@@ -798,7 +798,7 @@ export function EmptyState({
           style={{
             height: 40,
             marginTop: 'var(--sp-6)',
-            fontSize: 'calc(12.5px * var(--text-scale, 1))',
+            fontSize: 'var(--type-sm-plus)',
             ...(inline ? { width: '100%' } : { paddingInline: 20 }),
           }}
         >

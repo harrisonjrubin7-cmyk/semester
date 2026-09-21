@@ -50,7 +50,7 @@ export function BehindOffer() {
         <span
           style={{
             display: 'block',
-            fontSize: 'calc(13.5px * var(--text-scale, 1))',
+            fontSize: 'var(--type-base-plus)',
             marginTop: 'var(--sp-2)',
             lineHeight: 'var(--leading-normal)',
             textWrap: 'pretty',
@@ -61,7 +61,7 @@ export function BehindOffer() {
         <span
           style={{
             display: 'block',
-            fontSize: 'calc(11.5px * var(--text-scale, 1))',
+            fontSize: 'var(--type-xs-plus)',
             color: 'var(--app-dim)',
             marginTop: 'calc(5px * var(--density, 1))',
             lineHeight: 'var(--leading-normal)',

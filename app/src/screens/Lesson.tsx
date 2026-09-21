@@ -444,7 +444,7 @@ export function LessonPlayer() {
           >
             {clock(c.at)}
           </span>
-          <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 1.35 }}>{c.text}</span>
+          <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base-plus)', lineHeight: 1.35 }}>{c.text}</span>
         </button>
       ))}
 

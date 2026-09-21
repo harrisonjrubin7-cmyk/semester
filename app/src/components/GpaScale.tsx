@@ -115,7 +115,7 @@ export function GpaScale() {
 
       <div
         style={{
-          fontSize: 'calc(12.5px * var(--text-scale, 1))',
+          fontSize: 'var(--type-sm-plus)',
           color: 'var(--app-dim)',
           lineHeight: 'var(--leading-relaxed)',
           marginBottom: 'var(--sp-5)',
@@ -224,7 +224,7 @@ export function GpaScale() {
 
       <p
         style={{
-          fontSize: 'calc(11.5px * var(--text-scale, 1))',
+          fontSize: 'var(--type-xs-plus)',
           color: 'var(--app-dim)',
           marginTop: 'var(--sp-5)',
           lineHeight: 'var(--leading-relaxed)',

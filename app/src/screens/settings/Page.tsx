@@ -128,7 +128,7 @@ export function SettingsPage({
           <p
             style={{
               marginTop: 'calc(7px * var(--density, 1))', marginInline: '0', marginBottom: '0',
-              fontSize: 'calc(12.5px * var(--text-scale, 1))',
+              fontSize: 'var(--type-sm-plus)',
               color: 'var(--app-dim)',
               lineHeight: 'var(--leading-relaxed)',
               textWrap: 'pretty',

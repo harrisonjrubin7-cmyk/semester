@@ -160,7 +160,7 @@ export function BreakItUp({ item }: { item: DatedItem }) {
           know how long "gather sources" takes, so it does not guess. */}
       <div
         style={{
-          fontSize: 'calc(11.5px * var(--text-scale, 1))',
+          fontSize: 'var(--type-xs-plus)',
           color: 'var(--app-dim)',
           marginTop: 'var(--sp-5)',
           lineHeight: 'var(--leading-relaxed)',

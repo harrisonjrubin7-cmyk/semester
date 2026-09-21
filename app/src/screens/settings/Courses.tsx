@@ -64,7 +64,7 @@ export function SettingsCourses() {
               {byRole.length > 0 && (
                 // Named rather than counted, for the same reason as the
                 // school's list below it.
-                <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
+                <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
                   Hidden: {byRole.map((h) => DESTINATIONS.find((d) => d.screen === h)?.label ?? h).join(', ')}.
                   Nothing is deleted — switch back and every one of them returns with everything
                   in it.
@@ -85,7 +85,7 @@ export function SettingsCourses() {
               {ROLES.filter((r) => !r.ready).map((r) => (
                 <div key={r.id} style={{ marginBottom: 'var(--sp-4)' }}>
                   <div style={{ fontSize: 'var(--type-base)' }}>{r.label}</div>
-                  <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
+                  <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
                     {r.needs}
                   </div>
                 </div>
@@ -129,7 +129,7 @@ export function SettingsCourses() {
                   `components/SchoolPicker.tsx` — find it, add it, or skip. */}
               <SchoolPicker />
               {hidden.length > 0 && (
-                <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
+                <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
                   {/* Named rather than counted. "3 screens are hidden" invites the
                       question this answers. */}
                   Hidden: {hidden.map((h) => DESTINATIONS.find((d) => d.screen === h)?.label ?? h).join(', ')}.

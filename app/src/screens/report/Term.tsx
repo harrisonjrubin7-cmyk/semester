@@ -132,7 +132,7 @@ export function TermReport() {
             ? 'Nothing this term will support.'
             : `${found.length} ${found.length === 1 ? 'thing' : 'things'} the term will support.`}
         </div>
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
+        <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
           {basis(input)}
         </div>
       </Blueprint>
@@ -177,7 +177,7 @@ export function TermReport() {
       ) : null}
 
       {found.length === 0 ? (
-        <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-7)', lineHeight: 1.55 }}>
+        <div style={{ fontSize: 'var(--type-base-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-7)', lineHeight: 1.55 }}>
           {nothing || 'Nothing stood out far enough above the noise to be worth saying.'}
         </div>
       ) : (

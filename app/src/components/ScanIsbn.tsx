@@ -84,7 +84,7 @@ export function ScanIsbn({ onFound }: { onFound: (isbn: string) => void }) {
           setTrouble('');
           setOpen((was) => !was);
         }}
-        style={{ height: 38, marginBottom: 'var(--sp-4)', fontSize: 'calc(12.5px * var(--text-scale, 1))' }}
+        style={{ height: 38, marginBottom: 'var(--sp-4)', fontSize: 'var(--type-sm-plus)' }}
       >
         {open ? 'Stop scanning' : 'Scan the barcode on the book'}
       </button>
@@ -106,7 +106,7 @@ export function ScanIsbn({ onFound }: { onFound: (isbn: string) => void }) {
           >
             <track kind="captions" />
           </video>
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
             {trouble ||
               'Hold the barcode still in frame. The number is read on this device and goes no further — the app does not look it up, because that would mean telling somebody else what you are studying.'}
           </div>

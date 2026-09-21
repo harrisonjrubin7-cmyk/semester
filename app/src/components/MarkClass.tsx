@@ -78,7 +78,7 @@ export function MarkClass({
               borderRadius: 'var(--r-sm)',
               border: `1px solid ${on ? 'var(--app-accent-deep)' : 'var(--app-line)'}`,
               background: on ? 'var(--app-accent-wash)' : 'transparent',
-              fontSize: 'calc(11.5px * var(--text-scale, 1))',
+              fontSize: 'var(--type-xs-plus)',
               ...secondLine(on),
             }}
           >

@@ -285,7 +285,7 @@ export function Bill() {
       {instalments.length === 0 ? (
         <div
           style={{
-            fontSize: 'calc(12.5px * var(--text-scale, 1))',
+            fontSize: 'var(--type-sm-plus)',
             ...secondLine(),
             marginBottom: 'var(--sp-4)',
             lineHeight: 'var(--leading-normal)',
@@ -494,7 +494,7 @@ export function Bill() {
       {adding === 'aid' && !aidKindOf(aidKind).credits && (
         <div
           style={{
-            fontSize: 'calc(12.5px * var(--text-scale, 1))',
+            fontSize: 'var(--type-sm-plus)',
             ...secondLine(),
             marginBottom: 'var(--sp-4)',
             lineHeight: 'var(--leading-normal)',
@@ -508,7 +508,7 @@ export function Bill() {
       {bad ? (
         <div
           style={{
-            fontSize: 'calc(12.5px * var(--text-scale, 1))',
+            fontSize: 'var(--type-sm-plus)',
             color: 'var(--app-warn)',
             marginBottom: 'var(--sp-4)',
             lineHeight: 'var(--leading-normal)',

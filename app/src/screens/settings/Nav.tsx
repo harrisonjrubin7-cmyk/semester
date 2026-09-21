@@ -21,7 +21,7 @@ import { currentLook } from '../../state/shape';
 import { usesBar } from '../../lib/chrome';
 
 const HINT = {
-  fontSize: 'calc(11.5px * var(--text-scale, 1))',
+  fontSize: 'var(--type-xs-plus)',
   color: 'var(--app-dim)',
   marginTop: 'var(--sp-3)',
   lineHeight: 'var(--leading-normal)',
@@ -317,7 +317,7 @@ export function SettingsNav() {
                       style={{ flex: 1, minWidth: 0, paddingBlock: 'calc(11px * var(--density, 1))', paddingInline: '0', opacity: on ? 1 : DIMMED_ROW }}
                     >
                       <div style={{ fontSize: 'var(--type-md)' }}>{section?.label ?? id}</div>
-                      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>{section?.blurb}</div>
+                      <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>{section?.blurb}</div>
                     </div>
                     <Reorder
                       label={section?.label ?? id}

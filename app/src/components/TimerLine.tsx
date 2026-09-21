@@ -65,7 +65,7 @@ export function TimerLine() {
               </span>
               <span
                 style={{
-                  fontSize: 'calc(12.5px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-sm-plus)',
                   color: 'var(--app-dim)',
                   textWrap: 'pretty',
                 }}

@@ -49,7 +49,7 @@ export function NotYetOpened({ pool }: { pool?: Destination[] }) {
       >
         Not opened yet
       </SectionLabel>
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginBottom: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
+      <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', marginBottom: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
         {seenLine(state.visited, pool)} These three change each day.
       </div>
 
@@ -74,13 +74,13 @@ export function NotYetOpened({ pool }: { pool?: Destination[] }) {
               <TabGlyph screen={d.screen} size={16} />
             </span>
             <span style={{ flex: 1, minWidth: 0 }}>
-              <span style={{ display: 'block', fontSize: 'calc(13.5px * var(--text-scale, 1))' }}>{saysFor(d, school.capabilities).label}</span>
+              <span style={{ display: 'block', fontSize: 'var(--type-base-plus)' }}>{saysFor(d, school.capabilities).label}</span>
               {/* The directory's own sentence, not a second one written for
                   here — two descriptions of the same screen would drift. */}
               <span
                 style={{
                   display: 'block',
-                  fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-xs-plus)',
                   color: 'var(--app-dim)',
                   marginTop: 'var(--sp-1)',
                   lineHeight: 1.4,

@@ -117,7 +117,7 @@ describe('what it catches', () => {
   it('allows a token, a calc against the scale, and inherit', () => {
     expect(
       on(`export const a = <i style={{ fontSize: 'var(--type-md)' }} />;
-export const b = <i style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))' }} />;
+export const b = <i style={{ fontSize: 'var(--type-xs-plus)' }} />;
 export const c = <i style={{ fontSize: 'inherit' }} />;
 export const d = <i style={{ fontSize: '0.92em' }} />;`),
     ).toEqual([]);

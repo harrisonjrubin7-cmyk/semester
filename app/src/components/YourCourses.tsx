@@ -127,7 +127,7 @@ export function YourCourses() {
                 style={{ flex: 1, minWidth: 0, textAlign: 'left', paddingBlock: 'calc(10px * var(--density, 1))', paddingInline: '0' }}
               >
                 <span
-                  style={{ display: 'flex', alignItems: 'center', gap: 'calc(7px * var(--density, 1))', fontSize: 'calc(13.5px * var(--text-scale, 1))' }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 'calc(7px * var(--density, 1))', fontSize: 'var(--type-base-plus)' }}
                 >
                   <span
                     aria-hidden="true"
@@ -194,7 +194,7 @@ export function YourCourses() {
                   // what clearing it does.
                   placeholder={c.name}
                   aria-label={`Your name for ${c.code}`}
-                  style={{ width: '100%', fontSize: 'calc(13.5px * var(--text-scale, 1))' }}
+                  style={{ width: '100%', fontSize: 'var(--type-base-plus)' }}
                 />
                 {renamed(c, state.yours) ? (
                   <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 'calc(5px * var(--density, 1))' }}>

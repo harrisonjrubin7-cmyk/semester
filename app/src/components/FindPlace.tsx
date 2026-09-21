@@ -120,7 +120,7 @@ export function FindPlace() {
         <>
           <p
             style={{
-              fontSize: 'calc(12.5px * var(--text-scale, 1))',
+              fontSize: 'var(--type-sm-plus)',
               color: 'var(--app-dim)',
               lineHeight: 1.55,
               textWrap: 'pretty',
@@ -204,7 +204,7 @@ export function FindPlace() {
                     <span
                       style={{
                         display: 'block',
-                        fontSize: 'calc(13.5px * var(--text-scale, 1))',
+                        fontSize: 'var(--type-base-plus)',
                         lineHeight: 1.35,
                         textWrap: 'pretty',
                       }}
@@ -214,7 +214,7 @@ export function FindPlace() {
                     <span
                       style={{
                         display: 'block',
-                        fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                        fontSize: 'var(--type-xs-plus)',
                         color: 'var(--app-dim)',
                         marginTop: 'calc(3px * var(--density, 1))',
                         textWrap: 'pretty',
@@ -230,7 +230,7 @@ export function FindPlace() {
                  place is worse than no pin, because a pin is believed. */
               <p
                 style={{
-                  fontSize: 'calc(12.5px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-sm-plus)',
                   color: 'var(--app-dim)',
                   marginTop: 'calc(11px * var(--density, 1))',
                   lineHeight: 'var(--leading-relaxed)',
@@ -265,7 +265,7 @@ export function FindPlace() {
           </div>
           <p
             style={{
-              fontSize: 'calc(11.5px * var(--text-scale, 1))',
+              fontSize: 'var(--type-xs-plus)',
               color: 'var(--app-dim)',
               marginTop: 'var(--sp-4)',
               lineHeight: 'var(--leading-relaxed)',
@@ -297,7 +297,7 @@ export function FindPlace() {
             </button>
             <p
               style={{
-                fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                fontSize: 'var(--type-xs-plus)',
                 color: 'var(--app-dim)',
                 marginTop: 'var(--sp-4)',
                 lineHeight: 'var(--leading-relaxed)',
@@ -327,7 +327,7 @@ export function FindPlace() {
             style={{
               width: 'auto',
               marginTop: 'var(--sp-7)',
-              fontSize: 'calc(11.5px * var(--text-scale, 1))',
+              fontSize: 'var(--type-xs-plus)',
               color: 'var(--app-dim)',
             }}
           >

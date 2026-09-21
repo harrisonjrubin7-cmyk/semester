@@ -83,7 +83,7 @@ export function CloseTerm() {
         {rows.map((r) => (
           <div key={r.courseId} style={{ display: 'flex', gap: 'var(--sp-5)', alignItems: 'center' }}>
             <span style={{ flex: 1, minWidth: 0 }}>
-              <span style={{ display: 'block', fontSize: 'calc(13.5px * var(--text-scale, 1))' }}>
+              <span style={{ display: 'block', fontSize: 'var(--type-base-plus)' }}>
                 {r.code}
               </span>
               <span style={{ display: 'block', fontSize: 'var(--type-xs)', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
@@ -102,7 +102,7 @@ export function CloseTerm() {
         ))}
       </div>
 
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-6)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-6)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
         {readyLine(rows)}
       </div>
 

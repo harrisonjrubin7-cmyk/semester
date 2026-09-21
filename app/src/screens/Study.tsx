@@ -852,7 +852,7 @@ export function Study() {
                     {step.why && (
                       <div
                         style={{
-                          fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                          fontSize: 'var(--type-xs-plus)',
                           color: 'var(--app-dim)',
                           marginTop: 'var(--sp-3)',
                           lineHeight: 'var(--leading-normal)',
@@ -922,7 +922,7 @@ export function Study() {
       >
         + Add a reading to a course
       </button>
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
+      <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
         A chapter, a handout, a lecture — paste or attach it and the cards, the quiz, the guide
         and the cram sheet all take it in.
       </div>

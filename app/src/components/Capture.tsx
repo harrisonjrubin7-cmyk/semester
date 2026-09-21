@@ -144,7 +144,7 @@ export function Capture({
               </button>
             ))}
           </div>
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-4)' }}>
+          <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)' }}>
             {shots.length} of {MAX_SHOTS} · about {weigh(shots)} KB after resizing
           </div>
         </>

@@ -107,7 +107,7 @@ export function DayReport({ onGrain }: { onGrain: (grain: 'week') => void }) {
     }
   };
 
-  const quiet = { fontSize: 'calc(13.5px * var(--text-scale, 1))', color: 'var(--app-dim)', paddingBlock: 'calc(10px * var(--density, 1))', paddingInline: '0' };
+  const quiet = { fontSize: 'var(--type-base-plus)', color: 'var(--app-dim)', paddingBlock: 'calc(10px * var(--density, 1))', paddingInline: '0' };
 
   return (
     <>

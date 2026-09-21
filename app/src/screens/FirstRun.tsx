@@ -11,7 +11,7 @@ import { costLine } from '../lib/allowance';
 
 /** The footnote under a route — why it is there, or what it costs. */
 const NOTE: CSSProperties = {
-  fontSize: 'calc(11.5px * var(--text-scale, 1))',
+  fontSize: 'var(--type-xs-plus)',
   color: 'var(--app-dim)',
   lineHeight: 'var(--leading-relaxed)',
   marginTop: 'var(--sp-4)',

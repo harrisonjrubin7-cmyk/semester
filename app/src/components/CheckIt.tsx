@@ -101,7 +101,7 @@ export function CheckIt({
         <span
           style={{
             flex: 1,
-            fontSize: 'calc(12.5px * var(--text-scale, 1))',
+            fontSize: 'var(--type-sm-plus)',
             textWrap: 'pretty',
           }}
         >
@@ -111,7 +111,7 @@ export function CheckIt({
           type="button"
           className="bare"
           onClick={() => setOpen(false)}
-          style={{ width: 'auto', fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)' }}
+          style={{ width: 'auto', fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)' }}
         >
           Close
         </button>
@@ -133,7 +133,7 @@ export function CheckIt({
           and a flatterer. */}
       <p
         style={{
-          fontSize: 'calc(11.5px * var(--text-scale, 1))',
+          fontSize: 'var(--type-xs-plus)',
           color: 'var(--app-dim)',
           marginTop: 'calc(13px * var(--density, 1))',
           lineHeight: 'var(--leading-relaxed)',
@@ -168,7 +168,7 @@ export function CheckIt({
               <div
                 style={{
                   marginTop: 'var(--sp-5)',
-                  fontSize: 'calc(12.5px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-sm-plus)',
                   lineHeight: 1.6,
                   whiteSpace: 'pre-wrap',
                   textWrap: 'pretty',
@@ -181,7 +181,7 @@ export function CheckIt({
         ) : (
           <p
             style={{
-              fontSize: 'calc(11.5px * var(--text-scale, 1))',
+              fontSize: 'var(--type-xs-plus)',
               color: 'var(--app-dim)',
               marginTop: 'calc(9px * var(--density, 1))',
               lineHeight: 'var(--leading-relaxed)',
@@ -211,7 +211,7 @@ function Row({
       <span
         style={{
           flex: 1,
-          fontSize: 'calc(12.5px * var(--text-scale, 1))',
+          fontSize: 'var(--type-sm-plus)',
           lineHeight: 'var(--leading-normal)',
           textWrap: 'pretty',
         }}

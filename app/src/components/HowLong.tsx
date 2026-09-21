@@ -30,7 +30,7 @@ export function HowLong({
 
   return (
     <div style={{ paddingTop: 'calc(9px * var(--density, 1))', paddingInline: '0', paddingBottom: 'calc(4px * var(--density, 1))' }}>
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginBottom: 'var(--sp-3)', lineHeight: 1.4 }}>
+      <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginBottom: 'var(--sp-3)', lineHeight: 1.4 }}>
         How long did that take? It teaches the week ahead your own pace.
       </div>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-3)' }}>

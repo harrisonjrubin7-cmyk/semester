@@ -70,7 +70,7 @@ export function MyRules() {
             >
               <TickBox on={r.on} />
             </button>
-            <div style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))', ...secondLine(r.on) }}>
+            <div style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base-plus)', ...secondLine(r.on) }}>
               {ruleLine(r, courseCode)}
             </div>
             <button
@@ -90,7 +90,7 @@ export function MyRules() {
               value={r.days}
               onChange={(e) => set(editRule(rules, r.id, { days: Number(e.target.value) }))}
               aria-label="How long before"
-              style={{ flex: '1 1 96px', fontSize: 'calc(12.5px * var(--text-scale, 1))', minWidth: 96 }}
+              style={{ flex: '1 1 96px', fontSize: 'var(--type-sm-plus)', minWidth: 96 }}
             >
               {LEADS.map((d) => (
                 <option key={d} value={d}>
@@ -106,7 +106,7 @@ export function MyRules() {
                 set(editRule(rules, r.id, { watches: e.target.value as typeof r.watches }))
               }
               aria-label="What it watches"
-              style={{ flex: '1 1 92px', fontSize: 'calc(12.5px * var(--text-scale, 1))', minWidth: 92 }}
+              style={{ flex: '1 1 92px', fontSize: 'var(--type-sm-plus)', minWidth: 92 }}
             >
               <option value="deadline">every deadline</option>
               <option value="exam">exams only</option>
@@ -117,7 +117,7 @@ export function MyRules() {
               value={r.hour}
               onChange={(e) => set(editRule(rules, r.id, { hour: Number(e.target.value) }))}
               aria-label="What time of day"
-              style={{ flex: '0 1 78px', fontSize: 'calc(12.5px * var(--text-scale, 1))', minWidth: 74 }}
+              style={{ flex: '0 1 78px', fontSize: 'var(--type-sm-plus)', minWidth: 74 }}
             >
               {HOURS.map((h) => (
                 <option key={h} value={h}>
@@ -131,7 +131,7 @@ export function MyRules() {
               value={r.courseId}
               onChange={(e) => set(editRule(rules, r.id, { courseId: e.target.value }))}
               aria-label="Which course"
-              style={{ flex: '1 1 120px', fontSize: 'calc(12.5px * var(--text-scale, 1))', minWidth: 110 }}
+              style={{ flex: '1 1 120px', fontSize: 'var(--type-sm-plus)', minWidth: 110 }}
             >
               <option value="">all courses</option>
               {catalog.courses.map((c) => (
@@ -154,7 +154,7 @@ export function MyRules() {
           Add a reminder rule
         </button>
       ) : (
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-6)' }}>
+        <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-6)' }}>
           {MOST_RULES} is the limit — past that nobody remembers what they asked for.
         </div>
       )}

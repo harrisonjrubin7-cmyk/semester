@@ -47,7 +47,7 @@ export function Cutoffs({ courseId, code }: { courseId: string; code: string }) 
     <div style={{ marginTop: 'var(--sp-5)' }}>
       <div
         style={{
-          fontSize: 'calc(11.5px * var(--text-scale, 1))',
+          fontSize: 'var(--type-xs-plus)',
           color: 'var(--app-dim)',
           lineHeight: 'var(--leading-normal)',
           textWrap: 'pretty',
@@ -106,7 +106,7 @@ export function Cutoffs({ courseId, code }: { courseId: string; code: string }) 
         <div style={{ marginTop: 'var(--sp-5)' }}>
           <div
             style={{
-              fontSize: 'calc(11.5px * var(--text-scale, 1))',
+              fontSize: 'var(--type-xs-plus)',
               color: 'var(--app-dim)',
               lineHeight: 'var(--leading-normal)',
               marginBottom: 'var(--sp-4)',

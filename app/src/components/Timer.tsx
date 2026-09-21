@@ -113,7 +113,7 @@ export function Timer({
 
   if (ended.kind === 'kept') {
     return (
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', paddingBlock: 'calc(9px * var(--density, 1))', paddingInline: '0', lineHeight: 'var(--leading-normal)' }}>
+      <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', paddingBlock: 'calc(9px * var(--density, 1))', paddingInline: '0', lineHeight: 'var(--leading-normal)' }}>
         {clockLine(ended.minutes)} on this, recorded. The week ahead knows your pace a little
         better than it did.
       </div>
@@ -122,7 +122,7 @@ export function Timer({
 
   if (ended.kind === 'dropped') {
     return (
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', paddingBlock: 'calc(9px * var(--density, 1))', paddingInline: '0' }}>
+      <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', paddingBlock: 'calc(9px * var(--density, 1))', paddingInline: '0' }}>
         Under two minutes — not counted.
       </div>
     );
@@ -193,7 +193,7 @@ export function Timer({
                   paddingBlock: 'calc(8px * var(--density, 1))', paddingInline: 'calc(12px * var(--density, 1))',
                   borderRadius: 'var(--r-sm)',
                   border: '1px solid var(--app-line)',
-                  fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-xs-plus)',
                 }}
               >
                 {b.label}
@@ -206,7 +206,7 @@ export function Timer({
               style={{
                 width: 'auto',
                 paddingBlock: 'calc(8px * var(--density, 1))', paddingInline: 'calc(12px * var(--density, 1))',
-                fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                fontSize: 'var(--type-xs-plus)',
                 color: 'var(--app-dim)',
               }}
             >
@@ -238,12 +238,12 @@ export function Timer({
           // `Date.now()` for the start and the pauses, which are moments
           // rather than displayed figures: banking the store's stale minute
           // would lose up to thirty seconds on every pause.
-          style={{ height: 36, fontSize: 'calc(12.5px * var(--text-scale, 1))', paddingInline: 16 }}
+          style={{ height: 36, fontSize: 'var(--type-sm-plus)', paddingInline: 16 }}
         >
           Start working on this
         </button>
         {elsewhere ? (
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 1.4 }}>
+          <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 1.4 }}>
             {/* Said rather than prevented: the student may well have moved on
                 to this and forgotten the other one, and starting here should
                 not be blocked by a timer they have already abandoned. */}
@@ -295,13 +295,13 @@ export function Timer({
         </button>
       </div>
       {lost ? (
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'calc(7px * var(--density, 1))', lineHeight: 1.4 }}>
+        <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'calc(7px * var(--density, 1))', lineHeight: 1.4 }}>
           This has been running over {LONGEST / 60} hours. Stop it and the app will ask what it
           really was rather than recording this.
         </div>
       ) : null}
       {!running(mine) ? (
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'calc(7px * var(--density, 1))' }}>Paused. Nothing is counting.</div>
+        <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'calc(7px * var(--density, 1))' }}>Paused. Nothing is counting.</div>
       ) : null}
     </div>
   );

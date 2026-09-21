@@ -175,7 +175,7 @@ export function QuickAdd({ onClose }: { onClose: () => void }) {
               <div
                 key={line}
                 style={{
-                  fontSize: 'calc(12.5px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-sm-plus)',
                   color: line.startsWith('No ') ? 'var(--app-dim)' : 'var(--app-fg)',
                   lineHeight: 'var(--leading-normal)',
                   textWrap: 'pretty',
@@ -186,7 +186,7 @@ export function QuickAdd({ onClose }: { onClose: () => void }) {
             ))}
             <div
               style={{
-                fontSize: 'calc(12.5px * var(--text-scale, 1))',
+                fontSize: 'var(--type-sm-plus)',
                 marginTop: 'var(--sp-2)',
                 lineHeight: 'var(--leading-normal)',
                 textWrap: 'pretty',
@@ -208,7 +208,7 @@ export function QuickAdd({ onClose }: { onClose: () => void }) {
       ) : (
         <div
           style={{
-            fontSize: 'calc(12.5px * var(--text-scale, 1))',
+            fontSize: 'var(--type-sm-plus)',
             color: 'var(--app-dim)',
             marginTop: 'var(--sp-7)',
             lineHeight: 1.6,
@@ -225,7 +225,7 @@ export function QuickAdd({ onClose }: { onClose: () => void }) {
         <div
           role="status"
           style={{
-            fontSize: 'calc(12.5px * var(--text-scale, 1))',
+            fontSize: 'var(--type-sm-plus)',
             color: 'var(--app-dim)',
             marginTop: 'calc(14px * var(--density, 1))',
           }}

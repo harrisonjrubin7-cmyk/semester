@@ -209,7 +209,7 @@ export function WeekReport() {
             .
           </div>
           {forward.heaviest ? (
-            <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)' }}>
+            <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)' }}>
               {forward.heaviest.name} carries most of it, at {showHours(forward.heaviest.promised)}
               {forward.freest && forward.freest !== forward.heaviest
                 ? `; ${forward.freest.name} has the most room`

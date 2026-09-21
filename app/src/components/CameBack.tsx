@@ -159,12 +159,12 @@ export function CameBack({ item }: { item: DatedItem }) {
             paddingBlock: 'calc(7px * var(--density, 1))', paddingInline: 'calc(12px * var(--density, 1))',
             borderRadius: 'var(--r-sm)',
             border: `1px solid ${window.business ? 'var(--app-accent)' : 'var(--app-line)'}`,
-            fontSize: 'calc(11.5px * var(--text-scale, 1))',
+            fontSize: 'var(--type-xs-plus)',
           }}
         >
           Business days
         </button>
-        <span style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)' }}>
+        <span style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)' }}>
           {windowSummary(window)}
         </span>
       </div>
@@ -175,7 +175,7 @@ export function CameBack({ item }: { item: DatedItem }) {
       {window.business ? (
         <div
           style={{
-            fontSize: 'calc(11.5px * var(--text-scale, 1))',
+            fontSize: 'var(--type-xs-plus)',
             color: 'var(--app-dim)',
             marginTop: 'calc(7px * var(--density, 1))',
             lineHeight: 'var(--leading-relaxed)',
@@ -194,7 +194,7 @@ export function CameBack({ item }: { item: DatedItem }) {
         style={{
           width: 'auto',
           marginTop: 'calc(11px * var(--density, 1))',
-          fontSize: 'calc(11.5px * var(--text-scale, 1))',
+          fontSize: 'var(--type-xs-plus)',
           color: 'var(--app-dim)',
         }}
       >

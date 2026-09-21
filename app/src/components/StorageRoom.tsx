@@ -70,7 +70,7 @@ export function StorageRoom() {
         </div>
       ) : null}
 
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 1.55, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', lineHeight: 1.55, textWrap: 'pretty' }}>
         {roomLine(room)}
       </div>
 
@@ -80,7 +80,7 @@ export function StorageRoom() {
           className="btn btn-secondary btn-block"
           onClick={() => void askAgain()}
           disabled={asking}
-          style={{ height: 40, marginTop: 'var(--sp-5)', fontSize: 'calc(12.5px * var(--text-scale, 1))' }}
+          style={{ height: 40, marginTop: 'var(--sp-5)', fontSize: 'var(--type-sm-plus)' }}
         >
           {asking ? 'Asking…' : 'Ask the browser to keep it'}
         </button>

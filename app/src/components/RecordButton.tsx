@@ -83,7 +83,7 @@ export function RecordButton({
 
   if (!micSupported()) {
     return (
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)' }}>
+      <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)' }}>
         This browser will not give the app a microphone. Safari and Chrome both will — and a page
         served over plain http never does, which is why this needs https.
       </div>
@@ -150,7 +150,7 @@ export function RecordButton({
             display: 'flex',
             gap: 'calc(9px * var(--density, 1))',
             alignItems: 'flex-start',
-            fontSize: 'calc(12.5px * var(--text-scale, 1))',
+            fontSize: 'var(--type-sm-plus)',
             lineHeight: 'var(--leading-normal)',
             marginBottom: 'var(--sp-5)',
             cursor: 'pointer',
@@ -213,7 +213,7 @@ export function RecordButton({
             >
               {clockOf(seconds)}
             </span>
-            <span style={{ flex: 1, fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)' }}>
+            <span style={{ flex: 1, fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)' }}>
               {state === 'saving' ? 'Saving…' : state === 'paused' ? 'Paused' : 'Recording'}
             </span>
           </div>
@@ -254,7 +254,7 @@ export function RecordButton({
                 borderTop: '1px solid var(--app-line)',
                 maxHeight: 190,
                 overflowY: 'auto',
-                fontSize: 'calc(12.5px * var(--text-scale, 1))',
+                fontSize: 'var(--type-sm-plus)',
                 lineHeight: 'var(--leading-relaxed)',
               }}
             >
@@ -271,13 +271,13 @@ export function RecordButton({
           )}
 
           {wantText && segments.length === 0 && !interim && (
-            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', ...secondLine(), marginTop: 'calc(11px * var(--density, 1))' }}>
+            <div style={{ fontSize: 'var(--type-xs-plus)', ...secondLine(), marginTop: 'calc(11px * var(--density, 1))' }}>
               Listening. Words appear here as they are recognised.
             </div>
           )}
 
           {scribeNote && (
-            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', marginTop: 'var(--sp-5)', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)' }}>
+            <div style={{ fontSize: 'var(--type-xs-plus)', marginTop: 'var(--sp-5)', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)' }}>
               {scribeNote}
             </div>
           )}
@@ -336,7 +336,7 @@ export function RecordButton({
         <div
           role="alert"
           style={{
-            fontSize: 'calc(12.5px * var(--text-scale, 1))',
+            fontSize: 'var(--type-sm-plus)',
             color: 'var(--app-accent)',
             marginTop: 'var(--sp-5)',
             lineHeight: 'var(--leading-normal)',

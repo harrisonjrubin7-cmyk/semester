@@ -90,8 +90,20 @@
      at all; a token that dropped it would silently disable the setting
      wherever it was adopted. See the note in App.tsx. */
   --type-xs: calc(11px * var(--text-scale, 1)); /* labels, kickers, meta */
+  /*
+   * The three half-steps, which the app used 462 times before the scale
+   * admitted them. `xs` to `md` are a pixel apart, so a half is a real
+   * distinction at this size rather than rounding noise, and 124 of the 223
+   * uses of this one carry `--app-dim`: it is the second line under a row,
+   * the commonest piece of text in the app. Naming them changed nothing on
+   * screen — that was the point — and it stops the next one being picked by
+   * eye from the line above.
+   */
+  --type-xs-plus: calc(11.5px * var(--text-scale, 1)); /* the second line under a row */
   --type-sm: calc(12px * var(--text-scale, 1)); /* captions, second-rank prose */
+  --type-sm-plus: calc(12.5px * var(--text-scale, 1)); /* a caption with something to say */
   --type-base: calc(13px * var(--text-scale, 1)); /* body */
+  --type-base-plus: calc(13.5px * var(--text-scale, 1)); /* body that is the row */
   --type-md: calc(14px * var(--text-scale, 1)); /* list rows, the thing you tap */
   --type-lg: calc(15px * var(--text-scale, 1)); /* a card's own title */
   --type-xl: calc(26px * var(--text-scale, 1)); /* the one heading on a screen */

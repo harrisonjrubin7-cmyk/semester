@@ -201,7 +201,7 @@ export function Guide() {
       {waysOpen && here && (
         <div
           style={{
-            fontSize: 'calc(12.5px * var(--text-scale, 1))',
+            fontSize: 'var(--type-sm-plus)',
             color: 'var(--app-dim)',
             lineHeight: 'var(--leading-normal)',
             marginTop: 'calc(10px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(2px * var(--density, 1))',
@@ -465,7 +465,7 @@ export function Guide() {
           >
             Sit it as a timed paper
           </button>
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
             The paper is the same questions with a clock, marks and a key at the end instead of
             after each one — closer to the real thing, and worse for learning a card you have
             just met.
@@ -587,7 +587,7 @@ export function Guide() {
                           </div>
                           <div
                             style={{
-                              fontSize: 'calc(13.5px * var(--text-scale, 1))',
+                              fontSize: 'var(--type-base-plus)',
                               lineHeight: 1.55,
                               color: 'var(--app-dim)',
                               marginTop: 'var(--sp-3)',
@@ -996,7 +996,7 @@ function Documents() {
                 </span>
                 <span style={{ flex: 1, minWidth: 0 }}>
                   <span style={{ display: 'block', fontSize: 'var(--type-md)' }}>{guide.code} study guide</span>
-                  <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
+                  <span style={{ display: 'block', fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
                     {f.note}
                   </span>
                 </span>
@@ -1025,7 +1025,7 @@ function Documents() {
       </button>
 
       <div
-        style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginTop: 'var(--sp-5)', textWrap: 'pretty' }}
+        style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginTop: 'var(--sp-5)', textWrap: 'pretty' }}
       >
         {prebuilt ? (
           <>
@@ -1050,8 +1050,8 @@ function Documents() {
           </div>
           {u.cards.map((c) => (
             <div key={c.q} style={{ marginTop: 'var(--sp-4)' }}>
-              <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', fontWeight: 600, lineHeight: 1.35 }}>{c.q}</div>
-              <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginTop: 'var(--sp-1)' }}>
+              <div style={{ fontSize: 'var(--type-base-plus)', fontWeight: 600, lineHeight: 1.35 }}>{c.q}</div>
+              <div style={{ fontSize: 'var(--type-base-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginTop: 'var(--sp-1)' }}>
                 {c.a}
               </div>
             </div>
@@ -1189,7 +1189,7 @@ function Cases() {
                     </div>
                     <div
                       style={{
-                        fontSize: 'calc(13.5px * var(--text-scale, 1))',
+                        fontSize: 'var(--type-base-plus)',
                         lineHeight: 'var(--leading-relaxed)',
                         color: 'var(--app-dim)',
                         marginTop: 'var(--sp-1)',
@@ -1449,7 +1449,7 @@ function Cram() {
               </summary>
               <div
                 style={{
-                  fontSize: 'calc(13.5px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-base-plus)',
                   color: 'var(--app-dim)',
                   lineHeight: 'var(--leading-relaxed)',
                   marginTop: 'var(--sp-3)',

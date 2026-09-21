@@ -276,7 +276,7 @@ export function Reminders() {
 
   return (
     <div style={{ marginBottom: 'var(--sp-6)' }}>
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
         {line} They arrive while the app is open or running in the background. Waking a phone whose
         browser is closed needs a push server, which this deployment does not have — so treat these
         as a nudge while you are working, not an alarm clock.

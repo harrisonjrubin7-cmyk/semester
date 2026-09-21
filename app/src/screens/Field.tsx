@@ -270,7 +270,7 @@ export function FieldGuide() {
                 </div>
                 <div
                   style={{
-                    fontSize: 'calc(13.5px * var(--text-scale, 1))',
+                    fontSize: 'var(--type-base-plus)',
                     color: 'var(--app-dim)',
                     lineHeight: 'var(--leading-relaxed)',
                     marginTop: 'var(--sp-2)',
@@ -329,7 +329,7 @@ export function FieldGuide() {
                       </div>
                       <div
                         style={{
-                          fontSize: 'calc(13.5px * var(--text-scale, 1))',
+                          fontSize: 'var(--type-base-plus)',
                           lineHeight: 'var(--leading-relaxed)',
                           color: 'var(--app-dim)',
                           marginTop: 'var(--sp-1)',
@@ -386,7 +386,7 @@ export function FieldGuide() {
       {guide.selfTest && guide.selfTest.length > 0 && (
         <>
           <SectionLabel style={{ marginTop: 'calc(36px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(6px * var(--density, 1))' }}>Test yourself</SectionLabel>
-          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)' }}>
+          <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)' }}>
             The guide’s own questions, written to be answered out loud. Answers are below each one —
             cover them, or use Cards if you would rather they were hidden.
           </div>
@@ -423,7 +423,7 @@ export function FieldGuide() {
                   <span
                     style={{
                       display: 'block',
-                      fontSize: 'calc(13.5px * var(--text-scale, 1))',
+                      fontSize: 'var(--type-base-plus)',
                       color: 'var(--app-dim)',
                       lineHeight: 1.55,
                       marginTop: 'var(--sp-2)',

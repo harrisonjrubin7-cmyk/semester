@@ -93,13 +93,13 @@ export function Drawing({ code, language }: { code: string; language: Language }
   if (failed) {
     return (
       <div>
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginBottom: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
+        <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', marginBottom: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
           {failed} The code is below — it is often one label away from working, and it is yours to
           edit.
         </div>
         <pre
           style={{
-            fontSize: 'calc(11.5px * var(--text-scale, 1))',
+            fontSize: 'var(--type-xs-plus)',
             lineHeight: 'var(--leading-relaxed)',
             overflowX: 'auto',
             padding: 'var(--sp-6)',
@@ -117,7 +117,7 @@ export function Drawing({ code, language }: { code: string; language: Language }
 
   if (!svg) {
     return (
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', paddingBlock: 'calc(20px * var(--density, 1))', paddingInline: '0' }}>Drawing…</div>
+      <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', paddingBlock: 'calc(20px * var(--density, 1))', paddingInline: '0' }}>Drawing…</div>
     );
   }
 

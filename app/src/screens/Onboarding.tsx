@@ -367,7 +367,7 @@ export function Onboarding() {
           style={{
             marginTop: 'calc(18px * var(--density, 1))',
             textAlign: 'left',
-            fontSize: 'calc(12.5px * var(--text-scale, 1))',
+            fontSize: 'var(--type-sm-plus)',
             color: 'var(--app-dim)',
             lineHeight: 'var(--leading-normal)',
             textDecoration: 'underline',

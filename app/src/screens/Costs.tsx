@@ -147,7 +147,7 @@ function OutOfPocket() {
               <CustomRow key={c.id}>
                 <div style={{ display: 'flex', gap: 'var(--sp-5)', alignItems: 'baseline' }}>
                   <CourseTag id={c.id} style={{ flex: 'none' }} />
-                  <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)' }}>
+                  <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)' }}>
                     {theirs.length === 0
                       ? 'nothing recorded'
                       : `${theirs.length} ${theirs.length === 1 ? 'thing' : 'things'}`}
@@ -167,7 +167,7 @@ function OutOfPocket() {
                 </div>
                 {/* The comparison worth having in August. */}
                 {before ? (
-                  <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-2)' }}>
+                  <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-2)' }}>
                     {readTerm(before.term).label}: {money(before.cents)}
                   </div>
                 ) : null}
@@ -305,7 +305,7 @@ function OutOfPocket() {
       )}
 
       {bad ? (
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-warn)', marginBottom: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
+        <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-warn)', marginBottom: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
           {bad}
         </div>
       ) : null}

@@ -146,7 +146,7 @@ export function Essay() {
 
   return (
     <Page className="prose" bottom={26}>
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
         A real draft, for the writing that is not coursework — the cover letter, the club
         newsletter, the scholarship statement, the memo. For a class, the project file under
         Work on it is the tool: it gives you the document to write in, not the writing.
@@ -175,7 +175,7 @@ export function Essay() {
               }}
             >
               <span style={{ display: 'block', fontSize: 'var(--type-md)' }}>{option.label}</span>
-              <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
+              <span style={{ display: 'block', fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
                 {option.blurb}
               </span>
             </button>
@@ -237,7 +237,7 @@ export function Essay() {
                   {course.ai ? 'Change what is recorded' : 'Record the policy'}
                 </button>
               ) : (
-                <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
+                <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
                   A sample course, so this is fixed. Your own courses record their own policy under
                   Edit the course.
                 </div>
@@ -265,7 +265,7 @@ export function Essay() {
           onChange={(e) => setAttested(e.target.checked)}
           style={{ marginTop: 'var(--sp-1)', flex: 'none', width: 18, height: 18 }}
         />
-        <span style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', lineHeight: 'var(--leading-relaxed)' }}>
+        <span style={{ fontSize: 'var(--type-sm-plus)', lineHeight: 'var(--leading-relaxed)' }}>
           {u.coursework
             ? 'I have read the syllabus and it permits a drafting tool for this assignment.'
             : 'I have checked that whoever receives this permits a drafting tool.'}
@@ -275,7 +275,7 @@ export function Essay() {
       {!verdict.ok && (
         <div
           style={{
-            fontSize: 'calc(12.5px * var(--text-scale, 1))',
+            fontSize: 'var(--type-sm-plus)',
             lineHeight: 'var(--leading-relaxed)',
             marginTop: 'var(--sp-5)',
             paddingBlock: 'calc(11px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))',
@@ -318,7 +318,7 @@ export function Essay() {
         placeholder="Everything true about you it is allowed to say: what you have done, where, when, with whom, what came of it."
         style={{ width: '100%', minHeight: 110, resize: 'vertical', lineHeight: 'var(--leading-relaxed)' }}
       />
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
+      <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
         This list is the fence. Anything not on it comes back as a blank in square brackets rather
         than a guess — a letter that invents an internship reads exactly like one that does not.
       </div>
@@ -355,7 +355,7 @@ export function Essay() {
         value={lengthId}
         onChange={setLengthId}
       />
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'calc(5px * var(--density, 1))' }}>
+      <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'calc(5px * var(--density, 1))' }}>
         About {aim} words. {LENGTHS.find((l) => l.id === lengthId)?.blurb}
       </div>
 
@@ -400,7 +400,7 @@ export function Essay() {
             <Blueprint style={{ paddingBlock: 'calc(11px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))', marginTop: 'var(--sp-5)' }}>
               <div className="kicker">What it needs from you</div>
               {left.map((hole, i) => (
-                <div key={`${hole}-${i}`} style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', paddingBlock: 'calc(4px * var(--density, 1))', paddingInline: '0', lineHeight: 'var(--leading-normal)' }}>
+                <div key={`${hole}-${i}`} style={{ fontSize: 'var(--type-sm-plus)', paddingBlock: 'calc(4px * var(--density, 1))', paddingInline: '0', lineHeight: 'var(--leading-normal)' }}>
                   {hole.slice(1, -1)}
                 </div>
               ))}

@@ -54,7 +54,7 @@ export function ClosingWindows() {
                 <span
                   style={{
                     display: 'block',
-                    fontSize: 'calc(13.5px * var(--text-scale, 1))',
+                    fontSize: 'var(--type-base-plus)',
                     lineHeight: 1.35,
                     textWrap: 'pretty',
                   }}
@@ -65,7 +65,7 @@ export function ClosingWindows() {
                 <span
                   style={{
                     display: 'block',
-                    fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                    fontSize: 'var(--type-xs-plus)',
                     color: 'var(--app-dim)',
                     marginTop: 'calc(3px * var(--density, 1))',
                     textWrap: 'pretty',

@@ -198,7 +198,7 @@ export function Keys() {
             >
               {keyLabel(s.key)}
             </kbd>
-            <span style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)' }}>{s.does}</span>
+            <span style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)' }}>{s.does}</span>
           </div>
         ))}
       </div>

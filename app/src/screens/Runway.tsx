@@ -243,7 +243,7 @@ export function Runway() {
           {r.stage.label}. {r.stage.shape}
         </div>
         {r.daysAway > 0 ? (
-          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'calc(7px * var(--density, 1))', lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', marginTop: 'calc(7px * var(--density, 1))', lineHeight: 'var(--leading-normal)' }}>
             {r.clearDays} of those days have nothing else standing on them.
           </div>
         ) : null}
@@ -278,7 +278,7 @@ export function Runway() {
               style={{
                 height: 38,
                 marginTop: 'calc(9px * var(--density, 1))',
-                fontSize: 'calc(12.5px * var(--text-scale, 1))',
+                fontSize: 'var(--type-sm-plus)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -484,7 +484,7 @@ export function Runway() {
               opacity: u.cards === 0 ? DIMMED_ROW : 1,
             }}
           >
-            <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 1.35 }}>{u.name}</span>
+            <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base-plus)', lineHeight: 1.35 }}>{u.name}</span>
             <span
               style={{
                 flex: 'none',
@@ -528,14 +528,14 @@ export function Runway() {
                 style={{
                   flex: 'none',
                   width: 58,
-                  fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-xs-plus)',
                   color: 'var(--app-dim)',
                   fontVariantNumeric: 'tabular-nums',
                 }}
               >
                 {i.dueShort}
               </span>
-              <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 1.35 }}>
+              <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base-plus)', lineHeight: 1.35 }}>
                 {i.title}
                 <span style={{ color: 'var(--app-dim)' }}> · {code(i.c)}</span>
               </span>

@@ -564,7 +564,7 @@ export function Connect() {
             Open Brightspace
           </a>
         </div>
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', marginTop: 'var(--sp-5)', textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', marginTop: 'var(--sp-5)', textWrap: 'pretty' }}>
           What a Brightspace account can and cannot give this app, plainly: the{' '}
           <strong>calendar feed</strong> needs nothing but the link, and it carries what your
           instructors put on the Brightspace calendar — which is not always everything on the
@@ -803,7 +803,7 @@ export function Connect() {
               )}
 
               {id === 'google' && spec.clientId && (
-                <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginTop: 'calc(9px * var(--density, 1))' }}>
+                <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginTop: 'calc(9px * var(--density, 1))' }}>
                   Reading Gmail may not be switched on for your account yet: Google reviews that
                   one permission separately, and until it passes, only accounts this copy has
                   named can use it. Calendar, Drive and Tasks work immediately.
@@ -813,7 +813,7 @@ export function Connect() {
               {spec.caveat && (
                 <div
                   style={{
-                    fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                    fontSize: 'var(--type-xs-plus)',
                     color: 'var(--app-dim)',
                     lineHeight: 'var(--leading-relaxed)',
                     marginTop: 'var(--sp-5)',
@@ -848,7 +848,7 @@ export function Connect() {
                 <span
                   style={{
                     display: 'block',
-                    fontSize: 'calc(13.5px * var(--text-scale, 1))',
+                    fontSize: 'var(--type-base-plus)',
                     lineHeight: 'var(--leading-tight)',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
@@ -1058,7 +1058,7 @@ export function Connect() {
               </button>
             </div>
           ))}
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', marginTop: 'var(--sp-5)' }}>
+          <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', marginTop: 'var(--sp-5)' }}>
             Feed events show on the calendar under Campus, marked with where they came from. They
             never overwrite a deadline the syllabus stated.
           </div>

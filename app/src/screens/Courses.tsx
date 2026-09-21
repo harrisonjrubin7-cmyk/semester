@@ -356,7 +356,7 @@ function ComingUp() {
         onChange={(t) => dispatch({ type: 'setDueTab', tab: t })}
         style={{ marginBottom: 'var(--sp-6)' }}
       />
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-2)' }}>{blurb}</div>
+      <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-2)' }}>{blurb}</div>
       {list.length === 0 && (
         <div style={{ paddingBlock: 'calc(22px * var(--density, 1))', paddingInline: '0', fontSize: 'var(--type-md)', color: 'var(--app-dim)' }}>
           {tab === 'overdue'
@@ -455,10 +455,10 @@ function LmsLink({ course }: { course: Course }) {
             value={draft}
             placeholder="https://brightspace.vanderbilt.edu/d2l/home/123456"
             onChange={(e) => setDraft(e.target.value)}
-            style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', marginTop: 'calc(9px * var(--density, 1))' }}
+            style={{ fontSize: 'var(--type-sm-plus)', marginTop: 'calc(9px * var(--density, 1))' }}
             aria-label={`${course.code} Brightspace address`}
           />
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', marginTop: 'calc(7px * var(--density, 1))' }}>
+          <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', marginTop: 'calc(7px * var(--density, 1))' }}>
             Open the course in Brightspace and copy the address from the bar. Grades and
             submissions need D2L’s Valence API, which only Vanderbilt can issue a key for — so
             this is a link, and the dates come from the calendar feed under Connect.
@@ -870,7 +870,7 @@ export function ItemDetail() {
       {going && !done && (
         <div
           style={{
-            fontSize: 'calc(12.5px * var(--text-scale, 1))',
+            fontSize: 'var(--type-sm-plus)',
             color: 'var(--app-dim)',
             marginTop: 'var(--sp-4)',
             lineHeight: 'var(--leading-relaxed)',

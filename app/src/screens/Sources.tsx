@@ -163,14 +163,14 @@ export function Sources() {
             />
           ) : (
             <>
-              <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginBottom: 'var(--sp-5)', lineHeight: 'var(--leading-relaxed)' }}>
+              <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', marginBottom: 'var(--sp-5)', lineHeight: 'var(--leading-relaxed)' }}>
                 {completeness(list)}
               </div>
               {list.map((s) => {
                 const missing = gaps(s);
                 return (
                   <Blueprint plain key={s.id} style={{ paddingBlock: 'calc(12px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))', marginBottom: 'var(--sp-4)' }}>
-                    <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>{s.raw}</div>
+                    <div style={{ fontSize: 'var(--type-base-plus)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>{s.raw}</div>
                     {s.role.trim() ? (
                       <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
                         For: {s.role}
@@ -189,7 +189,7 @@ export function Sources() {
                             patch: { role: e.target.value.trim() },
                           })
                         }
-                        style={{ width: '100%', marginTop: 'var(--sp-4)', fontSize: 'calc(12.5px * var(--text-scale, 1))' }}
+                        style={{ width: '100%', marginTop: 'var(--sp-4)', fontSize: 'var(--type-sm-plus)' }}
                       />
                     )}
                     <div

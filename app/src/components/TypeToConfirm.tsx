@@ -109,7 +109,7 @@ export function TypeToConfirm({
           <div
             key={line}
             style={{
-              fontSize: 'calc(12.5px * var(--text-scale, 1))',
+              fontSize: 'var(--type-sm-plus)',
               color: 'var(--app-dim)',
               lineHeight: 'var(--leading-normal)',
               textWrap: 'pretty',
@@ -125,7 +125,7 @@ export function TypeToConfirm({
         style={{
           display: 'block',
           marginTop: 'calc(18px * var(--density, 1))',
-          fontSize: 'calc(12.5px * var(--text-scale, 1))',
+          fontSize: 'var(--type-sm-plus)',
           lineHeight: 'var(--leading-normal)',
           textWrap: 'pretty',
         }}

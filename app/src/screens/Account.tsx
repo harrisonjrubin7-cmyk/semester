@@ -72,13 +72,13 @@ export function AccountScreen() {
             {account.email}
           </div>
           {account.via && (
-            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'calc(3px * var(--density, 1))' }}>
+            <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'calc(3px * var(--density, 1))' }}>
               {/* Which button they pressed, which is what somebody needs to
                   know when signing in on a second device. */}
               Through {account.via}.
             </div>
           )}
-          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
+          <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
             {sync.status === 'syncing' && 'Catching up with your account…'}
             {sync.status === 'synced' &&
               `Synced ${sync.at ? new Date(sync.at).toLocaleTimeString() : ''} · ${counts}`}
@@ -94,7 +94,7 @@ export function AccountScreen() {
             See `lib/merge.ts`.
           */}
           {state.lastSync ? (
-            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
+            <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
               {syncLine(state.lastSync.notes)}
             </div>
           ) : null}
@@ -123,7 +123,7 @@ export function AccountScreen() {
               role="status"
               aria-live="polite"
               style={{
-                fontSize: 'calc(12.5px * var(--text-scale, 1))',
+                fontSize: 'var(--type-sm-plus)',
                 color: 'var(--app-dim)',
                 marginTop: 'calc(9px * var(--density, 1))',
                 lineHeight: 'var(--leading-relaxed)',
@@ -177,7 +177,7 @@ export function AccountScreen() {
         >
           Sign out (keeps data on this device)
         </ActionButton>
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
+        <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
           Signing out leaves this device's copy alone — nothing is deleted here, and nothing stops
           working.
         </div>
@@ -222,7 +222,7 @@ export function AccountScreen() {
       <Credentials />
 
       <SectionLabel>Before you sign up</SectionLabel>
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 1.55, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', lineHeight: 1.55, textWrap: 'pretty' }}>
         What you already have on this device is kept. The first sync sends it up, and if the
         account already holds a semester the two are merged rather than one replacing the other —
         you end up with both sides' courses, notes and ticked boxes.

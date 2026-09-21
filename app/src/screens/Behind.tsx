@@ -99,7 +99,7 @@ export function Behind() {
           <SectionLabel style={{ marginTop: 'calc(22px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(8px * var(--density, 1))' }}>Turning up</SectionLabel>
           <div
             style={{
-              fontSize: 'calc(11.5px * var(--text-scale, 1))',
+              fontSize: 'var(--type-xs-plus)',
               color: 'var(--app-dim)',
               marginBottom: 'calc(9px * var(--density, 1))',
               lineHeight: 'var(--leading-relaxed)',
@@ -143,7 +143,7 @@ export function Behind() {
             {note ? (
               <div
                 style={{
-                  fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-xs-plus)',
                   color: 'var(--app-dim)',
                   marginBottom: 'calc(9px * var(--density, 1))',
                   lineHeight: 'var(--leading-relaxed)',
@@ -173,7 +173,7 @@ export function Behind() {
                   <span
                     style={{
                       display: 'block',
-                      fontSize: 'calc(13.5px * var(--text-scale, 1))',
+                      fontSize: 'var(--type-base-plus)',
                       lineHeight: 1.35,
                       textWrap: 'pretty',
                     }}
@@ -183,7 +183,7 @@ export function Behind() {
                   <span
                     style={{
                       display: 'block',
-                      fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                      fontSize: 'var(--type-xs-plus)',
                       color: 'var(--app-dim)',
                       marginTop: 'calc(3px * var(--density, 1))',
                       textWrap: 'pretty',
@@ -231,7 +231,7 @@ export function Behind() {
             <span
               style={{
                 display: 'block',
-                fontSize: 'calc(13.5px * var(--text-scale, 1))',
+                fontSize: 'var(--type-base-plus)',
                 lineHeight: 1.35,
               }}
             >
@@ -240,7 +240,7 @@ export function Behind() {
             <span
               style={{
                 display: 'block',
-                fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                fontSize: 'var(--type-xs-plus)',
                 color: 'var(--app-dim)',
                 marginTop: 'var(--sp-2)',
                 lineHeight: 'var(--leading-relaxed)',

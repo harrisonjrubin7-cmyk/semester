@@ -173,11 +173,11 @@ export function Links() {
                         placeholder={link.hint || 'https://…'}
                         onChange={(e) => setDraft(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && save(link.id)}
-                        style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', marginTop: 'calc(9px * var(--density, 1))' }}
+                        style={{ fontSize: 'var(--type-sm-plus)', marginTop: 'calc(9px * var(--density, 1))' }}
                         aria-label={`${link.name} address`}
                       />
                       {link.note && (
-                        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', marginTop: 'calc(7px * var(--density, 1))' }}>
+                        <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', marginTop: 'calc(7px * var(--density, 1))' }}>
                           {link.note}
                         </div>
                       )}
@@ -221,7 +221,7 @@ export function Links() {
                 placeholder="https://…"
                 value={newUrl}
                 onChange={(e) => setNewUrl(e.target.value)}
-                style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', marginTop: 'var(--sp-4)' }}
+                style={{ fontSize: 'var(--type-sm-plus)', marginTop: 'var(--sp-4)' }}
               />
               <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-5)' }}>
                 <button
@@ -262,7 +262,7 @@ export function Links() {
             </ActionButton>
           )}
 
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', marginTop: 'var(--sp-5)', textWrap: 'pretty' }}>
+          <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', marginTop: 'var(--sp-5)', textWrap: 'pretty' }}>
             These open the system itself — the app on a phone that recognises the address, the site
             otherwise. None of them expose an API a student can use alone, so the app links out rather
             than pretending to read them. Correct any address here and the correction is what sticks.

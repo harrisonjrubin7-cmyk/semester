@@ -215,7 +215,7 @@ function Timers() {
         <p
           style={{
             marginTop: 'calc(22px * var(--density, 1))',
-            fontSize: 'calc(12.5px * var(--text-scale, 1))',
+            fontSize: 'var(--type-sm-plus)',
             color: 'var(--app-dim)',
             lineHeight: 'var(--leading-relaxed)',
             textWrap: 'pretty',
@@ -260,7 +260,7 @@ function TimerRow({ t, at }: { t: Timer; at: number }) {
         </span>
         <span
           style={{
-            fontSize: 'calc(12.5px * var(--text-scale, 1))',
+            fontSize: 'var(--type-sm-plus)',
             color: 'var(--app-dim)',
             textWrap: 'pretty',
           }}
@@ -396,7 +396,7 @@ function Alarms() {
       </div>
       <div
         style={{
-          fontSize: 'calc(11.5px * var(--text-scale, 1))',
+          fontSize: 'var(--type-xs-plus)',
           color: 'var(--app-dim)',
           marginTop: 'calc(7px * var(--density, 1))', marginInline: '0', marginBottom: '0',
         }}
@@ -463,7 +463,7 @@ function Alarms() {
                       paddingBlock: 'calc(7px * var(--density, 1))', paddingInline: 'calc(12px * var(--density, 1))',
                       borderRadius: 'var(--r-sm)',
                       border: `1px solid ${a.on ? 'var(--app-accent)' : 'var(--app-line)'}`,
-                      fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                      fontSize: 'var(--type-xs-plus)',
                       textTransform: 'uppercase',
                       letterSpacing: '0.08em',
                     }}
@@ -475,7 +475,7 @@ function Alarms() {
                     className="bare tappable"
                     onClick={() => dispatch({ type: 'removeAlarm', id: a.id })}
                     aria-label={`Delete the ${timeLine(a.at)} alarm`}
-                    style={{ width: 'auto', paddingBlock: 'calc(7px * var(--density, 1))', paddingInline: 'calc(10px * var(--density, 1))', fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)' }}
+                    style={{ width: 'auto', paddingBlock: 'calc(7px * var(--density, 1))', paddingInline: 'calc(10px * var(--density, 1))', fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)' }}
                   >
                     Delete
                   </button>
@@ -489,7 +489,7 @@ function Alarms() {
       <SectionLabel style={{ marginTop: 'calc(24px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(8px * var(--density, 1))' }}>What this can and cannot do</SectionLabel>
       <p
         style={{
-          fontSize: 'calc(12.5px * var(--text-scale, 1))',
+          fontSize: 'var(--type-sm-plus)',
           color: 'var(--app-dim)',
           lineHeight: 1.55,
           textWrap: 'pretty',

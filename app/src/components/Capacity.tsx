@@ -60,7 +60,7 @@ export function Capacity() {
       >
         {verdict(needed, cap, state.contract)}
         {taken ? (
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)' }}>
+          <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)' }}>
             {taken}
           </div>
         ) : null}
@@ -110,7 +110,7 @@ export function Capacity() {
       ) : null}
       <p
         style={{
-          fontSize: 'calc(11.5px * var(--text-scale, 1))',
+          fontSize: 'var(--type-xs-plus)',
           color: 'var(--app-dim)',
           marginTop: 'calc(9px * var(--density, 1))',
           lineHeight: 'var(--leading-relaxed)',
@@ -239,7 +239,7 @@ function Kept() {
               }}
               style={{ flex: 1, minWidth: 0, height: 36, fontSize: 'var(--type-base)' }}
             />
-            <span style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', ...secondLine(), flex: 'none' }}>
+            <span style={{ fontSize: 'var(--type-xs-plus)', ...secondLine(), flex: 'none' }}>
               to
             </span>
             <input
@@ -259,7 +259,7 @@ function Kept() {
               and for the same reason: a block with no days silently takes no
               hours out, which reads as the arithmetic being wrong. */}
           {keeps(r) ? null : (
-            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)' }}>
+            <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)' }}>
               Pick at least one day, and an end after the start. Counted as nothing until you do.
             </div>
           )}
@@ -295,7 +295,7 @@ function Kept() {
 
       <p
         style={{
-          fontSize: 'calc(11.5px * var(--text-scale, 1))',
+          fontSize: 'var(--type-xs-plus)',
           color: 'var(--app-dim)',
           marginTop: 'calc(9px * var(--density, 1))',
           lineHeight: 'var(--leading-relaxed)',

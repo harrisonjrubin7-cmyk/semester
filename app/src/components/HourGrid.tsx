@@ -366,7 +366,7 @@ export function HourGrid({
             <span
               style={{
                 display: 'block',
-                fontSize: 'calc(12.5px * var(--text-scale, 1))',
+                fontSize: 'var(--type-sm-plus)',
                 lineHeight: 1.2,
                 textDecoration: b.canceled ? 'line-through' : 'none',
                 overflow: 'hidden',

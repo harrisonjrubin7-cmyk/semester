@@ -96,7 +96,7 @@ export function AgainstCalendar() {
 
   return (
     <Folding name="AgainstCalendar">
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
         Every deadline here was read off a syllabus once, before term started. This checks them
         against what your LMS calendar says today, and shows both dates before changing anything.
       </div>
@@ -143,7 +143,7 @@ export function AgainstCalendar() {
               fontSize: 'var(--type-sm)',
             }}
           />
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
             Read here in your browser and never sent anywhere. {events.length > 0
               ? `${events.length} entries read.`
               : pasted.trim()
@@ -169,7 +169,7 @@ export function AgainstCalendar() {
             >
               {summary(report)}
             </div>
-            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
+            <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
               {report.agreed} matched and agreed · {report.onlyHere.length} here with no match in
               the feed
             </div>
@@ -195,13 +195,13 @@ export function AgainstCalendar() {
                         fontVariantNumeric: 'tabular-nums',
                       }}
                     >
-                      <span style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', color: 'var(--app-dim)', textDecoration: 'line-through' }}>
+                      <span style={{ fontSize: 'var(--type-base-plus)', color: 'var(--app-dim)', textDecoration: 'line-through' }}>
                         {m.was}
                       </span>
-                      <span style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))' }}>{m.now}</span>
-                      <span style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)' }}>{movedLine(m)}</span>
+                      <span style={{ fontSize: 'var(--type-base-plus)' }}>{m.now}</span>
+                      <span style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)' }}>{movedLine(m)}</span>
                     </div>
-                    <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
+                    <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
                       The feed calls it “{m.event.title}”.
                     </div>
                     <button
@@ -240,14 +240,14 @@ export function AgainstCalendar() {
                     style={{
                       flex: 'none',
                       width: 82,
-                      fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                      fontSize: 'var(--type-xs-plus)',
                       color: 'var(--app-dim)',
                       fontVariantNumeric: 'tabular-nums',
                     }}
                   >
                     {e.date}
                   </span>
-                  <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 1.35 }}>
+                  <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base-plus)', lineHeight: 1.35 }}>
                     {e.title}
                     {e.courseId ? (
                       <span style={{ color: 'var(--app-dim)' }}> · {code(e.courseId)}</span>
@@ -284,14 +284,14 @@ export function AgainstCalendar() {
                     style={{
                       flex: 'none',
                       width: 82,
-                      fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                      fontSize: 'var(--type-xs-plus)',
                       color: 'var(--app-dim)',
                       fontVariantNumeric: 'tabular-nums',
                     }}
                   >
                     {i.dueShort}
                   </span>
-                  <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 1.35 }}>
+                  <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base-plus)', lineHeight: 1.35 }}>
                     {i.title}
                     <span style={{ color: 'var(--app-dim)' }}> · {code(i.c)}</span>
                   </span>

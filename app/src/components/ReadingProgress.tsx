@@ -187,7 +187,7 @@ export function ReadingProgress({ item }: { item: DatedItem }) {
       {p.total === 0 ? (
         <div
           style={{
-            fontSize: 'calc(11.5px * var(--text-scale, 1))',
+            fontSize: 'var(--type-xs-plus)',
             color: 'var(--app-dim)',
             marginTop: 'calc(7px * var(--density, 1))',
             lineHeight: 'var(--leading-relaxed)',
@@ -210,7 +210,7 @@ export function ReadingProgress({ item }: { item: DatedItem }) {
           style={{
             width: 'auto',
             marginTop: 'calc(11px * var(--density, 1))',
-            fontSize: 'calc(11.5px * var(--text-scale, 1))',
+            fontSize: 'var(--type-xs-plus)',
             color: 'var(--app-dim)',
           }}
         >
@@ -264,7 +264,7 @@ export function ReadingsOnTheGo() {
                 <span
                   style={{
                     display: 'block',
-                    fontSize: 'calc(13.5px * var(--text-scale, 1))',
+                    fontSize: 'var(--type-base-plus)',
                     lineHeight: 1.35,
                     textWrap: 'pretty',
                   }}
@@ -295,7 +295,7 @@ export function ReadingsOnTheGo() {
                 <span
                   style={{
                     display: 'block',
-                    fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                    fontSize: 'var(--type-xs-plus)',
                     color: 'var(--app-dim)',
                     textWrap: 'pretty',
                   }}

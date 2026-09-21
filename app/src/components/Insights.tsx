@@ -118,7 +118,7 @@ export function Insights({
                     flex: 'none',
                     width: 'auto',
                     paddingBlock: '0', paddingInline: 'calc(12px * var(--density, 1))',
-                    fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                    fontSize: 'var(--type-xs-plus)',
                     letterSpacing: '0.08em',
                     textTransform: 'uppercase',
                   }}

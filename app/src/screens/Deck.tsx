@@ -307,7 +307,7 @@ function Build() {
             ))}
           </select>
           {catalog.courses.length > 1 && (
-            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', ...secondLine(), marginTop: 'var(--sp-3)' }}>
+            <div style={{ fontSize: 'var(--type-xs-plus)', ...secondLine(), marginTop: 'var(--sp-3)' }}>
               Switch course from Study.
             </div>
           )}
@@ -334,7 +334,7 @@ function Build() {
                   }}
                 >
                   <span style={{ display: 'block', fontSize: 'var(--type-md)' }}>{option.label}</span>
-                  <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
+                  <span style={{ display: 'block', fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
                     {option.blurb}
                   </span>
                 </button>
@@ -366,7 +366,7 @@ function Build() {
             onFill={(lines) => setMaterial((now) => appendTo(now, lines))}
             label="readings"
           />
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
             Anything not in here comes back as a blank in square brackets. A number invented on a
             slide is believed by a whole room at once.
           </div>
@@ -402,7 +402,7 @@ function Build() {
             value={String(minutes)}
             onChange={(next) => setMinutes(Number(next))}
           />
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'calc(5px * var(--density, 1))' }}>
+          <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'calc(5px * var(--density, 1))' }}>
             About {slidesFor(minutes, kindById(kindId))} content slides — a slide and a half a
             minute, which is the rate people actually present at.
           </div>
@@ -447,7 +447,7 @@ function Build() {
                 {slide.bullets.map((b, n) => (
                   <div
                     key={`${b}-${n}`}
-                    style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'calc(5px * var(--density, 1))', lineHeight: 'var(--leading-normal)' }}
+                    style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', marginTop: 'calc(5px * var(--density, 1))', lineHeight: 'var(--leading-normal)' }}
                   >
                     · {b}
                   </div>

@@ -46,7 +46,7 @@ export function Dictate({
 
   if (!dictationSupported()) {
     return (
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
+      <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
         This browser has no speech recognition, so dictation is off. Chrome and Safari have it.
       </div>
     );
@@ -111,7 +111,7 @@ export function Dictate({
         {on ? 'Stop dictating' : label}
       </button>
       {on && (
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
+        <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
           Listening. Words appear as you say them, after whatever was already written.
         </div>
       )}

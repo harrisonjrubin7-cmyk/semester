@@ -68,7 +68,7 @@ export function Attendance({ courseId }: { courseId: CourseId }) {
               >
                 {b.over > 0 ? `−${Math.round(b.cost * 10) / 10}%` : b.left}
               </span>
-              <span style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)' }}>
+              <span style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)' }}>
                 {b.over > 0 ? 'already lost to absences' : b.left === 1 ? 'absence left' : 'absences left'}
               </span>
             </div>
@@ -83,7 +83,7 @@ export function Attendance({ courseId }: { courseId: CourseId }) {
           >
             {said}
           </div>
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)' }}>
+          <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)' }}>
             {t.marked === 0
               ? 'Nothing marked yet. Mark a class from the day view.'
               : `${t.marked} ${t.marked === 1 ? 'class' : 'classes'} marked · ${t.present} went, ${t.absent} missed${t.excused ? `, ${t.excused} excused` : ''}`}
@@ -91,7 +91,7 @@ export function Attendance({ courseId }: { courseId: CourseId }) {
           {policy.note ? (
             <div
               style={{
-                fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                fontSize: 'var(--type-xs-plus)',
                 color: 'var(--app-dim)',
                 marginTop: 'calc(7px * var(--density, 1))',
                 lineHeight: 'var(--leading-normal)',
@@ -103,7 +103,7 @@ export function Attendance({ courseId }: { courseId: CourseId }) {
           ) : null}
         </div>
       ) : (
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
           {/* Stated rather than assumed. The importer does not read attendance
               rules yet, so "nothing here" means nothing was entered — not
               that the syllabus is silent. */}
@@ -131,7 +131,7 @@ export function Attendance({ courseId }: { courseId: CourseId }) {
       {open && (
         <div style={{ paddingBottom: 'var(--sp-4)' }}>
           <div style={{ display: 'flex', gap: 'var(--sp-4)', flexWrap: 'wrap' }}>
-            <label style={{ flex: '1 1 130px', fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)' }}>
+            <label style={{ flex: '1 1 130px', fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)' }}>
               Absences allowed
               <input
                 className="input"
@@ -139,10 +139,10 @@ export function Attendance({ courseId }: { courseId: CourseId }) {
                 value={policy.allowed || ''}
                 placeholder="0"
                 onChange={(e) => set({ allowed: Number(e.target.value) || 0 })}
-                style={{ width: '100%', height: 38, marginTop: 'var(--sp-2)', fontSize: 'calc(13.5px * var(--text-scale, 1))' }}
+                style={{ width: '100%', height: 38, marginTop: 'var(--sp-2)', fontSize: 'var(--type-base-plus)' }}
               />
             </label>
-            <label style={{ flex: '1 1 130px', fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)' }}>
+            <label style={{ flex: '1 1 130px', fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)' }}>
               Then % off, each
               <input
                 className="input"
@@ -150,10 +150,10 @@ export function Attendance({ courseId }: { courseId: CourseId }) {
                 value={policy.penaltyPer || ''}
                 placeholder="0"
                 onChange={(e) => set({ penaltyPer: Number(e.target.value) || 0 })}
-                style={{ width: '100%', height: 38, marginTop: 'var(--sp-2)', fontSize: 'calc(13.5px * var(--text-scale, 1))' }}
+                style={{ width: '100%', height: 38, marginTop: 'var(--sp-2)', fontSize: 'var(--type-base-plus)' }}
               />
             </label>
-            <label style={{ flex: '1 1 130px', fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)' }}>
+            <label style={{ flex: '1 1 130px', fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)' }}>
               Or worth % of grade
               <input
                 className="input"
@@ -161,7 +161,7 @@ export function Attendance({ courseId }: { courseId: CourseId }) {
                 value={policy.worth || ''}
                 placeholder="0"
                 onChange={(e) => set({ worth: Number(e.target.value) || 0 })}
-                style={{ width: '100%', height: 38, marginTop: 'var(--sp-2)', fontSize: 'calc(13.5px * var(--text-scale, 1))' }}
+                style={{ width: '100%', height: 38, marginTop: 'var(--sp-2)', fontSize: 'var(--type-base-plus)' }}
               />
             </label>
           </div>
@@ -173,7 +173,7 @@ export function Attendance({ courseId }: { courseId: CourseId }) {
             onChange={(e) => set({ note: e.target.value })}
             style={{ width: '100%', marginTop: 'var(--sp-4)', fontSize: 'var(--type-base)' }}
           />
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'calc(7px * var(--density, 1))', lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'calc(7px * var(--density, 1))', lineHeight: 'var(--leading-normal)' }}>
             A course can have both: some free absences with a penalty after, and attendance as a
             weighted category. Leave what does not apply at zero.
           </div>

@@ -133,7 +133,7 @@ export function Rework({
   return (
     <Folding name="Rework">
       <SectionLabel>Rebuild the guide around this</SectionLabel>
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)' }}>
+      <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)' }}>
         Everything you have added already shows up in every study format. This goes further and
         reorganises the guide itself — new material put in the unit it belongs to, units split or
         renamed where they have outgrown themselves, cards written from prose that never became
@@ -141,7 +141,7 @@ export function Rework({
       </div>
 
       {!owned && (
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)' }}>
+        <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)' }}>
           This is one of the built-in sample courses, so its guide cannot be replaced. Your own
           courses can be.
         </div>
@@ -224,7 +224,7 @@ export function Rework({
           </div>
 
           {cost.examples.length > 0 && (
-            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-relaxed)' }}>
+            <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-relaxed)' }}>
               {cost.examples.map((e, i) => (
                 <div key={i} style={{ marginBottom: 'var(--sp-3)' }}>
                   <div style={{ textDecoration: 'line-through', color: 'var(--app-dim)' }}>{e.before}</div>
@@ -266,7 +266,7 @@ export function Rework({
               reaches both rungs where it could reach neither.
             */}
             {plan.guide.units.map((u, i) => (
-              <div key={i} style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', ...secondLine(), paddingBlock: 'calc(3px * var(--density, 1))', paddingInline: '0' }}>
+              <div key={i} style={{ fontSize: 'var(--type-sm-plus)', ...secondLine(), paddingBlock: 'calc(3px * var(--density, 1))', paddingInline: '0' }}>
                 {u.name} <span style={faintLine()}>· {u.cards.length}</span>
               </div>
             ))}

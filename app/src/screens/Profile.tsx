@@ -122,7 +122,7 @@ export function Profile() {
             </div>
             <div
               style={{
-                fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                fontSize: 'var(--type-xs-plus)',
                 color: 'var(--app-dim)',
                 marginTop: 'calc(3px * var(--density, 1))',
                 lineHeight: 'var(--leading-normal)',
@@ -166,7 +166,7 @@ export function Profile() {
             placeholder="What should the app call you?"
             aria-label="Your name"
             onChange={(e) => dispatch({ type: 'setMyName', name: e.target.value })}
-            style={{ width: '100%', fontSize: 'calc(13.5px * var(--text-scale, 1))' }}
+            style={{ width: '100%', fontSize: 'var(--type-base-plus)' }}
           />
         </CustomRow>
       </Group>
@@ -236,7 +236,7 @@ export function Profile() {
               </div>
               <div
                 style={{
-                  fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-xs-plus)',
                   color: 'var(--app-dim)',
                   marginTop: 'calc(3px * var(--density, 1))',
                   lineHeight: 'var(--leading-normal)',
@@ -251,7 +251,7 @@ export function Profile() {
         {kept && (
           <div
             style={{
-              fontSize: 'calc(11.5px * var(--text-scale, 1))',
+              fontSize: 'var(--type-xs-plus)',
               color: 'var(--app-dim)',
               marginTop: 'var(--sp-4)',
               lineHeight: 'var(--leading-normal)',

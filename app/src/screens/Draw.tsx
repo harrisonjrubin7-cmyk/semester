@@ -205,7 +205,7 @@ export function Draw() {
               }}
             >
               <span style={{ display: 'block', fontSize: 'var(--type-md)' }}>{option.label}</span>
-              <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-1)', lineHeight: 1.4 }}>
+              <span style={{ display: 'block', fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-1)', lineHeight: 1.4 }}>
                 {option.blurb}
               </span>
             </button>
@@ -226,7 +226,7 @@ export function Draw() {
         }
         style={{ width: '100%', minHeight: 100, resize: 'vertical', lineHeight: 'var(--leading-relaxed)' }}
       />
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
+      <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
         Give it the numbers if you have them — they go in exactly as typed. Leave them out and the
         drawing is labelled rather than guessed.
       </div>
@@ -245,7 +245,7 @@ export function Draw() {
       {code && (
         <>
           <SectionLabel>The drawing</SectionLabel>
-          <Suspense fallback={<div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)' }}>Drawing…</div>}>
+          <Suspense fallback={<div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)' }}>Drawing…</div>}>
             <Drawing code={code} language={k.language} />
           </Suspense>
 
@@ -260,7 +260,7 @@ export function Draw() {
               width: '100%',
               minHeight: 160,
               resize: 'vertical',
-              fontSize: 'calc(11.5px * var(--text-scale, 1))',
+              fontSize: 'var(--type-xs-plus)',
               lineHeight: 'var(--leading-relaxed)',
               fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
             }}
@@ -307,7 +307,7 @@ export function Draw() {
               Copy
             </button>
           </div>
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
             {k.language === 'svg'
               ? 'An .svg opens in a browser, drops into Word and Google Docs, and stays sharp at any size.'
               : 'A .mmd is Mermaid — it renders in GitHub, Notion and Obsidian as it stands.'}{' '}

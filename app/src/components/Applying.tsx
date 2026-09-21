@@ -45,7 +45,7 @@ function Row({ s, onOpen, late }: { s: Standing; onOpen: () => void; late?: bool
       <span
         style={{
           display: 'block',
-          fontSize: 'calc(13.5px * var(--text-scale, 1))',
+          fontSize: 'var(--type-base-plus)',
           marginTop: 'calc(3px * var(--density, 1))',
           lineHeight: 1.4,
           textWrap: 'pretty',
@@ -119,7 +119,7 @@ export function ApplyingOn({ day }: { day: Date }) {
             <span
               style={{
                 display: 'block',
-                fontSize: 'calc(13.5px * var(--text-scale, 1))',
+                fontSize: 'var(--type-base-plus)',
                 lineHeight: 1.4,
                 textWrap: 'pretty',
               }}
@@ -129,7 +129,7 @@ export function ApplyingOn({ day }: { day: Date }) {
             <span
               style={{
                 display: 'block',
-                fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                fontSize: 'var(--type-xs-plus)',
                 color: 'var(--app-dim)',
                 marginTop: 'var(--sp-1)',
               }}

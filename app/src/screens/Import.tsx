@@ -80,7 +80,7 @@ const ACCEPT = `${DOCUMENTS}text/*,application/pdf,application/zip`;
  */
 const QUIET: CSSProperties = {
   display: 'block',
-  fontSize: 'calc(12.5px * var(--text-scale, 1))',
+  fontSize: 'var(--type-sm-plus)',
   color: 'var(--app-dim)',
   marginTop: 'var(--sp-5)',
   width: 'auto',
@@ -656,7 +656,7 @@ export function Import() {
             onChange={(e) => setPasted(e.target.value)}
             placeholder="The schedule, the grading, the dates — however it is written."
             style={{
-              fontSize: 'calc(13.5px * var(--text-scale, 1))',
+              fontSize: 'var(--type-base-plus)',
               lineHeight: 'var(--leading-normal)',
               height: 'auto',
               resize: 'vertical',
@@ -700,7 +700,7 @@ export function Import() {
             ...rowEleven,
           }}
         >
-          <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base-plus)', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {f.name}
           </span>
           <span style={{ fontSize: 'var(--type-xs)', color: 'var(--app-dim)', flex: 'none' }}>
@@ -726,7 +726,7 @@ export function Import() {
             placeholder="Optional — “the midterm moved to Oct 8”, “skip chapter 4”"
             value={hint}
             onChange={(e) => setHint(e.target.value)}
-            style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))' }}
+            style={{ fontSize: 'var(--type-base-plus)' }}
           />
 
           {/* Beside the build button rather than in Settings: the moment
@@ -1001,8 +1001,8 @@ function Rediff({
         borderBottom: '1px solid var(--app-line-soft)',
       }}
     >
-      <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 1.35 }}>{label}</span>
-      <span style={{ flex: 'none', fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)' }}>{right}</span>
+      <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base-plus)', lineHeight: 1.35 }}>{label}</span>
+      <span style={{ flex: 'none', fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)' }}>{right}</span>
     </div>
   );
 
@@ -1118,7 +1118,7 @@ function Preview({
         <div
           style={{
             fontFamily: 'var(--font-heading)',
-            fontSize: 'calc(11.5px * var(--text-scale, 1))',
+            fontSize: 'var(--type-xs-plus)',
             letterSpacing: '0.1em',
             textTransform: 'uppercase',
             color: 'var(--app-dim)',
@@ -1136,7 +1136,7 @@ function Preview({
           <SectionLabel>Worth knowing</SectionLabel>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(7px * var(--density, 1))' }}>
             {warnings.map((w) => (
-              <div key={w} style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
+              <div key={w} style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
                 · {w}
               </div>
             ))}
@@ -1204,7 +1204,7 @@ function Preview({
               <span
                 style={{
                   display: 'block',
-                  fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-xs-plus)',
                   color: 'var(--app-dim)',
                   marginTop: 'var(--sp-2)',
                   lineHeight: 'var(--leading-normal)',
@@ -1228,8 +1228,8 @@ function Preview({
       <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(16px * var(--text-scale, 1))' }}>{m.guide.units[0]?.name}</div>
       {(m.guide.units[0]?.cards ?? []).slice(0, 2).map((c) => (
         <div key={c.q} style={{ marginTop: 'var(--sp-4)' }}>
-          <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', fontWeight: 600, lineHeight: 1.35 }}>{c.q}</div>
-          <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginTop: 'var(--sp-1)' }}>{c.a}</div>
+          <div style={{ fontSize: 'var(--type-base-plus)', fontWeight: 600, lineHeight: 1.35 }}>{c.q}</div>
+          <div style={{ fontSize: 'var(--type-base-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginTop: 'var(--sp-1)' }}>{c.a}</div>
         </div>
       ))}
 
@@ -1247,7 +1247,7 @@ function Preview({
           ? `Replace ${m.course.code} — ${keeping} ${keeping === 1 ? 'date' : 'dates'}`
           : `Add ${m.course.code} — ${keeping} ${keeping === 1 ? 'date' : 'dates'}`}
       </ActionButton>
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-relaxed)' }}>
+      <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-relaxed)' }}>
         {replacing
           ? 'The changes above are what this replaces. Your ticks and your drill history stay where they are.'
           : 'You can add readings to it later, and everything you add flows into the cards, the quiz and the slides at once.'}

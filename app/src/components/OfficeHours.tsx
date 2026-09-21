@@ -35,7 +35,7 @@ export function OfficeHours({ courseId }: { courseId: string }) {
           type="button"
           className="btn btn-secondary btn-block"
           onClick={() => dispatch({ type: 'go', screen: 'edit' })}
-          style={{ height: 40, marginTop: 'calc(9px * var(--density, 1))', fontSize: 'calc(12.5px * var(--text-scale, 1))' }}
+          style={{ height: 40, marginTop: 'calc(9px * var(--density, 1))', fontSize: 'var(--type-sm-plus)' }}
         >
           Add them
         </button>
@@ -58,7 +58,7 @@ export function OfficeHours({ courseId }: { courseId: string }) {
             ...row,
           }}
         >
-          <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 1.35 }}>
+          <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base-plus)', lineHeight: 1.35 }}>
             {h.title}
             {h.meta ? <span style={{ color: 'var(--app-dim)' }}> · {h.meta}</span> : null}
           </span>

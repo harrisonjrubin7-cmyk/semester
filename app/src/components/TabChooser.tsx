@@ -209,7 +209,7 @@ export function TabChooser() {
             alignItems: 'center',
             paddingBlock: 'calc(11px * var(--density, 1))', paddingInline: '0',
             color: 'var(--app-dim)',
-            fontSize: 'calc(13.5px * var(--text-scale, 1))',
+            fontSize: 'var(--type-base-plus)',
           }}
         >
           <div style={{ flex: 'none', width: 26, display: 'flex' }}>
@@ -223,7 +223,7 @@ export function TabChooser() {
         <div
           role="status"
           style={{
-            fontSize: 'calc(12.5px * var(--text-scale, 1))',
+            fontSize: 'var(--type-sm-plus)',
             marginTop: 'var(--sp-2)',
             color: 'var(--app-warn)',
             lineHeight: 'var(--leading-normal)',
@@ -265,7 +265,7 @@ export function TabChooser() {
                       paddingBlock: 'calc(8px * var(--density, 1))', paddingInline: 'calc(11px * var(--density, 1))',
                       borderRadius: 'var(--r-sm)',
                       border: '1px solid var(--app-line)',
-                      fontSize: 'calc(12.5px * var(--text-scale, 1))',
+                      fontSize: 'var(--type-sm-plus)',
                     }}
                   >
                     <span style={{ color: 'var(--app-dim)', display: 'flex' }}>
@@ -282,7 +282,7 @@ export function TabChooser() {
           ))}
         </>
       ) : (
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-6)', textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-6)', textWrap: 'pretty' }}>
           The bar is full. Take one out to put another in.
         </div>
       )}

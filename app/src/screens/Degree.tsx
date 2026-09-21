@@ -74,7 +74,7 @@ export function Degree() {
         <div
           style={{
             marginTop: 'var(--sp-3)',
-            fontSize: 'calc(12.5px * var(--text-scale, 1))',
+            fontSize: 'var(--type-sm-plus)',
             lineHeight: 1.55,
             textWrap: 'pretty',
           }}
@@ -115,7 +115,7 @@ function WhatIsLeft() {
   if (list.length === 0) {
     return (
       <Folding name="WhatIsLeft">
-        <p style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 1.55, textWrap: 'pretty' }}>
+        <p style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', lineHeight: 1.55, textWrap: 'pretty' }}>
           Nothing recorded yet. Add your requirements under Requirements — one row per line of
           your audit — and the courses you have taken under Taken.
         </p>
@@ -174,7 +174,7 @@ function WhatIsLeft() {
                   </div>
                   <div
                     style={{
-                      fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                      fontSize: 'var(--type-xs-plus)',
                       color: 'var(--app-dim)',
                       marginTop: 'calc(3px * var(--density, 1))',
                       textWrap: 'pretty',
@@ -188,7 +188,7 @@ function WhatIsLeft() {
                   {prog.done.length + prog.doing.length > 0 ? (
                     <div
                       style={{
-                        fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                        fontSize: 'var(--type-xs-plus)',
                         color: 'var(--app-dim)',
                         marginTop: 'var(--sp-2)',
                         textWrap: 'pretty',
@@ -219,7 +219,7 @@ function WhatIsLeft() {
           {/* Either they really are free electives, or a requirement has not
               been entered yet. Both are worth knowing and the app does not
               guess which. */}
-          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+          <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
             {loose.map((c) => c.code).join(', ')}. Either these are free electives, or a
             requirement they satisfy has not been entered yet.
           </div>
@@ -521,7 +521,7 @@ function Transcript({ rows }: { rows?: Taken[] }) {
             paddingBlock: 'calc(9px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))',
             borderRadius: 'var(--r-sm)',
             border: `1px solid ${current ? 'var(--app-accent)' : 'var(--app-line)'}`,
-            fontSize: 'calc(11.5px * var(--text-scale, 1))',
+            fontSize: 'var(--type-xs-plus)',
           }}
         >
           Taking it now
@@ -819,7 +819,7 @@ function TakenRow({ course: c }: { course: Taken }) {
         <span
           style={{
             display: 'block',
-            fontSize: 'calc(11.5px * var(--text-scale, 1))',
+            fontSize: 'var(--type-xs-plus)',
             color: 'var(--app-dim)',
             marginTop: 'var(--sp-1)',
             textWrap: 'pretty',
@@ -983,7 +983,7 @@ function RequirementRow({ requirement: r }: { requirement: Requirement }) {
         <span
           style={{
             display: 'block',
-            fontSize: 'calc(11.5px * var(--text-scale, 1))',
+            fontSize: 'var(--type-xs-plus)',
             color: 'var(--app-dim)',
             marginTop: 'var(--sp-1)',
             textWrap: 'pretty',

@@ -48,7 +48,7 @@ export function SettingsAlerts() {
               <SectionLabel style={{ marginTop: 'calc(26px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(6px * var(--density, 1))' }}>
                 Testing-centre lead time
               </SectionLabel>
-              <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginBottom: 'calc(9px * var(--density, 1))' }}>
+              <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginBottom: 'calc(9px * var(--density, 1))' }}>
                 If you book exams through Student Access, its lead time is stated in business days and
                 counting those backwards over a weekend is easy to get wrong. Set it here and the exam
                 runway does it. Leave it at zero if you do not use one.
@@ -64,7 +64,7 @@ export function SettingsAlerts() {
                   onChange={(e) => dispatch({ type: 'setAccessLead', days: Number(e.target.value) })}
                   style={{ width: 90, flex: 'none' }}
                 />
-                <span style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)' }}>
+                <span style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)' }}>
                   {state.accessLeadDays === 0
                     ? 'not used'
                     : `business days before an exam`}
@@ -84,7 +84,7 @@ export function SettingsAlerts() {
               </SectionLabel>
               <div
                 style={{
-                  fontSize: 'calc(12.5px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-sm-plus)',
                   color: 'var(--app-dim)',
                   lineHeight: 'var(--leading-relaxed)',
                   marginBottom: 'calc(9px * var(--density, 1))',
@@ -108,7 +108,7 @@ export function SettingsAlerts() {
                   }
                   style={{ flex: 1, minWidth: 0 }}
                 />
-                <span style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', flex: 'none' }}>
+                <span style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', flex: 'none' }}>
                   and
                 </span>
                 <input
@@ -132,7 +132,7 @@ export function SettingsAlerts() {
               {quiet && quiet.from === quiet.to ? (
                 <div
                   style={{
-                    fontSize: 'calc(12.5px * var(--text-scale, 1))',
+                    fontSize: 'var(--type-sm-plus)',
                     color: 'var(--app-warn)',
                     marginTop: 'calc(9px * var(--density, 1))',
                     lineHeight: 'var(--leading-normal)',
@@ -153,7 +153,7 @@ export function SettingsAlerts() {
               ) : (
                 <div
                   style={{
-                    fontSize: 'calc(12.5px * var(--text-scale, 1))',
+                    fontSize: 'var(--type-sm-plus)',
                     color: 'var(--app-dim)',
                     marginTop: 'calc(9px * var(--density, 1))',
                     lineHeight: 'var(--leading-normal)',

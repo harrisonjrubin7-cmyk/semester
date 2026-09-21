@@ -294,7 +294,7 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
         {/* Where it came from, when something put it here. A step in a plan
             found three weeks later says what it is for. */}
         {t.note ? (
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
             {t.note}
           </div>
         ) : null}

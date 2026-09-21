@@ -59,7 +59,7 @@ export function StartToday() {
             <span
               style={{
                 display: 'block',
-                fontSize: 'calc(13.5px * var(--text-scale, 1))',
+                fontSize: 'var(--type-base-plus)',
                 lineHeight: 1.35,
                 textWrap: 'pretty',
               }}
@@ -69,7 +69,7 @@ export function StartToday() {
             <span
               style={{
                 display: 'block',
-                fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                fontSize: 'var(--type-xs-plus)',
                 ...secondLine(),
                 marginTop: 'calc(3px * var(--density, 1))',
                 textWrap: 'pretty',
@@ -83,7 +83,7 @@ export function StartToday() {
             <span
               style={{
                 display: 'block',
-                fontSize: 'calc(12.5px * var(--text-scale, 1))',
+                fontSize: 'var(--type-sm-plus)',
                 marginTop: 'var(--sp-3)',
                 lineHeight: 'var(--leading-normal)',
                 textWrap: 'pretty',
@@ -205,7 +205,7 @@ export function StartList() {
               <span
                 style={{
                   display: 'block',
-                  fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-xs-plus)',
                   ...secondLine(!s.startOn),
                   marginTop: 'calc(3px * var(--density, 1))',
                   textWrap: 'pretty',
@@ -222,7 +222,7 @@ export function StartList() {
             {s.minutes ? (
               <span
                 style={{
-                  fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-xs-plus)',
                   ...secondLine(!s.startOn),
                   whiteSpace: 'nowrap',
                   fontVariantNumeric: 'tabular-nums',

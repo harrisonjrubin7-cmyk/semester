@@ -102,7 +102,7 @@ export function Applying() {
         ) : (
           <p
             style={{
-              fontSize: 'calc(12.5px * var(--text-scale, 1))',
+              fontSize: 'var(--type-sm-plus)',
               color: 'var(--app-dim)',
               lineHeight: 1.55,
               textWrap: 'pretty',
@@ -123,7 +123,7 @@ export function Applying() {
             ))}
           </div>
         ) : (
-          <p style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)' }}>
+          <p style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)' }}>
             Nothing closed out yet.
           </p>
         )
@@ -162,7 +162,7 @@ function Row({ a }: { a: Application }) {
         <span
           style={{
             display: 'block',
-            fontSize: 'calc(11.5px * var(--text-scale, 1))',
+            fontSize: 'var(--type-xs-plus)',
             color: 'var(--app-dim)',
             marginTop: 'calc(3px * var(--density, 1))',
             textWrap: 'pretty',
@@ -180,7 +180,7 @@ function Row({ a }: { a: Application }) {
             borderRadius: 'var(--r-sm)',
             background: 'var(--app-warn-wash)',
             border: '1px solid var(--app-warn-line)',
-            fontSize: 'calc(12.5px * var(--text-scale, 1))',
+            fontSize: 'var(--type-sm-plus)',
             lineHeight: 'var(--leading-normal)',
             textWrap: 'pretty',
           }}
@@ -206,7 +206,7 @@ function Row({ a }: { a: Application }) {
                   paddingBlock: 'calc(7px * var(--density, 1))', paddingInline: 'calc(11px * var(--density, 1))',
                   borderRadius: 'var(--r-sm)',
                   border: `1px solid ${a.stage === s.id ? 'var(--app-accent)' : 'var(--app-line)'}`,
-                  fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-xs-plus)',
                 }}
               >
                 {s.label}
@@ -241,7 +241,7 @@ function Row({ a }: { a: Application }) {
 
           <div
             style={{
-              fontSize: 'calc(11.5px * var(--text-scale, 1))',
+              fontSize: 'var(--type-xs-plus)',
               color: 'var(--app-dim)',
               marginTop: 'calc(11px * var(--density, 1))',
               lineHeight: 'var(--leading-relaxed)',
@@ -264,7 +264,7 @@ function Row({ a }: { a: Application }) {
                   paddingBlock: 'calc(7px * var(--density, 1))', paddingInline: 'calc(12px * var(--density, 1))',
                   borderRadius: 'var(--r-sm)',
                   border: '1px solid var(--app-line)',
-                  fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-xs-plus)',
                   textDecoration: 'none',
                 }}
               >
@@ -278,7 +278,7 @@ function Row({ a }: { a: Application }) {
               style={{
                 width: 'auto',
                 paddingBlock: 'calc(7px * var(--density, 1))', paddingInline: 'calc(12px * var(--density, 1))',
-                fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                fontSize: 'var(--type-xs-plus)',
                 color: 'var(--app-dim)',
               }}
             >
@@ -348,7 +348,7 @@ function AddOne({ onAdded }: { onAdded: () => void }) {
               paddingBlock: 'calc(7px * var(--density, 1))', paddingInline: 'calc(12px * var(--density, 1))',
               borderRadius: 'var(--r-sm)',
               border: `1px solid ${kind === k.id ? 'var(--app-accent)' : 'var(--app-line)'}`,
-              fontSize: 'calc(11.5px * var(--text-scale, 1))',
+              fontSize: 'var(--type-xs-plus)',
             }}
           >
             {k.label}
@@ -377,7 +377,7 @@ function AddOne({ onAdded }: { onAdded: () => void }) {
             paddingBlock: 'calc(8px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))',
             borderRadius: 'var(--r-sm)',
             border: `1px solid ${rolling ? 'var(--app-accent)' : 'var(--app-line)'}`,
-            fontSize: 'calc(11.5px * var(--text-scale, 1))',
+            fontSize: 'var(--type-xs-plus)',
           }}
         >
           Rolling
@@ -388,7 +388,7 @@ function AddOne({ onAdded }: { onAdded: () => void }) {
           "no hurry". */}
       <div
         style={{
-          fontSize: 'calc(11.5px * var(--text-scale, 1))',
+          fontSize: 'var(--type-xs-plus)',
           color: 'var(--app-dim)',
           marginTop: 'calc(7px * var(--density, 1))',
           lineHeight: 'var(--leading-relaxed)',
@@ -414,7 +414,7 @@ function AddOne({ onAdded }: { onAdded: () => void }) {
               paddingBlock: 'calc(7px * var(--density, 1))', paddingInline: 'calc(12px * var(--density, 1))',
               borderRadius: 'var(--r-sm)',
               border: `1px solid ${stage === s.id ? 'var(--app-accent)' : 'var(--app-line)'}`,
-              fontSize: 'calc(11.5px * var(--text-scale, 1))',
+              fontSize: 'var(--type-xs-plus)',
             }}
           >
             {s.label}

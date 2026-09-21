@@ -977,7 +977,7 @@ function WeekView() {
           />
           )}
           {total > 0 && (
-            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'calc(14px * var(--density, 1))', lineHeight: 'var(--leading-relaxed)' }}>
+            <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'calc(14px * var(--density, 1))', lineHeight: 'var(--leading-relaxed)' }}>
               Tap a date to open that day in full, hold a block to move it, and double-tap an empty
               hour to put something there. Deadlines and events with no hour on them are listed
               under the grid rather than drawn on it.

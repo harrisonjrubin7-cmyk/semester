@@ -66,7 +66,7 @@ const CAP: CSSProperties = {
 };
 
 const HINT: CSSProperties = {
-  fontSize: 'calc(11.5px * var(--text-scale, 1))',
+  fontSize: 'var(--type-xs-plus)',
   ...secondLine(),
   marginTop: 'var(--sp-3)',
   lineHeight: 'var(--leading-normal)',
@@ -125,7 +125,7 @@ function HuePicker() {
               style={{
                 flex: 1,
                 minWidth: 0,
-                fontSize: 'calc(12.5px * var(--text-scale, 1))',
+                fontSize: 'var(--type-sm-plus)',
                 fontFamily: 'var(--font-heading)',
                 color: derived.shade,
                 letterSpacing: '0.1em',
@@ -137,7 +137,7 @@ function HuePicker() {
             <span
               style={{
                 flex: 'none',
-                fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                fontSize: 'var(--type-xs-plus)',
                 color: verdict.ok ? 'var(--app-dim)' : 'var(--app-warn, #d9534f)',
                 textAlign: 'right',
               }}
@@ -309,7 +309,7 @@ export function SettingsLook() {
                 }}
               >
                 <span style={{ flex: 1, minWidth: 0 }}>
-                  <span style={{ display: 'block', fontSize: 'calc(13.5px * var(--text-scale, 1))' }}>
+                  <span style={{ display: 'block', fontSize: 'var(--type-base-plus)' }}>
                     {/* The one copy of this name. The workspace's Customize
                         panel reports it too, through `groundName`, and a
                         second literal here is how the two would come to
@@ -357,7 +357,7 @@ export function SettingsLook() {
                       </span>
                       <span style={{ flex: 1, minWidth: 0 }}>
                         <span style={{ display: 'block', fontSize: 'var(--type-md)' }}>{g.label}</span>
-                        <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
+                        <span style={{ display: 'block', fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
                           {g.blurb}
                         </span>
                       </span>

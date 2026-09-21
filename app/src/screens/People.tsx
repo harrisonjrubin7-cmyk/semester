@@ -118,7 +118,7 @@ function PeopleTab({ rows }: { rows?: Person[] }) {
         <p
           style={{
             marginTop: 'calc(20px * var(--density, 1))',
-            fontSize: 'calc(12.5px * var(--text-scale, 1))',
+            fontSize: 'var(--type-sm-plus)',
             color: 'var(--app-dim)',
             lineHeight: 1.6,
             textWrap: 'pretty',
@@ -152,7 +152,7 @@ function PeopleTab({ rows }: { rows?: Person[] }) {
                 <span
                   style={{
                     display: 'block',
-                    fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                    fontSize: 'var(--type-xs-plus)',
                     color: 'var(--app-dim)',
                     marginTop: 'calc(3px * var(--density, 1))',
                     textWrap: 'pretty',
@@ -259,7 +259,7 @@ function PeopleTab({ rows }: { rows?: Person[] }) {
                     style={{
                       width: 'auto',
                       marginTop: 'var(--sp-6)',
-                      fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                      fontSize: 'var(--type-xs-plus)',
                       color: 'var(--app-dim)',
                     }}
                   >
@@ -399,7 +399,7 @@ function LettersTab() {
 
   if (state.people.length === 0) {
     return (
-      <p style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 1.6 }}>
+      <p style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', lineHeight: 1.6 }}>
         Add somebody under People first — a letter belongs to a person.
       </p>
     );
@@ -421,7 +421,7 @@ function LettersTab() {
               paddingBlock: 'calc(8px * var(--density, 1))', paddingInline: 'calc(12px * var(--density, 1))',
               borderRadius: 'var(--r-sm)',
               border: `1px solid ${personId === p.id ? 'var(--app-accent)' : 'var(--app-line)'}`,
-              fontSize: 'calc(11.5px * var(--text-scale, 1))',
+              fontSize: 'var(--type-xs-plus)',
             }}
           >
             {p.name}
@@ -482,7 +482,7 @@ function LettersTab() {
                   </div>
                   <div
                     style={{
-                      fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                      fontSize: 'var(--type-xs-plus)',
                       color: 'var(--app-dim)',
                       marginTop: 'calc(3px * var(--density, 1))',
                     }}
@@ -497,7 +497,7 @@ function LettersTab() {
                   </div>
                   <div
                     style={{
-                      fontSize: 'calc(12.5px * var(--text-scale, 1))',
+                      fontSize: 'var(--type-sm-plus)',
                       marginTop: 'calc(7px * var(--density, 1))',
                       lineHeight: 'var(--leading-relaxed)',
                       textWrap: 'pretty',
@@ -571,7 +571,7 @@ function LettersTab() {
 
       <p
         style={{
-          fontSize: 'calc(11.5px * var(--text-scale, 1))',
+          fontSize: 'var(--type-xs-plus)',
           color: 'var(--app-dim)',
           marginTop: 'calc(22px * var(--density, 1))',
           lineHeight: 1.55,

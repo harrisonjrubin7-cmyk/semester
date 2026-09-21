@@ -100,7 +100,7 @@ export function Grades() {
                   first is worse than one line fewer.
                 */}
                 {s.counted > 0 || s.remaining > 0 ? (
-                  <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)' }}>
+                  <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)' }}>
                     {s.remaining > 0
                       ? `${Math.round(s.remaining)}% still to play for`
                       : 'Everything is in'}
@@ -125,7 +125,7 @@ export function Grades() {
                   and the app has none of the three. */}
               <div
                 style={{
-                  fontSize: 'calc(12.5px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-sm-plus)',
                   color: 'var(--app-dim)',
                   marginTop: 'var(--sp-5)',
                   lineHeight: 'var(--leading-relaxed)',
@@ -142,7 +142,7 @@ export function Grades() {
                 )}
               </div>
               {needCaveat(s) ? (
-                <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
+                <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
                   {/* Names the number the weights actually add to. "Do not add
                       to 100" leaves the student to work out by how much, from
                       a table they cannot easily sum in their head. */}
@@ -243,7 +243,7 @@ export function Grades() {
                       </span>
                       <span
                         style={{
-                          fontSize: 'calc(13.5px * var(--text-scale, 1))',
+                          fontSize: 'var(--type-base-plus)',
                           textAlign: 'right',
                           maxWidth: '62%',
                           lineHeight: 1.4,
@@ -295,7 +295,7 @@ export function Grades() {
                   >
                     On practice papers
                   </div>
-                  <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+                  <div style={{ fontSize: 'var(--type-base-plus)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
                     {trendLine(t, sat)}
                   </div>
                   {target !== null && t.papers > 0 ? (
@@ -326,7 +326,7 @@ export function Grades() {
         );
       })}
 
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'calc(22px * var(--density, 1))', lineHeight: 'var(--leading-relaxed)' }}>
+      <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'calc(22px * var(--density, 1))', lineHeight: 'var(--leading-relaxed)' }}>
         This is your own arithmetic, not a gradebook — nothing here is read from Brightspace, and
         nothing is sent anywhere. A syllabus that drops your lowest score, curves, or rounds will
         not match exactly.

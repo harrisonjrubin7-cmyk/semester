@@ -42,7 +42,7 @@ export function PiecesRow({ gradeKey, what }: { gradeKey: string; what: string }
         style={{
           width: 'auto',
           paddingTop: 'calc(2px * var(--density, 1))', paddingInline: '0', paddingBottom: 'calc(8px * var(--density, 1))',
-          fontSize: 'calc(11.5px * var(--text-scale, 1))',
+          fontSize: 'var(--type-xs-plus)',
           color: 'var(--app-dim)',
           textAlign: 'left',
         }}
@@ -71,7 +71,7 @@ export function PiecesRow({ gradeKey, what }: { gradeKey: string; what: string }
       <div style={{ display: 'flex', gap: 'calc(9px * var(--density, 1))', alignItems: 'center', marginTop: 'calc(7px * var(--density, 1))', flexWrap: 'wrap' }}>
         <label
           style={{
-            fontSize: 'calc(11.5px * var(--text-scale, 1))',
+            fontSize: 'var(--type-xs-plus)',
             color: 'var(--app-dim)',
             display: 'flex',
             alignItems: 'center',
@@ -98,7 +98,7 @@ export function PiecesRow({ gradeKey, what }: { gradeKey: string; what: string }
             dispatch({ type: 'setDrop', key: gradeKey, drop: 0 });
             setOpen(false);
           }}
-          style={{ width: 'auto', fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)' }}
+          style={{ width: 'auto', fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)' }}
         >
           Use one score instead
         </button>

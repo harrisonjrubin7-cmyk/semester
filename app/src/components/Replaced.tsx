@@ -60,7 +60,7 @@ export function Replaced() {
         style={{
           flex: 1,
           minWidth: 0,
-          fontSize: 'calc(12.5px * var(--text-scale, 1))',
+          fontSize: 'var(--type-sm-plus)',
           lineHeight: 'var(--leading-relaxed)',
           textWrap: 'pretty',
         }}

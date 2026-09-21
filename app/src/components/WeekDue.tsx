@@ -88,7 +88,7 @@ export function WeekDue({
           </span>
           <div style={{ flex: 1, minWidth: 0 }}>
             {d.items.length + d.tasks.length === 0 ? (
-              <span style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', ...faintLine() }}>—</span>
+              <span style={{ fontSize: 'var(--type-sm-plus)', ...faintLine() }}>—</span>
             ) : (
               d.items.map((i) => (
                 <div
@@ -107,7 +107,7 @@ export function WeekDue({
                       syllabus's own words. "Before class" is what it says and
                       is more use than the kind's label, which for anything
                       uncategorised reads "Other". */}
-                  <span style={{ color: 'var(--app-dim)', fontSize: 'calc(11.5px * var(--text-scale, 1))' }}>
+                  <span style={{ color: 'var(--app-dim)', fontSize: 'var(--type-xs-plus)' }}>
                     {' '}
                     {hasTime(i.dueTime) ? clock(i.dueAt) : i.dueTime.trim()}
                   </span>

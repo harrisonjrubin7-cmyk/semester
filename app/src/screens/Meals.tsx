@@ -111,10 +111,10 @@ function MealsDetails() {
           {paceLine(latest, p)}
         </div>
         {cashLine(latest) ? (
-          <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-4)' }}>{cashLine(latest)}</div>
+          <div style={{ fontSize: 'var(--type-base-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)' }}>{cashLine(latest)}</div>
         ) : null}
         {latest ? (
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)' }}>{staleLine(latest, now)}</div>
+          <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)' }}>{staleLine(latest, now)}</div>
         ) : null}
       </Blueprint>
 
@@ -214,7 +214,7 @@ function MealsDetails() {
       </div>
 
       {bad ? (
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-warn)', marginBottom: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
+        <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-warn)', marginBottom: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
           {bad}
         </div>
       ) : null}
@@ -228,7 +228,7 @@ function MealsDetails() {
           type="button"
           className="btn btn-ghost btn-block"
           onClick={() => dispatch({ type: 'go', screen: 'registrar' })}
-          style={{ height: 38, marginTop: 'var(--sp-4)', fontSize: 'calc(12.5px * var(--text-scale, 1))' }}
+          style={{ height: 38, marginTop: 'var(--sp-4)', fontSize: 'var(--type-sm-plus)' }}
         >
           Set the term's last day, and the app can say what a balance is a day
         </button>
