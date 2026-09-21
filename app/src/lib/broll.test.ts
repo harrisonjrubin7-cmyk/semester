@@ -265,18 +265,34 @@ describe('the shot lists in the repository', () => {
     }
   });
 
-  it('is still blank, and says so rather than holding fourteen guesses', () => {
+  it('has every written subject passing the rules it was written under', () => {
     /*
-     * The state of the work, asserted. Writing what a documentary shows is an
-     * editorial decision and nothing here has made it; a test that let a
-     * subject appear would be a test that let one appear without anybody
-     * choosing it. When somebody does fill these in, this is the line that
-     * tells them to update it.
+     * ECON is written; the other three are not. That asymmetry is the point
+     * of this test rather than an accident of it — the first course through
+     * is where a subject that does not survive `check` would show up, and
+     * "all four are blank" would have gone on passing whatever anybody wrote.
+     *
+     * A list is either wholly blank or wholly written. A half-filled one is
+     * somebody interrupted, and it is worth failing on rather than shipping:
+     * `broll-shots.mjs` refuses to price it anyway, so a half-filled list in
+     * the repository is a list nobody can use and nothing says why.
      */
     for (const file of lists) {
       const list = JSON.parse(readFileSync(join(SHOTS, file), 'utf8'));
-      expect(checkAll(list.shots).length, file).toBe(list.shots.length);
+      const problems = checkAll(list.shots).length;
+      expect(problems === 0 || problems === list.shots.length, `${file} is half-filled`).toBe(true);
     }
+  });
+
+  it('still has courses nobody has written yet, and says which', () => {
+    // The state of the work, asserted. When the last one is filled in, this
+    // is the line that tells whoever did it to retire this test rather than
+    // weaken it.
+    const blank = lists.filter((file) => {
+      const list = JSON.parse(readFileSync(join(SHOTS, file), 'utf8'));
+      return checkAll(list.shots).length === list.shots.length;
+    });
+    expect(blank.sort()).toEqual(['bus.json', 'core.json', 'psci.json']);
   });
 });
 

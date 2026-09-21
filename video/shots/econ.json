@@ -8,15 +8,15 @@
       "seconds": 6,
       "kind": "establishing",
       "chapter": "Cold open",
-      "subject": ""
+      "subject": "rows of empty exam desks spaced apart in a hall, before anyone arrives"
     },
     {
       "slot": "econ/chapter-1",
       "at": 35,
       "seconds": 6,
-      "kind": "establishing",
+      "kind": "detail",
       "chapter": "How to actually pass",
-      "subject": ""
+      "subject": "a desk lamp on at two in the morning, a cold cup of coffee beside it"
     },
     {
       "slot": "econ/chapter-2",
@@ -24,7 +24,7 @@
       "seconds": 6,
       "kind": "establishing",
       "chapter": "What economics is",
-      "subject": ""
+      "subject": "a market at closing time, one crate of fruit left on a stall"
     },
     {
       "slot": "econ/chapter-3",
@@ -32,7 +32,7 @@
       "seconds": 6,
       "kind": "establishing",
       "chapter": "Optimisation and opportunity cost",
-      "subject": ""
+      "subject": "a fork in a footpath through woodland, one branch worn smooth and the other not"
     },
     {
       "slot": "econ/chapter-4",
@@ -40,15 +40,15 @@
       "seconds": 6,
       "kind": "establishing",
       "chapter": "Supply, demand, equilibrium",
-      "subject": ""
+      "subject": "a harbour at slack tide, the boats sitting level and the water still"
     },
     {
       "slot": "econ/chapter-5",
       "at": 458,
       "seconds": 6,
-      "kind": "establishing",
+      "kind": "detail",
       "chapter": "Surplus and elasticity",
-      "subject": ""
+      "subject": "a rubber band stretched taut between two hands until it trembles"
     },
     {
       "slot": "econ/chapter-6",
@@ -56,7 +56,7 @@
       "seconds": 6,
       "kind": "establishing",
       "chapter": "Producers and cost curves",
-      "subject": ""
+      "subject": "a bakery before dawn, trays of dough going into an oven in sequence"
     },
     {
       "slot": "econ/chapter-7",
@@ -64,7 +64,7 @@
       "seconds": 6,
       "kind": "establishing",
       "chapter": "Efficiency and externalities",
-      "subject": ""
+      "subject": "smoke from a chimney drifting across a neighbouring garden where washing hangs"
     },
     {
       "slot": "econ/chapter-8",
@@ -72,7 +72,7 @@
       "seconds": 6,
       "kind": "establishing",
       "chapter": "Monopoly and game theory",
-      "subject": ""
+      "subject": "a single toll booth on an empty bridge at night"
     },
     {
       "slot": "econ/chapter-9",
@@ -80,31 +80,31 @@
       "seconds": 6,
       "kind": "establishing",
       "chapter": "Competition and information",
-      "subject": ""
+      "subject": "a row of near-identical food trucks on a street, one queue longer than the rest"
     },
     {
       "slot": "econ/chapter-10",
       "at": 1265,
       "seconds": 6,
-      "kind": "establishing",
+      "kind": "detail",
       "chapter": "The formula sheet",
-      "subject": ""
+      "subject": "a calculator face down on an empty desk, beside a sharpened pencil"
     },
     {
       "slot": "econ/chapter-11",
       "at": 1332,
       "seconds": 6,
-      "kind": "establishing",
+      "kind": "detail",
       "chapter": "Self-test",
-      "subject": ""
+      "subject": "an empty chair at a table, morning light moving slowly across it"
     },
     {
       "slot": "econ/chapter-12",
       "at": 1613,
       "seconds": 6,
-      "kind": "establishing",
+      "kind": "detail",
       "chapter": "The traps",
-      "subject": ""
+      "subject": "a wet leaf on a stone step, the step worn shallow in the middle"
     },
     {
       "slot": "econ/chapter-13",
@@ -112,7 +112,7 @@
       "seconds": 6,
       "kind": "establishing",
       "chapter": "Close",
-      "subject": ""
+      "subject": "a campus path at dusk, the lights coming on one at a time"
     }
   ]
 }
