@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { APPROACHES, brief, READ_SYSTEM, SYSTEM, approach, type Ask } from './solve';
+import {
+  APPROACHES,
+  brief,
+  READ_SYSTEM,
+  READ_WORK_SYSTEM,
+  SYSTEM,
+  approach,
+  type Ask,
+} from './solve';
 
 const ask = (over: Partial<Ask> = {}): Ask => ({
   approach: approach('method'),
@@ -98,5 +106,49 @@ describe('READ_SYSTEM', () => {
     // A guessed exponent silently turns the problem into a different one.
     expect(READ_SYSTEM).toContain('[?]');
     expect(READ_SYSTEM).toContain('rather than guessing');
+  });
+});
+
+describe('READ_WORK_SYSTEM', () => {
+  /*
+   * The one that matters. The request after this one asks for the FIRST step
+   * that is wrong, so a transcriber that tidies the arithmetic on the way in
+   * hands it working that no longer contains the mistake — and it answers
+   * "correct throughout" about an attempt that was not, which is worse than
+   * refusing, because the student has no way to see where it went.
+   */
+  it('forbids correcting the working it is copying', () => {
+    expect(READ_WORK_SYSTEM).toContain('Do not correct it');
+    expect(READ_WORK_SYSTEM).toMatch(/transcribe the wrong\s+step/);
+  });
+
+  it('names the specific repairs a helpful transcriber would make', () => {
+    // "Do not correct it" alone reads as a preamble. These are the four that
+    // a model actually does without being told not to.
+    for (const said of ['fix arithmetic', 'fix a sign', 'fix a formula', 'do not reorder steps']) {
+      expect(READ_WORK_SYSTEM.toLowerCase()).toContain(said.toLowerCase());
+    }
+  });
+
+  it('keeps what was crossed out, because that is where it often went wrong', () => {
+    expect(READ_WORK_SYSTEM).toContain('[crossed out:');
+  });
+
+  it('marks what it cannot read rather than guessing, in both directions', () => {
+    // Here a guess does one of two things, and the second is the one the
+    // problem-reading prompt does not have to worry about.
+    expect(READ_WORK_SYSTEM).toContain('[?]');
+    expect(READ_WORK_SYSTEM).toContain('invents a mistake they did not make');
+  });
+
+  it('does not diagnose, which is the next request’s job', () => {
+    expect(READ_WORK_SYSTEM).toContain('Do not comment, diagnose, grade');
+  });
+
+  it('is not the prompt for reading a problem', () => {
+    // They are opposite jobs at the one place it matters, and a single shared
+    // prompt is how the correcting instinct gets back in.
+    expect(READ_WORK_SYSTEM).not.toBe(READ_SYSTEM);
+    expect(READ_SYSTEM).not.toContain('Do not correct it');
   });
 });

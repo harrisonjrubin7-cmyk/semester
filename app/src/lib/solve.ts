@@ -158,6 +158,49 @@ export function brief(a: Ask): string {
   return lines.join('\n');
 }
 
+/**
+ * Reading a photograph of the student's own attempt.
+ *
+ * A separate prompt from {@link READ_SYSTEM}, and the separation is the whole
+ * point rather than tidiness. Transcribing a problem statement and
+ * transcribing somebody's working are opposite jobs at the one place it
+ * matters: a model reading a page of algebra is drawn to write down the
+ * algebra as it *should* go, and for a problem statement that instinct is
+ * harmless. For the student's attempt it is fatal — the next request asks for
+ * the FIRST step that is wrong, so a transcription that quietly fixes a
+ * dropped minus sign gets back "your working is correct throughout" about
+ * working that was not, which is a wrong answer delivered with confidence and
+ * no way for the student to see where it came from.
+ *
+ * So this says, four ways, not to help. Copy it wrong if it is wrong.
+ *
+ * Crossings-out are kept for the same reason. An abandoned line is evidence:
+ * it is often where the student first went wrong, and it is the thing a
+ * transcriber would most naturally leave out as not part of the answer.
+ */
+export const READ_WORK_SYSTEM = [
+  "You are reading a photograph of a university student's own handwritten attempt at a maths or",
+  'statistics problem. Your only job is to transcribe it.',
+  '',
+  'Transcribe it EXACTLY as written, as plain text with Unicode maths, keeping their line breaks',
+  'and the order they wrote things in.',
+  '',
+  'Do not correct it. This is the part that matters: if a step is wrong, transcribe the wrong',
+  'step. Do not fix arithmetic, do not fix a sign, do not fix a formula, do not finish a line',
+  'they left unfinished, do not reorder steps into the order they should have gone, and do not',
+  'add a step they did not write. Something else will look for the mistake, and it can only find',
+  'a mistake that is still there.',
+  '',
+  'Keep crossings-out and abandoned lines, marked as [crossed out: …]. A line they gave up on is',
+  'often where it first went wrong.',
+  '',
+  'Where a character is cut off, blurred or genuinely ambiguous, write [?] rather than guessing.',
+  'Guessing here invents a mistake they did not make, or hides one they did.',
+  '',
+  'Do not comment, diagnose, grade, or say whether it is right. Reply with the transcription and',
+  'nothing else.',
+].join('\n');
+
 /** Reading a photograph of a problem, rather than making cards from it. */
 export const READ_SYSTEM = [
   'You are reading a photograph of a maths or statistics problem — a textbook page, a problem',

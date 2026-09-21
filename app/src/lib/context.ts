@@ -45,6 +45,22 @@ import type { Mode } from './mode';
  * for*. Every lookup is one of the `onDemand` lines below, which is why they
  * are worded by category rather than by trigger. Nothing in that file reaches
  * a `never`, and its own test seeds all four and proves it.
+ *
+ * ## The third door, which is not this file's to close
+ *
+ * `lib/claude.ts:ask` appends the student's standing preferences — the list in
+ * `lib/aboutme.ts` — to the system prompt of every request, including the ones
+ * this file never sees, because Work the problem and Draft it are not
+ * questions asked of the assistant and do not come through here.
+ *
+ * It is written into `always` below anyway, and the sentence above about this
+ * file being the only one that decides is now wrong on its face rather than
+ * quietly: an allowlist that stops describing what leaves is worse than none,
+ * because it is trusted. What keeps that door narrow is different in kind from
+ * what keeps this one narrow — not an allowlist of fields, but the fact that
+ * every line was typed by the student into a box labelled with what it is for,
+ * capped at twelve of them, and deletable one at a time on the screen that
+ * shows them. Nothing infers a line and nothing the model says becomes one.
  */
 
 /**
@@ -79,6 +95,12 @@ export const PICK = {
      * sends any of them.
      */
     'What the current screen says it is showing — its summary, its visible rows after filters, and what it is focused on.',
+    /*
+     * Added by `lib/claude.ts`, not by this file, and listed here because this
+     * is the list of what leaves rather than the list of what this file
+     * assembles. See "The third door" above.
+     */
+    'The standing preferences the student typed about themselves, capped at twelve short lines. Never inferred, never written by the model.',
   ],
   onDemand: [
     'Deadlines in a window the question names — title, date, weight. Never the quote.',

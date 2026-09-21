@@ -37,6 +37,7 @@ import {
 } from './controls';
 
 import { sessionToken } from './token';
+import { held, preamble } from './aboutme';
 import { NOTHING_ARRIVED, askOpenAI } from './openai';
 import {
   markProxyDown,
@@ -751,6 +752,26 @@ export async function ask(options: AskOptions): Promise<string> {
     );
   }
 
+  /*
+   * The student's own standing preferences, added here and only here.
+   *
+   * This is the single door out of the app — every assistant feature calls
+   * `ask`, whichever provider answers — and that is the argument for putting
+   * it at the door rather than at the twenty-five call sites. A memory that
+   * reaches some of the tools is worse than one that reaches none: the
+   * student cannot tell which ones heard them, so the ones that did not read
+   * as the app forgetting.
+   *
+   * Appended rather than prepended. With `cache` on, the breakpoint sits on
+   * the whole system block, so this invalidates a cached prefix either way —
+   * but a caller's own instructions keep their position in the prompt, which
+   * is where every one of them was written to be.
+   *
+   * Empty adds nothing, not even a blank line. See `preamble`.
+   */
+  const mine = preamble(held());
+  const system = mine ? `${options.system}\n\n${mine}` : options.system;
+
   // The one branch in the whole app that knows there are two providers.
   // Everything above this — the guides, the email drafting, the diagrams, the
   // problem solver — calls ask() and never learns which company answered.
@@ -758,7 +779,7 @@ export async function ask(options: AskOptions): Promise<string> {
     return askOpenAI({
       apiKey: s.openaiKey,
       model: s.openaiModel,
-      system: options.system,
+      system,
       messages: asSent(options.messages),
       maxTokens: options.maxTokens,
       images: options.images,
@@ -802,8 +823,8 @@ export async function ask(options: AskOptions): Promise<string> {
         // A cached system prompt is sent as a block so the breakpoint can sit
         // on it. Plain string otherwise, which is the shorter wire form.
         system: options.cache
-          ? [{ type: 'text', text: options.system, cache_control: { type: 'ephemeral' } }]
-          : options.system,
+          ? [{ type: 'text', text: system, cache_control: { type: 'ephemeral' } }]
+          : system,
         stream: true,
         ...(options.think ? { thinking: { type: 'adaptive' } } : {}),
         ...(options.tools?.length ? { tools: strictly(options.tools, s.model) } : {}),
