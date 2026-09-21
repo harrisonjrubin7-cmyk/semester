@@ -184,6 +184,11 @@ end $$;
 -- names it merely revokes EXECUTE. Somebody pasted the documented recipe into
 -- the SQL editor, which is the habit this whole repair is a record of.
 --
+-- Measured rather than read, in the end: a Supabase preview branch built from
+-- migrations that do not create it has six event triggers, all the platform's
+-- own, and no `ensure_rls`. One built from migrations that do create it has
+-- seven. The platform does not supply this.
+--
 -- It matters because this file is not deployed anywhere (see `README.md`). An
 -- object that lives only here exists in no rebuilt database and on no preview
 -- branch, so a recovery from `migrations/` had no RLS-on-by-default and

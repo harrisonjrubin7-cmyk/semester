@@ -345,8 +345,26 @@ would have had no RLS-on-by-default and looked entirely healthy. It is created
 by `20260901000100_schema.sql` now, and the same probe finds it present with
 EXECUTE closed to `anon`, `authenticated` and PUBLIC.
 
-The argument does not rest on winning the provenance question, and that is the
-reason to prefer it: if the platform does install the trigger, `create or
+**Settled by measurement, not by reading.** Two Supabase-built preview
+branches on 21 September, each a fresh database the platform created and then
+ran the migrations against:
+
+| | `#588`, whose migrations do not create it | this branch, whose do |
+| --- | --- | --- |
+| event triggers | **6** — all Supabase's own | **7** |
+| `ensure_rls` | **absent** | present |
+| `rls_auto_enable` | **absent** | present, `prosrc` md5 equal to production's |
+
+Both branches applied all their migrations (`public.forms` exists in each), so
+the difference is the migration and nothing else. The platform installs six
+event triggers — `issue_graphql_placeholder`, `issue_pg_cron_access`,
+`issue_pg_graphql_access`, `issue_pg_net_access`, `pgrst_ddl_watch`,
+`pgrst_drop_watch` — and `ensure_rls` is not among them. **Every preview branch
+built from `main` today has no RLS-on-by-default**, which is also what a
+recovery from this directory would have had.
+
+The argument never rested on winning the provenance question, and that is still
+the reason to prefer it: if the platform does install the trigger, `create or
 replace` and a guarded `create event trigger` match what is there and change
 nothing; if it does not, the rebuild is safe instead of quietly unsafe. There
 is no reading under which keeping it out of the migrations is safer.

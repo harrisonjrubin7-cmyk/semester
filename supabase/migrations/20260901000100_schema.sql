@@ -121,6 +121,11 @@ create trigger state_touch before insert or update on public.state
 -- Supabase's house style and why the one migration that mentions it does
 -- nothing but revoke EXECUTE on something already there.
 --
+-- Measured, not inferred: a Supabase preview branch built from migrations that
+-- do not create it has six event triggers, every one the platform's own, and no
+-- `ensure_rls`; one built from migrations that do create it has seven. So no
+-- preview branch and no recovery had this until a migration made it.
+--
 -- Copied from the live definition rather than rewritten, upper-cased body and
 -- all, so that a diff of this against production reports a difference only
 -- when there is one.
