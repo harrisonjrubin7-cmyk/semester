@@ -1,0 +1,22 @@
+# What production's migration ledger says these ten files are.
+#
+# Each line is the md5 and byte length of one row's `statements[1]` in
+# `supabase_migrations.schema_migrations` on the live project, read on
+# 21 September 2026. The files in this directory were reconstructed from those
+# rows and must equal them exactly: `migrationhistory.test.ts` recomputes
+# every line and fails on any difference.
+#
+# These are not checksums of files somebody wrote. They are the fingerprints of
+# what the database ran, and the file is only correct because it matches one.
+#
+#   md5                               bytes  file
+822d2a0f5b08ade4288cedf84b019096       1453  20260907050718_push_devices_and_queue.sql
+6ca07698039de38a5f74d765a67d7508        707  20260907133756_push_scheduler_extensions.sql
+31ff5589b9a5615b49893785aecc3e3a       3251  20260907134823_harden_security_definer_helpers.sql
+3a4a82f65c93e4688363617ccef499ce       7060  20260907141019_rls_initplan_and_policy_overlap.sql
+43a5914d24ab4325a42a77621077e26c       1552  20260907141324_wrap_auth_uid_in_helpers.sql
+0743e7fb3c2d5ce06c5c2c1b84103bfc       2160  20260907141551_index_foreign_keys.sql
+377411f71884a98b37b1d31fdbbdebde       1475  20260908053010_classmates_any_school.sql
+a091b63a85ee5c7d5839632de9b227fd       4214  20260908053943_per_record_sync_with_soft_deletes.sql
+c87932c42613c9e4db93d30dbd5dafa9       1649  20260908054007_calendar_feeds.sql
+c6733bc1d662040d68b1ebbb08a0f10c       5804  20260911151826_groups.sql

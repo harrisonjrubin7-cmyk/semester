@@ -5,7 +5,8 @@ The schema this app runs on cannot be rebuilt from its own record.
 concern; this is the plan for fixing it, written before any of it was done so
 that the reasoning can be argued with rather than discovered in a diff.
 
-**Step 1 is done — see its own section. Steps 2 to 6 are still proposals.**
+**Steps 1 and 2 are done — see their own sections. Steps 3 to 6 are still
+proposals, and step 2 changed what step 3 has to be.**
 
 ## What is actually wrong
 
@@ -25,7 +26,11 @@ disaster recovery.
 `per_record_sync_with_soft_deletes`, `calendar_feeds` and `groups`
 (20260911151826) have full SQL in the database and no file in
 `supabase/migrations/`. They were applied through the dashboard or the
-management API. The repository has never described the database it deploys to.
+management API. The repository had never described the database it deploys to.
+
+Step 2 closed that on 21 September: all ten are now in
+[`supabase/history/`](supabase/history/), byte-for-byte. They are a record
+rather than a migration set, and the step says why.
 
 Three more records arrived on 21 September and are *not* in this count, because
 each has a file — under a different version. Item 3 explains why, and item 4
@@ -197,25 +202,61 @@ carries two identical touch triggers (`courses_touch` and `touch_courses`), and
 What it does not contain: data, roles, extensions, the schemas Supabase owns,
 and the `supabase_migrations` table itself.
 
-### 2 · Write the ten missing migrations into files
+### 2 · Write the ten missing migrations into files — **done, 21 September**
 
-Their SQL is in the history table and is complete. Each becomes a file under its
-own version number, byte-for-byte as recorded. No editing, no tidying, no
-merging two into one: the point is that the file and the row agree, and any
-improvement breaks that.
+[`supabase/history/`](supabase/history/), with
+[`MANIFEST`](supabase/history/MANIFEST) and its own README. Their SQL is in the
+history table and is complete, so each is a file under its own version number,
+byte-for-byte as recorded — no editing, no tidying, no merging two into one.
+The point is that the file and the row agree, and any improvement breaks that.
 
 This is the ten from fault 2 only. The three records from 21 September already
 have files and need no new ones: what is wrong with them is the version, and a
 version is what step 5 exists to correct. Writing a second copy of `invites`
 under today's timestamp would make the ledger tidy and the directory a liar.
 
+**Proved rather than trusted.** Transcribing 29,325 bytes out of a query result
+is a step that can go wrong silently, so the database reported an md5 per row
+before anything was copied, the bytes came across base64-encoded in chunks each
+carrying its own md5, and a file was written only once every chunk matched and
+the assembled file matched the row. Two chunks did come across wrong — both
+inside long runs of the `─` characters the comments are ruled with, miscounted
+repetitions — and were named by chunk number rather than discovered as a wrong
+file. `app/src/lib/migrationhistory.test.ts` re-checks the fingerprints on
+every run.
+
+**They are not in `migrations/`, and that is the finding.** The plan said they
+would be. The third of them fails outright there:
+`20260907134823_harden_security_definer_helpers.sql` runs `alter function
+public.verified_student() set schema private`, and
+`20260901000200_classmates.sql` now *creates* those helpers in `private`
+already. Every one of the ten is likewise folded into the eight base files —
+`push_devices` into `push.sql`, `blocks_blocked` into `classmates.sql`, the
+`vanderbilt/` prefix into `classmates_schools.sql`, `deleted_at` into
+`records.sql`, `calendar_feeds` into `calendar.sql`, `group_tasks` into
+`groups.sql`. So until step 3 is done there is no order in which twenty-five
+files replay, and putting them in `migrations/` would turn CI red and break
+every preview branch for nothing. They sit beside the snapshot instead, as a
+record, and step 3 is what earns them a move.
+
 ### 3 · Reconstruct the eight name-only migrations
 
 The delicate step, and the only one where a mistake is silent.
 
-The repository's own `schema.sql`, `classmates.sql` and the rest are presumably
-what was run. **Presumably is not good enough**, because the eight ran a year of
-dashboard edits ago and nothing recorded what was actually executed.
+The repository's own `schema.sql`, `classmates.sql` and the rest were taken here
+to be presumably what was run. **Step 2 disproved that**, and it is the reason
+this step got harder rather than easier: those files contain the content of
+migrations applied *after* them, so they are not a record of what ran at all.
+They are a statement of the current intended schema, edited continuously, which
+is why replaying the fifteen produces roughly the right database and why the
+directory has never been a history.
+
+So the eight cannot be recovered by reading the repository. What ran was never
+written down, and the only evidence left is arithmetic: production's schema is
+the eight plus the ten, and the ten are now known exactly. The eight as applied
+are therefore the snapshot with the ten's effects backed out — which is a
+reconstruction, not a reading, and the one place in this plan where a mistake
+is silent.
 
 So each reconstruction is checked against production rather than trusted:
 compare the objects a file creates against `information_schema` and `pg_proc` on
@@ -235,6 +276,15 @@ kind, and each one gets written down.
 `supabase/check.sh` already builds a throwaway Postgres 17 from the migrations
 directory. After steps 2 and 3 it will be applying twenty-five files instead of
 fifteen, and the suites must still pass.
+
+One of the twenty-five cannot be applied there at all.
+`20260907133756_push_scheduler_extensions.sql` installs `pg_cron` and `pg_net`.
+`local.stub.sql` stands in for the roles, schemas and default privileges
+Supabase provides because all of those are SQL; an extension is not, and needs
+a control file in the server's share directory. That file wants a named skip
+carrying a control that refuses to fire when the extension *is* available —
+a skip nobody can check is how a harness starts reporting green for work it
+did not do.
 
 That is necessary and not sufficient — the suites test policies, not schema
 shape. The real check is a diff: build the schema from the repaired file set,
@@ -285,8 +335,8 @@ repository, and it should be argued for on its own.
 | Step | State |
 | --- | --- |
 | 1 · snapshot production | **done 21 Sep** — verified by three matching fingerprints |
-| 2 · ten missing migrations into files | not started |
-| 3 · reconstruct the eight | not started |
+| 2 · ten missing migrations into files | **done 21 Sep** — fingerprint-checked |
+| 3 · reconstruct the eight | not started — and harder than written: see the step |
 | 4 · diff against the snapshot | not started |
 | 5 · `migration repair` | not started |
 | 6 · the pending migrations (four unapplied files) | blocked on 1–5 |
@@ -295,3 +345,12 @@ Until step 5 is done, **no pull request touching `supabase/` should be merged**.
 If Branching is applying migrations, a merge sends the pending ones to a schema
 nothing has reproduced; if it is not, the merge widens the gap by one more file.
 See [`ROLLBACK.md`](ROLLBACK.md).
+
+What that rule is protecting is `supabase/migrations/`, because that directory
+is the only thing a merge can send anywhere. Steps 1 and 2 both landed under
+it and neither added a file there: a snapshot and a record are inert, and
+`rollback.test.ts` and `migrationhistory.test.ts` are what make that
+checkable rather than asserted — each holds a control that goes red when its
+file is moved into `migrations/`. A change that adds to `migrations/` is still
+the thing to wait on, and the four already sitting there are still not to be
+applied.
