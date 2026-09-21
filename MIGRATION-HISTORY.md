@@ -5,8 +5,9 @@ The schema this app runs on cannot be rebuilt from its own record.
 concern; this is the plan for fixing it, written before any of it was done so
 that the reasoning can be argued with rather than discovered in a diff.
 
-**Steps 1 and 2 are done — see their own sections. Steps 3 to 6 are still
-proposals, and step 2 changed what step 3 has to be.**
+**Steps 1, 2 and 4 are done. Step 3 turned out not to be needed and step 5 is
+withdrawn, both on evidence gathered doing the others — each section says why.
+Step 6 is the one thing still open, and it is a decision rather than a task.**
 
 ## What is actually wrong
 
@@ -239,81 +240,127 @@ files replay, and putting them in `migrations/` would turn CI red and break
 every preview branch for nothing. They sit beside the snapshot instead, as a
 record, and step 3 is what earns them a move.
 
-### 3 · Reconstruct the eight name-only migrations
+### 3 · Reconstruct the eight — **not needed, and step 4 is why**
 
-The delicate step, and the only one where a mistake is silent.
+This step asked for the delicate thing: the eight as applied are the snapshot
+with the ten's effects backed out, reconstructed rather than read, and the one
+place in the plan where a mistake is silent.
 
-The repository's own `schema.sql`, `classmates.sql` and the rest were taken here
-to be presumably what was run. **Step 2 disproved that**, and it is the reason
-this step got harder rather than easier: those files contain the content of
-migrations applied *after* them, so they are not a record of what ran at all.
-They are a statement of the current intended schema, edited continuously, which
-is why replaying the fifteen produces roughly the right database and why the
-directory has never been a history.
+**It does not have to be done, because nothing depends on it.** Step 4 asked
+the only question the reconstruction was for — does `migrations/` build
+production? — and the answer is yes, without backing anything out. The eight
+files are not a damaged record of 1 September that needs repairing. They are a
+baseline of 15 September that is correct as a baseline, and the arithmetic
+step 2 describes is already done: they *are* the eight plus the ten.
 
-So the eight cannot be recovered by reading the repository. What ran was never
-written down, and the only evidence left is arithmetic: production's schema is
-the eight plus the ten, and the ten are now known exactly. The eight as applied
-are therefore the snapshot with the ten's effects backed out — which is a
-reconstruction, not a reading, and the one place in this plan where a mistake
-is silent.
+So the eight rows keep no statements, deliberately. The only SQL that could go
+in them is the baseline, and a ledger carrying the baseline at version
+`20260901000100` would assert a history that errors ten times when replayed —
+step 2 has those ten errors. **A visibly blank row is better than a plausible
+false one**, which is the same rule as the one this repair runs under.
 
-So each reconstruction is checked against production rather than trusted:
-compare the objects a file creates against `information_schema` and `pg_proc` on
-the live database — every table, column, type, default, constraint, index,
-policy and function signature — and record each difference. Where the file and
-production disagree, **production is right** and the file is amended with a
-comment saying what was found and that it was found rather than intended.
+What is genuinely lost is the text of what ran on 1 September, and it is lost
+for good: it was never written down, and every later edit to those files
+overwrote the evidence. That is worth saying plainly rather than leaving a step
+open that nobody can close.
 
-The expected differences are the ones faults 2 and 3 predict: production has had
-ten later migrations applied, so a column added by `calendar_feeds` will not be
-in `calendar.sql`. That is fine and is exactly what the version ordering is for.
-A difference that *cannot* be explained by a later migration is the interesting
-kind, and each one gets written down.
+### 4 · Prove the baseline against production — **done, 21 September**
 
-### 4 · Prove the reconstruction before trusting it
+The question: does `migrations/`, minus the four files production has never
+had, build production's schema? [`supabase/fingerprint.sql`](supabase/fingerprint.sql)
+asks it in six numbers, and it is a file rather than a paragraph because
+step 1's proof was quoted and never written down, which is half a proof.
 
-`supabase/check.sh` already builds a throwaway Postgres 17 from the migrations
-directory. After steps 2 and 3 it will be applying twenty-five files instead of
-fifteen, and the suites must still pass.
+Eleven files — the eight baseline, `invites`, `referrals` and `function_grants`
+— applied to a throwaway Postgres over `local.stub.sql`:
 
-One of the twenty-five cannot be applied there at all.
-`20260907133756_push_scheduler_extensions.sql` installs `pg_cron` and `pg_net`.
-`local.stub.sql` stands in for the roles, schemas and default privileges
-Supabase provides because all of those are SQL; an extension is not, and needs
-a control file in the server's share directory. That file wants a named skip
-carrying a control that refuses to fire when the extension *is* available —
-a skip nobody can check is how a harness starts reporting green for work it
-did not do.
+| | production | built from `migrations/` |
+| --- | --- | --- |
+| columns | `928e8832…` | `928e8832…` |
+| constraints | `ccf10d63…` | `ccf10d63…` |
+| indexes | `cbeb582a…` | `cbeb582a…` |
+| functions | `19900364…` | `e6606f22…` |
+| code (functions, comments out) | `b3f82ed7…` | `b3f82ed7…` |
+| policies | `ed31e933…` | `ed31e933…` |
 
-That is necessary and not sufficient — the suites test policies, not schema
-shape. The real check is a diff: build the schema from the repaired file set,
-dump it, and diff it against step 1's snapshot of production. **An empty diff is
-the acceptance criterion for this whole repair.** Anything else is a list of
-things still unexplained, and the list goes in this file rather than being
-waved through.
+**Five of six match, and the sixth is comments.** `claim_referral`,
+`gen_referral_code`, `make_referral_code` and `only_invited` were applied to
+production on 21 September with their comments stripped — 375 characters of
+body against this repository's 1060, for `only_invited`. Every statement in
+them is identical, and the `code` row is what says so. Two numbers that
+disagree tell you the databases differ; only the second tells you *how*, which
+is why both are in the file.
 
-The control matters as much as the check. A diff tool that reports "no
-differences" between two schemas is also what a broken diff looks like, so it
-gets shown failing first — against the twelve-file set, where the difference is
-known to be large.
+Production is not re-run to match. The functions behave identically and
+rewriting them for the sake of a hash is the tidying this document forbids.
 
-### 5 · Record the eight, and only then
+**The control.** Five matches out of six is also what a probe that cannot see
+anything looks like. So the same build was run again with the four files
+production does not have added back, and **all six numbers moved** — which
+discriminates the probe and, separately, re-confirms object by object that
+those four have never reached production.
 
-Once the diff is empty, the eight name-only rows can carry their statements.
-`supabase migration repair` is the supported route.
+#### The one object no file here creates
 
-This is the one production write in the plan and it touches only the history
-table. It creates no object, drops none, and changes no data. If step 4's diff
-is not empty, this step does not happen.
+`public.rls_auto_enable()` and its `ensure_rls` event trigger are what
+Supabase's "automatically enable RLS" setting installs. They are in Supabase's
+house style rather than this repository's, and the one migration that names
+them — `history/20260907134823_…` — only revokes EXECUTE, which is a thing you
+do to something that already exists. Step 1's snapshot calls `ensure_rls` "the
+project's"; that was wrong, and this corrects it. The definition now sits in
+`local.stub.sql` with the rest of what the platform provides, which is both
+where it belongs and the whole of why the function fingerprints differed by one
+entry.
+
+Putting it there then found something no fingerprint would have.
+`grants.check.sql` sweeps every function in `public` and fails on any a client
+can reach without being allowlisted, and the moment the stub created
+`rls_auto_enable` the way a real project does, it failed:
+
+    ✗ grants.check.sql
+        ERROR:  FAILED: a signed-out visitor can call rls_auto_enable()
+
+Production closed that on 7 September, and the statement that closed it lives
+in `history/`, which is a record and not a migration — so the revoke lived
+nowhere a fresh database would run it. **A rebuild from this directory would
+have been less safe than production is**, in exactly one way, and the check
+could not see it until the stub was faithful. It is closed now, in
+`20260901001500_function_grants.sql`. Production is unchanged and did not need
+changing: a sweep of its live grants shows only the three allowlisted functions
+reachable, by `authenticated` alone.
+
+The revoke needed both spellings, which is the inverse of the defect that file
+was written for. `revoke … from anon, authenticated` left `=X/postgres` behind
+— Postgres grants EXECUTE to PUBLIC on every new function — and `anon` still
+reached it through PUBLIC. The first fix read correctly and the check stayed
+red.
+
+**An empty diff is the acceptance criterion for this whole repair**, and on
+everything but four function comments it is met.
+
+### 5 · Record the eight — **withdrawn, on the evidence of steps 2 and 4**
+
+This was to be the one production write in the plan: `migration repair` filling
+the eight name-only rows with their statements, once step 4's diff was empty.
+
+The diff is empty and the step should still not happen. The statements it would
+write are the baseline, the baseline is a squash of everything through
+11 September, and a ledger carrying it at version `20260901000100` asserts a
+history that cannot replay. The rows are blank today and a reader can see they
+are blank. Filled, they would be wrong and look right.
+
+**So the repair completes with no write to production at all.** Nothing was
+applied, nothing was repaired, no row was edited. What changed is that this
+repository now holds the SQL production was carrying alone, and a way to ask
+whether the two still agree.
 
 ### 6 · Then, and separately, the pending migrations
 
 Out of scope here and worth naming so it is not forgotten. Once production is
 reproducible, a preview branch can finally be built that matches it, and
-`usage_atomic`, `group_columns_pinned`, `forms` and `access_log` can
-be rehearsed against it before a merge applies them. That is the staging work the rest of the
-plan was always about; it could not start until this was true.
+`usage_atomic`, `group_columns_pinned`, `forms` and `access_log` can be
+rehearsed against it before a merge applies them. That is the staging work the
+rest of the plan was always about; it could not start until this was true.
 
 ## What this costs, and what it does not fix
 
@@ -336,12 +383,22 @@ repository, and it should be argued for on its own.
 | --- | --- |
 | 1 · snapshot production | **done 21 Sep** — verified by three matching fingerprints |
 | 2 · ten missing migrations into files | **done 21 Sep** — fingerprint-checked |
-| 3 · reconstruct the eight | not started — and harder than written: see the step |
-| 4 · diff against the snapshot | not started |
-| 5 · `migration repair` | not started |
-| 6 · the pending migrations (four unapplied files) | blocked on 1–5 |
+| 3 · reconstruct the eight | **not needed** — the baseline builds production, so there is nothing to back out |
+| 4 · prove the baseline against production | **done 21 Sep** — five of six fingerprints match, the sixth is comments |
+| 5 · `migration repair` | **withdrawn** — it would write a history that cannot replay |
+| 6 · the four pending files | **open, and a decision** — see below |
 
-Until step 5 is done, **no pull request touching `supabase/` should be merged**.
+Step 6 is the one that unblocks the staging work, and it is not a task anybody
+can simply do. `usage_atomic`, `group_columns_pinned`, `forms` and `access_log`
+are numbered `20260901000900`–`20260901001300`, and production has thirteen
+migrations applied with higher numbers, so they cannot apply where they are.
+The two ways out are to renumber four files that are already merged, which
+changes the key the ledger is built on, or to apply them by hand and accept a
+fourth version that does not match its filename. **That is a call for whoever
+owns the project**, and until it is made production's schema deploy stays
+broken.
+
+Until it is made, **no pull request touching `supabase/` should be merged**.
 If Branching is applying migrations, a merge sends the pending ones to a schema
 nothing has reproduced; if it is not, the merge widens the gap by one more file.
 See [`ROLLBACK.md`](ROLLBACK.md).
