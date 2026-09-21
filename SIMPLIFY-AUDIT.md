@@ -1,3 +1,117 @@
+# One app — the thirtieth pass: the same sentence about three different questions
+
+Against `main` at `5d45ec6`. **<!--screens-->fifty-eight<!--/--> destinations**,
+unchanged. No merge. One line restored, one live field given a reader, one
+guard.
+
+`lib/mode.ts` reads every question as one of three — about this app, about this
+student's records, or general — and returns four things:
+
+```ts
+export interface Read {
+  mode: Mode;
+  /** Shown next to the answer: "Using: your courses". Never a mystery. */
+  says: string;
+  /** What in the question decided it, for the same reason a quote is shown. */
+  because: string;
+  /** Screens the question seems to be about, when it is about the app. */
+  screens: string[];
+}
+```
+
+`ai/converse.ts` is its only production caller. It kept `read.mode` — four
+times, all routing — and dropped the rest at the line it computed them:
+
+```ts
+const read = readMode(text);
+setMode(read.mode);          // and `says`, `because` and `screens` end here
+```
+
+## T1 — three docblocks say it is shown, and it never was
+
+| Where | What it says |
+| --- | --- |
+| `Read.says` | *"**Shown next to the answer**: 'Using: your courses'. Never a mystery."* |
+| `Read.because` | *"What in the question decided it, **for the same reason a quote is shown**."* |
+| `Conversation.mode` | *"What the last question was read as. **Shown, never hidden**."* |
+
+The third is the interesting one. `mode` was in live state — set on every
+question through `setMode`, cleared between conversations, carried on the
+`Conversation` interface — and read by **neither** surface. `Chat.tsx` and
+`Panel.tsx` both draw every other field the interface exposes; `talk.mode` is
+the one nothing touches. State written on every question and never read is the
+`lastOpened` shape from the twenty-third, and this time the field's own comment
+said what it was for.
+
+### What made it invisible
+
+Something was always on screen. `Looked` renders from `used` and says *"Read 4
+parts of your records"* — and measured, `used` is **the same four entries in
+all three modes**:
+
+| Typed | Mode | `used` | `Looked` said | The line that was dropped |
+| --- | --- | --- | --- | --- |
+| "explain price elasticity" | general | date, term, screen, course codes | Read 4 parts of your records | **General** |
+| "what is due Thursday" | grounded | *the same four* | *the same sentence* | **Using: your courses — "what is due"** |
+| "where do I set my grade scale" | app | *the same four* | *the same sentence* | **Using: this app — "where do I set"** |
+
+`lib/context.ts` pushes the date, the term and the screen unconditionally and
+the course codes whenever there are courses, so the row is mode-blind by
+construction. It was never missing — it was constant. The one line that varied
+with what the app had actually done was the one being thrown away, and a row
+that always says something is exactly the camouflage the reveal gate, `showAll`
+and `lastOpened` all had.
+
+### Restored
+
+`Live.mode: Mode | null` becomes `Live.read: Read | null` — the whole reading
+rather than the routing value — which costs nothing, since nothing read the
+narrower one. `ai/Turns.tsx` gains `Using`, a one-line dim row above `Looked`
+on the answer, saying what the question was taken to be and quoting the phrase
+that decided it. A general question is the default rather than a match, so
+`because` is empty and nothing is quoted.
+
+`Using` sits on `Reply` only. On a question with no reply — the twenty-ninth's
+case — there is no answer to describe, and "Using: your courses" beside a
+failed request would be furniture.
+
+Tidied in passing: `const read = readMode(text)` inside `send` now shadowed the
+new live value, so it is `how` — `how.mode` at all four routing sites.
+
+## Driven, and what the drive could not reach
+
+The keyless profile still draws the twenty-ninth's panel and nothing else
+changed; `pageerror` empty. **`Using` was not reached in the browser, and that
+is stated rather than implied:** it renders on a `Reply`, a reply needs a
+request to come back, and a request needs a key this container does not have.
+The component and both call sites are covered by tests instead, and the drive's
+role here was to prove no regression on the one path a keyless run *can* reach.
+
+## Proving it
+
+`ai/usingline.test.tsx`, seven cases, in two halves for the reason the
+twenty-ninth's guard was: the line could not be drawn, **and** neither surface
+drew it. Each reverted separately:
+
+| Reverted | Red |
+| --- | --- |
+| the quote in `Using` | *expected 'An answer.Using: your coursesCOPY…' to contain 'what is due'*; and the same for "where do I set" |
+| `<Using read={talk.read} />` from both files | *Chat.tsx does not draw `<Using>`*; *Panel.tsx does not draw `<Using>`* |
+
+The first case is the **measurement**, pinned as a test: the three modes
+produce one `used` list between them, and the three modes really are three.
+If `Looked` ever starts varying with the mode, that test fails and the two
+rows should be reconsidered rather than stacked — which is the thing a future
+pass would otherwise have to rediscover.
+
+The control: `<Using read={null}>` draws the answer and no line, so "it renders
+the line" cannot pass against a component printing one unconditionally.
+
+## Gates
+
+`tsc` clean · lint ok · tests in file order · shuffled · production build
+clean — every one by its **exit status**.
+
 # One app — the twenty-ninth pass: the answer that needs no key was only ever drawn beside one that did
 
 Against `main` at `a66fd33`. **<!--screens-->fifty-eight<!--/--> destinations**,
