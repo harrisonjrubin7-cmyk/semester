@@ -30,6 +30,44 @@ create extension if not exists pgcrypto with schema public;
 create schema if not exists extensions;
 create schema if not exists auth;
 
+-- ── The two extensions a plain Postgres does not have ─────────────────────
+--
+-- `20260907133756_push_scheduler_extensions.sql` is one of the ten migrations
+-- recovered from the live history table, and it is recorded byte-for-byte as
+-- production ran it. What it runs is:
+--
+--     create extension if not exists pg_cron with schema extensions;
+--     create extension if not exists pg_net  with schema extensions;
+--
+-- Neither ships with Postgres. Supabase installs both, which is what puts them
+-- in the same class as `anon` and `auth.users` above: something the platform
+-- supplies and this harness has to stand in for. Without a stand-in the
+-- harness stops on that file with `extension "pg_cron" is not available`, and
+-- the nine recovered migrations after it are never applied at all.
+--
+-- The stand-in is a catalog row rather than a real extension, because there is
+-- no real one to install: `create extension IF NOT EXISTS` is satisfied by the
+-- name already being present and does not look at what is behind it. That is
+-- also the limit of it, stated rather than discovered later — **this makes the
+-- name exist and nothing else.** No `cron.schedule`, no `net.http_post`, no
+-- `cron` or `net` schema. A check suite that called one would fail, and should:
+-- `supabase/scheduler.sql` is applied by hand to the live project for exactly
+-- this reason and has never been part of this harness.
+--
+-- Nothing in `schema.snapshot.sql` depends on either. Step 1 of
+-- `MIGRATION-HISTORY.md` records what the snapshot deliberately leaves out,
+-- and extensions are on that list, so a replay that does not really install
+-- them still reproduces every object the diff compares.
+insert into pg_catalog.pg_extension
+  (oid, extname, extowner, extnamespace, extrelocatable, extversion, extconfig, extcondition)
+select ((select max(oid)::bigint from pg_catalog.pg_extension) + row_number() over (order by name))::oid,
+       name,
+       (select oid from pg_roles where rolname = current_user),
+       (select oid from pg_namespace where nspname = 'extensions'),
+       false, '0.0-stub', null, null
+  from unnest(array['pg_cron', 'pg_net']) as name
+ where not exists (select 1 from pg_catalog.pg_extension e where e.extname = name);
+
 do $$ begin
   if not exists (select 1 from pg_roles where rolname = 'anon') then
     create role anon nologin;

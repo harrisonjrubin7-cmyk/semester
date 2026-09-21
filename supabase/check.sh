@@ -160,14 +160,44 @@ psql() { "$bindir/psql" -X -q -h "$work" -p "$port" -U postgres "$@"; }
 echo "· the parts Supabase provides, for a plain Postgres"
 psql -v ON_ERROR_STOP=1 -f "$here/local.stub.sql" >/dev/null
 
+# ── The two files that are history rather than desired state ──────────────
+#
+# `supabase/replay.expected` says which statements this replay is expected to
+# refuse, and its header says why they are refusals rather than differences.
+# The short version: ten of the migrations here were recovered byte-for-byte
+# from production's history table and may not be edited, and the eight files
+# numbered 20260901000100-000800 have absorbed their effect already.
+#
+# The point of reading it from a file is that the list cannot widen quietly.
+# A file named there is applied without ON_ERROR_STOP and its errors must then
+# match that file's lines *exactly* — same count, same text. An eleventh
+# refusal fails the run, and so does one of these ten re-worded. Every other
+# migration is applied exactly as before, stopping on its first error.
+expected=$here/replay.expected
+[ -f "$expected" ] || { echo "supabase/replay.expected is missing" >&2; exit 2; }
+want_for() { sed -e 's/#.*//' "$expected" | { grep "^$1|" || true; } | cut -d'|' -f2- | sort; }
+
 echo "· migrations"
 for m in "$here"/migrations/*.sql; do
-  if ! out=$(psql -v ON_ERROR_STOP=1 -f "$m" 2>&1); then
-    echo "  ✗ $(basename "$m")"
-    echo "$out" | grep -E "ERROR" | head -3
+  base=$(basename "$m")
+  want=$(want_for "$base")   # empty for every file but the two named there
+  if [ -z "$want" ]; then
+    if ! out=$(psql -v ON_ERROR_STOP=1 -f "$m" 2>&1); then
+      echo "  ✗ $base"
+      echo "$out" | grep -E "ERROR" | head -3
+      exit 1
+    fi
+    echo "  ✓ $base"
+    continue
+  fi
+  out=$(psql -v ON_ERROR_STOP=0 -f "$m" 2>&1)
+  got=$(echo "$out" | sed -nE 's/^psql:.*: ERROR:  (.*)$/\1/p' | sort)
+  if [ "$got" != "$want" ]; then
+    echo "  ✗ $base — refused statements are not the ones replay.expected names"
+    diff <(echo "$want") <(echo "$got") | sed 's/^/      /' | head -12
     exit 1
   fi
-  echo "  ✓ $(basename "$m")"
+  echo "  ✓ $base — $(echo "$want" | grep -c . || true) expected refusals, as listed"
 done
 
 # After the migrations, because they are `on all tables` and there are no

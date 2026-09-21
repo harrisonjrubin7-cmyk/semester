@@ -5,7 +5,9 @@ The schema this app runs on cannot be rebuilt from its own record.
 concern; this is the plan for fixing it, written before any of it was done so
 that the reasoning can be argued with rather than discovered in a diff.
 
-**Step 1 is done — see its own section. Steps 2 to 6 are still proposals.**
+**Steps 1 to 4 are done — each has its own section, and step 3's answer is not
+the one this plan expected. Steps 5 and 6 are still proposals, and step 6 is the
+one that fixes the deploy.**
 
 ## What is actually wrong
 
@@ -18,7 +20,9 @@ the wrong order makes two of them worse.
 zero statements. A replay runs nothing for them. This is the one that removes
 disaster recovery.
 
-**2 · Ten migrations exist only in production.** `push_devices_and_queue`,
+**2 · Ten migrations exist only in production** — *closed 21 September by step
+2; the paragraph below is kept as the statement of what was wrong.*
+`push_devices_and_queue`,
 `push_scheduler_extensions`, `harden_security_definer_helpers`,
 `rls_initplan_and_policy_overlap`, `wrap_auth_uid_in_helpers`,
 `index_foreign_keys`, `classmates_any_school`,
@@ -26,6 +30,10 @@ disaster recovery.
 (20260911151826) have full SQL in the database and no file in
 `supabase/migrations/`. They were applied through the dashboard or the
 management API. The repository has never described the database it deploys to.
+
+All ten now have files, each hashing to the row it came from, and the last
+sentence is no longer true: as of 21 September the repository describes the
+database it deploys to. Faults 1, 3 and 4 are unchanged.
 
 Three more records arrived on 21 September and are *not* in this count, because
 each has a file — under a different version. Item 3 explains why, and item 4
@@ -197,7 +205,7 @@ carries two identical touch triggers (`courses_touch` and `touch_courses`), and
 What it does not contain: data, roles, extensions, the schemas Supabase owns,
 and the `supabase_migrations` table itself.
 
-### 2 · Write the ten missing migrations into files
+### 2 · Write the ten missing migrations into files — **done, 21 September**
 
 Their SQL is in the history table and is complete. Each becomes a file under its
 own version number, byte-for-byte as recorded. No editing, no tidying, no
@@ -209,7 +217,38 @@ have files and need no new ones: what is wrong with them is the version, and a
 version is what step 5 exists to correct. Writing a second copy of `invites`
 under today's timestamp would make the ledger tidy and the directory a liar.
 
-### 3 · Reconstruct the eight name-only migrations
+**Done.** The ten are in `supabase/migrations/`, named `<version>_<name>.sql`
+for the version and name the row carries. Byte-for-byte was not assumed: each
+row's `md5(array_to_string(statements, E'\n'))` was read from production first,
+and each file on disk hashes to it.
+
+| version | name | md5, production row = file on disk |
+| --- | --- | --- |
+| 20260907050718 | `push_devices_and_queue` | `822d2a0f…` |
+| 20260907133756 | `push_scheduler_extensions` | `6ca07698…` |
+| 20260907134823 | `harden_security_definer_helpers` | `31ff5589…` |
+| 20260907141019 | `rls_initplan_and_policy_overlap` | `3a4a82f6…` |
+| 20260907141324 | `wrap_auth_uid_in_helpers` | `43a5914d…` |
+| 20260907141551 | `index_foreign_keys` | `0743e7fb…` |
+| 20260908053010 | `classmates_any_school` | `377411f7…` |
+| 20260908053943 | `per_record_sync_with_soft_deletes` | `a091b63a…` |
+| 20260908054007 | `calendar_feeds` | `c87932c4…` |
+| 20260911151826 | `groups` | `c6733bc1…` |
+
+They carry no header saying where they came from, deliberately: a provenance
+comment is an edit, and an edited file no longer hashes to the row. The
+provenance is here.
+
+**One of them cannot run in a plain Postgres**, and that is a harness problem
+rather than a file problem. `push_scheduler_extensions` creates `pg_cron` and
+`pg_net`, neither of which ships with Postgres, so `check.sh` stopped on it
+with `extension "pg_cron" is not available` and the nine files after it were
+never applied. `local.stub.sql` now stands in for them the way it already
+stands in for `anon` and `auth.users` — a catalog row that satisfies `create
+extension IF NOT EXISTS` and nothing more. Its comment says exactly how far
+that goes: the name exists, `cron.schedule` does not.
+
+### 3 · Reconstruct the eight name-only migrations — **not needed, and the measurement is why**
 
 The delicate step, and the only one where a mistake is silent.
 
@@ -230,7 +269,47 @@ in `calendar.sql`. That is fine and is exactly what the version ordering is for.
 A difference that *cannot* be explained by a later migration is the interesting
 kind, and each one gets written down.
 
-### 4 · Prove the reconstruction before trusting it
+#### What the check actually found
+
+The presumption was wrong in a direction this plan did not anticipate, and the
+correction is smaller than the plan budgeted for.
+
+The eight files are **not** what was run. They have been edited in place for a
+year, and each one now already contains the effect of migrations production
+applied to it later: `classmates.sql` creates its helpers in `private` today,
+and production created them in `public` and moved them a week afterwards with
+`harden_security_definer_helpers`. So they are a *desired state*, and the ten
+recovered files are a *history*, and `migrations/` has been holding both kinds
+of file without saying so.
+
+Replaying the second kind on top of the first was measured rather than
+reasoned about: the base eight were applied to a throwaway cluster and then
+each recovered file was applied with `ON_ERROR_STOP` off, so that every
+statement the base eight make impossible is reported rather than only the
+first. **Eight of the ten replay clean. Ten statements in the other two are
+refused, and they are all one fault in two shapes:**
+
+| file | statements refused | shape |
+| --- | --- | --- |
+| `harden_security_definer_helpers` | 4 | `alter function public.X set schema private` for a helper `classmates.sql` now creates in `private` already — plus `public.rls_auto_enable()`, which is no longer there to revoke from |
+| `rls_initplan_and_policy_overlap` | 6 | `create policy` for the six enrollments/profiles policies the base files now create pre-split, with `(select auth.uid())` already hoisted |
+
+Every one of them asks for something that has already happened. **That is a
+claim about the end state, not an excuse**, and step 4 is where it is tested —
+if the refusals were hiding a real difference, the fingerprints would not
+match, and they do.
+
+So the eight are left alone. What was missing was not a reconstruction but a
+statement of which statements are redundant and why, in a form that cannot
+quietly widen: `supabase/replay.expected` names those ten, one per line,
+verbatim. `check.sh` applies the two files that have entries without stopping
+on error and then requires their errors to be *exactly* that list — an
+eleventh refusal fails the run, and so does one of the ten re-worded. Both
+directions were mutation-checked: dropping a line reports the extra, and
+re-wording one reports the mismatch. Every other migration still applies under
+`ON_ERROR_STOP` as before.
+
+### 4 · Prove the reconstruction before trusting it — **done, 21 September**
 
 `supabase/check.sh` already builds a throwaway Postgres 17 from the migrations
 directory. After steps 2 and 3 it will be applying twenty-five files instead of
@@ -248,6 +327,51 @@ differences" between two schemas is also what a broken diff looks like, so it
 gets shown failing first — against the twelve-file set, where the difference is
 known to be large.
 
+#### The reading
+
+`supabase/check.sh` passes: twenty-five migrations applied, twelve suites, 246
+checks. That is the necessary half.
+
+The sufficient half is the fingerprint, taken three ways over the same three
+questions — the md5 of every column with its type and nullability, of every
+constraint definition, and of every policy with its command and both
+expressions. **Set A** is the repaired file set in the order production applied
+it: the base eight, then the ten recovered, then `invites`, `referrals` and
+`function_grants`. The four files production does not have are excluded,
+because it does not have them. **Set B** is `schema.snapshot.sql`, step 1's
+capture. The third is a live read of production.
+
+| | columns | constraints | policies | tables |
+| --- | --- | --- | --- | --- |
+| A · repaired file set | `d2e04c94…` / 116 | `fa90f0a6…` / 67 | `cb91b8b5…` / 41 | 23 |
+| B · `schema.snapshot.sql` | `d2e04c94…` / 116 | `fa90f0a6…` / 67 | `cb91b8b5…` / 41 | 23 |
+| production, read live | `d2e04c94…` / 116 | `fa90f0a6…` / 67 | `cb91b8b5…` / 41 | 23 |
+
+**The diff is empty, which is this repair's acceptance criterion.** It also
+settles step 3's ten refusals: a refusal that had swallowed a real difference
+would show here, and none does.
+
+And the controls, because three identical rows are also what a probe that
+answers "same" to everything looks like:
+
+| control | columns | constraints | policies | tables |
+| --- | --- | --- | --- | --- |
+| the base eight alone, as if the ten had never been recovered | `54584b2e…` / 104 | `ad4b1d9d…` / 57 | `21690c6c…` / 37 | 19 |
+| every file in `migrations/`, filename order — the four pending included | `103ad560…` / 144 | `5b9b5627…` / 79 | `82c3636c…` / 50 | 26 |
+
+Both differ on all three, and the second differs in the direction fault 3
+predicts: the four unapplied files add three tables and twenty-eight columns
+production has never seen.
+
+**One caveat, stated rather than buried.** This ran on Postgres 16; the live
+project is 17, and `check.sh` said so loudly both times. The chain still holds,
+because the claim being made is *A reproduces B* and both were built on the
+same 16 — and B was proved equal to production on its own terms in step 1.
+That the live read agrees digit-for-digit with both is a stronger result than
+was needed, and means the fingerprint does not move between those two majors
+for this schema. It is not a licence to skip 17 for the policy suites, which
+is a different question.
+
 ### 5 · Record the eight, and only then
 
 Once the diff is empty, the eight name-only rows can carry their statements.
@@ -257,13 +381,59 @@ This is the one production write in the plan and it touches only the history
 table. It creates no object, drops none, and changes no data. If step 4's diff
 is not empty, this step does not happen.
 
-### 6 · Then, and separately, the pending migrations
+**The diff is empty, so the gate is open — and step 3 changed what this step
+means.** The eight rows would carry the eight files' current contents, and
+those files are a desired state rather than a record of what ran. Writing them
+into the ledger says "this is the SQL that was applied on 8 September", which
+is not true of any of the eight. What *is* true, and is what the repair was
+for, is that replaying them in order rebuilds production's schema exactly.
 
-Out of scope here and worth naming so it is not forgotten. Once production is
-reproducible, a preview branch can finally be built that matches it, and
-`usage_atomic`, `group_columns_pinned`, `forms` and `access_log` can
-be rehearsed against it before a merge applies them. That is the staging work the rest of the
-plan was always about; it could not start until this was true.
+Two answers, and it is the owner's call rather than a thing to settle in a
+commit:
+
+- **Write them anyway**, and say so in the row — the ledger's job is to make
+  the schema reproducible, and after step 4 these eight do that. The cost is
+  that `schema_migrations` stops being a history and becomes a rebuild script.
+- **Leave the eight empty** and treat `schema.snapshot.sql` plus this document
+  as the record instead. The cost is that `supabase db pull`/`push` still sees
+  eight rows with nothing behind them.
+
+Neither is urgent and neither fixes the deploy. **Step 6 is the one that
+does.**
+
+### 6 · Then, and separately, the pending migrations — **this is the deploy fix**
+
+Out of scope when this was written and no longer out of scope, because
+production is now reproducible. A preview branch can be built that matches it,
+and `usage_atomic`, `group_columns_pinned`, `forms` and `access_log` can be
+rehearsed against it before a merge applies them. That is the staging work the
+rest of the plan was always about; it could not start until this was true.
+
+**And it is the failing deploy, which steps 1–5 never were.** The cause is
+stated further up and has not moved: those four files are numbered
+`20260901000900`–`001300`, and production has thirteen migrations applied at
+`20260907050718` and above. Migrations run in version order, so all four are in
+the past relative to the watermark and cannot apply as numbered. Nothing in
+steps 1 to 5 changes a version, so nothing in steps 1 to 5 was ever going to
+turn the deploy green.
+
+The fix is to renumber the four above `20260921002658`, and the plan has always
+said that is a decision rather than a step: **a version is what the ledger keys
+on, and these four are already merged.** Renaming a merged migration file is
+safe here only because production has never applied any of them — no row
+anywhere points at the old numbers. That is worth checking again at the time
+rather than taking from this paragraph.
+
+Two things to settle with it, both cheap and both easy to forget:
+
+- `access_log` should land before `function_grants` re-runs, because
+  `20260901001500_function_grants.sql` revokes `note_access` and `read_feed`
+  behind a `to_regprocedure` guard that is currently a no-op. Running it again
+  afterwards is what closes those two.
+- A preview branch still has no Edge Functions, so `usage_atomic` cannot be
+  rehearsed through the `claude` function there. Either `config.toml` gains a
+  `[functions]` block — which its own header argues against — or that one
+  migration is exercised by driving its SQL directly.
 
 ## What this costs, and what it does not fix
 
@@ -285,13 +455,19 @@ repository, and it should be argued for on its own.
 | Step | State |
 | --- | --- |
 | 1 · snapshot production | **done 21 Sep** — verified by three matching fingerprints |
-| 2 · ten missing migrations into files | not started |
-| 3 · reconstruct the eight | not started |
-| 4 · diff against the snapshot | not started |
-| 5 · `migration repair` | not started |
-| 6 · the pending migrations (four unapplied files) | blocked on 1–5 |
+| 2 · ten missing migrations into files | **done 21 Sep** — each file hashes to its production row |
+| 3 · reconstruct the eight | **not needed 21 Sep** — measured: ten redundant statements, named in `replay.expected` |
+| 4 · diff against the snapshot | **done 21 Sep** — empty, three ways, with two controls that differ |
+| 5 · `migration repair` | unblocked, and now carries a decision — see its section |
+| 6 · the pending migrations (four unapplied files) | **the deploy fix**, and the only remaining blocker is renumbering |
 
-Until step 5 is done, **no pull request touching `supabase/` should be merged**.
-If Branching is applying migrations, a merge sends the pending ones to a schema
-nothing has reproduced; if it is not, the merge widens the gap by one more file.
-See [`ROLLBACK.md`](ROLLBACK.md).
+The rule that no pull request touching `supabase/` should be merged was written
+when nothing here had been reproduced, and it stands for anything that **adds or
+changes a migration**: a merge either sends a pending file to a schema nothing
+has described, or widens the gap by one more. See [`ROLLBACK.md`](ROLLBACK.md).
+
+It does not stand for a change that only ever *narrows* the gap. The ten
+recovered files add nothing to the deploy's work — production's ledger already
+carries all ten versions, so a push skips every one of them — and they are what
+makes the repository describe the database for the first time. Anything that
+introduces a new version is still gated on step 6.

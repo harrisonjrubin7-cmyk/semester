@@ -1,0 +1,45 @@
+# Statements the replay is expected to refuse, and why each one is harmless.
+#
+# `migrations/` holds two kinds of file and this is the seam between them.
+#
+# The eight files numbered 20260901000100–000800 are **desired state**. They
+# have been edited in place for a year, so each one already contains the effect
+# of migrations that were applied to production later — `classmates.sql`
+# creates its helpers in `private` today, and production created them in
+# `public` and moved them a week afterwards.
+#
+# The ten files numbered 20260907–20260911 are **history**, recovered from
+# `supabase_migrations.schema_migrations` on 21 September and byte-for-byte
+# what production ran. `MIGRATION-HISTORY.md` step 2 is why they may not be
+# edited: the point of them is that the file and the row agree.
+#
+# Replay the second kind on top of the first and ten statements ask for
+# something that has already happened. Eight of the ten recovered migrations
+# replay clean; these two do not, and every refusal below is the same fault in
+# two shapes — a `set schema` for a function already moved, or a `create
+# policy` for a policy already split.
+#
+# **They are refusals, not differences.** The end state was measured three ways
+# and the three agree: the repaired file set, `schema.snapshot.sql`, and a live
+# read of production all give the same md5 for every column, every constraint
+# and every policy. The control matters as much as the check — the base eight
+# alone, and the whole directory in filename order, both give different md5s,
+# so the fingerprint is not one that says "same" to everything.
+#
+# This file is what stops that becoming a licence. `check.sh` applies the two
+# files below without stopping on error and then requires the errors to be
+# *exactly* this list: an eleventh refusal, or one of these with different
+# wording, fails the run. Anything else applies under ON_ERROR_STOP as before.
+#
+# Format: <migration filename>|<the ERROR text, verbatim>
+
+20260907134823_harden_security_definer_helpers.sql|function public.verified_student() does not exist
+20260907134823_harden_security_definer_helpers.sql|function public.classmate(uuid) does not exist
+20260907134823_harden_security_definer_helpers.sql|function public.in_class(text, text) does not exist
+20260907134823_harden_security_definer_helpers.sql|function public.rls_auto_enable() does not exist
+20260907141019_rls_initplan_and_policy_overlap.sql|policy "join your own classes" for table "enrollments" already exists
+20260907141019_rls_initplan_and_policy_overlap.sql|policy "change your own enrollment" for table "enrollments" already exists
+20260907141019_rls_initplan_and_policy_overlap.sql|policy "leave your own classes" for table "enrollments" already exists
+20260907141019_rls_initplan_and_policy_overlap.sql|policy "create your own profile" for table "profiles" already exists
+20260907141019_rls_initplan_and_policy_overlap.sql|policy "edit your own profile" for table "profiles" already exists
+20260907141019_rls_initplan_and_policy_overlap.sql|policy "delete your own profile" for table "profiles" already exists

@@ -195,13 +195,23 @@ branch ended up with, and `harden_security_definer_helpers` then failed on
 name-only eight. Two tables and no functions, from a history claiming ten
 applied migrations. The branch was deleted immediately; it billed for minutes.
 
-Three consequences, in the order they matter:
+Three consequences, in the order they matter. **The first two were closed on
+21 September** by steps 2 to 4 of [`MIGRATION-HISTORY.md`](MIGRATION-HISTORY.md),
+and are kept here because the third is not, and because the argument only makes
+sense whole.
 
-- **There is no disaster recovery.** If the project were lost, the recorded
-  migrations would produce two push tables and an error.
-- **Nothing can reproduce production to test against**, which is what a staging
-  environment was supposed to be for. A preview branch cannot reach production's
-  schema state, so it cannot rehearse a change to it.
+- ~~**There is no disaster recovery.**~~ If the project were lost, the recorded
+  migrations would produce two push tables and an error. **Closed.** The ten
+  migrations that existed only in production were recovered into files, each
+  hashing to the row it came from, and the repaired file set now rebuilds
+  production's schema: the md5 of every column, every constraint and every
+  policy matches `schema.snapshot.sql` and a live read of production, with two
+  controls that differ.
+- ~~**Nothing can reproduce production to test against.**~~ **Closed, on a
+  throwaway cluster rather than a preview branch.** `supabase/check.sh` now
+  applies all twenty-five files and passes twelve suites against them. A
+  preview branch still cannot reach production's state, for the second reason
+  further up — it has no Edge Functions — and that is unchanged.
 - **The repository and production describe different databases.** Ten of those
   migrations exist only in production and as no file here; **four** files here —
   `usage_atomic`, `group_columns_pinned`, `forms` and `access_log` — have never
@@ -214,7 +224,9 @@ Three consequences, in the order they matter:
   mismatch fixed in #502, one level up.
 
 **Until this is repaired, do not merge a pull request that touches
-`supabase/`.** If Branching is applying migrations, a merge sends those four to
+`supabase/` by adding or changing a migration.** (A change that only narrows
+the gap — the ten recovered files, whose versions production's ledger already
+carries — is not one of these; `MIGRATION-HISTORY.md`'s status table says why.) If Branching is applying migrations, a merge sends those four to
 a schema no test has ever reproduced — and the one that has already been
 applied by hand, `invites`, is the shape of the risk: it puts a `before insert`
 trigger on `auth.users`, the table every sign-up passes through, and it went in
