@@ -96,6 +96,7 @@ function tablesCreated(): string[] {
 const NOT_TABLES = new Set([
   'id',
   'deleted_at',
+  'gone_at',
   'user_id',
   'row_count',
   'email',
@@ -211,6 +212,38 @@ describe('the clocks that run are still the clocks the document describes', () =
    * from, and it would be describing a retention the database no longer has —
    * for the one table class holding a promise about other people's devices.
    */
+  /*
+   * The device row, which this document got wrong once and could again.
+   *
+   * It said "a 404 or 410 from the endpoint retires the row". It does not. A
+   * single rejection marks the row; the retire happens only if the *next* run
+   * finds it gone as well, and any success in a run clears the mark. The
+   * difference is the entire reason `gone_at` exists — `functions/push`
+   * records that a single 404 deleting the device is "exactly the behaviour
+   * the column exists to prevent", and that the failure is silent when it
+   * happens.
+   *
+   * So the document described the bug rather than the fix, and nothing was
+   * going to catch that: it reads plausibly, the column is real, and both 404
+   * and 410 do appear in the function. This pins the property that actually
+   * distinguishes the two — that a mark and a retire are separate steps — at
+   * both ends.
+   */
+  it('agrees with the push function about when a device is actually retired', () => {
+    const push = readFileSync(join(ROOT, 'supabase', 'functions', 'push', 'index.ts'), 'utf8');
+
+    // Two steps, not one: a mark that sets `gone_at`, and a delete.
+    expect(push).toMatch(/update\(\{\s*gone_at:/);
+    expect(push).toMatch(/from\('push_devices'\)\.delete\(\)/);
+    // And a success outranks a rejection, which is what makes it two runs.
+    expect(push).toContain('answered');
+
+    const said = flat();
+    expect(said).toContain('gone twice running');
+    // The wording that was wrong, in either of the forms it took.
+    expect(said).not.toMatch(/A 404 or 410 from the endpoint retires the row/);
+  });
+
   it('agrees with the migration and the scheduler about the tombstone sweep', () => {
     const sql = readFileSync(join(MIGRATIONS, '20260901000700_records.sql'), 'utf8');
     expect(sql).toContain('sweep_tombstones');
