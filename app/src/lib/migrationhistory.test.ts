@@ -74,13 +74,46 @@ describe('the recovered migration history', () => {
     }
   });
 
-  it('is kept out of the migrations directory, where it would be applied', () => {
-    const migrations = readdirSync(join(ROOT, 'supabase', 'migrations'));
-    for (const row of manifest()) {
-      expect(migrations, `${row.file} has been moved into migrations/`).not.toContain(row.file);
+  it('is kept out of the migrations directory as statements, not as names', () => {
+    const dir = join(ROOT, 'supabase', 'migrations');
+    const migrations = readdirSync(dir).filter((f) => f.endsWith('.sql'));
+
+    /*
+     * This asked whether `migrations/` contained a file with the record's
+     * *name*, which was the right question until `migrations/` gained a stub
+     * per ledger row — one carrying the version and no SQL, so that
+     * `db push` can find it and skip it. The stubs take the same names, so a
+     * name check now fails on the fix.
+     *
+     * The hazard was never the name. It is the statements: applied on top of
+     * the baseline, which already contains their effects, the third of these
+     * fails outright because `classmates.sql` absorbed it. So the question is
+     * asked about content instead, which is what the old check stood in for
+     * and is harder to satisfy by accident.
+     */
+    const recorded = manifest().map((r) => r.md5);
+    for (const f of migrations) {
+      expect(recorded, `migrations/${f} is byte-identical to a history record`).not.toContain(
+        md5(readFileSync(join(dir, f))),
+      );
     }
-    // And the control: there are migrations there for them to have joined.
-    expect(migrations.filter((f) => f.endsWith('.sql')).length).toBeGreaterThan(5);
+
+    /*
+     * And the half that is new. A stub is not optional decoration: remove one
+     * and the deploy goes straight back to "Remote migration versions not
+     * found in local migrations directory", which is the error that kept
+     * production's schema deploy red and which no suite running SQL could see.
+     */
+    for (const row of manifest()) {
+      const version = row.file.slice(0, 14);
+      expect(
+        migrations.some((f) => f.startsWith(version)),
+        `no file in migrations/ carries version ${version}, so a deploy will refuse to start`,
+      ).toBe(true);
+    }
+
+    // The control: there are migrations there for either check to have bitten on.
+    expect(migrations.length).toBeGreaterThan(5);
   });
 
   it('and says on its face that it is not a migration set', () => {

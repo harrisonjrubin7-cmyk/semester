@@ -684,17 +684,66 @@ added two more ledger rows with no file. Their content is folded into
 `20260921143455_forms.sql` and `20260921143653_access_log.sql`, so nothing is
 lost from a build — but the rows are in the ledger and the deploy counts them.
 
-**No fix is proposed here, deliberately.** The shapes available are
-`supabase migration repair` to mark the thirteen applied — the production write
-step 5 was withdrawn over — or files in `migrations/` that are no-ops on a
-fresh build, or a squashed baseline whose version is the ledger's newest. Each
-is a different answer to "what is `migrations/` for", which is the question
-this whole document is about, and picking one is a decision rather than a
-patch. What is settled is the diagnosis: the error is named, it is reproducible
-on every merge, and the thirteen rows are enumerated above.
+### The fix: a stub per row, holding the version and nothing else
 
-`ledgerfiles.test.ts` holds the count where it is, so that the next hand-applied
-migration cannot quietly make it fourteen.
+Three shapes were available. `supabase migration repair` would mark the
+thirteen applied, which is a write to the ledger and the thing step 5 was
+withdrawn over — worse here than there, because the repair that removes the
+complaint is `--status reverted`, and that *deletes the record of what
+production ran*. A squashed baseline carrying the ledger's newest version does
+not help either: the other twenty-seven rows still have no file. What is left
+is the third, and on inspection it is not a compromise but the only statement
+that is actually true of both sides.
+
+**`migrations/` now holds a file for every row in the ledger, and thirteen of
+them contain no SQL.** Each says, in its own header, what ran, when, where its
+statements are recorded, and why they are not repeated in it.
+
+That works because the two requirements were never in conflict about *files* —
+only about *statements*:
+
+  * A **deploy** needs the version to exist and reads nothing else. All thirteen
+    versions are already in the ledger, so `db push` finds the file, skips it,
+    and goes on to the pending migrations. The stub is never executed against
+    production.
+  * A **build from empty** needs each effect exactly once, and gets it from the
+    baseline. The stub runs and does nothing.
+
+Measured rather than argued, with `supabase/fingerprint.sql` — step 4's own
+instrument — over two throwaway clusters built from `local.stub.sql` and every
+file in `migrations/`, one with the thirteen applied and one with them skipped:
+
+| | with the stubs | without them |
+| --- | --- | --- |
+| columns | `059a98b5…` | `059a98b5…` |
+| constraints | `7476e44a…` | `7476e44a…` |
+| indexes | `14ba0a25…` | `14ba0a25…` |
+| functions | `ffc6d1b1…` | `ffc6d1b1…` |
+| code | `405e2986…` | `405e2986…` |
+| policies | `eb520788…` | `eb520788…` |
+
+Six of six identical. The stubs are inert, which is the whole claim.
+
+**Nothing was written to production.** The ledger is untouched; the thirteen
+rows still say what they always said. What changed is that the repository now
+admits they exist.
+
+### What guards it
+
+`ledgerfiles.test.ts` was written as a ratchet — the rows without files had to
+be among the thirteen known — because at the time the thirteen were not a
+mistake to delete. With the stubs the count is zero, so it asserts zero, which
+is the stronger statement and the one worth keeping: **a migration that reaches
+production without a file here is a broken deploy**, and that is as true of the
+next one as of these.
+
+`migrationhistory.test.ts` kept the recovered ten out of `migrations/` by
+filename, which was the right question until `migrations/` gained a stub under
+each of those names. It asks about **content** now — no file in `migrations/`
+may be byte-identical to a history record — which is what the filename check
+was standing in for, and it gained the other half: every recorded version must
+still have its stub, because deleting one puts the deploy straight back to
+`Remote migration versions not found in local migrations directory`.
 
 ## What this costs, and what it does not fix
 
