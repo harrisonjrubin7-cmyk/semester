@@ -19,12 +19,63 @@ cd app && npm run build → exit 0, 234 JS chunks, 6,469,990 B total
                           entry index-*.js = 562,445 B (174.79 kB gzip)
 ```
 
+That block is history, and it is kept because it is the only record of where
+this started. It stopped being a gate some weeks ago, which is the thing this
+section now says out loud rather than leaving for a tester to discover.
+
+**Re-taken 2026-09-21 on `4e62a1a`, and this is the one the rows below read:**
+
+<!--figures-->
+```
+cd app && npm test      → 551 files, 11,193 passed, 10 skipped, exit 0
+cd app && npm run build → exit 0, 285 JS chunks, 7,727,313 B total
+                          entry index-*.js = 511,045 B (152.72 kB gzip)
+```
+<!--/-->
+
+### Why a stale baseline is worse than none
+
+Eleven days separate those two blocks, and in them the suite gained 5,981
+tests and the bundle gained 1,257,323 B. Both gates that read the old figures
+had stopped being able to fail:
+
+- **A1** asked for *260 files and ≥ 5,212 tests*. The suite was at 11,193. Half
+  of every test in this repository could have been deleted and the gate would
+  still have passed, which is the exact regression its own next sentence — *"a
+  dropped test counts as a regression, not as a cleanup"* — exists to catch.
+- **B1** asked that the entry chunk *not grow beyond 562,445 B*. It is
+  511,045 B. The ceiling sat **51,400 B above the floor**, so the entry chunk
+  could have grown by a tenth and passed. A budget with ten per cent of slack
+  in it is not a budget.
+
+The entry chunk is *smaller* than at the baseline — 51,400 B and 22.07 kB of
+gzip smaller — while total JS grew 19.4%. That is code-splitting working
+exactly as **B2** asks, and it is why B1's ceiling drifted the wrong way
+without anybody noticing: nothing was going wrong, so nothing drew attention
+to the number that had stopped watching.
+
+**A1 no longer states a fixed count**, because a count is the wrong shape for
+the thing it is guarding. Tests churn — this repository adds them by the
+hundred in a week — so any number written here is stale within days, and a
+stale floor fails open every time. The rule below is relative to the last run
+recorded in this file instead, which is a figure that moves when the suite
+moves.
+
+**B1's ceiling is re-taken above** and is meant to be re-taken again whenever
+growth is justified. The two figures must agree: `lib/checklist.test.ts`
+reads both out of this file and fails if the ceiling and the reading drift
+apart, which is the failure that happened here — one number updated eleven
+times in the run logs below while the other sat still.
+
 ---
 
 ## A. Automated gates — all four must pass, every phase
 
-- [ ] **A1** `cd app && npm test` — 260 files pass, **≥ 5,212 tests pass**, 0 failures.
-      A dropped test counts as a regression, not as a cleanup.
+- [ ] **A1** `cd app && npm test` — 0 failures, and **no fewer tests than the
+      last run recorded in this file** (§ Runs below; 11,197 as of `4e62a1a`).
+      A dropped test counts as a regression, not as a cleanup. Relative rather
+      than a fixed number on purpose: see *Why a stale baseline is worse than
+      none* above.
 - [ ] **A2** `cd app && npm run test:zones` — the suite passes under both
       `America/Chicago` and `Pacific/Kiritimati`.
 - [ ] **A3** `cd app && npm run lint` — oxlint clean, `scripts/styles.mjs` clean (no raw
@@ -33,8 +84,9 @@ cd app && npm run build → exit 0, 234 JS chunks, 6,469,990 B total
 
 ## B. Bundle and load — the prompt's own performance rule
 
-- [ ] **B1** Entry chunk `index-*.js` has **not grown beyond 562,445 B**, or the
-      growth is stated in bytes and justified.
+- [ ] **B1** Entry chunk `index-*.js` has **not grown beyond <!--entry-->511,045<!--/--> B**, or the
+      growth is stated in bytes and justified — and the figures block above is
+      re-taken with it, so the ceiling never sits above the reading again.
 - [ ] **B2** Every new Workspace editor is in its own lazily-imported chunk —
       confirmed by finding it as a separate file in `dist/assets`, not inside
       the entry chunk.
@@ -496,3 +548,48 @@ Two more places where unbounded work could have hidden, both already sound:
 
 **P1, P2, P4** — service worker, PWA install and multi-tab sync, unchanged
 since Run 2 and still recorded as untested rather than passed.
+
+---
+
+## Run 5 — the figures themselves, re-taken (2026-09-21)
+
+Not a phase. The four runs above were each taken after a body of feature work;
+this one exists because the numbers at the top of this file had been left
+behind by eleven days of it, and two gates had stopped being able to fail.
+Recorded here in the same form as the others so that **A1** has a last run to
+read, which is the whole of its new rule.
+
+Taken on `4e62a1a` plus this change, which is one markdown file and one test
+and adds no application code — the bundle figures are therefore identical to
+the block at the top of this file, which is that commit without it.
+
+### Automated gates
+
+| | Result |
+| --- | --- |
+| **A1** `cd app && npm test` | **PASS** — 552 files, **11,197 passed**, 10 skipped, 0 failed. `4e62a1a` alone reads 551 and 11,193; the four added here are this run's own guard. Previous recorded run was 5,534 on 2026-09-10, and the distance is the point. |
+| **A2** `cd app && npm run test:zones` | **PASS** — 11,197 under `America/Chicago` and `Pacific/Kiritimati`, identical to UTC. |
+| **A3** `cd app && npm run lint` | **PASS** — exit 0. oxlint clean; `styles.mjs` ok (type 170 · leading 96 · space 0 · shorthand 0 · dim 2, 0 allowed exceptions); `labels.mjs` ok. |
+| **A4** `cd app && npm run build` | **PASS** — exit 0, no TypeScript errors. `check:university` also clean. |
+| — | `npm run test:shuffle` — 11,197 in an order nobody chose. `node pipeline/validate.mjs` — 4 courses, 48 items, 8 episodes, all checks passed. |
+
+### Bundle
+
+| | 2026-09-10 baseline | Now | Result |
+| --- | --- | --- | --- |
+| **B1** entry `index-*.js` | 562,445 B | **511,045 B** (152.72 kB gzip) | **PASS** — 51,400 B *smaller*, and the ceiling is re-taken here so it stops reading as a pass by default. |
+| **B2** editors code-split | — | 285 chunks, entry smaller while total grew | **PASS** — this is the mechanism that made B1's old ceiling slack. |
+| **B3** no heavy deps in entry | — | no dependency added | **PASS** — this change is a document and a test. |
+| **B4** totals reported | 234 chunks, 6,469,990 B | 285 chunks, 7,727,313 B | **REPORTED** — +51 chunks, +1,257,323 B (+19.4%), none of it in the entry chunk. |
+
+### What this run did not do
+
+**C through Q were not re-executed.** This change touches no screen, no route
+and no component, so re-driving them would be reporting Run 4's results under
+today's date — which is the failure this whole run exists to correct, in a
+different costume. They stand as last recorded.
+
+`lib/checklist.test.ts` now holds the one part of this that can rot silently:
+the figures block above and **B1**'s ceiling must state the same number. It
+cannot tell anyone the figure is *true* — that needs a build, and a build is
+not a test — only that this file has stopped contradicting itself.
