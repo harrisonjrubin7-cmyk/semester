@@ -3,6 +3,8 @@ import {
   EXAM_HORIZON_DAYS,
   MIN_STRETCH_MINUTES,
   SECONDS_PER_CARD,
+  counted,
+  countedLine,
   doneToday,
   dueIn,
   testWeight,
@@ -10,6 +12,8 @@ import {
   planTotals,
   rank,
   reasonFor,
+  warmedLine,
+  type Counted,
   type UnitFacts,
 } from './revise';
 import { emptyReview, type CardReview, type Reviews } from './review';
@@ -289,5 +293,174 @@ describe('doneToday', () => {
       b: answered({ seen: new Date(2026, 8, 10, 9, 0).getTime() }),
     };
     expect(doneToday(reviews, now)).toBe(0);
+  });
+});
+
+// ── The evening, counted rather than totalled ────────────────────────────
+
+describe('counted', () => {
+  const unit = (id: string, keys: string[]): UnitFacts => ({
+    courseId: 'econ',
+    code: 'ECON 1020',
+    index: 0,
+    name: id,
+    mastery: 50,
+    keys,
+    testInDays: null,
+    testKind: null,
+  });
+
+  const DAY = 86_400_000;
+  const now = new Date('2026-09-21T20:00:00Z');
+  const at = now.getTime();
+
+  /** A card answered `daysAgo`, due `dueIn` days from then. */
+  const seen = (daysAgo: number, dueInDays: number) => ({
+    right: 1,
+    wrong: 0,
+    streak: 1,
+    ease: 2.5,
+    interval: dueInDays,
+    seen: at - daysAgo * DAY,
+    due: at - daysAgo * DAY + dueInDays * DAY,
+  });
+
+  it('splits the lump the screen used to print as one number', () => {
+    // a: answered a week ago, due back a day later — come round.
+    // b: never answered at all — new material, not a backlog.
+    const reviews = { a: seen(7, 1) };
+    const c = counted([unit('U1', ['a', 'b'])], reviews, now);
+    expect(c.comeRound).toBe(1);
+    expect(c.neverMet).toBe(1);
+  });
+
+  it('does not count a card that has never been met as having come round', () => {
+    // The control, and the whole finding: `dueIn` counts both as due, so a
+    // probe that reported them together would look right on the test above.
+    const c = counted([unit('U1', ['a', 'b', 'c'])], {}, now);
+    expect(c.comeRound).toBe(0);
+    expect(c.neverMet).toBe(3);
+  });
+
+  it('does not count a card that is answered and not yet due', () => {
+    const reviews = { a: seen(1, 6) };
+    const c = counted([unit('U1', ['a'])], reviews, now);
+    expect(c.comeRound).toBe(0);
+    expect(c.neverMet).toBe(0);
+  });
+
+  it('counts a card named in two units once', () => {
+    // Each shipped guide's self-test recaps a question or two, so one key can
+    // sit in two units. Counting per unit and summing reports more cards than
+    // the course has.
+    const c = counted([unit('U1', ['a', 'b']), unit('U2', ['b'])], {}, now);
+    expect(c.neverMet).toBe(2);
+  });
+
+  it('counts the units started, not a percentage of anybody', () => {
+    const reviews = { a: seen(1, 6) };
+    const c = counted([unit('U1', ['a']), unit('U2', ['z'])], reviews, now);
+    expect(c.warmed).toBe(1);
+    expect(c.units).toBe(2);
+  });
+
+  it('counts distinct cards touched today', () => {
+    const reviews = { a: seen(0, 3), b: seen(7, 1) };
+    expect(counted([unit('U1', ['a', 'b'])], reviews, now).today).toBe(1);
+  });
+});
+
+describe('doneToday', () => {
+  const card = (seen: number) => ({
+    right: 1, wrong: 0, streak: 1, ease: 2.5, interval: 1, seen, due: seen,
+  });
+  const now = new Date('2026-09-21T20:00:00');
+  const start = new Date(2026, 8, 21).getTime();
+
+  it('counts a card answered since the last tick of the clock', () => {
+    // `useNow` ticks every thirty seconds, so `now` on screen is a snapshot
+    // that can be half a minute behind the answer just given — and the moment
+    // anybody reads this number is the moment they come off a drill. The old
+    // bound was `now.getTime()`, which looks like the day and is not.
+    expect(doneToday({ a: card(now.getTime() + 12_000) }, now)).toBe(1);
+  });
+
+  it('counts one answered earlier today', () => {
+    expect(doneToday({ a: card(start + 3_600_000) }, now)).toBe(1);
+  });
+
+  it('does not count yesterday', () => {
+    // The control: the bound moved to the end of the day, not away.
+    expect(doneToday({ a: card(start - 1) }, now)).toBe(0);
+  });
+
+  it('does not count tomorrow', () => {
+    expect(doneToday({ a: card(start + 86_400_000) }, now)).toBe(0);
+  });
+
+  it('does not count a card never answered', () => {
+    expect(doneToday({ a: card(0) }, now)).toBe(0);
+  });
+});
+
+describe('countedLine', () => {
+  const line = (c: Partial<Counted>) =>
+    countedLine({ comeRound: 0, neverMet: 0, today: 0, warmed: 0, units: 0, ...c });
+
+  it('names each part with its own noun', () => {
+    expect(line({ comeRound: 12, neverMet: 40, today: 3 })).toBe(
+      '12 cards come round · 40 cards never met · 3 cards today',
+    );
+  });
+
+  it('leaves out the parts that are nought', () => {
+    // A row of zeroes is how a summary stops being read.
+    expect(line({ neverMet: 40 })).toBe('40 cards never met');
+    expect(line({ comeRound: 1, today: 2 })).toBe('1 card come round · 2 cards today');
+  });
+
+  it('uses the singular for one', () => {
+    expect(line({ comeRound: 1 })).toBe('1 card come round');
+  });
+
+  it('says something true rather than nothing when there is nothing waiting', () => {
+    expect(line({ today: 0 })).toContain('Nothing waiting');
+  });
+
+  it('is never a streak, a score or a percentage', () => {
+    // `lib/you.ts` and `lib/weekly.ts` both refuse those in writing. This is
+    // the third place the rule now has to survive, so it is asserted here
+    // rather than left to whoever edits the strings next.
+    const said = [
+      line({ comeRound: 12, neverMet: 40, today: 3 }),
+      line({}),
+      warmedLine({ comeRound: 0, neverMet: 0, today: 0, warmed: 3, units: 11 }),
+    ].join(' ');
+    expect(said).not.toMatch(/streak|in a row|day[s]? running|%|score|points/i);
+  });
+});
+
+describe('warmedLine', () => {
+  const at = (warmed: number, units: number) =>
+    warmedLine({ comeRound: 0, neverMet: 0, today: 0, warmed, units });
+
+  it('says what has been started, out of what there is', () => {
+    expect(at(3, 11)).toBe('3 of 11 units started');
+  });
+
+  it('says nothing once every unit has been started', () => {
+    // "11 of 11" is a line that has stopped telling anybody anything.
+    expect(at(11, 11)).toBe('');
+  });
+
+  it('says nothing where there are no units at all', () => {
+    expect(at(0, 0)).toBe('');
+  });
+
+  it('says nothing before anything has been started', () => {
+    // "0 of 44" is a scoreboard reading nought on a fresh install, beside a
+    // line that has already said every card here is new. Seen on the screen,
+    // which is the only place it was visible.
+    expect(at(0, 44)).toBe('');
   });
 });
