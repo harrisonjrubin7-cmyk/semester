@@ -14,7 +14,17 @@
 --
 -- ## Why empty rather than the statements it ran
 --
--- This one has no record file, because it was typed into the dashboard rather than read back out. What it did is in [`20260921144011_function_grants.sql`](20260921144011_function_grants.sql), which is the same revokes written down properly and guarded by `to_regprocedure` — see fault 4 in `MIGRATION-HISTORY.md`.
+-- Its statements are in [`../history/20260921002658_revoke_function_execute_from_supabase_default_roles.sql`](../history/20260921002658_revoke_function_execute_from_supabase_default_roles.sql), byte-for-byte as the ledger reported them, checked by `migrationhistory.test.ts` against `MANIFEST` — the same as the other twelve.
+--
+-- This file said the opposite for an hour: that there was no record "because it
+-- was typed into the dashboard rather than read back out". The ledger says
+-- otherwise. `select md5(array_to_string(statements, E'\n')) from
+-- supabase_migrations.schema_migrations where version = '20260921002658'`
+-- returns `e847a7487970a86c0475047c8ec3ca97`, the md5 of that file. A row typed
+-- into the dashboard still has its statements stored; nothing about how a
+-- migration is applied decides whether it can be read back.
+--
+-- What it did is also in [`20260921144011_function_grants.sql`](20260921144011_function_grants.sql), which is the same revokes written down properly and guarded by `to_regprocedure` — see fault 4 in `MIGRATION-HISTORY.md`. That is where the *maintained* version lives; the record is what the database actually ran.
 --
 -- Putting those statements here would break every build from empty. The eight
 -- baseline files are a squash of everything through 11 September, so the
