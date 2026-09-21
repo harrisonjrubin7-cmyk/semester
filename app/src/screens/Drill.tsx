@@ -154,7 +154,7 @@ export function Drill() {
           : 'Come back tonight.';
     return (
       <div style={{ padding: 'var(--page-pad)' }}>
-        <div style={{ padding: '40px 0 0', textAlign: 'center' }}>
+        <div style={{ paddingTop: 'calc(40px * var(--density, 1))', paddingInline: '0', paddingBottom: '0', textAlign: 'center' }}>
           <div className="chrome-text" style={{ fontSize: 'calc(60px * var(--text-scale, 1))', lineHeight: 1 }}>
             {got}/{pool.length}
           </div>
@@ -177,7 +177,7 @@ export function Drill() {
 
           {/* This used to promise "missed ones come back first tomorrow" while
               keeping no record of what was missed. Now it reads the schedule. */}
-          <Blueprint plain style={{ padding: 14, marginTop: 26, textAlign: 'left' }}>
+          <Blueprint plain style={{ paddingBlock: 'calc(14px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))', marginTop: 'calc(26px * var(--density, 1))', textAlign: 'left' }}>
             <div className="kicker">What comes back</div>
             <div style={{ fontSize: 'var(--type-md)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)' }}>
               {waiting === 0
@@ -232,7 +232,7 @@ export function Drill() {
             Two facts about the same person, no grade and no target — see
             `lib/sure.ts` for why a graded calibration destroys its own signal.
           */}
-          <Blueprint plain style={{ padding: 14, marginTop: 14, textAlign: 'left' }}>
+          <Blueprint plain style={{ paddingBlock: 'calc(14px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))', marginTop: 'calc(14px * var(--density, 1))', textAlign: 'left' }}>
             <div className="kicker">How sure you were</div>
             <div style={{ fontSize: 'var(--type-base)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
               {calibrationLine(calibration(state.answers))}
@@ -259,7 +259,7 @@ export function Drill() {
             ) : null}
           </Blueprint>
 
-          <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 22 }}>
+          <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'calc(22px * var(--density, 1))' }}>
             <button
               type="button"
               className="btn btn-secondary"
@@ -348,7 +348,7 @@ export function Drill() {
         </div>
       </div>
 
-      <div className="kicker" style={{ marginTop: 18 }}>
+      <div className="kicker" style={{ marginTop: 'calc(18px * var(--density, 1))' }}>
         {/* In a mixed run the course matters more than the unit — knowing
             which subject you are in is half of what the card is testing, so
             it is named rather than left to be inferred from the question. The
@@ -366,7 +366,7 @@ export function Drill() {
           />
           <div
             style={{
-              fontSize: 'calc(11.5px * var(--text-scale, 1))',
+              fontSize: 'var(--type-xs-plus)',
               color: 'var(--app-dim)',
               marginTop: 'var(--sp-3)',
               lineHeight: 'var(--leading-normal)',
@@ -384,7 +384,7 @@ export function Drill() {
         onClick={() => !state.revealed && dispatch({ type: 'flip' })}
         style={{
           marginTop: 'var(--sp-5)',
-          padding: '24px 20px',
+          paddingBlock: 'calc(24px * var(--density, 1))', paddingInline: 'calc(20px * var(--density, 1))',
           minHeight: 250,
           display: 'flex',
           flexDirection: 'column',
@@ -413,7 +413,7 @@ export function Drill() {
           <span
             style={{
               marginTop: 'var(--sp-7)',
-              paddingTop: 14,
+              paddingTop: 'calc(14px * var(--density, 1))',
               borderTop: '1px solid var(--app-line)',
               fontSize: 'calc(16px * var(--text-scale, 1))',
               lineHeight: 'var(--leading-relaxed)',
@@ -463,7 +463,7 @@ export function Drill() {
         per card is a drill people stop doing, and half a signal beats none.
       */}
       {state.revealed && (
-        <div style={{ marginTop: 18 }}>
+        <div style={{ marginTop: 'calc(18px * var(--density, 1))' }}>
           <div style={{ display: 'flex', gap: 'var(--sp-4)' }}>
             <button
               type="button"
@@ -492,7 +492,7 @@ export function Drill() {
             style={{
               display: 'flex',
               gap: 'var(--sp-3)',
-              marginTop: 9,
+              marginTop: 'calc(9px * var(--density, 1))',
               alignItems: 'center',
               flexWrap: 'wrap',
             }}
@@ -521,7 +521,7 @@ export function Drill() {
                 }
                 style={{
                   width: 'auto',
-                  padding: '6px 9px',
+                  paddingBlock: 'calc(6px * var(--density, 1))', paddingInline: 'calc(9px * var(--density, 1))',
                   borderRadius: 'var(--r-sm)',
                   border: '1px solid var(--app-line)',
                   fontSize: 'calc(10.5px * var(--text-scale, 1))',
@@ -544,7 +544,7 @@ export function Drill() {
                 }
                 style={{
                   width: 'auto',
-                  padding: '6px 9px',
+                  paddingBlock: 'calc(6px * var(--density, 1))', paddingInline: 'calc(9px * var(--density, 1))',
                   borderRadius: 'var(--r-sm)',
                   border: '1px solid var(--app-accent)',
                   fontSize: 'calc(10.5px * var(--text-scale, 1))',
@@ -598,7 +598,7 @@ export function Quiz() {
       score >= n - 1 ? 'Exam-ready.' : score >= n * 0.6 ? 'Nearly there.' : 'Read the units again.';
     return (
       <div style={{ padding: 'var(--page-pad)' }}>
-        <div style={{ padding: '40px 0 0', textAlign: 'center' }}>
+        <div style={{ paddingTop: 'calc(40px * var(--density, 1))', paddingInline: '0', paddingBottom: '0', textAlign: 'center' }}>
           <div className="chrome-text" style={{ fontSize: 'calc(60px * var(--text-scale, 1))', lineHeight: 1 }}>
             {score}/{n}
           </div>
@@ -643,7 +643,7 @@ export function Quiz() {
           >
             Ten questions pulled at random from {guide.code}. Re-run it and you get a different ten.
           </div>
-          <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 26 }}>
+          <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'calc(26px * var(--density, 1))' }}>
             <button
               type="button"
               className="btn btn-secondary"
@@ -725,7 +725,7 @@ export function Quiz() {
         </div>
       </div>
 
-      <div className="kicker" style={{ marginTop: 18 }}>
+      <div className="kicker" style={{ marginTop: 'calc(18px * var(--density, 1))' }}>
         {current.unit}
       </div>
       <div
@@ -741,7 +741,7 @@ export function Quiz() {
         {current.q}
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 9, marginTop: 'var(--sp-7)' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(9px * var(--density, 1))', marginTop: 'var(--sp-7)' }}>
         {current.opts.map((o, i) => {
           const chosen = state.quizPicked === i;
           const reveal = answered;
@@ -756,7 +756,7 @@ export function Quiz() {
                 display: 'flex',
                 gap: 'var(--sp-5)',
                 alignItems: 'flex-start',
-                padding: '12px 13px',
+                paddingBlock: 'calc(12px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))',
                 border: `1px solid ${
                   reveal && o.ok
                     ? 'var(--app-accent)'
@@ -776,13 +776,13 @@ export function Quiz() {
                   flex: 'none',
                   fontFamily: 'var(--font-heading)',
                   fontSize: 'var(--type-md)',
-                  lineHeight: 1.35,
+                  lineHeight: 'var(--leading-tight-plus)',
                   color: 'var(--app-accent)',
                 }}
               >
                 {reveal && o.ok ? '✓' : chosen ? '✕' : ''}
               </span>
-              <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base)', lineHeight: 1.4, textWrap: 'pretty' }}>
+              <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base)', lineHeight: 'var(--leading-normal-minus)', textWrap: 'pretty' }}>
                 {o.text}
               </span>
             </button>
@@ -834,16 +834,16 @@ export function Quiz() {
 
       {answered && (
         <>
-          <Blueprint style={{ padding: '13px 14px', marginTop: 'var(--sp-7)' }}>
+          <Blueprint style={{ paddingBlock: 'calc(13px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))', marginTop: 'var(--sp-7)' }}>
             <div className="kicker">In full</div>
-            <div style={{ fontSize: 'var(--type-md)', lineHeight: 'var(--leading-relaxed)', marginTop: 5, textWrap: 'pretty' }}>
+            <div style={{ fontSize: 'var(--type-md)', lineHeight: 'var(--leading-relaxed)', marginTop: 'calc(5px * var(--density, 1))', textWrap: 'pretty' }}>
               {current.full}
             </div>
           </Blueprint>
           <ActionButton
             onClick={() => dispatch({ type: 'nextQuestion' })}
             tone="primary"
-            style={{ fontSize: 'var(--type-lg)', marginTop: 14 }}
+            style={{ fontSize: 'var(--type-lg)', marginTop: 'calc(14px * var(--density, 1))' }}
           >
             Next
           </ActionButton>

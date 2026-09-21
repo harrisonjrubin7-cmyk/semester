@@ -49,7 +49,7 @@ export function SettingsIndex() {
     // not look like the app it configures is the one screen that cannot afford
     // to be an exception.
     <div>
-      <div style={{ padding: '0 var(--page-pad) calc(14px * var(--density, 1))' }}>
+      <div style={{ paddingTop: '0', paddingInline: 'var(--page-pad)', paddingBottom: 'calc(14px * var(--density, 1))' }}>
         <input
           className="input"
           type="search"
@@ -57,7 +57,7 @@ export function SettingsIndex() {
           onChange={(e) => setQuery(e.target.value)}
           placeholder={SEARCH_PLACEHOLDER}
           aria-label={SEARCH_PLACEHOLDER}
-          style={{ width: '100%', height: 40, fontSize: 'calc(13.5px * var(--text-scale, 1))' }}
+          style={{ width: '100%', height: 40, fontSize: 'var(--type-base-plus)' }}
         />
       </div>
 
@@ -66,7 +66,7 @@ export function SettingsIndex() {
           {found.length === 0 ? (
             <div
               style={{
-                fontSize: 'calc(12.5px * var(--text-scale, 1))',
+                fontSize: 'var(--type-sm-plus)',
                 color: 'var(--app-dim)',
                 lineHeight: 'var(--leading-relaxed)',
                 textWrap: 'pretty',

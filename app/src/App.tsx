@@ -586,11 +586,11 @@ function TabBar() {
             style={{
               flex: 1,
               borderTop: `2px solid ${on ? 'var(--app-accent)' : 'transparent'}`,
-              padding: '9px 0 4px',
+              paddingTop: 'calc(9px * var(--density, 1))', paddingInline: '0', paddingBottom: 'calc(4px * var(--density, 1))',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              gap: 3,
+              gap: 'calc(3px * var(--density, 1))',
               /*
                * The tab that is not current still names a destination, so it
                * is text and takes `--app-dim`. At `--app-faint` — the
@@ -1124,11 +1124,11 @@ export default function App() {
       role="status"
       style={{
         flex: 'none',
-        padding: '10px 18px 11px',
+        paddingTop: 'calc(10px * var(--density, 1))', paddingInline: 'calc(18px * var(--density, 1))', paddingBottom: 'calc(11px * var(--density, 1))',
         background: 'var(--app-warn-wash)',
         borderBottom: '1px solid var(--app-warn-line)',
         color: 'var(--app-fg)',
-        fontSize: 'calc(12.5px * var(--text-scale, 1))',
+        fontSize: 'var(--type-sm-plus)',
         lineHeight: 'var(--leading-normal)',
         textWrap: 'pretty',
       }}

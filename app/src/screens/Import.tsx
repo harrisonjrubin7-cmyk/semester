@@ -80,11 +80,11 @@ const ACCEPT = `${DOCUMENTS}text/*,application/pdf,application/zip`;
  */
 const QUIET: CSSProperties = {
   display: 'block',
-  fontSize: 'calc(12.5px * var(--text-scale, 1))',
+  fontSize: 'var(--type-sm-plus)',
   color: 'var(--app-dim)',
   marginTop: 'var(--sp-5)',
   width: 'auto',
-  padding: '6px 0',
+  paddingBlock: 'calc(6px * var(--density, 1))', paddingInline: '0',
   textAlign: 'left',
 };
 
@@ -656,7 +656,7 @@ export function Import() {
             onChange={(e) => setPasted(e.target.value)}
             placeholder="The schedule, the grading, the dates — however it is written."
             style={{
-              fontSize: 'calc(13.5px * var(--text-scale, 1))',
+              fontSize: 'var(--type-base-plus)',
               lineHeight: 'var(--leading-normal)',
               height: 'auto',
               resize: 'vertical',
@@ -700,7 +700,7 @@ export function Import() {
             ...rowEleven,
           }}
         >
-          <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base-plus)', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {f.name}
           </span>
           <span style={{ fontSize: 'var(--type-xs)', color: 'var(--app-dim)', flex: 'none' }}>
@@ -726,7 +726,7 @@ export function Import() {
             placeholder="Optional — “the midterm moved to Oct 8”, “skip chapter 4”"
             value={hint}
             onChange={(e) => setHint(e.target.value)}
-            style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))' }}
+            style={{ fontSize: 'var(--type-base-plus)' }}
           />
 
           {/* Beside the build button rather than in Settings: the moment
@@ -756,7 +756,7 @@ export function Import() {
               disabled={busy !== ''}
               onClick={() => void build()}
               tone="primary"
-              style={{ fontSize: 'var(--type-lg)', marginTop: 14 }}
+              style={{ fontSize: 'var(--type-lg)', marginTop: 'calc(14px * var(--density, 1))' }}
             >
               {busy && !busy.startsWith('Reading ') ? busy : `Build the course from ${words.toLocaleString()} words`}
             </ActionButton>
@@ -920,7 +920,7 @@ function ByHand() {
   }
 
   return (
-    <Blueprint style={{ padding: 14, marginTop: 'var(--sp-6)' }}>
+    <Blueprint style={{ paddingBlock: 'calc(14px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))', marginTop: 'var(--sp-6)' }}>
       <Folding name="ByHand">
       <SectionLabel>Add it by hand</SectionLabel>
       <div style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'stretch' }}>
@@ -944,7 +944,7 @@ function ByHand() {
           style={{
             flex: 'none',
             width: 'auto',
-            padding: '0 18px',
+            paddingBlock: '0', paddingInline: 'calc(18px * var(--density, 1))',
             fontSize: 'var(--type-sm)',
             letterSpacing: '0.1em',
             textTransform: 'uppercase',
@@ -997,23 +997,23 @@ function Rediff({
         display: 'flex',
         gap: 'var(--sp-6)',
         alignItems: 'baseline',
-        padding: '9px 0',
+        paddingBlock: 'calc(9px * var(--density, 1))', paddingInline: '0',
         borderBottom: '1px solid var(--app-line-soft)',
       }}
     >
-      <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 1.35 }}>{label}</span>
-      <span style={{ flex: 'none', fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)' }}>{right}</span>
+      <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base-plus)', lineHeight: 'var(--leading-tight-plus)' }}>{label}</span>
+      <span style={{ flex: 'none', fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)' }}>{right}</span>
     </div>
   );
 
   return (
     <Folding name="Rediff">
       <SectionLabel>You already have {code}</SectionLabel>
-      <Blueprint style={{ padding: '14px 15px' }}>
+      <Blueprint style={{ paddingBlock: 'calc(14px * var(--density, 1))', paddingInline: 'calc(15px * var(--density, 1))' }}>
         <div className="chrome-text" style={{ fontSize: 'calc(20px * var(--text-scale, 1))', lineHeight: 1.2, textWrap: 'pretty' }}>
           {rediffSummary(changes)}
         </div>
-        <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 7, lineHeight: 'var(--leading-relaxed)' }}>
+        <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'calc(7px * var(--density, 1))', lineHeight: 'var(--leading-relaxed)' }}>
           {changes.same} unchanged. Saving replaces the course you have rather than adding a second
           copy of it.
         </div>
@@ -1109,7 +1109,7 @@ function Preview({
         <div className="chrome-text" style={{ fontSize: 'calc(24px * var(--text-scale, 1))', lineHeight: 1.1 }}>
           {m.course.code}
         </div>
-        <div style={{ fontSize: 'var(--type-md)', marginTop: 3 }}>{m.course.name}</div>
+        <div style={{ fontSize: 'var(--type-md)', marginTop: 'calc(3px * var(--density, 1))' }}>{m.course.name}</div>
         <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)' }}>
           {[m.course.prof, m.course.meets, m.course.room, m.course.credits]
             .filter(Boolean)
@@ -1118,7 +1118,7 @@ function Preview({
         <div
           style={{
             fontFamily: 'var(--font-heading)',
-            fontSize: 'calc(11.5px * var(--text-scale, 1))',
+            fontSize: 'var(--type-xs-plus)',
             letterSpacing: '0.1em',
             textTransform: 'uppercase',
             color: 'var(--app-dim)',
@@ -1134,9 +1134,9 @@ function Preview({
       {warnings.length > 0 && (
         <>
           <SectionLabel>Worth knowing</SectionLabel>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(7px * var(--density, 1))' }}>
             {warnings.map((w) => (
-              <div key={w} style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
+              <div key={w} style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
                 · {w}
               </div>
             ))}
@@ -1204,11 +1204,11 @@ function Preview({
               <span
                 style={{
                   display: 'block',
-                  fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-xs-plus)',
                   color: 'var(--app-dim)',
                   marginTop: 'var(--sp-2)',
                   lineHeight: 'var(--leading-normal)',
-                  paddingLeft: 92,
+                  paddingLeft: 'calc(92px * var(--density, 1))',
                 }}
               >
                 “{i.quote}”
@@ -1228,8 +1228,8 @@ function Preview({
       <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(16px * var(--text-scale, 1))' }}>{m.guide.units[0]?.name}</div>
       {(m.guide.units[0]?.cards ?? []).slice(0, 2).map((c) => (
         <div key={c.q} style={{ marginTop: 'var(--sp-4)' }}>
-          <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', fontWeight: 600, lineHeight: 1.35 }}>{c.q}</div>
-          <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginTop: 'var(--sp-1)' }}>{c.a}</div>
+          <div style={{ fontSize: 'var(--type-base-plus)', fontWeight: 600, lineHeight: 'var(--leading-tight-plus)' }}>{c.q}</div>
+          <div style={{ fontSize: 'var(--type-base-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginTop: 'var(--sp-1)' }}>{c.a}</div>
         </div>
       ))}
 
@@ -1239,7 +1239,7 @@ function Preview({
         onClick={() => { if (ready) onSave(); }}
         disabled={!ready}
         tone="primary"
-        style={{ fontSize: 'var(--type-lg)', marginTop: 18 }}
+        style={{ fontSize: 'var(--type-lg)', marginTop: 'calc(18px * var(--density, 1))' }}
       >
         {/* The count on the button, because it is the number that changed
             and the button is what commits it. */}
@@ -1247,7 +1247,7 @@ function Preview({
           ? `Replace ${m.course.code} — ${keeping} ${keeping === 1 ? 'date' : 'dates'}`
           : `Add ${m.course.code} — ${keeping} ${keeping === 1 ? 'date' : 'dates'}`}
       </ActionButton>
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-relaxed)' }}>
+      <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-relaxed)' }}>
         {replacing
           ? 'The changes above are what this replaces. Your ticks and your drill history stay where they are.'
           : 'You can add readings to it later, and everything you add flows into the cards, the quiz and the slides at once.'}

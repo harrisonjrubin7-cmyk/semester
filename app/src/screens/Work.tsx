@@ -175,7 +175,7 @@ export function Work() {
       {tab === 'plan' && (
         <>
           <SectionLabel>The instructions</SectionLabel>
-          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)' }}>
+          <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)' }}>
             Paste them, or drop the file your professor posted. You get back what is being asked,
             how it is marked, a plan with dates, and the questions worth asking in office hours.
             You do not get the assignment written — that is yours to write.
@@ -187,7 +187,7 @@ export function Work() {
             onChange={(e) => setInstructions(e.target.value)}
             placeholder="Paste the assignment instructions…"
             rows={7}
-            style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 'var(--leading-relaxed)', resize: 'vertical' }}
+            style={{ fontSize: 'var(--type-base-plus)', lineHeight: 'var(--leading-relaxed)', resize: 'vertical' }}
             aria-label="Assignment instructions"
           />
           <Dictate compact current={instructions} onText={setInstructions} label="Read the instructions out" />
@@ -198,7 +198,7 @@ export function Work() {
               multiple={false}
               block={false}
               onPick={([f]) => void upload(f)}
-              style={{ flex: 'none', padding: '0 14px', height: 40, fontSize: 'var(--type-xs)' }}
+              style={{ flex: 'none', paddingBlock: '0', paddingInline: 'calc(14px * var(--density, 1))', height: 40, fontSize: 'var(--type-xs)' }}
             >
               Upload
             </FilePick>
@@ -219,7 +219,7 @@ export function Work() {
             </button>
           </div>
           {read && (
-            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-4)' }}>Read {read}</div>
+            <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)' }}>Read {read}</div>
           )}
 
           {plan && <PlanView plan={plan} saved={saved} onKeep={keepSteps} />}
@@ -230,7 +230,7 @@ export function Work() {
       {tab === 'draft' && (
         <>
           <SectionLabel>Your draft</SectionLabel>
-          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)' }}>
+          <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)' }}>
             Feedback against the rubric and the course material — what is working, what would move
             the grade most, and anything the guide does not support. Nothing is rewritten for you.
           </div>
@@ -240,7 +240,7 @@ export function Work() {
             onChange={(e) => setDraft(e.target.value)}
             placeholder="Paste what you have written so far…"
             rows={10}
-            style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 'var(--leading-relaxed)', resize: 'vertical' }}
+            style={{ fontSize: 'var(--type-base-plus)', lineHeight: 'var(--leading-relaxed)', resize: 'vertical' }}
             aria-label="Your draft"
           />
           <DraftNote field={draftField} />
@@ -283,7 +283,7 @@ export function Work() {
       {tab === 'ask' && (
         <>
           <SectionLabel>What do you need</SectionLabel>
-          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)' }}>
+          <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)' }}>
             A revision timetable, practice questions, a summary of a reading, an email to a
             professor, an outline of your own argument to react to. This one has {guide.code} in
             front of it, so answers are about your course.
@@ -294,7 +294,7 @@ export function Work() {
             onChange={(e) => setPrompt(e.target.value)}
             placeholder="Write 15 practice questions on the units I am weakest at…"
             rows={4}
-            style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 'var(--leading-relaxed)', resize: 'vertical' }}
+            style={{ fontSize: 'var(--type-base-plus)', lineHeight: 'var(--leading-relaxed)', resize: 'vertical' }}
             aria-label="Your request"
           />
           <button
@@ -358,7 +358,7 @@ export function Work() {
 
       <Trouble said={trouble.said} onRetry={trouble.again} busy={busy} />
 
-      <div style={{ fontSize: 'var(--type-xs)', ...faintLine(), marginTop: 20, lineHeight: 'var(--leading-normal)' }}>
+      <div style={{ fontSize: 'var(--type-xs)', ...faintLine(), marginTop: 'calc(20px * var(--density, 1))', lineHeight: 'var(--leading-normal)' }}>
         Going through {routeLabel()}.
         Whatever you submit has to be your own work.
       </div>
@@ -369,7 +369,7 @@ export function Work() {
 /** Model output, as paragraphs rather than one wall. */
 function Prose({ text }: { text: string }) {
   return (
-    <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 1.6, whiteSpace: 'pre-wrap', textWrap: 'pretty' }}>
+    <div style={{ fontSize: 'var(--type-base-plus)', lineHeight: 'var(--leading-loose)', whiteSpace: 'pre-wrap', textWrap: 'pretty' }}>
       {text}
     </div>
   );
@@ -401,7 +401,7 @@ function PlanView({
 
   return (
     <Folding name="PlanView">
-      <Blueprint style={{ padding: 15, marginTop: 'var(--sp-7)', background: 'var(--app-hero)' }}>
+      <Blueprint style={{ paddingBlock: 'calc(15px * var(--density, 1))', paddingInline: 'calc(15px * var(--density, 1))', marginTop: 'var(--sp-7)', background: 'var(--app-hero)' }}>
         <div className="kicker">What this is</div>
         <div
           className="chrome-text"
@@ -410,7 +410,7 @@ function PlanView({
           {plan.title}
         </div>
         {plan.due && (
-          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 5 }}>Due {plan.due}</div>
+          <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', marginTop: 'calc(5px * var(--density, 1))' }}>Due {plan.due}</div>
         )}
       </Blueprint>
 
@@ -466,7 +466,7 @@ function PlanView({
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 'var(--type-md)', lineHeight: 'var(--leading-tight)' }}>{s.do}</div>
                 {s.why && (
-                  <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 3, lineHeight: 'var(--leading-normal)' }}>
+                  <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'calc(3px * var(--density, 1))', lineHeight: 'var(--leading-normal)' }}>
                     {s.why}
                   </div>
                 )}
@@ -474,7 +474,7 @@ function PlanView({
                   style={{
                     fontSize: 'calc(10.5px * var(--text-scale, 1))',
                     color: 'var(--app-dim)',
-                    marginTop: 5,
+                    marginTop: 'calc(5px * var(--density, 1))',
                     fontFamily: 'var(--font-heading)',
                     letterSpacing: '0.1em',
                     textTransform: 'uppercase',
@@ -514,7 +514,7 @@ function PlanView({
       {plan.unclear.length > 0 && (
         <>
           <SectionLabel>Worth asking about</SectionLabel>
-          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-2)' }}>
+          <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-2)' }}>
             The instructions do not settle these. Ask in office hours or on the discussion board —
             getting this right early is worth more than any amount of redrafting.
           </div>

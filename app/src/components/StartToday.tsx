@@ -36,9 +36,9 @@ export function StartToday() {
   if (list.length === 0) return null;
 
   return (
-    <div style={{ marginTop: 14 }}>
+    <div style={{ marginTop: 'calc(14px * var(--density, 1))' }}>
       <Folding name="StartToday">
-      <SectionLabel style={{ margin: '0 0 8px' }}>Begin today</SectionLabel>
+      <SectionLabel style={{ marginTop: '0', marginInline: '0', marginBottom: 'calc(8px * var(--density, 1))' }}>Begin today</SectionLabel>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
         {list.map((s) => (
           <button
@@ -50,7 +50,7 @@ export function StartToday() {
               display: 'block',
               width: '100%',
               textAlign: 'left',
-              padding: '11px 13px',
+              paddingBlock: 'calc(11px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))',
               borderRadius: 'var(--r-md)',
               border: `1px solid ${s.late ? 'var(--app-warn-line)' : 'var(--app-line)'}`,
               background: s.late ? 'var(--app-warn-wash)' : 'transparent',
@@ -59,8 +59,8 @@ export function StartToday() {
             <span
               style={{
                 display: 'block',
-                fontSize: 'calc(13.5px * var(--text-scale, 1))',
-                lineHeight: 1.35,
+                fontSize: 'var(--type-base-plus)',
+                lineHeight: 'var(--leading-tight-plus)',
                 textWrap: 'pretty',
               }}
             >
@@ -69,9 +69,9 @@ export function StartToday() {
             <span
               style={{
                 display: 'block',
-                fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                fontSize: 'var(--type-xs-plus)',
                 ...secondLine(),
-                marginTop: 3,
+                marginTop: 'calc(3px * var(--density, 1))',
                 textWrap: 'pretty',
               }}
             >
@@ -83,7 +83,7 @@ export function StartToday() {
             <span
               style={{
                 display: 'block',
-                fontSize: 'calc(12.5px * var(--text-scale, 1))',
+                fontSize: 'var(--type-sm-plus)',
                 marginTop: 'var(--sp-3)',
                 lineHeight: 'var(--leading-normal)',
                 textWrap: 'pretty',
@@ -144,14 +144,14 @@ export function StartList() {
 
   return (
     <Folding name="StartList">
-      <SectionLabel style={{ margin: 'calc(24px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}>
+      <SectionLabel style={{ marginTop: 'calc(24px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(6px * var(--density, 1))' }}>
         When to begin
       </SectionLabel>
       <div
         style={{
           fontSize: 'var(--type-sm)',
           color: 'var(--app-dim)',
-          marginBottom: 9,
+          marginBottom: 'calc(9px * var(--density, 1))',
           lineHeight: 'var(--leading-relaxed)',
           textWrap: 'pretty',
         }}
@@ -163,7 +163,7 @@ export function StartList() {
           style={{
             fontSize: 'var(--type-xs)',
             color: 'var(--app-dim)',
-            marginBottom: 9,
+            marginBottom: 'calc(9px * var(--density, 1))',
             lineHeight: 'var(--leading-normal)',
             textWrap: 'pretty',
           }}
@@ -171,7 +171,7 @@ export function StartList() {
           {adjustedLine(bias)}
         </div>
       ) : null}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(7px * var(--density, 1))' }}>
         {p.starts.map((s) => (
           <button
             key={s.id}
@@ -180,11 +180,11 @@ export function StartList() {
             onClick={() => dispatch({ type: 'openItem', id: s.id })}
             style={{
               display: 'flex',
-              gap: 11,
+              gap: 'calc(11px * var(--density, 1))',
               alignItems: 'baseline',
               width: '100%',
               textAlign: 'left',
-              padding: '10px 13px',
+              paddingBlock: 'calc(10px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))',
               borderRadius: 'var(--r-md)',
               border: `1px solid ${s.late ? 'var(--app-warn-line)' : 'var(--app-line)'}`,
               background: s.late ? 'var(--app-warn-wash)' : 'transparent',
@@ -196,7 +196,7 @@ export function StartList() {
                 style={{
                   display: 'block',
                   fontSize: 'var(--type-base)',
-                  lineHeight: 1.35,
+                  lineHeight: 'var(--leading-tight-plus)',
                   textWrap: 'pretty',
                 }}
               >
@@ -205,9 +205,9 @@ export function StartList() {
               <span
                 style={{
                   display: 'block',
-                  fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-xs-plus)',
                   ...secondLine(!s.startOn),
-                  marginTop: 3,
+                  marginTop: 'calc(3px * var(--density, 1))',
                   textWrap: 'pretty',
                 }}
               >
@@ -222,7 +222,7 @@ export function StartList() {
             {s.minutes ? (
               <span
                 style={{
-                  fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-xs-plus)',
                   ...secondLine(!s.startOn),
                   whiteSpace: 'nowrap',
                   fontVariantNumeric: 'tabular-nums',

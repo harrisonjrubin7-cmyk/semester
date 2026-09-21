@@ -72,7 +72,7 @@ export function YourCourses() {
   return (
     <Folding name="YourCourses">
       <SectionLabel
-        style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}
+        style={{ marginTop: 'calc(26px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(6px * var(--density, 1))' }}
       >
         Your courses, your way
       </SectionLabel>
@@ -105,7 +105,7 @@ export function YourCourses() {
                 style={{
                   flex: 'none',
                   width: 28,
-                  padding: '12px 0',
+                  paddingBlock: 'calc(12px * var(--density, 1))', paddingInline: '0',
                   fontSize: 'var(--type-md)',
                   color: mine.pinned ? 'var(--app-accent)' : 'var(--app-faint)',
                 }}
@@ -124,10 +124,10 @@ export function YourCourses() {
                 }}
                 aria-expanded={isOpen}
                 aria-label={`${c.code} ${nameFor(c, state.yours)}. ${MOVE_HINT}`}
-                style={{ flex: 1, minWidth: 0, textAlign: 'left', padding: '10px 0' }}
+                style={{ flex: 1, minWidth: 0, textAlign: 'left', paddingBlock: 'calc(10px * var(--density, 1))', paddingInline: '0' }}
               >
                 <span
-                  style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 'calc(13.5px * var(--text-scale, 1))' }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 'calc(7px * var(--density, 1))', fontSize: 'var(--type-base-plus)' }}
                 >
                   <span
                     aria-hidden="true"
@@ -180,7 +180,7 @@ export function YourCourses() {
             </div>
 
             {isOpen && (
-              <div style={{ padding: '2px 0 14px 36px' }}>
+              <div style={{ paddingTop: 'calc(2px * var(--density, 1))', paddingRight: '0', paddingBottom: 'calc(14px * var(--density, 1))', paddingLeft: 'calc(36px * var(--density, 1))' }}>
                 <input
                   className="input"
                   value={mine.name ?? ''}
@@ -194,20 +194,20 @@ export function YourCourses() {
                   // what clearing it does.
                   placeholder={c.name}
                   aria-label={`Your name for ${c.code}`}
-                  style={{ width: '100%', fontSize: 'calc(13.5px * var(--text-scale, 1))' }}
+                  style={{ width: '100%', fontSize: 'var(--type-base-plus)' }}
                 />
                 {renamed(c, state.yours) ? (
-                  <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 5 }}>
+                  <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 'calc(5px * var(--density, 1))' }}>
                     The syllabus calls it {c.name}. Clear the box to go back to that.
                   </div>
                 ) : null}
 
-                <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 11 }}>
+                <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 'calc(11px * var(--density, 1))' }}>
                   {mine.tint
                     ? 'Held here. Tap it again to hand this course back to the palette.'
                     : 'The palette placed this one. Pick a colour to hold it there instead.'}
                 </div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginTop: 'var(--sp-4)' }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'calc(7px * var(--density, 1))', marginTop: 'var(--sp-4)' }}>
                   {ACCENTS.map((a) => {
                     const on = mine.tint === a.id;
                     // Drawn as the course would actually wear it rather than as

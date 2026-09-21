@@ -419,7 +419,7 @@ export function Connect() {
       </div>
 
       {note && (
-        <Blueprint style={{ padding: '12px 14px', marginTop: 14, background: 'var(--app-hero)' }}>
+        <Blueprint style={{ paddingBlock: 'calc(12px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))', marginTop: 'calc(14px * var(--density, 1))', background: 'var(--app-hero)' }}>
           <div style={{ fontSize: 'var(--type-base)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>{note}</div>
         </Blueprint>
       )}
@@ -441,7 +441,7 @@ export function Connect() {
       */}
       <SectionLabel>Calendars</SectionLabel>
       <Blueprint
-        style={{ padding: '14px 15px', outline: dropping ? '2px dashed var(--app-ink)' : undefined }}
+        style={{ paddingBlock: 'calc(14px * var(--density, 1))', paddingInline: 'calc(15px * var(--density, 1))', outline: dropping ? '2px dashed var(--app-ink)' : undefined }}
         onDragOver={(e) => {
           e.preventDefault();
           setDropping(true);
@@ -456,7 +456,7 @@ export function Connect() {
         <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(18px * var(--text-scale, 1))' }}>
           Paste a calendar link
         </div>
-        <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginTop: 5, textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginTop: 'calc(5px * var(--density, 1))', textWrap: 'pretty' }}>
           In Brightspace, open <strong>Calendar</strong>, click <strong>Subscribe</strong>, and copy
           the link it gives you. It already carries your access — no password, and nothing to
           install. <strong>Outlook, Google, iCloud, Canvas and Zoom</strong> all publish the same
@@ -564,7 +564,7 @@ export function Connect() {
             Open Brightspace
           </a>
         </div>
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', marginTop: 'var(--sp-5)', textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', marginTop: 'var(--sp-5)', textWrap: 'pretty' }}>
           What a Brightspace account can and cannot give this app, plainly: the{' '}
           <strong>calendar feed</strong> needs nothing but the link, and it carries what your
           instructors put on the Brightspace calendar — which is not always everything on the
@@ -674,7 +674,7 @@ export function Connect() {
       <SectionLabel>Claude</SectionLabel>
       <Blueprint
         onClick={() => dispatch({ type: 'go', screen: 'setAssistant' })}
-        style={{ padding: '13px 15px', display: 'flex', gap: 'var(--sp-6)', alignItems: 'center' }}
+        style={{ paddingBlock: 'calc(13px * var(--density, 1))', paddingInline: 'calc(15px * var(--density, 1))', display: 'flex', gap: 'var(--sp-6)', alignItems: 'center' }}
       >
         <span style={{ flex: 1, minWidth: 0 }}>
           <span style={{ display: 'block', fontFamily: 'var(--font-heading)', fontSize: 'var(--type-lg)' }}>
@@ -690,13 +690,13 @@ export function Connect() {
 
 
       <SectionLabel>Accounts</SectionLabel>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(11px * var(--density, 1))' }}>
         {(Object.keys(PROVIDERS) as ProviderId[]).map((id) => {
           const spec = PROVIDERS[id];
           const token = live[id];
           const feed = state.feeds.find((f) => f.kind === (id === 'microsoft' ? 'microsoft' : 'ics') && f.url === id);
           return (
-            <Blueprint plain key={id} style={{ padding: '14px 15px' }}>
+            <Blueprint plain key={id} style={{ paddingBlock: 'calc(14px * var(--density, 1))', paddingInline: 'calc(15px * var(--density, 1))' }}>
               <div
                 style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 'var(--sp-5)' }}
               >
@@ -803,7 +803,7 @@ export function Connect() {
               )}
 
               {id === 'google' && spec.clientId && (
-                <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginTop: 9 }}>
+                <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginTop: 'calc(9px * var(--density, 1))' }}>
                   Reading Gmail may not be switched on for your account yet: Google reviews that
                   one permission separately, and until it passes, only accounts this copy has
                   named can use it. Calendar, Drive and Tasks work immediately.
@@ -813,7 +813,7 @@ export function Connect() {
               {spec.caveat && (
                 <div
                   style={{
-                    fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                    fontSize: 'var(--type-xs-plus)',
                     color: 'var(--app-dim)',
                     lineHeight: 'var(--leading-relaxed)',
                     marginTop: 'var(--sp-5)',
@@ -848,7 +848,7 @@ export function Connect() {
                 <span
                   style={{
                     display: 'block',
-                    fontSize: 'calc(13.5px * var(--text-scale, 1))',
+                    fontSize: 'var(--type-base-plus)',
                     lineHeight: 'var(--leading-tight)',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
@@ -1058,7 +1058,7 @@ export function Connect() {
               </button>
             </div>
           ))}
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', marginTop: 'var(--sp-5)' }}>
+          <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', marginTop: 'var(--sp-5)' }}>
             Feed events show on the calendar under Campus, marked with where they came from. They
             never overwrite a deadline the syllabus stated.
           </div>

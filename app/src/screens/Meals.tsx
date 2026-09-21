@@ -102,7 +102,7 @@ function MealsDetails() {
     <Page className="campus-personal" bottom={26} folds={false}>
       <TermSwitch /><div className="portal-stats"><div><strong>{latest&&latest.swipes>=0?latest.swipes:'—'}</strong><span>Meal swipes recorded</span></div><div><strong>{latest?money(latest.cashCents):'—'}</strong><span>Campus cash recorded</span></div><div><strong>{latest&&latest.diningCents>=0?money(latest.diningCents):'—'}</strong><span>Dining dollars recorded</span></div></div><p className="portal-muted">Balances are your saved readings, not a live account balance. Use the official balance page to check or change your enrolled plan.</p>
 
-      <Blueprint style={{ padding: '15px 16px', marginTop: 'var(--sp-6)' }}>
+      <Blueprint style={{ paddingBlock: 'calc(15px * var(--density, 1))', paddingInline: 'calc(16px * var(--density, 1))', marginTop: 'var(--sp-6)' }}>
         <div className="kicker">{readTerm(state.term).label}</div>
         <div
           className="chrome-text"
@@ -111,10 +111,10 @@ function MealsDetails() {
           {paceLine(latest, p)}
         </div>
         {cashLine(latest) ? (
-          <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-4)' }}>{cashLine(latest)}</div>
+          <div style={{ fontSize: 'var(--type-base-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)' }}>{cashLine(latest)}</div>
         ) : null}
         {latest ? (
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)' }}>{staleLine(latest, now)}</div>
+          <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)' }}>{staleLine(latest, now)}</div>
         ) : null}
       </Blueprint>
 
@@ -178,7 +178,7 @@ function MealsDetails() {
       )}
 
       <SectionLabel>Log what it says</SectionLabel>
-      <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginBottom: 9, lineHeight: 'var(--leading-relaxed)' }}>
+      <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginBottom: 'calc(9px * var(--density, 1))', lineHeight: 'var(--leading-relaxed)' }}>
         Leave a field blank if your plan does not have it. Two readings a few days apart is what
         turns a balance into a rate.
       </div>
@@ -214,7 +214,7 @@ function MealsDetails() {
       </div>
 
       {bad ? (
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-warn)', marginBottom: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
+        <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-warn)', marginBottom: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
           {bad}
         </div>
       ) : null}
@@ -228,7 +228,7 @@ function MealsDetails() {
           type="button"
           className="btn btn-ghost btn-block"
           onClick={() => dispatch({ type: 'go', screen: 'registrar' })}
-          style={{ height: 38, marginTop: 'var(--sp-4)', fontSize: 'calc(12.5px * var(--text-scale, 1))' }}
+          style={{ height: 38, marginTop: 'var(--sp-4)', fontSize: 'var(--type-sm-plus)' }}
         >
           Set the term's last day, and the app can say what a balance is a day
         </button>
@@ -261,7 +261,7 @@ function MealsDetails() {
         </Group>
       )}
 
-      <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 14, lineHeight: 'var(--leading-normal)' }}>
+      <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 'calc(14px * var(--density, 1))', lineHeight: 'var(--leading-normal)' }}>
         Nothing is fetched. The balance page is behind single sign-on and publishes no interface a
         student can use, so reading it would mean holding your university credentials — which this
         app will not do. The app reports a rate and a date and stops; it has no idea whether you

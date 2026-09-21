@@ -115,7 +115,7 @@ function HousingDetails() {
     <Page className="campus-personal" bottom={26} folds={false}>
       <TermSwitch />
 
-      <Blueprint style={{ padding: '15px 16px', marginTop: 'var(--sp-6)' }}>
+      <Blueprint style={{ paddingBlock: 'calc(15px * var(--density, 1))', paddingInline: 'calc(16px * var(--density, 1))', marginTop: 'var(--sp-6)' }}>
         <div className="kicker">{readTerm(state.term).label}</div>
         <div
           className="chrome-text"
@@ -123,7 +123,7 @@ function HousingDetails() {
         >
           {mine ? homeLine(mine) : 'No room on file yet.'}
         </div>
-        <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
+        <div style={{ fontSize: 'var(--type-base-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
           {moveOutLine(moveOut, now)}
         </div>
         {packLine(exams, moveOut, now) ? (
@@ -134,9 +134,9 @@ function HousingDetails() {
       </Blueprint>
 
       {mine && firstToday ? (
-        <Blueprint plain style={{ padding: '13px 14px', marginTop: 'var(--sp-5)' }}>
+        <Blueprint plain style={{ paddingBlock: 'calc(13px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))', marginTop: 'var(--sp-5)' }}>
           <div className="kicker">The first walk of the day</div>
-          <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+          <div style={{ fontSize: 'var(--type-base-plus)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
             {walk.known && walk.minutes > 0
               ? morningLine(mine, firstToday, state.places, clock)
               : hallSaved
@@ -148,7 +148,7 @@ function HousingDetails() {
               type="button"
               className="btn btn-ghost btn-block"
               onClick={() => dispatch({ type: 'go', screen: 'maps' })}
-              style={{ height: 38, marginTop: 9, fontSize: 'calc(12.5px * var(--text-scale, 1))' }}
+              style={{ height: 38, marginTop: 'calc(9px * var(--density, 1))', fontSize: 'var(--type-sm-plus)' }}
             >
               Open the map
             </button>
@@ -178,7 +178,7 @@ function HousingDetails() {
       ) : null}
 
       <SectionLabel>What it says</SectionLabel>
-      <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginBottom: 9, lineHeight: 'var(--leading-relaxed)' }}>
+      <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginBottom: 'calc(9px * var(--density, 1))', lineHeight: 'var(--leading-relaxed)' }}>
         The building is the only field that matters. Give it a move-out date if housing named one,
         or the hours after your last exam if that is how they put it — the app will not do both.
       </div>
@@ -223,7 +223,7 @@ function HousingDetails() {
       </div>
 
       {bad ? (
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-warn)', marginBottom: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
+        <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-warn)', marginBottom: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
           {bad}
         </div>
       ) : null}
@@ -238,7 +238,7 @@ function HousingDetails() {
       </button>
 
       {!lastExam && (
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
+        <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
           No exams on any syllabus yet, so a move-out counted from your last one stays a rule
           rather than a date. Import a syllabus with a final on it and the app will do the sum.
         </div>
@@ -265,7 +265,7 @@ function HousingDetails() {
         </Group>
       )}
 
-      <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 14, lineHeight: 'var(--leading-normal)' }}>
+      <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 'calc(14px * var(--density, 1))', lineHeight: 'var(--leading-normal)' }}>
         Nothing is fetched. The housing portal is behind single sign-on and publishes no interface a
         student can use, so reading it would mean holding your university credentials — which this
         app will not do. The address the portal hands you carries your own session token in it;

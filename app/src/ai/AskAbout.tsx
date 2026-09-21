@@ -166,7 +166,7 @@ export function AskSelection() {
         top: at.y,
         zIndex: 65,
         height: 34,
-        padding: '0 12px',
+        paddingBlock: '0', paddingInline: 'calc(12px * var(--density, 1))',
         borderRadius: 'var(--r-md)',
         border: '1px solid rgba(255,255,255,.4)',
         background: 'var(--chrome)',

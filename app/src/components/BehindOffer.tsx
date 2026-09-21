@@ -30,7 +30,7 @@ export function BehindOffer() {
   if (!b.deep) return null;
 
   return (
-    <div style={{ marginTop: 14 }}>
+    <div style={{ marginTop: 'calc(14px * var(--density, 1))' }}>
       <button
         type="button"
         className="bare tappable"
@@ -39,7 +39,7 @@ export function BehindOffer() {
           display: 'block',
           width: '100%',
           textAlign: 'left',
-          padding: '13px 14px',
+          paddingBlock: 'calc(13px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))',
           borderRadius: 'var(--r-md)',
           border: '1px solid var(--app-line)',
         }}
@@ -50,7 +50,7 @@ export function BehindOffer() {
         <span
           style={{
             display: 'block',
-            fontSize: 'calc(13.5px * var(--text-scale, 1))',
+            fontSize: 'var(--type-base-plus)',
             marginTop: 'var(--sp-2)',
             lineHeight: 'var(--leading-normal)',
             textWrap: 'pretty',
@@ -61,9 +61,9 @@ export function BehindOffer() {
         <span
           style={{
             display: 'block',
-            fontSize: 'calc(11.5px * var(--text-scale, 1))',
+            fontSize: 'var(--type-xs-plus)',
             color: 'var(--app-dim)',
-            marginTop: 5,
+            marginTop: 'calc(5px * var(--density, 1))',
             lineHeight: 'var(--leading-normal)',
           }}
         >

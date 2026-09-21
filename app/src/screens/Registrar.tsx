@@ -95,7 +95,7 @@ export function Registrar() {
             <span
               style={{
                 flex: 'none',
-                fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                fontSize: 'var(--type-xs-plus)',
                 ...secondLine(past),
                 ...(where === 'soon' || where === 'today' ? { color: 'var(--app-warn)' } : {}),
               }}
@@ -106,12 +106,12 @@ export function Registrar() {
         </div>
 
         {d.cost ? (
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', ...secondLine(past), marginTop: 3, lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'var(--type-xs-plus)', ...secondLine(past), marginTop: 'calc(3px * var(--density, 1))', lineHeight: 'var(--leading-normal)' }}>
             {d.cost}
           </div>
         ) : null}
 
-        <div style={{ display: 'flex', gap: 'var(--sp-3)', marginTop: 7, alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 'var(--sp-3)', marginTop: 'calc(7px * var(--density, 1))', alignItems: 'center' }}>
           <input
             className="input"
             type="date"
@@ -124,7 +124,7 @@ export function Registrar() {
           />
           {(d.kind === 'break' || d.kind === 'exams' || d.kind === 'window' || d.until) && (
             <>
-              <span style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', ...secondLine(past), flex: 'none' }}>to</span>
+              <span style={{ fontSize: 'var(--type-xs-plus)', ...secondLine(past), flex: 'none' }}>to</span>
               <input
                 className="input"
                 type="date"
@@ -184,18 +184,18 @@ export function Registrar() {
                     width: '100%',
                     textAlign: 'left',
                     alignItems: 'baseline',
-                    padding: '10px 11px',
+                    paddingBlock: 'calc(10px * var(--density, 1))', paddingInline: 'calc(11px * var(--density, 1))',
                     marginBottom: 'var(--sp-3)',
                     borderRadius: 'var(--r-md)',
                     border: `1px solid ${taken[i] ? 'var(--app-accent-deep)' : 'var(--app-line)'}`,
                     background: taken[i] ? 'var(--app-accent-wash)' : 'transparent',
                   }}
                 >
-                  <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 1.35 }}>
+                  <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base-plus)', lineHeight: 'var(--leading-tight-plus)' }}>
                     {f.label}
                     {f.id ? '' : ' — kept in your words'}
                   </span>
-                  <span style={{ flex: 'none', fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)' }}>
+                  <span style={{ flex: 'none', fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)' }}>
                     {longLabel(isoToDate(f.iso))}
                     {f.until ? ` – ${longLabel(isoToDate(f.until))}` : ''}
                   </span>
@@ -219,16 +219,16 @@ export function Registrar() {
     <Page
     >
         <>
-      <Blueprint style={{ padding: '14px 15px' }}>
+      <Blueprint style={{ paddingBlock: 'calc(14px * var(--density, 1))', paddingInline: 'calc(15px * var(--density, 1))' }}>
         <div className="kicker">
           {done.done} of {done.of} filled in
         </div>
-        <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 7, lineHeight: 'var(--leading-relaxed)' }}>
+        <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 'calc(7px * var(--density, 1))', lineHeight: 'var(--leading-relaxed)' }}>
           Every other date in this app came off a syllabus. These come from your registrar, and
           they are the ones that cost money rather than points — a withdrawal deadline missed is a
           course you are graded on whatever happens next.
         </div>
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', ...secondLine(), marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
+        <div style={{ fontSize: 'var(--type-xs-plus)', ...secondLine(), marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
           The app ships none of them. It cannot read a registrar, these dates differ by university
           and by year, and a wrong one that looks confident is worse than a blank one that asks.
         </div>
@@ -244,7 +244,7 @@ export function Registrar() {
               title={d.label}
               meta={longLabel(isoToDate(d.iso))}
               trailing={
-                <span style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)' }}>
+                <span style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)' }}>
                   {line(d, now)}
                 </span>
               }
@@ -264,13 +264,13 @@ export function Registrar() {
         ]}
         value={tab}
         onChange={setTab}
-        style={{ marginTop: 18 }}
+        style={{ marginTop: 'calc(18px * var(--density, 1))' }}
       />
 
       {tab === 'dates' ? (
         <>
           <SectionLabel>The dates worth knowing</SectionLabel>
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', ...secondLine(), marginBottom: 'var(--sp-2)', lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'var(--type-xs-plus)', ...secondLine(), marginBottom: 'var(--sp-2)', lineHeight: 'var(--leading-normal)' }}>
             Leave anything your university does not do. A blank row is a normal row.
           </div>
           {rows.map(row)}
@@ -356,7 +356,7 @@ export function Registrar() {
               Read it
             </button>
           </div>
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', ...secondLine(), marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'var(--type-xs-plus)', ...secondLine(), marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
             A registrar's page usually runs across two years. The app never guesses which — set it
             here, and paste a spring page separately.
           </div>

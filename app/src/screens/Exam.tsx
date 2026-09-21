@@ -241,7 +241,7 @@ export function Exam() {
   if (stage === 'setup') {
     return (
       <Page bottom={26}>
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
           A paper with a shape, a total and a clock — not another round of cards. The marks and
           the timing are worked out here; only the questions come from anywhere else.
         </div>
@@ -253,7 +253,7 @@ export function Exam() {
           ]}
           value={source}
           onChange={setSource}
-          style={{ marginTop: 14 }}
+          style={{ marginTop: 'calc(14px * var(--density, 1))' }}
         />
 
         <SectionLabel>How long you have</SectionLabel>
@@ -269,7 +269,7 @@ export function Exam() {
         />
 
         <SectionLabel>What it looks like</SectionLabel>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(7px * var(--density, 1))' }}>
           {FORMATS.map((f) => {
             const on = f.id === formatId;
             // A flashcard is not an argument, so a paper drawn from cards
@@ -285,7 +285,7 @@ export function Exam() {
                 onClick={() => setFormatId(f.id)}
                 style={{
                   textAlign: 'left',
-                  padding: '10px 12px',
+                  paddingBlock: 'calc(10px * var(--density, 1))', paddingInline: 'calc(12px * var(--density, 1))',
                   borderRadius: 'var(--r-md)',
                   border: `1px solid ${on && !unavailable ? 'var(--app-accent-deep)' : 'var(--app-line)'}`,
                   background: on && !unavailable ? 'var(--app-accent-wash)' : 'transparent',
@@ -307,7 +307,7 @@ export function Exam() {
                 {/* The reason it cannot be picked is the one line on this
                     button somebody actually needs, so it is not dimmed a
                     second time inside a button that is already dimmed. */}
-                <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', ...secondLine(unavailable), marginTop: 'var(--sp-1)' }}>
+                <span style={{ display: 'block', fontSize: 'var(--type-xs-plus)', ...secondLine(unavailable), marginTop: 'var(--sp-1)' }}>
                   {unavailable ? 'Needs written questions — a flashcard is not an argument.' : f.blurb}
                 </span>
               </button>
@@ -315,7 +315,7 @@ export function Exam() {
           })}
         </div>
 
-        <Blueprint style={{ padding: '12px 14px', marginTop: 14 }}>
+        <Blueprint style={{ paddingBlock: 'calc(12px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))', marginTop: 'calc(14px * var(--density, 1))' }}>
           <div className="kicker">The paper</div>
           <div style={{ fontSize: 'var(--type-md)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)' }}>
             {[
@@ -326,7 +326,7 @@ export function Exam() {
               .filter(Boolean)
               .join(', ')}
           </div>
-          <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 5 }}>
+          <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'calc(5px * var(--density, 1))' }}>
             {shape.points} marks · {shape.minutes} minutes
           </div>
         </Blueprint>
@@ -385,7 +385,7 @@ export function Exam() {
               placeholder="Paper code — leave empty for a new one"
               style={{ width: '100%', textTransform: 'uppercase' }}
             />
-            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
+            <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
               Every paper drawn from cards has a code. Enter one to get the same questions back —
               after revising, or because somebody in your class read theirs out.
             </div>
@@ -397,7 +397,7 @@ export function Exam() {
             >
               Sit it
             </ActionButton>
-            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
+            <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
               Built from {guide.code}'s own cards — no key needed, nothing invented, works
               offline. Switch course from Study. For the same questions marked one at a time as
               you answer, the guide's Quiz mode is the other half of this.
@@ -432,7 +432,7 @@ export function Exam() {
       */}
       <Blueprint
         style={{
-          padding: '12px 14px',
+          paddingBlock: 'calc(12px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))',
           position: 'sticky',
           top: 0,
           zIndex: 2,
@@ -443,7 +443,7 @@ export function Exam() {
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--sp-5)' }}>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div className="kicker">{marking ? 'Marked' : 'Sitting'}</div>
-            <div style={{ fontSize: 'var(--type-md)', marginTop: 3, lineHeight: 'var(--leading-tight)' }}>{title}</div>
+            <div style={{ fontSize: 'var(--type-md)', marginTop: 'calc(3px * var(--density, 1))', lineHeight: 'var(--leading-tight)' }}>{title}</div>
           </div>
           <div
             className="chrome-text"
@@ -453,7 +453,7 @@ export function Exam() {
           </div>
         </div>
         {!marking && left === 0 && (
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
             Time is up. Nothing has been taken away from you — finish when you want to.
           </div>
         )}
@@ -468,7 +468,7 @@ export function Exam() {
              there. The id is the question number rather than its id: a
              student reads the number, and a jump that lands somewhere the
              heading does not match is worse than no jump. */
-          <div key={q.id} id={`q${i + 1}`} style={{ marginTop: 18, scrollMarginTop: 'var(--sp-7)' }}>
+          <div key={q.id} id={`q${i + 1}`} style={{ marginTop: 'calc(18px * var(--density, 1))', scrollMarginTop: 'var(--sp-7)' }}>
             <div style={{ display: 'flex', gap: 'var(--sp-5)', alignItems: 'baseline' }}>
               <span className="kicker" style={{ flex: 'none' }}>
                 {i + 1} · {q.points} {q.points === 1 ? 'mark' : 'marks'}
@@ -477,7 +477,7 @@ export function Exam() {
                 <span style={{ fontSize: 'var(--type-xs)', ...secondLine(), flex: 1, minWidth: 0 }}>{q.from}</span>
               ) : null}
               {marking ? (
-                <span style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', flex: 'none', color: 'var(--app-dim)' }}>
+                <span style={{ fontSize: 'var(--type-xs-plus)', flex: 'none', color: 'var(--app-dim)' }}>
                   {marksFor(q, answer)}/{q.points}
                 </span>
               ) : null}
@@ -509,12 +509,12 @@ export function Exam() {
                 </button>
               )}
             </div>
-            <div style={{ fontSize: 'var(--type-lg)', lineHeight: 1.4, marginTop: 5, textWrap: 'pretty' }}>
+            <div style={{ fontSize: 'var(--type-lg)', lineHeight: 'var(--leading-normal-minus)', marginTop: 'calc(5px * var(--density, 1))', textWrap: 'pretty' }}>
               {q.prompt}
             </div>
 
             {q.kind === 'choice' ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)', marginTop: 9 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)', marginTop: 'calc(9px * var(--density, 1))' }}>
                 {q.options.map((option, n) => {
                   const picked = chosen === String(n);
                   const key = marking && String(n) === q.answer;
@@ -530,7 +530,7 @@ export function Exam() {
                         display: 'flex',
                         gap: 'var(--sp-5)',
                         textAlign: 'left',
-                        padding: '9px 11px',
+                        paddingBlock: 'calc(9px * var(--density, 1))', paddingInline: 'calc(11px * var(--density, 1))',
                         borderRadius: 'var(--r-md)',
                         border: `1px solid ${
                           key
@@ -550,10 +550,10 @@ export function Exam() {
                               : 'transparent',
                       }}
                     >
-                      <span style={{ flex: 'none', color: 'var(--app-dim)', fontSize: 'calc(12.5px * var(--text-scale, 1))' }}>
+                      <span style={{ flex: 'none', color: 'var(--app-dim)', fontSize: 'var(--type-sm-plus)' }}>
                         {letter(n)}
                       </span>
-                      <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 1.4 }}>
+                      <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base-plus)', lineHeight: 'var(--leading-normal-minus)' }}>
                         {option}
                       </span>
                     </button>
@@ -573,34 +573,34 @@ export function Exam() {
                   minHeight: q.kind === 'long' ? 150 : 84,
                   resize: 'vertical',
                   lineHeight: 'var(--leading-relaxed)',
-                  marginTop: 9,
+                  marginTop: 'calc(9px * var(--density, 1))',
                 }}
               />
             )}
 
             {marking && (
               <>
-                <Blueprint plain style={{ padding: '11px 13px', marginTop: 9 }}>
+                <Blueprint plain style={{ paddingBlock: 'calc(11px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))', marginTop: 'calc(9px * var(--density, 1))' }}>
                   <div className="kicker">{q.kind === 'choice' ? 'Why' : 'The key'}</div>
-                  <div style={{ fontSize: 'var(--type-base)', lineHeight: 1.55, marginTop: 5, textWrap: 'pretty' }}>
+                  <div style={{ fontSize: 'var(--type-base)', lineHeight: 'var(--leading-relaxed-plus)', marginTop: 'calc(5px * var(--density, 1))', textWrap: 'pretty' }}>
                     {q.kind === 'choice'
                       ? q.why || `${letter(Number(q.answer))}. ${q.options[Number(q.answer)]}`
                       : q.answer}
                   </div>
                   {q.kind !== 'choice' && q.why ? (
-                    <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 7, lineHeight: 'var(--leading-relaxed)' }}>
+                    <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'calc(7px * var(--density, 1))', lineHeight: 'var(--leading-relaxed)' }}>
                       {q.why}
                     </div>
                   ) : null}
                 </Blueprint>
 
                 {q.kind === 'choice' ? (
-                  <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 7 }}>
+                  <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'calc(7px * var(--density, 1))' }}>
                     {chosen === '' ? 'Left blank.' : right ? 'Right.' : 'Not this one.'}
                   </div>
                 ) : (
                   <>
-                    <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', margin: '9px 0 6px' }}>
+                    <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'calc(9px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(6px * var(--density, 1))' }}>
                       Mark it yourself against the key.
                     </div>
                     <Segmented
@@ -625,14 +625,14 @@ export function Exam() {
       {marking ? (
         <>
           <SectionLabel>How it went</SectionLabel>
-          <Blueprint style={{ padding: '14px 15px' }}>
+          <Blueprint style={{ paddingBlock: 'calc(14px * var(--density, 1))', paddingInline: 'calc(15px * var(--density, 1))' }}>
             <div className="chrome-text" style={{ fontSize: 'calc(30px * var(--text-scale, 1))', lineHeight: 1 }}>
               {marks.pct}%
             </div>
-            <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)' }}>
+            <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)' }}>
               {marks.got} of {marks.outOf} marks
             </div>
-            <div style={{ fontSize: 'var(--type-base)', marginTop: 9, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+            <div style={{ fontSize: 'var(--type-base)', marginTop: 'calc(9px * var(--density, 1))', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
               {verdict(marks)}
             </div>
           </Blueprint>
@@ -698,26 +698,26 @@ export function Exam() {
               </button>
             )}
           </div>
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
             A kept result shows on Grades beside what the rest of the course has to average — as
             evidence about you, never folded into the projection. The missed questions become
             cards in {course?.code ?? 'this course'}, and the drill schedule takes them from there.
           </div>
 
           {seed !== null && (
-            <Blueprint style={{ padding: '11px 13px', marginTop: 'var(--sp-5)' }}>
+            <Blueprint style={{ paddingBlock: 'calc(11px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))', marginTop: 'var(--sp-5)' }}>
               <div className="kicker">Paper code</div>
               <div
                 style={{
                   fontSize: 'calc(22px * var(--text-scale, 1))',
                   letterSpacing: '0.18em',
-                  marginTop: 5,
+                  marginTop: 'calc(5px * var(--density, 1))',
                   fontVariantNumeric: 'tabular-nums',
                 }}
               >
                 {seedCode(seed)}
               </div>
-              <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
+              <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
                 Enter it on the setup screen to sit these exact questions again, or give it to
                 somebody in your class and compare marks on the same paper.
               </div>
@@ -752,7 +752,7 @@ export function Exam() {
                 Share it with the class
               </button>
               ) : (
-                <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
+                <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
                   Sharing it into your class room needs an account — Me → Account. The code works
                   read aloud either way.
                 </div>
@@ -853,11 +853,11 @@ export function Exam() {
             window.scrollTo(0, 0);
             }}
             tone="primary"
-            style={{ marginTop: 22 }}
+            style={{ marginTop: 'calc(22px * var(--density, 1))' }}
           >
             Finish and mark it
           </ActionButton>
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
             {total(questions)} marks in {questions.length} questions. Multiple choice is marked
             here; the written ones you mark yourself against the key, which is the part that
             teaches.

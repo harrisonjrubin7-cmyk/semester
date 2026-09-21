@@ -62,11 +62,11 @@ import { Folding } from '../../components/Fold';
  * constant rather than the twelfth inline copy of four properties.
  */
 const CAP: CSSProperties = {
-  margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))',
+  marginTop: 'calc(26px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(6px * var(--density, 1))',
 };
 
 const HINT: CSSProperties = {
-  fontSize: 'calc(11.5px * var(--text-scale, 1))',
+  fontSize: 'var(--type-xs-plus)',
   ...secondLine(),
   marginTop: 'var(--sp-3)',
   lineHeight: 'var(--leading-normal)',
@@ -125,7 +125,7 @@ function HuePicker() {
               style={{
                 flex: 1,
                 minWidth: 0,
-                fontSize: 'calc(12.5px * var(--text-scale, 1))',
+                fontSize: 'var(--type-sm-plus)',
                 fontFamily: 'var(--font-heading)',
                 color: derived.shade,
                 letterSpacing: '0.1em',
@@ -137,7 +137,7 @@ function HuePicker() {
             <span
               style={{
                 flex: 'none',
-                fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                fontSize: 'var(--type-xs-plus)',
                 color: verdict.ok ? 'var(--app-dim)' : 'var(--app-warn, #d9534f)',
                 textAlign: 'right',
               }}
@@ -259,8 +259,8 @@ export function SettingsLook() {
                         flex: 'none',
                         display: 'flex',
                         alignItems: 'center',
-                        gap: 7,
-                        padding: '7px 12px',
+                        gap: 'calc(7px * var(--density, 1))',
+                        paddingBlock: 'calc(7px * var(--density, 1))', paddingInline: 'calc(12px * var(--density, 1))',
                         fontSize: 'var(--type-sm)',
                         borderColor: on ? a.base : 'var(--app-line)',
                       }}
@@ -299,17 +299,17 @@ export function SettingsLook() {
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 11,
+                  gap: 'calc(11px * var(--density, 1))',
                   textAlign: 'left',
-                  padding: '10px 11px',
-                  marginBottom: 7,
+                  paddingBlock: 'calc(10px * var(--density, 1))', paddingInline: 'calc(11px * var(--density, 1))',
+                  marginBottom: 'calc(7px * var(--density, 1))',
                   borderRadius: 'var(--r-sm)',
                   border: `1px solid ${state.ground === MATCH_DEVICE ? 'var(--app-accent)' : 'var(--app-line)'}`,
                   background: state.ground === MATCH_DEVICE ? 'var(--app-accent-wash)' : 'transparent',
                 }}
               >
                 <span style={{ flex: 1, minWidth: 0 }}>
-                  <span style={{ display: 'block', fontSize: 'calc(13.5px * var(--text-scale, 1))' }}>
+                  <span style={{ display: 'block', fontSize: 'var(--type-base-plus)' }}>
                     {/* The one copy of this name. The workspace's Customize
                         panel reports it too, through `groundName`, and a
                         second literal here is how the two would come to
@@ -323,7 +323,7 @@ export function SettingsLook() {
                   </span>
                 </span>
               </button>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(7px * var(--density, 1))' }}>
                 {GROUNDS.map((g) => {
                   const on = state.ground === g.id;
                   return (
@@ -336,9 +336,9 @@ export function SettingsLook() {
                       style={{
                         display: 'flex',
                         alignItems: 'center',
-                        gap: 11,
+                        gap: 'calc(11px * var(--density, 1))',
                         textAlign: 'left',
-                        padding: '10px 12px',
+                        paddingBlock: 'calc(10px * var(--density, 1))', paddingInline: 'calc(12px * var(--density, 1))',
                         borderRadius: 'var(--r-md)',
                         border: `1px solid ${on ? 'var(--app-accent-deep)' : 'var(--app-line)'}`,
                         background: on ? 'var(--app-accent-wash)' : 'transparent',
@@ -357,7 +357,7 @@ export function SettingsLook() {
                       </span>
                       <span style={{ flex: 1, minWidth: 0 }}>
                         <span style={{ display: 'block', fontSize: 'var(--type-md)' }}>{g.label}</span>
-                        <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
+                        <span style={{ display: 'block', fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
                           {g.blurb}
                         </span>
                       </span>
@@ -396,7 +396,7 @@ export function SettingsLook() {
                       onClick={() => dispatch({ type: 'setLook', look: { typeface: t.id } })}
                       style={{
                         flex: 'none',
-                        padding: '7px 12px',
+                        paddingBlock: 'calc(7px * var(--density, 1))', paddingInline: 'calc(12px * var(--density, 1))',
                         fontSize: 'var(--type-base)',
                         fontFamily: t.heading,
                         borderColor: on ? 'var(--app-accent)' : 'var(--app-line)',
@@ -425,7 +425,7 @@ export function SettingsLook() {
                       onClick={() => dispatch({ type: 'setLook', look: { bodyface: b.id } })}
                       style={{
                         flex: 'none',
-                        padding: '7px 12px',
+                        paddingBlock: 'calc(7px * var(--density, 1))', paddingInline: 'calc(12px * var(--density, 1))',
                         fontSize: 'var(--type-base)',
                         fontFamily: b.body,
                         borderColor: on ? 'var(--app-accent)' : 'var(--app-line)',

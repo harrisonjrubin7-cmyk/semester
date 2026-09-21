@@ -189,7 +189,7 @@ export function ChipScroll({
       {/* The trailing padding is the row's, not a caller's: it keeps the last
           chip off the edge once the row is scrolled to its end, and it was
           another thing only `ChipRow` had. */}
-      <div style={{ display: 'flex', gap: 'var(--sp-3)', paddingRight: 18 }}>{children}</div>
+      <div style={{ display: 'flex', gap: 'var(--sp-3)', paddingRight: 'calc(18px * var(--density, 1))' }}>{children}</div>
     </div>
   );
 }
@@ -236,7 +236,7 @@ export function ChipRow<T extends string>({
               aria-pressed={on}
               style={{
                 flex: 'none',
-                padding: '5px 12px',
+                paddingBlock: 'calc(5px * var(--density, 1))', paddingInline: 'calc(12px * var(--density, 1))',
                 fontSize: 'var(--type-sm)',
                 letterSpacing: '0.1em',
                 textTransform: 'uppercase',
@@ -366,7 +366,7 @@ export function Segmented<T extends string>({
             aria-pressed={on}
             style={{
               flex: 1,
-              padding: '9px 0',
+              paddingBlock: 'calc(9px * var(--density, 1))', paddingInline: '0',
               fontSize: 'var(--type-sm)',
               letterSpacing: '0.12em',
               textTransform: 'uppercase',
@@ -754,8 +754,8 @@ export function EmptyState({
     <div
       style={
         inline
-          ? { padding: '4px 0 2px' }
-          : { padding: '62px 10px', textAlign: 'center' }
+          ? { paddingTop: 'calc(4px * var(--density, 1))', paddingInline: '0', paddingBottom: 'calc(2px * var(--density, 1))' }
+          : { paddingBlock: 'calc(62px * var(--density, 1))', paddingInline: 'calc(10px * var(--density, 1))', textAlign: 'center' }
       }
     >
       {icon && !inline && (
@@ -763,7 +763,7 @@ export function EmptyState({
           style={{
             width: 36,
             height: 36,
-            margin: '0 auto 14px',
+            marginTop: '0', marginInline: 'auto', marginBottom: 'calc(14px * var(--density, 1))',
             border: '1px solid var(--app-line)',
             display: 'grid',
             placeItems: 'center',
@@ -798,7 +798,7 @@ export function EmptyState({
           style={{
             height: 40,
             marginTop: 'var(--sp-6)',
-            fontSize: 'calc(12.5px * var(--text-scale, 1))',
+            fontSize: 'var(--type-sm-plus)',
             ...(inline ? { width: '100%' } : { paddingInline: 20 }),
           }}
         >

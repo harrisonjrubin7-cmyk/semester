@@ -113,7 +113,7 @@ export function Timer({
 
   if (ended.kind === 'kept') {
     return (
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', padding: '9px 0', lineHeight: 'var(--leading-normal)' }}>
+      <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', paddingBlock: 'calc(9px * var(--density, 1))', paddingInline: '0', lineHeight: 'var(--leading-normal)' }}>
         {clockLine(ended.minutes)} on this, recorded. The week ahead knows your pace a little
         better than it did.
       </div>
@@ -122,7 +122,7 @@ export function Timer({
 
   if (ended.kind === 'dropped') {
     return (
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', padding: '9px 0' }}>
+      <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', paddingBlock: 'calc(9px * var(--density, 1))', paddingInline: '0' }}>
         Under two minutes — not counted.
       </div>
     );
@@ -130,8 +130,8 @@ export function Timer({
 
   if (ended.kind === 'ask') {
     return (
-      <div style={{ padding: '9px 0 4px' }}>
-        <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginBottom: 7, lineHeight: 'var(--leading-normal)' }}>
+      <div style={{ paddingTop: 'calc(9px * var(--density, 1))', paddingInline: '0', paddingBottom: 'calc(4px * var(--density, 1))' }}>
+        <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginBottom: 'calc(7px * var(--density, 1))', lineHeight: 'var(--leading-normal)' }}>
           That ran for {clockLine(ended.minutes)}, which is longer than the app will take on
           trust — a timer left running looks exactly like this. What was it really?
         </div>
@@ -145,7 +145,7 @@ export function Timer({
                 dispatch({ type: 'timeSpent', id, courseId, kind, bucketId: b.id });
                 setEnded({ kind: 'none' });
               }}
-              style={{ height: 32, fontSize: 'var(--type-sm)', padding: '0 10px', flex: 'none' }}
+              style={{ height: 32, fontSize: 'var(--type-sm)', paddingBlock: '0', paddingInline: 'calc(10px * var(--density, 1))', flex: 'none' }}
             >
               {b.label}
             </button>
@@ -154,7 +154,7 @@ export function Timer({
             type="button"
             className="bare"
             onClick={() => setEnded({ kind: 'none' })}
-            style={{ height: 32, fontSize: 'var(--type-sm)', color: 'var(--app-dim)', width: 'auto', padding: '0 8px' }}
+            style={{ height: 32, fontSize: 'var(--type-sm)', color: 'var(--app-dim)', width: 'auto', paddingBlock: '0', paddingInline: 'calc(8px * var(--density, 1))' }}
           >
             Forget it
           </button>
@@ -179,9 +179,9 @@ export function Timer({
         setSitting(begin({ id, courseId, kind, title }, at));
       };
       return (
-        <div style={{ padding: '9px 0 4px' }}>
+        <div style={{ paddingTop: 'calc(9px * var(--density, 1))', paddingInline: '0', paddingBottom: 'calc(4px * var(--density, 1))' }}>
           <div className="kicker">How long do you think?</div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-3)', marginTop: 7 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-3)', marginTop: 'calc(7px * var(--density, 1))' }}>
             {BUCKETS.map((b) => (
               <button
                 key={b.id}
@@ -190,10 +190,10 @@ export function Timer({
                 onClick={() => start(b.minutes, Date.now())}
                 style={{
                   width: 'auto',
-                  padding: '8px 12px',
+                  paddingBlock: 'calc(8px * var(--density, 1))', paddingInline: 'calc(12px * var(--density, 1))',
                   borderRadius: 'var(--r-sm)',
                   border: '1px solid var(--app-line)',
-                  fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-xs-plus)',
                 }}
               >
                 {b.label}
@@ -205,8 +205,8 @@ export function Timer({
               onClick={() => start(null, Date.now())}
               style={{
                 width: 'auto',
-                padding: '8px 12px',
-                fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                paddingBlock: 'calc(8px * var(--density, 1))', paddingInline: 'calc(12px * var(--density, 1))',
+                fontSize: 'var(--type-xs-plus)',
                 color: 'var(--app-dim)',
               }}
             >
@@ -217,7 +217,7 @@ export function Timer({
             style={{
               fontSize: 'var(--type-xs)',
               color: 'var(--app-dim)',
-              marginTop: 7,
+              marginTop: 'calc(7px * var(--density, 1))',
               lineHeight: 'var(--leading-normal)',
               textWrap: 'pretty',
             }}
@@ -230,7 +230,7 @@ export function Timer({
     }
 
     return (
-      <div style={{ padding: '9px 0 4px' }}>
+      <div style={{ paddingTop: 'calc(9px * var(--density, 1))', paddingInline: '0', paddingBottom: 'calc(4px * var(--density, 1))' }}>
         <button
           type="button"
           className="btn btn-secondary"
@@ -238,12 +238,12 @@ export function Timer({
           // `Date.now()` for the start and the pauses, which are moments
           // rather than displayed figures: banking the store's stale minute
           // would lose up to thirty seconds on every pause.
-          style={{ height: 36, fontSize: 'calc(12.5px * var(--text-scale, 1))', paddingInline: 16 }}
+          style={{ height: 36, fontSize: 'var(--type-sm-plus)', paddingInline: 16 }}
         >
           Start working on this
         </button>
         {elsewhere ? (
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 1.4 }}>
+          <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal-minus)' }}>
             {/* Said rather than prevented: the student may well have moved on
                 to this and forgotten the other one, and starting here should
                 not be blocked by a timer they have already abandoned. */}
@@ -261,8 +261,8 @@ export function Timer({
   return (
     <div
       style={{
-        padding: '10px 12px',
-        marginTop: 9,
+        paddingBlock: 'calc(10px * var(--density, 1))', paddingInline: 'calc(12px * var(--density, 1))',
+        marginTop: 'calc(9px * var(--density, 1))',
         borderRadius: 'var(--r-md)',
         border: '1px solid var(--app-line-top)',
         background: 'var(--app-hero)',
@@ -281,7 +281,7 @@ export function Timer({
           onClick={() =>
             setSitting(running(mine) ? hold(mine, Date.now()) : carryOn(mine, Date.now()))
           }
-          style={{ width: 'auto', padding: '0 10px', height: 32, fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}
+          style={{ width: 'auto', paddingBlock: '0', paddingInline: 'calc(10px * var(--density, 1))', height: 32, fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}
         >
           {running(mine) ? 'Pause' : 'Carry on'}
         </button>
@@ -295,13 +295,13 @@ export function Timer({
         </button>
       </div>
       {lost ? (
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 7, lineHeight: 1.4 }}>
+        <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'calc(7px * var(--density, 1))', lineHeight: 'var(--leading-normal-minus)' }}>
           This has been running over {LONGEST / 60} hours. Stop it and the app will ask what it
           really was rather than recording this.
         </div>
       ) : null}
       {!running(mine) ? (
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 7 }}>Paused. Nothing is counting.</div>
+        <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'calc(7px * var(--density, 1))' }}>Paused. Nothing is counting.</div>
       ) : null}
     </div>
   );

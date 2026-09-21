@@ -93,7 +93,7 @@ export function Undone() {
         display: 'flex',
         alignItems: 'center',
         gap: 'var(--sp-6)',
-        padding: '10px 12px',
+        paddingBlock: 'calc(10px * var(--density, 1))', paddingInline: 'calc(12px * var(--density, 1))',
         borderRadius: 10,
         background: 'var(--card)',
         border: '1px solid var(--line)',
@@ -105,7 +105,7 @@ export function Undone() {
         type="button"
         className="btn"
         onClick={() => dispatch({ type: 'undo' })}
-        style={{ height: 32, padding: '0 14px', flexShrink: 0 }}
+        style={{ height: 32, paddingBlock: '0', paddingInline: 'calc(14px * var(--density, 1))', flexShrink: 0 }}
       >
         Undo
       </button>

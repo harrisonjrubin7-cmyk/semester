@@ -32,16 +32,16 @@ export function HowMuch() {
 
   return (
     <Folding name="HowMuch">
-      <SectionLabel style={{ margin: 'calc(20px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}>
+      <SectionLabel style={{ marginTop: 'calc(20px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(6px * var(--density, 1))' }}>
         How much to make
       </SectionLabel>
 
       <div
         style={{
-          fontSize: 'calc(12.5px * var(--text-scale, 1))',
+          fontSize: 'var(--type-sm-plus)',
           color: 'var(--app-dim)',
           lineHeight: 'var(--leading-relaxed)',
-          marginBottom: 9,
+          marginBottom: 'calc(9px * var(--density, 1))',
         }}
       >
         {line(c)}
@@ -85,7 +85,7 @@ export function HowMuch() {
           }
           style={{ width: 90, flex: 'none' }}
         />
-        <span style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)' }}>
+        <span style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)' }}>
           {/* Zero is the default and is not "no cards" — said here rather than
               left to be discovered by typing it and getting a full deck. */}
           {c.cards === 0
@@ -98,7 +98,7 @@ export function HowMuch() {
         style={{
           fontSize: 'var(--type-xs)',
           ...secondLine(),
-          marginTop: 11,
+          marginTop: 'calc(11px * var(--density, 1))',
           lineHeight: 'var(--leading-normal)',
         }}
       >

@@ -118,14 +118,14 @@ export function ProjectFile({ courseId, course }: { courseId: CourseId; course: 
 
   return (
     <Folding name="ProjectFile">
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
         A document to write the thing <em>in</em> — headings, the question each section has to
         answer, your sources with a column for what each is for, the rubric as a checklist, and
         blanks where your claims go. Not the essay: that is the part with your name on it.
       </div>
 
       <SectionLabel>What kind of thing</SectionLabel>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(7px * var(--density, 1))' }}>
         {SHAPES.map((option) => {
           const on = option.id === shapeId;
           return (
@@ -137,14 +137,14 @@ export function ProjectFile({ courseId, course }: { courseId: CourseId; course: 
               aria-pressed={on}
               style={{
                 textAlign: 'left',
-                padding: '10px 12px',
+                paddingBlock: 'calc(10px * var(--density, 1))', paddingInline: 'calc(12px * var(--density, 1))',
                 borderRadius: 'var(--r-md)',
                 border: `1px solid ${on ? 'var(--app-accent-deep)' : 'var(--app-line)'}`,
                 background: on ? 'var(--app-accent-wash)' : 'transparent',
               }}
             >
               <span style={{ display: 'block', fontSize: 'var(--type-md)' }}>{option.label}</span>
-              <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
+              <span style={{ display: 'block', fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
                 {option.blurb}
               </span>
             </button>
@@ -162,31 +162,31 @@ export function ProjectFile({ courseId, course }: { courseId: CourseId; course: 
         style={{ width: '100%' }}
       />
       {dueDate ? (
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 5 }}>{runway(dueDate, now)}</div>
+        <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'calc(5px * var(--density, 1))' }}>{runway(dueDate, now)}</div>
       ) : null}
       {catalog.courses.length > 0 && (
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', ...secondLine(), marginTop: 5 }}>
+        <div style={{ fontSize: 'var(--type-xs-plus)', ...secondLine(), marginTop: 'calc(5px * var(--density, 1))' }}>
           For {course}. Switch course from Study.
         </div>
       )}
 
       {milestones.length > 0 && (
-        <Blueprint style={{ padding: '11px 13px', marginTop: 'var(--sp-5)' }}>
+        <Blueprint style={{ paddingBlock: 'calc(11px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))', marginTop: 'var(--sp-5)' }}>
           <div className="kicker">Working back from it</div>
           {milestones.map((m) => (
-            <div key={m.what} style={{ display: 'flex', gap: 'var(--sp-5)', padding: '5px 0' }}>
+            <div key={m.what} style={{ display: 'flex', gap: 'var(--sp-5)', paddingBlock: 'calc(5px * var(--density, 1))', paddingInline: '0' }}>
               <span
                 style={{
                   flex: 'none',
                   width: 74,
-                  fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-xs-plus)',
                   color: 'var(--app-dim)',
                   fontVariantNumeric: 'tabular-nums',
                 }}
               >
                 {m.date.slice(5)}
               </span>
-              <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(12.5px * var(--text-scale, 1))' }}>{m.what}</span>
+              <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-sm-plus)' }}>{m.what}</span>
             </div>
           ))}
           <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
@@ -228,7 +228,7 @@ export function ProjectFile({ courseId, course }: { courseId: CourseId; course: 
         courseId={courseId}
         onFill={(lines) => setSources((now) => appendTo(now, lines))}
       />
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
+      <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
         Yours only. Nothing here will invent an author, a title or a page number — a made-up
         citation looks exactly like a real one, and it goes in under your name.
       </div>
@@ -242,7 +242,7 @@ export function ProjectFile({ courseId, course }: { courseId: CourseId; course: 
         {busy ? 'Building it…' : out ? 'Build it again' : 'Build the project file'}
       </ActionButton>
       {!dueDate ? (
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-4)' }}>
+        <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)' }}>
           Needs a due date — the schedule is the half of this that saves you.
         </div>
       ) : null}
@@ -292,7 +292,7 @@ export function ProjectFile({ courseId, course }: { courseId: CourseId; course: 
             </button>
           </div>
           <PrintButton label="Print it" style={{ marginTop: 'var(--sp-4)' }} />
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
             Kept as a note it is editable in the app and comes out in an export. Saved as .md it
             opens in Word, Google Docs, Notion or anything else.
           </div>

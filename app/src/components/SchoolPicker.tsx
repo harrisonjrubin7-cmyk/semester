@@ -48,7 +48,7 @@ export function SchoolPicker() {
 
   const chip = (on: boolean) => ({
     width: 'auto' as const,
-    padding: '7px 11px',
+    paddingBlock: 'calc(7px * var(--density, 1))', paddingInline: 'calc(11px * var(--density, 1))',
     borderRadius: 'var(--r-sm)',
     border: `1px solid ${on ? 'var(--app-accent)' : 'var(--app-line)'}`,
     background: on ? 'var(--app-accent-wash)' : 'transparent',
@@ -72,7 +72,7 @@ export function SchoolPicker() {
             eleven versions of Ohio State, and the eleventh is the empty one. */}
         {dupes.length > 0 && (
           <div style={{ marginTop: 'var(--sp-4)' }}>
-            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginBottom: 'var(--sp-3)' }}>
+            <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginBottom: 'var(--sp-3)' }}>
               Already here — use one of these instead?
             </div>
             {dupes.map((s) => (
@@ -92,23 +92,23 @@ export function SchoolPicker() {
           </div>
         )}
 
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', margin: '12px 0 4px', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'calc(12px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(4px * var(--density, 1))', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
           Every question below is optional. Anything left alone stays switched off, and nothing here
           is permanent.
         </div>
 
         {ASKS.map((a) => (
-          <div key={a.id} style={{ marginTop: 14 }}>
-            <div style={{ fontSize: 'var(--type-base)', lineHeight: 1.4, textWrap: 'pretty' }}>
+          <div key={a.id} style={{ marginTop: 'calc(14px * var(--density, 1))' }}>
+            <div style={{ fontSize: 'var(--type-base)', lineHeight: 'var(--leading-normal-minus)', textWrap: 'pretty' }}>
               {a.ask}
             </div>
             {a.note && (
-              <div style={{ fontSize: 'var(--type-xs)', color: 'var(--app-dim)', marginTop: 3, lineHeight: 1.4 }}>
+              <div style={{ fontSize: 'var(--type-xs)', color: 'var(--app-dim)', marginTop: 'calc(3px * var(--density, 1))', lineHeight: 'var(--leading-normal-minus)' }}>
                 {a.note}
               </div>
             )}
             {a.kind === 'choice' && (
-              <div style={{ display: 'flex', gap: 'var(--sp-3)', flexWrap: 'wrap', marginTop: 7 }}>
+              <div style={{ display: 'flex', gap: 'var(--sp-3)', flexWrap: 'wrap', marginTop: 'calc(7px * var(--density, 1))' }}>
                 {a.options.map((o) => (
                   <button
                     key={o.id}
@@ -123,7 +123,7 @@ export function SchoolPicker() {
               </div>
             )}
             {a.kind === 'yesno' && (
-              <div style={{ display: 'flex', gap: 'var(--sp-3)', marginTop: 7 }}>
+              <div style={{ display: 'flex', gap: 'var(--sp-3)', marginTop: 'calc(7px * var(--density, 1))' }}>
                 {['yes', 'no'].map((v) => (
                   <button
                     key={v}
@@ -145,13 +145,13 @@ export function SchoolPicker() {
                 aria-label={a.ask}
                 inputMode={a.kind === 'url' ? 'url' : 'text'}
                 onChange={(e) => set(a.id, e.target.value)}
-                style={{ height: 38, marginTop: 7, fontSize: 'var(--type-base)' }}
+                style={{ height: 38, marginTop: 'calc(7px * var(--density, 1))', fontSize: 'var(--type-base)' }}
               />
             )}
           </div>
         ))}
 
-        <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 18 }}>
+        <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'calc(18px * var(--density, 1))' }}>
           <button
             type="button"
             className="btn btn-secondary"
@@ -197,7 +197,7 @@ export function SchoolPicker() {
       />
 
       {hint && hint.id !== state.schoolId && (
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
+        <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
           {/* Suggested from the address you signed in with. Never enforced —
               plenty of students sign in with a personal address, and plenty of
               people have one at a school they left. */}
@@ -260,7 +260,7 @@ export function SchoolPicker() {
         )}
       </div>
 
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
         {state.schoolId === '' ? SKIP_LINE : schoolLine(school)}
       </div>
 
@@ -295,14 +295,14 @@ function Row({
         style={{
           flex: 1,
           textAlign: 'left',
-          padding: '10px 11px',
+          paddingBlock: 'calc(10px * var(--density, 1))', paddingInline: 'calc(11px * var(--density, 1))',
           borderRadius: 'var(--r-sm)',
           border: `1px solid ${on ? 'var(--app-accent)' : 'var(--app-line)'}`,
           background: on ? 'var(--app-accent-wash)' : 'transparent',
-          marginBottom: 7,
+          marginBottom: 'calc(7px * var(--density, 1))',
         }}
       >
-        <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))' }}>{school.name}</div>
+        <div style={{ fontSize: 'var(--type-base-plus)' }}>{school.name}</div>
         {!school.verified && (
           <div style={{ fontSize: 'calc(10.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
             {ADDED_LINE}
@@ -317,12 +317,12 @@ function Row({
           aria-label={`Forget ${school.name}`}
           style={{
             width: 'auto',
-            padding: '8px 10px',
+            paddingBlock: 'calc(8px * var(--density, 1))', paddingInline: 'calc(10px * var(--density, 1))',
             borderRadius: 'var(--r-sm)',
             border: '1px solid var(--app-line)',
             fontSize: 'var(--type-xs)',
             color: 'var(--app-dim)',
-            marginBottom: 7,
+            marginBottom: 'calc(7px * var(--density, 1))',
           }}
         >
           Forget

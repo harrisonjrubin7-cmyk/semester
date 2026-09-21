@@ -68,7 +68,7 @@ export function BreakItUp({ item }: { item: DatedItem }) {
         onClick={() => setShown(true)}
         style={{
           width: 'auto',
-          padding: '8px 0 2px',
+          paddingTop: 'calc(8px * var(--density, 1))', paddingInline: '0', paddingBottom: 'calc(2px * var(--density, 1))',
           fontSize: 'var(--type-sm)',
           color: 'var(--app-dim)',
           textAlign: 'left',
@@ -86,7 +86,7 @@ export function BreakItUp({ item }: { item: DatedItem }) {
       {/* Shown before they are made, because a plan somebody disagrees with is
           worse than none — and the way to disagree with this one is to not
           press the button, which costs nothing. */}
-      <div style={{ marginTop: 'var(--sp-5)', display: 'flex', flexDirection: 'column', gap: 7 }}>
+      <div style={{ marginTop: 'var(--sp-5)', display: 'flex', flexDirection: 'column', gap: 'calc(7px * var(--density, 1))' }}>
         {steps.map((s) => (
           <div key={s.title} style={{ display: 'flex', gap: 'var(--sp-5)', alignItems: 'baseline' }}>
             <span
@@ -137,7 +137,7 @@ export function BreakItUp({ item }: { item: DatedItem }) {
           }}
           style={{
             width: 'auto',
-            padding: '9px 13px',
+            paddingBlock: 'calc(9px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))',
             borderRadius: 'var(--r-sm)',
             border: '1px solid var(--app-accent)',
             fontSize: 'var(--type-sm)',
@@ -149,7 +149,7 @@ export function BreakItUp({ item }: { item: DatedItem }) {
           type="button"
           className="bare"
           onClick={() => setShown(false)}
-          style={{ width: 'auto', padding: '9px 4px', fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}
+          style={{ width: 'auto', paddingBlock: 'calc(9px * var(--density, 1))', paddingInline: 'calc(4px * var(--density, 1))', fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}
         >
           Not now
         </button>
@@ -160,7 +160,7 @@ export function BreakItUp({ item }: { item: DatedItem }) {
           know how long "gather sources" takes, so it does not guess. */}
       <div
         style={{
-          fontSize: 'calc(11.5px * var(--text-scale, 1))',
+          fontSize: 'var(--type-xs-plus)',
           color: 'var(--app-dim)',
           marginTop: 'var(--sp-5)',
           lineHeight: 'var(--leading-relaxed)',

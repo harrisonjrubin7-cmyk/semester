@@ -90,13 +90,13 @@ export function TypeToConfirm({
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
-        padding: 22,
+        paddingBlock: 'calc(22px * var(--density, 1))', paddingInline: 'calc(22px * var(--density, 1))',
       }}
     >
       <div className="kicker">This one cannot be undone</div>
       <h2
         style={{
-          margin: '8px 0 0',
+          marginTop: 'calc(8px * var(--density, 1))', marginInline: '0', marginBottom: '0',
           fontSize: 'calc(19px * var(--text-scale, 1))',
           textWrap: 'balance',
         }}
@@ -104,12 +104,12 @@ export function TypeToConfirm({
         {title}
       </h2>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginTop: 'var(--sp-6)' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(5px * var(--density, 1))', marginTop: 'var(--sp-6)' }}>
         {what.map((line) => (
           <div
             key={line}
             style={{
-              fontSize: 'calc(12.5px * var(--text-scale, 1))',
+              fontSize: 'var(--type-sm-plus)',
               color: 'var(--app-dim)',
               lineHeight: 'var(--leading-normal)',
               textWrap: 'pretty',
@@ -124,8 +124,8 @@ export function TypeToConfirm({
         htmlFor="type-to-confirm"
         style={{
           display: 'block',
-          marginTop: 18,
-          fontSize: 'calc(12.5px * var(--text-scale, 1))',
+          marginTop: 'calc(18px * var(--density, 1))',
+          fontSize: 'var(--type-sm-plus)',
           lineHeight: 'var(--leading-normal)',
           textWrap: 'pretty',
         }}

@@ -54,7 +54,7 @@ export function StorageRoom() {
             position: 'relative',
             height: 4,
             borderRadius: 2,
-            marginBottom: 9,
+            marginBottom: 'calc(9px * var(--density, 1))',
             background: 'var(--app-track)',
           }}
         >
@@ -70,7 +70,7 @@ export function StorageRoom() {
         </div>
       ) : null}
 
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 1.55, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed-plus)', textWrap: 'pretty' }}>
         {roomLine(room)}
       </div>
 
@@ -80,13 +80,13 @@ export function StorageRoom() {
           className="btn btn-secondary btn-block"
           onClick={() => void askAgain()}
           disabled={asking}
-          style={{ height: 40, marginTop: 'var(--sp-5)', fontSize: 'calc(12.5px * var(--text-scale, 1))' }}
+          style={{ height: 40, marginTop: 'var(--sp-5)', fontSize: 'var(--type-sm-plus)' }}
         >
           {asking ? 'Asking…' : 'Ask the browser to keep it'}
         </button>
       )}
 
-      <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 9, lineHeight: 'var(--leading-normal)' }}>
+      <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 'calc(9px * var(--density, 1))', lineHeight: 'var(--leading-normal)' }}>
         Whether to grant this is the browser's decision, not the app's. Installing the app to your
         home screen is what most often changes the answer. Signing in is the other half: an account
         keeps a copy off this device entirely, which is the only thing that survives losing it.

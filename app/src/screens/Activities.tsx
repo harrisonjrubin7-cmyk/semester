@@ -109,17 +109,17 @@ export function Activities() {
           {tab === 'directory' && <CampusDirectory kind="clubs" onPlan={item=>{setPlanned(item);setTab('add');}}/>}
           {tab === 'yours' && (
             <>
-              <Blueprint style={{ padding: '14px 15px' }}>
+              <Blueprint style={{ paddingBlock: 'calc(14px * var(--density, 1))', paddingInline: 'calc(15px * var(--density, 1))' }}>
                 <div className="kicker">Your week</div>
-                <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', marginTop: 'var(--sp-4)', lineHeight: 1.55 }}>{loadLine(week)}</div>
+                <div style={{ fontSize: 'var(--type-base-plus)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed-plus)' }}>{loadLine(week)}</div>
                 <div
                   style={{
                     display: 'flex',
-                    gap: 14,
+                    gap: 'calc(14px * var(--density, 1))',
                     marginTop: 'var(--sp-6)',
-                    paddingTop: 11,
+                    paddingTop: 'calc(11px * var(--density, 1))',
                     borderTop: '1px solid var(--app-line)',
-                    fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                    fontSize: 'var(--type-xs-plus)',
                     color: 'var(--app-dim)',
                   }}
                 >
@@ -132,9 +132,9 @@ export function Activities() {
               {conflicts.length > 0 && (
                 <div
                   style={{
-                    fontSize: 'calc(12.5px * var(--text-scale, 1))',
+                    fontSize: 'var(--type-sm-plus)',
                     marginTop: 'var(--sp-6)',
-                    padding: '11px 13px',
+                    paddingBlock: 'calc(11px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))',
                     borderRadius: 'var(--r-md)',
                     lineHeight: 'var(--leading-relaxed)',
                     border: '1px solid var(--app-warn-line)',
@@ -212,11 +212,11 @@ function Row({ commitment }: { commitment: Commitment }) {
           })
         }
         aria-label={commitment.active ? `Pause ${commitment.name}` : `Resume ${commitment.name}`}
-        style={{ flex: 'none', width: 30, padding: '13px 2px 13px 0' }}
+        style={{ flex: 'none', width: 30, paddingTop: 'calc(13px * var(--density, 1))', paddingRight: 'calc(2px * var(--density, 1))', paddingBottom: 'calc(13px * var(--density, 1))', paddingLeft: '0' }}
       >
         <TickBox on={commitment.active} />
       </button>
-      <div style={{ flex: 1, minWidth: 0, padding: '12px 0' }}>
+      <div style={{ flex: 1, minWidth: 0, paddingBlock: 'calc(12px * var(--density, 1))', paddingInline: '0' }}>
         <div style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'baseline' }}>
           <span
             style={{
@@ -229,7 +229,7 @@ function Row({ commitment }: { commitment: Commitment }) {
           />
           <span style={{ fontSize: 'calc(14.5px * var(--text-scale, 1))', minWidth: 0 }}>{commitment.name}</span>
         </div>
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
+        <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
           {[kind.label, commitment.role, when, commitment.where].filter(Boolean).join(' · ')}
         </div>
       </div>
@@ -308,8 +308,8 @@ function AddOne({ onDone,initial }: { onDone: () => void;initial?:CampusListing|
               aria-pressed={on}
               style={{
                 flex: 'none',
-                padding: '6px 11px',
-                fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                paddingBlock: 'calc(6px * var(--density, 1))', paddingInline: 'calc(11px * var(--density, 1))',
+                fontSize: 'var(--type-xs-plus)',
                 background: on ? 'var(--app-accent-wash)' : 'transparent',
                 borderColor: on ? 'var(--app-accent-deep)' : undefined,
               }}
@@ -333,7 +333,7 @@ function AddOne({ onDone,initial }: { onDone: () => void;initial?:CampusListing|
 
       {fixed ? (
         <>
-          <div style={{ display: 'flex', gap: 5, marginBottom: 9 }}>
+          <div style={{ display: 'flex', gap: 'calc(5px * var(--density, 1))', marginBottom: 'calc(9px * var(--density, 1))' }}>
             {DAYS.map((d) => {
               const on = days.includes(d.day);
               return (
@@ -350,8 +350,8 @@ function AddOne({ onDone,initial }: { onDone: () => void;initial?:CampusListing|
                   }
                   style={{
                     flex: 1,
-                    padding: '7px 0',
-                    fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                    paddingBlock: 'calc(7px * var(--density, 1))', paddingInline: '0',
+                    fontSize: 'var(--type-xs-plus)',
                     background: on ? 'var(--app-accent-wash)' : 'transparent',
                   }}
                 >
@@ -378,7 +378,7 @@ function AddOne({ onDone,initial }: { onDone: () => void;initial?:CampusListing|
               style={{ width: 96, flex: 'none' }}
             />
           </div>
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)' }}>
+          <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)' }}>
             Start time and how many minutes it runs. It goes on your day and week grids.
           </div>
         </>
@@ -393,7 +393,7 @@ function AddOne({ onDone,initial }: { onDone: () => void;initial?:CampusListing|
             placeholder="Hours a week"
             style={{ width: '100%' }}
           />
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
             Your figure, not a guess at one. It counts toward the week without being drawn on the
             grid, because there is no hour to draw it on.
           </div>
@@ -486,8 +486,8 @@ function FindThings() {
           <Blueprint
             plain
             style={{
-              padding: '14px 15px',
-              marginBottom: 9,
+              paddingBlock: 'calc(14px * var(--density, 1))', paddingInline: 'calc(15px * var(--density, 1))',
+              marginBottom: 'calc(9px * var(--density, 1))',
               display: 'flex',
               gap: 'var(--sp-6)',
               alignItems: 'center',
@@ -495,7 +495,7 @@ function FindThings() {
           >
             <span style={{ flex: 1, minWidth: 0 }}>
               <span style={{ display: 'block', fontSize: 'var(--type-lg)' }}>{l.name}</span>
-              <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
+              <span style={{ display: 'block', fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
                 {l.blurb}
               </span>
             </span>
@@ -503,14 +503,14 @@ function FindThings() {
           </Blueprint>
         </a>
       ))}
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', marginTop: 'var(--sp-2)' }}>
+      <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', marginTop: 'var(--sp-2)' }}>
         No list of organisations is built into the app. There are several hundred and they turn
         over every year — a stale one would have you emailing a president who graduated in 2021.
         AnchorLink is the list, and it is always current.
       </div>
 
       <SectionLabel>Bring your involvement list back</SectionLabel>
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)' }}>
+      <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)' }}>
         Open your involvement page on AnchorLink, select it, copy, and paste here. Nothing is read
         from the page — a browser will not let this app see a tab it does not own, and it should
         not.
@@ -525,7 +525,7 @@ function FindThings() {
       />
 
       {text.trim() && found.length === 0 && (
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
+        <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
           Nothing in there reads as an organisation name. Navigation, counts and links are dropped
           rather than filed as clubs.
         </div>
@@ -534,7 +534,7 @@ function FindThings() {
       {found.length > 0 && (
         <>
           <SectionLabel>Found {found.length} — check them</SectionLabel>
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginBottom: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginBottom: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
             An involvement page has no reliable shape, so this is a loose read. The kind beside each
             is a guess from the name and you can change it after adding.
           </div>
@@ -548,12 +548,12 @@ function FindThings() {
                   gap: 'var(--sp-5)',
                   alignItems: 'center',
                   ...rowFlush,
-                  padding: '11px 0',
+                  paddingBlock: 'calc(11px * var(--density, 1))', paddingInline: '0',
                 }}
               >
                 <span style={{ flex: 1, minWidth: 0 }}>
                   <span style={{ display: 'block', fontSize: 'var(--type-md)' }}>{f.name}</span>
-                  <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
+                  <span style={{ display: 'block', fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
                     {[activityKind(guessKind(f.name)).label, f.role].filter(Boolean).join(' · ')}
                   </span>
                 </span>
@@ -580,14 +580,14 @@ function FindThings() {
                     });
                     setTaken((t) => [...t, f.name]);
                   }}
-                  style={{ flex: 'none', padding: '0 14px', height: 34, fontSize: 'var(--type-sm)' }}
+                  style={{ flex: 'none', paddingBlock: '0', paddingInline: 'calc(14px * var(--density, 1))', height: 34, fontSize: 'var(--type-sm)' }}
                 >
                   {already ? 'Added' : 'Add'}
                 </button>
               </div>
             );
           })}
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
             They arrive with no hours and no meeting time, because an involvement page carries
             neither. Open one under Yours to say when it meets and what it costs you.
           </div>

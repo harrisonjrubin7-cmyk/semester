@@ -72,13 +72,13 @@ export function AccountScreen() {
             {account.email}
           </div>
           {account.via && (
-            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 3 }}>
+            <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'calc(3px * var(--density, 1))' }}>
               {/* Which button they pressed, which is what somebody needs to
                   know when signing in on a second device. */}
               Through {account.via}.
             </div>
           )}
-          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
+          <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
             {sync.status === 'syncing' && 'Catching up with your account…'}
             {sync.status === 'synced' &&
               `Synced ${sync.at ? new Date(sync.at).toLocaleTimeString() : ''} · ${counts}`}
@@ -94,7 +94,7 @@ export function AccountScreen() {
             See `lib/merge.ts`.
           */}
           {state.lastSync ? (
-            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
+            <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
               {syncLine(state.lastSync.notes)}
             </div>
           ) : null}
@@ -114,7 +114,7 @@ export function AccountScreen() {
                 setChecked(line);
               });
             }}
-            style={{ marginTop: 14 }}
+            style={{ marginTop: 'calc(14px * var(--density, 1))' }}
           >
             {checking ? 'Checking…' : 'Check now'}
           </button>
@@ -123,9 +123,9 @@ export function AccountScreen() {
               role="status"
               aria-live="polite"
               style={{
-                fontSize: 'calc(12.5px * var(--text-scale, 1))',
+                fontSize: 'var(--type-sm-plus)',
                 color: 'var(--app-dim)',
-                marginTop: 9,
+                marginTop: 'calc(9px * var(--density, 1))',
                 lineHeight: 'var(--leading-relaxed)',
                 textWrap: 'pretty',
               }}
@@ -136,7 +136,7 @@ export function AccountScreen() {
         </Blueprint>
 
         <SectionLabel>What syncs</SectionLabel>
-        <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 1.55, textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed-plus)', textWrap: 'pretty' }}>
           Everything you have typed into this app, not a selection from it: your courses and what
           you have added to them, your tasks, appointments, notes and connected calendars, the
           documents, spreadsheets, decks and graphs you have made, the email you have drafted,
@@ -146,21 +146,21 @@ export function AccountScreen() {
         </div>
 
         <SectionLabel>What does not</SectionLabel>
-        <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 1.55, textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed-plus)', textWrap: 'pretty' }}>
           Files you attach stay on the device that has them — a lecture deck can be tens of
           megabytes and uploading it on a phone plan is not a choice the app should make for you.
           The sample semester's audio ships with the app, so it plays anywhere.
         </div>
 
         <SectionLabel>How conflicts resolve</SectionLabel>
-        <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 1.55, textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed-plus)', textWrap: 'pretty' }}>
           Nothing you added on one device is dropped because you added something on the other.
           Write a note on the laptop and another on your phone while it is offline, and you end up
           with both; tick one box here and a different one there, and both stay ticked. Settings
           are the exception, and deliberately so — your colours are whatever you last chose,
           wherever you chose it.
         </div>
-        <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 1.55, textWrap: 'pretty', marginTop: 'var(--sp-4)' }}>
+        <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed-plus)', textWrap: 'pretty', marginTop: 'var(--sp-4)' }}>
           What still does not merge is the same note edited on both: the later edit is the one that
           survives. The app would rather say so than pretend.
         </div>
@@ -173,11 +173,11 @@ export function AccountScreen() {
         <ActionButton
           disabled={busy}
           onClick={() => void run(signOut)}
-          style={{ fontSize: 'var(--type-sm)', marginTop: 20 }}
+          style={{ fontSize: 'var(--type-sm)', marginTop: 'calc(20px * var(--density, 1))' }}
         >
           Sign out (keeps data on this device)
         </ActionButton>
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
+        <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
           Signing out leaves this device's copy alone — nothing is deleted here, and nothing stops
           working.
         </div>
@@ -222,7 +222,7 @@ export function AccountScreen() {
       <Credentials />
 
       <SectionLabel>Before you sign up</SectionLabel>
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 1.55, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed-plus)', textWrap: 'pretty' }}>
         What you already have on this device is kept. The first sync sends it up, and if the
         account already holds a semester the two are merged rather than one replacing the other —
         you end up with both sides' courses, notes and ticked boxes.

@@ -96,7 +96,7 @@ export function AgainstCalendar() {
 
   return (
     <Folding name="AgainstCalendar">
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
         Every deadline here was read off a syllabus once, before term started. This checks them
         against what your LMS calendar says today, and shows both dates before changing anything.
       </div>
@@ -108,7 +108,7 @@ export function AgainstCalendar() {
         ]}
         value={source}
         onChange={setSource}
-        style={{ marginTop: 14 }}
+        style={{ marginTop: 'calc(14px * var(--density, 1))' }}
       />
 
       {source === 'feed' ? (
@@ -138,12 +138,12 @@ export function AgainstCalendar() {
               width: '100%',
               minHeight: 130,
               resize: 'vertical',
-              lineHeight: 1.4,
+              lineHeight: 'var(--leading-normal-minus)',
               fontFamily: 'ui-monospace, Menlo, monospace',
               fontSize: 'var(--type-sm)',
             }}
           />
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
             Read here in your browser and never sent anywhere. {events.length > 0
               ? `${events.length} entries read.`
               : pasted.trim()
@@ -161,7 +161,7 @@ export function AgainstCalendar() {
 
       {!nothing && (
         <>
-          <Blueprint style={{ padding: '15px 16px', marginTop: 'var(--sp-7)' }}>
+          <Blueprint style={{ paddingBlock: 'calc(15px * var(--density, 1))', paddingInline: 'calc(16px * var(--density, 1))', marginTop: 'var(--sp-7)' }}>
             <div className="kicker">Against {events.length} calendar entries</div>
             <div
               className="chrome-text"
@@ -169,7 +169,7 @@ export function AgainstCalendar() {
             >
               {summary(report)}
             </div>
-            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
+            <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
               {report.agreed} matched and agreed · {report.onlyHere.length} here with no match in
               the feed
             </div>
@@ -181,7 +181,7 @@ export function AgainstCalendar() {
               {report.moved.map((m) => {
                 const done = applied[m.item.id];
                 return (
-                  <Blueprint plain key={m.item.id} style={{ padding: '13px 14px', marginBottom: 9 }}>
+                  <Blueprint plain key={m.item.id} style={{ paddingBlock: 'calc(13px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))', marginBottom: 'calc(9px * var(--density, 1))' }}>
                     <div className="kicker">{code(m.item.c)}</div>
                     <div style={{ fontSize: 'var(--type-lg)', lineHeight: 'var(--leading-tight)', marginTop: 'var(--sp-2)', textWrap: 'pretty' }}>
                       {m.item.title}
@@ -191,17 +191,17 @@ export function AgainstCalendar() {
                         display: 'flex',
                         gap: 'var(--sp-5)',
                         alignItems: 'baseline',
-                        marginTop: 9,
+                        marginTop: 'calc(9px * var(--density, 1))',
                         fontVariantNumeric: 'tabular-nums',
                       }}
                     >
-                      <span style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', color: 'var(--app-dim)', textDecoration: 'line-through' }}>
+                      <span style={{ fontSize: 'var(--type-base-plus)', color: 'var(--app-dim)', textDecoration: 'line-through' }}>
                         {m.was}
                       </span>
-                      <span style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))' }}>{m.now}</span>
-                      <span style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)' }}>{movedLine(m)}</span>
+                      <span style={{ fontSize: 'var(--type-base-plus)' }}>{m.now}</span>
+                      <span style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)' }}>{movedLine(m)}</span>
                     </div>
-                    <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
+                    <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
                       The feed calls it “{m.event.title}”.
                     </div>
                     <button
@@ -240,14 +240,14 @@ export function AgainstCalendar() {
                     style={{
                       flex: 'none',
                       width: 82,
-                      fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                      fontSize: 'var(--type-xs-plus)',
                       color: 'var(--app-dim)',
                       fontVariantNumeric: 'tabular-nums',
                     }}
                   >
                     {e.date}
                   </span>
-                  <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 1.35 }}>
+                  <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base-plus)', lineHeight: 'var(--leading-tight-plus)' }}>
                     {e.title}
                     {e.courseId ? (
                       <span style={{ color: 'var(--app-dim)' }}> · {code(e.courseId)}</span>
@@ -284,14 +284,14 @@ export function AgainstCalendar() {
                     style={{
                       flex: 'none',
                       width: 82,
-                      fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                      fontSize: 'var(--type-xs-plus)',
                       color: 'var(--app-dim)',
                       fontVariantNumeric: 'tabular-nums',
                     }}
                   >
                     {i.dueShort}
                   </span>
-                  <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 1.35 }}>
+                  <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base-plus)', lineHeight: 'var(--leading-tight-plus)' }}>
                     {i.title}
                     <span style={{ color: 'var(--app-dim)' }}> · {code(i.c)}</span>
                   </span>
@@ -300,7 +300,7 @@ export function AgainstCalendar() {
             </>
           )}
 
-          <PrintButton label="Print this comparison" style={{ marginTop: 14 }} />
+          <PrintButton label="Print this comparison" style={{ marginTop: 'calc(14px * var(--density, 1))' }} />
           <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
             Titles are matched by how much they have in common, scoped to the course. Where a
             pairing is not clearly right it is reported as two separate lines rather than one

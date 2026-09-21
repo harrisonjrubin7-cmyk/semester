@@ -152,7 +152,7 @@ export function DeadlineRow({
               // otherwise reads as six identical rectangles.
               borderLeft: `3px solid ${tint(item.c).edge}`,
               borderRadius: 'var(--r-md)',
-              padding: '0 12px',
+              paddingBlock: '0', paddingInline: 'calc(12px * var(--density, 1))',
               marginBottom: 'var(--sp-4)',
             }
           : row),
@@ -165,7 +165,7 @@ export function DeadlineRow({
               // is one continuous line down a mixed day, and the segment a row
               // sits on is the cheapest possible way to say whose it is.
               borderLeft: `2px solid ${tint(item.c).edge}`,
-              marginLeft: 7,
+              marginLeft: 'calc(7px * var(--density, 1))',
               paddingLeft: 'var(--sp-6)',
             }
           : {}),

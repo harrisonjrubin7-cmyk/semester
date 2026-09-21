@@ -26,7 +26,7 @@ export function OfficeHours({ courseId }: { courseId: string }) {
     if (!yours) return null;
     return (
       <Folding name="OfficeHours">
-        <SectionLabel style={{ margin: '22px 0 6px' }}>Office hours</SectionLabel>
+        <SectionLabel style={{ marginTop: 'calc(22px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(6px * var(--density, 1))' }}>Office hours</SectionLabel>
         <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)' }}>
           None recorded. They are on the syllabus, and having them here means the app can point at
           them in a week that is going badly.
@@ -35,7 +35,7 @@ export function OfficeHours({ courseId }: { courseId: string }) {
           type="button"
           className="btn btn-secondary btn-block"
           onClick={() => dispatch({ type: 'go', screen: 'edit' })}
-          style={{ height: 40, marginTop: 9, fontSize: 'calc(12.5px * var(--text-scale, 1))' }}
+          style={{ height: 40, marginTop: 'calc(9px * var(--density, 1))', fontSize: 'var(--type-sm-plus)' }}
         >
           Add them
         </button>
@@ -47,7 +47,7 @@ export function OfficeHours({ courseId }: { courseId: string }) {
 
   return (
     <Folding name="OfficeHours">
-      <SectionLabel style={{ margin: '22px 0 6px' }}>Office hours</SectionLabel>
+      <SectionLabel style={{ marginTop: 'calc(22px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(6px * var(--density, 1))' }}>Office hours</SectionLabel>
       {hours.map((h, i) => (
         <div
           key={`${h.title}-${i}`}
@@ -58,7 +58,7 @@ export function OfficeHours({ courseId }: { courseId: string }) {
             ...row,
           }}
         >
-          <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 1.35 }}>
+          <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base-plus)', lineHeight: 'var(--leading-tight-plus)' }}>
             {h.title}
             {h.meta ? <span style={{ color: 'var(--app-dim)' }}> · {h.meta}</span> : null}
           </span>

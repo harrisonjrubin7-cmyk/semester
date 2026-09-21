@@ -36,7 +36,7 @@ export function AskForTime({ item }: { item: DatedItem }) {
       }
       style={{
         width: 'auto',
-        padding: '8px 0 2px',
+        paddingTop: 'calc(8px * var(--density, 1))', paddingInline: '0', paddingBottom: 'calc(2px * var(--density, 1))',
         fontSize: 'var(--type-sm)',
         color: 'var(--app-dim)',
         textAlign: 'left',

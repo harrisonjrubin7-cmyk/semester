@@ -93,7 +93,7 @@ export function Clocks() {
         ]}
         value={tab}
         onChange={setTab}
-        style={{ margin: '0 0 16px' }}
+        style={{ marginTop: '0', marginInline: '0', marginBottom: 'calc(16px * var(--density, 1))' }}
       />
 
       {tab === 'timers' ? <Timers /> : <Alarms />}
@@ -133,9 +133,9 @@ function Timers() {
 
   return (
     <Folding name="Timers">
-      <SectionLabel style={{ margin: '0 0 10px' }}>Set one</SectionLabel>
+      <SectionLabel style={{ marginTop: '0', marginInline: '0', marginBottom: 'calc(10px * var(--density, 1))' }}>Set one</SectionLabel>
 
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginBottom: 'var(--sp-6)' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'calc(7px * var(--density, 1))', marginBottom: 'var(--sp-6)' }}>
         {PRESETS.map((m) => (
           <button
             key={m}
@@ -144,7 +144,7 @@ function Timers() {
             onClick={() => start(m * 60)}
             style={{
               width: 'auto',
-              padding: '9px 14px',
+              paddingBlock: 'calc(9px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))',
               borderRadius: 'var(--r-md)',
               border: '1px solid var(--app-line)',
               fontSize: 'var(--type-base)',
@@ -176,7 +176,7 @@ function Timers() {
           type="button"
           className="btn btn-secondary"
           onClick={startTyped}
-          style={{ width: 'auto', padding: '0 18px', height: 42, textTransform: 'uppercase', letterSpacing: '0.09em' }}
+          style={{ width: 'auto', paddingBlock: '0', paddingInline: 'calc(18px * var(--density, 1))', height: 42, textTransform: 'uppercase', letterSpacing: '0.09em' }}
         >
           Start
         </button>
@@ -194,7 +194,7 @@ function Timers() {
           role="status"
           style={{
             fontSize: 'var(--type-sm)',
-            marginTop: 7,
+            marginTop: 'calc(7px * var(--density, 1))',
             color: 'var(--app-warn-ink, var(--app-fg))',
           }}
         >
@@ -204,8 +204,8 @@ function Timers() {
 
       {state.timers.length > 0 ? (
         <>
-          <SectionLabel style={{ margin: '24px 0 10px' }}>Running</SectionLabel>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
+          <SectionLabel style={{ marginTop: 'calc(24px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(10px * var(--density, 1))' }}>Running</SectionLabel>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(9px * var(--density, 1))' }}>
             {state.timers.map((t) => (
               <TimerRow key={t.id} t={t} at={at} />
             ))}
@@ -214,8 +214,8 @@ function Timers() {
       ) : (
         <p
           style={{
-            marginTop: 22,
-            fontSize: 'calc(12.5px * var(--text-scale, 1))',
+            marginTop: 'calc(22px * var(--density, 1))',
+            fontSize: 'var(--type-sm-plus)',
             color: 'var(--app-dim)',
             lineHeight: 'var(--leading-relaxed)',
             textWrap: 'pretty',
@@ -247,7 +247,7 @@ function TimerRow({ t, at }: { t: Timer; at: number }) {
   const pct = t.seconds > 0 ? Math.min(100, Math.max(0, ((t.seconds - left) / t.seconds) * 100)) : 0;
 
   return (
-    <Blueprint style={{ padding: '13px 14px' }}>
+    <Blueprint style={{ paddingBlock: 'calc(13px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))' }}>
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--sp-5)' }}>
         <span
           style={{
@@ -260,7 +260,7 @@ function TimerRow({ t, at }: { t: Timer; at: number }) {
         </span>
         <span
           style={{
-            fontSize: 'calc(12.5px * var(--text-scale, 1))',
+            fontSize: 'var(--type-sm-plus)',
             color: 'var(--app-dim)',
             textWrap: 'pretty',
           }}
@@ -277,14 +277,14 @@ function TimerRow({ t, at }: { t: Timer; at: number }) {
           height: 4,
           borderRadius: 2,
           background: 'var(--app-line)',
-          margin: '10px 0 11px',
+          marginTop: 'calc(10px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(11px * var(--density, 1))',
           overflow: 'hidden',
         }}
       >
         <div style={{ width: `${pct}%`, height: '100%', background: 'var(--app-accent)' }} />
       </div>
 
-      <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 'calc(7px * var(--density, 1))', flexWrap: 'wrap' }}>
         <Small onClick={() => swap((now) => (running(t) ? pause(t, now) : resume(t, now)))}>
           {running(t) ? 'Pause' : 'Resume'}
         </Small>
@@ -311,7 +311,7 @@ function Small({ children, onClick }: { children: React.ReactNode; onClick: () =
       onClick={onClick}
       style={{
         width: 'auto',
-        padding: '7px 12px',
+        paddingBlock: 'calc(7px * var(--density, 1))', paddingInline: 'calc(12px * var(--density, 1))',
         borderRadius: 'var(--r-sm)',
         border: '1px solid var(--app-line)',
         fontSize: 'var(--type-sm)',
@@ -348,7 +348,7 @@ function Alarms() {
 
   return (
     <Folding name="Alarms">
-      <SectionLabel style={{ margin: '0 0 10px' }}>Set one</SectionLabel>
+      <SectionLabel style={{ marginTop: '0', marginInline: '0', marginBottom: 'calc(10px * var(--density, 1))' }}>Set one</SectionLabel>
 
       <div style={{ display: 'flex', gap: 'var(--sp-4)' }}>
         <input
@@ -369,7 +369,7 @@ function Alarms() {
         />
       </div>
 
-      <div style={{ display: 'flex', gap: 'var(--sp-3)', margin: '10px 0 0' }}>
+      <div style={{ display: 'flex', gap: 'var(--sp-3)', marginTop: 'calc(10px * var(--density, 1))', marginInline: '0', marginBottom: '0' }}>
         {DOW_INITIALS.map((letter, d) => {
           const on = days.includes(d);
           return (
@@ -396,9 +396,9 @@ function Alarms() {
       </div>
       <div
         style={{
-          fontSize: 'calc(11.5px * var(--text-scale, 1))',
+          fontSize: 'var(--type-xs-plus)',
           color: 'var(--app-dim)',
-          margin: '7px 0 0',
+          marginTop: 'calc(7px * var(--density, 1))', marginInline: '0', marginBottom: '0',
         }}
       >
         {daysLine(days) === 'Once' ? 'No days chosen — it rings once, at the next one.' : daysLine(days)}
@@ -414,10 +414,10 @@ function Alarms() {
 
       {state.alarms.length > 0 ? (
         <>
-          <SectionLabel style={{ margin: '24px 0 10px' }}>Set</SectionLabel>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
+          <SectionLabel style={{ marginTop: 'calc(24px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(10px * var(--density, 1))' }}>Set</SectionLabel>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(9px * var(--density, 1))' }}>
             {state.alarms.map((a) => (
-              <Blueprint plain key={a.id} style={{ padding: '12px 14px' }}>
+              <Blueprint plain key={a.id} style={{ paddingBlock: 'calc(12px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-6)' }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div
@@ -460,10 +460,10 @@ function Alarms() {
                     }
                     style={{
                       width: 'auto',
-                      padding: '7px 12px',
+                      paddingBlock: 'calc(7px * var(--density, 1))', paddingInline: 'calc(12px * var(--density, 1))',
                       borderRadius: 'var(--r-sm)',
                       border: `1px solid ${a.on ? 'var(--app-accent)' : 'var(--app-line)'}`,
-                      fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                      fontSize: 'var(--type-xs-plus)',
                       textTransform: 'uppercase',
                       letterSpacing: '0.08em',
                     }}
@@ -475,7 +475,7 @@ function Alarms() {
                     className="bare tappable"
                     onClick={() => dispatch({ type: 'removeAlarm', id: a.id })}
                     aria-label={`Delete the ${timeLine(a.at)} alarm`}
-                    style={{ width: 'auto', padding: '7px 10px', fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)' }}
+                    style={{ width: 'auto', paddingBlock: 'calc(7px * var(--density, 1))', paddingInline: 'calc(10px * var(--density, 1))', fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)' }}
                   >
                     Delete
                   </button>
@@ -486,12 +486,12 @@ function Alarms() {
         </>
       ) : null}
 
-      <SectionLabel style={{ margin: '24px 0 8px' }}>What this can and cannot do</SectionLabel>
+      <SectionLabel style={{ marginTop: 'calc(24px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(8px * var(--density, 1))' }}>What this can and cannot do</SectionLabel>
       <p
         style={{
-          fontSize: 'calc(12.5px * var(--text-scale, 1))',
+          fontSize: 'var(--type-sm-plus)',
           color: 'var(--app-dim)',
-          lineHeight: 1.55,
+          lineHeight: 'var(--leading-relaxed-plus)',
           textWrap: 'pretty',
         }}
       >
@@ -512,7 +512,7 @@ function Alarms() {
           style={{
             width: 'auto',
             marginTop: 'var(--sp-4)',
-            padding: '9px 14px',
+            paddingBlock: 'calc(9px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))',
             borderRadius: 'var(--r-md)',
             border: '1px solid var(--app-line)',
             fontSize: 'var(--type-sm)',

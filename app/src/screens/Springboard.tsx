@@ -186,8 +186,8 @@ function FolderTile({
             height: ICON,
             display: 'grid',
             gridTemplateColumns: '1fr 1fr',
-            gap: 3,
-            padding: 7,
+            gap: 'calc(3px * var(--density, 1))',
+            paddingBlock: 'calc(7px * var(--density, 1))', paddingInline: 'calc(7px * var(--density, 1))',
             background: 'var(--app-hero)',
             border: '1px solid var(--app-line)',
             borderRadius: 'var(--icon-radius, 16px)',
@@ -211,8 +211,8 @@ function FolderTile({
             display: 'grid',
             gridTemplateColumns: 'repeat(4, 1fr)',
             gap: 'var(--sp-7)',
-            padding: '14px 12px',
-            margin: '4px 0 8px',
+            paddingBlock: 'calc(14px * var(--density, 1))', paddingInline: 'calc(12px * var(--density, 1))',
+            marginTop: 'calc(4px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(8px * var(--density, 1))',
             background: 'var(--app-panel)',
             border: '1px solid var(--app-line)',
             borderRadius: 'var(--r-md)',
@@ -302,7 +302,7 @@ export function Springboard() {
      */
     <nav
       aria-label="Sections"
-      style={{ display: 'flex', flexDirection: 'column', minHeight: '100%', padding: '10px 14px 0' }}
+      style={{ display: 'flex', flexDirection: 'column', minHeight: '100%', paddingTop: 'calc(10px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))', paddingBottom: '0' }}
     >
       <input
         className="input"
@@ -310,17 +310,17 @@ export function Springboard() {
         onChange={(e) => setQuery(e.target.value)}
         placeholder="Search"
         aria-label="Search the app"
-        style={{ width: '100%', height: 38, marginBottom: 14, fontSize: 'var(--type-base)' }}
+        style={{ width: '100%', height: 38, marginBottom: 'calc(14px * var(--density, 1))', fontSize: 'var(--type-base)' }}
       />
 
       {searching ? (
         <>
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginBottom: 'var(--sp-5)' }}>
+          <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginBottom: 'var(--sp-5)' }}>
             {found.length === 0
               ? 'Nothing here by that name.'
               : `${found.length} ${found.length === 1 ? 'place' : 'places'}`}
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 18 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 'calc(18px * var(--density, 1))' }}>
             {found.map((s) => (
               <Icon key={s} screen={s} onOpen={open} />
             ))}
@@ -338,7 +338,7 @@ export function Springboard() {
               style={{
                 width: '100%',
                 textAlign: 'left',
-                padding: '13px 14px',
+                paddingBlock: 'calc(13px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))',
                 marginBottom: 'var(--sp-7)',
                 background: 'var(--app-hero)',
                 border: '1px solid var(--app-line)',
@@ -372,11 +372,11 @@ export function Springboard() {
             somebody lands.
           */}
           {page === 0 && recent.length > 0 && (
-            <div style={{ marginBottom: 18 }}>
+            <div style={{ marginBottom: 'calc(18px * var(--density, 1))' }}>
               <div className="kicker" style={{ fontSize: 'calc(10px * var(--text-scale, 1))', marginBottom: 'var(--sp-4)' }}>
                 Lately
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 18 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 'calc(18px * var(--density, 1))' }}>
                 {recent.map((d) => (
                   <Icon key={d.screen} screen={d.screen} onOpen={open} />
                 ))}
@@ -384,7 +384,7 @@ export function Springboard() {
             </div>
           )}
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 18 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 'calc(18px * var(--density, 1))' }}>
             {here?.items.map((item) =>
               typeof item === 'string' ? (
                 <Icon
@@ -414,7 +414,7 @@ export function Springboard() {
           {pages.length > 1 && (
             <TabList
               label="Pages"
-              style={{ display: 'flex', gap: 'var(--sp-4)', justifyContent: 'center', padding: '20px 0 8px' }}
+              style={{ display: 'flex', gap: 'var(--sp-4)', justifyContent: 'center', paddingTop: 'calc(20px * var(--density, 1))', paddingInline: '0', paddingBottom: 'calc(8px * var(--density, 1))' }}
               /*
                 A 7px dot is what a page indicator looks like everywhere, and
                 a 7px dot is not something a thumb can hit. So the dot is
@@ -479,8 +479,8 @@ export function Springboard() {
         style={{
           display: 'grid',
           gridTemplateColumns: `repeat(${Math.max(1, dock.length)}, 1fr)`,
-          gap: 18,
-          padding: '14px 12px',
+          gap: 'calc(18px * var(--density, 1))',
+          paddingBlock: 'calc(14px * var(--density, 1))', paddingInline: 'calc(12px * var(--density, 1))',
           marginBottom: 'var(--sp-5)',
           background: 'var(--app-panel)',
           border: '1px solid var(--app-line)',

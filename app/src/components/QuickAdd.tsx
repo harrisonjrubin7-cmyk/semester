@@ -168,14 +168,14 @@ export function QuickAdd({ onClose }: { onClose: () => void }) {
       />
 
       {text.trim() ? (
-        <div style={{ marginTop: 14 }}>
+        <div style={{ marginTop: 'calc(14px * var(--density, 1))' }}>
           <div className="kicker">What it read</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginTop: 7 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(5px * var(--density, 1))', marginTop: 'calc(7px * var(--density, 1))' }}>
             {readBack(caught, codeOf).map((line) => (
               <div
                 key={line}
                 style={{
-                  fontSize: 'calc(12.5px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-sm-plus)',
                   color: line.startsWith('No ') ? 'var(--app-dim)' : 'var(--app-fg)',
                   lineHeight: 'var(--leading-normal)',
                   textWrap: 'pretty',
@@ -186,7 +186,7 @@ export function QuickAdd({ onClose }: { onClose: () => void }) {
             ))}
             <div
               style={{
-                fontSize: 'calc(12.5px * var(--text-scale, 1))',
+                fontSize: 'var(--type-sm-plus)',
                 marginTop: 'var(--sp-2)',
                 lineHeight: 'var(--leading-normal)',
                 textWrap: 'pretty',
@@ -208,10 +208,10 @@ export function QuickAdd({ onClose }: { onClose: () => void }) {
       ) : (
         <div
           style={{
-            fontSize: 'calc(12.5px * var(--text-scale, 1))',
+            fontSize: 'var(--type-sm-plus)',
             color: 'var(--app-dim)',
             marginTop: 'var(--sp-7)',
-            lineHeight: 1.6,
+            lineHeight: 'var(--leading-loose)',
             textWrap: 'pretty',
           }}
         >
@@ -225,9 +225,9 @@ export function QuickAdd({ onClose }: { onClose: () => void }) {
         <div
           role="status"
           style={{
-            fontSize: 'calc(12.5px * var(--text-scale, 1))',
+            fontSize: 'var(--type-sm-plus)',
             color: 'var(--app-dim)',
-            marginTop: 14,
+            marginTop: 'calc(14px * var(--density, 1))',
           }}
         >
           {said} It is one of yours, filed against the course — not a line pretending the

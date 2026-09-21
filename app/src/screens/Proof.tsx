@@ -103,7 +103,7 @@ export function Proof() {
 
   return (
     <Page>
-      <SectionLabel style={{ margin: '0 0 9px' }}>Paste it in</SectionLabel>
+      <SectionLabel style={{ marginTop: '0', marginInline: '0', marginBottom: 'calc(9px * var(--density, 1))' }}>Paste it in</SectionLabel>
       <textarea
         className="input"
         value={text}
@@ -116,7 +116,7 @@ export function Proof() {
           minHeight: 220,
           resize: 'vertical',
           fontSize: 'var(--type-md)',
-          lineHeight: 1.6,
+          lineHeight: 'var(--leading-loose)',
         }}
       />
 
@@ -235,7 +235,7 @@ export function Proof() {
 
       {catalog.courses.length > 0 ? (
         <>
-          <SectionLabel style={{ margin: '22px 0 8px' }}>Is this for a course?</SectionLabel>
+          <SectionLabel style={{ marginTop: 'calc(22px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(8px * var(--density, 1))' }}>Is this for a course?</SectionLabel>
           <PickChips
             options={['', ...catalog.courses.map((c) => c.id)]}
             value={courseId}
@@ -246,9 +246,9 @@ export function Proof() {
           />
           <p
             style={{
-              fontSize: 'calc(11.5px * var(--text-scale, 1))',
+              fontSize: 'var(--type-xs-plus)',
               color: 'var(--app-dim)',
-              marginTop: 9,
+              marginTop: 'calc(9px * var(--density, 1))',
               lineHeight: 'var(--leading-relaxed)',
               textWrap: 'pretty',
             }}

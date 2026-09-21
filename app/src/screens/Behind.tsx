@@ -74,7 +74,7 @@ export function Behind() {
 
   return (
     <Page>
-      <Blueprint style={{ padding: '15px 16px' }}>
+      <Blueprint style={{ paddingBlock: 'calc(15px * var(--density, 1))', paddingInline: 'calc(16px * var(--density, 1))' }}>
         <div className="kicker">Where it actually stands</div>
         <div
           className="chrome-text"
@@ -96,12 +96,12 @@ export function Behind() {
       */}
       {attendance.length > 0 && (
         <div>
-          <SectionLabel style={{ margin: '22px 0 8px' }}>Turning up</SectionLabel>
+          <SectionLabel style={{ marginTop: 'calc(22px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(8px * var(--density, 1))' }}>Turning up</SectionLabel>
           <div
             style={{
-              fontSize: 'calc(11.5px * var(--text-scale, 1))',
+              fontSize: 'var(--type-xs-plus)',
               color: 'var(--app-dim)',
-              marginBottom: 9,
+              marginBottom: 'calc(9px * var(--density, 1))',
               lineHeight: 'var(--leading-relaxed)',
               textWrap: 'pretty',
             }}
@@ -119,7 +119,7 @@ export function Behind() {
                   display: 'block',
                   width: '100%',
                   textAlign: 'left',
-                  padding: '12px 13px',
+                  paddingBlock: 'calc(12px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))',
                   border: '1px solid var(--app-line)',
                   borderRadius: 'var(--r-sm)',
                   fontSize: 'var(--type-base)',
@@ -139,13 +139,13 @@ export function Behind() {
         if (group.length === 0) return null;
         return (
           <div key={where}>
-            <SectionLabel style={{ margin: '22px 0 8px' }}>{label}</SectionLabel>
+            <SectionLabel style={{ marginTop: 'calc(22px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(8px * var(--density, 1))' }}>{label}</SectionLabel>
             {note ? (
               <div
                 style={{
-                  fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-xs-plus)',
                   color: 'var(--app-dim)',
-                  marginBottom: 9,
+                  marginBottom: 'calc(9px * var(--density, 1))',
                   lineHeight: 'var(--leading-relaxed)',
                   textWrap: 'pretty',
                 }}
@@ -164,7 +164,7 @@ export function Behind() {
                     display: 'block',
                     width: '100%',
                     textAlign: 'left',
-                    padding: '11px 13px',
+                    paddingBlock: 'calc(11px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))',
                     borderRadius: 'var(--r-md)',
                     border: '1px solid var(--app-line)',
                     opacity: where === 'tight' ? DIMMED_ROW : 1,
@@ -173,8 +173,8 @@ export function Behind() {
                   <span
                     style={{
                       display: 'block',
-                      fontSize: 'calc(13.5px * var(--text-scale, 1))',
-                      lineHeight: 1.35,
+                      fontSize: 'var(--type-base-plus)',
+                      lineHeight: 'var(--leading-tight-plus)',
                       textWrap: 'pretty',
                     }}
                   >
@@ -183,9 +183,9 @@ export function Behind() {
                   <span
                     style={{
                       display: 'block',
-                      fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                      fontSize: 'var(--type-xs-plus)',
                       color: 'var(--app-dim)',
-                      marginTop: 3,
+                      marginTop: 'calc(3px * var(--density, 1))',
                       textWrap: 'pretty',
                     }}
                   >
@@ -200,7 +200,7 @@ export function Behind() {
         );
       })}
 
-      <SectionLabel style={{ margin: '26px 0 8px' }}>Other moves</SectionLabel>
+      <SectionLabel style={{ marginTop: 'calc(26px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(8px * var(--density, 1))' }}>Other moves</SectionLabel>
       <div
         style={{
           fontSize: 'var(--type-sm)',
@@ -212,7 +212,7 @@ export function Behind() {
       >
         {movesLine(b)}
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(9px * var(--density, 1))' }}>
         {moves(b).map((m) => (
           <button
             key={m.id}
@@ -223,7 +223,7 @@ export function Behind() {
               display: 'block',
               width: '100%',
               textAlign: 'left',
-              padding: '12px 14px',
+              paddingBlock: 'calc(12px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))',
               borderRadius: 'var(--r-md)',
               border: '1px solid var(--app-line)',
             }}
@@ -231,8 +231,8 @@ export function Behind() {
             <span
               style={{
                 display: 'block',
-                fontSize: 'calc(13.5px * var(--text-scale, 1))',
-                lineHeight: 1.35,
+                fontSize: 'var(--type-base-plus)',
+                lineHeight: 'var(--leading-tight-plus)',
               }}
             >
               {m.what}
@@ -240,7 +240,7 @@ export function Behind() {
             <span
               style={{
                 display: 'block',
-                fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                fontSize: 'var(--type-xs-plus)',
                 color: 'var(--app-dim)',
                 marginTop: 'var(--sp-2)',
                 lineHeight: 'var(--leading-relaxed)',

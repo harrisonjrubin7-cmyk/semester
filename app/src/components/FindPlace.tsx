@@ -114,15 +114,15 @@ export function FindPlace() {
 
   return (
     <Folding name="FindPlace">
-      <SectionLabel style={{ margin: '0 0 8px' }}>Look up an address</SectionLabel>
+      <SectionLabel style={{ marginTop: '0', marginInline: '0', marginBottom: 'calc(8px * var(--density, 1))' }}>Look up an address</SectionLabel>
 
       {!g.on ? (
         <>
           <p
             style={{
-              fontSize: 'calc(12.5px * var(--text-scale, 1))',
+              fontSize: 'var(--type-sm-plus)',
               color: 'var(--app-dim)',
-              lineHeight: 1.55,
+              lineHeight: 'var(--leading-relaxed-plus)',
               textWrap: 'pretty',
             }}
           >
@@ -159,7 +159,7 @@ export function FindPlace() {
               disabled={busy || !query.trim()}
               style={{
                 width: 'auto',
-                padding: '0 16px',
+                paddingBlock: '0', paddingInline: 'calc(16px * var(--density, 1))',
                 height: 42,
                 textTransform: 'uppercase',
                 letterSpacing: '0.09em',
@@ -173,7 +173,7 @@ export function FindPlace() {
 
           {hits !== null ? (
             hits.length > 0 ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 7, marginTop: 11 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(7px * var(--density, 1))', marginTop: 'calc(11px * var(--density, 1))' }}>
                 {hits.map((f) => (
                   <button
                     key={`${f.lat},${f.lon},${f.label}`}
@@ -196,7 +196,7 @@ export function FindPlace() {
                       display: 'block',
                       width: '100%',
                       textAlign: 'left',
-                      padding: '10px 13px',
+                      paddingBlock: 'calc(10px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))',
                       borderRadius: 'var(--r-md)',
                       border: '1px solid var(--app-line)',
                     }}
@@ -204,8 +204,8 @@ export function FindPlace() {
                     <span
                       style={{
                         display: 'block',
-                        fontSize: 'calc(13.5px * var(--text-scale, 1))',
-                        lineHeight: 1.35,
+                        fontSize: 'var(--type-base-plus)',
+                        lineHeight: 'var(--leading-tight-plus)',
                         textWrap: 'pretty',
                       }}
                     >
@@ -214,9 +214,9 @@ export function FindPlace() {
                     <span
                       style={{
                         display: 'block',
-                        fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                        fontSize: 'var(--type-xs-plus)',
                         color: 'var(--app-dim)',
-                        marginTop: 3,
+                        marginTop: 'calc(3px * var(--density, 1))',
                         textWrap: 'pretty',
                       }}
                     >
@@ -230,9 +230,9 @@ export function FindPlace() {
                  place is worse than no pin, because a pin is believed. */
               <p
                 style={{
-                  fontSize: 'calc(12.5px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-sm-plus)',
                   color: 'var(--app-dim)',
-                  marginTop: 11,
+                  marginTop: 'calc(11px * var(--density, 1))',
                   lineHeight: 'var(--leading-relaxed)',
                   textWrap: 'pretty',
                 }}
@@ -242,8 +242,8 @@ export function FindPlace() {
             )
           ) : null}
 
-          <SectionLabel style={{ margin: '22px 0 8px' }}>Settings</SectionLabel>
-          <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap' }}>
+          <SectionLabel style={{ marginTop: 'calc(22px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(8px * var(--density, 1))' }}>Settings</SectionLabel>
+          <div style={{ display: 'flex', gap: 'calc(7px * var(--density, 1))', flexWrap: 'wrap' }}>
             {SERVICES.map((s) => (
               <button
                 key={s.id}
@@ -253,7 +253,7 @@ export function FindPlace() {
                 onClick={() => dispatch({ type: 'setGeocode', patch: { service: s.id } })}
                 style={{
                   width: 'auto',
-                  padding: '8px 13px',
+                  paddingBlock: 'calc(8px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))',
                   borderRadius: 'var(--r-sm)',
                   border: `1px solid ${g.service === s.id ? 'var(--app-accent)' : 'var(--app-line)'}`,
                   fontSize: 'var(--type-sm)',
@@ -265,7 +265,7 @@ export function FindPlace() {
           </div>
           <p
             style={{
-              fontSize: 'calc(11.5px * var(--text-scale, 1))',
+              fontSize: 'var(--type-xs-plus)',
               color: 'var(--app-dim)',
               marginTop: 'var(--sp-4)',
               lineHeight: 'var(--leading-relaxed)',
@@ -279,7 +279,7 @@ export function FindPlace() {
           {/* Its own switch. Looking up text you typed and sending where you
               are standing are different acts, and somebody may well want the
               first and not the second. */}
-          <div style={{ marginTop: 14 }}>
+          <div style={{ marginTop: 'calc(14px * var(--density, 1))' }}>
             <button
               type="button"
               className="bare tappable"
@@ -287,7 +287,7 @@ export function FindPlace() {
               onClick={() => dispatch({ type: 'setGeocode', patch: { reverseOn: !g.reverseOn } })}
               style={{
                 width: 'auto',
-                padding: '8px 13px',
+                paddingBlock: 'calc(8px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))',
                 borderRadius: 'var(--r-sm)',
                 border: `1px solid ${g.reverseOn ? 'var(--app-accent)' : 'var(--app-line)'}`,
                 fontSize: 'var(--type-sm)',
@@ -297,7 +297,7 @@ export function FindPlace() {
             </button>
             <p
               style={{
-                fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                fontSize: 'var(--type-xs-plus)',
                 color: 'var(--app-dim)',
                 marginTop: 'var(--sp-4)',
                 lineHeight: 'var(--leading-relaxed)',
@@ -311,7 +311,7 @@ export function FindPlace() {
                 onClick={whereAmI}
                 disabled={busy}
                 spacing="0.09em"
-                style={{ marginTop: 9 }}
+                style={{ marginTop: 'calc(9px * var(--density, 1))' }}
               >
                 What is here?
               </ActionButton>
@@ -327,7 +327,7 @@ export function FindPlace() {
             style={{
               width: 'auto',
               marginTop: 'var(--sp-7)',
-              fontSize: 'calc(11.5px * var(--text-scale, 1))',
+              fontSize: 'var(--type-xs-plus)',
               color: 'var(--app-dim)',
             }}
           >

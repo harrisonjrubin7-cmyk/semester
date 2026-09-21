@@ -127,7 +127,7 @@ export function Solve() {
       </div>
 
       <SectionLabel>What do you need</SectionLabel>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(7px * var(--density, 1))' }}>
         {APPROACHES.map((option) => {
           const on = option.id === aid;
           return (
@@ -139,7 +139,7 @@ export function Solve() {
               aria-pressed={on}
               style={{
                 textAlign: 'left',
-                padding: '11px 13px',
+                paddingBlock: 'calc(11px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))',
                 borderRadius: 'var(--r-md)',
                 border: `1px solid ${on ? 'var(--app-accent-deep)' : 'var(--app-line)'}`,
                 background: on ? 'var(--app-accent-wash)' : 'transparent',
@@ -149,10 +149,10 @@ export function Solve() {
               <span
                 style={{
                   display: 'block',
-                  fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-xs-plus)',
                   color: 'var(--app-dim)',
                   marginTop: 'var(--sp-1)',
-                  lineHeight: 1.4,
+                  lineHeight: 'var(--leading-normal-minus)',
                 }}
               >
                 {option.blurb}
@@ -169,7 +169,7 @@ export function Solve() {
         value={problem}
         onChange={(e) => setProblem(e.target.value)}
         placeholder="Type it, or photograph it below."
-        style={{ width: '100%', minHeight: 110, resize: 'vertical', lineHeight: 1.55 }}
+        style={{ width: '100%', minHeight: 110, resize: 'vertical', lineHeight: 'var(--leading-relaxed-plus)' }}
       />
       <Dictate compact current={problem} onText={setProblem} label="Read the problem out" />
       <FilePick
@@ -187,7 +187,7 @@ export function Solve() {
       >
         {busy === 'Reading it…' ? 'Reading it…' : 'Photograph the problem'}
       </FilePick>
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
+      <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
         Anything the photo cannot show clearly comes back as [?] rather than a guess — a guessed
         exponent turns it into a different problem without telling you.
       </div>
@@ -201,7 +201,7 @@ export function Solve() {
             value={work}
             onChange={(e) => setWork(e.target.value)}
             placeholder="Your working, as far as you got. Rough is fine."
-            style={{ width: '100%', minHeight: 110, resize: 'vertical', lineHeight: 1.55 }}
+            style={{ width: '100%', minHeight: 110, resize: 'vertical', lineHeight: 'var(--leading-relaxed-plus)' }}
           />
           <DraftNote field={workField} />
         </>

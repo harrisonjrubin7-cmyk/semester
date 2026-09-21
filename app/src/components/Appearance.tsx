@@ -37,7 +37,7 @@ import { SectionLabel } from './ui';
 import { Folding } from './Fold';
 
 const LABEL_STYLE = {
-  margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))',
+  marginTop: 'calc(26px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(6px * var(--density, 1))',
 } as const;
 
 const BLURB_STYLE = {
@@ -131,7 +131,7 @@ function Frame({ children, void: onVoid = false }: { children: ReactNode; void?:
       style={{
         display: 'block',
         height: 74,
-        padding: 7,
+        paddingBlock: 'calc(7px * var(--density, 1))', paddingInline: 'calc(7px * var(--density, 1))',
         background: onVoid ? 'var(--app-void, var(--app-bg))' : 'var(--app-bg)',
         border: '1px solid var(--app-line-soft)',
         borderRadius: 'var(--r-sm)',
@@ -176,7 +176,7 @@ function LayoutPreview({ shell }: { shell: string }) {
               key={w}
               style={{
                 display: 'block',
-                padding: '5px 6px',
+                paddingBlock: 'calc(5px * var(--density, 1))', paddingInline: 'calc(6px * var(--density, 1))',
                 // Inset from the left, which is the thing the layout is about.
                 backgroundImage:
                   i < 2 ? 'linear-gradient(var(--app-line-soft), var(--app-line-soft))' : 'none',
@@ -201,7 +201,7 @@ function LayoutPreview({ shell }: { shell: string }) {
         <span
           style={{
             display: 'block',
-            padding: '5px 6px',
+            paddingBlock: 'calc(5px * var(--density, 1))', paddingInline: 'calc(6px * var(--density, 1))',
             background: 'var(--app-panel)',
             borderRadius: 'var(--r-sm)',
             boxShadow: '0 1px 3px rgba(0,0,0,.28)',
@@ -226,7 +226,7 @@ function LayoutPreview({ shell }: { shell: string }) {
               style={{
                 flex: 1,
                 display: 'block',
-                padding: '6px 5px',
+                paddingBlock: 'calc(6px * var(--density, 1))', paddingInline: 'calc(5px * var(--density, 1))',
                 background: 'var(--app-panel)',
                 borderRadius: 'var(--r-sm)',
                 boxShadow: '0 1px 3px rgba(0,0,0,.28)',

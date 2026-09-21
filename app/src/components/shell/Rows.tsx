@@ -154,7 +154,7 @@ export function Group({
         {shut ? null : framed ? (
           <Blueprint
             style={{
-              padding: 14,
+              paddingBlock: 'calc(14px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))',
               // The same two-second outline the grouped panel gets, on the
               // frame this layout already draws.
               borderColor: lit ? 'var(--app-accent)' : undefined,
@@ -223,7 +223,7 @@ export function Group({
         <div
           style={{
             margin: `calc(7px * var(--density, 1)) ${SIDE}px 0`,
-            fontSize: 'calc(11.5px * var(--text-scale, 1))',
+            fontSize: 'var(--type-xs-plus)',
             color: 'var(--app-dim)',
             lineHeight: 'var(--leading-relaxed)',
             textWrap: 'pretty',
@@ -306,17 +306,17 @@ function Row({
 function Label({ label, sub }: { label: ReactNode; sub?: ReactNode }) {
   return (
     <span style={{ flex: 1, minWidth: 0 }}>
-      <span style={{ display: 'block', fontSize: 'var(--type-md)', lineHeight: 1.35 }}>
+      <span style={{ display: 'block', fontSize: 'var(--type-md)', lineHeight: 'var(--leading-tight-plus)' }}>
         {label}
       </span>
       {sub ? (
         <span
           style={{
             display: 'block',
-            fontSize: 'calc(11.5px * var(--text-scale, 1))',
+            fontSize: 'var(--type-xs-plus)',
             color: 'var(--app-dim)',
             marginTop: 'var(--sp-1)',
-            lineHeight: 1.4,
+            lineHeight: 'var(--leading-normal-minus)',
           }}
         >
           {sub}
@@ -331,7 +331,7 @@ function Value({ children }: { children: ReactNode }) {
   return (
     <span
       style={{
-        fontSize: 'calc(12.5px * var(--text-scale, 1))',
+        fontSize: 'var(--type-sm-plus)',
         color: 'var(--app-dim)',
         maxWidth: '45%',
         overflow: 'hidden',

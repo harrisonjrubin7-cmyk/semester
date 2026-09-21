@@ -307,7 +307,7 @@ function Build() {
             ))}
           </select>
           {catalog.courses.length > 1 && (
-            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', ...secondLine(), marginTop: 'var(--sp-3)' }}>
+            <div style={{ fontSize: 'var(--type-xs-plus)', ...secondLine(), marginTop: 'var(--sp-3)' }}>
               Switch course from Study.
             </div>
           )}
@@ -315,7 +315,7 @@ function Build() {
       ) : (
         <>
           <SectionLabel>What kind of talk</SectionLabel>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(7px * var(--density, 1))' }}>
             {KINDS.map((option) => {
               const on = option.id === kindId;
               return (
@@ -327,14 +327,14 @@ function Build() {
                   onClick={() => setKindId(option.id)}
                   style={{
                     textAlign: 'left',
-                    padding: '10px 12px',
+                    paddingBlock: 'calc(10px * var(--density, 1))', paddingInline: 'calc(12px * var(--density, 1))',
                     borderRadius: 'var(--r-md)',
                     border: `1px solid ${on ? 'var(--app-accent-deep)' : 'var(--app-line)'}`,
                     background: on ? 'var(--app-accent-wash)' : 'transparent',
                   }}
                 >
                   <span style={{ display: 'block', fontSize: 'var(--type-md)' }}>{option.label}</span>
-                  <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
+                  <span style={{ display: 'block', fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
                     {option.blurb}
                   </span>
                 </button>
@@ -366,7 +366,7 @@ function Build() {
             onFill={(lines) => setMaterial((now) => appendTo(now, lines))}
             label="readings"
           />
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
             Anything not in here comes back as a blank in square brackets. A number invented on a
             slide is believed by a whole room at once.
           </div>
@@ -402,7 +402,7 @@ function Build() {
             value={String(minutes)}
             onChange={(next) => setMinutes(Number(next))}
           />
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 5 }}>
+          <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'calc(5px * var(--density, 1))' }}>
             About {slidesFor(minutes, kindById(kindId))} content slides — a slide and a half a
             minute, which is the rate people actually present at.
           </div>
@@ -412,7 +412,7 @@ function Build() {
               onClick={() => void make()}
               disabled={busy}
               tone="primary"
-              style={{ marginTop: 18 }}
+              style={{ marginTop: 'calc(18px * var(--density, 1))' }}
             >
               {busy ? 'Planning it…' : plan ? 'Plan it again' : 'Plan the deck'}
             </ActionButton>
@@ -429,7 +429,7 @@ function Build() {
           <SectionLabel>{file.slides.length} slides</SectionLabel>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
             {file.slides.map((slide, i) => (
-              <Blueprint plain key={`${slide.title}-${i}`} style={{ padding: '11px 13px' }}>
+              <Blueprint plain key={`${slide.title}-${i}`} style={{ paddingBlock: 'calc(11px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))' }}>
                 <div className="kicker">
                   {i + 1}
                   {slide.note ? ` · ${slide.note}` : ''}
@@ -438,7 +438,7 @@ function Build() {
                   style={{
                     fontSize: slide.opening ? 17 : 14.5,
                     lineHeight: 'var(--leading-tight)',
-                    marginTop: 5,
+                    marginTop: 'calc(5px * var(--density, 1))',
                     textWrap: 'pretty',
                   }}
                 >
@@ -447,7 +447,7 @@ function Build() {
                 {slide.bullets.map((b, n) => (
                   <div
                     key={`${b}-${n}`}
-                    style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 5, lineHeight: 'var(--leading-normal)' }}
+                    style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', marginTop: 'calc(5px * var(--density, 1))', lineHeight: 'var(--leading-normal)' }}
                   >
                     · {b}
                   </div>
@@ -491,7 +491,7 @@ function Build() {
             onClick={() => void save()}
             disabled={saving}
             tone="primary"
-            style={{ marginTop: 14 }}
+            style={{ marginTop: 'calc(14px * var(--density, 1))' }}
           >
             {saving ? 'Writing the file…' : 'Save as PowerPoint'}
           </ActionButton>

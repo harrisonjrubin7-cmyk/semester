@@ -42,8 +42,8 @@ export function Trouble({
   return (
     <div
       style={{
-        marginTop: 14,
-        padding: '11px 13px',
+        marginTop: 'calc(14px * var(--density, 1))',
+        paddingBlock: 'calc(11px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))',
         borderRadius: 'var(--r-md)',
         border: '1px solid var(--app-warn-line)',
         background: 'var(--app-warn-wash)',
@@ -69,7 +69,7 @@ export function Trouble({
           className="btn btn-secondary"
           onClick={onRetry}
           disabled={busy}
-          style={{ height: 38, marginTop: 'var(--sp-5)', fontSize: 'calc(12.5px * var(--text-scale, 1))', paddingInline: 18 }}
+          style={{ height: 38, marginTop: 'var(--sp-5)', fontSize: 'var(--type-sm-plus)', paddingInline: 18 }}
         >
           {busy ? 'Trying…' : label}
         </button>

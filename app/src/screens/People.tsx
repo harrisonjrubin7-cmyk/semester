@@ -56,7 +56,7 @@ export function People() {
         ]}
         value={tab}
         onChange={setTab}
-        style={{ margin: '0 0 16px' }}
+        style={{ marginTop: '0', marginInline: '0', marginBottom: 'calc(16px * var(--density, 1))' }}
       />
       {tab === 'people' ? <PeopleTab rows={state.people} /> : <LettersTab />}
     </Page>
@@ -100,7 +100,7 @@ function PeopleTab({ rows }: { rows?: Person[] }) {
             setName('');
             setRole('');
           }}
-          style={{ width: 'auto', padding: '0 16px', height: 42, textTransform: 'uppercase', letterSpacing: '0.09em' }}
+          style={{ width: 'auto', paddingBlock: '0', paddingInline: 'calc(16px * var(--density, 1))', height: 42, textTransform: 'uppercase', letterSpacing: '0.09em' }}
         >
           Add
         </button>
@@ -117,10 +117,10 @@ function PeopleTab({ rows }: { rows?: Person[] }) {
       {state.people.length === 0 ? (
         <p
           style={{
-            marginTop: 20,
-            fontSize: 'calc(12.5px * var(--text-scale, 1))',
+            marginTop: 'calc(20px * var(--density, 1))',
+            fontSize: 'var(--type-sm-plus)',
             color: 'var(--app-dim)',
-            lineHeight: 1.6,
+            lineHeight: 'var(--leading-loose)',
             textWrap: 'pretty',
           }}
         >
@@ -131,7 +131,7 @@ function PeopleTab({ rows }: { rows?: Person[] }) {
         </p>
       ) : null}
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 9, marginTop: 18 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(9px * var(--density, 1))', marginTop: 'calc(18px * var(--density, 1))' }}>
         {people.map((p) => {
           const k = known(state.visits, p.id, now);
           const theirs = state.visits
@@ -139,7 +139,7 @@ function PeopleTab({ rows }: { rows?: Person[] }) {
             .sort((a, b) => b.at - a.at);
           const course = p.courseId ? catalog.byId[p.courseId]?.code : '';
           return (
-            <Blueprint plain key={p.id} style={{ padding: '13px 14px' }}>
+            <Blueprint plain key={p.id} style={{ paddingBlock: 'calc(13px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))' }}>
               <button
                 type="button"
                 className="bare tappable"
@@ -152,9 +152,9 @@ function PeopleTab({ rows }: { rows?: Person[] }) {
                 <span
                   style={{
                     display: 'block',
-                    fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                    fontSize: 'var(--type-xs-plus)',
                     color: 'var(--app-dim)',
-                    marginTop: 3,
+                    marginTop: 'calc(3px * var(--density, 1))',
                     textWrap: 'pretty',
                   }}
                 >
@@ -165,7 +165,7 @@ function PeopleTab({ rows }: { rows?: Person[] }) {
                     display: 'block',
                     fontSize: 'var(--type-sm)',
                     color: 'var(--app-dim)',
-                    marginTop: 5,
+                    marginTop: 'calc(5px * var(--density, 1))',
                     lineHeight: 'var(--leading-normal)',
                     textWrap: 'pretty',
                   }}
@@ -259,7 +259,7 @@ function PeopleTab({ rows }: { rows?: Person[] }) {
                     style={{
                       width: 'auto',
                       marginTop: 'var(--sp-6)',
-                      fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                      fontSize: 'var(--type-xs-plus)',
                       color: 'var(--app-dim)',
                     }}
                   >
@@ -399,7 +399,7 @@ function LettersTab() {
 
   if (state.people.length === 0) {
     return (
-      <p style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 1.6 }}>
+      <p style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-loose)' }}>
         Add somebody under People first — a letter belongs to a person.
       </p>
     );
@@ -407,7 +407,7 @@ function LettersTab() {
 
   return (
     <Folding name="LettersTab">
-      <SectionLabel style={{ margin: '0 0 8px' }}>Ask for one</SectionLabel>
+      <SectionLabel style={{ marginTop: '0', marginInline: '0', marginBottom: 'calc(8px * var(--density, 1))' }}>Ask for one</SectionLabel>
       <div style={{ display: 'flex', gap: 'var(--sp-3)', flexWrap: 'wrap' }}>
         {state.people.map((p) => (
           <button
@@ -418,10 +418,10 @@ function LettersTab() {
             onClick={() => setPersonId(p.id)}
             style={{
               width: 'auto',
-              padding: '8px 12px',
+              paddingBlock: 'calc(8px * var(--density, 1))', paddingInline: 'calc(12px * var(--density, 1))',
               borderRadius: 'var(--r-sm)',
               border: `1px solid ${personId === p.id ? 'var(--app-accent)' : 'var(--app-line)'}`,
-              fontSize: 'calc(11.5px * var(--text-scale, 1))',
+              fontSize: 'var(--type-xs-plus)',
             }}
           >
             {p.name}
@@ -454,7 +454,7 @@ function LettersTab() {
             setForWhat('');
             setDue('');
           }}
-          style={{ width: 'auto', padding: '0 16px', height: 40, textTransform: 'uppercase', letterSpacing: '0.09em' }}
+          style={{ width: 'auto', paddingBlock: '0', paddingInline: 'calc(16px * var(--density, 1))', height: 40, textTransform: 'uppercase', letterSpacing: '0.09em' }}
         >
           Track it
         </button>
@@ -462,8 +462,8 @@ function LettersTab() {
 
       {wanted.length > 0 ? (
         <>
-          <SectionLabel style={{ margin: '22px 0 8px' }}>Wanting something from you</SectionLabel>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
+          <SectionLabel style={{ marginTop: 'calc(22px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(8px * var(--density, 1))' }}>Wanting something from you</SectionLabel>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(9px * var(--density, 1))' }}>
             {wanted.map((l) => {
               const left = daysLeft(l, now);
               const tight = short(l, now);
@@ -472,7 +472,7 @@ function LettersTab() {
                   plain
                   key={l.id}
                   style={{
-                    padding: '13px 14px',
+                    paddingBlock: 'calc(13px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))',
                     border: tight ? '1px solid var(--app-warn-line)' : undefined,
                     background: tight ? 'var(--app-warn-wash)' : undefined,
                   }}
@@ -482,9 +482,9 @@ function LettersTab() {
                   </div>
                   <div
                     style={{
-                      fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                      fontSize: 'var(--type-xs-plus)',
                       color: 'var(--app-dim)',
-                      marginTop: 3,
+                      marginTop: 'calc(3px * var(--density, 1))',
                     }}
                   >
                     {[
@@ -497,8 +497,8 @@ function LettersTab() {
                   </div>
                   <div
                     style={{
-                      fontSize: 'calc(12.5px * var(--text-scale, 1))',
-                      marginTop: 7,
+                      fontSize: 'var(--type-sm-plus)',
+                      marginTop: 'calc(7px * var(--density, 1))',
                       lineHeight: 'var(--leading-relaxed)',
                       textWrap: 'pretty',
                     }}
@@ -530,7 +530,7 @@ function LettersTab() {
                         }
                         style={{
                           width: 'auto',
-                          padding: '6px 10px',
+                          paddingBlock: 'calc(6px * var(--density, 1))', paddingInline: 'calc(10px * var(--density, 1))',
                           borderRadius: 'var(--r-sm)',
                           border: `1px solid ${l.stage === a.id ? 'var(--app-accent)' : 'var(--app-line)'}`,
                           fontSize: 'var(--type-xs)',
@@ -557,7 +557,7 @@ function LettersTab() {
                       type="button"
                       className="bare"
                       onClick={() => dispatch({ type: 'dropLetter', id: l.id })}
-                      style={{ width: 'auto', padding: '6px 10px', fontSize: 'var(--type-xs)', color: 'var(--app-dim)' }}
+                      style={{ width: 'auto', paddingBlock: 'calc(6px * var(--density, 1))', paddingInline: 'calc(10px * var(--density, 1))', fontSize: 'var(--type-xs)', color: 'var(--app-dim)' }}
                     >
                       Remove
                     </button>
@@ -571,10 +571,10 @@ function LettersTab() {
 
       <p
         style={{
-          fontSize: 'calc(11.5px * var(--text-scale, 1))',
+          fontSize: 'var(--type-xs-plus)',
           color: 'var(--app-dim)',
-          marginTop: 22,
-          lineHeight: 1.55,
+          marginTop: 'calc(22px * var(--density, 1))',
+          lineHeight: 'var(--leading-relaxed-plus)',
           textWrap: 'pretty',
         }}
       >
@@ -595,7 +595,7 @@ function Toggle({ on, label, onClick }: { on: boolean; label: string; onClick: (
       onClick={onClick}
       style={{
         width: 'auto',
-        padding: '6px 10px',
+        paddingBlock: 'calc(6px * var(--density, 1))', paddingInline: 'calc(10px * var(--density, 1))',
         borderRadius: 'var(--r-sm)',
         border: `1px solid ${on ? 'var(--app-accent)' : 'var(--app-line)'}`,
         fontSize: 'var(--type-xs)',

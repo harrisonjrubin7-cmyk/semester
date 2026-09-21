@@ -122,7 +122,7 @@ function OutOfPocket() {
 
   return (
     <>
-      <Blueprint style={{ padding: '15px 16px', marginTop: 'var(--sp-6)' }}>
+      <Blueprint style={{ paddingBlock: 'calc(15px * var(--density, 1))', paddingInline: 'calc(16px * var(--density, 1))', marginTop: 'var(--sp-6)' }}>
         <div className="kicker">{readTerm(state.term).label}</div>
         <div
           className="chrome-text"
@@ -147,7 +147,7 @@ function OutOfPocket() {
               <CustomRow key={c.id}>
                 <div style={{ display: 'flex', gap: 'var(--sp-5)', alignItems: 'baseline' }}>
                   <CourseTag id={c.id} style={{ flex: 'none' }} />
-                  <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)' }}>
+                  <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)' }}>
                     {theirs.length === 0
                       ? 'nothing recorded'
                       : `${theirs.length} ${theirs.length === 1 ? 'thing' : 'things'}`}
@@ -167,7 +167,7 @@ function OutOfPocket() {
                 </div>
                 {/* The comparison worth having in August. */}
                 {before ? (
-                  <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-2)' }}>
+                  <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-2)' }}>
                     {readTerm(before.term).label}: {money(before.cents)}
                   </div>
                 ) : null}
@@ -178,12 +178,12 @@ function OutOfPocket() {
                       display: 'flex',
                       gap: 'var(--sp-4)',
                       alignItems: 'baseline',
-                      marginTop: 7,
+                      marginTop: 'calc(7px * var(--density, 1))',
                       paddingLeft: 'var(--sp-5)',
                       borderLeft: '2px solid var(--app-line)',
                     }}
                   >
-                    <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base)', lineHeight: 1.35 }}>
+                    <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base)', lineHeight: 'var(--leading-tight-plus)' }}>
                       {x.what}
                       <span style={{ color: 'var(--app-dim)' }}>
                         {' · '}
@@ -206,7 +206,7 @@ function OutOfPocket() {
                             dispatch({ type: 'patchCost', id: x.id, patch: { backCents: cents } });
                           }
                         }}
-                        style={{ flex: 'none', height: 28, fontSize: 'var(--type-xs)', padding: '0 8px' }}
+                        style={{ flex: 'none', height: 28, fontSize: 'var(--type-xs)', paddingBlock: '0', paddingInline: 'calc(8px * var(--density, 1))' }}
                       >
                         Sold
                       </button>
@@ -292,7 +292,7 @@ function OutOfPocket() {
             display: 'block',
             width: '100%',
             textAlign: 'left',
-            padding: '9px 11px',
+            paddingBlock: 'calc(9px * var(--density, 1))', paddingInline: 'calc(11px * var(--density, 1))',
             marginBottom: 'var(--sp-4)',
             borderRadius: 'var(--r-md)',
             border: `1px solid ${rented ? 'var(--app-accent-deep)' : 'var(--app-line)'}`,
@@ -305,7 +305,7 @@ function OutOfPocket() {
       )}
 
       {bad ? (
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-warn)', marginBottom: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
+        <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-warn)', marginBottom: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
           {bad}
         </div>
       ) : null}
@@ -339,7 +339,7 @@ function OutOfPocket() {
         </a>
       ) : null}
 
-      <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 14, lineHeight: 'var(--leading-normal)' }}>
+      <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 'calc(14px * var(--density, 1))', lineHeight: 'var(--leading-normal)' }}>
         Nothing here is looked up. Prices differ by edition, by seller and by the week, and a wrong
         one shown confidently is worse than a blank field — so you type what you paid, and the app
         remembers it for the August when you are deciding again.

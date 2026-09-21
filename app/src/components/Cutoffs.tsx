@@ -47,7 +47,7 @@ export function Cutoffs({ courseId, code }: { courseId: string; code: string }) 
     <div style={{ marginTop: 'var(--sp-5)' }}>
       <div
         style={{
-          fontSize: 'calc(11.5px * var(--text-scale, 1))',
+          fontSize: 'var(--type-xs-plus)',
           color: 'var(--app-dim)',
           lineHeight: 'var(--leading-normal)',
           textWrap: 'pretty',
@@ -66,7 +66,7 @@ export function Cutoffs({ courseId, code }: { courseId: string; code: string }) 
           }}
           style={{
             width: 'auto',
-            padding: '6px 10px',
+            paddingBlock: 'calc(6px * var(--density, 1))', paddingInline: 'calc(10px * var(--density, 1))',
             borderRadius: 'var(--r-sm)',
             border: '1px solid var(--app-line)',
             fontSize: 'var(--type-xs)',
@@ -87,7 +87,7 @@ export function Cutoffs({ courseId, code }: { courseId: string; code: string }) 
             }}
             style={{
               width: 'auto',
-              padding: '6px 10px',
+              paddingBlock: 'calc(6px * var(--density, 1))', paddingInline: 'calc(10px * var(--density, 1))',
               borderRadius: 'var(--r-sm)',
               border: '1px solid var(--app-line)',
               fontSize: 'var(--type-xs)',
@@ -106,7 +106,7 @@ export function Cutoffs({ courseId, code }: { courseId: string; code: string }) 
         <div style={{ marginTop: 'var(--sp-5)' }}>
           <div
             style={{
-              fontSize: 'calc(11.5px * var(--text-scale, 1))',
+              fontSize: 'var(--type-xs-plus)',
               color: 'var(--app-dim)',
               lineHeight: 'var(--leading-normal)',
               marginBottom: 'var(--sp-4)',
@@ -117,7 +117,7 @@ export function Cutoffs({ courseId, code }: { courseId: string; code: string }) 
             that band — a blank is not a zero.
           </div>
           {rows.map((r, i) => (
-            <div key={i} style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'center', marginBottom: 7 }}>
+            <div key={i} style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'center', marginBottom: 'calc(7px * var(--density, 1))' }}>
               <input
                 className="input"
                 value={r.label}

@@ -102,7 +102,7 @@ export function Guide() {
       {state.mode !== 'field' && (
         <>
           <div style={{ fontSize: 'var(--type-lg)', lineHeight: 'var(--leading-tight)' }}>{guide.name}</div>
-          <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 3 }}>{guide.blurb}</div>
+          <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 'calc(3px * var(--density, 1))' }}>{guide.blurb}</div>
         </>
       )}
 
@@ -118,7 +118,7 @@ export function Guide() {
           textTransform: 'uppercase',
           display: 'flex',
           alignItems: 'center',
-          gap: 7,
+          gap: 'calc(7px * var(--density, 1))',
         }}
       >
         <Plus size={14} />
@@ -162,7 +162,7 @@ export function Guide() {
           alignItems: 'center',
           gap: 'var(--sp-4)',
           width: '100%',
-          margin: '20px 0 14px',
+          marginTop: 'calc(20px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(14px * var(--density, 1))',
           textAlign: 'left',
         }}
       >
@@ -201,10 +201,10 @@ export function Guide() {
       {waysOpen && here && (
         <div
           style={{
-            fontSize: 'calc(12.5px * var(--text-scale, 1))',
+            fontSize: 'var(--type-sm-plus)',
             color: 'var(--app-dim)',
             lineHeight: 'var(--leading-normal)',
-            margin: '10px 0 2px',
+            marginTop: 'calc(10px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(2px * var(--density, 1))',
             textWrap: 'pretty',
           }}
         >
@@ -238,7 +238,7 @@ export function Guide() {
           <ActionButton
             onClick={() => dispatch({ type: 'startDrill', unit: null })}
             tone="primary"
-            style={{ fontSize: 'var(--type-lg)', marginTop: 14 }}
+            style={{ fontSize: 'var(--type-lg)', marginTop: 'calc(14px * var(--density, 1))' }}
           >
             Drill all {cards.length} cards
           </ActionButton>
@@ -246,7 +246,7 @@ export function Guide() {
           <Blueprint
             onClick={() => dispatch({ type: 'startDrill', unit: weak.index })}
             style={{
-              padding: '13px 14px',
+              paddingBlock: 'calc(13px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))',
               marginTop: 'var(--sp-6)',
               display: 'flex',
               alignItems: 'center',
@@ -338,7 +338,7 @@ export function Guide() {
               first" was already out here for that reason and "Not right?"
               joins it.
             */}
-            <div style={{ display: 'flex', gap: 'var(--sp-6)', alignItems: 'center', margin: '0 0 12px 38px' }}>
+            <div style={{ display: 'flex', gap: 'var(--sp-6)', alignItems: 'center', marginTop: '0', marginRight: '0', marginBottom: 'calc(12px * var(--density, 1))', marginLeft: 'calc(38px * var(--density, 1))' }}>
               {/*
                 Offered only on units nobody has touched — see `lib/pretest.ts`.
                 On a unit already drilled this would not be a guess, it would be
@@ -351,7 +351,7 @@ export function Guide() {
                   onClick={() => dispatch({ type: 'guessFirst', courseId: state.guideId, unit: i })}
                   style={{
                     width: 'auto',
-                    padding: '5px 9px',
+                    paddingBlock: 'calc(5px * var(--density, 1))', paddingInline: 'calc(9px * var(--density, 1))',
                     borderRadius: 'var(--r-sm)',
                     border: '1px solid var(--app-line)',
                     fontSize: 'calc(10.5px * var(--text-scale, 1))',
@@ -423,7 +423,7 @@ export function Guide() {
       )}
 
       {state.mode === 'quiz' && (
-        <Blueprint style={{ padding: 'var(--sp-7)', marginTop: 14 }}>
+        <Blueprint style={{ padding: 'var(--sp-7)', marginTop: 'calc(14px * var(--density, 1))' }}>
           <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(22px * var(--text-scale, 1))', lineHeight: 1.1 }}>
             Ten multiple choice
           </div>
@@ -446,7 +446,7 @@ export function Guide() {
             dispatch({ type: 'startQuiz', quiz: buildQuiz(guide, state.quizSeed) })
             }
             tone="primary"
-            style={{ fontSize: 'var(--type-lg)', marginTop: 14 }}
+            style={{ fontSize: 'var(--type-lg)', marginTop: 'calc(14px * var(--density, 1))' }}
           >
             Start quiz
           </ActionButton>
@@ -465,7 +465,7 @@ export function Guide() {
           >
             Sit it as a timed paper
           </button>
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
             The paper is the same questions with a clock, marks and a key at the end instead of
             after each one — closer to the real thing, and worse for learning a card you have
             just met.
@@ -490,7 +490,7 @@ export function Guide() {
                   className="bare on-paper"
                   onClick={() => dispatch({ type: 'toggleUnit', index: i })}
                   aria-expanded={open}
-                  style={{ display: 'flex', gap: 11, alignItems: 'center' }}
+                  style={{ display: 'flex', gap: 'calc(11px * var(--density, 1))', alignItems: 'center' }}
                 >
                   <ChevronRight
                     size={14}
@@ -539,10 +539,10 @@ export function Guide() {
                 <div
                   className={`guide-unit${open ? '' : ' is-shut'}`}
                   style={{
-                    padding: '8px 0 2px 25px',
+                    paddingTop: 'calc(8px * var(--density, 1))', paddingRight: '0', paddingBottom: 'calc(2px * var(--density, 1))', paddingLeft: 'calc(25px * var(--density, 1))',
                     display: open ? 'flex' : 'none',
                     flexDirection: 'column',
-                    gap: 14,
+                    gap: 'calc(14px * var(--density, 1))',
                   }}
                 >
                     {u.cards.map((c, ci) => {
@@ -568,7 +568,7 @@ export function Guide() {
                               fontSize: 'var(--type-md)',
                               lineHeight: 'var(--leading-relaxed)',
                               color: 'var(--app-dim)',
-                              marginTop: 3,
+                              marginTop: 'calc(3px * var(--density, 1))',
                               textWrap: 'pretty',
                             }}
                           >
@@ -581,14 +581,14 @@ export function Guide() {
                     {onUnit(i)
                       .filter((up) => up.body)
                       .map((up) => (
-                        <Blueprint plain key={up.id} style={{ padding: '13px 14px' }}>
+                        <Blueprint plain key={up.id} style={{ paddingBlock: 'calc(13px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))' }}>
                           <div className="kicker">
                             Added{up.source ? ` · ${up.source}` : ''}
                           </div>
                           <div
                             style={{
-                              fontSize: 'calc(13.5px * var(--text-scale, 1))',
-                              lineHeight: 1.55,
+                              fontSize: 'var(--type-base-plus)',
+                              lineHeight: 'var(--leading-relaxed-plus)',
                               color: 'var(--app-dim)',
                               marginTop: 'var(--sp-3)',
                               whiteSpace: 'pre-wrap',
@@ -664,7 +664,7 @@ export function Guide() {
         style={{
           fontSize: 'var(--type-xs)',
           color: 'var(--app-dim)',
-          marginTop: 22,
+          marginTop: 'calc(22px * var(--density, 1))',
           fontFamily: 'var(--font-heading)',
           letterSpacing: '0.08em',
         }}
@@ -694,7 +694,7 @@ function Watch() {
 
   if (made === 0) {
     return (
-      <Blueprint style={{ padding: 'var(--sp-7)', marginTop: 14, background: 'var(--app-hero)' }}>
+      <Blueprint style={{ padding: 'var(--sp-7)', marginTop: 'calc(14px * var(--density, 1))', background: 'var(--app-hero)' }}>
         <div className="kicker">Lessons</div>
         <div className="chrome-text" style={{ fontSize: 'var(--type-xl)', marginTop: 'var(--sp-4)', lineHeight: 1.1 }}>
           Not recorded yet
@@ -709,13 +709,13 @@ function Watch() {
 
   return (
     <>
-      <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 14, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 'calc(14px * var(--density, 1))', textWrap: 'pretty' }}>
         {made} {made === 1 ? 'lesson' : 'lessons'} · {Math.round(total / 60)} minutes. Each unit
         taught out loud, with the slide changing as the voice moves. Headphones on the walk to
         Buttrick and you have covered a unit.
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', marginTop: 14 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', marginTop: 'calc(14px * var(--density, 1))' }}>
         {guide.units.map((u, i) => {
           const lesson = lessons[i];
           const added = onUnit(i).reduce((n, up) => n + up.cards.length, 0);
@@ -762,7 +762,7 @@ function Watch() {
                     fontFamily: 'var(--font-heading)',
                     letterSpacing: '0.1em',
                     textTransform: 'uppercase',
-                    marginTop: 3,
+                    marginTop: 'calc(3px * var(--density, 1))',
                   }}
                 >
                   {lesson ? lesson.len : 'not recorded'}
@@ -787,7 +787,7 @@ function Decks() {
 
   return (
     <>
-      <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 14, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 'calc(14px * var(--density, 1))', textWrap: 'pretty' }}>
         One point per slide, question before answer. Better than Read for a unit you have not met
         yet; worse than Cards for one you nearly know.
       </div>
@@ -805,7 +805,7 @@ function Decks() {
         >
           <Blueprint
             style={{
-              padding: '12px 14px',
+              paddingBlock: 'calc(12px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))',
               marginTop: 'var(--sp-6)',
               display: 'flex',
               gap: 'var(--sp-6)',
@@ -823,7 +823,7 @@ function Decks() {
             >
               PPTX
             </span>
-            <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base)', lineHeight: 1.35 }}>
+            <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base)', lineHeight: 'var(--leading-tight-plus)' }}>
               The whole course as a PowerPoint deck
             </span>
             <ChevronRight size={15} style={{ color: 'var(--app-dim)', flex: 'none' }} />
@@ -833,7 +833,7 @@ function Decks() {
         <Blueprint
           onClick={() => dispatch({ type: 'go', screen: 'deck' })}
           style={{
-            padding: '12px 14px',
+            paddingBlock: 'calc(12px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))',
             marginTop: 'var(--sp-6)',
             display: 'flex',
             gap: 'var(--sp-6)',
@@ -851,13 +851,13 @@ function Decks() {
           >
             PPTX
           </span>
-          <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base)', lineHeight: 1.35 }}>
+          <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base)', lineHeight: 'var(--leading-tight-plus)' }}>
             Build a deck from any unit — a real PowerPoint file, written here
           </span>
           <ChevronRight size={15} style={{ color: 'var(--app-dim)', flex: 'none' }} />
         </Blueprint>
       )}
-      <div style={{ display: 'flex', flexDirection: 'column', marginTop: 14 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', marginTop: 'calc(14px * var(--density, 1))' }}>
         {guide.units.map((u, i) => (
           <button
             key={u.name}
@@ -893,7 +893,7 @@ function Decks() {
                   fontFamily: 'var(--font-heading)',
                   letterSpacing: '0.1em',
                   textTransform: 'uppercase',
-                  marginTop: 3,
+                  marginTop: 'calc(3px * var(--density, 1))',
                 }}
               >
                 {u.cards.length * 2 + 2} slides
@@ -942,7 +942,7 @@ function Documents() {
 
   return (
     <Folding name="Documents">
-      <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 14, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 'calc(14px * var(--density, 1))', textWrap: 'pretty' }}>
         The same {guide.units.length} units as a document — every card, the framings, the
         worked examples, the case files, the terms and the self-test, in reading order.
       </div>
@@ -975,12 +975,12 @@ function Documents() {
       </ActionButton>
 
       {files.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 11, marginTop: 14 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(11px * var(--density, 1))', marginTop: 'calc(14px * var(--density, 1))' }}>
           {files.map((f) => (
             <a key={f.label} href={f.href} target="_blank" rel="noreferrer" className="bare">
               <Blueprint
                 plain
-                style={{ padding: '14px 15px', display: 'flex', gap: 'var(--sp-6)', alignItems: 'center' }}
+                style={{ paddingBlock: 'calc(14px * var(--density, 1))', paddingInline: 'calc(15px * var(--density, 1))', display: 'flex', gap: 'var(--sp-6)', alignItems: 'center' }}
               >
                 <span
                   style={{
@@ -996,7 +996,7 @@ function Documents() {
                 </span>
                 <span style={{ flex: 1, minWidth: 0 }}>
                   <span style={{ display: 'block', fontSize: 'var(--type-md)' }}>{guide.code} study guide</span>
-                  <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
+                  <span style={{ display: 'block', fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
                     {f.note}
                   </span>
                 </span>
@@ -1010,7 +1010,7 @@ function Documents() {
       <ActionButton
         onClick={() => window.print()}
         tone="primary"
-        style={{ fontSize: 'var(--type-base)', marginTop: 14 }}
+        style={{ fontSize: 'var(--type-base)', marginTop: 'calc(14px * var(--density, 1))' }}
       >
         Print this screen
       </ActionButton>
@@ -1025,7 +1025,7 @@ function Documents() {
       </button>
 
       <div
-        style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginTop: 'var(--sp-5)', textWrap: 'pretty' }}
+        style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginTop: 'var(--sp-5)', textWrap: 'pretty' }}
       >
         {prebuilt ? (
           <>
@@ -1044,14 +1044,14 @@ function Documents() {
 
       <SectionLabel>The whole guide, in order</SectionLabel>
       {guide.units.map((u, i) => (
-        <div key={u.name} style={{ marginTop: 14 }}>
+        <div key={u.name} style={{ marginTop: 'calc(14px * var(--density, 1))' }}>
           <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(17px * var(--text-scale, 1))', lineHeight: 1.2 }}>
             {i + 1}. {u.name}
           </div>
           {u.cards.map((c) => (
             <div key={c.q} style={{ marginTop: 'var(--sp-4)' }}>
-              <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', fontWeight: 600, lineHeight: 1.35 }}>{c.q}</div>
-              <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginTop: 'var(--sp-1)' }}>
+              <div style={{ fontSize: 'var(--type-base-plus)', fontWeight: 600, lineHeight: 'var(--leading-tight-plus)' }}>{c.q}</div>
+              <div style={{ fontSize: 'var(--type-base-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginTop: 'var(--sp-1)' }}>
                 {c.a}
               </div>
             </div>
@@ -1101,7 +1101,7 @@ function Figures() {
   if (unitFigures.length === 0 && extras.length === 0) {
     return (
       <>
-        <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 14, textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 'calc(14px * var(--density, 1))', textWrap: 'pretty' }}>
           No figures in this guide yet. Describe the picture this course turns on — a curve, a
           process, the causal chain in an argument — and what comes back can be kept here.
         </div>
@@ -1112,7 +1112,7 @@ function Figures() {
 
   return (
     <>
-      <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 14, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 'calc(14px * var(--density, 1))', textWrap: 'pretty' }}>
         Every figure the guide draws, at phone size. These are the ones worth being able to sketch
         from memory.
       </div>
@@ -1139,7 +1139,7 @@ function Cases() {
 
   return (
     <Folding name="Cases">
-      <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 14, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 'calc(14px * var(--density, 1))', textWrap: 'pretty' }}>
         The concepts pointed at things you can actually see. All four professors grade on applying
         an idea to a case you have not met before — this is the rep for that.
       </div>
@@ -1153,9 +1153,9 @@ function Cases() {
       {guide.cases && guide.cases.length > 0 && (
         <>
           <SectionLabel>The debates, claim by claim</SectionLabel>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(11px * var(--density, 1))' }}>
             {guide.cases.map((c) => (
-              <Blueprint plain key={c.title} style={{ padding: '14px 15px' }}>
+              <Blueprint plain key={c.title} style={{ paddingBlock: 'calc(14px * var(--density, 1))', paddingInline: 'calc(15px * var(--density, 1))' }}>
                 <div className="kicker">{c.when}</div>
                 <div
                   style={{
@@ -1189,7 +1189,7 @@ function Cases() {
                     </div>
                     <div
                       style={{
-                        fontSize: 'calc(13.5px * var(--text-scale, 1))',
+                        fontSize: 'var(--type-base-plus)',
                         lineHeight: 'var(--leading-relaxed)',
                         color: 'var(--app-dim)',
                         marginTop: 'var(--sp-1)',
@@ -1206,7 +1206,7 @@ function Cases() {
                     color: 'var(--app-dim)',
                     lineHeight: 'var(--leading-normal)',
                     marginTop: 'var(--sp-5)',
-                    paddingTop: 9,
+                    paddingTop: 'calc(9px * var(--density, 1))',
                     borderTop: '1px solid var(--app-line)',
                     textWrap: 'pretty',
                   }}
@@ -1220,9 +1220,9 @@ function Cases() {
       )}
 
       <SectionLabel>Apply it</SectionLabel>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(11px * var(--density, 1))' }}>
         {examples.map((e) => (
-          <Blueprint plain key={e.t} style={{ padding: '14px 15px' }}>
+          <Blueprint plain key={e.t} style={{ paddingBlock: 'calc(14px * var(--density, 1))', paddingInline: 'calc(15px * var(--density, 1))' }}>
             <span className="tag tag-accent">{e.tag}</span>
             <div
               style={{
@@ -1341,7 +1341,7 @@ function Cram() {
           )}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-5)' }}>
             {guide.frames.map((f) => (
-              <Blueprint key={f.t} plain style={{ padding: '13px 14px' }}>
+              <Blueprint key={f.t} plain style={{ paddingBlock: 'calc(13px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))' }}>
                 <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(17px * var(--text-scale, 1))', lineHeight: 1.15 }}>
                   {f.t}
                 </div>
@@ -1398,7 +1398,7 @@ function Cram() {
           <SectionLabel>Added since the guide was made</SectionLabel>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-5)' }}>
             {notes.map((n) => (
-              <Blueprint key={n.id} plain style={{ padding: '13px 14px' }}>
+              <Blueprint key={n.id} plain style={{ paddingBlock: 'calc(13px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))' }}>
                 <div className="kicker">
                   {n.source || 'Yours'}
                   {n.unit !== null && guide.units[n.unit] ? ` · ${guide.units[n.unit].name}` : ''}
@@ -1449,7 +1449,7 @@ function Cram() {
               </summary>
               <div
                 style={{
-                  fontSize: 'calc(13.5px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-base-plus)',
                   color: 'var(--app-dim)',
                   lineHeight: 'var(--leading-relaxed)',
                   marginTop: 'var(--sp-3)',
@@ -1660,7 +1660,7 @@ function Listen() {
 
   if (!episode) {
     return (
-      <Blueprint style={{ padding: 'var(--sp-7)', marginTop: 14, background: 'var(--app-hero)' }}>
+      <Blueprint style={{ padding: 'var(--sp-7)', marginTop: 'calc(14px * var(--density, 1))', background: 'var(--app-hero)' }}>
         <div className="kicker">Field guide, spoken</div>
         <div className="chrome-text" style={{ fontSize: 'var(--type-xl)', marginTop: 'var(--sp-4)' }}>
           Not recorded yet
@@ -1684,7 +1684,7 @@ function Listen() {
   return (
     <Folding name="Listen">
       {pod.editions.length > 1 && (
-        <div style={{ marginTop: 14 }}>
+        <div style={{ marginTop: 'calc(14px * var(--density, 1))' }}>
           <ChipRow
             options={pod.editions.map((e) => e.label)}
             value={episode.label}
@@ -1696,7 +1696,7 @@ function Listen() {
         </div>
       )}
 
-      <Blueprint style={{ padding: 'var(--sp-7)', marginTop: 14, background: 'var(--app-hero)' }}>
+      <Blueprint style={{ padding: 'var(--sp-7)', marginTop: 'calc(14px * var(--density, 1))', background: 'var(--app-hero)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
           <div className="kicker">Field guide, spoken</div>
           <div
@@ -1726,7 +1726,7 @@ function Listen() {
         </div>
 
         {episode.ready ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-4)', marginTop: 14 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-4)', marginTop: 'calc(14px * var(--density, 1))' }}>
             <button
               type="button"
               className="btn btn-primary"
@@ -1772,7 +1772,7 @@ function Listen() {
         ) : (
           <div
             style={{
-              marginTop: 14,
+              marginTop: 'calc(14px * var(--density, 1))',
               paddingTop: 'var(--sp-6)',
               borderTop: '1px solid var(--app-line)',
               fontSize: 'var(--type-sm)',
@@ -1802,7 +1802,7 @@ function Listen() {
         </div>
       )}
 
-      <SectionLabel style={{ margin: '22px 0 4px' }}>Chapters</SectionLabel>
+      <SectionLabel style={{ marginTop: 'calc(22px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(4px * var(--density, 1))' }}>Chapters</SectionLabel>
       {episode.chapters.map((c) => (
         <button
           key={c.t + c.name}
@@ -1812,7 +1812,7 @@ function Listen() {
           disabled={!episode.ready}
           style={{
             display: 'flex',
-            gap: 14,
+            gap: 'calc(14px * var(--density, 1))',
             alignItems: 'baseline',
             ...shortRow,
             cursor: episode.ready ? 'pointer' : 'default',

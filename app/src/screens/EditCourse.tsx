@@ -97,7 +97,7 @@ export function EditCourse() {
             */
             onClick={adopt}
             tone="primary"
-            style={{ marginTop: 14, fontSize: 'var(--type-sm)' }}
+            style={{ marginTop: 'calc(14px * var(--density, 1))', fontSize: 'var(--type-sm)' }}
           >
             Make these mine
           </ActionButton>
@@ -128,7 +128,7 @@ export function EditCourse() {
     placeholder = '',
   ) => (
     <label style={{ display: 'block', marginBottom: 'var(--sp-5)' }}>
-      <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginBottom: 'var(--sp-2)' }}>
+      <span style={{ display: 'block', fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginBottom: 'var(--sp-2)' }}>
         {label}
       </span>
       <input
@@ -192,7 +192,7 @@ export function EditCourse() {
           ))}
         </select>
       </div>
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
+      <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
         The term decides which year this course's dates fall in, and keeps last semester out of
         Today without deleting it. Courses added before this existed are filed under Fall 2026,
         which is what their dates are.
@@ -203,7 +203,7 @@ export function EditCourse() {
         Recorded here, and read by the drafting tool, which will not write for a course unless
         this says plainly that it may. Nothing recorded counts as no.
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 7, marginBottom: 'var(--sp-5)' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(7px * var(--density, 1))', marginBottom: 'var(--sp-5)' }}>
         {STANCES.map((option) => {
           const on = (draft.course.ai?.stance ?? 'unstated') === option.id;
           return (
@@ -217,14 +217,14 @@ export function EditCourse() {
               }
               style={{
                 textAlign: 'left',
-                padding: '9px 12px',
+                paddingBlock: 'calc(9px * var(--density, 1))', paddingInline: 'calc(12px * var(--density, 1))',
                 borderRadius: 'var(--r-md)',
                 border: `1px solid ${on ? 'var(--app-accent-deep)' : 'var(--app-line)'}`,
                 background: on ? 'var(--app-accent-wash)' : 'transparent',
               }}
             >
-              <span style={{ display: 'block', fontSize: 'calc(13.5px * var(--text-scale, 1))' }}>{option.label}</span>
-              <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
+              <span style={{ display: 'block', fontSize: 'var(--type-base-plus)' }}>{option.label}</span>
+              <span style={{ display: 'block', fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
                 {stanceLine(option.id)}
               </span>
             </button>
@@ -299,13 +299,13 @@ export function EditCourse() {
         + Add a grading row
       </button>
       {note ? (
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-4)' }}>{note}</div>
+        <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)' }}>{note}</div>
       ) : null}
 
       <SectionLabel>When it meets</SectionLabel>
       {draft.schedule.map((block, i) => (
-        <Blueprint plain key={i} style={{ padding: '12px 13px', marginBottom: 9 }}>
-          <div style={{ display: 'flex', gap: 5, marginBottom: 9 }}>
+        <Blueprint plain key={i} style={{ paddingBlock: 'calc(12px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))', marginBottom: 'calc(9px * var(--density, 1))' }}>
+          <div style={{ display: 'flex', gap: 'calc(5px * var(--density, 1))', marginBottom: 'calc(9px * var(--density, 1))' }}>
             {DAYS.map((d) => {
               const on = block.days.includes(d.day);
               return (
@@ -334,7 +334,7 @@ export function EditCourse() {
                   }
                   style={{
                     flex: 1,
-                    padding: '6px 0',
+                    paddingBlock: 'calc(6px * var(--density, 1))', paddingInline: '0',
                     fontSize: 'var(--type-xs)',
                     background: on ? 'var(--app-accent-wash)' : 'transparent',
                   }}
@@ -440,7 +440,7 @@ export function EditCourse() {
           + Office hours
         </button>
       </div>
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
+      <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
         The time is written as it appears on screen, and the hour grid places a block by it — so
         "9:10a" and "2:45p" are understood and "morning" is not. Office hours sit dimmer on the
         rail than a class, and are what the app watches when it notices a course going badly.
@@ -450,7 +450,7 @@ export function EditCourse() {
         Deadlines
       </SectionLabel>
       {draft.items.map((i) => (
-        <Blueprint plain key={i.id} style={{ padding: '12px 13px', marginBottom: 9 }}>
+        <Blueprint plain key={i.id} style={{ paddingBlock: 'calc(12px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))', marginBottom: 'calc(9px * var(--density, 1))' }}>
           <input
             aria-label="What is due"
             className="input"
@@ -527,18 +527,18 @@ export function EditCourse() {
         onClick={save}
         disabled={!dirty}
         tone="primary"
-        style={{ marginTop: 18 }}
+        style={{ marginTop: 'calc(18px * var(--density, 1))' }}
       >
         {dirty ? 'Save the changes' : saved ? 'Saved' : 'Nothing changed'}
       </ActionButton>
       {dirty ? (
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
+        <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
           Nothing is saved until you press that. A half-typed date would otherwise flow straight
           into the calendar and the overdue count while you were still typing it.
         </div>
       ) : null}
       {saved ? (
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
+        <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
           Saved. The calendar, Grades, Today and every study mode are using it already. What you
           have ticked off and drilled is untouched.
         </div>

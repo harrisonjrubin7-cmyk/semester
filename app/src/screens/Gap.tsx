@@ -150,18 +150,18 @@ function Run({ win }: { win: GapWindow }) {
   if (over) {
     return (
       <div style={{ padding: 'var(--page-pad)', display: 'flex', flexDirection: 'column', minHeight: '70vh' }}>
-        <div style={{ flex: 1, paddingTop: 40 }}>
+        <div style={{ flex: 1, paddingTop: 'calc(40px * var(--density, 1))' }}>
           <div className="chrome-text" style={{ fontSize: 'calc(46px * var(--text-scale, 1))', lineHeight: 1.1 }}>
             {runLine(idx, got)}
           </div>
-          <div style={{ fontSize: 'var(--type-lg)', marginTop: 14, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+          <div style={{ fontSize: 'var(--type-lg)', marginTop: 'calc(14px * var(--density, 1))', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
             {stopped
               ? goLine(win)
               : left === 0
                 ? `That is the window. ${goLine(win)}`
                 : `${deck.length} cards was the lot. ${goLine(win)}`}
           </div>
-          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-6)', lineHeight: 'var(--leading-relaxed)' }}>
+          <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-6)', lineHeight: 'var(--leading-relaxed)' }}>
             Every answer is recorded against the card, the same as a sitting-down drill — what you
             missed comes back sooner and what you knew comes back later.
           </div>
@@ -187,7 +187,7 @@ function Run({ win }: { win: GapWindow }) {
    * the one thing this screen exists to stop.
    */
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '78vh', padding: '0 16px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '78vh', paddingBlock: '0', paddingInline: 'calc(16px * var(--density, 1))' }}>
       {/* How much of the window is gone. A bar rather than a clock: a number
           counting down is a thing you watch instead of the card. */}
       <div style={{ position: 'relative', height: 3, marginTop: 'var(--sp-2)' }}>
@@ -227,7 +227,7 @@ function Run({ win }: { win: GapWindow }) {
           letterSpacing: '0.08em',
           textTransform: 'uppercase',
           color: 'var(--app-dim)',
-          marginTop: 9,
+          marginTop: 'calc(9px * var(--density, 1))',
         }}
       >
         <span>{card.code}</span>
@@ -304,7 +304,7 @@ function Run({ win }: { win: GapWindow }) {
           flex: 1,
           width: '100%',
           textAlign: 'left',
-          padding: '22px 2px',
+          paddingBlock: 'calc(22px * var(--density, 1))', paddingInline: 'calc(2px * var(--density, 1))',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'center',
@@ -326,11 +326,11 @@ function Run({ win }: { win: GapWindow }) {
           <div
             style={{
               fontSize: 'calc(16px * var(--text-scale, 1))',
-              lineHeight: 1.55,
+              lineHeight: 'var(--leading-relaxed-plus)',
               color: 'var(--app-dim)',
               textWrap: 'pretty',
               borderTop: '1px solid var(--app-line)',
-              paddingTop: 14,
+              paddingTop: 'calc(14px * var(--density, 1))',
             }}
           >
             {card.a}
@@ -344,7 +344,7 @@ function Run({ win }: { win: GapWindow }) {
 
       {/* Both targets in the bottom third, where a thumb reaches without the
           hand moving on the phone. */}
-      <div style={{ paddingBottom: 18 }}>
+      <div style={{ paddingBottom: 'calc(18px * var(--density, 1))' }}>
         {shown ? (
           <div style={{ display: 'flex', gap: 'var(--sp-5)' }}>
             <button

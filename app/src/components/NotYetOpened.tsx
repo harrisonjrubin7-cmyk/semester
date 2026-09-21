@@ -45,11 +45,11 @@ export function NotYetOpened({ pool }: { pool?: Destination[] }) {
   return (
     <Folding name="NotYetOpened">
       <SectionLabel
-        style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(4px * var(--density, 1))' }}
+        style={{ marginTop: 'calc(26px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(4px * var(--density, 1))' }}
       >
         Not opened yet
       </SectionLabel>
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginBottom: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
+      <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', marginBottom: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
         {seenLine(state.visited, pool)} These three change each day.
       </div>
 
@@ -62,28 +62,28 @@ export function NotYetOpened({ pool }: { pool?: Destination[] }) {
             onClick={() => dispatch({ type: 'go', screen: d.screen })}
             style={{
               display: 'flex',
-              gap: 11,
+              gap: 'calc(11px * var(--density, 1))',
               alignItems: 'flex-start',
               textAlign: 'left',
-              padding: '11px 12px',
+              paddingBlock: 'calc(11px * var(--density, 1))', paddingInline: 'calc(12px * var(--density, 1))',
               borderRadius: 'var(--r-md)',
               border: '1px solid var(--app-line)',
             }}
           >
-            <span style={{ flex: 'none', color: 'var(--app-dim)', paddingTop: 1 }}>
+            <span style={{ flex: 'none', color: 'var(--app-dim)', paddingTop: 'calc(1px * var(--density, 1))' }}>
               <TabGlyph screen={d.screen} size={16} />
             </span>
             <span style={{ flex: 1, minWidth: 0 }}>
-              <span style={{ display: 'block', fontSize: 'calc(13.5px * var(--text-scale, 1))' }}>{saysFor(d, school.capabilities).label}</span>
+              <span style={{ display: 'block', fontSize: 'var(--type-base-plus)' }}>{saysFor(d, school.capabilities).label}</span>
               {/* The directory's own sentence, not a second one written for
                   here — two descriptions of the same screen would drift. */}
               <span
                 style={{
                   display: 'block',
-                  fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-xs-plus)',
                   color: 'var(--app-dim)',
                   marginTop: 'var(--sp-1)',
-                  lineHeight: 1.4,
+                  lineHeight: 'var(--leading-normal-minus)',
                 }}
               >
                 {saysFor(d, school.capabilities).blurb}

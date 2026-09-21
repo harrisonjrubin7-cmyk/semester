@@ -28,7 +28,7 @@ export function SettingsAbout() {
         <>
           <Group header="Where the numbers come from" lit={lights('sources data where from figures citations', lit)}>
             <CustomRow>
-              <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(2px * var(--density, 1))' }}>Sources</SectionLabel>
+              <SectionLabel style={{ marginTop: 'calc(26px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(2px * var(--density, 1))' }}>Sources</SectionLabel>
               {SOURCES.map((s) => (
                 <div
                   key={s.label}
@@ -58,7 +58,7 @@ export function SettingsAbout() {
 
               <ActionButton
                 onClick={() => dispatch({ type: 'restartOnboarding' })}
-                style={{ marginTop: 24 }}
+                style={{ marginTop: 'calc(24px * var(--density, 1))' }}
               >
                 Replay onboarding
               </ActionButton>

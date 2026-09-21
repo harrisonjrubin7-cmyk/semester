@@ -153,8 +153,8 @@ export function SlideDeck() {
       <Blueprint
         style={{
           position: 'relative',
-          marginTop: 14,
-          padding: 22,
+          marginTop: 'calc(14px * var(--density, 1))',
+          paddingBlock: 'calc(22px * var(--density, 1))', paddingInline: 'calc(22px * var(--density, 1))',
           minHeight: 330,
           display: 'flex',
           flexDirection: 'column',

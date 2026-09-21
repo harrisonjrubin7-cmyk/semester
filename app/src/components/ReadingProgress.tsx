@@ -67,7 +67,7 @@ export function ReadingProgress({ item }: { item: DatedItem }) {
         onClick={() => setOpen(true)}
         style={{
           width: 'auto',
-          padding: '8px 0 2px',
+          paddingTop: 'calc(8px * var(--density, 1))', paddingInline: '0', paddingBottom: 'calc(2px * var(--density, 1))',
           fontSize: 'var(--type-sm)',
           color: 'var(--app-dim)',
           textAlign: 'left',
@@ -106,7 +106,7 @@ export function ReadingProgress({ item }: { item: DatedItem }) {
             height: 5,
             borderRadius: 3,
             background: 'var(--app-line)',
-            margin: '9px 0 10px',
+            marginTop: 'calc(9px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(10px * var(--density, 1))',
             overflow: 'hidden',
           }}
         >
@@ -128,7 +128,7 @@ export function ReadingProgress({ item }: { item: DatedItem }) {
         {spread ? ` ${spread}` : ''}
       </div>
 
-      <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 11, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'calc(11px * var(--density, 1))', flexWrap: 'wrap' }}>
         <input
           className="input"
           inputMode="numeric"
@@ -147,7 +147,7 @@ export function ReadingProgress({ item }: { item: DatedItem }) {
           onClick={save}
           style={{
             width: 'auto',
-            padding: '9px 14px',
+            paddingBlock: 'calc(9px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))',
             borderRadius: 'var(--r-sm)',
             border: '1px solid var(--app-line)',
             fontSize: 'var(--type-sm)',
@@ -157,7 +157,7 @@ export function ReadingProgress({ item }: { item: DatedItem }) {
         </button>
       </div>
 
-      <div className="kicker" style={{ marginTop: 13 }}>
+      <div className="kicker" style={{ marginTop: 'calc(13px * var(--density, 1))' }}>
         How much there is
       </div>
       <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-3)', alignItems: 'center', flexWrap: 'wrap' }}>
@@ -187,9 +187,9 @@ export function ReadingProgress({ item }: { item: DatedItem }) {
       {p.total === 0 ? (
         <div
           style={{
-            fontSize: 'calc(11.5px * var(--text-scale, 1))',
+            fontSize: 'var(--type-xs-plus)',
             color: 'var(--app-dim)',
-            marginTop: 7,
+            marginTop: 'calc(7px * var(--density, 1))',
             lineHeight: 'var(--leading-relaxed)',
             textWrap: 'pretty',
           }}
@@ -209,8 +209,8 @@ export function ReadingProgress({ item }: { item: DatedItem }) {
           }}
           style={{
             width: 'auto',
-            marginTop: 11,
-            fontSize: 'calc(11.5px * var(--text-scale, 1))',
+            marginTop: 'calc(11px * var(--density, 1))',
+            fontSize: 'var(--type-xs-plus)',
             color: 'var(--app-dim)',
           }}
         >
@@ -240,9 +240,9 @@ export function ReadingsOnTheGo() {
 
   return (
     <Folding name="ReadingProgress">
-      <div style={{ marginTop: 14 }}>
-        <SectionLabel style={{ margin: '0 0 8px' }}>Part way through</SectionLabel>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+      <div style={{ marginTop: 'calc(14px * var(--density, 1))' }}>
+        <SectionLabel style={{ marginTop: '0', marginInline: '0', marginBottom: 'calc(8px * var(--density, 1))' }}>Part way through</SectionLabel>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(7px * var(--density, 1))' }}>
           {going.map((p) => {
             const item = all.find((i) => i.id === p.id);
             const along = pct(p);
@@ -256,7 +256,7 @@ export function ReadingsOnTheGo() {
                   display: 'block',
                   width: '100%',
                   textAlign: 'left',
-                  padding: '10px 13px',
+                  paddingBlock: 'calc(10px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))',
                   borderRadius: 'var(--r-md)',
                   border: '1px solid var(--app-line)',
                 }}
@@ -264,8 +264,8 @@ export function ReadingsOnTheGo() {
                 <span
                   style={{
                     display: 'block',
-                    fontSize: 'calc(13.5px * var(--text-scale, 1))',
-                    lineHeight: 1.35,
+                    fontSize: 'var(--type-base-plus)',
+                    lineHeight: 'var(--leading-tight-plus)',
                     textWrap: 'pretty',
                   }}
                 >
@@ -278,7 +278,7 @@ export function ReadingsOnTheGo() {
                       height: 4,
                       borderRadius: 2,
                       background: 'var(--app-line)',
-                      margin: '7px 0 6px',
+                      marginTop: 'calc(7px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(6px * var(--density, 1))',
                       overflow: 'hidden',
                     }}
                   >
@@ -295,7 +295,7 @@ export function ReadingsOnTheGo() {
                 <span
                   style={{
                     display: 'block',
-                    fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                    fontSize: 'var(--type-xs-plus)',
                     color: 'var(--app-dim)',
                     textWrap: 'pretty',
                   }}

@@ -62,9 +62,9 @@ export function Grades() {
         return (
           <div key={c.id}>
             <Folding name="body">
-            <SectionLabel style={{ margin: '26px 0 8px' }}>{c.code}</SectionLabel>
+            <SectionLabel style={{ marginTop: 'calc(26px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(8px * var(--density, 1))' }}>{c.code}</SectionLabel>
 
-            <Blueprint style={{ padding: 15, background: 'var(--app-hero)' }}>
+            <Blueprint style={{ paddingBlock: 'calc(15px * var(--density, 1))', paddingInline: 'calc(15px * var(--density, 1))', background: 'var(--app-hero)' }}>
               <div className="kicker">
                 {s.current === null ? 'Nothing graded yet' : `Across ${Math.round(s.counted)}% of the grade`}
               </div>
@@ -100,7 +100,7 @@ export function Grades() {
                   first is worse than one line fewer.
                 */}
                 {s.counted > 0 || s.remaining > 0 ? (
-                  <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)' }}>
+                  <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)' }}>
                     {s.remaining > 0
                       ? `${Math.round(s.remaining)}% still to play for`
                       : 'Everything is in'}
@@ -125,7 +125,7 @@ export function Grades() {
                   and the app has none of the three. */}
               <div
                 style={{
-                  fontSize: 'calc(12.5px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-sm-plus)',
                   color: 'var(--app-dim)',
                   marginTop: 'var(--sp-5)',
                   lineHeight: 'var(--leading-relaxed)',
@@ -142,7 +142,7 @@ export function Grades() {
                 )}
               </div>
               {needCaveat(s) ? (
-                <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
+                <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
                   {/* Names the number the weights actually add to. "Do not add
                       to 100" leaves the student to work out by how much, from
                       a table they cannot easily sum in their head. */}
@@ -161,7 +161,7 @@ export function Grades() {
                   display: 'flex',
                   gap: 'var(--sp-6)',
                   alignItems: 'center',
-                  padding: '11px 0',
+                  paddingBlock: 'calc(11px * var(--density, 1))', paddingInline: '0',
                 }}
               >
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -205,7 +205,7 @@ export function Grades() {
                   style={{
                     fontSize: 'var(--type-xs)',
                     color: 'var(--app-dim)',
-                    margin: '14px 0 6px',
+                    marginTop: 'calc(14px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(6px * var(--density, 1))',
                     fontFamily: 'var(--font-heading)',
                     letterSpacing: '0.12em',
                     textTransform: 'uppercase',
@@ -232,7 +232,7 @@ export function Grades() {
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'baseline',
-                        padding: '8px 0',
+                        paddingBlock: 'calc(8px * var(--density, 1))', paddingInline: '0',
                         borderBottom: '1px solid var(--app-line-soft)',
                         opacity: impossible ? DIMMED_ROW : 1,
                       }}
@@ -243,10 +243,10 @@ export function Grades() {
                       </span>
                       <span
                         style={{
-                          fontSize: 'calc(13.5px * var(--text-scale, 1))',
+                          fontSize: 'var(--type-base-plus)',
                           textAlign: 'right',
                           maxWidth: '62%',
-                          lineHeight: 1.4,
+                          lineHeight: 'var(--leading-normal-minus)',
                           color: t.reach === 'hard' ? 'var(--app-warn)' : undefined,
                         }}
                       >
@@ -295,15 +295,15 @@ export function Grades() {
                   >
                     On practice papers
                   </div>
-                  <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+                  <div style={{ fontSize: 'var(--type-base-plus)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
                     {trendLine(t, sat)}
                   </div>
                   {target !== null && t.papers > 0 ? (
-                    <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 5, lineHeight: 'var(--leading-normal)' }}>
+                    <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'calc(5px * var(--density, 1))', lineHeight: 'var(--leading-normal)' }}>
                       {against(t.average, target)}
                     </div>
                   ) : null}
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-3)', marginTop: 9 }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-3)', marginTop: 'calc(9px * var(--density, 1))' }}>
                     {sat.slice(0, 6).map((paper) => (
                       <PaperTag key={paper.id} paper={paper} />
                     ))}
@@ -326,7 +326,7 @@ export function Grades() {
         );
       })}
 
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 22, lineHeight: 'var(--leading-relaxed)' }}>
+      <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'calc(22px * var(--density, 1))', lineHeight: 'var(--leading-relaxed)' }}>
         This is your own arithmetic, not a gradebook — nothing here is read from Brightspace, and
         nothing is sent anywhere. A syllabus that drops your lowest score, curves, or rounds will
         not match exactly.

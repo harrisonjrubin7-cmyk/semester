@@ -32,11 +32,11 @@ export function PostMortem({ record, courseId }: { record: Returned; courseId: s
     return (
       <div style={{ marginTop: 'var(--sp-5)' }}>
         {done ? (
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
+          <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
             {doneLine(done, units.map((u) => unitName(u.name)))}
           </div>
         ) : (
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
+          <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
             {OFFER}
           </div>
         )}
@@ -49,8 +49,8 @@ export function PostMortem({ record, courseId }: { record: Returned; courseId: s
           }}
           style={{
             width: 'auto',
-            padding: '6px 10px',
-            marginTop: 7,
+            paddingBlock: 'calc(6px * var(--density, 1))', paddingInline: 'calc(10px * var(--density, 1))',
+            marginTop: 'calc(7px * var(--density, 1))',
             borderRadius: 'var(--r-sm)',
             border: '1px solid var(--app-line)',
             fontSize: 'var(--type-xs)',
@@ -78,11 +78,11 @@ export function PostMortem({ record, courseId }: { record: Returned; courseId: s
 
   const chip = (on: boolean) => ({
     width: 'auto' as const,
-    padding: '6px 10px',
+    paddingBlock: 'calc(6px * var(--density, 1))', paddingInline: 'calc(10px * var(--density, 1))',
     borderRadius: 'var(--r-sm)',
     border: `1px solid ${on ? 'var(--app-accent)' : 'var(--app-line)'}`,
     background: on ? 'var(--app-accent-wash)' : 'transparent',
-    fontSize: 'calc(11.5px * var(--text-scale, 1))',
+    fontSize: 'var(--type-xs-plus)',
   });
 
   return (
@@ -108,10 +108,10 @@ export function PostMortem({ record, courseId }: { record: Returned; courseId: s
         onChange={(e) => setDraft({ ...draft, other: e.target.value })}
         placeholder="Anything the units do not cover"
         aria-label="Anything the units do not cover"
-        style={{ height: 36, marginTop: 'var(--sp-4)', fontSize: 'calc(12.5px * var(--text-scale, 1))' }}
+        style={{ height: 36, marginTop: 'var(--sp-4)', fontSize: 'var(--type-sm-plus)' }}
       />
 
-      <div className="kicker" style={{ marginTop: 14 }}>
+      <div className="kicker" style={{ marginTop: 'calc(14px * var(--density, 1))' }}>
         What kind of miss?
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)', marginTop: 'var(--sp-4)' }}>
@@ -132,7 +132,7 @@ export function PostMortem({ record, courseId }: { record: Returned; courseId: s
         ))}
       </div>
 
-      <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 14 }}>
+      <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'calc(14px * var(--density, 1))' }}>
         <button
           type="button"
           className="btn btn-secondary"
