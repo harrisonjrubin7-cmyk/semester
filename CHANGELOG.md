@@ -45,6 +45,27 @@ Needs the assistant set up, like every other place the app has to read a
 photograph. Typing the number in is unchanged and still the fastest route for
 a single figure.
 
+### Fixing the wording of a question no longer wipes what you knew about it
+
+A card's identity used to be its question. Drill a card fifty times, then have
+the question reworded in an update — a typo fixed, a sentence tightened — and
+the app treated it as a card it had never seen. Your streak, your ease, your
+next review date: gone, with nothing said, and the unit's mastery quietly back
+to the number the guide shipped with.
+
+Every card in the four prepared guides now carries an identity of its own, and
+that identity does not move when the wording does. Nothing you have already
+answered has changed: each id was set to the key that card's history is
+already filed under, so this took effect without anything being migrated,
+rebuilt or reset.
+
+Cards from material you add yourself are not covered. A re-imported reading
+produces genuinely new cards with no thread back to the old ones, so those
+still start their history over — as they always have.
+
+Nothing to do, and nothing to look at: this is only visible the next time a
+question is edited, which is exactly when it is meant to be invisible.
+
 ### The app asks which semester you are in, instead of assuming Fall 2026
 
 A brand-new install started in Fall 2026 whatever day you opened it on — the

@@ -300,7 +300,7 @@ whether the proposal is good.
 | P1 | One calendar integration, then one LMS | **Not a code item here.** Provider registration and an institutional agreement. The copy that misdescribed it is fixed above. |
 | P1 | Schedule work into real availability | **Open.** The largest genuinely-new item in the document, and correctly sequenced behind trustworthy calendar input. |
 | P1 | Carry exact source locations | **Landed, and the claim was exact.** The three locators still say what is true of the original — a prepared unit and a pasted excerpt have no page — but a citation now names the place inside the source it was found at. See below. |
-| P2 | Mistakes into the next practice session | **Open, and the claim is exact.** `cardKey()` in `lib/review.ts` is FNV-1a over the *question text*, so rewording a card changes its identity. `data/catalog.ts:155` already documents this as the design; the report is right that it blocks a scheduler migration, and right to say stable ids come first. |
+| P2 | Mistakes into the next practice session | **The prerequisite landed; the loop is still open.** The claim was exact — `cardKey()` was FNV-1a over the *question text* — and the report was right that stable ids come first. They are in: all 325 shipped cards carry one, minted as the hash they already keyed on, so nothing stored moved. The closed loop itself — error → concept → scheduled revisit → measured improvement — is what is left. See below. |
 | P2 | Offline, sync and reminders | **Open, and the claim is exact.** `HORIZON_DAYS = 7` in `lib/push.ts`: *"How far ahead to queue. A week is enough to survive a phone left in a bag."* The report's question — what happens after longer inactivity — is not answered anywhere. |
 | P2 | Shared coursework with a small group | **Open.** Needs two real accounts, which is the report's own acceptance criterion. |
 | P3 | Lecture capture, career discovery | **Open, and correctly deferred.** |
@@ -397,6 +397,47 @@ And a quotation only the looser whole-string check can match — NFKC composes
 must still be **accepted**, with no location. A locator that becomes a new way
 to reject a true citation is worse than the gap it closes, so the strict search
 decides where, and the loose one goes on deciding whether.
+
+### Stable card ids — the prerequisite, and the measurement that nearly stopped it
+
+`cardKey` hashed the question and nothing else, and the docstring above it
+argued for that: a materially different question deserves to be re-learned.
+The argument is not silly and it is not what happens. The app cannot tell a
+rewrite from a rewording, so it answers both with the harsher of the two — a
+typo fixed in a guide, a sentence tightened, a question asked in clearer words,
+and the row holding what a student knew becomes one nothing will look up again.
+Silently: no message, and the unit's mastery figure quietly falls back to the
+estimate the guide shipped with.
+
+**The measurement came first, and it argued the other way.** Across this
+repository's whole history, no shipped question has ever been edited — 325
+`q:` lines added under `src/data/`, 0 removed. The failure has never fired.
+`CLAUDE.md` is explicit that a merged decision is a decision and that re-tuning
+what somebody has already argued for is not work, so an argued trade-off with
+no victims is close to a reason to leave it alone.
+
+What settles it is the price. `StudyCard` gains an optional `id`, and every id
+on the 325 shipped cards was minted as **the hash `cardKey` already returned
+for that card's question** — so `cardIdentity` and `cardKey` agreed on every
+card in the app on the day it landed, 325 of 325, and not one stored review row
+moved. There is no migration, because there was nothing to migrate. A loaded
+gun unloaded for free is worth doing before it goes off rather than after.
+
+Two things the change made newly breakable, both guarded. A copy-pasted id on
+two different questions would merge two cards' histories and read as an
+ordinary line of data, so `cardidentity.test.ts` asserts that cards share an id
+only where they share a question — which the five deliberate unit/self-test
+repeats do. And `allCards` collapsed those repeats by question text; keyed on
+text it agrees with keying on id only until one half is reworded, at which
+point the pair splits in the deck while still sharing one review row, which is
+the bug that function exists to prevent, back again wearing the fix.
+
+**Not covered, and said rather than left to be found:** cards a student adds
+with their own material still have no id and keep the old behaviour exactly.
+There is nothing to key them on — re-importing a reading produces new card
+objects with no thread back to the old ones — and inventing one would be a
+migration nobody asked for. The fallback is the old failure, kept deliberately
+and documented where it lives.
 
 ---
 

@@ -54,6 +54,21 @@ import { fit } from '../lib/chatlog';
  * Nothing here is sent anywhere. `lib/context.ts` still decides that, alone.
  */
 
+/**
+ * A proposal offered a second time, with the sentence it has to carry.
+ *
+ * Here rather than in `converse.ts` because it is conversation state, and the
+ * header above says what happens to conversation state kept in the hook: the
+ * sheet gets one and the full chat gets another. A held offer is the worst
+ * thing to keep two of — it is out of `proposals` while it waits, so the
+ * surface that did not set it would show neither the offer nor the hold.
+ */
+export interface Held {
+  p: Proposal;
+  /** What cannot be taken back, in the student's language. */
+  because: string;
+}
+
 export interface Live {
   turns: Turn[];
   /** Every conversation, newest last touched first. See `lib/threads.ts`. */
@@ -88,6 +103,8 @@ export interface Live {
   /** What the app could answer about itself, with nothing sent. */
   locally: Local | null;
   proposals: Proposal[];
+  /** The one waiting on a second answer, or null. See `lib/reach.ts`. */
+  holding: Held | null;
   applied: { p: Proposal; before: Lists }[];
   /** The month's spend, re-read whenever a request reports usage. */
   spend: ReturnType<typeof readSpend>;
@@ -131,6 +148,7 @@ function empty(): Live {
     looking: [],
     locally: null,
     proposals: [],
+    holding: null,
     applied: [],
     spend: readSpend(),
     // What the load itself had to drop, so a long conversation says so the
@@ -408,7 +426,7 @@ export function dropThread(id: string): void {
  */
 function cleared(): Pick<
   Live,
-  'streaming' | 'busy' | 'read' | 'used' | 'looking' | 'locally' | 'proposals' | 'applied'
+  | 'streaming' | 'busy' | 'read' | 'used' | 'looking' | 'locally' | 'proposals' | 'holding' | 'applied'
 > {
   return {
     streaming: '',
@@ -418,6 +436,7 @@ function cleared(): Pick<
     looking: [],
     locally: null,
     proposals: [],
+    holding: null,
     applied: [],
   };
 }

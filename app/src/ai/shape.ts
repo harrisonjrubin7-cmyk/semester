@@ -2,7 +2,7 @@ import type { Catalog } from '../data/catalog';
 import type { State } from '../state/shape';
 import type { Screen } from '../lib/types';
 import { liveGuide, type LiveGuide } from '../lib/live';
-import { anyAnswered, cardKey } from '../lib/review';
+import { anyAnswered, cardIdentity } from '../lib/review';
 import { evidenceForCards, knowing, says as saysKnowing, why } from '../lib/knowing';
 
 /**
@@ -92,7 +92,7 @@ export function startedNow(look: Look, courseId: string, guide?: LiveGuide): boo
   const g = guide ?? guideNow(look, courseId);
   if (!g) return false;
   return anyAnswered(
-    g.units.flatMap((u) => u.cards.map((card) => cardKey(courseId, card.q))),
+    g.units.flatMap((u) => u.cards.map((card) => cardIdentity(courseId, card))),
     look.state.reviews,
   );
 }
@@ -116,14 +116,9 @@ export function startedNow(look: Look, courseId: string, guide?: LiveGuide): boo
 export function standingNow(
   look: Look,
   courseId: string,
-  unit: { cards: { q: string }[] },
+  unit: { cards: { id?: string; q: string }[] },
 ): { state: string; evidence: string } {
-  const ev = evidenceForCards(
-    courseId,
-    unit.cards.map((card) => card.q),
-    look.state.reviews,
-    look.now.getTime(),
-  );
+  const ev = evidenceForCards(courseId, unit.cards, look.state.reviews, look.now.getTime());
   return { state: saysKnowing(knowing(ev)).toLowerCase(), evidence: why(ev) };
 }
 

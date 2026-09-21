@@ -1,6 +1,6 @@
 import type { CourseModule, Guide } from './types';
 import { allCards, unitCards, type DeckCard } from '../data/catalog';
-import { cardKey, dueFirst, type Reviews } from './review';
+import { cardIdentity, dueFirst, type Reviews } from './review';
 import { interleave } from './interleave';
 
 /**
@@ -15,13 +15,13 @@ import { interleave } from './interleave';
  */
 
 export interface DrillCard extends DeckCard {
-  /** `cardKey(courseId, q)` — the card's identity to the review system. */
+  /** `cardIdentity(courseId, card)` — the card's identity to the review system. */
   key: string;
   courseId: string;
 }
 
 const keyed = (cards: DeckCard[], courseId: string): DrillCard[] =>
-  cards.map((c) => ({ ...c, key: cardKey(courseId, c.q), courseId }));
+  cards.map((c) => ({ ...c, key: cardIdentity(courseId, c), courseId }));
 
 /**
  * One guide's deck: the whole guide, or one unit of it.

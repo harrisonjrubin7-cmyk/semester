@@ -46,6 +46,7 @@
  */
 
 import { ACCENTS, GROUNDS, SIZES, DENSITIES, type Look } from './look';
+import { sortFor, type Reach } from './reach';
 import { STAGES, type Application, type Stage } from './apply';
 import type { ToolCall, ToolSpec } from './claude';
 import type { Action, Persisted } from '../state/shape';
@@ -427,10 +428,24 @@ export interface Proposal {
   verb: string;
   action: Action;
   /**
+   * How far this reaches, which decides what confirming it has to cost.
+   *
+   * See `lib/reach.ts`. Every tool the app has today is `look` or `mine` —
+   * the student's own device and nothing else — and both confirm with the
+   * single tap they always have. The field exists for the tool that sends
+   * something, which is the one that must not inherit a checkbox's
+   * confirmation by saying nothing.
+   */
+  reach: Reach;
+  /**
    * Whether this changes what you have or only what you are looking at.
    *
    * A view proposal on the screen you are already on is applied on arrival —
    * see `Ask.tsx`. Everything else waits for a tap either way.
+   *
+   * Derived from `reach` by `sortFor`, never written beside it: two fields
+   * answering for one proposal is two fields that can disagree, and a tool
+   * marked `outward` and `view` would be sent without being kept.
    */
   sort: 'write' | 'view';
   /** How to put it back. Absent only on a view, which changes nothing to put. */
@@ -523,7 +538,8 @@ export function readProposal(call: ToolCall, known: Known): Proposal | null {
       said: `Tick off “${real.title}” as done`,
       did: `“${real.title}” is ticked off`,
       verb: 'Tick it',
-      sort: 'write',
+      reach: 'mine',
+      sort: sortFor('mine'),
       action: { type: 'toggleDone', id: which },
       // Ticking is its own inverse, which is the whole reason it is safe.
       undo: { how: 'inverse', action: { type: 'toggleDone', id: which } },
@@ -539,7 +555,8 @@ export function readProposal(call: ToolCall, known: Known): Proposal | null {
       said: when ? `Add “${title}” to your list for ${day(when)}` : `Add “${title}” to your list`,
       did: `“${title}” is on your list`,
       verb: 'Add it',
-      sort: 'write',
+      reach: 'mine',
+      sort: sortFor('mine'),
       action: {
         type: 'addTask',
         task: { title, date: when || null, time: '', note: '', courseId: null },
@@ -558,7 +575,8 @@ export function readProposal(call: ToolCall, known: Known): Proposal | null {
       said: `Move “${task.title}” to ${day(when)}`,
       did: `“${task.title}” is now on ${day(when)}`,
       verb: 'Move it',
-      sort: 'write',
+      reach: 'mine',
+      sort: sortFor('mine'),
       action: { type: 'editTask', id: which, patch: { date: when } },
       // The old date, read now. This is why the undo is built before the write.
       undo: {
@@ -583,7 +601,8 @@ export function readProposal(call: ToolCall, known: Known): Proposal | null {
       said: `Mark you ${mark} for ${course.code} on ${day(date)}`,
       did: `${course.code} on ${day(date)} is marked ${mark}`,
       verb: 'Record it',
-      sort: 'write',
+      reach: 'mine',
+      sort: sortFor('mine'),
       action: { type: 'markAttendance', courseId, date, mark },
       undo: { how: 'inverse', action: { type: 'markAttendance', courseId, date, mark: was } },
     };
@@ -599,7 +618,8 @@ export function readProposal(call: ToolCall, known: Known): Proposal | null {
       said: label ? `Start a ${whole}-minute timer for ${label}` : `Start a ${whole}-minute timer`,
       did: `A ${whole}-minute timer is running`,
       verb: 'Start it',
-      sort: 'write',
+      reach: 'mine',
+      sort: sortFor('mine'),
       action: { type: 'addTimer', label, seconds: whole * 60, at: Date.now() },
       undo: {
         how: 'appeared',
@@ -620,7 +640,8 @@ export function readProposal(call: ToolCall, known: Known): Proposal | null {
       said: `Keep “${title}” as a note${course ? ` on ${course.code}` : ''} — ${body.length} characters`,
       did: `“${title}” is in your notes`,
       verb: 'Keep it',
-      sort: 'write',
+      reach: 'mine',
+      sort: sortFor('mine'),
       action: { type: 'keepNote', title, body, courseId: course ? courseId : null },
       undo: { how: 'appeared', field: 'notes', remove: (row) => ({ type: 'deleteNote', id: row }) },
     };
@@ -636,7 +657,8 @@ export function readProposal(call: ToolCall, known: Known): Proposal | null {
       said: `Add “${raw}” to your sources${course ? ` for ${course.code}` : ''}`,
       did: 'The source is in your list',
       verb: 'Add it',
-      sort: 'write',
+      reach: 'mine',
+      sort: sortFor('mine'),
       // `raw` is kept verbatim and never overwritten by the parser — see
       // `lib/sources.ts`. The fields it can read out of a line are read there.
       action: {
@@ -671,7 +693,8 @@ export function readProposal(call: ToolCall, known: Known): Proposal | null {
       said: `Track ${role} at ${org}${due ? `, due ${day(due)}` : ''}`,
       did: `${role} at ${org} is being tracked`,
       verb: 'Track it',
-      sort: 'write',
+      reach: 'mine',
+      sort: sortFor('mine'),
       action: { type: 'addApplication', patch: { org, role, due, rolling: !due } },
       undo: {
         how: 'appeared',
@@ -693,7 +716,8 @@ export function readProposal(call: ToolCall, known: Known): Proposal | null {
       said: `Set the ${LOOK_LABEL[field]} to ${value}`,
       did: `The ${LOOK_LABEL[field]} is ${value}`,
       verb: 'Change it',
-      sort: 'write',
+      reach: 'mine',
+      sort: sortFor('mine'),
       action: { type: 'setLook', look: { [field]: value } },
       undo: { how: 'inverse', action: { type: 'setLook', look: { [field]: was } } },
     };
@@ -709,7 +733,8 @@ export function readProposal(call: ToolCall, known: Known): Proposal | null {
       said: `Set your study budget to ${whole} hours a day, from ${known.dayBudget}`,
       did: `Your study budget is ${whole} hours a day`,
       verb: 'Set it',
-      sort: 'write',
+      reach: 'mine',
+      sort: sortFor('mine'),
       action: { type: 'setDayBudget', hours: whole },
       // Every plan on every screen is built from this number, so the old one
       // is carried rather than assumed to be the default.
@@ -729,7 +754,8 @@ export function readProposal(call: ToolCall, known: Known): Proposal | null {
       said: `Move ${app.role} at ${app.org} from ${was} to ${named}`,
       did: `${app.role} at ${app.org} is at ${named}`,
       verb: 'Move it',
-      sort: 'write',
+      reach: 'mine',
+      sort: sortFor('mine'),
       action: { type: 'moveApplication', id: app.id, stage },
       undo: { how: 'inverse', action: { type: 'moveApplication', id: app.id, stage: app.stage } },
     };
@@ -746,7 +772,8 @@ export function readProposal(call: ToolCall, known: Known): Proposal | null {
       said: `On ${app.role} at ${app.org}, set the next step to "${next}"${by ? `, by ${day(by)}` : ''}`,
       did: `The next step on ${app.org} is "${next}"`,
       verb: 'Set it',
-      sort: 'write',
+      reach: 'mine',
+      sort: sortFor('mine'),
       action: { type: 'patchApplication', id: app.id, patch: { next, nextBy: by } },
       undo: {
         how: 'inverse',
@@ -781,7 +808,8 @@ export function readProposal(call: ToolCall, known: Known): Proposal | null {
       said: `Write “${title}”${course ? ` for ${course.code}` : ''} — ${summary(blocks)}`,
       did: `“${title}” is in your documents`,
       verb: 'Write it',
-      sort: 'write',
+      reach: 'mine',
+      sort: sortFor('mine'),
       action: {
         type: 'makeDocument',
         doc: { title, subtitle: '', courseId: course ? courseId : null, blocks },
@@ -810,7 +838,8 @@ export function readProposal(call: ToolCall, known: Known): Proposal | null {
         `${rows.length} rows by ${wide}${formulas ? `, ${formulas} of them formulas` : ''}`,
       did: `“${title}” is in your sheets`,
       verb: 'Build it',
-      sort: 'write',
+      reach: 'mine',
+      sort: sortFor('mine'),
       action: {
         type: 'makeSheet',
         sheet: fromRows(title, rows, course ? courseId : null),
@@ -839,7 +868,8 @@ export function readProposal(call: ToolCall, known: Known): Proposal | null {
       said: `Keep “${name}” — ${reads}${course ? ` — under ${course.code}` : ''}`,
       did: `“${name}” is in your equations`,
       verb: 'Keep it',
-      sort: 'write',
+      reach: 'mine',
+      sort: sortFor('mine'),
       action: {
         type: 'saveEquation',
         equation: {
@@ -867,7 +897,8 @@ export function readProposal(call: ToolCall, known: Known): Proposal | null {
       said: `Open ${where}` + (why ? ` — ${why}` : ''),
       did: where,
       verb: 'Open it',
-      sort: 'view',
+      reach: 'look',
+      sort: sortFor('look'),
       screen,
       action: { type: 'go', screen },
       // Deliberately no undo: nothing was kept, so there is nothing to put
