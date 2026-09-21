@@ -147,7 +147,7 @@ export function Snapshots() {
               {costLine(rows)}
             </div>
             {rows.length > 0 && (
-              <ul style={{ marginTop: 'calc(8px * var(--density, 1))', marginInline: '0', marginBottom: '0', paddingLeft: 'calc(17px * var(--density, 1))', fontSize: 'var(--type-sm-plus)', lineHeight: 1.6 }}>
+              <ul style={{ marginTop: 'calc(8px * var(--density, 1))', marginInline: '0', marginBottom: '0', paddingLeft: 'calc(17px * var(--density, 1))', fontSize: 'var(--type-sm-plus)', lineHeight: 'var(--leading-loose)' }}>
                 {rows.map((r) => (
                   <li key={r.line} style={{ opacity: r.loses ? 1 : DIMMED_ROW }}>
                     {r.line}

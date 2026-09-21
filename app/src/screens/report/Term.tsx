@@ -177,7 +177,7 @@ export function TermReport() {
       ) : null}
 
       {found.length === 0 ? (
-        <div style={{ fontSize: 'var(--type-base-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-7)', lineHeight: 1.55 }}>
+        <div style={{ fontSize: 'var(--type-base-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-7)', lineHeight: 'var(--leading-relaxed-plus)' }}>
           {nothing || 'Nothing stood out far enough above the noise to be worth saying.'}
         </div>
       ) : (

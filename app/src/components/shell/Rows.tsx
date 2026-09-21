@@ -306,7 +306,7 @@ function Row({
 function Label({ label, sub }: { label: ReactNode; sub?: ReactNode }) {
   return (
     <span style={{ flex: 1, minWidth: 0 }}>
-      <span style={{ display: 'block', fontSize: 'var(--type-md)', lineHeight: 1.35 }}>
+      <span style={{ display: 'block', fontSize: 'var(--type-md)', lineHeight: 'var(--leading-tight-plus)' }}>
         {label}
       </span>
       {sub ? (
@@ -316,7 +316,7 @@ function Label({ label, sub }: { label: ReactNode; sub?: ReactNode }) {
             fontSize: 'var(--type-xs-plus)',
             color: 'var(--app-dim)',
             marginTop: 'var(--sp-1)',
-            lineHeight: 1.4,
+            lineHeight: 'var(--leading-normal-minus)',
           }}
         >
           {sub}

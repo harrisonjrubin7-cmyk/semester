@@ -776,13 +776,13 @@ export function Quiz() {
                   flex: 'none',
                   fontFamily: 'var(--font-heading)',
                   fontSize: 'var(--type-md)',
-                  lineHeight: 1.35,
+                  lineHeight: 'var(--leading-tight-plus)',
                   color: 'var(--app-accent)',
                 }}
               >
                 {reveal && o.ok ? '✓' : chosen ? '✕' : ''}
               </span>
-              <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base)', lineHeight: 1.4, textWrap: 'pretty' }}>
+              <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base)', lineHeight: 'var(--leading-normal-minus)', textWrap: 'pretty' }}>
                 {o.text}
               </span>
             </button>

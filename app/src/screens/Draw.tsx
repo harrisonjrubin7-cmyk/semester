@@ -205,7 +205,7 @@ export function Draw() {
               }}
             >
               <span style={{ display: 'block', fontSize: 'var(--type-md)' }}>{option.label}</span>
-              <span style={{ display: 'block', fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-1)', lineHeight: 1.4 }}>
+              <span style={{ display: 'block', fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-1)', lineHeight: 'var(--leading-normal-minus)' }}>
                 {option.blurb}
               </span>
             </button>

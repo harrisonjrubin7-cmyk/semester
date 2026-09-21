@@ -220,7 +220,7 @@ export function Sources() {
                       </button>
                     </div>
                     {missing.length > 0 ? (
-                      <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 'var(--sp-3)', lineHeight: 1.4 }}>
+                      <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal-minus)' }}>
                         Missing {missing.join(', ')}. Kept as you wrote it either way.
                       </div>
                     ) : null}

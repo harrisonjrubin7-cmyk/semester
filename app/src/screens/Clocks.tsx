@@ -491,7 +491,7 @@ function Alarms() {
         style={{
           fontSize: 'var(--type-sm-plus)',
           color: 'var(--app-dim)',
-          lineHeight: 1.55,
+          lineHeight: 'var(--leading-relaxed-plus)',
           textWrap: 'pretty',
         }}
       >

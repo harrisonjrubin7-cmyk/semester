@@ -116,7 +116,7 @@ export function Proof() {
           minHeight: 220,
           resize: 'vertical',
           fontSize: 'var(--type-md)',
-          lineHeight: 1.6,
+          lineHeight: 'var(--leading-loose)',
         }}
       />
 

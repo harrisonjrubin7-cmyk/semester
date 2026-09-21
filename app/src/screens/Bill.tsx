@@ -166,7 +166,7 @@ export function Bill() {
           {charges.map((c) => (
             <CustomRow key={c.id}>
               <div style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'baseline' }}>
-                <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base)', lineHeight: 1.35 }}>
+                <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base)', lineHeight: 'var(--leading-tight-plus)' }}>
                   {c.what}
                   <span style={{ color: 'var(--app-dim)' }}>
                     {' · '}
@@ -205,7 +205,7 @@ export function Bill() {
               <CustomRow key={a.id}>
                 <div style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'baseline' }}>
                   <span
-                    style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base)', lineHeight: 1.35 }}
+                    style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base)', lineHeight: 'var(--leading-tight-plus)' }}
                   >
                     {a.what}
                     <span style={{ color: 'var(--app-dim)' }}>

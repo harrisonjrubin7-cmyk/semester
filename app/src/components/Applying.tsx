@@ -47,7 +47,7 @@ function Row({ s, onOpen, late }: { s: Standing; onOpen: () => void; late?: bool
           display: 'block',
           fontSize: 'var(--type-base-plus)',
           marginTop: 'calc(3px * var(--density, 1))',
-          lineHeight: 1.4,
+          lineHeight: 'var(--leading-normal-minus)',
           textWrap: 'pretty',
         }}
       >
@@ -120,7 +120,7 @@ export function ApplyingOn({ day }: { day: Date }) {
               style={{
                 display: 'block',
                 fontSize: 'var(--type-base-plus)',
-                lineHeight: 1.4,
+                lineHeight: 'var(--leading-normal-minus)',
                 textWrap: 'pretty',
               }}
             >

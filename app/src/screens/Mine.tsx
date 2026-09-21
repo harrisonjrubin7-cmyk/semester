@@ -1545,7 +1545,7 @@ export function NoteEditor() {
         onChange={(e) => dispatch({ type: 'updateNote', id: note.id, patch: { body: e.target.value } })}
         placeholder="Write anything."
         spellCheck
-        style={{ minHeight: 260, fontSize: 'var(--type-md)', lineHeight: 1.55, marginTop: 'var(--sp-6)' }}
+        style={{ minHeight: 260, fontSize: 'var(--type-md)', lineHeight: 'var(--leading-relaxed-plus)', marginTop: 'var(--sp-6)' }}
         aria-label="Note body"
       />
 

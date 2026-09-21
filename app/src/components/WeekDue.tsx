@@ -95,7 +95,7 @@ export function WeekDue({
                   key={i.id}
                   style={{
                     fontSize: 'var(--type-base)',
-                    lineHeight: 1.4,
+                    lineHeight: 'var(--leading-normal-minus)',
                     marginBottom: 'calc(3px * var(--density, 1))',
                     opacity: state.done[i.id] ? DIMMED_ROW : 1,
                     textDecoration: state.done[i.id] ? 'line-through' : 'none',

@@ -83,7 +83,7 @@ export function NotYetOpened({ pool }: { pool?: Destination[] }) {
                   fontSize: 'var(--type-xs-plus)',
                   color: 'var(--app-dim)',
                   marginTop: 'var(--sp-1)',
-                  lineHeight: 1.4,
+                  lineHeight: 'var(--leading-normal-minus)',
                 }}
               >
                 {saysFor(d, school.capabilities).blurb}

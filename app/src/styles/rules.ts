@@ -50,8 +50,12 @@ export const TYPE: Record<string, string> = {
 
 export const LEADING: Record<string, string> = {
   '1.3': 'tight',
+  '1.35': 'tight-plus',
+  '1.4': 'normal-minus',
   '1.45': 'normal',
   '1.5': 'relaxed',
+  '1.55': 'relaxed-plus',
+  '1.6': 'loose',
 };
 
 export const SPACE: Record<string, string> = {

@@ -174,7 +174,7 @@ export function Behind() {
                     style={{
                       display: 'block',
                       fontSize: 'var(--type-base-plus)',
-                      lineHeight: 1.35,
+                      lineHeight: 'var(--leading-tight-plus)',
                       textWrap: 'pretty',
                     }}
                   >
@@ -232,7 +232,7 @@ export function Behind() {
               style={{
                 display: 'block',
                 fontSize: 'var(--type-base-plus)',
-                lineHeight: 1.35,
+                lineHeight: 'var(--leading-tight-plus)',
               }}
             >
               {m.what}

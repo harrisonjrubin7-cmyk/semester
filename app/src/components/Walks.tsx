@@ -74,7 +74,7 @@ export function Walks({ date }: { date?: Date }) {
           >
             {h.known && tight(h) ? '!' : '→'}
           </span>
-          <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base)', lineHeight: 1.4 }}>{hopLine(h)}</span>
+          <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base)', lineHeight: 'var(--leading-normal-minus)' }}>{hopLine(h)}</span>
         </div>
       ))}
 

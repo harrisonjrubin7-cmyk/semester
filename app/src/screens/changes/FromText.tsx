@@ -152,7 +152,7 @@ export function FromText() {
 
       {done ? (
         <Blueprint style={{ paddingBlock: 'calc(13px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))', marginTop: 'calc(14px * var(--density, 1))' }}>
-          <div style={{ fontSize: 'var(--type-md)', lineHeight: 1.4 }}>Applied: {done}.</div>
+          <div style={{ fontSize: 'var(--type-md)', lineHeight: 'var(--leading-normal-minus)' }}>Applied: {done}.</div>
           <button
             type="button"
             className="btn btn-secondary btn-block"
@@ -195,7 +195,7 @@ export function FromText() {
                     background: taken[i] ? 'var(--app-accent-wash)' : 'transparent',
                   }}
                 >
-                  <span style={{ display: 'block', fontSize: 'var(--type-md)', lineHeight: 1.35 }}>
+                  <span style={{ display: 'block', fontSize: 'var(--type-md)', lineHeight: 'var(--leading-tight-plus)' }}>
                     {shown ? describe(c, shown) : ''}
                   </span>
                   {/* The sentence it rests on. This is the whole safety of it —

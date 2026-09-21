@@ -369,7 +369,7 @@ export function Work() {
 /** Model output, as paragraphs rather than one wall. */
 function Prose({ text }: { text: string }) {
   return (
-    <div style={{ fontSize: 'var(--type-base-plus)', lineHeight: 1.6, whiteSpace: 'pre-wrap', textWrap: 'pretty' }}>
+    <div style={{ fontSize: 'var(--type-base-plus)', lineHeight: 'var(--leading-loose)', whiteSpace: 'pre-wrap', textWrap: 'pretty' }}>
       {text}
     </div>
   );

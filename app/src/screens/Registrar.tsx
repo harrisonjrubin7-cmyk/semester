@@ -191,7 +191,7 @@ export function Registrar() {
                     background: taken[i] ? 'var(--app-accent-wash)' : 'transparent',
                   }}
                 >
-                  <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base-plus)', lineHeight: 1.35 }}>
+                  <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base-plus)', lineHeight: 'var(--leading-tight-plus)' }}>
                     {f.label}
                     {f.id ? '' : ' — kept in your words'}
                   </span>

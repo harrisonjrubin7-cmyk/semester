@@ -261,7 +261,7 @@ function OverdueBanner() {
         background: 'var(--app-warn-wash)',
       }}
     >
-      <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base)', lineHeight: 1.35 }}>
+      <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base)', lineHeight: 'var(--leading-tight-plus)' }}>
         <strong style={{ fontWeight: 600 }}>
           {missed} {missed === 1 ? 'deadline' : 'deadlines'} went by
         </strong>{' '}

@@ -80,7 +80,7 @@ function Row({ c, onOpen }: { c: Clash; onOpen: () => void }) {
           display: 'block',
           fontSize: 'var(--type-md)',
           marginTop: 'var(--sp-2)',
-          lineHeight: 1.4,
+          lineHeight: 'var(--leading-normal-minus)',
           textWrap: 'pretty',
         }}
       >

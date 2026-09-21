@@ -135,7 +135,7 @@ export function FigureCard({ figure, unit }: { figure: Figure; unit?: string }) 
                   style={{
                     fontSize: 'var(--type-base)',
                     color: 'var(--app-dim)',
-                    lineHeight: 1.4,
+                    lineHeight: 'var(--leading-normal-minus)',
                     marginTop: 'var(--sp-1)',
                     textWrap: 'pretty',
                   }}

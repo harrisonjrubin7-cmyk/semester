@@ -484,7 +484,7 @@ export function Runway() {
               opacity: u.cards === 0 ? DIMMED_ROW : 1,
             }}
           >
-            <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base-plus)', lineHeight: 1.35 }}>{u.name}</span>
+            <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base-plus)', lineHeight: 'var(--leading-tight-plus)' }}>{u.name}</span>
             <span
               style={{
                 flex: 'none',
@@ -535,7 +535,7 @@ export function Runway() {
               >
                 {i.dueShort}
               </span>
-              <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base-plus)', lineHeight: 1.35 }}>
+              <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base-plus)', lineHeight: 'var(--leading-tight-plus)' }}>
                 {i.title}
                 <span style={{ color: 'var(--app-dim)' }}> · {code(i.c)}</span>
               </span>

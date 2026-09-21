@@ -258,7 +258,7 @@ export function Groupwork() {
                   ...rowStyle,
                 }}
               >
-                <span style={{ display: 'block', fontSize: 'var(--type-lg)', lineHeight: 1.35 }}>{g.name}</span>
+                <span style={{ display: 'block', fontSize: 'var(--type-lg)', lineHeight: 'var(--leading-tight-plus)' }}>{g.name}</span>
                 {g.due ? (
                   <span style={{ display: 'block', fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'calc(3px * var(--density, 1))' }}>
                     due {g.due}
@@ -455,7 +455,7 @@ export function Groupwork() {
                       flex: 1,
                       minWidth: 0,
                       fontSize: 'var(--type-base-plus)',
-                      lineHeight: 1.35,
+                      lineHeight: 'var(--leading-tight-plus)',
                       textDecoration: p.done ? 'line-through' : 'none',
                       opacity: p.done ? DIMMED_ROW : 1,
                     }}

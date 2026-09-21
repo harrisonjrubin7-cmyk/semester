@@ -588,7 +588,7 @@ export function Guide() {
                           <div
                             style={{
                               fontSize: 'var(--type-base-plus)',
-                              lineHeight: 1.55,
+                              lineHeight: 'var(--leading-relaxed-plus)',
                               color: 'var(--app-dim)',
                               marginTop: 'var(--sp-3)',
                               whiteSpace: 'pre-wrap',
@@ -823,7 +823,7 @@ function Decks() {
             >
               PPTX
             </span>
-            <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base)', lineHeight: 1.35 }}>
+            <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base)', lineHeight: 'var(--leading-tight-plus)' }}>
               The whole course as a PowerPoint deck
             </span>
             <ChevronRight size={15} style={{ color: 'var(--app-dim)', flex: 'none' }} />
@@ -851,7 +851,7 @@ function Decks() {
           >
             PPTX
           </span>
-          <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base)', lineHeight: 1.35 }}>
+          <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base)', lineHeight: 'var(--leading-tight-plus)' }}>
             Build a deck from any unit — a real PowerPoint file, written here
           </span>
           <ChevronRight size={15} style={{ color: 'var(--app-dim)', flex: 'none' }} />
@@ -1050,7 +1050,7 @@ function Documents() {
           </div>
           {u.cards.map((c) => (
             <div key={c.q} style={{ marginTop: 'var(--sp-4)' }}>
-              <div style={{ fontSize: 'var(--type-base-plus)', fontWeight: 600, lineHeight: 1.35 }}>{c.q}</div>
+              <div style={{ fontSize: 'var(--type-base-plus)', fontWeight: 600, lineHeight: 'var(--leading-tight-plus)' }}>{c.q}</div>
               <div style={{ fontSize: 'var(--type-base-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginTop: 'var(--sp-1)' }}>
                 {c.a}
               </div>

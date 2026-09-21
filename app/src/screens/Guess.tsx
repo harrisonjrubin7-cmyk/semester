@@ -52,7 +52,7 @@ export function Guess() {
         >
           {state.guessRight} of {asked.length}
         </div>
-        <div style={{ fontSize: 'var(--type-base-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-5)', lineHeight: 1.55, textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'var(--type-base-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-relaxed-plus)', textWrap: 'pretty' }}>
           {verdict(state.guessRight, asked.length)}
         </div>
         <ActionButton

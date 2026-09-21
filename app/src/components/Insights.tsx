@@ -184,7 +184,7 @@ export function Insights({
                   minWidth: 0,
                   fontSize: 'var(--type-xs)',
                   ...secondLine(),
-                  lineHeight: 1.4,
+                  lineHeight: 'var(--leading-normal-minus)',
                   textWrap: 'pretty',
                 }}
               >

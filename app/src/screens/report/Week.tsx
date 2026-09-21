@@ -201,7 +201,7 @@ export function WeekReport() {
 
       <Group header="The week coming" framed={false}>
         <Blueprint style={{ paddingBlock: 'calc(13px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))' }}>
-          <div style={{ fontSize: 'var(--type-lg)', lineHeight: 1.4 }}>
+          <div style={{ fontSize: 'var(--type-lg)', lineHeight: 'var(--leading-normal-minus)' }}>
             {showHours(forward.promised)} already promised
             {forward.due.length > 0
               ? `, ${forward.due.length} ${forward.due.length === 1 ? 'deadline' : 'deadlines'}`

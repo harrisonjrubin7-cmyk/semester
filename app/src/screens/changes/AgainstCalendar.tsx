@@ -138,7 +138,7 @@ export function AgainstCalendar() {
               width: '100%',
               minHeight: 130,
               resize: 'vertical',
-              lineHeight: 1.4,
+              lineHeight: 'var(--leading-normal-minus)',
               fontFamily: 'ui-monospace, Menlo, monospace',
               fontSize: 'var(--type-sm)',
             }}
@@ -247,7 +247,7 @@ export function AgainstCalendar() {
                   >
                     {e.date}
                   </span>
-                  <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base-plus)', lineHeight: 1.35 }}>
+                  <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base-plus)', lineHeight: 'var(--leading-tight-plus)' }}>
                     {e.title}
                     {e.courseId ? (
                       <span style={{ color: 'var(--app-dim)' }}> · {code(e.courseId)}</span>
@@ -291,7 +291,7 @@ export function AgainstCalendar() {
                   >
                     {i.dueShort}
                   </span>
-                  <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base-plus)', lineHeight: 1.35 }}>
+                  <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base-plus)', lineHeight: 'var(--leading-tight-plus)' }}>
                     {i.title}
                     <span style={{ color: 'var(--app-dim)' }}> · {code(i.c)}</span>
                   </span>

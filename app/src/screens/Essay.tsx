@@ -387,7 +387,7 @@ export function Essay() {
           <Produced style={{ background: 'var(--app-panel)' }}>{draft}</Produced>
           <DraftNote field={outField} />
 
-          <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-5)', lineHeight: 1.55 }}>
+          <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-relaxed-plus)' }}>
             {count} words against {aim}.{' '}
             {left.length > 0
               ? `${left.length} ${left.length === 1 ? 'blank' : 'blanks'} left for you — fill every one before this goes anywhere.`

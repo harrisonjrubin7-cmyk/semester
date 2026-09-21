@@ -326,7 +326,7 @@ function Run({ win }: { win: GapWindow }) {
           <div
             style={{
               fontSize: 'calc(16px * var(--text-scale, 1))',
-              lineHeight: 1.55,
+              lineHeight: 'var(--leading-relaxed-plus)',
               color: 'var(--app-dim)',
               textWrap: 'pretty',
               borderTop: '1px solid var(--app-line)',

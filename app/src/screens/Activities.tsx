@@ -111,7 +111,7 @@ export function Activities() {
             <>
               <Blueprint style={{ paddingBlock: 'calc(14px * var(--density, 1))', paddingInline: 'calc(15px * var(--density, 1))' }}>
                 <div className="kicker">Your week</div>
-                <div style={{ fontSize: 'var(--type-base-plus)', marginTop: 'var(--sp-4)', lineHeight: 1.55 }}>{loadLine(week)}</div>
+                <div style={{ fontSize: 'var(--type-base-plus)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed-plus)' }}>{loadLine(week)}</div>
                 <div
                   style={{
                     display: 'flex',

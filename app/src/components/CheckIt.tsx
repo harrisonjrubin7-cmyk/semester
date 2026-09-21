@@ -169,7 +169,7 @@ export function CheckIt({
                 style={{
                   marginTop: 'var(--sp-5)',
                   fontSize: 'var(--type-sm-plus)',
-                  lineHeight: 1.6,
+                  lineHeight: 'var(--leading-loose)',
                   whiteSpace: 'pre-wrap',
                   textWrap: 'pretty',
                 }}

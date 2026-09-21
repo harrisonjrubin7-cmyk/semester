@@ -246,7 +246,7 @@ export function Grades() {
                           fontSize: 'var(--type-base-plus)',
                           textAlign: 'right',
                           maxWidth: '62%',
-                          lineHeight: 1.4,
+                          lineHeight: 'var(--leading-normal-minus)',
                           color: t.reach === 'hard' ? 'var(--app-warn)' : undefined,
                         }}
                       >

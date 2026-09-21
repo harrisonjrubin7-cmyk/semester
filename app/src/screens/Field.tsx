@@ -231,7 +231,7 @@ export function FieldGuide() {
                 <div
                   style={{
                     fontSize: 'var(--type-md)',
-                    lineHeight: 1.6,
+                    lineHeight: 'var(--leading-loose)',
                     color: 'var(--app-dim)',
                     marginTop: 'calc(5px * var(--density, 1))',
                     textWrap: 'pretty',
@@ -425,7 +425,7 @@ export function FieldGuide() {
                       display: 'block',
                       fontSize: 'var(--type-base-plus)',
                       color: 'var(--app-dim)',
-                      lineHeight: 1.55,
+                      lineHeight: 'var(--leading-relaxed-plus)',
                       marginTop: 'var(--sp-2)',
                       textWrap: 'pretty',
                     }}

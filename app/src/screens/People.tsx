@@ -120,7 +120,7 @@ function PeopleTab({ rows }: { rows?: Person[] }) {
             marginTop: 'calc(20px * var(--density, 1))',
             fontSize: 'var(--type-sm-plus)',
             color: 'var(--app-dim)',
-            lineHeight: 1.6,
+            lineHeight: 'var(--leading-loose)',
             textWrap: 'pretty',
           }}
         >
@@ -399,7 +399,7 @@ function LettersTab() {
 
   if (state.people.length === 0) {
     return (
-      <p style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', lineHeight: 1.6 }}>
+      <p style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-loose)' }}>
         Add somebody under People first — a letter belongs to a person.
       </p>
     );
@@ -574,7 +574,7 @@ function LettersTab() {
           fontSize: 'var(--type-xs-plus)',
           color: 'var(--app-dim)',
           marginTop: 'calc(22px * var(--density, 1))',
-          lineHeight: 1.55,
+          lineHeight: 'var(--leading-relaxed-plus)',
           textWrap: 'pretty',
         }}
       >

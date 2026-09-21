@@ -98,7 +98,7 @@ export function GapOffer() {
       }}
     >
       <div className="kicker">Between classes</div>
-      <div style={{ fontSize: 'calc(16px * var(--text-scale, 1))', lineHeight: 1.35, marginTop: 'calc(5px * var(--density, 1))', textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(16px * var(--text-scale, 1))', lineHeight: 'var(--leading-tight-plus)', marginTop: 'calc(5px * var(--density, 1))', textWrap: 'pretty' }}>
         {fitsLine(win, cards)}
       </div>
       <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)' }}>

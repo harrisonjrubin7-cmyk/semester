@@ -122,7 +122,7 @@ export function FindPlace() {
             style={{
               fontSize: 'var(--type-sm-plus)',
               color: 'var(--app-dim)',
-              lineHeight: 1.55,
+              lineHeight: 'var(--leading-relaxed-plus)',
               textWrap: 'pretty',
             }}
           >
@@ -205,7 +205,7 @@ export function FindPlace() {
                       style={{
                         display: 'block',
                         fontSize: 'var(--type-base-plus)',
-                        lineHeight: 1.35,
+                        lineHeight: 'var(--leading-tight-plus)',
                         textWrap: 'pretty',
                       }}
                     >

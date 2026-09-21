@@ -183,7 +183,7 @@ function OutOfPocket() {
                       borderLeft: '2px solid var(--app-line)',
                     }}
                   >
-                    <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base)', lineHeight: 1.35 }}>
+                    <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base)', lineHeight: 'var(--leading-tight-plus)' }}>
                       {x.what}
                       <span style={{ color: 'var(--app-dim)' }}>
                         {' · '}

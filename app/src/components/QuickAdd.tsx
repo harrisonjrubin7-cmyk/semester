@@ -211,7 +211,7 @@ export function QuickAdd({ onClose }: { onClose: () => void }) {
             fontSize: 'var(--type-sm-plus)',
             color: 'var(--app-dim)',
             marginTop: 'var(--sp-7)',
-            lineHeight: 1.6,
+            lineHeight: 'var(--leading-loose)',
             textWrap: 'pretty',
           }}
         >

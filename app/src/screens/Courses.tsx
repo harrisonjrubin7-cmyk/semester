@@ -751,7 +751,7 @@ export function ItemDetail() {
       <div
         style={{
           fontSize: 'var(--type-md)',
-          lineHeight: 1.55,
+          lineHeight: 'var(--leading-relaxed-plus)',
           marginTop: 'calc(18px * var(--density, 1))',
           color: 'var(--app-dim)',
           textWrap: 'pretty',

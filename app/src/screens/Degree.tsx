@@ -75,7 +75,7 @@ export function Degree() {
           style={{
             marginTop: 'var(--sp-3)',
             fontSize: 'var(--type-sm-plus)',
-            lineHeight: 1.55,
+            lineHeight: 'var(--leading-relaxed-plus)',
             textWrap: 'pretty',
           }}
         >
@@ -115,7 +115,7 @@ function WhatIsLeft() {
   if (list.length === 0) {
     return (
       <Folding name="WhatIsLeft">
-        <p style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', lineHeight: 1.55, textWrap: 'pretty' }}>
+        <p style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed-plus)', textWrap: 'pretty' }}>
           Nothing recorded yet. Add your requirements under Requirements — one row per line of
           your audit — and the courses you have taken under Taken.
         </p>
@@ -169,7 +169,7 @@ function WhatIsLeft() {
                     opacity: prog.met ? DIMMED_ROW : 1,
                   }}
                 >
-                  <div style={{ fontSize: 'var(--type-base)', lineHeight: 1.35, textWrap: 'pretty' }}>
+                  <div style={{ fontSize: 'var(--type-base)', lineHeight: 'var(--leading-tight-plus)', textWrap: 'pretty' }}>
                     {prog.req.name || 'Unnamed requirement'}
                   </div>
                   <div

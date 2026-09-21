@@ -289,7 +289,7 @@ export function Export() {
                 <span style={{ fontSize: 'var(--type-xs)', ...secondLine() }}>{counts[part.id]}</span>
               )}
             </div>
-            <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-1)', lineHeight: 1.4 }}>
+            <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-1)', lineHeight: 'var(--leading-normal-minus)' }}>
               {part.blurb}
             </div>
           </div>

@@ -99,11 +99,11 @@ export function SchoolPicker() {
 
         {ASKS.map((a) => (
           <div key={a.id} style={{ marginTop: 'calc(14px * var(--density, 1))' }}>
-            <div style={{ fontSize: 'var(--type-base)', lineHeight: 1.4, textWrap: 'pretty' }}>
+            <div style={{ fontSize: 'var(--type-base)', lineHeight: 'var(--leading-normal-minus)', textWrap: 'pretty' }}>
               {a.ask}
             </div>
             {a.note && (
-              <div style={{ fontSize: 'var(--type-xs)', color: 'var(--app-dim)', marginTop: 'calc(3px * var(--density, 1))', lineHeight: 1.4 }}>
+              <div style={{ fontSize: 'var(--type-xs)', color: 'var(--app-dim)', marginTop: 'calc(3px * var(--density, 1))', lineHeight: 'var(--leading-normal-minus)' }}>
                 {a.note}
               </div>
             )}

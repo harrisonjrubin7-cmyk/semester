@@ -189,8 +189,17 @@ describe('the per-file ledger', () => {
     return join(dir, 'src');
   };
 
-  // Two off-scale values, in the two axes, so a test can move one at a time.
-  const DRIFT = `export const x = <i style={{ padding: 14, lineHeight: 1.35 }} />;`;
+  /*
+   * Two off-scale values, in the two axes, so a test can move one at a time.
+   *
+   * `1.15` rather than the `1.35` this used to carry: 1.35 became
+   * `--leading-tight-plus` when the ramp grew to seven steps, which left this
+   * fixture measuring `leading 0` and three cases here red. 1.15 is on the
+   * display tail that pass deliberately did not name — headline leading, a
+   * different job from the body ramp — so it is off the scale for a reason
+   * rather than by accident, which is what a fixture wants.
+   */
+  const DRIFT = `export const x = <i style={{ padding: 14, lineHeight: 1.15 }} />;`;
 
   it('passes a file that owes exactly what the ledger says', () => {
     expect(overBudget(tree(DRIFT), { 'Probe.tsx': { leading: 1, space: 1 } })).toEqual([]);

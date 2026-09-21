@@ -1928,7 +1928,7 @@ const WEEK_LIST: CSSProperties = {
   // is being dragged — 0.41 rather than the 0.29 that pairing used to give —
   // and that one is the ghost doing what a ghost is for.
   color: 'var(--app-dim)',
-  lineHeight: 1.35,
+  lineHeight: 'var(--leading-tight-plus)',
 };
 
 /**
@@ -2936,7 +2936,7 @@ export function EventDetail() {
       </Blueprint>
 
       <div
-        style={{ fontSize: 'var(--type-md)', lineHeight: 1.55, marginTop: 'calc(18px * var(--density, 1))', color: 'var(--app-dim)', textWrap: 'pretty' }}
+        style={{ fontSize: 'var(--type-md)', lineHeight: 'var(--leading-relaxed-plus)', marginTop: 'calc(18px * var(--density, 1))', color: 'var(--app-dim)', textWrap: 'pretty' }}
       >
         {event.detail}
       </div>

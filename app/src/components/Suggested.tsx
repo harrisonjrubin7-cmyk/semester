@@ -148,7 +148,7 @@ export function Suggested() {
               <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
                 {p.what}
               </div>
-              <div style={{ fontSize: 'var(--type-xs)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 1.4, textWrap: 'pretty' }}>
+              <div style={{ fontSize: 'var(--type-xs)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal-minus)', textWrap: 'pretty' }}>
                 {whenLine(p, now)}
               </div>
               <div style={{ display: 'flex', gap: 'calc(7px * var(--density, 1))', marginTop: 'var(--sp-5)', flexWrap: 'wrap' }}>

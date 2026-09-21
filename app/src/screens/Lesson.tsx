@@ -105,7 +105,7 @@ const BEAT_TITLE = {
 
 const BEAT_BODY = {
   fontSize: 'calc(14.5px * var(--text-scale, 1))',
-  lineHeight: 1.55,
+  lineHeight: 'var(--leading-relaxed-plus)',
   color: 'var(--app-dim)',
   marginTop: 'var(--sp-5)',
   whiteSpace: 'pre-wrap',
@@ -292,7 +292,7 @@ export function LessonPlayer() {
                   <div
                     style={{
                       fontSize: 'var(--type-lg)',
-                      lineHeight: 1.55,
+                      lineHeight: 'var(--leading-relaxed-plus)',
                       marginTop: 'var(--sp-6)',
                       textWrap: 'pretty',
                     }}
@@ -444,7 +444,7 @@ export function LessonPlayer() {
           >
             {clock(c.at)}
           </span>
-          <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base-plus)', lineHeight: 1.35 }}>{c.text}</span>
+          <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base-plus)', lineHeight: 'var(--leading-tight-plus)' }}>{c.text}</span>
         </button>
       ))}
 

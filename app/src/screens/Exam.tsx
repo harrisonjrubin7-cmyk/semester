@@ -509,7 +509,7 @@ export function Exam() {
                 </button>
               )}
             </div>
-            <div style={{ fontSize: 'var(--type-lg)', lineHeight: 1.4, marginTop: 'calc(5px * var(--density, 1))', textWrap: 'pretty' }}>
+            <div style={{ fontSize: 'var(--type-lg)', lineHeight: 'var(--leading-normal-minus)', marginTop: 'calc(5px * var(--density, 1))', textWrap: 'pretty' }}>
               {q.prompt}
             </div>
 
@@ -553,7 +553,7 @@ export function Exam() {
                       <span style={{ flex: 'none', color: 'var(--app-dim)', fontSize: 'var(--type-sm-plus)' }}>
                         {letter(n)}
                       </span>
-                      <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base-plus)', lineHeight: 1.4 }}>
+                      <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base-plus)', lineHeight: 'var(--leading-normal-minus)' }}>
                         {option}
                       </span>
                     </button>
@@ -582,7 +582,7 @@ export function Exam() {
               <>
                 <Blueprint plain style={{ paddingBlock: 'calc(11px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))', marginTop: 'calc(9px * var(--density, 1))' }}>
                   <div className="kicker">{q.kind === 'choice' ? 'Why' : 'The key'}</div>
-                  <div style={{ fontSize: 'var(--type-base)', lineHeight: 1.55, marginTop: 'calc(5px * var(--density, 1))', textWrap: 'pretty' }}>
+                  <div style={{ fontSize: 'var(--type-base)', lineHeight: 'var(--leading-relaxed-plus)', marginTop: 'calc(5px * var(--density, 1))', textWrap: 'pretty' }}>
                     {q.kind === 'choice'
                       ? q.why || `${letter(Number(q.answer))}. ${q.options[Number(q.answer)]}`
                       : q.answer}

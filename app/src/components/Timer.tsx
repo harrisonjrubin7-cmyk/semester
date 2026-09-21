@@ -243,7 +243,7 @@ export function Timer({
           Start working on this
         </button>
         {elsewhere ? (
-          <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 1.4 }}>
+          <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal-minus)' }}>
             {/* Said rather than prevented: the student may well have moved on
                 to this and forgotten the other one, and starting here should
                 not be blocked by a timer they have already abandoned. */}
@@ -295,7 +295,7 @@ export function Timer({
         </button>
       </div>
       {lost ? (
-        <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'calc(7px * var(--density, 1))', lineHeight: 1.4 }}>
+        <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'calc(7px * var(--density, 1))', lineHeight: 'var(--leading-normal-minus)' }}>
           This has been running over {LONGEST / 60} hours. Stop it and the app will ask what it
           really was rather than recording this.
         </div>

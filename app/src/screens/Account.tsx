@@ -136,7 +136,7 @@ export function AccountScreen() {
         </Blueprint>
 
         <SectionLabel>What syncs</SectionLabel>
-        <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 1.55, textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed-plus)', textWrap: 'pretty' }}>
           Everything you have typed into this app, not a selection from it: your courses and what
           you have added to them, your tasks, appointments, notes and connected calendars, the
           documents, spreadsheets, decks and graphs you have made, the email you have drafted,
@@ -146,21 +146,21 @@ export function AccountScreen() {
         </div>
 
         <SectionLabel>What does not</SectionLabel>
-        <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 1.55, textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed-plus)', textWrap: 'pretty' }}>
           Files you attach stay on the device that has them — a lecture deck can be tens of
           megabytes and uploading it on a phone plan is not a choice the app should make for you.
           The sample semester's audio ships with the app, so it plays anywhere.
         </div>
 
         <SectionLabel>How conflicts resolve</SectionLabel>
-        <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 1.55, textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed-plus)', textWrap: 'pretty' }}>
           Nothing you added on one device is dropped because you added something on the other.
           Write a note on the laptop and another on your phone while it is offline, and you end up
           with both; tick one box here and a different one there, and both stay ticked. Settings
           are the exception, and deliberately so — your colours are whatever you last chose,
           wherever you chose it.
         </div>
-        <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 1.55, textWrap: 'pretty', marginTop: 'var(--sp-4)' }}>
+        <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed-plus)', textWrap: 'pretty', marginTop: 'var(--sp-4)' }}>
           What still does not merge is the same note edited on both: the later edit is the one that
           survives. The app would rather say so than pretend.
         </div>
@@ -222,7 +222,7 @@ export function AccountScreen() {
       <Credentials />
 
       <SectionLabel>Before you sign up</SectionLabel>
-      <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', lineHeight: 1.55, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed-plus)', textWrap: 'pretty' }}>
         What you already have on this device is kept. The first sync sends it up, and if the
         account already holds a semester the two are merged rather than one replacing the other —
         you end up with both sides' courses, notes and ticked boxes.

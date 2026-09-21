@@ -215,7 +215,7 @@ export function Rework({
             style={{
               fontSize: 'var(--type-base)',
               marginTop: 'calc(7px * var(--density, 1))',
-              lineHeight: 1.55,
+              lineHeight: 'var(--leading-relaxed-plus)',
               // The one thing worth a colour: something you drilled going away.
               color: cost.reworded + cost.dropped > 0 ? 'var(--app-warn)' : 'inherit',
             }}
@@ -241,7 +241,7 @@ export function Rework({
           </div>
 
           {plan.notes.length > 0 && (
-            <ul style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'calc(10px * var(--density, 1))', marginInline: '0', marginBottom: '0', paddingLeft: 'calc(18px * var(--density, 1))', lineHeight: 1.55 }}>
+            <ul style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'calc(10px * var(--density, 1))', marginInline: '0', marginBottom: '0', paddingLeft: 'calc(18px * var(--density, 1))', lineHeight: 'var(--leading-relaxed-plus)' }}>
               {plan.notes.map((n, i) => (
                 <li key={i}>{n}</li>
               ))}

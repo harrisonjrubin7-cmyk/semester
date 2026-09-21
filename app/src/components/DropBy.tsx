@@ -80,7 +80,7 @@ export function DropBy({ courseId, limit }: { courseId?: string; limit?: number 
                 </span>
               ) : null}
             </div>
-            <div style={{ fontSize: 'var(--type-md)', lineHeight: 1.4, marginTop: 'calc(7px * var(--density, 1))' }}>{r.said}</div>
+            <div style={{ fontSize: 'var(--type-md)', lineHeight: 'var(--leading-normal-minus)', marginTop: 'calc(7px * var(--density, 1))' }}>{r.said}</div>
 
             {next ? (
               <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>

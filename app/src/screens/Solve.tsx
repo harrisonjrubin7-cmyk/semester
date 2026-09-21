@@ -152,7 +152,7 @@ export function Solve() {
                   fontSize: 'var(--type-xs-plus)',
                   color: 'var(--app-dim)',
                   marginTop: 'var(--sp-1)',
-                  lineHeight: 1.4,
+                  lineHeight: 'var(--leading-normal-minus)',
                 }}
               >
                 {option.blurb}
@@ -169,7 +169,7 @@ export function Solve() {
         value={problem}
         onChange={(e) => setProblem(e.target.value)}
         placeholder="Type it, or photograph it below."
-        style={{ width: '100%', minHeight: 110, resize: 'vertical', lineHeight: 1.55 }}
+        style={{ width: '100%', minHeight: 110, resize: 'vertical', lineHeight: 'var(--leading-relaxed-plus)' }}
       />
       <Dictate compact current={problem} onText={setProblem} label="Read the problem out" />
       <FilePick
@@ -201,7 +201,7 @@ export function Solve() {
             value={work}
             onChange={(e) => setWork(e.target.value)}
             placeholder="Your working, as far as you got. Rough is fine."
-            style={{ width: '100%', minHeight: 110, resize: 'vertical', lineHeight: 1.55 }}
+            style={{ width: '100%', minHeight: 110, resize: 'vertical', lineHeight: 'var(--leading-relaxed-plus)' }}
           />
           <DraftNote field={workField} />
         </>

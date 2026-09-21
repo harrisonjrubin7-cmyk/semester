@@ -48,7 +48,7 @@ export function Produced({
          * what this holds. Written once here rather than six times across the
          * screens, which is the part that was actually wrong.
          */
-        lineHeight: 1.6,
+        lineHeight: 'var(--leading-loose)',
         // The newlines are the model's paragraphing. Collapsing them would
         // turn a structured answer into one block.
         whiteSpace: 'pre-wrap',

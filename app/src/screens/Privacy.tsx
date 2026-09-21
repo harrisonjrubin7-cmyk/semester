@@ -107,7 +107,7 @@ export function Privacy() {
         >
           What this app holds
         </div>
-        <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 1.55, textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed-plus)', textWrap: 'pretty' }}>
           In plain language, and short enough to actually read.
           {where ? ` Your account, if you have one, is on ${where}.` : ''}
           {!cloudConfigured && ' This build has no account service at all — nothing can leave the device.'}
@@ -121,7 +121,7 @@ export function Privacy() {
             style={{
               fontSize: 'var(--type-base-plus)',
               color: 'var(--app-dim)',
-              lineHeight: 1.6,
+              lineHeight: 'var(--leading-loose)',
               textWrap: 'pretty',
             }}
           >
@@ -144,7 +144,7 @@ export function Privacy() {
         on={state.countScreens}
         onChange={() => dispatch({ type: 'countScreens', on: !state.countScreens })}
       />
-      <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', lineHeight: 1.55, marginTop: 'var(--sp-4)', textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed-plus)', marginTop: 'var(--sp-4)', textWrap: 'pretty' }}>
         {usageLine(state.countScreens, counts)}
       </div>
       {total(counts) > 0 && (
@@ -196,13 +196,13 @@ export function Privacy() {
       )}
 
       <SectionLabel style={{ marginTop: 'calc(22px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(5px * var(--density, 1))' }}>If something is wrong</SectionLabel>
-      <div style={{ fontSize: 'var(--type-base-plus)', color: 'var(--app-dim)', lineHeight: 1.6, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-loose)', textWrap: 'pretty' }}>
         There is no form. Email <strong>{SUPPORT}</strong> and a person will answer — including if
         you want your account removed by hand rather than by the button below.
       </div>
 
       <SectionLabel style={{ marginTop: 'calc(22px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(5px * var(--density, 1))' }}>Export diagnostics</SectionLabel>
-      <div style={{ fontSize: 'var(--type-base-plus)', color: 'var(--app-dim)', lineHeight: 1.6, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-loose)', textWrap: 'pretty' }}>
         Saves a plain text file of the last {KEEP} things that went wrong on this device — error
         messages, which screen you were on, which build. It holds none of your work, and it is
         readable, so you can see what is in it before you send it. Nothing is uploaded on its own.
@@ -268,7 +268,7 @@ export function Privacy() {
       <SectionLabel style={{ marginTop: 'calc(26px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(5px * var(--density, 1))' }}>Delete my account</SectionLabel>
       {account ? (
         <>
-          <div style={{ fontSize: 'var(--type-base-plus)', color: 'var(--app-dim)', lineHeight: 1.6, textWrap: 'pretty' }}>
+          <div style={{ fontSize: 'var(--type-base-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-loose)', textWrap: 'pretty' }}>
             Removes every row belonging to {account.email}: courses, deadlines, notes, grades,
             cards and any queued reminders. It does not touch this device — signing out and
             deleting the account both leave your semester here.
@@ -289,7 +289,7 @@ export function Privacy() {
               style={{
                 fontSize: 'var(--type-base)',
                 marginTop: 'var(--sp-5)',
-                lineHeight: 1.55,
+                lineHeight: 'var(--leading-relaxed-plus)',
                 textWrap: 'pretty',
               }}
             >
@@ -298,7 +298,7 @@ export function Privacy() {
           )}
         </>
       ) : (
-        <div style={{ fontSize: 'var(--type-base-plus)', color: 'var(--app-dim)', lineHeight: 1.6, textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'var(--type-base-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-loose)', textWrap: 'pretty' }}>
           You are not signed in, so there is no account to delete — nothing about this semester
           has ever left the device.
         </div>

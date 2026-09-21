@@ -1001,7 +1001,7 @@ function Rediff({
         borderBottom: '1px solid var(--app-line-soft)',
       }}
     >
-      <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base-plus)', lineHeight: 1.35 }}>{label}</span>
+      <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base-plus)', lineHeight: 'var(--leading-tight-plus)' }}>{label}</span>
       <span style={{ flex: 'none', fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)' }}>{right}</span>
     </div>
   );
@@ -1228,7 +1228,7 @@ function Preview({
       <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(16px * var(--text-scale, 1))' }}>{m.guide.units[0]?.name}</div>
       {(m.guide.units[0]?.cards ?? []).slice(0, 2).map((c) => (
         <div key={c.q} style={{ marginTop: 'var(--sp-4)' }}>
-          <div style={{ fontSize: 'var(--type-base-plus)', fontWeight: 600, lineHeight: 1.35 }}>{c.q}</div>
+          <div style={{ fontSize: 'var(--type-base-plus)', fontWeight: 600, lineHeight: 'var(--leading-tight-plus)' }}>{c.q}</div>
           <div style={{ fontSize: 'var(--type-base-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginTop: 'var(--sp-1)' }}>{c.a}</div>
         </div>
       ))}
