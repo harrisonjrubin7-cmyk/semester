@@ -94,10 +94,10 @@ student instead, which is a worse experience and an honest one.
 
 ### What reaches a screen, and what does not — read this before exporting
 
-Two of the branches below are **stored and read back correctly, and rendered
-by nothing yet**. They are documented because the format carries them, not
-because we are asking for them, and a university should not spend an
-afternoon on either:
+Every branch below now reaches a screen. Two of them did not when this page
+was first written, and both said so here; they are named again at the bottom
+of this section so that a partner who read the earlier version knows what
+changed.
 
 | Branch | Reaches a screen? |
 | --- | --- |
@@ -106,14 +106,21 @@ afternoon on either:
 | `housing` | **Yes** — the move-out date |
 | `gradeSystem` | **Yes** — grade cutoffs and the term GPA band |
 | `athleticsFeedUrl` | **Yes** — Connect |
-| `buildings` | **No.** The campus map searches OpenStreetMap live, biased to a box around campus, so it does not need a bundled list. Sending one is not wrong; it is just not read yet |
-| `gradingNotes` | **No.** Carried and stored, rendered nowhere at present |
+| `buildings` | **Yes** — Getting there. A room named on a syllabus is placed from this list, so classes have coordinates before anybody has saved a thing |
+| `gradingNotes` | **Yes** — printed beside the grade scale, in your own words and attributed to you |
 
 This list is a measurement, not a promise about the future — it was taken by
 grepping `app/src` for each field. If you are deciding where to spend an
 hour, spend it on `academicCalendar`: it is the branch with the most rows,
 the shortest shelf life, and the only one whose mistakes cost a student
 money.
+
+**What changed, for anybody holding an earlier copy of this page.**
+`gradingNotes` was "carried and stored, rendered nowhere at present" and is
+now printed under the grade scale. `buildings` was "the campus map searches
+OpenStreetMap live… it is just not read yet", and that is no longer true: the
+map asks your own saved places first, then this list, and only then offers to
+search. A campus whose buildings are in the pack needs no lookup at all.
 
 ### `academicCalendar`
 
@@ -155,7 +162,8 @@ registration for next term opens.
 
 ### `buildings`
 
-**Not rendered yet** — see the table above before spending time here.
+What puts a class on the map on the first morning, before a student has saved
+anything.
 
 ```jsonc
 "buildings": [{ "name": "Featheringill Hall", "abbr": "FGH", "lat": 36.1447, "lng": -86.8027 }]
@@ -166,6 +174,23 @@ exactly `0, 0` is refused and reported: that is the Gulf of Guinea, and it is
 what an unfilled spreadsheet column becomes when a coordinate field is
 exported as a number. A pin in the ocean is the one failure a student cannot
 read as missing data.
+
+**How a room is matched to a row.** A syllabus writes "Featheringill 201" or
+"FGH 201" or "Commons 363A", and the part before the first number is taken as
+the building. That is compared against `name` in either direction but only on
+a whole word — "Featheringill" finds "Featheringill Hall" and vice versa,
+while "F 100" finds nothing — and against `abbr` exactly. Send the `abbr` your
+students actually write; it is the form most likely to appear on a timetable.
+
+**A student's own saved place always wins.** Somebody who has stood outside a
+building and named it has a coordinate they checked, and importing a pack
+never moves it. Your list answers for every building they have not done that
+for, which on day one is all of them.
+
+**A building you leave out is not a broken pack.** The room simply has no
+coordinate, says so, and offers to search for it — the behaviour every campus
+had before any of this existed. Partial lists are useful; send what the
+estates team already has.
 
 ### `mealPlanTiers`
 

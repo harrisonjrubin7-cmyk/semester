@@ -37,7 +37,7 @@ import { clockOf } from '../lib/atrisk';
 import { nowAt, readDay, worthMarking } from '../lib/rail';
 import { said } from '../lib/arrive';
 import { campusHours, datedEvents, datedItems } from '../lib/select';
-import { overdueCount } from '../lib/standing';
+import { overdueCount, claimed } from '../lib/standing';
 import { ordered, sectionLabel, visible } from '../lib/feed';
 import { MOVE_HINT, useMovable } from '../lib/arrange';
 import { line, pressing, standing } from '../lib/registrar';
@@ -239,11 +239,31 @@ function YourTasks() {
  * dropped it, and the only signal was a count going down — which looks
  * identical to finishing everything. This says the number out loud on the
  * screen you open first, and goes straight to the list of them.
+ *
+ * ## Only what is actually yours
+ *
+ * It used to count the shipped semester's deadlines too, so a first run
+ * opened on "14 deadlines went by without being ticked off" — warning
+ * coloured, above everything else, about a term the visitor had never seen
+ * and had not yet been asked whether they wanted. Seen on the deployed site.
+ *
+ * `claimed` in `lib/standing.ts` holds the rule and says why; the short
+ * version is that `state.sample` is the "these are mine / not mine" question
+ * still being open, and a deadline belonging to nobody is not a deadline
+ * anybody missed. Answering it — either way — makes this the plain count
+ * again.
  */
 function OverdueBanner() {
   const { state, dispatch, catalog } = useStore();
   const now = useNow();
-  const missed = overdueCount(datedItems(catalog, now), state.done);
+  const missed = overdueCount(
+    claimed(
+      datedItems(catalog, now),
+      state.courses.map((c) => c.course.id),
+      state.sample,
+    ),
+    state.done,
+  );
   if (missed === 0) return null;
 
   return (

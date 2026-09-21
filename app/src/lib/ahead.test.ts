@@ -327,3 +327,66 @@ describe('showHours', () => {
     expect(showHours(4)).toBe('4 hours');
   });
 });
+
+/**
+ * A season is promised hours, and a trip is not one day.
+ *
+ * The three claims worth holding. A practice takes its own hours out of the
+ * evening it sits in; a four-day bus trip takes four days out, clipped at both
+ * ends, rather than 76 hours out of the Thursday it left on; and every hour it
+ * takes comes off the hours there are, because `spare` is what is left of the
+ * windows after everything promised.
+ *
+ * Reverted against `week` without `athletics` in its sum, the first three go
+ * red and the fourth does not — which is what makes it the control: a student
+ * with no season entered gets the week they always got, and a probe that
+ * failed on them too would be measuring something other than the season.
+ */
+describe('a season in the week', () => {
+  const trip = (over: Partial<{ start: string; end: string }> = {}) => ({
+    id: 't',
+    title: 'Away meet',
+    team: 'Track',
+    kind: 'Travel' as const,
+    start: '2026-09-04T16:00',
+    end: '2026-09-07T08:00',
+    where: '',
+    notes: '',
+    steps: [],
+    ...over,
+  });
+
+  it('counts a practice as hours promised, like any other commitment', () => {
+    const w = week(
+      input({ athletics: [trip({ start: '2026-09-04T16:00', end: '2026-09-04T18:30' })] }),
+    );
+    expect(w.promised).toBe(2.5);
+    expect(w.days[1].athletics).toBe(2.5);
+    expect(w.days[0].athletics).toBe(0);
+  });
+
+  it('spreads a trip across the days it touches, clipped at both ends', () => {
+    const w = week(input({ athletics: [trip()] }));
+    // Fri from 16:00 is 8, Sat and Sun whole, Mon to 08:00 is 8.
+    expect(w.days.map((d) => d.athletics)).toEqual([0, 8, 24, 24, 8, 0, 0]);
+    expect(w.promised).toBe(64);
+  });
+
+  it('takes those hours off the hours there are', () => {
+    const before = week(input()).spare;
+    const after = week(input({ athletics: [trip()] })).spare;
+    expect(after).toBeLessThan(before);
+    /*
+     * 48, not the trip's 64. A day cannot lose more hours than it offers, and
+     * with no windows set the offer is a sixteen-hour day: Friday loses its 8,
+     * Saturday and Sunday lose 16 each of their 24, Monday loses its 8. Which
+     * is the arithmetic being asserted — a trip that swallowed 24 hours out of
+     * a 16-hour day would drive `spare` negative.
+     */
+    expect(Math.round(before - after)).toBe(8 + 16 + 16 + 8);
+  });
+
+  it('changes nothing for a student who has entered no season', () => {
+    expect(week(input({ athletics: [] }))).toEqual(week(input()));
+  });
+});

@@ -21,10 +21,11 @@
 --     SQL
 --     psql -v ON_ERROR_STOP=1 -d semester_check -f supabase/classmates.check.sql
 --
--- The grants come after the migrations because they are `on all tables`, and
--- there are no tables until the migrations have run. Supabase applies the
--- equivalent as default privileges on `public`, which is why nothing in
--- `migrations/` grants them itself.
+-- The schema and `auth.users` grants come after the migrations. The table
+-- privileges no longer do: they are set as default privileges below, before
+-- any migration runs, which is how Supabase applies them and the only way a
+-- revoke inside a migration can survive to be checked. See the note above
+-- `alter default privileges … on tables`.
 
 create extension if not exists pgcrypto with schema public;
 create schema if not exists extensions;
@@ -72,6 +73,31 @@ end $$;
 -- hole this now makes visible.
 alter default privileges in schema public
   grant execute on functions to anon, authenticated, service_role;
+
+-- And the same for tables, which is the other half and was missing for the
+-- same reason the function half was.
+--
+-- `check.sh` used to model this as `grant all on all tables in schema public`
+-- run *after* the migrations, and the header of this file used to say it could
+-- not be done here because "there are no tables until the migrations have
+-- run". That is true of `grant on all tables` and irrelevant to
+-- `alter default privileges`, whose entire purpose is to apply to objects that
+-- do not exist yet — which is exactly the argument that moved the function
+-- grant into this file.
+--
+-- The difference is not cosmetic. A blanket grant after the migrations hands
+-- back every table privilege a migration deliberately revoked, so the harness
+-- could not see a relation-level revoke succeed or fail: it erased the
+-- evidence either way. `20260921143455_forms.sql` was applied to the live
+-- project with `public.published_forms` — an auto-updatable view with the
+-- definer's rights — writable by `anon`, and no suite here could have caught
+-- it, because in this harness `anon` was handed ALL on that view after the
+-- migration that was supposed to have taken it away.
+--
+-- Placed before the migrations, a revoke in a migration now sticks, exactly as
+-- it does on the live project. `grants.check.sql` is what reads the result.
+alter default privileges in schema public
+  grant all on tables to anon, authenticated, service_role;
 
 -- Only the columns the check suites actually write. A real `auth.users` has
 -- many more, and none of them are reachable from a policy in this schema.

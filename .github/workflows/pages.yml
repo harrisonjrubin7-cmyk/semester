@@ -68,7 +68,7 @@ jobs:
       # `workflow_dispatch` there is no triggering run and this is empty,
       # which checks out the default branch — the intended behaviour for a
       # hand-started deploy.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
 
@@ -76,7 +76,7 @@ jobs:
       # Build and deployment → Source: GitHub Actions. A workflow token is not
       # allowed to create the site ("Resource not accessible by integration"),
       # so asking it to would only fail on every run.
-      - uses: actions/configure-pages@v5
+      - uses: actions/configure-pages@v6
         id: pages
 
       - uses: actions/setup-node@v4
@@ -208,6 +208,23 @@ jobs:
             echo "::notice title=University::No VITE_UNIVERSITY_GATEWAY_URL, so the University screen will say no approved connection has been configured."
           fi
 
+          # Both halves or neither. One without the other is not a partial
+          # configuration, it is a build that contradicts itself: the address
+          # alone made `sharedEndpoint()` look present, so the assistant told
+          # people to sign in while Classmates said there is no account
+          # service to sign in to, and the Sign in button on Group work led to
+          # a screen saying the same. `lib/assistant.ts` no longer reads the
+          # address without the key, so the sentences are true either way —
+          # this stops the half-configured build existing in the first place,
+          # because it is a deploy nobody meant to make.
+          if [ -n "$VITE_SUPABASE_URL" ] && [ -z "$VITE_SUPABASE_KEY" ]; then
+            echo "::error title=Accounts::VITE_SUPABASE_URL is set and VITE_SUPABASE_KEY is not. Accounts and the shared key both need the pair, so this build would have neither. Set VITE_SUPABASE_KEY, or unset VITE_SUPABASE_URL to build device-only."
+            exit 1
+          fi
+          if [ -z "$VITE_SUPABASE_URL" ] && [ -n "$VITE_SUPABASE_KEY" ]; then
+            echo "::error title=Accounts::VITE_SUPABASE_KEY is set and VITE_SUPABASE_URL is not. Set VITE_SUPABASE_URL, or unset VITE_SUPABASE_KEY to build device-only."
+            exit 1
+          fi
           if [ -n "$VITE_SUPABASE_URL" ] && [ -n "$VITE_SUPABASE_KEY" ]; then
             echo "::notice title=Accounts::Supabase configured (url ${#VITE_SUPABASE_URL} chars, key ${#VITE_SUPABASE_KEY} chars) — this build has accounts."
           else
@@ -244,9 +261,9 @@ jobs:
       - name: Fall back to the app on unknown paths
         run: cp app/dist/index.html app/dist/404.html
 
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: app/dist
 
-      - uses: actions/deploy-pages@v4
+      - uses: actions/deploy-pages@v5
         id: deployment

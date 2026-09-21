@@ -46,7 +46,10 @@ beforeEach(() => {
   window.localStorage.clear();
   setSessionToken(null);
   vi.unstubAllEnvs();
+  // The pair, because `sharedEndpoint()` needs both halves — an address with
+  // no key names a function nothing can authenticate to. See `cloudsplit.test.ts`.
   vi.stubEnv('VITE_SUPABASE_URL', 'https://example.supabase.co');
+  vi.stubEnv('VITE_SUPABASE_KEY', 'sb_publishable_test');
   saveSettings({ ...settings(), apiKey: '', proxy: '', provider: 'anthropic' });
 });
 

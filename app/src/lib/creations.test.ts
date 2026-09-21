@@ -354,6 +354,37 @@ describe('a design as SVG', () => {
     expect(out).toContain('<image');
   });
 
+  /*
+   * A chart in the file is the same chart as on screen, because both come out
+   * of `chartShapes`. What is asserted here is that the export renders those
+   * marks at all — the geometry is `chartlayer.test.ts`'s business.
+   */
+  it('draws a chart layer into the document, with its words escaped', () => {
+    const d = canvas();
+    // Two series, so there is a legend and the name is really drawn. With one
+    // the series name is never text in the document, and the first version of
+    // this asserted an escape of something that was never written.
+    d.layers = [{ ...newLayer('chart', d), text: 'Week\t<b>Marks</b>\tLate\n1\t70\t4\n2\t80\t2', w: 600, h: 400 }];
+    const out = designSvg(d);
+    expect(out).toContain('<rect');
+    expect(out).not.toContain('<b>Marks</b>');
+    expect(out).toContain('&lt;b&gt;Marks&lt;/b&gt;');
+  });
+
+  it('draws nothing for a chart whose table cannot be read', () => {
+    const d = canvas();
+    d.layers = [{ ...newLayer('chart', d), text: 'nonsense' }];
+    // Not a broken picture and not a stray box: nothing, and the panel says
+    // why. A chart that cannot be read has nothing honest to draw.
+    expect(designSvg(d)).not.toContain('<g');
+  });
+
+  it('never gives a chart a gradient, its series carrying the colour', () => {
+    const d = canvas();
+    d.layers = [{ ...newLayer('chart', d), w: 600, h: 400, gradient: { to: '#ffffff', angle: 0 } }];
+    expect(designSvg(d)).not.toContain('linearGradient');
+  });
+
   it('fades every kind of layer, not only the shapes', () => {
     // Four separate attributes in four branches of one function, which is
     // exactly the shape of code where one gets missed.
@@ -549,6 +580,19 @@ describe('a creation library', () => {
     const p = newCreation('design');
     p.notes = Array.from({ length: NOTE_LIMIT + 1 }, (_, i) => pinned(`n${i}`));
     expect(() => lib(p)).toThrow(/notes/i);
+  });
+
+  it('reads a design saved before a layer could be a chart', () => {
+    const p = newCreation('design');
+    p.design.layers = [newLayer('rectangle', p.design)];
+    delete (p.design.layers[0] as Partial<DesignLayer>).chartKind;
+    expect(readCreations({ version: 1, projects: [p] }).projects[0].design.layers[0].chartKind).toBe('column');
+  });
+
+  it('refuses a chart kind it cannot draw', () => {
+    const p = newCreation('design');
+    p.design.layers = [{ ...newLayer('chart', p.design), chartKind: 'donut' as DesignLayer['chartKind'] }];
+    expect(() => lib(p)).toThrow(/layer/i);
   });
 
   it('refuses an opacity outside the range the editor can reach', () => {

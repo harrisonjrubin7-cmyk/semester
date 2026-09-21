@@ -284,6 +284,23 @@ export function missed(apps: Application[], now: Date): Standing[] {
   return standing(apps, now).filter((s) => s.daysAway < 0);
 }
 
+/**
+ * Everything sent and unanswered for longer than most processes take.
+ *
+ * Longest silence first, because that is the one ordering the facts support —
+ * thirty-five days is a bigger number than twenty-two, and nothing here says
+ * which of the two is more worth chasing. The app knows the number of days and
+ * stops; whether that means a nudge, a different employer or nothing at all is
+ * not something a tracker can tell from a stage and a date.
+ *
+ * `quiet` is the same predicate the expanded row on `screens/Applying.tsx`
+ * already draws with and the same one `summary` counts, which is what keeps
+ * the figure on Today and the sentence in the tracker from disagreeing.
+ */
+export function quietOnes(apps: Application[], now: Date): Application[] {
+  return apps.filter((a) => quiet(a, now)).sort((a, b) => daysInStage(b, now) - daysInStage(a, now));
+}
+
 /** "Summer Analyst at Goldman Sachs", or whichever half was filled in. */
 export function title(a: Application): string {
   if (a.role && a.org) return `${a.role} at ${a.org}`;

@@ -1005,6 +1005,16 @@ export interface Ephemeral {
   quiz: QuizQuestion[];
   quizIdx: number;
   quizPicked: number | null;
+  /**
+   * On a matching question, which right-hand side each left is joined to.
+   *
+   * Keyed by index into `pairs`, valued by index into `pairs` — so a correct
+   * join is `key === value`, and the marking needs no second copy of the
+   * answer. Cleared by `nextQuestion` and `startQuiz`, like the rungs.
+   */
+  quizJoins: Record<number, number>;
+  /** The left-hand side waiting for a definition, if one is selected. */
+  quizHolding: number | null;
   quizScore: number;
   quizSeed: number;
   /**
@@ -1037,11 +1047,47 @@ export interface Ephemeral {
   removedCourses: string[];
 }
 
+/**
+ * What a quiz question is asking you to do.
+ *
+ * `choice` was the only one for a long time, and the type carried no `kind`
+ * at all — a `QuizQuestion` was structurally a four-option multiple choice
+ * and nothing else. `docs/STUDY_REQUIREMENTS.md` has asked for the other two
+ * since before the app had a quiz screen.
+ */
+export type QuizKind = 'choice' | 'truefalse' | 'match';
+
+/** One term and the definition it belongs to, in a matching question. */
+export interface QuizPair {
+  left: string;
+  right: string;
+}
+
 export interface QuizQuestion {
+  kind: QuizKind;
   q: string;
   unit: string;
   full: string;
+  /** The options to pick between. Two on a true-or-false, none on a match. */
   opts: { text: string; ok: boolean }[];
+  /**
+   * The answer a true-or-false statement proposes, which may not be the right
+   * one. Kept apart from `q` so the screen can draw it as a claim being made
+   * rather than as part of the question, and apart from `full`, which stays
+   * the real answer and is what gets revealed either way.
+   */
+  claim?: string;
+  /** The pairs to join up, in their true order. Only on a match. */
+  pairs?: QuizPair[];
+  /**
+   * The order the right-hand column is drawn in, as indexes into `pairs`.
+   *
+   * The scramble is stored rather than re-rolled at render time: a question
+   * whose options move under the student between two renders of the same
+   * question is a different question each time, and React re-renders this
+   * screen on every tap.
+   */
+  shown?: number[];
 }
 
 export type State = Persisted & Ephemeral;
@@ -1520,6 +1566,8 @@ export function initialEphemeral(): Ephemeral {
     quiz: [],
     quizIdx: 0,
     quizPicked: null,
+    quizJoins: {},
+    quizHolding: null,
     quizScore: 0,
     quizSeed: 1,
     quizRungs: 0,
@@ -2188,6 +2236,10 @@ export type Action =
   /** One more rung of the hint ladder on the question showing. */
   | { type: 'takeHint' }
   | { type: 'pickAnswer'; index: number }
+  /** Pick up a term on a matching question, or put the held one down. */
+  | { type: 'holdTerm'; index: number | null }
+  /** Join the held term to this definition, both indexes into `pairs`. */
+  | { type: 'joinTerm'; right: number }
   | { type: 'nextQuestion' }
   | { type: 'setCalView'; view: 'day' | 'week' | 'month' | 'semester' }
   | { type: 'setReport'; grain: ReportGrain }
@@ -2430,7 +2482,7 @@ export type Action =
   | { type: 'failFeed'; id: string; status: string }
   | { type: 'removeFeed'; id: string }
   | { type: 'setLinkUrl'; id: string; url: string }
-  | { type: 'addLink'; name: string; url: string }
+  | { type: 'addLink'; name: string; url: string; group?: string }
   | { type: 'removeLink'; id: string }
   | { type: 'addCourse'; module: CourseModule }
   /**

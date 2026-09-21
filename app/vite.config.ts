@@ -478,6 +478,90 @@ const claudeProxy = (key: string) => ({
 })
 
 /**
+ * The Content-Security-Policy's two moving parts.
+ *
+ * The policy itself is in `index.html`, where it can be read, and that header
+ * explains what it covers and what a <meta> tag cannot. Two things about it
+ * cannot live in a static file, and they are here.
+ *
+ * ## The origins a deployment adds
+ *
+ * Four build variables name a host this repository cannot know: the Supabase
+ * project URL, the proxy the assistant talks to, the proxy that fetches a
+ * calendar, and the university gateway. `pages.yml` reads all four from
+ * repository variables. A policy that hardcoded a guess at them — `*.supabase.co`
+ * and nothing else — would be correct for the deployment that exists today and
+ * would switch those features off, silently and from the browser, for a fork
+ * or a move to another host. That is the failure mode this repository keeps
+ * finding: not an error, but a feature that looks switched off on purpose.
+ *
+ * So the origins come from whatever is actually configured. Only the origin —
+ * scheme, host and port — because that is all a CSP source is; the path a
+ * variable carries is dropped. Only https, because a policy admitting http is
+ * a policy with a hole in it, and a variable pointing at http in a deployed
+ * build is a bug worth failing loudly rather than accommodating. A value that
+ * is a bare path (`/anthropic`, which is what the dev server sets) is already
+ * covered by `'self'` and adds nothing.
+ *
+ * The Supabase URL also contributes its `wss:` form. supabase-js opens a
+ * websocket for realtime, and `connect-src` governs it — a policy that allows
+ * the REST origin and not the socket fails in a way that looks like the
+ * network being slow.
+ */
+function cspExtraConnect(read: (name: string) => string | undefined): string {
+  const out = new Set<string>()
+  const supabase = 'VITE_SUPABASE_URL'
+  for (const name of [
+    supabase,
+    'VITE_CLAUDE_PROXY',
+    'VITE_ICS_PROXY',
+    'VITE_OAUTH_PROXY',
+    'VITE_UNIVERSITY_GATEWAY_URL',
+  ]) {
+    const value = (read(name) ?? '').trim()
+    // A bare path is same-origin, which `'self'` already allows.
+    if (!value || value.startsWith('/')) continue
+    let url: URL
+    try {
+      url = new URL(value)
+    } catch {
+      continue
+    }
+    if (url.protocol !== 'https:') continue
+    out.add(url.origin)
+    if (name === supabase) out.add(`wss://${url.host}`)
+  }
+  return [...out].sort().join(' ')
+}
+
+/**
+ * The policy, taken back out again while developing.
+ *
+ * `@vitejs/plugin-react` injects its refresh preamble into the page as an
+ * inline <script>, and `script-src 'self'` refuses an inline script by
+ * definition. Left in place, `npm run dev` opens to a blank page and a console
+ * message — which is a worse outcome than the policy is worth, because the dev
+ * server is not a thing anybody can reach.
+ *
+ * `vite preview` is a build and keeps the tag, so the arrangement CI opens
+ * cold is the arrangement a student gets. That is the one that matters and it
+ * is the one that is checked.
+ *
+ * `order: 'pre'` so this runs before Vite's own `%VITE_…%` substitution, which
+ * would otherwise spend a moment resolving a tag that is about to be deleted.
+ */
+const csp = (serving: boolean) => ({
+  name: 'csp',
+  transformIndexHtml: {
+    order: 'pre' as const,
+    handler: (html: string) =>
+      serving
+        ? html.replace(/[ \t]*<meta\s+http-equiv="Content-Security-Policy"[\s\S]*?\/>\n?/i, '')
+        : html,
+  },
+})
+
+/**
  * The test files that must keep a module registry of their own.
  *
  * Every one of these calls `vi.mock`, and a mock can only rebind a module the
@@ -504,6 +588,7 @@ const MOCKS_MODULES = [
   'src/components/TermChoice.test.tsx',
   'src/components/gpascalenote.test.tsx',
   'src/lib/extract.test.ts',
+  'src/lib/extractaccuracy.test.ts',
   'src/lib/referral.test.ts',
   'src/lib/generate.test.ts',
   'src/lib/presence.test.ts',
@@ -511,6 +596,7 @@ const MOCKS_MODULES = [
   'src/screens/call/consent.ui.test.tsx',
   'src/screens/addmaterial.test.tsx',
   'src/screens/pathway.test.tsx',
+  'src/screens/pathwaygrid.test.tsx',
   'src/screens/solvephoto.test.tsx',
   'src/screens/university.test.tsx',
   'src/state/deeplink.test.tsx',
@@ -557,6 +643,23 @@ export default defineConfig(({ command, mode }) => {
   process.env.VITE_BUILD_ID ??= Date.now().toString(36)
 
   /*
+   * The origins the policy in `index.html` gains from this deployment's
+   * configuration. Set here for the reason `VITE_BUILD_ID` above is: Vite runs
+   * this function before it reads the environment, so a `VITE_`-prefixed name
+   * put on `process.env` here is one `%VITE_CSP_EXTRA_CONNECT%` in the HTML
+   * resolves against.
+   *
+   * Always assigned, never `??=`. An unresolved `%VITE_…%` is left in the page
+   * verbatim, and a stray percent sign inside `connect-src` is a source
+   * expression the browser cannot parse — it would be ignored rather than
+   * fatal, but a policy nobody can read is a policy nobody maintains. Empty is
+   * the honest value when nothing is configured.
+   */
+  process.env.VITE_CSP_EXTRA_CONNECT = cspExtraConnect(
+    (name) => process.env[name] ?? local[name],
+  )
+
+  /*
    * With a key on the server, point the app at the proxy holding it — unless
    * whoever is running this named a proxy of their own, which is the production
    * shape and wins.
@@ -591,7 +694,14 @@ export default defineConfig(({ command, mode }) => {
     // workflow sets VITE_BASE; everywhere else this stays '/' and nothing about
     // development changes.
     base: process.env.VITE_BASE ?? '/',
-    plugins: [react(), icsProxy(), canvasProxy(), appleToken(), claudeProxy(anthropicKey)],
+    plugins: [
+      react(),
+      csp(command === 'serve'),
+      icsProxy(),
+      canvasProxy(),
+      appleToken(),
+      claudeProxy(anthropicKey),
+    ],
     /*
      * The test suite, which had no configuration at all and was paying for it.
      *
