@@ -11,7 +11,7 @@ import { allCards } from '../../data/catalog';
 import { DOW, DOW_INITIALS, dateToIso } from '../../lib/date';
 import { liveGuide } from '../../lib/live';
 import { learned, showSpan } from '../../lib/pace';
-import { cardKey, comeRound, neverMet, tallyKeys } from '../../lib/review';
+import { cardIdentity, comeRound, neverMet, tallyKeys } from '../../lib/review';
 import { inTime, testsNear } from '../../lib/intime';
 import { datedItems, loadByCourse } from '../../lib/select';
 import {
@@ -143,7 +143,7 @@ export function You() {
    */
   const cards = useMemo(() => {
     const keys = catalog.courses.flatMap((c) =>
-      allCards(liveGuide(catalog, c.id, state.updates, state.reviews)).map((q) => cardKey(c.id, q.q)),
+      allCards(liveGuide(catalog, c.id, state.updates, state.reviews)).map((card) => cardIdentity(c.id, card)),
     );
     const t = tallyKeys(keys, state.reviews);
     // The same schedule the drill deals from, so this row and that screen
