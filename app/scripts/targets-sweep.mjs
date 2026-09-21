@@ -21,8 +21,29 @@
  *
  * A number nobody can retake goes stale without anybody noticing it has, and
  * this one went further than stale: it was never a measurement of the thing it
- * named. Every figure this prints says which screen, which tier and which
- * criterion, for that reason.
+ * named. Every figure this prints says which screen, which tier, which
+ * density and which criterion, for that reason.
+ *
+ * ## The density, which every earlier figure left out
+ *
+ * This script seeded no density, so it ran at Comfortable — and Comfortable
+ * is the loosest of the three, where a target is at its largest. Every figure
+ * it printed before this was true and was about one third of the app's
+ * readers.
+ *
+ * Measured across all three the first time it could be: **0 controls under
+ * the AA minimum at Comfortable, 20 at Snug, 33 at Tight** on a phone; 0, 21
+ * and 36 on a desktop. The setting has been costing targets the whole time
+ * and nothing here could see it.
+ *
+ * The mechanism is worth naming, because it is not the obvious one. The
+ * controls that fail are not smaller boxes — a folding heading measures 25.44
+ * pixels tall at Comfortable and 25.44 at Tight, its padding being real pixels
+ * for exactly this reason. What shrinks is the space *between* them, so a
+ * neighbour's hit area reaches in and takes two pixels off the top of one
+ * that is otherwise fine. `366x25 → 367x23` is that, and it is the pair this
+ * file's header already says to read: the drawing did not change and the tap
+ * did.
  *
  * ## Why this is a browser and not a test
  *
@@ -108,6 +129,40 @@ const BASE = process.env.SWEEP_URL || 'http://localhost:5173/';
 const CHROME = process.env.SWEEP_CHROMIUM || '/opt/pw-browsers/chromium';
 /** Narrow the run while working on the sweep itself; unset means everything. */
 const ONLY = process.env.SWEEP_SCREENS?.split(',').map((s) => s.trim()).filter(Boolean);
+
+/*
+ * The third dimension, and the one this sweep was missing.
+ *
+ * `lib/look.ts` lets a reader choose how much space sits between rows, and
+ * every spacing token in the app is multiplied by it: Comfortable 1, Snug
+ * 0.86, Tight 0.74. This script seeded no density at all, so every figure it
+ * has ever printed is a figure about Comfortable — the loosest of the three,
+ * and the one where a target is at its largest.
+ *
+ * That is not a small gap. A hit area written as a density-scaled value
+ * passes here and shrinks for a reader on Tight with nothing going red, which
+ * is exactly what happened: `components/Fold.tsx` carried a comment recording
+ * that reading its tap reach off `--sp-3` put every folding heading at 23px
+ * against a floor of 24, a sweep turned it back into `calc(6px * …)`, and this
+ * script was green the whole time because it never asked the question.
+ *
+ * So density is measured the way the tier already is, and for the reason the
+ * header gives about tiers: a figure from one is not a figure about the other.
+ *
+ * Kept in step with `DENSITIES` in `app/src/lib/look.ts` by
+ * `src/styles/sweepdensity.test.ts`, because a list of settings copied into a
+ * script is a list that goes stale the moment a fourth is added.
+ */
+const DENSITIES = [
+  { id: 'comfortable', label: 'Comfortable', scale: 1 },
+  { id: 'snug', label: 'Snug', scale: 0.86 },
+  { id: 'tight', label: 'Tight', scale: 0.74 },
+];
+
+/** One density while working on the sweep itself; unset means all three. */
+const DENSITY_ONLY = process.env.SWEEP_DENSITY?.trim();
+const densities = () =>
+  DENSITY_ONLY ? DENSITIES.filter((d) => d.id === DENSITY_ONLY) : DENSITIES;
 
 /*
  * The two thresholds, and why there are two.
@@ -552,14 +607,15 @@ const MEASURE = `(() => {
   };
 })()`;
 
-async function sweep(browser, label, width, height) {
+async function sweep(browser, tier, width, height, density) {
+  const label = `${tier} · ${density.label}`;
   const ctx = await browser.newContext({ viewport: { width, height }, deviceScaleFactor: 1 });
-  await ctx.addInitScript(() => {
+  await ctx.addInitScript((id) => {
     localStorage.setItem(
       'semester.v1',
-      JSON.stringify({ schemaVersion: 6, shell: 'soft', nav: 'springboard' }),
+      JSON.stringify({ schemaVersion: 6, shell: 'soft', nav: 'springboard', density: id }),
     );
-  });
+  }, density.id);
   const page = await ctx.newPage();
   const broke = [];
   page.on('pageerror', (e) => broke.push(String(e)));
@@ -570,10 +626,37 @@ async function sweep(browser, label, width, height) {
   if (await skip.count()) await skip.click().catch(() => {});
   await page.waitForTimeout(1000);
 
+  /*
+   * That the density actually arrived, before anything is measured under it.
+   *
+   * A seed that does not take is the worst failure this script could have: it
+   * would run three times, draw Comfortable three times, print three
+   * identical figures under three different headings, and look like proof
+   * that density costs nothing. `lib/look.ts` writes the scale onto the root
+   * as `--density`, so that is what gets read back — the applied value, not
+   * the value that was asked for.
+   *
+   * The same argument as the instrument below, one setting up: point the
+   * probe at the fault it is meant to see before trusting the run it is in.
+   */
+  const applied = await page.evaluate(() =>
+    Number(getComputedStyle(document.documentElement).getPropertyValue('--density')),
+  );
+  if (!(Math.abs(applied - density.scale) < 0.001)) {
+    console.error(
+      `\n  ${label}: asked for density ${density.id} (${density.scale}) and the page is drawing ` +
+        `${applied || 'nothing'}. The seed did not take, so every figure below would be about ` +
+        `Comfortable wearing another name.`,
+    );
+    await ctx.close();
+    process.exitCode = 3;
+    return null;
+  }
+
   const known = await page.evaluate(CONTROLS);
   const lying = instrument(known);
   console.log(
-    `\n═══ ${label} — ${width}×${height} ═══\n` +
+    `\n═══ ${label} — ${width}×${height}, --density ${applied} ═══\n` +
       `  the instrument: 44×44 read ${known.big.w}×${known.big.h} · ` +
       `10×10 read ${known.small.w}×${known.small.h} · ` +
       `60×20 in tap-y read ${known.overlaid.w}×${known.overlaid.h}\n` +
@@ -699,21 +782,64 @@ async function sweep(browser, label, width, height) {
   }
   if (broke.length) console.log(`\n  pageerrors: ${broke.slice(0, 3).join(' | ')}`);
   await ctx.close();
-  return { smalls, controls, tinies, aa, blocked };
+  return { tier, density, smalls, controls, tinies, aa, blocked };
 }
 
 const browser = await chromium.launch({
   ...(CHROME ? { executablePath: CHROME } : {}),
   args: ['--no-sandbox'],
 });
-const phone = await sweep(browser, 'phone', 420, 900);
-const desktop = await sweep(browser, 'desktop', 1280, 900);
+const TIERS = [
+  { tier: 'phone', width: 420, height: 900 },
+  { tier: 'desktop', width: 1280, height: 900 },
+];
+
+const runs = [];
+for (const density of densities()) {
+  for (const { tier, width, height } of TIERS) {
+    runs.push(await sweep(browser, tier, width, height, density));
+  }
+}
 await browser.close();
 
-if (phone && desktop) {
-  console.log(
-    `\nunder ${TARGET}px (AAA): phone ${phone.smalls}/${phone.controls} · desktop ${desktop.smalls}/${desktop.controls}` +
-      `\nunder ${AA}px (AA):  phone ${phone.aa}/${phone.controls} · desktop ${desktop.aa}/${desktop.controls}` +
-      `\nunreachable:      phone ${phone.blocked} · desktop ${desktop.blocked}`,
-  );
+const got = runs.filter(Boolean);
+if (got.length === runs.length && got.length) {
+  const cell = (r, pick) => `${pick(r)}/${r.controls}`;
+  const line = (title, pick) => {
+    const by = new Map();
+    for (const r of got) by.set(`${r.tier}`, [...(by.get(r.tier) ?? []), r]);
+    const parts = [...by.entries()].map(
+      ([tier, rs]) => `${tier} ${rs.map((r) => `${r.density.label} ${cell(r, pick)}`).join(' · ')}`,
+    );
+    return `\n${title}\n  ${parts.join('\n  ')}`;
+  };
+  console.log(line(`under ${TARGET}px (AAA) — an aim`, (r) => r.smalls));
+  console.log(line(`under ${AA}px (AA) — the failure`, (r) => r.aa));
+
+  /*
+   * The delta, said out loud.
+   *
+   * The per-run blocks above each answer "how is it at this density"; the one
+   * question none of them answers is the one this whole dimension was added
+   * for — what the setting *costs*. A reader scanning six blocks for a number
+   * that grew is a reader who will miss it, so the growth is computed here
+   * and a clean sweep says so in one line.
+   */
+  const base = got.filter((r) => r.density.id === 'comfortable');
+  const worst = got.filter((r) => r.density.id !== 'comfortable');
+  const grew = worst
+    .map((r) => {
+      const was = base.find((b) => b.tier === r.tier);
+      return was && r.aa > was.aa ? `${r.tier} ${was.density.label} ${was.aa} → ${r.density.label} ${r.aa}` : '';
+    })
+    .filter(Boolean);
+  if (base.length && worst.length) {
+    console.log(
+      grew.length
+        ? `\nthe setting costs targets: ${grew.join(' · ')}\n` +
+            `  Every one of those is a control a reader on a tighter screen cannot reliably hit,\n` +
+            `  and it is invisible at Comfortable — which is the only density this sweep used to run.`
+        : `\nthe setting costs no targets: the AA count is the same at every density measured.`,
+    );
+  }
 }
