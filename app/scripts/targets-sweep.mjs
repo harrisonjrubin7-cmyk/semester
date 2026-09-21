@@ -246,6 +246,19 @@ const HITTEST = `
   const AA = ${AA};
   const TYPE = ${TYPE};
   const seen = (el) => el.checkVisibility ? el.checkVisibility() : true;
+  /*
+   * Inert is not small, and it is not covered either: it is withdrawn.
+   *
+   * An element inside an 'inert' subtree takes no pointer, takes no focus
+   * and is not in the accessibility tree, so 2.5.8 has nothing to ask about
+   * it — there is no target. Counting one is how an author who has correctly
+   * withdrawn a control gets a failure for it.
+   *
+   * Deliberately not folded into 'seen', which the type pass also uses:
+   * inert text is still drawn and still read by whoever is looking at it, so
+   * it stays in the type count. Only the two control loops ask this.
+   */
+  const live = (el) => !el.closest('[inert]');
   const name = (el) => {
     const cls = (el.getAttribute('class') || '').trim().split(/\\s+/)[0] || '';
     return el.tagName.toLowerCase() + (cls ? '.' + cls : '');
@@ -492,6 +505,16 @@ const MEASURE = `(() => {
   const small = new Map();
   const under = new Map();
   const covered = new Map();
+  /*
+   * The ones that answer nowhere, by name.
+   *
+   * There was a count and no list, which is the complaint the AA list's own
+   * comment makes about itself two screens down: four controls spread over
+   * fifty-eight destinations are four places to go, and a number is none. The
+   * count has read 4 on every run since the blocked pass was written and
+   * nobody could say which four without instrumenting the script by hand.
+   */
+  const stuck = new Map();
   const tiny = new Map();
   let total = 0;
   let underAA = 0;
@@ -513,7 +536,7 @@ const MEASURE = `(() => {
    * probe disagree with each other.
    */
   for (const el of controls) {
-    if (!seen(el)) continue;
+    if (!seen(el) || !live(el)) continue;
     const r = el.getBoundingClientRect();
     if (r.width === 0 || r.height === 0) continue;
     if (r.bottom <= 0 || r.top >= innerHeight || r.right <= 0 || r.left >= innerWidth) continue;
@@ -526,7 +549,7 @@ const MEASURE = `(() => {
   }
 
   for (const el of controls) {
-    if (!seen(el)) continue;
+    if (!seen(el) || !live(el)) continue;
     const t = target(el);
     if (t.rw === 0 || t.rh === 0) continue;
     total += 1;
@@ -559,6 +582,13 @@ const MEASURE = `(() => {
     const fails = h < AA || w < AA;
     if (fails) { if (!inline) underAA += 1; else inlineAA += 1; }
     if (t.blocked) blocked += 1;
+    if (t.blocked) {
+      const k = name(el) + ' ' + Math.round(t.rw) + 'x' + Math.round(t.rh) +
+        (t.by ? ' under role=' + t.by : ' under an element with no role');
+      const seenIt = stuck.get(k);
+      if (seenIt) seenIt.n += 1;
+      else stuck.set(k, { n: 1, text: (el.textContent || '').trim().slice(0, 24) });
+    }
     const key0 = name(el) + ' ' + Math.round(t.rw) + 'x' + Math.round(t.rh) +
       ' → ' + Math.round(t.w) + 'x' + Math.round(t.h) +
       (t.blocked ? ' BLOCKED' + (t.by ? ' under role=' + t.by : '') : '') +
@@ -601,6 +631,7 @@ const MEASURE = `(() => {
     small: rows(small),
     under: rows(under),
     covered: rows(covered),
+    stuck: rows(stuck),
     tiny: rows(tiny),
     smallCount: rows(small).reduce((n, r) => n + r.n, 0),
     tinyCount: rows(tiny).reduce((n, r) => n + r.n, 0),
@@ -674,6 +705,7 @@ async function sweep(browser, tier, width, height, density) {
   const causes = new Map();
   const underCauses = new Map();
   const coveredCauses = new Map();
+  const stuckCauses = new Map();
   const tinyCauses = new Map();
   let controls = 0;
   let smalls = 0;
@@ -739,6 +771,10 @@ async function sweep(browser, tier, width, height, density) {
       const k = `${row.k}  ${screen}${row.text ? ` "${row.text}"` : ''}`;
       coveredCauses.set(k, (coveredCauses.get(k) ?? 0) + row.n);
     }
+    for (const row of found.stuck) {
+      const k = `${row.k}  ${screen}${row.text ? ` "${row.text}"` : ''}`;
+      stuckCauses.set(k, (stuckCauses.get(k) ?? 0) + row.n);
+    }
   }
 
   const share = controls ? Math.round((smalls / controls) * 100) : 0;
@@ -757,6 +793,16 @@ async function sweep(browser, tier, width, height, density) {
     }
   } else {
     console.log(`\n  nothing under ${AA}px.`);
+  }
+
+  if (stuckCauses.size) {
+    /* Not sliced to ten like the two lists below it. A control that answers
+       nowhere is a failure of a different kind from a small one, there have
+       only ever been four, and a truncated list of four is a list. */
+    console.log(`\n  answering nowhere inside their own box — scrolling does not cure these`);
+    for (const [k, n] of [...stuckCauses.entries()].sort((a, b) => b[1] - a[1])) {
+      console.log(`  ${String(n).padStart(4)} × ${k}`);
+    }
   }
 
   if (coveredCauses.size) {
