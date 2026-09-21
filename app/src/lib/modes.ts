@@ -184,7 +184,8 @@ export function modesFor(cat: Catalog, courseId: CourseId, src: Source): ModeInf
     {
       id: 'quiz',
       label: 'Quiz',
-      blurb: 'Multiple choice, marked as you go, wrong answers drawn from the guide.',
+      blurb:
+        'Multiple choice, true-or-false and a round of matching, marked as you go, with the wrong answers drawn from the guide.',
       count: options >= 4 ? plural(cards, 'card') + ' in play' : 'Needs 4 answers',
       ready: options >= 4,
       missing:

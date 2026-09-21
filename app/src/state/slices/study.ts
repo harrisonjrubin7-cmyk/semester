@@ -13,6 +13,7 @@ import { score } from '../../lib/review';
 import { finishes, moveOn, type Session } from '../../lib/sessions';
 import { handle, remember } from '../../lib/sure';
 import { unitKey } from '../../lib/pretest';
+import { matchDone } from '../../lib/quiz';
 import type { Action, State } from '../shape';
 import { push } from './navigate';
 
@@ -371,6 +372,8 @@ export function study(state: State, action: Action): State | null {
           quiz: action.quiz,
           quizIdx: 0,
           quizPicked: null,
+          quizJoins: {},
+          quizHolding: null,
           quizScore: 0,
           quizSeed: state.quizSeed + 7,
           quizRungs: 0,
@@ -390,6 +393,56 @@ export function study(state: State, action: Action): State | null {
     }
 
     /*
+     * Pick a term up, or put it down again.
+     *
+     * A term already joined to something can be picked up — that is how a
+     * join is undone. The join itself is left in place until a new one
+     * replaces it, so tapping a term to look at it does not cost the answer
+     * that was already there.
+     */
+    case 'holdTerm':
+      if (matchDone(state.quiz[state.quizIdx], state.quizJoins)) return state;
+      return { ...state, quizHolding: state.quizHolding === action.index ? null : action.index };
+
+    /*
+     * Join the held term to a definition, and mark the question once every
+     * term has one.
+     *
+     * A definition already spoken for is taken from whoever had it rather
+     * than refused, because the alternative is a student who has to work out
+     * which of four rows to undo before they can say what they mean. The
+     * displaced term goes back to unjoined and the question stays unanswered,
+     * which is the honest state: they have not finished.
+     *
+     * Marked here rather than by the screen because the score is state, and a
+     * screen that computes it is a screen that can compute it twice — which
+     * is the bug `pickAnswer` guards against by refusing a second answer.
+     */
+    case 'joinTerm': {
+      const q = state.quiz[state.quizIdx];
+      if (!q || q.kind !== 'match' || !q.pairs) return state;
+      if (matchDone(q, state.quizJoins)) return state;
+      const held = state.quizHolding;
+      if (held === null) return state;
+
+      const joins: Record<number, number> = {};
+      for (const [left, right] of Object.entries(state.quizJoins)) {
+        if (right !== action.right) joins[Number(left)] = right;
+      }
+      joins[held] = action.right;
+
+      const done = q.pairs.every((_, i) => joins[i] !== undefined);
+      const right = q.pairs.every((_, i) => joins[i] === i);
+
+      return {
+        ...state,
+        quizJoins: joins,
+        quizHolding: null,
+        quizScore: state.quizScore + (done && right ? 1 : 0),
+      };
+    }
+
+    /*
      * One more rung, and the question is marked as helped from the first one.
      *
      * Marked here rather than at `nextQuestion`, so a question you take a hint
@@ -405,6 +458,8 @@ export function study(state: State, action: Action): State | null {
         ...state,
         quizIdx: state.quizIdx + 1,
         quizPicked: null,
+        quizJoins: {},
+        quizHolding: null,
         quizRungs: 0,
         quizHelped: state.quizHelped + (state.quizRungs > 0 ? 1 : 0),
       };
