@@ -18,7 +18,10 @@
 --     **refuses `admin`** — the value whose absence is the point.
 --   * `app_admins` is readable by nobody through the API: not by a signed-out
 --     visitor, not by an ordinary account, and **not by the administrator the
---     row is about**. RLS is on and there is no policy at all.
+--     row is about**. Two layers say so and both are checked: the table is
+--     revoked from `anon` and `authenticated`, so the statements raise rather
+--     than return nothing; and underneath that, RLS is on with no policy at
+--     all, read from the catalogue because the revoke hides it.
 --   * It is writable by nobody, in all three senses, so there is no in-app
 --     route to making yourself one.
 --   * `is_app_admin()` lives in `private` and has no twin in `public`. That is
@@ -66,6 +69,29 @@ begin
     raise exception 'FAILED: % — expected %, got %', what, want, coalesce(got, 'null');
   end if;
   raise notice 'ok  % (%)', what, got;
+end $$;
+
+/*
+ * A statement the current role may not run at all.
+ *
+ * `counted(…, 0)` is the right shape when row-level security filters a
+ * statement down to nothing. It is the wrong shape once the table is also
+ * revoked, because the grant is checked first and the statement raises
+ * instead of affecting no rows — which is what `20260921161500_roles.sql`
+ * does to `app_admins`, deliberately: "Not readable through the API by
+ * anyone."
+ *
+ * So this asserts the stronger thing the table actually has. A statement that
+ * succeeds is the failure, including one that succeeds by returning nothing.
+ */
+create or replace function pg_temp.denied(what text, stmt text)
+returns void language plpgsql as $$
+begin
+  execute stmt;
+  raise exception 'FAILED: % — the statement was allowed to run', what;
+exception
+  when insufficient_privilege then
+    raise notice 'ok  % (permission denied)', what;
 end $$;
 
 create or replace function pg_temp.newuser(address text)
@@ -128,16 +154,16 @@ begin
   -- administrator reading their own row is the most natural policy to write
   -- and there is deliberately no policy at all.
   perform pg_temp.become_anon();
-  select count(*) into n from public.app_admins;
-  perform pg_temp.counted('a signed-out visitor reads no admin rows', n, 0);
+  perform pg_temp.denied('a signed-out visitor reads no admin rows',
+                         'select 1 from public.app_admins');
 
   perform pg_temp.become(person);
-  select count(*) into n from public.app_admins;
-  perform pg_temp.counted('an ordinary account reads none', n, 0);
+  perform pg_temp.denied('an ordinary account reads none',
+                         'select 1 from public.app_admins');
 
   perform pg_temp.become(admin);
-  select count(*) into n from public.app_admins;
-  perform pg_temp.counted('and an administrator cannot read their own row', n, 0);
+  perform pg_temp.denied('and an administrator cannot read their own row',
+                         'select 1 from public.app_admins');
 
   -- The control: the row is really there. Without this, every count above is
   -- zero for the uninteresting reason and the suite proves nothing.
@@ -154,18 +180,15 @@ begin
     raise notice 'ok  an account cannot make itself an administrator';
   end;
 
-  update public.app_admins set note = 'mine now';
-  get diagnostics n = row_count;
-  perform pg_temp.counted('nor edit the list', n, 0);
+  perform pg_temp.denied('nor edit the list',
+                         'update public.app_admins set note = ''mine now''');
 
-  delete from public.app_admins;
-  get diagnostics n = row_count;
-  perform pg_temp.counted('nor remove anybody from it', n, 0);
+  perform pg_temp.denied('nor remove anybody from it',
+                         'delete from public.app_admins');
 
   perform pg_temp.become(admin);
-  delete from public.app_admins;
-  get diagnostics n = row_count;
-  perform pg_temp.counted('and neither can an administrator', n, 0);
+  perform pg_temp.denied('and neither can an administrator',
+                         'delete from public.app_admins');
 
   -- ── is_app_admin(), and where it lives ──────────────────────────────────
   perform pg_temp.become(admin);
@@ -190,6 +213,24 @@ begin
     from pg_proc p join pg_namespace ns on ns.oid = p.pronamespace
    where p.proname = 'is_app_admin' and ns.nspname = 'private';
   perform pg_temp.counted('and exactly one in private', n, 1);
+
+  -- ── and the layer the revoke now hides ──────────────────────────────────
+  --
+  -- Every denial above is the grant talking. That is the stronger of the two
+  -- and it is what the table has, but this file's header claims a second
+  -- thing — "RLS is on and there is no policy at all" — and a grant-level
+  -- revoke makes that claim unobservable from any of the roles above. So it
+  -- is read from the catalogue instead. Re-granting select to `authenticated`
+  -- tomorrow would turn six assertions green-to-red up there; this is what
+  -- says the floor underneath them is still there.
+  select count(*) into n
+    from pg_class c join pg_namespace ns on ns.oid = c.relnamespace
+   where ns.nspname = 'public' and c.relname = 'app_admins' and c.relrowsecurity;
+  perform pg_temp.counted('row-level security is on for app_admins', n, 1);
+
+  select count(*) into n
+    from pg_policies where schemaname = 'public' and tablename = 'app_admins';
+  perform pg_temp.counted('and there is no policy on it at all', n, 0);
 end $$;
 
 rollback;
