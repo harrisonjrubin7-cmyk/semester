@@ -89,3 +89,27 @@ export function beforeYouSend(reach: Reach): string {
   if (reach === 'guarded') return 'This needs more than a tap to confirm.';
   return '';
 }
+
+/** What the apply loop must do with a proposal, decided in one place. */
+export type Taking =
+  /** Dispatch it now. One tap was the whole confirmation. */
+  | { take: true }
+  /** Hold it, and say this first. Nothing has happened yet. */
+  | { take: false; because: string };
+
+/**
+ * Whether a proposal may be applied on the tap that was just made.
+ *
+ * Pulled out of the apply loop so it can be tested without a React root, and
+ * so there is exactly one place that decides. The loop asking
+ * `needsMoreThanATap` inline would work and would be the second place — and
+ * the second place is the one that gets missed when a level is added.
+ *
+ * `held` is whether the student has already been shown the sentence and said
+ * yes to it. The loop passes false on the first tap and true on the second;
+ * nothing else may pass true.
+ */
+export function taking(reach: Reach, held: boolean): Taking {
+  if (!needsMoreThanATap(reach) || held) return { take: true };
+  return { take: false, because: beforeYouSend(reach) };
+}

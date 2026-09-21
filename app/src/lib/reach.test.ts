@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { FURTHER, beforeYouSend, needsMoreThanATap, reaches, sortFor, type Reach } from './reach';
+import { FURTHER, beforeYouSend, needsMoreThanATap, reaches, sortFor, taking, type Reach } from './reach';
 import { TOOLS } from './tools';
 
 const SOURCE = readFileSync(new URL('./tools.ts', import.meta.url), 'utf8');
@@ -102,5 +102,60 @@ describe('the tools, against that vocabulary', () => {
     // proposals in it at all.
     expect(TOOLS.length).toBeGreaterThanOrEqual(16);
     expect(TOOLS.some((t) => t.name === 'add_task')).toBe(true);
+  });
+});
+
+describe('what the apply loop must do with one', () => {
+  it('takes your own things on the tap that was just made', () => {
+    expect(taking('look', false)).toEqual({ take: true });
+    expect(taking('mine', false)).toEqual({ take: true });
+  });
+
+  it('holds anything that reaches further, and says what cannot be undone', () => {
+    const held = taking('outward', false);
+    expect(held.take).toBe(false);
+    expect(held.take === false && held.because).toMatch(/cannot be unsent/);
+    expect(taking('binding', false).take).toBe(false);
+    expect(taking('guarded', false).take).toBe(false);
+  });
+
+  it('takes it once the student has been shown that sentence and said yes', () => {
+    expect(taking('outward', true)).toEqual({ take: true });
+    expect(taking('binding', true)).toEqual({ take: true });
+    expect(taking('guarded', true)).toEqual({ take: true });
+  });
+
+  /*
+   * The half that makes the loop trustworthy rather than the vocabulary.
+   *
+   * `converse.ts` passes `false` on the first tap and `true` only from
+   * `confirm`, which is reachable only from the held card. A loop that asked
+   * `needsMoreThanATap` inline instead would work and would be the second
+   * place that knows — and the second place is the one missed when a level is
+   * added, which is the whole failure this file exists to prevent.
+   */
+  it('is the only thing the apply loop asks', () => {
+    const loop = readFileSync(new URL('../ai/converse.ts', import.meta.url), 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, ' '));
+    expect(loop, 'the apply loop no longer asks').toMatch(/taking\(p\.reach, false\)/);
+    expect(loop, 'the loop decides for itself instead of asking').not.toMatch(
+      /needsMoreThanATap\(/,
+    );
+    // Only `confirm` may say the tap already happened.
+    expect((loop.match(/taking\([^)]*true\)/g) ?? []).length).toBe(0);
+  });
+
+  it('cannot hold a proposal where nobody can see it', () => {
+    // A held offer is out of `proposals`, so if nothing drew `holding` it
+    // would vanish on the tap — a button that silently does nothing, which is
+    // worse than the one tap it replaced.
+    const chat = readFileSync(new URL('../ai/Chat.tsx', import.meta.url), 'utf8');
+    expect(chat, 'Chat no longer draws the held proposal').toMatch(/holding=\{talk\.holding\}/);
+    expect(chat).toMatch(/onConfirm=\{talk\.confirm\}/);
+    expect(chat).toMatch(/onLetGo=\{talk\.letGo\}/);
+    const actions = readFileSync(new URL('../ai/Actions.tsx', import.meta.url), 'utf8');
+    expect(actions, 'the held card is gone').toMatch(/export function Holding\(/);
+    // It says nothing has happened, which is the claim a held card makes.
+    expect(actions).toMatch(/Nothing has happened yet/);
   });
 });
