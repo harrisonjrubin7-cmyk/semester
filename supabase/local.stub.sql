@@ -172,60 +172,28 @@ do $$ begin
   end if;
 end $$;
 
--- ── RLS on by default, which is a dashboard setting and not a migration ───
+-- ── RLS on by default is NOT here, and that is the correction ────────────
 --
--- Production has an event trigger, `ensure_rls`, that enables row-level
--- security on every table created in `public`. Nothing in `migrations/`
--- creates it and nothing should: it is what Supabase's "automatically enable
--- RLS" setting installs, it is written in Supabase's house style rather than
--- this repository's, and the one migration that names it —
--- `history/20260907134823_harden_security_definer_helpers.sql` — only revokes
--- EXECUTE on the function, which is a thing you do to something that already
--- exists.
+-- `public.rls_auto_enable()` and the `ensure_rls` event trigger were put in
+-- this file on 21 September as "what Supabase's automatically-enable-RLS
+-- setting installs". There is no such setting. Supabase's own documentation,
+-- under the heading *Auto-enable RLS for new tables*, says "if you want RLS
+-- enabled automatically for new tables, **you can create** an event trigger",
+-- and gives this exact code — which is why production's copy is in Supabase's
+-- house style rather than this repository's, and why the only migration that
+-- names it merely revokes EXECUTE. Somebody pasted the documented recipe into
+-- the SQL editor, which is the habit this whole repair is a record of.
 --
--- It was missing here, and its absence was the whole of the difference between
--- production's function fingerprint and a local build's. Copied from the live
--- definition rather than rewritten, because the point is to be the same thing.
+-- It matters because this file is not deployed anywhere (see `README.md`). An
+-- object that lives only here exists in no rebuilt database and on no preview
+-- branch, so a recovery from `migrations/` had no RLS-on-by-default and
+-- nothing said so: `function_grants.sql` skips a function that is absent
+-- rather than failing on it, so the revoke passed over it in silence.
 --
--- What it costs: a table whose migration forgot `enable row level security`
--- now passes a local check, because this turns it on. That is not a hole this
--- file opens — production has behaved that way since the setting was switched
--- on, and a local build that behaved otherwise was telling the checks
--- something untrue about where they will run.
-create or replace function public.rls_auto_enable()
- returns event_trigger
- language plpgsql
- security definer
- set search_path to 'pg_catalog'
-as $function$
-DECLARE
-  cmd record;
-BEGIN
-  FOR cmd IN
-    SELECT *
-    FROM pg_event_trigger_ddl_commands()
-    WHERE command_tag IN ('CREATE TABLE', 'CREATE TABLE AS', 'SELECT INTO')
-      AND object_type IN ('table','partitioned table')
-  LOOP
-     IF cmd.schema_name IS NOT NULL AND cmd.schema_name IN ('public') AND cmd.schema_name NOT IN ('pg_catalog','information_schema') AND cmd.schema_name NOT LIKE 'pg_toast%' AND cmd.schema_name NOT LIKE 'pg_temp%' THEN
-      BEGIN
-        EXECUTE format('alter table if exists %s enable row level security', cmd.object_identity);
-        RAISE LOG 'rls_auto_enable: enabled RLS on %', cmd.object_identity;
-      EXCEPTION
-        WHEN OTHERS THEN
-          RAISE LOG 'rls_auto_enable: failed to enable RLS on %', cmd.object_identity;
-      END;
-     ELSE
-        RAISE LOG 'rls_auto_enable: skip % (either system schema or not in enforced list: %.)', cmd.object_identity, cmd.schema_name;
-     END IF;
-  END LOOP;
-END;
-$function$;
-
-do $$ begin
-  if not exists (select 1 from pg_event_trigger where evtname = 'ensure_rls') then
-    create event trigger ensure_rls on ddl_command_end
-      when tag in ('CREATE TABLE', 'CREATE TABLE AS', 'SELECT INTO')
-      execute function public.rls_auto_enable();
-  end if;
-end $$;
+-- It is created by `migrations/20260901000100_schema.sql` instead. That is
+-- right under either account of where production's copy came from: if the
+-- platform does install it, `create or replace` and a guarded
+-- `create event trigger` match what is already there and change nothing; if it
+-- does not, a rebuild is safe rather than quietly unsafe. There is no reading
+-- of the evidence under which keeping it out of the migrations is the safer
+-- choice.

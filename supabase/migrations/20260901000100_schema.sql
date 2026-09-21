@@ -101,3 +101,72 @@ create trigger courses_touch before insert or update on public.courses
 drop trigger if exists state_touch on public.state;
 create trigger state_touch before insert or update on public.state
   for each row execute function public.touch_updated_at();
+
+-- ── RLS on by default ─────────────────────────────────────────────────────
+--
+-- Production has an event trigger, `ensure_rls`, that turns on row-level
+-- security for every table created in `public` afterwards. Nothing in this
+-- directory created it until now, and a database rebuilt from here was
+-- therefore quietly less safe than the one running — no count of tables,
+-- policies or functions would have shown it, which is how it survived a
+-- snapshot, a fingerprint and two people looking straight at it.
+--
+-- Where it came from, since two documents have now guessed wrong. It is not
+-- Supabase's own platform object, and it is not installed by an
+-- "automatically enable RLS" setting: there is no such setting. Supabase's
+-- documentation has a section headed *Auto-enable RLS for new tables* which
+-- says "if you want RLS enabled automatically for new tables, you can create
+-- an event trigger", and prints this exact code. Somebody ran the documented
+-- recipe against this project by hand — which is both why it reads in
+-- Supabase's house style and why the one migration that mentions it does
+-- nothing but revoke EXECUTE on something already there.
+--
+-- Copied from the live definition rather than rewritten, upper-cased body and
+-- all, so that a diff of this against production reports a difference only
+-- when there is one.
+create or replace function public.rls_auto_enable()
+ returns event_trigger
+ language plpgsql
+ security definer
+ set search_path to 'pg_catalog'
+as $function$
+DECLARE
+  cmd record;
+BEGIN
+  FOR cmd IN
+    SELECT *
+    FROM pg_event_trigger_ddl_commands()
+    WHERE command_tag IN ('CREATE TABLE', 'CREATE TABLE AS', 'SELECT INTO')
+      AND object_type IN ('table','partitioned table')
+  LOOP
+     IF cmd.schema_name IS NOT NULL AND cmd.schema_name IN ('public') AND cmd.schema_name NOT IN ('pg_catalog','information_schema') AND cmd.schema_name NOT LIKE 'pg_toast%' AND cmd.schema_name NOT LIKE 'pg_temp%' THEN
+      BEGIN
+        EXECUTE format('alter table if exists %s enable row level security', cmd.object_identity);
+        RAISE LOG 'rls_auto_enable: enabled RLS on %', cmd.object_identity;
+      EXCEPTION
+        WHEN OTHERS THEN
+          RAISE LOG 'rls_auto_enable: failed to enable RLS on %', cmd.object_identity;
+      END;
+     ELSE
+        RAISE LOG 'rls_auto_enable: skip % (either system schema or not in enforced list: %.)', cmd.object_identity, cmd.schema_name;
+     END IF;
+  END LOOP;
+END;
+$function$;
+
+-- `create event trigger` has no `if not exists`, and creating one needs
+-- superuser — which the `postgres` role running these migrations has, on the
+-- live project and on a preview branch alike; production's own copy is owned
+-- by it. Guarded rather than dropped and recreated, so that running this
+-- against a database that already has the trigger leaves it exactly as it is.
+--
+-- The EXECUTE grant is closed by `20260901001500_function_grants.sql`, which
+-- already lists this function. Until now it skipped it, because on a rebuild
+-- there was nothing there to revoke.
+do $$ begin
+  if not exists (select 1 from pg_event_trigger where evtname = 'ensure_rls') then
+    create event trigger ensure_rls on ddl_command_end
+      when tag in ('CREATE TABLE', 'CREATE TABLE AS', 'SELECT INTO')
+      execute function public.rls_auto_enable();
+  end if;
+end $$;
