@@ -2443,6 +2443,7 @@ export type Action =
   | { type: 'removeFeed'; id: string }
   | { type: 'setLinkUrl'; id: string; url: string }
   | { type: 'addLink'; name: string; url: string; group?: string }
+  | { type: 'setLinkGroup'; id: string; group: string }
   | { type: 'removeLink'; id: string }
   | { type: 'addCourse'; module: CourseModule }
   /**
