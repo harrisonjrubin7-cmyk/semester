@@ -141,6 +141,50 @@ describe('what the history findings say, which is not about a dashboard', () => 
     expect(doc(), 'the repair is no longer pointed at').toContain('MIGRATION-HISTORY.md');
   });
 
+  /*
+   * The snapshot, and the one way it could do harm.
+   *
+   * `supabase/schema.snapshot.sql` is a record of the live schema, written
+   * because eight of production's twenty-one recorded migrations carry no SQL
+   * and cannot rebuild it. It creates every table the project has.
+   *
+   * Dropped into `supabase/migrations/` it stops being a record and becomes a
+   * migration — one that `check.sh` would apply to a throwaway cluster twice
+   * over, and that Branching would send at a production database where all of
+   * those objects already exist. That is the mistake worth a test; the file
+   * being merely absent is the lesser one.
+   */
+  it('the snapshot exists and is pointed at', () => {
+    expect(existsSync(join(ROOT, 'supabase', 'schema.snapshot.sql'))).toBe(true);
+    expect(
+      readFileSync(join(ROOT, 'MIGRATION-HISTORY.md'), 'utf8'),
+      'the repair plan no longer links the snapshot',
+    ).toContain('supabase/schema.snapshot.sql');
+  });
+
+  it('and is not in the migrations directory, where it would be applied', () => {
+    const migrations = readdirSync(join(ROOT, 'supabase', 'migrations'));
+    for (const f of migrations) {
+      expect(f, `${f} looks like the snapshot, inside migrations/`).not.toMatch(/snapshot/i);
+    }
+    // And the control: there are migrations there to be confused with.
+    expect(migrations.filter((f) => f.endsWith('.sql')).length).toBeGreaterThan(5);
+  });
+
+  it('and says on its face that it is not one', () => {
+    /*
+     * The header is the only thing standing between a reader and applying it.
+     * A snapshot that does not say so is a migration nobody has noticed yet.
+     */
+    const snap = readFileSync(join(ROOT, 'supabase', 'schema.snapshot.sql'), 'utf8');
+    expect(snap, 'the snapshot no longer warns against applying it').toMatch(
+      /not\s+a\s+migration/i,
+    );
+    expect(snap, 'the snapshot no longer says not to apply it to production').toMatch(
+      /[Dd]o\s+not\s+apply\s+this\s+to\s+production/,
+    );
+  });
+
   it('and the repair plan is there, with a status somebody has to maintain', () => {
     const plan = join(ROOT, 'MIGRATION-HISTORY.md');
     expect(existsSync(plan), 'MIGRATION-HISTORY.md is gone').toBe(true);

@@ -107,6 +107,41 @@ no test in this repository can see the thing that replaced it.
   load-bearing in a way nothing here will warn you about. Check it by hand when
   that setting changes; no test in this repository can.
 
+### Settled on 21 September: it is on, and its deploys to production fail
+
+Pull request #545 touched `supabase/` and the integration built it a preview
+branch — `lztuwtiymlvueulmhduj`, reaching `FUNCTIONS_DEPLOYED`. So the setting
+is right and the section below, written while it was wrong, is history rather
+than the current state.
+
+**And the same listing carries the answer to the question the next section
+could not settle.** The `main` branch entry reads `MIGRATIONS_FAILED`, stamped
+`2026-09-18T17:37` — three minutes after the merge that carried
+`20260901001300_access_log.sql`. The deploy to production ran, and it failed.
+
+That corrects this document's own earlier sentence, which said a migration
+reached main and did not reach the database and *nothing failed*. Something
+failed. It failed where nobody was looking: on a branch record in the Supabase
+dashboard, with no issue, no red tick and no comment. **Production's schema
+deploy has been broken since 18 September and the repository could not tell.**
+
+Why it fails is in `MIGRATION-HISTORY.md` and is structural rather than a bad
+statement: the four migration files production has never had are numbered
+between `20260901000900` and `20260901001300`, and production has thirteen
+migrations
+applied with *later* numbers. Migrations run in timestamp order, so these are
+in the past, and Supabase's own documentation names the cause — "Using the
+Dashboard's SQL editor or Table Editor on your remote database bypasses the
+migration history, and `db push` will start failing with sync errors."
+
+One consequence is worth stating plainly, because it cuts the other way from
+what this document has said since: **a merge cannot currently apply anything to
+production**, because the step that would apply it is the step that is failing.
+The instruction below still stands, for the opposite reason to the original
+one — not that a merge will push four untested migrations, but that the deploy
+is broken and every merge quietly adds to what it will have to survive when it
+is fixed.
+
 ### Where that stood on the evening of 18 September
 
 The setting was changed that afternoon, and the section above is the result:
@@ -168,19 +203,25 @@ Three consequences, in the order they matter:
   environment was supposed to be for. A preview branch cannot reach production's
   schema state, so it cannot rehearse a change to it.
 - **The repository and production describe different databases.** Ten of those
-  migrations exist only in production and as no file here; **five** files here —
-  `usage_atomic`, `group_columns_pinned`, `forms`, `invites` and `access_log` —
-  have never reached production, verified object by object rather than inferred
-  from the history. `supabase/check.sh` builds its schema from the files, so a
-  green check is a fact about a database nobody is running: the same shape as
-  the Postgres-major mismatch fixed in #502, one level up.
+  migrations exist only in production and as no file here; **four** files here —
+  `usage_atomic`, `group_columns_pinned`, `forms` and `access_log` — have never
+  reached production, verified object by object rather than inferred from the
+  history. `invites` and `referrals` were on that list until 21 September, when
+  they were applied by hand; the ledger recorded them under today's timestamps
+  rather than their filenames, which is a third fault and not a fix.
+  `supabase/check.sh` builds its schema from the files, so a green check is a
+  fact about a database nobody is running: the same shape as the Postgres-major
+  mismatch fixed in #502, one level up.
 
 **Until this is repaired, do not merge a pull request that touches
-`supabase/`.** If Branching is applying migrations, a merge sends those
-five — one of which puts a `before insert` trigger on `auth.users`, the table
-every sign-up passes through — to a schema no test has ever reproduced. If it
-is not, the merge widens the gap by one more file, silently, which is what
-`access_log` has just demonstrated. Neither is a good reason to merge one.
+`supabase/`.** If Branching is applying migrations, a merge sends those four to
+a schema no test has ever reproduced — and the one that has already been
+applied by hand, `invites`, is the shape of the risk: it puts a `before insert`
+trigger on `auth.users`, the table every sign-up passes through, and it went in
+with `set_invite_only` executable by anybody holding the browser's publishable
+key. If Branching is not applying migrations, the merge widens the gap by one
+more file, silently, which is what `access_log` has just demonstrated. Neither
+is a good reason to merge one.
 
 [`MIGRATION-HISTORY.md`](MIGRATION-HISTORY.md) holds the repair.
 
