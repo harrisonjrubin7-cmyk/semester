@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { AA_TEXT, contrast, failLine, over, passes, type Check } from './contrast';
 import { GROUNDS, tokensFor } from './look';
 import { DIMMED_ROW, faintLine, secondLine } from './dim';
+import { withoutComments } from '../styles/rules';
 
 /**
  * The audit `contrast.test.ts` runs over the tokens, run over the dimming the
@@ -342,5 +343,124 @@ describe('the faint rung, on a glyph too small to carry it', () => {
     const shape = new RegExp(`<span[^>]*faintLine\\(\\)[^>]*>\\s*([${SEPARATORS}])\\s*</span>`);
     expect(shape.test(`<span style={{ ...faintLine(), flex: 'none' }}>·</span>`)).toBe(true);
     expect(shape.test(`<span style={{ ...secondLine(), flex: 'none' }}>·</span>`)).toBe(false);
+  });
+
+  /*
+   * ## The same rule, read off the tree rather than off one line
+   *
+   * The test above is the shape the defect had the first time: a `<span>` on
+   * one line, styled by `faintLine()`, holding a separator and nothing else.
+   * Written that way it cannot see three things, and all three were in the
+   * tree when it landed:
+   *
+   *   - **the token written out.** `screens/me/You.tsx` painted its week strip
+   *     with `d.due > 0 ? 'var(--app-dim)' : 'var(--app-faint)'`. No call to
+   *     `faintLine()` appears, so the pattern never fires — and the `>` inside
+   *     that very conditional is what a `[^>]*` attribute scan stops at, so
+   *     widening the pattern alone would not have reached it either.
+   *   - **the glyph inside an expression.** That same placeholder is
+   *     `{d.due > 0 ? d.due : '·'}`, a quoted literal in a ternary rather than
+   *     a bare child.
+   *   - **the glyph with something beside it.** `components/Rework.tsx` had
+   *     `· {u.cards.length}` — a separator *and* the count it separates, both
+   *     at the faint rung, at 12.5px. `ai/Actions.tsx` had a dismiss `×`, on a
+   *     `<button>` rather than a `<span>`.
+   *
+   * The browser sweep found exactly one of the three, because it measures what
+   * renders in the states it drives and the other two need a chat turn and a
+   * rework plan to appear. That is the division of labour this repository
+   * keeps arriving at: the sweep proves the one it can reach, and a structural
+   * read catches the siblings no run happened to open.
+   *
+   * ## Why it does not simply flag every faint glyph
+   *
+   * `components/Command.tsx` puts a whole sentence at `--app-faint` and 12px,
+   * and it contains an em-dash. That is a real question, but it is a different
+   * one — prose at the wrong rung, not a separator at it — and it wants
+   * measuring on its own rather than being swept up by a pattern that happened
+   * to match its punctuation. So the glyph must *stand alone*: the entire
+   * content of its element, the first thing in it, or a quoted single
+   * character. A dash with words on both sides is a sentence.
+   */
+  /*
+   * Generous, and it has to be: `withoutComments` blanks a comment to spaces
+   * but keeps its length, so a docblock inside the `style` object sits between
+   * the tag and the glyph and counts against this. Set to 400 first, and the
+   * `You.tsx` revert below passed — the probe could no longer see the very
+   * site it was written for, because the comment explaining the fix was longer
+   * than the reach of the thing checking it.
+   */
+  const LOOKBACK = 1500;
+
+  /** Every separator glyph painted at the faint rung, with prose left out. */
+  function faintGlyphs(src: string): number[] {
+    const at: number[] = [];
+    for (const m of src.matchAll(new RegExp(`[${SEPARATORS}]`, 'gu'))) {
+      const i = m.index ?? 0;
+      const from = Math.max(0, i - LOOKBACK);
+      const open = src.lastIndexOf('<', i);
+      if (open < from) continue;
+      const head = src.slice(open, i);
+      // The nearest `<` has to be a tag rather than a comparison in plain code.
+      if (!/^<[A-Za-z]/.test(head)) continue;
+      // A closing tag between the two means the walk left the element it began in.
+      if (head.includes('</')) continue;
+      if (!/faintLine\(\)|--app-faint/.test(head)) continue;
+      // `aria-hidden` on a single glyph is the exemption 1.4.3 allows, and the
+      // browser sweep reads it the same way — hidden *and* one non-alphanumeric
+      // character, never hidden alone.
+      if (/aria-hidden/.test(head)) continue;
+      // Stands alone: quoted on both sides, or nothing but space before it
+      // inside its own element.
+      const quoted = /['"]/.test(src[i - 1] ?? '') && /['"]/.test(src[i + 1] ?? '');
+      const before = src.slice(src.lastIndexOf('>', i) + 1, i);
+      if (!quoted && !/^[\s{]*$/.test(before)) continue;
+      at.push(i);
+    }
+    return at;
+  }
+
+  it('is not what a separator is painted with, written any of the ways it is written', () => {
+    const bad: string[] = [];
+    for (const file of sources()) {
+      const src = withoutComments(readFileSync(file, 'utf8'));
+      for (const i of faintGlyphs(src)) {
+        const line = src.slice(0, i).split('\n').length;
+        bad.push(`${file.slice(SRC.length + 1)}:${line}  ${src.slice(i - 40, i + 12).replace(/\s+/g, ' ').trim()}`);
+      }
+    }
+    expect(
+      bad,
+      `a separator glyph is small text, so it takes the --app-dim rung rather than --app-faint:\n  ${bad.join('\n  ')}`,
+    ).toEqual([]);
+  });
+
+  /*
+   * The probe, pointed at each shape it was written for and at the one it must
+   * leave alone. An empty list passes, so a pattern that quietly stopped
+   * matching would read as a clean tree — the fault this repository has found
+   * in its own instruments more than once.
+   */
+  it('and the wider probe sees each shape, and not the sentence', () => {
+    const hit = (src: string) => faintGlyphs(withoutComments(src)).length;
+
+    // The three it was written for.
+    expect(hit(`<span style={{ color: d.due > 0 ? 'var(--app-dim)' : 'var(--app-faint)' }}>{d.due > 0 ? d.due : '·'}</span>`)).toBe(1);
+    expect(hit(`<span style={faintLine()}>· {u.cards.length}</span>`)).toBe(1);
+    expect(hit(`<button style={{ width: 20, ...faintLine() }}>\n  ×\n</button>`)).toBe(1);
+
+    // Fixed, in each of the same three shapes.
+    expect(hit(`<span style={{ color: 'var(--app-dim)' }}>{d.due > 0 ? d.due : '·'}</span>`)).toBe(0);
+    expect(hit(`<span style={secondLine()}>· {u.cards.length}</span>`)).toBe(0);
+    expect(hit(`<button style={{ width: 20, ...secondLine() }}>\n  ×\n</button>`)).toBe(0);
+
+    // Prose at the faint rung is a different finding and not this one's to raise.
+    expect(hit(`<div style={{ color: 'var(--app-faint)' }}>Deadlines, courses — and the app’s own screens.</div>`)).toBe(0);
+
+    // The exemption, which is hidden *and* a lone glyph.
+    expect(hit(`<span aria-hidden="true" style={faintLine()}>·</span>`)).toBe(0);
+
+    // A comment that merely discusses the rung is not a use of it.
+    expect(hit(`/* --app-faint — the hairline strength, held to 3:1 */`)).toBe(0);
   });
 });
