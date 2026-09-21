@@ -1710,7 +1710,7 @@ function Listen() {
             {episode.len}
           </div>
         </div>
-        <div className="chrome-text" style={{ fontSize: 'calc(28px * var(--text-scale, 1))', lineHeight: 1.06, marginTop: 'var(--sp-4)' }}>
+        <div className="chrome-text" style={{ fontSize: 'var(--type-2xl)', lineHeight: 1.06, marginTop: 'var(--sp-4)' }}>
           {guide.code}
         </div>
         <div

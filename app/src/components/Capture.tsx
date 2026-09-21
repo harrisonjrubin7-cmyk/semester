@@ -132,7 +132,7 @@ export function Capture({
                     position: 'absolute',
                     inset: 'auto 0 0 0',
                     background: 'rgba(0,0,0,.65)',
-                    fontSize: 'calc(9px * var(--text-scale, 1))',
+                    fontSize: 'var(--type-3xs)',
                     letterSpacing: '0.1em',
                     textTransform: 'uppercase',
                     paddingBlock: 'calc(2px * var(--density, 1))', paddingInline: '0',

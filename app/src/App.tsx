@@ -618,7 +618,7 @@ function TabBar() {
             {labelled ? (
               <span
                 style={{
-                  fontSize: 'calc(9px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-3xs)',
                   letterSpacing: '0.06em',
                   textTransform: 'uppercase',
                   whiteSpace: 'nowrap',
