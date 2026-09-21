@@ -176,3 +176,46 @@ export function absenceDraft(e: AthleticEvent, conflicts: string[]): string {
     'Thank you.',
   ].join('\n');
 }
+
+/**
+ * Where a student's own season is kept, named once.
+ *
+ * The key carries the account and the term, same as the Athletics screen has
+ * always written it. It moved out here the moment a second reader appeared:
+ * the week-ahead arithmetic reads this library too, and a planner keyed on a
+ * string one character different from the screen's would report a season of
+ * nothing, convincingly, forever.
+ */
+export function athleticsKey(accountId: string | undefined, term: string): string {
+  return `semester.athletics.v1:${accountId || 'device'}:${term}`;
+}
+
+/**
+ * Hours an event takes out of one local day.
+ *
+ * Clipped to the day at both ends, which is the whole difficulty. A bus
+ * leaving Thursday at four and returning Sunday at eight is 76 hours long and
+ * none of the three planners it touches wants that number: Thursday loses
+ * eight of its evening, Friday and Saturday lose everything, Sunday loses its
+ * morning. Counting the span against the departure day instead would put
+ * three days of travel into one Thursday and leave the weekend reading empty.
+ *
+ * A day is capped at its own length by construction, since both edges are
+ * clamped to the day's own midnights.
+ */
+export function hoursOnDay(events: { start: string; end: string }[], date: Date): number {
+  // Both edges from the calendar rather than from a 24-hour step, for
+  // `eventDays`'s reason: a day across a daylight-saving boundary is 23 or 25
+  // hours long, and a fixed step would clip an hour off one day of the year
+  // and double-count an hour on another.
+  const from = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+  const to = new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1).getTime();
+  let ms = 0;
+  for (const e of events) {
+    const a = Date.parse(e.start);
+    const b = Date.parse(e.end);
+    if (!Number.isFinite(a) || !Number.isFinite(b) || b <= a) continue;
+    ms += Math.max(0, Math.min(b, to) - Math.max(a, from));
+  }
+  return ms / 3_600_000;
+}

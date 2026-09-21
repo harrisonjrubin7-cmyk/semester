@@ -37,6 +37,7 @@ import { useNow, useStore } from '../../state/store';
 import { useDeviceLibrary } from '../../lib/device-library';
 import { EMPTY_FAMILY, readFamily } from '../../lib/family';
 import { softTop, type TopStat } from '../../lib/softtop';
+import { useAthleticEvents } from '../../lib/athletics.hook';
 import { fills } from '../shell/exempt';
 import { Hero, Stat, StatRow } from './Soft';
 
@@ -92,9 +93,27 @@ function useTop() {
     EMPTY_FAMILY,
   );
   const familyPlans = family.value.members.length;
+  /*
+   * The season, for the same reason and by the same route.
+   *
+   * Two facts depend on it: the hours a week ahead already holds — a practice
+   * every evening and a bus on Friday are promised hours, and Today's figure
+   * disagreed with the week report's until this was passed — and the count
+   * over the Athletics screen itself, which used to be the Activities list.
+   */
+  const season = useAthleticEvents();
   return useMemo(
-    () => softTop(state.screen, { state, catalog, now, caps, sync: said, familyPlans }),
-    [state, catalog, now, caps, said, familyPlans],
+    () =>
+      softTop(state.screen, {
+        state,
+        catalog,
+        now,
+        caps,
+        sync: said,
+        familyPlans,
+        athletics: season,
+      }),
+    [state, catalog, now, caps, said, familyPlans, season],
   );
 }
 

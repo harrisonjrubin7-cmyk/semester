@@ -10,6 +10,7 @@ import {
   ATHLETICS_LIMITS,
   EMPTY_ATHLETICS,
   absenceDraft,
+  athleticsKey,
   eventDays,
   overlaps,
   readAthletics,
@@ -66,8 +67,11 @@ const fresh = (): AthleticEvent => ({
 
 export function Athletics() {
   const { state, account } = useStore();
-  const scope = `${account?.id || 'device'}:${state.term}`;
-  return <Workspace key={scope} storageKey={`semester.athletics.v1:${scope}`} />;
+  // The key is `lib/athletics.ts`'s, not this screen's: the week-ahead
+  // arithmetic reads the same library, and two spellings of one key is a
+  // planner that reports an empty season.
+  const key = athleticsKey(account?.id, state.term);
+  return <Workspace key={key} storageKey={key} />;
 }
 
 function Workspace({ storageKey }: { storageKey: string }) {

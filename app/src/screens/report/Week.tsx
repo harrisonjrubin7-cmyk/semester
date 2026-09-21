@@ -13,6 +13,7 @@ import { ask } from '../../lib/claude';
 import { configured, provider } from '../../lib/assistant';
 import { download } from '../../lib/deliver';
 import { showHours, week } from '../../lib/ahead';
+import { useAthleticEvents } from '../../lib/athletics.hook';
 import { ActionButton } from '../../components/ui';
 import { goHome } from '../../lib/openhome';
 import {
@@ -49,6 +50,10 @@ import {
 export function WeekReport() {
   const { state, dispatch, catalog } = useStore();
   const now = useNow();
+  // Practice, competition and travel are promised hours like any other. The
+  // season is a device library rather than store data, so it is read here and
+  // passed in — see `lib/athletics.hook.ts`.
+  const season = useAthleticEvents();
 
   const [said, setSaid] = useState('');
   const [busy, setBusy] = useState(false);
@@ -86,8 +91,9 @@ export function WeekReport() {
         commitments: state.commitments,
         appointments: state.appointments,
         windows: state.windows,
+        athletics: season,
       }),
-    [catalog, nextWeek, state.done, state.commitments, state.appointments, state.windows],
+    [catalog, nextWeek, state.done, state.commitments, state.appointments, state.windows, season],
   );
 
   const ahead: Ahead = {
