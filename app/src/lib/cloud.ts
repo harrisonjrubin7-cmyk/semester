@@ -578,6 +578,36 @@ export async function saveQueue(
 }
 
 /**
+ * When every queued reminder was due, for this account.
+ *
+ * Read rather than assumed, because the queue is the one place the client and
+ * the sender both touch, and the sender's contract is that it deletes a row
+ * once it has sent it. Anything still here is therefore still unsent, and
+ * `neverArrived` in `lib/push.ts` decides which of those are old enough to
+ * mean something.
+ *
+ * Only `send_at` is selected. The titles and bodies are the part of this table
+ * that is somebody's coursework — `PUSH_NOTE` is the promise made about them —
+ * and a liveness check has no business reading them back down to the device to
+ * count rows.
+ *
+ * Signed out there is no queue to have an opinion about, so this answers with
+ * an empty list rather than throwing: a caller asking "is delivery working"
+ * before an account exists is asking about nothing, not hitting an error.
+ */
+export async function queuedSendAts(): Promise<number[]> {
+  if (!cloudConfigured) return [];
+  const db = await cloud();
+  const { data: who } = await db.auth.getUser();
+  const userId = who.user?.id;
+  if (!userId) return [];
+
+  const { data, error } = await db.from('push_queue').select('send_at').eq('user_id', userId);
+  if (error) throw new Error(error.message);
+  return (data ?? []).map((r) => new Date((r as { send_at: string }).send_at).getTime());
+}
+
+/**
  * Delete the rows belonging to this account.
  *
  * Not a flag, not an archive. `on delete cascade` in the schema means removing
@@ -722,7 +752,7 @@ export const OWNED_TABLES: OwnedTable[] = [
   // Two different rows, and they are not the same fact. `referrals` here is
   // *your own arrival* — the code you came in on. `referral_codes` is the code
   // you handed out, and the cascade underneath it takes the record of everyone
-  // who came through you. See `supabase/migrations/20260921003500_referrals.sql`.
+  // who came through you. See `supabase/migrations/20260921002623_referrals.sql`.
   { table: 'referrals', column: 'user_id' },
   { table: 'referral_codes', column: 'user_id' },
 
@@ -888,7 +918,7 @@ export async function replaceFeed(token: string): Promise<void> {
 // holds the token because Apple and Google arrive with no credentials, and the
 // reminder sender, run by the scheduler rather than by a person.
 //
-// `supabase/migrations/20260921003400_access_log.sql` writes both down, and
+// `supabase/migrations/20260921143653_access_log.sql` writes both down, and
 // the policy on that table makes it readable by the account it is about. This
 // is that read. The point of the whole thing is the calendar: a published link
 // is a bearer credential living in somebody's phone for months, the app has

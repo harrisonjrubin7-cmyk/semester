@@ -210,7 +210,7 @@ export function Courses() {
                     gap: 'var(--sp-5)',
                   }}
                 >
-                  <div className="chrome-text" style={{ fontSize: 'calc(22px * var(--text-scale, 1))' }}>
+                  <div className="chrome-text" style={{ fontSize: 'var(--type-display)' }}>
                     {c.code}
                   </div>
                   <div
@@ -734,7 +734,7 @@ export function ItemDetail() {
             <div className="kicker" style={{ fontSize: 'var(--type-2xs)' }}>
               Due
             </div>
-            <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(18px * var(--text-scale, 1))' }}>{item.dueShort}</div>
+            <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--type-display-xs)' }}>{item.dueShort}</div>
             <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}>{item.dueTime}</div>
           </div>
           <div style={{ width: 1, background: 'var(--app-line)' }} />
@@ -742,7 +742,7 @@ export function ItemDetail() {
             <div className="kicker" style={{ fontSize: 'var(--type-2xs)' }}>
               Weight
             </div>
-            <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(18px * var(--text-scale, 1))' }}>{item.weight}</div>
+            <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--type-display-xs)' }}>{item.weight}</div>
             <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}>{item.where}</div>
           </div>
         </div>

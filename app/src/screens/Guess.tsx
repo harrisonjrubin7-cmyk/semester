@@ -88,7 +88,7 @@ export function Guess() {
       <div
         className="chrome-text"
         style={{
-          fontSize: 'calc(24px * var(--text-scale, 1))',
+          fontSize: 'var(--type-display-lg)',
           lineHeight: 1.16,
           marginTop: 'var(--sp-7)',
           textWrap: 'pretty',

@@ -93,12 +93,64 @@ export const NOTIFICATIONS: AppNotification[] = [
   },
 ];
 
-/** Connected sources, shown in Settings. */
+/**
+ * Where the app's figures actually come from, shown in Settings › About.
+ *
+ * This list came out of the design comp (`project/Semester Phone.dc.html`),
+ * where four plausible connected accounts are exactly what a mockup should
+ * have, and it shipped verbatim under a header that promises provenance.
+ * Three of the four rows said something the code does not do and the fourth
+ * said something no third-party app can do:
+ *
+ *  · **Brightspace — “4 courses · synced 6:40 AM · On”.** `lib/connect.ts`
+ *    says what the Brightspace route is: a read-only per-user .ics feed the
+ *    student pastes. Nothing syncs, on a clock or otherwise, and the feed
+ *    carries no course list.
+ *  · **Gradescope — “On”.** The word appears nowhere in `app/src` outside
+ *    sample course data. There is no Gradescope route, of any kind.
+ *  · **Apple Calendar — “Two-way”.** `lib/connect.ts` again: *“Apple —
+ *    sign-in only. There is no iCloud calendar API”*. `lib/subscribe.ts`
+ *    publishes a feed outward; a feed is one direction by construction.
+ *  · **Top Hat — a join code.** Top Hat's only integration surface is LTI,
+ *    which connects it to an institution's LMS. There is no public API and no
+ *    student data export, so no app outside a data-sharing agreement can read
+ *    a student's own Top Hat score — and reading it out of their logged-in
+ *    session is the credential-scraping this app refuses everywhere else.
+ *
+ * `screens/lmsclaims.test.ts` already pins three other places where this app
+ * told a student something too generous about an LMS. This was the fourth,
+ * and it survived that pass because it is data rather than prose.
+ *
+ * So the rows now name the routes that exist, and the tag says **what each
+ * one takes** rather than whether it is switched on — there is no switch, and
+ * a status column for connections the app does not hold is the whole defect.
+ */
 export const SOURCES = [
-  { label: 'Brightspace', meta: '4 courses · synced 6:40 AM', state: 'On' },
-  { label: 'Gradescope', meta: 'ECON 1020 problem sets', state: 'On' },
-  { label: 'Apple Calendar', meta: 'Two-way, “Fall 2026” calendar', state: 'On' },
-  { label: 'Top Hat', meta: 'Join code 782449', state: 'Link' },
+  {
+    label: 'Your syllabus',
+    meta: 'Every date, weight and quote, read from the file you upload',
+    state: 'File',
+  },
+  {
+    label: 'A calendar link',
+    meta: 'Brightspace, Outlook, Google, iCloud — read-only, and never whether you submitted',
+    state: 'Link',
+  },
+  {
+    label: 'Canvas',
+    meta: 'A token you issue yourself — assignments, and your own submissions',
+    state: 'Token',
+  },
+  {
+    label: 'What you enter',
+    meta: 'Scores, absences, hours. Nothing is filled in on your behalf.',
+    state: 'Yours',
+  },
+  {
+    label: 'Top Hat',
+    meta: 'Not connected — no app can read your score. Its grade line comes from the syllabus; the number is yours.',
+    state: 'By hand',
+  },
 ];
 
 /** The three onboarding screens. */

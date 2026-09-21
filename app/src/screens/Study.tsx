@@ -335,7 +335,7 @@ export function Study() {
               {exam.days}
             </div>
             <div style={{ minWidth: 0 }}>
-              <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(19px * var(--text-scale, 1))', lineHeight: 'var(--leading-display-lg)' }}>
+              <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--type-display-sm)', lineHeight: 'var(--leading-display-lg)' }}>
                 {exam.days === 1 ? 'day' : 'days'} to {exam.code} {exam.item.title}
               </div>
               <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}>
@@ -651,7 +651,7 @@ export function Study() {
                     counts give way to it. */}
                 <div
                   className="chrome-text"
-                  style={{ fontSize: 'calc(20px * var(--text-scale, 1))', flex: 'none', whiteSpace: 'nowrap' }}
+                  style={{ fontSize: 'var(--type-display-sm)', flex: 'none', whiteSpace: 'nowrap' }}
                 >
                   {g.code}
                 </div>

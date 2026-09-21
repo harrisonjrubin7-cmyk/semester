@@ -174,7 +174,7 @@ export function Onboarding() {
       >
         {soft && state.onb === 0 ? welcomeLine(catalog, now) : step.t}
       </div>
-      <div style={{ fontSize: 'calc(16px * var(--text-scale, 1))', lineHeight: 'var(--leading-relaxed)', color: 'var(--app-dim)', maxWidth: '30ch' }}>
+      <div style={{ fontSize: 'var(--type-display-xs)', lineHeight: 'var(--leading-relaxed)', color: 'var(--app-dim)', maxWidth: '30ch' }}>
         {soft && state.onb === 0 ? welcomeLead(catalog) : step.b}
       </div>
 
@@ -240,7 +240,7 @@ export function Onboarding() {
               <div
                 style={{
                   fontFamily: 'var(--font-heading)',
-                  fontSize: 'calc(17px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-display-xs)',
                   width: 88,
                   color: 'var(--app-accent)',
                 }}
@@ -386,7 +386,7 @@ export function Onboarding() {
       <ActionButton
         onClick={() => dispatch({ type: 'onbNext' })}
         tone={state.onb === 3 && cloudConfigured && !account ? 'secondary' : 'primary'}
-        style={{ fontSize: 'calc(16px * var(--text-scale, 1))' }}
+        style={{ fontSize: 'var(--type-display-xs)' }}
       >
         {step.cta}
       </ActionButton>

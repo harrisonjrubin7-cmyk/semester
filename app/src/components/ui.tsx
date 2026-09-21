@@ -775,7 +775,7 @@ export function EmptyState({
       )}
       <div
         className={inline ? 'kicker' : 'chrome-text'}
-        style={inline ? undefined : { fontSize: 'calc(24px * var(--text-scale, 1))' }}
+        style={inline ? undefined : { fontSize: 'var(--type-display-lg)' }}
       >
         {title}
       </div>

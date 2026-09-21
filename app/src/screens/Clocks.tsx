@@ -422,7 +422,7 @@ function Alarms() {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div
                       style={{
-                        fontSize: 'calc(21px * var(--text-scale, 1))',
+                        fontSize: 'var(--type-display)',
                         fontVariantNumeric: 'tabular-nums',
                         ...secondLine(a.on),
                       }}

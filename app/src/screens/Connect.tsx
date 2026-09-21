@@ -453,7 +453,7 @@ export function Connect() {
           void addFiles([...e.dataTransfer.files]);
         }}
       >
-        <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(18px * var(--text-scale, 1))' }}>
+        <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--type-display-xs)' }}>
           Paste a calendar link
         </div>
         <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginTop: 'calc(5px * var(--density, 1))', textWrap: 'pretty' }}>
@@ -700,7 +700,7 @@ export function Connect() {
               <div
                 style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 'var(--sp-5)' }}
               >
-                <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(18px * var(--text-scale, 1))' }}>{spec.name}</div>
+                <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--type-display-xs)' }}>{spec.name}</div>
                 {token && <span className="tag tag-accent">Connected</span>}
               </div>
               <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginTop: 'var(--sp-2)' }}>

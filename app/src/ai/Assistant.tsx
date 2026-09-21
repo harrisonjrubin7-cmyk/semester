@@ -5,9 +5,10 @@ import { WIDE, useMedia } from '../lib/media';
 import { screenName } from '../lib/nav';
 import { AskSelection } from './AskAbout';
 import { fills } from '../components/shell/exempt';
+import { useScrolling } from '../lib/scrolling.hook';
 import { faultOf } from '../lib/fault';
 import { offline } from '../lib/offline';
-import { secondLine } from '../lib/dim';
+import { secondLine, PASSING } from '../lib/dim';
 
 type PanelComponent = (typeof import('./Panel'))['Panel'];
 
@@ -704,6 +705,14 @@ export function Assistant() {
    * Runs on the close, not on the open: `was` is the previous value, so this
    * fires exactly once per open-and-shut and never on a first render.
    */
+  /*
+   * Faded while the page moves under it, so a line passing beneath a 52px
+   * opaque circle can be read on its way past. See `lib/scrolling.hook.ts`:
+   * it reports false throughout when less motion has been asked for, and the
+   * button then stays put.
+   */
+  const scrolling = useScrolling();
+
   const was = useRef(false);
   useEffect(() => {
     if (was.current && !ai.open) {
@@ -804,8 +813,23 @@ export function Assistant() {
             border: '1px solid rgba(255,255,255,.45)',
             boxShadow: 'var(--glow)',
             fontFamily: 'var(--font-heading)',
-            fontSize: 'calc(17px * var(--text-scale, 1))',
+            fontSize: 'var(--type-display-xs)',
             cursor: 'pointer',
+            /*
+             * Down to a fifth while the page moves, and back when it settles.
+             *
+             * Not to nothing: a control that vanishes reads as one that has
+             * gone away, and somebody reaching for it mid-flick should still
+             * see where it is. A fifth is enough to read a word through and
+             * still find the circle.
+             *
+             * `pointerEvents` is deliberately left alone. The fade is about
+             * what can be read, not about what can be pressed, and taking the
+             * target away for 420ms after every scroll would break a tap that
+             * somebody had already committed to.
+             */
+            opacity: scrolling ? PASSING : 1,
+            transition: 'opacity 160ms ease-out',
           }}
         >
           {/* A glyph rather than an icon import: the tab bar's icon set has

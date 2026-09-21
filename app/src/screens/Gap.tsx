@@ -315,7 +315,7 @@ function Run({ win }: { win: GapWindow }) {
         <div
           style={{
             fontFamily: 'var(--font-heading)',
-            fontSize: 'calc(25px * var(--text-scale, 1))',
+            fontSize: 'var(--type-display-lg)',
             lineHeight: 'var(--leading-display-xs)',
             textWrap: 'pretty',
           }}
@@ -325,7 +325,7 @@ function Run({ win }: { win: GapWindow }) {
         {shown ? (
           <div
             style={{
-              fontSize: 'calc(16px * var(--text-scale, 1))',
+              fontSize: 'var(--type-display-xs)',
               lineHeight: 'var(--leading-relaxed-plus)',
               color: 'var(--app-dim)',
               textWrap: 'pretty',

@@ -98,7 +98,7 @@ export function Profile() {
                  the legible one. */
               className={named(state.myName) ? 'chrome-text' : undefined}
               style={{
-                fontSize: 'calc(22px * var(--text-scale, 1))',
+                fontSize: 'var(--type-display)',
                 lineHeight: 'var(--leading-display-lg)',
                 ...(named(state.myName) ? {} : { color: 'var(--app-dim)' }),
               }}
@@ -250,7 +250,7 @@ export function Profile() {
             <Blueprint plain key={h.label} style={{ padding: 'var(--sp-5)' }}>
               <div
                 className="chrome-text"
-                style={{ fontSize: 'calc(20px * var(--text-scale, 1))', lineHeight: 'var(--leading-display-lg)' }}
+                style={{ fontSize: 'var(--type-display-sm)', lineHeight: 'var(--leading-display-lg)' }}
               >
                 {h.count}
               </div>

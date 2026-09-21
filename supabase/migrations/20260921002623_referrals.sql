@@ -323,7 +323,7 @@ grant execute on function public.claim_referral(text) to authenticated;
 --
 -- `signup_open` is the honest half and the reason this returns four columns
 -- instead of three. While the pilot's invite gate is on, a link handed to a
--- stranger cannot make an account at all — `20260921003300_invites.sql`
+-- stranger cannot make an account at all — `20260921002428_invites.sql`
 -- refuses it in a trigger on `auth.users` — so an ambassador screen that did
 -- not know would print a dead link under a cheerful heading and let somebody
 -- spend a week wondering why their count stayed at nought. The gate's state is

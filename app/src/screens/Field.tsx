@@ -191,7 +191,7 @@ export function FieldGuide() {
               <div
                 style={{
                   fontFamily: 'var(--font-heading)',
-                  fontSize: 'calc(19px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-display-sm)',
                   lineHeight: 'var(--leading-display)',
                   flex: 1,
                   minWidth: 0,
@@ -220,7 +220,7 @@ export function FieldGuide() {
                 <div
                   style={{
                     fontFamily: 'var(--font-heading)',
-                    fontSize: 'calc(16px * var(--text-scale, 1))',
+                    fontSize: 'var(--type-display-xs)',
                     lineHeight: 'var(--leading-display-xs)',
                     color: 'var(--app-accent)',
                     textWrap: 'pretty',
@@ -265,7 +265,7 @@ export function FieldGuide() {
                   paddingBottom: 'var(--sp-1)',
                 }}
               >
-                <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(17px * var(--text-scale, 1))', lineHeight: 'var(--leading-display)' }}>
+                <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--type-display-xs)', lineHeight: 'var(--leading-display)' }}>
                   {f.t}
                 </div>
                 <div
@@ -299,7 +299,7 @@ export function FieldGuide() {
                 <div
                   style={{
                     fontFamily: 'var(--font-heading)',
-                    fontSize: 'calc(18px * var(--text-scale, 1))',
+                    fontSize: 'var(--type-display-xs)',
                     lineHeight: 'var(--leading-display)',
                     marginTop: 'var(--sp-2)',
                   }}
@@ -365,7 +365,7 @@ export function FieldGuide() {
           <SectionLabel style={{ marginTop: 'calc(36px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(6px * var(--density, 1))' }}>Glossary</SectionLabel>
           {guide.terms.map((t) => (
             <div key={t.t} style={termRow}>
-              <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(15.5px * var(--text-scale, 1))' }}>{t.t}</div>
+              <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--type-display-xs)' }}>{t.t}</div>
               <div
                 style={{
                   fontSize: 'var(--type-base)',

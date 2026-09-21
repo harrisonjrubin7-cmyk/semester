@@ -1,0 +1,79 @@
+# What production's migration ledger held, read at 15:2x UTC on 21 September 2026.
+#
+# `supabase_migrations.schema_migrations` on the live project, one line per row:
+# version, then name. This is a reading, not a wish — `app/src/lib/deploy.test.ts`
+# holds `migrations/` to it and explains the rule.
+#
+# ## The rule, and the failure it is about
+#
+# The schema deploy runs `db push`, which applies every local migration whose
+# version the ledger does not already have. Those run **in version order**, so a
+# pending version *lower* than the highest applied one cannot run: it is in the
+# past relative to a database that has already moved on. Supabase's own
+# documentation names it — "Using the Dashboard's SQL editor or Table Editor on
+# your remote database bypasses the migration history, and `db push` will start
+# failing with sync errors."
+#
+# That is what broke production's deploy on 18 September and kept it broken for
+# three days. Seven files here were numbered `20260901000900`–`20260901001500`,
+# all below a watermark that had reached `20260911151826`, so every one of them
+# was pending and in the past. The deploy failed on the whole set, silently, on
+# a branch record in a dashboard with no red tick anywhere in this repository.
+#
+# ## Why this file is a snapshot rather than a live check
+#
+# Nothing in a test run can reach the live project, and a test that pretended to
+# would be worse than none. So this is the reading, dated, and the guard holds
+# the directory to it. A newer reading that disagrees is a finding about the
+# database and belongs in `MIGRATION-HISTORY.md` before it belongs here.
+#
+# A **new** migration is still allowed to be pending — that is what a migration
+# is. What is not allowed is a pending version *below* the last line of this
+# file, because that one cannot ever run.
+#
+
+# ## Why this is a file and not a constant
+#
+# It was a constant once, in `rollback.test.ts`, written the same afternoon:
+# `LEDGER_NEWEST = '20260921002658'`, with a note that the ledger held
+# twenty-one rows. Both were true when they were typed. Within the hour the
+# ledger took seven more — five from the pending migrations being applied by
+# hand, then `forms_relation_grants` and `access_log_function_search_path` —
+# and the constant silently described a database that no longer existed. A
+# renumbering done against it put seven files at `20260921003000`–`003600`,
+# above the watermark it named and below the real one, which is the same fault
+# the renumbering was for.
+#
+# A constant copied out of a database has no date on it and no way to go stale
+# loudly. This file has both: it says when it was read, and the guard fails
+# rather than passes when the directory stops matching it.
+#
+#   version         name
+20260901000100  schema
+20260901000200  classmates
+20260901000300  classmates_schools
+20260901000400  rooms
+20260901000500  groups
+20260901000600  push
+20260901000700  records
+20260901000800  calendar
+20260907050718  push_devices_and_queue
+20260907133756  push_scheduler_extensions
+20260907134823  harden_security_definer_helpers
+20260907141019  rls_initplan_and_policy_overlap
+20260907141324  wrap_auth_uid_in_helpers
+20260907141551  index_foreign_keys
+20260908053010  classmates_any_school
+20260908053943  per_record_sync_with_soft_deletes
+20260908054007  calendar_feeds
+20260911151826  groups
+20260921002428  invites
+20260921002623  referrals
+20260921002658  revoke_function_execute_from_supabase_default_roles
+20260921142822  usage_atomic
+20260921142841  group_columns_pinned
+20260921143455  forms
+20260921143653  access_log
+20260921144011  function_grants_rerun_after_access_log
+20260921144711  forms_relation_grants
+20260921150750  access_log_function_search_path
