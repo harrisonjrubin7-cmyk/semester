@@ -134,9 +134,50 @@ SQL
 before_gate=$(psql -Atc "select invite_only from public.access_gate")
 before_rows=$(psql -Atc "select count(*) from public.courses")
 
+# ── First, the gap between the two readings of production ────────────────
+#
+# `schema.snapshot.sql` and `ledger.snapshot` are two readings of the same
+# project taken hours apart, and on 21 September they stopped agreeing: the
+# ledger records `20260921170000 schools` and `20260921211500
+# pin_profile_school` as applied, and the snapshot — read earlier the same day —
+# contains neither `public.schools` nor `profiles.school_id`. Production has
+# both. The snapshot is simply older.
+#
+# Before this, the loop below applied only what the ledger calls pending,
+# against a shape that was missing what the ledger calls applied. The first
+# migration to reference `public.schools` therefore failed here with `relation
+# "public.schools" does not exist` — a true error about the harness, printed as
+# if it were a fact about the migration, which is the shape of confusion this
+# directory keeps being a record of.
+#
+# So the applied ones are replayed first, in version order, to bring the
+# snapshot up to the ledger. Every migration in this repository is written to
+# be safe to run twice — that rule is stated in each of their headers — so a
+# replay over a shape that already has them is a no-op, and one that is *not*
+# a no-op is a finding worth having: this is the only place the claim gets
+# tested against production's shape rather than an empty database.
+#
+# Neither reading is bumped to match the other. A stale snapshot is closed by
+# reading production again, which is step 1 of MIGRATION-HISTORY.md and not
+# something a script can do.
+echo "· the migrations production already has, replayed over an older snapshot of it"
+replayed=0
+failed=0
+for m in "$here"/migrations/*.sql; do
+  version=$(basename "$m" | cut -c1-14)
+  [ "$version" -gt "$LEDGER_NEWEST" ] && continue
+  if out=$(psql -v ON_ERROR_STOP=1 -f "$m" 2>&1); then
+    replayed=$((replayed + 1))
+  else
+    echo "  ✗ $(basename "$m") — the ledger says production has this and it will not re-apply"
+    echo "$out" | grep -E "ERROR" | head -3 | sed 's/^/      /'
+    failed=1
+  fi
+done
+echo "  ✓ $replayed applied migrations re-apply cleanly"
+
 echo "· the migrations a deploy would apply, in the order it would apply them"
 pending=0
-failed=0
 for m in "$here"/migrations/*.sql; do
   version=$(basename "$m" | cut -c1-14)
   [ "$version" -gt "$LEDGER_NEWEST" ] || continue
