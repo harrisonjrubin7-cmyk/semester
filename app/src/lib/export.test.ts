@@ -15,6 +15,7 @@ import {
   fold,
   icsText,
   notesMarkdown,
+  projectFile,
   safeName,
   stampedName,
   toCsv,
@@ -500,6 +501,50 @@ describe('notesMarkdown', () => {
 
   it('is unchanged for a caller that has no drafts', () => {
     expect(notesMarkdown([note], code, [])).toBe(notesMarkdown([note], code));
+  });
+});
+
+describe('projectFile', () => {
+  it('names a file after the project', () => {
+    expect(projectFile('Midterm survey', 'form', 'csv', 'responses')).toBe(
+      'Midterm-survey-responses.csv',
+    );
+    expect(projectFile('Lab walkthrough', 'video', 'webm')).toBe('Lab-walkthrough.webm');
+  });
+
+  it('never produces a file with no stem, which is the defect it was written for', () => {
+    /*
+     * `screens/Create.tsx` lets a title be emptied — a plain input, no trim,
+     * nothing required — and the video export put it straight in front of the
+     * extension. A browser rewrites what it will accept as a download name, so
+     * this is not about the downloads folder; it is about `lib/files.ts:addFile`,
+     * which stores the name verbatim and put a `.webm` row with no stem in the
+     * app's own Files list. See the note on `projectFile`.
+     */
+    expect(projectFile('', 'video', 'webm')).toBe('untitled-video.webm');
+    expect(projectFile('   ', 'form', 'csv', 'responses')).toBe('untitled-form-responses.csv');
+    for (const title of ['', '   ', '///', '???', '...']) {
+      expect(projectFile(title, 'form', 'csv'), title).not.toMatch(/^\./);
+    }
+  });
+
+  it('takes the separators out of a title that is allowed to hold them', () => {
+    // "Midterm 1/2 survey" is an ordinary name for a form and a path
+    // separator to everything downstream.
+    expect(projectFile('Midterm 1/2 survey', 'form', 'csv')).toBe('Midterm-12-survey.csv');
+    expect(projectFile('Notes: "final"?', 'design', 'png')).toBe('Notes-final.png');
+  });
+
+  it('says what kind of thing it was when there is no title to use', () => {
+    // A folder holding three files called `export.webm` is its own problem.
+    expect(projectFile('', 'form', 'csv')).toBe('untitled-form.csv');
+    expect(projectFile('', 'design', 'png')).toBe('untitled-design.png');
+    expect(projectFile('', '', 'csv')).toBe('untitled-project.csv');
+  });
+
+  it('keeps the suffix optional, and out of the name when there is none', () => {
+    expect(projectFile('Survey', 'form', 'csv')).toBe('Survey.csv');
+    expect(projectFile('Survey', 'form', 'csv', '')).toBe('Survey.csv');
   });
 });
 
