@@ -102,6 +102,28 @@ jobs:
         working-directory: app
         run: npm run check:university
 
+      # The other half the build graph does not reach, found the same way.
+      #
+      # `video/` is its own package with its own `tsconfig.json`, and nothing
+      # referenced it, so `tsc -b` never opened it. The coverage that existed
+      # was the same accident as the university server's: `app/src/lib`'s
+      # guards import `captions.ts`, `fit.ts`, `shorts.ts`, `clipspend.ts` and
+      # `broll.ts`, so those five are pulled into the app's program and an
+      # error in them does fail the step above.
+      #
+      # Six of ten were checked by nothing at all — `Documentary.tsx`,
+      # `Lesson.tsx`, `Short.tsx`, `Persona.tsx`, `Root.tsx` and `index.ts`,
+      # which is every composition plus the entry point. Measured by planting
+      # a type error in each and watching `tsc -b` stay green.
+      #
+      # It is not hypothetical. A reference to an undefined binding went into
+      # `Documentary.tsx` and passed `tsc -b` and the lint step; the only
+      # thing that caught it was rendering a frame, which CI does not do and
+      # cannot afford to.
+      - name: Typecheck the video package
+        working-directory: app
+        run: npm run check:video
+
       - name: Test
         working-directory: app
         run: npm test

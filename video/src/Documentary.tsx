@@ -1,6 +1,15 @@
-import { AbsoluteFill, Audio, interpolate, staticFile, useCurrentFrame, useVideoConfig } from 'remotion';
+import {
+  AbsoluteFill,
+  Audio,
+  interpolate,
+  OffthreadVideo,
+  staticFile,
+  useCurrentFrame,
+  useVideoConfig,
+} from 'remotion';
 import { cueIndexAt } from '../../app/src/lib/beats';
 import { tokensFor } from '../../app/src/lib/look';
+import { shotAt, type DocumentaryShot } from './broll';
 import { CAPTION_LEADING, captionIndexAt, captionType, type LineTime } from './captions';
 
 /**
@@ -32,6 +41,27 @@ import { CAPTION_LEADING, captionIndexAt, captionType, type LineTime } from './c
  * it, which is the resolution the times have. `captions.ts` has the argument
  * for not cutting them finer. An episode with no line track still renders —
  * the lower-thirds and the spine were never dependent on one.
+ *
+ * ## The B-roll is a panel, and that was a measurement rather than a taste
+ *
+ * The obvious cut is full-bleed footage with the lower third over it. It does
+ * not survive contact with `lib/contrast.ts`. The kicker — "CHAPTER 4 OF 14" —
+ * is `--app-accent-deep`, a deliberately quiet role that clears AA against the
+ * app's own surfaces and has no margin left for an unknown image underneath.
+ * Walked over all thirteen grounds and every accent, against white, black and
+ * mid-grey footage, with a scrim of the ground colour at increasing alpha:
+ *
+ *     alpha 0.70   body text 5.63   accent-deep 2.25
+ *     alpha 0.85   body text 9.57   accent-deep 3.66
+ *     alpha 0.95   body text 12.30  accent-deep 4.62
+ *
+ * The kicker needs 0.95 to clear 4.5:1 in the worst case, and a scrim at 0.95
+ * is a scrim with no footage visible through it. The alternative — hiding the
+ * type while a shot runs — takes the captions off screen for six seconds at
+ * every chapter open, which is the second a chapter's first line is being
+ * spoken. So the clip is a bounded insert in the space the frame already left
+ * empty, the type stays on solid ground, and nothing is measured against a
+ * surface that flatters it.
  */
 
 export interface DocumentaryChapter {
@@ -52,6 +82,11 @@ export interface DocumentaryProps extends Record<string, unknown> {
   chapters: DocumentaryChapter[];
   /** Per-line times, or empty when none have been recovered for this episode. */
   times: LineTime[];
+  /**
+   * B-roll that exists on disk, from `video/shots/<course>.json`. Empty is the
+   * mode this format shipped in and still the default.
+   */
+  shots: DocumentaryShot[];
   /** The script's own words, indexed as `times` indexes them. */
   said: { v: string; t: string }[];
   /** Length of the whole episode, in seconds. */
@@ -65,6 +100,7 @@ export interface DocumentaryProps extends Record<string, unknown> {
 /** How long the chapter card takes to arrive. */
 export const LOWER_THIRD_IN = 0.6;
 
+
 export function Documentary({
   code,
   title,
@@ -72,6 +108,7 @@ export function Documentary({
   chapters,
   times,
   said,
+  shots,
   seconds: total,
   render,
   ground,
@@ -122,6 +159,8 @@ export function Documentary({
    */
   const spoken = captionIndexAt(times, at);
   const caption = spoken === -1 ? undefined : said[times[spoken].i];
+
+  const running = shotAt(shots, at);
 
   const pad = Math.round(width * 0.075);
   /*
@@ -184,14 +223,6 @@ export function Documentary({
         </div>
       </div>
 
-      {/*
-       * The middle is where an establishing shot would go.
-       *
-       * It is empty on purpose rather than filled with motion nobody chose:
-       * `--broll none` is the only mode that exists today, and a decorative
-       * gradient standing in for a shot that was never bought would make the
-       * two modes hard to tell apart in a review.
-       */}
       <div
         style={{
           flex: 1,
@@ -202,6 +233,53 @@ export function Documentary({
           paddingBottom: Math.round(height * 0.04),
         }}
       >
+        {/*
+         * The establishing shot, when one was bought.
+         *
+         * Still empty otherwise, and on purpose rather than filled with motion
+         * nobody chose: a decorative gradient standing in for a shot that was
+         * never generated would make the two modes hard to tell apart in a
+         * review. `trimBefore` is not needed — each clip is its own file, cut
+         * to length by whoever generated it, and `shotAt` decides when it is
+         * on screen.
+         *
+         * Full width and whatever height is left, which comes out around 7:1
+         * — a strip rather than a window. That is the shape the frame has
+         * spare, not a preference: the running head, the chapter card, the
+         * caption box, the spine and the timeline are all committed, and a
+         * 16:9 panel in the gap between them is 390 pixels across on a
+         * 1920-wide frame, which reads as a thumbnail somebody forgot to
+         * finish. `object-fit: cover` takes the crop, so a clip generated at
+         * 16:9 loses its top and bottom rather than letterboxing.
+         */}
+        <div
+          style={{
+            flex: 1,
+            minHeight: 0,
+            paddingTop: Math.round(height * 0.03),
+            paddingBottom: Math.round(height * 0.03),
+          }}
+        >
+          {running && (
+            <div
+              style={{
+                width: '100%',
+                height: '100%',
+                overflow: 'hidden',
+                borderRadius: 6,
+                opacity: running.opacity,
+                background: tokens['--app-panel'],
+              }}
+            >
+              <OffthreadVideo
+                src={staticFile(running.shot.file.replace(/^\//, ''))}
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                muted
+              />
+            </div>
+          )}
+        </div>
+
         {chapter && (
           <div
             style={{

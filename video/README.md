@@ -64,8 +64,21 @@ python3 pipeline/documentary.py econ                # the whole 28 minutes
 
 The spine is the podcast MP3 every student already streams and the picture is
 its own chapter marks — the ones `audio/synth.py` measured while rendering it,
-not the ones `chapters.py` recovers afterwards. Nothing is synthesised, no
-audio is cut, and `--broll none` is the only mode that exists.
+not the ones `chapters.py` recovers afterwards. Nothing is synthesised and no audio is cut.
+
+**B-roll, when there is any.** `video/shots/<course>.json` says what each
+insert is and when it lands; `pipeline/broll-shots.mjs` drafts, checks and
+prices it. This renders whatever ended up in `app/public/video/broll/<course>/`
+and looks exactly as it did before when that is nothing, which is every course
+today. `--broll none` suppresses inserts that do exist.
+
+An insert is a **full-width strip**, not a window, and that is the shape the
+frame has spare rather than a preference — a 16:9 panel in the gap between the
+running head and the chapter card is 390 pixels across on a 1920-wide frame.
+It is also not full-bleed, and that was a measurement: the chapter kicker is
+`--app-accent-deep`, which needs a scrim at 0.95 alpha to clear 4.5:1 over
+white footage, and a scrim at 0.95 is a scrim with no footage visible through
+it. `src/Documentary.tsx` has the table.
 
 **The captions are per line, and the times under them are measured.** This
 used to say there were none, because nothing recorded where a line started.
@@ -114,10 +127,12 @@ provider was wired, which is the whole point — the first paid run cannot happe
 without it. `app/src/lib/clipspend.test.ts` is its guard, including the case that
 matters: generate fourteen chapters, run the command again, spend zero.
 
-`--broll <provider>` is not wired to anything and exits non-zero saying so. No
-per-second price is written into this repository: those move faster than the
-code, and a stale one quoted in a `--dry-run` reads like a measurement.
-Choosing a provider and a price is a spending decision, left to whoever spends.
+Pricing and the spend ceiling moved to `pipeline/broll-shots.mjs`, which is
+where the shot list is, because a run's cost is a fact about what it is asking
+for. No per-second price is written into this repository: those move faster
+than the code, and a stale one quoted in a `--dry-run` reads like a
+measurement. Choosing a provider and a price is a spending decision, left to
+whoever spends.
 
 ## It cannot disagree with the app
 

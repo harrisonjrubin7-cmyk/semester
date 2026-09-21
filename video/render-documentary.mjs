@@ -16,7 +16,6 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { bundle } from '@remotion/bundler';
 import { renderMedia, selectComposition } from '@remotion/renderer';
-import { dollars, estimate, EMPTY, unspent } from './src/clipspend.ts';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, '..');
@@ -38,7 +37,7 @@ const flag = (name, fallback = undefined) => {
   const i = argv.indexOf(`--${name}`);
   return i === -1 ? fallback : argv[i + 1];
 };
-const broll = flag('broll', 'none');
+const broll = flag('broll', 'auto');
 const ground = flag('ground', 'ink');
 const accent = flag('accent', 'sterling');
 const dry = argv.includes('--dry-run');
@@ -86,6 +85,24 @@ const track = existsSync(linesPath) && existsSync(scriptPath)
 const said = track ? JSON.parse(readFileSync(scriptPath, 'utf8')).lines : [];
 const times = track ? track.lines.filter((l) => l.i < said.length) : [];
 
+/*
+ * B-roll that exists, which is not the same question as B-roll that was asked
+ * for.
+ *
+ * `video/shots/<course>.json` says what each shot is and when it lands;
+ * `pipeline/broll-shots.mjs` checks and prices it. This only looks for the
+ * files, so a course with a written shot list and nothing generated renders
+ * exactly as it did before — which is the state every course is in today.
+ */
+const shotList = (() => {
+  const path = join(ROOT, 'video/shots', `${course}.json`);
+  if (broll === 'none' || !existsSync(path)) return [];
+  const list = JSON.parse(readFileSync(path, 'utf8'));
+  return list.shots
+    .map((shot, i) => ({ at: shot.at, seconds: shot.seconds, file: `/video/broll/${course}/chapter-${i}.mp4` }))
+    .filter((shot) => existsSync(join(ROOT, 'app/public', shot.file.slice(1))));
+})();
+
 const file = `/audio/${episode.id}.mp3`;
 if (!existsSync(join(ROOT, 'app/public', file.slice(1)))) {
   usage(`No episode audio at app/public${file}`);
@@ -108,6 +125,12 @@ console.log(
     `(${Math.round(covered * FPS).toLocaleString()} frames at ${FPS}fps)`,
 );
 console.log(
+  shotList.length
+    ? `  ${shotList.length} B-roll inserts on disk`
+    : `  no B-roll: ${broll === 'none' ? '--broll none' : 'nothing generated for this course yet'}` +
+      ' — see `node pipeline/broll-shots.mjs ' + course + '`',
+);
+console.log(
   times.length
     ? `  ${times.length} captions, ${track.source === 'synth' ? 'measured while rendering' : 'recovered from the audio'}`
     : `  no captions: nothing at ${linesPath.replace(`${ROOT}/`, '')}` +
@@ -115,45 +138,27 @@ console.log(
 );
 
 /*
- * ── what a B-roll run would cost ───────────────────────────────────────────
+ * Buying is not this script's job any more.
  *
- * `--broll none` is the only mode implemented. The accounting below runs
- * anyway, against an empty manifest, because the point of building it before
- * a provider is wired is that the first paid run cannot happen without it —
- * `video/src/clipspend.ts` has the argument in full.
+ * It used to price a run here, one clip per chapter, with `prompt: c.name` —
+ * so the fourteen clips it costed for ECON would have been generated from
+ * "Cold open" and "The formula sheet". `pipeline/broll.mjs` has the argument
+ * against that at length; the short version is that a chapter title names a
+ * passage of argument and cannot be filmed. Shot lists, checks, prices and the
+ * spend ceiling now live in `pipeline/broll-shots.mjs`, and this renders
+ * whatever ended up on disk.
  */
-if (broll !== 'none') {
-  const manifestPath = join(ROOT, 'app/public/audio/documentary', course, 'clipspend.json');
-  const manifest = existsSync(manifestPath)
-    ? JSON.parse(readFileSync(manifestPath, 'utf8'))
-    : EMPTY;
-
-  // One establishing shot per chapter is the shape the roadmap describes.
-  const jobs = episode.chapters.map((c, i) => ({
-    slot: `${course}/chapter-${i}`,
-    prompt: c.name,
-    seconds: 6,
-    provider: broll,
-    model: '(unset)',
-  }));
-  const todo = unspent(manifest, jobs);
-
+if (broll !== 'none' && broll !== 'auto') {
   console.error(
-    `\n--broll ${broll} is not wired to a provider.\n\n` +
-      `What it would ask for: ${todo.length} of ${jobs.length} clips ` +
-      `(${jobs.length - todo.length} already in ${manifestPath.replace(`${ROOT}/`, '')}).\n` +
-      'What it would cost: unknown — no rate is configured, and no per-second price is\n' +
-      'written into this repository on purpose, because those move faster than the code\n' +
-      "and a stale number quoted in a --dry-run reads like a measurement. Read the\n" +
-      "provider's current price, put it in the run, and the estimate becomes real:\n" +
-      `  at 10c/s that would be ${dollars(estimate(todo, { centsPerSecond: 10 }).cents)}.\n\n` +
-      'Choosing a provider is a spending decision, so it is left to whoever is spending.\n' +
-      'Use --broll none for the cut that costs nothing.',
+    `--broll ${broll} is not a provider this script talks to.\n\n` +
+      `  node pipeline/broll-shots.mjs ${course} --draft    write the shot list\n` +
+      `  node pipeline/broll-shots.mjs ${course} --price <cents/s> --max-spend <dollars>\n\n` +
+      'Use --broll none to render with no inserts, or leave it off and this uses\n' +
+      'whatever has been generated into app/public/video/broll/.',
   );
   process.exit(1);
 }
 
-console.log(`  --broll none: nothing to buy, nothing to spend`);
 
 if (dry) {
   console.log('\n--dry-run: nothing rendered.');
@@ -177,6 +182,7 @@ const inputProps = {
   chapters: episode.chapters,
   times,
   said,
+  shots: shotList,
   seconds: episode.seconds,
   render: covered,
   ground,
