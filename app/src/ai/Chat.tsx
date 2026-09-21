@@ -5,6 +5,7 @@ import { TOUCH, WIDE, useMedia } from '../lib/media';
 import { chromeFor } from '../lib/chrome';
 import { useKeyboardInset } from '../lib/keyboard';
 import { useConversation, provider } from './converse';
+import { useVoice } from './usevoice';
 import { configured, modelLabel } from '../lib/assistant';
 import { Composer, sendHint } from './Composer';
 import { Dropped, Question, Reply, Waiting, Looked, useFollowing } from './Turns';
@@ -49,6 +50,7 @@ export function Chat() {
   const { state, dispatch } = useStore();
   const now = useNow();
   const talk = useConversation();
+  const voice = useVoice(talk);
   const touch = useMedia(TOUCH);
   const wide = useMedia(WIDE);
   /*
@@ -330,8 +332,9 @@ export function Chat() {
               return null;
             }}
             busy={talk.busy}
-            placeholder={sendHint(touch)}
+            placeholder={voice.on ? 'Listening — say it out loud' : sendHint(touch)}
             autoFocus={!touch}
+            voice={voice}
           />
           {/*
             One line, centred, under the pill — the shape every chat has, and

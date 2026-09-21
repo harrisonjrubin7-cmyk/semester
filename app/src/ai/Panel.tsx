@@ -7,6 +7,7 @@ import { assemble } from './assemble';
 import { TOUCH, WIDE, useMedia } from '../lib/media';
 import { useConversation, provider } from './converse';
 import { Composer, sendHint } from './Composer';
+import { useVoice } from './usevoice';
 import { Dropped, Question, Reply, Waiting, Looked, useFollowing } from './Turns';
 import { Opening } from './Opening';
 import { money } from '../lib/spend';
@@ -90,6 +91,7 @@ export function Panel({ side }: { side: 'right' | 'left' }) {
    * views of one assistant rather than two assistants. See its header.
    */
   const talk = useConversation();
+  const voice = useVoice(talk);
   /** Whether the "what's included" panel is open. Nothing hidden, on request. */
   const [showing, setShowing] = useState(false);
 
@@ -661,8 +663,13 @@ export function Panel({ side }: { side: 'right' | 'left' }) {
                     return null;
                   }}
                   busy={talk.busy}
-                  placeholder={`Ask about ${assembled.label} — ${sendHint(touch)}`}
+                  placeholder={
+                    voice.on
+                      ? 'Listening — say it out loud'
+                      : `Ask about ${assembled.label} — ${sendHint(touch)}`
+                  }
                   autoFocus
+                  voice={voice}
                 />
                 <div
                   style={{
