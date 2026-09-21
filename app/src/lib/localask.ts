@@ -1,4 +1,4 @@
-import { DESTINATIONS } from './nav';
+import type { Destination } from './nav';
 import { build as guidebook } from './guidebook';
 import type { Screen } from './types';
 
@@ -30,9 +30,24 @@ import type { Screen } from './types';
  * their real blurbs is useful even when the ranking is imperfect, because the
  * reader is doing the last step rather than trusting a claim.
  *
- * Everything here comes from the registry and the generated guide, so it can
- * never name a screen that does not exist — the same rule the guide is held
- * to, for the same reason.
+ * ## "A screen that does not exist" was the wrong safety property
+ *
+ * This file used to say: *everything here comes from the registry and the
+ * generated guide, so it can never name a screen that does not exist.* True,
+ * and beside the point. The registry is every screen the app has ever had —
+ * before `allowed` has asked what this school has and before `forRole` has
+ * asked who is holding the phone. A screen can exist in the app and not exist
+ * *for the person typing*, and naming one of those is the same failure.
+ *
+ * `lib/find.ts` already knew. Search gates on both, and says why:
+ *
+ * > search was the leak that would have let somebody reach a meal-plan screen
+ * > their university does not have, and a role is the same kind of hole — a
+ * > professor typing "housing" should not be offered a dorm screen the
+ * > directory has already stopped showing them.
+ *
+ * That is this question, typed into a different box. So the pool is a
+ * required parameter here too, and this file no longer imports the registry.
  */
 
 export interface Match {
@@ -94,7 +109,7 @@ function hitsIn(asked: string[], field: string): number {
  * than the word on the tab. The blurb counts once: it is prose, and prose
  * shares words with everything.
  */
-function scoreOf(asked: string[], d: (typeof DESTINATIONS)[number]): number {
+function scoreOf(asked: string[], d: Destination): number {
   const label = hitsIn(asked, d.label);
   const keys = hitsIn(asked, d.keywords);
   const blurb = hitsIn(asked, d.blurb);
@@ -119,17 +134,46 @@ const OPERATING = ['screens', 'settings', 'keys', 'wrong', 'first'];
  * same rule the ranking needs and for the same reason. Nothing here is
  * rewritten: these are the guide's own sentences, which is what makes them
  * safe to show without a model having checked them.
+ *
+ * ## And the quoting needs the same gate as the ranking
+ *
+ * The guidebook is a *manual*: `lib/guidebook.ts` documents all fifty-eight
+ * screens on purpose, its own self-check asserts one entry per registry row,
+ * and the app-mode system prompt is right to carry the lot — "can this app do
+ * X" is a question about the app. Quoting a line of it at somebody is not the
+ * same act. Gating the ranking and not this left the leak exactly where it
+ * was, one field along in the same return value: *"where is the meal plan"*
+ * kept answering **"Open it when you are thinking about meal, meals, plan."**,
+ * and *"housing move out date"* kept answering **"Your room, and the move-out
+ * date counted from your last exam rather than left as a rule."**
+ *
+ * The **Every screen** section is one block per registry row, headed
+ * `### <label>`, so a block belonging to a screen this person does not have
+ * is dropped whole. Every other operating section — settings, shortcuts, what
+ * to do when something is wrong, getting started — is not per-screen and is
+ * left alone: measured, no settings row is gated by school or role, so there
+ * is nothing there to filter.
  */
-function guideLines(asked: string[]): string[] {
+function guideLines(asked: string[], pool: Destination[]): string[] {
   const book = guidebook();
+  const mine = new Set(pool.map((d) => d.label));
   const found: { line: string; hits: number }[] = [];
   for (const sec of book.sections) {
     if (!OPERATING.includes(sec.id)) continue;
-    for (const line of sec.body.split('\n')) {
-      const text = line.trim();
-      if (text.length < 30) continue;
-      const hits = hitsIn(asked, text);
-      if (hits >= 2) found.push({ line: text, hits });
+    // Blocks, not lines, for the per-screen section: a heading names the
+    // screen its following lines are about, and a line on its own does not.
+    const blocks = sec.id === 'screens' ? sec.body.split('\n\n') : [sec.body];
+    for (const block of blocks) {
+      if (sec.id === 'screens') {
+        const head = /^### (.+)$/m.exec(block)?.[1]?.trim();
+        if (head && !mine.has(head)) continue;
+      }
+      for (const line of block.split('\n')) {
+        const text = line.trim();
+        if (text.length < 30) continue;
+        const hits = hitsIn(asked, text);
+        if (hits >= 2) found.push({ line: text, hits });
+      }
     }
   }
   return found
@@ -145,11 +189,11 @@ function guideLines(asked: string[]): string[] {
  * is a real outcome and not a failure. The screen asks the model then,
  * exactly as it did before.
  */
-export function answerLocally(question: string): Local | null {
+export function answerLocally(question: string, pool: Destination[]): Local | null {
   const asked = words(question);
   if (asked.length === 0) return null;
 
-  const matches = DESTINATIONS.map((d) => ({
+  const matches = pool.map((d) => ({
     screen: d.screen,
     label: d.label,
     blurb: d.blurb,
@@ -172,7 +216,7 @@ export function answerLocally(question: string): Local | null {
   const best = matches[0]?.score ?? 0;
   const kept = matches.filter((m) => m.score >= best * 0.4);
 
-  const fromGuide = guideLines(asked);
+  const fromGuide = guideLines(asked, pool);
   // Nothing to show is nothing to show. A panel saying "no matches" where the
   // model would have answered is strictly worse than the model answering.
   if (kept.length === 0 && fromGuide.length === 0) return null;

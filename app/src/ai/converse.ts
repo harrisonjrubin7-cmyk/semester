@@ -8,6 +8,7 @@ import { readMode, type Mode } from '../lib/mode';
 import type { Thread } from '../lib/threads';
 import { systemPrompt } from './prompt';
 import { answerLocally, type Local } from '../lib/localask';
+import { offered } from '../lib/nav';
 import { monthStart, read as readSpend, since, total } from '../lib/spend';
 import { proposalsLine, readProposal, TOOLS, undoFor, type Known, type Lists, type Proposal } from '../lib/tools';
 import { isLookup, LOOKUPS, MOST_ROUNDS, runLookups } from '../lib/lookup';
@@ -111,7 +112,7 @@ export interface Conversation {
 }
 
 export function useConversation(): Conversation {
-  const { state, dispatch, catalog } = useStore();
+  const { state, dispatch, catalog, school } = useStore();
   const now = useNow();
   const ai = useAI();
   const trouble = useTrouble();
@@ -207,7 +208,16 @@ export function useConversation(): Conversation {
    * moves instead.
    */
   const localFor = (text: string, read: Mode): Local | null => {
-    const found = answerLocally(text);
+    /*
+     * Their app, not the registry. `lib/find.ts` has gated search on the
+     * school and the role since it was written, for the case this very
+     * comment names above — "where is the meal plan". This answers the same
+     * question from the same words and was reading the ungated registry, so
+     * it named the meal screen at a university that has none and offered a
+     * professor typing "housing" the dorm screen the directory had already
+     * stopped showing them.
+     */
+    const found = answerLocally(text, offered(school.capabilities, state.role));
     if (!found) return null;
     if (read === 'app') return found;
     return (found.matches[0]?.score ?? 0) >= 1.5 ? found : null;

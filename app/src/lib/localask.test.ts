@@ -3,6 +3,18 @@ import { answerLocally } from './localask';
 import { DESTINATIONS } from './nav';
 
 /**
+ * The pool these cases use, named rather than defaulted.
+ *
+ * `answerLocally` takes the pool the school and the role have agreed on, and
+ * no longer imports the registry — see the note there, and `lib/find.ts`,
+ * which has gated the same question since it was written. These cases are
+ * about the ranking and the honesty of what is shown rather than about who is
+ * holding the phone, so the registry is the right pool *for them*.
+ * `lib/twoanswerers.test.ts` is where the gate itself is held.
+ */
+const ALL = DESTINATIONS;
+
+/**
  * What the app can say about itself with no network.
  *
  * The property that matters is not "it finds the right screen" — a bag of
@@ -30,7 +42,7 @@ describe('it can only name what exists', () => {
       'notifications',
       'where do I sign in',
     ]) {
-      for (const m of answerLocally(q)?.matches ?? []) {
+      for (const m of answerLocally(q, ALL)?.matches ?? []) {
         expect(real.has(m.screen), `${q} invented ${m.screen}`).toBe(true);
       }
     }
@@ -39,7 +51,7 @@ describe('it can only name what exists', () => {
   it('quotes the guide rather than writing about it', () => {
     // Every line it shows has to appear in the generated guide verbatim, so
     // nothing here can be a sentence somebody would have to check.
-    const got = answerLocally('where are my timers and alarms');
+    const got = answerLocally('where are my timers and alarms', ALL);
     for (const line of got?.fromGuide ?? []) {
       expect(line.length).toBeGreaterThan(29);
       expect(line).toBe(line.trim());
@@ -48,8 +60,8 @@ describe('it can only name what exists', () => {
 });
 
 describe('what it puts first', () => {
-  const first = (q: string) => answerLocally(q)?.matches[0]?.screen;
-  const listed = (q: string) => (answerLocally(q)?.matches ?? []).map((m) => m.screen);
+  const first = (q: string) => answerLocally(q, ALL)?.matches[0]?.screen;
+  const listed = (q: string) => (answerLocally(q, ALL)?.matches ?? []).map((m) => m.screen);
 
   it('puts the screen first when the question names it', () => {
     expect(first('where is the meal plan')).toBe('meals');
@@ -83,8 +95,8 @@ describe('when it should say nothing', () => {
   it('says nothing to a question that is not about this app', () => {
     // These reach the model. The mode reader sends them there anyway — this
     // is the second line, for when it does not.
-    expect(answerLocally('')).toBeNull();
-    expect(answerLocally('the of and a')).toBeNull();
+    expect(answerLocally('', ALL)).toBeNull();
+    expect(answerLocally('the of and a', ALL)).toBeNull();
   });
 
   it('drops a match far weaker than the best one', () => {
@@ -93,13 +105,13 @@ describe('when it should say nothing', () => {
      * blurb contains the word "plan", so it scored against "where is the meal
      * plan" — next to the real match it makes the real one look like a guess.
      */
-    const got = answerLocally('where is the meal plan');
+    const got = answerLocally('where is the meal plan', ALL);
     expect(got?.matches[0].screen).toBe('meals');
     expect(got?.matches.map((m) => m.screen)).not.toContain('home');
   });
 
   it('keeps a genuine tie, because a tie is worth showing as one', () => {
-    const got = answerLocally('where do I mark attendance');
+    const got = answerLocally('where do I mark attendance', ALL);
     // Whatever it finds, nothing in it may be far below the top.
     const scores = (got?.matches ?? []).map((m) => m.score);
     if (scores.length > 1) expect(scores.at(-1)!).toBeGreaterThanOrEqual(scores[0] * 0.4);
@@ -108,8 +120,8 @@ describe('when it should say nothing', () => {
 
 describe('what it costs', () => {
   it('is a pure function of the question, so it works offline and repeats', () => {
-    const once = JSON.stringify(answerLocally('how do I add a course'));
-    const twice = JSON.stringify(answerLocally('how do I add a course'));
+    const once = JSON.stringify(answerLocally('how do I add a course', ALL));
+    const twice = JSON.stringify(answerLocally('how do I add a course', ALL));
     expect(once).toBe(twice);
   });
 });
