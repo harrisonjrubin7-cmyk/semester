@@ -14,7 +14,7 @@ import type { CreativeProject, FormData, FormResponse, Question } from './creati
  *
  * This is the other side. The author publishes; a link goes out; anybody
  * holding it answers without an account; the answers come back to the author
- * and to nobody else. `supabase/migrations/20260901001100_forms.sql` is the
+ * and to nobody else. `supabase/migrations/20260921143455_forms.sql` is the
  * half that enforces it and `supabase/forms.check.sql` is where that
  * enforcement is asserted rather than hoped.
  *

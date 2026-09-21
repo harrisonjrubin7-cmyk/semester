@@ -41,7 +41,7 @@ import {
 
 const repo = join(process.cwd(), '..');
 const migration = readFileSync(
-  join(repo, 'supabase/migrations/20260901001400_referrals.sql'),
+  join(repo, 'supabase/migrations/20260921002623_referrals.sql'),
   'utf8',
 );
 

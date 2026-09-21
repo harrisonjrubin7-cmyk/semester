@@ -116,7 +116,7 @@ describe('the same list in three places, which is three places to drift', () => 
    * constraint rather than written down here.
    */
   function fromSql(): string[] {
-    const sql = read('supabase/migrations/20260901001300_access_log.sql');
+    const sql = read('supabase/migrations/20260921143653_access_log.sql');
     const constraint = /check \(client in \(([^)]*)\)\)/s.exec(sql);
     expect(constraint, 'access_log no longer constrains client; re-point this guard').toBeTruthy();
     return [...constraint![1].matchAll(/'([a-z]+)'/g)].map((m) => m[1]).sort();

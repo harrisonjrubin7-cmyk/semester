@@ -2,7 +2,7 @@
  * Saying why an account could not be made, when the reason is the invite list.
  *
  * The gate itself is a trigger on `auth.users` —
- * `supabase/migrations/20260901001200_invites.sql` — and it has to be there
+ * `supabase/migrations/20260921002428_invites.sql` — and it has to be there
  * rather than here, because the key this app carries is publishable and
  * anybody holding it can call the auth endpoint without ever loading this
  * file. **Everything in this module is an explanation. None of it is the

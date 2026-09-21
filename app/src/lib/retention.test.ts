@@ -193,7 +193,7 @@ describe('the clocks that run are still the clocks the document describes', () =
    * number, which is the drift a reader cannot see from either end alone.
    */
   it('agrees with the migration about the access log', () => {
-    const sql = readFileSync(join(MIGRATIONS, '20260901001300_access_log.sql'), 'utf8');
+    const sql = readFileSync(join(MIGRATIONS, '20260921143653_access_log.sql'), 'utf8');
     expect(sql).toMatch(/date - 90\b/);
     expect(flat()).toMatch(/\*\*90 days\*\*/);
   });

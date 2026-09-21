@@ -23,7 +23,7 @@
 -- no window between the read and the write because there is no separate read.
 --
 -- Apply with:
---     psql "$DATABASE_URL" -f supabase/migrations/20260901000900_usage_atomic.sql
+--     psql "$DATABASE_URL" -f supabase/migrations/20260921142822_usage_atomic.sql
 
 create or replace function public.count_call(p_user uuid, p_month text)
 returns int

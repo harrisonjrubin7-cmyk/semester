@@ -256,7 +256,7 @@ and the payout is deliberately not built.** `ACTION-PLAN.md` flags the
 ambassador GTM model as untested, and automating a credit before the mechanic
 is known to work is building the expensive half of an untested idea.
 
-It is built here as `supabase/migrations/20260901001400_referrals.sql`,
+It is built here as `supabase/migrations/20260921002623_referrals.sql`,
 `app/src/lib/referral.ts` and `app/src/components/ReferralLink.tsx`, and it
 lands on the account screen rather than as a new destination — which is the
 document's own last rule, and the registry is **58** screens, not the 60 it
@@ -266,7 +266,7 @@ Four things in the specification could not be built as written, and each is a
 finding rather than a preference:
 
 **The link cannot make an account at all while the pilot is on, and nothing
-would have said so.** `supabase/migrations/20260901001200_invites.sql` is an
+would have said so.** `supabase/migrations/20260921002428_invites.sql` is an
 allow-list enforced by a trigger on `auth.users`. With it on, a stranger who
 follows an ambassador's link is refused at sign-up — so the feature is inert,
 the count stays at nought, and the ambassador has no way to tell that from

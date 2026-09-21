@@ -42,7 +42,7 @@ What was missing is the sentence saying so, and the list of the exceptions.
 
 | What | Kept | Where it is enforced | How it runs |
 | --- | --- | --- | --- |
-| `access_log` | **90 days** | `supabase/migrations/20260901001300_access_log.sql` | On write, inside `note_access()`, scoped to the account being written to |
+| `access_log` | **90 days** | `supabase/migrations/20260921143653_access_log.sql` | On write, inside `note_access()`, scoped to the account being written to |
 | `push_queue` | **Until sent** | `supabase/functions/push/index.ts` | Deleted per account by id after a successful send |
 | `push_devices` | **Until a gateway has said it is gone twice running** | `supabase/functions/push/index.ts` | A 404 or 410 *marks* the row (`gone_at`); still gone on the next run retires it, and any success clears the mark |
 | Tombstones in `notes`, `tasks`, `appointments`, `sittings`, `courses` | **90 days after deletion** | `public.sweep_tombstones`, in `supabase/migrations/20260901000700_records.sql` | `pg_cron`, weekly — the `tombstones` job in `supabase/scheduler.sql` |

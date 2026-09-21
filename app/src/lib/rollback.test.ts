@@ -123,10 +123,12 @@ describe('what the history findings say, which is not about a dashboard', () => 
    * They asserted that `ROLLBACK.md` says Branching applies migrations on merge
    * and no longer says schema changes are made by hand. That was written from
    * Supabase's documentation and from a bot comment, and the repository then
-   * produced evidence against it: `20260901001300_access_log.sql` merged to
-   * main at 17:34 on 18 September and production had eighteen rows, no
-   * `access_log`, and the same newest version twenty-five minutes later. A
-   * merged migration did not arrive.
+   * produced evidence against it: the access_log migration — numbered
+   * `20260901001300` at the time, renumbered `20260921143653` on 21 September
+   * to the version production actually recorded it under — merged to main at
+   * 17:34 on 18 September, and production had eighteen rows, no `access_log`,
+   * and the same newest version twenty-five minutes later. A merged migration
+   * did not arrive.
    *
    * Whether the integration is on is a dashboard setting no test here can read,
    * so no test here should pin a claim about it — that is how a document ends
