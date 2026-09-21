@@ -21,6 +21,7 @@
  */
 
 import { useStore } from '../state/store';
+import { secondLine } from '../lib/dim';
 import { markOn, type Mark } from '../lib/attend';
 import type { CourseId } from '../lib/types';
 
@@ -78,7 +79,7 @@ export function MarkClass({
               border: `1px solid ${on ? 'var(--app-accent-deep)' : 'var(--app-line)'}`,
               background: on ? 'var(--app-accent-wash)' : 'transparent',
               fontSize: 'calc(11.5px * var(--text-scale, 1))',
-              opacity: on ? 1 : 0.65,
+              ...secondLine(on),
             }}
           >
             {c.short}

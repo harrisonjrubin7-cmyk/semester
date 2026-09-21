@@ -161,7 +161,7 @@ export function TypeToConfirm({
           className="btn btn-primary"
           onClick={onConfirm}
           disabled={!ok}
-          style={{ flex: 1, height: 44, opacity: ok ? 1 : 0.4 }}
+          style={{ flex: 1, height: 44 }}
         >
           {confirmLabel}
         </button>

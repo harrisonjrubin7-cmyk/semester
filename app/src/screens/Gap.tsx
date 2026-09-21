@@ -198,9 +198,11 @@ function Run({ win }: { win: GapWindow }) {
           style={{
             position: 'absolute',
             inset: 0,
-            background: 'var(--app-line)',
+            /* A weaker line rather than a veil over one: `color-mix` puts the
+               strength into the colour, where the palette can see it, and an
+               `opacity` here could not be raised by "Increase contrast". */
+            background: 'color-mix(in srgb, var(--app-line) 40%, transparent)',
             borderRadius: 2,
-            opacity: 0.4,
           }}
         />
         <div

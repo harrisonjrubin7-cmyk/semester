@@ -1064,7 +1064,7 @@ export function AddMaterial() {
         disabled={empty || Boolean(already)}
         onClick={() => (set ? show() : review())}
         tone="primary"
-        style={{ fontSize: 'var(--type-lg)', marginTop: already ? 'var(--sp-4)' : 'var(--sp-7)', opacity: empty || already ? 0.4 : 1 }}
+        style={{ fontSize: 'var(--type-lg)', marginTop: already ? 'var(--sp-4)' : 'var(--sp-7)' }}
       >
         {already
           ? 'Already added'

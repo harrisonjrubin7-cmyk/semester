@@ -164,7 +164,6 @@ export function PostMortem({ record, courseId }: { record: Returned; courseId: s
             height: 42,
             letterSpacing: '0.08em',
             textTransform: 'uppercase',
-            opacity: saidSomething(draft) ? 1 : 0.45,
           }}
         >
           Save

@@ -979,6 +979,12 @@ export function FilePick({
   return (
     <label
       className={bare ? 'bare tappable' : `btn btn-${tone}${block ? ' btn-block' : ''}`}
+      /*
+       * A `<label>` cannot be `:disabled`, however disabled the input inside it
+       * is, so the stylesheet is given something it can match — and a screen
+       * reader is told, which it was not before. See `.btn[aria-disabled]`.
+       */
+      aria-disabled={disabled || undefined}
       style={{
         // A `position` of its own, because the input is absolutely positioned
         // against it. Everything else is the block button's own chrome and is
@@ -992,7 +998,6 @@ export function FilePick({
               letterSpacing: '0.1em',
               textTransform: 'uppercase' as const,
               overflow: 'hidden',
-              opacity: disabled ? 0.55 : 1,
             }),
         ...style,
       }}

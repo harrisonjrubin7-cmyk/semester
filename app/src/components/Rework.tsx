@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { faintLine, secondLine } from '../lib/dim';
 import { useStore } from '../state/store';
 import { Blueprint } from './Blueprint';
 import { SectionLabel } from './ui';
@@ -249,16 +250,24 @@ export function Rework({
 
           <div style={{ marginTop: 'var(--sp-6)' }}>
             {/*
-              The row below keeps main's half of this rather than the dim
-              sweep's. The two are nested, and a colour does not compose where
-              an opacity does: taking both would paint the count and the name
-              the same, and taking the sweep's alone would stack 0.64 under 0.5
-              and put the count at 0.32. Name soft, count softer, which is the
-              hierarchy the line is drawn for.
+              Name soft, count softer — the hierarchy an earlier pass argued
+              for here and was right about. What it could not do at the time
+              was say it in tokens: the outer was an `opacity: 0.8` and the
+              inner a `--app-dim`, and its note explains the bind — taking the
+              token for both would paint the name and the count the same, and
+              putting the sweep's dim inside the opacity would stack 0.64 under
+              0.5 and land the count at 0.32.
+
+              The bind was having only one strength to spend. There are two.
+              `--app-dim` is the second line and `--app-faint` the one below
+              it, both audited against every ground, and a colour does not
+              compose with the colour inside it — so the hierarchy survives,
+              the arithmetic does not happen, and "Increase contrast" now
+              reaches both rungs where it could reach neither.
             */}
             {plan.guide.units.map((u, i) => (
-              <div key={i} style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.8, padding: '3px 0' }}>
-                {u.name} <span style={{ color: 'var(--app-dim)' }}>· {u.cards.length}</span>
+              <div key={i} style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', ...secondLine(), padding: '3px 0' }}>
+                {u.name} <span style={faintLine()}>· {u.cards.length}</span>
               </div>
             ))}
           </div>
