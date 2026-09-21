@@ -4,7 +4,7 @@ import { pickPersisted } from '../state/shape';
 import { Page } from '../components/Page';
 import { Blueprint } from '../components/Blueprint';
 import { Avatar } from '../components/Avatar';
-import { ActionButton, SectionLabel } from '../components/ui';
+import { SectionLabel } from '../components/ui';
 import { CustomRow, Group, NavRow } from '../components/shell/Rows';
 import { inventory } from '../lib/inventory';
 import { heading, held, named, nothingHeld, oldestLine, saidAbout } from '../lib/profile';
@@ -134,17 +134,21 @@ export function Profile() {
           </div>
         </div>
 
-        {/* One button, and which one depends on whether there is an account to
-            manage. Both open the same screen — it is the screen that knows the
-            difference, and it says so in its own words rather than in two
-            copies of them here. */}
-        <ActionButton
-          tone={account ? 'secondary' : 'primary'}
-          onClick={() => dispatch({ type: 'go', screen: 'account' })}
-          style={{ fontSize: 'var(--type-sm)', marginTop: 'var(--sp-6)' }}
-        >
-          {account ? 'Manage your account' : cloudConfigured ? 'Sign in' : 'How this device works'}
-        </ActionButton>
+        {/*
+          The button that used to sit here offered `account`, and so does the
+          row under "Your account and your data" below. Both were on screen at
+          once — one job, two doors, in the one place you are already standing.
+
+          The row is the one that stays, on this file's own principle: this
+          screen owns your name and *points* at everything else. A primary
+          button is the screen trying to be where you sign in, and signing in
+          belongs to Account, "because that screen explains what syncs and what
+          does not". Four passes of `SIMPLIFY-AUDIT.md` left the pair standing
+          as a taste call; it was settled by the owner, this way.
+
+          What the button knew and the row did not is the third state, and it
+          moved rather than being dropped — see the row's `sub`.
+        */}
       </Blueprint>
 
       {/*
@@ -273,9 +277,25 @@ export function Profile() {
         thing `screens/Me.tsx` already is.
       */}
       <Group header="Your account and your data">
+        {/*
+          Three states, not two, and the third is the reason this row reads the
+          way it does.
+
+          `cloudConfigured` is false on a build where no sign-in is switched
+          on, and a row promising "two devices hold one semester" there is a
+          promise the build cannot keep — the shape `components/Credentials.tsx`
+          exists to refuse. The button this replaced said "How this device
+          works" for exactly that case, and the sentence had to survive it.
+        */}
         <NavRow
           label="Account"
-          sub={account ? 'Signing in, syncing, and signing out' : 'Sign in so two devices hold one semester'}
+          sub={
+            account
+              ? 'Signing in, syncing, and signing out'
+              : cloudConfigured
+                ? 'Sign in so two devices hold one semester'
+                : 'What this copy does without an account'
+          }
           onClick={() => dispatch({ type: 'go', screen: 'account' })}
         />
         <NavRow

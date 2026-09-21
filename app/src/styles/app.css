@@ -112,7 +112,8 @@
 
      Named --sp-*, not --space-*, and that is not a stylistic preference.
      industry.css already defines --space-1 through --space-8 on a modular
-     scale (3.4, 6.8, 10.2, 13.6, 20.4, 27.2px) and spends them on every
+     scale (3.4, 6.8, 10.2, 13.6, 20.4, 27.2px, each now multiplied by
+     --density there as these are here) and spends them on every
      button, card, row and paragraph in the design system underneath. This
      sheet loads second, so declaring the same names here does not add a scale
      — it silently retunes the whole system. It did: with --space-2 redefined

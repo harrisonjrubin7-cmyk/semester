@@ -68,6 +68,47 @@ describe('under a modal dialog', () => {
     }
   });
 
+  /**
+   * The alarm, which is an `alertdialog` and was the one this missed.
+   *
+   * Every case above builds `role="dialog"`, so none of them could see the
+   * fault: `underModal` selected `[role="dialog"][aria-modal="true"]`, and
+   * `components/Ringing.tsx` — a timer or an alarm going off, covering the
+   * app at `inset: 0` — is `role="alertdialog"`, which is the correct role
+   * for it. Measured before the fix: with one up, `shortcutFor({ key: 'c' })`
+   * returned `{ does: 'Courses' }`, so a key pressed while an alarm was going
+   * off walked the app to another screen behind it.
+   *
+   * It is the worst overlay to have got wrong. `Ringing` has no `onClose` on
+   * purpose — *an alarm that a stray Escape silences is an alarm that did not
+   * go off* — so it is the one thing on screen a student cannot simply
+   * dismiss, and every shortcut went straight through it.
+   *
+   * `a11y/modal.ts` held the right selector in a `hasOpenModal` that nothing
+   * called; the twenty-fifth simplify pass moved it here and cut that.
+   */
+  const ringing = () => {
+    document.body.innerHTML =
+      '<div role="alertdialog" aria-modal="true"><button>Stop</button></div>';
+    return document;
+  };
+
+  it('stands down for an alertdialog too, not only a dialog', () => {
+    expect(underModal(ringing())).toBe(true);
+    for (const s of SHORTCUTS) {
+      expect(shortcutFor({ key: s.key }, ringing()), s.key).toBeNull();
+    }
+  });
+
+  it('still lets the shortcut sheet be closed, which carries aria-modal false', () => {
+    // The control. Widening the selector to the bare attribute must not catch
+    // `aria-modal="false"` — `components/Keys.tsx` renders its own sheet with
+    // that, and `?` has to keep toggling it.
+    document.body.innerHTML = '<div role="dialog" aria-modal="false"></div>';
+    expect(underModal(document)).toBe(false);
+    expect(shortcutFor({ key: '?' }, document)).not.toBeNull();
+  });
+
   it('hands them back the moment it closes', () => {
     const doc = open(false);
     expect(shortcutFor({ key: 't' }, doc)?.screen).toBe('home');

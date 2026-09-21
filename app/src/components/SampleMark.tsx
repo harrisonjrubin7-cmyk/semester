@@ -1,5 +1,5 @@
 import { useStore } from '../state/store';
-import { faintLine, secondLine } from '../lib/dim';
+import { secondLine } from '../lib/dim';
 
 /**
  * A standing note about where these four courses came from — and two ways out.
@@ -81,7 +81,7 @@ export function SampleMark() {
       >
         These are mine
       </button>
-      <span aria-hidden="true" style={{ ...faintLine(), flex: 'none' }}>·</span>
+      <span aria-hidden="true" style={{ ...secondLine(), flex: 'none' }}>·</span>
       <button
         type="button"
         className="bare tap-y"

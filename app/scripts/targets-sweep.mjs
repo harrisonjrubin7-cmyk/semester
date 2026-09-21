@@ -476,7 +476,32 @@ const MEASURE = `(() => {
     if (t.rw === 0 || t.rh === 0) continue;
     total += 1;
     const inline = getComputedStyle(el).display.includes('inline');
-    const fails = t.h < AA || t.w < AA;
+    /*
+     * Size, on the control's own rectangle when something is over it.
+     *
+     * t.w and t.h are the *hit* size, and for a blocked control that is 0x0 by
+     * construction — which then failed the AA test and put the thing in the
+     * list headed "the only list that is a failure". The map screen's zoom
+     * buttons are 30x30. They were being reported as under twenty-four for
+     * being covered.
+     *
+     * 2.5.8 is about how big a target is. Occlusion is a different question
+     * and this sweep already answers it separately, in the blocked count and
+     * in the covered pass above — whose own comment says the two were folded
+     * together in the first three versions and that keeping them apart is the
+     * fix. This loop was still folding them.
+     *
+     * A control that is genuinely small *and* covered still fails here, on its
+     * own rectangle, which is the reading that does not depend on what is
+     * painted over it.
+     *
+     * No backticks anywhere in this comment, and that is not fussiness: this
+     * block is inside the MEASURE template literal, so one would end the
+     * string and the file would not parse. The first version of this had four.
+     */
+    const w = t.blocked ? t.rw : t.w;
+    const h = t.blocked ? t.rh : t.h;
+    const fails = h < AA || w < AA;
     if (fails) { if (!inline) underAA += 1; else inlineAA += 1; }
     if (t.blocked) blocked += 1;
     const key0 = name(el) + ' ' + Math.round(t.rw) + 'x' + Math.round(t.rh) +
