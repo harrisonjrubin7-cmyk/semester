@@ -183,8 +183,35 @@ than afterwards: Brightspace asks for a JWKS URL during the install. With no
 key set the endpoint answers 503 and says so, and **launches keep working** —
 a launch is the platform proving itself to us and needs nothing of ours.
 
-Nothing signs with the key yet. Grade passback and deep linking are what will,
-and neither is built.
+**Deep linking signs with it**, and is the only thing that does. Grade
+passback still does not exist; the key is no longer idle.
+
+### Deep linking, on the launch endpoint
+
+There is no third URL for this. Deep linking is a different *message* arriving
+at `…/lti/launch`, which is why the administrator's list above did not grow.
+
+What it is for: an instructor inside Brightspace's "add an activity" flow
+picks Semester, Brightspace opens the launch endpoint with an
+`LtiDeepLinkingRequest`, and what comes back is not a page but a JWT this tool
+signs, posted to an address the platform nominated. The instructor never
+really leaves Brightspace, and the course ends up holding a link that launches
+Semester properly — with a token, verified — rather than a bare address.
+
+Three things refuse it, and each says which:
+
+    not-a-teacher        the launch carried no instructor role
+    no-key               LTI_PRIVATE_KEY is not set, so nothing can be signed
+    insecure-return-url  the platform's return address was not https
+
+The first is the one worth stating plainly: a deep-linking response is an
+instruction to put something in a course, so a platform that asks a *student*
+for one is confused or being driven, and the answer is no either way.
+
+The second is why this section sits under the key rather than beside the
+endpoints. A launch works with no key at all. This does not, and the person
+who has to fix it is the same person standing in the dialog — so it answers
+503 and names the setting rather than 500 and a log they cannot read.
 
 ### Registering a school
 
@@ -263,8 +290,10 @@ the honest reading of what happened, since a school's administrator installing
 this tool is an invitation issued by exactly the person the gate exists to let
 issue them. It leaves a row saying so.
 
-Deep linking and grade passback are still not built; both need a key of this
-tool's own, which is why there is no key material in either migration.
+Grade passback is still not built. Deep linking now is, and signs with the key
+described above — which is why there is still no key material in either
+migration: the key was always going to live as a function secret, and the
+thing that needed it arrived without changing that.
 
 ## Tables
 

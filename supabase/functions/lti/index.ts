@@ -60,9 +60,10 @@
  */
 
 import { createClient } from 'jsr:@supabase/supabase-js@2';
-import { createRemoteJWKSet, jwtVerify } from 'npm:jose@5';
+import { createRemoteJWKSet, importJWK, jwtVerify, SignJWT, type JWK } from 'npm:jose@5';
 import { checkLaunch, startLogin, type Launch, type Registration } from '../_shared/lti.ts';
 import { landingPath, provisionedEmail, provisionedMetadata } from '../_shared/ltiaccount.ts';
+import { autoPostForm, mayPlace, readSettings, resourceLinkItem, responseClaims } from '../_shared/ltideeplink.ts';
 import { jwks, keyId, publicJwk } from '../_shared/ltikey.ts';
 
 /** How long a launch has between the redirect out and the POST back. */
@@ -454,6 +455,73 @@ Deno.serve(async (req) => {
     console.log(
       `lti launch ok: iss=${who.issuer} deployment=${who.deploymentId} sub=${who.subject} context=${who.contextId ?? '-'} teaches=${who.teaches}`,
     );
+
+    /*
+     * ── The launch that asks a question ───────────────────────────────────
+     *
+     * An instructor inside Brightspace's "add an activity" flow. Everything
+     * below this block is about a student arriving at something already
+     * placed — an account, a session, a redirect — and none of it applies:
+     * nobody is arriving, and provisioning an account for an instructor who
+     * is choosing a link would leave a user behind on every cancelled dialog.
+     *
+     * So this returns before any of that, and it is the only path in this
+     * repository that signs something.
+     */
+    if (who.messageType === 'LtiDeepLinkingRequest') {
+      const allowed = mayPlace(who);
+      if (!allowed.ok) return refuse(allowed.reason, allowed.detail, 403);
+
+      const settings = readSettings(claims);
+      if (!settings.ok) return refuse(settings.reason, settings.detail, 400);
+
+      const key = privateJwk();
+      if (!key) {
+        /*
+         * A launch needs no key and still works; this cannot work without
+         * one, and the administrator who must fix it is the same person
+         * standing in the dialog. 503 with the setting named, rather than a
+         * 500 that sends them to a log they cannot read.
+         */
+        return refuse('no-key', 'LTI_PRIVATE_KEY is not set, so nothing can be signed.', 503);
+      }
+
+      const item = resourceLinkItem(
+        who.targetLinkUri,
+        who.contextTitle ? `Semester — ${who.contextTitle}` : 'Semester',
+      );
+      if (!item.ok) return refuse(item.reason, item.detail, 500);
+
+      const body = responseClaims({
+        reg,
+        settings: settings.value,
+        items: [item.value],
+        nonce: crypto.randomUUID(),
+        now: Math.floor(Date.now() / 1000),
+        msg: 'Semester is ready in this course.',
+      });
+      if (!body.ok) return refuse(body.reason, body.detail, 500);
+
+      let signed: string;
+      try {
+        const kid = await keyId(key);
+        signed = await new SignJWT(body.value)
+          .setProtectedHeader({ alg: 'RS256', kid, typ: 'JWT' })
+          .sign(await importJWK(key as JWK, 'RS256'));
+      } catch (e) {
+        return refuse('sign-failed', `The deep linking response could not be signed: ${e}`, 500);
+      }
+
+      console.log(
+        `lti deep link ok: iss=${who.issuer} deployment=${who.deploymentId} sub=${who.subject} ` +
+          `context=${who.contextId ?? '-'} return=${settings.value.returnUrl}`,
+      );
+
+      return new Response(autoPostForm(settings.value.returnUrl, signed), {
+        status: 200,
+        headers: { 'content-type': 'text/html; charset=utf-8' },
+      });
+    }
 
     /*
      * Where the app lives. Read rather than guessed: this is the address a
