@@ -3,9 +3,11 @@
 The schedule exists. It was never written down in one place, which is a
 different problem from not having one, and it is the problem this file is for.
 
-Three clocks run today, a fourth was written and is not running, and everything
-else is kept until somebody deletes it. All four are in migrations, one is in an
-Edge Function, and the promise they are all held to is a paragraph on a screen.
+Four clocks run today — the fourth was written three weeks before anything
+called it — and everything else is kept until somebody deletes it. Two are in
+migrations, two are in an Edge Function, one of them is scheduled from a file
+applied by hand, and the promise they are all held to is a paragraph on a
+screen.
 Nobody deciding whether this project is safe to pilot could have assembled that,
 and the first person who had to would have been assembling it under pressure.
 
@@ -43,6 +45,7 @@ What was missing is the sentence saying so, and the list of the exceptions.
 | `access_log` | **90 days** | `supabase/migrations/20260901001300_access_log.sql` | On write, inside `note_access()`, scoped to the account being written to |
 | `push_queue` | **Until sent** | `supabase/functions/push/index.ts` | Deleted per account by id after a successful send |
 | `push_devices` | **Until the push service rejects it** | `supabase/functions/push/index.ts` | A 404 or 410 from the endpoint retires the row |
+| Tombstones in `notes`, `tasks`, `appointments`, `sittings`, `courses` | **90 days after deletion** | `public.sweep_tombstones`, in `supabase/migrations/20260901000700_records.sql` | `pg_cron`, weekly — the `tombstones` job in `supabase/scheduler.sql` |
 
 The whole push queue is also deleted immediately when a student switches
 reminders off — that is in the privacy text above and is a user action rather
@@ -55,43 +58,53 @@ something touches it again, which is a property worth knowing and not a defect �
 the rows are per account per day per client family, never an address and never a
 user agent.
 
-## The clock that was written and does not run
+## The tombstone sweep, and the decision behind it
 
 `public.sweep_tombstones(older_than interval default '90 days')`, in
 `supabase/migrations/20260901000700_records.sql`, deletes soft-deleted rows from
 `notes`, `tasks`, `appointments`, `sittings` and `courses`.
 
-**Nothing calls it.** It is revoked from `public`, `anon` and `authenticated`,
-so it is not reachable from the API, and the only caller anywhere in this
-repository is `supabase/records.check.sql`, which is the test suite. Its own
-header is explicit that this is deliberate:
+**For a long time nothing called it.** It is revoked from `public`, `anon` and
+`authenticated`, so it is not reachable from the API, and for weeks the only
+caller anywhere in this repository was `supabase/records.check.sql` — the test
+suite. So the live state was that a row a student deleted left a tombstone kept
+indefinitely. That was never a contradiction of the privacy page above: a
+tombstone is `{ id, deleted_at }` with the content already gone. But
+"indefinitely" was a decision nobody had taken, and this project *does* have
+`pg_cron` — `supabase/scheduler.sql` already runs the push job on it.
+
+**It is scheduled now**, as the `tombstones` job in `scheduler.sql`: weekly, at
+04:17 UTC on Sunday, at the function's own ninety-day default. The migration's
+header asked for exactly this and said what it wanted first —
 
 > Not scheduled here. Run it by hand, or attach it to `pg_cron` if you have it —
 > an automatic job that deletes rows is not something this file should switch on
 > without you having read this paragraph.
 
-So the live state is: **a row a student deletes leaves a tombstone that is kept
-indefinitely.** That is not a contradiction of the privacy page — a tombstone is
-`{ id, deleted_at }` with the content gone, and it exists so that a delete on one
-device is not resurrected by another device that was offline. But "indefinitely"
-is a decision nobody has actually taken, and this project *does* have `pg_cron`:
-`supabase/scheduler.sql` already deploys it and runs the push job on it.
+— and the paragraph it points at is the reasoning this rests on: *"Ninety days
+is far longer than any device is plausibly offline and short enough that the
+tables do not accumulate a term of deletions."*
 
-**This is the one open item in this document, and it is the owner's to decide.**
-Left as it is, it is defensible and should be said out loud rather than left to
-be discovered. Switched on, it is one statement, alongside the push job:
+**What it costs, stated rather than buried.** A tombstone is what stops a
+deletion being resurrected by a device that was offline when it happened.
+Deleting one after ninety days means a device offline for longer than that,
+still holding the row, syncs it back as though it were new. Ninety days is
+where `records.sql` drew that line, and this schedule adopts it rather than
+re-arguing it.
 
-```sql
-select cron.schedule(
-  'tombstones',
-  '17 4 * * 0',                          -- Sundays, off the push job's cadence
-  $$select public.sweep_tombstones('90 days')$$
-);
-```
+Two smaller properties worth knowing. The job is **active**, unlike `push`,
+which is parked until its Edge Function has a secret — this one calls a
+function that is already there and waits for nothing. And it is **weekly rather
+than nightly**, because the work is proportional to deletions rather than to
+the size of the tables, so running it seven times as often would delete the
+same rows seven days sooner and buy nothing.
 
-Do not add that to a migration without deciding it. The migration's paragraph is
-right that a file which silently starts deleting rows is the wrong way for this
-to arrive.
+**This is not covered by `supabase/check.sh`.** That harness applies the
+migrations to a throwaway Postgres that has no `pg_cron`, so no `.check.sql`
+suite can see a schedule. What holds it instead is
+`app/src/lib/retention.test.ts`, which pins this document and `scheduler.sql`
+to the same interval and the same job name — a sweep silently unscheduled, or
+rescheduled at a different retention than the one written here, goes red there.
 
 ## Everything else: until you delete it
 
