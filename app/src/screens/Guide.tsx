@@ -12,7 +12,7 @@ import { hasPrebuiltDeck, hasPrebuiltDocs } from '../lib/handout';
 import { ActionButton, ChipRow, SectionLabel } from '../components/ui';
 import { ClearEvidence, Standing } from '../components/Standing';
 import { knowingOf, noEvidence, says as saysKnowing } from '../lib/knowing';
-import { cardKey } from '../lib/review';
+import { cardIdentity } from '../lib/review';
 import { fromGuide } from '../lib/doctemplates';
 import { addedLine } from '../lib/study';
 import { ModePicker } from '../components/ModePicker';
@@ -72,7 +72,7 @@ export function Guide() {
   const standings = useMemo(() => {
     const at = now.getTime();
     return guide.units.map((u) => {
-      const keys = u.cards.map((c) => cardKey(state.guideId, c.q));
+      const keys = u.cards.map((c) => cardIdentity(state.guideId, c));
       return { keys, ...knowingOf(keys, state.reviews, at) };
     });
   }, [guide.units, state.guideId, state.reviews, now]);

@@ -18,26 +18,32 @@ export const BUS_GUIDE: Guide = {
       mastery: 72,
       cards: [
         {
+          id: '14l8aq8',
           q: 'What actually decides your grade?',
           a: 'One 3-page case write-up (30%) and one final exam (25%) — 55% together. Everything else is points you lose only by not showing up.',
         },
         {
+          id: 'auvzfb',
           q: 'What is “the free 15%”?',
           a: 'Attendance (10%) plus SONA research sessions (5%) require zero studying. Miss them and an A becomes a B.',
         },
         {
+          id: '14hctxt',
           q: 'What is the SONA trap?',
           a: 'You must attend once in each window — Sep 8–17 and Sep 29–Oct 8. Two sessions in one window earns only 2.5%. Miss window 1 and the full 5% is gone permanently.',
         },
         {
+          id: 'redfz4',
           q: 'How does late work get penalized?',
           a: '1–7 days late = −20%. 8–14 days = −50%. Past 14 days = zero. Nothing is accepted after Oct 13, 11:59 PM CT.',
         },
         {
+          id: '102v2d8',
           q: 'What does the honour code say about AI here?',
           a: 'Do not upload course text or Harvard cases to an LLM, and any AI use must be cited to its original source, not the model. Study from a guide; write the case yourself from the case PDF.',
         },
         {
+          id: '1b9ky8',
           q: 'What is the shape of the calendar?',
           a: 'A 2-credit course compressed into seven weeks, Aug 27 → Oct 13, thirteen sessions. The final is 40 multiple choice + 10 short answer.',
         },
@@ -48,18 +54,22 @@ export const BUS_GUIDE: Guide = {
       mastery: 78,
       cards: [
         {
+          id: '1f56213',
           q: 'Name the 5 C’s.',
           a: 'Customers, Collaborators, Competitors, Company, Context. The company sits in the middle; the other four are the world around it.',
         },
         {
+          id: '1stxaka',
           q: 'What does each C ask?',
           a: 'Customers: whose needs are we fulfilling? Collaborators: who helps us create value? Competitors: who else chases the same need in the same customers? Company: our resources, skills, offering, goals. Context: economy, tech, regulation, culture.',
         },
         {
+          id: '1qxipjw',
           q: 'Which C do students define too narrowly?',
           a: 'Competitors — anyone aiming to fulfil the same need for the same customers. Netflix’s competitor was never only Blockbuster; it was sleep, video games and going out.',
         },
         {
+          id: '1dgybox',
           q: '5 C’s for Opera Philadelphia?',
           a: 'Customers: aging subscribers plus a young occasional audience. Collaborators: the Academy of Music, donors, festival venues. Competitors: every other Friday night in Philadelphia. Company: mid-size, bold artistic reputation, thin margins. Context: post-pandemic attendance, streaming, an older donor base.',
         },
@@ -70,14 +80,17 @@ export const BUS_GUIDE: Guide = {
       mastery: 66,
       cards: [
         {
+          id: '1r3g4sy',
           q: 'State the 3-V market value principle.',
           a: 'Customer value > 0 AND collaborator value > 0 AND company value > 0, all at once. Kill any leg and the offer collapses.',
         },
         {
+          id: '1bt9vpb',
           q: 'What does each leg mean?',
           a: 'Customer value: benefits minus price — if negative nobody buys. Collaborator value: enough margin and reason for partners to carry it — if negative nobody sells it. Company value: profit, share or strategic position — if negative we cannot sustain it.',
         },
         {
+          id: '1eqf4v8',
           q: 'Customers delighted, partners paid, company losing money — verdict?',
           a: 'Not viable. MoviePass is the case: $10/month unlimited films gave enormous customer value and theatres got full price, but company value was deeply negative. Two out of three is a bankruptcy.',
         },
@@ -88,18 +101,22 @@ export const BUS_GUIDE: Guide = {
       mastery: 70,
       cards: [
         {
+          id: 'hof83q',
           q: 'The seven tactics in their three groups?',
           a: 'Design the offering: product, service, brand, price, incentives. Communicate it: communication. Deliver it: distribution. This is Chernev’s update of the old 4 P’s.',
         },
         {
+          id: '1dev7k5',
           q: 'Which two tactics explain Blockbuster’s failure?',
           a: 'Distribution — slow to streaming, hard to collaborate with, new-release shortages — and brand: a brick-and-mortar retailer defined by late fees.',
         },
         {
+          id: '1ssh2hs',
           q: 'Why is “late fees” filed under brand, not incentives?',
           a: 'A pricing-and-incentives decision became the single association customers held about the company. One badly set tactic redefined a different box entirely.',
         },
         {
+          id: '11md9b2',
           q: 'What is the discipline the tactics impose?',
           a: 'Always walk all seven. Blockbuster did not lose on price or advertising — it lost on the two tactics most students forget to check.',
         },
@@ -110,14 +127,17 @@ export const BUS_GUIDE: Guide = {
       mastery: 74,
       cards: [
         {
+          id: 'hkxon5',
           q: 'Which half of SWOT is internal?',
           a: 'Strengths and weaknesses are internal to the company — patents, brand equity, cost position, talent; thin cash, weak distribution, no digital team. Opportunities and threats are external.',
         },
         {
+          id: 'jjur54',
           q: '“Consumers increasingly prefer sustainable fashion” — where does it go on ECOALF’s SWOT?',
           a: 'Opportunity, external. Better still, the derivative opportunity it creates for ECOALF specifically — a virtual store, a persistent-trend product line — not that the trend exists.',
         },
         {
+          id: 'cg7wgc',
           q: 'What is the exact mistake Hogue flagged?',
           a: 'Putting external forces in Strengths, or company facts in Opportunities. For ECOALF, S/W are internal to ECOALF only.',
         },
@@ -128,38 +148,47 @@ export const BUS_GUIDE: Guide = {
       mastery: 52,
       cards: [
         {
+          id: '1q3yl92',
           q: 'Value chain vs. value delivery network?',
           a: 'Value chain (Porter): everything inside your firm that adds value, design to delivery — Apple from chip design to the Genius Bar. Value delivery network: the wider ecosystem of suppliers, distributors and customers, like Toyota’s tier-1 network.',
         },
         {
+          id: 'v6dyg5',
           q: 'What is value migration?',
           a: 'Economic value shifting away from stale business models toward more agile ones — cable bundles to streaming.',
         },
         {
+          id: '1ch5s99',
           q: '$180 revenue a year, 60% gross margin, 3.5 years — CLV?',
           a: '$108 profit a year × 3.5 = $378. That is the ceiling on acquisition spend; at $120 CAC each subscriber nets about $258.',
         },
         {
+          id: '1lq1en5',
           q: 'What is value-based pricing, and Oberholzer-Gee’s definition of value?',
           a: 'Price set from customers’ perceived value rather than your costs — an EpiPen costs a few dollars to make. Customer value = what the customer appreciates the product at, minus what they must pay.',
         },
         {
+          id: '1uoilhw',
           q: 'Define customer centricity.',
           a: '“Seeing the world in general, and a company’s services in particular, from the customer’s point of view.”',
         },
         {
+          id: '16hlkbk',
           q: 'Name the 4 A’s.',
           a: 'Acceptability, affordability, accessibility, awareness — Sheth & Sisodia’s four management failures behind most business failures. Google Glass failed acceptability.',
         },
         {
+          id: 'df1sxu',
           q: 'The counterpoint Hogue wants you to hold.',
           a: 'Marshall Field: “the customer is always right.” Bezos: start with the customer and work backwards. But Kelleher of Southwest: the customer is sometimes wrong, and defending an abusive customer over your own employee is a betrayal. Customer centricity starts with employees.',
         },
         {
+          id: '1cmhtc8',
           q: 'The five steps of an A/B test?',
           a: 'Formulate the hypothesis, isolate one variable, define success metrics up front, execute a 50/50 split launch to similar audiences, analyse and iterate. Primary KPIs: CTR and CVR.',
         },
         {
+          id: 'e360dj',
           q: 'Why does an A/B test work?',
           a: 'Because only one thing changed, the difference in results is the effect of that thing. Change two variables and you learn nothing.',
         },
@@ -170,42 +199,52 @@ export const BUS_GUIDE: Guide = {
       mastery: 44,
       cards: [
         {
+          id: 'q22pat',
           q: 'What does research actually do for a company?',
           a: 'It rarely finds the next big thing. Done right it focuses the debate on strategy — shortening timelines and raising confidence. Done badly it is a disaster, and “speed to market is no excuse for negligence.”',
         },
         {
+          id: '1nfodi9',
           q: 'The seven steps of the research process?',
           a: 'Define the central question, build objectives, write the brief, collect data, analysis and insight, presentation and reporting, recommendations and next steps.',
         },
         {
+          id: '148qecj',
           q: 'Qualitative, quantitative or observational — how do you choose?',
           a: 'Qual when the issue is not well understood or the answer needs no number. Quant when you need a measurable answer. Observational when you need a compelling reason to believe from real behaviour.',
         },
         {
+          id: '15nw6fl',
           q: 'Remember the split.',
           a: 'Qualitative tells you why and cannot be projected to a population. Quantitative tells you how many and can. Observation tells you what people actually did rather than what they said.',
         },
         {
+          id: '1xd9axl',
           q: 'Primary vs. secondary data?',
           a: 'Primary is freshly gathered for your project — expensive, slow, exactly on-question (Kantar, IPSOS, Morning Consult). Secondary already exists for another purpose — cheap, fast, not on-question (Nielsen, IRI, Mintel).',
         },
         {
+          id: '1m8qmeq',
           q: 'The three decisions in a sampling plan?',
           a: 'Sampling unit (whom), sample size (how many), sampling procedure (how chosen). Screening criteria define the addressable market; quotas keep it representative.',
         },
         {
+          id: '1esjodz',
           q: 'n = 500 and you want to halve your error — cost?',
           a: 'About n = 2,000. Error falls with √n. Going 100 → 500 more than halves your error; going 1,000 → 2,000 buys under a point for double the money.',
         },
         {
+          id: '1ymffoq',
           q: 'Why is conjoint better than “what would you pay?”',
           a: 'It forces trade-offs between whole competing offers, the way a real purchase works. It produces part-worth utilities and predicts preference share for products that do not exist yet.',
         },
         {
+          id: '1s2is86',
           q: 'How is a conjoint study built?',
           a: 'Pick 4–6 attributes with levels. A fractional factorial or orthogonal design shows each respondent only a subset — 5 to 15 choice tasks — so they do not fatigue but the statistics still hold.',
         },
         {
+          id: 'qrw1km',
           q: 'What does a good central question look like?',
           a: 'It names a decision (“what monthly price”), a metric (“maximizes revenue”), and a testable add-on (“does NYT content drive incremental sales”). Copy that shape.',
         },
@@ -216,26 +255,32 @@ export const BUS_GUIDE: Guide = {
       mastery: 56,
       cards: [
         {
+          id: '61flaa',
           q: 'STP in order?',
           a: 'Segment the market into groups that would respond differently. Target the ones worth serving on size, growth, fit and competitive intensity. Position the single idea you want to own in their head.',
         },
         {
+          id: '1ejl5n6',
           q: 'Four ways to cut a market?',
           a: 'Demographic, geographic, psychographic, behavioural. Behavioural — usage rate, occasion, loyalty, benefit sought — is usually the most predictive.',
         },
         {
+          id: '7vewyi',
           q: 'What makes a segment worth targeting?',
           a: 'Measurable, substantial, accessible, actionable. A segment you cannot reach is a fact, not a strategy.',
         },
         {
+          id: '1tsjmbb',
           q: 'The positioning statement template?',
           a: 'For [target] who [need or occasion], [brand] is the [frame of reference] that [point of difference] because [reason to believe].',
         },
         {
+          id: 'cofxdz',
           q: 'What does open space on a perceptual map mean?',
           a: 'Either an opportunity or a place nobody wants to be. Your job is to say which, and why.',
         },
         {
+          id: '1ey37xg',
           q: 'How should you name a target segment in the case?',
           a: 'By behaviour and motivation — “lapsed single-ticket buyers who came for a festival production” — not by age bracket, then show the mix changing for them. That is what “insights beyond the obvious” means in the 40% rubric line.',
         },
@@ -246,18 +291,22 @@ export const BUS_GUIDE: Guide = {
       mastery: 60,
       cards: [
         {
+          id: '14wmvce',
           q: 'The five stages of the buying process, with levers?',
           a: 'Problem recognition (communication that names the need), information search (SEO, reviews, retail), evaluation (positioning, brand, price), purchase (incentives, distribution, checkout friction), post-purchase (service, loyalty, CLV).',
         },
         {
+          id: '1wjb4ar',
           q: 'The core idea?',
           a: 'Buying is a process, not a moment. Tactics attach to different stages, so knowing the stage tells you which lever to pull.',
         },
         {
+          id: 'bgttay',
           q: 'The four influences on a buyer?',
           a: 'Cultural (slowest-moving and strongest), social (why influencer marketing works), personal, psychological.',
         },
         {
+          id: 'xl9lzu',
           q: 'How does Simply Good Jars map onto the stages?',
           a: 'Stage 1 is the problem — a healthy lunch you do not have to make. Stage 5 is the jar return, where the post-purchase behaviour is the sustainability story.',
         },
@@ -268,18 +317,22 @@ export const BUS_GUIDE: Guide = {
       mastery: 48,
       cards: [
         {
+          id: '1ndy73f',
           q: 'Ariely’s core claim?',
           a: 'People are not rational utility-maximisers, they are predictably irrational — so how you frame an offer changes demand as much as the offer itself. The standard model is a special case, not the whole thing.',
         },
         {
+          id: 'lzixzz',
           q: 'Anchoring, loss aversion, decoy — one line each.',
           a: 'Anchoring: the first number sets the reference — a $1,200 list price makes $700 feel like a deal. Loss aversion: losing $100 hurts about twice as much as gaining $100 pleases. Decoy: an obviously worse third option changes which of the other two people pick.',
         },
         {
+          id: '1jq8454',
           q: 'Nobody chose the $125 print-only decoy — why keep it?',
           a: 'With the decoy, print+web took 84% and web-only 16%. Remove it and print+web falls to 32% while web-only jumps to 68% — cutting revenue. An option nobody buys can be the most profitable thing on the menu.',
         },
         {
+          id: '1s95bx6',
           q: 'The likely short-answer question here?',
           a: '“Give an example of a behavioural bias and how a marketer would use it ethically.” Note the word ethically — “ethical influence” is a stated student goal, so the boundary matters.',
         },
@@ -290,26 +343,32 @@ export const BUS_GUIDE: Guide = {
       mastery: 40,
       cards: [
         {
+          id: '1t3og17',
           q: 'CTR, CVR, CPA, ROMI — the formulas?',
           a: 'CTR = clicks ÷ impressions. CVR = conversions ÷ clicks. CPA = spend ÷ conversions. ROMI = (incremental revenue × contribution margin − spend) ÷ spend.',
         },
         {
+          id: '1q8o3x6',
           q: 'Work the funnel: 100k impressions, 2,000 clicks, 60 signups, $3,000 spend.',
           a: '2.0% CTR, 3.0% CVR, $50 CPA. 60 × $180 = $10,800 × 60% margin = $6,480. ROMI = ($6,480 − $3,000) ÷ $3,000 = 116% — and that is year one only, against a 3.5-year CLV.',
         },
         {
+          id: '1suvhdl',
           q: 'Why does digital get its own session?',
           a: 'It is the only channel where every stage of the funnel is measured — so it is where marketing has to prove ROI.',
         },
         {
+          id: '3ip0jx',
           q: 'What is wrong with last-click attribution?',
           a: 'It over-credits search and under-credits awareness. Easy and wrong.',
         },
         {
+          id: '1mo3ohc',
           q: 'Owned vs. earned vs. paid media?',
           a: 'Owned — your site and list — compounds. Earned is press, reviews, word of mouth. Paid stops the day you stop paying.',
         },
         {
+          id: 'iz9m45',
           q: 'What is close-loop analysis?',
           a: 'Evaluate results → improve product or creative → run a new campaign, logging everything in a performance database so targeting improves each cycle.',
         },
@@ -320,30 +379,37 @@ export const BUS_GUIDE: Guide = {
       mastery: 54,
       cards: [
         {
+          id: 'eww5i2',
           q: 'A product is three things at once — which?',
           a: 'Core benefit (the need it solves), actual product (features, quality, design), augmented product (warranty, service, delivery, community). Competitors copy the actual, rarely the augmented.',
         },
         {
+          id: '1tv703z',
           q: 'Product life cycle stages and their priorities?',
           a: 'Introduction: heavy advertising, build awareness. Growth: distribution and line extensions. Maturity: defend share, price and promotion defence. Decline: harvest or kill. Naming the wrong tactic for the stage is the classic wrong answer.',
         },
         {
+          id: 'wtnvxk',
           q: 'Define brand equity.',
           a: 'The extra value the name adds beyond the physical product — why someone pays more, searches by name, or forgives a mistake.',
         },
         {
+          id: 'ktohl6',
           q: 'Keller’s resonance pyramid, bottom to top?',
           a: 'Salience (who are you?), performance and imagery (what are you?), judgments and feelings, resonance (loyalty, community, advocacy). You cannot skip a level.',
         },
         {
+          id: 'wppqmx',
           q: 'What builds and what destroys brand equity?',
           a: 'Builds: consistent positioning, distinctive assets, quality matching the promise, experiences worth telling people about. Destroys: constant discounting (teaches people to wait), inconsistent messaging, blurring line extensions, service that contradicts the ad.',
         },
         {
+          id: '1ycd3g7',
           q: 'What is IMC?',
           a: 'Integrated marketing communications: every channel says a version of the same thing, and the message is decided by the positioning statement, not by the channel.',
         },
         {
+          id: 'yr40n1',
           q: 'Match funnel stage to channel and metric.',
           a: 'Awareness: TV, streaming, out-of-home, influencer, PR → reach. Consideration: social, content, search, reviews → engagement, CTR. Conversion: paid search, retargeting, email, POP → CVR, CPA. Loyalty: CRM, loyalty programme, community → retention, CLV, referral.',
         },
@@ -354,30 +420,37 @@ export const BUS_GUIDE: Guide = {
       mastery: 46,
       cards: [
         {
+          id: '19dq455',
           q: 'Cost, competitors, customers — what does each set?',
           a: 'Cost sets the floor. Competitors set the ceiling. Only the customer tells you the right price — value-based pricing, measured with conjoint, is the one he teaches.',
         },
         {
+          id: 'jkntn3',
           q: 'What does each pricing method ignore?',
           a: 'Cost-plus ignores what customers would happily pay and leaves money on the table. Competition-based ignores your own differentiation and invites a price war. Value-based is hardest and highest-margin.',
         },
         {
+          id: '1jjv8j0',
           q: 'Elastic or inelastic — which way do you move price?',
           a: '|E| > 1 elastic: a price cut raises revenue. |E| < 1 inelastic: a price rise raises revenue. Raise price 10%, volume falls 4% → E = −0.4 → inelastic → revenue rises.',
         },
         {
+          id: 'uvdrmu',
           q: 'Push vs. pull?',
           a: 'Push markets to the channel — trade deals, slotting fees, sales incentives. Pull markets to the customer so they walk in asking for it and the retailer has to stock it.',
         },
         {
+          id: 'be85hi',
           q: 'Channel levels, and the trade-off?',
           a: '0-level direct: full margin, data and control, but you fund it. 1-level retailer: more reach, shared margin. 2-level wholesaler + retailer: widest reach, thinnest margin, least shelf control.',
         },
         {
+          id: 'h7lvau',
           q: 'Why must distribution intensity match positioning?',
           a: 'Luxury sold everywhere stops being luxury. Intensive (Coke), selective (Levi’s), exclusive (luxury cars) — the link between distribution and brand equity.',
         },
         {
+          id: 'muat4l',
           q: 'Why is distribution the “Accessibility” A?',
           a: 'Distribution is availability. A product the target cannot conveniently get does not exist to them — and it is the tactic that killed Blockbuster.',
         },
@@ -420,50 +493,62 @@ export const BUS_GUIDE: Guide = {
   ],
   selfTest: [
     {
+      id: 'pmx6fa',
       q: 'Name the 5 C’s and say which one students most often define too narrowly.',
       a: 'Customers, Collaborators, Competitors, Company, Context. Competitors is the one — it means anyone fulfilling the same need for the same customer, not just firms in your industry.',
     },
     {
+      id: '1jd7g9d',
       q: 'An offer delights customers and pays partners well but loses the company money. What does the 3-V principle say?',
       a: 'It is not viable. All three legs — customer, collaborator, company — must be positive at the same time. Two out of three is MoviePass.',
     },
     {
+      id: 'd3xpgn',
       q: 'List the seven marketing tactics in their three groups.',
       a: 'Design: product, service, brand, price, incentives. Communicate: communication. Deliver: distribution.',
     },
     {
+      id: '1dev7k5',
       q: 'Which two tactics explain Blockbuster’s failure?',
       a: 'Distribution (slow to embrace streaming, difficult to collaborate with, new-release shortages) and brand (a brick-and-mortar retailer, defined in customers’ minds by late fees).',
     },
     {
+      id: '1lykot9',
       q: 'On a SWOT for ECOALF, where does “consumers increasingly prefer sustainable fashion” go — and why do students get it wrong?',
       a: 'Opportunity — it is external. Strengths and weaknesses are internal to ECOALF only. And push it further: the graded answer is the derivative opportunity, e.g. what that trend lets ECOALF build, like a virtual store.',
     },
     {
+      id: 'c9fz5p',
       q: 'Difference between value chain and value delivery network?',
       a: 'Value chain (Porter) = activities inside your company from design to delivery. Value delivery network = the broader ecosystem of you, suppliers, distributors and customers improving the whole system.',
     },
     {
+      id: 'bcwrkn',
       q: 'A customer generates $180 revenue a year at 60% margin and stays 3.5 years. What is CLV, and what does it tell you?',
       a: '$180 × 0.60 = $108/year × 3.5 = $378. It is the ceiling on what you can sustainably spend to acquire that customer.',
     },
     {
+      id: '1mx1tzo',
       q: 'Name the 4 A’s and give a product that failed one.',
       a: 'Acceptability, Affordability, Accessibility, Awareness. Google Glass had awareness and accessibility but failed acceptability — people did not want to be seen wearing it.',
     },
     {
+      id: '1p46vom',
       q: 'Give the five steps of an A/B test.',
       a: 'Formulate hypothesis → isolate one variable → define success metrics → execute a 50/50 split launch → analyse and iterate. Primary KPIs: CTR and CVR.',
     },
     {
+      id: 'a8oab5',
       q: 'Why is conjoint considered better than asking “what would you pay?”',
       a: 'It forces real trade-offs between whole competing offers, mirroring an actual purchase. It also predicts preference share for products that do not exist yet.',
     },
     {
+      id: '2comva',
       q: 'You have 500 respondents and want to halve your margin of error. What does that cost?',
       a: 'Roughly 2,000 respondents — four times the sample — because error falls with the square root of n. That diminishing return is the core sampling trade-off.',
     },
     {
+      id: '1lw0r2r',
       q: 'Ariely’s decoy: nobody chose print-only at $125. Why keep it on the page?',
       a: 'Because its presence made print+web at the same price look obviously superior, moving choice from 32% to 84%. An option nobody buys can still drive the most revenue.',
     },

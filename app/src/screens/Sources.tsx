@@ -12,6 +12,8 @@ import {
   completeness,
   forCourse,
   gaps,
+  listFile,
+  listName,
   parse,
   projects,
   toBibtex,
@@ -76,8 +78,14 @@ export function Sources() {
   }, [state.sources, courseId, filter]);
 
   const names = useMemo(() => projects(forCourse(state.sources, courseId)), [state.sources, courseId]);
-  const code = (id: string | null) => (id ? (catalog.byId[id]?.code ?? id) : 'Everything');
-  const heading = `${code(courseId)}${filter ? ` · ${filter}` : ''} sources`;
+  /*
+   * The course as a word, and nothing when no course is chosen. The picker's
+   * own first option says "Everything", and that label deliberately does not
+   * come through here — `lib/sources.ts:listName` says why a picker's word and
+   * a heading's word are two different jobs.
+   */
+  const code = (id: string | null) => (id ? (catalog.byId[id]?.code ?? id) : '');
+  const heading = listName(code(courseId), filter);
 
   const add = () => {
     const text = entry.trim();
@@ -265,7 +273,7 @@ export function Sources() {
                   className="btn btn-secondary"
                   onClick={() =>
                     download({
-                      name: `${heading.toLowerCase().replace(/[^\w]+/g, '-')}.bib`,
+                      name: listFile(heading, 'bib'),
                       body: toBibtex(list),
                       mime: 'text/plain',
                     })
@@ -279,7 +287,7 @@ export function Sources() {
                   className="btn btn-secondary"
                   onClick={() =>
                     download({
-                      name: `${heading.toLowerCase().replace(/[^\w]+/g, '-')}.md`,
+                      name: listFile(heading, 'md'),
                       body: toMarkdown(list, heading),
                       mime: 'text/markdown',
                     })

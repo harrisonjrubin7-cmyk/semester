@@ -31,7 +31,7 @@ import { datedItems } from './select';
 import { forLine } from './forwork';
 import { dueLabel, isoToDate } from './date';
 import { DESTINATIONS, saysFor } from './nav';
-import { cardKey, type Reviews } from './review';
+import { cardIdentity, type Reviews } from './review';
 import { nearAny } from './near';
 import { queryWords, worthSplitting } from './search';
 import { allowed, type Capabilities } from './school';
@@ -453,7 +453,7 @@ export function findEverything(
             */
             sub: `${u.cards.length} cards · ${says(
               knowingOf(
-                u.cards.map((card) => cardKey(c.id, card.q)),
+                u.cards.map((card) => cardIdentity(c.id, card)),
                 reviews,
                 Date.now(),
               ).state,

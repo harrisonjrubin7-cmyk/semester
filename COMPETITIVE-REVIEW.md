@@ -294,16 +294,71 @@ whether the proposal is good.
 
 | Band | Item | Verdict |
 |---|---|---|
-| P0 | Repeatable first setup | **Partly already built.** The manual route and the key-free doors landed; the school/term-first three-step shape is open. |
+| P0 | Repeatable first setup | **The term half landed; the rest was already built or stays open.** The manual route and the key-free doors were already there. The *term* was not asked at all — it was a constant, correct in the week it was written — and it is now the first thing on the school step. The three-step shape itself (add course → confirm dates → first action, inside the run) is still open. See below. |
 | P1 | Make tools easy to find | **Partly landed.** Three of the patch's five items above; the filter move declined with reasons; user testing is not a code item. |
 | P1 | **Make progress mean actual progress** | **Landed.** The defect. |
 | P1 | One calendar integration, then one LMS | **Not a code item here.** Provider registration and an institutional agreement. The copy that misdescribed it is fixed above. |
 | P1 | Schedule work into real availability | **Open.** The largest genuinely-new item in the document, and correctly sequenced behind trustworthy calendar input. |
 | P1 | Carry exact source locations | **Landed, and the claim was exact.** The three locators still say what is true of the original — a prepared unit and a pasted excerpt have no page — but a citation now names the place inside the source it was found at. See below. |
-| P2 | Mistakes into the next practice session | **Open, and the claim is exact.** `cardKey()` in `lib/review.ts` is FNV-1a over the *question text*, so rewording a card changes its identity. `data/catalog.ts:155` already documents this as the design; the report is right that it blocks a scheduler migration, and right to say stable ids come first. |
+| P2 | Mistakes into the next practice session | **The prerequisite landed; the loop is still open.** The claim was exact — `cardKey()` was FNV-1a over the *question text* — and the report was right that stable ids come first. They are in: all 325 shipped cards carry one, minted as the hash they already keyed on, so nothing stored moved. The closed loop itself — error → concept → scheduled revisit → measured improvement — is what is left. See below. |
 | P2 | Offline, sync and reminders | **Open, and the claim is exact.** `HORIZON_DAYS = 7` in `lib/push.ts`: *"How far ahead to queue. A week is enough to survive a phone left in a bag."* The report's question — what happens after longer inactivity — is not answered anywhere. |
 | P2 | Shared coursework with a small group | **Open.** Needs two real accounts, which is the report's own acceptance criterion. |
 | P3 | Lecture capture, career discovery | **Open, and correctly deferred.** |
+
+
+---
+
+### Repeatable first setup — the half of it that was a constant
+
+The report asks for **school + term** before anything else. The school has
+been asked since the first run existed. The term never was: `state.term`
+started life as `LEGACY_TERM`, whose own docstring calls it "the term every
+course saved before terms existed belongs to" and "only ever a fallback". It
+was doing two jobs, and it only does one of them correctly.
+
+Measured on the real `loadPersisted`, with nothing stored:
+
+    opened Mon Sep 21 2026 · app says 2026FA · actually 2026FA
+    opened Wed Feb 03 2027 · app says 2026FA · actually 2027SP
+    opened Thu Jun 03 2027 · app says 2026FA · actually 2027SU
+    opened Sun Jan 09 2028 · app says 2026FA · actually 2028SP
+
+`lib/term.ts` has always had `termNow` — *"the term a date falls in, for
+defaulting a new course sensibly"* — and outside its own tests **nothing
+called it**.
+
+This is not a label. `screens/Import.tsx` stamps every course it adds with
+`state.term`, and `yearFor` resolves a bare month against that term's own
+start month, so a September deadline filed under Fall 2026 is a deadline a
+year in the past. And `components/TermSwitch.tsx` is deliberately absent until
+there is more than one term — an argued decision, and the right one — so a
+student in that state has nothing on screen to correct it with.
+
+**Two changes, and the control is the half that must not move.** A fresh
+install now starts in the term of the day it is opened, through both doors
+onto a first install (`state/shape.ts` and `state/persist/index.ts`; fixing
+one would have left the path this build actually takes still in Fall 2026).
+The constant itself stays exactly where it was, because a *saved* state with
+no term was written before terms existed and its courses really do hold Fall
+2026 dates — filing those under today would move every deadline in them by a
+year, which is the failure `LEGACY_TERM` exists to prevent. Both directions
+are asserted.
+
+Then it is asked. Step 3 of the run becomes *"When and where do you study?"*,
+with the calendar's guess preselected among its neighbours rather than assumed
+— because the two cases a first run actually meets are the ones the calendar
+gets wrong: setting up in December for a term that begins in January, and a
+summer session the calendar has already called Fall.
+
+Driven in Chromium at 420px, `pageerror` empty: the row draws with Fall 2026
+selected, `data-more="end"` so the app's own overflow affordance is doing its
+job at 477px of chips in a 354px row, and choosing Spring 2027 survives a
+reload — read off the screen rather than out of `localStorage`, which this
+document's own last section explains is the wrong store to ask.
+
+**Still open, and it is the larger half:** the run ends and hands an empty app
+to `FirstRun` rather than carrying somebody through add-a-course, confirm the
+dates, and a first task. That is the "three-step shape" proper.
 
 ---
 
@@ -342,6 +397,47 @@ And a quotation only the looser whole-string check can match — NFKC composes
 must still be **accepted**, with no location. A locator that becomes a new way
 to reject a true citation is worse than the gap it closes, so the strict search
 decides where, and the loose one goes on deciding whether.
+
+### Stable card ids — the prerequisite, and the measurement that nearly stopped it
+
+`cardKey` hashed the question and nothing else, and the docstring above it
+argued for that: a materially different question deserves to be re-learned.
+The argument is not silly and it is not what happens. The app cannot tell a
+rewrite from a rewording, so it answers both with the harsher of the two — a
+typo fixed in a guide, a sentence tightened, a question asked in clearer words,
+and the row holding what a student knew becomes one nothing will look up again.
+Silently: no message, and the unit's mastery figure quietly falls back to the
+estimate the guide shipped with.
+
+**The measurement came first, and it argued the other way.** Across this
+repository's whole history, no shipped question has ever been edited — 325
+`q:` lines added under `src/data/`, 0 removed. The failure has never fired.
+`CLAUDE.md` is explicit that a merged decision is a decision and that re-tuning
+what somebody has already argued for is not work, so an argued trade-off with
+no victims is close to a reason to leave it alone.
+
+What settles it is the price. `StudyCard` gains an optional `id`, and every id
+on the 325 shipped cards was minted as **the hash `cardKey` already returned
+for that card's question** — so `cardIdentity` and `cardKey` agreed on every
+card in the app on the day it landed, 325 of 325, and not one stored review row
+moved. There is no migration, because there was nothing to migrate. A loaded
+gun unloaded for free is worth doing before it goes off rather than after.
+
+Two things the change made newly breakable, both guarded. A copy-pasted id on
+two different questions would merge two cards' histories and read as an
+ordinary line of data, so `cardidentity.test.ts` asserts that cards share an id
+only where they share a question — which the five deliberate unit/self-test
+repeats do. And `allCards` collapsed those repeats by question text; keyed on
+text it agrees with keying on id only until one half is reworded, at which
+point the pair splits in the deck while still sharing one review row, which is
+the bug that function exists to prevent, back again wearing the fix.
+
+**Not covered, and said rather than left to be found:** cards a student adds
+with their own material still have no id and keep the old behaviour exactly.
+There is nothing to key them on — re-importing a reading produces new card
+objects with no thread back to the old ones — and inventing one would be a
+migration nobody asked for. The fallback is the old failure, kept deliberately
+and documented where it lives.
 
 ---
 

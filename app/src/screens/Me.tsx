@@ -11,7 +11,7 @@ import { NOTIFICATIONS } from '../data/misc';
 import { ByTask } from '../components/nav/ByTask';
 
 import type { CourseModule } from '../lib/types';
-import { cardKey } from '../lib/review';
+import { cardIdentity } from '../lib/review';
 import { TypeToConfirm } from '../components/TypeToConfirm';
 import { You } from './me/You';
 
@@ -47,7 +47,7 @@ export function CourseRow({ module: c }: { module: CourseModule }) {
 
   const cards = c.guide.units.reduce((n, u) => n + u.cards.length, 0);
   const answered = c.guide.units.reduce(
-    (n, u) => n + u.cards.filter((card) => state.reviews[cardKey(c.course.id, card.q)]).length,
+    (n, u) => n + u.cards.filter((card) => state.reviews[cardIdentity(c.course.id, card)]).length,
     0,
   );
 

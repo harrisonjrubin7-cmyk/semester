@@ -6,7 +6,7 @@ import { Blueprint } from '../components/Blueprint';
 import { FigureCard } from '../components/FigureCard';
 import { ChevronLeft, ChevronRight } from '../components/Icons';
 import { deckOf } from '../lib/slides';
-import { cardKey } from '../lib/review';
+import { cardIdentity } from '../lib/review';
 import { knowingOf, says } from '../lib/knowing';
 
 
@@ -35,7 +35,7 @@ export function SlideDeck() {
   const started = useMemo(
     () =>
       !!unit &&
-      unit.cards.some((c) => (state.reviews[cardKey(state.guideId, c.q)]?.seen ?? 0) > 0),
+      unit.cards.some((c) => (state.reviews[cardIdentity(state.guideId, c)]?.seen ?? 0) > 0),
     [unit, state.reviews, state.guideId],
   );
 
@@ -43,7 +43,7 @@ export function SlideDeck() {
   const standing = useMemo(
     () =>
       knowingOf(
-        (unit?.cards ?? []).map((c) => cardKey(state.guideId, c.q)),
+        (unit?.cards ?? []).map((c) => cardIdentity(state.guideId, c)),
         state.reviews,
         now.getTime(),
       ),

@@ -544,6 +544,11 @@ Semester should support common formats such as:
 
 Semester’s biggest advantage should be that all tools work together.
 
+> The file model, the relationships and the provider abstractions that make
+> that true are specified separately, at items 129–183 of the master
+> specification — see [`WORKSPACE_REQUIREMENTS.md`](WORKSPACE_REQUIREMENTS.md).
+> This document stays the statement of what each tool must do.
+
 ```mermaid
 flowchart TD
     A["Course assignment"] --> B["Semester workspace"]

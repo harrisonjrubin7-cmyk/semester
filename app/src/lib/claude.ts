@@ -262,15 +262,102 @@ function insteadTry(taking: Route): string {
   }
 }
 
+/**
+ * Which of the two it was, when nothing came back from the shared-key function.
+ *
+ * `supabase/functions/_shared/cors.ts` carries the incident this exists for: on
+ * 21 September `ALLOWED_ORIGIN` was found set to a **localhost** address on the
+ * live project, and all three functions had been unreachable from the deployed
+ * site for as long as that had been true. Everything checkable server-side
+ * looked healthy — code byte-identical to the repository, every function
+ * ACTIVE, CI and the deploys green — because from the function's side the
+ * request arrived and was answered. The browser threw the answer away.
+ *
+ * That file states the consequence and stops there: *"there is nothing a client
+ * can log that distinguishes them"* — a CORS refusal, a dead host and a DNS
+ * failure all reach `fetch` as one bare rejection. It is right about the
+ * rejection and wrong that the question cannot be asked, because it can be
+ * asked **again, differently**:
+ *
+ *   A `mode: 'no-cors'` request is not subject to the check that threw the
+ *   first answer away. It resolves to an opaque response the moment the server
+ *   answers *anything*, and rejects only when nothing answered at all.
+ *
+ * So the disjunction resolves. Reachable, having just refused the real request:
+ * the origin is not on the allowlist. Not reachable either way: the function is
+ * not deployed, or the network is down.
+ *
+ * **Why GET, and why this is free.** `supabase/functions/claude/index.ts`
+ * answers a non-POST with 405 *before* it reads the key, before it verifies the
+ * caller and before `count_call` meters anything. So the probe cannot spend one
+ * of a student's sixty generations, cannot appear in `usage`, and changes
+ * nothing whatever the deployment's state — the status does not even matter
+ * here, only that something was there to send one.
+ *
+ * **What it can still get wrong**, stated rather than discovered later: a
+ * captive portal or an intercepting proxy answers the probe itself, and this
+ * would read that as the origin being refused. That is the same thing every
+ * other reachability check on the web gets wrong, it is named in the message as
+ * a possibility rather than asserted away, and the wrong half of it still
+ * points somebody at a real address to look at.
+ */
+export type Reachability = 'answered' | 'silent' | 'unasked';
+
+export async function probeReachable(
+  url: string,
+  deps: { fetch?: typeof fetch; signal?: AbortSignal } = {},
+): Promise<Reachability> {
+  const { fetch: send = globalThis.fetch, signal } = deps;
+  // An aborted request is a student who pressed stop. Asking anything after
+  // that would answer a question nobody is waiting for, and the probe would
+  // reject on the same signal and read as "silent" — which is a wrong answer
+  // rather than no answer, and the worse of the two to print.
+  if (signal?.aborted) return 'unasked';
+  try {
+    await send(url, { method: 'GET', mode: 'no-cors', signal });
+    return 'answered';
+  } catch {
+    return 'silent';
+  }
+}
+
+/** The sentence for each answer the probe can give. */
+function sharedSaid(where: Reachability, url: string): string {
+  switch (where) {
+    case 'answered':
+      return (
+        `The shared-key function at ${named(url)} is deployed and answering — it refused this ` +
+        'page rather than failing to exist, which is a CORS refusal and means this site’s ' +
+        'address is not in its ALLOWED_ORIGIN list. Whoever runs this deployment can fix it ' +
+        'by adding this origin to that secret (supabase/DEPLOY.md); it is a setting rather ' +
+        'than a deploy. Add your own key under Settings → The assistant to carry on now.'
+      );
+    case 'silent':
+      return (
+        `Nothing answered at ${named(url)} at all, so the shared-key function is either not ` +
+        'deployed or this device is offline. Add your own key under Settings → The assistant ' +
+        'to carry on now; whoever runs this deployment can look at the function (SETUP.md).'
+      );
+    default:
+      return (
+        'The request never reached the shared-key function — it is either not ' +
+        'deployed or is refusing this origin. Add your own key under Settings to carry on.'
+      );
+  }
+}
+
 /** What a browser reports when the request never reached anything. */
-function explainNetworkError(taking: Route, e: unknown): Error {
+async function explainNetworkError(
+  taking: Route,
+  e: unknown,
+  url = '',
+  signal?: AbortSignal,
+): Promise<Error> {
   if (e instanceof DOMException && e.name === 'AbortError') return e as unknown as Error;
   const said = e instanceof Error ? e.message : String(e);
   if (taking === 'shared') {
-    return new Error(
-      `${said}\n\nThe request never reached the shared-key function — it is either not ` +
-        'deployed or is refusing this origin. Add your own key under Settings to carry on.',
-    );
+    const where = url ? await probeReachable(url, { signal }) : 'unasked';
+    return new Error(`${said}\n\n${sharedSaid(where, url)}`);
   }
   if (taking === 'proxy') {
     return new Error(`${said}\n\nThe proxy did not answer. Check its address under Settings.`);
@@ -874,7 +961,7 @@ export async function ask(options: AskOptions): Promise<string> {
       }),
     });
   } catch (e) {
-    throw explainNetworkError(taking, e);
+    throw await explainNetworkError(taking, e, url, options.signal);
   }
 
   if (!res.ok || !res.body) {

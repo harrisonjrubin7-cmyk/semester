@@ -135,6 +135,9 @@ export function classNote(cat: Catalog, date: Date, c: CourseId | null): string 
 }
 
 export interface DeckCard {
+  /** The card's stable id, where it has one. Carried through so a deck can be
+   * keyed by {@link cardIdentity} rather than by its question text. */
+  id?: string;
   q: string;
   a: string;
   unit: string;
@@ -152,12 +155,18 @@ export interface DeckCard {
  * ten-question self-quiz and BUS's twelve-question one are ported whole — and
  * the guide is right to read that way.
  *
- * A deck is not. A card's identity is its question (`cardKey` in `lib/review`
- * hashes nothing else), so those two entries are one card with one review row,
- * and flattening both into one deck put the same question in front of somebody
- * twice in a sitting — the second time already answered, because answering the
- * first wrote the row they share. It also added one to every deck-size figure
- * the app prints, so ECON's 68 questions were 67 cards called 68.
+ * A deck is not. Those two entries are one card with one review row
+ * (`cardIdentity` in `lib/review` gives both the same key), so flattening both
+ * into one deck put the same question in front of somebody twice in a sitting
+ * — the second time already answered, because answering the first wrote the
+ * row they share. It also added one to every deck-size figure the app prints,
+ * so ECON's 68 questions were 67 cards called 68.
+ *
+ * The collapse is therefore keyed on the id where a card has one, and on the
+ * question only where it does not. Keyed on the question alone it would come
+ * undone the first time one half of such a pair is reworded: the two texts
+ * would differ while the id — and so the review row — stayed shared, which is
+ * this paragraph's own bug back again, wearing the fix.
  *
  * So the repeat is collapsed here, at the one place the whole-guide decks and
  * counts are built, rather than at each of the twelve callers that would
@@ -173,9 +182,10 @@ export function allCards(guide: Guide): DeckCard[] {
   const out: DeckCard[] = [];
   const seen = new Set<string>();
   const add = (c: StudyCard, unit: string, ui: number) => {
-    if (seen.has(c.q)) return;
-    seen.add(c.q);
-    out.push({ q: c.q, a: c.a, unit, ui });
+    const identity = c.id ?? c.q;
+    if (seen.has(identity)) return;
+    seen.add(identity);
+    out.push({ ...(c.id ? { id: c.id } : {}), q: c.q, a: c.a, unit, ui });
   };
   guide.units.forEach((u, ui) => u.cards.forEach((c) => add(c, u.name, ui)));
   guide.selfTest?.forEach((c) => add(c, 'Self-test', -1));
@@ -199,7 +209,7 @@ export function allCards(guide: Guide): DeckCard[] {
 export function unitCards(guide: Guide, ui: number): DeckCard[] {
   const from = ui === -1 ? guide.selfTest : guide.units[ui]?.cards;
   const name = ui === -1 ? 'Self-test' : (guide.units[ui]?.name ?? '');
-  return (from ?? []).map((c) => ({ q: c.q, a: c.a, unit: name, ui }));
+  return (from ?? []).map((c) => ({ ...(c.id ? { id: c.id } : {}), q: c.q, a: c.a, unit: name, ui }));
 }
 
 /**

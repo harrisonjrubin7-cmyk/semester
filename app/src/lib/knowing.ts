@@ -46,7 +46,7 @@
  * and label it as that — a count of cards, which is a thing that happened.
  */
 
-import { cardKey, type CardReview, type Reviews } from './review';
+import { cardIdentity, type CardReview, type Reviews } from './review';
 
 /** The five states, weakest first. */
 export type Knowing = 'unseen' | 'introduced' | 'practising' | 'retained' | 'review';
@@ -140,7 +140,7 @@ export function noEvidence(): Evidence {
 /**
  * Read the evidence for a set of cards.
  *
- * `keys` are `cardKey` hashes, the same ones `lib/review.ts` schedules
+ * `keys` are `cardIdentity` keys, the same ones `lib/review.ts` schedules
  * against. A key with no row is a card never answered: it counts toward
  * `cards` and toward nothing else, which is what makes `answered / cards`
  * coverage rather than a score.
@@ -164,15 +164,15 @@ export function evidenceFor(keys: string[], reviews: Reviews, now: number): Evid
   return ev;
 }
 
-/** The same reading, for a course's questions rather than precomputed keys. */
+/** The same reading, for a course's cards rather than precomputed keys. */
 export function evidenceForCards(
   courseId: string,
-  questions: string[],
+  cards: { id?: string; q: string }[],
   reviews: Reviews,
   now: number,
 ): Evidence {
   return evidenceFor(
-    questions.map((q) => cardKey(courseId, q)),
+    cards.map((c) => cardIdentity(courseId, c)),
     reviews,
     now,
   );
