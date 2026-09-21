@@ -135,10 +135,44 @@ export const STATED: Stated[] = [
    * section walks, so the two drifting apart is the failure that document
    * exists to stop.
    */
+  /*
+   * The checklist is the one place a stale count does damage rather than
+   * embarrassment. `D3` reads "All N destinations still appear in the
+   * launcher" and is meant to be *executed* — a tester who counts fifty-two
+   * and finds fifty-eight has either found a bug or found a stale document,
+   * and the whole value of a checklist is that they do not have to wonder
+   * which. It said fifty-two, which the registry last was before six landed.
+   */
   {
+    path: 'REGRESSION-CHECKLIST.md',
+    keys: ['screens'],
+    nouns: { screens: 'destinations' },
+  },
+  {
+    /*
+     * `screens` beside `modes`, and the reason is this file's own argument
+     * turned on itself.
+     *
+     * `COMPLETION-PLAN.md` has stated the destination count in three places —
+     * a performance line reading "Measured today", a table row naming
+     * `lib/nav.ts`, and a `grep -c` with its answer written in the comment
+     * beside it. All three said sixty. The registry has said fifty-eight
+     * since `80fbc5c`, which this same document explains at length four
+     * hundred lines further down: *"Re-taken 18 September 2026 over all 58
+     * destinations — 60 until `80fbc5c` made"*.
+     *
+     * So one file said both numbers, and the half that was generated is the
+     * half that stayed right. The mode count in this row has never been
+     * wrong; the destination count next to it rotted for three days. That is
+     * not an argument about diligence — it is the argument for the marker.
+     *
+     * A destination is a decision, which is the test the comment above sets
+     * for what belongs here: somebody adds one on purpose, rarely. It does
+     * not churn the way a component file does.
+     */
     path: 'COMPLETION-PLAN.md',
-    keys: ['modes'],
-    nouns: { modes: 'study modes' },
+    keys: ['modes', 'screens'],
+    nouns: { modes: 'study modes', screens: 'destinations' },
   },
 ];
 
