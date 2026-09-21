@@ -128,11 +128,17 @@ export const RunwayIcon = svg('runway');
 export const MailIcon = svg('mail');
 export const ProofIcon = svg('proof');
 
-/* The twenty-seven drawn for the launcher — see the note in `icons.data.ts`. */
+/*
+ * Drawn for the launcher — see the note in `icons.data.ts`.
+ *
+ * That note's "twenty-seven" is the count on the day it was written, not a
+ * count of this block: `ahead` and `tonight` left it when the twenty-sixth
+ * simplify pass cut their icons, those two screens having been merged into
+ * Today's tabs by `80fbc5c`. The note is history and stays as it is; this
+ * line stops being a figure so that it cannot go stale again.
+ */
 export const BriefIcon = svg('brief');
-export const AheadIcon = svg('ahead');
 export const BehindIcon = svg('behind');
-export const TonightIcon = svg('tonight');
 export const DegreeIcon = svg('degree');
 export const ImportIcon = svg('import');
 export const EditIcon = svg('edit');
