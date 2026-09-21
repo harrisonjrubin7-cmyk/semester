@@ -111,6 +111,26 @@ still gets `meals`, `housing`, `degree` and `maps`, and still gets both guide
 lines quoted back. A suite asserting only "the faculty user gets less" would
 pass against an answerer that had simply stopped answering.
 
+## Driven, and what the drive did not show
+
+`pageerror` empty. **The `Locally` panel did not draw**, and this is recorded
+rather than explained: asked *"where is the meal plan"* on a keyless profile,
+the Ask screen showed *"No key yet. Sign in to use the shared one, or add your
+own under Settings"* and no local answer.
+
+Two things rule out the obvious readings. The pool is not the cause — the
+twenty-seventh measured `offered()` at **58** on this same skipped profile, so
+`meals` is in it. And the panel is not mine — `setLocally(local)` runs before
+the request, and `ai/Actions.tsx`'s `<Locally>` hangs off the last turn, both
+untouched here.
+
+So this is a **question about the rendering, not about the answer**, and it is
+a good one: `<Locally>` has no component test anywhere in the suite, and the
+file's own argument for existing is *"a student on a train with no signal, or
+one who has never set up a key, is exactly the person asking where a setting
+lives."* That is the profile the drive used. Left open, honestly, rather than
+written up as a clean drive.
+
 ## Gates
 
 `tsc` clean · lint ok · tests in file order · shuffled · production build
