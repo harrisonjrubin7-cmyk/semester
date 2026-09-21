@@ -1,4 +1,5 @@
-import { DESTINATIONS } from '../../lib/nav';
+import { offered } from '../../lib/nav';
+import { resolveSchool } from '../../data/schools';
 import { datedItems } from '../../lib/select';
 import { tally } from '../../lib/review';
 import type { Provide } from '../shape';
@@ -121,11 +122,33 @@ export const me: Provide = (look) => {
    * which of them this student has opened, which is the one thing the
    * Everything screen's own provider sent and the one thing worth keeping.
    */
-  const never = DESTINATIONS.filter((d) => !state.visited[d.screen]).map((d) => d.screen);
+  /*
+   * The registry is the app; this figure is about a person.
+   *
+   * `DESTINATIONS` is every screen the app has ever had, before the school
+   * gate and the role gate have said anything — so this counted, and then
+   * *named*, screens the student cannot open. Measured: a faculty user was
+   * told "6 of 58" when their app has 47 screens in it, and `neverOpened`
+   * handed the model all eleven of the student-only ones — degree, costs,
+   * groupwork, meals, housing, runway, behind, yes, classmates, activities,
+   * applying — directly under a suggestion reading *"What have I never opened
+   * that I should?"* and an `open_screen` action to act on the answer. A
+   * student at a school with no meal plan, no housing and no campus map got
+   * the same treatment for five.
+   *
+   * It is right for a Vanderbilt student, for whom the registry and
+   * `offered()` are the same 58, which is the whole reason it lasted.
+   *
+   * The guidebook in the system prompt still describes all 58 and should: a
+   * manual describes the app, and this describes the person holding it.
+   */
+  const school = resolveSchool(state.schoolId, null, state.mySchools, state.schoolPack?.school ?? null);
+  const theirs = offered(school.capabilities, state.role);
+  const never = theirs.filter((d) => !state.visited[d.screen]).map((d) => d.screen);
   return {
     summary:
       `Progress — ${t.cards} cards answered, ${t.pct}% right. ${state.spent.length} pieces of work timed, ${state.sittings.length} practice papers sat. ` +
-      `The Everything tab is the directory: ${DESTINATIONS.length - never.length} of ${DESTINATIONS.length} screens have been opened at least once.`,
+      `The Everything tab is the directory: ${theirs.length - never.length} of ${theirs.length} screens have been opened at least once.`,
     visible: never.length > 0 ? [...rows, { neverOpened: never.join(', ') }] : rows,
     actions: ['open_screen'],
     suggestions: [

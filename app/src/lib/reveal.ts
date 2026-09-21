@@ -40,7 +40,7 @@
  * yet. The two compose: a screen must pass both.
  */
 
-import { DESTINATIONS } from './nav';
+import type { Destination } from './nav';
 
 /** What the app knows about how far along somebody is. */
 export interface Facts {
@@ -184,14 +184,34 @@ export function showing(
   return unlocked(screen, facts);
 }
 
-/** Everything currently earned, for a count and for the settings line. */
+/**
+ * Everything currently earned, for a count and for the settings line.
+ *
+ * ## The pool is the caller's, and it is not the registry
+ *
+ * This counted over `DESTINATIONS`, which is every screen the app has ever
+ * had — before the school has said whether it has a meal plan and before the
+ * role has said who is holding the phone. So the settings line offered a
+ * switch to reveal screens that no amount of revealing produces: measured on
+ * a fresh profile, it said **46 held back** to a faculty member whose app has
+ * 47 screens in it and is holding back 35, and 46 again to a student at a
+ * school with no meal plan, no housing and no campus map, where the true
+ * figure is 41.
+ *
+ * It read correctly for exactly one person — a Vanderbilt student, for whom
+ * the registry and `offered()` are the same 58 screens — which is why it
+ * survived. `lib/gateapplied.test.ts` keeps the reveal gate applied where
+ * somebody can see it; nothing was asking whether the *other two* gates had
+ * reached the count.
+ */
 export function countHidden(
+  pool: Destination[],
   facts: Facts,
   visited: Record<string, boolean>,
   showAll: boolean,
 ): number {
   if (showAll) return 0;
-  return DESTINATIONS.filter((d) => !showing(d.screen as string, facts, visited, showAll)).length;
+  return pool.filter((d) => !showing(d.screen as string, facts, visited, showAll)).length;
 }
 
 /**
