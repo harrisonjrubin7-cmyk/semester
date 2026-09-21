@@ -4,6 +4,7 @@ import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { ActionButton, FilePick, Notice, SectionLabel, Segmented } from '../components/ui';
 import { CardGrid, GridCard } from '../components/GridCard';
+import { ItemRow } from '../components/shell/Rows';
 import { secondLine } from '../lib/dim';
 import { download } from '../lib/deliver';
 import { fromMarkdown } from '../lib/document';
@@ -713,39 +714,33 @@ function Workspace({ storageKey }: { storageKey: string }) {
                 Readiness checklist
               </SectionLabel>
               {draft.steps.map((s) => (
-                <div
+                <ItemRow
                   key={s.id}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 'var(--sp-4)',
-                    paddingBlock: 'var(--sp-3)',
-                    borderBottom: '1px solid var(--app-line)',
-                  }}
-                >
-                  <input
-                    type="checkbox"
-                    aria-label={s.text}
-                    checked={s.done}
-                    onChange={(e) =>
-                      patch({
-                        steps: draft.steps.map((x) => (x.id === s.id ? { ...x, done: e.target.checked } : x)),
-                      })
-                    }
-                  />
-                  <span style={{ flex: 1, fontSize: 'var(--type-base)', lineHeight: 'var(--leading-normal)' }}>
-                    {s.text}
-                  </span>
-                  <button
-                    type="button"
-                    className="bare tappable"
-                    aria-label={`Remove step: ${s.text}`}
-                    onClick={() => patch({ steps: draft.steps.filter((x) => x.id !== s.id) })}
-                    style={{ ...secondLine() }}
-                  >
-                    ✕
-                  </button>
-                </div>
+                  leading={
+                    <input
+                      type="checkbox"
+                      aria-label={s.text}
+                      checked={s.done}
+                      onChange={(e) =>
+                        patch({
+                          steps: draft.steps.map((x) => (x.id === s.id ? { ...x, done: e.target.checked } : x)),
+                        })
+                      }
+                    />
+                  }
+                  title={s.text}
+                  trailing={
+                    <button
+                      type="button"
+                      className="bare tappable"
+                      aria-label={`Remove step: ${s.text}`}
+                      onClick={() => patch({ steps: draft.steps.filter((x) => x.id !== s.id) })}
+                      style={{ ...secondLine() }}
+                    >
+                      ✕
+                    </button>
+                  }
+                />
               ))}
               <form
                 onSubmit={(e) => {
@@ -1163,21 +1158,16 @@ function Workspace({ storageKey }: { storageKey: string }) {
                     ? 'Read only'
                     : 'No access';
             return (
-              <div
+              <ItemRow
                 key={id}
-                style={{
-                  paddingBlock: 'var(--sp-4)',
-                  borderBottom: '1px solid var(--app-line)',
-                  fontSize: 'var(--type-base)',
-                  lineHeight: 'var(--leading-normal)',
-                }}
-              >
-                <div>{label}</div>
-                <div style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>
-                  {access}
-                  {c?.lastSyncAt ? ` · Last sync ${new Date(c.lastSyncAt).toLocaleString()}` : ''}
-                </div>
-              </div>
+                title={label}
+                meta={
+                  <>
+                    {access}
+                    {c?.lastSyncAt ? ` · Last sync ${new Date(c.lastSyncAt).toLocaleString()}` : ''}
+                  </>
+                }
+              />
             );
           })}
 
