@@ -904,13 +904,13 @@ export function AddMaterial() {
       )}
 
       {parsed.cards.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 9, marginTop: 'var(--sp-6)' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(9px * var(--density, 1))', marginTop: 'var(--sp-6)' }}>
           {parsed.cards.slice(0, 3).map((c) => (
             <Blueprint plain key={c.q} style={{ padding: '11px 13px' }}>
               <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--type-lg)', lineHeight: 1.2 }}>
                 {c.q}
               </div>
-              <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', marginTop: 3 }}>
+              <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', marginTop: 'calc(3px * var(--density, 1))' }}>
                 {c.a}
               </div>
             </Blueprint>

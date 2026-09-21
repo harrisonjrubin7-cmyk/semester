@@ -148,7 +148,7 @@ export function RecordButton({
         <label
           style={{
             display: 'flex',
-            gap: 9,
+            gap: 'calc(9px * var(--density, 1))',
             alignItems: 'flex-start',
             fontSize: 'calc(12.5px * var(--text-scale, 1))',
             lineHeight: 'var(--leading-normal)',
@@ -180,7 +180,7 @@ export function RecordButton({
       {state === 'idle' && (
         <ActionButton
           onClick={() => void start()}
-          style={{ fontSize: 'var(--type-xs)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9 }}
+          style={{ fontSize: 'var(--type-xs)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'calc(9px * var(--density, 1))' }}
         >
           <span
             style={{
@@ -197,7 +197,7 @@ export function RecordButton({
 
       {(state === 'recording' || state === 'paused' || state === 'saving') && (
         <Blueprint style={{ padding: '13px 14px', background: 'var(--app-hero)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'calc(11px * var(--density, 1))' }}>
             <span
               style={{
                 width: 11,
@@ -250,7 +250,7 @@ export function RecordButton({
             <div
               style={{
                 marginTop: 'var(--sp-6)',
-                paddingTop: 11,
+                paddingTop: 'calc(11px * var(--density, 1))',
                 borderTop: '1px solid var(--app-line)',
                 maxHeight: 190,
                 overflowY: 'auto',
@@ -271,7 +271,7 @@ export function RecordButton({
           )}
 
           {wantText && segments.length === 0 && !interim && (
-            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', ...secondLine(), marginTop: 11 }}>
+            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', ...secondLine(), marginTop: 'calc(11px * var(--density, 1))' }}>
               Listening. Words appear here as they are recognised.
             </div>
           )}

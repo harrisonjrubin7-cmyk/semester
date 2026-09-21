@@ -107,7 +107,7 @@ function NextClassCard() {
       <div
         style={{
           marginTop: 'var(--sp-6)',
-          paddingTop: 11,
+          paddingTop: 'calc(11px * var(--density, 1))',
           borderTop: '1px solid var(--app-line)',
           fontSize: 'var(--type-base)',
           // A colour, not a fade: `--app-dim` is the rung `contrast.test.ts`
@@ -347,7 +347,7 @@ function ThisWeek() {
           <SectionLabel>On campus</SectionLabel>
           <Blueprint
             onClick={() => dispatch({ type: 'openEvent', id: nextEvent.id })}
-            style={{ padding: '13px 14px', display: 'flex', gap: 13, alignItems: 'center' }}
+            style={{ padding: '13px 14px', display: 'flex', gap: 'calc(13px * var(--density, 1))', alignItems: 'center' }}
           >
             <div
               style={{ width: 44, flex: 'none', fontFamily: 'var(--font-heading)', lineHeight: 1 }}
@@ -672,7 +672,7 @@ function Feed_due() {
         style={{
           fontSize: 'calc(27px * var(--text-scale, 1))',
           lineHeight: 1.08,
-          marginBottom: 14,
+          marginBottom: 'calc(14px * var(--density, 1))',
           textWrap: 'pretty',
         }}
       >
@@ -715,7 +715,7 @@ function Feed_due() {
         </Blueprint>
       )}
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(9px * var(--density, 1))' }}>
         {today.map((it) => {
           const done = !!state.done[it.id];
           return (
@@ -747,7 +747,7 @@ function Feed_due() {
                 onClick={() => dispatch({ type: 'openItem', id: it.id })}
                 style={{ flex: 1, minWidth: 0, opacity: done ? DIMMED_ROW : 1 }}
               >
-                <div style={{ display: 'flex', gap: 7, alignItems: 'center', marginBottom: 3 }}>
+                <div style={{ display: 'flex', gap: 'calc(7px * var(--density, 1))', alignItems: 'center', marginBottom: 'calc(3px * var(--density, 1))' }}>
                   <CourseTag id={it.c} />
                   <span
                     style={{
@@ -770,7 +770,7 @@ function Feed_due() {
                 >
                   {it.title}
                 </div>
-                <div style={{ fontSize: 'var(--type-sm)', ...secondLine(done), marginTop: 3 }}>
+                <div style={{ fontSize: 'var(--type-sm)', ...secondLine(done), marginTop: 'calc(3px * var(--density, 1))' }}>
                   {it.dueTime} · {it.where}
                 </div>
               </button>
@@ -845,14 +845,14 @@ function Feed_since() {
     <div
       style={{
         padding: '11px 13px',
-        marginBottom: 14,
+        marginBottom: 'calc(14px * var(--density, 1))',
         borderRadius: 'var(--r-md)',
         border: '1px solid var(--app-line)',
         background: 'var(--app-panel)',
       }}
     >
       <div className="kicker">{sinceLabel(lastSeen, now)}</div>
-      <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 'var(--leading-relaxed)', marginTop: 5, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 'var(--leading-relaxed)', marginTop: 'calc(5px * var(--density, 1))', textWrap: 'pretty' }}>
         {sinceLine(list)}
       </div>
     </div>
@@ -1108,7 +1108,7 @@ function Feed_registrar() {
             </span>
           </div>
           {d.cost ? (
-            <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 5, lineHeight: 'var(--leading-normal)' }}>
+            <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'calc(5px * var(--density, 1))', lineHeight: 'var(--leading-normal)' }}>
               {d.cost}
             </div>
           ) : null}
@@ -1162,7 +1162,7 @@ function Feed_bill() {
                 : `in ${next.daysAway} ${next.daysAway === 1 ? 'day' : 'days'}`}
           </span>
         </div>
-        <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 5, lineHeight: 'var(--leading-normal)' }}>
+        <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'calc(5px * var(--density, 1))', lineHeight: 'var(--leading-normal)' }}>
           {late
             ? "An unpaid balance is what puts a hold on next term's registration."
             : `Instalment ${next.instalment.n} of your payment plan.`}
@@ -1411,7 +1411,7 @@ function DoneToday() {
 
   return (
     <Folding name="DoneToday">
-      <Blueprint style={{ padding: 15, background: 'var(--app-hero)' }}>
+      <Blueprint style={{ paddingBlock: 'calc(15px * var(--density, 1))', paddingInline: 'calc(15px * var(--density, 1))', background: 'var(--app-hero)' }}>
         <div className="kicker">Finished</div>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--sp-5)', marginTop: 'var(--sp-3)' }}>
           <div className="chrome-text" style={{ fontSize: 'calc(34px * var(--text-scale, 1))', lineHeight: 1 }}>
@@ -1425,7 +1425,7 @@ function DoneToday() {
           <div
             style={{
               marginTop: 'var(--sp-6)',
-              paddingTop: 11,
+              paddingTop: 'calc(11px * var(--density, 1))',
               borderTop: '1px solid var(--app-line)',
               fontSize: 'var(--type-base)',
               color: 'var(--app-dim)',
@@ -1547,7 +1547,7 @@ function HoursToday() {
         />
       ) : (
         blocks.length > 0 && (
-          <HourGrid blocks={blocks} now={minutesNow(now)} style={{ marginTop: 14 }} />
+          <HourGrid blocks={blocks} now={minutesNow(now)} style={{ marginTop: 'calc(14px * var(--density, 1))' }} />
         )
       )}
       {untimed.length > 0 && (
@@ -1585,7 +1585,7 @@ function HoursToday() {
         onClick={() => {
         goMine(dispatch, 'appointments');
         }}
-        style={{ marginTop: 18, fontSize: 'var(--type-xs)' }}
+        style={{ marginTop: 'calc(18px * var(--density, 1))', fontSize: 'var(--type-xs)' }}
       >
         + Add something to the day
       </ActionButton>
@@ -1623,7 +1623,7 @@ function FeedHome() {
       <div style={{ padding: 'var(--page-pad)' }}>
         <NextClassCard />
 
-        <div style={{ marginTop: 22, display: 'flex', flexDirection: 'column' }}>
+        <div style={{ marginTop: 'calc(22px * var(--density, 1))', display: 'flex', flexDirection: 'column' }}>
           {entries.map((f) => (
             <button
               key={f.key}
@@ -1681,7 +1681,7 @@ function FeedHome() {
                   opacity: f.done || f.canceled ? DIMMED_ROW : 1,
                 }}
               >
-                <div style={{ display: 'flex', gap: 7, alignItems: 'center', marginBottom: 3 }}>
+                <div style={{ display: 'flex', gap: 'calc(7px * var(--density, 1))', alignItems: 'center', marginBottom: 'calc(3px * var(--density, 1))' }}>
                   {/*
                     The chip said "class" a second time by fading to 0.75, and
                     it was the only place in the app that did. The kind is

@@ -259,7 +259,7 @@ export function Waiting({ who, doing = [] }: { who: string; doing?: string[] }) 
           4px disc of `--app-fg`, and `aiPulse` animates the very property a
           colour would have replaced, so `color` has nothing to act on.
       */}
-      <span aria-hidden style={{ display: 'inline-flex', gap: 3 }}>
+      <span aria-hidden style={{ display: 'inline-flex', gap: 'calc(3px * var(--density, 1))' }}>
         {[0, 1, 2].map((i) => (
           <span
             key={i}

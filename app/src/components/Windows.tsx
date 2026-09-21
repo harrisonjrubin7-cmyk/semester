@@ -30,9 +30,9 @@ export function ClosingWindows() {
 
   return (
     <Folding name="Windows">
-      <div style={{ marginTop: 14 }}>
+      <div style={{ marginTop: 'calc(14px * var(--density, 1))' }}>
         <SectionLabel style={{ margin: '0 0 8px' }}>Time to say something</SectionLabel>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(7px * var(--density, 1))' }}>
           {soon.map((r) => {
             const item = all.find((i) => i.id === r.id);
             return (
@@ -67,7 +67,7 @@ export function ClosingWindows() {
                     display: 'block',
                     fontSize: 'calc(11.5px * var(--text-scale, 1))',
                     color: 'var(--app-dim)',
-                    marginTop: 3,
+                    marginTop: 'calc(3px * var(--density, 1))',
                     textWrap: 'pretty',
                   }}
                 >

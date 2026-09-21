@@ -100,7 +100,7 @@ export function Adopting({
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
-        padding: 22,
+        paddingBlock: 'calc(22px * var(--density, 1))', paddingInline: 'calc(22px * var(--density, 1))',
         overflowY: 'auto',
       }}
     >
@@ -161,7 +161,7 @@ export function Adopting({
                   display: 'block',
                   fontSize: 'var(--type-sm)',
                   color: 'var(--app-dim)',
-                  marginTop: 3,
+                  marginTop: 'calc(3px * var(--density, 1))',
                   lineHeight: 'var(--leading-normal)',
                   textWrap: 'pretty',
                 }}

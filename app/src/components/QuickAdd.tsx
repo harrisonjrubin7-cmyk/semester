@@ -168,9 +168,9 @@ export function QuickAdd({ onClose }: { onClose: () => void }) {
       />
 
       {text.trim() ? (
-        <div style={{ marginTop: 14 }}>
+        <div style={{ marginTop: 'calc(14px * var(--density, 1))' }}>
           <div className="kicker">What it read</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginTop: 7 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(5px * var(--density, 1))', marginTop: 'calc(7px * var(--density, 1))' }}>
             {readBack(caught, codeOf).map((line) => (
               <div
                 key={line}
@@ -227,7 +227,7 @@ export function QuickAdd({ onClose }: { onClose: () => void }) {
           style={{
             fontSize: 'calc(12.5px * var(--text-scale, 1))',
             color: 'var(--app-dim)',
-            marginTop: 14,
+            marginTop: 'calc(14px * var(--density, 1))',
           }}
         >
           {said} It is one of yours, filed against the course — not a line pretending the

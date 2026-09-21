@@ -112,7 +112,7 @@ export function Profile() {
               style={{
                 fontSize: 'var(--type-base)',
                 color: 'var(--app-dim)',
-                marginTop: 3,
+                marginTop: 'calc(3px * var(--density, 1))',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
                 whiteSpace: 'nowrap',
@@ -124,7 +124,7 @@ export function Profile() {
               style={{
                 fontSize: 'calc(11.5px * var(--text-scale, 1))',
                 color: 'var(--app-dim)',
-                marginTop: 3,
+                marginTop: 'calc(3px * var(--density, 1))',
                 lineHeight: 'var(--leading-normal)',
                 textWrap: 'pretty',
               }}
@@ -238,7 +238,7 @@ export function Profile() {
                 style={{
                   fontSize: 'calc(11.5px * var(--text-scale, 1))',
                   color: 'var(--app-dim)',
-                  marginTop: 3,
+                  marginTop: 'calc(3px * var(--density, 1))',
                   lineHeight: 'var(--leading-normal)',
                 }}
               >

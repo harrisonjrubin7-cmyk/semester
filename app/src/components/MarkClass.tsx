@@ -48,7 +48,7 @@ export function MarkClass({
   if (!started) return null;
 
   return (
-    <div style={{ display: 'flex', gap: 5, marginTop: 7, flexWrap: 'wrap' }}>
+    <div style={{ display: 'flex', gap: 'calc(5px * var(--density, 1))', marginTop: 'calc(7px * var(--density, 1))', flexWrap: 'wrap' }}>
       {CHOICES.map((c) => {
         const on = now === c.mark;
         return (

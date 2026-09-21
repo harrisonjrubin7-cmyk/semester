@@ -178,7 +178,7 @@ function OutOfPocket() {
                       display: 'flex',
                       gap: 'var(--sp-4)',
                       alignItems: 'baseline',
-                      marginTop: 7,
+                      marginTop: 'calc(7px * var(--density, 1))',
                       paddingLeft: 'var(--sp-5)',
                       borderLeft: '2px solid var(--app-line)',
                     }}
@@ -339,7 +339,7 @@ function OutOfPocket() {
         </a>
       ) : null}
 
-      <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 14, lineHeight: 'var(--leading-normal)' }}>
+      <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 'calc(14px * var(--density, 1))', lineHeight: 'var(--leading-normal)' }}>
         Nothing here is looked up. Prices differ by edition, by seller and by the week, and a wrong
         one shown confidently is worse than a blank field — so you type what you paid, and the app
         remembers it for the August when you are deciding again.

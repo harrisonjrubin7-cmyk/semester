@@ -106,12 +106,12 @@ export function Registrar() {
         </div>
 
         {d.cost ? (
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', ...secondLine(past), marginTop: 3, lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', ...secondLine(past), marginTop: 'calc(3px * var(--density, 1))', lineHeight: 'var(--leading-normal)' }}>
             {d.cost}
           </div>
         ) : null}
 
-        <div style={{ display: 'flex', gap: 'var(--sp-3)', marginTop: 7, alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 'var(--sp-3)', marginTop: 'calc(7px * var(--density, 1))', alignItems: 'center' }}>
           <input
             className="input"
             type="date"
@@ -223,7 +223,7 @@ export function Registrar() {
         <div className="kicker">
           {done.done} of {done.of} filled in
         </div>
-        <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 7, lineHeight: 'var(--leading-relaxed)' }}>
+        <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 'calc(7px * var(--density, 1))', lineHeight: 'var(--leading-relaxed)' }}>
           Every other date in this app came off a syllabus. These come from your registrar, and
           they are the ones that cost money rather than points — a withdrawal deadline missed is a
           course you are graded on whatever happens next.
@@ -264,7 +264,7 @@ export function Registrar() {
         ]}
         value={tab}
         onChange={setTab}
-        style={{ marginTop: 18 }}
+        style={{ marginTop: 'calc(18px * var(--density, 1))' }}
       />
 
       {tab === 'dates' ? (

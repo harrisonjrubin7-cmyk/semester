@@ -60,7 +60,7 @@ export function MyRules() {
             ...row,
           }}
         >
-          <div style={{ display: 'flex', gap: 9, alignItems: 'flex-start' }}>
+          <div style={{ display: 'flex', gap: 'calc(9px * var(--density, 1))', alignItems: 'flex-start' }}>
             <button
               type="button"
               className="bare tappable"
@@ -84,7 +84,7 @@ export function MyRules() {
             </button>
           </div>
 
-          <div style={{ display: 'flex', gap: 7, marginTop: 'var(--sp-4)', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 'calc(7px * var(--density, 1))', marginTop: 'var(--sp-4)', flexWrap: 'wrap' }}>
             <select
               className="input"
               value={r.days}

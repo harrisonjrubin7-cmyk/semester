@@ -260,7 +260,7 @@ export function Groupwork() {
               >
                 <span style={{ display: 'block', fontSize: 'var(--type-lg)', lineHeight: 1.35 }}>{g.name}</span>
                 {g.due ? (
-                  <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 3 }}>
+                  <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'calc(3px * var(--density, 1))' }}>
                     due {g.due}
                   </span>
                 ) : null}
@@ -304,7 +304,7 @@ export function Groupwork() {
             type="button"
             className="btn btn-ghost"
             onClick={() => setOpenId('')}
-            style={{ height: 32, fontSize: 'var(--type-sm)', marginTop: 14 }}
+            style={{ height: 32, fontSize: 'var(--type-sm)', marginTop: 'calc(14px * var(--density, 1))' }}
           >
             ← All groups
           </button>
@@ -322,12 +322,12 @@ export function Groupwork() {
             </div>
             {/* The sentence a group can argue with. See `lib/groupwork.ts`. */}
             {paceLine(asGroup(open), parts.map(asPart), now) ? (
-              <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 7, lineHeight: 'var(--leading-relaxed)' }}>
+              <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'calc(7px * var(--density, 1))', lineHeight: 'var(--leading-relaxed)' }}>
                 {paceLine(asGroup(open), parts.map(asPart), now)}
               </div>
             ) : null}
             {iAmIn && (
-              <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 11, alignItems: 'center' }}>
+              <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'calc(11px * var(--density, 1))', alignItems: 'center' }}>
                 <span style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', flex: 'none' }}>Due</span>
                 <input
                   className="input"
@@ -542,7 +542,7 @@ export function Groupwork() {
             </div>
           )}
 
-          <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 14, lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 'calc(14px * var(--density, 1))', lineHeight: 'var(--leading-normal)' }}>
             Any member can claim a part, tick one or fix a title — group work does not survive a
             permission model where only the person who wrote a line may correct it. Nobody can
             remove anybody from a group but themselves.

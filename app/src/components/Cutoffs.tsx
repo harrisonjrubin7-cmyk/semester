@@ -117,7 +117,7 @@ export function Cutoffs({ courseId, code }: { courseId: string; code: string }) 
             that band — a blank is not a zero.
           </div>
           {rows.map((r, i) => (
-            <div key={i} style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'center', marginBottom: 7 }}>
+            <div key={i} style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'center', marginBottom: 'calc(7px * var(--density, 1))' }}>
               <input
                 className="input"
                 value={r.label}

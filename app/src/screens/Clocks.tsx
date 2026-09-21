@@ -135,7 +135,7 @@ function Timers() {
     <Folding name="Timers">
       <SectionLabel style={{ margin: '0 0 10px' }}>Set one</SectionLabel>
 
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginBottom: 'var(--sp-6)' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'calc(7px * var(--density, 1))', marginBottom: 'var(--sp-6)' }}>
         {PRESETS.map((m) => (
           <button
             key={m}
@@ -194,7 +194,7 @@ function Timers() {
           role="status"
           style={{
             fontSize: 'var(--type-sm)',
-            marginTop: 7,
+            marginTop: 'calc(7px * var(--density, 1))',
             color: 'var(--app-warn-ink, var(--app-fg))',
           }}
         >
@@ -205,7 +205,7 @@ function Timers() {
       {state.timers.length > 0 ? (
         <>
           <SectionLabel style={{ margin: '24px 0 10px' }}>Running</SectionLabel>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(9px * var(--density, 1))' }}>
             {state.timers.map((t) => (
               <TimerRow key={t.id} t={t} at={at} />
             ))}
@@ -214,7 +214,7 @@ function Timers() {
       ) : (
         <p
           style={{
-            marginTop: 22,
+            marginTop: 'calc(22px * var(--density, 1))',
             fontSize: 'calc(12.5px * var(--text-scale, 1))',
             color: 'var(--app-dim)',
             lineHeight: 'var(--leading-relaxed)',
@@ -284,7 +284,7 @@ function TimerRow({ t, at }: { t: Timer; at: number }) {
         <div style={{ width: `${pct}%`, height: '100%', background: 'var(--app-accent)' }} />
       </div>
 
-      <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 'calc(7px * var(--density, 1))', flexWrap: 'wrap' }}>
         <Small onClick={() => swap((now) => (running(t) ? pause(t, now) : resume(t, now)))}>
           {running(t) ? 'Pause' : 'Resume'}
         </Small>
@@ -415,7 +415,7 @@ function Alarms() {
       {state.alarms.length > 0 ? (
         <>
           <SectionLabel style={{ margin: '24px 0 10px' }}>Set</SectionLabel>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(9px * var(--density, 1))' }}>
             {state.alarms.map((a) => (
               <Blueprint plain key={a.id} style={{ padding: '12px 14px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-6)' }}>

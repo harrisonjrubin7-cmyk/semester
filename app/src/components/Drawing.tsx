@@ -124,7 +124,7 @@ export function Drawing({ code, language }: { code: string; language: Language }
   return (
     <div
       style={{
-        padding: 14,
+        paddingBlock: 'calc(14px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))',
         borderRadius: 'var(--r-lg)',
         border: '1px solid var(--app-line)',
         background: 'var(--app-panel)',

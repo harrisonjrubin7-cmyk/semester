@@ -73,7 +73,7 @@ export function Applying() {
         <div className="kicker">Where it stands</div>
         <div
           className="chrome-text"
-          style={{ marginTop: 5, fontSize: 'var(--type-md)', textWrap: 'pretty' }}
+          style={{ marginTop: 'calc(5px * var(--density, 1))', fontSize: 'var(--type-md)', textWrap: 'pretty' }}
         >
           {summary(state.applications, now)}
         </div>
@@ -164,7 +164,7 @@ function Row({ a }: { a: Application }) {
             display: 'block',
             fontSize: 'calc(11.5px * var(--text-scale, 1))',
             color: 'var(--app-dim)',
-            marginTop: 3,
+            marginTop: 'calc(3px * var(--density, 1))',
             textWrap: 'pretty',
           }}
         >
@@ -191,7 +191,7 @@ function Row({ a }: { a: Application }) {
       ) : null}
 
       {open ? (
-        <div style={{ marginTop: 11 }}>
+        <div style={{ marginTop: 'calc(11px * var(--density, 1))' }}>
           <div className="kicker">Move it</div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-3)', marginTop: 'var(--sp-3)' }}>
             {STAGES.map((s) => (
@@ -236,14 +236,14 @@ function Row({ a }: { a: Application }) {
               dispatch({ type: 'patchApplication', id: a.id, patch: { nextBy: e.target.value } })
             }
             aria-label={`When the next step for ${title(a)} is wanted by`}
-            style={{ width: 170, height: 38, marginTop: 7 }}
+            style={{ width: 170, height: 38, marginTop: 'calc(7px * var(--density, 1))' }}
           />
 
           <div
             style={{
               fontSize: 'calc(11.5px * var(--text-scale, 1))',
               color: 'var(--app-dim)',
-              marginTop: 11,
+              marginTop: 'calc(11px * var(--density, 1))',
               lineHeight: 'var(--leading-relaxed)',
               textWrap: 'pretty',
             }}
@@ -390,7 +390,7 @@ function AddOne({ onAdded }: { onAdded: () => void }) {
         style={{
           fontSize: 'calc(11.5px * var(--text-scale, 1))',
           color: 'var(--app-dim)',
-          marginTop: 7,
+          marginTop: 'calc(7px * var(--density, 1))',
           lineHeight: 'var(--leading-relaxed)',
           textWrap: 'pretty',
         }}
@@ -437,7 +437,7 @@ function AddOne({ onAdded }: { onAdded: () => void }) {
         disabled={!org.trim() && !role.trim()}
         title={org.trim() || role.trim() ? undefined : 'Enter the organisation or the role first'}
         spacing="0.09em"
-        style={{ marginTop: 14 }}
+        style={{ marginTop: 'calc(14px * var(--density, 1))' }}
       >
         Add it
       </ActionButton>

@@ -153,7 +153,7 @@ export function Essay() {
       </div>
 
       <SectionLabel>What is this for</SectionLabel>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(7px * var(--density, 1))' }}>
         {USES.map((option) => {
           const on = option.id === useId;
           return (
@@ -205,7 +205,7 @@ export function Essay() {
           {course && (
             <Blueprint style={{ padding: '11px 13px', marginTop: 'var(--sp-5)' }}>
               <div className="kicker">Recorded policy</div>
-              <div style={{ fontSize: 'var(--type-base)', lineHeight: 'var(--leading-relaxed)', marginTop: 5 }}>
+              <div style={{ fontSize: 'var(--type-base)', lineHeight: 'var(--leading-relaxed)', marginTop: 'calc(5px * var(--density, 1))' }}>
                 {course.ai?.note ??
                   'Nothing recorded. Read the syllabus and set it under Edit the course.'}
               </div>
@@ -253,7 +253,7 @@ export function Essay() {
           display: 'flex',
           gap: 'var(--sp-5)',
           alignItems: 'flex-start',
-          marginTop: 14,
+          marginTop: 'calc(14px * var(--density, 1))',
           padding: '11px 12px',
           borderRadius: 'var(--r-md)',
           border: '1px solid var(--app-line)',
@@ -355,7 +355,7 @@ export function Essay() {
         value={lengthId}
         onChange={setLengthId}
       />
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 5 }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'calc(5px * var(--density, 1))' }}>
         About {aim} words. {LENGTHS.find((l) => l.id === lengthId)?.blurb}
       </div>
 
@@ -371,7 +371,7 @@ export function Essay() {
           onClick={() => void make()}
           disabled={busy || !verdict.ok}
           tone="primary"
-          style={{ marginTop: 18 }}
+          style={{ marginTop: 'calc(18px * var(--density, 1))' }}
         >
           {busy ? 'Drafting…' : out ? 'Draft it again' : 'Write the draft'}
         </ActionButton>

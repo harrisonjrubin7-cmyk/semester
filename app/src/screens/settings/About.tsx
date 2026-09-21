@@ -58,7 +58,7 @@ export function SettingsAbout() {
 
               <ActionButton
                 onClick={() => dispatch({ type: 'restartOnboarding' })}
-                style={{ marginTop: 24 }}
+                style={{ marginTop: 'calc(24px * var(--density, 1))' }}
               >
                 Replay onboarding
               </ActionButton>

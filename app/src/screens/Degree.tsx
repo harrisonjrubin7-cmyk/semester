@@ -146,19 +146,19 @@ function WhatIsLeft() {
       {list.map((p) => {
         const r = rollup(state.requirements, state.taken, p);
         return (
-          <div key={p} style={{ marginBottom: 20 }}>
+          <div key={p} style={{ marginBottom: 'calc(20px * var(--density, 1))' }}>
             <Folding name="WhatIsLeft">
             <SectionLabel style={{ margin: '0 0 6px' }}>{p}</SectionLabel>
             <div
               style={{
                 fontSize: 'var(--type-base)',
-                marginBottom: 9,
+                marginBottom: 'calc(9px * var(--density, 1))',
                 textWrap: 'pretty',
               }}
             >
               {rollupLine(r)}
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(7px * var(--density, 1))' }}>
               {forProgramme(state.requirements, state.taken, p).map((prog) => (
                 <div
                   key={prog.req.id}
@@ -176,7 +176,7 @@ function WhatIsLeft() {
                     style={{
                       fontSize: 'calc(11.5px * var(--text-scale, 1))',
                       color: 'var(--app-dim)',
-                      marginTop: 3,
+                      marginTop: 'calc(3px * var(--density, 1))',
                       textWrap: 'pretty',
                     }}
                   >
@@ -543,7 +543,7 @@ function Transcript({ rows }: { rows?: Taken[] }) {
       {state.taken.length > 0 ? (
         <>
           <SectionLabel style={{ margin: '24px 0 8px' }}>Recorded</SectionLabel>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(7px * var(--density, 1))' }}>
             {taken.map((c) => (
               <TakenRow key={c.id} course={c} />
             ))}
@@ -640,7 +640,7 @@ function Rules() {
       {state.requirements.length > 0 ? (
         <>
           <SectionLabel style={{ margin: '24px 0 8px' }}>Recorded</SectionLabel>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(7px * var(--density, 1))' }}>
             {state.requirements.map((r) => (
               <RequirementRow key={r.id} requirement={r} />
             ))}

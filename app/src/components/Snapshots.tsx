@@ -94,7 +94,7 @@ export function Snapshots() {
             {NONE_LINE}
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(1px * var(--density, 1))' }}>
             {list.map((s) => (
               <button
                 key={s.id}
@@ -147,7 +147,7 @@ export function Snapshots() {
               {costLine(rows)}
             </div>
             {rows.length > 0 && (
-              <ul style={{ margin: '8px 0 0', paddingLeft: 17, fontSize: 'calc(12.5px * var(--text-scale, 1))', lineHeight: 1.6 }}>
+              <ul style={{ margin: '8px 0 0', paddingLeft: 'calc(17px * var(--density, 1))', fontSize: 'calc(12.5px * var(--text-scale, 1))', lineHeight: 1.6 }}>
                 {rows.map((r) => (
                   <li key={r.line} style={{ opacity: r.loses ? 1 : DIMMED_ROW }}>
                     {r.line}
@@ -155,7 +155,7 @@ export function Snapshots() {
                 ))}
               </ul>
             )}
-            <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 9, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+            <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'calc(9px * var(--density, 1))', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
               {RESTORE_LINE}
             </div>
             <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-6)' }}>

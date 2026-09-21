@@ -131,7 +131,7 @@ export function Timer({
   if (ended.kind === 'ask') {
     return (
       <div style={{ padding: '9px 0 4px' }}>
-        <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginBottom: 7, lineHeight: 'var(--leading-normal)' }}>
+        <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginBottom: 'calc(7px * var(--density, 1))', lineHeight: 'var(--leading-normal)' }}>
           That ran for {clockLine(ended.minutes)}, which is longer than the app will take on
           trust — a timer left running looks exactly like this. What was it really?
         </div>
@@ -181,7 +181,7 @@ export function Timer({
       return (
         <div style={{ padding: '9px 0 4px' }}>
           <div className="kicker">How long do you think?</div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-3)', marginTop: 7 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-3)', marginTop: 'calc(7px * var(--density, 1))' }}>
             {BUCKETS.map((b) => (
               <button
                 key={b.id}
@@ -217,7 +217,7 @@ export function Timer({
             style={{
               fontSize: 'var(--type-xs)',
               color: 'var(--app-dim)',
-              marginTop: 7,
+              marginTop: 'calc(7px * var(--density, 1))',
               lineHeight: 'var(--leading-normal)',
               textWrap: 'pretty',
             }}
@@ -262,7 +262,7 @@ export function Timer({
     <div
       style={{
         padding: '10px 12px',
-        marginTop: 9,
+        marginTop: 'calc(9px * var(--density, 1))',
         borderRadius: 'var(--r-md)',
         border: '1px solid var(--app-line-top)',
         background: 'var(--app-hero)',
@@ -295,13 +295,13 @@ export function Timer({
         </button>
       </div>
       {lost ? (
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 7, lineHeight: 1.4 }}>
+        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'calc(7px * var(--density, 1))', lineHeight: 1.4 }}>
           This has been running over {LONGEST / 60} hours. Stop it and the app will ask what it
           really was rather than recording this.
         </div>
       ) : null}
       {!running(mine) ? (
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 7 }}>Paused. Nothing is counting.</div>
+        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'calc(7px * var(--density, 1))' }}>Paused. Nothing is counting.</div>
       ) : null}
     </div>
   );

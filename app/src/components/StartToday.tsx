@@ -36,7 +36,7 @@ export function StartToday() {
   if (list.length === 0) return null;
 
   return (
-    <div style={{ marginTop: 14 }}>
+    <div style={{ marginTop: 'calc(14px * var(--density, 1))' }}>
       <Folding name="StartToday">
       <SectionLabel style={{ margin: '0 0 8px' }}>Begin today</SectionLabel>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
@@ -71,7 +71,7 @@ export function StartToday() {
                 display: 'block',
                 fontSize: 'calc(11.5px * var(--text-scale, 1))',
                 ...secondLine(),
-                marginTop: 3,
+                marginTop: 'calc(3px * var(--density, 1))',
                 textWrap: 'pretty',
               }}
             >
@@ -151,7 +151,7 @@ export function StartList() {
         style={{
           fontSize: 'var(--type-sm)',
           color: 'var(--app-dim)',
-          marginBottom: 9,
+          marginBottom: 'calc(9px * var(--density, 1))',
           lineHeight: 'var(--leading-relaxed)',
           textWrap: 'pretty',
         }}
@@ -163,7 +163,7 @@ export function StartList() {
           style={{
             fontSize: 'var(--type-xs)',
             color: 'var(--app-dim)',
-            marginBottom: 9,
+            marginBottom: 'calc(9px * var(--density, 1))',
             lineHeight: 'var(--leading-normal)',
             textWrap: 'pretty',
           }}
@@ -171,7 +171,7 @@ export function StartList() {
           {adjustedLine(bias)}
         </div>
       ) : null}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(7px * var(--density, 1))' }}>
         {p.starts.map((s) => (
           <button
             key={s.id}
@@ -180,7 +180,7 @@ export function StartList() {
             onClick={() => dispatch({ type: 'openItem', id: s.id })}
             style={{
               display: 'flex',
-              gap: 11,
+              gap: 'calc(11px * var(--density, 1))',
               alignItems: 'baseline',
               width: '100%',
               textAlign: 'left',
@@ -207,7 +207,7 @@ export function StartList() {
                   display: 'block',
                   fontSize: 'calc(11.5px * var(--text-scale, 1))',
                   ...secondLine(!s.startOn),
-                  marginTop: 3,
+                  marginTop: 'calc(3px * var(--density, 1))',
                   textWrap: 'pretty',
                 }}
               >

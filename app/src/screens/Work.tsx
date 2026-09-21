@@ -358,7 +358,7 @@ export function Work() {
 
       <Trouble said={trouble.said} onRetry={trouble.again} busy={busy} />
 
-      <div style={{ fontSize: 'var(--type-xs)', ...faintLine(), marginTop: 20, lineHeight: 'var(--leading-normal)' }}>
+      <div style={{ fontSize: 'var(--type-xs)', ...faintLine(), marginTop: 'calc(20px * var(--density, 1))', lineHeight: 'var(--leading-normal)' }}>
         Going through {routeLabel()}.
         Whatever you submit has to be your own work.
       </div>
@@ -401,7 +401,7 @@ function PlanView({
 
   return (
     <Folding name="PlanView">
-      <Blueprint style={{ padding: 15, marginTop: 'var(--sp-7)', background: 'var(--app-hero)' }}>
+      <Blueprint style={{ paddingBlock: 'calc(15px * var(--density, 1))', paddingInline: 'calc(15px * var(--density, 1))', marginTop: 'var(--sp-7)', background: 'var(--app-hero)' }}>
         <div className="kicker">What this is</div>
         <div
           className="chrome-text"
@@ -410,7 +410,7 @@ function PlanView({
           {plan.title}
         </div>
         {plan.due && (
-          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 5 }}>Due {plan.due}</div>
+          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'calc(5px * var(--density, 1))' }}>Due {plan.due}</div>
         )}
       </Blueprint>
 
@@ -466,7 +466,7 @@ function PlanView({
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 'var(--type-md)', lineHeight: 'var(--leading-tight)' }}>{s.do}</div>
                 {s.why && (
-                  <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 3, lineHeight: 'var(--leading-normal)' }}>
+                  <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'calc(3px * var(--density, 1))', lineHeight: 'var(--leading-normal)' }}>
                     {s.why}
                   </div>
                 )}
@@ -474,7 +474,7 @@ function PlanView({
                   style={{
                     fontSize: 'calc(10.5px * var(--text-scale, 1))',
                     color: 'var(--app-dim)',
-                    marginTop: 5,
+                    marginTop: 'calc(5px * var(--density, 1))',
                     fontFamily: 'var(--font-heading)',
                     letterSpacing: '0.1em',
                     textTransform: 'uppercase',

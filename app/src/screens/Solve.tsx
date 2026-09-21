@@ -127,7 +127,7 @@ export function Solve() {
       </div>
 
       <SectionLabel>What do you need</SectionLabel>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(7px * var(--density, 1))' }}>
         {APPROACHES.map((option) => {
           const on = option.id === aid;
           return (

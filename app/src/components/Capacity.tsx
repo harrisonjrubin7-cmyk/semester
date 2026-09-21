@@ -101,7 +101,7 @@ export function Capacity() {
         {state.floor.on ? `On — ${clock(state.floor.from)} to ${clock(state.floor.to)}` : 'Off'}
       </button>
       {state.floor.on ? (
-        <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 9, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'calc(9px * var(--density, 1))', flexWrap: 'wrap' }}>
           <Bump label="Start earlier" onClick={() => shift('from', -30)} />
           <Bump label="Start later" onClick={() => shift('from', 30)} />
           <Bump label="Lift earlier" onClick={() => shift('to', -30)} />
@@ -112,7 +112,7 @@ export function Capacity() {
         style={{
           fontSize: 'calc(11.5px * var(--text-scale, 1))',
           color: 'var(--app-dim)',
-          marginTop: 9,
+          marginTop: 'calc(9px * var(--density, 1))',
           lineHeight: 'var(--leading-relaxed)',
           textWrap: 'pretty',
         }}
@@ -297,7 +297,7 @@ function Kept() {
         style={{
           fontSize: 'calc(11.5px * var(--text-scale, 1))',
           color: 'var(--app-dim)',
-          marginTop: 9,
+          marginTop: 'calc(9px * var(--density, 1))',
           lineHeight: 'var(--leading-relaxed)',
           textWrap: 'pretty',
         }}

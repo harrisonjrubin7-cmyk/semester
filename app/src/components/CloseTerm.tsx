@@ -29,7 +29,7 @@ export function CloseTerm() {
 
   if (done) {
     return (
-      <div style={{ marginTop: 18 }}>
+      <div style={{ marginTop: 'calc(18px * var(--density, 1))' }}>
         <div className="kicker">{readTerm(term).label}</div>
         <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
           {ARCHIVED_LINE}
@@ -40,7 +40,7 @@ export function CloseTerm() {
 
   if (!open) {
     return (
-      <div style={{ marginTop: 18 }}>
+      <div style={{ marginTop: 'calc(18px * var(--density, 1))' }}>
         <div className="kicker">Closing the term</div>
         <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
           {offerLine(rows, term)}
@@ -72,7 +72,7 @@ export function CloseTerm() {
   const after = nextTerm(term);
 
   return (
-    <div style={{ marginTop: 18 }}>
+    <div style={{ marginTop: 'calc(18px * var(--density, 1))' }}>
       <div className="kicker">Closing {readTerm(term).label}</div>
       <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
         The grade your registrar posted, as they wrote it — a letter, or whatever your school

@@ -545,7 +545,7 @@ export function Bill() {
         style={{
           fontSize: 'var(--type-xs)',
           ...secondLine(),
-          marginTop: 14,
+          marginTop: 'calc(14px * var(--density, 1))',
           lineHeight: 'var(--leading-normal)',
         }}
       >

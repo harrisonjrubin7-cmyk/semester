@@ -189,7 +189,7 @@ export function ChipScroll({
       {/* The trailing padding is the row's, not a caller's: it keeps the last
           chip off the edge once the row is scrolled to its end, and it was
           another thing only `ChipRow` had. */}
-      <div style={{ display: 'flex', gap: 'var(--sp-3)', paddingRight: 18 }}>{children}</div>
+      <div style={{ display: 'flex', gap: 'var(--sp-3)', paddingRight: 'calc(18px * var(--density, 1))' }}>{children}</div>
     </div>
   );
 }

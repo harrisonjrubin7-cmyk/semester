@@ -75,7 +75,7 @@ function Preview({ tabs }: { tabs: Screen[] }) {
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              gap: 3,
+              gap: 'calc(3px * var(--density, 1))',
               color: 'var(--app-faint)',
             }}
           >
@@ -250,7 +250,7 @@ export function TabChooser() {
               >
                 {group}
               </SectionLabel>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'calc(7px * var(--density, 1))' }}>
                 {items.map((d) => (
                   <button
                     key={d.screen}

@@ -62,7 +62,7 @@ export function CameBack({ item }: { item: DatedItem }) {
       <div
         style={{
           fontSize: 'var(--type-base)',
-          marginTop: 5,
+          marginTop: 'calc(5px * var(--density, 1))',
           lineHeight: 'var(--leading-normal)',
           textWrap: 'pretty',
         }}
@@ -70,7 +70,7 @@ export function CameBack({ item }: { item: DatedItem }) {
         {open}
       </div>
 
-      <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 11, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'calc(11px * var(--density, 1))', flexWrap: 'wrap' }}>
         <input
           className="input"
           value={record.score}
@@ -124,7 +124,7 @@ export function CameBack({ item }: { item: DatedItem }) {
         }}
       />
 
-      <div className="kicker" style={{ marginTop: 13 }}>
+      <div className="kicker" style={{ marginTop: 'calc(13px * var(--density, 1))' }}>
         {code}&rsquo;s window
       </div>
       <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-3)', alignItems: 'center', flexWrap: 'wrap' }}>
@@ -177,7 +177,7 @@ export function CameBack({ item }: { item: DatedItem }) {
           style={{
             fontSize: 'calc(11.5px * var(--text-scale, 1))',
             color: 'var(--app-dim)',
-            marginTop: 7,
+            marginTop: 'calc(7px * var(--density, 1))',
             lineHeight: 'var(--leading-relaxed)',
             textWrap: 'pretty',
           }}
@@ -193,7 +193,7 @@ export function CameBack({ item }: { item: DatedItem }) {
         onClick={() => dispatch({ type: 'unmarkReturned', id: item.id })}
         style={{
           width: 'auto',
-          marginTop: 11,
+          marginTop: 'calc(11px * var(--density, 1))',
           fontSize: 'calc(11.5px * var(--text-scale, 1))',
           color: 'var(--app-dim)',
         }}

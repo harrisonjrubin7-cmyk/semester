@@ -97,7 +97,7 @@ export function EditCourse() {
             */
             onClick={adopt}
             tone="primary"
-            style={{ marginTop: 14, fontSize: 'var(--type-sm)' }}
+            style={{ marginTop: 'calc(14px * var(--density, 1))', fontSize: 'var(--type-sm)' }}
           >
             Make these mine
           </ActionButton>
@@ -203,7 +203,7 @@ export function EditCourse() {
         Recorded here, and read by the drafting tool, which will not write for a course unless
         this says plainly that it may. Nothing recorded counts as no.
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 7, marginBottom: 'var(--sp-5)' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(7px * var(--density, 1))', marginBottom: 'var(--sp-5)' }}>
         {STANCES.map((option) => {
           const on = (draft.course.ai?.stance ?? 'unstated') === option.id;
           return (
@@ -304,8 +304,8 @@ export function EditCourse() {
 
       <SectionLabel>When it meets</SectionLabel>
       {draft.schedule.map((block, i) => (
-        <Blueprint plain key={i} style={{ padding: '12px 13px', marginBottom: 9 }}>
-          <div style={{ display: 'flex', gap: 5, marginBottom: 9 }}>
+        <Blueprint plain key={i} style={{ padding: '12px 13px', marginBottom: 'calc(9px * var(--density, 1))' }}>
+          <div style={{ display: 'flex', gap: 'calc(5px * var(--density, 1))', marginBottom: 'calc(9px * var(--density, 1))' }}>
             {DAYS.map((d) => {
               const on = block.days.includes(d.day);
               return (
@@ -450,7 +450,7 @@ export function EditCourse() {
         Deadlines
       </SectionLabel>
       {draft.items.map((i) => (
-        <Blueprint plain key={i.id} style={{ padding: '12px 13px', marginBottom: 9 }}>
+        <Blueprint plain key={i.id} style={{ padding: '12px 13px', marginBottom: 'calc(9px * var(--density, 1))' }}>
           <input
             aria-label="What is due"
             className="input"
@@ -527,7 +527,7 @@ export function EditCourse() {
         onClick={save}
         disabled={!dirty}
         tone="primary"
-        style={{ marginTop: 18 }}
+        style={{ marginTop: 'calc(18px * var(--density, 1))' }}
       >
         {dirty ? 'Save the changes' : saved ? 'Saved' : 'Nothing changed'}
       </ActionButton>

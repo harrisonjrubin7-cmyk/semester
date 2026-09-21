@@ -55,7 +55,7 @@ export function Suggested() {
     });
 
   return (
-    <div style={{ marginTop: 22 }}>
+    <div style={{ marginTop: 'calc(22px * var(--density, 1))' }}>
       <div className="kicker">Worth knowing about</div>
       <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
         {NO_DATES}
@@ -68,7 +68,7 @@ export function Suggested() {
         style={{
           width: 'auto',
           padding: '6px 10px',
-          marginTop: 9,
+          marginTop: 'calc(9px * var(--density, 1))',
           borderRadius: 'var(--r-sm)',
           border: '1px solid var(--app-line)',
           fontSize: 'var(--type-xs)',
@@ -85,7 +85,7 @@ export function Suggested() {
           <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}>
             Which year are you in?
           </div>
-          <div style={{ display: 'flex', gap: 'var(--sp-3)', flexWrap: 'wrap', marginTop: 7 }}>
+          <div style={{ display: 'flex', gap: 'var(--sp-3)', flexWrap: 'wrap', marginTop: 'calc(7px * var(--density, 1))' }}>
             {YEARS.map((y) => (
               <button
                 key={y.id}
@@ -107,7 +107,7 @@ export function Suggested() {
           <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-6)' }}>
             What are you interested in? Leaving these alone shows everything.
           </div>
-          <div style={{ display: 'flex', gap: 'var(--sp-3)', flexWrap: 'wrap', marginTop: 7 }}>
+          <div style={{ display: 'flex', gap: 'var(--sp-3)', flexWrap: 'wrap', marginTop: 'calc(7px * var(--density, 1))' }}>
             {FIELDS.map((f) => (
               <button
                 key={f}
@@ -151,7 +151,7 @@ export function Suggested() {
               <div style={{ fontSize: 'var(--type-xs)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 1.4, textWrap: 'pretty' }}>
                 {whenLine(p, now)}
               </div>
-              <div style={{ display: 'flex', gap: 7, marginTop: 'var(--sp-5)', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: 'calc(7px * var(--density, 1))', marginTop: 'var(--sp-5)', flexWrap: 'wrap' }}>
                 <button
                   type="button"
                   className="bare tappable"

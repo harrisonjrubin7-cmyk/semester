@@ -146,7 +146,7 @@ export function Onboarding() {
         overflowY: 'auto',
       }}
     >
-      <div style={{ display: 'flex', gap: 'var(--sp-3)', marginBottom: 34 }}>
+      <div style={{ display: 'flex', gap: 'var(--sp-3)', marginBottom: 'calc(34px * var(--density, 1))' }}>
         {all.map((_, i) => (
           <div key={i} style={{ height: 3, flex: 1, background: 'var(--app-line)' }}>
             <div
@@ -228,11 +228,11 @@ export function Onboarding() {
       {!soft && state.onb === 0 && catalog.courses.length > 0 && (
         <Blueprint
           style={{
-            marginTop: 34,
+            marginTop: 'calc(34px * var(--density, 1))',
             padding: '18px 16px',
             display: 'flex',
             flexDirection: 'column',
-            gap: 14,
+            gap: 'calc(14px * var(--density, 1))',
           }}
         >
           {catalog.courses.map((c) => (
@@ -254,7 +254,7 @@ export function Onboarding() {
       )}
 
       {state.onb === 1 && catalog.courses.length > 0 && (
-        <div style={{ marginTop: 30, display: 'flex', flexDirection: 'column', gap: 'var(--sp-5)' }}>
+        <div style={{ marginTop: 'calc(30px * var(--density, 1))', display: 'flex', flexDirection: 'column', gap: 'var(--sp-5)' }}>
           {catalog.courses.map((c) => (
             <div
               key={c.id}
@@ -309,7 +309,7 @@ export function Onboarding() {
       )}
 
       {state.onb === 2 && (
-        <div style={{ marginTop: 26 }}>
+        <div style={{ marginTop: 'calc(26px * var(--density, 1))' }}>
           <SchoolPicker />
         </div>
       )}
@@ -337,7 +337,7 @@ export function Onboarding() {
       )}
 
       {state.onb === 4 && (
-        <div style={{ marginTop: 26, display: 'flex', flexDirection: 'column' }}>
+        <div style={{ marginTop: 'calc(26px * var(--density, 1))', display: 'flex', flexDirection: 'column' }}>
           {NOTIF_DEFS.map((n) => (
             <Toggle
               key={n.k}
@@ -365,7 +365,7 @@ export function Onboarding() {
           className="bare tappable"
           onClick={() => dispatch({ type: 'go', screen: 'help' })}
           style={{
-            marginTop: 18,
+            marginTop: 'calc(18px * var(--density, 1))',
             textAlign: 'left',
             fontSize: 'calc(12.5px * var(--text-scale, 1))',
             color: 'var(--app-dim)',

@@ -253,7 +253,7 @@ export function Exam() {
           ]}
           value={source}
           onChange={setSource}
-          style={{ marginTop: 14 }}
+          style={{ marginTop: 'calc(14px * var(--density, 1))' }}
         />
 
         <SectionLabel>How long you have</SectionLabel>
@@ -269,7 +269,7 @@ export function Exam() {
         />
 
         <SectionLabel>What it looks like</SectionLabel>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(7px * var(--density, 1))' }}>
           {FORMATS.map((f) => {
             const on = f.id === formatId;
             // A flashcard is not an argument, so a paper drawn from cards
@@ -315,7 +315,7 @@ export function Exam() {
           })}
         </div>
 
-        <Blueprint style={{ padding: '12px 14px', marginTop: 14 }}>
+        <Blueprint style={{ padding: '12px 14px', marginTop: 'calc(14px * var(--density, 1))' }}>
           <div className="kicker">The paper</div>
           <div style={{ fontSize: 'var(--type-md)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)' }}>
             {[
@@ -326,7 +326,7 @@ export function Exam() {
               .filter(Boolean)
               .join(', ')}
           </div>
-          <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 5 }}>
+          <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'calc(5px * var(--density, 1))' }}>
             {shape.points} marks · {shape.minutes} minutes
           </div>
         </Blueprint>
@@ -443,7 +443,7 @@ export function Exam() {
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--sp-5)' }}>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div className="kicker">{marking ? 'Marked' : 'Sitting'}</div>
-            <div style={{ fontSize: 'var(--type-md)', marginTop: 3, lineHeight: 'var(--leading-tight)' }}>{title}</div>
+            <div style={{ fontSize: 'var(--type-md)', marginTop: 'calc(3px * var(--density, 1))', lineHeight: 'var(--leading-tight)' }}>{title}</div>
           </div>
           <div
             className="chrome-text"
@@ -468,7 +468,7 @@ export function Exam() {
              there. The id is the question number rather than its id: a
              student reads the number, and a jump that lands somewhere the
              heading does not match is worse than no jump. */
-          <div key={q.id} id={`q${i + 1}`} style={{ marginTop: 18, scrollMarginTop: 'var(--sp-7)' }}>
+          <div key={q.id} id={`q${i + 1}`} style={{ marginTop: 'calc(18px * var(--density, 1))', scrollMarginTop: 'var(--sp-7)' }}>
             <div style={{ display: 'flex', gap: 'var(--sp-5)', alignItems: 'baseline' }}>
               <span className="kicker" style={{ flex: 'none' }}>
                 {i + 1} · {q.points} {q.points === 1 ? 'mark' : 'marks'}
@@ -509,12 +509,12 @@ export function Exam() {
                 </button>
               )}
             </div>
-            <div style={{ fontSize: 'var(--type-lg)', lineHeight: 1.4, marginTop: 5, textWrap: 'pretty' }}>
+            <div style={{ fontSize: 'var(--type-lg)', lineHeight: 1.4, marginTop: 'calc(5px * var(--density, 1))', textWrap: 'pretty' }}>
               {q.prompt}
             </div>
 
             {q.kind === 'choice' ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)', marginTop: 9 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)', marginTop: 'calc(9px * var(--density, 1))' }}>
                 {q.options.map((option, n) => {
                   const picked = chosen === String(n);
                   const key = marking && String(n) === q.answer;
@@ -573,29 +573,29 @@ export function Exam() {
                   minHeight: q.kind === 'long' ? 150 : 84,
                   resize: 'vertical',
                   lineHeight: 'var(--leading-relaxed)',
-                  marginTop: 9,
+                  marginTop: 'calc(9px * var(--density, 1))',
                 }}
               />
             )}
 
             {marking && (
               <>
-                <Blueprint plain style={{ padding: '11px 13px', marginTop: 9 }}>
+                <Blueprint plain style={{ padding: '11px 13px', marginTop: 'calc(9px * var(--density, 1))' }}>
                   <div className="kicker">{q.kind === 'choice' ? 'Why' : 'The key'}</div>
-                  <div style={{ fontSize: 'var(--type-base)', lineHeight: 1.55, marginTop: 5, textWrap: 'pretty' }}>
+                  <div style={{ fontSize: 'var(--type-base)', lineHeight: 1.55, marginTop: 'calc(5px * var(--density, 1))', textWrap: 'pretty' }}>
                     {q.kind === 'choice'
                       ? q.why || `${letter(Number(q.answer))}. ${q.options[Number(q.answer)]}`
                       : q.answer}
                   </div>
                   {q.kind !== 'choice' && q.why ? (
-                    <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 7, lineHeight: 'var(--leading-relaxed)' }}>
+                    <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'calc(7px * var(--density, 1))', lineHeight: 'var(--leading-relaxed)' }}>
                       {q.why}
                     </div>
                   ) : null}
                 </Blueprint>
 
                 {q.kind === 'choice' ? (
-                  <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 7 }}>
+                  <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'calc(7px * var(--density, 1))' }}>
                     {chosen === '' ? 'Left blank.' : right ? 'Right.' : 'Not this one.'}
                   </div>
                 ) : (
@@ -632,7 +632,7 @@ export function Exam() {
             <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)' }}>
               {marks.got} of {marks.outOf} marks
             </div>
-            <div style={{ fontSize: 'var(--type-base)', marginTop: 9, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+            <div style={{ fontSize: 'var(--type-base)', marginTop: 'calc(9px * var(--density, 1))', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
               {verdict(marks)}
             </div>
           </Blueprint>
@@ -711,7 +711,7 @@ export function Exam() {
                 style={{
                   fontSize: 'calc(22px * var(--text-scale, 1))',
                   letterSpacing: '0.18em',
-                  marginTop: 5,
+                  marginTop: 'calc(5px * var(--density, 1))',
                   fontVariantNumeric: 'tabular-nums',
                 }}
               >
@@ -853,7 +853,7 @@ export function Exam() {
             window.scrollTo(0, 0);
             }}
             tone="primary"
-            style={{ marginTop: 22 }}
+            style={{ marginTop: 'calc(22px * var(--density, 1))' }}
           >
             Finish and mark it
           </ActionButton>

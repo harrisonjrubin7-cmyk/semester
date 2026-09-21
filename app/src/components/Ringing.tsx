@@ -149,7 +149,7 @@ export function Ringing() {
         alignItems: 'center',
         justifyContent: 'center',
         gap: 'var(--sp-4)',
-        padding: 24,
+        paddingBlock: 'calc(24px * var(--density, 1))', paddingInline: 'calc(24px * var(--density, 1))',
         textAlign: 'center',
       }}
     >
@@ -192,7 +192,7 @@ export function Ringing() {
         className="btn btn-primary"
         onClick={stop}
         autoFocus
-        style={{ marginTop: 18, minWidth: 180, height: 48, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+        style={{ marginTop: 'calc(18px * var(--density, 1))', minWidth: 180, height: 48, letterSpacing: '0.1em', textTransform: 'uppercase' }}
       >
         Stop
       </button>

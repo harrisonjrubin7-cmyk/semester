@@ -98,17 +98,17 @@ export function SchoolPicker() {
         </div>
 
         {ASKS.map((a) => (
-          <div key={a.id} style={{ marginTop: 14 }}>
+          <div key={a.id} style={{ marginTop: 'calc(14px * var(--density, 1))' }}>
             <div style={{ fontSize: 'var(--type-base)', lineHeight: 1.4, textWrap: 'pretty' }}>
               {a.ask}
             </div>
             {a.note && (
-              <div style={{ fontSize: 'var(--type-xs)', color: 'var(--app-dim)', marginTop: 3, lineHeight: 1.4 }}>
+              <div style={{ fontSize: 'var(--type-xs)', color: 'var(--app-dim)', marginTop: 'calc(3px * var(--density, 1))', lineHeight: 1.4 }}>
                 {a.note}
               </div>
             )}
             {a.kind === 'choice' && (
-              <div style={{ display: 'flex', gap: 'var(--sp-3)', flexWrap: 'wrap', marginTop: 7 }}>
+              <div style={{ display: 'flex', gap: 'var(--sp-3)', flexWrap: 'wrap', marginTop: 'calc(7px * var(--density, 1))' }}>
                 {a.options.map((o) => (
                   <button
                     key={o.id}
@@ -123,7 +123,7 @@ export function SchoolPicker() {
               </div>
             )}
             {a.kind === 'yesno' && (
-              <div style={{ display: 'flex', gap: 'var(--sp-3)', marginTop: 7 }}>
+              <div style={{ display: 'flex', gap: 'var(--sp-3)', marginTop: 'calc(7px * var(--density, 1))' }}>
                 {['yes', 'no'].map((v) => (
                   <button
                     key={v}
@@ -145,13 +145,13 @@ export function SchoolPicker() {
                 aria-label={a.ask}
                 inputMode={a.kind === 'url' ? 'url' : 'text'}
                 onChange={(e) => set(a.id, e.target.value)}
-                style={{ height: 38, marginTop: 7, fontSize: 'var(--type-base)' }}
+                style={{ height: 38, marginTop: 'calc(7px * var(--density, 1))', fontSize: 'var(--type-base)' }}
               />
             )}
           </div>
         ))}
 
-        <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 18 }}>
+        <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'calc(18px * var(--density, 1))' }}>
           <button
             type="button"
             className="btn btn-secondary"
@@ -299,7 +299,7 @@ function Row({
           borderRadius: 'var(--r-sm)',
           border: `1px solid ${on ? 'var(--app-accent)' : 'var(--app-line)'}`,
           background: on ? 'var(--app-accent-wash)' : 'transparent',
-          marginBottom: 7,
+          marginBottom: 'calc(7px * var(--density, 1))',
         }}
       >
         <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))' }}>{school.name}</div>
@@ -322,7 +322,7 @@ function Row({
             border: '1px solid var(--app-line)',
             fontSize: 'var(--type-xs)',
             color: 'var(--app-dim)',
-            marginBottom: 7,
+            marginBottom: 'calc(7px * var(--density, 1))',
           }}
         >
           Forget

@@ -248,7 +248,7 @@ export function Proof() {
             style={{
               fontSize: 'calc(11.5px * var(--text-scale, 1))',
               color: 'var(--app-dim)',
-              marginTop: 9,
+              marginTop: 'calc(9px * var(--density, 1))',
               lineHeight: 'var(--leading-relaxed)',
               textWrap: 'pretty',
             }}

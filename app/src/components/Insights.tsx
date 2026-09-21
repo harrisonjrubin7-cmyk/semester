@@ -93,7 +93,7 @@ export function Insights({
                 fontSize: 'var(--type-base)',
                 color: 'var(--app-dim)',
                 lineHeight: 'var(--leading-relaxed)',
-                marginTop: 5,
+                marginTop: 'calc(5px * var(--density, 1))',
                 textWrap: 'pretty',
               }}
             >

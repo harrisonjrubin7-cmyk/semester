@@ -128,7 +128,7 @@ export function ReadingProgress({ item }: { item: DatedItem }) {
         {spread ? ` ${spread}` : ''}
       </div>
 
-      <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 11, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'calc(11px * var(--density, 1))', flexWrap: 'wrap' }}>
         <input
           className="input"
           inputMode="numeric"
@@ -157,7 +157,7 @@ export function ReadingProgress({ item }: { item: DatedItem }) {
         </button>
       </div>
 
-      <div className="kicker" style={{ marginTop: 13 }}>
+      <div className="kicker" style={{ marginTop: 'calc(13px * var(--density, 1))' }}>
         How much there is
       </div>
       <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-3)', alignItems: 'center', flexWrap: 'wrap' }}>
@@ -189,7 +189,7 @@ export function ReadingProgress({ item }: { item: DatedItem }) {
           style={{
             fontSize: 'calc(11.5px * var(--text-scale, 1))',
             color: 'var(--app-dim)',
-            marginTop: 7,
+            marginTop: 'calc(7px * var(--density, 1))',
             lineHeight: 'var(--leading-relaxed)',
             textWrap: 'pretty',
           }}
@@ -209,7 +209,7 @@ export function ReadingProgress({ item }: { item: DatedItem }) {
           }}
           style={{
             width: 'auto',
-            marginTop: 11,
+            marginTop: 'calc(11px * var(--density, 1))',
             fontSize: 'calc(11.5px * var(--text-scale, 1))',
             color: 'var(--app-dim)',
           }}
@@ -240,9 +240,9 @@ export function ReadingsOnTheGo() {
 
   return (
     <Folding name="ReadingProgress">
-      <div style={{ marginTop: 14 }}>
+      <div style={{ marginTop: 'calc(14px * var(--density, 1))' }}>
         <SectionLabel style={{ margin: '0 0 8px' }}>Part way through</SectionLabel>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(7px * var(--density, 1))' }}>
           {going.map((p) => {
             const item = all.find((i) => i.id === p.id);
             const along = pct(p);

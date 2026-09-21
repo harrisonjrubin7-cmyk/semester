@@ -96,7 +96,7 @@ export function WeekDue({
                   style={{
                     fontSize: 'var(--type-base)',
                     lineHeight: 1.4,
-                    marginBottom: 3,
+                    marginBottom: 'calc(3px * var(--density, 1))',
                     opacity: state.done[i.id] ? DIMMED_ROW : 1,
                     textDecoration: state.done[i.id] ? 'line-through' : 'none',
                   }}

@@ -41,7 +41,7 @@ export function HowMuch() {
           fontSize: 'calc(12.5px * var(--text-scale, 1))',
           color: 'var(--app-dim)',
           lineHeight: 'var(--leading-relaxed)',
-          marginBottom: 9,
+          marginBottom: 'calc(9px * var(--density, 1))',
         }}
       >
         {line(c)}
@@ -98,7 +98,7 @@ export function HowMuch() {
         style={{
           fontSize: 'var(--type-xs)',
           ...secondLine(),
-          marginTop: 11,
+          marginTop: 'calc(11px * var(--density, 1))',
           lineHeight: 'var(--leading-normal)',
         }}
       >

@@ -42,7 +42,7 @@ export function Trouble({
   return (
     <div
       style={{
-        marginTop: 14,
+        marginTop: 'calc(14px * var(--density, 1))',
         padding: '11px 13px',
         borderRadius: 'var(--r-md)',
         border: '1px solid var(--app-warn-line)',

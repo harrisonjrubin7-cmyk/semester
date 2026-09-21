@@ -65,7 +65,7 @@ export function Guess() {
           })
           }
           tone="primary"
-          style={{ marginTop: 22 }}
+          style={{ marginTop: 'calc(22px * var(--density, 1))' }}
         >
           Now read the unit
         </ActionButton>
@@ -106,7 +106,7 @@ export function Guess() {
             placeholder="What do you think?"
             aria-label={`Your guess at: ${card.q}`}
             rows={3}
-            style={{ marginTop: 14, fontSize: 'var(--type-md)', lineHeight: 'var(--leading-relaxed)' }}
+            style={{ marginTop: 'calc(14px * var(--density, 1))', fontSize: 'var(--type-md)', lineHeight: 'var(--leading-relaxed)' }}
           />
           <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
             {NUDGE}
@@ -114,21 +114,21 @@ export function Guess() {
           <ActionButton
             onClick={() => dispatch({ type: 'guessShow' })}
             tone="primary"
-            style={{ marginTop: 14 }}
+            style={{ marginTop: 'calc(14px * var(--density, 1))' }}
           >
             Show me
           </ActionButton>
         </>
       ) : (
         <>
-          <Blueprint plain style={{ padding: 14, marginTop: 14 }}>
+          <Blueprint plain style={{ paddingBlock: 'calc(14px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))', marginTop: 'calc(14px * var(--density, 1))' }}>
             <div className="kicker">The answer</div>
             <div style={{ fontSize: 'var(--type-lg)', lineHeight: 'var(--leading-relaxed)', marginTop: 'var(--sp-3)', textWrap: 'pretty' }}>
               {card.a}
             </div>
           </Blueprint>
           {said.trim() && (
-            <Blueprint plain style={{ padding: 14, marginTop: 'var(--sp-5)' }}>
+            <Blueprint plain style={{ paddingBlock: 'calc(14px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))', marginTop: 'var(--sp-5)' }}>
               <div className="kicker">What you said</div>
               <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 'var(--leading-relaxed)', marginTop: 'var(--sp-3)', color: 'var(--app-dim)', textWrap: 'pretty' }}>
                 {said}
@@ -143,7 +143,7 @@ export function Guess() {
             no judgement. It is two taps and it counts towards a sentence, not
             a score — see `lib/pretest.ts`.
           */}
-          <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 14 }}>
+          <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'calc(14px * var(--density, 1))' }}>
             <button
               type="button"
               className="btn btn-secondary"

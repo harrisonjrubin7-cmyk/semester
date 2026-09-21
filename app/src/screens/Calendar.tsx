@@ -269,7 +269,7 @@ function DayView() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          marginBottom: 14,
+          marginBottom: 'calc(14px * var(--density, 1))',
         }}
       >
         <button
@@ -383,7 +383,7 @@ function DayView() {
           <SectionLabel style={{ margin: '0 0 12px' }}>The schedule</SectionLabel>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             {rail.map((b, i) => (
-              <div key={i} style={{ display: 'flex', gap: 14, alignItems: 'stretch' }}>
+              <div key={i} style={{ display: 'flex', gap: 'calc(14px * var(--density, 1))', alignItems: 'stretch' }}>
                 <div
                   style={{
                     width: 56,
@@ -953,7 +953,7 @@ function WeekView() {
           <WeekGrid
             days={days}
             now={minutesNow(now)}
-            style={{ marginTop: 14 }}
+            style={{ marginTop: 'calc(14px * var(--density, 1))' }}
             canMove={(b) => Boolean(b.from)}
             /* The only view with both axes, so a drop here moves the day and
                the hour together — which is what rearranging a week is. */
@@ -977,7 +977,7 @@ function WeekView() {
           />
           )}
           {total > 0 && (
-            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 14, lineHeight: 'var(--leading-relaxed)' }}>
+            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'calc(14px * var(--density, 1))', lineHeight: 'var(--leading-relaxed)' }}>
               Tap a date to open that day in full, hold a block to move it, and double-tap an empty
               hour to put something there. Deadlines and events with no hour on them are listed
               under the grid rather than drawn on it.
@@ -1057,7 +1057,7 @@ function WeekView() {
           )}
 
           {on.deadlines && <WeekDue start={start} classes={classMeetings} span={span} />}
-          <PrintButton label={`Print the ${named}`} style={{ marginTop: 14 }} />
+          <PrintButton label={`Print the ${named}`} style={{ marginTop: 'calc(14px * var(--density, 1))' }} />
         </>
       )}
       <div style={{ height: 22 }} />
@@ -1321,7 +1321,7 @@ function MonthView() {
       )}
 
       <div
-        style={{ display: 'grid', gridTemplateColumns: 'repeat(7,minmax(0,1fr))', gap: 1, marginBottom: 'var(--sp-3)' }}
+        style={{ display: 'grid', gridTemplateColumns: 'repeat(7,minmax(0,1fr))', gap: 'calc(1px * var(--density, 1))', marginBottom: 'var(--sp-3)' }}
         aria-hidden="true"
       >
         {DOW_INITIALS.map((d, i) => (
@@ -1355,7 +1355,7 @@ function MonthView() {
         and the arrows move from there, which is the roving-focus pattern every
         date grid uses and the difference between a usable month and a wall.
       */}
-      <Blueprint style={{ background: 'var(--app-line)', padding: 1 }}>
+      <Blueprint style={{ background: 'var(--app-line)', paddingBlock: 'calc(1px * var(--density, 1))', paddingInline: 'calc(1px * var(--density, 1))' }}>
       <div
         role="grid"
         aria-label={`${monthLabel(shownYear, shownMonth)}. Arrow keys move by day, Page Up and Page Down change month.`}
@@ -1388,7 +1388,7 @@ function MonthView() {
           dispatch({ type: 'setCalDay', date: iso(move.day) });
           setChasing(move.day);
         }}
-        style={{ display: 'grid', gridTemplateColumns: 'repeat(7,minmax(0,1fr))', gap: 1 }}
+        style={{ display: 'grid', gridTemplateColumns: 'repeat(7,minmax(0,1fr))', gap: 'calc(1px * var(--density, 1))' }}
       >
         {/*
           One row element per week. `display: contents` keeps the seven-column
@@ -1598,7 +1598,7 @@ function MonthView() {
                 ['Yours', { border: '1px solid var(--app-accent)' }],
               ] as const
             ).map(([label, mark]) => (
-              <span key={label} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+              <span key={label} style={{ display: 'flex', alignItems: 'center', gap: 'calc(5px * var(--density, 1))' }}>
                 <span style={{ width: 5, height: 5, flex: 'none', ...mark }} />
                 {label}
               </span>
@@ -1906,7 +1906,7 @@ function MonthView() {
         });
         dispatch({ type: 'setCalView', view: 'day' });
         }}
-        style={{ fontSize: 'var(--type-xs)', marginTop: 14 }}
+        style={{ fontSize: 'var(--type-xs)', marginTop: 'calc(14px * var(--density, 1))' }}
       >
         See classes and events that day
       </ActionButton>
@@ -2330,7 +2330,7 @@ function SemesterView() {
                 <div
                   style={{
                     display: 'flex',
-                    gap: 3,
+                    gap: 'calc(3px * var(--density, 1))',
                     height: 8,
                     alignItems: 'stretch',
                     marginTop: 'var(--sp-2)',
@@ -2630,7 +2630,7 @@ const STACK: CSSProperties = {
 
 const CAMPUS_ROW: CSSProperties = {
   display: 'flex',
-  gap: 13,
+  gap: 'calc(13px * var(--density, 1))',
   padding: '13px 14px',
   alignItems: 'flex-start',
 };
@@ -2913,7 +2913,7 @@ export function EventDetail() {
         >
           {event.title}
         </div>
-        <div style={{ display: 'flex', marginTop: 14, borderTop: '1px solid var(--app-line)' }}>
+        <div style={{ display: 'flex', marginTop: 'calc(14px * var(--density, 1))', borderTop: '1px solid var(--app-line)' }}>
           <div style={{ flex: 1, padding: '11px 0' }}>
             <div className="kicker" style={{ fontSize: 'calc(10px * var(--text-scale, 1))' }}>
               When
@@ -2936,7 +2936,7 @@ export function EventDetail() {
       </Blueprint>
 
       <div
-        style={{ fontSize: 'var(--type-md)', lineHeight: 1.55, marginTop: 18, color: 'var(--app-dim)', textWrap: 'pretty' }}
+        style={{ fontSize: 'var(--type-md)', lineHeight: 1.55, marginTop: 'calc(18px * var(--density, 1))', color: 'var(--app-dim)', textWrap: 'pretty' }}
       >
         {event.detail}
       </div>
@@ -2944,7 +2944,7 @@ export function EventDetail() {
       <SectionLabel style={{ margin: '22px 0 6px' }}>Getting in</SectionLabel>
       <div style={{ fontSize: 'var(--type-md)', color: 'var(--app-dim)' }}>{event.ticket}</div>
 
-      <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 24 }}>
+      <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'calc(24px * var(--density, 1))' }}>
         <button
           type="button"
           className="btn btn-primary"

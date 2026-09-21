@@ -199,7 +199,7 @@ export function Courses() {
                   // the stripe used to appear only for a course somebody had
                   // coloured by hand, which is to say almost never.
                   borderLeft: `3px solid ${tint(c.id).edge}`,
-                  paddingLeft: 13,
+                  paddingLeft: 'calc(13px * var(--density, 1))',
                 }}
               >
                 <div
@@ -235,7 +235,7 @@ export function Courses() {
                     gap: 'var(--sp-4)',
                     alignItems: 'center',
                     marginTop: 'var(--sp-6)',
-                    paddingTop: 11,
+                    paddingTop: 'calc(11px * var(--density, 1))',
                     borderTop: '1px solid var(--app-line)',
                   }}
                 >
@@ -455,10 +455,10 @@ function LmsLink({ course }: { course: Course }) {
             value={draft}
             placeholder="https://brightspace.vanderbilt.edu/d2l/home/123456"
             onChange={(e) => setDraft(e.target.value)}
-            style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', marginTop: 9 }}
+            style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', marginTop: 'calc(9px * var(--density, 1))' }}
             aria-label={`${course.code} Brightspace address`}
           />
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', marginTop: 7 }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', marginTop: 'calc(7px * var(--density, 1))' }}>
             Open the course in Brightspace and copy the address from the bar. Grades and
             submissions need D2L’s Valence API, which only Vanderbilt can issue a key for — so
             this is a link, and the dates come from the calendar feed under Connect.
@@ -475,7 +475,7 @@ function LmsLink({ course }: { course: Course }) {
               });
               setEditing(false);
             }}
-            style={{ marginTop: 9, fontSize: 'var(--type-xs)', letterSpacing: '0.12em', textTransform: 'uppercase' }}
+            style={{ marginTop: 'calc(9px * var(--density, 1))', fontSize: 'var(--type-xs)', letterSpacing: '0.12em', textTransform: 'uppercase' }}
           >
             Save
           </button>
@@ -510,10 +510,10 @@ function CourseInformation() {
       {renamed(course, state.yours) ? (
         <div style={{ fontSize: 'var(--type-sm)', ...secondLine(), marginTop: 'var(--sp-1)' }}>{course.name}</div>
       ) : null}
-      <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 3 }}>
+      <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 'calc(3px * var(--density, 1))' }}>
         {course.prof} · {course.email}
       </div>
-      <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap', marginTop: 'var(--sp-6)' }}>
+      <div style={{ display: 'flex', gap: 'calc(7px * var(--density, 1))', flexWrap: 'wrap', marginTop: 'var(--sp-6)' }}>
         <span className="tag tag-outline">{course.meets}</span>
         {/* The room is the one detail here you might need to act on, so it is
             a link to directions rather than a label to read and retype. */}
@@ -667,7 +667,7 @@ function CourseInformation() {
         style={{
           fontSize: 'var(--type-xs)',
           color: 'var(--app-dim)',
-          marginTop: 14,
+          marginTop: 'calc(14px * var(--density, 1))',
           fontFamily: 'var(--font-heading)',
           letterSpacing: '0.08em',
         }}
@@ -693,7 +693,7 @@ export function ItemDetail() {
     <div style={{ padding: 'var(--page-pad)' }}>
       <Folding name="ItemDetail">
       <Blueprint style={{ padding: 'var(--sp-7)' }}>
-        <div style={{ display: 'flex', gap: 7, alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 'calc(7px * var(--density, 1))', alignItems: 'center' }}>
           <CourseTag id={item.c} />
           <span
             style={{
@@ -752,7 +752,7 @@ export function ItemDetail() {
         style={{
           fontSize: 'var(--type-md)',
           lineHeight: 1.55,
-          marginTop: 18,
+          marginTop: 'calc(18px * var(--density, 1))',
           color: 'var(--app-dim)',
           textWrap: 'pretty',
         }}
@@ -857,7 +857,7 @@ export function ItemDetail() {
           aria-pressed={going}
           onClick={() => dispatch({ type: 'toggleStarted', id: item.id })}
           style={{
-            marginTop: 24,
+            marginTop: 'calc(24px * var(--density, 1))',
             height: 46,
             letterSpacing: '0.1em',
             textTransform: 'uppercase',

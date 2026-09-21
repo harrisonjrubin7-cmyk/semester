@@ -80,7 +80,7 @@ export function DropBy({ courseId, limit }: { courseId?: string; limit?: number 
                 </span>
               ) : null}
             </div>
-            <div style={{ fontSize: 'var(--type-md)', lineHeight: 1.4, marginTop: 7 }}>{r.said}</div>
+            <div style={{ fontSize: 'var(--type-md)', lineHeight: 1.4, marginTop: 'calc(7px * var(--density, 1))' }}>{r.said}</div>
 
             {next ? (
               <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
@@ -120,7 +120,7 @@ export function DropBy({ courseId, limit }: { courseId?: string; limit?: number 
                       dispatch({ type: 'openCourse', id: r.courseId });
                       dispatch({ type: 'go', screen: 'edit' });
                     }}
-                    style={{ height: 38, marginTop: 9, fontSize: 'calc(12.5px * var(--text-scale, 1))' }}
+                    style={{ height: 38, marginTop: 'calc(9px * var(--density, 1))', fontSize: 'calc(12.5px * var(--text-scale, 1))' }}
                   >
                     Add them
                   </button>

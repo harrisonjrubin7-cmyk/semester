@@ -36,7 +36,7 @@ export function Produced({
   return (
     <div
       style={{
-        padding: 14,
+        paddingBlock: 'calc(14px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))',
         borderRadius: 'var(--r-lg)',
         border: '1px solid var(--app-line)',
         fontSize: 'var(--type-md)',

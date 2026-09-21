@@ -165,7 +165,7 @@ export function DeadlineRow({
               // is one continuous line down a mixed day, and the segment a row
               // sits on is the cheapest possible way to say whose it is.
               borderLeft: `2px solid ${tint(item.c).edge}`,
-              marginLeft: 7,
+              marginLeft: 'calc(7px * var(--density, 1))',
               paddingLeft: 'var(--sp-6)',
             }
           : {}),

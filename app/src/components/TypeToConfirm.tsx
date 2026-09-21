@@ -90,7 +90,7 @@ export function TypeToConfirm({
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
-        padding: 22,
+        paddingBlock: 'calc(22px * var(--density, 1))', paddingInline: 'calc(22px * var(--density, 1))',
       }}
     >
       <div className="kicker">This one cannot be undone</div>
@@ -104,7 +104,7 @@ export function TypeToConfirm({
         {title}
       </h2>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginTop: 'var(--sp-6)' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(5px * var(--density, 1))', marginTop: 'var(--sp-6)' }}>
         {what.map((line) => (
           <div
             key={line}
@@ -124,7 +124,7 @@ export function TypeToConfirm({
         htmlFor="type-to-confirm"
         style={{
           display: 'block',
-          marginTop: 18,
+          marginTop: 'calc(18px * var(--density, 1))',
           fontSize: 'calc(12.5px * var(--text-scale, 1))',
           lineHeight: 'var(--leading-normal)',
           textWrap: 'pretty',

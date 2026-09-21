@@ -105,7 +105,7 @@ export function ScoreField({
             marginLeft: BOX - CAPTION,
             fontSize: 'calc(10.5px * var(--text-scale, 1))',
             color: 'var(--app-dim)',
-            marginTop: 5,
+            marginTop: 'calc(5px * var(--density, 1))',
             lineHeight: 1.4,
             textAlign: 'right',
             textWrap: 'pretty',

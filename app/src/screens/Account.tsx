@@ -72,7 +72,7 @@ export function AccountScreen() {
             {account.email}
           </div>
           {account.via && (
-            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 3 }}>
+            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'calc(3px * var(--density, 1))' }}>
               {/* Which button they pressed, which is what somebody needs to
                   know when signing in on a second device. */}
               Through {account.via}.
@@ -114,7 +114,7 @@ export function AccountScreen() {
                 setChecked(line);
               });
             }}
-            style={{ marginTop: 14 }}
+            style={{ marginTop: 'calc(14px * var(--density, 1))' }}
           >
             {checking ? 'Checking…' : 'Check now'}
           </button>
@@ -125,7 +125,7 @@ export function AccountScreen() {
               style={{
                 fontSize: 'calc(12.5px * var(--text-scale, 1))',
                 color: 'var(--app-dim)',
-                marginTop: 9,
+                marginTop: 'calc(9px * var(--density, 1))',
                 lineHeight: 'var(--leading-relaxed)',
                 textWrap: 'pretty',
               }}
@@ -173,7 +173,7 @@ export function AccountScreen() {
         <ActionButton
           disabled={busy}
           onClick={() => void run(signOut)}
-          style={{ fontSize: 'var(--type-sm)', marginTop: 20 }}
+          style={{ fontSize: 'var(--type-sm)', marginTop: 'calc(20px * var(--density, 1))' }}
         >
           Sign out (keeps data on this device)
         </ActionButton>

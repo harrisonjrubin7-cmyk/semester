@@ -756,7 +756,7 @@ export function Import() {
               disabled={busy !== ''}
               onClick={() => void build()}
               tone="primary"
-              style={{ fontSize: 'var(--type-lg)', marginTop: 14 }}
+              style={{ fontSize: 'var(--type-lg)', marginTop: 'calc(14px * var(--density, 1))' }}
             >
               {busy && !busy.startsWith('Reading ') ? busy : `Build the course from ${words.toLocaleString()} words`}
             </ActionButton>
@@ -920,7 +920,7 @@ function ByHand() {
   }
 
   return (
-    <Blueprint style={{ padding: 14, marginTop: 'var(--sp-6)' }}>
+    <Blueprint style={{ paddingBlock: 'calc(14px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))', marginTop: 'var(--sp-6)' }}>
       <Folding name="ByHand">
       <SectionLabel>Add it by hand</SectionLabel>
       <div style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'stretch' }}>
@@ -1013,7 +1013,7 @@ function Rediff({
         <div className="chrome-text" style={{ fontSize: 'calc(20px * var(--text-scale, 1))', lineHeight: 1.2, textWrap: 'pretty' }}>
           {rediffSummary(changes)}
         </div>
-        <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 7, lineHeight: 'var(--leading-relaxed)' }}>
+        <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'calc(7px * var(--density, 1))', lineHeight: 'var(--leading-relaxed)' }}>
           {changes.same} unchanged. Saving replaces the course you have rather than adding a second
           copy of it.
         </div>
@@ -1109,7 +1109,7 @@ function Preview({
         <div className="chrome-text" style={{ fontSize: 'calc(24px * var(--text-scale, 1))', lineHeight: 1.1 }}>
           {m.course.code}
         </div>
-        <div style={{ fontSize: 'var(--type-md)', marginTop: 3 }}>{m.course.name}</div>
+        <div style={{ fontSize: 'var(--type-md)', marginTop: 'calc(3px * var(--density, 1))' }}>{m.course.name}</div>
         <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)' }}>
           {[m.course.prof, m.course.meets, m.course.room, m.course.credits]
             .filter(Boolean)
@@ -1134,7 +1134,7 @@ function Preview({
       {warnings.length > 0 && (
         <>
           <SectionLabel>Worth knowing</SectionLabel>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(7px * var(--density, 1))' }}>
             {warnings.map((w) => (
               <div key={w} style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
                 · {w}
@@ -1208,7 +1208,7 @@ function Preview({
                   color: 'var(--app-dim)',
                   marginTop: 'var(--sp-2)',
                   lineHeight: 'var(--leading-normal)',
-                  paddingLeft: 92,
+                  paddingLeft: 'calc(92px * var(--density, 1))',
                 }}
               >
                 “{i.quote}”
@@ -1239,7 +1239,7 @@ function Preview({
         onClick={() => { if (ready) onSave(); }}
         disabled={!ready}
         tone="primary"
-        style={{ fontSize: 'var(--type-lg)', marginTop: 18 }}
+        style={{ fontSize: 'var(--type-lg)', marginTop: 'calc(18px * var(--density, 1))' }}
       >
         {/* The count on the button, because it is the number that changed
             and the button is what commits it. */}

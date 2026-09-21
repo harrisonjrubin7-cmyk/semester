@@ -259,7 +259,7 @@ export function SettingsLook() {
                         flex: 'none',
                         display: 'flex',
                         alignItems: 'center',
-                        gap: 7,
+                        gap: 'calc(7px * var(--density, 1))',
                         padding: '7px 12px',
                         fontSize: 'var(--type-sm)',
                         borderColor: on ? a.base : 'var(--app-line)',
@@ -299,10 +299,10 @@ export function SettingsLook() {
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 11,
+                  gap: 'calc(11px * var(--density, 1))',
                   textAlign: 'left',
                   padding: '10px 11px',
-                  marginBottom: 7,
+                  marginBottom: 'calc(7px * var(--density, 1))',
                   borderRadius: 'var(--r-sm)',
                   border: `1px solid ${state.ground === MATCH_DEVICE ? 'var(--app-accent)' : 'var(--app-line)'}`,
                   background: state.ground === MATCH_DEVICE ? 'var(--app-accent-wash)' : 'transparent',
@@ -323,7 +323,7 @@ export function SettingsLook() {
                   </span>
                 </span>
               </button>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(7px * var(--density, 1))' }}>
                 {GROUNDS.map((g) => {
                   const on = state.ground === g.id;
                   return (
@@ -336,7 +336,7 @@ export function SettingsLook() {
                       style={{
                         display: 'flex',
                         alignItems: 'center',
-                        gap: 11,
+                        gap: 'calc(11px * var(--density, 1))',
                         textAlign: 'left',
                         padding: '10px 12px',
                         borderRadius: 'var(--r-md)',

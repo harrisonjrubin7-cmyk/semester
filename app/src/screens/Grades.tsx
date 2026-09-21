@@ -64,7 +64,7 @@ export function Grades() {
             <Folding name="body">
             <SectionLabel style={{ margin: '26px 0 8px' }}>{c.code}</SectionLabel>
 
-            <Blueprint style={{ padding: 15, background: 'var(--app-hero)' }}>
+            <Blueprint style={{ paddingBlock: 'calc(15px * var(--density, 1))', paddingInline: 'calc(15px * var(--density, 1))', background: 'var(--app-hero)' }}>
               <div className="kicker">
                 {s.current === null ? 'Nothing graded yet' : `Across ${Math.round(s.counted)}% of the grade`}
               </div>
@@ -299,11 +299,11 @@ export function Grades() {
                     {trendLine(t, sat)}
                   </div>
                   {target !== null && t.papers > 0 ? (
-                    <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 5, lineHeight: 'var(--leading-normal)' }}>
+                    <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'calc(5px * var(--density, 1))', lineHeight: 'var(--leading-normal)' }}>
                       {against(t.average, target)}
                     </div>
                   ) : null}
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-3)', marginTop: 9 }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-3)', marginTop: 'calc(9px * var(--density, 1))' }}>
                     {sat.slice(0, 6).map((paper) => (
                       <PaperTag key={paper.id} paper={paper} />
                     ))}
@@ -326,7 +326,7 @@ export function Grades() {
         );
       })}
 
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 22, lineHeight: 'var(--leading-relaxed)' }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'calc(22px * var(--density, 1))', lineHeight: 'var(--leading-relaxed)' }}>
         This is your own arithmetic, not a gradebook — nothing here is read from Brightspace, and
         nothing is sent anywhere. A syllabus that drops your lowest score, curves, or rounds will
         not match exactly.

@@ -214,7 +214,7 @@ export function Rework({
           <div
             style={{
               fontSize: 'var(--type-base)',
-              marginTop: 7,
+              marginTop: 'calc(7px * var(--density, 1))',
               lineHeight: 1.55,
               // The one thing worth a colour: something you drilled going away.
               color: cost.reworded + cost.dropped > 0 ? 'var(--app-warn)' : 'inherit',
@@ -241,7 +241,7 @@ export function Rework({
           </div>
 
           {plan.notes.length > 0 && (
-            <ul style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', margin: '10px 0 0', paddingLeft: 18, lineHeight: 1.55 }}>
+            <ul style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', margin: '10px 0 0', paddingLeft: 'calc(18px * var(--density, 1))', lineHeight: 1.55 }}>
               {plan.notes.map((n, i) => (
                 <li key={i}>{n}</li>
               ))}
@@ -272,7 +272,7 @@ export function Rework({
             ))}
           </div>
 
-          <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 14 }}>
+          <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'calc(14px * var(--density, 1))' }}>
             <button
               type="button"
               className="btn btn-secondary"

@@ -247,7 +247,7 @@ export function WeekReport() {
             onClick={() => void read()}
             disabled={busy}
             tone="primary"
-            style={{ marginTop: 18 }}
+            style={{ marginTop: 'calc(18px * var(--density, 1))' }}
           >
             {busy ? 'Reading it…' : 'What should I make of this week?'}
           </ActionButton>
@@ -265,7 +265,7 @@ export function WeekReport() {
         </>
       )}
 
-      <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 14 }}>
+      <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'calc(14px * var(--density, 1))' }}>
         <button
           type="button"
           className="btn btn-secondary"

@@ -108,7 +108,7 @@ export function AgainstCalendar() {
         ]}
         value={source}
         onChange={setSource}
-        style={{ marginTop: 14 }}
+        style={{ marginTop: 'calc(14px * var(--density, 1))' }}
       />
 
       {source === 'feed' ? (
@@ -181,7 +181,7 @@ export function AgainstCalendar() {
               {report.moved.map((m) => {
                 const done = applied[m.item.id];
                 return (
-                  <Blueprint plain key={m.item.id} style={{ padding: '13px 14px', marginBottom: 9 }}>
+                  <Blueprint plain key={m.item.id} style={{ padding: '13px 14px', marginBottom: 'calc(9px * var(--density, 1))' }}>
                     <div className="kicker">{code(m.item.c)}</div>
                     <div style={{ fontSize: 'var(--type-lg)', lineHeight: 'var(--leading-tight)', marginTop: 'var(--sp-2)', textWrap: 'pretty' }}>
                       {m.item.title}
@@ -191,7 +191,7 @@ export function AgainstCalendar() {
                         display: 'flex',
                         gap: 'var(--sp-5)',
                         alignItems: 'baseline',
-                        marginTop: 9,
+                        marginTop: 'calc(9px * var(--density, 1))',
                         fontVariantNumeric: 'tabular-nums',
                       }}
                     >
@@ -300,7 +300,7 @@ export function AgainstCalendar() {
             </>
           )}
 
-          <PrintButton label="Print this comparison" style={{ marginTop: 14 }} />
+          <PrintButton label="Print this comparison" style={{ marginTop: 'calc(14px * var(--density, 1))' }} />
           <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
             Titles are matched by how much they have in common, scoped to the course. Where a
             pairing is not clearly right it is reported as two separate lines rather than one

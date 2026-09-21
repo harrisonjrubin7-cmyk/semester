@@ -71,7 +71,7 @@ export function FieldGuide() {
    * `components/Page.tsx`.
    */
   return (
-    <div style={{ marginTop: 18 }}>
+    <div style={{ marginTop: 'calc(18px * var(--density, 1))' }}>
       <Folding name="FieldGuide">
       {/* ── Masthead ─────────────────────────────────────────────────── */}
       <Blueprint style={{ padding: '20px 17px', background: 'var(--app-hero)' }}>
@@ -102,7 +102,7 @@ export function FieldGuide() {
         <div
           style={{
             marginTop: 'var(--sp-6)',
-            paddingTop: 11,
+            paddingTop: 'calc(11px * var(--density, 1))',
             borderTop: '1px solid var(--app-line)',
             fontFamily: 'var(--font-heading)',
             fontSize: 'calc(10.5px * var(--text-scale, 1))',
@@ -171,14 +171,14 @@ export function FieldGuide() {
             ref={(el) => {
               sections.current[i] = el;
             }}
-            style={{ marginTop: 34, scrollMarginTop: 12 }}
+            style={{ marginTop: 'calc(34px * var(--density, 1))', scrollMarginTop: 12 }}
           >
             <div
               style={{
                 display: 'flex',
                 alignItems: 'baseline',
                 gap: 'var(--sp-6)',
-                paddingBottom: 9,
+                paddingBottom: 'calc(9px * var(--density, 1))',
                 borderBottom: '1px solid var(--app-accent)',
               }}
             >
@@ -203,13 +203,13 @@ export function FieldGuide() {
             </div>
 
             {fig && (
-              <div style={{ marginTop: 15 }}>
+              <div style={{ marginTop: 'calc(15px * var(--density, 1))' }}>
                 <FigureCard figure={fig} />
               </div>
             )}
 
             {u.cards.map((c, ci) => (
-              <div key={c.q} style={{ marginTop: 17 }}>
+              <div key={c.q} style={{ marginTop: 'calc(17px * var(--density, 1))' }}>
                 {ci >= base && (
                   <span className="tag tag-accent" style={{ marginBottom: 'var(--sp-3)', display: 'inline-block' }}>
                     Added
@@ -233,7 +233,7 @@ export function FieldGuide() {
                     fontSize: 'var(--type-md)',
                     lineHeight: 1.6,
                     color: 'var(--app-dim)',
-                    marginTop: 5,
+                    marginTop: 'calc(5px * var(--density, 1))',
                     textWrap: 'pretty',
                   }}
                 >
@@ -254,13 +254,13 @@ export function FieldGuide() {
           {guide.addedLong.frames > 0 && (
             <div style={SINCE}>{addedLine(guide.addedLong.frames, 'framings')}</div>
           )}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(11px * var(--density, 1))' }}>
             {guide.frames.map((f) => (
               <div
                 key={f.t}
                 style={{
                   borderLeft: '2px solid var(--app-accent)',
-                  paddingLeft: 13,
+                  paddingLeft: 'calc(13px * var(--density, 1))',
                   paddingTop: 'var(--sp-1)',
                   paddingBottom: 'var(--sp-1)',
                 }}
@@ -397,7 +397,7 @@ export function FieldGuide() {
           )}
           {guide.selfTest.map((c, i) => (
             <div key={c.q} style={askRow}>
-              <div style={{ display: 'flex', gap: 11 }}>
+              <div style={{ display: 'flex', gap: 'calc(11px * var(--density, 1))' }}>
                 <span
                   style={{
                     fontFamily: 'var(--font-heading)',
@@ -441,7 +441,7 @@ export function FieldGuide() {
 
       <div
         style={{
-          marginTop: 30,
+          marginTop: 'calc(30px * var(--density, 1))',
           paddingTop: 'var(--sp-6)',
           borderTop: '1px solid var(--app-line)',
           fontSize: 'var(--type-xs)',

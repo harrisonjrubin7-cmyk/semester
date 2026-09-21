@@ -228,13 +228,13 @@ export function LessonPlayer() {
       <div className="kicker">
         Unit {unit + 1} of {guide.units.length} · {lesson.len}
       </div>
-      <div style={{ fontSize: 'var(--type-lg)', lineHeight: 'var(--leading-tight)', marginTop: 3 }}>{lesson.title}</div>
+      <div style={{ fontSize: 'var(--type-lg)', lineHeight: 'var(--leading-tight)', marginTop: 'calc(3px * var(--density, 1))' }}>{lesson.title}</div>
 
       {/* ── the slide ─────────────────────────────────────────────────── */}
       <Blueprint
         style={{
-          marginTop: 14,
-          padding: 20,
+          marginTop: 'calc(14px * var(--density, 1))',
+          paddingBlock: 'calc(20px * var(--density, 1))', paddingInline: 'calc(20px * var(--density, 1))',
           minHeight: 260,
           display: 'flex',
           flexDirection: 'column',
@@ -325,7 +325,7 @@ export function LessonPlayer() {
           fontSize: 'var(--type-xs)',
           letterSpacing: '0.1em',
           color: 'var(--app-dim)',
-          marginTop: 5,
+          marginTop: 'calc(5px * var(--density, 1))',
         }}
       >
         <span>{clock(time)}</span>

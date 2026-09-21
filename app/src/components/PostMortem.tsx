@@ -50,7 +50,7 @@ export function PostMortem({ record, courseId }: { record: Returned; courseId: s
           style={{
             width: 'auto',
             padding: '6px 10px',
-            marginTop: 7,
+            marginTop: 'calc(7px * var(--density, 1))',
             borderRadius: 'var(--r-sm)',
             border: '1px solid var(--app-line)',
             fontSize: 'var(--type-xs)',
@@ -111,7 +111,7 @@ export function PostMortem({ record, courseId }: { record: Returned; courseId: s
         style={{ height: 36, marginTop: 'var(--sp-4)', fontSize: 'calc(12.5px * var(--text-scale, 1))' }}
       />
 
-      <div className="kicker" style={{ marginTop: 14 }}>
+      <div className="kicker" style={{ marginTop: 'calc(14px * var(--density, 1))' }}>
         What kind of miss?
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)', marginTop: 'var(--sp-4)' }}>
@@ -132,7 +132,7 @@ export function PostMortem({ record, courseId }: { record: Returned; courseId: s
         ))}
       </div>
 
-      <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 14 }}>
+      <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'calc(14px * var(--density, 1))' }}>
         <button
           type="button"
           className="btn btn-secondary"

@@ -101,7 +101,7 @@ export function Behind() {
             style={{
               fontSize: 'calc(11.5px * var(--text-scale, 1))',
               color: 'var(--app-dim)',
-              marginBottom: 9,
+              marginBottom: 'calc(9px * var(--density, 1))',
               lineHeight: 'var(--leading-relaxed)',
               textWrap: 'pretty',
             }}
@@ -145,7 +145,7 @@ export function Behind() {
                 style={{
                   fontSize: 'calc(11.5px * var(--text-scale, 1))',
                   color: 'var(--app-dim)',
-                  marginBottom: 9,
+                  marginBottom: 'calc(9px * var(--density, 1))',
                   lineHeight: 'var(--leading-relaxed)',
                   textWrap: 'pretty',
                 }}
@@ -185,7 +185,7 @@ export function Behind() {
                       display: 'block',
                       fontSize: 'calc(11.5px * var(--text-scale, 1))',
                       color: 'var(--app-dim)',
-                      marginTop: 3,
+                      marginTop: 'calc(3px * var(--density, 1))',
                       textWrap: 'pretty',
                     }}
                   >
@@ -212,7 +212,7 @@ export function Behind() {
       >
         {movesLine(b)}
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(9px * var(--density, 1))' }}>
         {moves(b).map((m) => (
           <button
             key={m.id}

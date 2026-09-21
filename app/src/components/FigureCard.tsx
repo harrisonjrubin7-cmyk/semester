@@ -61,21 +61,21 @@ function StoredImage({ fileId, alt }: { fileId: string; alt: string }) {
 /** One figure, in whichever of the three forms it takes. */
 export function FigureCard({ figure, unit }: { figure: Figure; unit?: string }) {
   return (
-    <Blueprint style={{ padding: 15 }}>
+    <Blueprint style={{ paddingBlock: 'calc(15px * var(--density, 1))', paddingInline: 'calc(15px * var(--density, 1))' }}>
       {unit && <div className="kicker">{unit}</div>}
       <div
         style={{
           fontFamily: 'var(--font-heading)',
           fontSize: 'calc(19px * var(--text-scale, 1))',
           lineHeight: 1.15,
-          marginTop: 3,
+          marginTop: 'calc(3px * var(--density, 1))',
         }}
       >
         {figure.title}
       </div>
 
       {figure.type === 'bars' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)', marginTop: 14 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)', marginTop: 'calc(14px * var(--density, 1))' }}>
           {figure.rows.map((r) => (
             <div key={r.l}>
               <div
@@ -93,7 +93,7 @@ export function FigureCard({ figure, unit }: { figure: Figure; unit?: string }) 
                   <span style={{ color: 'var(--app-dim)', fontSize: 'var(--type-xs)' }}> {figure.unit}</span>
                 </span>
               </div>
-              <div style={{ height: 8, background: 'var(--app-track)', marginTop: 3 }}>
+              <div style={{ height: 8, background: 'var(--app-track)', marginTop: 'calc(3px * var(--density, 1))' }}>
                 <div
                   style={{
                     height: '100%',

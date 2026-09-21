@@ -210,7 +210,7 @@ export function Credentials({
             fontSize: 'var(--type-lg)',
             letterSpacing: '0.1em',
             textTransform: 'uppercase',
-            marginTop: 14,
+            marginTop: 'calc(14px * var(--density, 1))',
           }}
         >
           {busy ? 'Working…' : mode === 'in' ? 'Sign in' : 'Create the account'}
@@ -279,7 +279,7 @@ export function Credentials({
           overlay reaching sideways would have each claiming the other's
           space, and the one later in the DOM would quietly win the overlap.
           Measured 102×19: the size of the words, not of a thumb. */}
-      <div style={{ display: 'flex', gap: 14, marginTop: 18 }}>
+      <div style={{ display: 'flex', gap: 'calc(14px * var(--density, 1))', marginTop: 'calc(18px * var(--density, 1))' }}>
         {/*
           Changing your mind clears what the other mode said.
 
@@ -323,7 +323,7 @@ export function Credentials({
           style={{
             fontSize: 'var(--type-base)',
             color: 'var(--app-dim)',
-            marginTop: 14,
+            marginTop: 'calc(14px * var(--density, 1))',
             lineHeight: 'var(--leading-relaxed)',
             textWrap: 'pretty',
           }}
@@ -337,7 +337,7 @@ export function Credentials({
           style={{
             fontSize: 'var(--type-base)',
             color: 'var(--app-accent)',
-            marginTop: 14,
+            marginTop: 'calc(14px * var(--density, 1))',
             lineHeight: 'var(--leading-relaxed)',
           }}
         >

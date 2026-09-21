@@ -590,7 +590,7 @@ function TabBar() {
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              gap: 3,
+              gap: 'calc(3px * var(--density, 1))',
               /*
                * The tab that is not current still names a destination, so it
                * is text and takes `--app-dim`. At `--app-faint` — the

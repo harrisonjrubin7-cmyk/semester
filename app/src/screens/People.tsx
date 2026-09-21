@@ -117,7 +117,7 @@ function PeopleTab({ rows }: { rows?: Person[] }) {
       {state.people.length === 0 ? (
         <p
           style={{
-            marginTop: 20,
+            marginTop: 'calc(20px * var(--density, 1))',
             fontSize: 'calc(12.5px * var(--text-scale, 1))',
             color: 'var(--app-dim)',
             lineHeight: 1.6,
@@ -131,7 +131,7 @@ function PeopleTab({ rows }: { rows?: Person[] }) {
         </p>
       ) : null}
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 9, marginTop: 18 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(9px * var(--density, 1))', marginTop: 'calc(18px * var(--density, 1))' }}>
         {people.map((p) => {
           const k = known(state.visits, p.id, now);
           const theirs = state.visits
@@ -154,7 +154,7 @@ function PeopleTab({ rows }: { rows?: Person[] }) {
                     display: 'block',
                     fontSize: 'calc(11.5px * var(--text-scale, 1))',
                     color: 'var(--app-dim)',
-                    marginTop: 3,
+                    marginTop: 'calc(3px * var(--density, 1))',
                     textWrap: 'pretty',
                   }}
                 >
@@ -165,7 +165,7 @@ function PeopleTab({ rows }: { rows?: Person[] }) {
                     display: 'block',
                     fontSize: 'var(--type-sm)',
                     color: 'var(--app-dim)',
-                    marginTop: 5,
+                    marginTop: 'calc(5px * var(--density, 1))',
                     lineHeight: 'var(--leading-normal)',
                     textWrap: 'pretty',
                   }}
@@ -463,7 +463,7 @@ function LettersTab() {
       {wanted.length > 0 ? (
         <>
           <SectionLabel style={{ margin: '22px 0 8px' }}>Wanting something from you</SectionLabel>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(9px * var(--density, 1))' }}>
             {wanted.map((l) => {
               const left = daysLeft(l, now);
               const tight = short(l, now);
@@ -484,7 +484,7 @@ function LettersTab() {
                     style={{
                       fontSize: 'calc(11.5px * var(--text-scale, 1))',
                       color: 'var(--app-dim)',
-                      marginTop: 3,
+                      marginTop: 'calc(3px * var(--density, 1))',
                     }}
                   >
                     {[
@@ -498,7 +498,7 @@ function LettersTab() {
                   <div
                     style={{
                       fontSize: 'calc(12.5px * var(--text-scale, 1))',
-                      marginTop: 7,
+                      marginTop: 'calc(7px * var(--density, 1))',
                       lineHeight: 'var(--leading-relaxed)',
                       textWrap: 'pretty',
                     }}
@@ -573,7 +573,7 @@ function LettersTab() {
         style={{
           fontSize: 'calc(11.5px * var(--text-scale, 1))',
           color: 'var(--app-dim)',
-          marginTop: 22,
+          marginTop: 'calc(22px * var(--density, 1))',
           lineHeight: 1.55,
           textWrap: 'pretty',
         }}

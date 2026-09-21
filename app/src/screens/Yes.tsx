@@ -86,7 +86,7 @@ function EnrolledSchedule() {
             plain
             style={{
               padding: '14px 15px',
-              marginBottom: 9,
+              marginBottom: 'calc(9px * var(--density, 1))',
               display: 'flex',
               gap: 'var(--sp-6)',
               alignItems: 'center',
@@ -138,7 +138,7 @@ function EnrolledSchedule() {
                 key={c.code}
                 style={{
                   display: 'flex',
-                  gap: 11,
+                  gap: 'calc(11px * var(--density, 1))',
                   alignItems: 'flex-start',
                   ...rowStyle,
                 }}
@@ -167,7 +167,7 @@ function EnrolledSchedule() {
                   {c.lines.map((line) => (
                     <div
                       key={`${line.at}-${line.days.join('')}`}
-                      style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 3 }}
+                      style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'calc(3px * var(--density, 1))' }}
                     >
                       {meetsLine(line)}
                       {line.room ? ` · ${line.room}` : ''}
@@ -181,11 +181,11 @@ function EnrolledSchedule() {
           <ActionButton
             onClick={create}
             tone="primary"
-            style={{ marginTop: 14 }}
+            style={{ marginTop: 'calc(14px * var(--density, 1))' }}
           >
             Add them to the semester
           </ActionButton>
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 9, lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'calc(9px * var(--density, 1))', lineHeight: 'var(--leading-normal)' }}>
             They arrive with their timetable and no deadlines. YES knows when your classes meet and
             nothing about when your essays are due — that comes from the syllabus.
           </div>
@@ -193,7 +193,7 @@ function EnrolledSchedule() {
       )}
 
       {added ? (
-        <div style={{ fontSize: 'var(--type-base)', marginTop: 14, lineHeight: 'var(--leading-relaxed)', color: 'var(--app-dim)' }}>{added}</div>
+        <div style={{ fontSize: 'var(--type-base)', marginTop: 'calc(14px * var(--density, 1))', lineHeight: 'var(--leading-relaxed)', color: 'var(--app-dim)' }}>{added}</div>
       ) : null}
 
       <SectionLabel>The other way</SectionLabel>

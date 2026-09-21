@@ -265,7 +265,7 @@ export function Export() {
           key={part.id}
           style={{
             display: 'flex',
-            gap: 11,
+            gap: 'calc(11px * var(--density, 1))',
             alignItems: 'center',
             ...rowStyle,
           }}
@@ -336,18 +336,18 @@ export function Export() {
       )}
 
       {done ? (
-        <div style={{ fontSize: 'var(--type-base)', marginTop: 14, lineHeight: 'var(--leading-relaxed)', color: 'var(--app-dim)' }}>{done}</div>
+        <div style={{ fontSize: 'var(--type-base)', marginTop: 'calc(14px * var(--density, 1))', lineHeight: 'var(--leading-relaxed)', color: 'var(--app-dim)' }}>{done}</div>
       ) : null}
       {error ? (
         <div
           role="alert"
-          style={{ fontSize: 'var(--type-base)', marginTop: 14, lineHeight: 'var(--leading-relaxed)', color: 'var(--app-warn)' }}
+          style={{ fontSize: 'var(--type-base)', marginTop: 'calc(14px * var(--density, 1))', lineHeight: 'var(--leading-relaxed)', color: 'var(--app-warn)' }}
         >
           {error}
         </div>
       ) : null}
 
-      <div style={{ marginTop: 22 }}>
+      <div style={{ marginTop: 'calc(22px * var(--density, 1))' }}>
         <Subscribe />
 
         <Snapshots />
@@ -381,7 +381,7 @@ export function Export() {
       {offered && (
         <Blueprint style={{ padding: '13px 14px', marginTop: 'var(--sp-5)' }}>
           <div className="kicker">Ready to restore</div>
-          <div style={{ fontSize: 'var(--type-base)', marginTop: 7, lineHeight: 'var(--leading-relaxed)' }}>
+          <div style={{ fontSize: 'var(--type-base)', marginTop: 'calc(7px * var(--density, 1))', lineHeight: 'var(--leading-relaxed)' }}>
             {offered.parts.length > 0 ? offered.parts.join(', ') : 'an empty backup'}.
           </div>
           <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
@@ -419,7 +419,7 @@ export function Export() {
         <WorkspaceBackup />
       </div>
 
-      <Blueprint style={{ padding: '13px 14px', marginTop: 18 }}>
+      <Blueprint style={{ padding: '13px 14px', marginTop: 'calc(18px * var(--density, 1))' }}>
         <div className="kicker">The backup file</div>
         <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)' }}>
           It holds your courses, notes, tasks, appointments, grades, saved places and what you have

@@ -30,7 +30,7 @@ export function BehindOffer() {
   if (!b.deep) return null;
 
   return (
-    <div style={{ marginTop: 14 }}>
+    <div style={{ marginTop: 'calc(14px * var(--density, 1))' }}>
       <button
         type="button"
         className="bare tappable"
@@ -63,7 +63,7 @@ export function BehindOffer() {
             display: 'block',
             fontSize: 'calc(11.5px * var(--text-scale, 1))',
             color: 'var(--app-dim)',
-            marginTop: 5,
+            marginTop: 'calc(5px * var(--density, 1))',
             lineHeight: 'var(--leading-normal)',
           }}
         >

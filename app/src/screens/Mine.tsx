@@ -362,7 +362,7 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
         >
           {t.title}
         </span>
-        <span style={{ display: 'block', fontSize: 'var(--type-xs)', ...secondLine(t.done), marginTop: 3 }}>
+        <span style={{ display: 'block', fontSize: 'var(--type-xs)', ...secondLine(t.done), marginTop: 'calc(3px * var(--density, 1))' }}>
           <span className="tag tag-neutral" style={{ marginRight: 'var(--sp-3)' }}>
             {t.courseId ? courseCode(t.courseId) : 'Personal'}
           </span>
@@ -454,7 +454,7 @@ function Tasks({ rows }: { rows?: PersonalTask[] }) {
   return (
     <div>
       {open ? (
-        <Blueprint style={{ padding: 14, marginBottom: 14 }}>
+        <Blueprint style={{ paddingBlock: 'calc(14px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))', marginBottom: 'calc(14px * var(--density, 1))' }}>
           <input
             className="input"
             value={title}
@@ -1034,7 +1034,7 @@ function AppointmentRow({ appointment: a }: { appointment: Appointment }) {
       plain
       style={{
         display: 'flex',
-        gap: 13,
+        gap: 'calc(13px * var(--density, 1))',
         padding: '12px 14px',
         // The same tint the hour grid uses, so a row and its block on the
         // day are recognisably the same thing.
@@ -1165,7 +1165,7 @@ function Appointments() {
   return (
     <div>
       {open ? (
-        <Blueprint style={{ padding: 14, marginBottom: 14 }}>
+        <Blueprint style={{ paddingBlock: 'calc(14px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))', marginBottom: 'calc(14px * var(--density, 1))' }}>
           <input
             className="input"
             value={title}
@@ -1290,7 +1290,7 @@ function Appointments() {
         />
       )}
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)', marginTop: 14 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)', marginTop: 'calc(14px * var(--density, 1))' }}>
         {upcoming.map((a) => (
           <AppointmentRow key={a.id} appointment={a} />
         ))}
@@ -1342,7 +1342,7 @@ function Notes({ rows }: { rows?: Note[] }) {
           body="Write anything — a lecture summary, a question for office hours — and attach files to it."
         />
       ) : (
-        <div style={{ marginTop: 14 }}>
+        <div style={{ marginTop: 'calc(14px * var(--density, 1))' }}>
           {notes.map((n) => (
             <div key={n.id} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)' }}>
             <button
@@ -1365,7 +1365,7 @@ function Notes({ rows }: { rows?: Note[] }) {
                     display: 'block',
                     fontSize: 'var(--type-xs)',
                     color: 'var(--app-dim)',
-                    marginTop: 3,
+                    marginTop: 'calc(3px * var(--density, 1))',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',
@@ -1635,7 +1635,7 @@ export function NoteEditor() {
         dispatch({ type: 'back' });
         }}
         tone="ghost" spacing="0.12em"
-        style={{ marginTop: 18, color: 'var(--app-dim)' }}
+        style={{ marginTop: 'calc(18px * var(--density, 1))', color: 'var(--app-dim)' }}
       >
         Delete note
       </ActionButton>

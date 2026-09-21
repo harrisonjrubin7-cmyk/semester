@@ -78,7 +78,7 @@ export function Capture({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: 7,
+            gap: 'calc(7px * var(--density, 1))',
           }}
         >
           <Plus size={14} />

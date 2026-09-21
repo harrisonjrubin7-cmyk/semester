@@ -96,7 +96,7 @@ export function Dictate({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          gap: 9,
+          gap: 'calc(9px * var(--density, 1))',
         }}
       >
         <span

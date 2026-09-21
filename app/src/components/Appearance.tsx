@@ -131,7 +131,7 @@ function Frame({ children, void: onVoid = false }: { children: ReactNode; void?:
       style={{
         display: 'block',
         height: 74,
-        padding: 7,
+        paddingBlock: 'calc(7px * var(--density, 1))', paddingInline: 'calc(7px * var(--density, 1))',
         background: onVoid ? 'var(--app-void, var(--app-bg))' : 'var(--app-bg)',
         border: '1px solid var(--app-line-soft)',
         borderRadius: 'var(--r-sm)',

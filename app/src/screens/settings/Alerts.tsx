@@ -48,7 +48,7 @@ export function SettingsAlerts() {
               <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}>
                 Testing-centre lead time
               </SectionLabel>
-              <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginBottom: 9 }}>
+              <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginBottom: 'calc(9px * var(--density, 1))' }}>
                 If you book exams through Student Access, its lead time is stated in business days and
                 counting those backwards over a weekend is easy to get wrong. Set it here and the exam
                 runway does it. Leave it at zero if you do not use one.
@@ -87,7 +87,7 @@ export function SettingsAlerts() {
                   fontSize: 'calc(12.5px * var(--text-scale, 1))',
                   color: 'var(--app-dim)',
                   lineHeight: 'var(--leading-relaxed)',
-                  marginBottom: 9,
+                  marginBottom: 'calc(9px * var(--density, 1))',
                 }}
               >
                 {quiet
@@ -134,7 +134,7 @@ export function SettingsAlerts() {
                   style={{
                     fontSize: 'calc(12.5px * var(--text-scale, 1))',
                     color: 'var(--app-warn)',
-                    marginTop: 9,
+                    marginTop: 'calc(9px * var(--density, 1))',
                     lineHeight: 'var(--leading-normal)',
                   }}
                 >
@@ -146,7 +146,7 @@ export function SettingsAlerts() {
                   type="button"
                   className="btn btn-secondary"
                   onClick={() => dispatch({ type: 'setQuiet', quiet: null })}
-                  style={{ marginTop: 11, height: 36, fontSize: 'var(--type-sm)' }}
+                  style={{ marginTop: 'calc(11px * var(--density, 1))', height: 36, fontSize: 'var(--type-sm)' }}
                 >
                   Turn quiet hours off
                 </button>
@@ -155,7 +155,7 @@ export function SettingsAlerts() {
                   style={{
                     fontSize: 'calc(12.5px * var(--text-scale, 1))',
                     color: 'var(--app-dim)',
-                    marginTop: 9,
+                    marginTop: 'calc(9px * var(--density, 1))',
                     lineHeight: 'var(--leading-normal)',
                   }}
                 >

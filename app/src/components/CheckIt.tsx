@@ -118,9 +118,9 @@ export function CheckIt({
       </div>
 
       {groups.map(([kind, list]) => (
-        <div key={kind} style={{ marginTop: 11 }}>
+        <div key={kind} style={{ marginTop: 'calc(11px * var(--density, 1))' }}>
           <div className="kicker">{KIND_LABEL[kind]}</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginTop: 5 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(5px * var(--density, 1))', marginTop: 'calc(5px * var(--density, 1))' }}>
             {list.map((f) => (
               <Row key={`${f.at}:${f.kind}`} f={f} text={text} onChange={onChange} />
             ))}
@@ -135,7 +135,7 @@ export function CheckIt({
         style={{
           fontSize: 'calc(11.5px * var(--text-scale, 1))',
           color: 'var(--app-dim)',
-          marginTop: 13,
+          marginTop: 'calc(13px * var(--density, 1))',
           lineHeight: 'var(--leading-relaxed)',
           textWrap: 'pretty',
         }}
@@ -154,7 +154,7 @@ export function CheckIt({
               onClick={asking ? () => abort.current?.abort() : runSecond}
               style={{
                 width: 'auto',
-                marginTop: 9,
+                marginTop: 'calc(9px * var(--density, 1))',
                 padding: '8px 13px',
                 borderRadius: 'var(--r-sm)',
                 border: '1px solid var(--app-line)',
@@ -183,7 +183,7 @@ export function CheckIt({
             style={{
               fontSize: 'calc(11.5px * var(--text-scale, 1))',
               color: 'var(--app-dim)',
-              marginTop: 9,
+              marginTop: 'calc(9px * var(--density, 1))',
               lineHeight: 'var(--leading-relaxed)',
               textWrap: 'pretty',
             }}
@@ -207,7 +207,7 @@ function Row({
   onChange?: (next: string) => void;
 }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'baseline', gap: 9 }}>
+    <div style={{ display: 'flex', alignItems: 'baseline', gap: 'calc(9px * var(--density, 1))' }}>
       <span
         style={{
           flex: 1,

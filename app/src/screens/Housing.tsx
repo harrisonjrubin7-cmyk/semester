@@ -148,7 +148,7 @@ function HousingDetails() {
               type="button"
               className="btn btn-ghost btn-block"
               onClick={() => dispatch({ type: 'go', screen: 'maps' })}
-              style={{ height: 38, marginTop: 9, fontSize: 'calc(12.5px * var(--text-scale, 1))' }}
+              style={{ height: 38, marginTop: 'calc(9px * var(--density, 1))', fontSize: 'calc(12.5px * var(--text-scale, 1))' }}
             >
               Open the map
             </button>
@@ -178,7 +178,7 @@ function HousingDetails() {
       ) : null}
 
       <SectionLabel>What it says</SectionLabel>
-      <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginBottom: 9, lineHeight: 'var(--leading-relaxed)' }}>
+      <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginBottom: 'calc(9px * var(--density, 1))', lineHeight: 'var(--leading-relaxed)' }}>
         The building is the only field that matters. Give it a move-out date if housing named one,
         or the hours after your last exam if that is how they put it — the app will not do both.
       </div>
@@ -265,7 +265,7 @@ function HousingDetails() {
         </Group>
       )}
 
-      <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 14, lineHeight: 'var(--leading-normal)' }}>
+      <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 'calc(14px * var(--density, 1))', lineHeight: 'var(--leading-normal)' }}>
         Nothing is fetched. The housing portal is behind single sign-on and publishes no interface a
         student can use, so reading it would mean holding your university credentials — which this
         app will not do. The address the portal hands you carries your own session token in it;

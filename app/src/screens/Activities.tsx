@@ -115,9 +115,9 @@ export function Activities() {
                 <div
                   style={{
                     display: 'flex',
-                    gap: 14,
+                    gap: 'calc(14px * var(--density, 1))',
                     marginTop: 'var(--sp-6)',
-                    paddingTop: 11,
+                    paddingTop: 'calc(11px * var(--density, 1))',
                     borderTop: '1px solid var(--app-line)',
                     fontSize: 'calc(11.5px * var(--text-scale, 1))',
                     color: 'var(--app-dim)',
@@ -333,7 +333,7 @@ function AddOne({ onDone,initial }: { onDone: () => void;initial?:CampusListing|
 
       {fixed ? (
         <>
-          <div style={{ display: 'flex', gap: 5, marginBottom: 9 }}>
+          <div style={{ display: 'flex', gap: 'calc(5px * var(--density, 1))', marginBottom: 'calc(9px * var(--density, 1))' }}>
             {DAYS.map((d) => {
               const on = days.includes(d.day);
               return (
@@ -487,7 +487,7 @@ function FindThings() {
             plain
             style={{
               padding: '14px 15px',
-              marginBottom: 9,
+              marginBottom: 'calc(9px * var(--density, 1))',
               display: 'flex',
               gap: 'var(--sp-6)',
               alignItems: 'center',

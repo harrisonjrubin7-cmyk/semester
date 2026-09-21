@@ -46,7 +46,7 @@ export function Running() {
       style={{
         display: 'flex',
         alignItems: 'center',
-        gap: 7,
+        gap: 'calc(7px * var(--density, 1))',
         width: 'auto',
         flex: 'none',
         padding: '0 9px',

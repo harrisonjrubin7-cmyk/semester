@@ -315,7 +315,7 @@ function Build() {
       ) : (
         <>
           <SectionLabel>What kind of talk</SectionLabel>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(7px * var(--density, 1))' }}>
             {KINDS.map((option) => {
               const on = option.id === kindId;
               return (
@@ -402,7 +402,7 @@ function Build() {
             value={String(minutes)}
             onChange={(next) => setMinutes(Number(next))}
           />
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 5 }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'calc(5px * var(--density, 1))' }}>
             About {slidesFor(minutes, kindById(kindId))} content slides — a slide and a half a
             minute, which is the rate people actually present at.
           </div>
@@ -412,7 +412,7 @@ function Build() {
               onClick={() => void make()}
               disabled={busy}
               tone="primary"
-              style={{ marginTop: 18 }}
+              style={{ marginTop: 'calc(18px * var(--density, 1))' }}
             >
               {busy ? 'Planning it…' : plan ? 'Plan it again' : 'Plan the deck'}
             </ActionButton>
@@ -438,7 +438,7 @@ function Build() {
                   style={{
                     fontSize: slide.opening ? 17 : 14.5,
                     lineHeight: 'var(--leading-tight)',
-                    marginTop: 5,
+                    marginTop: 'calc(5px * var(--density, 1))',
                     textWrap: 'pretty',
                   }}
                 >
@@ -447,7 +447,7 @@ function Build() {
                 {slide.bullets.map((b, n) => (
                   <div
                     key={`${b}-${n}`}
-                    style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 5, lineHeight: 'var(--leading-normal)' }}
+                    style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'calc(5px * var(--density, 1))', lineHeight: 'var(--leading-normal)' }}
                   >
                     · {b}
                   </div>
@@ -491,7 +491,7 @@ function Build() {
             onClick={() => void save()}
             disabled={saving}
             tone="primary"
-            style={{ marginTop: 14 }}
+            style={{ marginTop: 'calc(14px * var(--density, 1))' }}
           >
             {saving ? 'Writing the file…' : 'Save as PowerPoint'}
           </ActionButton>

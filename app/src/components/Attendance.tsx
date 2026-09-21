@@ -76,7 +76,7 @@ export function Attendance({ courseId }: { courseId: CourseId }) {
           <div
             style={{
               fontSize: 'var(--type-base)',
-              marginTop: 7,
+              marginTop: 'calc(7px * var(--density, 1))',
               lineHeight: 'var(--leading-relaxed)',
               textWrap: 'pretty',
             }}
@@ -93,7 +93,7 @@ export function Attendance({ courseId }: { courseId: CourseId }) {
               style={{
                 fontSize: 'calc(11.5px * var(--text-scale, 1))',
                 color: 'var(--app-dim)',
-                marginTop: 7,
+                marginTop: 'calc(7px * var(--density, 1))',
                 lineHeight: 'var(--leading-normal)',
                 textWrap: 'pretty',
               }}
@@ -173,7 +173,7 @@ export function Attendance({ courseId }: { courseId: CourseId }) {
             onChange={(e) => set({ note: e.target.value })}
             style={{ width: '100%', marginTop: 'var(--sp-4)', fontSize: 'var(--type-base)' }}
           />
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 7, lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'calc(7px * var(--density, 1))', lineHeight: 'var(--leading-normal)' }}>
             A course can have both: some free absences with a penalty after, and attendance as a
             weighted category. Leave what does not apply at zero.
           </div>

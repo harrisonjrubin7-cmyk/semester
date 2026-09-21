@@ -186,7 +186,7 @@ export function Draw() {
       </div>
 
       <SectionLabel>What kind of picture</SectionLabel>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(7px * var(--density, 1))' }}>
         {KINDS.map((option) => {
           const on = option.id === kindId;
           return (
@@ -235,7 +235,7 @@ export function Draw() {
         onClick={() => void draw()}
         disabled={busy || !prompt.trim()}
         tone="primary"
-        style={{ marginTop: 14 }}
+        style={{ marginTop: 'calc(14px * var(--density, 1))' }}
       >
         {busy ? 'Drawing…' : code ? 'Draw it again' : 'Draw it'}
       </ActionButton>

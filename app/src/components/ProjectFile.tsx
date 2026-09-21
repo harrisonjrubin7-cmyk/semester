@@ -125,7 +125,7 @@ export function ProjectFile({ courseId, course }: { courseId: CourseId; course: 
       </div>
 
       <SectionLabel>What kind of thing</SectionLabel>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(7px * var(--density, 1))' }}>
         {SHAPES.map((option) => {
           const on = option.id === shapeId;
           return (
@@ -162,10 +162,10 @@ export function ProjectFile({ courseId, course }: { courseId: CourseId; course: 
         style={{ width: '100%' }}
       />
       {dueDate ? (
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 5 }}>{runway(dueDate, now)}</div>
+        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'calc(5px * var(--density, 1))' }}>{runway(dueDate, now)}</div>
       ) : null}
       {catalog.courses.length > 0 && (
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', ...secondLine(), marginTop: 5 }}>
+        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', ...secondLine(), marginTop: 'calc(5px * var(--density, 1))' }}>
           For {course}. Switch course from Study.
         </div>
       )}

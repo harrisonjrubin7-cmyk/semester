@@ -225,7 +225,7 @@ export function Runway() {
           value={exam.id}
           labels={Object.fromEntries(next.map((e) => [e.id, `${code(e.c)} · ${e.daysAway}d`]))}
           onChange={(id) => setPick(next.findIndex((e) => e.id === id))}
-          style={{ marginBottom: 14 }}
+          style={{ marginBottom: 'calc(14px * var(--density, 1))' }}
         />
       )}
 
@@ -243,7 +243,7 @@ export function Runway() {
           {r.stage.label}. {r.stage.shape}
         </div>
         {r.daysAway > 0 ? (
-          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 7, lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'calc(7px * var(--density, 1))', lineHeight: 'var(--leading-normal)' }}>
             {r.clearDays} of those days have nothing else standing on them.
           </div>
         ) : null}
@@ -277,7 +277,7 @@ export function Runway() {
               className="btn btn-secondary btn-block"
               style={{
                 height: 38,
-                marginTop: 9,
+                marginTop: 'calc(9px * var(--density, 1))',
                 fontSize: 'calc(12.5px * var(--text-scale, 1))',
                 display: 'flex',
                 alignItems: 'center',
@@ -311,7 +311,7 @@ export function Runway() {
               unit: r.units.indexOf(worst),
             })
           }
-          style={{ height: 52, marginTop: 14, display: 'block', textAlign: 'center' }}
+          style={{ height: 52, marginTop: 'calc(14px * var(--density, 1))', display: 'block', textAlign: 'center' }}
         >
           {/*
             `--app-dim` is wrong here, and main is right about why: it is the
@@ -544,7 +544,7 @@ export function Runway() {
         </>
       )}
 
-      <PrintButton label="Print the runway" style={{ marginTop: 14 }} />
+      <PrintButton label="Print the runway" style={{ marginTop: 'calc(14px * var(--density, 1))' }} />
       <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
         Every number here is counted from your own drilling and your own deadlines. There is no
         readiness score and there will not be one — it would be believed, and the app cannot know.

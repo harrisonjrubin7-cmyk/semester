@@ -91,7 +91,7 @@ function Row({ c, onOpen }: { c: Clash; onOpen: () => void }) {
           display: 'block',
           fontSize: 'var(--type-sm)',
           color: 'var(--app-dim)',
-          marginTop: 5,
+          marginTop: 'calc(5px * var(--density, 1))',
           lineHeight: 'var(--leading-normal)',
           textWrap: 'pretty',
         }}
@@ -109,7 +109,7 @@ export function WorstDay() {
   if (!worst) return null;
 
   return (
-    <div style={{ marginTop: 14 }}>
+    <div style={{ marginTop: 'calc(14px * var(--density, 1))' }}>
       <Row c={worst} onOpen={() => openDay(worst.date)} />
     </div>
   );

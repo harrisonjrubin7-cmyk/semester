@@ -151,13 +151,13 @@ export function FromText() {
       <Trouble said={trouble.said} onRetry={trouble.again} />
 
       {done ? (
-        <Blueprint style={{ padding: '13px 14px', marginTop: 14 }}>
+        <Blueprint style={{ padding: '13px 14px', marginTop: 'calc(14px * var(--density, 1))' }}>
           <div style={{ fontSize: 'var(--type-md)', lineHeight: 1.4 }}>Applied: {done}.</div>
           <button
             type="button"
             className="btn btn-secondary btn-block"
             onClick={() => dispatch({ type: 'openCourse', id: courseId })}
-            style={{ height: 38, marginTop: 9, fontSize: 'calc(12.5px * var(--text-scale, 1))' }}
+            style={{ height: 38, marginTop: 'calc(9px * var(--density, 1))', fontSize: 'calc(12.5px * var(--text-scale, 1))' }}
           >
             See the course
           </button>
@@ -189,7 +189,7 @@ export function FromText() {
                     width: '100%',
                     textAlign: 'left',
                     padding: '11px 12px',
-                    marginBottom: 7,
+                    marginBottom: 'calc(7px * var(--density, 1))',
                     borderRadius: 'var(--r-md)',
                     border: `1px solid ${taken[i] ? 'var(--app-accent-deep)' : 'var(--app-line)'}`,
                     background: taken[i] ? 'var(--app-accent-wash)' : 'transparent',
@@ -206,7 +206,7 @@ export function FromText() {
                       fontSize: 'var(--type-sm)',
                       color: 'var(--app-dim)',
                       marginTop: 'var(--sp-3)',
-                      paddingLeft: 9,
+                      paddingLeft: 'calc(9px * var(--density, 1))',
                       borderLeft: '2px solid var(--app-line)',
                       lineHeight: 'var(--leading-normal)',
                     }}
@@ -236,7 +236,7 @@ export function FromText() {
         </>
       )}
 
-      <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 14, lineHeight: 'var(--leading-normal)' }}>
+      <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 'calc(14px * var(--density, 1))', lineHeight: 'var(--leading-normal)' }}>
         {provider()} may only propose a date the announcement states, and every row quotes the
         sentence it came from — anything it cannot quote is dropped before you see it. A moved
         deadline keeps its id, so a box you already ticked stays ticked.

@@ -86,7 +86,7 @@ export function BreakItUp({ item }: { item: DatedItem }) {
       {/* Shown before they are made, because a plan somebody disagrees with is
           worse than none — and the way to disagree with this one is to not
           press the button, which costs nothing. */}
-      <div style={{ marginTop: 'var(--sp-5)', display: 'flex', flexDirection: 'column', gap: 7 }}>
+      <div style={{ marginTop: 'var(--sp-5)', display: 'flex', flexDirection: 'column', gap: 'calc(7px * var(--density, 1))' }}>
         {steps.map((s) => (
           <div key={s.title} style={{ display: 'flex', gap: 'var(--sp-5)', alignItems: 'baseline' }}>
             <span

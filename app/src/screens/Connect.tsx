@@ -419,7 +419,7 @@ export function Connect() {
       </div>
 
       {note && (
-        <Blueprint style={{ padding: '12px 14px', marginTop: 14, background: 'var(--app-hero)' }}>
+        <Blueprint style={{ padding: '12px 14px', marginTop: 'calc(14px * var(--density, 1))', background: 'var(--app-hero)' }}>
           <div style={{ fontSize: 'var(--type-base)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>{note}</div>
         </Blueprint>
       )}
@@ -456,7 +456,7 @@ export function Connect() {
         <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(18px * var(--text-scale, 1))' }}>
           Paste a calendar link
         </div>
-        <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginTop: 5, textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginTop: 'calc(5px * var(--density, 1))', textWrap: 'pretty' }}>
           In Brightspace, open <strong>Calendar</strong>, click <strong>Subscribe</strong>, and copy
           the link it gives you. It already carries your access — no password, and nothing to
           install. <strong>Outlook, Google, iCloud, Canvas and Zoom</strong> all publish the same
@@ -690,7 +690,7 @@ export function Connect() {
 
 
       <SectionLabel>Accounts</SectionLabel>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(11px * var(--density, 1))' }}>
         {(Object.keys(PROVIDERS) as ProviderId[]).map((id) => {
           const spec = PROVIDERS[id];
           const token = live[id];
@@ -803,7 +803,7 @@ export function Connect() {
               )}
 
               {id === 'google' && spec.clientId && (
-                <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginTop: 9 }}>
+                <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginTop: 'calc(9px * var(--density, 1))' }}>
                   Reading Gmail may not be switched on for your account yet: Google reviews that
                   one permission separately, and until it passes, only accounts this copy has
                   named can use it. Calendar, Drive and Tasks work immediately.

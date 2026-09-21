@@ -91,20 +91,20 @@ export function GapOffer() {
         width: '100%',
         textAlign: 'left',
         padding: '13px 14px',
-        marginBottom: 14,
+        marginBottom: 'calc(14px * var(--density, 1))',
         borderRadius: 'var(--r-md)',
         border: '1px solid var(--app-line)',
         background: 'var(--app-panel)',
       }}
     >
       <div className="kicker">Between classes</div>
-      <div style={{ fontSize: 'calc(16px * var(--text-scale, 1))', lineHeight: 1.35, marginTop: 5, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(16px * var(--text-scale, 1))', lineHeight: 1.35, marginTop: 'calc(5px * var(--density, 1))', textWrap: 'pretty' }}>
         {fitsLine(win, cards)}
       </div>
       <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)' }}>
         {termsLine(win, pace)} One thumb, no typing.
       </div>
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', ...secondLine(), marginTop: 5, lineHeight: 'var(--leading-normal)' }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', ...secondLine(), marginTop: 'calc(5px * var(--density, 1))', lineHeight: 'var(--leading-normal)' }}>
         {walkLine(win)}
       </div>
     </button>

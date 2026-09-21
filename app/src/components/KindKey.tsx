@@ -123,7 +123,7 @@ export function KindKey({ compact = false, lead }: { compact?: boolean; lead?: R
             }}
           >
             {rows.map((row) => (
-              <span key={row.key} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+              <span key={row.key} style={{ display: 'flex', alignItems: 'center', gap: 'calc(5px * var(--density, 1))' }}>
                 <span style={{ width: 3, height: 10, background: row.tint, flex: 'none' }} />
                 {row.label}
               </span>

@@ -46,7 +46,7 @@ function Row({ s, onOpen, late }: { s: Standing; onOpen: () => void; late?: bool
         style={{
           display: 'block',
           fontSize: 'calc(13.5px * var(--text-scale, 1))',
-          marginTop: 3,
+          marginTop: 'calc(3px * var(--density, 1))',
           lineHeight: 1.4,
           textWrap: 'pretty',
         }}
@@ -71,10 +71,10 @@ export function ApplyingSoon() {
   const open = () => dispatch({ type: 'go', screen: 'applying' });
 
   return (
-    <div style={{ marginTop: 14 }}>
+    <div style={{ marginTop: 'calc(14px * var(--density, 1))' }}>
       <Folding name="ApplyingSoon">
       <SectionLabel style={{ margin: '0 0 8px' }}>Applications</SectionLabel>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(7px * var(--density, 1))' }}>
         {late.map((s) => (
           <Row key={s.id} s={s} onOpen={open} late />
         ))}
@@ -100,7 +100,7 @@ export function ApplyingOn({ day }: { day: Date }) {
   return (
     <Folding name="ApplyingOn">
       <SectionLabel style={{ margin: '20px 0 8px' }}>Applications</SectionLabel>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(7px * var(--density, 1))' }}>
         {onDay.map((s) => (
           <button
             key={s.id}

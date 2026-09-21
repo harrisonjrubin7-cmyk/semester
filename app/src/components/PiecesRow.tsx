@@ -68,7 +68,7 @@ export function PiecesRow({ gradeKey, what }: { gradeKey: string; what: string }
           lineHeight: 'var(--leading-relaxed)',
         }}
       />
-      <div style={{ display: 'flex', gap: 9, alignItems: 'center', marginTop: 7, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 'calc(9px * var(--density, 1))', alignItems: 'center', marginTop: 'calc(7px * var(--density, 1))', flexWrap: 'wrap' }}>
         <label
           style={{
             fontSize: 'calc(11.5px * var(--text-scale, 1))',
@@ -109,7 +109,7 @@ export function PiecesRow({ gradeKey, what }: { gradeKey: string; what: string }
           style={{
             fontSize: 'var(--type-sm)',
             color: 'var(--app-dim)',
-            marginTop: 7,
+            marginTop: 'calc(7px * var(--density, 1))',
             lineHeight: 'var(--leading-normal)',
             textWrap: 'pretty',
           }}

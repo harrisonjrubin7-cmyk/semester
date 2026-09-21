@@ -83,7 +83,7 @@ export function Walks({ date }: { date?: Date }) {
           type="button"
           className="btn btn-secondary btn-block"
           onClick={() => dispatch({ type: 'go', screen: 'maps' })}
-          style={{ height: 38, marginTop: 9, fontSize: 'calc(12.5px * var(--text-scale, 1))' }}
+          style={{ height: 38, marginTop: 'calc(9px * var(--density, 1))', fontSize: 'calc(12.5px * var(--text-scale, 1))' }}
         >
           Find the buildings you use
         </button>

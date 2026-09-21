@@ -173,11 +173,11 @@ export function Links() {
                         placeholder={link.hint || 'https://…'}
                         onChange={(e) => setDraft(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && save(link.id)}
-                        style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', marginTop: 9 }}
+                        style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', marginTop: 'calc(9px * var(--density, 1))' }}
                         aria-label={`${link.name} address`}
                       />
                       {link.note && (
-                        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', marginTop: 7 }}>
+                        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', marginTop: 'calc(7px * var(--density, 1))' }}>
                           {link.note}
                         </div>
                       )}
@@ -186,7 +186,7 @@ export function Links() {
                         className="btn btn-secondary"
                         onClick={() => save(link.id)}
                         style={{
-                          marginTop: 9,
+                          marginTop: 'calc(9px * var(--density, 1))',
                           fontSize: 'var(--type-xs)',
                           letterSpacing: '0.12em',
                           textTransform: 'uppercase',
@@ -213,7 +213,7 @@ export function Links() {
                 placeholder="What it is — Commodore Card, the gym"
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
-                style={{ fontSize: 'var(--type-base)', marginTop: 9 }}
+                style={{ fontSize: 'var(--type-base)', marginTop: 'calc(9px * var(--density, 1))' }}
               />
               <input
                 aria-label="Its address"

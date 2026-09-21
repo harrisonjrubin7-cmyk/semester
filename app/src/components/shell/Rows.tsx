@@ -154,7 +154,7 @@ export function Group({
         {shut ? null : framed ? (
           <Blueprint
             style={{
-              padding: 14,
+              paddingBlock: 'calc(14px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))',
               // The same two-second outline the grouped panel gets, on the
               // frame this layout already draws.
               borderColor: lit ? 'var(--app-accent)' : undefined,

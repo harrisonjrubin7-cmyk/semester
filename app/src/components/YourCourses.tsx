@@ -127,7 +127,7 @@ export function YourCourses() {
                 style={{ flex: 1, minWidth: 0, textAlign: 'left', padding: '10px 0' }}
               >
                 <span
-                  style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 'calc(13.5px * var(--text-scale, 1))' }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 'calc(7px * var(--density, 1))', fontSize: 'calc(13.5px * var(--text-scale, 1))' }}
                 >
                   <span
                     aria-hidden="true"
@@ -197,17 +197,17 @@ export function YourCourses() {
                   style={{ width: '100%', fontSize: 'calc(13.5px * var(--text-scale, 1))' }}
                 />
                 {renamed(c, state.yours) ? (
-                  <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 5 }}>
+                  <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 'calc(5px * var(--density, 1))' }}>
                     The syllabus calls it {c.name}. Clear the box to go back to that.
                   </div>
                 ) : null}
 
-                <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 11 }}>
+                <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 'calc(11px * var(--density, 1))' }}>
                   {mine.tint
                     ? 'Held here. Tap it again to hand this course back to the palette.'
                     : 'The palette placed this one. Pick a colour to hold it there instead.'}
                 </div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginTop: 'var(--sp-4)' }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'calc(7px * var(--density, 1))', marginTop: 'var(--sp-4)' }}>
                   {ACCENTS.map((a) => {
                     const on = mine.tint === a.id;
                     // Drawn as the course would actually wear it rather than as

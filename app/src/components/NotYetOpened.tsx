@@ -62,7 +62,7 @@ export function NotYetOpened({ pool }: { pool?: Destination[] }) {
             onClick={() => dispatch({ type: 'go', screen: d.screen })}
             style={{
               display: 'flex',
-              gap: 11,
+              gap: 'calc(11px * var(--density, 1))',
               alignItems: 'flex-start',
               textAlign: 'left',
               padding: '11px 12px',
@@ -70,7 +70,7 @@ export function NotYetOpened({ pool }: { pool?: Destination[] }) {
               border: '1px solid var(--app-line)',
             }}
           >
-            <span style={{ flex: 'none', color: 'var(--app-dim)', paddingTop: 1 }}>
+            <span style={{ flex: 'none', color: 'var(--app-dim)', paddingTop: 'calc(1px * var(--density, 1))' }}>
               <TabGlyph screen={d.screen} size={16} />
             </span>
             <span style={{ flex: 1, minWidth: 0 }}>

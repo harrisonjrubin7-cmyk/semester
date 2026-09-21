@@ -173,7 +173,7 @@ export function FindPlace() {
 
           {hits !== null ? (
             hits.length > 0 ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 7, marginTop: 11 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(7px * var(--density, 1))', marginTop: 'calc(11px * var(--density, 1))' }}>
                 {hits.map((f) => (
                   <button
                     key={`${f.lat},${f.lon},${f.label}`}
@@ -216,7 +216,7 @@ export function FindPlace() {
                         display: 'block',
                         fontSize: 'calc(11.5px * var(--text-scale, 1))',
                         color: 'var(--app-dim)',
-                        marginTop: 3,
+                        marginTop: 'calc(3px * var(--density, 1))',
                         textWrap: 'pretty',
                       }}
                     >
@@ -232,7 +232,7 @@ export function FindPlace() {
                 style={{
                   fontSize: 'calc(12.5px * var(--text-scale, 1))',
                   color: 'var(--app-dim)',
-                  marginTop: 11,
+                  marginTop: 'calc(11px * var(--density, 1))',
                   lineHeight: 'var(--leading-relaxed)',
                   textWrap: 'pretty',
                 }}
@@ -243,7 +243,7 @@ export function FindPlace() {
           ) : null}
 
           <SectionLabel style={{ margin: '22px 0 8px' }}>Settings</SectionLabel>
-          <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 'calc(7px * var(--density, 1))', flexWrap: 'wrap' }}>
             {SERVICES.map((s) => (
               <button
                 key={s.id}
@@ -279,7 +279,7 @@ export function FindPlace() {
           {/* Its own switch. Looking up text you typed and sending where you
               are standing are different acts, and somebody may well want the
               first and not the second. */}
-          <div style={{ marginTop: 14 }}>
+          <div style={{ marginTop: 'calc(14px * var(--density, 1))' }}>
             <button
               type="button"
               className="bare tappable"
@@ -311,7 +311,7 @@ export function FindPlace() {
                 onClick={whereAmI}
                 disabled={busy}
                 spacing="0.09em"
-                style={{ marginTop: 9 }}
+                style={{ marginTop: 'calc(9px * var(--density, 1))' }}
               >
                 What is here?
               </ActionButton>

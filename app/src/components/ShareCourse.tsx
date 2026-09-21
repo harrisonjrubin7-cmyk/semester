@@ -48,7 +48,7 @@ export function ShareCourse({ courseId }: { courseId: CourseId }) {
   };
 
   return (
-    <div style={{ marginTop: 14 }}>
+    <div style={{ marginTop: 'calc(14px * var(--density, 1))' }}>
       <button
         type="button"
         className="btn btn-secondary btn-block"

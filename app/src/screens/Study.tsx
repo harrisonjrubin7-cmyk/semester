@@ -341,7 +341,7 @@ export function Study() {
           <div
             style={{
               marginTop: 'var(--sp-6)',
-              paddingTop: 11,
+              paddingTop: 'calc(11px * var(--density, 1))',
               borderTop: '1px solid var(--app-line)',
               fontSize: 'var(--type-base)',
               color: 'var(--app-dim)',
@@ -550,7 +550,7 @@ export function Study() {
         walks the catalogue, and doing that four times to draw four rows is
         four times the work for the same answer. See `lib/intime.ts`.
       */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(11px * var(--density, 1))' }}>
         {catalog.courses.map((c) => {
           const g = liveGuide(catalog, c.id, state.updates, state.reviews);
           const cards = allCards(g).length;
@@ -687,7 +687,7 @@ export function Study() {
                 `lib/revise.ts`; it is no longer printed as if it were a
                 measurement.
               */}
-              <div style={{ marginTop: 11 }}>
+              <div style={{ marginTop: 'calc(11px * var(--density, 1))' }}>
                 <Standing state={standing.state} evidence={standing.evidence} name={c.code} />
               </div>
               {/*
@@ -706,7 +706,7 @@ export function Study() {
                 style={{
                   fontSize: 'var(--type-xs)',
                   color: 'var(--app-dim)',
-                  marginTop: 5,
+                  marginTop: 'calc(5px * var(--density, 1))',
                   fontFamily: 'var(--font-heading)',
                   letterSpacing: '0.1em',
                   textTransform: 'uppercase',
@@ -779,7 +779,7 @@ export function Study() {
               <div
                 style={{
                   marginTop: 'var(--sp-6)',
-                  paddingTop: 11,
+                  paddingTop: 'calc(11px * var(--density, 1))',
                   borderTop: '1px solid var(--app-line)',
                 }}
               >
@@ -918,7 +918,7 @@ export function Study() {
         type="button"
         className="btn btn-secondary btn-block"
         onClick={() => dispatch({ type: 'openUpdate', courseId: state.guideId, unit: null })}
-        style={{ height: 44, marginTop: 14 }}
+        style={{ height: 44, marginTop: 'calc(14px * var(--density, 1))' }}
       >
         + Add a reading to a course
       </button>
