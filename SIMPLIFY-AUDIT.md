@@ -272,19 +272,19 @@ when it has been right for a while.
 
 `tsc` clean · lint ok · production build clean · five cold boots clean.
 
-**Two tests fail, and they fail on `main` with this branch's changes stashed.**
-`lib/migrationorder.test.ts` and `lib/rollback.test.ts` both say
-`supabase/migrations/20260921003700_lti.sql` is pending and below the
-`20260921150750` watermark, so a deploy cannot reach it — a migration numbered
-00:37 landing after one numbered 15:07 had been applied. It arrived in
-`6660785`, touches no file this pass touches, and the remedy is a renumber in
-somebody else's live area: `#570`, `#587` and `#589` are all working the
-migration history right now. Recorded here rather than fixed, because a rename
-of a migration file from this branch is how two sessions collide over a
-deploy.
+**11,388 tests pass across 565 files** in file order, shuffled and in both other
+timezones.
 
-Everything else: **11,382 tests pass across 562 files** in file order, shuffled
-and in both other timezones.
+Two of those were red for about an hour, on `main` rather than here:
+`lib/migrationorder.test.ts` and `lib/rollback.test.ts` said
+`supabase/migrations/20260921003700_lti.sql` was pending and below the
+`20260921150750` watermark, where a deploy can never reach it. Established by
+running them on `origin/main` with this branch stashed, reported on the pull
+request rather than fixed from here, and fixed on `main` by `#608` — which
+renumbered the same file to `20260921160000_lti.sql` four minutes before this
+session had finished renumbering it to `20260921160413`. The fourth
+convergence of the day, and the first where stopping cost nothing because
+their fix covered both filename references exactly as this one would have.
 
 Taken nine times across twelve merges of `main` — 20, 20, 19, 16, 15, 16, 16,
 14, 3 — moving by cuts, by T7's one restoration, and once by the probe itself
