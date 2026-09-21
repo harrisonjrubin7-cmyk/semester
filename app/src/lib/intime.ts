@@ -1,13 +1,24 @@
 /**
  * Getting a card back in front of you before the test, rather than after it.
  *
- * `lib/review.ts` schedules cards on a plain SM-2 variant, and SM-2 does not
- * know what a semester is. Measured on this app's own numbers, a card answered
- * right every time it comes up goes: one day, six days, **sixteen**, then
- * forty-five. So a student who starts revising two weeks out answers a card on
- * day 0, day 1 and day 7 — and on day 7 the scheduler puts it away until day
- * 23. The exam is on day 14. The card is never seen again before it, and the
- * reason is that nothing in the scheduler had ever been told the exam exists.
+ * `lib/review.ts` schedules cards on a forgetting curve, and a forgetting
+ * curve does not know what a semester is. Measured on this app's own numbers,
+ * a card answered right every time it comes up goes: two days, **eleven**,
+ * forty-six, then a hundred and sixty-three. So a student who starts revising
+ * a fortnight out answers a card on day 0, day 2 and day 13 — and on day 13
+ * the scheduler puts it away until day 59. The exam is on day 14. The card is
+ * never seen again before it, and the reason is that nothing in the scheduler
+ * had ever been told the exam exists.
+ *
+ * That is worse than it was, not better, and the direction is the thing to
+ * notice. Under the SM-2 variant this module was written against the ladder
+ * ran one, six, sixteen, forty-five, and the census below found 67 of the 320
+ * shipped cards stranded by a test three weeks out. Under FSRS the same census
+ * finds **87** — a scheduler with a real model of memory is *more* willing to
+ * let a well-known card sleep through a midterm, because from memory's point
+ * of view it is right to. Nothing here needed changing when it landed, which
+ * is the argument for having put the adjustment at the read rather than in the
+ * record.
  *
  * The app knows. `testedIn` in `lib/select.ts` has answered "when is this
  * course's next test" since the study plan needed it; it was only ever read to

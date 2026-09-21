@@ -22,6 +22,15 @@
  * at a time.
  */
 
+import {
+  type Grade,
+  type Memory,
+  firstMemory,
+  intervalDays,
+  nextMemory,
+} from './fsrs';
+import type { Sure } from './sure';
+
 export interface CardReview {
   /** Times answered correctly, ever. */
   right: number;
@@ -37,12 +46,25 @@ export interface CardReview {
   seen: number;
   /** When it comes up again, epoch ms. */
   due: number;
+  /**
+   * Days until recall of this card would fall to 90%. FSRS's memory, and what
+   * actually decides `due` once a card has been answered under it.
+   *
+   * Optional because this record syncs: a device still on the version before
+   * FSRS writes a row without it, and reads one with it and ignores it. A card
+   * that arrives without the pair is migrated from `interval` and `ease` the
+   * first time it is answered — see `memoryOf`.
+   */
+  stability?: number;
+  /** 1–10, how little each success buys on this card. FSRS's other half. */
+  difficulty?: number;
 }
 
 export type Reviews = Record<string, CardReview>;
 
 const DAY = 86_400_000;
 const MIN_EASE = 1.3;
+const MAX_EASE = 3.2;
 const START_EASE = 2.5;
 
 /**
@@ -110,12 +132,80 @@ export function emptyReview(now: number): CardReview {
 }
 
 /**
+ * The FSRS memory a card already has, or the one implied by its SM-2 history.
+ *
+ * This is the "on top of SM-2" half, and it is the reason nobody's schedule
+ * resets on the day this ships. A card answered before FSRS carries an
+ * interval and an ease and no memory; both translate:
+ *
+ *   **interval → stability.** At the retention this app aims for they are the
+ *   same quantity — `intervalDays(s, 0.9)` returns `s` exactly — so the last
+ *   interval SM-2 chose *is* an estimate of the card's stability, and it is
+ *   the best one available.
+ *
+ *   **ease → difficulty.** SM-2's ease runs 1.3 to 3.2 and means the opposite
+ *   of difficulty, so it is reversed onto 1–10. A card at the default 2.5
+ *   lands near 4.3, which is a little easier than an unseen card and about
+ *   right for one that has been getting through on the default.
+ *
+ * A card with no interval yet — never answered, or lapsed back to nought —
+ * has no history worth translating and starts from the grade.
+ */
+export function memoryOf(r: CardReview, grade: Grade): Memory {
+  if (r.stability !== undefined && r.difficulty !== undefined) {
+    return { stability: r.stability, difficulty: r.difficulty };
+  }
+  if (r.interval <= 0) return firstMemory(grade);
+  const span = MAX_EASE - MIN_EASE;
+  return {
+    stability: Math.max(0.1, r.interval),
+    difficulty: Math.min(10, Math.max(1, 10 - (9 * (r.ease - MIN_EASE)) / span)),
+  };
+}
+
+/**
+ * The FSRS grade this app's two questions add up to.
+ *
+ * FSRS wants Again/Hard/Good/Easy and this drill never asks that — it asks
+ * whether you got it and how sure you were, which `lib/sure.ts` already
+ * records for its own purposes. The pair maps cleanly and the mapping is the
+ * only place the two vocabularies meet:
+ *
+ * | got | sure | grade | why |
+ * | --- | --- | --- | --- |
+ * | no | any | Again | a miss is a miss; how sure you were changes how soon it returns, not whether it lapsed |
+ * | yes | guess | Hard | right by luck. `sure.ts` already refuses to let this start a long interval |
+ * | yes | think | Good | the ordinary success |
+ * | yes | know | Easy | the one signal this app had and threw away |
+ *
+ * The last row is the whole argument for taking `sure` here rather than only
+ * the `soon` boolean `sure.ts` reduces it to. "I knew it" and "I think so"
+ * were the same answer to the scheduler, and they are not the same evidence.
+ */
+export function gradeFor(got: boolean, sure: Sure | undefined, soon: boolean): Grade {
+  if (!got) return 1;
+  if (soon || sure === 'guess') return 2;
+  return sure === 'know' ? 4 : 3;
+}
+
+/**
  * Fold one answer into a card's record.
  *
- * Standard SM-2 shape, with the grades collapsed to the two the drill actually
- * offers. A miss does not send the card to the back of a queue days away; it
+ * The interval is FSRS's now — stability and difficulty, and a due date read
+ * off a forgetting curve rather than off the last interval times an ease. See
+ * `lib/fsrs.ts` for why that is a different kind of answer.
+ *
+ * **The SM-2 fields are still maintained**, and not out of sentiment. This
+ * record is in the sync payload, so a phone on last week's build reads rows
+ * this one writes: `ease`, `interval` and `streak` are what that phone
+ * schedules on, and dropping them would silently reset every card on the older
+ * device. They also feed `strength` and every mastery figure in the app, which
+ * are about how well a card is known rather than when it is next due.
+ *
+ * A miss still does not send the card to the back of a queue days away; it
  * comes back in the same sitting, which is the whole reason to say you missed
- * it.
+ * it. FSRS models what that miss did to the memory; the ten minutes is a
+ * product decision and stays one.
  */
 export function score(
   prev: CardReview | undefined,
@@ -130,8 +220,24 @@ export function score(
    * this file learning about confidence.
    */
   soon = false,
+  /**
+   * How sure the student said they were, when the screen asked. Optional
+   * because one call site — the between-classes gap filler — does not ask.
+   * Absent, it grades as an ordinary success, which is what it was before.
+   */
+  sure?: Sure,
 ): CardReview {
   const r = prev ?? emptyReview(now);
+  const grade = gradeFor(got, sure, soon);
+  /*
+   * How long it actually sat, not how long it was scheduled for. FSRS turns
+   * that delay into evidence — a card recalled three weeks late is stronger
+   * proof than the same card recalled on time — and `seen: 0` on a card that
+   * has never been answered has to mean no elapsed time rather than fifty-six
+   * years of it.
+   */
+  const elapsed = r.seen > 0 ? Math.max(0, (now - r.seen) / DAY) : 0;
+  const memory = nextMemory(memoryOf(r, grade), grade, elapsed);
 
   if (!got) {
     return {
@@ -141,23 +247,47 @@ export function score(
       ease: Math.max(MIN_EASE, r.ease - 0.2),
       interval: 0,
       seen: now,
+      stability: memory.stability,
+      difficulty: memory.difficulty,
       // Ten minutes: back before you leave, not back next week.
       due: now + 10 * 60_000,
     };
   }
 
   const streak = r.streak + 1;
-  const grown = streak === 1 ? 1 : streak === 2 ? 6 : Math.round(r.interval * r.ease);
-  // A guess that happened to be right earns the streak but not the runway: it
-  // comes back tomorrow rather than in a week, and the ease does not grow.
-  const interval = soon ? 1 : grown;
+  /*
+   * FSRS picks the interval, and one product decision overrides it.
+   *
+   * A right answer the student called a guess grades as Hard, and FSRS's Hard
+   * is generous: four days on a card's second answer, against seven for an
+   * ordinary success. `lib/sure.ts` argues the opposite and argues it well —
+   * *"letting a guess start a three-day interval is how a card disappears
+   * until the week of the exam"* — and that is a decision about what this app
+   * is for rather than a claim about memory.
+   *
+   * So the two are kept apart. The **memory still learns**: stability and
+   * difficulty move exactly as the model says, so the card's next interval
+   * after a real success is computed from what actually happened. Only the
+   * **date** is held to the product's floor. Deleting this line would not
+   * corrupt the model; it would quietly reverse a merged decision, which is
+   * why it is a line rather than a grade.
+   */
+  const interval = soon ? 1 : intervalDays(memory.stability);
   return {
     right: r.right + 1,
     wrong: r.wrong,
     streak,
-    ease: soon ? r.ease : Math.min(3.2, r.ease + 0.1),
+    /*
+     * SM-2's own fields, still moved exactly as they were. They are not what
+     * schedules this card any more — `interval` above comes off the forgetting
+     * curve — but they are what a device on the previous build schedules on,
+     * and this row syncs to one.
+     */
+    ease: soon ? r.ease : Math.min(MAX_EASE, r.ease + 0.1),
     interval,
     seen: now,
+    stability: memory.stability,
+    difficulty: memory.difficulty,
     due: now + interval * DAY,
   };
 }
