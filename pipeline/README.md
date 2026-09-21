@@ -17,6 +17,7 @@ slides.py        guide → a PowerPoint deck
 handout.py       guide → a Word document and a PDF
 chapters.py      recover chapter marks from an existing recording
 shorts.py        lessons → one vertical short per flashcard
+documentary.py   podcast episode → a documentary cut of it
 restyle-script.mjs  script → the same script in a hosting style (calls a model)
 styles.mjs       the hosting styles, as structural parameters
 ```

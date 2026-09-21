@@ -53,6 +53,44 @@ The words on screen are the words being spoken, so these are captioned without
 a captioning pass — but per *beat*, not per word. A cue records where a line
 starts, not a syllable, so nothing here bounces along with the voice.
 
+## Documentary cuts
+
+Step 4's free half: the two-voice episode with its chapter marks drawn over it.
+
+```bash
+python3 pipeline/documentary.py econ --seconds 90   # a slice, to look at
+python3 pipeline/documentary.py econ                # the whole 28 minutes
+```
+
+The spine is the podcast MP3 every student already streams and the picture is
+its own chapter marks — the ones `audio/synth.py` measured while rendering it,
+not the ones `chapters.py` recovers afterwards. Nothing is synthesised, no
+audio is cut, and `--broll none` is the only mode that exists.
+
+**There are no captions.** `synth.py` records where a *chapter* starts; nothing
+records where a line starts, and the transcript has the words with no times at
+all. A caption track would have to be invented, and one eight seconds out of
+step reads as a broken player rather than as an approximation. A forced aligner
+over the rendered audio is the honest fix and is not built.
+
+**The chapter card holds rather than fading.** The first cut faded it after
+seven seconds, which on a 28-minute episode with a chapter every two minutes
+left twenty-six of those minutes as a near-empty dark frame — the thing `--mp4`
+already did and step 1 existed to replace.
+
+## Spending, before anything is bought
+
+`src/clipspend.ts` is the manifest the roadmap's §7 asks for: hash what decides a
+clip, and a re-run of an unchanged course buys nothing. It was built *before* a
+provider was wired, which is the whole point — the first paid run cannot happen
+without it. `app/src/lib/clipspend.test.ts` is its guard, including the case that
+matters: generate fourteen chapters, run the command again, spend zero.
+
+`--broll <provider>` is not wired to anything and exits non-zero saying so. No
+per-second price is written into this repository: those move faster than the
+code, and a stale one quoted in a `--dry-run` reads like a measurement.
+Choosing a provider and a price is a spending decision, left to whoever spends.
+
 ## It cannot disagree with the app
 
 Two imports reach across the repo root into `app/src/lib`, and both are load-
