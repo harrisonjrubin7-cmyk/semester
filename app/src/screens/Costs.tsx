@@ -24,6 +24,7 @@ import {
 } from '../lib/cost';
 import { readTerm } from '../lib/term';
 import { CourseTag } from '../components/CourseTag';
+import { NilTaxNote } from '../components/NilTaxNote';
 
 /**
  * What this term cost — the statement, and what you chose to spend.
@@ -227,6 +228,14 @@ function OutOfPocket() {
           })}
           </Group>
       )}
+
+      {/*
+        * Money that arrived with nothing taken out of it, said where the rest
+        * of the money is. It draws only once something is recorded — see
+        * `components/NilTaxNote.tsx`, which also says why there is no figure
+        * in it beyond the student's own total.
+        */}
+      <NilTaxNote />
 
       <SectionLabel>Add something</SectionLabel>
       <select

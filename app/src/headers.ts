@@ -255,6 +255,7 @@ export const HEADERS: Record<Screen, (c: HeaderCtx) => Head> = {
    * `short`, so Athletics would be headed "Sport".
    */
   athletics: () => ({ kicker: 'The season, against the term', title: 'Athletics' }),
+  nil: () => ({ kicker: 'Yours, on this device', title: 'NIL deals' }),
   career: () => ({ kicker: 'What is open, and what you have done', title: 'Career' }),
   family: () => ({ kicker: 'What somebody else would see', title: 'Family' }),
   pathway: () => ({ kicker: 'The part that outlasts this term', title: 'Pathway' }),

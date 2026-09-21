@@ -1273,7 +1273,7 @@ decision, and not as a side effect of wanting a dashboard.
 ### 7.1 Performance
 
 Measured today, against the four shipped courses: 44 units, 44 narrated lessons,
-8 podcast editions, <!--screens-->fifty-eight<!--/--> destinations, 164 spreadsheet functions.
+8 podcast editions, <!--screens-->fifty-nine<!--/--> destinations, 164 spreadsheet functions.
 
 | Watch for | Today | What would trigger work |
 | --- | --- | --- |

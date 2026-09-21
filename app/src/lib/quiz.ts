@@ -1,4 +1,5 @@
 import { allCards } from '../data/catalog';
+import type { DeckCard } from '../data/catalog';
 import type { Guide } from './types';
 import type { QuizQuestion } from '../state/store';
 
@@ -28,21 +29,214 @@ export function distinctAnswers(guide: Guide): number {
   return new Set(allCards(guide).map((c) => clip(c.a))).size;
 }
 
+/** How many term/definition pairs one matching question joins up. */
+export const MATCH_PAIRS = 4;
+
 /**
- * Up to ten multiple-choice questions drawn from the guide.
+ * Whether this guide's key terms can field a matching question.
  *
- * The decoys are real answers to other questions in the same guide, which is
- * what makes the exercise worth doing — the wrong options are all plausible and
- * all true of something, so recognising the right one is the same
- * discrimination the exam asks for. Seeded so a run is reproducible but each
- * new run differs.
+ * Both sides have to be distinct, and for the same reason the options do: a
+ * matching question with two identical definitions on the right is one a
+ * student can get wrong while being right, which is worse than not asking.
+ */
+export function matchableTerms(guide: Guide): { t: string; d: string }[] {
+  const seenT = new Set<string>();
+  const seenD = new Set<string>();
+  const out: { t: string; d: string }[] = [];
+  for (const term of guide.terms ?? []) {
+    const t = term.t.trim();
+    const d = clip(term.d.trim());
+    if (!t || !d || seenT.has(t) || seenD.has(d)) continue;
+    seenT.add(t);
+    seenD.add(d);
+    out.push({ t, d });
+  }
+  return out;
+}
+
+/** A seeded shuffle, in place, using the run's own generator. */
+function shuffle<T>(list: T[], rnd: () => number): T[] {
+  for (let i = list.length - 1; i > 0; i--) {
+    const j = Math.floor(rnd() * (i + 1));
+    [list[i], list[j]] = [list[j], list[i]];
+  }
+  return list;
+}
+
+/**
+ * One multiple-choice question from a card, or nothing.
  *
- * "Up to", because a question that cannot find three different decoys is
- * dropped rather than asked with two options.
+ * Split out of `buildQuiz` when the run learned other kinds, so the rule this
+ * carries — three distinct decoys or no question at all — stays in one place
+ * rather than being restated per kind.
+ */
+function choiceFrom(card: DeckCard, all: DeckCard[], rnd: () => number): QuizQuestion | null {
+  const right = clip(card.a);
+  const wrong: string[] = [];
+  /*
+   * Held as clipped text, not as the raw answer.
+   *
+   * Two answers that share their first hundred-odd characters are two
+   * different strings and one option: de-duplicating on the raw answer let
+   * both through, so a question could show the same sentence twice with one
+   * copy marked correct. Somebody picking the identical-looking option was
+   * marked wrong by a quiz that had asked them to tell two things apart
+   * while showing them the same thing.
+   */
+  const seen = new Set<string>([right]);
+  let guard = 0;
+  while (wrong.length < 3 && guard < 400) {
+    guard++;
+    const candidate = clip(all[Math.floor(rnd() * all.length)].a);
+    if (seen.has(candidate)) continue;
+    seen.add(candidate);
+    wrong.push(candidate);
+  }
+
+  // A guide with too few different answers cannot make a fourth option, and
+  // a two-option "multiple choice" is a coin toss with a score attached.
+  // Better to ask nothing than to ask that.
+  if (wrong.length < 3) return null;
+
+  const opts = shuffle(
+    [...wrong.map((a) => ({ text: a, ok: false })), { text: right, ok: true }],
+    rnd,
+  );
+
+  return { kind: 'choice', q: card.q, unit: card.unit, full: card.a, opts };
+}
+
+/**
+ * One true-or-false question from a card, or nothing.
+ *
+ * The statement is the card's own question with an answer proposed under it —
+ * either the answer that belongs to it, or one borrowed from another card.
+ * That is the same trick the multiple-choice decoys turn: a borrowed answer is
+ * true of something, so rejecting it is the discrimination the exam asks for,
+ * not a sniff test for nonsense.
+ *
+ * Nothing rather than a question when no borrowed answer reads differently
+ * from the real one. A true-or-false whose false half is the right answer in
+ * other words marks a student wrong for being right, and unlike a fourth
+ * option nobody can see it coming.
+ */
+function trueFalseFrom(
+  card: DeckCard,
+  all: DeckCard[],
+  rnd: () => number,
+): QuizQuestion | null {
+  const right = clip(card.a);
+  const holds = rnd() < 0.5;
+
+  let claim = right;
+  if (!holds) {
+    let guard = 0;
+    let borrowed = '';
+    while (!borrowed && guard < 400) {
+      guard++;
+      const candidate = clip(all[Math.floor(rnd() * all.length)].a);
+      if (candidate !== right) borrowed = candidate;
+    }
+    if (!borrowed) return null;
+    claim = borrowed;
+  }
+
+  return {
+    kind: 'truefalse',
+    q: card.q,
+    unit: card.unit,
+    full: card.a,
+    claim,
+    opts: [
+      { text: 'True', ok: holds },
+      { text: 'False', ok: !holds },
+    ],
+  };
+}
+
+/**
+ * One matching question from the guide's key terms, or nothing.
+ *
+ * `pairs` is the truth, in order. `shown` is the order the definitions are
+ * drawn in — indexes into `pairs` — so the right-hand column is scrambled
+ * without the answer having to be stored twice or recovered by searching.
+ *
+ * Capped at one per run by the caller: four pairs is already the longest
+ * single act of reading in the quiz, and two of them in ten questions turns a
+ * recall drill into a puzzle.
+ */
+function matchFrom(terms: { t: string; d: string }[], rnd: () => number): QuizQuestion | null {
+  if (terms.length < MATCH_PAIRS) return null;
+  const picked = shuffle([...terms], rnd).slice(0, MATCH_PAIRS);
+  const pairs = picked.map((p) => ({ left: p.t, right: p.d }));
+
+  /*
+   * A scramble that is allowed to come back in order.
+   *
+   * Forcing a derangement would make "already lined up" a reliable signal
+   * that the ordering is wrong, which is a hint the question did not mean to
+   * give. One chance in twenty-four is a coincidence, not a tell.
+   */
+  const shown = shuffle(
+    pairs.map((_, i) => i),
+    rnd,
+  );
+
+  return {
+    kind: 'match',
+    q: 'Match each term to its definition.',
+    unit: 'Key terms',
+    full: pairs.map((p) => `${p.left} — ${p.right}`).join('\n'),
+    opts: [],
+    pairs,
+    shown,
+  };
+}
+
+/** At most this many true-or-false questions in a run of ten. */
+const TRUE_FALSE = 3;
+
+/**
+ * Up to ten questions drawn from the guide — multiple choice, true-or-false,
+ * and one round of matching where the key terms allow it.
+ *
+ * The decoys, on every kind that has them, are real answers to other questions
+ * in the same guide, which is what makes the exercise worth doing — the wrong
+ * options are all plausible and all true of something, so recognising the
+ * right one is the same discrimination the exam asks for. Seeded so a run is
+ * reproducible but each new run differs.
+ *
+ * "Up to", because a question that cannot be asked honestly is dropped rather
+ * than asked badly: three distinct decoys for a choice, a borrowed answer that
+ * reads differently for a true-or-false, four distinct terms for a match.
+ *
+ * ## Why one card never appears twice in a run
+ *
+ * A card asked as a choice and again as a true-or-false is the same question
+ * with the answer already given away by the first of them. The pools are
+ * therefore cut from one shuffled deck rather than drawn independently.
  */
 export function buildQuiz(guide: Guide, seed: number): QuizQuestion[] {
   const all = allCards(guide);
   if (all.length === 0) return [];
+
+  /*
+   * A guide too thin for a multiple choice gets no quiz at all, and that
+   * includes the kinds that would fit in it.
+   *
+   * True-or-false is a two-option question, which is the exact shape this
+   * file has always refused to ask — "a coin toss with a score attached".
+   * The difference is that a true-or-false says so, and a student reading
+   * one knows the odds they are being offered; a four-option question with
+   * two real options lies about them. That makes it a fair *part* of a run
+   * and a bad *whole* one, so it supplements the choice questions rather
+   * than standing in for them when there are none.
+   *
+   * Gated on the same number `lib/modes.ts` gates the mode on, so that the
+   * Study screen offering a quiz and this function returning one cannot
+   * disagree.
+   */
+  if (distinctAnswers(guide) < 4) return [];
 
   let s = (seed * 9301) % 233280 || 1;
   const rnd = () => {
@@ -50,50 +244,75 @@ export function buildQuiz(guide: Guide, seed: number): QuizQuestion[] {
     return s / 233280;
   };
 
-  const shuffled = [...all];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(rnd() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-
   const out: QuizQuestion[] = [];
 
-  for (const card of shuffled.slice(0, Math.min(10, shuffled.length))) {
-    const right = clip(card.a);
-    const wrong: string[] = [];
-    /*
-     * Held as clipped text, not as the raw answer.
-     *
-     * Two answers that share their first hundred-odd characters are two
-     * different strings and one option: de-duplicating on the raw answer let
-     * both through, so a question could show the same sentence twice with one
-     * copy marked correct. Somebody picking the identical-looking option was
-     * marked wrong by a quiz that had asked them to tell two things apart
-     * while showing them the same thing.
-     */
-    const seen = new Set<string>([right]);
-    let guard = 0;
-    while (wrong.length < 3 && guard < 400) {
-      guard++;
-      const candidate = clip(all[Math.floor(rnd() * all.length)].a);
-      if (seen.has(candidate)) continue;
-      seen.add(candidate);
-      wrong.push(candidate);
+  const match = matchFrom(matchableTerms(guide), rnd);
+  if (match) out.push(match);
+
+  const shuffled = shuffle([...all], rnd);
+
+  /*
+   * True-or-false first, off the front of the shuffled deck.
+   *
+   * Off the front rather than by picking at random from the whole deck,
+   * because the cards it consumes have to be the ones the choice pass then
+   * does not see. Taking a slice is how "no card twice" is enforced rather
+   * than checked afterwards.
+   *
+   * Skipped outright on a deck with one distinct answer: there is no second
+   * answer to borrow, so every statement would be true and the question would
+   * be a formality with a score attached.
+   */
+  const enough = new Set(all.map((c) => clip(c.a))).size >= 2;
+  const wantTF = enough ? Math.min(TRUE_FALSE, Math.max(0, 10 - out.length - 1)) : 0;
+
+  let used = 0;
+  let made = 0;
+  for (const card of shuffled) {
+    if (made >= wantTF) break;
+    used++;
+    const tf = trueFalseFrom(card, all, rnd);
+    if (tf) {
+      out.push(tf);
+      made++;
     }
-
-    // A guide with too few different answers cannot make a fourth option, and
-    // a two-option "multiple choice" is a coin toss with a score attached.
-    // Better to ask nothing than to ask that.
-    if (wrong.length < 3) continue;
-
-    const opts = [...wrong.map((a) => ({ text: a, ok: false })), { text: right, ok: true }];
-    for (let i = opts.length - 1; i > 0; i--) {
-      const j = Math.floor(rnd() * (i + 1));
-      [opts[i], opts[j]] = [opts[j], opts[i]];
-    }
-
-    out.push({ q: card.q, unit: card.unit, full: card.a, opts });
   }
 
-  return out;
+  for (const card of shuffled.slice(used)) {
+    if (out.length >= 10) break;
+    const choice = choiceFrom(card, all, rnd);
+    if (choice) out.push(choice);
+  }
+
+  return shuffle(out, rnd);
+}
+
+/**
+ * Whether every term in a matching question has been given a definition.
+ *
+ * Here rather than on the screen because the reducer needs the same answer:
+ * two definitions of "finished" is how a question gets scored twice, or
+ * scored and then still accepting taps.
+ */
+export function matchDone(
+  question: QuizQuestion | undefined,
+  joins: Record<number, number>,
+): boolean {
+  if (!question || question.kind !== 'match' || !question.pairs) return false;
+  return question.pairs.every((_, i) => joins[i] !== undefined);
+}
+
+/**
+ * Whether the question showing has been answered, whatever kind it is.
+ *
+ * A choice or a true-or-false is answered the moment an option is picked; a
+ * match only once the last pair is placed. The screen reads this to decide
+ * whether to reveal, and the reducer to decide whether to keep listening.
+ */
+export function isAnswered(
+  question: QuizQuestion | undefined,
+  picked: number | null,
+  joins: Record<number, number>,
+): boolean {
+  return question?.kind === 'match' ? matchDone(question, joins) : picked !== null;
 }
