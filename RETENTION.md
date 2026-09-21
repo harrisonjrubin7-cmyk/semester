@@ -171,6 +171,7 @@ behind and a client that believes it succeeded.
 | `forms`, `form_responses` | account deletion | |
 | `calendar_feeds` | account deletion | the published feed token; the Export screen can retire and reissue it |
 | `reports` | account deletion of the reporter | |
+| `schools` | **never**, by any account's deletion | reference data, not anybody's record: the list of universities the server recognises, written only by an admin and readable by everyone. No account creates a row here, so no account's departure can take one. `profiles.school_id` points at it and is cleared to null when a school is removed, which is a school closing rather than a student leaving |
 | `blocks` | **not** lifted by deletion | keyed on `blocked`, not `user_id`, so deleting your account cannot undo somebody else's protection. This is deliberate and `deletion.check.sql` pins it |
 | `push_devices`, `push_queue` | see the clocks above | |
 | `access_log` | 90 days, see above | readable by the account it is about, which is the difference between an audit log and an operator's private diary |
