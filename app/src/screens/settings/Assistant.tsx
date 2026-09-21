@@ -462,6 +462,13 @@ export function SettingsAssistant() {
                 question.
                 <br />
                 <br />
+                Asking out loud adds one thing this page cannot promise about. The words reach the
+                assistant the same way a typed question does, but the <em>recording</em> is
+                recognised by the browser rather than by this app — and in Chrome that means the
+                audio goes to Google. Safari does its own. Nothing is uploaded by Semester, and
+                nothing is kept: what the microphone hears becomes text in the box and is gone.
+                <br />
+                <br />
                 Never, whatever is asked: your notes, your drafts, your files, anyone in People or
                 Letters, and no key or token of any kind. That list is one file —{' '}
                 <code>lib/context.ts</code> — which decides everything that travels with a question,

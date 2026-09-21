@@ -146,7 +146,7 @@ function PeopleTab({ rows }: { rows?: Person[] }) {
                 onClick={() => setOpen(open === p.id ? null : p.id)}
                 style={{ display: 'block', width: '100%', textAlign: 'left' }}
               >
-                <span style={{ display: 'block', fontSize: 'calc(14.5px * var(--text-scale, 1))' }}>
+                <span style={{ display: 'block', fontSize: 'var(--type-md-plus)' }}>
                   {p.name}
                 </span>
                 <span

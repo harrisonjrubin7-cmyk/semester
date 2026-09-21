@@ -102,7 +102,7 @@ export function Links() {
                         className="bare"
                         style={{ flex: 1, minWidth: 0, textDecoration: 'none', color: 'inherit' }}
                       >
-                        <span style={{ display: 'block', fontSize: 'calc(14.5px * var(--text-scale, 1))', lineHeight: 'var(--leading-tight)' }}>
+                        <span style={{ display: 'block', fontSize: 'var(--type-md-plus)', lineHeight: 'var(--leading-tight)' }}>
                           {link.name}
                         </span>
                         <span
@@ -121,7 +121,7 @@ export function Links() {
                       </a>
                     ) : (
                       <span style={{ flex: 1, minWidth: 0 }}>
-                        <span style={{ display: 'block', fontSize: 'calc(14.5px * var(--text-scale, 1))', lineHeight: 'var(--leading-tight)' }}>
+                        <span style={{ display: 'block', fontSize: 'var(--type-md-plus)', lineHeight: 'var(--leading-tight)' }}>
                           {link.name}
                         </span>
                         <span
