@@ -7,8 +7,25 @@ are missing.
 
 ## What is live
 
-    claude   ACTIVE, v1, verify_jwt off
-    push     ACTIVE, v1, verify_jwt off
+Read off the project on 21 September 2026, not from memory. This list was
+`claude` and `push` alone for weeks after four more had been deployed, which
+is how `supabase/config.toml` came to declare two functions on the strength of
+it — see the correction in that file's header.
+
+    calendar  ACTIVE, v12, verify_jwt off
+    canvas    ACTIVE, v4,  verify_jwt off
+    claude    ACTIVE, v19, verify_jwt off
+    fetchcal  ACTIVE, v13, verify_jwt off
+    lti       ACTIVE, v3,  verify_jwt off
+    push      ACTIVE, v16, verify_jwt off
+
+All six, which is every directory in `supabase/functions/` that is not
+`_shared`. `app/src/lib/functionconfig.test.ts` holds this list, that
+directory and `config.toml` to each other, so a seventh function cannot be
+deployed and leave this section describing six.
+
+The version numbers date this reading and nothing depends on them; the slugs
+and the flag are what the test reads.
 
 ## Deploying a function without a laptop
 

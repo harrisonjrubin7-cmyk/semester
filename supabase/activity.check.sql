@@ -280,8 +280,30 @@ begin
   perform public.note_activity(array['opened']);
   reset role;
 
+  /*
+   * Two locks, and which one answers first changed under this suite.
+   *
+   * `check.sh` used to hand `authenticated` every table privilege back after
+   * the migrations ran, so an UPDATE reached row-level security, matched no
+   * row for want of a policy, and reported nothing changed. That blanket grant
+   * is gone — it erased the evidence of every relation-level revoke, which is
+   * the whole point of `revoke all on public.activity from anon,
+   * authenticated` — so now the *grant* refuses before a policy is ever
+   * consulted, and the refusal is an error rather than a silent nought.
+   *
+   * Both outcomes are accepted here, and the notice says which one happened,
+   * because either is the table behaving. What is not accepted is the row
+   * moving: the assertion after this block is the one that matters, and it
+   * holds whichever lock did the work.
+   */
   perform pg_temp.become(a);
-  update public.activity set day = '2020-01-01' where user_id = a;
+  begin
+    update public.activity set day = '2020-01-01' where user_id = a;
+    raise notice 'ok  an update is permitted at the grant and stopped by the policy';
+  exception
+    when insufficient_privilege then
+      raise notice 'ok  an account has no update privilege on the table at all';
+  end;
   reset role;
 
   select count(*) into n from public.activity where user_id = a and day = '2020-01-01';

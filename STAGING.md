@@ -6,79 +6,82 @@ including Edge Functions". **Branching is already on**, has been since before
 `supabase/`. [`ROLLBACK.md`](ROLLBACK.md) is the history of how that setting was
 found to be misconfigured, corrected, and then watched.
 
-So this item is not "turn it on". It is two harder halves: **a preview branch
-exists and nobody has established that it matches production**, and **the
-three words at the end of the plan's sentence are not true today**.
+So this item was never "turn it on". It is two harder halves: **the three
+words at the end of the plan's sentence — "including Edge Functions" — were
+not true**, which is settled below; and **a preview branch exists and nobody
+has ever established that it matches production**, which is not.
 
-## The Edge Functions, which a preview branch does not have
+## The Edge Functions, and what a preview branch actually runs
 
-This was read off a branch rather than reasoned about. The preview branch for
-the pull request that added this file finished its Edge Functions task with a
-warning, and the warning is the whole finding:
+This took three goes to get right, and the wrong versions are worth keeping in
+view because each was wrong in a way that reads as careful.
 
-> **⚠️ Warning — Only Functions declared in config.toml will be automatically
-> deployed to branches: `[functions.my-slug]`**
+**First I wrote that Branching does not carry Edge Functions at all.** False —
+`ROLLBACK.md` records a branch reaching `FUNCTIONS_DEPLOYED`.
 
-[`supabase/config.toml`](supabase/config.toml) declares none, and says so in
-its own header, deliberately:
+**Then the branch's own warning suggested it carried none of ours:**
 
-> In particular there is no `[functions]` block. Edge Functions are deployed by
-> `.github/workflows/functions.yml` … Declaring them here as well would give
-> one function two deploy paths that can disagree about which version is live.
+> ⚠️ Only Functions declared in config.toml will be automatically deployed to
+> branches: `[functions.my-slug]`
 
-That reasoning is about **production**, where it is sound. Its consequence is
-about **staging**, and the file does not mention it: a preview branch has no
-`claude`, no `push`, no `fetchcal`, no `canvas`, no `lti`, no `calendar`.
-Every AI feature, every reminder and the calendar feed are simply absent from
-staging — and absent in the way that looks like an app bug rather than a
-missing deploy.
+and `supabase/config.toml` declared none, so I concluded a preview branch had
+no functions. **Also false, and this is the one worth understanding.**
 
-`functions.yml` cannot cover for that. It works the project ref out from
-`SUPABASE_PROJECT_REF` or `VITE_SUPABASE_URL`, both of which name production,
-so it has never deployed a function anywhere else.
+The management API settles it. The preview branch for pull request #618 lists
+`claude`, `push`, `calendar`, `fetchcal`, `canvas` and `lti`, all ACTIVE. A
+branch **inherits production's functions**. What the warning means is narrower:
+only the declared ones are *rebuilt from the repository*. The rest keep the
+build production had when the branch was cut.
 
-### Settled on 21 September: declare the live ones, and pin the flag
+That is worse than absence, not better. A missing function fails loudly the
+first time a screen calls it. A function running last week's code answers
+every call successfully and with the wrong behaviour, and staging reports that
+the pull request works.
 
-`supabase/config.toml` now carries a `[functions]` block. The argument that
-stood against one is answered rather than overruled, and the answer has two
-halves.
+The same listing shows it happening, which is why this version is measured
+rather than reasoned:
 
-**Only the functions that are live.** `claude` and `push`, which is what
-`DEPLOY.md` records as ACTIVE — and not `fetchcal`, `canvas`, `lti` or
-`calendar`, which production deliberately does not have. This is the point
-rather than a shortcut: the plan asks for a branch that *matches* production,
-and a branch carrying four functions production lacks would not match it, it
-would exceed it. Declaring a function is also **how it gets deployed**, so
-listing those four would have shipped them.
+| | `claude` on the branch | `claude` in production |
+| --- | --- | --- |
+| version | 20 | 19 |
+| checksum | `da4011ce…` | `8f8d4bec…` |
+| built at | `/app/supabase/functions/…` | `/home/runner/work/…` |
 
-**The one flag they can disagree about is pinned.** Two deploy paths hurt when
-they can disagree *silently*, and the thing these two can disagree about is
-`verify_jwt`. `app/src/lib/functionconfig.test.ts` reads this file, the
-workflow and `DEPLOY.md` as text and goes red when any pair stops agreeing —
-the instrument `lib/referral.test.ts` and `lib/allowance.test.ts` use for every
-other pair of sides in this repository that cannot import from each other.
+The branch rebuilt it from the repository; production's is still the one the
+workflow deployed.
 
-It holds three things, in both directions:
+### Settled: declare all six, and pin the three lists to each other
 
-| | |
-| --- | --- |
-| a live function missing from `config.toml` | a preview branch that silently lacks it — the original fault |
-| a function declared that is not live | worse, because declaring it deploys it |
-| `verify_jwt` disagreeing with `--no-verify-jwt` | every AI request failing in the browser, at whichever deploy ran last |
+`config.toml` now declares every function in `supabase/functions/`, because
+every one of them is live. **And the third mistake is the instructive one:**
+the first attempt declared two, on the strength of `DEPLOY.md`'s "What is
+live" section — which listed `claude` and `push` and was four functions out of
+date. I trusted a document in this repository over the system it describes,
+in a repository whose `CLAUDE.md` is largely a record of that exact failure.
 
-That third one is why the objection deserved taking seriously rather than
-waving through. `claude` answers a CORS preflight, which carries no
-`Authorization` header at all, so the *stricter* of the two paths is the one
-that breaks the app.
+`DEPLOY.md` is corrected, and `app/src/lib/functionconfig.test.ts` now holds
+**three** sets equal rather than two:
 
-Seven mutations were run against the guard and all seven are caught: dropping
-a live function, declaring one that is not live, a slug matching no directory,
-`verify_jwt` flipped to true, `verify_jwt` left unset, the workflow dropping
-its flag, and a function going live in `DEPLOY.md` without being declared here.
+    supabase/functions/  ==  [functions.*] in config.toml  ==  DEPLOY.md's live list
 
-**What this does not do** is deploy anything new. Both functions were already
-live and already deployed by the workflow; what changes is that a preview
-branch now gets them too.
+with `supabase/functions/` as the ground truth, because a directory either
+exists or it does not. Pinning the config to the prose is what let the prose
+steer; pinning both to the directories is what stops it.
+
+The flag is pinned too. `verify_jwt = false` on all six, matching the
+`--no-verify-jwt` the workflow passes and what the project reports for each.
+`claude`, `fetchcal` and `canvas` answer a CORS preflight, which carries no
+`Authorization` header, so the *stricter* of the two paths is the one that
+breaks the app.
+
+Seven mutations, all seven caught: a real function left undeclared, a slug
+with no directory, `DEPLOY.md` going stale again, `DEPLOY.md` naming something
+that does not exist, the flag flipped, the flag unset, and the workflow
+dropping `--no-verify-jwt`.
+
+**Declaring them deploys nothing new.** All six were already live and
+`functions.yml` remains the only thing that deploys to production. What
+changes is that a branch now rebuilds them from the branch.
 
 ## Renaming a migration breaks every branch that already applied it
 
@@ -106,8 +109,12 @@ So a preview branch is **not** rebuilt from the repository on each push. It
 keeps its own accumulated ledger, and the bot's own line — *only new migration
 files are pushed* — has a sharper consequence than it sounds: **adding a
 migration is cheap, and renaming one invalidates every branch in flight.**
-Rebuilding the branch is the remedy, and the bot says how: close and reopen the
-pull request.
+Rebuilding the branch is the remedy. The bot suggests closing and reopening
+the pull request, and there is a narrower way that does not touch the pull
+request at all: **reset the branch through the management API**, which is what
+was done here. It rebuilt from `CREATING_PROJECT` through `RUNNING_MIGRATIONS`
+to `FUNCTIONS_DEPLOYED` in about four minutes, and cleared the stale ledger
+entry without deleting anything a reviewer was looking at.
 
 This repository has now renumbered migrations twice in one day — seven files in
 the history repair, then this one — and both times the reasoning was sound and
@@ -161,7 +168,10 @@ nothing in this repository should be read as claiming otherwise. That part is
 twenty minutes in a dashboard and a SQL editor, and it is twenty minutes
 nobody has spent.
 
-The Edge Functions half is settled and done. None of it can be *checked* while
-the Migrations task is refusing, which it is on every branch that predates the
-renumbering — the first branch built after that clears is the first one where
-any of this can be confirmed rather than reasoned about.
+The Edge Functions half is settled and, unusually for this document, checked:
+the branch for pull request #618 was reset, rebuilt to `FUNCTIONS_DEPLOYED`,
+and its function list read back from the management API. That is where the
+version-20-against-19 table above comes from.
+
+What remains unchecked is the comparison itself — the six fingerprints — which
+is the step that turns "a branch built" into "staging proven".

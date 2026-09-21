@@ -169,7 +169,7 @@ fi
 # Rows are not the only live state a second application can move, and this
 # script's first version could only see rows.
 #
-# `20260921003200_forms.sql` says `drop view if exists public.published_forms`
+# `20260921143455_forms.sql` says `drop view if exists public.published_forms`
 # and creates it again. The statements are idempotent and the **privileges are
 # not**: a recreated relation in `public` is handed the default privileges
 # afresh, and on Supabase those are `grant all on tables to anon,

@@ -21,21 +21,30 @@ import { describe, expect, it } from 'vitest';
  * every other pair of sides in this repository that cannot import from each
  * other: read the other side as text, and go red when they stop agreeing.
  *
- * Three claims, and each of them is a thing that would otherwise be found by a
- * student in the pilot rather than by a test:
+ * ## Three sets, and which one is the ground truth
  *
- *   - Every function declared here exists as a directory. A typo in a slug is
- *     a deploy of nothing, reported as a success.
- *   - The declared set is exactly what `DEPLOY.md` records as live. Declaring
- *     a function is how Branching deploys it, so a name added here is a
- *     function shipped — `fetchcal`, `canvas`, `lti` and `calendar` are
- *     deliberately not live, and a preview branch that carried them would not
- *     match production, it would exceed it.
- *   - `verify_jwt` agrees with the flag the workflow passes. This is the one
- *     that can actually break the app: `claude` answers a CORS preflight,
- *     which carries no Authorization header at all, so a path that quietly
- *     turned the platform's own check back on would fail every AI request in
- *     the browser, and it would do it at whichever deploy ran last.
+ * The first version of this file held `config.toml` to `DEPLOY.md` alone, and
+ * that was the wrong shape. `DEPLOY.md` is prose somebody maintains by hand,
+ * it was four functions out of date, and pinning the config to it let a stale
+ * document decide what a preview branch rebuilds. The management API reported
+ * six functions ACTIVE while the document said two, and nothing went red.
+ *
+ * So the ground truth is `supabase/functions/` — a directory either exists or
+ * it does not — and all three sets must be **equal**:
+ *
+ *     directories  ==  [functions.*] in config.toml  ==  DEPLOY.md's live list
+ *
+ * Each direction catches a different accident. A directory missing from the
+ * config is a function a preview branch runs *production's* build of rather
+ * than this branch's — silently, which is the worst shape a staging
+ * environment can take. A slug in the config with no directory is a rebuild of
+ * nothing, reported as success. And a document disagreeing with either is how
+ * this file came to be wrong in the first place.
+ *
+ * Plus the flag, which is the one that can actually break the app. `claude`,
+ * `fetchcal` and `canvas` answer a CORS preflight, which carries no
+ * Authorization header at all, so a path that quietly turned the platform's
+ * own check back on would fail every AI request in the browser.
  */
 
 const repo = join(process.cwd(), '..');

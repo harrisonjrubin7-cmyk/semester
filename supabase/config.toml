@@ -27,9 +27,12 @@
 #   > ⚠️ Only Functions declared in config.toml will be automatically deployed
 #   > to branches: [functions.my-slug]
 #
-# So the objection is answered rather than overruled. Two deploy paths are a
-# problem when they can *silently* disagree, and the thing they can disagree
-# about here is exactly one flag — `verify_jwt`. `lib/functionconfig.test.ts`
+# So the objection is answered rather than overruled, and it turns out to be
+# narrower than it read: declaring a function here does not give it a second
+# deploy path to production — `functions.yml` remains the only thing that
+# deploys. What this list decides is what a *branch* rebuilds from the
+# repository. The one thing the two can still disagree about is a flag —
+# `verify_jwt`. `lib/functionconfig.test.ts`
 # reads this file and the workflow as text and goes red if the two stop
 # matching, which is the instrument `lib/referral.test.ts` and
 # `lib/allowance.test.ts` use for every other pair of sides that cannot import
@@ -48,25 +51,46 @@ major_version = 17
 
 # ── Edge Functions ────────────────────────────────────────────────────────
 #
-# **Only the ones that are live in production**, which is the whole point
-# rather than an oversight. The plan asks for a preview branch that *matches*
-# production; a branch carrying `fetchcal`, `canvas`, `lti` and `calendar`
-# would not match it, it would exceed it — and worse, declaring a function here
-# is how it gets deployed, so listing the four that production deliberately
-# does not have would deploy them. DEPLOY.md is the record of what is live, and
-# `functionconfig.test.ts` holds this list to it: deploy a function for real,
-# say so there, and this file has to follow.
+# Every function that exists, because every one of them is live. That was
+# measured against the project rather than read off this repository, and the
+# first version of this block got it wrong by trusting `DEPLOY.md`, which
+# listed two and was two functions out of date. The management API lists
+# `claude`, `push`, `calendar`, `fetchcal`, `canvas` and `lti`, all ACTIVE and
+# all `verify_jwt` false.
 #
-# `verify_jwt = false` on both, matching the `--no-verify-jwt` that
-# `functions.yml` passes to every deploy. It is the platform's own check that
-# is off, not authentication: `claude` verifies the caller's token itself and
-# has to answer a CORS preflight, which carries no Authorization header at all,
-# and `push` is called by the scheduler and authenticates with a shared secret.
-# DEPLOY.md argues both at length. Getting this flag wrong in the other
-# direction is the one way these two deploy paths can hurt each other, which is
-# why a test pins it.
+# **Declaring them is not what deploys them.** They are already deployed, by
+# `.github/workflows/functions.yml`, and that stays the deploy path. What a
+# branch does with this list is narrower and is the whole reason the block
+# exists: a preview branch inherits production's *build* of every function,
+# and rebuilds from this repository only the ones named here. Undeclared, a
+# branch runs the code production had when the branch was cut — which looks
+# exactly like working, and is the worst shape a staging environment can take.
+# The branch on pull request #618 shows both halves: its `claude` came back at
+# version 20 with a fresh checksum, production's at 19 with the old one.
+#
+# `verify_jwt = false` on all six, matching the `--no-verify-jwt` that
+# `functions.yml` passes to every deploy, and matching what the project
+# reports for each. It is the platform's own check that is off, not
+# authentication: `claude`, `fetchcal` and `canvas` verify the caller's token
+# themselves and have to answer a CORS preflight, which carries no
+# Authorization header at all, and `push` is called by the scheduler with a
+# shared secret. DEPLOY.md argues each. Getting this flag wrong in the other
+# direction is the one way the two deploy paths can hurt each other, which is
+# why `lib/functionconfig.test.ts` pins it.
+
+[functions.calendar]
+verify_jwt = false
+
+[functions.canvas]
+verify_jwt = false
 
 [functions.claude]
+verify_jwt = false
+
+[functions.fetchcal]
+verify_jwt = false
+
+[functions.lti]
 verify_jwt = false
 
 [functions.push]
