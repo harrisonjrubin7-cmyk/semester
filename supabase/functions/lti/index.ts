@@ -42,7 +42,7 @@
  * within that issuer. **Turning that into a Semester account is not done here
  * and is not done anywhere yet.** Whether a launch may create an account, and
  * what happens when the same human already made one themselves, is a real
- * decision with a real blast radius, and `20260921003700_lti.sql` says why it
+ * decision with a real blast radius, and `20260921160000_lti.sql` says why it
  * is not being answered by accident in a foreign key.
  *
  * So the last thing this function does on success is render a checkpoint that
