@@ -47,19 +47,8 @@
  */
 
 import { createClient } from 'jsr:@supabase/supabase-js@2';
+import { corsHeaders } from '../_shared/cors.ts';
 
-const cors = {
-  'Access-Control-Allow-Origin': Deno.env.get('ALLOWED_ORIGIN') ?? '*',
-  'Access-Control-Allow-Headers': 'authorization, content-type, apikey, x-client-info',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Max-Age': '86400',
-};
-
-const json = (body: unknown, status = 200) =>
-  new Response(JSON.stringify(body), {
-    status,
-    headers: { ...cors, 'Content-Type': 'application/json' },
-  });
 
 /** One megabyte. A term's calendar is a few hundred kilobytes at the outside. */
 const MAX_BYTES = 1_000_000;
@@ -157,6 +146,19 @@ async function readCapped(response: Response): Promise<string | null> {
 }
 
 Deno.serve(async (req) => {
+  /*
+   * Per request, because the answer depends on who asked. `ALLOWED_ORIGIN` is
+   * a comma-separated allowlist now and the header echoes back whichever entry
+   * the request came from — see `../_shared/cors.ts`, which carries the
+   * incident this shape exists because of.
+   */
+  const cors = corsHeaders(Deno.env.get('ALLOWED_ORIGIN'), req.headers.get('Origin'));
+  const json = (body: unknown, status = 200) =>
+    new Response(JSON.stringify(body), {
+      status,
+      headers: { ...cors, 'Content-Type': 'application/json' },
+    });
+
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors });
   if (req.method !== 'POST') return json({ error: 'POST only.' }, 405);
 

@@ -333,7 +333,31 @@ student with their own key is unaffected either way — the app prefers a key se
 on the device and only falls back to this one.
 
 Optional: `MONTHLY_CALL_LIMIT` (default 60 calls per account per month) and
-`ALLOWED_ORIGIN` (default `*` — worth setting to the Pages origin).
+`ALLOWED_ORIGIN` (default `*`).
+
+**`ALLOWED_ORIGIN` is a comma-separated list, and setting it to one origin is
+how this was broken for weeks.** It is read by `claude`, `fetchcal` and
+`canvas` alike, so a wrong value takes out the shared key, the calendar-link
+reader and the Canvas sync together. On 21 September 2026 it was found set to a
+**localhost** address on the live project: all three were unreachable from the
+deployed site while the functions were ACTIVE, the deployed code matched this
+repository byte for byte, and every check was green.
+
+It hides because a CORS refusal cannot be seen from either end. The browser
+rejects the response before the page sees it, so the app can only say *"could
+not reach"* — the same sentence it prints for a dead host — and the function's
+own side shows a request that arrived and was answered. Nothing logs it.
+
+So list every origin that must work, the deployed site **and** any dev server:
+
+    supabase secrets set ALLOWED_ORIGIN=https://<user>.github.io,http://localhost:5173
+
+The header echoes back whichever entry the request came from, so both work at
+once rather than one silently breaking the other. No trailing slashes — though
+`supabase/functions/_shared/cors.ts` trims them, because the address bar adds
+one and that is the mistake this is most likely to meet. After changing it,
+press **Check the shared key works** on Settings → The assistant from the
+deployed site; that is the one place the answer is real.
 
 ### 2. Reminder keys
 
