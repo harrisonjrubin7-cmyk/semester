@@ -579,6 +579,7 @@ const csp = (serving: boolean) => ({
  */
 const MOCKS_MODULES = [
   'src/screens/onboardingcounts.test.tsx',
+  'src/components/saysomething.test.tsx',
   'src/screens/mentionbadge.test.tsx',
   'src/components/waitingrow.test.tsx',
   'src/components/pushstalled.test.tsx',

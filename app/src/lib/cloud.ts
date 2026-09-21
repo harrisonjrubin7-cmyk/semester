@@ -721,6 +721,15 @@ export const OWNED_TABLES: OwnedTable[] = [
   // account does. `activity.check.sql` proves the delete policy this line
   // needs, and that it cannot be aimed at somebody else's rows.
   { table: 'activity', column: 'user_id' },
+  // What this account said was wrong. Keyed on `author` rather than
+  // `user_id` — the column list exists for exactly this.
+  //
+  // It belongs up here rather than among the classmates tables because its
+  // select policy asks only `author = auth.uid()`, with no enrolment in the
+  // chain, so none of the ordering hazard below applies to it.
+  // `feedback.check.sql` proves the delete policy this line needs and that it
+  // cannot be aimed at anybody else's reports.
+  { table: 'feedback', column: 'author' },
 
   // ── Classmates: yours, but other people can see them ────────────────────
   //

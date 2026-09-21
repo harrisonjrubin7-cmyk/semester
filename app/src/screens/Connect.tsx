@@ -21,6 +21,7 @@ import {
   forget,
   listRemoteFiles,
   pullCalendar,
+  signInReady,
   tokens,
   writable,
   type ProviderId,
@@ -804,7 +805,18 @@ export function Connect() {
                 {spec.blurb}
               </div>
 
-              {!spec.clientId ? (
+              {/*
+                A sign-in is offered only where one can finish: `signInReady`
+                asks the client ID and the proxy together, because Zoom and
+                Apple cannot complete a token exchange without the second.
+                Starting one that cannot finish spends a student's consent.
+
+                `!token` first so a connection already held stays reachable.
+                A build can lose the proxy — or the client ID — under someone
+                who is already connected, and hiding the panel then would
+                strand the token with no way to disconnect it.
+              */}
+              {!token && !signInReady(spec) ? (
                 <div
                   style={{
                     fontSize: 'var(--type-sm)',
