@@ -100,27 +100,94 @@ export function edgeColour(data: Uint8ClampedArray, width: number, height: numbe
 }
 
 /**
- * Clear every pixel close enough to `key`, in place. Answers how many went.
+ * Clear the background, in place. Answers how many pixels went.
  *
- * In place because the buffer is the one the caller is about to put back on a
- * canvas, and copying a few million bytes to avoid saying so would be a cost
- * paid on every use for a tidiness nobody can observe.
+ * ## Only what the border can reach
  *
- * Alpha goes to 0 and the colour bytes are left alone. Writing them to zero as
- * well would turn every cleared pixel black, which is invisible until the PNG
- * is composited somewhere that does not honour the alpha — and then the whole
+ * The first version of this cleared *every* pixel close enough to `key`,
+ * wherever it was. That is not what a background is, and the difference is
+ * visible on the commonest thing anybody lifts: the middle of a letter O, the
+ * gap inside a logo, the hole in a mug handle, a white shirt on a white wall.
+ * All of them are the background's colour and none of them are the background,
+ * and a global key punched straight through them — the poster showed its own
+ * page through the middle of the subject.
+ *
+ * So this floods inward from the edges. A pixel goes only if it matches *and*
+ * there is a path of matching pixels from it to the border. An enclosed pocket
+ * of white is unreachable and stays, which is the whole of the rule and the
+ * whole of the fix.
+ *
+ * Four-connected rather than eight, deliberately: an eight-connected flood
+ * leaks through a single-pixel diagonal gap in an outline, which is exactly
+ * what a thin letterform or a hairline border is made of. Four-connectivity
+ * needs a real opening to get in.
+ *
+ * Iterative, with an explicit stack. Recursion here is one frame per pixel and
+ * a photograph is millions of them; the first thing a recursive flood does on
+ * a real picture is overflow the stack.
+ *
+ * ## What is left alone
+ *
+ * Alpha goes to 0 and the colour bytes stay. Writing them to zero as well
+ * would turn every cleared pixel black, which is invisible until the PNG is
+ * composited somewhere that does not honour the alpha — and then the whole
  * background comes back as a black rectangle.
+ *
+ * In place, because the buffer is the one the caller is about to put back on a
+ * canvas.
  */
-export function keyOut(data: Uint8ClampedArray, key: Rgb, tolerance: number): number {
+export function keyOut(
+  data: Uint8ClampedArray,
+  width: number,
+  height: number,
+  key: Rgb,
+  tolerance: number,
+): number {
+  if (width < 1 || height < 1) return 0;
+
   const limit = tolerance * tolerance;
+  const seen = new Uint8Array(width * height);
+  const stack: number[] = [];
   let cleared = 0;
-  for (let i = 0; i < data.length; i += 4) {
-    if (data[i + 3] === 0) continue;
-    if (apart(data[i]!, data[i + 1]!, data[i + 2]!, key) <= limit) {
-      data[i + 3] = 0;
-      cleared++;
+
+  /** Take this pixel if it is background, and queue its neighbours. */
+  const consider = (x: number, y: number) => {
+    if (x < 0 || y < 0 || x >= width || y >= height) return;
+    const at = y * width + x;
+    if (seen[at]) return;
+    seen[at] = 1;
+    const i = at * 4;
+    // Already clear: nothing to take, but the flood still passes through it —
+    // a picture lifted twice must not be walled off by its own first pass.
+    if (data[i + 3] === 0) {
+      stack.push(at);
+      return;
     }
+    if (apart(data[i]!, data[i + 1]!, data[i + 2]!, key) > limit) return;
+    data[i + 3] = 0;
+    cleared++;
+    stack.push(at);
+  };
+
+  for (let x = 0; x < width; x++) {
+    consider(x, 0);
+    consider(x, height - 1);
   }
+  for (let y = 0; y < height; y++) {
+    consider(0, y);
+    consider(width - 1, y);
+  }
+
+  while (stack.length) {
+    const at = stack.pop()!;
+    const x = at % width;
+    const y = (at - x) / width;
+    consider(x - 1, y);
+    consider(x + 1, y);
+    consider(x, y - 1);
+    consider(x, y + 1);
+  }
+
   return cleared;
 }
 
