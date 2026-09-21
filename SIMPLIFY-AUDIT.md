@@ -1,3 +1,166 @@
+# One app — the twenty-fifth pass: one question, two answers, and the one nobody called was the right one
+
+Against `main` at `00c3679`. **<!--screens-->fifty-eight<!--/--> destinations**,
+unchanged. No merge, no screen touched. One duplicate resolved, one cut, one
+guard — and a user-visible bug behind it.
+
+Numbered twenty-fifth: another session took the twenty-fourth — *the row was
+struck in prose and left standing in code* — and merged first while this was
+waiting. Third time in three days that two sessions have reached this file at
+once, and the third time `CLAUDE.md`'s first rule has caught it at the merge
+rather than at the start. The subjects are unrelated.
+
+The twenty-third pass left the dead-export question open and said why: two
+instruments had failed at it, and it *"wants a probe that resolves dynamic
+`import()`, distinguishes in-module use from an import, and knows a test helper
+from a dead one — which is a pass of its own."* This is that pass. The probe
+took three corrections, the third of which is the most useful thing here.
+
+## T1 — the instrument, corrected three times
+
+| Reading | Dead exports | What was wrong |
+| --- | --- | --- |
+| twenty-third pass | **1,054** | no dynamic `import()`, no in-module check, test helpers counted as dead |
+| this pass, first run | **31** | — |
+| after the `APPLE` correction | **30** | computed-path dynamic imports |
+| after the stripping correction | **13** | comments and strings stripped with a regex |
+
+**The `APPLE` correction.** `app/scripts/icons.mjs` does
+`const { APPLE, FILES } = await import(join(src, 'components', 'mark.svg.ts'))`
+— a dynamic import whose path is *computed*, which no resolver can follow from
+the source. Names taken out of one are now excused everywhere rather than in
+one module: coarse, and in the only safe direction, since it can hide a dead
+export but never invent one.
+
+**The stripping correction, which is the one worth keeping.** The probe removed
+comments and strings before looking for a name, so a name in prose would not
+count as a use. Its template-literal step mispaired backticks in `lib/proof.ts`
+and swallowed the code between them:
+
+    MISSPELLINGS   raw: 2   after stripping: 1
+
+`proofread()` reads that table fifteen lines below its own declaration, and the
+probe reported it dead. **You cannot lex JavaScript with a regex**, and this
+tree — full of regex literals and template strings — is the proof. The check
+now counts raw mentions and excuses a name that appears only in its own
+docblock, which is again the safe direction.
+
+**Seventeen of the thirty were that bug.** Every one would have been in the
+pull request.
+
+Controls, run each time: `screens/Import.tsx`'s `Import` (reached only by
+`lazy(() => import(…))`), `lib/nav.ts`'s `offered` and `lately`, and
+`lib/unseen.ts`'s `offer` must never appear. They never did. And all thirteen
+survivors were re-checked by a second method that does not share the census's
+resolver — grep for an import of that name from that module — which agreed on
+all thirteen.
+
+## T2 — the first one read turned out not to be dead at all
+
+`a11y/modal.ts`'s `hasOpenModal()`, and its docblock says what it is for:
+
+> The shell's shortcuts — a new tab, the bookmarks menu, reopening a closed tab
+> — are global, so they would otherwise fire while somebody is inside a dialog
+> that has taken the display. **They defer to this** rather than each keeping
+> its own idea of what counts as busy.
+
+They do not. `lib/keys.ts` had written **its own** `underModal`, and
+`shortcutFor` calls that. One question, two answers — and they do not agree:
+
+| | `hasOpenModal` (uncalled) | `underModal` (in use) |
+| --- | --- | --- |
+| selector | `[aria-modal="true"]` | `[role="dialog"][aria-modal="true"]` |
+| callers | none | `shortcutFor` |
+| tested | never | yes, with an injectable document |
+
+The expectation going in was a missing wire — a real gate nobody called, like
+the twenty-first pass's. Driving the app said otherwise: with QuickAdd open,
+`c` did **not** navigate. The behaviour was implemented; it was implemented
+twice. **The hypothesis was wrong and the browser is what said so.**
+
+## T3 — and the copy in use is the one with the hole
+
+Nine overlays in this app declare `aria-modal="true"`. Eight are
+`role="dialog"`. The ninth is `components/Ringing.tsx` — a timer or an alarm
+going off — and it is **`role="alertdialog"`**, which is the correct role for
+it and precisely what the live selector does not match.
+
+Measured, before the fix:
+
+    underModal(role=dialog)        true
+    underModal(role=alertdialog)   false
+    shortcutFor('c') under dialog        null
+    shortcutFor('c') under alertdialog   { does: 'Courses', screen: 'courses' }
+
+And in a real browser, against an unfixed `main` as the control, with a timer
+seeded to have finished a minute ago:
+
+| | alarm overlay up | hash before → after pressing `c` |
+| --- | --- | --- |
+| `main` | true | `#/home` → **`#/courses`** |
+| fixed | true | `#/home` → `#/home` |
+
+**It is the worst overlay in the app to have got wrong.** `Ringing` covers
+everything at `inset: 0` on an opaque background and deliberately has no
+`onClose` — its own comment is *"an alarm that a stray Escape silences is an
+alarm that did not go off."* So it is the one thing a student cannot dismiss by
+reflex, every shortcut went straight through it, and because the overlay is
+opaque there is no sign: you press Stop and you are on a screen you never asked
+for.
+
+The selector moves to `underModal`, which is the copy that is called, tested
+and injectable; `hasOpenModal` is cut. `aria-modal="false"` is still not
+caught, which is a control in the test rather than an aside — the shortcut
+sheet carries it and `?` has to keep closing it.
+
+`lib/keys.test.ts` gains the case. Its existing block builds `role="dialog"`
+every time, so it could not have caught this; reverted, the new case fails on
+`expected false to be true`.
+
+## T4 — the other twelve, as a worklist, deliberately not cut
+
+The twentieth pass listed eleven hand-drawn rows rather than converting them in
+bulk, and `#539` later found seven of the eleven were not rows. The same
+caution applies here with more force, because T2 is the proof: **a dead export
+is a question, not a verdict.** The first one opened was not dead.
+
+    components/Clashes.tsx       ClashList        components/Icons.tsx     AheadIcon
+    components/shell/Rows.tsx    ToggleRow        components/Icons.tsx     TonightIcon
+    lib/bookmarks.hook.ts        forgetMarks      lib/decks.ts             deckId
+    lib/chatlog.ts               save             lib/docxin.ts            readable
+    lib/fourier.ts               phaseAt          lib/pdf.ts               frameFor
+    lib/rollover.ts              archivedTerms    lib/select.ts            dotsForMonth
+
+Three already have a shape worth recording, from the looks this pass did take:
+
+- **`AheadIcon` and `TonightIcon`** are icons for `ahead` and `tonight`, and
+  neither is a screen any more — `grep -c "screen: 'ahead'\|screen: 'tonight'"
+  lib/nav.ts` is **0**. Residue of merges this file argued for.
+- **`chatlog.ts`'s `save`** has the same signature as `threads.ts`'s
+  `save(kept: Kept): void`, and `threads.ts` imports from `chatlog.ts` and
+  re-exports its `ROOM`. That is a layer built on top rather than a duplicate,
+  and the old single-conversation persistence left behind by the move to many
+  threads — a cut, but one that wants reading first.
+- **`readable`** is one of **five** declarations of that name in the tree, so
+  the question there is which of the five, not whether.
+
+## Gates
+
+`tsc` clean · lint ok · **10,892 tests pass across 534 files** · shuffle clean ·
+production build clean · driven in a real browser with a control on `main`,
+`pageerror` empty.
+
+## To do
+
+- **The twelve above**, one look each.
+- **`offerable()`'s default is still the ungated registry** — carried from the
+  twenty-first, twice now.
+- The census is a script and not a test. It has been wrong three times in one
+  afternoon, and a guard whose probe is that young would fail on correct code
+  before it caught anything; it is recorded here rather than landed.
+
+---
+
 # One app — the twenty-fourth pass: the row was struck in prose and left standing in code
 
 Against `main` at `423e5ca`, rebased onto `89306af` — two merges arrived while
