@@ -1,4 +1,4 @@
-import type { DesignData, DesignLayer } from './creations';
+import type { DesignData, DesignLayer, DesignNote } from './creations';
 
 /**
  * Two people on one canvas.
@@ -57,7 +57,11 @@ export type Edit =
   /** The paper itself — its size and colour. */
   | { t: 'paper'; at: number; from: string; width: number; height: number; background: string }
   /** The whole canvas, for somebody who has just arrived. */
-  | { t: 'whole'; at: number; from: string; canvas: DesignData };
+  | { t: 'whole'; at: number; from: string; canvas: DesignData }
+  /** A note pinned or edited. Replies are notes, so this carries both. */
+  | { t: 'note'; id: string; at: number; from: string; note: DesignNote }
+  /** A note removed, with its replies going when their parent does. */
+  | { t: 'unnote'; id: string; at: number; from: string };
 
 /** The moment of the last edit applied, per layer id, plus the paper's. */
 export type Seen = Record<string, { at: number; from: string }>;
@@ -129,6 +133,18 @@ export function fold(canvas: DesignData, seen: Seen, edit: Edit): Folded {
     if (!canvas.layers.some((l) => l.id === edit.id)) return { canvas, seen: mark, changed: false };
     return { canvas: { ...canvas, layers: canvas.layers.filter((l) => l.id !== edit.id) }, seen: mark, changed: true };
   }
+
+  /*
+   * A note edit is not the canvas's business, and this line is why.
+   *
+   * Everything below assumed that an edit which was not `whole`, `paper` or
+   * `drop` had to be a layer — narrowing by elimination, which was true right
+   * up until the protocol grew a fourth and fifth kind. Without this, a note
+   * arriving from a collaborator would be spliced into `layers` as an object
+   * with no `kind`, and the canvas would try to draw it. The type checker
+   * caught it; nothing at runtime would have until something was on screen.
+   */
+  if (edit.t === 'note' || edit.t === 'unnote') return nothing;
 
   const at = canvas.layers.findIndex((l) => l.id === edit.id);
   const layers =
@@ -233,5 +249,103 @@ function same(a: DesignLayer, b: DesignLayer): boolean {
     a.gradient?.angle === b.gradient?.angle &&
     !a.gradient === !b.gradient &&
     a.fileId === b.fileId
+  );
+}
+
+
+/* ── Notes ───────────────────────────────────────────────────────────────── */
+
+/**
+ * Notes fold separately from the canvas, and the separation is the point.
+ *
+ * They are not in `DesignData` — see `DesignNote` — so `fold` above cannot
+ * reach them, and giving it a second kind of state to thread through would
+ * have made the canvas merge harder to read for the sake of sharing four
+ * lines. The rule is the same one, stated once more: last write per id wins,
+ * and an edit older than what this device already applied is dropped.
+ *
+ * `seen` is shared with the canvas fold. Both key on a uuid, so a note and a
+ * layer cannot file under the same entry — the argument `PAPER` already makes
+ * for the one key here that is not a uuid.
+ */
+export interface FoldedNotes {
+  notes: DesignNote[];
+  seen: Seen;
+  changed: boolean;
+}
+
+export function foldNote(notes: DesignNote[], seen: Seen, edit: Edit): FoldedNotes {
+  const nothing: FoldedNotes = { notes, seen, changed: false };
+  if (edit.t !== 'note' && edit.t !== 'unnote') return nothing;
+  if (!newer(seen[edit.id], edit.at, edit.from)) return nothing;
+
+  const seenNow: Seen = { ...seen, [edit.id]: { at: edit.at, from: edit.from } };
+
+  if (edit.t === 'unnote') {
+    if (!notes.some((n) => n.id === edit.id)) return { notes, seen: seenNow, changed: false };
+    // A note's replies go when it does. Left behind they would be answers to
+    // nothing, and the reader refuses a design that holds one.
+    return { notes: notes.filter((n) => n.id !== edit.id && n.replyTo !== edit.id), seen: seenNow, changed: true };
+  }
+
+  /*
+   * A reply whose parent is not here is dropped rather than kept for later.
+   *
+   * The reader refuses a design holding an answer to nothing, so accepting one
+   * would build a canvas this app could save and then not reopen. Losing it is
+   * the lesser failure, and it is rare: the parent is always sent first by the
+   * device that has both.
+   */
+  if (edit.note.replyTo && !notes.some((n) => n.id === edit.note.replyTo && !n.replyTo)) return nothing;
+
+  const had = notes.findIndex((n) => n.id === edit.id);
+  const notesNow = had === -1 ? [...notes, edit.note] : notes.map((n) => (n.id === edit.id ? edit.note : n));
+  return { notes: notesNow, seen: seenNow, changed: true };
+}
+
+/** Every note edit in a batch, folded in order. */
+export function foldNotes(notes: DesignNote[], seen: Seen, edits: Edit[]): FoldedNotes {
+  let out: FoldedNotes = { notes, seen, changed: false };
+  for (const e of edits) {
+    const next = foldNote(out.notes, out.seen, e);
+    out = { notes: next.notes, seen: next.seen, changed: out.changed || next.changed };
+  }
+  return out;
+}
+
+/** What to send after a note was pinned, answered, resolved or removed. */
+export function noteChanges(was: DesignNote[], now: DesignNote[], from: string, at: number): Edit[] {
+  const edits: Edit[] = [];
+  const before = new Map(was.map((n) => [n.id, n]));
+
+  for (const n of now) {
+    const had = before.get(n.id);
+    if (!had || !sameNote(had, n)) edits.push({ t: 'note', id: n.id, at, from, note: n });
+  }
+
+  const after = new Set(now.map((n) => n.id));
+  for (const n of was) {
+    // A reply that went because its parent did is not its own removal: the
+    // `unnote` for the parent already takes it at the other end, and sending
+    // both would race the parent's own edit.
+    if (!after.has(n.id) && (!n.replyTo || after.has(n.replyTo))) {
+      edits.push({ t: 'unnote', id: n.id, at, from });
+    }
+  }
+
+  return edits;
+}
+
+/** Two notes with the same content. Every field, so a new one is not missed. */
+function sameNote(a: DesignNote, b: DesignNote): boolean {
+  return (
+    a.replyTo === b.replyTo &&
+    a.x === b.x &&
+    a.y === b.y &&
+    a.at === b.at &&
+    a.authorId === b.authorId &&
+    a.authorName === b.authorName &&
+    a.body === b.body &&
+    a.resolved === b.resolved
   );
 }

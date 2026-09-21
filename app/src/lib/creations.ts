@@ -141,6 +141,52 @@ export interface DesignData {
   layers: DesignLayer[];
 }
 
+/**
+ * A note pinned to a design, or an answer to one.
+ *
+ * ## Not in `DesignData`, and that is the whole of why this is here
+ *
+ * Undo in the editor is a stack of whole `DesignData`s. A note kept in there
+ * would be undone by the Undo button — and on a shared canvas, *somebody
+ * else's* note would be undone by your Undo button, which is the same mistake
+ * `lib/coedit.ts` already refuses to make about their layers. Undo is for the
+ * artwork. So notes hang off the project beside the canvas rather than in it.
+ *
+ * ## Replies are notes, not a list inside one
+ *
+ * `replyTo` rather than a `replies: []` on the parent, and that is a
+ * consequence of how edits merge: the wire is last-writer-wins per id. Two
+ * people answering the same note at the same moment would each send a parent
+ * carrying their own array, and the later one would land on top — one reply
+ * silently gone. Flat, the two answers have different ids and both survive,
+ * because they never contend for the same key.
+ *
+ * `x`/`y` are canvas units on a root note and meaningless on a reply, which
+ * is drawn under its parent rather than pinned anywhere of its own.
+ */
+export interface DesignNote {
+  id: string;
+  /** The note this answers, or '' when it is pinned to the canvas itself. */
+  replyTo: string;
+  x: number;
+  y: number;
+  at: number;
+  /**
+   * Stable per account, so "you" survives a reload and a second device.
+   *
+   * Falls back to the tab's own id when nobody is signed in, which is honest
+   * rather than ideal: it means a signed-out person's notes stop being theirs
+   * when they reload. The alternative was inventing a durable identity for
+   * somebody who has not given one, and this app has already refused that.
+   */
+  authorId: string;
+  /** What they asked to be called. Never invented — see the editor. */
+  authorName: string;
+  body: string;
+  /** Only meaningful on a root note; a reply is resolved with its parent. */
+  resolved: boolean;
+}
+
 export interface VideoClip {
   id: string;
   fileId: string;
@@ -168,6 +214,8 @@ export interface CreativeProject {
   form: FormData;
   design: DesignData;
   video: VideoData;
+  /** Pinned to the design. Outside `design` on purpose — see `DesignNote`. */
+  notes: DesignNote[];
 }
 
 export interface CreationLibrary {
@@ -178,6 +226,14 @@ export interface CreationLibrary {
 export const EMPTY_CREATIONS: CreationLibrary = { version: 1, projects: [] };
 
 export const CREATION_LIMIT = 40;
+
+/**
+ * Notes on one design, replies included.
+ *
+ * Generous, because a note is a sentence and the limit is here to stop a
+ * broken sender filling the store rather than to ration a conversation.
+ */
+export const NOTE_LIMIT = 300;
 export const PROJECT_KINDS = ['form', 'design', 'video'] as const;
 export const LAYER_KINDS = ['text', 'rectangle', 'ellipse', 'triangle', 'image'] as const;
 
@@ -328,6 +384,47 @@ export function readCreations(value: unknown): CreationLibrary {
       layerIds.add(l.id);
     }
 
+    /* ── The notes ── */
+    /*
+     * Filled in for every project saved before designs could be commented on,
+     * the same way `opacity` and `rotation` are on a layer — the library is
+     * still version 1 and the projects without the field are ones a student
+     * already made.
+     */
+    if (p.notes === undefined) p.notes = [];
+    if (!Array.isArray(p.notes) || p.notes.length > NOTE_LIMIT) throw new Error('Invalid notes.');
+
+    const noteIds = new Set<string>();
+    for (const n of p.notes) {
+      const ok =
+        obj(n) &&
+        textValue(n.id, 100) &&
+        !noteIds.has(n.id) &&
+        textValue(n.replyTo, 100) &&
+        finite(n.x, 0, 2400) &&
+        finite(n.y, 0, 2400) &&
+        finite(n.at, 0, 1e15) &&
+        textValue(n.authorId, 200) &&
+        textValue(n.authorName, 80) &&
+        textValue(n.body, 2000) &&
+        typeof n.resolved === 'boolean';
+      if (!ok) throw new Error('Invalid note.');
+      noteIds.add(n.id as string);
+    }
+    /*
+     * A reply must answer a note that is really here, and never another reply.
+     *
+     * Checked after the loop rather than inside it, because a reply may arrive
+     * before its parent in the array — the wire has no order to promise. One
+     * level deep is the whole of the threading model: a reply to a reply has
+     * nowhere to be drawn, and letting one in would make the editor a tree
+     * walker instead of a list.
+     */
+    const roots = new Set((p.notes as DesignNote[]).filter((n) => !n.replyTo).map((n) => n.id));
+    for (const n of p.notes as DesignNote[]) {
+      if (n.replyTo && !roots.has(n.replyTo)) throw new Error('Invalid note: a reply with no note to answer.');
+    }
+
     /* ── The video ── */
     if (!obj(v) || !Array.isArray(v.clips) || v.clips.length > 30) throw new Error('Invalid video.');
     const clipIds = new Set<string>();
@@ -376,6 +473,7 @@ export function newCreation(kind: CreativeProject['kind'], courseId = '', itemId
     },
     design: { width: 900, height: 1200, background: '#ffffff', layers: [] },
     video: { clips: [] },
+    notes: [],
   };
 }
 

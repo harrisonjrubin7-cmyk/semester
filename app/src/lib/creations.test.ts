@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   CREATION_LIMIT,
+  NOTE_LIMIT,
   designSvg,
   gradientEnds,
   gradientId,
@@ -17,7 +18,9 @@ import {
   videoSeconds,
   visibleQuestions,
   xml,
+  type CreativeProject,
   type DesignLayer,
+  type DesignNote,
   type FormData,
   type Question,
   type VideoClip,
@@ -407,6 +410,20 @@ describe('a video sequence', () => {
 describe('a creation library', () => {
   const lib = (p: unknown) => readCreations({ version: 1, projects: [p] });
 
+  /** A note pinned to a design, said once rather than ten times. */
+  const pinned = (id: string, over: Partial<DesignNote> = {}): DesignNote => ({
+    id,
+    replyTo: '',
+    x: 10,
+    y: 20,
+    at: 1_700_000_000_000,
+    authorId: 'acct-1',
+    authorName: 'Harrison',
+    body: 'A note.',
+    resolved: false,
+    ...over,
+  });
+
   it('reads a project a screen would save', () => {
     expect(lib(newCreation('form')).projects[0].kind).toBe('form');
   });
@@ -481,6 +498,57 @@ describe('a creation library', () => {
       p.design.layers = [{ ...newLayer('rectangle', p.design), gradient: gradient as DesignLayer['gradient'] }];
       expect(() => lib(p), JSON.stringify(gradient)).toThrow(/layer/i);
     }
+  });
+
+  it('reads a project saved before designs could be commented on', () => {
+    const p = newCreation('design');
+    delete (p as Partial<CreativeProject>).notes;
+    expect(readCreations({ version: 1, projects: [p] }).projects[0].notes).toEqual([]);
+  });
+
+  it('reads a design with a note and an answer to it', () => {
+    const p = newCreation('design');
+    p.notes = [pinned('n1'), pinned('r1', { replyTo: 'n1' })];
+    expect(() => lib(p)).not.toThrow();
+  });
+
+  /*
+   * A reply may arrive before its parent — the wire promises no order — so the
+   * parent check runs after the array is read rather than inside the loop. The
+   * second case is what makes that more than a formality.
+   */
+  it('reads an answer that arrived before the note it answers', () => {
+    const p = newCreation('design');
+    p.notes = [pinned('r1', { replyTo: 'n1' }), pinned('n1')];
+    expect(() => lib(p)).not.toThrow();
+  });
+
+  it('refuses an answer to a note that is not there', () => {
+    const p = newCreation('design');
+    p.notes = [pinned('r1', { replyTo: 'ghost' })];
+    expect(() => lib(p)).toThrow(/answer/i);
+  });
+
+  it('refuses an answer to an answer, one level being the whole model', () => {
+    const p = newCreation('design');
+    p.notes = [pinned('n1'), pinned('r1', { replyTo: 'n1' }), pinned('r2', { replyTo: 'r1' })];
+    expect(() => lib(p)).toThrow(/answer/i);
+  });
+
+  it('refuses two notes sharing an id, and a note with no body it can hold', () => {
+    const p = newCreation('design');
+    p.notes = [pinned('n1'), pinned('n1')];
+    expect(() => lib(p)).toThrow(/note/i);
+
+    const q = newCreation('design');
+    q.notes = [pinned('n1', { body: 'x'.repeat(2001) })];
+    expect(() => lib(q)).toThrow(/note/i);
+  });
+
+  it('refuses more notes than a design may hold', () => {
+    const p = newCreation('design');
+    p.notes = Array.from({ length: NOTE_LIMIT + 1 }, (_, i) => pinned(`n${i}`));
+    expect(() => lib(p)).toThrow(/notes/i);
   });
 
   it('refuses an opacity outside the range the editor can reach', () => {
