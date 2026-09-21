@@ -76,7 +76,7 @@ jobs:
       # Build and deployment → Source: GitHub Actions. A workflow token is not
       # allowed to create the site ("Resource not accessible by integration"),
       # so asking it to would only fail on every run.
-      - uses: actions/configure-pages@v5
+      - uses: actions/configure-pages@v6
         id: pages
 
       - uses: actions/setup-node@v4
