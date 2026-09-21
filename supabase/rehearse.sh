@@ -150,9 +150,45 @@ for m in "$here"/migrations/*.sql; do
   fi
 done
 
+# ── Nothing to rehearse, and the two ways to arrive there ─────────────────
+#
+# This used to be one case and an `exit 2`, which read as "you asked for a
+# rehearsal and got nothing, which is not a pass". That is the right instinct
+# and it was aimed at the wrong half.
+#
+# **Everything on disk is in the ledger.** Production has applied all of it
+# and the next deploy carries nothing. That is the ordinary state of this
+# repository between migrations, and it is what `20260921211500` produced the
+# moment its row was recorded: the watermark passed the newest file, every
+# branch in the repository went red on `rehearse.sh`, and not one of them had
+# touched `supabase/`. A gate that fails on the calendar rather than on the
+# diff teaches people to ignore it, which is the one thing a gate cannot
+# survive.
+#
+# **Or a file is missing from the ledger and numbered at or below the
+# watermark.** `db push` can never apply it, whatever this script would have
+# said about its SQL. That is a real fault and keeps a non-zero exit.
+#
+# `lib/migrationorder.test.ts` holds the same rule from the other side, and
+# says it plainly: *"The rule is not 'every migration must already be
+# applied'. A new migration is supposed to be pending; that is what a
+# migration is. The rule is that a pending version may not be below the
+# watermark."* The old `exit 2` failed the first sentence to enforce the
+# third.
 if [ "$pending" = 0 ]; then
-  echo "  (nothing newer than $LEDGER_NEWEST — there is no deploy to rehearse)" >&2
-  exit 2
+  applied=$(sed -e 's/#.*//' "$LEDGER_SNAPSHOT" | awk 'NF {print $1}')
+  stranded=""
+  for m in "$here"/migrations/*.sql; do
+    version=$(basename "$m" | cut -c1-14)
+    printf '%s\n' "$applied" | grep -qxF "$version" || stranded="$stranded  $(basename "$m")"
+  done
+  if [ -n "$stranded" ]; then
+    echo "  ✗ at or below the watermark $LEDGER_NEWEST and not in the ledger, so a" >&2
+    echo "    deploy can never apply them:$stranded" >&2
+    exit 2
+  fi
+  echo "  (every migration is in the ledger — nothing to deploy, nothing to rehearse)"
+  exit 0
 fi
 
 after_gate=$(psql -Atc "select invite_only from public.access_gate")
