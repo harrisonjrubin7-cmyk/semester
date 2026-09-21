@@ -40,9 +40,17 @@ leaves the rest of the file running unprotected.
 ## `*.check.sql` — the tests
 
 `access.check.sql`, `calendar.check.sql`, `classmates.check.sql`,
-`deletion.check.sql`, `forms.check.sql`, `groups.check.sql`,
-`invites.check.sql`, `records.check.sql`, `referrals.check.sql`,
-`rooms.check.sql`, `sync.check.sql`.
+`deletion.check.sql`, `forms.check.sql`, `grants.check.sql`,
+`groups.check.sql`, `invites.check.sql`, `records.check.sql`,
+`referrals.check.sql`, `rooms.check.sql`, `sync.check.sql`.
+
+`grants.check.sql` is the odd one and worth reading first if you are adding a
+migration. Every other suite asks what a signed-in account may *read*; that one
+asks whether a function is reachable from the browser at all, which no policy
+can answer — a `security definer` function runs as its owner, so the EXECUTE
+grant is the only thing standing in front of it. It is an allowlist over the
+whole schema rather than a list of cases, because the fault it guards against
+is an omission.
 
 (This list had gone stale by four — it named seven of the eleven, and the four
 it left out include the two whose subject is whether an account can be created

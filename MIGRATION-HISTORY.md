@@ -27,10 +27,23 @@ disaster recovery.
 `supabase/migrations/`. They were applied through the dashboard or the
 management API. The repository has never described the database it deploys to.
 
-**3 · Six files have never been applied.** `usage_atomic`,
-`group_columns_pinned`, `forms`, `invites`, `access_log` and `referrals` are in
+**3 · Four files have never been applied**, and it was six until 21 September.
+`usage_atomic`, `group_columns_pinned`, `forms` and `access_log` are in
 `supabase/migrations/` and absent from production — verified object by object,
-not inferred from the history, for the first five. Two of them matter for the pilot: the atomic AI
+not inferred from the history.
+
+`invites` and `referrals` were applied by hand on 21 September, which is the
+first time anything in this directory reached the database since the audit.
+They are recorded as `20260921002428` and `20260921002623` — **today's
+timestamps, not their filenames**, because the management API assigns its own
+version and the ledger was not edited afterwards to match. `ROLLBACK.md` says
+why: never write to production to make a record tidy. So the two names are in
+the ledger and the two versions are not the ones on disk, and that is the
+truthful state rather than a tidy one.
+
+A third record, `20260921002658`
+`revoke_function_execute_from_supabase_default_roles`, has no file behind it
+and is the subject of item 4 below. Two of them matter for the pilot: the atomic AI
 metering fix and the invite gate are merged code sitting on a schema that does
 not support them.
 
@@ -44,6 +57,38 @@ a file from this directory in the window, so a file that landed after the
 audit is unapplied unless somebody has gone and done it by hand. **The gap
 grows on its own**, which is the argument for doing this rather than watching
 it.
+
+**4 · One migration exists only in production, and it is three days old.**
+`20260921002658 revoke_function_execute_from_supabase_default_roles` was
+applied by hand on 21 September, immediately after `invites`, because applying
+`invites` opened a live hole: `set_invite_only(boolean)` landed with `anon=X`
+and `authenticated=X`, so anybody holding the publishable key that ships in the
+browser could have turned the pilot's invite gate on or off.
+
+The cause is a gap this repository did not know it had. Every migration here
+writes `revoke all on function … from public`, which is the correct spelling
+as far as it goes — `invites.check.sql` exists partly to prove that revoking
+from `anon` and `authenticated` *by name* leaves the inherited PUBLIC grant
+intact. But Supabase's `pg_default_acl` for schema `public`, objtype `f`,
+grants EXECUTE to those roles **explicitly** on every function as it is
+created, and a revoke aimed at PUBLIC does not touch an explicit grant. Both
+spellings are needed. `check.sh` granted tables and never functions, so the
+suite was green on a hole that was open.
+
+This is fault 2 happening again in miniature, and it is being closed the way
+fault 2 should have been: `supabase/migrations/20260901001500_function_grants.sql`
+is the file, `local.stub.sql` now sets the same default privileges Supabase
+does so the harness can see the hole, and `grants.check.sql` is an allowlist
+over the whole schema so the next function cannot ship reachable quietly.
+
+Two things are deliberately left alone. **Production is not re-run to match the
+file.** The hand-applied statement already closed every function that exists
+there, and re-running it for the sake of the ledger is the tidying this
+document's own rule forbids. And the file revokes two functions —
+`note_access` and `read_feed` from `access_log` — that production does not
+have, so every revoke in it is guarded by `to_regprocedure`: it is safe to run
+early, and running it again after `access_log` finally lands is what closes
+those two.
 
 ## The rule this repair runs under
 
@@ -126,8 +171,7 @@ is not empty, this step does not happen.
 
 Out of scope here and worth naming so it is not forgotten. Once production is
 reproducible, a preview branch can finally be built that matches it, and
-`usage_atomic`, `group_columns_pinned`, `forms`, `invites`, `access_log` and
-`referrals` can
+`usage_atomic`, `group_columns_pinned`, `forms` and `access_log` can
 be rehearsed against it before a merge applies them. That is the staging work the rest of the
 plan was always about; it could not start until this was true.
 
