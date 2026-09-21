@@ -87,7 +87,7 @@ const words = (
   fill: string,
   bold = true,
   opacity = 1,
-): Omit<DesignLayer, 'id' | 'fileId'> => ({ kind: 'text', text, fill, fontSize, bold, opacity, rotation: 0, ...at });
+): Omit<DesignLayer, 'id' | 'fileId'> => ({ kind: 'text', text, fill, fontSize, bold, opacity, rotation: 0, gradient: null, ...at });
 
 /** A block of colour. */
 const block = (
@@ -95,7 +95,7 @@ const block = (
   fill: string,
   kind: 'rectangle' | 'ellipse' | 'triangle' = 'rectangle',
   opacity = 1,
-): Omit<DesignLayer, 'id' | 'fileId'> => ({ kind, text: '', fill, fontSize: 48, bold: false, opacity, rotation: 0, ...at });
+): Omit<DesignLayer, 'id' | 'fileId'> => ({ kind, text: '', fill, fontSize: 48, bold: false, opacity, rotation: 0, gradient: null, ...at });
 
 const INK = '#101418';
 const PAPER = '#ffffff';
