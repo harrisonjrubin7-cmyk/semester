@@ -44,12 +44,52 @@ What was missing is the sentence saying so, and the list of the exceptions.
 | --- | --- | --- | --- |
 | `access_log` | **90 days** | `supabase/migrations/20260901001300_access_log.sql` | On write, inside `note_access()`, scoped to the account being written to |
 | `push_queue` | **Until sent** | `supabase/functions/push/index.ts` | Deleted per account by id after a successful send |
-| `push_devices` | **Until the push service rejects it** | `supabase/functions/push/index.ts` | A 404 or 410 from the endpoint retires the row |
+| `push_devices` | **Until a gateway has said it is gone twice running** | `supabase/functions/push/index.ts` | A 404 or 410 *marks* the row (`gone_at`); still gone on the next run retires it, and any success clears the mark |
 | Tombstones in `notes`, `tasks`, `appointments`, `sittings`, `courses` | **90 days after deletion** | `public.sweep_tombstones`, in `supabase/migrations/20260901000700_records.sql` | `pg_cron`, weekly — the `tombstones` job in `supabase/scheduler.sql` |
+
+### This file describes the repository, and the repository is not the database
+
+Every row above was read out of the migration or the function that enforces it.
+That is the right source for *what the rule is* and the wrong one for *whether
+it is running*, and on 21 September [`MIGRATION-HISTORY.md`](MIGRATION-HISTORY.md)
+established the difference: four migrations in `supabase/migrations/` have never
+been applied to production — `usage_atomic`, `group_columns_pinned`, `forms` and
+`access_log` — verified object by object rather than inferred, with the project's
+schema deploy recorded as `MIGRATIONS_FAILED` since three minutes after the
+`access_log` merge.
+
+So two things in this file are claims about a schema production does not yet
+have:
+
+- **`access_log`'s ninety days is not running**, because the table and
+  `note_access()` are not there. Nothing is over-retained by that — there is no
+  log at all — but the row above says a clock runs, and it does not.
+- **`forms` and `form_responses`** are named in the account-deletion table for
+  the same reason.
+
+Neither is a contradiction of the privacy page, which promises a *ceiling* on
+what is kept rather than a floor. Both are this file describing intent as
+though it were deployment, which is the error it exists to prevent.
+
+`MIGRATION-HISTORY.md` carries the repair plan. Until those four land, read the
+rows above as the rule each table will be kept under, and that document as the
+list of which tables exist to keep.
 
 The whole push queue is also deleted immediately when a student switches
 reminders off — that is in the privacy text above and is a user action rather
 than a clock, but it is the reason the queue never holds much.
+
+**One row above is easy to write down wrong, and this file did.** It said a 404
+or 410 retires the device. It does not, and the difference is the whole reason
+`gone_at` exists. A single rejection only marks the row; a device is deleted
+only if the *next* run finds it gone as well, and an endpoint that answers at
+any point in a run is neither marked nor retired — proof that it is alive
+outranks proof that it is not. `functions/push/index.ts` is explicit that a
+single 404 deleting the device is "exactly the behaviour the column exists to
+prevent", because the failure is silent: the phone just stops getting
+reminders and no screen has anything to say about it. So the retention here is
+two consecutive failed runs, not one rejection, and this file described the bug
+that was fixed rather than the code that fixed it.
 
 `access_log` prunes on write rather than on a schedule, and the migration says
 why: a `pg_cron` entry is a third thing to deploy and a fourth thing to notice
