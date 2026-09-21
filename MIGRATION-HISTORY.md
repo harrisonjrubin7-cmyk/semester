@@ -636,6 +636,66 @@ afterwards is the `main` branch record: `MIGRATIONS_FAILED` stamped
 `2026-09-18T17:37` before, and a fresh timestamp reaching `FUNCTIONS_DEPLOYED`
 after.
 
+### The test was run, and it came back negative
+
+Several merges landed on 21 September after the renumbering. Every one of them
+took the `main` branch record to `CREATING_PROJECT` and then back to
+`MIGRATIONS_FAILED`. The renumbering did not fix the deploy.
+
+It is worth being exact about what that does and does not mean, because the
+renumbering was correct and this is a *second* fault standing behind the first.
+The deploy never reached the point of ordering anything. From the project's
+`workflow_run_logs`, at 17:30, 17:33, 17:37 twice, 17:42 and 17:44:
+
+    INFO  Cloning git repo... git_ref=main
+    INFO  Checking service health... project_ref=lzrqvlugnawcgywkhqlz
+    INFO  Skipping configuration for protected branch...
+    INFO  Connecting to database...
+    ERROR Remote migration versions not found in local migrations directory.
+
+That is not about versions being in the past. `db push` first requires that
+**every row already in the ledger has a file in `supabase/migrations/`**, and
+thirteen do not:
+
+| rows | where the SQL lives |
+| --- | --- |
+| the ten of fault 2, `push_devices_and_queue` … `groups` | `supabase/history/` |
+| `20260921002658 revoke_function_execute_from_supabase_default_roles` | nowhere |
+| `20260921144711 forms_relation_grants` | nowhere |
+| `20260921150750 access_log_function_search_path` | nowhere |
+
+**Step 2 put those ten in `history/` on purpose, and that is the thing blocking
+the deploy.** Its reasoning holds: the eight baseline files are a squash of
+everything through 11 September, so the baseline already contains those ten
+migrations' effects, and a file for each in `migrations/` would apply them a
+second time on any build from empty. So the two requirements are in direct
+conflict —
+
+  * a build from empty must **not** have those files, or it applies them twice;
+  * a deploy to production must **have** them, or it refuses to start.
+
+Nothing in this document had noticed that, and `rehearse.sh` says plainly in
+its own header that it cannot: *"This script cannot see the ledger."* It
+rehearses the SQL, and this fault is not in the SQL.
+
+The last two rows are this repository's own doing and are newer than the plan:
+applying the pending migrations by hand closed a live hole and, in closing it,
+added two more ledger rows with no file. Their content is folded into
+`20260921143455_forms.sql` and `20260921143653_access_log.sql`, so nothing is
+lost from a build — but the rows are in the ledger and the deploy counts them.
+
+**No fix is proposed here, deliberately.** The shapes available are
+`supabase migration repair` to mark the thirteen applied — the production write
+step 5 was withdrawn over — or files in `migrations/` that are no-ops on a
+fresh build, or a squashed baseline whose version is the ledger's newest. Each
+is a different answer to "what is `migrations/` for", which is the question
+this whole document is about, and picking one is a decision rather than a
+patch. What is settled is the diagnosis: the error is named, it is reproducible
+on every merge, and the thirteen rows are enumerated above.
+
+`ledgerfiles.test.ts` holds the count where it is, so that the next hand-applied
+migration cannot quietly make it fourteen.
+
 ## What this costs, and what it does not fix
 
 Steps 1–4 touch no live system and can be abandoned at any point with nothing
