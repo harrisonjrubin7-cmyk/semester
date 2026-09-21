@@ -92,6 +92,11 @@
   /* Below `xs`, and not a display size: 10px is the springboard tile's
      caption and the week grid's cell, 10.5 the caps kicker over a section.
      38 sites between them, which is more than any step above `md` carries. */
+  /* Under `2xs`, and the week grid is all of it: the hour down the gutter and
+     the day letter across the top, both caps and both tracked wide. They were
+     9 and 9.5, half a pixel apart in one component, which is drift rather
+     than a distinction — the 9.5 joins the 9 here. */
+  --type-3xs: calc(9px * var(--text-scale, 1)); /* a tracked caps label in a grid */
   --type-2xs: calc(10px * var(--text-scale, 1)); /* a tile's caption, a grid cell */
   --type-2xs-plus: calc(10.5px * var(--text-scale, 1)); /* the caps kicker over a section */
   --type-xs: calc(11px * var(--text-scale, 1)); /* labels, kickers, meta */
@@ -110,6 +115,7 @@
   --type-base: calc(13px * var(--text-scale, 1)); /* body */
   --type-base-plus: calc(13.5px * var(--text-scale, 1)); /* body that is the row */
   --type-md: calc(14px * var(--text-scale, 1)); /* list rows, the thing you tap */
+  --type-md-plus: calc(14.5px * var(--text-scale, 1)); /* the name on a row you open */
   --type-lg: calc(15px * var(--text-scale, 1)); /* a card's own title */
   /*
      The gap between `lg` and `xl`, which the app had been filling by hand.
@@ -141,6 +147,19 @@
      say what actually uses it. */
   --type-display-lg: calc(24px * var(--text-scale, 1)); /* the screen's title — 15 */
   --type-xl: calc(26px * var(--text-scale, 1)); /* the one heading on a screen */
+  /*
+     Above `xl` the app is only ever setting a figure — a clock, a score, a
+     count, a countdown. All twenty-five sites past 26 are one, with no
+     heading among them, and unlike the 15-to-26 gap they do not lie flat:
+     28 is used seven times, 30 five, 34 four, 38 three, then 42, 46 and 60
+     once or twice each. A decaying tail is what display type looks like when
+     it is working — the bigger a number is set, the rarer and more deliberate
+     the moment — so only the mode is named here.
+
+     The 27s come with it. One pixel from 28 across nine sites between them is
+     drift, not a distinction somebody drew.
+  */
+  --type-2xl: calc(28px * var(--text-scale, 1)); /* the figure a screen is about */
 
   /* Spacing.
 

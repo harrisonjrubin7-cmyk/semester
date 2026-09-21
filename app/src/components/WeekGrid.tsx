@@ -115,7 +115,7 @@ export function WeekGrid({
             <span
               style={{
                 display: 'block',
-                fontSize: 'calc(9.5px * var(--text-scale, 1))',
+                fontSize: 'var(--type-3xs)',
                 letterSpacing: '0.12em',
                 color: d.isToday ? 'var(--app-fg)' : 'var(--app-faint)',
               }}
@@ -160,7 +160,7 @@ export function WeekGrid({
                 width: GUTTER - 6,
                 textAlign: 'right',
                 fontFamily: 'var(--font-heading)',
-                fontSize: 'calc(9px * var(--text-scale, 1))',
+                fontSize: 'var(--type-3xs)',
                 letterSpacing: '0.06em',
                 ...faintLine(),
               }}
@@ -250,7 +250,7 @@ export function WeekGrid({
                 <span
                   style={{
                     display: 'block',
-                    fontSize: 'calc(9px * var(--text-scale, 1))',
+                    fontSize: 'var(--type-3xs)',
                     lineHeight: 'var(--leading-display)',
                     letterSpacing: '0.01em',
                     textDecoration: b.canceled ? 'line-through' : 'none',

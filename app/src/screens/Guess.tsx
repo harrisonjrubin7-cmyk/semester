@@ -48,7 +48,7 @@ export function Guess() {
         <div className="kicker">Before you read it</div>
         <div
           className="chrome-text"
-          style={{ fontSize: 'calc(28px * var(--text-scale, 1))', lineHeight: 'var(--leading-display-lg)', marginTop: 'var(--sp-4)', textWrap: 'pretty' }}
+          style={{ fontSize: 'var(--type-2xl)', lineHeight: 'var(--leading-display-lg)', marginTop: 'var(--sp-4)', textWrap: 'pretty' }}
         >
           {state.guessRight} of {asked.length}
         </div>
