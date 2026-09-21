@@ -192,6 +192,21 @@ export function Chat() {
                       ? (next) => void talk.send(next, talk.turns.slice(0, i))
                       : undefined
                   }
+                  /*
+                   * A question that is still the last turn got no reply — no
+                   * key, no connection, or a request that failed — and that is
+                   * exactly when the app's own answer is worth having. It used
+                   * to hang only off `Reply`, so it was computed on every
+                   * question and drawn only when a request had succeeded.
+                   */
+                  extra={
+                    i === talk.turns.length - 1 && !talk.busy ? (
+                      <Locally
+                        locally={talk.locally}
+                        onGo={(screen) => dispatch({ type: 'go', screen })}
+                      />
+                    ) : undefined
+                  }
                 />
               ) : (
                 <Reply
