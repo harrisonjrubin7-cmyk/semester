@@ -107,7 +107,7 @@ export function DayReport({ onGrain }: { onGrain: (grain: 'week') => void }) {
     }
   };
 
-  const quiet = { fontSize: 'calc(13.5px * var(--text-scale, 1))', color: 'var(--app-dim)', padding: '10px 0' };
+  const quiet = { fontSize: 'calc(13.5px * var(--text-scale, 1))', color: 'var(--app-dim)', paddingBlock: 'calc(10px * var(--density, 1))', paddingInline: '0' };
 
   return (
     <>
@@ -125,7 +125,7 @@ export function DayReport({ onGrain }: { onGrain: (grain: 'week') => void }) {
         style={{ marginBottom: 'var(--sp-7)' }}
       />
 
-      <Blueprint style={{ padding: '15px 16px' }}>
+      <Blueprint style={{ paddingBlock: 'calc(15px * var(--density, 1))', paddingInline: 'calc(16px * var(--density, 1))' }}>
         <div className="kicker">
           {now.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}
         </div>

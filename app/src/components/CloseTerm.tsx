@@ -52,7 +52,7 @@ export function CloseTerm() {
             onClick={() => setOpen(true)}
             style={{
               width: 'auto',
-              padding: '6px 10px',
+              paddingBlock: 'calc(6px * var(--density, 1))', paddingInline: 'calc(10px * var(--density, 1))',
               marginTop: 'var(--sp-4)',
               borderRadius: 'var(--r-sm)',
               border: '1px solid var(--app-line)',

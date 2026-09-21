@@ -49,7 +49,7 @@ export function SettingsIndex() {
     // not look like the app it configures is the one screen that cannot afford
     // to be an exception.
     <div>
-      <div style={{ padding: '0 var(--page-pad) calc(14px * var(--density, 1))' }}>
+      <div style={{ paddingTop: '0', paddingInline: 'var(--page-pad)', paddingBottom: 'calc(14px * var(--density, 1))' }}>
         <input
           className="input"
           type="search"

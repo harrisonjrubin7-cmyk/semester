@@ -198,7 +198,7 @@ export function Work() {
               multiple={false}
               block={false}
               onPick={([f]) => void upload(f)}
-              style={{ flex: 'none', padding: '0 14px', height: 40, fontSize: 'var(--type-xs)' }}
+              style={{ flex: 'none', paddingBlock: '0', paddingInline: 'calc(14px * var(--density, 1))', height: 40, fontSize: 'var(--type-xs)' }}
             >
               Upload
             </FilePick>

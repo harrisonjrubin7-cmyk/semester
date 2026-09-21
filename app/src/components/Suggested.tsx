@@ -39,7 +39,7 @@ export function Suggested() {
 
   const chip = (on: boolean) => ({
     width: 'auto' as const,
-    padding: '6px 10px',
+    paddingBlock: 'calc(6px * var(--density, 1))', paddingInline: 'calc(10px * var(--density, 1))',
     borderRadius: 'var(--r-sm)',
     border: `1px solid ${on ? 'var(--app-accent)' : 'var(--app-line)'}`,
     background: on ? 'var(--app-accent-wash)' : 'transparent',
@@ -67,7 +67,7 @@ export function Suggested() {
         onClick={() => setOpen(!open)}
         style={{
           width: 'auto',
-          padding: '6px 10px',
+          paddingBlock: 'calc(6px * var(--density, 1))', paddingInline: 'calc(10px * var(--density, 1))',
           marginTop: 'calc(9px * var(--density, 1))',
           borderRadius: 'var(--r-sm)',
           border: '1px solid var(--app-line)',
@@ -134,7 +134,7 @@ export function Suggested() {
             <div
               key={p.id}
               style={{
-                padding: '12px 13px',
+                paddingBlock: 'calc(12px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))',
                 border: '1px solid var(--app-line)',
                 borderRadius: 'var(--r-sm)',
               }}

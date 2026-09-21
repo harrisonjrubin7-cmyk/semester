@@ -133,7 +133,7 @@ export function Bill() {
 
   return (
     <>
-      <Blueprint style={{ padding: '15px 16px', marginTop: 'var(--sp-6)' }}>
+      <Blueprint style={{ paddingBlock: 'calc(15px * var(--density, 1))', paddingInline: 'calc(16px * var(--density, 1))', marginTop: 'var(--sp-6)' }}>
         <div className="kicker">{readTerm(state.term).label}</div>
         <div
           className="chrome-text"
@@ -237,7 +237,7 @@ export function Bill() {
                     className="btn btn-ghost"
                     aria-pressed={!a.pending}
                     onClick={() => dispatch({ type: 'patchAid', id: a.id, patch: { pending: !a.pending } })}
-                    style={{ flex: 'none', height: 28, fontSize: 'var(--type-xs)', padding: '0 8px' }}
+                    style={{ flex: 'none', height: 28, fontSize: 'var(--type-xs)', paddingBlock: '0', paddingInline: 'calc(8px * var(--density, 1))' }}
                   >
                     {a.pending ? 'Not yet' : 'Confirmed'}
                   </button>
@@ -479,7 +479,7 @@ export function Bill() {
             display: 'block',
             width: '100%',
             textAlign: 'left',
-            padding: '9px 11px',
+            paddingBlock: 'calc(9px * var(--density, 1))', paddingInline: 'calc(11px * var(--density, 1))',
             marginBottom: 'var(--sp-4)',
             borderRadius: 'var(--r-md)',
             border: `1px solid ${pending ? 'var(--app-accent-deep)' : 'var(--app-line)'}`,

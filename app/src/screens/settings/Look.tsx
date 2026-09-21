@@ -62,7 +62,7 @@ import { Folding } from '../../components/Fold';
  * constant rather than the twelfth inline copy of four properties.
  */
 const CAP: CSSProperties = {
-  margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))',
+  marginTop: 'calc(26px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(6px * var(--density, 1))',
 };
 
 const HINT: CSSProperties = {
@@ -260,7 +260,7 @@ export function SettingsLook() {
                         display: 'flex',
                         alignItems: 'center',
                         gap: 'calc(7px * var(--density, 1))',
-                        padding: '7px 12px',
+                        paddingBlock: 'calc(7px * var(--density, 1))', paddingInline: 'calc(12px * var(--density, 1))',
                         fontSize: 'var(--type-sm)',
                         borderColor: on ? a.base : 'var(--app-line)',
                       }}
@@ -301,7 +301,7 @@ export function SettingsLook() {
                   alignItems: 'center',
                   gap: 'calc(11px * var(--density, 1))',
                   textAlign: 'left',
-                  padding: '10px 11px',
+                  paddingBlock: 'calc(10px * var(--density, 1))', paddingInline: 'calc(11px * var(--density, 1))',
                   marginBottom: 'calc(7px * var(--density, 1))',
                   borderRadius: 'var(--r-sm)',
                   border: `1px solid ${state.ground === MATCH_DEVICE ? 'var(--app-accent)' : 'var(--app-line)'}`,
@@ -338,7 +338,7 @@ export function SettingsLook() {
                         alignItems: 'center',
                         gap: 'calc(11px * var(--density, 1))',
                         textAlign: 'left',
-                        padding: '10px 12px',
+                        paddingBlock: 'calc(10px * var(--density, 1))', paddingInline: 'calc(12px * var(--density, 1))',
                         borderRadius: 'var(--r-md)',
                         border: `1px solid ${on ? 'var(--app-accent-deep)' : 'var(--app-line)'}`,
                         background: on ? 'var(--app-accent-wash)' : 'transparent',
@@ -396,7 +396,7 @@ export function SettingsLook() {
                       onClick={() => dispatch({ type: 'setLook', look: { typeface: t.id } })}
                       style={{
                         flex: 'none',
-                        padding: '7px 12px',
+                        paddingBlock: 'calc(7px * var(--density, 1))', paddingInline: 'calc(12px * var(--density, 1))',
                         fontSize: 'var(--type-base)',
                         fontFamily: t.heading,
                         borderColor: on ? 'var(--app-accent)' : 'var(--app-line)',
@@ -425,7 +425,7 @@ export function SettingsLook() {
                       onClick={() => dispatch({ type: 'setLook', look: { bodyface: b.id } })}
                       style={{
                         flex: 'none',
-                        padding: '7px 12px',
+                        paddingBlock: 'calc(7px * var(--density, 1))', paddingInline: 'calc(12px * var(--density, 1))',
                         fontSize: 'var(--type-base)',
                         fontFamily: b.body,
                         borderColor: on ? 'var(--app-accent)' : 'var(--app-line)',

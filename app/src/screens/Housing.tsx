@@ -115,7 +115,7 @@ function HousingDetails() {
     <Page className="campus-personal" bottom={26} folds={false}>
       <TermSwitch />
 
-      <Blueprint style={{ padding: '15px 16px', marginTop: 'var(--sp-6)' }}>
+      <Blueprint style={{ paddingBlock: 'calc(15px * var(--density, 1))', paddingInline: 'calc(16px * var(--density, 1))', marginTop: 'var(--sp-6)' }}>
         <div className="kicker">{readTerm(state.term).label}</div>
         <div
           className="chrome-text"
@@ -134,7 +134,7 @@ function HousingDetails() {
       </Blueprint>
 
       {mine && firstToday ? (
-        <Blueprint plain style={{ padding: '13px 14px', marginTop: 'var(--sp-5)' }}>
+        <Blueprint plain style={{ paddingBlock: 'calc(13px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))', marginTop: 'var(--sp-5)' }}>
           <div className="kicker">The first walk of the day</div>
           <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
             {walk.known && walk.minutes > 0

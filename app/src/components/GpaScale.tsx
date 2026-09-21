@@ -111,7 +111,7 @@ export function GpaScale() {
 
   return (
     <Folding name="GpaScale">
-      <SectionLabel style={{ margin: '24px 0 6px' }}>What a letter is worth</SectionLabel>
+      <SectionLabel style={{ marginTop: 'calc(24px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(6px * var(--density, 1))' }}>What a letter is worth</SectionLabel>
 
       <div
         style={{
@@ -206,7 +206,7 @@ export function GpaScale() {
           type="button"
           className="btn btn-secondary"
           onClick={add}
-          style={{ height: 34, fontSize: 'var(--type-sm)', padding: '0 11px', flex: 'none' }}
+          style={{ height: 34, fontSize: 'var(--type-sm)', paddingBlock: '0', paddingInline: 'calc(11px * var(--density, 1))', flex: 'none' }}
         >
           Add a grade
         </button>
@@ -215,7 +215,7 @@ export function GpaScale() {
             type="button"
             className="btn btn-secondary"
             onClick={() => set({ ...COMMON_SCALE })}
-            style={{ height: 34, fontSize: 'var(--type-sm)', padding: '0 11px', flex: 'none' }}
+            style={{ height: 34, fontSize: 'var(--type-sm)', paddingBlock: '0', paddingInline: 'calc(11px * var(--density, 1))', flex: 'none' }}
           >
             Back to the common table
           </button>

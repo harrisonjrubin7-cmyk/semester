@@ -143,7 +143,7 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
     return (
       /* `data-editing`: the assistant's floating button stands down while a
          row is a form. See the note on `editing` in `ai/Assistant.tsx`. */
-      <Blueprint data-editing="" style={{ padding: '12px 14px', background: 'var(--app-panel)' }}>
+      <Blueprint data-editing="" style={{ paddingBlock: 'calc(12px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))', background: 'var(--app-panel)' }}>
         <input
           className="input"
           value={title}
@@ -264,7 +264,7 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
             className="btn btn-primary"
             onClick={save}
             disabled={!title.trim()}
-            style={{ width: 'auto', padding: '0 16px', height: 38, fontSize: 'var(--type-xs)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+            style={{ width: 'auto', paddingBlock: '0', paddingInline: 'calc(16px * var(--density, 1))', height: 38, fontSize: 'var(--type-xs)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
           >
             Save
           </button>
@@ -272,7 +272,7 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
             type="button"
             className="bare"
             onClick={() => setEditing(false)}
-            style={{ width: 'auto', padding: '0 8px', height: 38, fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}
+            style={{ width: 'auto', paddingBlock: '0', paddingInline: 'calc(8px * var(--density, 1))', height: 38, fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}
           >
             Cancel
           </button>
@@ -286,7 +286,7 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
                any overlap rather than at half of it — see `tappable` in
                `ai/Assistant.tsx`. */
             data-danger=""
-            style={{ width: 'auto', padding: '0 8px', height: 38, fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}
+            style={{ width: 'auto', paddingBlock: '0', paddingInline: 'calc(8px * var(--density, 1))', height: 38, fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}
           >
             Delete
           </button>
@@ -307,7 +307,7 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
       style={{
         display: 'flex',
         gap: 'var(--sp-6)',
-        padding: '12px 14px',
+        paddingBlock: 'calc(12px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))',
         alignItems: 'flex-start',
         background: t.done ? 'transparent' : 'var(--app-panel)',
       }}
@@ -904,7 +904,7 @@ function AppointmentRow({ appointment: a }: { appointment: Appointment }) {
 
   if (editing) {
     return (
-      <Blueprint data-editing="" style={{ padding: '12px 14px', background: 'var(--app-panel)' }}>
+      <Blueprint data-editing="" style={{ paddingBlock: 'calc(12px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))', background: 'var(--app-panel)' }}>
         <input
           className="input"
           value={title}
@@ -979,7 +979,7 @@ function AppointmentRow({ appointment: a }: { appointment: Appointment }) {
               aria-pressed={kind === k.id}
               style={{
                 flex: 'none',
-                padding: '5px 10px',
+                paddingBlock: 'calc(5px * var(--density, 1))', paddingInline: 'calc(10px * var(--density, 1))',
                 fontSize: 'var(--type-xs)',
                 letterSpacing: '0.08em',
                 textTransform: 'uppercase',
@@ -1001,7 +1001,7 @@ function AppointmentRow({ appointment: a }: { appointment: Appointment }) {
             className="btn btn-primary"
             onClick={save}
             disabled={!title.trim()}
-            style={{ width: 'auto', padding: '0 16px', height: 38, fontSize: 'var(--type-xs)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+            style={{ width: 'auto', paddingBlock: '0', paddingInline: 'calc(16px * var(--density, 1))', height: 38, fontSize: 'var(--type-xs)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
           >
             Save
           </button>
@@ -1009,7 +1009,7 @@ function AppointmentRow({ appointment: a }: { appointment: Appointment }) {
             type="button"
             className="bare"
             onClick={() => setEditing(false)}
-            style={{ width: 'auto', padding: '0 8px', height: 38, fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}
+            style={{ width: 'auto', paddingBlock: '0', paddingInline: 'calc(8px * var(--density, 1))', height: 38, fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}
           >
             Cancel
           </button>
@@ -1020,7 +1020,7 @@ function AppointmentRow({ appointment: a }: { appointment: Appointment }) {
             onClick={() => dispatch({ type: 'deleteAppointment', id: a.id })}
             aria-label={`Delete ${a.title}`}
             data-danger=""
-            style={{ width: 'auto', padding: '0 8px', height: 38, fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}
+            style={{ width: 'auto', paddingBlock: '0', paddingInline: 'calc(8px * var(--density, 1))', height: 38, fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}
           >
             Delete
           </button>
@@ -1035,7 +1035,7 @@ function AppointmentRow({ appointment: a }: { appointment: Appointment }) {
       style={{
         display: 'flex',
         gap: 'calc(13px * var(--density, 1))',
-        padding: '12px 14px',
+        paddingBlock: 'calc(12px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))',
         // The same tint the hour grid uses, so a row and its block on the
         // day are recognisably the same thing.
         borderLeft: `2px solid ${kindOf(a.kind).tint}`,
@@ -1241,7 +1241,7 @@ function Appointments() {
                 aria-pressed={kind === k.id}
                 style={{
                   flex: 'none',
-                  padding: '5px 10px',
+                  paddingBlock: 'calc(5px * var(--density, 1))', paddingInline: 'calc(10px * var(--density, 1))',
                   fontSize: 'var(--type-xs)',
                   letterSpacing: '0.08em',
                   textTransform: 'uppercase',
@@ -1591,7 +1591,7 @@ export function NoteEditor() {
       )}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
         {attached.map((f) => (
-          <Blueprint plain key={f.id} style={{ display: 'flex', gap: 'var(--sp-6)', padding: '11px 13px' }}>
+          <Blueprint plain key={f.id} style={{ display: 'flex', gap: 'var(--sp-6)', paddingBlock: 'calc(11px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))' }}>
             <button
               type="button"
               className="bare"
@@ -1617,7 +1617,7 @@ export function NoteEditor() {
               type="button"
               className="btn btn-ghost"
               onClick={() => dispatch({ type: 'detachFile', noteId: note.id, fileId: f.id })}
-              style={{ flex: 'none', fontSize: 'calc(10px * var(--text-scale, 1))', letterSpacing: '0.12em', padding: '4px 6px' }}
+              style={{ flex: 'none', fontSize: 'calc(10px * var(--text-scale, 1))', letterSpacing: '0.12em', paddingBlock: 'calc(4px * var(--density, 1))', paddingInline: 'calc(6px * var(--density, 1))' }}
             >
               Detach
             </button>

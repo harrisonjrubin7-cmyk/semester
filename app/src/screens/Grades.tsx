@@ -62,7 +62,7 @@ export function Grades() {
         return (
           <div key={c.id}>
             <Folding name="body">
-            <SectionLabel style={{ margin: '26px 0 8px' }}>{c.code}</SectionLabel>
+            <SectionLabel style={{ marginTop: 'calc(26px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(8px * var(--density, 1))' }}>{c.code}</SectionLabel>
 
             <Blueprint style={{ paddingBlock: 'calc(15px * var(--density, 1))', paddingInline: 'calc(15px * var(--density, 1))', background: 'var(--app-hero)' }}>
               <div className="kicker">
@@ -161,7 +161,7 @@ export function Grades() {
                   display: 'flex',
                   gap: 'var(--sp-6)',
                   alignItems: 'center',
-                  padding: '11px 0',
+                  paddingBlock: 'calc(11px * var(--density, 1))', paddingInline: '0',
                 }}
               >
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -205,7 +205,7 @@ export function Grades() {
                   style={{
                     fontSize: 'var(--type-xs)',
                     color: 'var(--app-dim)',
-                    margin: '14px 0 6px',
+                    marginTop: 'calc(14px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(6px * var(--density, 1))',
                     fontFamily: 'var(--font-heading)',
                     letterSpacing: '0.12em',
                     textTransform: 'uppercase',
@@ -232,7 +232,7 @@ export function Grades() {
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'baseline',
-                        padding: '8px 0',
+                        paddingBlock: 'calc(8px * var(--density, 1))', paddingInline: '0',
                         borderBottom: '1px solid var(--app-line-soft)',
                         opacity: impossible ? DIMMED_ROW : 1,
                       }}

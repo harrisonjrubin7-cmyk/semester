@@ -137,7 +137,7 @@ export function ProjectFile({ courseId, course }: { courseId: CourseId; course: 
               aria-pressed={on}
               style={{
                 textAlign: 'left',
-                padding: '10px 12px',
+                paddingBlock: 'calc(10px * var(--density, 1))', paddingInline: 'calc(12px * var(--density, 1))',
                 borderRadius: 'var(--r-md)',
                 border: `1px solid ${on ? 'var(--app-accent-deep)' : 'var(--app-line)'}`,
                 background: on ? 'var(--app-accent-wash)' : 'transparent',
@@ -171,10 +171,10 @@ export function ProjectFile({ courseId, course }: { courseId: CourseId; course: 
       )}
 
       {milestones.length > 0 && (
-        <Blueprint style={{ padding: '11px 13px', marginTop: 'var(--sp-5)' }}>
+        <Blueprint style={{ paddingBlock: 'calc(11px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))', marginTop: 'var(--sp-5)' }}>
           <div className="kicker">Working back from it</div>
           {milestones.map((m) => (
-            <div key={m.what} style={{ display: 'flex', gap: 'var(--sp-5)', padding: '5px 0' }}>
+            <div key={m.what} style={{ display: 'flex', gap: 'var(--sp-5)', paddingBlock: 'calc(5px * var(--density, 1))', paddingInline: '0' }}>
               <span
                 style={{
                   flex: 'none',

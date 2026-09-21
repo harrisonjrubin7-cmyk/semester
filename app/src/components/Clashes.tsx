@@ -66,7 +66,7 @@ function Row({ c, onOpen }: { c: Clash; onOpen: () => void }) {
         display: 'block',
         width: '100%',
         textAlign: 'left',
-        padding: '12px 13px',
+        paddingBlock: 'calc(12px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))',
         borderRadius: 'var(--r-md)',
         border: '1px solid var(--app-warn-line)',
         background: 'var(--app-warn-wash)',
@@ -181,7 +181,7 @@ export function ClashList() {
 
   return (
     <Folding name="Clashes">
-      <SectionLabel style={{ margin: 'calc(24px * var(--density, 1)) 0 calc(8px * var(--density, 1))' }}>
+      <SectionLabel style={{ marginTop: 'calc(24px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(8px * var(--density, 1))' }}>
         Worth seeing coming
       </SectionLabel>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>

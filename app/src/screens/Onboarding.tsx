@@ -142,7 +142,7 @@ export function Onboarding() {
         flex: 1,
         display: 'flex',
         flexDirection: 'column',
-        padding: '70px 24px 42px',
+        paddingTop: 'calc(70px * var(--density, 1))', paddingInline: 'calc(24px * var(--density, 1))', paddingBottom: 'calc(42px * var(--density, 1))',
         overflowY: 'auto',
       }}
     >
@@ -168,7 +168,7 @@ export function Onboarding() {
           fontSize: 'calc(42px * var(--text-scale, 1))',
           lineHeight: 1.04,
           letterSpacing: '-0.01em',
-          margin: '10px 0 14px',
+          marginTop: 'calc(10px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(14px * var(--density, 1))',
           textWrap: 'pretty',
         }}
       >
@@ -229,7 +229,7 @@ export function Onboarding() {
         <Blueprint
           style={{
             marginTop: 'calc(34px * var(--density, 1))',
-            padding: '18px 16px',
+            paddingBlock: 'calc(18px * var(--density, 1))', paddingInline: 'calc(16px * var(--density, 1))',
             display: 'flex',
             flexDirection: 'column',
             gap: 'calc(14px * var(--density, 1))',
@@ -263,7 +263,7 @@ export function Onboarding() {
                 alignItems: 'center',
                 gap: 'var(--sp-6)',
                 border: '1px solid var(--app-line)',
-                padding: '12px 14px',
+                paddingBlock: 'calc(12px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))',
               }}
             >
               <div

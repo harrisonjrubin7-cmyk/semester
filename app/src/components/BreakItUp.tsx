@@ -68,7 +68,7 @@ export function BreakItUp({ item }: { item: DatedItem }) {
         onClick={() => setShown(true)}
         style={{
           width: 'auto',
-          padding: '8px 0 2px',
+          paddingTop: 'calc(8px * var(--density, 1))', paddingInline: '0', paddingBottom: 'calc(2px * var(--density, 1))',
           fontSize: 'var(--type-sm)',
           color: 'var(--app-dim)',
           textAlign: 'left',
@@ -137,7 +137,7 @@ export function BreakItUp({ item }: { item: DatedItem }) {
           }}
           style={{
             width: 'auto',
-            padding: '9px 13px',
+            paddingBlock: 'calc(9px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))',
             borderRadius: 'var(--r-sm)',
             border: '1px solid var(--app-accent)',
             fontSize: 'var(--type-sm)',
@@ -149,7 +149,7 @@ export function BreakItUp({ item }: { item: DatedItem }) {
           type="button"
           className="bare"
           onClick={() => setShown(false)}
-          style={{ width: 'auto', padding: '9px 4px', fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}
+          style={{ width: 'auto', paddingBlock: 'calc(9px * var(--density, 1))', paddingInline: 'calc(4px * var(--density, 1))', fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}
         >
           Not now
         </button>

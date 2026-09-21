@@ -76,7 +76,7 @@ export function HomeWalk() {
         display: 'block',
         width: '100%',
         textAlign: 'left',
-        padding: '12px 14px',
+        paddingBlock: 'calc(12px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))',
         marginBottom: 'calc(14px * var(--density, 1))',
         borderRadius: 'var(--r-md)',
         border: '1px solid var(--app-line)',

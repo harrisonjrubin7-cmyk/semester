@@ -87,7 +87,7 @@ export function SettingsPage({
      * skip link's target is least ambiguous elsewhere.
      */
     <div style={{ paddingBottom: 'calc(24px * var(--density, 1))' }}>
-      <div style={{ padding: '0 var(--page-pad) calc(12px * var(--density, 1))' }}>
+      <div style={{ paddingTop: '0', paddingInline: 'var(--page-pad)', paddingBottom: 'calc(12px * var(--density, 1))' }}>
         <div
           style={{
             fontSize: 'calc(10.5px * var(--text-scale, 1))',
@@ -115,7 +115,7 @@ export function SettingsPage({
         */}
         <h2
           style={{
-            margin: '4px 0 0',
+            marginTop: 'calc(4px * var(--density, 1))', marginInline: '0', marginBottom: '0',
             fontSize: 'calc(21px * var(--text-scale, 1))',
             fontFamily: 'var(--font-heading)',
             fontWeight: 'var(--font-heading-weight)' as never,
@@ -127,7 +127,7 @@ export function SettingsPage({
         {blurb ? (
           <p
             style={{
-              margin: 'calc(7px * var(--density, 1)) 0 0',
+              marginTop: 'calc(7px * var(--density, 1))', marginInline: '0', marginBottom: '0',
               fontSize: 'calc(12.5px * var(--text-scale, 1))',
               color: 'var(--app-dim)',
               lineHeight: 'var(--leading-relaxed)',

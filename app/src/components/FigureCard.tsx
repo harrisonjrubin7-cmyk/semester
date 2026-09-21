@@ -122,7 +122,7 @@ export function FigureCard({ figure, unit }: { figure: Figure; unit?: string }) 
                   fontSize: 'var(--type-base)',
                   color: 'var(--app-accent)',
                   alignSelf: 'flex-start',
-                  padding: '6px 0',
+                  paddingBlock: 'calc(6px * var(--density, 1))', paddingInline: '0',
                 }}
               >
                 {s.n}

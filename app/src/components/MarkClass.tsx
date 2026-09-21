@@ -73,7 +73,7 @@ export function MarkClass({
             style={{
               width: 'auto',
               flex: 'none',
-              padding: '4px 10px',
+              paddingBlock: 'calc(4px * var(--density, 1))', paddingInline: 'calc(10px * var(--density, 1))',
               height: 28,
               borderRadius: 'var(--r-sm)',
               border: `1px solid ${on ? 'var(--app-accent-deep)' : 'var(--app-line)'}`,

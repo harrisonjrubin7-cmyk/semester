@@ -187,7 +187,7 @@ function Run({ win }: { win: GapWindow }) {
    * the one thing this screen exists to stop.
    */
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '78vh', padding: '0 16px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '78vh', paddingBlock: '0', paddingInline: 'calc(16px * var(--density, 1))' }}>
       {/* How much of the window is gone. A bar rather than a clock: a number
           counting down is a thing you watch instead of the card. */}
       <div style={{ position: 'relative', height: 3, marginTop: 'var(--sp-2)' }}>
@@ -304,7 +304,7 @@ function Run({ win }: { win: GapWindow }) {
           flex: 1,
           width: '100%',
           textAlign: 'left',
-          padding: '22px 2px',
+          paddingBlock: 'calc(22px * var(--density, 1))', paddingInline: 'calc(2px * var(--density, 1))',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'center',

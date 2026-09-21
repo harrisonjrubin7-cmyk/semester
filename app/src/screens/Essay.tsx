@@ -168,7 +168,7 @@ export function Essay() {
               }}
               style={{
                 textAlign: 'left',
-                padding: '10px 12px',
+                paddingBlock: 'calc(10px * var(--density, 1))', paddingInline: 'calc(12px * var(--density, 1))',
                 borderRadius: 'var(--r-md)',
                 border: `1px solid ${on ? 'var(--app-accent-deep)' : 'var(--app-line)'}`,
                 background: on ? 'var(--app-accent-wash)' : 'transparent',
@@ -203,7 +203,7 @@ export function Essay() {
             ))}
           </select>
           {course && (
-            <Blueprint style={{ padding: '11px 13px', marginTop: 'var(--sp-5)' }}>
+            <Blueprint style={{ paddingBlock: 'calc(11px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))', marginTop: 'var(--sp-5)' }}>
               <div className="kicker">Recorded policy</div>
               <div style={{ fontSize: 'var(--type-base)', lineHeight: 'var(--leading-relaxed)', marginTop: 'calc(5px * var(--density, 1))' }}>
                 {course.ai?.note ??
@@ -254,7 +254,7 @@ export function Essay() {
           gap: 'var(--sp-5)',
           alignItems: 'flex-start',
           marginTop: 'calc(14px * var(--density, 1))',
-          padding: '11px 12px',
+          paddingBlock: 'calc(11px * var(--density, 1))', paddingInline: 'calc(12px * var(--density, 1))',
           borderRadius: 'var(--r-md)',
           border: '1px solid var(--app-line)',
         }}
@@ -278,7 +278,7 @@ export function Essay() {
             fontSize: 'calc(12.5px * var(--text-scale, 1))',
             lineHeight: 'var(--leading-relaxed)',
             marginTop: 'var(--sp-5)',
-            padding: '11px 13px',
+            paddingBlock: 'calc(11px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))',
             borderRadius: 'var(--r-md)',
             border: '1px solid var(--app-line)',
             background: 'var(--app-panel)',
@@ -397,10 +397,10 @@ export function Essay() {
           </div>
 
           {left.length > 0 && (
-            <Blueprint style={{ padding: '11px 13px', marginTop: 'var(--sp-5)' }}>
+            <Blueprint style={{ paddingBlock: 'calc(11px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))', marginTop: 'var(--sp-5)' }}>
               <div className="kicker">What it needs from you</div>
               {left.map((hole, i) => (
-                <div key={`${hole}-${i}`} style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', padding: '4px 0', lineHeight: 'var(--leading-normal)' }}>
+                <div key={`${hole}-${i}`} style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', paddingBlock: 'calc(4px * var(--density, 1))', paddingInline: '0', lineHeight: 'var(--leading-normal)' }}>
                   {hole.slice(1, -1)}
                 </div>
               ))}

@@ -84,7 +84,7 @@ const QUIET: CSSProperties = {
   color: 'var(--app-dim)',
   marginTop: 'var(--sp-5)',
   width: 'auto',
-  padding: '6px 0',
+  paddingBlock: 'calc(6px * var(--density, 1))', paddingInline: '0',
   textAlign: 'left',
 };
 
@@ -944,7 +944,7 @@ function ByHand() {
           style={{
             flex: 'none',
             width: 'auto',
-            padding: '0 18px',
+            paddingBlock: '0', paddingInline: 'calc(18px * var(--density, 1))',
             fontSize: 'var(--type-sm)',
             letterSpacing: '0.1em',
             textTransform: 'uppercase',
@@ -997,7 +997,7 @@ function Rediff({
         display: 'flex',
         gap: 'var(--sp-6)',
         alignItems: 'baseline',
-        padding: '9px 0',
+        paddingBlock: 'calc(9px * var(--density, 1))', paddingInline: '0',
         borderBottom: '1px solid var(--app-line-soft)',
       }}
     >
@@ -1009,7 +1009,7 @@ function Rediff({
   return (
     <Folding name="Rediff">
       <SectionLabel>You already have {code}</SectionLabel>
-      <Blueprint style={{ padding: '14px 15px' }}>
+      <Blueprint style={{ paddingBlock: 'calc(14px * var(--density, 1))', paddingInline: 'calc(15px * var(--density, 1))' }}>
         <div className="chrome-text" style={{ fontSize: 'calc(20px * var(--text-scale, 1))', lineHeight: 1.2, textWrap: 'pretty' }}>
           {rediffSummary(changes)}
         </div>

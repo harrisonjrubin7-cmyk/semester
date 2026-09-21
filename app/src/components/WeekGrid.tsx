@@ -230,7 +230,7 @@ export function WeekGrid({
                   width: `calc(${slot})`,
                   height: box.height,
                   overflow: 'hidden',
-                  padding: '2px 3px',
+                  paddingBlock: 'calc(2px * var(--density, 1))', paddingInline: 'calc(3px * var(--density, 1))',
                   borderLeft: `2px solid ${tint}`,
                   borderRadius: 'var(--r-sm)',
                   background: 'var(--app-panel)',

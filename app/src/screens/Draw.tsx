@@ -198,7 +198,7 @@ export function Draw() {
               aria-pressed={on}
               style={{
                 textAlign: 'left',
-                padding: '11px 13px',
+                paddingBlock: 'calc(11px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))',
                 borderRadius: 'var(--r-md)',
                 border: `1px solid ${on ? 'var(--app-accent-deep)' : 'var(--app-line)'}`,
                 background: on ? 'var(--app-accent-wash)' : 'transparent',

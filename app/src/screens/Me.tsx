@@ -212,7 +212,7 @@ export function Notifications() {
           key={n.id}
           plain
           style={{
-            padding: '13px 14px',
+            paddingBlock: 'calc(13px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))',
             marginBottom: 'var(--sp-5)',
             background: i < 2 ? 'var(--app-panel)' : 'transparent',
           }}

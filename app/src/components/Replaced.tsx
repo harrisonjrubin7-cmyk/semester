@@ -46,8 +46,8 @@ export function Replaced() {
     <div
       role="status"
       style={{
-        margin: '0 14px 10px',
-        padding: '11px 13px',
+        marginTop: '0', marginInline: 'calc(14px * var(--density, 1))', marginBottom: 'calc(10px * var(--density, 1))',
+        paddingBlock: 'calc(11px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))',
         borderRadius: 'var(--r-md)',
         border: '1px solid var(--app-line)',
         background: 'var(--app-panel)',
@@ -78,7 +78,7 @@ export function Replaced() {
         style={{
           width: 'auto',
           flex: 'none',
-          padding: '4px 8px',
+          paddingBlock: 'calc(4px * var(--density, 1))', paddingInline: 'calc(8px * var(--density, 1))',
           borderRadius: 'var(--r-sm)',
           border: '1px solid var(--app-line)',
           fontSize: 'var(--type-xs)',

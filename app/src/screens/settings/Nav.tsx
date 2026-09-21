@@ -29,7 +29,7 @@ const HINT = {
 } as const;
 
 const LABEL_STYLE = {
-  margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))',
+  marginTop: 'calc(26px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(6px * var(--density, 1))',
 } as const;
 
 /**
@@ -303,7 +303,7 @@ export function SettingsNav() {
                       className="bare tappable"
                       onClick={() => dispatch({ type: 'toggleFeedSection', id })}
                       aria-label={on ? `Hide ${section?.label}` : `Show ${section?.label}`}
-                      style={{ flex: 'none', width: 30, padding: '12px 2px 12px 0' }}
+                      style={{ flex: 'none', width: 30, paddingTop: 'calc(12px * var(--density, 1))', paddingRight: 'calc(2px * var(--density, 1))', paddingBottom: 'calc(12px * var(--density, 1))', paddingLeft: '0' }}
                     >
                       <TickBox on={on} />
                     </button>
@@ -314,7 +314,7 @@ export function SettingsNav() {
                     <div
                       tabIndex={0}
                       aria-label={`${section?.label ?? id}. ${MOVE_HINT}`}
-                      style={{ flex: 1, minWidth: 0, padding: '11px 0', opacity: on ? 1 : DIMMED_ROW }}
+                      style={{ flex: 1, minWidth: 0, paddingBlock: 'calc(11px * var(--density, 1))', paddingInline: '0', opacity: on ? 1 : DIMMED_ROW }}
                     >
                       <div style={{ fontSize: 'var(--type-md)' }}>{section?.label ?? id}</div>
                       <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>{section?.blurb}</div>

@@ -90,7 +90,7 @@ export function Panel({
   return (
     <div
       style={{
-        padding: '12px 13px',
+        paddingBlock: 'calc(12px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))',
         borderRadius: 'var(--r-md)',
         border: '1px solid var(--app-line)',
         ...(tone === 'raised' ? { background: 'var(--app-hero)' } : {}),

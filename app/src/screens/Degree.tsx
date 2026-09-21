@@ -69,7 +69,7 @@ export function Degree() {
   return (
     <Page>
       <>
-      <Blueprint style={{ padding: '14px 15px' }}>
+      <Blueprint style={{ paddingBlock: 'calc(14px * var(--density, 1))', paddingInline: 'calc(15px * var(--density, 1))' }}>
         <div className="kicker">Your arithmetic, not the registrar’s</div>
         <div
           style={{
@@ -94,7 +94,7 @@ export function Degree() {
         ]}
         value={tab}
         onChange={setTab}
-        style={{ margin: '16px 0' }}
+        style={{ marginBlock: 'calc(16px * var(--density, 1))', marginInline: '0' }}
       />
 
       {tab === 'left' ? <WhatIsLeft /> : null}
@@ -129,7 +129,7 @@ function WhatIsLeft() {
         */}
         {h.done > 0 ? (
           <>
-            <SectionLabel style={{ margin: '24px 0 8px' }}>Hours and grades</SectionLabel>
+            <SectionLabel style={{ marginTop: 'calc(24px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(8px * var(--density, 1))' }}>Hours and grades</SectionLabel>
             <div style={{ fontSize: 'var(--type-base)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
               {h.done} hours finished
               {h.withThisTerm !== h.done ? `, ${h.withThisTerm} with this term` : ''}. {gpaLine(g, isCommon(state.scale))}
@@ -148,7 +148,7 @@ function WhatIsLeft() {
         return (
           <div key={p} style={{ marginBottom: 'calc(20px * var(--density, 1))' }}>
             <Folding name="WhatIsLeft">
-            <SectionLabel style={{ margin: '0 0 6px' }}>{p}</SectionLabel>
+            <SectionLabel style={{ marginTop: '0', marginInline: '0', marginBottom: 'calc(6px * var(--density, 1))' }}>{p}</SectionLabel>
             <div
               style={{
                 fontSize: 'var(--type-base)',
@@ -163,7 +163,7 @@ function WhatIsLeft() {
                 <div
                   key={prog.req.id}
                   style={{
-                    padding: '10px 13px',
+                    paddingBlock: 'calc(10px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))',
                     borderRadius: 'var(--r-md)',
                     border: '1px solid var(--app-line)',
                     opacity: prog.met ? DIMMED_ROW : 1,
@@ -205,7 +205,7 @@ function WhatIsLeft() {
         );
       })}
 
-      <SectionLabel style={{ margin: '24px 0 8px' }}>Hours and grades</SectionLabel>
+      <SectionLabel style={{ marginTop: 'calc(24px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(8px * var(--density, 1))' }}>Hours and grades</SectionLabel>
       <div style={{ fontSize: 'var(--type-base)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
         {h.done} hours finished
         {h.withThisTerm !== h.done ? `, ${h.withThisTerm} with this term` : ''}. {gpaLine(g, isCommon(state.scale))}
@@ -215,7 +215,7 @@ function WhatIsLeft() {
 
       {loose.length > 0 ? (
         <>
-          <SectionLabel style={{ margin: '24px 0 8px' }}>Counting towards nothing</SectionLabel>
+          <SectionLabel style={{ marginTop: 'calc(24px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(8px * var(--density, 1))' }}>Counting towards nothing</SectionLabel>
           {/* Either they really are free electives, or a requirement has not
               been entered yet. Both are worth knowing and the app does not
               guess which. */}
@@ -518,7 +518,7 @@ function Transcript({ rows }: { rows?: Taken[] }) {
           onClick={() => setCurrent(!current)}
           style={{
             width: 'auto',
-            padding: '9px 13px',
+            paddingBlock: 'calc(9px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))',
             borderRadius: 'var(--r-sm)',
             border: `1px solid ${current ? 'var(--app-accent)' : 'var(--app-line)'}`,
             fontSize: 'calc(11.5px * var(--text-scale, 1))',
@@ -542,7 +542,7 @@ function Transcript({ rows }: { rows?: Taken[] }) {
 
       {state.taken.length > 0 ? (
         <>
-          <SectionLabel style={{ margin: '24px 0 8px' }}>Recorded</SectionLabel>
+          <SectionLabel style={{ marginTop: 'calc(24px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(8px * var(--density, 1))' }}>Recorded</SectionLabel>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(7px * var(--density, 1))' }}>
             {taken.map((c) => (
               <TakenRow key={c.id} course={c} />
@@ -639,7 +639,7 @@ function Rules() {
 
       {state.requirements.length > 0 ? (
         <>
-          <SectionLabel style={{ margin: '24px 0 8px' }}>Recorded</SectionLabel>
+          <SectionLabel style={{ marginTop: 'calc(24px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(8px * var(--density, 1))' }}>Recorded</SectionLabel>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(7px * var(--density, 1))' }}>
             {state.requirements.map((r) => (
               <RequirementRow key={r.id} requirement={r} />
@@ -801,7 +801,7 @@ function TakenRow({ course: c }: { course: Taken }) {
         display: 'flex',
         gap: 'var(--sp-5)',
         alignItems: 'baseline',
-        padding: '10px 13px',
+        paddingBlock: 'calc(10px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))',
         borderRadius: 'var(--r-md)',
         border: '1px solid var(--app-line)',
       }}
@@ -965,7 +965,7 @@ function RequirementRow({ requirement: r }: { requirement: Requirement }) {
         display: 'flex',
         gap: 'var(--sp-5)',
         alignItems: 'baseline',
-        padding: '10px 13px',
+        paddingBlock: 'calc(10px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))',
         borderRadius: 'var(--r-md)',
         border: '1px solid var(--app-line)',
       }}

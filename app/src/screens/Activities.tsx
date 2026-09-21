@@ -109,7 +109,7 @@ export function Activities() {
           {tab === 'directory' && <CampusDirectory kind="clubs" onPlan={item=>{setPlanned(item);setTab('add');}}/>}
           {tab === 'yours' && (
             <>
-              <Blueprint style={{ padding: '14px 15px' }}>
+              <Blueprint style={{ paddingBlock: 'calc(14px * var(--density, 1))', paddingInline: 'calc(15px * var(--density, 1))' }}>
                 <div className="kicker">Your week</div>
                 <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', marginTop: 'var(--sp-4)', lineHeight: 1.55 }}>{loadLine(week)}</div>
                 <div
@@ -134,7 +134,7 @@ export function Activities() {
                   style={{
                     fontSize: 'calc(12.5px * var(--text-scale, 1))',
                     marginTop: 'var(--sp-6)',
-                    padding: '11px 13px',
+                    paddingBlock: 'calc(11px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))',
                     borderRadius: 'var(--r-md)',
                     lineHeight: 'var(--leading-relaxed)',
                     border: '1px solid var(--app-warn-line)',
@@ -212,11 +212,11 @@ function Row({ commitment }: { commitment: Commitment }) {
           })
         }
         aria-label={commitment.active ? `Pause ${commitment.name}` : `Resume ${commitment.name}`}
-        style={{ flex: 'none', width: 30, padding: '13px 2px 13px 0' }}
+        style={{ flex: 'none', width: 30, paddingTop: 'calc(13px * var(--density, 1))', paddingRight: 'calc(2px * var(--density, 1))', paddingBottom: 'calc(13px * var(--density, 1))', paddingLeft: '0' }}
       >
         <TickBox on={commitment.active} />
       </button>
-      <div style={{ flex: 1, minWidth: 0, padding: '12px 0' }}>
+      <div style={{ flex: 1, minWidth: 0, paddingBlock: 'calc(12px * var(--density, 1))', paddingInline: '0' }}>
         <div style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'baseline' }}>
           <span
             style={{
@@ -308,7 +308,7 @@ function AddOne({ onDone,initial }: { onDone: () => void;initial?:CampusListing|
               aria-pressed={on}
               style={{
                 flex: 'none',
-                padding: '6px 11px',
+                paddingBlock: 'calc(6px * var(--density, 1))', paddingInline: 'calc(11px * var(--density, 1))',
                 fontSize: 'calc(11.5px * var(--text-scale, 1))',
                 background: on ? 'var(--app-accent-wash)' : 'transparent',
                 borderColor: on ? 'var(--app-accent-deep)' : undefined,
@@ -350,7 +350,7 @@ function AddOne({ onDone,initial }: { onDone: () => void;initial?:CampusListing|
                   }
                   style={{
                     flex: 1,
-                    padding: '7px 0',
+                    paddingBlock: 'calc(7px * var(--density, 1))', paddingInline: '0',
                     fontSize: 'calc(11.5px * var(--text-scale, 1))',
                     background: on ? 'var(--app-accent-wash)' : 'transparent',
                   }}
@@ -486,7 +486,7 @@ function FindThings() {
           <Blueprint
             plain
             style={{
-              padding: '14px 15px',
+              paddingBlock: 'calc(14px * var(--density, 1))', paddingInline: 'calc(15px * var(--density, 1))',
               marginBottom: 'calc(9px * var(--density, 1))',
               display: 'flex',
               gap: 'var(--sp-6)',
@@ -548,7 +548,7 @@ function FindThings() {
                   gap: 'var(--sp-5)',
                   alignItems: 'center',
                   ...rowFlush,
-                  padding: '11px 0',
+                  paddingBlock: 'calc(11px * var(--density, 1))', paddingInline: '0',
                 }}
               >
                 <span style={{ flex: 1, minWidth: 0 }}>
@@ -580,7 +580,7 @@ function FindThings() {
                     });
                     setTaken((t) => [...t, f.name]);
                   }}
-                  style={{ flex: 'none', padding: '0 14px', height: 34, fontSize: 'var(--type-sm)' }}
+                  style={{ flex: 'none', paddingBlock: '0', paddingInline: 'calc(14px * var(--density, 1))', height: 34, fontSize: 'var(--type-sm)' }}
                 >
                   {already ? 'Added' : 'Add'}
                 </button>

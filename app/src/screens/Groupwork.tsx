@@ -190,7 +190,7 @@ export function Groupwork() {
   if (!account) {
     return (
       <Page>
-        <Blueprint style={{ padding: '15px 16px' }}>
+        <Blueprint style={{ paddingBlock: 'calc(15px * var(--density, 1))', paddingInline: 'calc(16px * var(--density, 1))' }}>
           <div className="kicker">Sign in first</div>
           <div style={{ fontSize: 'var(--type-md)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)', color: 'var(--app-dim)' }}>
             A group is other people, so it needs an account. Everything else in the app works
@@ -309,7 +309,7 @@ export function Groupwork() {
             ← All groups
           </button>
 
-          <Blueprint style={{ padding: '15px 16px', marginTop: 'var(--sp-5)' }}>
+          <Blueprint style={{ paddingBlock: 'calc(15px * var(--density, 1))', paddingInline: 'calc(16px * var(--density, 1))', marginTop: 'var(--sp-5)' }}>
             <div className="kicker">{code}</div>
             <div
               className="chrome-text"
@@ -483,7 +483,7 @@ export function Groupwork() {
                           await loadOne(open.id);
                         })
                       }
-                      style={{ flex: 'none', height: 28, fontSize: 'var(--type-xs)', padding: '0 8px' }}
+                      style={{ flex: 'none', height: 28, fontSize: 'var(--type-xs)', paddingBlock: '0', paddingInline: 'calc(8px * var(--density, 1))' }}
                     >
                       {p.owner === account.id ? 'Yours' : owner ? owner.handle : 'Take it'}
                     </button>

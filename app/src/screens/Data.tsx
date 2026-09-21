@@ -160,7 +160,7 @@ export function DataScreen() {
               display: 'flex',
               justifyContent: 'space-between',
               gap: 'var(--sp-5)',
-              padding: '11px 0',
+              paddingBlock: 'calc(11px * var(--density, 1))', paddingInline: '0',
               marginTop: 'var(--sp-4)',
               borderTop: '1px solid var(--app-line)',
               fontSize: 'var(--type-md)',
@@ -312,7 +312,7 @@ export function DataScreen() {
           */}
           <Downloads />
 
-          <Blueprint plain style={{ padding: '11px 13px', marginTop: 'var(--sp-6)' }}>
+          <Blueprint plain style={{ paddingBlock: 'calc(11px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))', marginTop: 'var(--sp-6)' }}>
             <div className="kicker">How it is stored</div>
             <div style={{ fontSize: 'var(--type-base)', lineHeight: 'var(--leading-relaxed)', marginTop: 'var(--sp-2)' }}>
               {/*
@@ -393,7 +393,7 @@ function Collection({
           width: '100%',
           gap: 'var(--sp-5)',
           alignItems: 'baseline',
-          padding: '10px 0',
+          paddingBlock: 'calc(10px * var(--density, 1))', paddingInline: '0',
           textAlign: 'left',
           opacity: row.count === 0 ? DIMMED_ROW : 1,
         }}
@@ -415,7 +415,7 @@ function Collection({
               style={{
                 display: 'flex',
                 gap: 'var(--sp-4)',
-                padding: '7px 0 7px 12px',
+                paddingTop: 'calc(7px * var(--density, 1))', paddingRight: '0', paddingBottom: 'calc(7px * var(--density, 1))', paddingLeft: 'calc(12px * var(--density, 1))',
                 borderLeft: '2px solid var(--app-line)',
                 fontSize: 'var(--type-sm)',
                 lineHeight: 'var(--leading-normal)',

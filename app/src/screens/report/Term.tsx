@@ -122,7 +122,7 @@ export function TermReport() {
         </>
       )}
 
-      <Blueprint style={{ padding: '15px 16px', marginTop: 'var(--sp-6)' }}>
+      <Blueprint style={{ paddingBlock: 'calc(15px * var(--density, 1))', paddingInline: 'calc(16px * var(--density, 1))', marginTop: 'var(--sp-6)' }}>
         <div className="kicker">{label}</div>
         <div
           className="chrome-text"
@@ -153,7 +153,7 @@ export function TermReport() {
       */}
       {calibrationLine(bias) ? (
         <>
-          <SectionLabel style={{ margin: '22px 0 6px' }}>Your own estimates</SectionLabel>
+          <SectionLabel style={{ marginTop: 'calc(22px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(6px * var(--density, 1))' }}>Your own estimates</SectionLabel>
           <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
             {calibrationLine(bias)}
           </div>
@@ -169,7 +169,7 @@ export function TermReport() {
       */}
       {marks ? (
         <>
-          <SectionLabel style={{ margin: '22px 0 6px' }}>Where the marks went</SectionLabel>
+          <SectionLabel style={{ marginTop: 'calc(22px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(6px * var(--density, 1))' }}>Where the marks went</SectionLabel>
           <div style={{ fontSize: 'var(--type-lg)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
             {marks}
           </div>

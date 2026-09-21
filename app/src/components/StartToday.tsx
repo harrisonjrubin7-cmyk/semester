@@ -38,7 +38,7 @@ export function StartToday() {
   return (
     <div style={{ marginTop: 'calc(14px * var(--density, 1))' }}>
       <Folding name="StartToday">
-      <SectionLabel style={{ margin: '0 0 8px' }}>Begin today</SectionLabel>
+      <SectionLabel style={{ marginTop: '0', marginInline: '0', marginBottom: 'calc(8px * var(--density, 1))' }}>Begin today</SectionLabel>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
         {list.map((s) => (
           <button
@@ -50,7 +50,7 @@ export function StartToday() {
               display: 'block',
               width: '100%',
               textAlign: 'left',
-              padding: '11px 13px',
+              paddingBlock: 'calc(11px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))',
               borderRadius: 'var(--r-md)',
               border: `1px solid ${s.late ? 'var(--app-warn-line)' : 'var(--app-line)'}`,
               background: s.late ? 'var(--app-warn-wash)' : 'transparent',
@@ -144,7 +144,7 @@ export function StartList() {
 
   return (
     <Folding name="StartList">
-      <SectionLabel style={{ margin: 'calc(24px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}>
+      <SectionLabel style={{ marginTop: 'calc(24px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(6px * var(--density, 1))' }}>
         When to begin
       </SectionLabel>
       <div
@@ -184,7 +184,7 @@ export function StartList() {
               alignItems: 'baseline',
               width: '100%',
               textAlign: 'left',
-              padding: '10px 13px',
+              paddingBlock: 'calc(10px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))',
               borderRadius: 'var(--r-md)',
               border: `1px solid ${s.late ? 'var(--app-warn-line)' : 'var(--app-line)'}`,
               background: s.late ? 'var(--app-warn-wash)' : 'transparent',

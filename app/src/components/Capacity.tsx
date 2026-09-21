@@ -46,10 +46,10 @@ export function Capacity() {
 
   return (
     <Folding name="Capacity">
-      <SectionLabel style={{ margin: '0 0 8px' }}>Does this week fit?</SectionLabel>
+      <SectionLabel style={{ marginTop: '0', marginInline: '0', marginBottom: 'calc(8px * var(--density, 1))' }}>Does this week fit?</SectionLabel>
       <div
         style={{
-          padding: '13px 14px',
+          paddingBlock: 'calc(13px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))',
           borderRadius: 'var(--r-md)',
           border: `1px solid ${tight ? 'var(--app-warn-line)' : 'var(--app-line)'}`,
           background: tight ? 'var(--app-warn-wash)' : 'transparent',
@@ -66,7 +66,7 @@ export function Capacity() {
         ) : null}
       </div>
 
-      <SectionLabel style={{ margin: '22px 0 8px' }}>How many hours school gets</SectionLabel>
+      <SectionLabel style={{ marginTop: 'calc(22px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(8px * var(--density, 1))' }}>How many hours school gets</SectionLabel>
       <div style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'center', flexWrap: 'wrap' }}>
         <input
           className="input"
@@ -84,7 +84,7 @@ export function Capacity() {
         </span>
       </div>
 
-      <SectionLabel style={{ margin: '22px 0 8px' }}>The sleep floor</SectionLabel>
+      <SectionLabel style={{ marginTop: 'calc(22px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(8px * var(--density, 1))' }}>The sleep floor</SectionLabel>
       <button
         type="button"
         className="bare tappable"
@@ -92,7 +92,7 @@ export function Capacity() {
         onClick={() => dispatch({ type: 'setFloor', patch: { on: !state.floor.on } })}
         style={{
           width: 'auto',
-          padding: '9px 14px',
+          paddingBlock: 'calc(9px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))',
           borderRadius: 'var(--r-sm)',
           border: `1px solid ${state.floor.on ? 'var(--app-accent)' : 'var(--app-line)'}`,
           fontSize: 'var(--type-sm)',
@@ -170,7 +170,7 @@ function Kept() {
 
   return (
     <>
-      <SectionLabel style={{ margin: '22px 0 8px' }}>What you keep for yourself</SectionLabel>
+      <SectionLabel style={{ marginTop: 'calc(22px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(8px * var(--density, 1))' }}>What you keep for yourself</SectionLabel>
 
       {rest.map((r) => (
         <div key={r.id} style={{ marginBottom: 'var(--sp-5)' }}>
@@ -215,7 +215,7 @@ function Kept() {
                   }
                   style={{
                     flex: 1,
-                    padding: '6px 0',
+                    paddingBlock: 'calc(6px * var(--density, 1))', paddingInline: '0',
                     fontSize: 'var(--type-xs)',
                     background: on ? 'var(--app-accent-wash)' : 'transparent',
                     borderColor: on ? 'var(--app-accent-deep)' : 'var(--app-line)',
@@ -273,7 +273,7 @@ function Kept() {
             type="button"
             className="btn btn-secondary"
             onClick={() => dispatch({ type: 'addRest', patch: s })}
-            style={{ height: 34, fontSize: 'var(--type-sm)', padding: '0 11px', flex: 'none' }}
+            style={{ height: 34, fontSize: 'var(--type-sm)', paddingBlock: '0', paddingInline: 'calc(11px * var(--density, 1))', flex: 'none' }}
           >
             + {s.label}
           </button>
@@ -287,7 +287,7 @@ function Kept() {
               patch: { label: '', days: [1, 2, 3, 4, 5], from: 18 * 60, to: 19 * 60 },
             })
           }
-          style={{ height: 34, fontSize: 'var(--type-sm)', padding: '0 11px', flex: 'none' }}
+          style={{ height: 34, fontSize: 'var(--type-sm)', paddingBlock: '0', paddingInline: 'calc(11px * var(--density, 1))', flex: 'none' }}
         >
           + One of your own
         </button>
@@ -318,7 +318,7 @@ function Bump({ label, onClick }: { label: string; onClick: () => void }) {
       onClick={onClick}
       style={{
         width: 'auto',
-        padding: '7px 11px',
+        paddingBlock: 'calc(7px * var(--density, 1))', paddingInline: 'calc(11px * var(--density, 1))',
         borderRadius: 'var(--r-sm)',
         border: '1px solid var(--app-line)',
         fontSize: 'var(--type-xs)',

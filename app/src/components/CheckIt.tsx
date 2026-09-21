@@ -65,7 +65,7 @@ export function CheckIt({
         onClick={() => setOpen(true)}
         style={{
           width: 'auto',
-          padding: '8px 0 2px',
+          paddingTop: 'calc(8px * var(--density, 1))', paddingInline: '0', paddingBottom: 'calc(2px * var(--density, 1))',
           fontSize: 'var(--type-sm)',
           color: 'var(--app-dim)',
           textAlign: 'left',
@@ -155,7 +155,7 @@ export function CheckIt({
               style={{
                 width: 'auto',
                 marginTop: 'calc(9px * var(--density, 1))',
-                padding: '8px 13px',
+                paddingBlock: 'calc(8px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))',
                 borderRadius: 'var(--r-sm)',
                 border: '1px solid var(--app-line)',
                 fontSize: 'var(--type-sm)',
@@ -231,7 +231,7 @@ function Row({
           onClick={() => onChange(applyFix(text, f))}
           style={{
             width: 'auto',
-            padding: '4px 9px',
+            paddingBlock: 'calc(4px * var(--density, 1))', paddingInline: 'calc(9px * var(--density, 1))',
             borderRadius: 'var(--r-sm)',
             border: '1px solid var(--app-line)',
             fontSize: 'var(--type-xs)',

@@ -32,7 +32,7 @@ export function HowMuch() {
 
   return (
     <Folding name="HowMuch">
-      <SectionLabel style={{ margin: 'calc(20px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}>
+      <SectionLabel style={{ marginTop: 'calc(20px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(6px * var(--density, 1))' }}>
         How much to make
       </SectionLabel>
 

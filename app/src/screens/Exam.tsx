@@ -285,7 +285,7 @@ export function Exam() {
                 onClick={() => setFormatId(f.id)}
                 style={{
                   textAlign: 'left',
-                  padding: '10px 12px',
+                  paddingBlock: 'calc(10px * var(--density, 1))', paddingInline: 'calc(12px * var(--density, 1))',
                   borderRadius: 'var(--r-md)',
                   border: `1px solid ${on && !unavailable ? 'var(--app-accent-deep)' : 'var(--app-line)'}`,
                   background: on && !unavailable ? 'var(--app-accent-wash)' : 'transparent',
@@ -315,7 +315,7 @@ export function Exam() {
           })}
         </div>
 
-        <Blueprint style={{ padding: '12px 14px', marginTop: 'calc(14px * var(--density, 1))' }}>
+        <Blueprint style={{ paddingBlock: 'calc(12px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))', marginTop: 'calc(14px * var(--density, 1))' }}>
           <div className="kicker">The paper</div>
           <div style={{ fontSize: 'var(--type-md)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)' }}>
             {[
@@ -432,7 +432,7 @@ export function Exam() {
       */}
       <Blueprint
         style={{
-          padding: '12px 14px',
+          paddingBlock: 'calc(12px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))',
           position: 'sticky',
           top: 0,
           zIndex: 2,
@@ -530,7 +530,7 @@ export function Exam() {
                         display: 'flex',
                         gap: 'var(--sp-5)',
                         textAlign: 'left',
-                        padding: '9px 11px',
+                        paddingBlock: 'calc(9px * var(--density, 1))', paddingInline: 'calc(11px * var(--density, 1))',
                         borderRadius: 'var(--r-md)',
                         border: `1px solid ${
                           key
@@ -580,7 +580,7 @@ export function Exam() {
 
             {marking && (
               <>
-                <Blueprint plain style={{ padding: '11px 13px', marginTop: 'calc(9px * var(--density, 1))' }}>
+                <Blueprint plain style={{ paddingBlock: 'calc(11px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))', marginTop: 'calc(9px * var(--density, 1))' }}>
                   <div className="kicker">{q.kind === 'choice' ? 'Why' : 'The key'}</div>
                   <div style={{ fontSize: 'var(--type-base)', lineHeight: 1.55, marginTop: 'calc(5px * var(--density, 1))', textWrap: 'pretty' }}>
                     {q.kind === 'choice'
@@ -600,7 +600,7 @@ export function Exam() {
                   </div>
                 ) : (
                   <>
-                    <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', margin: '9px 0 6px' }}>
+                    <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'calc(9px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(6px * var(--density, 1))' }}>
                       Mark it yourself against the key.
                     </div>
                     <Segmented
@@ -625,7 +625,7 @@ export function Exam() {
       {marking ? (
         <>
           <SectionLabel>How it went</SectionLabel>
-          <Blueprint style={{ padding: '14px 15px' }}>
+          <Blueprint style={{ paddingBlock: 'calc(14px * var(--density, 1))', paddingInline: 'calc(15px * var(--density, 1))' }}>
             <div className="chrome-text" style={{ fontSize: 'calc(30px * var(--text-scale, 1))', lineHeight: 1 }}>
               {marks.pct}%
             </div>
@@ -705,7 +705,7 @@ export function Exam() {
           </div>
 
           {seed !== null && (
-            <Blueprint style={{ padding: '11px 13px', marginTop: 'var(--sp-5)' }}>
+            <Blueprint style={{ paddingBlock: 'calc(11px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))', marginTop: 'var(--sp-5)' }}>
               <div className="kicker">Paper code</div>
               <div
                 style={{

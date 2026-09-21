@@ -152,7 +152,7 @@ export function DeadlineRow({
               // otherwise reads as six identical rectangles.
               borderLeft: `3px solid ${tint(item.c).edge}`,
               borderRadius: 'var(--r-md)',
-              padding: '0 12px',
+              paddingBlock: '0', paddingInline: 'calc(12px * var(--density, 1))',
               marginBottom: 'var(--sp-4)',
             }
           : row),

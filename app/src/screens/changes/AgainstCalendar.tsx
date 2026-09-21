@@ -161,7 +161,7 @@ export function AgainstCalendar() {
 
       {!nothing && (
         <>
-          <Blueprint style={{ padding: '15px 16px', marginTop: 'var(--sp-7)' }}>
+          <Blueprint style={{ paddingBlock: 'calc(15px * var(--density, 1))', paddingInline: 'calc(16px * var(--density, 1))', marginTop: 'var(--sp-7)' }}>
             <div className="kicker">Against {events.length} calendar entries</div>
             <div
               className="chrome-text"
@@ -181,7 +181,7 @@ export function AgainstCalendar() {
               {report.moved.map((m) => {
                 const done = applied[m.item.id];
                 return (
-                  <Blueprint plain key={m.item.id} style={{ padding: '13px 14px', marginBottom: 'calc(9px * var(--density, 1))' }}>
+                  <Blueprint plain key={m.item.id} style={{ paddingBlock: 'calc(13px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))', marginBottom: 'calc(9px * var(--density, 1))' }}>
                     <div className="kicker">{code(m.item.c)}</div>
                     <div style={{ fontSize: 'var(--type-lg)', lineHeight: 'var(--leading-tight)', marginTop: 'var(--sp-2)', textWrap: 'pretty' }}>
                       {m.item.title}

@@ -71,7 +71,7 @@ export function DropBy({ courseId, limit }: { courseId?: string; limit?: number 
         const when = whenLine(next, now);
 
         return (
-          <Blueprint plain key={r.courseId} style={{ padding: '13px 14px', marginBottom: 'var(--sp-4)' }}>
+          <Blueprint plain key={r.courseId} style={{ paddingBlock: 'calc(13px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))', marginBottom: 'var(--sp-4)' }}>
             <div style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'baseline' }}>
               <CourseTag id={r.courseId}>{mod?.course.code ?? r.courseId}</CourseTag>
               {when ? (

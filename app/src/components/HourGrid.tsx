@@ -335,7 +335,7 @@ export function HourGrid({
               height: box.height,
               overflow: 'hidden',
               textAlign: 'left',
-              padding: '4px 8px',
+              paddingBlock: 'calc(4px * var(--density, 1))', paddingInline: 'calc(8px * var(--density, 1))',
               borderLeft: `2px solid ${tint}`,
               borderRadius: 'var(--r-sm)',
               background: 'var(--app-panel)',

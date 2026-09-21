@@ -419,7 +419,7 @@ export function Connect() {
       </div>
 
       {note && (
-        <Blueprint style={{ padding: '12px 14px', marginTop: 'calc(14px * var(--density, 1))', background: 'var(--app-hero)' }}>
+        <Blueprint style={{ paddingBlock: 'calc(12px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))', marginTop: 'calc(14px * var(--density, 1))', background: 'var(--app-hero)' }}>
           <div style={{ fontSize: 'var(--type-base)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>{note}</div>
         </Blueprint>
       )}
@@ -441,7 +441,7 @@ export function Connect() {
       */}
       <SectionLabel>Calendars</SectionLabel>
       <Blueprint
-        style={{ padding: '14px 15px', outline: dropping ? '2px dashed var(--app-ink)' : undefined }}
+        style={{ paddingBlock: 'calc(14px * var(--density, 1))', paddingInline: 'calc(15px * var(--density, 1))', outline: dropping ? '2px dashed var(--app-ink)' : undefined }}
         onDragOver={(e) => {
           e.preventDefault();
           setDropping(true);
@@ -674,7 +674,7 @@ export function Connect() {
       <SectionLabel>Claude</SectionLabel>
       <Blueprint
         onClick={() => dispatch({ type: 'go', screen: 'setAssistant' })}
-        style={{ padding: '13px 15px', display: 'flex', gap: 'var(--sp-6)', alignItems: 'center' }}
+        style={{ paddingBlock: 'calc(13px * var(--density, 1))', paddingInline: 'calc(15px * var(--density, 1))', display: 'flex', gap: 'var(--sp-6)', alignItems: 'center' }}
       >
         <span style={{ flex: 1, minWidth: 0 }}>
           <span style={{ display: 'block', fontFamily: 'var(--font-heading)', fontSize: 'var(--type-lg)' }}>
@@ -696,7 +696,7 @@ export function Connect() {
           const token = live[id];
           const feed = state.feeds.find((f) => f.kind === (id === 'microsoft' ? 'microsoft' : 'ics') && f.url === id);
           return (
-            <Blueprint plain key={id} style={{ padding: '14px 15px' }}>
+            <Blueprint plain key={id} style={{ paddingBlock: 'calc(14px * var(--density, 1))', paddingInline: 'calc(15px * var(--density, 1))' }}>
               <div
                 style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 'var(--sp-5)' }}
               >

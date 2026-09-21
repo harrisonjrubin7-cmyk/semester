@@ -704,7 +704,7 @@ export function AddMaterial() {
                 aria-pressed={on}
                 style={{
                   flex: 'none',
-                  padding: '5px 11px',
+                  paddingBlock: 'calc(5px * var(--density, 1))', paddingInline: 'calc(11px * var(--density, 1))',
                   fontSize: 'var(--type-xs)',
                   letterSpacing: '0.1em',
                   textTransform: 'uppercase',
@@ -844,7 +844,7 @@ export function AddMaterial() {
         readTerms.length > 0 ||
         readFigs.length > 0 ||
         describeStudyParts(readLong) !== '') && (
-        <Blueprint plain style={{ padding: '11px 13px', marginTop: 'var(--sp-6)' }}>
+        <Blueprint plain style={{ paddingBlock: 'calc(11px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))', marginTop: 'var(--sp-6)' }}>
           <div className="kicker">What it read</div>
           {readSummary && (
             <div style={{ fontSize: 'var(--type-base)', lineHeight: 'var(--leading-relaxed)', marginTop: 'var(--sp-2)' }}>
@@ -906,7 +906,7 @@ export function AddMaterial() {
       {parsed.cards.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(9px * var(--density, 1))', marginTop: 'var(--sp-6)' }}>
           {parsed.cards.slice(0, 3).map((c) => (
-            <Blueprint plain key={c.q} style={{ padding: '11px 13px' }}>
+            <Blueprint plain key={c.q} style={{ paddingBlock: 'calc(11px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))' }}>
               <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--type-lg)', lineHeight: 1.2 }}>
                 {c.q}
               </div>
@@ -948,7 +948,7 @@ export function AddMaterial() {
             </ActionButton>
           )}
           {readNote && (
-            <Blueprint plain style={{ padding: '11px 13px', marginTop: 'var(--sp-6)' }}>
+            <Blueprint plain style={{ paddingBlock: 'calc(11px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))', marginTop: 'var(--sp-6)' }}>
               <div className="kicker">What it saw</div>
               <div style={{ fontSize: 'var(--type-base)', lineHeight: 'var(--leading-relaxed)', marginTop: 'var(--sp-2)' }}>{readNote}</div>
               {shotCards.length > 0 && (
@@ -1084,7 +1084,7 @@ export function AddMaterial() {
         {told && arrived && (
           <>
             <SectionLabel>What you added</SectionLabel>
-            <Blueprint plain style={{ padding: '11px 13px' }}>
+            <Blueprint plain style={{ paddingBlock: 'calc(11px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))' }}>
               <div className="kicker">{arrived.name}</div>
               <div style={{ fontSize: 'var(--type-md)', lineHeight: 'var(--leading-tight)', marginTop: 'var(--sp-2)' }}>
                 {looking && !set

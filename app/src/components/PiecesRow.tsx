@@ -41,7 +41,7 @@ export function PiecesRow({ gradeKey, what }: { gradeKey: string; what: string }
         onClick={() => setOpen(true)}
         style={{
           width: 'auto',
-          padding: '2px 0 8px',
+          paddingTop: 'calc(2px * var(--density, 1))', paddingInline: '0', paddingBottom: 'calc(8px * var(--density, 1))',
           fontSize: 'calc(11.5px * var(--text-scale, 1))',
           color: 'var(--app-dim)',
           textAlign: 'left',
@@ -53,7 +53,7 @@ export function PiecesRow({ gradeKey, what }: { gradeKey: string; what: string }
   }
 
   return (
-    <div style={{ padding: '2px 0 12px' }}>
+    <div style={{ paddingTop: 'calc(2px * var(--density, 1))', paddingInline: '0', paddingBottom: 'calc(12px * var(--density, 1))' }}>
       <textarea
         className="input"
         value={text}

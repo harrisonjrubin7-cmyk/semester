@@ -27,7 +27,7 @@ function Row({ s, onOpen, late }: { s: Standing; onOpen: () => void; late?: bool
         display: 'block',
         width: '100%',
         textAlign: 'left',
-        padding: '10px 13px',
+        paddingBlock: 'calc(10px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))',
         borderRadius: 'var(--r-md)',
         border: `1px solid ${late ? 'var(--app-warn-line)' : 'var(--app-line)'}`,
         background: late ? 'var(--app-warn-wash)' : 'transparent',
@@ -73,7 +73,7 @@ export function ApplyingSoon() {
   return (
     <div style={{ marginTop: 'calc(14px * var(--density, 1))' }}>
       <Folding name="ApplyingSoon">
-      <SectionLabel style={{ margin: '0 0 8px' }}>Applications</SectionLabel>
+      <SectionLabel style={{ marginTop: '0', marginInline: '0', marginBottom: 'calc(8px * var(--density, 1))' }}>Applications</SectionLabel>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(7px * var(--density, 1))' }}>
         {late.map((s) => (
           <Row key={s.id} s={s} onOpen={open} late />
@@ -99,7 +99,7 @@ export function ApplyingOn({ day }: { day: Date }) {
 
   return (
     <Folding name="ApplyingOn">
-      <SectionLabel style={{ margin: '20px 0 8px' }}>Applications</SectionLabel>
+      <SectionLabel style={{ marginTop: 'calc(20px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(8px * var(--density, 1))' }}>Applications</SectionLabel>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(7px * var(--density, 1))' }}>
         {onDay.map((s) => (
           <button
@@ -111,7 +111,7 @@ export function ApplyingOn({ day }: { day: Date }) {
               display: 'block',
               width: '100%',
               textAlign: 'left',
-              padding: '10px 13px',
+              paddingBlock: 'calc(10px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))',
               borderRadius: 'var(--r-md)',
               border: '1px solid var(--app-line)',
             }}

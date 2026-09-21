@@ -135,7 +135,7 @@ export function Capture({
                     fontSize: 'calc(9px * var(--text-scale, 1))',
                     letterSpacing: '0.1em',
                     textTransform: 'uppercase',
-                    padding: '2px 0',
+                    paddingBlock: 'calc(2px * var(--density, 1))', paddingInline: '0',
                     textAlign: 'center',
                   }}
                 >
@@ -151,7 +151,7 @@ export function Capture({
       )}
 
       {errors.length > 0 && (
-        <Blueprint plain style={{ padding: '10px 12px', marginTop: 'var(--sp-5)' }} role="alert">
+        <Blueprint plain style={{ paddingBlock: 'calc(10px * var(--density, 1))', paddingInline: 'calc(12px * var(--density, 1))', marginTop: 'var(--sp-5)' }} role="alert">
           {errors.map((e) => (
             <div
               key={e}

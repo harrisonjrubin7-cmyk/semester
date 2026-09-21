@@ -49,7 +49,7 @@ export function Running() {
         gap: 'calc(7px * var(--density, 1))',
         width: 'auto',
         flex: 'none',
-        padding: '0 9px',
+        paddingBlock: '0', paddingInline: 'calc(9px * var(--density, 1))',
         height: 28,
         borderRadius: 999,
         border: `1px solid ${lost ? 'var(--app-warn-line)' : 'var(--app-line-top)'}`,

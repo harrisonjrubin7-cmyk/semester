@@ -43,7 +43,7 @@ export function Trouble({
     <div
       style={{
         marginTop: 'calc(14px * var(--density, 1))',
-        padding: '11px 13px',
+        paddingBlock: 'calc(11px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))',
         borderRadius: 'var(--r-md)',
         border: '1px solid var(--app-warn-line)',
         background: 'var(--app-warn-wash)',

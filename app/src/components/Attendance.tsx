@@ -49,12 +49,12 @@ export function Attendance({ courseId }: { courseId: CourseId }) {
 
   return (
     <Folding name="Attendance">
-      <SectionLabel style={{ margin: '24px 0 6px' }}>Turning up</SectionLabel>
+      <SectionLabel style={{ marginTop: 'calc(24px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(6px * var(--density, 1))' }}>Turning up</SectionLabel>
 
       {hasPolicy(policy) ? (
         <div
           style={{
-            padding: '12px 14px',
+            paddingBlock: 'calc(12px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))',
             borderRadius: 'var(--r-md)',
             border: `1px solid ${how === 'over' || how === 'close' ? 'var(--app-warn-line)' : 'var(--app-line)'}`,
             background: how === 'over' || how === 'close' ? 'var(--app-warn-wash)' : 'transparent',
@@ -119,7 +119,7 @@ export function Attendance({ courseId }: { courseId: CourseId }) {
         aria-expanded={open}
         style={{
           width: 'auto',
-          padding: '8px 0',
+          paddingBlock: 'calc(8px * var(--density, 1))', paddingInline: '0',
           fontSize: 'var(--type-sm)',
           color: 'var(--app-dim)',
           textAlign: 'left',

@@ -586,7 +586,7 @@ function TabBar() {
             style={{
               flex: 1,
               borderTop: `2px solid ${on ? 'var(--app-accent)' : 'transparent'}`,
-              padding: '9px 0 4px',
+              paddingTop: 'calc(9px * var(--density, 1))', paddingInline: '0', paddingBottom: 'calc(4px * var(--density, 1))',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
@@ -1124,7 +1124,7 @@ export default function App() {
       role="status"
       style={{
         flex: 'none',
-        padding: '10px 18px 11px',
+        paddingTop: 'calc(10px * var(--density, 1))', paddingInline: 'calc(18px * var(--density, 1))', paddingBottom: 'calc(11px * var(--density, 1))',
         background: 'var(--app-warn-wash)',
         borderBottom: '1px solid var(--app-warn-line)',
         color: 'var(--app-fg)',

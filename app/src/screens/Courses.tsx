@@ -191,7 +191,7 @@ export function Courses() {
                 key={c.id}
                 onClick={() => dispatch({ type: 'openCourse', id: c.id })}
                 style={{
-                  padding: '15px 16px',
+                  paddingBlock: 'calc(15px * var(--density, 1))', paddingInline: 'calc(16px * var(--density, 1))',
                   display: 'block',
                   // The colour is a stripe down the edge rather than a tint on the
                   // whole card: four tinted cards is a dashboard, and the whole point
@@ -358,7 +358,7 @@ function ComingUp() {
       />
       <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-2)' }}>{blurb}</div>
       {list.length === 0 && (
-        <div style={{ padding: '22px 0', fontSize: 'var(--type-md)', color: 'var(--app-dim)' }}>
+        <div style={{ paddingBlock: 'calc(22px * var(--density, 1))', paddingInline: '0', fontSize: 'var(--type-md)', color: 'var(--app-dim)' }}>
           {tab === 'overdue'
             ? 'Nothing has gone by unticked.'
             : tab === 'done'
@@ -599,7 +599,7 @@ function CourseInformation() {
       {/* Next to the grade, because that is what it changes. */}
       <Attendance courseId={course.id} />
 
-      <SectionLabel style={{ margin: '24px 0 6px' }}>How the grade is built</SectionLabel>
+      <SectionLabel style={{ marginTop: 'calc(24px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(6px * var(--density, 1))' }}>How the grade is built</SectionLabel>
       <table className="table">
         <tbody>
           {course.grading.map((g) => (
@@ -628,16 +628,16 @@ function CourseInformation() {
         */}
       {mineOpen.length > 0 && (
         <>
-          <SectionLabel style={{ margin: '24px 0 6px' }}>In progress</SectionLabel>
+          <SectionLabel style={{ marginTop: 'calc(24px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(6px * var(--density, 1))' }}>In progress</SectionLabel>
           {mineOpen.map((i) => (
             <DeadlineRow key={i.id} item={i} tone={standingOf(i, state.done)} />
           ))}
         </>
       )}
 
-      <SectionLabel style={{ margin: '24px 0 6px' }}>Still ahead</SectionLabel>
+      <SectionLabel style={{ marginTop: 'calc(24px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(6px * var(--density, 1))' }}>Still ahead</SectionLabel>
       {mine.ahead.length === 0 && (
-        <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', padding: '8px 0' }}>
+        <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', paddingBlock: 'calc(8px * var(--density, 1))', paddingInline: '0' }}>
           Nothing left in this course.
         </div>
       )}
@@ -647,7 +647,7 @@ function CourseInformation() {
 
       {mine.overdue.length > 0 && (
         <>
-          <SectionLabel style={{ margin: '24px 0 6px' }}>Went by</SectionLabel>
+          <SectionLabel style={{ marginTop: 'calc(24px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(6px * var(--density, 1))' }}>Went by</SectionLabel>
           {mine.overdue.map((i) => (
             <DeadlineRow key={i.id} item={i} tone="overdue" />
           ))}
@@ -656,7 +656,7 @@ function CourseInformation() {
 
       {mine.done.length > 0 && (
         <>
-          <SectionLabel style={{ margin: '24px 0 6px' }}>Done</SectionLabel>
+          <SectionLabel style={{ marginTop: 'calc(24px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(6px * var(--density, 1))' }}>Done</SectionLabel>
           {mine.done.map((i) => (
             <DeadlineRow key={i.id} item={i} tone="done" />
           ))}
@@ -713,7 +713,7 @@ export function ItemDetail() {
             fontSize: 'calc(27px * var(--text-scale, 1))',
             lineHeight: 1.1,
             letterSpacing: '-0.01em',
-            margin: '10px 0 12px',
+            marginTop: 'calc(10px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(12px * var(--density, 1))',
             textWrap: 'pretty',
           }}
         >
@@ -730,7 +730,7 @@ export function ItemDetail() {
           the long value.
         */}
         <div style={{ display: 'flex', borderTop: '1px solid var(--app-line)' }}>
-          <div style={{ flex: 1, minWidth: 0, padding: '11px 0' }}>
+          <div style={{ flex: 1, minWidth: 0, paddingBlock: 'calc(11px * var(--density, 1))', paddingInline: '0' }}>
             <div className="kicker" style={{ fontSize: 'calc(10px * var(--text-scale, 1))' }}>
               Due
             </div>
@@ -738,7 +738,7 @@ export function ItemDetail() {
             <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}>{item.dueTime}</div>
           </div>
           <div style={{ width: 1, background: 'var(--app-line)' }} />
-          <div style={{ flex: 1, minWidth: 0, padding: '11px 0 11px 14px' }}>
+          <div style={{ flex: 1, minWidth: 0, paddingTop: 'calc(11px * var(--density, 1))', paddingRight: '0', paddingBottom: 'calc(11px * var(--density, 1))', paddingLeft: 'calc(14px * var(--density, 1))' }}>
             <div className="kicker" style={{ fontSize: 'calc(10px * var(--text-scale, 1))' }}>
               Weight
             </div>
@@ -782,11 +782,11 @@ export function ItemDetail() {
           up, then do it. */}
       <ForThis item={item} />
 
-      <SectionLabel style={{ margin: '22px 0 8px' }}>Straight from the syllabus</SectionLabel>
+      <SectionLabel style={{ marginTop: 'calc(22px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(8px * var(--density, 1))' }}>Straight from the syllabus</SectionLabel>
       <div
         style={{
           borderLeft: '2px solid var(--app-accent)',
-          padding: '2px 0 2px 14px',
+          paddingTop: 'calc(2px * var(--density, 1))', paddingRight: '0', paddingBottom: 'calc(2px * var(--density, 1))', paddingLeft: 'calc(14px * var(--density, 1))',
           fontSize: 'var(--type-base)',
           lineHeight: 'var(--leading-relaxed)',
           color: 'var(--app-dim)',

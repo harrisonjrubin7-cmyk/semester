@@ -74,7 +74,7 @@ export function FieldGuide() {
     <div style={{ marginTop: 'calc(18px * var(--density, 1))' }}>
       <Folding name="FieldGuide">
       {/* ── Masthead ─────────────────────────────────────────────────── */}
-      <Blueprint style={{ padding: '20px 17px', background: 'var(--app-hero)' }}>
+      <Blueprint style={{ paddingBlock: 'calc(20px * var(--density, 1))', paddingInline: 'calc(17px * var(--density, 1))', background: 'var(--app-hero)' }}>
         <div className="kicker">Field guide · {guide.code}</div>
         <div
           className="chrome-text"
@@ -248,7 +248,7 @@ export function FieldGuide() {
       {/* ── Frames ───────────────────────────────────────────────────── */}
       {guide.frames && guide.frames.length > 0 && (
         <>
-          <SectionLabel style={{ margin: '36px 0 10px' }}>
+          <SectionLabel style={{ marginTop: 'calc(36px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(10px * var(--density, 1))' }}>
             {catalog.frameLabels[state.guideId] ?? 'Frames'}
           </SectionLabel>
           {guide.addedLong.frames > 0 && (
@@ -288,13 +288,13 @@ export function FieldGuide() {
       {/* ── Case files ───────────────────────────────────────────────── */}
       {guide.cases && guide.cases.length > 0 && (
         <>
-          <SectionLabel style={{ margin: '36px 0 10px' }}>Case files</SectionLabel>
+          <SectionLabel style={{ marginTop: 'calc(36px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(10px * var(--density, 1))' }}>Case files</SectionLabel>
           {guide.addedLong.cases > 0 && (
             <div style={SINCE}>{addedLine(guide.addedLong.cases, 'pairings')}</div>
           )}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-6)' }}>
             {guide.cases.map((c) => (
-              <Blueprint key={c.title} plain style={{ padding: '15px 15px' }}>
+              <Blueprint key={c.title} plain style={{ paddingBlock: 'calc(15px * var(--density, 1))', paddingInline: 'calc(15px * var(--density, 1))' }}>
                 <div className="kicker">{c.when}</div>
                 <div
                   style={{
@@ -350,7 +350,7 @@ export function FieldGuide() {
       {/* ── Figures that belong to no one unit ───────────────────────── */}
       {extras.length > 0 && (
         <>
-          <SectionLabel style={{ margin: '36px 0 10px' }}>Also worth knowing</SectionLabel>
+          <SectionLabel style={{ marginTop: 'calc(36px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(10px * var(--density, 1))' }}>Also worth knowing</SectionLabel>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-7)' }}>
             {extras.map((f, i) => (
               <FigureCard key={`x${i}`} figure={f} />
@@ -362,7 +362,7 @@ export function FieldGuide() {
       {/* ── Glossary ─────────────────────────────────────────────────── */}
       {guide.terms.length > 0 && (
         <>
-          <SectionLabel style={{ margin: '36px 0 6px' }}>Glossary</SectionLabel>
+          <SectionLabel style={{ marginTop: 'calc(36px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(6px * var(--density, 1))' }}>Glossary</SectionLabel>
           {guide.terms.map((t) => (
             <div key={t.t} style={termRow}>
               <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(15.5px * var(--text-scale, 1))' }}>{t.t}</div>
@@ -385,7 +385,7 @@ export function FieldGuide() {
       {/* ── Self-test ────────────────────────────────────────────────── */}
       {guide.selfTest && guide.selfTest.length > 0 && (
         <>
-          <SectionLabel style={{ margin: '36px 0 6px' }}>Test yourself</SectionLabel>
+          <SectionLabel style={{ marginTop: 'calc(36px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(6px * var(--density, 1))' }}>Test yourself</SectionLabel>
           <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)' }}>
             The guide’s own questions, written to be answered out loud. Answers are below each one —
             cover them, or use Cards if you would rather they were hidden.

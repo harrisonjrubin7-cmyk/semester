@@ -77,7 +77,7 @@ export function Insights({
       <SectionLabel>{heading}</SectionLabel>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
         {found.map((f) => (
-          <Blueprint key={f.id} plain style={{ padding: '13px 14px' }}>
+          <Blueprint key={f.id} plain style={{ paddingBlock: 'calc(13px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))' }}>
             <div
               style={{
                 fontFamily: 'var(--font-heading)',
@@ -117,7 +117,7 @@ export function Insights({
                     height: 34,
                     flex: 'none',
                     width: 'auto',
-                    padding: '0 12px',
+                    paddingBlock: '0', paddingInline: 'calc(12px * var(--density, 1))',
                     fontSize: 'calc(11.5px * var(--text-scale, 1))',
                     letterSpacing: '0.08em',
                     textTransform: 'uppercase',

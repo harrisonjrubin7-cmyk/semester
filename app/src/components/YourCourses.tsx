@@ -72,7 +72,7 @@ export function YourCourses() {
   return (
     <Folding name="YourCourses">
       <SectionLabel
-        style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}
+        style={{ marginTop: 'calc(26px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(6px * var(--density, 1))' }}
       >
         Your courses, your way
       </SectionLabel>
@@ -105,7 +105,7 @@ export function YourCourses() {
                 style={{
                   flex: 'none',
                   width: 28,
-                  padding: '12px 0',
+                  paddingBlock: 'calc(12px * var(--density, 1))', paddingInline: '0',
                   fontSize: 'var(--type-md)',
                   color: mine.pinned ? 'var(--app-accent)' : 'var(--app-faint)',
                 }}
@@ -124,7 +124,7 @@ export function YourCourses() {
                 }}
                 aria-expanded={isOpen}
                 aria-label={`${c.code} ${nameFor(c, state.yours)}. ${MOVE_HINT}`}
-                style={{ flex: 1, minWidth: 0, textAlign: 'left', padding: '10px 0' }}
+                style={{ flex: 1, minWidth: 0, textAlign: 'left', paddingBlock: 'calc(10px * var(--density, 1))', paddingInline: '0' }}
               >
                 <span
                   style={{ display: 'flex', alignItems: 'center', gap: 'calc(7px * var(--density, 1))', fontSize: 'calc(13.5px * var(--text-scale, 1))' }}
@@ -180,7 +180,7 @@ export function YourCourses() {
             </div>
 
             {isOpen && (
-              <div style={{ padding: '2px 0 14px 36px' }}>
+              <div style={{ paddingTop: 'calc(2px * var(--density, 1))', paddingRight: '0', paddingBottom: 'calc(14px * var(--density, 1))', paddingLeft: 'calc(36px * var(--density, 1))' }}>
                 <input
                   className="input"
                   value={mine.name ?? ''}

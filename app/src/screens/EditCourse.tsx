@@ -217,7 +217,7 @@ export function EditCourse() {
               }
               style={{
                 textAlign: 'left',
-                padding: '9px 12px',
+                paddingBlock: 'calc(9px * var(--density, 1))', paddingInline: 'calc(12px * var(--density, 1))',
                 borderRadius: 'var(--r-md)',
                 border: `1px solid ${on ? 'var(--app-accent-deep)' : 'var(--app-line)'}`,
                 background: on ? 'var(--app-accent-wash)' : 'transparent',
@@ -304,7 +304,7 @@ export function EditCourse() {
 
       <SectionLabel>When it meets</SectionLabel>
       {draft.schedule.map((block, i) => (
-        <Blueprint plain key={i} style={{ padding: '12px 13px', marginBottom: 'calc(9px * var(--density, 1))' }}>
+        <Blueprint plain key={i} style={{ paddingBlock: 'calc(12px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))', marginBottom: 'calc(9px * var(--density, 1))' }}>
           <div style={{ display: 'flex', gap: 'calc(5px * var(--density, 1))', marginBottom: 'calc(9px * var(--density, 1))' }}>
             {DAYS.map((d) => {
               const on = block.days.includes(d.day);
@@ -334,7 +334,7 @@ export function EditCourse() {
                   }
                   style={{
                     flex: 1,
-                    padding: '6px 0',
+                    paddingBlock: 'calc(6px * var(--density, 1))', paddingInline: '0',
                     fontSize: 'var(--type-xs)',
                     background: on ? 'var(--app-accent-wash)' : 'transparent',
                   }}
@@ -450,7 +450,7 @@ export function EditCourse() {
         Deadlines
       </SectionLabel>
       {draft.items.map((i) => (
-        <Blueprint plain key={i.id} style={{ padding: '12px 13px', marginBottom: 'calc(9px * var(--density, 1))' }}>
+        <Blueprint plain key={i.id} style={{ paddingBlock: 'calc(12px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))', marginBottom: 'calc(9px * var(--density, 1))' }}>
           <input
             aria-label="What is due"
             className="input"

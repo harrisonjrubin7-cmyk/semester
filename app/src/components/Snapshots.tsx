@@ -139,7 +139,7 @@ export function Snapshots() {
         )}
 
         {picked && (
-          <Blueprint style={{ padding: '13px 14px', marginTop: 'var(--sp-5)' }}>
+          <Blueprint style={{ paddingBlock: 'calc(13px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))', marginTop: 'var(--sp-5)' }}>
             <div className="kicker">
               {reasonLabel(picked.reason)} · {whenLine(picked.at, now)}
             </div>
@@ -147,7 +147,7 @@ export function Snapshots() {
               {costLine(rows)}
             </div>
             {rows.length > 0 && (
-              <ul style={{ margin: '8px 0 0', paddingLeft: 'calc(17px * var(--density, 1))', fontSize: 'calc(12.5px * var(--text-scale, 1))', lineHeight: 1.6 }}>
+              <ul style={{ marginTop: 'calc(8px * var(--density, 1))', marginInline: '0', marginBottom: '0', paddingLeft: 'calc(17px * var(--density, 1))', fontSize: 'calc(12.5px * var(--text-scale, 1))', lineHeight: 1.6 }}>
                 {rows.map((r) => (
                   <li key={r.line} style={{ opacity: r.loses ? 1 : DIMMED_ROW }}>
                     {r.line}

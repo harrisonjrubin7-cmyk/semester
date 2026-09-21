@@ -48,7 +48,7 @@ export function SchoolPicker() {
 
   const chip = (on: boolean) => ({
     width: 'auto' as const,
-    padding: '7px 11px',
+    paddingBlock: 'calc(7px * var(--density, 1))', paddingInline: 'calc(11px * var(--density, 1))',
     borderRadius: 'var(--r-sm)',
     border: `1px solid ${on ? 'var(--app-accent)' : 'var(--app-line)'}`,
     background: on ? 'var(--app-accent-wash)' : 'transparent',
@@ -92,7 +92,7 @@ export function SchoolPicker() {
           </div>
         )}
 
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', margin: '12px 0 4px', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'calc(12px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(4px * var(--density, 1))', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
           Every question below is optional. Anything left alone stays switched off, and nothing here
           is permanent.
         </div>
@@ -295,7 +295,7 @@ function Row({
         style={{
           flex: 1,
           textAlign: 'left',
-          padding: '10px 11px',
+          paddingBlock: 'calc(10px * var(--density, 1))', paddingInline: 'calc(11px * var(--density, 1))',
           borderRadius: 'var(--r-sm)',
           border: `1px solid ${on ? 'var(--app-accent)' : 'var(--app-line)'}`,
           background: on ? 'var(--app-accent-wash)' : 'transparent',
@@ -317,7 +317,7 @@ function Row({
           aria-label={`Forget ${school.name}`}
           style={{
             width: 'auto',
-            padding: '8px 10px',
+            paddingBlock: 'calc(8px * var(--density, 1))', paddingInline: 'calc(10px * var(--density, 1))',
             borderRadius: 'var(--r-sm)',
             border: '1px solid var(--app-line)',
             fontSize: 'var(--type-xs)',

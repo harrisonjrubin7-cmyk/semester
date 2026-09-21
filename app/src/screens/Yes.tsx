@@ -85,7 +85,7 @@ function EnrolledSchedule() {
           <Blueprint
             plain
             style={{
-              padding: '14px 15px',
+              paddingBlock: 'calc(14px * var(--density, 1))', paddingInline: 'calc(15px * var(--density, 1))',
               marginBottom: 'calc(9px * var(--density, 1))',
               display: 'flex',
               gap: 'var(--sp-6)',
@@ -148,11 +148,11 @@ function EnrolledSchedule() {
                   className="bare tappable"
                   onClick={() => setTake((t) => ({ ...t, [c.code]: !on }))}
                   aria-label={`${on ? 'Leave out' : 'Add'} ${c.code}`}
-                  style={{ flex: 'none', width: 30, padding: '13px 2px 13px 0' }}
+                  style={{ flex: 'none', width: 30, paddingTop: 'calc(13px * var(--density, 1))', paddingRight: 'calc(2px * var(--density, 1))', paddingBottom: 'calc(13px * var(--density, 1))', paddingLeft: '0' }}
                 >
                   <TickBox on={on} />
                 </button>
-                <div style={{ flex: 1, minWidth: 0, padding: '12px 0' }}>
+                <div style={{ flex: 1, minWidth: 0, paddingBlock: 'calc(12px * var(--density, 1))', paddingInline: '0' }}>
                   <div style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'baseline' }}>
                     <span style={{ fontSize: 'var(--type-lg)' }}>{c.code}</span>
                     {already.has(c.code) && (

@@ -69,7 +69,7 @@ export function Applying() {
     <Page
     >
         <>
-      <Blueprint style={{ padding: '14px 15px' }}>
+      <Blueprint style={{ paddingBlock: 'calc(14px * var(--density, 1))', paddingInline: 'calc(15px * var(--density, 1))' }}>
         <div className="kicker">Where it stands</div>
         <div
           className="chrome-text"
@@ -87,7 +87,7 @@ export function Applying() {
         ]}
         value={tab}
         onChange={setTab}
-        style={{ margin: '16px 0' }}
+        style={{ marginBlock: 'calc(16px * var(--density, 1))', marginInline: '0' }}
       />
 
       {tab === 'add' ? <AddOne onAdded={() => setTab('open')} /> : null}
@@ -143,7 +143,7 @@ function Row({ a }: { a: Application }) {
   const url = safeUrl(a.url);
 
   return (
-    <Blueprint style={{ padding: '13px 14px' }}>
+    <Blueprint style={{ paddingBlock: 'calc(13px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))' }}>
       <button
         type="button"
         className="bare tappable"
@@ -176,7 +176,7 @@ function Row({ a }: { a: Application }) {
         <div
           style={{
             marginTop: 'var(--sp-4)',
-            padding: '8px 10px',
+            paddingBlock: 'calc(8px * var(--density, 1))', paddingInline: 'calc(10px * var(--density, 1))',
             borderRadius: 'var(--r-sm)',
             background: 'var(--app-warn-wash)',
             border: '1px solid var(--app-warn-line)',
@@ -203,7 +203,7 @@ function Row({ a }: { a: Application }) {
                 onClick={() => dispatch({ type: 'moveApplication', id: a.id, stage: s.id })}
                 style={{
                   width: 'auto',
-                  padding: '7px 11px',
+                  paddingBlock: 'calc(7px * var(--density, 1))', paddingInline: 'calc(11px * var(--density, 1))',
                   borderRadius: 'var(--r-sm)',
                   border: `1px solid ${a.stage === s.id ? 'var(--app-accent)' : 'var(--app-line)'}`,
                   fontSize: 'calc(11.5px * var(--text-scale, 1))',
@@ -261,7 +261,7 @@ function Row({ a }: { a: Application }) {
                 rel="noreferrer noopener"
                 style={{
                   width: 'auto',
-                  padding: '7px 12px',
+                  paddingBlock: 'calc(7px * var(--density, 1))', paddingInline: 'calc(12px * var(--density, 1))',
                   borderRadius: 'var(--r-sm)',
                   border: '1px solid var(--app-line)',
                   fontSize: 'calc(11.5px * var(--text-scale, 1))',
@@ -277,7 +277,7 @@ function Row({ a }: { a: Application }) {
               onClick={() => dispatch({ type: 'removeApplication', id: a.id })}
               style={{
                 width: 'auto',
-                padding: '7px 12px',
+                paddingBlock: 'calc(7px * var(--density, 1))', paddingInline: 'calc(12px * var(--density, 1))',
                 fontSize: 'calc(11.5px * var(--text-scale, 1))',
                 color: 'var(--app-dim)',
               }}
@@ -334,7 +334,7 @@ function AddOne({ onAdded }: { onAdded: () => void }) {
         style={{ width: '100%', height: 42, marginTop: 'var(--sp-4)' }}
       />
 
-      <SectionLabel style={{ margin: '16px 0 8px' }}>What kind</SectionLabel>
+      <SectionLabel style={{ marginTop: 'calc(16px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(8px * var(--density, 1))' }}>What kind</SectionLabel>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-3)' }}>
         {KINDS.map((k) => (
           <button
@@ -345,7 +345,7 @@ function AddOne({ onAdded }: { onAdded: () => void }) {
             onClick={() => setKind(k.id)}
             style={{
               width: 'auto',
-              padding: '7px 12px',
+              paddingBlock: 'calc(7px * var(--density, 1))', paddingInline: 'calc(12px * var(--density, 1))',
               borderRadius: 'var(--r-sm)',
               border: `1px solid ${kind === k.id ? 'var(--app-accent)' : 'var(--app-line)'}`,
               fontSize: 'calc(11.5px * var(--text-scale, 1))',
@@ -356,7 +356,7 @@ function AddOne({ onAdded }: { onAdded: () => void }) {
         ))}
       </div>
 
-      <SectionLabel style={{ margin: '16px 0 8px' }}>When it closes</SectionLabel>
+      <SectionLabel style={{ marginTop: 'calc(16px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(8px * var(--density, 1))' }}>When it closes</SectionLabel>
       <div style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'center', flexWrap: 'wrap' }}>
         <input
           className="input"
@@ -374,7 +374,7 @@ function AddOne({ onAdded }: { onAdded: () => void }) {
           onClick={() => setRolling(!rolling)}
           style={{
             width: 'auto',
-            padding: '8px 13px',
+            paddingBlock: 'calc(8px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))',
             borderRadius: 'var(--r-sm)',
             border: `1px solid ${rolling ? 'var(--app-accent)' : 'var(--app-line)'}`,
             fontSize: 'calc(11.5px * var(--text-scale, 1))',
@@ -400,7 +400,7 @@ function AddOne({ onAdded }: { onAdded: () => void }) {
           : 'Leave it blank if you do not know yet — the app will not guess one.'}
       </div>
 
-      <SectionLabel style={{ margin: '16px 0 8px' }}>Where it has got to</SectionLabel>
+      <SectionLabel style={{ marginTop: 'calc(16px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(8px * var(--density, 1))' }}>Where it has got to</SectionLabel>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-3)' }}>
         {STAGES.filter((s) => s.id !== 'closed').map((s) => (
           <button
@@ -411,7 +411,7 @@ function AddOne({ onAdded }: { onAdded: () => void }) {
             onClick={() => setStage(s.id)}
             style={{
               width: 'auto',
-              padding: '7px 12px',
+              paddingBlock: 'calc(7px * var(--density, 1))', paddingInline: 'calc(12px * var(--density, 1))',
               borderRadius: 'var(--r-sm)',
               border: `1px solid ${stage === s.id ? 'var(--app-accent)' : 'var(--app-line)'}`,
               fontSize: 'calc(11.5px * var(--text-scale, 1))',

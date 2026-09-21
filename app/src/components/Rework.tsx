@@ -209,7 +209,7 @@ export function Rework({
       ) : null}
 
       {plan && cost && (
-        <Blueprint style={{ padding: '13px 14px', marginTop: 'var(--sp-6)' }}>
+        <Blueprint style={{ paddingBlock: 'calc(13px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))', marginTop: 'var(--sp-6)' }}>
           <div className="kicker">What it would cost you</div>
           <div
             style={{
@@ -241,7 +241,7 @@ export function Rework({
           </div>
 
           {plan.notes.length > 0 && (
-            <ul style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', margin: '10px 0 0', paddingLeft: 'calc(18px * var(--density, 1))', lineHeight: 1.55 }}>
+            <ul style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'calc(10px * var(--density, 1))', marginInline: '0', marginBottom: '0', paddingLeft: 'calc(18px * var(--density, 1))', lineHeight: 1.55 }}>
               {plan.notes.map((n, i) => (
                 <li key={i}>{n}</li>
               ))}
@@ -266,7 +266,7 @@ export function Rework({
               reaches both rungs where it could reach neither.
             */}
             {plan.guide.units.map((u, i) => (
-              <div key={i} style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', ...secondLine(), padding: '3px 0' }}>
+              <div key={i} style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', ...secondLine(), paddingBlock: 'calc(3px * var(--density, 1))', paddingInline: '0' }}>
                 {u.name} <span style={faintLine()}>· {u.cards.length}</span>
               </div>
             ))}

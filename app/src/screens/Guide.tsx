@@ -162,7 +162,7 @@ export function Guide() {
           alignItems: 'center',
           gap: 'var(--sp-4)',
           width: '100%',
-          margin: '20px 0 14px',
+          marginTop: 'calc(20px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(14px * var(--density, 1))',
           textAlign: 'left',
         }}
       >
@@ -204,7 +204,7 @@ export function Guide() {
             fontSize: 'calc(12.5px * var(--text-scale, 1))',
             color: 'var(--app-dim)',
             lineHeight: 'var(--leading-normal)',
-            margin: '10px 0 2px',
+            marginTop: 'calc(10px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(2px * var(--density, 1))',
             textWrap: 'pretty',
           }}
         >
@@ -246,7 +246,7 @@ export function Guide() {
           <Blueprint
             onClick={() => dispatch({ type: 'startDrill', unit: weak.index })}
             style={{
-              padding: '13px 14px',
+              paddingBlock: 'calc(13px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))',
               marginTop: 'var(--sp-6)',
               display: 'flex',
               alignItems: 'center',
@@ -338,7 +338,7 @@ export function Guide() {
               first" was already out here for that reason and "Not right?"
               joins it.
             */}
-            <div style={{ display: 'flex', gap: 'var(--sp-6)', alignItems: 'center', margin: '0 0 12px 38px' }}>
+            <div style={{ display: 'flex', gap: 'var(--sp-6)', alignItems: 'center', marginTop: '0', marginRight: '0', marginBottom: 'calc(12px * var(--density, 1))', marginLeft: 'calc(38px * var(--density, 1))' }}>
               {/*
                 Offered only on units nobody has touched — see `lib/pretest.ts`.
                 On a unit already drilled this would not be a guess, it would be
@@ -351,7 +351,7 @@ export function Guide() {
                   onClick={() => dispatch({ type: 'guessFirst', courseId: state.guideId, unit: i })}
                   style={{
                     width: 'auto',
-                    padding: '5px 9px',
+                    paddingBlock: 'calc(5px * var(--density, 1))', paddingInline: 'calc(9px * var(--density, 1))',
                     borderRadius: 'var(--r-sm)',
                     border: '1px solid var(--app-line)',
                     fontSize: 'calc(10.5px * var(--text-scale, 1))',
@@ -539,7 +539,7 @@ export function Guide() {
                 <div
                   className={`guide-unit${open ? '' : ' is-shut'}`}
                   style={{
-                    padding: '8px 0 2px 25px',
+                    paddingTop: 'calc(8px * var(--density, 1))', paddingRight: '0', paddingBottom: 'calc(2px * var(--density, 1))', paddingLeft: 'calc(25px * var(--density, 1))',
                     display: open ? 'flex' : 'none',
                     flexDirection: 'column',
                     gap: 'calc(14px * var(--density, 1))',
@@ -581,7 +581,7 @@ export function Guide() {
                     {onUnit(i)
                       .filter((up) => up.body)
                       .map((up) => (
-                        <Blueprint plain key={up.id} style={{ padding: '13px 14px' }}>
+                        <Blueprint plain key={up.id} style={{ paddingBlock: 'calc(13px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))' }}>
                           <div className="kicker">
                             Added{up.source ? ` · ${up.source}` : ''}
                           </div>
@@ -805,7 +805,7 @@ function Decks() {
         >
           <Blueprint
             style={{
-              padding: '12px 14px',
+              paddingBlock: 'calc(12px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))',
               marginTop: 'var(--sp-6)',
               display: 'flex',
               gap: 'var(--sp-6)',
@@ -833,7 +833,7 @@ function Decks() {
         <Blueprint
           onClick={() => dispatch({ type: 'go', screen: 'deck' })}
           style={{
-            padding: '12px 14px',
+            paddingBlock: 'calc(12px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))',
             marginTop: 'var(--sp-6)',
             display: 'flex',
             gap: 'var(--sp-6)',
@@ -980,7 +980,7 @@ function Documents() {
             <a key={f.label} href={f.href} target="_blank" rel="noreferrer" className="bare">
               <Blueprint
                 plain
-                style={{ padding: '14px 15px', display: 'flex', gap: 'var(--sp-6)', alignItems: 'center' }}
+                style={{ paddingBlock: 'calc(14px * var(--density, 1))', paddingInline: 'calc(15px * var(--density, 1))', display: 'flex', gap: 'var(--sp-6)', alignItems: 'center' }}
               >
                 <span
                   style={{
@@ -1155,7 +1155,7 @@ function Cases() {
           <SectionLabel>The debates, claim by claim</SectionLabel>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(11px * var(--density, 1))' }}>
             {guide.cases.map((c) => (
-              <Blueprint plain key={c.title} style={{ padding: '14px 15px' }}>
+              <Blueprint plain key={c.title} style={{ paddingBlock: 'calc(14px * var(--density, 1))', paddingInline: 'calc(15px * var(--density, 1))' }}>
                 <div className="kicker">{c.when}</div>
                 <div
                   style={{
@@ -1222,7 +1222,7 @@ function Cases() {
       <SectionLabel>Apply it</SectionLabel>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(11px * var(--density, 1))' }}>
         {examples.map((e) => (
-          <Blueprint plain key={e.t} style={{ padding: '14px 15px' }}>
+          <Blueprint plain key={e.t} style={{ paddingBlock: 'calc(14px * var(--density, 1))', paddingInline: 'calc(15px * var(--density, 1))' }}>
             <span className="tag tag-accent">{e.tag}</span>
             <div
               style={{
@@ -1341,7 +1341,7 @@ function Cram() {
           )}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-5)' }}>
             {guide.frames.map((f) => (
-              <Blueprint key={f.t} plain style={{ padding: '13px 14px' }}>
+              <Blueprint key={f.t} plain style={{ paddingBlock: 'calc(13px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))' }}>
                 <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(17px * var(--text-scale, 1))', lineHeight: 1.15 }}>
                   {f.t}
                 </div>
@@ -1398,7 +1398,7 @@ function Cram() {
           <SectionLabel>Added since the guide was made</SectionLabel>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-5)' }}>
             {notes.map((n) => (
-              <Blueprint key={n.id} plain style={{ padding: '13px 14px' }}>
+              <Blueprint key={n.id} plain style={{ paddingBlock: 'calc(13px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))' }}>
                 <div className="kicker">
                   {n.source || 'Yours'}
                   {n.unit !== null && guide.units[n.unit] ? ` · ${guide.units[n.unit].name}` : ''}
@@ -1802,7 +1802,7 @@ function Listen() {
         </div>
       )}
 
-      <SectionLabel style={{ margin: '22px 0 4px' }}>Chapters</SectionLabel>
+      <SectionLabel style={{ marginTop: 'calc(22px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(4px * var(--density, 1))' }}>Chapters</SectionLabel>
       {episode.chapters.map((c) => (
         <button
           key={c.t + c.name}

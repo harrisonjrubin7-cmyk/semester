@@ -205,7 +205,7 @@ export function Links() {
           })}
 
           {adding ? (
-            <Blueprint style={{ padding: '13px 14px', marginTop: 'var(--sp-6)' }}>
+            <Blueprint style={{ paddingBlock: 'calc(13px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))', marginTop: 'var(--sp-6)' }}>
               <div className="kicker">Your own link</div>
               <input
                 aria-label="What the link is"

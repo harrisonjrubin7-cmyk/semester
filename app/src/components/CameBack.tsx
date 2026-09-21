@@ -35,7 +35,7 @@ export function CameBack({ item }: { item: DatedItem }) {
         onClick={() => dispatch({ type: 'markReturned', id: item.id, courseId: item.c })}
         style={{
           width: 'auto',
-          padding: '8px 0 2px',
+          paddingTop: 'calc(8px * var(--density, 1))', paddingInline: '0', paddingBottom: 'calc(2px * var(--density, 1))',
           fontSize: 'var(--type-sm)',
           color: 'var(--app-dim)',
           textAlign: 'left',
@@ -52,7 +52,7 @@ export function CameBack({ item }: { item: DatedItem }) {
     <div
       style={{
         marginTop: 'var(--sp-5)',
-        padding: '12px 13px',
+        paddingBlock: 'calc(12px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))',
         border: `1px solid ${window.days > 0 && !record.raised ? 'var(--app-warn-line)' : 'var(--app-line)'}`,
         background: window.days > 0 && !record.raised ? 'var(--app-warn-wash)' : 'transparent',
         borderRadius: 'var(--r-md)',
@@ -90,7 +90,7 @@ export function CameBack({ item }: { item: DatedItem }) {
           }
           style={{
             width: 'auto',
-            padding: '9px 13px',
+            paddingBlock: 'calc(9px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))',
             borderRadius: 'var(--r-sm)',
             border: `1px solid ${record.raised ? 'var(--app-accent)' : 'var(--app-line)'}`,
             fontSize: 'var(--type-sm)',
@@ -156,7 +156,7 @@ export function CameBack({ item }: { item: DatedItem }) {
           }
           style={{
             width: 'auto',
-            padding: '7px 12px',
+            paddingBlock: 'calc(7px * var(--density, 1))', paddingInline: 'calc(12px * var(--density, 1))',
             borderRadius: 'var(--r-sm)',
             border: `1px solid ${window.business ? 'var(--app-accent)' : 'var(--app-line)'}`,
             fontSize: 'calc(11.5px * var(--text-scale, 1))',

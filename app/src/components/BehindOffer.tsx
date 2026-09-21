@@ -39,7 +39,7 @@ export function BehindOffer() {
           display: 'block',
           width: '100%',
           textAlign: 'left',
-          padding: '13px 14px',
+          paddingBlock: 'calc(13px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))',
           borderRadius: 'var(--r-md)',
           border: '1px solid var(--app-line)',
         }}

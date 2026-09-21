@@ -327,7 +327,7 @@ function Build() {
                   onClick={() => setKindId(option.id)}
                   style={{
                     textAlign: 'left',
-                    padding: '10px 12px',
+                    paddingBlock: 'calc(10px * var(--density, 1))', paddingInline: 'calc(12px * var(--density, 1))',
                     borderRadius: 'var(--r-md)',
                     border: `1px solid ${on ? 'var(--app-accent-deep)' : 'var(--app-line)'}`,
                     background: on ? 'var(--app-accent-wash)' : 'transparent',
@@ -429,7 +429,7 @@ function Build() {
           <SectionLabel>{file.slides.length} slides</SectionLabel>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
             {file.slides.map((slide, i) => (
-              <Blueprint plain key={`${slide.title}-${i}`} style={{ padding: '11px 13px' }}>
+              <Blueprint plain key={`${slide.title}-${i}`} style={{ paddingBlock: 'calc(11px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))' }}>
                 <div className="kicker">
                   {i + 1}
                   {slide.note ? ` · ${slide.note}` : ''}

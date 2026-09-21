@@ -342,7 +342,7 @@ function DayView() {
 
       {gridBlocks.length > 0 && (
         <>
-          <SectionLabel style={{ margin: '0 0 6px' }}>By the hour</SectionLabel>
+          <SectionLabel style={{ marginTop: '0', marginInline: '0', marginBottom: 'calc(6px * var(--density, 1))' }}>By the hour</SectionLabel>
           <KindKey compact />
           <HourGrid
             blocks={gridBlocks}
@@ -350,7 +350,7 @@ function DayView() {
             // Here the grid is what the screen is for, so it opens on the hour
             // it is. Today's feed passes no such thing; see the prop.
             findNow={isToday}
-            style={{ margin: '14px 0 26px' }}
+            style={{ marginTop: 'calc(14px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(26px * var(--density, 1))' }}
             /*
              * What a block is drawn from decides whether it moves. A class is
              * the timetable repeating and a commitment is a standing
@@ -380,7 +380,7 @@ function DayView() {
 
       {rail.length > 0 && (
         <>
-          <SectionLabel style={{ margin: '0 0 12px' }}>The schedule</SectionLabel>
+          <SectionLabel style={{ marginTop: '0', marginInline: '0', marginBottom: 'calc(12px * var(--density, 1))' }}>The schedule</SectionLabel>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             {rail.map((b, i) => (
               <div key={i} style={{ display: 'flex', gap: 'calc(14px * var(--density, 1))', alignItems: 'stretch' }}>
@@ -417,7 +417,7 @@ function DayView() {
                 <div
                   style={{
                     flex: 1,
-                    padding: '11px 0 15px',
+                    paddingTop: 'calc(11px * var(--density, 1))', paddingInline: '0', paddingBottom: 'calc(15px * var(--density, 1))',
                     minWidth: 0,
                     // Cancelled is a state of the whole block. On the title
                     // alone it left the meta line under it at full `--app-dim`
@@ -697,7 +697,7 @@ const CARRY = {
 
 const arrow = {
   width: 'auto',
-  padding: '6px 7px',
+  paddingBlock: 'calc(6px * var(--density, 1))', paddingInline: 'calc(7px * var(--density, 1))',
   fontFamily: 'var(--font-heading)',
   fontSize: 'var(--type-xs)',
   letterSpacing: '0.06em',
@@ -1608,7 +1608,7 @@ function MonthView() {
         }
       />
 
-      <SectionLabel style={{ margin: '20px 0 6px' }}>
+      <SectionLabel style={{ marginTop: 'calc(20px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(6px * var(--density, 1))' }}>
         {DOW[new Date(shownYear, shownMonth, selectedDay).getDay()]} · {MONTHS[shownMonth]}{' '}
         {selectedDay}
         {inThisMonth && selectedDay === now.getDate() ? ' · today' : ''}
@@ -2631,7 +2631,7 @@ const STACK: CSSProperties = {
 const CAMPUS_ROW: CSSProperties = {
   display: 'flex',
   gap: 'calc(13px * var(--density, 1))',
-  padding: '13px 14px',
+  paddingBlock: 'calc(13px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))',
   alignItems: 'flex-start',
 };
 
@@ -2676,7 +2676,7 @@ function CampusList() {
 
   return (
     <>
-      <div style={{ padding: '14px 18px' }}>
+      <div style={{ paddingBlock: 'calc(14px * var(--density, 1))', paddingInline: 'calc(18px * var(--density, 1))' }}>
         <div className="section-label" style={{ marginBottom: 'var(--sp-6)' }}>
           {total} {total === 1 ? 'event' : 'events'}
         </div>
@@ -2731,7 +2731,7 @@ function CampusList() {
                   type="button"
                   className="btn btn-ghost"
                   onClick={() => dispatch({ type: 'toggleSaved', id: e.id })}
-                  style={{ flex: 'none', fontSize: 'calc(10px * var(--text-scale, 1))', letterSpacing: '0.12em', textTransform: 'uppercase', padding: '4px 6px' }}
+                  style={{ flex: 'none', fontSize: 'calc(10px * var(--text-scale, 1))', letterSpacing: '0.12em', textTransform: 'uppercase', paddingBlock: 'calc(4px * var(--density, 1))', paddingInline: 'calc(6px * var(--density, 1))' }}
                 >
                   {saved ? 'Saved' : 'Save'}
                 </button>
@@ -2828,7 +2828,7 @@ export function Calendar() {
      * the note about screens with nothing of their own to filter.
      */
     <Page wide bottom={0}>
-      <div style={{ padding: '14px 18px 0' }}>
+      <div style={{ paddingTop: 'calc(14px * var(--density, 1))', paddingInline: 'calc(18px * var(--density, 1))', paddingBottom: '0' }}>
         <Segmented
           options={[
             { id: 'day', label: 'Day' },
@@ -2841,7 +2841,7 @@ export function Calendar() {
         />
       </div>
 
-      <div style={{ padding: '10px 0 0 18px' }}>
+      <div style={{ paddingTop: 'calc(10px * var(--density, 1))', paddingRight: '0', paddingBottom: '0', paddingLeft: 'calc(18px * var(--density, 1))' }}>
         <ChipRow
           options={SOURCES.map((s) => s.label)}
           value={SOURCES.find((s) => s.id === state.calSource)?.label ?? 'All'}
@@ -2862,7 +2862,7 @@ export function Calendar() {
        * all four read it through `eventFilter` in `lib/calsource.ts`.
        */}
       {state.calSource === 'campus' && (
-        <div style={{ padding: '8px 0 0 18px' }}>
+        <div style={{ paddingTop: 'calc(8px * var(--density, 1))', paddingRight: '0', paddingBottom: '0', paddingLeft: 'calc(18px * var(--density, 1))' }}>
           <ChipRow
             options={EVENT_KINDS}
             value={state.evFilter as EvFilter}
@@ -2914,7 +2914,7 @@ export function EventDetail() {
           {event.title}
         </div>
         <div style={{ display: 'flex', marginTop: 'calc(14px * var(--density, 1))', borderTop: '1px solid var(--app-line)' }}>
-          <div style={{ flex: 1, padding: '11px 0' }}>
+          <div style={{ flex: 1, paddingBlock: 'calc(11px * var(--density, 1))', paddingInline: '0' }}>
             <div className="kicker" style={{ fontSize: 'calc(10px * var(--text-scale, 1))' }}>
               When
             </div>
@@ -2924,7 +2924,7 @@ export function EventDetail() {
             <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}>{event.time}</div>
           </div>
           <div style={{ width: 1, background: 'var(--app-line)' }} />
-          <div style={{ flex: 1, padding: '11px 0 11px 14px' }}>
+          <div style={{ flex: 1, paddingTop: 'calc(11px * var(--density, 1))', paddingRight: '0', paddingBottom: 'calc(11px * var(--density, 1))', paddingLeft: 'calc(14px * var(--density, 1))' }}>
             <div className="kicker" style={{ fontSize: 'calc(10px * var(--text-scale, 1))' }}>
               Where
             </div>
@@ -2941,7 +2941,7 @@ export function EventDetail() {
         {event.detail}
       </div>
 
-      <SectionLabel style={{ margin: '22px 0 6px' }}>Getting in</SectionLabel>
+      <SectionLabel style={{ marginTop: 'calc(22px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(6px * var(--density, 1))' }}>Getting in</SectionLabel>
       <div style={{ fontSize: 'var(--type-md)', color: 'var(--app-dim)' }}>{event.ticket}</div>
 
       <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'calc(24px * var(--density, 1))' }}>

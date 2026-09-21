@@ -298,7 +298,7 @@ export function Panel({ side }: { side: 'right' | 'left' }) {
                 aria-expanded={full}
                 style={{
                   width: '100%',
-                  padding: '9px 0 5px',
+                  paddingTop: 'calc(9px * var(--density, 1))', paddingInline: '0', paddingBottom: 'calc(5px * var(--density, 1))',
                   display: 'grid',
                   placeItems: 'center',
                   touchAction: 'none',

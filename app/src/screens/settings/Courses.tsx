@@ -43,7 +43,7 @@ export function SettingsCourses() {
             lit={lights('role student faculty teaching professor instructor advisor administrator parent payer staff who am i', lit)}
           >
             <CustomRow>
-              <SectionLabel style={{ margin: '0 0 6px' }}>You are here as</SectionLabel>
+              <SectionLabel style={{ marginTop: '0', marginInline: '0', marginBottom: 'calc(6px * var(--density, 1))' }}>You are here as</SectionLabel>
               <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginBottom: 'var(--sp-4)', textWrap: 'pretty' }}>
                 {roleOf(state.role).blurb}
               </div>
@@ -79,7 +79,7 @@ export function SettingsCourses() {
                 what you typed into it would be the confident wrong thing
                 this app refuses everywhere else.
               */}
-              <SectionLabel style={{ margin: 'calc(22px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}>
+              <SectionLabel style={{ marginTop: 'calc(22px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(6px * var(--density, 1))' }}>
                 Not yet
               </SectionLabel>
               {ROLES.filter((r) => !r.ready).map((r) => (
@@ -122,7 +122,7 @@ export function SettingsCourses() {
             lit={lights('school university college campus where you study switch', lit)}
           >
             <CustomRow>
-              <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}>Where you study</SectionLabel>
+              <SectionLabel style={{ marginTop: 'calc(26px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(6px * var(--density, 1))' }}>Where you study</SectionLabel>
               {/* Was a two-option toggle: this school, or "somewhere else". That is
                   fine for one student and useless for anyone whose university the app
                   has never heard of, which is everyone else. See
@@ -148,7 +148,7 @@ export function SettingsCourses() {
               <YourCourses />
             </CustomRow>
             <CustomRow>
-              <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(2px * var(--density, 1))' }}>Your courses</SectionLabel>
+              <SectionLabel style={{ marginTop: 'calc(26px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(2px * var(--density, 1))' }}>Your courses</SectionLabel>
               <Toggle
                 label={`Sample semester — ${SEED_SUMMARY.courses} courses, ${SEED_SUMMARY.cards} cards, ${SEED_SUMMARY.lessons} lessons`}
                 on={state.sample}

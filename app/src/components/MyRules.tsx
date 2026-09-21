@@ -43,7 +43,7 @@ export function MyRules() {
   return (
     <Folding name="MyRules">
       <SectionLabel
-        style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}
+        style={{ marginTop: 'calc(26px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(6px * var(--density, 1))' }}
       >
         Your own reminders
       </SectionLabel>
@@ -66,7 +66,7 @@ export function MyRules() {
               className="bare tappable"
               onClick={() => set(editRule(rules, r.id, { on: !r.on }))}
               aria-label={r.on ? `Switch off: ${ruleLine(r, courseCode)}` : `Switch on: ${ruleLine(r, courseCode)}`}
-              style={{ flex: 'none', width: 28, padding: '2px 0' }}
+              style={{ flex: 'none', width: 28, paddingBlock: 'calc(2px * var(--density, 1))', paddingInline: '0' }}
             >
               <TickBox on={r.on} />
             </button>

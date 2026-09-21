@@ -108,7 +108,7 @@ export function Adopting({
       <div className="kicker">Signed in</div>
       <h2
         style={{
-          margin: '8px 0 0',
+          marginTop: 'calc(8px * var(--density, 1))', marginInline: '0', marginBottom: '0',
           fontSize: 'calc(19px * var(--text-scale, 1))',
           textWrap: 'balance',
         }}
@@ -139,7 +139,7 @@ export function Adopting({
               className="bare"
               style={{
                 textAlign: 'left',
-                padding: '12px 13px',
+                paddingBlock: 'calc(12px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))',
                 borderRadius: 'var(--r-md)',
                 border: `1px solid ${on ? 'var(--app-accent)' : 'var(--app-line)'}`,
                 background: on ? 'var(--app-panel)' : 'transparent',

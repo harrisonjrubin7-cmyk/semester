@@ -137,7 +137,7 @@ export function WeekReport() {
 
   return (
     <>
-      <Blueprint style={{ padding: '15px 16px' }}>
+      <Blueprint style={{ paddingBlock: 'calc(15px * var(--density, 1))', paddingInline: 'calc(16px * var(--density, 1))' }}>
         <div className="kicker">{back.label}</div>
         <div
           className="chrome-text"
@@ -200,7 +200,7 @@ export function WeekReport() {
       </Group>
 
       <Group header="The week coming" framed={false}>
-        <Blueprint style={{ padding: '13px 14px' }}>
+        <Blueprint style={{ paddingBlock: 'calc(13px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))' }}>
           <div style={{ fontSize: 'var(--type-lg)', lineHeight: 1.4 }}>
             {showHours(forward.promised)} already promised
             {forward.due.length > 0

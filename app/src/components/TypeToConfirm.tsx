@@ -96,7 +96,7 @@ export function TypeToConfirm({
       <div className="kicker">This one cannot be undone</div>
       <h2
         style={{
-          margin: '8px 0 0',
+          marginTop: 'calc(8px * var(--density, 1))', marginInline: '0', marginBottom: '0',
           fontSize: 'calc(19px * var(--text-scale, 1))',
           textWrap: 'balance',
         }}

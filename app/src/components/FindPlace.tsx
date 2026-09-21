@@ -114,7 +114,7 @@ export function FindPlace() {
 
   return (
     <Folding name="FindPlace">
-      <SectionLabel style={{ margin: '0 0 8px' }}>Look up an address</SectionLabel>
+      <SectionLabel style={{ marginTop: '0', marginInline: '0', marginBottom: 'calc(8px * var(--density, 1))' }}>Look up an address</SectionLabel>
 
       {!g.on ? (
         <>
@@ -159,7 +159,7 @@ export function FindPlace() {
               disabled={busy || !query.trim()}
               style={{
                 width: 'auto',
-                padding: '0 16px',
+                paddingBlock: '0', paddingInline: 'calc(16px * var(--density, 1))',
                 height: 42,
                 textTransform: 'uppercase',
                 letterSpacing: '0.09em',
@@ -196,7 +196,7 @@ export function FindPlace() {
                       display: 'block',
                       width: '100%',
                       textAlign: 'left',
-                      padding: '10px 13px',
+                      paddingBlock: 'calc(10px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))',
                       borderRadius: 'var(--r-md)',
                       border: '1px solid var(--app-line)',
                     }}
@@ -242,7 +242,7 @@ export function FindPlace() {
             )
           ) : null}
 
-          <SectionLabel style={{ margin: '22px 0 8px' }}>Settings</SectionLabel>
+          <SectionLabel style={{ marginTop: 'calc(22px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(8px * var(--density, 1))' }}>Settings</SectionLabel>
           <div style={{ display: 'flex', gap: 'calc(7px * var(--density, 1))', flexWrap: 'wrap' }}>
             {SERVICES.map((s) => (
               <button
@@ -253,7 +253,7 @@ export function FindPlace() {
                 onClick={() => dispatch({ type: 'setGeocode', patch: { service: s.id } })}
                 style={{
                   width: 'auto',
-                  padding: '8px 13px',
+                  paddingBlock: 'calc(8px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))',
                   borderRadius: 'var(--r-sm)',
                   border: `1px solid ${g.service === s.id ? 'var(--app-accent)' : 'var(--app-line)'}`,
                   fontSize: 'var(--type-sm)',
@@ -287,7 +287,7 @@ export function FindPlace() {
               onClick={() => dispatch({ type: 'setGeocode', patch: { reverseOn: !g.reverseOn } })}
               style={{
                 width: 'auto',
-                padding: '8px 13px',
+                paddingBlock: 'calc(8px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))',
                 borderRadius: 'var(--r-sm)',
                 border: `1px solid ${g.reverseOn ? 'var(--app-accent)' : 'var(--app-line)'}`,
                 fontSize: 'var(--type-sm)',

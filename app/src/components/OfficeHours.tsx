@@ -26,7 +26,7 @@ export function OfficeHours({ courseId }: { courseId: string }) {
     if (!yours) return null;
     return (
       <Folding name="OfficeHours">
-        <SectionLabel style={{ margin: '22px 0 6px' }}>Office hours</SectionLabel>
+        <SectionLabel style={{ marginTop: 'calc(22px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(6px * var(--density, 1))' }}>Office hours</SectionLabel>
         <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)' }}>
           None recorded. They are on the syllabus, and having them here means the app can point at
           them in a week that is going badly.
@@ -47,7 +47,7 @@ export function OfficeHours({ courseId }: { courseId: string }) {
 
   return (
     <Folding name="OfficeHours">
-      <SectionLabel style={{ margin: '22px 0 6px' }}>Office hours</SectionLabel>
+      <SectionLabel style={{ marginTop: 'calc(22px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(6px * var(--density, 1))' }}>Office hours</SectionLabel>
       {hours.map((h, i) => (
         <div
           key={`${h.title}-${i}`}

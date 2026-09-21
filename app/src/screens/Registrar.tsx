@@ -184,7 +184,7 @@ export function Registrar() {
                     width: '100%',
                     textAlign: 'left',
                     alignItems: 'baseline',
-                    padding: '10px 11px',
+                    paddingBlock: 'calc(10px * var(--density, 1))', paddingInline: 'calc(11px * var(--density, 1))',
                     marginBottom: 'var(--sp-3)',
                     borderRadius: 'var(--r-md)',
                     border: `1px solid ${taken[i] ? 'var(--app-accent-deep)' : 'var(--app-line)'}`,
@@ -219,7 +219,7 @@ export function Registrar() {
     <Page
     >
         <>
-      <Blueprint style={{ padding: '14px 15px' }}>
+      <Blueprint style={{ paddingBlock: 'calc(14px * var(--density, 1))', paddingInline: 'calc(15px * var(--density, 1))' }}>
         <div className="kicker">
           {done.done} of {done.of} filled in
         </div>

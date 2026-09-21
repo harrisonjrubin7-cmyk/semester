@@ -43,7 +43,7 @@ function Door({
     <Blueprint
       onClick={onClick}
       style={{
-        padding: '15px 16px',
+        paddingBlock: 'calc(15px * var(--density, 1))', paddingInline: 'calc(16px * var(--density, 1))',
         marginTop: lead ? 'var(--sp-7)' : 'var(--sp-5)',
         display: 'flex',
         gap: 'var(--sp-6)',

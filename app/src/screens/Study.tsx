@@ -424,7 +424,7 @@ export function Study() {
         ]}
         value={tab}
         onChange={(next) => dispatch({ type: 'setStudyTab', tab: next })}
-        style={{ margin: '16px 0 4px' }}
+        style={{ marginTop: 'calc(16px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(4px * var(--density, 1))' }}
       />
 
       {/*
@@ -463,7 +463,7 @@ export function Study() {
             know which — so two or three tiles are said out loud above the
             grid, with the deadline that asked for them. See `lib/toolnow.ts`.
           */}
-          <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', margin: '14px 0 2px', lineHeight: 'var(--leading-relaxed)' }}>
+          <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'calc(14px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(2px * var(--density, 1))', lineHeight: 'var(--leading-relaxed)' }}>
             Everything the app can do with a course. What is at the top is picked from what you
             actually have due.
           </div>
@@ -619,7 +619,7 @@ export function Study() {
               plain
               key={c.id}
               style={{
-                padding: '14px 15px',
+                paddingBlock: 'calc(14px * var(--density, 1))', paddingInline: 'calc(15px * var(--density, 1))',
                 display: 'block',
                 // The same stripe as the Courses list, for the same reason:
                 // this is the other screen where four codes have to be told
@@ -875,7 +875,7 @@ export function Study() {
                       onClick={() => dispatch({ type: 'openGuide', id: c.id, mode: m.id })}
                       style={{
                         flex: 'none',
-                        padding: '5px 10px',
+                        paddingBlock: 'calc(5px * var(--density, 1))', paddingInline: 'calc(10px * var(--density, 1))',
                         fontSize: 'var(--type-xs)',
                         letterSpacing: '0.1em',
                         textTransform: 'uppercase',
@@ -893,7 +893,7 @@ export function Study() {
                       aria-expanded={false}
                       style={{
                         flex: 'none',
-                        padding: '5px 10px',
+                        paddingBlock: 'calc(5px * var(--density, 1))', paddingInline: 'calc(10px * var(--density, 1))',
                         fontSize: 'var(--type-xs)',
                         letterSpacing: '0.1em',
                         textTransform: 'uppercase',
@@ -967,7 +967,7 @@ export function Study() {
         onClear={() => dispatch({ type: 'clearPlan' })}
       />
 
-      <SectionLabel style={{ margin: '20px 0 4px' }}>Tonight’s sitting</SectionLabel>
+      <SectionLabel style={{ marginTop: 'calc(20px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(4px * var(--density, 1))' }}>Tonight’s sitting</SectionLabel>
       <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginBottom: 'var(--sp-6)', textWrap: 'pretty' }}>
         Say how long you have. The app ranks every unit in every course by what is due, how
         cold it is and what is being tested soon, then fills the time — and says why each one

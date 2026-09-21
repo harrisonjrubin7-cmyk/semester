@@ -101,7 +101,7 @@ export function Privacy() {
           style={{
             fontSize: 'calc(24px * var(--text-scale, 1))',
             lineHeight: 1.15,
-            margin: '8px 0 10px',
+            marginTop: 'calc(8px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(10px * var(--density, 1))',
             textWrap: 'balance',
           }}
         >
@@ -116,7 +116,7 @@ export function Privacy() {
 
       {CLAIMS.map((c) => (
         <div key={c.heading}>
-          <SectionLabel style={{ margin: '22px 0 5px' }}>{c.heading}</SectionLabel>
+          <SectionLabel style={{ marginTop: 'calc(22px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(5px * var(--density, 1))' }}>{c.heading}</SectionLabel>
           <div
             style={{
               fontSize: 'calc(13.5px * var(--text-scale, 1))',
@@ -138,7 +138,7 @@ export function Privacy() {
         sentence about them — and the list of screens never opened is the thing
         the counting is for from their side of it.
       */}
-      <SectionLabel style={{ margin: '22px 0 5px' }}>Counting screen opens</SectionLabel>
+      <SectionLabel style={{ marginTop: 'calc(22px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(5px * var(--density, 1))' }}>Counting screen opens</SectionLabel>
       <Toggle
         label="Count which screens I open"
         on={state.countScreens}
@@ -156,7 +156,7 @@ export function Privacy() {
                 display: 'flex',
                 justifyContent: 'space-between',
                 fontSize: 'calc(12.5px * var(--text-scale, 1))',
-                padding: '5px 0',
+                paddingBlock: 'calc(5px * var(--density, 1))', paddingInline: '0',
                 borderBottom: '1px solid var(--app-line-soft)',
               }}
             >
@@ -180,7 +180,7 @@ export function Privacy() {
             }}
             style={{
               width: 'auto',
-              padding: '6px 10px',
+              paddingBlock: 'calc(6px * var(--density, 1))', paddingInline: 'calc(10px * var(--density, 1))',
               marginTop: 'var(--sp-5)',
               borderRadius: 'var(--r-sm)',
               border: '1px solid var(--app-line)',
@@ -195,13 +195,13 @@ export function Privacy() {
         </div>
       )}
 
-      <SectionLabel style={{ margin: '22px 0 5px' }}>If something is wrong</SectionLabel>
+      <SectionLabel style={{ marginTop: 'calc(22px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(5px * var(--density, 1))' }}>If something is wrong</SectionLabel>
       <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 1.6, textWrap: 'pretty' }}>
         There is no form. Email <strong>{SUPPORT}</strong> and a person will answer — including if
         you want your account removed by hand rather than by the button below.
       </div>
 
-      <SectionLabel style={{ margin: '22px 0 5px' }}>Export diagnostics</SectionLabel>
+      <SectionLabel style={{ marginTop: 'calc(22px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(5px * var(--density, 1))' }}>Export diagnostics</SectionLabel>
       <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 1.6, textWrap: 'pretty' }}>
         Saves a plain text file of the last {KEEP} things that went wrong on this device — error
         messages, which screen you were on, which build. It holds none of your work, and it is
@@ -265,7 +265,7 @@ export function Privacy() {
         </div>
       )}
 
-      <SectionLabel style={{ margin: '26px 0 5px' }}>Delete my account</SectionLabel>
+      <SectionLabel style={{ marginTop: 'calc(26px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(5px * var(--density, 1))' }}>Delete my account</SectionLabel>
       {account ? (
         <>
           <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 1.6, textWrap: 'pretty' }}>

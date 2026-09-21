@@ -113,7 +113,7 @@ export function SettingsAssistant() {
   } as const;
 
   const chip = (on: boolean) => ({
-    padding: '5px 11px',
+    paddingBlock: 'calc(5px * var(--density, 1))', paddingInline: 'calc(11px * var(--density, 1))',
     fontSize: 'var(--type-xs)',
     letterSpacing: '0.1em',
     textTransform: 'uppercase' as const,
@@ -154,7 +154,7 @@ export function SettingsAssistant() {
                     className="btn"
                     onClick={() => setConfig({ ...config, provider: p.id })}
                     aria-pressed={config.provider === p.id}
-                    style={{ flex: 1, ...chip(config.provider === p.id), padding: '7px 11px' }}
+                    style={{ flex: 1, ...chip(config.provider === p.id), paddingBlock: 'calc(7px * var(--density, 1))', paddingInline: 'calc(11px * var(--density, 1))' }}
                   >
                     {p.label}
                   </button>

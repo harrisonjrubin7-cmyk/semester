@@ -98,7 +98,7 @@ export function WorkWindows() {
                   }
                   style={{
                     flex: 1,
-                    padding: '6px 0',
+                    paddingBlock: 'calc(6px * var(--density, 1))', paddingInline: '0',
                     fontSize: 'var(--type-xs)',
                     background: on ? 'var(--app-accent-wash)' : 'transparent',
                     borderColor: on ? 'var(--app-accent-deep)' : 'var(--app-line)',
@@ -151,7 +151,7 @@ export function WorkWindows() {
             type="button"
             className="btn btn-secondary"
             onClick={() => dispatch({ type: 'addWindow', window: s })}
-            style={{ height: 34, fontSize: 'var(--type-sm)', padding: '0 11px', flex: 'none' }}
+            style={{ height: 34, fontSize: 'var(--type-sm)', paddingBlock: '0', paddingInline: 'calc(11px * var(--density, 1))', flex: 'none' }}
           >
             + {s.label}
           </button>
@@ -165,7 +165,7 @@ export function WorkWindows() {
               window: { label: '', days: [1, 2, 3, 4, 5], from: 9 * 60, to: 12 * 60 },
             })
           }
-          style={{ height: 34, fontSize: 'var(--type-sm)', padding: '0 11px', flex: 'none' }}
+          style={{ height: 34, fontSize: 'var(--type-sm)', paddingBlock: '0', paddingInline: 'calc(11px * var(--density, 1))', flex: 'none' }}
         >
           + One of your own
         </button>

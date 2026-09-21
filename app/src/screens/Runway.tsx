@@ -179,7 +179,7 @@ export function Runway() {
   if (!exam || !r) {
     return (
       <Page>
-        <Blueprint style={{ padding: '15px 16px' }}>
+        <Blueprint style={{ paddingBlock: 'calc(15px * var(--density, 1))', paddingInline: 'calc(16px * var(--density, 1))' }}>
           <EmptyState
             inline
             title="Nothing to count down to"
@@ -229,7 +229,7 @@ export function Runway() {
         />
       )}
 
-      <Blueprint style={{ padding: '15px 16px' }}>
+      <Blueprint style={{ paddingBlock: 'calc(15px * var(--density, 1))', paddingInline: 'calc(16px * var(--density, 1))' }}>
         <div className="kicker">
           {code(exam.c)} · {exam.title}
         </div>
@@ -255,7 +255,7 @@ export function Runway() {
         eleven at night. Silent for everybody who has not set one.
       */}
       {book && (
-        <Blueprint style={{ padding: '13px 14px', marginTop: 'var(--sp-5)' }}>
+        <Blueprint style={{ paddingBlock: 'calc(13px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))', marginTop: 'var(--sp-5)' }}>
           <div className="kicker">Student Access</div>
           <div
             style={{

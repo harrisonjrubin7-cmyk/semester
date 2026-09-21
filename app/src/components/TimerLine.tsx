@@ -36,7 +36,7 @@ export function TimerLine() {
   return (
     <Folding name="TimerLine">
       <div style={{ marginTop: 'calc(14px * var(--density, 1))' }}>
-        <SectionLabel style={{ margin: '0 0 8px' }}>Counting</SectionLabel>
+        <SectionLabel style={{ marginTop: '0', marginInline: '0', marginBottom: 'calc(8px * var(--density, 1))' }}>Counting</SectionLabel>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(7px * var(--density, 1))' }}>
           {counting.map((t) => (
             <button
@@ -50,7 +50,7 @@ export function TimerLine() {
                 gap: 'var(--sp-5)',
                 width: '100%',
                 textAlign: 'left',
-                padding: '10px 13px',
+                paddingBlock: 'calc(10px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))',
                 borderRadius: 'var(--r-md)',
                 border: '1px solid var(--app-line)',
               }}

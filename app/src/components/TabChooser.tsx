@@ -71,7 +71,7 @@ function Preview({ tabs }: { tabs: Screen[] }) {
             style={{
               flex: 1,
               minWidth: 0,
-              padding: '9px 0 7px',
+              paddingTop: 'calc(9px * var(--density, 1))', paddingInline: '0', paddingBottom: 'calc(7px * var(--density, 1))',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
@@ -140,7 +140,7 @@ export function TabChooser() {
   return (
     <Folding name="TabChooser">
       <SectionLabel
-        style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}
+        style={{ marginTop: 'calc(26px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(6px * var(--density, 1))' }}
       >
         The bar
       </SectionLabel>
@@ -173,7 +173,7 @@ export function TabChooser() {
             <div
               tabIndex={0}
               aria-label={`${tabLabel(id)}. ${MOVE_HINT}`}
-              style={{ flex: 1, minWidth: 0, padding: '11px 0', fontSize: 'var(--type-md)' }}
+              style={{ flex: 1, minWidth: 0, paddingBlock: 'calc(11px * var(--density, 1))', paddingInline: '0', fontSize: 'var(--type-md)' }}
             >
               {tabLabel(id)}
             </div>
@@ -207,7 +207,7 @@ export function TabChooser() {
             display: 'flex',
             gap: 'var(--sp-4)',
             alignItems: 'center',
-            padding: '11px 0',
+            paddingBlock: 'calc(11px * var(--density, 1))', paddingInline: '0',
             color: 'var(--app-dim)',
             fontSize: 'calc(13.5px * var(--text-scale, 1))',
           }}
@@ -240,13 +240,13 @@ export function TabChooser() {
 
       {hasRoom(tabs) ? (
         <>
-          <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', margin: '14px 0 4px', textWrap: 'pretty' }}>
+          <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 'calc(14px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(4px * var(--density, 1))', textWrap: 'pretty' }}>
             Add one:
           </div>
           {spare.map(({ group, items }) => (
             <div key={group}>
               <SectionLabel
-                style={{ margin: 'calc(14px * var(--density, 1)) 0 calc(2px * var(--density, 1))' }}
+                style={{ marginTop: 'calc(14px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(2px * var(--density, 1))' }}
               >
                 {group}
               </SectionLabel>
@@ -262,7 +262,7 @@ export function TabChooser() {
                       display: 'flex',
                       alignItems: 'center',
                       gap: 'var(--sp-3)',
-                      padding: '8px 11px',
+                      paddingBlock: 'calc(8px * var(--density, 1))', paddingInline: 'calc(11px * var(--density, 1))',
                       borderRadius: 'var(--r-sm)',
                       border: '1px solid var(--app-line)',
                       fontSize: 'calc(12.5px * var(--text-scale, 1))',

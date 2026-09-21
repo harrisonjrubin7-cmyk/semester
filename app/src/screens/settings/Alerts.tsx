@@ -45,7 +45,7 @@ export function SettingsAlerts() {
             lit={lights('lead days ahead early warning notice registration access', lit)}
           >
             <CustomRow>
-              <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}>
+              <SectionLabel style={{ marginTop: 'calc(26px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(6px * var(--density, 1))' }}>
                 Testing-centre lead time
               </SectionLabel>
               <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginBottom: 'calc(9px * var(--density, 1))' }}>
@@ -79,7 +79,7 @@ export function SettingsAlerts() {
             lit={lights('quiet hours sleep night do not disturb silence mute overnight', lit)}
           >
             <CustomRow>
-              <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}>
+              <SectionLabel style={{ marginTop: 'calc(26px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(6px * var(--density, 1))' }}>
                 Nothing between
               </SectionLabel>
               <div
@@ -176,7 +176,7 @@ export function SettingsAlerts() {
             lit={lights('notifications alerts tell me when reminders notify due mute silence course quiet one', lit)}
           >
             <CustomRow>
-              <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(2px * var(--density, 1))' }}>Tell me when</SectionLabel>
+              <SectionLabel style={{ marginTop: 'calc(26px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(2px * var(--density, 1))' }}>Tell me when</SectionLabel>
               <Reminders />
               {NOTIF_DEFS.map((n) => (
                 <Toggle

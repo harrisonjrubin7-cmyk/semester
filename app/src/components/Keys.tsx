@@ -155,7 +155,7 @@ export function Keys() {
         zIndex: 60,
         width: 300,
         maxWidth: 'calc(100vw - 36px)',
-        padding: '14px 16px 12px',
+        paddingTop: 'calc(14px * var(--density, 1))', paddingInline: 'calc(16px * var(--density, 1))', paddingBottom: 'calc(12px * var(--density, 1))',
         borderRadius: 'var(--r-md)',
         border: '1px solid var(--app-line-top)',
         background: 'var(--app-panel)',
@@ -181,14 +181,14 @@ export function Keys() {
         {SHORTCUTS.map((s) => (
           <div
             key={s.key}
-            style={{ display: 'flex', gap: 'var(--sp-5)', alignItems: 'baseline', padding: '4px 0' }}
+            style={{ display: 'flex', gap: 'var(--sp-5)', alignItems: 'baseline', paddingBlock: 'calc(4px * var(--density, 1))', paddingInline: '0' }}
           >
             <kbd
               style={{
                 flex: 'none',
                 minWidth: 26,
                 textAlign: 'center',
-                padding: '2px 5px',
+                paddingBlock: 'calc(2px * var(--density, 1))', paddingInline: 'calc(5px * var(--density, 1))',
                 borderRadius: 'var(--r-sm)',
                 border: '1px solid var(--app-line-top)',
                 background: 'var(--app-hero)',

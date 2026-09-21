@@ -49,7 +49,7 @@ export function PostMortem({ record, courseId }: { record: Returned; courseId: s
           }}
           style={{
             width: 'auto',
-            padding: '6px 10px',
+            paddingBlock: 'calc(6px * var(--density, 1))', paddingInline: 'calc(10px * var(--density, 1))',
             marginTop: 'calc(7px * var(--density, 1))',
             borderRadius: 'var(--r-sm)',
             border: '1px solid var(--app-line)',
@@ -78,7 +78,7 @@ export function PostMortem({ record, courseId }: { record: Returned; courseId: s
 
   const chip = (on: boolean) => ({
     width: 'auto' as const,
-    padding: '6px 10px',
+    paddingBlock: 'calc(6px * var(--density, 1))', paddingInline: 'calc(10px * var(--density, 1))',
     borderRadius: 'var(--r-sm)',
     border: `1px solid ${on ? 'var(--app-accent)' : 'var(--app-line)'}`,
     background: on ? 'var(--app-accent-wash)' : 'transparent',

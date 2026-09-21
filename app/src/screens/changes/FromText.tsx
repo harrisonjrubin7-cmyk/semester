@@ -151,7 +151,7 @@ export function FromText() {
       <Trouble said={trouble.said} onRetry={trouble.again} />
 
       {done ? (
-        <Blueprint style={{ padding: '13px 14px', marginTop: 'calc(14px * var(--density, 1))' }}>
+        <Blueprint style={{ paddingBlock: 'calc(13px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))', marginTop: 'calc(14px * var(--density, 1))' }}>
           <div style={{ fontSize: 'var(--type-md)', lineHeight: 1.4 }}>Applied: {done}.</div>
           <button
             type="button"
@@ -188,7 +188,7 @@ export function FromText() {
                     display: 'block',
                     width: '100%',
                     textAlign: 'left',
-                    padding: '11px 12px',
+                    paddingBlock: 'calc(11px * var(--density, 1))', paddingInline: 'calc(12px * var(--density, 1))',
                     marginBottom: 'calc(7px * var(--density, 1))',
                     borderRadius: 'var(--r-md)',
                     border: `1px solid ${taken[i] ? 'var(--app-accent-deep)' : 'var(--app-line)'}`,

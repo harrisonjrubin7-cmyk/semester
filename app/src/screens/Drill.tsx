@@ -154,7 +154,7 @@ export function Drill() {
           : 'Come back tonight.';
     return (
       <div style={{ padding: 'var(--page-pad)' }}>
-        <div style={{ padding: '40px 0 0', textAlign: 'center' }}>
+        <div style={{ paddingTop: 'calc(40px * var(--density, 1))', paddingInline: '0', paddingBottom: '0', textAlign: 'center' }}>
           <div className="chrome-text" style={{ fontSize: 'calc(60px * var(--text-scale, 1))', lineHeight: 1 }}>
             {got}/{pool.length}
           </div>
@@ -384,7 +384,7 @@ export function Drill() {
         onClick={() => !state.revealed && dispatch({ type: 'flip' })}
         style={{
           marginTop: 'var(--sp-5)',
-          padding: '24px 20px',
+          paddingBlock: 'calc(24px * var(--density, 1))', paddingInline: 'calc(20px * var(--density, 1))',
           minHeight: 250,
           display: 'flex',
           flexDirection: 'column',
@@ -521,7 +521,7 @@ export function Drill() {
                 }
                 style={{
                   width: 'auto',
-                  padding: '6px 9px',
+                  paddingBlock: 'calc(6px * var(--density, 1))', paddingInline: 'calc(9px * var(--density, 1))',
                   borderRadius: 'var(--r-sm)',
                   border: '1px solid var(--app-line)',
                   fontSize: 'calc(10.5px * var(--text-scale, 1))',
@@ -544,7 +544,7 @@ export function Drill() {
                 }
                 style={{
                   width: 'auto',
-                  padding: '6px 9px',
+                  paddingBlock: 'calc(6px * var(--density, 1))', paddingInline: 'calc(9px * var(--density, 1))',
                   borderRadius: 'var(--r-sm)',
                   border: '1px solid var(--app-accent)',
                   fontSize: 'calc(10.5px * var(--text-scale, 1))',
@@ -598,7 +598,7 @@ export function Quiz() {
       score >= n - 1 ? 'Exam-ready.' : score >= n * 0.6 ? 'Nearly there.' : 'Read the units again.';
     return (
       <div style={{ padding: 'var(--page-pad)' }}>
-        <div style={{ padding: '40px 0 0', textAlign: 'center' }}>
+        <div style={{ paddingTop: 'calc(40px * var(--density, 1))', paddingInline: '0', paddingBottom: '0', textAlign: 'center' }}>
           <div className="chrome-text" style={{ fontSize: 'calc(60px * var(--text-scale, 1))', lineHeight: 1 }}>
             {score}/{n}
           </div>
@@ -756,7 +756,7 @@ export function Quiz() {
                 display: 'flex',
                 gap: 'var(--sp-5)',
                 alignItems: 'flex-start',
-                padding: '12px 13px',
+                paddingBlock: 'calc(12px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))',
                 border: `1px solid ${
                   reveal && o.ok
                     ? 'var(--app-accent)'
@@ -834,7 +834,7 @@ export function Quiz() {
 
       {answered && (
         <>
-          <Blueprint style={{ padding: '13px 14px', marginTop: 'var(--sp-7)' }}>
+          <Blueprint style={{ paddingBlock: 'calc(13px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))', marginTop: 'var(--sp-7)' }}>
             <div className="kicker">In full</div>
             <div style={{ fontSize: 'var(--type-md)', lineHeight: 'var(--leading-relaxed)', marginTop: 'calc(5px * var(--density, 1))', textWrap: 'pretty' }}>
               {current.full}

@@ -196,7 +196,7 @@ export function RecordButton({
       )}
 
       {(state === 'recording' || state === 'paused' || state === 'saving') && (
-        <Blueprint style={{ padding: '13px 14px', background: 'var(--app-hero)' }}>
+        <Blueprint style={{ paddingBlock: 'calc(13px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))', background: 'var(--app-hero)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 'calc(11px * var(--density, 1))' }}>
             <span
               style={{
@@ -259,7 +259,7 @@ export function RecordButton({
               }}
             >
               {paragraphs(segments).slice(-6).map((seg) => (
-                <p key={`${seg.at}-${seg.text.length}`} style={{ margin: '0 0 8px' }}>
+                <p key={`${seg.at}-${seg.text.length}`} style={{ marginTop: '0', marginInline: '0', marginBottom: 'calc(8px * var(--density, 1))' }}>
                   <span style={{ ...faintLine(), fontVariantNumeric: 'tabular-nums' }}>
                     {stamp(seg.at)}{' '}
                   </span>

@@ -45,7 +45,7 @@ export function NotYetOpened({ pool }: { pool?: Destination[] }) {
   return (
     <Folding name="NotYetOpened">
       <SectionLabel
-        style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(4px * var(--density, 1))' }}
+        style={{ marginTop: 'calc(26px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(4px * var(--density, 1))' }}
       >
         Not opened yet
       </SectionLabel>
@@ -65,7 +65,7 @@ export function NotYetOpened({ pool }: { pool?: Destination[] }) {
               gap: 'calc(11px * var(--density, 1))',
               alignItems: 'flex-start',
               textAlign: 'left',
-              padding: '11px 12px',
+              paddingBlock: 'calc(11px * var(--density, 1))', paddingInline: 'calc(12px * var(--density, 1))',
               borderRadius: 'var(--r-md)',
               border: '1px solid var(--app-line)',
             }}

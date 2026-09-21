@@ -102,7 +102,7 @@ function MealsDetails() {
     <Page className="campus-personal" bottom={26} folds={false}>
       <TermSwitch /><div className="portal-stats"><div><strong>{latest&&latest.swipes>=0?latest.swipes:'—'}</strong><span>Meal swipes recorded</span></div><div><strong>{latest?money(latest.cashCents):'—'}</strong><span>Campus cash recorded</span></div><div><strong>{latest&&latest.diningCents>=0?money(latest.diningCents):'—'}</strong><span>Dining dollars recorded</span></div></div><p className="portal-muted">Balances are your saved readings, not a live account balance. Use the official balance page to check or change your enrolled plan.</p>
 
-      <Blueprint style={{ padding: '15px 16px', marginTop: 'var(--sp-6)' }}>
+      <Blueprint style={{ paddingBlock: 'calc(15px * var(--density, 1))', paddingInline: 'calc(16px * var(--density, 1))', marginTop: 'var(--sp-6)' }}>
         <div className="kicker">{readTerm(state.term).label}</div>
         <div
           className="chrome-text"
