@@ -5,11 +5,12 @@ The schema this app runs on cannot be rebuilt from its own record.
 concern; this is the plan for fixing it, written before any of it was done so
 that the reasoning can be argued with rather than discovered in a diff.
 
-**Steps 1, 2, 4 and 6 are done. Step 3 turned out not to be needed and step 5
-is withdrawn, both on evidence gathered doing the others — each section says
-why. Step 6 was the last to close and the only one that could turn the deploy
-green: steps 1 to 5 change no version, and a version is the whole of the
-fault.**
+**The repair is done.** Steps 1, 2, 4 and 6 were carried out; step 3 turned
+out not to be needed and step 5 is withdrawn, both on evidence gathered doing
+the others, and each section says why. Step 6 was the last to close and the
+only one that could turn the deploy green: steps 1 to 5 change no version, and
+a version is the whole of the fault. **No step wrote to the ledger by hand** —
+the only production write in any of it is the one a merge makes by deploying.
 
 ## What is actually wrong
 
@@ -480,6 +481,44 @@ migration above the watermark stays green, a truncated snapshot goes red rather
 than reporting all clear, and a file moved onto another file's row goes red
 naming both.
 
+#### Two sessions renumbered these files an hour apart, and one of them was wrong
+
+This is worth the space, because the way it went wrong is the thing this whole
+document is about.
+
+**#587 did the same step, at the same time, and picked different numbers.** It
+renumbered the seven to `20260921003000`–`003600`: fresh values chosen to sort
+after the newest version its author had read, `20260921002658`. That was a
+correct reading when it was taken, and the reasoning built on it was sound.
+
+It was not correct by the time the work merged. The ledger took seven more rows
+that afternoon — five from the pending migrations being applied by hand at
+14:28–14:40, then `forms_relation_grants` at 14:47 and
+`access_log_function_search_path` at 15:07 — and the newest became
+`20260921150750`. So all seven renumbered files landed **above the watermark
+its author saw and below the real one**, which is precisely the state that
+broke the deploy in the first place. The repair reproduced the fault it was
+for.
+
+Two things made it invisible. The numbers *look* right: they sort after
+everything anybody had written down. And the guard that would have caught it
+read the ledger out of two constants in `rollback.test.ts` —
+`LEDGER_NEWEST = '20260921002658'`, and a comment saying the ledger held
+twenty-one rows. Both were true when typed, and a constant copied out of a
+database carries no date and cannot go stale loudly.
+
+**This repair uses the versions the ledger actually recorded instead**, which
+has the property that no reading can go stale underneath it: a file whose
+version is *in* the ledger is never pending, whatever the watermark does next.
+The two sets of names differ in one more way that matters — #587's numbers are
+new, so a deploy would apply all seven to production a second time; these are
+the recorded ones, so a deploy applies nothing.
+
+Both guards now read `supabase/ledger.snapshot`, one dated reading of every
+row, and `migrationorder.test.ts` carries #587's seven numbers as a control
+alongside the original seven. A guard that only catches the fault as first seen
+is a guard against history.
+
 #### The renamed set still builds production
 
 Renaming changes the order files apply in, so the fingerprint was taken again
@@ -548,14 +587,20 @@ four pending files would be applied *by* the deploy, once the deploy worked.
 They were applied by hand instead, on 21 September, and once that had
 happened the only thing between the deploy and green was seven filenames.
 
-The rule that **no pull request touching `supabase/` should be merged** stood
-while a merge could send an unrehearsed migration to production. It cannot any
-more: nothing in `migrations/` is pending. It still stands for a change that
-**adds** a migration, which is pending by definition — and step 4 is what says
-the baseline it would be added to is production’s.
-If Branching is applying migrations, a merge sends the pending ones to a schema
-nothing has reproduced; if it is not, the merge widens the gap by one more file.
-See [`ROLLBACK.md`](ROLLBACK.md).
+The rule that **no pull request touching `supabase/` should be merged** is
+**lifted**, and [`ROLLBACK.md`](ROLLBACK.md) records the same thing at more
+length. It stood while a merge could send an unrehearsed migration to a schema
+nothing had reproduced. Both halves are answered: step 4 reproduces the schema
+and fingerprints it, `supabase/rehearse.sh` runs the pending set against that
+reproduction on every pull request, and after step 6 nothing in `migrations/`
+is pending at all.
+
+What replaces it is narrower and permanent, and is the one thing three days of
+this cost buys: **a migration whose version is not in the live ledger, and not
+greater than every version the ledger holds, cannot be deployed — whatever its
+SQL says.** `check.sh` and `rehearse.sh` both apply files in filename order to
+a database that has never seen them, so neither can see that fault.
+`supabase/ledger.snapshot` and the two guards over it are what can.
 
 What that rule is protecting is `supabase/migrations/`, because that directory
 is the only thing a merge can send anywhere. Steps 1 and 2 both landed under

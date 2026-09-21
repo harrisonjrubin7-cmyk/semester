@@ -69,6 +69,7 @@ import { ACCENT_TINT, anchorHue, tintsFor, type CourseTint } from '../lib/tint';
 import { ground as groundOf, resolveGround } from '../lib/look';
 import { usePrefersDark } from '../lib/prefers';
 import { USAGE_KEY, note as noteUsage, read as readUsage } from '../lib/usage';
+import { hold as holdAboutMe } from '../lib/aboutme';
 import { countRows, decide, type Choice, type Sides } from '../lib/adopt';
 import type { Facts } from '../lib/reveal';
 import type { School } from '../lib/school';
@@ -372,6 +373,22 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       stamp();
     };
   }, []);
+
+  /*
+   * The standing preferences, handed to the one thing that cannot ask for them.
+   *
+   * `lib/claude.ts:ask` builds every outgoing request and is not a hook, so it
+   * reads this list from a module-level value rather than from the store. This
+   * is the only thing that writes it. It runs on the list itself rather than on
+   * every render, so a keystroke anywhere else in the app does not touch it.
+   *
+   * Placed here, above the router, because the alternative — each assistant
+   * screen passing its own copy — is the twenty-five call sites this design
+   * exists to avoid. See `lib/aboutme.ts`.
+   */
+  useEffect(() => {
+    holdAboutMe(state.aboutMe);
+  }, [state.aboutMe]);
 
   /*
    * A count per screen, on this device and nowhere else.
@@ -691,6 +708,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       if (idle) window.cancelIdleCallback(handle);
       else window.clearTimeout(handle);
       stop?.();
+      // The account is `useState` and goes with this provider; the token is a
+      // module-level variable in `lib/token.ts` and does not. Left set, it
+      // outlives the thing that knows what it is for — and the next provider
+      // to mount starts with `account` null and a token still in hand, which
+      // is the inverse of the disagreement `lib/assistant.ts` has a whole
+      // paragraph about. Clearing it here keeps the two with the same
+      // lifetime, which is the only reason they can be reasoned about
+      // together. The next mount re-reads the session, so nothing is lost.
+      setSessionToken(null);
     };
   }, []);
 

@@ -83,6 +83,7 @@ const LABELS: Record<string, string> = {
   people: 'People',
   letters: 'Letters',
   myRules: 'Your rules',
+  aboutMe: 'What you have told the assistant',
   archivedTerms: 'Closed terms',
 };
 

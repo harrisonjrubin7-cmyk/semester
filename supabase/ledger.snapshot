@@ -1,4 +1,4 @@
-# What production's migration ledger held, read on 21 September 2026.
+# What production's migration ledger held, read at 15:2x UTC on 21 September 2026.
 #
 # `supabase_migrations.schema_migrations` on the live project, one line per row:
 # version, then name. This is a reading, not a wish — `app/src/lib/deploy.test.ts`
@@ -31,6 +31,23 @@
 # is. What is not allowed is a pending version *below* the last line of this
 # file, because that one cannot ever run.
 #
+
+# ## Why this is a file and not a constant
+#
+# It was a constant once, in `rollback.test.ts`, written the same afternoon:
+# `LEDGER_NEWEST = '20260921002658'`, with a note that the ledger held
+# twenty-one rows. Both were true when they were typed. Within the hour the
+# ledger took seven more — five from the pending migrations being applied by
+# hand, then `forms_relation_grants` and `access_log_function_search_path` —
+# and the constant silently described a database that no longer existed. A
+# renumbering done against it put seven files at `20260921003000`–`003600`,
+# above the watermark it named and below the real one, which is the same fault
+# the renumbering was for.
+#
+# A constant copied out of a database has no date on it and no way to go stale
+# loudly. This file has both: it says when it was read, and the guard fails
+# rather than passes when the directory stops matching it.
+#
 #   version         name
 20260901000100  schema
 20260901000200  classmates
@@ -58,3 +75,5 @@
 20260921143455  forms
 20260921143653  access_log
 20260921144011  function_grants_rerun_after_access_log
+20260921144711  forms_relation_grants
+20260921150750  access_log_function_search_path

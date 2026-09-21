@@ -271,6 +271,9 @@ export const STRATEGY: Record<string, Strategy> = {
   // An arrangement of rules the student wrote, not a list of things they
   // collect — merging two devices' would produce a set neither asked for.
   myRules: 'theirs',
+  // A short list somebody wrote about themselves, not a collection they add
+  // to from two devices. Whichever they edited last is the one they meant.
+  aboutMe: 'theirs',
   myName: 'theirs',
   // A choice about whether the app counts anything, so it follows the person.
   // The counts it governs never sync at all — see `lib/usage.ts`.

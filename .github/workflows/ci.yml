@@ -379,6 +379,13 @@ jobs:
       - name: Check the database policies
         run: supabase/check.sh
 
+      # `check.sh` builds from empty; this applies the pending migrations to
+      # production's recorded shape with rows in it, which is the question a
+      # deploy actually asks. Production's schema deploy failed silently from
+      # 18 September because nothing had ever asked it.
+      - name: Rehearse the deploy against production's shape
+        run: supabase/rehearse.sh
+
   # ── Saying so when main is red ──────────────────────────────────────────
   #
   # A pull request that fails tells the person who opened it: the check sits

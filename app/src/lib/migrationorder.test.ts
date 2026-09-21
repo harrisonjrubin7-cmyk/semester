@@ -67,9 +67,21 @@ describe('the ledger snapshot is a reading, and still reads like one', () => {
    * read nothing. That is the failure this repository keeps finding in its own
    * instruments, so the shape is asserted before anything is concluded from it.
    */
-  it('parses twenty-six rows, every one a fourteen-digit version and a name', () => {
+  it('parses as rows, every one a fourteen-digit version and a name', () => {
     const rows = ledger();
-    expect(rows).toHaveLength(26);
+    /*
+     * A floor, not a count. This asserted exactly twenty-six for about twenty
+     * minutes and then went red because the ledger took two more rows — which
+     * is the snapshot being **re-read**, the thing this file is supposed to
+     * support, rather than anything being wrong. An exact count turns every
+     * honest refresh into a failing test, and a test that cries wolf at the
+     * correct action gets its number bumped without being read.
+     *
+     * What the floor is actually for is the empty tree: a parse that stopped
+     * matching returns nothing, and nothing makes the watermark `undefined`
+     * and every comparison below vacuously true.
+     */
+    expect(rows.length, 'ledger.snapshot did not parse').toBeGreaterThan(20);
     for (const { version, name } of rows) {
       expect(version, `not a version: ${version}`).toMatch(/^\d{14}$/);
       expect(name.length, `no name for ${version}`).toBeGreaterThan(2);
@@ -116,6 +128,32 @@ describe('no migration is numbered in the past', () => {
     ];
     const stranded = before.filter((v) => !applied.has(v) && v < watermark);
     expect(stranded).toEqual(before);
+  });
+
+  /*
+   * And the second set, which is the one worth having.
+   *
+   * The numbers above are the original fault, and a guard that only catches
+   * the fault as first seen is a guard against history. These seven are the
+   * *repair* of it going wrong: a renumbering done on 21 September against a
+   * watermark read earlier that afternoon, landing at `20260921003000`–`003600`
+   * — comfortably above `20260921002658`, which was the newest version when
+   * the reading was taken, and below `20260921142822` and the six rows after
+   * it, which the ledger took while the work was in progress.
+   *
+   * They look right. They sort after every number anybody had written down.
+   * Only the live ledger says otherwise, which is the whole argument for
+   * reading it rather than remembering it.
+   */
+  it('and catches a renumbering done against a stale watermark', () => {
+    const applied = new Set(ledger().map((r) => r.version));
+    const watermark = ledger()[ledger().length - 1].version;
+    const renumbered = [
+      '20260921003000', '20260921003100', '20260921003200', '20260921003300',
+      '20260921003400', '20260921003500', '20260921003600',
+    ];
+    const stranded = renumbered.filter((v) => !applied.has(v) && v < watermark);
+    expect(stranded).toEqual(renumbered);
   });
 
   /*
