@@ -31,9 +31,8 @@
  */
 
 import type { Catalog } from '../data/catalog';
-import { blocksFor } from '../data/catalog';
 import { asset } from './asset';
-import { dateToIso, decorateItem } from './date';
+import { runsOver } from './athletics';
 import { describe, type Kind } from './downloads';
 import { hasPrebuiltDeck, hasPrebuiltDocs } from './handout';
 import type { CourseId } from './types';
@@ -64,29 +63,17 @@ export interface PackResult {
 /**
  * The courses a trip actually runs over.
  *
- * Classes in those days and deadlines falling inside them, which is the same
- * pair the Athletics screen lists as "what this runs over" — so the pack is
- * built from the conflict the student is already looking at rather than from
- * every course they are enrolled in. Somebody missing two of four classes does
- * not want four courses' audio on a phone.
+ * Classes in those days and deadlines falling inside them — `runsOver` in
+ * `lib/athletics.ts`, which the absence email is built from too, so the pack
+ * and the letter cannot disagree about which courses a trip touches. The pack
+ * is therefore built from the conflict the student is already looking at
+ * rather than from every course they are enrolled in: somebody missing two of
+ * four classes does not want four courses' audio on a phone.
  *
  * Days come in as `YYYY-MM-DD`, from `eventDays`.
  */
 export function coursesInDays(catalog: Catalog, days: string[], now: Date): CourseId[] {
-  const found = new Set<CourseId>();
-  for (const day of days) {
-    // Midday, so a date built from the string cannot land on the previous
-    // day in a timezone behind UTC — `lib/date.ts` makes the same move.
-    const date = new Date(`${day}T12:00`);
-    if (Number.isNaN(date.getTime())) continue;
-    for (const b of blocksFor(catalog, date)) {
-      if (!b.canceled && b.c) found.add(b.c);
-    }
-    for (const i of catalog.items) {
-      if (dateToIso(decorateItem(i, now).date) === day) found.add(i.c);
-    }
-  }
-  return [...found];
+  return runsOver(catalog, days, now).map((m) => m.course);
 }
 
 /**

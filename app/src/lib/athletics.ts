@@ -1,4 +1,8 @@
+import type { Catalog } from '../data/catalog';
+import { blocksFor } from '../data/catalog';
+import { dateToIso, decorateItem, longLabel } from './date';
 import { obj, textValue } from './device-library';
+import type { CourseId } from './types';
 
 /**
  * A season, as the person living it has to plan around it.
@@ -218,4 +222,89 @@ export function hoursOnDay(events: { start: string; end: string }[], date: Date)
     ms += Math.max(0, Math.min(b, to) - Math.max(a, from));
   }
   return ms / 3_600_000;
+}
+
+/**
+ * What a trip's days hold, course by course.
+ *
+ * The Athletics screen's own `conflicts` answers this at the hour — it clips
+ * the first and last days to the event's own times, so leaving at four on
+ * Thursday does not cost the Thursday morning lecture. That is the right
+ * answer to *what does this trip cost me*, and the wrong shape for two other
+ * questions the app now asks: which courses to bundle for offline, and who to
+ * write to.
+ *
+ * Both of those are course-shaped and day-shaped, so this is too. It is
+ * deliberately the coarser reading: a professor writing back about a Thursday
+ * you are on a bus for does not care that the bus left at four.
+ */
+export interface Missed {
+  course: CourseId;
+  /** Class meetings inside the days — "Fri Sep 18 · Lecture". */
+  classes: string[];
+  /** Deadlines falling inside the days — "Fri Sep 18 · Problem Set 4". */
+  due: string[];
+}
+
+export function runsOver(catalog: Catalog, days: string[], now: Date): Missed[] {
+  const found = new Map<CourseId, Missed>();
+  const add = (course: CourseId): Missed => {
+    const held = found.get(course) ?? { course, classes: [], due: [] };
+    found.set(course, held);
+    return held;
+  };
+
+  for (const day of days) {
+    // Midday, so a date built from the string cannot land on the day before in
+    // a timezone behind UTC. `lib/date.ts` makes the same move.
+    const date = new Date(`${day}T12:00`);
+    if (Number.isNaN(date.getTime())) continue;
+    const label = longLabel(date);
+
+    for (const b of blocksFor(catalog, date)) {
+      if (b.canceled || !b.c) continue;
+      add(b.c).classes.push(`${label} · ${b.title}`);
+    }
+    for (const i of catalog.items) {
+      if (dateToIso(decorateItem(i, now).date) === day) add(i.c).due.push(`${label} · ${i.title}`);
+    }
+  }
+  return [...found.values()];
+}
+
+/**
+ * The absence note as an email rather than as a document.
+ *
+ * The document version above is the one to keep, print or hand to an athletics
+ * office. This is the one that gets *sent*, which is a different artefact:
+ * addressed to one professor, about one course, with no markdown headings in
+ * it — a `#` in an email body is a `#` in a professor's inbox.
+ *
+ * It says the same first thing for the same reason, and it asks rather than
+ * announces. Everything factual in it comes from the student's own calendar
+ * and the syllabus the app already holds; nothing about why, because the app
+ * does not know why and `lib/mail.ts` forbids it inventing one.
+ */
+export function absenceEmail(
+  e: AthleticEvent,
+  course: { code: string; name?: string },
+  missed: Missed,
+): { subject: string; body: string } {
+  const when = `${e.start.replace('T', ' ')} through ${e.end.replace('T', ' ')}`;
+  const lines = [...missed.classes.map((c) => `- Class: ${c}`), ...missed.due.map((d) => `- Due: ${d}`)];
+
+  return {
+    subject: `${course.code} — absence for ${e.title}`,
+    body: [
+      'Hello Professor,',
+      '',
+      `I am travelling with ${e.team || 'my team'} for ${e.title}, from ${when}, and will miss the following in ${course.code}:`,
+      '',
+      lines.length > 0 ? lines.join('\n') : '- I will confirm exactly which sessions this affects.',
+      '',
+      'Could we discuss how to prepare for the material I will miss, and the process for any assessment arrangements? I will send official documentation from the athletics office when I have it — this message is not one.',
+      '',
+      'Thank you.',
+    ].join('\n'),
+  };
 }

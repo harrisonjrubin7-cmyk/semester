@@ -9,7 +9,6 @@ import {
   ATHLETIC_KINDS,
   ATHLETICS_LIMITS,
   EMPTY_ATHLETICS,
-  absenceDraft,
   athleticsKey,
   eventDays,
   overlaps,
@@ -21,6 +20,7 @@ import { fromMarkdown } from '../lib/document';
 import { dateToIso, decorateItem } from '../lib/date';
 import { lengthOf, railFor } from '../lib/select';
 import { TravelPack } from '../components/TravelPack';
+import { AbsenceNotices } from '../components/AbsenceNotices';
 
 /**
  * A season beside the coursework it collides with.
@@ -322,6 +322,8 @@ function Workspace({ storageKey }: { storageKey: string }) {
                 </>
               )}
 
+              <AbsenceNotices event={selected} conflicts={conflicts(selected)} />
+
               {(selected.kind === 'Travel' || selected.kind === 'Competition') && (
                 /*
                  * Offered for the two kinds that take somebody off campus.
@@ -345,23 +347,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
                 <ActionButton onClick={() => addToCalendar(selected)} style={{ flex: '1 1 auto' }}>
                   Add to calendar
                 </ActionButton>
-                <ActionButton
-                  onClick={() =>
-                    dispatch({
-                      type: 'makeDocument',
-                      open: true,
-                      doc: {
-                        title: `${selected.title} · Academic absence request`,
-                        subtitle: 'Draft for review · Not sent, and not an official authorization',
-                        courseId: null,
-                        blocks: fromMarkdown(absenceDraft(selected, conflicts(selected))),
-                      },
-                    })
-                  }
-                  style={{ flex: '1 1 auto' }}
-                >
-                  Draft the request
-                </ActionButton>
+
                 <ActionButton
                   onClick={() =>
                     dispatch({
