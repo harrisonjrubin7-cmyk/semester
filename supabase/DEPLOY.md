@@ -146,6 +146,43 @@ This was checked by making the call by hand, exactly as the job would:
 which is `push`'s own first branch. pg_net reaches the function, the URL is
 right, the Vault read works. Only `CRON_SECRET` is missing.
 
+### The tombstone sweep — in the file, not yet on the project
+
+`scheduler.sql` now also schedules a second job, `tombstones`, weekly at
+`17 4 * * 0`, calling `public.sweep_tombstones('90 days')`. It clears
+soft-deleted rows from `notes`, `tasks`, `appointments`, `sittings` and
+`courses` ninety days after the deletion. [`RETENTION.md`](../RETENTION.md)
+carries the decision and what it costs — a device offline longer than ninety
+days, still holding the row, syncs it back.
+
+**It is in the file and has not been applied.** Nothing in this repository can
+apply it; a schedule only exists once somebody runs the statement. Re-running
+the whole of `scheduler.sql` is safe — every statement in it is idempotent and
+`cron.schedule` replaces a job of the same name — or run just this one:
+
+    select cron.schedule(
+      'tombstones',
+      '17 4 * * 0',
+      $job$select public.sweep_tombstones('90 days')$job$
+    );
+
+Unlike `push` it wants **no** `cron.alter_job`, because it is parked on
+nothing: the function it calls already exists and needs no secret. Confirm it
+landed active, and that both jobs are there:
+
+    select jobname, schedule, active from cron.job order by jobname;
+
+Expect `push` inactive on `*/15 * * * *` and `tombstones` active on
+`17 4 * * 0`. Afterwards, the first run is very likely to delete nothing and
+that is correct rather than a failure — the oldest migration here is dated
+September 2026, so on a project this young no tombstone is ninety days old
+yet. What it returns is the row count:
+
+    select jobname, status, return_message, start_time
+    from cron.job_run_details
+    where jobid = (select jobid from cron.job where jobname = 'tombstones')
+    order by start_time desc limit 5;
+
 ## Security advisor
 
 Nine of the ten findings are closed (migration

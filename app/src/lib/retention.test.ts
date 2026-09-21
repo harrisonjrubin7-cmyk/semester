@@ -192,16 +192,47 @@ describe('the clocks that run are still the clocks the document describes', () =
     expect(flat()).toMatch(/\*\*90 days\*\*/);
   });
 
-  it('agrees with the migration about the tombstone sweep, including that it is not scheduled', () => {
+  /*
+   * The tombstone sweep, and the one number three files have to agree on.
+   *
+   * This test used to assert the opposite — that nothing scheduled the sweep —
+   * because for weeks nothing did, and the document said so. Scheduling it
+   * turned this red, which is what it was for: the schedule and the sentence
+   * describing it cannot move independently.
+   *
+   * `supabase/check.sh` cannot cover this. It applies the migrations to a
+   * throwaway Postgres with no `pg_cron`, so no `.check.sql` suite can see a
+   * schedule at all. This is the only thing standing between the job and a
+   * quiet edit.
+   *
+   * What would actually go wrong without it: somebody tunes the sweep to
+   * `'30 days'` in `scheduler.sql` and `RETENTION.md` goes on promising
+   * ninety. The document is what a reviewer reads and what the owner decided
+   * from, and it would be describing a retention the database no longer has —
+   * for the one table class holding a promise about other people's devices.
+   */
+  it('agrees with the migration and the scheduler about the tombstone sweep', () => {
     const sql = readFileSync(join(MIGRATIONS, '20260901000700_records.sql'), 'utf8');
     expect(sql).toContain('sweep_tombstones');
     expect(sql).toMatch(/default '90 days'/);
 
-    // The claim the document makes about the live state. If somebody schedules
-    // the sweep, this goes red and the document has to be updated to say so —
-    // which is the whole reason the row is worth pinning.
-    const scheduler = join(ROOT, 'supabase', 'scheduler.sql');
-    expect(readFileSync(scheduler, 'utf8')).not.toContain('sweep_tombstones');
-    expect(flat()).toContain('**Nothing calls it.**');
+    // Scheduled, under the name the document names.
+    const scheduler = readFileSync(join(ROOT, 'supabase', 'scheduler.sql'), 'utf8');
+    expect(scheduler).toContain('sweep_tombstones');
+    expect(scheduler).toMatch(/cron\.schedule\(\s*'tombstones'/);
+
+    /*
+     * The retention the job actually passes, read out of the call rather than
+     * matched loosely anywhere in the file — the migration's own `default '90
+     * days'` is in scope of a bare search and would satisfy it whatever the
+     * job said.
+     */
+    const call = /sweep_tombstones\('([^']+)'\)/.exec(scheduler);
+    expect(call, 'scheduler.sql no longer calls sweep_tombstones with a literal interval').not.toBeNull();
+    expect(call![1]).toBe('90 days');
+
+    // And the document says the same number, and no longer says it is unrun.
+    expect(flat()).toContain('**90 days after deletion**');
+    expect(flat()).not.toContain('**Nothing calls it.**');
   });
 });
