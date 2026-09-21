@@ -1,8 +1,10 @@
 # One app — the thirty-second pass: the row type that belonged on the write
 
-Against `main` at `97ecedc`. **<!--screens-->fifty-eight<!--/--> destinations**,
-unchanged. No cut. One type wired, and the last open row of the thirtieth
-pass's census closed.
+Against `main` at `42a36d8`. **<!--screens-->fifty-nine<!--/-->
+destinations** — fifty-eight when this was written, and a fifty-ninth landed
+from another session while it sat in review; none of them is this pass's doing.
+No cut. One type wired, and the last open row of the thirtieth pass's census
+closed.
 
 The thirtieth left exactly one look untaken and said so: *"does the query
 annotate its rows with `Enrollment`, or is the type stale? It is a wiring job
