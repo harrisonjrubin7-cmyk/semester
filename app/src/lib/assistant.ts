@@ -294,12 +294,28 @@ export function route(s = settings()): 'proxy' | 'shared' | 'own' | 'openai' | '
  * ## The third case is the one worth having
  *
  * Signed in, this build has a shared endpoint, and the assistant still has no
- * token. That should be impossible — `state/store.tsx` sets the account and
- * the token on adjacent lines of one callback — so if a student ever reads
- * this sentence, the two have come apart, and it says so plainly instead of
- * blaming them for not signing in. It was written after an afternoon spent
- * establishing exactly that state from the outside, through gateway logs and
- * a chunk graph, because the screen would not say it.
+ * token. It was written after an afternoon spent establishing exactly that
+ * state from the outside, through gateway logs and a chunk graph, because the
+ * screen would not say it.
+ *
+ * This used to say the state *should be impossible*, because `state/store.tsx`
+ * sets the account and the token on adjacent lines of one callback. That
+ * reasoning is wrong, and it is worth keeping the correction here because it
+ * sent one investigation looking for a duplicated module before anybody
+ * reread the two lines. They are adjacent, but they read **different fields
+ * of the same session**:
+ *
+ *     setAccount(accountOf(s));                   // needs s.user
+ *     setSessionToken(s?.access_token ?? null);   // needs s.access_token
+ *
+ * `cloud.ts`'s `accountOf` returns an account for any session with a `user`
+ * and never looks at the token. So a session carrying a user and no usable
+ * `access_token` produces precisely this state, and adjacency prevents
+ * nothing — the two lines are only as coupled as the object they read.
+ *
+ * `lib/token.test.ts` holds the four shapes and what each one comes to. What
+ * is still unestablished is which of them the auth client actually emits; the
+ * sentence below is what a student reads while that is being worked out.
  */
 export function routeWhy(signedIn: boolean, s = settings()): string {
   if (route(s) !== 'none') return '';
