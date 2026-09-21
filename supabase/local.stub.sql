@@ -88,7 +88,7 @@ alter default privileges in schema public
 -- The difference is not cosmetic. A blanket grant after the migrations hands
 -- back every table privilege a migration deliberately revoked, so the harness
 -- could not see a relation-level revoke succeed or fail: it erased the
--- evidence either way. `20260901001100_forms.sql` was applied to the live
+-- evidence either way. `20260921143455_forms.sql` was applied to the live
 -- project with `public.published_forms` — an auto-updatable view with the
 -- definer's rights — writable by `anon`, and no suite here could have caught
 -- it, because in this harness `anon` was handed ALL on that view after the
