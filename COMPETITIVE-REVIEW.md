@@ -299,13 +299,49 @@ whether the proposal is good.
 | P1 | **Make progress mean actual progress** | **Landed.** The defect. |
 | P1 | One calendar integration, then one LMS | **Not a code item here.** Provider registration and an institutional agreement. The copy that misdescribed it is fixed above. |
 | P1 | Schedule work into real availability | **Open.** The largest genuinely-new item in the document, and correctly sequenced behind trustworthy calendar input. |
-| P1 | Carry exact source locations | **Open, and the claim is exact.** `components/StudyStudio.tsx` writes `original page not recorded` in three locators — prepared guide units, added course material, and pasted text. |
+| P1 | Carry exact source locations | **Landed, and the claim was exact.** The three locators still say what is true of the original — a prepared unit and a pasted excerpt have no page — but a citation now names the place inside the source it was found at. See below. |
 | P2 | Mistakes into the next practice session | **The prerequisite landed; the loop is still open.** The claim was exact — `cardKey()` was FNV-1a over the *question text* — and the report was right that stable ids come first. They are in: all 325 shipped cards carry one, minted as the hash they already keyed on, so nothing stored moved. The closed loop itself — error → concept → scheduled revisit → measured improvement — is what is left. See below. |
 | P2 | Offline, sync and reminders | **Open, and the claim is exact.** `HORIZON_DAYS = 7` in `lib/push.ts`: *"How far ahead to queue. A week is enough to survive a phone left in a bag."* The report's question — what happens after longer inactivity — is not answered anywhere. |
 | P2 | Shared coursework with a small group | **Open.** Needs two real accounts, which is the report's own acceptance criterion. |
 | P3 | Lecture capture, career discovery | **Open, and correctly deferred.** |
 
 ---
+
+### Carry exact source locations — what landed, and what did not
+
+The studio has always *found* the place a quotation sits and then dropped it.
+A citation is only accepted because `normalized(source.text)` **includes**
+`normalized(quote)` — a search that knows the index and returns a boolean. So
+the app could tell a student the quotation was somewhere in their material and
+not where, and the panel that showed the evidence printed the entire source
+underneath for them to find it by eye.
+
+`locateQuote` in `lib/studystudio.ts` keeps the index, in the *source's own*
+offsets. That is the whole difficulty: normalized offsets are not original
+offsets, because NFKC expands (ﬁ → fi), `toLowerCase` can expand, and — the
+case that matters, since models quote sentences the source wrapped — a run of
+whitespace collapses to one space. The map is therefore rebuilt one original
+character at a time. `quotelocation.test.ts` pins a line-break quote that a raw
+`indexOf` cannot find at all, and a ﬁ quote where a normalized offset used as
+an original one lands mid-word and reads back *wrong* rather than absent.
+
+**What did not change is the sentence the report quoted.** A prepared guide
+unit has no page; a pasted excerpt has no page; an upload with no page
+structure has no page. Rewording those three locators would have been the
+cosmetic fix, and the report's own standing instruction — never hide "page not
+recorded" — argues against it. They still say it, and a citation from one now
+reads *Prepared course guide · Unit 1; original page not recorded · characters
+27–65*, with the quotation marked in place in the panel rather than a wall of
+source text beside it. The honest half of the old string is kept; the useless
+half is answered.
+
+**The controls are two, and the second is the one that matters.** A quotation
+that is not in the source must come back with no span *and* still be refused.
+And a quotation only the looser whole-string check can match — NFKC composes
+"e" + U+0301 into "é" across characters, which a per-character map cannot —
+must still be **accepted**, with no location. A locator that becomes a new way
+to reject a true citation is worse than the gap it closes, so the strict search
+decides where, and the loose one goes on deciding whether.
 
 ### Stable card ids — the prerequisite, and the measurement that nearly stopped it
 
