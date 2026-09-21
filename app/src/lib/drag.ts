@@ -477,21 +477,13 @@ export function useDragToMove<T>({ onDrop, grid, disabled }: DragOptions<T>) {
   };
 }
 
-/**
- * Keyboard equivalent: pick up, move, drop.
- *
- * Not optional and not a nicety. A calendar whose only move gesture is a drag
- * is a calendar nobody can use with a keyboard or a screen reader, and this
- * app does not ship that anywhere else. Space or Enter picks up, the arrows
- * move, Enter drops, Escape puts it back — the pattern every drag-and-drop
- * accessibility guide describes, and the one the month grid's own roving focus
- * already prepares people for.
+/*
+ * A `Carrying<T>` interface stood here, with `days` and `minutes`, for
+ * keyboard pick-up-and-move. The one grid that implements it —
+ * `screens/Calendar.tsx`'s month view — keeps `{ what, day }` of its own and
+ * never needed the hour axis the extra field was for. A contract designed
+ * ahead of its second implementation, and the second one has not come. The
+ * keyboard pattern the docstring argued for is shipped; only the type was
+ * unused.
  */
-export interface Carrying<T> {
-  payload: T;
-  /** Days moved so far, so the caller can say where it would land. */
-  days: number;
-  /** Minutes moved so far, on the grids that have an hour axis. */
-  minutes: number;
-}
 

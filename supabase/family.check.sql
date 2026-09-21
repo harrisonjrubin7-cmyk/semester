@@ -313,6 +313,24 @@ begin
     raise notice 'ok  a grant from somebody to themselves is refused';
   end;
 
+  -- ── A shared account is not an untouched one ────────────────────────────
+  --
+  -- `lti_account_untouched` decides whether a Brightspace launch may attach
+  -- itself to an account that already exists, and `20260921160100` walks a
+  -- list of tables to answer it. `family_grants` was added to that list by the
+  -- migration this suite covers, and the test that enforces the list only
+  -- reads the SQL as text — so this is the half that proves the behaviour.
+  --
+  -- The control comes first and is the point: an account with nothing in it
+  -- reads as untouched, so the `false` below is a fact about the grant rather
+  -- than about a function that says no to everybody.
+  set local role postgres;
+  perform pg_temp.said('an account with nothing in it is untouched',
+    public.lti_account_untouched(nobody)::text, 'true');
+
+  perform pg_temp.said('and a student who has shared something is not',
+    public.lti_account_untouched(student)::text, 'false');
+
   -- ── Deletion, which is the privacy page's promise ───────────────────────
   perform pg_temp.become(parent);
   delete from public.family_grants where id = pending;

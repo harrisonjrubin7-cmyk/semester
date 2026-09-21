@@ -299,16 +299,10 @@ export function itemsOn(cat: Catalog, now: Date, year: number, month: number, da
   return datedItems(cat, now).filter((i) => sameDay(i.date, target));
 }
 
-/** One dot per deadline in the month grid, capped at three. */
-export function dotsForMonth(cat: Catalog, now: Date, year: number, month: number): Record<number, number> {
-  const counts: Record<number, number> = {};
-  datedItems(cat, now).forEach((i) => {
-    if (i.date.getFullYear() === year && i.date.getMonth() === month) {
-      counts[i.date.getDate()] = (counts[i.date.getDate()] ?? 0) + 1;
-    }
-  });
-  return counts;
-}
+/* A `dotsForMonth(cat, now, year, month)` stood here, capped at three. The
+ * month grid does draw those dots, and computes them per day from the items
+ * it already has — `screens/Calendar.tsx` slices `onDay` to `DOTS` — so this
+ * was a second way to count them that nothing asked for. */
 
 // ── Your own things, folded into the day ──────────────────────────────────
 
