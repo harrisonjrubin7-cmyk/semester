@@ -83,6 +83,25 @@ jobs:
           else
             list=$(git diff --name-only HEAD^ HEAD -- supabase/functions \
               | cut -d/ -f3 | sort -u | tr '\n' ' ')
+            # `_shared/` is not a function; it is imported by several, and the
+            # CLI bundles it into each at deploy time. So a change there must
+            # redeploy every function that imports it — and must not be passed
+            # on as a name, because the existence check below would fail on it.
+            #
+            # This is the half that is easy to leave out: with `_shared` merely
+            # skipped, a fix to shared code would report "deployed" having
+            # redeployed nothing, and the functions would keep running the old
+            # copy. Dependents are found by asking which functions import it
+            # rather than by a list here, so a fourth one cannot go missing.
+            case " $list " in
+              *" _shared "*)
+                list=$(printf '%s' "$list" | tr ' ' '\n' | grep -v '^_shared$' || true)
+                deps=$(grep -rl "_shared/" supabase/functions --include=index.ts \
+                  | cut -d/ -f3 | sort -u)
+                list=$(printf '%s\n%s\n' "$list" "$deps" | sed '/^$/d' | sort -u | tr '\n' ' ')
+                echo "::notice title=Shared code::_shared changed, so every function importing it is redeployed."
+                ;;
+            esac
           fi
           list=$(printf '%s' "$list" | tr -s ' ' | sed 's/^ //; s/ $//')
           if [ -z "$list" ]; then
