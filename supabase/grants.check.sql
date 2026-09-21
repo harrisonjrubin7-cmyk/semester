@@ -124,16 +124,23 @@ end $$;
 do $$
 declare
   /*
-   * The allowlist. Three, and each is a deliberate entry point:
+   * The allowlist. Four, and each is a deliberate entry point:
    *   make_referral_code  — mints this account's own code
    *   claim_referral      — records that this account arrived on somebody's
    *   referral_standing   — two integers and a boolean about the caller
+   *   adopt_lti_identity  — attaches a Brightspace launch to the caller's own
+   *                         account. Callable by a signed-in account *because*
+   *                         that is half the security argument: it needs a
+   *                         launch ticket the server minted AND a session the
+   *                         caller proved, and neither alone will move an
+   *                         account. See 20260921160100_lti_identity.sql.
    *
    * Adding a line here is the decision. If a new function needs to be callable
    * it belongs in this array with its own migration granting it; if it does
    * not, the migration revokes it and this array does not change.
    */
   allowed constant text[] := array[
+    'adopt_lti_identity(want_ticket text)',
     'claim_referral(given text)',
     'make_referral_code()',
     'referral_standing()'
@@ -172,7 +179,7 @@ begin
   if missing is not null then
     raise exception 'FAILED: the allowlist names %, which a signed-in account cannot call', missing;
   end if;
-  raise notice 'ok  and can call all three that it should';
+  raise notice 'ok  and can call all four that it should';
 end $$;
 
 -- ── The gate's own switch, named because it is the one that was open ──────

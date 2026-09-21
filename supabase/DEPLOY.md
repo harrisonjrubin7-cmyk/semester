@@ -165,19 +165,42 @@ which is a confusing thing to debug if you did not know the row was missing.
 Both URLs are `https` by a check constraint rather than by convention: they are
 the two addresses this function redirects a student to and fetches keys from.
 
-### What a launch does today, and what it does not
+### One setting it needs
 
-It verifies, and then it stops. The last thing the function does on a good
-launch is render a page saying the connection works. **Signing in from
-Brightspace is not built** — turning a platform's id for a person into a
-Semester account is a real decision, including what happens when that human
-already made an account themselves, and `20260921160000_lti.sql` says why there
-is deliberately no foreign key answering it yet.
+    SEMESTER_APP_URL = https://harrisonjrubin7-cmyk.github.io/semester/
 
-So this is installable and testable by an administrator now, and it is not yet
-a way in for a student. Deep linking and grade passback are not built either;
-both need a key of this tool's own, which is why there is no key material in
-the migration.
+Set it under Edge Functions → Secrets. There is deliberately **no default**:
+this is the address a student's browser is sent to carrying a one-use session
+token, so a wrong guess is not a broken link, it is a token handed to whatever
+is at the address we assumed. Without it the function refuses the launch and
+says which setting is missing.
+
+### What a launch does
+
+A first launch **makes an account**, keyed on the issuer and the platform's
+subject for that person, and signs them in. A professor switches the tool on
+and two hundred students click it that week; every one asked to go and sign up
+first is one who does not come back.
+
+Attaching an account a student **already had** is never automatic. Nothing in
+this function reads the token's email claim to find an existing account — an
+email claim is a string a registered platform sends us, and matching on it
+hands an account to whoever can get one registration row wrong. Instead the
+launch issues a ticket, and `adopt_lti_identity` spends it only alongside a
+session the student proved. Two proofs, held by no single party.
+
+`_shared/ltiaccount.ts` makes that structural: a provisioned account's address
+is synthesised on `lti.invalid`, a domain that cannot receive mail, so there is
+no account for an email match to find even if somebody later writes one.
+
+**The invite gate is not bypassed.** While it is on, the function puts the
+synthesised address on `public.invites` before creating the account — which is
+the honest reading of what happened, since a school's administrator installing
+this tool is an invitation issued by exactly the person the gate exists to let
+issue them. It leaves a row saying so.
+
+Deep linking and grade passback are still not built; both need a key of this
+tool's own, which is why there is no key material in either migration.
 
 ## Tables
 
