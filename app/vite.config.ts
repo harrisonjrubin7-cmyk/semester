@@ -509,6 +509,7 @@ const MOCKS_MODULES = [
   'src/screens/call/consent.ui.test.tsx',
   'src/screens/addmaterial.test.tsx',
   'src/screens/pathway.test.tsx',
+  'src/screens/solvephoto.test.tsx',
   'src/screens/university.test.tsx',
   'src/state/deeplink.test.tsx',
   'src/state/persist/firstrun.test.ts',
