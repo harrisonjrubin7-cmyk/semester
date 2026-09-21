@@ -57,7 +57,7 @@
 
   const out = [];
   const seen = new Set();
-  let measured = 0, skipped = 0, gradient = 0, invisible = 0;
+  let measured = 0, skipped = 0, gradient = 0, invisible = 0, decorative = 0;
   /*
    * `document.body`, and it has to be.
    *
@@ -74,7 +74,7 @@
    * elements are asked about.
    */
   const rootEl = window.__sweepRoot ? document.querySelector(window.__sweepRoot) : document.body;
-  if (!rootEl) return { rows: [], measured: 0, skipped: 0, gradient: 0, invisible: 0, missingRoot: true };
+  if (!rootEl) return { rows: [], measured: 0, skipped: 0, gradient: 0, invisible: 0, decorative: 0, missingRoot: true };
   const within = [rootEl, ...rootEl.querySelectorAll('*')];
   for (const el of within) {
     const cs = getComputedStyle(el);
@@ -125,6 +125,55 @@
     const ink = ownText ? parse(cs.color) : null;
     if (ownText && !ph && ink && ink.a === 0) { invisible += 1; continue; }
 
+    /*
+     * A single glyph the author has declared carries nothing.
+     *
+     * The sibling of the case above, and the one it did not cover. That `·`
+     * was invisible; this one is painted, at 3.6:1 on the darkest ground —
+     * `components/SampleMark.tsx` separates *These are mine* from *Not mine*
+     * with `<span aria-hidden="true">·</span>`, and a run across thirteen
+     * grounds, six navigations and two widths reported it eighty-two times.
+     * One separator dot, counted once per pass, filling the whole findings
+     * list.
+     *
+     * 1.4.3 exempts text that is pure decoration, and `aria-hidden="true"` is
+     * the author saying in the markup that this is what it is.
+     *
+     * ## Why the test is not `aria-hidden` alone
+     *
+     * Because that was the first version of this, and measuring it stopped
+     * it. Across all fifty-eight destinations, **208 of 2,984 visible text
+     * elements sit inside `aria-hidden="true"` — seven per cent** — and they
+     * are not all decoration: `span.mcell-count` is the number of things on a
+     * calendar day, `span.paper-line` is the preview text inside a document
+     * template card, and the weekday column headers are `M`, `T`, `W`. Every
+     * one of those is read by a sighted person and hidden only because a
+     * fuller label is offered to a screen reader. Skipping them would make
+     * this sweep blind to a whole class of real text, which is the same
+     * mistake as the false finding, pointed the other way.
+     *
+     * So: hidden **and** a single character that is neither a letter nor a
+     * digit. That leaves 118 of the 2,984 — `·`, `✦`, `↑`, `+`, `−`, `|` —
+     * and not one word, digit or initial among them.
+     *
+     * Measured through this file rather than beside it, on `calendar`, `write`
+     * and `deck` at `SWEEP_SCOPE=all`:
+     *
+     *     narrow (this rule)     258 measured,  4 called decoration
+     *     aria-hidden alone      172 measured, 90 called decoration
+     *
+     * Eighty-six elements of real text on three screens, which the blanket
+     * rule would have stopped looking at.
+     *
+     * Counted rather than dropped, like every other thing this file declines
+     * to measure: a pass that looked away should say so.
+     */
+    if (ownText && !ph && el.closest('[aria-hidden="true"]') &&
+        /^[^\p{L}\p{N}]$/u.test((el.textContent || '').trim())) {
+      decorative += 1;
+      continue;
+    }
+
     measured += 1;
     const size = parseFloat(cs.fontSize);
     const bold = (+cs.fontWeight || 400) >= 700;
@@ -149,5 +198,5 @@
     if (ownText) check(cs.color, 'text', el.textContent);
     if (ph) check(getComputedStyle(el, '::placeholder').color, 'placeholder', ph);
   }
-  return { rows: out, measured, skipped, gradient, invisible };
+  return { rows: out, measured, skipped, gradient, invisible, decorative };
 })()
