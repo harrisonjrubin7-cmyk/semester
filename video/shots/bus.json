@@ -1,126 +1,126 @@
 {
-  "course": "bus",
-  "id": "bus-podcast",
-  "shots": [
-    {
-      "slot": "bus/chapter-0",
-      "at": 0,
-      "seconds": 6,
-      "kind": "establishing",
-      "chapter": "Cold open",
-      "subject": ""
-    },
-    {
-      "slot": "bus/chapter-1",
-      "at": 35,
-      "seconds": 6,
-      "kind": "establishing",
-      "chapter": "How the grade actually works",
-      "subject": ""
-    },
-    {
-      "slot": "bus/chapter-2",
-      "at": 136,
-      "seconds": 6,
-      "kind": "establishing",
-      "chapter": "The 5 C's",
-      "subject": ""
-    },
-    {
-      "slot": "bus/chapter-3",
-      "at": 236,
-      "seconds": 6,
-      "kind": "establishing",
-      "chapter": "The 3-V principle",
-      "subject": ""
-    },
-    {
-      "slot": "bus/chapter-4",
-      "at": 305,
-      "seconds": 6,
-      "kind": "establishing",
-      "chapter": "The seven tactics",
-      "subject": ""
-    },
-    {
-      "slot": "bus/chapter-5",
-      "at": 387,
-      "seconds": 6,
-      "kind": "establishing",
-      "chapter": "SWOT",
-      "subject": ""
-    },
-    {
-      "slot": "bus/chapter-6",
-      "at": 440,
-      "seconds": 6,
-      "kind": "establishing",
-      "chapter": "Value and customer centricity",
-      "subject": ""
-    },
-    {
-      "slot": "bus/chapter-7",
-      "at": 608,
-      "seconds": 6,
-      "kind": "establishing",
-      "chapter": "Marketing research",
-      "subject": ""
-    },
-    {
-      "slot": "bus/chapter-8",
-      "at": 783,
-      "seconds": 6,
-      "kind": "establishing",
-      "chapter": "Segmentation, targeting, positioning",
-      "subject": ""
-    },
-    {
-      "slot": "bus/chapter-9",
-      "at": 895,
-      "seconds": 6,
-      "kind": "establishing",
-      "chapter": "Consumer behaviour and behavioural economics",
-      "subject": ""
-    },
-    {
-      "slot": "bus/chapter-10",
-      "at": 1048,
-      "seconds": 6,
-      "kind": "establishing",
-      "chapter": "Digital marketing and the metrics",
-      "subject": ""
-    },
-    {
-      "slot": "bus/chapter-11",
-      "at": 1170,
-      "seconds": 6,
-      "kind": "establishing",
-      "chapter": "Product, brand, price, distribution",
-      "subject": ""
-    },
-    {
-      "slot": "bus/chapter-12",
-      "at": 1372,
-      "seconds": 6,
-      "kind": "establishing",
-      "chapter": "The midterm case playbook",
-      "subject": ""
-    },
-    {
-      "slot": "bus/chapter-13",
-      "at": 1551,
-      "seconds": 6,
-      "kind": "establishing",
-      "chapter": "Self-test",
-      "subject": ""
-    },
-    {
-      "slot": "bus/chapter-14",
-      "at": 1828,
-      "seconds": 6,
-      "kind": "establishing",
-      "chapter": "Close",
-      "subject": ""
-    }
-  ]
+ "course": "bus",
+ "id": "bus-podcast",
+ "shots": [
+  {
+   "slot": "bus/chapter-0",
+   "at": 0,
+   "seconds": 6,
+   "kind": "establishing",
+   "chapter": "Cold open",
+   "subject": "a shop's shutters half raised at dawn, the street outside still empty"
+  },
+  {
+   "slot": "bus/chapter-1",
+   "at": 35,
+   "seconds": 6,
+   "kind": "detail",
+   "chapter": "How the grade actually works",
+   "subject": "a set of brass scales on a counter, one pan settled lower than the other"
+  },
+  {
+   "slot": "bus/chapter-2",
+   "at": 136,
+   "seconds": 6,
+   "kind": "establishing",
+   "chapter": "The 5 C's",
+   "subject": "five shipping containers stacked on a dock, each one a different colour"
+  },
+  {
+   "slot": "bus/chapter-3",
+   "at": 236,
+   "seconds": 6,
+   "kind": "detail",
+   "chapter": "The 3-V principle",
+   "subject": "three funnels of different widths on a workbench, the narrowest still dripping"
+  },
+  {
+   "slot": "bus/chapter-4",
+   "at": 305,
+   "seconds": 6,
+   "kind": "detail",
+   "chapter": "The seven tactics",
+   "subject": "a tool wall in a workshop, seven outlines bare where the tools have been taken"
+  },
+  {
+   "slot": "bus/chapter-5",
+   "at": 387,
+   "seconds": 6,
+   "kind": "establishing",
+   "chapter": "SWOT",
+   "subject": "a crossroads from above at dusk, four roads meeting on an empty square"
+  },
+  {
+   "slot": "bus/chapter-6",
+   "at": 440,
+   "seconds": 6,
+   "kind": "detail",
+   "chapter": "Value and customer centricity",
+   "subject": "a warm loaf passed across a counter, both hands cupped underneath it"
+  },
+  {
+   "slot": "bus/chapter-7",
+   "at": 608,
+   "seconds": 6,
+   "kind": "detail",
+   "chapter": "Marketing research",
+   "subject": "a tape recorder running on a cafe table between two cooling cups"
+  },
+  {
+   "slot": "bus/chapter-8",
+   "at": 783,
+   "seconds": 6,
+   "kind": "detail",
+   "chapter": "Segmentation, targeting, positioning",
+   "subject": "a tray of loose buttons sorted into shallow dishes by colour and by size"
+  },
+  {
+   "slot": "bus/chapter-9",
+   "at": 895,
+   "seconds": 6,
+   "kind": "establishing",
+   "chapter": "Consumer behaviour and behavioural economics",
+   "subject": "a supermarket aisle at night, fully lit and empty of shoppers"
+  },
+  {
+   "slot": "bus/chapter-10",
+   "at": 1048,
+   "seconds": 6,
+   "kind": "detail",
+   "chapter": "Digital marketing and the metrics",
+   "subject": "a rack of cooling fans turning behind a steel grille, lit from within"
+  },
+  {
+   "slot": "bus/chapter-11",
+   "at": 1170,
+   "seconds": 6,
+   "kind": "establishing",
+   "chapter": "Product, brand, price, distribution",
+   "subject": "a loading bay at first light, four wrapped pallets waiting on the concrete"
+  },
+  {
+   "slot": "bus/chapter-12",
+   "at": 1372,
+   "seconds": 6,
+   "kind": "detail",
+   "chapter": "The midterm case playbook",
+   "subject": "a stopwatch face up on a bare table, the second hand mid sweep"
+  },
+  {
+   "slot": "bus/chapter-13",
+   "at": 1551,
+   "seconds": 6,
+   "kind": "establishing",
+   "chapter": "Self-test",
+   "subject": "one chair pulled out from a long empty table, lit hard from one side"
+  },
+  {
+   "slot": "bus/chapter-14",
+   "at": 1828,
+   "seconds": 6,
+   "kind": "establishing",
+   "chapter": "Close",
+   "subject": "a shop's lights going off one bank at a time, the wet street outside"
+  }
+ ]
 }

@@ -1,134 +1,134 @@
 {
-  "course": "psci",
-  "id": "psci-podcast",
-  "shots": [
-    {
-      "slot": "psci/chapter-0",
-      "at": 0,
-      "seconds": 6,
-      "kind": "establishing",
-      "chapter": "Cold open",
-      "subject": ""
-    },
-    {
-      "slot": "psci/chapter-1",
-      "at": 56,
-      "seconds": 6,
-      "kind": "establishing",
-      "chapter": "Theory and hypotheses",
-      "subject": ""
-    },
-    {
-      "slot": "psci/chapter-2",
-      "at": 220,
-      "seconds": 6,
-      "kind": "establishing",
-      "chapter": "Measurement, and why it decides Kansas",
-      "subject": ""
-    },
-    {
-      "slot": "psci/chapter-3",
-      "at": 397,
-      "seconds": 6,
-      "kind": "establishing",
-      "chapter": "Describing data, and the ecological fallacy",
-      "subject": ""
-    },
-    {
-      "slot": "psci/chapter-4",
-      "at": 463,
-      "seconds": 6,
-      "kind": "establishing",
-      "chapter": "Hypotheses and variables",
-      "subject": ""
-    },
-    {
-      "slot": "psci/chapter-5",
-      "at": 531,
-      "seconds": 6,
-      "kind": "establishing",
-      "chapter": "Causality — the four hurdles",
-      "subject": ""
-    },
-    {
-      "slot": "psci/chapter-6",
-      "at": 658,
-      "seconds": 6,
-      "kind": "establishing",
-      "chapter": "Research design and validity",
-      "subject": ""
-    },
-    {
-      "slot": "psci/chapter-7",
-      "at": 758,
-      "seconds": 6,
-      "kind": "establishing",
-      "chapter": "Experiments",
-      "subject": ""
-    },
-    {
-      "slot": "psci/chapter-8",
-      "at": 948,
-      "seconds": 6,
-      "kind": "establishing",
-      "chapter": "Controlling without an experiment",
-      "subject": ""
-    },
-    {
-      "slot": "psci/chapter-9",
-      "at": 1131,
-      "seconds": 6,
-      "kind": "establishing",
-      "chapter": "Sampling",
-      "subject": ""
-    },
-    {
-      "slot": "psci/chapter-10",
-      "at": 1223,
-      "seconds": 6,
-      "kind": "establishing",
-      "chapter": "Why polls miss",
-      "subject": ""
-    },
-    {
-      "slot": "psci/chapter-11",
-      "at": 1354,
-      "seconds": 6,
-      "kind": "establishing",
-      "chapter": "Probability, inference and regression",
-      "subject": ""
-    },
-    {
-      "slot": "psci/chapter-12",
-      "at": 1558,
-      "seconds": 6,
-      "kind": "establishing",
-      "chapter": "Small-N and selection bias",
-      "subject": ""
-    },
-    {
-      "slot": "psci/chapter-13",
-      "at": 1657,
-      "seconds": 6,
-      "kind": "establishing",
-      "chapter": "The five exam frames",
-      "subject": ""
-    },
-    {
-      "slot": "psci/chapter-14",
-      "at": 1766,
-      "seconds": 6,
-      "kind": "establishing",
-      "chapter": "Self-test",
-      "subject": ""
-    },
-    {
-      "slot": "psci/chapter-15",
-      "at": 2082,
-      "seconds": 6,
-      "kind": "establishing",
-      "chapter": "Close",
-      "subject": ""
-    }
-  ]
+ "course": "psci",
+ "id": "psci-podcast",
+ "shots": [
+  {
+   "slot": "psci/chapter-0",
+   "at": 0,
+   "seconds": 6,
+   "kind": "establishing",
+   "chapter": "Cold open",
+   "subject": "a polling station at dawn, the door propped open, nobody through it yet"
+  },
+  {
+   "slot": "psci/chapter-1",
+   "at": 56,
+   "seconds": 6,
+   "kind": "detail",
+   "chapter": "Theory and hypotheses",
+   "subject": "a plumb line hanging dead still over a half built wall"
+  },
+  {
+   "slot": "psci/chapter-2",
+   "at": 220,
+   "seconds": 6,
+   "kind": "detail",
+   "chapter": "Measurement, and why it decides Kansas",
+   "subject": "two measuring jugs of different shapes holding the same volume of water"
+  },
+  {
+   "slot": "psci/chapter-3",
+   "at": 397,
+   "seconds": 6,
+   "kind": "abstract",
+   "chapter": "Describing data, and the ecological fallacy",
+   "subject": "a flock of starlings turning as one mass, single birds flickering out of it"
+  },
+  {
+   "slot": "psci/chapter-4",
+   "at": 463,
+   "seconds": 6,
+   "kind": "detail",
+   "chapter": "Hypotheses and variables",
+   "subject": "two seedlings in identical pots, one under a glass cloche and one bare"
+  },
+  {
+   "slot": "psci/chapter-5",
+   "at": 531,
+   "seconds": 6,
+   "kind": "establishing",
+   "chapter": "Causality — the four hurdles",
+   "subject": "four hurdles set out on an empty running track, evenly spaced"
+  },
+  {
+   "slot": "psci/chapter-6",
+   "at": 658,
+   "seconds": 6,
+   "kind": "establishing",
+   "chapter": "Research design and validity",
+   "subject": "a surveyor's tripod on a hillside, the instrument level and unattended"
+  },
+  {
+   "slot": "psci/chapter-7",
+   "at": 758,
+   "seconds": 6,
+   "kind": "detail",
+   "chapter": "Experiments",
+   "subject": "two identical glass tanks side by side, one clouded and one clear"
+  },
+  {
+   "slot": "psci/chapter-8",
+   "at": 948,
+   "seconds": 6,
+   "kind": "establishing",
+   "chapter": "Controlling without an experiment",
+   "subject": "a river split by a gravel bank, the two channels running at different speeds"
+  },
+  {
+   "slot": "psci/chapter-9",
+   "at": 1131,
+   "seconds": 6,
+   "kind": "detail",
+   "chapter": "Sampling",
+   "subject": "a ladle dipped into a wide vat, the surface closing over behind it"
+  },
+  {
+   "slot": "psci/chapter-10",
+   "at": 1223,
+   "seconds": 6,
+   "kind": "detail",
+   "chapter": "Why polls miss",
+   "subject": "a fishing net hauled up with wide tears in it, the water running through"
+  },
+  {
+   "slot": "psci/chapter-11",
+   "at": 1354,
+   "seconds": 6,
+   "kind": "abstract",
+   "chapter": "Probability, inference and regression",
+   "subject": "rain finding its way down a pane, separate drops merging into one track"
+  },
+  {
+   "slot": "psci/chapter-12",
+   "at": 1558,
+   "seconds": 6,
+   "kind": "detail",
+   "chapter": "Small-N and selection bias",
+   "subject": "three pebbles taken from a whole shingle beach, held in an open palm"
+  },
+  {
+   "slot": "psci/chapter-13",
+   "at": 1657,
+   "seconds": 6,
+   "kind": "establishing",
+   "chapter": "The five exam frames",
+   "subject": "five windows in a stone wall, each framing a different part of the valley"
+  },
+  {
+   "slot": "psci/chapter-14",
+   "at": 1766,
+   "seconds": 6,
+   "kind": "detail",
+   "chapter": "Self-test",
+   "subject": "a brass bell on an empty invigilator's desk, nobody behind it"
+  },
+  {
+   "slot": "psci/chapter-15",
+   "at": 2082,
+   "seconds": 6,
+   "kind": "establishing",
+   "chapter": "Close",
+   "subject": "a polling station at dusk, the door shut, the lights still burning inside"
+  }
+ ]
 }
