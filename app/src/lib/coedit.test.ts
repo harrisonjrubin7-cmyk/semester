@@ -28,6 +28,7 @@ const layer = (id: string, over: Partial<DesignLayer> = {}): DesignLayer => ({
   fontSize: 24,
   bold: false,
   opacity: 1,
+  rotation: 0,
   fileId: '',
   ...over,
 });
@@ -220,6 +221,7 @@ describe('what to send after an edit here', () => {
     ['fontSize', { fontSize: 99 }],
     ['bold', { bold: true }],
     ['opacity', { opacity: 0.5 }],
+    ['rotation', { rotation: 15 }],
     ['kind', { kind: 'rectangle' as const }],
     ['fileId', { fileId: 'abc' }],
   ] as [string, Partial<DesignLayer>][]) {

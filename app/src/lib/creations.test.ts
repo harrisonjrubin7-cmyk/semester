@@ -9,6 +9,7 @@ import {
   readCreations,
   responseRows,
   sheetText,
+  layerTransform,
   splitClip,
   trianglePoints,
   videoSeconds,
@@ -256,6 +257,39 @@ describe('a design as SVG', () => {
     expect(designSvg(d)).not.toContain('opacity');
   });
 
+  /*
+   * Rotation is about the layer's own centre. `rotate(deg)` with no centre
+   * turns about the page's origin, which throws the layer off the canvas on
+   * the first degree — so the centre is the assertion, not the presence of a
+   * transform.
+   */
+  it('turns a layer about its own centre, not about the page corner', () => {
+    const d = canvas();
+    d.layers = [{ ...newLayer('rectangle', d), x: 100, y: 200, w: 300, h: 400, rotation: 30 }];
+    expect(designSvg(d)).toContain('transform="rotate(30 250 400)"');
+  });
+
+  it('says nothing about a layer nobody turned', () => {
+    // The control, and the same promise the fade makes: an export of a design
+    // with no rotation in it carries no transforms at all.
+    const d = canvas();
+    d.layers = [{ ...newLayer('rectangle', d), rotation: 0 }];
+    expect(designSvg(d)).not.toContain('transform');
+    expect(layerTransform(d.layers[0])).toBe('');
+  });
+
+  it('turns every kind of layer, not only the shapes', () => {
+    for (const kind of ['text', 'rectangle', 'ellipse', 'triangle'] as const) {
+      const d = canvas();
+      d.layers = [{ ...newLayer(kind, d), text: 'hello', rotation: 45 }];
+      expect(designSvg(d), kind).toContain('transform="rotate(45');
+    }
+
+    const d = canvas();
+    d.layers = [{ ...newLayer('image', d), fileId: 'f1', rotation: 45 }];
+    expect(designSvg(d, { f1: 'data:image/png;base64,AAAA' })).toContain('transform="rotate(45');
+  });
+
   it('fades every kind of layer, not only the shapes', () => {
     // Four separate attributes in four branches of one function, which is
     // exactly the shape of code where one gets missed.
@@ -344,6 +378,23 @@ describe('a creation library', () => {
 
     const out = readCreations({ version: 1, projects: [p] });
     expect(out.projects[0].design.layers[0].opacity).toBe(1);
+  });
+
+  it('reads a design saved before layers could be turned, and leaves it upright', () => {
+    const p = newCreation('design');
+    p.design.layers = [newLayer('rectangle', p.design)];
+    delete (p.design.layers[0] as Partial<DesignLayer>).rotation;
+
+    const out = readCreations({ version: 1, projects: [p] });
+    expect(out.projects[0].design.layers[0].rotation).toBe(0);
+  });
+
+  it('refuses a rotation outside the half-turn either way the slider can reach', () => {
+    for (const rotation of [181, -181, 360, Number.NaN]) {
+      const p = newCreation('design');
+      p.design.layers = [{ ...newLayer('rectangle', p.design), rotation }];
+      expect(() => lib(p), String(rotation)).toThrow(/layer/i);
+    }
   });
 
   it('refuses an opacity outside the range the editor can reach', () => {

@@ -3,6 +3,7 @@ import {
   atFirstBeat,
   atLastBeat,
   CUE_LEAD,
+  cueEntrance,
   cueIndexAt,
   showingExtra,
   type BeatPosition,
@@ -160,5 +161,58 @@ describe('the slide at a moment', () => {
       last = i;
     }
     expect(last).toBe(3);
+  });
+});
+
+describe('a cue arriving', () => {
+  /** What the lesson video fades a slide in over. */
+  const OVER = 0.42;
+
+  it('starts when the cue is selected, not when its narration begins', () => {
+    /*
+     * The whole reason this function exists. `cueIndexAt` turns the slide
+     * 150ms *before* the cue's own second, so an entrance measured from
+     * `cue.at` is being asked about a negative time for exactly that long —
+     * and clamped, a negative time is an opacity of zero.
+     *
+     * Literal seconds, not `12.5 - CUE_LEAD`, which is the expression the
+     * function evaluates and would agree with itself at any lead including
+     * none.
+     */
+    expect(CUE_LEAD).toBe(0.15);
+    expect(cueEntrance(CUES, 1, 12.35, OVER)).toBe(0);
+    expect(cueEntrance(CUES, 1, 12.35 + OVER / 2, OVER)).toBeCloseTo(0.5, 6);
+    expect(cueEntrance(CUES, 1, 12.35 + OVER, OVER)).toBeCloseTo(1, 6);
+  });
+
+  it('is never zero while a cue is the one on screen', () => {
+    /*
+     * The bug this was written for, stated as the property that was broken:
+     * between the moment `cueIndexAt` hands over and the moment the new slide
+     * is visible, the frame had nothing on it at all. The outgoing slide was
+     * gone because the index had moved; the incoming one was at zero.
+     *
+     * Walked at a frame a time through every handover in the fixture.
+     */
+    for (let s = 0; s <= 45; s += 1 / 30) {
+      const index = cueIndexAt(CUES, s);
+      const shown = cueEntrance(CUES, index, s, OVER);
+      expect(shown, `at ${s.toFixed(3)}s, cue ${index}`).toBeGreaterThan(0);
+    }
+  });
+
+  it('stays inside 0 and 1 either side of the cue', () => {
+    expect(cueEntrance(CUES, 1, 0, OVER)).toBe(0);
+    expect(cueEntrance(CUES, 1, 1000, OVER)).toBe(1);
+  });
+
+  it('is fully arrived when there is no entrance to play', () => {
+    expect(cueEntrance(CUES, 1, 12.35, 0)).toBe(1);
+    expect(cueEntrance(CUES, 1, 0, 0)).toBe(1);
+  });
+
+  it('answers for a cue that is not there, rather than throwing', () => {
+    expect(cueEntrance([], 0, 5, OVER)).toBe(1);
+    expect(cueEntrance(CUES, 99, 5, OVER)).toBe(1);
   });
 });

@@ -88,3 +88,34 @@ export function cueIndexAt(cues: readonly { at: number }[], seconds: number): nu
   for (let n = 0; n < cues.length; n += 1) if (cues[n].at <= seconds + CUE_LEAD) i = n;
   return i;
 }
+
+/**
+ * How far a cue is into its entrance at `seconds`, from 0 to 1.
+ *
+ * The companion to `cueIndexAt`, and it exists because getting one right
+ * without the other produces a bug neither one looks like. `cueIndexAt` turns
+ * the slide `CUE_LEAD` *before* the cue's own second — that is the whole point
+ * of the lead — so an animation measured from `cue.at` is being asked about a
+ * negative time for those 150ms. Clamped, that is an opacity of zero.
+ *
+ * The lesson video did exactly that, and every unit rendered from it blinks
+ * black for 150ms at every cue: the outgoing slide has already gone because
+ * the index moved on, and the incoming one is not visible yet. Ten cues a unit,
+ * a hundred and twenty in a thirteen-minute explainer. It survived because a
+ * frame sampled at random is almost never inside a 150ms window, and because
+ * the two halves of the rule lived in different files.
+ *
+ * So the entrance starts where the cue was *selected*, not where its narration
+ * begins. Before that it is 0, after `over` seconds it is 1, and a caller that
+ * wants a rise or a fade drives both from this one number.
+ */
+export function cueEntrance(
+  cues: readonly { at: number }[],
+  index: number,
+  seconds: number,
+  over: number,
+): number {
+  if (over <= 0) return 1;
+  const shown = (cues[index]?.at ?? 0) - CUE_LEAD;
+  return Math.max(0, Math.min(1, (seconds - shown) / over));
+}
