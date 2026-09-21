@@ -42,6 +42,37 @@ do $$ begin
   end if;
 end $$;
 
+-- ── The grant this directory could not see ────────────────────────────────
+--
+-- Supabase does not only grant tables. `pg_default_acl` on a real project
+-- carries an entry for schema `public`, objtype `f`:
+--
+--     {postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}
+--
+-- so **every function created in `public` is granted EXECUTE to those roles
+-- explicitly, as it is created**. That is a different thing from the table
+-- grants below, and the difference is the whole reason this block exists:
+-- `revoke all on function … from public` removes the PUBLIC grant and does not
+-- touch an explicit per-role one. A migration that revokes only from PUBLIC
+-- therefore leaves the function reachable by anybody holding the publishable
+-- key, on a real project, while this harness — which never granted functions
+-- at all — reported it closed.
+--
+-- That was not hypothetical. `20260901001200_invites.sql` was applied to the
+-- live project on 21 September and `set_invite_only(boolean)` landed with
+-- `anon=X` and `authenticated=X`: a signed-out visitor could have turned the
+-- pilot's invite gate on or off. `invites.check.sql` had a check for exactly
+-- that and it had been passing, because the thing it was testing against did
+-- not exist here.
+--
+-- Unlike the table grants, this one belongs in the stub rather than after the
+-- migrations, and can only work here: default privileges apply to objects
+-- created *afterwards*, so they must be in place before a migration creates
+-- its first function. `20260901001500_function_grants.sql` is what closes the
+-- hole this now makes visible.
+alter default privileges in schema public
+  grant execute on functions to anon, authenticated, service_role;
+
 -- Only the columns the check suites actually write. A real `auth.users` has
 -- many more, and none of them are reachable from a policy in this schema.
 create table if not exists auth.users (
