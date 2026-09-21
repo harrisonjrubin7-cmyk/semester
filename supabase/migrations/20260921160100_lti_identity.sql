@@ -115,8 +115,25 @@ create index if not exists lti_link_ticket_expires_at_idx on public.lti_link_tic
 --
 -- `indexes.check.sql` is what said so, on the tree where #614 added the table
 -- and #611 added the sweep. Neither could see the other.
-create index if not exists lti_link_ticket_provisioned_user_id_idx
-  on public.lti_link_ticket (provisioned_user_id);
+--
+-- **And neither could see the third.** The index that belongs here was added
+-- by `20260921174500_index_lti_link_ticket_user.sql`, merged at 17:49:26 on
+-- 21 September; this file grew its own at 17:50:42, seventy-six seconds later,
+-- from a session that could not see the first. Both are right on their own and
+-- together they are two identical indexes on one column — which
+-- `indexes.check.sql` caught in its *other* check, "identical indexes, one of
+-- each pair is dead weight", and which left `main` red.
+--
+-- The one here is withdrawn rather than the dedicated migration, on a reading
+-- of the live ledger rather than a guess: production has applied nothing above
+-- `20260921150750`, so neither this file nor that one has ever run, and there
+-- is no database anywhere holding the index under this name to diverge from.
+-- The other file is self-contained and carries the whole argument, including
+-- the part this comment does not — that `lti_claim_link` deletes the
+-- provisioned user on the ordinary linking path, so the scan is on that path
+-- and not only on account deletion.
+--
+-- Do not add it back here. The guard cannot tell a second index from a first.
 
 comment on table public.lti_link_ticket is
   'Proof that a launch was validated, spent once when a student attaches an account they already had.';
