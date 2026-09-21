@@ -176,7 +176,6 @@ export function SchoolPicker() {
               height: 44,
               letterSpacing: '0.1em',
               textTransform: 'uppercase',
-              opacity: made === null ? 0.45 : 1,
             }}
           >
             {made === null ? 'Name it first' : 'Add it'}

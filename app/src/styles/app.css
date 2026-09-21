@@ -1924,6 +1924,59 @@ a:hover {
   background: rgba(206, 211, 220, 0.2);
 }
 
+/*
+ * A disabled `.btn`, said as ink rather than as a veil.
+ *
+ * `industry.css` answers `:disabled` with `opacity: 0.45`. That is the design
+ * system's call and this file does not edit that sheet — `deadcss.test.ts`
+ * says why it is left alone — but `.device` is where this app states its own
+ * look, and an opacity is the wrong tool here for the two reasons `lib/dim.ts`
+ * sets out: it multiplies with anything inside it, and `tokensFor` cannot
+ * raise it when the device asks for more contrast.
+ *
+ * **It multiplied five times over.** Five buttons dimmed themselves by hand on
+ * top of the system's 0.45 — `Cutoffs` at 0.45, `PostMortem` and
+ * `SchoolPicker` at 0.45, `TypeToConfirm` and `Update` at 0.4 — so what
+ * rendered was 0.20, 0.20 and 0.18. Nobody typed those. The inline halves are
+ * gone and this rule replaces the veil with `--app-faint`, which is held to
+ * 3:1 — the contrast bar for a disabled control, and the same answer
+ * `.bare:disabled`, `.bench-item`, `.desktop-star`, `.pill-soft` and
+ * `.rib-btn` already give.
+ *
+ * So `opacity: 1` here is load-bearing: without it the system's 0.45 would sit
+ * over the new ink and the two would compound again, at 0.19 — worse than what
+ * was there before. Measured in Chromium on Indigo and on Parchment.
+ *
+ * `.btn-primary` needs its own line rather than just the ink. It is a filled
+ * chrome button with a glow and a text shadow, and faint ink on a bright fill
+ * reads as broken rather than as unavailable — so the fill, the glow and the
+ * shadow come off and what is left is the flat outline every other disabled
+ * control in the app already is.
+ *
+ * `aria-disabled` beside `:disabled` because `FilePick` in `components/ui.tsx`
+ * is a `<label>` wrapping a disabled `<input type="file">`, and a label cannot
+ * match `:disabled` however disabled the control inside it is. It carried its
+ * own `opacity: 0.55` instead, and said nothing to a screen reader at all.
+ */
+.device .btn:disabled,
+.device .btn[aria-disabled='true'] {
+  opacity: 1;
+  color: var(--app-faint);
+  cursor: default;
+}
+.device .btn-primary:disabled,
+.device .btn-primary[aria-disabled='true'] {
+  background: none;
+  border-color: var(--app-line);
+  box-shadow: none;
+  text-shadow: none;
+  color: var(--app-faint);
+}
+.device .btn-primary:disabled:hover,
+.device .btn-primary:disabled:active {
+  filter: none;
+}
+
 .device .tag {
   border-radius: var(--r-sm);
   font-family: var(--font-heading);

@@ -1,7 +1,7 @@
 import { useEffect, useRef, type CSSProperties } from 'react';
-import { faintLine } from '../lib/dim';
+import { DIMMED_ROW, faintLine } from '../lib/dim';
 import { blockLabel, kindTint } from '../lib/kinds';
-import { gridAttrs, pointIn, useDragToMove } from '../lib/drag';
+import { HELD, gridAttrs, pointIn, useDragToMove } from '../lib/drag';
 import { hourWindow } from '../lib/hourwindow';
 import { placeBlock } from '../lib/hourplace';
 import { useStore } from '../state/store';
@@ -259,8 +259,11 @@ export function HourGrid({
             left: GUTTER - 4,
             right: 0,
             height: 1,
-            background: 'var(--app-accent)',
-            opacity: 0.8,
+            /* The strength in the colour rather than over it. This one is not
+               a leaf — the dot below is its child — so the `opacity` dimmed
+               both, and the mix is applied to both to keep the marker one
+               object. */
+            background: 'color-mix(in srgb, var(--app-accent) 80%, transparent)',
           }}
         >
           <span
@@ -271,7 +274,7 @@ export function HourGrid({
               width: 7,
               height: 7,
               borderRadius: '50%',
-              background: 'var(--app-accent)',
+              background: 'color-mix(in srgb, var(--app-accent) 80%, transparent)',
             }}
           />
         </div>
@@ -355,7 +358,7 @@ export function HourGrid({
                */
               backgroundImage: own ? `linear-gradient(${courseTint(b.c).wash}, ${courseTint(b.c).wash})` : undefined,
               boxShadow: '0 1px 0 var(--app-line-top) inset',
-              opacity: holding ? 0.4 : b.canceled ? 0.45 : 1,
+              opacity: holding ? HELD : b.canceled ? DIMMED_ROW : 1,
               // Only while held, so the page still scrolls under a finger.
               ...(holding ? { touchAction: 'none' as const } : {}),
             }}

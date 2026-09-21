@@ -70,6 +70,19 @@ export const HOLD_MS = 250;
 /** How far a pointer may move before a press is a scroll rather than a hold. */
 export const SLOP = 6;
 
+/**
+ * How far a card drops back while it is under the finger.
+ *
+ * Beside `HOLD_MS` and `SLOP` because it is the same kind of fact — how a
+ * drag behaves, answered once so the next draggable thing does not pick its
+ * own number by eye. It is deliberately *not* in `lib/dim.ts`: that file is
+ * about dimming **text**, and says so, and its answer there is a colour. This
+ * is a whole card with its title, its tag and its coloured edge going
+ * translucent together while it is lifted, which is what `opacity` is for and
+ * what a colour cannot do.
+ */
+export const HELD = 0.4;
+
 /** Times snap to the quarter hour. Finer is precision nobody drags for. */
 export const STEP_MINUTES = 15;
 

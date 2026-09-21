@@ -23,6 +23,7 @@
  */
 
 import { useNow, useStore } from '../state/store';
+import { DIMMED_ROW } from '../lib/dim';
 import { Page } from '../components/Page';
 import { FirstRun } from './FirstRun';
 import { Blueprint } from '../components/Blueprint';
@@ -166,7 +167,7 @@ export function Behind() {
                     padding: '11px 13px',
                     borderRadius: 'var(--r-md)',
                     border: '1px solid var(--app-line)',
-                    opacity: where === 'tight' ? 0.72 : 1,
+                    opacity: where === 'tight' ? DIMMED_ROW : 1,
                   }}
                 >
                   <span

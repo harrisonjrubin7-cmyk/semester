@@ -213,8 +213,7 @@ function LayoutPreview({ shell }: { shell: string }) {
               height: 11,
               width: '38%',
               borderRadius: 2,
-              background: 'var(--app-accent, var(--app-dim))',
-              opacity: 0.85,
+              background: 'color-mix(in srgb, var(--app-accent, var(--app-dim)) 85%, transparent)',
             }}
           />
           <span style={{ display: 'block', height: 4 }} />

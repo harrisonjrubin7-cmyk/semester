@@ -151,7 +151,7 @@ export function Cutoffs({ courseId, code }: { courseId: string; code: string }) 
             setOpen(false);
             }}
             tone="primary"
-            style={{ marginTop: 'var(--sp-2)', fontSize: 'var(--type-base)', opacity: typed === null ? 0.45 : 1 }}
+            style={{ marginTop: 'var(--sp-2)', fontSize: 'var(--type-base)' }}
           >
             {typed === null ? 'Nothing to save yet' : `Use these for ${code}`}
           </ActionButton>
