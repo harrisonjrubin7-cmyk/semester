@@ -1,0 +1,128 @@
+# Why there are exceptions here at all, and what was measured before adding one.
+#
+# `gitleaks` with its stock rules finds nine things in this repository. None of
+# the nine is a credential a stranger could use, and all nine are the same
+# rule — `generic-api-key`, which fires on a high-entropy string sitting near
+# the word "key". Left alone, the secret-scanning step in `ci.yml` is red on
+# every push for ever, and a check that is always red is a check nobody reads.
+#
+# Measured with gitleaks 8.28.0 over the working tree, 257 MB in 2.9 s:
+#
+#     generic-api-key  app/.env.production:14          sb_publishable_aU09…
+#     generic-api-key  app/src/lib/assistant.ts:56,436 semester.claude.v1, …
+#     generic-api-key  app/src/lib/classmates.test.ts:192,193,199,205
+#                                                      vanderbilt/ECON, …
+#     generic-api-key  audio/manifest.json:141,330     b729fa308ce916c1, …
+#
+# With this file: none. Each block below says which of those it answers and
+# why that string is not a credential.
+#
+# ## Every exception here is scoped to a value, and none to a file
+#
+# That is the decision worth stating, because the obvious way to write this
+# file is the wrong one. `paths = ['''^app/\.env\.production$''']` silences
+# those eight lines in one stroke — and turns off all ~170 rules for that file,
+# so a service-role key pasted into the very file whose header says it must
+# never go there would pass the check written to catch it. The same trap sits
+# on `assistant.ts`, which is the one file in the app that talks to Anthropic
+# and therefore the likeliest place for a real key to land by accident.
+#
+# So every block matches on the *secret gitleaks extracted*, never on where it
+# found it. A publishable key is allowed by its prefix wherever it appears; a
+# service key is caught wherever it appears, including here.
+#
+# ## The field that looks like it does this and does not
+#
+# `targetRules = ['generic-api-key']` on a global allowlist is the documented
+# way to narrow an exception to one rule, and **in 8.28.0 it silently makes the
+# whole allowlist inert**. Measured: the same path exception allows the file
+# without the field and allows nothing with it — nine findings before, nine
+# after, no warning either way. It is written down here because the failure is
+# invisible in both directions: the config reads as *more* careful than the one
+# that works, and the only symptom is a check that stayed red.
+#
+# Value-scoping is what this file uses instead, and it is the stronger of the
+# two anyway: `targetRules` leaves the other rules on for the file, while a
+# value regex leaves them on for the file *and* for the value.
+#
+# ## Proved rather than asserted
+#
+# A real `sk-ant-api03-…` (93 characters and the trailing AA), a service-role
+# JWT, and an AWS access token were planted one at a time in each of the four
+# files named above and the scan re-run. All four were reported:
+#
+#     anthropic-api-key  app/.env.production:15
+#     jwt                app/.env.production:16
+#     anthropic-api-key  app/src/lib/assistant.ts:470
+#     anthropic-api-key  audio/manifest.json:345
+#     aws-access-token   app/src/lib/classmates.test.ts:256
+#
+# The AWS control is worth a line of its own: the first attempt used
+# `AKIAIOSFODNN7EXAMPLE` and was *not* reported, which reads as a hole in this
+# file and is not one — gitleaks' own rules allowlist the key AWS prints in its
+# documentation. A random one is caught. A control that clears a suspect is a
+# claim about the control, and this one was wrong before it was right.
+
+[extend]
+useDefault = true
+
+# ── The Supabase publishable key, committed on purpose ──────────────────────
+#
+# `app/.env.production:14`. Its own header says why it is in the repository:
+# the built JavaScript contains it whichever way it is supplied, which is what
+# "publishable" means, and the row-level policies in the schema are what makes
+# that safe. Gitleaks cannot tell a key meant to be public from one that is
+# not; a person can, once, and this is where that reading is recorded.
+# `SECRETS.md` holds the same distinction in prose.
+#
+# Scoped to the prefix rather than to the current value, so rotating the key
+# does not mean editing this file — an exception that expires quietly is worse
+# than one that is scoped by hand. The prefix is what carries the safety:
+# Supabase names the secret half `sb_secret_…`, and a service-role key from
+# before that scheme is a JWT. Neither matches, and the controls above show
+# both are still caught.
+[[allowlists]]
+description = 'Supabase publishable keys, which the built page carries anyway. Never sb_secret_ and never a JWT.'
+regexTarget = 'secret'
+regexes = ['''^sb_publishable_[A-Za-z0-9_-]{8,}$''']
+
+# ── Two kinds of string this codebase calls a "key" ─────────────────────────
+#
+#   · `semester.claude.v1` and `semester.claude.strict.v1` are localStorage
+#     names — what a settings object is saved under in the student's own
+#     browser. `SETTINGS_KEY` and `STRICT_KEY` in `app/src/lib/assistant.ts`.
+#   · `vanderbilt/ECON` and its neighbours are classmate-room keys: a school
+#     slug and a course code joined by a slash. They are fixtures for
+#     `roomsFor`, and the real ones are public the moment two students are in
+#     the same room. Gitleaks reports the match truncated at the space, which
+#     is why the second regex ends at the department rather than the number.
+#
+# Both are anchored and shaped so they cannot match a credential: one is a
+# literal dotted prefix this app owns, the other is lowercase-slash-uppercase
+# and at most nineteen characters.
+[[allowlists]]
+description = 'A localStorage name, and a classmate-room key of school-slug/COURSE. Neither is a credential.'
+regexTarget = 'secret'
+regexes = [
+  '''^semester\.[a-z.]+\.v[0-9]+$''',
+  '''^[a-z][a-z0-9-]*/[A-Z]{2,4}$''',
+]
+
+# ── Content digests in the generated audio manifest ─────────────────────────
+#
+# `audio/manifest.json` carries one entry per lesson, each with a "key" that is
+# a 16-hex digest of the text the audio was rendered from. Sixteen hex
+# characters beside the word "key" is precisely what `generic-api-key` looks
+# for. Two of the several hundred crossed its entropy threshold this week and a
+# regenerated manifest would cross it with different ones, so this is scoped to
+# the shape rather than to the two that happened to fire.
+#
+# Sixteen hex characters is 64 bits and nothing in this project's credential
+# vocabulary is that short: the shortest real secret here is a 24-byte calendar
+# token, and the rest are JWTs and prefixed keys. Length alone is what makes
+# this exception safe, and it is checked — the planted Anthropic key in this
+# same file was reported.
+[[allowlists]]
+description = 'Generated 16-hex content digests, one per lesson. Too short to be any credential this project holds.'
+regexTarget = 'secret'
+regexes = ['''^[0-9a-f]{16}$''']
