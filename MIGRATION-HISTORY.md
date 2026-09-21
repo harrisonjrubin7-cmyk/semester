@@ -5,12 +5,20 @@ The schema this app runs on cannot be rebuilt from its own record.
 concern; this is the plan for fixing it, written before any of it was done so
 that the reasoning can be argued with rather than discovered in a diff.
 
-**The repair is done.** Steps 1, 2, 4 and 6 were carried out; step 3 turned
+**The repair is done, and the deploy has been observed working** — see
+*The deploy, observed* below, which is the only section here that reports a
+result rather than a plan. Steps 1, 2, 4 and 6 were carried out; step 3 turned
 out not to be needed and step 5 is withdrawn, both on evidence gathered doing
-the others, and each section says why. Step 6 was the last to close and the
-only one that could turn the deploy green: steps 1 to 5 change no version, and
-a version is the whole of the fault. **No step wrote to the ledger by hand** —
+the others, and each section says why. **No step wrote to the ledger by hand** —
 the only production write in any of it is the one a merge makes by deploying.
+
+This banner said for a while that step 6 was "the only one that could turn the
+deploy green". It could not, and the document disproves it two screens down
+under *The test was run, and it came back negative*: every merge after the
+renumbering still failed, because the deploy was refusing before it ordered
+anything. The stubs are what fixed it. A summary that contradicts its own
+evidence section is worse than no summary, so the claim is corrected here
+rather than left for a reader to catch.
 
 ## What is actually wrong
 
@@ -821,6 +829,54 @@ was standing in for, and it gained the other half: every recorded version must
 still have its stub, because deleting one puts the deploy straight back to
 `Remote migration versions not found in local migrations directory`.
 
+## The deploy, observed
+
+Everything above this line is a plan or an argument. This is the reading.
+
+`main`'s Supabase branch record left `MIGRATIONS_FAILED` for the first time
+since 18 September and reads `FUNCTIONS_DEPLOYED`. That status alone would be
+weak evidence — it is a word in a dashboard — so the ledger was read instead,
+which is the thing that cannot be wrong about whether a migration ran. Between
+the 15:2x reading in `supabase/ledger.snapshot` and the 21:5x one that replaced
+it, production took **nine rows, none of them applied by hand**:
+
+    20260921151000  activity
+    20260921155500  index_foreign_keys_added_since
+    20260921160000  lti
+    20260921160100  lti_identity
+    20260921161500  roles
+    20260921162000  lti_token_url
+    20260921170000  schools
+    20260921174500  index_lti_link_ticket_user
+    20260921211500  pin_profile_school
+
+Nine migrations, several merges, no dashboard, no SQL editor. That is the
+deploy doing its job, which is what three days of this was for.
+
+### What it took to find, which is the part worth keeping
+
+The fault was diagnosed four times before anybody read the error the deploy
+prints. All four diagnoses were reasoned from the ledger and from Supabase's
+documentation, and all four were about version *ordering* — a real fault, fixed
+in step 6, and not the one the deploy was stopping on. The actual message names
+the opposite direction and was sitting in the project's `workflow_run_logs` the
+entire time, once per failed merge.
+
+The lesson is cheaper than the three days: **when a system tells you why it
+refused, read that, before reasoning about why it might have.** `rehearse.sh`
+says so in its own header about its own blind spot — it cannot see the ledger —
+and the same sentence would have applied here.
+
+### What is still not guarded
+
+A migration applied through the dashboard still reaches production without a
+file, and nothing here stops it. `ledgerfiles.test.ts` catches it on the next
+run *against the snapshot*, which means somebody has to re-read the snapshot
+first — the guard is only as fresh as its last reading. Closing that properly
+means comparing the repository against a live project on every run, which is a
+different kind of check from everything else in this repository and should be
+argued for on its own rather than smuggled in here.
+
 ## What this costs, and what it does not fix
 
 Steps 1–4 touch no live system and can be abandoned at any point with nothing
@@ -846,11 +902,18 @@ repository, and it should be argued for on its own.
 | 4 · prove the baseline against production | **done 21 Sep** — five of six fingerprints match, the sixth is comments |
 | 5 · `migration repair` | **withdrawn** — it would write a history that cannot replay |
 | 6 · the pending migrations | **done 21 Sep** — content applied by hand, seven files renumbered to the versions it recorded |
+| 7 · a stub per ledger row | **done 21 Sep** — thirteen files holding a version and no SQL; this is the one that fixed the deploy |
+| — · the deploy itself | **green 21 Sep** — `FUNCTIONS_DEPLOYED`, and nine migrations applied by `db push` rather than by hand; see *The deploy, observed* |
 
-Step 6 closed last and by a route this plan did not propose. It assumed the
-four pending files would be applied *by* the deploy, once the deploy worked.
-They were applied by hand instead, on 21 September, and once that had
-happened the only thing between the deploy and green was seven filenames.
+Step 6 closed by a route this plan did not propose. It assumed the four pending
+files would be applied *by* the deploy, once the deploy worked; they were
+applied by hand instead, on 21 September.
+
+The sentence that stood here — that "once that had happened the only thing
+between the deploy and green was seven filenames" — was wrong, and the section
+above records the merge that disproved it. Seven filenames were *a* thing in
+the way. Thirteen ledger rows with no file in `migrations/` were the other, and
+they were the one the deploy actually stopped on.
 
 The rule that **no pull request touching `supabase/` should be merged** is
 **lifted**, and [`ROLLBACK.md`](ROLLBACK.md) records the same thing at more

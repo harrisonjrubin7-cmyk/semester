@@ -151,3 +151,135 @@ describe('what DEPLOY.md says is deployed', () => {
     ).toEqual([]);
   });
 });
+
+/**
+ * Every module a function imports, found wherever it sits.
+ *
+ * Not `slugs()`, which excludes `_shared` on purpose: a specifier in
+ * `_shared/lti.ts` is compiled into every function importing it, so a shared
+ * module reaching for a CDN breaks `lti`'s build and not its own.
+ */
+function functionSources(): { path: string; text: string }[] {
+  const out: { path: string; text: string }[] = [];
+  const walk = (dir: string) => {
+    for (const e of readdirSync(dir, { withFileTypes: true }).sort((a, b) =>
+      a.name.localeCompare(b.name),
+    )) {
+      const at = join(dir, e.name);
+      if (e.isDirectory()) walk(at);
+      else if (e.name.endsWith('.ts')) out.push({ path: at.slice(FUNCTIONS.length + 1), text: readFileSync(at, 'utf8') });
+    }
+  };
+  walk(FUNCTIONS);
+  return out;
+}
+
+/**
+ * Module specifiers only — the quoted string in an `import`/`export ... from`,
+ * a bare `import '…'`, or a dynamic `import('…')`.
+ *
+ * Deliberately not every `https://` in the file. These functions are full of
+ * legitimate ones: `calendar` builds `.ics` URLs, `lti` fetches a JWKS
+ * endpoint, `claude` posts to an API. A probe that flagged those would be
+ * deleted within a week, and rightly.
+ */
+const SPECIFIER = /(?:^|\n)\s*(?:import|export)\b[^\n;]*?from\s*['"]([^'"]+)['"]|(?:^|\n)\s*import\s*['"]([^'"]+)['"]|\bimport\(\s*['"]([^'"]+)['"]\s*\)/g;
+
+function specifiersIn(text: string): string[] {
+  return [...text.matchAll(SPECIFIER)].map((m) => m[1] ?? m[2] ?? m[3]).filter((s): s is string => !!s);
+}
+
+/*
+ * A preview branch built four of these six functions, and the two it skipped
+ * were the two still importing from `https://esm.sh/`.
+ *
+ * ## What was measured, on 21 September 2026
+ *
+ * Two preview branches, spun up from the same production project fifty seconds
+ * apart, carrying the same six `[functions.*]` blocks in `config.toml`:
+ *
+ *   - PR #686's branch, three `esm.sh` imports untouched, deployed four of six.
+ *     `push` stayed at v16 and `calendar` at v12, each still carrying
+ *     production's `/home/runner/…` entrypoint and production's exact build
+ *     hash — the branch had not rebuilt them at all.
+ *   - PR #685's branch, the same three lines moved to `jsr:`/`npm:`, deployed
+ *     six of six. `push` went to v17, `calendar` to v13, both with the
+ *     branch's own `/app/…` entrypoint and a fresh hash.
+ *
+ * Same parent, same config, one minute apart, differing in three import lines.
+ * The earlier candidate explanations do not survive it: not alphabetical order
+ * (`calendar` is first and failed, `lti` fifth and succeeded), not
+ * `import_map`, not the config blocks, which both branches had.
+ *
+ * ## Why the rule is wider than the measurement
+ *
+ * Only `esm.sh` was measured. It is the only CDN this repository has ever
+ * used, so it is the only one there was anything to measure. The check below
+ * refuses every `https://` specifier, which is a policy that goes past the
+ * evidence, and the reason is the shape of the recurrence rather than a claim
+ * about `unpkg` or `deno.land/x`: the fault is invisible. Nothing errors. The
+ * function simply is not in the preview, and the branch's warning about it
+ * reads the same as the warning about nothing being wrong. A guard naming
+ * `esm.sh` alone is satisfied by making the identical mistake through a
+ * different host — and this repository's own history is that the fix lands,
+ * then a sixth instance arrives the afternoon the guard ships, and a seventh
+ * that evening.
+ *
+ * `jsr:` and `npm:` are not a preference. They are what six functions in this
+ * project's production runtime are proven to build from, and a `deno.land/x`
+ * module worth having is on one of them.
+ */
+describe('how the functions name their dependencies', () => {
+  it('has sources with imports to be right or wrong about', () => {
+    // Two controls. A walk that returned nothing, or files with no specifiers
+    // in them, would make the check below vacuously true — which is what a
+    // wrong ROOT or a broken regex looks like from the outside.
+    const files = functionSources();
+    expect(files.length, 'no .ts found under supabase/functions').toBeGreaterThan(5);
+    expect(
+      files.some((f) => f.path.startsWith('_shared')),
+      'the walk did not descend into _shared, so a shared module could import anything',
+    ).toBe(true);
+    expect(files.flatMap((f) => specifiersIn(f.text)).length).toBeGreaterThan(5);
+  });
+
+  it('can see a CDN specifier when there is one', () => {
+    /*
+     * The control that matters most, and the one this repository learned to
+     * write the hard way: a clean reading is a claim about the probe too. The
+     * first teardown probe here reported every file leaking and the second
+     * reported a leaking file clean, and both were the probe. So the detector
+     * is shown the exact two lines that were in `push/index.ts`, and a URL in
+     * a non-specifier position it must ignore.
+     */
+    const bad = [
+      `import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';`,
+      `import webpush from 'https://esm.sh/web-push@3.6.7';`,
+      `export { x } from 'https://deno.land/x/y/mod.ts';`,
+      `await import('https://unpkg.com/thing');`,
+    ].join('\n');
+    expect(specifiersIn(bad).filter((s) => s.startsWith('https://')).length).toBe(4);
+
+    const fine = [
+      `import { createClient } from 'jsr:@supabase/supabase-js@2';`,
+      `import { corsHeaders } from '../_shared/cors.ts';`,
+      `import { jwtVerify } from 'npm:jose@5';`,
+      `const res = await fetch('https://api.anthropic.com/v1/messages');`,
+      `const feed = \`https://\${host}/functions/v1/calendar?token=\${t}\`;`,
+    ].join('\n');
+    expect(specifiersIn(fine).filter((s) => s.startsWith('https://'))).toEqual([]);
+  });
+
+  it('imports nothing over https, because a preview branch will not build it', () => {
+    const offenders = functionSources().flatMap((f) =>
+      specifiersIn(f.text)
+        .filter((s) => /^https?:\/\//.test(s))
+        .map((s) => `${f.path}: ${s}`),
+    );
+    expect(
+      offenders,
+      `a preview branch deployed neither function that imported over https, and said nothing ` +
+        `about it. Use jsr: or npm: instead:\n  ${offenders.join('\n  ')}`,
+    ).toEqual([]);
+  });
+});

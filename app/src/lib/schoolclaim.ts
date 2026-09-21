@@ -10,9 +10,16 @@
  * "a client check is not security, and this file has always said the policies
  * are the security."
  *
- * So the claim is not a field this module writes. `profiles.school_id` has its
- * UPDATE privilege revoked from both API roles; the only way in is
- * `claim_school()`, which reads the address the server confirmed. Nothing here
+ * So the claim is not a field this module writes. Both API roles are off the
+ * insert and update column lists for `profiles.school_id`, so the only way in
+ * is `claim_school()`, which reads the address the server confirmed.
+ *
+ * That sentence used to say the column's UPDATE privilege was *revoked*, which
+ * is what `20260921170000_schools.sql` tried and what Postgres declined to do:
+ * a column-level revoke cannot subtract from a table-level grant, and for a
+ * while the column was writable by the account it describes.
+ * `20260921211500_pin_profile_school.sql` is the fix and
+ * `supabase/tenancy.check.sql` is what would now notice. Nothing here
  * can admit anybody, which is the property worth having: if this file were
  * replaced wholesale by something that returned "yes" to everything, no row
  * would change.
