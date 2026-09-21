@@ -468,6 +468,45 @@ describe('drilling', () => {
     expect(s.reviews.card1.due).toBeGreaterThan(Date.now());
   });
 
+  /*
+   * The screen asks two questions and the scheduler was only ever told one.
+   *
+   * `sure` was collected, written into `answers` for the calibration line, and
+   * dropped on the way to `score` — so a card the student *knew* and a card
+   * they had to think about came back on the same day. FSRS is the first
+   * scheduler here that can use the difference, and this is the wire.
+   *
+   * The intervals are the measured ones, not round numbers: a first answer
+   * graded Good starts at the model's 2.3065 days and one graded Easy at
+   * 8.2956, which is `W[2]` and `W[3]`. They are asserted as an ordering with
+   * one hard value so that refitting the weights moves one number here rather
+   * than turning the test red for the right reason.
+   */
+  it('gives a card the student knew a longer interval than one they had to think about', () => {
+    const know = reducer(blank(), { type: 'markCard', got: true, key: 'card1', sure: 'know' });
+    const think = reducer(blank(), { type: 'markCard', got: true, key: 'card1', sure: 'think' });
+    const unasked = reducer(blank(), { type: 'markCard', got: true, key: 'card1' });
+
+    expect(know.reviews.card1.interval).toBe(8);
+    expect(think.reviews.card1.interval).toBeLessThan(know.reviews.card1.interval);
+    // The control: "think" is an ordinary success, so it must land exactly
+    // where the screen that never asks lands. If this drifts, the mapping has
+    // started reading confidence somewhere it was not supposed to.
+    expect(think.reviews.card1.interval).toBe(unasked.reviews.card1.interval);
+  });
+
+  it('keeps a guess coming back tomorrow, and still lets the memory learn', () => {
+    /*
+     * `lib/sure.ts` decides that a right answer the student guessed at comes
+     * back at once, and `lib/review.ts` holds that floor on the *date* only.
+     * Both halves are asserted here because they are the ones that argue with
+     * each other: the day is the product's, the stability is the model's.
+     */
+    const s = reducer(blank(), { type: 'markCard', got: true, key: 'card1', sure: 'guess' });
+    expect(s.reviews.card1.interval).toBe(1);
+    expect(s.reviews.card1.stability).toBeGreaterThan(0);
+  });
+
   it('a miss resets the streak but keeps the history', () => {
     let s = reducer(blank(), { type: 'markCard', got: true, key: 'card1' });
     s = reducer(s, { type: 'markCard', got: false, key: 'card1' });
