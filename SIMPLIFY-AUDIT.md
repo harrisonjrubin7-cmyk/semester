@@ -1,3 +1,102 @@
+# One app — the twenty-first pass: seven of the eleven were never rows
+
+Against `main` at `a8c3f7d`. **<!--screens-->fifty-eight<!--/--> destinations**,
+unchanged. No merge, no destination touched, no route removed.
+
+The twentieth pass left three things. This takes the first — *"the eleven rows,
+one look each, if the owner wants them on `ItemRow`"* — and the owner asked for
+it. Eleven looks, as that pass insisted, because it refused to do them from a
+grep and was right to.
+
+**Four converted. Seven stay, and one of those is not a row at all.**
+
+## T1 — what the eleven actually are
+
+| Site | What it draws | Verdict |
+| --- | --- | --- |
+| `screens/University.tsx:723` | checkbox · step text · remove button | **converted** — `leading`/`title`/`trailing`, exactly |
+| `screens/University.tsx:1170` | service name over its access state | **converted** — `title`/`meta` |
+| `screens/call/Stage.tsx:972` | name at the door · Let in · Not now | **converted** — `title`/`trailing` |
+| `screens/call/Stage.tsx:1087` | participant · hand, mic, camera, Remove | **converted** — `title`/`trailing` |
+| `ai/Answer.tsx:269` | **a `<th>` in a `<table>`** | kept — not a row |
+| `components/MuteCourses.tsx:80` | `role="switch"`, `aria-checked` | kept — a switch |
+| `components/creation/DesignEditor.tsx:626` | `aria-pressed` layer selector | kept — a selection control |
+| `screens/Athletics.tsx:290` | `<label>` wrapping a checkbox | kept — tap target |
+| `screens/Career.tsx:908` | `<label>` wrapping a checkbox | kept — tap target |
+| `screens/Data.tsx:384` | wrapper round an `aria-expanded` button | kept — a disclosure |
+| `screens/Pathway.tsx:762` | a `<details>` element | kept — a disclosure |
+
+## T2 — why the seven stay, which is not one reason
+
+Three distinct arguments, and only the first is about taste.
+
+**One is not a row.** `ai/Answer.tsx:269` is a table header cell in the markdown
+renderer. It sits inside a `.map` because a table has header cells, and it
+carries a hairline because a table header has a rule under it. Nothing about it
+is a list.
+
+**Three would lose their semantics.** `MuteCourses` is `role="switch"` with
+`aria-checked`; `DesignEditor` is `aria-pressed`; `Data` is `aria-expanded`.
+`ItemRow` takes `title`, `meta`, `trailing`, `leading` and `onClick`, and
+exposes no ARIA passthrough — `Row` accepts `role` and `ariaChecked`, but only
+`ToggleRow` passes them. Converting any of the three swaps a control a screen
+reader announces as on, pressed or expanded for one it announces as a button.
+That is a regression, and it is invisible unless somebody is listening.
+
+**Two would lose their tap target.** `Athletics:290` and `Career:908` are
+`<label>` elements wrapping a checkbox, so the whole row toggles. `ItemRow`
+renders a `div` when it has no `onClick`, and a `div` does not associate. The
+checkbox alone would remain, which on a phone is a target of about sixteen
+pixels where there was one of three hundred and ninety. `University:723` looks
+like these two and is not: it is already a `div` rather than a `label`, so the
+conversion took nothing away.
+
+**One is a disclosure.** `Pathway:762` is a `<details>`. Its hairline is the
+edge of a collapsible panel.
+
+## T3 — the payoff, measured rather than asserted
+
+`ItemRow` reads the shell through `useGrouped()`. The hand-drawn rows do not,
+so they drew the same hairline in every layout while the app around them drew
+the grouped divider with its inset. Taken off the converted connections row in
+a browser, both shells:
+
+| Shell | Padding | Border under |
+| --- | --- | --- |
+| soft | `11px 0` | 1px hairline |
+| grouped | `7px 15px` | none — the grouped divider instead |
+
+Before the change that row was `paddingBlock: var(--sp-4)` and a hairline, in
+both. **This is the argument for the conversion and the audit had never made
+it** — S4 counted the rows as duplicated markup, which they are, and did not
+say what the duplication costs. It costs a row that disagrees with its own
+shell.
+
+## T4 — the instrument, a fourth time
+
+The sixteenth pass counted call sites and could not tell a pathway from a
+contextual action. The eighteenth measured a window in characters. The
+nineteenth grouped by filename. This one is the same family:
+
+**`borderBottom` inside a `.map` is a visual idiom, and "a list row" is a
+semantic one.** The grep cannot see the difference between a row, a switch, a
+label-wrapped checkbox, a disclosure and a table header, because all five draw
+a line under themselves and four of the five repeat. Seven of eleven — sixty-four
+per cent — were something else.
+
+Stated for the next census, beside the nineteenth's rule: *group by rendered
+unit, not by path* — and *classify by element and ARIA, not by border*. The
+element says what it is. The hairline only says where it ends.
+
+## To do
+
+- `account` on Profile — carried from the nineteenth pass and the twentieth,
+  still the owner's to name.
+- A pointer-pairing guard past `edit`, when a second instance exists.
+- Nothing else. The eleven are resolved: four converted, seven argued.
+
+---
+
 # One app — the twentieth pass: the figures moved, and half of one never counted what it said
 
 Against `main` at `0a5e98a`. **<!--screens-->fifty-eight<!--/--> destinations**,
