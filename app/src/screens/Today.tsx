@@ -2,7 +2,7 @@ import { Fragment, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useNow, useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { useRowStyle, useSoft } from '../components/shell/useShell';
-import { WorstDay } from '../components/Clashes';
+import { ClashList, WorstDay } from '../components/Clashes';
 import { TimerLine } from '../components/TimerLine';
 import { ApplyingSoon } from '../components/Applying';
 import { ReadingsOnTheGo } from '../components/ReadingProgress';
@@ -46,7 +46,7 @@ import { HowLong } from '../components/HowLong';
 import { DropBy } from '../components/DropBy';
 import { Walks } from '../components/Walks';
 import { BehindOffer } from '../components/BehindOffer';
-import { StartToday } from '../components/StartToday';
+import { StartList, StartToday } from '../components/StartToday';
 import { changes, line as sinceLine, shouldSpeak, sinceLabel } from '../lib/since';
 import { GapOffer } from './GapOffer';
 import { HomeWalk } from '../components/HomeWalk';
@@ -381,6 +381,32 @@ function ThisWeek() {
           </Blueprint>
         </>
       )}
+
+      {/*
+        The two lists this tab inherited and did not receive.
+       *
+       * `80fbc5c` merged `#/ahead` into this tab, and its "What the merge had
+       * to carry" note lists the keywords, the context provider and the
+       * header. `screens/Ahead.tsx` rendered four things: `Capacity` and
+       * `DayBudget`, both of which went to Settings → Workload, and these
+       * two, which went nowhere. The controls were carried and the content
+       * was not, and nothing has drawn either list since — found by the
+       * twenty-sixth simplify pass, reading the dead exports one at a time.
+       *
+       * Here rather than on the feed, which is the split both modules were
+       * written around: Today's feed gets the one-line form — `WorstDay`, the
+       * nearest hard day, and `StartToday`, what must begin today — because a
+       * screen that opens with four warnings is a screen people learn to
+       * scroll past. The full fortnight belongs where somebody has come to
+       * look at the shape of a week, and since that merge this tab is that
+       * place.
+       *
+       * Above the seven days for `Ahead.tsx`'s own reason: a day that will
+       * not fit is the shape of the fortnight, and everything below is
+       * scheduling inside it. Both draw nothing on a quiet week.
+       */}
+      <ClashList />
+      <StartList />
 
       <SectionLabel>The next seven days</SectionLabel>
       <div
