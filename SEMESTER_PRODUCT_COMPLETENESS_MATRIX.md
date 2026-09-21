@@ -387,6 +387,76 @@ thing rather than its isolation.
 
 ---
 
+## Part 5 — §228, the universal entity graph
+
+§228 asks for a standardised relationship architecture over twelve entities,
+and warns: *"Do not overengineer this into a graph database unless justified."*
+Measured before deciding whether anything is justified.
+
+### Ten of the twelve already exist
+
+Table names taken from `create table public.…` across every migration; state
+fields from the two interfaces in `state/shape.ts`; types from exact
+`export interface`/`export type` declarations across the tree. Substring
+matching was abandoned after it reported `public.profiles` as the `File`
+entity.
+
+| §228 entity | server table | state field | type |
+| --- | --- | --- | --- |
+| User | `profiles`, `app_admins` | `myName`, `aboutMe` | `Person`, `FamilyMember` |
+| Course | `courses`, `enrollments` | `courses` | `Course`, `CourseModule` |
+| Assignment | — | inside `CourseModule` | `Item`, `DatedItem` |
+| Event | — | `feedEvents`, `commitments` | `FeedEvent`, `Commitment` |
+| Document | — | `documents` | `Doc` |
+| File | — | IndexedDB, by id | `ShotFile` |
+| Meeting | — | `appointments` | `Appointment` |
+| Job | — | `applications` | `Application` |
+| Housing | — | `residences` | `Residence` |
+| Campus Resource | — | `places` | `SavedPlace` |
+| **Organization** | — | — | — |
+| **Marketplace** | — | — | — |
+
+**Two of twelve do not exist at all**, and one of those two is the §47.10
+decision rather than a modelling gap. Marketplace has never been specified for
+this app beyond §228's list.
+
+### The relationship architecture is already here, and it is a foreign key
+
+§228 names seven relationship kinds. The one that carries almost all of the
+weight is `BELONGS_TO`, and it is already implemented the ordinary way: **seven
+types carry a `CourseId`** — `Item`, `Note`, `PersonalTask`, `CourseUpdate`,
+`FeedEvent`, `Block`, and the session state itself.
+
+That is what makes §227's first chain hold. It is not a graph and does not need
+to be.
+
+The other kinds map onto things that exist rather than things to build:
+
+| §228 kind | what carries it today |
+| --- | --- |
+| `BELONGS_TO` | `CourseId` on seven types |
+| `PART_OF` | `CourseModule.items`, indexed by `buildCatalog` |
+| `CREATED_BY` | implicit — a device holds one student's data |
+| `SHARED_WITH` | `FamilyItem.memberId`, and `group_members` server-side |
+| `ATTENDED_BY` | `attendance`, `sittings` |
+| `LINKED_TO` | `lib/links.ts`, `bookmarks` |
+| `RELATED_TO` | `lib/meet.ts` — the same term in two courses |
+
+### So the answer to §228 is: do not build it
+
+§228's own warning applies to §228. A universal entity graph over these twelve
+would be a **device-local** graph for ten of them, because only User and Course
+have a server table — and the value §228 imagines (relating one student's
+record to another's) is not reachable from a device-local graph at all. It
+would be a large abstraction over an existing foreign key, buying nothing until
+the entities are on a server.
+
+What would be worth doing, when §47.10 and §47.11 are decided, is far smaller:
+give Organization and Event the same `BELONGS_TO` treatment the other ten
+already have.
+
+---
+
 ## What to fix, in order
 
 §226: *"Do not merely document gaps. Fix them according to priority."*
