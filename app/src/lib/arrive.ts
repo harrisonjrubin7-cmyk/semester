@@ -12,10 +12,20 @@
  * A room is text on a syllabus. It becomes a position only when it matches a
  * place *you* saved — the rule `lib/rooms.ts` already uses for the walk
  * between two classes — or when you looked it up on this screen and pressed
- * save. There is no built-in table of campus buildings, because a table of
- * coordinates nobody checked is a set of pins dropped confidently in the
- * wrong place, and a pin is believed. A stop with no coordinate says so and
- * offers to be found; it never guesses.
+ * save, or when the university itself published the building's coordinates.
+ * A stop with no coordinate says so and offers to be found; it never guesses.
+ *
+ * That third source is new, and it is the exception this paragraph used to
+ * rule out: "there is no built-in table of campus buildings, because a table
+ * of coordinates nobody checked is a set of pins dropped confidently in the
+ * wrong place, and a pin is believed." Every word of that is still true of a
+ * table *this app* compiles, and none of it is true of one the school sent.
+ * A registrar's estates list is not unchecked — it is the most checked source
+ * there is, and it is strictly better evidence than the OpenStreetMap search
+ * result this screen already accepts on a tap. The rule the sentence was
+ * protecting is kept where it matters: nothing is invented here, the order
+ * below puts your own saved place first, and a building the school did not
+ * send still has no coordinate and still says so.
  *
  * ## Only walking gets an estimate
  *
@@ -28,8 +38,9 @@
  */
 
 import type { Destination } from './maps';
+import type { SchoolData } from './school';
 import { far, metresBetween, type SavedPlace } from './place';
-import { buildingOf, matchPlace, walkMinutes } from './rooms';
+import { buildingOf, matchBuilding, matchPlace, walkMinutes } from './rooms';
 
 /**
  * "9:05a", "11:00a" — a time in a sentence.
@@ -108,6 +119,9 @@ export interface Stop {
 }
 
 /** A room becomes a stop, taking its coordinates from a place you saved. */
+/** One row of the buildings list a school pack may carry. */
+type SchoolBuilding = NonNullable<SchoolData['buildings']>[number];
+
 export function roomStop(
   key: string,
   kind: StopKind,
@@ -115,17 +129,38 @@ export function roomStop(
   room: string,
   dest: Destination,
   places: SavedPlace[],
+  buildings: SchoolBuilding[] = [],
   extra: Partial<Stop> = {},
 ): Stop {
   const known = matchPlace(room, places);
+  /*
+   * Your own place first, the school's list second, and never the other way.
+   *
+   * A place you stood in and named is a coordinate you checked; a building
+   * the estates department published is a coordinate somebody else checked.
+   * Both beat a guess, and when they disagree the one you made wins — which
+   * also means importing a pack can never move a pin somebody placed by hand.
+   *
+   * `placeId` stays undefined for a school building, and that is deliberate
+   * rather than an omission: it is not one of your saved places, so the
+   * screen still offers to save it, and `held` still reads as "not yours
+   * yet". Handing it an id would make the app claim you had saved something
+   * you have never seen.
+   */
+  const sent = known ? null : matchBuilding(room, buildings);
+  const at = known
+    ? { lat: known.lat, lon: known.lon }
+    : sent
+      ? { lat: sent.lat, lon: sent.lon }
+      : null;
   return {
     key,
     kind,
     label,
     detail: room,
     building: buildingOf(room),
-    spot: known ? { lat: known.lat, lon: known.lon } : null,
-    dest: known ? { query: room, lat: known.lat, lon: known.lon } : dest,
+    spot: at,
+    dest: at ? { query: room, lat: at.lat, lon: at.lon } : dest,
     placeId: known?.id,
     ...extra,
   };

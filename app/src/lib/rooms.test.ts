@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { PACE, buildingOf, daySummary, hopLine, hops, matchPlace, tight, walkMinutes } from './rooms';
+import {
+  PACE,
+  buildingOf,
+  daySummary,
+  hopLine,
+  hops,
+  matchBuilding,
+  matchPlace,
+  tight,
+  walkMinutes,
+} from './rooms';
 import type { SavedPlace } from './place';
 
 const place = (label: string, lat: number, lon: number): SavedPlace => ({
@@ -293,5 +303,55 @@ describe('how much of the gap is actually free', () => {
     const arrivingLong = between(block('Buttrick', 600, 50), block('Garland Hall', 690, 75));
     expect(leavingLong.spare).toBe(15);
     expect(arrivingLong.spare).toBe(40);
+  });
+});
+
+
+describe('matchBuilding', () => {
+  const FGH = { name: 'Featheringill Hall', abbr: 'FGH', lat: 36.1447, lng: -86.8027 };
+  const COMMONS = { name: 'Commons Center', lat: 36.1401, lng: -86.8064 };
+
+  it('reads the pack spelling and returns the app one', () => {
+    // `lng` in, `lon` out. The two names for one number are a transposition
+    // waiting to happen, and this is the line that would catch it.
+    expect(matchBuilding('Featheringill 201', [FGH])).toEqual({
+      name: 'Featheringill Hall',
+      lat: 36.1447,
+      lon: -86.8027,
+    });
+  });
+
+  it('matches a name both ways round, as a saved place does', () => {
+    expect(matchBuilding('Featheringill Hall 201', [FGH])?.name).toBe('Featheringill Hall');
+    expect(matchBuilding('Featheringill 201', [FGH])?.name).toBe('Featheringill Hall');
+    expect(matchBuilding('Commons 363A', [COMMONS])?.name).toBe('Commons Center');
+  });
+
+  it('matches an abbreviation exactly, and only exactly', () => {
+    expect(matchBuilding('FGH 201', [FGH])?.name).toBe('Featheringill Hall');
+    // Not a prefix. "F 100" is not Featheringill, and a registrar who ships a
+    // one-letter code must not thereby claim every room on campus.
+    expect(matchBuilding('F 100', [FGH])).toBeNull();
+    expect(matchBuilding('FGHX 100', [FGH])).toBeNull();
+  });
+
+  it('is unmoved by case, which is how a syllabus is actually written', () => {
+    expect(matchBuilding('featheringill 201', [FGH])?.name).toBe('Featheringill Hall');
+    expect(matchBuilding('fgh 201', [FGH])?.name).toBe('Featheringill Hall');
+  });
+
+  it('says nothing rather than guessing', () => {
+    expect(matchBuilding('Buttrick 101', [FGH, COMMONS])).toBeNull();
+    expect(matchBuilding('Featheringill 201', [])).toBeNull();
+    expect(matchBuilding('Featheringill 201')).toBeNull();
+    expect(matchBuilding('', [FGH])).toBeNull();
+    // A room with no building in it at all — a bare section number.
+    expect(matchBuilding('101', [FGH])).toBeNull();
+  });
+
+  it('ignores a row whose name is blank rather than matching everything', () => {
+    // `''.startsWith(x)` is false but `x.startsWith('')` is true, so a blank
+    // name would have claimed every room through the second half of the test.
+    expect(matchBuilding('Buttrick 101', [{ name: '   ', lat: 1, lng: 2 }])).toBeNull();
   });
 });

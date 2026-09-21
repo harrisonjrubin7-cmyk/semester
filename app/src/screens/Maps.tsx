@@ -120,7 +120,7 @@ const SAME = 30;
  * different jobs and the app is only better at the first one.
  */
 export function Maps() {
-  const { state, dispatch, catalog } = useStore();
+  const { state, dispatch, catalog, school } = useStore();
   const now = useNow();
   // A row's padding and hairline, from the layout rather than hard-coded.
   const linkRow = useRowStyle(13);
@@ -168,6 +168,16 @@ export function Maps() {
     return course && isPlace(course.room) ? course.room : '';
   };
 
+  /*
+   * The buildings the school published, if it published any.
+   *
+   * Read through `school.data` rather than from a bundled table, so a campus
+   * this app has never heard of arrives with its rooms already placed the
+   * moment somebody imports its pack — which is the whole of what the pack is
+   * for. A school that sent none leaves this empty and nothing below changes.
+   */
+  const sent = school.data.buildings ?? [];
+
   const stopFor = (
     key: string,
     kind: Stop['kind'],
@@ -176,7 +186,7 @@ export function Maps() {
     extra: Partial<Stop> = {},
   ): Stop[] => {
     const dest = fromRoom(room);
-    return dest ? [roomStop(key, kind, label, room, dest, places, extra)] : [];
+    return dest ? [roomStop(key, kind, label, room, dest, places, sent, extra)] : [];
   };
 
   const today: Stop[] = blocksFor(catalog, now)
