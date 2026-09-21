@@ -105,13 +105,33 @@ export const SHORTCUTS: Shortcut[] = [
  * whole page, not about one element's subtree. The dialogs that hold a field
  * were already safe by `typing()` below — this is for the ones that do not,
  * which is every sheet made of buttons.
- *
- * `aria-modal="false"` is not caught, which is right: the shortcut sheet
- * itself carries that, and `?` has to keep closing it.
  */
 export function underModal(doc?: Document): boolean {
   const d = doc ?? (typeof document === 'undefined' ? null : document);
-  return Boolean(d?.querySelector('[role="dialog"][aria-modal="true"]'));
+  /*
+   * The attribute alone, and not `[role="dialog"]` beside it.
+   *
+   * It read `[role="dialog"][aria-modal="true"]`, which is eight of the app's
+   * nine overlays. The ninth is `components/Ringing.tsx` — an alarm or a timer
+   * going off — and it is `role="alertdialog"`, which is the correct role for
+   * it and the reason the selector missed it. Measured: with an alertdialog up,
+   * `shortcutFor({ key: 'c' })` returned the Courses shortcut, so a key pressed
+   * while an alarm covered the screen walked the app to another screen behind
+   * it. The one overlay in this app deliberately built to be hard to dismiss —
+   * *an alarm that a stray Escape silences is an alarm that did not go off* —
+   * was the one the shortcuts did not stand down for.
+   *
+   * `aria-modal` is what the whole page is being told; the role says what kind
+   * of dialog it is, which is not this function's question. `a11y/modal.ts`
+   * had the right selector in a `hasOpenModal` nothing ever called, and its
+   * docblock claimed these shortcuts deferred to it. They deferred to this
+   * instead. One question, two answers, and the one in use was the wrong one;
+   * see the twenty-fourth pass in `SIMPLIFY-AUDIT.md`.
+   *
+   * `aria-modal="false"` is still not caught, which is right: the shortcut
+   * sheet itself carries that, and `?` has to keep closing it.
+   */
+  return Boolean(d?.querySelector('[aria-modal="true"]'));
 }
 
 /**

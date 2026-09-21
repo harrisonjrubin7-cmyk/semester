@@ -1,16 +1,20 @@
 import { useEffect, useRef, type KeyboardEvent, type RefObject } from 'react';
 
-/**
- * Whether a modal dialog is open anywhere.
+/*
+ * `hasOpenModal` stood here, and the shortcuts never called it.
  *
- * The shell's shortcuts — a new tab, the bookmarks menu, reopening a closed
- * tab — are global, so they would otherwise fire while somebody is inside a
- * dialog that has taken the display. They defer to this rather than each
- * keeping its own idea of what counts as busy.
+ * It answered "is a modal open anywhere" off `[aria-modal="true"]`, and its
+ * docblock said the shell's global shortcuts deferred to it *rather than each
+ * keeping its own idea of what counts as busy*. They did not. `lib/keys.ts`
+ * had written its own `underModal` and used that, so there were two answers
+ * to one question and the uncalled one was the better of the two: this
+ * selector caught every overlay, and the live one required `role="dialog"`
+ * and so missed `components/Ringing.tsx`, the alarm, which is correctly
+ * `role="alertdialog"`.
+ *
+ * The twenty-fourth simplify pass moved the selector onto `underModal` and
+ * cut this. One question, one answer, and it is the one that is called.
  */
-export function hasOpenModal(): boolean {
-  return document.querySelector('[aria-modal="true"]') !== null;
-}
 
 /**
  * `aria-modal="true"`, kept as a promise rather than said as one.
