@@ -28,30 +28,28 @@
  */
 
 import { createClient } from 'jsr:@supabase/supabase-js@2';
+import { corsHeaders } from '../_shared/cors.ts';
 
 const ANTHROPIC = 'https://api.anthropic.com/v1/messages';
 
 /** Calls per account per calendar month. Raise it in the dashboard, not here. */
 const MONTHLY_CALLS = Number(Deno.env.get('MONTHLY_CALL_LIMIT') ?? '60');
 
-const cors = {
-  'Access-Control-Allow-Origin': Deno.env.get('ALLOWED_ORIGIN') ?? '*',
-  // Every header the app actually sends. A browser refuses the whole request
-  // when a preflight omits one — anthropic-version is on every call, and
-  // leaving it out here fails before the function ever runs.
-  'Access-Control-Allow-Headers':
-    'authorization, content-type, anthropic-version, apikey, x-client-info',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Max-Age': '86400',
-};
-
-const json = (body: unknown, status = 200) =>
-  new Response(JSON.stringify(body), {
-    status,
-    headers: { ...cors, 'Content-Type': 'application/json' },
-  });
 
 Deno.serve(async (req) => {
+  /*
+   * Per request, because the answer depends on who asked. `ALLOWED_ORIGIN` is
+   * a comma-separated allowlist now and the header echoes back whichever entry
+   * the request came from — see `../_shared/cors.ts`, which carries the
+   * incident this shape exists because of.
+   */
+  const cors = corsHeaders(Deno.env.get('ALLOWED_ORIGIN'), req.headers.get('Origin'));
+  const json = (body: unknown, status = 200) =>
+    new Response(JSON.stringify(body), {
+      status,
+      headers: { ...cors, 'Content-Type': 'application/json' },
+    });
+
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors });
   if (req.method !== 'POST') return json({ error: { message: 'POST only.' } }, 405);
 

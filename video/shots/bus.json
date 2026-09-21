@@ -1,0 +1,126 @@
+{
+  "course": "bus",
+  "id": "bus-podcast",
+  "shots": [
+    {
+      "slot": "bus/chapter-0",
+      "at": 0,
+      "seconds": 6,
+      "kind": "establishing",
+      "chapter": "Cold open",
+      "subject": ""
+    },
+    {
+      "slot": "bus/chapter-1",
+      "at": 35,
+      "seconds": 6,
+      "kind": "establishing",
+      "chapter": "How the grade actually works",
+      "subject": ""
+    },
+    {
+      "slot": "bus/chapter-2",
+      "at": 136,
+      "seconds": 6,
+      "kind": "establishing",
+      "chapter": "The 5 C's",
+      "subject": ""
+    },
+    {
+      "slot": "bus/chapter-3",
+      "at": 236,
+      "seconds": 6,
+      "kind": "establishing",
+      "chapter": "The 3-V principle",
+      "subject": ""
+    },
+    {
+      "slot": "bus/chapter-4",
+      "at": 305,
+      "seconds": 6,
+      "kind": "establishing",
+      "chapter": "The seven tactics",
+      "subject": ""
+    },
+    {
+      "slot": "bus/chapter-5",
+      "at": 387,
+      "seconds": 6,
+      "kind": "establishing",
+      "chapter": "SWOT",
+      "subject": ""
+    },
+    {
+      "slot": "bus/chapter-6",
+      "at": 440,
+      "seconds": 6,
+      "kind": "establishing",
+      "chapter": "Value and customer centricity",
+      "subject": ""
+    },
+    {
+      "slot": "bus/chapter-7",
+      "at": 608,
+      "seconds": 6,
+      "kind": "establishing",
+      "chapter": "Marketing research",
+      "subject": ""
+    },
+    {
+      "slot": "bus/chapter-8",
+      "at": 783,
+      "seconds": 6,
+      "kind": "establishing",
+      "chapter": "Segmentation, targeting, positioning",
+      "subject": ""
+    },
+    {
+      "slot": "bus/chapter-9",
+      "at": 895,
+      "seconds": 6,
+      "kind": "establishing",
+      "chapter": "Consumer behaviour and behavioural economics",
+      "subject": ""
+    },
+    {
+      "slot": "bus/chapter-10",
+      "at": 1048,
+      "seconds": 6,
+      "kind": "establishing",
+      "chapter": "Digital marketing and the metrics",
+      "subject": ""
+    },
+    {
+      "slot": "bus/chapter-11",
+      "at": 1170,
+      "seconds": 6,
+      "kind": "establishing",
+      "chapter": "Product, brand, price, distribution",
+      "subject": ""
+    },
+    {
+      "slot": "bus/chapter-12",
+      "at": 1372,
+      "seconds": 6,
+      "kind": "establishing",
+      "chapter": "The midterm case playbook",
+      "subject": ""
+    },
+    {
+      "slot": "bus/chapter-13",
+      "at": 1551,
+      "seconds": 6,
+      "kind": "establishing",
+      "chapter": "Self-test",
+      "subject": ""
+    },
+    {
+      "slot": "bus/chapter-14",
+      "at": 1828,
+      "seconds": 6,
+      "kind": "establishing",
+      "chapter": "Close",
+      "subject": ""
+    }
+  ]
+}

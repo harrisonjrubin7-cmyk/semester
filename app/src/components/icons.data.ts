@@ -225,13 +225,11 @@ export const SHAPES = {
   brief: [{ d: 'M6 3.5h12v17H6z' }, { d: 'M9.5 16.5v-3M12 16.5v-6M14.5 16.5v-4.5' }],
 
   /** Ahead — the days in front of you. */
-  ahead: [{ d: 'M4 12h13' }, { d: 'm12.5 7 5 5-5 5' }],
 
   /** Behind — the same arrow, turned, against the wall of what has gone. */
   behind: [{ d: 'M4.5 4.5v15' }, { d: 'M20 12H8.5' }, { d: 'm13 7-5 5 5 5' }],
 
   /** Tonight — a moon. The one screen that is about the hours after dark. */
-  tonight: [{ d: 'M20 14.7A8.6 8.6 0 0 1 9.3 4 8.6 8.6 0 1 0 20 14.7z' }],
 
   /** Degree — the cap. What the four years are for. */
   degree: [

@@ -1,3 +1,117 @@
+# One app — the twenty-sixth pass: the merge carried the controls and left the content
+
+Against `main` at `8e13574`. **<!--screens-->fifty-eight<!--/--> destinations**,
+unchanged. No merge. Two components restored, two cut, one guard.
+
+The twenty-fifth left twelve dead exports as a worklist, *one look each*, on
+the rule it had just proved: **a dead export is a question, not a verdict** —
+the first one it opened turned out to be a live duplicate with a hole in it.
+This pass takes the twelve looks. The first one answered the same way, and
+bigger.
+
+## T1 — `ClashList` and `StartList` were the content of a screen that was merged
+
+`components/Clashes.tsx` and `components/StartToday.tsx` are each one question
+written at two lengths, and each says so at the top of itself:
+
+> Two shapes from one source. On Today it is a single line about the nearest
+> hard day, because a screen that opens with four warnings is a screen people
+> learn to scroll past. **In the week ahead it is the full list**, where
+> somebody has already come to look at the shape of a fortnight.
+
+"The week ahead" was `#/ahead`, and the fifteenth pass merged it into Today's
+**This week** tab — `80fbc5c`, *"The question that was built twice and kept
+once"*. `screens/Ahead.tsx` rendered four things. Two of them survive:
+
+| `Ahead.tsx` rendered | Where it is now |
+| --- | --- |
+| `Capacity` | Settings → Workload |
+| `DayBudget` | Settings → Workload |
+| **`ClashList`** | **nowhere** |
+| **`StartList`** | **nowhere** |
+
+**The merge carried both controls and neither list.** `Capacity` and
+`DayBudget` are settings; `ClashList` and `StartList` were the screen's
+content — *Worth seeing coming*, the heavy days of the fortnight, and *When to
+begin*, the work whose start date has arrived. Since that commit neither has
+been drawn on any screen in this app.
+
+### And the merge audited itself in prose, under that exact heading
+
+`80fbc5c` has a section called **"What the merge had to carry"**. It lists the
+keywords, the `taskTags`, the assistant's context provider and the header
+hero — carefully, and it is right about all four. It does not mention either
+list.
+
+That is the third time:
+
+| Merge | Audited itself as | Lost |
+| --- | --- | --- |
+| `4eb1044` | *"Lately and Not-opened-yet were the only things the tab had"* | the reveal gate (twenty-first pass) |
+| `80fbc5c` | *"What the merge had to carry"* | these two lists |
+
+**The short form surviving is what makes the loss invisible.** Today still
+warned about the nearest hard day, so nothing looked broken — the same reason
+`showAll` and `lastOpened` went unnoticed. A half that still works is the best
+camouflage a missing half can have.
+
+### Restored to the tab the merge chose
+
+Both now render in `ThisWeek`, above the seven days, for `Ahead.tsx`'s own
+stated reason: *a day that will not fit is the shape of the fortnight, and
+everything below it is scheduling inside it*. Not on the feed — the split the
+two modules were written around is the whole point, and Today's feed keeps the
+one-line forms.
+
+Driven in a browser on the shipped sample: **`StartList` draws** — *When to
+begin*, its explanatory line and the full list with a first action on each row.
+`ClashList` draws nothing there and is supposed to, the sample fortnight having
+no heavy day; that is the behaviour its own first line promises. `pageerror`
+empty.
+
+`src/components/bothshapes.test.ts` is the guard, and it asks the pairing
+rather than the two names: a module that answers one question at two lengths
+must have both lengths on a screen. Reverted, it fails naming both long forms.
+Its first version required the JSX tag and failed on the two *short* forms,
+which were never in doubt — `WorstDay` and `StartToday` are entries in Today's
+section registry, which is a render that does not look like one.
+
+## T2 — the twelve, each looked at
+
+| Export | Verdict |
+| --- | --- |
+| `Clashes.tsx` `ClashList` | **Wired.** T1. |
+| `StartToday.tsx` `StartList` | **Wired.** T1 — found by reading `Ahead.tsx`'s imports rather than by the census, which never flagged it. |
+| `Icons.tsx` `AheadIcon`, `TonightIcon` | **Cut**, with their shapes. Icons for `ahead` and `tonight`, which `80fbc5c` also removed: neither is in the `Screen` union, `icons.pick.ts` maps neither, and `SHAPES.ahead`/`SHAPES.tonight` were reachable only through these two components. |
+| `shell/Rows.tsx` `ToggleRow` | **Keep, recorded.** Reads as a second `Toggle`, but `ui.tsx`'s already carries `role="switch"` and `aria-checked`, so this is a duplicate with no advantage rather than a better copy nobody called. Unused API on the shell's row kit; cutting it is a taste call about that kit, not a fault. |
+| `bookmarks.hook.ts` `forgetMarks` | **Cut candidate, not cut.** Says *"For tests"* and no test uses it, while its siblings `forgetSound` and `forgetStrip` are both test-used. Either the bookmarks hook's cache leaks between tests and nobody noticed, or this is surplus — and that is a question about the hook's tests, not about the export. |
+| `chatlog.ts` `save` | **Cut candidate, not cut.** `threads.ts` exports `save(kept: Kept)` with the same signature and imports from `chatlog.ts`, re-exporting its `ROOM`: a layer built on top, and this is the single-conversation persistence left behind by the move to many threads. Wants reading before removal. |
+| `decks.ts` `deckId` | **Cut candidate.** `return newId()`, and its docblock claims it matches *"what `pptx.ts` would call it"*, which `newId()` does not encode. Either the claim is stale or the naming belongs here; one look at `pptx.ts` settles it. |
+| `docxin.ts` `readable` | **Open.** One of **five** declarations of that name in the tree; the question is which, not whether. |
+| `fourier.ts` `phaseAt` | **Keep, recorded.** The pair of `sizeAt`, which is drawn. A spectrum's phase is the half nothing plots yet; cutting one of a mathematical pair to satisfy a census is how a library loses its shape. |
+| `pdf.ts` `frameFor` | **Open.** |
+| `rollover.ts` `archivedTerms` | **Open, and the interesting one left.** *"Terms that have been closed, newest first, **for a switcher to grey out**"* — and no switcher greys anything out. The same sentence-describing-a-feature-that-is-not-there shape as T1, one size down. |
+| `select.ts` `dotsForMonth` | **Open.** |
+
+Two wired, two cut, three kept with a reason, five left open with what the look
+found. That is the honest split, and it is why the twenty-fifth did not cut
+them in bulk: of the fourteen dead exports these two passes have opened, **four
+were not dead** — one live duplicate with a hole, two lost features, and a
+mathematical pair.
+
+## Gates
+
+`tsc` clean · lint ok · **10,903 tests pass across 536 files** · shuffle clean ·
+production build clean · driven in a browser, `pageerror` empty.
+
+## To do
+
+- **The five still open** above, one look each.
+- **`offerable()`'s default is still the ungated registry** — carried from the
+  twenty-first, now the fourth pass running.
+
+---
+
 # One app — the twenty-fifth pass: one question, two answers, and the one nobody called was the right one
 
 Against `main` at `00c3679`. **<!--screens-->fifty-eight<!--/--> destinations**,
@@ -283,9 +397,20 @@ files and twenty-four tests of their own.
   would get the registry unless it said otherwise.
 - **The dead-export question is still open and still unasked**, carried from the
   twenty-third, which threw away two instruments at it.
-- The `ItemRow` ARIA widening, carried from the twentieth pass's T5 and the
-  twenty-second: `Row` already accepts `role` and `ariaChecked`, so passing them
-  through would bring `MuteCourses` and `DesignEditor` onto the shared row.
+- ~~The `ItemRow` ARIA widening, carried from the twentieth pass's T5 and the
+  twenty-second.~~ **Already landed when this row was written**, and struck
+  afterwards. `#541` merged fifty-four minutes before this pass's commit, and
+  the twentieth pass's own T5 — above, in this file — had already recorded it
+  closed. `ItemRow` carries `role`, `aria-checked`, `aria-pressed` and
+  `aria-label`; `MuteCourses` and `DesignEditor` are on it; and
+  `components/shell/rows.aria.test.tsx` renders the component to hold it.
+
+  Worth leaving struck rather than deleted, because of which pass it is in.
+  The twenty-fourth is about a row crossed out in prose while the code still
+  had the defect. This is that fault inverted, in the same pass's own To do: a
+  row carried forward in prose after the code was fixed. Neither direction is
+  free, and this one costs whoever picks the row up the dig that finds it
+  already done.
 - **Nothing on the destinations row, and now nothing exempted from it either.**
   `ARGUED` is empty for the first time since it was written, so the next entry
   in it is a new claim rather than an inherited one.

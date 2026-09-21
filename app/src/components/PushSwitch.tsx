@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { secondLine } from '../lib/dim';
 import { useNow, useStore } from '../state/store';
 import { canPush, enrol, enrolled, leave, markRefilled, PUSH_NOTE, queueFor } from '../lib/push';
+import { INSTALL_FIRST, NO_PUSH_HERE, reach } from '../lib/onhome';
 import { atRiskToday } from '../lib/atrisk';
 import { classesToNudge } from '../lib/notify';
 import { dropDevice, saveDevice, saveQueue, wipeQueue } from '../lib/cloud';
@@ -22,6 +23,17 @@ const VAPID = (import.meta.env.VITE_VAPID_PUBLIC_KEY as string | undefined) ?? '
  * behind a switch that does nothing: the browser has to support push, the
  * build has to carry a key, and you have to be signed in — because the queue
  * lives on the account, and there is nowhere to put it otherwise.
+ *
+ * ## The fourth, which used to be said by drawing nothing
+ *
+ * `canPush()` being false returned `null` here, and on one platform that was
+ * the whole feature failing silently. Safari delivers push only to a page the
+ * student has added to their home screen, and offers no prompt to do it —
+ * so every iPhone opening this screen in a tab found the row simply absent,
+ * with nothing anywhere saying that reminders were one gesture away. See
+ * `lib/onhome.ts`: where the answer is fixable it is now said, and where it
+ * is not, that is said too rather than leaving a hole somebody has to guess
+ * the meaning of.
  */
 export function PushSwitch() {
   const { state, catalog, account, courseCode } = useStore();
@@ -34,7 +46,26 @@ export function PushSwitch() {
     void enrolled().then(setOn);
   }, []);
 
-  if (!canPush()) return null;
+  // Not `if (!canPush()) return null`. See the note above: on iOS the absence
+  // of push is a thing the student can fix in two taps, and drawing nothing
+  // was the app declining to mention it.
+  const can = reach(canPush());
+  if (can !== 'ready') {
+    return (
+      <div style={{ marginTop: 'var(--sp-5)' }}>
+        <div
+          style={{
+            fontSize: 'var(--type-sm)',
+            color: 'var(--app-dim)',
+            lineHeight: 'var(--leading-relaxed)',
+            textWrap: 'pretty',
+          }}
+        >
+          {can === 'install-first' ? INSTALL_FIRST : NO_PUSH_HERE}
+        </div>
+      </div>
+    );
+  }
 
   const blocked = !VAPID
     ? 'This build has no push key set, so reminders cannot be delivered. See supabase/functions/push.'

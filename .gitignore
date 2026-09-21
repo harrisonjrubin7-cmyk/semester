@@ -47,3 +47,9 @@ app/public/audio/documentary/
 # in a few seconds. Committing them would be committing the preset twice, and
 # the second copy is the one that goes stale.
 app/public/video/personas/
+
+# And the B-roll. Generated clips are bought from a provider, not built from
+# anything in this repository, so they are neither derived nor source — and
+# `video/shots/<course>.json`, which *is* committed, says exactly what each
+# one was asked to be.
+app/public/video/broll/

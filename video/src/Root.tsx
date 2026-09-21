@@ -75,6 +75,8 @@ const PLACEHOLDER_DOC = {
     { v: 'host', t: 'So this episode is the blocks. Ten chapters, the formula sheet, and the tr…' },
     { v: 'expert', t: 'And a self-test at the end. But do the problem sets yourself — the connect…' },
   ],
+  // No B-roll: the mode this format shipped in, and what the studio opens on.
+  shots: [],
   seconds: 1696,
   render: 60,
 };

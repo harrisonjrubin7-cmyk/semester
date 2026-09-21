@@ -28,7 +28,9 @@ import { codeOf } from '../data/catalog';
 import { upcomingItems } from '../lib/select';
 import {
   MIN_STRETCH_MINUTES,
-  doneToday,
+  counted,
+  countedLine,
+  warmedLine,
   planFor,
   planTotals,
   rank,
@@ -148,8 +150,11 @@ export function Study() {
   const totals = planTotals(plan);
   const inPlan = new Set(plan.map((s) => `${s.courseId}-${s.index}`));
   const alsoRanked = mine.filter((s) => !inPlan.has(`${s.courseId}-${s.index}`)).slice(0, 6);
-  const waiting = mine.reduce((n, s) => n + s.due, 0);
-  const answeredToday = doneToday(state.reviews, now);
+  // The evening described rather than totalled, over whichever courses are in
+  // play — so the summary and the plan under it never disagree about which
+  // evening is on. See `counted` in `lib/revise.ts`.
+  const tally = counted(mine, state.reviews, now);
+  const warmed = warmedLine(tally);
   /**
    * Open the cards for one stretch.
    *
@@ -1203,8 +1208,21 @@ export function Study() {
           textTransform: 'uppercase',
         }}
       >
-        {waiting} cards waiting{only ? ` in ${catalog.short[only as CourseId] ?? ''}` : ''} ·{' '}
-        {answeredToday} answered today
+        {/*
+          The same work, described rather than totalled.
+
+          This line used to read "N cards waiting", and `dueIn` builds that N
+          by counting two unrelated states as one: cards that have come round
+          again, and cards nobody has ever met. `lib/review.ts` spends a
+          docstring on why the lump is the wrong thing to call due — a course
+          you have answered one card of was being told a hundred had come
+          round for review — and the sentence on the screen was the place that
+          argument had never reached. See `counted` in `lib/revise.ts`, which
+          also says why none of this is a streak.
+        */}
+        {countedLine(tally)}
+        {warmed ? ` · ${warmed}` : ''}
+        {only ? ` · ${catalog.short[only as CourseId] ?? ''} only` : ''}
       </div>
 
       {/* The ranking, past the point the time ran out. Kept behind a tap: the

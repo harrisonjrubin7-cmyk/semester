@@ -24,6 +24,9 @@ restyle-script.mjs  script → the same script in a hosting style (calls a model
 styles.mjs       the hosting styles, as structural parameters
 persona-sheet.mjs   persona → its character reference sheet
 personas.mjs     the animated series' characters, as structural parameters
+broll-shots.mjs  chapter marks → a shot list, checked and priced
+broll.mjs        what a shot may ask for, and the spend ceiling
+likeness.mjs     the one rule both of those share
 ```
 
 Everything after `guide_reader.py` reads the same guide through it, so a deck, a
@@ -65,6 +68,47 @@ script, or any chapter mark is missed, nothing is written and it says why.
 Where these formats go next — movie-format lessons, one short per flashcard,
 several podcast hosting styles from one draft, and what each of those actually
 costs — is in [`../docs/VIDEO_PODCAST_ROADMAP.md`](../docs/VIDEO_PODCAST_ROADMAP.md).
+
+## B-roll for a documentary cut
+
+```bash
+node pipeline/broll-shots.mjs econ --draft      # one blank shot per chapter
+node pipeline/broll-shots.mjs econ             # check what was written
+node pipeline/broll-shots.mjs econ --price 10 --max-spend 8.40
+```
+
+A shot list lives at `video/shots/<course>.json` and is **edited by hand**.
+`--draft` writes one shot per chapter, landing on the second that chapter's
+mark does, with the subject blank — and nothing prices or buys a list with
+blanks in it.
+
+That is not ceremony. `render-documentary.mjs` used to build its clip jobs
+with `prompt: c.name`, so the fourteen clips it costed for ECON would have
+been generated from "Cold open", "Optimisation and opportunity cost" and "The
+formula sheet". A chapter title names a passage of argument; a shot is
+something a camera can point at; and the estimate for fourteen unusable clips
+looks exactly like the estimate for fourteen good ones. Same arrangement as
+`make-script.mjs`: the tool writes the structure, a person writes the words.
+
+What a subject may not be, and why:
+
+- **the chapter's own title** — it is right there in the file, it is the wrong
+  thing, and pasting it across is the likeliest way this ends up producing what
+  it was written to prevent;
+- **text, signage, charts, whiteboards, equations** — a video model renders
+  those as convincing nonsense, and this frame already carries the real chapter
+  card and the real captions, typeset from the script;
+- **anything pointing at a person** — `likeness.mjs`, the same rule
+  `personas.mjs` enforces on an appearance note.
+
+Three guardrails on the money, stopping three different things. The manifest
+stops a second run paying for the first run's clips. `--price` has to be
+supplied because a rate committed here would be quoted in a `--dry-run` next
+year as though it were measured. And `--max-spend` stops a run that is
+correctly priced, correctly deduplicated and far larger than anybody meant —
+which is what a hand-edited shot list makes possible for the first time.
+
+Generating is still not wired to a provider.
 
 ## The animated series' characters
 
