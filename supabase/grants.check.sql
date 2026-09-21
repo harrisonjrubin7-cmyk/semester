@@ -218,7 +218,7 @@ end $$;
 -- meets the base table's policies at all. Row-level security is not
 -- underneath it; nothing is.
 --
--- `20260901001100_forms.sql` created `public.published_forms` exactly that way
+-- `20260921143455_forms.sql` created `public.published_forms` exactly that way
 -- — definer's rights on purpose, so its WHERE clause could stand in front of
 -- `forms`' owner-only policies — and granted SELECT on top of the ALL that
 -- Supabase's default privileges had already given `anon`. Applied to the live
