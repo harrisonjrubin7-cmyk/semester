@@ -370,6 +370,47 @@ export interface Strip {
    * the way back in.
    */
   closed: Shut[];
+  /**
+   * The second pane, when there is one.
+   *
+   * Absent is the ordinary case and the reason this is one optional field
+   * rather than a list of panes: **two is the limit, and it is structural.**
+   * A list would make three panes a number somebody could raise, and the
+   * limit would then live in whatever checked the length — which is how a
+   * pane limit becomes four panes on a wide screen and a bug report about
+   * a pane you cannot reach on a phone. One field cannot hold three.
+   *
+   * **Nothing draws this yet, and that is deliberate rather than unfinished.**
+   * A pane has to render a tab's page, and a page in this app is a function of
+   * `state.screen` and `state.nav` — one navigation, in one store, read by
+   * ninety-eight screens. Two panes showing two places needs a navigation per
+   * pane, which is a change to the store and not to the strip. The strip's
+   * half of it is here, held and tested, because the render will need exactly
+   * this and because a pane that named a tab by index would have been the
+   * cheap thing to reach for once there was a deadline.
+   *
+   * See {@link splitWith}, and `HISTORY-WORKSPACE-QUEUE.md` for the rest.
+   */
+  split?: Split;
+}
+
+/** Which way the second pane sits from the active one. */
+export type Side = 'right' | 'left' | 'down';
+
+/**
+ * A second tab, shown beside the active one.
+ *
+ * By id rather than by index, unlike `at`, and the difference is deliberate.
+ * `at` is an index into a list the strip owns and reorders in the same breath
+ * — `rearrange` moves a tab and fixes `at` in one pass. A split names a tab
+ * that somebody chose, and it has to survive every one of those moves: a
+ * closed tab to its left, a drag, a group collapsing. An index survives none
+ * of them, and the failure is silent — the right-hand pane quietly becomes a
+ * different tab, which is worse than it going blank.
+ */
+export interface Split {
+  id: string;
+  side: Side;
 }
 
 /** A tab that was closed, and the seat it was closed from. */
@@ -582,14 +623,17 @@ function reveal(strip: Strip): Strip {
 /**
  * Go to a tab. Out-of-range is clamped rather than thrown: it is a click.
  *
- * A tab inside a collapsed group opens the group on the way — `reveal`, which
- * is the same rule the rest of the strip is held to. Nothing else can happen:
- * its page is about to be the whole window, and a strip claiming it is folded
- * away would be lying about where you are.
+ * A tab inside a collapsed group opens the group on the way, and a tab that
+ * was in the second pane leaves it — both because this goes through `tidy`,
+ * which is where the strip's invariants live. It called `reveal` alone until
+ * the second pane existed, and `reveal` is the one rule of the four that an
+ * index move can break on its own; the second pane is another, so the choice
+ * was between naming two of them here and naming none. `tidy` returns a strip
+ * that already holds by reference, so a click costs a comparison.
  */
 export function select(strip: Strip, which: number): Strip {
   const at = clamp(strip, which);
-  return reveal(at === strip.at ? strip : { ...strip, at });
+  return tidy(at === strip.at ? strip : { ...strip, at });
 }
 
 /**
@@ -682,6 +726,51 @@ export function openBeside(
 }
 
 /**
+ * Put a tab in the second pane, beside the active one.
+ *
+ * The two refusals are the whole of the rule, and both return the strip
+ * unchanged rather than throwing, because both are reachable from a menu
+ * somebody left open while the strip moved under it.
+ *
+ * **A tab cannot be split against itself.** One tab in two panes is not a
+ * split, it is the same page drawn twice with one of them impossible to close
+ * without guessing which you meant. `openBeside` is what "the same thing
+ * twice" is actually for: it makes a *second tab* on the same place, and that
+ * one can be split against the first.
+ *
+ * **A tab that is not in the strip cannot be in a pane.** An id that answers
+ * to nothing would draw an empty pane with no way to fill it.
+ *
+ * Splitting when there is already a split replaces it. Two is the limit, so
+ * there is nothing else it could mean, and refusing would leave somebody
+ * pressing Close Split before every Split Right for no reason they could see.
+ */
+export function splitWith(strip: Strip, id: string, side: Side): Strip {
+  if (id === current(strip).id) return strip;
+  if (!strip.tabs.some((t) => t.id === id)) return strip;
+  return { ...strip, split: { id, side } };
+}
+
+/** Back to one pane. The tab stays open; only the pane goes. */
+export function unsplit(strip: Strip): Strip {
+  if (!strip.split) return strip;
+  const { split: _gone, ...rest } = strip;
+  return rest;
+}
+
+/**
+ * The tab in the second pane, or null when there is not one.
+ *
+ * Null rather than undefined because a component asks this once and branches
+ * on it, and `undefined` is also what an out-of-range lookup returns — two
+ * absences that mean different things reading the same.
+ */
+export function besideTab(strip: Strip): AppTab | null {
+  if (!strip.split) return null;
+  return strip.tabs.find((t) => t.id === strip.split!.id) ?? null;
+}
+
+/**
  * The strip, put back in order after anything that could have broken it.
  *
  * Two rules, both invisible until they are broken. **A group is one run of
@@ -751,7 +840,31 @@ export function tidy(strip: Strip): Strip {
   // And the third rule, which is about where you are standing rather than
   // about the order: **the tab you are on is never folded away**. See
   // `reveal`. Last, because it reads the strip as this function leaves it.
-  return reveal(same ? strip : { ...strip, tabs: order, at, groups });
+  const settled = reveal(same ? strip : { ...strip, tabs: order, at, groups });
+
+  /*
+   * The fourth: **a pane always holds a tab, and never the one beside it.**
+   *
+   * Both ways of going wrong arrive here rather than at the split itself.
+   * Closing the tab that was in the second pane leaves an id answering to
+   * nothing, and `close` has no business knowing about panes. Selecting the
+   * tab that is in the second pane makes the split name the active tab, which
+   * would draw one page twice — and `select` is an index move that cannot see
+   * ids. So the rule is enforced where the strip is made coherent rather than
+   * in the four places that could break it, which is the same argument the
+   * three rules above are built on.
+   *
+   * Dropped rather than repaired, for the reason `storedTabs` drops a tab it
+   * cannot read: there is no second choice that is obviously right, and a
+   * pane that silently became a different tab is worse than one that closed.
+   */
+  const beside = settled.split;
+  if (!beside) return settled;
+  const holds = settled.tabs.some((t) => t.id === beside.id);
+  const itself = beside.id === settled.tabs[settled.at]?.id;
+  if (holds && !itself) return settled;
+  const { split: _gone, ...one } = settled;
+  return one;
 }
 
 /** The same tab, out of whatever group it was in. */
@@ -1215,6 +1328,7 @@ export function load(raw: string | null, known: (screen: string) => boolean): St
       at?: unknown;
       groups?: unknown;
       closed?: unknown;
+      split?: unknown;
     };
     const tabs = storedTabs(saved.tabs, known, true);
     if (tabs.length === 0) return blank();
@@ -1230,6 +1344,13 @@ export function load(raw: string | null, known: (screen: string) => boolean): St
        * bolted. A blank is not kept — `fresh` is not what this list is for.
        */
       closed: storedShut(saved.closed, known).slice(0, MAX_CLOSED),
+      /*
+       * Read field by field like everything else here, and left to `tidy` to
+       * check against the tabs that survived. A stored split naming a tab the
+       * reader above dropped is exactly the dangling pane `tidy`'s fourth
+       * rule is for, so there is no second check here to disagree with it.
+       */
+      ...storedSplit(saved.split),
     };
     /*
      * `tidy` last, and it is doing real work rather than tidying.
@@ -1244,6 +1365,20 @@ export function load(raw: string | null, known: (screen: string) => boolean): St
   } catch {
     return blank();
   }
+}
+
+/**
+ * A split off the device, or nothing.
+ *
+ * Returns the field to spread rather than the value, so the caller cannot
+ * write `split: undefined` into a strip and give every comparison of two
+ * strips a key that is present and empty on one side.
+ */
+function storedSplit(raw: unknown): { split?: Split } {
+  const saved = raw as Partial<Split> | undefined;
+  if (typeof saved?.id !== 'string' || !saved.id) return {};
+  if (saved.side !== 'right' && saved.side !== 'left' && saved.side !== 'down') return {};
+  return { split: { id: saved.id, side: saved.side } };
 }
 
 /**
@@ -1341,6 +1476,15 @@ export function dump(strip: Strip): string {
     at: clamp(strip, strip.at),
     groups: strip.groups,
     closed: strip.closed,
+    /*
+     * Spread rather than written as `split: strip.split`, which would be the
+     * same JSON — `JSON.stringify` drops an undefined value — and a different
+     * thing to read. The rest of this module treats the field's *absence* as
+     * the one-pane case, and a line that looks like it writes `undefined` is
+     * an invitation for the next person to make the type `Split | undefined`
+     * and break every comparison of two strips.
+     */
+    ...(strip.split ? { split: strip.split } : {}),
   });
 }
 

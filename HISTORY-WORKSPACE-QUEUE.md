@@ -34,8 +34,9 @@ why it is not `lib/tabs.ts`, which is a different thing with the same name.
 | 224 | Deep linking | `lib/route.ts` — hash routes, `NAMED` entities |
 
 **`Lane` is not a split pane.** `laneId` / `laneOrder` / `arrangeLanes`
-describe runs *within the strip*, left to right. Split view (191–194) is
-genuinely absent; do not mistake lanes for it.
+describe runs *within the strip*, left to right. Do not mistake lanes for it.
+Split view's *model* now exists — `Strip.split`, `splitWith`, `unsplit`,
+`besideTab` — and nothing draws it; see F1 and F2 below.
 
 **`lib/history.ts` is not navigation history.** It is editor undo/redo — a
 ring buffer with coalescing, for a sheet or a document. Semester History
@@ -96,12 +97,54 @@ deadlines, which the app already knows.
 Needs A and the existing `Action[]` place mechanism in `lib/browser.ts`.
 166 warns against over-persisting transient UI state; honour that.
 
-### F · Split view (191, 192, 193, 194)
-Genuinely new. Two panes, hard limit two. `AI side-by-side` (194) is the
-case that justifies it. Do not nest.
+### F1 · Split view — the model (191, 192, 193) · **landed**
+`Strip.split`, `splitWith`, `unsplit`, `besideTab`, and `tidy`'s fourth rule.
+Two panes, hard limit two, and the limit is structural: one optional field
+cannot hold three. The pane names a tab **by id**, not by seat, so it survives
+a close in front of it, a drag and a pin — the three moves an index loses
+silently. Stale panes are dropped rather than repaired, the same way
+`storedTabs` drops a tab it cannot read.
+
+`select` now goes through `tidy` rather than `reveal` alone, because going to
+the tab that is in the second pane is one of the two ways to end up drawing one
+page twice, and the other is closing it.
+
+### F2 · Split view — the render (191, 192, 194) · **blocked, and not on effort**
+
+A pane has to draw a tab's page. A page in this app is a function of
+`state.screen` and `state.nav`: one navigation, in one store, read by
+ninety-eight screen components. **Two panes showing two places needs a
+navigation per pane**, which is a change to `state/shape.ts` and the store, not
+to the strip. Nothing in the workspace layout renders a screen that is not
+`state.screen` — `App.tsx` mounts one `<CurrentScreen />`.
+
+Three ways were considered and two of them are traps:
+
+- **A second store for the second pane.** Two stores syncing, two
+  localStorage writers, two answers to what the library contains. This is the
+  bug the repository treats as fatal, arrived at from a new direction.
+- **One store, a nav override per pane, navigations forwarded to the store.**
+  Clicking a course in the right pane moves the left one. Anybody would hit it
+  in the first minute.
+- **One store, a nav override per pane, and the panes swap when you touch the
+  inactive one.** This is the one worth designing. The inactive pane is a view
+  you can read; interacting with it makes it the live pane and puts the other
+  one beside it, which is what `select` already does to a tab and is already
+  modelled — `at` and `split.id` trade places. It needs a real argument about
+  what a frozen pane may run: effects, focus, scroll restoration, and the
+  screen-scoped fields on `State` (`calMonth`, `moneyTab`, the report grain)
+  that are global today and are per-pane the moment there are two.
+
+Note that "navigation" is not a clean subset of the action union — plenty of
+actions both move you and set a screen-scoped field — so a pane provider that
+intercepts *nav actions by type* would be a guess-list that rots. The
+coordinate has to move onto the pane, not the dispatch.
+
+F1 landing first is deliberate: the render will need exactly that model, and a
+pane named by index is the cheap thing somebody reaches for under a deadline.
 
 ### G · Workspace presets and saved workspaces (195–201)
-Needs F. Presets arrange existing features and create no new ones (199).
+Needs F2. Presets arrange existing features and create no new ones (199).
 
 ### H · Multi-*browser*-window (180, 181, 182, 188, 189, 190)
 `window.open` + the existing BroadcastChannel sync. Respect popup blocking
