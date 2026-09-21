@@ -545,6 +545,42 @@ production as it stood that morning. This measures fifteen against production
 as it stands now, four migrations later, and lands on the same five numbers
 with the same single explained exception.
 
+#### The rebuild is now less safe than the thing it rebuilds
+
+The fingerprints above compare columns, constraints, indexes, functions, code
+and policies. They do not compare **privileges**, and on one relation the two
+differ in a way that matters.
+
+`20260921143455_forms.sql` creates `public.published_forms` and grants SELECT
+on it. On Supabase a relation in `public` is created with the default
+privileges already applied — `grant all on tables to anon, authenticated,
+service_role` — so that line adds SELECT on top of ALL rather than settling
+the matter. `published_forms` is auto-updatable and keeps the definer's rights
+deliberately, so a write grant on it is a write that runs as the view's owner
+and never meets `forms`' owner-only policies. Measured on the live project as
+`anon`: `delete from public.published_forms` removed a row, while the same
+delete against `forms` was refused.
+
+Production does not have that hole, because it was closed by hand at 14:47 —
+which is the ledger row `20260921144711 forms_relation_grants`, and that row
+has **no file**. So this is fault 2 in its purest form and pointing the other
+way: a rebuild from `migrations/` produces a schema that is correct in every
+fingerprint above and *more exposed than production*. Disaster recovery is
+what this document exists for, and the recovered database would have been the
+unsafe one.
+
+The same applies, less sharply, to `20260921150750
+access_log_function_search_path`: `note_access` and `read_feed` were created
+without a pinned `search_path`, Supabase's linter said so, and the fix is
+another ledger row with no file.
+
+Both are folded into the files they belong to rather than added as new
+migrations — the versions above them are already in the ledger, so a deploy
+applies nothing either way, and what changes is what a *fresh* build produces.
+`grants.check.sql` sweeps every view in `public` for a write grant, and
+`rehearse.sh` asks the same after a rehearsed deploy, so neither can come back
+quietly.
+
 #### What it still does not do
 
 **Nothing here flips the status.** The branch record reads what the last deploy

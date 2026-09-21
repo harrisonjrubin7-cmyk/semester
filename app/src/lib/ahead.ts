@@ -33,6 +33,7 @@ import { DOW, dateToIso, decorateItem } from './date';
 import { lengthOf } from './select';
 import type { DoneMap } from './standing';
 import { weekShape, type WeekShape, type Window } from './windows';
+import { hoursOnDay, type AthleticEvent } from './athletics';
 
 export interface Day {
   date: Date;
@@ -47,6 +48,16 @@ export interface Day {
   commitments: number;
   /** Hours of your own appointments. */
   appointments: number;
+  /**
+   * Hours of practice, competition, training and travel on this day.
+   *
+   * Its own field rather than folded into `commitments`, because a student on
+   * a team can see at a glance which of the two took the evening — and because
+   * the season is kept in a device library the store knows nothing about, so a
+   * day reading zero here may mean "nothing on" or "nothing entered", and only
+   * a screen that keeps them apart can say which.
+   */
+  athletics: number;
   /** Deadlines falling on this day and not yet ticked. */
   due: DatedItem[];
   /** Every promised hour on this day. */
@@ -109,6 +120,20 @@ export interface WeekInput {
   appointments: Appointment[];
   /** The hours this person actually works in. Empty falls back to 16 a day. */
   windows?: Window[];
+  /**
+   * The season, from the Athletics library — practices, competitions, travel.
+   *
+   * A *data input*, and deliberately nothing more. Every hour here is counted
+   * exactly as a commitment's hours are counted: promised, and therefore gone
+   * from `spare`. No rule in this file knows what a competition is, and none
+   * should — the planning logic that was right for a shift at work is right
+   * for a bus to a meet, and a second set of arithmetic for athletes would be
+   * two answers to one question.
+   *
+   * Optional because the season lives outside the store: a caller that has not
+   * read the library passes nothing and gets the week it always got.
+   */
+  athletics?: AthleticEvent[];
 }
 
 /**
@@ -156,6 +181,10 @@ export function week(input: WeekInput): Week {
     // ordinary length of one and the same honest approximation.
     const appointments = input.appointments.filter((a) => a.date === key).length;
 
+    // Clipped to this day rather than counted whole against its start — see
+    // `hoursOnDay`. A four-day trip is four days here, which is the point.
+    const athletics = hoursOnDay(input.athletics ?? [], date);
+
     const due = dated.filter(
       (i) =>
         i.date.getFullYear() === date.getFullYear() &&
@@ -163,7 +192,7 @@ export function week(input: WeekInput): Week {
         i.date.getDate() === date.getDate(),
     );
 
-    const today = classes + commitments + appointments;
+    const today = classes + commitments + appointments + athletics;
     hours += today;
     byDay[date.getDay()] = (byDay[date.getDay()] ?? 0) + today;
 
@@ -173,6 +202,7 @@ export function week(input: WeekInput): Week {
       classes: round(classes),
       commitments: round(commitments),
       appointments,
+      athletics: round(athletics),
       due,
       promised: round(today),
     });

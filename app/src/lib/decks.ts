@@ -14,7 +14,6 @@
  * in IndexedDB instead.
  */
 
-import { newId } from './idb';
 import { DEFAULT_PALETTE, type Deck, type Palette, type Slide } from './pptx';
 import type { CourseId } from './types';
 
@@ -417,7 +416,7 @@ export function keepable(
   return { ...deck, courseId, hidden: [] };
 }
 
-/** A file name for the deck, matching what `pptx.ts` would call it. */
-export function deckId(): string {
-  return newId();
-}
+/* A `deckId()` stood here — `return newId()` — claiming to match "what
+ * `pptx.ts` would call it". It did not: `pptx.ts` names a file from its stem,
+ * `${stem || 'deck'}.pptx`, not from a random id. A stale claim over an alias
+ * nothing called. */

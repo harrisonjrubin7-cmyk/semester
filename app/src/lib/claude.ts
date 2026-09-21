@@ -38,6 +38,7 @@ import {
 
 import { sessionToken } from './token';
 import { held, preamble } from './aboutme';
+import { readFound, searchTool, type Found } from './research';
 import { NOTHING_ARRIVED, askOpenAI } from './openai';
 import {
   markProxyDown,
@@ -351,6 +352,24 @@ interface AskOptions {
   tools?: ToolSpec[];
   /** Told about each tool the model wants to use, once its arguments are whole. */
   onToolUse?: (call: ToolCall) => void;
+  /**
+   * Let the model search the web, server-side.
+   *
+   * Nothing runs here: `web_search` is executed on Anthropic's infrastructure
+   * and its results arrive as blocks in the same response, which is why this
+   * is a flag rather than another entry in `tools` — that array is for tools
+   * this app is offered and hands back for a person to approve, and a server
+   * tool has already happened by the time it is seen.
+   *
+   * Off everywhere but `screens/Research.tsx`. It is the one place in the app
+   * that talks to anything but the API, and keeping it a per-call flag is what
+   * makes that greppable rather than a property of the assistant.
+   */
+  search?: boolean;
+  /** Told about each page a search turned up, as the results arrive. */
+  onFound?: (found: Found[]) => void;
+  /** Told when a search failed, in words meant to be shown. See `research.ts`. */
+  onSearchTrouble?: (said: string) => void;
   /**
    * What the reply cost, in tokens, as the API reported it.
    *
@@ -827,7 +846,20 @@ export async function ask(options: AskOptions): Promise<string> {
           : system,
         stream: true,
         ...(options.think ? { thinking: { type: 'adaptive' } } : {}),
-        ...(options.tools?.length ? { tools: strictly(options.tools, s.model) } : {}),
+        /*
+         * The client tools and the server one go in the same array, and only
+         * the client ones go through `strictly` — a server tool carries no
+         * schema to close, and passing it through would strip the `type` that
+         * identifies it.
+         */
+        ...(options.tools?.length || options.search
+          ? {
+              tools: [
+                ...(options.tools?.length ? strictly(options.tools, s.model) : []),
+                ...(options.search ? [searchTool(s.model)] : []),
+              ],
+            }
+          : {}),
         // Never both: the API refuses a request that asks for citations and a
         // constrained shape at once, and the citations are worth more.
         ...(options.format && !options.cite && !structuredRefused()
@@ -1060,6 +1092,20 @@ export async function ask(options: AskOptions): Promise<string> {
             // right: acting on a half-read instruction is the one outcome
             // worse than not acting.
           }
+        }
+        /*
+         * A search's results, which arrive whole rather than as deltas: the
+         * search ran on the server, so the block is complete the moment it
+         * starts. A failure arrives here too and is not an exception — see
+         * `readFound`, which is where the object-versus-array branch lives.
+         */
+        if (
+          event.type === 'content_block_start' &&
+          event.content_block?.type === 'web_search_tool_result'
+        ) {
+          const { found, error } = readFound(event.content_block);
+          if (error) options.onSearchTrouble?.(error);
+          else if (found.length) options.onFound?.(found);
         }
         if (event.type === 'content_block_delta' && event.delta?.text) {
           text += event.delta.text;

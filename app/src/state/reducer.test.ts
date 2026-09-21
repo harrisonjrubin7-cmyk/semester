@@ -3,7 +3,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { reducer } from './reducer';
-import { DEFAULT_PERSISTED, initialEphemeral, type State } from './shape';
+import { DEFAULT_PERSISTED, initialEphemeral, type QuizQuestion, type State } from './shape';
 import { directoryOf } from '../lib/look';
 
 /**
@@ -529,10 +529,90 @@ describe('drilling', () => {
   it('ignores a second answer to the same quiz question', () => {
     const started = reducer(blank(), {
       type: 'startQuiz',
-      quiz: [{ q: 'q', unit: 'u', full: 'q', opts: [{ text: 'a', ok: true }] }],
+      quiz: [{ kind: 'choice', q: 'q', unit: 'u', full: 'q', opts: [{ text: 'a', ok: true }] }],
     });
     const once = reducer(started, { type: 'pickAnswer', index: 0 });
     expect(reducer(once, { type: 'pickAnswer', index: 0 })).toBe(once);
+  });
+});
+
+/**
+ * Joining terms to definitions, which is the one quiz kind with state.
+ *
+ * A choice and a true-or-false are one tap and a number; a match is four
+ * assignments that can be made in any order, changed, and taken from each
+ * other. All of it is in the reducer rather than the screen for the reason
+ * `pickAnswer` is: a score a screen computes is a score a screen can compute
+ * twice.
+ */
+describe('matching a term to its definition', () => {
+  const MATCH: QuizQuestion = {
+    kind: 'match',
+    q: 'Match each term to its definition.',
+    unit: 'Key terms',
+    full: '',
+    opts: [],
+    pairs: [
+      { left: 'A', right: 'one' },
+      { left: 'B', right: 'two' },
+    ],
+    shown: [1, 0],
+  };
+
+  const started = () => reducer(blank(), { type: 'startQuiz', quiz: [MATCH] });
+
+  /**
+   * Join left `l` to right `r`, the way two taps do.
+   *
+   * Not called `join` — `node:path`'s is imported at the top of this file,
+   * and a helper that shadows it inside one describe is how a later test in
+   * the same file gets a confusing error about a path.
+   */
+  const pair = (s: State, l: number, r: number) =>
+    reducer(reducer(s, { type: 'holdTerm', index: l }), { type: 'joinTerm', right: r });
+
+  it('needs a term in hand before a definition means anything', () => {
+    const s = started();
+    expect(reducer(s, { type: 'joinTerm', right: 0 })).toBe(s);
+  });
+
+  it('puts a term down again when it is tapped twice', () => {
+    const held = reducer(started(), { type: 'holdTerm', index: 0 });
+    expect(held.quizHolding).toBe(0);
+    expect(reducer(held, { type: 'holdTerm', index: 0 }).quizHolding).toBeNull();
+  });
+
+  it('scores a run where every term found its own definition', () => {
+    const done = pair(pair(started(), 0, 0), 1, 1);
+    expect(done.quizJoins).toEqual({ 0: 0, 1: 1 });
+    expect(done.quizScore).toBe(1);
+  });
+
+  it('scores nothing when one pair is wrong, even though all are placed', () => {
+    const done = pair(pair(started(), 0, 1), 1, 0);
+    expect(done.quizScore).toBe(0);
+  });
+
+  it('takes a definition from the term that had it, rather than refusing', () => {
+    // The alternative is a student who has to work out which of four rows to
+    // undo before they can say what they mean.
+    const taken = pair(pair(started(), 0, 0), 1, 0);
+    expect(taken.quizJoins).toEqual({ 1: 0 });
+    // And the question is not finished, because it is not: A has nothing now.
+    expect(taken.quizScore).toBe(0);
+  });
+
+  it('stops listening once the last pair is placed', () => {
+    const done = pair(pair(started(), 0, 0), 1, 1);
+    expect(reducer(done, { type: 'holdTerm', index: 0 })).toBe(done);
+    expect(pair(done, 0, 1).quizScore).toBe(1);
+    expect(pair(done, 0, 1).quizJoins).toEqual({ 0: 0, 1: 1 });
+  });
+
+  it('clears the joins when the next question comes up', () => {
+    const next = reducer(pair(started(), 0, 0), { type: 'nextQuestion' });
+    expect(next.quizJoins).toEqual({});
+    expect(next.quizHolding).toBeNull();
   });
 });
 

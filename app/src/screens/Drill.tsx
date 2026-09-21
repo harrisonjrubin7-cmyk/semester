@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { allCards } from '../data/catalog';
 import { useNow, useStore } from '../state/store';
+import type { QuizQuestion } from '../state/store';
 import { SURES, beliefs, calibration, calibrationLine } from '../lib/sure';
 import { SayIt } from '../components/SayIt';
 import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
-import { buildQuiz } from '../lib/quiz';
+import { buildQuiz, isAnswered } from '../lib/quiz';
 import { ladderFor, nextRungLabel, scoreLine } from '../lib/ladder';
 import { A_SITTING, aSitting, catching, dueCount } from '../lib/review';
 import { inTime, testsNear } from '../lib/intime';
@@ -560,6 +561,193 @@ export function Drill() {
   );
 }
 
+/**
+ * A matching question: four terms on the left, their definitions scrambled.
+ *
+ * Two taps rather than a drag. A drag is the obvious gesture and it is the
+ * wrong one here — the rows are long enough to wrap to three lines on a
+ * phone, so a drag target moves under the finger as the list reflows, and a
+ * dragged answer that lands on the wrong row is a mark lost to the interface
+ * rather than to not knowing. Tap a term, tap a definition, done.
+ *
+ * A definition already spoken for is taken rather than refused, and the term
+ * that had it goes back to empty. See `joinTerm` in the study slice for why.
+ */
+function Matching({
+  question,
+  joins,
+  holding,
+  answered,
+  onHold,
+  onJoin,
+}: {
+  question: QuizQuestion;
+  joins: Record<number, number>;
+  holding: number | null;
+  answered: boolean;
+  onHold: (index: number | null) => void;
+  onJoin: (right: number) => void;
+}) {
+  const pairs = question.pairs ?? [];
+  const shown = question.shown ?? pairs.map((_, i) => i);
+  /** Which term, if any, currently holds each definition. */
+  const takenBy = new Map<number, number>();
+  for (const [left, right] of Object.entries(joins)) takenBy.set(right, Number(left));
+
+  return (
+    <div style={{ marginTop: 'var(--sp-7)' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(9px * var(--density, 1))' }}>
+        {pairs.map((pair, i) => {
+          const joined = joins[i];
+          const held = holding === i;
+          const right = answered && joined === i;
+          const wrong = answered && joined !== undefined && joined !== i;
+          return (
+            <button
+              key={i}
+              type="button"
+              className="bare"
+              aria-pressed={held}
+              onClick={() => onHold(i)}
+              disabled={answered}
+              style={{
+                display: 'flex',
+                gap: 'var(--sp-5)',
+                alignItems: 'flex-start',
+                textAlign: 'left',
+                paddingBlock: 'calc(12px * var(--density, 1))',
+                paddingInline: 'calc(13px * var(--density, 1))',
+                border: `1px solid ${
+                  right ? 'var(--app-accent)' : held ? 'rgba(233,235,239,.55)' : 'var(--app-line)'
+                }`,
+                background: right
+                  ? 'var(--app-accent-wash)'
+                  : held
+                    ? 'var(--app-track)'
+                    : 'transparent',
+                opacity: wrong ? DIMMED_ROW : 1,
+                cursor: answered ? 'default' : 'pointer',
+              }}
+            >
+              <span style={{ width: 16, flex: 'none', color: 'var(--app-accent)' }} aria-hidden="true">
+                {right ? '✓' : wrong ? '✕' : held ? '›' : ''}
+              </span>
+              <span style={{ flex: 1, minWidth: 0 }}>
+                <span
+                  style={{
+                    display: 'block',
+                    fontSize: 'var(--type-base)',
+                    lineHeight: 'var(--leading-normal-minus)',
+                    // As on the options above: `.bare:disabled` would paint a
+                    // marked row `--app-faint`, and a marked row is the one
+                    // being read.
+                    color: answered ? 'var(--app-fg)' : undefined,
+                  }}
+                >
+                  {pair.left}
+                </span>
+                <span
+                  style={{
+                    display: 'block',
+                    fontSize: 'var(--type-xs)',
+                    /*
+                       Dim while it is a prompt, full strength once it is an
+                       answer — and the second half is not only about emphasis.
+                       A marked row is drawn on `--app-accent-wash`, and dim
+                       ink over that wash is a pairing `lib/contrast.test.ts`
+                       does not walk: it checks the two faded strengths over
+                       every surface on the ramp, and the accent only over the
+                       wash. Putting the fade on the wash would be a reading
+                       nobody has taken. See the note in that file about a
+                       check that passed on the surface it sampled while the
+                       app drew another.
+                    */
+                    color: answered ? 'var(--app-fg)' : 'var(--app-dim)',
+                    marginTop: 'var(--sp-2)',
+                    textWrap: 'pretty',
+                  }}
+                >
+                  {joined === undefined
+                    ? held
+                      ? 'Now pick its definition'
+                      : 'Not matched yet'
+                    : pairs[joined].right}
+                </span>
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/*
+        The definitions, in their scrambled order.
+
+        Hidden once the question is marked: what matters then is which term
+        got which, and that is already written under each term above. Leaving
+        a second copy of every definition on screen doubles the reading at the
+        moment the student is trying to see what they got wrong.
+      */}
+      {!answered && (
+        <>
+          <div className="kicker" style={{ marginTop: 'calc(18px * var(--density, 1))' }}>
+            The definitions
+          </div>
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 'calc(9px * var(--density, 1))',
+              marginTop: 'var(--sp-4)',
+            }}
+          >
+            {shown.map((r) => {
+              const owner = takenBy.get(r);
+              return (
+                <button
+                  key={r}
+                  type="button"
+                  className="bare"
+                  onClick={() => onJoin(r)}
+                  disabled={holding === null}
+                  style={{
+                    display: 'flex',
+                    gap: 'var(--sp-5)',
+                    alignItems: 'flex-start',
+                    textAlign: 'left',
+                    paddingBlock: 'calc(12px * var(--density, 1))',
+                    paddingInline: 'calc(13px * var(--density, 1))',
+                    border: '1px solid var(--app-line)',
+                    background: 'transparent',
+                    opacity: owner !== undefined ? DIMMED_ROW : holding === null ? DIMMED_ROW : 1,
+                    cursor: holding === null ? 'default' : 'pointer',
+                  }}
+                >
+                  <span
+                    style={{
+                      flex: 1,
+                      minWidth: 0,
+                      fontSize: 'var(--type-base)',
+                      lineHeight: 'var(--leading-normal-minus)',
+                      textWrap: 'pretty',
+                    }}
+                  >
+                    {pairs[r].right}
+                  </span>
+                  {owner !== undefined && (
+                    <span style={{ flex: 'none', fontSize: 'var(--type-xs)', color: 'var(--app-dim)' }}>
+                      taken
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 /** Ten multiple choice, with the full answer revealed after each pick. */
 export function Quiz() {
   const { state, dispatch } = useStore();
@@ -682,7 +870,7 @@ export function Quiz() {
     );
   }
 
-  const answered = state.quizPicked !== null;
+  const answered = isAnswered(current, state.quizPicked, state.quizJoins);
 
   /*
    * The hints this question can offer, and the ones already taken.
@@ -691,8 +879,13 @@ export function Quiz() {
    * `lib/ladder.ts`. Nothing is generated and nothing is fetched, which is the
    * point: the moment a student needs a hint is eleven at night, and a hint
    * that needs a configured model is a hint that is not there.
+   *
+   * Offered on a multiple choice and nothing else. The ladder's useful rung
+   * strikes options out, and striking one of two is not a hint — it is the
+   * answer, handed over with a score still attached. A matching question has
+   * no options to strike at all.
    */
-  const rungs = ladderFor(current, guide.terms ?? []);
+  const rungs = current.kind === 'choice' ? ladderFor(current, guide.terms ?? []) : [];
   const taken = rungs.slice(0, state.quizRungs);
   // Options a `narrow` rung has struck out. Struck through rather than
   // removed: an option that vanishes takes the student's place on the list
@@ -741,6 +934,42 @@ export function Quiz() {
         {current.q}
       </div>
 
+      {/*
+        The claim a true-or-false is making, drawn as something separate from
+        the question rather than run into it.
+
+        It has to read as *an answer somebody has proposed*, because half the
+        time it is the wrong one. Set in the same panel the real answer is
+        revealed in afterwards, so the thing being judged and the thing it is
+        judged against occupy the same place on the screen.
+      */}
+      {current.kind === 'truefalse' && current.claim && (
+        <Blueprint style={{ marginTop: 'var(--sp-6)', paddingBlock: 'calc(13px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))' }}>
+          <div className="kicker">The answer given</div>
+          <div
+            style={{
+              fontSize: 'var(--type-base)',
+              lineHeight: 'var(--leading-normal-minus)',
+              marginTop: 'var(--sp-3)',
+              textWrap: 'pretty',
+            }}
+          >
+            {current.claim}
+          </div>
+        </Blueprint>
+      )}
+
+      {current.kind === 'match' && current.pairs && (
+        <Matching
+          question={current}
+          joins={state.quizJoins}
+          holding={state.quizHolding}
+          answered={answered}
+          onHold={(index) => dispatch({ type: 'holdTerm', index })}
+          onJoin={(right) => dispatch({ type: 'joinTerm', right })}
+        />
+      )}
+
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(9px * var(--density, 1))', marginTop: 'var(--sp-7)' }}>
         {current.opts.map((o, i) => {
           const chosen = state.quizPicked === i;
@@ -782,7 +1011,36 @@ export function Quiz() {
               >
                 {reveal && o.ok ? '✓' : chosen ? '✕' : ''}
               </span>
-              <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base)', lineHeight: 'var(--leading-normal-minus)', textWrap: 'pretty' }}>
+              <span
+                style={{
+                  flex: 1,
+                  minWidth: 0,
+                  fontSize: 'var(--type-base)',
+                  lineHeight: 'var(--leading-normal-minus)',
+                  textWrap: 'pretty',
+                  /*
+                    Said explicitly, because the button is `disabled` once the
+                    question is answered and `.bare:disabled` paints its text
+                    `--app-faint`.
+
+                    That is right for a control nobody can press and wrong for
+                    this one: the moment an option is disabled is the moment it
+                    becomes the *answer*, and the answer was being drawn at
+                    0.42 alpha — the weakest ink there is, and the one
+                    `lib/contrast.test.ts` records as measuring under its own
+                    3:1 bar on five grounds. Measured in Chromium at
+                    rgba(236,238,242,.42) on the correct option, ticked and
+                    washed in accent, which is the one line on the screen the
+                    student is there to read.
+
+                    Which option is which is carried by the tick, the border
+                    and the wash, and the wrong ones are still stepped back —
+                    by `opacity` on the row, which fades the whole thing
+                    together rather than singling out the text.
+                  */
+                  color: reveal ? 'var(--app-fg)' : undefined,
+                }}
+              >
                 {o.text}
               </span>
             </button>
@@ -835,8 +1093,18 @@ export function Quiz() {
       {answered && (
         <>
           <Blueprint style={{ paddingBlock: 'calc(13px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))', marginTop: 'var(--sp-7)' }}>
-            <div className="kicker">In full</div>
-            <div style={{ fontSize: 'var(--type-md)', lineHeight: 'var(--leading-relaxed)', marginTop: 'calc(5px * var(--density, 1))', textWrap: 'pretty' }}>
+            <div className="kicker">{current.kind === 'match' ? 'The pairs' : 'In full'}</div>
+            <div
+              style={{
+                fontSize: 'var(--type-md)',
+                lineHeight: 'var(--leading-relaxed)',
+                marginTop: 'calc(5px * var(--density, 1))',
+                textWrap: 'pretty',
+                // A match's key is one line per pair, and the newlines are the
+                // whole of its shape. Everything else here is a paragraph.
+                whiteSpace: current.kind === 'match' ? 'pre-line' : undefined,
+              }}
+            >
               {current.full}
             </div>
           </Blueprint>

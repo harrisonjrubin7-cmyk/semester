@@ -46,6 +46,51 @@ the exceptions, and there are three that actually bite:
 3. **University-supported or externally-supported research.** Work done as part
    of a research team, particularly under a federal grant.
 
+### The order matters, and it only runs one way
+
+Exception 2 is the only one on that list you can still trigger by accident, and
+the only one whose trigger looks like good news. The others are questions about
+what has already happened: a course you either took or did not, a faculty member
+who either supervised this or did not, equipment you either used or did not.
+Those facts are fixed, and the determination below simply reads them.
+
+Funding is not fixed. Every day this determination is unsent, there is an open
+question about ownership *and* a live opportunity to make the answer worse — a
+Wond'ry grant, a pitch competition prize, an accelerator stipend, a summer
+fellowship administered by the university. The policy says what happens then in
+as many words: *if the funding is determined to be a significant University
+resource, then Vanderbilt would own the resulting technology, and the student
+recipients would forego ownership.*
+
+So the sequence is not a preference:
+
+**Get the determination in writing first. Take university money second.**
+
+Not because the money is a bad idea — a Wond'ry grant may well be the right
+thing to take. Because the two cost wildly different amounts depending on which
+order they happen in:
+
+- **Determination first.** You hold a letter saying Semester was student-owned
+  as of that date. A grant afterwards is a negotiation with a known starting
+  point, and you can ask what the specific award does to ownership *before*
+  accepting it. Some awards are structured not to touch it. You cannot find
+  that out after the fact.
+- **Money first.** The determination now has to reason about the grant, which
+  is the exact question the policy resolves against you if it lands the wrong
+  way. You have also removed your own leverage: nobody renegotiates the terms
+  of money already accepted and spent.
+
+The asymmetry is the whole point. Sending the email costs an hour and closes an
+open question. Taking a five-figure award before sending it can cost the
+company, and there is no version of that trade where waiting a fortnight for a
+reply was the expensive choice.
+
+**If money is already in flight** — an application submitted, an award offered
+but not accepted, a program you are mid-way through — say so in the email
+rather than sending it and hoping the timing works out. An office told about a
+pending award can tell you what accepting it would do. An office that finds out
+afterwards can only tell you what it did.
+
 ### The facts that decide it — answer these before you write
 
 The email below is much stronger if it states facts rather than asks an open
@@ -63,6 +108,10 @@ question. Work out your answer to each of these first:
 - [ ] Are you in any **program** — accelerator, incubator, entrepreneurship
       course — whose participation agreement you signed? Those agreements can
       say things the Technology Policy does not.
+- [ ] Is there any university money **in flight** — applied for, offered,
+      or expected? This is the one item on the list that is about the future
+      rather than the past, and it is the one that can still change the answer.
+      Name it in the email; do not accept it before the reply.
 
 If every answer is "no", you are almost certainly clear, and the email becomes
 a request to have that confirmed in writing rather than a question. **Get it in
@@ -94,6 +143,11 @@ entrepreneurship office are the usual second stops.
 >   administered award. [If untrue: "It received [amount] from [source] on
 >   [date], and I would like to know whether that counts as a significant
 >   University resource."]
+> - [If anything is pending: "I have applied for / been offered [award] from
+>   [source]. I have not accepted it, and I would rather understand what
+>   accepting it would do to the ownership position than find out afterwards.
+>   If that is a question for a different office, I'd be grateful for the
+>   pointer."]
 > - No faculty or staff member has contributed to it or supervised it as
 >   research.
 > - It was not created for course credit and no syllabus specified it.
@@ -114,11 +168,14 @@ entrepreneurship office are the usual second stops.
 > [name]
 > [email] · [phone]
 
-Two notes on the draft. It states facts and asks for confirmation rather than
+Three notes on the draft. It states facts and asks for confirmation rather than
 asking "do you own my app?" — the second invites a cautious answer and starts a
-review you did not need. And it says why you are asking, because a student who
+review you did not need. It says why you are asking, because a student who
 mentions investors gets routed to the people who handle that, which is what you
-want.
+want. And it declares pending money rather than waiting to see whether the
+reply arrives first: an office told about an award in advance can tell you what
+accepting it would do, which is the only point at which that question has a
+useful answer.
 
 ---
 

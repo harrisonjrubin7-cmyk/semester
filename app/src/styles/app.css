@@ -2306,6 +2306,55 @@ a:hover {
 }
 
 /*
+ * The microphone, the same object as the send button and quieter.
+ *
+ * Secondary at rest because it is the second way in, not the first: a pill
+ * with two filled buttons in it reads as a choice between two equal things,
+ * and typing is what nearly everybody does.
+ *
+ * `.is-on` is the one state that has to be legible from across a room, since
+ * the whole point of the mode is that the phone is not in your hand. The
+ * accent ground says the microphone is open, and it is the same accent the
+ * focus ring uses, so it means what it means everywhere else in the app.
+ */
+.device .ai-mic {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-size: var(--type-sm);
+  background: transparent;
+  border: 1px solid var(--app-line);
+  color: var(--app-dim);
+}
+.device .ai-mic:hover {
+  border-color: var(--app-accent);
+  color: var(--app-fg);
+}
+.device .ai-mic.is-on {
+  background: var(--app-accent-wash);
+  border-color: var(--app-accent);
+  color: var(--app-fg);
+}
+/*
+ * The pulse that says it is live, and is switched off for anybody who asked
+ * for less motion — the colour above already carries the state, so the
+ * animation is decoration and decoration is what that setting turns off.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  .device .ai-mic.is-on {
+    animation: micLive 1.6s ease-in-out infinite;
+  }
+}
+@keyframes micLive {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+
+/*
  * The dock the composer sits in, on the chat tab.
  *
  * Its own padding rather than the screen's, because it is the one block in

@@ -37,6 +37,9 @@ import { useNow, useStore } from '../../state/store';
 import { useDeviceLibrary } from '../../lib/device-library';
 import { EMPTY_FAMILY, readFamily } from '../../lib/family';
 import { softTop, type TopStat } from '../../lib/softtop';
+import { useAthleticEvents } from '../../lib/athletics.hook';
+import { useDeviceLibrary as useLibrary } from '../../lib/device-library';
+import { EMPTY_NIL, nilKey, readNil } from '../../lib/nil';
 import { fills } from '../shell/exempt';
 import { Hero, Stat, StatRow } from './Soft';
 
@@ -92,9 +95,38 @@ function useTop() {
     EMPTY_FAMILY,
   );
   const familyPlans = family.value.members.length;
+  /*
+   * The season, for the same reason and by the same route.
+   *
+   * Two facts depend on it: the hours a week ahead already holds — a practice
+   * every evening and a bus on Friday are promised hours, and Today's figure
+   * disagreed with the week report's until this was passed — and the count
+   * over the Athletics screen itself, which used to be the Activities list.
+   */
+  const season = useAthleticEvents();
+  /*
+   * And the NIL record, by the same route again.
+   *
+   * A count, never the money. The hero is the biggest type on the screen and
+   * what somebody was paid is the one figure on any of these screens that is
+   * nobody else's business to read over a shoulder — `lib/softtop.ts` says so
+   * at the case that uses this.
+   */
+  const nil = useLibrary(nilKey(account?.id), readNil, EMPTY_NIL);
+  const nilDeals = nil.value.deals.length;
   return useMemo(
-    () => softTop(state.screen, { state, catalog, now, caps, sync: said, familyPlans }),
-    [state, catalog, now, caps, said, familyPlans],
+    () =>
+      softTop(state.screen, {
+        state,
+        catalog,
+        now,
+        caps,
+        sync: said,
+        familyPlans,
+        athletics: season,
+        nilDeals,
+      }),
+    [state, catalog, now, caps, said, familyPlans, season, nilDeals],
   );
 }
 

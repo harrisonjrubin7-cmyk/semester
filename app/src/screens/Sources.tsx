@@ -5,6 +5,7 @@ import { Blueprint } from '../components/Blueprint';
 import { Page } from '../components/Page';
 import { EmptyState, SectionLabel, Segmented } from '../components/ui';
 import { PrintButton } from '../components/PrintButton';
+import { FindSources } from '../components/FindSources';
 import { download } from '../lib/deliver';
 import {
   asLines,
@@ -31,6 +32,25 @@ import {
  * unambiguous and leaves everything else alone, because a wrong author in a
  * bibliography is worse than no author. The raw line is right there to read;
  * a parsed field looks like it was checked.
+ *
+ * ## A third way in, which does not weaken that
+ *
+ * `components/FindSources.tsx` sits in the middle of this screen and searches
+ * the open web. It is worth being precise about why that is not a breach of
+ * the sentence above, because it looks like one.
+ *
+ * A generated citation is the model composing a plausible author, journal and
+ * year for a paper that does not exist — the failure this screen was built
+ * against. What the search hands back is a *URL that was opened*: the title is
+ * the page's own, the address resolves, and the panel claims no author and no
+ * year precisely because a search result does not reliably carry either. The
+ * line it offers is built for you to correct, not to trust.
+ *
+ * And nothing it finds arrives here by itself. Each row has an Add beside it
+ * and goes through the same path a pasted line does, so a source is still here
+ * because you put it here. The field that earns marks — what it is for — is
+ * left empty on what it adds, for the reason below: nothing that has read a
+ * search result can honestly fill it in.
  *
  * The field that matters is "what it is for". It is the one that improves an
  * essay — a source you cannot say that about does not belong in the paper —
@@ -76,7 +96,7 @@ export function Sources() {
   return (
     <Page
       bottom={26}
-      blurb="Nothing here invents a citation — every source is one you entered, kept exactly as you wrote it. The tools that ask for your sources read from this list instead of asking again."
+      blurb="Nothing here invents a citation. A source is one you entered, or one a search actually opened and you chose to keep — kept exactly as it came. The tools that ask for your sources read from this list instead of asking again."
     >
         <>
           <SectionLabel>Course</SectionLabel>
@@ -149,6 +169,16 @@ export function Sources() {
           >
             Keep it
           </button>
+
+          {/*
+            The other way a source gets here, and it goes through the same Add.
+
+            `components/FindSources.tsx` searches the open web and offers what
+            it opened; nothing reaches the list until it is tapped. It draws
+            nothing at all without a key, so the screen is unchanged for
+            anybody not using the assistant.
+          */}
+          <FindSources />
 
           {list.length > 0 && <SectionLabel>{heading}</SectionLabel>}
           {/* `list`, not `list`: this is the screen saying you have no sources at

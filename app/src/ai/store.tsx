@@ -211,20 +211,8 @@ export function useAI(): AI {
   return ai;
 }
 
-/**
- * Add context for as long as this component is mounted.
- *
- * For a modal, an expanded row, a selected card — anything that is part of
- * what the student is looking at but is not the screen. Unregisters on
- * unmount, so a closed sheet cannot leave its record attached to the next
- * question.
- *
- * `ctx` must be memoised by the caller, or this re-registers on every render.
- */
-export function useAIContext(id: string, ctx: ScreenContext | null): void {
-  const { register } = useAI();
-  useEffect(() => {
-    if (!ctx) return;
-    return register(id, ctx);
-  }, [id, ctx, register]);
-}
+/* A `useAIContext(id, ctx)` hook stood here to register context for a
+ * component's lifetime. The screens that register context call `register`
+ * directly inside their own effects — `components/Insights.tsx`,
+ * `ai/AskAbout.tsx` — so this was a second door onto `register` that none of
+ * them took. */

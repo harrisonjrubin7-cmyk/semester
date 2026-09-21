@@ -37,9 +37,10 @@ import { NO_TIME } from './duetime';
 import { estimate, type Spent } from './pace';
 import { isExam } from './runway';
 import type { Commitment } from './activities';
+import { eventDays, type AthleticEvent } from './athletics';
 import type { DatedItem } from './types';
 
-export type ClashKind = 'exams' | 'heavy' | 'stacked' | 'committed';
+export type ClashKind = 'exams' | 'competition' | 'travel' | 'heavy' | 'stacked' | 'committed';
 
 export interface Clash {
   /** The day, `YYYY-MM-DD`, so it can be opened. */
@@ -87,6 +88,11 @@ export function clashes(
   /** A course id to its code, for naming two exams in one sentence. */
   code: (id: string) => string,
   budgetHours = DEFAULT_BUDGET,
+  /**
+   * The season, from the Athletics device library. Empty for a caller that has
+   * not read it, which is every caller that is not the app itself.
+   */
+  athletics: AthleticEvent[] = [],
 ): Clash[] {
   // No `now` parameter: `datedItems` has already stamped `daysAway` against
   // it, and a second clock here could disagree with the one the rest of the
@@ -96,6 +102,19 @@ export function clashes(
   for (const i of ahead) {
     const day = dateToIso(i.date);
     byDay.set(day, [...(byDay.get(day) ?? []), i]);
+  }
+
+  /*
+   * The season by day, built once rather than re-walked per deadline.
+   *
+   * `eventDays` is the same day-walk the Athletics screen uses, so a trip that
+   * reads as four days there reads as four days here. A day nothing is due on
+   * is not in `byDay` at all and never gets looked up: a competition on a free
+   * Saturday is not a clash, it is a Saturday.
+   */
+  const season = new Map<string, AthleticEvent[]>();
+  for (const e of athletics) {
+    for (const day of eventDays(e)) season.set(day, [...(season.get(day) ?? []), e]);
   }
 
   const out: Clash[] = [];
@@ -122,6 +141,54 @@ export function clashes(
         hours,
         unknown,
         says: `${exams.length} exams on the same day — ${[...new Set(exams.map((e) => code(e.c)))].join(' and ')}.`,
+      });
+    }
+
+    /*
+     * An exam and a competition on one day.
+     *
+     * Named separately from `committed` below, which is about a weekly
+     * commitment and fires on two ordinary deadlines. This fires on one exam
+     * and one competition, because that pair has a different answer: nobody
+     * sequences their way out of being in another state.
+     *
+     * Training and practice are deliberately not in here. A practice moves,
+     * and a warning that fired on every evening session for every exam in the
+     * fortnight is a warning somebody switches off before it ever says
+     * anything about a bus to Knoxville.
+     */
+    const fixtures = (season.get(date) ?? []).filter((e) => e.kind === 'Competition');
+    if (fixtures.length > 0 && exams.length > 0) {
+      out.push({
+        date,
+        kind: 'competition',
+        daysAway,
+        items: exams,
+        hours,
+        unknown,
+        says: `${exams.length === 1 ? 'An exam' : `${exams.length} exams`} on the day of ${fixtures.map((f) => f.title).join(' and ')}.`,
+      });
+    }
+
+    /*
+     * Work due on a day you are travelling.
+     *
+     * One deadline is enough, unlike `committed`, which wants two. The
+     * difference is that a commitment is somewhere you will be for two hours
+     * and travel is a day you do not have — an airport, a bus, a hotel with
+     * the wifi it has — so a single paper due in the middle of it is already
+     * the problem.
+     */
+    const away = (season.get(date) ?? []).filter((e) => e.kind === 'Travel');
+    if (away.length > 0) {
+      out.push({
+        date,
+        kind: 'travel',
+        daysAway,
+        items: onDay,
+        hours,
+        unknown,
+        says: `${onDay.length === 1 ? '1 thing' : `${onDay.length} things`} due on a travel day — ${away.map((a) => a.title).join(' and ')}.`,
       });
     }
 
@@ -216,7 +283,20 @@ export function clashes(
   // Nearest first, and the harder kind first within a day: two exams is a
   // bigger problem than a busy afternoon, and reading the smaller one first
   // would bury it.
-  const rank: Record<ClashKind, number> = { exams: 0, heavy: 1, stacked: 2, committed: 3 };
+  /*
+   * Two exams first, then the two a letter can still fix, then the three that
+   * are about how an evening is spent. `competition` sits above `heavy`
+   * because a heavy day is moveable by starting earlier and a competition is
+   * not moveable at all.
+   */
+  const rank: Record<ClashKind, number> = {
+    exams: 0,
+    competition: 1,
+    travel: 2,
+    heavy: 3,
+    stacked: 4,
+    committed: 5,
+  };
   return out.sort((a, b) => a.daysAway - b.daysAway || rank[a.kind] - rank[b.kind]);
 }
 
@@ -250,6 +330,10 @@ export function adviceFor(c: Clash): string {
   switch (c.kind) {
     case 'exams':
       return 'Two exams cannot be revised for in one evening. The runway for both starts now.';
+    case 'competition':
+      return 'This is a letter, not a late night. Draft the absence request from Athletics while there is still time for an answer, and ask about the arrangement rather than assuming one.';
+    case 'travel':
+      return 'A travel day has no desk in it. Finish what you can before you go, and take the rest offline.';
     case 'stacked':
       return 'Pick the order tonight rather than at eleven. The one worth most marks goes first.';
     case 'heavy':

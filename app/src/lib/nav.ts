@@ -421,7 +421,7 @@ export const DESTINATIONS: Destination[] = [
     screen: 'sources',
     label: 'Sources',
     blurb: 'Every reading you have kept, with what each is for — and out as BibTeX.',
-    keywords: 'source sources citation citations bibliography reference references reading list bibtex zotero overleaf works cited quote author year paper article book cite',
+    keywords: 'source sources citation citations bibliography reference references reading list bibtex zotero overleaf works cited quote author year paper article book cite research search web find literature secondary scholarly journal evidence background beyond syllabus google scholar library',
     /*
      * Courses rather than Make, since the making screens arrived.
      *
@@ -711,6 +711,17 @@ export const DESTINATIONS: Destination[] = [
       'athletics sport sports team varsity club intramural practice training competition meet game travel trip away absence letter professor conflict conflicts season roster coach eligibility',
     group: 'Beyond',
     taskTags: ['campus', 'week'],
+    root: 'mine',
+  },
+  {
+    screen: 'nil',
+    label: 'NIL deals',
+    short: 'NIL',
+    blurb: 'A private record of what you were paid, what it adds up to, and the date that follows from it.',
+    keywords:
+      'nil name image likeness deal deals brand sponsorship endorsement collective booster payment paid money disclose disclosure report reporting compliance office nil go college sports commission 600 threshold aggregate fair market value valid business purpose pay for play 1099 taxes athlete athletics',
+    group: 'Beyond',
+    taskTags: ['ahead', 'campus'],
     root: 'mine',
   },
   {

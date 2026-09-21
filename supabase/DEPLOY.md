@@ -7,8 +7,33 @@ are missing.
 
 ## What is live
 
-    claude   ACTIVE, v1, verify_jwt off
-    push     ACTIVE, v1, verify_jwt off
+Read off the project at 16:05 UTC on 21 September 2026, not remembered:
+
+    claude     ACTIVE, v19, verify_jwt off
+    push       ACTIVE, v16, verify_jwt off
+    calendar   ACTIVE, v12, verify_jwt off
+    fetchcal   ACTIVE, v13, verify_jwt off
+    canvas     ACTIVE,  v4, verify_jwt off
+    lti        ACTIVE,  v1, verify_jwt off
+
+**This file said two, at v1, and three of the other four were filed below under
+"Not deployed yet".** `fetchcal` had been live since 9 September when that was
+written — twelve days — and `calendar` since the 8th and was named nowhere at
+all. `lti` went up at 15:48 on the 21st, about two hours after its own section
+said it had not.
+
+The cause is not forgetfulness, and that is why the rows above carry a
+timestamp. `functions.yml` deploys on every push to main that touches a
+function's directory, so **a function directory on main is a deployed
+function**: "not deployed yet" is true only until the pull request merges, and
+then it is false with nobody having edited anything. A hand-written record
+cannot win that race. `app/src/lib/deployfunctions.test.ts` is what holds this
+section to the directories instead — it cannot see the project, so it checks
+the one thing it can: that every function here is accounted for, and that none
+of them is described as unshipped.
+
+The version numbers are the part that will go stale first and the part that
+matters least; the deployed-or-not column is the one that misled.
 
 ## Deploying a function without a laptop
 
@@ -28,7 +53,7 @@ deploys nothing rather than failing main.
 The project is read from the `SUPABASE_PROJECT_REF` variable if set, and
 otherwise off `VITE_SUPABASE_URL` — so a fork deploys to its own project.
 
-## Not deployed yet: `fetchcal`
+## Live: `fetchcal`
 
     supabase functions deploy fetchcal
 
@@ -38,8 +63,10 @@ on behalf of a signed-in device — the Connect screen's *Subscribe* button.
 Why it has to exist at all: a calendar server sends no CORS headers, so the
 browser is refused before the request leaves. The dev server forwards that one
 request itself (`/feed?url=` in `app/vite.config.ts`), which is why pasting a
-Brightspace or Outlook link works on a laptop running `npm run dev` and, until
-this is deployed, fails on the built app.
+Brightspace or Outlook link works on a laptop running `npm run dev`. On the
+built app it works too, through this function. For twelve days this paragraph
+ended "and, until this is deployed, fails on the built app", which told anybody
+reading it that a working feature was broken.
 
 It takes no secret and needs no SQL. It verifies the caller's own JWT, refuses
 anything that is not https to a public host, refuses a redirect that lands
@@ -53,11 +80,12 @@ person's calendar.
 function checks the token itself, and the platform check would reject the CORS
 preflight, which carries no `Authorization` header.
 
-Until it is deployed the app degrades rather than breaks — links from hosts
-that do allow the browser still work, the screen says what failed, and adding a
-downloaded `.ics` needs no network at all.
+Were it ever down or rolled back, the app degrades rather than breaks — links
+from hosts that do allow the browser still work, the screen says what failed,
+and adding a downloaded `.ics` needs no network at all. That is worth keeping
+written down; it is a fallback, not the current state.
 
-## Not deployed yet: `canvas`
+## Live: `canvas`
 
     supabase functions deploy canvas
 
@@ -96,9 +124,9 @@ It takes no secret of its own and needs no SQL. `verify_jwt` should be **off**,
 for the same reason as the others: the function checks the token itself, and
 the platform check would reject the CORS preflight.
 
-Until it is deployed the app says so and points at the calendar link, which
-needs no server at all and carries most of the same dates — just not whether
-you did them.
+Were it down, the app says so and points at the calendar link, which needs no
+server at all and carries most of the same dates — just not whether you did
+them. Again: a fallback, not where things stand.
 
 `verify_jwt` is off on both, and on both it is the platform check that is off,
 not authentication:
@@ -114,7 +142,7 @@ not authentication:
   returns 503 to everything, so a half-finished deploy is silent rather than
   open.
 
-## Not deployed yet: `lti`
+## Live: `lti`
 
     supabase functions deploy lti --no-verify-jwt
 
@@ -165,19 +193,42 @@ which is a confusing thing to debug if you did not know the row was missing.
 Both URLs are `https` by a check constraint rather than by convention: they are
 the two addresses this function redirects a student to and fetches keys from.
 
-### What a launch does today, and what it does not
+### One setting it needs
 
-It verifies, and then it stops. The last thing the function does on a good
-launch is render a page saying the connection works. **Signing in from
-Brightspace is not built** — turning a platform's id for a person into a
-Semester account is a real decision, including what happens when that human
-already made an account themselves, and `20260921160000_lti.sql` says why there
-is deliberately no foreign key answering it yet.
+    SEMESTER_APP_URL = https://harrisonjrubin7-cmyk.github.io/semester/
 
-So this is installable and testable by an administrator now, and it is not yet
-a way in for a student. Deep linking and grade passback are not built either;
-both need a key of this tool's own, which is why there is no key material in
-the migration.
+Set it under Edge Functions → Secrets. There is deliberately **no default**:
+this is the address a student's browser is sent to carrying a one-use session
+token, so a wrong guess is not a broken link, it is a token handed to whatever
+is at the address we assumed. Without it the function refuses the launch and
+says which setting is missing.
+
+### What a launch does
+
+A first launch **makes an account**, keyed on the issuer and the platform's
+subject for that person, and signs them in. A professor switches the tool on
+and two hundred students click it that week; every one asked to go and sign up
+first is one who does not come back.
+
+Attaching an account a student **already had** is never automatic. Nothing in
+this function reads the token's email claim to find an existing account — an
+email claim is a string a registered platform sends us, and matching on it
+hands an account to whoever can get one registration row wrong. Instead the
+launch issues a ticket, and `adopt_lti_identity` spends it only alongside a
+session the student proved. Two proofs, held by no single party.
+
+`_shared/ltiaccount.ts` makes that structural: a provisioned account's address
+is synthesised on `lti.invalid`, a domain that cannot receive mail, so there is
+no account for an email match to find even if somebody later writes one.
+
+**The invite gate is not bypassed.** While it is on, the function puts the
+synthesised address on `public.invites` before creating the account — which is
+the honest reading of what happened, since a school's administrator installing
+this tool is an invitation issued by exactly the person the gate exists to let
+issue them. It leaves a row saying so.
+
+Deep linking and grade passback are still not built; both need a key of this
+tool's own, which is why there is no key material in either migration.
 
 ## Tables
 
