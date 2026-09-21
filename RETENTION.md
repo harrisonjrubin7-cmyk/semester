@@ -185,13 +185,34 @@ behind and a client that believes it succeeded.
 | `app_admins` | account deletion, by cascade only | who may open the internal administrator dashboard. Not written or readable through the API by anyone, including the administrator it names, so no client deletes from it — the row goes when the `auth.users` row does. Deleting everything does not remove the sign-in itself, so an administrator who empties their account is still an administrator |
 | `lti_identity` | account deletion | which Semester account a Brightspace launch opens. It cascades on the account it points at, so deleting your account unbinds the launch too — and a later launch from the same school provisions a fresh account rather than reopening a deleted one, which is the correct reading of having asked to be forgotten |
 | `lti_link_ticket` | minutes, swept an hour past expiry | the single-use proof that a launch was validated, held only long enough for a student to say they already have an account. It names no person: an issuer, an opaque subject the platform chose, and the account the launch just made. Cascades with that account, and sweep_lti_link_ticket() removes what is an hour past expiry |
+| `organizations` | **never**, by any account's deletion | a student organization outlives everybody in it, which is what distinguishes it from a study group. `organizations.created_by` is `on delete set null`, so a founder who deletes their account leaves the organization standing with no founder recorded — the opposite of `groups.created_by`, and for the opposite reason: a group is its four people, an organization is not its founder |
+| `organization_members` | **no answer yet** — see below | |
 | `invites`, `access_gate` | **no answer yet** — see below | |
 
 ## What has no answer, stated rather than rounded off
 
-Two, and neither is urgent, and both should be answered before a pilot grows
-past people the owner knows by name.
+Three. Two are not urgent and should be answered before a pilot grows past
+people the owner knows by name. The third is urgent in the narrow sense that it
+has to be answered before anything in the app writes to `organization_members`,
+and it is listed first for that reason.
 
+- **What deleting everything does to a membership is undecided, and the
+  reason is a real problem rather than an oversight.** Every other row about a
+  person goes, and a membership row should: it names an account on a roster,
+  and `profiles` goes in the same pass, so leaving it behind means a roster
+  entry nobody can identify or ask. But `20260921230000_organizations.sql`
+  refuses to let the only administrator of an organization leave, because an
+  organization with members and no administrator cannot be edited, cannot admit
+  anybody and cannot appoint a replacement — it is locked, permanently, with no
+  route back. Deleting an account cannot be refused for that reason, and it
+  cannot be allowed to lock a club either, so one of three things has to be
+  decided: the organization is deleted with its last administrator, or
+  administration passes to somebody by a rule written down in advance, or the
+  deletion leaves the row and says so. Until one of them is chosen,
+  `organization_members` is in neither `OWNED_TABLES` nor `KEPT_TABLES` in
+  `app/src/lib/cloud.ts` — which is safe only because nothing in the app writes
+  the table yet. `privacy.test.ts` turns red the moment that stops being true,
+  which is the right moment for this paragraph to be replaced by an answer.
 - **`invites` is an allow-list of email addresses with no expiry.** The table is
   `(email, invited_at, note)` and nothing removes a row. Somebody invited to a
   pilot in September is still an invited address indefinitely. It is revoked
@@ -204,7 +225,7 @@ past people the owner knows by name.
   back in January should find their semester — but it is a default, not a
   decision, and it is the one a data-protection reviewer will ask about.
 
-Neither is a bug. Both are questions this document exists to stop being
+None is a bug. All three are questions this document exists to stop being
 invisible.
 
 ## Changing any of this

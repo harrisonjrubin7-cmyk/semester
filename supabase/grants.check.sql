@@ -124,7 +124,7 @@ end $$;
 do $$
 declare
   /*
-   * The allowlist. Seven, and each is a deliberate entry point:
+   * The allowlist. Thirteen, and each is a deliberate entry point:
    *   make_referral_code  — mints this account's own code
    *   claim_referral      — records that this account arrived on somebody's
    *   referral_standing   — two integers and a boolean about the caller
@@ -161,7 +161,31 @@ declare
     -- column's own UPDATE privilege is revoked from both API roles, so this
     -- function is the only way in and has to be callable by a signed-in
     -- account. See 20260921170000_schools.sql.
-    'claim_school(want text)'
+    'claim_school(want text)',
+
+    /*
+     * The six ways into `organization_members`, and the reason there are six
+     * rather than a policy. Both API roles are off INSERT, UPDATE and DELETE
+     * on that table outright — it holds one person's rank as decided by
+     * another, so there is no column a client may write and no row it may add.
+     * Each of these asks what the caller is to that organization before it
+     * writes anything, and `organizations.check.sql` attempts every refusal as
+     * the account that should be refused.
+     *
+     * `start_organization` is also the only insert into `public.organizations`,
+     * which has no insert policy: creating one and being its first
+     * administrator have to be a single statement.
+     *
+     * `anon` is off all six. A signed-out visitor has no standing anywhere by
+     * definition, and every one of them begins by asking what the caller's is.
+     * See 20260921230000_organizations.sql.
+     */
+    'apply_to_organization(org uuid)',
+    'follow_organization(org uuid, want boolean)',
+    'leave_organization(org uuid)',
+    'set_member_capabilities(org uuid, who uuid, want text[])',
+    'set_member_standing(org uuid, who uuid, want text)',
+    'start_organization(want_slug text, want_name text, want_about text)'
   ];
   extra text;
   missing text;
@@ -197,7 +221,7 @@ begin
   if missing is not null then
     raise exception 'FAILED: the allowlist names %, which a signed-in account cannot call', missing;
   end if;
-  raise notice 'ok  and can call all seven that it should';
+  raise notice 'ok  and can call all thirteen that it should';
 end $$;
 
 -- ── The gate's own switch, named because it is the one that was open ──────
