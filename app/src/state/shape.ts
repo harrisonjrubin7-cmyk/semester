@@ -574,6 +574,8 @@ export interface Persisted {
   lineHeight: string;
   readingWidth: string;
   iconShape: string;
+  /** `device`, `still` or `calm` — see `CALMS` in `lib/look.ts`. */
+  calm: string;
   labels: string;
   /**
    * How the app phrases what it tells you. See `lib/tone.ts`.
@@ -1447,6 +1449,7 @@ export const DEFAULT_PERSISTED: Persisted = {
   lineHeight: 'normal',
   readingWidth: 'normal',
   iconShape: 'none',
+  calm: 'device',
   labels: 'on',
   badges: 'due',
   feed: 'cards',
@@ -1479,6 +1482,7 @@ export function currentLook(state: Persisted): Look {
     lineHeight: state.lineHeight,
     readingWidth: state.readingWidth,
     iconShape: state.iconShape,
+    calm: state.calm,
     labels: state.labels,
     badges: state.badges,
     feed: state.feed,
@@ -1984,6 +1988,7 @@ export function pickPersisted(state: State): Persisted {
     lineHeight: state.lineHeight,
     readingWidth: state.readingWidth,
     iconShape: state.iconShape,
+    calm: state.calm,
     labels: state.labels,
     badges: state.badges,
     feed: state.feed,
