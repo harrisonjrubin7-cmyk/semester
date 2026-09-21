@@ -4,6 +4,12 @@ Semester now contains an enormous number of capabilities. The interface must not
 
 A student should be able to use Semester immediately without understanding the entire product. This document is the experience half of the master specification — sections 350 to 408 — and it governs every screen the other requirement documents describe.
 
+# Two numbering schemes, and how to cite them
+
+**The master specification has issued §350–§408 twice, for different things.** This document holds the experience set — §350 is the UI/UX master standard, §378 is low-stimulation mode, §390 is notification priority. `docs/PLATFORM_REQUIREMENTS.md` holds the platform set, §301–535 — where §350 is university plan configuration, §378 is push permission UX, §390 is mobile swipe actions.
+
+Neither was renumbered, because renumbering one would silently break every reference already written against it. **So a bare "§378" is ambiguous and should never be written** — cite *experience §378* or *platform §378*.
+
 # Where this stands
 
 Much of this was built before it was written down, because `lib/look.ts` and the audits in `npm run lint` have been arguing for it for months. The table records what is load-bearing today, checked against the code rather than remembered.

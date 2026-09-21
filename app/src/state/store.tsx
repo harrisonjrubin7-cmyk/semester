@@ -31,7 +31,7 @@ import {
   cloudConfigured,
   currentSession,
   onAuthChange,
-  explainSyncError,
+  explainSync,
   pull,
   push as pushCloud,
   type Account,
@@ -832,7 +832,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         Date.now(),
       );
     } catch (e) {
-      const error = explainSyncError(e instanceof Error ? e.message : String(e));
+      // The object, not its message: `explainSync` reads PostgREST's `code`
+      // and Supabase's `status`, which this line used to drop one step early.
+      const { said: error } = explainSync(e);
       setSync({ status: 'error', at: 0, error });
       return refreshSaid({ ...base, error }, Date.now());
     }
@@ -880,7 +882,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           setSync({
             status: 'error',
             at: 0,
-            error: explainSyncError(e instanceof Error ? e.message : String(e)),
+            error: explainSync(e).said,
           }),
         );
     }, 2500);

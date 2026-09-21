@@ -12,6 +12,7 @@ import { offered, type Destination } from '../lib/nav';
 import { monthStart, read as readSpend, since, total } from '../lib/spend';
 import { proposalsLine, readProposal, TOOLS, undoFor, type Known, type Lists, type Proposal } from '../lib/tools';
 import { taking } from '../lib/reach';
+import { toolsFor } from '../lib/toolscope';
 import { isLookup, LOOKUPS, MOST_ROUNDS, runLookups } from '../lib/lookup';
 import { currentLook } from '../state/shape';
 import { datedItems } from '../lib/select';
@@ -431,7 +432,10 @@ export function useConversation(): Conversation {
                * grade scale" is no longer in the mode the prompt describes.
                * `prompt.test.ts` holds the other half of this.
                */
-              how.mode === 'app' || round >= MOST_ROUNDS ? TOOLS : [...TOOLS, ...LOOKUPS],
+              toolsFor(
+                how.mode,
+                how.mode === 'app' || round >= MOST_ROUNDS ? TOOLS : [...TOOLS, ...LOOKUPS],
+              ),
             onToolUse: (call) => {
               if (isLookup(call.name)) {
                 wants.push(call);
