@@ -24,6 +24,27 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### Photograph a score, and it lands in your grades
+
+Top Hat, iClicker and the rest have no way to hand this app your score — there
+is no student API to ask. So under each course's grading table there is now
+**From a photo**: photograph the screen that shows your score, and the number
+comes across.
+
+What it does *not* do is decide anything for you. It reads the page, shows you
+every number on it that could be a score with the line each one came from, and
+you tap the one that is yours. Then it proposes which category it belongs to —
+and where the line does not name one, it says so and leaves the choice to you
+rather than guessing. **Nothing reaches your grades until you have picked
+both.**
+
+It files exactly what was on your screen. Photograph "13/14" and "13/14" is
+what the field holds, the same as if you had typed it.
+
+Needs the assistant set up, like every other place the app has to read a
+photograph. Typing the number in is unchanged and still the fastest route for
+a single figure.
+
 ### Fixing the wording of a question no longer wipes what you knew about it
 
 A card's identity used to be its question. Drill a card fifty times, then have
