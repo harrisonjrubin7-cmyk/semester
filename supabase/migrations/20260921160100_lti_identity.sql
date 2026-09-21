@@ -172,7 +172,14 @@ begin
       ('public.blocks',            'user_id'),
       ('public.referrals',         'user_id'),
       ('public.referral_codes',    'user_id'),
-      ('public.forms',             'owner')
+      ('public.forms',             'owner'),
+      -- Created by 20260921161500_roles.sql, which applies after this file. A
+      -- student who has shared anything with a parent has plainly used this
+      -- account, so a launch must not read it as untouched and attach to it.
+      -- The `to_regclass` guard below is what makes naming a table this
+      -- migration does not create safe: until that one applies the relation is
+      -- absent and the loop skips it, exactly as it does for `forms`.
+      ('public.family_grants',     'student_id')
     ) as x(rel, col)
   loop
     /*

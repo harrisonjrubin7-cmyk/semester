@@ -128,6 +128,9 @@ declare
    *   make_referral_code  — mints this account's own code
    *   claim_referral      — records that this account arrived on somebody's
    *   referral_standing   — two integers and a boolean about the caller
+   *   accept_family_grant — the recipient of a family grant accepts it, which
+   *                         is the one write they have on `family_grants`;
+   *                         `authenticated` only, never `anon`
    *   adopt_lti_identity  — attaches a Brightspace launch to the caller's own
    *                         account. Callable by a signed-in account *because*
    *                         that is half the security argument: it needs a
@@ -140,6 +143,7 @@ declare
    * not, the migration revokes it and this array does not change.
    */
   allowed constant text[] := array[
+    'accept_family_grant(grant_id uuid)',
     'adopt_lti_identity(want_ticket text)',
     'claim_referral(given text)',
     'make_referral_code()',
@@ -179,7 +183,7 @@ begin
   if missing is not null then
     raise exception 'FAILED: the allowlist names %, which a signed-in account cannot call', missing;
   end if;
-  raise notice 'ok  and can call all four that it should';
+  raise notice 'ok  and can call all five that it should';
 end $$;
 
 -- ── The gate's own switch, named because it is the one that was open ──────
