@@ -58,7 +58,7 @@ end $$;
 -- key, on a real project, while this harness — which never granted functions
 -- at all — reported it closed.
 --
--- That was not hypothetical. `20260901001200_invites.sql` was applied to the
+-- That was not hypothetical. `20260921003300_invites.sql` was applied to the
 -- live project on 21 September and `set_invite_only(boolean)` landed with
 -- `anon=X` and `authenticated=X`: a signed-out visitor could have turned the
 -- pilot's invite gate on or off. `invites.check.sql` had a check for exactly
@@ -68,7 +68,7 @@ end $$;
 -- Unlike the table grants, this one belongs in the stub rather than after the
 -- migrations, and can only work here: default privileges apply to objects
 -- created *afterwards*, so they must be in place before a migration creates
--- its first function. `20260901001500_function_grants.sql` is what closes the
+-- its first function. `20260921003600_function_grants.sql` is what closes the
 -- hole this now makes visible.
 alter default privileges in schema public
   grant execute on functions to anon, authenticated, service_role;
