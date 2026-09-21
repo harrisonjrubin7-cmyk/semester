@@ -107,18 +107,10 @@ revoke all on public.lti_link_ticket from anon, authenticated;
 
 create index if not exists lti_link_ticket_expires_at_idx on public.lti_link_ticket (expires_at);
 
--- The cascade above needs an index on `provisioned_user_id`, and it is not
--- here. `20260921174500_index_lti_link_ticket_user.sql` creates it, under the
--- name `lti_link_ticket_provisioned_user`, with the argument written out: the
--- scan is not hypothetical, because `lti_claim_link` in this same file deletes
--- the provisioned account on the ordinary linking path.
---
--- It was here too, for forty minutes. Two sessions read the same
--- `indexes.check.sql` failure and fixed it two ways — one in place, since this
--- migration is above the ledger's watermark and unapplied; one as a migration
--- of its own. Both merged, and the sweep's other half then named the pair:
--- "identical indexes, one of each pair is dead weight". This is the copy that
--- arrived second, so this is the copy that goes.
+-- The covering index this table's cascade needs is not here. It is its own
+-- migration — `20260921174500_index_lti_link_ticket_user.sql` — which is
+-- where it stayed after two sessions added it twice, under two names, in the
+-- same afternoon. See that file for why the column needs one.
 
 comment on table public.lti_link_ticket is
   'Proof that a launch was validated, spent once when a student attaches an account they already had.';

@@ -316,19 +316,61 @@ production does not have added back, and **all six numbers moved** — which
 discriminates the probe and, separately, re-confirms object by object that
 those four have never reached production.
 
-#### The one object no file here creates
+#### The one object no file here created
 
-`public.rls_auto_enable()` and its `ensure_rls` event trigger are what
-Supabase's "automatically enable RLS" setting installs. They are in Supabase's
-house style rather than this repository's, and the one migration that names
-them — `history/20260907134823_…` — only revokes EXECUTE, which is a thing you
-do to something that already exists. Step 1's snapshot calls `ensure_rls` "the
-project's"; that was wrong, and this corrects it. The definition now sits in
-`local.stub.sql` with the rest of what the platform provides, which is both
-where it belongs and the whole of why the function fingerprints differed by one
-entry.
+`public.rls_auto_enable()` and its `ensure_rls` event trigger turn row-level
+security on for every table created in `public` afterwards, and nothing in
+`migrations/` created them.
 
-Putting it there then found something no fingerprint would have.
+This section first said they are what Supabase's "automatically enable RLS"
+setting installs, that step 1's snapshot calling `ensure_rls` "the project's"
+was wrong, and that the definition therefore belonged in `local.stub.sql`.
+**Step 1 was right and this was wrong.** There is no such setting. Supabase's
+documentation has a section headed *Auto-enable RLS for new tables* which says
+"if you want RLS enabled automatically for new tables, you can create an event
+trigger", and prints this exact function and trigger. Somebody ran the
+documented recipe against this project by hand — which accounts for both
+observations that pointed the other way: the code reads in Supabase's house
+style because it was copied from Supabase's documentation, and the only
+migration that mentions it merely revokes EXECUTE because by then it already
+existed. It is the same habit as every other hand-applied statement this
+document is a record of.
+
+What that cost was measured, not argued. With the stub's copy removed and all
+fifteen migrations applied — the shape of a real rebuild or a preview branch,
+where `local.stub.sql` is deployed nowhere — `ensure_rls` was **absent**, and
+nothing failed and nothing said so: the revoke in `function_grants.sql` skips a
+function that is not there rather than erroring on it. A recovered database
+would have had no RLS-on-by-default and looked entirely healthy. It is created
+by `20260901000100_schema.sql` now, and the same probe finds it present with
+EXECUTE closed to `anon`, `authenticated` and PUBLIC.
+
+**Settled by measurement, not by reading.** Two Supabase-built preview
+branches on 21 September, each a fresh database the platform created and then
+ran the migrations against:
+
+| | `#588`, whose migrations do not create it | this branch, whose do |
+| --- | --- | --- |
+| event triggers | **6** — all Supabase's own | **7** |
+| `ensure_rls` | **absent** | present |
+| `rls_auto_enable` | **absent** | present, `prosrc` md5 equal to production's |
+
+Both branches applied all their migrations (`public.forms` exists in each), so
+the difference is the migration and nothing else. The platform installs six
+event triggers — `issue_graphql_placeholder`, `issue_pg_cron_access`,
+`issue_pg_graphql_access`, `issue_pg_net_access`, `pgrst_ddl_watch`,
+`pgrst_drop_watch` — and `ensure_rls` is not among them. **Every preview branch
+built from `main` today has no RLS-on-by-default**, which is also what a
+recovery from this directory would have had.
+
+The argument never rested on winning the provenance question, and that is still
+the reason to prefer it: if the platform does install the trigger, `create or
+replace` and a guarded `create event trigger` match what is there and change
+nothing; if it does not, the rebuild is safe instead of quietly unsafe. There
+is no reading under which keeping it out of the migrations is safer.
+
+Putting it in the stub did find something no fingerprint would have, and that
+part stands.
 `grants.check.sql` sweeps every function in `public` and fails on any a client
 can reach without being allowlisted, and the moment the stub created
 `rls_auto_enable` the way a real project does, it failed:
@@ -340,8 +382,10 @@ Production closed that on 7 September, and the statement that closed it lives
 in `history/`, which is a record and not a migration — so the revoke lived
 nowhere a fresh database would run it. **A rebuild from this directory would
 have been less safe than production is**, in exactly one way, and the check
-could not see it until the stub was faithful. It is closed now, in
-`20260901001500_function_grants.sql`. Production is unchanged and did not need
+could not see it until the function was there to sweep. It is closed now, in
+`20260901001500_function_grants.sql` — and because the function is created by a
+migration rather than by the stub, that revoke now runs on a rebuild instead of
+skipping an object that is not there. Production is unchanged and did not need
 changing: a sweep of its live grants shows only the three allowlisted functions
 reachable, by `authenticated` alone.
 
@@ -591,6 +635,66 @@ production's ledger, which is the whole mechanism at issue. The reading to check
 afterwards is the `main` branch record: `MIGRATIONS_FAILED` stamped
 `2026-09-18T17:37` before, and a fresh timestamp reaching `FUNCTIONS_DEPLOYED`
 after.
+
+### The test was run, and it came back negative
+
+Several merges landed on 21 September after the renumbering. Every one of them
+took the `main` branch record to `CREATING_PROJECT` and then back to
+`MIGRATIONS_FAILED`. The renumbering did not fix the deploy.
+
+It is worth being exact about what that does and does not mean, because the
+renumbering was correct and this is a *second* fault standing behind the first.
+The deploy never reached the point of ordering anything. From the project's
+`workflow_run_logs`, at 17:30, 17:33, 17:37 twice, 17:42 and 17:44:
+
+    INFO  Cloning git repo... git_ref=main
+    INFO  Checking service health... project_ref=lzrqvlugnawcgywkhqlz
+    INFO  Skipping configuration for protected branch...
+    INFO  Connecting to database...
+    ERROR Remote migration versions not found in local migrations directory.
+
+That is not about versions being in the past. `db push` first requires that
+**every row already in the ledger has a file in `supabase/migrations/`**, and
+thirteen do not:
+
+| rows | where the SQL lives |
+| --- | --- |
+| the ten of fault 2, `push_devices_and_queue` … `groups` | `supabase/history/` |
+| `20260921002658 revoke_function_execute_from_supabase_default_roles` | nowhere |
+| `20260921144711 forms_relation_grants` | nowhere |
+| `20260921150750 access_log_function_search_path` | nowhere |
+
+**Step 2 put those ten in `history/` on purpose, and that is the thing blocking
+the deploy.** Its reasoning holds: the eight baseline files are a squash of
+everything through 11 September, so the baseline already contains those ten
+migrations' effects, and a file for each in `migrations/` would apply them a
+second time on any build from empty. So the two requirements are in direct
+conflict —
+
+  * a build from empty must **not** have those files, or it applies them twice;
+  * a deploy to production must **have** them, or it refuses to start.
+
+Nothing in this document had noticed that, and `rehearse.sh` says plainly in
+its own header that it cannot: *"This script cannot see the ledger."* It
+rehearses the SQL, and this fault is not in the SQL.
+
+The last two rows are this repository's own doing and are newer than the plan:
+applying the pending migrations by hand closed a live hole and, in closing it,
+added two more ledger rows with no file. Their content is folded into
+`20260921143455_forms.sql` and `20260921143653_access_log.sql`, so nothing is
+lost from a build — but the rows are in the ledger and the deploy counts them.
+
+**No fix is proposed here, deliberately.** The shapes available are
+`supabase migration repair` to mark the thirteen applied — the production write
+step 5 was withdrawn over — or files in `migrations/` that are no-ops on a
+fresh build, or a squashed baseline whose version is the ledger's newest. Each
+is a different answer to "what is `migrations/` for", which is the question
+this whole document is about, and picking one is a decision rather than a
+patch. What is settled is the diagnosis: the error is named, it is reproducible
+on every merge, and the thirteen rows are enumerated above.
+
+`ledgerfiles.test.ts` holds the count where it is, so that the next hand-applied
+migration cannot quietly make it fourteen.
 
 ## What this costs, and what it does not fix
 
