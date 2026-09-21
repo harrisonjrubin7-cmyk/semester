@@ -513,6 +513,7 @@ const MOCKS_MODULES = [
   'src/state/deeplink.test.tsx',
   'src/state/persist/firstrun.test.ts',
   'src/state/persist/tell.test.ts',
+  'src/state/storetoken.test.tsx',
 ]
 
 export default defineConfig(({ command, mode }) => {

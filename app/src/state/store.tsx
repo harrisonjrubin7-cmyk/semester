@@ -691,6 +691,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       if (idle) window.cancelIdleCallback(handle);
       else window.clearTimeout(handle);
       stop?.();
+      // The account is `useState` and goes with this provider; the token is a
+      // module-level variable in `lib/token.ts` and does not. Left set, it
+      // outlives the thing that knows what it is for — and the next provider
+      // to mount starts with `account` null and a token still in hand, which
+      // is the inverse of the disagreement `lib/assistant.ts` has a whole
+      // paragraph about. Clearing it here keeps the two with the same
+      // lifetime, which is the only reason they can be reasoned about
+      // together. The next mount re-reads the session, so nothing is lost.
+      setSessionToken(null);
     };
   }, []);
 
