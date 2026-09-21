@@ -204,7 +204,7 @@ export function Sources() {
                       {[s.author, s.year, s.title, s.project]
                         .filter(Boolean)
                         .map((bit) => (
-                          <span key={bit} className="tag tag-outline" style={{ fontSize: 'calc(10.5px * var(--text-scale, 1))' }}>
+                          <span key={bit} className="tag tag-outline" style={{ fontSize: 'var(--type-2xs-plus)' }}>
                             {bit}
                           </span>
                         ))}

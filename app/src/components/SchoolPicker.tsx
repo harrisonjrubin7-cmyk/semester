@@ -304,7 +304,7 @@ function Row({
       >
         <div style={{ fontSize: 'var(--type-base-plus)' }}>{school.name}</div>
         {!school.verified && (
-          <div style={{ fontSize: 'calc(10.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
+          <div style={{ fontSize: 'var(--type-2xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
             {ADDED_LINE}
           </div>
         )}

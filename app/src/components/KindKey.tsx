@@ -66,7 +66,7 @@ export function KindKey({ compact = false, lead }: { compact?: boolean; lead?: R
   // AA, and under it again for anything nested, which is how the count beside
   // the label came to 0.44. See `lib/dim.ts`.
   const caps = {
-    fontSize: 'calc(10px * var(--text-scale, 1))',
+    fontSize: 'var(--type-2xs)',
     fontFamily: 'var(--font-heading)',
     letterSpacing: '0.1em',
     textTransform: 'uppercase' as const,

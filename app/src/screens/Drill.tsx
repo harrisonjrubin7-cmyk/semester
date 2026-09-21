@@ -155,7 +155,7 @@ export function Drill() {
     return (
       <div style={{ padding: 'var(--page-pad)' }}>
         <div style={{ paddingTop: 'calc(40px * var(--density, 1))', paddingInline: '0', paddingBottom: '0', textAlign: 'center' }}>
-          <div className="chrome-text" style={{ fontSize: 'calc(60px * var(--text-scale, 1))', lineHeight: 1 }}>
+          <div className="chrome-text" style={{ fontSize: 'calc(60px * var(--text-scale, 1))', lineHeight: 'var(--leading-none)' }}>
             {got}/{pool.length}
           </div>
           <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(24px * var(--text-scale, 1))', marginTop: 'var(--sp-2)' }}>
@@ -524,7 +524,7 @@ export function Drill() {
                   paddingBlock: 'calc(6px * var(--density, 1))', paddingInline: 'calc(9px * var(--density, 1))',
                   borderRadius: 'var(--r-sm)',
                   border: '1px solid var(--app-line)',
-                  fontSize: 'calc(10.5px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-2xs-plus)',
                   color: 'var(--app-dim)',
                 }}
               >
@@ -547,7 +547,7 @@ export function Drill() {
                   paddingBlock: 'calc(6px * var(--density, 1))', paddingInline: 'calc(9px * var(--density, 1))',
                   borderRadius: 'var(--r-sm)',
                   border: '1px solid var(--app-accent)',
-                  fontSize: 'calc(10.5px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-2xs-plus)',
                 }}
               >
                 ✓ {s.short}
@@ -599,7 +599,7 @@ export function Quiz() {
     return (
       <div style={{ padding: 'var(--page-pad)' }}>
         <div style={{ paddingTop: 'calc(40px * var(--density, 1))', paddingInline: '0', paddingBottom: '0', textAlign: 'center' }}>
-          <div className="chrome-text" style={{ fontSize: 'calc(60px * var(--text-scale, 1))', lineHeight: 1 }}>
+          <div className="chrome-text" style={{ fontSize: 'calc(60px * var(--text-scale, 1))', lineHeight: 'var(--leading-none)' }}>
             {score}/{n}
           </div>
           <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(24px * var(--text-scale, 1))', marginTop: 'var(--sp-2)' }}>

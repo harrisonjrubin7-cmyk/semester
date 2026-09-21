@@ -81,7 +81,7 @@ export function Grades() {
                 {s.current === null ? 'Nothing graded yet' : `Across ${Math.round(s.counted)}% of the grade`}
               </div>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--sp-5)', marginTop: 'var(--sp-3)' }}>
-                <div className="chrome-text" style={{ fontSize: 'calc(34px * var(--text-scale, 1))', lineHeight: 1 }}>
+                <div className="chrome-text" style={{ fontSize: 'calc(34px * var(--text-scale, 1))', lineHeight: 'var(--leading-none)' }}>
                   {s.current === null ? '—' : `${Math.round(s.current)}%`}
                   {/* The letter beside the number, where the scale in force
                       has cutoffs to read it against. The line under the

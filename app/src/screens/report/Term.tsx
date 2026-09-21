@@ -126,7 +126,7 @@ export function TermReport() {
         <div className="kicker">{label}</div>
         <div
           className="chrome-text"
-          style={{ fontSize: 'calc(22px * var(--text-scale, 1))', lineHeight: 1.2, marginTop: 'var(--sp-3)', textWrap: 'pretty' }}
+          style={{ fontSize: 'calc(22px * var(--text-scale, 1))', lineHeight: 'var(--leading-display-sm)', marginTop: 'var(--sp-3)', textWrap: 'pretty' }}
         >
           {found.length === 0
             ? 'Nothing this term will support.'

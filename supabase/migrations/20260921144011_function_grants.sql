@@ -70,7 +70,18 @@ declare
   /*
    * Each entry is a function and the roles that must not reach it.
    *
-   *   'anon, authenticated'  — no client may call this at all
+   *   'anon, authenticated'  — no client may call this at all, where the
+   *                            function's own migration has already revoked
+   *                            the PUBLIC grant it was created with
+   *   'public, anon,
+   *    authenticated'        — both spellings, for a function no migration
+   *                            here creates. Postgres grants EXECUTE to
+   *                            PUBLIC on every new function, so the named
+   *                            revoke alone leaves `=X/postgres` behind and
+   *                            `anon` still reaches it through PUBLIC — the
+   *                            exact inverse of the defect at the top of this
+   *                            file, and it was found the same way: by a check
+   *                            failing, not by reading
    *   'anon'                 — signed-in only; `authenticated` keeps the grant
    *                            its own migration gave it deliberately
    */
@@ -92,6 +103,22 @@ declare
     -- holding it.
     ['public.note_access(uuid, text, text)',       'anon, authenticated'],
     ['public.read_feed(text, text)',               'anon, authenticated'],
+
+    -- Not this repository's function, and revoked anyway. `rls_auto_enable`
+    -- and `touch_updated_at` are installed by the platform and by
+    -- `records`, and both are reached by a trigger rather than by a caller —
+    -- Postgres checks EXECUTE when a trigger is created, not each time it
+    -- fires, so neither needs a client grant to do its job.
+    --
+    -- `rls_auto_enable` is here because a rebuild from this directory would
+    -- otherwise be less safe than production is. Production revoked it on
+    -- 7 September, in `history/20260907134823_harden_security_definer_helpers.sql`,
+    -- and that file is a record rather than a migration — so the revoke lived
+    -- nowhere that a fresh database would run. `grants.check.sql` is what
+    -- noticed, the moment `local.stub.sql` started creating the function the
+    -- way a real project does.
+    ['public.rls_auto_enable()',                   'public, anon, authenticated'],
+    ['public.touch_updated_at()',                  'public, anon, authenticated'],
 
     -- Signed in only. All three also guard `auth.uid() is null` internally,
     -- and that is not made redundant by this: the internal guard decides what

@@ -67,7 +67,7 @@ export function FigureCard({ figure, unit }: { figure: Figure; unit?: string }) 
         style={{
           fontFamily: 'var(--font-heading)',
           fontSize: 'calc(19px * var(--text-scale, 1))',
-          lineHeight: 1.15,
+          lineHeight: 'var(--leading-display)',
           marginTop: 'calc(3px * var(--density, 1))',
         }}
       >
@@ -128,7 +128,7 @@ export function FigureCard({ figure, unit }: { figure: Figure; unit?: string }) 
                 {s.n}
               </div>
               <div style={{ flex: 1, minWidth: 0, paddingBottom: 'var(--sp-6)' }}>
-                <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(16px * var(--text-scale, 1))', lineHeight: 1.2 }}>
+                <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(16px * var(--text-scale, 1))', lineHeight: 'var(--leading-display-sm)' }}>
                   {s.t}
                 </div>
                 <div

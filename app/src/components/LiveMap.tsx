@@ -225,6 +225,27 @@ export function LiveMap({
         ref={host}
         role="application"
         aria-label="Map"
+        /*
+          Withdrawn, and not merely covered, for as long as the panel is up.
+          
+          The panel over it stops a pointer and nothing else. The targets sweep
+          reported four controls on this screen that "answer nowhere inside
+          their own box" — this host, Leaflet's two zoom links and its
+          attribution link — and tabbing the screen finds all four, in order,
+          invisible under an opaque panel and every one of them still live.
+          The zoom button a mouse is deliberately kept away from, because there
+          is nothing to zoom, is one Tab and one Enter away from a keyboard;
+          the host answers arrow keys and pans a map with no tiles; and a
+          screen reader is told there is an application here called Map.
+          
+          `inert` is the whole of it: out of the tab order, out of the
+          accessibility tree, out of hit testing, and anything focused inside
+          is blurred. It says what the z-index was only managing to imply.
+          
+          It comes off the moment a tile arrives, with the panel, because it is
+          the same `blank` — which is also why nothing here needs undoing.
+        */
+        inert={blank}
         style={{
           height: '100%',
           width: '100%',

@@ -208,21 +208,42 @@ applied migrations. The branch was deleted immediately; it billed for minutes.
 
 Three consequences, in the order they matter:
 
-- **There is no disaster recovery.** If the project were lost, the recorded
-  migrations would produce two push tables and an error.
+Two of the three were measured on 21 September and came back better than they
+read. The corrections are under each, because a document that only ever gets
+worse is one people stop checking.
+
+- **There is no disaster recovery.** If the project were lost, the *recorded
+  migrations* would produce two push tables and an error — eight of the
+  twenty-one rows carry no SQL, and that is still true and cannot be fixed:
+  what ran on 1 September was never written down.
+
+  But the repository is not the ledger. `supabase/migrations/` builds
+  production's schema from empty, and that is now measured rather than hoped:
+  six fingerprints over columns, constraints, indexes, functions, function code
+  and policies, five matching production exactly and the sixth differing only
+  in comments stripped from four function bodies.
+  [`supabase/fingerprint.sql`](supabase/fingerprint.sql) is the query, so the
+  claim can be re-checked rather than believed. **Recovery is a file set and a
+  stub, not a replay** — and it works.
+
 - **Nothing can reproduce production to test against**, which is what a staging
-  environment was supposed to be for. A preview branch cannot reach production's
-  schema state, so it cannot rehearse a change to it.
-- **The repository and production describe different databases.** Ten of those
-  migrations exist only in production and as no file here; **four** files here —
-  `usage_atomic`, `group_columns_pinned`, `forms` and `access_log` — have never
-  reached production, verified object by object rather than inferred from the
-  history. `invites` and `referrals` were on that list until 21 September, when
-  they were applied by hand; the ledger recorded them under today's timestamps
-  rather than their filenames, which is a third fault and not a fix.
-  `supabase/check.sh` builds its schema from the files, so a green check is a
-  fact about a database nobody is running: the same shape as the Postgres-major
-  mismatch fixed in #502, one level up.
+  environment was supposed to be for.
+
+  Half of that is now wrong. A throwaway Postgres built from `local.stub.sql`
+  and eleven of the fifteen migrations does reach production's schema; the four
+  left out are the four production has never had. What still cannot is a
+  preview branch, because Branching applies all fifteen — so the staging
+  environment remains blocked on the same decision as ever.
+
+- **The repository and production describe different databases.** This is the
+  one that stands, and it is narrower than it was. Ten migrations existed only
+  in production and as no file here; their SQL is now in
+  [`supabase/history/`](supabase/history/), byte for byte. **Four** files here —
+  `usage_atomic`, `group_columns_pinned`, `forms` and `access_log` — have still
+  never reached production, verified object by object rather than inferred from
+  the history. `invites` and `referrals` were on that list until 21 September,
+  when they were applied by hand; the ledger recorded them under that day's
+  timestamps rather than their filenames, which is a third fault and not a fix.
 
 **Until this is repaired, do not merge a pull request that touches
 `supabase/`.** If Branching is applying migrations, a merge sends those four to

@@ -106,7 +106,7 @@ function MealsDetails() {
         <div className="kicker">{readTerm(state.term).label}</div>
         <div
           className="chrome-text"
-          style={{ fontSize: 'calc(21px * var(--text-scale, 1))', lineHeight: 1.25, marginTop: 'var(--sp-3)', textWrap: 'pretty' }}
+          style={{ fontSize: 'calc(21px * var(--text-scale, 1))', lineHeight: 'var(--leading-display-xs)', marginTop: 'var(--sp-3)', textWrap: 'pretty' }}
         >
           {paceLine(latest, p)}
         </div>

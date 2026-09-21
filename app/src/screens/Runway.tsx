@@ -235,7 +235,7 @@ export function Runway() {
         </div>
         <div
           className="chrome-text"
-          style={{ fontSize: 'calc(24px * var(--text-scale, 1))', lineHeight: 1.15, marginTop: 'var(--sp-3)', textWrap: 'pretty' }}
+          style={{ fontSize: 'calc(24px * var(--text-scale, 1))', lineHeight: 'var(--leading-display)', marginTop: 'var(--sp-3)', textWrap: 'pretty' }}
         >
           {headline(r)}
         </div>

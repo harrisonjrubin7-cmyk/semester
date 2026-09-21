@@ -102,7 +102,7 @@ export function Privacy() {
           className="chrome-text"
           style={{
             fontSize: 'calc(24px * var(--text-scale, 1))',
-            lineHeight: 1.15,
+            lineHeight: 'var(--leading-display)',
             marginTop: 'calc(8px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(10px * var(--density, 1))',
             textWrap: 'balance',
           }}
