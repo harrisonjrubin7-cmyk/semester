@@ -278,6 +278,32 @@ begin
     from pg_proc p join pg_namespace ns on ns.oid = p.pronamespace
    where p.proname = 'is_app_admin' and ns.nspname = 'private';
   perform pg_temp.counted('and exactly one in private', n, 1);
+
+  -- ── the floor under the revoke, which nothing above can see ─────────────
+  --
+  -- Every `refused` in this file is the *grant* talking. The grant is checked
+  -- before row-level security, so once `app_admins` is revoked from `anon` and
+  -- `authenticated` the statement raises and RLS is never consulted — which
+  -- means this file's second claim, "RLS is on and there is no policy at all",
+  -- stopped being observable from any role the suite can become.
+  --
+  -- That is not hypothetical. Planting `create policy … for select using
+  -- (true)` on this table leaves **every `refused` assertion above still
+  -- passing**, because the grant stops the statement first. Two layers are
+  -- claimed and only one was being checked.
+  --
+  -- So this one is read from the catalogue. It is what says the floor is
+  -- still there if the revoke is ever loosened — the day somebody grants
+  -- select back, the assertions above turn red, and these say whether there
+  -- was anything underneath them.
+  select count(*) into n
+    from pg_class c join pg_namespace ns on ns.oid = c.relnamespace
+   where ns.nspname = 'public' and c.relname = 'app_admins' and c.relrowsecurity;
+  perform pg_temp.counted('row-level security is on for app_admins', n, 1);
+
+  select count(*) into n
+    from pg_policies where schemaname = 'public' and tablename = 'app_admins';
+  perform pg_temp.counted('and there is no policy on it at all', n, 0);
 end $$;
 
 rollback;
