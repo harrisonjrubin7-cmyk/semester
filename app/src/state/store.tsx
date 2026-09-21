@@ -69,6 +69,7 @@ import { ACCENT_TINT, anchorHue, tintsFor, type CourseTint } from '../lib/tint';
 import { ground as groundOf, resolveGround } from '../lib/look';
 import { usePrefersDark } from '../lib/prefers';
 import { USAGE_KEY, note as noteUsage, read as readUsage } from '../lib/usage';
+import { hold as holdAboutMe } from '../lib/aboutme';
 import { countRows, decide, type Choice, type Sides } from '../lib/adopt';
 import type { Facts } from '../lib/reveal';
 import type { School } from '../lib/school';
@@ -372,6 +373,22 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       stamp();
     };
   }, []);
+
+  /*
+   * The standing preferences, handed to the one thing that cannot ask for them.
+   *
+   * `lib/claude.ts:ask` builds every outgoing request and is not a hook, so it
+   * reads this list from a module-level value rather than from the store. This
+   * is the only thing that writes it. It runs on the list itself rather than on
+   * every render, so a keystroke anywhere else in the app does not touch it.
+   *
+   * Placed here, above the router, because the alternative — each assistant
+   * screen passing its own copy — is the twenty-five call sites this design
+   * exists to avoid. See `lib/aboutme.ts`.
+   */
+  useEffect(() => {
+    holdAboutMe(state.aboutMe);
+  }, [state.aboutMe]);
 
   /*
    * A count per screen, on this device and nowhere else.

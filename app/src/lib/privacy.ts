@@ -100,6 +100,15 @@ export const SYNC_GROUPS: { says: string; keys: string[] }[] = [
     ],
   },
   {
+    // Its own line rather than folded in with the name, which is the group it
+    // is otherwise nearest to. These are sentences somebody wrote about
+    // themselves, they are the one field here that rides on every request the
+    // assistant makes, and a person deciding whether to sign in should see
+    // them said rather than summarised as "your profile".
+    says: 'what you have told the assistant about yourself',
+    keys: ['aboutMe'],
+  },
+  {
     says: 'everything you have made — documents, spreadsheets, decks, equations, graphs and the folders they sit in',
     keys: [
       'documents', 'sheets', 'decks', 'equations', 'plots', 'folders',

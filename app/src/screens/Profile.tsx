@@ -7,7 +7,7 @@ import { Avatar } from '../components/Avatar';
 import { SectionLabel } from '../components/ui';
 import { CustomRow, Group, NavRow } from '../components/shell/Rows';
 import { inventory } from '../lib/inventory';
-import { heading, held, named, nothingHeld, oldestLine, saidAbout } from '../lib/profile';
+import { heading, held, named, nothingHeld, oldestLine, saidAbout, toldLine } from '../lib/profile';
 import { roleOf } from '../lib/role';
 import { cloudConfigured } from '../lib/cloud';
 
@@ -173,6 +173,22 @@ export function Profile() {
             style={{ width: '100%', fontSize: 'var(--type-base-plus)' }}
           />
         </CustomRow>
+      </Group>
+
+      {/*
+        A row rather than the list itself, for the reason the whole screen is
+        rows: the editor lives on the page that explains what leaves the
+        device, because that is the context in which "the assistant knows this"
+        is a decision rather than a novelty. What belongs here is the count,
+        which is what makes it findable from the question this screen answers.
+      */}
+      <Group header="What the assistant knows about you">
+        <NavRow
+          label="Things you have told it"
+          value={toldLine(state.aboutMe.length)}
+          sub="Said once, and every part of the app that asks Claude is told it."
+          onClick={() => dispatch({ type: 'go', screen: 'setAssistant' })}
+        />
       </Group>
 
       {/* Where the pickers are, said as values so the rows answer the question
