@@ -45,6 +45,26 @@ still start their history over — as they always have.
 Nothing to do, and nothing to look at: this is only visible the next time a
 question is edited, which is exactly when it is meant to be invisible.
 
+### The app asks which semester you are in, instead of assuming Fall 2026
+
+A brand-new install started in Fall 2026 whatever day you opened it on — the
+semester was written into the app as a fixed value rather than read off the
+calendar. Today that is right. In January it would not have been, and nothing
+on screen would have said so: courses you added would have been filed under
+last autumn, deadlines with no year on them would have resolved against the
+wrong one, and the semester switcher that would let you fix it does not appear
+until you have courses in two semesters.
+
+A new install now starts in whatever semester it is actually opened in, and
+the first run asks. Step 3 is *"When and where do you study?"*, with the
+calendar's guess already chosen and the semesters either side of it beside it
+— for setting up in December for a January start, or a summer session the
+calendar has already called Fall.
+
+Nothing you have already saved moves. A semester you had already chosen stays
+chosen, and courses saved before the app knew about semesters at all stay in
+Fall 2026, where their dates belong.
+
 ### A quotation in a study guide now tells you where in your material it is
 
 Open *View cited material* under any section of a generated study guide. It
@@ -90,6 +110,33 @@ whether it is switched on, because there was never a switch.
 **Nothing you had changes, and nothing stops working.** If you were reading
 that screen as "my Brightspace is hooked up", it never was, and the rest of the
 app has been telling you so on the Connect screen all along.
+### Three things are now counted about your account, and the Privacy screen says which
+
+Semester is about to be piloted, and four questions decide whether it is worth
+building further: does it work for somebody who is not its author, do people
+come back, does the syllabus extraction hold up on real courses, and would
+anybody pay for it. Answering the middle one needs a record of who came back,
+and until now there was none.
+
+**What is recorded, in full:** for each day you had the app open while signed
+in, up to three words — that you opened it, that you had added a course of
+your own by then, and that you had answered a practice card by then. That is
+the whole row. Not which screens you opened, not what you typed, not what time
+of day, not how long for, not which course.
+
+**What has not changed, and was the reason to build it this way:** there is
+still no third-party analytics in this app and no tracking of you anywhere
+else on the web. Signed out, none of this happens at all — nothing leaves the
+device, exactly as before. You can read your own rows, deleting your account
+deletes them, and they are dropped after a little over a year.
+
+The Privacy screen names it in the same words it names everything else, under
+*The three things counted about your account*. It is worth reading: that page
+is the promise, and a record it did not mention would have made the page
+untrue.
+
+Nothing to do, and nothing on screen changes.
+
 
 ### Your university can send its own data as a file, and you load it
 

@@ -43,6 +43,7 @@ What was missing is the sentence saying so, and the list of the exceptions.
 | What | Kept | Where it is enforced | How it runs |
 | --- | --- | --- | --- |
 | `access_log` | **90 days** | `supabase/migrations/20260921143653_access_log.sql` | On write, inside `note_access()`, scoped to the account being written to |
+| `activity` | **400 days** | `supabase/migrations/20260921151000_activity.sql` | On write, inside `note_activity()`, scoped to the account being written to |
 | `push_queue` | **Until sent** | `supabase/functions/push/index.ts` | Deleted per account by id after a successful send |
 | `push_devices` | **Until a gateway has said it is gone twice running** | `supabase/functions/push/index.ts` | A 404 or 410 *marks* the row (`gone_at`); still gone on the next run retires it, and any success clears the mark |
 | Tombstones in `notes`, `tasks`, `appointments`, `sittings`, `courses` | **90 days after deletion** | `public.sweep_tombstones`, in `supabase/migrations/20260901000700_records.sql` | `pg_cron`, weekly — the `tombstones` job in `supabase/scheduler.sql` |
@@ -175,6 +176,7 @@ behind and a client that believes it succeeded.
 | `blocks` | **not** lifted by deletion | keyed on `blocked`, not `user_id`, so deleting your account cannot undo somebody else's protection. This is deliberate and `deletion.check.sql` pins it |
 | `push_devices`, `push_queue` | see the clocks above | |
 | `access_log` | 90 days, see above | readable by the account it is about, which is the difference between an audit log and an operator's private diary |
+| `activity` | 400 days, see above | one row per account, day and mark, for the three figures the pilot is judged on. Readable by the account it is about, for the same reason the access log is. `ANALYTICS.md` is what it is for; `lib/privacy.ts` names it on the screen |
 | `referral_codes` | account deletion | one generated code per ambassador. Deleting it takes every `referrals` row pointing at it, by the foreign key — an ambassador who leaves is not remembered by a count of who they recruited |
 | `referrals` | account deletion, of either side | the row saying which code an account arrived on. It goes when that account is deleted, **and** when the ambassador whose code it names is. Never readable by the ambassador: it is a count on their screen and nothing else |
 | `lti_platform` | **kept until an administrator removes it** | not personal data at all: one row per Brightspace deployment of this tool, holding an issuer, a client id and two public URLs. It is configuration a school installed, and it outlives every student who launches through it — deleting it on any account's deletion would uninstall the integration for everybody |

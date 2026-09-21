@@ -60,6 +60,34 @@ describe('the first run knows how long it is', () => {
     expect(alerts).toBeGreaterThan(account);
   });
 
+  /*
+   * The term, asked on the same screen as the school.
+   *
+   * Read from source for the reason at the top of this file: this is the only
+   * version of the screen that ships, and `components/TermChoice.test.tsx`
+   * already covers what the control does once it is on a page. What a source
+   * read catches, and nothing else here would, is the control being dropped
+   * from the run — which fails silently, because a first install would go
+   * back to answering "what semester is it" with a constant and every screen
+   * would go on working.
+   */
+  it('asks which term it is, on the screen that asks where', () => {
+    expect(onboarding).toContain('<TermChoice');
+    expect(onboarding).toContain("from '../components/TermChoice'");
+  });
+
+  it('asks both on the same step, so neither is a screen of its own', () => {
+    const step = onboarding.indexOf('state.onb === 2');
+    const term = onboarding.indexOf('<TermChoice', step);
+    const school = onboarding.indexOf('<SchoolPicker', step);
+    expect(step).toBeGreaterThan(-1);
+    expect(term).toBeGreaterThan(step);
+    expect(school).toBeGreaterThan(step);
+    // The term first: it is the load-bearing half, and the school's own block
+    // is long enough to push it under the fold if it went second.
+    expect(term).toBeLessThan(school);
+  });
+
   it('ends the run from the constant, never from a literal', () => {
     // The bug this file exists for. A hardcoded bound here is invisible until
     // somebody adds a screen and it silently never appears.

@@ -424,13 +424,10 @@ export function useConversation(): Conversation {
               }
               const p = readProposal(call, held);
               if (!p) return;
-              // A view change on the screen you are already looking at runs now:
-              // you can see the filter land and see it go, so a card asking
-              // permission to narrow the list in front of you is pure friction.
-              if (p.sort === 'view' && p.screen === state.screen) {
-                if (p.search) dispatch({ type: 'setQuery', query: p.search });
-                return;
-              }
+              // A card offering to take you where you already are is noise, so
+              // it is dropped rather than shown. It used to dispatch a search
+              // here as well; nothing read it — see the note on `Proposal`.
+              if (p.sort === 'view' && p.screen === state.screen) return;
               setProposals((was) => (was.some((q) => q.id === p.id) ? was : [...was, p]));
             },
             onUsage: (u) => {
@@ -537,7 +534,9 @@ export function useConversation(): Conversation {
         setBusy(false);
       }
     },
-    [busy, turns, remember, trouble, ai, state, catalog, now, school, systemFor, held, dispatch],
+    // No `dispatch`: the one call `send` made was the search the card
+    // promised and no screen ran. See the note on `Proposal` in `lib/tools.ts`.
+    [busy, turns, remember, trouble, ai, state, catalog, now, school, systemFor, held],
   );
 
   /*
@@ -556,7 +555,6 @@ export function useConversation(): Conversation {
     (p: Proposal) => {
       const before = lists();
       dispatch(p.action);
-      if (p.sort === 'view' && p.search) dispatch({ type: 'setQuery', query: p.search });
       setProposals((was) => was.filter((q) => q.id !== p.id));
       // A view keeps no row: you are somewhere else now, and going back is the
       // undo. Only writes leave something to take back.

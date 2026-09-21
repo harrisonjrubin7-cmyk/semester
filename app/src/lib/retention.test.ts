@@ -212,6 +212,23 @@ describe('the clocks that run are still the clocks the document describes', () =
   });
 
   /*
+   * The second clock, and the first one added since this document existed —
+   * which is the case the whole file was written for. `activity` is a record
+   * about a student's work rather than the work, so it is allowed a clock at
+   * all; what it is not allowed is a clock the document does not know about.
+   *
+   * Pinned at both ends, like the access log's: the migration's prune and the
+   * table above cannot move independently. `lib/activity.ts` exports the same
+   * number for the app's side of it, and `activity.test.ts` is what holds
+   * that third copy to these two.
+   */
+  it('agrees with the migration about the activity record', () => {
+    const sql = readFileSync(join(MIGRATIONS, '20260921151000_activity.sql'), 'utf8');
+    expect(sql).toMatch(/date - 400\b/);
+    expect(flat()).toMatch(/\*\*400 days\*\*/);
+  });
+
+  /*
    * The tombstone sweep, and the one number three files have to agree on.
    *
    * This test used to assert the opposite — that nothing scheduled the sweep —
