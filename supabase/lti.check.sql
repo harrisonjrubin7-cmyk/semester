@@ -118,6 +118,43 @@ begin
   perform pg_temp.must('an http JWKS URL is refused', not took);
 end $$;
 
+-- ── The token endpoint, which a launch does not need ──────────────────────
+
+do $$
+declare took boolean;
+begin
+  perform pg_temp.must(
+    'a registration may have no token endpoint at all',
+    (select token_url is null from public.lti_platform
+      where issuer = 'https://brightspace.test.edu' and deployment_id = 'deploy-a'));
+
+  update public.lti_platform
+     set token_url = 'https://auth.brightspace.test/core/connect/token'
+   where issuer = 'https://brightspace.test.edu' and deployment_id = 'deploy-a';
+
+  perform pg_temp.must(
+    'and an https one is recorded',
+    (select token_url = 'https://auth.brightspace.test/core/connect/token'
+       from public.lti_platform
+      where issuer = 'https://brightspace.test.edu' and deployment_id = 'deploy-a'));
+
+  /*
+   * The sharpest of the three URL checks on this table. The other two are
+   * places a student is sent or a public document is fetched; this is where a
+   * *signed assertion* is posted, so a plain-http value would put the thing
+   * that stands in for this tool's client secret on the wire in clear.
+   */
+  begin
+    update public.lti_platform
+       set token_url = 'http://auth.brightspace.test/core/connect/token'
+     where issuer = 'https://brightspace.test.edu' and deployment_id = 'deploy-a';
+    took := true;
+  exception when check_violation then
+    took := false;
+  end;
+  perform pg_temp.must('an http token endpoint is refused', not took);
+end $$;
+
 -- ── The replay guard ──────────────────────────────────────────────────────
 
 insert into public.lti_nonce (state, nonce, issuer, client_id, expires_at)
