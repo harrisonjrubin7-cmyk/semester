@@ -2,6 +2,7 @@ import type { Catalog } from '../data/catalog';
 import { blocksFor } from '../data/catalog';
 import { dateToIso, decorateItem, longLabel } from './date';
 import { obj, textValue } from './device-library';
+import { readRequirements, type Requirement } from './degree';
 import type { CourseId } from './types';
 
 /**
@@ -44,12 +45,84 @@ export interface AthleticEvent {
   steps: { text: string; done: boolean }[];
 }
 
+/**
+ * A kind of countable athletically-related activity, as an athlete would name
+ * one.
+ *
+ * The list is the student's vocabulary, not a rulebook. Whether a given
+ * activity counts — and against which limit — is a question with a real answer
+ * that belongs to a compliance office, and this app has no way to ask it. So
+ * the kinds here are labels for the student's own log, and the screen says so.
+ */
+export const CARA_KINDS = [
+  'Practice',
+  'Competition',
+  'Required weights or conditioning',
+  'Film or team meeting',
+  'Skill instruction',
+  'Required travel',
+  'Other',
+] as const;
+
+export type CaraKind = (typeof CARA_KINDS)[number];
+
+/** One entry in the student's own hours log. */
+export interface CaraEntry {
+  id: string;
+  /** `YYYY-MM-DD`, local. */
+  date: string;
+  /** Hours, as the student counted them. */
+  hours: number;
+  kind: CaraKind;
+  note: string;
+}
+
 export interface AthleticsLibrary {
   version: 1;
   events: AthleticEvent[];
+  /**
+   * The hours log. See `CARA_KINDS` — a record, never a determination.
+   *
+   * Optional in stored data because every library written before this existed
+   * has none; `readAthletics` fills it in, so a reader never has to.
+   */
+  cara: CaraEntry[];
+  /**
+   * The weekly limit, exactly as the student was told it — free text, never a
+   * number this app supplies.
+   *
+   * **No cap is hardcoded here, and that is deliberate.** The figures usually
+   * quoted (20 hours a week in season, 8 out of season, one day off a week,
+   * from NCAA Bylaw 17) differ by division, by sport, by whether the sport is
+   * in or out of its playing season, by the academic year, and by legislation
+   * that changes; the app cannot know which of those a given student is under.
+   * `lib/degree.ts` makes the same refusal about degree requirements, for the
+   * same reason and at greater length: a confidently wrong number here is
+   * found out by an athlete when nothing can be done about it.
+   *
+   * So the arithmetic is done against the figure the student entered, and the
+   * screen says where that figure comes from.
+   */
+  caraLimit: string;
+  /**
+   * Eligibility and credit-progress requirements, in the student's own words.
+   *
+   * `Requirement` is `lib/degree.ts`'s, reused rather than restated, and so is
+   * the arithmetic over it: the courses somebody has already recorded on the
+   * Degree screen count towards a requirement they enter here, because they
+   * are the same courses. What is not reused is the store — a degree is the
+   * account's, and this is a device library like the rest of this workspace.
+   */
+  eligibility: Requirement[];
 }
 
-export const EMPTY_ATHLETICS: AthleticsLibrary = { version: 1, events: [] };
+export const EMPTY_ATHLETICS: AthleticsLibrary = {
+  version: 1,
+  events: [],
+  cara: [],
+  caraLimit: '',
+  eligibility: [],
+};
 
 /** The caps, named once so the reader and the message cannot disagree. */
 export const ATHLETICS_LIMITS = {
@@ -62,9 +135,18 @@ export const ATHLETICS_LIMITS = {
   stepText: 500,
   /** The longest an event may run. A season is not one event. */
   days: 31,
+  /** Entries in the hours log. A season of daily entries is a few hundred. */
+  cara: 2000,
+  /** Hours in one entry. A day is 24 and a log entry is not a week. */
+  caraHours: 24,
+  caraNote: 500,
+  caraLimit: 200,
+  /** Requirements in the eligibility checklist. */
+  eligibility: 100,
 } as const;
 
 const LOCAL_MINUTE = /^\d{4}-\d\d-\d\dT\d\d:\d\d$/;
+const LOCAL_DAY = /^\d{4}-\d\d-\d\d$/;
 
 /**
  * An athletics library out of storage or a file, or an error.
@@ -73,6 +155,22 @@ const LOCAL_MINUTE = /^\d{4}-\d\d-\d\dT\d\d:\d\d$/;
  * enough: an end at or before the start makes `eventDays` loop forever, and an
  * event spanning a year would put a "Travel" band across every day of the
  * term. Both are stated here rather than guarded at each call site.
+ *
+ * ## It normalises rather than rejecting what it can fill in
+ *
+ * The library grew three fields — an hours log, the limit that log is measured
+ * against, and an eligibility checklist — after people had been keeping
+ * seasons in it for a term. Insisting on them would have meant every existing
+ * record failing its validator, and `lib/device-library.ts` is explicit about
+ * what happens then: the value goes to empty for display and **every write is
+ * refused**, which is a student opening Athletics to find their season gone
+ * and no way to put anything back. So a missing field is filled in, and the
+ * device library stores the validated result, which quietly upgrades the
+ * record on the next write.
+ *
+ * A field that is *present and wrong* is still an error. The distinction is
+ * the one that matters: absent means "written before this existed", and
+ * malformed means somebody's file is not what it claims to be.
  */
 export function readAthletics(value: unknown): AthleticsLibrary {
   if (
@@ -119,7 +217,57 @@ export function readAthletics(value: unknown): AthleticsLibrary {
     }
     ids.add(e.id as string);
   }
-  return value as unknown as AthleticsLibrary;
+
+  const cara = value.cara ?? [];
+  if (!Array.isArray(cara) || cara.length > ATHLETICS_LIMITS.cara) {
+    throw new Error(`Use an hours log of up to ${ATHLETICS_LIMITS.cara} entries.`);
+  }
+  const logIds = new Set<string>();
+  for (const c of cara) {
+    const shaped =
+      obj(c) &&
+      textValue(c.id, 100) &&
+      !logIds.has(c.id as string) &&
+      textValue(c.date, 30) &&
+      LOCAL_DAY.test(c.date as string) &&
+      Number.isFinite(Date.parse(c.date as string)) &&
+      typeof c.hours === 'number' &&
+      Number.isFinite(c.hours) &&
+      c.hours > 0 &&
+      c.hours <= ATHLETICS_LIMITS.caraHours &&
+      CARA_KINDS.includes(c.kind as CaraKind) &&
+      textValue(c.note, ATHLETICS_LIMITS.caraNote);
+    if (!shaped) {
+      throw new Error(
+        `Check the hours log: each entry needs a date, a kind, and between 0 and ${ATHLETICS_LIMITS.caraHours} hours.`,
+      );
+    }
+    logIds.add(c.id as string);
+  }
+
+  const caraLimit = value.caraLimit ?? '';
+  if (!textValue(caraLimit, ATHLETICS_LIMITS.caraLimit)) {
+    throw new Error('Check the weekly limit — it is a short line of text.');
+  }
+
+  /*
+   * `readRequirements` normalises rather than throwing, which is right for the
+   * Degree screen — a requirement with a bad count becomes a requirement with
+   * a count of 1 rather than an account that will not load. The one thing it
+   * cannot absorb is a value that is not a list at all, so that is checked.
+   */
+  if (value.eligibility !== undefined && !Array.isArray(value.eligibility)) {
+    throw new Error('Check the eligibility checklist — it is a list of requirements.');
+  }
+  const eligibility = readRequirements(value.eligibility ?? []).slice(0, ATHLETICS_LIMITS.eligibility);
+
+  return {
+    version: 1,
+    events: value.events as AthleticEvent[],
+    cara: cara as CaraEntry[],
+    caraLimit: caraLimit as string,
+    eligibility,
+  };
 }
 
 /**

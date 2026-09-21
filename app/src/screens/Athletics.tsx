@@ -21,6 +21,8 @@ import { dateToIso, decorateItem } from '../lib/date';
 import { lengthOf, railFor } from '../lib/select';
 import { TravelPack } from '../components/TravelPack';
 import { AbsenceNotices } from '../components/AbsenceNotices';
+import { CaraLog } from '../components/CaraLog';
+import { EligibilityCheck } from '../components/EligibilityCheck';
 
 /**
  * A season beside the coursework it collides with.
@@ -49,6 +51,8 @@ import { AbsenceNotices } from '../components/AbsenceNotices';
 const TABS = [
   { id: 'schedule' as const, label: 'Schedule' },
   { id: 'edit' as const, label: 'Add' },
+  { id: 'hours' as const, label: 'Hours' },
+  { id: 'eligibility' as const, label: 'Eligibility' },
   { id: 'data' as const, label: 'Import' },
 ];
 
@@ -135,7 +139,10 @@ function Workspace({ storageKey }: { storageKey: string }) {
 
   const save = () => {
     try {
-      const next = { version: 1 as const, events: [...lib.value.events.filter((e) => e.id !== draft.id), draft] };
+      const next = {
+        ...lib.value,
+        events: [...lib.value.events.filter((e) => e.id !== draft.id), draft],
+      };
       readAthletics(next);
       if (lib.update(next)) {
         setChosen(draft.id);
@@ -195,7 +202,12 @@ function Workspace({ storageKey }: { storageKey: string }) {
       <Segmented
         options={TABS.map((t) => ({
           id: t.id,
-          label: t.id === 'schedule' ? `${t.label} (${lib.value.events.length})` : t.label,
+          label:
+            t.id === 'schedule'
+              ? `${t.label} (${lib.value.events.length})`
+              : t.id === 'hours' && lib.value.cara.length > 0
+                ? `${t.label} (${lib.value.cara.length})`
+                : t.label,
         }))}
         value={tab}
         onChange={setTab}
@@ -474,6 +486,14 @@ function Workspace({ storageKey }: { storageKey: string }) {
             </button>
           </fieldset>
         </form>
+      )}
+
+      {tab === 'hours' && (
+        <CaraLog value={lib.value} update={lib.update} blocked={lib.blocked} />
+      )}
+
+      {tab === 'eligibility' && (
+        <EligibilityCheck value={lib.value} update={lib.update} blocked={lib.blocked} />
       )}
 
       {tab === 'data' && (
