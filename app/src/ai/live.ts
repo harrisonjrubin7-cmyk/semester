@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from 'react';
 import type { Turn } from '../lib/claude';
 import type { Local } from '../lib/localask';
-import type { Mode } from '../lib/mode';
+import type { Read } from '../lib/mode';
 import type { Lists, Proposal } from '../lib/tools';
 import {
   load as loadThreads,
@@ -63,7 +63,16 @@ export interface Live {
   /** The answer as it arrives, before it becomes a turn. */
   streaming: string;
   busy: boolean;
-  mode: Mode | null;
+  /**
+   * How the question was read, kept whole rather than reduced to its mode.
+   *
+   * This was `mode: Mode | null` — the routing answer, stored on every
+   * question and read by neither surface. `readMode` returns three more
+   * things beside it, two of them documented as shown: `says` ("Using: your
+   * courses") and `because` (the phrase in the question that decided it).
+   * Keeping only the mode threw both away at the moment they were computed.
+   */
+  read: Read | null;
   /** Which parts of the context were drawn on, for the "what it read" row. */
   used: string[];
   /**
@@ -117,7 +126,7 @@ function empty(): Live {
     openId: open.id,
     streaming: '',
     busy: false,
-    mode: null,
+    read: null,
     used: [],
     looking: [],
     locally: null,
@@ -399,12 +408,12 @@ export function dropThread(id: string): void {
  */
 function cleared(): Pick<
   Live,
-  'streaming' | 'busy' | 'mode' | 'used' | 'looking' | 'locally' | 'proposals' | 'applied'
+  'streaming' | 'busy' | 'read' | 'used' | 'looking' | 'locally' | 'proposals' | 'applied'
 > {
   return {
     streaming: '',
     busy: false,
-    mode: null,
+    read: null,
     used: [],
     looking: [],
     locally: null,
