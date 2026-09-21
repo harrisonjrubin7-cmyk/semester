@@ -1030,6 +1030,49 @@ export function Study() {
         </div>
       )}
 
+      {/*
+        What the plan rests on, above the plan.
+
+        This sat at the foot of the tab, under the button that mixes every
+        course — near enough that the summary read as that button's caption
+        rather than as the evening's. It belongs with the controls it
+        describes: the minutes and the courses are what produce these numbers,
+        and somebody who has just set both should not have to reach the bottom
+        of a nine-unit plan to see what they add up to.
+      */}
+      <div
+        style={{
+          marginBottom: 'var(--sp-6)',
+          fontSize: 'var(--type-xs)',
+          color: 'var(--app-dim)',
+          fontFamily: 'var(--font-heading)',
+          letterSpacing: '0.1em',
+          textTransform: 'uppercase',
+        }}
+      >
+        {/*
+          The same work, described rather than totalled.
+
+          This line used to read "N cards waiting", and `dueIn` builds that N
+          by counting two unrelated states as one: cards that have come round
+          again, and cards nobody has ever met. `lib/review.ts` spends a
+          docstring on why the lump is the wrong thing to call due — a course
+          you have answered one card of was being told a hundred had come
+          round for review — and the sentence on the screen was the place that
+          argument had never reached. See `counted` in `lib/revise.ts`, which
+          also says why none of this is a streak.
+        */}
+        {countedLine(tally)}
+        {warmed ? ` · ${warmed}` : ''}
+        {/*
+          The course filter names itself *below* the chips that set it, which
+          is why this block sits under the whole control cluster rather than
+          directly beneath the minutes: "· ECON only" printed above those
+          chips would explain a control the reader has not met yet.
+        */}
+        {only ? ` · ${catalog.short[only as CourseId] ?? ''} only` : ''}
+      </div>
+
       {plan.length === 0 ? (
         /*
           Nothing to do is a real answer and gets said plainly. It used to be
@@ -1191,39 +1234,6 @@ export function Study() {
           </div>
         </>
       )}
-
-      {/*
-        What the plan rests on. Both numbers are read off your own answers, so
-        the tab can be checked rather than believed.
-      */}
-      <div
-        style={{
-          marginTop: 'var(--sp-7)',
-          paddingTop: 'var(--sp-6)',
-          borderTop: '1px solid var(--app-line)',
-          fontSize: 'var(--type-xs)',
-          color: 'var(--app-dim)',
-          fontFamily: 'var(--font-heading)',
-          letterSpacing: '0.1em',
-          textTransform: 'uppercase',
-        }}
-      >
-        {/*
-          The same work, described rather than totalled.
-
-          This line used to read "N cards waiting", and `dueIn` builds that N
-          by counting two unrelated states as one: cards that have come round
-          again, and cards nobody has ever met. `lib/review.ts` spends a
-          docstring on why the lump is the wrong thing to call due — a course
-          you have answered one card of was being told a hundred had come
-          round for review — and the sentence on the screen was the place that
-          argument had never reached. See `counted` in `lib/revise.ts`, which
-          also says why none of this is a streak.
-        */}
-        {countedLine(tally)}
-        {warmed ? ` · ${warmed}` : ''}
-        {only ? ` · ${catalog.short[only as CourseId] ?? ''} only` : ''}
-      </div>
 
       {/* The ranking, past the point the time ran out. Kept behind a tap: the
           plan is the answer, and this is the working. */}
