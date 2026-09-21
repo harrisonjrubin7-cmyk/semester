@@ -6,6 +6,7 @@ import { ActionButton, SectionLabel } from '../components/ui';
 import { Blueprint } from '../components/Blueprint';
 import { CAMPUS_LINKS } from '../data/campus';
 import { schoolLinks } from '../lib/schoollinks';
+import { OWN_GROUP, groupName, inGroup, linkGroups } from '../lib/linkgroups';
 import type { CampusLink } from '../lib/types';
 
 
@@ -24,9 +25,21 @@ import type { CampusLink } from '../lib/types';
  * The state is unchanged. `linkUrls` still holds the addresses somebody has
  * corrected and `extraLinks` the ones they added; both are read here exactly
  * as they were read there.
+ *
+ * ## The headings a student names
+ *
+ * There used to be five, the last of them "Yours", and everything anybody
+ * added went under it. That is one heading for the whole of a person's own
+ * addresses — a club, a landlord, three group chats, the gym — which is the
+ * flat list this screen was grouped to stop being, arrived at from the other
+ * side.
+ *
+ * The app's four stay and stay in their order. "Yours" is now what a link is
+ * called when its group is left empty, and any other name becomes a heading of
+ * its own, after the four, in the order they were first named. The fold and
+ * the order are in `lib/linkgroups.ts` so that one answer serves the headings
+ * and the rows under them.
  */
-
-const GROUPS = ['Campus', 'Books', 'Tickets', 'Social', 'Yours'] as const;
 
 export function Links() {
   const { state, dispatch, school } = useStore();
@@ -36,16 +49,18 @@ export function Links() {
   const [adding, setAdding] = useState(false);
   const [newName, setNewName] = useState('');
   const [newUrl, setNewUrl] = useState('');
+  const [newGroup, setNewGroup] = useState('');
 
-  // Links you add yourself land under "Yours" rather than among the defaults,
-  // so which addresses the app guessed and which you chose stays obvious.
+  // Links you add yourself land under a heading of your own — the one you
+  // named, or "Yours" — rather than among the defaults, so which addresses the
+  // app guessed and which you chose stays obvious.
   //
   // Your school's own addresses come last and come deduped: six of them live
   // in the school profile, and for Vanderbilt four are already in the bundled
   // list under the names the university uses. `schoolLinks` drops those and
   // keeps what nothing else had, which is how a student at a school this app
   // has never heard of still gets their registrar on this screen.
-  const mine: CampusLink[] = state.extraLinks.map((l) => ({ ...l, group: 'Yours' as const }));
+  const mine: CampusLink[] = state.extraLinks.map((l) => ({ ...l, group: groupName(l) }));
   const links: CampusLink[] = [
     ...CAMPUS_LINKS,
     ...mine,
@@ -78,14 +93,14 @@ export function Links() {
             heading reads as a dump; Campus, Tickets and Social are three
             different errands and you are only ever on one of them.
           */}
-          {GROUPS.map((group) => {
-            const inGroup = links.filter((l) => (l.group ?? 'Campus') === group);
-            if (inGroup.length === 0) return null;
+          {linkGroups(state.extraLinks).map((group) => {
+            const under = inGroup(links, group);
+            if (under.length === 0) return null;
             return (
               <div key={group}>
                 <SectionLabel>{group}</SectionLabel>
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
-            {inGroup.map((link) => {
+            {under.map((link) => {
               const url = addressOf(link);
               const open = editing === link.id;
               return (
@@ -223,6 +238,19 @@ export function Links() {
                 onChange={(e) => setNewUrl(e.target.value)}
                 style={{ fontSize: 'var(--type-sm-plus)', marginTop: 'var(--sp-4)' }}
               />
+              {/*
+                Optional, and the placeholder says what leaving it empty gets
+                you. Typing a heading that already exists puts the row under it
+                rather than beside it — see `linkGroups`.
+              */}
+              <input
+                aria-label="Which group it goes under"
+                className="input"
+                placeholder={`Group — ${OWN_GROUP} if you leave it`}
+                value={newGroup}
+                onChange={(e) => setNewGroup(e.target.value)}
+                style={{ fontSize: 'var(--type-sm-plus)', marginTop: 'var(--sp-4)' }}
+              />
               <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-5)' }}>
                 <button
                   type="button"
@@ -242,9 +270,11 @@ export function Links() {
                       type: 'addLink',
                       name: newName,
                       url: /^https?:\/\//i.test(url) ? url : `https://${url}`,
+                      group: newGroup,
                     });
                     setNewName('');
                     setNewUrl('');
+                    setNewGroup('');
                     setAdding(false);
                   }}
                   style={{ flex: 1, height: 40, fontSize: 'var(--type-xs)', letterSpacing: '0.1em', textTransform: 'uppercase' }}

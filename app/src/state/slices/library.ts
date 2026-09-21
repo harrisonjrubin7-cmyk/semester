@@ -277,6 +277,10 @@ export function library(state: State, action: Action): State | null {
         url: action.url.trim(),
         hint: '',
         note: '',
+        // Kept as typed and left off where nothing was typed, so the default
+        // lives in one place — `groupName` in `lib/linkgroups.ts` — rather than
+        // being baked into every record the moment it is saved.
+        ...(action.group?.trim() ? { group: action.group.trim() } : {}),
       };
       return { ...state, extraLinks: [...state.extraLinks, link] };
     }
