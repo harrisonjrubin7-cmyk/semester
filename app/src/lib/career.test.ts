@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
   EMPTY_CAREER,
   builtResume,
+  careerEvent,
+  eventWhere,
   hasTargets,
   newOpportunity,
   outreachDrafts,
@@ -255,5 +257,60 @@ describe('the three outreach drafts', () => {
 
   it('writes a draft for a note with no name rather than addressing an empty string', () => {
     expect(outreachDrafts({ ...priya, name: '' }, [])).toContain('Hello [their name],');
+  });
+});
+
+describe('a career fair, from what is on the poster', () => {
+  it('files a room as a place and a pasted address as a link', () => {
+    expect(eventWhere('Student Life Center, Room 200')).toEqual({
+      location: 'Student Life Center, Room 200',
+      url: '',
+    });
+    expect(eventWhere('https://vanderbilt.joinhandshake.com/fair')).toEqual({
+      location: '',
+      url: 'https://vanderbilt.joinhandshake.com/fair',
+    });
+    expect(eventWhere('vanderbilt.edu/careerfair')).toEqual({
+      location: '',
+      url: 'https://vanderbilt.edu/careerfair',
+    });
+  });
+
+  /*
+   * `safeUrl` answers "is this safe to open", not "is this a link". It reads
+   * `Sarratt` as the hostname `https://sarratt`, because a host needs no dot —
+   * so asking it this question directly filed one-word venues as web
+   * addresses nobody could open.
+   */
+  it('does not read a one-word venue as a hostname', () => {
+    expect(eventWhere('Sarratt')).toEqual({ location: 'Sarratt', url: '' });
+    expect(eventWhere('Commons')).toEqual({ location: 'Commons', url: '' });
+  });
+
+  it('refuses a link that is not one, and keeps the text as a place', () => {
+    expect(eventWhere('javascript:alert(1)')).toEqual({ location: 'javascript:alert(1)', url: '' });
+  });
+
+  it('builds a listing of the right kind, with the other fourteen fields left empty', () => {
+    const made = careerEvent({
+      name: '  Fall Career Fair  ',
+      date: '2026-10-08',
+      where: 'Student Life Center',
+      note: 'Bring ten copies.',
+    });
+    expect(made.kind).toBe('Career event');
+    expect(made.title).toBe('Fall Career Fair');
+    expect(made.deadline).toBe('2026-10-08');
+    expect(made.location).toBe('Student Life Center');
+    expect(made.description).toBe('Bring ten copies.');
+    expect(made.saved).toBe(false);
+    expect(made.compensation).toBe('');
+  });
+
+  it('is a listing the library reads back, rather than a shape only this form makes', () => {
+    const made = careerEvent({ name: 'Fall Career Fair', date: '', where: 'vu.edu/fair', note: '' });
+    const read = readCareer({ ...EMPTY_CAREER, opportunities: [made] });
+    expect(read.opportunities[0].url).toBe('https://vu.edu/fair');
+    expect(read.opportunities[0].kind).toBe('Career event');
   });
 });

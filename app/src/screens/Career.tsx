@@ -17,6 +17,7 @@ import {
   builtResume,
   coverLetter,
   hasTargets,
+  careerEvent,
   newOpportunity,
   outreachDrafts,
   readCareer,
@@ -91,11 +92,15 @@ import { LIVE, safeUrl, type ApplyKind } from '../lib/apply';
 
 const TABS = [
   { id: 'discover' as const, label: 'Discover' },
+  { id: 'fairs' as const, label: 'Fairs' },
   { id: 'resume' as const, label: 'Résumé' },
   { id: 'network' as const, label: 'Contacts' },
   { id: 'abroad' as const, label: 'Abroad' },
   { id: 'library' as const, label: 'Library' },
 ];
+
+/** The four things a careers-fair poster tells you, and nothing else. */
+const EMPTY_EVENT = { name: '', date: '', where: '', note: '' };
 
 type Tab = (typeof TABS)[number]['id'];
 
@@ -157,6 +162,7 @@ function Workspace({ storageKey, pathwayKey }: { storageKey: string; pathwayKey:
   const [experience, setExperience] = useState<CareerExperience | null>(null);
   const [person, setPerson] = useState<CareerContact | null>(null);
   const [shared, setShared] = useState<SharedTag[]>([]);
+  const [event, setEvent] = useState(EMPTY_EVENT);
   const [notice, setNotice] = useState('');
 
   const open = lib.value.opportunities.find((o) => o.id === selected);
@@ -195,6 +201,11 @@ function Workspace({ storageKey, pathwayKey }: { storageKey: string; pathwayKey:
     const has = sharedTags(education, c);
     return shared.every((t) => has.includes(t));
   });
+
+  /** Career events, soonest first, for the quick-add's own list. */
+  const events = lib.value.opportunities
+    .filter((o) => o.kind === 'Career event')
+    .sort((a, b) => (a.deadline || '9999').localeCompare(b.deadline || '9999'));
 
   const write = (title: string, body: string) =>
     dispatch({
@@ -559,6 +570,110 @@ function Workspace({ storageKey, pathwayKey }: { storageKey: string; pathwayKey:
                 </p>
               )}
             </>
+          )}
+        </>
+      )}
+
+      {tab === 'fairs' && (
+        <>
+          <p style={{ ...line, marginBlock: '0 var(--sp-5)', textWrap: 'pretty' }}>
+            A fair is on a poster for a fortnight and then it is not. Four answers, and it lands in the
+            same list as everything else under Discover — nothing here registers you for anything.
+          </p>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!event.name.trim()) return;
+              const made = careerEvent(event);
+              try {
+                const next = { ...lib.value, opportunities: [...lib.value.opportunities, made] };
+                readCareer(next);
+                if (lib.update(next)) {
+                  setEvent(EMPTY_EVENT);
+                  setNotice('Saved with your other opportunities. Nothing has been registered for.');
+                }
+              } catch (err) {
+                setNotice((err as Error).message);
+              }
+            }}
+          >
+            <label style={field}>
+              <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>What it is called</span>
+              <input
+                className="input"
+                required
+                maxLength={160}
+                value={event.name}
+                onChange={(e) => setEvent({ ...event, name: e.target.value })}
+                style={input}
+              />
+            </label>
+            <label style={field}>
+              <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>When</span>
+              <input
+                className="input"
+                type="date"
+                value={event.date}
+                onChange={(e) => setEvent({ ...event, date: e.target.value })}
+                style={input}
+              />
+            </label>
+            <label style={field}>
+              {/*
+               * One box, because a poster gives you a room or a link and
+               * almost never both. Which field it lands in is decided by what
+               * was typed — see `eventWhere` in `lib/career.ts`.
+               */}
+              <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>Where, or the link</span>
+              <input
+                className="input"
+                maxLength={CAREER_LIMITS.url}
+                value={event.where}
+                onChange={(e) => setEvent({ ...event, where: e.target.value })}
+                style={input}
+              />
+            </label>
+            <label style={field}>
+              <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>
+                One note — who is coming, what to bring
+              </span>
+              <textarea
+                className="input"
+                rows={3}
+                maxLength={CAREER_LIMITS.description}
+                value={event.note}
+                onChange={(e) => setEvent({ ...event, note: e.target.value })}
+                style={input}
+              />
+            </label>
+            <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>
+              Add the event
+            </button>
+          </form>
+
+          <SectionLabel aside={`${events.length}`} style={{ marginBlock: 'var(--sp-7) var(--sp-4)' }}>
+            Events you have written down
+          </SectionLabel>
+          {events.length === 0 ? (
+            <p style={{ ...body, ...secondLine(), textWrap: 'pretty' }}>
+              Nothing yet. What is on the poster is all this needs.
+            </p>
+          ) : (
+            <CardGrid min={150}>
+              {events.map((o) => (
+                <GridCard
+                  key={o.id}
+                  label={o.title}
+                  meta={o.deadline || 'No date'}
+                  title={o.location || o.url || 'No place recorded'}
+                  onClick={() => {
+                    setKind('Career event');
+                    setSelected(o.id);
+                    setTab('discover');
+                  }}
+                />
+              ))}
+            </CardGrid>
           )}
         </>
       )}

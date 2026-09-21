@@ -79,6 +79,15 @@ const person = (name: string, patch: Partial<CareerContact> = {}): CareerContact
 const contacts = () =>
   [...host.querySelectorAll('section h2, section .section-label')].map((h) => h.textContent?.trim());
 
+/** A card in the one `CardGrid` on screen, by its label. */
+const pressCard = async (label: string) => {
+  const card = [...host.querySelectorAll('[style*="auto-fit"] > button')].find(
+    (b) => b.querySelector('span')?.textContent?.trim() === label,
+  );
+  expect(card, `no card called ${label}`).toBeTruthy();
+  await act(async () => card!.dispatchEvent(new MouseEvent('click', { bubbles: true })));
+};
+
 const press = async (label: string) => {
   const button = [...host.querySelectorAll('button')].find((b) => b.textContent?.trim() === label);
   expect(button, `no button called ${label}`).toBeTruthy();
@@ -238,5 +247,65 @@ describe('drafting a message to a contact', () => {
     const titles = (written.documents ?? []).map((d: { title: string }) => d.title);
     expect(titles).toContain('Messages to Priya');
     expect(JSON.parse(localStorage.getItem(KEY)!).contacts).toHaveLength(1);
+  });
+});
+
+describe('the career-fair quick-add', () => {
+  const fill = async (values: Record<string, string>) => {
+    for (const [label, value] of Object.entries(values)) {
+      const box = [...host.querySelectorAll('label')].find((l) =>
+        l.querySelector('span')?.textContent?.trim().startsWith(label),
+      );
+      expect(box, `no field called ${label}`).toBeTruthy();
+      const control = box!.querySelector('input, textarea') as HTMLInputElement | HTMLTextAreaElement;
+      await act(async () => {
+        const setter = Object.getOwnPropertyDescriptor(
+          control instanceof HTMLTextAreaElement ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype,
+          'value',
+        )!.set!;
+        setter.call(control, value);
+        control.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+    }
+  };
+
+  it('is a tab of its own, four answers deep, and saves into the same list', async () => {
+    await mount();
+    await press('Fairs');
+    expect(text()).toContain('Nothing yet. What is on the poster is all this needs.');
+    // The long Discover form is not what this asks: no compensation, no credit.
+    expect(text()).not.toContain('Compensation, as listed');
+
+    await fill({
+      'What it is called': 'Fall Career Fair',
+      When: '2026-10-08',
+      'Where, or the link': 'Student Life Center',
+      'One note': 'Bring ten copies.',
+    });
+    await press('Add the event');
+
+    const saved = JSON.parse(localStorage.getItem(KEY)!).opportunities;
+    expect(saved).toHaveLength(1);
+    expect(saved[0].kind).toBe('Career event');
+    expect(saved[0].title).toBe('Fall Career Fair');
+    expect(saved[0].location).toBe('Student Life Center');
+    expect(text()).toContain('Nothing has been registered for');
+  });
+
+  it('shows the events it has, and opens one in Discover where the rest of them live', async () => {
+    await mount({
+      opportunities: [
+        listing({ id: 'fair', title: 'Fall Career Fair', kind: 'Career event', deadline: '2026-10-08' }),
+        listing({ id: 'job', title: 'Summer analyst' }),
+      ],
+    });
+    await press('Fairs');
+    expect(cards()).toEqual(['Fall Career Fair']);
+
+    await pressCard('Fall Career Fair');
+    // One home for an opportunity, and it is Discover — this tab is a way in,
+    // not a second copy of the list.
+    expect(cards()).toEqual(['Fall Career Fair']);
+    expect(text()).toContain('You entered this');
   });
 });

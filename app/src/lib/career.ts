@@ -439,6 +439,48 @@ export function resumeMarkdown(c: CareerLibrary): string {
 }
 
 /**
+ * The one "where" box on a career-fair quick-add, as the two fields a listing
+ * has.
+ *
+ * A poster gives you a room or a link and almost never both, so the form asks
+ * once. What comes back decides which field it was: something already shaped
+ * like an address goes to the link, and everything else is a place.
+ *
+ * The shape test is deliberately narrower than `safeUrl`, which is a question
+ * about whether a link is safe to open rather than about whether this is a
+ * link at all. `safeUrl('Sarratt')` answers `https://sarratt`, because a
+ * hostname needs no dot — so a one-word venue would have been filed as a web
+ * address nobody could open. A dot with no spaces around it, or a scheme
+ * already typed, is what a student actually pastes.
+ */
+export function eventWhere(where: string): { location: string; url: string } {
+  const s = where.trim();
+  const shaped = /^https?:\/\//i.test(s) || /^\S+\.\S{2,}(?:[/?#]|$)/.test(s);
+  const url = shaped ? safeUrl(s) : '';
+  return url ? { location: '', url } : { location: s, url: '' };
+}
+
+/**
+ * A career fair, from the four things a poster tells you.
+ *
+ * The full Discover form has sixteen fields, which is right for a job somebody
+ * is going to apply to and wrong for a fair on Thursday — by the time you have
+ * answered "Compensation, as listed" for a careers fair you have stopped
+ * writing it down. This is the same record, reached in four answers, and it
+ * lands in the same `opportunities` array with the same kind.
+ */
+export function careerEvent(fields: { name: string; date: string; where: string; note: string }): Opportunity {
+  return {
+    ...newOpportunity(),
+    kind: 'Career event',
+    title: fields.name.trim(),
+    deadline: fields.date,
+    description: fields.note,
+    ...eventWhere(fields.where),
+  };
+}
+
+/**
  * Three openings to one person, none of them sent.
  *
  * The same rule as `coverLetter`, and for the same reason: the brackets are
