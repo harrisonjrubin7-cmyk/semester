@@ -172,6 +172,7 @@ behind and a client that believes it succeeded.
 | `forms`, `form_responses` | account deletion | |
 | `calendar_feeds` | account deletion | the published feed token; the Export screen can retire and reissue it |
 | `reports` | account deletion of the reporter | |
+| `feedback` | account deletion of its author | what somebody said was wrong, with the screen *shape*, device class and build the app supplied — never a route, a user-agent or an address, and the check constraints in `20260921215800_feedback.sql` are what make that a property of the database rather than a promise about `lib/feedback.ts`. No clock: a bug report is worth keeping until the person who sent it leaves, and there is no version of "we aged out your bug report" that helps anybody. Readable and deletable by its author, never rewritable by anyone |
 | `schools` | **never**, by any account's deletion | reference data, not anybody's record: the list of universities the server recognises, written only by an admin and readable by everyone. No account creates a row here, so no account's departure can take one. `profiles.school_id` points at it and is cleared to null when a school is removed, which is a school closing rather than a student leaving |
 | `blocks` | **not** lifted by deletion | keyed on `blocked`, not `user_id`, so deleting your account cannot undo somebody else's protection. This is deliberate and `deletion.check.sql` pins it |
 | `push_devices`, `push_queue` | see the clocks above | |
