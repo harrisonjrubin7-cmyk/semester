@@ -100,6 +100,43 @@ Two consequences, and both are ways staging quietly stops being staging:
    old text, silently, and closing and reopening the pull request is the only
    thing that rebuilds it.
 
+## Renaming a migration breaks every branch that already applied it
+
+A third thing, found the same way as the second — by watching this pull
+request's own branch rather than by reasoning about the platform.
+
+`20260921003700_lti.sql` was renumbered to `20260921160000_lti.sql` on main at
+15:57 on 21 September, in the pull request that fixed it being stranded below
+the ledger watermark. That fix was correct and necessary. What nobody had
+established is what it does to a preview branch that already exists:
+
+| | |
+| --- | --- |
+| This branch, Migrations task | ✅ 16:10 · ✅ 16:13 · ✅ 16:15 · **❌ 16:31** |
+| What changed at 16:26 | merged main, which renamed that file and nothing else about migrations |
+| The error | `Remote migration versions not found in local migrations directory.` |
+
+The branch had applied `20260921003700` when it was built. After the rename
+there is no file with that version, so the branch's own ledger carries a
+version the repository cannot account for, and the task refuses. Pull request
+#611 hit the identical error at 16:13, on a different branch with an unrelated
+diff, once it too carried the renamed file.
+
+So a preview branch is **not** rebuilt from the repository on each push. It
+keeps its own accumulated ledger, and the bot's own line — *only new migration
+files are pushed* — has a sharper consequence than it sounds: **adding a
+migration is cheap, and renaming one invalidates every branch in flight.**
+Rebuilding the branch is the remedy, and the bot says how: close and reopen the
+pull request.
+
+This repository has now renumbered migrations twice in one day — seven files in
+the history repair, then this one — and both times the reasoning was sound and
+the cost to staging was invisible. It is not an argument against renumbering,
+which fixed a broken production deploy. It is a cost to say out loud next time,
+because a staging environment that is red for a reason nobody can name is one
+people stop looking at, which is how production's schema deploy stayed broken
+for three days.
+
 ## What is known to work, without a branch
 
 `supabase/check.sh` builds every migration from empty in a throwaway Postgres
@@ -144,4 +181,6 @@ nothing in this repository should be read as claiming otherwise. That part is
 twenty minutes in a dashboard and a SQL editor, and it is twenty minutes
 nobody has spent.
 
-The Edge Functions half is not twenty minutes; it is the decision above.
+The Edge Functions half is not twenty minutes; it is the decision above. And
+none of it can be checked at all while the Migrations task is refusing, which
+it is on every branch that predates the renumbering.
