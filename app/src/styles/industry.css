@@ -191,8 +191,30 @@ figcaption {
  *   box would move the header instead.
  */
 .btn { min-height: 44px; }
+/*
+ * The two exemptions still need a floor, because the argument for them was a
+ * measurement and the measurement was taken at one density.
+ *
+ * "A chip at 29px clears the 24x24 AA asks for" was true of Comfortable and
+ * of nothing else. `.btn` takes its height from `--space-2`, every space
+ * token answers Density, and a chip let out of the 44 floor falls to the
+ * padding alone: 25.2px at Comfortable, 23.8 at Snug, 22.6 at Tight. The four
+ * course chips on Update — ECON 1020, PSCI 1104, CORE 2500, BUS 1600 — read
+ * 22.6 tall with 23.5 of reach at Tight, under the AA minimum, and the row
+ * that was measured as clearing the bar was the one that failed it.
+ *
+ * 24 real pixels, not a token: a thumb does not shrink because a screen was
+ * asked to. It is the AA minimum and nothing more, chosen over 44 for exactly
+ * the reason the exemption exists — at 44 the Segmented above and the ChipRow
+ * below overlapped by 4px, and in that band the lower row won taps meant for
+ * the upper. At 24 the tallest chip here is unchanged at Comfortable and
+ * Snug; only the rows that were failing move, and they move by 1.4px.
+ *
+ * `.btn-icon` keeps its 0: it sets `width`/`height: 36px` outright, so the
+ * floor would decide nothing, and `.tap` already gives it 44 of reach.
+ */
 .chiprow .btn,
-.seg .btn,
+.seg .btn { min-height: 24px; }
 .btn-icon { min-height: 0; }
 .btn:disabled { opacity: 0.45; cursor: not-allowed; }
 .btn-primary { background: var(--color-accent); color: var(--color-bg); }
