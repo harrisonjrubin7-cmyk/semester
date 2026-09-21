@@ -27,6 +27,7 @@ import type { Launch } from '../../../supabase/functions/_shared/lti';
  */
 
 const who = (over: Partial<Launch> = {}): Launch => ({
+  messageType: 'LtiResourceLinkRequest',
   subject: 'platform-user-88',
   issuer: 'https://brightspace.vanderbilt.edu',
   clientId: 'semester-client',
