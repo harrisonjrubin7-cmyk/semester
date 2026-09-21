@@ -162,6 +162,13 @@ export const STRATEGY: Record<string, Strategy> = {
   // `ticks` keeps both sides' keys rather than letting one map replace the
   // other wholesale.
   started: 'ticks',
+  // Finished-and-not-handed-in, and handed in. Keyed by deadline id and merged
+  // the same way, and here the argument is sharper than it is for `started`:
+  // the upload happens on the laptop and the tick often on the phone, so these
+  // are the maps most likely to hold a key the other device does not. `ticks`
+  // keeps both. See `lib/stage.ts`.
+  ready: 'ticks',
+  submitted: 'ticks',
   saved: 'ticks',
   grades: 'ticks',
   // Cutoffs per course. Keyed the same way and merged the same way: typing

@@ -1,4 +1,5 @@
 import { CourseHub } from '../components/CourseHub';
+import { WhereItStands } from '../components/WhereItStands';
 import { useState } from 'react';
 import { useNow, useStore } from '../state/store';
 import { draftFor } from '../lib/mail';
@@ -900,6 +901,11 @@ export function ItemDetail() {
           Study
         </button>
       </div>
+      {/* Where it stands past the tick: finished, handed in, or finished and
+          never handed in — which is the one the tick cannot say and the one
+          worth a warning. See `lib/stage.ts`. */}
+      <WhereItStands item={item} />
+
       {/* Before it is ticked, a clock you can start. After, the question you
           can answer in one tap. The same measurement either way, and neither
           appears once this piece of work has a time against it. */}
