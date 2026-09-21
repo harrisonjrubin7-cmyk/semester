@@ -45,12 +45,19 @@
   --font-heading-weight: 600;
   --font-body: "Barlow", system-ui, sans-serif;
 
-  --space-1: 3.4px;
-  --space-2: 6.8px;
-  --space-3: 10.2px;
-  --space-4: 13.6px;
-  --space-6: 20.4px;
-  --space-8: 27.2px;
+  /*
+   * The scale answers the Density setting, the same way `app.css`'s `--sp-*`
+   * does. These are the design system's own steps and keep their own ratio —
+   * 3.4 apart, not the app scale's 2 — because retuning them is a decision
+   * about the system's look and this is not that decision. What changes is
+   * that Comfortable / Snug / Tight now reach them at all.
+   */
+  --space-1: calc(3.4px * var(--density, 1));
+  --space-2: calc(6.8px * var(--density, 1));
+  --space-3: calc(10.2px * var(--density, 1));
+  --space-4: calc(13.6px * var(--density, 1));
+  --space-6: calc(20.4px * var(--density, 1));
+  --space-8: calc(27.2px * var(--density, 1));
 
   --radius-sm: 2px;
   --radius-md: 4px;
@@ -84,6 +91,17 @@ h1, h2, h3, h4 { font-family: var(--font-heading); font-weight: var(--font-headi
   position: absolute; width: 11px; height: 11px;
   color: color-mix(in srgb, var(--color-text) 55%, transparent);
 }
+/*
+ * The corner's own numbers do not answer Density, and must not.
+ *
+ * The mark is an 11px box holding two 1px rules, and the 5px centres each one
+ * in it — (11 - 1) / 2. The -6px then hangs the box off the panel's corner by
+ * its own half. Every number here is derived from the 11 and the 1, and a
+ * border is 1px at every density, so scaling the offsets alone would pull the
+ * rules off centre and the marks off the corner they mark. Ornament whose
+ * parts are measured from each other is not spacing between content, which is
+ * what the setting is about.
+ */
 .blueprint > .corner::before, .blueprint > .corner::after {
   content: ""; position: absolute; background: currentColor;
 }
@@ -138,7 +156,7 @@ figcaption {
 
 /* — buttons — */
 .btn {
-  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  display: inline-flex; align-items: center; justify-content: center; gap: calc(6px * var(--density, 1));
   cursor: pointer; text-decoration: none;
   font-family: var(--font-heading); font-weight: var(--font-heading-weight);
   font-size: 14px; line-height: 1.2; color: var(--color-text); /* matches the .input's 14px —
@@ -191,7 +209,7 @@ figcaption {
 
 /* — forms — */
 .field > label {
-  display: block; font-size: 12px; margin-bottom: 5px;
+  display: block; font-size: 12px; margin-bottom: calc(5px * var(--density, 1));
   color: color-mix(in srgb, var(--color-text) 70%, transparent);
 }
 .input {
@@ -203,7 +221,7 @@ figcaption {
    * extra eight pixels — which is why this is safe here and is not a rule
    * for every control (see `ChipRow` in `components/ui.tsx`).
    */
-  width: 100%; min-height: 44px; padding: 6px 10px; font: inherit;
+  width: 100%; min-height: 44px; padding: calc(6px * var(--density, 1)) calc(10px * var(--density, 1)); font: inherit;
   font-size: 14px; color: var(--color-text); caret-color: var(--color-accent);
   background: var(--color-surface);
   border: 1px solid var(--color-divider); border-radius: var(--radius-md);
@@ -211,7 +229,7 @@ figcaption {
 .input:hover { border-color: color-mix(in srgb, var(--color-text) 45%, transparent); }
 .input:focus-visible { border-color: var(--color-accent); outline-offset: 0; }
 textarea.input { min-height: 90px; resize: vertical; }
-.radio { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; }
+.radio { display: inline-flex; align-items: center; gap: calc(8px * var(--density, 1)); cursor: pointer; font-size: 14px; }
 .radio input, .seg-opt input {
   position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none;
 }
@@ -230,8 +248,8 @@ textarea.input { min-height: 90px; resize: vertical; }
   border: 1px solid var(--color-divider); border-radius: var(--radius-md);
 }
 .seg-opt {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 7px 12px; font-size: 13px; cursor: pointer;
+  display: inline-flex; align-items: center; gap: calc(6px * var(--density, 1));
+  padding: calc(7px * var(--density, 1)) calc(12px * var(--density, 1)); font-size: 13px; cursor: pointer;
 }
 .seg-opt + .seg-opt { border-left: 1px solid var(--color-divider); }
 .seg-opt:has(input:checked) { background: var(--color-accent); color: var(--color-bg); }
@@ -250,7 +268,7 @@ textarea.input { min-height: 90px; resize: vertical; }
 }
 .card-body { margin: 0; font-size: 13px; opacity: 0.8; flex: 1; }
 .card-meta {
-  display: flex; align-items: center; gap: 6px; font-size: 11px;
+  display: flex; align-items: center; gap: calc(6px * var(--density, 1)); font-size: 11px;
   color: color-mix(in srgb, var(--color-text) 50%, transparent);
 }
 .elev-sm { box-shadow: var(--shadow-sm); }
@@ -260,7 +278,7 @@ textarea.input { min-height: 90px; resize: vertical; }
 /* — tags — */
 .tag {
   display: inline-flex; align-items: center; font-size: 11px;
-  letter-spacing: 0.02em; padding: 3px 10px;
+  letter-spacing: 0.02em; padding: calc(3px * var(--density, 1)) calc(10px * var(--density, 1));
   border-radius: calc(var(--radius-md) * 0.75);
 }
 .tag-accent { background: var(--color-accent-100); color: var(--color-accent-800); }
