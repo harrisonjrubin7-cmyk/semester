@@ -22,6 +22,8 @@ shorts.py        lessons → one vertical short per flashcard
 documentary.py   podcast episode → a documentary cut of it
 restyle-script.mjs  script → the same script in a hosting style (calls a model)
 styles.mjs       the hosting styles, as structural parameters
+persona-sheet.mjs   persona → its character reference sheet
+personas.mjs     the animated series' characters, as structural parameters
 ```
 
 Everything after `guide_reader.py` reads the same guide through it, so a deck, a
@@ -63,6 +65,39 @@ script, or any chapter mark is missed, nothing is written and it says why.
 Where these formats go next — movie-format lessons, one short per flashcard,
 several podcast hosting styles from one draft, and what each of those actually
 costs — is in [`../docs/VIDEO_PODCAST_ROADMAP.md`](../docs/VIDEO_PODCAST_ROADMAP.md).
+
+## The animated series' characters
+
+```bash
+node pipeline/persona-sheet.mjs --all --dry-run       # the prompt, first
+node pipeline/persona-sheet.mjs host-nell --layout    # the sheet's layout, $0
+node pipeline/persona-sheet.mjs host-nell --image <provider>   # not wired
+```
+
+A character reference sheet is nine panels of one character, generated once
+and then used as the reference every later clip of a course has to match. It
+is the artefact of step 4 that cannot be walked back: settle a persona
+carelessly and it is a face on four courses.
+
+`personas.mjs` is why the appearance is not a paragraph. §7 of the roadmap
+commits to no real person's name, voice or likeness in a persona preset or a
+character sheet, and a commitment a file merely states is one a `--style "like
+<somebody>"` walks straight through. So appearance is a choice from enumerated
+axes — build, age, hair, wardrobe, what they carry, manner — and a likeness is
+not refused so much as unrepresentable. The one free-text field is a note about
+lighting and posture, and it is checked: it may not use a construction that
+points at somebody, and it may not carry a capital letter anywhere but the
+first. `app/src/lib/personas.test.ts` says what that catches and what it does
+not.
+
+`--layout` draws the nine panels at the arrangement and proportion the prompt
+asks for, labelled, in the persona's own accent — for nothing, before a
+provider is involved. It is the storyboard for an image nobody has bought, and
+afterwards it is what you hold the bought one against.
+
+`--image <provider>` is not wired to anything and exits non-zero saying so. No
+per-image price is written into this repository: those move faster than the
+code, and a stale one quoted in a `--dry-run` reads like a measurement.
 
 ## Adding a course
 

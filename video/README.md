@@ -86,6 +86,26 @@ seven seconds, which on a 28-minute episode with a chapter every two minutes
 left twenty-six of those minutes as a near-empty dark frame — the thing `--mp4`
 already did and step 1 existed to replace.
 
+## Character sheets
+
+Step 4's other half: the recurring characters of the animated series.
+
+```bash
+node pipeline/persona-sheet.mjs host-nell --layout
+```
+
+`src/Persona.tsx` draws the *layout* of a character reference sheet — nine
+panels at the arrangement and proportion the prompt asks for, each labelled
+with the view and expression that belongs in it, with a framing guide, in the
+persona's own accent. It is not the sheet: the sheet is nine drawings of a
+character that does not exist yet and only an image model is going to make
+those.
+
+It is 1080×1440 rather than 1920×1080, and that is not a preference. A 3×3
+grid of portrait panels is a portrait page; at 16:9 each cell comes out about
+550 by 200, and a letterbox is the one shape a head-and-shoulders portrait
+cannot be composed in. A sheet is a still and owes nothing to a video's aspect.
+
 ## Spending, before anything is bought
 
 `src/clipspend.ts` is the manifest the roadmap's §7 asks for: hash what decides a
