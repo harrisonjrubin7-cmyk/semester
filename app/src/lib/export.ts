@@ -111,7 +111,11 @@ export function notesMarkdown(
   if (drafts.length === 0) return written;
 
   const composed = drafts.map((d) => {
-    const when = new Date(d.updated).toISOString().slice(0, 10);
+    // Same clock as the notes above, for the same reason: a draft written in
+    // the evening west of Greenwich is already tomorrow in UTC, and the two
+    // halves of one file disagreeing about what day it is is worse than either
+    // date being wrong on its own.
+    const when = dateToIso(new Date(d.updated));
     const tag = d.courseId ? ` · ${code(d.courseId)}` : '';
     // Said plainly, because a draft that was handed to a mail app may or may
     // not have been sent from it — the app saw it leave and nothing after.
@@ -823,6 +827,7 @@ export const NOT_IN_BACKUP: Record<string, string> = {
   feed: 'the shape of Today',
   ground: 'the background the app is drawn on',
   hue: 'the tint behind the ground',
+  calm: 'how much the app may move and decorate itself',
   iconShape: 'how the icons are drawn',
   labels: 'whether the tab bar names its tabs',
   lineHeight: 'how far apart the lines sit',

@@ -111,7 +111,7 @@ describe('keying a colour out', () => {
     const d = picture(8, 8, [255, 255, 255, 255]);
     for (let y = 2; y < 6; y++) for (let x = 2; x < 6; x++) put(d, 8, x, y, [10, 20, 30, 255]);
 
-    const cleared = keyOut(d, { r: 255, g: 255, b: 255 }, TOLERANCE.deft);
+    const cleared = keyOut(d, 8, 8, { r: 255, g: 255, b: 255 }, TOLERANCE.deft);
     expect(cleared).toBe(64 - 16);
     expect(alphaAt(d, 8, 0, 0)).toBe(0);
     // The control: a test that only checked the background would pass just as
@@ -128,13 +128,13 @@ describe('keying a colour out', () => {
     const d = picture(4, 4, [255, 255, 255, 255]);
     put(d, 4, 1, 1, [253, 255, 254, 255]);
     put(d, 4, 2, 2, [255, 252, 255, 255]);
-    expect(keyOut(d, { r: 255, g: 255, b: 255 }, TOLERANCE.deft)).toBe(16);
+    expect(keyOut(d, 4, 4, { r: 255, g: 255, b: 255 }, TOLERANCE.deft)).toBe(16);
   });
 
   it('leaves a colour that is merely similar, at a tolerance that should not reach it', () => {
     const d = picture(2, 2, [255, 255, 255, 255]);
     put(d, 2, 0, 0, [200, 200, 200, 255]);
-    keyOut(d, { r: 255, g: 255, b: 255 }, 32);
+    keyOut(d, 2, 2, { r: 255, g: 255, b: 255 }, 32);
     expect(alphaAt(d, 2, 0, 0)).toBe(255);
     expect(alphaAt(d, 2, 1, 1)).toBe(0);
   });
@@ -146,21 +146,91 @@ describe('keying a colour out', () => {
    */
   it('clears the alpha without blacking out the colour underneath it', () => {
     const d = picture(2, 2, [120, 130, 140, 255]);
-    keyOut(d, { r: 120, g: 130, b: 140 }, TOLERANCE.deft);
+    keyOut(d, 2, 2, { r: 120, g: 130, b: 140 }, TOLERANCE.deft);
     expect(alphaAt(d, 2, 0, 0)).toBe(0);
     expect([d[0], d[1], d[2]]).toEqual([120, 130, 140]);
   });
 
   it('does not count a pixel that was already clear', () => {
     const d = picture(2, 2, [255, 255, 255, 0]);
-    expect(keyOut(d, { r: 255, g: 255, b: 255 }, TOLERANCE.deft)).toBe(0);
+    expect(keyOut(d, 2, 2, { r: 255, g: 255, b: 255 }, TOLERANCE.deft)).toBe(0);
+  });
+
+  /*
+   * The defect the flood fill exists for, and the one every test above is
+   * blind to: all twelve of them pass against a global key, because in each
+   * the background is reachable from an edge.
+   *
+   * A ring is the commonest real case — the middle of a letter O, the gap
+   * inside a logo, the hole in a mug handle. It is the background's colour and
+   * it is not the background, and a global key punches straight through it.
+   */
+  it('leaves an enclosed pocket of the background colour alone', () => {
+    const W = 21;
+    const d = picture(W, W, [255, 255, 255, 255]);
+    for (let y = 0; y < W; y++) {
+      for (let x = 0; x < W; x++) {
+        const r = Math.hypot(x - 10, y - 10);
+        if (r >= 4 && r <= 8) put(d, W, x, y, [20, 20, 20, 255]);
+      }
+    }
+
+    keyOut(d, W, W, { r: 255, g: 255, b: 255 }, TOLERANCE.deft);
+
+    expect(alphaAt(d, W, 10, 10), 'the hole inside the ring was eaten').toBe(255);
+    expect(alphaAt(d, W, 0, 0), 'the outside was not lifted').toBe(0);
+    expect(alphaAt(d, W, 10, 4), 'the ring itself was lifted').toBe(255);
+  });
+
+  /*
+   * Four-connected, not eight. An eight-connected flood squeezes through a
+   * single-pixel diagonal gap — which is what a thin letterform or a hairline
+   * border is made of, so the leak lands on exactly the pictures this feature
+   * is for.
+   */
+  it('does not leak through a one-pixel diagonal gap in an outline', () => {
+    const d = picture(7, 7, [255, 255, 255, 255]);
+    // A box of dark pixels with its corner left open on the diagonal only.
+    for (const [x, y] of [[2, 1], [3, 1], [4, 1], [1, 2], [5, 2], [1, 3], [5, 3], [1, 4], [5, 4], [2, 5], [3, 5], [4, 5]] as const) {
+      put(d, 7, x, y, [20, 20, 20, 255]);
+    }
+    keyOut(d, 7, 7, { r: 255, g: 255, b: 255 }, TOLERANCE.deft);
+    expect(alphaAt(d, 7, 3, 3), 'the flood got in through a diagonal').toBe(255);
+  });
+
+  /*
+   * A picture already carrying transparency must not be walled off by it, or
+   * raising the tolerance and lifting again would do nothing.
+   *
+   * The first version of this test did not test that at all: it cleared the
+   * top row and asked whether the middle went, but the other three borders
+   * still reached the middle on their own, so it passed with the pass-through
+   * removed. Here the *only* way in is the cleared cell — a dark wall with one
+   * already-transparent gap in it.
+   */
+  it('lets a second lift pass through what the first one cleared', () => {
+    const W = 9;
+    const d = picture(W, W, [255, 255, 255, 255]);
+    for (let y = 2; y <= 6; y++) {
+      for (let x = 2; x <= 6; x++) {
+        if (x === 2 || x === 6 || y === 2 || y === 6) put(d, W, x, y, [20, 20, 20, 255]);
+      }
+    }
+    // The one opening, already lifted by an earlier pass.
+    put(d, W, 4, 2, [255, 255, 255, 0]);
+
+    keyOut(d, W, W, { r: 255, g: 255, b: 255 }, TOLERANCE.deft);
+
+    expect(alphaAt(d, W, 0, 0), 'outside the wall').toBe(0);
+    expect(alphaAt(d, W, 4, 4), 'inside, reachable only through the cleared gap').toBe(0);
+    expect(alphaAt(d, W, 2, 4), 'the wall itself').toBe(255);
   });
 
   it('takes more as the tolerance rises, and never fewer', () => {
     const counts = [4, 16, 32, 64, 120].map((t) => {
       const d = picture(8, 8, [255, 255, 255, 255]);
       for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) put(d, 8, x, y, [255 - x * 8, 255 - x * 8, 255 - x * 8, 255]);
-      return keyOut(d, { r: 255, g: 255, b: 255 }, t);
+      return keyOut(d, 8, 8, { r: 255, g: 255, b: 255 }, t);
     });
     for (let i = 1; i < counts.length; i++) expect(counts[i]!).toBeGreaterThanOrEqual(counts[i - 1]!);
     // And the ramp really does span the range, or the run above proves nothing.

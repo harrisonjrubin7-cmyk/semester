@@ -6,6 +6,7 @@ import { ClashList, WorstDay } from '../components/Clashes';
 import { TimerLine } from '../components/TimerLine';
 import { ApplyingSoon } from '../components/Applying';
 import { ReadingsOnTheGo } from '../components/ReadingProgress';
+import { Waiting } from '../components/Waiting';
 import { ClosingWindows } from '../components/Windows';
 import { FirstRun } from './FirstRun';
 import { Blueprint } from '../components/Blueprint';
@@ -684,6 +685,14 @@ function Feed_next() {
     <>
       <NextClassCard />
       <OverdueBanner />
+      {/*
+       * After the overdue banner, deliberately. That one is about work of
+       * yours that has already slipped; this is about somebody else waiting on
+       * you. Your own missed deadline outranks another person's message, and
+       * both are silent when they have nothing, so on most days this section
+       * is still just the next class.
+       */}
+      <Waiting />
     </>
   );
 }

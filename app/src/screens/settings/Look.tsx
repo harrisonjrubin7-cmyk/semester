@@ -11,6 +11,7 @@ import {
   ACCENTS,
   BODYFACES,
   CORNERS,
+  CALMS,
   DENSITIES,
   GROUNDS,
   ICON_SHAPES,
@@ -493,6 +494,19 @@ export function SettingsLook() {
               value={state.tone}
               options={TONE_LABELS.map((t) => ({ id: t.id, label: t.label, sub: t.blurb }))}
               onChange={(tone) => dispatch({ type: 'setTone', tone })}
+            />
+          </Group>
+
+          <Group
+            header="Motion"
+            footer="Your device's own reduced-motion setting is always honoured. This is for wanting a still Semester without a still phone."
+            lit={lights('motion animation still calm low stimulation reduce movement sensory vestibular', lit)}
+          >
+            <SelectRow
+              label="Movement"
+              value={state.calm}
+              options={CALMS.map((c) => ({ id: c.id, label: c.label, sub: c.blurb }))}
+              onChange={(calm) => dispatch({ type: 'setLook', look: { calm } })}
             />
           </Group>
 

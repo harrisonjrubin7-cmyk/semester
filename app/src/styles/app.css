@@ -7453,3 +7453,46 @@ button.adband-bar {
   align-items: center;
   gap: var(--sp-4);
 }
+
+/* ── Calm: less motion, and less around it ───────────────────────────────
+ *
+ * Requirements 378 and 379 of `docs/EXPERIENCE_REQUIREMENTS.md`. The
+ * attribute is written by `App.tsx` from the `calm` setting in `lib/look.ts`;
+ * `lib/prefers.ts` reads the same attribute for the scrolls the app performs
+ * in script, which a stylesheet cannot reach.
+ *
+ * The blanket `prefers-reduced-motion` rule further up this sheet already
+ * stills animations and transitions for anybody whose device asks. These two
+ * selectors are the app's own answer, for somebody who wants a still
+ * interface here without stilling their whole device.
+ */
+:root[data-calm='still'] *,
+:root[data-calm='still'] *::before,
+:root[data-calm='still'] *::after,
+:root[data-calm='calm'] *,
+:root[data-calm='calm'] *::before,
+:root[data-calm='calm'] *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+
+/*
+ * And the decoration, which is the half `still` deliberately leaves alone.
+ *
+ * Shadows and gradients go because they are the two that read as depth and
+ * movement when nothing is moving. `background-image: none` catches the
+ * gradients written as images, which is how most of them are written here;
+ * it is scoped to elements that also have a background colour so a real
+ * picture — a campus photograph, an avatar — is not blanked with them.
+ */
+:root[data-calm='calm'] * {
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+
+:root[data-calm='calm'] [class*='gradient'],
+:root[data-calm='calm'] [data-decorative] {
+  background-image: none !important;
+}

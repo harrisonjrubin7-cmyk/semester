@@ -1,0 +1,31 @@
+-- access_log_function_search_path — applied to production on 2026-09-21 at 15:07:50 UTC.
+--
+-- **There is deliberately no SQL in this file, and that is the whole point.**
+--
+-- Production's ledger has a row for version `20260921150750`. Supabase's
+-- deploy refuses to start unless every row already in that ledger has a file
+-- here — not a matching one, just one — and for months it did not:
+--
+--     ERROR Remote migration versions not found in local migrations directory.
+--
+-- That error is what had kept the schema deploy red, behind the renumbering
+-- fault that got all the attention. It never reached the SQL, so nothing that
+-- runs SQL could see it.
+--
+-- ## Why empty rather than the statements it ran
+--
+-- Its statements are in [`../history/20260921150750_access_log_function_search_path.sql`](../history/20260921150750_access_log_function_search_path.sql), byte-for-byte as the ledger reported them, checked by `migrationhistory.test.ts` against `MANIFEST`. That directory is a record, not a migration set.
+--
+-- Putting those statements here would break every build from empty. The eight
+-- baseline files are a squash of everything through 11 September, so the
+-- schema they produce *already contains this migration's effects*, and
+-- applying it again on top is a second `create` of something that exists.
+-- `migrationhistory.test.ts` says the same thing from the other side and names
+-- the file that proves it: the third of the recovered ten fails outright,
+-- because `classmates.sql` long ago absorbed it.
+--
+-- So the two requirements are met separately. A **deploy** needs the version to
+-- exist, and reads nothing else — it skips this file, because the ledger
+-- already has the row. A **build from empty** needs the effects exactly once,
+-- and gets them from the baseline. This file is the join between those two
+-- facts, and it does nothing in either direction.
