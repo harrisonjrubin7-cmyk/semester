@@ -312,3 +312,72 @@ describe('nothing the row named became unreachable', () => {
     expect(registered.size).toBeGreaterThan(20);
   });
 });
+
+/**
+ * Where the evening's counts sit on the Revise tab.
+ *
+ * They were at the foot of the tab, immediately under **Mix every course in
+ * one run** — close enough to it that the summary read as that button's
+ * caption rather than as the whole evening's. Seen on the deployed site at
+ * phone size, where the button and the line land together at the bottom of
+ * the scroll with the plan above them.
+ *
+ * They belong with the controls that produce them: the minutes and the course
+ * chips decide what the numbers are, and somebody who has just set both
+ * should not have to scroll past a nine-unit plan to see what they add up to.
+ *
+ * ## Asserted as an order, not as a parent
+ *
+ * The line is a bare `div` with no class of its own, and giving it one to
+ * make it findable would be inventing a hook for the test rather than for the
+ * screen. Document order answers the real question anyway — *is it above the
+ * plan or below it* — and it keeps working if the markup around it changes.
+ *
+ * `compareDocumentPosition` rather than index arithmetic over a flat query,
+ * because the three things being compared are at different depths.
+ */
+describe('the counts on the Revise tab', () => {
+  /** Turn to Revise, which is not the tab the screen opens on. */
+  async function revise(): Promise<void> {
+    await show(<Study />);
+    const tab = [...host.querySelectorAll('button')].find(
+      (b) => (b.textContent ?? '').trim().toLowerCase() === 'revise',
+    );
+    expect(tab, 'no Revise tab on the study screen').toBeTruthy();
+    await act(async () => tab!.click());
+  }
+
+  /** The element holding a given run of text, deepest first. */
+  const holding = (what: RegExp): Element | undefined =>
+    [...host.querySelectorAll('div, button')]
+      .filter((n) => what.test(n.textContent ?? ''))
+      .at(-1);
+
+  const before = (a: Element, b: Element): boolean =>
+    Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
+
+  it('draws them above the plan rather than at the foot of the tab', async () => {
+    await revise();
+    const counts = holding(/cards? (come round|never met|today)|Nothing waiting/);
+    const mix = holding(/Mix every course in one run/);
+    expect(counts, 'no counts line on the Revise tab').toBeTruthy();
+    expect(mix, 'no mix button on the Revise tab').toBeTruthy();
+    expect(
+      before(counts!, mix!),
+      'the counts line is still below the mix button',
+    ).toBe(true);
+  });
+
+  it('and below the minutes they are counted against', async () => {
+    // The other half: moving it up is only right if it landed under the
+    // controls rather than above them. A block hoisted to the top of the tab
+    // would pass the test above and be wrong.
+    await revise();
+    const counts = holding(/cards? (come round|never met|today)|Nothing waiting/);
+    const picker = [...host.querySelectorAll('button')].find(
+      (b) => /^\d+ min$/.test((b.textContent ?? '').trim()),
+    );
+    expect(picker, 'no minutes picker on the Revise tab').toBeTruthy();
+    expect(before(picker!, counts!), 'the counts line is above the minutes').toBe(true);
+  });
+});

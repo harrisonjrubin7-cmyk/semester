@@ -15,6 +15,7 @@ import { record } from '../../lib/pace';
 import { currentLook, type Action, type State } from '../shape';
 import { readTabs } from '../../lib/tabbar';
 import { readRules } from '../../lib/myrules';
+import { readFacts } from '../../lib/aboutme';
 import { mark as markAttendance, readPolicy } from '../../lib/attend';
 import { readDrop } from '../../lib/drop';
 import { readLeadDays } from '../../lib/runway';
@@ -133,6 +134,13 @@ export function settings(state: State, action: Action): State | null {
     // that are gone.
     case 'setMyRules':
       return { ...state, myRules: readRules(action.rules) };
+
+    // Read back through the same reader the stored list goes through, so a
+    // list that arrived from a screen and a list that arrived from disk are
+    // the same list — the cap, the trim and the empty-line drop all happen
+    // once, here, and cannot be skipped by a caller.
+    case 'setAboutMe':
+      return { ...state, aboutMe: readFacts(action.facts) };
 
     case 'setMyName':
       // Trimmed and capped here rather than in the field, so a name pasted in

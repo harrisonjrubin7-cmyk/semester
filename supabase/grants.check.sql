@@ -22,10 +22,10 @@
 -- until somebody decides which side of the line it belongs on, and writes it
 -- down here.
 --
--- That is not a hypothetical shape of bug. `20260901001200_invites.sql` was
+-- That is not a hypothetical shape of bug. `20260921003300_invites.sql` was
 -- applied to the live project on 21 September 2026 and `set_invite_only`
 -- landed with `anon=X`: anybody holding the publishable key could have turned
--- the pilot's invite gate on or off. `20260901001500_function_grants.sql` is
+-- the pilot's invite gate on or off. `20260921003600_function_grants.sql` is
 -- the fix; this file is the reason the next one cannot happen quietly.
 --
 --   How to run it: supabase/check.sh grants

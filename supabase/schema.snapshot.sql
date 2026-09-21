@@ -638,18 +638,36 @@ CREATE TRIGGER touch_tasks BEFORE INSERT OR UPDATE ON public.tasks FOR EACH ROW 
 
 -- ── Event trigger ─────────────────────────────────────────────────────────
 --
--- One of the seven event triggers in production is this project's; the other
+-- One of the seven event triggers in production is recorded here; the other
 -- six belong to Supabase (owner `supabase_admin`, functions in `extensions`)
--- and are not recorded here because they are not ours to restore. This one is
--- owned by `postgres` and is what makes RLS-on-by-default true, so a schema
--- rebuilt without it would be quietly less safe than the original.
+-- and are not, because they are not ours to restore. It is what makes
+-- RLS-on-by-default true, so a schema rebuilt without it would be quietly
+-- less safe than the original.
+--
+-- **It is not this project's either**, which the first version of this file
+-- said it was. It is installed by Supabase's "automatically enable RLS"
+-- setting: written in Supabase's house style rather than this repository's,
+-- and the one migration that names it — `history/20260907134823_…` — only
+-- revokes EXECUTE on the function, which is a thing you do to something that
+-- already exists. Nothing in `migrations/` creates it and nothing should.
+-- It is kept here because this file is a record of production, and production
+-- has it.
+--
+-- Guarded, because `local.stub.sql` now creates it too — that is where the
+-- platform's objects belong, and a replay that applies the stub first would
+-- otherwise die on this line with `event trigger "ensure_rls" already
+-- exists`. Which it did, on the rehearsal that found this.
 --
 -- Needs superuser, which is why it is last: everything above applies without
--- it, and this line is the only one that will fail for a non-superuser.
+-- it, and this is the only line that will fail for a non-superuser.
 
-CREATE EVENT TRIGGER ensure_rls ON ddl_command_end
-  WHEN TAG IN ('CREATE TABLE', 'CREATE TABLE AS', 'SELECT INTO')
-  EXECUTE FUNCTION public.rls_auto_enable();
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_event_trigger WHERE evtname = 'ensure_rls') THEN
+    CREATE EVENT TRIGGER ensure_rls ON ddl_command_end
+      WHEN TAG IN ('CREATE TABLE', 'CREATE TABLE AS', 'SELECT INTO')
+      EXECUTE FUNCTION public.rls_auto_enable();
+  END IF;
+END $$;
 
 -- ── Row-level security ────────────────────────────────────────────────────
 --

@@ -5,9 +5,11 @@ The schema this app runs on cannot be rebuilt from its own record.
 concern; this is the plan for fixing it, written before any of it was done so
 that the reasoning can be argued with rather than discovered in a diff.
 
-**Steps 1, 2 and 4 are done. Step 3 turned out not to be needed and step 5 is
-withdrawn, both on evidence gathered doing the others — each section says why.
-Step 6 is the one thing still open, and it is a decision rather than a task.**
+**The repair is done.** Steps 1, 2, 4 and 6 were carried out; step 3 turned out
+not to be needed and step 5 is withdrawn, both on evidence gathered doing the
+others, and each section says why. The only write to production in any of it is
+the one a merge makes by deploying the renumbered migrations — nothing here
+edited the ledger by hand.
 
 ## What is actually wrong
 
@@ -88,7 +90,7 @@ spellings are needed. `check.sh` granted tables and never functions, so the
 suite was green on a hole that was open.
 
 This is fault 2 happening again in miniature, and it is being closed the way
-fault 2 should have been: `supabase/migrations/20260901001500_function_grants.sql`
+fault 2 should have been: `supabase/migrations/20260921003600_function_grants.sql`
 is the file, `local.stub.sql` now sets the same default privileges Supabase
 does so the harness can see the hole, and `grants.check.sql` is an allowlist
 over the whole schema so the next function cannot ship reachable quietly.
@@ -386,22 +388,86 @@ repository, and it should be argued for on its own.
 | 3 · reconstruct the eight | **not needed** — the baseline builds production, so there is nothing to back out |
 | 4 · prove the baseline against production | **done 21 Sep** — five of six fingerprints match, the sixth is comments |
 | 5 · `migration repair` | **withdrawn** — it would write a history that cannot replay |
-| 6 · the four pending files | **open, and a decision** — see below |
+| 6 · the pending files | **done 21 Sep** — seven renumbered above the ledger, rehearsed against production's shape |
 
-Step 6 is the one that unblocks the staging work, and it is not a task anybody
-can simply do. `usage_atomic`, `group_columns_pinned`, `forms` and `access_log`
-are numbered `20260901000900`–`20260901001300`, and production has thirteen
-migrations applied with higher numbers, so they cannot apply where they are.
-The two ways out are to renumber four files that are already merged, which
-changes the key the ledger is built on, or to apply them by hand and accept a
-fourth version that does not match its filename. **That is a call for whoever
-owns the project**, and until it is made production's schema deploy stays
-broken.
+Step 6 was the call nobody could make from the evidence alone, and it has been
+made: **renumber.** The alternative was applying the files by hand and letting
+a fourth version stop matching its filename, which is the fault this whole
+document exists about.
 
-Until it is made, **no pull request touching `supabase/` should be merged**.
-If Branching is applying migrations, a merge sends the pending ones to a schema
-nothing has reproduced; if it is not, the merge widens the gap by one more file.
-See [`ROLLBACK.md`](ROLLBACK.md).
+It was seven files and not four. `invites`, `referrals` and `function_grants`
+have their *content* in production, applied by hand on 21 September, but under
+versions the ledger assigned — `20260921002428`, `…2623`, `…2658` — and their
+*file* versions were as pending as the other four. Renumbering four would have
+left three files that `db push` still refuses, and the deploy still broken.
+
+| was | is | why it moved |
+| --- | --- | --- |
+| `20260901000900_usage_atomic` | `20260921003000_usage_atomic` | never applied |
+| `20260901001000_group_columns_pinned` | `20260921003100_group_columns_pinned` | never applied |
+| `20260901001100_forms` | `20260921003200_forms` | never applied |
+| `20260901001200_invites` | `20260921003300_invites` | applied under `20260921002428` |
+| `20260901001300_access_log` | `20260921003400_access_log` | never applied |
+| `20260901001400_referrals` | `20260921003500_referrals` | applied under `20260921002623` |
+| `20260901001500_function_grants` | `20260921003600_function_grants` | applied under `20260921002658` |
+
+Relative order is unchanged, so a build from empty applies them in the same
+sequence it always did — and the six fingerprints are byte-identical before and
+after, which is what says the renumbering moved names and not schema.
+
+Three of the seven will therefore be applied to production a second time. Every
+one is idempotent by construction — `create table if not exists`, `create or
+replace function`, `drop policy if exists` then create, and revokes guarded by
+`to_regprocedure` — and re-applying them replaces the comment-stripped function
+bodies of step 4 with this repository's, which closes the one fingerprint that
+did not match. The seed in `invites` carries `on conflict (only_one) do
+nothing`, so it cannot reset the gate; that was checked rather than read, below.
+
+### Rehearsed, because reading a migration is not running one
+
+[`supabase/rehearse.sh`](supabase/rehearse.sh) builds production's shape from
+the snapshot, puts rows in it — the invite gate on, an account, a course —
+applies every migration numbered above the ledger's newest, and checks that the
+rows did not move.
+
+    · the migrations a deploy would apply, in the order it would apply them
+      ✓ 20260921003000_usage_atomic.sql
+      ✓ 20260921003100_group_columns_pinned.sql
+      ✓ 20260921003200_forms.sql
+      ✓ 20260921003300_invites.sql
+      ✓ 20260921003400_access_log.sql
+      ✓ 20260921003500_referrals.sql
+      ✓ 20260921003600_function_grants.sql
+    · the pilot's invite gate: t → t
+    · one account's courses:   1 → 1
+
+`check.sh` could not have caught a fault here, and that is the point of adding
+a second script rather than a case to the first: it builds from empty, where
+there is no live state to damage and no earlier migration to collide with. **A
+deploy asks a different question, and nothing in this repository had ever asked
+it** — which is part of why production's deploy failed on 18 September with
+nobody aware.
+
+Two controls, because a rehearsal that always passes proves nothing. A
+migration edited to reference a column that does not exist is reported `✗` with
+its error. A migration edited to write `invite_only = false` is reported as
+`t → f` and **STATE MOVED**. A third control was run first and was a bad one: a
+`not null` column added to `forms`, which succeeds against an empty table and
+told me nothing until I noticed the table it was added to had no rows in it.
+
+What this cannot prove is that the *ledger* accepts them: Postgres applies a
+file whatever it is called, and the refusal that was failing lives in Supabase's
+CLI. The filenames are what decide that, and `rollback.test.ts` pins them.
+
+### The freeze
+
+**It lifts with this change, and not before.** The instruction was: no pull
+request touching `supabase/` gets merged, because a merge sends pending
+migrations to a schema nothing has reproduced, or widens the gap by one more
+file. Both halves are now answered — the schema is reproduced and fingerprinted
+(step 4), and the pending migrations are rehearsed against it with live state
+in place. This pull request is the one that was always going to have to touch
+`supabase/` to end it. See [`ROLLBACK.md`](ROLLBACK.md).
 
 What that rule is protecting is `supabase/migrations/`, because that directory
 is the only thing a merge can send anywhere. Steps 1 and 2 both landed under
