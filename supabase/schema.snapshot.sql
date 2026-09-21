@@ -14,6 +14,27 @@
 -- used throughout so that applying it to an *empty* database is safe, which is
 -- how it is verified, and that is the only place it should ever run.
 --
+-- ## How far through the ledger this reaches
+--
+-- SNAPSHOT-THROUGH: 20260921002658
+--
+-- That line is read by `supabase/rehearse.sh` and is not decoration. This file
+-- was generated when the live ledger had **twenty-one rows**, the last of them
+-- `20260921002658_revoke_function_execute_from_supabase_default_roles`. The
+-- ledger has thirty-seven now, so this file is sixteen rows behind it.
+--
+-- The rehearsal has to know that. It starts from this file and applies only
+-- what is newer than the ledger's *newest* row, so without the line above it
+-- would assume everything up to `20260921211500` were already here — and
+-- silently rehearse a deploy against a schema missing `public.forms`,
+-- `public.lti_platform`, `public.schools`, `public.app_admins` and
+-- `private.is_app_admin()`, among others. The first migration to reference one
+-- of those failed with `function private.is_app_admin() does not exist`, on a
+-- branch whose own SQL was sound.
+--
+-- **Whoever regenerates this file updates this line in the same commit.** It is
+-- the one fact about the snapshot that cannot be derived from its contents.
+--
 -- ## What it does not contain
 --
 -- Data. Roles, extensions and the `auth`/`storage`/`realtime` schemas Supabase
@@ -644,19 +665,29 @@ CREATE TRIGGER touch_tasks BEFORE INSERT OR UPDATE ON public.tasks FOR EACH ROW 
 -- RLS-on-by-default true, so a schema rebuilt without it would be quietly
 -- less safe than the original.
 --
--- **It is not this project's either**, which the first version of this file
--- said it was. It is installed by Supabase's "automatically enable RLS"
--- setting: written in Supabase's house style rather than this repository's,
--- and the one migration that names it — `history/20260907134823_…` — only
--- revokes EXECUTE on the function, which is a thing you do to something that
--- already exists. Nothing in `migrations/` creates it and nothing should.
--- It is kept here because this file is a record of production, and production
--- has it.
+-- **It is this project's**, which the first version of this file said and a
+-- later one withdrew. The withdrawal reasoned that Supabase's "automatically
+-- enable RLS" setting installs it — the code is in Supabase's house style
+-- rather than this repository's, and the one migration that named it only
+-- revoked EXECUTE, which is a thing you do to something that already exists.
 --
--- Guarded, because `local.stub.sql` now creates it too — that is where the
--- platform's objects belong, and a replay that applies the stub first would
--- otherwise die on this line with `event trigger "ensure_rls" already
--- exists`. Which it did, on the rehearsal that found this.
+-- Two Supabase-built preview branches settled it on 21 September. One whose
+-- migrations do not create the trigger came up with six event triggers, every
+-- one the platform's own, and no `ensure_rls`; one whose migrations do create
+-- it came up with seven. Both had applied all their migrations. The platform
+-- does not supply this, and the house style is explained instead by Supabase's
+-- documentation, which prints this exact function and trigger under
+-- *Auto-enable RLS for new tables* as a recipe to run yourself. Somebody did.
+--
+-- So `20260901000100_schema.sql` creates it, and `local.stub.sql` — which is
+-- deployed nowhere — no longer does. It is still recorded here because this
+-- file is a record of production and production has it.
+--
+-- Guarded all the same, and the guard is what matters rather than the reason
+-- for it: a replay that applies the migrations first, or an earlier stub that
+-- still carried the trigger, would otherwise die on this line with
+-- `event trigger "ensure_rls" already exists`. Which it did, on the rehearsal
+-- that found the collision.
 --
 -- Needs superuser, which is why it is last: everything above applies without
 -- it, and this is the only line that will fail for a non-superuser.

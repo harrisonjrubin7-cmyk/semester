@@ -1,3 +1,324 @@
+# One app — the thirty-fourth pass: the warning outlived the fault
+
+Against `main` at `593c235`. **<!--screens-->fifty-nine<!--/--> destinations**,
+unchanged. No cut, no merge. Five false sentences corrected and one guard
+written.
+
+The thirty-third asked which live fields nobody reads. This one asks the
+question the other way round: **which of the rules written down in this
+codebase are no longer true?** A comment cannot be caught by `tsc`, `oxlint`
+or the suite, so the only thing standing between a stale rule and the next
+author is somebody going and looking.
+
+The specimen came from the file that exists *because* of this fault. The
+thirtieth-odd pass extracted `lib/opencal.ts` from a module-private
+`useOpenDay`, with the argument written out: **a helper nobody can import is a
+rule nobody can follow.** It landed, it is correct, and all four call sites
+use it.
+
+Its own docblock has been lying ever since.
+
+## The four sentences
+
+`lib/opencal.ts` carried a warning that `month` was a broken grain:
+
+> `month` and `semester` do not [honour the date]. The month view anchors on
+> `calYear` and `calMonth` — separate fields, reachable only through
+> `stepMonth`, which moves by a delta and cannot be sent to a date. So
+> `openCal(date, 'month')` sets a day nothing reads and lands on whatever month
+> the calendar was already showing. **It fails silently.**
+
+Every word of that was true when written. Then the pass that merged the
+calendar's position onto one field deleted `calMonth`, `calYear` and the month
+view's private `selDate`, pointed `stepMonth` at `calDay`, and recorded in this
+very document that it *"also closes L3 without needing the 'go to this month'
+action that row said was missing"*.
+
+So the fault was fixed, the audit said so, and the warning stayed.
+
+| Where | The claim | Checked against |
+| --- | --- | --- |
+| `lib/opencal.ts` | `month` does not honour the date | `MonthView` derives the month shown **and** the day selected from `calDay` |
+| `lib/opencal.ts` | the position is held twice, recorded as an open row | L3 closed; `calMonth`/`calYear`/`selDate` deleted |
+| `lib/opencal.ts` | Today's aside passes `month` | it passes `week` |
+| `screens/Today.tsx` | "`month` is not available" | it is |
+| `state/readstate.test.ts` | Calendar destructures `calYear`, `calMonth`, `calSource` | it destructures `calSource` |
+
+`semester` is the control. It is the other half of the original sentence, it is
+still true — `SemesterView` anchors on `useNow()` and reads no date anywhere in
+its 662 lines — and it is what says the sentence was written carefully rather
+than carelessly. A correction that had found the whole claim wrong would have
+been the suspicious result.
+
+## It had propagated, and it was costing something
+
+The cheap reading of a stale comment is that it is untidy. This one was not.
+
+`screens/Today.tsx` draws the aside under the seven-day window — *"what a
+seven-day window cannot show, said out loud"* — and its handler carried the
+claim onward, as reasoning:
+
+> `month` is not available: the month view anchors on `calYear` and `calMonth`,
+> which `setCalDay` does not touch, so asking for it lands on the current month
+> whatever date you pass.
+
+That is an author reaching for a grain, being told by a comment that it was
+unavailable, and picking another. The comment had stopped being true before
+they read it. **A wrong warning is more expensive than a missing helper**: the
+missing helper makes the next author do the work again, and the wrong warning
+makes them design around a road that is open.
+
+`week` is kept. The aside points at the first thing past the window, and the
+week holding it shows that thing with its neighbours, which is what "the
+calendar has the rest" promises; a month would show more and locate it less.
+That is a judgement about wording rather than a bug, so it is recorded below
+rather than settled by a pass whose subject is stale comments.
+
+## The guard, and what it turned out not to be
+
+`Calendar.opencal.test.tsx` asserts the corrected half through the view: open
+`2026-09-24` in `month` from a calendar sitting in January, and the grid names
+September and selects the 24th.
+
+Reverting `MonthView`'s anchor to `now` — the pre-merge behaviour, minus the
+deleted fields — turns two of its three assertions red. The third stays green,
+which is what makes it the control: the reverted view shows January whatever it
+is asked for, so "January is on screen" cannot tell the two apart.
+
+**A first draft of that file's note claimed the revert broke nothing else. That
+was wrong and is recorded rather than quietly fixed.** `Calendar.keyboard.test.tsx`
+fails on it too, because paging with `PageDown` moves `calDay` and its
+assertions read the grid. The anchor *line* therefore had incidental cover all
+along. What had none is the claim the new file is named for — that a date handed
+to `openCal` arrives — and the gap between those two is the finding:
+
+| File | Under the revert | What it actually holds |
+| --- | --- | --- |
+| `lib/opencal.test.ts` | **passes** | the action list's shape — `[1]` carries `view: 'month'` |
+| `Calendar.keyboard.test.tsx` | fails | paging from today |
+| `Calendar.opencal.test.tsx` | fails | a date handed in arrives |
+
+The middle row is the one worth keeping in mind. The file whose *name* says it
+covers `openCal` is the file that passes throughout, because asserting the
+dispatches says nothing about where the calendar ends up.
+
+## Gates
+
+`tsc` clean · lint ok · the suite in file order, shuffled and in both other
+timezones · production build clean · five cold boots clean. Figures in the
+commit.
+
+## To do
+
+- **Today's aside: `week` or `month`?** Now a real choice rather than a
+  constraint. Recorded, not taken — it is a question about what the sentence
+  promises, and the owner's.
+- **Nothing holds a docblock to the code it describes**, and nothing can in
+  general. This pass found five stale sentences by reading; the narrow ones
+  that name a deleted symbol could be caught — `oneday.test.ts` already
+  forbids `selDate`, `calMonth`, `calYear` and `selectDate` coming back, and a
+  sibling rule could fail when a deleted name appears in a comment in the
+  present tense. Not written here: the rule needs a tense, and a census that
+  cannot tell "anchors on `calYear`" from "used to anchor on `calYear`" would
+  redden every honest history note in the repository, this document included.
+
+---
+
+# One app — the thirty-third pass: the card said it had searched
+
+Against `main` at `d8aa171`. **<!--screens-->fifty-nine<!--/--> destinations**,
+unchanged. No merge. One broken promise cut, one guard.
+
+The thirty-first gave a live field a reader. This one found a live field that
+should never have existed, by asking the same question of the whole session
+half of state: **which of these does nobody read?**
+
+Sixty-six fields. One answer: `query`.
+
+## T1 — a search the app announced, dispatched, and never ran
+
+`lib/tools.ts` gave the model a `search` parameter on `open_screen`, and said
+what it was for:
+
+> For a view: text to search for once there. Carried beside the action rather
+> than inside it because `go` and `setQuery` are two dispatches, and **the
+> screen runs them in that order so it arrives already narrowed** rather than
+> narrowing in front of you.
+
+No screen ran the second one. `state.query` was written by exactly two lines,
+both in `ai/converse.ts`, and **read by nothing in this app** — every search
+box in here is a local `useState`, nineteen of them.
+
+What the student saw:
+
+| | |
+| --- | --- |
+| the card offered | *Open Personal, searching for “Stromme” — your own list* |
+| after the tap, `did` said | *Personal, searching for “Stromme”* |
+| what happened | Personal opened, unnarrowed |
+
+`did` is documented as *"Said after it runs: what changed, past tense."* So
+this is not a dead field with no consequence. It is the app telling somebody
+it did a thing it did not do.
+
+### Measured before cutting it
+
+`open_screen` may target twenty-three screens. Resolving each through
+`screens.tsx` to its component:
+
+| | |
+| --- | --- |
+| screens `open_screen` can reach | **23** |
+| of those, with a search box at all | **2** — `courses`, and `sheet` |
+| of those two, reading `state.query` | **0** |
+
+So on twenty-one screens the parameter was a promise the app *could not*
+keep, and on the other two it was one it *did not*. And `sheet`'s box searches
+spreadsheet functions rather than the student's words, which leaves
+`screens/Courses.tsx` as the only real candidate there has ever been.
+
+Cut, therefore, rather than wired: the honest fix for a sentence nothing
+backs is to stop saying it. Recorded in `lib/tools.ts` where the parameter
+was: if arriving already narrowed is wanted, the way to build it is a screen
+that takes what to search for, not a global field every screen has to
+remember to read.
+
+Gone with it: `Ephemeral.query`, its default, the `setQuery` action, its
+reducer case, and both dispatches. `send`'s dependency array lost `dispatch`
+too — the one call it made was this search.
+
+### The test pinned the sentence and never checked the screen
+
+`lib/tools.test.ts` had a case called **"says the search in the line, so
+arriving somewhere filtered is not a surprise"**, asserting the exact string
+`'Open Personal, searching for “Stromme” — your own list'`. Its own example is
+a screen with no search box. A test can hold a promise in place as firmly as
+it can hold a behaviour, and this one had.
+
+It is rewritten to assert what is true, and a control beside it asks the
+question the old one did not: **all twenty-three screens**, rather than one,
+and for each that the line, the past tense and the action agree.
+
+## T2 — the guard, and the way it failed first
+
+`state/sessionread.test.ts`: every field `initialEphemeral` sets has a reader
+outside the three files that merely carry it — `state/shape.ts` declares it,
+`state/slices/` reduces it, `state/persist/` moves it. It is the sibling of
+`state/keyread.test.ts`, which the twenty-third pass wrote for the persisted
+half after `lastOpened`. The session half had one too; nothing was asking.
+
+**The first version passed against a faithful revert of the bug.** Restoring
+`query` to `initialEphemeral` left it green, and the reason is one this
+repository has already written down twice, arriving from the other direction:
+
+> this codebase explains at length what a file used to do, so a test that
+> cannot tell the explanation from the thing being explained fails on its own
+> documentation — `ai/split.test.ts`, and `ai/live.test.ts` learned it the
+> same way
+
+Here it *passed* on documentation. The note this pass had just written into
+`lib/tools.ts` contains the words `state.query`, explaining that nothing reads
+it — and the probe counted that sentence as a reader. Comments now come out
+first, and the third case is a control on exactly that: `lib/tools.ts` still
+contains the phrase, and stripped of comments it does not.
+
+The stripper is deliberately only two lines. The twenty-sixth pass had one
+that also tried to remove template literals, mispaired a backtick and
+swallowed the code between — seventeen false findings out of thirty.
+
+Reverted again with the stripping in place:
+
+    expected [ 'query' ] to deeply equal []
+
+Two more controls: the field parse must yield more than twenty names, because
+a parse that stops matching reports every field dead and passes a broken probe
+off as a clean tree; and the matcher must find both shapes of read, `state.x`
+and `const { x } = state`, since three files use the second and two of those
+are ephemeral fields.
+
+## Gates
+
+`tsc` clean · lint ok · tests in file order · shuffled · production build
+clean — every one by its **exit status**.
+
+---
+
+# One app — the thirty-second pass: the row type that belonged on the write
+
+Against `main` at `42a36d8`. **<!--screens-->fifty-nine<!--/-->
+destinations** — fifty-eight when this was written, and a fifty-ninth landed
+from another session while it sat in review; none of them is this pass's doing.
+No cut. One type wired, and the last open row of the thirtieth pass's census
+closed.
+
+The thirtieth left exactly one look untaken and said so: *"does the query
+annotate its rows with `Enrollment`, or is the type stale? It is a wiring job
+or a deletion and nothing else."* It was neither, and the reason is worth more
+than the row.
+
+## The look
+
+`lib/classmates.ts` declares three row types. Two are used the same way —
+`data as Profile`, `data as Message[]` — annotating whole rows coming back.
+`Enrollment` was not used at all, and the guess either way was wrong because
+**nothing in this file ever selects a whole enrollments row**:
+
+| | |
+| --- | --- |
+| `myRooms` | `.select('code')` → cast `{ code: string }[]` |
+| `whoIsIn` | `.select('user_id')` → cast `{ user_id: string }[]` |
+| `leave` | `.delete()` — no row at all |
+| `join` | `.upsert({ user_id, term, code })` — **all three columns** |
+
+Annotating either read with `Enrollment` would have been a lie about what
+PostgREST returned: `.select('code')` does not come back carrying `user_id`
+and `term`, and saying it does is worse than saying nothing. So "wire it" in
+the obvious direction was the wrong answer, and so was "delete it" — the
+shape is real, it just never appears on the way *in*.
+
+It appears on the way *out*, once, in `join`'s upsert, and that was an object
+literal nothing checked.
+
+## What the wiring buys, proved by breaking it
+
+    const row: Enrollment = { user_id: userId, term, code: clean };
+
+Rename a column on the type, as a migration would, and the write stops
+compiling at the line that sends the old name:
+
+    interface Enrollment { user_id; term_id; code }   ← term → term_id
+
+    src/lib/classmates.ts(298,46): error TS2353: Object literal may only
+    specify known properties, and 'term' does not exist in type 'Enrollment'.
+
+Before, that rename compiled clean and the write went on sending `term`. The
+control is the unmodified tree, where `tsc` is green — the error comes from the
+mismatch, not from the annotation existing.
+
+## The census reads 2, and both are deliberate
+
+`forgetMarks` and `phaseAt`, each kept with its argument at the site. There are
+no unexplained dead exports in `app/src`.
+
+That is the end of a line that started at **1,054**, and the shape of the
+journey is the finding rather than the number: 1,054 → 20 → 3 → 2, with three
+claims withdrawn on the way, two of them about the probe rather than the code.
+
+## Gates
+
+`tsc` clean · lint ok · **11,597 tests pass across 581 files** · zones clean ·
+shuffle clean · production build clean · five cold boots clean.
+
+## To do
+
+- **`census:exports` is still a script, not a gate.** It has now been right
+  across two passes and wrong twice within one; the argument for waiting is
+  unchanged.
+- Nothing on the dead-export row. It is closed, and the two that remain are
+  held by their own docstrings rather than by a list.
+
+---
+
 # One app — the thirty-first pass: the same sentence about three different questions
 
 Against `main` at `176b2f7`. **<!--screens-->fifty-nine<!--/--> destinations**,
@@ -409,9 +730,9 @@ merges, which is the real test of that claim.
 
 ## To do
 
-- **`classmates.ts`'s `enrollments` read.** The one look T9 did not take: does
-  the query annotate its rows with `Enrollment`, or is the type stale? It is a
-  wiring job or a deletion and nothing else.
+- ~~**`classmates.ts`'s `enrollments` read.**~~ Taken by the thirty-second pass
+  above, and it was neither of the two answers this row offered: no read is a
+  whole row, so the type belonged on the write.
 - **The probe is one blind spot better and still not a gate.** T8's matcher
   follows six computed reaches and prints the count it could not follow; that
   number being zero is the only part that has to keep working. It graduates to

@@ -42,6 +42,9 @@ vi.mock('../lib/cloud', () => ({
   currentSession: async () => session,
   onAuthChange: () => () => {},
   explainSyncError: (e: unknown) => String(e),
+  // `store.tsx` calls this one now: it hands the error object over whole, so
+  // PostgREST's `code` survives to reach `classify`. See `lib/failure.ts`.
+  explainSync: (e: unknown) => ({ said: String(e), code: 'INTERNAL_ERROR', ref: 'SEM-TEST' }),
   pull: async () => null,
   push: async () => {},
 }));

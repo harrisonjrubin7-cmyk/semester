@@ -195,7 +195,18 @@ export function study(state: State, action: Action): State | null {
         lastAnswer: { key: action.key, was: state.reviews[action.key] ?? null, got: action.got },
         reviews: {
           ...state.reviews,
-          [action.key]: score(state.reviews[action.key], action.got, now, h?.soon ?? false),
+          /*
+           * Confidence goes to the scheduler, not just to the record.
+           *
+           * `action.sure` was already being written into `answers` below and
+           * dropped here, which cost the one distinction FSRS can use and
+           * SM-2 could not: a card you answered and *knew* grades Easy, a card
+           * you answered and had to think about grades Good. The `soon` flag
+           * beside it is the other half of the same answer — it is what
+           * `lib/sure.ts` makes of a guess — and both are handed over rather
+           * than re-derived, so the confidence rules stay in one file.
+           */
+          [action.key]: score(state.reviews[action.key], action.got, now, h?.soon ?? false, action.sure),
         },
         answers: action.sure
           ? remember(state.answers, {

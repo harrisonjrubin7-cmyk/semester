@@ -50,18 +50,22 @@ function coin(key: string, day: number): number {
 /**
  * A student who revised across the term and then stopped.
  *
- * The window matters and took two attempts to get right. A fortnight of
- * revision only reaches a sixteen-day interval — three right answers, 1 then 6
- * then 16 — and sixteen days is short enough that the card comes back on its
- * own well before the test. Nothing is stranded, and the census reported zero
- * for all four decks, which is a measurement of the simulation rather than of
- * the app.
+ * The window matters and took two attempts to get right. Revise across the
+ * fortnight before the test and the census reports zero stranded cards for all
+ * four decks — still, measured again under FSRS — which is a measurement of
+ * the simulation rather than of the app. Not because the intervals stay short:
+ * three right answers on time reach forty-six days under FSRS, where SM-2
+ * reached sixteen. It is that `wouldMiss` asks for two things, and a fortnight
+ * of revision fails the second — a card looked at *inside* the run-up is not
+ * stranded however far its own schedule then sends it, because it has had the
+ * look this module exists to guarantee.
  *
- * It is the *fourth* right answer that does the damage: it puts the card away
- * for forty-five days. So this revises from `from` days before the test until
- * `until` days before it — a term's work, finishing before the run-up begins,
- * which is the ordinary shape of a midterm on material covered in the first
- * month.
+ * So this revises from `from` days before the test until `until` days before
+ * it — a term's work, finishing before the run-up begins, which is the
+ * ordinary shape of a midterm on material covered in the first month. That
+ * leaves the damage where it belongs: the third right answer puts a card away
+ * for forty-six days, and forty-six days from the last quiet day is well past
+ * the exam.
  *
  * Not a perfect student: roughly one answer in six is missed and one in five is
  * a right answer they say they guessed at, which is what `lib/sure.ts` reads.
@@ -190,18 +194,23 @@ describe('the controls: this measurement can report nothing', () => {
 
 describe('what a test does to the schedule, on the shipped decks', () => {
   /*
-   * The finding, in one number per deck. A student revising daily for a
-   * fortnight, getting most of them right, is dropped by the scheduler on
-   * three cards in four — because only a *right* answer earns a sixteen-day
-   * interval, and sixteen days is longer than the exam is away.
+   * The finding, in one number per deck. A student who revised across the term
+   * and stopped, getting most of them right, is dropped by the scheduler on
+   * better than one card in four — 87 of the 320 shipped cards — because a
+   * card answered right three times is one the scheduler trusts for longer
+   * than the exam is away.
+   *
+   * Under the SM-2 variant this file was written against the same census read
+   * 67. FSRS strands *more*, which is the right way round for a scheduler that
+   * models forgetting and knows nothing about Thursday.
    */
   it('drops part of a revised deck before the test, and not all of it', () => {
     /*
-     * The finding, in one number per deck. The cards at risk are the ones the
-     * student knows *best*: only a fourth consecutive right answer earns the
-     * forty-five-day interval that outruns an exam three weeks out, so this
-     * drops the work somebody did well and keeps the work they struggled
-     * with — which is precisely backwards.
+     * The cards at risk are the ones the student knows *best*: it takes three
+     * consecutive right answers to earn the forty-six-day interval that
+     * outruns an exam three weeks out, so this drops the work somebody did
+     * well and keeps the work they struggled with — which is precisely
+     * backwards.
      *
      * Bounded on both sides deliberately. "All of them" is what a broken probe
      * says, and this file's first version said exactly that.
@@ -221,6 +230,14 @@ describe('what a test does to the schedule, on the shipped decks', () => {
     // `allCards` deals each card once. See `deckKeys`.
     expect(cards).toBe(320);
     expect(missed).toBeGreaterThan(cards * 0.1);
+    /*
+     * And pinned, because it is quoted as a figure in this file's prose and in
+     * `lib/intime.ts`'s header, and a number in prose that nothing checks is a
+     * number that goes quietly wrong. It moved from 67 to 87 when the
+     * scheduler moved from SM-2 to FSRS; if it moves again, the sentences move
+     * with it rather than after somebody notices.
+     */
+    expect(missed).toBe(87);
   });
 
   it('brings every one of them back, dealt as thinly as the days allow', () => {

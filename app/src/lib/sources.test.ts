@@ -5,6 +5,8 @@ import {
   completeness,
   forCourse,
   gaps,
+  listFile,
+  listName,
   parse,
   projects,
   toBibtex,
@@ -194,6 +196,83 @@ describe('toBibtex', () => {
   });
 });
 
+describe('what the list is called', () => {
+  it('names the course, and the project inside it', () => {
+    expect(listName('ECON 1020', '')).toBe('ECON 1020 sources');
+    expect(listName('ECON 1020', 'Midterm paper')).toBe('ECON 1020 · Midterm paper sources');
+  });
+
+  it('never says "Everything sources", which is what it used to say', () => {
+    /*
+     * The defect, and the state of the screen nobody has to choose: the course
+     * picker's first option is labelled "Everything", the screen used that
+     * label as the scope, and the heading came out as a phrase no one would
+     * write. It left the app too — see the export tests below.
+     */
+    expect(listName('', '')).toBe('All sources');
+    expect(listName('', '')).not.toMatch(/everything/i);
+  });
+
+  it('lets a project name the list when no course narrows it', () => {
+    // "All · Midterm paper" names the absence of a narrowing and then
+    // contradicts it in the next word.
+    expect(listName('', 'Midterm paper')).toBe('Midterm paper sources');
+  });
+
+  it('reads as a noun phrase in every scope there is', () => {
+    /*
+     * The property rather than four spellings of it — and the third assertion
+     * is the one that matters. Written with only the first two, this test
+     * passed against the defect: "Everything sources" starts with a capital
+     * and ends in the thing it is a list of, and is still a phrase nobody
+     * would write. A sweep that agrees with the bug is a sweep that will agree
+     * with the next one, so it asks the thing that is actually true here —
+     * **the picker's word for a choice never reaches the heading.**
+     */
+    for (const course of ['', 'ECON 1020']) {
+      for (const project of ['', 'Midterm paper']) {
+        const name = listName(course, project);
+        expect(name, `${course}/${project}`).toMatch(/^[A-Z]/);
+        expect(name, `${course}/${project}`).toMatch(/ sources$/);
+        expect(name, `${course}/${project}`).not.toMatch(/everything/i);
+      }
+    }
+  });
+
+  it('ignores whitespace that would otherwise draw a separator', () => {
+    // A project field holding only spaces is a real state — the input is
+    // optional — and ` · ` hanging off a heading is how it used to show.
+    expect(listName('ECON 1020', '   ')).toBe('ECON 1020 sources');
+    expect(listName('  ', '  ')).toBe('All sources');
+  });
+});
+
+describe('the list as a file name', () => {
+  it('builds a name from the heading', () => {
+    expect(listFile('ECON 1020 sources', 'bib')).toBe('econ-1020-sources.bib');
+  });
+
+  it('collapses the separator rather than leaving a stray dash', () => {
+    expect(listFile('ECON 1020 · Midterm paper sources', 'md')).toBe(
+      'econ-1020-midterm-paper-sources.md',
+    );
+  });
+
+  it('does not start or end a name with a dash', () => {
+    // A project called "(draft)" is the case: some tools read a leading dash
+    // as the start of an option rather than as a name.
+    expect(listFile('(draft) sources', 'bib')).toBe('draft-sources.bib');
+    expect(listFile('sources!', 'md')).toBe('sources.md');
+  });
+
+  it('never produces a hidden file', () => {
+    // Every character unusable leaves an empty stem, and `.md` is a hidden
+    // file on every system this app runs on — a download that vanishes.
+    expect(listFile('···', 'md')).toBe('sources.md');
+    expect(listFile('', 'bib')).toBe('sources.bib');
+  });
+});
+
 describe('toMarkdown', () => {
   it('lists the raw lines under a heading, with what each is for', () => {
     const out = toMarkdown([source()], 'PSCI 1104 sources');
@@ -204,6 +283,13 @@ describe('toMarkdown', () => {
 
   it('leaves out the For line when there is none', () => {
     expect(toMarkdown([source({ role: '' })], 'x')).not.toContain('**For:**');
+  });
+
+  it('titles the exported list with the name the screen shows', () => {
+    // The heading is not only a heading. This is the line a student sees at
+    // the top of a file they hand to somebody else, and it is where
+    // "# Everything sources" used to end up.
+    expect(toMarkdown([source()], listName('', ''))).toContain('# All sources');
   });
 });
 

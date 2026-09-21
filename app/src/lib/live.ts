@@ -25,7 +25,7 @@
 import { useMemo } from 'react';
 import type { Catalog } from '../data/catalog';
 import { useStore } from '../state/store';
-import { cardKey, unitMastery, type Reviews } from './review';
+import { cardIdentity, unitMastery, type Reviews } from './review';
 import { nameFor, sessionIn, slotFor, unitNumber } from './session.place';
 import type {
   CourseId,
@@ -324,7 +324,7 @@ export function applyReviews(
   const units = guide.units.map((u) => ({
     ...u,
     mastery: unitMastery(
-      u.cards.map((c) => cardKey(courseId, c.q)),
+      u.cards.map((c) => cardIdentity(courseId, c)),
       reviews,
       u.mastery,
       now,

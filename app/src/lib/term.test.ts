@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { LEGACY_TERM, SEASONS, isPast, readTerm, sortTerms, termId, termNow, yearFor } from './term';
+import { LEGACY_TERM, SEASONS, isPast, readTerm, sortTerms, termId, termNow, termsAround, yearFor } from './term';
 
 describe('reading a term id', () => {
   it('takes the six characters a course stores', () => {
@@ -95,5 +95,49 @@ describe('the id itself', () => {
 
   it('sorts correctly as a plain string within a year', () => {
     expect(['2026FA', '2026SP', '2026SU'].sort()).toEqual(['2026FA', '2026SP', '2026SU']);
+  });
+});
+
+/**
+ * The terms offered to somebody being asked which one they are in.
+ *
+ * `termNow` alone would be a statement rather than a question, and it is
+ * wrong in exactly the two cases a first run meets: setting the app up in
+ * December for a term that begins in January, and a summer session the
+ * calendar has already called Fall. So the guess is offered in a row with its
+ * neighbours.
+ */
+describe('the window of terms a first run offers', () => {
+  it('puts the calendar\'s guess in the row, at the offset it was asked for', () => {
+    const now = new Date(2026, 8, 21);
+    const window = termsAround(now);
+    expect(window).toHaveLength(5);
+    expect(window[1].id).toBe(termNow(now).id);
+    expect(window.map((t) => t.id)).toEqual(['2026SU', '2026FA', '2026WI', '2027SP', '2027SU']);
+  });
+
+  it('walks back into the previous year rather than off the front of the table', () => {
+    // January is Spring, the first season in `SEASONS`, so one step back is an
+    // index of -1. A plain `%` gives -1 back and `SEASONS[-1]` is undefined —
+    // the whole reason the arithmetic is written out rather than inlined.
+    const window = termsAround(new Date(2027, 0, 9), 1, 0);
+    expect(window.map((t) => t.id)).toEqual(['2026WI', '2027SP']);
+  });
+
+  it('walks forward into the next year from the last season', () => {
+    // December is Winter, the last row, so forward wraps the year. Winter is
+    // deliberately after Fall in `SEASONS` and this is where that shows.
+    const window = termsAround(new Date(2026, 11, 3), 0, 2);
+    expect(window.map((t) => t.id)).toEqual(['2026WI', '2027SP', '2027SU']);
+  });
+
+  it('is asymmetric on purpose, and looks further forward than back', () => {
+    // Setting up early is commoner than entering a term that has nearly
+    // finished, and it is the case the app would otherwise handle worst: a
+    // December install for a January term files everything under Winter.
+    const window = termsAround(new Date(2026, 8, 21));
+    const here = window.findIndex((t) => t.id === termNow(new Date(2026, 8, 21)).id);
+    expect(here).toBe(1);
+    expect(window.length - here - 1).toBeGreaterThan(here);
   });
 });

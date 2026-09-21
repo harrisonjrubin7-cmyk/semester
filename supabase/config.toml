@@ -8,10 +8,48 @@
 # time a deploy runs, and a dashboard that lies to the person reading it is
 # worse than a config file that is short.
 #
-# In particular there is no [functions] block. Edge Functions are deployed by
+# The [functions] blocks below are the one deliberate exception, and they were
+# added against this file's own earlier advice. That advice is kept here rather
+# than deleted, because it names a real cost and the cost has not gone away.
+#
+# It read: *"there is no [functions] block. Edge Functions are deployed by
 # `.github/workflows/functions.yml`, which deploys only the directories a push
 # actually changed — see DEPLOY.md. Declaring them here as well would give one
-# function two deploy paths that can disagree about which version is live.
+# function two deploy paths that can disagree about which version is live."*
+#
+# ## What the absence cost, which is what changed the answer
+#
+# Supabase Branching deploys to a preview branch only what this file declares,
+# so with no blocks it deployed **no functions at all**. Every preview branch
+# reported it, in the same warning, every time:
+#
+#     Only Functions declared in config.toml will be automatically deployed
+#     to branches: [functions.my-slug]
+#
+# A branch could therefore exercise a migration and never a function. The whole
+# point of a preview branch is to answer "does this work" before main does, and
+# for six functions it could not be asked — `claude`, `push` and `lti` among
+# them, which are the ones carrying secrets, JWT checks and a CORS preflight.
+#
+# ## The risk being accepted, and how to tell if it bites
+#
+# Two paths can disagree. Read off the project when these blocks were added,
+# `push` and `calendar` were last deployed on 18 September and had not moved
+# through a day of merges, while `claude`, `fetchcal`, `canvas` and `lti` each
+# bumped when their own directory changed — so `functions.yml` was the only
+# thing deploying to production, and only what changed.
+#
+# **That is the observable.** If a merge that touches no function directory
+# bumps `push` or `calendar`'s version, a second path is deploying to
+# production and this decision needs revisiting. `supabase functions list`, or
+# the dashboard, answers it in one look.
+#
+# `verify_jwt` is written for every one of them rather than left to default,
+# and every one is `false` — deliberately, for the reason DEPLOY.md gives at
+# each function: the function checks the caller's token itself, and the
+# platform check would reject the CORS preflight, which carries no
+# `Authorization` header. Writing it makes these files say what production
+# already does instead of relying on a dashboard nobody can see from here.
 
 project_id = "lzrqvlugnawcgywkhqlz"
 
@@ -20,3 +58,32 @@ project_id = "lzrqvlugnawcgywkhqlz"
 # would be built on a different major than production, and the first thing you
 # would learn from it is something untrue about production.
 major_version = 17
+
+
+# ── Edge Functions ────────────────────────────────────────────────────────
+#
+# One block per directory in `supabase/functions/`, minus `_shared`, which
+# holds modules the others import and is not a function.
+#
+# `app/src/lib/deployfunctions.test.ts` holds this list to that directory, so
+# a function added without a block here fails rather than quietly never
+# reaching a preview branch — which is the exact failure these blocks exist to
+# end, and would otherwise return one function at a time.
+
+[functions.calendar]
+verify_jwt = false
+
+[functions.canvas]
+verify_jwt = false
+
+[functions.claude]
+verify_jwt = false
+
+[functions.fetchcal]
+verify_jwt = false
+
+[functions.lti]
+verify_jwt = false
+
+[functions.push]
+verify_jwt = false

@@ -17,26 +17,32 @@ export const CORE_GUIDE: Guide = {
       mastery: 70,
       cards: [
         {
+          id: 'prmxzu',
           q: 'What is the single biggest risk to your grade?',
           a: 'Attendance. After two unexcused absences you lose 10% of the final grade for every additional class — bigger than any quiz.',
         },
         {
+          id: 'qhdugz',
           q: 'What do quizzes actually test?',
           a: 'The main argument of the readings due that day, plus the lecture slides from the class before.',
         },
         {
+          id: 'b0exka',
           q: 'What are the three ways people lose this grade?',
           a: 'Attendance. Deadlines — everything is due before class begins, a missed quiz is a 0 with no make-up, late reflections drop a letter grade per day. And not checking email.',
         },
         {
+          id: '1qns6c4',
           q: 'What is the recoverable part?',
           a: 'Lost quiz points can be made up with extra credit later, and reflections are self-graded. Blatantly gaming the self-assessment is treated as cheating.',
         },
         {
+          id: '1yq1q5e',
           q: 'What is not on the syllabus but still required?',
           a: 'Media and current-events assignments — announced by email and Brightspace only.',
         },
         {
+          id: 'te87hf',
           q: 'What is the grade actually built from?',
           a: '8 quizzes at 10 pts, 13 reflections at 10 pts, one final reflection at 20 pts (“Ultrarealism and Human Flourishment”), plus attendance. No exams.',
         },
@@ -47,30 +53,37 @@ export const CORE_GUIDE: Guide = {
       mastery: 58,
       cards: [
         {
+          id: '3l2zdy',
           q: 'Define embodiment.',
           a: 'The body is not just biology — it is biology shaped by culture, history and practice, and experienced from the inside. A jump shot, a limp, a fear of the pool.',
         },
         {
+          id: '10c0py2',
           q: 'What does a biocultural approach refuse to ask?',
           a: 'Nature vs. nurture. The right question is always how genes and environment work together here, and how much each contributes.',
         },
         {
+          id: '96ac5w',
           q: 'Play → ritual → sport, in one line?',
           a: 'Sport is not an invention of civilization — it grows out of play, which is older than humans, and carries ritual meaning. Mayan ball courts were temples.',
         },
         {
+          id: '1ahe5ws',
           q: 'Why is race a social fact rather than a biological unit?',
           a: 'Genetic variation is real; races as discrete biological groups are not. Africa holds most human genetic diversity, which is exactly why “Black athletic gene” stories collapse.',
         },
         {
+          id: 'lqiv7j',
           q: 'The fifth big idea?',
           a: 'Sport reflects and reproduces power. Gender, race, class and nation are made visible in sport — and made harder to challenge by it. Sport can “enrich or stifle,” “oppress or liberate.”',
         },
         {
+          id: 'kvo7hc',
           q: 'What are the two course capacities?',
           a: '(B) Systematic and structural thinking — seeing sport inside larger systems. (C) Cultural and interpretative investigation — reading difference as meaning, not fact.',
         },
         {
+          id: '10ciiuz',
           q: 'How does the semester move?',
           a: 'Outward: bodies and evolution → social difference and power → how anthropologists actually study sport → character and virtue. Knowing which move you are in tells you what a question is really asking.',
         },
@@ -81,50 +94,62 @@ export const CORE_GUIDE: Guide = {
       mastery: 52,
       cards: [
         {
+          id: '1b29jeb',
           q: 'Fox’s argument in one line?',
           a: 'Play looks pointless, costs real energy and can get you killed — which means evolution kept it for a reason: it builds brains, bodies and the ability to agree on rules.',
         },
         {
+          id: '1r357wt',
           q: 'Stuart Brown’s seven characteristics of play?',
           a: 'Voluntary, inherently attractive, free of time, diminished self-consciousness, improvisational, continuation desire, apparently purposeless.',
         },
         {
+          id: 'e6c0na',
           q: 'How do the classic theorists define play?',
           a: 'Carl Diem: “purposeless activity, for its own sake.” Huizinga: “not serious.” Roger Caillois: “an occasion of pure waste” — then spent 200 pages on it. Konner calls it “a central paradox of evolutionary biology.”',
         },
         {
+          id: '1u1uhpk',
           q: 'The cost side of the paradox — two facts.',
           a: 'Young mammals burn up to 15% of their calories playing, and in Peru in 1988, 22 of 26 sea pups killed by sea lions were playing in tidal pools and never saw the attack.',
         },
         {
+          id: '1lop7t3',
           q: 'The payoff side — two facts.',
           a: 'Rats allowed to play developed higher BDNF in the amygdala and prefrontal cortex; across 15 mammal species bigger relative brain size tracked with more play (Pellis).',
         },
         {
+          id: 'qwuajg',
           q: 'The dolphin study — three things to remember.',
           a: 'Over five years, 16 captive dolphins initiated play with balls more than with any other object, bubbles or each other. Free play with Fox became a rule-governed interspecies game in ten minutes. Piaget’s “moderately discrepant events”: players keep making it slightly harder.',
         },
         {
+          id: '13kw2j6',
           q: 'What is the EQ comparison?',
           a: 'Encephalization quotient: humans 7.0, dolphins ~4.5, great apes 1.5–3. More brain, more play.',
         },
         {
+          id: '1j5fkm',
           q: 'Konner’s categories, by players and object?',
           a: 'Solitary locomotor-rotational, object play, social play — plus serious, master, rough-and-tumble and adult play by character. The slides frame play as “behavioral fat.”',
         },
         {
+          id: '1bua3zv',
           q: 'The throwing hypothesis?',
           a: 'Calvin: accurate one-armed throwing may have driven lateralization to the left brain — the hemisphere handling the rapid muscle sequencing language needs. Throwing gave an immediate return, unlike fire or tools. Speculative; state it, don’t defend it.',
         },
         {
+          id: '6irdqm',
           q: 'Two numbers on the play deficit?',
           a: 'Children spend 50% less time playing outdoors than in the 1970s, and 10–16 year-olds average 12.6 minutes a day of vigorous activity.',
         },
         {
+          id: 'jtxz2o',
           q: 'Why does it matter that hunter-gatherers had leisure?',
           a: 'Richard Lee among the !Kung: women could gather three days’ food in one day; Sahlins said hunters “keep bankers’ hours.” So play is not an invention of civilization.',
         },
         {
+          id: '1qvfeie',
           q: 'Name some historical ball games.',
           a: 'Aboriginal marn grook; Copper Inuit akraurak (the aurora is arsarnerit, “the football players”); Afghan buzkashi; Greek episkyros and ephedrismos; Roman harpastum. Galen wrote the first scientific case for ball play and praised it as a leveler: “even the poorest man can play ball.”',
         },
@@ -135,42 +160,52 @@ export const CORE_GUIDE: Guide = {
       mastery: 44,
       cards: [
         {
+          id: '1q8ni52',
           q: 'Their argument in one line?',
           a: '“Man the Hunter” survives because science only studied the traits where males have the advantage; measured on endurance, female physiology looks at least as well built for hunting.',
         },
         {
+          id: '1gayddy',
           q: 'What is the story being argued against?',
           a: 'The 1966 symposium and 1968 volume Man the Hunter (Lee & DeVore) made hunting the engine of human evolution and gave it to men. Laughlin: “Man’s life as a hunter supplied all the other ingredients for achieving civilization.”',
         },
         {
+          id: '2b5jfg',
           q: 'Zihlman’s line to memorize?',
           a: 'Pictures of the past are “backward projections of modern cultural sex stereotypes” onto people who lived a million years ago.',
         },
         {
+          id: '1ek7qau',
           q: 'Why was “Woman the Gatherer” only half a fix?',
           a: 'Slocum (1975) and Dahlberg (1981) answered back, but still handed hunting to men. Hrdy’s The Woman That Never Evolved went further.',
         },
         {
+          id: 'ixq8qh',
           q: 'The data gap — the three numbers.',
           a: '34% of participants in sport and exercise science research are female, 14% in nutritional-supplement research, and 3% of athletic-performance publications are female-only against 63% male-only.',
         },
         {
+          id: '1ikgh1',
           q: 'What must you say about variation?',
           a: 'There is more variation within sexes than between them, every metric overlaps, and sex — like gender — is not a strict binary.',
         },
         {
+          id: '14qj9ii',
           q: 'Name three physiological reasons females may suit endurance.',
           a: '70% greater fatty-acid oxidation from estrogen; adiponectin up to 65% higher; intramuscular fat 58 vs. 23 g/kg; more Type I fibers; 20–35% better load-carrying economy; less exercise-induced muscle damage.',
         },
         {
+          id: 'py07vo',
           q: 'The killer distance evidence?',
           a: 'Women and men perform similarly at 42 km and women outperform men beyond 90 km; one model predicts female advantage from 65 km up. Persistence hunting is 17–33 km of endurance, not speed — and Bramble & Lieberman’s founding paper never mentions sex.',
         },
         {
+          id: 'cqk12p',
           q: 'The pacing and ethnographic evidence?',
           a: 'Across 190,000+ runners at the Bolder Boulder 10K, women were 1.96× more likely to hold pace at halfway. The Agta of the Philippines hunted with dogs and bows into late pregnancy; also Inuit, Tiwi, Ojibwa.',
         },
         {
+          id: 'udx3up',
           q: 'The elegant twist at the end?',
           a: 'Pregnancy and lactation cost 500–600 kcal a day. Motherhood is a multi-year endurance event — so it may be what selected for female endurance rather than a handicap that ruled women out of hunting. Sophie Power ran the 168 km UTMB while breastfeeding a three-month-old.',
         },
@@ -181,34 +216,42 @@ export const CORE_GUIDE: Guide = {
       mastery: 47,
       cards: [
         {
+          id: 'j4sq2o',
           q: 'Epstein’s argument in one line?',
           a: 'Elite skill is not fast reflexes and it is not 10,000 hours — it is learned pattern-recognition (“software”) running on physical equipment that varies a lot between people (“hardware”).',
         },
         {
+          id: '1lfmpfn',
           q: 'Why couldn’t Pujols hit Jennie Finch?',
           a: 'He had no chunks for her delivery. A 68 mph underhand pitch from 43 feet arrives like a 95 mph fastball; reaction time is ~200 ms for everyone, the pitch takes 400 ms and the contact window is 5 ms, so he had to commit before the ball was halfway. His own reaction time was 66th percentile against college students.',
         },
         {
+          id: 'rbpnp9',
           q: 'What did the random-chessboard experiment prove?',
           a: 'Masters’ advantage is learned pattern recognition, not innate memory. De Groot’s masters rebuilt real boards from a 3-second glance; on arrangements that could never occur in a game their recall dropped to average (Chase & Simon, 1973).',
         },
         {
+          id: 'wyscui',
           q: 'What did Starkes and Abernethy add?',
           a: 'Occlusion tests showed the same in volleyball and field hockey — and hiding a badminton player’s forearm turns an elite player into a near-novice. Expertise is reading the body, not seeing the ball.',
         },
         {
+          id: '1hdb7wd',
           q: 'Strongest evidence against the 10,000-hours rule?',
           a: 'Campitelli & Gobet: chess master level took 3,000 to 23,000 hours, and some players logged 25,000+ without ever making master. Elite basketball, field hockey and wrestling athletes average closer to 4,000/4,000/6,000 sport-specific hours.',
         },
         {
+          id: 'im58h7',
           q: 'The quiz trap on Ericsson.',
           a: 'K. Anders Ericsson never used the phrase “10,000-hours rule.” He credits it to a chapter title in Gladwell’s Outliers, which he says “misconstrued” the violin study — a cross-sectional, retrospective study of 10 pre-screened students.',
         },
         {
+          id: '1v8bn0k',
           q: 'Holm vs. Thomas — what is the point?',
           a: 'Holm jumped for twenty years with an Achilles so stiff it took 1.8 tons to stretch it 1 cm. Thomas cleared 7’3.25” on his seventh jump ever with a 10¼-inch Achilles and beat Holm after eight months — and has not improved since. Hardware and software, both real.',
         },
         {
+          id: '1rr6qzp',
           q: 'What is talent transfer?',
           a: 'Moving a good general athlete into a better-suited sport — the Australian Institute of Sport turned surf-lifesaving and water-skiing athletes into Olympic skeleton racers in 14 months. Danish research found late specialization worked better in centimeter/gram/second sports.',
         },
@@ -219,50 +262,62 @@ export const CORE_GUIDE: Guide = {
       mastery: 35,
       cards: [
         {
+          id: 'fh7hnh',
           q: 'The argument in one line?',
           a: 'Genetic variation is real and mostly inside Africa — which is exactly why “Black people are built to sprint” is bad genetics, even though specific traits with specific histories do cluster in specific populations.',
         },
         {
+          id: 'y0d74v',
           q: 'What did Kenneth Kidd find?',
           a: 'Every stretch of the genome he looked at had more variation in African populations. On one stretch, a single population of African Pygmies had more variation than the entire rest of the world combined. His line: “from a genetic point of view, all Europeans look alike.”',
         },
         {
+          id: 'npebts',
           q: 'Why might the fastest and the slowest human both be African?',
           a: 'African populations hold the greatest genetic diversity, so for any genetically influenced trait the extremes at both ends should be overrepresented. Sport only ever measures one tail.',
         },
         {
+          id: '7krvf1',
           q: 'The nuance you must hold onto.',
           a: 'Humans are 99–99.5% identical at the DNA level, but at least 15 million letters differ. Self-identified race matched blind DNA identification in 3,631 of 3,636 Americans — yet with every world population included the picture is a continuous spectrum, not discrete groups.',
         },
         {
+          id: '1ae35xt',
           q: 'How does within- vs. between-group variation depend on the trait?',
           a: '~90% of skull-shape variation is within groups; ~90% of skin-color variation is between them. And African Americans range from 1% to 99% West African ancestry (Tishkoff).',
         },
         {
+          id: '1vd9uud',
           q: 'What does ACTN3 actually tell you?',
           a: 'Mostly who will not run an Olympic 100 m final. About 25% of East Asians and 18% of white Australians are XX, under 1% of Zulu; of 32 Australian Olympic sprinters, zero were XX. Foster: “the best genetic test right now is a stopwatch.”',
         },
         {
+          id: 'cf1c4o',
           q: 'How was ACTN3 discovered?',
           a: 'Kathryn North was drafting a letter to Nature Genetics announcing a new muscular dystrophy gene — then tested the healthy family members and found the same variant. Her own caution: it “contributes a little,” there may be hundreds of genes, and diet, environment and opportunity all matter.',
         },
         {
+          id: '1fvyyt0',
           q: 'Pitsiladis vs. Morrison & Cooper?',
           a: 'Pitsiladis: environment and a talent-spotting system — Champs since 1910, 100 schools, a 35,000-seat stadium, boosters like Charles Fuller recruiting Sherone Simpson; Bolt and Blake both wanted to play cricket. Morrison & Cooper: malaria-driven history via sickle-cell and low hemoglobin.',
         },
         {
+          id: 'wh9yan',
           q: 'What is the weak spot in each?',
           a: 'Pitsiladis does not explain why finalists are so consistently of West African descent. Morrison & Cooper’s final step — hemoglobin → fiber type — has never been tested in humans; only one mouse study and one rat study.',
         },
         {
+          id: '15t1lau',
           q: 'What undercuts the “Maroon warrior” theory?',
           a: 'Maroons are not genetically distinguishable from other Jamaicans, and one of Pitsiladis’s grad students had more sprint gene variants than “the likes of a Usain Bolt.” His advice to British runners: “Go into sprinting. Don’t worry because you’re white.”',
         },
         {
+          id: '1j3gxna',
           q: 'What is genuinely established (Ch. 11)?',
           a: 'Allen’s and Bergmann’s rules on limb length and build at low latitudes; max speed scales with the square root of leg length; sickle-cell trait protects against malaria (Allison, 1954) and all but disappears above 800 m, while being overrepresented in jumps and throws.',
         },
         {
+          id: '1pjqsrf',
           q: 'Cooper’s most important point?',
           a: 'The belief that physical superiority implies intellectual inferiority “only developed when physical superiority became associated with African Americans,” around 1936. A result of bigotry, not a cause of it — and the answer is more careful inquiry, not less.',
         },
@@ -293,42 +348,52 @@ export const CORE_GUIDE: Guide = {
   ],
   selfTest: [
     {
+      id: '1k9yda3',
       q: 'Why couldn’t Albert Pujols hit Jennie Finch?',
       a: 'He had no mental database of her body movements, pitch tendencies or softball spin — no chunks to read. Since a hitter must commit before the ball is halfway, he was left reacting, and raw reaction time (66th percentile) isn’t enough.',
     },
     {
+      id: 'rbpnp9',
       q: 'What did the random-chessboard experiment prove?',
       a: 'That masters’ memory advantage is learned pattern recognition, not superior innate memory. On arrangements that could never occur in a real game, their recall dropped to average.',
     },
     {
+      id: 'yzx3pp',
       q: 'State the strongest evidence against a strict 10,000-hours rule.',
       a: 'Campitelli & Gobet: master level took anywhere from 3,000 to 23,000 hours; some logged 25,000+ and never made master. Elite athletes in basketball, field hockey and wrestling average closer to 4,000/4,000/6,000 sport-specific hours.',
     },
     {
+      id: '12s9eql',
       q: 'Name three physiological reasons females may be suited to endurance.',
       a: 'Any three of: 70% greater fatty-acid oxidation; adiponectin up to 65% higher; more intramuscular fat (58 vs. 23 g/kg); more Type I fibers; 20–35% better load-carrying economy; less exercise-induced muscle damage; more consistent pacing.',
     },
     {
+      id: '1jkeuji',
       q: 'What is wrong with Man the Hunter, according to Slocum?',
       a: '“A theory that leaves out half the human species is unbalanced” — and because the fossil data are so scant, bias fills the gaps with just-so stories.',
     },
     {
+      id: 'fg7l5w',
       q: 'Why does Kidd say the fastest and the slowest human might both be African?',
       a: 'Because African populations hold the greatest genetic diversity, so for any genetically influenced trait the extremes at both ends should be overrepresented there. Sport only ever measures one end.',
     },
     {
+      id: '1vd9uud',
       q: 'What does ACTN3 actually tell you?',
       a: 'Mostly who won’t run an Olympic 100 m final — the XX genotype is essentially absent among elite sprinters. It rules out roughly 1 in 7 people worldwide and almost no one of African descent. Foster: use a stopwatch.',
     },
     {
+      id: '1042qa1',
       q: 'Give the environmental explanation for Jamaican sprinting.',
       a: 'Every child sprints at school sports day; adult enthusiasts recruit fast kids into track high schools; Champs gives them a 35,000-seat proving ground and scholarships; pro clubs like MVP keep them on the island. Talent stays in the sprint pipeline instead of leaking into football as it does in the US.',
     },
     {
+      id: 'tw7smp',
       q: 'What makes the Cooper & Morrison malaria hypothesis only a hypothesis?',
       a: 'The malaria → sickle-cell and malaria → low-hemoglobin links are established. The final step — that low hemoglobin drove a shift toward fast-twitch fibers — has been shown only in one mouse and one rat study, and never tested in humans.',
     },
     {
+      id: '1xwgp7n',
       q: 'How does Fox answer his son’s question, “why do we play ball?”',
       a: 'Because play is brain food and balls are the richest kind — kinetically interesting, socially binding objects that build motor skill, cognitive flexibility and the shared rules that make cooperation possible. It’s older than civilization, not a product of it.',
     },

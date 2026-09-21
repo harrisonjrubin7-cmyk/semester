@@ -6,6 +6,7 @@ import { StorageRoom } from '../components/StorageRoom';
 import { syncLine } from '../lib/merge';
 import { ActionButton, SectionLabel } from '../components/ui';
 import { Credentials } from '../components/Credentials';
+import { SchoolClaim } from '../components/SchoolClaim';
 import { ReferralLink } from '../components/ReferralLink';
 import { cloudConfigured, signOut } from '../lib/cloud';
 
@@ -134,6 +135,11 @@ export function AccountScreen() {
             </div>
           )}
         </Blueprint>
+
+        {/* Which university the *server* believes this account is at, which is
+            a different fact from the school profile the device picked and the
+            only one a policy can ever read. See `components/SchoolClaim.tsx`. */}
+        <SchoolClaim />
 
         <SectionLabel>What syncs</SectionLabel>
         <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed-plus)', textWrap: 'pretty' }}>

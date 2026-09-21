@@ -9,7 +9,7 @@ import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from '../components/ui';
 import { PrintButton } from '../components/PrintButton';
 import { datedItems } from '../lib/select';
-import { cardKey } from '../lib/review';
+import { cardIdentity } from '../lib/review';
 import { forCourse } from '../lib/sitting';
 import {
   coverage,
@@ -154,7 +154,7 @@ export function Runway() {
       let seen = 0;
       let due = 0;
       for (const card of u.cards) {
-        const r = state.reviews[cardKey(exam.c, card.q)];
+        const r = state.reviews[cardIdentity(exam.c, card)];
         if (!r || r.seen === 0) continue;
         seen += 1;
         if (r.due <= at + exam.daysAway * 86_400_000) due += 1;

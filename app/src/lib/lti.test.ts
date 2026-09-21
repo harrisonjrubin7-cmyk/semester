@@ -195,12 +195,37 @@ describe('what kind of message', () => {
     expect(why(check({ [CLAIM.version]: '1.1.0' }))).toBe('wrong-version');
   });
 
-  it('refuses deep linking by name, because it is not built yet', () => {
+  /*
+   * This test used to assert that deep linking was refused because it was not
+   * built. It is built, so it now asserts the thing that replaced that: the
+   * gate is still an allowlist, and the type reaches the caller on the verdict
+   * rather than being read a second time out of the raw claims.
+   */
+  it('accepts a deep linking request and says that is what it was', () => {
     const v = check({ [CLAIM.messageType]: 'LtiDeepLinkingRequest' });
+    expect(why(v)).toBe('accepted');
+    if (v.ok) expect(v.value.messageType).toBe('LtiDeepLinkingRequest');
+  });
+
+  it('says a resource link launch is a resource link launch', () => {
+    const v = check({});
+    expect(why(v)).toBe('accepted');
+    if (v.ok) expect(v.value.messageType).toBe('LtiResourceLinkRequest');
+  });
+
+  /*
+   * The half that matters more now that the gate admits two. Widening an
+   * allowlist by one member is not the same as removing it, and a token
+   * carrying a type nobody here has considered is refused exactly as before.
+   */
+  it('still refuses a message type nobody has considered', () => {
+    const v = check({ [CLAIM.messageType]: 'LtiSubmissionReviewRequest' });
     expect(why(v)).toBe('wrong-message-type');
-    // Named rather than generic, so the day it is built the thing that changes
-    // is one line and not somebody's afternoon reading a JWT.
-    if (!v.ok) expect(v.detail).toContain('LtiDeepLinkingRequest');
+    if (!v.ok) expect(v.detail).toContain('LtiSubmissionReviewRequest');
+  });
+
+  it('still refuses a launch with no message type at all', () => {
+    expect(why(check({ [CLAIM.messageType]: undefined }))).toBe('wrong-message-type');
   });
 });
 

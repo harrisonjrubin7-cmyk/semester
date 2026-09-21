@@ -240,6 +240,15 @@ function sameOrigin(a: string, b: string): boolean {
  * this does not is something nothing downstream can accidentally trust.
  */
 export interface Launch {
+  /**
+   * Which of the two messages this was.
+   *
+   * On the verdict rather than inferred again by the caller, because the
+   * caller would have to read the raw claims to do it — and a second reading
+   * of a claim that has already been checked is the place the two readings
+   * drift apart.
+   */
+  messageType: 'LtiResourceLinkRequest' | 'LtiDeepLinkingRequest';
   /** The platform's own id for this person, unique only within the issuer. */
   subject: string;
   issuer: string;
@@ -274,6 +283,19 @@ export interface LaunchCheck {
 }
 
 const RESOURCE_LINK_REQUEST = 'LtiResourceLinkRequest';
+const DEEP_LINKING_REQUEST = 'LtiDeepLinkingRequest';
+
+/**
+ * The two messages this tool answers, and the reason it is a set rather than
+ * a pair of `||`.
+ *
+ * Every rule in `checkLaunch` above the message-type gate applies to both:
+ * both are signed by the same platform, both carry a nonce that may be spent
+ * once, both name a deployment. What differs is only what the caller does
+ * afterwards, which is why the type is *carried on the verdict* rather than
+ * branched on here.
+ */
+const ANSWERED = new Set<string>([RESOURCE_LINK_REQUEST, DEEP_LINKING_REQUEST]);
 
 /**
  * Roles that mean "can see other people's work".
@@ -347,15 +369,18 @@ export function checkLaunch(input: LaunchCheck): Verdict<Launch> {
   }
 
   const messageType = str(claims[CLAIM.messageType]);
-  if (messageType !== RESOURCE_LINK_REQUEST) {
+  if (!messageType || !ANSWERED.has(messageType)) {
     /*
-     * Deep linking is a different message on the same endpoint and is not
-     * built yet. Refusing it by name rather than falling through means the day
-     * it is built, the thing that changes is this line — and until then a
-     * deep-linking launch gets a refusal that says what it was rather than a
-     * generic one that sends somebody reading the JWT.
+     * Still refused by name, and still an allowlist. The previous version of
+     * this gate admitted one type and said that the day deep linking was
+     * built, the thing that changes is this line; this is that change, and it
+     * adds a member to a set rather than relaxing the test — a token carrying
+     * a message type nobody here has considered is refused exactly as before.
      */
-    return no('wrong-message-type', `Message type ${messageType ?? '(absent)'} is not a resource link request.`);
+    return no(
+      'wrong-message-type',
+      `Message type ${messageType ?? '(absent)'} is not one this tool answers.`,
+    );
   }
 
   const subject = str(claims.sub);
@@ -380,6 +405,7 @@ export function checkLaunch(input: LaunchCheck): Verdict<Launch> {
   const context = obj(claims[CLAIM.context]);
 
   return yes({
+    messageType: messageType as Launch['messageType'],
     subject,
     issuer: iss,
     clientId: reg.clientId,

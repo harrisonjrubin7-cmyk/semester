@@ -24,13 +24,14 @@ import { over, timed } from '../lib/timing';
 import type { Named } from '../lib/forwork';
 import { arrange } from '../lib/yours';
 import { setSessionToken } from '../lib/token';
+import { type Mark, marksFor, noteToday } from '../lib/activity';
 import { claimPending } from '../lib/referral';
 import {
   accountOf,
   cloudConfigured,
   currentSession,
   onAuthChange,
-  explainSyncError,
+  explainSync,
   pull,
   push as pushCloud,
   type Account,
@@ -721,6 +722,36 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, []);
 
   /**
+   * The pilot's three figures, from what is already true of this account.
+   *
+   * Signed in only, and there is nothing to decide about that: the call is in
+   * this branch and `note_activity` reads the account out of the verified
+   * token rather than taking one, so signed out there is neither a caller nor
+   * a row. `lib/privacy.ts` says so on the screen, and it is the sentence the
+   * whole privacy position rests on.
+   *
+   * The dependency is the derived marks rather than the state, which is the
+   * point of deriving them: this fires when the account arrives and again
+   * when one of three facts about it changes — a first course, a first card
+   * answered — and on no other render. `lib/activity.ts` is the argument for
+   * reading state instead of putting a call at each moment worth counting.
+   *
+   * Nothing on screen waits for it and a failure is dropped: the guard inside
+   * is written only after the call succeeds, so an offline open is retried on
+   * the next one rather than counted as done.
+   */
+  const said = marksFor(state).join(',');
+  const marks = useMemo(() => said.split(',') as Mark[], [said]);
+  useEffect(() => {
+    if (!cloudConfigured || !account) return;
+    void noteToday(marks).catch(() => {});
+    // `state` is deliberately not a dependency, and the memo above is what
+    // makes that honest rather than a suppressed warning: `marks` is a new
+    // array only when one of the three facts changes, so this effect cannot
+    // fire on a keystroke in a note and cannot miss a course being added.
+  }, [account, marks]);
+
+  /**
    * Check the account for a newer copy, and say plainly what came of it.
    *
    * This used to be the body of an effect that ran once, on sign-in, and never
@@ -801,7 +832,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         Date.now(),
       );
     } catch (e) {
-      const error = explainSyncError(e instanceof Error ? e.message : String(e));
+      // The object, not its message: `explainSync` reads PostgREST's `code`
+      // and Supabase's `status`, which this line used to drop one step early.
+      const { said: error } = explainSync(e);
       setSync({ status: 'error', at: 0, error });
       return refreshSaid({ ...base, error }, Date.now());
     }
@@ -849,7 +882,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           setSync({
             status: 'error',
             at: 0,
-            error: explainSyncError(e instanceof Error ? e.message : String(e)),
+            error: explainSync(e).said,
           }),
         );
     }, 2500);

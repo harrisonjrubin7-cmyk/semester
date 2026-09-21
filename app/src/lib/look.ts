@@ -508,6 +508,65 @@ export function densityOf(id: string | undefined): number {
   return DENSITIES.find((d) => d.id === id)?.scale ?? 1;
 }
 
+/**
+ * How much the interface is allowed to move and decorate itself.
+ *
+ * Two requirements, and they are one setting because they are one ramp.
+ *
+ * §379 asks for an app setting beside `prefers-reduced-motion`, and the reason
+ * is not redundancy: the OS setting is device-wide and somebody who wants a
+ * still interface *here* should not have to still their whole phone to get it.
+ * §378 asks for a low-stimulation mode, whose first item is reduced motion and
+ * whose remaining items are the decoration around it.
+ *
+ * Offering those as two independent toggles would make four states, two of
+ * which are incoherent — low stimulation with motion on is not a thing anybody
+ * wants — so they are one ordered scale instead. `still` is §379. `calm` is
+ * §378, and it contains `still`. That also answers §373, which asks that
+ * customization stay constrained enough to keep the result consistent.
+ *
+ * `device` is the default and means what the app has always done: ask the
+ * operating system about motion, and decorate fully.
+ */
+export const CALMS = [
+  {
+    id: 'device',
+    label: 'Follow my device',
+    blurb: 'Motion follows your system setting. Everything is drawn as designed.',
+  },
+  {
+    id: 'still',
+    label: 'Less motion',
+    blurb: 'Nothing slides, glides or sweeps, whatever your device says.',
+  },
+  {
+    id: 'calm',
+    label: 'Low stimulation',
+    blurb: 'Less motion, and less decoration around it: no gradients, no shadows, quieter badges.',
+  },
+];
+
+/** A stored calm setting turned into one of the three that mean something. */
+export function calmOf(id: string | undefined): string {
+  return CALMS.find((c) => c.id === id)?.id ?? CALMS[0].id;
+}
+
+/**
+ * Whether this setting asks for motion to be reduced on its own account.
+ *
+ * `device` does not — it defers, and `lib/prefers.ts` asks the media query.
+ * Both of the others do, which is what makes `still` a subset of `calm`
+ * rather than a separate axis.
+ */
+export function stillerThanDevice(id: string | undefined): boolean {
+  return calmOf(id) !== 'device';
+}
+
+/** Whether decoration is toned down: gradients, shadows, decorative imagery. */
+export function lowStimulation(id: string | undefined): boolean {
+  return calmOf(id) === 'calm';
+}
+
 export const CORNERS = [
   { id: 'drawn', label: 'Drawn', radii: [3, 6, 10] },
   { id: 'square', label: 'Square', radii: [0, 0, 0] },
@@ -1189,6 +1248,11 @@ export interface Look {
   lineHeight?: string;
   readingWidth?: string;
   iconShape?: string;
+  /**
+   * `device`, `still` or `calm` — how much the interface may move and
+   * decorate itself. See `CALMS`.
+   */
+  calm?: string;
   labels?: string;
   badges?: string;
   feed?: string;
@@ -1568,6 +1632,10 @@ export function readLook(saved: Look | undefined): Required<Look> {
     lineHeight: LINE_HEIGHTS.find((l) => l.id === saved?.lineHeight)?.id ?? 'normal',
     readingWidth: READING_WIDTHS.find((w) => w.id === saved?.readingWidth)?.id ?? 'normal',
     iconShape: iconShapeOf(saved?.iconShape).id,
+    // Unrecognised falls to `device`, which is the value that defers to the
+    // operating system — so a stored setting from a future build loses the
+    // app's own opinion and keeps the person's device one.
+    calm: calmOf(saved?.calm),
     labels: LABELS.find((l) => l.id === saved?.labels)?.id ?? 'on',
     badges: BADGES.find((b) => b.id === saved?.badges)?.id ?? 'due',
     feed: feedStyleOf(saved?.feed),

@@ -1,0 +1,41 @@
+-- revoke_function_execute_from_supabase_default_roles — applied to production on 2026-09-21 at 00:26:58 UTC.
+--
+-- **There is deliberately no SQL in this file, and that is the whole point.**
+--
+-- Production's ledger has a row for version `20260921002658`. Supabase's
+-- deploy refuses to start unless every row already in that ledger has a file
+-- here — not a matching one, just one — and for months it did not:
+--
+--     ERROR Remote migration versions not found in local migrations directory.
+--
+-- That error is what had kept the schema deploy red, behind the renumbering
+-- fault that got all the attention. It never reached the SQL, so nothing that
+-- runs SQL could see it.
+--
+-- ## Why empty rather than the statements it ran
+--
+-- Its statements are in [`../history/20260921002658_revoke_function_execute_from_supabase_default_roles.sql`](../history/20260921002658_revoke_function_execute_from_supabase_default_roles.sql), byte-for-byte as the ledger reported them, checked by `migrationhistory.test.ts` against `MANIFEST` — the same as the other twelve.
+--
+-- This file said the opposite for an hour: that there was no record "because it
+-- was typed into the dashboard rather than read back out". The ledger says
+-- otherwise. `select md5(array_to_string(statements, E'\n')) from
+-- supabase_migrations.schema_migrations where version = '20260921002658'`
+-- returns `e847a7487970a86c0475047c8ec3ca97`, the md5 of that file. A row typed
+-- into the dashboard still has its statements stored; nothing about how a
+-- migration is applied decides whether it can be read back.
+--
+-- What it did is also in [`20260921144011_function_grants.sql`](20260921144011_function_grants.sql), which is the same revokes written down properly and guarded by `to_regprocedure` — see fault 4 in `MIGRATION-HISTORY.md`. That is where the *maintained* version lives; the record is what the database actually ran.
+--
+-- Putting those statements here would break every build from empty. The eight
+-- baseline files are a squash of everything through 11 September, so the
+-- schema they produce *already contains this migration's effects*, and
+-- applying it again on top is a second `create` of something that exists.
+-- `migrationhistory.test.ts` says the same thing from the other side and names
+-- the file that proves it: the third of the recovered ten fails outright,
+-- because `classmates.sql` long ago absorbed it.
+--
+-- So the two requirements are met separately. A **deploy** needs the version to
+-- exist, and reads nothing else — it skips this file, because the ledger
+-- already has the row. A **build from empty** needs the effects exactly once,
+-- and gets them from the baseline. This file is the join between those two
+-- facts, and it does nothing in either direction.

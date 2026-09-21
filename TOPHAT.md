@@ -232,7 +232,7 @@ check-in, and the file goes further than the tier proposes:
 PSCI 1104's five percent is therefore already a scored line with a budget
 behind it. Nothing in this half is open.
 
-### Tier B · Screenshot your Top Hat score, and have it read · **Open — and both halves of its premise are wrong in the cheap direction**
+### Tier B · Screenshot your Top Hat score, and have it read · **Landed — and both halves of its premise were wrong in the cheap direction**
 
 > Worth scoping only after Tier A ships and after the camera-scan syllabus
 > feature (which this reuses the OCR pipeline from) is built.
@@ -270,8 +270,34 @@ today. That is smaller than the document sizes it, and it stays behind the
 honest line, because it is one student handing over their own already-visible
 data.
 
-Still Open, and still second in order. Nothing about it should be said in
-product copy before it exists.
+**That destination is now built**, and it is `components/ScoreShot.tsx` on the
+Grades screen, behind the same key gate as every other door a model reads
+through. The shape of it is the argument this file has been making all the way
+down:
+
+- **The model transcribes; the app reads.** `readPages` is asked for the text
+  on the screen and nothing else, and which of those words is a score is
+  decided in code by `lib/readout.ts`. Asking the model for the score directly
+  is one round trip shorter and has no floor under it — a blurred 8 comes back
+  as a confident 9 with nothing to check it against, and a page with no grade
+  on it comes back with a number anyway, because that is what it was asked for.
+- **It refuses more than it reads.** A score screen is mostly not scores, and
+  the deck this app ships proves it: PSCI 1104's own Top Hat join code is
+  `782449`, a six-digit number two lines from the grade. A reader that took
+  every number it saw would offer it, and a student tapping the first
+  suggestion would file a 782,449% attendance mark. So a bare number counts
+  only where its line says what it is, and `lib/readout.test.ts` keeps that
+  page as its fixture.
+- **Nothing is filed without two taps.** The candidate is chosen, the category
+  is agreed, and only then does anything reach `setGrade`. The category is
+  proposed from the line's own words and **refuses a tie** rather than opening
+  on an arbitrary row — a chooser that opens on a guess invites the tap that
+  files a mark there.
+
+What goes in is the string that was on their screen — `13/14`, not `92.857` —
+because `components/ScoreField.tsx` reads a photographed fraction the same way
+it reads a typed one, and a student who opens the field in November should see
+what they photographed in September.
 
 ### Tier C · A true live sync · **Declined — and the repository settled this before the document asked**
 
@@ -378,9 +404,10 @@ Four things, in the order they are worth.
 2. **Tier A is built, and its first item would undo its third.** The parser has
    no category vocabulary, which is what makes it generic; writing "Top Hat"
    into it is how that would be lost.
-3. **Tier B is cheaper than sized, and is not an OCR job.** The camera,
-   the transcriber and the table-preserving prompt all ship. What is missing is
-   a destination for one number.
+3. **Tier B was cheaper than sized, and was not an OCR job.** The camera, the
+   transcriber and the table-preserving prompt all shipped already; what was
+   missing was a destination for one number, and that is now built. See the
+   tier above.
 4. **The question-type gap is real and is the app's own.** It is in
    `docs/PRODUCT_REQUIREMENTS.md` and it has been since before this document
    was written. Filing it against Top Hat would have credited the wrong source

@@ -124,10 +124,18 @@ end $$;
 do $$
 declare
   /*
-   * The allowlist. Four, and each is a deliberate entry point:
+   * The allowlist. Seven, and each is a deliberate entry point:
    *   make_referral_code  — mints this account's own code
    *   claim_referral      — records that this account arrived on somebody's
    *   referral_standing   — two integers and a boolean about the caller
+   *   note_activity       — the caller says which of three things are true of
+   *                         it today. It is here rather than behind the
+   *                         service key because the caller is a browser, and
+   *                         it is safe to be here because it takes neither an
+   *                         account nor a date: `activity.check.sql` holds
+   *                         that signature structurally, which is the only
+   *                         thing standing between this entry and handing the
+   *                         table to anybody with the publishable key.
    *   accept_family_grant — the recipient of a family grant accepts it, which
    *                         is the one write they have on `family_grants`;
    *                         `authenticated` only, never `anon`
@@ -147,7 +155,13 @@ declare
     'adopt_lti_identity(want_ticket text)',
     'claim_referral(given text)',
     'make_referral_code()',
-    'referral_standing()'
+    'note_activity(marks text[])',
+    'referral_standing()',
+    -- Sets `profiles.school_id` from the address the server confirmed. The
+    -- column's own UPDATE privilege is revoked from both API roles, so this
+    -- function is the only way in and has to be callable by a signed-in
+    -- account. See 20260921170000_schools.sql.
+    'claim_school(want text)'
   ];
   extra text;
   missing text;
@@ -183,7 +197,7 @@ begin
   if missing is not null then
     raise exception 'FAILED: the allowlist names %, which a signed-in account cannot call', missing;
   end if;
-  raise notice 'ok  and can call all five that it should';
+  raise notice 'ok  and can call all seven that it should';
 end $$;
 
 -- ── The gate's own switch, named because it is the one that was open ──────
@@ -218,7 +232,7 @@ end $$;
 -- meets the base table's policies at all. Row-level security is not
 -- underneath it; nothing is.
 --
--- `20260901001100_forms.sql` created `public.published_forms` exactly that way
+-- `20260921143455_forms.sql` created `public.published_forms` exactly that way
 -- — definer's rights on purpose, so its WHERE clause could stand in front of
 -- `forms`' owner-only policies — and granted SELECT on top of the ALL that
 -- Supabase's default privileges had already given `anon`. Applied to the live

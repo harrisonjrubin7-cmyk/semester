@@ -199,9 +199,6 @@ export function navigate(state: State, action: Action): State | null {
     case 'setEvFilter':
       return { ...state, evFilter: action.filter };
 
-    case 'setQuery':
-      return { ...state, query: action.query };
-
     case 'setHomeTab':
       return { ...state, homeTab: action.tab };
 

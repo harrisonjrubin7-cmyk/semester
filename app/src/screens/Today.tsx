@@ -6,6 +6,7 @@ import { ClashList, WorstDay } from '../components/Clashes';
 import { TimerLine } from '../components/TimerLine';
 import { ApplyingSoon } from '../components/Applying';
 import { ReadingsOnTheGo } from '../components/ReadingProgress';
+import { Waiting } from '../components/Waiting';
 import { ClosingWindows } from '../components/Windows';
 import { FirstRun } from './FirstRun';
 import { Blueprint } from '../components/Blueprint';
@@ -610,13 +611,24 @@ function ThisWeek() {
           type="button"
           className="bare tappable"
           // The week holding the first of them. This sentence names a period
-          // rather than a date, so the day grain would be too narrow — and
-          // `month` is not available: the month view anchors on `calYear` and
-          // `calMonth`, which `setCalDay` does not touch, so asking for it
-          // lands on the current month whatever date you pass. See the note in
-          // `lib/opencal.ts`. Going without a day at all, which is what this
-          // did, left you on whichever day the session last showed — often one
-          // inside the very week this line calls insufficient.
+          // rather than a date, so the day grain would be too narrow. Going
+          // without a day at all, which is what this did, left you on
+          // whichever day the session last showed — often one inside the very
+          // week this line calls insufficient.
+          //
+          // It used to say `month` was not available here, because the month
+          // view anchored on fields `setCalDay` did not touch. That stopped
+          // being true when the calendar's position was merged onto `calDay`,
+          // and the sentence outlived it — see the note in `lib/opencal.ts`,
+          // which carried the same claim. `month` is a real option now.
+          //
+          // `week` is kept rather than widened on the strength of that: this
+          // aside points at the first thing past a seven-day window, and the
+          // week holding it shows that thing with its neighbours, which is
+          // what "the calendar has the rest" promises. A month would show more
+          // and locate it less. Recorded in the audit as a question for
+          // whoever owns the wording, not settled here by a comment going
+          // stale in the other direction.
           onClick={() => goCal(dispatch, dateToIso(rest[0].date), 'week')}
           style={{
             display: 'block',
@@ -684,6 +696,14 @@ function Feed_next() {
     <>
       <NextClassCard />
       <OverdueBanner />
+      {/*
+       * After the overdue banner, deliberately. That one is about work of
+       * yours that has already slipped; this is about somebody else waiting on
+       * you. Your own missed deadline outranks another person's message, and
+       * both are silent when they have nothing, so on most days this section
+       * is still just the next class.
+       */}
+      <Waiting />
     </>
   );
 }

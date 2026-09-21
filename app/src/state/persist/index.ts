@@ -27,6 +27,7 @@ import { readIncoming } from '../../lib/stored';
 import { migrate, versionOf } from '../../lib/migrate';
 import {
   DEFAULT_PERSISTED,
+  freshPersisted,
   STORAGE_KEY,
   loadPersisted,
   type Persisted,
@@ -208,7 +209,7 @@ export async function load(): Promise<Persisted | null> {
         { store: SETTINGS_STORE, key: 'schemaVersion', value: DEFAULT_PERSISTED.schemaVersion },
       ]);
     }
-    return { ...DEFAULT_PERSISTED };
+    return freshPersisted();
   }
 
   const found = await readEverything();

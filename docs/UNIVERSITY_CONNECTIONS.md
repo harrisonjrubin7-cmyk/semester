@@ -1,5 +1,10 @@
 # University connection handoff
 
+> The student-facing requirements this framework exists to serve are items
+> 184–238 of the master specification — see
+> [`UNIVERSITY_OS_REQUIREMENTS.md`](UNIVERSITY_OS_REQUIREMENTS.md). This
+> document stays the record of what is actually built and connected.
+
 Updated September 13, 2026. No university credentials or approved API access have been supplied. This package adds an executable gateway framework, a typed adapter interface, a records/action client, and local preparation tools. It does **not** contain working Canvas, Brightspace, SIS, email, payment, or campus-service adapters. Those must be implemented and tested against the institution's approved systems.
 
 ## What is built

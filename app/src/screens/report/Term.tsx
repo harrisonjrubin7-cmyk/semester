@@ -67,7 +67,7 @@ export function TermReport() {
       state.reviews,
       catalog.modules.map((m) => ({
         courseId: m.course.id,
-        questions: allCards(m.guide).map((c) => c.q),
+        cards: allCards(m.guide),
       })),
     );
 

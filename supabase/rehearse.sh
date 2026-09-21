@@ -134,6 +134,51 @@ SQL
 before_gate=$(psql -Atc "select invite_only from public.access_gate")
 before_rows=$(psql -Atc "select count(*) from public.courses")
 
+# ── Catching the snapshot up to the ledger ────────────────────────────────
+#
+# `schema.snapshot.sql` is production's shape *as it was when it was read*, and
+# the ledger has moved since. It declares how far it reaches on a
+# `SNAPSHOT-THROUGH:` line, and everything between that and `LEDGER_NEWEST` is
+# a migration production has applied and this file does not show.
+#
+# Without this the rehearsal starts from a schema sixteen ledger rows behind
+# production and does not know it. Every migration at or below the watermark is
+# assumed present, so `public.forms`, `public.lti_platform`, `public.schools`,
+# `public.app_admins` and `private.is_app_admin()` are all silently absent —
+# and the first pending migration to reference one of them fails with an error
+# about its own SQL. That happened: `20260921214500_report_status.sql` on a
+# branch whose migration was correct and whose `check.sh` suites all passed.
+#
+# These are applied quietly unless one fails. They are not the rehearsal — they
+# are the part of production the snapshot could not show, and a failure here is
+# a broken record rather than a broken deploy, so it says which it is.
+SNAPSHOT_THROUGH=$(sed -n 's/^-- SNAPSHOT-THROUGH: *\([0-9]\{14\}\).*/\1/p' "$here/schema.snapshot.sql" | head -1)
+if [ -z "$SNAPSHOT_THROUGH" ]; then
+  echo "· schema.snapshot.sql declares no SNAPSHOT-THROUGH line." >&2
+  echo "  Without it this script cannot tell which ledger rows the snapshot predates," >&2
+  echo "  and would rehearse against a schema it believes is complete and is not." >&2
+  exit 2
+fi
+
+caught=0
+for m in "$here"/migrations/*.sql; do
+  version=$(basename "$m" | cut -c1-14)
+  [ "$version" -gt "$SNAPSHOT_THROUGH" ] || continue
+  [ "$version" -le "$LEDGER_NEWEST" ] || continue
+  if out=$(psql -v ON_ERROR_STOP=1 -f "$m" 2>&1); then
+    caught=$((caught + 1))
+  else
+    echo "· the snapshot is behind the ledger, and catching it up failed:" >&2
+    echo "    ✗ $(basename "$m")" >&2
+    echo "$out" | grep -E "ERROR" | head -3 | sed 's/^/      /' >&2
+    echo "  This is the snapshot or the ledger being wrong, not the deploy." >&2
+    exit 1
+  fi
+done
+if [ "$caught" -gt 0 ]; then
+  echo "· $caught migrations the ledger has and the snapshot predates, applied first"
+fi
+
 echo "· the migrations a deploy would apply, in the order it would apply them"
 pending=0
 failed=0
@@ -150,9 +195,45 @@ for m in "$here"/migrations/*.sql; do
   fi
 done
 
+# ── Nothing to rehearse, and the two ways to arrive there ─────────────────
+#
+# This used to be one case and an `exit 2`, which read as "you asked for a
+# rehearsal and got nothing, which is not a pass". That is the right instinct
+# and it was aimed at the wrong half.
+#
+# **Everything on disk is in the ledger.** Production has applied all of it
+# and the next deploy carries nothing. That is the ordinary state of this
+# repository between migrations, and it is what `20260921211500` produced the
+# moment its row was recorded: the watermark passed the newest file, every
+# branch in the repository went red on `rehearse.sh`, and not one of them had
+# touched `supabase/`. A gate that fails on the calendar rather than on the
+# diff teaches people to ignore it, which is the one thing a gate cannot
+# survive.
+#
+# **Or a file is missing from the ledger and numbered at or below the
+# watermark.** `db push` can never apply it, whatever this script would have
+# said about its SQL. That is a real fault and keeps a non-zero exit.
+#
+# `lib/migrationorder.test.ts` holds the same rule from the other side, and
+# says it plainly: *"The rule is not 'every migration must already be
+# applied'. A new migration is supposed to be pending; that is what a
+# migration is. The rule is that a pending version may not be below the
+# watermark."* The old `exit 2` failed the first sentence to enforce the
+# third.
 if [ "$pending" = 0 ]; then
-  echo "  (nothing newer than $LEDGER_NEWEST — there is no deploy to rehearse)" >&2
-  exit 2
+  applied=$(sed -e 's/#.*//' "$LEDGER_SNAPSHOT" | awk 'NF {print $1}')
+  stranded=""
+  for m in "$here"/migrations/*.sql; do
+    version=$(basename "$m" | cut -c1-14)
+    printf '%s\n' "$applied" | grep -qxF "$version" || stranded="$stranded  $(basename "$m")"
+  done
+  if [ -n "$stranded" ]; then
+    echo "  ✗ at or below the watermark $LEDGER_NEWEST and not in the ledger, so a" >&2
+    echo "    deploy can never apply them:$stranded" >&2
+    exit 2
+  fi
+  echo "  (every migration is in the ledger — nothing to deploy, nothing to rehearse)"
+  exit 0
 fi
 
 after_gate=$(psql -Atc "select invite_only from public.access_gate")
@@ -169,7 +250,7 @@ fi
 # Rows are not the only live state a second application can move, and this
 # script's first version could only see rows.
 #
-# `20260921003200_forms.sql` says `drop view if exists public.published_forms`
+# `20260921143455_forms.sql` says `drop view if exists public.published_forms`
 # and creates it again. The statements are idempotent and the **privileges are
 # not**: a recreated relation in `public` is handed the default privileges
 # afresh, and on Supabase those are `grant all on tables to anon,
