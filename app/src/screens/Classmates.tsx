@@ -189,7 +189,28 @@ export function Classmates() {
       nameOf,
       new Date(),
       profile?.handle ?? '',
-      [],
+      /*
+       * Your own handle, and it has to be here for the badge to work.
+       *
+       * `pieces` only treats `@name` as a mention when `name` is in this list
+       * — an unmatched `@` stays plain text on purpose, so the app never
+       * paints a mention of somebody who will not be told. This passed an
+       * empty list, so `@harrison` was plain words, `mentions` could only ever
+       * count `@class`, and the warning-coloured badge in
+       * `components/room/Rooms.tsx` had never once been able to appear for a
+       * person naming you. The count was computed correctly and was structurally
+       * unreachable.
+       *
+       * The empty list was right about the *other* handles and wrong to stop
+       * there: the list has no profiles for rooms that are not open, which is
+       * why `nameOf` above returns nothing. But this row does not need forty
+       * names to answer "was I named" — it needs one, and it is the one name
+       * this screen already has.
+       *
+       * Found in #668, where the same `[]` was copied into the Today row and a
+       * test caught it there.
+       */
+      profile?.handle ? [profile.handle] : [],
     );
   }, [account, catalog.courses, rooms, state.schoolId, said, marks, profile]);
 
