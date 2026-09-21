@@ -70,7 +70,39 @@ export function usePrefersContrast(): boolean {
  * answer in that direction is a jump instead of a glide; in the other it is a
  * symptom.
  */
+export const CALM_ATTR = 'data-calm';
+
+/**
+ * The app's own answer, read off the root element rather than out of React.
+ *
+ * `prefersLessMotion` is called from `scrollKindly`, which is called from
+ * ordinary functions with no hooks and no store in scope — so the setting has
+ * to be somewhere a plain function can reach. `App.tsx` already writes the
+ * whole look onto `document.documentElement` on every change; this rides
+ * along as one attribute, which makes the DOM the single place both halves of
+ * the question are asked.
+ *
+ * Absent means nothing has been written yet — a server render, or the first
+ * paint before the effect runs — and absent must mean "defer to the device"
+ * rather than "reduce". Getting that backwards would make the app ignore a
+ * device that is asking for stillness, for exactly as long as it takes the
+ * first effect to fire.
+ */
+export function calmAsks(): boolean {
+  try {
+    const set = document.documentElement.getAttribute(CALM_ATTR);
+    return set === 'still' || set === 'calm';
+  } catch {
+    return false;
+  }
+}
+
 export function prefersLessMotion(): boolean {
+  // The app setting only ever adds stillness. Somebody who has asked for less
+  // motion here gets it whatever the device says; somebody who has not is
+  // answered exactly as before, which is why this is an `||` and not a
+  // precedence rule with two ways to be wrong.
+  if (calmAsks()) return true;
   // `?? true`, which is what the paragraph above argues for and what this
   // answered the other way round. A browser that cannot be asked got a page
   // sweeping its whole length, for the people the setting exists to protect.

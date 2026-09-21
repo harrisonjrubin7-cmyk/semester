@@ -625,6 +625,82 @@ applies nothing either way, and what changes is what a *fresh* build produces.
 `rehearse.sh` asks the same after a rehearsed deploy, so neither can come back
 quietly.
 
+#### And a third time, four hours later, by the same arithmetic
+
+`20260921003700_lti.sql` arrived with #600 and put `main` red on the guard the
+section above installed. It is the same mistake a third time and it deserves
+no more blame than the second: `003700` is the obvious next number after
+`003600`, it sorts after every version its author had read, and it was a
+correct reading when it was taken. The ledger had moved to `20260921150750`
+by the time the work merged, which is the paragraph above this one with a
+different date on it.
+
+What is different is that it did not reach production and it did not stay
+invisible for three days. The guard named it on the merge:
+
+    these are pending and below the watermark 20260921150750,
+    so the deploy cannot apply them: 20260921003700
+
+That is the whole return on step 6. The fault used to be a deploy failing in a
+dashboard nobody was looking at; it is now a red tick with the offending
+version printed in it, four minutes after it landed. #608 renumbered the file
+to `20260921160000_lti.sql` and hardened `rehearse.sh`.
+
+#### Five sessions, four fixes, fifteen minutes
+
+This is the part worth the space, and it is not about migrations.
+
+Five sessions reached that red tick inside a quarter of an hour. **Four of
+them wrote a rename**, each picking a different number — `160000`, `160413`,
+`160500`, `155553` — and a fifth, #615, diagnosed it and deliberately left it
+alone. #608 merged; the other three were dropped or rewritten on rebase, one
+of them after its author had already run `supabase/check.sh` against it.
+
+The section above this one is titled "two sessions renumbered these files an
+hour apart". This is the same shape at ten times the rate, and the cause is
+the improvement: the guard that makes the fault visible makes it visible to
+*everyone at once*, and nothing coordinates who takes it. That is a good trade
+and it is still a cost, and it is worth writing down rather than tidying away
+— a repository whose guards are this good will keep paying it.
+
+What made the duplication cheap rather than expensive was `CLAUDE.md`'s first
+rule working as intended: every one of those sessions checked `main` before
+pushing, found the landed fix, and stood down. The convergence is the failure;
+the checking is what keeps it from being a merge conflict.
+
+#### And the half nobody could see
+
+The rename was fixed four times over. The four citations *inside* the file
+were fixed by none of them, because nothing can see a wrong filename in a
+comment.
+
+`20260921160000_lti.sql` cited `20260921003500_referrals.sql` and
+`20260921003600_function_grants.sql`, at four sites, and neither name has ever
+resolved. #600 wrote that prose against the numbers #587 proposed, which #588
+had already replaced with `…002623` and `…144011` — so the same branch-cut
+that stranded the migration below the watermark left it pointing at two files
+that were never on disk. The same mistake twice in one file: once in a number
+a deploy reads, which broke CI in four minutes, and once in a number only a
+person reads, which survived four independent fixes of the first half.
+
+Found by #580 while duplicating the rename, and fixed in #621 **with the guard
+that closes it** — `lib/migrationcitations.test.ts` reads everything under
+`supabase/` and requires every migration filename cited in it to name a file
+that exists, in `migrations/` or in `history/`. That is the part this document
+could not have supplied: an account of a recurrence is not a guard against it.
+
+This document is deliberately outside that scan, and should stay outside it.
+Its job is to discuss the names those seven files had *before* #588; its
+dangling citations are correct as history and would have to be excepted, and
+an exception list is a thing somebody later widens.
+
+**The habit the whole sequence suggests**, which is the only part a guard
+cannot enforce: the number to pick is not "one after the last file in the
+directory", it is a clock reading taken when the rename is made, checked
+against the last line of `supabase/ledger.snapshot`. Those two agree by
+construction and the first only agrees by luck — which is exactly how four
+sessions picked four different numbers and #600 picked a wrong one.
+
 #### What it still does not do
 
 **Nothing here flips the status.** The branch record reads what the last deploy
@@ -684,17 +760,66 @@ added two more ledger rows with no file. Their content is folded into
 `20260921143455_forms.sql` and `20260921143653_access_log.sql`, so nothing is
 lost from a build — but the rows are in the ledger and the deploy counts them.
 
-**No fix is proposed here, deliberately.** The shapes available are
-`supabase migration repair` to mark the thirteen applied — the production write
-step 5 was withdrawn over — or files in `migrations/` that are no-ops on a
-fresh build, or a squashed baseline whose version is the ledger's newest. Each
-is a different answer to "what is `migrations/` for", which is the question
-this whole document is about, and picking one is a decision rather than a
-patch. What is settled is the diagnosis: the error is named, it is reproducible
-on every merge, and the thirteen rows are enumerated above.
+### The fix: a stub per row, holding the version and nothing else
 
-`ledgerfiles.test.ts` holds the count where it is, so that the next hand-applied
-migration cannot quietly make it fourteen.
+Three shapes were available. `supabase migration repair` would mark the
+thirteen applied, which is a write to the ledger and the thing step 5 was
+withdrawn over — worse here than there, because the repair that removes the
+complaint is `--status reverted`, and that *deletes the record of what
+production ran*. A squashed baseline carrying the ledger's newest version does
+not help either: the other twenty-seven rows still have no file. What is left
+is the third, and on inspection it is not a compromise but the only statement
+that is actually true of both sides.
+
+**`migrations/` now holds a file for every row in the ledger, and thirteen of
+them contain no SQL.** Each says, in its own header, what ran, when, where its
+statements are recorded, and why they are not repeated in it.
+
+That works because the two requirements were never in conflict about *files* —
+only about *statements*:
+
+  * A **deploy** needs the version to exist and reads nothing else. All thirteen
+    versions are already in the ledger, so `db push` finds the file, skips it,
+    and goes on to the pending migrations. The stub is never executed against
+    production.
+  * A **build from empty** needs each effect exactly once, and gets it from the
+    baseline. The stub runs and does nothing.
+
+Measured rather than argued, with `supabase/fingerprint.sql` — step 4's own
+instrument — over two throwaway clusters built from `local.stub.sql` and every
+file in `migrations/`, one with the thirteen applied and one with them skipped:
+
+| | with the stubs | without them |
+| --- | --- | --- |
+| columns | `059a98b5…` | `059a98b5…` |
+| constraints | `7476e44a…` | `7476e44a…` |
+| indexes | `14ba0a25…` | `14ba0a25…` |
+| functions | `ffc6d1b1…` | `ffc6d1b1…` |
+| code | `405e2986…` | `405e2986…` |
+| policies | `eb520788…` | `eb520788…` |
+
+Six of six identical. The stubs are inert, which is the whole claim.
+
+**Nothing was written to production.** The ledger is untouched; the thirteen
+rows still say what they always said. What changed is that the repository now
+admits they exist.
+
+### What guards it
+
+`ledgerfiles.test.ts` was written as a ratchet — the rows without files had to
+be among the thirteen known — because at the time the thirteen were not a
+mistake to delete. With the stubs the count is zero, so it asserts zero, which
+is the stronger statement and the one worth keeping: **a migration that reaches
+production without a file here is a broken deploy**, and that is as true of the
+next one as of these.
+
+`migrationhistory.test.ts` kept the recovered ten out of `migrations/` by
+filename, which was the right question until `migrations/` gained a stub under
+each of those names. It asks about **content** now — no file in `migrations/`
+may be byte-identical to a history record — which is what the filename check
+was standing in for, and it gained the other half: every recorded version must
+still have its stub, because deleting one puts the deploy straight back to
+`Remote migration versions not found in local migrations directory`.
 
 ## What this costs, and what it does not fix
 

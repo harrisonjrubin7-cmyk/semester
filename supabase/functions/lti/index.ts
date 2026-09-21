@@ -63,6 +63,7 @@ import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { createRemoteJWKSet, jwtVerify } from 'npm:jose@5';
 import { checkLaunch, startLogin, type Launch, type Registration } from '../_shared/lti.ts';
 import { landingPath, provisionedEmail, provisionedMetadata } from '../_shared/ltiaccount.ts';
+import { jwks, keyId, publicJwk } from '../_shared/ltikey.ts';
 
 /** How long a launch has between the redirect out and the POST back. */
 const FLIGHT_SECONDS = 300;
@@ -145,10 +146,10 @@ async function registration(
   client: ReturnType<typeof db>,
   issuer: string,
   clientId?: string,
-): Promise<Registration | null> {
+): Promise<(Registration & { tokenUrl: string | null }) | null> {
   let q = client
     .from('lti_platform')
-    .select('issuer, client_id, deployment_id, auth_login_url, jwks_url')
+    .select('issuer, client_id, deployment_id, auth_login_url, jwks_url, token_url')
     .eq('issuer', issuer);
   if (clientId) q = q.eq('client_id', clientId);
   const { data, error } = await q.limit(2);
@@ -170,6 +171,7 @@ async function registration(
     deploymentId: r.deployment_id,
     authLoginUrl: r.auth_login_url,
     jwksUrl: r.jwks_url,
+    tokenUrl: r.token_url ?? null,
   };
 }
 
@@ -281,9 +283,83 @@ async function accountFor(
   return { ok: true, email, ticket: ticketError ? null : ticket };
 }
 
+/**
+ * This tool's own signing key.
+ *
+ * Read here and published as its public half below. **Nothing signs with it
+ * yet** — grade passback and deep linking are the callers and neither is
+ * built — and that is not a reason to hold the endpoint back, because a JWKS
+ * URL is a *registration-time* artifact: Brightspace asks a school's
+ * administrator for it while they install the tool, long before anything is
+ * signed. Publishing it is what lets them finish.
+ *
+ * `_shared/ltikey.ts` carries the rest of the exchange — the assertion claims
+ * and the token request — specified and tested, and deliberately not wired to
+ * anything. The migration for this feature refused to hold key material
+ * "before anything signs with it"; the same reasoning applies to a live
+ * signing path with no caller.
+ *
+ * A JWK in a function secret, which is where `VAPID_PRIVATE_KEY` lives and for
+ * the same reason: a private key used only by an Edge Function, whose public
+ * half is published on purpose. `_shared/ltikey.ts` argues it at length,
+ * including why not the Vault and why not a table.
+ *
+ * Absent is a working state, not a broken one. A launch needs no key at all —
+ * only calling *back* into Brightspace does — so a project that has not set
+ * one serves no JWKS and says so, and every student can still launch.
+ */
+function privateJwk(): Record<string, unknown> | null {
+  const raw = Deno.env.get('LTI_PRIVATE_KEY');
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === 'object' ? (parsed as Record<string, unknown>) : null;
+  } catch {
+    /*
+     * Logged as the shape of the fault rather than the value, obviously. A
+     * malformed key is the one configuration error here that cannot be
+     * inferred from the outside: the endpoint would 500 and the platform would
+     * report only that our JWKS could not be read.
+     */
+    console.error('lti: LTI_PRIVATE_KEY is set but is not JSON');
+    return null;
+  }
+}
+
 Deno.serve(async (req) => {
   const path = new URL(req.url).pathname.replace(/\/+$/, '');
   const client = db();
+
+  /*
+   * ── The public half of this tool's key ────────────────────────────────
+   *
+   * A school's administrator gives this address to Brightspace when they
+   * register the tool, and Brightspace fetches it to verify anything this tool
+   * signs. It is public by design: that is what a JWKS is.
+   *
+   * `publicJwk` is the one function in this repository whose failure mode is
+   * publishing the *private* key at a public URL, so it names what may be
+   * served rather than deleting what may not — an allowlist cannot fail open
+   * on a field nobody thought of. `ltikey.test.ts` proves it by handing over a
+   * key with every secret field set and reading the answer back by name.
+   */
+  if (path.endsWith('/jwks')) {
+    const jwk = privateJwk();
+    if (!jwk) return refuse('no-key', 'LTI_PRIVATE_KEY is not set on this project.', 503);
+
+    const pub = publicJwk(jwk, await keyId(jwk));
+    if (!pub.ok) return refuse(pub.reason, pub.detail, 500);
+
+    return new Response(JSON.stringify(jwks([pub.value])), {
+      headers: {
+        'content-type': 'application/json; charset=utf-8',
+        // A platform may cache this. An hour is short enough that a rotation
+        // is picked up the same morning and long enough that a launch is not
+        // waiting on a fetch.
+        'cache-control': 'public, max-age=3600',
+      },
+    });
+  }
 
   // ── Step one: start a login ─────────────────────────────────────────────
   if (path.endsWith('/login')) {

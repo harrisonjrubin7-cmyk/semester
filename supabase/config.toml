@@ -8,38 +8,48 @@
 # time a deploy runs, and a dashboard that lies to the person reading it is
 # worse than a config file that is short.
 #
-# There is a [functions] block at the bottom, and there was deliberately not one
-# until 21 September. The argument that stood here was:
+# The [functions] blocks below are the one deliberate exception, and they were
+# added against this file's own earlier advice. That advice is kept here rather
+# than deleted, because it names a real cost and the cost has not gone away.
 #
-#   > Edge Functions are deployed by `.github/workflows/functions.yml`, which
-#   > deploys only the directories a push actually changed. Declaring them here
-#   > as well would give one function two deploy paths that can disagree about
-#   > which version is live.
+# It read: *"there is no [functions] block. Edge Functions are deployed by
+# `.github/workflows/functions.yml`, which deploys only the directories a push
+# actually changed — see DEPLOY.md. Declaring them here as well would give one
+# function two deploy paths that can disagree about which version is live."*
 #
-# That is about production and it is right. What it did not say is what it
-# costs staging, and a preview branch is where that bill arrives: Branching
-# deploys only the functions named here, so with no block a preview branch had
-# **no functions at all** — no `claude`, no `push`, nothing. Every AI feature
-# and every reminder was absent from staging, in the way that looks like an app
-# bug rather than a missing deploy. The branch on pull request #618 said so
-# itself, in a warning nobody had read before:
+# ## What the absence cost, which is what changed the answer
 #
-#   > ⚠️ Only Functions declared in config.toml will be automatically deployed
-#   > to branches: [functions.my-slug]
+# Supabase Branching deploys to a preview branch only what this file declares,
+# so with no blocks it deployed **no functions at all**. Every preview branch
+# reported it, in the same warning, every time:
 #
-# So the objection is answered rather than overruled, and it turns out to be
-# narrower than it read: declaring a function here does not give it a second
-# deploy path to production — `functions.yml` remains the only thing that
-# deploys. What this list decides is what a *branch* rebuilds from the
-# repository. The one thing the two can still disagree about is a flag —
-# `verify_jwt`. `lib/functionconfig.test.ts`
-# reads this file and the workflow as text and goes red if the two stop
-# matching, which is the instrument `lib/referral.test.ts` and
-# `lib/allowance.test.ts` use for every other pair of sides that cannot import
-# from each other. Undetected divergence was the fault; duplication was only
-# ever the symptom.
+#     Only Functions declared in config.toml will be automatically deployed
+#     to branches: [functions.my-slug]
 #
-# See STAGING.md for the whole of it.
+# A branch could therefore exercise a migration and never a function. The whole
+# point of a preview branch is to answer "does this work" before main does, and
+# for six functions it could not be asked — `claude`, `push` and `lti` among
+# them, which are the ones carrying secrets, JWT checks and a CORS preflight.
+#
+# ## The risk being accepted, and how to tell if it bites
+#
+# Two paths can disagree. Read off the project when these blocks were added,
+# `push` and `calendar` were last deployed on 18 September and had not moved
+# through a day of merges, while `claude`, `fetchcal`, `canvas` and `lti` each
+# bumped when their own directory changed — so `functions.yml` was the only
+# thing deploying to production, and only what changed.
+#
+# **That is the observable.** If a merge that touches no function directory
+# bumps `push` or `calendar`'s version, a second path is deploying to
+# production and this decision needs revisiting. `supabase functions list`, or
+# the dashboard, answers it in one look.
+#
+# `verify_jwt` is written for every one of them rather than left to default,
+# and every one is `false` — deliberately, for the reason DEPLOY.md gives at
+# each function: the function checks the caller's token itself, and the
+# platform check would reject the CORS preflight, which carries no
+# `Authorization` header. Writing it makes these files say what production
+# already does instead of relying on a dashboard nobody can see from here.
 
 project_id = "lzrqvlugnawcgywkhqlz"
 
@@ -49,34 +59,16 @@ project_id = "lzrqvlugnawcgywkhqlz"
 # would learn from it is something untrue about production.
 major_version = 17
 
+
 # ── Edge Functions ────────────────────────────────────────────────────────
 #
-# Every function that exists, because every one of them is live. That was
-# measured against the project rather than read off this repository, and the
-# first version of this block got it wrong by trusting `DEPLOY.md`, which
-# listed two and was two functions out of date. The management API lists
-# `claude`, `push`, `calendar`, `fetchcal`, `canvas` and `lti`, all ACTIVE and
-# all `verify_jwt` false.
+# One block per directory in `supabase/functions/`, minus `_shared`, which
+# holds modules the others import and is not a function.
 #
-# **Declaring them is not what deploys them.** They are already deployed, by
-# `.github/workflows/functions.yml`, and that stays the deploy path. What a
-# branch does with this list is narrower and is the whole reason the block
-# exists: a preview branch inherits production's *build* of every function,
-# and rebuilds from this repository only the ones named here. Undeclared, a
-# branch runs the code production had when the branch was cut — which looks
-# exactly like working, and is the worst shape a staging environment can take.
-# The branch on pull request #618 shows both halves: its `claude` came back at
-# version 20 with a fresh checksum, production's at 19 with the old one.
-#
-# `verify_jwt = false` on all six, matching the `--no-verify-jwt` that
-# `functions.yml` passes to every deploy, and matching what the project
-# reports for each. It is the platform's own check that is off, not
-# authentication: `claude`, `fetchcal` and `canvas` verify the caller's token
-# themselves and have to answer a CORS preflight, which carries no
-# Authorization header at all, and `push` is called by the scheduler with a
-# shared secret. DEPLOY.md argues each. Getting this flag wrong in the other
-# direction is the one way the two deploy paths can hurt each other, which is
-# why `lib/functionconfig.test.ts` pins it.
+# `app/src/lib/deployfunctions.test.ts` holds this list to that directory, so
+# a function added without a block here fails rather than quietly never
+# reaching a preview branch — which is the exact failure these blocks exist to
+# end, and would otherwise return one function at a time.
 
 [functions.calendar]
 verify_jwt = false

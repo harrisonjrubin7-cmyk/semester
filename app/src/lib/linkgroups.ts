@@ -44,10 +44,16 @@ export const groupName = (link: CampusLink): string => link.group?.trim() || OWN
  * Every heading to draw, in order.
  *
  * The app's four first and always in their order, then the student's own in
- * the order they first named them, which is the only ordering that is theirs
- * rather than the app's opinion. Names are folded case-insensitively and the
- * first spelling wins, so `Landlord` and `landlord` are one heading and not
- * two that look identical on a phone.
+ * the order of the first link that names each, which is the only ordering
+ * that is theirs rather than the app's opinion. A heading therefore sits
+ * where its rows sit: re-file the topmost added link and its heading moves
+ * with it, which is the behaviour somebody who has just moved that link
+ * expects, and is why there is no separate list of heading order to keep in
+ * step with the rows.
+ *
+ * Names are folded case-insensitively and the first spelling wins, so
+ * `Landlord` and `landlord` are one heading and not two that look identical
+ * on a phone.
  */
 export function linkGroups(added: CampusLink[]): string[] {
   const out = [...BUILT_IN_GROUPS] as string[];

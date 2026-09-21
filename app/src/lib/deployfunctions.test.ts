@@ -63,6 +63,7 @@ function slugs(): string[] {
 }
 
 const deployDoc = () => readFileSync(join(ROOT, 'supabase', 'DEPLOY.md'), 'utf8');
+const configToml = () => readFileSync(join(ROOT, 'supabase', 'config.toml'), 'utf8');
 
 /**
  * The indented block under `## What is live`, and nothing else.
@@ -100,6 +101,35 @@ describe('what DEPLOY.md says is deployed', () => {
     expect(
       missing,
       `deployed but not listed under "What is live": ${missing.join(', ')}`,
+    ).toEqual([]);
+  });
+
+  /*
+   * Supabase Branching deploys to a preview branch only what `config.toml`
+   * declares. With no `[functions]` blocks it deployed none of them, and said
+   * so on every branch — *"Only Functions declared in config.toml will be
+   * automatically deployed to branches"* — so a branch could exercise a
+   * migration and never a function.
+   *
+   * The blocks are there now. The failure they end returns one function at a
+   * time, though: the next function added without a block does not error, it
+   * silently never reaches a preview branch, and the warning about it looks
+   * exactly like the warning about nothing being wrong. So the list is held to
+   * the directory rather than to somebody remembering.
+   *
+   * Matched on the section header rather than on the slug appearing anywhere,
+   * for the same reason the "What is live" check reads one block: `calendar`
+   * and `claude` are ordinary words in that file's prose, and a looser probe
+   * would be true of them whether or not the block existed.
+   */
+  it('declares every one of them in config.toml, or previews skip it', () => {
+    const toml = configToml();
+    const undeclared = slugs().filter(
+      (s) => !new RegExp(String.raw`^\[functions\.${s}\]\s*$`, 'm').test(toml),
+    );
+    expect(
+      undeclared,
+      `no [functions.<slug>] block, so a preview branch deploys nothing for: ${undeclared.join(', ')}`,
     ).toEqual([]);
   });
 

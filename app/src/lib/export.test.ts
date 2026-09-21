@@ -448,7 +448,7 @@ describe('notesMarkdown', () => {
     body: 'I am writing to ask…',
     courseId: 'econ' as const,
     purposeId: 'extension',
-    updated: Date.UTC(2026, 8, 5),
+    updated: new Date(2026, 8, 5, 9, 0).getTime(),
     handed: null,
   };
 
@@ -468,6 +468,34 @@ describe('notesMarkdown', () => {
   it('writes a file for drafts alone rather than saying nothing was written', () => {
     const md = notesMarkdown([], code, [draft]);
     expect(md).toContain('## Extension on the essay');
+  });
+
+  it('dates a draft on the student\'s clock too, not Greenwich\'s', () => {
+    /*
+     * The notes half of this file was fixed for exactly this and carries the
+     * guard above; the drafts half was written later and reintroduced
+     * `toISOString().slice(0, 10)`. So one export could date a note the 3rd
+     * and the extension request written minutes after it the 4th.
+     *
+     * The fixture above used to be `Date.UTC(2026, 8, 5)` — a UTC midnight,
+     * which is the one value that reads the same either way — and no draft
+     * test asserted a date at all, which is why `test:zones` ran green over
+     * this for as long as it existed. Local fields in, local fields out.
+     */
+    const evening = new Date(2026, 8, 3, 21, 30);
+    const md = notesMarkdown([], code, [{ ...draft, updated: evening.getTime() }]);
+    expect(md).toContain('2026-09-03');
+  });
+
+  it('gives a note and a draft written minutes apart the same date', () => {
+    const evening = new Date(2026, 8, 3, 21, 30);
+    const md = notesMarkdown(
+      [{ ...note, updated: evening.getTime() }],
+      code,
+      [{ ...draft, updated: evening.getTime() + 60_000 }],
+    );
+    expect(md.match(/2026-09-03/g)).toHaveLength(2);
+    expect(md).not.toContain('2026-09-04');
   });
 
   it('is unchanged for a caller that has no drafts', () => {
@@ -566,7 +594,7 @@ describe('readBackup', () => {
 describe('a backup carries the semester, not the look', () => {
   const LOOK = [
     'accent', 'textSize', 'ground', 'density', 'corners', 'typeface', 'bodyface',
-    'lineHeight', 'readingWidth', 'iconShape', 'labels', 'badges', 'feed', 'shell',
+    'lineHeight', 'readingWidth', 'iconShape', 'calm', 'labels', 'badges', 'feed', 'shell',
     'groupOrder', 'boardOrder', 'hue',
   ];
 
