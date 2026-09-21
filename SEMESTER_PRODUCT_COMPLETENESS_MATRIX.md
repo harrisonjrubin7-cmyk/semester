@@ -321,6 +321,72 @@ open product decision, not a per-feature defect.
 
 ---
 
+## Part 4 — §227, the feature connection audit
+
+§227 asks whether features actually chain together, and names three chains. It
+was measured by asking which state fields more than one screen touches, across
+all 745 source files with comments stripped.
+
+**191 state fields — 124 persisted, 67 session.** The controls that had to pass
+for the numbers to mean anything: `courses` must parse as a field and read as
+shared; `query` must be absent (the thirty-third pass cut it); more than 80
+fields must parse; and something must be read at the top level, which is what
+caught the walk missing `src/App.tsx`.
+
+### The finding is about how the connections are made
+
+**A naive `state.X` matcher systematically undercounts connection in this
+codebase**, and three separate mechanisms are why:
+
+| mechanism | example | what a direct-read audit sees |
+| --- | --- | --- |
+| **derived structures** | `buildCatalog` in `data/catalog.ts` indexes every course's `items` | `items` looks like a field no screen reads — it is not a state-root field at all |
+| **accessor functions** | `currentLook(state).favourites` | `favourites`, `shortcuts` and `boardOrder` look unread |
+| **key-name registries** | `lib/merge.ts`, `lib/privacy.ts`, `lib/export.ts` each list field names as strings | `liveSession` looks unread |
+
+All four of those fields are read. **Seven fields read as "touched by nothing"
+and every one was the probe.** That matters beyond this document: any §227 silo
+hunt that greps for direct reads will report false silos, and the fix it
+proposes will be to connect things that are already connected.
+
+`state/keyread.test.ts` and `state/sessionread.test.ts` already guard the real
+version of this question, and their passing is what exposed the probe here.
+
+### Chain 1 — COURSE → Assignment → Calendar → Study Plan → … → Exam
+
+§227's first chain is the one this app is built around, and it connects:
+
+| link | carried by | screens touching it |
+| --- | --- | --- |
+| COURSE | `courses` | **10** |
+| Assignment | `CourseModule.items`, via `buildCatalog` | indirect — see above |
+| ticked / in progress | `done`, `started` | **11**, 3 |
+| Calendar | `feedEvents` | 2 |
+| Study Plan | `sessions` | 1 |
+| Mastery | `reviews` | **9** |
+| Exam | `sittings` | 1 |
+| Tasks | `tasks` | **9** |
+| New material | `updates` | 6 |
+| Notes | `notes` | 4 |
+
+The chain holds. `done` at eleven screens and `courses` at ten are the spine —
+ticking a deadline off in one place changes what every other screen says,
+which is the property §227 is asking for.
+
+### Chains 2 and 3 do not exist, and not because they are disconnected
+
+§227's other two chains are `ORGANIZATION → Event → …` and
+`CAREER → Job → Company → Event → …`. **Organizations, events, jobs and
+companies have no table and no state field**, so there is nothing to connect.
+Those chains are blocked on §47.10 and §47.11 — the product decision, not a
+wiring job — and auditing them for silos would be measuring the absence of a
+thing rather than its isolation.
+
+`career` and `applying` exist as screens and share `documents` (2 screens) and
+`applications`; that is the fragment of chain 3 that is real today.
+
+---
+
 ## What to fix, in order
 
 §226: *"Do not merely document gaps. Fix them according to priority."*
