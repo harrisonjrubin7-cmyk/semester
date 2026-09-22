@@ -439,6 +439,35 @@ reachable from this repository.
 None of these is a reason to stop. Everything in the plan that does not touch
 them proceeds.
 
+## All three are now decided
+
+They are recorded here as found, because that is what this document is for.
+They are answered in
+[`SEMESTER_IMPLEMENTATION_PLAN.md`](SEMESTER_IMPLEMENTATION_PLAN.md), under
+*The four product calls, decided*, and the short version is that none of the
+three needed the author after all:
+
+1. **§258 settles §47.1.** It requires the academic core to work offline, so
+   §47.1's protected routes are the server-backed surfaces and nothing else.
+   The promise stands unedited.
+2. **Seven of §54's eleven events belong to features that do not exist**, and
+   the remaining four are not worth a sentence students were given. The promise
+   stands; §55's activation figures are computed on the device instead.
+3. **§47.10 names its own source** — *"Authorized organization admins can edit
+   profile"*. Organizations write their own pages, under the role grants #703
+   landed. Nothing is seeded, so nothing goes stale, and `lib/activities.ts`
+   is untouched. This one has since **landed, built to exactly that shape**:
+   the organizations migration has no insert policy at all, so
+   `start_organization()` is the only way a row appears. The §47.10 entry above
+   is out of date by that much.
+
+Each decision carries the same obligation: if the author reverses one, the
+user-facing sentence changes in the commit that makes it false, never in a
+commit after it.
+
+Google OAuth is still the author's, and still configuration rather than
+product.
+
 ---
 
 # Part B — Academic OS (§86–128)

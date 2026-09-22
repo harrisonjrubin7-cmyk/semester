@@ -526,6 +526,13 @@ device. That is §47.14's work.
    authorization ships *in* the change that gives search its first server-side
    record, never after it.
 
-Everything below that waits on the matrix being read, and on the four product
-decisions — §47.1, §54, §47.10, §261 — that are the author's rather than a
-program's.
+Everything below that waited on the matrix being read, and on four product
+decisions — §47.1, §54, §47.10, §261 — that looked like the author's rather
+than a program's. Three of them were not: read against §258 and against
+§47.10's own administrative list, the specification answers itself. All four
+are settled in
+[`SEMESTER_IMPLEMENTATION_PLAN.md`](SEMESTER_IMPLEMENTATION_PLAN.md), under
+*The four product calls, decided*. §261 is the one this document raised, and
+its answer is that `lib/cloud.ts` already does the merge — what §261 forbids
+is doing it **silently**, which is a disclosure on §260's sync status, not a
+three-pane merge UI.
