@@ -41,6 +41,7 @@ import type { Screen } from './lib/types';
 
 const SearchHome = lazy(() => import('./screens/Search').then((m) => ({ default: m.SearchHome })));
 const Directory = lazy(() => import('./screens/Directory').then((m) => ({ default: m.Directory })));
+const Moderation = lazy(() => import('./screens/Moderation').then((m) => ({ default: m.Moderation })));
 const University = lazy(() => import('./screens/University').then((m) => ({ default: m.University })));
 const Athletics = lazy(() => import('./screens/Athletics').then((m) => ({ default: m.Athletics })));
 const Nil = lazy(() => import('./screens/Nil').then((m) => ({ default: m.Nil })));
@@ -130,6 +131,7 @@ export const Guides = lazy(() => import('./screens/Guides').then((m) => ({ defau
 export const SCREENS: Record<Exclude<Screen, 'home' | 'onboarding'>, ComponentType> = {
   search: SearchHome,
   directory: Directory,
+  moderation: Moderation,
   university: University,
   athletics: Athletics,
   nil: Nil,

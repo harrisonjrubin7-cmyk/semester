@@ -264,6 +264,14 @@ export const HEADERS: Record<Screen, (c: HeaderCtx) => Head> = {
   account: () => ({ kicker: 'Your semester, everywhere', title: 'Account' }),
   slides: (c) => ({ kicker: c.about('deck'), title: 'Slides' }),
   import: () => ({ kicker: 'Syllabus in, course out', title: 'New course' }),
+  /*
+   * Its own line rather than `fromRegistry`, because the registry does not
+   * list it and the fallback's last resort is "Today" — which over a queue of
+   * harassment reports would be the exact failure that table was built to make
+   * unrepresentable. See `screens/Moderation.tsx` for why it is not a
+   * destination.
+   */
+  moderation: () => ({ kicker: 'Administrators', title: 'Report queue' }),
   // The six with no line of their own: four that the registry names —
   // Everything, How this works, Your data, Privacy — and the two shell
   // screens, which are the workspace looking at itself and are deliberately

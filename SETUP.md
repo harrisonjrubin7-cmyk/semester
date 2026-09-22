@@ -289,7 +289,8 @@ Microsoft or Apple account is valid.
 
 ### Optional · Making an administrator
 
-`public.app_admins` decides who may open the internal administrator dashboard.
+`public.app_admins` decides who may open the report queue at `#/moderation`
+(below), and any internal screen added later.
 It has row-level security on and **no policy at all**, so no account can read
 it, write it, or take itself off it — including the administrator it names.
 That is deliberate: an account that can make itself an administrator is one,
@@ -309,6 +310,30 @@ node scripts/grant-admin.ts revoke ada@vanderbilt.edu
 
 They have to have signed up in the app first — the script never creates an
 account, it only finds one.
+
+#### Where an administrator actually goes
+
+**`#/moderation`**, in the app, signed in as the account that was granted.
+
+It is the report queue: every report a student has filed from a classmate
+room, what the message said, and the four transitions —
+`open · under_review · resolved · dismissed`. Reports have been collected
+since 1 September and were unreadable by anybody until
+`20260921214500_report_status.sql`; that migration opened the table to
+`private.is_app_admin()` and this screen is what opens it.
+
+**It is not in the app's directory and it is not meant to be.** Being an
+administrator is not a fact the browser is allowed to know — `app_admins` has
+no select policy, which is exactly what makes the queue's policy
+un-spoofable — so there is no honest way to offer the screen to the right
+people and nobody else. The address is the door, and this is where it is
+written down.
+
+Anyone may open it; the server is the gate. An account that is not an
+administrator is sent the same query and gets no rows, which is the same
+nothing it had before. **The screen says so**: an empty queue and an account
+with no business there are identical from the device, so it states both rather
+than telling somebody there are no reports when it cannot know that.
 
 **This is the one place the service key belongs outside Supabase**, and the
 paragraph above about not putting it anywhere else still holds everywhere

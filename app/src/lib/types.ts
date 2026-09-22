@@ -710,6 +710,16 @@ export type Screen =
   // not a bookmark. See `lib/desk.ts`.
   | 'search'
   | 'directory'
+  /*
+   * The report queue, which is not a destination and is reached by address.
+   *
+   * `#/moderation`. Not in `lib/nav.ts` because the only thing the registry
+   * could do with it is offer it to every student: `lib/reveal.ts` gates on
+   * facts about a semester, and being an administrator is not one — the client
+   * is not allowed to know it, which is what makes the policy behind this
+   * un-spoofable. See `screens/Moderation.tsx`.
+   */
+  | 'moderation'
   | 'data'
   | 'help'
   | 'onboarding'

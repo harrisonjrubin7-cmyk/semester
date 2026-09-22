@@ -51,6 +51,27 @@ const OPENED_FROM_SOMEWHERE_ELSE: Record<string, string> = {
     'Every app this student has, as a list or a grid. Opened from All apps in the ' +
     'sidebar, from the launcher, and from Explore all apps on the search home. It is ' +
     'the index of the registry rather than a row in it.',
+  /*
+   * The one entry here that is not opened from another screen, and the reason
+   * is worth more than the row. Every other line above says "you arrive at
+   * this from the thing it belongs to". This one says the app is not allowed
+   * to know who should see it.
+   *
+   * Being an administrator is a fact about `public.app_admins`, which has no
+   * select policy — a browser cannot read whether the account it is signed in
+   * as is on that list, and that is exactly what makes the queue's policy
+   * un-spoofable. So there is no honest gate for a directory entry: listing it
+   * offers a report queue to every student, and `lib/reveal.ts` gates on facts
+   * about a semester, which this is not and cannot be made into.
+   *
+   * The address is the door, `SETUP.md` writes it down beside making somebody
+   * an administrator, and the server answers the query for administrators and
+   * for nobody else.
+   */
+  moderation:
+    'The report queue. Reached at `#/moderation` by an administrator, and deliberately ' +
+    'not offered: whether somebody is one is a fact the client is not allowed to read. ' +
+    'See `screens/Moderation.tsx` and SETUP.md.',
 };
 
 /** The `Screen` union, read from the source that defines it. */
