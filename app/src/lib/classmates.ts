@@ -32,6 +32,17 @@
  * otherwise would be the worst kind of lie in a feature like this — somebody
  * would rely on it. Blocking is the remedy that works, and it is immediate.
  *
+ * That sentence stands although the queue itself now exists, and this note is
+ * here so the next reader does not take it for an oversight.
+ * `20260921214500_report_status.sql` gave `public.reports` a status and a
+ * select policy, and `screens/Moderation.tsx` is the screen an administrator
+ * opens it with. Both are preconditions for somebody watching. **Neither is
+ * somebody watching.** Whether anybody reads the queue is a fact about a rota
+ * in an institution, which no amount of code here can establish and which this
+ * app must not imply on the strength of having built the tool. The sentence
+ * changes when there is a person, and the promise it makes is deliberately the
+ * weaker of the two available.
+ *
  * Everything above the network line here is pure and tested: normalising a
  * course code is what decides whether two people are in the same room at all,
  * and getting it wrong splits a lecture into "ECON 1020", "econ1020" and

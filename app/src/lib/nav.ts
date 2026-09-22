@@ -1014,6 +1014,10 @@ const NESTED_NAMES: Partial<Record<Screen, string>> = {
   // browser's new-tab page is not one of your bookmarks. See `lib/desk.ts`.
   search: 'the search home',
   directory: 'all apps',
+  // The report queue. Not in the registry, because the registry's job is to
+  // offer things and there is no fact about a semester that says somebody
+  // moderates. See `screens/Moderation.tsx`.
+  moderation: 'the report queue',
   course: 'this course',
   item: 'this deadline',
   event: 'this event',

@@ -62,7 +62,30 @@ const SETTINGS = [
   'setAssistant',
 ] as const;
 
-const NOT_DESTINATIONS = new Set<string>([...SHELL, ...FIRST_RUN, ...DETAIL, ...SETTINGS]);
+/**
+ * The one screen the app is not allowed to offer.
+ *
+ * Not a detail page, not a settings page and not part of the shell — the
+ * report queue is a place, and it would be a destination like any other but
+ * for one fact: the client cannot know who should see it. `public.app_admins`
+ * has no select policy, which is what makes the queue's own policy
+ * un-spoofable, so a browser cannot ask whether the account it is signed in as
+ * belongs there. `lib/reveal.ts` gates the directory on facts about a
+ * semester, and this is not one.
+ *
+ * Listing it anyway would offer a report queue to every student who imported a
+ * course. The address is the door and `SETUP.md` is where it is written down.
+ * See `screens/Moderation.tsx`.
+ */
+const BY_ADDRESS = ['moderation'] as const;
+
+const NOT_DESTINATIONS = new Set<string>([
+  ...SHELL,
+  ...FIRST_RUN,
+  ...DETAIL,
+  ...SETTINGS,
+  ...BY_ADDRESS,
+]);
 
 /**
  * The union, read out of the file rather than imported.
