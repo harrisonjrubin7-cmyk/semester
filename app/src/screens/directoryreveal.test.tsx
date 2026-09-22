@@ -190,8 +190,26 @@ describe('the directory on a brand-new account', () => {
     const panel = suggested();
     const offered = held.filter((d) => panel.includes(d.blurb.slice(0, 40)));
     expect(offered.map((d) => d.screen)).toEqual([]);
-    // And the panel is drawing something, so this is a statement about what
-    // it chose rather than about it being absent.
-    expect(panel).toContain('Upload a syllabus');
+    /*
+     * And the panel is drawing something, so the empty list above is a
+     * statement about what it chose rather than about it being absent.
+     *
+     * **Not by name, and that is the whole of this comment.** This read
+     * `toContain('Upload a syllabus')` and was green for a day at a time:
+     * `offer` in `lib/unseen.ts` rotates the three by the calendar day —
+     * `dayIndex % left.length`, a window of three sliding one position every
+     * midnight — so naming a screen asserts that today is one of about three
+     * days in forty-six. It was written on one of them. It went red on
+     * 22 September with nothing in the app having changed, and the commit it
+     * broke under was a dependency bump, which is exactly the wrong place to
+     * go looking.
+     *
+     * So the liveness check is liveness: the panel drew rows, and what it
+     * drew is real destinations rather than chrome. Both survive the rotation
+     * and survive a screen being added to or taken out of the pool, which is
+     * the other thing that moves `left.length` underneath a named assertion.
+     */
+    const shown = DESTINATIONS.filter((d) => panel.includes(d.blurb.slice(0, 40)));
+    expect(shown.length).toBeGreaterThan(0);
   });
 });
