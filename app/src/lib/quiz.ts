@@ -3,6 +3,8 @@ import type { DeckCard } from '../data/catalog';
 import type { Guide } from './types';
 import type { QuizQuestion } from '../state/store';
 import { judge, normalise } from './word';
+import { SPOTS, askable } from './hotspot';
+import type { DiagramKind } from './types';
 
 /**
  * Long answers are clipped so four options fit on a phone without scrolling
@@ -141,6 +143,62 @@ function wordFrom(
      * guide's own terms rather than against whatever was left.
      */
     others: all.filter((o) => o.t !== pick.t).map((o) => o.t),
+  };
+}
+
+/**
+ * One click-on-target question from a diagram, or nothing.
+ *
+ * The answer is a place on a picture rather than a string, and the shape that
+ * makes possible is the reason this kind needed no new state: **the spots are
+ * the options.** `opts` holds one entry per clickable part in the order
+ * `lib/hotspot.ts` lists them, `ok` marks the one being asked for, and the
+ * screen draws them as boxes over the drawing instead of as rows of text. So
+ * `pickAnswer` marks it, `isAnswered` already knows when it is done, and undo,
+ * scoring and the hint ladder all work without being told this kind exists.
+ *
+ * Which is worth stating plainly, because the obvious build — a `clickTarget`
+ * action carrying coordinates, and hit-testing in the reducer — would have put
+ * the geometry in three places and the marking in a fourth.
+ */
+function targetFrom(kinds: DiagramKind[], rnd: () => number): QuizQuestion | null {
+  if (kinds.length === 0) return null;
+  const kind = kinds[Math.floor(rnd() * kinds.length)];
+  /*
+   * Asked through `askable` rather than by counting the spots here.
+   *
+   * `diagramsIn` already filters the list this is handed, so in the app the
+   * check never fires — but `buildQuiz` takes the kinds as an argument and
+   * nothing stops a caller passing one straight in. Restating the rule as
+   * `spots.length < 2` is what this line was first written as, and the two
+   * copies would agree until `MIN_SPOTS` moved. One authority, in the file
+   * that holds the spots.
+   *
+   * Said plainly, because it is the kind of thing that otherwise reads as
+   * tested: **the `askable` half of this cannot fire today.** Every diagram in
+   * `SPOTS` has two spots or more, so a kind is either absent — caught by
+   * `!spots` — or askable, and no test can reach the gap between. Deleting
+   * `askable(kind)` breaks nothing and a mutant of it survives. It stays as
+   * the thing that will be right the day somebody adds a one-spot diagram,
+   * and `hotspot.test.ts` is where that day is actually guarded: it asserts
+   * every entry clears `MIN_SPOTS`, which is the same rule reached from the
+   * side that can be measured.
+   */
+  const spots = SPOTS[kind];
+  if (!spots || !askable(kind)) return null;
+  const want = Math.floor(rnd() * spots.length);
+
+  return {
+    kind: 'target',
+    q: `Click ${spots[want].ask}.`,
+    unit: 'Figures',
+    full: spots[want].name,
+    diagram: kind,
+    // In the spot map's own order, never shuffled: the options *are* places on
+    // a picture, and re-ordering them would move the answer rather than move a
+    // row. `shown` on a matching question exists because that one has two
+    // columns to scramble; this one has none.
+    opts: spots.map((s, i) => ({ text: s.name, ok: i === want })),
   };
 }
 
@@ -298,6 +356,17 @@ const TRUE_FALSE = 3;
 const WORD_ANSWERS = 2;
 
 /**
+ * At most this many click-on-target questions in a run of ten.
+ *
+ * One, and for the same reason the matching question is capped at one: a
+ * diagram is the longest single act of looking in the run, and a second one
+ * would have to come off a deck of five pictures, so two runs in a row would
+ * repeat. When there are more diagrams with spots than there are courses, this
+ * is the number to revisit.
+ */
+const TARGETS = 1;
+
+/**
  * Up to ten questions drawn from the guide — multiple choice, true-or-false,
  * and one round of matching where the key terms allow it.
  *
@@ -317,7 +386,19 @@ const WORD_ANSWERS = 2;
  * with the answer already given away by the first of them. The pools are
  * therefore cut from one shuffled deck rather than drawn independently.
  */
-export function buildQuiz(guide: Guide, seed: number): QuizQuestion[] {
+export function buildQuiz(
+  guide: Guide,
+  seed: number,
+  /**
+   * The diagrams this course illustrates, filtered to the ones that can be
+   * asked about. Handed in rather than read, because figures hang off the
+   * *module* and this file is deliberately free of the catalogue — the same
+   * reason `lib/intime.ts` is handed its tests. Empty by default, which means
+   * no diagram questions, which is the honest answer for a caller that does
+   * not know.
+   */
+  diagrams: DiagramKind[] = [],
+): QuizQuestion[] {
   const all = allCards(guide);
   if (all.length === 0) return [];
 
@@ -357,6 +438,11 @@ export function buildQuiz(guide: Guide, seed: number): QuizQuestion[] {
    * which is the typed-answer version of the "no card twice" rule below: the
    * second asking is the first one with the answer already given.
    */
+  for (let i = 0; i < TARGETS; i++) {
+    const target = targetFrom(diagrams, rnd);
+    if (target) out.push(target);
+  }
+
   const askable = wordableTerms(guide);
   const pool = [...askable];
   for (let i = 0; i < WORD_ANSWERS && pool.length > 0; i++) {

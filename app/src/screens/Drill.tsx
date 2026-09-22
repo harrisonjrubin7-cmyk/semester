@@ -7,6 +7,8 @@ import { SayIt } from '../components/SayIt';
 import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
 import { buildQuiz, isAnswered, wordRight } from '../lib/quiz';
+import { CANVAS, SPOTS, diagramsIn } from '../lib/hotspot';
+import { Diagram } from '../components/Diagram';
 import { ladderFor, nextRungLabel, scoreLine } from '../lib/ladder';
 import { A_SITTING, aSitting, catching, dueCount } from '../lib/review';
 import { inTime, testsNear } from '../lib/intime';
@@ -562,6 +564,84 @@ export function Drill() {
 }
 
 /**
+ * A click-on-target question: the diagram, with its parts clickable.
+ *
+ * The boxes are `lib/hotspot.ts`'s, positioned as percentages of the 320×200
+ * canvas the SVG is drawn on — which is what makes them line up at any width
+ * without anybody storing a pixel size. The SVG scales; so do they.
+ *
+ * **They are invisible until the answer is in.** A target you can see is a
+ * target you can count, and a question with four faint rectangles on it is one
+ * you can answer by elimination without looking at the picture. Once answered
+ * the right one is outlined and, if a wrong one was clicked, so is that — the
+ * two together being the thing worth seeing, since "not there, here" is the
+ * whole lesson of a diagram question.
+ *
+ * Each box is a real `button` with the spot's name on it, so the question is
+ * answerable without a pointer and readable by a screen reader, which a set of
+ * SVG click handlers would not be. The name is the accessible name only; it is
+ * not drawn, or the answer would be written on the target.
+ */
+function Targets({
+  question,
+  picked,
+  answered,
+  onPick,
+}: {
+  question: QuizQuestion;
+  picked: number | null;
+  answered: boolean;
+  onPick: (index: number) => void;
+}) {
+  const spots = question.diagram ? (SPOTS[question.diagram] ?? []) : [];
+  if (!question.diagram || spots.length === 0) return null;
+
+  return (
+    <Blueprint
+      style={{
+        marginTop: 'var(--sp-6)',
+        paddingBlock: 'calc(13px * var(--density, 1))',
+        paddingInline: 'calc(14px * var(--density, 1))',
+      }}
+    >
+      <div style={{ position: 'relative' }}>
+        <Diagram kind={question.diagram} />
+        {spots.map((spot, i) => {
+          const right = question.opts[i]?.ok ?? false;
+          const chosen = picked === i;
+          const show = answered && (right || chosen);
+          return (
+            <button
+              key={spot.name}
+              type="button"
+              className="bare"
+              onClick={() => onPick(i)}
+              disabled={answered}
+              style={{
+                position: 'absolute',
+                left: `${(spot.x / CANVAS.w) * 100}%`,
+                top: `${(spot.y / CANVAS.h) * 100}%`,
+                width: `${(spot.w / CANVAS.w) * 100}%`,
+                height: `${(spot.h / CANVAS.h) * 100}%`,
+                padding: 0,
+                background: show && right ? 'var(--app-accent-wash)' : 'transparent',
+                border: show
+                  ? `1.5px solid ${right ? 'var(--app-accent)' : 'var(--app-line)'}`
+                  : '1px solid transparent',
+                cursor: answered ? 'default' : 'pointer',
+              }}
+            >
+              {/* Named for a screen reader, drawn for nobody. */}
+              <span className="sr-only">{spot.name}</span>
+            </button>
+          );
+        })}
+      </div>
+    </Blueprint>
+  );
+}
+
+/**
  * A typed-answer question: the definition is on screen, the term is not.
  *
  * The first question in this app that is not answered by picking, and the two
@@ -856,7 +936,7 @@ function Matching({
 
 /** Ten multiple choice, with the full answer revealed after each pick. */
 export function Quiz() {
-  const { state, dispatch } = useStore();
+  const { state, dispatch, catalog } = useStore();
   const { guide } = useLive(state.guideId);
   const over = state.quiz.length > 0 && state.quizIdx >= state.quiz.length;
   const current = state.quiz[state.quizIdx];
@@ -878,7 +958,10 @@ export function Quiz() {
    */
   useEffect(() => {
     if (state.quiz.length === 0 && allCards(guide).length > 0) {
-      dispatch({ type: 'startQuiz', quiz: buildQuiz(guide, state.quizSeed) });
+      dispatch({
+        type: 'startQuiz',
+        quiz: buildQuiz(guide, state.quizSeed, diagramsIn(catalog.figures[state.guideId])),
+      });
     }
     // Only ever on arriving at an empty quiz. Depending on the seed would
     // rebuild the deck under the answer being read, since `startQuiz` moves it.
@@ -949,7 +1032,12 @@ export function Quiz() {
             <button
               type="button"
               className="btn btn-primary"
-              onClick={() => dispatch({ type: 'startQuiz', quiz: buildQuiz(guide, state.quizSeed) })}
+              onClick={() =>
+                dispatch({
+                  type: 'startQuiz',
+                  quiz: buildQuiz(guide, state.quizSeed, diagramsIn(catalog.figures[state.guideId])),
+                })
+              }
               style={{ flex: 1, height: 48, letterSpacing: '0.1em', textTransform: 'uppercase' }}
             >
               New ten
@@ -1076,6 +1164,15 @@ export function Quiz() {
         />
       )}
 
+      {current.kind === 'target' && (
+        <Targets
+          question={current}
+          picked={state.quizPicked}
+          answered={answered}
+          onPick={(index) => dispatch({ type: 'pickAnswer', index })}
+        />
+      )}
+
       {current.kind === 'word' && (
         /*
          * Keyed on the question, so React gives a new question a new input
@@ -1094,8 +1191,14 @@ export function Quiz() {
         />
       )}
 
+      {/*
+        The options as rows — every kind but the target, whose options are
+        places on a picture and are drawn as boxes over it by `Targets` above.
+        Drawing both would put each answer on the screen twice, and the list
+        would be answerable without looking at the diagram at all.
+      */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(9px * var(--density, 1))', marginTop: 'var(--sp-7)' }}>
-        {current.opts.map((o, i) => {
+        {(current.kind === 'target' ? [] : current.opts).map((o, i) => {
           const chosen = state.quizPicked === i;
           const reveal = answered;
           return (
@@ -1218,7 +1321,13 @@ export function Quiz() {
         <>
           <Blueprint style={{ paddingBlock: 'calc(13px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))', marginTop: 'var(--sp-7)' }}>
             <div className="kicker">
-              {current.kind === 'match' ? 'The pairs' : current.kind === 'word' ? 'The term' : 'In full'}
+              {current.kind === 'match'
+                ? 'The pairs'
+                : current.kind === 'word'
+                  ? 'The term'
+                  : current.kind === 'target'
+                    ? 'What that is'
+                    : 'In full'}
             </div>
             <div
               style={{

@@ -16,6 +16,7 @@ import type {
   CampusLink,
   ChangeSource,
   CostsTab,
+  DiagramKind,
   CoursesTab,
   CourseId,
   CourseModule,
@@ -1092,7 +1093,7 @@ export interface Ephemeral {
  * than producing it, and the exam asks for the second. What that costs is a
  * marking problem, which `lib/word.ts` is about.
  */
-export type QuizKind = 'choice' | 'truefalse' | 'match' | 'word';
+export type QuizKind = 'choice' | 'truefalse' | 'match' | 'word' | 'target';
 
 /** One term and the definition it belongs to, in a matching question. */
 export interface QuizPair {
@@ -1127,6 +1128,16 @@ export interface QuizQuestion {
    * tolerance safe rather than generous.
    */
   others?: string[];
+  /**
+   * The diagram to draw, and to click on. Only on a target.
+   *
+   * The clickable parts are `opts`, in `lib/hotspot.ts`'s order — so this is
+   * the only extra field the kind needs, and `pickAnswer` marks it like any
+   * other question. The geometry is looked up from the kind rather than copied
+   * here: a box stored on the question is a box that can disagree with the one
+   * the screen draws.
+   */
+  diagram?: DiagramKind;
   /**
    * The order the right-hand column is drawn in, as indexes into `pairs`.
    *

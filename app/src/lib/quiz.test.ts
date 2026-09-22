@@ -9,6 +9,7 @@ import {
   MATCH_PAIRS,
 } from './quiz';
 import type { Guide } from './types';
+import { SPOTS, diagramsIn } from './hotspot';
 
 /**
  * A quiz is marked, so its mistakes cost somebody a score.
@@ -212,6 +213,78 @@ const TERMED = (): Guide => ({
     { t: 'Deadweight loss', d: 'Trades worth making that no longer happen.' },
     { t: 'HHI', d: 'The sum of squared market shares.' },
   ],
+});
+
+describe('click on target', () => {
+  const DIAGRAMS = ['supply-demand', 'monopoly'] as const;
+
+  it('asks one, off a diagram it was given', () => {
+    const targets = buildQuiz(TERMED(), 1, [...DIAGRAMS]).filter((q) => q.kind === 'target');
+    expect(targets).toHaveLength(1);
+    expect(DIAGRAMS).toContain(targets[0].diagram!);
+  });
+
+  it('asks none when it is given no diagrams', () => {
+    // The default, which is what every caller that does not know gets.
+    expect(buildQuiz(TERMED(), 1).filter((q) => q.kind === 'target')).toHaveLength(0);
+    expect(buildQuiz(TERMED(), 1, []).filter((q) => q.kind === 'target')).toHaveLength(0);
+  });
+
+  /*
+   * The options are the spots, in the spot map's own order and never shuffled.
+   * A target question's options *are* places on a picture, so re-ordering them
+   * would move the answer rather than move a row — which is why this kind
+   * needed no `shown` and no new reducer action.
+   */
+  it('lines its options up with the diagram’s spots, in order', () => {
+    for (const seed of [1, 2, 5, 9, 13]) {
+      const t = buildQuiz(TERMED(), seed, [...DIAGRAMS]).find((q) => q.kind === 'target');
+      if (!t) continue;
+      const spots = SPOTS[t.diagram!]!;
+      expect(t.opts.map((o) => o.text), `seed ${seed}`).toEqual(spots.map((s) => s.name));
+    }
+  });
+
+  it('marks exactly one option right, and names it in full', () => {
+    for (const seed of [1, 2, 5, 9, 13, 21]) {
+      const t = buildQuiz(TERMED(), seed, [...DIAGRAMS]).find((q) => q.kind === 'target');
+      if (!t) continue;
+      expect(t.opts.filter((o) => o.ok), `seed ${seed}`).toHaveLength(1);
+      expect(t.full).toBe(t.opts.find((o) => o.ok)!.text);
+      expect(t.q, `seed ${seed}`).toMatch(/^Click .+\.$/);
+    }
+  });
+
+  /*
+   * It is answered by picking, like a choice, and that is the whole design:
+   * the reducer, the score, undo and the hint ladder all work on this kind
+   * without having been told it exists.
+   */
+  it('is answered by picking, with no typing and no joining', () => {
+    const t = buildQuiz(TERMED(), 1, [...DIAGRAMS]).find((q) => q.kind === 'target')!;
+    expect(isAnswered(t, null, {}, null)).toBe(false);
+    expect(isAnswered(t, 0, {}, null)).toBe(true);
+  });
+
+  it('asks about a diagram with too few spots not at all', () => {
+    // `funnel` is drawn by the app and has no spots, which is the honest
+    // answer for a picture whose parts cannot be clicked apart on a phone.
+    expect(buildQuiz(TERMED(), 1, ['funnel']).filter((q) => q.kind === 'target')).toHaveLength(0);
+  });
+
+  it('reads a course’s figures for the diagrams worth asking about', () => {
+    expect(
+      diagramsIn({
+        0: { type: 'diagram', title: 'S and D', caption: '', kind: 'supply-demand' },
+        1: { type: 'diagram', title: 'A funnel', caption: '', kind: 'funnel' },
+        2: { type: 'steps', title: 'Steps', caption: '', steps: [] },
+        3: { type: 'diagram', title: 'S and D again', caption: '', kind: 'supply-demand' },
+      }),
+    ).toEqual(['supply-demand']);
+    // `funnel` dropped for having no spots, the repeat collapsed, the
+    // non-diagram ignored. And nothing at all out of nothing at all.
+    expect(diagramsIn(undefined)).toEqual([]);
+  });
 });
 
 describe('typed answers', () => {
