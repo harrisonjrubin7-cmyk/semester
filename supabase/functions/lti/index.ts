@@ -64,7 +64,17 @@ import { createRemoteJWKSet, importJWK, jwtVerify, SignJWT, type JWK } from 'npm
 import { checkLaunch, startLogin, type Launch, type Registration } from '../_shared/lti.ts';
 import { landingPath, provisionedEmail, provisionedMetadata } from '../_shared/ltiaccount.ts';
 import { autoPostForm, mayPlace, readSettings, resourceLinkItem, responseClaims } from '../_shared/ltideeplink.ts';
-import { jwks, keyId, publicJwk } from '../_shared/ltikey.ts';
+import { SCOPE, clientAssertion, jwks, keyId, publicJwk, tokenRequest } from '../_shared/ltikey.ts';
+import {
+  SCORE_MEDIA,
+  matchLineItem,
+  readEndpoint,
+  scoreBody,
+  scoresUrl,
+  tokenResponse,
+  type LineItemRow,
+} from '../_shared/ltiags.ts';
+import { corsHeaders } from '../_shared/cors.ts';
 
 /** How long a launch has between the redirect out and the POST back. */
 const FLIGHT_SECONDS = 300;
@@ -332,6 +342,133 @@ Deno.serve(async (req) => {
   const client = db();
 
   /*
+   * ── A score, going the other way ──────────────────────────────────────
+   *
+   * The one route here a browser reaches with `fetch` rather than by being
+   * sent, so the one that needs CORS and the one that verifies a Semester
+   * session rather than a platform token. The app calls it when a quiz ends,
+   * with a course code and a score; the answer is whether that went anywhere.
+   *
+   * Every refusal below the session check answers 200 with `reported: false`
+   * and a reason word. They are not errors from the student's side — "this
+   * course is not graded in Brightspace" is the ordinary state of nearly
+   * every course in the app — and a 4xx would put a red line in a console
+   * for a quiz that went perfectly well.
+   */
+  if (path.endsWith('/score')) {
+    const cors = corsHeaders(Deno.env.get('ALLOWED_ORIGIN'), req.headers.get('Origin'));
+    const answer = (body: Record<string, unknown>, status = 200) =>
+      new Response(JSON.stringify(body), {
+        status,
+        headers: { ...cors, 'content-type': 'application/json' },
+      });
+    const not = (reason: string, detail: string, status = 200) => {
+      console.log(`lti score not reported: ${reason} — ${detail}`);
+      return answer({ reported: false, reason }, status);
+    };
+
+    if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors });
+    if (req.method !== 'POST') return answer({ error: 'POST only' }, 405);
+
+    // ── who is asking ──────────────────────────────────────────────────
+    const bearer = req.headers.get('Authorization')?.replace(/^Bearer\s+/i, '');
+    if (!bearer) return answer({ error: 'Sign in first.' }, 401);
+    const { data: session, error: authError } = await client.auth.getUser(bearer);
+    if (authError || !session?.user) return answer({ error: 'That session is not valid.' }, 401);
+    const userId = session.user.id;
+
+    let body: { code?: unknown; given?: unknown; max?: unknown };
+    try {
+      body = await req.json();
+    } catch {
+      return answer({ error: 'The body is not JSON.' }, 400);
+    }
+    const code = typeof body.code === 'string' ? body.code : '';
+    const given = typeof body.given === 'number' ? body.given : Number.NaN;
+    const max = typeof body.max === 'number' ? body.max : Number.NaN;
+
+    // ── the identities this account holds, and the columns they know ───
+    const { data: identities, error: idError } = await client
+      .from('lti_identity')
+      .select('issuer, subject')
+      .eq('user_id', userId);
+    if (idError) return not('identity-lookup-failed', idError.message, 500);
+    if (!identities || identities.length === 0) return not('no-identity', 'This account has never been launched from a platform.');
+
+    const rows: LineItemRow[] = [];
+    for (const id of identities) {
+      const { data: items, error: liError } = await client
+        .from('lti_line_item')
+        .select('issuer, subject, client_id, context_id, context_title, lineitem_url, scopes')
+        .eq('issuer', id.issuer)
+        .eq('subject', id.subject);
+      if (liError) return not('line-item-lookup-failed', liError.message, 500);
+      for (const it of items ?? []) rows.push(it as LineItemRow);
+    }
+
+    const match = matchLineItem(rows, code);
+    if (!match.ok) return not(match.reason, match.detail);
+    const item = match.value;
+
+    const score = scoreBody({ userId: item.subject, given, max, at: Date.now() });
+    if (!score.ok) return not(score.reason, score.detail, 400);
+
+    // ── a token of our own ─────────────────────────────────────────────
+    const reg = await registration(client, item.issuer, item.client_id);
+    if (!reg) return not('registration-gone', `Registration for ${item.issuer} is no longer there.`, 500);
+    const key = privateJwk();
+    if (!key) return not('no-key', 'LTI_PRIVATE_KEY is not set, so nothing can be signed.', 503);
+
+    const assertion = clientAssertion(reg, crypto.randomUUID(), Math.floor(Date.now() / 1000));
+    if (!assertion.ok) return not(assertion.reason, assertion.detail, 500);
+
+    let signed: string;
+    try {
+      const kid = await keyId(key);
+      signed = await new SignJWT(assertion.value)
+        .setProtectedHeader({ alg: 'RS256', kid, typ: 'JWT' })
+        .sign(await importJWK(key as JWK, 'RS256'));
+    } catch (e) {
+      return not('sign-failed', `The client assertion could not be signed: ${e}`, 500);
+    }
+
+    const form = tokenRequest(signed, [SCOPE.score]);
+    if (!form.ok) return not(form.reason, form.detail, 500);
+
+    let token: string;
+    try {
+      const res = await fetch(reg.tokenUrl!, {
+        method: 'POST',
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        body: form.value,
+      });
+      if (!res.ok) return not('token-refused', `${reg.tokenUrl} answered ${res.status}.`, 502);
+      const parsed = tokenResponse(await res.json());
+      if (!parsed.ok) return not(parsed.reason, parsed.detail, 502);
+      token = parsed.value;
+    } catch (e) {
+      return not('token-unreachable', `${reg.tokenUrl}: ${e}`, 502);
+    }
+
+    // ── and the number, to the column the instructor made ──────────────
+    try {
+      const res = await fetch(scoresUrl(item.lineitem_url), {
+        method: 'POST',
+        headers: { authorization: `Bearer ${token}`, 'content-type': SCORE_MEDIA },
+        body: JSON.stringify(score.value),
+      });
+      if (!res.ok) return not('platform-refused', `${item.lineitem_url} answered ${res.status}.`, 502);
+    } catch (e) {
+      return not('platform-unreachable', `${item.lineitem_url}: ${e}`, 502);
+    }
+
+    console.log(
+      `lti score ok: iss=${item.issuer} sub=${item.subject} context=${item.context_id} ${given}/${max}`,
+    );
+    return answer({ reported: true, course: item.context_title ?? item.context_id });
+  }
+
+  /*
    * ── The public half of this tool's key ────────────────────────────────
    *
    * A school's administrator gives this address to Brightspace when they
@@ -535,6 +672,44 @@ Deno.serve(async (req) => {
 
     const bound = await accountFor(client, who);
     if (!bound.ok) return refuse(bound.reason, bound.detail, 500);
+
+    /*
+     * ── Where this course's grades go, if anywhere ────────────────────────
+     *
+     * After `accountFor`, because the row points at the identity it just made
+     * or found, and before the redirect, because this is the only moment the
+     * claim is in hand. Nothing here can fail the launch: a student standing
+     * in an LMS is not the person to show a gradebook error to, and a launch
+     * that works without a grade column is the ordinary launch.
+     *
+     * `not-graded` is logged at the same level as success, deliberately. It is
+     * not a fault; it is the instructor having placed an ordinary link, which
+     * is most links.
+     */
+    const grades = readEndpoint(claims);
+    if (grades.ok) {
+      const { error: liError } = await client
+        .from('lti_line_item')
+        .upsert(
+          {
+            issuer: who.issuer,
+            subject: who.subject,
+            context_id: who.contextId ?? '',
+            client_id: who.clientId,
+            context_title: who.contextTitle,
+            resource_link_id: who.resourceLinkId,
+            lineitem_url: grades.value.lineitem,
+            lineitems_url: grades.value.lineitems,
+            scopes: grades.value.scopes,
+            seen_at: new Date().toISOString(),
+          },
+          { onConflict: 'issuer,subject,context_id' },
+        );
+      if (liError) console.error(`lti line item not recorded: ${liError.message}`);
+      else console.log(`lti line item: context=${who.contextId ?? '-'} lineitem=${grades.value.lineitem}`);
+    } else {
+      console.log(`lti line item: ${grades.reason} — ${grades.detail}`);
+    }
 
     /*
      * The session, minted server-side. Nothing else in this project does this

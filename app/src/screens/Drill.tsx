@@ -750,9 +750,44 @@ function Matching({
 
 /** Ten multiple choice, with the full answer revealed after each pick. */
 export function Quiz() {
-  const { state, dispatch } = useStore();
+  const { state, dispatch, courseCode } = useStore();
   const { guide } = useLive(state.guideId);
   const over = state.quiz.length > 0 && state.quizIdx >= state.quiz.length;
+
+  /*
+   * Tell Brightspace, if there is a Brightspace to tell.
+   *
+   * On the render the quiz ends and no other, through `import()` so the
+   * cloud client is not part of this screen for the student who has never
+   * opened Semester from an LMS — see `lib/ltiscore.ts` for what decides
+   * whether anything is sent, which is not this screen. The answer is one
+   * sentence or nothing, and the sentence is shown because a score leaving
+   * the device for a gradebook is the one thing here a student must not
+   * discover afterwards.
+   */
+  const [reported, setReported] = useState<string | null>(null);
+  useEffect(() => {
+    if (!over) {
+      setReported(null);
+      return;
+    }
+    let live = true;
+    const code = courseCode(state.guideId);
+    const given = state.quizScore;
+    const max = state.quiz.length;
+    import('../lib/ltiscore')
+      .then((m) => m.report(code, given, max).then((r) => (live ? setReported(m.saidAbout(r)) : undefined)))
+      .catch(() => {
+        // The quiz is over and the score is on screen; a gradebook that
+        // could not be reached is not the student's problem to see.
+      });
+    return () => {
+      live = false;
+    };
+    // Only on the run ending. The score and length are fixed by then, and
+    // re-firing on their identity would report the same run twice.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [over]);
   const current = state.quiz[state.quizIdx];
 
   /*
@@ -817,6 +852,20 @@ export function Quiz() {
               }}
             >
               {scoreLine(score, n, state.quizHelped)}
+            </div>
+          )}
+          {reported && (
+            <div
+              style={{
+                fontFamily: 'var(--font-heading)',
+                fontSize: 'var(--type-sm)',
+                letterSpacing: '0.12em',
+                textTransform: 'uppercase',
+                color: 'var(--app-dim)',
+                marginTop: 'var(--sp-3)',
+              }}
+            >
+              {reported}
             </div>
           )}
           <div
