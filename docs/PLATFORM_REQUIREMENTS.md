@@ -24,7 +24,7 @@ Nothing in this document is claimed as built without a named symbol. The gaps ar
 | 309 | AI tool allowlist | **not built** — all 22 of `TOOLS` reach every assistant mode |
 | 310 | Action simulation before consequential actions | `Proposal` / `readProposal` in `lib/tools.ts` — every write becomes a card with a button |
 | 311 | Idempotency keys | partial — `lib/tools.ts` re-reads each proposal, but no keys |
-| 313–315 | Automations and automation centre | **not built** |
+| 313–315 | Automations and automation centre | `lib/automations.ts` → `RunningNow` at the top of Settings → Alerts: every active automation in one list (built-in reminders, own rules, mail rules, quiet hours, mutes), mail rules switchable there; §315 held by `automations.test.ts`, which reads the three engines for any network call or dispatch |
 | 320–322 | Realtime collaboration and presence | `lib/rtc.ts`, `lib/mesh.ts`, `lib/roomchat.ts` |
 | 327–336 | Developer platform, API, webhooks | **not built** — no public API surface |
 | 337 | Error taxonomy | **not built** — no `PERMISSION_DENIED` / `VALIDATION_ERROR` constants |

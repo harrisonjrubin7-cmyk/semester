@@ -4,6 +4,7 @@ import { CustomRow, Group } from '../../components/shell/Rows';
 import { lights } from '../../lib/settings';
 import { SectionLabel, Toggle } from '../../components/ui';
 import { MyRules } from '../../components/MyRules';
+import { RunningNow } from '../../components/RunningNow';
 import { PushSwitch } from '../../components/PushSwitch';
 import { MuteCourses } from '../../components/MuteCourses';
 import { Reminders } from '../Me';
@@ -40,6 +41,16 @@ export function SettingsAlerts() {
     >
       {(lit) => (
         <>
+          <Group
+            header="Running now"
+            footer="Everything the app does on its own, in one list. Each is switched below or, for a mail rule, here. None of them can register or drop a course, send mail, buy anything or submit anything — they say things and they file mail, and both are undone by switching them off."
+            lit={lights('automations running active rules what is on automatic mail rules quiet', lit)}
+          >
+            <CustomRow>
+              <RunningNow />
+            </CustomRow>
+          </Group>
+
           <Group
             header="How far ahead"
             lit={lights('lead days ahead early warning notice registration access', lit)}
