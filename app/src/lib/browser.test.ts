@@ -8,6 +8,7 @@ import {
   TABS_KEY,
   add,
   arrangeLanes,
+  besideTab,
   blank,
   close,
   closeGroup,
@@ -39,8 +40,10 @@ import {
   reopen,
   renameGroup,
   select,
+  splitWith,
   tabAt,
   tidy,
+  unsplit,
   visit,
   whatClosed,
   write,
@@ -1256,5 +1259,175 @@ describe('moving a whole run', () => {
     const pinned = pin(s, s.tabs.findIndex((t) => t.screen === 'calendar'));
     const moved = arrangeLanes(pinned, [id, ...laneOrder(pinned).filter((x) => x !== id)]);
     expect(moved.tabs[0].pinned).toBe(true);
+  });
+});
+
+/*
+ * The second pane.
+ *
+ * Two panes is the whole feature and the hard part is that the split names a
+ * tab the strip is free to move, close and re-order underneath it. So most of
+ * what is here is the strip changing around a split rather than the split
+ * being made: the two refusals, then a close, a select, a drag and a pin.
+ */
+describe('a second pane', () => {
+  it('has none until one is asked for', () => {
+    const s = strip(['home', 'calendar']);
+    expect(s.split).toBeUndefined();
+    expect(besideTab(s)).toBeNull();
+  });
+
+  it('shows the tab named, on the side asked for', () => {
+    const s = splitWith(strip(['home', 'calendar', 'study']), 't2', 'down');
+    expect(s.split).toEqual({ id: 't2', side: 'down' });
+    expect(besideTab(s)?.screen).toBe('study');
+    // The tab is in a pane, not moved into one: it is still in the strip, in
+    // its seat, and the one you are on has not changed.
+    expect(names(s)).toEqual(['home', 'calendar', 'study']);
+    expect(current(s).screen).toBe('home');
+  });
+
+  /*
+   * One tab in two panes is the same page drawn twice with one of them
+   * impossible to close without guessing which was meant. `openBeside` is
+   * what "this place twice" is for, and the second of those two tabs can
+   * then go in the pane.
+   */
+  it('refuses to put the tab you are on beside itself', () => {
+    const was = strip(['home', 'calendar'], 1);
+    expect(splitWith(was, 't1', 'right')).toBe(was);
+  });
+
+  it('refuses an id the strip has not got', () => {
+    const was = strip(['home', 'calendar']);
+    expect(splitWith(was, 'nobody', 'right')).toBe(was);
+  });
+
+  /*
+   * Two is the limit, so a second Split Right has only one thing it could
+   * mean. Refusing would leave somebody pressing Close Split before every
+   * split for no reason they could see.
+   */
+  it('replaces the pane rather than making a third', () => {
+    const s = splitWith(splitWith(strip(['home', 'calendar', 'study']), 't1', 'right'), 't2', 'left');
+    expect(s.split).toEqual({ id: 't2', side: 'left' });
+  });
+
+  it('goes back to one pane without closing the tab', () => {
+    const s = unsplit(splitWith(strip(['home', 'calendar']), 't1', 'right'));
+    expect(s.split).toBeUndefined();
+    expect(names(s)).toEqual(['home', 'calendar']);
+  });
+
+  it('is unchanged by closing a pane there is not one of', () => {
+    const was = strip(['home', 'calendar']);
+    expect(unsplit(was)).toBe(was);
+  });
+});
+
+/*
+ * And the rule that makes the rest of the strip safe to leave alone: a pane
+ * always holds a tab, and never the one beside it. Every one of these is a
+ * function that has no idea panes exist — which is the point of holding it in
+ * `tidy` rather than in the four places that could break it.
+ */
+describe('a second pane, as the strip moves under it', () => {
+  const split = (at = 0) => splitWith(strip(['home', 'calendar', 'study'], at), 't2', 'right');
+
+  it('closes when the tab in it is closed', () => {
+    const s = close(split(), 2);
+    expect(s.split).toBeUndefined();
+    expect(names(s)).toEqual(['home', 'calendar']);
+  });
+
+  it('closes when you go to the tab that was in it', () => {
+    const s = select(split(), 2);
+    expect(s.split).toBeUndefined();
+    expect(current(s).screen).toBe('study');
+  });
+
+  it('survives a tab closing in front of it, which an index would not', () => {
+    const s = close(split(), 1);
+    expect(besideTab(s)?.screen).toBe('study');
+    // The seat moved from 2 to 1. A split by index would now be pointing past
+    // the end, and a clamped one would be showing `home`.
+    expect(s.tabs.findIndex((t) => t.id === 't2')).toBe(1);
+  });
+
+  it('survives the tab in it being dragged somewhere else', () => {
+    const s = rearrange(split(), ['t2', 't0', 't1'], 't2');
+    expect(besideTab(s)?.screen).toBe('study');
+    expect(names(s)).toEqual(['study', 'home', 'calendar']);
+  });
+
+  it('survives the tab in it being pinned', () => {
+    const s = pin(split(), 2);
+    expect(besideTab(s)?.screen).toBe('study');
+  });
+
+  it('closes when the group the tab in it was in is closed', () => {
+    const grouped = makeGroup(split(), 2, 'Reading', 0, 'g');
+    const s = closeGroup(grouped, 'g');
+    expect(s.split).toBeUndefined();
+  });
+});
+
+describe('a second pane, through the store and back', () => {
+  it('comes back naming the same tab, on the same side', () => {
+    const was = splitWith(strip(['home', 'calendar'], 0), 't1', 'down');
+    expect(load(dump(was), known)).toEqual(was);
+  });
+
+  it('is absent rather than empty on a strip that had no pane', () => {
+    const was = strip(['home', 'calendar']);
+    const back = load(dump(was), known);
+    expect(back.split).toBeUndefined();
+    expect('split' in back).toBe(false);
+  });
+
+  /*
+   * Read field by field like everything else off the device, and then left to
+   * `tidy`, which is what drops a pane naming a tab the tab reader dropped.
+   * A second check here would be a second opinion to keep in step.
+   */
+  it('drops a stored pane naming a tab that did not survive the read', () => {
+    const saved = JSON.stringify({
+      tabs: [{ id: 'a', screen: 'home', title: 'Today', place: [] }],
+      at: 0,
+      split: { id: 'b', side: 'right' },
+    });
+    expect(load(saved, known).split).toBeUndefined();
+  });
+
+  it('drops a stored pane that is not a pane', () => {
+    const tabs = [
+      { id: 'a', screen: 'home', title: 'Today', place: [] },
+      { id: 'b', screen: 'study', title: 'Study', place: [] },
+    ];
+    const withSplit = (split: unknown) => load(JSON.stringify({ tabs, at: 0, split }), known).split;
+    expect(withSplit({ id: 'b', side: 'sideways' })).toBeUndefined();
+    expect(withSplit({ id: 'b' })).toBeUndefined();
+    expect(withSplit({ side: 'right' })).toBeUndefined();
+    expect(withSplit({ id: '', side: 'right' })).toBeUndefined();
+    expect(withSplit('right')).toBeUndefined();
+    expect(withSplit(null)).toBeUndefined();
+    // And the one that is.
+    expect(withSplit({ id: 'b', side: 'right' })).toEqual({ id: 'b', side: 'right' });
+  });
+
+  /*
+   * The stored strip says you are on the tab the stored pane names, which is
+   * the state `select` cannot produce but a hand-edited store can.
+   */
+  it('drops a stored pane naming the tab the stored strip is on', () => {
+    const saved = JSON.stringify({
+      tabs: [
+        { id: 'a', screen: 'home', title: 'Today', place: [] },
+        { id: 'b', screen: 'study', title: 'Study', place: [] },
+      ],
+      at: 1,
+      split: { id: 'b', side: 'right' },
+    });
+    expect(load(saved, known).split).toBeUndefined();
   });
 });

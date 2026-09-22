@@ -336,13 +336,13 @@ export interface Persisted {
   dayBudget: number;
   /** The order they put their courses in. Ids not listed keep import order. */
   courseOrder: CourseId[];
-  /** The destinations you opened most recently, newest first. */
-  recent: Screen[];
   /**
    * Every screen ever opened, so the app can say what has not been.
    *
-   * Separate from `recent`, which keeps twelve — a screen opened once in
-   * August and not since falls off that list and would then be offered back
+   * Separate from the trail in `lib/trail.hook.ts`, which is device-local and
+   * keeps a record of (screen, id, at) tuples. This list keeps only screen
+   * names and is read by the reveal gate — a screen opened once in August and
+   * not since falls off and would then be offered back
    * as though it were new. See `lib/unseen.ts`.
    */
   visited: Record<string, boolean>;
@@ -1446,7 +1446,6 @@ export const DEFAULT_PERSISTED: Persisted = {
   drops: {},
   examCovers: {},
   dayBudget: DEFAULT_BUDGET,
-  recent: [],
   sittings: [],
   sessions: [],
   liveSession: null,
@@ -1821,17 +1820,13 @@ export function loadPersisted(): Persisted {
         Object.entries(saved.drops ?? {}).map(([k, v]) => [k, readDrop(v)]),
       ),
       courseOrder: list(saved.courseOrder),
-      recent: list(saved.recent),
-      // Seeded from `recent` for anybody upgrading: without this the app
-      // would tell somebody who has used it all term that they have never
-      // opened Today, which is both wrong and the sort of wrong that makes
-      // the rest of the sentence untrustworthy.
-      visited:
-        saved.visited ??
-        Object.fromEntries(list<Screen>(saved.recent).map((s) => [s, true])),
-      // No seeding from `recent`, unlike `visited` above: `recent` carries no
-      // times, so any date invented here would be today's, and "opened
-      // today" beside a screen somebody last saw in August is worse than
+      // `visited` is read by the reveal gate to know what has been opened.
+      // Seeded from localStorage if available; otherwise empty. The trail is
+      // device-local and does not migrate when accounts change, so visited
+      // is built afresh on the device.
+      visited: saved.visited ?? {},
+      // The trail (device-local visit history) is not seeded from persisted
+      // state: every device has its own trail, and the trail carries no
       // "opened at some point", which is what an empty entry says.
       sittings: list(saved.sittings),
       sessions: list(saved.sessions),
@@ -1961,7 +1956,6 @@ export function pickPersisted(state: State): Persisted {
     examCovers: state.examCovers,
     courseOrder: state.courseOrder,
     feedHidden: state.feedHidden,
-    recent: state.recent,
     visited: state.visited,
     sittings: state.sittings,
     sessions: state.sessions,

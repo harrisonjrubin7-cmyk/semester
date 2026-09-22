@@ -47,6 +47,7 @@ import type { Destination } from '../lib/nav';
 import { ALWAYS_TO_HAND, GROUPS, lately, saysFor } from '../lib/nav';
 import { showing } from '../lib/reveal';
 import { secondLine } from '../lib/dim';
+import { useRecentScreens } from '../lib/trail.hook';
 import { glyphFor } from '../components/icons.pick';
 import { AppsIcon, NotesIcon, Search as SearchIcon, StarIcon } from '../components/Icons';
 import { NotYetOpened } from '../components/NotYetOpened';
@@ -66,6 +67,7 @@ export function Directory() {
   const { state, dispatch, facts, school } = useStore();
   const caps = school.capabilities;
   const look = currentLook(state);
+  const recentScreens = useRecentScreens();
   /*
    * List or grid, and it borrows the setting the rest of the app already has.
    *
@@ -132,7 +134,7 @@ export function Directory() {
   const chips: string[] = GROUPS.filter((g) => apps.some((d) => d.group === g));
   const shown = narrowApps(apps, chips.includes(category) ? category : '', query, caps);
   const favourites = readFavourites(look.favourites, caps, state.role);
-  const recent = lately(state.recent, state.tabs, caps, ALWAYS_TO_HAND, 4, state.role);
+  const recent = lately(recentScreens, state.tabs, caps, ALWAYS_TO_HAND, 4, state.role);
 
   const star = (screen: Screen) =>
     dispatch({
