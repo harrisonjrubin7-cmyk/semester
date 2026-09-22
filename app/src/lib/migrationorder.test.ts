@@ -191,6 +191,74 @@ describe('no migration is numbered in the past', () => {
   });
 });
 
+describe('no two migrations claim the same version', () => {
+  /*
+   * The second way a migration never runs, and the quiet one.
+   *
+   * Everything above is about a version being too *low*. This is about two
+   * files carrying the same one, which the tests above cannot see: both sort
+   * above the watermark, both are pending, and `fileVersions()` happily
+   * returns the number twice.
+   *
+   * `db push` applies pending versions and records each in
+   * `supabase_migrations.schema_migrations`, where `version` is the primary
+   * key. So of two files sharing a number, one is applied and recorded and the
+   * other is thereafter *indistinguishable from already applied*. It is not
+   * rejected and it does not fail the push — it is skipped, permanently, with
+   * nothing reporting why. The watermark fault at least broke loudly.
+   *
+   * It happened on 22 September. `20260922003000_connections.sql` merged at
+   * 01:50 and `20260922003000_lti_line_item.sql` at 01:54, from two branches
+   * neither of which could see the other, and `main` carried both for the
+   * minutes it took to notice. Whichever lost the race would have taken its
+   * table, its policies and its functions out of production silently — and
+   * `supabase/check.sh` would have stayed green throughout, because it applies
+   * every file in `migrations/` in filename order to an empty database and
+   * never consults a ledger at all. That is the same blind spot that let the
+   * watermark fault live for three days, in a different direction.
+   */
+  it('every version in migrations/ appears exactly once', () => {
+    const versions = fileVersions();
+    // The control: an empty or unreadable directory would make "no duplicates"
+    // true of nothing at all, which is the reading this repository keeps
+    // catching in its own probes.
+    expect(versions.length, 'read no migrations at all').toBeGreaterThan(20);
+    const seen = new Map<string, string[]>();
+    for (const file of readdirSync(MIGRATIONS).filter((f) => f.endsWith('.sql'))) {
+      const version = file.slice(0, 14);
+      seen.set(version, [...(seen.get(version) ?? []), file]);
+    }
+    const shared = [...seen.entries()]
+      .filter(([, files]) => files.length > 1)
+      .map(([version, files]) => `${version}: ${files.join(' and ')}`);
+    expect(
+      shared,
+      `these share a version, so a push applies one and silently skips the rest: ${shared.join('; ')}`,
+    ).toEqual([]);
+  });
+
+  /*
+   * And the probe, against the collision as it actually stood rather than a
+   * shape invented for the test. A guard whose only evidence is that it passes
+   * is not known to be a guard — `CLAUDE.md` is explicit — so this reproduces
+   * the pair by name and asserts the detection sees it.
+   */
+  it('and would have caught the pair that shared 20260922003000', () => {
+    const files = [
+      '20260922003000_connections.sql',
+      '20260922003000_lti_line_item.sql',
+      '20260922012000_capabilities.sql',
+    ];
+    const seen = new Map<string, string[]>();
+    for (const file of files) {
+      const version = file.slice(0, 14);
+      seen.set(version, [...(seen.get(version) ?? []), file]);
+    }
+    const shared = [...seen.entries()].filter(([, f]) => f.length > 1).map(([v]) => v);
+    expect(shared).toEqual(['20260922003000']);
+  });
+});
+
 describe('the recovered migrations stay out of the push', () => {
   /*
    * `history/` holds what production ran. Every version in it is in the ledger,
