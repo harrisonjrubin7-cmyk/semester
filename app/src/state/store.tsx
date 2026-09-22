@@ -57,6 +57,7 @@ import { backupOf } from '../lib/export';
 import { countsOf, takeDaily } from '../lib/snapshots';
 import { LEGACY_TERM, sortTerms, type Term } from '../lib/term';
 import { readSeen, writeSeen } from '../lib/since';
+import { recordVisit } from '../lib/trail.hook';
 import { badge } from '../lib/device';
 import { SHARE_FLAG } from '../lib/shared';
 import { linkedScreen } from '../lib/deeplink';
@@ -1205,6 +1206,25 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }
     shown.current = route;
   }, [route]);
+
+  /*
+   * And the trail follows it, which is the same event said once more.
+   *
+   * Here rather than in a component of its own, and here rather than in
+   * `push`: this effect is the only thing in the app that already knows *where
+   * the app is* as one value — `NAMED` against the state, the id included,
+   * once per place rather than once per render. `push` cannot do it because a
+   * reducer is pure and the trail is on the device, and a second computation
+   * of "where are we" somewhere else would be a second answer to drift out of
+   * step with the address bar. `lib/trail.hook.ts` says the rest.
+   *
+   * The mode is deliberately not passed. Reading a guide as slides is the same
+   * place read differently — the reason `replaces` exists two lines up — and a
+   * history with four rows for one course guide is one nobody scrolls twice.
+   */
+  useEffect(() => {
+    recordVisit(route.screen, route.id);
+  }, [route.screen, route.id]);
 
   /*
    * And the other way: Back, Forward, or a hash typed by hand.
