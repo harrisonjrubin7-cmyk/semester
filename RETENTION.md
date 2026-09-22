@@ -59,22 +59,25 @@ been applied to production — `usage_atomic`, `group_columns_pinned`, `forms` a
 schema deploy recorded as `MIGRATIONS_FAILED` since three minutes after the
 `access_log` merge.
 
-So two things in this file are claims about a schema production does not yet
-have:
+So for three days two things in this file were claims about a schema production
+did not have: `access_log`'s ninety days was not running, because the table and
+`note_access()` were not there, and `forms` and `form_responses` were named in
+the account-deletion table for the same reason. Neither contradicted the
+privacy page, which promises a *ceiling* on what is kept rather than a floor;
+both were this file describing intent as though it were deployment, which is
+the error it exists to prevent.
 
-- **`access_log`'s ninety days is not running**, because the table and
-  `note_access()` are not there. Nothing is over-retained by that — there is no
-  log at all — but the row above says a clock runs, and it does not.
-- **`forms` and `form_responses`** are named in the account-deletion table for
-  the same reason.
+**Closed 21 September, and re-read on the 22nd rather than assumed.** All four
+are in production's ledger — `usage_atomic`, `group_columns_pinned`, `forms`,
+`access_log` — and the objects are there: `public.access_log`, `public.forms`,
+`public.form_responses`, `public.note_access()`. The ninety-day clock in the
+row above is running. `MIGRATION-HISTORY.md` carries how the deploy was
+repaired and *The deploy, observed* is the section that reports it working.
 
-Neither is a contradiction of the privacy page, which promises a *ceiling* on
-what is kept rather than a floor. Both are this file describing intent as
-though it were deployment, which is the error it exists to prevent.
-
-`MIGRATION-HISTORY.md` carries the repair plan. Until those four land, read the
-rows above as the rule each table will be kept under, and that document as the
-list of which tables exist to keep.
+The sweep that the row for `notes`, `tasks`, `appointments`, `sittings` and
+`courses` relies on is also live now: the `tombstones` job in
+`supabase/scheduler.sql` read active on `17 4 * * 0` off `cron.job` on
+22 September, with no run yet because no Sunday has passed.
 
 The whole push queue is also deleted immediately when a student switches
 reminders off — that is in the privacy text above and is a user action rather

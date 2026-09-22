@@ -121,9 +121,11 @@ after a raise is not a cost you can absorb.
 
 ### The email
 
-Ready to send. Fill the bracketed fields, delete this line and the heading
-above it. CTTC is the right office; if they redirect you, the Wond'ry and the
-entrepreneurship office are the usual second stops.
+**Sent, September 2026.** What follows is the template it was sent from, kept
+as the record of what was asked. The reply in writing is now the open item;
+until it arrives, the order above still holds. CTTC is the right office; if
+they redirect you, the Wond'ry and the entrepreneurship office are the usual
+second stops.
 
 > **To:** [CTTC contact / cttc@vanderbilt.edu]
 > **Subject:** Student-owned software — requesting confirmation of ownership under the Technology Policy

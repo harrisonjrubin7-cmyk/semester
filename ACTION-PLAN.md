@@ -117,7 +117,7 @@ same words: `SETUP.md:268` *"Authentication → Providers, switch on what you wa
 … Until then those two buttons return a provider error."* Somebody has to go and
 do it in the dashboard. Nothing needs building.
 
-### 3 · The Vanderbilt IP question · **Prepared — [`IP.md`](IP.md) §1; the email is yours to send**
+### 3 · The Vanderbilt IP question · **Sent — [`IP.md`](IP.md) §1; the reply in writing is what is open**
 
 Unresolved, and everything downstream assumes the answer is no. Cheap to check
 with Vanderbilt's tech transfer / entrepreneurship office, expensive to ignore.
@@ -134,7 +134,9 @@ side of that line Semester falls on, and carries a ready-to-send email that
 *states* those facts and asks for confirmation, rather than asking an open
 question that starts a review nobody needed.
 
-Still open, and not a code item: sending it, and getting the answer in writing.
+**Sent, September 2026.** Still open, and not a code item: the answer in
+writing. Until it arrives the order §1 argues for still holds — no university
+money accepted before the reply.
 
 ### 4 · The simplify / merge pass · **Partly — the empty shells are already deferred**
 
@@ -276,7 +278,7 @@ Real, none of it urgent, and the last one has measurements attached.
 
 | # | Item | State |
 | --- | --- | --- |
-| 12 | Data-retention schedule | **Written and now decided — [`RETENTION.md`](RETENTION.md).** It was never absent, only scattered, and the privacy page already *promises* no schedule over a student's work, so the job was recording the decision rather than inventing one. The one thing genuinely open — `sweep_tombstones`, written and called by nothing — is **scheduled**: weekly at 90 days, as the `tombstones` job in `supabase/scheduler.sql`. Still to apply on the live project, see `supabase/DEPLOY.md`. `lib/retention.test.ts` is the bidirectional tripwire and pins the interval across all three files |
+| 12 | Data-retention schedule | **Written and now decided — [`RETENTION.md`](RETENTION.md).** It was never absent, only scattered, and the privacy page already *promises* no schedule over a student's work, so the job was recording the decision rather than inventing one. The one thing genuinely open — `sweep_tombstones`, written and called by nothing — is **scheduled**: weekly at 90 days, as the `tombstones` job in `supabase/scheduler.sql`. **Applied — `tombstones` read active on `17 4 * * 0` off `cron.job` on 22 September.** The `push` job beside it is still parked, because `CRON_SECRET` is still unset on the function (measured: `503 "not configured"`); `supabase/DEPLOY.md` has the two remaining steps. `lib/retention.test.ts` is the bidirectional tripwire and pins the interval across all three files |
 | 13 | Data-access audit log and a formal incident-response process | **Both landed — see below.** The commitment was one sentence about the last step; it is now [`SECURITY.md`](SECURITY.md), and the log it depends on exists |
 | 14 | A staging environment | **Gated, and the gap was worse than a missing URL.** `pages.yml` and `ci.yml` both fired on push to main independently, so a commit that failed CI deployed anyway. Pages now runs on `workflow_run` and deploys only a CI run that passed, pinned to `head_sha`. CI also opens every course address cold in a real browser against the production build (`smoke:cold`) — the class the deep-link bug was in |
 | 15 | Multi-vendor AI redundancy | **Partly** — `lib/assistant.ts` already routes to OpenAI as a second provider, and `ask()` is the one branch in the app that knows there are two. The open part is a *policy*: which vendor answers when, and who decides |
