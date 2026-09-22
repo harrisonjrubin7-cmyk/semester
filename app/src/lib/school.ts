@@ -43,6 +43,7 @@
  */
 
 import { readGradeSystem, type GradeSystem } from './cutoffs';
+import { readAiOff, type AiOff } from './aiflags';
 
 /** What the app may offer, given where somebody studies. */
 export interface Capabilities {
@@ -71,6 +72,17 @@ export interface Capabilities {
   libraryUrl?: string;
   healthUrl?: string;
   advisingUrl?: string;
+  /**
+   * Categories of context this university has switched **off** in the
+   * assistant. Absent or empty means everything travels, which is what every
+   * school does today.
+   *
+   * `lib/aiflags.ts` holds the list and the reasoning; `lib/context.ts` is
+   * where each one is actually refused. A category here that no gate consults
+   * would be a promise to a university that nothing keeps, so the two files
+   * are changed together or not at all.
+   */
+  aiOff?: AiOff[];
 }
 
 /** One term as the registrar publishes it. */
@@ -282,6 +294,9 @@ export function readCapabilities(raw: unknown): Capabilities {
     libraryUrl: url('libraryUrl'),
     healthUrl: url('healthUrl'),
     advisingUrl: url('advisingUrl'),
+    // Dropped rather than guessed at: an unrecognised category leaves the
+    // real one on, so `readAiOff` keeps only what a gate exists for.
+    aiOff: readAiOff(c.aiOff),
   };
 }
 

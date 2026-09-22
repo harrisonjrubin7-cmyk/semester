@@ -6,6 +6,7 @@ import type { Catalog } from '../data/catalog';
 import { liveGuide } from './live';
 import type { State } from '../state/shape';
 import type { Mode } from './mode';
+import { aiAllows, type AiOff } from './aiflags';
 
 /**
  * What leaves this device when a question is asked, and nothing else.
@@ -265,6 +266,18 @@ export function build(
    * questions.
    */
   onScreen = '',
+  /**
+   * Categories this student's university has switched off.
+   *
+   * Consulted at each block below rather than filtered afterwards, because a
+   * block that is assembled and then dropped is one refactor away from being
+   * assembled and sent. `lib/aiflags.ts` holds the list; the gates are here
+   * because this is the file that decides what leaves.
+   *
+   * Empty for a school that has configured nothing, which is every school
+   * today — so this parameter changes no existing behaviour.
+   */
+  off: readonly AiOff[] = [],
 ): Built {
   const used: string[] = [];
   const parts: string[] = [];
@@ -275,7 +288,7 @@ export function build(
   parts.push(`The student is on the "${screen}" screen.`);
   used.push("today's date", 'the active term', 'which screen you are on');
 
-  if (onScreen.trim()) {
+  if (onScreen.trim() && aiAllows(off, 'screen')) {
     parts.push(onScreen.trim());
     used.push('what this screen is showing');
   }
@@ -300,7 +313,7 @@ export function build(
    */
   const already = (code: string) => onScreen.includes(code);
 
-  if (catalog.courses.length > 0) {
+  if (catalog.courses.length > 0 && aiAllows(off, 'courses')) {
     parts.push(
       `Their courses:\n${catalog.courses
         .map((c) => `- ${c.code} — ${catalog.byId[c.id]?.name ?? ''}`)
@@ -330,7 +343,7 @@ export function build(
     .filter((i) => !state.done[i.id])
     .slice(0, 40);
 
-  if (due.length > 0) {
+  if (due.length > 0 && aiAllows(off, 'deadlines')) {
     parts.push(
       `Due in the next ${days} days:\n${due
         .map((i) => `- [${i.id}] ${catalog.byId[i.c]?.code} · ${i.title} · ${i.dueShort}${i.weight ? ` · ${i.weight}` : ''}`)
@@ -347,7 +360,7 @@ export function build(
     // the answer nothing and still costs a paragraph.
     const s = standing(full, state.grades, { pieces: state.pieces, drops: state.drops });
     const graded = s.rows.filter((r) => r.score !== null);
-    if (graded.length > 0 && !already(course.code)) {
+    if (graded.length > 0 && !already(course.code) && aiAllows(off, 'grades')) {
       parts.push(
         `${course.code} grades — ${graded.length} of ${s.rows.length} components back, currently ${Math.round(s.current ?? 0)}%, ${Math.round(s.remaining)}% still ungraded:\n${s.rows
           .map((r) => `- ${r.what} · ${r.weight}%${r.score !== null ? ` · ${r.score}` : ' · not back'}`)
@@ -358,7 +371,7 @@ export function build(
 
     const policy = state.attendPolicy[course.id];
     const t = tally(state.attendance, course.id);
-    if (hasPolicy(policy) && t.marked > 0 && !already(course.code)) {
+    if (hasPolicy(policy) && t.marked > 0 && !already(course.code) && aiAllows(off, 'attendance')) {
       const b = budget(policy, t);
       parts.push(
         `${course.code} attendance — ${t.present} present, ${t.absent} absent, ${t.excused} excused across ${t.marked} marked. Policy allows ${policy.allowed}; ${b.left} left, ${b.cost} points lost so far.`,
@@ -382,7 +395,7 @@ export function build(
     // came back confidently built on everything except that reading.
     const guide = liveGuide(catalog, course.id, state.updates, state.reviews);
     const aboutStudy = /\bstud|revis|unit|topic|cold|weak|know|understand|explain\b/i.test(question);
-    if (guide && guide.units.length > 0 && aboutStudy) {
+    if (guide && guide.units.length > 0 && aboutStudy && aiAllows(off, 'coursework')) {
       /*
        * What each unit's evidence supports, not what the guide estimated.
        *
