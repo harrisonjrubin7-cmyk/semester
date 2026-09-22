@@ -4,6 +4,20 @@
 
 ## Exists
 
+**Corrected.** This document first said export and deletion did not exist.
+They do, and had before it was written:
+
+| Flow | Where |
+| --- | --- |
+| Export your data | `lib/export.ts` (+ `exportqa.ts`) |
+| Erase from this device | `lib/erase.ts` |
+| Delete the account's cloud copy | `cloud.ts deleteEverything` |
+| The disclosure itself | `CLAIMS` in `lib/privacy.ts`, written **as data** so `privacy.test.ts` fails when it drifts from the code |
+
+That last one is the part worth keeping: a privacy page that drifts from what
+the code does is not merely stale, it is a false statement somebody relied on.
+
+
 - `RETENTION.md` at the repository root
 - `app/src/lib/privacy.test.ts` guards some visibility behaviour
 - Server-side enforcement via RLS rather than client-side hiding — the correct
@@ -14,10 +28,11 @@
 ## Missing
 
 - **Data classification.** No field is labelled `PUBLIC` / `CAMPUS_VISIBLE` /
-  `CONNECTIONS_ONLY` / `PRIVATE` / `ADMIN_RESTRICTED` / `SENSITIVE`.
+  `CONNECTIONS_ONLY` / `PRIVATE` / `ADMIN_RESTRICTED` / `SENSITIVE`. `CLAIMS`
+  in `lib/privacy.ts` is the nearest thing and is per-*statement*, not
+  per-field.
 - **Data minimisation review.** No per-field record of why it exists, who sees
   it, retention, deletion behaviour, integration source.
-- **Export and deletion workflows.** Neither exists as a user-facing flow.
 - **Integration disconnect / permission revocation** surfaces.
 
 ## FERPA posture — read this before writing anything university-facing
