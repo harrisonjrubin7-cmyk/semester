@@ -1,29 +1,5 @@
 // @vitest-environment jsdom
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-
-/*
- * The clock is pinned, because "Not opened yet" rotates by calendar day.
- *
- * `offer` in `lib/unseen.ts` starts its three at `dayIndex % left.length` and
- * steps one along each day — by design, so the same day shows the same three
- * and tomorrow shows the next. The last test in this file asserts a specific
- * member of that trio, "Upload a syllabus", which is therefore only true on
- * some days. It passed for as long as it was written on one of them.
- *
- * Measured: the file passed at 22:xx UTC on 21 September and failed at 01:21
- * UTC on 22 September with nothing else changed — and with the clock frozen
- * to each of those days in turn, it passes on the 21st and fails on the 22nd.
- * A shuffle seed was blamed first, because that is when it happened to be
- * noticed; replaying the seed and running the file alone in order both
- * failed, which is how a timing fault and an ordering fault come apart.
- *
- * Pinned to a day on which the assertion holds. Only `Date` is faked, so
- * React's own timers and the unmount in `afterEach` are untouched.
- */
-beforeAll(() => {
-  vi.useFakeTimers({ toFake: ['Date'] });
-  vi.setSystemTime(new Date('2026-09-21T12:00:00Z'));
-});
+import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { StoreProvider } from '../state/store';
