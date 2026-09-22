@@ -4,17 +4,16 @@ import { Page } from '../components/Page';
 import { ActionButton, Notice, SectionLabel, Segmented } from '../components/ui';
 import { NotOfficial } from '../components/NotOfficial';
 import { NilExplainer } from '../components/NilExplainer';
+import { ComplianceLink } from '../components/ComplianceLink';
 import { secondLine } from '../lib/dim';
 import { useDeviceLibrary } from '../lib/device-library';
 import { download } from '../lib/deliver';
 import { money, readMoney } from '../lib/cost';
 import { longLabel } from '../lib/date';
 import {
-  CSC_URL,
   DISCLOSURE_CENTS,
   DISCLOSURE_DAYS,
   EMPTY_NIL,
-  NIL_GO_URL,
   NIL_LIMITS,
   aggregate,
   crossings,
@@ -412,19 +411,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
             </fieldset>
           </form>
 
-          <SectionLabel style={{ marginBlock: 'var(--sp-7) var(--sp-3)' }}>Where it actually goes</SectionLabel>
-          <p style={{ ...line, marginBlock: 0 }}>
-            Submission happens at NIL Go and questions go to your own compliance office. This app has
-            no connection to either and never submits anything on your behalf.
-          </p>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-4)', marginTop: 'var(--sp-4)' }}>
-            <a className="btn btn-ghost" href={NIL_GO_URL} target="_blank" rel="noreferrer noopener" style={{ flex: '1 1 auto' }}>
-              Open NIL Go
-            </a>
-            <a className="btn btn-ghost" href={CSC_URL} target="_blank" rel="noreferrer noopener" style={{ flex: '1 1 auto' }}>
-              College Sports Commission
-            </a>
-          </div>
+          <ComplianceLink />
 
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-4)', marginTop: 'var(--sp-6)' }}>
             <ActionButton
