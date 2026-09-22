@@ -25,7 +25,7 @@
  */
 
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
-import { classify, reference, type Code } from './failure';
+import { classify, reference, say, type Code } from './failure';
 import type { Seen } from '../state/shape';
 import { MOVE_MS, fetchWithin, timedOut, tookTooLong } from './net';
 import { explainSignUp } from './invite';
@@ -373,14 +373,46 @@ export async function signOut(): Promise<void> {
  * This keeps every sentence `explainSyncError` produces, because that advice
  * is specific and correct and a category cannot replace it: `42P01` is only
  * "not found" to a taxonomy, while the paragraph below knows it means the
- * migrations were never applied and says which file to start with. What this
- * adds is the part support needs — a stable code decided from a stable field,
- * and a reference to quote — without touching the part students read.
+ * migrations were never applied and says which file to start with.
+ *
+ * ## What happens when none of those three sentences applies
+ *
+ * `explainSyncError` returns the server's own message unchanged, and that is
+ * what `screens/Account.tsx` prints after "Sync failed.". A student is handed
+ * a database's sentence with no statement of what survived and nothing to do
+ * next — which is the case `lib/failure.ts` was written for, and `say()` there
+ * has held the three lines platform §998 asks for the whole time, reached by
+ * nothing. `classify` was already being called on this very error and its
+ * answer thrown away one line later.
+ *
+ * So an unmatched failure is composed from the code instead. The three
+ * matched branches are untouched, including the message they each quote.
+ *
+ * The server's words survive only where `verbatim` allows them, which is the
+ * deliberate part: a validation message names a field somebody just typed and
+ * is the most useful thing on the screen, while an unrecognised internal error
+ * is the one case §337 says not to print. That does mean an unmatched error no
+ * longer shows its raw text to whoever is deploying. The three deployment
+ * paragraphs below are exactly the recognised cases and still quote it, and
+ * what replaces it says whether the write landed — which the raw text never
+ * did.
  */
 export function explainSync(e: unknown, ref = reference()): { said: string; code: Code; ref: string } {
   const message = e instanceof Error ? e.message : String(e);
   const code = classify(e);
-  return { said: `${explainSyncError(message)}\n\nReference: ${ref}`, code, ref };
+  const advised = explainSyncError(message);
+  /*
+   * Equality is the match test because it is the same test the function makes
+   * of itself: every branch that recognises something returns the message with
+   * a paragraph appended, so an unchanged string is a fall-through and nothing
+   * else. Asking here beats a second copy of three regexes that would then
+   * have to be kept in step with the ones twenty lines down.
+   */
+  const said =
+    advised === message
+      ? say(code, { ref, detail: message })
+      : `${advised}\n\nReference: ${ref}`;
+  return { said, code, ref };
 }
 
 export function explainSyncError(message: string): string {
