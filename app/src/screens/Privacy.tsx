@@ -28,6 +28,7 @@ import { SCHEMA, migrationLine } from '../lib/migrate';
 import { migrationReport } from '../state/shape';
 import { cloudConfigured, deleteEverything } from '../lib/cloud';
 import { eraseDevice } from '../lib/erase';
+import { forgetTrail } from '../lib/trail.hook';
 import { Toggle } from '../components/ui';
 import { DESTINATIONS, offered } from '../lib/nav';
 import {
@@ -88,6 +89,7 @@ export function Privacy() {
    */
   const [erasing, setErasing] = useState(false);
   const [wiping, setWiping] = useState(false);
+  const [clearingHistory, setClearingHistory] = useState(false);
   const [busy, setBusy] = useState(false);
   const [said, setSaid] = useState('');
   const [saved, setSaved] = useState('');
@@ -310,6 +312,39 @@ export function Privacy() {
           You are not signed in, so there is no account to delete — nothing about this semester
           has ever left the device.
         </div>
+      )}
+
+      <SectionLabel style={{ marginTop: 'calc(26px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(5px * var(--density, 1))' }}>Clear history</SectionLabel>
+      <div style={{ fontSize: 'var(--type-base-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-loose)', textWrap: 'pretty' }}>
+        Removes the record of where you have been on this device. This is stored locally and never synced to your account.
+        There is no undo.
+      </div>
+      <button
+        type="button"
+        className="btn btn-block"
+        onClick={() => setClearingHistory(true)}
+        style={{ marginTop: 'var(--sp-6)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+      >
+        Clear history
+      </button>
+
+      {clearingHistory && (
+        <TypeToConfirm
+          title="Clear history"
+          what={[
+            'The record of where you have been on this device is permanently removed.',
+            'This is stored locally on this device only — it is not on your account or any server.',
+            'There is no undo.',
+          ]}
+          want="CLEAR"
+          describe="the word"
+          confirmLabel="Clear it"
+          onConfirm={() => {
+            setClearingHistory(false);
+            forgetTrail();
+          }}
+          onCancel={() => setClearingHistory(false)}
+        />
       )}
 
       {/* Tokens rather than the numbers its neighbours were written with:
