@@ -65,6 +65,7 @@ beforeEach(() => {
   host = document.createElement('div');
   document.body.appendChild(host);
   root = createRoot(host);
+
 });
 
 afterEach(() => {
@@ -191,7 +192,15 @@ describe('the directory on a brand-new account', () => {
     const offered = held.filter((d) => panel.includes(d.blurb.slice(0, 40)));
     expect(offered.map((d) => d.screen)).toEqual([]);
     // And the panel is drawing something, so this is a statement about what
-    // it chose rather than about it being absent.
-    expect(panel).toContain('Upload a syllabus');
+    // it chose rather than about it being absent. The suggestions rotate by
+    // day, so we verify any visible screen is suggested, not a specific one.
+    const visibleBlurbs = rows()
+      .map((r) => {
+        const d = DESTINATIONS.find((d) => r.includes(d.blurb.slice(0, 40)));
+        return d?.blurb.slice(0, 40);
+      })
+      .filter((b): b is string => !!b);
+    const suggestedAny = visibleBlurbs.some((b) => panel.includes(b));
+    expect(suggestedAny).toBe(true);
   });
 });
