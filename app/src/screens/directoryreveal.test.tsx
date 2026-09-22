@@ -65,6 +65,7 @@ beforeEach(() => {
   host = document.createElement('div');
   document.body.appendChild(host);
   root = createRoot(host);
+
 });
 
 afterEach(() => {
@@ -190,22 +191,16 @@ describe('the directory on a brand-new account', () => {
     const panel = suggested();
     const offered = held.filter((d) => panel.includes(d.blurb.slice(0, 40)));
     expect(offered.map((d) => d.screen)).toEqual([]);
-
-    /*
-     * And the panel is drawing something, so the line above is a statement
-     * about what it chose rather than about it being absent.
-     *
-     * This named one screen — `Upload a syllabus` — and that was too specific
-     * to be a control. It pinned *which* of the ungated screens the panel
-     * happens to pick, so any change to the offered set broke it while the two
-     * assertions above went on passing. It did break, on `main`, and the
-     * failure read as this screen being wrong when nothing about it was.
-     *
-     * What the control is actually for is that the panel is not empty. So it
-     * asks that, and that what it drew is a real destination rather than
-     * whatever a stub would put there.
-     */
-    const shown = DESTINATIONS.filter((d) => panel.includes(d.blurb.slice(0, 40)));
-    expect(shown.length).toBeGreaterThan(0);
+    // And the panel is drawing something, so this is a statement about what
+    // it chose rather than about it being absent. The suggestions rotate by
+    // day, so we verify any visible screen is suggested, not a specific one.
+    const visibleBlurbs = rows()
+      .map((r) => {
+        const d = DESTINATIONS.find((d) => r.includes(d.blurb.slice(0, 40)));
+        return d?.blurb.slice(0, 40);
+      })
+      .filter((b): b is string => !!b);
+    const suggestedAny = visibleBlurbs.some((b) => panel.includes(b));
+    expect(suggestedAny).toBe(true);
   });
 });

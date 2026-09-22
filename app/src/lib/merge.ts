@@ -372,6 +372,11 @@ export const STRATEGY: Record<string, Strategy> = {
   // follows them — and because it only ever adds, the worst a wrong guess does
   // is show a screen they had not asked for yet.
   showAll: 'theirs',
+  // Being on a team is a fact about the person, so the last device told is the
+  // one that is right — the same reasoning as `showAll` directly above, and
+  // with the same safety net: it only ever adds, because `visited` means
+  // neither answer can take a screen away from somebody already using it.
+  athlete: 'theirs',
   cleared: 'theirs',
   waysOpen: 'theirs',
   // Whether the calendar's colour key is unrolled. Learned once, on whichever

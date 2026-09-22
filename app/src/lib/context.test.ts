@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { PICK, build } from './context';
+import { AI_CATEGORIES, type AiOff } from './aiflags';
 import { DEFAULT_PERSISTED, type State } from '../state/shape';
 import { buildCatalog } from '../data/catalog';
 import type { CourseUpdate } from './types';
@@ -270,5 +271,101 @@ describe('the guide that leaves is the guide as it stands', () => {
 
   it('still sends nothing when nothing was added', () => {
     expect(sent(loaded({ guideId: 'econ', updates: [] }))).toBe(sent(loaded({ guideId: 'econ' })));
+  });
+});
+
+/**
+ * What a university has switched off, and whether switching it off works.
+ *
+ * `lib/aiflags.test.ts` proves the arithmetic of the list — what parses, what
+ * is refused, what the sentence reads like. None of that is evidence that a
+ * switch does anything, and a flag that governs nothing is the specific
+ * failure this whole idea is worth guarding against: a console full of
+ * switches is a promise to a university, and a promise nothing keeps is worse
+ * than no console.
+ *
+ * So these assert against the payload, in the file that decides it.
+ */
+describe('a switch a university threw', () => {
+  const ask = (off: AiOff[], question = 'how am I doing in BUS 1600', screen = 'ask', seen = '') =>
+    build(question, 'grounded', loaded(), catalog, NOW, screen, seen, off).text;
+
+  /*
+   * The control, and it comes first on purpose. Every assertion below is that
+   * something is *absent*, and all of them pass against a `build` that
+   * returned an empty string. This is the one that says the payload was
+   * really there to remove from.
+   */
+  it('sends all of it when nothing is switched off', () => {
+    const all = ask([]);
+    expect(all).toContain('BUS 1600 grades');
+    expect(all).toContain('Their courses');
+  });
+
+  it('stops grades travelling', () => {
+    expect(ask(['grades'])).not.toContain('BUS 1600 grades');
+  });
+
+  it('stops the course list travelling', () => {
+    expect(ask(['courses'])).not.toContain('Their courses');
+  });
+
+  it('stops what is on screen travelling', () => {
+    const seen = 'On screen: Grades (grades).\nBUS 1600 running 82%, 45% still to play for.';
+    expect(ask([], 'how am I doing', 'grades', seen)).toContain('BUS 1600 running 82%');
+    expect(ask(['screen'], 'how am I doing', 'grades', seen)).not.toContain('BUS 1600 running 82%');
+  });
+
+  it('stops deadlines travelling', () => {
+    const q = 'what is due this week';
+    expect(ask([], q)).toContain('Due in the next');
+    expect(ask(['deadlines'], q)).not.toContain('Due in the next');
+  });
+
+  it('stops unit names travelling', () => {
+    const q = 'which units in BUS 1600 do I understand least';
+    expect(ask([], q)).toContain('BUS 1600 units');
+    expect(ask(['coursework'], q)).not.toContain('BUS 1600 units');
+  });
+
+  /*
+   * A switch is not a blunt instrument. Turning grades off must leave the
+   * deadlines alone, or a university reading the console has been told
+   * something false about what it just did.
+   */
+  it('takes only what it names', () => {
+    const out = ask(['grades'], 'what is due this week and how am I doing');
+    expect(out).not.toContain('BUS 1600 grades');
+    expect(out).toContain('Due in the next');
+    expect(out).toContain('Their courses');
+  });
+
+  it('says less it used, because less went', () => {
+    const on = build('how am I doing in BUS 1600', 'grounded', loaded(), catalog, NOW, 'ask', '', []);
+    const off = build(
+      'how am I doing in BUS 1600',
+      'grounded',
+      loaded(),
+      catalog,
+      NOW,
+      'ask',
+      '',
+      ['grades'],
+    );
+    // The list of what an answer drew on has to shrink too. A payload that
+    // dropped the grades while still claiming to have used them would make
+    // the one checkable thing about an answer a lie.
+    expect(on.used.join(' ')).toContain('BUS 1600 grades');
+    expect(off.used.join(' ')).not.toContain('BUS 1600 grades');
+  });
+
+  it('sends nothing of a student to a university that switched everything off', () => {
+    const everything = AI_CATEGORIES.map((c) => c.id);
+    const out = ask(everything, 'how am I doing in BUS 1600');
+    expect(out).not.toContain('BUS 1600');
+    expect(out).not.toContain('ECON 1020');
+    // The date and the screen remain: they are not the student's data, and an
+    // answer with neither cannot say where it is.
+    expect(out).toContain('The student is on the');
   });
 });
