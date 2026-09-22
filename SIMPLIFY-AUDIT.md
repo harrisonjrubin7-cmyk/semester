@@ -1,3 +1,141 @@
+# One app — the thirty-fifth pass: nothing is dropped without a reason written down
+
+Against `main` at `b6933847`. **<!--screens-->fifty-nine<!--/--> destinations**,
+unchanged. No cut, no merge. **No defect in the app**, one guard, and one
+defect found in the tooling by accident.
+
+The thirty-fourth asked which written rules are no longer true. This one asks
+about the failures nobody sees: **when something goes wrong, can anything tell?**
+
+A sync that fails and says so is annoying. A sync that fails, is caught, and
+says nothing is worse, because it is indistinguishable from success — the
+spinner stops, the screen is unchanged, and the deadline never arrived. There
+are 362 catch blocks in `src`, far too many to read.
+
+## The answer is that the app is careful
+
+A census built on `ts.createProgram` classified every one:
+
+| bucket | count | |
+| --- | ---: | --- |
+| speaks | 117 | throws, `console`, a setter carrying the error, or a call into a reporting module |
+| answers | 143 | returns a value, assigns one, or deliberately skips past the failure |
+| explained | 85 | empty, with a comment saying why that is right |
+| **bare** | **0** | empty, with nothing |
+| silent | 17 | statements, none of which speak or answer |
+
+**Not one empty catch in this application lacks a written reason.**
+
+The seventeen were then read, all of them, and every one is an accumulator or a
+settler: `refused.push({ name, why })` in `intake.ts`, `problems.push(…)` in
+`Sheet.tsx`, `missed.push({ file, why })` in `travelpack.ts`, `resolve(false)`
+out of a failed IndexedDB open, one `return` from a URL parse with nothing to
+report. Each collects the failure for a caller that reports it in aggregate,
+which is a better shape than an alert per file.
+
+So this pass changes no behaviour in the app, because there was none to change.
+
+## The instrument was wrong four times first
+
+A census that reports nothing is worth exactly as much as its ability to
+report something. Each round below was cut by a row picked at random and read:
+
+| round | worth a look | what the false positive was |
+| --- | ---: | --- |
+| 1 | 151 | a hand-written list of setter names, missing `setTrouble` and `setNote` |
+| 2 | 50 | tested for `=` alone, convicting `best \|\|= ''` and a `continue` past a hidden course |
+| 3 | 46 | had never heard of `lib/trouble.ts`, which **thirty files** report through |
+| 4 | 17 | all seventeen defensible |
+
+The third row is the one to keep. `lib/trouble.ts` is a proper abstraction —
+`trouble.failed(e, retry)`, `trouble.wrong('…')` — and every call into it read
+as silence, because the head of the expression is a local variable named
+`trouble`. Three rounds of guessing at this app's vocabulary produced three
+wrong numbers; the fourth stopped guessing and asked the checker **where the
+callee is declared**.
+
+Then the guard written from it made the same class of mistake a fifth time, in
+the other direction. Moved off the parser onto a regular expression, it dropped
+the condition the parser had given for free — *no statements* — and reported
+**186 bare catches** where the census had reported none. `catch { resolve(false); }`
+holds no brace either, so it matched the same expression. Two instruments
+disagreeing by 186 is the cheapest possible way to find that out, and is the
+argument for keeping the first one long enough to disagree with the second.
+
+## A clean reading is a claim about the probe
+
+Zero bare is either a careful codebase or a blind instrument, and they look
+identical from outside. So both were planted, in `src/lib/__probe.ts`:
+
+```ts
+export function bareOne()      { try { JSON.parse('x'); } catch {} }
+export function silentOne()    { try { JSON.parse('x'); } catch { const x = 1; } }
+export function explainedOne() { try { JSON.parse('x'); } catch { /* deliberate */ } }
+export function nestedOne()    { try { JSON.parse('x'); } catch { if (n) { void 0; } } }
+```
+
+The census named the first two by file and line; the guard names the first and
+ignores the other three. The reading is therefore about the code.
+
+## What this landed, and what it did not
+
+`src/lib/swallowed.test.ts` holds the `bare` row at zero: **an empty catch must
+carry a comment.** Deliberately the narrowest of the five rows. Whether
+`resolve(false)` is the right answer to a failed IndexedDB open is a question
+about that function; whether `catch {}` was a decision or an omission is not a
+question at all, and the comment is the whole difference.
+
+**The census script itself is not landed.** It cannot run: TypeScript 7.0.2
+arrived on `main` in #639 and it is the native port, whose package exports
+`./lib/version.cjs` as `.` and moves everything else under `./unstable/*`.
+There is no `createProgram`, no `readConfigFile` and no `sys` anywhere in it.
+Shipping a script that throws on the repository's own toolchain would be the
+thirty-fourth pass's fault in executable form.
+
+## The defect that was not being looked for
+
+The same bump silently broke a census that **is** in `package.json`:
+
+```
+$ npm run census:exports
+file:///home/user/semester/app/scripts/exports.mjs:164
+const cfg = ts.readConfigFile(cfgPath, ts.sys.readFile);
+                                              ^
+```
+
+Nothing failed when that happened. Pass 25 argued `census:exports` should stay
+a script rather than a gate, and that argument still holds — but this is its
+price, and it had already been paid before anybody looked: **a script nothing
+runs is a script that can break without a sound.** `npx tsc -b` and
+`npm run lint` both pass under TypeScript 7; the app is fine. Only the tooling
+that reads the app is not.
+
+That is recorded here rather than fixed, because the fix is a choice between
+porting two scripts to an API its own package calls unstable and pinning
+TypeScript back to 6, and neither is this pass's to make.
+
+## Gates
+
+`tsc` clean · lint ok · the suite in file order, shuffled and in both other
+timezones · production build clean · five cold boots clean. Figures in the
+commit, and measured after `npm ci` — the run before it was against a stale
+`node_modules` still holding TypeScript 6, which is its own small lesson.
+
+## To do
+
+- **`census:exports` does not run.** Port it to `typescript/unstable/*`, or pin
+  TypeScript to 6 and say why. The second is smaller and reversible; the first
+  is the one that lasts.
+- **The `silent` row is not held by anything**, and should not be — sixteen of
+  its seventeen are accumulators whose correctness is a question about their
+  caller, not about the block.
+- **Nothing tells you when a script stops running.** The two censuses, the
+  contrast sweep and the wall sweep are all `package.json` entries that no gate
+  invokes. A single CI step that runs each and checks only that it exits zero
+  would have caught this the hour it landed.
+
+---
+
 # One app — the thirty-fourth pass: the warning outlived the fault
 
 Against `main` at `593c235`. **<!--screens-->fifty-nine<!--/--> destinations**,
