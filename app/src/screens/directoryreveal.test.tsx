@@ -190,8 +190,23 @@ describe('the directory on a brand-new account', () => {
     const panel = suggested();
     const offered = held.filter((d) => panel.includes(d.blurb.slice(0, 40)));
     expect(offered.map((d) => d.screen)).toEqual([]);
-    // And the panel is drawing something, so this is a statement about what
-    // it chose rather than about it being absent.
-    expect(panel).toContain('Upload a syllabus');
+    /*
+     * And the panel is drawing something, so this is a statement about what
+     * it chose rather than about it being absent.
+     *
+     * Deliberately "drew some destination" rather than a named one. This line
+     * used to pin `'Upload a syllabus'`, and #560's `reveal.ts` change —
+     * "Count what this person has, not what the registry has" — moved which
+     * screens are held back and therefore which the panel offers. On a fresh
+     * profile it now draws Video call, Personal and Progress, so a correct
+     * panel failed a control written about a different one.
+     *
+     * The assertion above is the claim; this is only its guard against being
+     * vacuous, and what it needs is that the panel is not empty. Pinning one
+     * suggestion made it a second, accidental assertion about the
+     * recommender's taste — which is free to change, and did.
+     */
+    const anyDrawn = DESTINATIONS.filter((d) => panel.includes(d.blurb.slice(0, 40)));
+    expect(anyDrawn.length, 'the suggestions panel drew nothing at all').toBeGreaterThan(0);
   });
 });
