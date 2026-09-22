@@ -308,12 +308,31 @@ grant update (name, about, listed) on public.organizations to anon, authenticate
 -- by a definer function that would have to step over its own trigger.
 -- `start_organization()` inserts, and a BEFORE UPDATE trigger never sees an
 -- insert.
+--
+-- ## `created_by` is not on that list, and it was
+--
+-- A column cannot be both `on delete set null` and immutable, and this table
+-- asked for both. A referential action is an ordinary UPDATE issued by the
+-- system, so it fires this trigger like anything else — and with `created_by`
+-- pinned, deleting a founder's account failed outright with `created_by cannot
+-- be changed after the row is created`. Not the organization's deletion: the
+-- account's. `organizations.check.sql` found it by deleting the `auth.users`
+-- row, which is what a real account removal does, rather than by deleting the
+-- membership row and calling that the same thing.
+--
+-- Which of the two to keep is decided by what reads the column, and nothing
+-- does. The delete policy asks `ADMIN` rather than asking who started it; the
+-- comment on the column above says it is provenance and not authority. The
+-- API roles still cannot write it — it is off the update grant, which is the
+-- control that was doing the work — so what the pin added was protection
+-- against the service role, and the only thing that turned out to need was the
+-- cascade.
 
 drop trigger if exists organizations_pinned on public.organizations;
 create trigger organizations_pinned
   before update on public.organizations
   for each row
-  execute function private.refuse_column_change('id', 'school_id', 'slug', 'created_by', 'created_at');
+  execute function private.refuse_column_change('id', 'school_id', 'slug', 'created_at');
 
 -- ── Who sees a membership row ─────────────────────────────────────────────
 --

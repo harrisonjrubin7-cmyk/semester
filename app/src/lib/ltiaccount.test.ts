@@ -1,5 +1,5 @@
 /// <reference types="node" />
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
@@ -158,11 +158,34 @@ const NOT_CONTENT = new Set([
   'activity',
 ]);
 
-const migration = () =>
-  readFileSync(
-    join(__dirname, '../../../supabase/migrations/20260921160100_lti_identity.sql'),
-    'utf8',
-  );
+/**
+ * The definition of `lti_account_untouched` that a deploy actually ends up
+ * with, which is the *last* one in version order and not the first.
+ *
+ * This read a hardcoded path — `20260921160100_lti_identity.sql`, where the
+ * function was first created — and that is half of why a later change to the
+ * table list was made by editing that file. It is in `ledger.snapshot`:
+ * production applied it, so `db push` skips it, and an edit to it reaches a
+ * fresh database and nothing else. The test went green either way, which is
+ * the part that mattered.
+ *
+ * Taking the newest file that redefines the function makes the two agree: a
+ * redefinition in a new migration is read, and an edit to an applied one is
+ * not enough on its own.
+ */
+const DEFINES = 'create or replace function public.lti_account_untouched';
+
+const migration = () => {
+  const dir = join(__dirname, '../../../supabase/migrations');
+  const holds = readdirSync(dir)
+    .filter((n) => n.endsWith('.sql'))
+    .sort()
+    .filter((n) => readFileSync(join(dir, n), 'utf8').includes(DEFINES));
+  // The control: a rename would otherwise leave this reading nothing, and
+  // every assertion below passes against nothing.
+  expect(holds.length, 'no migration defines lti_account_untouched any more').toBeGreaterThan(0);
+  return readFileSync(join(dir, holds[holds.length - 1]), 'utf8');
+};
 
 /**
  * The tables `lti_account_untouched` actually looks in, read out of the SQL.

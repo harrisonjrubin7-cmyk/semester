@@ -598,4 +598,174 @@ begin
   end;
 end $$;
 
+-- ── What happens when somebody stops existing ─────────────────────────────
+--
+-- `20260921234500_organization_succession.sql` answers the question the first
+-- migration left open, and the answer has three moving parts: the cascade from
+-- `auth.users`, a trigger that deletes an organization once nobody is in it,
+-- and a function any member can call to take on one that has no administrator.
+--
+-- Each is attempted the way it actually happens. The cascade in particular is
+-- not simulated by deleting the membership row — deleting the `auth.users` row
+-- is what a real account removal does, and it is the path no function of ours
+-- runs on.
+
+do $$
+declare
+  boss    uuid;
+  second  uuid;
+  turned  uuid;
+  solo    uuid;
+  club    uuid;
+  onlyone uuid;
+  caps    text[];
+  got     text;
+  n       bigint;
+begin
+  boss   := pg_temp.newuser('boss@northerly.edu');
+  second := pg_temp.newuser('second@northerly.edu');
+  turned := pg_temp.newuser('turned@northerly.edu');
+  solo   := pg_temp.newuser('solo@northerly.edu');
+  perform pg_temp.claims(boss, 'northerly');
+  perform pg_temp.claims(second, 'northerly');
+  perform pg_temp.claims(turned, 'northerly');
+  perform pg_temp.claims(solo, 'northerly');
+
+  perform pg_temp.become(boss);
+  club := public.start_organization('rowing', 'Rowing Club');
+  reset role;
+  perform pg_temp.become(second);
+  perform public.apply_to_organization(club);
+  reset role;
+  perform pg_temp.become(turned);
+  perform public.apply_to_organization(club);
+  reset role;
+  perform pg_temp.become(boss);
+  perform public.set_member_capabilities(club, boss, array['ADMIN', 'MEMBERSHIP']);
+  perform public.set_member_standing(club, second, 'MEMBER');
+  perform public.set_member_standing(club, turned, 'DECLINED');
+  reset role;
+
+  -- ── A member cannot take on an organization that has an administrator ──
+
+  if not pg_temp.refused(second, format(
+      $q$select public.claim_abandoned_organization(%L)$q$, club)) then
+    raise exception 'FAILED: a member took over an organization that had an administrator';
+  end if;
+  perform pg_temp.ok('a member cannot take on an organization that has an administrator');
+
+  -- ── The cascade, as it actually happens ───────────────────────────────
+
+  delete from auth.users u where u.id = boss;
+
+  perform pg_temp.counted('deleting an account takes its membership rows with it', (
+    select count(*) from public.organization_members m where m.user_id = boss), 0);
+  perform pg_temp.counted('the organization is not deleted with its last administrator', (
+    select count(*) from public.organizations o where o.id = club), 1);
+  perform pg_temp.counted('and it now has no administrator at all', (
+    select count(*) from public.organization_members m
+     where m.org_id = club and 'ADMIN' = any(m.capabilities)), 0);
+
+  /*
+   * And now — only now — the question of who may take it on is a real one.
+   *
+   * These two were asserted earlier in the file's first draft, against an
+   * organization that still had an administrator, and they passed without
+   * touching the rule they name: the claim was refused by the "this one has an
+   * administrator" check and the standing check was never reached. Removing
+   * the standing check entirely left the suite green at 54. They are here
+   * instead, where the organization is adminless and the standing check is the
+   * only thing left to refuse them.
+   */
+  if not pg_temp.refused(turned, format(
+      $q$select public.claim_abandoned_organization(%L)$q$, club)) then
+    raise exception 'FAILED: somebody the organization declined took it over';
+  end if;
+  perform pg_temp.ok('somebody who was declined cannot take on an abandoned organization');
+
+  if not pg_temp.refused(solo, format(
+      $q$select public.claim_abandoned_organization(%L)$q$, club)) then
+    raise exception 'FAILED: a stranger took over an abandoned organization';
+  end if;
+  perform pg_temp.ok('and neither can somebody with no row in it at all');
+
+  /*
+   * Which is the state the whole file is about. Adminless is honest — that is
+   * what has happened — and it is recoverable by the people it belongs to,
+   * rather than fixed by a rule promoting somebody who never agreed to it.
+   */
+  perform pg_temp.become(second);
+  caps := public.claim_abandoned_organization(club);
+  reset role;
+  perform pg_temp.said('a member takes on an organization nobody is running',
+    array_to_string(caps, ','), 'ADMIN');
+
+  -- And the control for that pair: having taken it on, they are an
+  -- administrator by every other measure, not just by a returned array.
+  perform pg_temp.become(second);
+  update public.organizations set name = 'Rowing Society' where id = club;
+  reset role;
+  select o.name into got from public.organizations o where o.id = club;
+  perform pg_temp.said('and can do the things an administrator does', got, 'Rowing Society');
+
+  -- ── An organization whose last member goes is deleted ─────────────────
+  --
+  -- The one case adminless cannot be recovered from, because there is nobody
+  -- to recover it. Leaving the row would put a shell nobody can enter in a
+  -- campus directory forever.
+
+  perform pg_temp.become(solo);
+  onlyone := public.start_organization('fencing', 'Fencing Club');
+  reset role;
+  perform pg_temp.counted('an organization with one member exists', (
+    select count(*) from public.organizations o where o.id = onlyone), 1);
+
+  delete from auth.users u where u.id = solo;
+  perform pg_temp.counted('and is gone once that member is', (
+    select count(*) from public.organizations o where o.id = onlyone), 0);
+
+  /*
+   * The control for the trigger, and it is the one that matters: a trigger
+   * that deleted the organization on *every* departure would pass the
+   * assertion above and would have deleted the rowing club three checks ago.
+   * That it did not is asserted there; this says the two cases are different
+   * on purpose.
+   */
+  perform pg_temp.counted('while an organization with members left standing still stands', (
+    select count(*) from public.organizations o where o.id = club), 1);
+
+  -- ── Forgetting, which is not leaving ──────────────────────────────────
+  --
+  -- `leave_organization()` refuses to touch DECLINED and REMOVED, because that
+  -- is the organization's record of a decision and the person it is about is
+  -- still here. An account being deleted is not still here, and `profiles`
+  -- goes in the same pass — so a row left behind would be a decision about
+  -- somebody nobody can identify or ask about.
+
+  perform pg_temp.counted('somebody who was declined still has a row', (
+    select count(*) from public.organization_members m
+     where m.org_id = club and m.user_id = turned), 1);
+
+  perform pg_temp.become(turned);
+  n := public.forget_my_organizations();
+  reset role;
+  perform pg_temp.counted('forgetting takes it, which leaving would not have', n, 1);
+  perform pg_temp.counted('and the row is gone', (
+    select count(*) from public.organization_members m
+     where m.org_id = club and m.user_id = turned), 0);
+
+  /*
+   * And it takes the sole administrator's row too, where `leave_organization`
+   * refuses. Same reason: there is nobody left to appoint a successor, so the
+   * refusal has nothing to offer. The organization is left adminless and, this
+   * time, with no members either — so the trigger removes it.
+   */
+  perform pg_temp.become(second);
+  n := public.forget_my_organizations();
+  reset role;
+  perform pg_temp.counted('the sole administrator can forget, where they could not leave', n, 1);
+  perform pg_temp.counted('and the organization goes with its last member', (
+    select count(*) from public.organizations o where o.id = club), 0);
+end $$;
+
 rollback;

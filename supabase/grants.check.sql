@@ -124,7 +124,7 @@ end $$;
 do $$
 declare
   /*
-   * The allowlist. Thirteen, and each is a deliberate entry point:
+   * The allowlist. Fifteen, and each is a deliberate entry point:
    *   make_referral_code  — mints this account's own code
    *   claim_referral      — records that this account arrived on somebody's
    *   referral_standing   — two integers and a boolean about the caller
@@ -185,7 +185,23 @@ declare
     'leave_organization(org uuid)',
     'set_member_capabilities(org uuid, who uuid, want text[])',
     'set_member_standing(org uuid, who uuid, want text)',
-    'start_organization(want_slug text, want_name text, want_about text)'
+    'start_organization(want_slug text, want_name text, want_about text)',
+
+    /*
+     * And the two that answer what happens when somebody stops existing.
+     *
+     * `forget_my_organizations` is the only delete path into
+     * `organization_members` from a client, and it exists because there is no
+     * other one: `lib/cloud.ts` empties an account by sending one filtered
+     * DELETE per table, and DELETE on that table is revoked from both roles.
+     *
+     * `claim_abandoned_organization` is how an organization gets out of the
+     * state the first one can leave it in. Callable by a signed-in account and
+     * refused unless the caller is already a member of that organization and
+     * nobody in it holds ADMIN. See 20260921234500_organization_succession.sql.
+     */
+    'claim_abandoned_organization(org uuid)',
+    'forget_my_organizations()'
   ];
   extra text;
   missing text;
@@ -221,7 +237,7 @@ begin
   if missing is not null then
     raise exception 'FAILED: the allowlist names %, which a signed-in account cannot call', missing;
   end if;
-  raise notice 'ok  and can call all thirteen that it should';
+  raise notice 'ok  and can call all fifteen that it should';
 end $$;
 
 -- ── The gate's own switch, named because it is the one that was open ──────
