@@ -1,7 +1,7 @@
 # What production's migration ledger holds, read at 21:5x UTC on 21 September 2026.
 #
 # `supabase_migrations.schema_migrations` on the live project, one line per row:
-# version, then name. This is a reading, not a wish — `app/src/lib/deploy.test.ts`
+# version, then name. This is a reading, not a wish — `app/src/lib/migrationorder.test.ts`
 # holds `migrations/` to it and explains the rule.
 #
 # ## The rule, and the failure it is about

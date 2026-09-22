@@ -7,33 +7,76 @@ are missing.
 
 ## What is live
 
-Read off the project at 16:05 UTC on 21 September 2026, not remembered:
+Read off the project at 01:08 UTC on 22 September 2026, not remembered. The
+last column is which pipeline deployed that version, and it is the one worth
+reading:
 
-    claude     ACTIVE, v19, verify_jwt off
-    push       ACTIVE, v16, verify_jwt off
-    calendar   ACTIVE, v12, verify_jwt off
-    fetchcal   ACTIVE, v13, verify_jwt off
-    canvas     ACTIVE,  v4, verify_jwt off
-    lti        ACTIVE,  v1, verify_jwt off
+    claude     ACTIVE, v64, verify_jwt off   platform
+    push       ACTIVE, v28, verify_jwt off   platform
+    calendar   ACTIVE, v24, verify_jwt off   platform
+    fetchcal   ACTIVE, v56, verify_jwt off   platform
+    canvas     ACTIVE, v49, verify_jwt off   platform
+    lti        ACTIVE, v49, verify_jwt off   platform
 
-**This file said two, at v1, and three of the other four were filed below under
-"Not deployed yet".** `fetchcal` had been live since 9 September when that was
+**This file once said two, at v1, and filed three of the other four under "Not
+deployed yet".** `fetchcal` had been live since 9 September when that was
 written — twelve days — and `calendar` since the 8th and was named nowhere at
 all. `lti` went up at 15:48 on the 21st, about two hours after its own section
 said it had not.
 
-The cause is not forgetfulness, and that is why the rows above carry a
-timestamp. `functions.yml` deploys on every push to main that touches a
-function's directory, so **a function directory on main is a deployed
-function**: "not deployed yet" is true only until the pull request merges, and
-then it is false with nobody having edited anything. A hand-written record
-cannot win that race. `app/src/lib/deployfunctions.test.ts` is what holds this
-section to the directories instead — it cannot see the project, so it checks
-the one thing it can: that every function here is accounted for, and that none
-of them is described as unshipped.
+### There are two pipelines, not one
+
+This section used to explain that with one sentence: `functions.yml` deploys on
+every push to main that touches a function's directory, so a function directory
+on main is a deployed function. That is true and it is not the whole mechanism,
+and the half it leaves out is the half that failed.
+
+    platform   Supabase's own deploy off the main branch. Runs on EVERY merge.
+    runner     .github/workflows/functions.yml. Runs only when a merge touches
+               that function's directory.
+
+The project reports an `entrypoint_path` per function which names the machine
+the bundle was built on — `file:///app/...` for the platform,
+`file:///home/runner/work/semester/semester/...` for the runner — so the column
+above is read rather than assumed.
+
+**A `runner` row means the platform deploy is not building that function.** It
+runs on every merge; if it were building the function it would have overwritten
+the path. So the column is not a note about provenance, it is the freeze
+detector, and for three days it was sitting in plain sight reading `runner`
+twice while nobody looked.
+
+Between 18 September 17:35:25Z and 21 September 22:53:45Z, `push` and
+`calendar` sat at v16 and v12 while the other four gained fifteen and sixteen
+versions each. **246 merges landed on main in that window**, every one of them
+running the platform deploy, which rebuilt four functions and passed over two
+without a word. Neither pipeline reached them, for two different reasons:
+
+  - the platform deploy skipped them because both still imported over
+    `https://esm.sh/`, which #685 measured against a same-hour control on a
+    second preview branch and fixed; and
+  - `functions.yml` never fired because **no commit touched either directory in
+    those three days** — checked in the log, not assumed.
+
+So they were not stale, they were unreachable. A change merged *into*
+`calendar` would have gone live in the ordinary way; a change merged anywhere
+else left the live `.ics` feed on a three-day-old bundle and reported nothing.
+
+`supabase/functions.snapshot` is that reading, kept as a file, and
+`app/src/lib/functionsdeployed.test.ts` holds this directory to it —
+including the rule that a `runner` row is a finding. It also records the one
+reading that is transient rather than a fault: a `workflow_dispatch` deploy
+writes a runner path legitimately, and the next merge overwrites it. **A runner
+row that survives a merge is the freeze.**
+
+`app/src/lib/deployfunctions.test.ts` holds the section above to the directories
+that exist — it cannot see the project, so it checks what it can: that every
+function here is accounted for, that none is described as unshipped, that each
+has a `[functions.<slug>]` block, and that none of them imports over `https://`.
 
 The version numbers are the part that will go stale first and the part that
-matters least; the deployed-or-not column is the one that misled.
+matters least. The deployed-or-not column is the one that misled; the pipeline
+column is the one that stayed silent.
 
 ## Deploying a function without a laptop
 
