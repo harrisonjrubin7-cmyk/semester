@@ -1,0 +1,71 @@
+# Which pipeline last deployed each Edge Function, read off the project at
+# 01:08 UTC on 22 September 2026.
+#
+# Four columns: slug, version, the pipeline that deployed that version, and when.
+# `app/src/lib/functionsdeployed.test.ts` holds `supabase/functions/` to this
+# reading and explains the rule. A newer reading that disagrees is a finding,
+# not a number to update in passing.
+#
+# ## How the pipeline column is known
+#
+# It is not a guess or a label somebody chose. The project reports an
+# `entrypoint_path` per function, and it names the machine the bundle was built
+# on:
+#
+#     file:///app/supabase/functions/<slug>/index.ts       platform
+#     file:///home/runner/work/semester/semester/...        runner
+#
+# `platform` is Supabase's own deploy off the main branch, which runs on every
+# merge. `runner` is `.github/workflows/functions.yml`, which runs only when a
+# merge touches that function's directory.
+#
+# ## The rule, and the failure it is about
+#
+# **A `runner` row means the platform deploy is not building that function.**
+# The platform deploy runs on every merge, so if it were building the function
+# it would have overwritten the path by now. A runner path is therefore not a
+# harmless detail about provenance; it is positive evidence of exclusion from
+# the pipeline that runs continuously.
+#
+# That is what nobody read for three days. Between **18 September 17:35:25Z**
+# and **21 September 22:53:45Z**, `push` and `calendar` sat at v16 and v12 on
+# runner paths while the other four accumulated fifteen and sixteen versions
+# each. **246 merges landed on main in that window.** Every one of them ran the
+# platform deploy, which rebuilt four functions and passed over two, and said
+# nothing either time.
+#
+# The reason neither pipeline reached them is the part worth keeping:
+#
+#   - the platform deploy skipped them because both still imported over
+#     `https://esm.sh/`, which #685 measured against a control and fixed; and
+#   - `functions.yml` never fired because **no commit touched either directory
+#     in those three days** — checked, not assumed. Its trigger is a change to
+#     the directory, and there was none.
+#
+# So they were not stale. They were unreachable by any deploy, and the last
+# deploy either had received was the one that happened to precede the freeze.
+# A change merged into `calendar` — the live `.ics` feed — would have gone live
+# in the ordinary way, while a change merged anywhere else left it untouched
+# and unreported.
+#
+# ## What a `runner` row does not mean
+#
+# `functions.yml` has a `workflow_dispatch` escape hatch, and a hand-started
+# deploy legitimately writes a runner path. That reading is real but transient:
+# the next merge's platform deploy overwrites it. So one `runner` row is a thing
+# to look at rather than a fault in itself — **a runner row that survives the
+# next merge is the freeze.** Re-read before concluding, which is the same
+# instruction `ledger.snapshot` carries and for the same reason.
+#
+# ## Re-reading it
+#
+# Nothing in a test run can reach the project. The reading comes from the
+# Management API's function list (the dashboard's Edge Functions page shows the
+# same versions), and the columns below are transcribed from it.
+
+claude     64  platform  2026-09-22T01:08:08Z
+push       28  platform  2026-09-22T01:08:08Z
+calendar   24  platform  2026-09-22T01:08:08Z
+fetchcal   56  platform  2026-09-22T01:08:08Z
+canvas     49  platform  2026-09-22T01:08:08Z
+lti        49  platform  2026-09-22T01:08:08Z
