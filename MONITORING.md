@@ -32,6 +32,7 @@ everything else, and a deliberate refusal to add a dashboard nobody opens.
 | Auth failures | Supabase dashboard → Logs → Auth | No |
 | Database health | `supabase/health.sql`, blocks 2–5 | Yes |
 | **The schema deploy** | Supabase dashboard → Branches, the `main` branch record | No |
+| **The ledger, against this repository** | `supabase/ledgerdrift.sh`, every six hours from `.github/workflows/ledger.yml` | Yes |
 
 Four of the five are in the platform and not in this repository. That is worth
 stating plainly rather than papering over with a query: nothing in `supabase/`
@@ -52,6 +53,33 @@ the ledger's watermark — by holding `migrations/` against
 as watching the deploy: it checks a file against a dated reading, and the
 reading is only as fresh as the last person who took one. The branch record is
 the deploy itself. Look at it.
+
+**The sixth row is that sentence, answered.** "Only as fresh as the last person
+who took one" was the whole weakness, and on 21 September it was expensive: the
+ledger took seventeen rows in an afternoon, four separate sessions re-read it
+by hand, and every one of those re-reads was prompted by an accident rather
+than by a schedule. `public.activity` reached the live project as a table
+nothing here created and was found because an unrelated fingerprint came up
+three columns short.
+
+[`supabase/ledgerdrift.sh`](supabase/ledgerdrift.sh) takes the reading on a
+clock instead. It asks the project directly and reports three things: a version
+the project has run with no file here — which stops the next `db push` before
+it applies anything — a file numbered behind the watermark, which can never be
+applied, and whether `ledger.snapshot` still describes the live ledger at all.
+
+It does not gate anything, deliberately. It needs a project credential, so it
+cannot run on a fork, and the drift it looks for is not introduced by anybody's
+diff. It reports into one standing issue, in the same shape as the `main is
+red` notice: opened on drift, commented while it persists, closed when it
+clears. Run it by hand after a deploy from Actions → Ledger drift → Run
+workflow, or locally with a token and `supabase/ledgerdrift.sh`.
+
+What it still cannot tell you is whether a migration's *text* is what
+production ran. The ledger stores the CLI's re-serialisation of the statements
+it parsed, not the file, so the bytes differ for every normally-deployed
+migration — the script's header carries the measurement. The branch record is
+still the deploy itself.
 
 ## The one alert
 

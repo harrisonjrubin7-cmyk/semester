@@ -1,0 +1,147 @@
+# Ask production what it has run, on a clock rather than on an accident.
+#
+# `supabase/ledgerdrift.sh` explains what it compares and why. This is the part
+# that makes it happen without anybody deciding to look.
+#
+# ## Why a schedule and not a pull request
+#
+# The drift this catches is not introduced by a diff. It is introduced by
+# somebody opening the SQL editor, and it exists in the project before it
+# exists — if it ever does — in a branch. A check attached to `pull_request`
+# would first see it whenever the next unrelated change happened to be opened,
+# which on 21 September would have been "after the deploy had been failing for
+# three days".
+#
+# It also must not gate anything. A job that needs a project credential is a
+# job that cannot pass on a fork, and a required check a contributor cannot run
+# is how a repository stops taking contributions. So this reports and never
+# blocks: `ci.yml` decides whether a change is good, and this decides whether
+# the *database* has quietly stopped matching the repository.
+#
+# ## How it reports
+#
+# One standing issue, reopened by commenting, closed when the drift clears —
+# the same shape as the `main is red` notice in `ci.yml`, and for the same
+# reason given there: a new issue per run would be a different way of being
+# ignored.
+#
+# ## Every six hours
+#
+# The ledger took seventeen rows in one afternoon on 21 September, so a daily
+# check would have reported some of that a day late. Six hours is short enough
+# that a hand-applied migration is found while whoever applied it still
+# remembers doing so, and long enough that a quiet week costs four runs a day
+# against an API and nothing else.
+
+name: Ledger drift
+
+on:
+  schedule:
+    # Every six hours, at :17 rather than :00. The hour boundary is when every
+    # scheduled workflow on GitHub fires at once and the queue is longest; this
+    # job is never urgent to the minute.
+    - cron: '17 */6 * * *'
+  workflow_dispatch:
+
+# Two runs comparing the same project against the same branch would only race
+# each other to comment on the same issue.
+concurrency:
+  group: ledger-drift
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      # Not `if:` on the secret — a skipped job reports success and says
+      # nothing, which is the failure mode this whole file exists to avoid.
+      # It runs, and says out loud that it could not look.
+      - name: Read the live ledger
+        id: drift
+        continue-on-error: true
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          if [ -z "$SUPABASE_ACCESS_TOKEN" ]; then
+            echo "::warning title=Ledger not checked::No SUPABASE_ACCESS_TOKEN secret, so the live ledger was not read. Add one from supabase.com/dashboard/account/tokens under Settings → Secrets and variables → Actions."
+            echo "state=unchecked" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          set +e
+          out=$(supabase/ledgerdrift.sh 2>&1)
+          code=$?
+          set -e
+          echo "$out"
+          # A random delimiter, because the report carries migration *names*
+          # read out of the database, and a fixed one is a line somebody could
+          # put there. Naming a migration `EOF` is exactly the sort of thing
+          # this repository has learned to expect of itself.
+          delim="REPORT_$(openssl rand -hex 16)"
+          {
+            echo "report<<$delim"
+            echo "$out"
+            echo "$delim"
+          } >> "$GITHUB_OUTPUT"
+          case "$code" in
+            0) echo "state=clean"  >> "$GITHUB_OUTPUT" ;;
+            1) echo "state=drift"  >> "$GITHUB_OUTPUT" ;;
+            *) echo "state=broken" >> "$GITHUB_OUTPUT" ;;
+          esac
+
+      # The notifier never decides the colour of this run, for the reason
+      # `ci.yml` gives: a notifier that can fail paints the repository red
+      # about itself rather than about the thing it watches.
+      - uses: actions/github-script@v9
+        continue-on-error: true
+        env:
+          STATE: ${{ steps.drift.outputs.state }}
+          REPORT: ${{ steps.drift.outputs.report }}
+        with:
+          script: |
+            const state = process.env.STATE;
+            if (state === 'unchecked') return;
+
+            const TITLE = 'production\'s ledger has drifted from this repository';
+            const { owner, repo } = context.repo;
+            const run = `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`;
+            const report = '```\n' + (process.env.REPORT || '').trim() + '\n```';
+
+            const open = await github.paginate(github.rest.issues.listForRepo, {
+              owner, repo, state: 'open', per_page: 100,
+            });
+            const notice = open.find((i) => !i.pull_request && i.title === TITLE);
+
+            // `broken` is its own case and is not silence. A reading that
+            // could not be taken is indistinguishable from a clean one if
+            // nobody says which it was, and that is precisely the confusion
+            // `ledgerdrift.sh` refuses to let a short reading create.
+            if (state === 'drift' || state === 'broken') {
+              const lede = state === 'drift'
+                ? ['The live project has run something this repository does not describe, or',
+                   'describes something the project can never run. Either stops the next',
+                   '`db push` before it applies anything.'].join('\n')
+                : ['The ledger could not be read, so nothing was checked. That is not a',
+                   'clean result — it is no result.'].join('\n');
+              const body = `${lede}\n\n${report}\n\n${run}`;
+              if (notice) {
+                await github.rest.issues.createComment({
+                  owner, repo, issue_number: notice.number, body,
+                });
+              } else {
+                await github.rest.issues.create({ owner, repo, title: TITLE, body });
+              }
+            } else if (notice) {
+              await github.rest.issues.createComment({
+                owner, repo, issue_number: notice.number,
+                body: `Clear again.\n\n${report}\n\n${run}`,
+              });
+              await github.rest.issues.update({
+                owner, repo, issue_number: notice.number, state: 'closed',
+              });
+            }
