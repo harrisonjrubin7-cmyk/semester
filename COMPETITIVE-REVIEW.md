@@ -294,7 +294,7 @@ whether the proposal is good.
 
 | Band | Item | Verdict |
 |---|---|---|
-| P0 | Repeatable first setup | **The term half landed, a worse half was found and fixed, and the three-step shape stays open.** The manual route and the key-free doors were already there. The *term* was not asked at all and now is. Then the run itself turned out to be describing the sample semester as the student's own — measured, and fixed below. The three-step shape (add course → confirm dates → first action, inside the run) is still open. See below. |
+| P0 | Repeatable first setup | **Landed.** The term half, the sample-semester half, and the three-step shape — all three fixed, in that order, each found by measuring the previous fix rather than reading the claim. The run ends on the add-course door rather than on somebody else's Today; add-course → confirm dates → first action already existed inside that screen and was simply unreachable from here. See below. |
 | P1 | Make tools easy to find | **Partly landed.** Three of the patch's five items above; the filter move declined with reasons; user testing is not a code item. |
 | P1 | **Make progress mean actual progress** | **Landed.** The defect. |
 | P1 | One calendar integration, then one LMS | **Not a code item here.** Provider registration and an institutional agreement. The copy that misdescribed it is fixed above. |
@@ -356,9 +356,11 @@ job at 477px of chips in a 354px row, and choosing Spring 2027 survives a
 reload — read off the screen rather than out of `localStorage`, which this
 document's own last section explains is the wrong store to ask.
 
-**Still open, and it is the larger half:** the run ends and hands an empty app
-to `FirstRun` rather than carrying somebody through add-a-course, confirm the
-dates, and a first task. That is the "three-step shape" proper.
+**Was open, and read as the larger half — until it was measured.** The run
+ended by handing an empty app to `FirstRun` rather than carrying somebody
+through add-a-course, confirm the dates, and a first task. Fixed below, in
+the third of the three passes this row went through — and the fix was not
+building that shape, because it already existed.
 
 #### And the half that was worse than the one the report named
 
@@ -400,6 +402,66 @@ catalogue built from the four sample modules, and whatever is the student's —
 so every assertion is about which of the two reaches the screen. A test given
 only an empty catalogue would pass against the bug. All four go red on a
 faithful revert, quoting it back: `expected 'Semester4 syllabi. One brain.…'`.
+
+#### And the "three-step shape" was already built — the run just never delivered you to it
+
+The finding above fixed what the run *said*. Fixing where it *ends* turned up
+a third thing, and it reframes the "still open" line at the top of this
+section: the three-step shape the report asked for — add a course, confirm
+the dates, land on a first task — is not missing from this app. It is built,
+inside `screens/Import.tsx`, and has been reachable from the `+` in the header
+the whole time:
+
+1. **Add a course.** Upload a syllabus, paste one as text, or add it by hand
+   with nothing but a course code.
+2. **Confirm the dates.** The review screen holds a checkbox naming exactly
+   this — *"I checked the course information and selected dates against my
+   syllabus. Add only the dates I approved."* — and refuses to file anything
+   until it is ticked.
+3. **A first task.** Uploading lands you on the course page; adding by hand
+   lands you on Edit, open to the one field left to fill in.
+
+What was missing is that finishing onboarding never sent anyone there.
+`onbNext`, on the last step, always went to `firstScreen(state.nav)` — Today,
+under the default navigation — whichever door the previous fix had just
+pointed at. Driven end to end in Chromium at 420px, five presses of the
+primary button, `pageerror` empty:
+
+| | Before | After |
+|---|---|---|
+| Where the run ends, with nothing of yours in yet | `#/home` — Today, with the sample's `BUS 1600` next class and a `CORE 2500` quiz due today | `#/import` — "Upload it. Walk away.", the by-hand field already open |
+| Where the run ends, once you have a course | unchanged | unchanged — `firstScreen(state.nav)`, same as opening the app |
+
+Landing on Today with nothing of your own in it is the same failure as the
+sample-semester finding above, one screen later: `SampleMark`'s own docstring
+already named the fix — *"import one real syllabus alongside it and Today
+mixes your Thursday paper with somebody else's, with nothing distinguishing
+them"* — and predicted the specific moment nothing acted on: **"Not mine"
+removes them, which is what somebody who was looking around wants *once they
+have their own syllabus in*.** Measured on a real install with a course added
+by hand: the sample banner stayed up, and Today kept leading with `BUS 1600`
+and the quiz that was never the student's.
+
+So two changes, both at the same moment — the first course of your own,
+however it arrives:
+
+- **The sample retires itself.** `addCourse` and `schoolCourse` clear
+  `state.sample` the moment `state.courses` goes from empty to one. Only the
+  first: reopening the sample later from Settings and adding a second course
+  must not answer the same question twice, and the guard for that is a test
+  that adds a second course with the sample deliberately switched back on and
+  asserts it stays on.
+- **The run ends on the door**, not on Today, when nothing of yours has
+  arrived yet. Once anything has — the courses list is non-empty regardless
+  of the sample — it ends exactly where it always did, because reopening the
+  run from the guidebook is not a first setup.
+
+`state/sampleretire.test.ts`, nine cases, both halves reverted separately —
+the sample-retirement guard alone, and the `doneScreen` routing alone — and
+each faithful revert fails exactly the tests written for it, four of nine,
+while the three controls (adding a second course does not re-toggle the
+sample; an account with the sample already off stays off; Skip is unaffected)
+stay green throughout.
 
 
 ---

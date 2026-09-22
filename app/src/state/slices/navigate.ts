@@ -16,6 +16,37 @@ import { ONB_STEPS } from '../../data/misc';
 import { firstScreen } from '../../lib/chrome';
 
 /**
+ * Where the run lets somebody out, which is not the same as where the app
+ * opens.
+ *
+ * It used to be `firstScreen` for everybody, and on a fresh install that is
+ * Today with the shipped semester in it. Driven end to end, pressing the
+ * primary button five times and reading the screen it landed on:
+ *
+ *     NEXT CLASS · IN 9 HR 46 MIN · 11:00a · BUS 1600 · Alumni Hall 201
+ *     DUE TODAY · 0 of 1 done · "One thing left. Finish it."
+ *       CORE 2500 QUIZ — Quiz #3 — Foer, "How Soccer Explains…"
+ *       Before class, 1:15p · Brightspace
+ *     6 deadlines went by unticked in the last three weeks.
+ *
+ * `SampleMark` says at the top of that screen which semester it is, and says
+ * it well. What no part of it says is how to get your own — the only route is
+ * the `+` in the header, and a student who has just been told "drop one in"
+ * has to go looking for the door they were promised.
+ *
+ * So a run that ends with nothing of the student's own ends **on** that door.
+ * With courses already in, nothing changes: somebody reopening the run from
+ * the guidebook is not being set up, and lands where the app opens.
+ *
+ * `finishOnboarding` — the Skip below it — is deliberately not this. Skip
+ * means stop showing me things, and answering it with a form would be the
+ * opposite of what was asked.
+ */
+function doneScreen(state: State): Screen {
+  return state.courses.length === 0 ? 'import' : firstScreen(state.nav);
+}
+
+/**
  * Where you have been lately, for the top of the directory.
  *
  * Kept here rather than in the Me screen because `push` is the one funnel
@@ -237,7 +268,7 @@ export function navigate(state: State, action: Action): State | null {
      */
     case 'onbNext':
       return state.onb >= ONB_STEPS - 1
-        ? { ...state, screen: firstScreen(state.nav), history: [], seenOnboarding: true, onb: 0 }
+        ? { ...state, screen: doneScreen(state), history: [], seenOnboarding: true, onb: 0 }
         : { ...state, onb: state.onb + 1 };
 
     case 'restartOnboarding':
