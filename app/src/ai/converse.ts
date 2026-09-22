@@ -341,7 +341,25 @@ export function useConversation(): Conversation {
          * different questions — see the note on `build`'s `onScreen`.
          */
         const seen = assemble(ai);
-        const drawn = buildContext(text, how.mode, state, catalog, now, state.screen, seen.text);
+        /*
+         * The school's own switches, straight from the capability bag.
+         *
+         * Read here and handed over rather than reached for inside
+         * `lib/context.ts`, because that file is deliberately a pure function
+         * of what it is given — it imports no store and no school resolver,
+         * which is what makes it readable in one sitting and checkable as the
+         * boundary it claims to be.
+         */
+        const drawn = buildContext(
+          text,
+          how.mode,
+          state,
+          catalog,
+          now,
+          state.screen,
+          seen.text,
+          school.capabilities.aiOff ?? [],
+        );
         /** Everything this answer drew on: what travelled, plus what it fetched. */
         const drew = new Set(drawn.used);
         setUsed(drawn.used);
