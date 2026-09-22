@@ -370,7 +370,16 @@ This was checked by making the call by hand, exactly as the job would:
 which is `push`'s own first branch. pg_net reaches the function, the URL is
 right, the Vault read works. Only `CRON_SECRET` is missing.
 
-### The tombstone sweep — in the file, not yet on the project
+**Re-checked 22 September, 01:31 UTC, the same way: still `503 "not
+configured"`.** `scheduler.sql` had been re-run on the project by then — the
+`tombstones` job below is the evidence — and it leaves `push` parked on
+purpose, because the one thing it cannot do is set a function secret. So the
+scheduler is applied and the reminder chain is still one step short: step 2
+under *Push notifications* below (`supabase secrets set CRON_SECRET=…`), and
+then step 3 to unpark the job. Until then `cron.job_run_details` is empty for
+`push`, which is what parked looks like and is correct.
+
+### The tombstone sweep — on the project, measured 22 September
 
 `scheduler.sql` now also schedules a second job, `tombstones`, weekly at
 `17 4 * * 0`, calling `public.sweep_tombstones('90 days')`. It clears
@@ -379,10 +388,17 @@ soft-deleted rows from `notes`, `tasks`, `appointments`, `sittings` and
 carries the decision and what it costs — a device offline longer than ninety
 days, still holding the row, syncs it back.
 
-**It is in the file and has not been applied.** Nothing in this repository can
-apply it; a schedule only exists once somebody runs the statement. Re-running
-the whole of `scheduler.sql` is safe — every statement in it is idempotent and
-`cron.schedule` replaces a job of the same name — or run just this one:
+**Applied.** Read off `cron.job` at 01:31 UTC on 22 September 2026:
+
+    push         */15 * * * *   active = false
+    tombstones   17 4 * * 0     active = true
+
+and `cron.job_run_details` empty for both — `tombstones` has not had a Sunday
+yet, and `push` is parked. Nothing in this repository could apply it; a
+schedule only exists once somebody runs the statement, and somebody did. If it
+ever has to be re-created, re-running the whole of `scheduler.sql` is safe —
+every statement in it is idempotent and `cron.schedule` replaces a job of the
+same name — or run just this one:
 
     select cron.schedule(
       'tombstones',
@@ -447,8 +463,10 @@ whether that person shares a class with you.
   trigger as a recipe to run yourself, under *Auto-enable RLS for new tables*,
   and somebody ran it here. `20260901000100_schema.sql` creates it now, so a
   rebuild gets the trigger and the revoke above has something to close.
-- **`groups.sql`** got the same treatment ahead of time. It is not applied to
-  the live project, and it had no grants at all — so its three helpers would
+- **`groups.sql`** got the same treatment ahead of time. It was not applied to
+  the live project when this was written (it is now — `groups` is in the
+  ledger and `private.group_room` exists, read 22 September), and it had no
+  grants at all — so its three helpers would
   have inherited the same default EXECUTE and appeared as three more
   endpoints. `group_room` is the one worth noticing: it answers "which class
   is group X in" for any id, an enumeration away from a map of who studies
