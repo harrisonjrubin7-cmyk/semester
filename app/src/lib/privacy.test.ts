@@ -258,6 +258,23 @@ describe('"delete my account" really means every row', () => {
      * would have sent a delete against a column that is not there.
      *
      * Read off the migrations rather than asserted against a copy of them.
+     *
+     * ## The regex, and the four tables it used to lose
+     *
+     * It was `([^;]*?)\n\)` — everything up to a closing paren, as long as no
+     * semicolon appeared first. A semicolon in *prose* therefore ended the
+     * match, and `forms.sql` has one: "Never the answer key; see the header."
+     * So `forms` found no body, hit the `continue` below, and was never
+     * checked — the table this comment names as the reason the test exists.
+     * `push_devices`, `referral_codes` and `organization_members` went the same
+     * way. Nineteen of twenty-three were being read and the other four were
+     * silently skipped, which is worse than not having the test, because the
+     * output says the same thing either way.
+     *
+     * Now it runs to the first line beginning `);`, which is where a create
+     * table ends and nowhere else — a column definition never starts a line
+     * with a paren — and a table in the schema that finds no body is a failure
+     * rather than a `continue`.
      */
     const { OWNED_TABLES } = await import('./cloud');
     const fs = require('node:fs') as typeof import('node:fs');
@@ -269,11 +286,39 @@ describe('"delete my account" really means every row', () => {
       .map((n) => fs.readFileSync(path.join(dir, n), 'utf8'))
       .join('\n');
 
-    for (const { table, column, cascadesFrom } of OWNED_TABLES) {
+    const { tables } = schema();
+    for (const { table, column, cascadesFrom, via } of OWNED_TABLES) {
       const body = sql.match(
-        new RegExp(`create table (?:if not exists )?public\\.${table} \\(([^;]*?)\\n\\)`, 's'),
+        new RegExp(`create table (?:if not exists )?public\\.${table} \\(([\\s\\S]*?)\\n\\);`),
       )?.[1];
-      if (!body) continue; // Not in any migration; the test above is what says so.
+      if (!body) {
+        // A table in no migration is the test above's business. A table that
+        // *is* in one and whose body this cannot find is this test going
+        // quiet, which is the thing it must never do.
+        expect(tables.has(table), `${table} is in a migration but its body did not parse`).toBe(
+          false,
+        );
+        continue;
+      }
+      if (via) {
+        /*
+         * The third spelling, and the one that is not a column at all. A table
+         * whose rows this account cannot reach with a filtered DELETE — because
+         * the verb is revoked — goes out through a function instead. What has to
+         * be true of that function is the same thing that has to be true of a
+         * column: it exists in the schema, and a signed-in account can actually
+         * call it. A name here that nothing grants would be a delete that never
+         * happens, reported as a success.
+         */
+        expect(column, table).toBeNull();
+        expect(sql, `${table} via ${via}`).toMatch(
+          new RegExp(`create or replace function public\\.${via}\\(`),
+        );
+        expect(sql, `${table} via ${via} granted`).toMatch(
+          new RegExp(`grant execute on function public\\.${via}\\([^)]*\\) to [^;]*authenticated`),
+        );
+        continue;
+      }
       if (column === null) {
         // Nothing is sent for this one, so its parent has to be in the list
         // and the cascade has to be in the schema.
@@ -310,6 +355,7 @@ describe('"delete my account" really means every row', () => {
     expect(KEPT_TABLES.map((t) => t.table).sort()).toEqual([
       'group_tasks',
       'groups',
+      'organizations',
       'reports',
       'schools',
     ]);

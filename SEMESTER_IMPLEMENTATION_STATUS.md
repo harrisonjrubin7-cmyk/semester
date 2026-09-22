@@ -456,7 +456,10 @@ three needed the author after all:
 3. **§47.10 names its own source** — *"Authorized organization admins can edit
    profile"*. Organizations write their own pages, under the role grants #703
    landed. Nothing is seeded, so nothing goes stale, and `lib/activities.ts`
-   is untouched.
+   is untouched. This one has since **landed, built to exactly that shape**:
+   the organizations migration has no insert policy at all, so
+   `start_organization()` is the only way a row appears. The §47.10 entry above
+   is out of date by that much.
 
 Each decision carries the same obligation: if the author reverses one, the
 user-facing sentence changes in the commit that makes it false, never in a

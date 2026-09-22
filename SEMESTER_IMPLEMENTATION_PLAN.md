@@ -211,9 +211,12 @@ That question — **what is the source of organization and event data, and what
 refreshes it?** — is answered below, in *The four product calls, decided*: the
 source is the organizations themselves, writing their own pages under the role
 grants [#703](https://github.com/harrisonjrubin7-cmyk/semester/pull/703)
-landed. Nothing is seeded, so nothing goes stale. With that settled the phase
-is ordinary work: two tables, RSVP and follow as rows, and the entity pages
-§47.7 lists.
+landed. Nothing is seeded, so nothing goes stale.
+
+**The organizations half of this phase is now built** — `public.organizations`,
+`public.organization_members`, and `lib/orgs.ts` over them. What remains is
+events: browse, search, detail, RSVP and cancel per §47.11, on the same
+principle that an organization creates its own.
 
 §61's demo flow is the acceptance test for this phase and the two before it.
 Its steps 6 through 24 are precisely organizations, events, connections and
@@ -336,6 +339,15 @@ has written to it, not because a seed rotted.
 
 `lib/activities.ts`'s comment stays exactly as it is. It refuses to *ship* a
 directory; it never refused to let people write one.
+
+**This one has since landed, built to exactly that shape**, by another session
+working in parallel: `supabase/migrations/20260921230000_organizations.sql` and
+`app/src/lib/orgs.ts`. The migration seeds nothing and has *no insert policy* —
+`start_organization()` is the only way a row appears, and membership is
+governed by capabilities checked server-side in `private.org_can()`. The
+decision above is therefore a reading of the specification that the
+implementation independently confirms, rather than a call still waiting to be
+acted on.
 
 ### 4. Conflict resolution — §261 forbids silence, not last-write-wins
 

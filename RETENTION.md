@@ -186,6 +186,8 @@ behind and a client that believes it succeeded.
 | `app_admins` | account deletion, by cascade only | who may open the internal administrator dashboard. Not written or readable through the API by anyone, including the administrator it names, so no client deletes from it — the row goes when the `auth.users` row does. Deleting everything does not remove the sign-in itself, so an administrator who empties their account is still an administrator |
 | `lti_identity` | account deletion | which Semester account a Brightspace launch opens. It cascades on the account it points at, so deleting your account unbinds the launch too — and a later launch from the same school provisions a fresh account rather than reopening a deleted one, which is the correct reading of having asked to be forgotten |
 | `lti_link_ticket` | minutes, swept an hour past expiry | the single-use proof that a launch was validated, held only long enough for a student to say they already have an account. It names no person: an issuer, an opaque subject the platform chose, and the account the launch just made. Cascades with that account, and sweep_lti_link_ticket() removes what is an hour past expiry |
+| `organizations` | **never**, by any account's deletion | a student organization outlives everybody in it, which is what distinguishes it from a study group. `organizations.created_by` is `on delete set null`, so a founder who deletes their account leaves the organization standing with no founder recorded — the opposite of `groups.created_by`, and for the opposite reason: a group is its four people, an organization is not its founder |
+| `organization_members` | account deletion | your standing in an organization and the capabilities that go with it. Both API roles are off DELETE on the table — the row is somebody else's judgement about you, and a table anybody can delete their own row from is one an applicant can un-decline themselves in — so it goes through `forget_my_organizations()`, which takes the `DECLINED` and `REMOVED` rows that leaving refuses to touch. If you were the only administrator the organization is left with none and any member can take it on; if you were the last member it goes with you |
 | `role_grants` | account deletion of the **subject**, by cascade. The grantor's deletion does not take it | which roles somebody holds, over what, and who said so. Not writable through the API at all, so no client deletes from it — the row goes when the `auth.users` row it names as subject does. `role_grants.granted_by` is ON DELETE SET NULL on purpose and is the asymmetry worth reading twice: removing a member of staff must not silently strip the roles they granted, so the grant survives them and forgets who made it. **Revoked and expired rows are kept, not swept**, and that is a decision rather than an omission — the select policy lets a person read their own revoked grants, which is how somebody finds out why a workspace they had yesterday is gone. The cost is that the table remembers every role an account ever held for as long as the account exists; if that becomes the wrong trade, the sweep belongs beside `sweep_lti_nonce()` and should keep the most recent revocation per scope rather than delete blindly |
 | `invites`, `access_gate` | **no answer yet** — see below | |
 
@@ -193,6 +195,13 @@ behind and a client that believes it succeeded.
 
 Two, and neither is urgent, and both should be answered before a pilot grows
 past people the owner knows by name.
+
+A third was here until `20260921234500_organization_succession.sql`: what
+deleting an account does to a membership, when the only administrator of an
+organization cannot be allowed to leave it locked and a cascade cannot be
+refused. The answer is in the table above and in that migration's header — the
+organization is left with no administrator, which is honest, and any member can
+take it on.
 
 - **`invites` is an allow-list of email addresses with no expiry.** The table is
   `(email, invited_at, note)` and nothing removes a row. Somebody invited to a
