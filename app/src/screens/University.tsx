@@ -30,6 +30,13 @@ import {
   type UniversityRole,
 } from '../lib/university';
 import { schoolCourse } from '../lib/fromschool';
+import {
+  RELATIONSHIP_MEANS,
+  connectionsFrom,
+  readinessOf,
+  relationshipOf,
+} from '../lib/readiness';
+import type { School } from '../lib/school';
 import type { Screen } from '../lib/types';
 
 /**
@@ -155,6 +162,73 @@ export function University() {
    */
   const scope = `${account?.id || 'device'}:${state.term}`;
   return <Workspace key={scope} storageKey={`semester.university.drafts.v1:${scope}`} />;
+}
+
+/**
+ * Where this university actually stands with Semester, said before anything
+ * else on the screen.
+ *
+ * The rest of this screen is already honest per service — every tile states
+ * its connection. What it could not say until now is the whole-institution
+ * version of the same thing, and that is the claim a catalogue of a hundred
+ * universities makes by existing. A student looking at Semester's page for
+ * their school should not have to infer from thirty-seven tiles that nobody
+ * at their school has agreed to anything.
+ *
+ * Both values come from `lib/readiness.ts` and neither can be set here. The
+ * level is derived from what the school profile carries and what the school's
+ * own gateway reports as connected; the relationship is declared in the
+ * repository, defaults to public data, and is deliberately not a field a data
+ * pack can carry.
+ */
+function Standing({
+  school,
+  status,
+}: {
+  school: School;
+  status: InstitutionStatus | null;
+}) {
+  const relationship = relationshipOf(school.id);
+  const meaning = RELATIONSHIP_MEANS[relationship];
+  const ready = readinessOf(school, relationship, connectionsFrom(status?.connections));
+
+  return (
+    <div
+      style={{
+        border: '1px solid var(--app-line)',
+        borderRadius: 'var(--r-md)',
+        paddingBlock: 'calc(11px * var(--density, 1))',
+        paddingInline: 'calc(13px * var(--density, 1))',
+        marginBlock: 'var(--sp-4)',
+      }}
+    >
+      <SectionLabel style={{ marginBlock: 0 }}>
+        {meaning.short} · Level {ready.level}, {ready.name}
+      </SectionLabel>
+      <div
+        style={{
+          fontSize: 'var(--type-sm-plus)',
+          lineHeight: 'var(--leading-normal)',
+          marginTop: 'var(--sp-3)',
+          textWrap: 'pretty',
+        }}
+      >
+        {meaning.says}
+      </div>
+      <div
+        style={{
+          fontSize: 'var(--type-xs-plus)',
+          ...secondLine(),
+          lineHeight: 'var(--leading-normal)',
+          marginTop: 'var(--sp-3)',
+          textWrap: 'pretty',
+        }}
+      >
+        {ready.is}
+        {ready.held ? ` ${ready.held}` : ''}
+      </div>
+    </div>
+  );
 }
 
 function Workspace({ storageKey }: { storageKey: string }) {
@@ -433,6 +507,8 @@ function Workspace({ storageKey }: { storageKey: string }) {
         Official records, submissions and payments need a connection your school has approved —{' '}
         {status ? 'and this account has one.' : 'and none is configured yet.'}
       </div>
+
+      <Standing school={school} status={status} />
 
       <Segmented
         options={TABS.map((t) => ({
