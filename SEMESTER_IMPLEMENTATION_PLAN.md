@@ -207,39 +207,156 @@ repeatable source is named. Until one is, building the tables produces empty
 pages, and §47.12 has a sentence for that too: *"Do not show fake personalized
 modules."*
 
-So this phase starts with an answer to one question — **what is the source of
-organization and event data, and what refreshes it?** — and then it is
-ordinary work: two tables, RSVP and follow as rows, and the entity pages §47.7
-lists.
+That question — **what is the source of organization and event data, and what
+refreshes it?** — is answered below, in *The four product calls, decided*: the
+source is the organizations themselves, writing their own pages under the role
+grants [#703](https://github.com/harrisonjrubin7-cmyk/semester/pull/703)
+landed. Nothing is seeded, so nothing goes stale. With that settled the phase
+is ordinary work: two tables, RSVP and follow as rows, and the entity pages
+§47.7 lists.
 
 §61's demo flow is the acceptance test for this phase and the two before it.
 Its steps 6 through 24 are precisely organizations, events, connections and
 messages, in that order.
 
-### Phase 7 — §54 and §55, if the promise changes
+### Phase 7 — §55 on the device, and §54 only if the promise changes
 
-Analytics is blocked on a decision, not a dependency. The app tells students it
-has none, in `lib/guidebook.ts:222` and `lib/privacy.ts:185`. If that changes,
-§54's own instruction is the right shape — *"Create a clean analytics
-abstraction rather than scattering tracking calls across the codebase"* — and
-§55's metrics come off it.
+Analytics was blocked on a decision rather than a dependency, and the decision
+is below: the promise in `lib/guidebook.ts:222` and `lib/privacy.ts:185`
+stands, and nothing is sent. §55's activation figures do not need it — they
+are computable from state the device already holds, and the device is where a
+student can see their own. That part is buildable now.
+
+What the decision defers is the aggregate. If the author reverses it, §54's own
+instruction is the right shape — *"Create a clean analytics abstraction rather
+than scattering tracking calls across the codebase"* — and the sentence in
+`lib/guidebook.ts` changes in the commit that sends the first event.
 
 ---
 
-## Blocked on the author, not on the program
+## The four product calls, decided
 
-§63 step 13 asks that these be documented exactly rather than worked around.
+§63 step 13 asks that anything blocked on the author be documented exactly
+rather than worked around. Four entries sat here for that reason. Three of
+them were never really questions about what the author wants — they were
+questions about what two documents mean when read together, and reading them
+together answers all three. They are settled below, with what would have to
+change to reverse each one.
+
+One thing is still genuinely the author's, and it is configuration rather
+than product:
 
 | | what is needed | where |
 | --- | --- | --- |
 | **Google OAuth** | switch the provider on in the Supabase dashboard and paste a client id and secret | `SETUP.md:268` |
-| **Organization/event data source** | name a real, repeatable source, or agree there will not be one | §47.10, and `lib/activities.ts` |
-| **The account promise** | §47.1 wants protected routes; the app tells students it has no account requirement | `lib/privacy.ts:185` |
-| **The analytics promise** | §54 wants eleven tracked events; the app tells students it has none | `lib/guidebook.ts:222` |
 
-The first is configuration. The other three are the author's product calls, and
-§63 step 14 — *"Never replace a real integration requirement with fake success
-behavior"* — is why none of them will be worked around here.
+### 1. The account promise — §47.1 and §258 are one decision, and it is already made
+
+§47.1 lists nine things and calls them required. Eight of them exist: sign up,
+login, logout, email verification, password reset, persistent sessions,
+account settings, account deletion. The ninth — **protected routes** — is the
+only one that reads as a contradiction of `lib/privacy.ts:185`, which tells
+students *"It works without an account"*.
+
+It is not a contradiction, because §258 settles it in the same document.
+§258 names what must work offline: *Schedule, Assignments, Recent notes,
+Downloaded files, Study materials, Saved campus information.* That is the
+academic core, and a route cannot be both protected and offline-first. §258
+also draws the line for the other side — *"Do not promise offline capability
+for features that require server confirmation"* — and every screen §47.1 is
+really written for is on that side: a message to another student, an RSVP
+another person can count, a report a moderator reads.
+
+**Decided: the promise stands, and §47.1's protected routes are scoped to the
+server-backed surfaces.** The academic core stays usable with no account,
+because §258 requires it to be. Authentication is real — no mock login, no
+hardcoded current user, per §47.1's closing line — and it is real *already*;
+what changes is nothing, because the surfaces that need a gate are the ones
+not yet built.
+
+This decision carries an obligation for whoever builds them. The claim in
+`lib/privacy.ts` is not decoration, and it is accurate today in a strong
+sense: signed out, nothing leaves the device at all. The first feature that
+makes that false changes the sentence **in the same commit** — *"It works
+without an account"* becomes a claim about the academic core specifically.
+Never the feature first and the copy after.
+
+### 2. Analytics — §54's promise stands, and §55's question is still answerable
+
+`lib/guidebook.ts:222` tells students the app *"has no account requirement and
+no analytics, and signed out nothing leaves this device."* §54 asks for eleven
+tracked events.
+
+Seven of the eleven — connection request sent, connection accepted, message
+sent, organization followed, event viewed, event RSVP, notification opened —
+are events of features that do not exist. So the question today is narrower
+than it looks: it is whether four events (account created, onboarding
+completed, search performed, search result opened) are worth breaking a
+sentence for.
+
+**Decided: they are not, and the promise stands.** §54's own qualifiers argue
+this side — *"privacy-conscious"*, *"Avoid collecting unnecessary sensitive
+data"* — and a search query is about the most sensitive string this app holds.
+
+That is not a decision to stop measuring. §55 asks *"Track whether people
+actually use the product"* and lists activation: what fraction complete
+onboarding, what fraction take one meaningful action. Every one of those
+figures is computable from state the device already holds, and the device is
+where the student can see their own. What §55 cannot have without a reversal
+is the *aggregate*.
+
+Reversing it is a coherent thing to want, and it has a shape: §54's own
+instruction — *"Create a clean analytics abstraction rather than scattering
+tracking calls across the codebase"* — plus opt-in, plus the same sign-in the
+sync already uses, plus a new row in `lib/privacy.ts`'s `CLAIMS` naming
+exactly what is sent. The sentence in `lib/guidebook.ts` changes in the commit
+that sends the first event, not in the one after it.
+
+### 3. Organizations and events — the source is the organizations
+
+This was the one that looked most like a blocked question. `lib/activities.ts`
+refuses to ship a hardcoded directory because a hardcoded directory goes stale
+and then somebody emails a president who graduated in 2021; §53 and §47.14
+agree with the refusal.
+
+The answer was in §47.10 the whole time. It asks for *"Authorized organization
+admins can edit profile"*, *"Create event"*, *"View membership requests"*.
+An organization that maintains its own page **is** the repeatable source §53
+asks for, and it is the only one that refreshes itself. There is no public
+student-accessible API for Vanderbilt's organization directory to import from,
+and there does not need to be one.
+
+**Decided: build the tables user-generated, not seeded.** An organization page
+exists when somebody holding a role over it creates it — which is precisely
+what `private.holds_role()` and `public.role_grants` were built for in
+[#703](https://github.com/harrisonjrubin7-cmyk/semester/pull/703). Nothing is
+hardcoded, so nothing goes stale, and §47.12's *"Do not show fake personalized
+modules"* holds by construction: an empty directory is empty because nobody
+has written to it, not because a seed rotted.
+
+`lib/activities.ts`'s comment stays exactly as it is. It refuses to *ship* a
+directory; it never refused to let people write one.
+
+### 4. Conflict resolution — §261 forbids silence, not last-write-wins
+
+§261 asks for *"Your version / Server version / Merge"* and closes with
+*"Avoid silently overwriting user work."* `lib/cloud.ts` already states its
+reconciliation in its own header: what arrives from the account is merged
+field by field through `lib/merge.ts`, so lists keep both sides; one record
+edited on both devices is last-write-wins, and the file says so rather than
+implying better.
+
+The gap between those two is not the merge. It is the word **silently**.
+
+**Decided: build the disclosure, not the three-way merge.** When a sync
+replaces a record the device also edited, the app says which record and keeps
+the copy that lost retrievable. §260's sync-status vocabulary — *Saved,
+Saving, Offline, Syncing, Sync failed* — is the surface it belongs on, and
+`lib/cloud.ts`'s own judgement stands: *"Anything cleverer is a
+distributed-systems project, and pretending otherwise in the UI would be worse
+than saying it plainly."* §261's prohibition is satisfied in full by not being
+silent. Its three-pane UI is a means, and the cheaper means reaches the same
+end.
 
 ---
 
