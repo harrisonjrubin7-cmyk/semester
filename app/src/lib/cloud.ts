@@ -669,12 +669,26 @@ export async function queuedSendAts(): Promise<number[]> {
 export type OwnedTable = {
   table: string;
   /**
-   * The column holding the account id. Null when nothing is sent for this
-   * table because a cascade from another one in this list already takes it —
-   * `cascadesFrom` says which.
+   * The column holding the account id. Null when nothing is *filtered* for
+   * this table, which happens two ways: a cascade from another one in this
+   * list already takes it — `cascadesFrom` says which — or the rows are
+   * unreachable by a filtered DELETE and a function takes them, which `via`
+   * names.
    */
   column: string | null;
   cascadesFrom?: string;
+  /**
+   * The `rpc` this account's rows go through instead of a DELETE.
+   *
+   * One table needs it. `organization_members` holds one person's rank in an
+   * organization as decided by another, so DELETE on it is revoked from both
+   * API roles outright and there is no filter that would work.
+   * `forget_my_organizations()` is the only way out, and it does more than a
+   * DELETE could: it takes the `DECLINED` and `REMOVED` rows that
+   * `leave_organization()` refuses to touch, and the trigger behind it removes
+   * an organization left with no members at all.
+   */
+  via?: string;
 };
 
 /** A table a deleted account leaves rows in, and why. Said on the privacy page. */
@@ -814,6 +828,19 @@ export const OWNED_TABLES: OwnedTable[] = [
   { table: 'family_grants', column: 'student_id' },
 
   // ── Shared forms ────────────────────────────────────────────────────────
+  // ── Organizations ───────────────────────────────────────────────────────
+  //
+  // Not a filtered DELETE, and it cannot be one: DELETE on
+  // `organization_members` is revoked from both API roles, because the row is
+  // somebody else's judgement about this account and a table anybody can
+  // delete their own row from is a table an applicant can un-decline
+  // themselves in. `forget_my_organizations()` is the only way out and takes
+  // everything, decisions included — see
+  // `supabase/migrations/20260921234500_organization_succession.sql` for why
+  // that is the right answer *here* and the wrong one for somebody who is
+  // merely leaving.
+  { table: 'organization_members', column: null, via: 'forget_my_organizations' },
+
   { table: 'forms', column: 'owner' },
   // Taken by the line above rather than by a request of its own:
   // `form_responses.form_id` references `forms` with `on delete cascade`, and
@@ -856,6 +883,10 @@ export const KEPT_TABLES: KeptTable[] = [
     why: 'A report you filed is a record about somebody else. It has no delete policy at all, deliberately: deleting your account is not a way to withdraw one.',
   },
   {
+    table: 'organizations',
+    why: 'A student organization outlives everybody in it — that is most of what makes it one rather than a study group. Your membership goes and it stays, with no founder recorded if you started it. If you were its last administrator it is left with none, and any member can take it on; if you were its last member it goes with you, because an organization nobody is in is not anything.',
+  },
+  {
     table: 'schools',
     why: 'The list of universities the app recognises is not a record about you — no account writes a row in it, and only an administrator can. Leaving is not a way to remove a university, and the entry saying which one you are at lives on your own profile, which does go.',
   },
@@ -868,7 +899,12 @@ export async function deleteEverything(): Promise<string> {
   if (!userId) throw new Error('Sign in first — there is no account to delete.');
 
   const failed: string[] = [];
-  for (const { table, column } of OWNED_TABLES) {
+  for (const { table, column, via } of OWNED_TABLES) {
+    if (via) {
+      const { error } = await db.rpc(via);
+      if (error && !/does not exist|schema cache/i.test(error.message)) failed.push(table);
+      continue;
+    }
     if (column === null) continue;
     const { error } = await db.from(table).delete().eq(column, userId);
     // A table this project does not have is not a failure — a build without

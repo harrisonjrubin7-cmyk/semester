@@ -50,6 +50,19 @@ function makeDb() {
     errors,
     db: {
       from: (table: string) => chain(table, 'from'),
+      /*
+       * One entry in `OWNED_TABLES` is emptied by a function rather than by a
+       * filtered DELETE, because DELETE on its table is revoked from both API
+       * roles. Recorded under the same log so that "what did the button send"
+       * is one question with one answer, rather than two lists a later test
+       * has to remember to check both of.
+       */
+      rpc: (fn: string, args?: unknown) => {
+        log.push({ table: fn, op: 'rpc', args: [args] });
+        return Promise.resolve(
+          errors[fn] ? { data: null, error: { message: errors[fn] } } : { data: null, error: null },
+        );
+      },
       auth: {
         getUser: async () => ({ data: { user: { id: 'user-1' } } }),
         signOut: vi.fn(async () => ({ error: null })),
@@ -61,6 +74,8 @@ function makeDb() {
     },
     /** Which tables a delete was sent to, in order. */
     deleted: () => log.filter((l) => l.op === 'delete').map((l) => l.table),
+    /** Which functions were called, in order. */
+    called: () => log.filter((l) => l.op === 'rpc').map((l) => l.table),
     /** The ids named by an `.in('id', [...])` call. */
     prunedIds: () =>
       log
@@ -558,11 +573,41 @@ describe('deleteEverything', () => {
     const { deleteEverything, OWNED_TABLES } = await load();
     const said = await deleteEverything();
     // Every entry but the ones a cascade covers, which are sent nothing on
-    // purpose — `privacy.test.ts` is what proves the cascade is really there.
-    const sent = OWNED_TABLES.filter((t) => t.column !== null).map((t) => t.table);
+    // purpose — `privacy.test.ts` is what proves the cascade is really there —
+    // and the ones a function empties, which are the next test.
+    const sent = OWNED_TABLES.filter((t) => t.column !== null && !t.via).map((t) => t.table);
     expect(harness.deleted().sort()).toEqual([...sent].sort());
     expect(harness.db.auth.signOut).toHaveBeenCalled();
     expect(said).toMatch(/your rows are gone and you are signed out/i);
+  });
+
+  /*
+   * `organization_members` holds one person's rank in an organization as
+   * decided by another, so DELETE on it is revoked from both API roles and
+   * there is no filter that would work. A name added to this list with a
+   * column would have sent a delete PostgREST refuses, and the button would
+   * have reported a failure; a name added with neither a column nor a
+   * function would have sent nothing at all and reported success.
+   */
+  it('calls the function for a table no filtered delete can reach', async () => {
+    const { deleteEverything, OWNED_TABLES } = await load();
+    await deleteEverything();
+    const byFunction = OWNED_TABLES.filter((t) => t.via);
+    expect(byFunction.length).toBeGreaterThan(0);
+    for (const { table, via } of byFunction) {
+      expect(harness.deleted(), table).not.toContain(table);
+      expect(harness.called(), table).toContain(via);
+    }
+  });
+
+  it('reports a function that refused, rather than reporting the account emptied', async () => {
+    const { deleteEverything, OWNED_TABLES } = await load();
+    const first = OWNED_TABLES.find((t) => t.via);
+    harness.errors[first!.via!] = 'permission denied';
+    const said = await deleteEverything();
+    expect(said).toContain(first!.table);
+    expect(said).not.toMatch(/your rows are gone/i);
+    expect(harness.db.auth.signOut).toHaveBeenCalled();
   });
 
   it('sends nothing for a table a cascade already empties', async () => {
