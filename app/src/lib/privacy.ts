@@ -156,7 +156,7 @@ export const SYNC_GROUPS: { says: string; keys: string[] }[] = [
       'tabs', 'yours', 'controls', 'role', 'showAll',
       'schemaVersion', 'accent', 'textSize', 'ground', 'density', 'corners',
       'typeface', 'bodyface', 'lineHeight', 'readingWidth', 'iconShape', 'calm',
-      'labels', 'badges', 'feed', 'courseColours', 'shell', 'favourites',
+      'labels', 'badges', 'feed', 'courseColours', 'shell', 'focus', 'favourites',
       'shortcuts', 'directory', 'groupOrder', 'boardOrder', 'hue',
     ],
   },

@@ -41,12 +41,24 @@ import { useEffect, useRef } from 'react';
 import { useStore } from '../../state/store';
 import { GROUPS, destination, destinationsFor, saysFor, shelfOf } from '../../lib/nav';
 import { TabList } from '../ui';
+import { focused } from '../../lib/focus';
 
 export function ShelfNav() {
   const { state, dispatch, school } = useStore();
   const here = shelfOf(state.screen);
   const caps = school.capabilities;
-  const onShelf = destinationsFor(here, caps, state.role);
+  /*
+   * Focus, which is the one gate these rows do take. The argument above is
+   * against a row that changes length on its own as the term goes on; a row
+   * that changes once, when the person flips a switch, and then holds is a
+   * row whose positions can be learned. A shelf left with nothing on it goes
+   * from row one — except the one you are standing on, which stays so the
+   * rows never say you are nowhere. See `lib/focus.ts`.
+   */
+  const onShelf = focused(destinationsFor(here, caps, state.role), state.focus);
+  const shelves = GROUPS.filter(
+    (g) => g === here || focused(destinationsFor(g, caps, state.role), state.focus).length > 0,
+  );
   const said = destination(state.screen);
   const rows = useRef<HTMLElement>(null);
 
@@ -72,14 +84,14 @@ export function ShelfNav() {
       <TabList
         label="Areas"
         className="shelf-nav-row"
-        tabs={GROUPS.map((g) => ({ id: g, label: g }))}
+        tabs={shelves.map((g) => ({ id: g, label: g }))}
         value={here}
         tabClassName={(on) => `bare pill-soft shelf-nav-pill${on ? ' is-on' : ''}`}
         onChange={(g) => {
           // A shelf is not a screen, so pressing one opens the first screen on
           // it rather than doing nothing. Row two then shows where that
           // landed, which is the whole point of the pair.
-          const first = destinationsFor(g, caps, state.role)[0];
+          const first = focused(destinationsFor(g, caps, state.role), state.focus)[0];
           if (first) dispatch({ type: 'go', screen: first.screen });
         }}
       />

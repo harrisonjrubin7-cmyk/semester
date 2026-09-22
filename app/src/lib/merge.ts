@@ -216,6 +216,9 @@ export const STRATEGY: Record<string, Strategy> = {
   // than about the screen it is on, so it follows them between devices.
   courseColours: 'theirs',
   shell: 'theirs',
+  // Focus is about the person's week, not the device: finals are finals on
+  // the laptop too.
+  focus: 'theirs',
   // Where the message sits beside the list. About how somebody reads a
   // mailbox rather than about the window it is in, so it follows them.
   mailPane: 'theirs',

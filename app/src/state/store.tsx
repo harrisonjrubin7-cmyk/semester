@@ -40,6 +40,7 @@ import type { Session } from '@supabase/supabase-js';
 import { loadSeed } from '../data/seed';
 import { nextPayment } from '../lib/bill';
 import { classesToNudge, dueReminders, fire } from '../lib/notify';
+import { essentialOnly } from '../lib/focus';
 import { atRiskToday } from '../lib/atrisk';
 import { beginNow, planFrom } from '../lib/start';
 import { myReminders } from '../lib/myrules';
@@ -1069,7 +1070,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       const at = new Date();
       const items = datedItems(catalog, at);
       fire(
-        dueReminders(at, state.notifs, {
+        dueReminders(at, essentialOnly(state.notifs, state.focus), {
           items,
           done: state.done,
           classes: classesToNudge(railFor(catalog, at, state.appointments)),
@@ -1149,7 +1150,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     // so an interval holding a stale copy would go on working backwards
     // through last week's working hours, and the start date it named would be
     // a day the student had already changed their mind about.
-  }, [catalog, state.notifs, state.mutedCourses, state.appointments, state.registrar, state.myRules, state.attendance, state.attendPolicy, state.done, state.quiet, state.term, state.charges, state.aid, state.payments, state.plans, state.spent, state.windows, courseCode]);
+  }, [catalog, state.notifs, state.focus, state.mutedCourses, state.appointments, state.registrar, state.myRules, state.attendance, state.attendPolicy, state.done, state.quiet, state.term, state.charges, state.aid, state.payments, state.plans, state.spent, state.windows, courseCode]);
 
   // The number on the installed icon: things due today and not ticked. In the
   // provider rather than on Today, because the count has to be right whatever

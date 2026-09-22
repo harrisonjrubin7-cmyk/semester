@@ -1,4 +1,4 @@
-Sections **301–1217** of the master specification: the platform beneath the product. AI reliability, workflow automation, collaboration, the developer platform, quality engineering, institutional analytics, governance, billing, implementation operations, communications, native and PWA strategy, lifecycle operations, compliance evidence, data governance, marketplace and career safeguards, AI administration, what "contract-ready" finally means, then the implementation dependency system, institutional deployment, migration, QA, security, support and governance, and finally event operations, financial workflows, organizations, marketplace and housing, academic integrity, AI governance, testing, launch certification and the final production-readiness gates.
+Sections **301–1341** of the master specification: the platform beneath the product. AI reliability, workflow automation, collaboration, the developer platform, quality engineering, institutional analytics, governance, billing, implementation operations, communications, native and PWA strategy, lifecycle operations, compliance evidence, data governance, marketplace and career safeguards, AI administration, what "contract-ready" finally means, then the implementation dependency system, institutional deployment, migration, QA, security, support and governance, and finally event operations, financial workflows, organizations, marketplace and housing, academic integrity, AI governance, testing, launch certification and the final production-readiness gates.
 
 # Two numbering schemes, and how to cite them
 
@@ -12,7 +12,7 @@ Neither was renumbered, because renumbering one would silently break every refer
 | --- | --- | --- |
 | 301–349 | — | this document |
 | 350–408 | `EXPERIENCE_REQUIREMENTS.md` | **also this document** |
-| 409–1217 | — | this document |
+| 409–1341 | — | this document |
 
 # Where this stands
 
@@ -24,7 +24,7 @@ Nothing in this document is claimed as built without a named symbol. The gaps ar
 | 309 | AI tool allowlist | **not built** — all 22 of `TOOLS` reach every assistant mode |
 | 310 | Action simulation before consequential actions | `Proposal` / `readProposal` in `lib/tools.ts` — every write becomes a card with a button |
 | 311 | Idempotency keys | partial — `lib/tools.ts` re-reads each proposal, but no keys |
-| 313–315 | Automations and automation centre | **not built** |
+| 313–315 | Automations and automation centre | `lib/automations.ts` → `RunningNow` at the top of Settings → Alerts: every active automation in one list (built-in reminders, own rules, mail rules, quiet hours, mutes), mail rules switchable there; §315 held by `automations.test.ts`, which reads the three engines for any network call or dispatch |
 | 320–322 | Realtime collaboration and presence | `lib/rtc.ts`, `lib/mesh.ts`, `lib/roomchat.ts` |
 | 327–336 | Developer platform, API, webhooks | **not built** — no public API surface |
 | 337 | Error taxonomy | **not built** — no `PERMISSION_DENIED` / `VALIDATION_ERROR` constants |
@@ -3692,3 +3692,509 @@ The shortest path from the current repository to a pilot-ready university produc
 # 1217. Step 6 — fix P0
 
 Security, data loss, broken build, authentication, tenant leakage — first, always.
+
+# 1218. Step 7 — establish pilot-ready core
+
+Authentication, tenant model, profiles, directory, search, courses, calendar, organizations, events, messaging, notifications, AI v1, university admin, monitoring, accessibility, security. **Do not divert into optional modules until this stack is stable.**
+
+# 1219. Step 8 — one complete vertical slice per domain
+
+Database → API → authorization → UI → search → RSVP → notification → calendar → analytics → admin → tests. **Do not mark Event complete because a card renders.**
+
+# 1220. Step 9 — establish the first tenant
+
+Tenant configuration, campus data, academic calendar, organizations, services, courses and public resources are **data-driven**. Remove institution-specific frontend assumptions.
+
+# 1221. Step 10 — generalize tenant architecture
+
+Search the codebase for university-specific logic and decide, for each, whether it is configuration, a provider adapter, a data record, a policy or a feature flag. Then refactor.
+
+# 1222. Step 11 — create a second synthetic tenant
+
+University Alpha and University Beta, with separate users, courses, organizations, search, AI retrieval, admin and files. **This validates the architecture before scaling, not after.**
+
+# 1223. Step 12 — tenant isolation hardening
+
+Automated cross-tenant failure tests against REST, database services, search, files, realtime, AI retrieval, admin and exports.
+
+# 1224. Step 13 — authorization hardening
+
+A `RESOURCE × ROLE × ACTION` matrix, tested. A student cannot edit the university, manage another organization or read a private file; an organization admin manages **their** organization and no other.
+
+# 1225. Step 14 — data model consolidation
+
+Four unrelated representations of one domain concept is four places to fix a bug. Normalize carefully.
+
+# 1226. Step 15 — canonical entity IDs
+
+**Never index-, title- or display-name-based identity.** IDs survive a rename.
+
+# 1227. Step 16 — source metadata
+
+`source_type`, `provider`, `external_id`, `last_synced` on imported records.
+
+# 1228. Step 17 — search v1
+
+People, courses, organizations, events, campus resources — tenant-aware, permission-aware, typo tolerant, fast, paginated. **Before expanding to every entity.**
+
+# 1229. Step 18 — search v2
+
+Documents, notes, jobs, marketplace, housing, university processes — **only after core search performs well.**
+
+# 1230. Step 19 — Home redesign
+
+Today, next up, for you, campus now, recent. **Not every module on Home.**
+
+# 1231. Step 20 — calendar as shared infrastructure
+
+Class, assignment, exam, study, organization, event, meeting, career and personal all write to one abstraction. **Avoid separate calendars.**
+
+# 1232. Step 21 — academic data normalization
+
+University, term, school, department, course, section, enrollment, professor, assignment, exam — **before advanced degree or registration AI.**
+
+# 1233. Step 22 — academic dashboard v1
+
+Answers *what classes do I have, what is due, what is next, what exams are coming, what should I work on* — from actual structured data.
+
+# 1234. Step 23 — study planner v1
+
+Create, move, complete, link to course, link to exam. Adaptive planning follows later.
+
+# 1235. Step 24 — course community v1
+
+Course page, privacy-aware peers, discussion, study groups, resources, professor info. **Do not duplicate the LMS gradebook.**
+
+# 1236. Step 25 — organization OS v1
+
+Profile, follow, membership, applications, events, announcements, members, roles — before finance and elections.
+
+# 1237. Step 26 — event platform v1
+
+Create, publish, RSVP, capacity, save, calendar, share, cancel, notifications.
+
+# 1238. Step 27 — messaging v1
+
+Direct conversation, persistent history, unread, notifications, block, report. Realtime preferred.
+
+# 1239. Step 28 — notification infrastructure
+
+**No feature-specific notification tables.** One event-driven service.
+
+# 1240. Step 29 — history infrastructure
+
+Recently viewed, search history, AI history, recently closed workspace — privacy-controlled.
+
+# 1241. Step 30 — workspace tabs
+
+**Only after routes are stable**, and built on canonical routes and entities.
+
+# 1242. Step 31 — multi-window
+
+*Open in new window* first; drag-to-detach only where it is technically reliable.
+
+# 1243. Step 32 — split view
+
+Two panes maximum first: document + AI, course + notes, calendar + registration.
+
+# 1244. Step 33 — documents v1
+
+Create, edit, autosave, share, comments, version history, export. **Not a Google Docs clone immediately.**
+
+# 1245. Step 34 — drive v1
+
+Files, folders, recent, starred, shared, trash, course association.
+
+# 1246. Step 35 — PDF v1
+
+View, search, highlight, course association, AI source reference.
+
+# 1247. Step 36 — projects v1
+
+Tasks, files, members, meetings. Keep it simple.
+
+# 1248. Step 37 — slides and sheets decision gate
+
+Evaluate demand, differentiation, cost and existing integrations **before** building native editors. If Google and Microsoft integrations satisfy most use cases, contextual integration beats rebuilding an office suite.
+
+# 1249. Step 38 — Semester AI gateway
+
+**One gateway, one tool registry, one permissions layer, one cost meter, one audit layer. No direct model calls from arbitrary UI.**
+
+# 1250. Step 39 — AI v1 capabilities
+
+High-value **read** workflows, source-grounded: today's schedule, assignments, campus search, course questions, events, university processes.
+
+# 1251. Step 40 — AI write actions
+
+**Only after read reliability.** Reversible first — save an event, create a task, create a study session, follow an organization. Messages, email, registration and payments come later, with stronger confirmation.
+
+# 1252. Step 41 — AI benchmark before release
+
+**No new AI capability ships without a test set.** Accuracy, tool correctness, authorization, sources, latency, cost.
+
+# 1253. Step 42 — degree tracker v1
+
+Required courses, credits, choose-N groups, general education, major requirements. **Not every edge case immediately.**
+
+# 1254. Step 43 — catalog year
+
+**Catalog-year aware from the first production implementation.** Retrofitting it later is very hard.
+
+# 1255. Step 44 — registration planner v1
+
+Course search, section selection, weekly schedule, conflicts, saved plans, prerequisite display. **No direct registration yet.**
+
+# 1256. Step 45 — registration integration
+
+`READ → PRECHECK → WRITE SANDBOX → PILOT → PRODUCTION WRITE`.
+
+# 1257. Step 46 — university process engine
+
+Change major, request transcript, find advisor, add/drop, financial aid, housing, study abroad — each mapped to the tenant's official process.
+
+# 1258. Step 47 — university knowledge base
+
+Tenant-scoped, with source, owner, last verified, effective date and status.
+
+# 1259. Step 48 — top-100 data platform
+
+Identity, academic calendar, schools, departments, campus services, organizations, events for the initial cohort. **Not every category at once.**
+
+# 1260. Step 49 — top-100 quality gate
+
+A university is not publicly enabled until its baseline dataset passes defined completeness and quality checks.
+
+# 1261. Step 50 — university public mode
+
+Public data, events and resources. **No implication of partnership.**
+
+# 1262. Step 51 — contracted mode
+
+SSO, private student data, admin, integrations, institutional AI.
+
+# 1263. Step 52 — admin v1
+
+University profile, users and roles, organizations, official resources, feature flags, integrations.
+
+# 1264. Step 53 — admin v2
+
+Communications, moderation, analytics, data governance, AI policy.
+
+# 1265. Step 54 — implementation console
+
+**Built before signing multiple universities.** Tenant setup, SSO, integrations, data, testing, pilot, launch.
+
+# 1266. Step 55 — university setup automation
+
+**Creating a university must not require an engineer to hand-create dozens of database records.**
+
+# 1267. Step 56 — SSO provider abstraction
+
+Normalized before adding many customers.
+
+# 1268. Step 57 — Google Workspace integration
+
+Calendar, email, drive, via official APIs, where the first customer uses Google.
+
+# 1269. Step 58 — Microsoft 365 integration
+
+The normalized equivalent. **Do not design the core experience around Google-only assumptions.**
+
+# 1270. Step 59 — LMS first provider
+
+One adapter, built correctly, then tested through the normalized interface.
+
+# 1271. Step 60 — SIS first provider
+
+Same. **Not five shallow adapters at once.**
+
+# 1272. Step 61 — provider test harness
+
+Fixtures and sandbox tests, so an adapter is testable **without live production university credentials.**
+
+# 1273. Step 62 — monitoring before pilot
+
+Errors, uptime, database, integration health, AI failures. **No pilot without it.**
+
+# 1274. Step 63 — backups before pilot
+
+Automated backups, and a **restore test** before broader launch.
+
+# 1275. Step 64 — support before pilot
+
+Help centre, feedback, support request, escalation.
+
+# 1276. Step 65 — accessibility before pilot
+
+Critical workflows pass a defined review. **Do not defer accessibility to enterprise procurement.**
+
+# 1277. Step 66 — security review before pilot
+
+Auth, authorization, tenant isolation, file security, AI permissions, secrets, rate limits.
+
+# 1278. Step 67 — privacy review before pilot
+
+Profile defaults, course visibility, history, AI data, analytics, connected apps.
+
+# 1279. Step 68 — demo tenant
+
+Polished, synthetic, separate. **Sales never demonstrates on live student data.**
+
+# 1280. Step 69 — pilot tenant
+
+Real approved configuration and authorized data, with features kept limited.
+
+# 1281. Step 70 — pilot cohort
+
+Manageable, and chosen with the institution.
+
+# 1282. Step 71 — pilot measurement
+
+Activation, retention, search, errors, support, AI accuracy, integration reliability.
+
+# 1283. Step 72 — pilot interviews
+
+Confusion, missing workflows, trust issues, navigation problems, data errors. **Analytics alone will not show these.**
+
+# 1284. Step 73 — pilot fix sprint
+
+Pilot-discovered P0, P1, usability and data-quality issues **outrank new roadmap features.**
+
+# 1285. Step 74 — university acceptance
+
+SSO, data, integrations, admin, communications, support — validated before full launch.
+
+# 1286. Step 75 — go live
+
+The runbook, and intense monitoring.
+
+# 1287. Step 76 — hypercare
+
+**Do not return to feature development immediately.** Stabilize.
+
+# 1288. Step 77 — post-launch review
+
+What worked, what failed, what was custom, what should become reusable.
+
+# 1289. Step 78 — second university
+
+**Not by copying the first.** Generalized configuration and providers, with any custom engineering tracked.
+
+# 1290. Step 79 — reduce implementation cost
+
+After each university, identify the reusable mappings, provider code, config templates, tests and docs.
+
+# 1291. Step 80 — expansion
+
+**Only after a repeatable implementation exists** should institutional sales scale.
+
+# 1292. Execution loop
+
+Understand → check dependencies → design the smallest correct solution → implement → test → browser verify → security verify → mobile verify → accessibility verify → document → update status → continue.
+
+# 1293. Completion rule
+
+**A screen existing is not completion.** A feature works end to end.
+
+# 1294. Stop-and-fix rule
+
+A security flaw, an architectural blocker or a data integrity problem is fixed in the foundation **before** more is layered on it.
+
+# 1295. No rewrite rule
+
+**Do not rewrite working architecture because another technology looks cleaner.** Only when it prevents requirements, security demands it, maintenance cost is unacceptable, or migration has clear value.
+
+# 1296. No premature enterprise complexity
+
+No microservices, Kubernetes, Kafka or multiple databases without demonstrated need. **A strong modular monolith is acceptable.**
+
+# 1297. No premature ML
+
+Deterministic recommendations, ranking and matching first.
+
+# 1298. No premature office suite rebuild
+
+**Do not spend months reproducing Docs, Excel, PowerPoint or Zoom** before validating whether integrations plus contextual features deliver more.
+
+# 1299. Build unique Semester advantages first
+
+University context, course context, degree context, campus graph, student graph, process navigation, the AI action layer, cross-system workflows.
+
+# 1300. Core competitive product
+
+Semester Intelligence over academics, campus and workspace, all over the campus graph, all over the university's own systems.
+
+# 1301. Market differentiator
+
+**Not more screens. Everything connected.**
+
+# 1302. Student experience differentiator
+
+*What should I do today?* answered coherently across classes, assignments, exams, study plan, clubs, messages, career and calendar.
+
+# 1303. University differentiator
+
+A student experience, intelligence, workflow and integration layer **over** existing systems rather than instead of them.
+
+# 1304. AI differentiator
+
+Not *here's how registration usually works*, but the window, the remaining requirement and three eligible sections — **only when authorized data supports the statement.**
+
+# 1305. Degree differentiator
+
+Not *read the catalog*, but the four remaining requirements, sourced.
+
+# 1306. Campus differentiator
+
+Not *search the university website*, but the office that handles it, the official process and the deadline.
+
+# 1307. Workspace differentiator
+
+Assignment → document → meeting → slides → deadline → course, connected **even when the files live in Google or Microsoft.**
+
+# 1308. History differentiator
+
+What you were working on, in what course, on what project — under your control.
+
+# 1309. Cross-device differentiator
+
+MacBook → phone → desktop without losing work, history, calendar, messages or preferences.
+
+# 1310. Final pilot experience
+
+A pilot student uses Semester for **a full ordinary day**, not a demo. *If Semester is only useful during a demo, the product is not ready.*
+
+# 1311. Final contract sales experience
+
+Student, faculty and admin value, integration strategy, security, accessibility, AI governance and implementation — in one coherent demonstration.
+
+# 1312. Final engineering experience
+
+Clone, configure, seed, run, test — **without tribal knowledge.**
+
+# 1313. Final implementation experience
+
+Configure, connect, import, test, pilot, launch — **not fork, rewrite, patch.**
+
+# 1314. Final admin experience
+
+Normal operations without asking Semester engineering to edit a database.
+
+# 1315. Final support experience
+
+What went wrong, who owns it, what to do — **without sending a screenshot into an unknown inbox.**
+
+# 1316. Final trust experience
+
+*Is this official? Where did it come from? Did this actually happen? Who can see this?*
+
+# 1317. Final market-ready check
+
+A last audit of product, architecture, security, privacy, accessibility, reliability, AI, integrations, implementation, support and documentation.
+
+# 1318. Final red team question
+
+**If a university signs tomorrow, what would prevent us from safely launching them?** Every answer is a blocker or a documented dependency.
+
+# 1319. Final student question
+
+If a student opens Semester with no explanation, can they see why to use it? If not, simplify.
+
+# 1320. Final faculty question
+
+Does it make faculty workflow easier, or add a system to maintain? If the latter, redesign.
+
+# 1321. Final admin question
+
+Can the university control Semester **without giving itself inappropriate access to students?** If not, fix governance.
+
+# 1322. Final AI question
+
+Is it more useful because it understands authorized university context? If it behaves like a generic chatbot, improve the context rather than adding decorative AI.
+
+# 1323. Final differentiation question
+
+What can Semester do **because it connects systems** that a standalone app cannot? Invest there.
+
+# 1324. Final complexity question
+
+Of every screen: can this be simpler?
+
+# 1325. Final implementation priority
+
+**Do not build the entire specification before pursuing pilots.** Build enough to prove adoption, institutional value, integration, security and repeatability.
+
+# 1326. Final execution command
+
+**Execution mode. Do not return another high-level plan as the primary output.**
+
+```
+AUDIT → STABILIZE → SECURE → BUILD CORE → CONNECT CORE → AI V1
+→ MULTI-TENANT → ADMIN → INTEGRATIONS → PILOT HARDENING
+→ UNIVERSITY PILOT → ITERATE → SCALE
+```
+
+# 1327. After each session
+
+Update `SEMESTER_IMPLEMENTATION_STATUS.md` and `SEMESTER_MARKET_READINESS.md` with **actual** changes.
+
+# 1328. Each session report
+
+`COMPLETED`, `TESTED`, `BLOCKED`, `NEXT` — with specific files and features.
+
+# 1329. Never claim completion without testing
+
+If it is not tested the status is `TESTING`, not `COMPLETE`.
+
+# 1330. Never claim an integration connected without a connection
+
+An adapter with no credentials is `IMPLEMENTED` and `BLOCKED_EXTERNAL`. It is not `CONNECTED`.
+
+# 1331. Never claim a university partnership without a contract
+
+**A public tenant is not a customer.**
+
+# 1332. Never claim a security certification without an audit
+
+Architecture readiness is not certification.
+
+# 1333. Never claim accessibility conformance without evidence
+
+Track what was actually tested.
+
+# 1334. Never claim AI accuracy without a benchmark
+
+Measure it.
+
+# 1335. Never claim scale without a load test
+
+Measure it.
+
+# 1336. Never claim backup safety without a restore test
+
+**A backup nobody has restored is not a backup.**
+
+# 1337. Never claim a data migration complete without reconciliation
+
+Compare source and destination.
+
+# 1338. Never claim a transaction succeeded without an authoritative result
+
+Payments, registration, email, applications, reservations, submissions.
+
+# 1339. Final build philosophy
+
+```
+TRUST → RELIABILITY → USABILITY → CONNECTED FUNCTIONALITY → INTELLIGENCE → SCALE
+```
+
+**Do not reverse it.**
+
+# 1340. Final product statement
+
+A student understands, organizes, navigates and acts across their entire university experience from one trusted interface; a university deploys a modern student experience and AI layer over existing systems **without a high-risk replacement of its core infrastructure.**
+
+# 1341. Begin
+
+Inspect the repository. Establish the actual current state. Fix the most critical issue first. Then continue by dependency and priority until Semester is pilot-ready and contract-ready.

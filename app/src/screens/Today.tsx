@@ -60,6 +60,7 @@ import { Folding } from '../components/Fold';
 import { goMine } from '../lib/openmine';
 import { dateToIso } from '../lib/date';
 import { goCal } from '../lib/opencal';
+import { inFocusMode } from '../lib/focus';
 
 /** The next-class card, shared by both nav modes. */
 function NextClassCard() {
@@ -335,7 +336,11 @@ function ThisWeek() {
   const { state, dispatch, catalog, tint, courseCode } = useStore();
   const now = useNow();
   const row = useRowStyle(9);
-  const nextEvent = datedEvents(now, state.schoolId, state.sample).find((e) => !e.isPast);
+  // What is on around campus is the first thing focus sets aside — see
+  // `lib/focus.ts`. The week's own days below are the term and stay.
+  const nextEvent = inFocusMode(state.focus)
+    ? undefined
+    : datedEvents(now, state.schoolId, state.sample).find((e) => !e.isPast);
 
   // Your own tasks alongside the deadlines, day by day. Same reason as
   // everywhere else in this change: a week that shows only what a syllabus
@@ -1438,7 +1443,13 @@ function TodayFeed() {
    * student has ordered or hidden is untouched — this is one part removed,
    * not a second feed.
    */
-  const order = visible(state.feedOrder, state.feedHidden).filter((id) => !(soft && id === 'next'));
+  // "Worth dropping by" is the campus recommending itself, which is the
+  // section experience §377 names first. Skipped rather than hidden, so the
+  // person's own on/off for it is untouched when focus ends.
+  const focusOn = inFocusMode(state.focus);
+  const order = visible(state.feedOrder, state.feedHidden).filter(
+    (id) => !(soft && id === 'next') && !(focusOn && id === 'dropby'),
+  );
 
   /*
    * Arranging Today on Today.
@@ -1595,12 +1606,15 @@ function HoursToday() {
    */
   const blocks = [
     ...hoursFor(catalog, now, state.appointments, state.commitments, [], state.tasks),
-    ...campusHours(datedEvents(now, state.schoolId, state.sample), state.feedEvents, now).map(
-      (b) => ({
-        ...b,
-        onClick: b.eventId ? () => dispatch({ type: 'openEvent', id: b.eventId! }) : undefined,
-      }),
-    ),
+    // The campus calendar waits while focus is on; your own hours do not.
+    ...(inFocusMode(state.focus)
+      ? []
+      : campusHours(datedEvents(now, state.schoolId, state.sample), state.feedEvents, now).map(
+          (b) => ({
+            ...b,
+            onClick: b.eventId ? () => dispatch({ type: 'openEvent', id: b.eventId! }) : undefined,
+          }),
+        )),
   ];
   /*
    * The rest of today's tasks: the ones whose time is not a clock.

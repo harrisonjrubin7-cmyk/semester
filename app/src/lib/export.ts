@@ -871,6 +871,7 @@ export const NOT_IN_BACKUP: Record<string, string> = {
   ground: 'the background the app is drawn on',
   hue: 'the tint behind the ground',
   calm: 'how much the app may move and decorate itself',
+  focus: 'whether the shelves that are not this term are set aside',
   iconShape: 'how the icons are drawn',
   labels: 'whether the tab bar names its tabs',
   lineHeight: 'how far apart the lines sit',

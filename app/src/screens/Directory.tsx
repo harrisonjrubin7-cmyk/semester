@@ -46,6 +46,7 @@ import { allApps, isFavourite, narrowApps, readFavourites, toggleFavourite } fro
 import type { Destination } from '../lib/nav';
 import { ALWAYS_TO_HAND, GROUPS, lately, saysFor } from '../lib/nav';
 import { showing } from '../lib/reveal';
+import { focusLine, focused, inFocusMode, setAside } from '../lib/focus';
 import { secondLine } from '../lib/dim';
 import { glyphFor } from '../components/icons.pick';
 import { AppsIcon, NotesIcon, Search as SearchIcon, StarIcon } from '../components/Icons';
@@ -117,8 +118,20 @@ export function Directory() {
    * allowed to want. The top bar was never gated and still is not.
    */
   const every = allApps(caps, state.role);
-  const browsing = every.filter((d) => showing(d.screen, facts, state.visited, state.showAll));
+  /*
+   * And the fourth, which is the person's rather than the app's.
+   *
+   * `lib/focus.ts` sets aside the shelves that are not this term's work for
+   * as long as the switch in Settings is on. Applied after `showing` and
+   * lifted by a query for the same reason that one is: a directory is what
+   * you want in front of you, and search is what you are allowed to want.
+   */
+  const browsing = focused(
+    every.filter((d) => showing(d.screen, facts, state.visited, state.showAll)),
+    state.focus,
+  );
   const apps = query.trim() ? every : browsing;
+  const aside = setAside(every, state.focus);
   /*
    * The chips are read off what this list actually holds, not off the
    * registry, for the reason `desk.ts`'s `categories` gives about the school
@@ -198,6 +211,19 @@ export function Directory() {
           {apps.length} apps, one semester
         </div>
       </div>
+      {/*
+        Said, while it is on. A mode that hides things and does not say so is
+        a bug report waiting to be written — "where did Classmates go" — and
+        the answer belongs on the screen it went from, with the way back.
+      */}
+      {inFocusMode(state.focus) && !query && (
+        <div className="deskdir-focus" style={secondLine()}>
+          {focusLine(aside)}{' '}
+          <button type="button" className="bare deskdir-focusoff" onClick={() => dispatch({ type: 'go', screen: 'setNav' })}>
+            Turn focus off
+          </button>
+        </div>
+      )}
 
       {/*
         Three lists above the index, and only when you are not filtering.

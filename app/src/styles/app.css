@@ -6843,6 +6843,62 @@ section[data-drop] > .grip + * {
   font-size: var(--type-sm);
 }
 
+/* The sentence that says focus is on, and the way back. One line, under the
+   count, in the count's own voice — a mode that hides things and does not say
+   so on the screen they went from is a bug report waiting to be written. */
+.deskdir-focus {
+  font-size: var(--type-sm);
+  margin-top: var(--sp-3);
+  line-height: var(--leading-normal);
+}
+
+/* The list of what the app is doing on its own — Settings → Alerts, at the
+   top. Plain rows, because it is a reading list rather than controls: the
+   controls are the switches under it. */
+.running-now-list {
+  list-style: none;
+  margin: var(--sp-4) 0 0;
+  padding: 0;
+}
+
+.running-now-row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  padding-block: var(--sp-2);
+  border-top: 1px solid var(--app-line);
+  font-size: var(--type-sm-plus);
+  line-height: var(--leading-normal);
+}
+
+.running-now-row.is-held {
+  color: var(--app-dim);
+}
+
+.running-now-held {
+  flex: none;
+  font-size: var(--type-xs-plus);
+  color: var(--app-dim);
+}
+
+.running-now-mail {
+  margin-top: var(--sp-5);
+}
+
+.running-now-edit {
+  margin-top: var(--sp-3);
+  color: var(--app-fg);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+  font-size: var(--type-sm);
+}
+
+.deskdir-focusoff {
+  color: var(--app-fg);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
 .deskdir-label {
   font-size: var(--type-lg);
   color: var(--app-fg);

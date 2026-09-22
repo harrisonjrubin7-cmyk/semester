@@ -16,6 +16,7 @@ import { afterMove, boardLists } from '../../lib/springboard';
 import { readOrder, shelfLists, writeOrder } from '../../lib/launcher';
 // Aliased: `Group` is already the settings page's own panel component.
 import { offered } from '../../lib/nav';
+import { focusLine, inFocusMode, setAside } from '../../lib/focus';
 import type { Group as Shelf } from '../../lib/nav';
 import type { Screen } from '../../lib/types';
 import { currentLook } from '../../state/shape';
@@ -330,6 +331,25 @@ export function SettingsNav() {
                   </div>
                 );
               })}
+            </CustomRow>
+          </Group>
+
+          <Group
+            header="Focus"
+            footer="For a study period or finals. Classes, deadlines, study, the calendar and documents stay; campus, life and what comes after the degree wait, and the all-clear and Sunday reminders go quiet. Search still finds everything, and your tabs and favourites are not touched."
+            lit={lights('focus finals study period exams distraction hide campus social quiet mode', lit)}
+          >
+            <CustomRow>
+              <Toggle
+                label="Focus on the term"
+                on={inFocusMode(state.focus)}
+                onChange={() => dispatch({ type: 'setLook', look: { focus: inFocusMode(state.focus) ? 'off' : 'on' } })}
+              />
+              <div style={HINT}>
+                {inFocusMode(state.focus)
+                  ? focusLine(setAside(offered(school.capabilities, state.role), 'on'))
+                  : `Would set aside ${setAside(offered(school.capabilities, state.role), 'on')} screens at this school. Everything is on for now.`}
+              </div>
             </CustomRow>
           </Group>
 
