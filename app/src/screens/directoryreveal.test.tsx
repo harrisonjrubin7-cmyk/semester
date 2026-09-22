@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { StoreProvider } from '../state/store';
@@ -72,6 +72,10 @@ afterEach(() => {
   act(() => root.unmount());
   host.remove();
   localStorage.clear();
+  // The sweep at the foot of this file stops the clock. Restoring here as
+  // well as there means a failure mid-loop cannot leave it stopped for
+  // whichever file runs next.
+  vi.useRealTimers();
 });
 
 function show() {
@@ -202,5 +206,63 @@ describe('the directory on a brand-new account', () => {
       .filter((b): b is string => !!b);
     const suggestedAny = visibleBlurbs.some((b) => panel.includes(b));
     expect(suggestedAny).toBe(true);
+  });
+
+  /*
+   * The same claim, on every day of the rotation rather than on today.
+   *
+   * #724 fixed the control above by taking the screen's name out of it, which
+   * was the right call: `NotYetOpened` draws `offer(visited, dayOf(now), pool)`
+   * and `offer` takes a window of three starting at `dayIndex % left.length` —
+   * the panel says so on screen, "These three change each day" — so naming one
+   * of the three was naming a date. Measured across the cycle, "Upload a
+   * syllabus" is in the window on the 19th, 20th and 21st of September and not
+   * again until the 30th. The file was written on the 21st and went red at
+   * local midnight with nothing about the app changed.
+   *
+   * What that left is a claim checked on whichever morning CI happens to run.
+   * The invariant has nothing to do with which three are up: the panel must
+   * never offer a screen the list above it is holding back, on any day. So
+   * the day is driven rather than waited for.
+   *
+   * Fourteen because the cycle is eleven with twelve screens ungated on a
+   * fresh profile, and fourteen still covers it if the registry grows.
+   *
+   * Only `Date` is faked: the store defers its start behind a timer, and
+   * stopping the clock entirely would stop that too.
+   */
+  it('never offers a held-back screen, on any day of the rotation', () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    const panels = new Set<string>();
+
+    for (let day = 0; day < 14; day += 1) {
+      act(() => root.unmount());
+      host.remove();
+      // Local components, because `dayOf` reads local time — which is also why
+      // this drives fourteen consecutive days rather than trusting one: CI
+      // runs UTC, Chicago and Kiritimati, and the last is a day ahead.
+      vi.setSystemTime(new Date(2026, 8, 20 + day, 12, 0, 0));
+      host = document.createElement('div');
+      document.body.appendChild(host);
+      root = createRoot(host);
+      show();
+
+      const drawn = rows().join(' ');
+      const held = DESTINATIONS.filter((d) => !drawn.includes(d.blurb.slice(0, 40)));
+      // Not vacuous, per day: with no gate nothing is held back and the
+      // assertion below is true of a broken app.
+      expect(held.length, `day ${day}: the gate bit`).toBeGreaterThan(0);
+
+      const panel = suggested();
+      expect(panel.length, `day ${day}: the panel drew something`).toBeGreaterThan(0);
+      const offered = held.filter((d) => panel.includes(d.blurb.slice(0, 40)));
+      expect(offered.map((d) => d.screen), `day ${day}`).toEqual([]);
+      panels.add(panel);
+    }
+
+    // The control on the loop. One entry means the window never turned and
+    // every assertion above is fourteen copies of the same morning — which is
+    // exactly the state the day-dependent assertion was in, one day at a time.
+    expect(panels.size).toBeGreaterThan(1);
   });
 });

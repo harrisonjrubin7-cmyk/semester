@@ -19,9 +19,39 @@ import { DEFAULT_PERSISTED, type Action, type Persisted, type State } from '../s
 
 export function library(state: State, action: Action): State | null {
   switch (action.type) {
+    /*
+     * The sample steps aside when the first course of the student's own
+     * arrives, and `SampleMark` is where the argument for that is already
+     * written:
+     *
+     *     **Not mine** removes them, which is what somebody who was looking
+     *     around wants *once they have their own syllabus in*.
+     *
+     * It named the moment and nothing acted on it. Measured on a real install
+     * — run skipped, `PHYS 1601` added by hand, Today read off the screen:
+     *
+     *     NEXT CLASS · BUS 1600 · Alumni Hall 201
+     *     DUE TODAY · "One thing left. Finish it." · CORE 2500 QUIZ
+     *     6 deadlines went by unticked in the last three weeks
+     *
+     * Their own course is not in any of it, and the banner offering to take
+     * the other four away is still sitting at the top waiting to be noticed.
+     * That is the failure the same docstring predicts a paragraph earlier:
+     * "import one real syllabus alongside it and Today mixes your Thursday
+     * paper with somebody else's, with nothing distinguishing them."
+     *
+     * **The first one only**, which is the whole of the rule. Somebody who
+     * switches the sample back on from Settings to look something up has said
+     * what they want, and adding their next course must not answer them
+     * again; `state.courses.length === 0` is the transition and not the state.
+     * Nothing is deleted either way — the seed is compiled in, `sample` only
+     * decides whether it is shown, and Settings and `FirstRun` both offer it
+     * back.
+     */
     case 'addCourse':
       return {
         ...state,
+        ...(state.courses.length === 0 ? { sample: false } : null),
         courses: [...state.courses, action.module],
         // A course id is a slug of its code, so re-importing ECON 1020 after
         // deleting it reuses the id. Cancel the pending deletion or the next
@@ -50,6 +80,9 @@ export function library(state: State, action: Action): State | null {
         : action.module;
       return {
         ...state,
+        // The same moment as `addCourse` above, arriving by the other door: a
+        // first course of the student's own, synced rather than imported.
+        ...(state.courses.length === 0 ? { sample: false } : null),
         courses: had
           ? state.courses.map((c) => (c.course.id === merged.course.id ? merged : c))
           : [...state.courses, merged],

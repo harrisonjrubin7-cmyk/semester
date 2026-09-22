@@ -124,7 +124,7 @@ end $$;
 do $$
 declare
   /*
-   * The allowlist. Fifteen, and each is a deliberate entry point:
+   * The allowlist. Twenty, and each is a deliberate entry point:
    *   make_referral_code  — mints this account's own code
    *   claim_referral      — records that this account arrived on somebody's
    *   referral_standing   — two integers and a boolean about the caller
@@ -201,7 +201,24 @@ declare
      * nobody in it holds ADMIN. See 20260921234500_organization_succession.sql.
      */
     'claim_abandoned_organization(org uuid)',
-    'forget_my_organizations()'
+    'forget_my_organizations()',
+
+    -- The five in 20260922003000_connections.sql. `public.connections` is
+    -- revoked from both API roles and has no write policy, so these are not a
+    -- convenience over a table a signed-in account could otherwise reach —
+    -- they are the only door, and each carries a rule a policy on an INSERT
+    -- cannot express: the reverse request may already exist, either account
+    -- may have blocked the other, and only the addressee may accept.
+    --
+    -- The two readers are here for the same reason and a narrower one: the
+    -- select policy scopes the table to the two ends of an edge, and a mutual
+    -- count is a question about pairs the caller is not in. They return a
+    -- boolean and an integer, never a roster.
+    'accept_connection(who uuid)',
+    'connected_with(who uuid)',
+    'mutual_connections(who uuid)',
+    'remove_connection(who uuid)',
+    'request_connection(who uuid)'
   ];
   extra text;
   missing text;
@@ -237,7 +254,7 @@ begin
   if missing is not null then
     raise exception 'FAILED: the allowlist names %, which a signed-in account cannot call', missing;
   end if;
-  raise notice 'ok  and can call all fifteen that it should';
+  raise notice 'ok  and can call all twenty that it should';
 end $$;
 
 -- ── The gate's own switch, named because it is the one that was open ──────

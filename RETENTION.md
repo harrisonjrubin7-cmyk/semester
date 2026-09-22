@@ -59,22 +59,25 @@ been applied to production — `usage_atomic`, `group_columns_pinned`, `forms` a
 schema deploy recorded as `MIGRATIONS_FAILED` since three minutes after the
 `access_log` merge.
 
-So two things in this file are claims about a schema production does not yet
-have:
+So for three days two things in this file were claims about a schema production
+did not have: `access_log`'s ninety days was not running, because the table and
+`note_access()` were not there, and `forms` and `form_responses` were named in
+the account-deletion table for the same reason. Neither contradicted the
+privacy page, which promises a *ceiling* on what is kept rather than a floor;
+both were this file describing intent as though it were deployment, which is
+the error it exists to prevent.
 
-- **`access_log`'s ninety days is not running**, because the table and
-  `note_access()` are not there. Nothing is over-retained by that — there is no
-  log at all — but the row above says a clock runs, and it does not.
-- **`forms` and `form_responses`** are named in the account-deletion table for
-  the same reason.
+**Closed 21 September, and re-read on the 22nd rather than assumed.** All four
+are in production's ledger — `usage_atomic`, `group_columns_pinned`, `forms`,
+`access_log` — and the objects are there: `public.access_log`, `public.forms`,
+`public.form_responses`, `public.note_access()`. The ninety-day clock in the
+row above is running. `MIGRATION-HISTORY.md` carries how the deploy was
+repaired and *The deploy, observed* is the section that reports it working.
 
-Neither is a contradiction of the privacy page, which promises a *ceiling* on
-what is kept rather than a floor. Both are this file describing intent as
-though it were deployment, which is the error it exists to prevent.
-
-`MIGRATION-HISTORY.md` carries the repair plan. Until those four land, read the
-rows above as the rule each table will be kept under, and that document as the
-list of which tables exist to keep.
+The sweep that the row for `notes`, `tasks`, `appointments`, `sittings` and
+`courses` relies on is also live now: the `tombstones` job in
+`supabase/scheduler.sql` read active on `17 4 * * 0` off `cron.job` on
+22 September, with no run yet because no Sunday has passed.
 
 The whole push queue is also deleted immediately when a student switches
 reminders off — that is in the privacy text above and is a user action rather
@@ -171,6 +174,7 @@ behind and a client that believes it succeeded.
 | `groups`, `group_members`, `group_tasks` | account deletion of the member | a group you started **stays** — other members rely on it. `KEPT_TABLES` in `deletion.check.sql` holds the three exceptions with the reason the privacy page prints |
 | `forms`, `form_responses` | account deletion | |
 | `calendar_feeds` | account deletion | the published feed token; the Export screen can retire and reissue it |
+| `connections` | account deletion of **either** end | both columns are `on delete cascade`, which is the whole answer and is deliberate: a connection is a fact two accounts agreed on, so it cannot outlive either of them. There is no tombstone and no sweep — the row *is* the agreement, and a removed connection is removed rather than marked, because "we kept a record of who you used to be connected to" is not a sentence this project wants to be able to say |
 | `reports` | account deletion of the reporter | |
 | `feedback` | account deletion of its author | what somebody said was wrong, with the screen *shape*, device class and build the app supplied — never a route, a user-agent or an address, and the check constraints in `20260921215800_feedback.sql` are what make that a property of the database rather than a promise about `lib/feedback.ts`. No clock: a bug report is worth keeping until the person who sent it leaves, and there is no version of "we aged out your bug report" that helps anybody. Readable and deletable by its author, never rewritable by anyone |
 | `schools` | **never**, by any account's deletion | reference data, not anybody's record: the list of universities the server recognises, written only by an admin and readable by everyone. No account creates a row here, so no account's departure can take one. `profiles.school_id` points at it and is cleared to null when a school is removed, which is a school closing rather than a student leaving |
@@ -186,9 +190,11 @@ behind and a client that believes it succeeded.
 | `app_admins` | account deletion, by cascade only | who may open the internal administrator dashboard. Not written or readable through the API by anyone, including the administrator it names, so no client deletes from it — the row goes when the `auth.users` row does. Deleting everything does not remove the sign-in itself, so an administrator who empties their account is still an administrator |
 | `lti_identity` | account deletion | which Semester account a Brightspace launch opens. It cascades on the account it points at, so deleting your account unbinds the launch too — and a later launch from the same school provisions a fresh account rather than reopening a deleted one, which is the correct reading of having asked to be forgotten |
 | `lti_link_ticket` | minutes, swept an hour past expiry | the single-use proof that a launch was validated, held only long enough for a student to say they already have an account. It names no person: an issuer, an opaque subject the platform chose, and the account the launch just made. Cascades with that account, and sweep_lti_link_ticket() removes what is an hour past expiry |
+| `lti_line_item` | account deletion, by cascade through `lti_identity` | which Brightspace gradebook column a course's link owns, so a quiz score can find its way back. A row exists only when an instructor placed the link as a *graded* activity — the launch says so, and an ordinary link writes nothing here. It holds addresses and a course title, never a score: the number goes to the platform and is not kept on this side. Keyed to the identity rather than the account, so retiring a provisioned account in favour of the student's own takes the memory of where their grade went with it, which is the correct reading of the binding having moved |
 | `organizations` | **never**, by any account's deletion | a student organization outlives everybody in it, which is what distinguishes it from a study group. `organizations.created_by` is `on delete set null`, so a founder who deletes their account leaves the organization standing with no founder recorded — the opposite of `groups.created_by`, and for the opposite reason: a group is its four people, an organization is not its founder |
 | `organization_members` | account deletion | your standing in an organization and the capabilities that go with it. Both API roles are off DELETE on the table — the row is somebody else's judgement about you, and a table anybody can delete their own row from is one an applicant can un-decline themselves in — so it goes through `forget_my_organizations()`, which takes the `DECLINED` and `REMOVED` rows that leaving refuses to touch. If you were the only administrator the organization is left with none and any member can take it on; if you were the last member it goes with you |
 | `role_grants` | account deletion of the **subject**, by cascade. The grantor's deletion does not take it | which roles somebody holds, over what, and who said so. Not writable through the API at all, so no client deletes from it — the row goes when the `auth.users` row it names as subject does. `role_grants.granted_by` is ON DELETE SET NULL on purpose and is the asymmetry worth reading twice: removing a member of staff must not silently strip the roles they granted, so the grant survives them and forgets who made it. **Revoked and expired rows are kept, not swept**, and that is a decision rather than an omission — the select policy lets a person read their own revoked grants, which is how somebody finds out why a workspace they had yesterday is gone. The cost is that the table remembers every role an account ever held for as long as the account exists; if that becomes the wrong trade, the sweep belongs beside `sweep_lti_nonce()` and should keep the most recent revocation per scope rather than delete blindly |
+| `app_roles`, `app_capabilities`, `role_capabilities` | **kept until a migration changes them** | not personal data and not anybody's rows: the twenty roles, the nine capabilities and the matrix between them, identical for every account. Written only by migration — no client may insert, update or delete, and there is no write policy on any of the three — so there is nothing here an account deletion could reach and nothing it should. Readable by any signed-in account, because item 240's context switcher has to know which tools a role carries and every row of it is printed in `docs/ROLE_REQUIREMENTS.md` anyway. The same answer `lti_platform` has, for the same reason: configuration outlives the people it applies to |
 | `invites`, `access_gate` | **no answer yet** — see below | |
 
 ## What has no answer, stated rather than rounded off

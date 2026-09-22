@@ -20,8 +20,12 @@ what the authenticated user is authorised to see, and never data from another
 tenant — is not enforced by construction. It currently depends on each call
 site passing the right context.
 
-**No cost controls.** Nothing tracks tenant, user, feature, model, tokens,
-cost or latency. Universities need predictable economics before they sign.
+**Cost controls are per user, not per tenant.** Corrected: `public.usage`
+already meters `calls`, `input_tokens` and `output_tokens` per account per
+month, so the metering exists and the gap is narrower than first recorded — a
+university cannot be given a bill, a cap or a forecast, because nothing rolls
+those rows up by school. `profiles.school_id` is what would make that possible
+and nothing reads it yet.
 
 **No model routing abstraction.** Business logic is not insulated from a
 specific provider or model.

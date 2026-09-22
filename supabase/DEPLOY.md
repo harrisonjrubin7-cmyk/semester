@@ -7,33 +7,76 @@ are missing.
 
 ## What is live
 
-Read off the project at 16:05 UTC on 21 September 2026, not remembered:
+Read off the project at 01:08 UTC on 22 September 2026, not remembered. The
+last column is which pipeline deployed that version, and it is the one worth
+reading:
 
-    claude     ACTIVE, v19, verify_jwt off
-    push       ACTIVE, v16, verify_jwt off
-    calendar   ACTIVE, v12, verify_jwt off
-    fetchcal   ACTIVE, v13, verify_jwt off
-    canvas     ACTIVE,  v4, verify_jwt off
-    lti        ACTIVE,  v1, verify_jwt off
+    claude     ACTIVE, v64, verify_jwt off   platform
+    push       ACTIVE, v28, verify_jwt off   platform
+    calendar   ACTIVE, v24, verify_jwt off   platform
+    fetchcal   ACTIVE, v56, verify_jwt off   platform
+    canvas     ACTIVE, v49, verify_jwt off   platform
+    lti        ACTIVE, v49, verify_jwt off   platform
 
-**This file said two, at v1, and three of the other four were filed below under
-"Not deployed yet".** `fetchcal` had been live since 9 September when that was
+**This file once said two, at v1, and filed three of the other four under "Not
+deployed yet".** `fetchcal` had been live since 9 September when that was
 written — twelve days — and `calendar` since the 8th and was named nowhere at
 all. `lti` went up at 15:48 on the 21st, about two hours after its own section
 said it had not.
 
-The cause is not forgetfulness, and that is why the rows above carry a
-timestamp. `functions.yml` deploys on every push to main that touches a
-function's directory, so **a function directory on main is a deployed
-function**: "not deployed yet" is true only until the pull request merges, and
-then it is false with nobody having edited anything. A hand-written record
-cannot win that race. `app/src/lib/deployfunctions.test.ts` is what holds this
-section to the directories instead — it cannot see the project, so it checks
-the one thing it can: that every function here is accounted for, and that none
-of them is described as unshipped.
+### There are two pipelines, not one
+
+This section used to explain that with one sentence: `functions.yml` deploys on
+every push to main that touches a function's directory, so a function directory
+on main is a deployed function. That is true and it is not the whole mechanism,
+and the half it leaves out is the half that failed.
+
+    platform   Supabase's own deploy off the main branch. Runs on EVERY merge.
+    runner     .github/workflows/functions.yml. Runs only when a merge touches
+               that function's directory.
+
+The project reports an `entrypoint_path` per function which names the machine
+the bundle was built on — `file:///app/...` for the platform,
+`file:///home/runner/work/semester/semester/...` for the runner — so the column
+above is read rather than assumed.
+
+**A `runner` row means the platform deploy is not building that function.** It
+runs on every merge; if it were building the function it would have overwritten
+the path. So the column is not a note about provenance, it is the freeze
+detector, and for three days it was sitting in plain sight reading `runner`
+twice while nobody looked.
+
+Between 18 September 17:35:25Z and 21 September 22:53:45Z, `push` and
+`calendar` sat at v16 and v12 while the other four gained fifteen and sixteen
+versions each. **246 merges landed on main in that window**, every one of them
+running the platform deploy, which rebuilt four functions and passed over two
+without a word. Neither pipeline reached them, for two different reasons:
+
+  - the platform deploy skipped them because both still imported over
+    `https://esm.sh/`, which #685 measured against a same-hour control on a
+    second preview branch and fixed; and
+  - `functions.yml` never fired because **no commit touched either directory in
+    those three days** — checked in the log, not assumed.
+
+So they were not stale, they were unreachable. A change merged *into*
+`calendar` would have gone live in the ordinary way; a change merged anywhere
+else left the live `.ics` feed on a three-day-old bundle and reported nothing.
+
+`supabase/functions.snapshot` is that reading, kept as a file, and
+`app/src/lib/functionsdeployed.test.ts` holds this directory to it —
+including the rule that a `runner` row is a finding. It also records the one
+reading that is transient rather than a fault: a `workflow_dispatch` deploy
+writes a runner path legitimately, and the next merge overwrites it. **A runner
+row that survives a merge is the freeze.**
+
+`app/src/lib/deployfunctions.test.ts` holds the section above to the directories
+that exist — it cannot see the project, so it checks what it can: that every
+function here is accounted for, that none is described as unshipped, that each
+has a `[functions.<slug>]` block, and that none of them imports over `https://`.
 
 The version numbers are the part that will go stale first and the part that
-matters least; the deployed-or-not column is the one that misled.
+matters least. The deployed-or-not column is the one that misled; the pipeline
+column is the one that stayed silent.
 
 ## Deploying a function without a laptop
 
@@ -183,8 +226,41 @@ than afterwards: Brightspace asks for a JWKS URL during the install. With no
 key set the endpoint answers 503 and says so, and **launches keep working** —
 a launch is the platform proving itself to us and needs nothing of ours.
 
-**Deep linking signs with it**, and is the only thing that does. Grade
-passback still does not exist; the key is no longer idle.
+**Deep linking and grade passback both sign with it.** A deep-linking answer
+is a JWT signed as this tool; a grade is posted with a token this tool
+obtained by presenting one. Neither works without the key, and both say so.
+
+### Grade passback, and what decides whether a number is ever sent
+
+Not this tool. When an instructor places the link as a **graded activity**,
+the launch names the gradebook column it owns, and the launch endpoint
+records that address against the student's identity. Placed as an ordinary
+link, nothing is recorded and nothing is ever sent — which is most links.
+
+The number is the quiz: ten questions, a count right. When one ends, the
+app posts the course code and the score to
+
+    …/functions/v1/lti/score      POST, with the student's own session
+
+and is told whether that went anywhere. The server matches the code
+against the course *titles* it remembered at launch, because the app knows
+codes and the platform knows titles and nobody has typed the mapping. One
+match sends; none or several sends nothing, and the reason is in the log:
+
+    no-identity        this account was never launched from a platform
+    no-match           no graded Brightspace course has this code in its title
+    ambiguous          two do — cross-listed courses — and guessing is worse
+    no-key             LTI_PRIVATE_KEY is not set, so nothing can be signed
+    token-refused      the platform's token endpoint said no; check token_url
+    platform-refused   the column refused the score; the scopes are in the row
+
+`token_url` on `lti_platform` is what this needs that a launch never did.
+A registration installed before that column existed has none, and the
+score endpoint refuses by name (`no-token-url`) rather than guessing an
+address to post a signed assertion to.
+
+The student is told, on the screen, when a score was reported. That is the
+one line this feature adds to the app, and it is not decoration.
 
 ### Deep linking, on the launch endpoint
 
@@ -290,10 +366,10 @@ the honest reading of what happened, since a school's administrator installing
 this tool is an invitation issued by exactly the person the gate exists to let
 issue them. It leaves a row saying so.
 
-Grade passback is still not built. Deep linking now is, and signs with the key
-described above — which is why there is still no key material in either
-migration: the key was always going to live as a function secret, and the
-thing that needed it arrived without changing that.
+All three LTI directions are built now — launch, deep linking, grade
+passback — and the two that sign do so with the key described above. There is
+still no key material in any migration: the key was always going to live as a
+function secret, and both things that needed it arrived without changing that.
 
 ## Tables
 
@@ -327,7 +403,16 @@ This was checked by making the call by hand, exactly as the job would:
 which is `push`'s own first branch. pg_net reaches the function, the URL is
 right, the Vault read works. Only `CRON_SECRET` is missing.
 
-### The tombstone sweep — in the file, not yet on the project
+**Re-checked 22 September, 01:31 UTC, the same way: still `503 "not
+configured"`.** `scheduler.sql` had been re-run on the project by then — the
+`tombstones` job below is the evidence — and it leaves `push` parked on
+purpose, because the one thing it cannot do is set a function secret. So the
+scheduler is applied and the reminder chain is still one step short: step 2
+under *Push notifications* below (`supabase secrets set CRON_SECRET=…`), and
+then step 3 to unpark the job. Until then `cron.job_run_details` is empty for
+`push`, which is what parked looks like and is correct.
+
+### The tombstone sweep — on the project, measured 22 September
 
 `scheduler.sql` now also schedules a second job, `tombstones`, weekly at
 `17 4 * * 0`, calling `public.sweep_tombstones('90 days')`. It clears
@@ -336,10 +421,17 @@ soft-deleted rows from `notes`, `tasks`, `appointments`, `sittings` and
 carries the decision and what it costs — a device offline longer than ninety
 days, still holding the row, syncs it back.
 
-**It is in the file and has not been applied.** Nothing in this repository can
-apply it; a schedule only exists once somebody runs the statement. Re-running
-the whole of `scheduler.sql` is safe — every statement in it is idempotent and
-`cron.schedule` replaces a job of the same name — or run just this one:
+**Applied.** Read off `cron.job` at 01:31 UTC on 22 September 2026:
+
+    push         */15 * * * *   active = false
+    tombstones   17 4 * * 0     active = true
+
+and `cron.job_run_details` empty for both — `tombstones` has not had a Sunday
+yet, and `push` is parked. Nothing in this repository could apply it; a
+schedule only exists once somebody runs the statement, and somebody did. If it
+ever has to be re-created, re-running the whole of `scheduler.sql` is safe —
+every statement in it is idempotent and `cron.schedule` replaces a job of the
+same name — or run just this one:
 
     select cron.schedule(
       'tombstones',
@@ -404,8 +496,10 @@ whether that person shares a class with you.
   trigger as a recipe to run yourself, under *Auto-enable RLS for new tables*,
   and somebody ran it here. `20260901000100_schema.sql` creates it now, so a
   rebuild gets the trigger and the revoke above has something to close.
-- **`groups.sql`** got the same treatment ahead of time. It is not applied to
-  the live project, and it had no grants at all — so its three helpers would
+- **`groups.sql`** got the same treatment ahead of time. It was not applied to
+  the live project when this was written (it is now — `groups` is in the
+  ledger and `private.group_room` exists, read 22 September), and it had no
+  grants at all — so its three helpers would
   have inherited the same default EXECUTE and appeared as three more
   endpoints. `group_room` is the one worth noticing: it answers "which class
   is group X in" for any id, an enumeration away from a map of who studies

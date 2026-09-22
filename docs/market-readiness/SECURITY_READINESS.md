@@ -19,6 +19,8 @@ never read.
 **Rate limiting exists on the gateway.** `app/server/institution/gateway.ts`,
 60 requests per 60s window, with expiry sweeping.
 
+**A real CSP already ships,** and its own comment is the model for how this repository documents a partial mitigation: every source is justified by something that loads from it, the two directives a meta tag cannot carry are named rather than dropped, and the browser sweep that verified it was run once more with `font-src 'none'` as a control, to prove the sweep could see a violation at all.
+
 **Secrets hygiene is set up.** `.gitleaks.toml` at the root; `SECRETS.md`
 documents handling; CI runs `npm audit --audit-level=high`.
 
@@ -28,7 +30,7 @@ documents handling; CI runs `npm audit --audit-level=high`.
 | --- | --- | --- |
 | Tenant isolation | **Missing** | Helpers exist, no policy calls them. Release blocker. |
 | The `school_id` pin | **Fixed today** | Was a no-op. See below. |
-| HTTP security headers | **Missing** | No CSP, HSTS, Referrer-Policy anywhere. Static Pages host — needs host config or meta equivalents. |
+| HTTP security headers | **Partly present** | A full CSP ships in `app/index.html` (meta-delivered), browser-verified against a control and guarded by `lib/csp.test.ts`. `frame-ancestors`, `report-uri` and HSTS cannot be carried by a meta tag and wait on a host that sets headers. |
 | Admin audit log | **Missing** | Gateway journals gateway actions. Role changes, tenant settings and moderation are unrecorded. |
 | SSO | **Missing** | No SAML/OIDC. |
 | Rate limiting beyond the gateway | **Missing** | Supabase-direct paths (most of the app) are unlimited. |
