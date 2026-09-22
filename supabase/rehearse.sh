@@ -181,6 +181,7 @@ fi
 
 echo "· the migrations a deploy would apply, in the order it would apply them"
 pending=0
+failed=0
 for m in "$here"/migrations/*.sql; do
   version=$(basename "$m" | cut -c1-14)
   [ "$version" -gt "$LEDGER_NEWEST" ] || continue
