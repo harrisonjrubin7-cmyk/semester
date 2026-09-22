@@ -62,10 +62,10 @@ describe('the platform requirements', () => {
     expect(ns.length, 'no sections parsed out of PLATFORM_REQUIREMENTS.md').toBeGreaterThan(300);
   });
 
-  it('covers 301 to 1217 with nothing missing', () => {
+  it('covers 301 to 1341 with nothing missing', () => {
     const have = covered(PLATFORM);
     const missing = [];
-    for (let n = 301; n <= 1217; n++) if (!have.has(n)) missing.push(n);
+    for (let n = 301; n <= 1341; n++) if (!have.has(n)) missing.push(n);
     expect(missing, 'a section was dropped').toEqual([]);
   });
 

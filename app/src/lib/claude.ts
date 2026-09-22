@@ -24,6 +24,7 @@
  */
 
 import { UNNAMED, record, type Usage } from './spend';
+import { modelFor, workFor } from './airoute';
 import type { CaseFile, CourseId, Example, Figure, Frame, StudyCard } from './types';
 import { figureShapes, readFigures } from './figure';
 import { fetchWithin, timedOut, tookTooLong } from './net';
@@ -924,7 +925,10 @@ export async function ask(options: AskOptions): Promise<string> {
       headers,
       signal: options.signal,
       body: JSON.stringify({
-        model: s.model,
+        // Routed, not the raw setting. `lib/airoute.ts` may only pick a model
+        // at or below the one chosen, so this can make a call cheaper and
+        // never more expensive.
+        model: modelFor(workFor(options.about), s.model),
         max_tokens: options.maxTokens ?? 1400,
         // A cached system prompt is sent as a block so the breakpoint can sit
         // on it. Plain string otherwise, which is the shorter wire form.
@@ -1254,7 +1258,10 @@ export async function ask(options: AskOptions): Promise<string> {
      */
     record({
       at: Date.now(),
-      model: s.model,
+      // The model actually used, which is the routed one. Recording `s.model`
+      // here would file the spend against a model the request never reached
+      // — the meter has to say what was spent, not what was configured.
+      model: modelFor(workFor(options.about), s.model),
       from: options.about || UNNAMED,
       ...(options.courseId ? { courseId: options.courseId } : {}),
       use: counted,
