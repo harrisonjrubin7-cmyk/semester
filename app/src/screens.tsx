@@ -118,6 +118,7 @@ const Registrar = lazy(() => import('./screens/Registrar').then((m) => ({ defaul
 const Sources = lazy(() => import('./screens/Sources').then((m) => ({ default: m.Sources })));
 const AccountScreen = lazy(() => import('./screens/Account').then((m) => ({ default: m.AccountScreen })));
 const SlideDeck = lazy(() => import('./screens/Slides').then((m) => ({ default: m.SlideDeck })));
+const SchoolAdminScreen = lazy(() => import('./screens/SchoolAdmin').then((m) => ({ default: m.SchoolAdmin })));
 export const Springboard = lazy(() => import('./screens/Springboard').then((m) => ({ default: m.Springboard })));
 export const Guides = lazy(() => import('./screens/Guides').then((m) => ({ default: m.Guides })));
 
@@ -207,4 +208,5 @@ export const SCREENS: Record<Exclude<Screen, 'home' | 'onboarding'>, ComponentTy
   sources: Sources,
   account: AccountScreen,
   slides: SlideDeck,
+  schoolAdmin: SchoolAdminScreen,
 };

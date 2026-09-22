@@ -36,7 +36,7 @@ const OPENED_FROM_SOMEWHERE_ELSE: Record<string, string> = {
   item: 'One deadline. Opened from the course it belongs to, or from Today.',
   event: 'One calendar entry. Opened from the calendar.',
   note: 'One note. Opened from Notes, or made by the + button.',
-  guide: 'A course’s field guide. Opened from Study, for a course.',
+  guide: "A course's field guide. Opened from Study, for a course.",
   quiz: 'A quiz on one unit. Opened from Study.',
   drill: 'Cards for one unit. Opened from Study.',
   guess: 'The recall drill for one unit. Opened from Study.',
@@ -44,13 +44,16 @@ const OPENED_FROM_SOMEWHERE_ELSE: Record<string, string> = {
   lesson: 'A narrated lesson for one unit. Opened from Study or from Watch.',
   slides: 'One unit as a deck. Opened from Study.',
   search:
-    'The workspace’s search home — the wordmark, the one field and the shortcuts. ' +
+    "The workspace's search home — the wordmark, the one field and the shortcuts. " +
     'What a new tab opens on, and what the Search home row in the sidebar returns to. ' +
-    'Not a destination for the same reason a browser’s new-tab page is not a bookmark.',
+    "Not a destination for the same reason a browser's new-tab page is not a bookmark.",
   directory:
     'Every app this student has, as a list or a grid. Opened from All apps in the ' +
     'sidebar, from the launcher, and from Explore all apps on the search home. It is ' +
     'the index of the registry rather than a row in it.',
+  schoolAdmin:
+    'School administrative console for configuring which AI capability categories are switched off. ' +
+    'Accessed by school administrators from settings or during school setup.',
 };
 
 /** The `Screen` union, read from the source that defines it. */

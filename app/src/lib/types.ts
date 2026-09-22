@@ -813,7 +813,9 @@ export type Screen =
   | 'setGrading'
   | 'setWorkload'
   | 'setAbout'
-  | 'setAssistant';
+  | 'setAssistant'
+  // School administration console
+  | 'schoolAdmin';
 
 /**
  * The report's grain, the post a changed date arrived in, and the grain of
