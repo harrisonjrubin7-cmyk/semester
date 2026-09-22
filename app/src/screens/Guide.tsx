@@ -26,6 +26,7 @@ import { DIMMED_ROW, secondLine } from '../lib/dim';
 import { FigureCard } from '../components/FigureCard';
 import { PrintButton } from '../components/PrintButton';
 import { buildQuiz } from '../lib/quiz';
+import { diagramsIn } from '../lib/hotspot';
 import { asset } from '../lib/asset';
 import { Folding } from '../components/Fold';
 import { hasTranscript, load, readingTime, speaker, type Transcript } from '../lib/transcript';
@@ -443,7 +444,10 @@ export function Guide() {
           </div>
           <ActionButton
             onClick={() =>
-            dispatch({ type: 'startQuiz', quiz: buildQuiz(guide, state.quizSeed) })
+              dispatch({
+                type: 'startQuiz',
+                quiz: buildQuiz(guide, state.quizSeed, diagramsIn(catalog.figures[state.guideId])),
+              })
             }
             tone="primary"
             style={{ fontSize: 'var(--type-lg)', marginTop: 'calc(14px * var(--density, 1))' }}

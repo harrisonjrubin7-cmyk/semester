@@ -6,7 +6,9 @@ import { SURES, beliefs, calibration, calibrationLine } from '../lib/sure';
 import { SayIt } from '../components/SayIt';
 import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
-import { buildQuiz, isAnswered } from '../lib/quiz';
+import { buildQuiz, isAnswered, wordRight } from '../lib/quiz';
+import { CANVAS, SPOTS, diagramsIn } from '../lib/hotspot';
+import { Diagram } from '../components/Diagram';
 import { ladderFor, nextRungLabel, scoreLine } from '../lib/ladder';
 import { A_SITTING, aSitting, catching, dueCount } from '../lib/review';
 import { inTime, testsNear } from '../lib/intime';
@@ -562,6 +564,190 @@ export function Drill() {
 }
 
 /**
+ * A click-on-target question: the diagram, with its parts clickable.
+ *
+ * The boxes are `lib/hotspot.ts`'s, positioned as percentages of the 320×200
+ * canvas the SVG is drawn on — which is what makes them line up at any width
+ * without anybody storing a pixel size. The SVG scales; so do they.
+ *
+ * **They are invisible until the answer is in.** A target you can see is a
+ * target you can count, and a question with four faint rectangles on it is one
+ * you can answer by elimination without looking at the picture. Once answered
+ * the right one is outlined and, if a wrong one was clicked, so is that — the
+ * two together being the thing worth seeing, since "not there, here" is the
+ * whole lesson of a diagram question.
+ *
+ * Each box is a real `button` with the spot's name on it, so the question is
+ * answerable without a pointer and readable by a screen reader, which a set of
+ * SVG click handlers would not be. The name is the accessible name only; it is
+ * not drawn, or the answer would be written on the target.
+ */
+function Targets({
+  question,
+  picked,
+  answered,
+  onPick,
+}: {
+  question: QuizQuestion;
+  picked: number | null;
+  answered: boolean;
+  onPick: (index: number) => void;
+}) {
+  const spots = question.diagram ? (SPOTS[question.diagram] ?? []) : [];
+  if (!question.diagram || spots.length === 0) return null;
+
+  return (
+    <Blueprint
+      style={{
+        marginTop: 'var(--sp-6)',
+        paddingBlock: 'calc(13px * var(--density, 1))',
+        paddingInline: 'calc(14px * var(--density, 1))',
+      }}
+    >
+      <div style={{ position: 'relative' }}>
+        <Diagram kind={question.diagram} />
+        {spots.map((spot, i) => {
+          const right = question.opts[i]?.ok ?? false;
+          const chosen = picked === i;
+          const show = answered && (right || chosen);
+          return (
+            <button
+              key={spot.name}
+              type="button"
+              className="bare"
+              onClick={() => onPick(i)}
+              disabled={answered}
+              style={{
+                position: 'absolute',
+                left: `${(spot.x / CANVAS.w) * 100}%`,
+                top: `${(spot.y / CANVAS.h) * 100}%`,
+                width: `${(spot.w / CANVAS.w) * 100}%`,
+                height: `${(spot.h / CANVAS.h) * 100}%`,
+                padding: 0,
+                background: show && right ? 'var(--app-accent-wash)' : 'transparent',
+                border: show
+                  ? `1.5px solid ${right ? 'var(--app-accent)' : 'var(--app-line)'}`
+                  : '1px solid transparent',
+                cursor: answered ? 'default' : 'pointer',
+              }}
+            >
+              {/* Named for a screen reader, drawn for nobody. */}
+              <span className="sr-only">{spot.name}</span>
+            </button>
+          );
+        })}
+      </div>
+    </Blueprint>
+  );
+}
+
+/**
+ * A typed-answer question: the definition is on screen, the term is not.
+ *
+ * The first question in this app that is not answered by picking, and the two
+ * decisions worth reading are both about not punishing somebody for the
+ * interface rather than for the answer.
+ *
+ * **The draft is local, and only the submit reaches the store.** A field that
+ * dispatched on every keystroke would put half-written answers through the
+ * marker and make the score depend on how far through typing somebody was.
+ * It also re-renders the whole screen per character, which on a phone is the
+ * difference between a text box and a slideshow.
+ *
+ * **Enter submits, and the button says so.** A soft keyboard's return key is
+ * where a thumb already is, and a form that ignores it is one people submit by
+ * hunting for a button they can only half see above the keyboard. It is a
+ * `form` rather than a button with a key handler for exactly that: the browser
+ * already knows what return means inside one, on every platform, including the
+ * ones that label the key "Go".
+ *
+ * Marked on submit and never again — `answerWord` refuses a second answer, the
+ * same way `pickAnswer` does.
+ */
+function TypeAnswer({
+  answered,
+  typed,
+  right,
+  onAnswer,
+}: {
+  answered: boolean;
+  typed: string | null;
+  right: boolean;
+  onAnswer: (text: string) => void;
+}) {
+  const [draft, setDraft] = useState('');
+
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        // A blank submit is not an answer, and treating it as a wrong one
+        // would score a slip of the thumb against somebody who has not tried
+        // yet. The button is disabled too; this is the keyboard's path.
+        if (answered || !draft.trim()) return;
+        onAnswer(draft);
+      }}
+      style={{ marginTop: 'var(--sp-7)' }}
+    >
+      <label
+        htmlFor="quiz-typed"
+        className="kicker"
+        style={{ display: 'block', marginBottom: 'var(--sp-3)' }}
+      >
+        {answered ? 'What you wrote' : 'Type the term'}
+      </label>
+      <input
+        id="quiz-typed"
+        type="text"
+        value={answered ? (typed ?? '') : draft}
+        onChange={(e) => setDraft(e.target.value)}
+        disabled={answered}
+        autoComplete="off"
+        autoCorrect="off"
+        autoCapitalize="none"
+        spellCheck={false}
+        /*
+         * No autocomplete, no autocorrect, no spellcheck, and each is off for
+         * the same reason: every one of them is a machine offering the answer
+         * to a question about whether you know it. Autocorrect is the worst of
+         * them — it would silently turn a wrong answer into a right one and
+         * the student would never see what they actually typed.
+         */
+        style={{
+          width: '100%',
+          boxSizing: 'border-box',
+          paddingBlock: 'calc(12px * var(--density, 1))',
+          paddingInline: 'calc(13px * var(--density, 1))',
+          fontSize: 'var(--type-base)',
+          fontFamily: 'inherit',
+          color: 'inherit',
+          background: answered ? 'var(--app-track)' : 'transparent',
+          border: `1px solid ${
+            answered ? (right ? 'var(--app-accent)' : 'var(--app-line)') : 'var(--app-line)'
+          }`,
+        }}
+      />
+      {!answered && (
+        <button
+          type="submit"
+          className="btn btn-primary"
+          disabled={!draft.trim()}
+          style={{
+            marginTop: 'calc(10px * var(--density, 1))',
+            width: '100%',
+            height: 44,
+            letterSpacing: '0.1em',
+            textTransform: 'uppercase',
+          }}
+        >
+          Answer
+        </button>
+      )}
+    </form>
+  );
+}
+
+/**
  * A matching question: four terms on the left, their definitions scrambled.
  *
  * Two taps rather than a drag. A drag is the obvious gesture and it is the
@@ -750,7 +936,7 @@ function Matching({
 
 /** Ten multiple choice, with the full answer revealed after each pick. */
 export function Quiz() {
-  const { state, dispatch } = useStore();
+  const { state, dispatch, catalog } = useStore();
   const { guide } = useLive(state.guideId);
   const over = state.quiz.length > 0 && state.quizIdx >= state.quiz.length;
   const current = state.quiz[state.quizIdx];
@@ -772,7 +958,10 @@ export function Quiz() {
    */
   useEffect(() => {
     if (state.quiz.length === 0 && allCards(guide).length > 0) {
-      dispatch({ type: 'startQuiz', quiz: buildQuiz(guide, state.quizSeed) });
+      dispatch({
+        type: 'startQuiz',
+        quiz: buildQuiz(guide, state.quizSeed, diagramsIn(catalog.figures[state.guideId])),
+      });
     }
     // Only ever on arriving at an empty quiz. Depending on the seed would
     // rebuild the deck under the answer being read, since `startQuiz` moves it.
@@ -843,7 +1032,12 @@ export function Quiz() {
             <button
               type="button"
               className="btn btn-primary"
-              onClick={() => dispatch({ type: 'startQuiz', quiz: buildQuiz(guide, state.quizSeed) })}
+              onClick={() =>
+                dispatch({
+                  type: 'startQuiz',
+                  quiz: buildQuiz(guide, state.quizSeed, diagramsIn(catalog.figures[state.guideId])),
+                })
+              }
               style={{ flex: 1, height: 48, letterSpacing: '0.1em', textTransform: 'uppercase' }}
             >
               New ten
@@ -870,7 +1064,7 @@ export function Quiz() {
     );
   }
 
-  const answered = isAnswered(current, state.quizPicked, state.quizJoins);
+  const answered = isAnswered(current, state.quizPicked, state.quizJoins, state.quizTyped);
 
   /*
    * The hints this question can offer, and the ones already taken.
@@ -970,8 +1164,41 @@ export function Quiz() {
         />
       )}
 
+      {current.kind === 'target' && (
+        <Targets
+          question={current}
+          picked={state.quizPicked}
+          answered={answered}
+          onPick={(index) => dispatch({ type: 'pickAnswer', index })}
+        />
+      )}
+
+      {current.kind === 'word' && (
+        /*
+         * Keyed on the question, so React gives a new question a new input
+         * rather than reusing the last one with its draft still in it. The
+         * draft lives in component state by design (see `TypeAnswer`), and
+         * component state is exactly what survives a re-render when the
+         * element does — which would hand somebody the previous answer
+         * already typed into the next question.
+         */
+        <TypeAnswer
+          key={`${state.quizIdx}:${current.full}`}
+          answered={answered}
+          typed={state.quizTyped}
+          right={state.quizTyped !== null && wordRight(current, state.quizTyped)}
+          onAnswer={(text) => dispatch({ type: 'answerWord', text })}
+        />
+      )}
+
+      {/*
+        The options as rows — every kind but the target, whose options are
+        places on a picture and are drawn as boxes over it by `Targets` above.
+        Drawing both would put each answer on the screen twice, and the list
+        would be answerable without looking at the diagram at all.
+      */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(9px * var(--density, 1))', marginTop: 'var(--sp-7)' }}>
-        {current.opts.map((o, i) => {
+        {(current.kind === 'target' ? [] : current.opts).map((o, i) => {
           const chosen = state.quizPicked === i;
           const reveal = answered;
           return (
@@ -1093,7 +1320,15 @@ export function Quiz() {
       {answered && (
         <>
           <Blueprint style={{ paddingBlock: 'calc(13px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))', marginTop: 'var(--sp-7)' }}>
-            <div className="kicker">{current.kind === 'match' ? 'The pairs' : 'In full'}</div>
+            <div className="kicker">
+              {current.kind === 'match'
+                ? 'The pairs'
+                : current.kind === 'word'
+                  ? 'The term'
+                  : current.kind === 'target'
+                    ? 'What that is'
+                    : 'In full'}
+            </div>
             <div
               style={{
                 fontSize: 'var(--type-md)',

@@ -147,8 +147,23 @@ export const SOURCES = [
     state: 'Yours',
   },
   {
-    label: 'Top Hat',
-    meta: 'Not connected — no app can read your score. Its grade line comes from the syllabus; the number is yours.',
+    /*
+     * Named, all three, rather than "your classroom response tool".
+     *
+     * This row exists to be *found*, by a student staring at a participation
+     * mark they cannot square with the app — and they are looking for the word
+     * on their own screen. It shipped as `Top Hat` alone because both shipped
+     * Top Hat courses made that the case in front of us; a student whose course
+     * uses iClicker or Poll Everywhere read the same list and found no answer
+     * at all, which `TOPHAT.md` observes is how the question gets asked again.
+     *
+     * The naming is only here. `lib/clicker.ts` has the argument for why the
+     * *parser* must go on recognising none of them: a category name is carried
+     * verbatim, so all three already arrive with no rule written, and a
+     * vocabulary there would drop the courses it had not been taught.
+     */
+    label: 'Top Hat, iClicker, Poll Everywhere',
+    meta: 'Not connected — no app can read your score, and the same goes for any other clicker. The grade line comes from your syllabus; the number is yours.',
     state: 'By hand',
   },
 ];

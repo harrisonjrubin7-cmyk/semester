@@ -1,6 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { buildQuiz, distinctAnswers, matchableTerms, MATCH_PAIRS } from './quiz';
+import {
+  buildQuiz,
+  distinctAnswers,
+  isAnswered,
+  matchableTerms,
+  wordRight,
+  wordableTerms,
+  MATCH_PAIRS,
+} from './quiz';
 import type { Guide } from './types';
+import { SPOTS, diagramsIn } from './hotspot';
 
 /**
  * A quiz is marked, so its mistakes cost somebody a score.
@@ -206,6 +215,198 @@ const TERMED = (): Guide => ({
   ],
 });
 
+describe('click on target', () => {
+  const DIAGRAMS = ['supply-demand', 'monopoly'] as const;
+
+  it('asks one, off a diagram it was given', () => {
+    const targets = buildQuiz(TERMED(), 1, [...DIAGRAMS]).filter((q) => q.kind === 'target');
+    expect(targets).toHaveLength(1);
+    expect(DIAGRAMS).toContain(targets[0].diagram!);
+  });
+
+  it('asks none when it is given no diagrams', () => {
+    // The default, which is what every caller that does not know gets.
+    expect(buildQuiz(TERMED(), 1).filter((q) => q.kind === 'target')).toHaveLength(0);
+    expect(buildQuiz(TERMED(), 1, []).filter((q) => q.kind === 'target')).toHaveLength(0);
+  });
+
+  /*
+   * The options are the spots, in the spot map's own order and never shuffled.
+   * A target question's options *are* places on a picture, so re-ordering them
+   * would move the answer rather than move a row — which is why this kind
+   * needed no `shown` and no new reducer action.
+   */
+  it('lines its options up with the diagram’s spots, in order', () => {
+    for (const seed of [1, 2, 5, 9, 13]) {
+      const t = buildQuiz(TERMED(), seed, [...DIAGRAMS]).find((q) => q.kind === 'target');
+      if (!t) continue;
+      const spots = SPOTS[t.diagram!]!;
+      expect(t.opts.map((o) => o.text), `seed ${seed}`).toEqual(spots.map((s) => s.name));
+    }
+  });
+
+  it('marks exactly one option right, and names it in full', () => {
+    for (const seed of [1, 2, 5, 9, 13, 21]) {
+      const t = buildQuiz(TERMED(), seed, [...DIAGRAMS]).find((q) => q.kind === 'target');
+      if (!t) continue;
+      expect(t.opts.filter((o) => o.ok), `seed ${seed}`).toHaveLength(1);
+      expect(t.full).toBe(t.opts.find((o) => o.ok)!.text);
+      expect(t.q, `seed ${seed}`).toMatch(/^Click .+\.$/);
+    }
+  });
+
+  /*
+   * It is answered by picking, like a choice, and that is the whole design:
+   * the reducer, the score, undo and the hint ladder all work on this kind
+   * without having been told it exists.
+   */
+  it('is answered by picking, with no typing and no joining', () => {
+    const t = buildQuiz(TERMED(), 1, [...DIAGRAMS]).find((q) => q.kind === 'target')!;
+    expect(isAnswered(t, null, {}, null)).toBe(false);
+    expect(isAnswered(t, 0, {}, null)).toBe(true);
+  });
+
+  it('asks about a diagram with too few spots not at all', () => {
+    // `funnel` is drawn by the app and has no spots, which is the honest
+    // answer for a picture whose parts cannot be clicked apart on a phone.
+    expect(buildQuiz(TERMED(), 1, ['funnel']).filter((q) => q.kind === 'target')).toHaveLength(0);
+  });
+
+  it('reads a course’s figures for the diagrams worth asking about', () => {
+    expect(
+      diagramsIn({
+        0: { type: 'diagram', title: 'S and D', caption: '', kind: 'supply-demand' },
+        1: { type: 'diagram', title: 'A funnel', caption: '', kind: 'funnel' },
+        2: { type: 'steps', title: 'Steps', caption: '', steps: [] },
+        3: { type: 'diagram', title: 'S and D again', caption: '', kind: 'supply-demand' },
+      }),
+    ).toEqual(['supply-demand']);
+    // `funnel` dropped for having no spots, the repeat collapsed, the
+    // non-diagram ignored. And nothing at all out of nothing at all.
+    expect(diagramsIn(undefined)).toEqual([]);
+  });
+});
+
+describe('typed answers', () => {
+  it('asks some, and the definition is the question', () => {
+    const words = buildQuiz(TERMED(), 1).filter((q) => q.kind === 'word');
+    expect(words.length).toBeGreaterThan(0);
+    for (const w of words) {
+      const term = TERMED().terms!.find((t) => t.t === w.full);
+      expect(term, `${w.full} is not one of the guide's terms`).toBeDefined();
+      expect(w.q).toBe(term!.d);
+      // Nothing to pick. A word question that shipped options would be a
+      // multiple choice with a keyboard in front of it.
+      expect(w.opts).toEqual([]);
+    }
+  });
+
+  it('never asks for the same term twice in a run', () => {
+    for (const seed of [1, 2, 3, 7, 11, 23]) {
+      const asked = buildQuiz(TERMED(), seed)
+        .filter((q) => q.kind === 'word')
+        .map((q) => q.full);
+      expect(new Set(asked).size, `seed ${seed}`).toBe(asked.length);
+    }
+  });
+
+  it('carries the other terms, so the marker can refuse an ambiguous answer', () => {
+    for (const w of buildQuiz(TERMED(), 1).filter((q) => q.kind === 'word')) {
+      expect(w.others).toBeDefined();
+      expect(w.others).not.toContain(w.full);
+      expect(w.others!.length).toBe(TERMED().terms!.length - 1);
+    }
+  });
+
+  it('asks none of a guide with no key terms', () => {
+    expect(buildQuiz(SIX, 1).filter((q) => q.kind === 'word')).toHaveLength(0);
+  });
+
+  /*
+   * The giveaway rule, which is the one that needed real guides to find. A
+   * definition that says the term back is a question with its answer printed
+   * underneath it, and marking somebody right for reading is worse than not
+   * asking. Checked on the normalised forms, so the echo is caught however it
+   * was capitalised or hyphenated.
+   */
+  it('refuses a term its own definition gives away', () => {
+    expect(
+      wordableTerms({
+        ...SIX,
+        terms: [
+          { t: 'Elasticity', d: 'Elasticity is how much quantity moves.' },
+          { t: 'Surplus', d: 'the SURPLUS, roughly.' },
+          { t: 'Marginal cost', d: 'What one more unit adds to total cost.' },
+        ],
+      }).map((t) => t.t),
+    ).toEqual(['Marginal cost']);
+  });
+
+  /*
+   * The control for it: a definition that merely contains the word as part of
+   * a longer one is not a giveaway. `costly` is not `cost`, and a rule
+   * matching on substrings rather than whole words would drop this term for
+   * no reason.
+   */
+  it('control: a longer word containing the term is not a giveaway', () => {
+    expect(
+      wordableTerms({
+        ...SIX,
+        terms: [{ t: 'Cost', d: 'A costly business, measured per unit.' }],
+      }).map((t) => t.t),
+    ).toEqual(['Cost']);
+  });
+
+  it('refuses a term too long to type, and one with no definition', () => {
+    expect(
+      wordableTerms({
+        ...SIX,
+        terms: [
+          { t: 'A'.repeat(33), d: 'Something.' },
+          { t: 'Elasticity', d: '   ' },
+          { t: 'Surplus', d: 'The gap.' },
+        ],
+      }).map((t) => t.t),
+    ).toEqual(['Surplus']);
+  });
+
+  /*
+   * Two entries that normalise to one term are one question, not two — the
+   * second would be unanswerable-by-design, since typing either answer marks
+   * whichever was asked.
+   */
+  it('keeps one of two terms that normalise the same', () => {
+    expect(
+      wordableTerms({
+        ...SIX,
+        terms: [
+          { t: 'Cost-benefit', d: 'Weighing one against the other.' },
+          { t: 'cost benefit', d: 'The same idea, spelled differently.' },
+        ],
+      })
+    ).toHaveLength(1);
+  });
+
+  it('is answered only once something has been submitted', () => {
+    const word = buildQuiz(TERMED(), 1).find((q) => q.kind === 'word')!;
+    expect(isAnswered(word, null, {}, null)).toBe(false);
+    expect(isAnswered(word, null, {}, '')).toBe(true);
+    // A picked option is not an answer to a question with no options, which is
+    // what would happen if the kinds shared a branch.
+    expect(isAnswered(word, 0, {}, null)).toBe(false);
+  });
+
+  it('marks the term right and another term wrong', () => {
+    const word = buildQuiz(TERMED(), 1).find((q) => q.kind === 'word')!;
+    expect(wordRight(word, word.full)).toBe(true);
+    expect(wordRight(word, word.others![0])).toBe(false);
+    // And says nothing about a question of another kind, rather than throwing
+    // or quietly marking it.
+    const choice = buildQuiz(TERMED(), 1).find((q) => q.kind === 'choice')!;
+    expect(wordRight(choice, choice.full)).toBe(false);
+  });
+});
+
 describe('true-or-false', () => {
   it('asks some, and never as many as the whole run', () => {
     const out = buildQuiz(SIX, 1);
@@ -327,8 +528,8 @@ describe('the run as a whole', () => {
     expect(shape(5)).not.toBe(shape(6));
   });
 
-  it('mixes all three kinds when the guide can field them', () => {
+  it('mixes every kind when the guide can field them', () => {
     const kinds = new Set(buildQuiz(TERMED(), 1).map((q) => q.kind));
-    expect([...kinds].sort()).toEqual(['choice', 'match', 'truefalse']);
+    expect([...kinds].sort()).toEqual(['choice', 'match', 'truefalse', 'word']);
   });
 });

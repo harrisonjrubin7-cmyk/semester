@@ -623,6 +623,70 @@ describe('drilling', () => {
     const once = reducer(started, { type: 'pickAnswer', index: 0 });
     expect(reducer(once, { type: 'pickAnswer', index: 0 })).toBe(once);
   });
+
+  /*
+   * A typed answer, which is the first kind the student produces rather than
+   * picks. Three things are asserted and each is a way of getting it wrong:
+   * the score has to move, what they wrote has to survive so the reveal can
+   * show it back, and a second submit has to do nothing.
+   */
+  const WORD = {
+    kind: 'word' as const,
+    q: 'Whether a finding generalizes beyond the study.',
+    unit: 'Key terms',
+    full: 'External validity',
+    opts: [],
+    others: ['Internal validity', 'Reliability'],
+  };
+
+  it('marks a typed answer and keeps what was typed', () => {
+    const started = reducer(blank(), { type: 'startQuiz', quiz: [WORD] });
+    const s = reducer(started, { type: 'answerWord', text: '  external validity ' });
+    expect(s.quizScore).toBe(1);
+    // As typed, not as marked: a student who misspelled it is owed the sight
+    // of what they wrote beside what it was.
+    expect(s.quizTyped).toBe('  external validity ');
+  });
+
+  it('scores a wrong typed answer at nothing, and still records it', () => {
+    const started = reducer(blank(), { type: 'startQuiz', quiz: [WORD] });
+    const s = reducer(started, { type: 'answerWord', text: 'reliability' });
+    expect(s.quizScore).toBe(0);
+    expect(s.quizTyped).toBe('reliability');
+  });
+
+  /*
+   * The guard the whole `lib/word.ts` ambiguity rule exists for, asserted here
+   * too because this is the path a student actually takes: the reducer is
+   * where the score is written, and a marker that was right in isolation and
+   * wired up wrong would pass every test in `word.test.ts`.
+   */
+  it('refuses a near miss that is also another term, through the reducer', () => {
+    const started = reducer(blank(), { type: 'startQuiz', quiz: [WORD] });
+    expect(reducer(started, { type: 'answerWord', text: 'internal validity' }).quizScore).toBe(0);
+  });
+
+  it('ignores a second typed answer to the same question', () => {
+    const started = reducer(blank(), { type: 'startQuiz', quiz: [WORD] });
+    const once = reducer(started, { type: 'answerWord', text: 'nonsense' });
+    const twice = reducer(once, { type: 'answerWord', text: 'External validity' });
+    expect(twice).toBe(once);
+    expect(twice.quizScore).toBe(0);
+  });
+
+  it('clears the typed answer when the next question comes up', () => {
+    const started = reducer(blank(), { type: 'startQuiz', quiz: [WORD, WORD] });
+    const answered = reducer(started, { type: 'answerWord', text: 'External validity' });
+    expect(reducer(answered, { type: 'nextQuestion' }).quizTyped).toBeNull();
+  });
+
+  it('does not take a typed answer for a question of another kind', () => {
+    const started = reducer(blank(), {
+      type: 'startQuiz',
+      quiz: [{ kind: 'choice', q: 'q', unit: 'u', full: 'q', opts: [{ text: 'a', ok: true }] }],
+    });
+    expect(reducer(started, { type: 'answerWord', text: 'q' })).toBe(started);
+  });
 });
 
 /**

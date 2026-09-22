@@ -5,6 +5,7 @@ import { useRowStyle } from '../components/shell/useShell';
 import { Blueprint } from '../components/Blueprint';
 import { Meter, SectionLabel } from '../components/ui';
 import { key, needCaveat, needFor, reaches, standing } from '../lib/grades';
+import { noteFor, toolIn } from '../lib/clicker';
 import { NO_POLICY, pointsOff, rate, tally } from '../lib/attend';
 import { PiecesRow } from '../components/PiecesRow';
 import { against, forCourse, trend, trendLine, type Sitting } from '../lib/sitting';
@@ -193,6 +194,29 @@ export function Grades() {
                     {r.pct}
                     {r.weight === null ? ' · not weighted' : r.extra ? ' · extra credit' : ''}
                   </div>
+                  {/*
+                    A category whose score lives in a clicker the app cannot
+                    read.
+
+                    Said beside the empty field rather than in a help page,
+                    because the moment somebody wonders why nothing filled it
+                    in is the moment they are looking at it. `lib/clicker.ts`
+                    has the wording and the argument; the detection is used
+                    only to decide whether to say this, never to decide whether
+                    the category is real.
+                  */}
+                  {toolIn(r.what) && (
+                    <div
+                      style={{
+                        fontSize: 'var(--type-xs)',
+                        color: 'var(--app-dim)',
+                        marginTop: 'var(--sp-2)',
+                        lineHeight: 'var(--leading-normal-minus)',
+                      }}
+                    >
+                      {noteFor(toolIn(r.what)!)}
+                    </div>
+                  )}
                 </div>
                 <ScoreField
                   value={state.grades[key(c.id, i)] ?? ''}
