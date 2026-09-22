@@ -1309,8 +1309,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       ownThings: state.tasks.length + state.appointments.length,
       terms: terms.length || 1,
       signedIn: Boolean(account),
+      athlete: state.athlete,
     }),
-    [catalog, state.notes, state.sittings, state.tasks, state.appointments, terms, account],
+    [catalog, state.notes, state.sittings, state.tasks, state.appointments, terms, account, state.athlete],
   );
 
   /**

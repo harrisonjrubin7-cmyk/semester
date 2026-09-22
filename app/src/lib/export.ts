@@ -907,6 +907,10 @@ export const NOT_IN_BACKUP: Record<string, string> = {
   quiet: 'the hours reminders are held back',
   role: 'which role the app is being used as',
   showAll: 'whether the screens held back on a first morning are shown',
+  // One tap to set again, and it travels between devices on the sync like
+  // `showAll` does. A backup carries the semester; this is a switch about
+  // which shelves the directory offers, not something recorded during one.
+  athlete: 'whether Athletics and NIL are offered',
 
   // Facts about this install, true of the device and not of the person. A
   // restore that carried these would describe the machine the backup came
