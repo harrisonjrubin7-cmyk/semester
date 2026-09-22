@@ -66,6 +66,7 @@ const teacher = (over: Partial<Launch> = {}): Launch => ({
   contextId: 'PSCI-2100',
   contextTitle: 'International Security',
   targetLinkUri: 'https://fn.semester.app/lti/launch',
+  resourceLinkId: null,
   name: null,
   email: null,
   ...over,

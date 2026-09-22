@@ -263,6 +263,15 @@ export interface Launch {
   contextTitle: string | null;
   /** Where the platform wants this launch to land. Same-origin, checked. */
   targetLinkUri: string;
+  /**
+   * The placed link this launch came through, when the platform sent one.
+   * A deep-linking request has none — there is no link yet — and a resource
+   * link launch from a platform that omits the claim is tolerated rather than
+   * refused, because nothing here has to have it. Grade passback records it
+   * beside the line item, for the day the key there is the link rather than
+   * the course.
+   */
+  resourceLinkId: string | null;
   /** Display name and email, when the platform was configured to send them. */
   name: string | null;
   email: string | null;
@@ -403,6 +412,7 @@ export function checkLaunch(input: LaunchCheck): Verdict<Launch> {
   const roles = rawRoles.filter((r): r is string => typeof r === 'string');
 
   const context = obj(claims[CLAIM.context]);
+  const resourceLink = obj(claims[CLAIM.resourceLink]);
 
   return yes({
     messageType: messageType as Launch['messageType'],
@@ -415,6 +425,7 @@ export function checkLaunch(input: LaunchCheck): Verdict<Launch> {
     contextId: context ? str(context.id) : null,
     contextTitle: context ? str(context.title) : null,
     targetLinkUri: target,
+    resourceLinkId: resourceLink ? str(resourceLink.id) : null,
     name: str(claims.name),
     email: str(claims.email),
   });

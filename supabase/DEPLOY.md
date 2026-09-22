@@ -183,8 +183,41 @@ than afterwards: Brightspace asks for a JWKS URL during the install. With no
 key set the endpoint answers 503 and says so, and **launches keep working** —
 a launch is the platform proving itself to us and needs nothing of ours.
 
-**Deep linking signs with it**, and is the only thing that does. Grade
-passback still does not exist; the key is no longer idle.
+**Deep linking and grade passback both sign with it.** A deep-linking answer
+is a JWT signed as this tool; a grade is posted with a token this tool
+obtained by presenting one. Neither works without the key, and both say so.
+
+### Grade passback, and what decides whether a number is ever sent
+
+Not this tool. When an instructor places the link as a **graded activity**,
+the launch names the gradebook column it owns, and the launch endpoint
+records that address against the student's identity. Placed as an ordinary
+link, nothing is recorded and nothing is ever sent — which is most links.
+
+The number is the quiz: ten questions, a count right. When one ends, the
+app posts the course code and the score to
+
+    …/functions/v1/lti/score      POST, with the student's own session
+
+and is told whether that went anywhere. The server matches the code
+against the course *titles* it remembered at launch, because the app knows
+codes and the platform knows titles and nobody has typed the mapping. One
+match sends; none or several sends nothing, and the reason is in the log:
+
+    no-identity        this account was never launched from a platform
+    no-match           no graded Brightspace course has this code in its title
+    ambiguous          two do — cross-listed courses — and guessing is worse
+    no-key             LTI_PRIVATE_KEY is not set, so nothing can be signed
+    token-refused      the platform's token endpoint said no; check token_url
+    platform-refused   the column refused the score; the scopes are in the row
+
+`token_url` on `lti_platform` is what this needs that a launch never did.
+A registration installed before that column existed has none, and the
+score endpoint refuses by name (`no-token-url`) rather than guessing an
+address to post a signed assertion to.
+
+The student is told, on the screen, when a score was reported. That is the
+one line this feature adds to the app, and it is not decoration.
 
 ### Deep linking, on the launch endpoint
 
@@ -290,10 +323,10 @@ the honest reading of what happened, since a school's administrator installing
 this tool is an invitation issued by exactly the person the gate exists to let
 issue them. It leaves a row saying so.
 
-Grade passback is still not built. Deep linking now is, and signs with the key
-described above — which is why there is still no key material in either
-migration: the key was always going to live as a function secret, and the
-thing that needed it arrived without changing that.
+All three LTI directions are built now — launch, deep linking, grade
+passback — and the two that sign do so with the key described above. There is
+still no key material in any migration: the key was always going to live as a
+function secret, and both things that needed it arrived without changing that.
 
 ## Tables
 
