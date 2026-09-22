@@ -83,6 +83,7 @@ export function History() {
       <input
         type="text"
         placeholder="Search history..."
+        aria-label="Search history"
         value={query}
         onChange={(e) => setQuery(e.currentTarget.value)}
         className="history-search"
