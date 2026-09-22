@@ -27,6 +27,7 @@
  */
 
 import { contrast as wcagContrast } from './contrast';
+import { focusOf } from './focus';
 import type { NavMode } from './types';
 
 export interface Accent {
@@ -1264,6 +1265,11 @@ export interface Look {
   courseColours?: string;
   /** Which of the three layouts every screen is drawn in. See `SHELLS`. */
   shell?: string;
+  /**
+   * `on` or `off` — whether the shelves that are not this term's work are
+   * set aside. See `lib/focus.ts`, which owns the list and the argument.
+   */
+  focus?: string;
   /** Whether the directory of everything is a list or tiles. See `DIRECTORIES`. */
   directory?: string;
   /**
@@ -1641,6 +1647,9 @@ export function readLook(saved: Look | undefined): Required<Look> {
     feed: feedStyleOf(saved?.feed),
     courseColours: courseColoursOf(saved?.courseColours),
     shell: shellOf(saved?.shell),
+    // Off unless it says on: a setting from a future build that this one
+    // cannot read must not hide three shelves on the way in.
+    focus: focusOf(saved?.focus),
     // Kept unresolved on purpose, unlike every other key here. An unrecognised
     // value falls back to empty rather than to a style, because empty is a
     // state this one has — nobody has chosen — and resolving it here would

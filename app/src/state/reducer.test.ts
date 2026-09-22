@@ -804,6 +804,16 @@ describe('the look', () => {
     expect(reducer(blank(), { type: 'setLook', look: { courseColours: 'plaid' } }).courseColours).toBe('on');
   });
 
+  it('remembers whether focus is on, and refuses a value it does not know', () => {
+    // Off by default: a fresh install shows the whole app, and focus is the
+    // thing you turn on for a fortnight in December.
+    expect(blank().focus).toBe('off');
+    expect(reducer(blank(), { type: 'setLook', look: { focus: 'on' } }).focus).toBe('on');
+    expect(reducer(blank(), { type: 'setLook', look: { focus: 'finals' } }).focus).toBe('off');
+    const back = reducer(reducer(blank(), { type: 'setLook', look: { focus: 'on' } }), { type: 'setLook', look: { focus: 'off' } });
+    expect(back.focus).toBe('off');
+  });
+
   it('folds the calendar key away and remembers that it was opened', () => {
     // Closed to begin with: eleven marks above the grid on every calendar
     // view, every time, is a key that is read twice and then in the way.

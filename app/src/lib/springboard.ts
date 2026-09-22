@@ -27,6 +27,7 @@
  */
 
 import { arranged, readLists, writeLists } from './arrange';
+import { focused } from './focus';
 import { DESTINATIONS, offered } from './nav';
 import { DEFAULT_ROLE, type Role } from './role';
 import { has } from './search';
@@ -111,8 +112,15 @@ export function placed(): string[] {
  * an id here that names no real screen is dropped rather than drawn as an icon
  * that goes nowhere. Empty folders and empty pages go with it.
  */
-export function pagesFor(caps: Capabilities, role: Role = DEFAULT_ROLE): Page[] {
-  const can = new Set(offered(caps, role).map((d) => d.screen as string));
+export function pagesFor(
+  caps: Capabilities,
+  role: Role = DEFAULT_ROLE,
+  focus: string | undefined = undefined,
+): Page[] {
+  // The fourth gate — `lib/focus.ts` — applied to the icons and not to the
+  // dock: the dock is the four screens a term is made of, and `focus.test.ts`
+  // holds it to that.
+  const can = new Set(focused(offered(caps, role), focus).map((d) => d.screen as string));
   const pages: Page[] = [];
   for (const page of PAGES) {
     const items: (string | Folder)[] = [];
@@ -136,7 +144,7 @@ export function pagesFor(caps: Capabilities, role: Role = DEFAULT_ROLE): Page[] 
    * apart.
    */
   const seen = new Set(placed());
-  const rest = offered(caps, role)
+  const rest = focused(offered(caps, role), focus)
     .map((d) => d.screen as string)
     .filter((s) => !seen.has(s));
   if (rest.length > 0) pages.push({ widgets: false, items: rest });
@@ -188,9 +196,10 @@ export function arrangedPages(
   caps: Capabilities,
   saved: string | undefined,
   role: Role = DEFAULT_ROLE,
+  focus: string | undefined = undefined,
 ): Page[] {
   const lists = readLists(saved);
-  return pagesFor(caps, role).map((page, i) => {
+  return pagesFor(caps, role, focus).map((page, i) => {
     const byKey = new Map(page.items.map((item) => [keyOf(item), item]));
     const items = arranged([...byKey.keys()], lists[pageKey(i)] ?? []).map((k) => {
       const item = byKey.get(k)!;

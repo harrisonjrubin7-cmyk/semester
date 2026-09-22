@@ -599,6 +599,11 @@ export interface Persisted {
   /** `plain`, `grouped` or `soft`. Which layout every screen is drawn in. */
   shell: string;
   /**
+   * `on` or `off`. Whether the shelves that are not this term's work are set
+   * aside — experience §377. See `lib/focus.ts`.
+   */
+  focus: string;
+  /**
    * The shortcuts on the workspace's search home, as screen ids.
    *
    * A look key like `groupOrder`, parsed by `lib/desk.ts`, which checks every
@@ -1491,6 +1496,7 @@ export const DEFAULT_PERSISTED: Persisted = {
   feed: 'cards',
   courseColours: 'on',
   shell: 'plain',
+  focus: 'off',
   // Empty for the reason `directory` below is: an empty list is the state
   // "nobody has arranged their shortcuts", and writing the five defaults in
   // here would spend that state on the first save.
@@ -1524,6 +1530,7 @@ export function currentLook(state: Persisted): Look {
     feed: state.feed,
     courseColours: state.courseColours,
     shell: state.shell,
+    focus: state.focus,
     favourites: state.favourites,
     shortcuts: state.shortcuts,
     directory: state.directory,
@@ -2035,6 +2042,7 @@ export function pickPersisted(state: State): Persisted {
     feed: state.feed,
     courseColours: state.courseColours,
     shell: state.shell,
+    focus: state.focus,
     favourites: state.favourites,
     shortcuts: state.shortcuts,
     directory: state.directory,

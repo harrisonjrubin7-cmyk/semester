@@ -6843,6 +6843,21 @@ section[data-drop] > .grip + * {
   font-size: var(--type-sm);
 }
 
+/* The sentence that says focus is on, and the way back. One line, under the
+   count, in the count's own voice — a mode that hides things and does not say
+   so on the screen they went from is a bug report waiting to be written. */
+.deskdir-focus {
+  font-size: var(--type-sm);
+  margin-top: var(--sp-3);
+  line-height: var(--leading-normal);
+}
+
+.deskdir-focusoff {
+  color: var(--app-fg);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
 .deskdir-label {
   font-size: var(--type-lg);
   color: var(--app-fg);

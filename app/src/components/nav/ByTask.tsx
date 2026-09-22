@@ -9,6 +9,7 @@ import { distinctGlyphs } from '../icons.pick';
 import { firstFigure } from '../../lib/softtop';
 import { ALWAYS_TO_HAND, byTask, narrowTasks, offered, saysFor, type Destination } from '../../lib/nav';
 import { TileSheet } from './TileSheet';
+import { focused } from '../../lib/focus';
 import type { Screen } from '../../lib/types';
 
 /**
@@ -77,8 +78,13 @@ export function ByTask() {
   const box = useRef<HTMLInputElement>(null);
 
   const sections = useMemo(
-    () => byTask(offered(caps, state.role).filter((d) => !ALWAYS_TO_HAND.includes(d.screen))),
-    [caps, state.role],
+    () =>
+      byTask(
+        focused(offered(caps, state.role), state.focus).filter(
+          (d) => !ALWAYS_TO_HAND.includes(d.screen),
+        ),
+      ),
+    [caps, state.role, state.focus],
   );
 
   const shown = useMemo(() => narrowTasks(sections, q, caps), [sections, q, caps]);

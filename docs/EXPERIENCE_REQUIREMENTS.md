@@ -20,7 +20,7 @@ Much of this was built before it was written down, because `lib/look.ts` and the
 | 371 | Course colour coding | `COURSE_COLOURS`, `courseColoursOf()`, `lib/tint.ts` |
 | 372 | Light / dark / system | `GROUNDS`, `MATCH_DEVICE`, `resolveGround()`, `usePrefersDark()` |
 | 373 | Corner style, density, background intensity | `CORNERS`, `DENSITIES`, `GROUNDS` |
-| 377 | Application-wide Focus Mode | **not built** |
+| 377 | Application-wide Focus Mode | `lib/focus.ts` → `focus` look key; applied on the directory, shelves, launcher pages, by-task tiles, Today's campus surfaces and the reminder tick. No marketplace exists to hide. |
 | 378 | Low-stimulation mode | `CALMS` → `calm`, with the decoration half in `styles/app.css` |
 | 379 | Reduced motion | device half in `prefersLessMotion()` and CSS at five sites; app half is `CALMS` → `calm` |
 | 381 | Typography scale | `SIZES`, `scaleOf()`, enforced by the style audit in `npm run lint` |

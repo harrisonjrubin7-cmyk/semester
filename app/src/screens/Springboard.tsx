@@ -242,7 +242,7 @@ export function Springboard() {
   const [query, setQuery] = useState('');
 
   const look = currentLook(state);
-  const pages = arrangedPages(school.capabilities, look.boardOrder, state.role);
+  const pages = arrangedPages(school.capabilities, look.boardOrder, state.role, state.focus);
   const dock = arrangedDock(school.capabilities, look.boardOrder, state.role);
   // What the assistant's floating button has to clear. See the dock below.
   const dockBox = useRef<HTMLDivElement>(null);
