@@ -93,10 +93,15 @@ export const SYNC_GROUPS: { says: string; keys: string[] }[] = [
     ],
   },
   {
-    says: 'the hours you plan to work and the rules that decide your reminders',
+    says: 'the hours you plan to work, whether you are on a team, and the rules that decide your reminders',
     keys: [
       'windows', 'spent', 'contract', 'floor', 'rest', 'dayBudget', 'myRules',
       'quiet', 'notifs', 'mutedCourses', 'accessLeadDays',
+      // Named in this group rather than among the layout settings, although it
+      // is a switch like `showAll` is. It is a statement about the person
+      // rather than about the phone — the page would be describing it wrongly
+      // if it appeared under colours and text size.
+      'athlete',
     ],
   },
   {

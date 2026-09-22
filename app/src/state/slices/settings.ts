@@ -283,6 +283,17 @@ export function settings(state: State, action: Action): State | null {
     case 'showEverything':
       return state.showAll === action.on ? state : { ...state, showAll: action.on };
 
+    /*
+     * On a team, or not.
+     *
+     * Symmetrical with `showEverything` in that it only ever adds: switching
+     * it off hides nothing somebody has already opened, because `visited`
+     * outranks every gate in `lib/reveal.ts`. Somebody who leaves a team keeps
+     * the season they recorded and the screens they were keeping it on.
+     */
+    case 'setAthlete':
+      return state.athlete === action.on ? state : { ...state, athlete: action.on };
+
     case 'setSchool':
       return state.schoolId === action.id ? state : { ...state, schoolId: action.id };
 

@@ -705,6 +705,19 @@ export interface Persisted {
    * about a first morning rather than about permanently hiding anything.
    */
   showAll: boolean;
+  /**
+   * Whether this student is on a team.
+   *
+   * The one fact about a person that no amount of coursework reveals, and the
+   * reason it is a switch rather than an `UNLOCKS` rule like everything else
+   * in `lib/reveal.ts`. Athletics is the screen a season is *entered on*, so
+   * gating it on having entered a season would hide its own way in — the trap
+   * that file names about Courses and the first score.
+   *
+   * It only ever adds. `visited` means a student already using Athletics keeps
+   * it whatever this says, and search finds both screens either way.
+   */
+  athlete: boolean;
   /** The shape this copy was written in. See `lib/migrate.ts`. */
   schemaVersion: number;
   /**
@@ -1348,6 +1361,8 @@ export const DEFAULT_PERSISTED: Persisted = {
   // install should be the app they already have. Changed in Settings.
   schoolId: 'vanderbilt',
   showAll: false,
+  // Nobody is a student-athlete until they say so; roughly 6% of students are.
+  athlete: false,
   schemaVersion: SCHEMA,
   started: {},
   ready: {},
@@ -1859,6 +1874,7 @@ export function loadPersisted(): Persisted {
       submitted: readStage(saved.submitted),
       schoolId: typeof saved.schoolId === 'string' ? saved.schoolId : DEFAULT_PERSISTED.schoolId,
       showAll: saved.showAll === true,
+      athlete: saved.athlete === true,
       // Every field readLook knows about, handed straight through. Naming
       // them one by one here is how a new control gets added, saved, and then
       // silently dropped on the next reload.
@@ -1979,6 +1995,7 @@ export function pickPersisted(state: State): Persisted {
     submitted: state.submitted,
     schoolId: state.schoolId,
     showAll: state.showAll,
+    athlete: state.athlete,
     /*
      * Stamped on the way out, so the next build to read this knows what shape
      * it is in without having to guess from which fields are present.
@@ -2191,6 +2208,7 @@ export type Action =
   | { type: 'markStage'; id: string; stage: ItemStage }
   | { type: 'setSchool'; id: string }
   | { type: 'showEverything'; on: boolean }
+  | { type: 'setAthlete'; on: boolean }
   | { type: 'mixCourses'; on: boolean }
   /**
    * Clear this device's own rows so the account's copy is what is left.
