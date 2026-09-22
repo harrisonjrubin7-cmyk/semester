@@ -2,6 +2,7 @@ import { allCards } from '../data/catalog';
 import type { DeckCard } from '../data/catalog';
 import type { Guide } from './types';
 import type { QuizQuestion } from '../state/store';
+import { judge, normalise } from './word';
 
 /**
  * Long answers are clipped so four options fit on a phone without scrolling
@@ -52,6 +53,95 @@ export function matchableTerms(guide: Guide): { t: string; d: string }[] {
     out.push({ t, d });
   }
   return out;
+}
+
+/**
+ * How many characters a typed answer may run to before it stops being one.
+ *
+ * A term is a thing you can produce from memory in a box; a sentence is not.
+ * Thirty-two is where the four shipped glossaries stop being names and start
+ * being descriptions — `Operational definition` is 22 and `Spurious
+ * relationship` is 23, and the entries longer than this are the formula-sheet
+ * headings that nobody types.
+ */
+const TYPEABLE = 32;
+
+/**
+ * Which of a guide's key terms can honestly be asked for by typing.
+ *
+ * Three things disqualify one, and the third is the one that took looking at
+ * real guides to find:
+ *
+ *  1. **Too long to type.** See {@link TYPEABLE}.
+ *  2. **A definition that is not a question.** An empty one asks nothing.
+ *  3. **A definition containing the term.** `Coverage error — the sampling
+ *     frame leaves out part of the population` is fine; a definition that says
+ *     the word back is a question whose answer is printed underneath it, and
+ *     marking somebody right for reading is worse than not asking.
+ *
+ * Compared on the *normalised* forms, so a definition that echoes the term in
+ * lower case or without its hyphen is caught too — which is how it is usually
+ * written when it happens at all.
+ */
+export function wordableTerms(guide: Guide): { t: string; d: string }[] {
+  const seen = new Set<string>();
+  const out: { t: string; d: string }[] = [];
+  for (const term of guide.terms ?? []) {
+    const t = term.t.trim();
+    const d = term.d.trim();
+    if (!t || !d || t.length > TYPEABLE) continue;
+    const key = normalise(t);
+    if (!key || seen.has(key)) continue;
+    // The giveaway check. `normalise` puts both sides in the same form, so
+    // this catches the echo however it was capitalised or punctuated.
+    if (` ${normalise(d)} `.includes(` ${key} `)) continue;
+    seen.add(key);
+    out.push({ t, d });
+  }
+  return out;
+}
+
+/**
+ * One typed-answer question from the guide's key terms, or nothing.
+ *
+ * The definition is the question and the term is the answer, which is the
+ * direction that can be marked. The other way round — show the term, ask for
+ * the definition — is the more natural thing to ask a person and cannot be
+ * marked by any means in this repository: a definition in somebody's own words
+ * is right, and no edit distance says so.
+ *
+ * `others` is every other askable term in the same guide, carried on the
+ * question so the marker can refuse a near miss that is also a near miss for
+ * one of them. Across the four shipped guides exactly one pair needs it, and
+ * it is `External validity` and `Internal validity` — see `lib/word.test.ts`,
+ * which measures that rather than asserting it.
+ */
+function wordFrom(
+  pool: { t: string; d: string }[],
+  all: { t: string; d: string }[],
+  rnd: () => number,
+): QuizQuestion | null {
+  if (pool.length === 0) return null;
+  const pick = pool[Math.floor(rnd() * pool.length)];
+  return {
+    kind: 'word',
+    q: pick.d,
+    unit: 'Key terms',
+    full: pick.t,
+    opts: [],
+    /*
+     * The rivals come from `all`, not from `pool`.
+     *
+     * `pool` shrinks as the run asks its questions, and building the list from
+     * it made the guard weaker on the second question than on the first: a
+     * term already asked was no longer a rival, so an answer ambiguous between
+     * it and this one would have been marked right. Nothing on screen would
+     * have shown it, and a test that only looked at the first question would
+     * not have either — this is `quiz.test.ts` counting the list against the
+     * guide's own terms rather than against whatever was left.
+     */
+    others: all.filter((o) => o.t !== pick.t).map((o) => o.t),
+  };
 }
 
 /** A seeded shuffle, in place, using the run's own generator. */
@@ -197,6 +287,17 @@ function matchFrom(terms: { t: string; d: string }[], rnd: () => number): QuizQu
 const TRUE_FALSE = 3;
 
 /**
+ * At most this many typed-answer questions in a run of ten.
+ *
+ * Two, and the number is a claim about attention rather than about marking. A
+ * typed answer is the slowest question in the run — a keyboard comes up, the
+ * thumb leaves the answer area, and the reward for getting it right is the
+ * same one tapping gives. Two of them is the hardest part of a run; five would
+ * be the run, and a student who wanted to be typing would be using the drill.
+ */
+const WORD_ANSWERS = 2;
+
+/**
  * Up to ten questions drawn from the guide — multiple choice, true-or-false,
  * and one round of matching where the key terms allow it.
  *
@@ -248,6 +349,23 @@ export function buildQuiz(guide: Guide, seed: number): QuizQuestion[] {
 
   const match = matchFrom(matchableTerms(guide), rnd);
   if (match) out.push(match);
+
+  /*
+   * Typed answers, off the same glossary the match came from.
+   *
+   * Drawn without replacement so one run cannot ask for the same term twice,
+   * which is the typed-answer version of the "no card twice" rule below: the
+   * second asking is the first one with the answer already given.
+   */
+  const askable = wordableTerms(guide);
+  const pool = [...askable];
+  for (let i = 0; i < WORD_ANSWERS && pool.length > 0; i++) {
+    const word = wordFrom(pool, askable, rnd);
+    if (!word) break;
+    out.push(word);
+    const at = pool.findIndex((t) => t.t === word.full);
+    if (at >= 0) pool.splice(at, 1);
+  }
 
   const shuffled = shuffle([...all], rnd);
 
@@ -313,6 +431,24 @@ export function isAnswered(
   question: QuizQuestion | undefined,
   picked: number | null,
   joins: Record<number, number>,
+  typed: string | null = null,
 ): boolean {
-  return question?.kind === 'match' ? matchDone(question, joins) : picked !== null;
+  if (question?.kind === 'match') return matchDone(question, joins);
+  if (question?.kind === 'word') return typed !== null;
+  return picked !== null;
+}
+
+/**
+ * Whether a typed answer is the one the question wanted.
+ *
+ * A thin wrapper, and it earns its place by being the only route: the reducer,
+ * the screen's reveal and any future replay all have to agree about what
+ * "right" was, and three call sites assembling the same three arguments is how
+ * they stop agreeing. `others` defaults to nothing rather than being optional
+ * in `lib/word.ts`, because the default belongs here — a question built
+ * without rivals has none, which is different from a caller forgetting them.
+ */
+export function wordRight(question: QuizQuestion | undefined, typed: string): boolean {
+  if (!question || question.kind !== 'word') return false;
+  return judge(typed, question.full, question.others ?? []).ok;
 }

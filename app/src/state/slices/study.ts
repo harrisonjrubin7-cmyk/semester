@@ -13,7 +13,7 @@ import { score } from '../../lib/review';
 import { finishes, moveOn, type Session } from '../../lib/sessions';
 import { handle, remember } from '../../lib/sure';
 import { unitKey } from '../../lib/pretest';
-import { matchDone } from '../../lib/quiz';
+import { matchDone, wordRight } from '../../lib/quiz';
 import type { Action, State } from '../shape';
 import { push } from './navigate';
 
@@ -384,6 +384,7 @@ export function study(state: State, action: Action): State | null {
           quizIdx: 0,
           quizPicked: null,
           quizJoins: {},
+          quizTyped: null,
           quizHolding: null,
           quizScore: 0,
           quizSeed: state.quizSeed + 7,
@@ -392,6 +393,30 @@ export function study(state: State, action: Action): State | null {
         },
         'quiz',
       );
+
+    /*
+     * A typed answer, marked once.
+     *
+     * Same refusal as `pickAnswer` and for the same reason: a second answer to
+     * a question already answered would score it twice. The draft lives in the
+     * input until submit, so what arrives here is what somebody meant to say
+     * rather than how far through saying it they were.
+     *
+     * Stored as typed, not as marked. The screen reveals the right answer
+     * either way, and a student who wrote `externl validty` is owed the sight
+     * of what they wrote next to what it was — replacing it with a boolean
+     * would leave them guessing which letter they missed.
+     */
+    case 'answerWord': {
+      if (state.quizTyped !== null) return state;
+      const q = state.quiz[state.quizIdx];
+      if (!q || q.kind !== 'word') return state;
+      return {
+        ...state,
+        quizTyped: action.text,
+        quizScore: state.quizScore + (wordRight(q, action.text) ? 1 : 0),
+      };
+    }
 
     case 'pickAnswer': {
       if (state.quizPicked !== null) return state;
@@ -470,6 +495,7 @@ export function study(state: State, action: Action): State | null {
         quizIdx: state.quizIdx + 1,
         quizPicked: null,
         quizJoins: {},
+        quizTyped: null,
         quizHolding: null,
         quizRungs: 0,
         quizHelped: state.quizHelped + (state.quizRungs > 0 ? 1 : 0),

@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { buildQuiz, distinctAnswers, matchableTerms, MATCH_PAIRS } from './quiz';
+import {
+  buildQuiz,
+  distinctAnswers,
+  isAnswered,
+  matchableTerms,
+  wordRight,
+  wordableTerms,
+  MATCH_PAIRS,
+} from './quiz';
 import type { Guide } from './types';
 
 /**
@@ -206,6 +214,126 @@ const TERMED = (): Guide => ({
   ],
 });
 
+describe('typed answers', () => {
+  it('asks some, and the definition is the question', () => {
+    const words = buildQuiz(TERMED(), 1).filter((q) => q.kind === 'word');
+    expect(words.length).toBeGreaterThan(0);
+    for (const w of words) {
+      const term = TERMED().terms!.find((t) => t.t === w.full);
+      expect(term, `${w.full} is not one of the guide's terms`).toBeDefined();
+      expect(w.q).toBe(term!.d);
+      // Nothing to pick. A word question that shipped options would be a
+      // multiple choice with a keyboard in front of it.
+      expect(w.opts).toEqual([]);
+    }
+  });
+
+  it('never asks for the same term twice in a run', () => {
+    for (const seed of [1, 2, 3, 7, 11, 23]) {
+      const asked = buildQuiz(TERMED(), seed)
+        .filter((q) => q.kind === 'word')
+        .map((q) => q.full);
+      expect(new Set(asked).size, `seed ${seed}`).toBe(asked.length);
+    }
+  });
+
+  it('carries the other terms, so the marker can refuse an ambiguous answer', () => {
+    for (const w of buildQuiz(TERMED(), 1).filter((q) => q.kind === 'word')) {
+      expect(w.others).toBeDefined();
+      expect(w.others).not.toContain(w.full);
+      expect(w.others!.length).toBe(TERMED().terms!.length - 1);
+    }
+  });
+
+  it('asks none of a guide with no key terms', () => {
+    expect(buildQuiz(SIX, 1).filter((q) => q.kind === 'word')).toHaveLength(0);
+  });
+
+  /*
+   * The giveaway rule, which is the one that needed real guides to find. A
+   * definition that says the term back is a question with its answer printed
+   * underneath it, and marking somebody right for reading is worse than not
+   * asking. Checked on the normalised forms, so the echo is caught however it
+   * was capitalised or hyphenated.
+   */
+  it('refuses a term its own definition gives away', () => {
+    expect(
+      wordableTerms({
+        ...SIX,
+        terms: [
+          { t: 'Elasticity', d: 'Elasticity is how much quantity moves.' },
+          { t: 'Surplus', d: 'the SURPLUS, roughly.' },
+          { t: 'Marginal cost', d: 'What one more unit adds to total cost.' },
+        ],
+      }).map((t) => t.t),
+    ).toEqual(['Marginal cost']);
+  });
+
+  /*
+   * The control for it: a definition that merely contains the word as part of
+   * a longer one is not a giveaway. `costly` is not `cost`, and a rule
+   * matching on substrings rather than whole words would drop this term for
+   * no reason.
+   */
+  it('control: a longer word containing the term is not a giveaway', () => {
+    expect(
+      wordableTerms({
+        ...SIX,
+        terms: [{ t: 'Cost', d: 'A costly business, measured per unit.' }],
+      }).map((t) => t.t),
+    ).toEqual(['Cost']);
+  });
+
+  it('refuses a term too long to type, and one with no definition', () => {
+    expect(
+      wordableTerms({
+        ...SIX,
+        terms: [
+          { t: 'A'.repeat(33), d: 'Something.' },
+          { t: 'Elasticity', d: '   ' },
+          { t: 'Surplus', d: 'The gap.' },
+        ],
+      }).map((t) => t.t),
+    ).toEqual(['Surplus']);
+  });
+
+  /*
+   * Two entries that normalise to one term are one question, not two — the
+   * second would be unanswerable-by-design, since typing either answer marks
+   * whichever was asked.
+   */
+  it('keeps one of two terms that normalise the same', () => {
+    expect(
+      wordableTerms({
+        ...SIX,
+        terms: [
+          { t: 'Cost-benefit', d: 'Weighing one against the other.' },
+          { t: 'cost benefit', d: 'The same idea, spelled differently.' },
+        ],
+      })
+    ).toHaveLength(1);
+  });
+
+  it('is answered only once something has been submitted', () => {
+    const word = buildQuiz(TERMED(), 1).find((q) => q.kind === 'word')!;
+    expect(isAnswered(word, null, {}, null)).toBe(false);
+    expect(isAnswered(word, null, {}, '')).toBe(true);
+    // A picked option is not an answer to a question with no options, which is
+    // what would happen if the kinds shared a branch.
+    expect(isAnswered(word, 0, {}, null)).toBe(false);
+  });
+
+  it('marks the term right and another term wrong', () => {
+    const word = buildQuiz(TERMED(), 1).find((q) => q.kind === 'word')!;
+    expect(wordRight(word, word.full)).toBe(true);
+    expect(wordRight(word, word.others![0])).toBe(false);
+    // And says nothing about a question of another kind, rather than throwing
+    // or quietly marking it.
+    const choice = buildQuiz(TERMED(), 1).find((q) => q.kind === 'choice')!;
+    expect(wordRight(choice, choice.full)).toBe(false);
+  });
+});
+
 describe('true-or-false', () => {
   it('asks some, and never as many as the whole run', () => {
     const out = buildQuiz(SIX, 1);
@@ -327,8 +455,8 @@ describe('the run as a whole', () => {
     expect(shape(5)).not.toBe(shape(6));
   });
 
-  it('mixes all three kinds when the guide can field them', () => {
+  it('mixes every kind when the guide can field them', () => {
     const kinds = new Set(buildQuiz(TERMED(), 1).map((q) => q.kind));
-    expect([...kinds].sort()).toEqual(['choice', 'match', 'truefalse']);
+    expect([...kinds].sort()).toEqual(['choice', 'match', 'truefalse', 'word']);
   });
 });

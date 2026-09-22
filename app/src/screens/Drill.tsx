@@ -6,7 +6,7 @@ import { SURES, beliefs, calibration, calibrationLine } from '../lib/sure';
 import { SayIt } from '../components/SayIt';
 import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
-import { buildQuiz, isAnswered } from '../lib/quiz';
+import { buildQuiz, isAnswered, wordRight } from '../lib/quiz';
 import { ladderFor, nextRungLabel, scoreLine } from '../lib/ladder';
 import { A_SITTING, aSitting, catching, dueCount } from '../lib/review';
 import { inTime, testsNear } from '../lib/intime';
@@ -562,6 +562,112 @@ export function Drill() {
 }
 
 /**
+ * A typed-answer question: the definition is on screen, the term is not.
+ *
+ * The first question in this app that is not answered by picking, and the two
+ * decisions worth reading are both about not punishing somebody for the
+ * interface rather than for the answer.
+ *
+ * **The draft is local, and only the submit reaches the store.** A field that
+ * dispatched on every keystroke would put half-written answers through the
+ * marker and make the score depend on how far through typing somebody was.
+ * It also re-renders the whole screen per character, which on a phone is the
+ * difference between a text box and a slideshow.
+ *
+ * **Enter submits, and the button says so.** A soft keyboard's return key is
+ * where a thumb already is, and a form that ignores it is one people submit by
+ * hunting for a button they can only half see above the keyboard. It is a
+ * `form` rather than a button with a key handler for exactly that: the browser
+ * already knows what return means inside one, on every platform, including the
+ * ones that label the key "Go".
+ *
+ * Marked on submit and never again — `answerWord` refuses a second answer, the
+ * same way `pickAnswer` does.
+ */
+function TypeAnswer({
+  answered,
+  typed,
+  right,
+  onAnswer,
+}: {
+  answered: boolean;
+  typed: string | null;
+  right: boolean;
+  onAnswer: (text: string) => void;
+}) {
+  const [draft, setDraft] = useState('');
+
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        // A blank submit is not an answer, and treating it as a wrong one
+        // would score a slip of the thumb against somebody who has not tried
+        // yet. The button is disabled too; this is the keyboard's path.
+        if (answered || !draft.trim()) return;
+        onAnswer(draft);
+      }}
+      style={{ marginTop: 'var(--sp-7)' }}
+    >
+      <label
+        htmlFor="quiz-typed"
+        className="kicker"
+        style={{ display: 'block', marginBottom: 'var(--sp-3)' }}
+      >
+        {answered ? 'What you wrote' : 'Type the term'}
+      </label>
+      <input
+        id="quiz-typed"
+        type="text"
+        value={answered ? (typed ?? '') : draft}
+        onChange={(e) => setDraft(e.target.value)}
+        disabled={answered}
+        autoComplete="off"
+        autoCorrect="off"
+        autoCapitalize="none"
+        spellCheck={false}
+        /*
+         * No autocomplete, no autocorrect, no spellcheck, and each is off for
+         * the same reason: every one of them is a machine offering the answer
+         * to a question about whether you know it. Autocorrect is the worst of
+         * them — it would silently turn a wrong answer into a right one and
+         * the student would never see what they actually typed.
+         */
+        style={{
+          width: '100%',
+          boxSizing: 'border-box',
+          paddingBlock: 'calc(12px * var(--density, 1))',
+          paddingInline: 'calc(13px * var(--density, 1))',
+          fontSize: 'var(--type-base)',
+          fontFamily: 'inherit',
+          color: 'inherit',
+          background: answered ? 'var(--app-track)' : 'transparent',
+          border: `1px solid ${
+            answered ? (right ? 'var(--app-accent)' : 'var(--app-line)') : 'var(--app-line)'
+          }`,
+        }}
+      />
+      {!answered && (
+        <button
+          type="submit"
+          className="btn btn-primary"
+          disabled={!draft.trim()}
+          style={{
+            marginTop: 'calc(10px * var(--density, 1))',
+            width: '100%',
+            height: 44,
+            letterSpacing: '0.1em',
+            textTransform: 'uppercase',
+          }}
+        >
+          Answer
+        </button>
+      )}
+    </form>
+  );
+}
+
+/**
  * A matching question: four terms on the left, their definitions scrambled.
  *
  * Two taps rather than a drag. A drag is the obvious gesture and it is the
@@ -870,7 +976,7 @@ export function Quiz() {
     );
   }
 
-  const answered = isAnswered(current, state.quizPicked, state.quizJoins);
+  const answered = isAnswered(current, state.quizPicked, state.quizJoins, state.quizTyped);
 
   /*
    * The hints this question can offer, and the ones already taken.
@@ -967,6 +1073,24 @@ export function Quiz() {
           answered={answered}
           onHold={(index) => dispatch({ type: 'holdTerm', index })}
           onJoin={(right) => dispatch({ type: 'joinTerm', right })}
+        />
+      )}
+
+      {current.kind === 'word' && (
+        /*
+         * Keyed on the question, so React gives a new question a new input
+         * rather than reusing the last one with its draft still in it. The
+         * draft lives in component state by design (see `TypeAnswer`), and
+         * component state is exactly what survives a re-render when the
+         * element does — which would hand somebody the previous answer
+         * already typed into the next question.
+         */
+        <TypeAnswer
+          key={`${state.quizIdx}:${current.full}`}
+          answered={answered}
+          typed={state.quizTyped}
+          right={state.quizTyped !== null && wordRight(current, state.quizTyped)}
+          onAnswer={(text) => dispatch({ type: 'answerWord', text })}
         />
       )}
 
@@ -1093,7 +1217,9 @@ export function Quiz() {
       {answered && (
         <>
           <Blueprint style={{ paddingBlock: 'calc(13px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))', marginTop: 'var(--sp-7)' }}>
-            <div className="kicker">{current.kind === 'match' ? 'The pairs' : 'In full'}</div>
+            <div className="kicker">
+              {current.kind === 'match' ? 'The pairs' : current.kind === 'word' ? 'The term' : 'In full'}
+            </div>
             <div
               style={{
                 fontSize: 'var(--type-md)',

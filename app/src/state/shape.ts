@@ -1036,6 +1036,16 @@ export interface Ephemeral {
   quizJoins: Record<number, number>;
   /** The left-hand side waiting for a definition, if one is selected. */
   quizHolding: number | null;
+  /**
+   * What was typed on a word question, once it has been submitted.
+   *
+   * `null` until then, which is what `isAnswered` reads — so the draft a
+   * student is still editing lives in the input and never in here. A field
+   * that changed on every keystroke would make `nextQuestion` and the score
+   * depend on how far through typing somebody was, and would put a
+   * half-written answer through the marker.
+   */
+  quizTyped: string | null;
   quizScore: number;
   quizSeed: number;
   /**
@@ -1073,10 +1083,16 @@ export interface Ephemeral {
  *
  * `choice` was the only one for a long time, and the type carried no `kind`
  * at all — a `QuizQuestion` was structurally a four-option multiple choice
- * and nothing else. `docs/STUDY_REQUIREMENTS.md` has asked for the other two
+ * and nothing else. `docs/STUDY_REQUIREMENTS.md` has asked for the others
  * since before the app had a quiz screen.
+ *
+ * `word` is the first that is not answered by picking. Every kind above it
+ * draws the answer on the screen somewhere and asks which one it is;
+ * recognising the right answer among four is a different and easier thing
+ * than producing it, and the exam asks for the second. What that costs is a
+ * marking problem, which `lib/word.ts` is about.
  */
-export type QuizKind = 'choice' | 'truefalse' | 'match';
+export type QuizKind = 'choice' | 'truefalse' | 'match' | 'word';
 
 /** One term and the definition it belongs to, in a matching question. */
 export interface QuizPair {
@@ -1100,6 +1116,17 @@ export interface QuizQuestion {
   claim?: string;
   /** The pairs to join up, in their true order. Only on a match. */
   pairs?: QuizPair[];
+  /**
+   * The other answers the same guide could have wanted. Only on a word.
+   *
+   * Carried on the question rather than looked up when the answer is marked,
+   * because the marking happens in the reducer and the reducer has no
+   * catalogue — and because the list has to be the one this question was
+   * built against. `lib/word.ts` uses it to refuse a near miss that is also a
+   * near miss for something else, which is the guard that makes the typo
+   * tolerance safe rather than generous.
+   */
+  others?: string[];
   /**
    * The order the right-hand column is drawn in, as indexes into `pairs`.
    *
@@ -1591,6 +1618,7 @@ export function initialEphemeral(): Ephemeral {
     quizIdx: 0,
     quizPicked: null,
     quizJoins: {},
+    quizTyped: null,
     quizHolding: null,
     quizScore: 0,
     quizSeed: 1,
@@ -2275,6 +2303,7 @@ export type Action =
   /** One more rung of the hint ladder on the question showing. */
   | { type: 'takeHint' }
   | { type: 'pickAnswer'; index: number }
+  | { type: 'answerWord'; text: string }
   /** Pick up a term on a matching question, or put the held one down. */
   | { type: 'holdTerm'; index: number | null }
   /** Join the held term to this definition, both indexes into `pairs`. */
