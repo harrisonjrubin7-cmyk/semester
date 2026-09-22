@@ -24,6 +24,31 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### The first thing the app said about your semester was about somebody else's
+
+Open the app for the first time and it introduced itself with **"4 syllabi.
+One brain."** On the next screen — *"Dropped in. Read."* — it listed four PDF
+filenames with ticks beside them: `Econ1020_2026_Fall.pdf`,
+`PSCI1104_Trounstine_F26.pdf`, `Sports_Fall26_Syllabus.pdf`, `Syllabus Draft
+8262026.pdf`, adding up to *48 dated obligations across 4 courses*, under a
+button that said **Looks right**. On the Soft layout the opening line was
+*"You have 4 courses, 34 deadlines ahead, and 9 days until your first final."*
+
+None of it was yours. Those are the four sample courses, which ship switched
+on so the app has something to show — and the first run was counting
+everything loaded rather than everything you had given it.
+
+The run now counts your own courses and nothing else. A brand-new install
+opens on *"Your syllabi. One brain."* and **Show me**, the second screen says
+*"Drop one in."*, and the Soft layout says *"Nothing loaded yet. Add a
+syllabus and the semester comes back."*
+
+Add a course and it goes back to counting — *"1 syllabus. One brain."*, your
+filename, your dates — with the sample still on and still not counted. The
+sample semester itself has not changed and is where it was, under Settings.
+
+Nothing to do, and nothing you had is affected.
+
 ### Photograph a score, and it lands in your grades
 
 Top Hat, iClicker and the rest have no way to hand this app your score — there

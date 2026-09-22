@@ -79,10 +79,10 @@ export const SYNC_GROUPS: { says: string; keys: string[] }[] = [
     ],
   },
   {
-    says: 'what you have ticked off, started and attended, and when',
+    says: 'what you have ticked off, started, handed in and attended, and when',
     keys: [
-      'done', 'tickedAt', 'started', 'saved', 'pieces', 'progress',
-      'attendance', 'attendPolicy',
+      'done', 'tickedAt', 'started', 'ready', 'submitted', 'saved', 'pieces',
+      'progress', 'attendance', 'attendPolicy',
     ],
   },
   {

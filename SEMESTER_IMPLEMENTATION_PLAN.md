@@ -273,3 +273,93 @@ supabase/check.sh          # seventeen policy suites
 Phases 4 through 6 are almost entirely row-level security, so `supabase/check.sh`
 is the gate that matters for them: a policy is only ever wrong in a way you
 notice when a second account is involved, which is what those suites are for.
+
+---
+
+# Queued: Part C, the second-pass gap analysis (§226–300)
+
+Seventy-five sections, supplied after the plan above was written. They are
+**queued rather than folded into the phases**, deliberately, and this section
+says why and what the first move is.
+
+## Why queued and not scheduled
+
+§226 opens by forbidding exactly the thing that scheduling them now would be:
+
+> Before adding additional surface-area features, audit everything specified so
+> far.
+
+Its deliverable is a matrix — `SEMESTER_PRODUCT_COMPLETENESS_MATRIX.md` —
+classifying every feature across six states and thirteen defect flags. That
+audit has to happen against the tree before any of §227–300 can be ordered,
+because a third of them look, from a first reading, as though they may already
+be built. Writing them into the phase list before measuring would produce the
+same fault this plan's §0 already records once: **a name standing in for the
+thing.**
+
+## What the first reading suggests, and why it is not a verdict
+
+Marked with the module that would settle each. **None of these has been
+measured yet** — they are where the audit should start, not what it will find.
+
+| § | likely state on a first reading | what would settle it |
+| --- | --- | --- |
+| 263 Draft recovery | **probably built** | `lib/draft.ts` exists and its docblock describes §263 almost exactly |
+| 266 Import center | **probably built** | `lib/extract.ts` (PDF/DOCX/PPTX/text/zip), `lib/intake.ts`, `lib/import-review.ts` previews before committing |
+| 267 Export center | **probably built** | `screens/Export.tsx`, `lib/export.ts`, `lib/docx.ts`, `lib/pdfout.ts` |
+| 270 PDF → study material | **probably built** | the syllabus importer already does this *and* keeps the source reference §270 requires |
+| 258 Offline-first review | **built by construction** | the app is offline-first; `lib/privacy.ts` states it to the student |
+| 261 Conflict resolution | **probably absent, and argued against** | `lib/cloud.ts` says plainly that one record edited on two devices keeps the later edit, and that anything cleverer "is a distributed-systems project" |
+| 229 Universal save | **partly** | `lib/bookmarks.ts` saves *places*, not entities |
+| 247 Time zone system | **probably absent** | no timezone module in `lib/`; #619 fixed one instance in the ICS export |
+| 249–250 i18n and locale | **probably absent** | no translation infrastructure in `lib/` |
+| 236 Command center | **partly built** | `components/Command.tsx` and `lib/launcher.ts` exist; §236's list is wider than what they reach |
+| 251–256 Global search 2.0 | **partly, and local only** | `screens/Search.tsx` makes no network call at all — see below |
+| 230–235, 239–240 | **absent** | collections, share, comments, mentions, activity, inbox, requests — no module, and most need §47.8's social graph first |
+
+Two entries there matter more than their row.
+
+**§261 is a conflict, not a gap.** `lib/cloud.ts` argues its position and warns
+against pretending otherwise in the UI. §261 asks for *Your version / Server
+version / Merge*. That is a fourth item for the conflicts list above, and the
+author's call rather than a program's.
+
+**§258 is the third appearance of the offline promise.** §47.1 wants protected
+routes, §54 wants analytics, and §258 wants the offline-first behaviour this
+app already has. The first two conflict with the promise; the third depends on
+it. Deciding §47.1 therefore decides §258 as well, and they should be settled
+together rather than separately.
+
+## The order, once the matrix exists
+
+1. **§226 — the matrix.** Every feature, six states, thirteen flags. Measured,
+   with the file that settles each row, the way
+   [`SEMESTER_IMPLEMENTATION_STATUS.md`](SEMESTER_IMPLEMENTATION_STATUS.md)
+   was. §226 says *"Do not merely document gaps. Fix them according to
+   priority"* — so the matrix is the first commit, not the whole phase.
+2. **§257 — search authorization, before §251 widens what search reaches.**
+   §257 marks itself *critical*: search must apply authorization before
+   returning records. It is the only section in Part C that is a security
+   requirement rather than a feature.
+
+   Measured: **`screens/Search.tsx` makes no network call.** Search today runs
+   entirely over the device's own data, so §257 is satisfied *vacuously* —
+   there is no shared index, so there is nothing to leak. That is not a
+   property to be proud of; it is a property that disappears the instant §251
+   adds People, Organizations, Jobs or Housing to what search can reach.
+
+   So §257 is not a box already ticked. It is a constraint on §251, and the
+   authorization has to land in the same change that gives search its first
+   server-side record — never after it.
+3. **§227–228 — the connection audit and the entity graph**, which decide the
+   shape everything from §229 onward hangs off. §228 warns against
+   overengineering it into a graph database; this repository's existing
+   registry (`lib/nav.ts`, fifty-nine destinations) is the precedent for how
+   much structure is enough.
+4. **Everything else, by whatever the matrix says is broken rather than
+   merely missing** — §226's own instruction.
+
+## What Part C does not change
+
+The P0 above it. `public.reports` still cannot be read by anybody, and nothing
+in §226–300 supersedes that.

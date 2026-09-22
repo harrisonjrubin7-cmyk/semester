@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
@@ -149,10 +149,6 @@ describe('what it reports about the schema', () => {
     at('supabase', 'migrations', '20260921160100_lti_identity.sql'),
     'utf8',
   );
-  const classmates = readFileSync(
-    at('supabase', 'migrations', '20260901000200_classmates.sql'),
-    'utf8',
-  );
   const adminRoles = readFileSync(
     at('supabase', 'migrations', '20260921161500_roles.sql'),
     'utf8',
@@ -165,8 +161,39 @@ describe('what it reports about the schema', () => {
     return sql.slice(start, sql.indexOf('\n);', start));
   };
 
+  /**
+   * Every column a table has now, not the ones it was created with.
+   *
+   * This used to read one migration and ask what columns it declared, and the
+   * difference cost nothing until a column arrived somewhere else. It did:
+   * `20260921214500_report_status.sql` adds `status` to `public.reports` with
+   * an `alter table`, and the assertion below went on reading
+   * `20260901000200_classmates.sql` and went on passing while its own name —
+   * "still a sink rather than a queue" — had stopped being true.
+   *
+   * A guard that reads one file cannot see a schema. So the `create table` is
+   * the start and every `alter table … add column` in the directory is folded
+   * in after it.
+   */
+  const everyMigration = readdirSync(at('supabase', 'migrations'))
+    .filter((f) => f.endsWith('.sql'))
+    .sort()
+    .map((f) => readFileSync(at('supabase', 'migrations', f), 'utf8'));
+
+  const columnsNow = (table: string): string => {
+    const declared = everyMigration.map((sql) => columnsOf(sql, table)).find(Boolean) ?? '';
+    const added = everyMigration
+      .flatMap((sql) => [
+        ...sql.matchAll(
+          new RegExp(`alter table\\s+public\\.${table}\\s+add column(?: if not exists)? (\\w+)`, 'gi'),
+        ),
+      ])
+      .map((m) => `  ${m[1]} added-later`);
+    return [declared, ...added].join('\n');
+  };
+
   const identityColumns = columnsOf(identity, 'lti_identity');
-  const reportColumns = columnsOf(classmates, 'reports');
+  const reportColumns = columnsNow('reports');
 
   it('found both tables, so their absences are absences', () => {
     // The control. An empty string contains no `status` column either, and
@@ -187,10 +214,22 @@ describe('what it reports about the schema', () => {
     expect(identityColumns).not.toMatch(/\broles?\b/);
   });
 
-  it('public.reports is still a sink rather than a queue', () => {
-    // Item 295 asks for status, category, assignee and resolution. None is
-    // there yet, which is what makes a filed report unanswerable.
-    for (const field of ['status', 'category', 'assigned', 'resolution']) {
+  it('public.reports has a status now, and is no longer only a sink', () => {
+    // Item 295 asks for four things. `status` arrived with
+    // `20260921214500_report_status.sql`, together with a select policy for
+    // `private.is_app_admin()` — so a report can now be read and moved through
+    // `open → under_review → resolved → dismissed`.
+    //
+    // This assertion is the one that was quietly false: it read the creating
+    // migration, the column had been added by a later one, and the test passed
+    // under a name that had stopped describing the schema.
+    expect(reportColumns, 'reports.status').toMatch(/^\s*status\b/m);
+  });
+
+  it('and still has no category, assignee or resolution', () => {
+    // The other three of item 295. A queue an administrator can read is not
+    // yet a case system, and the document should not be able to claim it is.
+    for (const field of ['category', 'assigned', 'resolution']) {
       expect(reportColumns, `reports.${field} now exists`).not.toMatch(
         new RegExp(`^\\s*${field}`, 'm'),
       );
@@ -206,6 +245,61 @@ describe('what it reports about the schema', () => {
      */
     expect(adminRoles).toMatch(/create or replace function private\.is_app_admin\(\)/);
     expect(adminRoles).not.toMatch(/function public\.is_app_admin/);
+  });
+});
+
+describe('what it now claims is built', () => {
+  /*
+   * The document says items 239 and 300 are done, in five places. That claim
+   * can rot in the same direction as the findings above: a revert, or a
+   * renumbering of the migration, and the prose still reads as true.
+   *
+   * The behaviour of the table and the predicate is `supabase/rolegrants.check.sql`'s
+   * job — it has the policies, the two locks and the liveness. This only
+   * checks that the things the document names by name are there, which is the
+   * half a TypeScript suite can see.
+   */
+  const migration = at('supabase', 'migrations', '20260921223000_role_grants.sql');
+
+  it('the migration the document names is there', () => {
+    expect(existsSync(migration), 'role_grants migration').toBe(true);
+    expect(existsSync(at('supabase', 'rolegrants.check.sql')), 'its suite').toBe(true);
+  });
+
+  it('it creates the grant row and the predicate, and the predicate is private', () => {
+    const sql = readFileSync(migration, 'utf8');
+    expect(sql).toMatch(/^create table if not exists public\.role_grants/m);
+    expect(sql).toMatch(/^create or replace function private\.holds_role\(/m);
+    // A `public.holds_role` would be a URL PostgREST publishes, which is the
+    // whole reason for the schema choice. `grants.check.sql` fails on it too.
+    expect(sql).not.toMatch(/function public\.holds_role/);
+  });
+
+  /*
+   * Every pattern below is anchored to the start of a line, and that is not
+   * style. The first version of this block was not, so commenting the revoke
+   * out — `-- revoke all on table public.role_grants …` — still matched it and
+   * the assertion passed on a table open to every visitor. `rolegrants.check.sql`
+   * caught that fault; this file claimed to and did not, which is the worse of
+   * the two failures because it is the one that reads as covered.
+   */
+  it('the table is closed to clients by both locks', () => {
+    const sql = readFileSync(migration, 'utf8');
+    // The outer lock: Supabase's default privileges grant ALL on a new table
+    // in `public` to both API roles, so the revoke is not optional.
+    expect(sql).toMatch(/^revoke all on table public\.role_grants from anon, authenticated;/m);
+    // The inner lock: exactly one policy, and it reads.
+    const policies = [...sql.matchAll(/^create policy .*? on public\.role_grants/gm)];
+    expect(policies).toHaveLength(1);
+    expect(sql).toMatch(/^create policy "your roles are yours to see" on public\.role_grants\s+for select/m);
+  });
+
+  it('the predicate reads the caller and only live grants', () => {
+    const sql = readFileSync(migration, 'utf8');
+    // Each of these is a fault `rolegrants.check.sql` was watched go red under.
+    expect(sql).toMatch(/^[ \t]*and g\.subject = \(select auth\.uid\(\)\)|^[ \t]*where g\.subject = \(select auth\.uid\(\)\)/m);
+    expect(sql).toMatch(/^[ \t]*and g\.revoked_at is null/m);
+    expect(sql).toMatch(/^[ \t]*and \(g\.expires_at is null or g\.expires_at > now\(\)\)/m);
   });
 });
 

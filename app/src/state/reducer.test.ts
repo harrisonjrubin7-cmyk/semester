@@ -105,6 +105,56 @@ describe('ticking things off', () => {
   });
 });
 
+/*
+ * The two marks between finishing something and getting it back, and the one
+ * implication in the store that is deliberately one-way. See `lib/stage.ts`.
+ */
+describe('handing something in', () => {
+  it('ticks it off, because every list decides "missed" from the tick', () => {
+    const next = reducer(blank(), { type: 'markStage', id: 'e1', stage: 'submitted' });
+    expect(next.submitted.e1).toBeGreaterThan(0);
+    expect(next.done.e1).toBe(true);
+    expect(next.tickedAt.e1).toBeGreaterThan(0);
+  });
+
+  it('does not un-tick it when the submission is taken back', () => {
+    // The asymmetry is the whole point. Retracting the claim that the work went
+    // somewhere is not a claim that it was never finished, and an implication
+    // that un-implies itself is how an enum loses a fact.
+    const on = reducer(blank(), { type: 'markStage', id: 'e1', stage: 'submitted' });
+    const off = reducer(on, { type: 'markStage', id: 'e1', stage: 'submitted' });
+    expect('e1' in off.submitted).toBe(false);
+    expect(off.done.e1).toBe(true);
+    expect(off.tickedAt.e1).toBeGreaterThan(0);
+  });
+
+  it('leaves the original tick time alone on something already ticked', () => {
+    const ticked = reducer(blank(), { type: 'toggleDone', id: 'e1' });
+    const when = ticked.tickedAt.e1;
+    const then = reducer(ticked, { type: 'markStage', id: 'e1', stage: 'submitted' });
+    // Re-stamping would move the deadline into the week it was uploaded in on a
+    // report that has already attributed it, which is the one figure
+    // `tickedAt` exists to get right.
+    expect(then.tickedAt.e1).toBe(when);
+  });
+
+  it('implies nothing at all for the other mark', () => {
+    // `ready` is the fact that the work is finished and has not gone anywhere.
+    // A tick on the strength of it would erase the only thing it says.
+    const next = reducer(blank(), { type: 'markStage', id: 'e1', stage: 'ready' });
+    expect(next.ready.e1).toBeGreaterThan(0);
+    expect(next.done.e1).toBeUndefined();
+    expect('e1' in next.tickedAt).toBe(false);
+  });
+
+  it('keeps the two marks apart', () => {
+    const one = reducer(blank(), { type: 'markStage', id: 'e1', stage: 'ready' });
+    const two = reducer(one, { type: 'markStage', id: 'e2', stage: 'submitted' });
+    expect(Object.keys(two.ready)).toEqual(['e1']);
+    expect(Object.keys(two.submitted)).toEqual(['e2']);
+  });
+});
+
 describe('going places', () => {
   it('leaves a way back from a screen that is not a root', () => {
     const there = reducer(blank(), { type: 'go', screen: 'essay' });
@@ -466,6 +516,45 @@ describe('drilling', () => {
     expect(s.drillGot).toBe(1);
     expect(s.reviews.card1.right).toBe(1);
     expect(s.reviews.card1.due).toBeGreaterThan(Date.now());
+  });
+
+  /*
+   * The screen asks two questions and the scheduler was only ever told one.
+   *
+   * `sure` was collected, written into `answers` for the calibration line, and
+   * dropped on the way to `score` — so a card the student *knew* and a card
+   * they had to think about came back on the same day. FSRS is the first
+   * scheduler here that can use the difference, and this is the wire.
+   *
+   * The intervals are the measured ones, not round numbers: a first answer
+   * graded Good starts at the model's 2.3065 days and one graded Easy at
+   * 8.2956, which is `W[2]` and `W[3]`. They are asserted as an ordering with
+   * one hard value so that refitting the weights moves one number here rather
+   * than turning the test red for the right reason.
+   */
+  it('gives a card the student knew a longer interval than one they had to think about', () => {
+    const know = reducer(blank(), { type: 'markCard', got: true, key: 'card1', sure: 'know' });
+    const think = reducer(blank(), { type: 'markCard', got: true, key: 'card1', sure: 'think' });
+    const unasked = reducer(blank(), { type: 'markCard', got: true, key: 'card1' });
+
+    expect(know.reviews.card1.interval).toBe(8);
+    expect(think.reviews.card1.interval).toBeLessThan(know.reviews.card1.interval);
+    // The control: "think" is an ordinary success, so it must land exactly
+    // where the screen that never asks lands. If this drifts, the mapping has
+    // started reading confidence somewhere it was not supposed to.
+    expect(think.reviews.card1.interval).toBe(unasked.reviews.card1.interval);
+  });
+
+  it('keeps a guess coming back tomorrow, and still lets the memory learn', () => {
+    /*
+     * `lib/sure.ts` decides that a right answer the student guessed at comes
+     * back at once, and `lib/review.ts` holds that floor on the *date* only.
+     * Both halves are asserted here because they are the ones that argue with
+     * each other: the day is the product's, the stability is the model's.
+     */
+    const s = reducer(blank(), { type: 'markCard', got: true, key: 'card1', sure: 'guess' });
+    expect(s.reviews.card1.interval).toBe(1);
+    expect(s.reviews.card1.stability).toBeGreaterThan(0);
   });
 
   it('a miss resets the streak but keeps the history', () => {

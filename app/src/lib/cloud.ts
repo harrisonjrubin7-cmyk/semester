@@ -25,6 +25,7 @@
  */
 
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
+import { classify, reference, type Code } from './failure';
 import type { Seen } from '../state/shape';
 import { MOVE_MS, fetchWithin, timedOut, tookTooLong } from './net';
 import { explainSignUp } from './invite';
@@ -361,6 +362,27 @@ export async function signOut(): Promise<void> {
  * recognised is passed through untouched — a wrong guess would be worse than
  * the original.
  */
+/**
+ * The same, from the error itself rather than from its message.
+ *
+ * `state/store.tsx` had the object in scope at both call sites and passed
+ * `e.message`, so PostgREST's `code` and Supabase's `status` were dropped one
+ * line before anything tried to work out what had gone wrong — leaving the
+ * regexes below to guess it back out of English prose.
+ *
+ * This keeps every sentence `explainSyncError` produces, because that advice
+ * is specific and correct and a category cannot replace it: `42P01` is only
+ * "not found" to a taxonomy, while the paragraph below knows it means the
+ * migrations were never applied and says which file to start with. What this
+ * adds is the part support needs — a stable code decided from a stable field,
+ * and a reference to quote — without touching the part students read.
+ */
+export function explainSync(e: unknown, ref = reference()): { said: string; code: Code; ref: string } {
+  const message = e instanceof Error ? e.message : String(e);
+  const code = classify(e);
+  return { said: `${explainSyncError(message)}\n\nReference: ${ref}`, code, ref };
+}
+
 export function explainSyncError(message: string): string {
   if (/schema cache|does not exist|relation .* does not exist/i.test(message)) {
     return (

@@ -34,12 +34,18 @@ import { sources } from '../styles/rules';
  * a key a key.
  *
  * The destructure half catches nothing today, and that is stated rather than
- * implied. `screens/Calendar.tsx` pulls `calYear`, `calMonth` and `calSource`
- * out of `state`, but all three are member-accessed elsewhere too, so the rule
- * passes without it — checked by deleting that half and watching the test stay
- * green. It is kept because the field that is destructured and nothing else is
- * the false positive this rule cannot afford: a census that calls a live field
- * dead is one people stop believing, and then delete.
+ * implied. `screens/Calendar.tsx` pulls `calSource` out of `state`, and it is
+ * member-accessed elsewhere too, so the rule passes without it — checked by
+ * deleting that half and watching the test stay green. It is kept because the
+ * field that is destructured and nothing else is the false positive this rule
+ * cannot afford: a census that calls a live field dead is one people stop
+ * believing, and then delete.
+ *
+ * This paragraph named `calYear` and `calMonth` alongside it until the pass
+ * that merged the calendar's position onto `calDay` deleted both. The
+ * assertion below was updated then and this sentence was not, which is the
+ * same fault the specimen note beneath it warns about — one file saying two
+ * things about the same fields.
  *
  * ## What it cannot see
  *

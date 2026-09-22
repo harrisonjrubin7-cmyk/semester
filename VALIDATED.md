@@ -12,14 +12,13 @@ command under it can.**
 
 ## How to read this
 
-Everything in the left column was measured on **`42a36d8`, 21 September 2026**,
+Everything in the left column was measured on **`1c305ee`, 21 September 2026**,
 with the command beside it. Everything in the right column has **no evidence in
 this repository or anywhere else**, and saying so is the point of the document.
 
 **Every figure carries a commit, because these move.** The test count alone took
-five values in one afternoon — 11,236 → 11,265 → 11,414 → 11,648 → 11,788 — and the
-number of files the RLS suite lives in went 13 → 14 → 17 in about ninety
-minutes. A figure without a commit beside it is not a fact about the product,
+six values in one afternoon — 11,236 → 11,265 → 11,414 → 11,648 → 11,788 → 12,046 — and the
+number of files the RLS suite lives in went 13 → 14 → 17 → 19 in a few hours. A figure without a commit beside it is not a fact about the product,
 it is a fact about the afternoon somebody wrote the slide.
 
 ---
@@ -28,12 +27,13 @@ it is a fact about the afternoon somebody wrote the slide.
 
 | Claim | Evidence | Re-check with |
 | --- | --- | --- |
-| **The product is built and runs** | 11,788 tests passing across 595 files, 10 skipped, 0 failing | `cd app && npm test` |
-| **The tests do not depend on each other** | The same suite passes in a randomised order (seed 1790023884704), which is a different fault from a broken test and a real one | `npm run test:shuffle` |
+| **The product is built and runs** | 12,046 tests passing across 615 files, 10 skipped, 0 failing | `cd app && npm test` |
+| **The tests do not depend on each other** | The same suite passes in a randomised order (seed 1790028722879), which is a different fault from a broken test and a real one | `npm run test:shuffle` |
 | **It compiles and ships** | Typecheck, lint (including style and accessible-label audits) and production build all exit 0 | `npx tsc -b`, `npm run lint`, `npm run build` |
-| **Row-level security is enforced and checked** | 89 `create policy` statements; **209 assertions across 17 `.check.sql` files** that create real users and assert a stranger can neither read nor write, then roll back | `grep -c 'create policy' supabase/migrations/*` |
-| **The schema can be rebuilt from the repository** | 20 migrations, **none empty**; the 14 migrations applied to production outside the repo are recorded byte-for-byte in `supabase/history/` | `find supabase/migrations -name '*.sql' -empty` |
+| **Row-level security is enforced and checked** | 93 `create policy` statements; **241 assertions across 19 `.check.sql` files** that create real users and assert a stranger can neither read nor write, then roll back | `grep -c 'create policy' supabase/migrations/*` |
+| **The schema can be rebuilt from the repository** | 37 migrations, **none empty**; the 15 migrations applied to production outside the repo are recorded byte-for-byte in `supabase/history/` | `find supabase/migrations -name '*.sql' -empty` |
 | **Every commit is gated** | `ci.yml` runs six checks on every pull request: typecheck, lint, university typecheck, video typecheck, the suite, and the suite again in other timezones | `.github/workflows/ci.yml` |
+| **The instrument for the missing number is already built** | `ANALYTICS.md` defines activation, weekly active use and **30-day retention**, with the SQL for each; `lib/activity.ts` and `supabase/migrations/20260921151000_activity.sql` implement them. One table, three marks, no screen names or titles or counts | `cat ANALYTICS.md` |
 | **The engineering culture is real, not claimed** | Structural guards catch defects that runtime probes miss — during this review two of them caught errors in work being written *for* this review, and a third caught a broken citation on `main` | `app/src/lib/migrationcitations.test.ts` |
 
 ### The differentiating features exist and are reachable
@@ -125,9 +125,21 @@ Rivals that paywall the syllabus upload itself cannot say either half.
 
 ## What would move a row from right to left, cheapest first
 
-1. **Ten real users with a 30-day retention number.** This is the single
-   highest-value missing fact. It outweighs another quarter of modelling, and it
-   is the one an investor will ask for first.
+1. **Ten real users with a 30-day retention number.** The single highest-value
+   missing fact, the one an investor asks for first, and — this is the part
+   worth knowing before anybody scopes work for it — **it needs no engineering
+   at all.**
+
+   `ANALYTICS.md` already defines the three figures, already holds the query
+   for each, and already reasons about a pilot of exactly ten people. The
+   table, the marks and the one call site that writes them are built and
+   shipped. Nothing is missing from the instrument; what is missing is people
+   walking through it.
+
+   So this item is not a sprint. It is ten students and thirty days, and the
+   number falls out of a query somebody runs by hand — which `ANALYTICS.md`
+   says is deliberately a person's job, with no dashboard and no third party
+   holding a copy.
 2. **A soft paywall or 20–30 structured pricing interviews.** Converts
    *willingness to pay* from assumption to observation.
 3. **Two or three ambassadors at one campus, with tracked installs.** Tests the
