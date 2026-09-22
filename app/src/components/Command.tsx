@@ -64,6 +64,7 @@ import { actionsFor, flatten, hitKey, landingOf } from '../lib/openhit';
 import { DESKTOP, useMedia } from '../lib/media';
 import { offered, screenName } from '../lib/nav';
 import { secondLine } from '../lib/dim';
+import { useRecentScreens } from '../lib/trail.hook';
 import { Wordmark } from './Brand';
 import { AskIcon, ClocksIcon, Search as SearchIcon, SpeakerIcon, SpeakerOffIcon } from './Icons';
 import { TabGlyph } from './TabIcon';
@@ -96,6 +97,7 @@ export function Command({ onClose }: { onClose: () => void }) {
   const { state, dispatch, catalog, school } = useStore();
   const now = useNow();
   const ai = useAI();
+  const recentScreens = useRecentScreens();
   /* The shell owns search when it is the navigation: two search fields on
      screen at once was the audit's fix #10. */
   const modern = useModernShell();
@@ -360,11 +362,11 @@ export function Command({ onClose }: { onClose: () => void }) {
     const all = offered(school.capabilities, state.role);
     const seen = new Set<Screen>();
     const out: { screen: Screen; label: string }[] = [];
-    for (const screen of state.recent) {
-      const d = all.find((x) => x.screen === screen);
-      if (!d || seen.has(screen)) continue;
-      seen.add(screen);
-      out.push({ screen, label: d.short ?? d.label });
+    for (const screenName of recentScreens) {
+      const d = all.find((x) => x.screen === screenName);
+      if (!d || seen.has(d.screen)) continue;
+      seen.add(d.screen);
+      out.push({ screen: d.screen, label: d.short ?? d.label });
     }
     for (const d of all) {
       if (seen.has(d.screen)) continue;
@@ -372,7 +374,7 @@ export function Command({ onClose }: { onClose: () => void }) {
       out.push({ screen: d.screen, label: d.short ?? d.label });
     }
     return out;
-  }, [school.capabilities, state.role, state.recent]);
+  }, [school.capabilities, state.role, recentScreens]);
 
   const onSearchPage = sent.trim() === '';
   /** The tab the strip is on, which is what the app behind this is showing. */

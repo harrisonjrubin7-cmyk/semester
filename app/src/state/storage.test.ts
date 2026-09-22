@@ -44,7 +44,7 @@ function withStorage<T>(raw: string | null, run: () => T): T {
 /** Every field the app will call an array method on. */
 const LISTS = [
   'tasks', 'appointments', 'notes', 'updates', 'feeds', 'feedEvents', 'extraLinks',
-  'courses', 'places', 'commitments', 'timers', 'alarms', 'courseOrder', 'recent',
+  'courses', 'places', 'commitments', 'timers', 'alarms', 'courseOrder',
   'sittings', 'sources', 'registrar', 'spent', 'windows', 'costs', 'balances', 'residences',
 ] as const;
 
@@ -74,10 +74,9 @@ describe('opening the app on damaged storage', () => {
   });
 
   it('keeps a good list rather than emptying it', () => {
-    const raw = JSON.stringify({ tasks: [{ id: 'a' }, { id: 'b' }], recent: ['home', 'courses'] });
+    const raw = JSON.stringify({ tasks: [{ id: 'a' }, { id: 'b' }] });
     const state = withStorage(raw, () => loadPersisted());
     expect(state.tasks).toHaveLength(2);
-    expect(state.recent).toEqual(['home', 'courses']);
   });
 
   /*
@@ -166,13 +165,13 @@ describe('opening the app on damaged storage', () => {
   it('keeps the rows either side of a hole', () => {
     const raw = JSON.stringify({
       tasks: [{ id: 'a' }, null, { id: 'b' }],
-      recent: ['home', null, 'courses'],
+      courseOrder: ['home', null, 'courses'],
     });
     const state = withStorage(raw, () => loadPersisted());
     expect(state.tasks.map((t) => t.id)).toEqual(['a', 'b']);
-    // Strings, not objects: `courseOrder` and `recent` are why the filter is
+    // Strings, not objects: `courseOrder` and `visited` are why the filter is
     // for holes rather than for things that are objects.
-    expect(state.recent).toEqual(['home', 'courses']);
+    expect(state.courseOrder).toEqual(['home', 'courses']);
   });
 });
 
@@ -255,7 +254,6 @@ describe('a save that is wrong in one place', () => {
       () => loadPersisted(),
     );
     expect(Object.keys(kept.done).length, 'the ticked deadlines').toBe(3);
-    expect(kept.recent.length, 'where you have been').toBe(3);
     expect(kept.dayBudget, 'the day budget').toBe(5);
     expect(kept.nav, 'the chosen navigation').toBe('shelves');
   });

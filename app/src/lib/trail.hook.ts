@@ -1,3 +1,4 @@
+import { useSyncExternalStore } from 'react';
 import { TRAIL_KEY, readTrail, stepped, writeTrail, type Visit } from './trail';
 import type { Screen } from './types';
 
@@ -34,6 +35,8 @@ import type { Screen } from './types';
  */
 
 let held: Visit[] | null = null;
+let cachedRecent: string[] | null = null;
+const subscribers = new Set<() => void>();
 
 function load(): Visit[] {
   try {
@@ -54,6 +57,7 @@ export function trail(): Visit[] {
 function commit(next: Visit[]): void {
   if (next === trail()) return;
   held = next;
+  cachedRecent = null;
   try {
     localStorage.setItem(TRAIL_KEY, writeTrail(next));
   } catch {
@@ -61,6 +65,43 @@ function commit(next: Visit[]): void {
     // were last Tuesday is not worth failing a save over, so it is dropped
     // quietly and the trail holds for this session only.
   }
+  subscribers.forEach((s) => s());
+}
+
+function subscribe(listener: () => void): () => void {
+  subscribers.add(listener);
+  return () => subscribers.delete(listener);
+}
+
+/** Hook: the trail, and re-render when it changes. */
+export function useTrail(): Visit[] {
+  return useSyncExternalStore(subscribe, trail);
+}
+
+/**
+ * Recent screens, in order of most recent first, as a list of screen names.
+ *
+ * Deduped — each screen appears once, in the order it was last visited.
+ * Matches the shape of the old `state.recent` so it can be used in place of it.
+ * Cached to avoid creating a new array on every call.
+ */
+export function recentScreens(): string[] {
+  if (cachedRecent) return cachedRecent;
+  const seen = new Set<string>();
+  const screens: string[] = [];
+  for (const visit of trail()) {
+    if (!seen.has(visit.screen)) {
+      seen.add(visit.screen);
+      screens.push(visit.screen);
+    }
+  }
+  cachedRecent = screens;
+  return screens;
+}
+
+/** Hook: recent screens, re-rendering when the trail changes. */
+export function useRecentScreens(): string[] {
+  return useSyncExternalStore(subscribe, recentScreens);
 }
 
 /** The app is now at this place. See the header for why there is one caller. */
@@ -82,6 +123,7 @@ export function recordVisit(screen: Screen, id: string, at: number = Date.now())
  */
 export function forgetTrail(): void {
   held = null;
+  cachedRecent = null;
   try {
     localStorage.removeItem(TRAIL_KEY);
   } catch {

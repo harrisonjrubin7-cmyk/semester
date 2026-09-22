@@ -16,20 +16,6 @@ import { ONB_STEPS } from '../../data/misc';
 import { firstScreen } from '../../lib/chrome';
 
 /**
- * Where you have been lately, for the top of the directory.
- *
- * Kept here rather than in the Me screen because `push` is the one funnel
- * every route in the app goes through — a list built anywhere else would miss
- * whichever way somebody actually got there. Screens are filtered to real
- * destinations at render time rather than on the way in, so the list follows
- * the directory when the directory changes instead of holding ids that no
- * longer mean anything.
- */
-function remember(recent: Screen[], screen: Screen): Screen[] {
-  return [screen, ...recent.filter((s) => s !== screen)].slice(0, 12);
-}
-
-/**
  * The two panels that must never outlive the screen they were opened over.
  *
  * `finder` and `apps` are drawn above everything, are not persisted, and have
@@ -60,10 +46,10 @@ export function push(state: State, screen: Screen): State {
     ...state,
     screen,
     history,
-    recent: remember(state.recent, screen),
     // Written on the way in rather than counted: how many times somebody
     // opened the map is not the app's business, and whether they ever did is
     // the only part that makes a difference to what it offers them.
+    // Note: recent navigation is now tracked in lib/trail.hook.ts, not here.
     /*
      * Whether, not when.
      *

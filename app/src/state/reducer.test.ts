@@ -162,14 +162,6 @@ describe('going places', () => {
     expect(deep.history).toContain('essay');
   });
 
-  it('remembers where you have been, newest first and without repeats', () => {
-    let s = blank();
-    for (const screen of ['essay', 'exam', 'essay'] as const) {
-      s = reducer(s, { type: 'go', screen });
-    }
-    expect(s.recent.slice(0, 2)).toEqual(['essay', 'exam']);
-  });
-
   it('going nowhere is not a move', () => {
     const s = reducer(blank(), { type: 'go', screen: 'essay' });
     expect(reducer(s, { type: 'go', screen: 'essay' })).toBe(s);

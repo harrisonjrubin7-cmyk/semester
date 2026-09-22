@@ -54,6 +54,7 @@ import {
 import { MOVE_HINT, useMovable } from '../lib/arrange';
 import { currentLook } from '../state/shape';
 import { lately } from '../lib/nav';
+import { useRecentScreens } from '../lib/trail.hook';
 import { useBottomChrome } from '../lib/bottomchrome.hook';
 import type { Screen } from '../lib/types';
 
@@ -240,6 +241,7 @@ export function Springboard() {
   const now = useNow();
   const [page, setPage] = useState(0);
   const [query, setQuery] = useState('');
+  const recentScreens = useRecentScreens();
 
   const look = currentLook(state);
   const pages = arrangedPages(school.capabilities, look.boardOrder, state.role);
@@ -274,7 +276,7 @@ export function Springboard() {
   // Against the dock rather than the tab bar: this layout's own navigation is
   // the dock, and a shortcut to something already one tap away is noise. Same
   // rule as the Me screen, from the same place. See `lib/nav.ts`.
-  const recent = lately(state.recent, dock, school.capabilities, [], 4, state.role);
+  const recent = lately(recentScreens, dock, school.capabilities, [], 4, state.role);
 
   /*
    * No `<Page>` here, deliberately.

@@ -871,7 +871,6 @@ export const NOT_IN_BACKUP: Record<string, string> = {
   cleared: 'whether the sample term has been cleared',
   countScreens: 'whether screen opens are counted at all',
   lastSync: 'when this device last reached the account',
-  recent: 'the screens opened lately',
   registered: 'whether this device registered for reminders',
   schemaVersion: 'the shape the file is in, written by the backup itself',
   seenOnboarding: 'whether onboarding has run here',

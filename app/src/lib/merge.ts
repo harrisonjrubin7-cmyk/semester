@@ -380,9 +380,6 @@ export const STRATEGY: Record<string, Strategy> = {
   // Who this person is. About them rather than about the device, so a role
   // chosen on the laptop is the role on the phone.
   role: 'theirs',
-  // Where you have been lately, newest first. Interleaving two devices'
-  // histories would make it a list of nowhere in particular.
-  recent: 'theirs',
   // Not `theirs`: opening a screen on a laptop is still having opened it, and
   // a phone that syncs later should not un-see it.
   visited: 'ticks',
