@@ -303,6 +303,81 @@ describe('what it now claims is built', () => {
   });
 });
 
+describe('the capability matrix it now claims is built', () => {
+  /*
+   * Item 299 and the fourth foundation. Same reason as the block above — the
+   * document says "built" in five places and a revert would leave the prose
+   * reading true — and the same anchoring, because the last time this file
+   * asserted a statement's presence unanchored, `-- ` in front of it satisfied
+   * the pattern.
+   *
+   * What the matrix *does* is `supabase/capabilities.check.sql`'s job: the two
+   * locks, the liveness, sets-not-tiers, and that an `app_admins` row carries
+   * no capability. This is only the half a TypeScript suite can see.
+   */
+  const migration = at('supabase', 'migrations', '20260922012000_capabilities.sql');
+
+  it('the migration and its suite are there', () => {
+    expect(existsSync(migration), 'capabilities migration').toBe(true);
+    expect(existsSync(at('supabase', 'capabilities.check.sql')), 'its suite').toBe(true);
+  });
+
+  it('it creates the two vocabularies, the matrix and the predicate', () => {
+    const sql = readFileSync(migration, 'utf8');
+    for (const table of ['app_roles', 'app_capabilities', 'role_capabilities']) {
+      expect(sql, table).toMatch(
+        new RegExp(`^create table if not exists public\\.${table}`, 'm'),
+      );
+    }
+    expect(sql).toMatch(/^create or replace function private\.has_capability\(/m);
+    // A `public.has_capability` would be a URL PostgREST publishes — the same
+    // reason `holds_role` and `is_app_admin` are both in `private`.
+    expect(sql).not.toMatch(/function public\.has_capability/);
+  });
+
+  it('the three reference tables are closed to clients by both locks', () => {
+    const sql = readFileSync(migration, 'utf8');
+    for (const table of ['app_roles', 'app_capabilities', 'role_capabilities']) {
+      expect(sql, `revoke on ${table}`).toMatch(
+        new RegExp(`^revoke all on table public\\.${table}\\s+from anon, authenticated;`, 'm'),
+      );
+    }
+    // Every policy on them reads. One that wrote would let a client grant
+    // itself `platform:configure` without touching `role_grants`.
+    const policies = [...sql.matchAll(/^create policy .*? on public\.(app_roles|app_capabilities|role_capabilities)\n\s+for (\w+)/gm)];
+    expect(policies).toHaveLength(3);
+    expect(policies.map((m) => m[2])).toEqual(['select', 'select', 'select']);
+  });
+
+  it('the predicate reads the matrix, the caller, and only live grants', () => {
+    const sql = readFileSync(migration, 'utf8');
+    expect(sql).toMatch(/^\s*join public\.role_capabilities rc on rc\.role = g\.role/m);
+    expect(sql).toMatch(/^\s*and rc\.capability = want_capability/m);
+    expect(sql).toMatch(/^\s*where g\.subject = \(select auth\.uid\(\)\)/m);
+    expect(sql).toMatch(/^\s*and g\.revoked_at is null/m);
+    expect(sql).toMatch(/^\s*and \(g\.expires_at is null or g\.expires_at > now\(\)\)/m);
+  });
+
+  it('the twenty roles are one list, not two', () => {
+    /*
+     * The document's claim, and the thing a later migration could undo by
+     * re-adding the constraint "for safety": the check constraint is dropped
+     * and a foreign key to `app_roles` replaces it.
+     */
+    const sql = readFileSync(migration, 'utf8');
+    expect(sql).toMatch(/^\s*drop constraint if exists role_grants_role_check;/m);
+    expect(sql).toMatch(/references public\.app_roles \(role\)/);
+  });
+
+  it('the reports policies ask for a capability rather than the flag', () => {
+    const sql = readFileSync(migration, 'utf8');
+    expect(sql).toMatch(/using \(private\.has_capability\('report:read'\)\)/);
+    expect(sql).toMatch(/using \(private\.has_capability\('moderation:action'\)\)/);
+    // The point of the split: this migration must not reintroduce the boolean.
+    expect(sql).not.toMatch(/^[ \t]*using \(private\.is_app_admin\(\)\)/m);
+  });
+});
+
 describe('the specification it continues', () => {
   const items = [...spec.matchAll(/^# (\d+)\./gm)].map((m) => Number(m[1]));
 

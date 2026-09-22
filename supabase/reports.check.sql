@@ -1,7 +1,7 @@
 -- Who may read a report, and the four states one can be in.
 --
 -- `20260921214500_report_status.sql` changed `public.reports` from a table
--- nobody could read into one administrators can. That is a privilege
+-- nobody could read into one moderators can. That is a privilege
 -- boundary, and a privilege boundary is only ever wrong in a way you notice
 -- when a second account is involved — so this walks four of them.
 --
@@ -12,8 +12,8 @@
 --     one worth stating: the obvious "let a reporter see their own" is
 --     refused on purpose, because a row names a third party.
 --   * A signed-out visitor reads nothing and writes nothing.
---   * An administrator reads every report, and may move its status.
---   * An administrator may **not** rewrite what was said — not the reason, not
+--   * A moderator reads every report, and may move its status.
+--   * A moderator may **not** rewrite what was said — not the reason, not
 --     the copy, not who it was about. That is a *column* grant rather than a
 --     policy, because row-level security chooses rows and says nothing about
 --     columns; the first draft of the migration got this wrong and claimed
@@ -26,8 +26,8 @@
 -- Every assertion above except one is "cannot". A policy that refused
 -- *everybody* would satisfy all of them and would also be completely broken —
 -- the queue would still be unreadable, which is the defect this migration was
--- written to fix. So the administrator read is asserted by count, against a
--- known number of rows, and an administrator who reads zero fails this file.
+-- written to fix. So the moderator read is asserted by count, against a
+-- known number of rows, and a moderator who reads zero fails this file.
 --
 -- That is the same shape `admins.check.sql` uses for `is_app_admin()` itself:
 -- "A guard that answers false for everyone protects everything and is
@@ -94,7 +94,20 @@ begin
   alice := pg_temp.newuser('alice@vanderbilt.edu');
   bob   := pg_temp.newuser('bob@vanderbilt.edu');
 
-  insert into public.app_admins (user_id, note) values (admin, 'reports check');
+  -- A moderator, by capability rather than by flag.
+  --
+  -- This was `insert into public.app_admins`, because when this file was
+  -- written `private.is_app_admin()` was the only gate there was.
+  -- `20260922012000_capabilities.sql` repointed both policies on this table at
+  -- `private.has_capability('report:read')` and `('moderation:action')`, which
+  -- `moderator` carries and an `app_admins` row does not — `app_admins` keeps
+  -- its own narrower job, "who may open the administrator dashboard".
+  --
+  -- The control below is what caught the change: with the old setup it read 0
+  -- reports instead of 2, which is the suite doing exactly what its header says
+  -- the count is for.
+  insert into public.role_grants (subject, role, scope_kind, scope_id, provenance)
+  values (admin, 'moderator', 'platform', '', 'platform');
 
   -- ── A student files one ─────────────────────────────────────────────────
   perform pg_temp.become(alice);
@@ -116,13 +129,13 @@ begin
   select count(*) into n from public.reports;
   perform pg_temp.counted('a signed-out visitor reads no reports', n, 0);
 
-  -- ── The administrator, and the control ──────────────────────────────────
+  -- ── The moderator, and the control ──────────────────────────────────
   --
   -- Two rows went in above. If this reads 0 the policy refuses everybody, the
   -- queue is still unreadable, and every "cannot" asserted above is worthless.
   perform pg_temp.become(admin);
   select count(*) into n from public.reports;
-  perform pg_temp.counted('an administrator reads every report — THE CONTROL', n, 2);
+  perform pg_temp.counted('a moderator reads every report — THE CONTROL', n, 2);
 
   -- A new report is open.
   select status into st from public.reports where reporter = alice;
@@ -131,7 +144,7 @@ begin
   -- And may be moved along, through each of the other three.
   update public.reports set status = 'under_review' where reporter = alice;
   select status into st from public.reports where reporter = alice;
-  perform pg_temp.said('an administrator may take it under review', st, 'under_review');
+  perform pg_temp.said('a moderator may take it under review', st, 'under_review');
 
   update public.reports set status = 'resolved' where reporter = alice;
   select status into st from public.reports where reporter = alice;
@@ -149,7 +162,7 @@ begin
     raise notice 'ok  a status outside the four is refused';
   end;
 
-  -- ── What an administrator may not do ────────────────────────────────────
+  -- ── What a moderator may not do ────────────────────────────────────
   --
   -- The complaint is what was said at the time, and the reviewer is the last
   -- person who should be able to edit it. This is asserted rather than noted,
@@ -161,21 +174,21 @@ begin
   -- chooses rows and has nothing to say about columns.
   begin
     update public.reports set reason = 'something else entirely' where reporter = alice;
-    raise exception 'FAILED: an administrator rewrote the complaint';
+    raise exception 'FAILED: a moderator rewrote the complaint';
   exception when insufficient_privilege then
-    raise notice 'ok  an administrator cannot rewrite the reason';
+    raise notice 'ok  a moderator cannot rewrite the reason';
   end;
 
   begin
     update public.reports set copy = 'a different message' where reporter = alice;
-    raise exception 'FAILED: an administrator rewrote the copy of the message';
+    raise exception 'FAILED: a moderator rewrote the copy of the message';
   exception when insufficient_privilege then
     raise notice 'ok  nor the copy kept with it';
   end;
 
   begin
     update public.reports set about = admin where reporter = alice;
-    raise exception 'FAILED: an administrator changed who a report was about';
+    raise exception 'FAILED: a moderator changed who a report was about';
   exception when insufficient_privilege then
     raise notice 'ok  nor who it was about';
   end;
@@ -188,7 +201,7 @@ begin
 
   -- ── Back to a student, with rows now present ────────────────────────────
   --
-  -- Re-checked after the administrator's writes rather than only before them:
+  -- Re-checked after the moderator's writes rather than only before them:
   -- a policy that leaked only once a row had been touched would pass the
   -- first check and fail here.
   perform pg_temp.become(alice);

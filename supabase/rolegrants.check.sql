@@ -90,14 +90,24 @@ exception
     raise notice 'ok  % (refused outright)', what;
 end $$;
 
-/** A statement the *schema* must refuse, whoever runs it. */
+/**
+ * A statement the *schema* must refuse, whoever runs it.
+ *
+ * `foreign_key_violation` is on the list because of what
+ * `20260922012000_capabilities.sql` did to the role vocabulary: it moved the
+ * twenty values out of a `check` constraint and into `public.app_roles`, so a
+ * role that is not one raises 23503 where it used to raise 23514. The schema
+ * got stricter and this helper had to catch up — the first run after that
+ * migration failed here, on `wizard`, which is the assertion working.
+ */
 create or replace function pg_temp.invalid(what text, stmt text)
 returns void language plpgsql as $$
 begin
   execute stmt;
   raise exception 'FAILED: % — the row was accepted', what;
 exception
-  when check_violation or unique_violation or not_null_violation then
+  when check_violation or unique_violation or not_null_violation
+    or foreign_key_violation then
     raise notice 'ok  % (rejected)', what;
 end $$;
 

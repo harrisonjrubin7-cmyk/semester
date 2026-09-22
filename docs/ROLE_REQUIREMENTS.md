@@ -100,7 +100,7 @@ Resolved against the tree. "Present" means the file or table exists and does the
 | 291–292 registrar | Process translation | `app/src/lib/registrar.ts`, `app/src/lib/transcript.ts`, `app/src/screens/Registrar.tsx` |
 | 294–296 moderation | Case system | **Partly.** `public.reports` gained `status` (`open`/`under_review`/`resolved`/`dismissed`) and a select policy for `private.is_app_admin()` in `20260921214500_report_status.sql`, so a report can now be read and moved. Still no category, assignee or resolution, and **no screen** — a queue nobody has opened is not yet a case system |
 | 297–298 platform admin | Differentiated capability | `public.app_admins` + `private.is_app_admin()`, one tier |
-| 299 permission matrix | Central definitions | Still nothing central. `app/src/lib/school.ts` (`allowed`) and `app/src/lib/role.ts` (`forRole`) gate *screens*, and both say they are not permissions. `private.holds_role()` is what a capability map would be built on |
+| 299 permission matrix | Central definitions | **Built** — `public.role_capabilities` in `supabase/migrations/20260922012000_capabilities.sql`, read by `private.has_capability()`. The two screen gates are unchanged and still are not permissions |
 | 300 resource authorization | Server-side ownership check | **Built** — `private.holds_role()`, beside `family_grants`' policies and `private.in_group()` |
 | 301 impersonation | Controlled support mode | Nothing, which is the right amount for now |
 
@@ -799,7 +799,17 @@ Three notes on where that central place is, given what the repository already ha
 
 - There are currently two screen gates and neither is a permission, which both say so in their own comments: `allowed` in `app/src/lib/school.ts` decides whether a school has a feature at all, and `forRole` in `app/src/lib/role.ts` decides whether a screen is addressed to this person. `lib/role.ts` states the rule plainly — "this file will be what the client asks for, never what grants it" — and the permission matrix must not be built on top of either, because a third client-side gate is not an authorization model.
 - The definitions belong somewhere both halves can read. `packages/contract` and `packages/institution` exist for exactly that reason, and `UNIVERSITY_ROLES` already lives in the second one.
-- The matrix has to be enforced in Postgres, because that is where the data is and row-level security is what protects it. The repository has seventeen policy suites under `supabase/*.check.sql` asserting what each role can and cannot reach; a permission matrix that is not expressed as policies is a matrix nothing checks, and `grants.check.sql`'s allowlist is the pattern — every reachable function named deliberately, so a new one is refused until somebody decides which side it is on.
+- The matrix has to be enforced in Postgres, because that is where the data is and row-level security is what protects it. A permission matrix that is not expressed as policies is a matrix nothing checks, and `grants.check.sql`'s allowlist is the pattern — every reachable function named deliberately, so a new one is refused until somebody decides which side it is on.
+
+**Built**, as data rather than as code: `public.role_capabilities` in `supabase/migrations/20260922012000_capabilities.sql`, with `public.app_roles` and `public.app_capabilities` as its two vocabularies and `private.has_capability(capability, scope_kind, scope_id)` as the one question a policy asks. Nine capabilities, fifteen rows. `supabase/capabilities.check.sql` is the suite.
+
+Three decisions in it are worth carrying forward, because each is a thing a later migration could quietly undo:
+
+- **The twenty roles are now one list, not two.** They were a `check` constraint on `role_grants.role`; they are `public.app_roles`, both tables point at it by foreign key, and the constraint is gone. A value repeated in two places is a value that will disagree with itself.
+- **Sets, not tiers.** `organization_member` carries `organization:read` and not `member:manage`; `organization_admin` carries both. That is item 256 held by the seeded matrix rather than by a comment, and it is asserted.
+- **`platform_admin` is not a superuser.** It carries three capabilities and not a fourth. A role that implicitly held everything would be the boolean again under a longer name, which is what item 239 opens by refusing.
+
+The two capabilities item 299 lists under `USER` — `profile:read` and `profile:update:self` — are deliberately **not** in the vocabulary. They belong to every account, are already carried by the policies and column grants on `public.profiles`, and putting them here would invent a grant nobody should need and make the predicate answer false for a thing everybody may do.
 
 # 300. Resource-level authorization
 
@@ -836,7 +846,9 @@ Four things come first, and everything else in this document reads or writes the
 1. ~~**The grant row** (item 239)~~ — **done.** `public.role_grants`, in `supabase/migrations/20260921223000_role_grants.sql`. Person, role, scope, provenance, expiry, revocation; no write route through the API.
 2. ~~**The predicate** (item 300)~~ — **done.** `private.holds_role()`, in the same migration, with `supabase/rolegrants.check.sql` as the suite.
 3. **Persisting what the LTI launch already says** (items 246–250, 274) — the only institutionally-vouched role data the platform receives, currently discarded per request. Every faculty, TA, advisor and department item is blocked on it, it is the smallest of the four, and it now has somewhere to be written to: a launch carrying `Instructor` becomes a `faculty` grant over that course with `provenance = 'institution'`.
-4. **Splitting `private.is_app_admin()`** into named capabilities (items 294–299) — before, not after, the moderator queue and the platform dashboard are built against it, because both will otherwise be written to ask a boolean. `role_grants` can already carry `moderator` and `platform_admin`; what is missing is the capability map of item 299 and the migration that moves the existing admin rows onto it.
+4. ~~**Splitting `private.is_app_admin()`** into named capabilities (items 294–299)~~ — **done**, and only just in time. `20260921214500_report_status.sql` had already given `public.reports` two policies asking `private.is_app_admin()`, because it was the only gate there was; `20260922012000_capabilities.sql` repoints both at `report:read` and `moderation:action`. Those two are separate on purpose, so a reviewer-only role is expressible without a second boolean.
+
+   `private.is_app_admin()` is **not** deprecated and is not consulted by the capability path. It keeps the narrower job its own comment gives it — "who may open the administrator dashboard" — and an `app_admins` row now carries no capability at all, which `capabilities.check.sql` asserts as a measurement rather than an intention. Whoever grants the first moderator adds a `role_grants` row.
 
 After those, the roles that need no institutional integration are the ones to build first, because they exercise the whole architecture without waiting on anybody: **tutor** (item 254) and **organization officer and admin** (items 255–258). Both are students holding a second role over a scope, which is item 239's case in its most ordinary form.
 
