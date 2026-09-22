@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
@@ -149,10 +149,6 @@ describe('what it reports about the schema', () => {
     at('supabase', 'migrations', '20260921160100_lti_identity.sql'),
     'utf8',
   );
-  const classmates = readFileSync(
-    at('supabase', 'migrations', '20260901000200_classmates.sql'),
-    'utf8',
-  );
   const adminRoles = readFileSync(
     at('supabase', 'migrations', '20260921161500_roles.sql'),
     'utf8',
@@ -165,8 +161,39 @@ describe('what it reports about the schema', () => {
     return sql.slice(start, sql.indexOf('\n);', start));
   };
 
+  /**
+   * Every column a table has now, not the ones it was created with.
+   *
+   * This used to read one migration and ask what columns it declared, and the
+   * difference cost nothing until a column arrived somewhere else. It did:
+   * `20260921214500_report_status.sql` adds `status` to `public.reports` with
+   * an `alter table`, and the assertion below went on reading
+   * `20260901000200_classmates.sql` and went on passing while its own name —
+   * "still a sink rather than a queue" — had stopped being true.
+   *
+   * A guard that reads one file cannot see a schema. So the `create table` is
+   * the start and every `alter table … add column` in the directory is folded
+   * in after it.
+   */
+  const everyMigration = readdirSync(at('supabase', 'migrations'))
+    .filter((f) => f.endsWith('.sql'))
+    .sort()
+    .map((f) => readFileSync(at('supabase', 'migrations', f), 'utf8'));
+
+  const columnsNow = (table: string): string => {
+    const declared = everyMigration.map((sql) => columnsOf(sql, table)).find(Boolean) ?? '';
+    const added = everyMigration
+      .flatMap((sql) => [
+        ...sql.matchAll(
+          new RegExp(`alter table\\s+public\\.${table}\\s+add column(?: if not exists)? (\\w+)`, 'gi'),
+        ),
+      ])
+      .map((m) => `  ${m[1]} added-later`);
+    return [declared, ...added].join('\n');
+  };
+
   const identityColumns = columnsOf(identity, 'lti_identity');
-  const reportColumns = columnsOf(classmates, 'reports');
+  const reportColumns = columnsNow('reports');
 
   it('found both tables, so their absences are absences', () => {
     // The control. An empty string contains no `status` column either, and
@@ -187,10 +214,22 @@ describe('what it reports about the schema', () => {
     expect(identityColumns).not.toMatch(/\broles?\b/);
   });
 
-  it('public.reports is still a sink rather than a queue', () => {
-    // Item 295 asks for status, category, assignee and resolution. None is
-    // there yet, which is what makes a filed report unanswerable.
-    for (const field of ['status', 'category', 'assigned', 'resolution']) {
+  it('public.reports has a status now, and is no longer only a sink', () => {
+    // Item 295 asks for four things. `status` arrived with
+    // `20260921214500_report_status.sql`, together with a select policy for
+    // `private.is_app_admin()` — so a report can now be read and moved through
+    // `open → under_review → resolved → dismissed`.
+    //
+    // This assertion is the one that was quietly false: it read the creating
+    // migration, the column had been added by a later one, and the test passed
+    // under a name that had stopped describing the schema.
+    expect(reportColumns, 'reports.status').toMatch(/^\s*status\b/m);
+  });
+
+  it('and still has no category, assignee or resolution', () => {
+    // The other three of item 295. A queue an administrator can read is not
+    // yet a case system, and the document should not be able to claim it is.
+    for (const field of ['category', 'assigned', 'resolution']) {
       expect(reportColumns, `reports.${field} now exists`).not.toMatch(
         new RegExp(`^\\s*${field}`, 'm'),
       );
