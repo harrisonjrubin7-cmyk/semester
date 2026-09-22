@@ -62,7 +62,11 @@ Semester already receives authoritative role information on every LTI launch. `s
 Instructor  Administrator  ContentDeveloper  Mentor  TeachingAssistant
 ```
 
-It collapses them into a single `teaching` boolean, and then nothing persists. `public.lti_identity` stores `issuer`, `subject`, `user_id`, `origin` and `created_at` — and no roles. So the one role source in the entire system that an institution actually vouches for is read, reduced to one bit, used for the length of one request, and discarded.
+It collapses them into a single `teaching` boolean, and until `supabase/migrations/20260922020000_lti_roles.sql` nothing persisted: `public.lti_identity` stores `issuer`, `subject`, `user_id`, `origin` and `created_at` and no roles, so the one role source in the entire system that an institution actually vouches for was read, reduced to one bit, used for the length of one request, and discarded.
+
+**Written down now.** `public.lti_role_map` says which launch role becomes which Semester role, `public.record_lti_roles()` records it as `provenance = 'institution'` grants scoped to `issuer/context`, and the launch calls it once the account exists. `supabase/ltiroles.check.sql` is the suite.
+
+`teaches` is unchanged and still keeps all five, because it answers a different question — *can this person see other people's work* — and for that one `Administrator` and `Mentor` belong in the set. The map answers *what may they do in Semester*, and **the two must not be the same list**: that is exactly what item 250 warns about for teaching assistants, and the difference is why the map is four rows rather than five.
 
 Items 246, 250, 251 and 274 all say the same thing in different words: faculty, TA, advisor and department access **must be institutionally authorized**. The authorization those items require is already arriving. It is being thrown away. Persisting it is a smaller piece of work than any of the workspaces those items describe, and every one of those workspaces is blocked on it.
 
@@ -86,7 +90,7 @@ Resolved against the tree. "Present" means the file or table exists and does the
 | 239 role model | Multi-role account | **Built** — `public.role_grants`, scoped and provenanced, twenty roles. `profiles.account_role` remains what an account says it is |
 | 240 role switching | Context switch | `app/src/lib/role.ts` + `setRole` in `app/src/state/shape.ts`, single role, no contexts |
 | 241 student role | The core product | Built — this is the app |
-| 246–250 faculty, TA | Course-scoped authority | `supabase/functions/_shared/lti.ts` knows the roles; nothing stores them |
+| 246–250 faculty, TA | Course-scoped authority | **Built** — `public.lti_role_map` and `public.record_lti_roles()`, called by the launch. `faculty` and `teaching_assistant` grants scoped to the platform's course |
 | 249 office hours | Two-party booking | `public.appointments` is a per-user synced record, not a booking between two people |
 | 251–253 advisor | Reading another person's plan | Nothing. `app/src/lib/role.ts` marks `advisor` not ready and says why |
 | 254 tutor | Tutor profile, booking, reviews | Nothing under `app/src/lib/` |
@@ -845,7 +849,13 @@ Four things come first, and everything else in this document reads or writes the
 
 1. ~~**The grant row** (item 239)~~ — **done.** `public.role_grants`, in `supabase/migrations/20260921223000_role_grants.sql`. Person, role, scope, provenance, expiry, revocation; no write route through the API.
 2. ~~**The predicate** (item 300)~~ — **done.** `private.holds_role()`, in the same migration, with `supabase/rolegrants.check.sql` as the suite.
-3. **Persisting what the LTI launch already says** (items 246–250, 274) — the only institutionally-vouched role data the platform receives, currently discarded per request. Every faculty, TA, advisor and department item is blocked on it, it is the smallest of the four, and it now has somewhere to be written to: a launch carrying `Instructor` becomes a `faculty` grant over that course with `provenance = 'institution'`.
+3. ~~**Persisting what the LTI launch already says** (items 246–250, 274)~~ — **done.** `supabase/migrations/20260922020000_lti_roles.sql`. A launch carrying `Instructor` becomes a `faculty` grant over that course with `provenance = 'institution'`; one carrying `TeachingAssistant` becomes `teaching_assistant`; `Learner` becomes `student`, which is the institution saying *enrolled* rather than an account having typed it.
+
+   Three refusals are the security of it, and each is an absence somebody could add a row to. **`Administrator` maps to nothing** — an administrator of the LMS is not Semester's, and item 275 is why. **`Mentor` maps to nothing** — the standard leaves it meaning a parent in one deployment and an advisor in another, and item 245 makes the first a consent-gated `family_grants` row while item 251 makes the second institutionally authorized; guessing between them from a URI is how somebody sees a record they were never granted. **`ContentDeveloper` maps to nothing** — permission to edit an LMS course's materials, which item 247's course community is not.
+
+   It revokes what a launch stops asserting, because otherwise the institution is the source of truth only in the direction that adds access — and it may not touch a `self` or `platform` grant in either direction, which the suite asserts rather than the comment promising.
+
+   The scope is `issuer/context`, the platform's own course id qualified by the platform. Deliberately **not** translated into a Semester course code: no correspondence between a Brightspace org-unit id and a Semester course has been established anywhere, and inventing one here would put a grant on a course nobody said it was about. That translation is items 129–183's work.
 4. ~~**Splitting `private.is_app_admin()`** into named capabilities (items 294–299)~~ — **done**, and only just in time. `20260921214500_report_status.sql` had already given `public.reports` two policies asking `private.is_app_admin()`, because it was the only gate there was; `20260922012000_capabilities.sql` repoints both at `report:read` and `moderation:action`. Those two are separate on purpose, so a reviewer-only role is expressible without a second boolean.
 
    `private.is_app_admin()` is **not** deprecated and is not consulted by the capability path. It keeps the narrower job its own comment gives it — "who may open the administrator dashboard" — and an `app_admins` row now carries no capability at all, which `capabilities.check.sql` asserts as a measurement rather than an intention. Whoever grants the first moderator adds a `role_grants` row.

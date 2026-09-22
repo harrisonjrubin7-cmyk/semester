@@ -190,15 +190,24 @@ async function params(req: Request): Promise<Record<string, string>> {
 /**
  * The account this launch opens, made if it is not there yet.
  *
- * Returns the address to mint a session for, and a link ticket when — and
- * only when — this call is what created the account. An existing identity
- * gets no ticket: there is nothing to adopt, and handing one out anyway would
- * let a student who launches every week keep a live proof in their history.
+ * Returns the address to mint a session for, the account it belongs to, and a
+ * link ticket when — and only when — this call is what created the account. An
+ * existing identity gets no ticket: there is nothing to adopt, and handing one
+ * out anyway would let a student who launches every week keep a live proof in
+ * their history.
+ *
+ * `userId` is returned because `record_lti_roles` needs the subject of the
+ * grants it writes, and this function is the only place that knows it on both
+ * paths. Deriving it again from the address afterwards would be a second answer
+ * to a question already answered here.
  */
 async function accountFor(
   client: ReturnType<typeof db>,
   who: Launch,
-): Promise<{ ok: true; email: string; ticket: string | null } | { ok: false; reason: string; detail: string }> {
+): Promise<
+  | { ok: true; email: string; userId: string; ticket: string | null }
+  | { ok: false; reason: string; detail: string }
+> {
   const { data: known, error: lookupError } = await client
     .from('lti_identity')
     .select('user_id')
@@ -220,7 +229,7 @@ async function accountFor(
     if (error || !user?.user?.email) {
       return { ok: false, reason: 'account-gone', detail: error?.message ?? 'bound account has no address' };
     }
-    return { ok: true, email: user.user.email, ticket: null };
+    return { ok: true, email: user.user.email, userId: known.user_id, ticket: null };
   }
 
   /*
@@ -281,7 +290,7 @@ async function accountFor(
   // than made fatal: the account is real and the session is about to work.
   if (ticketError) console.error(`lti ticket not issued: ${ticketError.message}`);
 
-  return { ok: true, email, ticket: ticketError ? null : ticket };
+  return { ok: true, email, userId: made.user.id, ticket: ticketError ? null : ticket };
 }
 
 /**
@@ -535,6 +544,40 @@ Deno.serve(async (req) => {
 
     const bound = await accountFor(client, who);
     if (!bound.ok) return refuse(bound.reason, bound.detail, 500);
+
+    /*
+     * ── What the launch asserted, written down ────────────────────────────
+     *
+     * Until `20260922020000_lti_roles.sql` this was the one authoritative role
+     * source in the system and it was discarded every request: the claim is
+     * read above, reduced to `who.teaches`, and forgotten. Items 246, 250, 251
+     * and 274 all require that faculty, TA and advisor access be
+     * institutionally authorized, and this is the institution saying so.
+     *
+     * `record_lti_roles` does the mapping in SQL rather than here, so the trust
+     * decision — `Instructor` yes, `Administrator` deliberately not — is one
+     * auditable table that `ltiroles.check.sql` tests, instead of a branch in a
+     * function nothing runs in CI.
+     *
+     * **Not fatal**, for the reason the ticket write is not: the account is real
+     * and the session is about to work, and a launch that died here would cost a
+     * student their class over a grant. It fails closed — no grant written means
+     * no access gained — which is the safe direction, and the count is logged so
+     * a professor who sees nothing has a line to point at.
+     */
+    const { data: liveRoles, error: rolesError } = await client.rpc('record_lti_roles', {
+      want_subject: bound.userId,
+      want_issuer: who.issuer,
+      want_context: who.contextId,
+      want_roles: who.roles,
+    });
+    if (rolesError) {
+      console.error(`lti roles not recorded: ${rolesError.message}`);
+    } else {
+      console.log(
+        `lti roles recorded: sub=${who.subject} context=${who.contextId ?? '-'} live=${liveRoles ?? 0}`,
+      );
+    }
 
     /*
      * The session, minted server-side. Nothing else in this project does this
