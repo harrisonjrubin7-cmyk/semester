@@ -3,6 +3,8 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
   CEILING,
+  connectionsFrom,
+  relationshipOf,
   LEVELS,
   NO_CONNECTIONS,
   NO_RELATIONSHIP,
@@ -240,5 +242,71 @@ describe('the school this repository actually ships', () => {
     const r = readinessOf(vandy, 'institutional-customer', NO_CONNECTIONS);
     expect(r.level).toBe(2);
     expect(mayClaimConnection(r)).toBe(false);
+  });
+});
+
+describe('the gateway is what says a thing is connected', () => {
+  it('only a connected state counts', () => {
+    /*
+     * `not-configured`, `error` and `disconnected` are each a reason the
+     * integration is not working. A ladder that counted a broken one would be
+     * at its least honest exactly when a student most needs it right.
+     */
+    expect(connectionsFrom([{ area: 'identity', state: 'connected' }])).toEqual({ sso: true });
+    for (const state of ['not-configured', 'error', 'disconnected']) {
+      expect(connectionsFrom([{ area: 'identity', state }]), state).toEqual({});
+    }
+  });
+
+  it('and an absent or empty report is no connections, not an error', () => {
+    expect(connectionsFrom(null)).toEqual({});
+    expect(connectionsFrom(undefined)).toEqual({});
+    expect(connectionsFrom([])).toEqual({});
+  });
+
+  it('and areas that are not what a level means raise nothing', () => {
+    /*
+     * Real connections that are simply not the definition of level 3 or 4. A
+     * level is not a count of integrations, and mapping these would make it
+     * one — a school with dining and athletics connected is not "Connected"
+     * in the sense the ladder uses.
+     */
+    const live = ['dining', 'athletics', 'advising', 'billing', 'library'].map((area) => ({
+      area,
+      state: 'connected',
+    }));
+    expect(connectionsFrom(live)).toEqual({});
+    expect(readinessOf(RICH, 'institutional-customer', connectionsFrom(live)).level).toBe(2);
+  });
+
+  it('and a real gateway report moves the level', () => {
+    // The control. Everything above is a refusal, and refusals pass for free
+    // on a function that returns {} unconditionally.
+    const live = [
+      { area: 'courses', state: 'connected' },
+      { area: 'dining', state: 'connected' },
+    ];
+    expect(connectionsFrom(live)).toEqual({ lms: true });
+    expect(readinessOf(RICH, 'pilot', connectionsFrom(live)).level).toBe(3);
+  });
+
+  it('and calendar stays unmapped rather than guessed', () => {
+    // `UNIVERSITY_AREAS` has no calendar entry. Mapping `courses` to it would
+    // be the small dishonesty the module exists to refuse, so the flag stays
+    // false and this pins that it was a decision.
+    expect(connectionsFrom([{ area: 'calendar', state: 'connected' }])).toEqual({});
+  });
+});
+
+describe('the relationship registry', () => {
+  it('Vanderbilt is not a customer, and neither is anybody else', () => {
+    /*
+     * The app was built around Vanderbilt and Vanderbilt has agreed to
+     * nothing. If this ever reads otherwise without paperwork behind it, the
+     * catalogue has started claiming a contract.
+     */
+    expect(relationshipOf('vanderbilt')).toBe('public-data');
+    expect(relationshipOf('harvard')).toBe('public-data');
+    expect(relationshipOf('')).toBe('public-data');
   });
 });

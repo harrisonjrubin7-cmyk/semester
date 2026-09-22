@@ -70,8 +70,8 @@ the liability rather than the feature. These come first.
 
 | Item | State | Note |
 | --- | --- | --- |
-| **156 Do not fake integrations** `PARTIAL` | The five states now exist as `Relationship` in `app/src/lib/readiness.ts`, default to the weakest, and carry a sentence each rather than a label. The refusals are enforced and tested: no quantity of pack data reaches a connected level, and a configured integration against an institution that agreed to nothing is still shown as public data. **Nothing renders them yet** — that is what is left. |
-| **155 Readiness levels** `PARTIAL` | Levels 0–5 in `app/src/lib/readiness.ts`, derived with no setter, and capped by what the relationship permits. Levels 3+ are unreachable from a data pack by construction, so every school here — Vanderbilt included — is level 2 while the adapter registry stays empty. **No screen shows the level yet.** |
+| **156 Do not fake integrations** `BUILT` | `app/src/lib/readiness.ts` holds the five states; `app/src/screens/University.tsx` shows the current one above everything else on the screen, in a sentence rather than a label — *"It is not a customer, nothing is connected to its systems, and nobody there has agreed to anything."* The refusals are tested: no quantity of pack data reaches a connected level, and a configured integration against an institution that agreed to nothing is still shown as public data. The relationship registry is a table in the repository, deliberately not a field a data pack can carry. |
+| **155 Readiness levels** `BUILT` | Levels 0–5 in `app/src/lib/readiness.ts`, derived with no setter and capped by what the relationship permits, shown on `app/src/screens/University.tsx`. Level 3+ needs the school's own gateway to report a connection — `connectionsFrom` reads `ConnectionStatus[]` and counts only `connected` — so every school here is level 2 while the adapter registry stays empty. Verified in a browser, not only in the suite. |
 | **157 Public university mode** `TODO` | Depends on 156 landing first. |
 | **158 Contracted mode** `TODO` | Depends on 156. |
 

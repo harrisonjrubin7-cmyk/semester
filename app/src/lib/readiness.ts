@@ -296,6 +296,76 @@ export function mayClaimCustomer(relationship: Relationship): boolean {
   return relationship === 'institutional-customer';
 }
 
+/**
+ * Which institutions Semester actually has a relationship with.
+ *
+ * Deliberately a table in the repository rather than a field on `School`, and
+ * that placement is the point. A `School` is a data pack — something somebody
+ * was handed, per `docs/SCHOOL_DATA_PACK.md` — and a pack that could carry
+ * `relationship: 'institutional-customer'` would let a file claim a contract.
+ * Anyone who can write a pack could then promote their own university.
+ *
+ * So this is declared here, by whoever knows, and a school absent from it is
+ * `public-data`. **Vanderbilt is not in it**, which is correct: this app was
+ * built around Vanderbilt and Vanderbilt has agreed to nothing.
+ */
+const DECLARED: Record<string, Relationship> = {};
+
+/** What Semester's relationship to this school is. Absent means public data. */
+export function relationshipOf(schoolId: string): Relationship {
+  return DECLARED[schoolId] ?? NO_RELATIONSHIP;
+}
+
+/**
+ * The areas whose gateway connection counts as which kind of integration.
+ *
+ * The bridge between `ConnectionStatus[]` — which the school's own gateway
+ * reports — and the ladder. Reading the gateway rather than taking a caller's
+ * word is what makes level 3 mean something: the evidence is a service the
+ * institution stood up, not a field anybody here can set.
+ *
+ * Mapped conservatively, and the gaps are deliberate rather than forgotten:
+ *
+ *   · **`calendar` has no area.** `UNIVERSITY_AREAS` has no calendar entry, so
+ *     that flag stays false until the contract grows one. Inventing a mapping
+ *     — `courses`, say — would be the small dishonesty this module exists to
+ *     refuse.
+ *   · **`advising`, `billing`, `aid` and the rest map to nothing.** They are
+ *     real connections and they are not what levels 3 and 4 are defined as, so
+ *     they raise no rung. A level is not a count of integrations.
+ */
+const AREA_MEANS: Record<string, keyof Connections> = {
+  identity: 'sso',
+  courses: 'lms',
+  assignments: 'lms',
+  assessments: 'lms',
+  grades: 'lms',
+  email: 'email',
+  registration: 'registration',
+  records: 'sis',
+  graduation: 'degreeAudit',
+};
+
+/**
+ * The connections a gateway is actually reporting as live.
+ *
+ * Only `state === 'connected'` counts. `not-configured`, `error` and
+ * `disconnected` are each a reason the thing is not working, and a ladder that
+ * treated a broken integration as a rung would be at its least honest exactly
+ * when a student most needs it to be right.
+ */
+export function connectionsFrom(
+  reported: readonly { area: string; state: string }[] | null | undefined,
+): Connections {
+  const out: Connections = {};
+  for (const c of reported ?? []) {
+    if (c.state !== 'connected') continue;
+    const kind = AREA_MEANS[c.area];
+    if (kind) out[kind] = true;
+  }
+  return out;
+}
+
 /** A `Relationship` from whatever a stored profile had, defaulting weakest. */
 export function readRelationship(raw: unknown): Relationship {
   return (RELATIONSHIPS as readonly string[]).includes(raw as string)
