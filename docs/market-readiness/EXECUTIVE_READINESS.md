@@ -30,11 +30,12 @@ paperwork a procurement office asks for.
 1. **No multi-tenant isolation.** See the scorecard. Tenant identity landed
    hours ago; nothing enforces it yet.
 2. **No SSO.** No SAML, no OIDC. A university cannot put this behind its IdP.
-3. **No observability.** If it breaks in production, nobody finds out from the
-   system.
+3. **No operator signal.** There *is* a consent-based local diagnostic log
+   (`lib/diagnose.ts`) and third-party reporting was refused deliberately — but
+   nothing tells an operator the app is broken for everybody.
 4. **No admin audit log in the database.** The gateway journals its own
    actions; role changes and tenant setting changes are not recorded.
-5. **No HTTP security headers.**
+5. **Header-only protections absent** — a CSP ships in a meta tag; HSTS and `frame-ancestors` need a host that can set headers.
 
 ## Sequenced recommendation
 
