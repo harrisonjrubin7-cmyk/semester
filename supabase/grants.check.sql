@@ -153,6 +153,12 @@ declare
   allowed constant text[] := array[
     'accept_family_grant(grant_id uuid)',
     'adopt_lti_identity(want_ticket text)',
+    -- The share-code pair from 20260922015000_family_invites.sql. Both must be
+    -- callable by a signed-in account and by nobody else: minting is how a
+    -- student writes to a table with no insert policy, and claiming is how
+    -- somebody who holds eight characters turns them into grants.
+    'claim_family_invite(given text)',
+    'make_family_invite(want_categories text[], want_access text, want_resources text[], want_days integer)',
     'claim_referral(given text)',
     'make_referral_code()',
     'note_activity(marks text[])',
@@ -254,7 +260,7 @@ begin
   if missing is not null then
     raise exception 'FAILED: the allowlist names %, which a signed-in account cannot call', missing;
   end if;
-  raise notice 'ok  and can call all twenty that it should';
+  raise notice 'ok  and can call all twenty-two that it should';
 end $$;
 
 -- ── The gate's own switch, named because it is the one that was open ──────
