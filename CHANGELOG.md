@@ -24,6 +24,24 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### Setting up ends at your first course, not at somebody else's Today
+
+Finishing the introduction used to land you on Today with the shipped sample
+semester in it — a Tuesday quiz for a course called CORE 2500, six deadlines
+marked as missed, none of it yours. A banner across the top said whose
+semester it was and offered to take it away, and nothing told you it was
+there to answer.
+
+Setting up now ends on the screen for adding your first course, if you have
+not added one yet — the same door the introduction had just told you to use.
+And once you add that first course, the sample steps aside on its own: the
+banner is gone, and Today is your own day rather than somebody else's,
+whether that course arrived by uploading a syllabus or by typing in a course
+code. Nothing is deleted — the sample semester is still there if you switch
+it back on from Settings, exactly as before.
+
+Nothing to do.
+
 ### The first thing the app said about your semester was about somebody else's
 
 Open the app for the first time and it introduced itself with **"4 syllabi.

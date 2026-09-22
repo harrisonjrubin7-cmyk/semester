@@ -139,7 +139,15 @@ function steps(cat: Catalog, tone: Tone, hasAccount: boolean) {
       k: 'Step 5 of 5',
       t: askReminders(tone),
       b: 'Change any of this later. Nothing here is permanent.',
-      cta: empty ? 'Get started' : 'Start the semester',
+      /*
+       * The button says where it goes, because it now goes somewhere.
+       *
+       * With nothing of the student's own in yet, this ends on the import
+       * screen rather than on Today — see `doneScreen` in
+       * `state/slices/navigate.ts` — and "Get started" is what a button says
+       * when it is closing an introduction rather than opening the next step.
+       */
+      cta: empty ? 'Add your first course' : 'Start the semester',
     },
   ];
 }
