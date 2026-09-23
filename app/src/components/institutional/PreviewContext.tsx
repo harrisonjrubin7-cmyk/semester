@@ -4,6 +4,8 @@ import {
   type InstitutionalFixture,
   type PreviewPerson,
 } from '../../data/institutional-preview';
+import type { FlightRole, TenantId } from '../../lib/flight-plan';
+import { FlightPlanProvider } from './FlightPlanContext';
 
 interface InstitutionalPreviewContextValue {
   fixtures: readonly InstitutionalFixture[];
@@ -37,7 +39,18 @@ export function InstitutionalPreviewProvider({ children }: { children: ReactNode
     [institution, person],
   );
 
-  return <PreviewContext.Provider value={value}>{children}</PreviewContext.Provider>;
+  return (
+    <PreviewContext.Provider value={value}>
+      <FlightPlanProvider
+        key={`${institution.id}:${person.id}`}
+        tenant={institution.id as TenantId}
+        role={person.role as FlightRole}
+        personId={person.id}
+      >
+        {children}
+      </FlightPlanProvider>
+    </PreviewContext.Provider>
+  );
 }
 
 export function useInstitutionalPreview(): InstitutionalPreviewContextValue {

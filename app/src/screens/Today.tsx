@@ -1,4 +1,4 @@
-import { Fragment, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, lazy, Suspense, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useNow, useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { useRowStyle, useSoft } from '../components/shell/useShell';
@@ -60,6 +60,23 @@ import { Folding } from '../components/Fold';
 import { goMine } from '../lib/openmine';
 import { dateToIso } from '../lib/date';
 import { goCal } from '../lib/opencal';
+import { INSTITUTIONAL_PREVIEW } from '../lib/institutional-preview';
+
+const FlightPlanHome = lazy(() =>
+  import('../components/institutional/FlightPlanHome').then((module) => ({
+    default: module.FlightPlanHome,
+  })),
+);
+
+function FlightPlanHomeSlot() {
+  const { dispatch } = useStore();
+  if (!INSTITUTIONAL_PREVIEW) return null;
+  return (
+    <Suspense fallback={null}>
+      <FlightPlanHome enabled onNavigate={(screen) => dispatch({ type: 'go', screen })} />
+    </Suspense>
+  );
+}
 
 /** The next-class card, shared by both nav modes. */
 function NextClassCard() {
@@ -678,6 +695,8 @@ function TabHome() {
         onChange={(next) => dispatch({ type: 'setHomeTab', tab: next })}
         style={{ marginTop: '0', marginInline: '0', marginBottom: 'calc(16px * var(--density, 1))' }}
       />
+
+      <FlightPlanHomeSlot />
 
       {tab === 'today' && <TodayFeed />}
 
@@ -1702,6 +1721,7 @@ function FeedHome() {
 
       <div style={{ padding: 'var(--page-pad)' }}>
         <NextClassCard />
+        <FlightPlanHomeSlot />
 
         <div style={{ marginTop: 'calc(22px * var(--density, 1))', display: 'flex', flexDirection: 'column' }}>
           {entries.map((f) => (
