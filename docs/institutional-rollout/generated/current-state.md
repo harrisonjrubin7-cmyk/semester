@@ -1,8 +1,8 @@
 # Semester institutional current-state census
 
-Commit: `eb0a1e453647779ba401a51e99f8207619a7881e`
+Commit: `fb0c6fec0530aafc345ae72d083a51b4341d8ad3`
 
-Generated from commit time: `2026-09-23T18:16:38.000Z`
+Generated from commit time: `2026-09-23T18:58:41.000Z`
 
 - Registered destinations: 59
 - Screen union members: 81

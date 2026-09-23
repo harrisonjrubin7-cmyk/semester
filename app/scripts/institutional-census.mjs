@@ -150,12 +150,64 @@ function markdown(result) {
   return lines.join('\n');
 }
 
+function sourceLink(ref) {
+  if (ref.startsWith('repo:')) {
+    const path = ref.slice('repo:'.length);
+    return `[${path}](../../../${path})`;
+  }
+  if (ref.startsWith('web:')) {
+    const url = ref.slice('web:'.length);
+    return `[${url}](${url})`;
+  }
+  return `\`${ref}\``;
+}
+
+function capabilityMarkdown(capabilities, commit) {
+  const dispositions = ['preserve', 'extend', 'build', 'external-gate'];
+  const label = {
+    preserve: 'Preserve',
+    extend: 'Extend',
+    build: 'Build',
+    'external-gate': 'External gate',
+  };
+  const lines = [
+    '# Semester capability disposition matrix',
+    '',
+    `Commit: \`${commit}\``,
+    '',
+    'The sixty approved product capabilities are mapped to the existing product rather than treated as sixty routes.',
+    '',
+  ];
+  for (let phase = 0; phase <= 8; phase += 1) {
+    const inPhase = capabilities.filter((item) => item.phase === phase);
+    if (inPhase.length === 0) continue;
+    lines.push(`## Phase ${phase}`, '');
+    for (const disposition of dispositions) {
+      const rows = inPhase.filter((item) => item.disposition === disposition);
+      if (rows.length === 0) continue;
+      lines.push(`### ${label[disposition]}`, '', '| ID | Capability | Current state | Destinations | Owner | Sources |', '| --- | --- | --- | --- | --- | --- |');
+      for (const item of rows) {
+        lines.push(
+          `| ${item.id} | ${item.name} | ${item.currentState} | ${item.destinations.join(', ')} | ${item.owner} | ${item.sources.map(sourceLink).join('<br>')} |`,
+        );
+      }
+      lines.push('');
+    }
+  }
+  return lines.join('\n');
+}
+
 export async function writeCensus(repoRoot, outputDir) {
   const repo = fileURLToPath(repoRoot);
   const result = await census(pathToFileURL(join(repo, 'app/src/')));
+  const registry = await import(pathToFileURL(join(repo, 'app/src/lib/rollout-capabilities.ts')).href);
   mkdirSync(outputDir, { recursive: true });
   writeFileSync(join(outputDir, 'current-state.json'), `${JSON.stringify(result, null, 2)}\n`);
   writeFileSync(join(outputDir, 'current-state.md'), markdown(result));
+  writeFileSync(
+    join(outputDir, 'capability-disposition.md'),
+    capabilityMarkdown(registry.CAPABILITIES, result.commit),
+  );
   return result;
 }
 

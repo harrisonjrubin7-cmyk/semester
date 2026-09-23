@@ -28,10 +28,14 @@ describe('institutional census', () => {
     const result = await writeCensus(new URL('../../', import.meta.url), output);
     const json = JSON.parse(readFileSync(join(output, 'current-state.json'), 'utf8'));
     const markdown = readFileSync(join(output, 'current-state.md'), 'utf8');
+    const capabilities = readFileSync(join(output, 'capability-disposition.md'), 'utf8');
 
     expect(json.commit).toBe(result.commit);
     expect(markdown).toContain(`Commit: \`${result.commit}\``);
     expect(markdown).toContain('[app/src/lib/nav.ts]');
     expect(markdown).not.toMatch(/node_modules|\.env/);
+    expect(capabilities.match(/\| CAP-\d{3} \|/g)).toHaveLength(60);
+    expect(capabilities).toContain('## Phase 6');
+    expect(capabilities).toContain('### External gate');
   });
 });
