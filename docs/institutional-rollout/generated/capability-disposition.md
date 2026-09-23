@@ -1,6 +1,6 @@
 # Semester capability disposition matrix
 
-Commit: `fb0c6fec0530aafc345ae72d083a51b4341d8ad3`
+Commit: `7192e9edac90963be2ce472d41497c84a60446c3`
 
 The sixty approved product capabilities are mapped to the existing product rather than treated as sixty routes.
 

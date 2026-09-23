@@ -29,6 +29,7 @@ describe('institutional census', () => {
     const json = JSON.parse(readFileSync(join(output, 'current-state.json'), 'utf8'));
     const markdown = readFileSync(join(output, 'current-state.md'), 'utf8');
     const capabilities = readFileSync(join(output, 'capability-disposition.md'), 'utf8');
+    const traceability = readFileSync(join(output, 'requirements-traceability.md'), 'utf8');
 
     expect(json.commit).toBe(result.commit);
     expect(markdown).toContain(`Commit: \`${result.commit}\``);
@@ -37,5 +38,9 @@ describe('institutional census', () => {
     expect(capabilities.match(/\| CAP-\d{3} \|/g)).toHaveLength(60);
     expect(capabilities).toContain('## Phase 6');
     expect(capabilities).toContain('### External gate');
+    expect(traceability.match(/\| CAP-\d{3} \|/g)).toHaveLength(60);
+    expect(traceability).toContain('## Sources to capabilities');
+    expect(traceability).toContain('## Unverified and unavailable');
+    expect(traceability).toContain('Shared Semester ChatGPT conversation');
   });
 });

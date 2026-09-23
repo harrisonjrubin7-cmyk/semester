@@ -197,16 +197,62 @@ function capabilityMarkdown(capabilities, commit) {
   return lines.join('\n');
 }
 
+function traceabilityMarkdown(capabilities, sources, commit) {
+  const indexed = new Map(sources.map((source) => [source.ref, source]));
+  const lines = [
+    '# Semester requirements traceability',
+    '',
+    `Commit: \`${commit}\``,
+    '',
+    '## Requirements to implementation',
+    '',
+    '| Requirement | Capability | Phase | Current state | Product surfaces | Files and tests | Evidence |',
+    '| --- | --- | --- | --- | --- | --- | --- |',
+  ];
+  for (const item of capabilities) {
+    lines.push(
+      `| ${item.id} | ${item.name} | ${item.phase} | ${item.currentState} | ${item.destinations.join(', ')} | ` +
+        '[registry](../../../app/src/lib/rollout-capabilities.ts) · ' +
+        '[tests](../../../app/src/lib/rollout-capabilities.test.ts) | ' +
+        `${item.sources.map(sourceLink).join('<br>')} |`,
+    );
+  }
+  lines.push('', '## Sources to capabilities', '', '| Source | Status | Capabilities | Note |', '| --- | --- | --- | --- |');
+  for (const source of sources) {
+    const usedBy = capabilities.filter((item) => item.sources.includes(source.ref)).map((item) => item.id);
+    lines.push(`| ${sourceLink(source.ref)} | ${source.status} | ${usedBy.join(', ') || 'Context only'} | ${source.note} |`);
+  }
+  lines.push('', '## Unverified and unavailable', '');
+  const weak = sources.filter((source) => source.status !== 'verified');
+  if (weak.length === 0) lines.push('None.');
+  for (const source of weak) {
+    lines.push(`- **${source.title}** — ${source.status}. ${source.note} (${sourceLink(source.ref)})`);
+  }
+  const unresolved = capabilities.flatMap((item) =>
+    item.sources.filter((ref) => !indexed.has(ref)).map((ref) => `${item.id}: ${ref}`),
+  );
+  if (unresolved.length > 0) {
+    lines.push('', '### Unindexed references', '', ...unresolved.map((row) => `- ${row}`));
+  }
+  lines.push('');
+  return lines.join('\n');
+}
+
 export async function writeCensus(repoRoot, outputDir) {
   const repo = fileURLToPath(repoRoot);
   const result = await census(pathToFileURL(join(repo, 'app/src/')));
   const registry = await import(pathToFileURL(join(repo, 'app/src/lib/rollout-capabilities.ts')).href);
+  const sources = JSON.parse(text(join(repo, 'docs/institutional-rollout/source-index.json')));
   mkdirSync(outputDir, { recursive: true });
   writeFileSync(join(outputDir, 'current-state.json'), `${JSON.stringify(result, null, 2)}\n`);
   writeFileSync(join(outputDir, 'current-state.md'), markdown(result));
   writeFileSync(
     join(outputDir, 'capability-disposition.md'),
     capabilityMarkdown(registry.CAPABILITIES, result.commit),
+  );
+  writeFileSync(
+    join(outputDir, 'requirements-traceability.md'),
+    traceabilityMarkdown(registry.CAPABILITIES, sources, result.commit),
   );
   return result;
 }
