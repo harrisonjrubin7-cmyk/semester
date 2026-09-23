@@ -1,0 +1,360 @@
+{
+  "schemaVersion": 1,
+  "generatedOn": "2026-09-23",
+  "documents": [
+    {
+      "slug": "master-specification",
+      "title": "Semester Institutional Rollout Master Specification",
+      "sourceSections": [
+        "§1–§18 approved design"
+      ],
+      "outputFilename": "master-specification.md",
+      "owner": "Semester product and engineering",
+      "verificationDate": "2026-09-23",
+      "generationStatus": "generated",
+      "sha256": "1e7c7906f97a161aba09f19e85db7f9576f6e8fae9f68f09ba0a3cb276f0ea82"
+    },
+    {
+      "slug": "executive-institutional-brief",
+      "title": "Executive Institutional Brief",
+      "sourceSections": [
+        "§1 purpose",
+        "§3 product identity",
+        "§13 delivery program"
+      ],
+      "outputFilename": "executive-institutional-brief.md",
+      "owner": "Institutional program owner",
+      "verificationDate": "2026-09-23",
+      "generationStatus": "generated",
+      "sha256": "a9cb86fa1b524b01c004fcd2d0d4b803f38254fd8dc279a945351ab3b7660424"
+    },
+    {
+      "slug": "current-product-live-site-audit",
+      "title": "Current Product and Live Site Audit",
+      "sourceSections": [
+        "current-state census",
+        "source index",
+        "§2 truth policy"
+      ],
+      "outputFilename": "current-product-live-site-audit.md",
+      "owner": "Product engineering",
+      "verificationDate": "2026-09-23",
+      "generationStatus": "generated",
+      "sha256": "2eb0af03f8793d324cc5bd474a677c04613a68f32076e7764c093f783c878692"
+    },
+    {
+      "slug": "capability-disposition-matrix",
+      "title": "Capability Disposition Matrix",
+      "sourceSections": [
+        "60-capability registry",
+        "requirements traceability"
+      ],
+      "outputFilename": "capability-disposition-matrix.md",
+      "owner": "Product engineering",
+      "verificationDate": "2026-09-23",
+      "generationStatus": "generated",
+      "sha256": "d6cf6d2a9f1cf9fa74160c37d2b25a48e4e9bf9a53a34cafbf6faa3f901862ed"
+    },
+    {
+      "slug": "canonical-data-model-permissions",
+      "title": "Canonical Data Model and Permissions",
+      "sourceSections": [
+        "§5 platform architecture",
+        "§6 identity and permissions",
+        "tenant-role schema map"
+      ],
+      "outputFilename": "canonical-data-model-permissions.md",
+      "owner": "Platform engineering",
+      "verificationDate": "2026-09-23",
+      "generationStatus": "generated",
+      "sha256": "8318fce6ee59295356a653fd666e2a60b39ebc4d2a47d970c84d4bbb16e849f3"
+    },
+    {
+      "slug": "product-systems-user-journeys",
+      "title": "Product Systems and User Journeys",
+      "sourceSections": [
+        "§4 information architecture",
+        "§7 product systems"
+      ],
+      "outputFilename": "product-systems-user-journeys.md",
+      "owner": "Product design",
+      "verificationDate": "2026-09-23",
+      "generationStatus": "generated",
+      "sha256": "79552fad4e1974e81fe427a0998ea4548bfe08a8e130f4dcfc208b066e08a177"
+    },
+    {
+      "slug": "ai-governance-automation",
+      "title": "AI Governance and Automation",
+      "sourceSections": [
+        "§7.11 Ask Semester",
+        "§9 security and governance"
+      ],
+      "outputFilename": "ai-governance-automation.md",
+      "owner": "AI governance owner",
+      "verificationDate": "2026-09-23",
+      "generationStatus": "generated",
+      "sha256": "d58753e9694903890c19c63a0e18677cdeb1c6ef98d2716ed4898cd6b0cffd49"
+    },
+    {
+      "slug": "integration-architecture",
+      "title": "Integration Architecture",
+      "sourceSections": [
+        "§5 platform architecture",
+        "§8 integration architecture"
+      ],
+      "outputFilename": "integration-architecture.md",
+      "owner": "Integration engineering",
+      "verificationDate": "2026-09-23",
+      "generationStatus": "generated",
+      "sha256": "84226327c17585731c284281833a0d197e132bbe40f799b675972816d9d4f685"
+    },
+    {
+      "slug": "security-privacy-compliance",
+      "title": "Security, Privacy and Compliance",
+      "sourceSections": [
+        "§6 permissions",
+        "§9 security and governance"
+      ],
+      "outputFilename": "security-privacy-compliance.md",
+      "owner": "Security and privacy owners",
+      "verificationDate": "2026-09-23",
+      "generationStatus": "generated",
+      "sha256": "0b1203c654e12a22f56d69a6f6e13ee08df1a9b0fe73b8129d29118a22ddc2b6"
+    },
+    {
+      "slug": "accessibility-conformance-plan",
+      "title": "Accessibility Conformance Plan",
+      "sourceSections": [
+        "§10 accessibility and responsive behavior",
+        "§12 testing"
+      ],
+      "outputFilename": "accessibility-conformance-plan.md",
+      "owner": "Accessibility owner",
+      "verificationDate": "2026-09-23",
+      "generationStatus": "generated",
+      "sha256": "9fd4ef798c3aec64340b4adbf7343e23b1d7ee14a23a139c0c94cc08643d8417"
+    },
+    {
+      "slug": "migration-rollback-disaster-recovery",
+      "title": "Migration, Rollback and Disaster Recovery",
+      "sourceSections": [
+        "§11 data continuity",
+        "§13 delivery program"
+      ],
+      "outputFilename": "migration-rollback-disaster-recovery.md",
+      "owner": "Platform operations",
+      "verificationDate": "2026-09-23",
+      "generationStatus": "generated",
+      "sha256": "a6cbe1f7ae983d99bc253b1c0dc9859eae09add9442ef9cbe90f361fcca3a030"
+    },
+    {
+      "slug": "testing-verification-plan",
+      "title": "Testing and Verification Plan",
+      "sourceSections": [
+        "§12 testing",
+        "§13 delivery gates"
+      ],
+      "outputFilename": "testing-verification-plan.md",
+      "owner": "Quality engineering",
+      "verificationDate": "2026-09-23",
+      "generationStatus": "generated",
+      "sha256": "2e2772e9fb4b76aa1613509ca30b604a8350fe198d85ad183aa05b54f31bdf4d"
+    },
+    {
+      "slug": "pilot-institutional-rollout-runbook",
+      "title": "Pilot Institutional Rollout Runbook",
+      "sourceSections": [
+        "§13 delivery program",
+        "§14 local preview"
+      ],
+      "outputFilename": "pilot-institutional-rollout-runbook.md",
+      "owner": "Institutional implementation lead",
+      "verificationDate": "2026-09-23",
+      "generationStatus": "generated",
+      "sha256": "a2ed8d7a6338b0ae9decbce1ea29f30d480a5f6ef69db8f68ea17a33187dd5b9"
+    },
+    {
+      "slug": "procurement-security-review-package",
+      "title": "Procurement and Security Review Package",
+      "sourceSections": [
+        "§5 architecture",
+        "§9 governance",
+        "§13 rollout gates"
+      ],
+      "outputFilename": "procurement-security-review-package.md",
+      "owner": "Institutional program owner",
+      "verificationDate": "2026-09-23",
+      "generationStatus": "generated",
+      "sha256": "fc61cc18f86d27e30c0d0d9a232df3e4917b7c42a867b1b35624291413eb484c"
+    },
+    {
+      "slug": "claude-code-execution-guide",
+      "title": "Claude Code Execution Guide",
+      "sourceSections": [
+        "§16 execution model",
+        "§17 program decomposition"
+      ],
+      "outputFilename": "claude-code-execution-guide.md",
+      "owner": "Engineering lead",
+      "verificationDate": "2026-09-23",
+      "generationStatus": "generated",
+      "sha256": "376956b21c744292417f3e02c6ab17e25382ba08a6a9a1bddb94a19df20038ba"
+    },
+    {
+      "slug": "requirements-traceability-source-index",
+      "title": "Requirements Traceability and Source Index",
+      "sourceSections": [
+        "§2 source hierarchy",
+        "traceability registry",
+        "source index"
+      ],
+      "outputFilename": "requirements-traceability-source-index.md",
+      "owner": "Program assurance",
+      "verificationDate": "2026-09-23",
+      "generationStatus": "generated",
+      "sha256": "7f13f47a69f56d4bfe7d35ead5c2145986bd4375b60ab9af15367d2799bc3bc5"
+    },
+    {
+      "slug": "decisions-risks-external-blockers",
+      "title": "Decisions, Risks and External Blockers",
+      "sourceSections": [
+        "§2 truth policy",
+        "§13 gates",
+        "§16 stop conditions"
+      ],
+      "outputFilename": "decisions-risks-external-blockers.md",
+      "owner": "Program owner",
+      "verificationDate": "2026-09-23",
+      "generationStatus": "generated",
+      "sha256": "06f7bb32db1ab39868bcd1b46b23a0c92a32997948c80f1e04aa0f7e2f0c2899"
+    }
+  ],
+  "executionPackets": [
+    {
+      "slug": "00-baseline-foundation",
+      "title": "Baseline and foundation",
+      "sourceSections": [
+        "§16 execution model",
+        "approved requirements",
+        "current repository evidence"
+      ],
+      "outputFilename": "00-baseline-foundation.md",
+      "owner": "Claude Code implementation owner",
+      "verificationDate": "2026-09-23",
+      "generationStatus": "generated",
+      "sha256": "1acc2423aa32110cd01d3144c92ec13d7704df8f3b178ba0ed53479ddc01de05"
+    },
+    {
+      "slug": "01-identity-tenancy-authorization",
+      "title": "Identity, tenancy and authorization",
+      "sourceSections": [
+        "§16 execution model",
+        "approved requirements",
+        "current repository evidence"
+      ],
+      "outputFilename": "01-identity-tenancy-authorization.md",
+      "owner": "Claude Code implementation owner",
+      "verificationDate": "2026-09-23",
+      "generationStatus": "generated",
+      "sha256": "a0388a0ddbdcffa0b920c266121ec9c64e0b46479a36c61015933dc4bedd1f48"
+    },
+    {
+      "slug": "02-canonical-academic-data",
+      "title": "Canonical academic data",
+      "sourceSections": [
+        "§16 execution model",
+        "approved requirements",
+        "current repository evidence"
+      ],
+      "outputFilename": "02-canonical-academic-data.md",
+      "owner": "Claude Code implementation owner",
+      "verificationDate": "2026-09-23",
+      "generationStatus": "generated",
+      "sha256": "ae249c86aa50b1afcac7e8f1adffffbe9dd493b648c60fb1b54c3793499c3b54"
+    },
+    {
+      "slug": "03-capture-planning-provenance",
+      "title": "Capture, planning and provenance",
+      "sourceSections": [
+        "§16 execution model",
+        "approved requirements",
+        "current repository evidence"
+      ],
+      "outputFilename": "03-capture-planning-provenance.md",
+      "owner": "Claude Code implementation owner",
+      "verificationDate": "2026-09-23",
+      "generationStatus": "generated",
+      "sha256": "7cf6e68429b9d029e382e5d104c3716d7ba9f9f0ef9c64c75147c43e2fdfbed2"
+    },
+    {
+      "slug": "04-study-creation-ai",
+      "title": "Study, creation and governed AI",
+      "sourceSections": [
+        "§16 execution model",
+        "approved requirements",
+        "current repository evidence"
+      ],
+      "outputFilename": "04-study-creation-ai.md",
+      "owner": "Claude Code implementation owner",
+      "verificationDate": "2026-09-23",
+      "generationStatus": "generated",
+      "sha256": "b0a939e3b340d011fb6c45ac2ca0d0915cb1a34094be80732f7e6434ddc48c10"
+    },
+    {
+      "slug": "05-campus-career-messaging",
+      "title": "Campus, career and messaging systems",
+      "sourceSections": [
+        "§16 execution model",
+        "approved requirements",
+        "current repository evidence"
+      ],
+      "outputFilename": "05-campus-career-messaging.md",
+      "owner": "Claude Code implementation owner",
+      "verificationDate": "2026-09-23",
+      "generationStatus": "generated",
+      "sha256": "cfa3c50df420fa52373e213bd3d1c10d107be30664a1315b87560a5c1c1507f9"
+    },
+    {
+      "slug": "06-integrations-operations",
+      "title": "Integrations and operations",
+      "sourceSections": [
+        "§16 execution model",
+        "approved requirements",
+        "current repository evidence"
+      ],
+      "outputFilename": "06-integrations-operations.md",
+      "owner": "Claude Code implementation owner",
+      "verificationDate": "2026-09-23",
+      "generationStatus": "generated",
+      "sha256": "7a371d27746bbda18345d2555e85eeb28b623b2b8ccf66bc140827d777e42c85"
+    },
+    {
+      "slug": "07-security-accessibility-quality",
+      "title": "Security, accessibility and quality gates",
+      "sourceSections": [
+        "§16 execution model",
+        "approved requirements",
+        "current repository evidence"
+      ],
+      "outputFilename": "07-security-accessibility-quality.md",
+      "owner": "Claude Code implementation owner",
+      "verificationDate": "2026-09-23",
+      "generationStatus": "generated",
+      "sha256": "7ffdfc04613b046b348af4cc342101a8de05d3450b305f1e495a11b83f568db4"
+    },
+    {
+      "slug": "08-institutional-rollout",
+      "title": "Institutional pilot and rollout",
+      "sourceSections": [
+        "§16 execution model",
+        "approved requirements",
+        "current repository evidence"
+      ],
+      "outputFilename": "08-institutional-rollout.md",
+      "owner": "Claude Code implementation owner",
+      "verificationDate": "2026-09-23",
+      "generationStatus": "generated",
+      "sha256": "31bedf93a83aab6e3ab23743be379845536daf905b8e7d284718028e41b9dfec"
+    }
+  ]
+}
