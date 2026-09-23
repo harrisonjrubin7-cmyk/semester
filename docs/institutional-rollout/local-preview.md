@@ -32,7 +32,31 @@ VITE_INSTITUTIONAL_PREVIEW=true npm run build
 SMOKE_PLAYWRIGHT=/tmp/semester-smoke/node_modules/playwright npm run smoke:institutional
 ```
 
-If no Chrome or Edge executable is installed, omit `PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1` and run `npx playwright install chromium` in the scratch directory. The smoke starts and stops its own loopback Vite preview server, probes the approved desktop and phone routes, and exits nonzero on missing navigation, route drift, absent synthetic disclosure, or browser errors.
+If no Chrome or Edge executable is installed, omit `PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1` and run `npx playwright install chromium` in the scratch directory. The smoke starts and stops its own loopback Vite preview server. It probes Home, Calendar, Study, When you are behind, University, Email, and Search on desktop and phone; checks keyboard entry, one application root, one main landmark, and one institutional primary navigation; prepares a local recovery draft; switches from Northstar to Cedar Coast; and verifies the draft does not cross that boundary before opening the Cedar Coast student-success workspace.
+
+Verify the production-default build separately:
+
+```bash
+VITE_INSTITUTIONAL_PREVIEW=false npm run build
+EXPECT_INSTITUTIONAL_PREVIEW=false \
+  SMOKE_PLAYWRIGHT=/tmp/semester-smoke/node_modules/playwright \
+  npm run smoke:institutional
+```
+
+The flag-off smoke checks the same routes and viewports while asserting that no preview bar, Flight Plan module, or `semester.flight-plan.*` storage key appears.
+
+## What the preview adds
+
+The preview extends the existing Semester routes; it does not introduce another shell:
+
+- Home: one ranked Flight Plan decision and bounded weekly load.
+- Calendar: source confirmation, focused sessions, capacity, and overflow.
+- Study: sample practice evidence with prerequisites, hints, explanations, and sources.
+- When you are behind: reschedule, reduce, and prepare-help choices that do not alter source deadlines.
+- Email: local, reviewable drafts marked unsent.
+- University: role-aware synthetic workspaces for students, faculty, advisors, student-success staff, administrators, moderators, employers, and authorized payers.
+
+Institution and persona selectors change only synthetic presentation context. They do not grant production authorization.
 
 ## Deployment boundary
 

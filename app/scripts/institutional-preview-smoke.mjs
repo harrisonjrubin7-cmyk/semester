@@ -11,6 +11,7 @@ const host = '127.0.0.1';
 const port = Number(process.env.INSTITUTIONAL_SMOKE_PORT || 4180);
 const base = `http://${host}:${port}/`;
 const vite = join(appRoot, 'node_modules', 'vite', 'bin', 'vite.js');
+const expectedPreview = process.env.EXPECT_INSTITUTIONAL_PREVIEW !== 'false';
 
 if (!Number.isInteger(port) || port < 1 || port > 65_535) {
   console.error('INSTITUTIONAL_SMOKE_PORT must be an integer from 1 to 65535');
@@ -63,16 +64,13 @@ if (!schemaMatch) throw new Error('could not read the current storage schema');
 const schemaVersion = Number(schemaMatch[1]);
 
 const cases = [
-  { hash: '#/search', width: 1440, height: 1000, expected: 'Semester' },
-  { hash: '#/calendar', width: 390, height: 844, expected: 'Calendar' },
-  { hash: '#/ask', width: 1440, height: 1000, expected: 'Ask' },
+  { hash: '#/home', width: 1440, height: 1000, expected: 'Today', module: 'Synthetic Flight Plan' },
+  { hash: '#/calendar', width: 390, height: 844, expected: 'Calendar', module: 'Sample Flight Plan capacity' },
+  { hash: '#/study', width: 1440, height: 1000, expected: 'Study', module: 'Sample learning evidence' },
+  { hash: '#/behind', width: 390, height: 844, expected: 'When you are behind', module: 'Sample Flight Plan recovery' },
+  { hash: '#/university', width: 1440, height: 1000, expected: 'University', module: 'Student workspace' },
   { hash: '#/mail', width: 390, height: 844, expected: 'Email' },
-  { hash: '#/home', width: 1440, height: 1000, expected: 'Today' },
-  { hash: '#/courses', width: 1440, height: 1000, expected: 'Courses' },
-  { hash: '#/study', width: 1440, height: 1000, expected: 'Study' },
-  { hash: '#/create', width: 1440, height: 1000, expected: 'Create' },
-  { hash: '#/university', width: 1440, height: 1000, expected: 'University' },
-  { hash: '#/career', width: 1440, height: 1000, expected: 'Career' },
+  { hash: '#/search', width: 1440, height: 1000, expected: 'Search' },
 ];
 
 const chromeCandidates = [
@@ -112,23 +110,71 @@ try {
       });
 
       await page.goto(`${base}${probe.hash}`, { waitUntil: 'domcontentloaded' });
-      await page.locator('nav[aria-label="Primary"]').waitFor({ state: 'visible', timeout: 10_000 });
-      await page.getByText('Synthetic preview', { exact: false }).first().waitFor({ state: 'visible' });
+      await page.locator('main#main').waitFor({ state: 'visible', timeout: 10_000 });
+      if (expectedPreview) {
+        await page.locator('nav[aria-label="Primary"]').waitFor({ state: 'visible', timeout: 10_000 });
+        await page.getByText('Synthetic preview', { exact: false }).first().waitFor({ state: 'visible' });
+        if (probe.module) await page.getByText(probe.module, { exact: false }).first().waitFor({ state: 'visible' });
+      }
 
       const result = await page.evaluate(() => ({
         hash: location.hash,
         text: document.body.innerText,
+        roots: document.querySelectorAll('[data-semester-root]').length,
+        mains: document.querySelectorAll('main').length,
+        primaryCount: document.querySelectorAll('nav[aria-label="Primary"]').length,
+        flightKeys: Object.keys(localStorage).filter((key) => key.startsWith('semester.flight-plan.')),
         primary: [...document.querySelectorAll('nav[aria-label="Primary"] button')]
           .map((button) => button.textContent?.trim()),
       }));
       const expectedPrimary = ['Home', 'Calendar', 'Discover', 'Ask Semester', 'Inbox'];
       if (result.hash !== probe.hash) findings.push(`${probe.hash}: rewrote route to ${result.hash}`);
-      if (!result.text.includes(probe.expected)) findings.push(`${probe.hash}: did not draw ${probe.expected}`);
-      if (JSON.stringify(result.primary) !== JSON.stringify(expectedPrimary)) {
+      if (expectedPreview && !result.text.includes(probe.expected)) findings.push(`${probe.hash}: did not draw ${probe.expected}`);
+      if (result.roots !== 1) findings.push(`${probe.hash}: drew ${result.roots} Semester roots`);
+      if (result.mains !== 1) findings.push(`${probe.hash}: drew ${result.mains} main landmarks`);
+      if (expectedPreview && result.primaryCount !== 1) findings.push(`${probe.hash}: drew ${result.primaryCount} global navigations`);
+      if (expectedPreview && JSON.stringify(result.primary) !== JSON.stringify(expectedPrimary)) {
         findings.push(`${probe.hash}: primary navigation was ${JSON.stringify(result.primary)}`);
       }
+      if (!expectedPreview && result.text.includes('Synthetic preview')) findings.push(`${probe.hash}: preview bar rendered with flag off`);
+      if (!expectedPreview && result.text.includes('Synthetic Flight Plan')) findings.push(`${probe.hash}: Flight Plan rendered with flag off`);
+      if (!expectedPreview && result.flightKeys.length) findings.push(`${probe.hash}: preview storage initialized with flag off`);
+      await page.keyboard.press('Tab');
+      if (await page.evaluate(() => document.activeElement === document.body)) findings.push(`${probe.hash}: keyboard focus stayed on body`);
       for (const error of errors) findings.push(`${probe.hash}: ${error}`);
-      console.log(`PASS ${probe.hash} ${probe.width}x${probe.height}`);
+      console.log(`PASS ${probe.hash} ${probe.width}x${probe.height} root=${result.roots} main=${result.mains}`);
+    } finally {
+      await context.close();
+    }
+  }
+
+  if (expectedPreview) {
+    const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+    try {
+      await context.addInitScript(
+        ([version]) => localStorage.setItem('semester.v1', JSON.stringify({ schemaVersion: version, sample: true, seenOnboarding: true, nav: 'tabs' })),
+        [schemaVersion],
+      );
+      const page = await context.newPage();
+      await page.goto(`${base}#/behind`, { waitUntil: 'domcontentloaded' });
+      await page.getByText('Sample Flight Plan recovery', { exact: false }).first().waitFor();
+      await page.getByRole('button', { name: 'Prepare help request' }).click();
+      await page.goto(`${base}#/mail`, { waitUntil: 'domcontentloaded' });
+      await page.getByText('Help with Evidence & sampling practice', { exact: false }).waitFor();
+
+      const previewControls = page.locator('aside[aria-label="Institutional preview controls"]');
+      await previewControls.locator('summary').click();
+      await previewControls.locator('select').nth(0).selectOption('cedar-coast');
+      await page.getByText('Cedar Coast College', { exact: false }).first().waitFor();
+      if (await page.getByText('Help with Evidence & sampling practice', { exact: false }).count()) {
+        findings.push('context isolation: Northstar draft leaked into Cedar Coast');
+      }
+
+      await page.goto(`${base}#/university`, { waitUntil: 'domcontentloaded' });
+      await previewControls.locator('summary').click();
+      await previewControls.locator('select').nth(1).selectOption('cedar-coast-campus-staff');
+      await page.getByText('Student-success workspace', { exact: false }).waitFor();
+      console.log('PASS context isolation Northstar student -> Cedar Coast student -> Cedar Coast staff');
     } finally {
       await context.close();
     }
@@ -145,4 +191,4 @@ if (findings.length) {
   process.exit(1);
 }
 
-console.log(`Institutional preview smoke passed: ${cases.length} route/viewport probes.`);
+console.log(`${expectedPreview ? 'Institutional preview' : 'Feature-flag-off'} smoke passed: ${cases.length} route/viewport probes.`);

@@ -1,5 +1,3 @@
-import type { PreviewRole } from "../data/institutional-preview";
-
 export const TENANTS = {
   northstar: {
     name: "Northstar University",
@@ -26,8 +24,8 @@ export const ROLES = [
   "moderator",
   "employer",
   "authorized_payer",
-] as const satisfies readonly PreviewRole[];
-export type FlightRole = PreviewRole;
+] as const;
+export type FlightRole = (typeof ROLES)[number];
 export const ROLE_NAMES: Record<FlightRole, string> = {
   student: "Student",
   faculty: "Faculty",

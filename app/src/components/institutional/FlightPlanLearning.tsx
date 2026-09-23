@@ -31,7 +31,7 @@ export function FlightPlanLearning() {
                   {concept.choices.map((choice, index) => (
                     <button
                       type="button"
-                      className="bare tappable on-paper"
+                      className="bare tappable"
                       data-choice={index}
                       key={choice}
                       onClick={() =>

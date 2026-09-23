@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { useNow, useStore } from './state/store';
 import { useBottomChrome } from './lib/bottomchrome.hook';
 import { currentLook } from './state/shape';
@@ -101,12 +101,7 @@ import { useTier } from './lib/media';
 import { DOW, MONTHS } from './lib/date';
 import { windowTitle } from './a11y/title';
 import type { Screen } from './lib/types';
-
-const InstitutionalPreviewProvider = lazy(() =>
-  import('./components/institutional/PreviewContext').then((module) => ({
-    default: module.InstitutionalPreviewProvider,
-  })),
-);
+import { InstitutionalPreviewRoot } from './components/institutional/PreviewRoot';
 
 /**
  * What fills the column while a screen's chunk is in flight.
@@ -775,7 +770,7 @@ function Workspace({
         column. Portals that look for `.device` find this, and it is
         positioned, so they land over the whole workspace.
       */}
-      <div className="device deskwork" data-tier={tier}>
+      <div className="device deskwork" data-tier={tier} data-semester-root>
         <SkipLink />
         <Titled />
         <Fresh />
@@ -991,11 +986,9 @@ function Rail() {
 export default function App() {
   if (INSTITUTIONAL_PREVIEW) {
     return (
-      <Suspense fallback={null}>
-        <InstitutionalPreviewProvider>
-          <AppFrame />
-        </InstitutionalPreviewProvider>
-      </Suspense>
+      <InstitutionalPreviewRoot>
+        <AppFrame />
+      </InstitutionalPreviewRoot>
     );
   }
   return <AppFrame />;
@@ -1234,7 +1227,7 @@ function AppFrame() {
        * `.desk-one` drops the rail's column so the pane does not sit in the
        * second half of an empty grid.
        */
-      <div className={chrome.rail && !INSTITUTIONAL_PREVIEW ? 'desk' : 'desk desk-one'} data-tier={tier}>
+      <div className={chrome.rail && !INSTITUTIONAL_PREVIEW ? 'desk' : 'desk desk-one'} data-tier={tier} data-semester-root>
         {/* First in the tree, so it is the first tab stop. See the note in
             the phone layout below. */}
         <SkipLink />
@@ -1376,7 +1369,7 @@ function AppFrame() {
 
   function phoneFrame() {
   return (
-    <div className="device" data-tier={tier}>
+    <div className="device" data-tier={tier} data-semester-root>
       {/*
         The first focusable thing on the page, and invisible until it has
         focus. With sixty screens behind a header and a tab bar, a keyboard

@@ -169,3 +169,24 @@ describe('there is one h1', () => {
     expect(page, 'and so needs no landing point of its own').not.toMatch(/tabIndex=\{-1\}/);
   });
 });
+
+describe('institutional preview extends the one Semester application root', () => {
+  it('marks every existing shell layout as the same application root', () => {
+    const app = find('App.tsx').src;
+    expect(app.match(/data-semester-root/g)?.length).toBe(3);
+  });
+
+  it('adds no nested global landmark or standalone institutional stylesheet', () => {
+    const institutional = FILES.filter(({ file }) => file.includes('/institutional/'));
+    for (const { file, src } of institutional) {
+      expect(src, `${file} must stay inside the shell main`).not.toMatch(/<main[\s>]/);
+      expect(src, `${file} must not add global navigation`).not.toMatch(/<nav[\s>]/);
+      expect(src, `${file} must use the existing design system`).not.toMatch(/import\s+['"][^'"]+\.css['"]/);
+    }
+  });
+
+  it('mounts App exactly once in the signed-in product root', () => {
+    const main = find('main.tsx').src;
+    expect(main.match(/<App\s*\/>/g)).toHaveLength(1);
+  });
+});

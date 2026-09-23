@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { loadSeed } from '../../data/seed';
 import type { PreviewRole } from '../../data/institutional-preview';
 import { StoreProvider } from '../../state/store';
 import { InstitutionalPreviewProvider, useInstitutionalPreview } from './PreviewContext';
@@ -10,6 +11,7 @@ import { RoleWorkspace } from './RoleWorkspace';
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 let host: HTMLDivElement;
 let root: Root;
+beforeAll(() => loadSeed());
 
 function RoleChooser({ role }: { role: PreviewRole }) {
   const { institution, selectPerson } = useInstitutionalPreview();

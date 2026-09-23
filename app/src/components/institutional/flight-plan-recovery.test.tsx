@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { loadSeed } from '../../data/seed';
 import { StoreProvider } from '../../state/store';
 import { FlightPlanProvider } from './FlightPlanContext';
 import { FlightPlanRecovery } from './FlightPlanRecovery';
@@ -9,6 +10,7 @@ import { FlightPlanRecovery } from './FlightPlanRecovery';
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 let host: HTMLDivElement;
 let root: Root;
+beforeAll(() => loadSeed());
 beforeEach(() => {
   host = document.createElement('div');
   document.body.append(host);

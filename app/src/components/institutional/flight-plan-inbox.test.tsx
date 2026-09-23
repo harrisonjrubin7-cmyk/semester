@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { loadSeed } from '../../data/seed';
 import { StoreProvider } from '../../state/store';
 import { updateTask } from '../../lib/flight-plan';
 import { FlightPlanProvider, useFlightPlan } from './FlightPlanContext';
@@ -10,6 +11,7 @@ import { FlightPlanInbox } from './FlightPlanInbox';
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 let host: HTMLDivElement;
 let root: Root;
+beforeAll(() => loadSeed());
 const values = new Map<string, string>();
 const storage = {
   getItem: (key: string) => values.get(key) ?? null,
