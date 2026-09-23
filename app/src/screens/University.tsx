@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { lazy, Suspense, useRef, useState } from 'react';
 import { useDeviceLibrary } from '../lib/device-library';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
@@ -38,6 +38,18 @@ import {
 } from '../lib/readiness';
 import type { School } from '../lib/school';
 import type { Screen } from '../lib/types';
+import { INSTITUTIONAL_PREVIEW } from '../lib/institutional-preview';
+
+const RoleWorkspace = lazy(() =>
+  import('../components/institutional/RoleWorkspace').then((module) => ({
+    default: module.RoleWorkspace,
+  })),
+);
+
+function RoleWorkspaceSlot() {
+  if (!INSTITUTIONAL_PREVIEW) return null;
+  return <Suspense fallback={null}><RoleWorkspace /></Suspense>;
+}
 
 /**
  * Everything a university is, and an honest account of which parts work.
@@ -509,6 +521,8 @@ function Workspace({ storageKey }: { storageKey: string }) {
       </div>
 
       <Standing school={school} status={status} />
+
+      <RoleWorkspaceSlot />
 
       <Segmented
         options={TABS.map((t) => ({
