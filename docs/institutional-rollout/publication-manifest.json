@@ -6,7 +6,7 @@
       "slug": "master-specification",
       "title": "Semester Institutional Rollout Master Specification",
       "sourceSections": [
-        "§1–§18 approved design"
+        "\u00a71\u2013\u00a718 approved design"
       ],
       "outputFilename": "master-specification.md",
       "owner": "Semester product and engineering",
@@ -18,9 +18,9 @@
       "slug": "executive-institutional-brief",
       "title": "Executive Institutional Brief",
       "sourceSections": [
-        "§1 purpose",
-        "§3 product identity",
-        "§13 delivery program"
+        "\u00a71 purpose",
+        "\u00a73 product identity",
+        "\u00a713 delivery program"
       ],
       "outputFilename": "executive-institutional-brief.md",
       "owner": "Institutional program owner",
@@ -34,7 +34,7 @@
       "sourceSections": [
         "current-state census",
         "source index",
-        "§2 truth policy"
+        "\u00a72 truth policy"
       ],
       "outputFilename": "current-product-live-site-audit.md",
       "owner": "Product engineering",
@@ -59,8 +59,8 @@
       "slug": "canonical-data-model-permissions",
       "title": "Canonical Data Model and Permissions",
       "sourceSections": [
-        "§5 platform architecture",
-        "§6 identity and permissions",
+        "\u00a75 platform architecture",
+        "\u00a76 identity and permissions",
         "tenant-role schema map"
       ],
       "outputFilename": "canonical-data-model-permissions.md",
@@ -73,8 +73,8 @@
       "slug": "product-systems-user-journeys",
       "title": "Product Systems and User Journeys",
       "sourceSections": [
-        "§4 information architecture",
-        "§7 product systems"
+        "\u00a74 information architecture",
+        "\u00a77 product systems"
       ],
       "outputFilename": "product-systems-user-journeys.md",
       "owner": "Product design",
@@ -86,8 +86,8 @@
       "slug": "ai-governance-automation",
       "title": "AI Governance and Automation",
       "sourceSections": [
-        "§7.11 Ask Semester",
-        "§9 security and governance"
+        "\u00a77.11 Ask Semester",
+        "\u00a79 security and governance"
       ],
       "outputFilename": "ai-governance-automation.md",
       "owner": "AI governance owner",
@@ -99,8 +99,8 @@
       "slug": "integration-architecture",
       "title": "Integration Architecture",
       "sourceSections": [
-        "§5 platform architecture",
-        "§8 integration architecture"
+        "\u00a75 platform architecture",
+        "\u00a78 integration architecture"
       ],
       "outputFilename": "integration-architecture.md",
       "owner": "Integration engineering",
@@ -112,8 +112,8 @@
       "slug": "security-privacy-compliance",
       "title": "Security, Privacy and Compliance",
       "sourceSections": [
-        "§6 permissions",
-        "§9 security and governance"
+        "\u00a76 permissions",
+        "\u00a79 security and governance"
       ],
       "outputFilename": "security-privacy-compliance.md",
       "owner": "Security and privacy owners",
@@ -125,8 +125,8 @@
       "slug": "accessibility-conformance-plan",
       "title": "Accessibility Conformance Plan",
       "sourceSections": [
-        "§10 accessibility and responsive behavior",
-        "§12 testing"
+        "\u00a710 accessibility and responsive behavior",
+        "\u00a712 testing"
       ],
       "outputFilename": "accessibility-conformance-plan.md",
       "owner": "Accessibility owner",
@@ -138,8 +138,8 @@
       "slug": "migration-rollback-disaster-recovery",
       "title": "Migration, Rollback and Disaster Recovery",
       "sourceSections": [
-        "§11 data continuity",
-        "§13 delivery program"
+        "\u00a711 data continuity",
+        "\u00a713 delivery program"
       ],
       "outputFilename": "migration-rollback-disaster-recovery.md",
       "owner": "Platform operations",
@@ -151,8 +151,8 @@
       "slug": "testing-verification-plan",
       "title": "Testing and Verification Plan",
       "sourceSections": [
-        "§12 testing",
-        "§13 delivery gates"
+        "\u00a712 testing",
+        "\u00a713 delivery gates"
       ],
       "outputFilename": "testing-verification-plan.md",
       "owner": "Quality engineering",
@@ -164,8 +164,8 @@
       "slug": "pilot-institutional-rollout-runbook",
       "title": "Pilot Institutional Rollout Runbook",
       "sourceSections": [
-        "§13 delivery program",
-        "§14 local preview"
+        "\u00a713 delivery program",
+        "\u00a714 local preview"
       ],
       "outputFilename": "pilot-institutional-rollout-runbook.md",
       "owner": "Institutional implementation lead",
@@ -177,9 +177,9 @@
       "slug": "procurement-security-review-package",
       "title": "Procurement and Security Review Package",
       "sourceSections": [
-        "§5 architecture",
-        "§9 governance",
-        "§13 rollout gates"
+        "\u00a75 architecture",
+        "\u00a79 governance",
+        "\u00a713 rollout gates"
       ],
       "outputFilename": "procurement-security-review-package.md",
       "owner": "Institutional program owner",
@@ -191,8 +191,8 @@
       "slug": "claude-code-execution-guide",
       "title": "Claude Code Execution Guide",
       "sourceSections": [
-        "§16 execution model",
-        "§17 program decomposition"
+        "\u00a716 execution model",
+        "\u00a717 program decomposition"
       ],
       "outputFilename": "claude-code-execution-guide.md",
       "owner": "Engineering lead",
@@ -204,7 +204,7 @@
       "slug": "requirements-traceability-source-index",
       "title": "Requirements Traceability and Source Index",
       "sourceSections": [
-        "§2 source hierarchy",
+        "\u00a72 source hierarchy",
         "traceability registry",
         "source index"
       ],
@@ -218,9 +218,9 @@
       "slug": "decisions-risks-external-blockers",
       "title": "Decisions, Risks and External Blockers",
       "sourceSections": [
-        "§2 truth policy",
-        "§13 gates",
-        "§16 stop conditions"
+        "\u00a72 truth policy",
+        "\u00a713 gates",
+        "\u00a716 stop conditions"
       ],
       "outputFilename": "decisions-risks-external-blockers.md",
       "owner": "Program owner",
@@ -234,7 +234,7 @@
       "slug": "00-baseline-foundation",
       "title": "Baseline and foundation",
       "sourceSections": [
-        "§16 execution model",
+        "\u00a716 execution model",
         "approved requirements",
         "current repository evidence"
       ],
@@ -248,7 +248,7 @@
       "slug": "01-identity-tenancy-authorization",
       "title": "Identity, tenancy and authorization",
       "sourceSections": [
-        "§16 execution model",
+        "\u00a716 execution model",
         "approved requirements",
         "current repository evidence"
       ],
@@ -262,7 +262,7 @@
       "slug": "02-canonical-academic-data",
       "title": "Canonical academic data",
       "sourceSections": [
-        "§16 execution model",
+        "\u00a716 execution model",
         "approved requirements",
         "current repository evidence"
       ],
@@ -276,7 +276,7 @@
       "slug": "03-capture-planning-provenance",
       "title": "Capture, planning and provenance",
       "sourceSections": [
-        "§16 execution model",
+        "\u00a716 execution model",
         "approved requirements",
         "current repository evidence"
       ],
@@ -290,7 +290,7 @@
       "slug": "04-study-creation-ai",
       "title": "Study, creation and governed AI",
       "sourceSections": [
-        "§16 execution model",
+        "\u00a716 execution model",
         "approved requirements",
         "current repository evidence"
       ],
@@ -304,7 +304,7 @@
       "slug": "05-campus-career-messaging",
       "title": "Campus, career and messaging systems",
       "sourceSections": [
-        "§16 execution model",
+        "\u00a716 execution model",
         "approved requirements",
         "current repository evidence"
       ],
@@ -318,7 +318,7 @@
       "slug": "06-integrations-operations",
       "title": "Integrations and operations",
       "sourceSections": [
-        "§16 execution model",
+        "\u00a716 execution model",
         "approved requirements",
         "current repository evidence"
       ],
@@ -332,7 +332,7 @@
       "slug": "07-security-accessibility-quality",
       "title": "Security, accessibility and quality gates",
       "sourceSections": [
-        "§16 execution model",
+        "\u00a716 execution model",
         "approved requirements",
         "current repository evidence"
       ],
@@ -346,7 +346,7 @@
       "slug": "08-institutional-rollout",
       "title": "Institutional pilot and rollout",
       "sourceSections": [
-        "§16 execution model",
+        "\u00a716 execution model",
         "approved requirements",
         "current repository evidence"
       ],
@@ -355,6 +355,116 @@
       "verificationDate": "2026-09-23",
       "generationStatus": "generated",
       "sha256": "31bedf93a83aab6e3ab23743be379845536daf905b8e7d284718028e41b9dfec"
+    }
+  ],
+  "publishedArtifacts": [
+    {
+      "filename": "master-specification.docx",
+      "kind": "docx",
+      "sourceSlug": "master-specification",
+      "sha256": "25827999a09d57e5a8c3ab40c5a6e9bdd1d7affac724f87e22069a2542e42558"
+    },
+    {
+      "filename": "executive-institutional-brief.docx",
+      "kind": "docx",
+      "sourceSlug": "executive-institutional-brief",
+      "sha256": "a4fbab3fbe8514cba33b2011e86db6c20c78dd78906ab7d9c1c5fec7f7fe38ae"
+    },
+    {
+      "filename": "current-product-live-site-audit.docx",
+      "kind": "docx",
+      "sourceSlug": "current-product-live-site-audit",
+      "sha256": "55644498fcdd4a53e51ad4ff7f2f44b2f4970875d186c006a9e21c5adc14040a"
+    },
+    {
+      "filename": "capability-disposition-matrix.docx",
+      "kind": "docx",
+      "sourceSlug": "capability-disposition-matrix",
+      "sha256": "d5b67380ee8e1fc6082ecef785be34f5040a37241439260957252ff253500697"
+    },
+    {
+      "filename": "canonical-data-model-permissions.docx",
+      "kind": "docx",
+      "sourceSlug": "canonical-data-model-permissions",
+      "sha256": "7be1272be9d93108766eeb81453eb57527b0c1ae23a8eb3026956168c770c25e"
+    },
+    {
+      "filename": "product-systems-user-journeys.docx",
+      "kind": "docx",
+      "sourceSlug": "product-systems-user-journeys",
+      "sha256": "fa4a46a26449aab3c0aa9dffbf98be4d8f673ae7c8b3c83a25af90cd830c9675"
+    },
+    {
+      "filename": "ai-governance-automation.docx",
+      "kind": "docx",
+      "sourceSlug": "ai-governance-automation",
+      "sha256": "bbb1603001aa22f692c4b4b170b9e36eceb0ac84b65c1d4ba716244b6a5e06c2"
+    },
+    {
+      "filename": "integration-architecture.docx",
+      "kind": "docx",
+      "sourceSlug": "integration-architecture",
+      "sha256": "326e39eeb33c7f500ffb3c630a84942dd474860ffa6d4fce64426c3680167b7c"
+    },
+    {
+      "filename": "security-privacy-compliance.docx",
+      "kind": "docx",
+      "sourceSlug": "security-privacy-compliance",
+      "sha256": "07cc80f79b3b16e6e53193603118d59d902b1aaf882f55479f45d62b8b4bdca0"
+    },
+    {
+      "filename": "accessibility-conformance-plan.docx",
+      "kind": "docx",
+      "sourceSlug": "accessibility-conformance-plan",
+      "sha256": "13a925659966f4070e7185874d05b7c6a0eef3dd17eae1c347930bdf2a15eb85"
+    },
+    {
+      "filename": "migration-rollback-disaster-recovery.docx",
+      "kind": "docx",
+      "sourceSlug": "migration-rollback-disaster-recovery",
+      "sha256": "1fc84a5d92693f2402c015cab58965c2ff872cc28c274e611ae28de2c5774483"
+    },
+    {
+      "filename": "testing-verification-plan.docx",
+      "kind": "docx",
+      "sourceSlug": "testing-verification-plan",
+      "sha256": "d66ff549861d6cc6ff4eae15e7a8146a2ebbb2948f69bb84617dc8aca5ac1917"
+    },
+    {
+      "filename": "pilot-institutional-rollout-runbook.docx",
+      "kind": "docx",
+      "sourceSlug": "pilot-institutional-rollout-runbook",
+      "sha256": "5200b7885ab251e68ca2e5283cdbb473fb5581625677a149fa7cf423c50ccbfe"
+    },
+    {
+      "filename": "procurement-security-review-package.docx",
+      "kind": "docx",
+      "sourceSlug": "procurement-security-review-package",
+      "sha256": "7af94ae6ec80c0d558e783a521ac7bdfd4aa8385e1ec3cf1f459f46f9d79ae4c"
+    },
+    {
+      "filename": "claude-code-execution-guide.docx",
+      "kind": "docx",
+      "sourceSlug": "claude-code-execution-guide",
+      "sha256": "6bea308605b371c5fb66130e3a6c79e2de3cacac672a7fc4c2be4c6c7d30fb16"
+    },
+    {
+      "filename": "requirements-traceability-source-index.docx",
+      "kind": "docx",
+      "sourceSlug": "requirements-traceability-source-index",
+      "sha256": "3132261f9fdd5484ddb6a85a4f1d19ff7237b245b4a0beef1630507f68589813"
+    },
+    {
+      "filename": "decisions-risks-external-blockers.docx",
+      "kind": "docx",
+      "sourceSlug": "decisions-risks-external-blockers",
+      "sha256": "07a51df5b9fc5a9552009989edca5b7dbea36a300b1342b2562eba0908a45d8a"
+    },
+    {
+      "filename": "Semester-Institutional-Rollout-Master.pdf",
+      "kind": "pdf",
+      "sourceSlug": "master-publication",
+      "sha256": "17c5da1aab6037c31ccd261d5fcff3355240daac2f264c7054634466728a89be"
     }
   ]
 }
