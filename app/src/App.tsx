@@ -68,6 +68,8 @@ import { courseFieldFor, insideCourse } from './lib/parent';
 import { ShellBody } from './components/shell/ShellBody';
 import { isCanvas } from './components/shell/exempt';
 import { ShelfNav } from './components/nav/ShelfNav';
+import { InstitutionalNavigation } from './components/nav/InstitutionalPrimaryNav';
+import { INSTITUTIONAL_PREVIEW } from './lib/institutional-preview';
 import { SoftTop } from './components/soft/SoftTop';
 import { barFor, litRailTab, litTab, tabLabel } from './lib/tabbar';
 import { TabGlyph } from './components/TabIcon';
@@ -790,9 +792,10 @@ function Workspace({
             layout is shaped like keeps them. It draws nothing at all until
             something has been starred. */}
         <BookmarksBar />
+        <InstitutionalNavigation />
 
-        <div className={chrome.sidebar ? 'deskwork-body' : 'deskwork-body deskwork-one'}>
-          {chrome.sidebar && <Sidebar />}
+        <div className={chrome.sidebar && !INSTITUTIONAL_PREVIEW ? 'deskwork-body' : 'deskwork-body deskwork-one'}>
+          {chrome.sidebar && !INSTITUTIONAL_PREVIEW && <Sidebar />}
           <div
             className={
               isCanvas(state.screen)
@@ -1207,7 +1210,7 @@ export default function App() {
        * `.desk-one` drops the rail's column so the pane does not sit in the
        * second half of an empty grid.
        */
-      <div className={chrome.rail ? 'desk' : 'desk desk-one'} data-tier={tier}>
+      <div className={chrome.rail && !INSTITUTIONAL_PREVIEW ? 'desk' : 'desk desk-one'} data-tier={tier}>
         {/* First in the tree, so it is the first tab stop. See the note in
             the phone layout below. */}
         <SkipLink />
@@ -1228,7 +1231,7 @@ export default function App() {
         <Watching />
         {/* The one question a first sign-in asks, and only when it is real. */}
         {asking && <Adopting sides={asking.sides} say={asking.say} onChoose={settle} />}
-        {chrome.rail && <Rail />}
+        {chrome.rail && !INSTITUTIONAL_PREVIEW && <Rail />}
         {/* `has-canvas` widens the header's gutter to match a screen whose
             body is a grid rather than a column — see `.pane-body.is-canvas`
             in `styles/app.css`. Both answers come from the same list in
@@ -1327,7 +1330,8 @@ export default function App() {
           <Replaced />
           <Undone />
           {trouble}
-          {chrome.shelves && <ShelfNav />}
+          <InstitutionalNavigation />
+          {!INSTITUTIONAL_PREVIEW && chrome.shelves && <ShelfNav />}
           <ScrollArea screen={state.screen} key={state.screen}>
             <SoftTop />
             <Suspense fallback={<Loading />}>
@@ -1396,7 +1400,8 @@ export default function App() {
       <Said />
       <SampleMark />
       {trouble}
-      {chrome.shelves && <ShelfNav />}
+      <InstitutionalNavigation />
+      {!INSTITUTIONAL_PREVIEW && chrome.shelves && <ShelfNav />}
       <ScrollArea screen={state.screen} key={state.screen}>
         <SoftTop />
         <Suspense fallback={<Loading />}>
@@ -1409,7 +1414,7 @@ export default function App() {
           </ScreenTrouble>
         </Suspense>
       </ScrollArea>
-      {chrome.tabs && <TabBar />}
+      {!INSTITUTIONAL_PREVIEW && chrome.tabs && <TabBar />}
     </div>
   );
   }

@@ -68,6 +68,9 @@
   --shadow-sm: 0 1px 2px color-mix(in srgb, #2b2b2d 14%, transparent);
   --shadow-md: 0 3px 10px color-mix(in srgb, #2b2b2d 16%, transparent);
   --shadow-lg: 0 12px 32px color-mix(in srgb, #2b2b2d 22%, transparent);
+
+  /* Institutional preview chrome uses the same materials as the app. */
+  --institutional-nav-target: 44px;
 }
 
 body {
@@ -359,4 +362,3 @@ textarea.input { min-height: 90px; resize: vertical; }
 .btn { border: 1px solid var(--color-divider); }
 .btn-primary { border-color: var(--color-accent); }
 .btn-ghost { border-color: transparent; }
-

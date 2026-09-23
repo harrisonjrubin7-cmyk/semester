@@ -1133,7 +1133,7 @@ a:hover {
 .task-filter-box {
   flex: 1;
   min-width: 0;
-  min-height: 44px;
+  min-height: var(--institutional-nav-target);
   font-size: var(--type-md);
 }
 
@@ -3324,7 +3324,7 @@ input[type='search'].input {
   flex: none;
   display: inline-flex;
   align-items: center;
-  min-height: 44px;
+  min-height: var(--institutional-nav-target);
   padding: 0 var(--sp-3);
   font-family: var(--font-heading);
   font-size: calc(11px * var(--text-scale, 1));
@@ -3726,6 +3726,104 @@ section[data-drop] > .grip + * {
   font-size: calc(12px * var(--text-scale, 1));
   line-height: var(--line-height, 1.45);
   color: var(--app-dim);
+}
+
+/* ── Institutional navigation preview ────────────────────────────────────
+ *
+ * A build-flagged shell over the same route catalogue. The two rows remain
+ * horizontally stable on compact widths; the contextual row becomes a
+ * disclosure rather than consuming permanent phone height.
+ */
+.institutional-navigation {
+  border-bottom: 1px solid var(--app-line-soft);
+  background: var(--app-bg);
+}
+
+.institutional-primary-nav,
+.institutional-workspace-desktop,
+.institutional-workspace-sheet nav {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.institutional-primary-nav,
+.institutional-workspace-desktop {
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-block: var(--sp-3);
+}
+
+.institutional-primary-nav::-webkit-scrollbar,
+.institutional-workspace-desktop::-webkit-scrollbar {
+  display: none;
+}
+
+.institutional-primary-nav {
+  border-bottom: 1px solid var(--app-line-soft);
+}
+
+.institutional-nav-button {
+  flex: none;
+  width: auto;
+  min-height: 44px;
+  padding: var(--sp-3) var(--sp-6);
+  border-radius: 999px;
+  color: var(--app-dim);
+  white-space: nowrap;
+}
+
+.institutional-nav-button:hover,
+.institutional-nav-button:focus-visible {
+  color: var(--app-fg);
+  background: var(--app-line-soft);
+}
+
+.institutional-nav-button.is-on {
+  color: var(--app-fg);
+  background: var(--app-accent-wash);
+  box-shadow: inset 0 -2px 0 var(--app-accent-bright);
+}
+
+.institutional-workspace-sheet {
+  display: none;
+}
+
+.institutional-workspace-sheet summary {
+  min-height: 44px;
+  padding: var(--sp-4) 0;
+  color: var(--app-fg);
+  cursor: pointer;
+}
+
+.institutional-workspace-sheet nav {
+  flex-direction: column;
+  align-items: stretch;
+  padding-bottom: var(--sp-5);
+}
+
+.institutional-workspace-sheet .institutional-nav-button {
+  width: 100%;
+  text-align: left;
+}
+
+@media (max-width: 759px) {
+  .institutional-navigation {
+    padding-inline: 14px;
+  }
+
+  .institutional-primary-nav {
+    margin-inline: -14px;
+    padding-inline: 14px;
+  }
+
+  .institutional-workspace-desktop {
+    display: none;
+  }
+
+  .institutional-workspace-sheet {
+    display: block;
+  }
 }
 
 /* ---------------------------------------------------------------------------
