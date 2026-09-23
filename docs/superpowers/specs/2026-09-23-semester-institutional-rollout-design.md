@@ -1,6 +1,6 @@
 # Semester Institutional Rollout Design
 
-**Status:** Approved conversational design, written specification awaiting owner review  
+**Status:** Conversational direction reconfirmed; written specification awaiting owner review
 **Date:** 23 September 2026  
 **Product:** Semester  
 **Authoritative implementation target:** Existing React, TypeScript and Supabase repository  
@@ -89,6 +89,30 @@ Preferred language is direct and actionable:
 - Keep mobile useful for quick decisions and desktop powerful for deeper work.
 - Keep essential planning usable without AI.
 - Never reward superficial activity instead of meaningful academic progress.
+
+### 3.4 Central-foundation invariant
+
+The current Semester application is the permanent product foundation. Expansion must happen through its existing `App` root, shell, design tokens, component patterns, destination registry, internal tabs, universal search, app directory, feature flags and route model.
+
+The institutional program must not:
+
+- Mount a second application in place of `App`.
+- Replace the dark editorial Semester shell with a separate visual system.
+- Hide the existing product behind a personal-workspace escape hatch.
+- Duplicate a current screen merely to give an institutional role different sample data.
+- Rename or repurpose an existing route in a way that breaks saved links or stored navigation.
+- Treat Home, Plan, Learn, Connect and Inbox as permission to replace the approved Home, Calendar, Discover, Ask Semester and Inbox hierarchy.
+
+New capabilities attach to the current product as native modules:
+
+- Home gains the Flight Plan, next-best action and recovery summary.
+- Calendar gains workload capacity, source conflicts and rescheduling.
+- Courses and Study gain verified academic records, mastery evidence and teaching workflows.
+- University gains tenant administration, integration readiness, advising, faculty and service workflows.
+- Discover, Connect and Inbox gain the campus graph, communication and network effects.
+- Applying, Family, Career and Pathway extend the same learner record to applicants, supporters, alumni, mentors and employers.
+
+An architectural regression test must fail if institutional mode introduces another root app, another global navigation, a nested main landmark, a second page heading inside the shell, or a standalone token system.
 
 ## 4. Navigation and information architecture
 
@@ -667,6 +691,7 @@ Nothing is omitted from the end state. The program is divided because dependenci
 
 ### Phase 1: Institutional foundation
 
+- Shared institutional preview context inside the existing `App` root
 - Canonical tenancy
 - Identity and SSO
 - Complete roles and permissions
@@ -829,7 +854,7 @@ The first implementation plan will produce:
 - Local preview setup and verified launch procedure
 - Drive and PDF publication builders
 
-No product implementation begins until that plan is reviewed and its execution method is selected.
+No product implementation begins until the written specification is reviewed, the next subsystem plan is reviewed and its execution method is selected. Completion proceeds through independently testable vertical slices; “everything” is the committed end state, not permission to collapse all phases into an unverifiable rewrite.
 
 ## 18. Acceptance of this design
 
