@@ -1,7 +1,7 @@
 import {StudyJournal} from '../components/StudyJournal';
 import { StudyStudio } from '../components/StudyStudio';
 import { allCards } from '../data/catalog';
-import { useMemo, useState } from 'react';
+import { lazy, Suspense, useMemo, useState } from 'react';
 import { useNow, useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { useRowStyle } from '../components/shell/useShell';
@@ -37,6 +37,22 @@ import {
   type UnitFacts,
 } from '../lib/revise';
 import type { CourseId } from '../lib/types';
+import { INSTITUTIONAL_PREVIEW } from '../lib/institutional-preview';
+
+const FlightPlanLearning = lazy(() =>
+  import('../components/institutional/FlightPlanLearning').then((module) => ({
+    default: module.FlightPlanLearning,
+  })),
+);
+
+function FlightPlanLearningSlot() {
+  if (!INSTITUTIONAL_PREVIEW) return null;
+  return (
+    <Suspense fallback={null}>
+      <FlightPlanLearning />
+    </Suspense>
+  );
+}
 
 /**
  * The evenings a student actually has.
@@ -415,6 +431,8 @@ export function Study() {
           </div>
         </Blueprint>
       )}
+
+      <FlightPlanLearningSlot />
 
       <Segmented
         options={[
