@@ -61,9 +61,11 @@ describe('synthetic institutional preview fixtures', () => {
   it('is imported by production source only through the preview boundary', () => {
     const bar = readFileSync(new URL('../components/InstitutionalPreviewBar.tsx', import.meta.url), 'utf8');
     const app = readFileSync(new URL('../App.tsx', import.meta.url), 'utf8');
+    const screens = readFileSync(new URL('../screens.tsx', import.meta.url), 'utf8');
 
     expect(bar).toContain("import('../data/institutional-preview')");
-    expect(app).toContain("import('./components/InstitutionalPreviewBar')");
+    expect(screens).toContain("import('./components/InstitutionalPreviewBar')");
+    expect(app).toContain('InstitutionalPreviewBar');
     expect(app).not.toMatch(/from ['"]\.\/data\/institutional-preview['"]/);
 
     const sourceRoot = resolve(process.cwd(), 'src');

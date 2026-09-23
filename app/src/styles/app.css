@@ -3809,12 +3809,12 @@ section[data-drop] > .grip + * {
 
 @media (max-width: 759px) {
   .institutional-navigation {
-    padding-inline: 14px;
+    padding-inline: calc(14px * var(--density, 1));
   }
 
   .institutional-primary-nav {
-    margin-inline: -14px;
-    padding-inline: 14px;
+    margin-inline: calc(-14px * var(--density, 1));
+    padding-inline: calc(14px * var(--density, 1));
   }
 
   .institutional-workspace-desktop {

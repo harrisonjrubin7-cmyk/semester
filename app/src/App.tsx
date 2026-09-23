@@ -22,7 +22,7 @@ import { Replaced } from './components/Replaced';
 import { SampleMark } from './components/SampleMark';
 import { CALM_ATTR, scrollKindly, usePrefersContrast, usePrefersDark } from './lib/prefers';
 import { Today } from './screens/Today';
-import { Guides, SCREENS, Springboard } from './screens';
+import { Guides, InstitutionalPreviewBar, SCREENS, Springboard } from './screens';
 import { headOf, type Head } from './headers';
 import {
   calmOf,
@@ -101,12 +101,6 @@ import { useTier } from './lib/media';
 import { DOW, MONTHS } from './lib/date';
 import { windowTitle } from './a11y/title';
 import type { Screen } from './lib/types';
-
-const InstitutionalPreviewBar = lazy(() =>
-  import('./components/InstitutionalPreviewBar').then((module) => ({
-    default: module.InstitutionalPreviewBar,
-  })),
-);
 
 /**
  * What fills the column while a screen's chunk is in flight.
@@ -1198,12 +1192,12 @@ export default function App() {
   return (
     <>
       <Sound />
+      {frame()}
       {INSTITUTIONAL_PREVIEW && (
         <Suspense fallback={null}>
           <InstitutionalPreviewBar />
         </Suspense>
       )}
-      {frame()}
     </>
   );
 

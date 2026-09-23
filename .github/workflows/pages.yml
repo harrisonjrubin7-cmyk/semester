@@ -123,6 +123,7 @@ jobs:
           VITE_SUPABASE_KEY: ${{ vars.VITE_SUPABASE_KEY || secrets.VITE_SUPABASE_KEY }}
           VITE_VAPID_PUBLIC_KEY: ${{ vars.VITE_VAPID_PUBLIC_KEY || secrets.VITE_VAPID_PUBLIC_KEY }}
           VITE_UNIVERSITY_GATEWAY_URL: ${{ vars.VITE_UNIVERSITY_GATEWAY_URL || secrets.VITE_UNIVERSITY_GATEWAY_URL }}
+          VITE_INSTITUTIONAL_PREVIEW: ${{ vars.VITE_INSTITUTIONAL_PREVIEW || secrets.VITE_INSTITUTIONAL_PREVIEW }}
           VITE_CLAUDE_PROXY: ${{ vars.VITE_CLAUDE_PROXY || secrets.VITE_CLAUDE_PROXY }}
           VITE_ICS_PROXY: ${{ vars.VITE_ICS_PROXY || secrets.VITE_ICS_PROXY }}
           # The shared key's monthly allowance, as the app *says* it. The cap
@@ -147,7 +148,8 @@ jobs:
           # the deployed app claims it has no account service, and it gives
           # away nothing that the page does not already carry.
           names="VITE_SUPABASE_URL VITE_SUPABASE_KEY VITE_VAPID_PUBLIC_KEY
-                 VITE_UNIVERSITY_GATEWAY_URL VITE_CLAUDE_PROXY VITE_ICS_PROXY
+                 VITE_UNIVERSITY_GATEWAY_URL VITE_INSTITUTIONAL_PREVIEW
+                 VITE_CLAUDE_PROXY VITE_ICS_PROXY
                  VITE_OAUTH_PROXY VITE_MS_CLIENT_ID VITE_GOOGLE_CLIENT_ID
                  VITE_ZOOM_CLIENT_ID VITE_APPLE_CLIENT_ID VITE_STUN_URLS
                  VITE_TURN_URL VITE_TURN_USER VITE_TURN_PASS"
