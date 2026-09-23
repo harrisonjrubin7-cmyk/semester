@@ -1,5 +1,4 @@
-import { useEffect, useState } from 'react';
-import type { InstitutionalFixture } from '../data/institutional-preview';
+import { useInstitutionalPreview } from './institutional/PreviewContext';
 
 const barStyle = {
   position: 'fixed',
@@ -15,24 +14,7 @@ const barStyle = {
 } as const;
 
 export function InstitutionalPreviewBar() {
-  const [fixtures, setFixtures] = useState<readonly InstitutionalFixture[] | null>(null);
-  const [institutionId, setInstitutionId] = useState('northstar');
-  const [personId, setPersonId] = useState('northstar-student');
-
-  useEffect(() => {
-    let active = true;
-    void import('../data/institutional-preview').then((module) => {
-      if (active) setFixtures(module.INSTITUTIONAL_FIXTURES);
-    });
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  if (!fixtures) return <aside aria-label="Institutional preview controls">Loading synthetic preview…</aside>;
-
-  const institution = fixtures.find((fixture) => fixture.id === institutionId) ?? fixtures[0];
-  const person = institution.people.find((candidate) => candidate.id === personId) ?? institution.people[0];
+  const { fixtures, institution, person, selectInstitution, selectPerson } = useInstitutionalPreview();
 
   return (
     <aside aria-label="Institutional preview controls" style={barStyle}>
@@ -45,11 +27,7 @@ export function InstitutionalPreviewBar() {
             Institution{' '}
             <select
               value={institution.id}
-              onChange={(event) => {
-                const next = fixtures.find((fixture) => fixture.id === event.target.value) ?? fixtures[0];
-                setInstitutionId(next.id);
-                setPersonId(next.people[0].id);
-              }}
+              onChange={(event) => selectInstitution(event.target.value)}
             >
               {fixtures.map((fixture) => (
                 <option key={fixture.id} value={fixture.id}>{fixture.name}</option>
@@ -58,7 +36,7 @@ export function InstitutionalPreviewBar() {
           </label>
           <label>
             Persona{' '}
-            <select value={person.id} onChange={(event) => setPersonId(event.target.value)}>
+            <select value={person.id} onChange={(event) => selectPerson(event.target.value)}>
               {institution.people.map((candidate) => (
                 <option key={candidate.id} value={candidate.id}>
                   {candidate.name} — {candidate.role.replaceAll('_', ' ')}

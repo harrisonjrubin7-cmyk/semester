@@ -1,4 +1,4 @@
-import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { useNow, useStore } from './state/store';
 import { useBottomChrome } from './lib/bottomchrome.hook';
 import { currentLook } from './state/shape';
@@ -101,6 +101,12 @@ import { useTier } from './lib/media';
 import { DOW, MONTHS } from './lib/date';
 import { windowTitle } from './a11y/title';
 import type { Screen } from './lib/types';
+
+const InstitutionalPreviewProvider = lazy(() =>
+  import('./components/institutional/PreviewContext').then((module) => ({
+    default: module.InstitutionalPreviewProvider,
+  })),
+);
 
 /**
  * What fills the column while a screen's chunk is in flight.
@@ -983,6 +989,19 @@ function Rail() {
 }
 
 export default function App() {
+  if (INSTITUTIONAL_PREVIEW) {
+    return (
+      <Suspense fallback={null}>
+        <InstitutionalPreviewProvider>
+          <AppFrame />
+        </InstitutionalPreviewProvider>
+      </Suspense>
+    );
+  }
+  return <AppFrame />;
+}
+
+function AppFrame() {
   const { state, dispatch, saveTrouble, asking, settle } = useStore();
   /*
    * Which of the three layouts this window is in — see `lib/media.ts`.
