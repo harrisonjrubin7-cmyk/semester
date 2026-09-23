@@ -174,3 +174,20 @@ comment reads the field back.
 Until **Deploy to production** is switched on, migrations are still applied by
 hand: SQL Editor → New query → paste a file's contents → Run, in filename
 order. SETUP.md walks through it.
+
+## Institutional isolation baseline
+
+`institutional-foundation.check.sql` composes the school, organization, role
+grant and capability boundaries into one two-campus probe. It verifies that a
+campus cannot read another campus's organization, `profiles.school_id` cannot
+be directly changed by a client, revoked and expired grants carry nothing, an
+exact scope does not authorize a different tenant-prefixed scope, and a tenant
+role implies no platform capability.
+
+Run it only through the disposable local harness:
+
+    supabase/check.sh institutional-foundation
+
+The harness creates a temporary Postgres cluster, applies every migration,
+runs the check in a transaction, rolls the fixtures back and removes the
+cluster. Do not run this fixture-producing check against staging or production.
