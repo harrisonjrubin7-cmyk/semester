@@ -1,4 +1,4 @@
-import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { useNow, useStore } from './state/store';
 import { useBottomChrome } from './lib/bottomchrome.hook';
 import { currentLook } from './state/shape';
@@ -101,6 +101,12 @@ import { useTier } from './lib/media';
 import { DOW, MONTHS } from './lib/date';
 import { windowTitle } from './a11y/title';
 import type { Screen } from './lib/types';
+
+const InstitutionalPreviewBar = lazy(() =>
+  import('./components/InstitutionalPreviewBar').then((module) => ({
+    default: module.InstitutionalPreviewBar,
+  })),
+);
 
 /**
  * What fills the column while a screen's chunk is in flight.
@@ -1192,6 +1198,11 @@ export default function App() {
   return (
     <>
       <Sound />
+      {INSTITUTIONAL_PREVIEW && (
+        <Suspense fallback={null}>
+          <InstitutionalPreviewBar />
+        </Suspense>
+      )}
       {frame()}
     </>
   );
