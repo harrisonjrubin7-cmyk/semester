@@ -89,7 +89,17 @@ begin
       -- file — so unlike the others this one is not a forward reference and
       -- the `to_regclass` guard below is belt to its braces rather than the
       -- thing making it legal.
-      ('public.organization_members', 'user_id')
+      ('public.organization_members', 'user_id'),
+      -- Created by 20260922015000_family_invites.sql, which applies after this
+      -- file, so the `to_regclass` guard below is what makes naming it legal:
+      -- before that migration the relation is absent and the loop skips it.
+      --
+      -- A student who has generated a share code has chosen what to share and
+      -- handed somebody eight characters. That is the clearest possible use of
+      -- an account, and a Brightspace launch must not read it as untouched and
+      -- attach itself — least of all to the one account whose owner has an
+      -- outstanding invitation to somebody else.
+      ('public.family_invites',       'student_id')
     ) as x(rel, col)
   loop
     /*
