@@ -1,5 +1,19 @@
 # Repairing the migration history
 
+## 23 September 2026 — tenant intelligence policy
+
+`20260923210000_intelligence_policy.sql` adds school-scoped feature state, AI
+policy, approved-source and consent records. University administration is
+authorized only by live `role_grants` at `scope_kind = 'school'`; profile
+choices, email domains and browser-provided flags grant nothing. The migration
+also records old/new configuration changes with the authenticated actor and
+the verified grant that authorized an institutional write. The two public read
+helpers are security-invoker functions, so their table RLS remains in force.
+
+The matching `intelligence-policy.check.sql` uses two synthetic schools and
+proves same-tenant administration, cross-tenant invisibility, source-approval
+refusal, student-owned consent and audit evidence on PostgreSQL 17.
+
 The schema this app runs on cannot be rebuilt from its own record.
 [`ROLLBACK.md`](ROLLBACK.md) states the finding and why it is a rollback
 concern; this is the plan for fixing it, written before any of it was done so

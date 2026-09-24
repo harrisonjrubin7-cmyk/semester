@@ -111,6 +111,11 @@ begin
   values
     (northstar_user, 'organization_admin', 'organization',
      'northstar-check/revoked-lab', 'institution', now());
+  insert into public.role_grants
+    (subject, role, scope_kind, scope_id, provenance)
+  values
+    (northstar_user, 'university_admin', 'school',
+     'northstar-check', 'institution');
 
   perform pg_temp.become(northstar_user);
   select private.has_capability(
@@ -135,6 +140,16 @@ begin
 
   select private.has_capability('platform:configure') into answer;
   perform pg_temp.answered('a tenant role implies no platform capability', answer, false);
+
+  select private.has_capability(
+    'tenant:configure', 'school', 'northstar-check'
+  ) into answer;
+  perform pg_temp.answered('a verified school grant enables tenant configuration', answer, true);
+
+  select private.has_capability(
+    'tenant:configure', 'school', 'cedar-check'
+  ) into answer;
+  perform pg_temp.answered('a school grant is exact and cannot configure another tenant', answer, false);
 
   reset role;
   raise notice 'institutional foundation: every check passed';

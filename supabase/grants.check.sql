@@ -124,7 +124,7 @@ end $$;
 do $$
 declare
   /*
-   * The allowlist. Twenty, and each is a deliberate entry point:
+   * The allowlist. Twenty-two, and each is a deliberate entry point:
    *   make_referral_code  — mints this account's own code
    *   claim_referral      — records that this account arrived on somebody's
    *   referral_standing   — two integers and a boolean about the caller
@@ -157,6 +157,10 @@ declare
     'make_referral_code()',
     'note_activity(marks text[])',
     'referral_standing()',
+    -- Both are security-invoker reads. Their table RLS remains the boundary:
+    -- a caller can resolve only policy rows from their verified school.
+    'effective_ai_policy(want_tenant text, want_user uuid)',
+    'feature_state(want_capability text, want_tenant text)',
     -- Sets `profiles.school_id` from the address the server confirmed. The
     -- column's own UPDATE privilege is revoked from both API roles, so this
     -- function is the only way in and has to be callable by a signed-in
@@ -254,7 +258,7 @@ begin
   if missing is not null then
     raise exception 'FAILED: the allowlist names %, which a signed-in account cannot call', missing;
   end if;
-  raise notice 'ok  and can call all twenty that it should';
+  raise notice 'ok  and can call all twenty-two that it should';
 end $$;
 
 -- ── The gate's own switch, named because it is the one that was open ──────
