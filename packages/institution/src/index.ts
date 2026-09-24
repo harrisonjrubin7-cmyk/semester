@@ -25,6 +25,8 @@
 
 export const INSTITUTION_VERSION = 1;
 
+export * from './intelligence.ts';
+
 /**
  * The thirty-seven service areas, each with the name a student would read.
  *

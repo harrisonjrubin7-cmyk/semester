@@ -744,6 +744,7 @@ export default defineConfig(({ command, mode }) => {
           test: {
             name: 'shared',
             isolate: false,
+            include: [...configDefaults.include, '../packages/institution/src/**/*.test.ts'],
             exclude: [...configDefaults.exclude, ...MOCKS_MODULES],
           },
         },

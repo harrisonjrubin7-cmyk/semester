@@ -6,6 +6,7 @@ import { MAX_BODY, createGateway } from './gateway.ts';
 import { supabaseIdentity } from './auth.ts';
 import { adapters } from './adapters.ts';
 import { SANDBOX_NAME, SandboxStore, sandboxAdapters } from './sandbox.ts';
+import { createIntelligenceService } from './intelligence.ts';
 
 /**
  * The process. Everything the gateway needs before it can answer anything.
@@ -159,6 +160,39 @@ const authenticate = authUrl && authKey ? supabaseIdentity(authUrl, authKey) : a
 const sandboxOn = process.env.SEMESTER_SANDBOX_INSTITUTION === '1';
 const sandboxStore = sandboxOn ? new SandboxStore(sandboxPath()) : null;
 const installed = sandboxStore ? [...adapters, ...sandboxAdapters(sandboxStore)] : adapters;
+const configuredModels = (process.env.SEMESTER_AI_PROVIDERS || '')
+  .split(',')
+  .map((model) => model.trim())
+  .filter(Boolean);
+const monthlyCents = Number(process.env.SEMESTER_AI_MONTHLY_CENTS || '0');
+const retentionDays = Number(process.env.SEMESTER_AI_RETENTION_DAYS || '30');
+
+/*
+ * Provider names and budgets are policy, not a provider implementation.
+ * This repository deliberately ships no institutional model credential or
+ * connector, so the live process stays policy-disabled even if an operator
+ * has started drafting those values. Tests inject an approved provider at the
+ * same boundary; a deployment must do the same before changing this status.
+ */
+const intelligence = createIntelligenceService({
+  status: 'policy-disabled',
+  loadPolicy: async () => ({
+    state: 'off',
+    allowedModes: ['explain', 'hint', 'practice', 'review'],
+    allowedModels: configuredModels,
+    maxRequestCents: 0,
+    monthlyBudgetCents: Number.isFinite(monthlyCents) ? Math.max(0, monthlyCents) : 0,
+    monthlySpentCents: 0,
+    retentionDays: Number.isFinite(retentionDays) ? Math.max(0, Math.floor(retentionDays)) : 30,
+  }),
+  loadApprovedSources: async () => [],
+  modelTask: async () => ({ candidates: [] }),
+  generate: async () => {
+    throw new Error('No approved institutional model provider is installed.');
+  },
+  execute: async () => ({ verified: false }),
+  audit: (identity, record) => journal.auditIntelligence(identity, record),
+});
 
 const handler = createGateway({
   origin: appOrigin(),
@@ -169,6 +203,7 @@ const handler = createGateway({
   authenticate,
   adapters: installed,
   journal,
+  intelligence,
 });
 
 async function serve(req: IncomingMessage, res: ServerResponse): Promise<void> {
