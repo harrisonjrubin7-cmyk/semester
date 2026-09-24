@@ -2,7 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { allApps } from './desk';
 import { DESTINATIONS } from './nav';
 import type { Capabilities } from './school';
-import { JOURNEYS, journeysFor, recommendJourney, searchJourneys } from './journeys';
+import {
+  JOURNEYS,
+  journeyPositionFor,
+  journeysFor,
+  recommendJourney,
+  searchJourneys,
+} from './journeys';
 
 const ALL: Capabilities = {
   mealPlan: 'both',
@@ -26,8 +32,17 @@ describe('student journeys', () => {
     ]);
     const registered = new Set(DESTINATIONS.map((destination) => destination.screen));
     expect(result.every((journey) => journey.screens.every((screen) => registered.has(screen)))).toBe(true);
-    expect(new Set(result.flatMap((journey) => journey.screens)).size).toBeGreaterThan(0);
+    expect(new Set(result.flatMap((journey) => journey.screens))).toEqual(registered);
     expect(allApps(ALL, 'student')).toHaveLength(beforeJourneyCount);
+  });
+
+  it('connects a screen to its current journey and adjacent parts', () => {
+    const position = journeyPositionFor('write');
+    expect(position?.journey.id).toBe('complete-assignment');
+    expect(position?.current).toBe('write');
+    expect(position?.previous).toBeTruthy();
+    expect(position?.next).toBeTruthy();
+    expect(position?.position).toBeGreaterThan(1);
   });
 
   it('ranks plan today from a confirmed deadline without hiding the other journeys', () => {
