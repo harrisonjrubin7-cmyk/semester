@@ -7035,6 +7035,90 @@ section[data-drop] > .grip + * {
   min-height: 0;
 }
 
+.course-mastery {
+  margin-top: var(--sp-5);
+  padding: var(--sp-5);
+  border: 1px solid var(--app-line-soft);
+  border-radius: var(--r-md);
+}
+
+.course-mastery > summary {
+  cursor: pointer;
+  color: var(--app-fg);
+  font-size: var(--type-sm);
+}
+
+.course-mastery > p {
+  color: var(--app-dim);
+  font-size: var(--type-xs-plus);
+  line-height: var(--leading-normal);
+}
+
+.mastery-graph {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+  margin-block: var(--sp-5);
+}
+
+.mastery-concept {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.mastery-concept-head,
+.mastery-concept-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--sp-5);
+}
+
+.mastery-concept-head {
+  font-size: var(--type-sm);
+}
+
+.mastery-concept-head > span,
+.mastery-concept-meta {
+  color: var(--app-dim);
+}
+
+.mastery-concept-meta {
+  flex-wrap: wrap;
+  font-size: var(--type-xs);
+}
+
+.mastery-track {
+  height: var(--sp-2);
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--app-line);
+}
+
+.mastery-track > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--app-accent);
+}
+
+.study-mistake-suggestion {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-5);
+  margin-block: var(--sp-5);
+  padding: var(--sp-5);
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-md);
+  background: var(--app-accent-wash);
+  font-size: var(--type-sm);
+}
+
+.study-mistake-suggestion button {
+  flex: none;
+}
+
 @media (max-width: 759px) {
   .journey-cards {
     grid-template-columns: 1fr;
