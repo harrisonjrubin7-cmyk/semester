@@ -38,7 +38,7 @@ create table if not exists public.tenant_feature_policy (
   permitted_roles text[] not null default '{}',
   reason text not null default '' check (length(reason) <= 1000),
   effective_at timestamptz not null default now(),
-  updated_by uuid not null references auth.users(id),
+  updated_by uuid references auth.users(id) on delete set null,
   updated_at timestamptz not null default now(),
   unique (tenant_id, capability)
 );
@@ -56,7 +56,7 @@ create table if not exists public.ai_policy (
   monthly_budget_cents bigint not null default 0 check (monthly_budget_cents >= 0),
   retention_days integer not null default 30 check (retention_days between 0 and 3650),
   policy_version text not null default '1' check (length(trim(policy_version)) between 1 and 100),
-  updated_by uuid not null references auth.users(id),
+  updated_by uuid references auth.users(id) on delete set null,
   updated_at timestamptz not null default now(),
   constraint ai_policy_modes_valid check (
     allowed_modes <@ array['explain', 'hint', 'practice', 'review', 'draft']::text[]
@@ -77,7 +77,7 @@ create table if not exists public.approved_source (
   authority text not null check (authority in ('authoritative', 'supplemental', 'prohibited')),
   source_uri text check (source_uri is null or length(source_uri) <= 2000),
   citation_label text not null default '' check (length(citation_label) <= 500),
-  created_by uuid not null references auth.users(id),
+  created_by uuid references auth.users(id) on delete set null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   unique (tenant_id, course_id, title)

@@ -19,6 +19,7 @@ import { datedItems } from '../lib/select';
 import { useTrouble } from '../lib/trouble';
 import { useAI } from './store';
 import { assemble } from './assemble';
+import { assembleIntelligenceRequest } from '../intelligence/assemble';
 import { dropThread, flight, keepTurns, newThread, openThread, sender, setLive, useLive,
   renameThread,
   pinThread,
@@ -163,7 +164,7 @@ function localFor(text: string, read: Mode, pool: Destination[]): Local | null {
 }
 
 export function useConversation(): Conversation {
-  const { state, dispatch, catalog, school } = useStore();
+  const { state, dispatch, catalog, school, account } = useStore();
   const now = useNow();
   const ai = useAI();
   const trouble = useTrouble();
@@ -360,9 +361,46 @@ export function useConversation(): Conversation {
           seen.text,
           school.capabilities.aiOff ?? [],
         );
+        const personId = account?.id ?? 'device';
+        const intelligence = assembleIntelligenceRequest({
+          question: text,
+          scope: {
+            tenantId: state.schoolId || 'unaffiliated',
+            role: state.role,
+            personId,
+            ...(state.guideId ? { resourceId: state.guideId } : {}),
+          },
+          screen: state.screen,
+          ...(state.guideId ? { courseId: state.guideId } : {}),
+          visibleSourceIds: seen.visibleSourceIds,
+          evidence: state.sources.map((source) => ({
+            id: `source:${source.id}`,
+            sourceId: source.id,
+            origin: 'student' as const,
+            title: source.title || source.raw.slice(0, 100) || 'Saved source',
+            locator: source.url || 'Saved in Semester',
+            excerpt: source.raw.slice(0, 500),
+            verifiedAt: new Date(source.created).toISOString(),
+            authority: 'confirmed' as const,
+            scope: {
+              tenantId: state.schoolId || 'unaffiliated',
+              role: state.role,
+              personId,
+              ...(source.courseId ? { resourceId: source.courseId } : {}),
+            },
+          })),
+          requestedMode: 'explain',
+          allowedModes: ['explain', 'hint', 'practice', 'review', 'draft'],
+          policyId: `${state.schoolId || 'unaffiliated'}:local-default`,
+          consentIds: [],
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+          providerRoute: provider() === 'openai' ? 'openai' : 'anthropic',
+          assembledAt: now.toISOString(),
+        });
         /** Everything this answer drew on: what travelled, plus what it fetched. */
         const drew = new Set(drawn.used);
-        setUsed(drawn.used);
+        for (const item of intelligence.evidence) drew.add(`${item.title} — ${item.locator}`);
+        setUsed([...drew]);
 
         /*
          * The conversation as the next request will see it, which is not
@@ -573,7 +611,7 @@ export function useConversation(): Conversation {
     },
     // No `dispatch`: the one call `send` made was the search the card
     // promised and no screen ran. See the note on `Proposal` in `lib/tools.ts`.
-    [busy, turns, remember, trouble, ai, state, catalog, now, school, systemFor, held],
+    [busy, turns, remember, trouble, ai, state, catalog, now, school, account?.id, systemFor, held],
   );
 
   /*

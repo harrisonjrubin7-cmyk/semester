@@ -11,6 +11,11 @@ import {
 import { useNow, useStore } from '../state/store';
 import type { Look, ScreenContext } from './shape';
 import type { Screen } from '../lib/types';
+import {
+  sameSessionScope,
+  type IntelligenceSessionScope,
+} from '../intelligence/session';
+import { flight, newThread } from './live';
 
 /**
  * The assistant's own state, mounted once above the router.
@@ -94,8 +99,16 @@ const Ctx = createContext<AI | null>(null);
  * every store change without costing anything, because nothing below it
  * re-renders when it does.
  */
-function Bridge({ onLive, onScreen }: { onLive: (l: Look) => void; onScreen: (s: Screen) => void }) {
-  const { state, catalog } = useStore();
+function Bridge({
+  onLive,
+  onScreen,
+  onScope,
+}: {
+  onLive: (l: Look) => void;
+  onScreen: (s: Screen) => void;
+  onScope: (scope: IntelligenceSessionScope) => void;
+}) {
+  const { state, catalog, account } = useStore();
   const now = useNow();
   /*
    * Handed up after the render commits, rather than written during it.
@@ -117,6 +130,13 @@ function Bridge({ onLive, onScreen }: { onLive: (l: Look) => void; onScreen: (s:
   useEffect(() => {
     onScreen(state.screen);
   }, [state.screen, onScreen]);
+  useEffect(() => {
+    onScope({
+      tenantId: state.schoolId || 'unaffiliated',
+      role: state.role,
+      personId: account?.id ?? 'device',
+    });
+  }, [state.schoolId, state.role, account?.id, onScope]);
   return null;
 }
 
@@ -130,10 +150,25 @@ export function AIProvider({ children }: { children: ReactNode }) {
   const cameFrom = useRef<HTMLElement | null>(null);
   /** Context registered by components that are mounted right now. */
   const extra = useRef(new Map<string, ScreenContext>());
+  /** Authorization scope attached to the current conversation context. */
+  const sessionScope = useRef<IntelligenceSessionScope | null>(null);
 
   const onScreen = useCallback((s: Screen) => setScreen(s), []);
   const onLive = useCallback((l: Look) => {
     live.current = l;
+  }, []);
+  const onScope = useCallback((next: IntelligenceSessionScope) => {
+    const previous = sessionScope.current;
+    sessionScope.current = next;
+    if (!previous || sameSessionScope(previous, next)) return;
+
+    // A pending answer, visible-source context and proposed action all belong
+    // to the old authorization scope. Stop the request, clear mounted context
+    // and begin a transcript that cannot send those turns under the new one.
+    flight.abort?.abort();
+    flight.abort = null;
+    extra.current.clear();
+    newThread();
   }, []);
 
   const readCameFrom = useCallback(() => cameFrom.current, []);
@@ -192,7 +227,7 @@ export function AIProvider({ children }: { children: ReactNode }) {
 
   return (
     <Ctx.Provider value={value}>
-      <Bridge onLive={onLive} onScreen={onScreen} />
+      <Bridge onLive={onLive} onScreen={onScreen} onScope={onScope} />
       <Seed.Provider value={{ seeded, clear: () => setSeeded('') }}>{children}</Seed.Provider>
     </Ctx.Provider>
   );
