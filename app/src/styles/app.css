@@ -3800,6 +3800,67 @@ section[data-drop] > .grip + * {
   border-bottom: 1px solid var(--app-line-soft);
 }
 
+/* ── Institutional workspace density ─────────────────────────────────────
+ *
+ * The workspace deliberately has several persistent wayfinding layers: open
+ * tabs, global search, primary destinations and the contextual workspace.
+ * At their original comfortable spacing those layers consumed roughly the
+ * first third of a short laptop viewport before the page itself began. Keep
+ * every layer, but make the chrome read as one compact control surface.
+ *
+ * The buttons retain their 44px interaction floor. Only the air around those
+ * targets and the decorative mark are reduced, so this does not trade away
+ * keyboard or touch access for density. Scoped through the institutional
+ * navigation so the non-institutional shells preserve their existing rhythm.
+ */
+.deskwork:has(.institutional-navigation) > .desktop-bar {
+  gap: var(--sp-5);
+  padding: var(--sp-1) var(--sp-7);
+}
+
+.deskwork:has(.institutional-navigation) .desktop-brand {
+  gap: var(--sp-4);
+}
+
+.deskwork:has(.institutional-navigation) .desktop-mark {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--r-md);
+}
+
+.deskwork:has(.institutional-navigation) .desktop-field {
+  min-height: 44px;
+  gap: var(--sp-4);
+  padding: var(--sp-2) var(--sp-4) var(--sp-2) var(--sp-6);
+}
+
+.deskwork:has(.institutional-navigation) .desktop-ai {
+  min-height: 44px;
+  padding: var(--sp-2) var(--sp-5);
+}
+
+.deskwork:has(.institutional-navigation) .institutional-primary-nav {
+  padding-block: var(--sp-1);
+}
+
+.deskwork:has(.institutional-navigation) .institutional-nav-button {
+  padding-inline: var(--sp-5);
+}
+
+.deskwork:has(.institutional-navigation) .institutional-workspace-disclosure > summary {
+  padding-block: var(--sp-2);
+}
+
+.deskwork:has(.institutional-navigation) .app-header {
+  padding-bottom: var(--sp-3);
+}
+
+@media (max-width: 759px) {
+  .deskwork:has(.institutional-navigation) > .desktop-bar {
+    padding-inline: var(--sp-5);
+  }
+}
+
 .institutional-journey-context {
   display: flex;
   align-items: center;
