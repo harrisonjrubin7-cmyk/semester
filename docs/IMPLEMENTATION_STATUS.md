@@ -10,7 +10,7 @@ The existing 59-screen product remains the foundation. Six journey cards now rou
 
 The institutional server now owns AI policy, approved-source filtering, provider and cost routing, action confirmation and metadata-only auditing. PostgreSQL adds tenant/person-isolated learning evidence, skill claims and capture records with row-level security and consent withdrawal behavior. The gateway still starts policy-disabled because no approved production provider adapter ships in this repository.
 
-Local acceptance is recorded in [`docs/institutional-rollout/intelligence-expansion-evidence.md`](institutional-rollout/intelligence-expansion-evidence.md): 12,646 tests passed, file-order/shuffle/two-timezone suites agreed, both production builds passed, desktop and phone browser smoke passed, and all 30 PostgreSQL policy suites passed. This does not prove live SSO, SCIM, LMS access, employer/alumni data, sent actions, official-record writes or legal permission to record.
+Local acceptance is recorded in [`docs/institutional-rollout/intelligence-expansion-evidence.md`](institutional-rollout/intelligence-expansion-evidence.md): 12,646 tests passed, file-order/shuffle/two-timezone suites agreed, both production builds passed, desktop and phone browser smoke passed, and all 30 PostgreSQL policy suites passed. This does not prove that live SSO, SCIM or LMS connections work. It also does not prove employer or alumni data, sent actions, official-record writes or legal permission to record.
 
 ## September 15, 2026 — the mistake journal only ever wrote
 
