@@ -7119,6 +7119,78 @@ section[data-drop] > .grip + * {
   flex: none;
 }
 
+.skills-empty {
+  color: var(--app-dim);
+  font-size: var(--type-base);
+}
+
+.skills-graph {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--sp-5);
+}
+
+.skills-claim,
+.career-fit {
+  padding: var(--sp-6);
+  border: 1px solid var(--app-line-soft);
+  border-radius: var(--r-lg);
+  background: var(--app-hero);
+}
+
+.skills-claim-head,
+.career-fit-columns {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--sp-6);
+}
+
+.skills-claim-head > span,
+.skills-claim > p {
+  color: var(--app-dim);
+  font-size: var(--type-xs);
+}
+
+.skills-evidence {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  margin-top: var(--sp-4);
+}
+
+.skills-evidence button {
+  width: auto;
+  padding: var(--sp-3) var(--sp-4);
+  border: 1px solid var(--app-line);
+  border-radius: 999px;
+  color: var(--app-fg);
+  font-size: var(--type-xs);
+}
+
+.career-fit-columns > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.career-skill-plan {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  padding-left: var(--sp-7);
+}
+
+.career-skill-plan li > span {
+  display: block;
+  margin-top: var(--sp-2);
+  color: var(--app-dim);
+}
+
+@media (max-width: 600px) {
+  .career-fit-columns {
+    flex-direction: column;
+  }
+}
+
 @media (max-width: 759px) {
   .journey-cards {
     grid-template-columns: 1fr;

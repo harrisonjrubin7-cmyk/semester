@@ -88,11 +88,22 @@ describe('the stylesheets', () => {
   it('style nothing that nothing wears', () => {
     const hay = haystack();
     const dead: string[] = [];
+    // The same utility class appears in many rules. Cache the repository-wide
+    // substring check so a full parallel suite does not repeatedly rescan the
+    // whole source tree for the same name.
+    const worn = new Map<string, boolean>();
+    const appears = (name: string) => {
+      const cached = worn.get(name);
+      if (cached !== undefined) return cached;
+      const found = hay.includes(name);
+      worn.set(name, found);
+      return found;
+    };
     for (const sheet of SHEETS) {
       const css = readFileSync(join(STYLES, sheet), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
       for (const m of css.matchAll(/\.(-?[_a-zA-Z][\w-]*)/g)) {
         const name = m[1];
-        if (FOREIGN.test(name) || COMPOSED.has(name) || hay.includes(name)) continue;
+        if (FOREIGN.test(name) || COMPOSED.has(name) || appears(name)) continue;
         if (!dead.includes(`${sheet}: .${name}`)) dead.push(`${sheet}: .${name}`);
       }
     }
