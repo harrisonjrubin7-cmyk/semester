@@ -12,6 +12,7 @@ import {
 import type { AdapterContext, InstitutionAdapter } from './adapter.ts';
 import type { ActionJournal } from './journal.ts';
 import type { IntelligenceService } from './intelligence.ts';
+import type { PublicSsoConfig } from './membership.ts';
 
 /**
  * The gateway: everything that is the same whichever university it is.
@@ -56,6 +57,7 @@ interface Config {
   adapters: InstitutionAdapter[];
   journal: ActionJournal;
   intelligence?: IntelligenceService;
+  loadSsoConfig?: () => Promise<PublicSsoConfig | null>;
 }
 
 class HttpError extends Error {
@@ -165,6 +167,14 @@ export function createGateway(config: Config) {
           },
           { status: ready ? 200 : 503, headers },
         );
+      }
+      if (request.method === 'GET' && path === '/v1/auth/config') {
+        try {
+          const sso = await config.loadSsoConfig?.();
+          return Response.json(sso ?? { enabled: false }, { status: 200, headers });
+        } catch {
+          return Response.json({ enabled: false }, { status: 200, headers });
+        }
       }
       if (!['GET', 'POST'].includes(request.method)) fail(405, 'Method not supported.');
 

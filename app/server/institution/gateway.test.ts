@@ -129,6 +129,7 @@ function fixture() {
     refreshIdentity: async (current) => membershipActive ? { ...current, roles: membershipRoles } : null,
     adapters: [adapter],
     journal,
+    loadSsoConfig: async () => ({ enabled: true, label: 'Vanderbilt', domain: 'vanderbilt.edu' }),
     intelligence: {
       status: 'configured-sandbox',
       policy: async () => ({ status: 200, body: {} }),
@@ -198,6 +199,17 @@ function fixture() {
 }
 
 describe('university gateway boundaries', () => {
+  it('publishes only the approved sign-in label and discovery domain without requiring a session', async () => {
+    const f = fixture();
+    const result = await f.request('/v1/auth/config', undefined, { authorization: '' });
+    expect(result.status).toBe(200);
+    expect(await result.json()).toEqual({
+      enabled: true,
+      label: 'Vanderbilt',
+      domain: 'vanderbilt.edu',
+    });
+  });
+
   it('does not accept role claims from editable user metadata', () => {
     expect(
       trustedIdentity({ id: 'u', ...{ user_metadata: { semester: { institutionId: 's', roles: ['admin'] } } } }),

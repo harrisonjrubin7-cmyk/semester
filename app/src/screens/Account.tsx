@@ -227,6 +227,11 @@ export function AccountScreen() {
       */}
       <Credentials />
 
+      <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+        An institution sign-in option appears only after the university has authorized its identity
+        provider and Semester has verified the connection.
+      </div>
+
       <SectionLabel>Before you sign up</SectionLabel>
       <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed-plus)', textWrap: 'pretty' }}>
         What you already have on this device is kept. The first sync sends it up, and if the

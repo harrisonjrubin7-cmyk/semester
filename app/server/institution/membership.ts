@@ -15,6 +15,55 @@ export interface ProviderRecord {
   tenantId: string;
   providerIdentifier: string;
   status: 'pending' | 'authorized' | 'disabled';
+  domains?: readonly string[];
+}
+
+export interface PublicSsoConfig {
+  enabled: true;
+  label: string;
+  domain: string;
+}
+
+export function publicSsoConfig(
+  providers: readonly ProviderRecord[],
+  domain: string,
+  label: string,
+): PublicSsoConfig | null {
+  const normalized = domain.trim().toLowerCase();
+  const matches = providers.filter(
+    (provider) =>
+      provider.status === 'authorized' &&
+      provider.domains?.some((candidate) => candidate.trim().toLowerCase() === normalized),
+  );
+  if (matches.length !== 1 || !normalized || !label.trim()) return null;
+  return { enabled: true, label: label.trim(), domain: normalized };
+}
+
+export function supabaseSsoConfigLoader(
+  url: string,
+  serviceKey: string,
+  domain: string,
+  label: string,
+): () => Promise<PublicSsoConfig | null> {
+  const client = createClient(url, serviceKey, {
+    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+  });
+  return async () => {
+    const { data, error } = await client
+      .from('institution_identity_provider')
+      .select('id, tenant_id, provider_identifier, status, domains')
+      .eq('status', 'authorized')
+      .contains('domains', [domain.trim().toLowerCase()])
+      .limit(2);
+    if (error) throw new Error('Institution identity provider configuration lookup failed.');
+    return publicSsoConfig((data ?? []).map((row) => ({
+      id: row.id as string,
+      tenantId: row.tenant_id as string,
+      providerIdentifier: row.provider_identifier as string,
+      status: row.status as ProviderRecord['status'],
+      domains: Array.isArray(row.domains) ? row.domains as string[] : [],
+    })), domain, label);
+  };
 }
 
 export interface MembershipRecord {

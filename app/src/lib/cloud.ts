@@ -33,6 +33,7 @@ import { explainSignUp } from './invite';
 const env = import.meta.env as unknown as Record<string, string | undefined>;
 const URL = env.VITE_SUPABASE_URL ?? '';
 const KEY = env.VITE_SUPABASE_KEY ?? '';
+const UNIVERSITY_GATEWAY_URL = env.VITE_UNIVERSITY_GATEWAY_URL ?? '';
 
 /** False when no project is configured — the app then runs device-only. */
 export const cloudConfigured = Boolean(URL && KEY);
@@ -97,6 +98,53 @@ export function appUrl(): string {
   const base = import.meta.env.BASE_URL || '/';
   // `URL` is taken in this module by the project address, hence globalThis.
   return new globalThis.URL(base, window.location.origin).href;
+}
+
+export interface InstitutionSsoConfig {
+  enabled: true;
+  label: string;
+  domain: string;
+}
+
+/**
+ * The public, non-secret part of an institution's approved SSO connection.
+ *
+ * The browser cannot turn this on from an environment label alone. The
+ * gateway derives it from the current server-side provider record and returns
+ * only the human label and domain used by Supabase domain discovery. Missing,
+ * malformed and unreachable configurations all mean "do not draw a button".
+ */
+export async function institutionSsoConfig(): Promise<InstitutionSsoConfig | null> {
+  if (!UNIVERSITY_GATEWAY_URL) return null;
+  try {
+    const base = new globalThis.URL(UNIVERSITY_GATEWAY_URL, window.location.origin);
+    const local = ['localhost', '127.0.0.1'];
+    const secure =
+      base.protocol === 'https:' ||
+      (base.protocol === 'http:' && local.includes(base.hostname) && local.includes(window.location.hostname));
+    if (base.username || base.password || base.search || base.hash || !secure) return null;
+
+    const result = await fetchWithin(`${base.href.replace(/\/$/, '')}/v1/auth/config`, {
+      credentials: 'omit',
+      redirect: 'error',
+    });
+    if (!result.ok) return null;
+    const value: unknown = await result.json();
+    if (!value || typeof value !== 'object') return null;
+    const candidate = value as Record<string, unknown>;
+    if (
+      candidate.enabled !== true ||
+      typeof candidate.label !== 'string' ||
+      !candidate.label.trim() ||
+      candidate.label.length > 80 ||
+      typeof candidate.domain !== 'string' ||
+      candidate.domain !== candidate.domain.toLowerCase() ||
+      !/^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/.test(candidate.domain)
+    ) return null;
+    return { enabled: true, label: candidate.label.trim(), domain: candidate.domain };
+  } catch {
+    return null;
+  }
 }
 
 // ── Signing in ────────────────────────────────────────────────────────────
@@ -326,6 +374,21 @@ export async function signInWith(provider: Provider): Promise<void> {
       ...(provider === 'azure' ? { scopes: 'email openid profile' } : {}),
     },
   });
+  if (error) throw new Error(error.message);
+}
+
+export async function signInWithSSO({
+  domain,
+  redirectTo,
+}: {
+  domain: string;
+  redirectTo: string;
+}): Promise<void> {
+  if (redirectTo !== appUrl()) throw new Error('Institutional sign-in must return to the approved app address.');
+  if (!/^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/.test(domain)) {
+    throw new Error('Institutional sign-in is not configured with a valid domain.');
+  }
+  const { error } = await (await cloud()).auth.signInWithSSO({ domain, options: { redirectTo } });
   if (error) throw new Error(error.message);
 }
 

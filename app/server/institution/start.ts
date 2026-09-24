@@ -4,7 +4,11 @@ import { dirname, resolve } from 'node:path';
 import { ActionJournal } from './journal.ts';
 import { MAX_BODY, createGateway } from './gateway.ts';
 import { supabaseIdentity } from './auth.ts';
-import { createMembershipResolver, supabaseMembershipDirectory } from './membership.ts';
+import {
+  createMembershipResolver,
+  supabaseMembershipDirectory,
+  supabaseSsoConfigLoader,
+} from './membership.ts';
 import { adapters } from './adapters.ts';
 import { SANDBOX_NAME, SandboxStore, sandboxAdapters } from './sandbox.ts';
 import { createIntelligenceService } from './intelligence.ts';
@@ -143,6 +147,8 @@ const journal = openJournal();
 const authUrl = process.env.SEMESTER_AUTH_URL || '';
 const authKey = process.env.SEMESTER_AUTH_PUBLIC_KEY || '';
 const authServiceKey = process.env.SEMESTER_AUTH_SERVICE_KEY || '';
+const ssoDomain = (process.env.SEMESTER_SSO_DOMAIN || '').trim().toLowerCase();
+const ssoLabel = (process.env.SEMESTER_SSO_LABEL || '').trim();
 
 /*
  * With no auth project configured nothing authenticates, and the gateway
@@ -158,6 +164,9 @@ const membershipResolver = authUrl && authServiceKey
   : null;
 const authenticate = authUrl && authKey && membershipResolver
   ? supabaseIdentity(authUrl, authKey, membershipResolver)
+  : async () => null;
+const loadSsoConfig = authUrl && authServiceKey && ssoDomain && ssoLabel
+  ? supabaseSsoConfigLoader(authUrl, authServiceKey, ssoDomain, ssoLabel)
   : async () => null;
 
 /*
@@ -216,6 +225,7 @@ const handler = createGateway({
   adapters: installed,
   journal,
   intelligence,
+  loadSsoConfig,
 });
 
 async function serve(req: IncomingMessage, res: ServerResponse): Promise<void> {

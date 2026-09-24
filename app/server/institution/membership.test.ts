@@ -1,11 +1,34 @@
 import { describe, expect, it } from 'vitest';
 import {
   createMembershipResolver,
+  publicSsoConfig,
   type AuthorizationAuditRecord,
   type MembershipDirectory,
   type MembershipRecord,
   type ProviderRecord,
 } from './membership.ts';
+
+describe('public institutional SSO configuration', () => {
+  it('enables discovery only for exactly one authorized provider covering the domain', () => {
+    expect(publicSsoConfig([
+      { ...provider, domains: ['vanderbilt.edu'] },
+    ], 'vanderbilt.edu', 'Vanderbilt')).toEqual({
+      enabled: true,
+      label: 'Vanderbilt',
+      domain: 'vanderbilt.edu',
+    });
+  });
+
+  it('does not advertise a missing, pending, disabled, mismatched, or ambiguous provider', () => {
+    expect(publicSsoConfig([], 'vanderbilt.edu', 'Vanderbilt')).toBeNull();
+    expect(publicSsoConfig([{ ...provider, status: 'pending', domains: ['vanderbilt.edu'] }], 'vanderbilt.edu', 'Vanderbilt')).toBeNull();
+    expect(publicSsoConfig([{ ...provider, domains: ['other.edu'] }], 'vanderbilt.edu', 'Vanderbilt')).toBeNull();
+    expect(publicSsoConfig([
+      { ...provider, domains: ['vanderbilt.edu'] },
+      { ...provider, id: 'other', domains: ['vanderbilt.edu'] },
+    ], 'vanderbilt.edu', 'Vanderbilt')).toBeNull();
+  });
+});
 
 function directory(providers: ProviderRecord[], memberships: MembershipRecord[]): MembershipDirectory {
   return {

@@ -46,6 +46,14 @@ const signUp = vi.fn<(email: string, password: string) => Promise<Made>>(async (
 const signIn = vi.fn<(email: string, password: string) => Promise<void>>(async () => {});
 const sendReset = vi.fn<(email: string) => Promise<string>>(async () => 'A reset link is on its way.');
 const signInWith = vi.fn<(provider: string) => Promise<void>>(async () => {});
+const signInWithSSO = vi.fn<
+  (options: { domain: string; redirectTo: string }) => Promise<void>
+>(async () => {});
+const institutionSsoConfig = vi.fn(async () => null as {
+  enabled: true;
+  label: string;
+  domain: string;
+} | null);
 
 /**
  * What the project says it has switched on, and when it says it.
@@ -65,10 +73,13 @@ vi.mock('../lib/cloud', () => ({
   namesSaid: (names: string[]) =>
     names.length < 2 ? (names[0] ?? '') : `${names.slice(0, -1).join(', ')} or ${names[names.length - 1]}`,
   providersOn: () => providersOn(),
+  institutionSsoConfig: () => institutionSsoConfig(),
+  appUrl: () => 'https://semester.example/',
   signUp: (email: string, password: string) => signUp(email, password),
   signIn: (email: string, password: string) => signIn(email, password),
   sendReset: (email: string) => sendReset(email),
   signInWith: (provider: string) => signInWith(provider),
+  signInWithSSO: (options: { domain: string; redirectTo: string }) => signInWithSSO(options),
 }));
 
 const { Credentials } = await import('./Credentials');
@@ -141,6 +152,9 @@ beforeEach(() => {
   signIn.mockClear();
   sendReset.mockClear();
   signInWith.mockClear();
+  signInWithSSO.mockClear();
+  institutionSsoConfig.mockReset();
+  institutionSsoConfig.mockResolvedValue(null);
   providersOn.mockClear();
   signUp.mockImplementation(async () => ({ said: 'Account made.', signedIn: true }));
   asking = new Promise((resolve) => {
@@ -433,6 +447,63 @@ describe('the provider buttons', () => {
       await enter();
       expect(signIn).toHaveBeenCalledWith('you@vanderbilt.edu', 'a-real-password');
     });
+  });
+});
+
+describe('the institution-approved SSO button', () => {
+  it('appears only after the gateway supplies an enabled Vanderbilt configuration', async () => {
+    institutionSsoConfig.mockResolvedValue({
+      enabled: true,
+      label: 'Vanderbilt',
+      domain: 'vanderbilt.edu',
+    });
+    await showAnswered(<Credentials />, []);
+    await act(async () => {
+      await institutionSsoConfig.mock.results[0]?.value;
+    });
+    expect(link('Continue with Vanderbilt')).toBeTruthy();
+  });
+
+  it('stays absent when no authorized institutional provider is available', async () => {
+    await showAnswered(<Credentials />, []);
+    await act(async () => {
+      await institutionSsoConfig.mock.results[0]?.value;
+    });
+    expect(link('Continue with Vanderbilt')).toBeUndefined();
+  });
+
+  it('uses the exact approved domain and app callback', async () => {
+    institutionSsoConfig.mockResolvedValue({
+      enabled: true,
+      label: 'Vanderbilt',
+      domain: 'vanderbilt.edu',
+    });
+    await showAnswered(<Credentials />, []);
+    await act(async () => {
+      await institutionSsoConfig.mock.results[0]?.value;
+      link('Continue with Vanderbilt')?.click();
+    });
+    expect(signInWithSSO).toHaveBeenCalledWith({
+      domain: 'vanderbilt.edu',
+      redirectTo: 'https://semester.example/',
+    });
+  });
+
+  it('shows a readable recovery when institutional sign-in fails', async () => {
+    institutionSsoConfig.mockResolvedValue({
+      enabled: true,
+      label: 'Vanderbilt',
+      domain: 'vanderbilt.edu',
+    });
+    signInWithSSO.mockRejectedValueOnce(new Error('Vanderbilt sign-in is temporarily unavailable.'));
+    await showAnswered(<Credentials />, []);
+    await act(async () => {
+      await institutionSsoConfig.mock.results[0]?.value;
+      link('Continue with Vanderbilt')?.click();
+    });
+    expect(host.querySelector('[role=alert]')?.textContent).toContain(
+      'Vanderbilt sign-in is temporarily unavailable.',
+    );
   });
 });
 
