@@ -81,6 +81,7 @@ describe('role-aware University workspace', () => {
       expect(host.textContent).toContain(role === 'advisor' ? 'Advisor workspace' : 'Student-success workspace');
       expect(host.textContent).toContain('Sample student A · workload review');
       expect(host.textContent).toContain('Locked · sample consent required');
+      expect(host.textContent).not.toContain('Sample student B');
     });
   }
 
@@ -121,6 +122,19 @@ describe('role-aware University workspace', () => {
     for (const role of PREVIEW_ROLES) {
       renderRole(role);
       expect(host.querySelector('[aria-label="Available functions"]'), role).not.toBeNull();
+    }
+  });
+
+  it('gives every non-student preview role a capability-backed local preparation action', () => {
+    for (const role of PREVIEW_ROLES.filter((candidate) => candidate !== 'student')) {
+      renderRole(role);
+      const action = [...host.querySelectorAll<HTMLButtonElement>('button')].find(
+        (button) => button !== host.querySelector('button') && button.textContent?.startsWith('Prepare'),
+      );
+      expect(action, role).toBeDefined();
+      act(() => action?.click());
+      expect(host.textContent, role).toContain('prepared locally');
+      expect(host.textContent, role).toContain('Nothing was published or sent');
     }
   });
 });

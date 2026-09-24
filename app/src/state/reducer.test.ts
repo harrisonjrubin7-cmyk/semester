@@ -84,6 +84,26 @@ describe('every action is handled somewhere', () => {
   });
 });
 
+describe('role-aware route enforcement', () => {
+  it('leaves a role-inapplicable screen when the role changes', () => {
+    const state = { ...blank(), screen: 'degree' as const, history: ['calendar', 'costs'] as State['history'] };
+    const next = reducer(state, { type: 'setRole', role: 'faculty' });
+    expect(next.screen).toBe('home');
+    expect(next.history).toEqual(['calendar']);
+  });
+
+  it('refuses hidden internal navigation and typed URLs for the active role', () => {
+    const faculty = { ...blank(), role: 'faculty' as const, screen: 'calendar' as const };
+    expect(reducer(faculty, { type: 'go', screen: 'degree' }).screen).toBe('home');
+    expect(reducer(faculty, { type: 'landed', screen: 'costs' }).screen).toBe('home');
+  });
+
+  it('preserves the complete student surface', () => {
+    const student = { ...blank(), role: 'student' as const };
+    expect(reducer(student, { type: 'go', screen: 'degree' }).screen).toBe('degree');
+  });
+});
+
 describe('ticking things off', () => {
   it('records when, as well as whether', () => {
     const next = reducer(blank(), { type: 'toggleDone', id: 'e1' });

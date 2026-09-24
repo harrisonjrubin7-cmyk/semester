@@ -102,6 +102,7 @@ import { DOW, MONTHS } from './lib/date';
 import { windowTitle } from './a11y/title';
 import type { Screen } from './lib/types';
 import { InstitutionalPreviewRoot } from './components/institutional/PreviewRoot';
+import { forRole } from './lib/role';
 
 /**
  * What fills the column while a screen's chunk is in flight.
@@ -900,6 +901,7 @@ function Rail() {
   const extras = ['ask', 'import', 'account', 'connect', 'settings']
     .map((s) => destination(s as Screen))
     .filter((d): d is NonNullable<typeof d> => Boolean(d))
+    .filter((d) => forRole(d.screen, state.role))
     // Not twice. Four of these six can now be put in the bar, and the rail
     // draws the bar above this list — so without the filter, a student who
     // put Ask Claude in their bar would find it in the rail twice.
