@@ -116,7 +116,9 @@ describe('every navigation is a landmark', () => {
  */
 describe('there is one main', () => {
   it('is the one in ScrollArea', () => {
-    expect(find('ScrollArea.tsx').src).toContain('<main id="main"');
+    const scrollArea = find('ScrollArea.tsx').src;
+    expect(scrollArea).toContain('<main id="main"');
+    expect(scrollArea, 'the skip-link target must receive keyboard focus').toContain('tabIndex={-1}');
   });
 
   it('exempts the pages that are a whole page, and only those', () => {

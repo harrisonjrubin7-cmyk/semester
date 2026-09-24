@@ -29,13 +29,24 @@ There is also a dedicated contrast workflow (`.github/workflows/contrast.yml`)
 and `app/src/lib/contrast.test.ts` walking the full ramp — CLAUDE.md treats
 contrast regressions as a named hazard.
 
+`app/scripts/accessibility-smoke.mjs` also opens the production bundle's Home,
+Calendar, Courses, Assignments, Registration and Degree journeys at desktop
+and a 320 CSS-pixel reflow viewport (the WCAG 400% reflow equivalent from a
+1280-pixel baseline). It verifies one main landmark, a route-aware title and
+heading, named visible controls, valid ARIA references, unique IDs, page-level
+reflow and a keyboard skip link that transfers focus to main. CI runs this
+against the same base path GitHub Pages deploys. This is regression evidence,
+not formal conformance evidence.
+
 ## Missing
 
 - **No WCAG 2.2 AA audit** against the critical workflows as workflows —
   the guards are unit-level, not journey-level.
 - **No screen-reader pass** recorded against registration, degree tracker,
   calendar or documents.
-- **No zoom/reflow testing** at 200% and 400%.
+- **No independent 200% text-zoom review.** Automated 400% reflow coverage is
+  present for six critical journeys, but it does not replace manual browser
+  zoom and assistive-technology review.
 - **No ACR/VPAT.** One cannot be produced from this tree; it requires formal
   evaluation. Do not fabricate one.
 
