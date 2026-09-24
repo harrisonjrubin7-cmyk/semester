@@ -961,6 +961,13 @@ readiness probe, shared atomic rate limits, and conservative retention. Its
 merge; a green repository check still does not prove a production project has
 applied it, so the live ledger and deploy workflow remain the authority.
 
+`20260924200000_gateway_observability.sql` is also pending and must follow the
+journal migration. It records the last successful server-only retention sweep
+and makes that freshness available only to the service role so the gateway can
+fail readiness closed when the hourly cleanup has stopped. Neither the green
+repository suite nor the checked-in scheduler proves that production has
+applied the migration or activated the job.
+
 | Step | State |
 | --- | --- |
 | 1 · snapshot production | **done 21 Sep** — verified by three matching fingerprints |

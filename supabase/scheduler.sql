@@ -138,3 +138,14 @@ select cron.schedule(
   '43 4 * * *',
   $job$select private.sweep_ai_runtime_metadata()$job$
 );
+
+-- Durable institutional action and AI-confirmation state has conservative
+-- retention rules in gateway_purge_journal(). Run hourly, off the hour, and
+-- record the successful sweep so `/health/ready` can fail closed if this job
+-- is missing or stalled. Uncertain, pending and processing university actions
+-- are never age-purged.
+select cron.schedule(
+  'institution-gateway-retention',
+  '11 * * * *',
+  $job$select public.gateway_purge_journal()$job$
+);

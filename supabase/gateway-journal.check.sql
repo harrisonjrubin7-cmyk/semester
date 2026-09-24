@@ -18,6 +18,9 @@ begin
   if not public.gateway_journal_health() then
     raise exception 'FAILED: the write readiness probe did not succeed';
   end if;
+  if public.gateway_retention_health() then
+    raise exception 'FAILED: retention claimed ready before a sweep ran';
+  end if;
 
   if not public.gateway_save_review(first_id, 'gateway-a', 'student-a', now() + interval '10 minutes', operation, repeat('x', 40)) then
     raise exception 'FAILED: a valid review was not saved';
@@ -60,6 +63,9 @@ begin
 
   update private.gateway_review set expires_at = now() - interval '200 days';
   perform public.gateway_purge_journal();
+  if not public.gateway_retention_health() then
+    raise exception 'FAILED: a successful retention sweep did not become ready';
+  end if;
   if exists (select 1 from private.gateway_review where id = first_id) then
     raise exception 'FAILED: an old completed action was not purged';
   end if;
@@ -121,6 +127,10 @@ begin
   if has_table_privilege('authenticated', 'private.gateway_intelligence_action', 'select')
      or has_function_privilege('authenticated', 'public.gateway_claim_intelligence_action(uuid,text,text,timestamptz)', 'execute') then
     raise exception 'FAILED: browser roles can reach intelligence action state';
+  end if;
+  if has_function_privilege('authenticated', 'public.gateway_retention_health()', 'execute')
+     or not has_function_privilege('service_role', 'public.gateway_retention_health()', 'execute') then
+    raise exception 'FAILED: retention readiness privileges are not service-only';
   end if;
 end $$;
 

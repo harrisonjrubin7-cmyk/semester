@@ -70,6 +70,7 @@ export interface SavedReview {
  */
 export interface ActionJournalStore {
   healthy(): boolean | Promise<boolean>;
+  retentionHealthy?(): boolean | Promise<boolean>;
   save(row: SavedReview): void | Promise<void>;
   get(id: string, identity: UniversityIdentity): SavedReview | null | Promise<SavedReview | null>;
   claim(id: string, identity: UniversityIdentity, now: number): boolean | Promise<boolean>;

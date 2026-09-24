@@ -14,6 +14,7 @@ import type { ActionJournalStore } from './journal.ts';
 import type { IntelligenceService } from './intelligence.ts';
 import type { PublicSsoConfig } from './membership.ts';
 import { MemoryRateLimiter, type RateLimiter } from './rate-limit.ts';
+import type { ReadinessResult } from './readiness.ts';
 
 /**
  * The gateway: everything that is the same whichever university it is.
@@ -60,6 +61,31 @@ interface Config {
   intelligence?: IntelligenceService;
   loadSsoConfig?: () => Promise<PublicSsoConfig | null>;
   rateLimiter?: RateLimiter;
+  readiness?: () => Promise<ReadinessResult>;
+  telemetry?: (event: GatewayTelemetryEvent) => void | Promise<void>;
+}
+
+export interface GatewayTelemetryEvent {
+  event: 'institution.request';
+  requestId: string;
+  method: string;
+  route: string;
+  status: number;
+  durationMs: number;
+  errorClass: 'none' | 'client' | 'server';
+}
+
+const TELEMETRY_ROUTES = new Set([
+  '/health', '/health/live', '/health/ready', '/v1/auth/config',
+  '/v1/intelligence/policy', '/v1/intelligence/respond',
+  '/status', '/records', '/actions/prepare', '/actions/commit', '/actions/reconcile',
+]);
+
+function telemetryRoute(pathname: string): string {
+  if (/^\/v1\/intelligence\/actions\/[^/]+\/confirm$/.test(pathname)) {
+    return '/v1/intelligence/actions/:id/confirm';
+  }
+  return TELEMETRY_ROUTES.has(pathname) ? pathname : '/unmatched';
 }
 
 class HttpError extends Error {
@@ -103,7 +129,7 @@ export function createGateway(config: Config) {
   const installed = new Map(config.adapters.map((a) => [`${a.institutionId}:${a.area}`, a]));
   const rateLimiter = config.rateLimiter ?? new MemoryRateLimiter();
 
-  return async (request: Request): Promise<Response> => {
+  const handle = async (request: Request): Promise<Response> => {
     const headers = new Headers({
       'Content-Type': 'application/json',
       'Cache-Control': 'no-store',
@@ -155,8 +181,14 @@ export function createGateway(config: Config) {
        * endpoint that narrates which part of a service is broken is a map for
        * somebody choosing what to lean on.
        */
-      if (request.method === 'GET' && path === '/health') {
-        const ready = await config.journal.healthy();
+      if (request.method === 'GET' && path === '/health/live') {
+        return Response.json({ service: 'Semester university gateway', version: 1, status: 'live' }, { status: 200, headers });
+      }
+      if (request.method === 'GET' && (path === '/health' || path === '/health/ready')) {
+        const readiness = config.readiness
+          ? await config.readiness()
+          : { ready: await config.journal.healthy(), status: 'ready' as const };
+        const ready = readiness.ready;
         return Response.json(
           {
             service: 'Semester university gateway',
@@ -490,5 +522,25 @@ export function createGateway(config: Config) {
         { status: e instanceof HttpError ? e.status : 503, headers },
       );
     }
+  };
+
+  return async (request: Request): Promise<Response> => {
+    const requestId = randomUUID();
+    const started = performance.now();
+    const response = await handle(request);
+    response.headers.set('X-Request-Id', requestId);
+    const pathname = new URL(request.url).pathname;
+    const route = telemetryRoute(pathname);
+    const event: GatewayTelemetryEvent = {
+      event: 'institution.request',
+      requestId,
+      method: request.method,
+      route,
+      status: response.status,
+      durationMs: Math.max(0, Math.round(performance.now() - started)),
+      errorClass: response.status >= 500 ? 'server' : response.status >= 400 ? 'client' : 'none',
+    };
+    try { await config.telemetry?.(event); } catch { /* observability must not rewrite the response */ }
+    return response;
   };
 }

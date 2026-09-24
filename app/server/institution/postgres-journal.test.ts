@@ -33,6 +33,7 @@ function fakeClient() {
       if (name === 'gateway_journal_health') {
         return failHealth ? { data: null, error: new Error('offline') } : { data: true, error: null };
       }
+      if (name === 'gateway_retention_health') return { data: true, error: null };
       if (name === 'gateway_save_review') {
         body = String(args.want_body);
         return { data: true, error: null };
@@ -93,6 +94,13 @@ describe('Postgres action journal', () => {
     expect(await journal.healthy()).toBe(true);
     fake.failHealth();
     expect(await journal.healthy()).toBe(false);
+  });
+
+  it('reads retention readiness from the service-only shared probe', async () => {
+    const fake = fakeClient();
+    const journal = new PostgresActionJournal({ client: fake.client, encryptionKey: key });
+    expect(await journal.retentionHealthy()).toBe(true);
+    expect(fake.calls.at(-1)?.name).toBe('gateway_retention_health');
   });
 
   it('writes only metadata for governed intelligence audits', async () => {

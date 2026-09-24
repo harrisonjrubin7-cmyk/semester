@@ -6,6 +6,7 @@ import { PostgresActionJournal } from './postgres-journal.ts';
 import { PostgresRateLimiter } from './rate-limit.ts';
 import { PostgresIntelligenceActionStore } from './intelligence-action-store.ts';
 import { createInstitutionIntelligenceRuntime } from './intelligence-runtime.ts';
+import { institutionReadiness } from './readiness.ts';
 
 export type InstitutionEnvironment = Record<string, string | undefined>;
 
@@ -62,6 +63,10 @@ export function createProductionInstitutionRuntime(env: InstitutionEnvironment) 
   });
   const ssoDomain = (env.SEMESTER_SSO_DOMAIN || '').trim().toLowerCase();
   const ssoLabel = (env.SEMESTER_SSO_LABEL || '').trim();
+  const minimumAdapters = Number(env.SEMESTER_MINIMUM_ADAPTERS || '1');
+  if (!Number.isInteger(minimumAdapters) || minimumAdapters < 0) {
+    throw new Error('SEMESTER_MINIMUM_ADAPTERS must be a non-negative integer.');
+  }
   return createGateway({
     origin: exactAppOrigin(env),
     institutionName: env.SEMESTER_INSTITUTION_NAME || 'Your university',
@@ -71,6 +76,16 @@ export function createProductionInstitutionRuntime(env: InstitutionEnvironment) 
     journal,
     rateLimiter,
     intelligence,
+    readiness: () => institutionReadiness({
+      journal,
+      monitoringConfigured: env.SEMESTER_MONITORING_READY === '1',
+      adaptersInstalled: adapters.length,
+      minimumAdapters,
+      integrationsHealthy: env.SEMESTER_INTEGRATIONS_READY === '1',
+      intelligenceStatus: intelligence.status,
+      requireProductionIntelligence: env.SEMESTER_REQUIRE_AI === '1',
+    }),
+    telemetry: async (event) => console.info(JSON.stringify(event)),
     loadSsoConfig: ssoDomain && ssoLabel
       ? supabaseSsoConfigLoader(authUrl, serviceKey, ssoDomain, ssoLabel)
       : async () => null,

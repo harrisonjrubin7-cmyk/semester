@@ -15,6 +15,8 @@ import { trustedIdentity } from './auth.ts';
 import { createGateway } from './gateway.ts';
 import { ActionJournal, type ActionJournalStore, type SavedReview } from './journal.ts';
 import type { RateLimiter } from './rate-limit.ts';
+import type { GatewayTelemetryEvent } from './gateway.ts';
+import type { ReadinessResult } from './readiness.ts';
 
 /**
  * The refusals, exercised against a real journal on a real file.
@@ -91,7 +93,14 @@ function asynchronousJournal(inner: ActionJournal, events: string[]): ActionJour
 function fixture({
   asynchronous = false,
   rateLimiter,
-}: { asynchronous?: boolean; rateLimiter?: RateLimiter } = {}) {
+  readiness,
+  telemetry,
+}: {
+  asynchronous?: boolean;
+  rateLimiter?: RateLimiter;
+  readiness?: () => Promise<ReadinessResult>;
+  telemetry?: (event: GatewayTelemetryEvent) => void | Promise<void>;
+} = {}) {
   const dir = mkdtempSync(join(tmpdir(), 'semester-gateway-'));
   dirs.push(dir);
   const path = join(dir, 'test.sqlite');
@@ -185,6 +194,8 @@ function fixture({
       },
     },
     rateLimiter,
+    readiness,
+    telemetry,
   });
 
   const input: ActionInput = {
@@ -548,6 +559,16 @@ describe('the health check', () => {
     expect((await said.json()).status).toBe('ready');
   });
 
+  it('separates process liveness from dependency readiness', async () => {
+    const f = fixture({ readiness: async () => ({ ready: false, status: 'unavailable' }) });
+    const live = await f.request('/health/live', undefined, { authorization: '' });
+    const ready = await f.request('/health/ready', undefined, { authorization: '' });
+    expect(live.status).toBe(200);
+    expect(await live.json()).toMatchObject({ status: 'live' });
+    expect(ready.status).toBe(503);
+    expect(await ready.json()).toMatchObject({ status: 'unavailable' });
+  });
+
   /*
    * The one that decides whether the endpoint is worth having.
    *
@@ -592,6 +613,44 @@ describe('the health check', () => {
   it('counts the adapters, so an empty registry is visible rather than implied', async () => {
     const f = fixture();
     expect((await (await f.request('/health', undefined, { authorization: '' })).json()).adapters).toBe(1);
+  });
+});
+
+describe('request telemetry', () => {
+  it('adds a correlation id and records metadata without request content or action ids', async () => {
+    const events: GatewayTelemetryEvent[] = [];
+    const f = fixture({ telemetry: async (event) => { events.push(event); } });
+    const response = await f.request('/v1/intelligence/actions/private-action-id/confirm', {
+      confirmed: true,
+      at: new Date().toISOString(),
+      privateAnswer: 'do not log me',
+    });
+    expect(response.headers.get('x-request-id')).toMatch(/^[0-9a-f-]{36}$/);
+    expect(events).toHaveLength(1);
+    expect(events[0]).toMatchObject({
+      event: 'institution.request',
+      method: 'POST',
+      route: '/v1/intelligence/actions/:id/confirm',
+      status: 200,
+      errorClass: 'none',
+    });
+    expect(JSON.stringify(events)).not.toContain('private-action-id');
+    expect(JSON.stringify(events)).not.toContain('do not log me');
+    expect(JSON.stringify(events)).not.toContain('test-token');
+  });
+
+  it('does not let a telemetry outage change the gateway response', async () => {
+    const f = fixture({ telemetry: async () => { throw new Error('monitor offline'); } });
+    expect((await f.request('/status')).status).toBe(200);
+  });
+
+  it('does not log arbitrary unmatched path segments', async () => {
+    const events: GatewayTelemetryEvent[] = [];
+    const f = fixture({ telemetry: (event) => { events.push(event); } });
+    await f.request('/student-name/private-record-id');
+    expect(events[0].route).toBe('/unmatched');
+    expect(JSON.stringify(events)).not.toContain('student-name');
+    expect(JSON.stringify(events)).not.toContain('private-record-id');
   });
 });
 
