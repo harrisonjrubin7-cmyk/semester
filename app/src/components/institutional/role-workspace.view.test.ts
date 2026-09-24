@@ -38,7 +38,7 @@ describe('role workspace capability exposure', () => {
     for (const institution of INSTITUTIONAL_FIXTURES) {
       for (const person of institution.people) {
         expect(
-          availableRoleFunctions(person.role, person.grants, '2026-09-24T12:00:00.000Z'),
+          availableRoleFunctions(institution.id, person.role, person.grants, '2026-09-24T12:00:00.000Z'),
           `${institution.id}:${person.role}`,
         ).toEqual(ROLE_WORKSPACE_FUNCTIONS[person.role]);
       }
@@ -46,7 +46,7 @@ describe('role workspace capability exposure', () => {
   });
 
   it('exposes only functions backed by a live grant for the exact role', () => {
-    const functions = availableRoleFunctions('advisor', [
+    const functions = availableRoleFunctions('northstar', 'advisor', [
       grant('advisor', ['appointment:manage']),
       grant('university_admin', ['student-plan:read']),
       grant('advisor', ['student-plan:read'], '2025-01-01T00:00:00.000Z'),
@@ -56,10 +56,19 @@ describe('role workspace capability exposure', () => {
   });
 
   it('fails closed for missing, malformed and expired grants', () => {
-    expect(availableRoleFunctions('faculty', [], '2026-09-24T12:00:00.000Z')).toEqual([]);
-    expect(availableRoleFunctions('faculty', [
+    expect(availableRoleFunctions('northstar', 'faculty', [], '2026-09-24T12:00:00.000Z')).toEqual([]);
+    expect(availableRoleFunctions('northstar', 'faculty', [
       grant('faculty', ['course:manage'], 'not-a-date'),
     ], '2026-09-24T12:00:00.000Z')).toEqual([]);
+  });
+
+  it('does not expose functions from a different synthetic institution', () => {
+    const functions = availableRoleFunctions('northstar', 'advisor', [{
+      ...grant('advisor', ['student-plan:read', 'appointment:manage']),
+      scopeId: 'cedar-coast-advisor',
+    }], '2026-09-24T12:00:00.000Z');
+
+    expect(functions).toEqual([]);
   });
 
   it('requires every local preparation action to appear in that role function contract', () => {

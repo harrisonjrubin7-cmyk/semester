@@ -16,7 +16,7 @@ export function RoleWorkspace() {
   const { workspace, updateWorkspace } = useFlightPlan();
   const [receipt, setReceipt] = useState('');
   const role = person.role;
-  const available = availableRoleFunctions(role, person.grants);
+  const available = availableRoleFunctions(institution.id, role, person.grants);
   const capabilities = new Set(available.map((item) => item.capability));
 
   const prepareFacultyDraft = (kind: 'assignment' | 'feedback') => {
@@ -100,7 +100,7 @@ export function RoleWorkspace() {
         <div style={{ marginBlock: 'var(--sp-4)' }}>
           <strong>Available functions</strong>
           <p style={{ color: 'var(--app-dim)' }}>
-            Shown from this persona’s live synthetic scoped grant. Production authorizes every read and action again on the server.
+            Shown from this persona’s live synthetic role and institution-scoped grant. Production authorizes every read and action again on the server.
           </p>
           <ul aria-label="Available functions" style={{ marginBlock: 'var(--sp-2) 0' }}>
             {available.map((item) => <li key={`${item.capability}:${item.label}`}>{item.label}</li>)}
