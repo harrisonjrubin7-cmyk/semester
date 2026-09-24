@@ -6,12 +6,16 @@ import { INSTITUTIONAL_FIXTURES, PREVIEW_ROLES } from './institutional-preview';
 const EXPECTED_ROLES = [
   'student',
   'faculty',
+  'teaching_assistant',
   'advisor',
   'campus_staff',
   'university_admin',
   'moderator',
   'employer',
+  'applicant',
   'authorized_payer',
+  'authorized_family',
+  'alumni',
 ];
 
 describe('synthetic institutional preview fixtures', () => {

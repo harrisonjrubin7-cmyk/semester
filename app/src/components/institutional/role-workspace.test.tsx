@@ -3,7 +3,7 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { loadSeed } from '../../data/seed';
-import type { PreviewRole } from '../../data/institutional-preview';
+import { PREVIEW_ROLES, type PreviewRole } from '../../data/institutional-preview';
 import { StoreProvider } from '../../state/store';
 import { InstitutionalPreviewProvider, useInstitutionalPreview } from './PreviewContext';
 import { RoleWorkspace } from './RoleWorkspace';
@@ -67,6 +67,14 @@ describe('role-aware University workspace', () => {
     expect(host.textContent).toContain('Nothing was published or sent');
   });
 
+  it('gives teaching assistants course-support functions without publishing or grading authority', () => {
+    renderRole('teaching_assistant');
+    expect(host.textContent).toContain('Teaching-assistant workspace');
+    expect(host.textContent).toContain('Prepare learning activities');
+    expect(host.textContent).toContain('Prepare office-hours support');
+    expect(host.textContent).toContain('No grade or course change is published');
+  });
+
   for (const role of ['advisor', 'campus_staff'] as const) {
     it(`locks unconsented student detail for ${role}`, () => {
       renderRole(role);
@@ -95,4 +103,24 @@ describe('role-aware University workspace', () => {
       expect(host.textContent).not.toContain('Research brief');
     });
   }
+
+  for (const [role, label, functionName] of [
+    ['applicant', 'Applicant workspace', 'Track my application preparation'],
+    ['authorized_family', 'Authorized-family workspace', 'Review explicitly shared updates'],
+    ['alumni', 'Alumni workspace', 'Prepare a mentorship profile'],
+  ] as const) {
+    it(`presents applicable, privacy-scoped functions for ${role}`, () => {
+      renderRole(role);
+      expect(host.textContent).toContain(label);
+      expect(host.textContent).toContain(functionName);
+      expect(host.textContent).not.toContain('Research brief');
+    });
+  }
+
+  it('shows a named function list for every preview role', () => {
+    for (const role of PREVIEW_ROLES) {
+      renderRole(role);
+      expect(host.querySelector('[aria-label="Available functions"]'), role).not.toBeNull();
+    }
+  });
 });

@@ -18,23 +18,31 @@ export type TenantId = keyof typeof TENANTS;
 export const ROLES = [
   "student",
   "faculty",
+  "teaching_assistant",
   "advisor",
   "campus_staff",
   "university_admin",
   "moderator",
   "employer",
+  "applicant",
   "authorized_payer",
+  "authorized_family",
+  "alumni",
 ] as const;
 export type FlightRole = (typeof ROLES)[number];
 export const ROLE_NAMES: Record<FlightRole, string> = {
   student: "Student",
   faculty: "Faculty",
+  teaching_assistant: "Teaching assistant",
   advisor: "Advisor",
   campus_staff: "Student success",
   university_admin: "Administrator",
   moderator: "Moderator",
   employer: "Employer",
+  applicant: "Applicant",
   authorized_payer: "Authorized payer",
+  authorized_family: "Authorized family",
+  alumni: "Alumni",
 };
 export type TaskAction =
   "confirm" | "complete" | "reschedule" | "reduce" | "help" | "office" | "drop";

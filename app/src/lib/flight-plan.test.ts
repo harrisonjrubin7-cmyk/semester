@@ -9,6 +9,13 @@ import {
 import * as flightPlan from "./flight-plan";
 
 describe("Student Flight Plan", () => {
+  it("supports every institutional preview role without an unsafe adapter", () => {
+    expect(flightPlan.ROLES).toEqual(expect.arrayContaining([
+      "student", "faculty", "teaching_assistant", "advisor", "campus_staff",
+      "university_admin", "moderator", "employer", "applicant",
+      "authorized_payer", "authorized_family", "alumni",
+    ]));
+  });
   it("holds uncertain work out of the plan until the student confirms its source", () => {
     const state = createWorkspace("northstar", "student");
     const uncertain = state.tasks.find((task) => !task.confirmed)!;
