@@ -28,6 +28,7 @@
     "dev:university": "node --env-file=server/institution/.env server/institution/start.ts",
     "sweep:walls": "node scripts/wallsweep.mjs",
     "smoke:cold": "node scripts/cold-smoke.mjs",
+    "smoke:a11y": "node scripts/accessibility-smoke.mjs",
     "preview:institutional": "node scripts/institutional-preview.mjs",
     "smoke:institutional": "node scripts/institutional-preview-smoke.mjs",
     "smoke:production": "node scripts/production-smoke.mjs",

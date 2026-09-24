@@ -353,6 +353,18 @@ jobs:
           SMOKE_URL: http://localhost:4173/${{ github.event.repository.name }}/
         run: npm run smoke:cold
 
+      # The unit-level accessibility guards cannot prove that the assembled
+      # production bundle still has one main landmark, a working skip link or
+      # usable reflow. Exercise the six institution-critical journeys in the
+      # same Chromium and deployed-base-path build used by the cold smoke.
+      # This is automated regression evidence, not a formal WCAG audit.
+      - name: Audit critical accessibility journeys
+        working-directory: app
+        env:
+          SMOKE_PLAYWRIGHT: /tmp/smoke/node_modules/playwright
+          SMOKE_URL: http://localhost:4173/${{ github.event.repository.name }}/
+        run: npm run smoke:a11y
+
       # Runs at the repo root and needs no dependencies of its own — it reads
       # the course modules as source.
       - name: Validate the course data

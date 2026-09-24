@@ -120,7 +120,11 @@ export function ScrollArea({ screen, children }: { screen: Screen; children: Rea
   }, [screen, filled]);
 
   return (
-    <main id="main" className={filled ? 'scrollarea is-filled' : 'scrollarea'} ref={box}>
+    <main id="main"
+      className={filled ? 'scrollarea is-filled' : 'scrollarea'}
+      ref={box}
+      tabIndex={-1}
+    >
       {/* Inside, at the top, so it pushes the screen down the way a pulled
           sheet of paper would. It owns the gesture; this owns the element.
           Not on a filled screen: pull-to-refresh reads a scroll position, and
