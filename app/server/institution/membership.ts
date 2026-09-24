@@ -8,6 +8,7 @@ import {
 export interface VerifiedAuthUser {
   id: string;
   providerIdentifier: string;
+  userName: string;
 }
 
 export interface ProviderRecord {
@@ -76,7 +77,12 @@ export interface MembershipRecord {
 
 export interface MembershipDirectory {
   providersFor(providerIdentifier: string): Promise<ProviderRecord[]>;
-  membershipsFor(userId: string, tenantId: string, providerId: string): Promise<MembershipRecord[]>;
+  membershipsFor(
+    userId: string,
+    tenantId: string,
+    providerId: string,
+    userName: string,
+  ): Promise<MembershipRecord[]>;
 }
 
 export interface AuthorizationAuditRecord {
@@ -121,7 +127,12 @@ export function createMembershipResolver(
       return null;
     }
 
-    const memberships = await directory.membershipsFor(user.id, provider.tenantId, provider.id);
+    const memberships = await directory.membershipsFor(
+      user.id,
+      provider.tenantId,
+      provider.id,
+      user.userName,
+    );
     if (memberships.length !== 1) {
       await audit(auditRecord(user, 'denied', memberships.length ? 'ambiguous-membership' : 'missing-membership', provider.tenantId));
       return null;
@@ -148,6 +159,17 @@ export function supabaseMembershipDirectory(url: string, serviceKey: string): Me
   const client = createClient(url, serviceKey, {
     auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
   });
+  const memberships = async (userId: string, tenantId: string, providerId: string) => {
+    const { data, error } = await client
+      .from('institution_membership')
+      .select('auth_user_id, tenant_id, identity_provider_id, status, roles')
+      .eq('auth_user_id', userId)
+      .eq('tenant_id', tenantId)
+      .eq('identity_provider_id', providerId)
+      .limit(2);
+    if (error) throw new Error('Institution membership lookup failed.');
+    return data ?? [];
+  };
   return {
     providersFor: async (providerIdentifier) => {
       const { data, error } = await client
@@ -163,16 +185,19 @@ export function supabaseMembershipDirectory(url: string, serviceKey: string): Me
         status: row.status as ProviderRecord['status'],
       }));
     },
-    membershipsFor: async (userId, tenantId, providerId) => {
-      const { data, error } = await client
-        .from('institution_membership')
-        .select('auth_user_id, tenant_id, identity_provider_id, status, roles')
-        .eq('auth_user_id', userId)
-        .eq('tenant_id', tenantId)
-        .eq('identity_provider_id', providerId)
-        .limit(2);
-      if (error) throw new Error('Institution membership lookup failed.');
-      return (data ?? []).map((row) => ({
+    membershipsFor: async (userId, tenantId, providerId, userName) => {
+      let data = await memberships(userId, tenantId, providerId);
+      if (!data.length) {
+        const { data: claimed, error } = await client.rpc('bind_institution_sso_membership', {
+          want_tenant: tenantId,
+          want_provider: providerId,
+          want_auth_user: userId,
+          want_user_name: userName,
+        });
+        if (error) throw new Error('Institution membership binding failed.');
+        if (claimed === true) data = await memberships(userId, tenantId, providerId);
+      }
+      return data.map((row) => ({
         userId: row.auth_user_id as string,
         tenantId: row.tenant_id as string,
         providerId: row.identity_provider_id as string,

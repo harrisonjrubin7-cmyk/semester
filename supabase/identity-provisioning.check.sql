@@ -96,9 +96,37 @@ begin
   ) into membership;
   reset role;
 
-  update public.institution_membership
-     set auth_user_id = north_user
-   where id = membership;
+  perform pg_temp.become(north_user);
+  if not pg_temp.refused(format(
+    'select public.bind_institution_sso_membership(%L, %L, %L, %L)',
+    'northstar-identity', north_provider, north_user, 'student@northstar-identity.example'
+  )) then
+    raise exception 'FAILED: a browser role executed the first-login binding function';
+  end if;
+  reset role;
+  raise notice 'ok  first-login membership binding is service-only';
+
+  set local role service_role;
+  if not public.bind_institution_sso_membership(
+    'northstar-identity', north_provider, north_user, 'student@northstar-identity.example'
+  ) then
+    raise exception 'FAILED: first verified SSO login did not claim the provisioned membership';
+  end if;
+  reset role;
+  raise notice 'ok  first verified SSO login claims its SCIM membership';
+
+  select count(*) into n from public.institution_membership
+   where id = membership and auth_user_id = north_user and identity_provider_id = north_provider;
+  perform pg_temp.counted('the claim binds both the auth user and verified provider', n, 1);
+
+  set local role service_role;
+  if public.bind_institution_sso_membership(
+    'northstar-identity', north_provider, cedar_user, 'student@cedar-identity.example'
+  ) then
+    raise exception 'FAILED: a user name outside the provider domain claimed a membership';
+  end if;
+  reset role;
+  raise notice 'ok  provider domain mismatch cannot claim a membership';
 
   perform pg_temp.become(cedar_user);
   select count(*) into n from public.institution_membership where tenant_id = 'northstar-identity';

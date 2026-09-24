@@ -52,6 +52,12 @@ export interface ScimAuditEvent {
 }
 
 export interface ScimRepository {
+  /**
+   * Mutation methods persist their accepted audit event atomically. `audit`
+   * may therefore see the same tenant/request id immediately afterwards and
+   * must treat that as an idempotent acknowledgement, not a second insert.
+   * Refused mutations have no mutation transaction, so `audit` creates them.
+   */
   credential(id: string): Promise<CredentialMaterial | null>;
   listUsers(tenantId: string, filter: ScimFilter | null): Promise<ProvisioningResult[]>;
   getUser(tenantId: string, id: string): Promise<ProvisioningResult | null>;

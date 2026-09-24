@@ -54,25 +54,48 @@ const membership: MembershipRecord = {
   roles: ['student', 'advisor'],
 };
 
+const verified = (id = 'user-1') => ({
+  id,
+  providerIdentifier: 'sso:vanderbilt',
+  userName: id === 'user-1' ? 'student@vanderbilt.edu' : 'missing@vanderbilt.edu',
+});
+
 describe('current institutional membership resolution', () => {
   it('binds one verified SSO provider to one active tenant membership', async () => {
     const resolve = createMembershipResolver(directory([provider], [membership]));
-    await expect(resolve({ id: 'user-1', providerIdentifier: 'sso:vanderbilt' })).resolves.toEqual({
+    await expect(resolve(verified())).resolves.toEqual({
       userId: 'user-1',
       institutionId: 'vanderbilt',
       roles: ['student', 'advisor'],
     });
   });
 
+  it('passes the verified SSO user name so a pre-login SCIM membership can be claimed', async () => {
+    let seenUserName = '';
+    const resolve = createMembershipResolver({
+      providersFor: async () => [provider],
+      membershipsFor: async (_userId, _tenantId, _providerId, userName) => {
+        seenUserName = userName;
+        return [membership];
+      },
+    });
+    await expect(resolve({
+      id: 'user-1',
+      providerIdentifier: 'sso:vanderbilt',
+      userName: 'student@vanderbilt.edu',
+    })).resolves.not.toBeNull();
+    expect(seenUserName).toBe('student@vanderbilt.edu');
+  });
+
   it('denies absent and ambiguous provider mappings', async () => {
     const missing = createMembershipResolver(directory([], [membership]));
-    await expect(missing({ id: 'user-1', providerIdentifier: 'sso:vanderbilt' })).resolves.toBeNull();
+    await expect(missing(verified())).resolves.toBeNull();
 
     const ambiguous = createMembershipResolver(directory([
       provider,
       { ...provider, id: 'provider-other', tenantId: 'another-school' },
     ], [membership]));
-    await expect(ambiguous({ id: 'user-1', providerIdentifier: 'sso:vanderbilt' })).resolves.toBeNull();
+    await expect(ambiguous(verified())).resolves.toBeNull();
   });
 
   it('denies inactive, duplicate and roleless memberships', async () => {
@@ -82,16 +105,16 @@ describe('current institutional membership resolution', () => {
       [{ ...membership, roles: ['invented-role'] }],
     ]) {
       const resolve = createMembershipResolver(directory([provider], rows));
-      await expect(resolve({ id: 'user-1', providerIdentifier: 'sso:vanderbilt' })).resolves.toBeNull();
+      await expect(resolve(verified())).resolves.toBeNull();
     }
   });
 
   it('reloads membership so deprovisioning is effective on the next check', async () => {
     const rows: MembershipRecord[] = [{ ...membership }];
     const resolve = createMembershipResolver(directory([provider], rows));
-    await expect(resolve({ id: 'user-1', providerIdentifier: 'sso:vanderbilt' })).resolves.not.toBeNull();
+    await expect(resolve(verified())).resolves.not.toBeNull();
     rows[0] = { ...rows[0], status: 'deprovisioned', roles: [] };
-    await expect(resolve({ id: 'user-1', providerIdentifier: 'sso:vanderbilt' })).resolves.toBeNull();
+    await expect(resolve(verified())).resolves.toBeNull();
   });
 
   it('audits accepted and denied decisions without a token or user content', async () => {
@@ -99,8 +122,8 @@ describe('current institutional membership resolution', () => {
     const resolve = createMembershipResolver(directory([provider], [membership]), async (event) => {
       events.push(event);
     });
-    await resolve({ id: 'user-1', providerIdentifier: 'sso:vanderbilt' });
-    await resolve({ id: 'missing-user', providerIdentifier: 'sso:vanderbilt' });
+    await resolve(verified());
+    await resolve(verified('missing-user'));
     expect(events.map((event) => event.outcome)).toEqual(['accepted', 'denied']);
     expect(JSON.stringify(events)).not.toMatch(/Bearer|token|question|course/i);
   });

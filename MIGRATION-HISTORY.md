@@ -1,5 +1,15 @@
 # Repairing the migration history
 
+## 24 September 2026 — first-login SSO membership binding
+
+`20260924154500_bind_institution_sso_membership.sql` adds the service-only,
+atomic bridge between a SCIM membership created before first login and the
+Supabase Auth user created by a verified SAML login. It binds only when the
+authorized provider, tenant, asserted email domain and active SCIM user name
+all agree; tenant mismatch, provider mismatch, rebinding and duplicate claims
+return false. The identity provisioning suite covers the successful binding
+and the cross-domain refusal.
+
 ## 24 September 2026 — institutional identity provisioning
 
 `20260924150142_institution_identity_provisioning.sql` adds tenant-bound SAML

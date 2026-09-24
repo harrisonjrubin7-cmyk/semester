@@ -73,7 +73,7 @@ export function trustedIdentity(user: {
 interface SupabaseAuthClient {
   auth: {
     getUser(token: string): Promise<{
-      data: { user: { id: string; app_metadata?: Record<string, unknown> } | null };
+      data: { user: { id: string; email?: string; app_metadata?: Record<string, unknown> } | null };
       error: unknown;
     }>;
   };
@@ -81,11 +81,13 @@ interface SupabaseAuthClient {
 
 export function verifiedAuthUser(user: {
   id: string;
+  email?: string;
   app_metadata?: Record<string, unknown>;
 }): VerifiedAuthUser | null {
   const provider = user.app_metadata?.provider;
-  return typeof provider === 'string' && provider.startsWith('sso:')
-    ? { id: user.id, providerIdentifier: provider }
+  const userName = user.email?.trim().toLowerCase();
+  return typeof provider === 'string' && provider.startsWith('sso:') && userName
+    ? { id: user.id, providerIdentifier: provider, userName }
     : null;
 }
 
