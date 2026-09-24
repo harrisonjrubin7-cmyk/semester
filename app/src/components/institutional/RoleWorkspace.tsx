@@ -8,13 +8,34 @@ import { controlPlaneView } from '../../lib/control-plane';
 const TITLES = {
   student: 'Student workspace',
   faculty: 'Faculty workspace',
+  teaching_assistant: 'Teaching-assistant workspace',
   advisor: 'Advisor workspace',
   campus_staff: 'Student-success workspace',
   university_admin: 'Administrator workspace',
   moderator: 'Community moderation workspace',
   employer: 'Employer workspace',
+  applicant: 'Applicant workspace',
   authorized_payer: 'Authorized payer workspace',
+  authorized_family: 'Authorized-family workspace',
+  alumni: 'Alumni workspace',
 } as const;
+
+type WorkspaceRole = keyof typeof TITLES;
+
+const ROLE_FUNCTIONS: Record<WorkspaceRole, string[]> = {
+  student: ['Plan my work', 'Learn and practice', 'Review my evidence'],
+  faculty: ['Prepare course materials', 'Prepare assignment drafts', 'Prepare feedback drafts'],
+  teaching_assistant: ['Prepare learning activities', 'Prepare office-hours support', 'Review assigned course context'],
+  advisor: ['Review consented plans', 'Prepare advising follow-up', 'Explain support signals'],
+  campus_staff: ['Review consented service cases', 'Prepare student support', 'Use the scoped directory'],
+  university_admin: ['Inspect identity and integrations', 'Stage policy', 'Review audit readiness'],
+  moderator: ['Review community reports', 'Prepare moderation notes', 'Escalate a sample case'],
+  employer: ['Prepare opportunity drafts', 'Review consented career profiles', 'Plan recruiting follow-up'],
+  applicant: ['Track my application preparation', 'Prepare visit questions', 'Review my deadlines'],
+  authorized_payer: ['Review shared billing summaries', 'Prepare a payment handoff', 'Review authorization scope'],
+  authorized_family: ['Review explicitly shared updates', 'Prepare student-approved questions', 'Review authorization scope'],
+  alumni: ['Prepare a mentorship profile', 'Discover alumni events', 'Review career-network preferences'],
+};
 
 export function RoleWorkspace() {
   const { institution, person } = useInstitutionalPreview();
@@ -39,7 +60,8 @@ export function RoleWorkspace() {
     setReceipt(`${kind === 'assignment' ? 'Assignment' : 'Feedback'} draft prepared locally.`);
   };
 
-  const external = role === 'moderator' || role === 'employer' || role === 'authorized_payer';
+  const external = role === 'moderator' || role === 'employer' || role === 'authorized_payer'
+    || role === 'applicant' || role === 'authorized_family' || role === 'alumni';
   const controlAccess = controlPlaneView({
     tenantId: institution.id,
     viewedTenantId: institution.id,
@@ -60,6 +82,13 @@ export function RoleWorkspace() {
       <Blueprint plain style={{ padding: 'var(--sp-6)', background: 'var(--app-hero)' }}>
         <strong>{person.name} · Synthetic preview</strong>
 
+        <div style={{ marginBlock: 'var(--sp-4)' }}>
+          <strong>Available functions</strong>
+          <ul aria-label="Available functions" style={{ marginBlock: 'var(--sp-2) 0' }}>
+            {ROLE_FUNCTIONS[role].map((item) => <li key={item}>{item}</li>)}
+          </ul>
+        </div>
+
         {role === 'student' && (
           <p>Your sample plan and evidence only. {workspace.tasks.filter((task) => task.status === 'open').length} open sample items are in this context.</p>
         )}
@@ -73,6 +102,10 @@ export function RoleWorkspace() {
             </div>
             <p style={{ color: 'var(--app-dim)' }}>Nothing is published to a learning system.</p>
           </>
+        )}
+
+        {role === 'teaching_assistant' && (
+          <p>Assigned-course preparation only. No grade or course change is published from this preview.</p>
         )}
 
         {(role === 'advisor' || role === 'campus_staff') && (
@@ -110,6 +143,9 @@ export function RoleWorkspace() {
             No student academic details are shown. {role === 'moderator' && 'Only sample community reports are in scope.'}
             {role === 'employer' && 'Only consented sample career profiles are in scope.'}
             {role === 'authorized_payer' && 'Only explicitly shared sample billing summaries are in scope.'}
+            {role === 'applicant' && 'Only this applicant’s synthetic preparation record is in scope.'}
+            {role === 'authorized_family' && 'Only information explicitly shared for this sample relationship is in scope.'}
+            {role === 'alumni' && 'Only this alumnus’s sample profile and opted-in network activity are in scope.'}
           </p>
         )}
 

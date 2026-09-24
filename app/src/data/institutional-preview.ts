@@ -4,12 +4,16 @@ import type { School } from '../lib/school';
 export const PREVIEW_ROLES = [
   'student',
   'faculty',
+  'teaching_assistant',
   'advisor',
   'campus_staff',
   'university_admin',
   'moderator',
   'employer',
+  'applicant',
   'authorized_payer',
+  'authorized_family',
+  'alumni',
 ] as const;
 
 export type PreviewRole = (typeof PREVIEW_ROLES)[number];
@@ -49,23 +53,31 @@ export interface InstitutionalFixture {
 const roleCapabilities: Record<PreviewRole, string[]> = {
   student: ['course:read', 'work:manage', 'profile:self'],
   faculty: ['course:manage', 'roster:read', 'message:course'],
+  teaching_assistant: ['course:assist', 'learning-activity:prepare', 'office-hours:prepare'],
   advisor: ['student-plan:read', 'appointment:manage'],
   campus_staff: ['service-case:manage', 'student-directory:read'],
   university_admin: ['institution:report', 'catalog:manage'],
   moderator: ['community:moderate', 'report:resolve'],
   employer: ['career-post:manage', 'candidate-consent:read'],
+  applicant: ['application:self-manage', 'visit:self-manage', 'profile:self'],
   authorized_payer: ['bill:shared-read', 'payment:submit'],
+  authorized_family: ['student-shared:read', 'family-preference:self'],
+  alumni: ['alumni-profile:self', 'mentorship:participate', 'event:discover'],
 };
 
 const scopeKind: Record<PreviewRole, VerifiedGrant['scopeKind']> = {
   student: 'institution',
   faculty: 'course',
+  teaching_assistant: 'course',
   advisor: 'department',
   campus_staff: 'organization',
   university_admin: 'institution',
   moderator: 'organization',
   employer: 'organization',
+  applicant: 'institution',
   authorized_payer: 'organization',
+  authorized_family: 'organization',
+  alumni: 'institution',
 };
 
 function people(
@@ -82,7 +94,7 @@ function people(
       {
         role,
         scopeKind: scopeKind[role],
-        scopeId: role === 'faculty' ? `${institutionId}-course-101` : `${institutionId}-${role}`,
+        scopeId: role === 'faculty' || role === 'teaching_assistant' ? `${institutionId}-course-101` : `${institutionId}-${role}`,
         capabilities: roleCapabilities[role],
         expiresAt: '2027-06-30T23:59:59.000Z',
       },
@@ -161,12 +173,16 @@ const fixtures: InstitutionalFixture[] = [
     people: people('northstar', 'northstar.example', {
       student: 'Avery Student',
       faculty: 'Riley Faculty',
+      teaching_assistant: 'Emerson Teaching Assistant',
       advisor: 'Morgan Advisor',
       campus_staff: 'Casey Campus',
       university_admin: 'Jordan Administrator',
       moderator: 'Quinn Moderator',
       employer: 'Taylor Employer',
+      applicant: 'Alex Applicant',
       authorized_payer: 'Parker Payer',
+      authorized_family: 'Finley Family',
+      alumni: 'Arden Alumni',
     }),
     records: records('northstar'),
   },
@@ -184,12 +200,16 @@ const fixtures: InstitutionalFixture[] = [
     people: people('cedar-coast', 'cedarcoast.example', {
       student: 'Sage Student',
       faculty: 'Rowan Faculty',
+      teaching_assistant: 'Hayden Teaching Assistant',
       advisor: 'Devon Advisor',
       campus_staff: 'Skyler Campus',
       university_admin: 'Cameron Administrator',
       moderator: 'Reese Moderator',
       employer: 'Ellis Employer',
+      applicant: 'Ari Applicant',
       authorized_payer: 'Blake Payer',
+      authorized_family: 'Frankie Family',
+      alumni: 'Marley Alumni',
     }),
     records: records('cedar-coast'),
   },

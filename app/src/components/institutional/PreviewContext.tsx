@@ -4,7 +4,7 @@ import {
   type InstitutionalFixture,
   type PreviewPerson,
 } from '../../data/institutional-preview';
-import type { FlightRole, TenantId } from '../../lib/flight-plan';
+import type { TenantId } from '../../lib/flight-plan';
 import { FlightPlanProvider } from './FlightPlanContext';
 
 interface InstitutionalPreviewContextValue {
@@ -44,7 +44,7 @@ export function InstitutionalPreviewProvider({ children }: { children: ReactNode
       <FlightPlanProvider
         key={`${institution.id}:${person.id}`}
         tenant={institution.id as TenantId}
-        role={person.role as FlightRole}
+        role={person.role}
         personId={person.id}
       >
         {children}
