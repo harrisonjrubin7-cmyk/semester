@@ -11,7 +11,7 @@ import {
 } from './membership.ts';
 import { adapters } from './adapters.ts';
 import { SANDBOX_NAME, SandboxStore, sandboxAdapters } from './sandbox.ts';
-import { createIntelligenceService } from './intelligence.ts';
+import { createInstitutionIntelligenceRuntime } from './intelligence-runtime.ts';
 
 /**
  * The process. Everything the gateway needs before it can answer anything.
@@ -183,34 +183,26 @@ const configuredModels = (process.env.SEMESTER_AI_PROVIDERS || '')
   .split(',')
   .map((model) => model.trim())
   .filter(Boolean);
-const monthlyCents = Number(process.env.SEMESTER_AI_MONTHLY_CENTS || '0');
-const retentionDays = Number(process.env.SEMESTER_AI_RETENTION_DAYS || '30');
+const maxRequestCents = Number(process.env.SEMESTER_AI_MAX_REQUEST_CENTS || '0');
+const estimatedRequestCents = Number(process.env.SEMESTER_AI_ESTIMATED_REQUEST_CENTS || '0');
+const configuredRuntimeStatus = process.env.SEMESTER_AI_RUNTIME_STATUS === 'production'
+  ? 'configured-production' as const
+  : 'configured-sandbox' as const;
 
 /*
- * Provider names and budgets are policy, not a provider implementation.
- * This repository deliberately ships no institutional model credential or
- * connector, so the live process stays policy-disabled even if an operator
- * has started drafting those values. Tests inject an approved provider at the
- * same boundary; a deployment must do the same before changing this status.
+ * This remains policy-disabled unless every server-only provider requirement
+ * is present. Tenant policy, approved source bodies, budget reservation and
+ * usage settlement are loaded authoritatively from Supabase on every request;
+ * a VITE_ flag or browser-supplied production claim cannot enable it.
  */
-const intelligence = createIntelligenceService({
-  status: 'policy-disabled',
-  loadPolicy: async () => ({
-    state: 'off',
-    permittedRoles: ['student'],
-    allowedModes: ['explain', 'hint', 'practice', 'review'],
-    allowedModels: configuredModels,
-    maxRequestCents: 0,
-    monthlyBudgetCents: Number.isFinite(monthlyCents) ? Math.max(0, monthlyCents) : 0,
-    monthlySpentCents: 0,
-    retentionDays: Number.isFinite(retentionDays) ? Math.max(0, Math.floor(retentionDays)) : 30,
-  }),
-  loadApprovedSources: async () => [],
-  modelTask: async () => ({ candidates: [] }),
-  generate: async () => {
-    throw new Error('No approved institutional model provider is installed.');
-  },
-  execute: async () => ({ verified: false }),
+const intelligence = createInstitutionIntelligenceRuntime({
+  authUrl,
+  authServiceKey,
+  openAIKey: process.env.OPENAI_API_KEY || '',
+  configuredModels,
+  maxRequestCents,
+  estimatedRequestCents,
+  status: configuredRuntimeStatus,
   audit: (identity, record) => journal.auditIntelligence(identity, record),
 });
 

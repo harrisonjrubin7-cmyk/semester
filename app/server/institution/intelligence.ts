@@ -9,6 +9,10 @@ import {
   type TenantIntelligencePolicy,
   type UniversityIdentity,
 } from '../../../packages/institution/src/index.ts';
+import type {
+  InstitutionModelProvider,
+  ProviderGenerationRequest,
+} from './providers/types.ts';
 
 export interface ApprovedIntelligenceSource {
   id: string;
@@ -29,18 +33,27 @@ export interface IntelligenceAuditRecord {
   confirmation?: 'confirmed' | 'refused';
 }
 
+export interface IntelligenceBudgetReservation {
+  id: string;
+  reservedCents: number;
+}
+
 export interface IntelligenceRespondInput {
   identity: UniversityIdentity;
   request: IntelligenceGatewayRequest;
   tenantPolicy: TenantIntelligencePolicy;
   approvedSources: ApprovedIntelligenceSource[];
   modelTask: ModelTask;
-  generate: (input: {
-    question: string;
-    mode: IntelligenceGatewayRequest['mode'];
-    route: { provider: string; model: string };
-    sources: ApprovedIntelligenceSource[];
-  }) => Promise<{ text: string; inputTokens: number; outputTokens: number; costCents?: number }>;
+  generate: InstitutionModelProvider['generate'];
+  reserveBudget?: (
+    identity: UniversityIdentity,
+    maximumCents: number,
+  ) => Promise<IntelligenceBudgetReservation | null>;
+  settleBudget?: (
+    identity: UniversityIdentity,
+    reservation: IntelligenceBudgetReservation,
+    usage: { costCents: number; inputTokens: number; outputTokens: number } | null,
+  ) => Promise<boolean>;
   audit?: (identity: UniversityIdentity, record: IntelligenceAuditRecord) => void;
 }
 
@@ -76,6 +89,8 @@ export interface IntelligenceResult {
 }
 
 const result = (status: number, body: Record<string, unknown>): IntelligenceResult => ({ status, body });
+const PROVIDER_DEADLINE_MS = 20_000;
+const MAX_OUTPUT_TOKENS = 1_200;
 
 export async function respond(input: IntelligenceRespondInput): Promise<IntelligenceResult> {
   const { identity, request, tenantPolicy } = input;
@@ -100,8 +115,13 @@ export async function respond(input: IntelligenceRespondInput): Promise<Intellig
 
   const requestedSources = new Set(request.sourceIds);
   const sources = input.approvedSources.filter((source) => requestedSources.has(source.id));
+  if (requestedSources.size === 0 || sources.length !== requestedSources.size) {
+    return result(403, {
+      code: 'source-not-approved',
+      message: 'Every source sent to Semester Intelligence must be approved for this tenant and account.',
+    });
+  }
   const allowedEvidence = new Set(sources.flatMap((source) => source.evidenceIds));
-  const evidenceIds = request.evidenceIds.filter((id) => allowedEvidence.has(id));
   const monthlyRemaining = Math.max(
     0,
     (tenantPolicy.monthlyBudgetCents ?? Number.POSITIVE_INFINITY) -
@@ -121,15 +141,94 @@ export async function respond(input: IntelligenceRespondInput): Promise<Intellig
     return result(503, { code: 'model-unavailable', message: 'No tenant-approved model fits the current cost policy.' });
   }
 
-  const generated = await input.generate({
+  const providerRequest: ProviderGenerationRequest = {
+    provider: route.provider,
+    model: route.model.replace(`${route.provider}:`, ''),
     question: request.question,
     mode: request.mode,
-    route: { provider: route.provider, model: route.model },
     sources,
-  });
+    maxOutputTokens: MAX_OUTPUT_TOKENS,
+  };
+  let reservation: IntelligenceBudgetReservation | null = null;
+  if (input.reserveBudget) {
+    try {
+      reservation = await input.reserveBudget(identity, route.estimatedCents);
+    } catch {
+      return result(503, { code: 'budget-unavailable', message: 'The institution budget service is unavailable.' });
+    }
+    if (!reservation) {
+      return result(429, { code: 'budget-exhausted', message: 'The institution AI budget is currently exhausted.' });
+    }
+  }
+  let generated;
+  try {
+    generated = await input.generate(providerRequest, AbortSignal.timeout(PROVIDER_DEADLINE_MS));
+  } catch {
+    if (reservation && input.settleBudget) {
+      try { await input.settleBudget(identity, reservation, null); } catch { /* reservation expiry is a server concern */ }
+    }
+    input.audit?.(identity, {
+      category: request.category,
+      provider: route.provider,
+      model: route.model,
+      inputTokens: 0,
+      outputTokens: 0,
+      costCents: 0,
+      policyDecision: 'provider-refused',
+    });
+    return result(503, {
+      code: 'provider-unavailable',
+      message: 'The tenant-approved model provider could not complete this request.',
+    });
+  }
+  if (
+    !generated.text.trim() ||
+    !Array.isArray(generated.citedSourceIds) ||
+    generated.citedSourceIds.length === 0 ||
+    generated.citedSourceIds.some((id) => !requestedSources.has(id)) ||
+    !Number.isFinite(generated.inputTokens) ||
+    !Number.isFinite(generated.outputTokens) ||
+    generated.inputTokens < 0 ||
+    generated.outputTokens < 0 ||
+    generated.outputTokens > MAX_OUTPUT_TOKENS
+  ) {
+    if (reservation && input.settleBudget) {
+      try { await input.settleBudget(identity, reservation, null); } catch { /* reservation expiry is a server concern */ }
+    }
+    return result(503, {
+      code: 'invalid-provider-response',
+      message: 'The tenant-approved provider returned an invalid or unmetered response.',
+    });
+  }
+  const citedSources = new Set(generated.citedSourceIds);
+  const citedEvidence = new Set(
+    sources.filter((source) => citedSources.has(source.id)).flatMap((source) => source.evidenceIds),
+  );
+  const evidenceIds = request.evidenceIds.filter((id) => allowedEvidence.has(id) && citedEvidence.has(id));
   const costCents = generated.costCents ?? route.estimatedCents;
   if (costCents > tenantPolicy.maxRequestCents || costCents > monthlyRemaining) {
+    if (reservation && input.settleBudget) {
+      try { await input.settleBudget(identity, reservation, null); } catch { /* reservation expiry is a server concern */ }
+    }
     return result(503, { code: 'cost-ceiling-exceeded', message: 'The response exceeded the tenant cost policy and was discarded.' });
+  }
+  if (reservation && input.settleBudget) {
+    let settled = false;
+    try {
+      settled = await input.settleBudget(identity, reservation, {
+        costCents,
+        inputTokens: generated.inputTokens,
+        outputTokens: generated.outputTokens,
+      });
+    } catch {
+      settled = false;
+    }
+    if (!settled) {
+      return result(503, {
+        code: 'usage-not-recorded',
+        message: 'The response was discarded because authoritative usage could not be recorded.',
+      });
+    }
   }
 
   const actions = request.proposedActions.map((action) => ({
@@ -148,6 +247,7 @@ export async function respond(input: IntelligenceRespondInput): Promise<Intellig
   return result(200, {
     version: 1,
     text: generated.text,
+    sourceIds: [...citedSources],
     evidenceIds,
     mode: request.mode,
     route: { provider: route.provider, model: route.model },
@@ -205,6 +305,8 @@ export interface IntelligenceServiceConfig {
   loadApprovedSources: (identity: UniversityIdentity, sourceIds: string[]) => Promise<ApprovedIntelligenceSource[]>;
   modelTask: (identity: UniversityIdentity, request: IntelligenceGatewayRequest) => Promise<ModelTask>;
   generate: IntelligenceRespondInput['generate'];
+  reserveBudget?: IntelligenceRespondInput['reserveBudget'];
+  settleBudget?: IntelligenceRespondInput['settleBudget'];
   execute: ConfirmActionInput['execute'];
   audit?: IntelligenceRespondInput['audit'];
 }
@@ -241,6 +343,8 @@ export function createIntelligenceService(config: IntelligenceServiceConfig): In
         approvedSources: await config.loadApprovedSources(identity, request.sourceIds),
         modelTask: await config.modelTask(identity, request),
         generate: config.generate,
+        reserveBudget: config.reserveBudget,
+        settleBudget: config.settleBudget,
         audit: config.audit,
       });
       if (response.status === 200) {
