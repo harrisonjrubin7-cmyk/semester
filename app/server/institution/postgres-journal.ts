@@ -59,6 +59,14 @@ export class PostgresActionJournal implements ActionJournalStore {
     }
   }
 
+  async retentionHealthy(): Promise<boolean> {
+    try {
+      return await this.rpc<boolean>('gateway_retention_health', {}, 'check retention readiness') === true;
+    } catch {
+      return false;
+    }
+  }
+
   async save(row: SavedReview): Promise<void> {
     const saved = await this.rpc<boolean>('gateway_save_review', {
       want_review: row.review.id,

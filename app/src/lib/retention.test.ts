@@ -303,4 +303,18 @@ describe('the clocks that run are still the clocks the document describes', () =
     expect(flat()).toContain('**90 days after deletion**');
     expect(flat()).not.toContain('**Nothing calls it.**');
   });
+
+  it('keeps the institutional gateway purge hourly and its readiness window wider than the cadence', () => {
+    const scheduler = readFileSync(join(ROOT, 'supabase', 'scheduler.sql'), 'utf8');
+    expect(scheduler).toMatch(
+      /cron\.schedule\(\s*'institution-gateway-retention',\s*'11 \* \* \* \*',\s*\$job\$select public\.gateway_purge_journal\(\)\$job\$/,
+    );
+
+    const readiness = readFileSync(
+      join(MIGRATIONS, '20260924200000_gateway_observability.sql'),
+      'utf8',
+    );
+    expect(readiness).toMatch(/last_retention_at > now\(\) - interval '2 hours'/);
+    expect(flat()).toContain('hourly sweep');
+  });
 });
