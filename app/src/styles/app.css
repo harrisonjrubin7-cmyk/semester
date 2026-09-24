@@ -6946,6 +6946,109 @@ section[data-drop] > .grip + * {
   color: var(--app-fg);
 }
 
+.deskdir-intro {
+  margin-top: var(--sp-2);
+  font-size: var(--type-sm);
+}
+
+.deskdir-alltools {
+  width: auto;
+  flex: none;
+  padding: var(--sp-4) var(--sp-6);
+  border: 1px solid var(--app-line);
+  border-radius: 999px;
+  color: var(--app-fg);
+  font-size: var(--type-sm);
+}
+
+.journey-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sp-6);
+}
+
+.journey-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  gap: var(--sp-5);
+  width: 100%;
+  min-height: 132px;
+  padding: var(--sp-7);
+  border: 1px solid var(--app-line-soft);
+  border-radius: var(--r-lg);
+  background: var(--app-hero);
+  color: var(--app-fg);
+  text-align: left;
+}
+
+.journey-card:hover,
+.journey-card:focus-visible {
+  border-color: var(--app-accent-deep);
+  background: var(--app-raise);
+}
+
+.journey-number {
+  color: var(--app-accent);
+  font-family: var(--font-heading);
+  font-size: var(--type-xs);
+  letter-spacing: 0.08em;
+}
+
+.journey-copy {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  min-width: 0;
+}
+
+.journey-name {
+  font-family: var(--font-heading);
+  font-size: var(--type-lg);
+  line-height: var(--leading-tight);
+}
+
+.journey-outcome,
+.journey-reason {
+  color: var(--app-dim);
+  font-size: var(--type-sm);
+  line-height: var(--leading-normal);
+}
+
+.journey-reason {
+  color: var(--app-accent-deep);
+}
+
+.journey-arrow {
+  color: var(--app-accent);
+  font-size: var(--type-lg);
+}
+
+.today-journey {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  margin-block: var(--sp-6);
+}
+
+.today-journey .journey-card {
+  min-height: 0;
+}
+
+@media (max-width: 759px) {
+  .journey-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .journey-card {
+    min-height: 0;
+  }
+
+  .deskdir-journeybar {
+    align-items: flex-start;
+  }
+}
+
 .deskdir-fav {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));

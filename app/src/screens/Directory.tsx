@@ -42,7 +42,7 @@ import { createElement, useState } from 'react';
 import { useStore } from '../state/store';
 import { currentLook } from '../state/shape';
 import { directoryOf } from '../lib/look';
-import { allApps, isFavourite, narrowApps, readFavourites, toggleFavourite } from '../lib/desk';
+import { allApps, discover, isFavourite, narrowApps, readFavourites, toggleFavourite } from '../lib/desk';
 import type { Destination } from '../lib/nav';
 import { ALWAYS_TO_HAND, GROUPS, lately, saysFor } from '../lib/nav';
 import { showing } from '../lib/reveal';
@@ -50,6 +50,8 @@ import { secondLine } from '../lib/dim';
 import { glyphFor } from '../components/icons.pick';
 import { AppsIcon, NotesIcon, Search as SearchIcon, StarIcon } from '../components/Icons';
 import { NotYetOpened } from '../components/NotYetOpened';
+import { JourneyCards } from '../components/JourneyCards';
+import { journeysFor } from '../lib/journeys';
 import type { Screen } from '../lib/types';
 
 /**
@@ -90,6 +92,7 @@ export function Directory() {
   const grid = directoryOf(look.directory, state.shell) === 'tiles';
   const [category, setCategory] = useState('');
   const [query, setQuery] = useState('');
+  const [allTools, setAllTools] = useState(false);
 
   /*
    * The third gate, which this screen was the one place left to apply.
@@ -118,7 +121,7 @@ export function Directory() {
    */
   const every = allApps(caps, state.role);
   const browsing = every.filter((d) => showing(d.screen, facts, state.visited, state.showAll));
-  const apps = query.trim() ? every : browsing;
+  const apps = query.trim() || allTools ? every : browsing;
   /*
    * The chips are read off what this list actually holds, not off the
    * registry, for the reason `desk.ts`'s `categories` gives about the school
@@ -133,6 +136,12 @@ export function Directory() {
   const shown = narrowApps(apps, chips.includes(category) ? category : '', query, caps);
   const favourites = readFavourites(look.favourites, caps, state.role);
   const recent = lately(state.recent, state.tabs, caps, ALWAYS_TO_HAND, 4, state.role);
+  const availableJourneys = journeysFor(every).filter((journey) => journey.screens.length > 0);
+  const matchedJourneyIds = new Set(discover(query, caps, state.role).journeys.map((journey) => journey.id));
+  const matchedJourneys = query.trim()
+    ? availableJourneys.filter((journey) => matchedJourneyIds.has(journey.id))
+    : availableJourneys;
+  const catalogVisible = allTools || Boolean(query.trim()) || Boolean(category);
 
   const star = (screen: Screen) =>
     dispatch({
@@ -236,9 +245,50 @@ export function Directory() {
         </>
       )}
 
-      <div className="deskdir-bar">
-        <div className="deskdir-label">All applications</div>
-        <div className="deskdir-views" role="group" aria-label="How to show the apps">
+      <div className="deskdir-bar deskdir-journeybar">
+        <div>
+          <div className="deskdir-label">What do you want to do?</div>
+          <div className="deskdir-intro" style={secondLine()}>
+            Start with an outcome. Every tool remains available below.
+          </div>
+        </div>
+        <button
+          type="button"
+          className="bare tappable deskdir-alltools"
+          aria-expanded={catalogVisible}
+          onClick={() => {
+            setAllTools((open) => !open);
+            setCategory('');
+          }}
+        >
+          {allTools ? 'Hide tools' : `All tools (${every.length})`}
+        </button>
+      </div>
+
+      <div className="deskdir-find">
+        <SearchIcon size={17} />
+        <input
+          className="bare deskdir-findbox"
+          type="search"
+          value={query}
+          placeholder="Search journeys and tools"
+          aria-label="Search journeys and tools"
+          onChange={(e) => setQuery(e.target.value)}
+        />
+      </div>
+
+      {matchedJourneys.length > 0 && (
+        <JourneyCards
+          journeys={matchedJourneys}
+          onOpen={(screen) => dispatch({ type: 'go', screen })}
+        />
+      )}
+
+      {catalogVisible && (
+        <>
+          <div className="deskdir-bar">
+            <div className="deskdir-label">All applications</div>
+            <div className="deskdir-views" role="group" aria-label="How to show the apps">
           <button
             type="button"
             className={grid ? 'bare deskdir-view' : 'bare deskdir-view is-on'}
@@ -257,42 +307,30 @@ export function Directory() {
           >
             <AppsIcon size={17} />
           </button>
-        </div>
-      </div>
+            </div>
+          </div>
 
-      <div className="deskdir-find">
-        <SearchIcon size={17} />
-        <input
-          className="bare deskdir-findbox"
-          type="search"
-          value={query}
-          placeholder="Filter these apps"
-          aria-label="Filter these apps"
-          onChange={(e) => setQuery(e.target.value)}
-        />
-      </div>
-
-      <div className="deskdir-chips" role="group" aria-label="Categories">
-        <button
-          type="button"
-          className={category === '' ? 'bare deskdir-chip is-on' : 'bare deskdir-chip'}
-          onClick={() => setCategory('')}
-          aria-pressed={category === ''}
-        >
-          All apps
-        </button>
-        {chips.map((group) => (
-          <button
-            key={group}
-            type="button"
-            className={category === group ? 'bare deskdir-chip is-on' : 'bare deskdir-chip'}
-            onClick={() => setCategory(group)}
-            aria-pressed={category === group}
-          >
-            {group}
-          </button>
-        ))}
-      </div>
+          <div className="deskdir-chips" role="group" aria-label="Categories">
+            <button
+              type="button"
+              className={category === '' ? 'bare deskdir-chip is-on' : 'bare deskdir-chip'}
+              onClick={() => setCategory('')}
+              aria-pressed={category === ''}
+            >
+              All apps
+            </button>
+            {chips.map((group) => (
+              <button
+                key={group}
+                type="button"
+                className={category === group ? 'bare deskdir-chip is-on' : 'bare deskdir-chip'}
+                onClick={() => setCategory(group)}
+                aria-pressed={category === group}
+              >
+                {group}
+              </button>
+            ))}
+          </div>
 
       {/*
         How many of them you are looking at, while you are narrowing.
@@ -305,7 +343,7 @@ export function Directory() {
         Hidden when nothing is narrowed: "58 of 58 apps" over the whole
         directory is a number that answers a question nobody asked.
       */}
-      {(query || category) && (
+      {catalogVisible && (query || category) && (
         <div className="deskdir-status" role="status">
           <span style={secondLine()}>
             {shown.length} of {apps.length} apps
@@ -324,7 +362,7 @@ export function Directory() {
         </div>
       )}
 
-      {shown.length === 0 ? (
+      {catalogVisible && (shown.length === 0 ? (
         /*
           The dead end, with the way out drawn on it.
 
@@ -405,6 +443,8 @@ export function Directory() {
             );
           })}
         </div>
+      ))}
+        </>
       )}
     </div>
   );

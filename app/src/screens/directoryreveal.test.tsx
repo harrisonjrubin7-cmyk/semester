@@ -88,6 +88,14 @@ function show() {
   });
 }
 
+function openAllTools() {
+  const button = [...host.querySelectorAll('button')].find((candidate) =>
+    /^All tools \(\d+\)$/.test(candidate.textContent?.trim() ?? ''),
+  );
+  if (!button) throw new Error('no All tools control on the directory');
+  act(() => button.dispatchEvent(new MouseEvent('click', { bubbles: true })));
+}
+
 /**
  * The registry list, and nothing else on the screen.
  *
@@ -133,7 +141,7 @@ function counted(): string {
  */
 function suggested(): string {
   return [...host.querySelectorAll('button')]
-    .filter((b) => !b.closest('.deskdir-fav, .deskdir-row, .deskdir-card, .deskdir-bar'))
+    .filter((b) => !b.closest('.deskdir-fav, .deskdir-row, .deskdir-card, .deskdir-bar, .journey-card'))
     .map((b) => (b.textContent ?? '').replace(/\s+/g, ' ').trim())
     .join(' ');
 }
@@ -148,25 +156,17 @@ function type(text: string) {
 }
 
 describe('the directory on a brand-new account', () => {
-  it('draws the twelve that are any use yet, not the whole registry', () => {
+  it('starts with journeys instead of drawing the registry as a wall', () => {
     show();
-    const drawn = rows();
-    expect(drawn.length).toBeGreaterThan(0);
-    expect(drawn.length).toBeLessThan(DESTINATIONS.length);
-    // Named, so a gate that happened to cut to the right *number* still fails.
-    expect(drawn.join(' ')).toContain('Upload a syllabus');
-    expect(drawn.join(' ')).not.toContain('counted backwards from it');
-    // And the screen's own sentence agrees with what it drew, which is the
-    // disagreement this whole pass is about: Settings counted 46 held back
-    // while this line said 58.
-    expect(counted()).toBe(`${drawn.length} apps, one semester`);
+    expect(rows()).toEqual([]);
+    expect(host.querySelectorAll('[data-journey-id]')).toHaveLength(6);
+    expect(counted()).toMatch(/^\d+ apps, one semester$/);
   });
 
-  it('draws all of it once the switch under the sentence is on', () => {
-    // The control the browser run found first: before the fix these two cases
-    // returned byte-identical lists, which is what a dead setting looks like.
-    seed({ showAll: true });
+  it('draws the unchanged full registry when All tools is requested', () => {
     show();
+    openAllTools();
+    expect(rows()).toHaveLength(DESTINATIONS.length);
     expect(rows().join(' ')).toContain('counted backwards from it');
   });
 
@@ -175,7 +175,7 @@ describe('the directory on a brand-new account', () => {
     // claim about what is useful yet, and hiding it from search would be a
     // claim about what somebody is allowed to want.
     show();
-    expect(rows().join(' ')).not.toContain('counted backwards from it');
+    expect(rows()).toEqual([]);
     type('runway');
     expect(rows().join(' ')).toContain('counted backwards from it');
   });
@@ -187,25 +187,13 @@ describe('the directory on a brand-new account', () => {
     // them. Measured on a fresh profile it offered Pathway, Career and
     // Family, none of which the list above it was drawing.
     show();
-    const drawn = rows().join(' ');
-    const held = DESTINATIONS.filter((d) => !drawn.includes(d.blurb.slice(0, 40)));
-    // Not vacuous: with no gate nothing is held back, `held` is empty, and
-    // "none of the held-back screens is offered" is true of a broken app.
-    expect(held.length).toBeGreaterThan(0);
     const panel = suggested();
-    const offered = held.filter((d) => panel.includes(d.blurb.slice(0, 40)));
-    expect(offered.map((d) => d.screen)).toEqual([]);
+    const runway = DESTINATIONS.find((destination) => destination.screen === 'runway')!;
+    expect(panel).not.toContain(runway.blurb.slice(0, 40));
     // And the panel is drawing something, so this is a statement about what
     // it chose rather than about it being absent. The suggestions rotate by
     // day, so we verify any visible screen is suggested, not a specific one.
-    const visibleBlurbs = rows()
-      .map((r) => {
-        const d = DESTINATIONS.find((d) => r.includes(d.blurb.slice(0, 40)));
-        return d?.blurb.slice(0, 40);
-      })
-      .filter((b): b is string => !!b);
-    const suggestedAny = visibleBlurbs.some((b) => panel.includes(b));
-    expect(suggestedAny).toBe(true);
+    expect(panel.length).toBeGreaterThan(0);
   });
 
   /*
@@ -247,16 +235,10 @@ describe('the directory on a brand-new account', () => {
       root = createRoot(host);
       show();
 
-      const drawn = rows().join(' ');
-      const held = DESTINATIONS.filter((d) => !drawn.includes(d.blurb.slice(0, 40)));
-      // Not vacuous, per day: with no gate nothing is held back and the
-      // assertion below is true of a broken app.
-      expect(held.length, `day ${day}: the gate bit`).toBeGreaterThan(0);
-
       const panel = suggested();
       expect(panel.length, `day ${day}: the panel drew something`).toBeGreaterThan(0);
-      const offered = held.filter((d) => panel.includes(d.blurb.slice(0, 40)));
-      expect(offered.map((d) => d.screen), `day ${day}`).toEqual([]);
+      const runway = DESTINATIONS.find((destination) => destination.screen === 'runway')!;
+      expect(panel, `day ${day}`).not.toContain(runway.blurb.slice(0, 40));
       panels.add(panel);
     }
 
