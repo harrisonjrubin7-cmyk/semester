@@ -3730,9 +3730,9 @@ section[data-drop] > .grip + * {
 
 /* ── Institutional navigation preview ────────────────────────────────────
  *
- * A build-flagged shell over the same route catalogue. The two rows remain
- * horizontally stable on compact widths; the contextual row becomes a
- * disclosure rather than consuming permanent phone height.
+ * A build-flagged shell over the same route catalogue. The contextual
+ * workspace tier is a disclosure at every width, so it names its purpose
+ * without permanently competing with primary navigation.
  */
 .institutional-navigation {
   border-bottom: 1px solid var(--app-line-soft);
@@ -3740,22 +3740,21 @@ section[data-drop] > .grip + * {
 }
 
 .institutional-primary-nav,
-.institutional-workspace-desktop,
-.institutional-workspace-sheet nav {
+.institutional-workspace-disclosure nav {
   display: flex;
   align-items: center;
   gap: var(--sp-2);
 }
 
 .institutional-primary-nav,
-.institutional-workspace-desktop {
+.institutional-workspace-disclosure nav {
   overflow-x: auto;
   scrollbar-width: none;
   padding-block: var(--sp-3);
 }
 
 .institutional-primary-nav::-webkit-scrollbar,
-.institutional-workspace-desktop::-webkit-scrollbar {
+.institutional-workspace-disclosure nav::-webkit-scrollbar {
   display: none;
 }
 
@@ -3785,26 +3784,20 @@ section[data-drop] > .grip + * {
   box-shadow: inset 0 -2px 0 var(--app-accent-bright);
 }
 
-.institutional-workspace-sheet {
-  display: none;
+.institutional-workspace-disclosure {
+  display: block;
 }
 
-.institutional-workspace-sheet summary {
+.institutional-workspace-disclosure > summary {
   min-height: 44px;
-  padding: var(--sp-4) 0;
+  padding: var(--sp-4) var(--sp-2);
   color: var(--app-fg);
   cursor: pointer;
+  font-weight: 650;
 }
 
-.institutional-workspace-sheet nav {
-  flex-direction: column;
-  align-items: stretch;
-  padding-bottom: var(--sp-5);
-}
-
-.institutional-workspace-sheet .institutional-nav-button {
-  width: 100%;
-  text-align: left;
+.institutional-workspace-disclosure[open] > summary {
+  border-bottom: 1px solid var(--app-line-soft);
 }
 
 @media (max-width: 759px) {
@@ -3817,13 +3810,70 @@ section[data-drop] > .grip + * {
     padding-inline: calc(14px * var(--density, 1));
   }
 
-  .institutional-workspace-desktop {
-    display: none;
+  .institutional-workspace-disclosure nav {
+    flex-direction: column;
+    align-items: stretch;
+    padding-bottom: var(--sp-5);
   }
 
-  .institutional-workspace-sheet {
-    display: block;
+  .institutional-workspace-disclosure .institutional-nav-button {
+    width: 100%;
+    text-align: left;
   }
+}
+
+/* ── Compact Flight Plan ──────────────────────────────────────────────── */
+.flight-plan-card > summary,
+.flight-plan-task > summary,
+.flight-plan-warning > summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-weight: 650;
+}
+
+.flight-plan-card > summary {
+  font-size: calc(16px * var(--text-scale, 1));
+}
+
+.flight-plan-body {
+  display: grid;
+  gap: var(--sp-3);
+  padding-top: var(--sp-3);
+}
+
+.flight-plan-intro,
+.flight-plan-warning-body p,
+.flight-plan-overflow {
+  color: var(--app-dim);
+  margin: 0;
+}
+
+.flight-plan-groups {
+  display: grid;
+  gap: var(--sp-2);
+}
+
+.flight-plan-task,
+.flight-plan-warning {
+  border-top: 1px solid var(--app-line);
+}
+
+.flight-plan-task-body,
+.flight-plan-warning-body {
+  display: grid;
+  gap: var(--sp-2);
+  padding: 0 0 var(--sp-4) var(--sp-5);
+}
+
+.flight-plan-source,
+.flight-plan-session {
+  color: var(--app-dim);
+}
+
+.flight-plan-warning > summary {
+  color: var(--app-warn, var(--app-fg));
 }
 
 /* ---------------------------------------------------------------------------
