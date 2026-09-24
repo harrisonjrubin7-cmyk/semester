@@ -1,5 +1,20 @@
 # Repairing the migration history
 
+## 24 September 2026 — institutional identity provisioning
+
+`20260924150142_institution_identity_provisioning.sql` adds tenant-bound SAML
+provider records, current institutional memberships, salted SCIM credential
+verification material, external identities, approved group-to-role mappings
+and immutable provisioning audit events. Browser-editable profile or user
+metadata does not grant access. Service-role-only functions apply idempotent
+SCIM user and group changes, clear roles on deprovisioning and grant nothing
+for unknown groups.
+
+The matching `identity-provisioning.check.sql` proves tenant isolation,
+external-identifier uniqueness, absence of plaintext credential storage,
+unknown-group refusal, approved group role derivation, immediate deprovisioning
+and immutable audit history on PostgreSQL 17.
+
 ## 23 September 2026 — isolated evidence graphs
 
 `20260923211000_evidence_graphs.sql` adds normalized learning evidence,
