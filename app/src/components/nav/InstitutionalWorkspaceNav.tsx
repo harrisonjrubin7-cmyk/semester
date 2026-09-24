@@ -29,10 +29,7 @@ export function InstitutionalWorkspaceNav() {
 
   return (
     <div className="institutional-workspace-wrap">
-      <nav className="institutional-workspace-desktop" aria-label="Workspace">
-        <WorkspaceButtons screen={state.screen} />
-      </nav>
-      <details className="institutional-workspace-sheet">
+      <details className="institutional-workspace-disclosure">
         <summary>{current.label} workspace</summary>
         <nav aria-label="Workspace">
           <WorkspaceButtons screen={state.screen} />

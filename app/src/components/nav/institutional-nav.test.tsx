@@ -46,7 +46,7 @@ describe('institutional navigation preview', () => {
     expect(host.querySelector('nav[aria-label="Workspace"]')).toBeNull();
   });
 
-  it('renders the five primary destinations and seven workspaces when enabled', () => {
+  it('renders the five primary destinations and keeps all seven workspaces in one disclosure', () => {
     render(true);
 
     const primary = host.querySelector('nav[aria-label="Primary"]')!;
@@ -58,10 +58,11 @@ describe('institutional navigation preview', () => {
       'Inbox',
     ]);
 
-    const desktopWorkspace = host.querySelector(
-      'nav[aria-label="Workspace"].institutional-workspace-desktop',
-    )!;
-    expect([...desktopWorkspace.querySelectorAll('button')].map((button) => button.textContent)).toEqual([
+    const disclosure = host.querySelector('details.institutional-workspace-disclosure')!;
+    expect(disclosure.hasAttribute('open')).toBe(false);
+    expect(disclosure.querySelector('summary')?.textContent).toBe('Home workspace');
+    const workspace = disclosure.querySelector('nav[aria-label="Workspace"]')!;
+    expect([...workspace.querySelectorAll('button')].map((button) => button.textContent)).toEqual([
       'Home',
       'Courses',
       'Study',
@@ -82,10 +83,12 @@ describe('institutional navigation preview', () => {
     expect(store.dispatch).toHaveBeenCalledWith({ type: 'go', screen: 'calendar' });
   });
 
-  it('offers the phone workspace navigation as an accessible disclosure', () => {
+  it('labels the disclosure with the current contextual workspace', () => {
     render(true);
-    const sheet = host.querySelector('details.institutional-workspace-sheet')!;
-    expect(sheet.querySelector('summary')?.textContent).toContain('Home workspace');
-    expect(sheet.querySelector('nav[aria-label="Workspace"]')).not.toBeNull();
+    expect(host.querySelector('details summary')?.textContent).toBe('Home workspace');
+
+    store.screen = 'degree';
+    render(true);
+    expect(host.querySelector('details summary')?.textContent).toBe('Courses workspace');
   });
 });
