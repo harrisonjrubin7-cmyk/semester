@@ -24,6 +24,7 @@ const request = (patch: Partial<IntelligenceGatewayRequest> = {}): IntelligenceG
 
 const policy = (patch: Partial<TenantIntelligencePolicy> = {}): TenantIntelligencePolicy => ({
   state: 'sandbox',
+  permittedRoles: ['student'],
   allowedModes: ['explain', 'hint', 'practice', 'review'],
   allowedModels: ['openai:gpt-5-mini'],
   maxRequestCents: 2,
@@ -48,6 +49,14 @@ describe('governed institution intelligence', () => {
     expect(response.body.code).toBe('policy-disabled');
   });
 
+  it('refuses identities whose verified roles are not permitted by tenant policy', async () => {
+    const response = await respond(fixture({
+      identity: { userId: 'student-1', institutionId: 'northstar', roles: ['family'] },
+    }));
+    expect(response.status).toBe(403);
+    expect(response.body.code).toBe('role-disabled');
+  });
+
   it('returns model prose separately from approved evidence identifiers', async () => {
     const response = await respond(fixture());
     expect(response.status).toBe(200);
@@ -58,7 +67,7 @@ describe('governed institution intelligence', () => {
   it('cannot apply a consequential action without a fresh explicit confirmation', async () => {
     const response = await confirmAction({
       identity: { userId: 'student-1', institutionId: 'northstar', roles: ['student'] },
-      action: { id: 'submit-1', label: 'Submit draft', class: 'consequential', tenantId: 'northstar', personId: 'student-1' },
+      action: { id: 'submit-1', label: 'Submit draft', effect: 'Submit', target: 'draft:1', class: 'consequential', reversible: false, evidenceIds: [], tenantId: 'northstar', personId: 'student-1', preparedAt: '2026-09-23T11:58:00.000Z', expiresAt: '2026-09-23T12:03:00.000Z' },
       confirmation: null,
       now: Date.parse('2026-09-23T12:00:00.000Z'),
       execute: vi.fn(),
@@ -70,7 +79,7 @@ describe('governed institution intelligence', () => {
   it('creates a receipt only after authoritative readback', async () => {
     const base = {
       identity: { userId: 'student-1', institutionId: 'northstar', roles: ['student'] } as UniversityIdentity,
-      action: { id: 'save-1', label: 'Save plan', class: 'internal-write' as const, tenantId: 'northstar', personId: 'student-1' },
+      action: { id: 'save-1', label: 'Save plan', effect: 'Save', target: 'plan:1', class: 'internal-write' as const, reversible: true, evidenceIds: [], tenantId: 'northstar', personId: 'student-1', preparedAt: '2026-09-23T11:58:00.000Z', expiresAt: '2026-09-23T12:03:00.000Z' },
       confirmation: { confirmed: true as const, actorId: 'student-1', at: '2026-09-23T11:59:30.000Z' },
       now: Date.parse('2026-09-23T12:00:00.000Z'),
     };
@@ -81,6 +90,36 @@ describe('governed institution intelligence', () => {
     }) });
     expect(verified.status).toBe(200);
     expect(verified.body).toMatchObject({ id: 'receipt-1', authoritative: true });
+  });
+
+  it('prepares a server-issued, expiring, single-use action with its complete reviewed effect', async () => {
+    const execute = vi.fn().mockResolvedValue({
+      verified: true as const,
+      receiptId: 'receipt-2',
+      message: 'Saved and read back.',
+      recordedAt: '2026-09-23T12:00:01.000Z',
+    });
+    const service = createIntelligenceService({
+      status: 'configured-sandbox',
+      loadPolicy: async () => policy(),
+      loadApprovedSources: async () => [{ id: 'syllabus', evidenceIds: ['evidence-1'], body: 'body' }],
+      modelTask: async () => ({ candidates: [{ model: 'openai:gpt-5-mini', provider: 'openai', estimatedCents: 1 }] }),
+      generate: async () => ({ text: 'Ready.', inputTokens: 1, outputTokens: 1 }),
+      execute,
+    });
+    const identity: UniversityIdentity = { userId: 'student-1', institutionId: 'northstar', roles: ['student'] };
+    const prepared = await service.respond(identity, request({ proposedActions: [{
+      id: 'client-id', label: 'Save plan', effect: 'Create one plan', target: 'plan:7',
+      class: 'internal-write', reversible: true, evidenceIds: ['evidence-1'],
+    }] }));
+    const action = (prepared.body.actions as Array<{ id: string }>)[0];
+    expect(action.id).not.toBe('client-id');
+    const confirmation = { confirmed: true, at: new Date().toISOString() };
+    expect((await service.confirm(identity, action.id, confirmation)).status).toBe(200);
+    expect(execute).toHaveBeenCalledWith(expect.objectContaining({
+      id: action.id, effect: 'Create one plan', target: 'plan:7', reversible: true,
+    }));
+    expect((await service.confirm(identity, action.id, confirmation)).status).toBe(404);
   });
 
   it('exposes the versioned route and journals metadata without protected source bodies', async () => {

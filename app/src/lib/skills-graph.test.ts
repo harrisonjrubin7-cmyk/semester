@@ -51,6 +51,11 @@ describe('career skills evidence', () => {
     expect(derived.evidence[0].sourceId).toBe(course().id);
   });
 
+  it('marks evidence stale from source availability instead of a hardcoded current state', () => {
+    const [derived] = deriveSkillClaims({ courses: [{ ...course(), available: false }], projects: [], work: [], organizations: [] });
+    expect(derived.freshness).toBe('stale');
+  });
+
   it('explains matches, gaps and stale evidence without a black-box percentage', () => {
     const fit = explainFit(opportunity(), [claim('Research'), claim('SQL', 'stale')]);
     expect(fit.matched).toContainEqual(expect.objectContaining({ skill: 'Research' }));

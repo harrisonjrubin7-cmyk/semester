@@ -82,7 +82,7 @@ function show() {
   act(() => {
     root.render(
       <StoreProvider>
-        <Directory />
+        <Directory journeyNavigation />
       </StoreProvider>,
     );
   });

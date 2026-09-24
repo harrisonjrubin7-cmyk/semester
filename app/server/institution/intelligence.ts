@@ -44,12 +44,12 @@ export interface IntelligenceRespondInput {
   audit?: (identity: UniversityIdentity, record: IntelligenceAuditRecord) => void;
 }
 
-export interface GovernedAction {
+export interface GovernedAction extends IntelligenceGatewayAction {
   id: string;
-  label: string;
-  class: IntelligenceGatewayAction['class'];
   tenantId: string;
   personId: string;
+  preparedAt: string;
+  expiresAt: string;
 }
 
 export interface ExplicitConfirmation {
@@ -90,6 +90,9 @@ export async function respond(input: IntelligenceRespondInput): Promise<Intellig
       costCents: 0, policyDecision: 'policy-disabled',
     });
     return result(403, { code: 'policy-disabled', message: 'Semester Intelligence is disabled by verified tenant policy.' });
+  }
+  if (!identity.roles.some((role) => tenantPolicy.permittedRoles.includes(role))) {
+    return result(403, { code: 'role-disabled', message: 'Semester Intelligence is not permitted for this verified role.' });
   }
   if (!tenantPolicy.allowedModes.includes(request.mode)) {
     return result(403, { code: 'mode-disabled', message: 'This academic-integrity mode is not permitted.' });
@@ -167,7 +170,9 @@ export async function confirmAction(input: ConfirmActionInput): Promise<Intellig
     Number.isFinite(at) &&
     at <= now &&
     now - at <= 5 * 60_000;
-  if (!fresh) {
+  const preparedAt = Date.parse(input.action.preparedAt);
+  const expiresAt = Date.parse(input.action.expiresAt);
+  if (!fresh || !Number.isFinite(preparedAt) || !Number.isFinite(expiresAt) || now < preparedAt || now > expiresAt) {
     input.audit?.(input.identity, {
       category: 'action', provider: '', model: '', inputTokens: 0, outputTokens: 0,
       costCents: 0, policyDecision: 'confirmation-required', actionId: input.action.id, confirmation: 'refused',
@@ -206,6 +211,7 @@ export interface IntelligenceServiceConfig {
 
 export interface IntelligenceService {
   status: IntelligenceServiceConfig['status'];
+  policy: (identity: UniversityIdentity) => Promise<IntelligenceResult>;
   respond: (identity: UniversityIdentity, value: unknown) => Promise<IntelligenceResult>;
   confirm: (identity: UniversityIdentity, actionId: string, value: unknown) => Promise<IntelligenceResult>;
 }
@@ -214,6 +220,13 @@ export function createIntelligenceService(config: IntelligenceServiceConfig): In
   const actions = new Map<string, GovernedAction>();
   return {
     status: config.status,
+    policy: async (identity) => {
+      const policy = await config.loadPolicy(identity);
+      if (policy.state === 'off' || !identity.roles.some((role) => policy.permittedRoles.includes(role))) {
+        return result(403, { code: 'policy-disabled', message: 'Semester Intelligence is unavailable for this account.' });
+      }
+      return result(200, { state: policy.state, allowedModes: policy.allowedModes });
+    },
     respond: async (identity, value) => {
       let request: IntelligenceGatewayRequest;
       try {
@@ -231,15 +244,20 @@ export function createIntelligenceService(config: IntelligenceServiceConfig): In
         audit: config.audit,
       });
       if (response.status === 200) {
-        for (const action of request.proposedActions) {
-          actions.set(`${identity.institutionId}:${identity.userId}:${action.id}`, {
-            id: action.id,
-            label: action.label,
-            class: action.class,
+        const prepared = request.proposedActions.map((action) => {
+          const now = Date.now();
+          const governed: GovernedAction = {
+            ...action,
+            id: randomUUID(),
             tenantId: identity.institutionId,
             personId: identity.userId,
-          });
-        }
+            preparedAt: new Date(now).toISOString(),
+            expiresAt: new Date(now + 5 * 60_000).toISOString(),
+          };
+          actions.set(`${identity.institutionId}:${identity.userId}:${governed.id}`, governed);
+          return governed;
+        });
+        response.body.actions = prepared.map(({ tenantId: _tenantId, personId: _personId, ...action }) => action);
       }
       return response;
     },
@@ -250,8 +268,10 @@ export function createIntelligenceService(config: IntelligenceServiceConfig): In
       const confirmation = body.confirmed === true && typeof body.at === 'string'
         ? { confirmed: true as const, actorId: identity.userId, at: body.at }
         : null;
+      // Claim before execution. A retry reconciles by receipt; it must never
+      // execute the same reviewed effect twice.
+      actions.delete(`${identity.institutionId}:${identity.userId}:${actionId}`);
       const response = await confirmAction({ identity, action, confirmation, execute: config.execute, audit: config.audit });
-      if (response.status === 200) actions.delete(`${identity.institutionId}:${identity.userId}:${actionId}`);
       return response;
     },
   };

@@ -15,6 +15,7 @@ import { Applied, Holding, Locally, Proposals } from './Actions';
 import { Trouble } from '../components/Trouble';
 import { IntelligenceDisclosure } from '../intelligence/Disclosure';
 import { IntegrityModePicker } from '../intelligence/ModePicker';
+import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
 
 /**
  * The assistant, full screen.
@@ -231,7 +232,7 @@ export function Chat() {
                   extra={
                     i === talk.turns.length - 1 && !talk.busy ? (
                       <>
-                        {talk.response ? (
+                        {EXPERIENCE_FLAGS.semesterIntelligence !== 'off' && talk.response ? (
                           <IntelligenceDisclosure response={talk.response} />
                         ) : (
                           <Using read={talk.read} />
@@ -331,11 +332,11 @@ export function Chat() {
         }
       >
         <div style={COLUMN}>
-          <IntegrityModePicker
+          {EXPERIENCE_FLAGS.semesterIntelligence !== 'off' && <IntegrityModePicker
             requested={talk.integrityMode}
-            policy={{ allowed: ['explain', 'hint', 'practice', 'review', 'draft'] }}
+            policy={{ allowed: talk.allowedIntegrityModes, reason: 'Available modes are set by verified university policy.' }}
             onChange={talk.setIntegrityMode}
-          />
+          />}
           <Composer
             value={draft}
             onChange={setDraft}

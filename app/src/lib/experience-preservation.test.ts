@@ -18,7 +18,7 @@ const PRE_EXPANSION_SCREENS = [
 describe('the intelligence expansion preserves the existing Semester product', () => {
   it('keeps every pre-expansion destination exactly once', () => {
     const screens = DESTINATIONS.map((destination) => destination.screen);
-    expect(screens).toEqual(expect.arrayContaining(PRE_EXPANSION_SCREENS));
+    expect(screens).toEqual(expect.arrayContaining([...PRE_EXPANSION_SCREENS]));
     expect(new Set(screens).size).toBe(screens.length);
   });
 
@@ -47,7 +47,7 @@ describe('the intelligence expansion preserves the existing Semester product', (
       flightStorageKey('northstar', 'student', 'student-a'),
       flightStorageKey('cedar-coast', 'student', 'student-a'),
       flightStorageKey('northstar', 'student', 'student-b'),
-      flightStorageKey('northstar', 'campus-staff', 'staff-a'),
+      flightStorageKey('northstar', 'campus_staff', 'staff-a'),
     ];
     expect(new Set(keys).size).toBe(keys.length);
   });

@@ -183,6 +183,11 @@ export function createGateway(config: Config) {
       const context: AdapterContext = { identity: who, signal: AbortSignal.timeout(20_000) };
 
       const intelligenceConfirm = /^\/v1\/intelligence\/actions\/([^/]+)\/confirm$/.exec(path);
+      if (request.method === 'GET' && path === '/v1/intelligence/policy') {
+        if (!config.intelligence) return Response.json({ code: 'policy-disabled', message: 'Semester Intelligence is not configured for this gateway.' }, { status: 503, headers });
+        const response = await config.intelligence.policy(who);
+        return Response.json(response.body, { status: response.status, headers });
+      }
       if (
         request.method === 'POST' &&
         (path === '/v1/intelligence/respond' || intelligenceConfirm)

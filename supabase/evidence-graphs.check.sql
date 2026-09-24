@@ -75,11 +75,20 @@ begin
     ('northstar-evidence', northstar_user, 'lecture_capture-withdrawn', 'consented', '1', northstar_user, now() + interval '30 days')
   returning id into withdrawn_consent;
 
+  if not pg_temp.refused(
+    northstar_user,
+    format('insert into public.evidence_reference (tenant_id, person_id, course_id, title, origin, authority, locator) values (%L, %L, %L, %L, %L, %L, %L)',
+      'northstar-evidence', northstar_user, 'econ', 'Fake official source', 'course', 'authoritative', 'page 1')
+  ) then raise exception 'FAILED: student created authoritative course evidence'; end if;
+  raise notice 'ok  students cannot create authoritative course evidence';
+
+  reset role;
   insert into public.evidence_reference
     (tenant_id, person_id, course_id, title, origin, authority, locator, excerpt)
   values
     ('northstar-evidence', northstar_user, 'econ', 'ECON syllabus', 'course', 'authoritative', 'page 2', 'Assessment policy')
   returning id into northstar_source;
+  perform pg_temp.become(northstar_user);
   insert into public.concept_evidence
     (tenant_id, person_id, evidence_id, course_id, concept_id, kind, score)
   values
@@ -124,6 +133,11 @@ begin
      set status = 'revoked', revoked_at = now()
    where id = withdrawn_consent;
   reset role;
+
+  perform pg_temp.become(northstar_user);
+  select count(*) into n from public.capture_asset where id = withdrawn_capture;
+  reset role;
+  perform pg_temp.counted('withdrawal makes the original capture row unreadable', n, 0);
 
   perform pg_temp.become(northstar_user);
   select count(*) into n from public.evidence_reference

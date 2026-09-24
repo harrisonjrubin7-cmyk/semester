@@ -22,7 +22,7 @@ describe('MasteryGraph', () => {
     document.body.append(host);
     root = createRoot(host);
     act(() =>
-      root.render(
+      root!.render(
         <MasteryGraph
           concepts={[
             {

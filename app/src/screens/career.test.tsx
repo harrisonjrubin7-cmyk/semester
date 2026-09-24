@@ -47,7 +47,7 @@ const mount = async (lib: Partial<CareerLibrary> = {}, education = '') => {
   await act(async () => {
     root.render(
       <StoreProvider>
-        <Career />
+        <Career careerSkillsGraph />
       </StoreProvider>,
     );
   });
@@ -238,6 +238,11 @@ describe('explainable skills fit', () => {
     expect(text()).toContain('Matched evidence');
     expect(text()).toContain('Missing');
     expect(text()).not.toMatch(/\b\d{1,3}% match\b/i);
+  });
+
+  it('keeps the prior career tabs when the skills graph flag is off', async () => {
+    await act(async () => root.render(<StoreProvider><Career careerSkillsGraph={false} /></StoreProvider>));
+    expect([...host.querySelectorAll('button')].some((button) => button.textContent === 'Skills & fit')).toBe(false);
   });
 });
 

@@ -20,15 +20,14 @@ export function SkillsGraph({ claims }: { claims: SkillClaim[] }) {
           </div>
           <div className="skills-evidence">
             {claim.evidence.map((evidence) => (
-              <button
-                type="button"
+              <details
                 className="bare"
                 data-source-id={evidence.sourceId}
                 key={`${evidence.sourceType}:${evidence.sourceId}`}
-                title={`${evidence.sourceType} evidence`}
               >
-                {evidence.label}
-              </button>
+                <summary>{evidence.label}</summary>
+                <span>{evidence.sourceType} evidence · source {evidence.sourceId}</span>
+              </details>
             ))}
           </div>
           {claim.freshness === 'stale' && <p>Evidence needs review.</p>}

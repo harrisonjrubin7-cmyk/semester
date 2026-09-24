@@ -66,6 +66,7 @@ export function courseLearningInput(
     due: number;
     recurringMistake?: MistakeClassification | null;
     stale?: boolean;
+    now?: number;
   },
 ): LearningLoopInput {
   const concepts = guide.units.map((unit, index) => ({
@@ -99,7 +100,9 @@ export function courseLearningInput(
     attempts,
     due: options.due,
     recurringMistake: options.recurringMistake ?? null,
-    stale: options.stale ?? false,
+    stale: options.stale ?? attempts.some((attempt) =>
+      attempt.at !== undefined && (options.now ?? Date.now()) - attempt.at > 180 * 86_400_000,
+    ),
     coverage: cardCount === 0 ? 0 : attempts.length / cardCount,
   };
 }

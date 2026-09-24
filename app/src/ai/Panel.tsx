@@ -17,6 +17,7 @@ import { Trouble } from '../components/Trouble';
 import { Applied, Locally, Proposals } from './Actions';
 import { IntelligenceDisclosure } from '../intelligence/Disclosure';
 import { IntegrityModePicker } from '../intelligence/ModePicker';
+import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
 
 /**
  * The panel: the assistant once it is open, and nothing that is true before.
@@ -556,7 +557,7 @@ export function Panel({ side }: { side: 'right' | 'left' }) {
                         extra={
                           i === talk.turns.length - 1 && !talk.busy ? (
                             <>
-                              {talk.response ? (
+                              {EXPERIENCE_FLAGS.semesterIntelligence !== 'off' && talk.response ? (
                                 <IntelligenceDisclosure response={talk.response} />
                               ) : (
                                 <Using read={talk.read} />
@@ -652,11 +653,11 @@ export function Panel({ side }: { side: 'right' | 'left' }) {
               }}
             >
               <div style={COLUMN}>
-                <IntegrityModePicker
+                {EXPERIENCE_FLAGS.semesterIntelligence !== 'off' && <IntegrityModePicker
                   requested={talk.integrityMode}
-                  policy={{ allowed: ['explain', 'hint', 'practice', 'review', 'draft'] }}
+                  policy={{ allowed: talk.allowedIntegrityModes, reason: 'Available modes are set by verified university policy.' }}
                   onChange={talk.setIntegrityMode}
-                />
+                />}
                 {/*
                   The same box the full chat uses, from `Composer.tsx`, so
                   Enter means the same thing on both — including on a touch

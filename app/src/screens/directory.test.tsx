@@ -48,7 +48,7 @@ beforeEach(() => {
     root = createRoot(host);
   });
   act(() => {
-    root.render(<StoreProvider>{<Directory />}</StoreProvider>);
+    root.render(<StoreProvider>{<Directory journeyNavigation />}</StoreProvider>);
   });
 });
 
@@ -60,6 +60,12 @@ afterEach(() => {
 const text = () => host.textContent ?? '';
 
 describe('the one directory', () => {
+  it('restores the existing catalog-first layout when journey navigation is off', () => {
+    act(() => root.render(<StoreProvider><Directory journeyNavigation={false} /></StoreProvider>));
+    expect(host.querySelectorAll('[data-journey-id]')).toHaveLength(0);
+    expect(text()).toContain('All applications');
+    expect(host.querySelector('[aria-label="Search tools"]')).toBeTruthy();
+  });
   it('starts with six journeys and keeps the unchanged catalog behind All tools', () => {
     expect(host.querySelectorAll('[data-journey-id]')).toHaveLength(6);
     const all = [...host.querySelectorAll('button')].find((button) =>

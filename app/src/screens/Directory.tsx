@@ -53,6 +53,7 @@ import { NotYetOpened } from '../components/NotYetOpened';
 import { JourneyCards } from '../components/JourneyCards';
 import { journeysFor } from '../lib/journeys';
 import type { Screen } from '../lib/types';
+import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
 
 /**
  * Already reachable without this list, so repeating them here is noise.
@@ -64,7 +65,11 @@ import type { Screen } from '../lib/types';
  * cannot come back here after this list has stopped offering it.
  */
 
-export function Directory() {
+export function Directory({
+  journeyNavigation = EXPERIENCE_FLAGS.journeyNavigation !== 'off',
+}: {
+  journeyNavigation?: boolean;
+} = {}) {
   const { state, dispatch, facts, school } = useStore();
   const caps = school.capabilities;
   const look = currentLook(state);
@@ -141,7 +146,7 @@ export function Directory() {
   const matchedJourneys = query.trim()
     ? availableJourneys.filter((journey) => matchedJourneyIds.has(journey.id))
     : availableJourneys;
-  const catalogVisible = allTools || Boolean(query.trim()) || Boolean(category);
+  const catalogVisible = !journeyNavigation || allTools || Boolean(query.trim()) || Boolean(category);
 
   const star = (screen: Screen) =>
     dispatch({
@@ -245,7 +250,7 @@ export function Directory() {
         </>
       )}
 
-      <div className="deskdir-bar deskdir-journeybar">
+      {journeyNavigation && <div className="deskdir-bar deskdir-journeybar">
         <div>
           <div className="deskdir-label">What do you want to do?</div>
           <div className="deskdir-intro" style={secondLine()}>
@@ -263,7 +268,7 @@ export function Directory() {
         >
           {allTools ? 'Hide tools' : `All tools (${every.length})`}
         </button>
-      </div>
+      </div>}
 
       <div className="deskdir-find">
         <SearchIcon size={17} />
@@ -271,13 +276,13 @@ export function Directory() {
           className="bare deskdir-findbox"
           type="search"
           value={query}
-          placeholder="Search journeys and tools"
-          aria-label="Search journeys and tools"
+          placeholder={journeyNavigation ? 'Search journeys and tools' : 'Search tools'}
+          aria-label={journeyNavigation ? 'Search journeys and tools' : 'Search tools'}
           onChange={(e) => setQuery(e.target.value)}
         />
       </div>
 
-      {matchedJourneys.length > 0 && (
+      {journeyNavigation && matchedJourneys.length > 0 && (
         <JourneyCards
           journeys={matchedJourneys}
           onOpen={(screen) => dispatch({ type: 'go', screen })}

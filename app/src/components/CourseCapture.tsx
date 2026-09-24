@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { FilePick } from './ui';
 import type { CapturePolicy } from '../lib/capture-policy';
 import { captureHash, type CaptureOriginal } from '../lib/course-capture';
@@ -12,23 +12,26 @@ export function CourseCapture({
   onFiles,
   onGuidedProblem,
   onConsentChange,
+  onRemovePersisted,
 }: {
   courseId: string;
   policy: CapturePolicy;
-  onFiles: (files: File[]) => void;
+  onFiles: (files: File[]) => void | Promise<Array<{ id: string }> | void>;
   onGuidedProblem?: (file: File) => void;
   onConsentChange?: (granted: boolean) => void;
+  onRemovePersisted?: (ids: string[]) => void | Promise<void>;
 }) {
   const [consent, setConsent] = useState(false);
   const [originals, setOriginals] = useState<Array<CaptureOriginal & { file: File }>>([]);
   const [status, setStatus] = useState('Waiting for explicit consent.');
+  const generation = useRef(0);
+  const persisted = useRef<string[]>([]);
+  useEffect(() => () => { generation.current += 1; }, []);
 
   const add = async (files: File[]) => {
+    if (!consent || policy.recording === 'prohibited') return;
+    const run = generation.current;
     setStatus('Preserving originals and checking file integrity…');
-    // Hand the originals to the established import pipeline immediately. A
-    // content digest can be slower for a long lecture and must not make a
-    // successful native file selection appear unresponsive.
-    onFiles(files);
     const made = await Promise.all(
       files.map(async (file, index) => ({
         id: `${courseId}:${file.name}:${file.size}:${index}`,
@@ -39,6 +42,14 @@ export function CourseCapture({
         file,
       })),
     );
+    if (run !== generation.current) return;
+    const stored = await onFiles(files);
+    const ids = stored?.map(({ id }) => id) ?? [];
+    if (run !== generation.current) {
+      if (ids.length) await onRemovePersisted?.(ids);
+      return;
+    }
+    persisted.current.push(...ids);
     setOriginals((current) => [...current, ...made]);
     setStatus(`${made.length} ${made.length === 1 ? 'original was' : 'originals were'} preserved locally with a content hash.`);
   };
@@ -67,8 +78,12 @@ export function CourseCapture({
             setConsent(event.target.checked);
             onConsentChange?.(event.target.checked);
             if (!event.target.checked) {
+              generation.current += 1;
+              const ids = [...persisted.current];
+              persisted.current = [];
+              if (ids.length) void onRemovePersisted?.(ids);
               setOriginals([]);
-              setStatus('Consent withdrawn. Local originals and derived artifacts were removed.');
+              setStatus('Consent withdrawn. Capture-session originals were cleared and persisted copies were queued for removal.');
             } else {
               setStatus('Consent recorded for this capture session.');
             }
@@ -77,7 +92,7 @@ export function CourseCapture({
         I have permission to capture this material and have given any required participant notice.
       </label>
 
-      <FilePick accept={ACCEPT} disabled={!consent} onPick={(files) => void add(files)}>
+      <FilePick accept={ACCEPT} disabled={!consent || denied} onPick={(files) => void add(files)}>
         Add audio, video, image or course document
       </FilePick>
 
@@ -99,8 +114,11 @@ export function CourseCapture({
             type="button"
             aria-label={`Remove ${original.name}`}
             onClick={() => {
+              const ids = [...persisted.current];
+              persisted.current = [];
+              if (ids.length) void onRemovePersisted?.(ids);
               setOriginals((current) => current.filter((item) => item.id !== original.id));
-              setStatus(`${original.name} was removed from local capture storage.`);
+              setStatus(`${original.name} was removed from this capture session; persisted copies were queued for removal.`);
             }}
           >
             Remove

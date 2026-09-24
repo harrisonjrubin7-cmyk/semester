@@ -40,7 +40,7 @@ export function IntegrityModePicker({
               style={{
                 width: 'auto',
                 flex: 'none',
-                minHeight: 30,
+                minHeight: 44,
                 padding: '0 var(--sp-4)',
                 borderRadius: 'var(--r-lg)',
                 border: '1px solid var(--app-line)',

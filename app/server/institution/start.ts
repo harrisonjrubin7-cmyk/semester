@@ -178,6 +178,7 @@ const intelligence = createIntelligenceService({
   status: 'policy-disabled',
   loadPolicy: async () => ({
     state: 'off',
+    permittedRoles: ['student'],
     allowedModes: ['explain', 'hint', 'practice', 'review'],
     allowedModels: configuredModels,
     maxRequestCents: 0,

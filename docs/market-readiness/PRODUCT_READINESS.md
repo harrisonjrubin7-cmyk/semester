@@ -7,7 +7,7 @@
 - 59 registered screens and 11 study formats preserved
 - 1,464 `.ts`/`.tsx` files under `app/src`
 - 683 test files discovered: 682 passed and 1 repository-declared file skipped
-- 12,640 tests passed and 13 skipped
+- 12,646 tests passed and 13 skipped
 - File order, shuffled order and America/Chicago plus Pacific/Kiritimati runs agree
 - Default and institutional-preview production builds pass
 - Desktop 1440×1000 and phone 390×844 browser acceptance pass
@@ -32,7 +32,7 @@
 | Approved AI provider adapter and campus keys | the gateway correctly starts policy-disabled without one |
 | Live SSO and SCIM configuration | contracts and controls exist; no institution has authorized a production identity connection here |
 | One live LTI 1.3/LMS deployment | repository support and sandbox checks are not proof of a university deployment |
-| Institution-specific retention and legal review | capture withdrawal is enforced, but timed physical erasure and recording permission must match each institution |
+| Institution-specific retention and legal review | capture withdrawal and a retention-worker entry point are enforced; production scheduling, object-storage purge and recording permission must match each institution |
 | Live opportunity, alumni and mentor sources | current career networking remains student-entered and draft-only |
 | Production observability and incident operations | local audit contracts do not replace monitored production operations |
 | Accessibility conformance review | structural and automated checks pass; a formal assistive-technology/WCAG review remains required |

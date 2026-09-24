@@ -3,7 +3,7 @@ import { controlPlaneView, type ControlPlaneInput } from '../../lib/control-plan
 import { Blueprint } from '../Blueprint';
 import { ActionButton, SectionLabel } from '../ui';
 
-export function ControlPlane({ input }: { input: ControlPlaneInput }) {
+export function ControlPlane({ input, onApply }: { input: ControlPlaneInput; onApply?: () => Promise<{ receiptId: string }> }) {
   const view = useMemo(() => controlPlaneView(input), [input]);
   const [message, setMessage] = useState('');
 
@@ -36,13 +36,19 @@ export function ControlPlane({ input }: { input: ControlPlaneInput }) {
         </ActionButton>
         <ActionButton
           tone="primary"
-          disabled={!view.canCreateProductionReceipt}
-          onClick={() => setMessage('Verified production receipt created by the institution gateway.')}
+          disabled={!view.canCreateProductionReceipt || !onApply}
+          onClick={() => {
+            setMessage('Applying through the verified gateway…');
+            void onApply?.().then(
+              ({ receiptId }) => setMessage(`Verified production receipt ${receiptId} returned by the institution gateway.`),
+              () => setMessage('The gateway did not return a verified receipt. Nothing is shown as applied.'),
+            );
+          }}
         >
           Apply through verified gateway
         </ActionButton>
       </div>
-      {!view.canCreateProductionReceipt && (
+      {(!view.canCreateProductionReceipt || !onApply) && (
         <p className="control-plane-note">
           Production changes require same-tenant authorization, production feature state and a
           production-verified gateway.

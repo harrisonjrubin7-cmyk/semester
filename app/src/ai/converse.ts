@@ -22,6 +22,8 @@ import { assemble } from './assemble';
 import { assembleIntelligenceRequest } from '../intelligence/assemble';
 import type { IntelligenceRequest } from '../intelligence/assemble';
 import type { IntelligenceResponse, IntegrityMode, SourceOrigin } from '../intelligence/contracts';
+import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
+import { institutionIntelligence, institutionIntelligencePolicy } from '../lib/university';
 import { dropThread, flight, keepTurns, newThread, openThread, sender, setLive, useLive,
   renameThread,
   pinThread,
@@ -75,6 +77,7 @@ export interface Conversation {
   /** Sources, information used, origin and integrity mode for the last answer. */
   response: IntelligenceResponse | null;
   integrityMode: IntegrityMode;
+  allowedIntegrityModes: IntegrityMode[];
   setIntegrityMode: (mode: IntegrityMode) => void;
   /** Offers waiting on a tap. Nothing here has happened. */
   proposals: Proposal[];
@@ -200,6 +203,16 @@ export function useConversation(): Conversation {
     v: { p: Proposal; before: Lists }[] | ((was: { p: Proposal; before: Lists }[]) => { p: Proposal; before: Lists }[]),
   ) => setLive('applied', v);
   const setSpend = (v: ReturnType<typeof readSpend>) => setLive('spend', v);
+  useEffect(() => {
+    if (EXPERIENCE_FLAGS.semesterIntelligence === 'off') return;
+    let alive = true;
+    void institutionIntelligencePolicy().then(({ allowedModes }) => {
+      if (!alive) return;
+      setLive('allowedIntegrityModes', allowedModes);
+      if (!allowedModes.includes(integrityMode) && allowedModes[0]) setLive('integrityMode', allowedModes[0]);
+    }, () => { if (alive) setLive('allowedIntegrityModes', []); });
+    return () => { alive = false; };
+  }, [account?.id, integrityMode, state.schoolId]);
 
   /**
    * What the app holds, for checking a tool call against reality.
@@ -411,6 +424,34 @@ export function useConversation(): Conversation {
         const drew = new Set(drawn.used);
         for (const item of intelligence.evidence) drew.add(`${item.title} — ${item.locator}`);
         setUsed([...drew]);
+
+        if (EXPERIENCE_FLAGS.semesterIntelligence !== 'off') {
+          const governed = await institutionIntelligence({
+            version: 1,
+            clientState: EXPERIENCE_FLAGS.semesterIntelligence,
+            tenantId: intelligence.context.scope.tenantId,
+            personId: intelligence.context.scope.personId,
+            question: intelligence.question,
+            mode: intelligence.context.integrityMode,
+            category: how.mode,
+            sourceIds: intelligence.context.sourceIds,
+            evidenceIds: intelligence.context.evidenceIds,
+            proposedActions: [],
+          });
+          const allowed = new Set(governed.evidenceIds);
+          const evidence = intelligence.evidence.filter((item) => allowed.has(item.id));
+          const origins = [...new Set(evidence.map((item) => item.origin))];
+          setResponse({
+            text: governed.text,
+            evidence,
+            informationUsed: [...drew],
+            origins: origins.length ? origins : ['inference'],
+            mode: governed.mode,
+            actions: [],
+          });
+          remember([...next, { role: 'assistant', content: governed.text }]);
+          return;
+        }
 
         /*
          * The conversation as the next request will see it, which is not
@@ -739,6 +780,7 @@ export function useConversation(): Conversation {
     locally,
     response,
     integrityMode,
+    allowedIntegrityModes: live.allowedIntegrityModes,
     setIntegrityMode: (mode) => setLive('integrityMode', mode),
     proposals,
     applied,

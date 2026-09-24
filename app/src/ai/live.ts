@@ -107,6 +107,8 @@ export interface Live {
   response: IntelligenceResponse | null;
   /** The student's requested academic-integrity interaction. */
   integrityMode: IntegrityMode;
+  /** Modes returned by verified institutional policy for the active account. */
+  allowedIntegrityModes: IntegrityMode[];
   proposals: Proposal[];
   /** The one waiting on a second answer, or null. See `lib/reach.ts`. */
   holding: Held | null;
@@ -154,6 +156,7 @@ function empty(): Live {
     locally: null,
     response: null,
     integrityMode: 'explain',
+    allowedIntegrityModes: [],
     proposals: [],
     holding: null,
     applied: [],

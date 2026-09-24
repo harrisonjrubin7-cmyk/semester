@@ -48,6 +48,7 @@ export interface ActionReceipt {
 
 export interface TenantIntelligencePolicy {
   state: IntelligenceFeatureState;
+  permittedRoles: string[];
   allowedModes: IntelligenceMode[];
   allowedModels: string[];
   maxRequestCents: number;

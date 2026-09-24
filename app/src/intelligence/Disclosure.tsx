@@ -36,22 +36,22 @@ export function IntelligenceDisclosure({ response }: { response: IntelligenceRes
       {response.evidence.length > 0 && (
         <div aria-label="Sources" style={{ display: 'flex', gap: 'var(--sp-3)', flexWrap: 'wrap' }}>
           {response.evidence.map((item) => (
-            <button
+            <details
               key={item.id}
-              type="button"
               className="bare"
               data-evidence-id={item.id}
-              title={`${item.excerpt}\nVerified ${item.verifiedAt}`}
               style={{
                 width: 'auto',
                 color: 'var(--app-fg)',
-                textDecoration: 'underline',
-                textUnderlineOffset: 3,
                 fontSize: 'var(--type-xs)',
               }}
             >
-              {item.title} · {item.locator}
-            </button>
+              <summary tabIndex={0} style={{ cursor: 'pointer', textDecoration: 'underline', textUnderlineOffset: 3 }}>
+                {item.title} · {item.locator}
+              </summary>
+              <p>{item.excerpt || 'No excerpt is available.'}</p>
+              <p>Verified {item.verifiedAt}</p>
+            </details>
           ))}
         </div>
       )}

@@ -27,8 +27,8 @@ import { Blueprint } from '../components/Blueprint';
 import { NeedsKey } from '../components/NeedsKey';
 import { Page } from '../components/Page';
 import { HowMuch } from '../components/HowMuch';
-import { ActionButton, ChipScroll, SectionLabel } from '../components/ui';
-import { addFile, formatBytes, type FileMeta } from '../lib/files';
+import { ActionButton, ChipScroll, FilePick, SectionLabel } from '../components/ui';
+import { addFile, deleteFile, formatBytes, type FileMeta } from '../lib/files';
 import { gather } from '../lib/bundle';
 import { describeParse, parseMaterial } from '../lib/parse';
 import type { CourseId, Figure, Term } from '../lib/types';
@@ -38,6 +38,7 @@ const NO_PARTS: StudyParts = { frames: [], selfTest: [], cases: [], examples: []
 import { describeFigure } from '../lib/figure';
 import { describeStudyParts, type StudyParts } from '../lib/study';
 import { effectiveCapturePolicy } from '../lib/capture-policy';
+import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
 
 /** Handled by the camera path above, which can see them. */
 const IMAGE = /\.(png|jpe?g|webp|gif|heic|heif)$/i;
@@ -83,7 +84,9 @@ const HINT: CSSProperties = {
   textWrap: 'pretty',
 };
 
-export function AddMaterial() {
+export function AddMaterial({
+  multimodalCapture = EXPERIENCE_FLAGS.multimodalCapture !== 'off',
+}: { multimodalCapture?: boolean } = {}) {
   // A row's padding and hairline, from the layout rather than hard-coded.
   const row11 = useRowStyle(11);
   const row10 = useRowStyle(10);
@@ -594,7 +597,7 @@ export function AddMaterial() {
   };
 
   const pick = async (list: File[]) => {
-    if (list.length === 0) return;
+    if (list.length === 0) return [];
     setBusy(true);
     setReadNote('');
 
@@ -669,6 +672,7 @@ export function AddMaterial() {
     ].filter(Boolean);
     if (notes.length > 0) setReadNote(notes.join('\n'));
     setBusy(false);
+    return added;
   };
 
   return (
@@ -938,7 +942,7 @@ export function AddMaterial() {
         which transcribes what is written and turns it into cards — and says so
         rather than filling in the parts that are out of focus.
       */}
-      <SectionLabel>Course capture</SectionLabel>
+      {multimodalCapture ? <><SectionLabel>Course capture</SectionLabel>
       <div style={{ ...HINT, marginBottom: 'var(--sp-5)' }}>
         Add a lecture recording, video, diagram, photograph or course document. Semester keeps the
         original with a content hash and never turns extracted deadlines or actions into changes
@@ -954,9 +958,14 @@ export function AddMaterial() {
             setShotCards([]);
           }
         }}
-        onFiles={(picked) => void pick(picked)}
+        onFiles={pick}
+        onRemovePersisted={async (ids) => {
+          await Promise.all(ids.map((id) => deleteFile(id)));
+          setFiles((current) => current.filter((file) => !ids.includes(file.id)));
+        }}
         onGuidedProblem={() => dispatch({ type: 'go', screen: 'solve', courseId })}
       />
+      </> : <><SectionLabel>Attach files</SectionLabel><FilePick accept=".pdf,.docx,.pptx,.txt,.md,image/*" onPick={(picked) => void pick(picked)}>Choose course files</FilePick></>}
 
       <SectionLabel>Photograph it</SectionLabel>
       {!capturePolicy.modelProcessing ? (

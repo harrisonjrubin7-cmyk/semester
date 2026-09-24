@@ -45,6 +45,7 @@ import {
   missingSkillPlan,
   searchOpportunities,
 } from '../lib/skills-graph';
+import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
 
 /**
  * What is open, what you have done, and who you have spoken to.
@@ -126,7 +127,9 @@ const FIELD_LABELS: Record<string, string> = {
   credit: 'Credit information',
 };
 
-export function Career() {
+export function Career({
+  careerSkillsGraph = EXPERIENCE_FLAGS.careerSkillsGraph !== 'off',
+}: { careerSkillsGraph?: boolean } = {}) {
   const { state, account } = useStore();
   const scope = `${account?.id || 'device'}:${state.term}`;
   /*
@@ -140,11 +143,12 @@ export function Career() {
       key={scope}
       storageKey={`semester.career.v1:${scope}`}
       pathwayKey={`semester.pathway.v1:${account?.id || 'device'}`}
+      careerSkillsGraph={careerSkillsGraph}
     />
   );
 }
 
-function Workspace({ storageKey, pathwayKey }: { storageKey: string; pathwayKey: string }) {
+function Workspace({ storageKey, pathwayKey, careerSkillsGraph }: { storageKey: string; pathwayKey: string; careerSkillsGraph: boolean }) {
   const { state, dispatch, catalog } = useStore();
   const lib = useDeviceLibrary(storageKey, readCareer, EMPTY_CAREER);
   const education = useDeviceLibrary(pathwayKey, readPathway, EMPTY_PATHWAY).value.profile.education;
@@ -266,7 +270,7 @@ function Workspace({ storageKey, pathwayKey }: { storageKey: string; pathwayKey:
         need approved school services this app is not connected to.
       </p>
 
-      <Segmented options={TABS} value={tab} onChange={setTab} style={{ marginBlock: 'var(--sp-5)' }} />
+      <Segmented options={TABS.filter(({ id }) => id !== 'skills' || careerSkillsGraph)} value={tab} onChange={setTab} style={{ marginBlock: 'var(--sp-5)' }} />
 
       {/*
        * Where the Applications tab used to be, as a row rather than a second
@@ -927,7 +931,7 @@ function Workspace({ storageKey, pathwayKey }: { storageKey: string; pathwayKey:
         </>
       )}
 
-      {tab === 'skills' && (
+      {tab === 'skills' && careerSkillsGraph && (
         <>
           <SectionLabel style={{ marginBlock: '0 var(--sp-4)' }}>Skills</SectionLabel>
           <p style={{ ...line, marginBlock: '0 var(--sp-5)', textWrap: 'pretty' }}>

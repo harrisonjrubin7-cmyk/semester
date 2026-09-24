@@ -64,6 +64,7 @@ import { INSTITUTIONAL_PREVIEW } from '../lib/institutional-preview';
 import { JourneyCards } from '../components/JourneyCards';
 import { journeysFor, recommendJourney } from '../lib/journeys';
 import { offered } from '../lib/nav';
+import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
 
 const FlightPlanHome = lazy(() =>
   import('../components/institutional/FlightPlanHome').then((module) => ({
@@ -84,6 +85,7 @@ function FlightPlanHomeSlot() {
 function RecommendedJourney() {
   const { state, dispatch, catalog, school } = useStore();
   const now = useNow();
+  if (EXPERIENCE_FLAGS.journeyNavigation === 'off') return null;
   const nowMs = now.getTime();
   const inAWeek = nowMs + 7 * 86_400_000;
   const confirmedDueSoon = upcomingItems(catalog, now).filter(

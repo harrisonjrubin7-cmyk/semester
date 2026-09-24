@@ -18,9 +18,9 @@ Verified 23 September 2026 against the branch containing the Semester Intelligen
 
 | Check | Result |
 | --- | --- |
-| `pnpm test` | 682 files passed, 1 repository-declared file skipped; 12,640 tests passed, 13 skipped |
+| `pnpm test` | 682 files passed, 1 repository-declared file skipped; 12,646 tests passed, 13 skipped |
 | `pnpm run test:zones` | identical counts in America/Chicago and Pacific/Kiritimati |
-| `pnpm run test:shuffle` | identical counts with seed `1790214191601` |
+| `pnpm run test:shuffle` | identical counts with seed `1790216164718` |
 | `pnpm run lint` | passed with 25 pre-existing allowed warnings; style and accessible-label audits passed |
 | `pnpm run build` | default production build passed |
 | institutional feature-state production build | passed with all six expansion flags enabled |
@@ -29,8 +29,10 @@ Verified 23 September 2026 against the branch containing the Semester Intelligen
 
 The acceptance pass also corrected three failures found by the gates: capture-action targets were raised to 44px, empty Career fit now explains both sides of the comparison, and all eight new evidence/capture tables received explicit retention answers. Two slow asynchronous tests were made deterministic without weakening their assertions.
 
+Final review remediation additionally bound the Ask Semester interface to the authenticated institutional gateway and its verified integrity-mode policy; made prepared actions immutable, expiring and single-use; added role enforcement; applied all six feature flags to their user-facing surfaces; hardened capture consent, cancellation, deletion and retention behavior; restricted authoritative evidence writes to approved source roles; exposed citations and skill evidence through accessible disclosures; and required a real gateway receipt before the control plane can report a successful change. Six focused regression tests were added, and the full matrix passed again afterward.
+
 ## Boundaries that remain external
 
 This is verified local and sandbox behavior. It is not evidence that production SSO or SCIM is configured, that a live LMS is authorized, that employer or alumni listings are live, that a proposed action was sent, that an official student record was changed, or that recording is legally permitted in any real classroom.
 
-The gateway intentionally starts policy-disabled without an approved provider adapter. Preview roles grant no production capability. Capture withdrawal makes originals and derivatives inaccessible and marks them removed or withdrawn, but a timed physical-erasure job is not yet implemented; institutions requiring one must configure and verify it before production.
+The gateway intentionally starts policy-disabled without an approved provider adapter. Preview roles grant no production capability. Capture withdrawal and expiry make database rows inaccessible and mark originals and derivatives removed or withdrawn. A service-role retention worker entry point is included; each deployment must schedule it and purge any object-storage key it returns before claiming timed physical erasure.

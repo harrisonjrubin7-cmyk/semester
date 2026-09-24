@@ -54,6 +54,7 @@ describe('IntelligenceDisclosure', () => {
 
   it('renders citations as application-owned controls keyed by evidence id', () => {
     act(() => root.render(<IntelligenceDisclosure response={responseFixture()} />));
-    expect(host.querySelector('[data-evidence-id="e1"]')).toBeInstanceOf(HTMLButtonElement);
+    expect(host.querySelector('[data-evidence-id="e1"]')).toBeInstanceOf(HTMLDetailsElement);
+    expect(host.querySelector('[data-evidence-id="e1"]')?.textContent).toContain('Elasticity is on the midterm');
   });
 });

@@ -53,8 +53,8 @@ describe('CourseCapture', () => {
       enabledInput.dispatchEvent(new Event('change', { bubbles: true }));
       await new Promise((resolve) => setTimeout(resolve, 0));
     });
-    expect(onFiles).toHaveBeenCalledWith([file]);
     await vi.waitFor(() => {
+      expect(onFiles).toHaveBeenCalledWith([file]);
       expect(host.querySelector('[role="status"]')?.textContent).toContain('preserved locally');
     });
   });
@@ -62,6 +62,8 @@ describe('CourseCapture', () => {
   it('shows denied policy and removes a local original', async () => {
     mount({ policy: { recording: 'prohibited', modelProcessing: false } });
     expect(host.textContent).toContain('Recording is not permitted');
+    consent();
+    expect((host.querySelector('input[type="file"]') as HTMLInputElement).disabled).toBe(true);
 
     act(() => root.unmount());
     host.remove();
@@ -76,9 +78,25 @@ describe('CourseCapture', () => {
       input.dispatchEvent(new Event('change', { bubbles: true }));
       await new Promise((resolve) => setTimeout(resolve, 0));
     });
-    const remove = [...host.querySelectorAll('button')].find((button) => /Remove problem.png/.test(button.getAttribute('aria-label') ?? ''))!;
+    await vi.waitFor(() => expect(host.querySelector('[aria-label="Remove problem.png"]')).toBeTruthy());
+    const remove = host.querySelector('[aria-label="Remove problem.png"]') as HTMLButtonElement;
     act(() => remove.click());
     expect(host.querySelector('[aria-label="Remove problem.png"]')).toBeNull();
     expect(host.querySelector('[role="status"]')?.textContent).toContain('was removed');
+  });
+
+  it('withdrawal clears persisted originals and prevents in-flight work from repopulating', async () => {
+    let finish!: (value: Array<{ id: string }>) => void;
+    const onFiles = vi.fn(() => new Promise<Array<{ id: string }>>((resolve) => { finish = resolve; }));
+    const onRemovePersisted = vi.fn();
+    mount({ onFiles, onRemovePersisted });
+    consent();
+    const input = host.querySelector('input[type="file"]') as HTMLInputElement;
+    Object.defineProperty(input, 'files', { configurable: true, value: [new File(['x'], 'lecture.mp3', { type: 'audio/mpeg' })] });
+    await act(async () => { input.dispatchEvent(new Event('change', { bubbles: true })); await vi.waitFor(() => expect(onFiles).toHaveBeenCalled()); });
+    consent();
+    await act(async () => { finish([{ id: 'stored-1' }]); await Promise.resolve(); });
+    expect(host.querySelector('[aria-label="Remove lecture.mp3"]')).toBeNull();
+    expect(onRemovePersisted).toHaveBeenCalledWith(['stored-1']);
   });
 });

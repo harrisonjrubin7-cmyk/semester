@@ -45,6 +45,7 @@ import {
   readinessForecast,
   recommendLearningActivity,
 } from '../lib/learning-loop';
+import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
 
 const FlightPlanLearning = lazy(() =>
   import('../components/institutional/FlightPlanLearning').then((module) => ({
@@ -101,7 +102,9 @@ const PLAN_ROWS = 8;
  * The exam countdown stays above the switcher, because it is true whichever
  * view you are on and it is the thing you want to see without looking.
  */
-export function Study() {
+export function Study({
+  adaptiveLearning = EXPERIENCE_FLAGS.adaptiveLearning !== 'off',
+}: { adaptiveLearning?: boolean } = {}) {
   const { state, dispatch, catalog, tint } = useStore();
   const now = useNow();
   /**
@@ -632,6 +635,7 @@ export function Study() {
           const learningInput = courseLearningInput(c.id, g, state.reviews, {
             due,
             recurringMistake,
+            now: now.getTime(),
           });
           const conceptStates = learningState(learningInput);
           const adaptive = recommendLearningActivity(learningInput);
@@ -732,7 +736,7 @@ export function Study() {
               <div style={{ marginTop: 'calc(11px * var(--density, 1))' }}>
                 <Standing state={standing.state} evidence={standing.evidence} name={c.code} />
               </div>
-              <details className="course-mastery">
+              {adaptiveLearning && <details className="course-mastery">
                 <summary>
                   Learning evidence · readiness {readiness.range[0]}–{readiness.range[1]}%
                 </summary>
@@ -749,7 +753,7 @@ export function Study() {
                     Start a short diagnostic
                   </button>
                 )}
-              </details>
+              </details>}
               {/*
                 What is true of this course today, beside what is true of it
                 always. The size of the guide is in the corner above and does

@@ -9,6 +9,8 @@ export interface SkillSource {
   title: string;
   details: string;
   sourceLabel?: string;
+  observedAt?: number;
+  available?: boolean;
 }
 
 export interface SkillEvidenceLink {
@@ -68,14 +70,18 @@ export function deriveSkillClaims(input: SkillGraphInput): SkillClaim[] {
           label: source.sourceLabel || source.title,
         };
         const existing = claims.get(id);
-        if (existing) existing.evidence.push(evidence);
+        const stale = source.available === false || (source.observedAt !== undefined && Date.now() - source.observedAt > 180 * 86_400_000);
+        if (existing) {
+          existing.evidence.push(evidence);
+          if (stale) existing.freshness = 'stale';
+        }
         else {
           claims.set(id, {
             id,
             skill,
             level: 'emerging',
             verification: 'suggested',
-            freshness: 'current',
+            freshness: stale ? 'stale' : 'current',
             evidence: [evidence],
           });
         }
