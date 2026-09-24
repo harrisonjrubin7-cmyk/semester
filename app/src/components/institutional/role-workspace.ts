@@ -106,16 +106,22 @@ export const ROLE_DRAFT_ACTIONS: Partial<Record<FlightRole, RoleDraftAction>> = 
 
 /**
  * Presentation follows the selected role, but availability follows only live
- * grants for that exact role. Capabilities from a second role never bleed
- * into this workspace, and this remains only a client presentation gate: the
- * server must authorize every consequential read and write again.
+ * grants for that exact role and synthetic institution. Capabilities from a
+ * second role or tenant never bleed into this workspace, and this remains
+ * only a client presentation gate: the server must authorize every
+ * consequential read and write again.
  */
 export function availableRoleFunctions(
+  tenantId: string,
   role: FlightRole,
   grants: VerifiedGrant[],
   now?: string,
 ): RoleFunction[] {
-  const matching = grants.filter((grant) => grant.role === role);
+  const tenantScopePrefix = `${tenantId}-`;
+  const matching = grants.filter((grant) => (
+    grant.role === role
+    && (grant.scopeId === tenantId || grant.scopeId.startsWith(tenantScopePrefix))
+  ));
   const access = resolveWorkspaceAccess({ selectedRole: role, grants: matching, now });
   const capabilities = new Set(access.authorizedCapabilities);
   return ROLE_WORKSPACE_FUNCTIONS[role].filter((item) => capabilities.has(item.capability));
