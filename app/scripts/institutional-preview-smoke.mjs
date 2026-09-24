@@ -169,6 +169,40 @@ try {
   }
 
   if (expectedPreview) {
+    const compactContext = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+    try {
+      await compactContext.addInitScript(
+        ([version]) => localStorage.setItem('semester.v1', JSON.stringify({ schemaVersion: version, sample: true, seenOnboarding: true, nav: 'workspace' })),
+        [schemaVersion],
+      );
+      const page = await compactContext.newPage();
+      await page.goto(`${base}#/home`, { waitUntil: 'domcontentloaded' });
+      await page.locator('main#main').waitFor({ state: 'visible', timeout: 10_000 });
+      const chrome = await page.evaluate(() => {
+        const height = (selector) => Math.round(document.querySelector(selector)?.getBoundingClientRect().height ?? 0);
+        const mainTop = Math.round(document.querySelector('main#main')?.getBoundingClientRect().top ?? 0);
+        const targets = [...document.querySelectorAll('.institutional-nav-button')]
+          .map((button) => Math.round(button.getBoundingClientRect().height));
+        return {
+          bar: height('.desktop-bar'),
+          primary: height('.institutional-primary-nav'),
+          workspace: height('.institutional-workspace-disclosure > summary'),
+          mainTop,
+          targetMinimum: Math.min(...targets),
+          overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        };
+      });
+      if (chrome.bar > 60) findings.push(`compact chrome: search bar grew to ${chrome.bar}px`);
+      if (chrome.primary > 50) findings.push(`compact chrome: primary navigation grew to ${chrome.primary}px`);
+      if (chrome.workspace > 44) findings.push(`compact chrome: workspace disclosure grew to ${chrome.workspace}px`);
+      if (chrome.mainTop > 320) findings.push(`compact chrome: page content starts at ${chrome.mainTop}px`);
+      if (chrome.targetMinimum < 44) findings.push(`compact chrome: navigation target shrank to ${chrome.targetMinimum}px`);
+      if (chrome.overflow > 0) findings.push(`compact chrome: page overflows horizontally by ${chrome.overflow}px`);
+      console.log(`PASS compact workspace chrome main=${chrome.mainTop}px target=${chrome.targetMinimum}px`);
+    } finally {
+      await compactContext.close();
+    }
+
     const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
     try {
       await context.addInitScript(
