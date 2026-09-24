@@ -62,7 +62,10 @@ const SETTINGS = [
   'setAssistant',
 ] as const;
 
-const NOT_DESTINATIONS = new Set<string>([...SHELL, ...FIRST_RUN, ...DETAIL, ...SETTINGS]);
+/** Administrative consoles accessed by school administrators during setup. */
+const ADMIN = ['schoolAdmin'] as const;
+
+const NOT_DESTINATIONS = new Set<string>([...SHELL, ...FIRST_RUN, ...DETAIL, ...SETTINGS, ...ADMIN]);
 
 /**
  * The union, read out of the file rather than imported.

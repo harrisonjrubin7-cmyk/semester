@@ -1025,6 +1025,7 @@ const NESTED_NAMES: Partial<Record<Screen, string>> = {
   lesson: 'this lesson',
   note: 'this note',
   slides: 'these slides',
+  schoolAdmin: 'school admin console',
 };
 
 /**

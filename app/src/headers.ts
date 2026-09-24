@@ -273,6 +273,8 @@ export const HEADERS: Record<Screen, (c: HeaderCtx) => Head> = {
   directory: fromRegistry,
   search: fromRegistry,
   onboarding: fromRegistry,
+  // School administration console
+  schoolAdmin: () => ({ kicker: 'School settings', title: 'AI Assistant Configuration' }),
 };
 
 /**
