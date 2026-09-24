@@ -1,5 +1,4 @@
 import { DatabaseSync } from 'node:sqlite';
-import { createCipheriv, createDecipheriv, createHash, randomBytes } from 'node:crypto';
 import type {
   ActionInput,
   Receipt,
@@ -7,6 +6,12 @@ import type {
   UniversityIdentity,
 } from '../../../packages/institution/src/index.ts';
 import type { IntelligenceAuditRecord } from './intelligence.ts';
+import {
+  assertJournalKey,
+  journalOperation,
+  openJournalRow,
+  sealJournalRow,
+} from './journal-crypto.ts';
 
 /**
  * The record of every action that reached, or may have reached, a school.
@@ -55,6 +60,38 @@ export interface SavedReview {
   receipt?: Receipt;
 }
 
+/**
+ * The action state machine the gateway depends on, independent of storage.
+ *
+ * SQLite implements it synchronously for the single-host development server.
+ * A production store may use a shared database and therefore return promises.
+ * Keeping both shapes behind this contract lets the request path await every
+ * durability boundary without making the local journal artificially async.
+ */
+export interface ActionJournalStore {
+  healthy(): boolean | Promise<boolean>;
+  save(row: SavedReview): void | Promise<void>;
+  get(id: string, identity: UniversityIdentity): SavedReview | null | Promise<SavedReview | null>;
+  claim(id: string, identity: UniversityIdentity, now: number): boolean | Promise<boolean>;
+  finish(
+    row: SavedReview,
+    state: 'completed' | 'pending' | 'refused' | 'uncertain',
+    receipt?: Receipt,
+  ): void | Promise<void>;
+  audit(
+    identity: UniversityIdentity,
+    area: string,
+    event: string,
+    reviewId?: string | null,
+  ): void | Promise<void>;
+  auditIntelligence?(
+    identity: UniversityIdentity,
+    record: IntelligenceAuditRecord,
+  ): void | Promise<void>;
+  purge?(now?: number): void | Promise<void>;
+  close?(): void | Promise<void>;
+}
+
 /** How long a settled row is kept before `purge` may drop it. */
 const KEEP = {
   /** A prepared review nobody confirmed. */
@@ -64,12 +101,12 @@ const KEEP = {
   audit: 180 * 86_400_000,
 } as const;
 
-export class ActionJournal {
+export class ActionJournal implements ActionJournalStore {
   private db: DatabaseSync;
   private key: Buffer;
 
   constructor(file: string, key: Buffer) {
-    if (key.length !== 32) throw new Error('The journal needs a 32-byte encryption key.');
+    assertJournalKey(key);
     this.key = key;
     this.db = new DatabaseSync(file, { timeout: 5000 });
     this.db.exec(`
@@ -154,18 +191,11 @@ export class ActionJournal {
 
   /** AES-256-GCM, with the IV and tag carried in front of the ciphertext. */
   private seal(v: unknown): string {
-    const iv = randomBytes(12);
-    const cipher = createCipheriv('aes-256-gcm', this.key, iv);
-    const out = Buffer.concat([cipher.update(JSON.stringify(v), 'utf8'), cipher.final()]);
-    return Buffer.concat([iv, cipher.getAuthTag(), out]).toString('base64');
+    return sealJournalRow(this.key, v as SavedReview);
   }
 
   private open(text: string): SavedReview {
-    const data = Buffer.from(text, 'base64');
-    const decipher = createDecipheriv('aes-256-gcm', this.key, data.subarray(0, 12));
-    // Set before any `update`, so a tampered row throws rather than decrypting.
-    decipher.setAuthTag(data.subarray(12, 28));
-    return JSON.parse(Buffer.concat([decipher.update(data.subarray(28)), decipher.final()]).toString('utf8'));
+    return openJournalRow<SavedReview>(this.key, text);
   }
 
   /**
@@ -177,17 +207,7 @@ export class ActionJournal {
    * the first is unresolved.
    */
   private operation(row: SavedReview): string {
-    return createHash('sha256')
-      .update(
-        JSON.stringify([
-          row.identity.institutionId,
-          row.identity.userId,
-          row.input.area,
-          row.input.recordId,
-          row.input.actionId,
-        ]),
-      )
-      .digest('hex');
+    return journalOperation(row);
   }
 
   save(row: SavedReview): void {

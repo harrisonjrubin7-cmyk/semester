@@ -3,6 +3,7 @@ import { createIntelligenceService, type IntelligenceAuditRecord, type Intellige
 import { createSupabaseIntelligenceRepository } from './intelligence-repository.ts';
 import { createOpenAIProvider } from './providers/openai.ts';
 import type { UniversityIdentity } from '../../../packages/institution/src/index.ts';
+import type { IntelligenceActionStore } from './intelligence-action-store.ts';
 
 export interface IntelligenceRuntimeOptions {
   authUrl: string;
@@ -12,7 +13,8 @@ export interface IntelligenceRuntimeOptions {
   maxRequestCents: number;
   estimatedRequestCents: number;
   status: 'configured-sandbox' | 'configured-production';
-  audit?: (identity: UniversityIdentity, record: IntelligenceAuditRecord) => void;
+  audit?: (identity: UniversityIdentity, record: IntelligenceAuditRecord) => void | Promise<void>;
+  actionStore?: IntelligenceActionStore;
 }
 
 const disabled = (audit?: IntelligenceRuntimeOptions['audit']): IntelligenceService =>
@@ -27,6 +29,7 @@ const disabled = (audit?: IntelligenceRuntimeOptions['audit']): IntelligenceServ
     generate: async () => { throw new Error('No approved institutional model provider is installed.'); },
     execute: async () => ({ verified: false }),
     audit,
+    actionStore: undefined,
   });
 
 export function createInstitutionIntelligenceRuntime(options: IntelligenceRuntimeOptions): IntelligenceService {
@@ -66,5 +69,6 @@ export function createInstitutionIntelligenceRuntime(options: IntelligenceRuntim
     // supply its own authoritative write plus readback before actions can ship.
     execute: async () => ({ verified: false }),
     audit: options.audit,
+    actionStore: options.actionStore,
   });
 }

@@ -4,6 +4,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
   UNIVERSITY_AREAS,
+  type ActionInput,
+  type Receipt,
   type UniversityIdentity,
   Refusal,
   type UniversityRecord,
@@ -11,7 +13,8 @@ import {
 import type { InstitutionAdapter } from './adapter.ts';
 import { trustedIdentity } from './auth.ts';
 import { createGateway } from './gateway.ts';
-import { ActionJournal } from './journal.ts';
+import { ActionJournal, type ActionJournalStore, type SavedReview } from './journal.ts';
+import type { RateLimiter } from './rate-limit.ts';
 
 /**
  * The refusals, exercised against a real journal on a real file.
@@ -48,12 +51,54 @@ afterEach(() => {
   dirs.splice(0).forEach((dir) => rmSync(dir, { recursive: true, force: true }));
 });
 
-function fixture() {
+function asynchronousJournal(inner: ActionJournal, events: string[]): ActionJournalStore {
+  const turn = () => new Promise<void>((resolve) => setTimeout(resolve, 1));
+  return {
+    healthy: async () => {
+      await turn();
+      events.push('healthy');
+      return inner.healthy();
+    },
+    save: async (row) => {
+      await turn();
+      inner.save(row);
+      events.push('save');
+    },
+    get: async (id, identity) => {
+      await turn();
+      events.push('get');
+      return inner.get(id, identity);
+    },
+    claim: async (id, identity, now) => {
+      await turn();
+      const claimed = inner.claim(id, identity, now);
+      events.push('claim');
+      return claimed;
+    },
+    finish: async (row: SavedReview, state, receipt?: Receipt) => {
+      await turn();
+      inner.finish(row, state, receipt);
+      events.push(`finish:${state}`);
+    },
+    audit: async (identity, area, event, reviewId = null) => {
+      await turn();
+      inner.audit(identity, area, event, reviewId);
+      events.push(`audit:${event}`);
+    },
+  };
+}
+
+function fixture({
+  asynchronous = false,
+  rateLimiter,
+}: { asynchronous?: boolean; rateLimiter?: RateLimiter } = {}) {
   const dir = mkdtempSync(join(tmpdir(), 'semester-gateway-'));
   dirs.push(dir);
   const path = join(dir, 'test.sqlite');
   const journal = new ActionJournal(path, key);
   journals.push(journal);
+  const journalEvents: string[] = [];
+  const journalStore = asynchronous ? asynchronousJournal(journal, journalEvents) : journal;
 
   let identity: UniversityIdentity | null = actor;
   let membershipActive = true;
@@ -128,7 +173,7 @@ function fixture() {
     authenticate: async () => identity,
     refreshIdentity: async (current) => membershipActive ? { ...current, roles: membershipRoles } : null,
     adapters: [adapter],
-    journal,
+    journal: journalStore,
     loadSsoConfig: async () => ({ enabled: true, label: 'Vanderbilt', domain: 'vanderbilt.edu' }),
     intelligence: {
       status: 'configured-sandbox',
@@ -139,9 +184,10 @@ function fixture() {
         return { status: 200, body: {} };
       },
     },
+    rateLimiter,
   });
 
-  const input = {
+  const input: ActionInput = {
     area: 'assignments',
     recordId: 'paper',
     version: '1',
@@ -171,6 +217,7 @@ function fixture() {
 
   return {
     journal,
+    journalEvents: () => [...journalEvents],
     path,
     input,
     request,
@@ -444,6 +491,25 @@ describe('university gateway boundaries', () => {
     expect(f.calls()).toBe(1);
   });
 
+  it('awaits every shared-journal boundary before answering an action request', async () => {
+    const f = fixture({ asynchronous: true });
+    const review = await f.prepare();
+    expect(f.journalEvents()).toEqual(['save', 'audit:action.prepared']);
+
+    const result = await f.request('/actions/commit', { reviewId: review.id, confirmed: true });
+    expect(result.status).toBe(200);
+    expect(f.journal.get(review.id, actor)?.state).toBe('completed');
+    expect(f.journalEvents()).toEqual([
+      'save',
+      'audit:action.prepared',
+      'get',
+      'claim',
+      'audit:action.started',
+      'finish:completed',
+      'audit:action.receipt',
+    ]);
+  });
+
   it('refuses expired reviews and preserves unresolved state across reopening', async () => {
     const f = fixture();
     const expired = { id: 'expired', title: 'Expired', details: [], expiresAt: '2020-01-01T00:00:00Z' };
@@ -501,6 +567,14 @@ describe('the health check', () => {
     expect((await said.json()).status).toBe('unavailable');
   });
 
+  it('awaits a remote journal health probe instead of treating its promise as ready', async () => {
+    const f = fixture({ asynchronous: true });
+    f.journal.close();
+    const said = await f.request('/health', undefined, { authorization: '' });
+    expect(said.status).toBe(503);
+    expect(f.journalEvents()).toEqual(['healthy']);
+  });
+
   /*
    * An unauthenticated endpoint that narrates which subsystem is broken is a
    * map for somebody choosing what to lean on. It says that it cannot serve,
@@ -518,5 +592,23 @@ describe('the health check', () => {
   it('counts the adapters, so an empty registry is visible rather than implied', async () => {
     const f = fixture();
     expect((await (await f.request('/health', undefined, { authorization: '' })).json()).adapters).toBe(1);
+  });
+});
+
+describe('request limits', () => {
+  it('awaits a shared limiter and returns 429 when it refuses the account', async () => {
+    const calls: string[] = [];
+    const f = fixture({
+      rateLimiter: {
+        allow: async (identity) => {
+          await new Promise<void>((resolve) => setTimeout(resolve, 1));
+          calls.push(`${identity.institutionId}:${identity.userId}`);
+          return false;
+        },
+      },
+    });
+    const response = await f.request('/status');
+    expect(response.status).toBe(429);
+    expect(calls).toEqual(['school-a:student-a']);
   });
 });

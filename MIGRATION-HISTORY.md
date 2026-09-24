@@ -951,6 +951,16 @@ repository, and it should be argued for on its own.
 
 ## Status
 
+### Pending durable gateway migration
+
+`20260924184500_gateway_action_journal.sql` is present in the repository but is
+not described here as deployed. It adds encrypted, tenant-scoped university
+action and AI-confirmation state, metadata-only audit events, a write-based
+readiness probe, shared atomic rate limits, and conservative retention. Its
+`gateway-journal.check.sql` suite must pass against PostgreSQL 17 in CI before
+merge; a green repository check still does not prove a production project has
+applied it, so the live ledger and deploy workflow remain the authority.
+
 | Step | State |
 | --- | --- |
 | 1 · snapshot production | **done 21 Sep** — verified by three matching fingerprints |
