@@ -14,6 +14,7 @@ import {
 } from '../lib/threads';
 import { read as readSpend } from '../lib/spend';
 import { fit } from '../lib/chatlog';
+import type { IntelligenceResponse, IntegrityMode } from '../intelligence/contracts';
 
 /**
  * The conversation, in one place, for every surface at once.
@@ -102,6 +103,12 @@ export interface Live {
   looking: string[];
   /** What the app could answer about itself, with nothing sent. */
   locally: Local | null;
+  /** Governed provenance for the most recent completed answer. */
+  response: IntelligenceResponse | null;
+  /** The student's requested academic-integrity interaction. */
+  integrityMode: IntegrityMode;
+  /** Modes returned by verified institutional policy for the active account. */
+  allowedIntegrityModes: IntegrityMode[];
   proposals: Proposal[];
   /** The one waiting on a second answer, or null. See `lib/reach.ts`. */
   holding: Held | null;
@@ -147,6 +154,9 @@ function empty(): Live {
     used: [],
     looking: [],
     locally: null,
+    response: null,
+    integrityMode: 'explain',
+    allowedIntegrityModes: [],
     proposals: [],
     holding: null,
     applied: [],
@@ -426,7 +436,7 @@ export function dropThread(id: string): void {
  */
 function cleared(): Pick<
   Live,
-  | 'streaming' | 'busy' | 'read' | 'used' | 'looking' | 'locally' | 'proposals' | 'holding' | 'applied'
+  | 'streaming' | 'busy' | 'read' | 'used' | 'looking' | 'locally' | 'response' | 'proposals' | 'holding' | 'applied'
 > {
   return {
     streaming: '',
@@ -435,6 +445,7 @@ function cleared(): Pick<
     used: [],
     looking: [],
     locally: null,
+    response: null,
     proposals: [],
     holding: null,
     applied: [],

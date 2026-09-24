@@ -5,6 +5,7 @@ import {
   allApps,
   categories,
   centreHidden,
+  discover,
   findApps,
   isFavourite,
   narrowApps,
@@ -80,6 +81,14 @@ describe('the shortcuts', () => {
     expect(isFavourite(toggleFavourite(without, 'courses' as Screen, ALL), 'courses' as Screen, ALL)).toBe(
       true,
     );
+  });
+});
+
+describe('journey-first discovery', () => {
+  it('returns matching journeys and tools from the same offered registry', () => {
+    const found = discover('resume', ALL);
+    expect(found.journeys.map((journey) => journey.id)).toContain('prepare-next');
+    expect(found.apps.every((destination) => offered(ALL).includes(destination))).toBe(true);
   });
 });
 

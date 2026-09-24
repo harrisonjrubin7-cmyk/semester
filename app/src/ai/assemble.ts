@@ -59,6 +59,41 @@ export interface Assembled {
   text: string;
   /** Rows that did not fit. Said out loud rather than silently cut. */
   dropped: number;
+  /** Source ids explicitly present in the active provider's visible slice. */
+  visibleSourceIds: string[];
+}
+
+function idsNamedBy(value: unknown, found = new Set<string>()): Set<string> {
+  if (Array.isArray(value)) {
+    for (const item of value) idsNamedBy(item, found);
+    return found;
+  }
+  if (!value || typeof value !== 'object') return found;
+  for (const [key, item] of Object.entries(value as Record<string, unknown>)) {
+    if (key === 'sourceId' && typeof item === 'string') found.add(item);
+    else if (key === 'sourceIds' && Array.isArray(item)) {
+      for (const id of item) if (typeof id === 'string') found.add(id);
+    } else {
+      idsNamedBy(item, found);
+    }
+  }
+  return found;
+}
+
+function visibleSourceIds(
+  screen: Screen,
+  now: Look | null,
+  contexts: readonly ScreenContext[],
+): string[] {
+  const found = new Set<string>();
+  for (const context of contexts) idsNamedBy([context.focus, context.visible], found);
+  // The Sources provider deliberately shows this exact capped slice. Its
+  // rendered rows omit internal ids, so preserve that visibility here without
+  // leaking every saved source from the store.
+  if (screen === 'sources' && now) {
+    for (const source of now.state.sources.slice(0, 40)) found.add(source.id);
+  }
+  return [...found];
 }
 
 export function assemble(ai: Inputs): Assembled {
@@ -71,7 +106,15 @@ export function assemble(ai: Inputs): Assembled {
   const label = screenName(screen);
   const registered = ai.registered();
   if (!now) {
-    return { screen, label, own: null, extra: registered, text: '', dropped: 0 };
+    return {
+      screen,
+      label,
+      own: null,
+      extra: registered,
+      text: '',
+      dropped: 0,
+      visibleSourceIds: visibleSourceIds(screen, now, registered),
+    };
   }
   const provide = providerFor(screen);
   const own = provide ? provide(now) : null;
@@ -88,7 +131,15 @@ export function assemble(ai: Inputs): Assembled {
       .map((c) => render(screen, label, c))
       .map((r) => r.text)
       .join('\n\n');
-    return { screen, label, own: null, extra: registered, text: only, dropped: 0 };
+    return {
+      screen,
+      label,
+      own: null,
+      extra: registered,
+      text: only,
+      dropped: 0,
+      visibleSourceIds: visibleSourceIds(screen, now, registered),
+    };
   }
   /*
    * What was asked about goes first, not last.
@@ -103,7 +154,15 @@ export function assemble(ai: Inputs): Assembled {
   const text = [...registered.map((c) => render(screen, label, c).text), rendered.text]
     .filter(Boolean)
     .join('\n\n');
-  return { screen, label, own, extra: registered, text, dropped: rendered.dropped };
+  return {
+    screen,
+    label,
+    own,
+    extra: registered,
+    text,
+    dropped: rendered.dropped,
+    visibleSourceIds: visibleSourceIds(screen, now, [own, ...registered]),
+  };
 }
 
 export function suggestionsFor(ai: Inputs): string[] {

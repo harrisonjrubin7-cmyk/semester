@@ -11,6 +11,7 @@ import {
 } from '../../../packages/institution/src/index.ts';
 import type { AdapterContext, InstitutionAdapter } from './adapter.ts';
 import type { ActionJournal } from './journal.ts';
+import type { IntelligenceService } from './intelligence.ts';
 
 /**
  * The gateway: everything that is the same whichever university it is.
@@ -53,6 +54,7 @@ interface Config {
   authenticate: (token: string) => Promise<UniversityIdentity | null>;
   adapters: InstitutionAdapter[];
   journal: ActionJournal;
+  intelligence?: IntelligenceService;
 }
 
 class HttpError extends Error {
@@ -158,6 +160,7 @@ export function createGateway(config: Config) {
             version: 1,
             status: ready ? 'ready' : 'unavailable',
             adapters: config.adapters.length,
+            intelligence: config.intelligence?.status ?? 'policy-disabled',
           },
           { status: ready ? 200 : 503, headers },
         );
@@ -178,6 +181,37 @@ export function createGateway(config: Config) {
       limits.set(key, limit);
 
       const context: AdapterContext = { identity: who, signal: AbortSignal.timeout(20_000) };
+
+      const intelligenceConfirm = /^\/v1\/intelligence\/actions\/([^/]+)\/confirm$/.exec(path);
+      if (request.method === 'GET' && path === '/v1/intelligence/policy') {
+        if (!config.intelligence) return Response.json({ code: 'policy-disabled', message: 'Semester Intelligence is not configured for this gateway.' }, { status: 503, headers });
+        const response = await config.intelligence.policy(who);
+        return Response.json(response.body, { status: response.status, headers });
+      }
+      if (
+        request.method === 'POST' &&
+        (path === '/v1/intelligence/respond' || intelligenceConfirm)
+      ) {
+        if (!config.intelligence) {
+          return Response.json(
+            { code: 'policy-disabled', message: 'Semester Intelligence is not configured for this gateway.' },
+            { status: 503, headers },
+          );
+        }
+        if (!request.headers.get('content-type')?.startsWith('application/json')) fail(415, 'Send JSON.');
+        const text = await request.text();
+        if (Buffer.byteLength(text) > MAX_BODY) fail(413, 'Request is too large.');
+        let value: unknown;
+        try {
+          value = JSON.parse(text);
+        } catch {
+          fail(400, 'Invalid JSON.');
+        }
+        const response = path === '/v1/intelligence/respond'
+          ? await config.intelligence.respond(who, value)
+          : await config.intelligence.confirm(who, decodeURIComponent(intelligenceConfirm![1]), value);
+        return Response.json(response.body, { status: response.status, headers });
+      }
 
       /** The adapter for an area, if it exists and currently permits this. */
       const adapterFor = async (area: UniversityArea, write = false) => {

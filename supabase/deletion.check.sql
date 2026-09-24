@@ -326,4 +326,84 @@ begin
   perform pg_temp.counted('so it is still in the room, with nobody told', n, 1);
 end $$;
 
+-- ── Personal intelligence evidence leaves with its owner ─────────────────
+
+do $$
+declare
+  leaver uuid := 'eeeeeeee-0000-0000-0000-00000000ef01';
+  other uuid := 'ffffffff-0000-0000-0000-00000000ef02';
+  evidence uuid;
+  claim uuid;
+  consent uuid;
+  capture uuid;
+  n bigint;
+begin
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+  insert into public.schools (id, name, email_domains)
+  values ('deletion-evidence', 'Deletion Evidence University', array['deletion-evidence.example']);
+  insert into auth.users (id, instance_id, aud, role, email, email_confirmed_at, created_at, updated_at)
+  values
+    (leaver, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'leaver@deletion-evidence.example', now(), now(), now()),
+    (other, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'other@deletion-evidence.example', now(), now(), now());
+  insert into public.profiles (user_id, handle, school_id) values
+    (leaver, 'evidence leaver', 'deletion-evidence'),
+    (other, 'evidence keeper', 'deletion-evidence');
+
+  perform pg_temp.become(leaver);
+  insert into public.consent_record
+    (tenant_id, subject_user_id, capability, status, policy_version, recorded_by, expires_at)
+  values ('deletion-evidence', leaver, 'lecture_capture', 'consented', '1', leaver, now() + interval '1 day')
+  returning id into consent;
+  insert into public.evidence_reference
+    (tenant_id, person_id, course_id, title, origin, authority, locator)
+  values ('deletion-evidence', leaver, 'econ', 'Private practice', 'student', 'unverified', 'question 1')
+  returning id into evidence;
+  insert into public.concept_evidence
+    (tenant_id, person_id, evidence_id, course_id, concept_id, kind, score)
+  values ('deletion-evidence', leaver, evidence, 'econ', 'demand', 'practice', 0.5);
+  insert into public.mistake_evidence
+    (tenant_id, person_id, evidence_id, course_id, concept_id, classification)
+  values ('deletion-evidence', leaver, evidence, 'econ', 'demand', 'concept');
+  insert into public.skill_claim (tenant_id, person_id, skill_name)
+  values ('deletion-evidence', leaver, 'Demand analysis') returning id into claim;
+  insert into public.skill_claim_evidence (tenant_id, person_id, skill_claim_id, evidence_id)
+  values ('deletion-evidence', leaver, claim, evidence);
+  insert into public.capture_asset
+    (tenant_id, person_id, course_id, consent_id, name, mime, content_hash)
+  values ('deletion-evidence', leaver, 'econ', consent, 'lecture.m4a', 'audio/mp4', 'sha256-delete')
+  returning id into capture;
+  insert into public.capture_segment (tenant_id, person_id, capture_id, locator, body)
+  values ('deletion-evidence', leaver, capture, '00:01:00', 'Private transcript.');
+  insert into public.capture_artifact (tenant_id, person_id, capture_id, kind, body, created_by)
+  values ('deletion-evidence', leaver, capture, 'notes', '{}', leaver);
+
+  -- These are the root records a deletion client removes. Their normalized
+  -- children follow by cascade, so no derived learning or capture data is
+  -- left detached from an account.
+  delete from public.capture_asset where person_id = leaver;
+  delete from public.skill_claim where person_id = leaver;
+  delete from public.evidence_reference where person_id = leaver;
+  delete from public.consent_record where subject_user_id = leaver;
+  reset role;
+
+  select
+    (select count(*) from public.evidence_reference where person_id = leaver) +
+    (select count(*) from public.concept_evidence where person_id = leaver) +
+    (select count(*) from public.mistake_evidence where person_id = leaver) +
+    (select count(*) from public.skill_claim where person_id = leaver) +
+    (select count(*) from public.skill_claim_evidence where person_id = leaver) +
+    (select count(*) from public.capture_asset where person_id = leaver) +
+    (select count(*) from public.capture_segment where person_id = leaver) +
+    (select count(*) from public.capture_artifact where person_id = leaver)
+  into n;
+  perform pg_temp.counted('personal learning, skill and capture evidence goes', n, 0);
+
+  insert into public.evidence_reference
+    (tenant_id, person_id, course_id, title, origin, authority, locator, created_by)
+  values ('deletion-evidence', other, 'econ', 'Other student evidence', 'student', 'unverified', 'question 2', other);
+  select count(*) into n from public.evidence_reference where person_id = other;
+  perform pg_temp.counted('another student evidence remains', n, 1);
+end $$;
+
 rollback;

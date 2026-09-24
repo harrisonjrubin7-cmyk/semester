@@ -70,7 +70,7 @@ const focused = () =>
       document.activeElement.tagName);
 
 const button = () =>
-  host.querySelector<HTMLButtonElement>('button[aria-label^="Ask about"]');
+  host.querySelector<HTMLButtonElement>('button[aria-label^="Ask Semester about"]');
 
 const escape = async () => {
   await act(async () => {
@@ -140,7 +140,7 @@ describe('closing the assistant gives focus back', () => {
     await escape();
 
     expect(host.querySelector('textarea')).toBeNull();
-    expect(focused()).toMatch(/^Ask about/);
+    expect(focused()).toMatch(/^Ask Semester about/);
   });
 
   it('to wherever it was, when a shortcut opened it from somewhere else', async () => {

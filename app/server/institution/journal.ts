@@ -6,6 +6,7 @@ import type {
   Review,
   UniversityIdentity,
 } from '../../../packages/institution/src/index.ts';
+import type { IntelligenceAuditRecord } from './intelligence.ts';
 
 /**
  * The record of every action that reached, or may have reached, a school.
@@ -90,6 +91,21 @@ export class ActionJournal {
         area TEXT NOT NULL,
         event TEXT NOT NULL,
         review_id TEXT
+      );
+      CREATE TABLE IF NOT EXISTS intelligence_audit(
+        id INTEGER PRIMARY KEY,
+        at TEXT NOT NULL,
+        tenant TEXT NOT NULL,
+        actor TEXT NOT NULL,
+        category TEXT NOT NULL,
+        provider TEXT NOT NULL,
+        model TEXT NOT NULL,
+        input_tokens INTEGER NOT NULL,
+        output_tokens INTEGER NOT NULL,
+        cost_cents REAL NOT NULL,
+        policy_decision TEXT NOT NULL,
+        action_id TEXT,
+        confirmation TEXT
       );
     `);
   }
@@ -245,6 +261,25 @@ export class ActionJournal {
   }
 
   /**
+   * Metadata only. Source bodies and model prose are deliberately absent from
+   * both this signature and the table, so logging cannot accidentally turn a
+   * protected course source into a second ungoverned copy.
+   */
+  auditIntelligence(identity: UniversityIdentity, record: IntelligenceAuditRecord): void {
+    this.db
+      .prepare(`INSERT INTO intelligence_audit(
+        at,tenant,actor,category,provider,model,input_tokens,output_tokens,
+        cost_cents,policy_decision,action_id,confirmation
+      ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)`)
+      .run(
+        new Date().toISOString(), identity.institutionId, identity.userId,
+        record.category, record.provider, record.model, record.inputTokens,
+        record.outputTokens, record.costCents, record.policyDecision,
+        record.actionId ?? null, record.confirmation ?? null,
+      );
+  }
+
+  /**
    * Drop what is safely done with. Never what is unresolved.
    *
    * `processing` and `uncertain` rows are deliberately not in either
@@ -260,6 +295,7 @@ export class ActionJournal {
       )
       .run(now - KEEP.ready, now - KEEP.completed);
     this.db.prepare('DELETE FROM audit WHERE at<?').run(new Date(now - KEEP.audit).toISOString());
+    this.db.prepare('DELETE FROM intelligence_audit WHERE at<?').run(new Date(now - KEEP.audit).toISOString());
   }
 
   close(): void {

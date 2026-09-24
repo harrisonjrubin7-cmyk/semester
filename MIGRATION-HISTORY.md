@@ -1,5 +1,37 @@
 # Repairing the migration history
 
+## 23 September 2026 — isolated evidence graphs
+
+`20260923211000_evidence_graphs.sql` adds normalized learning evidence,
+mistake evidence, skill claims and consent-bound capture records. Every record
+carries tenant and person scope, every foreign key is covered by a non-partial
+index, and row-level policies keep students inside their own tenant and their
+own evidence. Students may suggest or confirm a skill claim but cannot mark it
+institution verified; that transition requires a live school-scoped source
+approval capability.
+
+Capture assets point to a versioned consent record. Derived segments and
+artifacts are refused after consent is revoked or expires, and a withdrawal
+marks existing derivatives withdrawn and the original removed. The matching
+`evidence-graphs.check.sql` proves same-owner access, cross-tenant isolation,
+verification refusal, withdrawal and cascade deletion. The deletion and record
+suites additionally cover account cleanup and the structural tenant/person
+scope of all eight tables.
+
+## 23 September 2026 — tenant intelligence policy
+
+`20260923210000_intelligence_policy.sql` adds school-scoped feature state, AI
+policy, approved-source and consent records. University administration is
+authorized only by live `role_grants` at `scope_kind = 'school'`; profile
+choices, email domains and browser-provided flags grant nothing. The migration
+also records old/new configuration changes with the authenticated actor and
+the verified grant that authorized an institutional write. The two public read
+helpers are security-invoker functions, so their table RLS remains in force.
+
+The matching `intelligence-policy.check.sql` uses two synthetic schools and
+proves same-tenant administration, cross-tenant invisibility, source-approval
+refusal, student-owned consent and audit evidence on PostgreSQL 17.
+
 The schema this app runs on cannot be rebuilt from its own record.
 [`ROLLBACK.md`](ROLLBACK.md) states the finding and why it is a rollback
 concern; this is the plan for fixing it, written before any of it was done so

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { asText, explainScribeError, paragraphs, stamp, words, type Segment } from './transcribe';
+import { asText, captureLocator, explainScribeError, paragraphs, stamp, words, type Segment } from './transcribe';
 
 const seg = (at: number, text: string): Segment => ({ at, text });
 
@@ -17,6 +17,13 @@ describe('stamp', () => {
 
   it('does not produce a negative clock from a clock skew', () => {
     expect(stamp(-4)).toBe('0:00');
+  });
+});
+
+describe('captureLocator', () => {
+  it('uses a stable hour-minute-second locator for cited transcript moments', () => {
+    expect(captureLocator(14 * 60 + 22)).toBe('00:14:22');
+    expect(captureLocator(3725.9)).toBe('01:02:05');
   });
 });
 

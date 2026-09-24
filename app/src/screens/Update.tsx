@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Capture } from '../components/Capture';
+import { CourseCapture } from '../components/CourseCapture';
 import { RecordButton } from '../components/RecordButton';
 import { Rework } from '../components/Rework';
 import { readMaterial, readShots } from '../lib/claude';
@@ -27,7 +28,7 @@ import { NeedsKey } from '../components/NeedsKey';
 import { Page } from '../components/Page';
 import { HowMuch } from '../components/HowMuch';
 import { ActionButton, ChipScroll, FilePick, SectionLabel } from '../components/ui';
-import { addFile, formatBytes, type FileMeta } from '../lib/files';
+import { addFile, deleteFile, formatBytes, type FileMeta } from '../lib/files';
 import { gather } from '../lib/bundle';
 import { describeParse, parseMaterial } from '../lib/parse';
 import type { CourseId, Figure, Term } from '../lib/types';
@@ -36,21 +37,11 @@ import type { CourseId, Figure, Term } from '../lib/types';
 const NO_PARTS: StudyParts = { frames: [], selfTest: [], cases: [], examples: [] };
 import { describeFigure } from '../lib/figure';
 import { describeStudyParts, type StudyParts } from '../lib/study';
-import { DOCUMENTS } from '../lib/extract';
+import { effectiveCapturePolicy } from '../lib/capture-policy';
+import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
 
 /** Handled by the camera path above, which can see them. */
 const IMAGE = /\.(png|jpe?g|webp|gif|heic|heif)$/i;
-
-/**
- * What the picker offers here.
- *
- * Wider than the syllabus importer's: a reading can be a photograph of the
- * board, which `addFile` stores and the camera path reads. Keep it in step
- * with `READABLE` in `lib/bundle.ts`.
- */
-// The formats `lib/extract.ts` can read, plus the images only this screen
-// takes — a photo of a whiteboard or a notice pinned to a door.
-const ACCEPT = `${DOCUMENTS}.png,.jpg,.jpeg,.webp,.heic,text/*,image/*,application/pdf,application/zip`;
 
 /**
  * Enough text to be worth a request.
@@ -93,7 +84,9 @@ const HINT: CSSProperties = {
   textWrap: 'pretty',
 };
 
-export function AddMaterial() {
+export function AddMaterial({
+  multimodalCapture = EXPERIENCE_FLAGS.multimodalCapture !== 'off',
+}: { multimodalCapture?: boolean } = {}) {
   // A row's padding and hairline, from the layout rather than hard-coded.
   const row11 = useRowStyle(11);
   const row10 = useRowStyle(10);
@@ -109,6 +102,7 @@ export function AddMaterial() {
   const [text, setText] = useState('');
   const [files, setFiles] = useState<FileMeta[]>([]);
   const [busy, setBusy] = useState(false);
+  const [captureConsent, setCaptureConsent] = useState(false);
   const [shots, setShots] = useState<ShotFile[]>([]);
   const [reading, setReading] = useState(false);
   const [readNote, setReadNote] = useState('');
@@ -118,6 +112,24 @@ export function AddMaterial() {
   const [readCards, setReadCards] = useState<StudyCard[]>([]);
   const [readTerms, setReadTerms] = useState<Term[]>([]);
   const [readFigs, setReadFigs] = useState<Figure[]>([]);
+  const courseAi = catalog.byId[courseId]?.ai;
+  const capturePolicy = useMemo(
+    () =>
+      effectiveCapturePolicy({
+        institution: {
+          recording: 'permitted',
+          modelProcessing: true,
+          retentionDays: 30,
+          reason: 'Local preview policy: originals stay on this device.',
+        },
+        course: {
+          recording: 'permitted',
+          modelProcessing: courseAi?.stance !== 'banned',
+          reason: courseAi?.note || 'No additional course restriction is recorded.',
+        },
+      }),
+    [courseAi?.note, courseAi?.stance],
+  );
   const [readLong, setReadLong] = useState<StudyParts>(NO_PARTS);
   const [readSummary, setReadSummary] = useState('');
   const [readError, setReadError] = useState('');
@@ -585,7 +597,7 @@ export function AddMaterial() {
   };
 
   const pick = async (list: File[]) => {
-    if (list.length === 0) return;
+    if (list.length === 0) return [];
     setBusy(true);
     setReadNote('');
 
@@ -660,6 +672,7 @@ export function AddMaterial() {
     ].filter(Boolean);
     if (notes.length > 0) setReadNote(notes.join('\n'));
     setBusy(false);
+    return added;
   };
 
   return (
@@ -929,17 +942,56 @@ export function AddMaterial() {
         which transcribes what is written and turns it into cards — and says so
         rather than filling in the parts that are out of focus.
       */}
+      {multimodalCapture ? <><SectionLabel>Course capture</SectionLabel>
+      <div style={{ ...HINT, marginBottom: 'var(--sp-5)' }}>
+        Add a lecture recording, video, diagram, photograph or course document. Semester keeps the
+        original with a content hash and never turns extracted deadlines or actions into changes
+        until you confirm them.
+      </div>
+      <CourseCapture
+        courseId={courseId}
+        policy={capturePolicy}
+        onConsentChange={(granted) => {
+          setCaptureConsent(granted);
+          if (!granted) {
+            setShots([]);
+            setShotCards([]);
+          }
+        }}
+        onFiles={pick}
+        onRemovePersisted={async (ids) => {
+          await Promise.all(ids.map((id) => deleteFile(id)));
+          setFiles((current) => current.filter((file) => !ids.includes(file.id)));
+        }}
+        onGuidedProblem={() => dispatch({ type: 'go', screen: 'solve', courseId })}
+      />
+      </> : <><SectionLabel>Attach files</SectionLabel><FilePick accept=".pdf,.docx,.pptx,.txt,.md,image/*" onPick={(picked) => void pick(picked)}>Choose course files</FilePick></>}
+
       <SectionLabel>Photograph it</SectionLabel>
-      {claudeReady ? (
+      {!capturePolicy.modelProcessing ? (
+        <Blueprint plain style={{ paddingBlock: 'var(--sp-5)', paddingInline: 'var(--sp-6)' }}>
+          <strong>Model processing is disabled for this course.</strong>
+          <div style={{ ...HINT, marginTop: 'var(--sp-2)' }}>
+            You can still preserve the original above. Semester will not send the image to an AI
+            service or derive cards from it.
+          </div>
+        </Blueprint>
+      ) : claudeReady ? (
         <>
           <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)' }}>
             The board at the end of a lecture, a page of a textbook, a printed handout. Read into
             cards from what is actually written — anything unreadable is left out and said so.
           </div>
-          <Capture shots={shots} onChange={setShots} label="Use the camera" />
+          <Capture
+            shots={shots}
+            onChange={setShots}
+            label="Use the camera"
+            disabled={!captureConsent}
+            policyNotice={!captureConsent ? 'Confirm capture consent above before using the camera.' : undefined}
+          />
           {shots.length > 0 && (
             <ActionButton
-              disabled={reading}
+              disabled={reading || !captureConsent}
               onClick={() => void readPhotos()}
               tone="primary"
               style={{ marginTop: 'var(--sp-6)', fontSize: 'var(--type-sm)' }}
@@ -987,34 +1039,34 @@ export function AddMaterial() {
         Keeps the audio against this course, and can write it down as it goes. The transcript lands
         in the material box above, where it becomes cards, a quiz and a guide like anything else.
       </div>
-      <RecordButton
-        courseId={courseId}
-        label={guide.code}
-        onSaved={(meta, seconds, transcript) => {
-          setFiles((f) => [...f, meta]);
-          if (!transcript) return;
-          // Appended, never overwritten — you may have typed notes in there.
-          setText((prior) =>
-            prior.trim() ? `${prior.trim()}\n\n${transcript}` : transcript,
-          );
-          if (!title.trim()) setTitle(`Lecture · ${new Date().toLocaleDateString()}`);
-          if (!source.trim()) setSource(`Recorded in class · ${Math.round(seconds / 60)} min`);
-        }}
-      />
+      {capturePolicy.recording !== 'permitted' ? (
+        <Blueprint plain style={{ paddingBlock: 'var(--sp-5)', paddingInline: 'var(--sp-6)' }}>
+          Live recording is disabled by the effective capture policy. Upload an approved original
+          in Course capture instead.
+        </Blueprint>
+      ) : !captureConsent ? (
+        <Blueprint plain style={{ paddingBlock: 'var(--sp-5)', paddingInline: 'var(--sp-6)' }}>
+          Confirm capture consent above before starting the microphone.
+        </Blueprint>
+      ) : (
+        <RecordButton
+          courseId={courseId}
+          label={guide.code}
+          onSaved={(meta, seconds, transcript) => {
+            setFiles((f) => [...f, meta]);
+            if (!transcript) return;
+            // Appended, never overwritten — you may have typed notes in there.
+            setText((prior) =>
+              prior.trim() ? `${prior.trim()}\n\n${transcript}` : transcript,
+            );
+            if (!title.trim()) setTitle(`Lecture · ${new Date().toLocaleDateString()}`);
+            if (!source.trim()) setSource(`Recorded in class · ${Math.round(seconds / 60)} min`);
+          }}
+        />
+      )}
 
       <SectionLabel>Files</SectionLabel>
-      {/* The input is the button, for the reasons in `FilePick` — a hidden
-          input clicked from script is a press that can silently do nothing,
-          and it keeps its value, so attaching the same reading twice in a row
-          did nothing at all. */}
-      <FilePick
-        accept={ACCEPT}
-        disabled={busy}
-        onPick={(picked) => void pick(picked)}
-        style={{ fontSize: 'var(--type-sm)' }}
-      >
-        {busy ? 'Reading…' : 'Attach slides, a PDF, a photo of the board, or a zip'}
-      </FilePick>
+      {busy && <div className="course-capture-working" role="status">Reading the selected course material…</div>}
       {files.map((f) => (
         <div
           key={f.id}

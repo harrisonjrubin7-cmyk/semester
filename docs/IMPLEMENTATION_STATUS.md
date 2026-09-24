@@ -4,6 +4,14 @@ September 14, 2026 · Compared with the supplied complete product requirements a
 
 The existing app is preserved and expanded. **This build is a working student workspace with local planning tools and an institutional integration foundation. It is not yet a complete replacement for a university's LMS, email, registration, billing or campus-service systems.** The user confirmed that school-approved access is not yet available.
 
+## September 23, 2026 — intelligence expansion accepted without replacing the app
+
+The existing 59-screen product remains the foundation. Six journey cards now route students into it; the complete catalog remains available under All tools. Ask Semester provides five academic-integrity modes and an application-owned provenance receipt. Study connects diagnostics, retrieval, mistakes, evidence-backed recommendations and readiness forecasts. Career derives reviewable skill claims and explains matched and missing evidence. Course capture is consent- and policy-controlled. University adds a ten-area control plane whose preview roles cannot create production authorization.
+
+The institutional server now owns AI policy, approved-source filtering, provider and cost routing, action confirmation and metadata-only auditing. PostgreSQL adds tenant/person-isolated learning evidence, skill claims and capture records with row-level security and consent withdrawal behavior. The gateway still starts policy-disabled because no approved production provider adapter ships in this repository.
+
+Local acceptance is recorded in [`docs/institutional-rollout/intelligence-expansion-evidence.md`](institutional-rollout/intelligence-expansion-evidence.md): 12,646 tests passed, file-order/shuffle/two-timezone suites agreed, both production builds passed, desktop and phone browser smoke passed, and all 30 PostgreSQL policy suites passed. This does not prove live SSO, SCIM, LMS access, employer/alumni data, sent actions, official-record writes or legal permission to record.
+
 ## September 15, 2026 — the mistake journal only ever wrote
 
 `components/StudyJournal.tsx` has recorded mistakes since it shipped: the

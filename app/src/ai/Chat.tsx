@@ -4,7 +4,7 @@ import { useNow, useStore } from '../state/store';
 import { TOUCH, WIDE, useMedia } from '../lib/media';
 import { chromeFor } from '../lib/chrome';
 import { useKeyboardInset } from '../lib/keyboard';
-import { useConversation, provider } from './converse';
+import { useConversation } from './converse';
 import { useVoice } from './usevoice';
 import { configured, modelLabel } from '../lib/assistant';
 import { Composer, sendHint } from './Composer';
@@ -13,6 +13,9 @@ import { Threads, ThreadsOver } from './Threads';
 import { Opening } from './Opening';
 import { Applied, Holding, Locally, Proposals } from './Actions';
 import { Trouble } from '../components/Trouble';
+import { IntelligenceDisclosure } from '../intelligence/Disclosure';
+import { IntegrityModePicker } from '../intelligence/ModePicker';
+import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
 
 /**
  * The assistant, full screen.
@@ -229,8 +232,12 @@ export function Chat() {
                   extra={
                     i === talk.turns.length - 1 && !talk.busy ? (
                       <>
-                        <Using read={talk.read} />
-                        {talk.used.length > 0 && (
+                        {EXPERIENCE_FLAGS.semesterIntelligence !== 'off' && talk.response ? (
+                          <IntelligenceDisclosure response={talk.response} />
+                        ) : (
+                          <Using read={talk.read} />
+                        )}
+                        {!talk.response && talk.used.length > 0 && (
                           <Looked
                             said={`Read ${talk.used.length} ${talk.used.length === 1 ? 'part' : 'parts'} of your records`}
                             detail={talk.used.join('\n')}
@@ -272,7 +279,7 @@ export function Chat() {
               <div aria-hidden style={{ fontSize: 'var(--type-sm)' }}>
                 {talk.streaming && <Answering text={talk.streaming} />}
                 {(!talk.streaming || talk.looking.length > 0) && (
-                  <Waiting who={provider()} doing={talk.looking} />
+                  <Waiting who="Semester Intelligence" doing={talk.looking} />
                 )}
               </div>
             )}
@@ -325,6 +332,11 @@ export function Chat() {
         }
       >
         <div style={COLUMN}>
+          {EXPERIENCE_FLAGS.semesterIntelligence !== 'off' && <IntegrityModePicker
+            requested={talk.integrityMode}
+            policy={{ allowed: talk.allowedIntegrityModes, reason: 'Available modes are set by verified university policy.' }}
+            onChange={talk.setIntegrityMode}
+          />}
           <Composer
             value={draft}
             onChange={setDraft}

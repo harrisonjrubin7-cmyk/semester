@@ -249,11 +249,11 @@ export function TopBar({
           <button
             type="button"
             className="bare desktop-ai"
-            aria-label="AI Tutor"
+            aria-label="Semester Intelligence"
             onClick={() => dispatch({ type: 'go', screen: 'ask' })}
           >
             <AskIcon size={15} />
-            <span>AI Tutor</span>
+            <span>Semester Intelligence</span>
           </button>
         </div>
 

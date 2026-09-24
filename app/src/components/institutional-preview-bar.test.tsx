@@ -5,6 +5,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { InstitutionalPreviewBar } from './InstitutionalPreviewBar';
+import { InstitutionalPreviewProvider } from './institutional/PreviewContext';
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -29,7 +30,11 @@ async function renderBar() {
   // not Vite's first transform of the fixture module.
   await import('../data/institutional-preview');
   await act(async () => {
-    root.render(<InstitutionalPreviewBar />);
+    root.render(
+      <InstitutionalPreviewProvider>
+        <InstitutionalPreviewBar />
+      </InstitutionalPreviewProvider>,
+    );
   });
   await act(async () => {
     await new Promise((done) => setTimeout(done, 0));

@@ -20,10 +20,14 @@ export function Capture({
   shots,
   onChange,
   label = 'Photograph it',
+  disabled = false,
+  policyNotice,
 }: {
   shots: ShotFile[];
   onChange: (next: ShotFile[]) => void;
   label?: string;
+  disabled?: boolean;
+  policyNotice?: string;
 }) {
   const [busy, setBusy] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
@@ -54,10 +58,15 @@ export function Capture({
 
   const drop = (i: number) => onChange(shots.filter((_, k) => k !== i));
 
-  const full = busy || shots.length >= MAX_SHOTS;
+  const full = disabled || busy || shots.length >= MAX_SHOTS;
 
   return (
     <>
+      {policyNotice && (
+        <div className="capture-policy-notice" role={disabled ? 'status' : undefined}>
+          {policyNotice}
+        </div>
+      )}
       {/* Two `FilePick`s rather than two refs and two hidden inputs. The
           difference between them is still the one attribute it always was —
           `capture` opens the rear camera, its absence opens the library — and

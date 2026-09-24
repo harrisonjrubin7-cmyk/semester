@@ -59,11 +59,12 @@ describe('synthetic institutional preview fixtures', () => {
   });
 
   it('is imported by production source only through the preview boundary', () => {
-    const bar = readFileSync(new URL('../components/InstitutionalPreviewBar.tsx', import.meta.url), 'utf8');
     const app = readFileSync(new URL('../App.tsx', import.meta.url), 'utf8');
+    const root = readFileSync(new URL('../components/institutional/PreviewRoot.tsx', import.meta.url), 'utf8');
     const screens = readFileSync(new URL('../screens.tsx', import.meta.url), 'utf8');
 
-    expect(bar).toContain("import('../data/institutional-preview')");
+    expect(app).toContain("from './components/institutional/PreviewRoot'");
+    expect(root).toContain("import('./PreviewContext')");
     expect(screens).toContain("import('./components/InstitutionalPreviewBar')");
     expect(app).toContain('InstitutionalPreviewBar');
     expect(app).not.toMatch(/from ['"]\.\/data\/institutional-preview['"]/);
@@ -74,6 +75,6 @@ describe('synthetic institutional preview fixtures', () => {
       .map((entry) => resolve(entry.parentPath, entry.name))
       .filter((path) => readFileSync(path, 'utf8').includes("data/institutional-preview"))
       .map((path) => relative(sourceRoot, path));
-    expect(importers).toEqual(['components/InstitutionalPreviewBar.tsx']);
+    expect(importers).toEqual(['components/institutional/PreviewContext.tsx']);
   });
 });

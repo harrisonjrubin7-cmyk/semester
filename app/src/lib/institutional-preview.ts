@@ -1,4 +1,6 @@
-export function institutionalPreview(env: Record<string, string | undefined>): boolean {
+export type PreviewEnv = Record<string, string | undefined>;
+
+export function institutionalPreview(env: PreviewEnv): boolean {
   return env.VITE_INSTITUTIONAL_PREVIEW === 'true';
 }
 

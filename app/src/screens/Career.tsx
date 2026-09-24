@@ -20,6 +20,7 @@ import {
   careerEvent,
   newOpportunity,
   outreachDrafts,
+  opportunityApplication,
   readCareer,
   readOpportunities,
   resumeDocumentTitle,
@@ -36,7 +37,15 @@ import {
 import { EMPTY_PATHWAY, readPathway } from '../lib/pathway';
 import { fromMarkdown } from '../lib/document';
 import { download } from '../lib/deliver';
-import { LIVE, safeUrl, type ApplyKind } from '../lib/apply';
+import { LIVE, safeUrl } from '../lib/apply';
+import { SkillsGraph } from '../components/SkillsGraph';
+import {
+  deriveSkillClaims,
+  explainFit,
+  missingSkillPlan,
+  searchOpportunities,
+} from '../lib/skills-graph';
+import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
 
 /**
  * What is open, what you have done, and who you have spoken to.
@@ -94,6 +103,7 @@ const TABS = [
   { id: 'discover' as const, label: 'Discover' },
   { id: 'fairs' as const, label: 'Fairs' },
   { id: 'resume' as const, label: 'Résumé' },
+  { id: 'skills' as const, label: 'Skills & fit' },
   { id: 'network' as const, label: 'Contacts' },
   { id: 'abroad' as const, label: 'Abroad' },
   { id: 'library' as const, label: 'Library' },
@@ -117,18 +127,9 @@ const FIELD_LABELS: Record<string, string> = {
   credit: 'Credit information',
 };
 
-/** An opportunity kind, as the application tracker names the same thing. */
-const APPLY_KIND: Record<Opportunity['kind'], ApplyKind> = {
-  Internship: 'internship',
-  Job: 'job',
-  'Campus employment': 'job',
-  Research: 'research',
-  Fellowship: 'fellowship',
-  'Study abroad': 'program',
-  'Career event': 'other',
-};
-
-export function Career() {
+export function Career({
+  careerSkillsGraph = EXPERIENCE_FLAGS.careerSkillsGraph !== 'off',
+}: { careerSkillsGraph?: boolean } = {}) {
   const { state, account } = useStore();
   const scope = `${account?.id || 'device'}:${state.term}`;
   /*
@@ -142,12 +143,13 @@ export function Career() {
       key={scope}
       storageKey={`semester.career.v1:${scope}`}
       pathwayKey={`semester.pathway.v1:${account?.id || 'device'}`}
+      careerSkillsGraph={careerSkillsGraph}
     />
   );
 }
 
-function Workspace({ storageKey, pathwayKey }: { storageKey: string; pathwayKey: string }) {
-  const { state, dispatch } = useStore();
+function Workspace({ storageKey, pathwayKey, careerSkillsGraph }: { storageKey: string; pathwayKey: string; careerSkillsGraph: boolean }) {
+  const { state, dispatch, catalog } = useStore();
   const lib = useDeviceLibrary(storageKey, readCareer, EMPTY_CAREER);
   const education = useDeviceLibrary(pathwayKey, readPathway, EMPTY_PATHWAY).value.profile.education;
 
@@ -166,15 +168,14 @@ function Workspace({ storageKey, pathwayKey }: { storageKey: string; pathwayKey:
   const [notice, setNotice] = useState('');
 
   const open = lib.value.opportunities.find((o) => o.id === selected);
+  const naturalMatches = new Set(searchOpportunities(query, lib.value.opportunities).map((o) => o.id));
   const matches = lib.value.opportunities
     .filter(
       (o) =>
         (!savedOnly || o.saved) &&
         (kind === 'All types' || o.kind === kind) &&
         (format === 'All formats' || o.format === format) &&
-        `${o.title} ${o.organization} ${o.location} ${o.skills} ${o.country} ${o.term}`
-          .toLowerCase()
-          .includes(query.toLowerCase()),
+        naturalMatches.has(o.id),
     )
     .sort((a, b) => (a.deadline || '9999').localeCompare(b.deadline || '9999'));
 
@@ -206,6 +207,34 @@ function Workspace({ storageKey, pathwayKey }: { storageKey: string; pathwayKey:
   const events = lib.value.opportunities
     .filter((o) => o.kind === 'Career event')
     .sort((a, b) => (a.deadline || '9999').localeCompare(b.deadline || '9999'));
+
+  const source = (experience: CareerExperience) => ({
+    id: experience.id,
+    title: experience.title,
+    details: `${experience.organization} ${experience.details}`,
+    sourceLabel: `${experience.title}${experience.organization ? ` · ${experience.organization}` : ''}`,
+  });
+  const claims = deriveSkillClaims({
+    courses: catalog.courses.map((course) => ({
+      id: course.id,
+      title: `${course.code} ${course.name}`,
+      details: [
+        catalog.guides[course.id]?.blurb,
+        ...(catalog.guides[course.id]?.units.map((unit) => unit.name) ?? []),
+      ]
+        .filter(Boolean)
+        .join(' '),
+      sourceLabel: `${course.code} · ${course.name}`,
+    })),
+    projects: lib.value.experiences.filter((entry) => entry.category === 'Project').map(source),
+    work: lib.value.experiences.filter((entry) => entry.category === 'Experience').map(source),
+    organizations: lib.value.experiences
+      .filter((entry) => ['Leadership', 'Athletics', 'Service'].includes(entry.category))
+      .map(source),
+  });
+  const selectedForFit = open ?? lib.value.opportunities[0];
+  const fit = selectedForFit ? explainFit(selectedForFit, claims) : null;
+  const skillPlan = fit ? missingSkillPlan(fit) : [];
 
   const write = (title: string, body: string) =>
     dispatch({
@@ -241,7 +270,7 @@ function Workspace({ storageKey, pathwayKey }: { storageKey: string; pathwayKey:
         need approved school services this app is not connected to.
       </p>
 
-      <Segmented options={TABS} value={tab} onChange={setTab} style={{ marginBlock: 'var(--sp-5)' }} />
+      <Segmented options={TABS.filter(({ id }) => id !== 'skills' || careerSkillsGraph)} value={tab} onChange={setTab} style={{ marginBlock: 'var(--sp-5)' }} />
 
       {/*
        * Where the Applications tab used to be, as a row rather than a second
@@ -534,17 +563,7 @@ function Workspace({ storageKey, pathwayKey }: { storageKey: string; pathwayKey:
                     }
                     dispatch({
                       type: 'addApplication',
-                      patch: {
-                        org: open.organization,
-                        role: open.title,
-                        kind: APPLY_KIND[open.kind],
-                        where: open.location,
-                        due: open.deadline,
-                        url: open.url,
-                        note: open.requirements,
-                        next: 'Review what it asks for and start the materials',
-                        stage: 'found',
-                      },
+                      patch: opportunityApplication(open),
                     });
                     setNotice('Added to your tracker, with its deadline. Nothing has been applied for.');
                   }}
@@ -909,6 +928,134 @@ function Workspace({ storageKey, pathwayKey }: { storageKey: string; pathwayKey:
               </CardGrid>
             </>
           )}
+        </>
+      )}
+
+      {tab === 'skills' && careerSkillsGraph && (
+        <>
+          <SectionLabel style={{ marginBlock: '0 var(--sp-4)' }}>Skills</SectionLabel>
+          <p style={{ ...line, marginBlock: '0 var(--sp-5)', textWrap: 'pretty' }}>
+            Semester suggests skills from the evidence you recorded. A suggestion is never presented as
+            institution verified.
+          </p>
+          <SkillsGraph claims={claims} />
+
+          <SectionLabel aside={selectedForFit ? 'Explainable' : undefined} style={{ marginBlock: 'var(--sp-7) var(--sp-4)' }}>
+            Fit
+          </SectionLabel>
+          {!selectedForFit || !fit ? (
+            <section className="career-fit">
+              <strong>No opportunity selected</strong>
+              <p style={line}>Add one under Discover to compare its stated skills with your evidence.</p>
+              <div className="career-fit-columns">
+                <div>
+                  <strong>Matched evidence</strong>
+                  <p>No opportunity requirements are available to match yet.</p>
+                </div>
+                <div>
+                  <strong>Missing</strong>
+                  <p>No skill gap is inferred until you choose an opportunity with stated skills.</p>
+                </div>
+              </div>
+            </section>
+          ) : (
+            <section className="career-fit">
+              <strong>{selectedForFit.title}</strong>
+              <p style={line}>{selectedForFit.organization}</p>
+              <div className="career-fit-columns">
+                <div>
+                  <strong>Matched evidence</strong>
+                  {fit.matched.length > 0 ? (
+                    <ul>{fit.matched.map((match) => <li key={match.skill}>{match.skill}</li>)}</ul>
+                  ) : (
+                    <p>No matching evidence recorded yet.</p>
+                  )}
+                </div>
+                <div>
+                  <strong>Missing</strong>
+                  {fit.missing.length > 0 ? (
+                    <ul>{fit.missing.map((skill) => <li key={skill}>{skill}</li>)}</ul>
+                  ) : (
+                    <p>No stated skill gaps found.</p>
+                  )}
+                </div>
+              </div>
+              {fit.uncertainties.length > 0 && (
+                <details>
+                  <summary>Uncertainties</summary>
+                  <ul>{fit.uncertainties.map((uncertainty) => <li key={uncertainty}>{uncertainty}</li>)}</ul>
+                </details>
+              )}
+            </section>
+          )}
+
+          <SectionLabel style={{ marginBlock: 'var(--sp-7) var(--sp-4)' }}>Plan</SectionLabel>
+          {skillPlan.length > 0 ? (
+            <ol className="career-skill-plan">
+              {skillPlan.map((step) => (
+                <li key={step.skill}><strong>{step.skill}</strong><span>{step.action}</span></li>
+              ))}
+            </ol>
+          ) : (
+            <p style={{ ...body, ...secondLine() }}>Choose an opportunity with stated skills to build a gap plan.</p>
+          )}
+
+          <SectionLabel style={{ marginBlock: 'var(--sp-7) var(--sp-4)' }}>Portfolio</SectionLabel>
+          <p style={{ ...line, textWrap: 'pretty' }}>
+            Build a reviewable evidence index for your résumé or portfolio. Suggested claims keep their
+            verification label.
+          </p>
+          <ActionButton
+            disabled={claims.length === 0}
+            onClick={() =>
+              write(
+                'Skills evidence portfolio',
+                claims
+                  .map((claim) => `## ${claim.skill}\nVerification: ${claim.verification}\n\n${claim.evidence.map((evidence) => `- ${evidence.label}`).join('\n')}`)
+                  .join('\n\n'),
+              )
+            }
+          >
+            Build portfolio evidence draft
+          </ActionButton>
+
+          <SectionLabel style={{ marginBlock: 'var(--sp-7) var(--sp-4)' }}>Practice</SectionLabel>
+          <p style={{ ...line, textWrap: 'pretty' }}>
+            Prepare interview prompts from one real opportunity and your recorded evidence.
+          </p>
+          <ActionButton
+            disabled={!selectedForFit}
+            onClick={() => {
+              if (!selectedForFit) return;
+              write(
+                `${selectedForFit.organization} · Interview practice`,
+                `## Why this opportunity\n[Connect your interest to the role.]\n\n## Evidence to practise\n${fit?.matched.map((match) => `- ${match.skill}: [choose one example]`).join('\n') || '- [Add an example]'}\n\n## Questions\n1. Tell me about a project where you used one of these skills.\n2. What did you learn from a mistake?\n3. What would you like to learn in this role?`,
+              );
+            }}
+          >
+            Create interview practice
+          </ActionButton>
+
+          <SectionLabel style={{ marginBlock: 'var(--sp-7) var(--sp-4)' }}>Introductions</SectionLabel>
+          <p style={{ ...line, textWrap: 'pretty' }}>
+            These create drafts for you to review. They do not claim a mentor, alum or career-center
+            connection succeeded.
+          </p>
+          <div className="portal-actions">
+            {['Mentor', 'Alumni', 'Career center'].map((audience) => (
+              <ActionButton
+                key={audience}
+                onClick={() =>
+                  write(
+                    `${audience} introduction request`,
+                    `## Draft request\n\nHello,\n\nI am exploring ${selectedForFit?.title || '[opportunity or field]'} and would value a short conversation about [specific question]. My relevant evidence includes [course, project or experience].\n\nThank you,\n${lib.value.name || '[Your name]'}`,
+                  )
+                }
+              >
+                Draft {audience.toLowerCase()} request
+              </ActionButton>
+            ))}
+          </div>
         </>
       )}
 

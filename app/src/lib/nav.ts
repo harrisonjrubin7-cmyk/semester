@@ -297,11 +297,11 @@ export const DESTINATIONS: Destination[] = [
   },
   {
     screen: 'ask',
-    label: 'Ask Claude',
+    label: 'Ask Semester',
     short: 'Ask',
     blurb: 'The conversation — your term in hand, and every thread you have had.',
     // The full-screen chat was a destination of its own called "Chat", beside
-    // a tab called "Ask Claude" that opened a key form. One room, one door.
+    // a provider-branded tab that opened a key form. One room, one door.
     keywords:
       'ai chat explain help tutor claude conversation talk assistant ask threads history messages ' +
       'discuss back and forth question answer gpt chatgpt',

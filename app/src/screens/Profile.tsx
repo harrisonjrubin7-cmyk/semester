@@ -186,7 +186,7 @@ export function Profile() {
         <NavRow
           label="Things you have told it"
           value={toldLine(state.aboutMe.length)}
-          sub="Said once, and every part of the app that asks Claude is told it."
+          sub="Said once, and every part of Semester Intelligence is told it."
           onClick={() => dispatch({ type: 'go', screen: 'setAssistant' })}
         />
       </Group>

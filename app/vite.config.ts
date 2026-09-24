@@ -592,6 +592,7 @@ const MOCKS_MODULES = [
   'src/components/StudyStudio.test.tsx',
   'src/components/TermChoice.test.tsx',
   'src/components/gpascalenote.test.tsx',
+  'src/components/institutional/ControlPlane.test.tsx',
   'src/components/nav/institutional-nav.test.tsx',
   'src/lib/extract.test.ts',
   'src/lib/extractaccuracy.test.ts',
@@ -743,6 +744,7 @@ export default defineConfig(({ command, mode }) => {
           test: {
             name: 'shared',
             isolate: false,
+            include: [...configDefaults.include, '../packages/institution/src/**/*.test.ts'],
             exclude: [...configDefaults.exclude, ...MOCKS_MODULES],
           },
         },

@@ -1,4 +1,4 @@
-import { Fragment, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, lazy, Suspense, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useNow, useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { useRowStyle, useSoft } from '../components/shell/useShell';
@@ -60,6 +60,74 @@ import { Folding } from '../components/Fold';
 import { goMine } from '../lib/openmine';
 import { dateToIso } from '../lib/date';
 import { goCal } from '../lib/opencal';
+import { INSTITUTIONAL_PREVIEW } from '../lib/institutional-preview';
+import { JourneyCards } from '../components/JourneyCards';
+import { journeysFor, recommendJourney } from '../lib/journeys';
+import { offered } from '../lib/nav';
+import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
+
+const FlightPlanHome = lazy(() =>
+  import('../components/institutional/FlightPlanHome').then((module) => ({
+    default: module.FlightPlanHome,
+  })),
+);
+
+function FlightPlanHomeSlot() {
+  const { dispatch } = useStore();
+  if (!INSTITUTIONAL_PREVIEW) return null;
+  return (
+    <Suspense fallback={null}>
+      <FlightPlanHome enabled onNavigate={(screen) => dispatch({ type: 'go', screen })} />
+    </Suspense>
+  );
+}
+
+function RecommendedJourney() {
+  const { state, dispatch, catalog, school } = useStore();
+  const now = useNow();
+  if (EXPERIENCE_FLAGS.journeyNavigation === 'off') return null;
+  const nowMs = now.getTime();
+  const inAWeek = nowMs + 7 * 86_400_000;
+  const confirmedDueSoon = upcomingItems(catalog, now).filter(
+    (item) => item.daysAway <= 3 && item.checked?.confirmed,
+  ).length;
+  const reviewDue = Object.values(state.reviews).filter((review) => review.due <= nowMs).length;
+  const collaborationDue = state.tasks.filter(
+    (task) =>
+      !task.done &&
+      /\b(group|team|meet|partner|classmate)\b/i.test(`${task.title} ${task.note}`),
+  ).length;
+  const careerDue = state.applications.filter((application) => {
+    const due = application.nextBy || application.due;
+    if (!due) return false;
+    const at = new Date(`${due}T23:59:59`).getTime();
+    return at >= nowMs && at <= inAWeek;
+  }).length;
+  const ranked = recommendJourney({
+    confirmedDueSoon,
+    setupIncomplete: catalog.empty,
+    reviewDue,
+    collaborationDue,
+    careerDue,
+  });
+  const available = journeysFor(offered(school.capabilities, state.role));
+  const recommendation = ranked.find((candidate) =>
+    available.some((journey) => journey.id === candidate.id && journey.screens.length > 0),
+  );
+  if (!recommendation) return null;
+  const journey = available.find((candidate) => candidate.id === recommendation.id)!;
+
+  return (
+    <section className="today-journey" aria-label="Recommended journey">
+      <div className="kicker">Recommended next</div>
+      <JourneyCards
+        journeys={[journey]}
+        reasons={{ [journey.id]: recommendation.reason }}
+        onOpen={(screen) => dispatch({ type: 'go', screen })}
+      />
+    </section>
+  );
+}
 
 /** The next-class card, shared by both nav modes. */
 function NextClassCard() {
@@ -678,6 +746,9 @@ function TabHome() {
         onChange={(next) => dispatch({ type: 'setHomeTab', tab: next })}
         style={{ marginTop: '0', marginInline: '0', marginBottom: 'calc(16px * var(--density, 1))' }}
       />
+
+      <FlightPlanHomeSlot />
+      <RecommendedJourney />
 
       {tab === 'today' && <TodayFeed />}
 
@@ -1702,6 +1773,8 @@ function FeedHome() {
 
       <div style={{ padding: 'var(--page-pad)' }}>
         <NextClassCard />
+        <FlightPlanHomeSlot />
+        <RecommendedJourney />
 
         <div style={{ marginTop: 'calc(22px * var(--density, 1))', display: 'flex', flexDirection: 'column' }}>
           {entries.map((f) => (

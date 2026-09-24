@@ -1,4 +1,4 @@
-import { useRef, useState, type CSSProperties, type HTMLAttributes } from 'react';
+import { lazy, Suspense, useRef, useState, type CSSProperties, type HTMLAttributes } from 'react';
 import { DIMMED_ROW, secondLine } from '../lib/dim';
 import { useNow, useStore } from '../state/store';
 import { lastPulled, saysWhere, whereFeed, worthSaying } from '../lib/where';
@@ -74,6 +74,22 @@ import type {
 import { Folding } from '../components/Fold';
 import { goMine } from '../lib/openmine';
 import { goCal } from '../lib/opencal';
+import { INSTITUTIONAL_PREVIEW } from '../lib/institutional-preview';
+
+const FlightPlanCalendar = lazy(() =>
+  import('../components/institutional/FlightPlanCalendar').then((module) => ({
+    default: module.FlightPlanCalendar,
+  })),
+);
+
+function FlightPlanCalendarSlot() {
+  if (!INSTITUTIONAL_PREVIEW) return null;
+  return (
+    <Suspense fallback={null}>
+      <FlightPlanCalendar />
+    </Suspense>
+  );
+}
 
 /**
  * The calendar has two independent axes.
@@ -2828,6 +2844,7 @@ export function Calendar() {
      * the note about screens with nothing of their own to filter.
      */
     <Page wide bottom={0}>
+      <FlightPlanCalendarSlot />
       <div style={{ paddingTop: 'calc(14px * var(--density, 1))', paddingInline: 'calc(18px * var(--density, 1))', paddingBottom: '0' }}>
         <Segmented
           options={[

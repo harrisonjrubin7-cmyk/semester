@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { lazy, Suspense, useRef, useState } from 'react';
 import { useDeviceLibrary } from '../lib/device-library';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
@@ -38,6 +38,21 @@ import {
 } from '../lib/readiness';
 import type { School } from '../lib/school';
 import type { Screen } from '../lib/types';
+import { INSTITUTIONAL_PREVIEW } from '../lib/institutional-preview';
+import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
+import { ControlPlane } from '../components/institutional/ControlPlane';
+import type { ControlPlaneStatus } from '../lib/control-plane';
+
+const RoleWorkspace = lazy(() =>
+  import('../components/institutional/RoleWorkspace').then((module) => ({
+    default: module.RoleWorkspace,
+  })),
+);
+
+function RoleWorkspaceSlot() {
+  if (!INSTITUTIONAL_PREVIEW) return null;
+  return <Suspense fallback={null}><RoleWorkspace /></Suspense>;
+}
 
 /**
  * Everything a university is, and an honest account of which parts work.
@@ -100,9 +115,12 @@ const TABS = [
   { id: 'drafts' as const, label: 'Drafts' },
   { id: 'records' as const, label: 'Records' },
   { id: 'connections' as const, label: 'Connections' },
+  ...(EXPERIENCE_FLAGS.universityControlPlane !== 'off'
+    ? [{ id: 'control' as const, label: 'Control' }]
+    : []),
 ];
 
-type Tab = (typeof TABS)[number]['id'];
+type Tab = 'overview' | 'drafts' | 'records' | 'connections' | 'control';
 
 /** What each role is called on screen. */
 const ROLE_LABELS: Record<UniversityRole, string> = {
@@ -287,6 +305,11 @@ function Workspace({ storageKey }: { storageKey: string }) {
 
   const draft = drafts.find((d) => d.id === selected);
   const connection = status?.connections.find((c) => c.area === area);
+  const controlStatus: ControlPlaneStatus = status
+    ? 'connected but degraded'
+    : gatewayConfigured
+      ? 'awaiting authorization'
+      : 'contract only';
 
   const patch = (fields: Partial<UniversityDraft>) =>
     setDrafts((ds) =>
@@ -510,6 +533,8 @@ function Workspace({ storageKey }: { storageKey: string }) {
 
       <Standing school={school} status={status} />
 
+      <RoleWorkspaceSlot />
+
       <Segmented
         options={TABS.map((t) => ({
           id: t.id,
@@ -658,6 +683,25 @@ function Workspace({ storageKey }: { storageKey: string }) {
             the service your school approved for them.
           </p>
         </>
+      )}
+
+      {tab === 'control' && EXPERIENCE_FLAGS.universityControlPlane !== 'off' && (
+        <ControlPlane
+          input={{
+            tenantId: school.id,
+            viewedTenantId: school.id,
+            previewRole: intent,
+            featureState: EXPERIENCE_FLAGS.universityControlPlane,
+            gatewayStatus: controlStatus,
+            // The selector and locally loaded institution status are not
+            // authorization. A gateway-verified capability must populate
+            // this list before policy writes become available.
+            verifiedCapabilities: [],
+            approvedSourceCount: catalog.courses.filter((course) => Boolean(course.source)).length,
+            activeConsentCount: 0,
+            auditEventCount: 0,
+          }}
+        />
       )}
 
       {tab === 'drafts' && (

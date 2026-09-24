@@ -733,8 +733,8 @@ export function Assistant() {
         The button's whole job is to bring the assistant over what you are
         looking at. On the Ask tab you are looking at the assistant, so it
         offered to open a sheet showing the same conversation on top of the
-        same conversation — and the sheet's header would have read "Looking
-        at: Ask Claude". It also sat over the composer, which is the one
+        same conversation — and the sheet's header would have repeated the
+        Ask Semester destination. It also sat over the composer, which is the one
         control on that screen that matters.
 
         That second reason is the general one, and it is why this asks
@@ -756,7 +756,7 @@ export function Assistant() {
            * context, and calling it to write a label would rebuild four
            * courses' worth of grading rows on every render of a button.
            */
-          aria-label={`Ask about ${here}`}
+          aria-label={`Ask Semester about ${here}`}
           aria-keyshortcuts="a"
           onDragEnd={(e) => moveCorner(e.clientX < window.innerWidth / 2 ? 'left' : 'right')}
           draggable

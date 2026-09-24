@@ -76,6 +76,8 @@ import { useSound } from '../lib/sound.hook';
 import { readSearches, remember, forget, suggestions, writeSearches } from '../lib/typeahead';
 import type { Screen } from '../lib/types';
 import { useModernShell } from './shell-context';
+import { JourneyCards } from './JourneyCards';
+import { discover } from '../lib/desk';
 
 /**
  * Every size on this page, at the two scales it is drawn at.
@@ -237,6 +239,13 @@ export function Command({ onClose }: { onClose: () => void }) {
    * baffling rather than obvious.
    */
   const guessed = spelled(found);
+  const journeyResults = useMemo(
+    () =>
+      sent.trim()
+        ? discover(sent, school.capabilities, state.role).journeys
+        : [],
+    [sent, school.capabilities, state.role],
+  );
   // Clamped rather than reset: the selection following the results down as
   // somebody types is what makes Enter safe to press without looking.
   const cursor = Math.min(at, Math.max(0, hits.length - 1));
@@ -744,6 +753,12 @@ export function Command({ onClose }: { onClose: () => void }) {
           </div>
         ) : (
           <div style={{ width: '100%', maxWidth: size.column, margin: '0 auto', padding: '0 var(--sp-7) var(--sp-7)' }}>
+            {journeyResults.length > 0 && (
+              <div style={{ paddingTop: 'var(--sp-5)' }}>
+                <div className="kicker" style={{ marginBottom: 'var(--sp-4)' }}>Journeys</div>
+                <JourneyCards journeys={journeyResults} onOpen={land} />
+              </div>
+            )}
             {/* The chips: everything, then one kind. A search engine's row of
                 verticals, built from what came back rather than from a list
                 that can promise a kind with nothing in it. */}
@@ -960,7 +975,7 @@ export function Command({ onClose }: { onClose: () => void }) {
                 }}
               >
                 Nothing matches &ldquo;{text.trim()}&rdquo;. Try a course code, a topic from a
-                guide, a professor, or the name of a screen — or ask Claude, which can answer
+                guide, a professor, or the name of a screen — or ask Semester, which can answer
                 from what the app knows rather than only find it.
               </div>
             )}
@@ -1071,8 +1086,8 @@ function Box({
           type="button"
           className="bare tappable"
           onClick={onAsk}
-          aria-label="Ask Claude this"
-          title="Ask Claude"
+          aria-label="Ask Semester about this"
+          title="Ask Semester"
           style={{
             width: 'auto',
             flex: 'none',
