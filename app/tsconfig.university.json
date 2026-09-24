@@ -14,5 +14,5 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["server/institution/**/*.ts", "../packages/institution/**/*.ts"]
+  "include": ["server/institution/**/*.ts", "api/institution/**/*.ts", "../packages/institution/**/*.ts"]
 }
