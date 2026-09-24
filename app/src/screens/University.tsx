@@ -126,10 +126,14 @@ type Tab = 'overview' | 'drafts' | 'records' | 'connections' | 'control';
 const ROLE_LABELS: Record<UniversityRole, string> = {
   student: 'Student',
   faculty: 'Professor',
+  teaching_assistant: 'Teaching assistant',
   advisor: 'Advisor',
   admin: 'Administrator',
-  payer: 'Authorized payer',
   staff: 'Campus staff',
+  applicant: 'Applicant',
+  payer: 'Authorized payer',
+  family: 'Authorized family',
+  alumni: 'Alumni',
 };
 
 /**
