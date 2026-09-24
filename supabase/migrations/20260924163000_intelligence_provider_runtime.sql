@@ -156,6 +156,9 @@ begin
   delete from private.ai_usage_month m
   using public.ai_policy p
    where m.tenant_id = p.tenant_id
+     -- Never erase the authoritative current-month spend while it still
+     -- enforces the monthly ceiling, even when retention_days is zero.
+     and m.period_start < date_trunc('month', timezone('UTC', now()))::date
      and m.period_start < (timezone('UTC', now()) - make_interval(days => p.retention_days))::date;
   get diagnostics affected = row_count;
   return removed + affected;
