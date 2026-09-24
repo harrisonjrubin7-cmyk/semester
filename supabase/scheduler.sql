@@ -128,3 +128,13 @@ select cron.schedule(
   '17 4 * * 0',
   $job$select public.sweep_tombstones('90 days')$job$
 );
+
+-- AI provider reservations expire after five minutes inside the budget
+-- functions, so a crashed request cannot hold a tenant budget indefinitely.
+-- This daily job physically removes expired runtime metadata after each
+-- tenant's approved AI retention window; it never touches source content.
+select cron.schedule(
+  'ai-runtime-metadata',
+  '43 4 * * *',
+  $job$select private.sweep_ai_runtime_metadata()$job$
+);

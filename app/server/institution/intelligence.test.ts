@@ -38,7 +38,9 @@ const fixture = (patch: Partial<IntelligenceRespondInput> = {}): IntelligenceRes
   tenantPolicy: policy(),
   approvedSources: [{ id: 'syllabus', evidenceIds: ['evidence-1'], body: 'Elasticity is on the exam.' }],
   modelTask: { candidates: [{ model: 'openai:gpt-5-mini', provider: 'openai', estimatedCents: 1.2 }] },
-  generate: vi.fn().mockResolvedValue({ text: 'Review elasticity.', inputTokens: 80, outputTokens: 20 }),
+  generate: vi.fn().mockResolvedValue({
+    text: 'Review elasticity.', citedSourceIds: ['syllabus'], inputTokens: 80, outputTokens: 20, providerRequestId: 'response-1',
+  }),
   ...patch,
 });
 
@@ -62,6 +64,67 @@ describe('governed institution intelligence', () => {
     expect(response.status).toBe(200);
     expect(response.body).toMatchObject({ text: 'Review elasticity.', evidenceIds: ['evidence-1'] });
     expect(JSON.stringify(response.body)).not.toContain('Elasticity is on the exam');
+  });
+
+  it('refuses missing source approval before a provider sees the question', async () => {
+    const generate = vi.fn();
+    const response = await respond(fixture({ approvedSources: [], generate }));
+    expect(response.status).toBe(403);
+    expect(response.body.code).toBe('source-not-approved');
+    expect(generate).not.toHaveBeenCalled();
+  });
+
+  it('passes an explicit model, deadline signal and output bound to the provider', async () => {
+    const generate = vi.fn().mockResolvedValue({
+      text: 'Review elasticity.', citedSourceIds: ['syllabus'], inputTokens: 80, outputTokens: 20, providerRequestId: 'response-1',
+    });
+    expect((await respond(fixture({ generate }))).status).toBe(200);
+    expect(generate).toHaveBeenCalledWith(expect.objectContaining({
+      provider: 'openai', model: 'gpt-5-mini', maxOutputTokens: 1_200,
+    }), expect.any(AbortSignal));
+  });
+
+  it('maps provider failure without logging questions or protected source bodies', async () => {
+    const audit = vi.fn();
+    const response = await respond(fixture({
+      generate: vi.fn().mockRejectedValue(new Error('PROTECTED SOURCE BODY in upstream failure')),
+      audit,
+    }));
+    expect(response.status).toBe(503);
+    expect(response.body).toMatchObject({ code: 'provider-unavailable' });
+    expect(JSON.stringify({ response, audit: audit.mock.calls })).not.toContain('PROTECTED SOURCE BODY');
+    expect(audit).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({
+      policyDecision: 'provider-refused', inputTokens: 0, outputTokens: 0,
+    }));
+  });
+
+  it('reserves tenant budget before provider work and settles authoritative usage', async () => {
+    const order: string[] = [];
+    const reserveBudget = vi.fn(async () => {
+      order.push('reserve');
+      return { id: 'reservation-1', reservedCents: 1.2 };
+    });
+    const generate = vi.fn(async () => {
+      order.push('generate');
+      return { text: 'Review elasticity.', citedSourceIds: ['syllabus'], inputTokens: 80, outputTokens: 20, providerRequestId: 'response-1' };
+    });
+    const settleBudget = vi.fn(async (_identity, _reservation, usage) => {
+      order.push('settle');
+      return usage !== null;
+    });
+    expect((await respond(fixture({ reserveBudget, generate, settleBudget }))).status).toBe(200);
+    expect(order).toEqual(['reserve', 'generate', 'settle']);
+    expect(settleBudget).toHaveBeenCalledWith(expect.anything(), { id: 'reservation-1', reservedCents: 1.2 }, {
+      costCents: 1.2, inputTokens: 80, outputTokens: 20,
+    });
+  });
+
+  it('does not call a provider after an atomic budget refusal', async () => {
+    const generate = vi.fn();
+    const response = await respond(fixture({ reserveBudget: async () => null, generate }));
+    expect(response.status).toBe(429);
+    expect(response.body.code).toBe('budget-exhausted');
+    expect(generate).not.toHaveBeenCalled();
   });
 
   it('cannot apply a consequential action without a fresh explicit confirmation', async () => {
@@ -104,7 +167,7 @@ describe('governed institution intelligence', () => {
       loadPolicy: async () => policy(),
       loadApprovedSources: async () => [{ id: 'syllabus', evidenceIds: ['evidence-1'], body: 'body' }],
       modelTask: async () => ({ candidates: [{ model: 'openai:gpt-5-mini', provider: 'openai', estimatedCents: 1 }] }),
-      generate: async () => ({ text: 'Ready.', inputTokens: 1, outputTokens: 1 }),
+      generate: async () => ({ text: 'Ready.', citedSourceIds: ['syllabus'], inputTokens: 1, outputTokens: 1, providerRequestId: 'response-2' }),
       execute,
     });
     const identity: UniversityIdentity = { userId: 'student-1', institutionId: 'northstar', roles: ['student'] };

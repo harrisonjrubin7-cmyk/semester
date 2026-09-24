@@ -89,7 +89,7 @@ function tablesCreated(): string[] {
   for (const file of readdirSync(MIGRATIONS)) {
     if (!file.endsWith('.sql')) continue;
     const sql = readFileSync(join(MIGRATIONS, file), 'utf8');
-    const statements = /^[ \t]*create table\s+(?:if not exists\s+)?(?:public\.)?([a-z_]+)/gim;
+    const statements = /^[ \t]*create table\s+(?:if not exists\s+)?(?:(?:public|private)\.)?([a-z_]+)/gim;
     for (const m of sql.matchAll(statements)) {
       found.add(m[1]);
     }
