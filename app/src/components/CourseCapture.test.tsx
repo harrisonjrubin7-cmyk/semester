@@ -54,7 +54,9 @@ describe('CourseCapture', () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
     });
     expect(onFiles).toHaveBeenCalledWith([file]);
-    expect(host.querySelector('[role="status"]')?.textContent).toContain('preserved locally');
+    await vi.waitFor(() => {
+      expect(host.querySelector('[role="status"]')?.textContent).toContain('preserved locally');
+    });
   });
 
   it('shows denied policy and removes a local original', async () => {

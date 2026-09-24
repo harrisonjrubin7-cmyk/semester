@@ -7917,7 +7917,7 @@ button.adband-bar {
 }
 
 .course-capture-original button {
-  min-height: 36px;
+  min-height: 44px;
 }
 
 .capture-policy-notice {
@@ -7958,9 +7958,7 @@ button.adband-bar {
 .control-plane-tenant,
 .control-plane-status {
   color: var(--app-dim);
-  font-size: var(--type-xs);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: var(--type-sm);
 }
 
 .control-plane-tenant {
@@ -7975,6 +7973,8 @@ button.adband-bar {
 
 .control-plane-status {
   margin-top: var(--sp-3);
+  color: var(--app-fg);
+  line-height: var(--leading-normal);
 }
 
 .control-plane-actions {

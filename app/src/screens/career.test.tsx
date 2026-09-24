@@ -231,6 +231,16 @@ describe('filtering contacts by what you have in common', () => {
   });
 });
 
+describe('explainable skills fit', () => {
+  it('names matched and missing evidence even before an opportunity is selected', async () => {
+    await mount();
+    await press('Skills & fit');
+    expect(text()).toContain('Matched evidence');
+    expect(text()).toContain('Missing');
+    expect(text()).not.toMatch(/\b\d{1,3}% match\b/i);
+  });
+});
+
 describe('drafting a message to a contact', () => {
   it('opens a draft beside Prepare rather than instead of it, and sends nothing', async () => {
     await mount(

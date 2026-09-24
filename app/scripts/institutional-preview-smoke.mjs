@@ -122,6 +122,7 @@ try {
         text: document.body.innerText,
         roots: document.querySelectorAll('[data-semester-root]').length,
         mains: document.querySelectorAll('main').length,
+        headings: document.querySelectorAll('h1').length,
         primaryCount: document.querySelectorAll('nav[aria-label="Primary"]').length,
         flightKeys: Object.keys(localStorage).filter((key) => key.startsWith('semester.flight-plan.')),
         primary: [...document.querySelectorAll('nav[aria-label="Primary"] button')]
@@ -132,6 +133,7 @@ try {
       if (expectedPreview && !result.text.includes(probe.expected)) findings.push(`${probe.hash}: did not draw ${probe.expected}`);
       if (result.roots !== 1) findings.push(`${probe.hash}: drew ${result.roots} Semester roots`);
       if (result.mains !== 1) findings.push(`${probe.hash}: drew ${result.mains} main landmarks`);
+      if (result.headings !== 1) findings.push(`${probe.hash}: drew ${result.headings} page headings`);
       if (expectedPreview && result.primaryCount !== 1) findings.push(`${probe.hash}: drew ${result.primaryCount} global navigations`);
       if (expectedPreview && JSON.stringify(result.primary) !== JSON.stringify(expectedPrimary)) {
         findings.push(`${probe.hash}: primary navigation was ${JSON.stringify(result.primary)}`);

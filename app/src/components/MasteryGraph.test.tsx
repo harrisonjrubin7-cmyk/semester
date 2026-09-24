@@ -41,5 +41,8 @@ describe('MasteryGraph', () => {
     expect(host.textContent).toContain('1 evidence record');
     expect(host.textContent).toContain('Next review Sep 24');
     expect(host.querySelector('[aria-label="Concept mastery evidence"]')).toBeTruthy();
+    expect(host.querySelector('[role="img"]')?.getAttribute('aria-label')).toBe(
+      'Elasticity: 58 percent evidence confidence',
+    );
   });
 });

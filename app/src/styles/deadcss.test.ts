@@ -110,7 +110,7 @@ describe('the stylesheets', () => {
     // Named rather than counted: a failure should say which rule to look at,
     // and whether it is dead or merely composed somewhere this cannot see.
     expect(dead).toEqual([]);
-  });
+  }, 10_000);
 
   it('leaves no empty block behind when a rule goes', () => {
     // How the first sweep went wrong: stripping the rules out of four

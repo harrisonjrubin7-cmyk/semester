@@ -940,9 +940,20 @@ function Workspace({ storageKey, pathwayKey }: { storageKey: string; pathwayKey:
             Fit
           </SectionLabel>
           {!selectedForFit || !fit ? (
-            <p style={{ ...body, ...secondLine() }}>
-              Add an opportunity under Discover to compare its stated skills with your evidence.
-            </p>
+            <section className="career-fit">
+              <strong>No opportunity selected</strong>
+              <p style={line}>Add one under Discover to compare its stated skills with your evidence.</p>
+              <div className="career-fit-columns">
+                <div>
+                  <strong>Matched evidence</strong>
+                  <p>No opportunity requirements are available to match yet.</p>
+                </div>
+                <div>
+                  <strong>Missing</strong>
+                  <p>No skill gap is inferred until you choose an opportunity with stated skills.</p>
+                </div>
+              </div>
+            </section>
           ) : (
             <section className="career-fit">
               <strong>{selectedForFit.title}</strong>
