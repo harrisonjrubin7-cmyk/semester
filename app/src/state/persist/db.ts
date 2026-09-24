@@ -28,7 +28,7 @@ let opening: Promise<IDBDatabase | null> | null = null;
  * How long to wait for the database to open before going without it.
  *
  * Opening does not read anything — it checks a version and hands back a
- * handle — so on a working browser it is milliseconds. Ten seconds is not a
+ * handle — so on a working browser it is milliseconds. Three seconds is not a
  * budget, it is the point past which the honest conclusion is that no answer
  * is coming.
  *
@@ -36,10 +36,29 @@ let opening: Promise<IDBDatabase | null> | null = null;
  * rather than stuck spends the rest of the session on the localStorage path,
  * which after the migration is a copy from the day of the migration. That
  * would be an old account on screen. Against a wait with no end, which is
- * what this replaces, it is the better of the two — and at ten seconds it
- * takes a browser that has stopped answering rather than one that is busy.
+ * what this replaces, it is the better of the two — and three seconds is long
+ * enough to distinguish a normal open from a stalled one.
  */
-const OPEN_LIMIT_MS = 10_000;
+const OPEN_LIMIT_MS = 3_000;
+
+/**
+ * A transaction is allowed less time than opening the database.
+ *
+ * Mobile WebKit can successfully open IndexedDB and then leave a transaction
+ * in neither the complete nor error state (most often after restoring an app
+ * from suspension).  `main.tsx` awaits the first read before mounting React,
+ * so an unanswered transaction used to leave a completely empty window even
+ * though the localStorage copy was available.  Once this fires the handle is
+ * discarded: continuing to use a connection which has already stopped
+ * answering would only turn every later save into another wait.
+ */
+const TRANSACTION_LIMIT_MS = 1_500;
+
+function abandon(database: IDBDatabase): void {
+  database.close();
+  if (db === database) db = null;
+  opening = null;
+}
 
 /**
  * One open request, answered exactly once.
@@ -224,17 +243,30 @@ export function readAll(store: string): Promise<[string, unknown][]> {
       return;
     }
     try {
-      const t = db.transaction(store, 'readonly');
+      const database = db;
+      const t = database.transaction(store, 'readonly');
       const s = t.objectStore(store);
       const keys = s.getAllKeys();
       const values = s.getAll();
+      let answered = false;
+      const finish = (rows: [string, unknown][] = []) => {
+        if (answered) return;
+        answered = true;
+        clearTimeout(limit);
+        resolve(rows);
+      };
+      const limit = setTimeout(() => {
+        try { t.abort(); } catch { /* The browser may already have stopped it. */ }
+        abandon(database);
+        finish();
+      }, TRANSACTION_LIMIT_MS);
       t.oncomplete = () => {
         const k = keys.result as IDBValidKey[];
         const v = values.result as unknown[];
-        resolve(k.map((key, i) => [String(key), v[i]] as [string, unknown]));
+        finish(k.map((key, i) => [String(key), v[i]] as [string, unknown]));
       };
-      t.onerror = () => resolve([]);
-      t.onabort = () => resolve([]);
+      t.onerror = () => finish();
+      t.onabort = () => finish();
     } catch {
       resolve([]);
     }
@@ -276,16 +308,29 @@ export function write(writes: Write[]): Promise<boolean> {
       return;
     }
     try {
-      const t = db.transaction(stores, 'readwrite');
+      const database = db;
+      const t = database.transaction(stores, 'readwrite');
+      let answered = false;
+      const finish = (ok: boolean) => {
+        if (answered) return;
+        answered = true;
+        clearTimeout(limit);
+        resolve(ok);
+      };
+      const limit = setTimeout(() => {
+        try { t.abort(); } catch { /* The browser may already have stopped it. */ }
+        abandon(database);
+        finish(false);
+      }, TRANSACTION_LIMIT_MS);
       for (const w of writes) {
         if (!stores.includes(w.store)) continue;
         const s = t.objectStore(w.store);
         if (w.value === null) s.delete(w.key);
         else s.put(w.value, w.key);
       }
-      t.oncomplete = () => resolve(!dropped);
-      t.onerror = () => resolve(false);
-      t.onabort = () => resolve(false);
+      t.oncomplete = () => finish(!dropped);
+      t.onerror = () => finish(false);
+      t.onabort = () => finish(false);
     } catch {
       resolve(false);
     }
