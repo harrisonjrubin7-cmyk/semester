@@ -13,6 +13,7 @@ import type {
   InstitutionModelProvider,
   ProviderGenerationRequest,
 } from './providers/types.ts';
+import { MemoryIntelligenceActionStore, type IntelligenceActionStore } from './intelligence-action-store.ts';
 
 export interface ApprovedIntelligenceSource {
   id: string;
@@ -54,7 +55,7 @@ export interface IntelligenceRespondInput {
     reservation: IntelligenceBudgetReservation,
     usage: { costCents: number; inputTokens: number; outputTokens: number } | null,
   ) => Promise<boolean>;
-  audit?: (identity: UniversityIdentity, record: IntelligenceAuditRecord) => void;
+  audit?: (identity: UniversityIdentity, record: IntelligenceAuditRecord) => void | Promise<void>;
 }
 
 export interface GovernedAction extends IntelligenceGatewayAction {
@@ -80,7 +81,7 @@ export interface ConfirmActionInput {
     | { verified: false }
     | { verified: true; receiptId: string; message: string; recordedAt: string; status?: 'completed' | 'pending' }
   >;
-  audit?: (identity: UniversityIdentity, record: IntelligenceAuditRecord) => void;
+  audit?: (identity: UniversityIdentity, record: IntelligenceAuditRecord) => void | Promise<void>;
 }
 
 export interface IntelligenceResult {
@@ -100,7 +101,7 @@ export async function respond(input: IntelligenceRespondInput): Promise<Intellig
   // clientState is intentionally not read here. A browser cannot promote a
   // server policy by claiming its build is production.
   if (tenantPolicy.state === 'off') {
-    input.audit?.(identity, {
+    await input.audit?.(identity, {
       category: request.category, provider: '', model: '', inputTokens: 0, outputTokens: 0,
       costCents: 0, policyDecision: 'policy-disabled',
     });
@@ -167,7 +168,7 @@ export async function respond(input: IntelligenceRespondInput): Promise<Intellig
     if (reservation && input.settleBudget) {
       try { await input.settleBudget(identity, reservation, null); } catch { /* reservation expiry is a server concern */ }
     }
-    input.audit?.(identity, {
+    await input.audit?.(identity, {
       category: request.category,
       provider: route.provider,
       model: route.model,
@@ -235,7 +236,7 @@ export async function respond(input: IntelligenceRespondInput): Promise<Intellig
     ...action,
     evidenceIds: action.evidenceIds.filter((id) => allowedEvidence.has(id)),
   }));
-  input.audit?.(identity, {
+  await input.audit?.(identity, {
     category: request.category,
     provider: route.provider,
     model: route.model,
@@ -273,7 +274,7 @@ export async function confirmAction(input: ConfirmActionInput): Promise<Intellig
   const preparedAt = Date.parse(input.action.preparedAt);
   const expiresAt = Date.parse(input.action.expiresAt);
   if (!fresh || !Number.isFinite(preparedAt) || !Number.isFinite(expiresAt) || now < preparedAt || now > expiresAt) {
-    input.audit?.(input.identity, {
+    await input.audit?.(input.identity, {
       category: 'action', provider: '', model: '', inputTokens: 0, outputTokens: 0,
       costCents: 0, policyDecision: 'confirmation-required', actionId: input.action.id, confirmation: 'refused',
     });
@@ -292,7 +293,7 @@ export async function confirmAction(input: ConfirmActionInput): Promise<Intellig
     recordedAt: readback.recordedAt,
     authoritative: true,
   };
-  input.audit?.(input.identity, {
+  await input.audit?.(input.identity, {
     category: 'action', provider: '', model: '', inputTokens: 0, outputTokens: 0,
     costCents: 0, policyDecision: 'confirmed-and-read-back', actionId: input.action.id, confirmation: 'confirmed',
   });
@@ -309,6 +310,7 @@ export interface IntelligenceServiceConfig {
   settleBudget?: IntelligenceRespondInput['settleBudget'];
   execute: ConfirmActionInput['execute'];
   audit?: IntelligenceRespondInput['audit'];
+  actionStore?: IntelligenceActionStore;
 }
 
 export interface IntelligenceService {
@@ -319,7 +321,7 @@ export interface IntelligenceService {
 }
 
 export function createIntelligenceService(config: IntelligenceServiceConfig): IntelligenceService {
-  const actions = new Map<string, GovernedAction>();
+  const actions = config.actionStore ?? new MemoryIntelligenceActionStore();
   return {
     status: config.status,
     policy: async (identity) => {
@@ -348,7 +350,7 @@ export function createIntelligenceService(config: IntelligenceServiceConfig): In
         audit: config.audit,
       });
       if (response.status === 200) {
-        const prepared = request.proposedActions.map((action) => {
+        const prepared = await Promise.all(request.proposedActions.map(async (action) => {
           const now = Date.now();
           const governed: GovernedAction = {
             ...action,
@@ -358,15 +360,15 @@ export function createIntelligenceService(config: IntelligenceServiceConfig): In
             preparedAt: new Date(now).toISOString(),
             expiresAt: new Date(now + 5 * 60_000).toISOString(),
           };
-          actions.set(`${identity.institutionId}:${identity.userId}:${governed.id}`, governed);
+          await actions.save(governed);
           return governed;
-        });
+        }));
         response.body.actions = prepared.map(({ tenantId: _tenantId, personId: _personId, ...action }) => action);
       }
       return response;
     },
     confirm: async (identity, actionId, value) => {
-      const action = actions.get(`${identity.institutionId}:${identity.userId}:${actionId}`);
+      const action = await actions.claim(actionId, identity, Date.now());
       if (!action) return result(404, { code: 'action-not-found', message: 'Proposed action not found for this account.' });
       const body = value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {};
       const confirmation = body.confirmed === true && typeof body.at === 'string'
@@ -374,7 +376,6 @@ export function createIntelligenceService(config: IntelligenceServiceConfig): In
         : null;
       // Claim before execution. A retry reconciles by receipt; it must never
       // execute the same reviewed effect twice.
-      actions.delete(`${identity.institutionId}:${identity.userId}:${actionId}`);
       const response = await confirmAction({ identity, action, confirmation, execute: config.execute, audit: config.audit });
       return response;
     },

@@ -10,9 +10,10 @@ import {
   type UniversityIdentity,
 } from '../../../packages/institution/src/index.ts';
 import type { AdapterContext, InstitutionAdapter } from './adapter.ts';
-import type { ActionJournal } from './journal.ts';
+import type { ActionJournalStore } from './journal.ts';
 import type { IntelligenceService } from './intelligence.ts';
 import type { PublicSsoConfig } from './membership.ts';
+import { MemoryRateLimiter, type RateLimiter } from './rate-limit.ts';
 
 /**
  * The gateway: everything that is the same whichever university it is.
@@ -55,9 +56,10 @@ interface Config {
   authenticate: (token: string) => Promise<UniversityIdentity | null>;
   refreshIdentity?: (identity: UniversityIdentity, token: string) => Promise<UniversityIdentity | null>;
   adapters: InstitutionAdapter[];
-  journal: ActionJournal;
+  journal: ActionJournalStore;
   intelligence?: IntelligenceService;
   loadSsoConfig?: () => Promise<PublicSsoConfig | null>;
+  rateLimiter?: RateLimiter;
 }
 
 class HttpError extends Error {
@@ -78,8 +80,6 @@ function fail(status: number, message: string): never {
   throw new HttpError(status, message);
 }
 
-/** Requests per minute, per account. */
-const RATE = { window: 60_000, max: 60 } as const;
 /** How long somebody has to read a review and confirm it. */
 const REVIEW_MINUTES = 10;
 /**
@@ -101,7 +101,7 @@ export function createGateway(config: Config) {
    * selects which adapter runs.
    */
   const installed = new Map(config.adapters.map((a) => [`${a.institutionId}:${a.area}`, a]));
-  const limits = new Map<string, { until: number; count: number }>();
+  const rateLimiter = config.rateLimiter ?? new MemoryRateLimiter();
 
   return async (request: Request): Promise<Response> => {
     const headers = new Headers({
@@ -156,7 +156,7 @@ export function createGateway(config: Config) {
        * somebody choosing what to lean on.
        */
       if (request.method === 'GET' && path === '/health') {
-        const ready = config.journal.healthy();
+        const ready = await config.journal.healthy();
         return Response.json(
           {
             service: 'Semester university gateway',
@@ -186,11 +186,7 @@ export function createGateway(config: Config) {
       let who: UniversityIdentity = authenticated;
 
       const now = Date.now();
-      for (const [id, limit] of limits) if (limit.until < now) limits.delete(id);
-      const key = `${who.institutionId}:${who.userId}`;
-      const limit = limits.get(key) ?? { until: now + RATE.window, count: 0 };
-      if (++limit.count > RATE.max) fail(429, 'Please wait a minute before trying again.');
-      limits.set(key, limit);
+      if (!(await rateLimiter.allow(who, now))) fail(429, 'Please wait a minute before trying again.');
 
       const context: AdapterContext = { identity: who, signal: AbortSignal.timeout(20_000) };
 
@@ -324,7 +320,7 @@ export function createGateway(config: Config) {
           search: (url.searchParams.get('search') || '').slice(0, 200),
           cursor: (url.searchParams.get('cursor') || '').slice(0, 500) || null,
         });
-        config.journal.audit(who, area, 'records.read');
+        await config.journal.audit(who, area, 'records.read');
         return Response.json(page, { headers });
       }
 
@@ -358,8 +354,8 @@ export function createGateway(config: Config) {
           details: summary.details,
           expiresAt: new Date(now + REVIEW_MINUTES * 60_000).toISOString(),
         };
-        config.journal.save({ review, input, identity: who, state: 'ready' });
-        config.journal.audit(who, input.area, 'action.prepared', review.id);
+        await config.journal.save({ review, input, identity: who, state: 'ready' });
+        await config.journal.audit(who, input.area, 'action.prepared', review.id);
         return Response.json(review, { headers });
       }
 
@@ -368,7 +364,7 @@ export function createGateway(config: Config) {
       if (!asked || (path === '/actions/commit' && asked.confirmed !== true) || typeof asked.reviewId !== 'string') {
         fail(400, 'Confirm the reviewed action before continuing.');
       }
-      const row = config.journal.get(asked.reviewId as string, who);
+      const row = await config.journal.get(asked.reviewId as string, who);
       if (!row) fail(404, 'Review not found for this account.');
 
       // Already done: hand back the same receipt rather than doing anything.
@@ -393,8 +389,8 @@ export function createGateway(config: Config) {
         if (!result || !result.id || !['completed', 'pending'].includes(result.status)) {
           fail(409, 'The school has not confirmed the result yet. Do not submit it again.');
         }
-        config.journal.finish(row, result.status === 'pending' ? 'pending' : 'completed', result);
-        config.journal.audit(who, row.input.area, 'action.reconciled', row.review.id);
+        await config.journal.finish(row, result.status === 'pending' ? 'pending' : 'completed', result);
+        await config.journal.audit(who, row.input.area, 'action.reconciled', row.review.id);
         return Response.json(result, { headers });
       }
 
@@ -430,18 +426,18 @@ export function createGateway(config: Config) {
         fail(409, 'The action details changed. Prepare a new review.');
       }
 
-      if (!config.journal.claim(row.review.id, who, Date.now())) {
+      if (!(await config.journal.claim(row.review.id, who, Date.now()))) {
         fail(409, 'This action was already claimed or expired.');
       }
 
       try {
-        config.journal.audit(who, row.input.area, 'action.started', row.review.id);
+        await config.journal.audit(who, row.input.area, 'action.started', row.review.id);
         const receipt = await adapter.execute(context, row.input, row.review.id);
         if (!receipt.id || !['completed', 'pending'].includes(receipt.status) || !receipt.recordedAt) {
           throw new Error('Invalid upstream receipt.');
         }
-        config.journal.finish(row, receipt.status === 'pending' ? 'pending' : 'completed', receipt);
-        config.journal.audit(who, row.input.area, 'action.receipt', row.review.id);
+        await config.journal.finish(row, receipt.status === 'pending' ? 'pending' : 'completed', receipt);
+        await config.journal.audit(who, row.input.area, 'action.receipt', row.review.id);
         return Response.json(receipt, { headers });
       } catch (e) {
         /*
@@ -454,8 +450,8 @@ export function createGateway(config: Config) {
          * to reconcile an action that provably did not happen.
          */
         if (isRefusal(e)) {
-          config.journal.finish(row, 'refused');
-          config.journal.audit(who, row.input.area, 'action.refused', row.review.id);
+          await config.journal.finish(row, 'refused');
+          await config.journal.audit(who, row.input.area, 'action.refused', row.review.id);
           return fail(400, e.message);
         }
         /*
@@ -465,8 +461,8 @@ export function createGateway(config: Config) {
          * pay twice; marking it done could have them miss a deadline. So it
          * is marked unknown, and only `/actions/reconcile` can resolve it.
          */
-        config.journal.finish(row, 'uncertain');
-        config.journal.audit(who, row.input.area, 'action.uncertain', row.review.id);
+        await config.journal.finish(row, 'uncertain');
+        await config.journal.audit(who, row.input.area, 'action.uncertain', row.review.id);
         return fail(
           502,
           'The result could not be confirmed. Ask the institution to reconcile this action before submitting again.',
