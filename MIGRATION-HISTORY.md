@@ -1,5 +1,62 @@
 # Repairing the migration history
 
+## 24 September 2026 — first-login SSO membership binding
+
+`20260924154500_bind_institution_sso_membership.sql` adds the service-only,
+atomic bridge between a SCIM membership created before first login and the
+Supabase Auth user created by a verified SAML login. It binds only when the
+authorized provider, tenant, asserted email domain and active SCIM user name
+all agree; tenant mismatch, provider mismatch, rebinding and duplicate claims
+return false. The identity provisioning suite covers the successful binding
+and the cross-domain refusal.
+
+## 24 September 2026 — institutional identity provisioning
+
+`20260924150142_institution_identity_provisioning.sql` adds tenant-bound SAML
+provider records, current institutional memberships, salted SCIM credential
+verification material, external identities, approved group-to-role mappings
+and immutable provisioning audit events. Browser-editable profile or user
+metadata does not grant access. Service-role-only functions apply idempotent
+SCIM user and group changes, clear roles on deprovisioning and grant nothing
+for unknown groups.
+
+The matching `identity-provisioning.check.sql` proves tenant isolation,
+external-identifier uniqueness, absence of plaintext credential storage,
+unknown-group refusal, approved group role derivation, immediate deprovisioning
+and immutable audit history on PostgreSQL 17.
+
+## 23 September 2026 — isolated evidence graphs
+
+`20260923211000_evidence_graphs.sql` adds normalized learning evidence,
+mistake evidence, skill claims and consent-bound capture records. Every record
+carries tenant and person scope, every foreign key is covered by a non-partial
+index, and row-level policies keep students inside their own tenant and their
+own evidence. Students may suggest or confirm a skill claim but cannot mark it
+institution verified; that transition requires a live school-scoped source
+approval capability.
+
+Capture assets point to a versioned consent record. Derived segments and
+artifacts are refused after consent is revoked or expires, and a withdrawal
+marks existing derivatives withdrawn and the original removed. The matching
+`evidence-graphs.check.sql` proves same-owner access, cross-tenant isolation,
+verification refusal, withdrawal and cascade deletion. The deletion and record
+suites additionally cover account cleanup and the structural tenant/person
+scope of all eight tables.
+
+## 23 September 2026 — tenant intelligence policy
+
+`20260923210000_intelligence_policy.sql` adds school-scoped feature state, AI
+policy, approved-source and consent records. University administration is
+authorized only by live `role_grants` at `scope_kind = 'school'`; profile
+choices, email domains and browser-provided flags grant nothing. The migration
+also records old/new configuration changes with the authenticated actor and
+the verified grant that authorized an institutional write. The two public read
+helpers are security-invoker functions, so their table RLS remains in force.
+
+The matching `intelligence-policy.check.sql` uses two synthetic schools and
+proves same-tenant administration, cross-tenant invisibility, source-approval
+refusal, student-owned consent and audit evidence on PostgreSQL 17.
+
 The schema this app runs on cannot be rebuilt from its own record.
 [`ROLLBACK.md`](ROLLBACK.md) states the finding and why it is a rollback
 concern; this is the plan for fixing it, written before any of it was done so

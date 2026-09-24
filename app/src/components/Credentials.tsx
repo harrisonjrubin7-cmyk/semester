@@ -1,14 +1,19 @@
 import { useEffect, useState } from 'react';
 import { useStore } from '../state/store';
+import { ActionButton } from './ui';
 import {
+  appUrl,
+  institutionSsoConfig,
   PROVIDER_LABEL,
   namesSaid,
   providersOn,
   sendReset,
   signIn,
   signInWith,
+  signInWithSSO,
   signUp,
   type Provider,
+  type InstitutionSsoConfig,
 } from '../lib/cloud';
 
 /**
@@ -60,6 +65,7 @@ export function Credentials({
    * rendering below turns on all three — see `providersOn`.
    */
   const [on, setOn] = useState<Provider[] | null | undefined>(undefined);
+  const [institutionSso, setInstitutionSso] = useState<InstitutionSsoConfig | null>(null);
 
   useEffect(() => {
     // The form unmounts the moment a first run moves on, and the answer can
@@ -68,6 +74,9 @@ export function Credentials({
     let alive = true;
     void providersOn().then((got) => {
       if (alive) setOn(got);
+    });
+    void institutionSsoConfig().then((got) => {
+      if (alive) setInstitutionSso(got);
     });
     return () => {
       alive = false;
@@ -216,6 +225,24 @@ export function Credentials({
           {busy ? 'Working…' : mode === 'in' ? 'Sign in' : 'Create the account'}
         </button>
       </form>
+
+      {institutionSso && (
+        <ActionButton
+          tone="primary"
+          spacing="0.08em"
+          disabled={busy}
+          onClick={() => void run(() => signInWithSSO({
+            domain: institutionSso.domain,
+            redirectTo: appUrl(),
+          }))}
+          style={{
+            fontSize: 'var(--type-sm)',
+            marginTop: 'var(--sp-5)',
+          }}
+        >
+          Continue with {institutionSso.label}
+        </ActionButton>
+      )}
 
       {shown.length > 0 && (
         <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-5)' }}>

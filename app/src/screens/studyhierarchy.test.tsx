@@ -19,7 +19,7 @@ import { DESTINATIONS } from '../lib/nav';
  * their equal.
  *
  * Every one of the six had another home, and five answered to a different name
- * there — `AI Tutor` was `Ask Claude`, `Practice exam` was `Practice paper`,
+ * there — `AI Tutor` is now `Ask Semester`, `Practice exam` was `Practice paper`,
  * `Exam planner` was `Exam runway`, `Study groups` was `Group work`,
  * `Citations & evidence` was `Sources`. Three of those homes are the Tools tab
  * on this same screen, which is generated from `lib/nav.ts` and ranked by
@@ -275,7 +275,7 @@ describe('nothing the row named became unreachable', () => {
    * than about how the tab happens to draw today.
    */
   it.each([
-    ['ask', 'Ask Claude'],
+    ['ask', 'Ask Semester'],
     ['exam', 'Practice paper'],
     ['runway', 'Exam runway'],
   ])('%s is still a Study tool, under its own name (%s)', (screen, label) => {

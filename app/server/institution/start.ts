@@ -4,8 +4,14 @@ import { dirname, resolve } from 'node:path';
 import { ActionJournal } from './journal.ts';
 import { MAX_BODY, createGateway } from './gateway.ts';
 import { supabaseIdentity } from './auth.ts';
+import {
+  createMembershipResolver,
+  supabaseMembershipDirectory,
+  supabaseSsoConfigLoader,
+} from './membership.ts';
 import { adapters } from './adapters.ts';
 import { SANDBOX_NAME, SandboxStore, sandboxAdapters } from './sandbox.ts';
+import { createIntelligenceService } from './intelligence.ts';
 
 /**
  * The process. Everything the gateway needs before it can answer anything.
@@ -140,6 +146,9 @@ function headersOf(req: IncomingMessage): Headers {
 const journal = openJournal();
 const authUrl = process.env.SEMESTER_AUTH_URL || '';
 const authKey = process.env.SEMESTER_AUTH_PUBLIC_KEY || '';
+const authServiceKey = process.env.SEMESTER_AUTH_SERVICE_KEY || '';
+const ssoDomain = (process.env.SEMESTER_SSO_DOMAIN || '').trim().toLowerCase();
+const ssoLabel = (process.env.SEMESTER_SSO_LABEL || '').trim();
 
 /*
  * With no auth project configured nothing authenticates, and the gateway
@@ -147,7 +156,18 @@ const authKey = process.env.SEMESTER_AUTH_PUBLIC_KEY || '';
  * unconfigured behaviour: the alternative to checking a token is refusing, not
  * trusting one.
  */
-const authenticate = authUrl && authKey ? supabaseIdentity(authUrl, authKey) : async () => null;
+const membershipResolver = authUrl && authServiceKey
+  ? createMembershipResolver(
+      supabaseMembershipDirectory(authUrl, authServiceKey),
+      async (event) => console.info(JSON.stringify({ event: 'institution.authorization', ...event })),
+    )
+  : null;
+const authenticate = authUrl && authKey && membershipResolver
+  ? supabaseIdentity(authUrl, authKey, membershipResolver)
+  : async () => null;
+const loadSsoConfig = authUrl && authServiceKey && ssoDomain && ssoLabel
+  ? supabaseSsoConfigLoader(authUrl, authServiceKey, ssoDomain, ssoLabel)
+  : async () => null;
 
 /*
  * The sandbox, when it is asked for.
@@ -159,6 +179,40 @@ const authenticate = authUrl && authKey ? supabaseIdentity(authUrl, authKey) : a
 const sandboxOn = process.env.SEMESTER_SANDBOX_INSTITUTION === '1';
 const sandboxStore = sandboxOn ? new SandboxStore(sandboxPath()) : null;
 const installed = sandboxStore ? [...adapters, ...sandboxAdapters(sandboxStore)] : adapters;
+const configuredModels = (process.env.SEMESTER_AI_PROVIDERS || '')
+  .split(',')
+  .map((model) => model.trim())
+  .filter(Boolean);
+const monthlyCents = Number(process.env.SEMESTER_AI_MONTHLY_CENTS || '0');
+const retentionDays = Number(process.env.SEMESTER_AI_RETENTION_DAYS || '30');
+
+/*
+ * Provider names and budgets are policy, not a provider implementation.
+ * This repository deliberately ships no institutional model credential or
+ * connector, so the live process stays policy-disabled even if an operator
+ * has started drafting those values. Tests inject an approved provider at the
+ * same boundary; a deployment must do the same before changing this status.
+ */
+const intelligence = createIntelligenceService({
+  status: 'policy-disabled',
+  loadPolicy: async () => ({
+    state: 'off',
+    permittedRoles: ['student'],
+    allowedModes: ['explain', 'hint', 'practice', 'review'],
+    allowedModels: configuredModels,
+    maxRequestCents: 0,
+    monthlyBudgetCents: Number.isFinite(monthlyCents) ? Math.max(0, monthlyCents) : 0,
+    monthlySpentCents: 0,
+    retentionDays: Number.isFinite(retentionDays) ? Math.max(0, Math.floor(retentionDays)) : 30,
+  }),
+  loadApprovedSources: async () => [],
+  modelTask: async () => ({ candidates: [] }),
+  generate: async () => {
+    throw new Error('No approved institutional model provider is installed.');
+  },
+  execute: async () => ({ verified: false }),
+  audit: (identity, record) => journal.auditIntelligence(identity, record),
+});
 
 const handler = createGateway({
   origin: appOrigin(),
@@ -167,8 +221,11 @@ const handler = createGateway({
   // the plan's "never a placeholder success state presented as real" names.
   institutionName: sandboxOn ? SANDBOX_NAME : process.env.SEMESTER_INSTITUTION_NAME || 'Your university',
   authenticate,
+  refreshIdentity: async (_identity, token) => authenticate(token),
   adapters: installed,
   journal,
+  intelligence,
+  loadSsoConfig,
 });
 
 async function serve(req: IncomingMessage, res: ServerResponse): Promise<void> {

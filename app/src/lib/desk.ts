@@ -26,6 +26,7 @@ import { queryWords, worthSplitting } from './search';
 import { DEFAULT_ROLE, type Role } from './role';
 import type { Capabilities } from './school';
 import type { Screen } from './types';
+import { journeysFor, searchJourneys, type Journey } from './journeys';
 
 /**
  * The shortcuts a search home opens on, before anybody has moved one.
@@ -288,6 +289,23 @@ export function findApps(
     .filter((x) => x.score > 0);
   scored.sort((a, b) => b.score - a.score || a.i - b.i);
   return scored.slice(0, limit).map((x) => x.d);
+}
+
+/** Journey and tool matches from the same offered destination set. */
+export function discover(
+  query: string,
+  caps: Capabilities,
+  role: Role = DEFAULT_ROLE,
+  limit = 8,
+): { journeys: Journey[]; apps: Destination[] } {
+  const destinations = offered(caps, role);
+  const matchedIds = new Set(searchJourneys(query).map((journey) => journey.id));
+  return {
+    journeys: journeysFor(destinations).filter(
+      (journey) => journey.screens.length > 0 && matchedIds.has(journey.id),
+    ),
+    apps: findApps(query, caps, role, limit),
+  };
 }
 
 /**

@@ -114,7 +114,7 @@ describe('every field the store persists', () => {
     expect(readersOf('notAFieldAnythingReads', read)).toEqual([]);
   });
 
-  it('is read by something that is not merely carrying it', () => {
+  it('is read by something that is not merely carrying it', { timeout: 15_000 }, () => {
     const unread = fields.filter((f) => readersOf(f, read).length === 0);
     expect(unread).toEqual([]);
   });

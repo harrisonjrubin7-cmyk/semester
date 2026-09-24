@@ -19,6 +19,11 @@ import { datedItems } from '../lib/select';
 import { useTrouble } from '../lib/trouble';
 import { useAI } from './store';
 import { assemble } from './assemble';
+import { assembleIntelligenceRequest } from '../intelligence/assemble';
+import type { IntelligenceRequest } from '../intelligence/assemble';
+import type { IntelligenceResponse, IntegrityMode, SourceOrigin } from '../intelligence/contracts';
+import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
+import { institutionIntelligence, institutionIntelligencePolicy } from '../lib/university';
 import { dropThread, flight, keepTurns, newThread, openThread, sender, setLive, useLive,
   renameThread,
   pinThread,
@@ -69,6 +74,11 @@ export interface Conversation {
   looking: string[];
   /** What the app itself could say, with no request behind it. */
   locally: Local | null;
+  /** Sources, information used, origin and integrity mode for the last answer. */
+  response: IntelligenceResponse | null;
+  integrityMode: IntegrityMode;
+  allowedIntegrityModes: IntegrityMode[];
+  setIntegrityMode: (mode: IntegrityMode) => void;
   /** Offers waiting on a tap. Nothing here has happened. */
   proposals: Proposal[];
   /** What has been run, and how to take each one back. */
@@ -163,7 +173,7 @@ function localFor(text: string, read: Mode, pool: Destination[]): Local | null {
 }
 
 export function useConversation(): Conversation {
-  const { state, dispatch, catalog, school } = useStore();
+  const { state, dispatch, catalog, school, account } = useStore();
   const now = useNow();
   const ai = useAI();
   const trouble = useTrouble();
@@ -178,7 +188,7 @@ export function useConversation(): Conversation {
    * `useState`'s signature so everything downstream is unchanged.
    */
   const live = useLive();
-  const { turns, streaming, busy, read, used, looking, locally, proposals, applied, spend, dropped } =
+  const { turns, streaming, busy, read, used, looking, locally, response, integrityMode, proposals, applied, spend, dropped } =
     live;
   const setStreaming = (v: string) => setLive('streaming', v);
   const setBusy = (v: boolean) => setLive('busy', v);
@@ -186,12 +196,23 @@ export function useConversation(): Conversation {
   const setUsed = (v: string[]) => setLive('used', v);
   const setLooking = (v: string[]) => setLive('looking', v);
   const setLocally = (v: Local | null) => setLive('locally', v);
+  const setResponse = (v: IntelligenceResponse | null) => setLive('response', v);
   const setProposals = (v: Proposal[] | ((was: Proposal[]) => Proposal[])) =>
     setLive('proposals', v);
   const setApplied = (
     v: { p: Proposal; before: Lists }[] | ((was: { p: Proposal; before: Lists }[]) => { p: Proposal; before: Lists }[]),
   ) => setLive('applied', v);
   const setSpend = (v: ReturnType<typeof readSpend>) => setLive('spend', v);
+  useEffect(() => {
+    if (EXPERIENCE_FLAGS.semesterIntelligence === 'off') return;
+    let alive = true;
+    void institutionIntelligencePolicy().then(({ allowedModes }) => {
+      if (!alive) return;
+      setLive('allowedIntegrityModes', allowedModes);
+      if (!allowedModes.includes(integrityMode) && allowedModes[0]) setLive('integrityMode', allowedModes[0]);
+    }, () => { if (alive) setLive('allowedIntegrityModes', []); });
+    return () => { alive = false; };
+  }, [account?.id, integrityMode, state.schoolId]);
 
   /**
    * What the app holds, for checking a tool call against reality.
@@ -290,6 +311,7 @@ export function useConversation(): Conversation {
       setStreaming('');
       trouble.clear();
       setProposals([]);
+      setResponse(null);
       setBusy(true);
       flight.abort = new AbortController();
       let sofar = '';
@@ -307,6 +329,7 @@ export function useConversation(): Conversation {
        * can reach it: the rounds before a Stop have been paid for too.
        */
       let spent: Usage | null = null;
+      let responseContext: IntelligenceRequest | null = null;
       try {
         const how = readMode(text);
         setRead(how);
@@ -360,9 +383,75 @@ export function useConversation(): Conversation {
           seen.text,
           school.capabilities.aiOff ?? [],
         );
+        const personId = account?.id ?? 'device';
+        const intelligence = assembleIntelligenceRequest({
+          question: text,
+          scope: {
+            tenantId: state.schoolId || 'unaffiliated',
+            role: state.role,
+            personId,
+            ...(state.guideId ? { resourceId: state.guideId } : {}),
+          },
+          screen: state.screen,
+          ...(state.guideId ? { courseId: state.guideId } : {}),
+          visibleSourceIds: seen.visibleSourceIds,
+          evidence: state.sources.map((source) => ({
+            id: `source:${source.id}`,
+            sourceId: source.id,
+            origin: 'student' as const,
+            title: source.title || source.raw.slice(0, 100) || 'Saved source',
+            locator: source.url || 'Saved in Semester',
+            excerpt: source.raw.slice(0, 500),
+            verifiedAt: new Date(source.created).toISOString(),
+            authority: 'confirmed' as const,
+            scope: {
+              tenantId: state.schoolId || 'unaffiliated',
+              role: state.role,
+              personId,
+              ...(source.courseId ? { resourceId: source.courseId } : {}),
+            },
+          })),
+          requestedMode: integrityMode,
+          allowedModes: ['explain', 'hint', 'practice', 'review', 'draft'],
+          policyId: `${state.schoolId || 'unaffiliated'}:local-default`,
+          consentIds: [],
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+          providerRoute: provider() === 'openai' ? 'openai' : 'anthropic',
+          assembledAt: now.toISOString(),
+        });
+        responseContext = intelligence;
         /** Everything this answer drew on: what travelled, plus what it fetched. */
         const drew = new Set(drawn.used);
-        setUsed(drawn.used);
+        for (const item of intelligence.evidence) drew.add(`${item.title} — ${item.locator}`);
+        setUsed([...drew]);
+
+        if (EXPERIENCE_FLAGS.semesterIntelligence !== 'off') {
+          const governed = await institutionIntelligence({
+            version: 1,
+            clientState: EXPERIENCE_FLAGS.semesterIntelligence,
+            tenantId: intelligence.context.scope.tenantId,
+            personId: intelligence.context.scope.personId,
+            question: intelligence.question,
+            mode: intelligence.context.integrityMode,
+            category: how.mode,
+            sourceIds: intelligence.context.sourceIds,
+            evidenceIds: intelligence.context.evidenceIds,
+            proposedActions: [],
+          });
+          const allowed = new Set(governed.evidenceIds);
+          const evidence = intelligence.evidence.filter((item) => allowed.has(item.id));
+          const origins = [...new Set(evidence.map((item) => item.origin))];
+          setResponse({
+            text: governed.text,
+            evidence,
+            informationUsed: [...drew],
+            origins: origins.length ? origins : ['inference'],
+            mode: governed.mode,
+            actions: [],
+          });
+          remember([...next, { role: 'assistant', content: governed.text }]);
+          return;
+        }
 
         /*
          * The conversation as the next request will see it, which is not
@@ -525,6 +614,20 @@ export function useConversation(): Conversation {
           setLooking(found.saying);
         }
 
+        if (responseContext) {
+          const origins = [...new Set(responseContext.evidence.map((item) => item.origin))];
+          setResponse({
+            text: reply,
+            evidence: responseContext.evidence,
+            informationUsed: [...drew],
+            origins: origins.length > 0 ? origins : (['inference'] as SourceOrigin[]),
+            mode: responseContext.context.integrityMode,
+            ...(responseContext.policyDecision.restricted
+              ? { policyReason: responseContext.policyDecision.reason }
+              : {}),
+            actions: [],
+          });
+        }
         remember([
           ...next,
           { role: 'assistant', content: reply, ...(ranOut ? { incomplete: true } : {}) },
@@ -573,7 +676,7 @@ export function useConversation(): Conversation {
     },
     // No `dispatch`: the one call `send` made was the search the card
     // promised and no screen ran. See the note on `Proposal` in `lib/tools.ts`.
-    [busy, turns, remember, trouble, ai, state, catalog, now, school, systemFor, held],
+    [busy, turns, remember, trouble, ai, state, catalog, now, school, account?.id, integrityMode, systemFor, held],
   );
 
   /*
@@ -675,6 +778,10 @@ export function useConversation(): Conversation {
     used,
     looking,
     locally,
+    response,
+    integrityMode,
+    allowedIntegrityModes: live.allowedIntegrityModes,
+    setIntegrityMode: (mode) => setLive('integrityMode', mode),
     proposals,
     applied,
     proposalsLine: proposalsLine(proposals),

@@ -37,6 +37,8 @@ import type {
   Review,
   UniversityArea,
   UniversityRole,
+  IntelligenceGatewayRequest,
+  IntelligenceGatewayResponse,
 } from '@semester/institution';
 
 export { UNIVERSITY_AREAS, UNIVERSITY_ROLES } from '@semester/institution';
@@ -114,7 +116,11 @@ async function gateway<T>(path: string, body?: unknown): Promise<T> {
   const result = await response.json();
   if (!response.ok) {
     throw new Error(
-      typeof result.error === 'string' ? result.error : 'The connection could not complete this request.',
+      typeof result.message === 'string'
+        ? result.message
+        : typeof result.error === 'string'
+          ? result.error
+          : 'The connection could not complete this request.',
     );
   }
   return result as T;
@@ -122,6 +128,12 @@ async function gateway<T>(path: string, body?: unknown): Promise<T> {
 
 /** What the school says this account may see, per area. */
 export const institutionStatus = () => gateway<InstitutionStatus>('/status');
+
+/** The authenticated, policy-enforced institutional intelligence wire. */
+export const institutionIntelligence = (input: IntelligenceGatewayRequest) =>
+  gateway<IntelligenceGatewayResponse>('/v1/intelligence/respond', input);
+export const institutionIntelligencePolicy = () =>
+  gateway<{ state: string; allowedModes: IntelligenceGatewayRequest['mode'][] }>('/v1/intelligence/policy');
 
 /**
  * One page of a school's own records.

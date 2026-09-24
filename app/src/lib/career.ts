@@ -1,5 +1,5 @@
 import { isoDay, obj, textValue } from './device-library';
-import { safeUrl } from './apply';
+import { newApplication, safeUrl, type ApplyKind } from './apply';
 
 /**
  * The work of getting the next thing: what is open, what you have done, who
@@ -192,6 +192,34 @@ export function newOpportunity(): Opportunity {
     credit: '',
     saved: false,
   };
+}
+
+const APPLICATION_KIND: Record<Opportunity['kind'], ApplyKind> = {
+  Internship: 'internship',
+  Job: 'job',
+  'Campus employment': 'job',
+  Research: 'research',
+  Fellowship: 'fellowship',
+  'Study abroad': 'program',
+  'Career event': 'other',
+};
+
+/** Put a saved opportunity onto the one existing application calendar path. */
+export function opportunityApplication(opportunity: Opportunity, at = Date.now()) {
+  return newApplication(
+    {
+      org: opportunity.organization,
+      role: opportunity.title,
+      kind: APPLICATION_KIND[opportunity.kind],
+      where: opportunity.location,
+      due: opportunity.deadline,
+      url: opportunity.url,
+      note: opportunity.requirements,
+      next: 'Review what it asks for and start the materials',
+      stage: 'found',
+    },
+    at,
+  );
 }
 
 /**

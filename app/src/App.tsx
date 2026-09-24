@@ -22,7 +22,7 @@ import { Replaced } from './components/Replaced';
 import { SampleMark } from './components/SampleMark';
 import { CALM_ATTR, scrollKindly, usePrefersContrast, usePrefersDark } from './lib/prefers';
 import { Today } from './screens/Today';
-import { Guides, SCREENS, Springboard } from './screens';
+import { Guides, InstitutionalPreviewBar, SCREENS, Springboard } from './screens';
 import { headOf, type Head } from './headers';
 import {
   calmOf,
@@ -68,6 +68,8 @@ import { courseFieldFor, insideCourse } from './lib/parent';
 import { ShellBody } from './components/shell/ShellBody';
 import { isCanvas } from './components/shell/exempt';
 import { ShelfNav } from './components/nav/ShelfNav';
+import { InstitutionalNavigation } from './components/nav/InstitutionalPrimaryNav';
+import { INSTITUTIONAL_PREVIEW } from './lib/institutional-preview';
 import { SoftTop } from './components/soft/SoftTop';
 import { barFor, litRailTab, litTab, tabLabel } from './lib/tabbar';
 import { TabGlyph } from './components/TabIcon';
@@ -99,6 +101,7 @@ import { useTier } from './lib/media';
 import { DOW, MONTHS } from './lib/date';
 import { windowTitle } from './a11y/title';
 import type { Screen } from './lib/types';
+import { InstitutionalPreviewRoot } from './components/institutional/PreviewRoot';
 
 /**
  * What fills the column while a screen's chunk is in flight.
@@ -767,7 +770,7 @@ function Workspace({
         column. Portals that look for `.device` find this, and it is
         positioned, so they land over the whole workspace.
       */}
-      <div className="device deskwork" data-tier={tier}>
+      <div className="device deskwork" data-tier={tier} data-semester-root>
         <SkipLink />
         <Titled />
         <Fresh />
@@ -790,9 +793,10 @@ function Workspace({
             layout is shaped like keeps them. It draws nothing at all until
             something has been starred. */}
         <BookmarksBar />
+        <InstitutionalNavigation />
 
-        <div className={chrome.sidebar ? 'deskwork-body' : 'deskwork-body deskwork-one'}>
-          {chrome.sidebar && <Sidebar />}
+        <div className={chrome.sidebar && !INSTITUTIONAL_PREVIEW ? 'deskwork-body' : 'deskwork-body deskwork-one'}>
+          {chrome.sidebar && !INSTITUTIONAL_PREVIEW && <Sidebar />}
           <div
             className={
               isCanvas(state.screen)
@@ -980,6 +984,17 @@ function Rail() {
 }
 
 export default function App() {
+  if (INSTITUTIONAL_PREVIEW) {
+    return (
+      <InstitutionalPreviewRoot>
+        <AppFrame />
+      </InstitutionalPreviewRoot>
+    );
+  }
+  return <AppFrame />;
+}
+
+function AppFrame() {
   const { state, dispatch, saveTrouble, asking, settle } = useStore();
   /*
    * Which of the three layouts this window is in — see `lib/media.ts`.
@@ -1190,6 +1205,11 @@ export default function App() {
     <>
       <Sound />
       {frame()}
+      {INSTITUTIONAL_PREVIEW && (
+        <Suspense fallback={null}>
+          <InstitutionalPreviewBar />
+        </Suspense>
+      )}
     </>
   );
 
@@ -1207,7 +1227,7 @@ export default function App() {
        * `.desk-one` drops the rail's column so the pane does not sit in the
        * second half of an empty grid.
        */
-      <div className={chrome.rail ? 'desk' : 'desk desk-one'} data-tier={tier}>
+      <div className={chrome.rail && !INSTITUTIONAL_PREVIEW ? 'desk' : 'desk desk-one'} data-tier={tier} data-semester-root>
         {/* First in the tree, so it is the first tab stop. See the note in
             the phone layout below. */}
         <SkipLink />
@@ -1228,7 +1248,7 @@ export default function App() {
         <Watching />
         {/* The one question a first sign-in asks, and only when it is real. */}
         {asking && <Adopting sides={asking.sides} say={asking.say} onChoose={settle} />}
-        {chrome.rail && <Rail />}
+        {chrome.rail && !INSTITUTIONAL_PREVIEW && <Rail />}
         {/* `has-canvas` widens the header's gutter to match a screen whose
             body is a grid rather than a column — see `.pane-body.is-canvas`
             in `styles/app.css`. Both answers come from the same list in
@@ -1327,7 +1347,8 @@ export default function App() {
           <Replaced />
           <Undone />
           {trouble}
-          {chrome.shelves && <ShelfNav />}
+          <InstitutionalNavigation />
+          {!INSTITUTIONAL_PREVIEW && chrome.shelves && <ShelfNav />}
           <ScrollArea screen={state.screen} key={state.screen}>
             <SoftTop />
             <Suspense fallback={<Loading />}>
@@ -1348,7 +1369,7 @@ export default function App() {
 
   function phoneFrame() {
   return (
-    <div className="device" data-tier={tier}>
+    <div className="device" data-tier={tier} data-semester-root>
       {/*
         The first focusable thing on the page, and invisible until it has
         focus. With sixty screens behind a header and a tab bar, a keyboard
@@ -1396,7 +1417,8 @@ export default function App() {
       <Said />
       <SampleMark />
       {trouble}
-      {chrome.shelves && <ShelfNav />}
+      <InstitutionalNavigation />
+      {!INSTITUTIONAL_PREVIEW && chrome.shelves && <ShelfNav />}
       <ScrollArea screen={state.screen} key={state.screen}>
         <SoftTop />
         <Suspense fallback={<Loading />}>
@@ -1409,7 +1431,7 @@ export default function App() {
           </ScreenTrouble>
         </Suspense>
       </ScrollArea>
-      {chrome.tabs && <TabBar />}
+      {!INSTITUTIONAL_PREVIEW && chrome.tabs && <TabBar />}
     </div>
   );
   }

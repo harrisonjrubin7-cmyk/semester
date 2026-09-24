@@ -75,6 +75,8 @@ secret second, so either works.
 | `VITE_MS_CLIENT_ID`, `VITE_GOOGLE_CLIENT_ID`, `VITE_ZOOM_CLIENT_ID`, `VITE_APPLE_CLIENT_ID` | Actions | OAuth **client** IDs. Public by the standard's design; the secret half never reaches the browser |
 | `VITE_CLAUDE_PROXY`, `VITE_ICS_PROXY`, `VITE_OAUTH_PROXY`, `VITE_UNIVERSITY_GATEWAY_URL` | Actions | Addresses. Each also contributes an origin to the app's Content-Security-Policy — see the header of [`app/index.html`](app/index.html) |
 | `VITE_STUN_URLS`, `VITE_MONTHLY_CALL_LIMIT` | Actions | A public STUN list and a number |
+| `VITE_INSTITUTIONAL_PREVIEW` | Actions variable or secret | A public build-time feature flag. Only the exact value `true` enables the synthetic institutional preview; leave it unset for the production-default interface |
+| `VITE_SEMESTER_INTELLIGENCE`, `VITE_JOURNEY_NAVIGATION`, `VITE_ADAPTIVE_LEARNING`, `VITE_CAREER_SKILLS_GRAPH`, `VITE_MULTIMODAL_CAPTURE`, `VITE_UNIVERSITY_CONTROL_PLANE` | Actions variable or secret | Public additive-experience states. Each accepts only `off`, `preview`, `sandbox` or `production`; an omitted value inherits `preview` only when `VITE_INSTITUTIONAL_PREVIEW=true`, otherwise `off` |
 | `SUPABASE_PROJECT_REF` | Actions **variable** | The project reference, which is in the Supabase URL already |
 | `ALLOWED_ORIGIN`, `MONTHLY_CALL_LIMIT`, `VAPID_PUBLIC_KEY`, `VAPID_SUBJECT` | Supabase function secrets | Limits and public halves. One wrong `ALLOWED_ORIGIN` makes three functions unreachable from the browser and says nothing — see [`supabase/DEPLOY.md`](supabase/DEPLOY.md) |
 | `SUPABASE_URL` | Injected into functions | Nothing. It is in the JavaScript every visitor downloads |

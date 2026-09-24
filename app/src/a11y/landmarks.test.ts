@@ -169,3 +169,51 @@ describe('there is one h1', () => {
     expect(page, 'and so needs no landing point of its own').not.toMatch(/tabIndex=\{-1\}/);
   });
 });
+
+describe('institutional preview extends the one Semester application root', () => {
+  it('marks every existing shell layout as the same application root', () => {
+    const app = find('App.tsx').src;
+    expect(app.match(/data-semester-root/g)?.length).toBe(3);
+  });
+
+  it('adds no nested global landmark or standalone institutional stylesheet', () => {
+    const institutional = FILES.filter(({ file }) => file.includes('/institutional/'));
+    for (const { file, src } of institutional) {
+      expect(src, `${file} must stay inside the shell main`).not.toMatch(/<main[\s>]/);
+      expect(src, `${file} must not add global navigation`).not.toMatch(/<nav[\s>]/);
+      expect(src, `${file} must use the existing design system`).not.toMatch(/import\s+['"][^'"]+\.css['"]/);
+    }
+  });
+
+  it('mounts App exactly once in the signed-in product root', () => {
+    const main = find('main.tsx').src;
+    expect(main.match(/<App\s*\/>/g)).toHaveLength(1);
+  });
+});
+
+describe('the expansion keeps essential controls readable and touchable', () => {
+  it('uses the existing shell landmarks and no private stylesheet', () => {
+    for (const name of [
+      'components/JourneyCards.tsx',
+      'components/MasteryGraph.tsx',
+      'components/SkillsGraph.tsx',
+      'components/CourseCapture.tsx',
+      'components/institutional/ControlPlane.tsx',
+    ]) {
+      const component = find(name).src;
+      expect(component, `${name} nested a main landmark`).not.toMatch(/<main[\s>]/);
+      expect(component, `${name} nested a global navigation`).not.toMatch(/<nav[\s>]/);
+      expect(component, `${name} added a private stylesheet`).not.toMatch(/import\s+['"][^'"]+\.css['"]/);
+    }
+  });
+
+  it('gives capture actions a 44px minimum target', () => {
+    const css = readFileSync('src/styles/app.css', 'utf8');
+    expect(css).toMatch(/\.course-capture-original button\s*\{[^}]*min-height:\s*44px/s);
+  });
+
+  it('announces mutable capture and control-plane status', () => {
+    expect(find('components/CourseCapture.tsx').src).toContain('<p role="status"');
+    expect(find('components/institutional/ControlPlane.tsx').src).toContain('<p role="status"');
+  });
+});

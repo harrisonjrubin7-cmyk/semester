@@ -44,7 +44,17 @@
 
 import type { Screen } from './types';
 
-export type Role = 'student' | 'faculty' | 'advisor' | 'admin' | 'payer' | 'staff';
+export type Role =
+  | 'student'
+  | 'faculty'
+  | 'teaching_assistant'
+  | 'advisor'
+  | 'admin'
+  | 'staff'
+  | 'applicant'
+  | 'payer'
+  | 'family'
+  | 'alumni';
 
 export interface RoleInfo {
   id: Role;
@@ -83,6 +93,13 @@ export const ROLES: RoleInfo[] = [
     needs: '',
   },
   {
+    id: 'teaching_assistant',
+    label: 'Teaching assistant',
+    blurb: 'Your assigned course sections, learning activities and student support work.',
+    ready: false,
+    needs: 'An institution-assigned course role and an authorized learning-management connection.',
+  },
+  {
     id: 'advisor',
     label: 'Advising',
     blurb: 'Your advisees’ plans, their progress, and the appointments between.',
@@ -113,6 +130,27 @@ export const ROLES: RoleInfo[] = [
     blurb: 'Dining, housing, the library, transport, the desk you work at.',
     ready: false,
     needs: 'The service systems themselves, none of which publish anything a client can use.',
+  },
+  {
+    id: 'applicant',
+    label: 'Applicant',
+    blurb: 'Your application steps, decisions, visits and transition into the university.',
+    ready: false,
+    needs: 'An authorized admissions identity and the institution’s applicant systems.',
+  },
+  {
+    id: 'family',
+    label: 'Authorized family',
+    blurb: 'The information and actions a student or university has explicitly shared with you.',
+    ready: false,
+    needs: 'A current, auditable authorization scoped to specific records and actions.',
+  },
+  {
+    id: 'alumni',
+    label: 'Alumni',
+    blurb: 'Mentoring, lifelong learning, university services and opportunities after graduation.',
+    ready: false,
+    needs: 'An institution-verified alumni identity and approved alumni-service connections.',
   },
 ];
 

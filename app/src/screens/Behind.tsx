@@ -22,6 +22,7 @@
  * manners.
  */
 
+import { lazy, Suspense } from 'react';
 import { useNow, useStore } from '../state/store';
 import { DIMMED_ROW } from '../lib/dim';
 import { Page } from '../components/Page';
@@ -33,6 +34,18 @@ import { WAKING_HOURS, hoursOn } from '../lib/windows';
 import { behindLine, howBehind, moves, movesLine, triage, type Step } from '../lib/behind';
 import type { Screen } from '../lib/types';
 import { misses, missesLine } from '../lib/misses';
+import { INSTITUTIONAL_PREVIEW } from '../lib/institutional-preview';
+
+const FlightPlanRecovery = lazy(() =>
+  import('../components/institutional/FlightPlanRecovery').then((module) => ({
+    default: module.FlightPlanRecovery,
+  })),
+);
+
+function FlightPlanRecoverySlot() {
+  if (!INSTITUTIONAL_PREVIEW) return null;
+  return <Suspense fallback={null}><FlightPlanRecovery /></Suspense>;
+}
 
 const GROUPS: { where: Step['where']; label: string; note: string }[] = [
   {
@@ -88,6 +101,8 @@ export function Behind() {
           {behindLine(b)}
         </div>
       </Blueprint>
+
+      <FlightPlanRecoverySlot />
 
       {/*
         Before the deadlines, because a percentage already gone outranks a

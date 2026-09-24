@@ -36,6 +36,24 @@ describe('nothing to offer', () => {
 });
 
 describe('cards that have come round', () => {
+  it('uses the adaptive loop recommendation when its activity is available', () => {
+    const s = nextStep(
+      input({
+        adaptive: {
+          activity: 'cards',
+          label: 'Review 4 cards',
+          reason: '4 retrievals are due. Recurring procedure error.',
+          evidence: [],
+        },
+      }),
+    );
+    expect(s).toEqual({
+      id: 'cards',
+      label: 'Review 4 cards',
+      why: '4 retrievals are due. Recurring procedure error.',
+    });
+  });
+
   it('beats everything else, and counts them', () => {
     const s = nextStep(input({ due: 12, testIn: 2 }));
     expect(s).toMatchObject({ id: 'cards', label: 'Review 12 cards' });

@@ -1,7 +1,7 @@
 import {StudyJournal} from '../components/StudyJournal';
 import { StudyStudio } from '../components/StudyStudio';
 import { allCards } from '../data/catalog';
-import { useMemo, useState } from 'react';
+import { lazy, Suspense, useMemo, useState } from 'react';
 import { useNow, useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { useRowStyle } from '../components/shell/useShell';
@@ -37,6 +37,30 @@ import {
   type UnitFacts,
 } from '../lib/revise';
 import type { CourseId } from '../lib/types';
+import { INSTITUTIONAL_PREVIEW } from '../lib/institutional-preview';
+import { MasteryGraph } from '../components/MasteryGraph';
+import {
+  courseLearningInput,
+  learningState,
+  readinessForecast,
+  recommendLearningActivity,
+} from '../lib/learning-loop';
+import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
+
+const FlightPlanLearning = lazy(() =>
+  import('../components/institutional/FlightPlanLearning').then((module) => ({
+    default: module.FlightPlanLearning,
+  })),
+);
+
+function FlightPlanLearningSlot() {
+  if (!INSTITUTIONAL_PREVIEW) return null;
+  return (
+    <Suspense fallback={null}>
+      <FlightPlanLearning />
+    </Suspense>
+  );
+}
 
 /**
  * The evenings a student actually has.
@@ -78,7 +102,9 @@ const PLAN_ROWS = 8;
  * The exam countdown stays above the switcher, because it is true whichever
  * view you are on and it is the thing you want to see without looking.
  */
-export function Study() {
+export function Study({
+  adaptiveLearning = EXPERIENCE_FLAGS.adaptiveLearning !== 'off',
+}: { adaptiveLearning?: boolean } = {}) {
   const { state, dispatch, catalog, tint } = useStore();
   const now = useNow();
   /**
@@ -416,6 +442,8 @@ export function Study() {
         </Blueprint>
       )}
 
+      <FlightPlanLearningSlot />
+
       <Segmented
         options={[
           { id: 'guides', label: 'Guides' },
@@ -600,6 +628,18 @@ export function Study() {
           // this is the one that gets a word put to it.
           const standing = knowingOf(keys, state.reviews, now.getTime());
           const test = testedIn(catalog, now, c.id);
+          const recurringMistake =
+            keys.map((key) => state.reviews[key]).filter((review) => review?.wrong > 0).length >= 2
+              ? ('recall-gap' as const)
+              : null;
+          const learningInput = courseLearningInput(c.id, g, state.reviews, {
+            due,
+            recurringMistake,
+            now: now.getTime(),
+          });
+          const conceptStates = learningState(learningInput);
+          const adaptive = recommendLearningActivity(learningInput);
+          const readiness = readinessForecast(learningInput, now);
           const step = nextStep({
             ways,
             guide: g,
@@ -618,6 +658,7 @@ export function Study() {
             testIn: test?.days ?? null,
             testKind: test?.kind ?? null,
             started,
+            adaptive,
           });
           return (
             <Blueprint
@@ -695,6 +736,24 @@ export function Study() {
               <div style={{ marginTop: 'calc(11px * var(--density, 1))' }}>
                 <Standing state={standing.state} evidence={standing.evidence} name={c.code} />
               </div>
+              {adaptiveLearning && <details className="course-mastery">
+                <summary>
+                  Learning evidence · readiness {readiness.range[0]}–{readiness.range[1]}%
+                </summary>
+                <p>
+                  Forecast range, not a grade. It uses current retrieval coverage and review timing.
+                </p>
+                <MasteryGraph concepts={conceptStates} />
+                {learningInput.attempts.length === 0 && ways.some((way) => way.id === 'quiz') && (
+                  <button
+                    type="button"
+                    className="btn"
+                    onClick={() => dispatch({ type: 'openGuide', id: c.id, mode: 'quiz' })}
+                  >
+                    Start a short diagnostic
+                  </button>
+                )}
+              </details>}
               {/*
                 What is true of this course today, beside what is true of it
                 always. The size of the guide is in the corner above and does

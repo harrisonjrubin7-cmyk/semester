@@ -117,10 +117,10 @@ describe('the workspace draws each job once', () => {
  * the screen you are standing on, the tab is the room where every thread
  * lives, and both draw the *same* components so one conversation cannot start
  * reading as two products. They are also named apart — the floating button
- * says "Ask about <screen>", the tab's controls say "AI Tutor" — so they are
+ * says "Ask Semester about <screen>", the bar says "Semester Intelligence" — so they are
  * not the fault the census above is about. Left alone on purpose.
  *
- * What was the fault: the workspace's bar draws an AI Tutor button on every
+ * What was the fault: the workspace's bar draws an intelligence button on every
  * screen, and the search home drew a second one, same words and same glyph,
  * one row below the first. Two identical controls in one frame, on the screen
  * the workspace opens on.
@@ -128,7 +128,7 @@ describe('the workspace draws each job once', () => {
 describe('the assistant is offered once per frame', () => {
   const HOME = () => read('src/screens/Search.tsx');
 
-  it('leaves the AI Tutor button to the bar that draws it on every screen', () => {
+  it('leaves the intelligence button to the bar that draws it on every screen', () => {
     expect(BAR(), 'the bar is the survivor').toContain("screen: 'ask'");
     expect(withoutComments(HOME()), 'the search home must not draw a second').not.toContain(
       "screen: 'ask'",
@@ -142,9 +142,11 @@ describe('the assistant is offered once per frame', () => {
     // The floating button says where it will ask about; the bar says what it
     // opens. Two doors to one conversation is fine — two doors wearing one
     // name is the fault, and `App.tsx`'s launcher/directory pair was it.
-    expect(panel).toContain('aria-label={`Ask about ${here}`}');
-    expect(BAR()).toContain('AI Tutor');
-    expect(panel, 'the panel does not call itself the tab').not.toContain('AI Tutor');
+    expect(panel).toContain('aria-label={`Ask Semester about ${here}`}');
+    expect(BAR()).toContain('Semester Intelligence');
+    expect(panel, 'the panel does not call itself the bar').not.toContain(
+      'aria-label="Semester Intelligence"',
+    );
   });
 
   /*

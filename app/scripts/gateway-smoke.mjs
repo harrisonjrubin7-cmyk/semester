@@ -86,6 +86,10 @@ try {
 
   const health = await fetch(`http://127.0.0.1:${PORT}/health`).then((r) => r.json()).catch(() => null);
   check(health?.version === 1, `/health names the contract version (got ${health?.version})`);
+  check(
+    health?.intelligence === 'policy-disabled',
+    `intelligence reports its unconfigured policy truthfully (got ${health?.intelligence})`,
+  );
 
   /*
    * The count in the startup line, which is the thing that was wrong.

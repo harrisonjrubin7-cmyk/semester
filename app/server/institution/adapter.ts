@@ -27,8 +27,8 @@ import type {
  * Three things that are never an authorization, stated because each has been
  * somebody's bug: a role the browser sent, a record id that happens to be
  * well formed, and a tenant named in a request. `AdapterContext.identity` is
- * the only identity, it comes from `auth.ts`, and it comes out of server-side
- * `app_metadata` that no client can write.
+ * the only identity: `auth.ts` validates the token and `membership.ts`
+ * reloads its current tenant and roles from server-controlled records.
  *
  * Credentials — API keys, service accounts, signing secrets — come from the
  * server's own configuration or secret store. Never from anything reachable

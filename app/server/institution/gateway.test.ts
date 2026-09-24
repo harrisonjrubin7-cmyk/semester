@@ -56,6 +56,9 @@ function fixture() {
   journals.push(journal);
 
   let identity: UniversityIdentity | null = actor;
+  let membershipActive = true;
+  let membershipRoles: UniversityIdentity['roles'] = actor.roles;
+  let intelligenceConfirmedRoles: UniversityIdentity['roles'] = [];
   let version = '1';
   let calls = 0;
   let mode = 'ok';
@@ -123,8 +126,19 @@ function fixture() {
     origin: 'http://localhost:5173',
     institutionName: 'Test school',
     authenticate: async () => identity,
+    refreshIdentity: async (current) => membershipActive ? { ...current, roles: membershipRoles } : null,
     adapters: [adapter],
     journal,
+    loadSsoConfig: async () => ({ enabled: true, label: 'Vanderbilt', domain: 'vanderbilt.edu' }),
+    intelligence: {
+      status: 'configured-sandbox',
+      policy: async () => ({ status: 200, body: {} }),
+      respond: async () => ({ status: 200, body: {} }),
+      confirm: async (current) => {
+        intelligenceConfirmedRoles = current.roles;
+        return { status: 200, body: {} };
+      },
+    },
   });
 
   const input = {
@@ -165,6 +179,13 @@ function fixture() {
     identity: (v: UniversityIdentity | null) => {
       identity = v;
     },
+    membershipActive: (active: boolean) => {
+      membershipActive = active;
+    },
+    membershipRoles: (roles: UniversityIdentity['roles']) => {
+      membershipRoles = roles;
+    },
+    intelligenceConfirmedRoles: () => intelligenceConfirmedRoles,
     version: (v: string) => {
       version = v;
     },
@@ -178,6 +199,17 @@ function fixture() {
 }
 
 describe('university gateway boundaries', () => {
+  it('publishes only the approved sign-in label and discovery domain without requiring a session', async () => {
+    const f = fixture();
+    const result = await f.request('/v1/auth/config', undefined, { authorization: '' });
+    expect(result.status).toBe(200);
+    expect(await result.json()).toEqual({
+      enabled: true,
+      label: 'Vanderbilt',
+      domain: 'vanderbilt.edu',
+    });
+  });
+
   it('does not accept role claims from editable user metadata', () => {
     expect(
       trustedIdentity({ id: 'u', ...{ user_metadata: { semester: { institutionId: 's', roles: ['admin'] } } } }),
@@ -333,6 +365,23 @@ describe('university gateway boundaries', () => {
     f.identity({ ...actor, institutionId: 'school-b' });
     expect((await f.request('/actions/commit', { reviewId: r.id, confirmed: true })).status).toBe(404);
     expect(f.calls()).toBe(0);
+  });
+
+  it('rechecks current membership immediately before a consequential write', async () => {
+    const f = fixture();
+    const review = await f.prepare();
+    f.membershipActive(false);
+    const refused = await f.request('/actions/commit', { reviewId: review.id, confirmed: true });
+    expect(refused.status).toBe(403);
+    expect(f.calls()).toBe(0);
+  });
+
+  it('uses refreshed roles for an intelligence action confirmation', async () => {
+    const f = fixture();
+    f.membershipRoles(['advisor']);
+    const response = await f.request('/v1/intelligence/actions/action-1/confirm', { confirmed: true });
+    expect(response.status).toBe(200);
+    expect(f.intelligenceConfirmedRoles()).toEqual(['advisor']);
   });
 
   it('rechecks versions and displayed details before a write', async () => {

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNow, useStore } from '../state/store';
 import { WIDE, useMedia } from '../lib/media';
 import { secondLine } from '../lib/dim';
@@ -43,6 +43,18 @@ import {
   type MailDraft,
   type Thread,
 } from '../lib/mailbox';
+import { INSTITUTIONAL_PREVIEW } from '../lib/institutional-preview';
+
+const FlightPlanInbox = lazy(() =>
+  import('../components/institutional/FlightPlanInbox').then((module) => ({
+    default: module.FlightPlanInbox,
+  })),
+);
+
+function FlightPlanInboxSlot() {
+  if (!INSTITUTIONAL_PREVIEW) return null;
+  return <Suspense fallback={null}><FlightPlanInbox /></Suspense>;
+}
 
 /** How many conversations a page holds. Gmail's number, and it is a good one. */
 const PER_PAGE = 50;
@@ -380,6 +392,7 @@ export function Mail() {
 
   return (
     <div className="mb">
+      <FlightPlanInboxSlot />
       <div className="mb-top">
         {!wide && (
           <button

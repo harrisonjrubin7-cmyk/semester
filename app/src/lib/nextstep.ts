@@ -28,6 +28,7 @@
 
 import { says, type Knowing } from './knowing';
 import type { Guide, StudyMode } from './types';
+import type { LearningRecommendation } from './learning-loop';
 
 /**
  * A way into the course, as `lib/modes.ts` already models it.
@@ -100,6 +101,8 @@ export interface StepInput {
   testKind: string | null;
   /** True once any card in this course has been answered at all. */
   started: boolean;
+  /** Evidence-backed recommendation from the adaptive learning loop. */
+  adaptive?: LearningRecommendation;
 }
 
 export interface Step {
@@ -142,8 +145,12 @@ const has = (ways: Way[], id: StudyMode) => ways.some((w) => w.id === id);
  * talking for the sake of it.
  */
 export function nextStep(input: StepInput): Step | null {
-  const { ways, guide, due, dueOwn = due, testIn, testKind, started, standings } = input;
+  const { ways, guide, due, dueOwn = due, testIn, testKind, started, standings, adaptive } = input;
   if (ways.length === 0) return null;
+
+  if (adaptive && has(ways, adaptive.activity)) {
+    return { id: adaptive.activity, label: adaptive.label, why: adaptive.reason };
+  }
 
   // Before anything about cards. A card that has never been seen counts as
   // due — correctly, there is no schedule for it yet — so on a course nobody

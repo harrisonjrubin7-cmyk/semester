@@ -756,20 +756,20 @@ export function Connect() {
 
       {/* ── OAuth providers ─────────────────────────────────────────────── */}
       {/*
-        Where the Claude settings were.
+        Where the provider settings were.
 
         Connect accounts had its own key field, model picker and `saveSettings`
         call, and so did Settings → The assistant — two implementations of one
         setting, which is a setting that can disagree with itself. Settings won
         because it is the superset: two providers, the routing between them, and
         what the month has cost. What this screen had and that one did not — the
-        check-the-key button, and the sentence saying there is no "sign in with
-        Claude" to hunt for — moved there rather than dying with the copy.
+        check-the-key button, and the provider sign-in explanation — moved
+        there rather than dying with the copy.
 
         A row rather than nothing at all: this is where the key lived for a year,
         and somebody coming back for it should be told where it went.
       */}
-      <SectionLabel>Claude</SectionLabel>
+      <SectionLabel>Semester Intelligence</SectionLabel>
       <Blueprint
         onClick={() => dispatch({ type: 'go', screen: 'setAssistant' })}
         style={{ paddingBlock: 'calc(13px * var(--density, 1))', paddingInline: 'calc(15px * var(--density, 1))', display: 'flex', gap: 'var(--sp-6)', alignItems: 'center' }}
@@ -781,7 +781,7 @@ export function Connect() {
           <span style={{ display: 'block', fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-1)', textWrap: 'pretty' }}>
             {configured()
               ? `${modelLabel()} · ${routeLabel()}. Change it in Settings.`
-              : 'No key yet, so the parts of the app that need Claude are switched off. Set one in Settings.'}
+              : 'No provider key yet, so model-powered parts of Semester Intelligence are switched off. Set one in Settings.'}
           </span>
         </span>
       </Blueprint>

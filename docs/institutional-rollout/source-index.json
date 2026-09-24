@@ -1,0 +1,56 @@
+[
+  {
+    "ref": "repo:docs/superpowers/specs/2026-09-23-semester-institutional-rollout-design.md",
+    "title": "Semester Institutional Rollout Design",
+    "status": "verified",
+    "checkedAt": "2026-09-23T18:16:38.000Z",
+    "sha256": "2fb03eb467d3170419338a7b51e8ed211d5c530c69ead1d673e610f6fa17c0a6",
+    "note": "Approved program design in this branch."
+  },
+  {
+    "ref": "attachment:Pasted text.txt#L194-L985",
+    "title": "Semester central statement and complete 60-tool inventory",
+    "status": "verified",
+    "checkedAt": "2026-09-23T18:16:38.000Z",
+    "sha256": "db2ca7cb3597f603bca02f86030b6e5e0e1d124cd49cc33ced25e9512d229afb",
+    "note": "User-supplied attachment; 1,059 lines; cited range contains the complete inventory."
+  },
+  {
+    "ref": "repo:app/src/lib/types.ts",
+    "title": "Application screen and data types",
+    "status": "verified",
+    "checkedAt": "2026-09-23T18:16:38.000Z",
+    "sha256": "168d31c369f7030c9d02f075f9ae607cac9526a2d82f291dc587458b757c8568",
+    "note": "Current Screen union and application data contracts."
+  },
+  {
+    "ref": "repo:app/src/lib/nav.ts",
+    "title": "Application destination registry",
+    "status": "verified",
+    "checkedAt": "2026-09-23T18:16:38.000Z",
+    "sha256": "ea5f1e2c20ecf3859dd5f900ef4d2da39f496723893930cc3e7dcf268890c3f9",
+    "note": "Current 59-destination registry."
+  },
+  {
+    "ref": "repo:app/src/lib/nav.registry.test.ts",
+    "title": "Destination-accounting contract",
+    "status": "verified",
+    "checkedAt": "2026-09-23T18:16:38.000Z",
+    "sha256": "2abaf5b1a9240d4c5e6ce6271e8c3f7ce12c91a3232d17d98b1c2b1210f18c3d",
+    "note": "Names every screen intentionally excluded from the destination registry."
+  },
+  {
+    "ref": "web:https://chatgpt.com/share/6ab2c668-ab4c-83ea-a224-b5d582a9337f",
+    "title": "Shared Semester ChatGPT conversation",
+    "status": "unverified",
+    "checkedAt": "2026-09-23T18:16:38.000Z",
+    "note": "URL supplied by the user; content was not programmatically readable in this execution."
+  },
+  {
+    "ref": "web:https://harrisonjrubin7-cmyk.github.io/semester/#/search",
+    "title": "Current public Semester site",
+    "status": "verified",
+    "checkedAt": "2026-09-23T18:16:38.000Z",
+    "note": "Public live site inspected during design; production state must be refreshed before release."
+  }
+]

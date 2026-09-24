@@ -27,7 +27,10 @@
     "check:video": "tsc -p ../video/tsconfig.json",
     "dev:university": "node --env-file=server/institution/.env server/institution/start.ts",
     "sweep:walls": "node scripts/wallsweep.mjs",
-    "smoke:cold": "node scripts/cold-smoke.mjs"
+    "smoke:cold": "node scripts/cold-smoke.mjs",
+    "preview:institutional": "node scripts/institutional-preview.mjs",
+    "smoke:institutional": "node scripts/institutional-preview-smoke.mjs",
+    "rollout:census": "node scripts/institutional-census.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.116.0",

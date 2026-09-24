@@ -293,6 +293,29 @@ begin
   perform pg_temp.checkn('live rows are untouched by the sweep', n, 2::bigint);
 end $$;
 
+-- ── Intelligence records are normalized and protected ────────────────────
+
+do $$
+declare
+  expected text[] := array[
+    'evidence_reference', 'concept_evidence', 'mistake_evidence', 'skill_claim',
+    'skill_claim_evidence', 'capture_asset', 'capture_segment', 'capture_artifact'
+  ];
+  n bigint;
+begin
+  reset role;
+  select count(*) into n
+    from pg_class c join pg_namespace ns on ns.oid = c.relnamespace
+   where ns.nspname = 'public' and c.relname = any(expected) and c.relrowsecurity;
+  perform pg_temp.checkn('every intelligence record table has row-level security', n, 8::bigint);
+
+  select count(*) into n
+    from information_schema.columns
+   where table_schema = 'public' and table_name = any(expected)
+     and column_name in ('tenant_id', 'person_id');
+  perform pg_temp.checkn('every intelligence record carries tenant and person scope', n, 16::bigint);
+end $$;
+
 
 -- Nothing above is kept. Every check raises on failure, so reaching this line
 -- is the result — said out loud rather than left to be inferred from the

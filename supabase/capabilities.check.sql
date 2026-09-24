@@ -222,7 +222,7 @@ begin
   select count(*) into n from public.app_roles;
   perform pg_temp.counted('a signed-in account reads the twenty roles', n, 20);
   select count(*) into n from public.role_capabilities;
-  perform pg_temp.counted('and the whole matrix', n, 15);
+  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 20);
 
   perform pg_temp.become_anon();
   perform pg_temp.refused('a signed-out visitor cannot read the matrix',

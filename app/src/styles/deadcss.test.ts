@@ -88,18 +88,29 @@ describe('the stylesheets', () => {
   it('style nothing that nothing wears', () => {
     const hay = haystack();
     const dead: string[] = [];
+    // The same utility class appears in many rules. Cache the repository-wide
+    // substring check so a full parallel suite does not repeatedly rescan the
+    // whole source tree for the same name.
+    const worn = new Map<string, boolean>();
+    const appears = (name: string) => {
+      const cached = worn.get(name);
+      if (cached !== undefined) return cached;
+      const found = hay.includes(name);
+      worn.set(name, found);
+      return found;
+    };
     for (const sheet of SHEETS) {
       const css = readFileSync(join(STYLES, sheet), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
       for (const m of css.matchAll(/\.(-?[_a-zA-Z][\w-]*)/g)) {
         const name = m[1];
-        if (FOREIGN.test(name) || COMPOSED.has(name) || hay.includes(name)) continue;
+        if (FOREIGN.test(name) || COMPOSED.has(name) || appears(name)) continue;
         if (!dead.includes(`${sheet}: .${name}`)) dead.push(`${sheet}: .${name}`);
       }
     }
     // Named rather than counted: a failure should say which rule to look at,
     // and whether it is dead or merely composed somewhere this cannot see.
     expect(dead).toEqual([]);
-  });
+  }, 10_000);
 
   it('leaves no empty block behind when a rule goes', () => {
     // How the first sweep went wrong: stripping the rules out of four

@@ -66,6 +66,10 @@ function makeDb() {
       auth: {
         getUser: async () => ({ data: { user: { id: 'user-1' } } }),
         signOut: vi.fn(async () => ({ error: null })),
+        signInWithSSO: vi.fn(async (args: unknown) => {
+          log.push({ table: 'auth', op: 'signInWithSSO', args: [args] });
+          return { error: errors.auth ? { message: errors.auth } : null };
+        }),
         resetPasswordForEmail: vi.fn(async (email: string, opts: unknown) => {
           log.push({ table: 'auth', op: 'resetPasswordForEmail', args: [email, opts] });
           return { error: errors.auth ? { message: errors.auth } : null };
@@ -91,6 +95,7 @@ async function load() {
   vi.resetModules();
   vi.stubEnv('VITE_SUPABASE_URL', 'https://project.supabase.co');
   vi.stubEnv('VITE_SUPABASE_KEY', 'a-publishable-key');
+  vi.stubEnv('VITE_UNIVERSITY_GATEWAY_URL', 'https://gateway.example.test');
   harness = makeDb();
   vi.doMock('@supabase/supabase-js', () => ({ createClient: () => harness.db }));
   return import('./cloud');
@@ -351,6 +356,63 @@ describe('appUrl', () => {
     // Site URL, which nobody can diagnose from outside.
     const { appUrl } = await load();
     expect(appUrl()).toBe('https://example.test/');
+  });
+});
+
+describe('institutional SSO activation', () => {
+  const response = (body: unknown, ok = true) =>
+    vi.fn(async (_input: string, _init?: RequestInit) => ({ ok, json: async () => body }));
+
+  it('accepts only an enabled configuration supplied by the university gateway', async () => {
+    const mod = await load();
+    const fetching = response({ enabled: true, label: 'Vanderbilt', domain: 'vanderbilt.edu' });
+    vi.stubGlobal('fetch', fetching);
+    await expect(mod.institutionSsoConfig()).resolves.toEqual({
+      enabled: true,
+      label: 'Vanderbilt',
+      domain: 'vanderbilt.edu',
+    });
+    expect(fetching).toHaveBeenCalledWith(
+      'https://gateway.example.test/v1/auth/config',
+      expect.objectContaining({ credentials: 'omit', redirect: 'error' }),
+    );
+    expect(JSON.stringify(fetching.mock.calls[0]?.[1] ?? {})).not.toMatch(/authorization|bearer/i);
+  });
+
+  it.each([
+    [{ enabled: false }],
+    [{ enabled: true, label: 'Vanderbilt', domain: 'not a host' }],
+    [{ enabled: true, label: '', domain: 'vanderbilt.edu' }],
+  ])('keeps the institutional button hidden for disabled or malformed configuration', async (body) => {
+    const mod = await load();
+    vi.stubGlobal('fetch', response(body));
+    await expect(mod.institutionSsoConfig()).resolves.toBeNull();
+  });
+
+  it('keeps the institutional button hidden when no gateway is configured', async () => {
+    vi.resetModules();
+    vi.stubEnv('VITE_UNIVERSITY_GATEWAY_URL', '');
+    const fetching = vi.fn();
+    vi.stubGlobal('fetch', fetching);
+    await expect((await import('./cloud')).institutionSsoConfig()).resolves.toBeNull();
+    expect(fetching).not.toHaveBeenCalled();
+  });
+
+  it('starts domain discovery with the one allowlisted app callback', async () => {
+    const mod = await load();
+    await mod.signInWithSSO({ domain: 'vanderbilt.edu', redirectTo: 'https://example.test/' });
+    expect(harness.log.find((entry) => entry.op === 'signInWithSSO')?.args[0]).toEqual({
+      domain: 'vanderbilt.edu',
+      options: { redirectTo: 'https://example.test/' },
+    });
+  });
+
+  it('refuses a different redirect before asking the auth service', async () => {
+    const mod = await load();
+    await expect(
+      mod.signInWithSSO({ domain: 'vanderbilt.edu', redirectTo: 'https://attacker.example/' }),
+    ).rejects.toThrow(/approved app address/i);
+    expect(harness.log.some((entry) => entry.op === 'signInWithSSO')).toBe(false);
   });
 });
 
