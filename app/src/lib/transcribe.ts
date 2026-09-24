@@ -72,6 +72,15 @@ export function stamp(seconds: number): string {
   return `${h > 0 ? `${h}:` : ''}${mm}:${String(rest).padStart(2, '0')}`;
 }
 
+/** A fixed-width locator for citations that must stay stable across views. */
+export function captureLocator(seconds: number): string {
+  const s = Math.max(0, Math.floor(seconds));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const rest = s % 60;
+  return [h, m, rest].map((part) => String(part).padStart(2, '0')).join(':');
+}
+
 /**
  * The transcript as text.
  *
