@@ -73,6 +73,21 @@ const cases = [
   { hash: '#/search', width: 1440, height: 1000, expected: 'Search' },
 ];
 
+const roleWorkspaces = [
+  ['student', 'Student workspace', 'Plan my work'],
+  ['faculty', 'Faculty workspace', 'Prepare assignment drafts'],
+  ['teaching-assistant', 'Teaching-assistant workspace', 'Prepare office-hours support'],
+  ['advisor', 'Advisor workspace', 'Prepare advising follow-up'],
+  ['campus-staff', 'Student-success workspace', 'Prepare student support'],
+  ['university-admin', 'Administrator workspace', 'Review audit readiness'],
+  ['moderator', 'Community moderation workspace', 'Escalate a sample case'],
+  ['employer', 'Employer workspace', 'Plan recruiting follow-up'],
+  ['applicant', 'Applicant workspace', 'Track my application preparation'],
+  ['authorized-payer', 'Authorized payer workspace', 'Prepare a payment handoff'],
+  ['authorized-family', 'Authorized-family workspace', 'Prepare student-approved questions'],
+  ['alumni', 'Alumni workspace', 'Prepare a mentorship profile'],
+];
+
 const chromeCandidates = [
   process.env.SMOKE_CHROME,
   '/opt/pw-browsers/chromium',
@@ -176,10 +191,24 @@ try {
       }
 
       await page.goto(`${base}#/university`, { waitUntil: 'domcontentloaded' });
-      await previewControls.locator('summary').click();
-      await previewControls.locator('select').nth(1).selectOption('cedar-coast-campus-staff');
-      await page.getByText('Student-success workspace', { exact: false }).waitFor();
-      console.log('PASS context isolation Northstar student -> Cedar Coast student -> Cedar Coast staff');
+      const previewDisclosure = previewControls.locator('details');
+      for (const [role, title, applicableFunction] of roleWorkspaces) {
+        // Changing person intentionally remounts the tenant-scoped preview and
+        // closes this disclosure. Re-open it for the next role rather than
+        // forcing a hidden select, which would not represent a user's path.
+        if ((await previewDisclosure.getAttribute('open')) === null) {
+          await previewControls.locator('summary').click();
+        }
+        const roleSelect = previewControls.locator('select').nth(1);
+        await roleSelect.selectOption(`cedar-coast-${role}`);
+        await page.getByText(title, { exact: true }).waitFor();
+        await page.getByText(applicableFunction, { exact: true }).waitFor();
+        const visibleRoleHeadings = await page.locator('section[aria-label*="workspace for"] .section-label').allTextContents();
+        if (visibleRoleHeadings.length !== 1 || visibleRoleHeadings[0]?.trim() !== title) {
+          findings.push(`role workspace ${role}: visible headings were ${JSON.stringify(visibleRoleHeadings)}`);
+        }
+      }
+      console.log(`PASS context isolation and ${roleWorkspaces.length} role-specific workspaces`);
     } finally {
       await context.close();
     }
