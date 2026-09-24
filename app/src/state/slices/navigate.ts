@@ -14,6 +14,7 @@ import { LIBRARIES, NAMED } from '../../lib/route';
 import { ROOTS, type Action, type State } from '../shape';
 import { ONB_STEPS } from '../../data/misc';
 import { firstScreen } from '../../lib/chrome';
+import { screenForRole } from '../../lib/role';
 
 /**
  * Where the run lets somebody out, which is not the same as where the app
@@ -136,7 +137,7 @@ export function navigate(state: State, action: Action): State | null {
     case 'go':
       return push(
         action.courseId ? { ...state, guideId: action.courseId } : state,
-        action.screen,
+        screenForRole(action.screen, state.role),
       );
 
     /**
@@ -159,9 +160,10 @@ export function navigate(state: State, action: Action): State | null {
        */
       // The browser moved, which is a navigation like any other. See `dismiss`.
       state = dismiss(state);
-      const library = LIBRARIES.includes(action.screen);
-      if (action.screen === state.screen && !action.id && !action.mode && !library) return state;
-      const back = state.history[state.history.length - 1] === action.screen;
+      const landed = screenForRole(action.screen, state.role);
+      const library = LIBRARIES.includes(landed);
+      if (landed === state.screen && !action.id && !action.mode && !library) return state;
+      const back = state.history[state.history.length - 1] === landed;
       /*
        * Which field the id in the address belongs in.
        *
@@ -172,10 +174,10 @@ export function navigate(state: State, action: Action): State | null {
        * code in it. `lib/route.ts` imports nothing at runtime, so reading the
        * one table here costs nothing and cannot drift.
        */
-      const field = action.id || library ? NAMED[action.screen] : undefined;
+      const field = action.id || library ? NAMED[landed] : undefined;
       return {
         ...state,
-        screen: action.screen,
+        screen: landed,
         history: back ? state.history.slice(0, -1) : state.history,
         // `|| null` for the library case: landing on the shelf means no file
         // is open, and leaving the old id in place would reopen it instead.

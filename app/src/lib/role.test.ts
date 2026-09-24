@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_ROLE, ROLES, forRole, hiddenFrom, pickable, roleOf, type Role } from './role';
+import { DEFAULT_ROLE, ROLES, forRole, hiddenFrom, pickable, roleOf, screenForRole, type Role } from './role';
 import { DESTINATIONS, destinationsFor, offered } from './nav';
 import type { Capabilities } from './school';
 
@@ -76,6 +76,12 @@ describe('what each role sees', () => {
     for (const s of ['import', 'edit', 'calendar', 'registrar', 'write', 'deck', 'exam', 'mail']) {
       expect(forRole(s, 'faculty'), s).toBe(true);
     }
+  });
+
+  it('sends a stale role-inapplicable route home instead of rendering it directly', () => {
+    expect(screenForRole('degree', 'faculty')).toBe('home');
+    expect(screenForRole('write', 'faculty')).toBe('write');
+    expect(screenForRole('degree', 'student')).toBe('degree');
   });
 
   // A screen added later and forgotten in the table stays visible rather than

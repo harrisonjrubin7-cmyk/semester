@@ -212,6 +212,11 @@ export function forRole(screen: string, role: Role): boolean {
   return role === 'student' ? true : !STUDENT_ONLY_SET.has(screen);
 }
 
+/** A stale bookmark or role switch cannot keep a role-inapplicable screen open. */
+export function screenForRole(screen: Screen, role: Role): Screen {
+  return forRole(screen, role) ? screen : 'home';
+}
+
 /** Every screen this role does not see. For the diagnostics dump and the tests. */
 export function hiddenFrom(role: Role): string[] {
   return role === 'student' ? [] : [...STUDENT_ONLY];
