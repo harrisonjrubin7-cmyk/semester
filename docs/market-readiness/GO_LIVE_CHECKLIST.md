@@ -1,18 +1,23 @@
 # Go-Live Checklist
 
-**Status: `NOT_STARTED`** — no item below is currently met.
+**Status: `IN_PROGRESS`** — repository controls exist, but live operational
+and institutional evidence is still required before sign-off.
 
 Every line requires evidence, not an opinion.
 
 ## Blocking
 
-- [ ] Tenant isolation enforced in policy and covered by cross-tenant tests
+- [x] Institutional data-layer tenant isolation enforced in policy and covered
+  by cross-tenant tests (`supabase/*institution*.check.sql`, evidence, policy,
+  identity, journal and role-audit suites). This does not certify every legacy
+  direct-to-Supabase product table for multi-tenant institutional use.
 - [ ] Restore tested from backup, timed, and the restored DB passes the policy suites
 - [ ] Gateway journal backed up
 - [ ] Error monitoring live and alerting to a named person
 - [ ] Uptime monitoring live
 - [ ] Security headers configured at the host
-- [ ] Admin audit log recording role and tenant-setting changes
+- [x] Append-only audit evidence records tenant-setting and future role-grant,
+  change and revocation events; cross-tenant and immutability checks pass
 - [ ] Rate limiting on the Supabase-direct paths, not just the gateway
 - [ ] Data export and account deletion available to users
 - [ ] Accessibility audit of the piloted workflows
