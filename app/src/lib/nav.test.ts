@@ -527,7 +527,7 @@ describe('every screen is named, not identified', () => {
 
   it('names the settings pages the way the header bar does', () => {
     expect(screenName('setNav' as Screen)).toBe('Layout');
-    expect(screenName('setAssistant' as Screen)).toBe('Assistant');
+    expect(screenName('setAssistant' as Screen)).toBe('Intelligence');
   });
 
   it('leaves a registry screen wearing its registry label', () => {

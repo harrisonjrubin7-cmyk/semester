@@ -5,7 +5,7 @@ import { useStore } from '../state/store';
 import { useAI, useSeed } from './store';
 import { assemble } from './assemble';
 import { TOUCH, WIDE, useMedia } from '../lib/media';
-import { useConversation, provider } from './converse';
+import { useConversation } from './converse';
 import { Composer, sendHint } from './Composer';
 import { useVoice } from './usevoice';
 import { Dropped, Question, Reply, Waiting, Looked, Using, useFollowing } from './Turns';
@@ -15,6 +15,8 @@ import { configured, modelLabel } from '../lib/assistant';
 import { nameOf } from '../lib/threads';
 import { Trouble } from '../components/Trouble';
 import { Applied, Locally, Proposals } from './Actions';
+import { IntelligenceDisclosure } from '../intelligence/Disclosure';
+import { IntegrityModePicker } from '../intelligence/ModePicker';
 
 /**
  * The panel: the assistant once it is open, and nothing that is true before.
@@ -116,7 +118,7 @@ export function Panel({ side }: { side: 'right' | 'left' }) {
    * A new thread has no question yet and says who is answering instead.
    */
   const open = talk.threads.find((t) => t.id === talk.openId);
-  const title = open && open.turns.length > 0 ? nameOf(open) : `Ask ${provider()}`;
+  const title = open && open.turns.length > 0 ? nameOf(open) : 'Ask Semester';
 
   /**
    * Follows the stream, and stops the moment you scroll up.
@@ -554,8 +556,12 @@ export function Panel({ side }: { side: 'right' | 'left' }) {
                         extra={
                           i === talk.turns.length - 1 && !talk.busy ? (
                             <>
-                              <Using read={talk.read} />
-                              {talk.used.length > 0 && (
+                              {talk.response ? (
+                                <IntelligenceDisclosure response={talk.response} />
+                              ) : (
+                                <Using read={talk.read} />
+                              )}
+                              {!talk.response && talk.used.length > 0 && (
                                 <Looked
                                   said={`Read ${talk.used.length} ${
                                     talk.used.length === 1 ? 'part' : 'parts'
@@ -597,7 +603,7 @@ export function Panel({ side }: { side: 'right' | 'left' }) {
                     <div aria-hidden style={{ fontSize: 'var(--type-sm)' }}>
                       {talk.streaming && <Reply text={talk.streaming} />}
                       {(!talk.streaming || talk.looking.length > 0) && (
-                        <Waiting who={provider()} doing={talk.looking} />
+                        <Waiting who="Semester Intelligence" doing={talk.looking} />
                       )}
                     </div>
                   )}
@@ -646,6 +652,11 @@ export function Panel({ side }: { side: 'right' | 'left' }) {
               }}
             >
               <div style={COLUMN}>
+                <IntegrityModePicker
+                  requested={talk.integrityMode}
+                  policy={{ allowed: ['explain', 'hint', 'practice', 'review', 'draft'] }}
+                  onChange={talk.setIntegrityMode}
+                />
                 {/*
                   The same box the full chat uses, from `Composer.tsx`, so
                   Enter means the same thing on both — including on a touch

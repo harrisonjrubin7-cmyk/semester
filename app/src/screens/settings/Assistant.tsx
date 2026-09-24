@@ -127,7 +127,7 @@ export function SettingsAssistant() {
   return (
     <SettingsPage
       screen="setAssistant"
-      blurb="Which provider answers, which model, and what it has cost. The assistant itself is the Ask tab."
+      blurb="Which provider answers, which model, and what it has cost. Semester Intelligence itself is the Ask Semester tab."
     >
       {(lit) => (
         <>
@@ -435,7 +435,7 @@ export function SettingsAssistant() {
           */}
           <Group
             header="What it knows about you"
-            footer="Said once, and every part of the app that asks Claude anything is told it — the Ask tab, Work the problem, Draft it, the study tools. Nothing here is guessed at or remembered from a conversation: a line is here because you typed it, and it is gone when you delete it. These are preferences, not instructions — a line cannot make the assistant write work you will hand in as your own."
+            footer="Said once, and every part of Semester Intelligence is told it — Ask Semester, Work the problem, Draft it, and the study tools. Nothing here is guessed at or remembered from a conversation: a line is here because you typed it, and it is gone when you delete it. These are preferences, not instructions — a line cannot make the assistant write work you will hand in as your own."
             lit={lights('memory about you preferences remember profile context', lit)}
           >
             <CustomRow line={false}>

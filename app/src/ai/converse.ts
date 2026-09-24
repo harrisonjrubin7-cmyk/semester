@@ -20,6 +20,8 @@ import { useTrouble } from '../lib/trouble';
 import { useAI } from './store';
 import { assemble } from './assemble';
 import { assembleIntelligenceRequest } from '../intelligence/assemble';
+import type { IntelligenceRequest } from '../intelligence/assemble';
+import type { IntelligenceResponse, IntegrityMode, SourceOrigin } from '../intelligence/contracts';
 import { dropThread, flight, keepTurns, newThread, openThread, sender, setLive, useLive,
   renameThread,
   pinThread,
@@ -70,6 +72,10 @@ export interface Conversation {
   looking: string[];
   /** What the app itself could say, with no request behind it. */
   locally: Local | null;
+  /** Sources, information used, origin and integrity mode for the last answer. */
+  response: IntelligenceResponse | null;
+  integrityMode: IntegrityMode;
+  setIntegrityMode: (mode: IntegrityMode) => void;
   /** Offers waiting on a tap. Nothing here has happened. */
   proposals: Proposal[];
   /** What has been run, and how to take each one back. */
@@ -179,7 +185,7 @@ export function useConversation(): Conversation {
    * `useState`'s signature so everything downstream is unchanged.
    */
   const live = useLive();
-  const { turns, streaming, busy, read, used, looking, locally, proposals, applied, spend, dropped } =
+  const { turns, streaming, busy, read, used, looking, locally, response, integrityMode, proposals, applied, spend, dropped } =
     live;
   const setStreaming = (v: string) => setLive('streaming', v);
   const setBusy = (v: boolean) => setLive('busy', v);
@@ -187,6 +193,7 @@ export function useConversation(): Conversation {
   const setUsed = (v: string[]) => setLive('used', v);
   const setLooking = (v: string[]) => setLive('looking', v);
   const setLocally = (v: Local | null) => setLive('locally', v);
+  const setResponse = (v: IntelligenceResponse | null) => setLive('response', v);
   const setProposals = (v: Proposal[] | ((was: Proposal[]) => Proposal[])) =>
     setLive('proposals', v);
   const setApplied = (
@@ -291,6 +298,7 @@ export function useConversation(): Conversation {
       setStreaming('');
       trouble.clear();
       setProposals([]);
+      setResponse(null);
       setBusy(true);
       flight.abort = new AbortController();
       let sofar = '';
@@ -308,6 +316,7 @@ export function useConversation(): Conversation {
        * can reach it: the rounds before a Stop have been paid for too.
        */
       let spent: Usage | null = null;
+      let responseContext: IntelligenceRequest | null = null;
       try {
         const how = readMode(text);
         setRead(how);
@@ -389,7 +398,7 @@ export function useConversation(): Conversation {
               ...(source.courseId ? { resourceId: source.courseId } : {}),
             },
           })),
-          requestedMode: 'explain',
+          requestedMode: integrityMode,
           allowedModes: ['explain', 'hint', 'practice', 'review', 'draft'],
           policyId: `${state.schoolId || 'unaffiliated'}:local-default`,
           consentIds: [],
@@ -397,6 +406,7 @@ export function useConversation(): Conversation {
           providerRoute: provider() === 'openai' ? 'openai' : 'anthropic',
           assembledAt: now.toISOString(),
         });
+        responseContext = intelligence;
         /** Everything this answer drew on: what travelled, plus what it fetched. */
         const drew = new Set(drawn.used);
         for (const item of intelligence.evidence) drew.add(`${item.title} — ${item.locator}`);
@@ -563,6 +573,20 @@ export function useConversation(): Conversation {
           setLooking(found.saying);
         }
 
+        if (responseContext) {
+          const origins = [...new Set(responseContext.evidence.map((item) => item.origin))];
+          setResponse({
+            text: reply,
+            evidence: responseContext.evidence,
+            informationUsed: [...drew],
+            origins: origins.length > 0 ? origins : (['inference'] as SourceOrigin[]),
+            mode: responseContext.context.integrityMode,
+            ...(responseContext.policyDecision.restricted
+              ? { policyReason: responseContext.policyDecision.reason }
+              : {}),
+            actions: [],
+          });
+        }
         remember([
           ...next,
           { role: 'assistant', content: reply, ...(ranOut ? { incomplete: true } : {}) },
@@ -611,7 +635,7 @@ export function useConversation(): Conversation {
     },
     // No `dispatch`: the one call `send` made was the search the card
     // promised and no screen ran. See the note on `Proposal` in `lib/tools.ts`.
-    [busy, turns, remember, trouble, ai, state, catalog, now, school, account?.id, systemFor, held],
+    [busy, turns, remember, trouble, ai, state, catalog, now, school, account?.id, integrityMode, systemFor, held],
   );
 
   /*
@@ -713,6 +737,9 @@ export function useConversation(): Conversation {
     used,
     looking,
     locally,
+    response,
+    integrityMode,
+    setIntegrityMode: (mode) => setLive('integrityMode', mode),
     proposals,
     applied,
     proposalsLine: proposalsLine(proposals),

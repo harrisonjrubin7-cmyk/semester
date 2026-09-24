@@ -960,7 +960,7 @@ export function Command({ onClose }: { onClose: () => void }) {
                 }}
               >
                 Nothing matches &ldquo;{text.trim()}&rdquo;. Try a course code, a topic from a
-                guide, a professor, or the name of a screen — or ask Claude, which can answer
+                guide, a professor, or the name of a screen — or ask Semester, which can answer
                 from what the app knows rather than only find it.
               </div>
             )}
@@ -1071,8 +1071,8 @@ function Box({
           type="button"
           className="bare tappable"
           onClick={onAsk}
-          aria-label="Ask Claude this"
-          title="Ask Claude"
+          aria-label="Ask Semester about this"
+          title="Ask Semester"
           style={{
             width: 'auto',
             flex: 'none',

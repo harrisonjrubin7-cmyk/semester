@@ -114,8 +114,8 @@ export const SETTINGS: SettingsSection[] = [
       },
       {
         screen: 'setAssistant',
-        label: 'The assistant',
-        short: 'Assistant',
+        label: 'Semester Intelligence',
+        short: 'Intelligence',
         holds: 'Which provider answers, which model, what it costs and what it sees',
         keywords:
           'claude ai assistant chat gpt chatgpt openai anthropic api key proxy model sonnet opus haiku provider cost spend money tokens billing what it can see privacy context sign in with claude login console check my key',

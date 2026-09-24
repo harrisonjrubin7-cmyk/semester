@@ -7,7 +7,6 @@ import { homeTitle } from './lib/look';
 import { datedEvents, datedItems, nextExam } from './lib/select';
 import { destination } from './lib/nav';
 import { settingsTitle } from './lib/settings';
-import { provider } from './lib/assistant';
 import { isoToDate } from './lib/date';
 
 /** The two lines the header draws: the small one over the big one. */
@@ -208,7 +207,7 @@ export const HEADERS: Record<Screen, (c: HeaderCtx) => Head> = {
    * answering rather than repeating the title, which is the one thing about
    * this screen worth saying before you have asked anything.
    */
-  ask: () => ({ kicker: `${provider()} · this term`, title: 'Ask Claude' }),
+  ask: () => ({ kicker: 'Semester Intelligence · this term', title: 'Ask Semester' }),
   work: (c) => ({ kicker: c.about('assignments'), title: 'Work on it' }),
   maps: () => ({ kicker: 'Campus, city, and how to get there', title: 'Getting there' }),
   mail: () => ({ kicker: 'Read here, sent by you', title: 'Email' }),

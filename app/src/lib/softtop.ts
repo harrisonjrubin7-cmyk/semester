@@ -512,7 +512,7 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
     case 'ask':
       return {
         hero: {
-          label: 'Ask Claude',
+          label: 'Ask Semester',
           said: courses === 0 ? 'No course loaded, so answers come without a guide in hand.' : `Answering with ${count(courses, 'course')} in hand.`,
         },
         stats: term,
