@@ -3,6 +3,7 @@ import { Blueprint } from '../Blueprint';
 import { ActionButton, SectionLabel } from '../ui';
 import { useFlightPlan } from './FlightPlanContext';
 import { useInstitutionalPreview } from './PreviewContext';
+import { controlPlaneView } from '../../lib/control-plane';
 
 const TITLES = {
   student: 'Student workspace',
@@ -39,6 +40,19 @@ export function RoleWorkspace() {
   };
 
   const external = role === 'moderator' || role === 'employer' || role === 'authorized_payer';
+  const controlAccess = controlPlaneView({
+    tenantId: institution.id,
+    viewedTenantId: institution.id,
+    previewRole: role,
+    featureState: 'preview',
+    gatewayStatus: 'sandbox tested',
+    // Preview fixture grants make the demonstrations navigable; they are not
+    // cryptographically verified tenant capabilities and authorize no write.
+    verifiedCapabilities: [],
+    approvedSourceCount: 0,
+    activeConsentCount: 0,
+    auditEventCount: 0,
+  });
 
   return (
     <section aria-label={`${TITLES[role]} for ${institution.name}`} style={{ marginBlock: 'var(--sp-5)' }}>
@@ -79,6 +93,7 @@ export function RoleWorkspace() {
         {role === 'university_admin' && (
           <>
             <p>Illustrative settings · server enforcement required</p>
+            <p>{controlAccess.authorization} Open the Control tab to inspect and stage policy.</p>
             <div style={{ display: 'grid', gap: 'var(--sp-2)' }}>
               {institution.connections.map((connection) => (
                 <div key={connection.system}>

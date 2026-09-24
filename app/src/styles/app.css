@@ -7923,3 +7923,68 @@ button.adband-bar {
 .capture-policy-notice {
   margin-bottom: var(--sp-4);
 }
+
+.control-plane {
+  display: grid;
+  gap: var(--sp-6);
+  margin-block: var(--sp-6);
+}
+
+.control-plane-heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: var(--sp-6);
+  padding-bottom: var(--sp-5);
+  border-bottom: 1px solid var(--app-line);
+}
+
+.control-plane-heading h2 {
+  margin: var(--sp-2) 0 0;
+  font-family: var(--font-heading);
+  font-size: var(--type-xl);
+}
+
+.control-plane-heading p,
+.control-plane-grid p,
+.control-plane-note,
+.control-plane-message {
+  margin: var(--sp-3) 0 0;
+  color: var(--app-dim);
+  font-size: var(--type-sm);
+  line-height: var(--leading-normal);
+}
+
+.control-plane-tenant,
+.control-plane-status {
+  color: var(--app-dim);
+  font-size: var(--type-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.control-plane-tenant {
+  flex: none;
+}
+
+.control-plane-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: var(--sp-4);
+}
+
+.control-plane-status {
+  margin-top: var(--sp-3);
+}
+
+.control-plane-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-4);
+}
+
+@media (max-width: 560px) {
+  .control-plane-heading {
+    display: grid;
+  }
+}

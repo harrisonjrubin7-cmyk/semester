@@ -592,6 +592,7 @@ const MOCKS_MODULES = [
   'src/components/StudyStudio.test.tsx',
   'src/components/TermChoice.test.tsx',
   'src/components/gpascalenote.test.tsx',
+  'src/components/institutional/ControlPlane.test.tsx',
   'src/components/nav/institutional-nav.test.tsx',
   'src/lib/extract.test.ts',
   'src/lib/extractaccuracy.test.ts',
