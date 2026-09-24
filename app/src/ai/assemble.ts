@@ -2,6 +2,7 @@ import { screenName } from '../lib/nav';
 import { providerFor } from './providers';
 import { render, type Look, type ScreenContext } from './shape';
 import type { Screen } from '../lib/types';
+import { journeyPositionFor } from '../lib/journeys';
 
 /**
  * What the assistant can see, assembled at the moment it is asked.
@@ -105,13 +106,22 @@ export function assemble(ai: Inputs): Assembled {
   // at: setLook" and its placeholder "Ask about drill".
   const label = screenName(screen);
   const registered = ai.registered();
+  const journey = journeyPositionFor(screen);
+  const journeyText = journey
+    ? [
+        `Semester journey: ${journey.journey.label}.`,
+        `Current part: ${journey.position} of ${journey.total} — ${screenName(journey.current)}.`,
+        journey.previous ? `Previous part: ${screenName(journey.previous)}.` : '',
+        journey.next ? `Next part: ${screenName(journey.next)}.` : '',
+      ].filter(Boolean).join(' ')
+    : '';
   if (!now) {
     return {
       screen,
       label,
       own: null,
       extra: registered,
-      text: '',
+      text: journeyText,
       dropped: 0,
       visibleSourceIds: visibleSourceIds(screen, now, registered),
     };
@@ -136,7 +146,7 @@ export function assemble(ai: Inputs): Assembled {
       label,
       own: null,
       extra: registered,
-      text: only,
+      text: [journeyText, only].filter(Boolean).join('\n\n'),
       dropped: 0,
       visibleSourceIds: visibleSourceIds(screen, now, registered),
     };
@@ -151,7 +161,7 @@ export function assemble(ai: Inputs): Assembled {
    * end.
    */
   const rendered = render(screen, label, own);
-  const text = [...registered.map((c) => render(screen, label, c).text), rendered.text]
+  const text = [journeyText, ...registered.map((c) => render(screen, label, c).text), rendered.text]
     .filter(Boolean)
     .join('\n\n');
   return {
@@ -167,9 +177,11 @@ export function assemble(ai: Inputs): Assembled {
 
 export function suggestionsFor(ai: Inputs): string[] {
   const assembled = assemble(ai);
+  const journey = journeyPositionFor(assembled.screen);
+  const fromJourney = journey ? [`What should I do next in ${journey.journey.label}?`] : [];
   const fromScreen = assembled.own?.suggestions ?? [];
   const fromExtra = assembled.extra.flatMap((c) => c.suggestions);
-  const all = [...fromExtra, ...fromScreen];
+  const all = [...fromExtra, ...fromJourney, ...fromScreen];
   // Everywhere works, so a screen with nothing to suggest still offers the
   // two questions that are worth asking from anywhere.
   return all.length > 0

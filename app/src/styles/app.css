@@ -3800,6 +3800,54 @@ section[data-drop] > .grip + * {
   border-bottom: 1px solid var(--app-line-soft);
 }
 
+.institutional-journey-context {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-5);
+  padding: var(--sp-4) var(--sp-2) var(--sp-5);
+  border-top: 1px solid var(--app-line-soft);
+}
+
+.institutional-journey-copy {
+  display: grid;
+  gap: var(--sp-1);
+  min-width: 0;
+}
+
+.institutional-journey-copy > span:last-child {
+  color: var(--app-dim);
+  font-size: calc(13px * var(--text-scale, 1));
+}
+
+.institutional-journey-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+}
+
+.institutional-journey-button {
+  width: auto;
+  min-height: 44px;
+  padding: var(--sp-2) var(--sp-4);
+  border-radius: 999px;
+  color: var(--app-dim);
+  white-space: nowrap;
+}
+
+.institutional-journey-button:hover,
+.institutional-journey-button:focus-visible {
+  color: var(--app-fg);
+  background: var(--app-line-soft);
+}
+
+.institutional-journey-ai {
+  color: var(--app-accent-deep);
+  border: 1px solid var(--app-line);
+}
+
 @media (max-width: 759px) {
   .institutional-navigation {
     padding-inline: calc(14px * var(--density, 1));
@@ -3819,6 +3867,15 @@ section[data-drop] > .grip + * {
   .institutional-workspace-disclosure .institutional-nav-button {
     width: 100%;
     text-align: left;
+  }
+
+  .institutional-journey-context {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .institutional-journey-actions {
+    justify-content: flex-start;
   }
 }
 

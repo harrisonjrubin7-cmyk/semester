@@ -6,13 +6,19 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const store = vi.hoisted(() => ({
   screen: 'calendar',
   dispatch: vi.fn(),
+  showAI: vi.fn(),
 }));
 
 vi.mock('../../state/store', () => ({
   useStore: () => ({
-    state: { screen: store.screen },
+    state: { screen: store.screen, role: 'student' },
     dispatch: store.dispatch,
+    school: { capabilities: {} },
   }),
+}));
+
+vi.mock('../../ai/store', () => ({
+  useAI: () => ({ show: store.showAI }),
 }));
 
 import { InstitutionalNavigation } from './InstitutionalPrimaryNav';
@@ -29,6 +35,7 @@ function render(enabled?: boolean) {
 beforeEach(() => {
   store.screen = 'calendar';
   store.dispatch.mockReset();
+  store.showAI.mockReset();
   host = document.createElement('div');
   document.body.append(host);
   root = createRoot(host);
@@ -90,5 +97,20 @@ describe('institutional navigation preview', () => {
     store.screen = 'degree';
     render(true);
     expect(host.querySelector('details summary')?.textContent).toBe('Courses workspace');
+  });
+
+  it('connects the current screen to its journey, adjacent parts and Semester Intelligence', () => {
+    store.screen = 'write';
+    render(true);
+    const disclosure = host.querySelector<HTMLDetailsElement>('details')!;
+    disclosure.open = true;
+    const context = disclosure.querySelector('[aria-label="Current journey"]')!;
+    expect(context.textContent).toContain('Complete an assignment');
+    expect(context.textContent).toContain('of');
+
+    const ask = [...context.querySelectorAll<HTMLButtonElement>('button')]
+      .find((button) => button.textContent?.includes('Ask Semester'))!;
+    act(() => ask.click());
+    expect(store.showAI).toHaveBeenCalledWith(expect.stringContaining('Complete an assignment'));
   });
 });

@@ -23,42 +23,71 @@ export const JOURNEYS: Journey[] = [
     label: 'Start my semester',
     outcome: 'Bring in courses, confirm dates and connect the systems you already use.',
     aliases: ['setup', 'syllabus', 'import', 'registration', 'connect accounts'],
-    screens: ['import', 'connect', 'courses', 'calendar', 'registrar', 'yes'],
+    screens: ['import', 'search', 'directory', 'connect', 'courses', 'edit', 'registrar', 'yes', 'announce'],
   },
   {
     id: 'plan-today',
     label: 'Plan today',
     outcome: 'Turn confirmed deadlines and available time into a realistic next step.',
     aliases: ['today', 'deadline', 'schedule', 'tasks', 'week', 'behind'],
-    screens: ['home', 'calendar', 'mine', 'clocks', 'brief', 'behind'],
+    screens: ['home', 'calendar', 'mine', 'clocks', 'brief', 'runway', 'behind', 'notifs'],
   },
   {
     id: 'learn-practice',
     label: 'Learn and practice',
     outcome: 'Review what matters next, practice it and strengthen recall over time.',
     aliases: ['study', 'flashcards', 'quiz', 'exam', 'mastery', 'review'],
-    screens: ['study', 'exam', 'runway', 'ask', 'solve', 'analyse'],
+    screens: ['study', 'meet', 'ask', 'solve', 'exam', 'update', 'sources', 'proof'],
   },
   {
     id: 'complete-assignment',
     label: 'Complete an assignment',
     outcome: 'Move from source material to a checked document, deck, analysis or solution.',
     aliases: ['assignment', 'essay', 'paper', 'slides', 'citations', 'draft'],
-    screens: ['work', 'essay', 'write', 'sheet', 'deck', 'sources', 'proof', 'update'],
+    screens: ['work', 'essay', 'write', 'sheet', 'deck', 'equations', 'draw', 'analyse', 'create'],
   },
   {
     id: 'work-with-people',
     label: 'Work with people',
     outcome: 'Coordinate classmates, groups, meetings, messages and campus relationships.',
     aliases: ['group', 'classmates', 'collaboration', 'meeting', 'email', 'mentor'],
-    screens: ['groupwork', 'classmates', 'call', 'mail', 'people', 'activities'],
+    screens: [
+      'groupwork',
+      'classmates',
+      'call',
+      'mail',
+      'people',
+      'activities',
+      'university',
+      'maps',
+      'housing',
+      'meals',
+      'costs',
+      'family',
+      'athletics',
+    ],
   },
   {
     id: 'prepare-next',
     label: 'Prepare for what comes next',
     outcome: 'Connect the degree to skills, opportunities, applications and your next move.',
     aliases: ['career', 'resume', 'jobs', 'internship', 'applications', 'degree'],
-    screens: ['degree', 'career', 'applying', 'pathway', 'profile', 'export'],
+    screens: [
+      'degree',
+      'career',
+      'applying',
+      'pathway',
+      'profile',
+      'export',
+      'account',
+      'data',
+      'privacy',
+      'settings',
+      'help',
+      'links',
+      'me',
+      'nil',
+    ],
   },
 ];
 
@@ -70,6 +99,35 @@ export function journeysFor(destinations: Destination[]): Journey[] {
     aliases: [...journey.aliases],
     screens: journey.screens.filter((screen) => registered.has(screen)),
   }));
+}
+
+export interface JourneyPosition {
+  journey: Journey;
+  current: Screen;
+  position: number;
+  total: number;
+  previous?: Screen;
+  next?: Screen;
+}
+
+/** The current part of the larger student outcome, with the adjacent handoffs. */
+export function journeyPositionFor(
+  screen: Screen,
+  journeys: Journey[] = JOURNEYS,
+): JourneyPosition | null {
+  for (const journey of journeys) {
+    const index = journey.screens.indexOf(screen);
+    if (index < 0) continue;
+    return {
+      journey,
+      current: screen,
+      position: index + 1,
+      total: journey.screens.length,
+      previous: journey.screens[index - 1],
+      next: journey.screens[index + 1],
+    };
+  }
+  return null;
 }
 
 export interface JourneySignals {

@@ -65,7 +65,7 @@ const schemaVersion = Number(schemaMatch[1]);
 
 const cases = [
   { hash: '#/home', width: 1440, height: 1000, expected: 'Today', module: 'Synthetic Flight Plan' },
-  { hash: '#/calendar', width: 390, height: 844, expected: 'Calendar', module: 'Sample Flight Plan capacity' },
+  { hash: '#/calendar', width: 390, height: 844, expected: 'Calendar', module: 'Study plan' },
   { hash: '#/study', width: 1440, height: 1000, expected: 'Study', module: 'Sample learning evidence' },
   { hash: '#/behind', width: 390, height: 844, expected: 'When you are behind', module: 'Sample Flight Plan recovery' },
   { hash: '#/university', width: 1440, height: 1000, expected: 'University', module: 'Student workspace' },
@@ -115,6 +115,9 @@ try {
         await page.locator('nav[aria-label="Primary"]').waitFor({ state: 'visible', timeout: 10_000 });
         await page.getByText('Synthetic preview', { exact: false }).first().waitFor({ state: 'visible' });
         if (probe.module) await page.getByText(probe.module, { exact: false }).first().waitFor({ state: 'visible' });
+        const workspace = page.locator('details.institutional-workspace-disclosure');
+        await workspace.locator('summary').click();
+        await workspace.locator('[aria-label="Current journey"]').waitFor({ state: 'visible' });
       }
 
       const result = await page.evaluate(() => ({
