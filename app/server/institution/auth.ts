@@ -4,6 +4,7 @@ import {
   type UniversityIdentity,
   type UniversityRole,
 } from '../../../packages/institution/src/index.ts';
+import type { MembershipResolver, VerifiedAuthUser } from './membership.ts';
 
 /**
  * Who the gateway believes is asking, and why it believes it.
@@ -18,19 +19,12 @@ import {
  * not signed out an hour ago. `getUser` asks the auth service, every time, and
  * that round trip is the price of the answer being current.
  *
- * ## Roles come from `app_metadata`, which no client can write
+ * ## Institutional roles come from current membership records
  *
- * Supabase exposes two metadata bags on a user. `user_metadata` is writable by
- * the signed-in user — anybody can put `{"roles":["admin"]}` in their own. It
- * is never read here. `app_metadata` is writable only by a service-role key
- * held by the school's own systems, which makes it the one place a grant can
- * be recorded that the grantee cannot forge.
- *
- * So a university role in this app has exactly one source: a school
- * administrator setting `app_metadata.semester` on an account. The role
- * selector on `screens/University.tsx` picks a draft template and can never
- * reach this file — the two are separate fields with separate names in
- * `@semester/institution` precisely so nothing can confuse them.
+ * The validated Auth user contributes only its id and server-issued SSO
+ * provider identifier. `membership.ts` then resolves one authorized provider
+ * and one active membership from Postgres. Neither `user_metadata` nor stale
+ * `app_metadata.semester` role claims participate in production authorization.
  */
 
 interface SemesterGrant {
@@ -39,9 +33,11 @@ interface SemesterGrant {
 }
 
 /**
- * An identity from a verified user record, or null.
+ * A legacy fixture identity from server-only app metadata, or null.
  *
- * Null for anything short of a complete grant: no `app_metadata.semester`, no
+ * Local tests and the sandbox use this helper while they do not have a
+ * Supabase project. Production startup requires the resolver below. Null for
+ * anything short of a complete grant: no `app_metadata.semester`, no
  * institution, no recognised role. The gateway turns null into a 403 saying
  * no verified access is assigned — which is the true state of every account
  * until a school assigns one.
@@ -74,13 +70,38 @@ export function trustedIdentity(user: {
  * they would have the gateway quietly holding and refreshing a student's
  * credentials.
  */
-export function supabaseIdentity(url: string, key: string) {
+interface SupabaseAuthClient {
+  auth: {
+    getUser(token: string): Promise<{
+      data: { user: { id: string; app_metadata?: Record<string, unknown> } | null };
+      error: unknown;
+    }>;
+  };
+}
+
+export function verifiedAuthUser(user: {
+  id: string;
+  app_metadata?: Record<string, unknown>;
+}): VerifiedAuthUser | null {
+  const provider = user.app_metadata?.provider;
+  return typeof provider === 'string' && provider.startsWith('sso:')
+    ? { id: user.id, providerIdentifier: provider }
+    : null;
+}
+
+export function identityFromSupabaseClient(client: SupabaseAuthClient, resolve: MembershipResolver) {
+  return async (token: string): Promise<UniversityIdentity | null> => {
+    const { data, error } = await client.auth.getUser(token);
+    if (error || !data.user) return null;
+    const user = verifiedAuthUser(data.user);
+    return user ? resolve(user) : null;
+  };
+}
+
+export function supabaseIdentity(url: string, key: string, resolve: MembershipResolver) {
   const client = createClient(url, key, {
     auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
   });
 
-  return async (token: string): Promise<UniversityIdentity | null> => {
-    const { data, error } = await client.auth.getUser(token);
-    return error || !data.user ? null : trustedIdentity(data.user);
-  };
+  return identityFromSupabaseClient(client, resolve);
 }

@@ -52,6 +52,7 @@ interface Config {
   origin: string;
   institutionName: string;
   authenticate: (token: string) => Promise<UniversityIdentity | null>;
+  refreshIdentity?: (identity: UniversityIdentity, token: string) => Promise<UniversityIdentity | null>;
   adapters: InstitutionAdapter[];
   journal: ActionJournal;
   intelligence?: IntelligenceService;
@@ -170,8 +171,9 @@ export function createGateway(config: Config) {
       const token = /^Bearer ([^\s]+)$/.exec(request.headers.get('authorization') || '')?.[1];
       if (!token) fail(401, 'Sign in to your school-approved Semester account.');
 
-      const who = await config.authenticate(token);
-      if (!who) fail(403, 'No verified university access is assigned to this account.');
+      const authenticated = await config.authenticate(token);
+      if (!authenticated) fail(403, 'No verified university access is assigned to this account.');
+      let who: UniversityIdentity = authenticated;
 
       const now = Date.now();
       for (const [id, limit] of limits) if (limit.until < now) limits.delete(id);
@@ -206,6 +208,14 @@ export function createGateway(config: Config) {
           value = JSON.parse(text);
         } catch {
           fail(400, 'Invalid JSON.');
+        }
+        if (intelligenceConfirm && config.refreshIdentity) {
+          const current = await config.refreshIdentity(who, token);
+          if (!current || current.userId !== who.userId || current.institutionId !== who.institutionId) {
+            fail(403, 'Your current university access does not permit this action.');
+          }
+          who = current;
+          context.identity = current;
         }
         const response = path === '/v1/intelligence/respond'
           ? await config.intelligence.respond(who, value)
@@ -384,6 +394,15 @@ export function createGateway(config: Config) {
       }
       if (Date.parse(row.review.expiresAt) <= now) {
         fail(410, 'Review expired. Refresh and review the action again.');
+      }
+
+      if (config.refreshIdentity) {
+        const current = await config.refreshIdentity(who, token);
+        if (!current || current.userId !== who.userId || current.institutionId !== who.institutionId) {
+          fail(403, 'Your current university access does not permit this action.');
+        }
+        who = current;
+        context.identity = current;
       }
 
       /*
