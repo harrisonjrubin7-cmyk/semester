@@ -3,10 +3,9 @@
 The schedule exists. It was never written down in one place, which is a
 different problem from not having one, and it is the problem this file is for.
 
-Four clocks run today — the fourth was written three weeks before anything
-called it — and everything else is kept until somebody deletes it. Two are in
-migrations, two are in an Edge Function, one of them is scheduled from a file
-applied by hand, and the promise they are all held to is a paragraph on a
+Several clocks run today, and everything else follows an explicit deletion or
+institutional-retention decision. They span migrations, Edge Functions and
+scheduled jobs, and the promise they are all held to is a paragraph on a
 screen.
 Nobody deciding whether this project is safe to pilot could have assembled that,
 and the first person who had to would have been assembling it under pressure.
@@ -207,6 +206,7 @@ behind and a client that believes it succeeded.
 | `skill_claim`, `skill_claim_evidence` | account deletion, or school removal | a claim belongs to one student in one tenant and cascades with either. Its evidence links cascade with the claim or referenced evidence. Institution verification does not change ownership or retention, and deleting the verifier clears only the verifier field |
 | `capture_asset`, `capture_segment`, `capture_artifact` | account deletion, school removal, or explicit deletion by the student | each original is bound to a versioned `consent_record`; segments and derived artifacts cascade with the original. Consent withdrawal or expiry immediately marks the original removed and its derivatives withdrawn, making them unreadable through row-level policy, but **does not physically delete those rows**. The per-asset retention timestamp also prevents expired material from being treated as active, but no scheduled deletion job exists yet; a tenant that requires timed physical erasure must add and verify that job before production |
 | `tenant_policy_audit_event` | **kept until the school is removed** | the append-only institutional record of feature, AI, source and consent changes. Deleting an actor clears the actor and actor-grant references rather than deleting the event, preserving the fact and timing of the institutional action without retaining a deleted account's identity. A time-based institutional retention schedule must be added before production if a university requires one; none is silently implied here |
+| `role_grant_audit_event` | **kept until an approved institutional audit-retention process removes it; no time-based purge exists today** | append-only evidence of future role grants, changes, revocations and deletions. It stores tenant/scope/role metadata plus SHA-256 pseudonyms, never raw account IDs, names or email addresses. Account and school deletion therefore do not silently erase or rewrite the evidence. Vanderbilt must approve a retention period or documented legal basis before production; implementing that decision requires a narrowly authorized purge path because ordinary updates and deletes are deliberately refused |
 | `institution_identity_provider` | **kept until a tenant administrator removes the provider or the school is removed** | institution-wide SAML configuration, not one account's data. Disabling a provider stops new authorization without erasing the record needed to explain existing memberships |
 | `institution_membership` | **kept until the school is removed or the approved institutional retention process removes it** | current and deprovisioned institutional access. Account deletion clears the linked Auth user rather than erasing the institution's lifecycle record; deprovisioning immediately clears roles and access. Vanderbilt must approve the time-based retention period before production — the repository does not silently invent one |
 | `scim_credential` | **kept until a tenant administrator removes it or the school is removed** | salted verification material and lifecycle timestamps, never the bearer token. Revocation makes it unusable immediately; retaining the revoked row prevents its identity from being silently reused and supports provisioning audit evidence |

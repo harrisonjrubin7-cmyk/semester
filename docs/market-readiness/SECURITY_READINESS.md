@@ -28,10 +28,10 @@ documents handling; CI runs `npm audit --audit-level=high`.
 
 | Item | State | Note |
 | --- | --- | --- |
-| Tenant isolation | **Missing** | Helpers exist, no policy calls them. Release blocker. |
+| Tenant isolation | **Implemented for the institutional data layer** | Tenant policy, evidence, capture, identity/provisioning, gateway journal and role-audit policies are covered by cross-tenant suites. Older direct-to-Supabase product tables still use their original user/school boundaries and are not a blanket institutional tenancy claim. |
 | The `school_id` pin | **Fixed today** | Was a no-op. See below. |
 | HTTP security headers | **Partly present** | A full CSP ships in `app/index.html` (meta-delivered), browser-verified against a control and guarded by `lib/csp.test.ts`. `frame-ancestors`, `report-uri` and HSTS cannot be carried by a meta tag and wait on a host that sets headers. |
-| Admin audit log | **Missing** | Gateway journals gateway actions. Role changes, tenant settings and moderation are unrecorded. |
+| Admin audit log | **Implemented for tenant policy and role changes** | Tenant settings, AI policy, approved sources and consent already write immutable old/new events. Future role grants, changes and revocations now write pseudonymous, append-only tenant events. Moderation action evidence still needs its own workflow-level implementation. |
 | SSO | **Missing** | No SAML/OIDC. |
 | Rate limiting beyond the gateway | **Missing** | Supabase-direct paths (most of the app) are unlimited. |
 | Cross-tenant security tests | **Partial** | `supabase/tenancy.check.sql` covers the foundation (13 checks). No policy enforces isolation yet, so there is nothing further to assert. |
@@ -96,7 +96,7 @@ across instances. Documented here so nobody reports it as distributed.
 
 ## Next
 
-1. Cross-tenant test suite (`supabase/tenancy.check.sql`) asserting today's
-   truth, so the tightening is guarded when it lands.
-2. Security headers.
-3. Admin audit log table with append-only protection.
+1. Configure header-only protections on a host that supports them.
+2. Add distributed limits to any direct-to-Supabase mutation that remains in
+   the production institutional scope.
+3. Add moderation workflow audit evidence when that server workflow lands.
