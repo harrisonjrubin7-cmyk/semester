@@ -1,7 +1,9 @@
 # Incident Response
 
-**Status: `NOT_STARTED` as an operational practice.** This document defines the
-process; nothing has exercised it, and no monitoring exists to trigger it.
+**Status: `IN_PROGRESS` as an operational practice.** This document defines the
+process, public uptime monitoring can trigger it, and communication templates
+exist. No named incident owner or university contact has been configured, and
+the process has not been exercised.
 
 ## Severity
 
@@ -44,9 +46,14 @@ without a guard is half a fix.
 
 ## University-facing templates
 
-Not yet written. A pilot cannot start without them: an institution needs to
-know what it will be told, how fast, and by whom.
+Use [`INCIDENT_COMMUNICATION_TEMPLATES.md`](./INCIDENT_COMMUNICATION_TEMPLATES.md).
+The messages deliberately separate suspected impact from confirmed facts and
+include the next-update time. They are drafts, not a mailing list: a pilot
+still cannot start until the institution supplies its contacts and Semester
+assigns the named incident owner and backup.
 
 ## Blocked on
 
-Nothing external. This is unblocked work that has simply not been done.
+- Semester incident owner and backup
+- Vanderbilt security/privacy and operational contacts
+- A tabletop exercise using the real contact route

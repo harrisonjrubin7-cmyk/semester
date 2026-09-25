@@ -50,6 +50,8 @@ import { join } from 'node:path';
 
 const root = join(import.meta.dirname, '../../..');
 const scorecard = join(root, 'SEMESTER_MARKET_READINESS.md');
+const goLive = join(root, 'docs/market-readiness/GO_LIVE_CHECKLIST.md');
+const pilot = join(root, 'docs/market-readiness/PILOT_PLAYBOOK.md');
 
 /**
  * Things the scorecard reports as not built, and where they would live.
@@ -70,6 +72,9 @@ const PRESENT: { claim: string; at: string }[] = [
   { claim: 'consent-based local diagnostics', at: 'app/src/lib/diagnose.ts' },
   { claim: 'a content-security policy, with its own guard', at: 'app/src/lib/csp.test.ts' },
   { claim: 'erasure from this device', at: 'app/src/lib/erase.ts' },
+  { claim: 'portable and restorable data export', at: 'app/src/lib/export.ts' },
+  { claim: 'cloud-account deletion', at: 'app/src/lib/cloud.ts' },
+  { claim: 'hourly public production smoke', at: '.github/workflows/production-smoke.yml' },
   { claim: 'the privacy disclosure written as data', at: 'app/src/lib/privacy.ts' },
 ];
 
@@ -120,6 +125,7 @@ describe('the market-readiness scorecard', () => {
       'IMPLEMENTATION_PLAYBOOK', 'PILOT_PLAYBOOK', 'SUPPORT_PLAYBOOK',
       'INCIDENT_RESPONSE', 'DISASTER_RECOVERY', 'UNIVERSITY_ONBOARDING',
       'MIGRATION_PLAYBOOK', 'PROCUREMENT_CHECKLIST', 'GO_LIVE_CHECKLIST',
+      'INCIDENT_COMMUNICATION_TEMPLATES',
     ];
     for (const doc of named) {
       expect(
@@ -127,5 +133,18 @@ describe('the market-readiness scorecard', () => {
         `docs/market-readiness/${doc}.md is promised by the index and absent`,
       ).toBe(true);
     }
+  });
+
+  it('does not regress export and deletion to an unmet release claim', () => {
+    const release = readFileSync(goLive, 'utf8');
+    const entry = release
+      .split('\n')
+      .find((line) => /Data export and account deletion available to users/i.test(line));
+    expect(entry).toMatch(/^- \[x\]/);
+
+    const entryTable = readFileSync(pilot, 'utf8')
+      .split('\n')
+      .find((line) => /\| Data export and deletion available \|/i.test(line));
+    expect(entryTable).toMatch(/\*\*Met\*\*/);
   });
 });

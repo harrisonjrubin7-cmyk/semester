@@ -21,7 +21,11 @@ Every line requires evidence, not an opinion.
   current report-moderation status changes; isolation, pseudonymization and
   immutability checks pass
 - [ ] Rate limiting on the Supabase-direct paths, not just the gateway
-- [ ] Data export and account deletion available to users
+- [x] Data export and account deletion available to users: **Take it with you**
+  downloads portable CSV, Markdown, calendar, attachment and restorable JSON
+  files; specialized workspaces have a second explicit backup; **Privacy**
+  exposes typed-confirmation cloud-account deletion and device erasure. The
+  export/privacy/retention/erase suites are the release evidence.
 - [ ] Accessibility audit of the piloted workflows
 - [ ] Incident process with named owner and university contact templates
 - [ ] Rollback tested on the production deployment path
