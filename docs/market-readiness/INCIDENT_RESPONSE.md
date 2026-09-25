@@ -21,9 +21,11 @@ confirmed. The asymmetry is deliberate.
 DETECT → OWN → CONTAIN → COMMUNICATE → RESOLVE → POSTMORTEM
 ```
 
-**Detect.** Today: only a user report. This is the largest gap — see
-`INFRASTRUCTURE_READINESS.md`. Until monitoring exists, mean time to detection
-is unbounded.
+**Detect.** The hourly production smoke now detects loss of the Pages shell,
+its deployed module or stylesheet, and the production Supabase REST edge.
+Gateway liveness/readiness joins it when both production URLs are configured.
+Application exceptions, workflow correctness and named-person alert delivery
+remain unmonitored, so a user report is still the only signal for those gaps.
 
 **Own.** One named person. Not a channel.
 
