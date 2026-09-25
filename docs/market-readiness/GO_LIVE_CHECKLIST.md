@@ -14,7 +14,8 @@ Every line requires evidence, not an opinion.
 - [ ] Restore tested from backup, timed, and the restored DB passes the policy suites
 - [ ] Gateway journal backed up
 - [ ] Error monitoring live and alerting to a named person
-- [ ] Uptime monitoring live
+- [x] Hourly synthetic monitoring covers the public Pages HTML, deployed
+  module/stylesheet assets and production Supabase PostgREST
 - [ ] Security headers configured at the host
 - [x] Append-only audit evidence records tenant-setting, future role-grant and
   current report-moderation status changes; isolation, pseudonymization and
@@ -31,6 +32,8 @@ Every line requires evidence, not an opinion.
 - [ ] SSO configured and tested against the university's IdP
 - [ ] Each integration adapter approved, credentialed and tested against sandbox
 - [ ] AI gateway enforcing the tenant boundary by construction
+- [ ] Institutional gateway liveness/readiness added to the hourly monitor by
+  setting both production URL variables; the workflow fails on a partial pair
 
 ## Sign-off
 

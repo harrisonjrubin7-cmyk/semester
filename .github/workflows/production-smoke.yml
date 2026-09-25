@@ -1,0 +1,68 @@
+# Hourly synthetic checks for the systems students actually reach.
+#
+# The public check always runs against the deployed Pages bundle and Supabase
+# PostgREST. The institutional check activates only when both production URLs
+# are configured; a half-configuration fails loudly instead of silently
+# claiming that a gateway nobody checked is healthy.
+
+name: Production smoke
+
+on:
+  schedule:
+    - cron: '17 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-smoke
+  cancel-in-progress: true
+
+jobs:
+  public:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Probe public production
+        working-directory: app
+        env:
+          SEMESTER_PUBLIC_APP_URL: ${{ vars.SEMESTER_PRODUCTION_APP_URL }}
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL || secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_KEY: ${{ vars.VITE_SUPABASE_KEY || secrets.VITE_SUPABASE_KEY }}
+        run: node scripts/public-production-smoke.mjs
+
+  institutional:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Validate institutional monitor configuration
+        id: config
+        env:
+          APP_URL: ${{ vars.SEMESTER_PRODUCTION_APP_URL }}
+          GATEWAY_URL: ${{ vars.SEMESTER_PRODUCTION_GATEWAY_URL }}
+        run: |
+          if [ -z "$APP_URL" ] && [ -z "$GATEWAY_URL" ]; then
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::notice title=Institutional monitor::Skipped until both production URLs are configured."
+          elif [ -z "$APP_URL" ] || [ -z "$GATEWAY_URL" ]; then
+            echo "::error title=Institutional monitor::Set both SEMESTER_PRODUCTION_APP_URL and SEMESTER_PRODUCTION_GATEWAY_URL; one is missing."
+            exit 1
+          else
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Probe institutional production
+        if: steps.config.outputs.enabled == 'true'
+        working-directory: app
+        env:
+          SEMESTER_PRODUCTION_APP_URL: ${{ vars.SEMESTER_PRODUCTION_APP_URL }}
+          SEMESTER_PRODUCTION_GATEWAY_URL: ${{ vars.SEMESTER_PRODUCTION_GATEWAY_URL }}
+        run: node scripts/production-smoke.mjs

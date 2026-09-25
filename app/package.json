@@ -32,6 +32,7 @@
     "preview:institutional": "node scripts/institutional-preview.mjs",
     "smoke:institutional": "node scripts/institutional-preview-smoke.mjs",
     "smoke:production": "node scripts/production-smoke.mjs",
+    "smoke:public-production": "node scripts/public-production-smoke.mjs",
     "rollout:census": "node scripts/institutional-census.mjs"
   },
   "dependencies": {
