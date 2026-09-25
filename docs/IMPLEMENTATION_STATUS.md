@@ -4,6 +4,16 @@ September 14, 2026 · Compared with the supplied complete product requirements a
 
 The existing app is preserved and expanded. **This build is a working student workspace with local planning tools and an institutional integration foundation. It is not yet a complete replacement for a university's LMS, email, registration, billing or campus-service systems.** The user confirmed that school-approved access is not yet available.
 
+## September 25, 2026 — adaptive Today dashboard queued
+
+The approved mobile briefing and desktop planning-workspace specification is
+now tracked in
+[`docs/market-readiness/TODAY_ADAPTIVE_BACKLOG.md`](market-readiness/TODAY_ADAPTIVE_BACKLOG.md).
+It preserves Today’s existing data and routes while making compact layouts
+answer what matters now and expanded layouts support comparison and planning.
+Every item remains explicitly unchecked until implemented and verified; this
+entry does not claim that the current dashboard already meets the brief.
+
 ## September 23, 2026 — intelligence expansion accepted without replacing the app
 
 The existing 59-screen product remains the foundation. Six journey cards now route students into it; the complete catalog remains available under All tools. Ask Semester provides five academic-integrity modes and an application-owned provenance receipt. Study connects diagnostics, retrieval, mistakes, evidence-backed recommendations and readiness forecasts. Career derives reviewable skill claims and explains matched and missing evidence. Course capture is consent- and policy-controlled. University adds a ten-area control plane whose preview roles cannot create production authorization.
