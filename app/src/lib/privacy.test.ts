@@ -93,6 +93,15 @@ describe('how it is written', () => {
     expect(counting?.body).toContain('not uploaded');
   });
 
+  it('does not hide consented support behind a blanket only-you promise', () => {
+    const visibility = CLAIMS.find((c) => c.heading === 'Who can see your rows');
+    expect(visibility?.body).not.toMatch(/^Only you/i);
+    expect(visibility?.body).toMatch(/verified university supporter/i);
+    expect(visibility?.body).toMatch(/one-to-seven-day window/i);
+    expect(visibility?.body).toMatch(/every read is recorded/i);
+    expect(visibility?.body).toMatch(/raw notes, sources, recordings and mistake detail remain private/i);
+  });
+
   it('keeps those counts out of everything that syncs', () => {
     // The claim above is only true while this is. `pickPersisted` is what the
     // push sends, so a count that appeared in it would make the page a lie.

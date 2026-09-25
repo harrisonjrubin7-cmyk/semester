@@ -29,6 +29,7 @@ import { migrationReport } from '../state/shape';
 import { cloudConfigured, deleteEverything } from '../lib/cloud';
 import { eraseDevice } from '../lib/erase';
 import { Toggle } from '../components/ui';
+import { SupportAccess } from '../components/SupportAccess';
 import { DESTINATIONS, offered } from '../lib/nav';
 import {
   USAGE_KEY,
@@ -131,6 +132,8 @@ export function Privacy() {
           </div>
         </div>
       ))}
+
+      <SupportAccess account={account} />
 
       {/*
         The counting, and what it has actually counted.

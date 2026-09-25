@@ -124,7 +124,7 @@ end $$;
 do $$
 declare
   /*
-   * The allowlist. Twenty-four, and each is a deliberate entry point:
+   * The allowlist. Twenty-eight, and each is a deliberate entry point:
    *   make_referral_code  — mints this account's own code
    *   claim_referral      — records that this account arrived on somebody's
    *   referral_standing   — two integers and a boolean about the caller
@@ -166,6 +166,13 @@ declare
     -- caller was either side; immutable pseudonymous events remain.
     'forget_my_support_access()',
     'read_support_signals(want_grant uuid)',
+    -- The student surface resolves only verified same-school supporters,
+    -- creates consent and its bounded grant atomically, and lists only windows
+    -- in which the caller is the student or the still-authorized supporter.
+    'available_supporters()',
+    'create_support_access(want_supporter uuid, want_reason text, want_days integer)',
+    'revoke_support_access(want_grant uuid)',
+    'support_access_windows()',
     -- Sets `profiles.school_id` from the address the server confirmed. The
     -- column's own UPDATE privilege is revoked from both API roles, so this
     -- function is the only way in and has to be callable by a signed-in
@@ -263,7 +270,7 @@ begin
   if missing is not null then
     raise exception 'FAILED: the allowlist names %, which a signed-in account cannot call', missing;
   end if;
-  raise notice 'ok  and can call all twenty-four that it should';
+  raise notice 'ok  and can call all twenty-eight that it should';
 end $$;
 
 -- ── The gate's own switch, named because it is the one that was open ──────
