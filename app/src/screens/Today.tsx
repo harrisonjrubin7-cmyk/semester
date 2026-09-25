@@ -65,6 +65,7 @@ import { JourneyCards } from '../components/JourneyCards';
 import { journeysFor, recommendJourney } from '../lib/journeys';
 import { offered } from '../lib/nav';
 import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
+import { TodayDecisionSurface } from '../components/TodayDecisionSurface';
 
 const FlightPlanHome = lazy(() =>
   import('../components/institutional/FlightPlanHome').then((module) => ({
@@ -76,9 +77,11 @@ function FlightPlanHomeSlot() {
   const { dispatch } = useStore();
   if (!INSTITUTIONAL_PREVIEW) return null;
   return (
-    <Suspense fallback={null}>
-      <FlightPlanHome enabled onNavigate={(screen) => dispatch({ type: 'go', screen })} />
-    </Suspense>
+    <div className="today-synthetic-flight-plan">
+      <Suspense fallback={null}>
+        <FlightPlanHome enabled onNavigate={(screen) => dispatch({ type: 'go', screen })} />
+      </Suspense>
+    </div>
   );
 }
 
@@ -118,8 +121,8 @@ function RecommendedJourney() {
   const journey = available.find((candidate) => candidate.id === recommendation.id)!;
 
   return (
-    <section className="today-journey" aria-label="Recommended journey">
-      <div className="kicker">Recommended next</div>
+    <section className="today-journey today-secondary-journey" aria-label="Also useful">
+      <div className="kicker">Also useful</div>
       <JourneyCards
         journeys={[journey]}
         reasons={{ [journey.id]: recommendation.reason }}
@@ -138,6 +141,7 @@ function NextClassCard() {
 
   return (
     <Blueprint
+      className="today-next-class-legacy"
       style={{
         padding: 'var(--sp-7)',
         background: 'var(--app-hero)',
@@ -747,6 +751,7 @@ function TabHome() {
         style={{ marginTop: '0', marginInline: '0', marginBottom: 'calc(16px * var(--density, 1))' }}
       />
 
+      <TodayDecisionSurface />
       <FlightPlanHomeSlot />
       <RecommendedJourney />
 
@@ -1772,6 +1777,7 @@ function FeedHome() {
       </div>
 
       <div style={{ padding: 'var(--page-pad)' }}>
+        <TodayDecisionSurface />
         <NextClassCard />
         <FlightPlanHomeSlot />
         <RecommendedJourney />

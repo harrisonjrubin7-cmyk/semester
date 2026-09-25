@@ -7203,6 +7203,190 @@ section[data-drop] > .grip + * {
   min-height: 0;
 }
 
+/* Today is a briefing before it is a feed. These three objects share the
+   same decision model at every width; expanded layouts only change their
+   arrangement. The compact rules deliberately keep the cards short enough
+   for status, action and time to appear in the first few swipes. */
+.today-decision-surface {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sp-4);
+  margin: 0 0 var(--sp-6);
+}
+
+/* The briefing timeline already carries the next class. Keep the established
+   large Next class card as the fallback for role homes where the student-only
+   briefing is not rendered, rather than showing the same commitment twice. */
+.today-decision-surface ~ .today-next-class-legacy,
+.today-decision-surface ~ * .today-next-class-legacy {
+  display: none;
+}
+
+.today-decision-surface > :is(.blueprint, .today-near-term) {
+  min-width: 0;
+  padding: var(--sp-5);
+}
+
+.today-decision-surface h2 {
+  margin: var(--sp-2) 0 var(--sp-3);
+  font-family: var(--font-heading);
+  font-size: var(--type-lg);
+  line-height: var(--leading-tight);
+  text-wrap: balance;
+}
+
+.today-decision-surface p {
+  margin: 0 0 var(--sp-3);
+  color: var(--app-dim);
+  font-size: var(--type-sm);
+  line-height: var(--leading-normal);
+}
+
+.today-path-numbers {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  margin: var(--sp-4) 0 var(--sp-2);
+}
+
+.today-path-numbers strong {
+  flex: none;
+  color: var(--app-fg);
+  font-family: var(--font-heading);
+  font-size: var(--type-xl);
+  line-height: 1;
+}
+
+.today-path-numbers span,
+.today-path-credit,
+.today-sync-status {
+  color: var(--app-dim);
+  font-size: var(--type-xs-plus);
+  line-height: var(--leading-normal);
+}
+
+.today-path-numbers span {
+  text-align: right;
+}
+
+.today-path-credit {
+  margin-top: var(--sp-2) !important;
+}
+
+.today-next-action .btn {
+  width: 100%;
+  margin-top: var(--sp-2);
+}
+
+.today-action-tools {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  margin-top: var(--sp-3);
+}
+
+.today-why {
+  min-width: 0;
+  color: var(--app-dim);
+  font-size: var(--type-xs-plus);
+  line-height: var(--leading-normal);
+}
+
+.today-why > summary {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  cursor: pointer;
+  color: var(--app-accent-deep);
+}
+
+.today-why > p {
+  margin-bottom: var(--sp-2);
+  font-size: inherit;
+}
+
+.today-dismissed {
+  min-height: 44px;
+}
+
+.today-near-term {
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-md);
+  background: var(--app-panel);
+  box-shadow: 0 1px 0 var(--app-line-top) inset;
+}
+
+.today-timeline {
+  display: flex;
+  flex-direction: column;
+  margin: 0 0 var(--sp-2);
+}
+
+.today-timeline-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--sp-4);
+  width: 100%;
+  min-height: 58px;
+  padding: var(--sp-3) 0;
+  border-bottom: 1px solid var(--app-line-soft);
+  color: var(--app-fg);
+  text-align: left;
+}
+
+.today-timeline-row > span:first-child {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  min-width: 0;
+}
+
+.today-timeline-row :is(strong, small) {
+  overflow-wrap: anywhere;
+}
+
+.today-timeline-row strong {
+  font-size: var(--type-sm);
+  line-height: var(--leading-tight);
+}
+
+.today-timeline-row small {
+  color: var(--app-dim);
+  font-size: var(--type-xs);
+  line-height: var(--leading-normal);
+}
+
+.today-sync-status {
+  margin: var(--sp-3) 0 0 !important;
+}
+
+.today-clear {
+  padding-block: var(--sp-3);
+}
+
+@media (max-width: 1179px) {
+  /* The phone promises one primary recommendation. These existing secondary
+     modules remain available on expanded Today and through their own routes. */
+  .today-secondary-journey,
+  .today-synthetic-flight-plan {
+    display: none;
+  }
+}
+
+@media (min-width: 1180px) {
+  .today-decision-surface {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--sp-5);
+  }
+
+  .today-near-term {
+    grid-column: 1 / -1;
+  }
+}
+
 .course-mastery {
   margin-top: var(--sp-5);
   padding: var(--sp-5);

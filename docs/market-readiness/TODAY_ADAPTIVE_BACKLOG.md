@@ -1,7 +1,8 @@
 # Adaptive Today dashboard backlog
 
-**Status: `QUEUED`** — added 25 September 2026 from the approved Today-dashboard
-brief. This is a product requirement, not a claim about the current build.
+**Status: `IN PROGRESS`** — added 25 September 2026 from the approved
+Today-dashboard briefs. Stages 1–3 are implemented locally; later stages and
+the notification backlog remain product requirements, not release claims.
 
 ## Outcome
 
@@ -37,18 +38,18 @@ should know what to do next.
 
 ## Shared priority model
 
-- [ ] Path status and provenance
-- [ ] One next-best action
-- [ ] Immediate commitments across the next 24–72 hours
+- [x] Path status and provenance
+- [x] One next-best action
+- [x] Immediate commitments across the next 24–72 hours
 - [ ] Recent momentum
 - [ ] Relevant resources, people and future choices
 - [ ] Lower-priority notifications and recently viewed items only on demand
 
 ## Approved implementation order
 
-1. [ ] Mobile Path Snapshot
-2. [ ] Mobile Next Best Step card
-3. [ ] Mobile Today timeline
+1. [x] Mobile Path Snapshot
+2. [x] Mobile Next Best Step card
+3. [x] Mobile Today timeline
 4. [ ] My Path drill-in screen
 5. [ ] Desktop Path Overview
 6. [ ] Desktop Upcoming context rail
@@ -59,19 +60,41 @@ should know what to do next.
 
 ## Compact layout requirements
 
-- [ ] Under 600 px, show a calm single-column briefing.
+- [x] Under 600 px, show a calm single-column briefing.
 - [ ] Use five stable top-level destinations: Today, My Path, Search, Plan and
   Me, mapped onto the existing routes and navigation contracts.
 - [ ] Keep the greeting compact and subordinate to useful information.
-- [ ] Show a Path Snapshot with status, credits, percentage, unresolved choice
+- [x] Show a Path Snapshot with status, credits, percentage, unresolved choice
   count and a direct My Path action.
 - [ ] Show exactly one primary next action, with Why, snooze and dismiss paths.
-- [ ] Limit the timeline to the next 24–72 hours and link to the full plan.
+- [x] Limit the timeline to the next 24–72 hours and link to the full plan.
 - [ ] Show at most two adaptive This Week cards.
 - [ ] Keep career/future discovery below immediate academic needs.
 - [ ] Drill from summary to exact requirement, focused flow and full detail
   instead of expanding a data wall in place.
 - [ ] Support complete, snooze and hide without requiring swipe or long press.
+
+## Mobile briefing refinements
+
+The compact experience is a 5–15 second academic briefing, not a miniature
+desktop or another activity feed. Its exact order is:
+
+1. [ ] Compact greeting and full date.
+2. [x] Honest Your Path snapshot with one attention signal.
+3. [x] One explainable Next Best Step.
+4. [x] Immediate commitments, with four or fewer visible rows.
+5. [ ] A compact quick-action row for Search, Build plan, Add course, Schedule
+   and advising preparation, mapped to existing routes.
+6. [ ] No more than two adaptive This Week widgets, chosen from plan health,
+   registration readiness, advising, schedule conflict and contextual support.
+
+- [ ] Open recommendation reasoning in a focused sheet or dedicated compact
+  view that names inputs, logic, caveat, source and last successful sync.
+- [ ] Let students complete, snooze, hide and open an exact commitment with
+  visible controls; swipe and long-press may enhance but never gate an action.
+- [ ] Keep future/career discovery below immediate academic needs.
+- [x] Never invent a graduation target, institutional credit denominator or
+  verified status when the current record does not provide one.
 
 ## Expanded layout requirements
 
@@ -91,6 +114,23 @@ should know what to do next.
 - [ ] Provide keyboard-operable alternatives for course movement, pinning,
   comparison and sharing.
 
+## Side-by-side planning requirements
+
+- [ ] Requirement and course-options view: keep the selected requirement in
+  context while browsing qualifying choices and their source confidence.
+- [ ] Schedule and workload view: show the week beside credit load, conflicts,
+  open study blocks and the consequences of a proposed addition.
+- [ ] Current-plan and proposed-scenario view: compare graduation assumptions,
+  credits, requirements and conflicts before a student explicitly saves.
+- [ ] Advisor-meeting mode: pair the shared plan with an agenda, open questions
+  and accessible mark-discussed/add-note controls.
+- [ ] Preserve selection when panes, widths or views change.
+- [ ] Highlight consequences before saving and never overwrite the current plan
+  automatically.
+- [ ] Give every scenario an explicit Draft, Current, Shared or Archived state.
+- [ ] Provide non-drag actions such as Move to Fall, Add to plan, Remove and
+  Compare.
+
 ## Responsive states
 
 - [ ] Compact phone under 600 px: bottom navigation, one column, one primary
@@ -108,7 +148,7 @@ should know what to do next.
 
 - [ ] New student: invite program and graduation-goal setup; do not show 0% or
   empty widgets.
-- [ ] Incomplete data: request completed credits and current courses before
+- [x] Incomplete data: request completed credits and current courses before
   estimating a path.
 - [ ] Active plan: explain that the entered plan aligns with the stated target
   and name the next unresolved choice.
@@ -116,6 +156,38 @@ should know what to do next.
   without claiming certainty.
 - [ ] Offline, stale and disconnected states: retain useful device data, label
   source status and expose the last successful sync time.
+
+## Immediate commitments and ranking
+
+- [ ] Rank 0–14 day commitments by time sensitivity, student relevance,
+  required action and source confidence; low-confidence generic content must
+  not outrank a verified actionable event.
+- [ ] Support contextual variants for registration readiness, advising week,
+  verified deadlines, schedule conflicts, plan health, academic milestones,
+  saved-item follow-up and opted-in personal commitments.
+- [ ] Do not duplicate the LMS, calendar or task manager. Exclude raw activity
+  counts, login warnings, generic motivation, leaderboards, risk labels, long
+  announcements and competing countdowns.
+
+## Notification system backlog
+
+- [ ] Use three layers: contextual in-app notices, opt-in push only when delay
+  reduces value, and email for summaries, receipts, account events and selected
+  reminders.
+- [ ] Group the notification center by purpose: Needs attention, Upcoming,
+  Updates, Completed and Earlier. Collapse repeated reminders for one event.
+- [ ] MVP categories are registration milestones, advisor meetings, schedule
+  conflicts and student-saved deadlines.
+- [ ] Every alert deep-links to the exact item and is actionable, explainable,
+  configurable, dismissible and snoozable.
+- [ ] Ask for push permission only in context after the student saves a
+  deadline, meeting or plan; show a dismissible value explanation first.
+- [ ] Let students choose category, channel, frequency, quiet hours, eligible
+  data sources and whether recommendations may trigger reminders.
+- [ ] Enforce per-event and per-category frequency caps and avoid guilt-based
+  re-engagement messages.
+- [ ] Announce non-blocking results with polite status semantics; reserve
+  assertive alerts for urgent blocking errors or possible data loss.
 
 ## Trust and accessibility acceptance gates
 
@@ -129,7 +201,7 @@ should know what to do next.
 - [ ] No auto-advancing content or motion that hides important status.
 - [ ] Why explanations name the source, logic, caveat and last-sync state.
 - [ ] Students can correct, hide or report inaccurate personal-plan data.
-- [ ] Empty and error states name a concrete next step.
+- [x] Empty and error states name a concrete next step.
 
 ## Repository anchors to preserve
 
