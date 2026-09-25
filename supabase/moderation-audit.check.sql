@@ -48,10 +48,14 @@ begin
   insert into public.role_grants (subject, role, scope_kind, scope_id, provenance)
   values (moderator, 'moderator', 'platform', '', 'platform');
 
+  -- A reporter cannot SELECT a report back, including through INSERT
+  -- RETURNING. Generate the opaque identifier before the insert so this test
+  -- keeps that privacy boundary intact instead of asking PostgreSQL to weaken
+  -- it merely for the test harness.
+  report := gen_random_uuid();
   perform pg_temp.become(alice);
-  insert into public.reports (reporter, about, reason, copy)
-  values (alice, bob, 'A report that needs review', 'Original message copy')
-  returning id into report;
+  insert into public.reports (id, reporter, about, reason, copy)
+  values (report, alice, bob, 'A report that needs review', 'Original message copy');
 
   perform pg_temp.become(moderator);
   update public.reports set status = 'under_review' where id = report;
