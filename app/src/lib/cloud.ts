@@ -775,13 +775,15 @@ export type OwnedTable = {
   /**
    * The `rpc` this account's rows go through instead of a DELETE.
    *
-   * One table needs it. `organization_members` holds one person's rank in an
+   * Two tables need it. `organization_members` holds one person's rank in an
    * organization as decided by another, so DELETE on it is revoked from both
    * API roles outright and there is no filter that would work.
    * `forget_my_organizations()` is the only way out, and it does more than a
    * DELETE could: it takes the `DECLINED` and `REMOVED` rows that
    * `leave_organization()` refuses to touch, and the trigger behind it removes
-   * an organization left with no members at all.
+   * an organization left with no members at all. `support_access_grant` names
+   * an account in either the student or supporter column, so its RPC safely
+   * removes both sides in one server-side operation.
    */
   via?: string;
 };
@@ -842,6 +844,10 @@ export const OWNED_TABLES: OwnedTable[] = [
   { table: 'appointments', column: 'user_id' },
   { table: 'sittings', column: 'user_id' },
   { table: 'calendar_feeds', column: 'user_id' },
+  // A support grant names this account in either of two columns. The RPC
+  // removes both sides, which one filtered DELETE cannot express, while its
+  // audit trigger leaves only pseudonyms behind.
+  { table: 'support_access_grant', column: null, via: 'forget_my_support_access' },
   // The record of who read the rows above, which is about the account and so
   // goes with it. `access.check.sql` proves the delete policy that makes this
   // line work, and proves a stranger cannot use it to clear somebody else's.
@@ -984,6 +990,10 @@ export const KEPT_TABLES: KeptTable[] = [
   {
     table: 'schools',
     why: 'The list of universities the app recognises is not a record about you — no account writes a row in it, and only an administrator can. Leaving is not a way to remove a university, and the entry saying which one you are at lives on your own profile, which does go.',
+  },
+  {
+    table: 'support_access_event',
+    why: 'Support-access evidence stays after the grant is deleted so a student or university can establish that a read occurred. It contains typed tenant, grant, scope, expiry, revocation, action and time fields plus SHA-256 pseudonyms — never a name, email, free-form reason, note, source excerpt, recording, protected trait or emotion inference — and ordinary accounts cannot change or delete it.',
   },
 ];
 

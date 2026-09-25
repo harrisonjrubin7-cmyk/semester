@@ -358,6 +358,7 @@ describe('"delete my account" really means every row', () => {
       'organizations',
       'reports',
       'schools',
+      'support_access_event',
     ]);
     const said = deletionClaims().map((c) => c.body).join(' ');
     for (const { table, why } of KEPT_TABLES) {

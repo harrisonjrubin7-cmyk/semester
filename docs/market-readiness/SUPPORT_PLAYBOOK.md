@@ -1,6 +1,8 @@
 # Support Playbook
 
-**Status: `NOT_STARTED`**
+**Status: `IN_PROGRESS`** — the database boundary now supports a named,
+student-created, seven-day maximum, revocable and audited aggregate-only access
+window. The user-facing grant flow, staffed channels and service levels remain.
 
 ## Tiers
 
@@ -12,17 +14,20 @@
 
 ## What a supporter is allowed to see
 
-Unresolved, and it must be resolved before a pilot. RLS means support staff
-cannot currently read a student's data to help them — which is correct by
-default and unworkable as a permanent answer.
+The default remains no access. `support_access_grant` now binds one student,
+one verified same-tenant `support:read` holder, an active versioned consent
+record, the `learning-progress` aggregate scope and an expiry no more than
+seven days away. Revoking the grant or its consent stops the next read.
 
-The wrong fix is a support account with broad read. The right shape is
-**time-boxed, audited, consented access**: a student grants access for a
-window, every read is recorded, and the grant expires on its own.
+`read_support_signals()` returns only per-course evidence counts, average score,
+mistake count and last observation time. It records every read in immutable
+pseudonymous evidence. It never returns raw notes, evidence excerpts, mistake
+detail, captures, protected traits or inferred emotion.
 
-`family_grants` in `20260921161500_roles.sql` already implements almost exactly
-this pattern for family members — scoped by category, with acceptance and
-expiry. It is the model to follow rather than invent.
+The remaining product work is the student surface for choosing a verified
+supporter, stating the reason, selecting the window and revoking it. Until that
+surface and real university role provisioning are connected and exercised,
+the pilot criterion remains unmet.
 
 ## Channels, SLAs, knowledge base
 
@@ -30,5 +35,5 @@ None defined. A university will ask for all three in procurement.
 
 ## Next
 
-Define the support access model on the `family_grants` pattern. Everything else
-here is ordinary and can follow.
+Connect the bounded grant to the student Privacy/Support surface, then exercise
+it with two real tenant accounts before defining channels and service levels.
