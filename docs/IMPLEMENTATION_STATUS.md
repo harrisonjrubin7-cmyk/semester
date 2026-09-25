@@ -4,6 +4,28 @@ September 14, 2026 · Compared with the supplied complete product requirements a
 
 The existing app is preserved and expanded. **This build is a working student workspace with local planning tools and an institutional integration foundation. It is not yet a complete replacement for a university's LMS, email, registration, billing or campus-service systems.** The user confirmed that school-approved access is not yet available.
 
+## September 25, 2026 — adaptive Today dashboard in progress
+
+The approved mobile briefing and desktop planning-workspace specification is
+now tracked in
+[`docs/market-readiness/TODAY_ADAPTIVE_BACKLOG.md`](market-readiness/TODAY_ADAPTIVE_BACKLOG.md).
+It preserves Today’s existing data and routes while making compact layouts
+answer what matters now and expanded layouts support comparison and planning.
+
+The first local tranche now adds a student-only Path Snapshot, a deterministic
+and explainable Next Best Step, and a four-row 72-hour timeline derived from
+existing degree, deadline, task, appointment, class and review state. The path
+percentage is explicitly recorded-requirement coverage, never a fabricated
+degree-completion claim; Semester does not invent a 120-credit denominator or
+graduation date. Non-student roles retain their established role home.
+
+Focused model tests, TypeScript, lint/style/label checks and a production build
+pass. The result was browser-reviewed at 390 x 844 and 1440 x 900, including
+the recommendation explanation and visit-only dismiss/undo behavior. This is
+not a release claim: My Path drill-in, desktop context and plan-health work,
+search, scenario comparison, future discovery and the new notification-system
+backlog remain open.
+
 ## September 23, 2026 — intelligence expansion accepted without replacing the app
 
 The existing 59-screen product remains the foundation. Six journey cards now route students into it; the complete catalog remains available under All tools. Ask Semester provides five academic-integrity modes and an application-owned provenance receipt. Study connects diagnostics, retrieval, mistakes, evidence-backed recommendations and readiness forecasts. Career derives reviewable skill claims and explains matched and missing evidence. Course capture is consent- and policy-controlled. University adds a ten-area control plane whose preview roles cannot create production authorization.
