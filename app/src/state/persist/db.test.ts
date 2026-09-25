@@ -91,10 +91,10 @@ describe('open', () => {
     let settled = false;
     void waiting.then(() => (settled = true));
 
-    await vi.advanceTimersByTimeAsync(9_000);
+    await vi.advanceTimersByTimeAsync(2_500);
     expect(settled, 'still waiting before the limit').toBe(false);
 
-    await vi.advanceTimersByTimeAsync(1_500);
+    await vi.advanceTimersByTimeAsync(750);
     expect(await waiting).toBeNull();
   });
 
@@ -107,7 +107,7 @@ describe('open', () => {
     });
     const { open } = await fresh();
     const waiting = open([]);
-    await vi.advanceTimersByTimeAsync(11_000);
+    await vi.advanceTimersByTimeAsync(3_250);
     expect(await waiting).toBeNull();
     late?.();
     expect(await waiting).toBeNull();

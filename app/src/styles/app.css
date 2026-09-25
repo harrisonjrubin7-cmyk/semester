@@ -371,6 +371,61 @@ body {
   overflow-wrap: break-word;
 }
 
+/*
+ * The pre-React first paint from index.html.
+ *
+ * Storage is intentionally read before the application mounts, otherwise a
+ * returning student can flash through onboarding with an empty account.  The
+ * read is normally imperceptible, but a browser restoring a suspended
+ * IndexedDB connection may take a moment (or fail).  This keeps that honest
+ * wait from looking like a broken, empty application.  React replaces the
+ * entire node as soon as the account is ready.
+ */
+.boot {
+  min-height: 100%;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 18px;
+  padding: 24px;
+  box-sizing: border-box;
+  background:
+    radial-gradient(ellipse at 50% 35%, rgba(212, 217, 226, 0.08), transparent 42%),
+    var(--app-void);
+  color: var(--app-fg);
+  text-align: center;
+}
+.boot-mark {
+  height: 58px;
+  display: flex;
+  align-items: end;
+  gap: 7px;
+  color: var(--app-accent);
+}
+.boot-mark i {
+  display: block;
+  width: 13px;
+  height: 34px;
+  border: 1px solid currentColor;
+  background: var(--app-accent-wash);
+  transform: skewY(-12deg);
+}
+.boot-mark i:nth-child(2) { height: 46px; }
+.boot-mark i:nth-child(3) { height: 58px; }
+.boot-name {
+  font-family: var(--font-display);
+  font-size: calc(var(--type-xl) * 1.3);
+  letter-spacing: -0.012em;
+  color: var(--app-accent-bright);
+}
+.boot-status {
+  font-family: var(--font-heading);
+  font-size: var(--type-sm);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--app-dim);
+}
+
 a {
   color: var(--app-accent);
 }

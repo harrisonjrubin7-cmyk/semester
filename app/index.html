@@ -127,7 +127,21 @@
     <title>Semester</title>
   </head>
   <body>
-    <div id="root"></div>
+    <!--
+      A real first paint, before IndexedDB has answered and React can mount.
+
+      This is deliberately tiny and is replaced (not hidden) by createRoot.
+      If storage is unavailable or a mobile browser is restoring the app, the
+      student sees the product opening instead of an unexplained black window.
+      The classes live in app.css so the production CSP needs no inline style.
+    -->
+    <div id="root">
+      <main class="boot" aria-label="Semester is opening">
+        <div class="boot-mark" aria-hidden="true"><i></i><i></i><i></i></div>
+        <div class="boot-name">Semester</div>
+        <div class="boot-status" role="status">Opening your semester…</div>
+      </main>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
