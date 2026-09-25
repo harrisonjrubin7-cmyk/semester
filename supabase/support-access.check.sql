@@ -55,8 +55,12 @@ declare
   second_consent uuid;
   first_grant_id uuid;
   second_grant_id uuid;
+  ui_grant_id uuid;
+  reopened_grant_id uuid;
+  ui_consent_id uuid;
   evidence uuid;
   n bigint;
+  revoked boolean;
 begin
   insert into public.schools (id, name, email_domains) values
     ('support-check', 'Support Check University', array['support-check.example']),
@@ -75,6 +79,14 @@ begin
     (supporter, 'university_staff', 'school', 'support-check', 'institution'),
     (other_tenant_supporter, 'university_staff', 'school',
      'other-support-check', 'institution');
+
+  perform pg_temp.become(student);
+  select count(*) into n
+    from public.available_supporters();
+  reset role;
+  perform pg_temp.counted(
+    'the student can choose only the verified same-school supporter', n, 1
+  );
 
   perform pg_temp.become(student);
   insert into public.consent_record
@@ -249,6 +261,72 @@ begin
    where g.id = second_grant_id and g.revoked_at is not null;
   perform pg_temp.counted('consent withdrawal automatically revokes its grant', n, 1);
 
+  perform pg_temp.become(student);
+  select public.create_support_access(
+    supporter, 'Help me understand the aggregate learning pattern.', 1
+  ) into ui_grant_id;
+  select count(*) into n
+    from public.support_access_windows() w
+   where w.grant_id = ui_grant_id
+     and w.side = 'student'
+     and w.counterpart_label = 'supporter';
+  reset role;
+  perform pg_temp.counted('the student surface creates and lists its atomic consent window', n, 1);
+
+  perform pg_temp.become(supporter);
+  select count(*) into n
+    from public.support_access_windows() w
+   where w.grant_id = ui_grant_id
+     and w.side = 'supporter'
+     and w.counterpart_label = 'student';
+  reset role;
+  perform pg_temp.counted('the named supporter surface lists the active window', n, 1);
+
+  select g.consent_id into ui_consent_id
+    from public.support_access_grant g where g.id = ui_grant_id;
+  perform pg_temp.become(student);
+  select public.revoke_support_access(ui_grant_id) into revoked;
+  reset role;
+  if not revoked then raise exception 'FAILED: the student revoke returned false'; end if;
+  select count(*) into n
+    from public.support_access_grant g
+    join public.consent_record c on c.id = g.consent_id
+   where g.id = ui_grant_id
+     and g.revoked_at is not null
+     and c.id = ui_consent_id
+     and c.status = 'revoked'
+     and c.revoked_at is not null;
+  perform pg_temp.counted('revoke closes both the support grant and its consent', n, 1);
+
+  perform pg_temp.become(student);
+  select public.create_support_access(
+    supporter, 'A later, separately consented support window.', 1
+  ) into reopened_grant_id;
+  reset role;
+  if reopened_grant_id = ui_grant_id then
+    raise exception 'FAILED: renewed support access reused revoked consent';
+  end if;
+  raise notice 'ok  later access creates a separate consented window';
+
+  if not pg_temp.refused(
+    supporter,
+    format('select public.revoke_support_access(%L)', reopened_grant_id)
+  ) then
+    raise exception 'FAILED: the supporter revoked the student consent';
+  end if;
+  raise notice 'ok  only the student can revoke the support window';
+
+  if not pg_temp.refused(
+    student,
+    format(
+      'select public.create_support_access(%L, %L, 1)',
+      stranger, 'This account has no verified support role.'
+    )
+  ) then
+    raise exception 'FAILED: the student surface granted an unverified account';
+  end if;
+  raise notice 'ok  the student surface refuses an unverified supporter';
+
   if not pg_temp.refused(
     supporter,
     format('update public.support_access_event set action = %L where grant_id = %L',
@@ -268,7 +346,9 @@ begin
 
   select count(*) into n
     from public.support_access_event e
-   where e.grant_id in (first_grant_id, second_grant_id);
+   where e.grant_id in (
+     first_grant_id, second_grant_id, ui_grant_id, reopened_grant_id
+   );
   if n < 4 then
     raise exception 'FAILED: pseudonymous support evidence disappeared — got %', n;
   end if;

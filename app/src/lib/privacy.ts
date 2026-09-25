@@ -261,7 +261,7 @@ export const CLAIMS: Claim[] = [
   {
     heading: 'Who can see your rows',
     body:
-      'Only you. Every table is protected by row-level security keyed to your account, which is enforced by the database rather than by the app asking politely. A shared practice paper is the one exception and it is deliberate: you generate a link, and anyone with the link can open that one paper.',
+      'Your private rows are protected by row-level security keyed to your account, enforced by the database rather than by the app asking politely. There are two deliberate exceptions. A shared practice paper is visible to anyone holding its link. A support summary is visible only to the one verified university supporter you name, for the one-to-seven-day window you approve; every read is recorded, and raw notes, sources, recordings and mistake detail remain private.',
   },
 ];
 
@@ -279,4 +279,3 @@ export const SYNCED_FIELDS = SYNC_GROUPS.flatMap((g) => g.keys);
 
 /** Fields that must never appear in what is uploaded. */
 export const NEVER_SYNCED = ['apiKey', 'anthropicKey', 'sessionToken', 'password'];
-
