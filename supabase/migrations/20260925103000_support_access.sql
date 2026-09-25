@@ -101,6 +101,8 @@ create index if not exists support_access_by_supporter
   on public.support_access_grant (supporter_id, expires_at desc);
 create index if not exists support_access_by_consent
   on public.support_access_grant (consent_id, tenant_id, student_id);
+create index if not exists support_access_by_tenant
+  on public.support_access_grant (tenant_id, expires_at desc);
 
 create table if not exists public.support_access_event (
   id uuid primary key default gen_random_uuid(),
