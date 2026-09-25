@@ -20,16 +20,17 @@ hand over today.
 | DPA | **No** | — |
 | Insurance | **No** | — |
 | SSO support | **No** | Hard blocker for most institutions |
-| Accessibility conformance | **Partial** | Real infrastructure, no journey audit |
-| Uptime SLA | **No** | Cannot be offered without monitoring |
+| Accessibility conformance | **Partial** | Automated critical-journey audits run in CI; formal review and VPAT/ACR remain absent |
+| Uptime SLA | **No** | Hourly public synthetic monitoring exists, but no measured availability history, named on-call route or contractual SLO exists |
 
 ## The three that block hardest
 
 1. **SSO.** Many institutions will not proceed past this line.
 2. **Security questionnaire.** Cannot be answered honestly today; several
    answers would be "no".
-3. **Uptime SLA.** Unofferable without monitoring — you cannot commit to a
-   number you cannot measure.
+3. **Uptime SLA.** Still unofferable: an hourly probe begins the measurement,
+   but a contractual number needs retained availability history, alert delivery
+   to an accountable operator and an agreed SLO/error budget.
 
 ## The rule
 
