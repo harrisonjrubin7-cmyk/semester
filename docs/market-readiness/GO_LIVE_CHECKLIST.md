@@ -16,8 +16,9 @@ Every line requires evidence, not an opinion.
 - [ ] Error monitoring live and alerting to a named person
 - [ ] Uptime monitoring live
 - [ ] Security headers configured at the host
-- [x] Append-only audit evidence records tenant-setting and future role-grant,
-  change and revocation events; cross-tenant and immutability checks pass
+- [x] Append-only audit evidence records tenant-setting, future role-grant and
+  current report-moderation status changes; isolation, pseudonymization and
+  immutability checks pass
 - [ ] Rate limiting on the Supabase-direct paths, not just the gateway
 - [ ] Data export and account deletion available to users
 - [ ] Accessibility audit of the piloted workflows
