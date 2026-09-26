@@ -220,9 +220,12 @@ begin
 
   perform pg_temp.become(member);
   select count(*) into n from public.app_roles;
-  perform pg_temp.counted('a signed-in account reads the twenty roles', n, 20);
+  -- Twenty original roles plus the twenty-seven added by
+  -- 20260926150000_expansion_roles_and_features.sql.
+  perform pg_temp.counted('a signed-in account reads the forty-seven roles', n, 47);
   select count(*) into n from public.role_capabilities;
-  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 20);
+  -- Twenty original rows plus thirty-seven expansion rows.
+  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 57);
 
   perform pg_temp.become_anon();
   perform pg_temp.refused('a signed-out visitor cannot read the matrix',

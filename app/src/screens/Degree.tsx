@@ -42,6 +42,7 @@ import {
   type Taken,
 } from '../lib/degree';
 import { Folding } from '../components/Fold';
+import { GraduationSimulator } from '../components/GraduationSimulator';
 import {
   fixFor,
   missingLine,
@@ -56,7 +57,7 @@ import {
 
 export function Degree() {
   const { state } = useStore();
-  const [tab, setTab] = useState<'left' | 'taken' | 'rules'>('left');
+  const [tab, setTab] = useState<'left' | 'taken' | 'rules' | 'ahead'>('left');
 
   /*
    * The transcript, which is the one list here that gets long.
@@ -91,6 +92,7 @@ export function Degree() {
           { id: 'left', label: 'What is left' },
           { id: 'taken', label: `Taken${state.taken.length ? ` (${state.taken.length})` : ''}` },
           { id: 'rules', label: 'Requirements' },
+          { id: 'ahead', label: 'Scenarios' },
         ]}
         value={tab}
         onChange={setTab}
@@ -100,6 +102,7 @@ export function Degree() {
       {tab === 'left' ? <WhatIsLeft /> : null}
       {tab === 'taken' ? <Transcript rows={state.taken} /> : null}
       {tab === 'rules' ? <Rules /> : null}
+      {tab === 'ahead' ? <GraduationSimulator done={hours(state.taken).withThisTerm} /> : null}
       </>
     </Page>
   );

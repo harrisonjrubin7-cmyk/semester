@@ -260,7 +260,7 @@ export const DESTINATIONS: Destination[] = [
     label: 'The degree',
     short: 'Degree',
     blurb: 'What is left of a major or a minor, what each course counts towards, and where the hours stand.',
-    keywords: 'degree audit major minor requirements axle distribution graduation graduate credits credit hours transcript gpa cumulative four year plan declare declaration advisor advising what is left electives double count',
+    keywords: 'degree audit major minor requirements axle distribution graduation graduate credits credit hours transcript gpa cumulative four year plan declare declaration advisor advising what is left electives double count scenario scenarios what if simulator graduation date when will i graduate finish early late extra semester cost of delay minor switch majors part time summer courses heavier load',
     group: 'Courses',
     taskTags: ['ahead', 'stand'],
     root: 'me',
@@ -616,7 +616,7 @@ export const DESTINATIONS: Destination[] = [
     // the bar would read as a bug. `saysFor` names it everywhere with room.
     short: 'Register',
     blurb: 'Registration and class search — and paste your schedule straight back in.',
-    keywords: 'yes enrollment enrolment registration register student landing search classes schedule timetable transcript holds advisor commodore vanderbilt add drop credit hours section',
+    keywords: 'yes enrollment enrolment registration register student landing search classes schedule timetable transcript holds advisor commodore vanderbilt add drop credit hours section registration day time ticket window opens countdown backup backups plan b full section waitlist checklist crn crns copy section list',
     /*
      * Courses, not Campus, and the move came with University arriving.
      *
