@@ -76,7 +76,7 @@
 .portal-workspace dd{font-size:calc(14px * var(--text-scale, 1));line-height:1.55;margin:0;color:var(--app-accent-deep);white-space:pre-wrap}
 .portal-workspace details p{white-space:pre-wrap}
 .portal-block{display:block;font-size:calc(12px * var(--text-scale, 1));color:var(--app-dim);margin-top:calc(5px * var(--density, 1))}
-.portal-warning{background:var(--app-warn);color:var(--app-warn);padding:calc(12px * var(--density, 1)) calc(17px * var(--density, 1));border-radius:8px}
+.portal-warning{background:var(--app-warn-wash);border:1px solid var(--app-warn-line);color:var(--app-fg);padding:calc(12px * var(--density, 1)) calc(17px * var(--density, 1));border-radius:8px}
 .portal-import-help{margin:calc(24px * var(--density, 1)) 0;color:var(--app-dim)}
 .portal-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:calc(20px * var(--density, 1))}
 .portal-form-grid label{display:flex;flex-direction:column;gap:calc(9px * var(--density, 1));font-size:calc(13px * var(--text-scale, 1));color:var(--app-dim)}
@@ -244,3 +244,8 @@
    filled wherever it is written, on the app's own inverse pair. */
 .portal-primary{background:var(--app-fg);color:var(--app-bg)}
 
+/* Registration day and graduation scenarios. */
+.regday-list{white-space:pre-wrap;word-break:break-word;background:var(--app-panel);border:1px solid var(--app-line);border-radius:8px;padding:calc(12px * var(--density, 1));margin:0 0 calc(12px * var(--density, 1))}
+.regday-checklist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:calc(10px * var(--density, 1))}
+.regday-course ol{margin:calc(8px * var(--density, 1)) 0;padding-inline-start:calc(20px * var(--density, 1));display:flex;flex-direction:column;gap:calc(6px * var(--density, 1))}
+.regday-course li{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:calc(8px * var(--density, 1))}
