@@ -124,7 +124,7 @@ end $$;
 do $$
 declare
   /*
-   * The allowlist. Twenty-eight, and each is a deliberate entry point:
+   * The allowlist. Thirty, and each is a deliberate entry point:
    *   make_referral_code  — mints this account's own code
    *   claim_referral      — records that this account arrived on somebody's
    *   referral_standing   — two integers and a boolean about the caller
@@ -234,7 +234,16 @@ declare
     'connected_with(who uuid)',
     'mutual_connections(who uuid)',
     'remove_connection(who uuid)',
-    'request_connection(who uuid)'
+    'request_connection(who uuid)',
+
+    -- The two in 20260926150000_expansion_roles_and_features.sql.
+    -- `read_shared_accommodation` is the only way an instructor reads a
+    -- passport: it checks the share is live and addressed to the caller, and
+    -- writes an access event the student can see. `submit_course_review`
+    -- writes a review and its separate authorship row in one statement, so
+    -- the published review never carries who wrote it.
+    'read_shared_accommodation(want_share uuid)',
+    'submit_course_review(want_course text, want_term text, want_workload integer, want_difficulty integer, want_usefulness integer, want_body text)'
   ];
   extra text;
   missing text;
@@ -270,7 +279,7 @@ begin
   if missing is not null then
     raise exception 'FAILED: the allowlist names %, which a signed-in account cannot call', missing;
   end if;
-  raise notice 'ok  and can call all twenty-eight that it should';
+  raise notice 'ok  and can call all thirty that it should';
 end $$;
 
 -- ── The gate's own switch, named because it is the one that was open ──────
