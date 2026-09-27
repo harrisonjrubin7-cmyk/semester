@@ -5,6 +5,7 @@ import { readCareer } from './career';
 import { readCreations } from './creations';
 import { obj, textValue } from './device-library';
 import { readFamily } from './family';
+import { PATH_PROFILE_PREFIX, readPathProfile } from './path-profile';
 import { readPathway } from './pathway';
 import { readUniversityDrafts } from './university';
 
@@ -93,6 +94,12 @@ const DEFINITIONS: Record<string, Definition> = {
     prefix: ACTIONS_PREFIX,
     scope: 'account',
     read: readActionChoices,
+  },
+  pathProfile: {
+    label: 'Your degree path details',
+    prefix: PATH_PROFILE_PREFIX,
+    scope: 'account',
+    read: readPathProfile,
   },
 };
 

@@ -27,6 +27,7 @@
  */
 
 import { contrast as wcagContrast } from './contrast';
+import { readAccessModes } from './accessmode';
 import type { NavMode } from './types';
 
 export interface Accent {
@@ -1295,6 +1296,8 @@ export interface Look {
    * which would spend the state on the first save.
    */
   favourites?: string;
+  /** Accessibility modes, a comma list. See `lib/accessmode.ts`. */
+  access?: string;
   /**
    * `on` or `off` — whether the search home draws its row of shortcuts.
    *
@@ -1659,6 +1662,9 @@ export function readLook(saved: Look | undefined): Required<Look> {
     // registry on the way out, so a stale list can only arrange the shortcuts
     // oddly — never offer a screen this school does not have.
     favourites: typeof saved?.favourites === 'string' ? saved.favourites : '',
+    // Resolved here, unlike `favourites`: the modes are a closed list this
+    // file can check, and an unknown one should not survive a save.
+    access: readAccessModes(saved?.access).join(','),
     shortcuts: saved?.shortcuts === 'off' ? 'off' : 'on',
     // -1 rather than 0, because 0 is red.
     hue: typeof saved?.hue === 'number' && saved.hue >= 0 && saved.hue <= 360 ? saved.hue : -1,
