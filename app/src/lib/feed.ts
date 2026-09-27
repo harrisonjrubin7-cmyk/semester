@@ -85,7 +85,7 @@ export const SECTIONS: FeedSection[] = [
     label: 'A payment due',
     blurb: 'The next tuition instalment, once one is close. Nothing until it is, and nothing at all without a bill entered.',
   },
-  { id: 'tasks', label: 'Your own tasks', blurb: 'Things you added that are not from a syllabus.' },
+  { id: 'tasks', label: 'Your own actions', blurb: 'Things you added that are not from a syllabus.' },
   { id: 'rail', label: 'Today’s rail', blurb: 'The day hour by hour.' },
   {
     id: 'begin',

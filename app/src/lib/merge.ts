@@ -607,7 +607,7 @@ export interface MergeNote {
 const LABELS: Record<string, string> = {
   courses: 'Courses',
   notes: 'Notes',
-  tasks: 'Your tasks',
+  tasks: 'Your actions',
   appointments: 'Appointments',
   grades: 'Grades',
   gradeSystems: 'Grading cutoffs',

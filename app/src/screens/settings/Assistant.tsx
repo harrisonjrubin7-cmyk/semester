@@ -488,7 +488,7 @@ export function SettingsAssistant() {
           <Group header="What it can do" lit={lights('tools actions change undo permissions', lit)}>
             <CustomRow>
               <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
-                Offer to tick off a deadline, add or move one of your own tasks, mark you at a class,
+                Offer to tick off a deadline, add or move one of your own actions, mark you at a class,
                 start a timer, keep a note, add a source, track or move an application, set your
                 study budget, change the accent, text size, background or spacing, or take you to a
                 screen. Nothing happens until you tap it, and everything it changes has an Undo

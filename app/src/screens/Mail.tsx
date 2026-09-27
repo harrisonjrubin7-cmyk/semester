@@ -810,7 +810,7 @@ export function Mail() {
                     courseId: mail.courseId ?? null,
                   },
                 });
-                say('Added to your tasks.', 'mine');
+                say('Added to your actions.', 'mine');
               }}
               onChanges={(mail) => {
                 dispatch({ type: 'tellChange', text: `${mail.subject}\n\n${mail.body}` });

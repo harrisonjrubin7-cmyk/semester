@@ -1,0 +1,37 @@
+# Semester design standards
+
+Consistency beyond the visuals: what words mean, how screens are shaped, how
+flows start and end, how status and trust are shown, and who owns all of it.
+
+| Document | What it settles |
+|---|---|
+| [SEMESTER-CONTENT-STANDARDS.md](SEMESTER-CONTENT-STANDARDS.md) | Vocabulary, labels, tone, source language, message patterns |
+| [INTERACTION-STANDARDS.md](INTERACTION-STANDARDS.md) | Screen families, object contracts, flows, status, states, motion and sound, preferences |
+| [GOVERNANCE.md](GOVERNANCE.md) | Owners, new-pattern approval, PR checklist, screen audit, visual regression plan, adoption metrics |
+| [DESIGN-DEBT.md](DESIGN-DEBT.md) | Every known inconsistency, with evidence and a canonical fix |
+
+The visual foundations — tokens, grounds, type, spacing — are
+[`app/src/lib/look.ts`](../../app/src/lib/look.ts), described in
+[../DESIGN-SYSTEM-IMPROVEMENTS.md](../DESIGN-SYSTEM-IMPROVEMENTS.md). These
+documents build on that system and do not replace any of it.
+
+## What is enforced by code
+
+| Rule | Command | Where |
+|---|---|---|
+| Retired words cannot increase per file | `npm run lint:terms` (part of `npm run lint`) | `app/src/content/terms.ts`, `ledger.ts` |
+| Type, leading and spacing stay on the scale | `npm run lint:styles` | `app/src/styles/rules.ts`, `budget.ts` |
+| Every control has an accessible name | `npm run lint:labels` | `app/src/a11y/labels.ts` |
+| Nothing is said only with colour or shape | `npm test` | `app/src/a11y/tellings.test.ts` |
+| Reduced motion and calm mode are honoured | `npm test` | `app/src/a11y/motion.test.ts`, `calm.test.ts` |
+| Contrast on every ground | `npm test` | `app/src/lib/contrast.test.ts` |
+| Adoption figures | `npm run census:design` | `app/scripts/design-census.mjs` |
+
+## A coherent screen
+
+A screen is done when it uses the shared frame and its family's order, has
+one obvious primary action, uses the canonical words, shows source and
+freshness where a fact could be mistaken for official, handles loading,
+empty, error, permission, stale and success, works from 320 px to desktop and
+at 200 % zoom, works by keyboard and screen reader, and keeps navigation where
+the student expects it.

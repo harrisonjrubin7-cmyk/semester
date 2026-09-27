@@ -800,8 +800,8 @@ export const DESTINATIONS: Destination[] = [
     // "Mine" said whose it was and not what it held. Everything in the app is
     // yours; what makes this tab different is that you put it there yourself.
     label: 'Personal',
-    blurb: 'Your own tasks, appointments, notes, places and files.',
-    keywords: 'mine personal todo task appointment note file attachment place own yours',
+    blurb: 'Your own actions, appointments, notes, places and files.',
+    keywords: 'mine personal action todo task appointment note file attachment place own yours',
     group: 'Life',
     // On You rather than Life: this is the one screen holding what the
     // student wrote rather than what a syllabus or the campus did, which is
@@ -824,7 +824,7 @@ export const DESTINATIONS: Destination[] = [
     keywords:
       'me progress profile load more menu overview directory settings everything ' +
       'all screens index list of features what can this app do capabilities map contents table of contents ' +
-      'browse explore find a screen where is what is there tour inventory sitemap unused never opened by task',
+      'browse explore find a screen where is what is there tour inventory sitemap unused never opened by goal by task',
     group: 'Semester',
     taskTags: ['stand', 'app'],
     root: 'me',

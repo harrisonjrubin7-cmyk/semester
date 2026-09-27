@@ -85,7 +85,7 @@ export const TEMPLATES = {
     stages: [
       s('requirements', 'Requirements', 'What must the program do? What is out of scope?'),
       s('architecture', 'Architecture', 'The main parts and how they talk to each other.'),
-      s('tasks', 'Tasks', 'A list small enough that each takes one sitting.'),
+      s('tasks', 'Steps', 'A list small enough that each takes one sitting.'),
       s('implementation', 'Implementation', 'Build it. Note decisions you made.'),
       s('tests', 'Tests', 'What cases prove it works? Which fail?'),
       s('debug', 'Debugging log', 'Each bug: symptom, cause, fix.'),

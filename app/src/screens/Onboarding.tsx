@@ -131,7 +131,7 @@ function steps(cat: Catalog, tone: Tone, hasAccount: boolean) {
       b: offline
         ? 'This build has no account service switched on, so there is nothing to sign in to. Everything you do is saved here and goes no further — which is the whole app, minus the copy that follows you to a laptop.'
         : hasAccount
-          ? 'Your courses, notes, tasks and ticked boxes are on the account now, and the laptop gets the same semester the moment you sign in there.'
+          ? 'Your courses, notes, actions and ticked boxes are on the account now, and the laptop gets the same semester the moment you sign in there.'
           : 'An email address and a password, and the semester follows you to the laptop and back. Skip it and everything still works — it just stays on this device.',
       cta: offline || hasAccount ? 'Next' : 'Not now',
     },
