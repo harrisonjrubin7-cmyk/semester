@@ -8,6 +8,7 @@ import { GOALS, labelOf, recommend, subjectFor, type Goal, type Recommendation }
 import { progress, TEMPLATE_IDS, TEMPLATES, type TemplateId } from '../../lib/toolkit/templates';
 import { Notice, TabList } from '../ui';
 import { AssignmentPanel, RubricPanel } from './AssignmentPanel';
+import { ResearchPanel } from './ResearchPanel';
 import { useToolkit } from './store';
 
 /**
@@ -28,7 +29,7 @@ export interface ToolkitCourse {
   ai?: CoursePolicy;
 }
 
-type Section = 'start' | 'assignment' | 'rubric' | 'policy' | 'catalog';
+type Section = 'start' | 'assignment' | 'research' | 'rubric' | 'policy' | 'catalog';
 
 export function Toolkit({
   courses,
@@ -62,13 +63,14 @@ export function Toolkit({
   const tabs: { id: Section; label: string }[] = [
     { id: 'start', label: 'Start' },
     { id: 'assignment', label: 'Assignments' },
+    ...(on(flags.researchStudio) ? [{ id: 'research' as const, label: 'Research Studio' }] : []),
     { id: 'rubric', label: 'Rubric self-check' },
     { id: 'policy', label: 'AI-use policy' },
     { id: 'catalog', label: 'All tools' },
   ];
 
   const reachable = (r: Recommendation) =>
-    r.workspace.opens !== 'research' &&
+    (r.workspace.opens !== 'research' || on(flags.researchStudio)) &&
     r.workspace.opens !== 'data' &&
     (!r.workspace.id.startsWith('subject-') || on(flags.subjectWorkbenches));
 
@@ -94,6 +96,13 @@ export function Toolkit({
       .filter(({ p }) => p.next)
       .slice(0, 3)
       .map(({ w, p }) => ({ key: `ws-${w.id}`, text: `${w.title}: ${p.next!.label}`, go: () => setSection('assignment') })),
+    ...(on(flags.researchStudio)
+      ? store.research
+          .map((r) => ({ r, n: r.evidence.filter((e) => !e.verified && e.screening !== 'exclude').length }))
+          .filter(({ n }) => n)
+          .slice(0, 2)
+          .map(({ r, n }) => ({ key: `rs-${r.id}`, text: `Verify ${n} source${n === 1 ? '' : 's'} for “${r.question || 'your research question'}”`, go: () => setSection('research') }))
+      : []),
   ].slice(0, 5);
 
   return (
@@ -253,6 +262,7 @@ export function Toolkit({
           now={now}
         />
       )}
+      {section === 'research' && on(flags.researchStudio) && <ResearchPanel library={library} />}
       {section === 'rubric' && <RubricPanel />}
       {section === 'policy' && (
         <>
