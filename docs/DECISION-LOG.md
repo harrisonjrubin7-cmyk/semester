@@ -133,3 +133,27 @@ not indexable and bloat the app shell; and moving the app to path routing,
 which would migrate 59 screens and every stored deep link. Changing the
 production host (e.g. to Vercel, where `app/vercel.json` already exists) is a
 production change and needs approval.
+
+## D-034 · Teach-back compares and never grades
+
+**Taken in P3.3.** (D-030 to D-033 are on their own open branches; D-013–D-029
+belong to the feature-expansion work.)
+
+Teach-back sits inside the Study Studio and uses the Studio's own gates:
+selected sources, the consent to send them, and the course AI policy. The
+student writes an explanation, and the model says what the selected material
+shows they covered, left out, or contradicted.
+
+`lib/teachback.ts` holds the reply to four rules:
+- no score, grade or percentage;
+- no model answer or rewrite;
+- every point quotes a selected source word for word, and is checked like a
+  study-guide citation;
+- a contradiction also quotes the student's own words, checked against what
+  they wrote.
+
+A point that fails its check is dropped, and the drop is counted on screen.
+Nothing is stored.
+
+Rejected: a mastery score from teach-back, which is hidden academic scoring;
+feeding teach-back into the review schedule.
