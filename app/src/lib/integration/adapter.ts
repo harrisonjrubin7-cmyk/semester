@@ -11,7 +11,7 @@
 import type { DataClass } from './classification';
 import { withinCeiling } from './classification';
 import {
-  CANONICAL_ENTITIES, DOMAIN_CEILING, NEVER_INGEST,
+  CANONICAL_ENTITIES, DOMAIN_CEILING, NEVER_DISPLAY, NEVER_INGEST,
   type CanonicalEntity, type ProviderDomain, type SyncDirection, type SyncMode,
 } from './catalog';
 
@@ -72,9 +72,15 @@ export interface AdapterDeclaration {
 }
 
 const NEVER = new RegExp(`(^|[._])(${NEVER_INGEST.join('|')})([._]|$)`);
+const NEVER_SHOWN = new RegExp(`(^|_)(${[...NEVER_INGEST, ...NEVER_DISPLAY].join('|')})(_|$)`);
 
 export function namesNeverIngest(name: string): boolean {
   return NEVER.test(name.toLowerCase());
+}
+
+/** Whether a canonical field name is one the database will refuse to store. */
+export function namesNeverDisplayed(name: string): boolean {
+  return NEVER_SHOWN.test(name.toLowerCase());
 }
 
 /** Everything wrong with a declaration; empty means it may be registered. */
@@ -111,6 +117,8 @@ export function validateDeclaration(d: AdapterDeclaration): string[] {
     for (const f of e.fields) {
       if (namesNeverIngest(f.external) || namesNeverIngest(f.canonical)) {
         errors.push(`${e.externalEntity}.${f.external}: never ingested`);
+      } else if (namesNeverDisplayed(f.canonical)) {
+        errors.push(`${e.externalEntity}.${f.canonical}: never stored as a canonical field`);
       }
       if (f.type === 'enum' && !(f.enumValues && f.enumValues.length > 0)) {
         errors.push(`${e.externalEntity}.${f.external}: an enum needs its values`);

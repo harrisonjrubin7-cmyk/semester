@@ -837,6 +837,10 @@ export const OWNED_TABLES: OwnedTable[] = [
   // ── Private to one account ──────────────────────────────────────────────
   { table: 'push_queue', column: 'user_id' },
   { table: 'push_devices', column: 'user_id' },
+  // What a school shared about you through an integration, and the consent
+  // that let it in. Both also cascade on account deletion.
+  { table: 'canonical_entity_references', column: 'subject_user_id' },
+  { table: 'consent_record', column: 'subject_user_id' },
   { table: 'courses', column: 'user_id' },
   { table: 'state', column: 'user_id' },
   { table: 'notes', column: 'user_id' },

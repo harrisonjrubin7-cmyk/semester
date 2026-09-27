@@ -40,7 +40,7 @@ than copied — two stores for one fact is the failure this repository's audits 
 | 2 — Gateway core | `app/src/lib/integration/`: adapter contract, pipeline, idempotency, retry/back-off/DLQ, rate limit, redaction, freshness, mock provider, contract tests | **Done** (library; no worker deployed) |
 | 3 — Dashboard | `IntegrationDashboard.tsx`: map + equivalent table, connections, mappings, sync history, conflicts, pause/resume, replay request, export | **Done**, behind `VITE_INTEGRATION_DASHBOARD` and the tenant flags |
 | 4 — LTI foundation | Launch, OIDC/JWT validation, deep linking and AGS **already existed**. Added: `20260927180000_lti_integration_binding.sql` binds an `lti_platform` to a school and a connection, gates passback in the database, records each launch's course context; `_shared/ltigate.ts`; `lti-integration.check.sql` (32 checks) | **Done** |
-| 5 — SIS / degree audit read | Mock adapters for term, program, section, enrollment, requirement, window, hold summary; freshness cards | Not started |
+| 5 — SIS / degree audit read | `mock-sis.ts` (term, program, catalog entry, section, registration window, enrollment, hold *summary*) and a mock degree audit (requirement status), with contract tests; `20260927190000_canonical_display.sql` stores each fact's mapped values and lets a student delete their own; a **From your school** section on Today behind `module.source_freshness_cards`; **What your school shares** on Privacy, always on, with delete and consent revocation | **Done** |
 | 6 — CRM / ERP / campus | Mock adapters and student workflows | Not started |
 | 7 — Hardening | Worker, reconciliation job, retention jobs, device matrix, operator runbooks | Not started |
 

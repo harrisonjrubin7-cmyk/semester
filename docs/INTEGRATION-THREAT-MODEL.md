@@ -27,6 +27,9 @@ kill switches · the classification floor.
 | T12 | A provider sends an older version and overwrites a newer one | Timestamp regression refused | test: "refuses an older version" |
 | T14 | Grades posted to an LMS a school has not approved, or during an incident | `lti_passback_decision` before any signing: kill switches, both flags in production, approved write-direction healthy connection, approved unexpired `scope.lms.score_publish` | `lti-integration.check.sql` (32 checks; five deliberate breaks each turn it red) |
 | T15 | A launch records who launched | `lti_record_context` stores the context id only, tenant-wide T0, no subject | check: "tenant-wide, T0, LMS as source of truth" |
+| T16 | A hold's reason (a debt, a conduct matter, a health form) reaches Semester | The mapping keeps only office, blocks-registration and link; unmapped fields are dropped; `reason`, `amount`, `balance` refused as canonical names in TS and as `display` keys by trigger | `mock-sis.test.ts`: "never its reason or amount"; check: "a hold carrying its reason" |
+| T17 | A student cannot remove what a school sent about them | Owner-only delete policy on their references; consent revocation stops the next sync | check: "the student deleting their own hold" (and every other role refused); component test |
+| T18 | "No hold" shown from a stale feed | *No registration hold on record* only when both window and hold feed are live/recent; otherwise nothing is said | `school-records.test.ts` |
 | T13 | A mock adapter mistaken for a real connector | `mock: true` in the declaration; named "Mock LMS"; not in any registry | review |
 
 ## Residual risks

@@ -77,6 +77,24 @@ connection without its school, or another school's connection. Five deliberate b
 ignored) each turned it red. The TypeScript reader covers every word the SQL can return, the deploy-window
 case, closing on other errors, and that `/score` asks before it signs or fetches.
 
+## SIS and degree audit — `mock-sis.test.ts`, `school-records.test.ts`, `schoolrecords.test.tsx`, `canonical-display.check.sql` (15 checks)
+
+Mock declarations valid, read-only, mocks; personal facts T3 and tenant-wide T0. Tenant-wide facts carry no subject; an
+enrollment is tied to its student only with consent; a hold keeps office and link and never its reason or amount; a
+grade inside an enrollment is refused; enum and required-field conflicts. The never-display list matches the SQL
+trigger word for word. Freshness decays by kind and never improves; windows that closed and non-https links are
+dropped; "no hold on record" only from fresh feeds. On screen: the Today section appears with the flag on, and not
+with it off, under the kill switch, or with nothing shared; the Privacy panel appears with the flag off; Delete
+reaches the database filtered to the student and the kind; Revoke marks the consent revoked rather than deleting it.
+In SQL: reason, amount, grade, nested, array and oversized `display` refused (an ordinary key is the control);
+only the student deletes their own row, never the school's tenant-wide one, and still cannot write one.
+
+Deliberate breaks, each turning its suite red: delete without the student filter; Privacy panel gated on the flag;
+delete policy `using (true)`; `reason` dropped from the trigger. The first run of the SQL suite also found a real
+bug — lax JSON path mode unwrapped arrays, so `{"students":[…]}` was accepted — fixed with `strict`. Writing the
+component test found another: the cards flag required a connection no student can read, so the section could
+never have appeared.
+
 ## Not yet covered (later phases)
 
 Worker against a live database; webhook signature validation; reconciliation job; retention jobs; SIS/degree-audit mocks; tablet screenshots and a full device matrix (phone and desktop were driven in Chromium).

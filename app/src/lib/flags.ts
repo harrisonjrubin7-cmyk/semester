@@ -106,7 +106,10 @@ export const FLAGS: readonly FlagDefinition[] = [
     rollout: 'Off until a connection is live for the tenant; then preview for staff accounts first.',
     successCriteria: 'No imported fact is shown without its source and freshness.',
     rollback: 'Set to off. Cards fall back to the student-entered data they show today.',
-    killSwitches: ['kill.integration_sync'], needsConnection: true,
+    // No connection gate: a student cannot read connections, so the evaluator
+    // would refuse every student. The card shows only rows RLS already lets
+    // the student read, and there are none without a live connection.
+    killSwitches: ['kill.integration_sync'],
   }),
 
   // ── Release (temporary) ─────────────────────────────────────────────────

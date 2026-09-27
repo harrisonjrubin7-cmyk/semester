@@ -8530,3 +8530,48 @@ button.adband-bar {
     grid-template-columns: 1fr;
   }
 }
+
+/* ── From your school (Today) and what it shares (Privacy) ─────────────── */
+.school-records {
+  display: grid;
+  gap: var(--sp-3);
+}
+
+.school-readiness {
+  margin: 0;
+  font-weight: 600;
+}
+
+.school-fact {
+  display: grid;
+  gap: var(--sp-1);
+}
+
+.school-fact-meta,
+.school-data-lede {
+  color: var(--app-dim);
+  font-size: var(--type-sm);
+  line-height: var(--leading-normal);
+}
+
+.school-data {
+  display: grid;
+  gap: var(--sp-3);
+  margin-block: var(--sp-6);
+}
+
+.school-data-list {
+  display: grid;
+  gap: var(--sp-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  line-height: var(--leading-normal);
+}
+
+.school-twostep {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin-inline-start: var(--sp-2);
+}
