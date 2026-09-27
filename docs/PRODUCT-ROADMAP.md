@@ -61,7 +61,7 @@ them already exist in part on main (#761, #762).
 | A | Design and UX audit: [UX-ENHANCEMENT-PLAN.md](UX-ENHANCEMENT-PLAN.md), [DESIGN-SYSTEM-IMPROVEMENTS.md](DESIGN-SYSTEM-IMPROVEMENTS.md), crosswalk | **Done**, docs only (D-014) |
 | B | Today + Action Center: [TODAY-ACTION-CENTER.md](TODAY-ACTION-CENTER.md) | **Built** as an increment on BL-1.4, behind `today_action_center` (off); the H-2 fix is always on. Draft PR (D-021) |
 | C | Registration Day Mode (extends #762): [REGISTRATION-DAY-MODE.md](REGISTRATION-DAY-MODE.md) | **Built** behind `registration_day_mode` (off). Draft PR, stacked on Phase B |
-| D | Graduation Simulator + Cost Planner (extends #762) | Queued |
+| D | Graduation Simulator + Cost Planner (extends #762): [GRADUATION-AND-COST-SIMULATOR.md](GRADUATION-AND-COST-SIMULATOR.md) | **Built** behind `graduation_simulator` and `cost_planner` (off). Carries one additive migration, not applied (D-025). Draft PR, stacked on Phase C |
 | E | Academic Life Balance + Crunch Week (extends `lib/clash.ts`) | Queued |
 | F | Course Detail V2 | Queued |
 | G | Advisor Meeting Mode | Queued; sharing model is D-016 |

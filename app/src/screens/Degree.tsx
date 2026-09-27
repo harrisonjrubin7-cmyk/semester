@@ -56,7 +56,7 @@ import {
 } from '../lib/termgpa';
 
 export function Degree() {
-  const { state } = useStore();
+  const { state, account } = useStore();
   const [tab, setTab] = useState<'left' | 'taken' | 'rules' | 'ahead'>('left');
 
   /*
@@ -102,7 +102,7 @@ export function Degree() {
       {tab === 'left' ? <WhatIsLeft /> : null}
       {tab === 'taken' ? <Transcript rows={state.taken} /> : null}
       {tab === 'rules' ? <Rules /> : null}
-      {tab === 'ahead' ? <GraduationSimulator done={hours(state.taken).withThisTerm} /> : null}
+      {tab === 'ahead' ? <GraduationSimulator done={hours(state.taken).withThisTerm} accountId={account?.id ?? null} /> : null}
       </>
     </Page>
   );
