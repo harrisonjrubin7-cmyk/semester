@@ -425,6 +425,11 @@ export const STRATEGY: Record<string, Strategy> = {
   // Where you have been lately, newest first. Interleaving two devices'
   // histories would make it a list of nowhere in particular.
   recent: 'theirs',
+  // The deadlines and courses opened lately, for "Continue where you left
+  // off". `theirs` for the same reason as `recent`, and it is what makes the
+  // feature work across devices: the report you were reading on the laptop is
+  // the one the phone offers back.
+  opened: 'theirs',
   // Not `theirs`: opening a screen on a laptop is still having opened it, and
   // a phone that syncs later should not un-see it.
   visited: 'ticks',

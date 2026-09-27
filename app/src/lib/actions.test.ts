@@ -155,7 +155,7 @@ describe('ranking', () => {
     expect(score(action('a'), c, NOW).parts.fatigue).toBe(9);
   });
 
-  it('shows one most important and at most five next, the rest behind View all', () => {
+  it('shows one most important and at most three next, the rest behind View all', () => {
     const many = Array.from({ length: 9 }, (_, i) => action(`a${i}`, { dueAt: NOW + i * DAY }));
     const r = rank(many, {}, NOW);
     expect(r.mostImportant).not.toBeNull();
