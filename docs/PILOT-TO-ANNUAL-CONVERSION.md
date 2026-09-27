@@ -1,53 +1,55 @@
 # Pilot to Annual Conversion
 
-How a pilot ends. Launch-readiness Phase 3. It starts when the pilot enters
-`decide` ([`PAID-PILOT-FRAMEWORK.md`](PAID-PILOT-FRAMEWORK.md)), which requires
-outcomes measured against the baseline agreed in the charter.
+How a pilot ends. Launch-readiness Phase 3. It starts at the `decide` stage
+([`PAID-PILOT-FRAMEWORK.md`](PAID-PILOT-FRAMEWORK.md)), with outcomes
+measured against the baseline in the pilot plan.
 
-## Three outcomes, all real
+The decision itself is recorded by `pilotVerdict` in
+harrisonjrubin7-cmyk/semester#817. That function needs a written decision,
+signed by the sponsor, and refuses `convert` or `expand` while a
+high-severity security, privacy or policy issue is open.
 
-| Outcome | When | What follows |
+## Four outcomes, all real
+
+These use #817's `PilotDecision` vocabulary.
+
+| Decision | When | What follows |
 | --- | --- | --- |
-| **Expand** | The agreed targets are met, and the champion and sponsor want more | An annual proposal at the deal desk tier for the wider scope, followed by implementation for the new cohorts |
-| **Extend** | The results are mixed and a named cause can be fixed in time | One extension, within the deal desk's pilot length (6 months in total today), with the fix and a new date written into the charter. A second extension is a stop |
-| **Stop** | Targets missed, or the institution's priorities changed | A written summary to the champion; the student data export offered to the cohort (the beta exit path in harrisonjrubin7-cmyk/semester#814, once merged); tenant access ended by the offboarding steps. No renewal pitch |
+| **Convert** | The agreed targets are met for the piloted scope | An annual proposal at the deal desk tier for that scope |
+| **Expand** | Targets are met, and the champion and sponsor want more | An annual proposal for the wider scope; implementation for the new cohorts, each with its own launch-council go |
+| **Pause** | A named cause can be fixed, and the institution wants to try again | The fix and a new date, written down. The whole pilot, pause included, still ends within the deal desk's pilot length (6 months today) |
+| **Stop** | Targets missed, or the institution's priorities changed | A written summary to the champion; the student data export offered to the cohort (the beta exit path, harrisonjrubin7-cmyk/semester#814); tenant access ended by the offboarding steps. No renewal pitch |
 
-"Stop" is a required outcome in every charter (`charterProblems()` refuses one
-without it), because a pilot that can't end is a free trial with extra steps.
+A pilot that can't stop is a free trial with extra steps.
 
 ## The decision meeting
 
-Held with the champion and the sponsor, with these on the table:
+Held with the champion and the sponsor. On the table:
 
-1. The charter's metrics: baseline, target and result, each from its stated
-   source, at cohort level only.
+1. The plan's metrics, each with its baseline, target and result from the
+   stated source, at cohort level only.
 2. Support volume per hundred students, and every accessibility report with
    what was done about it.
-3. Cost to serve: AI usage against budget, and support and implementation
-   hours.
+3. Cost to serve: AI usage against budget, and the support and
+   implementation hours spent.
 4. Known limitations that affected the result, stated plainly.
 5. Semester's recommendation, which may be to stop.
 
 ## Annual proposal
 
-- It goes through the deal desk (`review()` in `governance/deal-desk.ts`). Any
-  pilot credit is applied as the policy allows, and never as "free forever".
-- The scope is the pilot's scope plus what the results justify, not plus
-  everything else.
-- It needs a data scope, a DPA and support terms: whatever the pilot ran
-  without now has to be in writing.
+- It goes through the deal desk (`review()` in `governance/deal-desk.ts`). Pilot
+  credit applies as the policy allows, never as "free forever".
+- The scope is the pilot's scope, plus only what the results justify.
+- A data scope, a DPA and support terms must be in writing: whatever the pilot
+  ran without has to be written down now.
 
 ## After conversion
 
-- **Quarterly business review:** the same metrics as the pilot, plus
-  adoption by cohort, support, accessibility and cost. It is written, and
-  sent to the sponsor.
+- **Quarterly business review:** the pilot's metrics, plus adoption by cohort,
+  support, accessibility and cost. Written, and sent to the sponsor.
 - **Renewal:** begins one budget cycle before the term ends, from the QBR
-  record, not from memory.
-- **Expansion:** each new cohort gets its own charter check and its own
-  launch-council go. A contract never launches a cohort by itself.
+  record.
+- **Expansion:** each new cohort gets its own readiness check and its own
+  launch-council go.
 - **References and case studies:** only with written consent from the named
   person, and never quoting student outcomes below the reporting threshold.
-
-Records of all of this live in the company's CRM and document store, as the
-[GTM playbook](INSTITUTIONAL-GTM-PLAYBOOK.md) explains.

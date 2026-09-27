@@ -311,8 +311,8 @@ export const LIBRARY: readonly Answer[] = [
   {
     id: 'IM-1', section: 'implementation', status: 'available',
     question: 'Describe your implementation approach.',
-    answer: 'A time-boxed paid pilot with a written charter: named institutional champion, approved data scope, baseline and success criteria agreed before launch, and a decision to expand, extend or stop.',
-    evidence: ['docs/PAID-PILOT-FRAMEWORK.md', 'docs/market-readiness/IMPLEMENTATION_PLAYBOOK.md', 'app/src/lib/gtm/pilot.ts'],
+    answer: 'A time-boxed paid pilot of 60 to 120 days with a written plan: an executive sponsor and an operational champion at the institution, a minimum-necessary data plan, a measured baseline and success criteria agreed before launch, and a signed decision to convert, expand, pause or stop.',
+    evidence: ['docs/PAID-PILOT-FRAMEWORK.md', 'docs/market-readiness/IMPLEMENTATION_PLAYBOOK.md'],
   },
   // ── Support / SLA ───────────────────────────────────────────────────────
   {

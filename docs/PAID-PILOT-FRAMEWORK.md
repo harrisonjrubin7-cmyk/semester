@@ -1,67 +1,55 @@
 # Paid Pilot Framework
 
 How a university pilot is chartered, run and decided. Launch-readiness
-Phase 3. The rules are code in
-[`app/src/lib/gtm/pilot.ts`](../app/src/lib/gtm/pilot.ts), tested in
-`pilot.test.ts`. This document gives the reasons for them.
+Phase 3.
 
-Where this sits among the documents already on main:
+**The enforced pilot rules live in harrisonjrubin7-cmyk/semester#817**:
+`pilotReadiness`, `pilotVerdict`, the buying-committee map and the decision
+log in `app/src/lib/gtm/pilot.ts`, enforced again by its `gtm_pilots` tables.
+That work came first. This document doesn't restate those rules. It
+explains how they fit with the launch-readiness work, and lists what the
+launch command asks for that #817 doesn't cover yet.
 
 | Document | Answers |
 | --- | --- |
 | [`market-readiness/PILOT_PLAYBOOK.md`](market-readiness/PILOT_PLAYBOOK.md) | What must be true of Semester before any pilot |
-| [`operating-model/COMMERCIAL-GOVERNANCE.md`](operating-model/COMMERCIAL-GOVERNANCE.md) and `governance/deal-desk.ts` | Price, pilot credit, pilot length, and who approves a deal |
-| **This document** | What each pilot must agree, and when it may move from one stage to the next |
-| [`PILOT-TO-ANNUAL-CONVERSION.md`](PILOT-TO-ANNUAL-CONVERSION.md) | How a pilot becomes, or does not become, an annual agreement |
+| [`operating-model/COMMERCIAL-GOVERNANCE.md`](operating-model/COMMERCIAL-GOVERNANCE.md) and `governance/deal-desk.ts` | Price, pilot credit, the longest a pilot may run (6 months), and who approves a deal |
+| #817's `docs/gtm/EXECUTION-PLAN.md` §5–§6 | The pilot plan, its readiness, and the signed decision |
+| **This document** | The lifecycle, the launch gate, and what the launch command adds |
+| [`PILOT-TO-ANNUAL-CONVERSION.md`](PILOT-TO-ANNUAL-CONVERSION.md) | How a pilot becomes, or doesn't become, an annual agreement |
 
-## The charter
+The two length rules agree. #817 requires 60–120 days; the deal desk allows
+up to 6 months. Every pilot #817 accepts is within the deal desk's limit.
 
-A charter is signed before configuration starts. `charterProblems()` lists
-everything wrong with one, and the pilot can't be configured until that list
-is empty.
+## What the launch command adds to #817's readiness check
 
-| Field | Rule | Why |
-| --- | --- | --- |
-| Institution, cohort | Cohort of 10–200 | Under 10 can't be reported on without identifying people (the n ≥ 10 threshold already on main). Over 200 can't be supported by hand. |
-| Champion | A named role **at the institution** | A pilot without one dies quietly. A Semester employee is a sales contact, not a champion. |
-| Duration | 1 month up to the deal desk's maximum (6 today) | Read from `DEAL_POLICY`, so the two can never disagree. |
-| Modules | At least one | So the scope is stated. |
-| Data scope | Only approved classes: account and affiliation, published catalog, what students enter, campus directory, cohort-level usage, consented support tickets | Anything else must be argued onto the list. Grades, GPA, rosters, enrollments, financial aid, health, disability, counseling, conduct, immigration, private messages, submissions, accommodations and location are refused by name. |
-| Sources | Every source has an owner at the institution and a freshness commitment | A student sees where each fact came from. Someone has to answer for it. |
-| Success metrics | Each has a source and a target; the baseline is measured before launch | A pilot without agreed criteria gets judged on vibes. |
-| Metric level | Cohort aggregates only; "at-risk", "early alert", "per student", "GPA", "wellbeing" are refused | No pilot builds a student risk profile, even to prove itself. |
-| Responsibilities | Written for both sides | |
-| Support | Hours and a contact the cohort can reach | |
-| Decisions | "Stop" must be one of them | If stopping isn't a real option, the criteria were decoration. |
-| Conversion | The path to an annual agreement | See the conversion document. |
+These were proposed to #817 as additions to `pilotReadiness`. Until they
+land there, they are checklist items for whoever reviews a pilot plan:
+
+| Check | Why |
+| --- | --- |
+| The data scope names no forbidden class: grades, GPA, rosters, enrollments, financial aid, health, disability, counseling, conduct, immigration, private messages, submissions, accommodations, location | The command forbids each of these through generic flows. Naming the class that was asked for tells the reviewer what to remove |
+| No success metric is about individual students ("at-risk", "early alert", "per student", "GPA", "wellbeing") | Outcomes are cohort aggregates. No pilot builds a student risk profile, even to prove itself |
+| The cohort has at least 10 and at most 200 students | Under 10 can't be reported without identifying people (the n ≥ 10 threshold on main); over 200 can't be supported by hand |
+| "Stop" is one of the possible decisions | #817's `PilotDecision` includes `stop`. The charter should say so in writing, too |
 
 ## The lifecycle
 
-`discovery → configure → train → launch → hypercare → learn → decide`, one
-stage at a time. `advanceProblems()` names what's missing.
+`discovery → configure → train → launch → hypercare → learn → decide`
 
 | Entering | Requires |
 | --- | --- |
-| configure | A signed charter with no problems |
-| train | The tenant configured |
-| launch | Training done, support routing live, the baseline measured, and the launch council's **go** for this cohort (Phase 0's `decide()`, harrisonjrubin7-cmyk/semester#806) |
+| configure | A plan with no `pilotReadiness` problems, signed |
+| train | The tenant configured, in sandbox data mode until production data is approved (`pilotDataMode`) |
+| launch | Training done, support routing live, the baseline measured, and **the launch council's go for this cohort** (Phase 0, #806) |
 | learn | At least two weeks of hypercare |
-| decide | Outcomes measured against the baseline |
+| decide | Outcomes measured against the baseline, and a signed verdict (`pilotVerdict`) |
 
-The launch gate is where this ties back to Phase 0. A signed contract does not
-launch a cohort. The council does.
+The launch gate is where pilots connect to launch readiness: a signed pilot
+plan doesn't launch a cohort, the council does.
 
 ## Where pilot records live
 
-The charter, contacts, notes and outcomes for a real institution do **not**
-live in this repository or in Semester's student database. This repository is
-public, and the student database is the one thing pilot data must never
-touch. Pilot records belong in the company's CRM or document store. There
-they are checked against these rules before signature:
-[`INSTITUTIONAL-GTM-PLAYBOOK.md`](INSTITUTIONAL-GTM-PLAYBOOK.md) explains how.
-
-## Pricing
-
-Nothing here sets a price. Pilot fee, credit and length come from the deal
-desk, and every pilot deal goes through `review()` in
-`app/src/lib/governance/deal-desk.ts`.
+In #817's `gtm_pilots`, `gtm_pilot_metrics` and `gtm_pilot_outcomes`
+tables, at platform scope, written only by Semester's sales role. See the GTM
+playbook's note on that decision.

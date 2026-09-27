@@ -7,35 +7,32 @@ The rules are code wherever code can hold them:
 
 | Rule | Where |
 | --- | --- |
-| Sales stages and the gate before each one | `SALES_STAGES`, `SALES_EXIT` and `salesMoveProblems()` in [`app/src/lib/gtm/pilot.ts`](../app/src/lib/gtm/pilot.ts) |
+| Sales stages, the gate before each one, and how each maps onto #817's account status | `SALES_STAGES`, `SALES_EXIT`, `ACCOUNT_STATUS_OF` and `salesMoveProblems()` in [`app/src/lib/gtm/stages.ts`](../app/src/lib/gtm/stages.ts) |
 | What an answer to an RFP may claim | [`HIGHER-ED-RFP-RESPONSE-LIBRARY.md`](HIGHER-ED-RFP-RESPONSE-LIBRARY.md), from `app/src/lib/gtm/rfp.ts` |
-| What a pilot must agree | [`PAID-PILOT-FRAMEWORK.md`](PAID-PILOT-FRAMEWORK.md) |
+| What a pilot must agree | `pilotReadiness` in #817, and [`PAID-PILOT-FRAMEWORK.md`](PAID-PILOT-FRAMEWORK.md) |
 | Price, discounts, who approves | [`operating-model/COMMERCIAL-GOVERNANCE.md`](operating-model/COMMERCIAL-GOVERNANCE.md), `governance/deal-desk.ts` |
 
-## A decision: GTM records are not stored in Semester
+## Where GTM records live
 
-The launch command lists about thirty tables for GTM, including
-`sales_accounts`, `sales_contacts`, `buying_committee_members`,
-`champion_records`, `pilot_baselines`, `qbr_records` and
-`renewal_records`. **This phase adds none of them, deliberately.**
+harrisonjrubin7-cmyk/semester#817 stores Semester's own institutional pipeline in
+the database: accounts, the buying committee, the decision log, pilots and
+their outcomes. They sit at platform scope behind a new `account:manage`
+capability that only Semester's sales role (`account_executive`) holds, and a
+customer school's configurers can read only their own account. That PR came
+first, and the pilot rules live there.
 
-- **The data would be in the wrong place.** These tables would hold named
-  contacts at other organizations, deal values and meeting notes. This
-  repository is public, and Semester's database is the one students' records
-  live in. Putting company pipeline data beside student data, behind the same
-  row-level security, turns a student-privacy boundary into a sales-data
-  boundary. A mistake in one then becomes a disclosure in the other. The
-  command's own rule, "do not expose company pipeline data to students or
-  unrelated tenant users", is best kept by not putting it there.
-- **A CRM already does this.** A small company's pipeline is better held in a
-  CRM, and its documents in the company's document store, both with access
-  limited to the people who sell.
-- **What does belong here is the discipline.** Stage gates, charter rules
-  and claim rules must be the same for every deal and reviewable in one
-  place, so they are code. The records are checked against them.
+The launch command's full list (`sales_contacts`, `qbr_records`,
+`renewal_records`, …) is broader than #817's tables. Before it grows, the
+council should confirm three things, because this is the same database
+students' records live in:
 
-If the council decides otherwise, the tables should go in a separate project
-from the student database, not in `public` beside it.
+1. **No personal data about contacts beyond a role and a work address.**
+   Meeting notes about named people belong in a CRM, not beside student data.
+2. **No student data ever joins a pipeline table.** Pilot outcomes are
+   cohort aggregates, suppressed below ten.
+3. **The capability boundary is tested both ways.** A student and another
+   school's administrator must each be refused, as #817's `gtm.check.sql`
+   already does for its own tables.
 
 ## Ideal customer profile, in order of fit today
 
@@ -53,7 +50,7 @@ experience layer, invite-only, with no system-of-record integration yet.
 4. **Multi-campus or state systems**: later. The multi-campus rules exist
    (`governance/hierarchy.ts`), but no single campus is live yet.
 
-For each target, record the following in the CRM, not here:
+For each target, record the following on the account (#817's tables, or a CRM for anything about named people):
 - institution type and size
 - stack (SIS, LMS, CRM, advising)
 - the problem in the champion's words
@@ -76,10 +73,10 @@ The gates are in `SALES_EXIT`, summarized here:
 | qualified | A named champion, the problem in their words, a budget cycle and a decision process |
 | outcome_workshop | The buying committee mapped, including IT, privacy, accessibility and the academic sponsor |
 | proposal | Security, privacy and accessibility review started, answered from the RFP library |
-| pilot_or_implementation_SOW | A draft charter with no `charterProblems()` |
+| pilot_or_implementation_SOW | A pilot plan with no `pilotReadiness` problems (#817) |
 | contracted | Procurement and legal signed; no deal-desk refusals |
 | live | The launch council's go for the first cohort |
-| renewal | The pilot reached `decide` with outcomes measured |
+| renewal | A signed, final `pilotVerdict` (#817) with outcomes measured |
 
 An opportunity moves forward only, and can't skip a gated stage.
 `closed_lost` is reachable from anywhere. A lost deal comes back as a new
