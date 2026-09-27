@@ -217,15 +217,33 @@ export const STRATEGY: Record<string, Strategy> = {
   // Whether the courses are coloured. About how somebody reads a list rather
   // than about the screen it is on, so it follows them between devices.
   courseColours: 'theirs',
-  shell: 'theirs',
-  // Where the message sits beside the list. About how somebody reads a
-  // mailbox rather than about the window it is in, so it follows them.
-  mailPane: 'theirs',
-  // Whether the directory is a list or nine tiles. `theirs` for the same
-  // reason the shell is: somebody who has learned that Data is bottom-left
-  // has learned it, and finding a column of fifty-five rows on the laptop
-  // instead means learning the place twice.
-  directory: 'theirs',
+  /*
+   * The layout, and the four settings that are really part of it: `mine`.
+   *
+   * These were `theirs`, on an argument worth keeping the shape of — somebody
+   * who has learned where Data is has learned it, and meeting a different
+   * layout on the laptop means learning the place twice. The adaptive-device
+   * contract (`docs/ADAPTIVE-DEVICE-EXPERIENCE.md`) decides the other way,
+   * and for a reason the old argument did not weigh: a layout is chosen *for
+   * a screen*. The Soft shell somebody picked on a phone, or the reading pane
+   * put underneath on a short laptop window, followed them onto a device it
+   * was never chosen for, and choosing again there changed it back on the
+   * first. Two devices each wanting their own layout could only take turns.
+   *
+   * So each device keeps its own, and a new device starts on the defaults and
+   * derives the rest from its width — `lib/chrome.ts` already makes every
+   * navigation work at every width, so no device is ever handed one it
+   * cannot use. What the student *arranged* still follows them: the home
+   * screen's icons, the workspace favourites, the feed and course orders and
+   * every look setting below are about the person and stay `theirs`.
+   */
+  shell: 'mine',
+  // Where the message sits beside the list — a question only a wide window
+  // asks, and the answer is about that window's height and width.
+  mailPane: 'mine',
+  // List or tiles, which `directoryOf` answers from the shell when nobody has
+  // chosen. It goes where the shell goes, or the two would disagree.
+  directory: 'mine',
   badges: 'theirs',
   // An arrangement somebody made on purpose, and one they made once. It
   // follows the account rather than the device for the same reason the shell
@@ -271,9 +289,11 @@ export const STRATEGY: Record<string, Strategy> = {
   // An arrangement rather than a list you add to — merging two orderings
   // would produce an order neither device chose.
   feedOrder: 'theirs',
-  // Same reasoning, and one more: unioning two bars would overflow it, and
-  // the overflow would be silently trimmed by whichever device read it next.
-  tabs: 'theirs',
+  // Which screens the tab bar holds. Never unioned — two bars merged would
+  // overflow, and the overflow would be silently trimmed by whichever device
+  // read it next — and now never taken from another device either: a bar is
+  // chosen for the thumb on the device holding it. See `shell` above.
+  tabs: 'mine',
   // Per course, not wholesale: two devices renaming two different courses
   // should end with both names, and `theirs` would keep one device's whole
   // set and drop the other's.
@@ -358,7 +378,8 @@ export const STRATEGY: Record<string, Strategy> = {
   // An arrangement, like feedOrder — merging two would produce an order
   // neither device chose.
   courseOrder: 'theirs',
-  nav: 'theirs',
+  // Which navigation this device draws. `mine`, with the layout — see `shell`.
+  nav: 'mine',
   sample: 'theirs',
   term: 'theirs',
   seenOnboarding: 'theirs',

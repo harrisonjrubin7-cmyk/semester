@@ -117,11 +117,10 @@ this change.
   (Google, Microsoft, Apple, institutional SSO). Email confirmation and
   password reset links are not covered. See
   [CROSS-DEVICE-CONTINUITY.md](CROSS-DEVICE-CONTINUITY.md).
-- **Layout preferences sync across devices.** `nav`, `shell` and `mailPane` use
-  the incoming value, so choosing a navigation on a laptop changes it on the
-  phone. `chromeFor` still draws a usable navigation at every width, so this
-  does not break the other device. It does go against the spec's "do not store
-  a device-specific layout preference in a way that affects another device".
+- **Layout preferences: per device.** `nav`, `shell`, `mailPane`, `tabs`
+  and `directory` no longer follow the last device to change them; each
+  device keeps its own. Arrangements and taste still sync. See
+  [CROSS-DEVICE-CONTINUITY.md](CROSS-DEVICE-CONTINUITY.md).
 - **The spec's institutional consoles** (tenant admin, integrations,
   moderation, analytics, support) are in the institutional preview, which this
   audit did not cover.

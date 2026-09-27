@@ -137,12 +137,16 @@ difference would look like a conflict, so none are reported.
    device, where "where you were" is not this tab's place to guess.
    A notification tap was already covered: it carries `screen` and `item`
    through the service worker to `lib/land.ts`.
-5. **Layout preferences sync with `theirs`.** `nav`, `shell`, `mailPane`,
-   `tabs` and `shortcuts` follow the last device to change them. Reading
-   preferences (`density`, `textSize`, `lineHeight`, `readingWidth` and others)
-   are `mine`, so they stay per device, which is what the spec asks. The
-   navigation cannot become unusable on another device, because `chromeFor`
-   adapts it to the width. Even so, the spec would make `nav` and `mailPane`
-   per device as well.
+5. **Fixed: layout preferences are per device.** `nav`, `shell`, `mailPane`,
+   `tabs` and `directory` are now `mine` in `lib/merge.ts`: a layout is chosen
+   for a screen, and a phone and a laptop can each keep their own. A new
+   device starts on the defaults and derives the rest from its width;
+   `chromeFor` already makes every navigation usable at every width. What the
+   student arranged — the home screen's icons, the workspace favourites, the
+   feed and course orders, the shortcuts row — and every look setting that is
+   about the person (accent, typeface) still follow the account. Reading
+   preferences (`density`, `textSize`, `lineHeight`, `readingWidth`, `labels`)
+   were already per device. The Layout and navigation screen says so. Guarded
+   by `lib/layoutdevice.test.ts`.
 
-5 is a change to sync behaviour that deserves its own review.
+
