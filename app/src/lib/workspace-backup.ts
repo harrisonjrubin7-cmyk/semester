@@ -1,3 +1,4 @@
+import { ACTIONS_PREFIX, readActionChoices } from './actions';
 import { readAthletics } from './athletics';
 import { readCareer } from './career';
 import { readCreations } from './creations';
@@ -7,7 +8,7 @@ import { readPathway } from './pathway';
 import { readUniversityDrafts } from './university';
 
 /**
- * A backup for the six workspaces the main one does not reach.
+ * A backup for the device workspaces the main one does not reach.
  *
  * `lib/export.ts` backs up the term — courses, deadlines, notes, grades — by
  * taking `pickPersisted` and writing it out. Athletics, Career, Family,
@@ -79,6 +80,12 @@ const DEFINITIONS: Record<string, Definition> = {
     prefix: 'semester.pathway.v1',
     scope: 'account',
     read: readPathway,
+  },
+  actions: {
+    label: 'What you did about your next steps',
+    prefix: ACTIONS_PREFIX,
+    scope: 'account',
+    read: readActionChoices,
   },
 };
 
