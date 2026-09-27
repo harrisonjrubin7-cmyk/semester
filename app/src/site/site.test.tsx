@@ -14,7 +14,8 @@ const hrefs = (html: string) => [...html.matchAll(/<a [^>]*href="([^"]*)"/g)].ma
 
 describe('every page', () => {
   it('covers the routes the brief names', () => {
-    const want = ['/', '/product/', '/students/', '/institutions/', '/pricing/', '/tools/', '/resources/', '/about/', '/careers/', '/contact/', '/security/', '/privacy/', '/accessibility/', '/help/', '/login/', '/signup/', '/account/', '/membership/'];
+    const want = ['/', '/product/', '/students/', '/institutions/', '/pricing/', '/tools/', '/resources/', '/about/', '/careers/', '/contact/', '/security/', '/privacy/', '/accessibility/', '/help/', '/login/', '/signup/', '/account/', '/membership/',
+      '/tools/graduation/', '/tools/schedule/', '/tools/checklist/', '/tools/advisor/'];
     expect(ROUTES.map((r) => r.path).sort()).toEqual([...want].sort());
   });
 
@@ -35,10 +36,24 @@ describe('every page', () => {
     for (const r of ROUTES) expect(r.description.length, r.path).toBeLessThanOrEqual(160);
   });
 
-  it('ships no script at all, and says so in its policy', () => {
-    for (const { route, html } of pages) {
+  it('ships no script outside the tools, and says so in its policy', () => {
+    for (const { route, html } of pages.filter((p) => !p.route.tool)) {
       expect(html, route.path).not.toMatch(/<script/i);
       expect(html, route.path).toContain("script-src 'none'");
+    }
+  });
+
+  it('gives each tool page exactly one script, from its own origin, and no way to send', () => {
+    const tools = pages.filter((p) => p.route.tool);
+    expect(tools.map((p) => p.route.tool)).toEqual(['graduation', 'schedule', 'checklist', 'advisor']);
+    for (const { route, html } of tools) {
+      expect([...html.matchAll(/<script\b[^>]*>/gi)].map((m) => m[0]), route.path).toEqual(['<script type="module" src="/tools/tools.js">']);
+      expect(html, route.path).not.toMatch(/<script[^>]*>[^<]/i);
+      expect(html, route.path).toContain("script-src 'self'");
+      expect(html, route.path).toContain("connect-src 'none'");
+      expect(html, route.path).not.toContain("'unsafe-inline'");
+      expect(html, route.path).toContain(`data-tool="${route.tool}"`);
+      expect(html, route.path).toContain('<noscript>');
     }
   });
 

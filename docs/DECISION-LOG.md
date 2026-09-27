@@ -1007,3 +1007,18 @@ session's range.)
     NIL, toolkit, directory, housing and meal plans, study journal,
     operations). They are listed as waiting on their owners rather than
     changed from here.
+
+## D-031 · Public tool pages may run one same-origin script
+
+**Taken in P2.2, within D-011.** (Numbered after D-030; D-013–D-029 belong to
+the feature-expansion work.) The content pages ship no JavaScript and say so in
+their policy (`script-src 'none'`). The four public tools cannot answer a
+question without running code, so their pages, and only theirs, load one
+bundled file, `tools/tools.js`, under `script-src 'self'` with `connect-src
+'none'` — no inline script, nothing from another origin, and no network
+request the page could make with what a student types. Each tool is
+prerendered, so it reads without scripts, and hydrates with the app's own
+functions (`project()`, `conflicts()`, `CHECKLIST`). `site.test.tsx` holds the
+policy per page; `tools/Tools.test.tsx` holds hydration. Rejected: sending
+visitors into the app for each tool (the P2.1 stop-gap), which asks for
+onboarding before an answer.

@@ -1,8 +1,10 @@
 import type { ReactNode } from 'react';
-import { renderToStaticMarkup } from 'react-dom/server';
+import { renderToStaticMarkup, renderToString } from 'react-dom/server';
+import { defaultNext } from '../lib/graduation';
 import { PROMISE, type SiteConfig } from './config';
 import { Layout, href } from './Layout';
 import * as P from './pages';
+import { TOOL_LIST, Tool, type ToolId, type ToolProps } from './tools/Tools';
 
 /**
  * Every public page, rendered to static HTML.
@@ -10,7 +12,8 @@ import * as P from './pages';
  * Used by `scripts/build-site.mjs`, which writes the files, and by
  * `site.test.tsx`, which checks them — the same function, so what is tested is
  * what ships. Pages carry no script: the site must work, and be indexable,
- * with JavaScript switched off.
+ * with JavaScript switched off. The one exception is the four tool pages, which
+ * load a single same-origin script to make the prerendered tool interactive.
  */
 
 export interface Route {
@@ -18,6 +21,8 @@ export interface Route {
   title: string;
   description: string;
   Page: (props: { config: SiteConfig }) => ReactNode;
+  /** Set on a tool page: the page loads `tools/tools.js` to hydrate it. */
+  tool?: ToolId;
 }
 
 export const ROUTES: Route[] = [
@@ -39,7 +44,29 @@ export const ROUTES: Route[] = [
   { path: '/signup/', title: 'Get started with Semester', description: 'Start free, with no card and no account required.', Page: P.Signup },
   { path: '/account/', title: 'Your Semester account', description: 'Your profile, sign-in and data controls, in the Semester app.', Page: P.Account },
   { path: '/membership/', title: 'Your Semester membership', description: 'Plans, and what every plan always includes.', Page: P.Membership },
+  ...TOOL_LIST.map(
+    (t): Route => ({
+      path: `/tools/${t.id}/`,
+      title: `${t.title} — Semester`,
+      description: t.description,
+      tool: t.id,
+      Page: ({ config }) => <P.ToolPage config={config} id={t.id} title={t.title} lead={t.lead} body={toolMarkup(t.id)} />,
+    }),
+  ),
 ];
+
+/**
+ * The tool's first render, and the props it used, for `client.tsx` to hydrate.
+ *
+ * `renderToString` rather than static markup: its text-node separators are
+ * what lets hydration match adjacent text ("15 credits · no conflicts") without
+ * a mismatch. The next term is fixed here, at build time, and handed to the
+ * client in the page, so both renders agree on it.
+ */
+export function toolMarkup(id: ToolId, now = new Date()): { html: string; props: string } {
+  const props: ToolProps = { next: defaultNext(now) };
+  return { html: renderToString(<Tool id={id} props={props} />), props: JSON.stringify(props) };
+}
 
 /** Escaped for an attribute or a `<title>`. */
 function esc(s: string): string {
@@ -52,6 +79,14 @@ function esc(s: string): string {
  */
 export const SITE_CSP =
   "default-src 'self'; script-src 'none'; style-src 'self'; img-src 'self' data:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'";
+
+/**
+ * A tool page's policy: the same, except that scripts from the site's own
+ * origin may run — the one bundled `tools/tools.js`, nothing inline, nothing
+ * from elsewhere. `connect-src 'none'` holds the tools to their word that
+ * nothing entered is sent anywhere.
+ */
+export const TOOL_CSP = SITE_CSP.replace("script-src 'none'", "script-src 'self'").replace("default-src 'self';", "default-src 'self'; connect-src 'none';");
 
 export function renderPage(route: Route, config: SiteConfig): string {
   const body = renderToStaticMarkup(
@@ -67,7 +102,7 @@ export function renderPage(route: Route, config: SiteConfig): string {
     '<head>',
     '<meta charset="utf-8">',
     '<meta name="viewport" content="width=device-width, initial-scale=1">',
-    `<meta http-equiv="Content-Security-Policy" content="${esc(SITE_CSP)}">`,
+    `<meta http-equiv="Content-Security-Policy" content="${esc(route.tool ? TOOL_CSP : SITE_CSP)}">`,
     `<title>${esc(route.title)}</title>`,
     `<meta name="description" content="${esc(route.description)}">`,
     '<meta name="theme-color" content="#090a0e">',
@@ -82,7 +117,7 @@ export function renderPage(route: Route, config: SiteConfig): string {
     `<link rel="icon" href="${esc(href(config, '/icon.svg'))}" type="image/svg+xml">`,
     `<link rel="stylesheet" href="${esc(href(config, '/site.css'))}">`,
     '</head>',
-    `<body>${body}</body>`,
+    route.tool ? `<body>${body}\n<script type="module" src="${esc(href(config, '/tools/tools.js'))}"></script></body>` : `<body>${body}</body>`,
     '</html>',
     '',
   ]

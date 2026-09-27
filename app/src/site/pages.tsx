@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { ALWAYS_INCLUDED, PILOT_NOTE, PLANS, priceLine } from '../lib/plans';
 import { CONTACT_EMAIL, PROMISE, type SiteConfig } from './config';
 import { appHref, href } from './Layout';
+import { TOOL_LIST, type ToolId } from './tools/Tools';
 
 /*
  * The public pages.
@@ -196,27 +197,39 @@ export const Pricing: Page = ({ config }) => (
   </>
 );
 
-const TOOLS: [string, string, string][] = [
-  ['Graduation timeline calculator', 'How many terms at what pace, with summers or without.', '#/degree'],
-  ['Schedule builder', 'Put sections in a cart and see every time conflict.', '#/yes'],
-  ['Registration checklist', 'Everything to have ready before your registration window opens.', '#/yes'],
-  ['Advisor meeting planner', 'Your questions and your plan, ready for the meeting.', '#/degree'],
-];
-
 export const Tools: Page = ({ config }) => (
   <>
-    <Hero title="Free tools" lead="Useful before you sign up. Each one opens in the Semester app, and nothing you enter leaves your device." />
+    <Hero title="Free tools" lead="Useful before you sign up. They run in this page, and nothing you enter is saved or sent." />
     <ul className="site-cards">
-      {TOOLS.map(([title, body, hash]) => (
-        <li key={title}>
-          <h2>{title}</h2>
-          <p>{body}</p>
-          <p><a href={appHref(config, hash)}>Open {title.toLowerCase()}</a></p>
+      {TOOL_LIST.map((t) => (
+        <li key={t.id}>
+          <h2>{t.title}</h2>
+          <p>{t.lead}</p>
+          <p><a href={href(config, `/tools/${t.id}/`)}>Open the {t.title.toLowerCase()}</a></p>
         </li>
       ))}
     </ul>
+    <p className="site-small">
+      Want it to remember? The same tools live in the <a href={appHref(config)}>Semester app</a>, which keeps your plan on your device.
+    </p>
   </>
 );
+
+/** One public tool: its prerendered first state, hydrated by `tools/tools.js`. */
+export function ToolPage({ config, id, title, lead, body }: { config: SiteConfig; id: ToolId; title: string; lead: string; body: { html: string; props: string } }) {
+  return (
+    <>
+      <Hero title={title} lead={lead} />
+      <noscript>
+        <p className="site-badge site-badge-warn">This tool needs JavaScript to respond to what you type. Everything else on this site works without it.</p>
+      </noscript>
+      <div className="tool-host" data-tool={id} data-props={body.props} dangerouslySetInnerHTML={{ __html: body.html }} />
+      <p className="site-small">
+        <a href={href(config, '/tools/')}>All free tools</a> · <a href={appHref(config)}>Open the Semester app</a>
+      </p>
+    </>
+  );
+}
 
 export const Resources: Page = ({ config }) => (
   <>
