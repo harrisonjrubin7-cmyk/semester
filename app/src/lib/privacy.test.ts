@@ -102,6 +102,14 @@ describe('how it is written', () => {
     expect(visibility?.body).toMatch(/raw notes, sources, recordings and mistake detail remain private/i);
   });
 
+  it('names the help request as an exception, and what it carries', () => {
+    const visibility = CLAIMS.find((c) => c.heading === 'Who can see your rows');
+    expect(visibility?.body).toMatch(/three deliberate exceptions/i);
+    expect(visibility?.body).toMatch(/help request/i);
+    expect(visibility?.body).toMatch(/only what you wrote and ticked/i);
+    expect(visibility?.body).toMatch(/every time .* opens it is recorded/i);
+  });
+
   it('keeps those counts out of everything that syncs', () => {
     // The claim above is only true while this is. `pickPersisted` is what the
     // push sends, so a count that appeared in it would make the page a lie.
@@ -364,6 +372,7 @@ describe('"delete my account" really means every row', () => {
     expect(KEPT_TABLES.map((t) => t.table).sort()).toEqual([
       'group_tasks',
       'groups',
+      'help_destinations',
       'organizations',
       'reports',
       'schools',

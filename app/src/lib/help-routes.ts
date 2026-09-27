@@ -1,0 +1,399 @@
+import { cloud } from './cloud';
+
+/**
+ * Getting from "I'm stuck" to the right person, with the student holding the pen.
+ *
+ * The app can explain, quiz and plan, and none of that replaces an advisor who
+ * knows the degree, a tutor who can watch you work a problem, or a librarian
+ * who knows which database to search. This is the route from one to the other.
+ * It is deliberately narrow, and each narrowness is a rule the database
+ * enforces as well (`supabase/migrations/20260927180000_help_requests.sql`):
+ *
+ * ## Nothing leaves that the student did not write or tick
+ *
+ * A request is their question plus any of seven named context fields — which
+ * course, which assignment, which requirement. The fields start **unticked**:
+ * the minimum-necessary default is the question alone. `preview` is what the
+ * confirm screen shows and `payload` is what is sent, and `payload` is built
+ * from `preview` rather than beside it, so the two cannot say different
+ * things. `CONTEXT_KEYS` is the database's vocabulary exactly;
+ * `help-routes.test.ts` reads the migration and fails when they drift.
+ *
+ * ## Some needs are a directory, never a request
+ *
+ * Wellbeing, accessibility and money are routed to the official office
+ * directly. Semester shows the link and the hours and stores nothing: a
+ * student's mental health, disability or finances are not something an app
+ * should be carrying between them and an office, and a stored request would be
+ * one more copy of the most sensitive thing they have. The database has no
+ * destination kind for wellbeing at all, and refuses `accepts_requests` on the
+ * other two.
+ *
+ * ## Nobody is referred automatically
+ *
+ * There is no code path that sends a request the student did not confirm, and
+ * nothing here reads grades, risk, or behaviour to suggest one. A need is
+ * something the student picks.
+ */
+
+// ── The needs a student can name ─────────────────────────────────────────
+
+export type DestinationKind =
+  | 'advisor'
+  | 'registrar'
+  | 'transfer_center'
+  | 'tutoring'
+  | 'writing_center'
+  | 'library'
+  | 'instructor'
+  | 'career_center'
+  | 'accessibility_office'
+  | 'financial_aid'
+  | 'campus_service';
+
+/** The kinds the database will store a request for. The rest are directory-only. */
+export const DIRECTORY_ONLY: ReadonlySet<DestinationKind> = new Set(['accessibility_office', 'financial_aid']);
+
+export const KIND_TEXT: Record<DestinationKind, string> = {
+  advisor: 'Academic advisor',
+  registrar: 'Registrar',
+  transfer_center: 'Transfer center',
+  tutoring: 'Tutoring',
+  writing_center: 'Writing center',
+  library: 'Librarian',
+  instructor: 'Instructor or TA office hours',
+  career_center: 'Career coach',
+  accessibility_office: 'Accessibility office',
+  financial_aid: 'Financial aid',
+  campus_service: 'Campus office',
+};
+
+export type NeedId =
+  | 'course'
+  | 'writing'
+  | 'research'
+  | 'registration'
+  | 'career'
+  | 'accessibility'
+  | 'money'
+  | 'wellbeing'
+  | 'community';
+
+export interface Need {
+  id: NeedId;
+  label: string;
+  /** Where to go, best first. Empty for wellbeing, which is directory-only by construction. */
+  kinds: DestinationKind[];
+  /** Context fields worth offering for this need. Still unticked by default. */
+  offer: ContextKey[];
+  /** When true, Semester only points; it never stores a request. */
+  directoryOnly: boolean;
+  /** One sentence the student reads before choosing. */
+  note: string;
+}
+
+export const NEEDS: Need[] = [
+  {
+    id: 'course',
+    label: 'Stuck on course material',
+    kinds: ['instructor', 'tutoring'],
+    offer: ['course', 'assignment', 'tried'],
+    directoryOnly: false,
+    note: 'Office hours and tutoring are for exactly this. Bring what you tried.',
+  },
+  {
+    id: 'writing',
+    label: 'A paper or writing project',
+    kinds: ['writing_center', 'instructor'],
+    offer: ['course', 'assignment', 'deadline'],
+    directoryOnly: false,
+    note: 'The writing center works on drafts at any stage, including none.',
+  },
+  {
+    id: 'research',
+    label: 'Finding or checking sources',
+    kinds: ['library'],
+    offer: ['course', 'assignment', 'source'],
+    directoryOnly: false,
+    note: 'A subject librarian can point you at the right database in minutes.',
+  },
+  {
+    id: 'registration',
+    label: 'Registration or degree requirements',
+    kinds: ['advisor', 'registrar', 'transfer_center'],
+    offer: ['requirement', 'plan', 'deadline'],
+    directoryOnly: false,
+    note: 'Semester’s requirement checks are estimates. Your advisor and the registrar are the official answer.',
+  },
+  {
+    id: 'career',
+    label: 'Career or internship decisions',
+    kinds: ['career_center'],
+    offer: ['plan', 'deadline'],
+    directoryOnly: false,
+    note: 'A career coach can review an application or talk through options.',
+  },
+  {
+    id: 'community',
+    label: 'Finding people or a group',
+    kinds: ['campus_service'],
+    offer: [],
+    directoryOnly: false,
+    note: 'Campus offices can point you to groups, mentors and events.',
+  },
+  {
+    id: 'accessibility',
+    label: 'Accessibility or accommodations',
+    kinds: ['accessibility_office'],
+    offer: [],
+    directoryOnly: true,
+    note: 'Contact the office directly. Semester does not send or store anything about this.',
+  },
+  {
+    id: 'money',
+    label: 'Financial aid or a bill',
+    kinds: ['financial_aid'],
+    offer: [],
+    directoryOnly: true,
+    note: 'Use the official office. Semester does not send or store anything about this.',
+  },
+  {
+    id: 'wellbeing',
+    label: 'Wellbeing or someone to talk to',
+    kinds: [],
+    offer: [],
+    directoryOnly: true,
+    note: 'Your campus counseling service is the place to start. If you are in danger, call or text 988, or your local emergency number. Semester does not send or store anything about this.',
+  },
+];
+
+export function needById(id: NeedId): Need {
+  const found = NEEDS.find((n) => n.id === id);
+  if (!found) throw new Error(`unknown need ${id}`);
+  return found;
+}
+
+// ── What a request may carry ─────────────────────────────────────────────
+
+/** The database's vocabulary, in the same order. Adding one is a privacy decision. */
+export const CONTEXT_KEYS = ['course', 'assignment', 'requirement', 'plan', 'deadline', 'source', 'tried'] as const;
+export type ContextKey = (typeof CONTEXT_KEYS)[number];
+
+export const CONTEXT_TEXT: Record<ContextKey, string> = {
+  course: 'Which course',
+  assignment: 'Which assignment',
+  requirement: 'Which requirement',
+  plan: 'Your plan or options',
+  deadline: 'The deadline',
+  source: 'The source or citation',
+  tried: 'What you already tried',
+};
+
+/**
+ * Named here so the confirm screen can say it, and so a later field added to
+ * `CONTEXT_KEYS` has to be argued past this list in review.
+ */
+export const NEVER_SENT = [
+  'Grades or GPA',
+  'Health, disability or counseling records',
+  'Financial aid or billing details',
+  'Immigration or visa status',
+  'Conduct records',
+  'Your messages, notes or AI conversations',
+  'Your location',
+] as const;
+
+/** The limits the database checks, so the screen refuses first and says why. */
+export const QUESTION_MAX = 2000;
+export const FIELD_MAX = 600;
+
+export interface Draft {
+  question: string;
+  /** Whatever the student typed into each field, ticked or not. */
+  fields: Partial<Record<ContextKey, string>>;
+  /** The fields they chose to send. Starts empty. */
+  ticked: ReadonlySet<ContextKey>;
+}
+
+export const emptyDraft = (): Draft => ({ question: '', fields: {}, ticked: new Set() });
+
+export interface PreviewLine {
+  key: 'question' | ContextKey;
+  label: string;
+  value: string;
+}
+
+/**
+ * Exactly what will leave, in the order the student reads it. A ticked field
+ * with nothing in it is dropped rather than sent empty — the database would
+ * refuse it, and "you ticked it but it said nothing" is not worth an error.
+ */
+export function preview(draft: Draft): PreviewLine[] {
+  const lines: PreviewLine[] = [];
+  const question = draft.question.trim().slice(0, QUESTION_MAX);
+  if (question) lines.push({ key: 'question', label: 'Your question', value: question });
+  for (const key of CONTEXT_KEYS) {
+    if (!draft.ticked.has(key)) continue;
+    const value = (draft.fields[key] ?? '').trim().slice(0, FIELD_MAX);
+    if (value) lines.push({ key, label: CONTEXT_TEXT[key], value });
+  }
+  return lines;
+}
+
+/** What `send_help_request` receives. Built from the preview, never beside it. */
+export function payload(draft: Draft): { question: string; context: Partial<Record<ContextKey, string>> } {
+  const lines = preview(draft);
+  const context: Partial<Record<ContextKey, string>> = {};
+  let question = '';
+  for (const line of lines) {
+    if (line.key === 'question') question = line.value;
+    else context[line.key] = line.value;
+  }
+  return { question, context };
+}
+
+export function sendable(draft: Draft): string | null {
+  if (!draft.question.trim()) return 'Write your question first.';
+  return null;
+}
+
+/**
+ * The same preview as plain text, for a student whose school has not
+ * connected an office yet: they can take it to office hours or paste it into
+ * an email themselves. Useful on its own, and nothing is stored.
+ */
+export function asNote(draft: Draft, to: DestinationKind | null): string {
+  const lines = preview(draft);
+  if (!lines.length) return '';
+  const head = to ? `For: ${KIND_TEXT[to]}` : 'Questions to bring';
+  return [head, '', ...lines.map((l) => (l.key === 'question' ? l.value : `${l.label}: ${l.value}`))].join('\n');
+}
+
+// ── A request once sent ──────────────────────────────────────────────────
+
+export const REQUEST_STATUSES = ['sent', 'acknowledged', 'scheduled', 'closed', 'withdrawn'] as const;
+export type RequestStatus = (typeof REQUEST_STATUSES)[number];
+
+/**
+ * Who may move a request where. Staff move forward only; only the student
+ * withdraws. `answer_help_request` and `withdraw_help_request` enforce the
+ * same table, and the test compares them.
+ */
+export const STAFF_MOVES: Record<RequestStatus, readonly RequestStatus[]> = {
+  sent: ['acknowledged', 'scheduled', 'closed'],
+  acknowledged: ['scheduled', 'closed'],
+  scheduled: ['closed'],
+  closed: [],
+  withdrawn: [],
+};
+export const WITHDRAWABLE: ReadonlySet<RequestStatus> = new Set(['sent', 'acknowledged', 'scheduled']);
+
+export const STATUS_TEXT: Record<RequestStatus, string> = {
+  sent: 'Sent',
+  acknowledged: 'Seen by the office',
+  scheduled: 'Scheduled',
+  closed: 'Closed',
+  withdrawn: 'Withdrawn',
+};
+
+/**
+ * The next thing for the student to do, if there is one. This is the
+ * follow-up the handoff hands back: a request is not finished when it is sent.
+ */
+export function followUp(status: RequestStatus, reply: string): string | null {
+  switch (status) {
+    case 'sent':
+      return 'Waiting for the office. You can withdraw this at any time.';
+    case 'acknowledged':
+      return 'The office has seen it. Watch for a reply here or by email.';
+    case 'scheduled':
+      return reply ? `Prepare for it: ${reply}` : 'Prepare for your appointment: bring your question and anything you tried.';
+    case 'closed':
+      return reply ? `Closed: ${reply}` : null;
+    case 'withdrawn':
+      return null;
+  }
+}
+
+// ── The database ─────────────────────────────────────────────────────────
+
+export interface Destination {
+  id: string;
+  kind: DestinationKind;
+  name: string;
+  officialUrl: string | null;
+  hours: string;
+  acceptsRequests: boolean;
+}
+
+export interface SentRequest {
+  id: string;
+  destinationId: string;
+  question: string;
+  context: Partial<Record<ContextKey, string>>;
+  status: RequestStatus;
+  reply: string;
+  createdAt: string;
+  opens: number;
+}
+
+const message = (error: { message?: string } | null, fallback: string) =>
+  error?.message?.trim() || fallback;
+
+const isStatus = (v: unknown): v is RequestStatus =>
+  typeof v === 'string' && (REQUEST_STATUSES as readonly string[]).includes(v);
+
+export async function loadHelp(): Promise<{ destinations: Destination[]; requests: SentRequest[] }> {
+  const db = await cloud();
+  const [dest, reqs, events] = await Promise.all([
+    db.from('help_destinations').select('id, kind, name, official_url, hours, accepts_requests'),
+    db.from('help_requests').select('id, destination_id, question, shared_context, status, reply, created_at').order('created_at', { ascending: false }),
+    db.from('help_request_events').select('request_id, kind'),
+  ]);
+  if (dest.error) throw new Error(message(dest.error, 'Could not load where to get help.'));
+  if (reqs.error) throw new Error(message(reqs.error, 'Could not load your requests.'));
+  const opens = new Map<string, number>();
+  for (const e of (events.data ?? []) as Record<string, unknown>[]) {
+    if (e.kind === 'opened') opens.set(String(e.request_id), (opens.get(String(e.request_id)) ?? 0) + 1);
+  }
+  return {
+    destinations: ((dest.data ?? []) as Record<string, unknown>[]).map((row) => ({
+      id: String(row.id),
+      kind: String(row.kind) as DestinationKind,
+      name: String(row.name),
+      officialUrl: row.official_url ? String(row.official_url) : null,
+      hours: String(row.hours ?? ''),
+      acceptsRequests: row.accepts_requests === true,
+    })),
+    requests: ((reqs.data ?? []) as Record<string, unknown>[]).map((row) => ({
+      id: String(row.id),
+      destinationId: String(row.destination_id),
+      question: String(row.question ?? ''),
+      context: (row.shared_context ?? {}) as Partial<Record<ContextKey, string>>,
+      status: isStatus(row.status) ? row.status : 'sent',
+      reply: String(row.reply ?? ''),
+      createdAt: String(row.created_at),
+      opens: opens.get(String(row.id)) ?? 0,
+    })),
+  };
+}
+
+export async function sendHelp(destinationId: string, draft: Draft): Promise<string> {
+  const refusal = sendable(draft);
+  if (refusal) throw new Error(refusal);
+  const { question, context } = payload(draft);
+  const db = await cloud();
+  const { data, error } = await db.rpc('send_help_request', {
+    want_destination: destinationId,
+    want_question: question,
+    want_context: context,
+  });
+  if (error) throw new Error(message(error, 'Could not send your request.'));
+  return String(data);
+}
+
+export async function withdrawHelp(requestId: string): Promise<void> {
+  const db = await cloud();
+  const { error } = await db.rpc('withdraw_help_request', { want: requestId });
+  if (error) throw new Error(message(error, 'Could not withdraw the request.'));
+}

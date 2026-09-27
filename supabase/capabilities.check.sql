@@ -224,8 +224,9 @@ begin
   -- 20260926150000_expansion_roles_and_features.sql.
   perform pg_temp.counted('a signed-in account reads the forty-seven roles', n, 47);
   select count(*) into n from public.role_capabilities;
-  -- Twenty original rows plus thirty-seven expansion rows.
-  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 57);
+  -- Twenty original rows, thirty-seven expansion rows, and the eight staff
+  -- roles that answer help requests (20260927180000_help_requests.sql).
+  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 65);
 
   perform pg_temp.become_anon();
   perform pg_temp.refused('a signed-out visitor cannot read the matrix',

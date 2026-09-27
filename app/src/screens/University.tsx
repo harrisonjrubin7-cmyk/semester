@@ -40,6 +40,7 @@ import type { School } from '../lib/school';
 import type { Screen } from '../lib/types';
 import { INSTITUTIONAL_PREVIEW } from '../lib/institutional-preview';
 import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
+import { GetHelp } from '../components/GetHelp';
 import { ControlPlane } from '../components/institutional/ControlPlane';
 import type { ControlPlaneStatus } from '../lib/control-plane';
 
@@ -118,9 +119,10 @@ const TABS = [
   ...(EXPERIENCE_FLAGS.universityControlPlane !== 'off'
     ? [{ id: 'control' as const, label: 'Control' }]
     : []),
+  ...(EXPERIENCE_FLAGS.humanHelp !== 'off' ? [{ id: 'help' as const, label: 'Get help' }] : []),
 ];
 
-type Tab = 'overview' | 'drafts' | 'records' | 'connections' | 'control';
+type Tab = 'overview' | 'drafts' | 'records' | 'connections' | 'control' | 'help';
 
 /** What each role is called on screen. */
 const ROLE_LABELS: Record<UniversityRole, string> = {
@@ -254,7 +256,7 @@ function Standing({
 }
 
 function Workspace({ storageKey }: { storageKey: string }) {
-  const { state, dispatch, catalog, school } = useStore();
+  const { state, dispatch, catalog, school, account } = useStore();
 
   const [tab, setTab] = useState<Tab>('overview');
   const [intent, setIntent] = useState<UniversityRole>('student');
@@ -688,6 +690,8 @@ function Workspace({ storageKey }: { storageKey: string }) {
           </p>
         </>
       )}
+
+      {tab === 'help' && EXPERIENCE_FLAGS.humanHelp !== 'off' && <GetHelp account={account} />}
 
       {tab === 'control' && EXPERIENCE_FLAGS.universityControlPlane !== 'off' && (
         <ControlPlane
