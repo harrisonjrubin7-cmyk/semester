@@ -33,6 +33,41 @@ tables this part hangs from: `integration_connections`, `integration_sync_runs`,
 `redact.ts` and `freshness.ts` with its seven `Freshness` states and
 `isOfficialCurrent`.
 
+## Built (Phase 1a, first slice): the rules, as pure tested code
+
+Beside #779's pipeline in `app/src/lib/integration/`, with no change to what
+`ingest` does. Each is pure — storage is handed in or not needed — so the
+worker, the dashboard and the tests share one implementation.
+
+| Module | What it decides |
+|---|---|
+| `drift.ts` | A batch against the adapter's declaration: removed, added, possible rename, type and enum changes. A breaking change holds that entity and recommends `degrade`; it never edits a mapping. Reports keep field names and enum codes, never values |
+| `reconcile.ts` | The provider's listing against stored references: matched, pending, mismatch, missing on either side, duplicate, stale, rejected. Exceptions carry redacted references only |
+| `duplicates.ts` | Natural-key duplicate candidates for six canonical entities, never across two people; a deterministic suggestion; a merge that records its exact before-state and reverses to it |
+| `lineage.ts` | One lineage row per canonical field per mapping version; source-owner rules; freshness breach levels that alert once per change |
+| `providers.ts` | Maturity words, and certified/partner claims only with live, person-verified evidence |
+| `simulate.ts` | Drift, then `ingest` against an in-memory store, for mock declarations only — refused by the type system and again at run time |
+| `mapping-versions.ts` | Propose → simulate → approve (not by the proposer, not if blocked) → live → roll back as a new event |
+
+**Import validation was already built.** #779's `ingest` validates schema,
+type, enum, required fields, classification, scope, consent, in-batch
+duplicates and timestamp regressions, and turns each failure into a counted,
+sanitized error — the quarantine this document planned. Nothing was added
+beside it.
+
+**Found while testing:** the first drift detector reported a hold's `reason`
+and `amount` as new fields on every run. They are on the never-display list and
+dropped by the mapping on purpose, so drift now ignores anything
+`namesNeverDisplayed` names. Reporting them would have taught an owner to
+ignore the report.
+
+**Next slice:** the tables (`reconciliation_runs`, `reconciliation_discrepancies`,
+`schema_fingerprints`, `schema_drift_events`, `duplicate_candidates`,
+`duplicate_resolution_actions`, `source_owners`, `tenant_mapping_versions`,
+`provider_registry`, `provider_certifications`, and the `simulation` schema)
+with RLS and `.check.sql` suites; wiring drift and reconciliation into the sync
+worker; and the dashboard views.
+
 ## Entity plan
 
 | Command entity | Decision | Why |
