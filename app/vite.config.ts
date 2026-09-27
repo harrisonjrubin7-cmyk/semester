@@ -614,6 +614,7 @@ const MOCKS_MODULES = [
   'src/screens/pathwaygrid.test.tsx',
   'src/screens/solvephoto.test.tsx',
   'src/screens/university.test.tsx',
+  'src/screens/university.helpcount.test.tsx',
   'src/state/deeplink.test.tsx',
   'src/state/persist/firstrun.test.ts',
   'src/state/persist/tell.test.ts',

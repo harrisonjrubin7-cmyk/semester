@@ -1,4 +1,4 @@
-import { lazy, Suspense, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { useDeviceLibrary } from '../lib/device-library';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
@@ -45,7 +45,7 @@ import { GetHelp } from '../components/GetHelp';
 import { HelpInbox } from '../components/HelpInbox';
 import { ReportQueue } from '../components/ReportQueue';
 import { operationsAllowed } from '../lib/institution-ops';
-import { helpSeedWaiting } from '../lib/help-routes';
+import { helpSeedWaiting, loadInboxes, newRequestCount, type StaffInbox } from '../lib/help-routes';
 import { ControlPlane } from '../components/institutional/ControlPlane';
 import { IntegrationDashboard } from '../components/institutional/IntegrationDashboard';
 import type { ControlPlaneStatus } from '../lib/control-plane';
@@ -293,6 +293,30 @@ function Workspace({ storageKey }: { storageKey: string }) {
   );
   const [intent, setIntent] = useState<UniversityRole>('student');
   const [area, setArea] = useState<UniversityArea>('courses');
+
+  /*
+   * New help requests waiting for this account's offices, shown on the Get
+   * help tab so staff see them without opening it. Zero for an account that
+   * answers for no office (RLS returns no inbox), so students see no count.
+   * A failed load shows no count rather than a wrong one; the inbox itself
+   * reports the error once opened.
+   */
+  const [helpCount, setHelpCount] = useState<{ owner: string; n: number }>({ owner: '', n: 0 });
+  const accountId = account?.id ?? '';
+  const countHelp = useCallback(
+    (inboxes: StaffInbox[]) => setHelpCount({ owner: accountId, n: newRequestCount(inboxes) }),
+    [accountId],
+  );
+  useEffect(() => {
+    if (EXPERIENCE_FLAGS.humanHelp === 'off' || !accountId) return;
+    let live = true;
+    loadInboxes()
+      .then((inboxes) => { if (live) countHelp(inboxes); })
+      .catch(() => { if (live) setHelpCount({ owner: accountId, n: 0 }); });
+    return () => { live = false; };
+  }, [accountId, countHelp]);
+  // Only this account's count: a count loaded for someone else is not shown.
+  const newHelp = accountId && helpCount.owner === accountId ? helpCount.n : 0;
 
   /*
    * The same store the other five device workspaces use.
@@ -576,7 +600,12 @@ function Workspace({ storageKey }: { storageKey: string }) {
       <Segmented
         options={TABS.map((t) => ({
           id: t.id,
-          label: t.id === 'drafts' ? `${t.label} (${drafts.length})` : t.label,
+          label:
+            t.id === 'drafts'
+              ? `${t.label} (${drafts.length})`
+              : t.id === 'help' && newHelp > 0
+                ? `${t.label} (${newHelp}\u00a0new)` // one unit when the tab wraps on a phone
+                : t.label,
         }))}
         value={tab}
         onChange={setTab}
@@ -728,7 +757,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
       {tab === 'help' && EXPERIENCE_FLAGS.humanHelp !== 'off' && (
         <>
           <GetHelp account={account} />
-          <HelpInbox account={account} />
+          <HelpInbox account={account} onInboxes={countHelp} />
         </>
       )}
 
