@@ -11,6 +11,7 @@ import { ladderFor, nextRungLabel, scoreLine } from '../lib/ladder';
 import { A_SITTING, aSitting, catching, dueCount } from '../lib/review';
 import { inTime, testsNear } from '../lib/intime';
 import { mixLine, worthMixing } from '../lib/interleave';
+import { whyDue } from '../lib/whydue';
 import { guideDeck, mixedDeck } from '../lib/drilldeck';
 import { useKeepAwake } from '../lib/awake';
 import { unitName } from '../lib/unit';
@@ -41,12 +42,18 @@ export function Drill() {
    * revision is *for*. Identity is preserved when nothing moved, which is what
    * keeps the memo below from re-sorting the deck under your thumb.
    */
+  const tests = useMemo(
+    () => testsNear(catalog, now),
+    // Held for the run, like the schedule it feeds.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [catalog, state.guideId, state.drillUnit, state.drillMix],
+  );
   const schedule = useMemo(
-    () => inTime(state.reviews, testsNear(catalog, now), now.getTime()),
+    () => inTime(state.reviews, tests, now.getTime()),
     // Same dependencies as the deck itself, and deliberately not `state.reviews`:
     // see the note in the memo below.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [catalog, state.guideId, state.drillUnit, state.drillMix],
+    [tests],
   );
 
   const ordered = useMemo(() => {
@@ -357,6 +364,24 @@ export function Drill() {
             `ECON 1020 · 0 · …` reads as three things when it is two. */}
         {state.drillMix ? `${courseCode(card.courseId)} · ${unitName(card.unit)}` : card.unit}
       </div>
+
+      {/* Why this card, now. Read off the stored record rather than the
+          run's adjusted copy, which "Run it again" does not rebuild — see
+          `lib/whydue.ts`. Hidden once the card is turned: by then the
+          question is whether you knew it. */}
+      {!state.revealed && (
+        <div
+          style={{
+            fontSize: 'var(--type-xs-plus)',
+            ...secondLine(),
+            marginTop: 'var(--sp-2)',
+            lineHeight: 'var(--leading-normal)',
+            textWrap: 'pretty',
+          }}
+        >
+          {whyDue(card.key, card.courseId, state.reviews, tests, now.getTime()).says}
+        </div>
+      )}
 
       {canMix && (
         <div style={{ marginTop: 'var(--sp-5)' }}>
