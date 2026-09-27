@@ -1,0 +1,249 @@
+import { useMemo } from 'react';
+import { blocksFor } from '../data/catalog';
+import { ACTIONS_PREFIX, EMPTY_ACTION_CHOICES, rank, readActionChoices } from '../lib/actions';
+import { clock, dateToIso } from '../lib/date';
+import { useDeviceLibrary } from '../lib/device-library';
+import { readDue } from '../lib/duetime';
+import { DESKTOP, useMedia } from '../lib/media';
+import { goCal } from '../lib/opencal';
+import { goMine } from '../lib/openmine';
+import { fromHash } from '../lib/route';
+import { appointmentsOn, tasksOn, upcomingItems } from '../lib/select';
+import { freshnessLine } from '../lib/source';
+import { todayActions } from '../lib/today-actions';
+import {
+  STATUS_SENTENCE,
+  doneForToday,
+  itemSource,
+  planCommitments,
+  type CommitmentRow,
+} from '../lib/today-center';
+import { pathSnapshot } from '../lib/today-decision';
+import { useNow, useStore } from '../state/store';
+import { ActionCenter } from './ActionCenter';
+import { QuickActions } from './QuickActions';
+import { SourceBadge } from './SourceBadge';
+import { Meter } from './ui';
+
+/** How far ahead the commitment rows look. "In 9 days" is the furthest the brief's example reaches. */
+const HORIZON_DAYS = 10;
+
+/**
+ * Today with `today_action_center` on (Phase B, DECISION-LOG D-013 and D-021).
+ *
+ * The Action Center itself is BL-1.4's (`components/ActionCenter.tsx`): one
+ * most important action, up to five next, the rest behind View all, worked
+ * with buttons and stored on the canonical model. Phase B puts Today around
+ * it:
+ *
+ * - the path in one of three approved sentences, with its source;
+ * - "done for today" when the day is done (handed to the Action Center);
+ * - at most one urgent commitment and four time-first rows, never repeating
+ *   the item the Action Center leads with;
+ * - five quick actions;
+ * - on a desktop, a context pane beside the column.
+ *
+ * With the flag off none of this renders, and Today is the #761 briefing.
+ */
+export function TodayActionCenter() {
+  const { state, dispatch, catalog, account } = useStore();
+  const now = useNow();
+  const wide = useMedia(DESKTOP);
+  // The same store the Action Center writes; read here only to know what it
+  // leads with and whether the day is done. `useDeviceLibrary` keeps the two
+  // readers in step through its change event.
+  const library = useDeviceLibrary(`${ACTIONS_PREFIX}:${account?.id || 'device'}`, readActionChoices, EMPTY_ACTION_CHOICES);
+  const choices = library.value.choices;
+
+  const path = useMemo(() => pathSnapshot(state.requirements, state.taken), [state.requirements, state.taken]);
+  const upcoming = useMemo(() => upcomingItems(catalog, now), [catalog, now]);
+  const reviewDue = useMemo(
+    () => Object.values(state.reviews).filter((review) => review.due <= now.getTime()).length,
+    [state.reviews, now],
+  );
+  const actions = useMemo(
+    () => todayActions({ path, upcoming, done: state.done, reviewDue, catalogEmpty: catalog.empty }),
+    [path, upcoming, state.done, reviewDue, catalog.empty],
+  );
+  const top = useMemo(() => rank(actions, choices, now.getTime()).mostImportant, [actions, choices, now]);
+  const leadingRoute = top ? fromHash(top.action.primary.target) : null;
+  const leadingId = leadingRoute?.screen === 'item' ? leadingRoute.id : null;
+  const closure = useMemo(
+    () => doneForToday({ upcoming, done: state.done, now: now.getTime() }, choices),
+    [upcoming, state.done, now, choices],
+  );
+
+  const rows = useMemo(() => {
+    const out: CommitmentRow[] = [];
+    const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + HORIZON_DAYS);
+    for (const item of upcoming) {
+      if (state.done[item.id] || item.date < start || item.date >= end) continue;
+      out.push({
+        id: `course:${item.id}`,
+        at: item.date.getTime() + Math.min(item.dueAt, 24 * 60 - 1) * 60_000,
+        title: item.title,
+        meta: catalog.byId[item.c]?.code || 'Course deadline',
+        kind: 'deadline',
+        group: item.c,
+        source: itemSource(item),
+        itemId: item.id,
+      });
+    }
+    for (let offset = 0; offset < HORIZON_DAYS; offset += 1) {
+      const date = new Date(start.getFullYear(), start.getMonth(), start.getDate() + offset);
+      for (const task of tasksOn(state.tasks, date).filter((t) => !t.done)) {
+        out.push({
+          id: `task:${task.id}`,
+          at: date.getTime() + (readDue(task.time) ?? 24 * 60 - 1) * 60_000,
+          title: task.title,
+          meta: 'Your task',
+          kind: 'task',
+          source: 'student_entered',
+        });
+      }
+      for (const appointment of appointmentsOn(state.appointments, date)) {
+        out.push({
+          id: `appointment:${appointment.id}:${dateToIso(date)}`,
+          at: date.getTime() + (appointment.at ?? 0) * 60_000,
+          title: appointment.title,
+          meta: appointment.where || 'Your appointment',
+          kind: 'appointment',
+          source: 'student_entered',
+        });
+      }
+      // Classes only for today and tomorrow: a timetable repeated for ten
+      // days would push every deadline off the list.
+      if (offset > 1) continue;
+      for (const block of blocksFor(catalog, date).filter((b) => !b.optional && !b.canceled)) {
+        out.push({
+          id: `class:${dateToIso(date)}:${block.c}:${block.at}`,
+          at: date.getTime() + block.at * 60_000,
+          title: block.title,
+          meta: `Class · ${clock(block.at)}`,
+          kind: 'class',
+          group: block.c || undefined,
+        });
+      }
+    }
+    return out;
+  }, [catalog, now, state.appointments, state.done, state.tasks, upcoming]);
+
+  const commitments = useMemo(() => planCommitments(rows, now.getTime(), leadingId), [rows, now, leadingId]);
+
+  const openRow = (row: CommitmentRow) => {
+    if (row.itemId) dispatch({ type: 'openItem', id: row.itemId });
+    else if (row.kind === 'task') goMine(dispatch, 'tasks');
+    else if (row.kind === 'appointment') goMine(dispatch, 'appointments');
+    else goCal(dispatch, dateToIso(new Date(row.at)));
+  };
+
+  const sentence = STATUS_SENTENCE[path.state];
+  const syncLine = state.lastSync ? freshnessLine(state.lastSync.at, now.getTime()) : null;
+  const unchecked = rows.filter((r) => r.source === 'needs_review').length;
+  const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const classesLeft = rows.filter((r) => r.kind === 'class' && r.at >= now.getTime() && r.at < midnight + 86_400_000);
+  // `doneForToday` already refuses while anything is due today or tomorrow,
+  // so a deadline further out can still sit under "When you have a moment".
+  const showClosure = closure?.line ?? null;
+
+  return (
+    <section className={`today-action-center${wide ? ' is-wide' : ''}`} aria-label="Today">
+      <div className="action-center-main">
+        <section className="action-panel" aria-labelledby="action-path-heading">
+          <p className="action-kicker">Your path</p>
+          <h2 id="action-path-heading" className="action-title">{sentence}</h2>
+          <p className="action-body">
+            {path.total > 0
+              ? `${path.covered} of ${path.total} recorded requirements covered · ${path.creditLine}`
+              : path.creditLine}
+          </p>
+          {path.total > 0 && (
+            <Meter
+              pct={path.percent}
+              height={6}
+              label={`${path.covered} of ${path.total} recorded requirements covered by finished or in-progress courses, ${path.percent} percent. This is not degree completion.`}
+            />
+          )}
+          <div className="action-source">
+            <SourceBadge label="student_entered" />
+            <span className="action-meta">Not the registrar’s audit</span>
+          </div>
+          <button type="button" className="workspace-text-button" onClick={() => dispatch({ type: 'go', screen: 'degree' })}>
+            View My Path
+          </button>
+        </section>
+
+        <section className="action-panel" aria-label="Actions">
+          <ActionCenter actions={actions} closure={showClosure} />
+        </section>
+
+        <section className="action-panel" aria-labelledby="action-commitments-heading">
+          <p className="action-kicker">Coming up</p>
+          <h2 id="action-commitments-heading" className="action-title">Your commitments</h2>
+          {commitments.urgent && (
+            <button type="button" className="commitment-urgent" onClick={() => openRow(commitments.urgent!)}>
+              <span className="commitment-when">{commitments.urgent.when}</span>
+              <strong>{commitments.urgent.title}</strong>
+              <span className="commitment-meta">{commitments.urgent.meta}</span>
+            </button>
+          )}
+          {commitments.rows.length > 0 ? (
+            <ul className="commitment-list">
+              {commitments.rows.map((row) => (
+                <li key={row.id}>
+                  <button type="button" className="commitment-row" onClick={() => openRow(row)}>
+                    <span className="commitment-when">{row.when}</span>
+                    <span className="commitment-what">
+                      <strong>{row.count > 1 ? (catalog.byId[row.group ?? '']?.code ?? row.title) : row.title}</strong>
+                      <span className="commitment-meta">
+                        {row.meta}
+                        {row.source === 'needs_review' ? ' · date not checked' : ''}
+                      </span>
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : !commitments.urgent ? (
+            <p className="action-body">Nothing is recorded for the next {HORIZON_DAYS} days.</p>
+          ) : null}
+          <button type="button" className="workspace-text-button" onClick={() => goCal(dispatch, dateToIso(now))}>
+            See full plan
+          </button>
+        </section>
+
+        <QuickActions />
+      </div>
+
+      {wide && (
+        <aside className="today-context" aria-label="Today at a glance">
+          <h2 className="action-kicker">At a glance</h2>
+          <section aria-labelledby="context-plan">
+            <h3 id="context-plan">Planning status</h3>
+            <p>{sentence}</p>
+          </section>
+          <section aria-labelledby="context-today">
+            <h3 id="context-today">Today’s schedule</h3>
+            {classesLeft.length > 0 ? (
+              <ul>
+                {classesLeft.map((r) => <li key={r.id}>{clock(Math.round((r.at - midnight) / 60_000))} · {r.title}</li>)}
+              </ul>
+            ) : (
+              <p>No more classes today.</p>
+            )}
+          </section>
+          <section aria-labelledby="context-fresh">
+            <h3 id="context-fresh">Data freshness</h3>
+            <p>{syncLine ? `Account sync: ${syncLine.toLowerCase()}` : 'No account sync recorded on this device.'}</p>
+            <p>
+              {unchecked === 0
+                ? 'Every upcoming course date has been checked against its source.'
+                : `${unchecked} upcoming course ${unchecked === 1 ? 'date has' : 'dates have'} not been checked against the syllabus.`}
+            </p>
+          </section>
+        </aside>
+      )}
+    </section>
+  );
+}
