@@ -74,3 +74,14 @@ it('lets the person asked accept or decline, and says contact goes through the p
   await act(async () => button('Accept')!.click());
   expect(calls).toEqual(['accepted r1']);
 });
+
+it('keeps an accepted request on the mentor’s screen, with the program handoff', async () => {
+  rosters = { me: 'me', offers: [], requests: [
+    { id: 'r3', kind: 'peer', requester: 's', recipient: 'me', requesterName: 'Sam', topics: ['Research'], note: '', status: 'accepted', createdAt: '' },
+  ] };
+  await draw([]);
+  expect(host.textContent).toContain('You are mentoring');
+  expect(host.textContent).toContain('Sam');
+  expect(host.textContent).toContain('no contact details go through Semester');
+  expect(button('Accept')).toBeUndefined();
+});

@@ -102,6 +102,22 @@ export function MentorFinder({
         </>
       ) : null}
 
+      {mine.mentoring.length ? (
+        <>
+          <SectionLabel>You are mentoring</SectionLabel>
+          {mine.mentoring.map((r) => (
+            <div key={r.id} className="jx-entry">
+              <div className="jx-entry-head">
+                <span className="jx-entry-title">{r.requesterName}</span>
+                <span className="jx-tag">Accepted</span>
+              </div>
+              {r.topics.length ? <div className="jx-entry-what">Wants to talk about {r.topics.join(', ')}</div> : null}
+              <div className="jx-entry-what">Your school’s mentoring program connects you from here — no contact details go through Semester.</div>
+            </div>
+          ))}
+        </>
+      ) : null}
+
       {mine.sent.length ? (
         <>
           <SectionLabel>Your requests</SectionLabel>

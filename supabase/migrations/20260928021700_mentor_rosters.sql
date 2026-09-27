@@ -179,13 +179,20 @@ begin
     raise exception 'Not an answer: %', want_status;
   end if;
   if want_status = 'accepted' then
+    -- Lock the offer before counting: two acceptances against the last slot
+    -- each lock a different request, so without this both read the same count
+    -- and both pass. The second now waits, then counts the first's accept.
+    -- A peer offer is per cohort, so its capacity counts that cohort only.
     if r.kind = 'peer' then
-      select capacity into cap from public.peer_mentor_offers where user_id = me and cohort_scope = r.cohort_scope;
+      select capacity into cap from public.peer_mentor_offers
+       where user_id = me and cohort_scope = r.cohort_scope for update;
+      select count(*) into taken from public.mentor_requests
+       where recipient = me and kind = 'peer' and cohort_scope = r.cohort_scope and status = 'accepted';
     else
-      select capacity into cap from public.alumni_mentor_offers where user_id = me;
+      select capacity into cap from public.alumni_mentor_offers where user_id = me for update;
+      select count(*) into taken from public.mentor_requests
+       where recipient = me and kind = r.kind and status = 'accepted';
     end if;
-    select count(*) into taken from public.mentor_requests
-     where recipient = me and kind = r.kind and status = 'accepted';
     if cap is null or taken >= cap then raise exception 'You are at your mentoring capacity.'; end if;
   end if;
   update public.mentor_requests set status = want_status, decided_at = now() where id = want;
@@ -221,7 +228,8 @@ comment on table public.mentor_requests is
 -- ── 4. A mentor request makes an account not fresh ────────────────────────
 -- `lti_account_untouched` decides whether a Brightspace launch may adopt an
 -- account as a fresh one. An account that has asked for a mentor, or been
--- asked, is not fresh, so the list gains `mentor_requests` at both ends.
+-- asked, or offered to mentor, is not fresh, so the list gains `mentor_requests`
+-- at both ends and both offer tables.
 -- Otherwise the definition from 20260927230000_help_requests.sql, unchanged —
 -- `ltiaccount.test.ts` reads whichever migration defines it last.
 create or replace function public.lti_account_untouched(who uuid)
@@ -259,7 +267,9 @@ begin
       ('public.support_access_grant', 'supporter_id'),
       ('public.help_requests',        'student_id'),
       ('public.mentor_requests',      'requester'),
-      ('public.mentor_requests',      'recipient')
+      ('public.mentor_requests',      'recipient'),
+      ('public.peer_mentor_offers',   'user_id'),
+      ('public.alumni_mentor_offers', 'user_id')
     ) as x(rel, col)
   loop
     if pg_catalog.to_regclass(t.rel) is null then continue; end if;

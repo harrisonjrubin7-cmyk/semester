@@ -1068,6 +1068,11 @@ export const OWNED_TABLES: OwnedTable[] = [
   // through `forget_my_mentor_requests()` (20260928021700), which removes every
   // request the account sent or received.
   { table: 'mentor_requests', column: null, via: 'forget_my_mentor_requests' },
+  // The offers themselves, with the display name the mentor chose. Deleting
+  // an account here does not delete `auth.users`, so their cascade never
+  // runs; each table's owner-delete policy is what this line relies on.
+  { table: 'peer_mentor_offers', column: 'user_id' },
+  { table: 'alumni_mentor_offers', column: 'user_id' },
 
   { table: 'forms', column: 'owner' },
   // Taken by the line above rather than by a request of its own:

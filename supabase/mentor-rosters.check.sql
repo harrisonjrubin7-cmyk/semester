@@ -13,7 +13,7 @@
 --     table directly. THE CONTROL: the mentor's accept succeeds and the status
 --     reads accepted, because a flow that refused everything would pass every
 --     refusal here.
---   * Capacity is enforced at acceptance.
+--   * Capacity is enforced at acceptance, per cohort for a peer offer.
 --   * A request cannot be aimed at somebody with no visible offer.
 --   * Alumni: an offer carries a display name; a student at the school can ask.
 --   * Either end can forget every request they are in.
@@ -97,7 +97,7 @@ end $$;
 
 do $$
 declare
-  mentor uuid; student uuid; second uuid; outsider uuid; far uuid; alum uuid;
+  mentor uuid; student uuid; second uuid; third uuid; outsider uuid; far uuid; alum uuid;
   req uuid; req2 uuid; n bigint; st text;
 begin
   insert into public.schools (id, name, email_domains) values
@@ -110,12 +110,15 @@ begin
   outsider := pg_temp.newuser('outsider@mr-u.example', 'mr-u');
   far      := pg_temp.newuser('far@mr-other.example', 'mr-other');
   alum     := pg_temp.newuser('alum@mr-u.example', 'mr-u');
+  third    := pg_temp.newuser('third@mr-u.example', 'mr-u');
 
   insert into public.role_grants (subject, role, scope_kind, scope_id, provenance) values
     (mentor,  'peer_mentor', 'cohort', 'mr-u/first-year', 'institution'),
     (student, 'student',     'cohort', 'mr-u/first-year', 'institution'),
     (second,  'student',     'cohort', 'mr-u/first-year', 'institution'),
-    (alum,    'alumni',      'school', 'mr-u',            'institution');
+    (alum,    'alumni',      'school', 'mr-u',            'institution'),
+    (mentor,  'peer_mentor', 'cohort', 'mr-u/second-year', 'institution'),
+    (third,   'student',     'cohort', 'mr-u/second-year', 'institution');
 
   -- ── Publishing an offer ─────────────────────────────────────────────────
   perform pg_temp.expect_allowed('a peer mentor publishing an offer in their cohort', mentor,
@@ -174,6 +177,18 @@ begin
     format($q$select public.answer_mentor_request(%L, 'accepted')$q$, req2));
   perform pg_temp.expect_allowed('the second student withdrawing their request', second,
     format($q$select public.answer_mentor_request(%L, 'withdrawn')$q$, req2));
+
+  -- A peer offer's capacity is per cohort. The mentor is full in first-year,
+  -- and a second-year offer of one must still take its first mentee — a count
+  -- across every cohort refused this.
+  perform pg_temp.expect_allowed('the mentor publishing a second offer, in another cohort', mentor,
+    $q$insert into public.peer_mentor_offers (user_id, tenant_id, cohort_scope, display_name, topics, capacity)
+       select (select auth.uid()), 'mr-u', 'mr-u/second-year', 'Sam (junior)', array['Study habits'], 1$q$);
+  perform pg_temp.become(third);
+  req2 := public.request_mentor('peer', mentor, 'mr-u/second-year', 'Kai', '{}', '');
+  execute 'reset role';
+  perform pg_temp.expect_allowed('accepting in a cohort with room, while full in another', mentor,
+    format($q$select public.answer_mentor_request(%L, 'accepted')$q$, req2));
 
   -- ── Alumni ──────────────────────────────────────────────────────────────
   perform pg_temp.expect_allowed('an alum publishing an offer with a display name', alum,
