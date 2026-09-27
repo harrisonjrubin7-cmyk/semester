@@ -2,7 +2,7 @@
 
 Code: `app/src/community/alias.ts`, enforced by `community_aliases`,
 `claim_community_alias` and `create_community_post` in
-`20260927235000_community.sql`.
+`20260927235917_community.sql`.
 
 **Two switches, both off:**
 

@@ -341,7 +341,7 @@ describe('the clocks that run are still the clocks the document describes', () =
       /cron\.schedule\(\s*'community-retention',\s*'29 4 \* \* \*',\s*\$job\$select private\.sweep_community_retention\(\)\$job\$/,
     );
 
-    const sql = readFileSync(join(MIGRATIONS, '20260927235000_community.sql'), 'utf8');
+    const sql = readFileSync(join(MIGRATIONS, '20260927235917_community.sql'), 'utf8');
     const sweep = sql.split('create or replace function private.sweep_community_retention()')[1]?.split('$$')[1] ?? '';
     expect(sweep, 'the sweep is no longer in the migration').not.toBe('');
     expect(sweep).toMatch(/retain_until < now\(\) and status not in \('open', 'appealed'\)/);
