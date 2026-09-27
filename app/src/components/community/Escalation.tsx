@@ -124,6 +124,34 @@ export function EscalationRequest({
   );
 }
 
+/** What each adapter failure code means, for the reviewer reading it. */
+export const FAILURE_TEXT: Record<string, string> = {
+  timeout: 'the university’s system did not answer in time',
+  network: 'the university’s system could not be reached',
+  channel_not_configured: 'the delivery channel in the agreement has not been set up on Semester’s side',
+  payload_rejected: 'the adapter refused to send it because it held a field the agreement does not allow',
+  signing_failed: 'it could not be signed',
+  unknown: 'an unrecognised error',
+};
+
+export function failureText(code: string): string {
+  const http = /^http_(\d{3})$/.exec(code);
+  if (http) return `the university’s system answered ${http[1]}`;
+  return FAILURE_TEXT[code] ?? FAILURE_TEXT.unknown;
+}
+
+/** Where an approved escalation's one delivery stands, in a sentence. */
+export function deliveryText(delivery: Escalation['delivery'], when: (iso: string) => string): string {
+  if (!delivery) return 'Approved; the delivery record is no longer kept.';
+  if (delivery.deliveredAt) return `Delivered ${when(delivery.deliveredAt)}.`;
+  if (!delivery.lastError) return 'Queued for delivery; not sent yet.';
+  const why = failureText(delivery.lastError);
+  if (delivery.attempts >= 5) {
+    return `Not delivered — ${why}. No more attempts will be made; tell whoever runs the delivery adapter, and reach the university another way if it is urgent.`;
+  }
+  return `Not delivered yet — ${why}. Next attempt ${delivery.nextAttemptAt ? when(delivery.nextAttemptAt) : 'soon'}.`;
+}
+
 const STATUS_TEXT: Record<Escalation['status'], string> = {
   requested: 'Waiting for a second reviewer',
   approved: 'Approved',
@@ -179,15 +207,7 @@ export function EscalationItem({
       </span>
       <p style={{ margin: 0 }}>Reason given: “{item.requestedReason}”</p>
       {item.decidedReason && <p style={{ margin: 0 }}>Second reviewer: “{item.decidedReason}”</p>}
-      {item.status === 'approved' && (
-        <p style={{ margin: 0 }}>
-          {item.delivery?.deliveredAt
-            ? `Delivered ${when(item.delivery.deliveredAt)}.`
-            : item.delivery && item.delivery.attempts >= 5
-              ? 'Delivery failed five times. Tell whoever runs the delivery adapter.'
-              : 'Queued for delivery; not sent yet.'}
-        </p>
-      )}
+      {item.status === 'approved' && <p style={{ margin: 0 }}>{deliveryText(item.delivery, when)}</p>}
       {item.status === 'requested' &&
         (mine ? (
           <p style={{ margin: 0 }}>You asked for this one. A different reviewer has to approve or refuse it.</p>

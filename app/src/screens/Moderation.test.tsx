@@ -313,6 +313,20 @@ describe('Moderation', () => {
       await render();
       expect(host.textContent).toContain('Queued for delivery; not sent yet.');
     });
+
+    it('says why a delivery failed, in words, and when it will try again', async () => {
+      mock.flags.institutionEscalation = true;
+      mock.escalations.mockResolvedValue([
+        pending({ status: 'approved', decidedAt: '2026-09-27T11:30:00Z', decidedReason: 'agreed',
+          delivery: { queuedAt: '2026-09-27T11:30:00Z', attempts: 2, deliveredAt: null, lastError: 'http_502', nextAttemptAt: '2026-09-27T11:50:00Z' } }),
+        pending({ id: 'e3', caseId: 'k8', status: 'approved', decidedAt: '2026-09-27T11:30:00Z', decidedReason: 'agreed',
+          delivery: { queuedAt: '2026-09-27T11:30:00Z', attempts: 5, deliveredAt: null, lastError: 'payload_rejected', nextAttemptAt: null } }),
+      ]);
+      await render();
+      expect(host.textContent).toContain('Not delivered yet — the university’s system answered 502. Next attempt');
+      expect(host.textContent).toContain('No more attempts will be made');
+      expect(host.textContent).toContain('held a field the agreement does not allow');
+    });
   });
 
   describe('safety state', () => {

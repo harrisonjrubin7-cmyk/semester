@@ -553,7 +553,14 @@ export interface Escalation {
   requestedBy: string;
   decidedReason: string | null;
   decidedAt: string | null;
-  delivery: { queuedAt: string; attempts: number; deliveredAt: string | null } | null;
+  delivery: {
+    queuedAt: string;
+    attempts: number;
+    deliveredAt: string | null;
+    /** One of the adapter's fixed codes (`http_502`, `timeout`, …), never text from the receiver. */
+    lastError: string | null;
+    nextAttemptAt: string | null;
+  } | null;
 }
 
 /** Every school's agreement, as reviewers may read it. */
@@ -593,7 +600,10 @@ export async function loadEscalations(): Promise<Escalation[]> {
   const caseIds = [...new Set(((data ?? []) as Row[]).map((r) => str(r.case_id)))];
   const [deliveries, cases] = await Promise.all([
     ids.length
-      ? db.from('community_escalation_deliveries').select('escalation_id, queued_at, attempts, delivered_at').in('escalation_id', ids)
+      ? db
+          .from('community_escalation_deliveries')
+          .select('escalation_id, queued_at, attempts, delivered_at, last_error, next_attempt_at')
+          .in('escalation_id', ids)
       : Promise.resolve({ data: [] as Row[], error: null }),
     caseIds.length
       ? db.from('community_cases').select('id, category, severity').in('id', caseIds)
@@ -618,7 +628,13 @@ export async function loadEscalations(): Promise<Escalation[]> {
       decidedReason: r.decided_reason ? str(r.decided_reason) : null,
       decidedAt: r.decided_at ? str(r.decided_at) : null,
       delivery: d
-        ? { queuedAt: str(d.queued_at), attempts: Number(d.attempts ?? 0), deliveredAt: d.delivered_at ? str(d.delivered_at) : null }
+        ? {
+            queuedAt: str(d.queued_at),
+            attempts: Number(d.attempts ?? 0),
+            deliveredAt: d.delivered_at ? str(d.delivered_at) : null,
+            lastError: d.last_error ? str(d.last_error) : null,
+            nextAttemptAt: d.next_attempt_at ? str(d.next_attempt_at) : null,
+          }
         : null,
     };
   });

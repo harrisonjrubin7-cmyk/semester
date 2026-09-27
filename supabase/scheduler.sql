@@ -144,6 +144,12 @@ select cron.schedule(
 -- record the successful sweep so `/health/ready` can fail closed if this job
 -- is missing or stalled. Uncertain, pending and processing university actions
 -- are never age-purged.
+select cron.schedule(
+  'institution-gateway-retention',
+  '11 * * * *',
+  $job$select public.gateway_purge_journal()$job$
+);
+
 -- Community Trust & Safety evidence. Daily: closed cases past their
 -- retain_until (90 days after a no-action close, a year after enforcement or
 -- an appeal), the reports and removed posts they were keeping, restrictions
@@ -156,10 +162,49 @@ select cron.schedule(
   $job$select private.sweep_community_retention()$job$
 );
 
+
+-- ── Escalation delivery ───────────────────────────────────────────────────
+--
+-- Sends an approved Community escalation to the university that agreed to
+-- receive it. The adapter is supabase/functions/_shared/escalation.ts, and it
+-- is not deployed: docs/CAMPUS-ESCALATION-POLICY.md has the steps, and they
+-- start with a signed agreement. So the job is created parked, the way `push`
+-- was, and the secret it will send is its own — not push_cron_secret, so the
+-- reminder sender's key can never call the one function that sends cases out.
+do $$
+begin
+  if not exists (select 1 from vault.secrets where name = 'escalation_cron_secret') then
+    perform vault.create_secret(
+      translate(encode(gen_random_bytes(32), 'base64'), '+/=', '-_'),
+      'escalation_cron_secret',
+      'Bearer token the escalation-delivery job sends to the escalate Edge Function. Must equal its ESCALATION_CRON_SECRET.',
+      null
+    );
+  end if;
+end $$;
+
 select cron.schedule(
-  'institution-gateway-retention',
-  '11 * * * *',
-  $job$select public.gateway_purge_journal()$job$
+  'escalation-delivery',
+  '*/5 * * * *',
+  $job$
+    select net.http_post(
+      url := 'https://lzrqvlugnawcgywkhqlz.supabase.co/functions/v1/escalate',
+      headers := jsonb_build_object(
+        'Content-Type', 'application/json',
+        'Authorization', 'Bearer ' || (
+          select decrypted_secret from vault.decrypted_secrets where name = 'escalation_cron_secret'
+        )
+      ),
+      body := '{}'::jsonb,
+      timeout_milliseconds := 60000
+    );
+  $job$
+);
+
+-- Parked: the function does not exist until somebody deploys it on purpose.
+select cron.alter_job(
+  (select jobid from cron.job where jobname = 'escalation-delivery'),
+  active := false
 );
 
 -- ── Integrations: the retention sweep ─────────────────────────────────────

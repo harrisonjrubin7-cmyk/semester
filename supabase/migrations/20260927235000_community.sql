@@ -2236,13 +2236,21 @@ create table if not exists public.community_escalation_deliveries (
   payload       jsonb       not null,
   queued_at     timestamptz not null default now(),
   attempts      integer     not null default 0,
-  delivered_at  timestamptz
+  delivered_at  timestamptz,
+  -- The adapter (supabase/functions/_shared/escalation.ts) claims a row for a
+  -- few minutes so two overlapping runs cannot both send it, and backs off
+  -- after a failure. last_error is one of the adapter's fixed codes — a status,
+  -- never anything the receiver said.
+  next_attempt_at timestamptz not null default now(),
+  claimed_until   timestamptz,
+  last_error      text        check (last_error is null or last_error ~ '^[a-z0-9_]{1,40}$')
 );
 create index if not exists community_escalation_deliveries_by_escalation on public.community_escalation_deliveries (escalation_id);
 create index if not exists community_escalation_deliveries_pending on public.community_escalation_deliveries (delivered_at, queued_at);
 alter table public.community_escalation_deliveries enable row level security;
 revoke all on table public.community_escalation_deliveries from anon, authenticated;
-grant select (id, escalation_id, queued_at, attempts, delivered_at) on table public.community_escalation_deliveries to authenticated;
+grant select (id, escalation_id, queued_at, attempts, delivered_at, next_attempt_at, last_error)
+  on table public.community_escalation_deliveries to authenticated;
 drop policy if exists "reviewers see delivery state" on public.community_escalation_deliveries;
 create policy "reviewers see delivery state" on public.community_escalation_deliveries
   for select to authenticated using (private.has_capability('community:review'));
@@ -2375,32 +2383,77 @@ end $$;
 revoke all on function public.decide_community_escalation(uuid, boolean, text) from public, anon, authenticated;
 grant execute on function public.decide_community_escalation(uuid, boolean, text) to authenticated;
 
-/* For the delivery adapter only: take what is waiting, and mark it sent. */
-create or replace function private.take_escalation_deliveries()
+/*
+ * For the delivery adapter only: claim what is due, oldest first.
+ *
+ * A row is due when it is unsent, has attempts left, its backoff has passed and
+ * nobody holds a live claim on it. It is held — not taken, and not charged an
+ * attempt — while the school's switch is off, its agreement is disabled, or the
+ * agreement now names a different channel than the one approved: a change of
+ * agreement after approval is a reason for a person to look, not for the
+ * adapter to guess. skip locked, so a second run in flight takes other rows.
+ */
+create or replace function public.take_escalation_deliveries()
 returns setof public.community_escalation_deliveries
 language sql
 security definer
 set search_path = ''
 as $$
-  update public.community_escalation_deliveries
-     set attempts = attempts + 1
-   where delivered_at is null and attempts < 5
-  returning *;
+  update public.community_escalation_deliveries d
+     set attempts = d.attempts + 1, claimed_until = now() + interval '5 minutes'
+   where d.id in (
+     select x.id
+       from public.community_escalation_deliveries x
+       join public.community_escalations e on e.id = x.escalation_id
+       join public.community_escalation_policies pol on pol.tenant_id = e.tenant_id
+      where x.delivered_at is null and x.attempts < 5
+        and x.next_attempt_at <= now()
+        and (x.claimed_until is null or x.claimed_until < now())
+        and e.status = 'approved'
+        and pol.enabled and pol.channel = x.channel
+        and private.community_program_on(e.tenant_id, 'institution_escalation')
+      order by x.queued_at
+      limit 20
+      for update of x skip locked)
+  returning d.*;
 $$;
-revoke all on function private.take_escalation_deliveries() from public, anon, authenticated;
-grant execute on function private.take_escalation_deliveries() to service_role;
+revoke all on function public.take_escalation_deliveries() from public, anon, authenticated;
+grant execute on function public.take_escalation_deliveries() to service_role;
 
-create or replace function private.mark_escalation_delivered(want_delivery uuid)
+create or replace function public.mark_escalation_delivered(want_delivery uuid)
 returns void
 language sql
 security definer
 set search_path = ''
 as $$
-  update public.community_escalation_deliveries set delivered_at = now()
+  update public.community_escalation_deliveries
+     set delivered_at = now(), claimed_until = null, last_error = null
    where id = want_delivery and delivered_at is null;
 $$;
-revoke all on function private.mark_escalation_delivered(uuid) from public, anon, authenticated;
-grant execute on function private.mark_escalation_delivered(uuid) to service_role;
+revoke all on function public.mark_escalation_delivered(uuid) from public, anon, authenticated;
+grant execute on function public.mark_escalation_delivered(uuid) to service_role;
+
+/*
+ * A failed send: release the claim and back off — 4, 16, 64, then 256
+ * minutes. A final failure (a payload the adapter refused, a channel nobody
+ * configured) spends the remaining attempts, so the console shows it failed
+ * rather than retrying something that cannot succeed.
+ */
+create or replace function public.mark_escalation_failed(want_delivery uuid, want_error text, want_final boolean)
+returns void
+language sql
+security definer
+set search_path = ''
+as $$
+  update public.community_escalation_deliveries
+     set claimed_until = null,
+         last_error = case when want_error ~ '^[a-z0-9_]{1,40}$' then want_error else 'unknown' end,
+         attempts = case when want_final then 5 else attempts end,
+         next_attempt_at = now() + interval '1 minute' * power(4, greatest(attempts, 1))
+   where id = want_delivery and delivered_at is null;
+$$;
+revoke all on function public.mark_escalation_failed(uuid, text, boolean) from public, anon, authenticated;
+grant execute on function public.mark_escalation_failed(uuid, text, boolean) to service_role;
 
 -- ── 15. The private account safety state ──────────────────────────────────
 --
@@ -2527,7 +2580,8 @@ grant execute on function public.my_community_standing() to authenticated;
 --
 --   drop function if exists public.my_community_standing(), public.case_author_safety(uuid, text),
 --     private.safety_value(uuid), private.record_safety_outcome(public.community_cases, text, text, uuid),
---     private.mark_escalation_delivered(uuid), private.take_escalation_deliveries(),
+--     public.mark_escalation_failed(uuid, text, boolean),
+--     public.mark_escalation_delivered(uuid), public.take_escalation_deliveries(),
 --     public.decide_community_escalation(uuid, boolean, text), public.request_community_escalation(uuid, text),
 --     private.escalation_allowed(public.community_cases);
 --   drop table if exists public.community_safety_entries, public.community_escalation_deliveries,

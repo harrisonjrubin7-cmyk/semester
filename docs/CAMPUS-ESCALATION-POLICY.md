@@ -67,3 +67,70 @@ it lists what would be sent. The person who asked sees "You asked for this
 one", not approval buttons. An approved escalation shows whether it has been
 delivered, or that delivery failed five times.
 
+## Delivery
+
+`supabase/functions/_shared/escalation.ts` sends what two reviewers
+approved. A parked pg_cron job, `escalation-delivery`, calls it every five
+minutes (`supabase/scheduler.sql`).
+
+- **Channels are names.** An agreement's `channel` must be `webhook:<name>`,
+  for example `webhook:vu_dos`. Its URL and signing key are function secrets,
+  `ESCALATION_WEBHOOK_VU_DOS_URL` and `ESCALATION_WEBHOOK_VU_DOS_KEY`. A name
+  with no configured address is not sent. A raw URL, plain http, credentials
+  in the URL or a key under 32 characters are all refused.
+- **Checked on the way out.** The payload must have exactly the allowlisted
+  keys, with `subject_ref` only as a 64-character hash. Anything else is
+  refused for good and never retried.
+- **Held, not sent,** while the school's switch is off, its agreement is
+  disabled, or the agreement now names a different channel than the one
+  approved. A held delivery isn't charged an attempt.
+- **One sender per delivery.** Each run claims up to 20 rows for five
+  minutes, with `skip locked`, so overlapping runs never send the same row.
+- **Retries** back off at 4, 16, 64 and 256 minutes, five attempts in all. An
+  unconfigured channel retries too, so an operator can fix it. What's recorded
+  is a code (`http_502`, `timeout`, `network`, `channel_not_configured`,
+  `payload_rejected`), never the receiver's reply. The console says which,
+  and when the next try is.
+
+### What the receiver gets
+
+    POST <configured URL>
+    Content-Type: application/json
+    Idempotency-Key: <delivery id>          same on every retry
+    X-Semester-Signature: t=<unix seconds>,v1=<hex HMAC-SHA256 of "t.<body>">
+
+    {"case_id": …, "tenant_id": …, "category": …, "severity": "P0"|"P1",
+     "summary": …, "occurred_at": …, "agreement_ref": …[, "subject_ref": …]}
+
+The receiver should recompute the signature with the shared key, reject a
+timestamp more than five minutes old, and treat a repeated
+`Idempotency-Key` as the same escalation. Any 2xx marks it delivered.
+Redirects are refused, and the reply body is never read.
+
+### Deploying it (not done; do it only with a signed agreement)
+
+1. Create `supabase/functions/escalate/index.ts`:
+
+       import { createClient } from 'jsr:@supabase/supabase-js@2';
+       import { handle } from '../_shared/escalation.ts';
+       const db = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '');
+       const rpc = async (fn: string, args?: object) => { const { data, error } = await db.rpc(fn, args); if (error) throw error; return data; };
+       Deno.serve((req) => handle(req, {
+         secret: Deno.env.get('ESCALATION_CRON_SECRET') ?? '',
+         take: () => rpc('take_escalation_deliveries'),
+         delivered: (id) => rpc('mark_escalation_delivered', { want_delivery: id }),
+         failed: (id, code, final) => rpc('mark_escalation_failed', { want_delivery: id, want_error: code, want_final: final }),
+         env: (k) => Deno.env.get(k), fetch, now: () => new Date(),
+       }));
+
+2. Add `[functions.escalate]` with `verify_jwt = false` to `supabase/config.toml`.
+   It's called by the scheduler with its own secret, like `push`. Once it's
+   live, add it to DEPLOY.md's "What is live". `functionconfig.test.ts` holds
+   all three to each other.
+3. Set `ESCALATION_CRON_SECRET` to the Vault value `escalation_cron_secret`,
+   and set the channel's `_URL` and `_KEY`.
+4. Write the school's `community_escalation_policies` row and switch
+   `institution_escalation` on (service role, both).
+5. Unpark the job: `select cron.alter_job((select jobid from cron.job where
+   jobname = 'escalation-delivery'), active := true);`
+

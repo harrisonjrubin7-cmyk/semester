@@ -948,7 +948,7 @@ do $$
 declare
   amy uuid; bo uuid; cy uuid; dee uuid; rev uuid; rev2 uuid; senior uuid; mgr uuid;
   grp uuid; threat uuid; dox uuid; spam uuid; minor uuid;
-  k_threat uuid; k_dox uuid; k_spam uuid; k_minor uuid; e uuid; e2 uuid;
+  k_threat uuid; k_dox uuid; k_spam uuid; k_minor uuid; e uuid; e2 uuid; dv uuid;
   n bigint; t text; v int; j jsonb;
 begin
   insert into public.schools (id, name, email_domains) values ('es-u', 'Escalation University', array['es-u.example']);
@@ -1067,13 +1067,13 @@ begin
   perform pg_temp.counted('the request and the approval are both in the case history', n, 2);
   perform pg_temp.expect_refused('a reviewer cannot read what was sent', rev, 'select payload from public.community_escalation_deliveries');
   perform pg_temp.counted('but can see that it is waiting', pg_temp.seen(rev, 'select id from public.community_escalation_deliveries where delivered_at is null'), 1);
-  perform pg_temp.expect_refused('nobody signed in takes deliveries', senior, 'select * from private.take_escalation_deliveries()');
+  perform pg_temp.expect_refused('nobody signed in takes deliveries', senior, 'select * from public.take_escalation_deliveries()');
   perform pg_temp.expect_refused('or marks one sent', senior,
-    format('select private.mark_escalation_delivered(%L)', (select id from public.community_escalation_deliveries where escalation_id = e)));
-  select count(*) into n from private.take_escalation_deliveries();
+    format('select public.mark_escalation_delivered(%L)', (select id from public.community_escalation_deliveries where escalation_id = e)));
+  select count(*) into n from public.take_escalation_deliveries();
   perform pg_temp.counted('the service role takes the waiting delivery', n, 1);
-  perform private.mark_escalation_delivered((select id from public.community_escalation_deliveries where escalation_id = e));
-  select count(*) into n from private.take_escalation_deliveries();
+  perform public.mark_escalation_delivered((select id from public.community_escalation_deliveries where escalation_id = e));
+  select count(*) into n from public.take_escalation_deliveries();
   perform pg_temp.counted('and once marked sent it is not taken again', n, 0);
 
   -- Identity only when the agreement requires it, and then as an opaque ref.
@@ -1089,6 +1089,47 @@ begin
   perform pg_temp.counted('and it is a hash, not the account', (j->>'subject_ref' ~ '^[0-9a-f]{64}$' and position(bo::text in j::text) = 0)::int, 1);
   perform pg_temp.said('it resolves only by recomputing against the case',
     j->>'subject_ref', private.role_audit_sha256('escalation:' || e2::text || ':' || bo::text));
+
+  -- ── The delivery adapter's queue ──────────────────────────────────────
+  select id into dv from public.community_escalation_deliveries where escalation_id = e2;
+  perform pg_temp.expect_refused('nobody signed in marks a delivery failed', senior,
+    format($q$select public.mark_escalation_failed(%L, 'http_500', false)$q$, dv));
+  update public.community_programs set enabled = false where tenant_id = 'es-u' and program = 'institution_escalation';
+  select count(*) into n from public.take_escalation_deliveries();
+  perform pg_temp.counted('with the switch off, an approved delivery is held', n, 0);
+  select attempts into v from public.community_escalation_deliveries where id = dv;
+  perform pg_temp.counted('and is not charged an attempt', v, 0);
+  update public.community_programs set enabled = true where tenant_id = 'es-u' and program = 'institution_escalation';
+  update public.community_escalation_policies set channel = 'webhook:somewhere_else' where tenant_id = 'es-u';
+  select count(*) into n from public.take_escalation_deliveries();
+  perform pg_temp.counted('held too when the agreement now names another channel', n, 0);
+  update public.community_escalation_policies set channel = 'secure-mail:dos' where tenant_id = 'es-u';
+  select count(*) into n from public.take_escalation_deliveries();
+  perform pg_temp.counted('taken once the agreement matches again', n, 1);
+  select attempts into v from public.community_escalation_deliveries where id = dv;
+  perform pg_temp.counted('and each take counts as an attempt, which is what caps retries at five', v, 1);
+  select count(*) into n from public.take_escalation_deliveries();
+  perform pg_temp.counted('a claimed delivery is not taken by an overlapping run', n, 0);
+  perform public.mark_escalation_failed(dv, 'http_502', false);
+  select count(*) into n from public.community_escalation_deliveries
+   where id = dv and last_error = 'http_502' and claimed_until is null and next_attempt_at > now() + interval '3 minutes';
+  perform pg_temp.counted('a failure releases the claim and backs off', n, 1);
+  select count(*) into n from public.take_escalation_deliveries();
+  perform pg_temp.counted('and is not retried before its time', n, 0);
+  perform public.mark_escalation_failed(dv, 'The receiver said: student Bo lives at 12 Elm', false);
+  select last_error into t from public.community_escalation_deliveries where id = dv;
+  perform pg_temp.said('an error that is not a code is stored as unknown, never as text', t, 'unknown');
+  perform pg_temp.counted('a reviewer sees the error code and the next try', pg_temp.seen(rev,
+    format('select last_error, next_attempt_at from public.community_escalation_deliveries where id = %L', dv)), 1);
+  update public.community_escalation_deliveries set next_attempt_at = now() - interval '1 second' where id = dv;
+  select count(*) into n from public.take_escalation_deliveries();
+  perform pg_temp.counted('its time come, it is taken again', n, 1);
+  perform public.mark_escalation_failed(dv, 'payload_rejected', true);
+  update public.community_escalation_deliveries set next_attempt_at = now() - interval '1 second' where id = dv;
+  select count(*) into n from public.take_escalation_deliveries();
+  perform pg_temp.counted('a final failure is never retried', n, 0);
+  select attempts into v from public.community_escalation_deliveries where id = dv;
+  perform pg_temp.counted('and reads as out of attempts', v, 5);
 
   -- Switched off, an approval already waiting stops.
   update public.community_escalation_policies set identity_required = false where tenant_id = 'es-u';

@@ -78,10 +78,11 @@ It **is not** yet:
 - **A media-safety detector.** Community has no image posting yet.
 - **A slur lexicon.** The hate rules are phrase patterns. A tenant's lexicon
   would be new rows in `community_detector_rules`.
-- **An escalation delivery adapter.** Approval queues a delivery in
-  `community_escalation_deliveries`; nothing sends it yet. An adapter would
-  run as the service role, call `private.take_escalation_deliveries()` and
-  mark each one sent. No university has an agreement, so none is written.
+- **A deployed escalation adapter.** The adapter is written and tested
+  (`supabase/functions/_shared/escalation.ts`) and its job is scheduled,
+  parked. It is not a function directory, because here a directory is a
+  deployed function, and deploying it waits for a signed agreement.
+  `docs/CAMPUS-ESCALATION-POLICY.md` has the steps.
 - **An admin screen for escalation agreements.** Policies are written by the
   service role; the console only reads them.
 - **A reviewer tool to map an alias to an account** (just-in-time access).
