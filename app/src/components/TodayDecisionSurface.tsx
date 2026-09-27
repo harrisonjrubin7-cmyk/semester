@@ -1,14 +1,14 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { blocksFor } from '../data/catalog';
 import { clock, dateToIso, daysBetween } from '../lib/date';
 import { readDue } from '../lib/duetime';
-import { pathSnapshot, showsTodayDecisionSurface } from '../lib/today-decision';
-import { todayActions } from '../lib/today-actions';
+import { pathSnapshot, nextTodayDecision, showsTodayDecisionSurface } from '../lib/today-decision';
 import { appointmentsOn, tasksOn, upcomingItems } from '../lib/select';
 import { useNow, useStore } from '../state/store';
+import { MODULE_FLAGS, moduleOn } from '../lib/experience-flags';
 import { Blueprint } from './Blueprint';
-import { ActionCenter } from './ActionCenter';
-import { Meter, SectionLabel } from './ui';
+import { TodayActionCenter } from './TodayActionCenter';
+import { ActionButton, Meter, SectionLabel } from './ui';
 import { goMine } from '../lib/openmine';
 import { goCal } from '../lib/opencal';
 
@@ -41,9 +41,26 @@ function syncLabel(lastSync: { at: number } | null | undefined): string {
   }).format(syncedAt)}`;
 }
 
-export function TodayDecisionSurface() {
+/**
+ * Today's briefing.
+ *
+ * With `today_action_center` on (DECISION-LOG D-013, D-021), students get
+ * the Action Center — BL-1.4's ranked list with Phase B around it. With it
+ * off, the default, this is the #761 briefing exactly as it shipped. The prop
+ * exists so tests can choose.
+ */
+export function TodayDecisionSurface({
+  actionCenter = moduleOn(MODULE_FLAGS.today_action_center),
+}: { actionCenter?: boolean } = {}) {
+  const { state } = useStore();
+  if (actionCenter && showsTodayDecisionSurface(state.role)) return <TodayActionCenter />;
+  return <DecisionBriefing />;
+}
+
+function DecisionBriefing() {
   const { state, dispatch, catalog } = useStore();
   const now = useNow();
+  const [dismissed, setDismissed] = useState<string | null>(null);
   const path = useMemo(
     () => pathSnapshot(state.requirements, state.taken),
     [state.requirements, state.taken],
@@ -53,10 +70,8 @@ export function TodayDecisionSurface() {
     () => Object.values(state.reviews).filter((review) => review.due <= now.getTime()).length,
     [state.reviews, now],
   );
-  // Every candidate `nextTodayDecision` weighs, ranked by `lib/actions.ts`
-  // instead of by the order of its ifs.
-  const actions = useMemo(
-    () => todayActions({
+  const decision = useMemo(
+    () => nextTodayDecision({
       path,
       upcoming,
       done: state.done,
@@ -127,6 +142,10 @@ export function TodayDecisionSurface() {
   // exposure rather than a helpful empty state.
   if (!showsTodayDecisionSurface(state.role)) return null;
 
+  const openDecision = () => {
+    if (decision.itemId) dispatch({ type: 'openItem', id: decision.itemId });
+    else dispatch({ type: 'go', screen: decision.destination });
+  };
   const syncLine = syncLabel(state.lastSync);
 
   return (
@@ -157,7 +176,29 @@ export function TodayDecisionSurface() {
       </Blueprint>
 
       <Blueprint className="today-next-action">
-        <ActionCenter actions={actions} />
+        <SectionLabel>Next best step</SectionLabel>
+        {dismissed === decision.id ? (
+          <p role="status" className="today-dismissed">
+            Hidden for this visit.{' '}
+            <button type="button" className="workspace-text-button" onClick={() => setDismissed(null)}>Undo</button>
+          </p>
+        ) : (
+          <>
+            <h2>{decision.title}</h2>
+            <p>{decision.body}</p>
+            <ActionButton tone="primary" onClick={openDecision}>{decision.action}</ActionButton>
+            <div className="today-action-tools">
+              <details className="today-why">
+                <summary>Why am I seeing this?</summary>
+                <p>{decision.why}</p>
+                <p><strong>Source:</strong> {decision.source}</p>
+              </details>
+              <button type="button" className="workspace-text-button" onClick={() => setDismissed(decision.id)}>
+                Not now
+              </button>
+            </div>
+          </>
+        )}
       </Blueprint>
 
       <aside className="today-near-term" aria-labelledby="today-near-term-heading">
