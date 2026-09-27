@@ -398,6 +398,9 @@ describe('"delete my account" really means every row', () => {
       'integration_scopes',
       'integration_sync_errors',
       'integration_sync_runs',
+      // Verified listings (lib/listings.ts, components/ListingDesk.tsx): an
+      // office's or employer's publication. publisher_id is `on delete set null`.
+      'opportunities',
       'organizations',
       'reports',
       'schools',

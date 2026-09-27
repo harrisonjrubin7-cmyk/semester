@@ -4,6 +4,7 @@ import { Page } from '../components/Page';
 import { SectionLabel, TabList } from '../components/ui';
 import { Card, Checklist, GoTo, Never, OfficeDoor } from '../components/JourneyKit';
 import { MentorFinder } from '../components/MentorFinder';
+import { VerifiedListings } from '../components/VerifiedListings';
 import { useDeviceLibrary } from '../lib/device-library';
 import { hasMode } from '../lib/accessmode';
 import { dateToIso } from '../lib/date';
@@ -78,6 +79,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
       {tab === 'list' && !selected ? (
         <List
           lib={lib.value}
+          onTrack={(o) => update((old) => ({ ...old, items: [o, ...old.items] }))}
           onAdd={(kind) => {
             const o = newOpportunity(kind);
             update((old) => ({ ...old, items: [o, ...old.items] }));
@@ -92,7 +94,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
   );
 }
 
-function List({ lib, onAdd, onOpen }: { lib: OpportunityLibrary; onAdd: (k: Kind) => void; onOpen: (id: string) => void }) {
+function List({ lib, onAdd, onOpen, onTrack }: { lib: OpportunityLibrary; onAdd: (k: Kind) => void; onOpen: (id: string) => void; onTrack: (o: Opportunity) => void }) {
   const [kind, setKind] = useState<Kind | 'all'>('all');
   const today = dateToIso(new Date());
   const soon = deadlines(lib.items, today).slice(0, 3);
@@ -138,6 +140,8 @@ function List({ lib, onAdd, onOpen }: { lib: OpportunityLibrary; onAdd: (k: Kind
       {kind === 'all' || kind === 'alumni' ? (
         <MentorFinder kind="alumni" interests={[]} fallback={null} />
       ) : null}
+
+      <VerifiedListings onTrack={onTrack} tracked={lib.items.flatMap((o) => [o.id, o.source]).filter(Boolean)} />
 
       <SectionLabel>Add</SectionLabel>
       <div className="jx-chips">
