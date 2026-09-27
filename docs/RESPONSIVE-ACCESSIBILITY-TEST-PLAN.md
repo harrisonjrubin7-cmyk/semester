@@ -54,5 +54,7 @@ rectangle is a failure to launch, not a dark theme.
 - Automated reflow at 320px across all screens (a Playwright sweep that fails
   on `scrollWidth > clientWidth`) would turn check 1 into a test. It needs the
   dev server in CI, which the browser smoke job already starts.
-- Offline and conflict states cannot be tested until they exist. See
-  [CROSS-DEVICE-CONTINUITY.md](CROSS-DEVICE-CONTINUITY.md).
+- Offline, Queued and Conflict are covered in jsdom by
+  `state/syncstates.test.tsx`. By hand: with devtools set to Offline, add a
+  task and check the Settings row reads "Queued to sync", then go back online
+  and check it reads "Synced" within a few seconds.

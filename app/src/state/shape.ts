@@ -1905,6 +1905,55 @@ export function loadPersisted(): Persisted {
  * The half of the state that outlives the session — what localStorage keeps,
  * and what an account syncs. Written once here so the two can never drift.
  */
+/**
+ * Whether two persisted halves are the same, field by field, by reference.
+ *
+ * The push to the account needs to know "did anything worth syncing change?"
+ * and must not answer yes to a navigation, which changes `state` and nothing
+ * in here. It used to depend on `JSON.stringify` of the whole half — and on
+ * the database path that string is never built (serialising the account on
+ * every change is what the move to IndexedDB removed), so it was `''` on
+ * every render and the push never re-ran after an edit at all.
+ *
+ * By reference is exact rather than approximate: `pickPersisted` copies no
+ * field, it hands each one straight through from `state`, and the reducer
+ * replaces a field only when it changes it. So two picks share every
+ * reference exactly when nothing persisted has changed.
+ */
+export function sameFields(a: Persisted, b: Persisted): boolean {
+  const keys = Object.keys(a) as (keyof Persisted)[];
+  if (keys.length !== Object.keys(b).length) return false;
+  return keys.every((k) => a[k] === b[k]);
+}
+
+/**
+ * Whether this device has changes the account does not.
+ *
+ * A flag on disk rather than in memory, so that closing the app offline and
+ * opening it again still says "Queued" rather than "Offline" — the edits are
+ * still waiting, and the student should not have to remember that they are.
+ * Set on any change to the persisted half while signed in, cleared by a push
+ * that lands.
+ */
+export const UNPUSHED_KEY = 'semester.unpushed';
+
+export function unpushed(): boolean {
+  try {
+    return localStorage.getItem(UNPUSHED_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+export function markUnpushed(on: boolean): void {
+  try {
+    if (on) localStorage.setItem(UNPUSHED_KEY, '1');
+    else localStorage.removeItem(UNPUSHED_KEY);
+  } catch {
+    // A storage that refuses a one-byte flag has bigger news than this.
+  }
+}
+
 export function pickPersisted(state: State): Persisted {
   return {
     nav: state.nav,

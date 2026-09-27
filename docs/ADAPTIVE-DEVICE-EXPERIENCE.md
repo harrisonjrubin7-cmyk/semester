@@ -108,8 +108,11 @@ this change.
   on each row's `updated_at`, so it cannot overwrite a copy it has not read;
   it pulls, merges and retries instead. One record edited on both devices
   still keeps the later edit. See [CROSS-DEVICE-CONTINUITY.md](CROSS-DEVICE-CONTINUITY.md).
-- **Offline, Queued and Conflict states.** The sync status has `syncing`,
-  `synced` and `error`, but none of these three.
+- **Offline, Queued and Conflict states: done**, with one limit: `conflict`
+  means another device keeps winning the race, not "pick between two edits
+  of the same note". Adding them uncovered that on IndexedDB an edit never
+  triggered a push; that is fixed too. See
+  [CROSS-DEVICE-CONTINUITY.md](CROSS-DEVICE-CONTINUITY.md).
 - **Return context after sign-in.** OAuth, SSO and password reset all return to
   the bare app URL.
 - **Layout preferences sync across devices.** `nav`, `shell` and `mailPane` use

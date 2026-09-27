@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { SYNC_WORDS } from '../lib/syncstatus';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Blueprint } from '../components/Blueprint';
@@ -79,8 +80,13 @@ export function AccountScreen() {
               Through {account.via}.
             </div>
           )}
-          <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
-            {sync.status === 'syncing' && 'Catching up with your account…'}
+          {/* A live region, so a screen reader hears "Queued" when the
+              connection drops and "Synced" when it comes back, rather than
+              finding out on the next visit to this screen. */}
+          <div role="status" style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
+            {sync.status === 'syncing' && SYNC_WORDS.syncing.sentence}
+            {(sync.status === 'offline' || sync.status === 'queued' || sync.status === 'conflict') &&
+              SYNC_WORDS[sync.status].sentence}
             {sync.status === 'synced' &&
               `Synced ${sync.at ? new Date(sync.at).toLocaleTimeString() : ''} · ${counts}`}
             {sync.status === 'error' && (

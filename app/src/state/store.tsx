@@ -77,13 +77,17 @@ import type { Facts } from '../lib/reveal';
 import type { School } from '../lib/school';
 // Aliased: an effect below has its own local `said` for a save error.
 import { said as refreshSaid } from '../lib/refresh';
+import { offline, watchConnection } from '../lib/offline';
 import {
   STORAGE_KEY,
   initialEphemeral,
   loadPersisted,
   markSeen,
+  markUnpushed,
   pickPersisted,
+  sameFields,
   seenRows,
+  unpushed,
   unseen,
   type Action,
   type Persisted,
@@ -118,6 +122,9 @@ export type SyncStatus =
   | 'signed-out'
   | 'syncing'
   | 'synced'
+  | 'offline'      // no connection, and nothing waiting to go up
+  | 'queued'       // no connection, and changes waiting to go up when it returns
+  | 'conflict'     // another device keeps writing at the same moment; retrying
   | 'error';
 
 interface Store {
@@ -776,6 +783,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       if (cloudConfigured) setSync({ status: 'signed-out', at: 0, error: '' });
       return refreshSaid(base, Date.now());
     }
+    // No connection is not a failure to report as one: the copy here is
+    // intact, and the pull happens when the connection comes back.
+    if (offline()) {
+      setSync((s) => ({ ...s, status: unpushed() ? 'queued' : 'offline', error: '' }));
+      return refreshSaid({ ...base, error: 'No connection. This device will catch up when it is back.' }, Date.now());
+    }
     setSync((s) => ({ ...s, status: 'syncing', error: '' }));
     try {
       const remote = await pull(account.id);
@@ -847,6 +860,51 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [refresh]);
 
   /*
+   * A count that moves when, and only when, something persisted changes.
+   *
+   * What the push below depends on. It depended on `persisted`, the
+   * serialised half — which on the database path is `''` on every render,
+   * because that string is never built there. So on IndexedDB, which is
+   * every ordinary browser, an edit never re-ran the push: the account heard
+   * about it only at the next sign-in, or when something else happened to
+   * trigger one. `sameFields` answers the same question by reference, on
+   * both paths, without serialising anything.
+   *
+   * A ref updated during render, which is safe here because the result is a
+   * pure function of `picked` and the previous pick: rendering twice with the
+   * same `picked` counts once.
+   */
+  const lastPick = useRef<{ picked: Persisted | null; n: number }>({ picked: null, n: 0 });
+  const edit = useMemo(() => {
+    const was = lastPick.current;
+    if (was.picked && sameFields(was.picked, picked)) return was.n;
+    lastPick.current = { picked, n: was.n + 1 };
+    return was.n + 1;
+  }, [picked]);
+
+  // Anything changed since the first render is something the account lacks
+  // until a push lands. The first count is the app loading, not an edit.
+  useEffect(() => {
+    if (edit > 1 && account) markUnpushed(true);
+  }, [edit, account]);
+
+  /*
+   * Whether there is a connection, as state, so going offline and coming back
+   * both re-run what depends on it.
+   */
+  const [online, setOnline] = useState(() => !offline());
+  useEffect(() => watchConnection(setOnline), []);
+
+  // Back online: look at the account before anything else. Whatever another
+  // device did while this one was away is merged in, and the push below then
+  // sends the merge rather than finding out the hard way.
+  const wasOnline = useRef(online);
+  useEffect(() => {
+    if (online && !wasOnline.current && account) void refresh();
+    wasOnline.current = online;
+  }, [online, account, refresh]);
+
+  /*
    * How many times in a row a push has found the account moved on.
    *
    * A push that loses the race pulls, merges and goes again — see `Stale` in
@@ -863,13 +921,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   /**
    * Every later change goes up, once things stop moving.
    *
-   * The dependency is the serialised persisted half, for the reason written
-   * above the localStorage save: this list used to be seventeen hand-written
-   * fields and had fallen a dozen behind. Drilling a card, naming a place,
+   * The dependency is `edit`, which moves whenever anything in the persisted
+   * half does — for the reason written above the localStorage save: this list
+   * used to be seventeen hand-written fields and had fallen a dozen behind. Drilling a card, naming a place,
    * sitting a practice paper and adding a source all changed state that this
    * effect was not watching, so none of them reached the account until some
-   * *other* field happened to change. Depending on the same string means what
-   * is saved is what is synced, and the two cannot drift again.
+   * *other* field happened to change. Depending on every field means what is
+   * saved is what is synced, and the two cannot drift again.
    *
    * A pull no longer suppresses the push either. The merge in `hydrate` is a
    * union, so the state after a pull holds this device's work as well as the
@@ -883,6 +941,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     // edit made with the dialogue on screen was pushed over the account the
     // student was in the middle of being asked about.
     if (asking) return;
+    /*
+     * No connection: say so, and wait. A push now would fail and read as
+     * "Sync trouble" for what is only a train going through a tunnel. The
+     * edits are on disk and `unpushed` remembers them; `online` coming back
+     * re-runs this effect, which pushes them.
+     */
+    if (!online) {
+      setSync((s) => ({ ...s, status: unpushed() ? 'queued' : 'offline', error: '' }));
+      return;
+    }
     const wait = lost === 0 ? 2500 : Math.min(60_000, 2500 * 2 ** lost);
     const timer = setTimeout(() => {
       const { courses, ...rest } = pickPersisted(state);
@@ -897,6 +965,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         .then((seen) => {
           // What the database stamped, not what this device's clock says.
           markSeen(seen);
+          markUnpushed(false);
           setLost(0);
           setSync({ status: 'synced', at: Date.now(), error: '' });
           if (removed.length > 0) dispatch({ type: 'removalsPushed', ids: removed });
@@ -908,7 +977,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             await refresh();
             if (lost >= 2) {
               setSync({
-                status: 'error',
+                status: 'conflict',
                 at: 0,
                 error:
                   'Another device keeps changing this semester at the same moment. Nothing has been overwritten, and this device will keep trying.',
@@ -925,11 +994,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         });
     }, wait);
     return () => clearTimeout(timer);
-    // `persisted` stands in for the whole persisted half. `state` is read
+    // `edit` stands in for the whole persisted half. `state` is read
     // inside the timer and is deliberately not a dependency — it changes on
     // every navigation, and none of those are worth a write.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [account, persisted, asking, lost]);
+  }, [account, edit, asking, lost, online]);
 
   // The sample is fetched the first time it is switched on, and stays in
   // memory after. It is still never copied into storage — an account holds a
