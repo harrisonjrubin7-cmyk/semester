@@ -143,10 +143,10 @@ export const CHARTERS: readonly ProductCharter[] = [
     sourceDependency: 'Outcome and course-demand aggregates (n ≥ 10, enforced by database constraints), the data dictionary and lineage in lib/institution-ops.ts.',
     fallback: 'The institution’s existing IR spreadsheets and reporting runbook.',
     classification: 'T3',
-    accessibilityAcceptance: 'Keyboard-complete; tables have headers and a text summary; suppression and status are said in words, never by colour alone.',
+    accessibilityAcceptance: 'Keyboard-complete; tables have headers and a text summary; suppression and status are said in words, never by colour alone. Not met yet for exports: a suppressed cell is written as an empty CSV field and the CSV is shown as text, so it must read as suppressed before any production tenant.',
     costModel: 'Read-only aggregate queries; drafts stay on the analyst’s device; no AI or media cost.',
     owners: { product: 'Institutional research product lead', engineering: 'Institutional engineering', support: 'Customer success' },
-    killSwitch: 'Tenant policy row off; drafts are device-only, so nothing server-side to undo.',
+    killSwitch: 'Today, only the build flag VITE_INSTITUTIONAL_OPERATIONS set to off, which needs a rebuild: nothing in the app yet reads a tenant policy row or checks outcomes:read for this studio (the outcomes:read gate is open work in #820). Drafts are device-only, so nothing server-side to undo.',
     decision: 'build', route: 'module', reviewAt: '2026-12-15',
   },
 ];
