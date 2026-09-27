@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { changes, line, shouldSpeak, sinceLabel, type SinceInput } from './since';
+import { changes, line, readSeen, shouldSpeak, sinceLabel, writeSeen, type SinceInput } from './since';
 
 const HOUR = 60 * 60 * 1000;
 const DAY = 24 * HOUR;
@@ -124,5 +124,50 @@ describe('how it reads', () => {
 
   it('says nothing rather than an empty sentence', () => {
     expect(line([])).toBe('');
+  });
+});
+
+describe('where the mark is kept', () => {
+  const store = new Map<string, string>();
+  const fake = {
+    getItem: (k: string) => store.get(k) ?? null,
+    setItem: (k: string, v: string) => void store.set(k, String(v)),
+    removeItem: (k: string) => void store.delete(k),
+    clear: () => store.clear(),
+  };
+  const withStorage = (run: () => void) => {
+    const original = globalThis.localStorage;
+    Object.defineProperty(globalThis, 'localStorage', { value: fake, configurable: true });
+    store.clear();
+    try {
+      run();
+    } finally {
+      Object.defineProperty(globalThis, 'localStorage', { value: original, configurable: true });
+    }
+  };
+
+  it('does not share a key with the sync stamps', () => {
+    withStorage(() => {
+      // What `state/shape.ts` writes under `semester.seen`.
+      const stamps = JSON.stringify({ state: '2026-09-27T10:00:00Z', courses: {} });
+      localStorage.setItem('semester.seen', stamps);
+      writeSeen(1_700_000_000_000);
+      expect(localStorage.getItem('semester.seen')).toBe(stamps);
+      expect(readSeen()).toBe(1_700_000_000_000);
+    });
+  });
+
+  it('reads a mark left under the old key, so an upgrade loses nothing', () => {
+    withStorage(() => {
+      localStorage.setItem('semester.seen', '1700000000000');
+      expect(readSeen()).toBe(1_700_000_000_000);
+    });
+  });
+
+  it('reads sync stamps under the old key as no mark rather than a date', () => {
+    withStorage(() => {
+      localStorage.setItem('semester.seen', JSON.stringify({ courses: {} }));
+      expect(readSeen()).toBe(0);
+    });
   });
 });

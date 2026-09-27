@@ -30,8 +30,11 @@ cannot be relaxed in code without the page changing in the same diff.
 Rule 1 compares this list, in this order, with `ROOTS`:
 
 ```roots
-home, courses, study, calendar, mine, me
+home, courses, study, calendar, support, mine, me
 ```
+
+`support` was added by #848 (one workspace: navigation areas), which merged
+while this page was in review — the first change this rule caught.
 
 ## Who may create a notification
 
