@@ -153,14 +153,14 @@ declare
   allowed constant text[] := array[
     'accept_family_grant(grant_id uuid)',
     'adopt_lti_identity(want_ticket text)',
-    -- The share-code pair from 20260927210000_family_invites.sql. Minting is
+    -- The share-code pair from 20260928140000_family_invites.sql. Minting is
     -- how a student writes to a table with no insert policy; claiming is how
     -- somebody holding eight characters turns them into accepted grants.
     'claim_family_invite(given text)',
     'claim_referral(given text)',
     'make_referral_code()',
     'make_family_invite(want_categories text[], want_access text, want_resources text[], want_days integer)',
-    -- 20260927230000_family_shared_items.sql: a code and the confirmed copies
+    -- 20260928141000_family_shared_items.sql: a code and the confirmed copies
     -- of what it names, in one transaction; and the supporter's one read path,
     -- which re-checks every grant and logs the read.
     'make_family_share(want_categories text[], want_resources text[], want_days integer, want_items jsonb, want_shown_as text)',
