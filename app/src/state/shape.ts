@@ -1102,6 +1102,13 @@ export interface QuizQuestion {
   q: string;
   unit: string;
   full: string;
+  /**
+   * The id of the card a choice or true-or-false was made from, where it has
+   * one, so the screen can name the card by `cardIdentity` — to put it in
+   * review, or leave it out of the next run. A card with no id is named by
+   * its question, which is `q`. None on a match, which is made from terms.
+   */
+  cardId?: string;
   /** The options to pick between. Two on a true-or-false, none on a match. */
   opts: { text: string; ok: boolean }[];
   /**
@@ -2255,6 +2262,11 @@ export type Action =
   | { type: 'undoCard' }
   /** An answer recorded against a card, with no drill run around it. */
   | { type: 'recordCard'; got: boolean; key: string }
+  /**
+   * Put a card's review row back as it was before a `recordCard`, or remove
+   * it if there was none. The undo for a student's own "review this soon".
+   */
+  | { type: 'restoreReview'; key: string; was: CardReview | null }
   /**
    * Commit a plan: these sittings, on these days, replacing anything from
    * today forward.
