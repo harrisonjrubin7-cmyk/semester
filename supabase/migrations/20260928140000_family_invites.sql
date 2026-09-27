@@ -394,6 +394,9 @@ begin
       ('public.support_access_grant', 'student_id'),
       ('public.support_access_grant', 'supporter_id'),
       ('public.help_requests',        'student_id'),
+      ('public.graduation_scenarios', 'user_id'),
+      ('public.advisor_shares',       'student_id'),
+      ('public.advisor_shares',       'advisor_id'),
       ('public.family_invites',       'student_id')
     ) as x(rel, col)
   loop
