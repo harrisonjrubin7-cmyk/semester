@@ -74,6 +74,19 @@ begin
          ('ih-u', 'term', 't-live', live, 'SIS', 'g3', 'Registrar', null),
          ('ih-u', 'term', 't-held', held, 'LMS', 'g4', 'LMS', now() - interval '40 days');
 
+  -- The worker is the service role, and the rows it writes take a public id
+  -- from a default. Codex found on #779 that the default's function was
+  -- executable only by `authenticated`, so every worker run failed opening.
+  execute 'set local role service_role';
+  insert into public.integration_sync_runs (tenant_id, connection_id, trigger_type, sync_mode)
+  values ('ih-u', live, 'scheduled', 'batch');
+  insert into public.source_records (tenant_id, connection_id, source_type, source_name, source_of_truth)
+  values ('ih-u', live, 'connected_institutional', 'Worker feed', 'Registrar');
+  execute 'reset role';
+  raise notice 'ok  the service role opens a run and records a source';
+  delete from public.integration_sync_runs where connection_id = live and completed_at is null;
+  delete from public.source_records where source_name = 'Worker feed';
+
   -- Who may call ------------------------------------------------------------
   perform pg_temp.counted('a signed-in account can run the sweep',
     has_function_privilege('authenticated', 'public.integration_retention_sweep()', 'execute')::int, 0);
