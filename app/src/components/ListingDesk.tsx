@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Notice, SectionLabel } from './ui';
 import { cloud } from '../lib/cloud';
 import { useMyCapabilities } from '../lib/capabilities';
-import { LISTING_KINDS, eligibilityLines, type ListingKind } from '../lib/listings';
+import { LISTING_KINDS, QUEUE_LIMIT, deadlineForStorage, deadlineLabel, eligibilityLines, loadReviewQueue, type ListingKind, type QueuedListing } from '../lib/listings';
 
 /**
  * The staff side of verified listings: publishers draft and submit, moderators
@@ -15,23 +15,27 @@ import { LISTING_KINDS, eligibilityLines, type ListingKind } from '../lib/listin
  * no way to, and the PR asks whether the policy should be narrowed to match.
  */
 
-interface Row { id: string; kind: string; title: string; status: string; url: string | null; publisher_scope_id: string; eligibility: unknown }
+type Row = QueuedListing;
 
 export function ListingDesk({ school }: { school: string }) {
   const grants = useMyCapabilities();
   const publishScopes = grants.filter((g) => g.capability === 'opportunity:publish');
   const moderates = grants.some((g) => g.capability === 'opportunity:moderate');
   const [rows, setRows] = useState<Row[]>([]);
+  const [more, setMore] = useState(false);
   const [notice, setNotice] = useState('');
   const [draft, setDraft] = useState({ kind: 'job' as ListingKind, title: '', body: '', url: '', deadline: '', eligibility: '', scope: '' });
 
   const refresh = useCallback(async () => {
-    if (!publishScopes.length && !moderates) return;
-    const { data } = await (await cloud()).from('opportunities')
-      .select('id, kind, title, status, url, publisher_scope_id, eligibility')
-      .in('status', ['draft', 'pending_review', 'published']).order('created_at', { ascending: false }).limit(100);
-    setRows((data ?? []) as Row[]);
-  }, [publishScopes.length, moderates]);
+    if (!moderates) return;
+    try {
+      const q = await loadReviewQueue();
+      setRows(q.rows);
+      setMore(q.more);
+    } catch (e) {
+      setNotice(e instanceof Error ? e.message : 'Could not load the review queue.');
+    }
+  }, [moderates]);
 
   // An account-backed resource, not render-derived state.
   // oxlint-disable-next-line react/set-state-in-effect
@@ -53,7 +57,7 @@ export function ListingDesk({ school }: { school: string }) {
       const { data: user } = await db.auth.getUser();
       return db.from('opportunities').insert({
         kind: draft.kind, title: draft.title.trim(), body: draft.body.trim(), url: draft.url.trim() || null,
-        deadline: draft.deadline || null, eligibility: draft.eligibility.trim() ? { text: draft.eligibility.trim() } : {},
+        deadline: deadlineForStorage(draft.deadline), eligibility: draft.eligibility.trim() ? { text: draft.eligibility.trim() } : {},
         publisher_id: user.user?.id, publisher_scope_kind: scope.scopeKind, publisher_scope_id: scope.scopeId,
         tenant_id: school || null, status: 'pending_review',
       });
@@ -63,7 +67,7 @@ export function ListingDesk({ school }: { school: string }) {
   const setStatus = (id: string, status: 'published' | 'removed') =>
     act(async () => (await cloud()).from('opportunities').update({ status }).eq('id', id));
 
-  const pending = rows.filter((r) => r.status === 'pending_review');
+  const pending = rows;
 
   return (
     <section className="jx-card" aria-labelledby="listing-desk-heading">
@@ -75,10 +79,12 @@ export function ListingDesk({ school }: { school: string }) {
         <>
           <SectionLabel>Waiting for review ({pending.length})</SectionLabel>
           {!pending.length ? <p className="jx-muted">Nothing waiting.</p> : null}
+          {more ? <p className="jx-muted">More than {QUEUE_LIMIT} are waiting; the oldest are shown first.</p> : null}
           {pending.map((r) => (
             <div key={r.id} className="jx-entry">
               <div className="jx-entry-title">{r.title}</div>
-              <div className="jx-entry-what">{r.kind} · from {r.publisher_scope_id}{r.url ? ` · ${r.url}` : ''}</div>
+              <div className="jx-entry-what">{r.kind} · from {r.publisher_scope_id}{r.url ? ` · ${r.url}` : ''}{r.deadline ? ` · apply by ${deadlineLabel(r.deadline)}` : ' · no deadline'}</div>
+              {r.body ? <div className="jx-entry-what">{r.body}</div> : <div className="jx-muted">No description.</div>}
               {eligibilityLines(r.eligibility).map((e) => <div key={e} className="jx-privacy">{e}</div>)}
               <div className="jx-actions">
                 <button type="button" className="jx-go" onClick={() => setStatus(r.id, 'published')}>Publish</button>

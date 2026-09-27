@@ -141,7 +141,7 @@ function List({ lib, onAdd, onOpen, onTrack }: { lib: OpportunityLibrary; onAdd:
         <MentorFinder kind="alumni" interests={[]} fallback={null} />
       ) : null}
 
-      <VerifiedListings onTrack={onTrack} tracked={lib.items.map((o) => o.source).filter(Boolean)} />
+      <VerifiedListings onTrack={onTrack} tracked={lib.items.flatMap((o) => [o.id, o.source]).filter(Boolean)} />
 
       <SectionLabel>Add</SectionLabel>
       <div className="jx-chips">

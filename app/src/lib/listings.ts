@@ -134,13 +134,42 @@ const TRACK_KIND: Record<ListingKind, Kind> = {
   program: 'experience',
 };
 
+/**
+ * The tracker entry's id for a listing, so the Tracker can tell it already has
+ * one whether or not the listing has a link.
+ */
+export const trackId = (l: Listing): string => `listing:${l.id}`.slice(0, 80);
+
+/** A deadline as a calendar date: a bare date as written, an instant in local time. */
+export function deadlineDay(deadline: string): string {
+  return DATE_ONLY.test(deadline) ? deadline : dateToIso(new Date(deadline));
+}
+
+/** A deadline to show. A bare date is never parsed as UTC midnight. */
+export function deadlineLabel(deadline: string): string {
+  return isoToDate(deadlineDay(deadline)).toLocaleDateString();
+}
+
+/**
+ * A date picked in the desk, as the instant it ends. `deadline` is a
+ * timestamptz, and a bare date stored there becomes UTC midnight — the start
+ * of the day, and the evening before for anyone west of Greenwich. The end of
+ * the day where the office picked it is the deadline the office meant.
+ */
+export function deadlineForStorage(day: string): string | null {
+  if (!DATE_ONLY.test(day)) return null;
+  const [y, m, d] = day.split('-').map(Number);
+  return new Date(y, m - 1, d, 23, 59, 59).toISOString();
+}
+
 /** A tracker entry for a listing: its title, who, deadline, and the listing's URL as the source. */
 export function trackerEntry(l: Listing): Opportunity {
   return {
     ...newOpportunity(TRACK_KIND[l.kind]),
+    id: trackId(l),
     title: l.title.slice(0, 160),
     org: l.from.slice(0, 160),
-    deadline: l.deadline && /^\d{4}-\d{2}-\d{2}/.test(l.deadline) ? l.deadline.slice(0, 10) : '',
+    deadline: l.deadline && Number.isFinite(Date.parse(l.deadline)) ? deadlineDay(l.deadline) : '',
     source: l.url ?? '',
   };
 }
@@ -165,4 +194,32 @@ export async function loadModerated(): Promise<Listing[]> {
     .limit(200);
   if (error) return [];
   return (data ?? []).map(readModerated).filter((l): l is Listing => l !== null);
+}
+
+/** A listing waiting for a moderator, with everything a student will see. */
+export interface QueuedListing {
+  id: string; kind: string; title: string; body: string; deadline: string | null;
+  status: string; url: string | null; publisher_scope_id: string; eligibility: unknown;
+}
+
+/** How many waiting listings one load holds. One more is asked for, to know if there are more. */
+export const QUEUE_LIMIT = 200;
+/** Everything a student will see, so a moderator reviews all of it before publishing. */
+export const QUEUE_COLUMNS = 'id, kind, title, body, deadline, status, url, publisher_scope_id, eligibility';
+
+/**
+ * The moderator's queue: only what is waiting, oldest first. Filtering after a
+ * cap let newer drafts and published rows push an older submission out of the
+ * only place it can be published or removed.
+ */
+export async function loadReviewQueue(client?: Awaited<ReturnType<typeof cloud>>): Promise<{ rows: QueuedListing[]; more: boolean }> {
+  const db = client ?? (await cloud());
+  const { data, error } = await db.from('opportunities')
+    .select(QUEUE_COLUMNS)
+    .eq('status', 'pending_review')
+    .order('created_at', { ascending: true })
+    .limit(QUEUE_LIMIT + 1);
+  if (error) throw new Error(error.message);
+  const got = (data ?? []) as unknown as QueuedListing[];
+  return { rows: got.slice(0, QUEUE_LIMIT), more: got.length > QUEUE_LIMIT };
 }

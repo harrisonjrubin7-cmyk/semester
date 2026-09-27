@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { SectionLabel } from './ui';
 import { SourceBadge } from './SourceBadge';
 import { useSchoolRecords } from '../lib/school-records-hook';
-import { LISTING_KINDS, arrange, fromCareerFeed, loadModerated, trackerEntry, type Listing, type ListingKind } from '../lib/listings';
+import { LISTING_KINDS, arrange, deadlineLabel, fromCareerFeed, loadModerated, trackId, trackerEntry, type Listing, type ListingKind } from '../lib/listings';
 import type { Opportunity } from '../lib/opportunities';
 
 /**
@@ -11,6 +11,7 @@ import type { Opportunity } from '../lib/opportunities';
  * tracker as before. "Track this" copies a listing into the student's own
  * tracker with the listing's link as its source; nothing is sent anywhere.
  */
+/** `tracked` holds the Tracker's entry ids and sources, so a listing is known whether or not it has a link. */
 export function VerifiedListings({ onTrack, tracked }: { onTrack: (o: Opportunity) => void; tracked: readonly string[] }) {
   const [moderated, setModerated] = useState<Listing[]>([]);
   const [kind, setKind] = useState<ListingKind | 'all'>('all');
@@ -41,7 +42,7 @@ export function VerifiedListings({ onTrack, tracked }: { onTrack: (o: Opportunit
         ))}
       </div>
       {shown.map((l) => {
-        const isTracked = !!l.url && tracked.includes(l.url);
+        const isTracked = tracked.includes(trackId(l)) || (!!l.url && tracked.includes(l.url));
         return (
           <article key={l.id} className="jx-entry">
             <div className="jx-entry-head">
@@ -49,7 +50,7 @@ export function VerifiedListings({ onTrack, tracked }: { onTrack: (o: Opportunit
               <span className="jx-tag">{LISTING_KINDS.find((k) => k.id === l.kind)!.label.replace(/s$/, '')}</span>
             </div>
             <div className="jx-entry-what">
-              {[l.from, l.deadline && `apply by ${new Date(l.deadline).toLocaleDateString()}`].filter(Boolean).join(' · ')}
+              {[l.from, l.deadline && `apply by ${deadlineLabel(l.deadline)}`].filter(Boolean).join(' · ')}
             </div>
             <SourceBadge label={l.source === 'career_feed' ? 'imported' : 'institution_verified'} />
             {l.body ? <div className="jx-entry-what">{l.body}</div> : null}
