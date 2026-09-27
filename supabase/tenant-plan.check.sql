@@ -114,22 +114,22 @@ begin
   raise notice 'ok  a pilot must end, and a plan cannot end before it starts';
 
   -- The launch's facts report the plan, and null when none is recorded.
-  select * into r from public.lti_launch_entitlement_facts('north-plan');
+  select * into r from public.lti_launch_entitlement_facts('north-plan', 'https://lms.test.edu', 'sub-none');
   perform pg_temp.answered('the facts report the recorded plan status', r.plan_status, 'active');
   perform pg_temp.answered('and its end date', (r.plan_ends_at is not null)::text, 'true');
-  select * into r from public.lti_launch_entitlement_facts('south-plan');
+  select * into r from public.lti_launch_entitlement_facts('south-plan', 'https://lms.test.edu', 'sub-none');
   perform pg_temp.answered('no plan recorded reads as null, not as ended', coalesce(r.plan_status, 'null'), 'null');
 
   set local role service_role;
   update public.tenant_plan set status = 'suspended', reason = 'unpaid' where tenant_id = 'north-plan';
   reset role;
-  select * into r from public.lti_launch_entitlement_facts('north-plan');
+  select * into r from public.lti_launch_entitlement_facts('north-plan', 'https://lms.test.edu', 'sub-none');
   perform pg_temp.answered('a suspension is read at once', r.plan_status, 'suspended');
   select count(*) into n from public.tenant_plan_history where tenant_id = 'north-plan';
   perform pg_temp.counted('and kept as a second history row', n, 2);
 
-  if has_function_privilege('anon', 'public.lti_launch_entitlement_facts(text)', 'execute')
-     or has_function_privilege('authenticated', 'public.lti_launch_entitlement_facts(text)', 'execute') then
+  if has_function_privilege('anon', 'public.lti_launch_entitlement_facts(text, text, text)', 'execute')
+     or has_function_privilege('authenticated', 'public.lti_launch_entitlement_facts(text, text, text)', 'execute') then
     raise exception 'FAILED: the entitlement facts are callable from the API';
   end if;
   raise notice 'ok  the entitlement facts are callable by the service role only';

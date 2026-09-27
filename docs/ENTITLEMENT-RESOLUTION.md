@@ -1,7 +1,8 @@
 # Entitlement resolution
 
-Status: **BUILT; RUNS IN SHADOW ON LTI LAUNCHES; ENFORCES NOTHING.** Four
-steps are sourced on a launch: kill-switch, tenant-plan, module and lifecycle. The order
+Status: **BUILT; RUNS IN SHADOW ON LTI LAUNCHES; ENFORCES NOTHING.** Five
+steps are sourced on a launch: kill-switch, tenant-plan, module, sso-policy
+and lifecycle. The order
 is `supabase/functions/_shared/entitlement.ts`: one copy, kept where a Deno
 edge function can deploy it. Its tests are `app/src/lib/entitlement.test.ts`,
 beside the other `_shared` rules' tests. It is not re-exported from
@@ -67,6 +68,24 @@ arbitrary:
 `supabase/tenant-plan.check.sql` proves each of those. With an administrator
 write policy added, its "cannot extend their own plan" check fails.
 
+## Where the SSO requirement comes from
+
+`public.tenant_sso_policy` holds one row per school
+(`20260928011845_tenant_sso_policy.sql`). Unlike a plan, it is the school's own
+security decision:
+
+- **A school's administrators set it.** Anyone holding `tenant:configure` in
+  that school can set it, and nobody can set another school's.
+- **The editor can't be faked.** A trigger stamps `updated_by` from
+  `auth.uid()`, so a row cannot name someone else as the editor.
+- **It's never deleted.** Turning the requirement off is a change, and every
+  change is copied to `tenant_sso_policy_history`, which cannot be edited or
+  deleted.
+- **No row means not required.** That is a true answer, not a missing one.
+
+`supabase/tenant-sso-policy.check.sql` proves each of those. Removing the stamp
+trigger, or opening inserts to any user, each makes it fail.
+
 ## To wire it
 
 Tables for personal and sponsored grants and usage counters (tenant plans now
@@ -80,7 +99,7 @@ Every LTI launch evaluates the order and logs what it would decide. It refuses
 nothing new (`_shared/ltientitlement.ts`):
 
 ```text
-lti entitlement (shadow): would refuse at module; unsourced=environment,sso-policy,…
+lti entitlement (shadow): would refuse at module; unsourced=environment,capability,…
 ```
 
 Shadow, because the LTI module flag `integration.lms_lti` defaults to `off`.
@@ -93,6 +112,7 @@ turning it on.
 | kill-switch | `kill.integration_sync`, platform-wide or the school's (`lti_launch_entitlement_facts`) |
 | tenant-plan | `tenant_plan`: refuses when `suspended` or `ended`, or when `ends_at` has passed; `trial` and `active` pass. **A school with no plan row** passes and is named in `unsourced=` for that launch, because no plan recorded is not a plan ended |
 | module | `feature_state('integration.lms_lti', school)`: anything but `off` is on |
+| sso-policy | `tenant_sso_policy.require_sso` (no row: not required), and whether the account the launch opens is a campus-SSO account (provider `sso:…`, the marker `auth.ts` trusts). An `lti.invalid` account, or a personal account someone linked, is not |
 | lifecycle | the membership join: `joined` is active, `membership-<status>` is that status, anything else is no membership |
 | every other step | **unsourced**: given a passing value and named in the log's `unsourced=` list |
 

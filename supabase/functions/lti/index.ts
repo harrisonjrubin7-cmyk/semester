@@ -770,7 +770,11 @@ Deno.serve(async (req) => {
      * logged and changes nothing about the launch.
      */
     const facts = join.tenantId
-      ? await client.rpc('lti_launch_entitlement_facts', { want_tenant: join.tenantId })
+      ? await client.rpc('lti_launch_entitlement_facts', {
+          want_tenant: join.tenantId,
+          want_issuer: who.issuer,
+          want_subject: who.subject,
+        })
       : { data: null, error: null };
     console.log(entitlementLogLine(launchEntitlement(join, readFacts(facts.data, facts.error), new Date())));
     const session = sessionDecision(join);

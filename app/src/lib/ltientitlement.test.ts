@@ -16,7 +16,7 @@ import { membershipJoin } from '../../../supabase/functions/_shared/ltimembershi
 const now = new Date('2026-09-27T20:00:00Z');
 const joined = membershipJoin([{ outcome: 'joined', tenant_id: 'north', membership_id: 'm-1', roles: ['student'] }], null);
 const plan = { status: 'active' as const, endsAt: '2027-06-30T00:00:00Z' };
-const on = { killSwitched: false, moduleState: 'production', plan };
+const on = { killSwitched: false, moduleState: 'production', plan, requireSso: false, accountSso: false };
 
 describe('the LTI launch entitlement, in shadow', () => {
   it('would allow a joined launch at a school with LTI on and no switch thrown', () => {
@@ -24,10 +24,11 @@ describe('the LTI launch entitlement, in shadow', () => {
   });
 
   it.each([
-    ['kill-switch', joined, { killSwitched: true, moduleState: 'production', plan }],
+    ['kill-switch', joined, { ...on, killSwitched: true }],
+    ['sso-policy', joined, { ...on, requireSso: true, accountSso: false }],
     ['tenant-plan', joined, { ...on, plan: { status: 'suspended' as const } }],
     ['tenant-plan', joined, { ...on, plan: { status: 'active' as const, endsAt: '2026-09-01T00:00:00Z' } }],
-    ['module', joined, { killSwitched: false, moduleState: 'off', plan }],
+    ['module', joined, { ...on, moduleState: 'off' }],
     ['lifecycle', membershipJoin([{ outcome: 'membership-suspended', tenant_id: 'north' }], null), on],
     ['lifecycle', membershipJoin([{ outcome: 'no-membership', tenant_id: 'north' }], null), on],
   ] as const)('would refuse at %s', (step, join, facts) => {
@@ -38,13 +39,13 @@ describe('the LTI launch entitlement, in shadow', () => {
   // same way for everyone, before anything about the person is read.
   it('reports the earliest step, as the order does', () => {
     const suspended = membershipJoin([{ outcome: 'membership-suspended', tenant_id: 'north' }], null);
-    expect(launchEntitlement(suspended, { killSwitched: false, moduleState: 'off', plan }, now))
+    expect(launchEntitlement(suspended, { ...on, moduleState: 'off' }, now))
       .toMatchObject({ verdict: { step: 'module' } });
   });
 
   it('treats preview and sandbox as the module being on, and only off as off', () => {
     for (const moduleState of ['preview', 'sandbox']) {
-      expect(launchEntitlement(joined, { killSwitched: false, moduleState, plan }, now))
+      expect(launchEntitlement(joined, { ...on, moduleState }, now))
         .toMatchObject({ verdict: { allowed: true } });
     }
   });
@@ -62,13 +63,14 @@ describe('the LTI launch entitlement, in shadow', () => {
 });
 
 describe('the shadow log', () => {
-  // The four sourced steps are the only ones a pass can mean anything for.
+  // The five sourced steps are the only ones a pass can mean anything for.
   it('names every step it did not check, and no step it did', () => {
     const sourced = ENTITLEMENT_STEPS.filter((s) => !(UNSOURCED_STEPS as readonly string[]).includes(s));
-    expect(sourced).toEqual(['kill-switch', 'tenant-plan', 'module', 'lifecycle']);
+    expect(sourced).toEqual(['kill-switch', 'tenant-plan', 'module', 'sso-policy', 'lifecycle']);
     const line = entitlementLogLine(launchEntitlement(joined, on, now));
     for (const step of UNSOURCED_STEPS) expect(line).toContain(step);
     expect(line).not.toContain('tenant-plan');
+    expect(line).not.toContain('sso-policy');
     expect(line).toMatch(/^lti entitlement \(shadow\): would allow; unsourced=/);
   });
 
@@ -80,13 +82,22 @@ describe('the shadow log', () => {
     expect(entitlementLogLine(result)).toMatch(/unsourced=tenant-plan,/);
   });
 
+  // A school that requires SSO lets a campus-SSO account through, and one
+  // that requires nothing lets anyone through.
+  it('passes sso-policy for a campus-SSO account, or when the school requires nothing', () => {
+    expect(launchEntitlement(joined, { ...on, requireSso: true, accountSso: true }, now))
+      .toMatchObject({ verdict: { allowed: true } });
+    expect(launchEntitlement(joined, { ...on, requireSso: false, accountSso: false }, now))
+      .toMatchObject({ verdict: { allowed: true } });
+  });
+
   it('lets a trial plan through, as the order does', () => {
     expect(launchEntitlement(joined, { ...on, plan: { status: 'trial' } }, now))
       .toMatchObject({ verdict: { allowed: true } });
   });
 
   it('says where it would refuse, and why it did not evaluate', () => {
-    expect(entitlementLogLine(launchEntitlement(joined, { killSwitched: false, moduleState: 'off', plan }, now)))
+    expect(entitlementLogLine(launchEntitlement(joined, { ...on, moduleState: 'off' }, now)))
       .toMatch(/^lti entitlement \(shadow\): would refuse at module; unsourced=/);
     expect(entitlementLogLine({ evaluated: false, why: 'unbound' }))
       .toBe('lti entitlement (shadow): not evaluated — unbound');
@@ -95,17 +106,22 @@ describe('the shadow log', () => {
 
 describe('reading the facts row', () => {
   it('reads a well-formed row, as the RPC returns it', () => {
-    expect(readFacts([{ kill_switched: false, module_state: 'off', plan_status: 'active', plan_ends_at: '2027-06-30T00:00:00+00:00' }], null))
-      .toEqual({ killSwitched: false, moduleState: 'off', plan: { status: 'active', endsAt: '2027-06-30T00:00:00+00:00' } });
-    expect(readFacts([{ kill_switched: false, module_state: 'off', plan_status: 'active', plan_ends_at: null }], null))
-      .toEqual({ killSwitched: false, moduleState: 'off', plan: { status: 'active' } });
+    expect(readFacts([{ kill_switched: false, module_state: 'off', plan_status: 'active', plan_ends_at: '2027-06-30T00:00:00+00:00', require_sso: true, account_sso: false }], null))
+      .toEqual({ killSwitched: false, moduleState: 'off', plan: { status: 'active', endsAt: '2027-06-30T00:00:00+00:00' }, requireSso: true, accountSso: false });
+    expect(readFacts([{ kill_switched: false, module_state: 'off', plan_status: 'active', plan_ends_at: null, require_sso: false, account_sso: true }], null))
+      .toEqual({ killSwitched: false, moduleState: 'off', plan: { status: 'active' }, requireSso: false, accountSso: true });
   });
 
-  it('reads no plan, or a database that predates tenant_plan, as no plan recorded', () => {
-    expect(readFacts([{ kill_switched: false, module_state: 'off', plan_status: null, plan_ends_at: null }], null))
-      .toEqual({ killSwitched: false, moduleState: 'off', plan: null });
-    expect(readFacts([{ kill_switched: false, module_state: 'off' }], null))
-      .toEqual({ killSwitched: false, moduleState: 'off', plan: null });
+  it('reads no plan row as no plan recorded', () => {
+    expect(readFacts([{ kill_switched: false, module_state: 'off', plan_status: null, plan_ends_at: null, require_sso: false, account_sso: false }], null))
+      .toEqual({ killSwitched: false, moduleState: 'off', plan: null, requireSso: false, accountSso: false });
+  });
+
+  // The function always returns both SSO fields, so a row without them is
+  // not one it returned: not trusted, rather than read as "not required".
+  it('does not trust a row missing the SSO fields', () => {
+    expect(readFacts([{ kill_switched: false, module_state: 'off', plan_status: null, plan_ends_at: null }], null)).toBeNull();
+    expect(readFacts([{ kill_switched: false, module_state: 'off', plan_status: null, plan_ends_at: null, require_sso: 'yes', account_sso: false }], null)).toBeNull();
   });
 
   it.each([

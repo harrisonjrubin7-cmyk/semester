@@ -110,7 +110,7 @@ begin
   -- ── The facts the shadow entitlement check reads ──────────────────────
   -- The control first: a school with nothing set reads as not switched off
   -- and module off, which is what an unconfigured school is.
-  select * into r from public.lti_launch_entitlement_facts('north-lti');
+  select * into r from public.lti_launch_entitlement_facts('north-lti', 'https://lms.test.edu', 'sub-none');
   perform pg_temp.answered('an unconfigured school: no kill switch', r.kill_switched::text, 'false');
   perform pg_temp.answered('an unconfigured school: module off', r.module_state, 'off');
 
@@ -118,16 +118,16 @@ begin
   values ('north-lti', 'integration.lms_lti', 'production');
   insert into public.feature_kill_switch (tenant_id, switch_key, engaged, reason, engaged_at)
   values ('north-lti', 'kill.integration_sync', true, 'check', now());
-  select * into r from public.lti_launch_entitlement_facts('north-lti');
+  select * into r from public.lti_launch_entitlement_facts('north-lti', 'https://lms.test.edu', 'sub-none');
   perform pg_temp.answered('the school''s LTI module state is read', r.module_state, 'production');
   perform pg_temp.answered('the school''s own kill switch is read', r.kill_switched::text, 'true');
 
   -- Another school's switch is not this school's.
-  select * into r from public.lti_launch_entitlement_facts('south-lti');
+  select * into r from public.lti_launch_entitlement_facts('south-lti', 'https://lms.test.edu', 'sub-none');
   perform pg_temp.answered('another school''s kill switch does not reach it', r.kill_switched::text, 'false');
 
-  if has_function_privilege('anon', 'public.lti_launch_entitlement_facts(text)', 'execute')
-     or has_function_privilege('authenticated', 'public.lti_launch_entitlement_facts(text)', 'execute') then
+  if has_function_privilege('anon', 'public.lti_launch_entitlement_facts(text, text, text)', 'execute')
+     or has_function_privilege('authenticated', 'public.lti_launch_entitlement_facts(text, text, text)', 'execute') then
     raise exception 'FAILED: the entitlement facts are callable from the API';
   end if;
   raise notice 'ok  the entitlement facts are callable by the service role only';

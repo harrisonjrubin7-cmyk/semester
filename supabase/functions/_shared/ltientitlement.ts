@@ -2,15 +2,17 @@
  * The entitlement order, run on an LTI launch in shadow: evaluated, logged,
  * never enforced.
  *
- * `entitlement.ts` decides in twelve steps. On a launch, four have a source:
+ * `entitlement.ts` decides in twelve steps. On a launch, five have a source:
  *
  *   kill-switch   `kill.integration_sync` (lti_launch_entitlement_facts)
  *   tenant-plan   `tenant_plan` (the same function); unsourced for a school
  *                 with no plan row, which is "not recorded", not "ended"
  *   module        `integration.lms_lti` feature state (the same function)
+ *   sso-policy    `tenant_sso_policy` (no row: not required), and whether the
+ *                 launch's account is a campus-SSO one (the same function)
  *   lifecycle     the membership join (`ltimembership.ts`)
  *
- * The other eight have nothing to read yet: no SSO-required policy, no course scope, no data tier, no personal grant, no usage counter,
+ * The other seven have nothing to read yet: no course scope, no data tier, no personal grant, no usage counter,
  * and no service-side capability lookup. They are given the values that pass,
  * and **named in the log as unsourced**, so a pass through one of them reads
  * as "not checked", never as "checked and allowed". A shadow log that hid
@@ -33,7 +35,7 @@ export const LTI_MODULE = 'integration.lms_lti';
  * only when that school has no plan row (see `launchEntitlement`).
  */
 export const UNSOURCED_STEPS = [
-  'environment', 'sso-policy', 'capability', 'course-scope',
+  'environment', 'capability', 'course-scope',
   'course-policy', 'data-classification', 'individual-plan', 'usage-allowance',
 ] as const;
 
@@ -44,6 +46,10 @@ export interface LaunchFacts {
   moduleState: string;
   /** The school's recorded plan, or null when it has none. */
   plan: { status: PlanStatus; endsAt?: string } | null;
+  /** Whether the school requires campus SSO. False when it has set nothing. */
+  requireSso: boolean;
+  /** Whether the account this launch opens is a campus-SSO account. */
+  accountSso: boolean;
 }
 
 export type LaunchEntitlement =
@@ -60,13 +66,16 @@ export function readFacts(data: unknown, error: { message?: string } | null): La
   if (!row || typeof row !== 'object') return null;
   const r = row as Record<string, unknown>;
   if (typeof r.kill_switched !== 'boolean' || typeof r.module_state !== 'string' || !STATES.has(r.module_state)) return null;
+  // Both always come back from the function; a row without them is not one it
+  // returned, so it is not trusted rather than read as "not required".
+  if (typeof r.require_sso !== 'boolean' || typeof r.account_sso !== 'boolean') return null;
+  const sso = { requireSso: r.require_sso, accountSso: r.account_sso };
 
-  // No plan: null, or absent from a database that predates tenant_plan. Both
-  // mean nothing is recorded, not that a plan ended.
+  // No plan row: null, meaning nothing is recorded, not that a plan ended.
   const status = r.plan_status ?? null;
   const ends = r.plan_ends_at ?? null;
   if (status === null) {
-    return ends === null ? { killSwitched: r.kill_switched, moduleState: r.module_state, plan: null } : null;
+    return ends === null ? { killSwitched: r.kill_switched, moduleState: r.module_state, plan: null, ...sso } : null;
   }
   if (typeof status !== 'string' || !PLAN_STATUSES.has(status)) return null;
   if (ends !== null && (typeof ends !== 'string' || !Number.isFinite(Date.parse(ends)))) return null;
@@ -74,6 +83,7 @@ export function readFacts(data: unknown, error: { message?: string } | null): La
     killSwitched: r.kill_switched,
     moduleState: r.module_state,
     plan: { status: status as PlanStatus, ...(ends === null ? {} : { endsAt: ends }) },
+    ...sso,
   };
 }
 
@@ -110,9 +120,9 @@ export function launchEntitlement(join: MembershipJoin, facts: LaunchFacts | nul
       planStatus: facts.plan?.status ?? 'active',
       ...(facts.plan?.endsAt ? { planEndsAt: facts.plan.endsAt } : {}),
       modules: facts.moduleState === 'off' ? [] : [LTI_MODULE],
-      requireSso: false, // unsourced
+      requireSso: facts.requireSso,
     },
-    session: { viaInstitutionSso: false },
+    session: { viaInstitutionSso: facts.accountSso },
     membership: join.joined ? { status: 'active' } : inactiveStatus(join.outcome),
     // Unsourced: no service-side capability lookup; required is what is held.
     capabilities: ['lti:launch'],
