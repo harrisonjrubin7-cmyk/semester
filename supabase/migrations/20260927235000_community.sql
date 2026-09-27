@@ -1631,6 +1631,168 @@ end $$;
 revoke all on function public.claim_community_alias(uuid, text) from public, anon, authenticated;
 grant execute on function public.claim_community_alias(uuid, text) to authenticated;
 
+-- ── 12a. Who is behind an alias: just-in-time, for one case ──────────────
+--
+-- The alias disclosure promises students that Semester still knows who they
+-- are and that trained Trust & Safety staff can check during a safety
+-- investigation. This is the check, and it is the rules in identity.ts
+-- (viewIdentity, JitGrant) enforced where a client cannot skip them:
+--
+--   * only for a post made under an alias, on a case that is open or
+--     appealed — a named post already shows who wrote it;
+--   * one reviewer asks, for themselves, with a written reason; a different
+--     reviewer approves or refuses with their own — compared by hash;
+--   * an approved grant is good for JIT_HOURS (identity.ts) for that reviewer
+--     on that case, and nothing else;
+--   * every look is a case event, as are the request and the decision.
+--
+-- What it shows: the account's handle at its school, an opaque vault reference
+-- that is stable per account and means nothing outside Semester, and the
+-- account's other cases (category, severity, status, whether under an alias).
+-- Never an email, a legal name or an account id.
+
+create table if not exists public.community_identity_grants (
+  id                  uuid        primary key default gen_random_uuid(),
+  case_id             uuid        not null references public.community_cases(id) on delete cascade,
+  status              text        not null default 'requested' check (status in ('requested', 'approved', 'refused')),
+  grantee_sha256      text        not null check (grantee_sha256 ~ '^[0-9a-f]{64}$'),
+  requested_reason    text        not null check (length(trim(requested_reason)) between 10 and 500),
+  requested_at        timestamptz not null default now(),
+  decided_by_sha256   text        check (decided_by_sha256 is null or decided_by_sha256 ~ '^[0-9a-f]{64}$'),
+  decided_reason      text        check (decided_reason is null or length(trim(decided_reason)) between 10 and 500),
+  decided_at          timestamptz,
+  expires_at          timestamptz
+);
+create unique index if not exists community_identity_grants_one_live
+  on public.community_identity_grants (case_id, grantee_sha256) where status = 'requested';
+create index if not exists community_identity_grants_by_case on public.community_identity_grants (case_id);
+alter table public.community_identity_grants enable row level security;
+revoke all on table public.community_identity_grants from anon, authenticated;
+grant select on table public.community_identity_grants to authenticated;
+drop policy if exists "reviewers see identity grants" on public.community_identity_grants;
+create policy "reviewers see identity grants" on public.community_identity_grants
+  for select to authenticated using (private.has_capability('community:review'));
+
+create or replace function public.request_alias_identity(want_case uuid, want_reason text)
+returns uuid
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  k public.community_cases;
+  me_hash text := private.role_audit_sha256((select auth.uid())::text);
+  alias_post boolean;
+  gid uuid;
+begin
+  if not private.has_capability('community:review') then
+    raise exception 'only Trust & Safety reviewers ask who is behind an alias' using errcode = '42501';
+  end if;
+  select * into k from public.community_cases where id = want_case;
+  if k.id is null or k.status not in ('open', 'appealed') then
+    raise exception 'only an open or appealed case' using errcode = '22023';
+  end if;
+  select p.as_alias into alias_post from public.community_posts p where p.id = k.post_id;
+  if not coalesce(alias_post, false) then
+    raise exception 'this post was not made under an alias' using errcode = '22023';
+  end if;
+  if coalesce(length(trim(want_reason)), 0) < 10 then
+    raise exception 'write down why the investigation needs it' using errcode = '22023';
+  end if;
+  if exists (select 1 from public.community_identity_grants g
+              where g.case_id = k.id and g.grantee_sha256 = me_hash
+                and (g.status = 'requested' or (g.status = 'approved' and g.expires_at > now()))) then
+    raise exception 'you already have a request or a grant for this case' using errcode = '22023';
+  end if;
+  insert into public.community_identity_grants (case_id, grantee_sha256, requested_reason)
+  values (k.id, me_hash, left(trim(want_reason), 500))
+  returning id into gid;
+  perform private.community_case_event(k.id,
+    case when private.has_capability('community:review_senior') then 'senior_reviewer' else 'reviewer' end,
+    'identity_requested', 'identity', k.status, k.status);
+  return gid;
+end $$;
+revoke all on function public.request_alias_identity(uuid, text) from public, anon, authenticated;
+grant execute on function public.request_alias_identity(uuid, text) to authenticated;
+
+create or replace function public.decide_alias_identity(want_grant uuid, want_approve boolean, want_reason text)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  g public.community_identity_grants;
+  k public.community_cases;
+  me_hash text := private.role_audit_sha256((select auth.uid())::text);
+begin
+  if not private.has_capability('community:review') then
+    raise exception 'only Trust & Safety reviewers decide these' using errcode = '42501';
+  end if;
+  select * into g from public.community_identity_grants where id = want_grant for update;
+  if g.id is null or g.status <> 'requested' then
+    raise exception 'no request is waiting' using errcode = '22023';
+  end if;
+  if g.grantee_sha256 = me_hash then
+    raise exception 'a second, different reviewer must decide' using errcode = '42501';
+  end if;
+  if coalesce(length(trim(want_reason)), 0) < 10 then
+    raise exception 'write the reason out' using errcode = '22023';
+  end if;
+  select * into k from public.community_cases where id = g.case_id;
+  if coalesce(want_approve, false) and k.status not in ('open', 'appealed') then
+    raise exception 'the case is no longer open' using errcode = '22023';
+  end if;
+  update public.community_identity_grants
+     set status = case when coalesce(want_approve, false) then 'approved' else 'refused' end,
+         decided_by_sha256 = me_hash, decided_reason = left(trim(want_reason), 500), decided_at = now(),
+         expires_at = case when coalesce(want_approve, false) then now() + interval '4 hours' end
+   where id = g.id;
+  perform private.community_case_event(k.id,
+    case when private.has_capability('community:review_senior') then 'senior_reviewer' else 'reviewer' end,
+    case when coalesce(want_approve, false) then 'identity_approved' else 'identity_refused' end,
+    'identity', k.status, k.status);
+end $$;
+revoke all on function public.decide_alias_identity(uuid, boolean, text) from public, anon, authenticated;
+grant execute on function public.decide_alias_identity(uuid, boolean, text) to authenticated;
+
+/* The look itself: only the grantee, only while the grant holds, every time logged. */
+create or replace function public.reveal_alias_identity(want_grant uuid)
+returns table (handle text, vault_ref text, other_cases jsonb, expires_at timestamptz)
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  g public.community_identity_grants;
+  k public.community_cases;
+  me_hash text := private.role_audit_sha256((select auth.uid())::text);
+  author uuid;
+begin
+  if not private.has_capability('community:review') then
+    raise exception 'only Trust & Safety reviewers' using errcode = '42501';
+  end if;
+  select * into g from public.community_identity_grants where id = want_grant;
+  if g.id is null or g.status <> 'approved' or g.grantee_sha256 <> me_hash or g.expires_at <= now() then
+    raise exception 'no grant of yours holds for this case' using errcode = '42501';
+  end if;
+  select * into k from public.community_cases where id = g.case_id;
+  select p.author_id into author from public.community_posts p where p.id = k.post_id;
+  perform private.community_case_event(k.id,
+    case when private.has_capability('community:review_senior') then 'senior_reviewer' else 'reviewer' end,
+    'identity_revealed', 'identity', k.status, k.status);
+  return query
+  select coalesce((select pr.handle from public.profiles pr where pr.user_id = author), 'Deleted account'),
+         case when author is null then '' else private.role_audit_sha256('vault:' || author::text) end,
+         coalesce((select jsonb_agg(jsonb_build_object('case_id', c.id, 'category', c.category, 'severity', c.severity,
+                                                       'status', c.status, 'as_alias', p.as_alias) order by c.created_at desc)
+                     from public.community_cases c join public.community_posts p on p.id = c.post_id
+                    where p.author_id = author and c.id <> k.id), '[]'::jsonb),
+         g.expires_at;
+end $$;
+revoke all on function public.reveal_alias_identity(uuid) from public, anon, authenticated;
+grant execute on function public.reveal_alias_identity(uuid) to authenticated;
+
 -- ── 13. Volunteer moderation ──────────────────────────────────────────────
 --
 -- The programme in docs/VOLUNTEER-MODERATOR-PROGRAM.md, as tables. Off at every
@@ -2765,6 +2927,9 @@ grant execute on function public.my_community_standing() to authenticated;
 --     public.mark_escalation_delivered(uuid), public.take_escalation_deliveries(),
 --     public.decide_community_escalation(uuid, boolean, text), public.request_community_escalation(uuid, text),
 --     private.escalation_allowed(public.community_cases);
+--   drop function if exists public.reveal_alias_identity(uuid), public.decide_alias_identity(uuid, boolean, text),
+--     public.request_alias_identity(uuid, text);
+--   drop table if exists public.community_identity_grants;
 --   drop function if exists public.retire_escalation_agreement(text, text),
 --     public.activate_escalation_agreement(text, text),
 --     public.save_escalation_agreement(text, text, text[], boolean, text, text, date),

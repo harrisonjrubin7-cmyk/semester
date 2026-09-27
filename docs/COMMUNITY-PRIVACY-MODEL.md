@@ -35,6 +35,9 @@ allowlist.
   grant must be for this case and this reviewer, approved by someone else,
   carry a written reason, and be unexpired. Every attempt is audited, granted
   or refused.
+- **Behind an alias,** that grant is `request_alias_identity` and
+  `decide_alias_identity` in the database: for one case, one reviewer and four
+  hours. Every look is a case event (`PSEUDONYMITY-POLICY.md`).
 - **Liaisons and admins** have no standing access. Platform administration
   grants no identity access.
 

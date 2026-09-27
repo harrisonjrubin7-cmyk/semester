@@ -377,6 +377,7 @@ describe('"delete my account" really means every row', () => {
       'community_escalation_deliveries',
       'community_escalation_policies',
       'community_escalations',
+      'community_identity_grants',
       'community_programs',
       'community_reports',
       'community_retention_runs',

@@ -11,6 +11,7 @@ import { ALIAS_ELIGIBLE_TYPES, ALIAS_RATE_LIMIT } from './alias';
 import { SUMMARY_MAX } from './crisis';
 import { VOLUNTEER_P2_CATEGORIES } from './moderation';
 import { SEVERITY_DELTA, STANDING_WORDS } from './safety-state';
+import { JIT_HOURS } from './identity';
 import { VOLUNTEER_RULES } from './volunteer';
 
 const sql = readFileSync(new URL('../../../supabase/migrations/20260927235000_community.sql', import.meta.url), 'utf8');
@@ -104,5 +105,15 @@ describe('safety state, in both places', () => {
     const standing = sql.slice(start, sql.indexOf('$$;', sql.indexOf('as $$', start) + 5));
     expect(standing).toContain(`'${STANDING_WORDS.affected}'`);
     expect(standing).toContain(`'${STANDING_WORDS.clear}'`);
+  });
+});
+
+describe('just-in-time identity, in both places', () => {
+  it('a grant lasts as long in the database as identity.ts says', () => {
+    expect(body('public.decide_alias_identity')).toContain(`now() + interval '${JIT_HOURS} hours'`);
+  });
+
+  it('a request needs the same ten characters of reason viewIdentity asks for', () => {
+    expect(body('public.request_alias_identity')).toContain('coalesce(length(trim(want_reason)), 0) < 10');
   });
 });

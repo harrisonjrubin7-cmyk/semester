@@ -166,6 +166,12 @@ export function allowlisted<T extends object, K extends keyof T>(
 
 export type ViewerRole = 'peer' | 'volunteer' | 'professional' | 'liaison' | 'admin';
 
+/**
+ * How long an approved just-in-time grant lasts. The database sets the same
+ * (`decide_alias_identity`); programs.test.ts holds the two together.
+ */
+export const JIT_HOURS = 4;
+
 /** Just-in-time access to restricted identity, granted per case. */
 export interface JitGrant {
   granteeId: string;

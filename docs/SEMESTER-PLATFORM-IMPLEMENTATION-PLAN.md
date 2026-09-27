@@ -86,8 +86,10 @@ It **is not** yet:
 - **Contract review in the app.** The Agreements screen records a
   reference to the signed agreement; the document itself lives outside
   Semester, and the person activating is asked what they checked against it.
-- **A reviewer tool to map an alias to an account** (just-in-time access).
-  Enforcement already reaches the account server-side.
+- **A notice to the student that their alias was looked behind.** Deliberately
+  not sent at the time: during a safety investigation it could tip off the
+  person being investigated. They were told, when they chose an alias, that
+  staff can check.
 
 The moderation console's escalation and safety-state parts are built. On a
 P0 or P1 case, "Escalate to the university" lists exactly what would be sent

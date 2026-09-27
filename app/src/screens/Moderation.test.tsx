@@ -14,6 +14,10 @@ const mock = vi.hoisted(() => ({
   decideEscalation: vi.fn(),
   safety: vi.fn(),
   canManage: vi.fn(),
+  grants: vi.fn(),
+  requestId: vi.fn(),
+  decideId: vi.fn(),
+  reveal: vi.fn(),
   dispatch: vi.fn(),
   queue: vi.fn(),
   decideCase: vi.fn(),
@@ -44,6 +48,10 @@ vi.mock('../community/client', () => ({
   readAuthorSafety: mock.safety,
   accountHash: async () => 'me-hash',
   canManageAgreements: mock.canManage,
+  loadIdentityGrants: mock.grants,
+  requestIdentity: mock.requestId,
+  decideIdentity: mock.decideId,
+  revealIdentity: mock.reveal,
 }));
 
 import { Moderation } from './Moderation';
@@ -62,7 +70,7 @@ const kase = (id: string, patch: Record<string, unknown> = {}) => ({
   route: 'professional_urgent',
   status: 'open',
   createdAt: '2026-09-27T10:00:00Z',
-  post: { body: `Body ${id}`, authorName: 'Jordan', status: 'held', communityName: 'ECON 1010' },
+  post: { body: `Body ${id}`, authorName: 'Jordan', status: 'held', communityName: 'ECON 1010', asAlias: false },
   reports: [{ category: 'private_information_or_doxxing', imminent: true, details: 'posted her room', createdAt: '2026-09-27T10:00:00Z' }],
   signals: [{ detector: 'pii_doxxing', ruleId: 'pii.third-party-contact', confidence: 0.95, version: 'community-detectors-2026.09.1', createdAt: '2026-09-27T10:00:00Z' }],
   ...patch,
@@ -107,7 +115,16 @@ const button = (scope: Element, text: string) =>
 beforeEach(() => {
   vi.clearAllMocks();
   mock.on = true;
-  mock.flags = { institutionEscalation: false, accountSafetyState: false };
+  mock.flags = { institutionEscalation: false, accountSafetyState: false, scopedPseudonymity: false };
+  mock.grants.mockResolvedValue([]);
+  mock.requestId.mockResolvedValue(undefined);
+  mock.decideId.mockResolvedValue(undefined);
+  mock.reveal.mockResolvedValue({
+    handle: 'quietana',
+    vaultRef: 'ab'.repeat(32),
+    otherCases: [{ caseId: 'k7', category: 'harassment_or_bullying', severity: 'P2', status: 'decided', asAlias: false }],
+    expiresAt: '2099-01-01T00:00:00Z',
+  });
   mock.programs.mockResolvedValue(new Map([['vu', { institutionEscalation: true, accountSafetyState: true }]]));
   mock.policies.mockResolvedValue(new Map([['vu', POLICY]]));
   mock.escalations.mockResolvedValue([]);
@@ -352,6 +369,105 @@ describe('Moderation', () => {
       await render();
       expect(mock.canManage).not.toHaveBeenCalled();
       expect(host.textContent).not.toContain('Escalation agreements');
+    });
+  });
+
+  describe('who is behind an alias', () => {
+    const aliasCase = () => kase('k0', { post: { body: 'Body k0', authorName: 'Wanderer5', status: 'held', communityName: 'Support', asAlias: true } });
+    const grant = (patch: Record<string, unknown> = {}) => ({
+      id: 'g1', caseId: 'k0', status: 'requested', grantee: 'me-hash', requestedReason: 'pattern of harassment',
+      requestedAt: '2026-09-27T10:00:00Z', decidedReason: null, expiresAt: null, ...patch,
+    });
+    const card = () => host.querySelector('article') as HTMLElement;
+
+    it('is absent while aliases are not built', async () => {
+      mock.queue.mockResolvedValue([aliasCase()]);
+      await render();
+      expect(host.textContent).not.toContain('Who posted this');
+      expect(mock.grants).not.toHaveBeenCalled();
+    });
+
+    it('stays absent with only escalation built, though everything it needs is loaded', async () => {
+      mock.flags.institutionEscalation = true;
+      mock.queue.mockResolvedValue([aliasCase()]);
+      await render();
+      expect(host.textContent).toContain('Escalate to the university');
+      expect(host.textContent).not.toContain('Who posted this');
+    });
+
+    it('is absent on a post made under a real name', async () => {
+      mock.flags.scopedPseudonymity = true;
+      await render();
+      expect(host.textContent).not.toContain('Who posted this');
+    });
+
+    it('asks with a reason', async () => {
+      mock.flags.scopedPseudonymity = true;
+      mock.queue.mockResolvedValue([aliasCase()]);
+      await render();
+      expect(mock.grants).toHaveBeenCalledWith(['k0']);
+      const ask = button(card(), 'Ask to see who posted this') as HTMLButtonElement;
+      expect(ask.disabled).toBe(true);
+      type(card().querySelector('details textarea') as HTMLTextAreaElement, 'pattern of harassment across posts');
+      await act(async () => ask.click());
+      expect(mock.requestId).toHaveBeenCalledWith('k0', 'pattern of harassment across posts');
+    });
+
+    it('tells the asker to wait, and offers them nothing to approve', async () => {
+      mock.flags.scopedPseudonymity = true;
+      mock.queue.mockResolvedValue([aliasCase()]);
+      mock.grants.mockResolvedValue([grant()]);
+      await render();
+      expect(card().textContent).toContain('A different reviewer has to approve it.');
+      expect(button(card(), 'Approve')).toBeUndefined();
+      expect(button(card(), 'Show who posted this')).toBeUndefined();
+    });
+
+    it('lets another reviewer decide, and says approving shows them nothing', async () => {
+      mock.flags.scopedPseudonymity = true;
+      mock.queue.mockResolvedValue([aliasCase()]);
+      mock.grants.mockResolvedValue([grant({ grantee: 'someone-else' })]);
+      await render();
+      const req = card().querySelector('[aria-label="A request to see who posted this"]') as HTMLElement;
+      expect(req.textContent).toContain('it does not show you anything');
+      const approve = button(req, 'Approve') as HTMLButtonElement;
+      expect(approve.disabled).toBe(true);
+      type(req.querySelector('textarea') as HTMLTextAreaElement, 'repeat reports from three members');
+      await act(async () => approve.click());
+      expect(mock.decideId).toHaveBeenCalledWith('g1', true, 'repeat reports from three members');
+      expect(button(card(), 'Show who posted this')).toBeUndefined();
+    });
+
+    it('shows the handle and other cases to the grantee, and says the look is recorded', async () => {
+      mock.flags.scopedPseudonymity = true;
+      mock.queue.mockResolvedValue([aliasCase()]);
+      mock.grants.mockResolvedValue([grant({ status: 'approved', expiresAt: '2099-01-01T00:00:00Z' })]);
+      await render();
+      await act(async () => button(card(), 'Show who posted this')!.click());
+      expect(mock.reveal).toHaveBeenCalledWith('g1');
+      expect(card().textContent).toContain('Posted by quietana.');
+      expect(card().textContent).toContain('under their own name');
+      expect(card().textContent).toContain('This look is recorded in the case history.');
+      const revealed = card().querySelector('details [role="status"]') as HTMLElement;
+      expect(revealed.textContent).toContain('quietana');
+      expect(revealed.textContent).not.toMatch(/@|\.edu|\.example/);
+    });
+
+    it('does not let a reviewer use somebody else\'s grant', async () => {
+      mock.flags.scopedPseudonymity = true;
+      mock.queue.mockResolvedValue([aliasCase()]);
+      mock.grants.mockResolvedValue([grant({ grantee: 'someone-else', status: 'approved', expiresAt: '2099-01-01T00:00:00Z' })]);
+      await render();
+      expect(button(card(), 'Show who posted this')).toBeUndefined();
+    });
+
+    it('treats an expired grant as gone', async () => {
+      mock.flags.scopedPseudonymity = true;
+      mock.queue.mockResolvedValue([aliasCase()]);
+      mock.grants.mockResolvedValue([grant({ status: 'approved', expiresAt: '2020-01-01T00:00:00Z' })]);
+      await render();
+      expect(button(card(), 'Show who posted this')).toBeUndefined();
+      expect(card().textContent).toContain('Your last grant has run out.');
     });
   });
 

@@ -124,7 +124,7 @@ end $$;
 do $$
 declare
   /*
-   * The allowlist. Seventy-five, and each is a deliberate entry point:
+   * The allowlist. Seventy-eight, and each is a deliberate entry point:
    *   make_referral_code  — mints this account's own code
    *   claim_referral      — records that this account arrived on somebody's
    *   referral_standing   — two integers and a boolean about the caller
@@ -239,6 +239,9 @@ declare
     'retire_escalation_agreement(want_tenant text, want_reason text)',
     'save_escalation_agreement(want_tenant text, want_agreement_ref text, want_categories text[], want_identity_required boolean, want_channel text, want_contact text, want_expires_on date)',
     'case_author_safety(want_case uuid, want_reason text)',
+    'decide_alias_identity(want_grant uuid, want_approve boolean, want_reason text)',
+    'request_alias_identity(want_case uuid, want_reason text)',
+    'reveal_alias_identity(want_grant uuid)',
     'decide_community_escalation(want_escalation uuid, want_approve boolean, want_reason text)',
     'my_community_standing()',
     'request_community_escalation(want_case uuid, want_reason text)',

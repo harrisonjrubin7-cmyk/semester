@@ -43,3 +43,28 @@ Students are told plainly (`ALIAS_DISCLOSURE`):
 
 > Other members see only this name. Semester still knows it is you, and
 > trained Trust & Safety staff can check during a safety investigation.
+
+## When Trust & Safety looks behind an alias
+
+This is `request_alias_identity`, `decide_alias_identity` and
+`reveal_alias_identity` (section 12a of the migration), in the moderation
+console as "Who posted this (alias)". They enforce the rules
+`viewIdentity` in `identity.ts` states:
+
+- **Only an alias post,** and only while its case is open or appealed.
+- **One reviewer asks, for themselves,** with a written reason. **A different
+  reviewer decides,** with their own. They're compared by hash, and approving
+  shows the approver nothing.
+- **For one case, one reviewer, for four hours** (`JIT_HOURS`, held to the SQL
+  by `programs.test.ts`).
+- **Every request, decision and look is a case event.**
+- **What's shown:** the account's handle at its school, an opaque account
+  reference that's the same on every case about that account, and its other
+  cases (category, severity, status, alias or not). Never an email, a legal
+  name or an account id.
+- **The school never sees any of it,** and neither does anyone without a
+  reviewer role.
+- **The student isn't told at the time,** because a notice during a safety
+  investigation could tip off the person being investigated. They were told
+  when they chose the alias that staff can check.
+

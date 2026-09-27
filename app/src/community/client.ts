@@ -351,7 +351,7 @@ export interface CaseRow {
   route: 'professional_urgent' | 'professional' | 'standard' | 'integrity_review';
   status: 'open' | 'decided' | 'appealed' | 'closed';
   createdAt: string;
-  post: { body: string; authorName: string; status: PostStatus; communityName: string } | null;
+  post: { body: string; authorName: string; status: PostStatus; communityName: string; asAlias: boolean } | null;
   reports: { category: ReportCategory; imminent: boolean; details: string; createdAt: string }[];
   /** What the detectors recorded. Never a reporter; brigading shows up here. */
   signals: { detector: string; ruleId: string; confidence: number; version: string; createdAt: string }[];
@@ -380,7 +380,7 @@ export async function loadQueue(): Promise<CaseRow[]> {
   const caseIds = (cases ?? []).map((c: Row) => str(c.id));
   const [posts, reports, communities, signals] = await Promise.all([
     postIds.length
-      ? db.from('community_posts').select('id, community_id, author_name, body, status').in('id', postIds)
+      ? db.from('community_posts').select('id, community_id, author_name, body, status, as_alias').in('id', postIds)
       : Promise.resolve({ data: [] as Row[], error: null }),
     caseIds.length
       ? db.from('community_reports').select('case_id, category, imminent, details, created_at').in('case_id', caseIds)
@@ -412,6 +412,7 @@ export async function loadQueue(): Promise<CaseRow[]> {
               authorName: str(p.author_name),
               status: str(p.status) as PostStatus,
               communityName: names.get(str(p.community_id)) ?? 'Community',
+              asAlias: Boolean(p.as_alias),
             }
           : null,
         reports: (reports.data ?? [])
@@ -660,6 +661,84 @@ export async function decideEscalation(escalationId: string, approve: boolean, r
 export async function accountHash(accountId: string): Promise<string> {
   const bytes = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(accountId));
   return [...new Uint8Array(bytes)].map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+/* ------------------------------------------------------------------ */
+/* Who is behind an alias (just-in-time, per case)                     */
+/* ------------------------------------------------------------------ */
+
+export interface IdentityGrant {
+  id: string;
+  caseId: string;
+  status: 'requested' | 'approved' | 'refused';
+  /** SHA-256 of the reviewer it is for, compared with accountHash() to say "yours". */
+  grantee: string;
+  requestedReason: string;
+  requestedAt: string;
+  decidedReason: string | null;
+  expiresAt: string | null;
+}
+
+export interface RevealedIdentity {
+  handle: string;
+  vaultRef: string;
+  otherCases: { caseId: string; category: ReportCategory; severity: Severity; status: string; asAlias: boolean }[];
+  expiresAt: string;
+}
+
+export async function loadIdentityGrants(caseIds: string[]): Promise<IdentityGrant[]> {
+  if (caseIds.length === 0) return [];
+  const db = await cloud();
+  const { data, error } = await db
+    .from('community_identity_grants')
+    .select('id, case_id, status, grantee_sha256, requested_reason, requested_at, decided_reason, expires_at')
+    .in('case_id', caseIds)
+    .order('requested_at', { ascending: false });
+  if (error) fail(error, 'Could not load identity requests.');
+  return ((data ?? []) as Row[]).map((r) => ({
+    id: str(r.id),
+    caseId: str(r.case_id),
+    status: str(r.status) as IdentityGrant['status'],
+    grantee: str(r.grantee_sha256),
+    requestedReason: str(r.requested_reason),
+    requestedAt: str(r.requested_at),
+    decidedReason: r.decided_reason ? str(r.decided_reason) : null,
+    expiresAt: r.expires_at ? str(r.expires_at) : null,
+  }));
+}
+
+export async function requestIdentity(caseId: string, reason: string): Promise<void> {
+  const db = await cloud();
+  const { error } = await db.rpc('request_alias_identity', { want_case: caseId, want_reason: reason });
+  if (error) fail(error, 'Could not ask.');
+}
+
+export async function decideIdentity(grantId: string, approve: boolean, reason: string): Promise<void> {
+  const db = await cloud();
+  const { error } = await db.rpc('decide_alias_identity', { want_grant: grantId, want_approve: approve, want_reason: reason });
+  if (error) fail(error, 'Could not record the decision.');
+}
+
+/** The look itself. The server writes it into the case history every time. */
+export async function revealIdentity(grantId: string): Promise<RevealedIdentity> {
+  const db = await cloud();
+  const { data, error } = await db.rpc('reveal_alias_identity', { want_grant: grantId });
+  if (error) fail(error, 'Could not show who posted this.');
+  const r = ((data ?? []) as Row[])[0];
+  if (!r) fail(null, 'Could not show who posted this.');
+  const others = Array.isArray(r.other_cases) ? (r.other_cases as Row[]) : [];
+  return {
+    handle: str(r.handle),
+    vaultRef: str(r.vault_ref),
+    otherCases: others.map((o) => ({
+      caseId: str(o.case_id),
+      category: str(o.category) as ReportCategory,
+      severity: str(o.severity) as Severity,
+      status: str(o.status),
+      asAlias: Boolean(o.as_alias),
+    })),
+    expiresAt: str(r.expires_at),
+  };
 }
 
 /* ------------------------------------------------------------------ */

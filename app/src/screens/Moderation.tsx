@@ -15,17 +15,20 @@ import {
   lastSweep,
   loadEscalationPolicies,
   loadEscalations,
+  loadIdentityGrants,
   loadProgramsBySchool,
   loadQueue,
   reviewerStanding,
   type CaseRow,
   type Escalation,
   type EscalationPolicy,
+  type IdentityGrant,
   type Programs,
   type Standing,
 } from '../community/client';
 import { EscalationItem, EscalationRequest } from '../components/community/Escalation';
 import { SafetyRead } from '../components/community/SafetyRead';
+import { IdentityCheck } from '../components/community/IdentityCheck';
 
 const CATEGORY = Object.fromEntries(CATEGORY_TEXT);
 
@@ -107,6 +110,8 @@ export function Moderation() {
 /** Both high-risk parts need their build flag here and the case's school's switch. */
 const ESCALATION_BUILT = () => enabled(COMMUNITY_FLAGS, 'institutionEscalation');
 const SAFETY_BUILT = () => enabled(COMMUNITY_FLAGS, 'accountSafetyState');
+/** Looking behind an alias exists only where aliases can. */
+const ALIASES_BUILT = () => enabled(COMMUNITY_FLAGS, 'scopedPseudonymity');
 
 function Console({ accountId }: { accountId: string }) {
   const { dispatch } = useStore();
@@ -119,20 +124,25 @@ function Console({ accountId }: { accountId: string }) {
   const [policies, setPolicies] = useState<Map<string, EscalationPolicy>>(new Map());
   const [escalations, setEscalations] = useState<Escalation[]>([]);
   const [me, setMe] = useState('');
+  const [identity, setIdentity] = useState<IdentityGrant[]>([]);
 
   const refresh = useCallback(async () => {
     try {
       const who = await reviewerStanding();
       setStanding(who);
       if (who !== 'none') {
-        setCases(await loadQueue());
+        const queue = await loadQueue();
+        setCases(queue);
         setSweep(await lastSweep());
+        if (ESCALATION_BUILT() || ALIASES_BUILT()) setMe(await accountHash(accountId));
+        if (ALIASES_BUILT()) {
+          setIdentity(await loadIdentityGrants(queue.filter((c) => c.post?.asAlias).map((c) => c.id)));
+        }
         if (ESCALATION_BUILT() || SAFETY_BUILT()) setPrograms(await loadProgramsBySchool());
         if (ESCALATION_BUILT()) {
-          const [p, e, h] = await Promise.all([loadEscalationPolicies(), loadEscalations(), accountHash(accountId)]);
+          const [p, e] = await Promise.all([loadEscalationPolicies(), loadEscalations()]);
           setPolicies(p);
           setEscalations(e);
-          setMe(h);
           setAgreementStaff(await canManageAgreements().catch(() => false));
         }
       }
@@ -172,6 +182,9 @@ function Console({ accountId }: { accountId: string }) {
         <EscalationRequest kase={c} policy={policies.get(c.tenantId)} live={liveFor(c.id)} onDone={done} />
       )}
       {safetyOn(c.tenantId) && <SafetyRead caseId={c.id} />}
+      {ALIASES_BUILT() && c.post?.asAlias && me && (
+        <IdentityCheck caseId={c.id} grants={identity.filter((g) => g.caseId === c.id)} me={me} now={new Date()} onDone={done} />
+      )}
     </>
   );
   const waiting = escalations.filter((x) => x.status === 'requested');

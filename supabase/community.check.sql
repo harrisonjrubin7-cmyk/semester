@@ -1342,4 +1342,103 @@ begin
   perform pg_temp.counted('the screen never switches the school''s programme on', (select count(*) from public.community_programs where tenant_id = 'ag-u'), 0);
 end $$;
 
+
+-- ── Who is behind an alias: just-in-time, for one case ───────────────────
+do $$
+declare
+  ana uuid; bo uuid; mgr uuid; r1 uuid; r2 uuid; r3 uuid;
+  sup uuid; alias_post uuid; named_post uuid; k_alias uuid; k_named uuid; g uuid; g3 uuid;
+  n bigint; t text; j jsonb; v text;
+begin
+  insert into public.schools (id, name, email_domains) values ('id-u', 'Identity University', array['id-u.example']);
+  ana := pg_temp.newuser('quietana@id-u.example', 'id-u');
+  bo  := pg_temp.newuser('bo@id-u.example', 'id-u');
+  mgr := pg_temp.newuser('mgr@id-u.example', 'id-u');
+  r1  := pg_temp.newuser('r1@id.semester.example', null);
+  r2  := pg_temp.newuser('r2@id.semester.example', null);
+  r3  := pg_temp.newuser('r3@id.semester.example', null);
+  insert into public.role_grants (subject, role, scope_kind, scope_id, provenance) values
+    (mgr, 'community_manager',     'school',   'id-u', 'institution'),
+    (r1,  'trust_safety_reviewer', 'platform', '',     'platform'),
+    (r2,  'trust_safety_reviewer', 'platform', '',     'platform'),
+    (r3,  'trust_safety_senior',   'platform', '',     'platform');
+  insert into public.community_programs (tenant_id, program, enabled, approved_ref) values ('id-u', 'scoped_pseudonymity', true, 'check');
+  perform pg_temp.expect_allowed('a manager starts a support community', mgr,
+    $q$select public.create_community('support', 'ID support', 'Support', '')$q$);
+  select id into sup from public.communities where name = 'ID support';
+  perform pg_temp.expect_allowed('and approves pseudonyms there', mgr, format('select public.approve_community_pseudonymity(%L, true)', sup));
+  perform pg_temp.expect_allowed('ana joins', ana, format('select public.join_community(%L)', sup));
+  perform pg_temp.expect_allowed('bo joins', bo, format('select public.join_community(%L)', sup));
+  perform pg_temp.expect_allowed('ana takes an alias', ana, format($q$select public.claim_community_alias(%L, 'Wanderer5')$q$, sup));
+  perform pg_temp.expect_allowed('ana posts under it', ana, format($q$select public.create_community_post(%L, 'Alias post under review', false, true)$q$, sup));
+  perform pg_temp.expect_allowed('and under her own name', ana, format($q$select public.create_community_post(%L, 'Named post under review')$q$, sup));
+  select id into alias_post from public.community_posts where body = 'Alias post under review';
+  select id into named_post from public.community_posts where body = 'Named post under review';
+  perform pg_temp.expect_allowed('bo reports the alias post', bo, format($q$select public.report_community_post(%L, 'harassment_or_bullying')$q$, alias_post));
+  perform pg_temp.expect_allowed('and the named one', bo, format($q$select public.report_community_post(%L, 'harassment_or_bullying')$q$, named_post));
+  select id into k_alias from public.community_cases where post_id = alias_post;
+  select id into k_named from public.community_cases where post_id = named_post;
+
+  perform pg_temp.expect_refused('a student cannot ask', bo,
+    format($q$select public.request_alias_identity(%L, 'I want to know who it is')$q$, k_alias));
+  perform pg_temp.expect_refused('nor the community manager', mgr,
+    format($q$select public.request_alias_identity(%L, 'I want to know who it is')$q$, k_alias));
+  perform pg_temp.expect_refused('a named post has nothing to reveal', r1,
+    format($q$select public.request_alias_identity(%L, 'pattern of harassment across posts')$q$, k_named));
+  perform pg_temp.expect_refused('a request needs a reason', r1, format($q$select public.request_alias_identity(%L, 'who')$q$, k_alias));
+  perform pg_temp.expect_allowed('a reviewer asks, with a reason', r1,
+    format($q$select public.request_alias_identity(%L, 'pattern of harassment across posts')$q$, k_alias));
+  select id into g from public.community_identity_grants where case_id = k_alias;
+  perform pg_temp.expect_refused('not twice while one is waiting', r1,
+    format($q$select public.request_alias_identity(%L, 'pattern of harassment across posts')$q$, k_alias));
+  perform pg_temp.expect_refused('nothing is shown before approval', r1, format('select * from public.reveal_alias_identity(%L)', g));
+  perform pg_temp.expect_refused('the reviewer who asked cannot approve', r1,
+    format($q$select public.decide_alias_identity(%L, true, 'approving my own request')$q$, g));
+  perform pg_temp.expect_refused('a student cannot approve it', bo,
+    format($q$select public.decide_alias_identity(%L, true, 'looks fine to me honestly')$q$, g));
+  perform pg_temp.expect_refused('nor can the school''s manager', mgr,
+    format($q$select public.decide_alias_identity(%L, true, 'looks fine to me honestly')$q$, g));
+  perform pg_temp.expect_refused('an approval needs its own reason', r2, format($q$select public.decide_alias_identity(%L, true, 'ok')$q$, g));
+  perform pg_temp.counted('students read no grants', pg_temp.seen(bo, 'select id from public.community_identity_grants'), 0);
+  perform pg_temp.counted('nor does the school', pg_temp.seen(mgr, 'select id from public.community_identity_grants'), 0);
+  perform pg_temp.expect_allowed('a second reviewer approves', r2,
+    format($q$select public.decide_alias_identity(%L, true, 'repeat reports from three members')$q$, g));
+  select count(*) into n from public.community_identity_grants
+   where id = g and expires_at between now() + interval '3 hours 59 minutes' and now() + interval '4 hours 1 minute';
+  perform pg_temp.counted('the grant lasts four hours', n, 1);
+  perform pg_temp.expect_refused('the approver cannot use it', r2, format('select * from public.reveal_alias_identity(%L)', g));
+  perform pg_temp.expect_refused('nor can a senior who took no part', r3, format('select * from public.reveal_alias_identity(%L)', g));
+
+  perform pg_temp.become(r1);
+  select handle, vault_ref, other_cases into t, v, j from public.reveal_alias_identity(g);
+  execute 'reset role';
+  perform pg_temp.said('the grantee sees the account''s handle', t, 'quietana');
+  perform pg_temp.counted('an opaque vault reference, not an id', (v ~ '^[0-9a-f]{64}$' and position(ana::text in v) = 0)::int, 1);
+  perform pg_temp.said('the same one every time for this account', v, private.role_audit_sha256('vault:' || ana::text));
+  perform pg_temp.counted('and the account''s other cases, not this one', jsonb_array_length(j), 1);
+  perform pg_temp.said('including one under her own name', j->0->>'case_id', k_named::text);
+  perform pg_temp.counted('never an email or an account id', (position('id-u.example' in t || v || j::text) + position(ana::text in t || v || j::text))::bigint, 0);
+
+  select string_agg(event, ',' order by occurred_at, id) into t from public.community_case_events
+   where case_id = k_alias and event like 'identity_%';
+  perform pg_temp.said('the request, the approval and the look are all in the case history', t,
+    'identity_requested,identity_approved,identity_revealed');
+
+  update public.community_identity_grants set expires_at = now() - interval '1 second' where id = g;
+  perform pg_temp.expect_refused('an expired grant shows nothing', r1, format('select * from public.reveal_alias_identity(%L)', g));
+  perform pg_temp.expect_allowed('once it has expired, the reviewer may ask again', r1,
+    format($q$select public.request_alias_identity(%L, 'second look after a new report')$q$, k_alias));
+
+  perform pg_temp.expect_allowed('another reviewer asks', r3,
+    format($q$select public.request_alias_identity(%L, 'checking for a linked account')$q$, k_alias));
+  select id into g3 from public.community_identity_grants where case_id = k_alias and grantee_sha256 = private.role_audit_sha256(r3::text);
+  perform pg_temp.expect_allowed('and is refused', r2,
+    format($q$select public.decide_alias_identity(%L, false, 'not needed for this decision')$q$, g3));
+  perform pg_temp.expect_refused('a refused grant shows nothing', r3, format('select * from public.reveal_alias_identity(%L)', g3));
+
+  update public.community_cases set status = 'closed' where id = k_alias;
+  perform pg_temp.expect_refused('a closed case cannot be asked about', r2,
+    format($q$select public.request_alias_identity(%L, 'pattern of harassment across posts')$q$, k_alias));
+end $$;
+
 rollback;
