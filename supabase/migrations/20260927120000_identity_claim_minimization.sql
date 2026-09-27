@@ -49,6 +49,8 @@ revoke all on function private.identity_attribute_mapping_allowed(jsonb) from pu
 grant execute on function private.identity_attribute_mapping_allowed(jsonb) to service_role;
 
 alter table public.institution_identity_provider
+  drop constraint if exists identity_provider_attribute_mapping_minimal;
+alter table public.institution_identity_provider
   add constraint identity_provider_attribute_mapping_minimal
   check (private.identity_attribute_mapping_allowed(attribute_mapping));
 
