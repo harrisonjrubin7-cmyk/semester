@@ -9,6 +9,8 @@ import { Credentials } from '../components/Credentials';
 import { SchoolClaim } from '../components/SchoolClaim';
 import { ReferralLink } from '../components/ReferralLink';
 import { cloudConfigured, signOut } from '../lib/cloud';
+import { SyncState } from '../components/unity/Status';
+import { ErrorState } from '../components/unity/States';
 
 /**
  * The account screen.
@@ -65,6 +67,24 @@ export function AccountScreen() {
       `${state.tasks.length} tasks`,
     ].join(' · ');
 
+    // The same check the pull-down gesture makes. The error state's recovery
+    // and the button below are one function, so they cannot drift apart.
+    const check = () => {
+      setChecking(true);
+      setChecked('');
+      void refresh().then((line) => {
+        setChecking(false);
+        setChecked(line);
+      });
+    };
+    // `explainSync` ends its sentence with "Reference: SEM-…"; the error state
+    // has a slot for exactly that, so it goes there rather than in the body.
+    const ref = /\n\nReference: (\S+)\s*$/.exec(sync.error);
+    const syncFailure = {
+      body: (ref ? sync.error.slice(0, ref.index) : sync.error).trim(),
+      reference: ref?.[1],
+    };
+
     return (
       <Page>
         <Blueprint style={{ padding: 'var(--sp-7)', background: 'var(--app-hero)' }}>
@@ -80,13 +100,27 @@ export function AccountScreen() {
             </div>
           )}
           <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
-            {sync.status === 'syncing' && 'Catching up with your account…'}
-            {sync.status === 'synced' &&
-              `Synced ${sync.at ? new Date(sync.at).toLocaleTimeString() : ''} · ${counts}`}
-            {sync.status === 'error' && (
-              <span style={{ whiteSpace: 'pre-wrap' }}>Sync failed. {sync.error}</span>
+            {/* The one sync indicator, in the shared vocabulary; the time and
+                the counts are this screen's own detail beneath it. */}
+            <SyncState />
+            {sync.status === 'synced' && (
+              <div className="nums">
+                {sync.at ? `${new Date(sync.at).toLocaleTimeString()} · ` : ''}
+                {counts}
+              </div>
             )}
           </div>
+          {sync.status === 'error' && (
+            <div style={{ marginTop: 'var(--sp-4)' }}>
+              <ErrorState
+                title="Sync did not finish"
+                body={syncFailure.body}
+                reference={syncFailure.reference}
+                recover={{ label: checking ? 'Checking…' : 'Check now', run: check }}
+                busy={checking}
+              />
+            </div>
+          )}
           {/*
             What the last sync actually did, which was never reported.
 
@@ -103,22 +137,17 @@ export function AccountScreen() {
           {/* The same check the pull-down gesture makes, for a laptop, which
               has no pull-down. It answers in a sentence rather than leaving a
               spinner to be interpreted — see `lib/refresh.ts`. */}
-          <button
-            type="button"
-            className="btn btn-block"
-            disabled={checking}
-            onClick={() => {
-              setChecking(true);
-              setChecked('');
-              void refresh().then((line) => {
-                setChecking(false);
-                setChecked(line);
-              });
-            }}
-            style={{ marginTop: 'calc(14px * var(--density, 1))' }}
-          >
-            {checking ? 'Checking…' : 'Check now'}
-          </button>
+          {sync.status !== 'error' && (
+            <button
+              type="button"
+              className="btn btn-block"
+              disabled={checking}
+              onClick={check}
+              style={{ marginTop: 'calc(14px * var(--density, 1))' }}
+            >
+              {checking ? 'Checking…' : 'Check now'}
+            </button>
+          )}
           {checked && (
             <div
               role="status"

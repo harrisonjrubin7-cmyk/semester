@@ -4,6 +4,7 @@ import { card, type PolicySource } from '../../lib/toolkit/policy';
 import { DISCLAIMER, interpret } from '../../lib/toolkit/rubric';
 import { completeStage, MIN_NOTE, newWorkspace, progress, reopenStage, submissionChecklist, TEMPLATE_IDS, TEMPLATES, type TemplateId, type Workspace } from '../../lib/toolkit/templates';
 import { Notice } from '../ui';
+import { ContextBar } from '../unity/ContextBar';
 import { newId, type useToolkit } from './store';
 
 type Library = ReturnType<typeof useToolkit>;
@@ -47,20 +48,28 @@ export function AssignmentPanel({
     const p = progress(open);
     const policy = card(layers);
     return (
-      <section className="portal-panel" aria-labelledby="ws-title">
-        <div className="portal-heading">
-          <div>
-            <span className="portal-eyebrow">
-              {t.name} · {open.courseCode || 'Independent project'} · Private
-            </span>
-            <h3 id="ws-title">{open.title}</h3>
-            <p>
-              {p.done} of {p.total} stages done{p.next ? ` · Next: ${p.next.label}` : ''}
-            </p>
-            <progress max={p.total} value={p.done} aria-label="Stages done" />
-          </div>
-          <button onClick={() => setOpenId(null)}>← All workspaces</button>
-        </div>
+      <section className="portal-panel" aria-label={`${open.title} workspace`}>
+        {/* Where this is, what it is, whose it is and that it is saved — the
+            shared bar. Provenance used to be its own heading further down; it
+            is the bar's Source & details now, which is where every other
+            workspace says it. "Private" is the drawer's visibility, "Only you". */}
+        <ContextBar
+          heading={3}
+          context={`${open.courseCode || 'Independent project'} · ${t.name}`}
+          title={open.title}
+          statuses={['yours']}
+          save="saved"
+          source={{
+            title: open.title,
+            origin: 'yours',
+            limitations: 'Everything in this workspace is your own writing. The toolkit generated none of it.',
+          }}
+          secondary={{ label: '← All workspaces', run: () => setOpenId(null) }}
+        />
+        <p>
+          {p.done} of {p.total} stages done{p.next ? ` · Next: ${p.next.label}` : ''}
+        </p>
+        <progress max={p.total} value={p.done} aria-label="Stages done" />
         <label>
           Assignment instructions (paste them from the course)
           <textarea className="input" rows={4} maxLength={20_000} value={open.prompt} onChange={(e) => save({ ...open, prompt: e.target.value })} />
@@ -113,8 +122,6 @@ export function AssignmentPanel({
             <li key={c}>{c}</li>
           ))}
         </ul>
-        <h4>Provenance</h4>
-        <p className="portal-muted">Everything in this workspace is your own writing. The toolkit generated none of it.</p>
         <label>
           Reflection: what would you do differently next time?
           <textarea className="input" rows={3} maxLength={20_000} value={open.reflection} onChange={(e) => save({ ...open, reflection: e.target.value })} />

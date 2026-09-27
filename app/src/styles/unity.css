@@ -410,6 +410,12 @@
   color: var(--text-secondary);
 }
 
+/* A failure explained in more than one paragraph — the sync and import
+   explanations are — keeps its breaks. */
+.state-body {
+  white-space: pre-line;
+}
+
 .state-note,
 .state-ref {
   font-size: var(--type-sm);

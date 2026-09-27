@@ -7,6 +7,7 @@ import { Blueprint } from '../components/Blueprint';
 import { Snapshots } from '../components/Snapshots';
 import { Subscribe } from '../components/Subscribe';
 import { WorkspaceBackup } from '../components/WorkspaceBackup';
+import { SuccessState } from '../components/unity/States';
 import { ActionButton, FilePick, SectionLabel, TickBox } from '../components/ui';
 import { PROVIDERS, tokens, type ProviderId } from '../lib/connect';
 import { datedItems } from '../lib/select';
@@ -109,6 +110,8 @@ export function Export() {
     null,
   );
   const [done, setDone] = useState('');
+  /** A backup put back — a milestone, said as one rather than as a grey line. */
+  const [restored, setRestored] = useState(false);
   const [error, setError] = useState('');
 
   const code = (id: string) => catalog.byId[id]?.code ?? id;
@@ -202,6 +205,7 @@ export function Export() {
     setBusy(what);
     setError('');
     setDone('');
+    setRestored(false);
     try {
       setDone(await fn());
     } catch (e) {
@@ -338,6 +342,11 @@ export function Export() {
       {done ? (
         <div style={{ fontSize: 'var(--type-base)', marginTop: 'calc(14px * var(--density, 1))', lineHeight: 'var(--leading-relaxed)', color: 'var(--app-dim)' }}>{done}</div>
       ) : null}
+      {restored && (
+        <div style={{ marginTop: 'calc(14px * var(--density, 1))' }}>
+          <SuccessState title="Restored" body="Everything in the file is in place." />
+        </div>
+      )}
       {error ? (
         <div
           role="alert"
@@ -365,6 +374,7 @@ export function Export() {
         onPick={([file]) => {
           setError('');
           setDone('');
+          setRestored(false);
           setOffered(null);
           void file
             .text()
@@ -405,7 +415,8 @@ export function Export() {
               onClick={() => {
                 dispatch({ type: 'restore', persisted: offered.data as never });
                 setOffered(null);
-                setDone('Restored. Everything in the file is in place.');
+                setDone('');
+                setRestored(true);
               }}
               style={{ flex: 1, height: 42 }}
             >
