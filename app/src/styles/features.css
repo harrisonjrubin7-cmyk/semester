@@ -293,3 +293,5 @@
 .studio-use{display:flex;flex-wrap:wrap;gap:var(--sp-3);align-items:center;justify-content:space-between;font-size:var(--type-sm)}
 .studio-use select{max-width:100%}
 .studio-items{padding-inline-start:1.2em;display:grid;gap:var(--sp-4)}
+.study-packs ul{padding-inline-start:1.2em;margin:var(--sp-2) 0}
+.study-pack{margin-block:var(--sp-3)}

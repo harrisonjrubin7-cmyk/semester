@@ -578,6 +578,7 @@ const csp = (serving: boolean) => ({
  * fails if this list and the tree disagree.
  */
 const MOCKS_MODULES = [
+  'src/components/StudyStudio.packs.test.tsx',
   'src/lib/coursestudio.test.ts',
   'src/components/CourseStudio.test.tsx',
   'src/screens/onboardingcounts.test.tsx',
