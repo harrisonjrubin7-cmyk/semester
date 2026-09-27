@@ -397,3 +397,86 @@ export async function withdrawHelp(requestId: string): Promise<void> {
   const { error } = await db.rpc('withdraw_help_request', { want: requestId });
   if (error) throw new Error(message(error, 'Could not withdraw the request.'));
 }
+
+// ── The staff side ───────────────────────────────────────────────────────
+//
+// Staff never read the request table. They learn which inboxes are theirs,
+// see ids, statuses and times in each, and open one at a time — and every
+// open is written down where the student can see it. The screen says so
+// before the button, not after.
+
+export interface StaffInbox {
+  destination: { id: string; kind: DestinationKind; name: string };
+  items: { id: string; status: RequestStatus; createdAt: string; updatedAt: string }[];
+}
+
+export interface OpenedRequest {
+  question: string;
+  context: Partial<Record<ContextKey, string>>;
+  status: RequestStatus;
+  createdAt: string;
+}
+
+export const REPLY_MAX = 1000;
+
+/** Every inbox this account answers for, with what is waiting in each. */
+export async function loadInboxes(): Promise<StaffInbox[]> {
+  const db = await cloud();
+  const { data, error } = await db.rpc('my_help_destinations');
+  if (error) throw new Error(message(error, 'Could not load your inboxes.'));
+  const destinations = ((data ?? []) as Record<string, unknown>[]).map((row) => ({
+    id: String(row.id),
+    kind: String(row.kind) as DestinationKind,
+    name: String(row.name),
+  }));
+  return Promise.all(
+    destinations.map(async (destination) => {
+      const res = await db.rpc('help_inbox', { want_destination: destination.id });
+      if (res.error) throw new Error(message(res.error, `Could not load ${destination.name}.`));
+      return {
+        destination,
+        items: ((res.data ?? []) as Record<string, unknown>[]).map((row) => ({
+          id: String(row.request_id),
+          status: isStatus(row.status) ? row.status : 'sent',
+          createdAt: String(row.created_at),
+          updatedAt: String(row.updated_at),
+        })),
+      };
+    }),
+  );
+}
+
+/** Opens one request. The student sees that this happened. */
+export async function openRequest(requestId: string): Promise<OpenedRequest> {
+  const db = await cloud();
+  const { data, error } = await db.rpc('open_help_request', { want: requestId });
+  if (error) throw new Error(message(error, 'Could not open the request.'));
+  const row = ((data ?? []) as Record<string, unknown>[])[0];
+  if (!row) throw new Error('That request is no longer available.');
+  const context: Partial<Record<ContextKey, string>> = {};
+  const raw = (row.shared_context ?? {}) as Record<string, unknown>;
+  for (const key of CONTEXT_KEYS) if (typeof raw[key] === 'string') context[key] = raw[key] as string;
+  return {
+    question: String(row.question ?? ''),
+    context,
+    status: isStatus(row.status) ? row.status : 'sent',
+    createdAt: String(row.created_at),
+  };
+}
+
+/** Moves a request forward, refusing here any move the database would refuse. */
+export async function answerRequest(
+  requestId: string,
+  from: RequestStatus,
+  to: RequestStatus,
+  reply: string,
+): Promise<void> {
+  if (!STAFF_MOVES[from].includes(to)) throw new Error(`A ${STATUS_TEXT[from].toLowerCase()} request cannot be moved to ${STATUS_TEXT[to].toLowerCase()}.`);
+  const db = await cloud();
+  const { error } = await db.rpc('answer_help_request', {
+    want: requestId,
+    want_status: to,
+    want_reply: reply.trim().slice(0, REPLY_MAX),
+  });
+  if (error) throw new Error(message(error, 'Could not update the request.'));
+}
