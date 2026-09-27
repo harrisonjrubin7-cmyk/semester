@@ -56,6 +56,6 @@ purpose, the suite run, and the change restored:
 | Subject-specific safety boundaries | Done for catalog and entitlement |
 | Accessibility / device matrix | Partial — see [DEVICE-TEST-MATRIX.md](DEVICE-TEST-MATRIX.md) |
 | Feature flags and kill switch | Done |
-| Threat-model review recorded | **Open** — needs a human reviewer |
+| Threat-model review recorded | Independent AI review recorded in the threat model; its 12 findings fixed. **Human review still open** |
 | No prohibited high-risk capability enabled | Done |
 | Human review where connector / provider / license required | Nothing requiring it is built |

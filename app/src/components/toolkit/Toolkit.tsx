@@ -37,19 +37,22 @@ type Section = 'start' | 'assignment' | 'research' | 'data' | 'rubric' | 'policy
 
 export function Toolkit({
   courses,
+  accountId,
   onOpen,
   onClose,
   flags = TOOLKIT_FLAGS,
   now = new Date(),
 }: {
   courses: readonly ToolkitCourse[];
+  /** The signed-in account, whose own toolkit this is. Undefined is "this device, nobody signed in". */
+  accountId?: string;
   onOpen: (screen: Screen) => void;
   onClose: () => void;
   flags?: ToolkitFlags;
   now?: Date;
 }) {
-  const library = useToolkit();
-  const dataLibrary = useToolkitData();
+  const library = useToolkit(accountId);
+  const dataLibrary = useToolkitData(accountId);
   const store = library.value;
   const [section, setSection] = useState<Section>('start');
   const [goal, setGoal] = useState<Goal | null>(null);

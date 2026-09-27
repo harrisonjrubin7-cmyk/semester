@@ -64,13 +64,32 @@ export interface Resolved {
   from?: PolicySource;
 }
 
+function blanketOf(stance: unknown): Exclude<UseState, 'unavailable'> | undefined {
+  switch (stance) {
+    case 'banned':
+      return 'prohibited';
+    case 'limited':
+      return 'limited';
+    case 'allowed':
+      return 'allowed';
+    default:
+      return undefined;
+  }
+}
+
 /**
  * A course policy as the student recorded it. `unstated` says nothing, so it
  * produces no layer at all — which is what lets the fallback show.
  */
 export function fromCourse(policy: CoursePolicy | undefined): PolicySource | undefined {
-  if (!policy || policy.stance === 'unstated') return undefined;
-  const blanket = policy.stance === 'banned' ? 'prohibited' : policy.stance === 'limited' ? 'limited' : 'allowed';
+  // Mapped value by value rather than "anything else is allowed": a stance
+  // the app does not recognise — a typo in stored data, a value added later —
+  // is not a permission, so it produces no layer and the card shows
+  // "Policy unavailable". A switch rather than an object lookup, so a stance
+  // named after an Object.prototype member ("constructor", "__proto__") is
+  // unrecognised too.
+  const blanket = blanketOf(policy?.stance);
+  if (!policy || !blanket) return undefined;
   return {
     layer: 'course',
     link: '',
