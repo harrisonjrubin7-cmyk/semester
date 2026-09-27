@@ -476,7 +476,9 @@ create table if not exists public.gtm_communication_events (
   consent_version  text        check (length(trim(consent_version)) between 1 and 60),
   allowed          boolean,
   refusal          text        check (refusal in ('missing_identifiers', 'suppressed', 'no_consent', 'topic_unsubscribed',
-                                                   'quiet_hours', 'frequency_cap', 'campaign_inactive')),
+                                                   'quiet_hours', 'frequency_cap', 'campaign_inactive', 'module_off',
+                                                   'kill_switch', 'channel_not_in_campaign',
+                                                   'consent_version_not_required')),
   occurred_at      timestamptz not null default now(),
   constraint gtm_event_decision_shape check (
     (kind = 'decision') = (allowed is not null)
@@ -522,6 +524,18 @@ begin
   if new.purpose = 'marketing' and c.status <> 'active' then
     raise exception 'refused: campaign_inactive' using errcode = '42501';
   end if;
+  -- Read on every decision, not only at activation: switching the module off
+  -- or engaging kill.sharing stops the next send of a campaign already live.
+  if public.feature_state('module.campaign_manager', c.tenant_id) <> 'production' then
+    raise exception 'refused: module_off' using errcode = '42501';
+  end if;
+  if public.kill_switch_engaged('kill.sharing', c.tenant_id) then
+    raise exception 'refused: kill_switch' using errcode = '42501';
+  end if;
+  -- Only the channels the campaign was reviewed and approved with.
+  if not new.channel = any (c.channels) then
+    raise exception 'refused: channel_not_in_campaign' using errcode = '42501';
+  end if;
   if exists (select 1 from public.gtm_suppression s where s.prospect_id = p.id) then
     raise exception 'refused: suppressed' using errcode = '42501';
   end if;
@@ -538,6 +552,11 @@ begin
   end if;
   if new.consent_version is distinct from channel_consent.version then
     raise exception 'refused: the consent version recorded is not the current one' using errcode = '42501';
+  end if;
+  -- The campaign names the consent language it was approved against; an
+  -- older (or other) version on file does not cover it.
+  if not channel_consent.version = any (c.consent_requirements) then
+    raise exception 'refused: consent_version_not_required' using errcode = '42501';
   end if;
 
   select * into topic_consent from public.gtm_consent g
@@ -559,6 +578,12 @@ begin
   -- The cap counts every message on this channel except transactional email
   -- (which returned above), as `decideSend` does: a transactional SMS still
   -- interrupts someone.
+  --
+  -- Two workers deciding for the same contact and channel at once would
+  -- each count the same committed rows and both pass at cap minus one. The
+  -- lock serializes the count and the insert per contact and channel until
+  -- this transaction ends.
+  perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(p.id::text || ':' || new.channel, 0));
   select count(*) into sent from public.gtm_communication_events e
    where e.prospect_id = p.id and e.channel = new.channel and e.kind = 'decision' and e.allowed
      and not (e.channel = 'email' and e.purpose = 'transactional')

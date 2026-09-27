@@ -463,6 +463,44 @@ begin
        values ('gtm-u', %L, 8, 'Fall 2027 deposit')$q$, away), 'utm_campaign_check');
 end $$;
 
+-- ── What a send answers to beyond consent (Codex review on #817) ──────────
+
+do $$
+declare
+  camp uuid := (select id from ids where name = 'camp');
+  late uuid;
+  ins text := $q$insert into public.gtm_communication_events
+    (tenant_id, campaign_id, prospect_id, kind, channel, purpose, topic, template_id, template_version, consent_version, allowed)
+    values ('gtm-u', %L, %L, 'decision', %L, 'marketing', 'deadlines', 'deposit-reminder', '4', %L, true)$q$;
+begin
+  insert into public.gtm_prospects (tenant_id, crm_reference, lifecycle_stage, program_interest, time_zone)
+  values ('gtm-u', 'slate-4', 7, '{nursing}', 'Etc/GMT-12') returning id into late;
+  insert into public.gtm_consent (tenant_id, prospect_id, channel, granted, version, source) values
+    ('gtm-u', late, 'sms', true, 'sms-v2', 'form'),
+    ('gtm-u', late, 'push', true, 'push-v1', 'form'),
+    ('gtm-u', late, 'email', true, 'email-v2', 'form');
+
+  perform pg_temp.refused_with('a send on a channel the campaign was not approved for', null,
+    format(ins, camp, late, 'push', 'push-v1'), 'channel_not_in_campaign');
+  perform pg_temp.refused_with('a send under a consent version the campaign does not accept', null,
+    format(ins, camp, late, 'sms', 'sms-v2'), 'consent_version_not_required');
+
+  update public.tenant_feature_policy set state = 'off' where tenant_id = 'gtm-u' and capability = 'module.campaign_manager';
+  perform pg_temp.refused_with('a send after the module is switched off, on an active campaign', null,
+    format(ins, camp, late, 'email', 'email-v2'), 'module_off');
+  update public.tenant_feature_policy set state = 'production' where tenant_id = 'gtm-u' and capability = 'module.campaign_manager';
+
+  update public.feature_kill_switch set engaged = true, reason = 'check' where tenant_id = 'gtm-u' and switch_key = 'kill.sharing';
+  perform pg_temp.refused_with('a send while kill.sharing is engaged, on an active campaign', null,
+    format(ins, camp, late, 'email', 'email-v2'), 'kill_switch');
+  update public.feature_kill_switch set engaged = false, reason = '' where tenant_id = 'gtm-u' and switch_key = 'kill.sharing';
+
+  -- A race cannot be staged in one session, so this is structural: the count
+  -- and the insert are serialized per contact and channel.
+  perform pg_temp.said('the cap count is taken under a per-contact, per-channel lock',
+    (pg_get_functiondef('private.gtm_send_guard'::regproc) ~ 'pg_advisory_xact_lock')::text, 'true');
+end $$;
+
 do $$
 declare
   camp uuid := (select id from ids where name = 'camp');
