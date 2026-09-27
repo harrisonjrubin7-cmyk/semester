@@ -105,7 +105,7 @@ select status_code, content from net._http_response order by created desc limit 
 
 A 200 with a JSON body of counts means it is ready: `select cron.alter_job((select jobid from cron.job where jobname =
 'integration-sync'), active := true);`. A 401 means the token check refused the Vault token; a 503 means the function
-cannot reach its token check (`public.integration_tick_authorized`, from `20260928011000_integration_tick_auth.sql`).
+cannot reach its token check (`public.integration_tick_authorized`, from `20260928031000_integration_tick_auth.sql`).
 
 Watch it in `cron.job_run_details` and `net._http_response`. Re-running `scheduler.sql` parks the job again, as it does
 `push`. To rotate the token, update the `integration_cron_secret` row in Vault; the next tick uses the new value on
