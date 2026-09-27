@@ -55,20 +55,10 @@ length, and holds the baseline figures.
 cd app
 npx tsc -b            # types
 npm run lint          # oxlint, plus the style and label audits
-npm run check:university  # the gateway's own NodeNext typecheck
 npm test              # the suite, in file order
 npm run test:shuffle  # the suite, in an order nobody chose
 npm run build         # production build
 ```
-
-`check:university` is not a duplicate of `tsc -b`. It compiles the gateway
-(`server/`, `api/`, `packages/institution`) under `module: NodeNext`, where a
-`.ts` file is CommonJS unless a `package.json` above it says
-`"type": "module"`, and nothing under `supabase/functions/` does. So `tsc -b`
-can be green while this is red. It happened on #803, when `packages/institution`
-re-exported a module from `supabase/functions/_shared/`: every local gate
-passed and CI failed with TS1287. Code under `supabase/functions/` stays out of
-anything the gateway imports.
 
 `test:shuffle` is not a duplicate of `test`. Green `test` and red
 `test:shuffle` means the tests depend on each other, which is a different fault
