@@ -1,4 +1,4 @@
-import { SESSION_MINUTES, showCapture } from '../../lib/unity';
+import { SESSION_MINUTES } from '../../lib/unity';
 import { useStore } from '../../state/store';
 import { useWorkspaceMode } from './modes';
 
@@ -23,9 +23,11 @@ export function QuickActions({ onDone }: { onDone: () => void }) {
   const actions: { label: string; run: () => void }[] = [
     {
       label: 'Capture something',
+      // The same box the header's + opens — one launcher, however it is
+      // reached. Its "Or keep it as" row is the way to the other kinds.
       run: () => {
         onDone();
-        showCapture();
+        dispatch({ type: 'quickAdd', open: true });
       },
     },
     {

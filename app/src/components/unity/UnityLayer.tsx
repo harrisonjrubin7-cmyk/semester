@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { useModal } from '../../a11y/modal';
 import { DESKTOP, useMedia } from '../../lib/media';
 import { statusOf } from '../../lib/status';
-import { SESSION_MINUTES, closeOverlay, useOverlay, type SourceDetail } from '../../lib/unity';
+import { SESSION_MINUTES, closeOverlay, showCapture, useOverlay, type SourceDetail } from '../../lib/unity';
 import { FocusBar } from './modes';
 import { useStore } from '../../state/store';
 import { courseFieldFor } from '../../lib/parent';
@@ -25,7 +25,7 @@ export function UnityLayer() {
     <>
       <FocusBar />
       {overlay.kind === 'source' && <SourceDrawer detail={overlay.detail} />}
-      {overlay.kind === 'capture' && <QuickCapture context={overlay.context} />}
+      {overlay.kind === 'capture' && <QuickCapture context={overlay.context} as={overlay.as} text={overlay.text} />}
       {overlay.kind === 'explain' && (
         <Sheet label="About this screen">
           <div className="screen-guide-body">
@@ -147,7 +147,7 @@ export function SourceDrawer({ detail }: { detail: SourceDetail }) {
 
 /** What a capture can be. Each lands in a store the app already has. */
 export const CAPTURE_KINDS = [
-  { id: 'task', label: 'Task' },
+  { id: 'task', label: 'Task, no date' },
   { id: 'note', label: 'Course note' },
   { id: 'source', label: 'Source' },
   { id: 'session', label: 'Study session' },
@@ -156,6 +156,39 @@ export const CAPTURE_KINDS = [
 ] as const;
 
 export type CaptureKind = (typeof CAPTURE_KINDS)[number]['id'];
+
+/**
+ * The other kinds, offered from the `+` box.
+ *
+ * The header's `+` is the one launcher — it is on every screen in every
+ * layout, `q` opens it, and `lib/onframe.test.ts` holds that it means one
+ * thing. That box reads a dated line ("econ ps4 friday 5pm") and refuses
+ * rather than guessing when there is no date. This row is where everything
+ * else goes: pick what it is and the Capture sheet opens with what was
+ * typed carried over, so nothing is typed twice.
+ */
+export function KeepItAs({ text, onLeave }: { text: string; onLeave: () => void }) {
+  return (
+    <div className="keep-it-as" role="group" aria-label="Keep it as something else">
+      <span className="kicker">Or keep it as</span>
+      <div className="quick-actions-row">
+        {CAPTURE_KINDS.map((k) => (
+          <button
+            key={k.id}
+            type="button"
+            className="pill-soft tap-y"
+            onClick={() => {
+              onLeave();
+              showCapture(undefined, { as: k.id, text: text.trim() });
+            }}
+          >
+            {k.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 /**
  * Global Quick Capture — one line, from anywhere, into the right place.
@@ -173,11 +206,13 @@ export type CaptureKind = (typeof CAPTURE_KINDS)[number]['id'];
  * sentence and shows what it read before writing — so "Has a due date?"
  * hands the line over to it rather than growing a second date parser here.
  */
-export function QuickCapture({ context }: { context?: string }) {
+export function QuickCapture({ context, as, text: carried = '' }: { context?: string; as?: string; text?: string }) {
   const { state, dispatch, catalog } = useStore();
   const field = useRef<HTMLInputElement>(null);
-  const [text, setText] = useState('');
-  const [kind, setKind] = useState<CaptureKind>('task');
+  const [text, setText] = useState(carried);
+  const [kind, setKind] = useState<CaptureKind>(
+    CAPTURE_KINDS.some((k) => k.id === as) ? (as as CaptureKind) : 'task',
+  );
   // The course you are standing in, and only then. `state.courseId` is the
   // last course *opened*, which on Today is a course you are not looking at
   // — `lib/parent.ts` makes the same distinction for the header's way up.

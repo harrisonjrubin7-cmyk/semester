@@ -46,7 +46,7 @@ export interface SourceDetail {
 export type Overlay =
   | { kind: 'none' }
   | { kind: 'source'; detail: SourceDetail }
-  | { kind: 'capture'; context?: string }
+  | { kind: 'capture'; context?: string; as?: string; text?: string }
   | { kind: 'explain'; screen: Screen };
 
 /** The minutes a study or focus session started from the shared layer runs for. */
@@ -65,8 +65,8 @@ export function showSource(detail: SourceDetail): void {
 }
 
 /** Open the capture launcher, attached to what the student is looking at. */
-export function showCapture(context?: string): void {
-  set({ kind: 'capture', context });
+export function showCapture(context?: string, carry: { as?: string; text?: string } = {}): void {
+  set({ kind: 'capture', context, ...carry });
 }
 
 /**

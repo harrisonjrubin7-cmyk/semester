@@ -51,6 +51,7 @@ import { dictate, dictationSupported } from '../lib/mic';
 import { ActionButton } from './ui';
 import { DESKTOP, useMedia } from '../lib/media';
 import { DIMMED_ROW } from '../lib/dim';
+import { KeepItAs } from './unity/UnityLayer';
 
 /**
  * How wide the box gets, the same measure the whole-app search uses.
@@ -260,6 +261,8 @@ export function QuickAdd({ onClose }: { onClose: () => void }) {
           fontSize: 'var(--type-display-xs)',
         }}
       />
+      {/* Everything that is not a dated line — see `KeepItAs`. */}
+      <KeepItAs text={text} onLeave={onClose} />
 
       {micError ? (
         <div

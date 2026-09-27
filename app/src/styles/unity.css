@@ -516,6 +516,17 @@
   justify-content: center;
 }
 
+.keep-it-as {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  margin-top: var(--sp-5);
+}
+
+.keep-it-as .quick-actions-row {
+  justify-content: flex-start;
+}
+
 .command-center {
   margin-block: var(--sp-7);
 }

@@ -8,7 +8,7 @@ import { STORAGE_KEY, currentLook, type State } from '../../state/shape';
 import { closeOverlay, showCapture } from '../../lib/unity';
 import { ContextBar } from './ContextBar';
 import { ObjectCard } from './ObjectCard';
-import { UnityLayer } from './UnityLayer';
+import { KeepItAs, UnityLayer } from './UnityLayer';
 import { CommandCenter, FirstGoal } from './CommandCenter';
 import { ScreenGuide } from './ScreenGuide';
 import { ShellBody } from '../shell/ShellBody';
@@ -201,6 +201,20 @@ describe('quick capture', () => {
     const note = seen.notes.find((n) => n.title === 'Can PSY 340 count twice?');
     expect(note?.body).toBe('Captured as: Question for advisor');
     expect(text()).toContain('Only me');
+  });
+
+  it('is reached from the + box, carrying over what was typed', async () => {
+    let left = 0;
+    await mount(<KeepItAs text="  Ask about the PSCI minor " onLeave={() => (left += 1)} />);
+    expect(host.querySelector('[role="group"]')!.getAttribute('aria-label')).toBe('Keep it as something else');
+    await press('Question for advisor');
+    expect(left).toBe(1);
+    const field = host.querySelector('[role="dialog"] input') as HTMLInputElement;
+    expect(field.value).toBe('Ask about the PSCI minor');
+    const chosen = [...host.querySelectorAll('[role="dialog"] button[aria-pressed="true"]')].map((b) => b.textContent);
+    expect(chosen).toEqual(['Question for advisor']);
+    await press('Save');
+    expect(seen.notes.some((n) => n.title === 'Ask about the PSCI minor')).toBe(true);
   });
 
   it('will not save an empty line', async () => {
