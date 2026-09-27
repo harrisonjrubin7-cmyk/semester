@@ -681,3 +681,78 @@ session's range.)
   not reused: those drive module visibility, and a student choosing which
   office notices to see is a separate decision.
 - Saving shows the whole list first, and says no office can see it.
+
+## D-051 · Phase K finishes course demand with one additive migration
+
+**Proposed — needs owner before any merge to `main`.**
+
+- `20260927234800_course_demand_forecasting.sql` finishes what
+  `20260926150000` began. It adds:
+  - `demand_consents`, a per-term consent record that only the student can
+    read;
+  - three student functions: `contribute_course_plan`, `stop_contributing`
+    and `my_demand_contribution`;
+  - two staff functions: `my_demand_scopes` and `course_demand`;
+  - a refresh wrapper, `refresh_course_demand_snapshots`, callable by the
+    service role only.
+- **The refresh counts only live consent.** `private.refresh_course_demand`
+  now joins `demand_consents`, so a `contributes_to_demand` flag set any
+  other way counts for nothing.
+- **Own school only.** The `term_plan_courses` owner policy now refuses a
+  contributing row at any school but the one on the student's profile.
+  Before, it checked only the owner.
+- **Nothing schedules the refresh.** A school turns it on with the feature.
+  See `docs/COURSE-DEMAND-FORECASTING.md`.
+- **Checked on a throwaway Postgres 16.** Every migration applies and every
+  suite passes, including `demand` (49 new checks).
+  - `expansion` now gives its opted-in students a consent record, since the
+    flag alone no longer counts.
+  - Seven faithful reverts each turned `demand` red:
+    - no consent join;
+    - no own-school check;
+    - the threshold;
+    - a definer view;
+    - stopping that keeps rows;
+    - an open refresh;
+    - backups below ten.
+
+    The last two were caught by the table's own check constraint as well.
+- **Not applied anywhere.** As with D-025, D-043 and D-048.
+
+## D-052 · What a student contributes, and how stopping works
+
+**Decided 27 Sep 2026 (Phase K).**
+
+- **Only course codes, each a primary or a backup.** The term is the
+  cart's. No section, time, instructor, title or name is sent. A test checks
+  every key of the payload.
+- **Codes are normalized.** "econ1010" becomes "ECON 1010", in both the app
+  and the database, because the department scope splits on the space.
+- **Only on confirmation.** The dialog lists exactly what is sent and what
+  is not. A changed cart is pointed out, and never re-sent quietly.
+- **Stopping is prospective.** It removes the rows and stamps the consent
+  at once. Counts already published keep the student until the next
+  refresh, and no refresh after that counts them. Both dialogs say so.
+
+## D-053 · What staff see
+
+**Decided 27 Sep 2026 (Phase K).**
+
+- **A new Demand tab on University, behind the flag.** Only accounts with
+  `demand:read` see counts: the registrar, a department chair, a dean or
+  institutional research. Anyone else is told they have no demand scope.
+- **Counts, never rows.** A course appears at ten or more planning it.
+  Backups below ten show as "Fewer than 10 hold it as a backup". The reader
+  drops any count below ten a second time.
+- **Source labels.**
+  - Counts are labelled **Estimated**, with their time. They are plans, not
+    enrollments.
+  - Capacity and waitlist are **Imported** from synced sections, with the
+    sync time. With no sections synced, the line reads "Capacity not
+    connected".
+- **Stated on both screens:** "Based on anonymized planning data from
+  students who chose to contribute." and "Not used for admissions or for any
+  automated enrollment decision."
+- **No export.** The Operations studio's `suppress()` (complementary
+  suppression) is not needed here, because nothing publishes a total that a
+  hidden cell could be subtracted from.

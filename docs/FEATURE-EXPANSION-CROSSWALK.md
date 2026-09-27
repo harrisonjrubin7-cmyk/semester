@@ -43,7 +43,7 @@ the duplicate that file warns about.
 | H | Source Locker | `source_locker` (D-044) | Course Companion → `course/:id` › **Sources** tab (built); Me → Trust Center (Phase N) | **Extend** | `lib/sources.ts`, `screens/Sources.tsx`, `lib/studysources.ts`, `intelligence/Disclosure.tsx` |
 | I | Career Evidence + resume bullets | `career_evidence` (D-046, D-047) | Me → `career` › **Evidence** tab; course overview › skills panel (built) | **Extend** | `lib/career.ts`, `screens/Career.tsx` (résumé present), `lib/skills-graph.ts` (`careerSkillsGraph` flag); table `skill_records` |
 | J | Campus Office Action Feed | `office_action_feed` (D-048, D-049, D-050) | Today: ranked in the Action Center, or the first three on the briefing; Key dates (`registrar`): full feed and the office desk (built) | **Extend** + migration | `institution_actions` finished by `20260927224500_office_action_feed.sql`; `lib/office-actions.ts`, `components/OfficeActionFeed.tsx`, `components/OfficeActionDesk.tsx` |
-| K | Course Demand Forecasting | `demand_forecasting` | Student: My Path → `yes` cart (opt-in). Staff: `university` | **Table only** | `term_plan_courses.contributes_to_demand` (default false); `course_demand_snapshots` (`planned_students >= 10` check); capability `demand:read` |
+| K | Course Demand Forecasting | `demand_forecasting` (D-051, D-052, D-053) | Plan › registration **Cart** (student consent); University › **Demand** (staff, by `demand:read` scope) (built) | **Extend** + migration | `20260927234800_course_demand_forecasting.sql`; `lib/course-demand.ts`, `components/DemandContribution.tsx`, `components/DemandDesk.tsx` |
 | L | Semester Wrapped | `semester_wrapped` | Me → `me` (Progress) | **Extend** | `screens/Reports.tsx` (`brief`), `lib/usage.ts` (device-only counts), `state.done` |
 | M | Offline Mode | `offline_mode` | Global badge; Today / Plan / My Path read paths | **Extend** | `public/sw.js` (537 lines: network-first shell, cache-first media), `lib/offline.ts`, `ScreenTrouble` offline copy |
 | N | Trust Center | `trust_center` | Me → `privacy` / `data` / `export` / `account` | **Extend** | `lib/privacy.ts` `CLAIMS`, `screens/Privacy.tsx`, `lib/erase.ts`, `lib/workspace-backup.ts`, `SupportAccess` (#759/#760); table `ai_memories`, `data_requests` |
@@ -304,6 +304,8 @@ change unless it is approved.
   constraint.
 - `demand:read` limited to registrar, department chair, dean and
   institutional researcher.
+
+**Built in Phase K** — see [COURSE-DEMAND-FORECASTING.md](COURSE-DEMAND-FORECASTING.md) (D-051). As first planned:
 
 **New:**
 

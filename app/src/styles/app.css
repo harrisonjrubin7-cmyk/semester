@@ -8443,6 +8443,43 @@ section[data-drop] > .grip + * {
   color: var(--app-dim);
 }
 
+/* ── Course demand (demand_forecasting, Phase K) ───────────────────────── */
+
+.demand-contribution,
+.demand-desk {
+  margin-top: var(--sp-5);
+}
+
+.demand-list {
+  display: grid;
+  gap: var(--sp-3);
+  margin: 0 0 var(--sp-4);
+  padding-left: 0;
+  list-style: none;
+}
+
+.demand-row {
+  padding: var(--sp-4);
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-md);
+}
+
+.demand-row p {
+  margin: 0 0 var(--sp-2);
+}
+
+.demand-term {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--sp-3);
+  margin: 0 0 var(--sp-5);
+}
+
+.demand-department h4 {
+  margin: var(--sp-5) 0 var(--sp-3);
+}
+
 /* BL-1.4's Action Center, when it sits in a Phase B panel rather than in the
    #761 card whose `.today-decision-surface` rules it was drawn against. */
 .action-panel .action-center h2 {
