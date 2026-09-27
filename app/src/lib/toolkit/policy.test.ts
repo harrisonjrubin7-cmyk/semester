@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { USES, card, fromCourse, permits, redirect, resolve, type PolicySource } from './policy';
+import { USES, card, fromCourse, fromInstructor, permits, redirect, resolve, type InstructorRules, type PolicySource } from './policy';
 
 describe('AI-use policy precedence', () => {
   const course = (blanket: PolicySource['blanket'], uses?: PolicySource['uses']): PolicySource => ({
@@ -80,5 +80,45 @@ describe('the Course Studio migration', () => {
     expect([...listed.matchAll(/'([^']+)'/g)].map((m) => m[1]).sort()).toEqual(USES.map(([u]) => u).sort());
     const states = /\$\.\* \? \(([^)]+)\)/.exec(sql)?.[1] ?? '';
     expect([...states.matchAll(/"([a-z]+)"/g)].map((m) => m[1]).sort()).toEqual(['allowed', 'limited', 'prohibited', 'required']);
+  });
+});
+
+describe('the instructor layer (Course Studio, D-101)', () => {
+  const instructor = (over: Partial<InstructorRules> = {}): InstructorRules => ({
+    blanket: null,
+    uses: {},
+    words: '',
+    link: '',
+    effective: '',
+    published: '2026-09-01',
+    ...over,
+  });
+
+  it('beats the student’s own note at the same layer, blanket over named', () => {
+    const layers = [fromInstructor(instructor({ blanket: 'prohibited' })), fromCourse({ stance: 'allowed', note: '' })];
+    const r = resolve('practice', layers);
+    expect(r.state).toBe('prohibited');
+    expect(r.from?.by).toBe('instructor');
+  });
+
+  it('leaves to the student’s note only what the instructor did not say', () => {
+    const layers = [fromInstructor(instructor({ uses: { practice: 'allowed' } })), fromCourse({ stance: 'banned', note: '' })];
+    expect(resolve('practice', layers)).toMatchObject({ state: 'allowed', from: { by: 'instructor' } });
+    expect(resolve('explanation', layers)).toMatchObject({ state: 'prohibited', from: { by: 'student-record' } });
+  });
+
+  it('asks in order of authority whatever order the layers arrive in', () => {
+    const layers = [fromCourse({ stance: 'allowed', note: '' }), fromInstructor(instructor({ blanket: 'prohibited' }))];
+    expect(resolve('practice', layers).state).toBe('prohibited');
+  });
+
+  it('never reads a blanket "allowed" as permitting a final answer (F3)', () => {
+    expect(resolve('final-answers', [fromInstructor(instructor({ blanket: 'allowed' }))]).state).toBe('prohibited');
+    expect(resolve('final-answers', [fromInstructor(instructor({ blanket: 'allowed', uses: { 'final-answers': 'required' } }))]).state).toBe('required');
+  });
+
+  it('says nothing when the rules say nothing, so the fallback shows', () => {
+    expect(fromInstructor(instructor())).toBeUndefined();
+    expect(resolve('practice', [fromInstructor(instructor())]).state).toBe('unavailable');
   });
 });

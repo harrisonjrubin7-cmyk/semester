@@ -1030,6 +1030,18 @@ export const KEPT_TABLES: KeptTable[] = [
     why: 'A student organization outlives everybody in it — that is most of what makes it one rather than a study group. Your membership goes and it stays, with no founder recorded if you started it. If you were its last administrator it is left with none, and any member can take it on; if you were its last member it goes with you, because an organization nobody is in is not anything.',
   },
   {
+    table: 'course_ai_rules',
+    why: 'The AI rules an instructor published for a course are course policy the whole class relies on, not a record about you. A student account never writes a row; an instructor who leaves has their name cleared from the rules they published, and the rules stay.',
+  },
+  {
+    table: 'course_guidance',
+    why: 'Guidance an instructor published for a course belongs to the course, not to any one account. Students only read it; an instructor who leaves has their name cleared from what they published, and it stays for the class.',
+  },
+  {
+    table: 'study_packs',
+    why: 'A study pack an instructor published is a list of course references for the whole class. Students only read it; an instructor who leaves has their name cleared from the packs they published, and the packs stay.',
+  },
+  {
     table: 'schools',
     why: 'The list of universities the app recognises is not a record about you — no account writes a row in it, and only an administrator can. Leaving is not a way to remove a university, and the entry saying which one you are at lives on your own profile, which does go.',
   },

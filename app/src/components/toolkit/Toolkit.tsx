@@ -5,6 +5,7 @@ import { BOUNDARIES, entitle, SUBJECTS, subjectOf, toolsFor, UNIVERSAL, type Sub
 import { interpretationGaps } from '../../lib/toolkit/data';
 import { on, TOOLKIT_FLAGS, type ToolkitFlags } from '../../lib/toolkit/flags';
 import { card, fromCourse, redirect, STATE_LABEL, usageLabel } from '../../lib/toolkit/policy';
+import { courseLayers, type CoursePublication } from '../../lib/courserules';
 import { GOALS, labelOf, recommend, subjectFor, type Goal, type Recommendation } from '../../lib/toolkit/recommend';
 import { boundaryNotice } from '../../lib/toolkit/safety';
 import { progress, TEMPLATE_IDS, TEMPLATES, type TemplateId } from '../../lib/toolkit/templates';
@@ -42,6 +43,7 @@ export function Toolkit({
   onClose,
   flags = TOOLKIT_FLAGS,
   now = new Date(),
+  published,
 }: {
   courses: readonly ToolkitCourse[];
   /** The signed-in account, whose own toolkit this is. Undefined is "this device, nobody signed in". */
@@ -50,6 +52,8 @@ export function Toolkit({
   onClose: () => void;
   flags?: ToolkitFlags;
   now?: Date;
+  /** What instructors published for these courses (Course Studio), keyed by normalised code. */
+  published?: Record<string, CoursePublication>;
 }) {
   const library = useToolkit(accountId);
   const dataLibrary = useToolkitData(accountId);
@@ -64,7 +68,7 @@ export function Toolkit({
   const [openTemplate, setOpenTemplate] = useState<TemplateId | null>(null);
 
   const course = courses.find((c) => c.code === courseCode);
-  const layers = useMemo(() => [fromCourse(course?.ai)], [course]);
+  const layers = useMemo(() => courseLayers(course?.code ?? '', course?.ai, published ?? {}), [course, published]);
   const subject = subjectFor({ courseCode, subjectId });
   const fromCode = subjectOf(courseCode);
   const dueInDays = due ? Math.round((Date.parse(`${due}T12:00:00`) - now.getTime()) / 86_400_000) : undefined;
@@ -315,7 +319,17 @@ function PolicyCard({ course, layers, onEdit }: { course?: ToolkitCourse; layers
   return (
     <section className="portal-panel" aria-labelledby="toolkit-policy">
       <h3 id="toolkit-policy">AI use for {course ? course.code : 'this project'}</h3>
-      {from ? (
+      {from?.by === 'instructor' ? (
+        <p className="portal-muted">
+          Set by your instructor{from.lastVerified ? ` · published ${from.lastVerified}` : ''}
+          {from.effective ? ` · in effect from ${from.effective}` : ''}.{from.text ? ` “${from.text}”` : ''}{' '}
+          {from.link && (
+            <a href={from.link} target="_blank" rel="noreferrer noopener">
+              The syllabus
+            </a>
+          )}
+        </p>
+      ) : from ? (
         <p className="portal-muted">
           Source: {from.by === 'student-record' ? 'your own record of the syllabus — not verified by the instructor' : from.by}.
           {from.text ? ` “${from.text}”` : ''} No link or effective date is on file.

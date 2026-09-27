@@ -285,3 +285,5 @@
 .support-option{display:flex;gap:var(--sp-3);align-items:flex-start;font-size:var(--type-sm)}
 .support-why{display:block}
 .family-claim{display:grid;gap:var(--sp-2);max-width:320px;margin-bottom:var(--sp-3)}
+.studio-guidance{border-inline-start:2px solid var(--app-line);padding-inline-start:var(--sp-3);margin-block:var(--sp-3)}
+.studio-guidance p{margin:var(--sp-2) 0 0;white-space:pre-wrap}
