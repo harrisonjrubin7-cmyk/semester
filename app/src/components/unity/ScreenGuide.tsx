@@ -53,16 +53,20 @@ export function ScreenGuide({ screen, sheet = false }: { screen: Screen; sheet?:
         </span>
         About this screen
       </button>
-      {open && (
-        <div id={region} className="screen-guide-body">
-          <Answers screen={screen} />
-          {screen !== 'help' && (
-            <button type="button" className="bare link-quiet tap-y" onClick={() => dispatch({ type: 'go', screen: 'help' })}>
-              Open the guidebook
-            </button>
-          )}
-        </div>
-      )}
+      {/*
+        Always in the document, and `hidden` until opened. `aria-controls`
+        has to name an element that exists: rendered only when open, the
+        button pointed at nothing on every screen, which the accessibility
+        smoke reports as a broken reference.
+      */}
+      <div id={region} className="screen-guide-body" hidden={!open}>
+        <Answers screen={screen} />
+        {screen !== 'help' && (
+          <button type="button" className="bare link-quiet tap-y" onClick={() => dispatch({ type: 'go', screen: 'help' })}>
+            Open the guidebook
+          </button>
+        )}
+      </div>
     </aside>
   );
 }

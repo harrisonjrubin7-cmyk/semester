@@ -278,6 +278,11 @@ describe('About this screen', () => {
     await mount(<ScreenGuide screen="calendar" />);
     const toggle = button(/About this screen/);
     expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    // The reference resolves while closed too — the accessibility smoke
+    // fails a control that names an element not in the document.
+    const region = document.getElementById(toggle.getAttribute('aria-controls')!);
+    expect(region).not.toBeNull();
+    expect(region!.hidden).toBe(true);
     await act(async () => toggle.click());
     expect(toggle.getAttribute('aria-expanded')).toBe('true');
     expect(document.getElementById(toggle.getAttribute('aria-controls')!)).not.toBeNull();
