@@ -21,9 +21,9 @@
  * stop them. Consent is `consent_record`, capability
  * `integration:<connection public id>`, status consented and not revoked.
  *
- * Nothing here is scheduled or deployed. It is the function a scheduled job, a
- * webhook endpoint or an operator's replay will call — see
- * `docs/INTEGRATION-OPERATOR-RUNBOOK.md`.
+ * The scheduled tick (`tick.ts`) calls it for connections that are due and for
+ * replays an operator requested; a webhook endpoint would call it the same way.
+ * See `docs/INTEGRATION-OPERATOR-RUNBOOK.md` §4.
  */
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { validateDeclaration, type AdapterDeclaration } from '../../src/lib/integration/adapter.ts';
@@ -235,14 +235,19 @@ export async function runSync(db: SupabaseClient, req: SyncRequest, now: () => D
   const runStatus = result.status === 'duplicate' || result.status === 'succeeded' ? 'succeeded'
     : result.status === 'partial' ? 'partial' : 'failed';
   if (!duplicate) {
-    if (runStatus === 'failed') {
-      // Release the claim. A failed batch that stayed "processed" would make
-      // its own retry or redelivery look like a duplicate and be dropped.
+    if (runStatus === 'failed' && result.errors.some((e) => e.retryable)) {
+      // Release the claim. A batch that failed for a reason another attempt
+      // can fix (a save that did not land) must not stay claimed, or its own
+      // retry or redelivery would look like a duplicate and be dropped.
       await db.from('integration_webhook_events').delete()
         .eq('connection_id', c.id).eq('idempotency_key', batch.idempotencyKey).eq('tenant_id', c.tenant_id);
     } else {
-      await db.from('integration_webhook_events').update({ processing_status: 'processed', processed_at: done })
-        .eq('connection_id', c.id).eq('idempotency_key', batch.idempotencyKey).eq('tenant_id', c.tenant_id);
+      // Kept, including a batch refused for good (schema, scope, consent,
+      // classification): redelivering it cannot change the answer, so it is
+      // a duplicate rather than a fresh failure logged on every delivery.
+      await db.from('integration_webhook_events').update({
+        processing_status: runStatus === 'failed' ? 'rejected' : 'processed', processed_at: done,
+      }).eq('connection_id', c.id).eq('idempotency_key', batch.idempotencyKey).eq('tenant_id', c.tenant_id);
     }
   }
   await db.from('integration_sync_runs').update({
