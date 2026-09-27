@@ -1,7 +1,18 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { DESKTOP, DESKTOP_AT, HANDHELD, TABLET_AT, TALL_AT, WIDE, tierFor } from './media';
+import {
+  DESKTOP,
+  DESKTOP_AT,
+  EXTRA_LARGE_AT,
+  HANDHELD,
+  MEDIUM_AT,
+  TABLET_AT,
+  TALL_AT,
+  WIDE,
+  tierFor,
+  windowClassFor,
+} from './media';
 
 /**
  * The three layouts, and the one thing that can break them silently.
@@ -23,11 +34,16 @@ const css = readFileSync(join(__dirname, '..', 'styles', 'app.css'), 'utf8');
 describe('the three layouts', () => {
   it('puts a phone, a tablet and a desktop in the right one', () => {
     expect(tierFor(390)).toBe('phone');
-    // An iPad mini upright, and the widest phone in landscape.
+    // An iPad mini upright.
     expect(tierFor(744)).toBe('phone');
+    // An iPad upright: medium, with the tab bar, as the adaptive-device
+    // contract puts a portrait tablet. It had the rail when the boundary was
+    // 760; that was a decision about the device, and this one is about the
+    // window.
+    expect(tierFor(834)).toBe('phone');
     expect(tierFor(TABLET_AT)).toBe('tablet');
-    // An iPad in portrait, and the same iPad in Split View at half a screen.
-    expect(tierFor(834)).toBe('tablet');
+    // The same iPad on its side.
+    expect(tierFor(1194)).toBe('tablet');
     expect(tierFor(DESKTOP_AT - 1)).toBe('tablet');
     expect(tierFor(DESKTOP_AT)).toBe('desktop');
     expect(tierFor(1440)).toBe('desktop');
@@ -43,11 +59,11 @@ describe('the three layouts', () => {
     // across in landscape — wider than an iPad mini is upright — and width
     // alone handed it the tablet layout and the rail with it.
     expect(tierFor(932, true)).toBe('phone');
-    expect(tierFor(1194, true)).toBe('phone');
+    expect(tierFor(1366, true)).toBe('phone');
     // And the same widths held by anything that is not short: the exception
     // is the pair of conditions, never the width on its own.
     expect(tierFor(932)).toBe('tablet');
-    expect(tierFor(1194)).toBe('desktop');
+    expect(tierFor(1366)).toBe('desktop');
   });
 
   it('puts the boundary in the gap between a phone and a tablet, not on a device', () => {
@@ -86,13 +102,15 @@ describe('the three layouts', () => {
     const widths = [...css.matchAll(/@media[^{]*\(min-width:\s*(\d+)px\)/g)].map((m) =>
       Number(m[1]),
     );
+    expect(widths).toContain(MEDIUM_AT);
     expect(widths).toContain(TABLET_AT);
     expect(widths).toContain(DESKTOP_AT);
+    expect(widths).toContain(EXTRA_LARGE_AT);
     for (const w of widths) {
       // 900 is the floating window's own boundary — a desktop *browser* rather
       // than a device — and 1600 the large-monitor step. Both are documented
       // where they are written. Anything else is a fourth layout by accident.
-      expect([TABLET_AT, DESKTOP_AT, 900, 1600]).toContain(w);
+      expect([MEDIUM_AT, TABLET_AT, DESKTOP_AT, 900, EXTRA_LARGE_AT]).toContain(w);
     }
   });
 
@@ -106,5 +124,36 @@ describe('the three layouts', () => {
     for (const token of ['--page-pad', '--chrome-pad', '--measure', '--canvas', '--rail-w', '--device-max']) {
       expect(base).toContain(`${token}:`);
     }
+  });
+});
+
+describe('the window classes', () => {
+  it("are the adaptive-device contract's five, at its boundaries", () => {
+    expect([MEDIUM_AT, TABLET_AT, DESKTOP_AT, EXTRA_LARGE_AT]).toEqual([600, 840, 1200, 1600]);
+    expect(windowClassFor(320)).toBe('compact');
+    expect(windowClassFor(MEDIUM_AT - 1)).toBe('compact');
+    expect(windowClassFor(MEDIUM_AT)).toBe('medium');
+    expect(windowClassFor(TABLET_AT - 1)).toBe('medium');
+    expect(windowClassFor(TABLET_AT)).toBe('expanded');
+    expect(windowClassFor(DESKTOP_AT - 1)).toBe('expanded');
+    expect(windowClassFor(DESKTOP_AT)).toBe('large');
+    expect(windowClassFor(EXTRA_LARGE_AT - 1)).toBe('large');
+    expect(windowClassFor(EXTRA_LARGE_AT)).toBe('extraLarge');
+  });
+
+  it('agree with the three tiers the navigation is chosen from', () => {
+    // compact and medium draw the tab bar, expanded the rail, large and up
+    // the desktop — at every width, not only the boundaries.
+    const tierOf = { compact: 'phone', medium: 'phone', expanded: 'tablet', large: 'desktop', extraLarge: 'desktop' };
+    for (let w = 280; w <= 2000; w += 7) expect(tierFor(w), String(w)).toBe(tierOf[windowClassFor(w)]);
+  });
+
+  it('widen the column at medium in the stylesheet, before the rail block', () => {
+    const medium = css.indexOf(`@media (min-width: ${MEDIUM_AT}px)`);
+    const tablet = css.indexOf(`@media (min-width: ${TABLET_AT}px)`);
+    expect(medium).toBeGreaterThan(-1);
+    // Earlier in the sheet, so the tablet block's values win where both apply.
+    expect(medium).toBeLessThan(tablet);
+    expect(css.slice(medium, css.indexOf('}', css.indexOf('}', medium) + 1))).toContain('--device-max: 560px');
   });
 });

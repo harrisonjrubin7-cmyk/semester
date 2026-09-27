@@ -18,13 +18,13 @@ describe('university control plane authorization', () => {
   it('lets a verified tenant administrator edit only their tenant policy', () => {
     expect(
       controlPlaneView(fixture({
-        verifiedCapabilities: [{ tenantId: 'northstar', capability: 'tenant_admin', verified: true }],
+        verifiedCapabilities: [{ tenantId: 'northstar', capability: 'tenant:configure', verified: true }],
       })).canEdit,
     ).toBe(true);
     expect(
       controlPlaneView(fixture({
         tenantId: 'cedar',
-        verifiedCapabilities: [{ tenantId: 'cedar', capability: 'tenant_admin', verified: true }],
+        verifiedCapabilities: [{ tenantId: 'cedar', capability: 'tenant:configure', verified: true }],
       })).canEdit,
     ).toBe(false);
   });

@@ -185,8 +185,8 @@ export function QuickAdd({ onClose }: { onClose: () => void }) {
          * them: the field a student types the whole capture into was a white
          * browser textbox with a blue focus ring, on a laptop.
          *
-         * Below 760px `.device` is a column with ground either side, and the
-         * box fills the column, as it always has. At 760px and up the pane is
+         * Below 840px `.device` is a column with ground either side, and the
+         * box fills the column, as it always has. At 840px and up the pane is
          * a strip in the middle of the window and shrinking to it would leave
          * the box hanging in the middle of the screen, so it is `fixed` there
          * and covers the window — which is what it did before this moved.

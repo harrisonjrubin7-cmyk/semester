@@ -258,6 +258,9 @@ declare
     -- 20260928000000: the caller's own report:read and moderation:action, so
     -- the moderation screen can tell an empty queue from no queue.
     'my_moderation_access()',
+    -- 20260928010000: the caller's own live capabilities, same predicate as
+    -- private.has_capability, so staff screens can open for staff.
+    'my_capabilities()',
     'open_help_request(want uuid)',
     'send_help_request(want_destination uuid, want_question text, want_context jsonb)',
     'withdraw_help_request(want uuid)',

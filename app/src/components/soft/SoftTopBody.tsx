@@ -33,7 +33,8 @@
  */
 
 import { useMemo } from 'react';
-import { useNow, useStore } from '../../state/store';
+import { useNow, useStore, type SyncStatus } from '../../state/store';
+import { SYNC_WORDS } from '../../lib/syncstatus';
 import { useDeviceLibrary } from '../../lib/device-library';
 import { EMPTY_FAMILY, readFamily } from '../../lib/family';
 import { softTop, type TopStat } from '../../lib/softtop';
@@ -54,12 +55,9 @@ import { Hero, Stat, StatRow } from './Soft';
  * space there is — there is no account — and the card's label already
  * supplies the noun.
  */
-const SYNC_SAID: Record<string, string> = {
-  synced: 'Synced',
-  syncing: 'Syncing',
-  'signed-out': 'None',
-  error: 'Trouble',
-};
+const SYNC_SAID = Object.fromEntries(
+  Object.entries(SYNC_WORDS).map(([status, words]) => [status, words.short]),
+) as Record<SyncStatus, string>;
 
 /**
  * This screen's spec.
@@ -75,7 +73,7 @@ function useTop() {
   const caps = school.capabilities;
   // The word Settings shows, not the whole status object: the spec holds
   // strings, and a shape with a timestamp in it would recompute every tick.
-  const said = SYNC_SAID[sync.status] ?? 'Local';
+  const said = SYNC_SAID[sync.status];
   /*
    * The one figure the spec cannot reach for itself.
    *
