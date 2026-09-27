@@ -222,14 +222,18 @@ begin
   select count(*) into n from public.app_roles;
   -- Twenty original roles plus the twenty-seven added by
   -- 20260926150000_expansion_roles_and_features.sql, plus `integration_admin`
-  -- and `incident_responder` from 20260927170000_integration_control_plane.sql.
-  perform pg_temp.counted('a signed-in account reads the forty-nine roles', n, 49);
+  -- and `incident_responder` from 20260927170000_integration_control_plane.sql,
+  -- plus the four office publishers from 20260927224500_office_action_feed.sql
+  -- (Phase J), and `athletic_academic_support` from
+  -- 20260928142000_support_shares.sql (D1).
+  perform pg_temp.counted('a signed-in account reads the fifty-four roles', n, 54);
   select count(*) into n from public.role_capabilities;
   -- Twenty original rows, thirty-seven expansion rows, eight from the
   -- integration control plane (four for integration_admin, three for
-  -- university_admin, one for incident_responder), and eight staff roles that
-  -- answer help requests (the help_requests migration).
-  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 73);
+  -- university_admin, one for incident_responder), eight staff roles that
+  -- answer help requests (the help_requests migration), and four for the
+  -- Phase J office publishers.
+  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 77);
 
   perform pg_temp.become_anon();
   perform pg_temp.refused('a signed-out visitor cannot read the matrix',

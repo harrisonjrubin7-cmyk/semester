@@ -1,3 +1,4 @@
+import { useQuizFeedback } from '../components/QuizFeedback';
 import { allCards, weakestUnit } from '../data/catalog';
 import { useEffect, useMemo, useState } from 'react';
 import { useKeepAwake } from '../lib/awake';
@@ -49,6 +50,7 @@ export function Guide() {
   useKeepAwake();
 
   const live = useLive(state.guideId);
+  const { leave: quizLeave } = useQuizFeedback(state.guideId);
   const { guide, figures: figMap, updates, onUnit } = live;
   const cards = allCards(guide);
   const weak = weakestUnit(guide);
@@ -443,7 +445,7 @@ export function Guide() {
           </div>
           <ActionButton
             onClick={() =>
-            dispatch({ type: 'startQuiz', quiz: buildQuiz(guide, state.quizSeed) })
+            dispatch({ type: 'startQuiz', quiz: buildQuiz(guide, state.quizSeed, quizLeave) })
             }
             tone="primary"
             style={{ fontSize: 'var(--type-lg)', marginTop: 'calc(14px * var(--density, 1))' }}

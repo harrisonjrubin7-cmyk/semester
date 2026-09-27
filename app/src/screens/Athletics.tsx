@@ -4,6 +4,7 @@ import { Page } from '../components/Page';
 import { ActionButton, FilePick, Notice, SectionLabel, Segmented } from '../components/ui';
 import { CardGrid, GridCard } from '../components/GridCard';
 import { secondLine } from '../lib/dim';
+import { AthleteShare, SupportSharesWithYou } from '../components/AthleteShare';
 import { useDeviceLibrary } from '../lib/device-library';
 import {
   ATHLETIC_KINDS,
@@ -54,6 +55,7 @@ const TABS = [
   { id: 'hours' as const, label: 'Hours' },
   { id: 'eligibility' as const, label: 'Eligibility' },
   { id: 'data' as const, label: 'Import' },
+  { id: 'share' as const, label: 'Share' },
 ];
 
 type Tab = (typeof TABS)[number]['id'];
@@ -494,6 +496,13 @@ function Workspace({ storageKey }: { storageKey: string }) {
 
       {tab === 'eligibility' && (
         <EligibilityCheck value={lib.value} update={lib.update} blocked={lib.blocked} />
+      )}
+
+      {tab === 'share' && (
+        <>
+          <AthleteShare library={lib.value} />
+          <SupportSharesWithYou />
+        </>
       )}
 
       {tab === 'data' && (
