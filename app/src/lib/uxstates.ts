@@ -78,7 +78,7 @@ function row(r: Row): UXStatePattern {
 export const UX_STATES: readonly UXStatePattern[] = [
   row({
     id: 'default-ready', category: 'default', state: 'Ready', severity: 'neutral',
-    trigger: 'Content or data available', feedback: 'Normal page', primaryAction: 'The main task',
+    trigger: 'Content or data available', feedback: 'Normal page', primaryAction: 'The main action',
     fallback: 'None needed', wcagRule: 'Clear heading hierarchy and visible controls.',
     semesterExample: '“Start a study session”', announcement: 'none', reviewPriority: 'P2',
   }),
@@ -181,7 +181,7 @@ export const UX_STATES: readonly UXStatePattern[] = [
     id: 'sync-blocked', category: 'sync', state: 'Blocked', severity: 'error',
     trigger: 'Sign-in, permission or policy stops the sync', feedback: 'An inline warning with the fix',
     primaryAction: 'Sign in', fallback: 'Copy the work out',
-    wcagRule: 'Alert only if the current task is blocked.', semesterExample: '“Sign in to sync your changes”',
+    wcagRule: 'Alert only if what they are doing is blocked.', semesterExample: '“Sign in to sync your changes”',
     announcement: 'assertive', reviewPriority: 'P0',
   }),
   row({
@@ -290,7 +290,7 @@ export const UX_STATES: readonly UXStatePattern[] = [
     id: 'ai-unavailable', category: 'ai', state: 'AI unavailable', severity: 'neutral',
     trigger: 'The provider or policy is unavailable', feedback: 'The manual alternative',
     primaryAction: 'Use the manual tools', fallback: 'Support',
-    wcagRule: 'Never block a core task on AI.', semesterExample: '“Use the planning template instead”',
+    wcagRule: 'Never block a core action on AI.', semesterExample: '“Use the planning template instead”',
     reviewPriority: 'P2',
   }),
 ];
