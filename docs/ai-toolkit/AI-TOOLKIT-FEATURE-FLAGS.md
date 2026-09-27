@@ -34,6 +34,12 @@ the Pages deploy (Actions → Pages → Run workflow). A repository variable win
 environment, which compiled the toolkit off — and `off` forces the other five off.
 The entry disappears from Study.
 
+**It is not instant.** The flags are compiled into the bundle, so switching them off
+means a new build and deploy (a few minutes), and a browser that already has the
+app keeps running the cached bundle until its service worker picks up the new one —
+usually on the next visit after the deploy. For an emergency, expect minutes to
+hours, not seconds.
+
 **Permanent:** remove the lines from `app/.env.production`.
 
 Either way, student data stays on their devices under `semester.toolkit.v1` and
