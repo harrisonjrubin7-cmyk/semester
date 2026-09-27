@@ -70,7 +70,7 @@ meaning on its own.
 | Conflict | `statusOf('conflict')` = "Conflict needs review"; the resolution UI is `components/Adopting.tsx` | None | Word, `⇄` glyph | Urgent |
 
 Each of these is now on real screens: `SaveState` in Write, Mine's note editor,
-Settings → Assistant and context bars; `SyncState` on Account; `Progress` on
+Settings → Assistant and context bars; `Progress` on
 Update, Import and the travel pack; `StepStatus` in Study Studio and Update;
 `SuccessState` on Registration day, Close term, Export and Snapshots;
 `PermissionNotice` on Support access, Family and Share course; `ErrorState`

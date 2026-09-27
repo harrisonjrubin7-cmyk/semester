@@ -23,7 +23,7 @@ components existed before this work; the rest were added beside them in
 | Named steps (AI generation) | `StepStatus` | `unity/States.tsx` | New | Study Studio generation; Update reading one file |
 | Permission changed | `PermissionNotice` | `unity/States.tsx` | New | Support access created and revoked; Family permission plan and item saved; Share course after sending |
 | Offline | `OfflineStrip` | `unity/States.tsx` | New | Every screen while offline, via `ShellBody` |
-| Save / sync | `SaveState`, `SyncState` | `unity/Status.tsx` | New | `SyncState` on Account; `SaveState` in Write, Mine's note editor, Settings → Assistant, the Capture sheet, and context bars that pass `save` |
+| Save / sync | `SaveState`, `SyncState` | `unity/Status.tsx` | New | `SaveState` in Write, Mine's note editor, Settings → Assistant, the Capture sheet, and context bars that pass `save` |
 
 ## When to use which
 
@@ -165,10 +165,11 @@ change what the student should do next. `SyncState` reads the account's sync
 state and connection through `syncStatusKey`, so it says the same words as
 Settings.
 
-Where it is used: `SyncState` on Account, above the counts it always showed;
-`SaveState` beside Write's save sentence, under the title in Mine's note
+Where it is used: `SaveState` beside Write's save sentence, under the title in Mine's note
 editor, in Settings → Assistant only once something has been saved, in the
 Capture sheet after Save, and in every context bar given a `save` state.
+`SyncState` is not placed: Account's sync line is #777's live region, worded
+from `SYNC_WORDS`, with the announced `ErrorState` beneath it on failure.
 
 ### Reversible and irreversible actions — `Undone`, `TypeToConfirm`
 

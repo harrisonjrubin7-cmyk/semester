@@ -22,7 +22,7 @@ store.
 | Next | `NextSteps` | The deadline (next deadline in the same course); `components/RegistrationDay.tsx` (Add backups, Open cart); `components/CloseTerm.tsx` (See your record, Import next term's syllabus) |
 | Status vocabulary | `StatusChip`, `statusOf` | Today's path snapshot, `screens/Degree.tsx`, `NotOfficial`, every placed context bar and object card, Settings and the soft layout's sync lines |
 | Source & details | `SourceDrawer` via `showSource()` or a `source` prop | Every placed `ContextBar` and `ObjectCard`; Today's path snapshot |
-| Save and sync | `SaveState`, `SyncState` | `screens/Account.tsx` (`SyncState`); `screens/Write.tsx`, the note editor in `screens/Mine.tsx`, `screens/settings/Assistant.tsx`, the Capture sheet, and the context bars that pass `save` |
+| Save and sync | `SaveState`, `SyncState` | `screens/Write.tsx`, the note editor in `screens/Mine.tsx`, `screens/settings/Assistant.tsx`, the Capture sheet, and the context bars that pass `save` |
 | Quick Capture | `QuickCapture` via `showCapture()` | The `+` box's "Or keep it as" row (`KeepItAs` in `QuickAdd`) |
 | About this screen | `ScreenGuide` | Every screen, via `ShellBody` |
 | Offline strip | `OfflineStrip` | Every screen while offline, via `ShellBody` |
@@ -266,12 +266,16 @@ and that every label is unique, and that every entry has a label, a sentence
 over ten characters, and a glyph.
 
 `syncStatusKey(sync, isOffline)` is the one mapping from the store's sync state
-(`off`, `signed-out`, `syncing`, `synced`, `error`) to a key; being offline
-outranks the last sync result, except when there is nothing to sync.
-Settings (`screens/settings/Index.tsx`) and the soft layout's card
-(`components/soft/SoftTopBody.tsx`) both read their words from it, which ended
-"Sync trouble" beside "Trouble" and "Not signed in" beside "None" as two
-unrelated strings. `lib/unity.test.ts` checks both files use it.
+(all nine of `SyncStatus`, including `offline`, `queued`, `conflict` and
+`review` from #777) to a key; being offline outranks the last sync result,
+except when there is nothing to sync or changes are already queued. Both
+conflict kinds map to `conflict`.
+
+The store's own states are named by a second table, `SYNC_WORDS` in
+`lib/syncstatus.ts` (#777), which Settings, the soft layout's card and
+Account read. The two were not merged; `lib/unity.test.ts` holds them to the
+same label and short form wherever both name a state, so "Sync trouble" and
+"Trouble" cannot drift apart again.
 
 Tone maps to a token through `toneVar(tone)`: attention and danger to
 `--status-attention` / `--status-danger` (both the warn ink), success and info

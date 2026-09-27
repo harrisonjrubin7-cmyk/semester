@@ -172,10 +172,12 @@ describe('Account: the sync lines', () => {
     await mount(<AccountScreen />);
   }
 
-  it('says Synced in the shared vocabulary and keeps the counts beneath it', async () => {
+  it('says Synced, with the counts, in the live sync line', async () => {
+    // Since #777 the sync line is Account's own live region, worded from
+    // `SYNC_WORDS`, rather than the shared `SyncState`.
     await signedIn({ status: 'synced', at: Date.now(), error: '' }, async () => 'Up to date.');
-    expect(host.querySelector('.save-state')?.textContent).toContain('Synced');
-    expect(text()).toMatch(/\d+ courses? · \d+ added · \d+ notes · \d+ tasks/);
+    const line = [...host.querySelectorAll('[role="status"]')].find((n) => /Synced/.test(n.textContent ?? ''));
+    expect(line?.textContent).toMatch(/Synced .* · \d+ courses? · \d+ added · \d+ notes · \d+ tasks/);
     expect(buttons().filter((b) => b.textContent === 'Check now')).toHaveLength(1);
   });
 
@@ -189,6 +191,8 @@ describe('Account: the sync lines', () => {
     expect(alert.querySelector('.state-body')!.textContent).toBe('The server said no.\n\nWhat to do next.');
     expect(alert.querySelector('.state-body')!.textContent).not.toContain('Reference');
     expect(alert.textContent).toContain('Reference: SEM-1234');
+    // Said once: the failure is the error state's, not repeated in the live line.
+    expect(text().split('Sync failed.').length - 1).toBe(0);
     // One "Check now", not the error state's and the old button's.
     expect(buttons().filter((b) => /Check now/.test(b.textContent ?? ''))).toHaveLength(1);
     await press('Check now');

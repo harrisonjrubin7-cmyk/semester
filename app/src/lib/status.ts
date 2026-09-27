@@ -27,6 +27,7 @@
  * least of the three.
  */
 
+import type { SyncStatus } from '../state/store';
 import { aboutWhere, saysWhere, type Where } from './where';
 
 export type Tone = 'neutral' | 'info' | 'success' | 'attention' | 'danger';
@@ -189,15 +190,21 @@ export function statusOf(key: StatusKey): Status {
   return { key, short: row.short ?? row.label, ...row };
 }
 
-/** The account's sync state, as the SyncStatus the store publishes. */
-export type SyncState = 'off' | 'signed-out' | 'syncing' | 'synced' | 'error';
+/** The account's sync state, exactly as the store publishes it. */
+export type SyncState = SyncStatus;
 
 /**
  * The one mapping from the store's sync state to a status. An offline device
  * outranks whatever the last sync said, because it is what will happen next.
+ *
+ * The words for the store's own states are `SYNC_WORDS` in
+ * `lib/syncstatus.ts`; this maps those states onto the shared vocabulary so a
+ * chip or a save line says the same thing (`lib/unity.test.ts` holds the two
+ * tables to the same labels). Both conflict states are `conflict` here: the
+ * chip says a conflict exists, and Account says which kind.
  */
 export function syncStatusKey(sync: SyncState, isOffline = false): StatusKey {
-  if (isOffline && sync !== 'off' && sync !== 'signed-out') return 'offline';
+  if (isOffline && sync !== 'off' && sync !== 'signed-out' && sync !== 'queued') return 'offline';
   switch (sync) {
     case 'synced':
       return 'synced';
@@ -209,6 +216,13 @@ export function syncStatusKey(sync: SyncState, isOffline = false): StatusKey {
       return 'signed-out';
     case 'off':
       return 'device-only';
+    case 'offline':
+      return 'offline';
+    case 'queued':
+      return 'queued';
+    case 'conflict':
+    case 'review':
+      return 'conflict';
   }
 }
 

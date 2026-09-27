@@ -2,6 +2,8 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { STATUS_KEYS, statusOf, syncStatusKey } from './status';
+import { SYNC_WORDS } from './syncstatus';
+import type { SyncStatus } from '../state/store';
 import { TRUST, aboutWhere, saysWhere, type Where } from './where';
 import { DEFAULT_PINS, MAX_PINS, WIDGETS, movePin, readPins, togglePin, writePins } from './widgets';
 import { explain, explainedByHand } from './explain';
@@ -64,11 +66,26 @@ describe('the status vocabulary', () => {
     expect(statusOf(syncStatusKey('off')).short).toBe('Local');
   });
 
-  it('is where both readouts get their words', () => {
+  it('agrees with SYNC_WORDS, the table the sync readouts read', () => {
+    // Two tables name sync states: `lib/syncstatus.ts` for the store's own
+    // states (the soft card, Settings, Account), and this one for chips and
+    // save lines. Where both name a state, they must name it the same way.
+    const same: SyncStatus[] = ['off', 'signed-out', 'syncing', 'synced', 'offline', 'error'];
+    for (const s of same) {
+      expect(statusOf(syncStatusKey(s)).label, s).toBe(SYNC_WORDS[s].standing);
+      expect(statusOf(syncStatusKey(s)).short, s).toBe(SYNC_WORDS[s].short);
+    }
+    // Every store state maps to something, including the two conflict kinds.
+    for (const s of Object.keys(SYNC_WORDS) as SyncStatus[]) expect(STATUS_KEYS).toContain(syncStatusKey(s));
+    expect(syncStatusKey('queued')).toBe('queued');
+    expect(syncStatusKey('review')).toBe('conflict');
+  });
+
+  it('leaves the readouts on the one table rather than a chain of their own', () => {
     const settings = readFileSync('src/screens/settings/Index.tsx', 'utf8');
     const soft = readFileSync('src/components/soft/SoftTopBody.tsx', 'utf8');
-    expect(settings).toContain('statusOf(syncStatusKey(');
-    expect(soft).toContain('statusOf(syncStatusKey(');
+    expect(settings).toContain('SYNC_WORDS[');
+    expect(soft).toContain('SYNC_WORDS');
     expect(settings).not.toMatch(/'Sync trouble'/);
     expect(soft).not.toMatch(/'Trouble'/);
   });

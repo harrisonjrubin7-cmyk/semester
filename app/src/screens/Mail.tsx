@@ -390,6 +390,40 @@ export function Mail() {
    */
   const showActions = wide || chosen.length > 0;
 
+  /*
+   * The paging, which is the only way past the fiftieth conversation.
+   *
+   * It lived only in the wide toolbar, and the list under it is sliced to a
+   * page at every width — so on a phone the fifty-first message in a folder
+   * was unreachable except by searching for it by name. Search is not a way
+   * to browse. The toolbar on a phone has no room for three more controls
+   * beside the search field, so there it is a row of its own under the
+   * toolbar, drawn only when there is a second page to go to.
+   */
+  const pager = (
+    <>
+      <span className="mb-folder-n">{pageLabel(threads.length, page, PER_PAGE)}</span>
+      <button
+        type="button"
+        className="mb-ico"
+        aria-label="Newer"
+        disabled={page === 0}
+        onClick={() => setPage((n) => Math.max(0, n - 1))}
+      >
+        <ChevronLeft size={17} />
+      </button>
+      <button
+        type="button"
+        className="mb-ico"
+        aria-label="Older"
+        disabled={page + 1 >= pages(threads.length, PER_PAGE)}
+        onClick={() => setPage((n) => n + 1)}
+      >
+        <ChevronLeft size={17} style={{ transform: 'rotate(180deg)' }} />
+      </button>
+    </>
+  );
+
   return (
     <div className="mb">
       <FlightPlanInboxSlot />
@@ -556,29 +590,7 @@ export function Mail() {
 
         {wide && (
           <>
-            {threads.length > 0 && (
-              <>
-                <span className="mb-folder-n">{pageLabel(threads.length, page, PER_PAGE)}</span>
-                <button
-                  type="button"
-                  className="mb-ico"
-                  aria-label="Newer"
-                  disabled={page === 0}
-                  onClick={() => setPage((n) => Math.max(0, n - 1))}
-                >
-                  <ChevronLeft size={17} />
-                </button>
-                <button
-                  type="button"
-                  className="mb-ico"
-                  aria-label="Older"
-                  disabled={page + 1 >= pages(threads.length, PER_PAGE)}
-                  onClick={() => setPage((n) => n + 1)}
-                >
-                  <ChevronLeft size={17} style={{ transform: 'rotate(180deg)' }} />
-                </button>
-              </>
-            )}
+            {threads.length > 0 && pager}
             <button
               type="button"
               className="mb-ico"
@@ -596,6 +608,11 @@ export function Mail() {
           </>
         )}
       </div>
+      {!wide && !open && threads.length > PER_PAGE && (
+        <div className="mb-top mb-pager" role="navigation" aria-label="Pages">
+          {pager}
+        </div>
+      )}
 
       {menu?.which === 'snooze' && (
         <Popover label="Snooze until" corner={menu.corner} onClose={() => setMenu(null)}>
