@@ -71,7 +71,7 @@ describe('the payload, checked again on the way out', () => {
   });
 
   it('agrees with the SQL about which keys it builds, and with the app about the cap', () => {
-    const sql = readFileSync(new URL('../../../supabase/migrations/20260928030000_community.sql', import.meta.url), 'utf8');
+    const sql = readFileSync(new URL('../../../supabase/migrations/20260928032000_community.sql', import.meta.url), 'utf8');
     const start = sql.indexOf('create or replace function public.decide_community_escalation(');
     const built = /jsonb_build_object\(([\s\S]*?)\);/.exec(sql.slice(start))?.[1] ?? '';
     const keys = [...built.matchAll(/'([a-z_]+)',/g)].map((m) => m[1]).sort();
