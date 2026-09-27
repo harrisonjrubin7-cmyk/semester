@@ -28,6 +28,7 @@
 
 import type { Account } from './cloud';
 import type { SyncStatus } from '../state/store';
+import { SYNC_WORDS } from './syncstatus';
 import type { Row } from './inventory';
 
 /**
@@ -112,8 +113,8 @@ export function saidAbout({ account, status, at }: AccountState, now = Date.now(
     };
   }
   const sub =
-    status === 'syncing'
-      ? 'Catching up with your account…'
+    status === 'syncing' || status === 'offline' || status === 'queued' || status === 'conflict' || status === 'review'
+      ? SYNC_WORDS[status].sentence
       : status === 'error'
         ? 'Sync failed — open Account for what went wrong.'
         : status === 'synced'

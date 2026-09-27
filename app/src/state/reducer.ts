@@ -20,6 +20,8 @@
  * and failing when the two sets differ in either direction.
  */
 
+import { strategyFor } from '../lib/merge';
+import { SETTING_FIELDS, putRecord } from '../lib/conflicts';
 import type { Action, State } from './shape';
 import { changedSomething, snapshot, tookSomething, undoableFor } from '../lib/undo';
 import { library } from './slices/library';
@@ -77,6 +79,52 @@ export function reducer(state: State, action: Action): State {
     // announcement, and the Account screen still has to be able to say what
     // the last sync did afterwards.
     return state.lastSync ? { ...state, lastSync: { ...state.lastSync, told: true } } : state;
+  }
+
+  // A version the student chose between two devices' edits. Here rather
+  // than in a slice because it can land in any list the merge unions, which
+  // is most of them. Only those: a field the merge does not treat as a list
+  // of records has no second copy to have chosen.
+  if (action.type === 'restoreRecord') {
+    const rows = (state as unknown as Record<string, unknown>)[action.field];
+    if (!Array.isArray(rows) || strategyFor(action.field) !== 'union') return state;
+    return { ...state, [action.field]: putRecord(rows, action.record) } as State;
+  }
+
+  // The same, for a setting: the version the student chose, written back
+  // field by field. Only the fields a group on the review list covers — this
+  // is an action any code could dispatch, and a generic "set these fields"
+  // must not become a way round every other action's rules.
+  if (action.type === 'restoreSettings') {
+    const allowed = Object.entries(action.values).filter(([field]) => SETTING_FIELDS.has(field));
+    if (allowed.length === 0) return state;
+    return { ...state, ...Object.fromEntries(allowed) } as State;
+  }
+
+  // And one key of a per-key map — a tick, a grade, a course's name. Only
+  // maps the merge treats key by key; `undefined` is the key not being set
+  // on the device the student chose, so it goes.
+  if (action.type === 'restoreTick') {
+    const map = (state as unknown as Record<string, unknown>)[action.field];
+    if (strategyFor(action.field) !== 'ticks' || typeof map !== 'object' || map === null) return state;
+    const next = { ...(map as Record<string, unknown>) };
+    if (action.value === undefined) delete next[action.key];
+    else next[action.key] = action.value;
+    return { ...state, [action.field]: next } as State;
+  }
+
+  // Keys another device removed, removed here — the one thing the per-key
+  // merge cannot do. Only per-key maps, and only the keys named.
+  if (action.type === 'dropTicks') {
+    let next: State | null = null;
+    for (const [field, keys] of Object.entries(action.removals)) {
+      const map = (state as unknown as Record<string, unknown>)[field];
+      if (strategyFor(field) !== 'ticks' || typeof map !== 'object' || map === null) continue;
+      const kept = { ...(map as Record<string, unknown>) };
+      for (const k of keys) delete kept[k];
+      next = { ...(next ?? state), [field]: kept } as State;
+    }
+    return next ?? state;
   }
 
   const undoable = undoableFor(action.type);

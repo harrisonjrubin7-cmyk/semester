@@ -177,13 +177,13 @@ export function says(p: Unnamed): string {
  * workspace top bar is a glyph and a `<span>AI Tutor</span>`, which is a
  * perfectly good name — until `app.css` says
  *
- *     @media (max-width: 759px) { .desktop-ai span { display: none } }
+ *     @media (max-width: 839px) { .desktop-ai span { display: none } }
  *
- * and below 760px the only text in the button is not rendered. `display:
+ * and below 840px the only text in the button is not rendered. `display:
  * none` removes an element from the accessibility tree as well as from the
  * page, so the accessible name is computed from nothing: VoiceOver on a phone
  * announced "button" and stopped, on the one control in that bar that opens
- * the assistant. Every viewport this app is designed for is under 760px.
+ * the assistant. Every viewport this app is designed for is under 840px.
  *
  * Nothing caught it. The tag rule does not look at buttons, the button really
  * did have text, and the suite renders in jsdom, which parses the stylesheet

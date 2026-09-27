@@ -409,14 +409,14 @@ export function Command({ onClose }: { onClose: () => void }) {
          *
          * Which leaves what it covers, and `absolute` answers it correctly on
          * exactly one of the two layouts. On a phone `.device` is the app, so
-         * `absolute` fills it — and on a browser window between 402 and 760px
+         * `absolute` fills it — and on a browser window between 402 and 840px
          * the app is a *column* with ground either side, where a search
          * spilling across the ground would be the only thing in the app that
          * does. On a desk `.device-pane` is a 560px strip in a 1280px window,
          * and shrinking to it would leave the rail live behind a dialog that
          * says `aria-modal`, which is a promise this would then be breaking.
          *
-         * So: the column below 760px, the window above it. The content draws
+         * So: the column below 840px, the window above it. The content draws
          * itself in a column either way, which is why covering the whole
          * window reads as a search and not as a stretched screen.
          *

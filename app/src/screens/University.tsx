@@ -44,6 +44,7 @@ import { GetHelp } from '../components/GetHelp';
 import { HelpInbox } from '../components/HelpInbox';
 import { ReportQueue } from '../components/ReportQueue';
 import { operationsAllowed } from '../lib/institution-ops';
+import { forSchool, useMyCapabilities } from '../lib/capabilities';
 import { helpSeedWaiting, loadInboxes, newRequestCount, type StaffInbox } from '../lib/help-routes';
 import { ControlPlane } from '../components/institutional/ControlPlane';
 import { IntegrationDashboard } from '../components/institutional/IntegrationDashboard';
@@ -122,14 +123,11 @@ function RoleWorkspaceSlot() {
  */
 
 /**
- * Capabilities the gateway has verified for this person over this school.
- * Empty until that verification is wired to the client — a role picked in the
- * UI is not authorization — so anything gated on it stays closed.
+ * The tabs, and what each is for. Operations depends on what the database says
+ * this person holds over this school (`lib/capabilities.ts`), so the list is
+ * built per render rather than once at load.
  */
-const VERIFIED_CAPABILITIES: readonly string[] = [];
-
-/** The tabs, and what each is for. */
-const TABS = [
+const tabsFor = (verified: readonly string[]) => [
   { id: 'overview' as const, label: 'Services' },
   { id: 'drafts' as const, label: 'Drafts' },
   { id: 'records' as const, label: 'Records' },
@@ -145,7 +143,7 @@ const TABS = [
     : []),
   // Staff only in practice, and governed in code: aggregates at n >= 10, no
   // per-student grain, forbidden measures refused. See lib/institution-ops.ts.
-  ...(EXPERIENCE_FLAGS.institutionalOperations !== 'off' && operationsAllowed(VERIFIED_CAPABILITIES)
+  ...(EXPERIENCE_FLAGS.institutionalOperations !== 'off' && operationsAllowed(verified)
     ? [{ id: 'operations' as const, label: 'Operations' }]
     : []),
 ];
@@ -285,6 +283,11 @@ function Standing({
 
 function Workspace({ storageKey }: { storageKey: string }) {
   const { state, dispatch, catalog, school, account } = useStore();
+  // Capabilities over this school, as the database reports them — never a role
+  // picked in the UI. They decide what is offered; policies still authorize.
+  const grants = useMyCapabilities();
+  const verified = forSchool(grants, school.id);
+  const TABS = tabsFor(verified);
 
   // An Action Center "Ask for help" lands here with a seed waiting; open on it.
   const [tab, setTab] = useState<Tab>(() =>
@@ -769,9 +772,9 @@ function Workspace({ storageKey }: { storageKey: string }) {
             featureState: EXPERIENCE_FLAGS.universityControlPlane,
             gatewayStatus: controlStatus,
             // The selector and locally loaded institution status are not
-            // authorization. A gateway-verified capability must populate
-            // this list before policy writes become available.
-            verifiedCapabilities: [],
+            // authorization. This list is what my_capabilities() reports over
+            // this school; the policy writes it unlocks are still checked by RLS.
+            verifiedCapabilities: verified.map((capability) => ({ tenantId: school.id, capability, verified: true })),
             approvedSourceCount: catalog.courses.filter((course) => Boolean(course.source)).length,
             activeConsentCount: 0,
             auditEventCount: 0,
@@ -781,9 +784,9 @@ function Workspace({ storageKey }: { storageKey: string }) {
 
       {tab === 'integrations' && EXPERIENCE_FLAGS.integrationDashboard !== 'off' && <IntegrationDashboard />}
 
-      {tab === 'operations' && EXPERIENCE_FLAGS.institutionalOperations !== 'off' && operationsAllowed(VERIFIED_CAPABILITIES) && (
+      {tab === 'operations' && EXPERIENCE_FLAGS.institutionalOperations !== 'off' && operationsAllowed(verified) && (
         <Suspense fallback={null}>
-          <OperationsStudio verified={VERIFIED_CAPABILITIES} tenantId={school.id} accountId={account?.id || 'device'} />
+          <OperationsStudio verified={verified} tenantId={school.id} accountId={account?.id || 'device'} />
         </Suspense>
       )}
 
