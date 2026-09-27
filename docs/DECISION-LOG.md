@@ -527,3 +527,41 @@ session's range.)
 - No grade prediction, pass likelihood, score or comparison with other
   students. A test holds those words out.
 
+## D-046 · Career evidence: nothing reaches a résumé that the student did not confirm or write
+
+**Decided 27 Sep 2026 (Phase I).**
+
+- **Skills.** Suggested skills from `lib/skills-graph.ts` stay "suggested"
+  until the student confirms, renames or rejects them. Only confirmed skills
+  appear on a résumé, a pitch or an artifact. A skill the student adds must
+  cite a course or an entry of theirs.
+- **Bullets.** Bullets are composed only from the student's answers to the
+  three metric prompts. An unanswered prompt is left out, never filled in.
+  The only words Semester adds are "using", "reaching" and "people". A test
+  checks that a bullet holds no other word, and no number the student did
+  not give.
+- **Entries and artifacts.** Every bullet belongs to an entry the student
+  made. Every artifact is tied to such an entry or to a course, and is
+  tagged only with confirmed skills.
+- **Pitch.** It uses the student's own name, headline, latest entry and
+  confirmed skills, and leaves a `[bracket]` wherever something is missing.
+- **No applications.** Nothing is ever applied for. A fair contact reaches
+  the student's own tracker only when they press "Add to my tracker".
+
+## D-047 · Career evidence stays on the device for now
+
+**Decided 27 Sep 2026 (Phase I).**
+
+- `semester.career-evidence.v1:<account|device>:<term>` is scoped like the
+  career library it builds on. It holds:
+  - skill decisions and the student's own skills;
+  - artifacts and bullets;
+  - résumé versions;
+  - interview ticks;
+  - fair plans.
+- The server's `skill_claim` tables (`20260923211000_evidence_graphs.sql`)
+  are not written from the app yet. Syncing confirmed skills to them is
+  follow-up work that needs a cloud adaptor and deletion wiring. That work
+  has to map the server's `rejected` state, which the app's `SkillClaim`
+  type lacks.
+
