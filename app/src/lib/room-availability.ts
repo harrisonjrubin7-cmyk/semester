@@ -17,8 +17,8 @@ import type { Freshness } from './integration/catalog';
 export interface RoomNow {
   space: string;
   /** `unknown`: the school listed no slots for this room today, so nothing is claimed. */
-  status: 'free_now' | 'free_later' | 'busy_today' | 'unknown';
-  /** Minutes since midnight: until when free now, or from when free later. */
+  status: 'free_now' | 'free_later' | 'busy_now' | 'unknown';
+  /** Minutes since midnight: until when free or busy now, or from when free later. */
   at: number | null;
   bookUrl: string | null;
   freshness: Freshness;
@@ -36,33 +36,36 @@ export function roomsNow(rows: readonly RecordRow[], now: Date): RoomNow[] {
   const out: RoomNow[] = [];
   for (const sp of spaces) {
     const name = str(sp.display.name).trim();
-    // Today's slots for this room, free or busy: a slot counts if it starts
-    // today or is still running now (an overnight one that began yesterday).
-    const today = slots
+    // This room's slots that are running now or start later today, free or
+    // busy. Finished slots say nothing about the rest of the day.
+    const ahead = slots
       .filter((sl) => str(sl.display.space).trim() === name)
       .map((sl) => ({ row: sl, free: str(sl.display.status) === 'free', from: new Date(str(sl.display.starts_at)), to: new Date(str(sl.display.ends_at)) }))
-      .filter((x) => !Number.isNaN(x.from.getTime()) && !Number.isNaN(x.to.getTime()) && (sameDay(x.from) || (x.from <= now && x.to > now)));
-    const mine = today
-      .filter((x) => x.free && x.to > now)
+      .filter((x) => !Number.isNaN(x.from.getTime()) && !Number.isNaN(x.to.getTime()) && x.to > now && (sameDay(x.from) || x.from <= now))
       .sort((a, b) => a.from.getTime() - b.from.getTime());
-    const current = mine.find((x) => x.from <= now && x.to > now);
-    const next = mine.find((x) => x.from > now);
-    const pick = current ?? next;
+    const free = ahead.filter((x) => x.free);
+    const current = free.find((x) => x.from <= now);
+    const next = free.find((x) => x.from > now);
+    // "Booked" needs a busy slot covering this minute; anything less is unknown.
+    const busyNow = current || next ? undefined : ahead.find((x) => !x.free && x.from <= now);
+    const pick = current ?? next ?? busyNow;
     out.push({
       space: name,
-      status: current ? 'free_now' : next ? 'free_later' : today.length ? 'busy_today' : 'unknown',
-      at: current ? minuteOf(current.to) : next ? minuteOf(next.from) : null,
+      status: current ? 'free_now' : next ? 'free_later' : busyNow ? 'busy_now' : 'unknown',
+      at: current ? minuteOf(current.to) : next ? minuteOf(next.from) : busyNow ? minuteOf(busyNow.to) : null,
       bookUrl: https(pick?.row.display.book_url) ?? https(sp.display.book_url),
+      // The slot's own freshness whenever a slot says anything; the room's
+      // 24-hour cadence only when none does.
       freshness: pick ? effectiveFreshness(pick.row, now) : effectiveFreshness(sp, now),
       quiet: sp.display.quiet === true,
     });
   }
-  const rank = { free_now: 0, free_later: 1, busy_today: 2, unknown: 3 };
+  const rank = { free_now: 0, free_later: 1, busy_now: 2, unknown: 3 };
   return out.sort((a, b) => rank[a.status] - rank[b.status] || (a.at ?? 1e9) - (b.at ?? 1e9) || a.space.localeCompare(b.space));
 }
 
 /** With sensory-friendly on, quiet rooms first within the same availability; nothing hidden. */
 export function quietFirst(rooms: readonly RoomNow[]): RoomNow[] {
-  const rank = { free_now: 0, free_later: 1, busy_today: 2, unknown: 3 };
+  const rank = { free_now: 0, free_later: 1, busy_now: 2, unknown: 3 };
   return [...rooms].sort((a, b) => rank[a.status] - rank[b.status] || Number(b.quiet) - Number(a.quiet));
 }

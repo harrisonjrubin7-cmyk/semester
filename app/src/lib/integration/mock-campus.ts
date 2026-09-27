@@ -124,7 +124,10 @@ export const MOCK_SPACE_BOOKING = {
 export const MOCK_LIBRARY = mock('mock_library', 'library', 'Mock Library', 'integration.campus_services', 'Library', 24 * 60, [
   { externalEntity: 'space', canonicalEntity: 'study_space', version: 1, scope: 'scope.library.space_read',
     classification: 'T0', personal: false,
-    fields: [s('name'), s('hours', 'hours', false), u('book_url')] },
+    // `quiet` feeds the sensory-friendly ordering on Support › Campus; a
+    // provider that does not send it leaves every room unmarked, never guessed.
+    fields: [s('name'), s('hours', 'hours', false), u('book_url'),
+      { external: 'quiet', canonical: 'quiet', type: 'boolean' as const, required: false }] },
 ]);
 
 export const MOCK_TUTORING = mock('mock_tutoring', 'tutoring', 'Mock Tutoring', 'integration.campus_services', 'Tutoring center', 24 * 60, [

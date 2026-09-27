@@ -27,7 +27,7 @@ export function RoomsNow({ sensory }: { sensory: boolean }) {
             {r.quiet ? <span className="jx-tag">Quiet</span> : null}
           </div>
           <div className="jx-entry-what">
-            {r.status === 'free_now' ? `Free until ${clock(r.at!)}` : r.status === 'free_later' ? `Free from ${clock(r.at!)}` : r.status === 'busy_today' ? 'Booked for the rest of today' : 'No availability listed today'}
+            {r.status === 'free_now' ? `Free until ${clock(r.at!)}` : r.status === 'free_later' ? `Free from ${clock(r.at!)}` : r.status === 'busy_now' ? `Booked until ${clock(r.at!)}; no free time listed after` : 'No availability listed for the rest of today'}
           </div>
           <div className="jx-privacy">
             {FRESHNESS_TEXT[r.freshness]} · from the school’s booking system

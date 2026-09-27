@@ -271,15 +271,28 @@ export async function loadRecords(db: SupabaseClient): Promise<RecordRow[]> {
   return (data ?? []) as unknown as RecordRow[];
 }
 
-/** Study spaces and their slots, apart from the facts Today and Notices read. */
-export async function loadRoomRecords(db: SupabaseClient): Promise<RecordRow[]> {
-  const { data, error } = await db.from('canonical_entity_references')
-    .select(RECORD_COLUMNS)
-    .in('canonical_entity_type', ROOM_TYPES)
-    .is('external_deleted_at', null)
-    .limit(1000);
+/**
+ * Study spaces and their slots, apart from the facts Today and Notices read.
+ * Two queries, each bounded to what the screen can use: every space, and only
+ * the slots still running or yet to start today. One capped query over every
+ * slot ever synced let finished ones crowd out today's — and the rooms too.
+ * Slot times are stored as `toISOString()` output, so they compare as text.
+ */
+export async function loadRoomRecords(db: SupabaseClient, now = new Date()): Promise<RecordRow[]> {
+  const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999).toISOString();
+  const [spaces, slots] = await Promise.all([
+    db.from('canonical_entity_references').select(RECORD_COLUMNS)
+      .eq('canonical_entity_type', 'study_space').is('external_deleted_at', null).limit(500),
+    db.from('canonical_entity_references').select(RECORD_COLUMNS)
+      .eq('canonical_entity_type', 'space_availability').is('external_deleted_at', null)
+      .gt('display->>ends_at', now.toISOString())
+      .lte('display->>starts_at', endOfDay)
+      .order('display->>starts_at', { ascending: true })
+      .limit(2000),
+  ]);
+  const error = spaces.error ?? slots.error;
   if (error) throw new Error(error.message || 'Could not load room availability.');
-  return (data ?? []) as unknown as RecordRow[];
+  return [...(spaces.data ?? []), ...(slots.data ?? [])] as unknown as RecordRow[];
 }
 
 /** The student's own imported records of one kind, removed now. */

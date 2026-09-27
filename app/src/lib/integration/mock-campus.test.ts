@@ -7,7 +7,7 @@ import { describe, expect, it } from 'vitest';
 import { validateDeclaration, type AdapterDeclaration } from './adapter';
 import { memoryStore, mockBatch } from './mock-adapter';
 import {
-  CAMPUS_ADAPTERS, CAMPUS_FIXTURES, MOCK_ADVISING, MOCK_ALERTS, MOCK_BURSAR, MOCK_CAREER, MOCK_EVENTS, MOCK_TUTORING,
+  CAMPUS_ADAPTERS, CAMPUS_FIXTURES, MOCK_ADVISING, MOCK_LIBRARY, MOCK_ALERTS, MOCK_BURSAR, MOCK_CAREER, MOCK_EVENTS, MOCK_TUTORING,
   MOCK_SPACE_AVAILABILITY, MOCK_SPACE_BOOKING,
 } from './mock-campus';
 import { ingest, type ConnectionState, type ExternalRecord } from './pipeline';
@@ -112,6 +112,13 @@ describe('ingest, campus', () => {
     expect(r.references[0]).toMatchObject({ canonicalEntity: 'space_availability', subjectUserId: null, classification: 'T0',
       values: { status: 'busy', space: 'Library room 214' } });
     expect(JSON.stringify(r.references)).not.toContain('student@example.edu');
+  });
+
+  it('keeps a study space’s quiet flag, which sensory-friendly ordering reads', async () => {
+    const space = { entityType: 'space', id: 'sp-1', updatedAt: '2026-09-27T06:00:00Z',
+      fields: { name: 'Quiet room', book_url: 'https://rooms.example.edu/q', quiet: true } };
+    const r = await run(MOCK_LIBRARY, [space]);
+    expect(r.references[0]).toMatchObject({ canonicalEntity: 'study_space', values: { name: 'Quiet room', quiet: true } });
   });
 
   it('declares room booking as a gated write that nothing sends', () => {
