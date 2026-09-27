@@ -2,7 +2,7 @@
 
 Code: `prepareEscalation` in `app/src/community/crisis.ts`, and the same rules
 enforced in the database by `request_community_escalation` and
-`decide_community_escalation` (`20260927210000_community.sql`, section 14).
+`decide_community_escalation` (`20260927235000_community.sql`, section 14).
 Flag: `VITE_INSTITUTION_ESCALATION` (high-risk, off, production refused).
 Server switch: the school's `community_programs` row for
 `institution_escalation`, plus a `community_escalation_policies` row. Only the

@@ -4,7 +4,7 @@ Code: `app/src/community/volunteer.ts`, plus `mayDecide` and `blindView` in
 `moderation.ts`. Enforced by the `community_volunteers`,
 `community_calibration_items`, `community_volunteer_tasks`,
 `community_volunteer_votes` and `community_volunteer_events` tables and their
-functions in `20260927210000_community.sql`. `programs.test.ts` holds the two
+functions in `20260927235000_community.sql`. `programs.test.ts` holds the two
 copies of every number to each other.
 
 **Two switches, both off.** The build flag `VITE_VOLUNTEER_MODERATION` is

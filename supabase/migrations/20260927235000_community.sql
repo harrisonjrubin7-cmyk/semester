@@ -1414,7 +1414,8 @@ grant execute on function private.sweep_community_retention() to service_role;
 -- ── 10. The LTI emptiness check counts Community ──────────────────────────
 -- An LTI launch attaches only to an account nobody has used. A post, a
 -- membership, a hosted session, a session place or a mute is use, so the
--- check from 20260925103000_support_access.sql is restated with them added.
+-- check from 20260927230000_help_requests.sql is restated with them added;
+-- this migration runs after it so neither loses the other's tables.
 create or replace function public.lti_account_untouched(who uuid)
 returns boolean
 language plpgsql
@@ -1448,6 +1449,7 @@ begin
       ('public.organization_members',           'user_id'),
       ('public.support_access_grant',           'student_id'),
       ('public.support_access_grant',           'supporter_id'),
+      ('public.help_requests',                  'student_id'),
       ('public.community_posts',                'author_id'),
       ('public.community_sessions',             'host_id'),
       ('public.community_session_participants', 'user_id'),
@@ -2557,7 +2559,7 @@ grant execute on function public.my_community_standing() to authenticated;
 --     private.has_contact_details(text), public.create_community(text, text, text, text),
 --     private.blocked_either_way(uuid),
 --     public.join_community(uuid), private.community_restricted(uuid, uuid), private.community_role(uuid);
---   -- and restore lti_account_untouched from 20260925103000_support_access.sql, first.
+--   -- and restore lti_account_untouched from 20260927230000_help_requests.sql, first.
 --   drop table if exists public.community_session_participants, public.community_sessions,
 --     public.community_venues, public.community_decisions, public.community_case_events,
 --     public.community_reports, public.community_cases, public.community_mutes,
