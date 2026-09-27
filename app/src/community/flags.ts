@@ -99,3 +99,5 @@ export function communityFlags(env: PreviewEnv): CommunityFlags {
 export function enabled(flags: CommunityFlags, flag: CommunityFlag): boolean {
   return flags[flag] !== 'off';
 }
+
+export const COMMUNITY_FLAGS = communityFlags(import.meta.env);
