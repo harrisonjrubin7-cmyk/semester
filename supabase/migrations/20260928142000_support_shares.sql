@@ -288,6 +288,7 @@ begin
       ('public.organization_members', 'user_id'),
       ('public.support_access_grant', 'student_id'),
       ('public.support_access_grant', 'supporter_id'),
+      ('public.help_requests',        'student_id'),
       ('public.family_invites',       'student_id'),
       ('public.family_shared_items',  'student_id'),
       ('public.family_access_events', 'student_id'),
