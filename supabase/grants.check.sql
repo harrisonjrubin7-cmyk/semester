@@ -281,7 +281,19 @@ declare
     -- holds each of those as the account refused.
     'list_advisor_shares()',
     'read_advisor_share(want_share uuid)',
-    'share_with_advisor(advisor_email text, share_title text, share_payload jsonb, share_expires timestamp with time zone)'
+    'share_with_advisor(advisor_email text, share_title text, share_payload jsonb, share_expires timestamp with time zone)',
+
+    -- The six in 20260927224500_office_action_feed.sql (Phase J, D-048).
+    -- The feed returns only published rows that reach the caller; the desk
+    -- only rows in the caller's own office scope, with a count that is null
+    -- below ten; the two writers check office, role and scope themselves.
+    -- `officeactions.check.sql` holds each as the account refused.
+    'draft_office_action(want_office text, want_scope_kind text, want_scope_id text, want_type text, want_audience text, want_target text, want_title text, want_why text, want_due timestamp with time zone, want_url text, want_source text)',
+    'move_office_action(want_id uuid, want_step text, want_note text)',
+    'my_action_publish_scopes()',
+    'my_office_actions()',
+    'office_action_programs()',
+    'office_desk_actions()'
   ];
   extra text;
   missing text;
@@ -317,7 +329,7 @@ begin
   if missing is not null then
     raise exception 'FAILED: the allowlist names %, which a signed-in account cannot call', missing;
   end if;
-  raise notice 'ok  and can call all thirty that it should';
+  raise notice 'ok  and can call every function it should';
 end $$;
 
 -- ── The gate's own switch, named because it is the one that was open ──────

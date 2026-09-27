@@ -250,18 +250,25 @@ begin
     pg_temp.seen(mentor, 'select * from public.onboarding_progress'), 0);
 
   -- ── institution actions ────────────────────────────────────────────────
-  perform pg_temp.expect_allowed('the registrar sends a cohort action', registrar,
+  -- Writes go through the Phase J functions (20260927224500); the direct
+  -- insert this section used to make is refused now, and a draft reaches no
+  -- student until a second person approves it. `officeactions.check.sql`
+  -- walks the whole workflow.
+  perform pg_temp.expect_refused('a direct insert, even by the registrar', registrar,
     $q$insert into public.institution_actions (tenant_id, publisher_id, publisher_scope_kind, publisher_scope_id,
-         action_type, target_cohort, title)
-       select 'exp-u', (select auth.uid()), 'school', 'exp-u', 'registration', 'exp-u/first-year', 'Meet your advisor'$q$);
-  perform pg_temp.counted('the cohort student sees it',
-    pg_temp.seen(student, 'select * from public.institution_actions'), 1);
-  perform pg_temp.counted('a student outside the cohort does not',
+         action_type, audience_kind, target_cohort, title)
+       select 'exp-u', (select auth.uid()), 'school', 'exp-u', 'registration', 'cohort', 'exp-u/first-year', 'Meet your advisor'$q$);
+  perform pg_temp.expect_allowed('the registrar drafts a cohort action', registrar,
+    $q$select public.draft_office_action('registrar', 'school', 'exp-u', 'registration', 'cohort', 'exp-u/first-year',
+         'Meet your advisor', 'Your advisor releases your registration hold.', null,
+         'https://registrar.exp-u.example/advising', 'Registrar advising policy')$q$);
+  perform pg_temp.counted('no student sees a draft',
+    pg_temp.seen(student, 'select * from public.institution_actions'), 0);
+  perform pg_temp.counted('a student outside the cohort does not either',
     pg_temp.seen(classmate, 'select * from public.institution_actions'), 0);
-  perform pg_temp.expect_refused('an instructor publishes an institution action', prof,
-    $q$insert into public.institution_actions (tenant_id, publisher_id, publisher_scope_kind, publisher_scope_id,
-         action_type, target_cohort, title)
-       select 'exp-u', (select auth.uid()), 'school', 'exp-u', 'hold', 'exp-u/first-year', 'Fake hold'$q$);
+  perform pg_temp.expect_refused('an instructor drafts an institution action', prof,
+    $q$select public.draft_office_action('registrar', 'school', 'exp-u', 'hold', 'cohort', 'exp-u/first-year',
+         'Fake hold', 'A hold.', null, 'https://example.com', 'None')$q$);
 
   -- ── transfer credit ────────────────────────────────────────────────────
   perform pg_temp.expect_allowed('a partner proposes an equivalency', partner,

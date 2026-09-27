@@ -856,6 +856,11 @@ export const OWNED_TABLES: OwnedTable[] = [
   // them cascades to their read log. Shares received as an advisor go with the
   // advisor's account through the foreign key on advisor_id.
   { table: 'advisor_shares', column: 'student_id' },
+  // What a student said applies to them for campus office actions, and which
+  // of those actions they marked done (`lib/office-actions-remote.ts`, Phase
+  // J). Both are the student's alone; no office can read either.
+  { table: 'institution_action_audiences', column: 'user_id' },
+  { table: 'institution_action_progress', column: 'user_id' },
   // A support grant names this account in either of two columns. The RPC
   // removes both sides, which one filtered DELETE cannot express, while its
   // audit trigger leaves only pseudonyms behind.
