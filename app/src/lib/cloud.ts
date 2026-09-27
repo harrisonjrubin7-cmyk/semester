@@ -992,6 +992,34 @@ export const KEPT_TABLES: KeptTable[] = [
     why: 'The list of universities the app recognises is not a record about you — no account writes a row in it, and only an administrator can. Leaving is not a way to remove a university, and the entry saying which one you are at lives on your own profile, which does go.',
   },
   {
+    table: 'integration_connections',
+    why: 'A university\'s connections to its other systems, and the record of each sync, belong to the university. Its integration staff read them; a student account never writes a row here, so leaving takes nothing from them. Anything imported about you specifically is held apart, readable only by you, and goes with your account.',
+  },
+  {
+    table: 'integration_scopes',
+    why: 'What each of your university\'s connections is approved to read. University configuration, not a record about you.',
+  },
+  {
+    table: 'integration_mappings',
+    why: 'How your university\'s systems\' fields map onto Semester\'s. University configuration, not a record about you.',
+  },
+  {
+    table: 'integration_sync_runs',
+    why: 'The history of your university\'s syncs: counts and times, never a record about a named student.',
+  },
+  {
+    table: 'integration_sync_errors',
+    why: 'Sync problems for your university\'s integration staff, with any external record identifier replaced by a one-way hash before it is stored.',
+  },
+  {
+    table: 'integration_dead_letter_events',
+    why: 'Sync work that failed and is waiting for review. It points at a stored payload and holds no record about you itself.',
+  },
+  {
+    table: 'feature_kill_switch',
+    why: 'The emergency stops for features across a university or all of Semester. Not a record about anybody.',
+  },
+  {
     table: 'support_access_event',
     why: 'Support-access evidence stays after the grant is deleted so a student or university can establish that a read occurred. It contains typed tenant, grant, scope, expiry, revocation, action and time fields plus SHA-256 pseudonyms — never a name, email, free-form reason, note, source excerpt, recording, protected trait or emotion inference — and ordinary accounts cannot change or delete it.',
   },
