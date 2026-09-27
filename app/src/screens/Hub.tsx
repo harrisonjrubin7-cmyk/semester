@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNow, useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { SectionLabel, TabList } from '../components/ui';
@@ -6,9 +6,8 @@ import { Card, GoTo, Never } from '../components/JourneyKit';
 import { useDeviceLibrary } from '../lib/device-library';
 import { datedItems } from '../lib/select';
 import { hasMode } from '../lib/accessmode';
-import { cloud, cloudConfigured } from '../lib/cloud';
-import { claimedSchool } from '../lib/schoolclaim';
-import { buildEnvironment, cardsEnabled, loadRecords, schoolRecordsView, type RecordRow } from '../lib/integration/school-records';
+import { schoolRecordsView } from '../lib/integration/school-records';
+import { useSchoolRecords } from '../lib/school-records-hook';
 import { officialMessages } from '../lib/official-notices';
 import { SourceBadge } from '../components/SourceBadge';
 import { clock, dateToIso } from '../lib/date';
@@ -38,32 +37,6 @@ import {
  * that looks real is the one kind of placeholder this screen cannot have.
  */
 
-type SchoolLoad = { status: 'off' | 'loading' } | { status: 'ready'; userId: string; rows: RecordRow[] };
-
-/**
- * What the school shared, loaded exactly as the Today card loads it: signed in,
- * a claimed school, the tenant's `module.source_freshness_cards` on, then the
- * student's own rows and the school's tenant-wide ones under RLS. Any failure
- * is "off" — the hub then says no channel is connected, which is true for it.
- */
-function useOfficialRecords(): SchoolLoad {
-  const [load, setLoad] = useState<SchoolLoad>({ status: 'loading' });
-  useEffect(() => {
-    let live = true;
-    void (async (): Promise<SchoolLoad> => {
-      if (!cloudConfigured) return { status: 'off' };
-      const db = await cloud();
-      const { data } = await db.auth.getUser();
-      if (!data.user?.id) return { status: 'off' };
-      const school = await claimedSchool();
-      if (!(await cardsEnabled(db, school, buildEnvironment(import.meta.env.MODE), new Date()))) return { status: 'off' };
-      return { status: 'ready', userId: data.user.id, rows: await loadRecords(db) };
-    })().then((next) => { if (live) setLoad(next); }, () => { if (live) setLoad({ status: 'off' }); });
-    return () => { live = false; };
-  }, []);
-  return load;
-}
-
 const TABS = [
   { id: 'inbox' as const, label: 'Inbox' },
   { id: 'saved' as const, label: 'Saved' },
@@ -90,7 +63,7 @@ function Workspace({ who }: { who: string }) {
   const prefs = prefsLib.value;
   const setPrefs = (patch: Partial<HubPrefs>) => prefsLib.update((old) => ({ ...old, ...patch }));
 
-  const school = useOfficialRecords();
+  const school = useSchoolRecords();
 
   const messages = useMemo(() => {
     const out: Message[] = school.status === 'ready' ? officialMessages(schoolRecordsView(school.rows, school.userId, now), now) : [];
