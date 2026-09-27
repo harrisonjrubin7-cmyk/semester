@@ -10,6 +10,7 @@ import { Blueprint } from './Blueprint';
 // Loaded only when their flags are on, so a build with both off — the
 // default — does not carry them in the first download.
 const RegistrationDayCard = lazy(() => import('./RegistrationDayCard').then((m) => ({ default: m.RegistrationDayCard })));
+const CrunchWeekCard = lazy(() => import('./CrunchWeekCard').then((m) => ({ default: m.CrunchWeekCard })));
 const TodayActionCenter = lazy(() => import('./TodayActionCenter').then((m) => ({ default: m.TodayActionCenter })));
 import { ActionButton, Meter, SectionLabel } from './ui';
 import { goMine } from '../lib/openmine';
@@ -55,14 +56,20 @@ function syncLabel(lastSync: { at: number } | null | undefined): string {
 export function TodayDecisionSurface({
   actionCenter = moduleOn(MODULE_FLAGS.today_action_center),
   registrationDay = moduleOn(MODULE_FLAGS.registration_day_mode),
-}: { actionCenter?: boolean; registrationDay?: boolean } = {}) {
+  // The forecast's suggestions live in Plan's balance view, so the card
+  // needs both flags (Phase E).
+  crunchWeek = moduleOn(MODULE_FLAGS.crunch_week_forecast) && moduleOn(MODULE_FLAGS.academic_life_balance),
+}: { actionCenter?: boolean; registrationDay?: boolean; crunchWeek?: boolean } = {}) {
   const { state } = useStore();
   const student = showsTodayDecisionSurface(state.role);
   // Registration Day Mode (Phase C) sits above whichever Today is showing,
   // and renders nothing unless the window is close or the student asked.
-  const registration = registrationDay && student ? (
+  // The Crunch Week Forecast (Phase E) sits with it, and renders nothing
+  // unless a crunch is coming.
+  const registration = (registrationDay || crunchWeek) && student ? (
     <Suspense fallback={null}>
-      <RegistrationDayCard />
+      {registrationDay ? <RegistrationDayCard /> : null}
+      {crunchWeek ? <CrunchWeekCard /> : null}
     </Suspense>
   ) : null;
   if (actionCenter && student) {
