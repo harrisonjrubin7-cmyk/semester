@@ -32,7 +32,7 @@ documents handling; CI runs `npm audit --audit-level=high`.
 | The `school_id` pin | **Fixed today** | Was a no-op. See below. |
 | HTTP security headers | **Partly present** | A full CSP ships in `app/index.html` (meta-delivered), browser-verified against a control and guarded by `lib/csp.test.ts`. `frame-ancestors`, `report-uri` and HSTS cannot be carried by a meta tag and wait on a host that sets headers. |
 | Admin audit log | **Implemented for tenant policy, role and current moderation changes** | Tenant settings, AI policy, approved sources and consent write immutable old/new events. Future role grants, changes and revocations write pseudonymous, append-only tenant events. Every report-status transition now writes content-free, pseudonymous, append-only evidence. Any later moderation action beyond status changes must add its own event before release. |
-| SSO | **Missing** | No SAML/OIDC. |
+| SSO | **Built, not yet exercised live** | Corrected — this row said "No SAML/OIDC". SAML membership binding and SCIM lifecycle provisioning landed in `20260924150142` and `20260924154500`, walked by `identity-provisioning.check.sql`. No real IdP has completed an exchange. |
 | Rate limiting beyond the gateway | **Missing** | Supabase-direct paths (most of the app) are unlimited. |
 | Cross-tenant security tests | **Partial** | `supabase/tenancy.check.sql` covers the foundation (13 checks). No policy enforces isolation yet, so there is nothing further to assert. |
 

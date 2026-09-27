@@ -167,7 +167,12 @@ export function transition(
   now: number,
   options: { until?: number; note?: string } = {},
 ): Moved | Refused {
-  const from = current?.status ?? 'open';
+  // A snooze that has run out is open — `effectiveStatus` says so, and the
+  // list shows it with an open action's controls. Moving it has to start from
+  // the same place, or the "Snooze" button it shows is refused as a second
+  // snooze of something still asleep.
+  const awake = current?.status === 'snoozed' && typeof current.snoozedUntil === 'number' && current.snoozedUntil <= now;
+  const from: ActionStatus = awake ? 'open' : (current?.status ?? 'open');
   const to = TRANSITIONS[from][event];
   if (!to) return { ok: false, why: `Cannot ${event} an action that is ${from.replace('_', ' ')}.` };
   if (event === 'snooze') {
