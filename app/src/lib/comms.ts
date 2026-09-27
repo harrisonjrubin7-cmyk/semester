@@ -1,4 +1,5 @@
 import type { Screen } from './types';
+import type { SourceLabel } from './source';
 
 /**
  * One inbox for what the term is telling you, with every message's source on it.
@@ -9,8 +10,9 @@ import type { Screen } from './types';
  * if nothing in it can be mistaken for something else. So:
  *
  * - **Every message carries its source.** `admit` drops one without.
- * - **Required is official-only.** A registrar hold is required; a Semester
- *   reminder never is, and `admit` downgrades any that claims to be.
+ * - **Required is official-only, and current-only.** A registrar hold is
+ *   required while the school's record is current; a Semester reminder never
+ *   is, nor is a stale official fact, and `admit` downgrades any that claims to be.
  * - **Nothing sponsored.** Sponsored content is dropped outright, not sorted
  *   below — "no sponsor content mixed with official notices" is not satisfied
  *   by putting it lower down.
@@ -54,6 +56,16 @@ export interface Message {
   screen?: Screen;
   /** Set by whoever produced it. Dropped by `admit`. */
   sponsored?: boolean;
+  /**
+   * Whether an official message is the school's current record. Required is
+   * allowed only when this is `true`; `admit` downgrades anything else.
+   */
+  current?: boolean;
+  /** The app-wide source label (lib/source.ts), for messages that carry facts. */
+  sourceLabel?: SourceLabel;
+  /** The official page. Only `https:` survives `admit`. */
+  url?: string;
+  urlLabel?: string;
 }
 
 /**
@@ -71,7 +83,11 @@ export function admit(messages: readonly Message[]): { shown: Message[]; refused
       refused += 1;
       continue;
     }
-    shown.push(m.priority === 'required' && m.channel !== 'official' ? { ...m, priority: 'high' } : m);
+    // Required only from an official channel, and only while that channel says
+    // the fact is current — it is the one label that ignores quiet hours and mute.
+    const mayRequire = m.channel === 'official' && m.current === true;
+    const url = m.url && /^https:\/\//i.test(m.url) ? m.url : undefined;
+    shown.push({ ...m, url, priority: m.priority === 'required' && !mayRequire ? 'high' : m.priority });
   }
   const rank: Record<Priority, number> = { required: 0, high: 1, normal: 2, low: 3 };
   shown.sort((a, b) => rank[a.priority] - rank[b.priority] || a.at.localeCompare(b.at));
