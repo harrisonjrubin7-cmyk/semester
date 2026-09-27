@@ -12,20 +12,24 @@ import { TENANT_ADMIN_CAPABILITY, controlPlaneView } from './control-plane';
 const g = (capability: string, scopeKind: string, scopeId = '') => ({ capability, scopeKind, scopeId });
 
 describe('capabilities over a school', () => {
-  it('counts a grant over this school and over the platform, and nothing else', () => {
+  it('counts a grant over exactly this school, and nothing else — not even the platform', () => {
     const grants = [
       g('outcomes:read', 'school', 'vanderbilt'),
       g('report:read', 'platform'),
       g('tenant:configure', 'school', 'other-u'),
       g('mentee:read', 'cohort', 'vanderbilt/2030'),
     ];
-    expect(forSchool(grants, 'vanderbilt')).toEqual(['outcomes:read', 'report:read']);
-    expect(forSchool(grants, '')).toEqual(['report:read']);
+    expect(forSchool(grants, 'vanderbilt')).toEqual(['outcomes:read']);
+    expect(forSchool(grants, '')).toEqual([]);
   });
 
   it('opens Operations for outcomes:read over the school — and not for a grant at another school', () => {
     expect(operationsAllowed(forSchool([g(OPERATIONS_CAPABILITY, 'school', 'vanderbilt')], 'vanderbilt'))).toBe(true);
     expect(operationsAllowed(forSchool([g(OPERATIONS_CAPABILITY, 'school', 'other-u')], 'vanderbilt'))).toBe(false);
+  });
+
+  it('does not open Operations for a platform grant, which no school policy honours', () => {
+    expect(operationsAllowed(forSchool([g(OPERATIONS_CAPABILITY, 'platform')], 'vanderbilt'))).toBe(false);
   });
 
   it('lets the Control tab edit on tenant:configure, and no longer on the capability that never existed', () => {

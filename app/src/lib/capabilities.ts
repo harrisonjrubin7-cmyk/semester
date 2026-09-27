@@ -27,15 +27,17 @@ export function readGrants(rows: unknown): Grant[] {
 }
 
 /**
- * The capabilities this person holds over one school: granted over that school,
- * or over the platform. Other scopes — a course, an office, another school —
- * do not count here.
+ * The capabilities this person holds over one school: granted over exactly that
+ * school. A platform grant does not count, because `private.has_capability`
+ * matches scope exactly and every school policy asks for `('school', id)` — a
+ * platform grant would open a screen whose reads the database then refuses.
+ * Other scopes — a course, an office, another school — do not count either.
  */
 export function forSchool(grants: readonly Grant[], school: string): string[] {
   return [
     ...new Set(
       grants
-        .filter((g) => (g.scopeKind === 'school' && g.scopeId === school && school !== '') || g.scopeKind === 'platform')
+        .filter((g) => g.scopeKind === 'school' && g.scopeId === school && school !== '')
         .map((g) => g.capability),
     ),
   ].sort();
