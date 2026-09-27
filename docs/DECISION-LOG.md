@@ -134,6 +134,242 @@ which would migrate 59 screens and every stored deep link. Changing the
 production host (e.g. to Vercel, where `app/vercel.json` already exists) is a
 production change and needs approval.
 
+## Numbering
+
+Two sessions write to this log. Entries D-013 to D-029 belong to the
+feature-expansion session (#765, #769). This session's Phase 1 entries
+start at D-030, so the two can merge without renumbering anything.
+
+## D-030 · How the shared AI key is clamped
+
+**Decided 27 Sep 2026 (BL-1.0, S-1).** `supabase/functions/claude` rebuilds
+every request through `supabase/functions/_shared/clamp.ts` before counting
+it.
+
+- **An unknown model is refused, not substituted.** Answering with a model
+  other than the one named misreports who answered.
+- **An oversize `max_tokens` is clamped, not refused.** The 16 000 ceiling is
+  above the app's largest ask (12 000), so no app path is cut.
+- **Fields outside the app's own request shape are dropped** and listed in
+  `dropped`, not passed through.
+- **The clamp runs before `count_call`,** so a malformed request no longer
+  costs one of the student's sixty calls.
+
+The model list and the search cap are tied to `lib/assistant.ts` and
+`lib/research.ts` by test, so adding a model to the app without adding it here
+fails CI rather than failing a student.
+
+Deployment note: `.github/workflows/functions.yml` deploys changed functions
+after CI passes on main, so **merging this to main is the production deploy**
+and needs owner approval.
+
+---
+
+# Feature-expansion command (27 Sep 2026)
+
+Entries D-012 onward come from the feature-expansion command (Phases A–P). The
+Phase A documents are [UX-ENHANCEMENT-PLAN.md](UX-ENHANCEMENT-PLAN.md),
+[DESIGN-SYSTEM-IMPROVEMENTS.md](DESIGN-SYSTEM-IMPROVEMENTS.md) and
+[FEATURE-EXPANSION-CROSSWALK.md](FEATURE-EXPANSION-CROSSWALK.md).
+
+## D-012 · The 14 module flags extend `experience-flags.ts`, off by default
+
+**Decided 27 Sep 2026.**
+
+- The command's 14 flags (`registration_day_mode` … `trust_center`) become
+  keys on the existing `ExperienceFlags`. Each is a `FeatureState` read from
+  `VITE_<NAME>`.
+- There is no second flag system. Tenant-level flags stay in
+  `tenant_feature_policy` (Phase 5).
+- **Unlike the six existing flags, these 14 do not default to `preview` under
+  `institutionalPreview`.** They are `off` unless set explicitly. Each module
+  is enabled on purpose, one at a time.
+
+## D-013 · A flag for the Today polish itself
+
+**Proposed — needs owner.**
+
+- Phase B changes the existing Today, but the command names no flag for it.
+- **Recommendation:** add `today_action_center`, off by default, so the
+  whole of Phase B except the §5.1 CSS defect fix can be switched back.
+- **Alternative:** gate Phase B under the existing `journeyNavigation`. This
+  is rejected because it already gates Directory, and the two would then
+  roll back together.
+
+## D-014 · Phase A changes no code
+
+**Decided 27 Sep 2026.**
+
+- The command allows non-breaking token and shared-component fixes in
+  Phase A, but also says to wait for confirmation before UI changes.
+- The stricter reading holds. The one real defect found, UX plan **H-2**
+  (unstyled `.workspace-text-button` and `.today-timeline-row` on Today,
+  from #761), is documented with its exact fix as the first commit of
+  Phase B rather than applied here.
+
+## D-015 · "Behind" in new copy, and the existing `behind` screen
+
+**Decided / Proposed.**
+
+- **Decided:** new copy never uses "at risk", "failing" or "behind". A
+  Phase B test enforces this on `today-decision` output.
+- **Proposed — needs owner:** relabel the existing screen `behind` ("When you
+  are behind", `lib/nav.ts:571`). For example, "Catching up". The screen id
+  and route stay unchanged (REGRESSION-CHECKLIST §Q).
+
+## D-016 · Advisor sharing: authorized grants, not bearer links, in the pilot
+
+**Proposed — needs owner.**
+
+- BL-1.9 said "no link-sharing". The command asks for a view-only link or an
+  authorized advisor share, with expiry and revocation.
+- **Recommendation:**
+  - Ship the agenda and a confirmed export/print first.
+  - Then add authorized shares through a new `advisor_shares` table
+    modelled on `accommodation_shares`: required term-bounded
+    `expires_at`, `revoked_at`, and access events the student sees
+    (SECURITY-GAP S-8).
+  - Anonymous view-only links wait until after the pilot.
+- The migration is additive, and applying it to production needs approval.
+
+## D-017 · Branches for the feature expansion
+
+**Decided 27 Sep 2026.**
+
+- The command lists `feature/*` branches with draft PRs into
+  `semester-unified-platform`. This session can push only its designated
+  branch (`claude/keen-turing-ao1rin`).
+- Phase A is committed there, and its draft PR targets
+  `semester-unified-platform`.
+- Later phases use a `feature/*` branch where the session's credentials
+  allow it, and otherwise the designated branch. Each gets one draft PR per
+  phase into `semester-unified-platform`.
+- Nothing is merged to `main`.
+
+## D-018 · Export misses two device stores
+
+**Noted 27 Sep 2026.**
+
+- `lib/workspace-backup.ts` does not include `semester.registration-day.v1`
+  or `semester.graduation.v1`, both from #762, so Export omits them.
+- Erase is unaffected, because it empties all of `localStorage`.
+- The fix goes in whichever of Phases C, D or N touches those stores first,
+  and it comes with a test that every `useDeviceLibrary` key is backed up
+  (crosswalk N-3).
+
+## D-019 · Owner approval of the Phase A recommendations
+
+**Decided by owner 27 Sep 2026.** "Start Phase B with the recommended
+defaults" approves these recommendations as written:
+
+- **D-013:** `today_action_center` flag, off by default.
+- **D-015:** relabel `behind`. This is approved but not done in Phase B; it is
+  a label-only change in `lib/nav.ts`, with the route unchanged.
+- **D-016:** authorized expiring advisor grants in the pilot, not bearer links.
+- **D-017:** one draft PR per phase into `semester-unified-platform`.
+
+D-012 is implemented as a second map, `MODULE_FLAGS`, beside `ExperienceFlags`
+rather than as 15 more keys on it. That keeps
+`experience-preservation.test.ts`'s six-flag contract intact, and the new
+flags never inherit the preview default.
+
+## D-020 · Phase B stacks on the other session's BL-1.1 to BL-1.3
+
+**Decided 27 Sep 2026.** A second session is working the same backlog:
+
+- BL-1.1 source labels landed on `feature/source-labels` at `7096529`.
+- BL-1.2/1.3, the canonical action model and store, landed on
+  `feature/action-model` at `e153146`.
+
+Both landed while Phase B was being built. Phase B had its own
+`lib/actions.ts`, and it was **dropped** for the canonical one, per
+`CLAUDE.md`: two action models under one storage key would be the duplicate
+that file warns about. Phase B is now the BL-1.4 slice (the Action Center on
+Today) on that model.
+
+The Phase B PR carries those two commits and the Phase A docs until they
+reach `semester-unified-platform`, and should merge after them. The other
+session could not be messaged from here; its next backlog item, BL-1.4, is
+this PR.
+
+## D-021 · Two Action Centers: this Phase B and `feature/action-center`
+
+**Decided by owner 27 Sep 2026: recommendation approved** ("rebase onto
+action-center"). Phase B is now an increment on BL-1.4. That means:
+
+- BL-1.4's `ActionCenter`, `lib/today-actions.ts` and its controls are kept.
+- Their inline `<details>` explanation moved into the sheet/drawer, keeping
+  "How it was ranked".
+- The whole thing is behind `today_action_center`. With the flag off, Today is
+  the #761 briefing.
+- Phase B's own action list, card, controls and hook were deleted, because
+  BL-1.4's cover the same ground.
+- The remaining helpers were renamed to `lib/today-center.ts`, so the two
+  `today-actions.ts` files no longer collide.
+
+The original proposal is kept below for the record.
+
+- At 16:26 the other session pushed BL-1.4 as `feature/action-center`
+  (`45d3877`). That is an Action Center on the same model, built while this
+  Phase B was being finished. Both change `TodayDecisionSurface`, both add a
+  file named `lib/today-actions.ts`, and both fix H-2. They cannot both merge
+  as they stand.
+
+| | `feature/action-center` (BL-1.4) | This Phase B |
+|---|---|---|
+| Flag | **None**: it replaces the Next best step for every student | `today_action_center`, off by default (D-013, approved) |
+| Scope | The Next best step block becomes a ranked list (1 + 5 + View all); the #761 path card and 72-hour rail stay | The whole Today surface |
+| Controls | Start, Done, Snooze until tomorrow, Not relevant, Something is wrong, Ask for help | Snooze (3 times), Dismiss with a reason, Correct |
+| Explanation | Inline `<details>`, including how the action was ranked | Bottom sheet / desktop drawer |
+| Only here | Start / Done / Ask for help; "View all"; the ranking breakdown; the calendar-day due-line fix | The three approved status sentences; Done for today; ≤1 urgent + ≤4 time-first commitment rows; Quick Actions; the desktop context pane; `MODULE_FLAGS`; the undo that leaves no fatigue trace; the H-2 guard test |
+
+**Recommendation:**
+
+1. Merge `feature/action-center` first, since it is the backlog's BL-1.4.
+2. Rebase this Phase B onto it as an increment: its ranked list and controls
+   stay, and this adds the flag gate, the status sentences, Done for today,
+   the commitment rules, Quick Actions, the sheet/drawer and the context
+   pane.
+3. Rename or merge the two `today-actions.ts` files.
+
+**Rejected:** merging both as they are, which would mean two Todays; or
+dropping either outright, which loses tested work the other lacks.
+
+## D-022 · Registration Day Mode reminders ride the registrar-deadline rule
+
+**Decided 27 Sep 2026 (Phase C).**
+
+- The window's two reminders (the day before, and the hour before) use the
+  existing `term` rule rather than a new `NotifKey`. A new key would change
+  the synced `notifs` record and the settings screen for one date.
+- To the student it is a registrar date: the same toggle and the same
+  quiet-hours rule apply.
+- The ids are `regday:…` so they land on `yes`, not `registrar`.
+
+## D-023 · Flagged Today surfaces are lazy-loaded
+
+**Decided 27 Sep 2026 (Phase C).**
+
+- `TodayDecisionSurface` loads Phase B's `TodayActionCenter` and Phase C's
+  `RegistrationDayCard` with `lazy()`.
+- With both flags off, the default, neither is in the first download.
+- The entry chunk went from 627.65 kB (Phase B base) to 602.68 kB, which is
+  below BL-1.4's recorded 613.71 kB.
+- The notifier's needs moved to `lib/registration-window.ts`, so the
+  always-loaded reminder code does not pull in the catalog parser.
+
+## D-024 · Registration readiness actions and BL-1.8
+
+**Proposed — needs owner if BL-1.8 lands separately.**
+
+- The Phase 0 backlog's BL-1.8 ("Registration readiness as a grouped action
+  workflow") is what `lib/registration-actions.ts` does, under the
+  `registration_day_mode` flag.
+- No BL-1.8 branch existed when Phase C was finished (checked at 17:20 UTC on
+  27 Sep, after the other session had pushed BL-1.10 to BL-1.13).
+- If the other session pushes one, reconcile as in D-021: keep one proposer,
+  and one "Registration readiness" group.
+
 ## D-031 · Public tool pages may run one same-origin script
 
 **Taken in P2.2, within D-011.** (Numbered after D-030; D-013–D-029 belong to

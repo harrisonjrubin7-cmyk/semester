@@ -799,6 +799,22 @@ export type Screen =
   | 'family'
   | 'pathway'
   /*
+   * The student journey around the term, from offer letter to alumni. Each is
+   * a map and a checklist the student keeps, never a record the university
+   * keeps, and each routes to the office that decides — see `lib/offices.ts`.
+   * Their libraries live on the device, like the four above.
+   *
+   * Launchpad is admission to the fifth week. The hub is one inbox with every
+   * source labelled. Support is care, access, safety and the campus itself.
+   * Opportunities is jobs, research, abroad, credentials, placements, funding
+   * and alumni. `lib/journey-areas.ts` says which of the twenty-six expansion
+   * areas each one answers.
+   */
+  | 'launchpad'
+  | 'hub'
+  | 'support'
+  | 'opportunities'
+  /*
    * One door to everything that makes something. Six of its nine tiles open
    * a maker this app already had; the three that are its own — a form, a
    * design, a video — had nowhere to live. See `screens/Create.tsx`.

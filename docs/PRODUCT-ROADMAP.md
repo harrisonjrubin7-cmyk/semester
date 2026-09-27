@@ -49,6 +49,32 @@ From the blueprint §18.5 — Today → Path → Registration → Search → Adv
 6. **Feedback + analytics event definitions**.
 7. **Onboarding/profile gaps** — only what the audit shows is missing.
 
+## Feature expansion (Phases A–P)
+
+The feature-expansion command of 27 Sep 2026 adds fourteen flagged modules. It
+does not replace Phases 0–8 above; its modules are mapped onto them in
+[FEATURE-EXPANSION-CROSSWALK.md](FEATURE-EXPANSION-CROSSWALK.md). Several of
+them already exist in part on main (#761, #762).
+
+| Phase | Module | Status |
+|---|---|---|
+| A | Design and UX audit: [UX-ENHANCEMENT-PLAN.md](UX-ENHANCEMENT-PLAN.md), [DESIGN-SYSTEM-IMPROVEMENTS.md](DESIGN-SYSTEM-IMPROVEMENTS.md), crosswalk | **Done**, docs only (D-014) |
+| B | Today + Action Center: [TODAY-ACTION-CENTER.md](TODAY-ACTION-CENTER.md) | **Built** as an increment on BL-1.4, behind `today_action_center` (off); the H-2 fix is always on. Draft PR (D-021) |
+| C | Registration Day Mode (extends #762): [REGISTRATION-DAY-MODE.md](REGISTRATION-DAY-MODE.md) | **Built** behind `registration_day_mode` (off). Draft PR, stacked on Phase B |
+| D | Graduation Simulator + Cost Planner (extends #762) | Queued |
+| E | Academic Life Balance + Crunch Week (extends `lib/clash.ts`) | Queued |
+| F | Course Detail V2 | Queued |
+| G | Advisor Meeting Mode | Queued; sharing model is D-016 |
+| H | Study Readiness + Source Locker | Queued |
+| I | Career Evidence | Queued |
+| J | Office Action Feed (UI on `institution_actions`) | Queued; needs a follow-up migration |
+| K | Course Demand Forecasting (UI on `course_demand_snapshots`) | Queued |
+| L | Semester Wrapped | Queued |
+| M | Offline Mode (extends `public/sw.js`) | Queued |
+| N | Trust Center | Queued; includes the D-018 export gap |
+| O | Visual polish (DS-1…DS-8) | Queued |
+| P | Docs, tests, PRs per phase | Continuous |
+
 ## What this roadmap deliberately does not do
 
 - No second navigation model. The five-destination IA is reached by

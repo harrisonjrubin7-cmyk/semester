@@ -1,11 +1,16 @@
-import { useMemo, useState } from 'react';
+import { lazy, Suspense, useMemo, useState } from 'react';
 import { blocksFor } from '../data/catalog';
 import { clock, dateToIso, daysBetween } from '../lib/date';
 import { readDue } from '../lib/duetime';
 import { pathSnapshot, nextTodayDecision, showsTodayDecisionSurface } from '../lib/today-decision';
 import { appointmentsOn, tasksOn, upcomingItems } from '../lib/select';
 import { useNow, useStore } from '../state/store';
+import { MODULE_FLAGS, moduleOn } from '../lib/experience-flags';
 import { Blueprint } from './Blueprint';
+// Loaded only when their flags are on, so a build with both off — the
+// default — does not carry them in the first download.
+const RegistrationDayCard = lazy(() => import('./RegistrationDayCard').then((m) => ({ default: m.RegistrationDayCard })));
+const TodayActionCenter = lazy(() => import('./TodayActionCenter').then((m) => ({ default: m.TodayActionCenter })));
 import { ActionButton, Meter, SectionLabel } from './ui';
 import { goMine } from '../lib/openmine';
 import { goCal } from '../lib/opencal';
@@ -39,7 +44,46 @@ function syncLabel(lastSync: { at: number } | null | undefined): string {
   }).format(syncedAt)}`;
 }
 
-export function TodayDecisionSurface() {
+/**
+ * Today's briefing.
+ *
+ * With `today_action_center` on (DECISION-LOG D-013, D-021), students get
+ * the Action Center — BL-1.4's ranked list with Phase B around it. With it
+ * off, the default, this is the #761 briefing exactly as it shipped. The prop
+ * exists so tests can choose.
+ */
+export function TodayDecisionSurface({
+  actionCenter = moduleOn(MODULE_FLAGS.today_action_center),
+  registrationDay = moduleOn(MODULE_FLAGS.registration_day_mode),
+}: { actionCenter?: boolean; registrationDay?: boolean } = {}) {
+  const { state } = useStore();
+  const student = showsTodayDecisionSurface(state.role);
+  // Registration Day Mode (Phase C) sits above whichever Today is showing,
+  // and renders nothing unless the window is close or the student asked.
+  const registration = registrationDay && student ? (
+    <Suspense fallback={null}>
+      <RegistrationDayCard />
+    </Suspense>
+  ) : null;
+  if (actionCenter && student) {
+    return (
+      <>
+        {registration}
+        <Suspense fallback={null}>
+          <TodayActionCenter registrationDay={registrationDay} />
+        </Suspense>
+      </>
+    );
+  }
+  return (
+    <>
+      {registration}
+      <DecisionBriefing />
+    </>
+  );
+}
+
+function DecisionBriefing() {
   const { state, dispatch, catalog } = useStore();
   const now = useNow();
   const [dismissed, setDismissed] = useState<string | null>(null);

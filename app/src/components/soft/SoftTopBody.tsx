@@ -38,6 +38,8 @@ import { useDeviceLibrary } from '../../lib/device-library';
 import { EMPTY_FAMILY, readFamily } from '../../lib/family';
 import { softTop, type TopStat } from '../../lib/softtop';
 import { useAthleticEvents } from '../../lib/athletics.hook';
+import { EMPTY_LAUNCHPAD, openSteps, readLaunchpad, stepsFor } from '../../lib/launchpad';
+import { EMPTY_OPPORTUNITIES, readOpportunities } from '../../lib/opportunities';
 import { useDeviceLibrary as useLibrary } from '../../lib/device-library';
 import { EMPTY_NIL, nilKey, readNil } from '../../lib/nil';
 import { fills } from '../shell/exempt';
@@ -114,6 +116,14 @@ function useTop() {
    */
   const nil = useLibrary(nilKey(account?.id), readNil, EMPTY_NIL);
   const nilDeals = nil.value.deals.length;
+  /*
+   * Launchpad and Opportunities, by the same route again — counts, read from
+   * their libraries because this function is the one that may open them.
+   */
+  const launch = useDeviceLibrary(`semester.launchpad.v1:${account?.id || 'device'}`, readLaunchpad, EMPTY_LAUNCHPAD);
+  const launchpadOpen = openSteps(stepsFor(launch.value.types), launch.value.stage, launch.value.done).length;
+  const opps = useDeviceLibrary(`semester.opportunities.v1:${account?.id || 'device'}`, readOpportunities, EMPTY_OPPORTUNITIES);
+  const opportunitiesLive = opps.value.items.filter((o) => o.stage !== 'Done' && o.stage !== 'Closed').length;
   return useMemo(
     () =>
       softTop(state.screen, {
@@ -125,8 +135,10 @@ function useTop() {
         familyPlans,
         athletics: season,
         nilDeals,
+        launchpadOpen,
+        opportunitiesLive,
       }),
-    [state, catalog, now, caps, said, familyPlans, season, nilDeals],
+    [state, catalog, now, caps, said, familyPlans, season, nilDeals, launchpadOpen, opportunitiesLive],
   );
 }
 
