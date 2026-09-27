@@ -78,7 +78,7 @@ export const NEVER_SUPPORT_RECIPIENTS = ['athletics_compliance_officer'] as cons
 /** What an athlete can choose to share with academic support, and nothing else. */
 export const ATHLETE_SHAREABLE = [
   ['travel', 'Travel and competition dates, with the classes each one misses'],
-  ['missed', 'Missed classes, per course, and whether you contacted the instructor'],
+  ['missed', 'Missed classes, per course, from your syllabus'],
   ['absence', 'Your absence notices, marked draft or sent as you recorded them'],
   ['pack', 'Which travel study packs you made, and what is marked done'],
   ['courses', 'Your courses this term'],

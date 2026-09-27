@@ -279,4 +279,9 @@
 .shared-from{border:1px solid var(--app-line);border-radius:var(--r-md);padding:var(--sp-4);margin-block:var(--sp-4)}
 .shared-from h3{font-size:var(--type-base);margin:0 0 var(--sp-2)}
 .shared-body{font-size:var(--type-sm);margin:var(--sp-2) 0 0;white-space:pre-wrap;overflow-wrap:anywhere}
+.support-payload section{margin-block:var(--sp-4)}
+.support-payload h4{font-size:var(--type-sm);margin:0 0 var(--sp-2)}
+.support-choose{border:0;padding:0;margin:0 0 var(--sp-4);display:grid;gap:var(--sp-3)}
+.support-option{display:flex;gap:var(--sp-3);align-items:flex-start;font-size:var(--type-sm)}
+.support-why{display:block}
 .family-claim{display:grid;gap:var(--sp-2);max-width:320px;margin-bottom:var(--sp-3)}

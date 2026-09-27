@@ -606,6 +606,7 @@ const MOCKS_MODULES = [
   'src/components/FamilyInvite.test.tsx',
   'src/lib/familyshare.test.ts',
   'src/components/SharedWithYou.test.tsx',
+  'src/components/AthleteShare.test.tsx',
   'src/components/SupportAccess.test.tsx',
   'src/components/GetHelp.test.tsx',
   'src/components/HelpInbox.test.tsx',

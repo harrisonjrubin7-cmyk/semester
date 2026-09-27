@@ -397,6 +397,23 @@ The migration is `20260928142000_support_shares.sql`. **Applying it to
 production needs owner approval**, and it goes after #830's migration. The
 athlete's screen is slice 5.
 
+**Slice 5, the screens (added 27 Sep 2026).** Athletics → Share is where the
+athlete chooses what to share, previews it and confirms. The staff page uses
+the same view as the preview, so the preview can't show something the staff
+page doesn't. The page also lists each share with when it was opened, and
+stopping it takes one button.
+
+Two of the six items are **not offered, and the picker says why**. Semester
+keeps no record of whether an absence email was sent, and none of which
+travel-pack items are done. Offering them would mean sharing a status the app
+made up. The same applies to the design's "whether you contacted the
+instructor" on missed classes, so that line now reads "from your syllabus".
+
+Staff listing is not logged; opening a share is. An ended share tells staff
+only "This share has ended." (D3). Nothing is computed about the athlete.
+Deadlines carry their source label ("Imported" or "Needs review") by the same
+rule Today uses. Slice 5 adds no migration.
+
 ---
 
 # Feature-expansion command (27 Sep 2026)
