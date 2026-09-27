@@ -124,10 +124,22 @@ begin
   select count(*) into n from public.reports;
   perform pg_temp.counted('nor can the person a report is about read it', n, 0);
 
+  -- ── Who is told there is a queue (20260928000000) ─────────────────────
+  -- A student is told no, on both counts — the screen then draws nothing.
+  select count(*) into n from public.my_moderation_access() where not can_read and not can_act;
+  perform pg_temp.counted('a student is told she may neither read nor act on the queue', n, 1);
+
   -- ── Signed out ──────────────────────────────────────────────────────────
   perform pg_temp.become_anon();
   select count(*) into n from public.reports;
   perform pg_temp.counted('a signed-out visitor reads no reports', n, 0);
+
+  begin
+    perform public.my_moderation_access();
+    raise exception 'FAILED: a signed-out visitor could ask about the queue';
+  exception when insufficient_privilege then
+    raise notice 'ok  a signed-out visitor cannot ask about the queue';
+  end;
 
   -- ── The moderator, and the control ──────────────────────────────────
   --
@@ -136,6 +148,11 @@ begin
   perform pg_temp.become(admin);
   select count(*) into n from public.reports;
   perform pg_temp.counted('a moderator reads every report — THE CONTROL', n, 2);
+
+  -- The control for the "no" above: a function that answered false for
+  -- everybody would pass it and hide the queue from the people it is for.
+  select count(*) into n from public.my_moderation_access() where can_read and can_act;
+  perform pg_temp.counted('a moderator is told she may read and act — THE ACCESS CONTROL', n, 1);
 
   -- A new report is open.
   select status into st from public.reports where reporter = alice;

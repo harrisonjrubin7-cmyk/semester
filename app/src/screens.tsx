@@ -95,6 +95,11 @@ const Solve = lazy(() => import('./screens/Solve').then((m) => ({ default: m.Sol
 const EditCourse = lazy(() => import('./screens/EditCourse').then((m) => ({ default: m.EditCourse })));
 const Analyse = lazy(() => import('./screens/Analyse').then((m) => ({ default: m.Analyse })));
 const Classmates = lazy(() => import('./screens/Classmates').then((m) => ({ default: m.Classmates })));
+const Community = lazy(() => import('./screens/Community').then((m) => ({ default: m.Community })));
+const Moderation = lazy(() => import('./screens/Moderation').then((m) => ({ default: m.Moderation })));
+const Volunteers = lazy(() => import('./screens/Volunteers').then((m) => ({ default: m.Volunteers })));
+const Agreements = lazy(() => import('./screens/Agreements').then((m) => ({ default: m.Agreements })));
+const Volunteer = lazy(() => import('./screens/Volunteer').then((m) => ({ default: m.Volunteer })));
 const Activities = lazy(() => import('./screens/Activities').then((m) => ({ default: m.Activities })));
 const Clocks = lazy(() => import('./screens/Clocks').then((m) => ({ default: m.Clocks })));
 const Proof = lazy(() => import('./screens/Proof').then((m) => ({ default: m.Proof })));
@@ -193,6 +198,11 @@ export const SCREENS: Record<Exclude<Screen, 'home' | 'onboarding'>, ComponentTy
   edit: EditCourse,
   analyse: Analyse,
   classmates: Classmates,
+  community: Community,
+  moderation: Moderation,
+  volunteer: Volunteer,
+  agreements: Agreements,
+  volunteers: Volunteers,
   activities: Activities,
   clocks: Clocks,
   proof: Proof,

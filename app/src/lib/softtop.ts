@@ -966,7 +966,7 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
         stats: [
           { label: 'Courses', value: num(courses) },
           { label: 'Notes', value: num(state.notes.length) },
-          { label: 'Your tasks', value: num(state.tasks.length) },
+          { label: 'Your actions', value: num(state.tasks.length) },
         ],
       };
 
@@ -1016,7 +1016,7 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
           figure: num(
             state.tasks.length + state.notes.length + state.appointments.length + state.sources.length + state.people.length,
           ),
-          foot: 'tasks, notes, appointments, sources and people',
+          foot: 'actions, notes, appointments, sources and people',
         },
         stats: term,
       };

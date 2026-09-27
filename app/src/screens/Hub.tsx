@@ -6,7 +6,11 @@ import { Card, GoTo, Never } from '../components/JourneyKit';
 import { useDeviceLibrary } from '../lib/device-library';
 import { datedItems } from '../lib/select';
 import { hasMode } from '../lib/accessmode';
-import { clock } from '../lib/date';
+import { schoolRecordsView } from '../lib/integration/school-records';
+import { useSchoolRecords } from '../lib/school-records-hook';
+import { officialMessages } from '../lib/official-notices';
+import { SourceBadge } from '../components/SourceBadge';
+import { clock, dateToIso } from '../lib/date';
 import { EMPTY_LAUNCHPAD, openSteps, readLaunchpad, stepsFor } from '../lib/launchpad';
 import { EMPTY_OPPORTUNITIES, deadlines, readOpportunities } from '../lib/opportunities';
 import {
@@ -59,8 +63,10 @@ function Workspace({ who }: { who: string }) {
   const prefs = prefsLib.value;
   const setPrefs = (patch: Partial<HubPrefs>) => prefsLib.update((old) => ({ ...old, ...patch }));
 
+  const school = useSchoolRecords();
+
   const messages = useMemo(() => {
-    const out: Message[] = [];
+    const out: Message[] = school.status === 'ready' ? officialMessages(schoolRecordsView(school.rows, school.userId, now), now) : [];
     for (const i of datedItems(catalog, now)) {
       if (i.isPast || i.daysAway > 7) continue;
       out.push({
@@ -78,7 +84,8 @@ function Workspace({ who }: { who: string }) {
     if (next) {
       out.push({ id: `launchpad:${next.id}`, channel: 'semester', source: 'Launchpad', title: next.title, body: next.detail, at: now.toISOString(), priority: 'low', screen: 'launchpad' });
     }
-    const today = now.toISOString().slice(0, 10);
+    // The student's calendar day, not UTC's — a deadline is a local date.
+    const today = dateToIso(now);
     for (const o of deadlines(opps.value.items, today).slice(0, 5)) {
       out.push({ id: `opportunity:${o.id}`, channel: 'semester', source: 'Opportunities', title: `${o.title || 'An opportunity'} — due ${o.deadline}`, at: `${o.deadline}T09:00:00`, priority: 'normal', screen: 'opportunities' });
     }
@@ -86,7 +93,8 @@ function Workspace({ who }: { who: string }) {
     // "Predictable layout": the list stays in time order rather than moving
     // the most urgent to the top. Nothing is hidden either way.
     return predictable ? [...shown].sort((a, b) => a.at.localeCompare(b.at)) : shown;
-  }, [catalog, now, launch.value, opps.value, predictable]);
+  }, [catalog, now, launch.value, opps.value, predictable, school]);
+  const officialCount = messages.filter((m) => m.channel === 'official').length;
 
   const minute = now.getHours() * 60 + now.getMinutes();
   const { now: shown, held } = visible(messages, prefs, minute);
@@ -115,7 +123,10 @@ function Workspace({ who }: { who: string }) {
             </div>
           ))}
           {!list.length ? <p className="jx-muted">Nothing here.</p> : null}
-          {tab === 'inbox' ? (
+          {tab === 'inbox' && school.status === 'ready' && !officialCount ? (
+            <p className="jx-muted">Nothing from your school right now. Semester is not an emergency channel — follow your school’s own alerts for anything urgent.</p>
+          ) : null}
+          {tab === 'inbox' && school.status !== 'ready' ? (
             <Card kicker="Official" title="No school channel connected">
               <p>
                 Registrar, financial aid, campus safety and department notices appear here, labelled Official, once your school connects them. Until then they reach you the way they do now — check your school email.
@@ -158,6 +169,12 @@ function MessageRow({ m, prefs, set }: { m: Message; prefs: HubPrefs; set: (p: P
         {m.title}
       </button>
       {m.body ? <div className="jx-entry-what">{m.body}</div> : null}
+      {m.sourceLabel ? <SourceBadge label={m.sourceLabel} /> : null}
+      {m.url ? (
+        <a className="jx-door-link" href={m.url} target="_blank" rel="noopener noreferrer">
+          {m.urlLabel ?? 'Open the official page'} ↗
+        </a>
+      ) : null}
       <div className="jx-actions">
         <button type="button" className="jx-go" aria-pressed={read} onClick={() => set({ read: toggle(prefs.read, m.id) })}>
           {read ? 'Mark unread' : 'Mark read'}

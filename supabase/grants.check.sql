@@ -124,7 +124,7 @@ end $$;
 do $$
 declare
   /*
-   * The allowlist. Thirty, and each is a deliberate entry point:
+   * The allowlist. Eighty-five, and each is a deliberate entry point:
    *   make_referral_code  — mints this account's own code
    *   claim_referral      — records that this account arrived on somebody's
    *   referral_standing   — two integers and a boolean about the caller
@@ -194,6 +194,75 @@ declare
     -- function is the only way in and has to be callable by a signed-in
     -- account. See 20260921170000_schools.sql.
     'claim_school(want text)',
+
+    /*
+     * Community (20260928032000_community.sql). Seventeen, because every write
+     * to a community table goes through one: members never learn another
+     * member's account id, so posting, blocking and reporting have to resolve
+     * it server-side; triage runs inside the report; and decisions and
+     * appeals check `community:review`, seniority and reviewer independence
+     * before they touch anything; `community_reviewer_standing` and
+     * `my_community_refs` answer only for the caller, and
+     * `forget_my_community` removes only the caller's rows. `community.check.sql` attempts each refusal
+     * as the account that should be refused.
+     */
+    'appeal_community_decision(want_post uuid)',
+    'block_community_author(want_post uuid)',
+    'community_reviewer_standing()',
+    'community_session_counts(want_community uuid)',
+    'create_community(want_kind text, want_name text, want_purpose text, want_integrity_policy text)',
+    'create_community_post(want_community uuid, want_body text, want_confirmed_own boolean, want_as_alias boolean, want_media uuid)',
+    'create_study_session(want_community uuid, want_venue uuid, want_title text, want_starts timestamp with time zone, want_ends timestamp with time zone, want_capacity integer)',
+    'decide_community_appeal(want_case uuid, want_uphold boolean, want_reason text)',
+    'decide_community_case(want_case uuid, want_action text, want_reason text)',
+    'delete_community_post(want_post uuid)',
+    'edit_community_post(want_post uuid, want_body text, want_confirmed_own boolean)',
+    'forget_my_community()',
+    'join_community(want_community uuid)',
+    'join_study_session(want_session uuid)',
+    'my_community_notices()',
+    'my_community_refs()',
+    'report_community_post(want_post uuid, want_category text, want_imminent boolean, want_details text)',
+
+    /*
+     * Scoped pseudonyms and volunteer moderation. Eight, and every one first
+     * asks community_programs whether that school has switched the programme
+     * on — a row only the service role can write — so at every school today
+     * each of them refuses. The volunteer functions then check eligibility,
+     * training, agreements, calibration status, caps and recusal before they
+     * hand out or accept anything; manage_volunteer needs a senior reviewer.
+     * community.check.sql attempts each refusal.
+     */
+    'apply_to_volunteer()',
+    'approve_community_pseudonymity(want_community uuid, want_on boolean)',
+    'claim_community_alias(want_community uuid, want_name text)',
+    'manage_volunteer(want_volunteer uuid, want_action text, want_reason text)',
+    'my_volunteer_standing()',
+    'volunteer_attest(want_kind text)',
+    'volunteer_decide(want_task uuid, want_action text, want_reason text)',
+    'volunteer_next_tasks()',
+    'volunteer_roster()',
+
+    /*
+     * Institution escalation and the private safety state, both off unless
+     * the school's community_programs row says otherwise. An escalation needs
+     * an agreement two senior staff recorded (section 14a), a P0 or P1 case in a covered
+     * category, and two different reviewers; case_author_safety needs a
+     * reviewer and a written reason, and logs every read;
+     * my_community_standing answers in words for the caller alone.
+     */
+    'activate_escalation_agreement(want_tenant text, want_reason text)',
+    'can_manage_escalation_agreements()',
+    'retire_escalation_agreement(want_tenant text, want_reason text)',
+    'save_escalation_agreement(want_tenant text, want_agreement_ref text, want_categories text[], want_identity_required boolean, want_channel text, want_contact text, want_expires_on date)',
+    'begin_community_image(want_community uuid, want_kind text, want_alt text)',
+    'case_author_safety(want_case uuid, want_reason text)',
+    'decide_alias_identity(want_grant uuid, want_approve boolean, want_reason text)',
+    'request_alias_identity(want_case uuid, want_reason text)',
+    'reveal_alias_identity(want_grant uuid)',
+    'decide_community_escalation(want_escalation uuid, want_approve boolean, want_reason text)',
+    'my_community_standing()',
+    'request_community_escalation(want_case uuid, want_reason text)',
 
     /*
      * The six ways into `organization_members`, and the reason there are six
@@ -271,6 +340,19 @@ declare
     'help_inbox(want_destination uuid)',
     -- 20260927230000's companion: which of those inboxes are the caller's.
     'my_help_destinations()',
+    -- 20260928000000: the caller's own report:read and moderation:action, so
+    -- the moderation screen can tell an empty queue from no queue.
+    'my_moderation_access()',
+    -- 20260928010000: the caller's own live capabilities, same predicate as
+    -- private.has_capability, so staff screens can open for staff.
+    'my_capabilities()',
+    -- 20260928021700: the only doors to `mentor_requests` — no API role holds
+    -- insert, update or delete on it. Send to an offer the caller can see;
+    -- the recipient accepts or declines, the requester withdraws, capacity is
+    -- checked at acceptance; either end forgets every request they are in.
+    'answer_mentor_request(want uuid, want_status text)',
+    'forget_my_mentor_requests()',
+    'request_mentor(want_kind text, want_recipient uuid, want_cohort text, want_name text, want_topics text[], want_note text)',
     'open_help_request(want uuid)',
     'send_help_request(want_destination uuid, want_question text, want_context jsonb)',
     'withdraw_help_request(want uuid)',

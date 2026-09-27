@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { FLAGS } from '../flags';
 import { charterProblems, CHARTERS } from './charters';
@@ -22,5 +23,30 @@ describe('product charters', () => {
     expect(charterProblems(c, '2027-01-01').join()).toMatch(/has passed/);
     expect(charterProblems({ ...c, route: 'partner_or_decline' }, '2026-09-27').join()).toMatch(/decided build/);
     expect(charterProblems({ ...c, nonGoals: [] }, '2026-09-27').join()).toMatch(/non-goals/);
+  });
+
+  it('charters the whole Operations studio, at the tier of its data, with the switch that really turns it off', () => {
+    const c = CHARTERS.find((x) => x.flag === 'module.institutional_operations')!;
+    // Every tab the one flag turns on is named somewhere in the charter.
+    const source = readFileSync(new URL('../../components/institutional/OperationsStudio.tsx', import.meta.url), 'utf8');
+    const tabs = [...source.matchAll(/\{ id: '(\w+)' as const, label: '(\w+)' \}/g)].map((m) => m[2]);
+    expect(tabs.length).toBeGreaterThanOrEqual(5);
+    const text = JSON.stringify(c).toLowerCase();
+    for (const t of tabs) expect(text, t).toContain(t.toLowerCase());
+    // Aggregates of education records, some sensitive: not student-owned work.
+    expect(c.classification).toBe('T3');
+    // The screen reads the build-time flag, so the tenant row alone is not a rollback.
+    const gate = readFileSync(new URL('../experience-flags.ts', import.meta.url), 'utf8');
+    expect(gate).toMatch(/institutionalOperations: featureState\(env, 'VITE_INSTITUTIONAL_OPERATIONS'/);
+    expect(c.killSwitch).toContain('VITE_INSTITUTIONAL_OPERATIONS');
+    expect(FLAGS.find((f) => f.key === c.flag)!.rollback).toContain('VITE_INSTITUTIONAL_OPERATIONS');
+    // University gates the studio on outcomes:read as my_capabilities() reports
+    // it for this school, so the charter names that gate and its source.
+    const university = readFileSync(new URL('../../screens/University.tsx', import.meta.url), 'utf8');
+    expect(university).toMatch(/operationsAllowed\(verified\)/);
+    expect(university).toMatch(/useMyCapabilities\(\)/);
+    expect(c.killSwitch).toContain('outcomes:read');
+    expect(c.killSwitch).not.toMatch(/open work|checks outcomes:read|nothing on the client supplies/);
+    expect(c.killSwitch).toContain('my_capabilities');
   });
 });

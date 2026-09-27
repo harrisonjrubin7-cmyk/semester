@@ -8,6 +8,9 @@ import {
   isSourceLabel,
   sourceLine,
   wantsAttention,
+  TRUST_KINDS,
+  TRUST_TEXT,
+  TRUST_MEANING,
 } from './source';
 
 /**
@@ -90,5 +93,28 @@ describe('freshness', () => {
   it('joins label and freshness into one line', () => {
     expect(sourceLine('imported', now - 86_400_000, now)).toBe('Imported · Updated yesterday');
     expect(sourceLine('estimated', null, now)).toBe('Estimated');
+  });
+});
+
+describe('the display-only trust kinds', () => {
+  it('add AI-assisted and External without touching the stored five', () => {
+    // The five are the database's check constraint; the two are never stored.
+    expect(SOURCE_LABELS).toHaveLength(5);
+    expect(SOURCE_LABELS as readonly string[]).not.toContain('ai_assisted');
+    expect(TRUST_KINDS.slice(0, 5)).toEqual([...SOURCE_LABELS]);
+    expect(TRUST_TEXT.ai_assisted).toBe('AI-assisted');
+    expect(TRUST_TEXT.external).toBe('External');
+  });
+
+  it('give every kind words and a meaning', () => {
+    for (const k of TRUST_KINDS) {
+      expect(TRUST_TEXT[k].length, k).toBeGreaterThan(0);
+      expect(TRUST_MEANING[k], k).toMatch(/\.$/);
+    }
+  });
+
+  it('style an AI answer to be noticed, like an estimate', () => {
+    expect(wantsAttention('ai_assisted')).toBe(true);
+    expect(wantsAttention('institution_verified')).toBe(false);
   });
 });

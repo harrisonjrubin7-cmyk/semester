@@ -21,7 +21,8 @@ import { useAI } from './store';
 import { assemble } from './assemble';
 import { assembleIntelligenceRequest } from '../intelligence/assemble';
 import type { IntelligenceRequest } from '../intelligence/assemble';
-import type { IntelligenceResponse, IntegrityMode, SourceOrigin } from '../intelligence/contracts';
+import { effectiveIntegrityMode, type IntelligenceResponse, type IntegrityMode, type SourceOrigin } from '../intelligence/contracts';
+import { tutorPolicy, tutoring } from '../lib/socratic';
 import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
 import { institutionIntelligence, institutionIntelligencePolicy } from '../lib/university';
 import { dropThread, flight, keepTurns, newThread, openThread, sender, setLive, useLive,
@@ -78,6 +79,8 @@ export interface Conversation {
   response: IntelligenceResponse | null;
   integrityMode: IntegrityMode;
   allowedIntegrityModes: IntegrityMode[];
+  /** Where the limits on those modes came from, for the line under the picker. */
+  integrityReason: string;
   setIntegrityMode: (mode: IntegrityMode) => void;
   /** Offers waiting on a tap. Nothing here has happened. */
   proposals: Proposal[];
@@ -281,6 +284,18 @@ export function useConversation(): Conversation {
    * questions, which was not possible while it lived in this closure.
    */
   const systemFor = systemPrompt;
+
+  /*
+   * What the mode picker is allowed to offer on this device, and what the
+   * chosen mode tells the model.
+   *
+   * With the institution gateway on, the gateway decides both and the answer
+   * comes from it. Without it — the path almost everybody is on — the limits
+   * come from the AI policy the student recorded for the course in view, read
+   * by the same resolver the toolkit uses. See `lib/socratic.ts`.
+   */
+  const governed = EXPERIENCE_FLAGS.semesterIntelligence !== 'off';
+  const limits = useMemo(() => tutorPolicy(catalog.byId[state.guideId]), [catalog, state.guideId]);
 
   const send = useCallback(
     /*
@@ -506,7 +521,11 @@ export function useConversation(): Conversation {
 
           const said = await ask({
             about: state.screen,
-            system: systemFor(how.mode, drawn.text),
+            system: systemFor(
+              how.mode,
+              drawn.text,
+              tutoring(effectiveIntegrityMode(integrityMode, { allowed: limits.allowed }).effective, limits),
+            ),
             messages: sending,
             /*
              * Room for an answer that also proposes something.
@@ -676,7 +695,7 @@ export function useConversation(): Conversation {
     },
     // No `dispatch`: the one call `send` made was the search the card
     // promised and no screen ran. See the note on `Proposal` in `lib/tools.ts`.
-    [busy, turns, remember, trouble, ai, state, catalog, now, school, account?.id, integrityMode, systemFor, held],
+    [busy, turns, remember, trouble, ai, state, catalog, now, school, account?.id, integrityMode, systemFor, held, limits],
   );
 
   /*
@@ -780,7 +799,8 @@ export function useConversation(): Conversation {
     locally,
     response,
     integrityMode,
-    allowedIntegrityModes: live.allowedIntegrityModes,
+    allowedIntegrityModes: governed ? live.allowedIntegrityModes : limits.allowed,
+    integrityReason: governed ? 'Available modes are set by verified university policy.' : limits.reason,
     setIntegrityMode: (mode) => setLive('integrityMode', mode),
     proposals,
     applied,

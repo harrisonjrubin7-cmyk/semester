@@ -36,7 +36,7 @@ const HORIZON_DAYS = 10;
  * Today with `today_action_center` on (Phase B, DECISION-LOG D-013 and D-021).
  *
  * The Action Center itself is BL-1.4's (`components/ActionCenter.tsx`): one
- * most important action, up to five next, the rest behind View all, worked
+ * most important action, up to three next, the rest behind View all, worked
  * with buttons and stored on the canonical model. Phase B puts Today around
  * it:
  *
@@ -115,7 +115,7 @@ export function TodayActionCenter({
           id: `task:${task.id}`,
           at: date.getTime() + (readDue(task.time) ?? 24 * 60 - 1) * 60_000,
           title: task.title,
-          meta: 'Your task',
+          meta: 'Your action',
           kind: 'task',
           source: 'student_entered',
         });

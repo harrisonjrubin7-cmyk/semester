@@ -1,9 +1,10 @@
-import { lazy, Suspense, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { useDeviceLibrary } from '../lib/device-library';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { ActionButton, FilePick, Notice, SectionLabel, Segmented } from '../components/ui';
 import { CardGrid, GridCard } from '../components/GridCard';
+import { ObjectCard } from '../components/unity/ObjectCard';
 import { ItemRow } from '../components/shell/Rows';
 import { secondLine } from '../lib/dim';
 import { download } from '../lib/deliver';
@@ -42,7 +43,11 @@ import { INSTITUTIONAL_PREVIEW } from '../lib/institutional-preview';
 import { EXPERIENCE_FLAGS, MODULE_FLAGS, moduleOn } from '../lib/experience-flags';
 import { GetHelp } from '../components/GetHelp';
 import { HelpInbox } from '../components/HelpInbox';
-import { helpSeedWaiting } from '../lib/help-routes';
+import { ReportQueue } from '../components/ReportQueue';
+import { ListingDesk } from '../components/ListingDesk';
+import { operationsAllowed } from '../lib/institution-ops';
+import { forSchool, useMyCapabilities } from '../lib/capabilities';
+import { helpSeedWaiting, loadInboxes, newRequestCount, type StaffInbox } from '../lib/help-routes';
 import { ControlPlane } from '../components/institutional/ControlPlane';
 import { IntegrationDashboard } from '../components/institutional/IntegrationDashboard';
 import type { ControlPlaneStatus } from '../lib/control-plane';
@@ -120,8 +125,12 @@ function RoleWorkspaceSlot() {
  * nothing anywhere is labelled official without a receipt.
  */
 
-/** The tabs, and what each is for. */
-const TABS = [
+/**
+ * The tabs, and what each is for. Operations depends on what the database says
+ * this person holds over this school (`lib/capabilities.ts`), so the list is
+ * built per render rather than once at load.
+ */
+const tabsFor = (verified: readonly string[]) => [
   { id: 'overview' as const, label: 'Services' },
   { id: 'drafts' as const, label: 'Drafts' },
   { id: 'records' as const, label: 'Records' },
@@ -137,7 +146,7 @@ const TABS = [
     : []),
   // Staff only in practice, and governed in code: aggregates at n >= 10, no
   // per-student grain, forbidden measures refused. See lib/institution-ops.ts.
-  ...(EXPERIENCE_FLAGS.institutionalOperations !== 'off'
+  ...(EXPERIENCE_FLAGS.institutionalOperations !== 'off' && operationsAllowed(verified)
     ? [{ id: 'operations' as const, label: 'Operations' }]
     : []),
   // Course demand (Phase K): staff only in practice. The database returns
@@ -281,6 +290,11 @@ function Standing({
 
 function Workspace({ storageKey }: { storageKey: string }) {
   const { state, dispatch, catalog, school, account } = useStore();
+  // Capabilities over this school, as the database reports them — never a role
+  // picked in the UI. They decide what is offered; policies still authorize.
+  const grants = useMyCapabilities();
+  const verified = forSchool(grants, school.id);
+  const TABS = tabsFor(verified);
 
   // An Action Center "Ask for help" lands here with a seed waiting; open on it.
   const [tab, setTab] = useState<Tab>(() =>
@@ -288,6 +302,30 @@ function Workspace({ storageKey }: { storageKey: string }) {
   );
   const [intent, setIntent] = useState<UniversityRole>('student');
   const [area, setArea] = useState<UniversityArea>('courses');
+
+  /*
+   * New help requests waiting for this account's offices, shown on the Get
+   * help tab so staff see them without opening it. Zero for an account that
+   * answers for no office (RLS returns no inbox), so students see no count.
+   * A failed load shows no count rather than a wrong one; the inbox itself
+   * reports the error once opened.
+   */
+  const [helpCount, setHelpCount] = useState<{ owner: string; n: number }>({ owner: '', n: 0 });
+  const accountId = account?.id ?? '';
+  const countHelp = useCallback(
+    (inboxes: StaffInbox[]) => setHelpCount({ owner: accountId, n: newRequestCount(inboxes) }),
+    [accountId],
+  );
+  useEffect(() => {
+    if (EXPERIENCE_FLAGS.humanHelp === 'off' || !accountId) return;
+    let live = true;
+    loadInboxes()
+      .then((inboxes) => { if (live) countHelp(inboxes); })
+      .catch(() => { if (live) setHelpCount({ owner: accountId, n: 0 }); });
+    return () => { live = false; };
+  }, [accountId, countHelp]);
+  // Only this account's count: a count loaded for someone else is not shown.
+  const newHelp = accountId && helpCount.owner === accountId ? helpCount.n : 0;
 
   /*
    * The same store the other five device workspaces use.
@@ -571,7 +609,12 @@ function Workspace({ storageKey }: { storageKey: string }) {
       <Segmented
         options={TABS.map((t) => ({
           id: t.id,
-          label: t.id === 'drafts' ? `${t.label} (${drafts.length})` : t.label,
+          label:
+            t.id === 'drafts'
+              ? `${t.label} (${drafts.length})`
+              : t.id === 'help' && newHelp > 0
+                ? `${t.label} (${newHelp}\u00a0new)` // one unit when the tab wraps on a phone
+                : t.label,
         }))}
         value={tab}
         onChange={setTab}
@@ -613,6 +656,10 @@ function Workspace({ storageKey }: { storageKey: string }) {
 
       {tab === 'overview' && (
         <>
+          {/* Draws nothing unless the database says this account may read reports. */}
+          <ReportQueue account={account} />
+          {/* Draws nothing unless my_capabilities() reports opportunity:publish or :moderate. */}
+          <ListingDesk school={school.id} />
           <label style={{ display: 'block', marginBlock: 'var(--sp-5) var(--sp-3)' }}>
             <SectionLabel style={{ marginBlock: 0 }}>Prepare drafts as</SectionLabel>
             <select
@@ -721,7 +768,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
       {tab === 'help' && EXPERIENCE_FLAGS.humanHelp !== 'off' && (
         <>
           <GetHelp account={account} />
-          <HelpInbox account={account} />
+          <HelpInbox account={account} onInboxes={countHelp} />
         </>
       )}
 
@@ -734,9 +781,9 @@ function Workspace({ storageKey }: { storageKey: string }) {
             featureState: EXPERIENCE_FLAGS.universityControlPlane,
             gatewayStatus: controlStatus,
             // The selector and locally loaded institution status are not
-            // authorization. A gateway-verified capability must populate
-            // this list before policy writes become available.
-            verifiedCapabilities: [],
+            // authorization. This list is what my_capabilities() reports over
+            // this school; the policy writes it unlocks are still checked by RLS.
+            verifiedCapabilities: verified.map((capability) => ({ tenantId: school.id, capability, verified: true })),
             approvedSourceCount: catalog.courses.filter((course) => Boolean(course.source)).length,
             activeConsentCount: 0,
             auditEventCount: 0,
@@ -746,9 +793,9 @@ function Workspace({ storageKey }: { storageKey: string }) {
 
       {tab === 'integrations' && EXPERIENCE_FLAGS.integrationDashboard !== 'off' && <IntegrationDashboard />}
 
-      {tab === 'operations' && EXPERIENCE_FLAGS.institutionalOperations !== 'off' && (
+      {tab === 'operations' && EXPERIENCE_FLAGS.institutionalOperations !== 'off' && operationsAllowed(verified) && (
         <Suspense fallback={null}>
-          <OperationsStudio />
+          <OperationsStudio verified={verified} tenantId={school.id} accountId={account?.id || 'device'} />
         </Suspense>
       )}
 
@@ -1066,54 +1113,51 @@ function Workspace({ storageKey }: { storageKey: string }) {
                 {fetched ? `Fetched ${new Date(fetched).toLocaleString()}` : 'Refresh to load records.'} ·
                 Read from your school, never copied into local drafts.
               </p>
-              {records.map((r) => (
-                <section
-                  key={r.id}
-                  style={{
-                    border: '1px solid var(--app-line)',
-                    borderRadius: 'var(--r-md)',
-                    padding: 'var(--sp-5)',
-                    marginBlock: 'var(--sp-4)',
-                  }}
-                >
-                  <SectionLabel aside={r.status} style={{ marginBlock: 0 }}>
-                    {r.title}
-                  </SectionLabel>
-                  <p
-                    style={{
-                      fontSize: 'var(--type-base)',
-                      lineHeight: 'var(--leading-normal)',
-                      marginBlock: 'var(--sp-4)',
-                    }}
-                  >
-                    {r.summary}
-                  </p>
-                  {r.details.map((d, i) => (
-                    <div key={i} style={{ fontSize: 'var(--type-sm)', marginBottom: 'var(--sp-3)' }}>
-                      <span style={secondLine()}>{d.label}: </span>
-                      <span>{d.value}</span>
-                    </div>
-                  ))}
-                  {connection.canWrite &&
-                    r.actions.map((a) => (
-                      <ActionButton
-                        key={a.id}
-                        disabled={busy}
-                        onClick={() => {
-                          setAction({ record: r, action: a });
-                          setValues({});
-                          setReview(null);
-                          setReceipt(null);
-                          setConfirmed(false);
-                          setUnresolved(false);
-                        }}
-                        style={{ marginTop: 'var(--sp-4)' }}
-                      >
+              {records.map((r) => {
+                const start = (a: (typeof r.actions)[number]) => {
+                  setAction({ record: r, action: a });
+                  setValues({});
+                  setReview(null);
+                  setReceipt(null);
+                  setConfirmed(false);
+                  setUnresolved(false);
+                };
+                const [first, ...rest] = connection.canWrite ? r.actions : [];
+                return (
+                  <div key={r.id}>
+                    <ObjectCard
+                      kind="task"
+                      level={2}
+                      title={r.title}
+                      explanation={r.summary}
+                      metadata={[r.status, ...r.details.map((d) => `${d.label}: ${d.value}`)].join(' · ')}
+                      statuses={['connected']}
+                      source={{
+                        title: r.title,
+                        origin: 'connected',
+                        sourceName: connection.provider || undefined,
+                        freshness: fetched ? `Fetched ${new Date(fetched).toLocaleString()}` : undefined,
+                      }}
+                      primary={
+                        first
+                          ? {
+                              label: first.label,
+                              run: () => start(first),
+                              // Disabled while a request is in flight, as the
+                              // button this replaced was.
+                              disabled: busy,
+                            }
+                          : undefined
+                      }
+                    />
+                    {rest.map((a) => (
+                      <ActionButton key={a.id} disabled={busy} onClick={() => start(a)} style={{ marginTop: 'var(--sp-4)' }}>
                         {a.label}
                       </ActionButton>
                     ))}
-                </section>
-              ))}
+                  </div>
+                );
+              })}
               {fetched && !records.length && (
                 <p style={{ fontSize: 'var(--type-base)', ...secondLine() }}>No matching records.</p>
               )}

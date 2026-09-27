@@ -86,7 +86,7 @@ export const SYNC_GROUPS: { says: string; keys: string[] }[] = [
     ],
   },
   {
-    says: 'your notes, tasks, appointments, activities and the calendars you subscribe to',
+    says: 'your notes, actions, appointments, activities and the calendars you subscribe to',
     keys: [
       'notes', 'tasks', 'appointments', 'commitments', 'timers', 'alarms',
       'feeds', 'feedEvents', 'feedHidden', 'feedOrder',
@@ -152,12 +152,13 @@ export const SYNC_GROUPS: { says: string; keys: string[] }[] = [
     says: 'and how the app is set up — your navigation, layout, colours, text size and which screens you have opened',
     keys: [
       'nav', 'tone', 'seenOnboarding', 'registered', 'cleared',
-      'waysOpen', 'keyOpen', 'countScreens', 'lastSync', 'recent', 'visited',
+      'waysOpen', 'keyOpen', 'countScreens', 'lastSync', 'recent', 'opened', 'visited',
       'tabs', 'yours', 'controls', 'role', 'showAll',
       'schemaVersion', 'accent', 'textSize', 'ground', 'density', 'corners',
       'typeface', 'bodyface', 'lineHeight', 'readingWidth', 'iconShape', 'calm',
       'labels', 'badges', 'feed', 'courseColours', 'shell', 'favourites', 'access',
       'shortcuts', 'directory', 'groupOrder', 'boardOrder', 'hue',
+      'workspaceMode', 'pinned', 'goal',
     ],
   },
 ];

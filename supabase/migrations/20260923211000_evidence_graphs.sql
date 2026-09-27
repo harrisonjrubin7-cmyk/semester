@@ -4,11 +4,19 @@
 alter table public.consent_record
   add column if not exists expires_at timestamptz;
 
-alter table public.consent_record
-  drop constraint if exists consent_record_scoped_identity;
-alter table public.consent_record
-  add constraint consent_record_scoped_identity
-  unique (id, tenant_id, subject_user_id);
+-- Added only when missing rather than dropped and re-added: once the evidence
+-- tables below reference it, a drop is refused, and a second run of this file
+-- (a repair, a restore rehearsal) would stop here.
+do $$
+begin
+  if not exists (select 1 from pg_constraint
+                  where conname = 'consent_record_scoped_identity'
+                    and conrelid = 'public.consent_record'::regclass) then
+    alter table public.consent_record
+      add constraint consent_record_scoped_identity
+      unique (id, tenant_id, subject_user_id);
+  end if;
+end $$;
 
 create table if not exists public.evidence_reference (
   id uuid primary key default gen_random_uuid(),
@@ -208,29 +216,36 @@ $$;
 revoke all on function private.owns_evidence_scope(text, uuid) from public, anon, authenticated;
 grant execute on function private.owns_evidence_scope(text, uuid) to authenticated;
 
+drop policy if exists "people own evidence references" on public.evidence_reference;
 create policy "people own evidence references" on public.evidence_reference
   for all to authenticated
   using (private.owns_evidence_scope(tenant_id, person_id))
   with check (private.owns_evidence_scope(tenant_id, person_id) and created_by = (select auth.uid()));
+drop policy if exists "people own concept evidence" on public.concept_evidence;
 create policy "people own concept evidence" on public.concept_evidence
   for all to authenticated
   using (private.owns_evidence_scope(tenant_id, person_id))
   with check (private.owns_evidence_scope(tenant_id, person_id));
+drop policy if exists "people own mistake evidence" on public.mistake_evidence;
 create policy "people own mistake evidence" on public.mistake_evidence
   for all to authenticated
   using (private.owns_evidence_scope(tenant_id, person_id))
   with check (private.owns_evidence_scope(tenant_id, person_id));
 
+drop policy if exists "people read and remove their skill claims" on public.skill_claim;
 create policy "people read and remove their skill claims" on public.skill_claim
   for select to authenticated using (private.owns_evidence_scope(tenant_id, person_id));
+drop policy if exists "source approvers read skill claims" on public.skill_claim;
 create policy "source approvers read skill claims" on public.skill_claim
   for select to authenticated using (private.has_capability('source:approve', 'school', tenant_id));
+drop policy if exists "people insert unverified skill claims" on public.skill_claim;
 create policy "people insert unverified skill claims" on public.skill_claim
   for insert to authenticated with check (
     private.owns_evidence_scope(tenant_id, person_id)
     and verification_state <> 'institution_verified'
     and verified_by is null and verified_at is null
   );
+drop policy if exists "people update unverified skill claims" on public.skill_claim;
 create policy "people update unverified skill claims" on public.skill_claim
   for update to authenticated
   using (private.owns_evidence_scope(tenant_id, person_id) and verification_state <> 'institution_verified')
@@ -239,8 +254,10 @@ create policy "people update unverified skill claims" on public.skill_claim
     and verification_state <> 'institution_verified'
     and verified_by is null and verified_at is null
   );
+drop policy if exists "people delete their skill claims" on public.skill_claim;
 create policy "people delete their skill claims" on public.skill_claim
   for delete to authenticated using (private.owns_evidence_scope(tenant_id, person_id));
+drop policy if exists "source approvers verify skill claims" on public.skill_claim;
 create policy "source approvers verify skill claims" on public.skill_claim
   for update to authenticated
   using (private.has_capability('source:approve', 'school', tenant_id))
@@ -249,6 +266,7 @@ create policy "source approvers verify skill claims" on public.skill_claim
     and verification_state = 'institution_verified'
     and verified_by = (select auth.uid()) and verified_at is not null
   );
+drop policy if exists "people own skill evidence links" on public.skill_claim_evidence;
 create policy "people own skill evidence links" on public.skill_claim_evidence
   for all to authenticated
   using (private.owns_evidence_scope(tenant_id, person_id))
@@ -311,27 +329,30 @@ revoke all on function private.assert_capture_asset_consent() from public, anon,
 revoke all on function private.assert_derived_capture_consent() from public, anon, authenticated;
 revoke all on function private.withdraw_capture_derivatives() from public, anon, authenticated;
 
-create trigger capture_asset_requires_consent
+create or replace trigger capture_asset_requires_consent
   before insert or update of consent_id, tenant_id, person_id, state, retained_until on public.capture_asset
   for each row when (new.state = 'active') execute function private.assert_capture_asset_consent();
-create trigger capture_segment_requires_consent
+create or replace trigger capture_segment_requires_consent
   before insert or update of capture_id, tenant_id, person_id, state on public.capture_segment
   for each row when (new.state = 'active') execute function private.assert_derived_capture_consent();
-create trigger capture_artifact_requires_consent
+create or replace trigger capture_artifact_requires_consent
   before insert or update of capture_id, tenant_id, person_id, state on public.capture_artifact
   for each row when (new.state <> 'withdrawn') execute function private.assert_derived_capture_consent();
-create trigger consent_withdraws_capture_derivatives
+create or replace trigger consent_withdraws_capture_derivatives
   after update of status, revoked_at, expires_at on public.consent_record
   for each row execute function private.withdraw_capture_derivatives();
 
+drop policy if exists "people own capture assets" on public.capture_asset;
 create policy "people own capture assets" on public.capture_asset
   for all to authenticated
   using (private.owns_evidence_scope(tenant_id, person_id))
   with check (private.owns_evidence_scope(tenant_id, person_id));
+drop policy if exists "people own active capture segments" on public.capture_segment;
 create policy "people own active capture segments" on public.capture_segment
   for all to authenticated
   using (private.owns_evidence_scope(tenant_id, person_id) and private.capture_consent_is_active(capture_id, tenant_id, person_id))
   with check (private.owns_evidence_scope(tenant_id, person_id) and private.capture_consent_is_active(capture_id, tenant_id, person_id));
+drop policy if exists "people own active capture artifacts" on public.capture_artifact;
 create policy "people own active capture artifacts" on public.capture_artifact
   for all to authenticated
   using (private.owns_evidence_scope(tenant_id, person_id) and private.capture_consent_is_active(capture_id, tenant_id, person_id))

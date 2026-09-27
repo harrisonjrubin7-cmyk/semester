@@ -230,7 +230,7 @@ export function brief(
     `- Deadlines that went by unticked: ${
       b.slipped.length === 0 ? 'none' : b.slipped.map((i) => `${code(i.c)} ${i.title}`).join('; ')
     }`,
-    `- Your own tasks: ${b.tasksDone} done, ${b.tasksOpen} still open`,
+    `- Your own actions: ${b.tasksDone} done, ${b.tasksOpen} still open`,
     `- Cards drilled: ${b.cardsDrilled}`,
     `- Practice papers sat: ${
       b.papers.length === 0

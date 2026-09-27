@@ -108,7 +108,7 @@ export function kindTint(id: string | null | undefined, light: boolean): string 
  */
 export function kindLabel(id: string | null | undefined): string {
   if (id === null || id === undefined) return 'Class';
-  if (id === 'task') return 'Task';
+  if (id === 'task') return 'Action';
   if (id === CAMPUS_KIND) return 'Campus';
   return kindOf(id).label;
 }

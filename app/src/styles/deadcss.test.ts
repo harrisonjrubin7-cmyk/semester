@@ -39,7 +39,7 @@ const STYLES = join(process.cwd(), 'src', 'styles');
  * is a design decision to make, not a cleanup to do, and a test that deleted
  * them would be this file overruling that file.
  */
-const SHEETS = ['app.css', 'features.css'];
+const SHEETS = ['app.css', 'features.css', 'unity.css'];
 
 /**
  * Classes built at runtime rather than written down, with where each is made.

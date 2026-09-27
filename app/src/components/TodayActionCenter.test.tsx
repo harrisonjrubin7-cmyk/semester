@@ -26,7 +26,7 @@ let wide = false;
 
 beforeAll(async () => {
   window.matchMedia = ((query: string) => ({
-    matches: wide && query.includes('min-width: 1180px'),
+    matches: wide && query.includes('min-width: 1200px'),
     addEventListener: () => {},
     removeEventListener: () => {},
   })) as unknown as typeof window.matchMedia;

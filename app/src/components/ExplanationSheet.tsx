@@ -11,12 +11,12 @@ import { SourceBadge } from './SourceBadge';
  * One component, two shapes, because the question is the same at every
  * width and the answer should not read differently on a phone:
  *
- * - **Under 1180px, a bottom sheet.** A modal dialog over a wash, portalled
+ * - **Under 1200px, a bottom sheet.** A modal dialog over a wash, portalled
  *   into `.device` like `TileSheet`, trapped by `useModal` (Escape closes,
  *   focus returns to whatever opened it). The handle is drawn but is not the
  *   way out — the Close button is, because a drag is never the only route
  *   (`a11y/dragging.test.ts`).
- * - **At 1180px and wider, a drawer.** Docked on the right and deliberately
+ * - **At 1200px and wider, a drawer.** Docked on the right and deliberately
  *   *not* modal: the page beside it stays usable, which is the reason to have
  *   the width. Escape still closes it, and focus still goes back.
  *

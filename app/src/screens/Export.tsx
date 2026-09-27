@@ -7,6 +7,7 @@ import { Blueprint } from '../components/Blueprint';
 import { Snapshots } from '../components/Snapshots';
 import { Subscribe } from '../components/Subscribe';
 import { WorkspaceBackup } from '../components/WorkspaceBackup';
+import { SuccessState } from '../components/unity/States';
 import { ActionButton, FilePick, SectionLabel, TickBox } from '../components/ui';
 import { PROVIDERS, tokens, type ProviderId } from '../lib/connect';
 import { datedItems } from '../lib/select';
@@ -49,7 +50,7 @@ const PARTS: { id: PartId; label: string; blurb: string; format: string }[] = [
     format: 'ICS',
   },
   { id: 'notes', label: 'Notes', blurb: 'Everything you wrote, including transcripts and email drafts.', format: 'Markdown' },
-  { id: 'tasks', label: 'Tasks', blurb: 'Your own to-do list, dated and dead.', format: 'CSV' },
+  { id: 'tasks', label: 'Your own actions', blurb: 'The actions you added, with their dates and whether they are done.', format: 'CSV' },
   {
     id: 'files',
     label: 'Attachments',
@@ -109,6 +110,8 @@ export function Export() {
     null,
   );
   const [done, setDone] = useState('');
+  /** A backup put back — a milestone, said as one rather than as a grey line. */
+  const [restored, setRestored] = useState(false);
   const [error, setError] = useState('');
 
   const code = (id: string) => catalog.byId[id]?.code ?? id;
@@ -202,6 +205,7 @@ export function Export() {
     setBusy(what);
     setError('');
     setDone('');
+    setRestored(false);
     try {
       setDone(await fn());
     } catch (e) {
@@ -338,6 +342,11 @@ export function Export() {
       {done ? (
         <div style={{ fontSize: 'var(--type-base)', marginTop: 'calc(14px * var(--density, 1))', lineHeight: 'var(--leading-relaxed)', color: 'var(--app-dim)' }}>{done}</div>
       ) : null}
+      {restored && (
+        <div style={{ marginTop: 'calc(14px * var(--density, 1))' }}>
+          <SuccessState title="Restored" body="Everything in the file is in place." />
+        </div>
+      )}
       {error ? (
         <div
           role="alert"
@@ -365,6 +374,7 @@ export function Export() {
         onPick={([file]) => {
           setError('');
           setDone('');
+          setRestored(false);
           setOffered(null);
           void file
             .text()
@@ -405,7 +415,8 @@ export function Export() {
               onClick={() => {
                 dispatch({ type: 'restore', persisted: offered.data as never });
                 setOffered(null);
-                setDone('Restored. Everything in the file is in place.');
+                setDone('');
+                setRestored(true);
               }}
               style={{ flex: 1, height: 42 }}
             >
@@ -422,7 +433,7 @@ export function Export() {
       <Blueprint style={{ paddingBlock: 'calc(13px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))', marginTop: 'calc(18px * var(--density, 1))' }}>
         <div className="kicker">The backup file</div>
         <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)' }}>
-          It holds your courses, notes, tasks, appointments, grades, saved places and what you have
+          It holds your courses, notes, actions, appointments, grades, saved places and what you have
           ticked off — everything except the attachments, which are in the zip beside it. Keys and
           the tokens for connected accounts are deliberately left out: a backup that carries your
           credentials is a liability, not a safety net.

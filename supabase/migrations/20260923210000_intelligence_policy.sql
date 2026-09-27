@@ -153,57 +153,71 @@ grant select, insert, update, delete on table public.approved_source to authenti
 grant select, insert, update, delete on table public.consent_record to authenticated;
 grant select on table public.tenant_policy_audit_event to authenticated;
 
+drop policy if exists "school members read feature policy" on public.tenant_feature_policy;
 create policy "school members read feature policy" on public.tenant_feature_policy
   for select to authenticated
   using (tenant_id = (select school_id from public.profiles where user_id = (select auth.uid())));
+drop policy if exists "tenant administrators insert feature policy" on public.tenant_feature_policy;
 create policy "tenant administrators insert feature policy" on public.tenant_feature_policy
   for insert to authenticated
   with check (private.has_capability('tenant:configure', 'school', tenant_id));
+drop policy if exists "tenant administrators update feature policy" on public.tenant_feature_policy;
 create policy "tenant administrators update feature policy" on public.tenant_feature_policy
   for update to authenticated
   using (private.has_capability('tenant:configure', 'school', tenant_id))
   with check (private.has_capability('tenant:configure', 'school', tenant_id));
+drop policy if exists "tenant administrators delete feature policy" on public.tenant_feature_policy;
 create policy "tenant administrators delete feature policy" on public.tenant_feature_policy
   for delete to authenticated
   using (private.has_capability('tenant:configure', 'school', tenant_id));
 
+drop policy if exists "school members read ai policy" on public.ai_policy;
 create policy "school members read ai policy" on public.ai_policy
   for select to authenticated
   using (tenant_id = (select school_id from public.profiles where user_id = (select auth.uid())));
+drop policy if exists "tenant administrators insert ai policy" on public.ai_policy;
 create policy "tenant administrators insert ai policy" on public.ai_policy
   for insert to authenticated
   with check (private.has_capability('ai:configure', 'school', tenant_id));
+drop policy if exists "tenant administrators update ai policy" on public.ai_policy;
 create policy "tenant administrators update ai policy" on public.ai_policy
   for update to authenticated
   using (private.has_capability('ai:configure', 'school', tenant_id))
   with check (private.has_capability('ai:configure', 'school', tenant_id));
+drop policy if exists "tenant administrators delete ai policy" on public.ai_policy;
 create policy "tenant administrators delete ai policy" on public.ai_policy
   for delete to authenticated
   using (private.has_capability('ai:configure', 'school', tenant_id));
 
+drop policy if exists "school members read approved sources" on public.approved_source;
 create policy "school members read approved sources" on public.approved_source
   for select to authenticated
   using (tenant_id = (select school_id from public.profiles where user_id = (select auth.uid())));
+drop policy if exists "source approvers insert approved sources" on public.approved_source;
 create policy "source approvers insert approved sources" on public.approved_source
   for insert to authenticated
   with check (
     private.has_capability('source:approve', 'school', tenant_id)
     and created_by = (select auth.uid())
   );
+drop policy if exists "source approvers update approved sources" on public.approved_source;
 create policy "source approvers update approved sources" on public.approved_source
   for update to authenticated
   using (private.has_capability('source:approve', 'school', tenant_id))
   with check (private.has_capability('source:approve', 'school', tenant_id));
+drop policy if exists "source approvers delete approved sources" on public.approved_source;
 create policy "source approvers delete approved sources" on public.approved_source
   for delete to authenticated
   using (private.has_capability('source:approve', 'school', tenant_id));
 
+drop policy if exists "people read their consent or tenant auditors read it" on public.consent_record;
 create policy "people read their consent or tenant auditors read it" on public.consent_record
   for select to authenticated
   using (
     subject_user_id = (select auth.uid())
     or private.has_capability('audit:read', 'school', tenant_id)
   );
+drop policy if exists "people record their own consent" on public.consent_record;
 create policy "people record their own consent" on public.consent_record
   for insert to authenticated
   with check (
@@ -211,6 +225,7 @@ create policy "people record their own consent" on public.consent_record
     and recorded_by = (select auth.uid())
     and tenant_id = (select school_id from public.profiles where user_id = (select auth.uid()))
   );
+drop policy if exists "people update their own consent" on public.consent_record;
 create policy "people update their own consent" on public.consent_record
   for update to authenticated
   using (subject_user_id = (select auth.uid()))
@@ -219,10 +234,12 @@ create policy "people update their own consent" on public.consent_record
     and recorded_by = (select auth.uid())
     and tenant_id = (select school_id from public.profiles where user_id = (select auth.uid()))
   );
+drop policy if exists "people delete their own consent" on public.consent_record;
 create policy "people delete their own consent" on public.consent_record
   for delete to authenticated
   using (subject_user_id = (select auth.uid()));
 
+drop policy if exists "tenant auditors read policy events" on public.tenant_policy_audit_event;
 create policy "tenant auditors read policy events" on public.tenant_policy_audit_event
   for select to authenticated
   using (private.has_capability('audit:read', 'school', tenant_id));
@@ -264,16 +281,16 @@ end $$;
 
 revoke all on function private.audit_tenant_policy_change() from public, anon, authenticated;
 
-create trigger audit_tenant_feature_policy
+create or replace trigger audit_tenant_feature_policy
   after insert or update or delete on public.tenant_feature_policy
   for each row execute function private.audit_tenant_policy_change();
-create trigger audit_ai_policy
+create or replace trigger audit_ai_policy
   after insert or update or delete on public.ai_policy
   for each row execute function private.audit_tenant_policy_change();
-create trigger audit_approved_source
+create or replace trigger audit_approved_source
   after insert or update or delete on public.approved_source
   for each row execute function private.audit_tenant_policy_change();
-create trigger audit_consent_record
+create or replace trigger audit_consent_record
   after insert or update or delete on public.consent_record
   for each row execute function private.audit_tenant_policy_change();
 

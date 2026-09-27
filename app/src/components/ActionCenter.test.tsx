@@ -68,12 +68,12 @@ const button = (name: RegExp, within: ParentNode = host) =>
   [...within.querySelectorAll('button')].find((b) => name.test(b.textContent ?? '')) as HTMLButtonElement | undefined;
 const stored = () => JSON.parse(localStorage.getItem(KEY) ?? '{"choices":{}}').choices;
 
-it('shows one most important, five next, and the rest behind View all', () => {
+it('shows one most important, three next, and the rest behind View all', () => {
   render(Array.from({ length: 8 }, (_, i) => make(i)));
   expect(host.querySelector('#action-top-title')?.textContent).toBe('Task number 0');
   const lists = host.querySelectorAll('ol.action-list');
-  expect(lists[0].querySelectorAll(':scope > li')).toHaveLength(5);
-  expect(host.textContent).toContain('View all (2 more)');
+  expect(lists[0].querySelectorAll(':scope > li')).toHaveLength(3);
+  expect(host.textContent).toContain('View all (4 more)');
 });
 
 it('shows the source, and opens the whole explanation with its working in a sheet', () => {

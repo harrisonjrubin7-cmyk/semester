@@ -38,6 +38,7 @@ alter table public.role_grant_audit_event enable row level security;
 revoke all on table public.role_grant_audit_event from anon, authenticated;
 grant select on table public.role_grant_audit_event to authenticated;
 
+drop policy if exists "tenant auditors read role grant events" on public.role_grant_audit_event;
 create policy "tenant auditors read role grant events" on public.role_grant_audit_event
   for select to authenticated
   using (
@@ -127,11 +128,11 @@ end $$;
 revoke all on function private.audit_role_grant_change() from public, anon, authenticated;
 revoke all on function private.refuse_role_grant_audit_change() from public, anon, authenticated;
 
-create trigger audit_role_grant_change
+create or replace trigger audit_role_grant_change
   after insert or update or delete on public.role_grants
   for each row execute function private.audit_role_grant_change();
 
-create trigger keep_role_grant_audit_immutable
+create or replace trigger keep_role_grant_audit_immutable
   before update or delete on public.role_grant_audit_event
   for each row execute function private.refuse_role_grant_audit_change();
 

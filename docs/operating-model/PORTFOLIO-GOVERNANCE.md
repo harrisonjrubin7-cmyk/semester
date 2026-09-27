@@ -26,7 +26,10 @@ New request (student, faculty, tenant, sales, internal)
 → Scale, revise, or retire
 ```
 
-Every decision goes in the decision log (`DECISIONS.md` at the repository root) with the scorecard attached.
+Every decision is a row in `governance_decisions` with its scorecard. The database computes the total and the route
+from the scores, refuses an incomplete card, refuses `build` on a route that doesn't support it, and never lets a
+decision be edited: a revisited decision is a new row that `supersedes` the old one. Decisions about the platform's
+own architecture still go in `DECISIONS.md` as well.
 
 ## Governance scorecard
 

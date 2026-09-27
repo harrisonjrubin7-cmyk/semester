@@ -136,12 +136,12 @@ export const TOOLS: ToolSpec[] = [
   {
     name: 'move_task',
     description:
-      'Move one of the student’s own tasks to a different day, when they say it is not happening today. Only their own tasks — a syllabus deadline is not yours to move, and there is no tool for it.',
+      'Move one of the student’s own actions to a different day, when they say it is not happening today. Only their own actions — a syllabus deadline is not yours to move, and there is no tool for it.',
     strict: true,
     input_schema: {
       type: 'object',
       properties: {
-        id: { type: 'string', description: 'The task id, exactly as given in the context.' },
+        id: { type: 'string', description: 'The action id, exactly as given in the context.' },
         date: { type: 'string', description: 'The new ISO date (2026-09-14).' },
       },
       required: ['id', 'date'],

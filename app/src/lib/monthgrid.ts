@@ -49,7 +49,7 @@ export interface Mark {
  */
 const SAYS: Record<string, [string, string]> = {
   due: ['deadline', 'deadlines'],
-  mine: ['task of your own', 'tasks of your own'],
+  mine: ['action of your own', 'actions of your own'],
   appt: ['appointment', 'appointments'],
   event: ['campus event', 'campus events'],
   feed: ['course event', 'course events'],

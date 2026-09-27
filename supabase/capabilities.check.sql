@@ -223,18 +223,23 @@ begin
   -- Twenty original roles plus the twenty-seven added by
   -- 20260926150000_expansion_roles_and_features.sql, plus `integration_admin`
   -- and `incident_responder` from 20260927170000_integration_control_plane.sql,
-  -- plus the four office publishers from 20260927224500_office_action_feed.sql
+  -- and `portfolio_council` from 20260927235000_governance_registries.sql,
+  -- plus the three Trust & Safety and community roles from the community migration,
+  -- plus the four office publishers from the office action feed migration
   -- (Phase J), and `athletic_academic_support` from
   -- 20260928142000_support_shares.sql (D1).
-  perform pg_temp.counted('a signed-in account reads the fifty-four roles', n, 54);
+  perform pg_temp.counted('a signed-in account reads the fifty-eight roles', n, 58);
   select count(*) into n from public.role_capabilities;
   -- Twenty original rows, thirty-seven expansion rows, eight from the
   -- integration control plane (four for integration_admin, three for
-  -- university_admin, one for incident_responder), eight staff roles that
-  -- answer help requests (the help_requests migration), four for the Phase J
-  -- office publishers, and `faculty` → `course:publish` from
-  -- 20260928150000_course_studio.sql.
-  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 78);
+  -- university_admin, one for incident_responder), and eight staff roles that
+  -- answer help requests (the help_requests migration), and two from the
+  -- governance registries (portfolio_council → governance:decide,
+  -- incident_responder → incident:communicate), and seven learner and
+  -- teaching roles → lti:launch (20260928015315_lti_launch_capability.sql),
+  -- five community rows, four for the Phase J office publishers, and
+  -- `faculty` → `course:publish` from 20260928150000_course_studio.sql.
+  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 92);
 
   perform pg_temp.become_anon();
   perform pg_temp.refused('a signed-out visitor cannot read the matrix',

@@ -3,6 +3,7 @@ import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { SectionLabel, TabList } from '../components/ui';
 import { Card, Checklist, GoTo, Never, OfficeDoor } from '../components/JourneyKit';
+import { RoomsNow } from '../components/RoomsNow';
 import { useDeviceLibrary } from '../lib/device-library';
 import { hasMode } from '../lib/accessmode';
 import { clock } from '../lib/date';
@@ -63,6 +64,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
       {tab === 'now' ? <Now lib={lib.value} set={set} chunk={chunk} /> : null}
       {tab === 'care' ? <Routines lib={lib.value} set={set} /> : null}
       {tab === 'access' ? <AccessNotes lib={lib.value} set={set} /> : null}
+      {tab === 'campus' ? <RoomsNow sensory={sensory} /> : null}
       {tab === 'campus' ? <Commute lib={lib.value} set={set} /> : null}
 
       <Never items={section.never} />

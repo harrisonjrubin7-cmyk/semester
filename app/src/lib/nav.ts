@@ -15,6 +15,7 @@
  * name.
  */
 
+import { COMMUNITY_FLAGS, enabled } from '../community/flags';
 import type { Screen } from './types';
 import { settingsTitle } from './settings';
 import { allowed, cardName, lmsName, showsCash, showsSwipes, swipeUnit, type Capabilities } from './school';
@@ -800,8 +801,8 @@ export const DESTINATIONS: Destination[] = [
     // "Mine" said whose it was and not what it held. Everything in the app is
     // yours; what makes this tab different is that you put it there yourself.
     label: 'Personal',
-    blurb: 'Your own tasks, appointments, notes, places and files.',
-    keywords: 'mine personal todo task appointment note file attachment place own yours',
+    blurb: 'Your own actions, appointments, notes, places and files.',
+    keywords: 'mine personal action todo task appointment note file attachment place own yours',
     group: 'Life',
     // On You rather than Life: this is the one screen holding what the
     // student wrote rather than what a syllabus or the campus did, which is
@@ -824,7 +825,7 @@ export const DESTINATIONS: Destination[] = [
     keywords:
       'me progress profile load more menu overview directory settings everything ' +
       'all screens index list of features what can this app do capabilities map contents table of contents ' +
-      'browse explore find a screen where is what is there tour inventory sitemap unused never opened by task',
+      'browse explore find a screen where is what is there tour inventory sitemap unused never opened by goal by task',
     group: 'Semester',
     taskTags: ['stand', 'app'],
     root: 'me',
@@ -988,8 +989,38 @@ export const DESTINATIONS: Destination[] = [
   },
 ];
 
+/**
+ * Community, registered only when its build switches are on.
+ *
+ * A switched-off feature is not a place in the app, so it is not in the
+ * registry at all rather than a tile that opens onto "not available". It
+ * turns on only with reporting, because a community without report, block and
+ * mute is not a version of it that should exist (app/src/community/flags.ts).
+ * `lib/nav.registry.test.ts` names it among the screens that may be absent.
+ */
+export const COMMUNITY_DESTINATION: Destination = {
+  screen: 'community',
+  label: 'Community',
+  short: 'Community',
+  blurb: 'Course spaces, study groups and study sessions — found by what you study, never by where you are.',
+  keywords:
+    'community communities study group groups study session sessions course space support group first generation organization club post posts forum discussion peers report block mute',
+  group: 'Beyond',
+  taskTags: ['campus', 'study'],
+  root: 'mine',
+};
+
+if (enabled(COMMUNITY_FLAGS, 'communityFeed') && enabled(COMMUNITY_FLAGS, 'communityReporting')) {
+  DESTINATIONS.push(COMMUNITY_DESTINATION);
+}
+
 /** Screens that are reached from somewhere rather than gone to directly. */
 const NESTED: Partial<Record<Screen, Screen>> = {
+  community: 'mine',
+  moderation: 'mine',
+  agreements: 'moderation',
+  volunteers: 'moderation',
+  volunteer: 'mine',
   course: 'courses',
   edit: 'courses',
   item: 'courses',
@@ -1057,6 +1088,13 @@ const NESTED_NAMES: Partial<Record<Screen, string>> = {
   // front door and the other is the index of everything behind it, the way a
   // browser's new-tab page is not one of your bookmarks. See `lib/desk.ts`.
   search: 'the search home',
+  // Community is a registered destination only while its switches are on;
+  // the review queue is a staff tool opened from it. See COMMUNITY_DESTINATION.
+  community: 'Community',
+  moderation: 'the review queue',
+  agreements: 'escalation agreements',
+  volunteers: 'the volunteer programme',
+  volunteer: 'volunteer moderation',
   directory: 'all apps',
   course: 'this course',
   item: 'this deadline',

@@ -42,9 +42,10 @@ import { createElement, useState } from 'react';
 import { useStore } from '../state/store';
 import { currentLook } from '../state/shape';
 import { directoryOf } from '../lib/look';
-import { allApps, discover, isFavourite, narrowApps, readFavourites, toggleFavourite } from '../lib/desk';
+import { allApps, chipsFor, discover, isFavourite, narrowApps, readFavourites, toggleFavourite } from '../lib/desk';
 import type { Destination } from '../lib/nav';
-import { ALWAYS_TO_HAND, GROUPS, lately, saysFor } from '../lib/nav';
+import { ALWAYS_TO_HAND, lately, saysFor } from '../lib/nav';
+import { navAreaLabel } from '../lib/navareas';
 import { showing } from '../lib/reveal';
 import { secondLine } from '../lib/dim';
 import { glyphFor } from '../components/icons.pick';
@@ -130,14 +131,15 @@ export function Directory({
   /*
    * The chips are read off what this list actually holds, not off the
    * registry, for the reason `desk.ts`'s `categories` gives about the school
-   * gate: a shelf whose every screen is held back is a chip that empties the
-   * list when pressed. With no courses that is most of them.
+   * gate: an area whose every screen is held back is a chip that empties the
+   * list when pressed. With no courses that is most of them. The chips are the
+   * navigation areas (`lib/navareas.ts`), the same headings the launcher uses.
    *
    * And a chip that is no longer offered is not honoured — clearing a query
-   * can take the shelf you were standing on away with it, and a filter on a
-   * shelf with nothing on it is an empty screen with no way back to the list.
+   * can take the area you were standing on away with it, and a filter on an
+   * area with nothing in it is an empty screen with no way back to the list.
    */
-  const chips: string[] = GROUPS.filter((g) => apps.some((d) => d.group === g));
+  const chips: string[] = chipsFor(apps);
   const shown = narrowApps(apps, chips.includes(category) ? category : '', query, caps);
   const favourites = readFavourites(look.favourites, caps, state.role);
   const recent = lately(state.recent, state.tabs, caps, ALWAYS_TO_HAND, 4, state.role);
@@ -408,7 +410,7 @@ export function Directory({
                     {said.blurb}
                   </span>
                   <span className="deskdir-cardgroup" style={secondLine()}>
-                    {d.group}
+                    {navAreaLabel(d.screen)}
                   </span>
                 </button>
               </div>
@@ -440,7 +442,7 @@ export function Directory({
                     {said.blurb}
                   </span>
                   <span className="deskdir-col-group deskdir-rowgroup" style={secondLine()}>
-                    {d.group}
+                    {navAreaLabel(d.screen)}
                   </span>
                 </button>
                 <span className="deskdir-col-star">{starButton(d.screen, said.label)}</span>

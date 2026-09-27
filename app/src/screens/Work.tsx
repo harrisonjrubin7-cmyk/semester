@@ -492,7 +492,7 @@ function PlanView({
             style={{ marginTop: 'var(--sp-6)', fontSize: 'var(--type-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--sp-4)' }}
           >
             {saved > 0 ? <Check size={14} /> : <Plus size={14} />}
-            {saved > 0 ? `${saved} tasks added` : `Add ${plan.steps.length} steps as tasks`}
+            {saved > 0 ? `${saved} actions added` : `Add ${plan.steps.length} steps as actions`}
           </ActionButton>
         </>
       )}

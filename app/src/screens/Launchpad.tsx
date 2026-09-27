@@ -3,6 +3,7 @@ import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { SectionLabel, TabList } from '../components/ui';
 import { Card, Checklist, GoTo, Never, OfficeDoor } from '../components/JourneyKit';
+import { MentorFinder } from '../components/MentorFinder';
 import { useDeviceLibrary } from '../lib/device-library';
 import { creditHoursOr0 } from '../lib/credits';
 import { hasMode } from '../lib/accessmode';
@@ -240,9 +241,16 @@ function Supporters({ lib, set }: { lib: LaunchpadLibrary; set: (p: Partial<Laun
                 </button>
               ))}
             </div>
-            <p className="jx-muted">
-              Your school has not connected a mentor program yet. When it does, a match is proposed to both of you, and contact happens only through the program once you both accept — never by sharing personal accounts.
-            </p>
+            <MentorFinder
+              kind="peer"
+              interests={lib.interests}
+              types={lib.types}
+              fallback={
+                <p className="jx-muted">
+                  Your school has not connected a mentor program yet. When it does, a match is proposed to both of you, and contact happens only through the program once you both accept — never by sharing personal accounts.
+                </p>
+              }
+            />
           </>
         ) : null}
       </Card>

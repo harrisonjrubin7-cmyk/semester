@@ -25,6 +25,7 @@
 
 export const INSTITUTION_VERSION = 1;
 
+export * from './identity.ts';
 export * from './intelligence.ts';
 export * from './provisioning.ts';
 
