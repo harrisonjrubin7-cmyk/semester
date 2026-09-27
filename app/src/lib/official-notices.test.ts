@@ -80,13 +80,15 @@ describe('official notices', () => {
  * whether the module is on for the school, and the rows. Each can be made to
  * fail, which is the case the hub has to tell apart from "not connected".
  */
-function fakeDb(o: { user?: string | null; state?: string; stateFails?: boolean; switchesFail?: boolean; rowsFail?: boolean; userThrows?: boolean }) {
+function fakeDb(o: { user?: string | null; state?: string; stateFails?: boolean; switchesFail?: boolean; rowsFail?: boolean; userThrows?: boolean; authError?: string }) {
   const fail = { message: 'network' };
   return {
     auth: {
       getUser: async () => {
         if (o.userThrows) throw new Error('offline');
-        return { data: { user: o.user === null ? null : { id: o.user ?? 'u1' } } };
+        // Supabase returns an auth error rather than throwing it.
+        if (o.authError) return { data: { user: null }, error: { name: o.authError, message: 'x' } };
+        return { data: { user: o.user === null ? null : { id: o.user ?? 'u1' } }, error: null };
       },
     },
     rpc: async () => (o.stateFails ? { data: null, error: fail } : { data: o.state ?? 'production', error: null }),
@@ -112,6 +114,7 @@ describe('loading the official channel', () => {
   it('is off for what is true about the school or the account', async () => {
     expect((await load(null)).status).toBe('off');
     expect((await load(fakeDb({ user: null }))).status).toBe('off');
+    expect((await load(fakeDb({ authError: 'AuthSessionMissingError' }))).status).toBe('off');
     expect((await load(fakeDb({}), async () => '')).status).toBe('off');
     expect((await load(fakeDb({ state: 'off' }))).status).toBe('off');
   });
@@ -121,5 +124,7 @@ describe('loading the official channel', () => {
     expect((await load(fakeDb({ switchesFail: true }))).status).toBe('error');
     expect((await load(fakeDb({ rowsFail: true }))).status).toBe('error');
     expect((await load(fakeDb({ userThrows: true }))).status).toBe('error');
+    expect((await load(fakeDb({ authError: 'AuthRetryableFetchError' }))).status).toBe('error');
+    expect((await load(fakeDb({}), async () => { throw new Error('profile lookup failed'); })).status).toBe('error');
   });
 });

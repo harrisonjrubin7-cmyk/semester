@@ -84,7 +84,10 @@ export async function loadOfficial(
 ): Promise<OfficialLoad> {
   if (!db) return { status: 'off' };
   try {
-    const { data } = await db.auth.getUser();
+    // A missing session is signed out; any other auth error is a failed request,
+    // which Supabase returns rather than throws.
+    const { data, error } = await db.auth.getUser();
+    if (error && error.name !== 'AuthSessionMissingError') return { status: 'error' };
     if (!data.user?.id) return { status: 'off' };
     const state = await cardsState(db, await school(), environment, now);
     if (state !== 'on') return { status: state };

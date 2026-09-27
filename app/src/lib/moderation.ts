@@ -142,17 +142,19 @@ type Client = Awaited<ReturnType<typeof cloud>>;
 export async function loadQueue(client?: Client): Promise<Queue> {
   const db = client ?? (await cloud());
   const [active, closed] = await Promise.all([
-    db.from('reports').select(QUEUE_COLUMNS).in('status', [...ACTIVE]).order('created_at', { ascending: true }).limit(ACTIVE_LIMIT + 1),
+    // An exact count, not a sentinel row: PostgREST caps a response at 1,000,
+    // so asking for ACTIVE_LIMIT + 1 could never return the extra row.
+    db.from('reports').select(QUEUE_COLUMNS, { count: 'exact' }).in('status', [...ACTIVE]).order('created_at', { ascending: true }).limit(ACTIVE_LIMIT),
     db.from('reports').select(QUEUE_COLUMNS).in('status', [...CLOSED]).order('created_at', { ascending: false }).limit(CLOSED_LIMIT),
   ]);
   if (active.error) throw new Error(active.error.message);
   if (closed.error) throw new Error(closed.error.message);
   const waiting = (active.data ?? []) as unknown[];
   const history = (closed.data ?? []) as unknown[];
-  const rows = [...waiting.slice(0, ACTIVE_LIMIT), ...history];
+  const rows = [...waiting, ...history];
   return {
     reports: ordered(rows.map(readRow).filter((r): r is QueuedReport => r !== null)),
-    moreWaiting: waiting.length > ACTIVE_LIMIT,
+    moreWaiting: (active.count ?? waiting.length) > waiting.length,
     closedCapped: history.length >= CLOSED_LIMIT,
   };
 }

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { cloud, cloudConfigured } from './cloud';
-import { claimedSchool } from './schoolclaim';
+import { claimedSchoolOrThrow } from './schoolclaim';
 import { buildEnvironment, loadRecords, loadRoomRecords } from './integration/school-records';
 import { loadOfficial, type OfficialLoad } from './official-notices';
 
@@ -22,7 +22,7 @@ export function useSchoolRecords(which: 'records' | 'rooms' = 'records'): School
     let live = true;
     void (async () => loadOfficial(
       cloudConfigured ? await cloud() : null,
-      claimedSchool,
+      claimedSchoolOrThrow,
       buildEnvironment(import.meta.env.MODE),
       new Date(),
       which === 'rooms' ? loadRoomRecords : loadRecords,

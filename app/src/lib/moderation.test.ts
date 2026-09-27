@@ -58,14 +58,17 @@ describe('the report queue', () => {
 function fakeReports(rows: { id: string; status: string; created_at: string }[]) {
   const table = () => {
     let out = rows.map((r) => ({ ...r, reason: 'r', copy: 'c', message_id: 'm' }));
+    let counted = false;
     const q = {
-      select: () => q,
+      select: (_: string, o?: { count?: string }) => { counted = o?.count === 'exact'; return q; },
       in: (_: string, values: string[]) => { out = out.filter((r) => values.includes(r.status)); return q; },
       order: (_: string, o: { ascending: boolean }) => {
         out = [...out].sort((a, b) => (o.ascending ? 1 : -1) * a.created_at.localeCompare(b.created_at));
         return q;
       },
-      limit: (n: number) => Promise.resolve({ data: out.slice(0, n), error: null }),
+      // PostgREST's own ceiling: never more than 1,000 rows in one response,
+      // whatever limit was asked for. A count, when asked, covers every match.
+      limit: (n: number) => Promise.resolve({ data: out.slice(0, Math.min(n, 1000)), count: counted ? out.length : null, error: null }),
     };
     return q;
   };
