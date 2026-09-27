@@ -117,8 +117,21 @@ describe('Notices', () => {
 });
 
 describe('Operations studio', () => {
+  it('refuses to open without the verified capability', () => {
+    draw(<OperationsStudio verified={[]} tenantId="t" accountId="a" />);
+    expect(host.textContent).toContain('needs the verified outcomes:read capability');
+    expect(host.querySelector('textarea')).toBeNull();
+  });
+
+  it('keeps one analyst’s drafts out of another school’s studio', () => {
+    localStorage.setItem('semester.operations.v1:t1:a', JSON.stringify({ evidence: [], standards: [], ready: { gdpr: true } }));
+    draw(<OperationsStudio verified={['outcomes:read']} tenantId="t2" accountId="a" />);
+    click(button('Readiness'));
+    expect((host.querySelector('input[aria-label^="Data subject requests"]') as HTMLInputElement).checked).toBe(false);
+  });
+
   it('withholds a small cell, and its complement, in the export it offers', () => {
-    draw(<OperationsStudio />);
+    draw(<OperationsStudio verified={['outcomes:read']} tenantId="t" accountId="a" />);
     const area = host.querySelector('textarea[aria-label="Aggregate counts"]') as HTMLTextAreaElement;
     const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')!.set!;
     act(() => {

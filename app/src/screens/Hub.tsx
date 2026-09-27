@@ -6,7 +6,7 @@ import { Card, GoTo, Never } from '../components/JourneyKit';
 import { useDeviceLibrary } from '../lib/device-library';
 import { datedItems } from '../lib/select';
 import { hasMode } from '../lib/accessmode';
-import { clock } from '../lib/date';
+import { clock, dateToIso } from '../lib/date';
 import { EMPTY_LAUNCHPAD, openSteps, readLaunchpad, stepsFor } from '../lib/launchpad';
 import { EMPTY_OPPORTUNITIES, deadlines, readOpportunities } from '../lib/opportunities';
 import {
@@ -78,7 +78,8 @@ function Workspace({ who }: { who: string }) {
     if (next) {
       out.push({ id: `launchpad:${next.id}`, channel: 'semester', source: 'Launchpad', title: next.title, body: next.detail, at: now.toISOString(), priority: 'low', screen: 'launchpad' });
     }
-    const today = now.toISOString().slice(0, 10);
+    // The student's calendar day, not UTC's — a deadline is a local date.
+    const today = dateToIso(now);
     for (const o of deadlines(opps.value.items, today).slice(0, 5)) {
       out.push({ id: `opportunity:${o.id}`, channel: 'semester', source: 'Opportunities', title: `${o.title || 'An opportunity'} — due ${o.deadline}`, at: `${o.deadline}T09:00:00`, priority: 'normal', screen: 'opportunities' });
     }
