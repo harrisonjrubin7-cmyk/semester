@@ -276,6 +276,18 @@ export function study(state: State, action: Action): State | null {
       };
 
     /*
+     * A row put back exactly as it was — or taken away, when there was none,
+     * so the card goes on counting as never met rather than as met with a
+     * blank record. The same distinction `undoCard` makes.
+     */
+    case 'restoreReview': {
+      const reviews = { ...state.reviews };
+      if (action.was) reviews[action.key] = action.was;
+      else delete reviews[action.key];
+      return { ...state, reviews };
+    }
+
+    /*
      * Clear the evidence for a set of cards.
      *
      * The "that's not right" behind a unit's standing. `lib/knowing.ts` reads
