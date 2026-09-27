@@ -22,7 +22,7 @@ import { Replaced } from './components/Replaced';
 import { SampleMark } from './components/SampleMark';
 import { CALM_ATTR, scrollKindly, usePrefersContrast, usePrefersDark } from './lib/prefers';
 import { Today } from './screens/Today';
-import { Guides, InstitutionalPreviewBar, SCREENS, Springboard } from './screens';
+import { Guides, InstitutionalPreviewBar, OfflineBanner, SCREENS, Springboard } from './screens';
 import { headOf, type Head } from './headers';
 import {
   calmOf,
@@ -105,6 +105,10 @@ import { windowTitle } from './a11y/title';
 import type { Screen } from './lib/types';
 import { InstitutionalPreviewRoot } from './components/institutional/PreviewRoot';
 import { forRole } from './lib/role';
+import { MODULE_FLAGS, moduleOn } from './lib/experience-flags';
+
+// Offline mode (Phase M). The badge is lazy, in screens.tsx, so the flag off costs nothing.
+const OFFLINE_MODE = moduleOn(MODULE_FLAGS.offline_mode);
 
 /** D-003: the five student destinations, when `journeyNavigation` is on. */
 const FIVE = EXPERIENCE_FLAGS.journeyNavigation !== 'off';
@@ -1159,7 +1163,7 @@ function AppFrame() {
    * the next reload, and a message that fades after four seconds is worse than
    * none because it makes them think they imagined it.
    */
-  const trouble = saveTrouble ? (
+  const saveNote = saveTrouble ? (
     <div
       role="status"
       style={{
@@ -1176,6 +1180,18 @@ function AppFrame() {
       {saveTrouble}
     </div>
   ) : null;
+  // Offline mode (Phase M) shares the slot: a standing condition, not an event.
+  const trouble =
+    saveNote || OFFLINE_MODE ? (
+      <>
+        {saveNote}
+        {OFFLINE_MODE ? (
+          <Suspense fallback={null}>
+            <OfflineBanner />
+          </Suspense>
+        ) : null}
+      </>
+    ) : null;
 
   /*
    * The workspace, at every width.

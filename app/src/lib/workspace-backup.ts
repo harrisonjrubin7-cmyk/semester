@@ -1,6 +1,18 @@
+import { ABROAD_PREFIX, readAbroad } from './abroad';
 import { ACTIONS_PREFIX, readActionChoices } from './actions';
+import { MEETING_KEY, readMeetings } from './advisor-meeting';
+import { EVIDENCE_PREFIX, readEvidence } from './career-evidence';
+import { SHORTLIST_KEY, readShortlist } from './course-detail';
+import { GRADUATION_KEY, readGraduation } from './graduation';
+import { LIFE_BALANCE_KEY, readSettings as readLifeBalance } from './life-balance';
+import { readRegistration } from './portal-storage';
+import { REGISTRATION_DAY_KEY, readRegistrationDay } from './registration-day';
+import { REGISTRATION_KEY } from './registration-plan';
+import { LOCKER_KEY, readLocker } from './source-locker';
+import { READINESS_KEY, readReadiness } from './study-readiness';
 import { readAthletics } from './athletics';
 import { CLARITY_PREFIX, readClarity } from './clarity';
+import { QUIZ_FEEDBACK_PREFIX, readQuizFeedback } from './quiz-feedback';
 import { readCareer } from './career';
 import { readCreations } from './creations';
 import { obj, textValue } from './device-library';
@@ -45,7 +57,12 @@ import { readUniversityDrafts } from './university';
 interface Definition {
   label: string;
   prefix: string;
-  scope: 'account' | 'term';
+  /**
+   * `device` is a store keyed by its name alone, shared by whoever uses this
+   * browser — the registration workspace and the stores built on it. It
+   * restores to the same key, and carries no term.
+   */
+  scope: 'account' | 'term' | 'device';
   read: (value: unknown) => unknown;
 }
 
@@ -83,6 +100,18 @@ const DEFINITIONS: Record<string, Definition> = {
     scope: 'account',
     read: readPathway,
   },
+  abroad: {
+    label: 'Study abroad plan',
+    prefix: ABROAD_PREFIX,
+    scope: 'account',
+    read: readAbroad,
+  },
+  quizfeedback: {
+    label: 'Quiz questions you reported',
+    prefix: QUIZ_FEEDBACK_PREFIX,
+    scope: 'account',
+    read: readQuizFeedback,
+  },
   actions: {
     label: 'What you did about your next steps',
     prefix: ACTIONS_PREFIX,
@@ -101,7 +130,22 @@ const DEFINITIONS: Record<string, Definition> = {
     scope: 'account',
     read: readClarity,
   },
+  // The device stores the feature expansion added (DECISION-LOG D-018, D-057).
+  // Before these, Export left out a registration-day plan and graduation
+  // scenarios, and everything after them.
+  registration: { label: 'Registration cart and saved schedules', prefix: REGISTRATION_KEY, scope: 'device', read: readRegistration },
+  registrationDay: { label: 'Registration day plan', prefix: REGISTRATION_DAY_KEY, scope: 'device', read: readRegistrationDay },
+  graduation: { label: 'Graduation scenarios', prefix: GRADUATION_KEY, scope: 'device', read: readGraduation },
+  lifeBalance: { label: 'Life balance settings', prefix: LIFE_BALANCE_KEY, scope: 'device', read: readLifeBalance },
+  shortlist: { label: 'Course shortlist', prefix: SHORTLIST_KEY, scope: 'device', read: readShortlist },
+  advisorMeeting: { label: 'Advisor meetings', prefix: MEETING_KEY, scope: 'device', read: readMeetings },
+  sourceLocker: { label: 'Source Locker choices', prefix: LOCKER_KEY, scope: 'device', read: readLocker },
+  studyReadiness: { label: 'Study readiness marks', prefix: READINESS_KEY, scope: 'device', read: readReadiness },
+  careerEvidence: { label: 'Career evidence', prefix: EVIDENCE_PREFIX, scope: 'term', read: readEvidence },
 };
+
+/** Every prefix this backup covers, for the guard in `workspace-backup.coverage.test.ts`. */
+export const BACKED_UP_PREFIXES: readonly string[] = Object.values(DEFINITIONS).map((d) => d.prefix);
 
 export interface WorkspaceRecord {
   kind: string;
@@ -135,9 +179,10 @@ function keyFor(kind: string, term: string, account: string): string {
   if (definition.scope === 'term' && !validTerm(term)) {
     throw new Error('A workspace in this backup has a term it could not have been saved under.');
   }
-  if (definition.scope === 'account' && term !== '') {
+  if (definition.scope !== 'term' && term !== '') {
     throw new Error('A workspace in this backup carries a term it cannot have.');
   }
+  if (definition.scope === 'device') return definition.prefix;
   return definition.scope === 'term' ? `${definition.prefix}:${account}:${term}` : `${definition.prefix}:${account}`;
 }
 

@@ -635,6 +635,20 @@ describe('drilling', () => {
     expect(reducer(s, { type: 'undoCard' }).reviews.card1.right).toBe(1);
   });
 
+  it('puts the review row for a quiz card back exactly as it was, or removes the row it made', () => {
+    // The undo for "Review this card soon" under a quiz question.
+    let s = reducer(blank(), { type: 'recordCard', got: true, key: 'card1' });
+    const before = s.reviews.card1;
+    s = reducer(s, { type: 'recordCard', got: false, key: 'card1' });
+    expect(s.reviews.card1).not.toEqual(before);
+    s = reducer(s, { type: 'restoreReview', key: 'card1', was: before });
+    expect(s.reviews.card1).toEqual(before);
+
+    let fresh = reducer(blank(), { type: 'recordCard', got: false, key: 'new' });
+    fresh = reducer(fresh, { type: 'restoreReview', key: 'new', was: null });
+    expect('new' in fresh.reviews).toBe(false);
+  });
+
   it('ignores a second answer to the same quiz question', () => {
     const started = reducer(blank(), {
       type: 'startQuiz',

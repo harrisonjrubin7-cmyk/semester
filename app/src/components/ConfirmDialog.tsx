@@ -1,4 +1,5 @@
 import { useId, useRef, type ReactNode } from 'react';
+import { offlineModeOn, useOnline } from '../lib/offline-mode';
 import { createPortal } from 'react-dom';
 import { useModal } from '../a11y/modal';
 
@@ -35,6 +36,10 @@ export function ConfirmDialog({
   const titleId = useId();
   const cancel = useRef<HTMLButtonElement>(null);
   const { ref, onKeyDown } = useModal<HTMLDivElement>({ onClose: onCancel, initial: cancel });
+  // Offline mode (Phase M): an official hand-off is never queued. Offline, the
+  // dialog says so and its confirm does nothing — see lib/offline-mode.ts.
+  const online = useOnline();
+  const handoffBlocked = tone === 'external' && offlineModeOn() && !online;
 
   const dialog = (
     <div className="dialog-backdrop" onClick={onCancel}>
@@ -55,10 +60,15 @@ export function ConfirmDialog({
               You are leaving Semester. Semester cannot see or change what happens there.
             </p>
           ) : null}
+          {handoffBlocked ? (
+            <p className="dialog-external" role="alert">
+              You are offline. Opening an official site needs a connection, so nothing will open and nothing is waiting to.
+            </p>
+          ) : null}
         </div>
         <div className="dialog-actions">
           <button ref={cancel} type="button" className="explain-close" onClick={onCancel}>Cancel</button>
-          <button type="button" className="explain-close dialog-confirm" onClick={onConfirm}>{confirmLabel}</button>
+          <button type="button" className="explain-close dialog-confirm" onClick={onConfirm} disabled={handoffBlocked}>{confirmLabel}</button>
         </div>
       </div>
     </div>
