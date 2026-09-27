@@ -112,6 +112,14 @@ describe('the context bar', () => {
     expect(host.querySelector('[role="status"]')?.textContent).toContain('Saved');
   });
 
+  it('holds an action while it cannot run', async () => {
+    let ran = 0;
+    await mount(<ContextBar title="Your study guide" primary={{ label: 'Save & open in Write', run: () => (ran += 1), disabled: true }} />);
+    expect(button('Save & open in Write').disabled).toBe(true);
+    await press('Save & open in Write');
+    expect(ran).toBe(0);
+  });
+
   it('opens Source & details as a dialog that takes focus and gives it back', async () => {
     await mount(
       <ContextBar

@@ -43,8 +43,9 @@ export function ContextBar({
   save?: StatusKey;
   /** What the Source & details drawer shows. Omit only where there is no source. */
   source?: SourceDetail;
-  primary?: { label: string; run: () => void };
-  secondary?: { label: string; run: () => void };
+  /** `disabled` while the action cannot run — a request already in flight. */
+  primary?: { label: string; run: () => void; disabled?: boolean };
+  secondary?: { label: string; run: () => void; disabled?: boolean };
   /** Anything further — a menu of advanced actions, disclosed on request. */
   children?: ReactNode;
   /**
@@ -76,12 +77,12 @@ export function ContextBar({
       {(primary || secondary || source || children) && (
         <div className="context-bar-actions">
           {primary && (
-            <button type="button" className="btn btn-primary" onClick={primary.run}>
+            <button type="button" className="btn btn-primary" onClick={primary.run} disabled={primary.disabled}>
               {primary.label}
             </button>
           )}
           {secondary && (
-            <button type="button" className="btn btn-ghost" onClick={secondary.run}>
+            <button type="button" className="btn btn-ghost" onClick={secondary.run} disabled={secondary.disabled}>
               {secondary.label}
             </button>
           )}
