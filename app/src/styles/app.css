@@ -7767,6 +7767,133 @@ section[data-drop] > .grip + * {
   border-top: 1px solid var(--app-line-soft);
 }
 
+/* ── Registration Day Mode (registration_day_mode, Phase C) ─────────────── */
+
+.regday-card {
+  margin: 0 0 var(--sp-6);
+  padding: var(--sp-6);
+  border: 1px solid var(--app-accent-deep);
+  border-radius: var(--r-md);
+  background: var(--app-panel);
+}
+
+.regday-card-clock {
+  margin: 0 0 var(--sp-3);
+  font-size: var(--type-display-sm);
+  line-height: var(--leading-display-sm);
+  color: var(--app-fg);
+  font-variant-numeric: tabular-nums;
+}
+
+.regday-card-lines {
+  display: grid;
+  gap: var(--sp-2);
+  margin: var(--sp-5) 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--type-sm);
+  color: var(--app-fg);
+}
+
+.regday-card-lines li {
+  display: flex;
+  gap: var(--sp-4);
+  align-items: baseline;
+}
+
+.regday-card-lines li > span[aria-hidden] {
+  flex: none;
+  width: 1.2em;
+  text-align: center;
+  font-weight: 700;
+}
+
+.regday-card-lines .is-ok > span[aria-hidden] {
+  color: var(--app-passing);
+}
+
+.regday-card-lines .is-open > span[aria-hidden] {
+  color: var(--app-warn);
+}
+
+.regday-card-heading {
+  margin: var(--sp-5) 0 var(--sp-3);
+  font-size: var(--type-xs);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--app-accent-deep);
+}
+
+.regday-card-plan {
+  display: grid;
+  gap: var(--sp-4);
+  margin: 0 0 var(--sp-5);
+  padding-left: var(--sp-7);
+  font-size: var(--type-sm);
+  color: var(--app-fg);
+}
+
+.regday-card-backups ol {
+  margin: var(--sp-1) 0 0;
+  padding-left: var(--sp-7);
+}
+
+.regday-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  margin: var(--sp-5) 0 var(--sp-3);
+}
+
+.regday-mode {
+  display: grid;
+  gap: var(--sp-3);
+  margin-top: var(--sp-5);
+}
+
+/* The confirmation dialog (components/ConfirmDialog.tsx), portalled onto
+   `.device` like TypeToConfirm and at its layer. industry.css drew these
+   against the older token set and never gave them a place to stack. */
+.device .dialog-backdrop {
+  position: absolute;
+  z-index: 85;
+  background: color-mix(in srgb, var(--app-void) 60%, transparent);
+}
+
+.device .dialog {
+  border: 1px solid var(--app-line);
+  background: var(--app-panel);
+  color: var(--app-fg);
+}
+
+.device .dialog-body {
+  opacity: 1;
+  color: var(--app-dim);
+}
+
+.device .dialog-body p {
+  margin: 0 0 var(--sp-4);
+  font-size: var(--type-sm);
+  line-height: var(--leading-normal);
+}
+
+.dialog-url {
+  overflow-wrap: anywhere;
+  color: var(--app-fg);
+}
+
+.dialog-external {
+  padding: var(--sp-4);
+  border-left: 2px solid var(--app-warn-line);
+  background: var(--app-warn-wash);
+  color: var(--app-fg);
+}
+
+.dialog-confirm {
+  border-color: var(--app-accent-deep);
+  color: var(--app-accent-deep);
+}
+
 /* BL-1.4's Action Center, when it sits in a Phase B panel rather than in the
    #761 card whose `.today-decision-surface` rules it was drawn against. */
 .action-panel .action-center h2 {
