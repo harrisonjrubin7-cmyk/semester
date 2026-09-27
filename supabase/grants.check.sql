@@ -270,7 +270,18 @@ declare
     'integration_approve_scope(want_scope uuid)',
     'integration_request_replay(want_dead_letter uuid, want_reason text)',
     'integration_set_paused(want_connection text, want_paused boolean, want_reason text)',
-    'kill_switch_engaged(want_switch text, want_tenant text)'
+    'kill_switch_engaged(want_switch text, want_tenant text)',
+
+    -- The three in 20260927201500_advisor_shares.sql (Phase G, D-016).
+    -- `share_with_advisor` finds the advisor only among the student's own
+    -- school's `academic_advisor` grants, and every miss reads the same.
+    -- `list_advisor_shares` returns shares addressed to the caller, titles and
+    -- dates only. `read_advisor_share` checks the share is live and addressed
+    -- to the caller, and logs the read for the student. `advisor.check.sql`
+    -- holds each of those as the account refused.
+    'list_advisor_shares()',
+    'read_advisor_share(want_share uuid)',
+    'share_with_advisor(advisor_email text, share_title text, share_payload jsonb, share_expires timestamp with time zone)'
   ];
   extra text;
   missing text;

@@ -43,6 +43,8 @@ import {
 } from '../lib/degree';
 import { Folding } from '../components/Fold';
 import { GraduationSimulator } from '../components/GraduationSimulator';
+import { AdvisorMeeting } from '../components/AdvisorMeeting';
+import { MODULE_FLAGS, moduleOn } from '../lib/experience-flags';
 import { PathSnapshotCard } from '../components/PathSnapshotCard';
 import {
   fixFor,
@@ -56,9 +58,10 @@ import {
   type TermInput,
 } from '../lib/termgpa';
 
-export function Degree() {
+/** `advisorMeeting` defaults to the `advisor_meeting_mode` flag; tests choose. */
+export function Degree({ advisorMeeting = moduleOn(MODULE_FLAGS.advisor_meeting_mode) }: { advisorMeeting?: boolean } = {}) {
   const { state, account } = useStore();
-  const [tab, setTab] = useState<'left' | 'taken' | 'rules' | 'ahead'>('left');
+  const [tab, setTab] = useState<'left' | 'taken' | 'rules' | 'ahead' | 'meeting'>('left');
 
   /*
    * The transcript, which is the one list here that gets long.
@@ -96,6 +99,8 @@ export function Degree() {
           { id: 'taken', label: `Taken${state.taken.length ? ` (${state.taken.length})` : ''}` },
           { id: 'rules', label: 'Requirements' },
           { id: 'ahead', label: 'Scenarios' },
+          // Advisor Meeting Mode (Phase G), only with its flag on.
+          ...(advisorMeeting ? [{ id: 'meeting' as const, label: 'Advisor meeting' }] : []),
         ]}
         value={tab}
         onChange={setTab}
@@ -106,6 +111,7 @@ export function Degree() {
       {tab === 'taken' ? <Transcript rows={state.taken} /> : null}
       {tab === 'rules' ? <Rules /> : null}
       {tab === 'ahead' ? <GraduationSimulator done={hours(state.taken).withThisTerm} accountId={account?.id ?? null} /> : null}
+      {tab === 'meeting' && advisorMeeting ? <AdvisorMeeting accountId={account?.id ?? null} /> : null}
       </>
     </Page>
   );
