@@ -76,7 +76,7 @@ import {
 } from '../_shared/ltiags.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { passbackVerdict } from '../_shared/ltigate.ts';
-import { membershipJoin, membershipLogLine, sessionDecision } from '../_shared/ltimembership.ts';
+import { membershipJoin, membershipLogLine, placementDecision, sessionDecision, type MembershipJoin } from '../_shared/ltimembership.ts';
 
 /** How long a launch has between the redirect out and the POST back. */
 const FLIGHT_SECONDS = 300;
@@ -131,7 +131,8 @@ function refuse(reason: string, detail: string, status = 400): Response {
 }
 
 /**
- * The launch was real; the school has made this person's access inactive.
+ * The launch was real; the school's membership refuses it: access made
+ * inactive, or (for placing an activity) no instructor role.
  *
  * Its own page, because `refuse` says the launch could not be verified, which
  * here would be false and would send somebody to their LMS administrator for
@@ -140,6 +141,15 @@ function refuse(reason: string, detail: string, status = 400): Response {
  * to tell them. The reference carries it for whoever they ask.
  */
 function membershipRefused(reason: string): Response {
+  if (reason === 'membership-not-instructor') {
+    // Access is fine; what is missing is the school listing them as teaching.
+    console.error(`lti refused: ${reason} — membership holds no faculty or teaching_assistant role`);
+    return page(
+      403,
+      'This activity could not be added',
+      `Your school's records do not list you as an instructor or teaching assistant, so Semester cannot add activities to this course for you. Nothing was changed. Your school's help desk can update your role; the reference is <code>${escape(reason)}</code>.`,
+    );
+  }
   console.error(`lti refused: ${reason} — institutional membership is not active`);
   return page(
     403,
@@ -205,6 +215,22 @@ async function registration(
     tokenUrl: r.token_url ?? null,
     tenantId: r.tenant_id ?? null,
   };
+}
+
+/**
+ * Which institutional membership a verified launch belongs to, logged.
+ * `public.lti_launch_membership` does the join; `ltimembership.ts` reads it.
+ */
+async function membershipFor(client: ReturnType<typeof db>, who: Launch): Promise<MembershipJoin> {
+  const { data, error } = await client.rpc('lti_launch_membership', {
+    want_issuer: who.issuer,
+    want_client: who.clientId,
+    want_deployment: who.deploymentId,
+    want_subject: who.subject,
+  });
+  const join = membershipJoin(data, error);
+  console.log(membershipLogLine(join));
+  return join;
 }
 
 /** Both a GET and a POST arrive here in the wild, so read both the same way. */
@@ -650,6 +676,11 @@ Deno.serve(async (req) => {
       const allowed = mayPlace(who);
       if (!allowed.ok) return refuse(allowed.reason, allowed.detail, 403);
 
+      // The LMS says instructor; when the school has a membership for this
+      // person, it must say so too (placementDecision). Narrows, never widens.
+      const placing = placementDecision(await membershipFor(client, who));
+      if (!placing.allow) return membershipRefused(placing.reason);
+
       const settings = readSettings(claims);
       if (!settings.ok) return refuse(settings.reason, settings.detail, 400);
 
@@ -720,7 +751,7 @@ Deno.serve(async (req) => {
      * After `accountFor`, because the join reads the `lti_identity` row it
      * guarantees. Through the registration's school and a *linked* identity
      * only, never an email or an LMS-sent id
-     * (20260927220000_lti_launch_membership.sql). It reads and never writes a
+     * (20260927235930_lti_launch_membership.sql). It reads and never writes a
      * membership.
      *
      * And it limits the session: when the school has a membership for this
@@ -729,14 +760,7 @@ Deno.serve(async (req) => {
      * refused launch leaves nothing behind. `sessionDecision` is the rule; a
      * launch that never reached a membership goes on as before.
      */
-    const { data: joinRow, error: joinError } = await client.rpc('lti_launch_membership', {
-      want_issuer: who.issuer,
-      want_client: who.clientId,
-      want_deployment: who.deploymentId,
-      want_subject: who.subject,
-    });
-    const join = membershipJoin(joinRow, joinError);
-    console.log(membershipLogLine(join));
+    const join = await membershipFor(client, who);
     const session = sessionDecision(join);
     if (!session.allow) return membershipRefused(session.reason);
 

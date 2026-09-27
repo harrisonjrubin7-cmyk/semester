@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { membershipJoin, membershipLogLine, sessionDecision } from '../../../supabase/functions/_shared/ltimembership';
+import { membershipJoin, membershipLogLine, placementDecision, sessionDecision } from '../../../supabase/functions/_shared/ltimembership';
 
 /**
  * The reader for `public.lti_launch_membership`. The join itself is proved in
@@ -82,4 +82,34 @@ describe('limiting the LTI session to the membership', () => {
     expect(sessionDecision(membershipJoin([{ outcome: 'joined', tenant_id: null }], null)))
       .toEqual({ allow: false, reason: 'membership-unreadable' });
   });
+});
+
+describe('placing an activity, scoped by the joined roles', () => {
+  const joinedAs = (...roles: string[]) =>
+    membershipJoin([{ outcome: 'joined', tenant_id: 'north', membership_id: 'm-1', roles }], null);
+
+  it.each([['faculty'], ['teaching_assistant'], ['student', 'teaching_assistant']])(
+    'allows a joined membership holding %j',
+    (...roles) => expect(placementDecision(joinedAs(...roles))).toEqual({ allow: true }),
+  );
+
+  // The LMS said instructor to get this far; the school says otherwise.
+  it.each([['student'], ['advisor'], ['admin'], ['staff', 'alumni']])(
+    'refuses a joined membership holding only %j',
+    (...roles) => expect(placementDecision(joinedAs(...roles)))
+      .toEqual({ allow: false, reason: 'membership-not-instructor' }),
+  );
+
+  it('refuses where the session gate would, before looking at roles', () => {
+    const suspended = membershipJoin([{ outcome: 'membership-suspended', tenant_id: 'north' }], null);
+    expect(placementDecision(suspended)).toEqual({ allow: false, reason: 'membership-suspended' });
+    expect(placementDecision(membershipJoin(null, { message: 'connection reset' })))
+      .toEqual({ allow: false, reason: 'membership-lookup-failed' });
+  });
+
+  it.each(['unbound', 'no-identity', 'identity-not-linked', 'no-membership'])(
+    'leaves the LMS rule alone when no membership was reached: %s',
+    (outcome) => expect(placementDecision(membershipJoin([{ outcome, tenant_id: 'north' }], null)))
+      .toEqual({ allow: true }),
+  );
 });

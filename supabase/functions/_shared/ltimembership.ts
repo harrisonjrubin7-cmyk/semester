@@ -1,7 +1,7 @@
 /**
  * What `public.lti_launch_membership` said about one launch, read without I/O.
  *
- * The database does the join (`20260927220000_lti_launch_membership.sql`):
+ * The database does the join (`20260927235930_lti_launch_membership.sql`):
  * registration → school, `linked` identity → account, account and school →
  * membership. This file only turns its row into a decision the function shell
  * can log, and it is here rather than in the shell so `ltimembership.test.ts`
@@ -90,4 +90,34 @@ export function sessionDecision(join: MembershipJoin): SessionDecision {
     return { allow: false, reason: `membership-${join.outcome}` };
   }
   return { allow: true };
+}
+
+/** Membership roles that may place Semester activities into a course. */
+export const PLACING_ROLES = ['faculty', 'teaching_assistant'] as const;
+
+/**
+ * Whether a Deep Linking request may place an activity, once the LMS's own
+ * instructor check (`mayPlace` in `_shared/ltideeplink.ts`) has passed.
+ *
+ * Deep Linking was the one thing the LMS role claim still granted by itself.
+ * This narrows it and never widens it: the caller runs `mayPlace` first, and
+ * a pass here is only ever in addition to that.
+ *
+ *  - **Joined:** the school has an opinion, so it must agree. The membership
+ *    must hold `faculty` or `teaching_assistant`. Both checks are required: a
+ *    faculty member enrolled as a learner in someone else's course is not an
+ *    instructor *there*, and the LMS is the one that knows the course.
+ *  - **A membership the school made inactive, or an answer that cannot be
+ *    trusted:** refused, exactly as `sessionDecision` refuses a session.
+ *  - **Never reached a membership** (unbound, unlinked, none in this school,
+ *    or the function not deployed yet): the LMS rule alone, as before. A school
+ *    that has said nothing does not block.
+ */
+export function placementDecision(join: MembershipJoin): SessionDecision {
+  const session = sessionDecision(join);
+  if (!session.allow) return session;
+  if (!join.joined) return { allow: true };
+  return join.roles.some((role) => (PLACING_ROLES as readonly string[]).includes(role))
+    ? { allow: true }
+    : { allow: false, reason: 'membership-not-instructor' };
 }

@@ -65,15 +65,17 @@ said "create/adapt", and this is the adapt.
 
 ## Known gaps, in the order they matter
 
-1. **The LTI membership join gates entry, but grants nothing yet.** Every launch
+1. **The LTI membership join gates entry and scopes placement.** Every launch
    asks `lti_launch_membership`: registration → school, *linked* identity →
    account, account + school → membership. A membership the school has made
    inactive refuses the session (403). A launch that never reached a membership
    goes on as before. That covers unbound registrations, which are logged as
    `lti launch unbound`, unlinked identities, and people with no membership in
-   that school. The joined roles are not yet used to scope what the session can
-   do, and the entitlement chain has no caller. It joins only students who have
-   linked their LMS identity to their SSO account.
+   that school. When joined, placing activities also requires a `faculty` or
+   `teaching_assistant` membership role. Institutional data was already scoped
+   by membership roles through the gateway. The entitlement chain still has no
+   caller. It joins only students who have linked their LMS identity to their
+   SSO account.
 2. **No LTI launch audit table.** Refusals are logged by reason code and not
    persisted.
 3. **Entitlement tables.** The resolver is a tested contract. Nothing yet

@@ -48,7 +48,7 @@ already has needs a single-use `lti_link_ticket` *and* a signed-in session.
 ## Joining a membership
 
 Every launch asks `public.lti_launch_membership`
-(`20260927220000_lti_launch_membership.sql`) which `institution_membership` it
+(`20260927235930_lti_launch_membership.sql`) which `institution_membership` it
 belongs to, through exactly one path:
 
 ```text
@@ -92,10 +92,25 @@ membership in another school does not join, a provisioned identity does not
 join even with a membership, and no call changes a membership.
 `ltimembership.test.ts` proves the shell cannot read a partial row as a join.
 
-**What it does not do yet:** the joined roles do not scope what an admitted
-session can do, and the entitlement chain has no caller. An admitted session
-reaches institutional data only through the gateway, which re-checks the
-membership on every request.
+### What the joined roles scope
+
+- **Institutional data.** An admitted session reaches it only through the
+  gateway, which re-reads the membership's current roles on every request and
+  never reads the LMS role claim. A joined launch opens the student's own
+  linked campus account, so the gateway already applies exactly the joined
+  roles. An unlinked `lti.invalid` account reaches no institutional data at
+  all, because the gateway accepts only campus-SSO accounts.
+- **Placing activities (Deep Linking).** This was the one thing the LMS role
+  claim granted by itself. `mayPlace` still requires the LMS to say instructor.
+  When the launch joins a membership, `placementDecision` also requires that
+  membership to hold `faculty` or `teaching_assistant`. Otherwise it refuses
+  with `membership-not-instructor` and a 403 page, "This activity could not be
+  added". Both checks are required: a faculty member enrolled as a learner in
+  someone else's course is not an instructor there. An inactive or unreadable
+  membership refuses placement exactly as it refuses a session. A launch that
+  reached no membership keeps the LMS rule alone.
+
+**Still not done:** the entitlement chain has no caller.
 
 ## Minimum claims
 
