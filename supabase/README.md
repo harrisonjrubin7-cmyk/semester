@@ -41,7 +41,8 @@ are fixed, and so are two more that reached main
 the same afternoon (#803: a check constraint added without dropping it first,
 and a function re-created at a signature a later file installs) — found by the
 same check the moment this branch was rebased onto them. `SEMESTER_CHECK_REAPPLY=1 supabase/check.sh` now applies every file a
-second time, requires the schema to come out identical, and runs the suites on
+second time, requires the schema and the rows of every table in `public` and
+`private` (count and a hash, per table) to come out identical, and runs the suites on
 the result; CI runs it that way. `reapply.known` is where a file that genuinely
 cannot run twice would be listed with its reason, and it is empty.
 

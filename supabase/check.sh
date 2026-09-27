@@ -197,7 +197,23 @@ done
 if [ -n "${SEMESTER_CHECK_REAPPLY:-}" ]; then
   echo "· migrations, a second time"
   dump() { "$bindir/pg_dump" -s -h "$work" -p "$port" -U postgres postgres | grep -vE '^\\(un)?restrict '; }
+  # And the rows. A migration can succeed on every run and still not be a
+  # no-op: an insert with no conflict clause seeds a second copy, an update
+  # rewrites a row each time. One line per table in public and private: its
+  # row count and a hash of every row, sorted, so the physical order a
+  # second pass leaves them in does not matter.
+  rows() {
+    psql -At -v ON_ERROR_STOP=1 <<'SQL'
+select format('select %L, count(*), md5(coalesce(string_agg(t::text, chr(10) order by t::text), %L)) from %I.%I t',
+              n.nspname || '.' || c.relname, '', n.nspname, c.relname)
+  from pg_class c join pg_namespace n on n.oid = c.relnamespace
+ where c.relkind in ('r', 'p') and n.nspname in ('public', 'private')
+ order by 1
+\gexec
+SQL
+  }
   dump > "$work/schema.1"
+  rows > "$work/rows.1"
   known=$(sed -e 's/#.*//' "$here/reapply.known" | awk 'NF {print $1}')
   bad=0
   for m in "$here"/migrations/*.sql; do
@@ -226,7 +242,18 @@ if [ -n "${SEMESTER_CHECK_REAPPLY:-}" ]; then
     diff "$work/schema.1" "$work/schema.2" | head -20 | sed 's/^/      /'
     exit 1
   fi
-  echo "  ✓ every other migration applied twice, and the schema is unchanged"
+  rows > "$work/rows.2"
+  # The control: a query that matched no tables would compare two empty files.
+  if [ "$(wc -l < "$work/rows.1")" -lt 50 ]; then
+    echo "  ✗ the row fingerprint read only $(wc -l < "$work/rows.1") tables; the query is broken"
+    exit 1
+  fi
+  if ! diff -q "$work/rows.1" "$work/rows.2" >/dev/null; then
+    echo "  ✗ a second pass changed the rows in these tables (table|rows|hash):"
+    diff "$work/rows.1" "$work/rows.2" | grep '^[<>]' | head -20 | sed 's/^/      /'
+    exit 1
+  fi
+  echo "  ✓ every other migration applied twice; the schema and the rows in $(wc -l < "$work/rows.1") tables are unchanged"
 fi
 
 psql -v ON_ERROR_STOP=1 >/dev/null <<'SQL'
