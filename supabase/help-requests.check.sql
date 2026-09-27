@@ -98,7 +98,7 @@ declare
   student uuid; classmate uuid; other_school uuid; advisor uuid; tutor uuid;
   implementer uuid; stranger_staff uuid;
   advising uuid; tutoring uuid; aid uuid; elsewhere uuid;
-  req uuid; req2 uuid; n bigint; q text; ctx jsonb; who_name text; who_email text;
+  req uuid; req2 uuid; req3 uuid; n bigint; q text; ctx jsonb; who_name text; who_email text;
 begin
   insert into public.schools (id, name, email_domains) values
     ('help-u', 'Help University', array['help-u.example']),
@@ -269,6 +269,46 @@ begin
   perform pg_temp.expect_refused('withdrawing twice', student,
     format('select public.withdraw_help_request(%L)', req2));
 
+  -- ── review fix 3: the office sees the identity as it was sent ──────────
+  update public.profiles set handle = 'renamed_later' where user_id = student;
+  update auth.users set email = 'changed-later@help-u.example' where id = student;
+  perform pg_temp.become(advisor);
+  select o.student_name, o.student_email into who_name, who_email from public.open_help_request(req) o;
+  reset role;
+  if who_name is distinct from 'student' or who_email is distinct from 'student@help-u.example' then
+    raise exception 'FAILED: a later rename reached the office (got %, %)', who_name, who_email;
+  end if;
+  raise notice 'ok  a name or email changed after sending does not reach the office';
+  update public.profiles set handle = 'student' where user_id = student;
+  update auth.users set email = 'student@help-u.example' where id = student;
+
+  -- ── review fix 1: a closed request can still be erased ─────────────────
+  perform pg_temp.expect_allowed('the advisor closes the scheduled request', advisor,
+    format($q$select public.answer_help_request(%L, 'closed', 'See you Tuesday')$q$, req));
+  perform pg_temp.expect_allowed('the student withdraws it after it was closed', student,
+    format('select public.withdraw_help_request(%L)', req));
+  perform pg_temp.counted('and every word of it, identity included, is gone',
+    (select count(*) from public.help_requests
+      where id = req and status = 'withdrawn' and question = '' and reply = ''
+        and shared_context = '{}'::jsonb and student_name = '' and student_email = ''), 1);
+
+  -- ── review fix 2: closing intake does not strand open requests ─────────
+  perform pg_temp.become(student);
+  select public.send_help_request(tutoring, 'Still stuck on PS3', '{}'::jsonb) into req3;
+  reset role;
+  perform pg_temp.expect_allowed('implementation retires tutoring', implementer,
+    format($q$update public.help_destinations set retired_at = now() where id = %L$q$, tutoring));
+  perform pg_temp.counted('the tutor still finds the retired inbox while a request waits in it',
+    pg_temp.seen(tutor, 'select * from public.my_help_destinations()'), 1);
+  perform pg_temp.counted('and the waiting request in it',
+    pg_temp.seen(tutor, format('select * from public.help_inbox(%L)', tutoring)), 1);
+  perform pg_temp.expect_refused('but no new request can be sent there', student,
+    format($q$select public.send_help_request(%L, 'Another', '{}'::jsonb)$q$, tutoring));
+  perform pg_temp.expect_allowed('the tutor closes the last one', tutor,
+    format($q$select public.answer_help_request(%L, 'closed', '')$q$, req3));
+  perform pg_temp.counted('and then the retired inbox is gone from their list',
+    pg_temp.seen(tutor, 'select * from public.my_help_destinations()'), 0);
+
   -- ── an account that asked for help is not a fresh one ──────────────────
   if public.lti_account_untouched(student) then
     raise exception 'FAILED: an account holding help requests reads as untouched';
@@ -286,14 +326,14 @@ begin
   perform public.forget_my_help_requests();
   reset role;
   perform pg_temp.counted('a classmate''s forget takes nothing of the student''s',
-    (select count(*) from public.help_requests where student_id = student), 2);
+    (select count(*) from public.help_requests where student_id = student), 3);
   perform pg_temp.become(student);
   perform public.forget_my_help_requests();
   reset role;
   perform pg_temp.counted('the student''s forget empties their requests',
     (select count(*) from public.help_requests where student_id = student), 0);
   perform pg_temp.counted('and every event with them',
-    (select count(*) from public.help_request_events where request_id in (req, req2)), 0);
+    (select count(*) from public.help_request_events where request_id in (req, req2, req3)), 0);
 end $$;
 
 rollback;
