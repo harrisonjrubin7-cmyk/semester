@@ -21,6 +21,8 @@ type Row = { user_id: string; id?: string; data: unknown; updated_at: string };
 
 function makeDb() {
   const tables: Record<string, Row[]> = { state: [], courses: [] };
+  // A refusal the next matching write returns, the way a CHECK constraint does.
+  const refuse: { table?: string; op?: string; error?: { message: string; code: string } } = {};
   let tick = 0;
   const now = () => `2026-09-27T12:00:${String(++tick).padStart(2, '0')}.000000+00:00`;
   const key = (table: string, r: Partial<Row>) => (table === 'state' ? r.user_id : `${r.user_id}/${r.id}`);
@@ -38,6 +40,7 @@ function makeDb() {
 
     const run = () => {
       const rows = tables[table];
+      if (refuse.error && refuse.table === table && refuse.op === op) return { data: null, error: refuse.error };
       if (op === 'insert') {
         const incoming = (Array.isArray(payload) ? payload : [payload]) as Row[];
         if (incoming.some((n) => rows.some((r) => key(table, r) === key(table, n)))) {
@@ -74,7 +77,7 @@ function makeDb() {
     return b;
   };
 
-  return { tables, db: { from } };
+  return { tables, refuse, db: { from } };
 }
 
 let harness: ReturnType<typeof makeDb>;
@@ -202,5 +205,37 @@ describe('what Stale is not', () => {
     expect(isStale(new Stale('x'))).toBe(true);
     expect(isStale(new Error('JWT expired'))).toBe(false);
     expect(isStale('Stale')).toBe(false);
+  });
+});
+
+describe('a write the database refuses outright', () => {
+  /*
+   * The retry decision is `classify`'s, and it reads the code before the
+   * words. A check violation's words match none of its fallbacks, so an Error
+   * carrying only the message was INTERNAL_ERROR — retried every five minutes
+   * against the same check, with a line saying it might recover by itself.
+   */
+  const check = { message: 'new row for relation "courses" violates check constraint "courses_data_size"', code: '23514' };
+
+  it.each([
+    ['updating the semester', 'state', 'update', true],
+    ['inserting the first semester', 'state', 'insert', false],
+    ['inserting a new course', 'courses', 'insert', true],
+    ['updating a known course', 'courses', 'update', true],
+  ] as const)('keeps the code when %s, so it is not retried', async (_, table, op, afterRead) => {
+    const { push, pull, explainSync } = await load();
+    const { retriesOnItsOwn } = await import('./syncstatus');
+    let seen = null;
+    if (afterRead) {
+      await push('u', { v: 1 }, table === 'courses' && op === 'insert' ? [] : [econ('a')]);
+      seen = (await pull('u')).seen;
+    }
+    Object.assign(harness.refuse, { table, op, error: check });
+    const e = await push('u', { v: 2 }, [econ('b')], [], seen).catch((x: unknown) => x);
+    expect(e).toBeInstanceOf(Error);
+    expect((e as { code?: string }).code).toBe('23514');
+    const { code } = explainSync(e);
+    expect(code).toBe('VALIDATION_ERROR');
+    expect(retriesOnItsOwn(code)).toBe(false);
   });
 });

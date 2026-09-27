@@ -570,6 +570,19 @@ export class Stale extends Error {
   }
 }
 
+/**
+ * A write's failure as an Error that keeps the database's code and status.
+ *
+ * `new Error(error.message)` kept only the prose, and the retry decision is
+ * made by `classify`, which reads the code first. A check-constraint refusal
+ * (23514) then fell through to INTERNAL_ERROR and was sent again every five
+ * minutes, with a line telling the student it might recover by itself. It
+ * will not: the same snapshot fails the same check.
+ */
+export function failed(error: { message: string; code?: string; status?: number }): Error {
+  return Object.assign(new Error(error.message), { code: error.code, status: error.status });
+}
+
 export function isStale(e: unknown): e is Stale {
   return e instanceof Error && e.name === 'Stale';
 }
@@ -643,7 +656,7 @@ export async function push(
       .eq('user_id', userId)
       .eq('updated_at', seen.state)
       .select('updated_at');
-    if (error) throw new Error(error.message);
+    if (error) throw failed(error);
     const rows = (data ?? []) as { updated_at: string }[];
     if (rows.length === 0) throw new Stale('your semester');
     stateAt = rows[0].updated_at;
@@ -655,7 +668,7 @@ export async function push(
       .maybeSingle();
     if (error) {
       if (error.code === TAKEN) throw new Stale('your semester');
-      throw new Error(error.message);
+      throw failed(error);
     }
     stateAt = (data as { updated_at?: string } | null)?.updated_at;
   }
@@ -673,7 +686,7 @@ export async function push(
       .select('id, updated_at');
     if (error) {
       if (error.code === TAKEN) throw new Stale('a course');
-      throw new Error(error.message);
+      throw failed(error);
     }
     for (const row of (data ?? []) as { id: string; updated_at: string }[]) {
       stamps[row.id] = row.updated_at;
@@ -695,7 +708,7 @@ export async function push(
     ),
   );
   for (const { id, data, error } of updated) {
-    if (error) throw new Error(error.message);
+    if (error) throw failed(error);
     const rows = (data ?? []) as { id: string; updated_at: string }[];
     if (rows.length === 0) throw new Stale('a course');
     stamps[id] = rows[0].updated_at;
