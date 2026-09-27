@@ -321,7 +321,15 @@ declare
     'course_demand(want_term text)',
     'my_demand_contribution(want_term text)',
     'my_demand_scopes()',
-    'stop_contributing(want_term text)'
+    'stop_contributing(want_term text)',
+
+    -- 20260928150000_course_studio.sql (D-101): faculty publish course rules,
+    -- guidance and packs, each checked against a live course-scoped grant;
+    -- the last lists which courses that is, and nothing about students.
+    'publish_course_rules(want_course text, want_term text, want_blanket text, want_uses jsonb, want_words text, want_link text, want_effective date)',
+    'publish_course_guidance(want_course text, want_term text, want_body text)',
+    'publish_study_pack(want_course text, want_term text, want_pack uuid, want_title text, want_note text, want_items jsonb, want_retired boolean)',
+    'my_course_studio_courses()'
   ];
   extra text;
   missing text;

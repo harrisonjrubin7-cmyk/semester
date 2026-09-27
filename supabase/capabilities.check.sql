@@ -231,9 +231,10 @@ begin
   -- Twenty original rows, thirty-seven expansion rows, eight from the
   -- integration control plane (four for integration_admin, three for
   -- university_admin, one for incident_responder), eight staff roles that
-  -- answer help requests (the help_requests migration), and four for the
-  -- Phase J office publishers.
-  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 77);
+  -- answer help requests (the help_requests migration), four for the Phase J
+  -- office publishers, and `faculty` → `course:publish` from
+  -- 20260928150000_course_studio.sql.
+  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 78);
 
   perform pg_temp.become_anon();
   perform pg_temp.refused('a signed-out visitor cannot read the matrix',
