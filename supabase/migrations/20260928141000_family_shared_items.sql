@@ -6,7 +6,7 @@
 --
 -- ## The gap this closes
 --
--- After 20260927210000_family_invites.sql a claimed code is a live
+-- After 20260928140000_family_invites.sql a claimed code is a live
 -- `family_grants` row naming items by id. Nothing on the server knows what
 -- those ids *are*: a Family item — the title, the note, the due date — lives
 -- in `semester.family.v1` on the student's device and nowhere else. A live
@@ -35,7 +35,10 @@
 --     counts across categories, not "last active", nothing computed (design
 --     §7: a supporter must not infer what was not shared).
 --
--- Run this after 20260927210000_family_invites.sql. Every statement is guarded.
+-- Numbered 20260928141000. It was first 20260927230000, which main had
+-- already used for `help_requests`; see the note in 20260928140000.
+--
+-- Run this after 20260928140000_family_invites.sql. Every statement is guarded.
 
 -- ── The copies ────────────────────────────────────────────────────────────
 --
@@ -291,7 +294,7 @@ comment on function public.read_family_share() is
 
 -- ── A shared copy is a used account ──────────────────────────────────────
 --
--- The complete latest definition, every row of 20260927210000 plus the two
+-- The complete latest definition, every row of 20260928140000 plus the two
 -- tables above. The note there about `graduation_scenarios` (#780) holds
 -- here too: whichever lands second carries both.
 
@@ -357,4 +360,4 @@ revoke all on function public.lti_account_untouched(uuid)
 --   drop table if exists public.family_shared_items;
 --   commit;
 --
--- and re-run the lti_account_untouched definition from 20260927210000.
+-- and re-run the lti_account_untouched definition from 20260928140000.
