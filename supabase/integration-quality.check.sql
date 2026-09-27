@@ -1,4 +1,4 @@
--- Integration quality: every boundary 20260928010000_integration_quality.sql
+-- Integration quality: every boundary 20260928020000_integration_quality.sql
 -- claims, walked as the account it is about. LOCAL/DISPOSABLE DATABASES ONLY;
 -- always rolled back.
 --
