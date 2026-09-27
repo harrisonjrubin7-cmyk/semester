@@ -85,7 +85,7 @@ export function tableStore(db: SupabaseClient, connection: ConnectionRow, adapte
       const type = canonicalOf(entity);
       if (!type) return null;
       const { data } = await db.from('canonical_entity_references').select('source_timestamp')
-        .eq('tenant_id', connection.tenant_id).eq('source_system', sourceSystem)
+        .eq('tenant_id', connection.tenant_id).eq('connection_id', connection.id).eq('source_system', sourceSystem)
         .eq('source_record_id', id).eq('canonical_entity_type', type).maybeSingle();
       return (data as { source_timestamp: string | null } | null)?.source_timestamp ?? null;
     },
@@ -124,6 +124,15 @@ export async function runSync(db: SupabaseClient, req: SyncRequest, now: () => D
   if (!c.approved_at) return fail('connection not approved');
   if (c.status === 'paused' || c.status === 'disconnected') return fail(`connection ${c.status}`);
   if (await killed(db, c.tenant_id, c.public_id)) return fail('kill switch engaged');
+
+  // The connector's own flag, for this school. Approval says a connection may
+  // run; the flag says the school has turned it on. Both are required, and a
+  // flag that is absent, unreadable or short of production is off.
+  const { data: flagRow, error: flagError } = await db.from('tenant_feature_policy').select('state')
+    .eq('tenant_id', c.tenant_id).eq('capability', req.adapter.featureFlag).maybeSingle();
+  if (flagError || (flagRow as { state: string } | null)?.state !== 'production') {
+    return fail(`${req.adapter.featureFlag} is not on for this school`);
+  }
 
   const { data: scopeRows } = await db.from('integration_scopes').select('scope_key,expires_at')
     .eq('connection_id', c.id).eq('approved', true);
@@ -204,7 +213,9 @@ export async function runSync(db: SupabaseClient, req: SyncRequest, now: () => D
         confidence: r.confidence, external_deleted_at: r.externalDeletedAt, display: r.values,
         updated_at: now().toISOString(),
       })),
-      { onConflict: 'tenant_id,source_system,source_record_id,canonical_entity_type' },
+      // A record's identity includes its connection: two connections to the
+      // same product at one school must not overwrite each other's rows.
+      { onConflict: 'tenant_id,connection_id,source_system,source_record_id,canonical_entity_type' },
     );
     if (refError) {
       result.errors.push({ category: 'unknown', entityType: null, reference: 'redacted',
@@ -221,10 +232,19 @@ export async function runSync(db: SupabaseClient, req: SyncRequest, now: () => D
   }
 
   const done = now().toISOString();
-  await db.from('integration_webhook_events').update({ processing_status: duplicate ? 'duplicate' : 'processed', processed_at: done })
-    .eq('connection_id', c.id).eq('idempotency_key', batch.idempotencyKey).eq('tenant_id', c.tenant_id);
   const runStatus = result.status === 'duplicate' || result.status === 'succeeded' ? 'succeeded'
     : result.status === 'partial' ? 'partial' : 'failed';
+  if (!duplicate) {
+    if (runStatus === 'failed') {
+      // Release the claim. A failed batch that stayed "processed" would make
+      // its own retry or redelivery look like a duplicate and be dropped.
+      await db.from('integration_webhook_events').delete()
+        .eq('connection_id', c.id).eq('idempotency_key', batch.idempotencyKey).eq('tenant_id', c.tenant_id);
+    } else {
+      await db.from('integration_webhook_events').update({ processing_status: 'processed', processed_at: done })
+        .eq('connection_id', c.id).eq('idempotency_key', batch.idempotencyKey).eq('tenant_id', c.tenant_id);
+    }
+  }
   await db.from('integration_sync_runs').update({
     status: runStatus, completed_at: done, cursor_before: batch.cursorBefore, cursor_after: result.cursorAfter,
     records_received: result.received, records_created: result.created, records_updated: result.updated,

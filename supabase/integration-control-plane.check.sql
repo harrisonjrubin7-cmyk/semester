@@ -329,6 +329,29 @@ begin
     pg_temp.seen(classmate, $q$select 1 from public.canonical_entity_references where canonical_entity_type = 'term'$q$), 1);
   perform pg_temp.counted('another school''s admin reads the public term',
     pg_temp.seen(integ_b, 'select 1 from public.canonical_entity_references'), 0);
+  -- Two connections to the same product at one school, with a record id in
+  -- common. Codex found on #779 that identity ignored the connection, so the
+  -- second import overwrote the first connection's row — someone else's
+  -- student, if the ids were ordinary ones like `student-1`.
+  declare conn2 uuid;
+  begin
+    insert into public.integration_connections (tenant_id, provider_domain, provider_name, connection_name)
+    values ('icp-a', 'lms', 'Canvas', 'Canvas (law school)') returning id into conn2;
+    insert into public.canonical_entity_references (tenant_id, canonical_entity_type, canonical_entity_id,
+      subject_user_id, connection_id, source_system, source_record_id, source_of_truth, classification)
+    values ('icp-a', 'enrollment', 'enr-law', classmate, conn2, 'sis', 'ext-1', 'Registrar', 'T3');
+    select count(*) into n from public.canonical_entity_references where source_record_id = 'ext-1';
+    perform pg_temp.counted('the same external id on two connections is two records', n, 2);
+    begin
+      insert into public.canonical_entity_references (tenant_id, canonical_entity_type, canonical_entity_id,
+        subject_user_id, connection_id, source_system, source_record_id, source_of_truth, classification)
+      values ('icp-a', 'enrollment', 'enr-dup', classmate, conn2, 'sis', 'ext-1', 'Registrar', 'T3');
+      raise exception 'FAILED: the same record twice on one connection was accepted';
+    exception when unique_violation then
+      raise notice 'ok  the same record twice on one connection is refused';
+    end;
+  end;
+
   perform pg_temp.expect_rejected('an education record with no owner',
     $q$insert into public.canonical_entity_references (tenant_id, canonical_entity_type, canonical_entity_id,
          source_system, source_record_id, source_of_truth, classification)
