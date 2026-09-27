@@ -96,10 +96,15 @@ export function review(deal: Deal, policy: DealPolicy = DEAL_POLICY): DealReview
   }
   if (deal.freeForever) refused.push('No “free forever” commitments.');
   if (!deal.aiOverageDefined) refused.push('The order must state the AI/compute overage policy.');
-  if (deal.implementationFeeCents < policy.implementationFeeFloorCents) {
+  const credit = deal.pilotCreditShare ?? 0;
+  const creditOk = credit <= policy.maxPilotCredit;
+  if (!creditOk) refused.push('Pilot credit exceeds the maximum share of first-year value.');
+  // The fee may fall below the floor only as a waiver carried by a pilot credit
+  // that is within its cap and at least as large as the amount waived.
+  const shortfall = policy.implementationFeeFloorCents - deal.implementationFeeCents;
+  if (shortfall > 0 && !(credit > 0 && creditOk && shortfall <= credit * netAcvCents)) {
     refused.push('Implementation fee is below the floor; waive it only as a pilot credit, which is capped.');
   }
-  if ((deal.pilotCreditShare ?? 0) > policy.maxPilotCredit) refused.push('Pilot credit exceeds the maximum share of first-year value.');
   if ((deal.pilotMonths ?? 0) > policy.maxPilotMonths) refused.push('Pilot is longer than the maximum; it must convert or end.');
 
   approvers.add('implementation');

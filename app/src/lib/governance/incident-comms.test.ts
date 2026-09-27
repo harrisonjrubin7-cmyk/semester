@@ -31,12 +31,23 @@ describe('incident communications', () => {
     }
   });
 
-  it('refuses a missing section, a left-in placeholder, speculation, and a missing audience line', () => {
+  it('refuses a missing section, a left-in placeholder of either case, and speculation', () => {
     const { next_update: _n, ...short } = facts;
     expect(compose('admin_outage', short)).toMatchObject({ ok: false, missing: ['next_update'] });
     expect(compose('admin_outage', { ...facts, who_is_affected: '[TENANT / COHORT]' }).ok).toBe(false);
+    expect(compose('admin_outage', { ...facts, who_is_affected: 'Students at [school].' }).ok).toBe(false);
+    expect(compose('admin_outage', { ...facts, where_to_get_help: 'See [the status page](https://status.example).' }).ok).toBe(true);
     expect(compose('admin_outage', { ...facts, what_happened: 'We believe a cache failed.' }).ok).toBe(false);
+  });
+
+  it('requires each audience field by name, not any line of text', () => {
     expect(compose('student_outage', facts).ok).toBe(false);
-    expect(compose('student_outage', facts, 'If a deadline was affected, contact your instructor.').ok).toBe(true);
+    expect(compose('integration_delay', facts, { source_system: 'foo' }).ok).toBe(false);
+    const sync = compose('integration_delay', facts, { source_system: 'Banner SIS', last_successful_sync: '06:00 CT' });
+    if (!sync.ok) throw new Error(JSON.stringify(sync));
+    expect(sync.body).toContain('Last successful sync\n06:00 CT');
+    expect(compose('security', facts, { data_exposure: 'probably fine' }).ok).toBe(false);
+    expect(compose('security', facts, { data_exposure: 'Not indicated' }).ok).toBe(true);
+    expect(compose('student_outage', facts, { deadline_contact: '[instructor]' }).ok).toBe(false);
   });
 });

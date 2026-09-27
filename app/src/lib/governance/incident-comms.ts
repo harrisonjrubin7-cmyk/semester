@@ -70,6 +70,18 @@ export const SECTION_HEADING: Record<Section, string> = {
   where_to_get_help: 'Where to get help',
 };
 
+/**
+ * A fact an audience's message must carry beyond the seven sections. Stated as
+ * a field, not as a sentence somebody promises to include: free text would let
+ * any line at all stand in for "the source system and last sync time".
+ * `oneOf`, where given, is the only answers accepted.
+ */
+export interface RequiredDetail {
+  key: string;
+  heading: string;
+  oneOf?: readonly string[];
+}
+
 export interface AudiencePolicy {
   /** Who must approve before sending. */
   approvers: readonly string[];
@@ -77,30 +89,31 @@ export interface AudiencePolicy {
   updateEveryMinutes: number;
   /** Also notify the institution’s named contact, not just the affected users. */
   notifyInstitution: boolean;
-  /** Extra line the message must carry, beyond the seven sections. */
-  mustAlsoSay?: string;
+  requires: readonly RequiredDetail[];
 }
+
+export const EXPOSURE = ['Not indicated', 'Suspected', 'Confirmed', 'Unknown'] as const;
 
 export const AUDIENCES: Record<Audience, AudiencePolicy> = {
   student_outage: { approvers: ['Incident commander'], updateEveryMinutes: 60, notifyInstitution: true,
-    mustAlsoSay: 'If a deadline is affected, say whom to contact for an extension — never promise one.' },
-  admin_outage: { approvers: ['Incident commander'], updateEveryMinutes: 60, notifyInstitution: true },
+    requires: [{ key: 'deadline_contact', heading: 'If a deadline was affected, contact' }] },
+  admin_outage: { approvers: ['Incident commander'], updateEveryMinutes: 60, notifyInstitution: true, requires: [] },
   integration_delay: { approvers: ['Integration owner'], updateEveryMinutes: 240, notifyInstitution: true,
-    mustAlsoSay: 'Name the source system and the last successful sync time; stale labels stay visible.' },
+    requires: [{ key: 'source_system', heading: 'Source system' }, { key: 'last_successful_sync', heading: 'Last successful sync' }] },
   security: { approvers: ['Security owner', 'Legal'], updateEveryMinutes: 60, notifyInstitution: true,
-    mustAlsoSay: 'State whether data exposure is not indicated, suspected, confirmed or unknown.' },
+    requires: [{ key: 'data_exposure', heading: 'Data exposure', oneOf: EXPOSURE }] },
   privacy: { approvers: ['Privacy owner', 'Legal'], updateEveryMinutes: 60, notifyInstitution: true,
-    mustAlsoSay: 'Say which data classes were involved; FERPA notice obligations are the institution’s to decide with us.' },
+    requires: [{ key: 'data_classes', heading: 'Data classes involved' }, { key: 'data_exposure', heading: 'Data exposure', oneOf: EXPOSURE }] },
   accessibility: { approvers: ['Accessibility lead'], updateEveryMinutes: 240, notifyInstitution: true,
-    mustAlsoSay: 'Give an accessible alternative route to complete the task now.' },
+    requires: [{ key: 'alternative_route', heading: 'Accessible alternative route' }] },
   ai_quality: { approvers: ['AI platform lead', 'AI governance chair'], updateEveryMinutes: 240, notifyInstitution: true,
-    mustAlsoSay: 'Say which outputs to distrust and whether the AI feature is paused.' },
-  marketplace_sponsor: { approvers: ['Trust & Safety lead', 'Legal'], updateEveryMinutes: 240, notifyInstitution: true },
+    requires: [{ key: 'outputs_to_distrust', heading: 'Outputs to distrust' }, { key: 'feature_paused', heading: 'AI feature paused', oneOf: ['Yes', 'No'] }] },
+  marketplace_sponsor: { approvers: ['Trust & Safety lead', 'Legal'], updateEveryMinutes: 240, notifyInstitution: true, requires: [] },
   community_safety: { approvers: ['Trust & Safety lead'], updateEveryMinutes: 60, notifyInstitution: true,
-    mustAlsoSay: 'Include the campus crisis contact the institution verified.' },
-  scheduled_maintenance: { approvers: ['Operations lead'], updateEveryMinutes: 1440, notifyInstitution: false },
+    requires: [{ key: 'crisis_contact', heading: 'Campus crisis contact' }] },
+  scheduled_maintenance: { approvers: ['Operations lead'], updateEveryMinutes: 1440, notifyInstitution: false, requires: [] },
   feature_rollback: { approvers: ['Product owner'], updateEveryMinutes: 1440, notifyInstitution: true,
-    mustAlsoSay: 'Say what students see instead and whether any of their work is affected.' },
+    requires: [{ key: 'instead', heading: 'What you will see instead' }, { key: 'work_affected', heading: 'Is your work affected', oneOf: ['Yes', 'No'] }] },
 };
 
 export type Composed =
@@ -110,13 +123,31 @@ export type Composed =
 /** Words that turn a notice into speculation or legalese. Refused in the body. */
 export const AVOID: readonly string[] = ['we believe', 'probably', 'hereinafter', 'notwithstanding', 'out of an abundance of caution'];
 
-export function compose(audience: Audience, facts: Partial<Record<Section, string>>, extra = ''): Composed {
+/**
+ * Any bracketed text, whatever its case: `[school]` is as unfilled as
+ * `[SCHOOL]`. A markdown link's `[text](url)` is not a placeholder.
+ */
+const PLACEHOLDER = /\[[^\]\n]+\](?!\()/g;
+
+export function compose(
+  audience: Audience,
+  facts: Partial<Record<Section, string>>,
+  details: Readonly<Record<string, string>> = {},
+): Composed {
   const missing = SECTIONS.filter((s) => !(facts[s] ?? '').trim());
-  const all = [...SECTIONS.map((s) => facts[s] ?? ''), extra].join('\n');
-  const placeholders = [...all.matchAll(/\[[A-Z0-9 _/]+\]/g)].map((m) => m[0]);
+  const required = AUDIENCES[audience].requires;
+  const all = [...SECTIONS.map((s) => facts[s] ?? ''), ...required.map((r) => details[r.key] ?? '')].join('\n');
+  const placeholders = [...all.matchAll(PLACEHOLDER)].map((m) => m[0]);
   for (const phrase of AVOID) if (all.toLowerCase().includes(phrase)) placeholders.push(`avoid: “${phrase}”`);
-  if (AUDIENCES[audience].mustAlsoSay && !extra.trim()) placeholders.push(`required: ${AUDIENCES[audience].mustAlsoSay}`);
+  for (const r of required) {
+    const v = (details[r.key] ?? '').trim();
+    if (!v) placeholders.push(`required: ${r.heading}`);
+    else if (r.oneOf && !r.oneOf.includes(v)) placeholders.push(`${r.heading} must be one of: ${r.oneOf.join(', ')}`);
+  }
   if (missing.length || placeholders.length) return { ok: false, missing, placeholders };
-  const body = SECTIONS.map((s) => `${SECTION_HEADING[s]}\n${facts[s]!.trim()}`).join('\n\n') + (extra.trim() ? `\n\n${extra.trim()}` : '');
+  const body = [
+    ...SECTIONS.map((s) => `${SECTION_HEADING[s]}\n${facts[s]!.trim()}`),
+    ...required.map((r) => `${r.heading}\n${details[r.key]!.trim()}`),
+  ].join('\n\n');
   return { ok: true, subject: `Semester — ${AUDIENCE_LABEL[audience]}`, body };
 }

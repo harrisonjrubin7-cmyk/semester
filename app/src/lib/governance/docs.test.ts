@@ -4,7 +4,7 @@ import { resolve } from 'node:path';
 import { CHARTERS } from './charters';
 import { NEVER, SETTINGS, APPROVAL_FLOW } from './config-tiers';
 import { CONTRACTS } from './data-contracts';
-import { AUDIENCE_LABEL, SECTION_HEADING } from './incident-comms';
+import { AUDIENCE_LABEL, AUDIENCES, SECTION_HEADING } from './incident-comms';
 import { DEFINITION_OF_DONE, DEFINITION_OF_READY, QUALITY_METRICS, RELEASE_APPROVALS } from './quality-gates';
 import { ROUTE_LABEL } from './scorecard';
 
@@ -41,6 +41,7 @@ describe('operating-model docs match the registries', () => {
     const d = doc('INCIDENT-COMMUNICATIONS.md');
     for (const label of Object.values(AUDIENCE_LABEL)) expect(d, label).toContain(`| ${label} |`);
     for (const h of Object.values(SECTION_HEADING)) expect(d, h).toContain(h);
+    for (const a of Object.values(AUDIENCES)) for (const r of a.requires) expect(d, r.heading).toContain(r.heading);
   });
 
   it('quality: every gate item and metric', () => {

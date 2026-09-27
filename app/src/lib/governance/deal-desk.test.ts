@@ -19,6 +19,14 @@ describe('deal desk', () => {
     expect(r.refused).toHaveLength(5);
   });
 
+  it('lets a capped pilot credit carry a fee waiver, and nothing else', () => {
+    const pilot = { ...base, implementationFeeCents: 0, pilotMonths: 4 };
+    expect(review({ ...pilot, pilotCreditShare: 0.2 }).refused).toEqual([]);
+    expect(review(pilot).refused.join()).toMatch(/below the floor/);
+    expect(review({ ...pilot, pilotCreditShare: 0.05 }).refused.join()).toMatch(/below the floor/);
+    expect(review({ ...pilot, pilotCreditShare: 0.8 }).refused).toHaveLength(2);
+  });
+
   it('caps the multi-year step and checks the minimum on the net value', () => {
     expect(review({ ...base, discount: 0, years: 3 }).netAcvCents).toBe(9_400_000);
     expect(review({ ...base, discount: 0, years: 10 }).netAcvCents).toBe(9_100_000);

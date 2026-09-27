@@ -7,7 +7,7 @@ and update cadence.
 
 Source: [`app/src/lib/governance/incident-comms.ts`](../../app/src/lib/governance/incident-comms.ts). `compose()`
 refuses to produce a message in any of these cases: a section is missing, a `[BRACKETED]` placeholder is left in,
-speculation or legalese appears, or the audience's required line is absent.
+speculation or legalese appears, or one of the audience's required fields is empty or outside its allowed answers.
 
 ## Every message says these seven things
 
@@ -24,19 +24,19 @@ because readers fill the gap with the worst interpretation.
 
 ## Audiences
 
-| Audience | Approvers | Update at least every | Must also say |
+| Audience | Approvers | Update at least every | Required fields |
 | --- | --- | --- | --- |
-| Student-facing outage | Incident commander | 1 h | Whom to contact about an affected deadline; never promise an extension |
+| Student-facing outage | Incident commander | 1 h | If a deadline was affected, contact (never promise an extension) |
 | Institution admin outage | Incident commander | 1 h | — |
-| Integration data delay | Integration owner | 4 h | Source system and last successful sync; stale labels stay visible |
-| Security incident | Security owner, Legal | 1 h | Data exposure: not indicated / suspected / confirmed / unknown |
-| Privacy incident | Privacy owner, Legal | 1 h | Data classes involved; FERPA notice decided with the institution |
-| Accessibility incident | Accessibility lead | 4 h | An accessible alternative route to finish the task now |
-| AI quality incident | AI platform lead, AI governance chair | 4 h | Which outputs to distrust; whether the feature is paused |
+| Integration data delay | Integration owner | 4 h | Source system · Last successful sync (stale labels stay visible) |
+| Security incident | Security owner, Legal | 1 h | Data exposure: Not indicated / Suspected / Confirmed / Unknown |
+| Privacy incident | Privacy owner, Legal | 1 h | Data classes involved · Data exposure (as above); FERPA notice decided with the institution |
+| Accessibility incident | Accessibility lead | 4 h | Accessible alternative route |
+| AI quality incident | AI platform lead, AI governance chair | 4 h | Outputs to distrust · AI feature paused: Yes / No |
 | Marketplace/sponsor safety incident | Trust & Safety lead, Legal | 4 h | — |
-| Community safety incident | Trust & Safety lead | 1 h | The campus crisis contact the institution verified |
+| Community safety incident | Trust & Safety lead | 1 h | Campus crisis contact (verified by the institution) |
 | Scheduled maintenance | Operations lead | 24 h | — |
-| Feature rollback | Product owner | 24 h | What students see instead; whether their work is affected |
+| Feature rollback | Product owner | 24 h | What you will see instead · Is your work affected: Yes / No |
 
 Every audience except scheduled maintenance also notifies the institution's named incident contact.
 
@@ -49,7 +49,7 @@ What happened
 Semester could not load Today between 09:10 and 09:40 CT.
 
 Who is affected
-Students at [school] using the web app.
+Students at the pilot school using the web app.
 
 What data or workflow is affected
 Today and Plan did not load. No data was lost or exposed.
@@ -64,7 +64,8 @@ Next update
 By 10:30 CT.
 
 Where to get help
-help@[domain] or the campus help desk.
+help@semester.example or the campus help desk.
 
-If a deadline was affected, contact your instructor. Semester can't grant extensions.
+If a deadline was affected, contact
+Your instructor. Semester can't grant extensions.
 ```
