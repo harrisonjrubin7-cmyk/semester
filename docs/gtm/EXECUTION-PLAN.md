@@ -76,7 +76,15 @@ the body, so the token never appears in a URL. It returns the list of documents 
 storage paths, or a one-minute signed URL for one document in the private `trust-packet` bucket. Every refusal
 is the same 404, and every response is `no-store` and `no-referrer`. Merging deploys it, but it stays inert until
 a trust officer publishes a document and the account team mints a grant. `supabase/DEPLOY.md` records why its
-JWT check is off, and why its snapshot row starts out `pending`. A wrong, revoked or expired
+JWT check is off, and why its snapshot row starts out `pending`.
+
+**The reviewer's page** is `app/src/screens/TrustRoom.tsx`. A link reads `…/semester/#room=<token>`: the
+token sits in the URL fragment, which browsers never send to a server, so GitHub Pages never logs it.
+`main.tsx` mounts the page instead of the app, before sign-in, storage or the service worker are touched, the
+same way as a published form. It lists the exact versions granted and the commit they came from. Each document
+is fetched only when the reviewer asks, shown as a link they click, and removed when its minute runs out.
+`lib/trustroom.ts` opens only an `https` URL on the project's own origin, whatever the server returns, and a
+link that is wrong, expired or withdrawn gets one message. A wrong, revoked or expired
 token returns nothing and gives no reason. Engaging the global `kill.sharing` switch stops every grant and
 every open.
 
@@ -94,25 +102,21 @@ every open.
 
 ## Still to build (§15 backlog), in the order the plan's launch sequence (§18) needs it
 
-1. **The reviewer's page**: the one screen a university reviewer opens. It reads the link token from the URL
-   fragment (never the query string, which servers log), posts it to the `trust-room` function, lists what the
-   grant covers, and opens each document through its one-minute signed URL. It belongs wherever the public
-   Trust Center goes (item 2).
-2. **Public Trust Center pages** (§3.3): these wait for #829 (the packet's contents and tiers) and #776 (the public
+1. **Public Trust Center pages** (§3.3): these wait for #829 (the packet's contents and tiers) and #776 (the public
    site, whose hosting is the owner's decision). The public-tier rows of `trust_artifacts` are what they render.
-3. **Workflow pages**: two or three, following the §3.2 template. Check the public-site work in progress first
+2. **Workflow pages**: two or three, following the §3.2 template. Check the public-site work in progress first
    (`feature/public-site`, `feature/public-tools`) so the routes aren't duplicated.
-4. **Campaign manager screen** over `activationGate` and `gtm_activation_failures`, listing every remaining failure.
+3. **Campaign manager screen** over `activationGate` and `gtm_activation_failures`, listing every remaining failure.
    **Preference center** writing `gtm_consent` for recruitment contacts and `consent_record` for enrolled students.
-5. **Email/SMS adapters** (worker, service role) that insert the decision into `gtm_communication_events` first,
+4. **Email/SMS adapters** (worker, service role) that insert the decision into `gtm_communication_events` first,
    and send only if the insert succeeded. No direct platform publishing for social (§15 phase 2).
-6. **Retention periods** for contacts and sends, with a sweep. `RETENTION.md` records that none exists yet, and a
+5. **Retention periods** for contacts and sends, with a sweep. `RETENTION.md` records that none exists yet, and a
    school has to set one before any campaign goes live.
-7. **Orientation QR/deep-link flow** using `campaignUrl(..., location)`, SSO, and the first-meaningful-action
+6. **Orientation QR/deep-link flow** using `campaignUrl(..., location)`, SSO, and the first-meaningful-action
    instrumentation (§9.2).
-8. **Dashboards** (§11.5) built on `kpi.ts`. Each labels its attribution model, logs access, and uses no risk
+7. **Dashboards** (§11.5) built on `kpi.ts`. Each labels its attribution model, logs access, and uses no risk
    score (§16.4).
-9. **Ambassador program** (§9.4). No peer-data access, by construction.
+8. **Ambassador program** (§9.4). No peer-data access, by construction.
 
 The admissions calendar (§8) and content cadence (§8.1) are operating material, not code. A campaign built
 from them is a `Campaign` whose `funnelStage` matches the calendar row.
