@@ -43,6 +43,7 @@ import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
 import { GetHelp } from '../components/GetHelp';
 import { HelpInbox } from '../components/HelpInbox';
 import { ReportQueue } from '../components/ReportQueue';
+import { ListingDesk } from '../components/ListingDesk';
 import { operationsAllowed } from '../lib/institution-ops';
 import { forSchool, useMyCapabilities } from '../lib/capabilities';
 import { helpSeedWaiting, loadInboxes, newRequestCount, type StaffInbox } from '../lib/help-routes';
@@ -651,6 +652,8 @@ function Workspace({ storageKey }: { storageKey: string }) {
         <>
           {/* Draws nothing unless the database says this account may read reports. */}
           <ReportQueue account={account} />
+          {/* Draws nothing unless my_capabilities() reports opportunity:publish or :moderate. */}
+          <ListingDesk school={school.id} />
           <label style={{ display: 'block', marginBlock: 'var(--sp-5) var(--sp-3)' }}>
             <SectionLabel style={{ marginBlock: 0 }}>Prepare drafts as</SectionLabel>
             <select
