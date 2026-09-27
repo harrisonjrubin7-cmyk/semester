@@ -620,6 +620,7 @@ const MOCKS_MODULES = [
   'src/state/storetoken.test.tsx',
   'src/state/syncretry.test.tsx',
   'src/state/syncstates.test.tsx',
+  'src/state/returnto.test.tsx',
 ]
 
 export default defineConfig(({ command, mode }) => {

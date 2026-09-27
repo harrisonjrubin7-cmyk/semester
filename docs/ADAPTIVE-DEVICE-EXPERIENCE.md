@@ -113,8 +113,10 @@ this change.
   of the same note". Adding them uncovered that on IndexedDB an edit never
   triggered a push; that is fixed too. See
   [CROSS-DEVICE-CONTINUITY.md](CROSS-DEVICE-CONTINUITY.md).
-- **Return context after sign-in.** OAuth, SSO and password reset all return to
-  the bare app URL.
+- **Return context after sign-in: done** for sign-ins that leave the page
+  (Google, Microsoft, Apple, institutional SSO). Email confirmation and
+  password reset links are not covered. See
+  [CROSS-DEVICE-CONTINUITY.md](CROSS-DEVICE-CONTINUITY.md).
 - **Layout preferences sync across devices.** `nav`, `shell` and `mailPane` use
   the incoming value, so choosing a navigation on a laptop changes it on the
   phone. `chromeFor` still draws a usable navigation at every width, so this

@@ -78,6 +78,7 @@ import type { School } from '../lib/school';
 // Aliased: an effect below has its own local `said` for a save error.
 import { said as refreshSaid } from '../lib/refresh';
 import { offline, watchConnection } from '../lib/offline';
+import { takeReturn } from '../lib/returnto';
 import {
   STORAGE_KEY,
   initialEphemeral,
@@ -674,10 +675,34 @@ export function StoreProvider({ children }: { children: ReactNode }) {
    * a signed-in account arriving a moment later is the same shape of delay it
    * always had — `currentSession` was asynchronous before this too.
    */
+  /*
+   * The address this page was opened at, before the app wrote one of its own.
+   *
+   * Empty is what a sign-in round trip lands on: every provider sends the tab
+   * back to the bare `appUrl()`. That is the one case a written-down return
+   * point is for — a page opened on a link somebody chose goes where the link
+   * says, not where a sign-in fifteen minutes ago was started from.
+   */
+  const bootHash = useRef(typeof window === 'undefined' ? '' : window.location.hash);
+  const returned = useRef(false);
+
   useEffect(() => {
     if (!cloudConfigured) return;
     const take = (s: Session | null) => {
       setAccount(accountOf(s));
+      /*
+       * Back to where the sign-in was started. Once per page, and taken
+       * whether or not it is used, so it cannot move anybody later. Through
+       * the hash, so the ordinary `hashchange` path below does the landing —
+       * the same one Back and a typed address use. See `lib/returnto.ts`.
+       */
+      if (s && !returned.current) {
+        returned.current = true;
+        const back = takeReturn();
+        // A boot hash that is not one of this app's addresses — a provider's
+        // `#error=` — was not a place anybody chose, so it does not count.
+        if (back && !fromHash(bootHash.current)) window.location.hash = back;
+      }
       // The shared key is only available to a signed-in account, and this is
       // what proves the account to the function.
       setSessionToken(s?.access_token ?? null);

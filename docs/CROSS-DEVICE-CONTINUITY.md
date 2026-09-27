@@ -94,10 +94,19 @@ spec's "Conflict needs review".
 3. **Fixed: pull on focus.** A laptop that stayed online overnight now
    catches up when the student switches back to it, rather than showing
    yesterday's semester until a manual refresh.
-4. **No return context after sign-in.** OAuth, SSO and password reset all
-   return to the bare `appUrl()`. A notification tap does carry `screen` and
-   `item` through the service worker to `lib/land.ts`, so deep links from
-   notifications work. Only the sign-in path loses the place.
+4. **Fixed: return context after sign-in.** Google, Microsoft, Apple and
+   institutional SSO sign in by leaving the page, and the provider has to send
+   the tab back to the bare `appUrl()` (the redirect must match the allowlist
+   exactly). Before leaving, `components/Credentials.tsx` now writes down
+   where the student was — or, on Account, the screen they came to Account
+   from — and the store sends the returning tab there once the session
+   arrives (`lib/returnto.ts`). The point is used once, expires after fifteen
+   minutes, and loses to a link: a page opened at an app address goes where
+   the address says. Email sign-up confirmation and password reset are not
+   covered, because their links usually open in a new tab or on another
+   device, where "where you were" is not this tab's place to guess.
+   A notification tap was already covered: it carries `screen` and `item`
+   through the service worker to `lib/land.ts`.
 5. **Layout preferences sync with `theirs`.** `nav`, `shell`, `mailPane`,
    `tabs` and `shortcuts` follow the last device to change them. Reading
    preferences (`density`, `textSize`, `lineHeight`, `readingWidth` and others)
@@ -106,4 +115,4 @@ spec's "Conflict needs review".
    adapts it to the width. Even so, the spec would make `nav` and `mailPane`
    per device as well.
 
-Each of 2–5 is a change to sync behaviour that deserves its own review.
+Each of 2 and 5 is a change to sync behaviour that deserves its own review.
