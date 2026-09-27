@@ -600,6 +600,7 @@ const MOCKS_MODULES = [
   'src/components/GraduationSimulator.phase-d.test.tsx',
   'src/components/StudyStudio.test.tsx',
   'src/components/QuizFeedback.test.tsx',
+  'src/components/TeachBack.test.tsx',
   'src/components/SupportAccess.test.tsx',
   'src/components/GetHelp.test.tsx',
   'src/components/HelpInbox.test.tsx',

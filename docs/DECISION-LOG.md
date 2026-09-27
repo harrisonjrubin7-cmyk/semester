@@ -184,6 +184,30 @@ Rejected: automatic FSRS updates from quiz answers; a hidden difficulty score;
 sending reports to an instructor, which would need its own preview,
 confirmation and recipient, and is left for the institution phase.
 
+## D-034 · Teach-back compares and never grades
+
+**Taken in P3.3.** (D-030 to D-033 are on their own open branches; D-013–D-029
+belong to the feature-expansion work.)
+
+Teach-back sits inside the Study Studio and uses the Studio's own gates:
+selected sources, the consent to send them, and the course AI policy. The
+student writes an explanation, and the model says what the selected material
+shows they covered, left out, or contradicted.
+
+`lib/teachback.ts` holds the reply to four rules:
+- no score, grade or percentage;
+- no model answer or rewrite;
+- every point quotes a selected source word for word, and is checked like a
+  study-guide citation;
+- a contradiction also quotes the student's own words, checked against what
+  they wrote.
+
+A point that fails its check is dropped, and the drop is counted on screen.
+Nothing is stored.
+
+Rejected: a mastery score from teach-back, which is hidden academic scoring;
+feeding teach-back into the review schedule.
+
 ---
 
 # Feature-expansion command (27 Sep 2026)
@@ -617,7 +641,6 @@ session's range.)
   follow-up work that needs a cloud adaptor and deletion wiring. That work
   has to map the server's `rejected` state, which the app's `SkillClaim`
   type lacks.
-
 
 ## D-048 · Phase J finishes `institution_actions` with one additive migration
 
