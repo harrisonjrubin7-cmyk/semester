@@ -24,6 +24,7 @@ export function fakeDb(tables: Tables) {
     let onConflict: string[] = [];
     let single: 'none' | 'maybe' | 'one' = 'none';
     let limit = Infinity;
+    let offset = 0;
     const failing = (tables.__fail as unknown as string[] | undefined) ?? [];
     const orders: { key: string; ascending: boolean; nullsFirst: boolean }[] = [];
 
@@ -67,7 +68,7 @@ export function fakeDb(tables: Tables) {
           return (o.ascending ? 1 : -1) * cmp(a, b);
         });
       }
-      const out = matched.slice(0, limit);
+      const out = matched.slice(offset, offset + limit);
       if (single === 'maybe') return { data: out[0] ?? null, error: null };
       if (single === 'one') return out[0] ? { data: out[0], error: null } : { data: null, error: { message: 'no row' } };
       return { data: out, error: null };
@@ -78,6 +79,7 @@ export function fakeDb(tables: Tables) {
       in: (k: string, vs: unknown[]) => { filters.push((r) => vs.includes(r[k])); return q; },
       is: (k: string, v: unknown) => { filters.push((r) => (r[k] ?? null) === v); return q; },
       limit: (n: number) => { limit = n; return q; },
+      range: (from: number, to: number) => { offset = from; limit = to - from + 1; return q; },
       not: (k: string, operator: string, v: unknown) => {
         if (operator !== 'is') throw new Error(`fakeDb: not.${operator} is not implemented`);
         filters.push((r) => (r[k] ?? null) !== v);

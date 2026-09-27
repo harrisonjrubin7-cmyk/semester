@@ -10,7 +10,7 @@ import { MOCK_SIS, SIS_FIXTURES } from '../../src/lib/integration/mock-sis.ts';
 import { mockBatch } from '../../src/lib/integration/mock-adapter.ts';
 import type { AdapterDeclaration } from '../../src/lib/integration/adapter.ts';
 import { fakeDb, type Row, type Tables } from './fakedb.ts';
-import { TICK_MINUTES, adapterFor, cadenceMinutes, isDue, tick, type PullRequest, type RegisteredAdapter } from './tick.ts';
+import { TICK_MINUTES, adapterFor, cadenceMinutes, intervalMinutes, isDue, tick, type PullRequest, type RegisteredAdapter } from './tick.ts';
 
 const NOW = new Date('2026-09-27T12:00:00Z');
 const ago = (minutes: number) => new Date(NOW.getTime() - minutes * 60_000).toISOString();
@@ -230,6 +230,82 @@ describe('the tick', () => {
     const s = await tick(flaky, { adapters: [sis([])], now: () => NOW, allowMock: true });
     expect(thrown).toBe(true);
     expect(s).toMatchObject({ ran: 2, failed: 1, succeeded: 1 });
+  });
+});
+
+/** A stand-in whose reads of one table fail once a filter on `column` is applied. */
+function unreadable(t: Tables, table: string, column: string) {
+  const db = fakeDb(t);
+  return { from: (name: string) => {
+    const q = db.from(name) as unknown as Record<string, (...a: unknown[]) => unknown>;
+    if (name !== table) return q;
+    let poisoned = false;
+    const wrap: Record<string, unknown> = {};
+    for (const [k, f] of Object.entries(q)) {
+      wrap[k] = k === 'then'
+        ? (ok: (v: unknown) => unknown, bad?: (e: unknown) => unknown) => (poisoned
+            ? Promise.resolve({ data: null, error: { message: 'timeout' } }).then(ok, bad)
+            : f(ok, bad))
+        : (...a: unknown[]) => { if (a[0] === column && k === 'in') poisoned = true; f(...a); return wrap; };
+    }
+    return wrap;
+  } } as unknown as typeof db;
+}
+
+describe('found by the Codex review of #811', () => {
+  it('counts the failures of a connection still configuring, so it too dead-letters on the fifth', async () => {
+    // The worker leaves a failing `configuring` connection in `configuring`,
+    // so counting only for `error` restarted it at attempt 1 every tick.
+    const t = world([connection('a', { status: 'configuring', last_attempt_at: ago(13 * 60) })], {
+      integration_sync_runs: [1, 2, 3, 4].map((n) => ({ id: `r${n}`, connection_id: 'a', tenant_id: 'vu', status: 'failed',
+        started_at: ago(13 * 60 * n) })),
+    });
+    await run(t, [sis([], true)]);
+    expect(t.integration_dead_letter_events).toHaveLength(1);
+    expect(t.integration_dead_letter_events[0]).toMatchObject({ attempts: 5 });
+  });
+
+  it('pulls nothing on schedule when it cannot read whether a connection is held', async () => {
+    const pulls: PullRequest[] = [];
+    const t = world([connection('a')], {
+      integration_dead_letter_events: [{ id: 'd1', tenant_id: 'vu', connection_id: 'a', resolved_at: null, replay_requested_at: null }],
+    });
+    const s = await tick(unreadable(t, 'integration_dead_letter_events', 'connection_id'),
+      { adapters: [sis(pulls)], now: () => NOW, allowMock: true });
+    expect(pulls).toEqual([]);
+    expect(s).toMatchObject({ ran: 0, deferred: true, skipped: { 'hold unreadable': 1 } });
+  });
+
+  it('caps replays by connection, so one connection’s many requests cannot starve another’s', async () => {
+    const pulls: PullRequest[] = [];
+    const many = Array.from({ length: 30 }, (_, i) => ({ id: `x${i}`, tenant_id: 'vu', connection_id: 'x', resolved_at: null,
+      replay_requested_at: ago(60 - i) }));
+    const t = world([connection('x', { provider_name: 'Unregistered SIS' }), connection('y', { last_attempt_at: ago(1) })], {
+      integration_dead_letter_events: [...many, { id: 'y1', tenant_id: 'vu', connection_id: 'y', resolved_at: null, replay_requested_at: ago(1) }],
+    });
+    const s = await run(t, [sis(pulls)], { maxRuns: 25 });
+    expect(pulls.map((p) => p.trigger)).toEqual(['replay']);
+    expect(s).toMatchObject({ replaysResolved: 1 });
+  });
+
+  it('keeps to the connection’s own freshness target, and the adapter’s only when it has none', async () => {
+    expect(intervalMinutes('01:00:00')).toBe(60);
+    expect(intervalMinutes('2 days')).toBe(2880);
+    expect(intervalMinutes('1 day 06:30:00')).toBe(1830);
+    expect(intervalMinutes('1 mon')).toBe(30 * 1440);
+    expect(intervalMinutes(null)).toBeNull();
+    expect(intervalMinutes('P1D')).toBeNull();
+
+    const pulls: PullRequest[] = [];
+    const t = world([
+      // An hour's target: due after thirty minutes, where the adapter's day would wait twelve hours.
+      connection('hourly', { freshness_target: '01:00:00', last_attempt_at: ago(40) }),
+      // Two days: not due at thirteen hours, where the adapter's day would be.
+      connection('slow', { freshness_target: '2 days', last_attempt_at: ago(13 * 60) }),
+      connection('default', { freshness_target: null, last_attempt_at: ago(13 * 60) }),
+    ]);
+    await run(t, [sis(pulls)]);
+    expect(pulls.map((p) => p.connectionPublicId.slice(5, 12)).sort()).toEqual(['default', 'hourly0']);
   });
 });
 

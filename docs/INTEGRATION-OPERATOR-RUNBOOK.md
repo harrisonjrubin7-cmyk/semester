@@ -78,9 +78,14 @@ connection that meets all of these:
 - approved and not paused or disconnected;
 - pulled rather than pushed (`sync_mode` of `incremental_api` or `batch`);
 - has an adapter registered in `app/server/integration/registry.ts`;
-- not attempted within half its freshness target, or within fifteen minutes when it is in `error`.
+- not attempted within half its freshness target, or within fifteen minutes when it is in `error`. The target is the
+  connection's own `freshness_target` when it has one, which is also what the dashboard and `integration_health()`
+  measure. Otherwise it is the adapter's.
 
-A connection holding an open dead letter is **not** retried on schedule; it waits for a replay. Every other rule is
+A connection holding an open dead letter is **not** retried on schedule; it waits for a replay. If the tick cannot read
+whether a connection is held, it pulls nothing on schedule that tick. Failures are counted whatever the status, so a
+connection still `configuring` also dead-letters on its fifth. Replays are capped per connection, not per request, so
+one connection's many requests cannot crowd out another's. Every other rule is
 still `runSync`'s. The registry is empty, so until an adapter is added a tick runs nothing and reports every
 connection as unregistered.
 

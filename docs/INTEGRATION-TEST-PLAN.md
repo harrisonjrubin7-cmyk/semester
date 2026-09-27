@@ -199,6 +199,14 @@ and the three new tests were re-run against main's worker with the corrected sta
 
 **The registry:** it refuses a mock and a double claim. A control shows that rule catches both.
 
+**Found by the Codex review of #811, before merge.** Each was written as a failing test before its fix, and reverting
+the fix turns it red again:
+
+- a failing `configuring` connection restarted at attempt 1 every tick and never dead-lettered;
+- an unreadable hold lookup let held connections be pulled;
+- replays were capped by row, so one connection's thirty requests shut out another's one;
+- the connection's own `freshness_target` was ignored in favour of the adapter's.
+
 Each tick rule was checked by reverting it: the hold, the attempt count, the replay's resolve and withdraw, the school
 check, one pull per connection, the run cap, the skip count and the fail-closed switch each turned a test red. So did
 un-parking the job and changing its cadence. `scheduler.sql` was also applied twice to a scratch Postgres with

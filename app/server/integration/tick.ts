@@ -94,10 +94,11 @@ interface ConnectionRow {
   sync_mode: string;
   cursor_state: Record<string, unknown> | null;
   last_attempt_at: string | null;
+  freshness_target: string | null;
 }
 
 const CONNECTION_COLUMNS =
-  'id,public_id,tenant_id,provider_domain,provider_name,provider_product,status,sync_mode,cursor_state,last_attempt_at';
+  'id,public_id,tenant_id,provider_domain,provider_name,provider_product,status,sync_mode,cursor_state,last_attempt_at,freshness_target';
 const RUNNABLE: readonly ConnectionStatus[] = ['configuring', 'healthy', 'degraded', 'error'];
 const PULLED = ['incremental_api', 'batch'];
 
@@ -111,10 +112,27 @@ export function adapterFor(adapters: readonly RegisteredAdapter[], c: Pick<Conne
   return hits.length === 1 ? hits[0] : null;
 }
 
-/** Minutes between scheduled pulls: half the freshness target, never under one tick. */
-export function cadenceMinutes(adapter: AdapterDeclaration, status: ConnectionStatus): number {
+/**
+ * A Postgres interval as PostgREST returns it (`IntervalStyle = postgres`):
+ * `01:00:00`, `2 days`, `1 day 06:30:00`, `1 mon`. Null for anything else, so a
+ * value this cannot read falls back to the adapter's target rather than to 0.
+ */
+export function intervalMinutes(value: string | null): number | null {
+  if (!value) return null;
+  const m = /^(?:(\d+) years? ?)?(?:(\d+) mons? ?)?(?:(\d+) days? ?)?(?:(\d+):(\d{2}):(\d{2})(?:\.\d+)?)?$/.exec(value.trim());
+  if (!m || m[0] === '') return null;
+  const [, y, mo, d, h, mi] = m.map((x) => Number(x ?? 0));
+  return ((y * 365 + mo * 30 + d) * 24 + h) * 60 + mi;
+}
+
+/**
+ * Minutes between scheduled pulls: half the freshness target, never under one
+ * tick. The connection's own target, when it has one, is the one the dashboard
+ * and `integration_health()` measure it against, so it wins over the adapter's.
+ */
+export function cadenceMinutes(adapter: AdapterDeclaration, status: ConnectionStatus, targetMinutes: number | null = null): number {
   if (status === 'error') return TICK_MINUTES;
-  return Math.max(TICK_MINUTES, Math.floor(adapter.freshnessTargetMinutes / 2));
+  return Math.max(TICK_MINUTES, Math.floor((targetMinutes ?? adapter.freshnessTargetMinutes) / 2));
 }
 
 export function isDue(lastAttemptAt: string | null, cadence: number, at: Date): boolean {
@@ -185,31 +203,46 @@ export async function tick(db: SupabaseClient, options: TickOptions): Promise<Ti
   };
 
   // ── 1. Replays ────────────────────────────────────────────────────────────
-  const { data: letters } = await db.from('integration_dead_letter_events').select('id,tenant_id,connection_id')
-    .is('resolved_at', null).not('replay_requested_at', 'is', null)
-    .order('replay_requested_at', { ascending: true }).limit(maxRuns);
-  const replays = (letters ?? []) as { id: string; tenant_id: string; connection_id: string }[];
+  // Capped by connection, not by row: one connection with many requests, or
+  // one that is refused every tick, must not push another's out of the window.
+  const PAGE = 200;
+  const letters: { id: string; tenant_id: string; connection_id: string }[] = [];
+  const order: string[] = [];
+  for (let page = 0; page < 10 && order.length < maxRuns; page++) {
+    const { data, error } = await db.from('integration_dead_letter_events').select('id,tenant_id,connection_id')
+      .is('resolved_at', null).not('replay_requested_at', 'is', null)
+      .order('replay_requested_at', { ascending: true }).range(page * PAGE, page * PAGE + PAGE - 1);
+    if (error) break;
+    const rows = (data ?? []) as typeof letters;
+    for (const l of rows) {
+      if (!order.includes(l.connection_id)) {
+        if (order.length >= maxRuns) break;
+        order.push(l.connection_id);
+      }
+      letters.push(l);
+    }
+    if (rows.length < PAGE) break;
+  }
   const replayed = new Set<string>();
-  if (replays.length) {
-    const { data: rows } = await db.from('integration_connections').select(CONNECTION_COLUMNS)
-      .in('id', [...new Set(replays.map((l) => l.connection_id))]);
+  if (order.length) {
+    const { data: rows } = await db.from('integration_connections').select(CONNECTION_COLUMNS).in('id', order);
     const byId = new Map(((rows ?? []) as ConnectionRow[]).map((c) => [c.id, c]));
-    for (const letter of replays) {
-      const c = byId.get(letter.connection_id);
-      // The letter's school must be its connection's; a mismatch is not ours to run.
-      if (!c || c.tenant_id !== letter.tenant_id) { skip('replay connection missing'); continue; }
+    for (const id of order) {
+      const c = byId.get(id);
+      const mine = letters.filter((l) => l.connection_id === id);
+      // A letter's school must be its connection's; a mismatch is not ours to run.
+      if (!c || mine.some((l) => l.tenant_id !== c.tenant_id)) { skip('replay connection missing'); continue; }
       const adapter = adapterFor(options.adapters, c);
       if (!adapter) { skip('no registered adapter'); continue; }
-      // One pull serves every open replay on a connection.
-      if (replayed.has(c.id)) continue;
       if (!room()) break;
       replayed.add(c.id);
+      // One pull serves every open replay on a connection.
       const report = await run(c, adapter, 'replay', 1);
       if (report?.outcome === 'ran' && report.result.status !== 'failed') {
         const { error } = await db.from('integration_dead_letter_events').update({ resolved_at: now().toISOString() })
           .eq('connection_id', c.id).eq('tenant_id', c.tenant_id).is('resolved_at', null)
           .not('replay_requested_at', 'is', null);
-        if (!error) summary.replaysResolved += replays.filter((l) => l.connection_id === c.id).length;
+        if (!error) summary.replaysResolved += mine.length;
       } else if (report && report.outcome !== 'refused') {
         // It failed again. Hand it back to the operator rather than pulling
         // every tick: the letter stays open, the request is withdrawn.
@@ -229,21 +262,29 @@ export async function tick(db: SupabaseClient, options: TickOptions): Promise<Ti
   for (const c of candidates) {
     const adapter = adapterFor(options.adapters, c);
     if (!adapter) { skip('no registered adapter'); continue; }
-    if (!isDue(c.last_attempt_at, cadenceMinutes(adapter.declaration, c.status), now())) { skip('not due'); continue; }
+    const cadence = cadenceMinutes(adapter.declaration, c.status, intervalMinutes(c.freshness_target));
+    if (!isDue(c.last_attempt_at, cadence, now())) { skip('not due'); continue; }
     due.push({ c, adapter });
   }
   if (due.length) {
-    const { data: open } = await db.from('integration_dead_letter_events').select('connection_id')
+    const { data: open, error: holdError } = await db.from('integration_dead_letter_events').select('connection_id')
       .is('resolved_at', null).in('connection_id', due.map((d) => d.c.id));
+    if (holdError) {
+      // Not knowing whether a connection is held is not knowing it is free:
+      // pull nothing on schedule, and let the next tick try again.
+      for (let i = 0; i < due.length; i++) skip('hold unreadable');
+      summary.deferred = true;
+      return summary;
+    }
     const held = new Set(((open ?? []) as { connection_id: string }[]).map((l) => l.connection_id));
     for (const { c, adapter } of due) {
       if (held.has(c.id)) { skip('dead letter awaiting an operator'); continue; }
       summary.due++;
       if (!room()) break;
-      const attempt = c.status === 'error'
-        // The worker dead-letters on `DEFAULT_RETRY`, so the count is on it too.
-        ? 1 + await consecutiveFailures(db, c, DEFAULT_RETRY.maxAttempts)
-        : 1;
+      // Counted for every status: the worker leaves a failing `configuring`
+      // connection in `configuring`, and it must reach the fifth attempt too.
+      // The worker dead-letters on `DEFAULT_RETRY`, so the count is on it too.
+      const attempt = 1 + await consecutiveFailures(db, c, DEFAULT_RETRY.maxAttempts);
       await run(c, adapter, 'scheduled', attempt);
     }
   }
