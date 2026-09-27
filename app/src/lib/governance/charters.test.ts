@@ -40,5 +40,11 @@ describe('product charters', () => {
     expect(gate).toMatch(/institutionalOperations: featureState\(env, 'VITE_INSTITUTIONAL_OPERATIONS'/);
     expect(c.killSwitch).toContain('VITE_INSTITUTIONAL_OPERATIONS');
     expect(FLAGS.find((f) => f.key === c.flag)!.rollback).toContain('VITE_INSTITUTIONAL_OPERATIONS');
+    // University gates the studio on a verified outcomes:read, so the charter
+    // names that gate and does not call it missing or open work.
+    const university = readFileSync(new URL('../../screens/University.tsx', import.meta.url), 'utf8');
+    expect(university).toMatch(/operationsAllowed\(VERIFIED_CAPABILITIES\)/);
+    expect(c.killSwitch).toContain('outcomes:read');
+    expect(c.killSwitch).not.toMatch(/open work|checks outcomes:read/);
   });
 });
