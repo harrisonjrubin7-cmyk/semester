@@ -170,6 +170,17 @@ const NOT_CONTENT = new Set([
    */
   'canonical_entity_references',
   'consent_record',
+  /*
+   * A private beta's membership, feedback and exit record. Not because they
+   * are nothing — the feedback is the person's words — but because an account
+   * this flow could retire can never have them: joining needs an invitation
+   * to a *confirmed* address, and a provisioned account's address is on a
+   * domain that cannot receive mail (`provisionedEmail` above), so no
+   * invitation can match it. `20260928010000_private_beta.sql`.
+   */
+  'beta_memberships',
+  'beta_feedback',
+  'beta_exit_requests',
 ]);
 
 /**

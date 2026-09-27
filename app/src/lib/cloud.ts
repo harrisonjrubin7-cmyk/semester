@@ -961,6 +961,13 @@ export const OWNED_TABLES: OwnedTable[] = [
   // removes both sides, which one filtered DELETE cannot express, while its
   // audit trigger leaves only pseudonyms behind.
   { table: 'support_access_grant', column: null, via: 'forget_my_support_access' },
+  // A private beta you joined: the membership, and through it what you sent
+  // as beta feedback and why you left. The tables have no grant at all, so a
+  // filtered DELETE cannot reach them; the RPC removes the memberships (the
+  // other two cascade) and any beta invitation to your confirmed address.
+  { table: 'beta_memberships', column: null, via: 'forget_my_beta' },
+  { table: 'beta_feedback', column: null, cascadesFrom: 'beta_memberships' },
+  { table: 'beta_exit_requests', column: null, cascadesFrom: 'beta_memberships' },
   // The record of who read the rows above, which is about the account and so
   // goes with it. `access.check.sql` proves the delete policy that makes this
   // line work, and proves a stranger cannot use it to clear somebody else's.

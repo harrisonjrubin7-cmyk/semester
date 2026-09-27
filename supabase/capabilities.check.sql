@@ -170,15 +170,21 @@ begin
   select private.has_capability('platform:configure') into a;
   perform pg_temp.answered('and may not configure the platform', a, false);
 
-  -- `platform_admin` carries three capabilities and not this one. Asserted out
-  -- of the matrix rather than by granting it, because the claim is about what
-  -- the seeded rows say.
+  -- `platform_admin` carries five capabilities and not this one: the three it
+  -- was created with, and running the private beta
+  -- (20260928010000_private_beta.sql). Asserted out of the matrix rather than
+  -- by granting it, because the claim is about what the seeded rows say — and
+  -- asserted as the exact set, so a sixth cannot arrive in passing.
   set local role postgres;
   select count(*) into n from public.role_capabilities
    where role = 'platform_admin' and capability = 'member:manage';
   perform pg_temp.counted('platform_admin does not implicitly hold member:manage', n, 0);
   select count(*) into n from public.role_capabilities where role = 'platform_admin';
-  perform pg_temp.counted('it holds exactly the three it was given', n, 3);
+  perform pg_temp.counted('it holds exactly the five it was given', n, 5);
+  select count(*) into n from public.role_capabilities where role = 'platform_admin'
+     and capability not in ('report:read', 'moderation:action', 'platform:configure',
+                            'beta:manage', 'beta:triage');
+  perform pg_temp.counted('and they are those five', n, 0);
 
   -- ── The split, as a measurement ────────────────────────────────────────
   --
@@ -229,14 +235,16 @@ begin
   select count(*) into n from public.role_capabilities;
   -- Twenty original rows, thirty-seven expansion rows, eight from the
   -- integration control plane (four for integration_admin, three for
-  -- university_admin, one for incident_responder), and eight staff roles that
-  -- answer help requests (the help_requests migration), and two from the
+  -- university_admin, one for incident_responder), eight staff roles that
+  -- answer help requests (the help_requests migration), two from the
   -- governance registries (portfolio_council → governance:decide,
   -- incident_responder → incident:communicate), seven learner and
   -- teaching roles → lti:launch (20260928015315_lti_launch_capability.sql),
-  -- five community rows, and one from integration quality
-  -- (integration_admin → integration:reconcile).
-  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 88);
+  -- five community rows, one from integration quality
+  -- (integration_admin → integration:reconcile), and three from the private
+  -- beta (beta:manage and beta:triage for platform_admin, beta:triage for
+  -- support_agent).
+  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 91);
 
   perform pg_temp.become_anon();
   perform pg_temp.refused('a signed-out visitor cannot read the matrix',

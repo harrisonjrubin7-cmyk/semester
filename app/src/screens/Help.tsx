@@ -4,6 +4,8 @@ import { Page } from '../components/Page';
 import { build, toMarkdown, type Section } from '../lib/guidebook';
 import { download } from '../lib/deliver';
 import { useStore } from '../state/store';
+import { BetaPanel } from '../components/BetaPanel';
+import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
 
 /**
  * The guide, in the app.
@@ -22,7 +24,7 @@ import { useStore } from '../state/store';
  * smaller than the dependency that would parse all of it.
  */
 export function Help() {
-  const { dispatch } = useStore();
+  const { dispatch, account } = useStore();
   const book = useMemo(() => build(), []);
   const [open, setOpen] = useState<string | null>('what');
 
@@ -57,6 +59,7 @@ export function Help() {
       }
     >
         <>
+          {EXPERIENCE_FLAGS.privateBeta !== 'off' && <BetaPanel account={account} />}
           {book.sections.map((s) => (
             <Chapter
               key={s.id}

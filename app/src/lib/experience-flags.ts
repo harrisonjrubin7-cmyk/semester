@@ -16,6 +16,12 @@ export interface ExperienceFlags {
    * curriculum simulation, evidence, developer platform and readiness.
    */
   institutionalOperations: FeatureState;
+  /**
+   * The private-beta panel on Help. Never on in an institutional preview:
+   * everything it shows comes from a real account's membership, which a
+   * preview does not have. Membership still decides whether anything draws.
+   */
+  privateBeta: FeatureState;
 }
 
 const STATES: readonly FeatureState[] = ['off', 'preview', 'sandbox', 'production'];
@@ -38,6 +44,7 @@ export function experienceFlags(env: PreviewEnv): ExperienceFlags {
     humanHelp: featureState(env, 'VITE_HUMAN_HELP', preview),
     integrationDashboard: featureState(env, 'VITE_INTEGRATION_DASHBOARD', preview),
     institutionalOperations: featureState(env, 'VITE_INSTITUTIONAL_OPERATIONS', preview),
+    privateBeta: featureState(env, 'VITE_PRIVATE_BETA', false),
   };
 }
 

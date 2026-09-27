@@ -282,6 +282,11 @@ behind and a client that believes it succeeded.
 | `community_media_blocklist` | **kept until an appeal restores the image, or with the school** | the hashes of an image a reviewer removed, so a re-upload is held. No file and no account id; who added it is a hash |
 | `community_media_deletions` | **until the service role confirms the file is gone** | the storage path of a file whose row was deleted, queued for the scanner to remove from the bucket. Never queued for a known-abuse match |
 | `community_retention_runs` | **1 year**, trimmed by the same sweep | the count of what each sweep removed and when, so a stalled job is visible. No row names a person |
+| `beta_programs`, `beta_cohorts`, `beta_feature_flags` | **kept until an administrator removes the program** | configuration of an invite-only beta; names nobody. The creator column is cleared on that account's deletion. Removing a program cascades to everything below. `20260928010000_private_beta.sql` |
+| `beta_invitations` | **until the invited address's account is deleted, or the program is removed** | an address invited to one cohort. `forget_my_beta()` removes invitations to the deleting account's confirmed address. An invitation that is never taken up has no clock yet. The same address also goes on `invites`, which answers for itself below |
+| `beta_memberships` | **account deletion** | who joined which cohort and when they left. Leaving sets the left-at time and keeps the row, so the program can see its own turnover; `forget_my_beta()` (the `via` in `OWNED_TABLES`) removes it |
+| `beta_feedback`, `beta_exit_requests` | **account deletion, by cascade from the membership** | what a member wrote to the beta and why they left. Triage reads feedback without the sender's identity, through the queue function; leaving the beta does not delete it, deleting the account does |
+| `beta_known_issues` | **kept until an administrator removes it or the program** | what the program publishes to its members. The creator column is cleared on that account's deletion |
 | `invites`, `access_gate` | **no answer yet** — see below | |
 
 ## What has no answer, stated rather than rounded off
