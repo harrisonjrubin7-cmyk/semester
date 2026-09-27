@@ -338,4 +338,33 @@ begin
   perform pg_temp.counted('which opens again once it is released (the control)', pg_temp.opened(token, 'privacy-disclosure'), 1);
 end $$;
 
+-- ── The bucket ───────────────────────────────────────────────────────────
+--
+-- Plain Postgres has no storage schema, so the migration skipped this. A
+-- stand-in with the columns the function writes, and one pre-existing public
+-- bucket of the same name, which must come out private.
+
+do $$
+declare b record;
+begin
+  create schema if not exists storage;
+  create table storage.buckets (id text primary key, name text not null, public boolean not null default false,
+                                file_size_limit bigint, allowed_mime_types text[]);
+  insert into storage.buckets (id, name, public) values ('trust-packet', 'trust-packet', true);
+  perform private.trust_packet_bucket_ensure();
+  select * into b from storage.buckets where id = 'trust-packet';
+  perform pg_temp.said('a public bucket of that name is made private', b.public::text, 'false');
+  perform pg_temp.said('files are capped at 25 MB', b.file_size_limit::text, '26214400');
+  perform pg_temp.said('and only documents may be stored',
+    (b.allowed_mime_types = array['application/pdf', 'text/markdown', 'text/csv', 'text/plain'])::text, 'true');
+  delete from storage.buckets;
+  perform private.trust_packet_bucket_ensure();
+  perform private.trust_packet_bucket_ensure();
+  perform pg_temp.counted('on an empty project it creates exactly one, and running it twice changes nothing',
+    (select count(*) from storage.buckets where id = 'trust-packet' and not public), 1);
+  perform pg_temp.said('nobody signed in or out can call it',
+    (has_function_privilege('anon', 'private.trust_packet_bucket_ensure()', 'execute')
+     or has_function_privilege('authenticated', 'private.trust_packet_bucket_ensure()', 'execute'))::text, 'false');
+end $$;
+
 rollback;

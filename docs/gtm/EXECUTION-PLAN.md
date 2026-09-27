@@ -69,7 +69,14 @@ only the account team (`account_executive`) grants or revokes access. An institu
 their own room (who asked, what was granted, every open) once their account is linked to their school.
 
 The reviewer has no Semester account, and nothing in `public` may be callable by a signed-out visitor. So a
-link is opened through `trust_room_open`, which only the service key can execute. A wrong, revoked or expired
+link is opened through `trust_room_open`, which only the service key can execute. That caller is the `trust-room` server
+function ([`supabase/functions/trust-room`](../../supabase/functions/trust-room/index.ts), with its rules in
+[`_shared/trustroom.ts`](../../supabase/functions/_shared/trustroom.ts)). It accepts only `POST` with the token in
+the body, so the token never appears in a URL. It returns the list of documents a grant covers without any
+storage paths, or a one-minute signed URL for one document in the private `trust-packet` bucket. Every refusal
+is the same 404, and every response is `no-store` and `no-referrer`. Merging deploys it, but it stays inert until
+a trust officer publishes a document and the account team mints a grant. `supabase/DEPLOY.md` records why its
+JWT check is off, and why its snapshot row starts out `pending`. A wrong, revoked or expired
 token returns nothing and gives no reason. Engaging the global `kill.sharing` switch stops every grant and
 every open.
 
@@ -87,10 +94,10 @@ every open.
 
 ## Still to build (§15 backlog), in the order the plan's launch sequence (§18) needs it
 
-1. **The procurement room's file server**: a Supabase server function that takes a link token, calls
-   `trust_room_open` with the service key, and hands back a short-lived signed URL into a private `trust-packet`
-   bucket. Server functions deploy on merge, so it gets its own reviewed change. Until it exists, a minted link
-   opens nothing.
+1. **The reviewer's page**: the one screen a university reviewer opens. It reads the link token from the URL
+   fragment (never the query string, which servers log), posts it to the `trust-room` function, lists what the
+   grant covers, and opens each document through its one-minute signed URL. It belongs wherever the public
+   Trust Center goes (item 2).
 2. **Public Trust Center pages** (§3.3): these wait for #829 (the packet's contents and tiers) and #776 (the public
    site, whose hosting is the owner's decision). The public-tier rows of `trust_artifacts` are what they render.
 3. **Workflow pages**: two or three, following the §3.2 template. Check the public-site work in progress first

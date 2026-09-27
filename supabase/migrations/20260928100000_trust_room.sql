@@ -383,7 +383,41 @@ drop policy if exists "the account's readers read every open" on public.trust_ro
 create policy "the account's readers read every open" on public.trust_room_access_log
   for select to authenticated using (private.gtm_account_visible(private.trust_grant_account(grant_id)));
 
--- ── 6. Descriptions ───────────────────────────────────────────────────────
+-- ── 6. The private bucket the file server signs into ───────────────────────
+--
+-- `trust-packet` holds the documents `trust_artifact_versions.storage_ref`
+-- points at. It is private: no storage policy grants anon or authenticated
+-- anything on it, so the only way to a file is a one-minute URL signed by the
+-- file server (supabase/functions/_shared/trustroom.ts) after
+-- `trust_room_open` has said yes. If a bucket of that name already exists and
+-- is public, it is made private rather than trusted.
+--
+-- Plain Postgres (supabase/check.sh, rehearse.sh) has no `storage` schema, so
+-- the call below is skipped there; trust-room.check.sql builds a stand-in
+-- `storage.buckets` and runs this same function against it.
+create or replace function private.trust_packet_bucket_ensure()
+returns void language plpgsql set search_path = '' as $$
+begin
+  execute $b$
+    insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+    values ('trust-packet', 'trust-packet', false, 26214400,
+            array['application/pdf', 'text/markdown', 'text/csv', 'text/plain'])
+    on conflict (id) do update
+      set public = false,
+          file_size_limit = excluded.file_size_limit,
+          allowed_mime_types = excluded.allowed_mime_types
+  $b$;
+end $$;
+revoke all on function private.trust_packet_bucket_ensure() from public, anon, authenticated;
+
+do $$
+begin
+  if to_regclass('storage.buckets') is not null then
+    perform private.trust_packet_bucket_ensure();
+  end if;
+end $$;
+
+-- ── 7. Descriptions ───────────────────────────────────────────────────────
 
 comment on table public.trust_artifacts is
   'A trust-packet item (docs/SECURITY-ACCESSIBILITY-READINESS.md), its tier and its owner.';
