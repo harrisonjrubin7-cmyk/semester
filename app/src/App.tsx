@@ -71,7 +71,9 @@ import { ShelfNav } from './components/nav/ShelfNav';
 import { InstitutionalNavigation } from './components/nav/InstitutionalPrimaryNav';
 import { INSTITUTIONAL_PREVIEW } from './lib/institutional-preview';
 import { SoftTop } from './components/soft/SoftTop';
-import { barFor, litRailTab, litTab, tabLabel } from './lib/tabbar';
+import { barForMode, labelForMode, litForMode } from './lib/tabbar';
+import { EXPERIENCE_FLAGS } from './lib/experience-flags';
+
 import { TabGlyph } from './components/TabIcon';
 import { Running } from './components/Running';
 import { Keys } from './components/Keys';
@@ -103,6 +105,9 @@ import { windowTitle } from './a11y/title';
 import type { Screen } from './lib/types';
 import { InstitutionalPreviewRoot } from './components/institutional/PreviewRoot';
 import { forRole } from './lib/role';
+
+/** D-003: the five student destinations, when `journeyNavigation` is on. */
+const FIVE = EXPERIENCE_FLAGS.journeyNavigation !== 'off';
 
 /**
  * What fills the column while a screen's chunk is in flight.
@@ -566,14 +571,14 @@ function TabBar() {
   // student arranged, minus anything the school or the role has since taken
   // off the table — see `barFor`. `litTab` rather than `rootOf` because a
   // chosen bar can hold a screen and the tab it files under at the same time.
-  const tabs = barFor(state.tabs, school.capabilities, state.role);
-  const here = litTab(state.screen, tabs);
+  const tabs = barForMode(state.tabs, school.capabilities, state.role, FIVE);
+  const here = litForMode(state.screen, tabs, FIVE);
   const labelled = state.labels !== 'off';
 
   return (
     <nav ref={bar} className="safe-bottom app-tabs" aria-label="Sections">
       {tabs.map((id) => {
-        const label = tabLabel(id);
+        const label = labelForMode(id, FIVE);
         // Lit for the screen itself and for everything nested under it, so a
         // flashcard three levels deep still shows you are inside Study.
         const on = here === id;
@@ -892,7 +897,7 @@ function Rail() {
   // Through the same gate as the bar: the rail is the same list on a wider
   // screen, and a screen hidden from this role must not survive by being on
   // a laptop.
-  const tabs = barFor(state.tabs, school.capabilities, state.role);
+  const tabs = barForMode(state.tabs, school.capabilities, state.role, FIVE);
   // The rail keeps its labels whatever the tab bar does: it is a wide-screen
   // sidebar with room for words, and the setting exists to buy height back on
   // a phone, which the rail is not on.
@@ -908,17 +913,14 @@ function Rail() {
     .filter((d) => !tabs.includes(d.screen));
   // Whichever of those the rail ended up drawing, so `litRailTab` knows which
   // screens this nav already has a row of its own for.
-  const here = litRailTab(
-    state.screen,
-    tabs,
-    extras.map((d) => d.screen),
-  );
+  // `litRailTab`'s rule, with the five-destination nesting when that is on.
+  const here = extras.some((d) => d.screen === state.screen) ? null : litForMode(state.screen, tabs, FIVE);
 
   return (
     <nav className="rail" aria-label="Sections">
       <Wordmark className="rail-mark" />
       {tabs.map((id) => {
-        const label = tabLabel(id);
+        const label = labelForMode(id, FIVE);
         const on = here === id;
         return (
           <button
