@@ -53,6 +53,11 @@
  * do it — every one in this app is a screen with a preview and a button — and
  * a list that mixes "go to the calendar" with "delete this course" is a list
  * where one wrong Enter is unrecoverable.
+ *
+ * What it does carry, on the empty page, is a row of quick actions that
+ * change nothing you cannot see and undo: open the capture sheet, start a
+ * timer, switch Focus mode. `components/unity/QuickActions.tsx` holds that
+ * line, and ⌘K / Ctrl+K opens this page as well as `/` — see `lib/keys.ts`.
  */
 
 import { useEffect, useMemo, useRef, useState, type RefObject } from 'react';
@@ -68,6 +73,7 @@ import { Wordmark } from './Brand';
 import { AskIcon, ClocksIcon, Search as SearchIcon, SpeakerIcon, SpeakerOffIcon } from './Icons';
 import { TabGlyph } from './TabIcon';
 import { TabStrip } from './Tabs';
+import { QuickActions } from './unity/QuickActions';
 import { BookmarkChips } from './Bookmarks';
 import { here, openInNew, pickTab, record, recordSearch, useStrip } from '../lib/browser.hook';
 import { justGo, tabAt } from '../lib/browser';
@@ -750,6 +756,9 @@ export function Command({ onClose }: { onClose: () => void }) {
                 </button>
               )}
             </div>
+            {/* The reversible actions, and only those — see the note in
+                `components/unity/QuickActions.tsx` and "No commands" above. */}
+            <QuickActions onDone={onClose} />
           </div>
         ) : (
           <div style={{ width: '100%', maxWidth: size.column, margin: '0 auto', padding: '0 var(--sp-7) var(--sp-7)' }}>

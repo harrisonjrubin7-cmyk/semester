@@ -233,6 +233,12 @@ export const STRATEGY: Record<string, Strategy> = {
   // The home screen's icons, for exactly the same reason: dragging them back
   // into place on the second device is the work these keys exist to avoid.
   boardOrder: 'theirs',
+  // How much of a workspace is drawn is a fact about how the person works,
+  // like the body face — the same on the laptop as on the phone.
+  workspaceMode: 'theirs',
+  // The command centre's pins are an arrangement made once, on purpose.
+  pinned: 'theirs',
+  goal: 'theirs',
   // The workspace's shortcuts, and the third arrangement somebody makes once
   // on purpose. Same argument again: pinning Study and Calendar back on the
   // laptop is the work these keys exist to avoid. `lib/desk.ts` resolves the

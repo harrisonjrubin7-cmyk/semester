@@ -2421,14 +2421,17 @@ a:hover {
  * `outline: none` on `:focus-visible` again.
  */
 .device :focus-visible {
-  outline: 2px solid var(--app-accent-deep);
-  outline-offset: 2px;
+  /* The width stays a literal: `a11y/focus.test.ts` reads it as the proof the
+     ring is an outline. Colour, offset and clearances are the named tokens in
+     `styles/tokens.css`, at the same values. */
+  outline: 2px solid var(--focus-color);
+  outline-offset: var(--focus-ring-offset);
   border-radius: var(--r-sm);
   /* Tabbing scrolls the focused control into view, and the frosted header sits
      on top of the scroller — so without this the thing you just focused lands
      underneath it and the ring is half hidden. */
-  scroll-margin-top: 96px;
-  scroll-margin-bottom: 84px;
+  scroll-margin-top: var(--focus-clear-top);
+  scroll-margin-bottom: var(--focus-clear-bottom);
 }
 
 /*
@@ -7322,6 +7325,31 @@ section[data-drop] > .grip + * {
   display: flex;
   flex-direction: column;
   margin: 0 0 var(--sp-2);
+}
+
+/* The briefing's text actions and timeline rows had no base style of their
+   own, so every one drew as the browser's grey default button — "View My
+   Path", "Not now", "See full plan" and each of the next-72-hours rows. The
+   reset `.bare` gives everywhere else, scoped to this surface, with the text
+   actions drawn quiet and underlined like the app's other in-line links. */
+.today-decision-surface .workspace-text-button,
+.today-timeline-row {
+  appearance: none;
+  background: none;
+  border: 0;
+  margin: 0;
+  font: inherit;
+  cursor: pointer;
+}
+
+.today-decision-surface .workspace-text-button {
+  display: inline-block;
+  min-height: var(--target-min);
+  padding: 0;
+  font-size: var(--type-sm);
+  color: var(--app-dim);
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
 }
 
 .today-timeline-row {

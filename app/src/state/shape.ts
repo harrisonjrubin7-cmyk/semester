@@ -637,6 +637,15 @@ export interface Persisted {
   /** A dragged accent hue, 0–360, or -1 for "use the named accent". */
   hue: number;
   /**
+   * `guided`, `focused`, `detailed` or `access` — how much of each workspace
+   * is drawn. Presentation only: see `WORKSPACE_MODES` in `lib/look.ts`.
+   */
+  workspaceMode: string;
+  /** The widgets pinned to Today's command centre, comma-separated ids. Empty is nobody has chosen. */
+  pinned: string;
+  /** What the student said would help most on first open. Empty until they say. See `lib/goals.ts`. */
+  goal: string;
+  /**
    * Whether the ten ways to study stay unrolled on a guide.
    *
    * Open is right the first time — otherwise six of the ten are a feature
@@ -1503,6 +1512,9 @@ export const DEFAULT_PERSISTED: Persisted = {
   groupOrder: '',
   boardOrder: '',
   hue: -1,
+  workspaceMode: 'guided',
+  pinned: '',
+  goal: '',
 };
 
 /** The look, gathered off the state it is spread across. */
@@ -1530,6 +1542,9 @@ export function currentLook(state: Persisted): Look {
     groupOrder: state.groupOrder,
     boardOrder: state.boardOrder,
     hue: state.hue,
+    workspaceMode: state.workspaceMode,
+    pinned: state.pinned,
+    goal: state.goal,
   };
 }
 
@@ -2041,6 +2056,9 @@ export function pickPersisted(state: State): Persisted {
     groupOrder: state.groupOrder,
     boardOrder: state.boardOrder,
     hue: state.hue,
+    workspaceMode: state.workspaceMode,
+    pinned: state.pinned,
+    goal: state.goal,
   };
 }
 

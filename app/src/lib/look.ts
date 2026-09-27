@@ -552,6 +552,34 @@ export function calmOf(id: string | undefined): string {
 }
 
 /**
+ * How much of each workspace is drawn — the four presentation modes.
+ *
+ * Presentation only, and that is a rule rather than a description: a mode
+ * changes what is shown first and what waits behind a disclosure, never what
+ * the student is allowed to do. Nothing that checks a permission or a
+ * capability reads this. `components/unity/modes.test.tsx` holds that.
+ *
+ * `access` is not a fifth palette. It turns on the accessibility settings the
+ * app already has — larger text, comfortable spacing, less motion — through
+ * `ACCESS_LOOK`, so there is one text-size setting and not two that disagree.
+ */
+export const WORKSPACE_MODES = [
+  { id: 'guided', label: 'Guided', blurb: 'Next steps and short explanations alongside the work.' },
+  { id: 'focused', label: 'Focused', blurb: 'The current work, its sources and save state — navigation steps back.' },
+  { id: 'detailed', label: 'Detailed', blurb: 'Sources, metadata and deadlines shown up front.' },
+  { id: 'access', label: 'Accessibility', blurb: 'Larger text, more space and less motion, from your own settings.' },
+] as const;
+
+export type WorkspaceMode = (typeof WORKSPACE_MODES)[number]['id'];
+
+export function workspaceModeOf(id: string | undefined): WorkspaceMode {
+  return WORKSPACE_MODES.find((m) => m.id === id)?.id ?? 'guided';
+}
+
+/** What choosing Accessibility asks of the existing settings. Nothing else. */
+export const ACCESS_LOOK = { textSize: 'large', density: 'comfortable', calm: 'still' } as const;
+
+/**
  * Whether this setting asks for motion to be reduced on its own account.
  *
  * `device` does not — it defers, and `lib/prefers.ts` asks the media query.
@@ -1284,6 +1312,12 @@ export interface Look {
    * string holding both would make a shelf called `dock` a real possibility.
    */
   boardOrder?: string;
+  /** How much of each workspace is drawn. See `WORKSPACE_MODES`. */
+  workspaceMode?: string;
+  /** Today's pinned command-centre widgets, comma-separated. See `lib/widgets.ts`. */
+  pinned?: string;
+  /** The first-session goal. See `lib/goals.ts`. */
+  goal?: string;
   /**
    * The shortcuts on the search home, as screen ids in the order they sit in.
    *
@@ -1662,6 +1696,11 @@ export function readLook(saved: Look | undefined): Required<Look> {
     shortcuts: saved?.shortcuts === 'off' ? 'off' : 'on',
     // -1 rather than 0, because 0 is red.
     hue: typeof saved?.hue === 'number' && saved.hue >= 0 && saved.hue <= 360 ? saved.hue : -1,
+    workspaceMode: workspaceModeOf(saved?.workspaceMode),
+    // Unvalidated here like `boardOrder`: `lib/widgets.ts` checks every id on
+    // the way out, so a stale list can only drop a widget, never draw a dead one.
+    pinned: typeof saved?.pinned === 'string' ? saved.pinned : '',
+    goal: typeof saved?.goal === 'string' ? saved.goal : '',
   };
 }
 

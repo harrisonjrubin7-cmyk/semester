@@ -30,6 +30,7 @@ import {
   resolveGround,
 } from '../../lib/look';
 import { Folding } from '../../components/Fold';
+import { WorkspaceModePicker } from '../../components/unity/modes';
 
 /**
  * A hue you can drag, with the reason it is safe to offer.
@@ -508,6 +509,16 @@ export function SettingsLook() {
               options={CALMS.map((c) => ({ id: c.id, label: c.label, sub: c.blurb }))}
               onChange={(calm) => dispatch({ type: 'setLook', look: { calm } })}
             />
+          </Group>
+
+          <Group
+            header="Workspace mode"
+            footer="Guided shows next steps and explanations; Focused steps the navigation back; Detailed puts sources and metadata up front; Accessibility turns on larger text, more space and less motion. None of them changes what you can do."
+            lit={lights('workspace mode guided focused focus detailed accessibility distraction deep work', lit)}
+          >
+            <CustomRow>
+              <WorkspaceModePicker />
+            </CustomRow>
           </Group>
 
           <Group

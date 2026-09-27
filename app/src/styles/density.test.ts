@@ -80,6 +80,8 @@ describe('spacing written past the tokens', () => {
     ['app.css', 8],
     ['industry.css', 0],
     ['features.css', 0],
+    ['tokens.css', 0],
+    ['unity.css', 0],
   ])('%s holds no more than its %i', (file, allowed) => {
     const found = unscaled(file);
     expect(

@@ -3,6 +3,7 @@ import { useStore } from '../../state/store';
 import { NavRow, Group } from '../../components/shell/Rows';
 import { SETTINGS, SEARCH_PLACEHOLDER, findSetting, markLooking, nothingFound } from '../../lib/settings';
 import type { Screen } from '../../lib/types';
+import { statusOf, syncStatusKey } from '../../lib/status';
 
 /**
  * Settings, as an index.
@@ -32,16 +33,9 @@ export function SettingsIndex() {
     setQuery('');
   };
 
-  const standing =
-    sync.status === 'synced'
-      ? 'Synced'
-      : sync.status === 'signed-out'
-        ? 'Not signed in'
-        : sync.status === 'syncing'
-          ? 'Syncing'
-          : sync.status === 'error'
-            ? 'Sync trouble'
-            : 'On this device only';
+  // The words are `lib/status.ts`'s, so this and the soft layout's card
+  // cannot name the same state two ways.
+  const standing = statusOf(syncStatusKey(sync.status)).label;
 
   return (
     // In whichever layout the app is set to, for the reason in `Page.tsx`:
