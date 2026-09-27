@@ -42,9 +42,9 @@ const DEVICE = 'device';
 
 /*
  * How dates and numbers are written. Only while `VITE_ME_LANGUAGE` is on — see
- * `lib/locale.ts`. Choosing reloads, because a formatted date is baked into
- * whatever a screen memoized, and a half-changed calendar is worse than a
- * reload.
+ * `lib/locale.ts`. Choosing reloads once the choice is stored, because a
+ * formatted date is baked into whatever a screen memoized, and a half-changed
+ * calendar is worse than a reload.
  */
 function DatesAndNumbers({ lit }: { lit: boolean }) {
   const example = new Date(2026, 8, 27, 14, 45);
@@ -62,8 +62,10 @@ function DatesAndNumbers({ lit }: { lit: boolean }) {
           ...FORMAT_LOCALES.map((l) => ({ id: l.tag, label: l.name, sub: l.name === l.english ? undefined : l.english })),
         ]}
         onChange={(id) => {
-          setChosenLocale(id === DEVICE ? null : id);
-          window.location.reload();
+          // Reload only once it is stored: a reload after a refused write
+          // would drop the choice. Unstored, it holds for this page, and
+          // what is drawn from now on uses it.
+          if (setChosenLocale(id === DEVICE ? null : id)) window.location.reload();
         }}
       />
     </Group>

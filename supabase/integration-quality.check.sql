@@ -115,7 +115,7 @@ end $$;
 do $$
 declare
   integ uuid; integ_b uuid; uadmin uuid; student uuid; platform uuid;
-  conn uuid; conn_b uuid; run uuid; recon uuid; disc uuid; drift uuid; cand uuid; res uuid; ver uuid;
+  conn uuid; conn_b uuid; run uuid; recon uuid; disc uuid; drift uuid; cand uuid; cand3 uuid; res uuid; ver uuid;
   who uuid; st text; n bigint;
 begin
   insert into public.schools (id, name, email_domains) values
@@ -182,6 +182,9 @@ begin
     'select 1 from private.integration_simulation_runs');
   perform pg_temp.expect_refused('the integration admin reads the simulation runs through the API role', integ,
     'select 1 from private.integration_simulation_runs');
+  perform pg_temp.counted('the worker, as the service role, can record a simulation run',
+    (has_table_privilege('service_role', 'private.integration_simulation_runs', 'INSERT')
+     and has_table_privilege('service_role', 'private.integration_simulation_runs', 'SELECT'))::int, 1);
   perform pg_temp.expect_refused('a signed-in account writes a reconciliation run', integ,
     format($q$insert into public.integration_reconciliation_runs (tenant_id, connection_id) values ('iq-a', %L)$q$, conn));
 
@@ -222,6 +225,20 @@ begin
   perform pg_temp.expect_refused('a resolution keeping a record outside the group', integ,
     format($q$insert into public.integration_duplicate_resolutions (tenant_id, candidate_id, kept, superseded, before)
               values ('iq-a', %L, 'c-other', array['c-old'], '{}')$q$, cand));
+  insert into public.integration_duplicate_candidates (tenant_id, canonical_entity, key_hash, members, suggested_keep)
+  values ('iq-a', 'course_section', '4e5f6a7b', array['t-1', 't-2', 't-3'], 't-1') returning id into cand3;
+  perform pg_temp.expect_refused('a resolution that leaves a member of its group unresolved', integ,
+    format($q$insert into public.integration_duplicate_resolutions (tenant_id, candidate_id, kept, superseded, before)
+              values ('iq-a', %L, 't-1', array['t-2'], '{}')$q$, cand3));
+  perform pg_temp.expect_refused('a resolution that supersedes the record it keeps', integ,
+    format($q$insert into public.integration_duplicate_resolutions (tenant_id, candidate_id, kept, superseded, before)
+              values ('iq-a', %L, 't-1', array['t-1', 't-2', 't-3'], '{}')$q$, cand3));
+  perform pg_temp.expect_refused('a resolution that names a member twice', integ,
+    format($q$insert into public.integration_duplicate_resolutions (tenant_id, candidate_id, kept, superseded, before)
+              values ('iq-a', %L, 't-1', array['t-2', 't-2', 't-3'], '{}')$q$, cand3));
+  perform pg_temp.expect_allowed('a resolution that supersedes every other member', integ,
+    format($q$insert into public.integration_duplicate_resolutions (tenant_id, candidate_id, kept, superseded, before)
+              values ('iq-a', %L, 't-1', array['t-3', 't-2'], '{}')$q$, cand3));
   perform pg_temp.expect_refused('another school resolving it', integ_b,
     format($q$insert into public.integration_duplicate_resolutions (tenant_id, candidate_id, kept, superseded, before)
               values ('iq-a', %L, 'c-new', array['c-old'], '{}')$q$, cand));
@@ -265,6 +282,10 @@ begin
     format($q$update public.integration_mapping_versions set simulation_run = 'sim-1', simulation_verdict = 'blocked' where id = %L$q$, ver));
   perform pg_temp.expect_refused('approving after a blocked simulation', uadmin,
     format($q$update public.integration_mapping_versions set status = 'approved' where id = %L$q$, ver));
+  -- The approver cannot write a passing simulation in the same statement as the approval.
+  perform pg_temp.expect_refused('approving while writing a passing simulation in the same update', uadmin,
+    format($q$update public.integration_mapping_versions set status = 'approved', simulation_run = 'sim-forged',
+              simulation_verdict = 'ready' where id = %L$q$, ver));
   perform pg_temp.expect_allowed('recording a passing simulation', integ,
     format($q$update public.integration_mapping_versions set simulation_run = 'sim-2', simulation_verdict = 'ready' where id = %L$q$, ver));
   perform pg_temp.expect_refused('the integration admin approving (no integration:approve)', integ,

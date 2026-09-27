@@ -64,7 +64,7 @@ ignore the report.
 ## Built (Phase 1a, second slice): where results are kept, and who may act
 
 `supabase/migrations/20260928040000_integration_quality.sql`, walked by
-`supabase/integration-quality.check.sql` (60 checks) and added to
+`supabase/integration-quality.check.sql` (66 checks) and added to
 `supabase/integration-rls-matrix.check.sql`'s four-account sweep.
 
 - Ten tables beside #779's, plus `integration_simulation_runs` in the private
@@ -95,6 +95,15 @@ lets `null` through, and a version could be approved with no simulation at all.
 Fixed with an explicit `is not null`; the suite's "approving before a
 simulation" case is what found it. Three further planted faults — self-approval,
 an unredacted reference, a second acknowledgement — each turned the suite red.
+
+**Found in review (Codex, on #801):** three more holes, each now a check that
+failed before its fix. An approver could write a passing simulation and approve
+in the *same* update, because the simulation guard ran only while the status
+was unchanged — a status change now carries no simulation at all. A resolution
+of a three-record group could supersede just one member and leave the group
+half-resolved — it must now supersede every member but the kept one, each
+once. And the worker had no grant on `integration_simulation_runs`, because a
+private table does not inherit the public schema's default grants.
 
 **Next:** wiring drift and reconciliation into the sync worker so it writes
 these rows, and the dashboard views that read them.

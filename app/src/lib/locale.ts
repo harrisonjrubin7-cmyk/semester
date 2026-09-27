@@ -117,15 +117,20 @@ export function chosenLocale(): string | null {
 }
 
 /** Choose a locale, or `null` to go back to matching the device. */
-export function setChosenLocale(tag: string | null): void {
+/**
+ * Returns whether the choice was stored. When the browser will not store it,
+ * it is kept for this page only — so a caller must not reload after a
+ * `false`, which would throw the choice away.
+ */
+export function setChosenLocale(tag: string | null): boolean {
   const next = tag && OFFERED.has(tag) ? tag : null;
   chosen = next;
   try {
     if (next) globalThis.localStorage?.setItem(LOCALE_KEY, next);
     else globalThis.localStorage?.removeItem(LOCALE_KEY);
+    return true;
   } catch {
-    // Kept for this session; it will not survive a reload, which is the
-    // honest outcome when the browser will not store it.
+    return false;
   }
 }
 

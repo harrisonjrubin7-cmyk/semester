@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   FORMAT_LOCALES,
   LOCALE_KEY,
@@ -86,6 +86,21 @@ describe('the flag', () => {
     setLanguageFlag('preview');
     setChosenLocale('es');
     expect(appLocale()).toBe('es');
+  });
+
+  it('says whether the choice was stored, and keeps it for the page when it was not', () => {
+    setLanguageFlag('preview');
+    expect(setChosenLocale('es')).toBe(true);
+    const refuse = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new DOMException('blocked', 'SecurityError');
+    });
+    try {
+      // Settings reloads only on true; a reload here would drop the choice.
+      expect(setChosenLocale('de')).toBe(false);
+      expect(appLocale()).toBe('de');
+    } finally {
+      refuse.mockRestore();
+    }
   });
 });
 

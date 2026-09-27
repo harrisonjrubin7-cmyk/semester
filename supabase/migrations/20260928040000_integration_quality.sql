@@ -275,8 +275,8 @@ create index if not exists integration_duplicate_resolutions_by_decider
 create index if not exists integration_duplicate_resolutions_by_reverser
   on public.integration_duplicate_resolutions (reversed_by);
 
--- A resolution is written by the person deciding, keeps a member of its
--- candidate, and can be reversed once — by whoever reverses it. Nothing else
+-- A resolution is written by the person deciding, keeps one member of its
+-- candidate and supersedes all the others, and can be reversed once — by whoever reverses it. Nothing else
 -- about it can change.
 create or replace function private.guard_duplicate_resolution()
 returns trigger
@@ -288,9 +288,14 @@ begin
   if tg_op = 'INSERT' then
     select members into group_members from public.integration_duplicate_candidates
      where id = new.candidate_id and tenant_id = new.tenant_id;
+    -- Keeps one member and supersedes every other member exactly once, so the
+    -- group is resolved whole and its reversal restores the whole group.
     if group_members is null or not (new.kept = any (group_members))
-       or not (new.superseded <@ group_members) then
-      raise exception 'A resolution keeps and supersedes members of its own candidate.' using errcode = '23514';
+       or new.kept = any (new.superseded)
+       or cardinality(new.superseded) <> (select count(distinct m) from unnest(new.superseded) m)
+       or not (new.superseded <@ group_members)
+       or not (group_members <@ (new.superseded || new.kept)) then
+      raise exception 'A resolution keeps one member of its candidate and supersedes all the others.' using errcode = '23514';
     end if;
     new.decided_by := auth.uid();
     new.decided_at := now();
@@ -443,6 +448,13 @@ begin
       raise exception 'Approval and go-live are recorded by changing the status.' using errcode = '42501';
     end if;
   else
+    -- A status change carries no simulation: otherwise an approver could write
+    -- a passing verdict and approve in one statement, and the check below would
+    -- see a simulation nobody ran.
+    if new.simulation_run is distinct from old.simulation_run
+       or new.simulation_verdict is distinct from old.simulation_verdict then
+      raise exception 'A simulation is recorded on its own, before the status changes.' using errcode = '42501';
+    end if;
     if not private.has_capability('integration:approve', 'school', old.tenant_id)
        and auth.uid() is not null then
       raise exception 'Changing a version''s status needs integration:approve.' using errcode = '42501';
@@ -554,6 +566,9 @@ create index if not exists integration_simulation_runs_by_tenant on private.inte
 create index if not exists integration_simulation_runs_by_creator on private.integration_simulation_runs (created_by);
 alter table private.integration_simulation_runs enable row level security;
 revoke all on table private.integration_simulation_runs from public, anon, authenticated;
+-- The worker records runs as the service role; private tables do not inherit
+-- public's default grants, so it is granted here, as gateway_rate_limit is.
+grant select, insert on table private.integration_simulation_runs to service_role;
 
 -- ── 9. Row-level security and grants ─────────────────────────────────────
 
