@@ -69,6 +69,18 @@
   color: var(--text-primary);
 }
 
+/* Inside the ported portal workspaces (course hub, study studio, toolkit)
+   `.portal-workspace button` fills every button with a wash and pads it to
+   40px — it outranks `.bare`, so a quiet link there drew as a grey slab
+   across the card. Two classes outrank it back. */
+.bare.link-quiet {
+  min-height: 0;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: 0;
+}
+
 /* ── Context bar ────────────────────────────────────────────────────────── */
 
 .context-bar {
@@ -80,6 +92,18 @@
   background: var(--bar-surface);
   border: 1px solid var(--bar-border);
   border-radius: var(--card-shape);
+}
+
+/* A bar placed inside a surface that is already a card — the course
+   banner, a studio panel — takes that surface rather than drawing a card of
+   its own inside it. Cards inside cards are the thing the brief names. */
+.course-banner > .context-bar,
+.portal-panel > .context-bar,
+.blueprint > .context-bar {
+  padding: 0;
+  margin-block: 0 var(--sp-4);
+  background: none;
+  border: 0;
 }
 
 .context-bar-title {
@@ -105,6 +129,13 @@
   flex-wrap: wrap;
   align-items: center;
   gap: var(--sp-4);
+}
+
+/* In the drawn frame the bar is the screen's own object — a deadline — and
+   its title is set at the size that title had before, not a card's. */
+.blueprint > .context-bar .context-bar-title {
+  font-size: var(--type-display-lg);
+  line-height: var(--leading-display);
 }
 
 /* ── Object card ────────────────────────────────────────────────────────── */
