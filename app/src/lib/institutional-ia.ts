@@ -65,6 +65,7 @@ export const WORKSPACES: InstitutionalWorkspace[] = [
     screen: 'home',
     includes: [
       'home',
+      'launchpad',
       'brief',
       'calendar',
       'runway',
@@ -105,19 +106,19 @@ export const WORKSPACES: InstitutionalWorkspace[] = [
     id: 'campus',
     label: 'Campus',
     screen: 'university',
-    includes: ['costs', 'meals', 'housing', 'maps', 'classmates', 'activities', 'people', 'family', 'athletics', 'university'],
+    includes: ['costs', 'meals', 'housing', 'maps', 'classmates', 'activities', 'people', 'family', 'athletics', 'support', 'university'],
   },
   {
     id: 'career',
     label: 'Career',
     screen: 'career',
-    includes: ['nil', 'applying', 'pathway', 'career'],
+    includes: ['nil', 'applying', 'pathway', 'opportunities', 'career'],
   },
   {
     id: 'messages',
     label: 'Messages',
     screen: 'mail',
-    includes: ['call', 'groupwork', 'mail'],
+    includes: ['hub', 'call', 'groupwork', 'mail'],
   },
 ];
 
