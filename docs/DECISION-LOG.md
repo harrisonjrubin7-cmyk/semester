@@ -163,6 +163,27 @@ Deployment note: `.github/workflows/functions.yml` deploys changed functions
 after CI passes on main, so **merging this to main is the production deploy**
 and needs owner approval.
 
+## D-033 · Quiz answers reach the review schedule only when the student sends them
+
+**Taken in P3.2 (self-quiz feedback).** (D-030 to D-032 are on their own open
+branches; D-013–D-029 belong to the feature-expansion work.) A quiz answer
+does not update the card's FSRS review by itself. A lucky guess would stretch
+the interval, and a slip on a known card would reset it. After a miss the
+student is offered **Review this card soon**, which records the miss through
+the existing `recordCard` action and can be undone (`restoreReview`).
+
+Students can also report a question: *the marked answer is wrong*, *more than
+one answer is right*, *the question is unclear*, or *I know this — stop asking
+it*. A report is kept on the device (`semester.quizfeedback.v1:{account}`,
+included in the workspace backup). It is sent nowhere, so it needs one tap
+and no confirmation. Its one effect is that `buildQuiz` leaves that card out
+of the student's quizzes, both as a question and as a decoy, until the report
+is taken back.
+
+Rejected: automatic FSRS updates from quiz answers; a hidden difficulty score;
+sending reports to an instructor, which would need its own preview,
+confirmation and recipient, and is left for the institution phase.
+
 ---
 
 # Feature-expansion command (27 Sep 2026)

@@ -10,6 +10,7 @@ import { REGISTRATION_KEY } from './registration-plan';
 import { LOCKER_KEY, readLocker } from './source-locker';
 import { READINESS_KEY, readReadiness } from './study-readiness';
 import { readAthletics } from './athletics';
+import { QUIZ_FEEDBACK_PREFIX, readQuizFeedback } from './quiz-feedback';
 import { readCareer } from './career';
 import { readCreations } from './creations';
 import { obj, textValue } from './device-library';
@@ -96,6 +97,12 @@ const DEFINITIONS: Record<string, Definition> = {
     prefix: 'semester.pathway.v1',
     scope: 'account',
     read: readPathway,
+  },
+  quizfeedback: {
+    label: 'Quiz questions you reported',
+    prefix: QUIZ_FEEDBACK_PREFIX,
+    scope: 'account',
+    read: readQuizFeedback,
   },
   actions: {
     label: 'What you did about your next steps',

@@ -332,3 +332,39 @@ describe('the run as a whole', () => {
     expect([...kinds].sort()).toEqual(['choice', 'match', 'truefalse']);
   });
 });
+
+describe('cards the student has left out', () => {
+  // `lib/quiz-feedback.ts` decides which; this is what building a run does with them.
+  const out = (q: string) => (c: { q: string }) => c.q === q;
+
+  it('never asks one, across many runs', () => {
+    for (let seed = 1; seed < 40; seed++) {
+      expect(buildQuiz(SIX, seed, out('Question two?')).map((q) => q.q), `seed ${seed}`).not.toContain('Question two?');
+    }
+  });
+
+  it('never borrows its answer as a decoy either', () => {
+    // An answer reported wrong is no better as the wrong option to something else.
+    for (let seed = 1; seed < 40; seed++) {
+      for (const q of buildQuiz(SIX, seed, out('Question two?'))) {
+        expect(q.opts.map((o) => o.text), `seed ${seed}`).not.toContain('Answer two.');
+        expect(q.claim ?? '', `seed ${seed}`).not.toBe('Answer two.');
+      }
+    }
+  });
+
+  it('asks nothing when too few answers are left, rather than a coin toss', () => {
+    // Six answers, three left out: three left is below the four a choice needs.
+    const three = (c: { q: string }) => ['Question one?', 'Question two?', 'Question three?'].includes(c.q);
+    expect(buildQuiz(SIX, 1)).not.toEqual([]);
+    expect(buildQuiz(SIX, 1, three)).toEqual([]);
+  });
+
+  it('carries the card id, so the screen can name the card', () => {
+    const withIds: Guide = { ...SIX, units: [{ ...SIX.units[0], cards: SIX.units[0].cards.map((c, i) => ({ ...c, id: `c${i}` })) }] };
+    for (const q of buildQuiz(withIds, 3).filter((x) => x.kind !== 'match')) {
+      expect(q.cardId).toMatch(/^c\d$/);
+    }
+    expect(buildQuiz(SIX, 3).every((q) => q.cardId === undefined)).toBe(true);
+  });
+});
