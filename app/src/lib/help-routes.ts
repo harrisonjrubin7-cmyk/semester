@@ -499,3 +499,81 @@ export async function answerRequest(
   });
   if (error) throw new Error(message(error, 'Could not update the request.'));
 }
+
+// ── From an action to a person ───────────────────────────────────────────
+//
+// The Action Center's "Ask for help" used to end in a note on the device and
+// a sentence telling the student to take it to someone. This is the bridge
+// that takes them there instead: the action becomes a need and some context,
+// and Get help opens on it.
+//
+// Three rules hold across the bridge, and each is a test:
+//   * **Pre-filled, never pre-ticked.** The action's title and date arrive in
+//     the fields, where the student can read and change them, and nothing is
+//     included until they tick it. The minimum-necessary default does not
+//     change because the app happened to know something.
+//   * **Nothing is stored to make the trip.** The seed is held in memory for
+//     the one navigation and taken on arrival. An action about a deadline is
+//     not written anywhere new because somebody pressed a button.
+//   * **Not every action has a person.** A setup step has no office, so it
+//     returns null and the caller keeps what it did before.
+//
+// The input is structural rather than `lib/actions.ts`'s `Action`, so this
+// file depends on no particular copy of the Action Center.
+
+export interface ActionLike {
+  type: string;
+  title: string;
+  dueAt?: number | null;
+}
+
+export interface HelpSeed {
+  need: NeedId;
+  fields: Partial<Record<ContextKey, string>>;
+  /** Shown above the form, so the student knows why it is filled in. */
+  from: string;
+}
+
+const dateLine = (at: number) =>
+  new Intl.DateTimeFormat(undefined, { weekday: 'short', month: 'short', day: 'numeric' }).format(new Date(at));
+
+/** Which need an action is about, and what to pre-fill. Null when no person is the answer. */
+export function helpFromAction(action: ActionLike): HelpSeed | null {
+  const title = action.title.trim().slice(0, FIELD_MAX);
+  const due = typeof action.dueAt === 'number' && Number.isFinite(action.dueAt) ? dateLine(action.dueAt) : null;
+  const from = `From your Action Center: ${title}`;
+  switch (action.type) {
+    case 'deadline':
+    case 'study':
+      return { need: 'course', from, fields: { assignment: title, ...(due ? { deadline: due } : {}) } };
+    case 'path':
+    case 'registration':
+      return { need: 'registration', from, fields: { requirement: title, ...(due ? { deadline: due } : {}) } };
+    default:
+      return null;
+  }
+}
+
+let pending: HelpSeed | null = null;
+
+/** Whether a seed is waiting, without taking it — for the screen choosing its tab. */
+export const helpSeedWaiting = (): boolean => pending !== null;
+
+/** The waiting seed, once. */
+export function takeHelpSeed(): HelpSeed | null {
+  const seed = pending;
+  pending = null;
+  return seed;
+}
+
+/**
+ * The Action Center's "Ask for help", when there is a person to ask. Returns
+ * false when there is not, so the caller can fall back to recording a note.
+ */
+export function askForHelp(action: ActionLike, go: () => void): boolean {
+  const seed = helpFromAction(action);
+  if (!seed) return false;
+  pending = seed;
+  go();
+  return true;
+}

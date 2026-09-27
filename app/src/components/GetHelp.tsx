@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { Account } from '../lib/cloud';
 import {
+  CONTEXT_KEYS,
   CONTEXT_TEXT,
   FIELD_MAX,
   IDENTITY_SENT,
@@ -17,10 +18,12 @@ import {
   preview,
   sendHelp,
   sendable,
+  takeHelpSeed,
   withdrawHelp,
   type ContextKey,
   type Destination,
   type Draft,
+  type HelpSeed,
   type NeedId,
   type SentRequest,
 } from '../lib/help-routes';
@@ -36,12 +39,16 @@ import { ActionButton, Notice, SectionLabel } from './ui';
  * useful before any integration exists.
  */
 export function GetHelp({ account }: { account: Account | null }) {
-  const [needId, setNeedId] = useState<NeedId | null>(null);
+  // Taken once, on first render: an Action Center "Ask for help" that led here.
+  const [seed] = useState<HelpSeed | null>(() => takeHelpSeed());
+  const [needId, setNeedId] = useState<NeedId | null>(seed?.need ?? null);
   const [destinations, setDestinations] = useState<Destination[]>([]);
   const [requests, setRequests] = useState<SentRequest[]>([]);
   const [myName, setMyName] = useState('');
   const [destinationId, setDestinationId] = useState('');
-  const [draft, setDraft] = useState<Draft>(emptyDraft);
+  // Pre-filled from the action, never pre-ticked: `ticked` starts empty either way.
+  const [draft, setDraft] = useState<Draft>(() => (seed ? { ...emptyDraft(), fields: { ...seed.fields } } : emptyDraft()));
+  const [from, setFrom] = useState(seed?.from ?? '');
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState('');
@@ -70,9 +77,15 @@ export function GetHelp({ account }: { account: Account | null }) {
   const office = offices.find((d) => d.id === destinationId) ?? null;
   const lines = preview(draft);
   const canSend = !!account && !!office?.acceptsRequests && !need?.directoryOnly;
+  // What the need offers, plus anything already filled in — a seeded deadline
+  // under course help is shown rather than carried invisibly.
+  const shown = need
+    ? CONTEXT_KEYS.filter((k) => need.offer.includes(k) || (draft.fields[k] ?? '').trim() !== '')
+    : [];
 
   const choose = (id: NeedId) => {
     setNeedId(id);
+    setFrom('');
     setDestinationId('');
     setDraft(emptyDraft());
     setConfirming(false);
@@ -118,6 +131,11 @@ export function GetHelp({ account }: { account: Account | null }) {
 
       {need && (
         <div className="portal-panel" style={{ display: 'grid', gap: 'var(--sp-4)' }}>
+          {from && (
+            <p style={{ margin: 0, color: 'var(--app-dim)' }}>
+              {from}. Its details are filled in below and not included until you tick them.
+            </p>
+          )}
           <p role="status">{need.note}</p>
 
           {offices.length > 0 && (
@@ -159,12 +177,12 @@ export function GetHelp({ account }: { account: Account | null }) {
                 />
               </label>
 
-              {need.offer.length > 0 && (
+              {shown.length > 0 && (
                 <fieldset style={{ border: 0, padding: 0, margin: 0, display: 'grid', gap: 'var(--sp-3)' }}>
                   <legend style={{ fontWeight: 600, marginBottom: 'var(--sp-2)' }}>
                     Add context (optional — only ticked lines are included)
                   </legend>
-                  {need.offer.map((key) => (
+                  {shown.map((key) => (
                     <div key={key} style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: 'var(--sp-3)', alignItems: 'center' }}>
                       <input
                         type="checkbox"

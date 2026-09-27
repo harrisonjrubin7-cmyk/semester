@@ -10,6 +10,10 @@ import {
   STAFF_MOVES,
   WITHDRAWABLE,
   answerRequest,
+  askForHelp,
+  helpFromAction,
+  helpSeedWaiting,
+  takeHelpSeed,
   asNote,
   emptyDraft,
   followUp,
@@ -171,5 +175,54 @@ describe('the staff side', () => {
     await expect(answerRequest('req', 'scheduled', 'acknowledged', '')).rejects.toThrow(/cannot be moved/);
     await expect(answerRequest('req', 'closed', 'scheduled', '')).rejects.toThrow(/cannot be moved/);
     await expect(answerRequest('req', 'sent', 'withdrawn', '')).rejects.toThrow(/cannot be moved/);
+  });
+});
+
+describe('from an Action Center action to a person', () => {
+  const DUE = Date.UTC(2099, 9, 14, 12);
+
+  it('a deadline becomes course help, with the assignment and date filled in', () => {
+    const seed = helpFromAction({ type: 'deadline', title: 'Problem Set 3', dueAt: DUE });
+    expect(seed?.need).toBe('course');
+    expect(seed?.fields.assignment).toBe('Problem Set 3');
+    expect(seed?.fields.deadline).toBeTruthy();
+    expect(seed?.from).toContain('Problem Set 3');
+  });
+
+  it('a path or registration action becomes advising help', () => {
+    expect(helpFromAction({ type: 'path', title: 'Statistics before PSY 340' })?.need).toBe('registration');
+    expect(helpFromAction({ type: 'registration', title: 'Pick backups' })?.fields).toEqual({ requirement: 'Pick backups' });
+  });
+
+  it('an action with no person to ask returns nothing, so the caller keeps its note', () => {
+    expect(helpFromAction({ type: 'setup', title: 'Add your courses' })).toBeNull();
+    expect(helpFromAction({ type: 'something-new', title: 'x' })).toBeNull();
+  });
+
+  it('pre-fills but never pre-ticks: the seed carries values, not consent', () => {
+    const seed = helpFromAction({ type: 'deadline', title: 'PS3', dueAt: DUE })!;
+    const d = { ...emptyDraft(), question: 'Stuck', fields: seed.fields };
+    expect(payload(d)).toEqual({ question: 'Stuck', context: {} });
+  });
+
+  it('every pre-filled key is in the vocabulary', () => {
+    for (const type of ['deadline', 'study', 'path', 'registration']) {
+      const seed = helpFromAction({ type, title: 't', dueAt: DUE })!;
+      for (const key of Object.keys(seed.fields)) expect(CONTEXT_KEYS).toContain(key);
+    }
+  });
+
+  it('hands the seed over once, and navigates only when there is a person to ask', () => {
+    let went = 0;
+    expect(askForHelp({ type: 'setup', title: 'x' }, () => went++)).toBe(false);
+    expect(went).toBe(0);
+    expect(helpSeedWaiting()).toBe(false);
+
+    expect(askForHelp({ type: 'deadline', title: 'PS3' }, () => went++)).toBe(true);
+    expect(went).toBe(1);
+    expect(helpSeedWaiting()).toBe(true);
+    expect(takeHelpSeed()?.fields.assignment).toBe('PS3');
+    expect(takeHelpSeed()).toBeNull();
+    expect(helpSeedWaiting()).toBe(false);
   });
 });

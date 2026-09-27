@@ -2,7 +2,7 @@
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { payload, type Draft } from '../lib/help-routes';
+import { askForHelp, payload, type Draft } from '../lib/help-routes';
 import { GetHelp } from './GetHelp';
 
 const mock = vi.hoisted(() => ({ load: vi.fn(), send: vi.fn(), withdraw: vi.fn() }));
@@ -47,6 +47,41 @@ const button = (text: string) =>
   [...host.querySelectorAll('button')].find((b) => b.textContent?.includes(text)) as HTMLButtonElement | undefined;
 const sentPreview = () => host.querySelector('dl[data-lines]')?.textContent ?? '';
 const identity = () => host.querySelector('dl[data-identity]')?.textContent ?? '';
+
+describe('arriving from the Action Center', () => {
+  it('opens on the need with the action filled in, and sends none of it until ticked', async () => {
+    mock.load.mockResolvedValue({ destinations: [{ ...ADVISING, id: 'tut', kind: 'tutoring', name: 'Tutoring Center' }], requests: [], name: 'harrison_r' });
+    mock.send.mockResolvedValue('req-1');
+    askForHelp({ type: 'deadline', title: 'Problem Set 3', dueAt: Date.UTC(2099, 9, 14, 12) }, () => {});
+    await act(async () => root.render(<GetHelp account={ME} />));
+
+    expect(radio('Stuck on course material').checked).toBe(true);
+    expect(host.textContent).toContain('From your Action Center: Problem Set 3');
+    expect(host.textContent).toMatch(/not included until you tick them/);
+
+    const values = [...host.querySelectorAll('input.input')].map((i) => (i as HTMLInputElement).value);
+    expect(values).toContain('Problem Set 3');
+    // The deadline is shown even though course help does not normally offer it.
+    expect(host.textContent).toContain('The deadline');
+    expect([...host.querySelectorAll('input[type=checkbox]')].every((c) => !(c as HTMLInputElement).checked)).toBe(true);
+
+    act(() => radio('Tutoring Center').click());
+    act(() => type(host.querySelector('textarea')!, 'I am stuck on question 2'));
+    expect(sentPreview()).not.toContain('Problem Set 3');
+
+    act(() => button('Review and send')!.click());
+    await act(async () => button('Yes, send to Tutoring Center')!.click());
+    const [, draft] = mock.send.mock.calls[0] as [string, Draft];
+    expect(payload(draft)).toEqual({ question: 'I am stuck on question 2', context: {} });
+  });
+
+  it('with nothing handed over, it opens on no need at all', async () => {
+    mock.load.mockResolvedValue({ destinations: [], requests: [], name: '' });
+    await act(async () => root.render(<GetHelp account={ME} />));
+    expect(host.textContent).not.toContain('From your Action Center');
+    expect(host.querySelectorAll('input[name=help-need]:checked')).toHaveLength(0);
+  });
+});
 
 describe('asking a person for help', () => {
   it('signed out, it still helps: a note to take, and nothing is loaded or sent', () => {
