@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { offline } from '../lib/offline';
 import {
   DEMAND_SOURCE_LINE,
   NOT_FOR_LINE,
@@ -108,7 +109,11 @@ export function DemandDesk({ accountId }: { accountId?: string | null } = {}) {
       </form>
 
       {asked && load.kind === 'loading' ? <p role="status">Loading demand for {asked}…</p> : null}
-      {load.kind === 'error' ? <p role="alert">Could not load demand: {load.message}</p> : null}
+      {load.kind === 'error' ? (
+        <p role="alert">
+          {offline() ? 'You are offline. Demand loads when you are connected — no old counts are shown as current.' : `Could not load demand: ${load.message}`}
+        </p>
+      ) : null}
       {asked && load.kind === 'ready' && !load.rows.length ? (
         <p>No course has ten or more contributing students for {asked} in your scope yet.</p>
       ) : null}

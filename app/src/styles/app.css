@@ -8512,6 +8512,34 @@ section[data-drop] > .grip + * {
   font-size: var(--type-sm);
 }
 
+/* ── Offline mode (offline_mode, Phase M) ──────────────────────────────── */
+
+.offline-banner {
+  flex: none;
+  padding: calc(10px * var(--density, 1)) calc(18px * var(--density, 1)) calc(11px * var(--density, 1));
+  border-bottom: 1px solid var(--app-line);
+  background: var(--app-panel);
+  color: var(--app-fg);
+  font-size: var(--type-sm);
+  line-height: var(--leading-normal);
+  text-wrap: pretty;
+}
+
+.offline-banner.is-offline {
+  background: var(--app-warn-wash);
+  border-bottom-color: var(--app-warn-line);
+}
+
+.offline-chip {
+  display: inline-block;
+  margin-right: var(--sp-2);
+  padding: 0 var(--sp-3);
+  border: 1px solid currentColor;
+  border-radius: var(--r-md);
+  font-size: var(--type-xs-plus);
+  font-weight: 600;
+}
+
 /* BL-1.4's Action Center, when it sits in a Phase B panel rather than in the
    #761 card whose `.today-decision-surface` rules it was drawn against. */
 .action-panel .action-center h2 {

@@ -1,4 +1,5 @@
 import { cloud } from './cloud';
+import { requireOnline } from './offline-mode';
 import {
   dueInstant,
   isEligibility,
@@ -53,6 +54,7 @@ export async function publishedPrograms(): Promise<string[]> {
 }
 
 export async function setAudience(userId: string, kind: 'program' | 'eligibility', value: string, on: boolean): Promise<void> {
+  requireOnline('send');
   const client = await cloud();
   const { error } = on
     ? await client.from('institution_action_audiences').insert({ user_id: userId, kind, value })
@@ -62,6 +64,7 @@ export async function setAudience(userId: string, kind: 'program' | 'eligibility
 }
 
 export async function markDone(userId: string, actionId: string, done: boolean): Promise<void> {
+  requireOnline('send');
   const client = await cloud();
   const { error } = done
     ? await client.from('institution_action_progress').insert({ action_id: actionId, user_id: userId })
@@ -135,6 +138,7 @@ export async function deskActions(): Promise<DeskRow[]> {
 }
 
 export async function saveDraft(d: Draft): Promise<string> {
+  requireOnline('publish');
   const { data, error } = await (await cloud()).rpc('draft_office_action', {
     want_office: d.office,
     want_scope_kind: d.scopeKind,
@@ -153,6 +157,7 @@ export async function saveDraft(d: Draft): Promise<string> {
 }
 
 export async function moveAction(id: string, step: DeskStep, note?: string): Promise<DeskStatus> {
+  requireOnline('publish');
   const { data, error } = await (await cloud()).rpc('move_office_action', { want_id: id, want_step: step, want_note: note ?? null });
   if (error) throw new Error(error.message);
   return data as DeskStatus;

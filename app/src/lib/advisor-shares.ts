@@ -1,4 +1,5 @@
 import type { SharePayload } from './advisor-meeting';
+import { requireOnline } from './offline-mode';
 import { cloud } from './cloud';
 
 /**
@@ -64,6 +65,7 @@ export const plausibleEmail = (s: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s
 export const NO_ADVISOR = 'No advisor at your school uses that address in Semester. Check it with your advisor.';
 
 export async function shareWithAdvisor(email: string, title: string, payload: SharePayload, days: number, now = Date.now()): Promise<string> {
+  requireOnline('share');
   if (!plausibleEmail(email)) throw new Error('Enter your advisor’s school email address.');
   checkPayload(payload);
   const { data, error } = await (await cloud()).rpc('share_with_advisor', {
