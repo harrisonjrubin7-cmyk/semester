@@ -57,4 +57,13 @@ describe('IntelligenceDisclosure', () => {
     expect(host.querySelector('[data-evidence-id="e1"]')).toBeInstanceOf(HTMLDetailsElement);
     expect(host.querySelector('[data-evidence-id="e1"]')?.textContent).toContain('Elasticity is on the midterm');
   });
+
+  it('carries the app’s own AI-assisted badge, and External when the web was used', () => {
+    act(() => root.render(<IntelligenceDisclosure response={responseFixture()} />));
+    expect(host.querySelector('[data-source="ai_assisted"]')?.textContent).toContain('AI-assisted');
+    expect(host.querySelector('[data-source="external"]')).toBeNull();
+
+    act(() => root.render(<IntelligenceDisclosure response={{ ...responseFixture(), origins: ['course', 'web'] }} />));
+    expect(host.querySelector('[data-source="external"]')?.textContent).toContain('External');
+  });
 });

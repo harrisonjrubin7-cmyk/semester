@@ -51,12 +51,42 @@ export const SOURCE_MEANING: Record<SourceLabel, string> = {
 };
 
 /**
+ * What the badge can say: the five above, and two that never reach a row.
+ *
+ * The UI constitution (`docs/design/SEMESTER-UI-CONSTITUTION.md` §7) asks for
+ * one trust vocabulary everywhere, and two kinds of content had their own:
+ * an assistant answer said "Inference" in `intelligence/Disclosure.tsx`, and
+ * nothing said that a fact came from outside the institution and outside the
+ * student. These two join the five **for display only**. `SOURCE_LABELS` is
+ * unchanged, because it is the database's check constraint and
+ * `source.test.ts` holds it to the migration; an AI answer or a web page is
+ * never stored as a `source_label`, so it never needs to be one.
+ */
+export const TRUST_KINDS = [...SOURCE_LABELS, 'ai_assisted', 'external'] as const;
+
+export type TrustKind = (typeof TRUST_KINDS)[number];
+
+export const TRUST_TEXT: Record<TrustKind, string> = {
+  ...SOURCE_TEXT,
+  ai_assisted: 'AI-assisted',
+  external: 'External',
+};
+
+export const TRUST_MEANING: Record<TrustKind, string> = {
+  ...SOURCE_MEANING,
+  ai_assisted: 'Written with Semester’s assistant. It is not an official answer — check anything you act on.',
+  external: 'From a source outside your institution and outside Semester, such as a web page.',
+};
+
+/**
  * Labels that should draw the eye. An estimate or a doubtful figure is the
  * one a student is most likely to over-trust, so it is the one styled to be
  * noticed — the opposite of the usual rule that official things look louder.
  */
-export function wantsAttention(label: SourceLabel): boolean {
-  return label === 'estimated' || label === 'needs_review';
+export function wantsAttention(label: TrustKind): boolean {
+  // An AI answer is the newest thing a student might over-trust, so it is
+  // styled with the estimates rather than with the records.
+  return label === 'estimated' || label === 'needs_review' || label === 'ai_assisted';
 }
 
 /**

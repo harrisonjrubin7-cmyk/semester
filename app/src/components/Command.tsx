@@ -65,7 +65,8 @@ import { DESKTOP, useMedia } from '../lib/media';
 import { offered, screenName } from '../lib/nav';
 import { secondLine } from '../lib/dim';
 import { Wordmark } from './Brand';
-import { AskIcon, ClocksIcon, Search as SearchIcon, SpeakerIcon, SpeakerOffIcon } from './Icons';
+import { AskIcon, ClocksIcon, Plus, Search as SearchIcon, SpeakerIcon, SpeakerOffIcon } from './Icons';
+import { addIntent, seedQuickAdd } from '../lib/intent';
 import { TabGlyph } from './TabIcon';
 import { TabStrip } from './Tabs';
 import { BookmarkChips } from './Bookmarks';
@@ -302,6 +303,23 @@ export function Command({ onClose }: { onClose: () => void }) {
     box.current?.focus();
   };
 
+  /**
+   * The field's third job: add. Opens the capture box on the text, with the
+   * verb taken off when there was one — the box parses dates and courses out
+   * of it exactly as if it had been typed there. See `lib/intent.ts`.
+   */
+  const add = (query: string) => {
+    seedQuickAdd(addIntent(query) ?? query.trim());
+    onClose();
+    dispatch({ type: 'quickAdd', open: true });
+  };
+
+  /** Enter in the box: an explicit add goes to the capture box, anything else is a search. */
+  const submit = (query: string) => {
+    if (addIntent(query) !== null) add(query);
+    else search(query);
+  };
+
   /** Go to a screen in the tab that is on, which is the app's own screen. */
   const land = (screen: Screen) => {
     record(screen, screenName(screen), justGo(screen));
@@ -463,7 +481,9 @@ export function Command({ onClose }: { onClose: () => void }) {
           }
           if (e.key === 'Enter') {
             e.preventDefault();
-            search(pick >= 0 ? rows[pick].text : text);
+            // A picked suggestion is a past search; only what was typed can be an add.
+            if (pick >= 0) search(rows[pick].text);
+            else submit(text);
             return;
           }
         }
@@ -498,7 +518,7 @@ export function Command({ onClose }: { onClose: () => void }) {
            * On the results page it opens what is selected, and holding the
            * key a browser uses opens it in a tab of its own.
            */
-          if (onSearchPage || hits.length === 0) search(text);
+          if (onSearchPage || hits.length === 0) submit(text);
           else go(cursor, e.metaKey || e.ctrlKey);
         }
       }}
@@ -536,6 +556,7 @@ export function Command({ onClose }: { onClose: () => void }) {
               ai.show(text);
               onClose();
             }}
+            onAdd={() => add(text)}
             rows={showRows ? rows : []}
             pick={pick}
             onHover={setPick}
@@ -599,6 +620,7 @@ export function Command({ onClose }: { onClose: () => void }) {
                   ai.show(text);
                   onClose();
                 }}
+                onAdd={() => add(text)}
                 rows={showRows ? rows : []}
                 pick={pick}
                 onHover={setPick}
@@ -1005,6 +1027,7 @@ function Box({
   onText,
   onOpen,
   onAsk,
+  onAdd,
   onHover,
   onPickRow,
   onForget,
@@ -1017,6 +1040,8 @@ function Box({
   onText: (v: string) => void;
   onOpen: () => void;
   onAsk: () => void;
+  /** Open the capture box on what is typed. See `lib/intent.ts`. */
+  onAdd: () => void;
   onHover: (i: number) => void;
   onPickRow: (row: string) => void;
   onForget: (row: string) => void;
@@ -1044,8 +1069,14 @@ function Box({
           value={text}
           onChange={(e) => onText(e.target.value)}
           onClick={onOpen}
-          placeholder="Search Semester"
-          aria-label="Search everything"
+          // One field for all three (constitution §12, decision 4): Enter
+          // searches, "add …" or "remind me to …" goes to the capture box, and
+          // the ASK and ADD buttons send whatever is typed either way.
+          // The full sentence where there is room; on a phone the ASK and ADD
+          // buttons beside it say the other two jobs, and the long form was
+          // cut off mid-word.
+          placeholder={wide ? 'Ask Semester, search, or add something…' : 'Search, ask or add…'}
+          aria-label="Search, ask or add"
           style={{
             flex: 1,
             minWidth: 0,
@@ -1104,6 +1135,31 @@ function Box({
         >
           <AskIcon size={14} />
           ASK
+        </button>
+        {/* And the third: what is typed goes into your plan. The capture box
+            reads the date and the course out of it the same as its own. */}
+        <button
+          type="button"
+          className="bare tappable"
+          onClick={onAdd}
+          aria-label="Add this as a task"
+          title="Add to your plan"
+          style={{
+            width: 'auto',
+            flex: 'none',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 'var(--sp-2)',
+            padding: 'var(--sp-2) var(--sp-4)',
+            borderRadius: 999,
+            border: '1px solid var(--app-line)',
+            fontSize: 'var(--type-xs)',
+            letterSpacing: '0.08em',
+            ...secondLine(),
+          }}
+        >
+          <Plus size={14} />
+          ADD
         </button>
       </div>
 

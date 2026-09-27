@@ -36,18 +36,28 @@ import type { Screen } from './types';
  * things that are empty, which makes the whole bar read as a menu of somebody
  * else's app rather than a place to start.
  *
- * The four that are left are the four the app is for: what is today, what the
- * courses are, how to study them, and when everything falls. Progress is the
- * fifth and is the way to everything else — it holds the whole directory, so
- * nothing is unreachable, only un-promoted.
+ * Progress is always the last and is the way to everything else — it holds
+ * the whole directory, so nothing is unreachable, only un-promoted.
+ *
+ * ## One tab per question, and Courses gave way to Support
+ *
+ * The bar held Today, Courses, Study, Calendar and Progress: four of the
+ * navigation areas in `lib/navareas.ts` and two tabs for one of them, Learn.
+ * What it did not hold was Help. "Who can help me" is the question a student
+ * is least likely to go looking for and most likely to need at a bad moment,
+ * and the one screen that answers it — Support — was four taps down the
+ * directory. So the bar is now the front doors of five areas in the order a
+ * day runs: what is now, when things fall, the work, who can help, how it is
+ * going. Courses is one tap from Study and from every deadline, and one tick
+ * from being back in the bar.
  *
  * This is the *default*, not the maximum. The bar still takes up to seven and
- * Map and Personal are one tap from Progress and one tick from being back in
- * it — see Settings, Navigation. And because `tabs` is saved state, anybody
- * who already has this app has their own bar already and sees no change at
- * all: this is what a fresh install starts from.
+ * Courses, Map and Personal are one tick from being back in it — see
+ * Settings, Navigation. And because `tabs` is saved state, anybody who
+ * already has this app has their own bar already and sees no change at all:
+ * this is what a fresh install starts from.
  */
-export const DEFAULT_TABS: Screen[] = ['home', 'courses', 'study', 'calendar', 'me'];
+export const DEFAULT_TABS: Screen[] = ['home', 'calendar', 'study', 'support', 'me'];
 
 /**
  * Seven, because seven is what fits.
