@@ -30,6 +30,7 @@
  * it rejected.
  */
 
+import type { SourceLabel } from './source';
 import { obj, textValue } from './device-library';
 import { conflicts, type CatalogCourse } from './registration';
 
@@ -38,7 +39,8 @@ export const REGISTRATION_DAY_KEY = 'semester.registration-day.v1';
 /** How many backups one section may carry. Five is already a long night. */
 export const MAX_BACKUPS = 5;
 
-export type TicketSource = 'student_entered' | 'imported';
+/** A time ticket is only ever typed in or imported; the shared labels are in `lib/source.ts`. */
+export type TicketSource = Extract<SourceLabel, 'student_entered' | 'imported'>;
 
 export interface RegistrationDayData {
   /** Local wall-clock time, `YYYY-MM-DDTHH:mm`, as a datetime-local input gives it. */
