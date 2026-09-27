@@ -95,6 +95,7 @@ declare
   rev1 uuid; rev2 uuid; senior uuid; mgr uuid; admin uuid; oldmod uuid;
   grp uuid; sup uuid; p1 uuid; p2 uuid; p3 uuid; p4 uuid; bp uuid; k uuid;
   venue uuid; far_venue uuid; sess uuid; n bigint; t text; t2 text;
+  g1 uuid; g2 uuid; g3 uuid; q uuid; c2 uuid; c3 uuid; c4 uuid; kk uuid; oldk uuid; j jsonb; i int;
 begin
   insert into public.schools (id, name, email_domains) values
     ('com-u', 'Community University', array['com-u.example']),
@@ -149,6 +150,10 @@ begin
   perform pg_temp.expect_allowed('dave joins', dave, format('select public.join_community(%L)', grp));
   perform pg_temp.expect_allowed('frank joins', frank, format('select public.join_community(%L)', grp));
   perform pg_temp.expect_allowed('alice joins the support community', alice, format('select public.join_community(%L)', sup));
+  -- These are members of long standing in communities that have existed for a
+  -- term; the brigading checks below add new joiners of their own.
+  update public.communities set created_at = now() - interval '60 days' where id in (grp, sup);
+  update public.community_members set joined_at = now() - interval '30 days' where community_id in (grp, sup);
   perform pg_temp.counted('a member sees only their own membership, never the roster',
     pg_temp.seen(bob, 'select community_id from public.community_members'), 1);
   perform pg_temp.counted('the manager who made the support community sees only their own row in it',
@@ -375,6 +380,181 @@ begin
   perform pg_temp.expect_refused('carol cannot mute on bob''s behalf', carol,
     format($q$insert into public.community_mutes (user_id, community_id, author_ref) values (%L, %L, 'zzzzzz')$q$, bob, grp));
 
+  -- ── Detectors ──────────────────────────────────────────────────────────
+  perform pg_temp.expect_allowed('dave posts ordinary study talk', dave,
+    format($q$select public.create_community_post(%L, 'Problem 3 on page 214 is hard, anyone free tonight?')$q$, grp));
+  select id into q from public.community_posts where body like 'Problem 3 on page 214%';
+  select count(*) into n from public.community_cases where post_id = q;
+  perform pg_temp.counted('ordinary study talk opens no case (the control)', n, 0);
+
+  perform pg_temp.expect_allowed('bob posts somebody else''s address', bob,
+    format($q$select public.create_community_post(%L, 'Her room number is 214 in Branscomb')$q$, grp));
+  select id into q from public.community_posts where body like 'Her room number is 214%';
+  select status into t from public.community_posts where id = q;
+  perform pg_temp.said('a high-confidence doxxing hit holds the post', t, 'held');
+  select severity || '/' || route || '/' || protection into t from public.community_cases where post_id = q;
+  perform pg_temp.said('as a P0 routed urgently', t, 'P0/professional_urgent/temporary_hold');
+  select rule_id || '/' || confidence || '/' || version into t from public.community_signals where post_id = q;
+  perform pg_temp.said('and records which rule, how sure and which version', t,
+    'pii.third-party-contact/0.95/community-detectors-2026.09.1');
+
+  perform pg_temp.expect_allowed('bob posts a threat', bob,
+    format($q$select public.create_community_post(%L, 'I''m going to hurt somebody after the lecture')$q$, grp));
+  select id into q from public.community_posts where body like 'I''m going to hurt%';
+  select p.status || '/' || c.severity || '/' || c.route || '/' || c.protection into t
+    from public.community_posts p join public.community_cases c on c.post_id = p.id where p.id = q;
+  perform pg_temp.said('threat language routes to a professional and holds nothing', t,
+    'published/P1/professional/queue');
+
+  perform pg_temp.expect_allowed('bob posts about wanting to die', bob,
+    format($q$select public.create_community_post(%L, 'Honestly I want to die this week, nothing is working')$q$, grp));
+  select id into q from public.community_posts where body like 'Honestly I want to die%';
+  select p.status || '/' || c.severity || '/' || c.route into t
+    from public.community_posts p join public.community_cases c on c.post_id = p.id where p.id = q;
+  perform pg_temp.said('crisis language reaches a professional and is never silenced', t, 'published/P1/professional');
+
+  perform pg_temp.expect_allowed('bob asks for an answer key', bob,
+    format($q$select public.create_community_post(%L, 'Does anyone have the answer key for the midterm?')$q$, grp));
+  select c.id into kk from public.community_cases c join public.community_posts p on p.id = c.post_id
+   where p.body like 'Does anyone have the answer key%';
+  select severity || '/' || route || '/' || protection into t from public.community_cases where id = kk;
+  perform pg_temp.said('an academic-integrity hit is a standard P2 in the queue', t, 'P2/standard/queue');
+
+  perform pg_temp.expect_allowed('bob posts two kinds of trouble at once', bob,
+    format($q$select public.create_community_post(%L, 'You should die. Go back to your country.')$q$, grp));
+  select c.protection || '/' || c.severity into t from public.community_cases c join public.community_posts p on p.id = c.post_id
+   where p.body = 'You should die. Go back to your country.';
+  perform pg_temp.said('two different detectors put the case under monitoring', t, 'monitor/P1');
+
+  perform pg_temp.expect_allowed('dave edits his post to add somebody''s schedule', dave,
+    format($q$select public.edit_community_post(id, 'His schedule is on the board outside 214') from public.community_posts where body like 'Problem 3 on page 214%%'$q$));
+  select status into t from public.community_posts where body = 'His schedule is on the board outside 214';
+  perform pg_temp.said('an edit is read again, and held', t, 'held');
+
+  -- Impersonation is only a question for unverified posts.
+  perform pg_temp.expect_allowed('frank claims to be the registrar', frank,
+    format($q$select public.create_community_post(%L, 'This is the registrar: drop deadlines moved')$q$, grp));
+  select c.category into t from public.community_cases c join public.community_posts p on p.id = c.post_id
+   where p.body like 'This is the registrar%';
+  perform pg_temp.said('a student claiming an office is an impersonation signal', t, 'impersonation');
+
+  -- A burst of posting from one account, anywhere, is a bot/rate signal.
+  for i in 1..7 loop
+    insert into public.community_posts (community_id, tenant_id, author_id, author_ref, author_name, body)
+    values (grp, 'com-u', frank, 'x', 'frank', 'burst ' || i);
+  end loop;
+  perform pg_temp.expect_allowed('frank posts an eighth time in ten minutes', frank,
+    format($q$select public.create_community_post(%L, 'one more')$q$, grp));
+  select count(*) into n from public.community_signals s join public.community_posts p on p.id = s.post_id
+   where p.body = 'one more' and s.rule_id = 'bot_rate.burst';
+  perform pg_temp.counted('a burst is recorded as a bot/rate signal', n, 1);
+
+  -- Who reads and tunes the rules.
+  perform pg_temp.counted('a student reads no rules', pg_temp.seen(bob, 'select id from public.community_detector_rules'), 0);
+  perform pg_temp.counted('a student reads no signals', pg_temp.seen(bob, 'select id from public.community_signals'), 0);
+  perform pg_temp.counted('a reviewer reads all fifteen rules', pg_temp.seen(rev1, 'select id from public.community_detector_rules'), 15);
+  perform pg_temp.expect_refused('a reviewer cannot switch a rule off', rev1,
+    $q$update public.community_detector_rules set enabled = false where id = 'integrity.answers'$q$);
+  perform pg_temp.expect_refused('a senior reviewer cannot rewrite a pattern', senior,
+    $q$update public.community_detector_rules set pattern = 'x{3}' where id = 'integrity.answers'$q$);
+  perform pg_temp.expect_allowed('a senior reviewer can switch a rule off', senior,
+    $q$update public.community_detector_rules set enabled = false where id = 'integrity.answers'$q$);
+  select count(*) into n from public.community_detector_rules
+   where id = 'integrity.answers' and not enabled and updated_by_sha256 = private.role_audit_sha256(senior::text);
+  perform pg_temp.counted('and the change is attributed by hash', n, 1);
+  perform pg_temp.expect_allowed('bob asks for answers again', bob,
+    format($q$select public.create_community_post(%L, 'Still looking for the answer key for the midterm')$q$, grp));
+  select count(*) into n from public.community_cases c join public.community_posts p on p.id = c.post_id
+   where p.body like 'Still looking for the answer key%';
+  perform pg_temp.counted('a switched-off rule does not fire', n, 0);
+
+  -- A person's decision reaches every signal on the case, and sets how long it is kept.
+  perform pg_temp.expect_allowed('a reviewer allows the answer-key post', rev1,
+    format($q$select public.decide_community_case(%L, 'allow', 'integrity.study_question')$q$, kk));
+  select human_outcome into t from public.community_signals where case_id = kk;
+  perform pg_temp.said('the signal learns the human outcome', t, 'allow');
+  select count(*) into n from public.community_cases
+   where id = kk and retain_until between now() + interval '89 days' and now() + interval '91 days';
+  perform pg_temp.counted('a case closed with nothing wrong is kept ninety days', n, 1);
+
+  -- ── Brigading ──────────────────────────────────────────────────────────
+  perform pg_temp.expect_allowed('carol posts', carol, format($q$select public.create_community_post(%L, 'Carol on elasticity')$q$, grp));
+  select id into q from public.community_posts where body = 'Carol on elasticity';
+  g1 := pg_temp.newuser('g1@com-u.example', 'com-u');
+  g2 := pg_temp.newuser('g2@com-u.example', 'com-u');
+  g3 := pg_temp.newuser('g3@com-u.example', 'com-u');
+  perform pg_temp.expect_allowed('three new accounts join', g1, format('select public.join_community(%L)', grp));
+  perform pg_temp.expect_allowed('and a second', g2, format('select public.join_community(%L)', grp));
+  perform pg_temp.expect_allowed('and a third', g3, format('select public.join_community(%L)', grp));
+  perform pg_temp.expect_allowed('the first new account reports carol', g1, format($q$select public.report_community_post(%L, 'harassment_or_bullying')$q$, q));
+  perform pg_temp.expect_allowed('the second', g2, format($q$select public.report_community_post(%L, 'harassment_or_bullying')$q$, q));
+  perform pg_temp.expect_allowed('the third', g3, format($q$select public.report_community_post(%L, 'harassment_or_bullying')$q$, q));
+  select status into t from public.community_posts where id = q;
+  perform pg_temp.said('three new joiners reporting together do not reduce the post', t, 'published');
+  select count(*) into n from public.community_reports where post_id = q and set_aside;
+  perform pg_temp.counted('their reports are set aside, not discarded', n, 3);
+  select route into t from public.community_cases where post_id = q;
+  perform pg_temp.said('and the case goes to integrity review', t, 'integrity_review');
+  select count(*) into n from public.community_signals where post_id = q and rule_id = 'brigade.fresh-joiners';
+  perform pg_temp.counted('with a brigading signal a reviewer can see', n, 1);
+  perform pg_temp.expect_refused('a reporter cannot see that their report was set aside', g1,
+    'select set_aside from public.community_reports');
+  perform pg_temp.expect_allowed('bob, a long-standing member, reports it', bob, format($q$select public.report_community_post(%L, 'harassment_or_bullying')$q$, q));
+  perform pg_temp.expect_allowed('frank reports it', frank, format($q$select public.report_community_post(%L, 'harassment_or_bullying')$q$, q));
+  select status into t from public.community_posts where id = q;
+  perform pg_temp.said('two genuine reporters are not topped up by the brigade', t, 'published');
+
+  perform pg_temp.expect_allowed('carol posts again', carol, format($q$select public.create_community_post(%L, 'Carol on tariffs')$q$, grp));
+  select id into q from public.community_posts where body = 'Carol on tariffs';
+  perform pg_temp.expect_allowed('new account one reports doxxing', g1, format($q$select public.report_community_post(%L, 'other')$q$, q));
+  perform pg_temp.expect_allowed('new account two', g2, format($q$select public.report_community_post(%L, 'other')$q$, q));
+  perform pg_temp.expect_allowed('new account three reports it as doxxing', g3,
+    format($q$select public.report_community_post(%L, 'private_information_or_doxxing')$q$, q));
+  select status into t from public.community_posts where id = q;
+  perform pg_temp.said('a set-aside doxxing report still holds, for the person it is about', t, 'held');
+
+  -- A reporter whose reports on one author keep being closed with no action.
+  perform pg_temp.expect_allowed('carol posts c2', carol, format($q$select public.create_community_post(%L, 'c2 supply')$q$, grp));
+  perform pg_temp.expect_allowed('carol posts c3', carol, format($q$select public.create_community_post(%L, 'c3 demand')$q$, grp));
+  perform pg_temp.expect_allowed('carol posts c4', carol, format($q$select public.create_community_post(%L, 'c4 equilibrium')$q$, grp));
+  select id into c2 from public.community_posts where body = 'c2 supply';
+  select id into c3 from public.community_posts where body = 'c3 demand';
+  select id into c4 from public.community_posts where body = 'c4 equilibrium';
+  perform pg_temp.expect_allowed('bob reports c2', bob, format($q$select public.report_community_post(%L, 'other')$q$, c2));
+  perform pg_temp.expect_allowed('a reviewer finds nothing wrong', rev1,
+    format($q$select public.decide_community_case(id, 'allow', 'no_violation') from public.community_cases where post_id = %L$q$, c2));
+  perform pg_temp.expect_allowed('bob reports c3', bob, format($q$select public.report_community_post(%L, 'other')$q$, c3));
+  perform pg_temp.expect_allowed('nothing wrong again', rev1,
+    format($q$select public.decide_community_case(id, 'close_no_action', 'no_violation') from public.community_cases where post_id = %L$q$, c3));
+  perform pg_temp.expect_allowed('bob reports c4', bob, format($q$select public.report_community_post(%L, 'other')$q$, c4));
+  select count(*) into n from public.community_reports where post_id = c4 and set_aside;
+  perform pg_temp.counted('a third report after two unfounded ones is set aside', n, 1);
+  select count(*) into n from public.community_signals where post_id = c4 and rule_id = 'brigade.unfounded-repeat';
+  perform pg_temp.counted('as an unfounded-repeat signal', n, 1);
+
+  -- ── The retention sweep ────────────────────────────────────────────────
+  perform pg_temp.expect_refused('nobody signed in can run the sweep', rev1, 'select private.sweep_community_retention()');
+  perform pg_temp.expect_refused('not even a senior reviewer', senior, 'select private.sweep_community_retention()');
+  select id into oldk from public.community_cases where post_id = c2;
+  update public.community_cases set retain_until = now() - interval '1 day' where id = oldk;
+  update public.community_cases set retain_until = now() - interval '1 day'
+   where post_id = c4 and status = 'open';
+  update public.community_sessions set starts_at = now() - interval '41 days', ends_at = now() - interval '40 days'
+   where title = 'Review';
+  j := private.sweep_community_retention();
+  select count(*) into n from public.community_cases where id = oldk;
+  perform pg_temp.counted('a closed case past its date is gone', n, 0);
+  select count(*) into n from public.community_decisions where case_id = oldk;
+  perform pg_temp.counted('with its decisions', n, 0);
+  select count(*) into n from public.community_cases where post_id = c4 and status = 'open';
+  perform pg_temp.counted('an open case is never swept, whatever its date', n, 1);
+  select count(*) into n from public.community_sessions where title = 'Review';
+  perform pg_temp.counted('a session that ended over thirty days ago is gone', n, 0);
+  select count(*) into n from public.community_retention_runs;
+  perform pg_temp.counted('and the run is recorded', n, 1);
+  perform pg_temp.counted('reviewers can see that it ran', pg_temp.seen(rev1, 'select id from public.community_retention_runs'), 1);
+  perform pg_temp.counted('students cannot', pg_temp.seen(bob, 'select id from public.community_retention_runs'), 0);
+
   -- ── Deleting an account ────────────────────────────────────────────────
   -- Alice has posts with cases (p1, p2, p3, p4) and without (the support posts).
   perform pg_temp.expect_allowed('alice forgets her Community data', alice, 'select public.forget_my_community()');
@@ -392,8 +572,9 @@ begin
   -- ── Leaving ────────────────────────────────────────────────────────────
   perform pg_temp.expect_allowed('dave leaves the group', dave,
     format('delete from public.community_members where community_id = %L', grp));
-  perform pg_temp.counted('and no longer reads its posts', pg_temp.seen(dave,
-    format('select id from public.community_posts where community_id = %L', grp)), 0);
+  perform pg_temp.counted('and no longer reads anybody else''s posts there', pg_temp.seen(dave,
+    format($q$select id from public.community_posts where community_id = %L
+               and body <> 'His schedule is on the board outside 214'$q$, grp)), 0);
 end $$;
 
 rollback;

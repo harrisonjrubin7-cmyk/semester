@@ -333,6 +333,7 @@ begin
           coalesce(handle, 'Member'), want_body,
           case when premoderated and my_role = 'member' then 'pending' else 'published' end)
   returning id into pid;
+  perform private.community_run_detectors(pid);
   return pid;
 end $$;
 revoke all on function public.create_community_post(uuid, text, boolean) from public, anon, authenticated;
@@ -353,6 +354,8 @@ begin
      set body = want_body, edited_at = now()
    where id = want_post and author_id = (select auth.uid()) and status in ('published', 'pending', 'reduced');
   if not found then raise exception 'not a post you can edit' using errcode = '42501'; end if;
+  -- An edit is a new text, so it is read again: editing is not a way round a rule.
+  perform private.community_run_detectors(want_post);
 end $$;
 revoke all on function public.edit_community_post(uuid, text, boolean) from public, anon, authenticated;
 grant execute on function public.edit_community_post(uuid, text, boolean) to authenticated;
@@ -444,7 +447,8 @@ create table if not exists public.community_cases (
   severity     text        not null check (severity in ('P0', 'P1', 'P2', 'P3')),
   protection   text        not null default 'queue' check (protection in (
                  'queue', 'monitor', 'reduce_distribution', 'temporary_hold')),
-  route        text        not null default 'standard' check (route in ('professional_urgent', 'professional', 'standard')),
+  route        text        not null default 'standard' check (route in (
+                 'professional_urgent', 'professional', 'standard', 'integrity_review')),
   status       text        not null default 'open' check (status in ('open', 'decided', 'appealed', 'closed')),
   created_at   timestamptz not null default now(),
   updated_at   timestamptz not null default now(),
@@ -477,6 +481,9 @@ create table if not exists public.community_reports (
                 'spam_scam_or_phishing', 'academic_integrity', 'other')),
   imminent    boolean     not null default false,
   details     text        not null default '' check (length(details) <= 1000),
+  -- Set when the brigading detector matched this report: it is kept, shown
+  -- to reviewers, and counted toward nothing.
+  set_aside   boolean     not null default false,
   created_at  timestamptz not null default now(),
   unique (post_id, reporter_id)
 );
@@ -485,6 +492,9 @@ create index if not exists community_reports_by_reporter on public.community_rep
 alter table public.community_reports enable row level security;
 revoke all on table public.community_reports from anon, authenticated;
 -- No reporter_id, to anybody. Reviewers read category, details and time.
+-- set_aside is not granted: a reporter can read their own report, and a
+-- brigade that could see it had been detected would learn how to avoid it.
+-- Reviewers see the brigading signal in community_signals instead.
 grant select (id, post_id, case_id, category, imminent, details, created_at)
   on table public.community_reports to authenticated;
 drop policy if exists "your reports, or a reviewer" on public.community_reports;
@@ -543,14 +553,238 @@ as $$
 $$;
 revoke all on function private.community_severity(text, boolean) from public, anon, authenticated;
 
+-- ── 6a. Detectors ─────────────────────────────────────────────────────────
+--
+-- Automated signals, which only ever triage. Each rule is a row so a senior
+-- reviewer can switch one off or change its confidence without a deploy, and
+-- so the rules are reviewable as data. They are readable by reviewers only:
+-- publishing the exact patterns would be publishing the way round them.
+--
+-- `app/src/community/detectors.ts` holds the same rules for the on-device
+-- prompts, and `detectors.test.ts` fails if the two lists differ. Patterns
+-- use `\y` for a word boundary here and `\b` there; that is the only
+-- difference the test allows.
+--
+-- What a hit does:
+--   * it is recorded in community_signals with its rule, confidence, version,
+--     route and — once a person decides — the human outcome;
+--   * it opens or joins the post's case at the rule's severity;
+--   * a doxxing rule at confidence 0.9 or more holds the post; nothing else
+--     a detector finds removes, hides or restricts anything;
+--   * two different detectors on one post put the case under monitoring.
+--
+-- Crisis language routes to a professional and is never a hold: silencing
+-- somebody who may be in trouble is the wrong first move.
+
+create table if not exists public.community_detector_rules (
+  id          text         primary key check (id ~ '^[a-z_]+\.[a-z0-9-]+$'),
+  detector    text         not null check (detector in (
+                'pii_doxxing', 'threat_crisis_language', 'hate_slur_risk', 'scam_phishing_link',
+                'media_safety', 'bot_rate_brigading', 'academic_integrity', 'impersonation')),
+  category    text         not null,
+  severity    text         not null check (severity in ('P0', 'P1', 'P2', 'P3')),
+  confidence  numeric(3,2) not null check (confidence > 0 and confidence <= 1),
+  pattern     text         not null check (length(pattern) between 3 and 1000),
+  enabled     boolean      not null default true,
+  version     text         not null default 'community-detectors-2026.09.1',
+  updated_at  timestamptz  not null default now(),
+  updated_by_sha256 text   check (updated_by_sha256 is null or updated_by_sha256 ~ '^[0-9a-f]{64}$')
+);
+alter table public.community_detector_rules enable row level security;
+revoke all on table public.community_detector_rules from anon, authenticated;
+grant select on table public.community_detector_rules to authenticated;
+-- Tuning, not rewriting: a senior reviewer may switch a rule or move its
+-- confidence. A new pattern is a migration, reviewed like code.
+grant update (enabled, confidence) on table public.community_detector_rules to authenticated;
+drop policy if exists "reviewers read detector rules" on public.community_detector_rules;
+create policy "reviewers read detector rules" on public.community_detector_rules
+  for select to authenticated using (private.has_capability('community:review'));
+drop policy if exists "senior reviewers tune detector rules" on public.community_detector_rules;
+create policy "senior reviewers tune detector rules" on public.community_detector_rules
+  for update to authenticated
+  using (private.has_capability('community:review_senior'))
+  with check (private.has_capability('community:review_senior'));
+
+create or replace function private.stamp_detector_rule()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  new.updated_at := now();
+  new.updated_by_sha256 := case when (select auth.uid()) is null then null
+                                else private.role_audit_sha256((select auth.uid())::text) end;
+  return new;
+end $$;
+revoke all on function private.stamp_detector_rule() from public, anon, authenticated;
+drop trigger if exists stamp_detector_rule on public.community_detector_rules;
+create trigger stamp_detector_rule before update on public.community_detector_rules
+  for each row execute function private.stamp_detector_rule();
+
+-- The rules. `\y` is a word boundary. Every pattern is matched
+-- case-insensitively. Keep in step with DETECTOR_RULES in detectors.ts.
+insert into public.community_detector_rules (id, detector, category, severity, confidence, pattern) values
+  ('pii.third-party-contact', 'pii_doxxing', 'private_information_or_doxxing', 'P0', 0.95,
+   '\y(her|his|their) (home address|address|phone number|number|dorm room|room number|room) is\y'),
+  ('pii.lives-at', 'pii_doxxing', 'private_information_or_doxxing', 'P0', 0.95,
+   '\y(she|he) lives (at|in|on) [a-z0-9 ]{0,30}(hall|house|apartments?|street|avenue|road|dorm|room)\y'),
+  ('pii.third-party-schedule', 'pii_doxxing', 'private_information_or_doxxing', 'P0', 0.90,
+   '\y(her|his) (class )?schedule is\y'),
+  ('threat.harm', 'threat_crisis_language', 'threat_or_safety_concern', 'P1', 0.80,
+   '\y(i|we)( will|[''’]ll| am going to|[''’]m going to|[''’]m gonna| are going to| gonna) (kill|shoot|stab|hurt|beat up) (you|him|her|them|us|someone|somebody|everyone|everybody|people)\y'),
+  ('threat.weapon-campus', 'threat_crisis_language', 'threat_or_safety_concern', 'P0', 0.90,
+   '\y(bring|bringing|brought) (a )?(gun|knife|weapon|bomb)s? (to|into) (class|school|campus|the library|the lecture|the dorm)\y'),
+  ('threat.wish-death', 'threat_crisis_language', 'threat_or_safety_concern', 'P1', 0.80,
+   '\yyou (should|deserve to) die\y'),
+  ('crisis.self-harm', 'threat_crisis_language', 'other', 'P1', 0.70,
+   '\y(kill myself|end my life|want to die|suicidal|suicide|hurt myself)\y'),
+  ('hate.dehumanizing', 'hate_slur_risk', 'hate_or_discrimination', 'P1', 0.80,
+   '\y(they|those people|you people) are (subhuman|vermin|animals|parasites|cockroaches)\y'),
+  ('hate.go-back', 'hate_slur_risk', 'hate_or_discrimination', 'P1', 0.80,
+   '\ygo back to (your|their) (own )?country\y'),
+  ('scam.shortened-link', 'scam_phishing_link', 'spam_scam_or_phishing', 'P3', 0.50,
+   '\y(bit\.ly|tinyurl\.com|goo\.gl|is\.gd|cutt\.ly|rb\.gy)/'),
+  ('scam.payment', 'scam_phishing_link', 'spam_scam_or_phishing', 'P2', 0.60,
+   '\y(gift cards?|wire (the )?money|pay upfront|payment upfront|double your (crypto|bitcoin|money))\y'),
+  ('scam.credentials', 'scam_phishing_link', 'spam_scam_or_phishing', 'P2', 0.70,
+   '\y(verify|confirm|update) your (account|password|login|student portal|student id)\y'),
+  ('integrity.answers', 'academic_integrity', 'academic_integrity', 'P2', 0.60,
+   '\y(answer key|answers (to|for) (the )?(quiz|exam|midterm|final|test|homework|hw|problem set|pset)|(quiz|exam|midterm|test) answers)\y'),
+  ('integrity.do-it-for-me', 'academic_integrity', 'academic_integrity', 'P2', 0.70,
+   '\y((take|do|write) my (exam|quiz|test|essay|homework|assignment) for (me|money)|pay (someone|you) to (take|do|write))\y'),
+  ('impersonation.official', 'impersonation', 'impersonation', 'P2', 0.60,
+   '\y(this is|message from|on behalf of) the (registrar|financial aid office|dean|office of the provost|campus police|it help desk)\y')
+on conflict (id) do nothing;
+
+create table if not exists public.community_signals (
+  id            bigint       generated always as identity primary key,
+  case_id       uuid         not null references public.community_cases(id) on delete cascade,
+  post_id       uuid         not null references public.community_posts(id) on delete cascade,
+  detector      text         not null,
+  rule_id       text         not null,
+  confidence    numeric(3,2) not null,
+  version       text         not null,
+  route         text         not null,
+  human_outcome text,
+  created_at    timestamptz  not null default now()
+);
+create index if not exists community_signals_by_case on public.community_signals (case_id);
+create index if not exists community_signals_by_post on public.community_signals (post_id, created_at);
+alter table public.community_signals enable row level security;
+revoke all on table public.community_signals from anon, authenticated;
+grant select on table public.community_signals to authenticated;
+drop policy if exists "reviewers read signals" on public.community_signals;
+create policy "reviewers read signals" on public.community_signals
+  for select to authenticated using (private.has_capability('community:review'));
+
+create or replace function private.community_route(want_severity text)
+returns text
+language sql
+immutable
+set search_path = ''
+as $$
+  select case want_severity when 'P0' then 'professional_urgent' when 'P1' then 'professional' else 'standard' end;
+$$;
+revoke all on function private.community_route(text) from public, anon, authenticated;
+
+/*
+ * Run every enabled rule over one post, record what matched, and triage.
+ * Called by create_community_post and edit_community_post, as the owner, so a
+ * client cannot skip it. Also counts a burst of posting from one account —
+ * eight or more in ten minutes, anywhere in Community — as a bot/rate signal.
+ */
+create or replace function private.community_run_detectors(want_post uuid)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  p public.community_posts;
+  k public.community_cases;
+  hits jsonb;
+  top jsonb;
+  hold boolean;
+  kinds integer;
+  rank_of text[] := array['P0', 'P1', 'P2', 'P3'];
+begin
+  select * into p from public.community_posts where id = want_post;
+  if p.id is null then return; end if;
+
+  select coalesce(jsonb_agg(h), '[]'::jsonb) into hits from (
+    select r.id as rule_id, r.detector, r.category, r.severity, r.confidence, r.version
+      from public.community_detector_rules r
+     where r.enabled
+       and p.body ~* r.pattern
+       -- Impersonation is only a question for a post nobody verified.
+       and (r.detector <> 'impersonation' or p.label = 'student_created')
+    union all
+    select 'bot_rate.burst', 'bot_rate_brigading', 'spam_scam_or_phishing', 'P2', 0.70, 'community-detectors-2026.09.1'
+     where (select count(*) from public.community_posts q
+             where q.author_id = p.author_id and q.created_at > now() - interval '10 minutes') >= 8
+  ) h;
+  if jsonb_array_length(hits) = 0 then return; end if;
+
+  select h into top from jsonb_array_elements(hits) h
+   order by array_position(rank_of, h->>'severity'), (h->>'confidence')::numeric desc limit 1;
+  hold := exists (select 1 from jsonb_array_elements(hits) h
+                   where h->>'detector' = 'pii_doxxing' and (h->>'confidence')::numeric >= 0.9);
+  select count(distinct h->>'detector') into kinds from jsonb_array_elements(hits) h;
+
+  select * into k from public.community_cases where post_id = p.id and status <> 'closed';
+  if k.id is null then
+    insert into public.community_cases (tenant_id, post_id, category, severity, route)
+    values (p.tenant_id, p.id, top->>'category', top->>'severity', private.community_route(top->>'severity'))
+    returning * into k;
+    perform private.community_case_event(k.id, 'triage', 'case_opened', 'detector:' || (top->>'rule_id'), 'open', 'open');
+  elsif array_position(rank_of, top->>'severity') < array_position(rank_of, k.severity) then
+    update public.community_cases
+       set severity = top->>'severity', category = top->>'category',
+           route = private.community_route(top->>'severity'), updated_at = now()
+     where id = k.id returning * into k;
+  end if;
+
+  insert into public.community_signals (case_id, post_id, detector, rule_id, confidence, version, route)
+  select k.id, p.id, h->>'detector', h->>'rule_id', (h->>'confidence')::numeric, h->>'version', k.route
+    from jsonb_array_elements(hits) h;
+
+  if hold then
+    update public.community_cases set protection = 'temporary_hold', updated_at = now() where id = k.id;
+    update public.community_posts set status = 'held' where id = p.id and status in ('published', 'reduced', 'pending');
+    perform private.community_case_event(k.id, 'triage', 'protection:temporary_hold', 'detector:high_confidence_pii', k.status, k.status);
+  elsif kinds >= 2 and k.protection = 'queue' then
+    update public.community_cases set protection = 'monitor', updated_at = now() where id = k.id;
+  end if;
+end $$;
+revoke all on function private.community_run_detectors(uuid) from public, anon, authenticated;
+
 /*
  * Report a post and triage it. Triage is the only automation here and it can
  * only protect, never decide:
  *
  *   one report                                   → a case in the queue
+ *   two distinct signals (reporters or detectors)
+ *     in thirty minutes                          → monitored
  *   one high-risk report (doxxing, threat, NCII,
  *     hate, or anything marked imminent)          → temporary hold, professional route
  *   three distinct reporters in sixty minutes     → reduced distribution pending review
+ *
+ * Brigading. A report is set aside — kept, shown to reviewers, counted toward
+ * no threshold — when either:
+ *   * in a community more than a week old, its reporter joined in the last day
+ *     and at least two other such new members reported the same post in the
+ *     last thirty minutes (in a new community everybody is new); or
+ *   * a reviewer has already closed two or more of this reporter's reports on
+ *     this author with no action in the last thirty days — a pattern of
+ *     unfounded reports, not somebody reporting repeated abuse, which counts
+ *     normally however often it happens.
+ * A set-aside report never reduces a post and sends the case to integrity
+ * review unless something already made it P0/P1. It can still hold a post for
+ * a high-risk category: a hold is a reversible protection for the person the
+ * post is about, not a penalty for its author, and missing a real doxxing
+ * report costs more than a hold a reviewer lifts. Brigading is never a reason
+ * to punish the target.
  *
  * Mirrors TRIAGE_THRESHOLDS in moderation.ts. A second report from the same
  * account is refused by the unique constraint, so it cannot count twice.
@@ -570,7 +804,11 @@ declare
   sev text := private.community_severity(want_category, coalesce(want_imminent, false));
   high_risk boolean := coalesce(want_imminent, false) or want_category in (
     'private_information_or_doxxing', 'threat_or_safety_concern', 'nonconsensual_media', 'hate_or_discrimination');
+  fresh boolean;
+  fresh_cluster boolean := false;
+  repeat_target boolean := false;
   reporters integer;
+  signals integer;
   rank_of text[] := array['P0', 'P1', 'P2', 'P3'];
 begin
   select * into p from public.community_posts where id = want_post;
@@ -582,22 +820,71 @@ begin
   select * into k from public.community_cases where post_id = p.id and status <> 'closed';
   if k.id is null then
     insert into public.community_cases (tenant_id, post_id, category, severity, route)
-    values (p.tenant_id, p.id, want_category, sev, 'standard')
+    values (p.tenant_id, p.id, want_category, sev, private.community_route(sev))
     returning * into k;
     perform private.community_case_event(k.id, 'triage', 'case_opened', 'triage:' || sev, 'open', 'open');
-  elsif array_position(rank_of, sev) < array_position(rank_of, k.severity) then
-    update public.community_cases set severity = sev, category = want_category, updated_at = now()
-     where id = k.id returning * into k;
   end if;
 
   insert into public.community_reports (post_id, case_id, reporter_id, category, imminent, details)
   values (p.id, k.id, me, want_category, coalesce(want_imminent, false), coalesce(want_details, ''));
 
-  update public.community_cases
-     set route = case when severity = 'P0' then 'professional_urgent'
-                      when severity = 'P1' then 'professional' else 'standard' end,
-         updated_at = now()
-   where id = k.id returning * into k;
+  -- ── Brigading ──
+  select m.joined_at > now() - interval '24 hours'
+         and (select c.created_at from public.communities c where c.id = p.community_id) < now() - interval '7 days'
+    into fresh
+    from public.community_members m where m.community_id = p.community_id and m.user_id = me;
+  if coalesce(fresh, false) then
+    select count(distinct r.reporter_id) >= 3 into fresh_cluster
+      from public.community_reports r
+      join public.community_members m on m.community_id = p.community_id and m.user_id = r.reporter_id
+     where r.post_id = p.id and r.created_at > now() - interval '30 minutes'
+       and m.joined_at > now() - interval '24 hours';
+  end if;
+  select count(*) >= 2 into repeat_target
+    from public.community_reports r
+    join public.community_posts q on q.id = r.post_id
+    join public.community_cases c on c.id = r.case_id
+   where r.reporter_id = me and q.author_id = p.author_id and r.post_id <> p.id
+     and r.created_at > now() - interval '30 days'
+     and c.status = 'closed'
+     and exists (select 1 from public.community_decisions d
+                  where d.case_id = c.id and d.stage = 'decision' and d.action in ('allow', 'close_no_action'));
+
+  if fresh_cluster or repeat_target then
+    -- Set aside this report and, for a fresh cluster, every fresh-joiner report on the post in the window.
+    update public.community_reports r set set_aside = true
+     where r.post_id = p.id
+       and (r.reporter_id = me
+            or (fresh_cluster and r.created_at > now() - interval '30 minutes'
+                and exists (select 1 from public.community_members m
+                             where m.community_id = p.community_id and m.user_id = r.reporter_id
+                               and m.joined_at > now() - interval '24 hours')));
+    insert into public.community_signals (case_id, post_id, detector, rule_id, confidence, version, route)
+    values (k.id, p.id, 'bot_rate_brigading',
+            case when fresh_cluster then 'brigade.fresh-joiners' else 'brigade.unfounded-repeat' end,
+            0.80, 'community-detectors-2026.09.1', 'integrity_review');
+    if k.severity not in ('P0', 'P1') then
+      update public.community_cases set route = 'integrity_review', updated_at = now() where id = k.id;
+    end if;
+    perform private.community_case_event(k.id, 'triage', 'reports_set_aside',
+      case when fresh_cluster then 'brigade.fresh-joiners' else 'brigade.unfounded-repeat' end, k.status, k.status);
+    if high_risk then
+      update public.community_cases set protection = 'temporary_hold', updated_at = now() where id = k.id;
+      update public.community_posts set status = 'held' where id = p.id and status in ('published', 'reduced');
+      perform private.community_case_event(k.id, 'triage', 'protection:temporary_hold', 'high_risk_report_set_aside', k.status, k.status);
+    end if;
+    return;
+  end if;
+
+  -- ── A counted report ──
+  if array_position(rank_of, sev) < array_position(rank_of, k.severity) then
+    update public.community_cases set severity = sev, category = want_category, updated_at = now()
+     where id = k.id returning * into k;
+  end if;
+  if k.route <> 'integrity_review' or k.severity in ('P0', 'P1') then
+    update public.community_cases set route = private.community_route(severity), updated_at = now()
+     where id = k.id returning * into k;
+  end if;
 
   if high_risk then
     update public.community_cases set protection = 'temporary_hold', updated_at = now() where id = k.id;
@@ -607,12 +894,16 @@ begin
   end if;
 
   select count(distinct r.reporter_id) into reporters from public.community_reports r
-   where r.post_id = p.id and r.created_at > now() - interval '60 minutes';
+   where r.post_id = p.id and not r.set_aside and r.created_at > now() - interval '60 minutes';
+  select count(distinct s.detector) into signals from public.community_signals s
+   where s.post_id = p.id and s.detector <> 'bot_rate_brigading' and s.created_at > now() - interval '30 minutes';
   if reporters >= 3 and k.protection in ('queue', 'monitor') then
     update public.community_cases set protection = 'reduce_distribution', updated_at = now() where id = k.id;
     update public.community_posts set status = 'reduced' where id = p.id and status = 'published';
     perform private.community_case_event(k.id, 'triage', 'protection:reduce_distribution', 'three_reporters_60m', k.status, k.status);
-  elsif reporters >= 2 and k.protection = 'queue' then
+  elsif (select count(distinct r.reporter_id) from public.community_reports r
+          where r.post_id = p.id and not r.set_aside and r.created_at > now() - interval '30 minutes') + signals >= 2
+        and k.protection = 'queue' then
     update public.community_cases set protection = 'monitor', updated_at = now() where id = k.id;
   end if;
 end $$;
@@ -693,8 +984,16 @@ begin
   insert into public.community_decisions (case_id, actor_id, stage, action, reason_code)
   values (k.id, (select auth.uid()), 'decision', want_action, want_reason);
   perform private.apply_community_action(k, want_action, author);
+  -- Every automated signal on the case learns what a person decided, which is
+  -- how a rule that keeps being overruled shows up in the numbers.
+  update public.community_signals set human_outcome = want_action
+   where case_id = k.id and human_outcome is null;
+  -- How long the evidence is kept follows from the outcome: ninety days when
+  -- nothing was wrong, a year when something was enforced.
   update public.community_cases
      set status = case when want_action in ('allow', 'close_no_action') then 'closed' else 'decided' end,
+         retain_until = now() + case when want_action in ('allow', 'close_no_action')
+                                     then interval '90 days' else interval '1 year' end,
          updated_at = now()
    where id = k.id;
   perform private.community_case_event(k.id, case when senior then 'senior_reviewer' else 'reviewer' end,
@@ -749,7 +1048,12 @@ begin
     update public.community_restrictions set lifted_at = now() where case_id = k.id and lifted_at is null;
     update public.community_posts set status = 'published' where id = k.post_id and status in ('removed', 'reduced', 'held');
   end if;
-  update public.community_cases set status = 'closed', updated_at = now() where id = k.id;
+  update public.community_signals
+     set human_outcome = coalesce(human_outcome, 'none') || case when want_uphold then ' / upheld on appeal' else ' / reversed on appeal' end
+   where case_id = k.id;
+  update public.community_cases
+     set status = 'closed', retain_until = now() + interval '1 year', updated_at = now()
+   where id = k.id;
   perform private.community_case_event(k.id, 'reviewer',
     case when want_uphold then 'appeal_upheld' else 'appeal_granted' end, want_reason, 'appealed', 'closed');
 end $$;
@@ -974,6 +1278,88 @@ end $$;
 revoke all on function public.forget_my_community() from public, anon, authenticated;
 grant execute on function public.forget_my_community() to authenticated;
 
+-- ── 9a. Retention sweep ───────────────────────────────────────────────────
+--
+-- What Trust & Safety keeps, and for how long, stated as the literals below
+-- so RETENTION.md and `retention.test.ts` can hold the document to them:
+--
+--   * a case closed with nothing wrong      → 90 days after the decision
+--   * a case with anything enforced         → 1 year after the decision
+--   * a case decided on appeal              → 1 year after the appeal
+--   * a case still open or under appeal     → never swept, whatever its date
+--   * a report no case holds any more       → 90 days after it was made
+--   * a lapsed or lifted restriction        → 90 days after it ended
+--   * a study session                       → 30 days after it ended
+--   * this sweep's own run log              → 1 year
+--
+-- Deleting a case takes its decisions, its history and its signals with it.
+-- A withdrawn or removed post whose case has gone is deleted too, since the
+-- only reason it was kept was the case. Every run writes a row, so a stalled
+-- job is visible rather than assumed. Scheduled daily in supabase/scheduler.sql
+-- as `community-retention`; callable by the service role only.
+
+create table if not exists public.community_retention_runs (
+  id                   bigint      generated always as identity primary key,
+  ran_at               timestamptz not null default now(),
+  cases_removed        integer     not null,
+  posts_removed        integer     not null,
+  reports_removed      integer     not null,
+  restrictions_removed integer     not null,
+  sessions_removed     integer     not null
+);
+create index if not exists community_retention_runs_by_time on public.community_retention_runs (ran_at desc);
+alter table public.community_retention_runs enable row level security;
+revoke all on table public.community_retention_runs from anon, authenticated;
+grant select on table public.community_retention_runs to authenticated;
+drop policy if exists "reviewers read retention runs" on public.community_retention_runs;
+create policy "reviewers read retention runs" on public.community_retention_runs
+  for select to authenticated using (private.has_capability('community:review'));
+
+create or replace function private.sweep_community_retention()
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  n_cases integer;
+  n_posts integer;
+  n_reports integer;
+  n_restrictions integer;
+  n_sessions integer;
+begin
+  delete from public.community_cases
+   where retain_until < now() and status not in ('open', 'appealed');
+  get diagnostics n_cases = row_count;
+
+  delete from public.community_posts p
+   where p.status in ('withdrawn', 'removed')
+     and not exists (select 1 from public.community_cases k where k.post_id = p.id);
+  get diagnostics n_posts = row_count;
+
+  delete from public.community_reports r
+   where r.case_id is null and r.created_at < now() - interval '90 days';
+  get diagnostics n_reports = row_count;
+
+  delete from public.community_restrictions x
+   where coalesce(least(x.lifted_at, x.until), x.until) < now() - interval '90 days';
+  get diagnostics n_restrictions = row_count;
+
+  delete from public.community_sessions s where s.ends_at < now() - interval '30 days';
+  get diagnostics n_sessions = row_count;
+
+  delete from public.community_retention_runs where ran_at < now() - interval '1 year';
+
+  insert into public.community_retention_runs
+    (cases_removed, posts_removed, reports_removed, restrictions_removed, sessions_removed)
+  values (n_cases, n_posts, n_reports, n_restrictions, n_sessions);
+
+  return jsonb_build_object('cases', n_cases, 'posts', n_posts, 'reports', n_reports,
+                            'restrictions', n_restrictions, 'sessions', n_sessions);
+end $$;
+revoke all on function private.sweep_community_retention() from public, anon, authenticated;
+grant execute on function private.sweep_community_retention() to service_role;
+
 -- ── 10. The LTI emptiness check counts Community ──────────────────────────
 -- An LTI launch attaches only to an account nobody has used. A post, a
 -- membership, a hosted session, a session place or a mute is use, so the
@@ -1037,6 +1423,10 @@ revoke all on function public.lti_account_untouched(uuid)
 --
 -- Every object here is new. To remove:
 --
+--   drop function if exists private.sweep_community_retention(), private.community_run_detectors(uuid),
+--     private.community_route(text), private.stamp_detector_rule();
+--   drop table if exists public.community_retention_runs, public.community_signals,
+--     public.community_detector_rules;
 --   drop function if exists public.community_session_counts(uuid), public.join_study_session(uuid),
 --     public.create_study_session(uuid, uuid, text, timestamptz, timestamptz, integer),
 --     public.my_community_notices(), public.community_reviewer_standing(), public.my_community_refs(),

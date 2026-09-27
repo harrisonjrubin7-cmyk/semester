@@ -192,11 +192,16 @@ export function triage(signals: SafetySignal[], now: Date, brigadeReporters: Rea
   }
   if (counted.length > 0) protect('queue', 'At least one needs-review signal.');
 
-  for (const s of counted) {
-    raise(provisionalSeverity(s.category, s.qualifiers));
+  // A high-risk report holds even when it was set aside as brigading: the
+  // hold protects the person the post is about and a reviewer can lift it.
+  for (const s of signals) {
     if (s.source === 'report' && HIGH_RISK_CATEGORIES.includes(s.category)) {
       protect('temporary_hold', `High-risk report: ${s.category}.`);
     }
+  }
+
+  for (const s of counted) {
+    raise(provisionalSeverity(s.category, s.qualifiers));
     if (
       s.source === 'detector' &&
       s.detector === 'pii_doxxing' &&

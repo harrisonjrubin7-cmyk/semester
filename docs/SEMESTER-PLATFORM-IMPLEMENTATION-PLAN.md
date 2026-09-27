@@ -38,7 +38,7 @@ The database half followed in `supabase/migrations/20260927170000_community.sql`
 - **Row-level security** through `private.has_capability`.
 - **RPCs:** 17, one for every write. Each is on the `grants.check.sql`
   allowlist.
-- **Checks:** `supabase/community.check.sql` walks 119 checks as the accounts
+- **Checks:** `supabase/community.check.sql` walks 190 checks as the accounts
   concerned. Seven guards were shown to fail when reverted: author id hidden,
   appeal independence, high-risk hold, P0 needs a senior reviewer, reporter
   hidden, roster hidden, and the three-reporter threshold.
@@ -55,14 +55,21 @@ The screens followed too:
   `VITE_COMMUNITY_FEED` and `VITE_COMMUNITY_REPORTING` are on. The console is
   opened from Community, only by an account the server says is a reviewer.
 
+Detectors and retention followed as well:
+
+- **Detectors:** fifteen detector rules run on every post and edit on the
+  server. Every hit is recorded with its rule, confidence, version, route and
+  the human outcome. Only high-confidence doxxing holds a post.
+- **Brigading:** new-joiner clusters and unfounded repeat reports are set
+  aside, never used to punish the post's author.
+- **Retention:** a daily sweep, logged in `community_retention_runs`, removes
+  expired evidence and never touches open cases.
+
 It **is not** yet:
 
-- **Server-side detectors** beyond the PII rules. Threat, hate, scam-link,
-  media-safety and brigading detectors plug into `SafetySignal` with a
-  `detector`, `confidence` and `version`. None of them exists yet. The
-  server's own post check covers email and phone only.
-- **A retention sweep.** Cases carry `retain_until`, but nothing enforces it
-  yet.
+- **A media-safety detector.** Community has no image posting yet.
+- **A slur lexicon.** The hate rules are phrase patterns. A tenant's lexicon
+  would be new rows in `community_detector_rules`.
 - **Database tables for the high-risk features:** aliases, volunteer queues,
   escalation and the safety state. Their rules exist in TypeScript behind
   flags that are off.

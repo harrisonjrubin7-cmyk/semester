@@ -7,7 +7,7 @@ import { cloudConfigured } from '../lib/cloud';
 import { COMMUNITY_FLAGS, enabled } from '../community/flags';
 import { CRISIS_NOTICE } from '../community/crisis';
 import type { DecisionAction } from '../community/moderation';
-import { decideAppeal, decideCase, loadQueue, reviewerStanding, type CaseRow, type Standing } from '../community/client';
+import { decideAppeal, decideCase, lastSweep, loadQueue, reviewerStanding, type CaseRow, type Standing } from '../community/client';
 
 const CATEGORY = Object.fromEntries(CATEGORY_TEXT);
 
@@ -23,6 +23,24 @@ const PROTECTION_TEXT: Record<CaseRow['protection'], string> = {
   monitor: 'Being monitored',
   reduce_distribution: 'Shown to fewer people pending review',
   temporary_hold: 'Hidden pending review',
+};
+
+const DETECTOR_TEXT: Record<string, string> = {
+  pii_doxxing: 'Private information',
+  threat_crisis_language: 'Threat or crisis language',
+  hate_slur_risk: 'Hate or slur risk',
+  scam_phishing_link: 'Scam or phishing',
+  media_safety: 'Media safety',
+  bot_rate_brigading: 'Posting burst or coordinated reports',
+  academic_integrity: 'Academic integrity',
+  impersonation: 'Impersonation',
+};
+
+const ROUTE_TEXT: Record<CaseRow['route'], string> = {
+  professional_urgent: 'urgent professional review',
+  professional: 'professional review',
+  standard: 'standard queue',
+  integrity_review: 'integrity review — reports may be coordinated',
 };
 
 const ACTIONS: [DecisionAction, string][] = [
@@ -72,12 +90,16 @@ function Console() {
   const [standing, setStanding] = useState<Standing | null>(null);
   const [cases, setCases] = useState<CaseRow[]>([]);
   const [status, setStatus] = useState('');
+  const [sweep, setSweep] = useState<{ ranAt: string; removed: number } | null | undefined>(undefined);
 
   const refresh = useCallback(async () => {
     try {
       const who = await reviewerStanding();
       setStanding(who);
-      if (who !== 'none') setCases(await loadQueue());
+      if (who !== 'none') {
+        setCases(await loadQueue());
+        setSweep(await lastSweep());
+      }
     } catch (e) {
       setStatus(e instanceof Error ? e.message : 'Could not load the queue.');
     }
@@ -102,6 +124,13 @@ function Console() {
     <Page blurb="Most severe first, then oldest. Reporters are never shown. Automation only queued, held or reduced these — every decision is yours.">
       <Notice>{CRISIS_NOTICE}</Notice>
       {status && <p role="status">{status}</p>}
+      {sweep !== undefined && (
+        <p style={{ color: 'var(--app-dim)' }}>
+          {sweep
+            ? `Evidence retention last ran ${when(sweep.ranAt)} and removed ${sweep.removed} record${sweep.removed === 1 ? '' : 's'}.`
+            : 'The evidence retention sweep has not run yet.'}
+        </p>
+      )}
       <SectionLabel aside={`${open.length}`}>Open cases</SectionLabel>
       {open.length === 0 && <p style={{ color: 'var(--app-dim)' }}>The queue is empty.</p>}
       {open.map((c) => (
@@ -152,7 +181,7 @@ function CaseCard({
         {SEVERITY_TEXT[kase.severity]} · {CATEGORY[kase.category] ?? kase.category}
       </strong>
       <span style={{ color: 'var(--app-dim)' }}>
-        Opened {when(kase.createdAt)} · {PROTECTION_TEXT[kase.protection]}
+        Opened {when(kase.createdAt)} · {PROTECTION_TEXT[kase.protection]} · {ROUTE_TEXT[kase.route]}
         {kase.post ? ` · in ${kase.post.communityName}` : ''}
       </span>
       {kase.post ? (
@@ -164,6 +193,19 @@ function CaseCard({
         </blockquote>
       ) : (
         <p>The post is no longer available.</p>
+      )}
+      {kase.signals.length > 0 && (
+        <div>
+          <p style={{ margin: 0, fontWeight: 600 }}>Automated signals — triage only, never a decision</p>
+          <ul style={{ margin: 0 }}>
+            {kase.signals.map((sig, i) => (
+              <li key={i}>
+                {DETECTOR_TEXT[sig.detector] ?? sig.detector} · rule {sig.ruleId} · confidence {Math.round(sig.confidence * 100)}% ·{' '}
+                {sig.version}
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
       <details>
         <summary>

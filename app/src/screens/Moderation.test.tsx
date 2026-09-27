@@ -9,6 +9,7 @@ const mock = vi.hoisted(() => ({
   queue: vi.fn(),
   decideCase: vi.fn(),
   decideAppeal: vi.fn(),
+  lastSweep: vi.fn(),
 }));
 
 vi.mock('../state/store', () => ({
@@ -22,6 +23,7 @@ vi.mock('../community/client', () => ({
   loadQueue: mock.queue,
   decideCase: mock.decideCase,
   decideAppeal: mock.decideAppeal,
+  lastSweep: mock.lastSweep,
 }));
 
 import { Moderation } from './Moderation';
@@ -41,6 +43,7 @@ const kase = (id: string, patch: Record<string, unknown> = {}) => ({
   createdAt: '2026-09-27T10:00:00Z',
   post: { body: `Body ${id}`, authorName: 'Jordan', status: 'held', communityName: 'ECON 1010' },
   reports: [{ category: 'private_information_or_doxxing', imminent: true, details: 'posted her room', createdAt: '2026-09-27T10:00:00Z' }],
+  signals: [{ detector: 'pii_doxxing', ruleId: 'pii.third-party-contact', confidence: 0.95, version: 'community-detectors-2026.09.1', createdAt: '2026-09-27T10:00:00Z' }],
   ...patch,
 });
 
@@ -51,6 +54,7 @@ beforeEach(() => {
   mock.queue.mockResolvedValue([kase('k0'), kase('k1', { status: 'appealed', severity: 'P2', category: 'spam_scam_or_phishing' })]);
   mock.decideCase.mockResolvedValue(undefined);
   mock.decideAppeal.mockResolvedValue(undefined);
+  mock.lastSweep.mockResolvedValue({ ranAt: '2026-09-27T09:29:00Z', removed: 4 });
   host = document.createElement('div');
   document.body.append(host);
   root = createRoot(host);
@@ -99,6 +103,24 @@ describe('Moderation', () => {
     expect(card.textContent).toContain('posted her room');
     expect(card.textContent).not.toMatch(/reported by|reporter:/i);
     expect(host.textContent).toContain('not monitored as an emergency-response service');
+  });
+
+  it('shows what the detectors recorded, labelled as triage', async () => {
+    await render();
+    const card = host.querySelector('article') as HTMLElement;
+    expect(card.textContent).toContain('Automated signals — triage only, never a decision');
+    expect(card.textContent).toContain('pii.third-party-contact · confidence 95%');
+    expect(card.textContent).toContain('urgent professional review');
+  });
+
+  it('says when the retention sweep last ran, and when it never has', async () => {
+    await render();
+    expect(host.textContent).toContain('removed 4 records');
+    act(() => root.unmount());
+    root = createRoot(host);
+    mock.lastSweep.mockResolvedValue(null);
+    await render();
+    expect(host.textContent).toContain('has not run yet');
   });
 
   it('does not offer a P0 account-wide pause to a non-senior reviewer', async () => {

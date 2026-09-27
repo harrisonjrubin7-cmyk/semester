@@ -1183,6 +1183,14 @@ export const KEPT_TABLES: KeptTable[] = [
     why: 'A report you filed is a record about somebody else, like `reports`: deleting your account is not a way to withdraw one. Who filed it is readable by nobody through the app, reviewers included.',
   },
   {
+    table: 'community_signals',
+    why: 'What an automated detector recorded about a post — the rule, how sure it was, and what a reviewer then decided. It belongs to the moderation case and goes when the case does, on the case\'s retention date.',
+  },
+  {
+    table: 'community_retention_runs',
+    why: 'How many records each daily retention sweep removed, and when. No row names a person, and the log trims itself after a year.',
+  },
+  {
     table: 'support_access_event',
     why: 'Support-access evidence stays after the grant is deleted so a student or university can establish that a read occurred. It contains typed tenant, grant, scope, expiry, revocation, action and time fields plus SHA-256 pseudonyms — never a name, email, free-form reason, note, source excerpt, recording, protected trait or emotion inference — and ordinary accounts cannot change or delete it.',
   },

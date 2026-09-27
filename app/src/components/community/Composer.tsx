@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { prePostCheck, redact, type PrePostDecision } from '../../community/pii';
+import { composerPrompts } from '../../community/detectors';
 import { Trouble } from '../Trouble';
 
 /**
@@ -18,28 +19,49 @@ export function Composer({
   submitText = 'Post',
   onSubmit,
   onCancel,
+  integrityPolicy = '',
 }: {
   label: string;
   initial?: string;
   submitText?: string;
   onSubmit: (body: string, confirmedOwn: boolean) => Promise<void>;
   onCancel?: () => void;
+  /** The course's policy on assessment answers, quoted by the integrity prompt. */
+  integrityPolicy?: string;
 }) {
   const [body, setBody] = useState(initial);
   const [check, setCheck] = useState<PrePostDecision | null>(null);
+  const [integrity, setIntegrity] = useState<{ message: string; confirmedOwn: boolean } | null>(null);
+  const [support, setSupport] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
-  const send = (confirmedOwn: boolean) => {
+  const send = (confirmedOwn: boolean, afterwards: string) => {
     setBusy(true);
     setError('');
     void onSubmit(body.trim(), confirmedOwn)
       .then(() => {
         setBody('');
         setCheck(null);
+        setIntegrity(null);
+        // Crisis language never stops a post. The support notice is shown
+        // once it has gone, and stays until the author writes again.
+        setSupport(afterwards);
       })
       .catch((e: unknown) => setError(e instanceof Error ? e.message : 'Could not post.'))
       .finally(() => setBusy(false));
+  };
+
+  /** After the privacy check: the integrity prompt, then send. */
+  const proceed = (confirmedOwn: boolean, integrityAcknowledged = false) => {
+    const prompts = composerPrompts(body, integrityPolicy);
+    const asks = prompts.find((p) => p.kind === 'integrity');
+    if (asks && !integrityAcknowledged) {
+      setCheck(null);
+      setIntegrity({ message: asks.message, confirmedOwn });
+      return;
+    }
+    send(confirmedOwn, prompts.find((p) => p.kind === 'support')?.message ?? '');
   };
 
   return (
@@ -50,7 +72,7 @@ export function Composer({
         event.preventDefault();
         if (!body.trim()) return;
         const result = prePostCheck(body);
-        if (result.action === 'allow') send(false);
+        if (result.action === 'allow') proceed(false);
         else setCheck(result);
       }}
     >
@@ -64,6 +86,8 @@ export function Composer({
           onChange={(e) => {
             setBody(e.target.value);
             setCheck(null);
+            setIntegrity(null);
+            setSupport('');
           }}
         />
       </label>
@@ -81,15 +105,33 @@ export function Composer({
             >
               Remove it for me
             </button>
-            <button type="button" className="btn btn-secondary" disabled={busy} onClick={() => send(true)}>
+            <button type="button" className="btn btn-secondary" disabled={busy} onClick={() => proceed(true)}>
               {check.action === 'edit_required' ? 'It’s mine — post anyway' : 'Post anyway'}
             </button>
           </div>
         </div>
       )}
+      {integrity && (
+        <div role="alert" className="portal-panel" style={{ display: 'grid', gap: 'var(--sp-3)' }}>
+          <p style={{ margin: 0 }}>{integrity.message}</p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-3)' }}>
+            <button type="button" className="btn btn-primary" onClick={() => setIntegrity(null)}>
+              Edit it
+            </button>
+            <button type="button" className="btn btn-secondary" disabled={busy} onClick={() => proceed(integrity.confirmedOwn, true)}>
+              Post anyway
+            </button>
+          </div>
+        </div>
+      )}
+      {support && (
+        <p role="status" className="portal-panel" style={{ margin: 0 }}>
+          {support}
+        </p>
+      )}
       {error && <Trouble said={error} />}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-3)' }}>
-        <button className="btn btn-primary" disabled={busy || !body.trim() || (check !== null && check.action !== 'allow')}>
+        <button className="btn btn-primary" disabled={busy || !body.trim() || (check !== null && check.action !== 'allow') || integrity !== null}>
           {busy ? 'Posting…' : submitText}
         </button>
         {onCancel && (

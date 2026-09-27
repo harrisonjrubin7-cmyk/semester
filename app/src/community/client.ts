@@ -334,11 +334,13 @@ export interface CaseRow {
   category: ReportCategory;
   severity: Severity;
   protection: 'queue' | 'monitor' | 'reduce_distribution' | 'temporary_hold';
-  route: 'professional_urgent' | 'professional' | 'standard';
+  route: 'professional_urgent' | 'professional' | 'standard' | 'integrity_review';
   status: 'open' | 'decided' | 'appealed' | 'closed';
   createdAt: string;
   post: { body: string; authorName: string; status: PostStatus; communityName: string } | null;
   reports: { category: ReportCategory; imminent: boolean; details: string; createdAt: string }[];
+  /** What the detectors recorded. Never a reporter; brigading shows up here. */
+  signals: { detector: string; ruleId: string; confidence: number; version: string; createdAt: string }[];
 }
 
 export async function reviewerStanding(): Promise<Standing> {
@@ -362,7 +364,7 @@ export async function loadQueue(): Promise<CaseRow[]> {
   if (error) fail(error, 'Could not load the queue.');
   const postIds = [...new Set((cases ?? []).map((c: Row) => str(c.post_id)))];
   const caseIds = (cases ?? []).map((c: Row) => str(c.id));
-  const [posts, reports, communities] = await Promise.all([
+  const [posts, reports, communities, signals] = await Promise.all([
     postIds.length
       ? db.from('community_posts').select('id, community_id, author_name, body, status').in('id', postIds)
       : Promise.resolve({ data: [] as Row[], error: null }),
@@ -370,8 +372,11 @@ export async function loadQueue(): Promise<CaseRow[]> {
       ? db.from('community_reports').select('case_id, category, imminent, details, created_at').in('case_id', caseIds)
       : Promise.resolve({ data: [] as Row[], error: null }),
     db.from('communities').select('id, name'),
+    caseIds.length
+      ? db.from('community_signals').select('case_id, detector, rule_id, confidence, version, created_at').in('case_id', caseIds)
+      : Promise.resolve({ data: [] as Row[], error: null }),
   ]);
-  for (const r of [posts, reports, communities]) if (r.error) fail(r.error, 'Could not load the queue.');
+  for (const r of [posts, reports, communities, signals]) if (r.error) fail(r.error, 'Could not load the queue.');
   const names = new Map<string, string>((communities.data ?? []).map((c: Row) => [str(c.id), str(c.name)]));
   const byPost = new Map<string, Row>((posts.data ?? []).map((p: Row) => [str(p.id), p]));
   return (cases ?? [])
@@ -402,9 +407,34 @@ export async function loadQueue(): Promise<CaseRow[]> {
             details: str(r.details),
             createdAt: str(r.created_at),
           })),
+        signals: (signals.data ?? [])
+          .filter((x: Row) => str(x.case_id) === str(c.id))
+          .map((x: Row) => ({
+            detector: str(x.detector),
+            ruleId: str(x.rule_id),
+            confidence: Number(x.confidence),
+            version: str(x.version),
+            createdAt: str(x.created_at),
+          })),
       };
     })
     .sort((a, b) => SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity] || a.createdAt.localeCompare(b.createdAt));
+}
+
+/** When the retention sweep last ran, so a stalled job shows on the console. */
+export async function lastSweep(): Promise<{ ranAt: string; removed: number } | null> {
+  const db = await cloud();
+  const { data, error } = await db
+    .from('community_retention_runs')
+    .select('ran_at, cases_removed, posts_removed, reports_removed, restrictions_removed, sessions_removed')
+    .order('ran_at', { ascending: false })
+    .limit(1);
+  if (error) fail(error, 'Could not read the retention log.');
+  const r = (data ?? [])[0] as Row | undefined;
+  if (!r) return null;
+  const removed = ['cases_removed', 'posts_removed', 'reports_removed', 'restrictions_removed', 'sessions_removed']
+    .reduce((n, k) => n + Number(r[k] ?? 0), 0);
+  return { ranAt: str(r.ran_at), removed };
 }
 
 export async function decideCase(caseId: string, action: DecisionAction, reasonCode: string): Promise<void> {

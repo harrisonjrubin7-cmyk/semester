@@ -374,6 +374,8 @@ describe('"delete my account" really means every row', () => {
       'communities',
       'community_cases',
       'community_reports',
+      'community_retention_runs',
+      'community_signals',
       'community_venues',
       'feature_kill_switch',
       'group_tasks',

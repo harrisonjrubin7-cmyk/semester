@@ -222,6 +222,41 @@ describe('Community', () => {
     expect(host.textContent).toContain('isn’t told who reported it');
   });
 
+  it('names the course policy before a post that asks for answers', async () => {
+    await openCourse();
+    type(host.querySelector('textarea') as HTMLTextAreaElement, 'Does anyone have the answer key for the midterm?');
+    await act(async () => {
+      (host.querySelector('form[aria-label="Write a post"]') as HTMLFormElement).requestSubmit();
+    });
+    expect(host.querySelector('[role="alert"]')?.textContent).toContain('No sharing graded answers.');
+    expect(mock.createPost).not.toHaveBeenCalled();
+    click('Post anyway');
+    await settle();
+    expect(mock.createPost).toHaveBeenCalledWith('c1', 'Does anyone have the answer key for the midterm?', false);
+  });
+
+  it('never stops a post with crisis language, and offers support after it', async () => {
+    await openCourse();
+    type(host.querySelector('textarea') as HTMLTextAreaElement, 'honestly I want to die this week');
+    await act(async () => {
+      (host.querySelector('form[aria-label="Write a post"]') as HTMLFormElement).requestSubmit();
+    });
+    await settle();
+    expect(mock.createPost).toHaveBeenCalledWith('c1', 'honestly I want to die this week', false);
+    expect(host.textContent).toContain('988');
+  });
+
+  it('says nothing on the device about a threat or hate hit', async () => {
+    await openCourse();
+    type(host.querySelector('textarea') as HTMLTextAreaElement, 'those people are vermin');
+    await act(async () => {
+      (host.querySelector('form[aria-label="Write a post"]') as HTMLFormElement).requestSubmit();
+    });
+    await settle();
+    expect(mock.createPost).toHaveBeenCalled();
+    expect(host.querySelector('form[aria-label="Write a post"] [role="alert"]')).toBeNull();
+  });
+
   it('hides a post for this viewer only', async () => {
     await openCourse();
     click('Hide');

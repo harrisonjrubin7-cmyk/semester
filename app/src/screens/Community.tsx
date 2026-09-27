@@ -386,7 +386,11 @@ function CommunityView({
       {hostOnly ? (
         <p style={{ color: 'var(--app-dim)' }}>Only hosts post in this community.</p>
       ) : (
-        <Composer label="Write a post" onSubmit={(body, own) => createPost(community.id, body, own).then(refresh)} />
+        <Composer
+          label="Write a post"
+          integrityPolicy={community.integrityPolicy}
+          onSubmit={(body, own) => createPost(community.id, body, own).then(refresh)}
+        />
       )}
 
       {own.length > 0 && (
@@ -399,6 +403,7 @@ function CommunityView({
                   label="Edit your post"
                   initial={p.body}
                   submitText="Save"
+                  integrityPolicy={community.integrityPolicy}
                   onSubmit={(body, confirmed) => editPost(p.id, body, confirmed).then(() => setEditing(null)).then(refresh)}
                   onCancel={() => setEditing(null)}
                 />

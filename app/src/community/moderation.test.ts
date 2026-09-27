@@ -95,6 +95,13 @@ describe('triage thresholds', () => {
     expect(t.protection).toBe('none');
   });
 
+  it('a brigade still cannot stop a high-risk report from holding the post', () => {
+    const brigade = new Set(['b1', 'b2', 'b3']);
+    const t = triage(['b1', 'b2', 'b3'].map((r) => report(r, 'private_information_or_doxxing')), now, brigade);
+    expect(t.protection).toBe('temporary_hold');
+    expect(t.route).toBe('integrity_review');
+  });
+
   it('a brigade does not bury a genuine high-risk report', () => {
     const brigade = new Set(['b1', 'b2']);
     const t = triage([report('b1', 'other'), report('b2', 'other'), report('r1', 'threat_or_safety_concern')], now, brigade);

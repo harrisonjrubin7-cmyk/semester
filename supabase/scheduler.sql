@@ -144,6 +144,18 @@ select cron.schedule(
 -- record the successful sweep so `/health/ready` can fail closed if this job
 -- is missing or stalled. Uncertain, pending and processing university actions
 -- are never age-purged.
+-- Community Trust & Safety evidence. Daily: closed cases past their
+-- retain_until (90 days after a no-action close, a year after enforcement or
+-- an appeal), the reports and removed posts they were keeping, restrictions
+-- ninety days after they ended, and study sessions thirty days after they
+-- ended. Open and appealed cases are never swept. Each run writes a row to
+-- community_retention_runs. See RETENTION.md and 20260927170000_community.sql.
+select cron.schedule(
+  'community-retention',
+  '29 4 * * *',
+  $job$select private.sweep_community_retention()$job$
+);
+
 select cron.schedule(
   'institution-gateway-retention',
   '11 * * * *',

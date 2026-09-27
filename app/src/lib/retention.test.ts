@@ -327,4 +327,37 @@ describe('the clocks that run are still the clocks the document describes', () =
     expect(flat()).toContain('daily at 03:29 UTC');
     expect(flat()).not.toContain('nothing schedules it yet');
   });
+
+  /*
+   * Community evidence. The periods are promises made to students about
+   * records of what they posted and reported, so the document, the scheduler
+   * and the sweep are read against each other rather than trusted to agree.
+   * Each interval is taken from the statement that uses it, not matched
+   * anywhere in the file, so a comment cannot satisfy it.
+   */
+  it('agrees with the migration and the scheduler about the Community sweep', () => {
+    const scheduler = readFileSync(join(ROOT, 'supabase', 'scheduler.sql'), 'utf8');
+    expect(scheduler).toMatch(
+      /cron\.schedule\(\s*'community-retention',\s*'29 4 \* \* \*',\s*\$job\$select private\.sweep_community_retention\(\)\$job\$/,
+    );
+
+    const sql = readFileSync(join(MIGRATIONS, '20260927170000_community.sql'), 'utf8');
+    const sweep = sql.split('create or replace function private.sweep_community_retention()')[1]?.split('$$')[1] ?? '';
+    expect(sweep, 'the sweep is no longer in the migration').not.toBe('');
+    expect(sweep).toMatch(/retain_until < now\(\) and status not in \('open', 'appealed'\)/);
+    expect(sweep).toMatch(/r\.case_id is null and r\.created_at < now\(\) - interval '90 days'/);
+    expect(sweep).toMatch(/< now\(\) - interval '90 days';\s*get diagnostics n_restrictions/);
+    expect(sweep).toMatch(/s\.ends_at < now\(\) - interval '30 days'/);
+    expect(sweep).toMatch(/ran_at < now\(\) - interval '1 year'/);
+
+    // The dates a decision sets, which are what the sweep then reads.
+    expect(sql).toMatch(/then interval '90 days' else interval '1 year' end/);
+    expect(sql).toMatch(/set status = 'closed', retain_until = now\(\) \+ interval '1 year'/);
+
+    const doc = flat();
+    expect(doc).toContain('**90 days after a case is closed with no action; 1 year after anything is enforced or an appeal is decided. Open and appealed cases are never swept**');
+    expect(doc).toContain('**30 days after the session ended**');
+    expect(doc).toContain('**90 days after the restriction ended or was lifted**');
+    expect(doc).toContain('**90 days after it was made, once no case holds it**');
+  });
 });
