@@ -1,3 +1,4 @@
+import { HUMANITIES_BUSINESS } from './subjects-humanities-business';
 import { STEM } from './subjects-stem';
 import { t, type Subject, type Tool } from './tools';
 
@@ -33,7 +34,7 @@ export const UNIVERSAL: readonly Tool[] = [
 ];
 
 /** Every subject the catalog knows, one list per group of departments. */
-export const SUBJECTS: readonly Subject[] = [...STEM];
+export const SUBJECTS: readonly Subject[] = [...STEM, ...HUMANITIES_BUSINESS];
 
 /** The subject a course code belongs to, or undefined when the prefix is not known. */
 export function subjectOf(code: string): Subject | undefined {

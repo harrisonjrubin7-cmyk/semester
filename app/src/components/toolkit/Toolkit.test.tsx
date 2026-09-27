@@ -74,6 +74,7 @@ it('recommends a finite set with a reason for each, and can hide one', () => {
   const items = host.querySelectorAll('.toolkit-recs > li');
   expect(items.length).toBeGreaterThan(0);
   expect(items.length).toBeLessThanOrEqual(4);
+  expect(host.textContent).toContain('PSCI 1104 is Political science');
   const first = items[0].querySelector('strong')!.textContent!;
   click(`Hide`);
   expect([...host.querySelectorAll('.toolkit-recs strong')].map((s) => s.textContent)).not.toContain(first);

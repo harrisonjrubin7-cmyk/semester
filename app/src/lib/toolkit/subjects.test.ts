@@ -9,6 +9,8 @@ describe('subject workbenches', () => {
   it('finds a subject from the course-code prefix, in any case', () => {
     expect(subjectOf('MATH 2300')?.id).toBe('math');
     expect(subjectOf('cs 1101')?.id).toBe('cs');
+    expect(subjectOf('PSCI 1104')?.id).toBe('poli-sci');
+    expect(subjectOf('econ 1010')?.id).toBe('economics');
   });
 
   it('no prefix belongs to two subjects', () => {
@@ -24,6 +26,11 @@ describe('subject workbenches', () => {
     }
     expect(find('dna-lab')?.boundary).toBe('science');
     expect(find('security-sandbox')?.boundary).toBe('cyber');
+  });
+
+  it('legal and finance tools carry their boundary', () => {
+    expect(find('case-brief')?.boundary).toBe('legal');
+    expect(find('finance-models')?.boundary).toBe('finance');
   });
 
   it('every subject inherits the universal tools, without duplicates', () => {

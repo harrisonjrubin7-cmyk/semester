@@ -70,6 +70,8 @@ export const draw = t('draw', 'Diagram builder', 'Flows, timelines and matrices 
 export const sheet = t('sheet', 'Spreadsheet', 'A grid out as Excel or CSV', 'native', { screen: 'sheet' });
 export const matrix = t('evidence-matrix', 'Evidence matrix', 'Study-by-study comparison with verification', 'guided', { opens: 'research' });
 export const labReport = t('lab-report', 'Lab report template', 'Objective through limitations, one stage at a time', 'guided', { opens: 'assignment' });
+export const caseAnalysis = t('case-analysis', 'Case analysis template', 'Facts, stakeholders, framework, alternatives, recommendation', 'guided', { opens: 'assignment' });
+export const policyMemo = t('policy-memo', 'Policy memo template', 'Problem, options, tradeoffs, recommendation, evidence', 'guided', { opens: 'assignment' });
 
 export type Family = 'STEM' | 'Humanities & languages' | 'Social sciences & business' | 'Health & clinical' | 'Arts & media' | 'Field & environment';
 
