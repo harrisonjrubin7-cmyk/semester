@@ -69,8 +69,12 @@ export interface Resolved {
  * produces no layer at all — which is what lets the fallback show.
  */
 export function fromCourse(policy: CoursePolicy | undefined): PolicySource | undefined {
-  if (!policy || policy.stance === 'unstated') return undefined;
-  const blanket = policy.stance === 'banned' ? 'prohibited' : policy.stance === 'limited' ? 'limited' : 'allowed';
+  // Mapped value by value rather than "anything else is allowed": a stance
+  // the app does not recognise — a typo in stored data, a value added later —
+  // is not a permission, so it produces no layer and the card shows
+  // "Policy unavailable".
+  const blanket = policy && ({ banned: 'prohibited', limited: 'limited', allowed: 'allowed' } as const)[policy.stance as 'banned' | 'limited' | 'allowed'];
+  if (!policy || !blanket) return undefined;
   return {
     layer: 'course',
     link: '',

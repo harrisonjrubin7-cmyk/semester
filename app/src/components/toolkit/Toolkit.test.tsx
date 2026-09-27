@@ -195,3 +195,12 @@ it('never lets datasets grow past their storage budget, however many are importe
   expect((localStorage.getItem(TOOLKIT_DATA_KEY) ?? '').length).toBeLessThanOrEqual(DATA_BUDGET);
   expect(host.textContent).toContain('Not enough room on this device');
 });
+
+it('does not say AI help is allowed for data that may not go to AI', () => {
+  mount();
+  tab('Data Studio');
+  act(() => ([...host.querySelectorAll('input[type="radio"]')][3] as HTMLInputElement).click());
+  expect(host.textContent).toContain('AI help is not available for this kind of data');
+  act(() => ([...host.querySelectorAll('input[type="radio"]')][2] as HTMLInputElement).click());
+  expect(host.textContent).not.toContain('AI help is not available for this kind of data');
+});
