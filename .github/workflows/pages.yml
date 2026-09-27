@@ -319,6 +319,19 @@ jobs:
             fi
           fi
 
+          # A demo build is a legitimate thing to deploy, and a surprising one
+          # to open: it wears the "Demo environment" label on every screen,
+          # swaps the student's own work for Northstar University fixtures and
+          # a persona switcher, and switches on every experience that inherits
+          # the flag. Somebody who set the variable once to try the preview
+          # and forgot it sees that on every visit and cannot tell why, so the
+          # run says it where the deploy is looked at. A warning, not an
+          # error: the demo is allowed, it is just never the product by
+          # accident.
+          if [ "$VITE_INSTITUTIONAL_PREVIEW" = "true" ]; then
+            echo "::warning title=Demo build::VITE_INSTITUTIONAL_PREVIEW is true, so this site is a demo with synthetic data and a persona switcher, not the product. To deploy the real app, delete the VITE_INSTITUTIONAL_PREVIEW repository variable (Settings → Secrets and variables → Actions) and re-run this workflow."
+          fi
+
           if [ -n "$VITE_SUPABASE_URL" ] && [ -n "$VITE_SUPABASE_KEY" ]; then
             echo "::notice title=Accounts::Supabase configured (url ${#VITE_SUPABASE_URL} chars, key ${#VITE_SUPABASE_KEY} chars) — this build has accounts."
           else
