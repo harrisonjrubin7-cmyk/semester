@@ -64,9 +64,10 @@ describe('the registry is not this person’s app', () => {
   });
 
   it('is shorter for every other person the app supports', () => {
-    expect(offered(VANDERBILT, 'faculty').length).toBe(DESTINATIONS.length - 11);
+    // Twelve: Launchpad joined the student-only list with deposits and orientation.
+    expect(offered(VANDERBILT, 'faculty').length).toBe(DESTINATIONS.length - 12);
     expect(offered(BARE, 'student').length).toBe(DESTINATIONS.length - 5);
-    expect(offered(BARE, 'faculty').length).toBe(DESTINATIONS.length - 12);
+    expect(offered(BARE, 'faculty').length).toBe(DESTINATIONS.length - 13);
   });
 });
 

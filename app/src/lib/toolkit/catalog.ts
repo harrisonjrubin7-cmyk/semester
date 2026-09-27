@@ -1,4 +1,5 @@
 import { HUMANITIES_BUSINESS } from './subjects-humanities-business';
+import { PROFESSIONAL } from './subjects-professional';
 import { STEM } from './subjects-stem';
 import { t, type Subject, type Tool } from './tools';
 
@@ -24,6 +25,7 @@ export const UNIVERSAL: readonly Tool[] = [
   t('data-studio', 'Data Studio', 'Dictionary, cleaning log, describe, chart with a table alternative, bounded conclusions', 'guided', { opens: 'data' }),
   t('assignment-workspace', 'Assignment workspace', 'Stages, deliverables, rubric self-check and submission checklist', 'guided', { opens: 'assignment' }),
   t('rubric-interpreter', 'Rubric self-check', 'A rubric criterion turned into a checklist — never a grade prediction', 'guided', { opens: 'rubric' }),
+  t('ai-disclosure', 'AI-use declaration', 'What you used, for what, and what you checked', 'guided', { opens: 'disclosure' }),
   t('study-guide', 'Study guide from sources', 'Guides built only from material you select, with quotations matched', 'native', { screen: 'study' }),
   t('practice-paper', 'Practice paper', 'A timed paper marked against a key', 'native', { screen: 'exam' }),
   t('sources', 'Sources', 'Your readings with what each is for, out as BibTeX', 'native', { screen: 'sources' }),
@@ -34,7 +36,7 @@ export const UNIVERSAL: readonly Tool[] = [
 ];
 
 /** Every subject the catalog knows, one list per group of departments. */
-export const SUBJECTS: readonly Subject[] = [...STEM, ...HUMANITIES_BUSINESS];
+export const SUBJECTS: readonly Subject[] = [...STEM, ...HUMANITIES_BUSINESS, ...PROFESSIONAL];
 
 /** The subject a course code belongs to, or undefined when the prefix is not known. */
 export function subjectOf(code: string): Subject | undefined {

@@ -5,7 +5,7 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { toolkitFlags } from '../../lib/toolkit/flags';
 import type { Screen } from '../../lib/types';
 import { DATA_BUDGET, MAX_RAW } from '../../lib/toolkit/data';
-import { TOOLKIT_DATA_KEY, TOOLKIT_KEY } from './store';
+import { toolkitDataKey, toolkitKey } from './store';
 import { Toolkit, type ToolkitCourse } from './Toolkit';
 
 /**
@@ -80,7 +80,7 @@ it('recommends a finite set with a reason for each, and can hide one', () => {
   const first = items[0].querySelector('strong')!.textContent!;
   click(`Hide`);
   expect([...host.querySelectorAll('.toolkit-recs strong')].map((s) => s.textContent)).not.toContain(first);
-  expect(JSON.parse(localStorage.getItem(TOOLKIT_KEY)!).hidden.length).toBe(1);
+  expect(JSON.parse(localStorage.getItem(toolkitKey())!).hidden.length).toBe(1);
 });
 
 it('opens a native Semester screen rather than a copy of it', () => {
@@ -166,6 +166,22 @@ it('shows a restricted workbench as needing review, not as a working tool', () =
   expect(dna.querySelector('button')).toBeNull();
 });
 
+it('shows the professional boundary a topic runs into, and nothing for ordinary coursework', () => {
+  mount();
+  const topic = [...host.querySelectorAll('label')].find((l) => l.textContent?.startsWith('Topic'))!.querySelector('input')!;
+  type(topic, 'sleep and memory in first-year students');
+  expect(host.querySelector('.portal-warning')).toBeNull();
+  type(topic, 'answers to the take-home exam');
+  expect(host.textContent).toContain('Semester will not produce answers for an assessment');
+});
+
+it('keeps the AI-use declaration from leaving until it is complete and attested', () => {
+  mount();
+  tab('AI-use policy');
+  expect(button('Download declaration').disabled).toBe(true);
+  expect(host.textContent).toContain('Confirm the attestation.');
+});
+
 const importPasted = (tierIndex: number, csv: string) => {
   tab('Data Studio');
   act(() => ([...host.querySelectorAll('input[type="radio"]')][tierIndex] as HTMLInputElement).click());
@@ -191,7 +207,7 @@ it('says a dataset was not imported when the device refuses to save it, and show
   mount();
   const real = Storage.prototype.setItem;
   vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (this: Storage, key: string, value: string) {
-    if (key === TOOLKIT_DATA_KEY) throw new Error('quota');
+    if (key === toolkitDataKey()) throw new Error('quota');
     return real.call(this, key, value);
   });
   importPasted(2, 'x,y\n1,2\n');
@@ -206,6 +222,27 @@ it('never lets datasets grow past their storage budget, however many are importe
   // Quotes and line breaks nearly double in JSON, so each of these is close to the per-file cap once stored.
   const big = 'a\n' + '"q",\n'.repeat(Math.floor((MAX_RAW - 2) / 5));
   for (let i = 0; i < 4; i++) importPasted(2, big);
-  expect((localStorage.getItem(TOOLKIT_DATA_KEY) ?? '').length).toBeLessThanOrEqual(DATA_BUDGET);
+  expect((localStorage.getItem(toolkitDataKey()) ?? '').length).toBeLessThanOrEqual(DATA_BUDGET);
   expect(host.textContent).toContain('Not enough room on this device');
+});
+
+it('does not say AI help is allowed for data that may not go to AI', () => {
+  mount();
+  tab('Data Studio');
+  act(() => ([...host.querySelectorAll('input[type="radio"]')][3] as HTMLInputElement).click());
+  expect(host.textContent).toContain('AI help is not available for this kind of data');
+  act(() => ([...host.querySelectorAll('input[type="radio"]')][2] as HTMLInputElement).click());
+  expect(host.textContent).not.toContain('AI help is not available for this kind of data');
+});
+
+it('keeps each account’s toolkit apart on a shared device', () => {
+  act(() => root.render(<Toolkit courses={COURSES} accountId="student-a" flags={ALL_ON} now={new Date('2026-09-27T12:00:00')} onOpen={() => {}} onClose={() => {}} />));
+  tab('Assignments');
+  click(/^Start a essay workspace/);
+  expect(host.textContent).toContain('0 of 7 stages done');
+  expect(localStorage.getItem(toolkitKey('student-a'))).toContain('"essay"');
+  act(() => root.render(<Toolkit key="b" courses={COURSES} accountId="student-b" flags={ALL_ON} now={new Date('2026-09-27T12:00:00')} onOpen={() => {}} onClose={() => {}} />));
+  tab('Assignments');
+  expect(host.textContent).not.toContain('stages done');
+  expect(localStorage.getItem(toolkitKey('student-b'))).toBeNull();
 });

@@ -329,6 +329,47 @@ begin
     pg_temp.seen(classmate, $q$select 1 from public.canonical_entity_references where canonical_entity_type = 'term'$q$), 1);
   perform pg_temp.counted('another school''s admin reads the public term',
     pg_temp.seen(integ_b, 'select 1 from public.canonical_entity_references'), 0);
+  -- Two connections to the same product at one school, with a record id in
+  -- common. Codex found on #779 that identity ignored the connection, so the
+  -- second import overwrote the first connection's row — someone else's
+  -- student, if the ids were ordinary ones like `student-1`.
+  declare conn2 uuid;
+  begin
+    insert into public.integration_connections (tenant_id, provider_domain, provider_name, connection_name)
+    values ('icp-a', 'lms', 'Canvas', 'Canvas (law school)') returning id into conn2;
+    insert into public.canonical_entity_references (tenant_id, canonical_entity_type, canonical_entity_id,
+      subject_user_id, connection_id, source_system, source_record_id, source_of_truth, classification)
+    values ('icp-a', 'enrollment', 'enr-law', classmate, conn2, 'sis', 'ext-1', 'Registrar', 'T3');
+    select count(*) into n from public.canonical_entity_references where source_record_id = 'ext-1';
+    perform pg_temp.counted('the same external id on two connections is two records', n, 2);
+    begin
+      insert into public.canonical_entity_references (tenant_id, canonical_entity_type, canonical_entity_id,
+        subject_user_id, connection_id, source_system, source_record_id, source_of_truth, classification)
+      values ('icp-a', 'enrollment', 'enr-dup', classmate, conn2, 'sis', 'ext-1', 'Registrar', 'T3');
+      raise exception 'FAILED: the same record twice on one connection was accepted';
+    exception when unique_violation then
+      raise notice 'ok  the same record twice on one connection is refused';
+    end;
+  end;
+  -- And removing both of those connections keeps both records, provenance
+  -- cleared. Codex found on #808 that `nulls not distinct` made the two
+  -- orphans identical, so the second removal failed on the unique index.
+  declare c_one uuid; c_two uuid;
+  begin
+    insert into public.integration_connections (tenant_id, provider_domain, provider_name, connection_name)
+    values ('icp-a', 'lms', 'Canvas', 'Canvas (nursing)') returning id into c_one;
+    insert into public.integration_connections (tenant_id, provider_domain, provider_name, connection_name)
+    values ('icp-a', 'lms', 'Canvas', 'Canvas (music)') returning id into c_two;
+    insert into public.canonical_entity_references (tenant_id, canonical_entity_type, canonical_entity_id,
+      subject_user_id, connection_id, source_system, source_record_id, source_of_truth, classification)
+    values ('icp-a', 'enrollment', 'enr-n', classmate, c_one, 'sis', 'ext-orphan', 'Registrar', 'T3'),
+           ('icp-a', 'enrollment', 'enr-m', classmate, c_two, 'sis', 'ext-orphan', 'Registrar', 'T3');
+    delete from public.integration_connections where id in (c_one, c_two);
+    select count(*) into n from public.canonical_entity_references
+     where source_record_id = 'ext-orphan' and connection_id is null;
+    perform pg_temp.counted('removing two connections that share a record keeps both, unattached', n, 2);
+  end;
+
   perform pg_temp.expect_rejected('an education record with no owner',
     $q$insert into public.canonical_entity_references (tenant_id, canonical_entity_type, canonical_entity_id,
          source_system, source_record_id, source_of_truth, classification)

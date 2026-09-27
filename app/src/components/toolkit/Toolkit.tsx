@@ -6,10 +6,12 @@ import { interpretationGaps } from '../../lib/toolkit/data';
 import { on, TOOLKIT_FLAGS, type ToolkitFlags } from '../../lib/toolkit/flags';
 import { card, fromCourse, redirect, STATE_LABEL, usageLabel } from '../../lib/toolkit/policy';
 import { GOALS, labelOf, recommend, subjectFor, type Goal, type Recommendation } from '../../lib/toolkit/recommend';
+import { boundaryNotice } from '../../lib/toolkit/safety';
 import { progress, TEMPLATE_IDS, TEMPLATES, type TemplateId } from '../../lib/toolkit/templates';
 import { Notice, TabList } from '../ui';
 import { AssignmentPanel, RubricPanel } from './AssignmentPanel';
 import { DataPanel } from './DataPanel';
+import { DisclosurePanel } from './DisclosurePanel';
 import { ResearchPanel } from './ResearchPanel';
 import { useToolkit, useToolkitData } from './store';
 
@@ -35,19 +37,22 @@ type Section = 'start' | 'assignment' | 'research' | 'data' | 'rubric' | 'policy
 
 export function Toolkit({
   courses,
+  accountId,
   onOpen,
   onClose,
   flags = TOOLKIT_FLAGS,
   now = new Date(),
 }: {
   courses: readonly ToolkitCourse[];
+  /** The signed-in account, whose own toolkit this is. Undefined is "this device, nobody signed in". */
+  accountId?: string;
   onOpen: (screen: Screen) => void;
   onClose: () => void;
   flags?: ToolkitFlags;
   now?: Date;
 }) {
-  const library = useToolkit();
-  const dataLibrary = useToolkitData();
+  const library = useToolkit(accountId);
+  const dataLibrary = useToolkitData(accountId);
   const store = library.value;
   const [section, setSection] = useState<Section>('start');
   const [goal, setGoal] = useState<Goal | null>(null);
@@ -55,6 +60,7 @@ export function Toolkit({
   const [subjectId, setSubjectId] = useState('');
   const [assignment, setAssignment] = useState<TemplateId | ''>('');
   const [due, setDue] = useState('');
+  const [topic, setTopic] = useState('');
   const [openTemplate, setOpenTemplate] = useState<TemplateId | null>(null);
 
   const course = courses.find((c) => c.code === courseCode);
@@ -62,6 +68,7 @@ export function Toolkit({
   const subject = subjectFor({ courseCode, subjectId });
   const fromCode = subjectOf(courseCode);
   const dueInDays = due ? Math.round((Date.parse(`${due}T12:00:00`) - now.getTime()) / 86_400_000) : undefined;
+  const notice = topic.trim() ? boundaryNotice(topic) : null;
 
   const tabs: { id: Section; label: string }[] = [
     { id: 'start', label: 'Start' },
@@ -192,7 +199,16 @@ export function Toolkit({
                 Due date (optional)
                 <input className="input" type="date" value={due} onChange={(e) => setDue(e.target.value)} />
               </label>
+              <label>
+                Topic (optional)
+                <input className="input" value={topic} maxLength={300} onChange={(e) => setTopic(e.target.value)} placeholder="e.g. sleep and memory in first-year students" />
+              </label>
             </div>
+            {notice && (
+              <p className="portal-warning" role="status">
+                {notice.text}
+              </p>
+            )}
           </section>
 
           <section className="portal-panel" aria-labelledby="toolkit-recs">
@@ -278,6 +294,7 @@ export function Toolkit({
       {section === 'policy' && (
         <>
           <PolicyCard course={course} layers={layers} onEdit={() => onOpen('edit')} />
+          {on(flags.aiDisclosure) && <DisclosurePanel library={library} course={course?.code ?? ''} />}
         </>
       )}
       {section === 'catalog' && <Catalog subject={subject} workbenchesOn={on(flags.subjectWorkbenches)} onOpen={onOpen} onSection={(s) => setSection(s)} />}

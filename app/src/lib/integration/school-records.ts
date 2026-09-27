@@ -204,11 +204,14 @@ export function schoolRecordsView(rows: readonly RecordRow[], userId: string | n
     : null;
 
   const blocking = holds.some((h) => h.text.startsWith('Action required before'));
-  // "No hold on record" only when the hold feed is fresh enough to be believed
-  // and there is a window to register in; otherwise say nothing about it.
+  // "No hold on record" only with evidence: fresh hold data from the school that
+  // blocks nothing, and a window to register in. No hold rows at all is not
+  // evidence — the scope may be unapproved or consent withheld — so then this
+  // says nothing about holds.
   const readiness: SchoolRecordsView['readiness'] = blocking
     ? 'blocked'
-    : window && window.official && holdRows.every((r) => isOfficialCurrent(effectiveFreshness(r, now), 'connected_institutional'))
+    : window && window.official && holdRows.length > 0
+        && holdRows.every((r) => isOfficialCurrent(effectiveFreshness(r, now), 'connected_institutional'))
       ? 'no_hold_on_record'
       : 'unknown';
 

@@ -134,6 +134,85 @@ view tabs and Tab reaches a map node that Enter opens. Controls: a planted unnam
 overflow probe measured the dashboard's own box, which the grid keeps inside the viewport whatever its children do,
 and reported the planted element as clean — it was replaced with a per-element check before these figures were taken.
 
+## Found by the Codex review of #779, after merge
+
+Each was reproduced as a failing test on main before its fix, then passed with it.
+
+| Finding | Reproduced by | Fix |
+| --- | --- | --- |
+| The service role could not execute `private.public_id`, so every worker run failed opening | `integration-hardening.check.sql` inserts a run and a source record as the service role: `permission denied for function public_id` | `20260927210000_integration_review_fixes.sql` grants it |
+| The worker never read the connector flag | `worker.test.ts`: absent, `off` and `preview` flags all ran | the worker requires `production` for the adapter's flag at the school |
+| A batch that failed to save stayed "processed", so its retry was skipped as a duplicate | `worker.test.ts`: the redelivery ingested nothing | a run that failed for a retryable reason releases its event claim (narrowed after #808, below) |
+| Two connections to one product overwrote each other's records on a shared id | `integration-control-plane.check.sql`: the second connection's row hit the unique key; `worker.test.ts`: one row for two connections | identity includes the connection (unique index; `nulls not distinct` dropped after #808, below); the worker and `lti_record_context` upsert on it |
+| "No registration hold on record" from a fresh window and no hold data at all | `school-records.test.ts` | the sentence needs fresh hold data that blocks nothing |
+
+The existing school-records test had encoded the fifth as correct and was rewritten. The worker test's in-memory table
+stand-in had an insert that fell through to its read path once a delete branch was added; the type check caught it,
+and the three new tests were re-run against main's worker with the corrected stand-in to confirm they fail there.
+
+## Found by the Codex review of #808, after merge
+
+| Finding | Reproduced by | Fix |
+| --- | --- | --- |
+| Removing two connections that shared a record failed: `on delete set null` left two rows identical under a `nulls not distinct` index | `integration-control-plane.check.sql`: `duplicate key value violates unique constraint "canonical_entity_references_identity"` | `20260927220000_integration_orphan_identity.sql` recreates the index nulls-distinct. Nothing upserts a reference without a connection |
+| Releasing the claim on *every* failed run re-ingested and re-logged a batch refused for good (consent, scope, schema, classification) on every redelivery | `worker.test.ts`: the redelivery ran again and logged a second error | the claim is released only when an error is retryable; otherwise the event is kept as `rejected` and a redelivery is a duplicate |
+
+## Scheduler — `tick.test.ts`, `registry.test.ts`, `api/integration/tick.test.ts`, `retention.test.ts`
+
+**What the tick runs:**
+
+- a due connection is pulled from its cursor;
+- a connection that is not due, not pulled, unapproved, paused, disconnected or unregistered is not run;
+- with the empty production registry, nothing runs.
+
+**Kill switches and refusals:**
+
+- the global switch, engaged or unreadable, stops the tick;
+- a school switch is left for the worker to refuse, and the refusal writes nothing.
+
+**Failures and dead letters:**
+
+- a failing connection's attempts are counted, so its fifth failure dead-letters;
+- after that it is held for an operator rather than dead-lettered every tick.
+
+**Replays:**
+
+- a requested replay runs once per connection and resolves its letters;
+- a replay that fails again is handed back to the operator;
+- a letter whose school is not its connection's school is never replayed.
+
+**Limits:**
+
+- the run cap and the time budget are both kept, oldest attempt first;
+- one run that throws does not stop the rest.
+
+**The endpoint:**
+
+- it answers 503 until all three variables are set;
+- it answers 401 to a wrong or missing token, and 405 to anything but POST.
+
+**The schedule is pinned:**
+
+- the job fires every `TICK_MINUTES` and is parked;
+- its address and token come from Vault;
+- the sweep is daily and not parked.
+
+**The registry:** it refuses a mock and a double claim. A control shows that rule catches both.
+
+**Found by the Codex review of #811, before merge.** Each was written as a failing test before its fix, and reverting
+the fix turns it red again:
+
+- a failing `configuring` connection restarted at attempt 1 every tick and never dead-lettered;
+- an unreadable hold lookup let held connections be pulled;
+- replays were capped by row, so one connection's thirty requests shut out another's one;
+- the connection's own `freshness_target` was ignored in favour of the adapter's.
+
+Each tick rule was checked by reverting it: the hold, the attempt count, the replay's resolve and withdraw, the school
+check, one pull per connection, the run cap, the skip count and the fail-closed switch each turned a test red. So did
+un-parking the job and changing its cadence. `scheduler.sql` was also applied twice to a scratch Postgres with
+stubbed cron, vault and net schemas. That produced both jobs once, with the sync job inactive. The job's body then
+posted to the Vault address with a bearer token.
+
 ## Two classification layers — `classification.test.ts`
 
 The platform floor matches the migration's seed row for row, and the AI Toolkit's gate (`lib/toolkit/classification.ts`)
@@ -142,5 +221,5 @@ destination. Restoring the old floor (T2 kept out of Community) turned three tes
 
 ## Not yet covered
 
-A live provider; webhook signature validation (no webhook endpoint exists); the worker against PostgREST rather than a stand-in; a scheduler for the sweep and the worker; tablet hardware and screen-reader software (the pass above is automated). 
+A live provider; webhook signature validation (no webhook endpoint exists); the worker against PostgREST rather than a stand-in; the scheduled tick against a deployed endpoint (the job is parked); tablet hardware and screen-reader software (the pass above is automated). 
 

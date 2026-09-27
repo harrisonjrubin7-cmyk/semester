@@ -139,7 +139,7 @@ export const SYNC_GROUPS: { says: string; keys: string[] }[] = [
   },
   {
     says: 'the people you have logged, the letters you have asked for and your advising visits',
-    keys: ['people', 'visits', 'letters', 'myName'],
+    keys: ['people', 'visits', 'letters', 'myName', 'pronounce'],
   },
   {
     says: 'what you have recorded a term costing, and your housing, meal and map records',
@@ -156,7 +156,7 @@ export const SYNC_GROUPS: { says: string; keys: string[] }[] = [
       'tabs', 'yours', 'controls', 'role', 'showAll',
       'schemaVersion', 'accent', 'textSize', 'ground', 'density', 'corners',
       'typeface', 'bodyface', 'lineHeight', 'readingWidth', 'iconShape', 'calm',
-      'labels', 'badges', 'feed', 'courseColours', 'shell', 'favourites',
+      'labels', 'badges', 'feed', 'courseColours', 'shell', 'favourites', 'access',
       'shortcuts', 'directory', 'groupOrder', 'boardOrder', 'hue',
     ],
   },

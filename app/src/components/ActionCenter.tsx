@@ -308,6 +308,29 @@ export function ActionCenter({
         </p>
       )}
 
+      {/*
+        The one way back for something hidden. "Not relevant" says it can be
+        reopened, and the Undo beside it lasts only until the page changes, so
+        without this list an accidental dismissal would be permanent.
+      */}
+      {ranked.hidden.some((h) => h.status === 'dismissed' || h.status === 'snoozed') && (
+        <details className="today-why">
+          <summary>Hidden ({ranked.hidden.filter((h) => h.status === 'dismissed' || h.status === 'snoozed').length})</summary>
+          <ul className="action-list">
+            {ranked.hidden
+              .filter((h) => h.status === 'dismissed' || h.status === 'snoozed')
+              .map((h) => (
+                <li key={h.action.id}>
+                  <button type="button" className="workspace-text-button" onClick={() => act(h.action.id, 'reopen')}>
+                    Bring back: {h.action.title}
+                  </button>
+                  <span className="today-sync-status"> · {h.status === 'dismissed' ? 'Not relevant' : 'Snoozed'}</span>
+                </li>
+              ))}
+          </ul>
+        </details>
+      )}
+
       {explaining && (
         <ExplanationSheet action={explaining.action} ranking={rankingLine(explaining)} onClose={() => setExplaining(null)} />
       )}

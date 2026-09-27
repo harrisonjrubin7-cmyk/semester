@@ -53,13 +53,53 @@ and states only.
 
 `runSync(serviceClient, { connectionPublicId, adapter, trigger, fetchBatch, attempt })` in
 `app/server/integration/worker.ts`. It refuses unless the adapter validates and matches the connection's domain, the
-connection is approved and not paused or disconnected, and no global, school or connection kill switch is engaged. It
+connection is approved and not paused or disconnected, the adapter's connector flag is `production` for the school, and
+no global, school or connection kill switch is engaged. It
 reads only scopes approved and unexpired now, resolves people only through **active** SCIM memberships, records every
-batch as an event (a redelivered key is ingested once), writes references with their display values, and moves the
+batch as an event (a redelivered key is ingested once; a batch that failed for a retryable reason, such as a save that did not land, releases its key so the retry is
+ingested), writes references with their display values, and moves the
 connection to `healthy`, `degraded` or `error` by the outcome.
 
 A provider failure is retried with back-off; after the fifth attempt (or at once for a permanent error) it becomes a
 dead letter.
+
+### On a schedule
+
+`supabase/scheduler.sql` holds two integration jobs:
+
+| Job | When | Does | State |
+| --- | --- | --- | --- |
+| `integration-retention` | daily 03:29 UTC | `integration_retention_sweep()` (§8) | active |
+| `integration-sync` | :07, :22, :37, :52 | POSTs to `/api/integration/tick` | **parked** |
+
+The tick (`app/server/integration/tick.ts`) first runs replays an operator requested (§5). It then runs `runSync` for each
+connection that meets all of these:
+
+- approved and not paused or disconnected;
+- pulled rather than pushed (`sync_mode` of `incremental_api` or `batch`);
+- has an adapter registered in `app/server/integration/registry.ts`;
+- not attempted within half its freshness target, or within fifteen minutes when it is in `error`. The target is the
+  connection's own `freshness_target` when it has one, which is also what the dashboard and `integration_health()`
+  measure. Otherwise it is the adapter's.
+
+A connection holding an open dead letter is **not** retried on schedule; it waits for a replay. If the tick cannot read
+whether a connection is held, it pulls nothing on schedule that tick. Failures are counted whatever the status, so a
+connection still `configuring` also dead-letters on its fifth. Replays are capped per connection, not per request, so
+one connection's many requests cannot crowd out another's. Every other rule is
+still `runSync`'s. The registry is empty, so until an adapter is added a tick runs nothing and reports every
+connection as unregistered.
+
+**Unparking `integration-sync`** (all four steps, in order):
+
+1. Read the generated token once: `select decrypted_secret from vault.decrypted_secrets where name = 'integration_cron_secret';`
+2. On the Vercel project, set `INTEGRATION_CRON_SECRET` to it. `SEMESTER_AUTH_URL` and `SEMESTER_AUTH_SERVICE_KEY` must
+   already be set. Redeploy. Until all three are set, the endpoint answers 503.
+3. Store the address: `select vault.create_secret('https://<production host>/api/integration/tick', 'integration_tick_url', 'Where integration-sync posts', null);`
+4. `select cron.alter_job((select jobid from cron.job where jobname = 'integration-sync'), active := true);`
+
+Check the result in `cron.job_run_details` and `net._http_response`: a healthy tick answers 200 with counts only. Re-running
+`scheduler.sql` parks the job again, as it does `push`. To rotate the token, update the Vault secret and the Vercel
+variable together; in between, every tick answers 401.
 
 After a full pull, reconcile: `reconcile(serviceClient, { connectionPublicId, adapter, canonicalEntity, providerIds,
 runId })` marks what the source deleted (values cleared, row kept 30 days as evidence) and warns about what the
@@ -73,6 +113,10 @@ source has that Semester does not.
 - **Replay** a dead letter (integration admin): `integration_request_replay(id, reason)`. This *requests*; the worker
   picks up rows with `replay_requested_at` set and runs them with `trigger: 'replay'`. Refused under
   `kill.integration_sync`.
+  - The next scheduled tick runs it as a fresh pull from the connection's cursor. A failed pull's payload was never
+    stored, only its hash.
+  - A run that does not fail resolves every open letter on that connection.
+  - A run that fails again withdraws the request. The letter stays open until it is requested again.
 
 ## 6. Incident: stop everything
 
@@ -94,7 +138,7 @@ source has that Semester does not.
 
 ## 8. Retention and legal hold
 
-`select * from public.integration_retention_sweep();` (service role, daily) removes, per school:
+`select * from public.integration_retention_sweep();` (service role; the `integration-retention` job runs it daily at 03:29 UTC) removes, per school:
 sync runs and errors older than 180 days, events processed more than 30 days ago, dead letters resolved more than 90
 days ago, snapshots past their expiry, and references the source deleted more than 30 days ago. It writes one
 `integration_retention_runs` row per school, which the school's integration staff can read.
