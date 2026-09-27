@@ -44,7 +44,14 @@ const MOVE_TEXT: Record<RequestStatus, string> = {
  * the list before it names nobody. The reply goes back through the app, where
  * the student reads it beside their question.
  */
-export function HelpInbox({ account }: { account: Account | null }) {
+export function HelpInbox({
+  account,
+  onInboxes,
+}: {
+  account: Account | null;
+  /** Told each time the inboxes load, so the Get help tab's count follows moves made here. */
+  onInboxes?: (inboxes: StaffInbox[]) => void;
+}) {
   const [inboxes, setInboxes] = useState<StaffInbox[]>([]);
   const [opened, setOpened] = useState<Record<string, OpenedRequest>>({});
   const [replies, setReplies] = useState<Record<string, string>>({});
@@ -54,11 +61,13 @@ export function HelpInbox({ account }: { account: Account | null }) {
   const refresh = useCallback(async () => {
     if (!account) return;
     try {
-      setInboxes(await loadInboxes());
+      const next = await loadInboxes();
+      setInboxes(next);
+      onInboxes?.(next);
     } catch (error) {
       setNotice(error instanceof Error ? error.message : 'Could not load your inboxes.');
     }
-  }, [account]);
+  }, [account, onInboxes]);
 
   // An account-backed resource, not render-derived state.
   // oxlint-disable-next-line react/set-state-in-effect

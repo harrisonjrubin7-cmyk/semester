@@ -448,6 +448,14 @@ export const REPLY_MAX = 1000;
 export const replyAfter = (previous: string, sent: string): string =>
   sent.trim() ? sent.trim().slice(0, REPLY_MAX) : previous;
 
+/**
+ * Requests nobody at the office has marked seen yet, across every inbox this
+ * account answers for. Opening a request does not change its status, so a
+ * request stays new until someone moves it on.
+ */
+export const newRequestCount = (inboxes: readonly StaffInbox[]): number =>
+  inboxes.reduce((n, box) => n + box.items.filter((item) => item.status === 'sent').length, 0);
+
 /** Every inbox this account answers for, with what is waiting in each. */
 export async function loadInboxes(): Promise<StaffInbox[]> {
   const db = await cloud();
