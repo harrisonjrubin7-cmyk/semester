@@ -67,6 +67,7 @@ import { JourneyCards } from '../components/JourneyCards';
 import { journeysFor, recommendJourney } from '../lib/journeys';
 import { offered } from '../lib/nav';
 import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
+import { CommandCenter, FirstGoal } from '../components/unity/CommandCenter';
 import { TodayDecisionSurface } from '../components/TodayDecisionSurface';
 
 const FlightPlanHome = lazy(() =>
@@ -753,7 +754,9 @@ function TabHome() {
         style={{ marginTop: '0', marginInline: '0', marginBottom: 'calc(16px * var(--density, 1))' }}
       />
 
+      <FirstGoal />
       <TodayDecisionSurface />
+      <CommandCenter />
       <FlightPlanHomeSlot />
       <RecommendedJourney />
 
@@ -1878,7 +1881,9 @@ function FeedHome() {
       </div>
 
       <div style={{ padding: 'var(--page-pad)' }}>
+        <FirstGoal />
         <TodayDecisionSurface />
+        <CommandCenter />
         <NextClassCard />
         <FlightPlanHomeSlot />
         <RecommendedJourney />

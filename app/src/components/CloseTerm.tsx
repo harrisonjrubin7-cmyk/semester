@@ -3,6 +3,8 @@ import { useStore } from '../state/store';
 import { backupOf } from '../lib/export';
 import { takeSnapshot } from '../lib/snapshots';
 import { readTerm } from '../lib/term';
+import { SuccessState } from './unity/States';
+import { NextSteps } from './unity/NextSteps';
 import { ARCHIVED_LINE, asTaken, closing, isArchived, nextTerm, offerLine, readyLine } from '../lib/rollover';
 
 /**
@@ -30,10 +32,13 @@ export function CloseTerm() {
   if (done) {
     return (
       <div style={{ marginTop: 'calc(18px * var(--density, 1))' }}>
-        <div className="kicker">{readTerm(term).label}</div>
-        <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
-          {ARCHIVED_LINE}
-        </div>
+        <SuccessState title={`${readTerm(term).label} is closed`} body={ARCHIVED_LINE} />
+        <NextSteps
+          steps={[
+            { label: 'See your record', run: () => dispatch({ type: 'go', screen: 'degree' }) },
+            { label: 'Import next term’s syllabus', run: () => dispatch({ type: 'go', screen: 'import' }) },
+          ]}
+        />
       </div>
     );
   }

@@ -181,7 +181,7 @@ export const UX_STATES: readonly UXStatePattern[] = [
     id: 'sync-blocked', category: 'sync', state: 'Blocked', severity: 'error',
     trigger: 'Sign-in, permission or policy stops the sync', feedback: 'An inline warning with the fix',
     primaryAction: 'Sign in', fallback: 'Copy the work out',
-    wcagRule: 'Alert only if what they are doing is blocked.', semesterExample: '“Sign in to sync your changes”',
+    wcagRule: 'Alert only if the current action is blocked.', semesterExample: '“Sign in to sync your changes”',
     announcement: 'assertive', reviewPriority: 'P0',
   }),
   row({

@@ -30,6 +30,8 @@ import { asset } from '../lib/asset';
 import { Folding } from '../components/Fold';
 import { hasTranscript, load, readingTime, speaker, type Transcript } from '../lib/transcript';
 import { scriptFor } from '../lib/script';
+import { ContextBar } from '../components/unity/ContextBar';
+import type { StatusKey } from '../lib/status';
 
 /** The note under a heading saying part of what follows arrived later. */
 const SINCE = {
@@ -90,6 +92,8 @@ export function Guide() {
    * away costs nothing but the fold.
    */
   const isNav = state.nav === 'guides';
+  // Imported is the one test of whose course this is — see `ShareCourse`.
+  const origin: StatusKey = state.courses.some((m) => m.course.id === state.guideId) ? 'made' : 'sample';
   const waysOpen = isNav || state.waysOpen;
 
   return (
@@ -101,7 +105,14 @@ export function Guide() {
           so repeating them above it just pushes the document down. */}
       {state.mode !== 'field' && (
         <>
-          <div style={{ fontSize: 'var(--type-lg)', lineHeight: 'var(--leading-tight)' }}>{guide.name}</div>
+          {/* The guide's name as a plain line, as before — the screen's name
+              is the h1 — with where it came from beside it. */}
+          <ContextBar
+            context={guide.code}
+            title={guide.name}
+            statuses={[origin]}
+            source={{ title: guide.name, origin, sourceName: guide.source }}
+          />
           <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 'calc(3px * var(--density, 1))' }}>{guide.blurb}</div>
         </>
       )}

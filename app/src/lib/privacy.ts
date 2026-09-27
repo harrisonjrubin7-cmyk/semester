@@ -158,6 +158,7 @@ export const SYNC_GROUPS: { says: string; keys: string[] }[] = [
       'typeface', 'bodyface', 'lineHeight', 'readingWidth', 'iconShape', 'calm',
       'labels', 'badges', 'feed', 'courseColours', 'shell', 'favourites', 'access',
       'shortcuts', 'directory', 'groupOrder', 'boardOrder', 'hue',
+      'workspaceMode', 'pinned', 'goal',
     ],
   },
 ];

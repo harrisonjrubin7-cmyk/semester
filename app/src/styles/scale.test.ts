@@ -168,7 +168,7 @@ export const d = <i style={{ fontSize: '0.92em' }} />;`),
   });
 
   it('fails on a size written longhand that a token already names', () => {
-    const [p] = on(`export const x = <i style={{ fontSize: 'calc(13px * var(--text-scale, 1))' }} />;`);
+    const [p] = on(`export const x = <i style={{ fontSize: 'calc(16px * var(--text-scale, 1))' }} />;`);
     expect(p.says).toContain('var(--type-base)');
   });
 

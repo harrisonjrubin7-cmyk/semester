@@ -33,6 +33,7 @@ import { RecordButton } from '../components/RecordButton';
 import { PrintButton } from '../components/PrintButton';
 import { Folding } from '../components/Fold';
 import { goMine } from '../lib/openmine';
+import { SaveState } from '../components/unity/Status';
 
 /**
  * Everything you added yourself.
@@ -1521,6 +1522,12 @@ export function NoteEditor() {
         style={{ height: 46, fontSize: 'var(--type-display-xs)', fontFamily: 'var(--font-heading)' }}
         aria-label="Note title"
       />
+      {/* Every keystroke is dispatched to the store as it is typed, so the
+          note is saved on this device the moment it changes — this says so
+          rather than leaving it to be assumed. */}
+      <div style={{ marginTop: 'var(--sp-2)' }}>
+        <SaveState status="saved" />
+      </div>
 
       {/* The deadline goes with the course — see the note in `screens/Write.tsx`. */}
       <CoursePicker

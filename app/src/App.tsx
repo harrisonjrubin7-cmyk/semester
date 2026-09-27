@@ -20,12 +20,14 @@ import { Onboarding } from './screens/Onboarding';
 import { Said } from './components/Said';
 import { Replaced } from './components/Replaced';
 import { SampleMark } from './components/SampleMark';
+import { MODE_ATTR } from './components/unity/modes';
 import { CALM_ATTR, scrollKindly, usePrefersContrast, usePrefersDark } from './lib/prefers';
 import { Today } from './screens/Today';
 import { Guides, InstitutionalPreviewBar, SCREENS, Springboard } from './screens';
 import { headOf, type Head } from './headers';
 import {
   calmOf,
+  workspaceModeOf,
   DRAWN_AT,
   ground,
   resolveGround,
@@ -80,6 +82,8 @@ import { Sound } from './components/Sound';
 import { Ringing } from './components/Ringing';
 import { PushTop } from './components/PushTop';
 import { QuickAdd } from './components/QuickAdd';
+import { UnityLayer } from './components/unity/UnityLayer';
+import { LoadingState } from './components/unity/States';
 import { Assistant } from './ai/Assistant';
 import { Command } from './components/Command';
 import { TabStrip, TabsFollow } from './components/Tabs';
@@ -119,23 +123,13 @@ import { forRole } from './lib/role';
  * It appears once per screen per session. React holds the module after the
  * first import, so the second visit to a screen renders straight away.
  */
+/*
+ * The screen fallback. It drew these four bars with `aria-hidden` and nothing
+ * else, so a screen reader heard silence while a screen loaded; the shared
+ * `LoadingState` keeps the same bars and says what is happening.
+ */
 function Loading() {
-  return (
-    <div style={{ padding: 'var(--page-pad)' }} aria-hidden="true">
-      {[62, 30, 96, 96].map((h, i) => (
-        <div
-          key={i}
-          style={{
-            height: h,
-            marginTop: i === 0 ? 0 : 12,
-            borderRadius: 'var(--r-md)',
-            background: 'var(--app-hero)',
-            color: 'var(--app-dim)',
-          }}
-        />
-      ))}
-    </div>
-  );
+  return <LoadingState />;
 }
 
 /**
@@ -881,6 +875,8 @@ function Workspace({
         <Assistant />
         {state.finder && <Command onClose={() => dispatch({ type: 'finder', open: false })} />}
         {state.quickAdd && <QuickAdd onClose={() => dispatch({ type: 'quickAdd', open: false })} />}
+        {/* The shared overlays — Source & details, Capture, the Focus bar. See `components/unity/UnityLayer.tsx`. */}
+        <UnityLayer />
         {/* The launcher and Customize, last so they stack over the body
             without a z-index of their own to keep in step with anything. */}
         {state.apps && <AppsPanel onClose={() => dispatch({ type: 'apps', open: false })} />}
@@ -1206,6 +1202,9 @@ function AppFrame() {
      * with no way to ask.
      */
     root.setAttribute(CALM_ATTR, calmOf((JSON.parse(lookKey) as Look).calm));
+    // The workspace mode rides along the same way, so the stylesheet can
+    // show and hide by it without any screen having to read the store.
+    root.setAttribute(MODE_ATTR, workspaceModeOf((JSON.parse(lookKey) as Look).workspaceMode));
 
     /*
      * And the other half of the browser's chrome.
@@ -1403,6 +1402,8 @@ function AppFrame() {
               with nothing capping it its explanation ran the full width of a
               laptop in a single line. See its own `position`. */}
           {state.quickAdd && <QuickAdd onClose={() => dispatch({ type: 'quickAdd', open: false })} />}
+          {/* The shared overlays — Source & details, Capture, the Focus bar. See `components/unity/UnityLayer.tsx`. */}
+          <UnityLayer />
           {/*
             The tabs, on the window rather than only inside the search
             overlay.
@@ -1508,6 +1509,8 @@ function AppFrame() {
       <Assistant />
       {asking && <Adopting sides={asking.sides} say={asking.say} onChoose={settle} />}
       {state.quickAdd && <QuickAdd onClose={() => dispatch({ type: 'quickAdd', open: false })} />}
+      {/* The shared overlays — Source & details, Capture, the Focus bar. See `components/unity/UnityLayer.tsx`. */}
+      <UnityLayer />
       {state.finder && <Command onClose={() => dispatch({ type: 'finder', open: false })} />}
       {/* The launcher, on this layout too. See the wide layout's copy. */}
       {state.apps && <AllApps onClose={() => dispatch({ type: 'apps', open: false })} />}

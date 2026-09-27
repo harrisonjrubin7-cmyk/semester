@@ -79,6 +79,7 @@ import { Paper as Sheet } from './write/Paper';
 import type { Menu } from '../lib/menus';
 import { revealKindly } from '../lib/prefers';
 import { change, forget, keep, restored, versionsOf, type Version } from '../lib/docversions';
+import { SaveState } from '../components/unity/Status';
 
 /**
  * Write a document.
@@ -1230,10 +1231,10 @@ function Saved({ doc, words: count }: { doc: Doc; words: number }) {
   }, [doc, count]);
 
   return (
-    <div
-      role="status"
-      style={{ ...secondLine(), fontSize: 'var(--type-xs)', marginTop: 'var(--sp-4)' }}
-    >
+    <div style={{ ...secondLine(), fontSize: 'var(--type-xs)', marginTop: 'var(--sp-4)' }}>
+      {/* The shared save line carries the live region; the sentence beside it
+          is the detail — when the last copy was kept. */}
+      <SaveState status={at === null ? 'saving' : 'saved'} />{' '}
       {at === null
         ? 'Every change is kept as you type.'
         : `A copy of this draft was kept at ${new Date(at).toLocaleTimeString(undefined, {

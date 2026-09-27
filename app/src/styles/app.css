@@ -112,11 +112,27 @@
   --type-xs-plus: calc(11.5px * var(--text-scale, 1)); /* the second line under a row */
   --type-sm: calc(12px * var(--text-scale, 1)); /* captions, second-rank prose */
   --type-sm-plus: calc(12.5px * var(--text-scale, 1)); /* a caption with something to say */
-  --type-base: calc(13px * var(--text-scale, 1)); /* body */
-  --type-base-plus: calc(13.5px * var(--text-scale, 1)); /* body that is the row */
-  --type-md: calc(14px * var(--text-scale, 1)); /* list rows, the thing you tap */
-  --type-md-plus: calc(14.5px * var(--text-scale, 1)); /* the name on a row you open */
-  --type-lg: calc(15px * var(--text-scale, 1)); /* a card's own title */
+  /*
+   * Body is 16px.
+
+   * It was 13, with rows at 14 and a card's title at 15 — a scale measured
+   * into place from usage, which is why it held for as long as it did. The
+   * design brief sets 16px as the floor for ordinary reading text, and the
+   * product decided to meet it (see `docs/TYPOGRAPHY-SYSTEM.md`). So body
+   * moved to 16 and every step above it moved with it, in the same order and
+   * with the same gaps where there was room: base-plus 16.5, rows 17 and
+   * 17.5, a card's title 18, an item title 19. From 20 up nothing moved — a
+   * section heading was already above the new body — and below body nothing
+   * moved either: captions, labels, kickers and the second line under a row
+   * are secondary text, which the brief sets at 12 to 14. The inherited
+   * default on `body` and `.device` moved from 15 to 16 for the same reason.
+   * Every name kept its job; only the numbers under the reading tier moved.
+   */
+  --type-base: calc(16px * var(--text-scale, 1)); /* body — 16px, see the note above `--type-base` */
+  --type-base-plus: calc(16.5px * var(--text-scale, 1)); /* body that is the row */
+  --type-md: calc(17px * var(--text-scale, 1)); /* list rows, the thing you tap */
+  --type-md-plus: calc(17.5px * var(--text-scale, 1)); /* the name on a row you open */
+  --type-lg: calc(18px * var(--text-scale, 1)); /* a card's own title */
   /*
      The gap between `lg` and `xl`, which the app had been filling by hand.
      Ninety-three sites across eleven values, 15.5 to 25, and no cluster in
@@ -137,7 +153,7 @@
      Named to match `--leading-display-*`, and they pair: a 22px figure takes
      `--leading-display` at 1.15, which is the ramp's own answer for 18-25px.
   */
-  --type-display-xs: calc(17px * var(--text-scale, 1)); /* a card or item title — 36 */
+  --type-display-xs: calc(19px * var(--text-scale, 1)); /* a card or item title — 36 */
   --type-display-sm: calc(20px * var(--text-scale, 1)); /* a section's own heading — 27 */
   --type-display: calc(22px * var(--text-scale, 1)); /* a figure read at a glance — 15 */
   /* The screen's own title, and the largest figures beside it. Both, and the
@@ -349,7 +365,7 @@ body {
   background: var(--app-void);
   color: var(--app-fg);
   font-family: var(--font-body);
-  font-size: calc(15px * var(--text-scale, 1));
+  font-size: calc(16px * var(--text-scale, 1));
   -webkit-font-smoothing: antialiased;
 
   /*
@@ -470,7 +486,7 @@ a:hover {
   background: var(--app-bg);
   color: var(--app-fg);
   font-family: var(--font-body);
-  font-size: calc(15px * var(--text-scale, 1));
+  font-size: calc(16px * var(--text-scale, 1));
   /* Set once here so every screen inherits it. Components that need a tighter
      line for their own reason still override locally; what this fixes is the
      hundred places that were relying on the browser default. */
@@ -2508,14 +2524,17 @@ a:hover {
  * `outline: none` on `:focus-visible` again.
  */
 .device :focus-visible {
-  outline: 2px solid var(--app-accent-deep);
-  outline-offset: 2px;
+  /* The width stays a literal: `a11y/focus.test.ts` reads it as the proof the
+     ring is an outline. Colour, offset and clearances are the named tokens in
+     `styles/tokens.css`, at the same values. */
+  outline: 2px solid var(--focus-color);
+  outline-offset: var(--focus-ring-offset);
   border-radius: var(--r-sm);
   /* Tabbing scrolls the focused control into view, and the frosted header sits
      on top of the scroller — so without this the thing you just focused lands
      underneath it and the ring is half hidden. */
-  scroll-margin-top: 96px;
-  scroll-margin-bottom: 84px;
+  scroll-margin-top: var(--focus-clear-top);
+  scroll-margin-bottom: var(--focus-clear-bottom);
 }
 
 /*
@@ -7491,6 +7510,31 @@ section[data-drop] > .grip + * {
   display: flex;
   flex-direction: column;
   margin: 0 0 var(--sp-2);
+}
+
+/* The briefing's text actions and timeline rows had no base style of their
+   own, so every one drew as the browser's grey default button — "View My
+   Path", "Not now", "See full plan" and each of the next-72-hours rows. The
+   reset `.bare` gives everywhere else, scoped to this surface, with the text
+   actions drawn quiet and underlined like the app's other in-line links. */
+.today-decision-surface .workspace-text-button,
+.today-timeline-row {
+  appearance: none;
+  background: none;
+  border: 0;
+  margin: 0;
+  font: inherit;
+  cursor: pointer;
+}
+
+.today-decision-surface .workspace-text-button {
+  display: inline-block;
+  min-height: var(--target-min);
+  padding: 0;
+  font-size: var(--type-sm);
+  color: var(--app-dim);
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
 }
 
 .today-timeline-row {
