@@ -243,7 +243,20 @@ declare
     -- writes a review and its separate authorship row in one statement, so
     -- the published review never carries who wrote it.
     'read_shared_accommodation(want_share uuid)',
-    'submit_course_review(want_course text, want_term text, want_workload integer, want_difficulty integer, want_usefulness integer, want_body text)'
+    'submit_course_review(want_course text, want_term text, want_workload integer, want_difficulty integer, want_usefulness integer, want_body text)',
+
+    -- The five in 20260927170000_integration_control_plane.sql. The first four
+    -- are the only way a connection's status or approval, a scope's approval,
+    -- or a replay request moves: those columns are off the API roles' column
+    -- grants, and each function checks its own capability over the row's
+    -- school, refuses the unsafe case (self-approval, no reason, a replay under
+    -- a kill switch) and is audited by trigger. `kill_switch_engaged` answers a
+    -- boolean about a switch key and a school and returns no row.
+    'integration_approve_connection(want_connection text, want_direction text)',
+    'integration_approve_scope(want_scope uuid)',
+    'integration_request_replay(want_dead_letter uuid, want_reason text)',
+    'integration_set_paused(want_connection text, want_paused boolean, want_reason text)',
+    'kill_switch_engaged(want_switch text, want_tenant text)'
   ];
   extra text;
   missing text;

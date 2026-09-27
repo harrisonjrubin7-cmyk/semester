@@ -75,6 +75,7 @@ import {
   type LineItemRow,
 } from '../_shared/ltiags.ts';
 import { corsHeaders } from '../_shared/cors.ts';
+import { passbackVerdict } from '../_shared/ltigate.ts';
 
 /** How long a launch has between the redirect out and the POST back. */
 const FLIGHT_SECONDS = 300;
@@ -410,6 +411,22 @@ Deno.serve(async (req) => {
     if (!match.ok) return not(match.reason, match.detail);
     const item = match.value;
 
+    /*
+     * ── Whether this school allows it at all ──────────────────────────────
+     *
+     * Before anything is signed or sent. The database decides — kill
+     * switches, and for a registration bound to a school its flags, its
+     * connection and its approved scope (20260927180000_lti_integration_binding.sql)
+     * — and a refusal is the ordinary `reported: false`, because a school
+     * that has passback switched off is not a fault in the student's quiz.
+     */
+    const { data: gateWord, error: gateError } = await client.rpc('lti_passback_decision', {
+      want_issuer: item.issuer,
+      want_client: item.client_id,
+    });
+    const gate = passbackVerdict(gateWord, gateError);
+    if (!gate.ok) return not(gate.reason, gate.detail);
+
     const score = scoreBody({ userId: item.subject, given, max, at: Date.now() });
     if (!score.ok) return not(score.reason, score.detail, 400);
 
@@ -672,6 +689,24 @@ Deno.serve(async (req) => {
 
     const bound = await accountFor(client, who);
     if (!bound.ok) return refuse(bound.reason, bound.detail, 500);
+
+    /*
+     * ── The course, for the school's integration record ───────────────────
+     *
+     * Only the context id, and only when the registration is bound to an
+     * approved, unpaused connection with the LTI flag on — the database
+     * decides and says why not. Never fails the launch, for the same reason
+     * the line item below does not.
+     */
+    if (who.contextId) {
+      const { data: recorded, error: recordError } = await client.rpc('lti_record_context', {
+        want_issuer: who.issuer,
+        want_client: who.clientId,
+        want_context: who.contextId,
+      });
+      if (recordError) console.log(`lti context not recorded: ${recordError.message}`);
+      else console.log(`lti context: ${recorded}`);
+    }
 
     /*
      * ── Where this course's grades go, if anywhere ────────────────────────
