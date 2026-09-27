@@ -16,7 +16,9 @@ anything leaving that they did not read first.
 | Tables, capability and the only doors in | `supabase/migrations/20260927180000_help_requests.sql` |
 | Every rule walked as the account it concerns (44 checks) | `supabase/help-requests.check.sql` |
 | Needs, vocabulary, preview, status table | `app/src/lib/help-routes.ts` |
-| The screen (University → Get help) | `app/src/components/GetHelp.tsx` |
+| The student's screen (University → Get help) | `app/src/components/GetHelp.tsx` |
+| The staff inbox, under the same tab | `app/src/components/HelpInbox.tsx` |
+| Which inboxes are the caller's | `supabase/migrations/20260927190000_help_inbox.sql` |
 
 ## The rules, and where each is enforced
 
@@ -42,10 +44,21 @@ If a school has not connected an office, the same preview becomes a note to
 copy and take to office hours or an email. Nothing is stored. The route is
 useful on the first day, before any university has configured anything.
 
+## The staff inbox
+
+Drawn only for an account that `my_help_destinations` says answers for an
+office — the database decides, the screen holds no role check. Each inbox
+lists statuses and times. A request's words appear only after **Open (the
+student will see this)**, and only forward moves are offered: seen,
+scheduled, closed. A reply goes back to the student beside their question.
+
+**No name is shown.** The student's confirm screen listed exactly what would
+be sent, and their identity was not on it. If offices need to know who is
+asking — to book a real appointment — the confirm screen must say so first,
+and that is a decision for the product, not a column to add quietly.
+
 ## Not built here, deliberately
 
-- **A staff inbox screen.** The functions exist and are tested; the staff
-  surface belongs with the role workspaces, not in this change.
 - **Linking to the Action Center.** `feature/action-model` (open) records a
   `help` event on an action. Once it lands, that event should open this route
   with the action's course and deadline pre-filled — still unticked.

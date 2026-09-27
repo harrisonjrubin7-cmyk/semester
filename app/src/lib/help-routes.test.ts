@@ -9,6 +9,7 @@ import {
   REQUEST_STATUSES,
   STAFF_MOVES,
   WITHDRAWABLE,
+  answerRequest,
   asNote,
   emptyDraft,
   followUp,
@@ -162,5 +163,13 @@ describe('the routes', () => {
     expect(followUp('scheduled', 'Tuesday 2pm')).toMatch(/Tuesday 2pm/);
     expect(followUp('scheduled', '')).toMatch(/Prepare/);
     expect(followUp('withdrawn', '')).toBeNull();
+  });
+});
+
+describe('the staff side', () => {
+  it('refuses a backward move before anything is sent', async () => {
+    await expect(answerRequest('req', 'scheduled', 'acknowledged', '')).rejects.toThrow(/cannot be moved/);
+    await expect(answerRequest('req', 'closed', 'scheduled', '')).rejects.toThrow(/cannot be moved/);
+    await expect(answerRequest('req', 'sent', 'withdrawn', '')).rejects.toThrow(/cannot be moved/);
   });
 });

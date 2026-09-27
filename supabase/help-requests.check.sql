@@ -185,6 +185,20 @@ begin
   perform pg_temp.counted('nor can the advisor select it directly',
     pg_temp.seen(advisor, 'select * from public.help_requests'), 0);
 
+  -- ── which inboxes are whose ────────────────────────────────────────────
+  perform pg_temp.counted('the advisor answers for advising only',
+    pg_temp.seen(advisor, $q$select * from public.my_help_destinations() where scope_id = 'help-u/advising'$q$)
+    + pg_temp.seen(advisor, 'select * from public.my_help_destinations()'), 2);
+  perform pg_temp.counted('the tutor answers for tutoring only',
+    pg_temp.seen(tutor, $q$select * from public.my_help_destinations() where scope_id = 'help-u/tutoring'$q$)
+    + pg_temp.seen(tutor, 'select * from public.my_help_destinations()'), 2);
+  perform pg_temp.counted('a student answers for nothing',
+    pg_temp.seen(student, 'select * from public.my_help_destinations()'), 0);
+  perform pg_temp.counted('an advisor elsewhere sees only their own school''s inbox',
+    pg_temp.seen(stranger_staff, $q$select * from public.my_help_destinations() where scope_id like 'help-u/%'$q$), 0);
+  perform pg_temp.counted('and implementation, who configures them, answers for none',
+    pg_temp.seen(implementer, 'select * from public.my_help_destinations()'), 0);
+
   -- ── the inbox and opening ──────────────────────────────────────────────
   perform pg_temp.counted('the advisor''s inbox lists it',
     pg_temp.seen(advisor, format('select * from public.help_inbox(%L)', advising)), 1);

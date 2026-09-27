@@ -41,6 +41,7 @@ import type { Screen } from '../lib/types';
 import { INSTITUTIONAL_PREVIEW } from '../lib/institutional-preview';
 import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
 import { GetHelp } from '../components/GetHelp';
+import { HelpInbox } from '../components/HelpInbox';
 import { ControlPlane } from '../components/institutional/ControlPlane';
 import type { ControlPlaneStatus } from '../lib/control-plane';
 
@@ -691,7 +692,12 @@ function Workspace({ storageKey }: { storageKey: string }) {
         </>
       )}
 
-      {tab === 'help' && EXPERIENCE_FLAGS.humanHelp !== 'off' && <GetHelp account={account} />}
+      {tab === 'help' && EXPERIENCE_FLAGS.humanHelp !== 'off' && (
+        <>
+          <GetHelp account={account} />
+          <HelpInbox account={account} />
+        </>
+      )}
 
       {tab === 'control' && EXPERIENCE_FLAGS.universityControlPlane !== 'off' && (
         <ControlPlane

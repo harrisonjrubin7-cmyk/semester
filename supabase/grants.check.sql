@@ -253,6 +253,8 @@ declare
     'answer_help_request(want uuid, want_status text, want_reply text)',
     'forget_my_help_requests()',
     'help_inbox(want_destination uuid)',
+    -- 20260927180000's companion: which of those inboxes are the caller's.
+    'my_help_destinations()',
     'open_help_request(want uuid)',
     'send_help_request(want_destination uuid, want_question text, want_context jsonb)',
     'withdraw_help_request(want uuid)'
