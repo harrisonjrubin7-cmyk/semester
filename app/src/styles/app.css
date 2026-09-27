@@ -8540,6 +8540,54 @@ section[data-drop] > .grip + * {
   font-weight: 600;
 }
 
+/* ── Trust & Data Center (trust_center, Phase N) ────────────────────────── */
+
+.trust-center {
+  margin: var(--sp-5) 0 var(--sp-7);
+}
+
+.trust-title {
+  margin: var(--sp-2) 0 var(--sp-4);
+  font-size: var(--type-lg);
+  line-height: var(--leading-display-sm);
+}
+
+.trust-section {
+  padding: var(--sp-4) 0;
+  border-top: 1px solid var(--app-line);
+}
+
+.trust-section h3 {
+  margin: 0 0 var(--sp-3);
+  font-size: var(--type-md);
+  line-height: var(--leading-tight);
+}
+
+.trust-list {
+  display: grid;
+  gap: var(--sp-3);
+  margin: 0 0 var(--sp-3);
+  padding-left: 0;
+  list-style: none;
+}
+
+.trust-labels {
+  display: grid;
+  gap: var(--sp-3);
+  margin: 0;
+}
+
+.trust-labels div {
+  display: grid;
+  grid-template-columns: minmax(0, 10rem) minmax(0, 1fr);
+  gap: var(--sp-3);
+  align-items: baseline;
+}
+
+.trust-labels dd {
+  margin: 0;
+}
+
 /* BL-1.4's Action Center, when it sits in a Phase B panel rather than in the
    #761 card whose `.today-decision-surface` rules it was drawn against. */
 .action-panel .action-center h2 {

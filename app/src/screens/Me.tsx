@@ -104,7 +104,10 @@ export function CourseRow({ module: c }: { module: CourseModule }) {
   );
 }
 
-export function Me({ semesterWrapped = moduleOn(MODULE_FLAGS.semester_wrapped) }: { semesterWrapped?: boolean } = {}) {
+export function Me({
+  semesterWrapped = moduleOn(MODULE_FLAGS.semester_wrapped),
+  trustCenter = moduleOn(MODULE_FLAGS.trust_center),
+}: { semesterWrapped?: boolean; trustCenter?: boolean } = {}) {
   const { state, dispatch } = useStore();
 
   const tab = state.meTab;
@@ -145,6 +148,13 @@ export function Me({ semesterWrapped = moduleOn(MODULE_FLAGS.semester_wrapped) }
         bookmark — so it cannot carry them itself.
       */}
       <Panel>
+        {trustCenter ? (
+          <NavRow
+            label="Trust & data"
+            sub="What Semester holds, who can see it, and how to take it back"
+            onClick={() => dispatch({ type: 'go', screen: 'privacy' })}
+          />
+        ) : null}
         <NavRow
           label="All apps"
           sub="Every screen in the app, what each is for, and the ones you have never opened"
