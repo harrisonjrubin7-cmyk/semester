@@ -5699,6 +5699,12 @@ section[data-drop] > .grip + * {
   border-bottom: 1px solid var(--app-line);
 }
 
+/* The phone's paging row, under the toolbar — see `pager` in Mail.tsx. */
+.mb-pager {
+  justify-content: flex-end;
+  padding-block: var(--sp-1);
+}
+
 .mb-body {
   flex: 1;
   display: flex;

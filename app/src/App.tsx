@@ -433,7 +433,7 @@ function Header({
           `findEverything` over the same `openHit` and drew the same tagged
           rows as `components/Command.tsx` — one search behind two doors, and
           which one you got depended on the width of your window. `/` opened
-          the overlay, and `Keys` is mounted only on the wide layout, so a
+          the overlay, and `Keys` was mounted only on the wide layout, so a
           phone could reach the screen and never the overlay.
 
           The overlay is the one that survives, for the reason its own file
@@ -1388,6 +1388,11 @@ function AppFrame() {
       <SkipLink />
       <Titled />
       <Fresh />
+      {/* On this layout too, which it was not: a laptop window dragged
+          narrow, or an iPad in Split View with a keyboard, is drawn as a
+          phone and still has keys. `Keys` decides for itself whether there
+          is a keyboard to listen to — see its own note. */}
+      <Keys />
       <Ringing />
       <PushTop />
       <Tapped />

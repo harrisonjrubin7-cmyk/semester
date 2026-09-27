@@ -154,3 +154,18 @@ export function useTier(): Tier {
  * held in landscape is wide and never does.
  */
 export const TOUCH = '(pointer: coarse)';
+
+/**
+ * A mouse or a trackpad somewhere on this device, whatever the window's width.
+ *
+ * `any-pointer` rather than `pointer`: it asks whether *any* input is fine,
+ * not whether the primary one is. An iPad with a Magic Keyboard answers yes
+ * — its trackpad is fine though its screen is coarse — and so does a laptop
+ * whose browser window has been dragged to 600px. Neither of those is wide,
+ * and both have a keyboard in front of them.
+ *
+ * The honest reading is "probably a keyboard", not "a keyboard": no query
+ * says that. It is used where the width was being asked the same question
+ * and answering it worse — see `components/Keys.tsx`.
+ */
+export const FINE = '(any-pointer: fine)';
