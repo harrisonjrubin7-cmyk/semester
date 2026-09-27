@@ -54,7 +54,7 @@ import { Folding } from '../components/Fold';
  */
 export function Activities() {
   const { state, catalog } = useStore();
-  const [tab, setTab] = useState<'yours' | 'add' | 'find' | 'directory'>('directory');
+  const [tab, setTab] = useState<'yours' | 'add' | 'find' | 'directory' | 'events'>('directory');
 
   const [planned,setPlanned]=useState<CampusListing|null>(null);
   const mine = state.commitments;
@@ -97,6 +97,7 @@ export function Activities() {
           <Segmented
             options={[
               { id: 'directory', label: 'Discover clubs' },
+              { id: 'events', label: 'Events' },
               { id: 'yours', label: 'My week' },
               { id: 'add', label: 'Add activity' },
               { id: 'find', label: 'Official directory & import' },
@@ -107,6 +108,7 @@ export function Activities() {
           />
 
           {tab === 'directory' && <CampusDirectory kind="clubs" onPlan={item=>{setPlanned(item);setTab('add');}}/>}
+          {tab === 'events' && <CampusDirectory kind="events" />}
           {tab === 'yours' && (
             <>
               <Blueprint style={{ paddingBlock: 'calc(14px * var(--density, 1))', paddingInline: 'calc(15px * var(--density, 1))' }}>

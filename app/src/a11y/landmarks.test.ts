@@ -70,8 +70,18 @@ const ROOTS = (() => {
   return names;
 })();
 
-/** Whether this file is one of those, by its default export's name. */
-const isRoot = (file: string) => ROOTS.has(file.replace(/\.tsx$/, '').split('/').pop()!);
+/**
+ * Whether this file is one of those, by its default export's name — or part
+ * of the public site.
+ *
+ * `site/render.tsx` renders every file under `src/site/` into a document of
+ * its own, prerendered to static HTML and never mounted inside the app's
+ * shell (DECISION-LOG D-011). Each of those pages is the whole page, the same
+ * kind of exception as `Respond`, and `site/site.test.tsx` holds every one of
+ * them to exactly one `<main>` and one `<h1>` on the rendered HTML.
+ */
+const isRoot = (file: string) =>
+  ROOTS.has(file.replace(/\.tsx$/, '').split('/').pop()!) || /(^|[\\/])src[\\/]site[\\/]/.test(file);
 
 /**
  * The app draws exactly one navigation, whichever of the four is chosen —
