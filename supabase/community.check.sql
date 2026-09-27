@@ -1,4 +1,4 @@
--- Community: every permission in 20260928030000_community.sql walked as the
+-- Community: every permission in 20260928030500_community.sql walked as the
 -- account it is about, and every refusal attempted as the account that should
 -- be refused. LOCAL/DISPOSABLE DATABASES ONLY; the transaction is always
 -- rolled back.

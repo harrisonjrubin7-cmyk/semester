@@ -14,7 +14,7 @@ import { SEVERITY_DELTA, STANDING_WORDS } from './safety-state';
 import { JIT_HOURS } from './identity';
 import { VOLUNTEER_RULES } from './volunteer';
 
-const sql = readFileSync(new URL('../../../supabase/migrations/20260928030000_community.sql', import.meta.url), 'utf8');
+const sql = readFileSync(new URL('../../../supabase/migrations/20260928030500_community.sql', import.meta.url), 'utf8');
 
 function body(fn: string): string {
   const start = sql.indexOf(`create or replace function ${fn}(`);

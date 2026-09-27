@@ -2,7 +2,7 @@
 
 Code:
 
-- the database: `20260928030000_community.sql`, section 16 (`community_media`,
+- the database: `20260928030500_community.sql`, section 16 (`community_media`,
   `community_media_blocklist`, `community_media_deletions`, the
   `community-media` bucket and its policies, `begin_community_image`,
   `record_media_scan`, and the media rules in `decide_community_case`,
