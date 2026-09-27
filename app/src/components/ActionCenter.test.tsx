@@ -154,3 +154,11 @@ it('counts calendar days, so two things due the same day say the same thing', ()
   expect(dueLine(at(0, 18), now)).toBe('Due today');
   expect(dueLine(at(0, 9), now)).toBe('Overdue');
 });
+
+it('with the help route off, "Ask for help" keeps the note and hands nothing over', async () => {
+  const { helpSeedWaiting } = await import('../lib/help-routes');
+  render([make(0)]);
+  act(() => button(/Ask for help/)?.click());
+  expect(host.querySelector('textarea')?.closest('label')?.textContent).toContain('What do you need help with?');
+  expect(helpSeedWaiting()).toBe(false);
+});
