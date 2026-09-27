@@ -31,6 +31,8 @@ const KIND_SAID: Record<ObjectKind, string> = {
 export interface CardAction {
   label: string;
   run: () => void;
+  /** While the action cannot run — a request already in flight. */
+  disabled?: boolean;
 }
 
 /**
@@ -105,12 +107,12 @@ export function ObjectCard({
       {(primary || secondary) && (
         <div className="object-card-actions">
           {primary && (
-            <button type="button" className="btn btn-primary" onClick={primary.run}>
+            <button type="button" className="btn btn-primary" onClick={primary.run} disabled={primary.disabled}>
               {primary.label}
             </button>
           )}
           {secondary && (
-            <button type="button" className="bare link-quiet tap-y" onClick={secondary.run}>
+            <button type="button" className="bare link-quiet tap-y" onClick={secondary.run} disabled={secondary.disabled}>
               {secondary.label}
             </button>
           )}

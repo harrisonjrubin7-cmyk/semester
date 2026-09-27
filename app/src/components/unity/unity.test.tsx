@@ -166,6 +166,14 @@ describe('the object card', () => {
     expect(ran).toBe(1);
   });
 
+  it('holds its primary while the action is already running', async () => {
+    let ran = 0;
+    await mount(<ObjectCard kind="task" title="Request a transcript" primary={{ label: 'Request', run: () => (ran += 1), disabled: true }} />);
+    expect(button('Request').disabled).toBe(true);
+    await press('Request');
+    expect(ran).toBe(0);
+  });
+
   it('opens in another place with a real navigation, so Back comes home', async () => {
     await mount(
       <ObjectCard kind="course" title="ECON 1020" openIn={[{ label: 'Study', screen: 'study' }, { label: 'Clocks', screen: 'clocks' }]} />,

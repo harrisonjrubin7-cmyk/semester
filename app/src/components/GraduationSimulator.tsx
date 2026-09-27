@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Notice } from './ui';
+import { ErrorState } from './unity/States';
 import { useDeviceLibrary } from '../lib/device-library';
 import { download } from '../lib/deliver';
 import {
@@ -57,16 +57,15 @@ export function GraduationSimulator({ done }: { done: number }) {
   return (
     <div className="portal-workspace graduation-simulator">
       {library.error ? (
-        <Notice alert>
-          {library.error}
-          <button
-            onClick={() =>
-              download({ name: 'Semester graduation recovery.json', body: library.recovery(), mime: 'application/json' })
-            }
-          >
-            Download recovery copy
-          </button>
-        </Notice>
+        <ErrorState
+          title="Could not save on this device"
+          body={library.error}
+          recover={{
+            label: 'Download recovery copy',
+            run: () =>
+              download({ name: 'Semester graduation recovery.json', body: library.recovery(), mime: 'application/json' }),
+          }}
+        />
       ) : null}
 
       <section className="portal-panel" aria-labelledby="grad-plan">

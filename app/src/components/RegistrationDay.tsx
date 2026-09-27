@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
-import { EmptyState, Notice } from './ui';
+import { EmptyState } from './ui';
+import { ErrorState, SuccessState } from './unity/States';
+import { NextSteps } from './unity/NextSteps';
 import { useDeviceLibrary } from '../lib/device-library';
 import { download } from '../lib/deliver';
 import type { CatalogCourse } from '../lib/registration';
@@ -72,6 +74,17 @@ export function RegistrationDay({
     }
   };
 
+  // Takes the student to the first section still without a backup.
+  const addBackups = () => {
+    const first = ready.unbacked[0];
+    if (!first) return;
+    const pick = document.querySelector<HTMLSelectElement>(
+      `select[aria-label="Add a backup for ${first.code} section ${first.section}"]`,
+    );
+    if (pick) pick.focus();
+    else document.getElementById('regday-backups')?.scrollIntoView?.({ block: 'start' });
+  };
+
   if (!cart.length) {
     return (
       <EmptyState
@@ -85,16 +98,15 @@ export function RegistrationDay({
   return (
     <div className="registration-day">
       {library.error ? (
-        <Notice alert>
-          {library.error}
-          <button
-            onClick={() =>
-              download({ name: 'Semester registration-day recovery.json', body: library.recovery(), mime: 'application/json' })
-            }
-          >
-            Download recovery copy
-          </button>
-        </Notice>
+        <ErrorState
+          title="Could not save on this device"
+          body={library.error}
+          recover={{
+            label: 'Download recovery copy',
+            run: () =>
+              download({ name: 'Semester registration-day recovery.json', body: library.recovery(), mime: 'application/json' }),
+          }}
+        />
       ) : null}
 
       <section className="portal-panel" aria-labelledby="regday-when">
@@ -142,6 +154,13 @@ export function RegistrationDay({
           <span>Time conflicts</span>
         </div>
       </div>
+      {ready.done === ready.total ? (
+        <SuccessState
+          title="Your registration checklist is complete"
+          body={`When your window opens, enroll in ${institution ? `${institution}’s` : 'your school’s'} registration system with your section list beside you, trying each backup in order if a section is full.`}
+          next={{ label: 'Copy section list', run: () => void copy() }}
+        />
+      ) : null}
 
       <section className="portal-panel" aria-labelledby="regday-backups">
         <h3 id="regday-backups">If a section is full</h3>
@@ -272,6 +291,22 @@ export function RegistrationDay({
           </p>
         ) : null}
       </section>
+
+      {/* Copy section list is the button just above, so it is not offered twice. */}
+      <NextSteps
+        steps={[
+          ...(ready.unbacked.length
+            ? [
+                {
+                  label: 'Add backups',
+                  why: `${ready.unbacked.length} section${ready.unbacked.length === 1 ? ' has' : 's have'} no backup yet.`,
+                  run: addBackups,
+                },
+              ]
+            : []),
+          { label: 'Open cart', why: 'Change the sections you are planning around.', run: onOpenCart },
+        ]}
+      />
     </div>
   );
 }
