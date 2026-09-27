@@ -10,6 +10,9 @@
  *   SITE_BASE     path the site is served under (default "/")
  *   SITE_ORIGIN   origin for canonical links, social tags and the sitemap
  *
+ * The four tool pages load one script, `tools/tools.js`: `src/site/tools/client.tsx`
+ * bundled with React, which hydrates the prerendered tool. No other page has one.
+ *
  * It renders with Vite's own module loader, so the pages are the same TSX the
  * test suite checks, compiled the same way, and the build adds no dependency.
  * Where the output is served is a deployment decision and is not made here.
@@ -17,7 +20,7 @@
 import { copyFileSync, cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createServer } from 'vite';
+import { build, createServer } from 'vite';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const app = join(here, '..');
@@ -50,6 +53,28 @@ try {
   cpSync(join(app, 'src', 'styles', 'fonts'), join(out, 'fonts'), { recursive: true });
   copyFileSync(join(app, 'public', 'icon.svg'), join(out, 'icon.svg'));
   copyFileSync(join(app, 'public', 'icon-512.png'), join(out, 'og.png'));
+
+  // The tools' one script. Vite's defaults, not the app's config: no PWA, no
+  // proxy, no hashed name, since the pages point at it by a fixed path.
+  await build({
+    root: app,
+    configFile: false,
+    mode: 'production',
+    logLevel: 'warn',
+    // The dev server above leaves the JSX transform in development mode, which
+    // emits `jsxDEV` calls the production React runtime does not have.
+    oxc: { jsx: { runtime: 'automatic', development: false } },
+    define: { 'process.env.NODE_ENV': '"production"' },
+    build: {
+      outDir: join(out, 'tools'),
+      emptyOutDir: false,
+      copyPublicDir: false,
+      rollupOptions: {
+        input: join(app, 'src', 'site', 'tools', 'client.tsx'),
+        output: { entryFileNames: 'tools.js', format: 'es' },
+      },
+    },
+  });
 
   console.log(`site: ${files.length} files into dist-site/ (base ${config.base}, app ${config.appUrl})`);
 } finally {

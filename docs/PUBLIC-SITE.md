@@ -2,20 +2,21 @@
 
 The company and product website, built as D-011 approved: a separate set of
 pages **prerendered to static HTML at real paths**, sharing the app's colours
-and typefaces. It ships no JavaScript. Every page is indexable, readable with
-scripts off, and carries a policy (`script-src 'none'`) that makes an injected
-script inert.
+and typefaces. Content pages ship no JavaScript: every one is indexable,
+readable with scripts off, and carries a policy (`script-src 'none'`) that makes
+an injected script inert. The four tool pages are the only exception (below).
 
 ## Where things are
 
 | | |
 |---|---|
-| Pages | `app/src/site/pages.tsx`: 18 routes, listed in `app/src/site/render.tsx` `ROUTES` |
+| Pages | `app/src/site/pages.tsx`: 18 content routes and 4 tool routes, listed in `app/src/site/render.tsx` `ROUTES` |
+| Tools | `app/src/site/tools/Tools.tsx` (the four tools), `tools/client.tsx` (hydration, bundled as `tools/tools.js`) |
 | Frame | `app/src/site/Layout.tsx`: skip link, header, a script-free `<details>` phone menu, footer |
 | Styles | `app/src/site/site.css`, with the app's `@font-face` rules prepended at build |
 | Plans | `app/src/lib/plans.ts`: one source for the pricing page and the in-app Membership panel |
 | Build | `app/scripts/build-site.mjs` renders with Vite's own module loader, writing to `app/dist-site/` (git-ignored) |
-| Tests | `app/src/site/site.test.tsx`, `app/src/lib/plans.test.ts` |
+| Tests | `app/src/site/site.test.tsx`, `app/src/site/tools/Tools.test.tsx`, `app/src/lib/plans.test.ts` |
 
 ```bash
 cd app
@@ -36,6 +37,30 @@ npm run site:preview    # serves dist-site on http://localhost:4175
   and saved plans are listed as on every plan.
 - The product preview is labelled demo data.
 - The site's colours equal the app's `:root` tokens.
+- Only tool pages have a script: exactly one, `tools/tools.js`, same-origin,
+  nothing inline. Their policy is `script-src 'self'` and `connect-src 'none'`,
+  so a tool cannot send what is typed into it even if its code tried.
+- Every tool hydrates without a mismatch (checked by prerendering, then
+  hydrating, in the test).
+
+## The public tools
+
+`/tools/graduation/`, `/tools/schedule/`, `/tools/checklist/` and
+`/tools/advisor/`. Each is prerendered, so its starting state is readable
+without JavaScript (a `<noscript>` note says the controls need it), and then
+hydrated by `tools/tools.js` (about 71 kB gzipped, mostly React).
+
+They call the app's own tested functions — `project()` from
+`lib/graduation.ts`, `conflicts()` from `lib/registration.ts`, `CHECKLIST` from
+`lib/registration-day.ts` — so the website and the app cannot disagree. Nothing
+is stored or sent: state lives in the page and is gone when the tab closes. The
+advisor planner copies to the clipboard or prints; the student sends it
+themselves. The graduation result is labelled *Estimated* and says it is not a
+degree audit.
+
+The next term the calculator starts from is fixed when the site is built. A
+build that goes months without a rebuild will start from a past term, which the
+student can change; rebuild each term.
 
 ## Decisions still needed before it is served (none are made here)
 
@@ -54,7 +79,7 @@ npm run site:preview    # serves dist-site on http://localhost:4175
 
 ## Not in this slice
 
-- **Interactive public tools** (P2.2). `/tools/` currently opens each tool in
-  the app.
-- **Membership inside the app** (P2.3). `/membership/` currently hands off to
-  the app's Account screen.
+- **Saving from a public tool.** A tool's result does not carry over into the
+  app; the index page points to the app for a plan that is kept.
+- `/membership/` hands off to the app's Account screen, where the Membership
+  panel (P2.3) lives.
