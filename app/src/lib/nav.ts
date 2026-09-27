@@ -812,7 +812,7 @@ export const DESTINATIONS: Destination[] = [
      */
     label: 'Account',
     blurb: 'Sign in so the same semester is on your phone and your laptop.',
-    keywords: 'sign in log in register sync devices password email',
+    keywords: 'sign in log in register sync devices password email membership plan plans pricing upgrade billing subscription',
     group: 'Data',
     taskTags: ['data'],
     root: 'me',
