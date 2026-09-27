@@ -134,7 +134,7 @@ create policy "a student deletes a support share" on public.support_shares
 
 create table if not exists public.support_share_events (
   id        uuid        primary key default gen_random_uuid(),
-  share_id  uuid        not null references public.support_shares(id) on delete cascade,
+  share_id  uuid        not null references public.support_shares on delete cascade,
   reader_id uuid        references auth.users on delete set null,
   read_at   timestamptz not null default now()
 );
