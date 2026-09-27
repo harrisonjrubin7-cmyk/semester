@@ -16,6 +16,12 @@ export interface ExperienceFlags {
    * curriculum simulation, evidence, developer platform and readiness.
    */
   institutionalOperations: FeatureState;
+  /**
+   * Asking Semester's own support about the app, on Help. Never on in an
+   * institutional preview: a ticket is a real message to real staff, which a
+   * synthetic preview account must not send.
+   */
+  supportTickets: FeatureState;
 }
 
 const STATES: readonly FeatureState[] = ['off', 'preview', 'sandbox', 'production'];
@@ -38,6 +44,7 @@ export function experienceFlags(env: PreviewEnv): ExperienceFlags {
     humanHelp: featureState(env, 'VITE_HUMAN_HELP', preview),
     integrationDashboard: featureState(env, 'VITE_INTEGRATION_DASHBOARD', preview),
     institutionalOperations: featureState(env, 'VITE_INSTITUTIONAL_OPERATIONS', preview),
+    supportTickets: featureState(env, 'VITE_SUPPORT_TICKETS', false),
   };
 }
 

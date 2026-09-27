@@ -170,6 +170,16 @@ const NOT_CONTENT = new Set([
    */
   'canonical_entity_references',
   'consent_record',
+  /*
+   * A question the student asked Semester's support about the app. It is
+   * theirs, and account deletion takes it (`forget_my_support_tickets`), but
+   * it is not coursework an attach could strand: the ticket stays with the
+   * account whichever way the attach goes, and an account whose only row is
+   * "sign-in isn't working" is exactly the account this flow exists to let
+   * attach. `20260928030000_support_tickets.sql` is the tables.
+   */
+  'support_tickets',
+  'support_ticket_messages',
 ]);
 
 /**

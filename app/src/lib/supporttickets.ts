@@ -1,0 +1,167 @@
+/**
+ * The student's half of support tickets.
+ *
+ * Every call is an RPC; the tables have no grant
+ * (`supabase/migrations/20260928030000_support_tickets.sql`). The rule this
+ * module exists to keep is the one that migration opens with: the student
+ * decides what context goes with a ticket, sees it before it is sent, and
+ * none of it is about them rather than about the app.
+ *
+ * `supporttickets.test.ts` reads the migration and fails if the categories, the six
+ * context keys or the first-response hours here drift from the ones the
+ * database enforces.
+ */
+import { cloud } from './cloud';
+
+export const CATEGORIES = ['account', 'sync', 'bug', 'accessibility', 'privacy', 'how_to', 'other'] as const;
+export type Category = (typeof CATEGORIES)[number];
+
+export const CATEGORY_LABELS: Record<Category, string> = {
+  account: 'My account or signing in',
+  sync: 'My work is not the same on my devices',
+  bug: 'Something is broken',
+  accessibility: 'An accessibility barrier',
+  privacy: 'A privacy question or concern',
+  how_to: 'How do I…',
+  other: 'Something else',
+};
+
+/** Hours to a first reply, as the database computes it. */
+export function firstResponseHours(category: Category): number {
+  return category === 'accessibility' || category === 'privacy' ? 24 : 72;
+}
+
+/** The six context keys the database accepts. All about the app, none about the person. */
+export const CONTEXT_KEYS = ['app_version', 'device_class', 'screen', 'signed_in', 'sync_state', 'offline'] as const;
+export type ContextKey = (typeof CONTEXT_KEYS)[number];
+
+export const CONTEXT_LABELS: Record<ContextKey, string> = {
+  app_version: 'App version',
+  device_class: 'Kind of device',
+  screen: 'The screen, without anything after its name',
+  signed_in: 'Whether I am signed in',
+  sync_state: 'Whether my work has synced',
+  offline: 'Whether I am offline',
+};
+
+/**
+ * Only the ticked keys, each trimmed to what the database accepts. A key the
+ * student did not tick is never in the result, whatever `available` holds.
+ */
+export function contextToSend(available: Partial<Record<ContextKey, string>>, ticked: ReadonlySet<ContextKey>): Partial<Record<ContextKey, string>> {
+  const out: Partial<Record<ContextKey, string>> = {};
+  for (const key of CONTEXT_KEYS) {
+    const value = available[key]?.trim();
+    if (ticked.has(key) && value) out[key] = value.slice(0, 80);
+  }
+  return out;
+}
+
+/** `#/work/abc?x=1` → `#/work`. An id after the screen name can name a course or a person. */
+export function screenShape(hash: string): string {
+  return /^#\/[a-z0-9_-]{1,40}/i.exec(hash)?.[0].toLowerCase() ?? '';
+}
+
+/**
+ * What the app could offer to send, read from the app and nothing else. The
+ * student sees each value next to its box before anything is ticked, so none
+ * of it is sent unseen — and `contextToSend` sends only what they tick.
+ */
+export function availableContext(app: {
+  build: string;
+  width: number;
+  hash: string;
+  signedIn: boolean;
+  sync: string;
+  online: boolean;
+}): Record<ContextKey, string> {
+  return {
+    app_version: app.build || 'dev',
+    device_class: app.width < 640 ? 'phone' : app.width < 1024 ? 'tablet' : 'desktop',
+    screen: screenShape(app.hash) || 'unknown',
+    signed_in: app.signedIn ? 'yes' : 'no',
+    sync_state: app.sync || 'unknown',
+    offline: app.online ? 'no' : 'yes',
+  };
+}
+
+export const STATUS_LABELS: Record<Ticket['status'], string> = {
+  open: 'Waiting for Semester support',
+  waiting_on_student: 'Support replied — waiting for you',
+  resolved: 'Support thinks this is solved',
+  closed: 'Closed',
+};
+
+export interface Ticket {
+  id: string;
+  category: Category;
+  subject: string;
+  status: 'open' | 'waiting_on_student' | 'resolved' | 'closed';
+  priority: 'high' | 'normal';
+  createdAt: string;
+  firstResponseDue: string;
+  firstRespondedAt: string | null;
+}
+
+export interface Message {
+  from: 'student' | 'support';
+  body: string;
+  at: string;
+}
+
+type Row = Record<string, unknown>;
+const STATUSES = ['open', 'waiting_on_student', 'resolved', 'closed'] as const;
+
+export function toTicket(row: Row): Ticket {
+  const category = (CATEGORIES as readonly string[]).includes(String(row.category)) ? (row.category as Category) : 'other';
+  const status = (STATUSES as readonly string[]).includes(String(row.status)) ? (row.status as Ticket['status']) : 'open';
+  return {
+    id: String(row.id),
+    category,
+    subject: String(row.subject),
+    status,
+    priority: row.priority === 'high' ? 'high' : 'normal',
+    createdAt: String(row.created_at),
+    firstResponseDue: String(row.first_response_due),
+    firstRespondedAt: row.first_responded_at ? String(row.first_responded_at) : null,
+  };
+}
+
+const fail = (error: { message?: string } | null, fallback: string) => new Error(error?.message?.trim() || fallback);
+
+export async function openTicket(category: Category, subject: string, body: string, context: Partial<Record<ContextKey, string>>): Promise<string> {
+  const db = await cloud();
+  const { data, error } = await db.rpc('open_support_ticket', {
+    want_category: category, want_subject: subject.trim(), want_body: body.trim(), want_context: context,
+  });
+  if (error) throw fail(error, 'Could not send your question.');
+  return String(data);
+}
+
+export async function myTickets(): Promise<Ticket[]> {
+  const db = await cloud();
+  const { data, error } = await db.rpc('my_support_tickets');
+  if (error) throw fail(error, 'Could not load your questions.');
+  return ((data ?? []) as Row[]).map(toTicket);
+}
+
+export async function myThread(ticketId: string): Promise<Message[]> {
+  const db = await cloud();
+  const { data, error } = await db.rpc('my_support_thread', { want_ticket: ticketId });
+  if (error) throw fail(error, 'Could not load the conversation.');
+  return ((data ?? []) as Row[]).map((r) => ({
+    from: r.from_side === 'support' ? 'support' : 'student', body: String(r.body), at: String(r.created_at),
+  }));
+}
+
+export async function replyToTicket(ticketId: string, body: string): Promise<void> {
+  const db = await cloud();
+  const { error } = await db.rpc('reply_to_my_ticket', { want_ticket: ticketId, want_body: body.trim() });
+  if (error) throw fail(error, 'Could not send your reply.');
+}
+
+export async function closeTicket(ticketId: string): Promise<void> {
+  const db = await cloud();
+  const { error } = await db.rpc('close_my_ticket', { want_ticket: ticketId });
+  if (error) throw fail(error, 'Could not close the question.');
+}
