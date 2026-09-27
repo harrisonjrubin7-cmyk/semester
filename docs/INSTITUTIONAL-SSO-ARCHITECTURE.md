@@ -82,8 +82,8 @@ said "create/adapt", and this is the adapt.
    persisted.
 3. **Entitlement sources.** On LTI launches the order reads the kill switch,
    the school's `tenant_plan`, the `integration.lms_lti` flag, the school's
-   `tenant_sso_policy` with whether the account is a campus-SSO one, and the
-   membership, and logs the rest as unsourced. Nothing yet stores personal
+   `tenant_sso_policy` with whether the account is a campus-SSO one, the
+   membership, and a live `lti:launch` grant, and logs the rest as unsourced. Nothing yet stores personal
    grants or allowances, so it runs in shadow.
 4. **OIDC** is not supported. `provider_type` admits only `'saml'`.
 5. **Personal ↔ institutional account linking** for SSO accounts does not exist.

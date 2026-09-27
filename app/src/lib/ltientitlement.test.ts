@@ -16,7 +16,7 @@ import { membershipJoin } from '../../../supabase/functions/_shared/ltimembershi
 const now = new Date('2026-09-27T20:00:00Z');
 const joined = membershipJoin([{ outcome: 'joined', tenant_id: 'north', membership_id: 'm-1', roles: ['student'] }], null);
 const plan = { status: 'active' as const, endsAt: '2027-06-30T00:00:00Z' };
-const on = { killSwitched: false, moduleState: 'production', plan, requireSso: false, accountSso: false };
+const on = { killSwitched: false, moduleState: 'production', plan, requireSso: false, accountSso: false, accountCanLaunch: true };
 
 describe('the LTI launch entitlement, in shadow', () => {
   it('would allow a joined launch at a school with LTI on and no switch thrown', () => {
@@ -26,6 +26,7 @@ describe('the LTI launch entitlement, in shadow', () => {
   it.each([
     ['kill-switch', joined, { ...on, killSwitched: true }],
     ['sso-policy', joined, { ...on, requireSso: true, accountSso: false }],
+    ['capability', joined, { ...on, accountCanLaunch: false }],
     ['tenant-plan', joined, { ...on, plan: { status: 'suspended' as const } }],
     ['tenant-plan', joined, { ...on, plan: { status: 'active' as const, endsAt: '2026-09-01T00:00:00Z' } }],
     ['module', joined, { ...on, moduleState: 'off' }],
@@ -63,14 +64,15 @@ describe('the LTI launch entitlement, in shadow', () => {
 });
 
 describe('the shadow log', () => {
-  // The five sourced steps are the only ones a pass can mean anything for.
+  // The six sourced steps are the only ones a pass can mean anything for.
   it('names every step it did not check, and no step it did', () => {
     const sourced = ENTITLEMENT_STEPS.filter((s) => !(UNSOURCED_STEPS as readonly string[]).includes(s));
-    expect(sourced).toEqual(['kill-switch', 'tenant-plan', 'module', 'sso-policy', 'lifecycle']);
+    expect(sourced).toEqual(['kill-switch', 'tenant-plan', 'module', 'sso-policy', 'lifecycle', 'capability']);
     const line = entitlementLogLine(launchEntitlement(joined, on, now));
     for (const step of UNSOURCED_STEPS) expect(line).toContain(step);
     expect(line).not.toContain('tenant-plan');
     expect(line).not.toContain('sso-policy');
+    expect(line).not.toContain('capability');
     expect(line).toMatch(/^lti entitlement \(shadow\): would allow; unsourced=/);
   });
 
@@ -106,20 +108,21 @@ describe('the shadow log', () => {
 
 describe('reading the facts row', () => {
   it('reads a well-formed row, as the RPC returns it', () => {
-    expect(readFacts([{ kill_switched: false, module_state: 'off', plan_status: 'active', plan_ends_at: '2027-06-30T00:00:00+00:00', require_sso: true, account_sso: false }], null))
-      .toEqual({ killSwitched: false, moduleState: 'off', plan: { status: 'active', endsAt: '2027-06-30T00:00:00+00:00' }, requireSso: true, accountSso: false });
-    expect(readFacts([{ kill_switched: false, module_state: 'off', plan_status: 'active', plan_ends_at: null, require_sso: false, account_sso: true }], null))
-      .toEqual({ killSwitched: false, moduleState: 'off', plan: { status: 'active' }, requireSso: false, accountSso: true });
+    expect(readFacts([{ kill_switched: false, module_state: 'off', plan_status: 'active', plan_ends_at: '2027-06-30T00:00:00+00:00', require_sso: true, account_sso: false, account_can_launch: true }], null))
+      .toEqual({ killSwitched: false, moduleState: 'off', plan: { status: 'active', endsAt: '2027-06-30T00:00:00+00:00' }, requireSso: true, accountSso: false, accountCanLaunch: true });
+    expect(readFacts([{ kill_switched: false, module_state: 'off', plan_status: 'active', plan_ends_at: null, require_sso: false, account_sso: true, account_can_launch: false }], null))
+      .toEqual({ killSwitched: false, moduleState: 'off', plan: { status: 'active' }, requireSso: false, accountSso: true, accountCanLaunch: false });
   });
 
   it('reads no plan row as no plan recorded', () => {
-    expect(readFacts([{ kill_switched: false, module_state: 'off', plan_status: null, plan_ends_at: null, require_sso: false, account_sso: false }], null))
-      .toEqual({ killSwitched: false, moduleState: 'off', plan: null, requireSso: false, accountSso: false });
+    expect(readFacts([{ kill_switched: false, module_state: 'off', plan_status: null, plan_ends_at: null, require_sso: false, account_sso: false, account_can_launch: false }], null))
+      .toEqual({ killSwitched: false, moduleState: 'off', plan: null, requireSso: false, accountSso: false, accountCanLaunch: false });
   });
 
   // The function always returns both SSO fields, so a row without them is
   // not one it returned: not trusted, rather than read as "not required".
-  it('does not trust a row missing the SSO fields', () => {
+  it('does not trust a row missing the SSO or capability fields', () => {
+    expect(readFacts([{ kill_switched: false, module_state: 'off', plan_status: null, plan_ends_at: null, require_sso: false, account_sso: false }], null)).toBeNull();
     expect(readFacts([{ kill_switched: false, module_state: 'off', plan_status: null, plan_ends_at: null }], null)).toBeNull();
     expect(readFacts([{ kill_switched: false, module_state: 'off', plan_status: null, plan_ends_at: null, require_sso: 'yes', account_sso: false }], null)).toBeNull();
   });

@@ -2,7 +2,7 @@
  * The entitlement order, run on an LTI launch in shadow: evaluated, logged,
  * never enforced.
  *
- * `entitlement.ts` decides in twelve steps. On a launch, five have a source:
+ * `entitlement.ts` decides in twelve steps. On a launch, six have a source:
  *
  *   kill-switch   `kill.integration_sync` (lti_launch_entitlement_facts)
  *   tenant-plan   `tenant_plan` (the same function); unsourced for a school
@@ -11,8 +11,10 @@
  *   sso-policy    `tenant_sso_policy` (no row: not required), and whether the
  *                 launch's account is a campus-SSO one (the same function)
  *   lifecycle     the membership join (`ltimembership.ts`)
+ *   capability    a live `lti:launch` grant for the launch's account at the
+ *                 school, by `private.has_capability`'s rules (the same function)
  *
- * The other seven have nothing to read yet: no course scope, no data tier, no personal grant, no usage counter,
+ * The other six have nothing to read yet: no course scope, no data tier, no personal grant, no usage counter,
  * and no service-side capability lookup. They are given the values that pass,
  * and **named in the log as unsourced**, so a pass through one of them reads
  * as "not checked", never as "checked and allowed". A shadow log that hid
@@ -35,7 +37,7 @@ export const LTI_MODULE = 'integration.lms_lti';
  * only when that school has no plan row (see `launchEntitlement`).
  */
 export const UNSOURCED_STEPS = [
-  'environment', 'capability', 'course-scope',
+  'environment', 'course-scope',
   'course-policy', 'data-classification', 'individual-plan', 'usage-allowance',
 ] as const;
 
@@ -50,7 +52,12 @@ export interface LaunchFacts {
   requireSso: boolean;
   /** Whether the account this launch opens is a campus-SSO account. */
   accountSso: boolean;
+  /** Whether that account holds a live `lti:launch` grant at the school. */
+  accountCanLaunch: boolean;
 }
+
+/** The capability an LTI launch requires (20260928015315_lti_launch_capability.sql). */
+export const LAUNCH_CAPABILITY = 'lti:launch';
 
 export type LaunchEntitlement =
   | { evaluated: true; verdict: EntitlementVerdict; unsourced: readonly string[] }
@@ -69,13 +76,14 @@ export function readFacts(data: unknown, error: { message?: string } | null): La
   // Both always come back from the function; a row without them is not one it
   // returned, so it is not trusted rather than read as "not required".
   if (typeof r.require_sso !== 'boolean' || typeof r.account_sso !== 'boolean') return null;
-  const sso = { requireSso: r.require_sso, accountSso: r.account_sso };
+  if (typeof r.account_can_launch !== 'boolean') return null;
+  const account = { requireSso: r.require_sso, accountSso: r.account_sso, accountCanLaunch: r.account_can_launch };
 
   // No plan row: null, meaning nothing is recorded, not that a plan ended.
   const status = r.plan_status ?? null;
   const ends = r.plan_ends_at ?? null;
   if (status === null) {
-    return ends === null ? { killSwitched: r.kill_switched, moduleState: r.module_state, plan: null, ...sso } : null;
+    return ends === null ? { killSwitched: r.kill_switched, moduleState: r.module_state, plan: null, ...account } : null;
   }
   if (typeof status !== 'string' || !PLAN_STATUSES.has(status)) return null;
   if (ends !== null && (typeof ends !== 'string' || !Number.isFinite(Date.parse(ends)))) return null;
@@ -83,7 +91,7 @@ export function readFacts(data: unknown, error: { message?: string } | null): La
     killSwitched: r.kill_switched,
     moduleState: r.module_state,
     plan: { status: status as PlanStatus, ...(ends === null ? {} : { endsAt: ends }) },
-    ...sso,
+    ...account,
   };
 }
 
@@ -124,9 +132,9 @@ export function launchEntitlement(join: MembershipJoin, facts: LaunchFacts | nul
     },
     session: { viaInstitutionSso: facts.accountSso },
     membership: join.joined ? { status: 'active' } : inactiveStatus(join.outcome),
-    // Unsourced: no service-side capability lookup; required is what is held.
-    capabilities: ['lti:launch'],
-    requiredCapability: 'lti:launch',
+    // Resolved in the database from role_grants, never from a launch claim.
+    capabilities: facts.accountCanLaunch ? [LAUNCH_CAPABILITY] : [],
+    requiredCapability: LAUNCH_CAPABILITY,
     dataTier: 0, // unsourced
     maxDataTier: 6,
   };

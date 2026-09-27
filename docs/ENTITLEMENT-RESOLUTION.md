@@ -1,8 +1,8 @@
 # Entitlement resolution
 
-Status: **BUILT; RUNS IN SHADOW ON LTI LAUNCHES; ENFORCES NOTHING.** Five
-steps are sourced on a launch: kill-switch, tenant-plan, module, sso-policy
-and lifecycle. The order
+Status: **BUILT; RUNS IN SHADOW ON LTI LAUNCHES; ENFORCES NOTHING.** Six
+steps are sourced on a launch: kill-switch, tenant-plan, module, sso-policy,
+lifecycle and capability. The order
 is `supabase/functions/_shared/entitlement.ts`: one copy, kept where a Deno
 edge function can deploy it. Its tests are `app/src/lib/entitlement.test.ts`,
 beside the other `_shared` rules' tests. It is not re-exported from
@@ -86,12 +86,29 @@ security decision:
 `supabase/tenant-sso-policy.check.sql` proves each of those. Removing the stamp
 trigger, or opening inserts to any user, each makes it fail.
 
+## Where the launch capability comes from
+
+`lti:launch` (`20260928015315_lti_launch_capability.sql`) is a capability in the
+existing matrix. The learner and teaching app roles carry it: `student`,
+`undergraduate_student`, `graduate_student`, `transfer_student`, `faculty`,
+`teaching_assistant` and `tutor`. Nothing new decides who holds a role.
+
+The launch runs as the service role, which has no `auth.uid()`, so
+`private.has_capability` cannot be asked. The facts function applies the same
+rules to the account the launch opens instead, and returns only yes or no.
+
+**What shadow will show:** SCIM writes memberships, not `role_grants`, so until
+a school issues grants most launches log `would refuse at capability`. That
+is accurate about today's data. `supabase/lti-capability.check.sql` walks every
+rule, and removing the revoked or scope condition each makes it fail.
+
 ## To wire it
 
-Tables for personal and sponsored grants and usage counters (tenant plans now
-exist, in `tenant_plan`; modules are `tenant_feature_policy`) (`usage_atomic` is the precedent). A server-side caller that builds the
-request from those rows, the current membership and `has_capability`. And an
-audit row for each refusal.
+Beyond LTI launches, the order still needs tables for personal and sponsored
+grants and for usage counters (`usage_atomic` is the precedent). Tenant plans
+are `tenant_plan`, modules are `tenant_feature_policy`, and capabilities are
+`role_grants`. It also needs a server-side caller for each action, and an audit
+row for each refusal.
 
 ## On an LTI launch, in shadow
 
@@ -99,7 +116,7 @@ Every LTI launch evaluates the order and logs what it would decide. It refuses
 nothing new (`_shared/ltientitlement.ts`):
 
 ```text
-lti entitlement (shadow): would refuse at module; unsourced=environment,capability,…
+lti entitlement (shadow): would refuse at module; unsourced=environment,course-scope,…
 ```
 
 Shadow, because the LTI module flag `integration.lms_lti` defaults to `off`.
@@ -114,6 +131,7 @@ turning it on.
 | module | `feature_state('integration.lms_lti', school)`: anything but `off` is on |
 | sso-policy | `tenant_sso_policy.require_sso` (no row: not required), and whether the account the launch opens is a campus-SSO account (provider `sso:…`, the marker `auth.ts` trusts). An `lti.invalid` account, or a personal account someone linked, is not |
 | lifecycle | the membership join: `joined` is active, `membership-<status>` is that status, anything else is no membership |
+| capability | a live `lti:launch` grant for the launch's account at the school, by `private.has_capability`'s rules (not revoked, not expired, exactly that school's scope), read from `role_grants` and never from a launch claim |
 | every other step | **unsourced**: given a passing value and named in the log's `unsourced=` list |
 
 The `unsourced=` list is the point of the log line. A pass through a step
