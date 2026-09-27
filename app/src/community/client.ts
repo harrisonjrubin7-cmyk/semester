@@ -3,7 +3,7 @@
  *
  * Every write is an RPC — members never hold another member's account id, so
  * the server resolves authors, runs triage and checks roles
- * (supabase/migrations/20260927235917_community.sql). Reads name their columns
+ * (supabase/migrations/20260928030000_community.sql). Reads name their columns
  * rather than `*`: several columns on these tables (author_id, reporter_id,
  * ref_salt, host_id) are granted to nobody, and `select=*` would ask for them
  * and be refused.
@@ -1074,7 +1074,7 @@ export async function attest(kind: 'confidentiality' | 'recusal'): Promise<void>
 export async function nextTasks(): Promise<VolunteerTask[]> {
   const db = await cloud();
   const { data, error } = await db.rpc('volunteer_next_tasks');
-  if (error) fail(error, 'Could not load tasks.');
+  if (error) fail(error, 'Could not load cases to review.');
   return ((data ?? []) as Row[]).map((r) => ({
     taskId: str(r.task_id),
     category: str(r.category) as ReportCategory,

@@ -187,7 +187,7 @@ describe('the handler', () => {
 });
 
 describe('in step with the database and the app', () => {
-  const sql = readFileSync(new URL('../../../supabase/migrations/20260927235917_community.sql', import.meta.url), 'utf8');
+  const sql = readFileSync(new URL('../../../supabase/migrations/20260928030000_community.sql', import.meta.url), 'utf8');
   const record = sql.slice(sql.indexOf('create or replace function public.record_media_scan('));
 
   it('the verdict keys are the ones record_media_scan reads', () => {

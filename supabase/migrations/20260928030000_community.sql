@@ -1515,6 +1515,10 @@ begin
       ('public.support_access_grant',           'student_id'),
       ('public.support_access_grant',           'supporter_id'),
       ('public.help_requests',                  'student_id'),
+      ('public.mentor_requests',                'requester'),
+      ('public.mentor_requests',                'recipient'),
+      ('public.peer_mentor_offers',             'user_id'),
+      ('public.alumni_mentor_offers',           'user_id'),
       ('public.community_posts',                'author_id'),
       ('public.community_sessions',             'host_id'),
       ('public.community_session_participants', 'user_id'),
@@ -3518,7 +3522,7 @@ grant execute on function public.mark_media_deleted(text[]) to service_role;
 --     private.has_contact_details(text), public.create_community(text, text, text, text),
 --     private.blocked_either_way(uuid),
 --     public.join_community(uuid), private.community_restricted(uuid, uuid), private.community_role(uuid);
---   -- and restore lti_account_untouched from 20260927230000_help_requests.sql, first.
+--   -- and restore lti_account_untouched from 20260928021700_mentor_rosters.sql, first.
 --   drop table if exists public.community_session_participants, public.community_sessions,
 --     public.community_venues, public.community_decisions, public.community_case_events,
 --     public.community_reports, public.community_cases, public.community_mutes,

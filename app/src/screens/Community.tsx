@@ -91,7 +91,7 @@ const ago = (iso: string) =>
  *
  * The rules this screen follows are stated and tested in `src/community/`;
  * the ones that must hold for every client are enforced by the database
- * (supabase/migrations/20260927235917_community.sql).
+ * (supabase/migrations/20260928030000_community.sql).
  */
 export function Community() {
   const { account } = useStore();

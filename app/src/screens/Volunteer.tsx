@@ -92,7 +92,7 @@ function VolunteerSignedIn() {
   const [on, setOn] = useState<boolean | null>(null);
   const [record, setRecord] = useState<VolunteerRecord | null>(null);
   const [standing, setStanding] = useState<VolunteerStanding | null>(null);
-  const [tasks, setTasks] = useState<VolunteerTask[]>([]);
+  const [queue, setQueue] = useState<VolunteerTask[]>([]);
   const [error, setError] = useState('');
   const [status, setStatus] = useState('');
   const [busy, setBusy] = useState(false);
@@ -244,7 +244,7 @@ function VolunteerSignedIn() {
         </ul>
       )}
 
-      <SectionLabel style={{ marginTop: 'var(--sp-6)' }} aside={tasks.length ? `${tasks.length}` : undefined}>
+      <SectionLabel style={{ marginTop: 'var(--sp-6)' }} aside={queue.length ? `${queue.length}` : undefined}>
         Your queue
       </SectionLabel>
       <Notice>{CRISIS_NOTICE}</Notice>
@@ -264,19 +264,19 @@ function VolunteerSignedIn() {
             setError('');
             void nextTasks()
               .then((t) => {
-                setTasks(t);
+                setQueue(t);
                 if (t.length === 0) setStatus('Nothing to review right now.');
               })
-              .catch((e: unknown) => setError(e instanceof Error ? e.message : 'Could not load tasks.'))
+              .catch((e: unknown) => setError(e instanceof Error ? e.message : 'Could not load cases to review.'))
               .finally(() => setBusy(false));
           }}
         >
-          {tasks.length ? 'Refresh the queue' : 'Get cases to review'}
+          {queue.length ? 'Refresh the queue' : 'Get cases to review'}
         </ActionButton>
       )}
 
       <ol style={{ listStyle: 'none', padding: 0, margin: 'var(--sp-4) 0 0', display: 'grid', gap: 'var(--sp-4)' }}>
-        {tasks.map((t) => (
+        {queue.map((t) => (
           <TaskCard
             key={t.taskId}
             task={t}
@@ -284,7 +284,7 @@ function VolunteerSignedIn() {
             onDecide={(action, reason) =>
               act(async () => {
                 await decideTask(t.taskId, action, reason);
-                setTasks((all) => all.filter((x) => x.taskId !== t.taskId));
+                setQueue((all) => all.filter((x) => x.taskId !== t.taskId));
               }, 'Recorded.')
             }
           />

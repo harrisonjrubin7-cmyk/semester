@@ -12,6 +12,7 @@ import type { Ledger } from './terms';
  */
 
 export const LEDGER: Ledger = {
+  'community/detectors.ts': { homework: 2 },
   'components/HelpInbox.tsx': { 'something went wrong': 1 },
   'lib/assignment.ts': { deliverable: 2 },
   'lib/connect.ts': { task: 3, 'to-do': 1 },

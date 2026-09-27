@@ -31,7 +31,7 @@ every rule the prompt states as a number or a prohibition, and 153 tests check
 them. Each prohibition has a test that was shown to go red when its guard was
 reverted.
 
-The database half followed in `supabase/migrations/20260927235917_community.sql`:
+The database half followed in `supabase/migrations/20260928030000_community.sql`:
 
 - **Tables:** communities, members, posts, restrictions, mutes, cases, reports,
   append-only case events, decisions, venues, sessions and session places.
