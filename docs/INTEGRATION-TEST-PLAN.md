@@ -95,6 +95,17 @@ bug — lax JSON path mode unwrapped arrays, so `{"students":[…]}` was accepte
 component test found another: the cards flag required a connection no student can read, so the section could
 never have appeared.
 
+## Campus, advising, career and bursar — `mock-campus.test.ts`, `school-records.test.ts`, `schoolrecords.test.tsx`
+
+Nine mock declarations valid, read-only, within their domain ceilings; personal records only for advising and bursar,
+with consent; every connector flag registered, high-risk and off. Sensitive declarations refused (a health scope, a
+`notes` field, a financial-aid scope). An appointment keeps time, office, mode and prep link; one carrying
+`instructor_notes` is refused; a referral drops its reason; a bursar item drops amount and balance; alerts refuse an
+unknown level. On Today: emergencies before advisories, expired alerts dropped, the caveat always present and the alert
+rendered first; a 15-minute-old alert is not official; a bursar item is told from an alert by whose it is; the next
+appointment within 30 days, one career deadline within 14 days, one event within 7. Three deliberate breaks (caveat
+removed, a student's own item shown as an alert, the bursar item given the alert's freshness target) each turned it red.
+
 ## Two classification layers — `classification.test.ts`
 
 The platform floor matches the migration's seed row for row, and the AI Toolkit's gate (`lib/toolkit/classification.ts`)

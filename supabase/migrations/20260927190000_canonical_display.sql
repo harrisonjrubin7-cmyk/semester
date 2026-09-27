@@ -4,7 +4,7 @@
 -- not the fact itself, so a student could not be shown "Registration opens 2
 -- November" with its source. `display` is the pipeline's mapped values for one
 -- reference: only fields a mapping declared, flat, small, and never a name on
--- the never-ingest list. RLS on the table is unchanged: a student's own row is
+-- the never-ingest list, a reason, an amount, a balance or notes. RLS on the table is unchanged: a student's own row is
 -- theirs alone; a tenant-wide T0/T1 row is readable in the school.
 --
 -- And a student may delete their own imported records. Revoking consent stops
@@ -37,7 +37,7 @@ as $$
 declare k text;
 begin
   for k in select jsonb_object_keys(new.display) loop
-    if lower(k) ~ '(^|_)(grades?|gpa|gradebook|roster|submissions?|accommodations?|health|counseling|conduct|instructor_notes|financial_aid|aid_award|reason|amount|balance)(_|$)' then
+    if lower(k) ~ '(^|_)(grades?|gpa|gradebook|roster|submissions?|accommodations?|health|counseling|conduct|instructor_notes|financial_aid|aid_award|reason|amount|balance|notes)(_|$)' then
       raise exception 'canonical display may not carry %', k using errcode = '23514';
     end if;
   end loop;

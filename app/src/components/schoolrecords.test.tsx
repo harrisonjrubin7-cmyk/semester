@@ -107,6 +107,17 @@ describe('From your school, on Today', () => {
     expect(host.querySelector('a')?.getAttribute('rel')).toContain('noopener');
   });
 
+  it('puts an official alert first, with the reminder that Semester is not an emergency channel', async () => {
+    world.rows = [hold, { id: 'a1', canonical_entity_type: 'notification', canonical_entity_id: 'a1', subject_user_id: null,
+      source_system: 'Alerts', source_url: null, source_timestamp: null, source_of_truth: 'Campus alert system',
+      freshness_status: 'live', updated_at: FRESH,
+      display: { severity: 'emergency', headline: 'Shelter in place', expires_at: new Date(Date.now() + 3_600_000).toISOString() } }];
+    await mount(<SchoolRecords />);
+    const facts = [...host.querySelectorAll('.school-fact-text')].map((n) => n.textContent);
+    expect(facts[0]).toBe('Emergency: Shelter in place');
+    expect(host.textContent).toContain('Semester is not an emergency channel');
+  });
+
   it('draws nothing while the school has the cards off', async () => {
     world.featureState = 'off';
     await mount(<SchoolRecords />);

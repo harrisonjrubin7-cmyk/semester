@@ -1,8 +1,10 @@
 /**
  * What your school has shared, on Today and on the privacy page.
  *
- * `SchoolRecords` is a Today section: registration readiness, holds,
- * enrollment and degree-audit status, each with where it came from and how
+ * `SchoolRecords` is a Today section: official campus alerts first, then
+ * registration readiness, holds, enrollment, degree-audit status, an advising
+ * appointment and referrals, bursar action items (never an amount), and the
+ * next career deadline and campus event, each with where it came from and how
  * fresh it is. It draws nothing unless the school has turned on
  * `module.source_freshness_cards` and something has actually been shared — so
  * on nearly every account, and on every build without an account service, it
@@ -46,10 +48,11 @@ function FactLine({ fact }: { fact: Fact }) {
         {fact.link && (
           <>
             {' · '}
-            <a href={fact.link} target="_blank" rel="noopener noreferrer">Open the official page</a>
+            <a href={fact.link} target="_blank" rel="noopener noreferrer">{fact.linkLabel ?? 'Open the official page'}</a>
           </>
         )}
       </div>
+      {fact.caveat && <div className="school-fact-meta">{fact.caveat}</div>}
     </div>
   );
 }
@@ -80,6 +83,8 @@ export function SchoolRecords() {
     <Folding name="School">
       <section className="school-records" aria-label="From your school">
         <SectionLabel style={{ marginTop: 0, marginInline: 0 }}>From your school</SectionLabel>
+        {/* Alerts before everything: they are the one thing here that can be about right now. */}
+        {view.alerts.map((a) => <FactLine key={a.id} fact={a} />)}
         {view.readiness === 'blocked' && (
           <p className="school-readiness" role="status">Something needs doing before you can register.</p>
         )}
@@ -92,6 +97,11 @@ export function SchoolRecords() {
         {view.window && <FactLine fact={view.window} />}
         {view.enrollment && <FactLine fact={view.enrollment} />}
         {view.requirements && <FactLine fact={view.requirements} />}
+        {view.appointment && <FactLine fact={view.appointment} />}
+        {view.referrals.map((r) => <FactLine key={r.id} fact={r} />)}
+        {view.actions.map((a) => <FactLine key={a.id} fact={a} />)}
+        {view.opportunity && <FactLine fact={view.opportunity} />}
+        {view.event && <FactLine fact={view.event} />}
       </section>
     </Folding>
   );

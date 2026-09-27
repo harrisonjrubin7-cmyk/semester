@@ -87,3 +87,71 @@ describe('the view', () => {
     expect(v.holds[0].link).toBeNull();
   });
 });
+
+describe('the campus facts', () => {
+  const alert = (severity: string, headline: string, over: Partial<RecordRow> = {}) => row('notification',
+    { severity, headline, issued_at: '2026-10-01T11:50:00Z', expires_at: '2026-10-01T20:00:00Z',
+      source_url: 'https://alerts.example.edu/1' },
+    { source_of_truth: 'Campus alert system', updated_at: '2026-10-01T11:58:00Z', ...over });
+
+  it('puts an emergency ahead of an advisory, drops expired alerts, and always carries the caveat', () => {
+    const v = schoolRecordsView([
+      alert('advisory', 'Shuttle suspended'),
+      alert('emergency', 'Shelter in place — Science Hall'),
+      alert('info', 'Old notice', { display: { severity: 'info', headline: 'Old notice', expires_at: '2026-10-01T10:00:00Z' } }),
+    ], ME, NOW);
+    expect(v.alerts.map((a) => a.text)).toEqual(['Emergency: Shelter in place — Science Hall', 'Advisory: Shuttle suspended']);
+    for (const a of v.alerts) expect(a.caveat).toMatch(/not an emergency channel/);
+  });
+
+  it('marks an alert that has not been refreshed in fifteen minutes as not official', () => {
+    const v = schoolRecordsView([alert('advisory', 'Shuttle suspended', { updated_at: '2026-10-01T11:30:00Z' })], ME, NOW);
+    expect(v.alerts[0]).toMatchObject({ freshness: 'stale', official: false });
+  });
+
+  it('tells a bursar action item from an alert by whose it is, and never shows an amount', () => {
+    const v = schoolRecordsView([
+      row('notification', { office: 'Student Accounts', due_at: '2026-10-15T00:00:00Z', action_url: 'https://accounts.example.edu/a' },
+        { subject_user_id: ME, source_of_truth: 'Bursar', updated_at: '2026-10-01T06:00:00Z' }),
+    ], ME, NOW);
+    expect(v.alerts).toEqual([]);
+    expect(v.actions[0]).toMatchObject({ text: 'An action from Student Accounts — due Thu, Oct 15', official: true,
+      link: 'https://accounts.example.edu/a' });
+  });
+
+  it('shows the next advising appointment with its preparation link', () => {
+    const v = schoolRecordsView([
+      row('appointment', { starts_at: '2026-10-02T15:00:00Z', office: 'Academic Advising', mode: 'video',
+        prep_url: 'https://advising.example.edu/prep' }, { subject_user_id: ME, source_of_truth: 'Advising system' }),
+      row('appointment', { starts_at: '2026-09-20T15:00:00Z', office: 'Past', mode: 'video' }, { subject_user_id: ME }),
+    ], ME, NOW);
+    expect(v.appointment).toMatchObject({ text: 'Advising appointment Fri, Oct 2, 3:00 PM UTC — Academic Advising, by video',
+      link: 'https://advising.example.edu/prep', linkLabel: 'Prepare' });
+  });
+
+  it('shows who asked to hear from you, never why', () => {
+    const v = schoolRecordsView([row('referral', { office: 'Writing Studio', action_url: 'https://writing.example.edu/book' },
+      { subject_user_id: ME })], ME, NOW);
+    expect(v.referrals[0]).toMatchObject({ text: 'Writing Studio asked to hear from you', linkLabel: 'Get in touch' });
+  });
+
+  it('offers one career deadline within a fortnight and one event within a week', () => {
+    const v = schoolRecordsView([
+      row('internship', { title: 'Later', employer: 'X', deadline_at: '2026-11-30T00:00:00Z' }),
+      row('internship', { title: 'Policy research intern', employer: 'Example Institute', deadline_at: '2026-10-10T23:59:00Z',
+        source_url: 'https://careers.example.edu/p/1' }),
+      row('event', { title: 'Career fair', starts_at: '2026-10-03T17:00:00Z', location: 'Student Center' }),
+      row('event', { title: 'Too far', starts_at: '2026-10-20T17:00:00Z' }),
+    ], ME, NOW);
+    expect(v.opportunity?.text).toBe('Policy research intern at Example Institute — apply by Sat, Oct 10');
+    expect(v.event?.text).toBe('Career fair — Sat, Oct 3, 5:00 PM UTC, Student Center');
+  });
+
+  it('is empty when only far-off or somebody else’s campus facts exist', () => {
+    const v = schoolRecordsView([
+      row('event', { title: 'Too far', starts_at: '2026-12-20T17:00:00Z' }),
+      row('appointment', { starts_at: '2026-10-02T15:00:00Z', office: 'X' }, { subject_user_id: 'someone-else' }),
+    ], ME, NOW);
+    expect(v.empty).toBe(true);
+  });
+});

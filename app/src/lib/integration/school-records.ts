@@ -37,9 +37,22 @@ const TARGET_MINUTES: Record<string, number> = {
   term: 24 * 60,
   course_section: 24 * 60,
   academic_requirement: 24 * 60,
+  appointment: 60,
+  referral: 60,
+  // A campus alert (tenant-wide) is 15 minutes; a bursar action item (the
+  // student's own) is a day. Same canonical type, told apart by whose it is.
+  notification: 15,
+  internship: 24 * 60,
+  job: 24 * 60,
+  event: 24 * 60,
 };
 
 export const SHOWN_TYPES = Object.keys(TARGET_MINUTES);
+
+function targetFor(row: RecordRow): number {
+  if (row.canonical_entity_type === 'notification' && row.subject_user_id !== null) return 24 * 60;
+  return TARGET_MINUTES[row.canonical_entity_type] ?? 24 * 60;
+}
 
 /** Stored freshness decays with age; hand-entered and estimated stay as they are. */
 export function effectiveFreshness(row: RecordRow, now: Date): Freshness {
@@ -47,7 +60,7 @@ export function effectiveFreshness(row: RecordRow, now: Date): Freshness {
   if (stored === 'manual' || stored === 'estimated' || stored === 'needs_confirmation' || stored === 'unavailable') {
     return stored;
   }
-  const decayed = freshnessFromAge(new Date(row.updated_at), TARGET_MINUTES[row.canonical_entity_type] ?? 24 * 60, now, true);
+  const decayed = freshnessFromAge(new Date(row.updated_at), targetFor(row), now, true);
   const order: Freshness[] = ['live', 'recent', 'stale'];
   return order[Math.max(order.indexOf(stored), order.indexOf(decayed))] ?? decayed;
 }
@@ -59,6 +72,10 @@ export interface Fact {
   freshness: Freshness;
   official: boolean;
   link: string | null;
+  /** What the link does, when "Open the official page" is not it. */
+  linkLabel?: string;
+  /** A sentence that must travel with this fact, whatever its freshness. */
+  caveat?: string;
   mine: boolean;
 }
 
@@ -68,6 +85,14 @@ export interface SchoolRecordsView {
   holds: Fact[];
   enrollment: Fact | null;
   requirements: (Fact & { met: number; inProgress: number; notMet: number }) | null;
+  /** Official campus alerts still in force, emergencies first. */
+  alerts: Fact[];
+  appointment: Fact | null;
+  referrals: Fact[];
+  /** Bursar action items: the office, a due date and the link — never an amount. */
+  actions: Fact[];
+  opportunity: Fact | null;
+  event: Fact | null;
   empty: boolean;
 }
 
@@ -135,6 +160,49 @@ export function schoolRecordsView(rows: readonly RecordRow[], userId: string | n
     };
   }
 
+  // ── Campus: alerts, advising, bursar, career, events ─────────────────────
+  const soonest = (list: RecordRow[], key: string, within: number) => list
+    .filter((r) => { const t = Date.parse(str(r.display[key])); return t > now.getTime() && t - now.getTime() <= within; })
+    .sort((a, b) => Date.parse(str(a.display[key])) - Date.parse(str(b.display[key])))[0];
+  const when = (iso: string) => {
+    const d = new Date(iso);
+    return `${day(iso)}, ${d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'UTC' })} UTC`;
+  };
+  const RANK: Record<string, number> = { emergency: 0, advisory: 1, info: 2 };
+  const LEVEL: Record<string, string> = { emergency: 'Emergency', advisory: 'Advisory', info: 'Notice' };
+
+  const alerts = of('notification')
+    .filter((r) => r.subject_user_id === null && typeof r.display.severity === 'string')
+    .filter((r) => !str(r.display.expires_at) || Date.parse(str(r.display.expires_at)) > now.getTime())
+    .sort((a, b) => (RANK[str(a.display.severity)] ?? 3) - (RANK[str(b.display.severity)] ?? 3))
+    .map((r) => ({
+      ...fact(r, `${LEVEL[str(r.display.severity)] ?? 'Notice'}: ${str(r.display.headline)}`, now, r.display.source_url),
+      caveat: `Follow ${r.source_of_truth} for anything urgent — Semester is not an emergency channel and may show this late.`,
+    }));
+
+  const MODE: Record<string, string> = { in_person: 'in person', video: 'by video', phone: 'by phone' };
+  const apt = soonest(of('appointment').filter((r) => r.subject_user_id === userId), 'starts_at', 30 * 86_400_000);
+  const appointment = apt
+    ? { ...fact(apt, `Advising appointment ${when(str(apt.display.starts_at))} — ${str(apt.display.office)}${MODE[str(apt.display.mode)] ? `, ${MODE[str(apt.display.mode)]}` : ''}`,
+        now, apt.display.prep_url), linkLabel: 'Prepare' }
+    : null;
+
+  const referrals = of('referral').filter((r) => r.subject_user_id === userId)
+    .map((r) => ({ ...fact(r, `${str(r.display.office) || 'An office'} asked to hear from you`, now, r.display.action_url), linkLabel: 'Get in touch' }));
+
+  const actions = of('notification').filter((r) => r.subject_user_id === userId)
+    .map((r) => fact(r, `An action from ${str(r.display.office) || 'an office'}${str(r.display.due_at) ? ` — due ${day(str(r.display.due_at))}` : ''}`,
+      now, r.display.action_url));
+
+  const post = soonest([...of('internship'), ...of('job')], 'deadline_at', 14 * 86_400_000);
+  const opportunity = post
+    ? fact(post, `${str(post.display.title)} at ${str(post.display.employer)} — apply by ${day(str(post.display.deadline_at))}`, now, post.display.source_url)
+    : null;
+  const ev = soonest(of('event'), 'starts_at', 7 * 86_400_000);
+  const event = ev
+    ? fact(ev, `${str(ev.display.title)} — ${when(str(ev.display.starts_at))}${str(ev.display.location) ? `, ${str(ev.display.location)}` : ''}`, now, ev.display.source_url)
+    : null;
+
   const blocking = holds.some((h) => h.text.startsWith('Action required before'));
   // "No hold on record" only when the hold feed is fresh enough to be believed
   // and there is a window to register in; otherwise say nothing about it.
@@ -144,8 +212,9 @@ export function schoolRecordsView(rows: readonly RecordRow[], userId: string | n
       ? 'no_hold_on_record'
       : 'unknown';
 
-  return { readiness, window, holds, enrollment, requirements,
-    empty: !window && holds.length === 0 && !enrollment && !requirements };
+  return { readiness, window, holds, enrollment, requirements, alerts, appointment, referrals, actions, opportunity, event,
+    empty: !window && holds.length === 0 && !enrollment && !requirements && alerts.length === 0 && !appointment
+      && referrals.length === 0 && actions.length === 0 && !opportunity && !event };
 }
 
 // ── Loading, behind the flag ───────────────────────────────────────────────
@@ -221,4 +290,10 @@ export const PURPOSE: Record<string, { label: string; why: string }> = {
   registration_window: { label: 'Registration windows', why: 'Published by your registrar for everyone in your year; not about you.' },
   term: { label: 'Terms', why: 'Your school’s term dates; not about you.' },
   course_section: { label: 'Course sections', why: 'The school’s published sections; not about you.' },
+  appointment: { label: 'Advising appointments', why: 'So Today can remind you and link the preparation page. Never an advisor’s notes.' },
+  referral: { label: 'Referrals', why: 'So you know which office asked to hear from you, and how to reach it. Never the reason.' },
+  notification: { label: 'Action items and alerts', why: 'Your bursar’s action items (the office, a due date and its link — never an amount), and campus-wide alerts, which are not about you.' },
+  internship: { label: 'Internships', why: 'Published by your career office; not about you.' },
+  job: { label: 'Jobs', why: 'Published by your career office; not about you.' },
+  event: { label: 'Campus events', why: 'Published by your school; not about you.' },
 };

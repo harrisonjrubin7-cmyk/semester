@@ -65,10 +65,11 @@ export const NEVER_INGEST = [
 
 /**
  * Also refused as a *canonical* field name, so no mapping can store them even
- * under a harmless external name: why a hold exists, and money owed. The
+ * under a harmless external name: why a hold or a referral exists, money owed,
+ * and an advisor's notes. The
  * database refuses these keys in `canonical_entity_references.display` too.
  */
-export const NEVER_DISPLAY = ['reason', 'amount', 'balance'] as const;
+export const NEVER_DISPLAY = ['reason', 'amount', 'balance', 'notes'] as const;
 
 /** How fresh each kind of fact is expected to be, by the command's sync classes. */
 export interface SyncClass {

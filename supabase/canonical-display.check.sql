@@ -83,6 +83,8 @@ begin
     $q$update public.canonical_entity_references set display = display || '{"reason":"Balance past due"}' where canonical_entity_id = 'h1'$q$);
   perform pg_temp.expect_rejected('an amount',
     $q$update public.canonical_entity_references set display = '{"amount_due":1250}' where canonical_entity_id = 'h1'$q$);
+  perform pg_temp.expect_rejected('an advisor''s notes',
+    $q$update public.canonical_entity_references set display = '{"notes":"Worried about workload"}' where canonical_entity_id = 'h1'$q$);
   perform pg_temp.expect_rejected('a grade',
     $q$update public.canonical_entity_references set display = '{"final_grade":"A-"}' where canonical_entity_id = 'h1'$q$);
   perform pg_temp.expect_rejected('a nested object',

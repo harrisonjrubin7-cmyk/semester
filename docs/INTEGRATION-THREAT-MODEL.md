@@ -30,6 +30,9 @@ kill switches · the classification floor.
 | T16 | A hold's reason (a debt, a conduct matter, a health form) reaches Semester | The mapping keeps only office, blocks-registration and link; unmapped fields are dropped; `reason`, `amount`, `balance` refused as canonical names in TS and as `display` keys by trigger | `mock-sis.test.ts`: "never its reason or amount"; check: "a hold carrying its reason" |
 | T17 | A student cannot remove what a school sent about them | Owner-only delete policy on their references; consent revocation stops the next sync | check: "the student deleting their own hold" (and every other role refused); component test |
 | T18 | "No hold" shown from a stale feed | *No registration hold on record* only when both window and hold feed are live/recent; otherwise nothing is said | `school-records.test.ts` |
+| T19 | An advisor's notes, or the reason for a referral, reaches Semester | Mappings keep office, time, mode and links only; `notes` and `reason` refused as canonical names and as `display` keys; `instructor_notes` refused as an incoming field | `mock-campus.test.ts`; check: "an advisor's notes" |
+| T20 | A student relies on Semester for an emergency | Alerts carry a caveat on every rendering naming the official system; stale after 15 minutes, then "not the official current record" | `school-records.test.ts`, `schoolrecords.test.tsx` |
+| T21 | A bursar amount or balance shown | Mapping has no amount field; `amount`, `balance` refused as names and keys; connector flag high-risk and off | `mock-campus.test.ts`: "never an amount or balance" |
 | T13 | A mock adapter mistaken for a real connector | `mock: true` in the declaration; named "Mock LMS"; not in any registry | review |
 
 ## Residual risks
