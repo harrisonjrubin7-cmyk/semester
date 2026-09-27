@@ -1,7 +1,7 @@
 /**
  * What `public.lti_launch_membership` said about one launch, read without I/O.
  *
- * The database does the join (`20260927210000_lti_launch_membership.sql`):
+ * The database does the join (`20260927220000_lti_launch_membership.sql`):
  * registration → school, `linked` identity → account, account and school →
  * membership. This file only turns its row into a decision the function shell
  * can log, and it is here rather than in the shell so `ltimembership.test.ts`
@@ -9,9 +9,10 @@
  *
  * Two rules, both about what this must never do:
  *
- *  - **It never fails a launch.** A student with no membership is still a
- *    student in a course; the launch goes through and the answer is recorded.
- *    Even a database error is `unavailable`, not a refusal.
+ *  - **Reading never fails a launch; only `sessionDecision` may.** A student
+ *    with no membership is still a student in a course. What limits the
+ *    session is a membership the school has made inactive, and that rule is
+ *    written once, below, where it can be tested.
  *  - **It never grants.** `joined` carries the membership's current roles,
  *    read from `institution_membership`. Nothing here reads a role from the
  *    LMS, and anything not `joined` carries no roles and no membership id a
@@ -53,4 +54,40 @@ export function membershipLogLine(join: MembershipJoin): string {
   return join.joined
     ? `lti membership: joined tenant=${join.tenantId} membership=${join.membershipId} roles=${join.roles.join(',')}`
     : `lti membership: ${join.outcome}${join.tenantId ? ` tenant=${join.tenantId}` : ''}`;
+}
+
+export type SessionDecision = { allow: true } | { allow: false; reason: string };
+
+/**
+ * Whether a launch may open a session, given its membership join.
+ *
+ * The rule: **a school that has an opinion about this person decides.** When
+ * the join reaches a membership in the registration's school and that
+ * membership is not active (`membership-suspended`, `-deprovisioned`,
+ * `-pending`), the LMS is not a way around it, and no session is minted.
+ *
+ * Everything that never reached a membership is allowed, as before. That
+ * covers a registration with no school (`unbound`, which was decided as
+ * "allowed, with a warning"), a person who never linked their campus account,
+ * and a linked person with no membership in this school. None of those is a
+ * school withdrawing access; they are a school that has not said anything.
+ *
+ * Two failures are handled differently, on purpose:
+ *
+ *  - `unavailable` (the function is not deployed yet) is allowed. The migration
+ *    and the function deploy separately, and this must not break every launch
+ *    in the gap between them.
+ *  - `lookup-failed` and `unreadable` refuse. The database answered and the
+ *    answer could not be trusted, and this is now a gate. A gate that opens
+ *    when it cannot read is not one. The launch already depends on the same
+ *    database for its nonce and registration, so this costs no availability a
+ *    launch had.
+ */
+export function sessionDecision(join: MembershipJoin): SessionDecision {
+  if (join.joined) return { allow: true };
+  if (join.outcome.startsWith('membership-')) return { allow: false, reason: join.outcome };
+  if (join.outcome === 'lookup-failed' || join.outcome === 'unreadable') {
+    return { allow: false, reason: `membership-${join.outcome}` };
+  }
+  return { allow: true };
 }

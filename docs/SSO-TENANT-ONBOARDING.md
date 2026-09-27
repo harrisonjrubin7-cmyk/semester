@@ -48,4 +48,5 @@ specified. Vanderbilt's filled-in version is
 | Domain matches no authorized provider | No campus button. Ordinary sign-in only |
 | Valid SSO, no active membership | Signed in with no institutional access. The gateway answers 403 "no verified access" |
 | Membership suspended or deprovisioned | Same, from the next request. No data is deleted |
+| Same, arriving from an LMS course link (linked account) | Refused with a 403 page, "Your school access is not active". No session is opened |
 | Provider disabled | Campus button disappears. Existing sessions lose institutional access on their next request |

@@ -48,7 +48,7 @@ already has needs a single-use `lti_link_ticket` *and* a signed-in session.
 ## Joining a membership
 
 Every launch asks `public.lti_launch_membership`
-(`20260927210000_lti_launch_membership.sql`) which `institution_membership` it
+(`20260927220000_lti_launch_membership.sql`) which `institution_membership` it
 belongs to, through exactly one path:
 
 ```text
@@ -71,8 +71,20 @@ institution_membership (tenant_id, auth_user_id = user_id)
   string a registered platform chooses.
 - **It reads and never writes.** A launch never creates, reactivates or widens a
   membership; SCIM is the lifecycle.
-- **It never fails a launch.** The function logs `lti membership: …`, and even
-  a database error is logged as `lookup-failed` or `unavailable`.
+- **It limits the session to the membership.** When the join reaches a
+  membership in this school that is not active (`membership-suspended`,
+  `-deprovisioned`, `-pending`), no session is minted. The student sees a 403
+  page, "Your school access is not active", with the reason as a reference, and
+  nothing about the course is recorded. `sessionDecision` in
+  `_shared/ltimembership.ts` is the rule.
+- **A school that has said nothing does not block.** `unbound`,
+  `no-registration`, `no-identity`, `identity-not-linked` and `no-membership`
+  all open a session as before.
+- **It fails closed on an untrustworthy answer, open on a missing one.**
+  `lookup-failed` and `unreadable` refuse, because a gate that opens when it
+  cannot read is not one. `unavailable` (the function not deployed yet) allows,
+  so the gap between migration and function deploys does not break every
+  launch.
 - **Roles come from the membership, never from the LMS `roles` claim.**
 
 `supabase/lti-membership.check.sql` walks every answer. Its controls: an active
@@ -80,9 +92,10 @@ membership in another school does not join, a provisioned identity does not
 join even with a membership, and no call changes a membership.
 `ltimembership.test.ts` proves the shell cannot read a partial row as a join.
 
-**What it does not do yet:** nothing consumes the answer. The session the
-launch mints is not scoped by the membership, and the entitlement chain has no
-caller.
+**What it does not do yet:** the joined roles do not scope what an admitted
+session can do, and the entitlement chain has no caller. An admitted session
+reaches institutional data only through the gateway, which re-checks the
+membership on every request.
 
 ## Minimum claims
 

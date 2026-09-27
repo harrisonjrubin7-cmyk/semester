@@ -76,7 +76,7 @@ import {
 } from '../_shared/ltiags.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { passbackVerdict } from '../_shared/ltigate.ts';
-import { membershipJoin, membershipLogLine } from '../_shared/ltimembership.ts';
+import { membershipJoin, membershipLogLine, sessionDecision } from '../_shared/ltimembership.ts';
 
 /** How long a launch has between the redirect out and the POST back. */
 const FLIGHT_SECONDS = 300;
@@ -127,6 +127,24 @@ function refuse(reason: string, detail: string, status = 400): Response {
     status,
     'This link could not be opened',
     `Semester could not verify this launch came from your school's Brightspace. Nothing was changed. If this keeps happening, the reference is <code>${escape(reason)}</code>.`,
+  );
+}
+
+/**
+ * The launch was real; the school has made this person's access inactive.
+ *
+ * Its own page, because `refuse` says the launch could not be verified, which
+ * here would be false and would send somebody to their LMS administrator for
+ * a problem that is their school's access office's. 403, not 401: we know who
+ * this is. It does not say suspended or deprovisioned; that is the school's
+ * to tell them. The reference carries it for whoever they ask.
+ */
+function membershipRefused(reason: string): Response {
+  console.error(`lti refused: ${reason} — institutional membership is not active`);
+  return page(
+    403,
+    'Your school access is not active',
+    `Your school has not made Semester available to your account right now, so this course link cannot open it. Nothing was changed. Your school's help desk can explain; the reference is <code>${escape(reason)}</code>.`,
   );
 }
 
@@ -702,9 +720,14 @@ Deno.serve(async (req) => {
      * After `accountFor`, because the join reads the `lti_identity` row it
      * guarantees. Through the registration's school and a *linked* identity
      * only, never an email or an LMS-sent id
-     * (20260927210000_lti_launch_membership.sql). It reads, it never writes a
-     * membership, and whatever it answers the launch goes on: a student
-     * without one is still a student in this course.
+     * (20260927220000_lti_launch_membership.sql). It reads and never writes a
+     * membership.
+     *
+     * And it limits the session: when the school has a membership for this
+     * person and it is not active, the LMS is not a way around that, and no
+     * session is minted. Before the context and line-item writes below, so a
+     * refused launch leaves nothing behind. `sessionDecision` is the rule; a
+     * launch that never reached a membership goes on as before.
      */
     const { data: joinRow, error: joinError } = await client.rpc('lti_launch_membership', {
       want_issuer: who.issuer,
@@ -712,7 +735,10 @@ Deno.serve(async (req) => {
       want_deployment: who.deploymentId,
       want_subject: who.subject,
     });
-    console.log(membershipLogLine(membershipJoin(joinRow, joinError)));
+    const join = membershipJoin(joinRow, joinError);
+    console.log(membershipLogLine(join));
+    const session = sessionDecision(join);
+    if (!session.allow) return membershipRefused(session.reason);
 
     /*
      * ── The course, for the school's integration record ───────────────────

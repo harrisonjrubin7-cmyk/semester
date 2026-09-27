@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { membershipJoin, membershipLogLine } from '../../../supabase/functions/_shared/ltimembership';
+import { membershipJoin, membershipLogLine, sessionDecision } from '../../../supabase/functions/_shared/ltimembership';
 
 /**
  * The reader for `public.lti_launch_membership`. The join itself is proved in
@@ -52,5 +52,34 @@ describe('reading an LTI launch membership join', () => {
       .toBe('lti membership: joined tenant=north membership=m-1 roles=student');
     expect(membershipLogLine(membershipJoin([{ outcome: 'unbound', tenant_id: null }], null)))
       .toBe('lti membership: unbound');
+  });
+});
+
+describe('limiting the LTI session to the membership', () => {
+  const decide = (outcome: string) => sessionDecision(membershipJoin([{ outcome, tenant_id: 'north' }], null));
+
+  it('opens a session for a joined, active membership', () => {
+    expect(sessionDecision(membershipJoin([{ outcome: 'joined', tenant_id: 'north', membership_id: 'm-1', roles: ['student'] }], null)))
+      .toEqual({ allow: true });
+  });
+
+  it.each(['membership-suspended', 'membership-deprovisioned', 'membership-pending'])(
+    'refuses when the school made the membership inactive: %s',
+    (outcome) => expect(decide(outcome)).toEqual({ allow: false, reason: outcome }),
+  );
+
+  // A school that has said nothing is not a school withdrawing access.
+  it.each(['unbound', 'no-registration', 'no-identity', 'identity-not-linked', 'no-membership'])(
+    'still allows a launch that never reached a membership: %s',
+    (outcome) => expect(decide(outcome)).toEqual({ allow: true }),
+  );
+
+  it('allows while the join function is not deployed, and refuses when its answer cannot be trusted', () => {
+    expect(sessionDecision(membershipJoin(null, { message: 'Could not find the function public.lti_launch_membership' })))
+      .toEqual({ allow: true });
+    expect(sessionDecision(membershipJoin(null, { message: 'connection reset' })))
+      .toEqual({ allow: false, reason: 'membership-lookup-failed' });
+    expect(sessionDecision(membershipJoin([{ outcome: 'joined', tenant_id: null }], null)))
+      .toEqual({ allow: false, reason: 'membership-unreadable' });
   });
 });
