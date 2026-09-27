@@ -13,12 +13,12 @@ anything leaving that they did not read first.
 
 | Part | File |
 | --- | --- |
-| Tables, capability and the only doors in | `supabase/migrations/20260927180000_help_requests.sql` |
+| Tables, capability and the only doors in | `supabase/migrations/20260927230000_help_requests.sql` |
 | Every rule walked as the account it concerns (44 checks) | `supabase/help-requests.check.sql` |
 | Needs, vocabulary, preview, status table | `app/src/lib/help-routes.ts` |
 | The student's screen (University → Get help) | `app/src/components/GetHelp.tsx` |
 | The staff inbox, under the same tab | `app/src/components/HelpInbox.tsx` |
-| Which inboxes are the caller's | `supabase/migrations/20260927190000_help_inbox.sql` |
+| Which inboxes are the caller's | `supabase/migrations/20260927231000_help_inbox.sql` |
 
 ## The rules, and where each is enforced
 
@@ -69,14 +69,14 @@ lists statuses and times. A request's words appear only after **Open (the
 student will see this)**, and only forward moves are offered: seen,
 scheduled, closed. A reply goes back to the student beside their question,
 and stays on the staff card as "Your office's reply" — reopening a request
-shows it (`20260927220000`), and an answer sent with the box empty keeps it.
+shows it (`20260927234000`), and an answer sent with the box empty keeps it.
 
 **Who is asking.** An opened request names the student — their Semester
 display name and the university email the server confirmed — because an
 office cannot book an appointment with a question alone. The student is told
 first: the confirm screen lists both, with their real values, as *always
 included*, above the lines they ticked (`IDENTITY_SENT`). Identity is
-recorded when the student sends (`20260927210000_help_request_review_fixes.sql`),
+recorded when the student sends (`20260927233000_help_request_review_fixes.sql`),
 so the office sees exactly what the confirm screen showed even if the student
 renames themselves later; withdrawal erases it with the question. The inbox
 list, before an open, still names nobody.

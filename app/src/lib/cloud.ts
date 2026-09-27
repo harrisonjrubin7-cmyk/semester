@@ -948,7 +948,7 @@ export const OWNED_TABLES: OwnedTable[] = [
 
   // ── Help requests ───────────────────────────────────────────────────────
   // No API role holds DELETE on `help_requests`: the only writes into it are
-  // the functions in `20260927180000_help_requests.sql`, so the way out is one
+  // the functions in `20260927230000_help_requests.sql`, so the way out is one
   // of them too. The events are the student's record of who opened what, and
   // go with their request.
   { table: 'help_requests', column: null, via: 'forget_my_help_requests' },

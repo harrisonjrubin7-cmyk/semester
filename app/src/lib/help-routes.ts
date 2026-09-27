@@ -7,7 +7,7 @@ import { cloud } from './cloud';
  * knows the degree, a tutor who can watch you work a problem, or a librarian
  * who knows which database to search. This is the route from one to the other.
  * It is deliberately narrow, and each narrowness is a rule the database
- * enforces as well (`supabase/migrations/20260927180000_help_requests.sql`):
+ * enforces as well (`supabase/migrations/20260927230000_help_requests.sql`):
  *
  * ## Nothing leaves that the student did not write or tick
  *
