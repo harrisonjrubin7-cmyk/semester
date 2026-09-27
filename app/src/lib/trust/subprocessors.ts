@@ -116,7 +116,7 @@ export const PARTIES: readonly Party[] = [
   },
   {
     name: 'Google', kind: 'student-directed',
-    purpose: 'Signing in with Google, and connecting the student’s own Google calendar, mail and tasks.',
+    purpose: 'Signing in with Google, and connecting the student’s own Google Calendar, Gmail and Google Tasks.',
     receives: 'Whatever the student’s own Google account returns to their browser, read under the permission they granted.',
     when: 'student-opt-in',
     hosts: ['accounts.google.com', 'oauth2.googleapis.com', 'www.googleapis.com', 'gmail.googleapis.com', 'tasks.googleapis.com'],
