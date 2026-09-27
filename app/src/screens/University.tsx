@@ -42,6 +42,7 @@ import type { Screen } from '../lib/types';
 import { INSTITUTIONAL_PREVIEW } from '../lib/institutional-preview';
 import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
 import { ControlPlane } from '../components/institutional/ControlPlane';
+import { IntegrationDashboard } from '../components/institutional/IntegrationDashboard';
 import type { ControlPlaneStatus } from '../lib/control-plane';
 
 const RoleWorkspace = lazy(() =>
@@ -119,9 +120,14 @@ const TABS = [
   ...(EXPERIENCE_FLAGS.universityControlPlane !== 'off'
     ? [{ id: 'control' as const, label: 'Control' }]
     : []),
+  // Staff only in practice: RLS returns nothing to an account without
+  // `integration:view`, and the dashboard says so rather than inventing data.
+  ...(EXPERIENCE_FLAGS.integrationDashboard !== 'off'
+    ? [{ id: 'integrations' as const, label: 'Integrations' }]
+    : []),
 ];
 
-type Tab = 'overview' | 'drafts' | 'records' | 'connections' | 'control';
+type Tab = 'overview' | 'drafts' | 'records' | 'connections' | 'control' | 'integrations';
 
 /** What each role is called on screen. */
 const ROLE_LABELS: Record<UniversityRole, string> = {
@@ -708,6 +714,8 @@ function Workspace({ storageKey }: { storageKey: string }) {
           }}
         />
       )}
+
+      {tab === 'integrations' && EXPERIENCE_FLAGS.integrationDashboard !== 'off' && <IntegrationDashboard />}
 
       {tab === 'drafts' && (
         <>

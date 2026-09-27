@@ -62,6 +62,17 @@ export const t = (id: string, name: string, purpose: string, state: ToolState, m
 export const planned = (id: string, name: string, purpose: string, boundary?: Boundary) => t(id, name, purpose, 'planned', { boundary });
 export const restricted = (id: string, name: string, purpose: string, boundary: Boundary) => t(id, name, purpose, 'restricted', { boundary });
 
+/* Tools several subjects share, defined once so a subject list reads as a list. */
+export const analyse = t('analyse', 'Analyse data', 'Statistics computed in the app, then explained', 'native', { screen: 'analyse' });
+export const equations = t('equations', 'Equation workbench', 'Write a formula, evaluate it, graph it', 'native', { screen: 'equations' });
+export const solve = t('solve', 'Work the problem', 'The method on other numbers; your attempt checked', 'native', { screen: 'solve' });
+export const draw = t('draw', 'Diagram builder', 'Flows, timelines and matrices from a description', 'native', { screen: 'draw' });
+export const sheet = t('sheet', 'Spreadsheet', 'A grid out as Excel or CSV', 'native', { screen: 'sheet' });
+export const matrix = t('evidence-matrix', 'Evidence matrix', 'Study-by-study comparison with verification', 'guided', { opens: 'research' });
+export const labReport = t('lab-report', 'Lab report template', 'Objective through limitations, one stage at a time', 'guided', { opens: 'assignment' });
+export const caseAnalysis = t('case-analysis', 'Case analysis template', 'Facts, stakeholders, framework, alternatives, recommendation', 'guided', { opens: 'assignment' });
+export const policyMemo = t('policy-memo', 'Policy memo template', 'Problem, options, tradeoffs, recommendation, evidence', 'guided', { opens: 'assignment' });
+
 export type Family = 'STEM' | 'Humanities & languages' | 'Social sciences & business' | 'Health & clinical' | 'Arts & media' | 'Field & environment';
 
 export interface Subject {

@@ -8,6 +8,7 @@ import { ApplyingSoon } from '../components/Applying';
 import { ReadingsOnTheGo } from '../components/ReadingProgress';
 import { Waiting } from '../components/Waiting';
 import { ClosingWindows } from '../components/Windows';
+import { SchoolRecords } from '../components/SchoolRecords';
 import { FirstRun } from './FirstRun';
 import { Blueprint } from '../components/Blueprint';
 import { ActionButton, ChipRow, EmptyState, Meter, SectionLabel, Segmented, TickBox } from '../components/ui';
@@ -1361,6 +1362,8 @@ const FEED_PARTS: Record<string, () => React.JSX.Element | null> = {
   applying: ApplyingSoon,
   reading: ReadingsOnTheGo,
   windows: ClosingWindows,
+  // Nothing unless the school turned it on and has shared something.
+  school: SchoolRecords,
 };
 
 /**
