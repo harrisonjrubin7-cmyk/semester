@@ -54,7 +54,7 @@ export interface SendContext {
   recipientTimeZone: string;
   consents: readonly ConsentRecord[];
   suppressed: boolean;
-  /** Timestamps of marketing messages already sent to this person on this channel. */
+  /** Timestamps of messages already sent to this person on this channel, other than transactional email. */
   recentSends: readonly string[];
   cap: FrequencyCap;
   quiet: QuietHours;

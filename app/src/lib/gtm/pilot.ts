@@ -1,6 +1,5 @@
 /**
- * Pilots that end in a decision, the buying committee, and the portfolio
- * scorecard (GTM plan §5, §6, §13.4).
+ * Pilots that end in a decision, and the buying committee (GTM plan §5, §6).
  *
  * A pilot is "a structured purchase decision, not an indefinite free trial":
  * `pilotReadiness` refuses a kickoff without the elements of §6.2, and
@@ -127,28 +126,4 @@ export function entryProblems(e: DecisionLogEntry): string[] {
   return out;
 }
 
-// ── Portfolio scorecard (§13.4) ─────────────────────────────────────────────
-
-export const SCORE_CRITERIA = [
-  'reusability', 'security', 'privacy', 'accessibility', 'integration_maturity', 'operational_supportability',
-  'cost_margin', 'configuration_fit', 'auditability', 'rollback_readiness', 'validated_adoption_value',
-] as const;
-export type ScoreCriterion = (typeof SCORE_CRITERIA)[number];
-
-export type PortfolioOutcome =
-  | 'core_platform'
-  | 'configurable_module'
-  | 'time_bounded_pilot'
-  | 'partner_defer_or_decline';
-
-export function portfolioDecision(scores: Readonly<Record<ScoreCriterion, number>>): { total: number; outcome: PortfolioOutcome } {
-  let total = 0;
-  for (const c of SCORE_CRITERIA) {
-    const s = scores[c];
-    if (!Number.isInteger(s) || s < 0 || s > 3) throw new Error(`${c} must be scored 0–3.`);
-    total += s;
-  }
-  const outcome: PortfolioOutcome =
-    total >= 27 ? 'core_platform' : total >= 21 ? 'configurable_module' : total >= 15 ? 'time_bounded_pilot' : 'partner_defer_or_decline';
-  return { total, outcome };
-}
+// The §13.4 portfolio scorecard is app/src/lib/governance/scorecard.ts (#813).

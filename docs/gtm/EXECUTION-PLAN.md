@@ -23,11 +23,31 @@ was deliberately broken once to confirm its test goes red.
 | §10 | Sponsorship: prohibited categories, school-approved categories/surfaces/segments, a visible "Sponsored" label, a "why shown" explanation, human approval, a scheduled audit and a complaint route. Never on AI answers, advising, rankings, or urgent academic flows, even when a school lists that surface. Reports go out as suppressed aggregates only. | `sponsor.ts` |
 | §6 | A pilot must run 60–120 days and have a baseline, sponsor, champion, a minimum-necessary read-only data plan, 3–5 metrics each with a baseline, agreed annual price, a midpoint review, and a conversion date near the end. It runs in sandbox until production data is approved. It isn't final until someone signs the decision, and it can't convert while a high-severity issue is open. | `pilot.ts` |
 | §5 | Committee roles still unmapped. Overdue decision-log items, highest risk first. An approval needs evidence and a date. | `pilot.ts` |
-| §13.4 | The portfolio scorecard: 11 criteria scored 0–3, mapped to the thresholds 27 / 21 / 15. | `pilot.ts` `portfolioDecision` |
 
 Two flags gate this work, both **off** and high-risk, in [the registry](../FEATURE-FLAG-REGISTRY.md):
 `module.campaign_manager` and `module.sponsorship`. Both need `tenant:configure` until a dedicated marketing
 capability exists, and both stop on `kill.sharing`.
+
+## The database
+
+[`supabase/migrations/20260928090000_gtm_foundation.sql`](../../supabase/migrations/20260928090000_gtm_foundation.sql)
+creates the §17 entities and enforces the same rules again, so neither a screen nor a worker can skip them.
+[`supabase/gtm.check.sql`](../../supabase/gtm.check.sql) walks them as each account involved (130 checks), and
+`app/src/lib/gtm/schema.test.ts` fails if a list in the migration drifts from its TypeScript copy.
+
+| Plan entity | Table | What the database refuses |
+| --- | --- | --- |
+| Prospect, ConsentRecord, Preference | `gtm_prospects`, `gtm_consent`, `gtm_suppression` | Any signed-in read or write, since these are for workers only. A contact has no column outside the targeting allow-list, so there is nothing sensitive to select. Consent is append-only, and the latest row wins. |
+| Campaign, CampaignApproval, LandingPage | `gtm_campaigns`, `gtm_campaign_reviews`, `gtm_campaign_links` | Sensitive or unknown audience fields. Links without the UTM convention. A campaign not born as a draft. Edits outside draft. Reviews by the owner or outside review. Approval by anyone except the named approver, or with a review missing or older than the last edit. Activation without the module in production, with `kill.sharing` engaged, or with any §13.3 field missing. |
+| CommunicationEvent | `gtm_communication_events` | An allowed decision with no current consent, a stale consent version, a withdrawn topic, a suppressed contact, the recipient's quiet hours, the cap reached, an inactive campaign, or no template version. Rows are append-only. |
+| ConversionEvent, AttributionTouch, DashboardAccessLog | `gtm_conversion_events`, `gtm_report_access` | A malformed campaign name. Staff see only `gtm_campaign_report`, whose counts are suppressed below ten, and every read is logged. |
+| Sponsor, SponsorReview, SponsorPlacement | `gtm_sponsor_policy`, `gtm_sponsor_placements` | Protected surfaces, even in the school's own policy. Categories outside the allow-list. A missing "Sponsored" label. Approval by the placement's author. Going live without the school's policy and the module. Edits after approval. |
+| InstitutionAccount, Stakeholder, DecisionLogEntry | `gtm_accounts`, `gtm_stakeholders`, `gtm_decision_log` | Writes by anyone but Semester's sales. A customer school's configurers read only their own account. An approval needs evidence and a resolution date. |
+| Pilot, PilotMetric, PilotOutcome | `gtm_pilots`, `gtm_pilot_metrics`, `gtm_pilot_outcomes` | Starting a pilot without the §6.2 elements. Deciding one without a signed outcome. Converting or expanding while a high-severity issue is open. |
+
+New roles: `marketing_admin`, `campaign_reviewer`, `marketing_analyst`, and the global `account_executive`.
+`university_admin` also gains `sponsor:review`. `RETENTION.md` gives each table its retention period, and says
+plainly that no time-based purge of contacts or sends exists yet.
 
 ## Parts the repository already had
 
@@ -39,21 +59,20 @@ capability exists, and both stop on `kill.sharing`.
 | Tenant configuration audit | `tenant_feature_policy` + `tenant_policy_audit_event` |
 | §3.3 trust artifacts, §4.4 procurement pack | `docs/market-readiness/` (security, privacy, accessibility, AI governance, incident response, procurement checklist) |
 | §6 pilot operations | `docs/market-readiness/PILOT_PLAYBOOK.md`, `PILOT.md` |
+| §13.4 portfolio scorecard, §12.1 configuration tiers, data contracts, deal desk | `app/src/lib/governance/` and `docs/operating-model/` (#813) |
 
 ## Still to build (§15 backlog), in the order the plan's launch sequence (§18) needs it
 
-1. **Tables and RLS** for Campaign, CampaignApproval, CommunicationEvent, AttributionTouch, ConversionEvent,
-   InstitutionAccount, Stakeholder, DecisionLogEntry, Pilot, PilotMetric, PilotOutcome, Sponsor, SponsorPlacement
-   (§17). Each should mirror the rules above in SQL, the way the classification floor does, with a test that
-   compares the two.
-2. **Trust Center and procurement room** (§3.3): public summaries, plus controlled access to the artifacts that
+1. **Trust Center and procurement room** (§3.3): public summaries, plus controlled access to the artifacts that
    already exist in `docs/market-readiness/`. Each artifact needs an owner, version, publish date and review date.
-3. **Workflow pages**: two or three, following the §3.2 template. Check the public-site work in progress first
+2. **Workflow pages**: two or three, following the §3.2 template. Check the public-site work in progress first
    (`feature/public-site`, `feature/public-tools`) so the routes aren't duplicated.
-4. **Campaign manager screen** over `activationGate`, listing every remaining failure. **Preference center** over
-   `consent_record`.
-5. **Email/SMS adapters** that call `decideSend` on every message and write its audit event. No direct platform
-   publishing for social (§15 phase 2).
+3. **Campaign manager screen** over `activationGate` and `gtm_activation_failures`, listing every remaining failure.
+   **Preference center** writing `gtm_consent` for recruitment contacts and `consent_record` for enrolled students.
+4. **Email/SMS adapters** (worker, service role) that insert the decision into `gtm_communication_events` first,
+   and send only if the insert succeeded. No direct platform publishing for social (§15 phase 2).
+5. **Retention periods** for contacts and sends, with a sweep. `RETENTION.md` records that none exists yet, and a
+   school has to set one before any campaign goes live.
 6. **Orientation QR/deep-link flow** using `campaignUrl(..., location)`, SSO, and the first-meaningful-action
    instrumentation (§9.2).
 7. **Dashboards** (§11.5) built on `kpi.ts`. Each labels its attribution model, logs access, and uses no risk

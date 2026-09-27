@@ -352,7 +352,18 @@ declare
     'integration_approve_scope(want_scope uuid)',
     'integration_request_replay(want_dead_letter uuid, want_reason text)',
     'integration_set_paused(want_connection text, want_paused boolean, want_reason text)',
-    'kill_switch_engaged(want_switch text, want_tenant text)'
+    'kill_switch_engaged(want_switch text, want_tenant text)',
+
+    -- The four in 20260928090000_gtm_foundation.sql. Contacts, consent and
+    -- sends have no API grant at all, so these are the only way a school's
+    -- staff learn anything about them, and each checks its capability over the
+    -- campaign's school. `gtm_campaign_report` returns counts suppressed below
+    -- ten and logs the read; `gtm_audience_count` returns one number; the two
+    -- gate functions return the names of unmet checks, never a row.
+    'gtm_activation_failures(want_campaign uuid)',
+    'gtm_audience_count(want_campaign uuid)',
+    'gtm_campaign_report(want_campaign uuid)',
+    'gtm_pilot_problems(want_pilot uuid)'
   ];
   extra text;
   missing text;
@@ -388,7 +399,7 @@ begin
   if missing is not null then
     raise exception 'FAILED: the allowlist names %, which a signed-in account cannot call', missing;
   end if;
-  raise notice 'ok  and can call all fifty-five that it should';
+  raise notice 'ok  and can call all fifty-nine that it should';
 end $$;
 
 -- ── The gate's own switch, named because it is the one that was open ──────

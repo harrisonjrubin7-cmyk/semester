@@ -224,19 +224,23 @@ begin
   -- 20260926150000_expansion_roles_and_features.sql, plus `integration_admin`
   -- and `incident_responder` from 20260927170000_integration_control_plane.sql,
   -- and `portfolio_council` from 20260927235000_governance_registries.sql,
-  -- plus the three Trust & Safety and community roles from the community migration.
-  perform pg_temp.counted('a signed-in account reads the fifty-three roles', n, 53);
+  -- plus the three Trust & Safety and community roles from the community migration,
+  -- and the four go-to-market roles from 20260928090000_gtm_foundation.sql.
+  perform pg_temp.counted('a signed-in account reads the fifty-seven roles', n, 57);
   select count(*) into n from public.role_capabilities;
   -- Twenty original rows, thirty-seven expansion rows, eight from the
   -- integration control plane (four for integration_admin, three for
   -- university_admin, one for incident_responder), and eight staff roles that
-  -- answer help requests (the help_requests migration), and two from the
+  -- answer help requests (the help_requests migration), two from the
   -- governance registries (portfolio_council → governance:decide,
   -- incident_responder → incident:communicate), seven learner and
   -- teaching roles → lti:launch (20260928015315_lti_launch_capability.sql),
-  -- five community rows, and one from integration quality
-  -- (integration_admin → integration:reconcile).
-  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 88);
+  -- five community rows, one from integration quality
+  -- (integration_admin → integration:reconcile), and six from the go-to-market
+  -- foundation (two for marketing_admin, one each for campaign_reviewer,
+  -- marketing_analyst, account_executive, and sponsor:review for
+  -- university_admin).
+  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 94);
 
   perform pg_temp.become_anon();
   perform pg_temp.refused('a signed-out visitor cannot read the matrix',

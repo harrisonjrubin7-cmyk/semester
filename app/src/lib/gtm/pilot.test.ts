@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
-  SCORE_CRITERIA, entryProblems, overdue, pilotDataMode, pilotReadiness, pilotVerdict, portfolioDecision, unmappedRoles,
-  type DecisionLogEntry, type PilotPlan, type ScoreCriterion,
+  entryProblems, overdue, pilotDataMode, pilotReadiness, pilotVerdict, unmappedRoles,
+  type DecisionLogEntry, type PilotPlan,
 } from './pilot';
 
 const PLAN: PilotPlan = {
@@ -66,21 +66,5 @@ describe('committee and decision log', () => {
 
   it('needs evidence and a date to close an approval', () => {
     expect(entryProblems(entry({ status: 'approved' }))).toHaveLength(2);
-  });
-});
-
-describe('portfolio scorecard', () => {
-  const all = (n: number) => Object.fromEntries(SCORE_CRITERIA.map((c) => [c, n])) as Record<ScoreCriterion, number>;
-
-  it('maps totals onto the four outcomes at the plan’s thresholds', () => {
-    expect(portfolioDecision(all(3))).toEqual({ total: 33, outcome: 'core_platform' });
-    expect(portfolioDecision({ ...all(2), reusability: 3, security: 3, privacy: 3, accessibility: 3, auditability: 3 }).outcome).toBe('core_platform'); // 27
-    expect(portfolioDecision(all(2)).outcome).toBe('configurable_module'); // 22
-    expect(portfolioDecision({ ...all(2), reusability: 1, security: 1 }).outcome).toBe('time_bounded_pilot'); // 20
-    expect(portfolioDecision({ ...all(1), reusability: 2, security: 2, privacy: 2 }).outcome).toBe('partner_defer_or_decline'); // 14
-  });
-
-  it('refuses a score outside 0–3', () => {
-    expect(() => portfolioDecision({ ...all(2), cost_margin: 4 })).toThrow(/0–3/);
   });
 });
