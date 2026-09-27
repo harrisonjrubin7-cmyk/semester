@@ -207,8 +207,9 @@ export const NEVER_SENT = [
  * Sent with every request, whatever is ticked, because an office cannot book
  * an appointment with a question alone. Shown on the confirm screen with the
  * student's real values before they send, and read by
- * `open_help_request` at the moment staff open it — never copied into the
- * request, so there is no second copy of the address to delete.
+ * `send_help_request` at the moment of sending, so the office sees exactly
+ * what the student saw even if they rename themselves later. Withdrawal
+ * erases it with the rest of the request.
  */
 export const IDENTITY_SENT = [
   { key: 'name', label: 'Your name on Semester' },
@@ -298,7 +299,8 @@ export const STAFF_MOVES: Record<RequestStatus, readonly RequestStatus[]> = {
   closed: [],
   withdrawn: [],
 };
-export const WITHDRAWABLE: ReadonlySet<RequestStatus> = new Set(['sent', 'acknowledged', 'scheduled']);
+/** Closed included: an office being done with a request does not end the student's right to erase it. */
+export const WITHDRAWABLE: ReadonlySet<RequestStatus> = new Set(['sent', 'acknowledged', 'scheduled', 'closed']);
 
 export const STATUS_TEXT: Record<RequestStatus, string> = {
   sent: 'Sent',

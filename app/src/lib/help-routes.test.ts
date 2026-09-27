@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
@@ -25,14 +25,21 @@ import {
   type Draft,
 } from './help-routes';
 
-const MIGRATION = readFileSync(
-  resolve(__dirname, '../../../supabase/migrations/20260927180000_help_requests.sql'),
-  'utf8',
-);
+/**
+ * Every help-request migration, oldest first. A later one may redefine a
+ * function, so each probe below reads the **last** definition of what it asks
+ * about — the one a deployed database ends up with.
+ */
+const DIR = resolve(__dirname, '../../../supabase/migrations');
+const MIGRATION = readdirSync(DIR)
+  .filter((f) => /_help_/.test(f))
+  .sort()
+  .map((f) => readFileSync(resolve(DIR, f), 'utf8'))
+  .join('\n');
 
 /** The quoted words inside the first `(...)` after `marker`. */
 function quotedAfter(marker: string): string[] {
-  const at = MIGRATION.indexOf(marker);
+  const at = MIGRATION.lastIndexOf(marker);
   expect(at, `${marker} not found in the migration`).toBeGreaterThan(-1);
   const open = MIGRATION.indexOf('(', at + marker.length - 1);
   let depth = 0;
@@ -68,7 +75,7 @@ describe('the app and the database mean the same words', () => {
   });
 
   it('staff moves are the moves answer_help_request allows', () => {
-    const body = MIGRATION.slice(MIGRATION.indexOf('function public.answer_help_request'));
+    const body = MIGRATION.slice(MIGRATION.lastIndexOf('create or replace function public.answer_help_request'));
     for (const [from, tos] of Object.entries(STAFF_MOVES)) {
       const clause = body.match(new RegExp(`r\\.status = '${from}'\\s+and want_status (?:in \\(([^)]*)\\)|= '([a-z_]+)')`));
       const allowed = clause ? [...(clause[1] ?? `'${clause[2]}'`).matchAll(/'([a-z_]+)'/g)].map((m) => m[1]) : [];
@@ -167,6 +174,11 @@ describe('the routes', () => {
     expect(followUp('scheduled', 'Tuesday 2pm')).toMatch(/Tuesday 2pm/);
     expect(followUp('scheduled', '')).toMatch(/Prepare/);
     expect(followUp('withdrawn', '')).toBeNull();
+  });
+
+  it('a closed request can still be withdrawn and erased', () => {
+    expect(WITHDRAWABLE.has('closed')).toBe(true);
+    expect(WITHDRAWABLE.has('withdrawn')).toBe(false);
   });
 });
 

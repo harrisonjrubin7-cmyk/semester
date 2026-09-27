@@ -30,7 +30,7 @@ anything leaving that they did not read first.
 | Accessibility and money are reached directly | `accepts_requests` refused for those kinds | directory-only, no fields offered |
 | Staff see only their own office's requests | no table grant; `help_inbox` returns ids and times, never words | — |
 | Every staff open is visible to the student | `open_help_request` writes an event | "Opened N times by the office" |
-| Withdrawing erases what it said | `withdraw_help_request` empties question, context and reply | "Withdraw and erase" |
+| Withdrawing erases what it said — including after the office closed it | `withdraw_help_request` empties question, context, reply and identity from any status but withdrawn | "Withdraw and erase" |
 | Account deletion empties it | `forget_my_help_requests`, listed in `OWNED_TABLES` | — |
 
 Staff capability: `help_request:respond`, held by academic advisors,
@@ -47,6 +47,13 @@ answers (setup steps), so the caller keeps its note. Three rules, each tested:
 fields arrive **filled but unticked**; the hand-over is **held in memory for
 one navigation** and never stored; and a pre-filled field the need does not
 normally offer is still **shown**, never carried invisibly.
+
+## Retiring an office
+
+Retiring a destination, or turning off `accepts_requests`, stops new requests
+at once. It does not hide the ones already sent: the office stays in
+`my_help_destinations` for the people who answer it until every request to it
+is closed or withdrawn, so nothing a student is waiting on is stranded.
 
 ## Without an integration
 
@@ -66,10 +73,11 @@ scheduled, closed. A reply goes back to the student beside their question.
 display name and the university email the server confirmed — because an
 office cannot book an appointment with a question alone. The student is told
 first: the confirm screen lists both, with their real values, as *always
-included*, above the lines they ticked (`IDENTITY_SENT`). Identity is read
-when staff open the request (`20260927200000_help_request_identity.sql`),
-never copied into it, so there is no second copy of the address to delete.
-The inbox list, before an open, still names nobody.
+included*, above the lines they ticked (`IDENTITY_SENT`). Identity is
+recorded when the student sends (`20260927210000_help_request_review_fixes.sql`),
+so the office sees exactly what the confirm screen showed even if the student
+renames themselves later; withdrawal erases it with the question. The inbox
+list, before an open, still names nobody.
 
 ## Not built here, deliberately
 

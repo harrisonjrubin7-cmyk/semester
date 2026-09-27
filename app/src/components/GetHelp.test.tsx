@@ -162,4 +162,19 @@ describe('asking a person for help', () => {
     await act(async () => button('Withdraw and erase')!.click());
     expect(mock.withdraw).toHaveBeenCalledWith('req-1');
   });
+
+  it('still offers to erase a request the office has closed', async () => {
+    mock.load.mockResolvedValue({
+      destinations: [ADVISING],
+      requests: [{
+        id: 'req-9', destinationId: 'adv', question: 'Old question', context: {},
+        status: 'closed', reply: 'Done', createdAt: '2099-01-01T00:00:00Z', opens: 1,
+      }],
+      name: '',
+    });
+    mock.withdraw.mockResolvedValue(undefined);
+    await act(async () => root.render(<GetHelp account={ME} />));
+    await act(async () => button('Withdraw and erase')!.click());
+    expect(mock.withdraw).toHaveBeenCalledWith('req-9');
+  });
 });
