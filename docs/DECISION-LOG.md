@@ -134,7 +134,13 @@ which would migrate 59 screens and every stored deep link. Changing the
 production host (e.g. to Vercel, where `app/vercel.json` already exists) is a
 production change and needs approval.
 
-## D-012 · How the shared AI key is clamped
+## Numbering
+
+Two sessions write to this log. Entries D-013 to D-029 belong to the
+feature-expansion session (#765, #769). This session's Phase 1 entries
+start at D-030, so the two can merge without renumbering anything.
+
+## D-030 · How the shared AI key is clamped
 
 **Decided 27 Sep 2026 (BL-1.0, S-1).** `supabase/functions/claude` rebuilds
 every request through `supabase/functions/_shared/clamp.ts` before counting
