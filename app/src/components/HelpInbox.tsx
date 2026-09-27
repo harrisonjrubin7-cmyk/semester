@@ -174,6 +174,14 @@ export function HelpInbox({
                                 const sent = replies[item.id] ?? '';
                                 setOpened((o) => ({ ...o, [item.id]: { ...open, status: to, reply: replyAfter(open.reply, sent) } }));
                                 setReplies((r) => ({ ...r, [item.id]: '' }));
+                                // The move is saved: say so to the tab's count now, so a
+                                // reload that fails after it cannot leave the count behind.
+                                const moved = inboxes.map((box) => ({
+                                  ...box,
+                                  items: box.items.map((it) => (it.id === item.id ? { ...it, status: to } : it)),
+                                }));
+                                setInboxes(moved);
+                                onInboxes?.(moved);
                                 await refresh();
                               })}
                             >

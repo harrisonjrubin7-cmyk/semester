@@ -134,3 +134,25 @@ it('drops the count when a request is marked seen in the inbox', async () => {
   expect(mock.answer).toHaveBeenCalledWith('a', 'sent', 'acknowledged', '');
   expect(helpTab()).toBe('Get help (1\u00a0new)');
 });
+
+it('drops the count from the move itself when the reload after it fails', async () => {
+  mock.account = ADVISOR;
+  mock.load.mockResolvedValue([inbox([item('a', 'sent')])]);
+  mock.open.mockResolvedValue({
+    studentName: 'harrison_r', studentEmail: 'h.rubin@example.edu',
+    question: 'Which statistics course fits?', context: {},
+    status: 'sent', reply: '', createdAt: '2099-01-01T00:00:00Z',
+  });
+  mock.answer.mockResolvedValue(undefined);
+  await mount();
+  expect(helpTab()).toBe('Get help (1\u00a0new)');
+
+  await act(async () => button(/^Get help/)!.click());
+  await act(async () => button(/student will see this/i)!.click());
+  // The move is saved, but the reload after it does not come back.
+  mock.load.mockRejectedValue(new Error('offline'));
+  await act(async () => button(/^mark as seen$/i)!.click());
+
+  expect(mock.answer).toHaveBeenCalledWith('a', 'sent', 'acknowledged', '');
+  expect(helpTab()).toBe('Get help');
+});
