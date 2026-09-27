@@ -86,6 +86,8 @@ export function sayClaim(word: ClaimWord): string {
 export interface InviteRow {
   code: string;
   categories: string[];
+  /** The items the code names, so a screen can tell which person's plan it came from. */
+  resourceIds: string[];
   expiresAt: string;
   grantExpiresAt: string;
   claimedAt: string | null;
@@ -97,12 +99,13 @@ export async function listInvites(): Promise<InviteRow[]> {
   if (!cloudConfigured) return [];
   const { data, error } = await (await cloud())
     .from('family_invites')
-    .select('code, categories, expires_at, grant_expires_at, claimed_at, revoked_at')
+    .select('code, categories, resource_ids, expires_at, grant_expires_at, claimed_at, revoked_at')
     .order('created_at', { ascending: false });
   if (error) throw new Error(error.message);
   return ((data ?? []) as Record<string, unknown>[]).map((r) => ({
     code: String(r.code),
     categories: Array.isArray(r.categories) ? (r.categories as string[]) : [],
+    resourceIds: Array.isArray(r.resource_ids) ? (r.resource_ids as string[]) : [],
     expiresAt: String(r.expires_at),
     grantExpiresAt: String(r.grant_expires_at),
     claimedAt: (r.claimed_at as string | null) ?? null,

@@ -931,6 +931,11 @@ export const OWNED_TABLES: OwnedTable[] = [
   // invite is the student's statement. A claimant's link to it is
   // `claimed_by`, which `on delete set null` clears when their account goes.
   { table: 'family_invites', column: 'student_id' },
+  // The confirmed copies behind a share, and the log of every read of them.
+  // Both are the student's; a supporter holds no row in either, and a reader's
+  // own deletion only clears `reader_id` on the log (`on delete set null`).
+  { table: 'family_shared_items', column: 'student_id' },
+  { table: 'family_access_events', column: 'student_id' },
 
   // ── Shared forms ────────────────────────────────────────────────────────
   // ── Organizations ───────────────────────────────────────────────────────

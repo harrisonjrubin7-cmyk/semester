@@ -77,7 +77,7 @@ describe('the student’s own codes', () => {
   });
 
   it('says where each code stands', () => {
-    const row = { code: 'K7M2Q9ZP', categories: [], expiresAt: '2026-10-04T00:00:00Z', grantExpiresAt: '2026-12-15T00:00:00Z', claimedAt: null, revokedAt: null };
+    const row = { code: 'K7M2Q9ZP', categories: [], resourceIds: [], expiresAt: '2026-10-04T00:00:00Z', grantExpiresAt: '2026-12-15T00:00:00Z', claimedAt: null, revokedAt: null };
     const now = new Date('2026-09-28T00:00:00Z');
     expect(inviteState(row, now)).toBe('Waiting · works until 2026-10-04');
     expect(inviteState({ ...row, claimedAt: '2026-09-29T10:00:00Z' }, now)).toBe('Accepted 2026-09-29');

@@ -39,7 +39,7 @@ const render = () =>
 
 it('says plainly that nothing is shared yet', () => {
   render();
-  expect(host.textContent).toContain('Nothing is shared with anyone yet.');
+  expect(host.textContent).toContain('A plan is shared only when you make a code for it');
   expect(host.textContent).toContain('No plans.');
 });
 
@@ -53,7 +53,7 @@ it('lists each plan with what stops it being shareable, and marks a ready one', 
   const rows = [...host.querySelectorAll('.sharing-list > li')].map((li) => li.textContent ?? '');
   expect(rows[0]).toContain('Mom · Parent');
   expect(rows[0]).toContain('1 item · until 2026-12-15');
-  expect(rows[0]).toContain('Ready to share once sharing turns on.');
+  expect(rows[0]).toContain('Ready to share: make a code for it on Family → Preview.');
   expect(rows[1]).toContain('Uncle Joe');
   expect(rows[1]).toContain('Needs an end date');
   expect(rows[1]).toContain('Nothing is chosen yet');

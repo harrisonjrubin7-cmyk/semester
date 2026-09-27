@@ -186,6 +186,40 @@ cover:
 
 Every migration needs approval before it is applied to production.
 
+## D-038 · A supporter reads a confirmed copy, through one logged reader
+
+**Decided 27 Sep 2026, building slice 3 of D-037.** A claimed code is a live
+`family_grants` row naming items by id, and those items existed only on the
+student's device. So a supporter had nothing to read.
+
+- **The confirmation carries the content.** `make_family_share` makes the code
+  and stores a copy of exactly the items it names, in one transaction. A code
+  never exists without its content, and content is never stored without a
+  confirmed code. An item that is not named, or is in a category the code does
+  not cover, is refused. So is a named item that is not carried.
+- **A copy, not a sync.** Editing an item on the device afterwards changes
+  nothing the supporter sees until the student shares again and confirms again.
+  A change that reached the supporter by itself would be a share nobody
+  previewed (design §6).
+- **One read path, and it logs.** Neither table has a policy for the
+  supporter. `read_family_share()` re-checks each grant at every read
+  (accepted, not revoked, not expired, not `payment`) and returns only named
+  items in the grant's own category. It writes one log row per student before
+  it returns anything. The student sees each read on Family, with when and how
+  many items. The supporter cannot read, write or delete the log.
+- **The supporter reads on request.** Nothing is fetched when the Family screen
+  opens, because each fetch is a read the student sees.
+- **Stopping** revokes every live grant naming the person's items and removes
+  the copies. The supporter's next look says "This share has ended.", the same
+  words as expiry (D3).
+
+Proved by `supabase/familyshare.check.sql` (38 checks). Five guards were each
+removed in turn, and the suite failed every time.
+
+The migration is `20260927230000_family_shared_items.sql`. **Applying it to
+production needs owner approval**, as #815's does, and it must be applied after
+#815's migration.
+
 ---
 
 # Feature-expansion command (27 Sep 2026)

@@ -7,9 +7,10 @@ import { SectionLabel } from './ui';
 /**
  * Everything this student is sharing, or planning to, in one list.
  *
- * Today every row is a plan on this device: no share with a real person
- * exists until the server side of `docs/CONSENT-SHARING-DESIGN.md` is
- * approved and built, and the list says so rather than implying otherwise.
+ * Every row is a plan on this device. A plan becomes a share with a real
+ * person only through a code made on Family → Preview (slice 2) and entered
+ * by that person; who has opened it is shown there, from the read log
+ * (slice 3). The list says that rather than implying a plan is a share.
  * What it does now is hold each plan to the rules that share will be held to
  * (`lib/sharing.ts`), so a plan that could never be shared as it stands — no
  * end date, nothing chosen, payment access — says why here, before anyone is
@@ -26,8 +27,9 @@ export function SharingList({ today = new Date().toLocaleDateString('en-CA') }: 
         <span id="sharing-title">Sharing</span>
       </SectionLabel>
       <p className="sharing-lead">
-        Nothing is shared with anyone yet. These are plans kept on this device. When sharing turns on, each one goes
-        to one named person, for the items you choose, until the date you set — and you see every time it is read.
+        These are plans kept on this device. A plan is shared only when you make a code for it on Family → Preview and
+        the person enters it: then it goes to that one person, for the items you chose, until the date you set — and
+        Family shows you every time it is opened.
       </p>
       {family.error ? (
         // Unreadable plans are not "no plans": say so, rather than list nothing as if nothing were planned.
@@ -53,7 +55,7 @@ export function SharingList({ today = new Date().toLocaleDateString('en-CA') }: 
                   ))}
                 </ul>
               ) : (
-                <div className="sharing-meta">Ready to share once sharing turns on.</div>
+                <div className="sharing-meta">Ready to share: make a code for it on Family → Preview.</div>
               )}
             </li>
           ))}

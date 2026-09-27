@@ -256,4 +256,7 @@
 .sharing-problems{font-size:var(--type-sm);margin:var(--sp-2) 0 0;padding-inline-start:1.2em}
 .family-code{font-family:var(--font-mono, ui-monospace, monospace);font-size:var(--type-xl);letter-spacing:0.18em;margin:var(--sp-3) 0}
 .family-confirm{border:1px solid var(--app-line);border-radius:var(--r-md);padding:var(--sp-4);margin-bottom:var(--sp-3)}
+.shared-from{border:1px solid var(--app-line);border-radius:var(--r-md);padding:var(--sp-4);margin-block:var(--sp-4)}
+.shared-from h3{font-size:var(--type-base);margin:0 0 var(--sp-2)}
+.shared-body{font-size:var(--type-sm);margin:var(--sp-2) 0 0;white-space:pre-wrap;overflow-wrap:anywhere}
 .family-claim{display:grid;gap:var(--sp-2);max-width:320px;margin-bottom:var(--sp-3)}
