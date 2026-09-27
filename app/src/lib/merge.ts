@@ -427,7 +427,7 @@ interface Stamped {
  * `created`, which is read first, so the ambiguous field is never reached for
  * one of those.
  */
-function stamp(row: unknown): number {
+export function stamp(row: unknown): number {
   const r = row as Stamped;
   for (const key of ['updated', 'seen', 'created', 'added', 'at'] as const) {
     const value = r?.[key];
@@ -436,7 +436,7 @@ function stamp(row: unknown): number {
   return 0;
 }
 
-function idOf(row: unknown): string | null {
+export function idOf(row: unknown): string | null {
   const r = row as Stamped;
   if (typeof r?.id === 'string') return r.id;
   // Courses are wrapped: { course: { id }, items, guide … }.

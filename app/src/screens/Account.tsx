@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { SYNC_WORDS } from '../lib/syncstatus';
+import { Review } from '../components/Review';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Blueprint } from '../components/Blueprint';
@@ -85,7 +86,7 @@ export function AccountScreen() {
               finding out on the next visit to this screen. */}
           <div role="status" style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
             {sync.status === 'syncing' && SYNC_WORDS.syncing.sentence}
-            {(sync.status === 'offline' || sync.status === 'queued' || sync.status === 'conflict') &&
+            {(sync.status === 'offline' || sync.status === 'queued' || sync.status === 'conflict' || sync.status === 'review') &&
               SYNC_WORDS[sync.status].sentence}
             {sync.status === 'synced' &&
               `Synced ${sync.at ? new Date(sync.at).toLocaleTimeString() : ''} · ${counts}`}
@@ -105,6 +106,9 @@ export function AccountScreen() {
               {syncLine(state.lastSync.notes)}
             </div>
           ) : null}
+
+          {/* Two devices' edits of one thing, and the choice. See `lib/conflicts.ts`. */}
+          <Review />
 
           {/* The same check the pull-down gesture makes, for a laptop, which
               has no pull-down. It answers in a sentence rather than leaving a

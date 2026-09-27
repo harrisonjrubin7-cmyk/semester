@@ -81,6 +81,16 @@ import { offline, watchConnection } from '../lib/offline';
 import { takeReturn } from '../lib/returnto';
 import { pushWait, retriesOnItsOwn } from '../lib/syncstatus';
 import {
+  addReview,
+  baseOf,
+  conflictsIn,
+  readBase,
+  readReview,
+  writeBase,
+  writeReview,
+  type Conflict,
+} from '../lib/conflicts';
+import {
   STORAGE_KEY,
   initialEphemeral,
   loadPersisted,
@@ -134,6 +144,7 @@ export type SyncStatus =
   | 'offline'      // no connection, and nothing waiting to go up
   | 'queued'       // no connection, and changes waiting to go up when it returns
   | 'conflict'     // another device keeps writing at the same moment; retrying
+  | 'review'       // synced, but two devices' edits of something wait on a choice
   | 'error';
 
 interface Store {
@@ -230,6 +241,13 @@ interface Store {
    */
   asking: { sides: Sides; say: string } | null;
   settle: (choice: Choice, backup: string | null) => void;
+  /**
+   * Records edited on two devices before either synced, waiting for the
+   * student to choose. Kept on this device only. See `lib/conflicts.ts`.
+   */
+  review: Conflict[];
+  /** Keep one copy of a waiting record. The other is let go. */
+  resolve: (key: string, keep: 'mine' | 'theirs') => void;
   /**
    * Take the semester the app ships with on as your own courses.
    *
@@ -810,6 +828,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
    * `hasRemote` is what stops a signed-in device with a blank account from
    * hydrating a semester's work away.
    */
+  /** Two devices' edits of one record, waiting on the student. See `lib/conflicts.ts`. */
+  const [review, setReview] = useState<Conflict[]>(readReview);
   /** When this device last asked the account for its copy. See the focus pull below. */
   const pulledAt = useRef(0);
   const refresh = useCallback(async (): Promise<string> => {
@@ -867,14 +887,32 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       const take = hasRemote && unseen(remote.seen, seen);
 
       if (take) {
-        dispatch({
-          type: 'hydrate',
-          persisted: {
-            ...(remote.state as Partial<Persisted>),
-            courses: remote.courses.map((c) => c.data as CourseModule),
-          },
-        });
+        const theirs = {
+          ...(remote.state as Partial<Persisted>),
+          courses: remote.courses.map((c) => c.data as CourseModule),
+        };
+        /*
+         * Before the merge, against the version both sides last agreed on:
+         * which records were edited here *and* there. The merge below still
+         * keeps one of each pair; the other is written down so the student
+         * can choose it instead. See `lib/conflicts.ts`.
+         */
+        const found = conflictsIn(
+          pickPersisted(latest.current) as unknown as Record<string, unknown>,
+          theirs as Record<string, unknown>,
+          readBase(),
+        );
+        if (found.length > 0) {
+          setReview((was) => {
+            const next = addReview(was, found);
+            writeReview(next);
+            return next;
+          });
+        }
+        dispatch({ type: 'hydrate', persisted: theirs });
         markSeen(remote.seen);
+        // This device now holds what the account holds, record for record.
+        writeBase(baseOf(theirs as Record<string, unknown>));
       }
       setSync({ status: 'synced', at: Date.now(), error: '' });
       return refreshSaid(
@@ -1052,6 +1090,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         .then((seen) => {
           // What the database stamped, not what this device's clock says.
           markSeen(seen);
+          // And the account now holds what was sent.
+          writeBase(baseOf({ ...rest, courses } as Record<string, unknown>));
           markUnpushed(false);
           setLost(0);
           setFailed(0);
@@ -1555,14 +1595,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         markSeen(remote.seen);
       } else {
         if (choice === 'cloud') dispatch({ type: 'wipeLocalForAdopt' });
-        dispatch({
-          type: 'hydrate',
-          persisted: {
-            ...(remote.state as Partial<Persisted>),
-            courses: remote.courses.map((c) => c.data as CourseModule),
-          },
-        });
+        const theirs = {
+          ...(remote.state as Partial<Persisted>),
+          courses: remote.courses.map((c) => c.data as CourseModule),
+        };
+        dispatch({ type: 'hydrate', persisted: theirs });
         markSeen(remote.seen);
+        // The first version this device and the account agree on.
+        writeBase(baseOf(theirs as Record<string, unknown>));
       }
       setAsking(null);
     },
@@ -1629,9 +1669,40 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     [tints],
   );
 
+  /**
+   * The student's choice between two devices' edits.
+   *
+   * Keeping the copy the merge already kept only clears the question. Keeping
+   * the other puts it back through the reducer, stamped now, and the ordinary
+   * push sends it up — so the other device gets the choice on its next pull,
+   * as an edit, and is not asked again.
+   */
+  const resolve = useCallback((key: string, keep: 'mine' | 'theirs') => {
+    setReview((was) => {
+      const item = was.find((c) => c.key === key);
+      if (item && keep !== item.kept) {
+        dispatch({ type: 'restoreRecord', field: item.field, record: keep === 'mine' ? item.mine : item.theirs });
+      }
+      const next = was.filter((c) => c.key !== key);
+      writeReview(next);
+      return next;
+    });
+  }, []);
+
+  /*
+   * What the sync line says, with waiting choices counted in. A device that
+   * synced cleanly but is holding two copies of a note says so, rather than
+   * "Synced" — which would be true of the account and not of the student's
+   * work. Anything worse (offline, an error) still says the worse thing.
+   */
+  const shownSync = useMemo(
+    () => (review.length > 0 && sync.status === 'synced' ? { ...sync, status: 'review' as SyncStatus } : sync),
+    [sync, review.length],
+  );
+
   const value = useMemo(
-    () => ({ state, dispatch, catalog, terms, courseCode, allItems, tint, lastSeen: lastSeen.current, account, sync, saveTrouble, refresh, say, school, facts, asking, settle, adopt }),
-    [state, catalog, terms, courseCode, allItems, tint, account, sync, saveTrouble, refresh, say, school, facts, asking, settle, adopt],
+    () => ({ state, dispatch, catalog, terms, courseCode, allItems, tint, lastSeen: lastSeen.current, account, sync: shownSync, saveTrouble, refresh, say, school, facts, asking, settle, adopt, review, resolve }),
+    [state, catalog, terms, courseCode, allItems, tint, account, shownSync, saveTrouble, refresh, say, school, facts, asking, settle, adopt, review, resolve],
   );
   /*
    * The clock is published beside the store, not inside it.

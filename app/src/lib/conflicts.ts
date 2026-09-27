@@ -1,0 +1,241 @@
+import { idOf, labelFor, stamp, strategyFor } from './merge';
+
+/**
+ * Two devices edited the same thing, and the student gets to choose.
+ *
+ * ## What the merge could not tell apart
+ *
+ * `lib/merge.ts` keeps the later edit of a record both sides hold, and that
+ * is the right default for the common case — one device edited it, the other
+ * did not, and "later" is simply "the edit". It is the wrong answer for the
+ * rare one: the same note rewritten on the phone on the bus and on the laptop
+ * in the library, both before either synced. "Later" then throws one of two
+ * real edits away, and nothing said so.
+ *
+ * Telling those apart needs the version both devices last agreed on. Without
+ * it, a record that differs could have been edited here, there, or in both
+ * places, and only the last is a conflict. So this keeps a **base**: a
+ * fingerprint of every identified record as of the last moment this device
+ * and the account held the same copy — after a push lands (the account now
+ * holds what was sent) and after a pull is taken (this device now holds what
+ * the account had). A record whose local copy differs from the base *and*
+ * whose remote copy differs from the base *and* the two differ from each
+ * other was edited on both sides. That is a conflict, and nothing else is.
+ *
+ * ## What happens to one
+ *
+ * The merge still runs exactly as before, so the app is never left holding
+ * two copies of one note. What changes is that the copy it did not keep is
+ * written down, on this device only, with the one it did — and the student is
+ * asked. Keeping the one in use dismisses the question. Keeping the other puts
+ * it back, stamped now, so it wins the next merge and goes up on the next
+ * push like any other edit.
+ *
+ * ## What it covers
+ *
+ * Lists of identified records — notes, tasks, appointments, drafts, courses,
+ * everything `union` merges. Settings (`theirs`) and ticked boxes (`ticks`)
+ * are not records and have no second copy worth choosing between; the merge
+ * notes already say when one of those was replaced.
+ */
+
+/** A short, stable fingerprint of a value. FNV-1a over its JSON; not a security hash. */
+export function fingerprint(value: unknown): string {
+  const text = JSON.stringify(value) ?? '';
+  let h = 0x811c9dc5;
+  for (let i = 0; i < text.length; i++) {
+    h ^= text.charCodeAt(i);
+    h = Math.imul(h, 0x01000193);
+  }
+  return (h >>> 0).toString(36);
+}
+
+/** `field/id` → fingerprint, for every identified record in a `union` list. */
+export type Base = Record<string, string>;
+
+const key = (field: string, id: string) => `${field}/${id}`;
+
+function recordLists(persisted: Record<string, unknown>): [string, unknown[]][] {
+  return Object.entries(persisted).filter(
+    (entry): entry is [string, unknown[]] => strategyFor(entry[0]) === 'union' && Array.isArray(entry[1]),
+  );
+}
+
+/** The base for a copy of the persisted half. */
+export function baseOf(persisted: Record<string, unknown>): Base {
+  const out: Base = {};
+  for (const [field, rows] of recordLists(persisted)) {
+    for (const row of rows) {
+      const id = idOf(row);
+      if (id !== null) out[key(field, id)] = fingerprint(row);
+    }
+  }
+  return out;
+}
+
+export interface Conflict {
+  /** `field/id`. Unique per record, and what the student's choice is keyed on. */
+  key: string;
+  field: string;
+  id: string;
+  /** This device's copy. */
+  mine: unknown;
+  /** The account's copy — the other device's edit. */
+  theirs: unknown;
+  /** Which one the merge kept, and so which is in use now. */
+  kept: 'mine' | 'theirs';
+  /** When it was found, epoch ms. */
+  found: number;
+}
+
+/**
+ * The records edited on both sides since the base.
+ *
+ * `remote` is what a pull brought, in the same shape as `local` (courses
+ * unwrapped to their modules). A field the remote does not carry is skipped,
+ * as the merge skips it. No base means this device has never agreed with the
+ * account on anything, and every difference would look like a conflict — so
+ * none are reported, and the merge's default stands.
+ */
+export function conflictsIn(
+  local: Record<string, unknown>,
+  remote: Record<string, unknown>,
+  base: Base | null,
+  now = Date.now(),
+): Conflict[] {
+  if (!base) return [];
+  const out: Conflict[] = [];
+  for (const [field, theirsRows] of recordLists(remote)) {
+    const mineRows = local[field];
+    if (!Array.isArray(mineRows)) continue;
+    const mineById = new Map<string, unknown>();
+    for (const row of mineRows) {
+      const id = idOf(row);
+      if (id !== null) mineById.set(id, row);
+    }
+    for (const theirs of theirsRows) {
+      const id = idOf(theirs);
+      if (id === null) continue;
+      const mine = mineById.get(id);
+      const agreed = base[key(field, id)];
+      if (mine === undefined || agreed === undefined) continue;
+      const a = fingerprint(mine);
+      const b = fingerprint(theirs);
+      if (a === b || a === agreed || b === agreed) continue;
+      // Both moved, apart. The same comparison `union` makes decides which
+      // one is in use after the merge.
+      out.push({
+        key: key(field, id),
+        field,
+        id,
+        mine,
+        theirs,
+        kept: stamp(theirs) >= stamp(mine) ? 'theirs' : 'mine',
+        found: now,
+      });
+    }
+  }
+  return out;
+}
+
+/**
+ * The list with this record in place of the one with its id, stamped now so
+ * the next merge keeps it. A record that is not there any more is added back:
+ * choosing a version of something is a stronger statement than a deletion
+ * that happened while the question was open.
+ */
+export function putRecord(rows: unknown[], record: unknown, now = Date.now()): unknown[] {
+  const id = idOf(record);
+  // `updated` whether or not the record had one: it is the first stamp the
+  // merge reads, so a chosen copy without it could lose the next merge to
+  // the very copy the student just chose against.
+  const fresh = record && typeof record === 'object' ? { ...(record as object), updated: now } : record;
+  if (id === null) return [...rows, fresh];
+  let found = false;
+  const out = rows.map((row) => {
+    if (idOf(row) !== id) return row;
+    found = true;
+    return fresh;
+  });
+  return found ? out : [...out, fresh];
+}
+
+/** What to call a record on the review list: its kind, and its own name. */
+export function describe(field: string, record: unknown): { kind: string; title: string; preview: string } {
+  const r = (record ?? {}) as Record<string, unknown>;
+  const course = (r.course ?? {}) as Record<string, unknown>;
+  const text = (v: unknown) => (typeof v === 'string' ? v.trim() : '');
+  const title =
+    text(r.title) || text(r.subject) || text(r.name) || text(course.code) || text(course.name) || 'Untitled';
+  const body = text(r.body) || text(r.note) || text(r.text) || text(r.detail);
+  return {
+    kind: labelFor(field),
+    title,
+    preview: body.length > 140 ? `${body.slice(0, 139)}…` : body,
+  };
+}
+
+// ── On this device ────────────────────────────────────────────────────────
+//
+// Both kept in localStorage and never synced. The base is this device's own
+// memory of what it last agreed; the review list holds the copy the merge did
+// not keep, which exists nowhere else.
+
+export const BASE_KEY = 'semester.base';
+export const REVIEW_KEY = 'semester.review';
+
+export function readBase(): Base | null {
+  try {
+    const raw = localStorage.getItem(BASE_KEY);
+    if (!raw) return null;
+    const parsed: unknown = JSON.parse(raw);
+    return parsed && typeof parsed === 'object' ? (parsed as Base) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function writeBase(base: Base): void {
+  try {
+    localStorage.setItem(BASE_KEY, JSON.stringify(base));
+  } catch {
+    // Without a base the next pull reports no conflicts and the merge's
+    // default stands — the behaviour before this existed.
+  }
+}
+
+export function readReview(): Conflict[] {
+  try {
+    const raw = localStorage.getItem(REVIEW_KEY);
+    const parsed: unknown = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed)
+      ? parsed.filter(
+          (c): c is Conflict =>
+            !!c && typeof c === 'object' && typeof (c as Conflict).key === 'string' &&
+            ((c as Conflict).kept === 'mine' || (c as Conflict).kept === 'theirs'),
+        )
+      : [];
+  } catch {
+    return [];
+  }
+}
+
+export function writeReview(list: Conflict[]): void {
+  try {
+    if (list.length === 0) localStorage.removeItem(REVIEW_KEY);
+    else localStorage.setItem(REVIEW_KEY, JSON.stringify(list));
+  } catch {
+    // See writeBase.
+  }
+}
+
+/**
+ * New conflicts folded into the waiting ones. A record already waiting keeps
+ * its entry but takes the newest pair of copies — the question is still the
+ * same question, about the latest two versions.
+ */
+export function addReview(waiting: Conflict[], found: Conflict[]): Conflict[] {
+  const byKey = new Map(waiting.map((c) => [c.key, c]));
+  for (const c of found) byKey.set(c.key, c);
+  return [...byKey.values()];
+}

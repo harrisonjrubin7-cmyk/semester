@@ -108,9 +108,9 @@ this change.
   on each row's `updated_at`, so it cannot overwrite a copy it has not read;
   it pulls, merges and retries instead. One record edited on both devices
   still keeps the later edit. See [CROSS-DEVICE-CONTINUITY.md](CROSS-DEVICE-CONTINUITY.md).
-- **Offline, Queued and Conflict states: done**, with one limit: `conflict`
-  means another device keeps winning the race, not "pick between two edits
-  of the same note". Adding them uncovered that on IndexedDB an edit never
+- **Offline, Queued, Conflict and Conflict-needs-review states: done.** A
+  record edited on two devices before either synced is put to the student
+  to choose. Adding the states also uncovered that on IndexedDB an edit never
   triggered a push; that is fixed too. See
   [CROSS-DEVICE-CONTINUITY.md](CROSS-DEVICE-CONTINUITY.md).
 - **Return context after sign-in: done** for sign-ins that leave the page

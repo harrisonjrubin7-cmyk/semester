@@ -2679,6 +2679,8 @@ export type Action =
   | { type: 'settleCourse'; guideId?: CourseId; courseId?: CourseId }
   | { type: 'removalsPushed'; ids: CourseId[] }
   | { type: 'hydrate'; persisted: Partial<Persisted>; at?: number }
+  /** A version the student chose on the review list, put back. See `lib/conflicts.ts`. */
+  | { type: 'restoreRecord'; field: string; record: unknown }
   | { type: 'restore'; persisted: Partial<Persisted> }
   /**
    * The browser moved, so the app follows.

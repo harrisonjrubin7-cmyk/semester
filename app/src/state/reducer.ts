@@ -20,6 +20,8 @@
  * and failing when the two sets differ in either direction.
  */
 
+import { strategyFor } from '../lib/merge';
+import { putRecord } from '../lib/conflicts';
 import type { Action, State } from './shape';
 import { changedSomething, snapshot, tookSomething, undoableFor } from '../lib/undo';
 import { library } from './slices/library';
@@ -77,6 +79,16 @@ export function reducer(state: State, action: Action): State {
     // announcement, and the Account screen still has to be able to say what
     // the last sync did afterwards.
     return state.lastSync ? { ...state, lastSync: { ...state.lastSync, told: true } } : state;
+  }
+
+  // A version the student chose between two devices' edits. Here rather
+  // than in a slice because it can land in any list the merge unions, which
+  // is most of them. Only those: a field the merge does not treat as a list
+  // of records has no second copy to have chosen.
+  if (action.type === 'restoreRecord') {
+    const rows = (state as unknown as Record<string, unknown>)[action.field];
+    if (!Array.isArray(rows) || strategyFor(action.field) !== 'union') return state;
+    return { ...state, [action.field]: putRecord(rows, action.record) } as State;
   }
 
   const undoable = undoableFor(action.type);

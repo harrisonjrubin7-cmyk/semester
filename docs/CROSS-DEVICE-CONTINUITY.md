@@ -69,13 +69,35 @@ shows `syncLabel(state.lastSync)`, and a local save failure raises a
 | Saving | `syncing` | A pull is in flight |
 | Offline | `offline` | No connection, and nothing waiting to go up |
 | Queued to sync | `queued` | No connection, and edits waiting. The flag (`semester.unpushed`) is on disk, so closing and reopening offline still says Queued |
-| Conflict needs review | `conflict` | A push has lost the race to another device three times running. Nothing is overwritten; it keeps merging and retrying |
+| Conflict needs review | `review` | Something was edited on two devices before either synced; both versions are kept until the student chooses (see below) |
+| (contention) | `conflict` | A push has lost the race to another device three times running. Nothing is overwritten; it keeps merging and retrying |
 
-What `conflict` does **not** yet mean is "these two edits of the same note
-disagree — pick one". The merge keeps the later edit of a record edited on
-both devices, and records it as a `MergeNote` (`lib/merge.ts`) that nothing
-surfaces as a choice. Offering that choice is the remaining step towards the
-spec's "Conflict needs review".
+### Conflict needs review
+
+When the same record — a note, a task, an appointment, a course, anything
+the merge unions — was edited on two devices before either synced, the
+student chooses which version to keep (`lib/conflicts.ts`,
+`components/Review.tsx`).
+
+Telling that apart from an ordinary edit needs the version both sides last
+agreed on, so each device keeps a **base**: a fingerprint of every such
+record as of the last push that landed or pull that was taken
+(`semester.base`, on the device only). On a pull, a record is a conflict
+only if this device's copy differs from the base, the account's copy
+differs from the base, and the two differ from each other. An edit on one
+side only is not a conflict and is merged as before.
+
+The merge still keeps the later edit, so the app never holds two copies of
+one note. The copy it did not keep goes onto a review list on this device
+(`semester.review`), the sync line reads **Conflict needs review**, and
+Account shows both versions side by side with "Keep this one" on each.
+Keeping the version in use clears the question. Keeping the other puts it
+back, stamped now, and the ordinary push sends it up, so the other device
+receives it as an edit and is not asked again.
+
+Not covered: settings (`theirs`) and ticked boxes (`ticks`), which are not
+records; and a device with no base yet — before its first sync — where every
+difference would look like a conflict, so none are reported.
 
 ## Gaps against the spec, in order of risk
 

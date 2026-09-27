@@ -63,6 +63,12 @@ export const SYNC_WORDS: Record<SyncStatus, SyncWords> = {
     sentence:
       'Another device keeps changing this semester at the same moment. Nothing has been overwritten — each round merges both — and this device will keep trying.',
   },
+  review: {
+    short: 'Review',
+    standing: 'Conflict needs review',
+    sentence:
+      'Something was changed on two devices before either synced. Both versions are saved on this device — choose which one to use.',
+  },
   error: {
     short: 'Trouble',
     standing: 'Sync trouble',
@@ -72,7 +78,7 @@ export const SYNC_WORDS: Record<SyncStatus, SyncWords> = {
 
 /** The states in which this device holds something the account does not know yet. */
 export function waiting(status: SyncStatus): boolean {
-  return status === 'queued' || status === 'conflict';
+  return status === 'queued' || status === 'conflict' || status === 'review';
 }
 
 /**
