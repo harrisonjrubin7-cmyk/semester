@@ -220,6 +220,45 @@ The migration is `20260927230000_family_shared_items.sql`. **Applying it to
 production needs owner approval**, as #815's does, and it must be applied after
 #815's migration.
 
+
+## D-039 · Support shares follow advisor shares, and re-check the role on every read
+
+**Decided 27 Sep 2026, building slice 4 of D-037.** The table is
+`support_shares`. It follows the other session's `advisor_shares` (D-016,
+#802) column for column, so the two staff shares don't diverge: one named
+recipient, found by address only among role holders at the student's own
+school; a previewed snapshot; a logged reader; and revoking works one way only.
+
+It differs in three places, each required by the design:
+
+- **The role is checked again at every listing and every read**, not only when
+  the share is made. A staff member who loses `athletic_academic_support`, or
+  whose grant expires, stops seeing the share without anyone revoking it (§4).
+- **Compliance is excluded** when the share is made and at every read. That
+  includes someone who holds both roles, and someone who takes on compliance
+  after the share was made (D2).
+- **The payload can hold only the six athlete items.** A column check refuses
+  any other key, so grades, NIL, the hours log and health records can't fit
+  whatever a client sends. A TypeScript test holds `ATHLETE_SHAREABLE` to the
+  migration's list.
+
+D1 adds the role `athletic_academic_support`, with no capabilities. A grant
+scoped to the school or to anything inside it (`<school>/…`) counts. Every
+refusal gives the same answer: an unknown address, the wrong office, another
+school, a revoked grant. So the lookup reveals nothing about who has an
+account or where they work. The same holds for an ended share: revoked,
+expired and lost role all read "not shared with you" (D3). The maximum length
+is 200 days (D4).
+
+Proved by `supabase/supportshares.check.sql` (45 checks). Five guards were
+each removed in turn: the read's role re-check, the listing's role re-check,
+the compliance exclusion, the payload keys and the log. The suite failed every
+time.
+
+The migration is `20260928001500_support_shares.sql`. **Applying it to
+production needs owner approval**, and it goes after #830's migration. The
+athlete's screen is slice 5.
+
 ---
 
 # Feature-expansion command (27 Sep 2026)

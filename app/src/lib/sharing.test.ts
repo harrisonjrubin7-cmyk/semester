@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { newFamilyItem, newFamilyMember, type FamilyMember } from './family';
 import {
@@ -90,5 +92,21 @@ describe('D1 and D2: who can receive an athlete share, and what it can hold', ()
     const offered = ATHLETE_SHAREABLE.map(([, text]) => text).join(' ');
     expect(offered).not.toMatch(/grade|gpa|nil|income|hours log|health/i);
     expect(ATHLETE_NEVER_SHARED.join(' ')).toMatch(/Grades.*NIL.*hours.*Health/s);
+  });
+
+  /*
+   * The database says the same thing, in 20260928001500_support_shares.sql:
+   * the payload check lists the keys a share may carry, and the recipient
+   * test names the two roles. A key added here and not there would be
+   * offered by the screen and refused by the server; one added there and not
+   * here would be a field nobody previewed.
+   */
+  it('matches what the database lets a share carry, and who it lets receive one', () => {
+    const sql = readFileSync(join(__dirname, '../../../supabase/migrations/20260928001500_support_shares.sql'), 'utf8');
+    const listed = /payload - array\[([^\]]+)\]::text\[\]/.exec(sql)?.[1] ?? '';
+    const keys = [...listed.matchAll(/'([^']+)'/g)].map((m) => m[1]);
+    expect(keys.sort()).toEqual([...ATHLETE_SHAREABLE.map(([k]) => k), 'sharedAs'].sort());
+    expect(sql).toContain(`holds_role_at(who, '${SUPPORT_RECIPIENT_ROLE}', school)`);
+    for (const never of NEVER_SUPPORT_RECIPIENTS) expect(sql).toContain(`not private.holds_role_at(who, '${never}', school)`);
   });
 });

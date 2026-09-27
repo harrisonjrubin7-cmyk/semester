@@ -7,7 +7,7 @@ import type { FamilyItem, FamilyMember } from './family';
  * The design is `docs/CONSENT-SHARING-DESIGN.md` (D-037, approved). This file
  * is its §1 made checkable, for the two relationships it covers — a supporter
  * (the Family plan, stored as `family_grants`) and athletic academic support
- * (`support_shares`, not built yet). Nothing here sends, stores on a server or
+ * (`support_shares`, 20260928001500; its screen is slice 5). Nothing here sends, stores on a server or
  * grants anything: it answers "may this be shared as it stands?" and "what
  * does the other person see?", so the screens that ask it and the server that
  * enforces it later cannot disagree about the answer.

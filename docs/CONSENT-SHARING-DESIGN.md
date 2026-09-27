@@ -219,6 +219,8 @@ Each slice is small and would ship behind approval of its migration:
    items with the code; `read_family_share()` re-checks and logs every read.*
 4. **`support_shares`**: migration modelled on `accommodation_shares`, check
    suite extended. **Needs approval.**
+   *Built (D-039): modelled on `advisor_shares` as well, so the two staff
+   shares match; the role is re-checked at every read.*
 5. **Athlete share UI**: item picker from `athletics.ts`, preview, recipient
    page.
 
