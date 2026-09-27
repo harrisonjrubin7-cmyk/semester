@@ -45,30 +45,6 @@ export interface ProductCharter {
 
 export const CHARTERS: readonly ProductCharter[] = [
   {
-    // Written from the flag's own definition in flags.ts (#818): its
-    // description, owner, rollout, success criteria and rollback. #813's rule
-    // that every module flag has a charter landed alongside it, and the two
-    // crossed.
-    flag: 'module.institutional_operations', name: 'Operations studio',
-    problem: 'Institutional research assembles data dictionaries, lineage and suppressed aggregate exports by hand in spreadsheets, where a per-student figure can slip through.',
-    primaryUser: 'Institutional research analyst',
-    jobToBeDone: 'When I need to publish or share an aggregate, I want a suppressed, lineage-labelled export straight from the source, so I can hand it on without a spreadsheet step or a privacy review of every cell.',
-    buyerAndAdoptionHypothesis: 'Provost and institutional research office; adopted if one pilot school’s IR office produces its termly exports here instead of by hand.',
-    successMetrics: {
-      behavior: 'Analysts open the studio to prepare an aggregate export.',
-      workflow: 'A suppressed, lineage-labelled export is produced without a spreadsheet step.',
-      institutional: 'No per-student figure is ever rendered or exported; small cells are suppressed at the source.',
-    },
-    nonGoals: ['Showing or exporting per-student records', 'Replacing the institution’s data warehouse', 'Storing analyst drafts server-side'],
-    sourceDependency: 'Institutional aggregates under outcomes:read, with Semester’s small-cell suppression.',
-    fallback: 'The institution’s existing IR reporting process.',
-    classification: 'T2', accessibilityAcceptance: 'Keyboard-complete; tables have headers; suppression shown in text, never by colour alone.',
-    costModel: 'Read-only aggregate queries; drafts stay on the analyst’s device; no AI or media cost.',
-    owners: { product: 'Institutional research', engineering: 'App engineering', support: 'Customer success' },
-    killSwitch: 'Tenant policy row off; drafts live on the analyst’s device only, so nothing to undo server-side.',
-    decision: 'build', route: 'pilot', reviewAt: '2026-12-15',
-  },
-  {
     flag: 'module.integration_dashboard', name: 'Integration Dashboard',
     problem: 'Integration staff cannot see which connection is failing, or why, without opening a ticket.',
     primaryUser: 'Institutional integration owner',
@@ -151,6 +127,27 @@ export const CHARTERS: readonly ProductCharter[] = [
     costModel: 'Compute seconds per run; quota per course.',
     owners: { product: 'Platform lead', engineering: 'Platform', support: 'Customer success' },
     killSwitch: 'kill.code_execution.', decision: 'build', route: 'pilot', reviewAt: '2026-12-15',
+  },
+  {
+    flag: 'module.institutional_operations', name: 'Operations studio',
+    problem: 'Institutional research assembles lineage, suppressed exports and accreditation evidence by hand across spreadsheets, where a small cell or a per-student figure is one paste away from a slide.',
+    primaryUser: 'Institutional research analyst',
+    jobToBeDone: 'When I owe a governed figure or an evidence pack, I want suppressed aggregates that carry their own definitions and sources, so I can publish without a spreadsheet step or a per-student number.',
+    buyerAndAdoptionHypothesis: 'Provost and institutional research office; adopted if one pilot school produces an accreditation or board export in the studio instead of a spreadsheet.',
+    successMetrics: {
+      behavior: 'Analysts open the studio for export and evidence tasks during the pilot term.',
+      workflow: 'A suppressed, lineage-labelled export is produced without a spreadsheet step.',
+      institutional: 'No export contains a cell under MIN_COHORT or a per-student figure; sensitive reports ship only after a second reviewer approves.',
+    },
+    nonGoals: ['Per-student reporting or lookup', 'Risk, attention, wellbeing or other FORBIDDEN measures', 'Editing source records'],
+    sourceDependency: 'Outcome and course-demand aggregates (n ≥ 10, enforced by database constraints), the data dictionary and lineage in lib/institution-ops.ts.',
+    fallback: 'The institution’s existing IR spreadsheets and reporting runbook.',
+    classification: 'T3',
+    accessibilityAcceptance: 'Keyboard-complete; tables have headers and a text summary; suppression and status are said in words, never by colour alone.',
+    costModel: 'Read-only aggregate queries; drafts stay on the analyst’s device; no AI or media cost.',
+    owners: { product: 'Institutional research product lead', engineering: 'Institutional engineering', support: 'Customer success' },
+    killSwitch: 'Tenant policy row off; drafts are device-only, so nothing server-side to undo.',
+    decision: 'build', route: 'module', reviewAt: '2026-12-15',
   },
 ];
 
