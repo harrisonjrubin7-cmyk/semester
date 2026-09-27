@@ -31,10 +31,12 @@
  */
 
 import type { SourceLabel } from './source';
+import { TIME, localTime } from './registration-window';
+
+export { REGISTRATION_DAY_KEY, localTime, storedWindow, windowReminders, type WindowReminder } from './registration-window';
 import { obj, textValue } from './device-library';
 import { conflicts, type CatalogCourse } from './registration';
 
-export const REGISTRATION_DAY_KEY = 'semester.registration-day.v1';
 
 /** How many backups one section may carry. Five is already a long night. */
 export const MAX_BACKUPS = 5;
@@ -50,6 +52,19 @@ export interface RegistrationDayData {
   backups: Record<string, string[]>;
   /** Ids from {@link CHECKLIST} the student has ticked. */
   checks: string[];
+  /**
+   * Registration Day Mode (`registration_day_mode`). All four are optional in
+   * storage — a plan saved before they existed reads with the defaults — and
+   * all four are the student's own entries.
+   */
+  /** The credits the student means to register for. No default: Semester does not guess a load. */
+  creditTarget: number | null;
+  /** Their school's registration system, as they typed it. `https:` only (`safePortalUrl`). */
+  portalUrl: string | null;
+  /** Reminders the day before and an hour before, through the registrar-deadline rule. */
+  remind: boolean;
+  /** Show the mode on Today now, whatever the date — for a pilot, a demo, or a student who wants it early. */
+  manual: boolean;
 }
 
 export const EMPTY_REGISTRATION_DAY: RegistrationDayData = {
@@ -57,6 +72,10 @@ export const EMPTY_REGISTRATION_DAY: RegistrationDayData = {
   source: 'student_entered',
   backups: {},
   checks: [],
+  creditTarget: null,
+  portalUrl: null,
+  remind: true,
+  manual: false,
 };
 
 export interface CheckItem {
@@ -97,7 +116,7 @@ export const CHECKLIST: CheckItem[] = [
   },
 ];
 
-const TIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
+
 
 export function readRegistrationDay(value: unknown): RegistrationDayData {
   if (!obj(value)) throw new Error('Saved registration-day plan is not valid.');
@@ -121,17 +140,12 @@ export function readRegistrationDay(value: unknown): RegistrationDayData {
   if (!Array.isArray(value.checks)) throw new Error('Saved checklist is not valid.');
   const known = new Set(CHECKLIST.map((c) => c.id));
   const checks = [...new Set(value.checks.filter((c): c is string => typeof c === 'string' && known.has(c)))];
-  return { opensAt, source, backups, checks };
-}
-
-/** A datetime-local string read as local time, or null when it is not one. */
-export function localTime(value: string | null): Date | null {
-  if (!value || !TIME.test(value)) return null;
-  const [date, clock] = value.split('T');
-  const [y, m, d] = date.split('-').map(Number);
-  const [hh, mm] = clock.split(':').map(Number);
-  const at = new Date(y, m - 1, d, hh, mm, 0, 0);
-  return Number.isNaN(at.getTime()) ? null : at;
+  const target = value.creditTarget;
+  const creditTarget = typeof target === 'number' && Number.isFinite(target) && target > 0 && target <= 40 ? target : null;
+  const portalUrl = typeof value.portalUrl === 'string' ? safePortalUrl(value.portalUrl) : null;
+  const remind = value.remind !== false;
+  const manual = value.manual === true;
+  return { opensAt, source, backups, checks, creditTarget, portalUrl, remind, manual };
 }
 
 export type Phase = 'unset' | 'later' | 'soon' | 'open';
@@ -306,4 +320,127 @@ export function prune(data: RegistrationDayData, cart: CatalogCourse[], catalog:
     if (kept.length) backups[primary] = kept;
   }
   return changed ? { ...data, backups } : data;
+}
+
+// ── Registration Day Mode (`registration_day_mode`) ─────────────────────────
+
+/**
+ * An address for the student's official registration system, or null.
+ *
+ * `https:` only, and at most 2,000 characters. The link is handed to the
+ * browser behind a confirmation (`components/ConfirmDialog`), and a
+ * `javascript:` or `http:` address typed or pasted into that field is exactly
+ * what a confirmation cannot make safe.
+ */
+export function safePortalUrl(value: string): string | null {
+  const text = value.trim();
+  if (!text || text.length > 2000) return null;
+  try {
+    const url = new URL(text);
+    return url.protocol === 'https:' && url.hostname ? url.toString() : null;
+  } catch {
+    return null;
+  }
+}
+
+/** How close the window must be before the mode appears on its own. */
+export const MODE_DAYS = 7;
+
+/**
+ * Whether Registration Day Mode is showing: the student asked for it, or
+ * their window opens within a week, or it opened less than a day ago. After
+ * that the day is over and Today goes back to being Today.
+ */
+export function modeActive(data: RegistrationDayData, now: Date): boolean {
+  if (data.manual) return true;
+  const at = localTime(data.opensAt);
+  if (!at) return false;
+  const minutes = (at.getTime() - now.getTime()) / 60_000;
+  return minutes <= MODE_DAYS * 1440 && minutes > -24 * 60;
+}
+
+/**
+ * "01:42:18" in the last day, ticking; null further out, where the sentence
+ * from `countdown` reads better than a clock with a day count in front.
+ */
+export function clockDigits(opensAt: string | null, now: Date): string | null {
+  const at = localTime(opensAt);
+  if (!at) return null;
+  const seconds = Math.ceil((at.getTime() - now.getTime()) / 1000);
+  if (seconds <= 0 || seconds > 24 * 3600) return null;
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${pad(Math.floor(seconds / 3600))}:${pad(Math.floor((seconds % 3600) / 60))}:${pad(seconds % 60)}`;
+}
+
+export interface SummaryLine {
+  ok: boolean;
+  text: string;
+}
+
+/**
+ * The three lines at the top of the mode, in the brief's shape:
+ *
+ *   ✓ 15 credits selected
+ *   ✓ No schedule conflicts
+ *   ! One backup option needed
+ *
+ * The credit line is only a check against a target the student set; with no
+ * target it states the number and asks for nothing, because Semester does not
+ * know what load is right for anybody.
+ */
+export function summaryLines(data: RegistrationDayData, cart: CatalogCourse[], catalog: CatalogCourse[]): SummaryLine[] {
+  const ready = readiness(data, cart, catalog);
+  const credits = cart.reduce((sum, c) => sum + c.credits, 0);
+  const creditText = `${credits} credit${credits === 1 ? '' : 's'} selected`;
+  const lines: SummaryLine[] = [];
+  if (data.creditTarget === null) {
+    lines.push({ ok: true, text: creditText });
+  } else if (credits === data.creditTarget) {
+    lines.push({ ok: true, text: `${creditText}, your target` });
+  } else {
+    const gap = data.creditTarget - credits;
+    lines.push({ ok: false, text: `${creditText}, ${Math.abs(gap)} ${gap > 0 ? 'under' : 'over'} your ${data.creditTarget}-credit target` });
+  }
+  lines.push(
+    ready.conflicts === 0
+      ? { ok: true, text: 'No schedule conflicts' }
+      : { ok: false, text: `${ready.conflicts} schedule conflict${ready.conflicts === 1 ? '' : 's'} to resolve` },
+  );
+  const missing = ready.unbacked.length;
+  lines.push(
+    missing === 0
+      ? { ok: true, text: 'Every course has a backup' }
+      : { ok: false, text: `${missing === 1 ? 'One backup option' : `${missing} backup options`} needed` },
+  );
+  return lines;
+}
+
+/**
+ * The parts of the brief's checklist Semester can see for itself. Worked out,
+ * never ticked: a checkbox for "no schedule conflicts" would let a student
+ * tick a claim the cart contradicts.
+ */
+export function derivedChecks(data: RegistrationDayData, cart: CatalogCourse[], catalog: CatalogCourse[]) {
+  const ready = readiness(data, cart, catalog);
+  const credits = cart.reduce((sum, c) => sum + c.credits, 0);
+  return [
+    { id: 'schedule', label: 'Schedule reviewed: no time conflicts', ok: cart.length > 0 && ready.conflicts === 0 },
+    {
+      id: 'credits',
+      label: data.creditTarget === null ? 'Credit target set' : `Credit target checked (${credits} of ${data.creditTarget})`,
+      ok: data.creditTarget !== null && credits === data.creditTarget,
+    },
+    { id: 'backups', label: 'Backup courses saved for every section', ok: cart.length > 0 && ready.unbacked.length === 0 },
+  ];
+}
+
+/**
+ * What a student types into the registration system, and nothing else: code,
+ * section and the course reference number where the catalog has one. The
+ * full plan with backups is `sectionList`; this is the paste.
+ */
+export function courseReferences(cart: CatalogCourse[]): string {
+  return cart
+    .map((c) => `${c.code} ${c.section}`.trim() + (c.crn ? ` · CRN ${c.crn}` : ' · reference number not in your catalog'))
+    .join('\n');
 }
