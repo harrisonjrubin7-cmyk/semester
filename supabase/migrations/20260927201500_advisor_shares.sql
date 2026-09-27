@@ -27,7 +27,7 @@
 --   drop function if exists public.list_advisor_shares();
 --   drop function if exists public.read_advisor_share(uuid);
 --   drop table if exists public.advisor_share_events, public.advisor_shares;
---   -- then re-run 20260927180000_untouched_graduation_drafts.sql.
+--   -- then re-run 20260927181500_untouched_graduation_drafts.sql.
 
 create table if not exists public.advisor_shares (
   id          uuid        primary key default gen_random_uuid(),
@@ -168,7 +168,7 @@ grant execute on function public.read_advisor_share(uuid) to authenticated;
 
 -- An account holding advisor shares, at either end, is not empty: account
 -- linking must not retire it. The complete latest definition, not a delta —
--- 20260927180000_untouched_graduation_drafts.sql with two rows added.
+-- 20260927181500_untouched_graduation_drafts.sql with two rows added.
 create or replace function public.lti_account_untouched(who uuid)
 returns boolean
 language plpgsql

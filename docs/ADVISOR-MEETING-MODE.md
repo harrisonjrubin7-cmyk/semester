@@ -54,7 +54,7 @@ asserts the payload's keys.
 - The student's private meeting notes.
 - Anything the student did not tick.
 
-## Server: `20260927200000_advisor_shares.sql`
+## Server: `20260927201500_advisor_shares.sql`
 
 | Object | What it does |
 |---|---|
@@ -76,7 +76,7 @@ asserts the payload's keys.
 
 | New | Purpose |
 |---|---|
-| `supabase/migrations/20260927200000_advisor_shares.sql` | Above |
+| `supabase/migrations/20260927201500_advisor_shares.sql` | Above |
 | `supabase/advisor.check.sql` | 45 checks: who may share with whom, who may read, expiry, revocation, the log, deletion, linking |
 | `lib/advisor-meeting.ts` | The device model (`semester.advisor-meeting.v1`), `sharePayload`, `payloadLines`, `meetingSummary` |
 | `lib/advisor-shares.ts` | Expiry choices, `shareState`, `checkPayload`, and the RPC and table calls |
@@ -162,5 +162,5 @@ Nothing below is collected.
   or delete them before turning the flag off. They also lapse by themselves
   within 120 days.
 - **The migration.** To undo it, drop the three functions and two tables, then
-  re-run `20260927180000_untouched_graduation_drafts.sql` (see the migration's
+  re-run `20260927181500_untouched_graduation_drafts.sql` (see the migration's
   header).

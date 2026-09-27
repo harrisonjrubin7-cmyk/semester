@@ -471,7 +471,7 @@ session's range.)
 
 **Proposed — needs owner before any merge to `main`.**
 
-- `20260927200000_advisor_shares.sql` adds `advisor_shares`,
+- `20260927201500_advisor_shares.sql` adds `advisor_shares`,
   `advisor_share_events` and three functions, and redefines
   `lti_account_untouched` with the new table (both ends).
 - Checked on a throwaway Postgres 16: every migration applies, and
@@ -479,6 +479,8 @@ session's range.)
   `ltiidentity` and `support-access` pass.
 - **Not applied anywhere.** Merging this branch to `main` would apply it
   through Supabase Branching, so that merge needs approval, as with D-025.
+- Numbered `20260927201500`, not `20260927200000`: two other branches
+  (`help_request_identity`, `integration_hardening`) claim that version.
 - **Alternative:** hold the migration back. Advisor Meeting Mode still
   prepares, exports and prints, and the sharing section says sharing is not
   available.
