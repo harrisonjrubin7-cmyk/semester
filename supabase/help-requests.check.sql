@@ -289,6 +289,22 @@ begin
   update public.profiles set handle = 'student' where user_id = student;
   update auth.users set email = 'student@help-u.example' where id = student;
 
+  -- ── a request from before the identity snapshot still names its sender ──
+  update public.help_requests set student_name = '', student_email = '' where id = req;
+  perform pg_temp.counted('the backfill fills the one live request left without a snapshot',
+    private.backfill_help_request_identity(), 1);
+  perform pg_temp.become(advisor);
+  select o.student_name, o.student_email into who_name, who_email from public.open_help_request(req) o;
+  reset role;
+  if who_name is distinct from 'student' or who_email is distinct from 'student@help-u.example' then
+    raise exception 'FAILED: a pre-snapshot request opens without its sender (got %, %)', who_name, who_email;
+  end if;
+  raise notice 'ok  and staff opening it see who sent it';
+  perform pg_temp.counted('a withdrawn request is never refilled',
+    (select count(*) from public.help_requests where id = req2 and student_email <> ''), 0);
+  perform pg_temp.counted('and running it again changes nothing',
+    private.backfill_help_request_identity(), 0);
+
   -- ── review fix 1: a closed request can still be erased ─────────────────
   perform pg_temp.expect_allowed('the advisor closes the scheduled request', advisor,
     format($q$select public.answer_help_request(%L, 'closed', 'See you Tuesday')$q$, req));

@@ -29,6 +29,37 @@ alter table public.help_requests
   add column if not exists student_name  text not null default '' check (length(student_name) <= 200),
   add column if not exists student_email text not null default '' check (length(student_email) <= 320);
 
+-- Requests sent before this migration were answered with the identity read
+-- live at open time. Blank snapshot columns would now show them as "A
+-- student" with no email and leave them unactionable, so every live request
+-- without a snapshot takes the identity it would have shown the moment before
+-- this ran. Withdrawn requests are left empty; that is what withdrawal means.
+-- A function rather than a bare statement, so `help-requests.check.sql` can
+-- run it against a row it has deliberately emptied.
+create or replace function private.backfill_help_request_identity()
+returns integer
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  n integer;
+begin
+  update public.help_requests r
+     set student_name = coalesce(p.handle, ''),
+         student_email = coalesce(u.email::text, '')
+    from auth.users u
+    left join public.profiles p on p.user_id = u.id
+   where u.id = r.student_id
+     and r.status <> 'withdrawn'
+     and r.student_email = '';
+  get diagnostics n = row_count;
+  return n;
+end $$;
+revoke all on function private.backfill_help_request_identity() from public, anon, authenticated;
+
+select private.backfill_help_request_identity();
+
 alter table public.help_requests drop constraint if exists help_request_withdrawn_is_empty;
 alter table public.help_requests add constraint help_request_withdrawn_is_empty check (
   status <> 'withdrawn'
