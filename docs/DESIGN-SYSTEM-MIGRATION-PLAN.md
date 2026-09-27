@@ -22,7 +22,7 @@ phases below are sections of that PR. Nothing was deployed or merged.
 | 5 — Interaction states and motion | `feature/micro-interaction-system` | `--motion-*` roles zeroed for reduced motion and the app's calm settings; `SaveState`, `SyncState`, `Progress`, `StepStatus`, all placed (see [EMPTY-LOADING-ERROR-SUCCESS-STATES.md](EMPTY-LOADING-ERROR-SUCCESS-STATES.md)); sheet entry animation; `.state-body` keeps line breaks | No per-item conflict UI (only `Adopting.tsx`) |
 | 6 — WCAG component hardening | `feature/wcag-component-hardening` | Loading now announces itself; glass fallbacks; new components at 44px targets; sync wording unified (`screens/settings/Index.tsx`, `components/soft/SoftTopBody.tsx`); hand-rolled error boxes replaced by the announced `ErrorState` on eight screens; `ContextBar`/`ObjectCard` actions can be held (`disabled`) while busy | Field-level error pattern; audits of tables, editors, media, charts; Focus bar not measured against the bottom clearance (the assistant sits under the scrim — measured, and held by `tokens.test.ts`) |
 | 7 — Trust cues and source UI | `feature/trust-cues-and-source-ui` | Source & details on Today's path snapshot and on every placed context bar and object card; honest `made` / `sample` / `yours` / `connected` origins on the deadline, course hub, guide, Pathway, Career and University (the course hub no longer calls imported courses "Sample course"); Study Studio's draft as "AI-assisted, source-linked" with its generation as named steps | Plan, Research, Data, Campus, Community, Advising; report-issue wiring on AI output |
-| 8 — Workspace modes, quick capture | `feature/workspace-modes-quick-capture` | Four modes, `data-workspace`, Settings group, `FocusBar`; Detailed reveals the source sentence on placed object cards; Quick Capture from the header's `+` on every screen (and `q`, the search home's `+`, the palette) via the "Or keep it as" row | Focused hides only the tab bar and shelves, not desktop sidebars; break reminder |
+| 8 — Workspace modes, quick capture | `feature/workspace-modes-quick-capture` | Four modes, `data-workspace`, Settings group, `FocusBar`; Detailed reveals the source sentence on placed object cards; Quick Capture from the header's `+` on every screen (and `q`, the search home's `+`, the palette) via the "Or keep it as" row | break reminder |
 
 ## Existing files changed
 
@@ -116,8 +116,6 @@ What is left, highest value and lowest risk first.
 ## Follow-ups that are decisions, not adoption
 
 - Body text at 13px against the brief's 16px ([TYPOGRAPHY-SYSTEM.md](TYPOGRAPHY-SYSTEM.md#open-decision-body-size)).
-- Focused mode hides the tab bar and shelves only; whether desktop sidebars
-  should also step back.
 - Bundling Atkinson Hyperlegible so that choice means the same on every device.
 - Visual regression snapshots (no tooling in the repository).
 - (Withdrawn.) An earlier version of this list said the assistant's panel draws

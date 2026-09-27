@@ -156,6 +156,24 @@ describe('the shared components’ sheet', () => {
     expect(moves.filter((v) => !/var\(--motion-/.test(v))).toEqual([]);
   });
 
+  /*
+   * Focused takes the desktop sidebars away, and their columns with them.
+   *
+   * The rail and the workspace's sidebar are grid items in a two-column grid
+   * (`.desk`, `.deskwork-body`). Hiding only the element auto-places the pane
+   * into the first track, which is the rail's — zero or 232px wide — so the
+   * screen collapses into a strip. Measured in Chromium at 1280px: with both
+   * rules the pane runs 0→1280 on the tab-bar layout and 1→1278 on the
+   * workspace, and the Focus bar with its Exit is on screen.
+   */
+  it('hides the desktop sidebars in Focused, and collapses their columns', () => {
+    const hide = /:root\[data-workspace='focused'\] \.rail,\s*:root\[data-workspace='focused'\] \.desk-side\s*\{\s*display: none;/;
+    const collapse = /:root\[data-workspace='focused'\] \.desk,\s*:root\[data-workspace='focused'\] \.deskwork-body\s*\{\s*grid-template-columns: minmax\(0, 1fr\);/;
+    expect(UNITY).toMatch(hide);
+    expect(UNITY).toMatch(collapse);
+    expect(UNITY).toMatch(/:root\[data-workspace='focused'\]\s*\{\s*--rail-w: 0px;/);
+  });
+
   it('gives every primary target the practical fingertip', () => {
     for (const sel of ['.next-step', '.command-widget-open', '.visibility-choice']) {
       const body = new RegExp(`\\${sel}\\s*\\{([^}]*)\\}`).exec(UNITY)![1];

@@ -15,7 +15,7 @@ touching the store.
 | Mode | Id | Blurb shown to the student | What it changes |
 | --- | --- | --- | --- |
 | Guided | `guided` | Next steps and short explanations alongside the work. | Nothing is hidden. This is the app as it was, and the default |
-| Focused | `focused` | The current work, its sources and save state — navigation steps back. | Hides `.app-tabs`, `.shelf-nav`, `.today-secondary-journey` and anything marked `.hides-in-focus` (`FirstGoal`, `CommandCenter`, `NextSteps`). Shows the Focus bar |
+| Focused | `focused` | The current work, its sources and save state — navigation steps back. | Hides `.app-tabs`, `.shelf-nav`, the desktop sidebars (`.rail` on the tab-bar layout, `.desk-side` on the workspace) with their grid columns, `.today-secondary-journey` and anything marked `.hides-in-focus` (`FirstGoal`, `CommandCenter`, `NextSteps`). Shows the Focus bar |
 | Detailed | `detailed` | Sources, metadata and deadlines shown up front. | Shows elements marked `.detail-only`, which are hidden otherwise — today, the source sentence on placed object cards |
 | Accessibility | `access` | Larger text, more space and less motion, from your own settings. | Sets the existing settings `textSize: 'large'`, `density: 'comfortable'`, `calm: 'still'` (`ACCESS_LOOK`) |
 
@@ -40,8 +40,12 @@ presentation only".
 
 Known limits:
 
-- Only the tab bar and shelf navigation are hidden. The desktop and workspace
-  layouts' own sidebars and rails are not listed and stay visible.
+- The desktop sidebars go, and so do their grid columns: hiding only the
+  element would auto-place the pane into the rail's track. Measured in
+  Chromium at 1280px, the pane runs 0→1280 on the tab-bar layout and 1→1278
+  on the workspace in Focused, against 248 and 233 from the left in Guided;
+  `styles/tokens.test.ts` holds the rules. The header — back, search, `+` —
+  stays, and the Focus bar's Exit is the way out.
 - The brief's optional break reminder is not built.
 - The Focus bar sits at `--layer-sticky` (20) near the bottom edge. It has not
   been measured against the assistant's floating button or against

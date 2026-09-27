@@ -696,6 +696,25 @@
   display: none;
 }
 
+/* And the desktop sidebars — the rail beside the pane on the tab-bar layout,
+   the workspace's own column on the workspace layout. Each is a grid column
+   as well as an element, so the column goes with it: hiding only the element
+   would auto-place the pane into the rail's zero-width track. The header's
+   back, search and + stay, and the Focus bar is the way out. */
+:root[data-workspace='focused'] {
+  --rail-w: 0px;
+}
+
+:root[data-workspace='focused'] .rail,
+:root[data-workspace='focused'] .desk-side {
+  display: none;
+}
+
+:root[data-workspace='focused'] .desk,
+:root[data-workspace='focused'] .deskwork-body {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 /* ── Glass — the constrained policy ─────────────────────────────────────────
    Allowed only on the transient overlays listed in
    `docs/ELEVATION-AND-GLASS-POLICY.md`, and `styles/glass.test.ts` holds the
