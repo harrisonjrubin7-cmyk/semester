@@ -149,3 +149,16 @@ it('refuses to import data until it is classified, and refuses regulated data ou
   act(() => regulated.click());
   expect(host.textContent).toContain('Regulated or restricted material is not kept in Semester');
 });
+
+it('shows a restricted workbench as needing review, not as a working tool', () => {
+  mount();
+  tab('All tools');
+  act(() => {
+    const select = host.querySelector('.toolkit-catalog')!.parentElement!.querySelector('select') as HTMLSelectElement;
+    Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value')!.set!.call(select, 'bio');
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+  const dna = [...host.querySelectorAll('.toolkit-catalog li')].find((li) => li.textContent?.includes('DNA Learning Lab'))!;
+  expect(dna.textContent).toContain('Needs review before use');
+  expect(dna.querySelector('button')).toBeNull();
+});

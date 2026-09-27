@@ -1,3 +1,4 @@
+import { STEM } from './subjects-stem';
 import { t, type Subject, type Tool } from './tools';
 
 export { BOUNDARIES, type Boundary, type Family, type Subject, type Tool, type ToolState } from './tools';
@@ -31,8 +32,8 @@ export const UNIVERSAL: readonly Tool[] = [
   t('groupwork', 'Group work', 'Who has which part, and whether it lands', 'native', { screen: 'groupwork' }),
 ];
 
-/** Every subject the catalog knows. Filled in by the subject workbench phases. */
-export const SUBJECTS: readonly Subject[] = [];
+/** Every subject the catalog knows, one list per group of departments. */
+export const SUBJECTS: readonly Subject[] = [...STEM];
 
 /** The subject a course code belongs to, or undefined when the prefix is not known. */
 export function subjectOf(code: string): Subject | undefined {
