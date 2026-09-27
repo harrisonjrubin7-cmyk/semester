@@ -7980,6 +7980,195 @@ section[data-drop] > .grip + * {
   text-align: right;
 }
 
+/* ── Academic life balance + Crunch Week Forecast (Phase E) ─────────────── */
+
+.balance {
+  margin: 0 var(--page-pad) var(--sp-7);
+  padding: var(--sp-6);
+  border: 1px solid var(--app-line-soft);
+  border-radius: var(--r-md);
+  background: var(--app-panel);
+}
+
+.balance-title {
+  margin: 0 0 var(--sp-3);
+  font-size: var(--type-lg);
+  color: var(--app-fg);
+}
+
+.balance-heading {
+  margin: var(--sp-6) 0 var(--sp-3);
+  font-size: var(--type-xs);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--app-accent-deep);
+}
+
+.balance-muted,
+.balance-said {
+  margin: 0 0 var(--sp-4);
+  font-size: var(--type-sm);
+  line-height: var(--leading-normal);
+  color: var(--app-dim);
+}
+
+.balance-said {
+  color: var(--app-fg);
+}
+
+.balance-categories,
+.balance-days,
+.balance-list {
+  display: grid;
+  gap: var(--sp-3);
+  margin: 0 0 var(--sp-4);
+  padding: 0;
+  list-style: none;
+  font-size: var(--type-sm);
+  color: var(--app-fg);
+}
+
+.balance-categories li,
+.balance-days li {
+  display: grid;
+  grid-template-columns: minmax(0, 9em) minmax(0, 1fr) auto;
+  gap: var(--sp-4);
+  align-items: center;
+}
+
+.balance-days li {
+  grid-template-columns: 3em minmax(0, 1fr);
+  row-gap: var(--sp-1);
+}
+
+.balance-day-text {
+  grid-column: 2;
+  color: var(--app-dim);
+}
+
+.balance-bar,
+.balance-density {
+  display: flex;
+  height: 0.6rem;
+  overflow: hidden;
+  border-radius: var(--r-sm);
+  background: var(--app-track);
+}
+
+.balance-bar > span {
+  background: var(--app-accent);
+}
+
+.balance-cat-hours {
+  font-variant-numeric: tabular-nums;
+}
+
+[data-category='class'] > .balance-bar > span,
+.balance-density > [data-category='class'] {
+  background: var(--app-accent);
+}
+
+[data-category='athletics'] > .balance-bar > span,
+.balance-density > [data-category='athletics'] {
+  background: var(--app-accent-deep);
+}
+
+[data-category='work'] > .balance-bar > span,
+.balance-density > [data-category='work'] {
+  background: var(--app-accent-bright);
+}
+
+[data-category='study'] > .balance-bar > span,
+.balance-density > [data-category='study'] {
+  background: var(--app-accent-fill);
+}
+
+[data-category='personal'] > .balance-bar > span,
+.balance-density > [data-category='personal'],
+[data-category='commute'] > .balance-bar > span,
+.balance-density > [data-category='commute'] {
+  background: var(--app-faint);
+}
+
+[data-category='open'] > .balance-bar > span,
+.balance-density > [data-category='open'] {
+  background: var(--app-line-soft);
+}
+
+.balance-more {
+  margin: var(--sp-5) 0;
+  font-size: var(--type-sm);
+  color: var(--app-fg);
+}
+
+.balance-more > summary {
+  cursor: pointer;
+  color: var(--app-accent-deep);
+}
+
+.balance-crunch {
+  margin-top: var(--sp-6);
+  padding-top: var(--sp-5);
+  border-top: 1px solid var(--app-line-soft);
+}
+
+.balance-crunch-item + .balance-crunch-item {
+  margin-top: var(--sp-6);
+}
+
+.balance-crunch-line,
+.crunch-card-line {
+  margin: 0 0 var(--sp-3);
+  font-size: var(--type-md);
+  color: var(--app-fg);
+}
+
+.balance-button {
+  min-height: 2.75rem;
+  padding: 0 var(--sp-5);
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--app-fg);
+  font: inherit;
+  cursor: pointer;
+}
+
+.balance-button:disabled {
+  cursor: not-allowed;
+  color: var(--app-faint);
+}
+
+.balance-commute {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-4);
+  margin: var(--sp-4) 0;
+  padding: 0;
+  border: 0;
+}
+
+.balance-commute-minutes {
+  display: grid;
+  gap: var(--sp-2);
+  max-width: 12em;
+  margin: 0 0 var(--sp-4);
+}
+
+.crunch-card {
+  margin: 0 0 var(--sp-6);
+  padding: var(--sp-6);
+  border: 1px solid var(--app-accent-deep);
+  border-radius: var(--r-md);
+  background: var(--app-panel);
+}
+
+.crunch-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+}
+
 /* BL-1.4's Action Center, when it sits in a Phase B panel rather than in the
    #761 card whose `.today-decision-surface` rules it was drawn against. */
 .action-panel .action-center h2 {

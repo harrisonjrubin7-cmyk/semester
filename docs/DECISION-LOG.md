@@ -401,3 +401,46 @@ dropping either outright, which loses tested work the other lacks.
 - `institution_verified` is refused, because nothing here comes from an
   institution feed.
 - Aid is neither estimated nor subtracted. Every total says "before any aid".
+
+## D-027 · The Crunch Week Forecast has its own flag
+
+**Decided 27 Sep 2026 (Phase E).**
+
+- `academic_life_balance` draws the week's hours in Plan. `crunch_week_forecast`
+  (`VITE_CRUNCH_WEEK_FORECAST`) adds the forecast under it and the one card on
+  Today.
+- The card needs both flags, because its suggestions live in the balance view.
+- A pilot can show the hours without any recommendation, which is the smaller
+  and safer first step.
+
+## D-028 · A crunch is three major deadlines in six days, one to four weeks out
+
+**Decided 27 Sep 2026 (Phase E).**
+
+- **Major:** an exam, a project, paper, essay, presentation or report, or
+  anything the syllabus weights at 10% or more.
+- **Window:** 7 to 27 days away. Closer than a week is `lib/clash.ts`'s
+  territory, and too late to move much.
+- **Suggestions:** one or two earlier starts (count − 2, at most two), in open
+  blocks of the week before, one a day, never before 9am in the default day.
+  Each is 90 minutes, or half the student's own past time for that kind of
+  work, between one and two hours.
+- These are counts, not a model of the student. The thresholds are constants
+  in `lib/life-balance.ts`, named and tested.
+
+## D-029 · Balance counts hours; it never scores a week or a person
+
+**Decided 27 Sep 2026 (Phase E).**
+
+- The view reports hours by category, overlaps, long stretches and open
+  blocks. It has no "healthy" range, no score, and no wellbeing or burnout
+  wording; a test holds the forecast's words to that.
+- Rest blocks are the student's own. They count as personal time but are never
+  called a conflict or part of a long stretch.
+- The commute is the one new input. It is device-only
+  (`semester.life-balance.v1`), is counted as hours, and is never placed on
+  the clock.
+- A suggested study block is written to the student's own Semester calendar
+  only after a preview and a confirmation. Nothing is written to an external
+  calendar.
+
