@@ -3,7 +3,7 @@
  *
  * Every write is an RPC — members never hold another member's account id, so
  * the server resolves authors, runs triage and checks roles
- * (supabase/migrations/20260928030000_community.sql). Reads name their columns
+ * (supabase/migrations/20260928032000_community.sql). Reads name their columns
  * rather than `*`: several columns on these tables (author_id, reporter_id,
  * ref_salt, host_id) are granted to nobody, and `select=*` would ask for them
  * and be refused.

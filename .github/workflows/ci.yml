@@ -430,7 +430,15 @@ jobs:
           fi
           "/usr/lib/postgresql/$want/bin/pg_config" --version
 
+      # With a second pass. Every migration is applied again on top of the built
+      # schema, which must come out byte-for-byte the same, before any suite
+      # runs — so the suites below check the schema a single pass builds, and a
+      # repair or restore can re-run the set. The first time this ran it found
+      # nine files that could not run twice, and one whose partial re-run left
+      # an older function behind that help-requests.check.sql then caught.
       - name: Check the database policies
+        env:
+          SEMESTER_CHECK_REAPPLY: '1'
         run: supabase/check.sh
 
       # `check.sh` builds from empty; this applies the pending migrations to

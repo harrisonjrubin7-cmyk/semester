@@ -2,7 +2,7 @@
 -- Browser metadata never grants membership; service-role functions are the
 -- only mutation path used by the provisioning gateway.
 
-create table public.institution_identity_provider (
+create table if not exists public.institution_identity_provider (
   id uuid primary key default gen_random_uuid(),
   tenant_id text not null references public.schools(id) on delete cascade,
   provider_identifier text not null check (length(trim(provider_identifier)) between 1 and 300),
@@ -21,10 +21,10 @@ create table public.institution_identity_provider (
   )
 );
 
-create index institution_identity_provider_by_tenant
+create index if not exists institution_identity_provider_by_tenant
   on public.institution_identity_provider (tenant_id);
 
-create table public.institution_membership (
+create table if not exists public.institution_membership (
   id uuid primary key default gen_random_uuid(),
   tenant_id text not null references public.schools(id) on delete cascade,
   auth_user_id uuid references auth.users(id) on delete set null,
@@ -51,17 +51,17 @@ create table public.institution_membership (
   )
 );
 
-create unique index institution_membership_one_user_per_tenant
+create unique index if not exists institution_membership_one_user_per_tenant
   on public.institution_membership (tenant_id, auth_user_id)
   where auth_user_id is not null;
-create index institution_membership_by_auth_user
+create index if not exists institution_membership_by_auth_user
   on public.institution_membership (auth_user_id);
-create index institution_membership_by_provider
+create index if not exists institution_membership_by_provider
   on public.institution_membership (identity_provider_id, tenant_id);
-create index institution_membership_by_tenant
+create index if not exists institution_membership_by_tenant
   on public.institution_membership (tenant_id);
 
-create table public.scim_credential (
+create table if not exists public.scim_credential (
   id uuid primary key default gen_random_uuid(),
   tenant_id text not null references public.schools(id) on delete cascade,
   label text not null check (length(trim(label)) between 1 and 200),
@@ -79,9 +79,9 @@ create table public.scim_credential (
   )
 );
 
-create index scim_credential_by_tenant on public.scim_credential (tenant_id);
+create index if not exists scim_credential_by_tenant on public.scim_credential (tenant_id);
 
-create table public.scim_external_identity (
+create table if not exists public.scim_external_identity (
   id uuid primary key default gen_random_uuid(),
   tenant_id text not null references public.schools(id) on delete cascade,
   membership_id uuid not null,
@@ -99,12 +99,12 @@ create table public.scim_external_identity (
     references public.institution_membership (id, tenant_id) on delete cascade
 );
 
-create unique index scim_external_identity_user_name
+create unique index if not exists scim_external_identity_user_name
   on public.scim_external_identity (tenant_id, lower(user_name));
-create index scim_external_identity_by_membership
+create index if not exists scim_external_identity_by_membership
   on public.scim_external_identity (membership_id, tenant_id);
 
-create table public.scim_group_mapping (
+create table if not exists public.scim_group_mapping (
   id uuid primary key default gen_random_uuid(),
   tenant_id text not null references public.schools(id) on delete cascade,
   external_group_id text not null check (length(trim(external_group_id)) between 1 and 300),
@@ -123,9 +123,9 @@ create table public.scim_group_mapping (
   )
 );
 
-create index scim_group_mapping_by_approver on public.scim_group_mapping (approved_by);
+create index if not exists scim_group_mapping_by_approver on public.scim_group_mapping (approved_by);
 
-create table public.provisioning_audit_event (
+create table if not exists public.provisioning_audit_event (
   id uuid primary key default gen_random_uuid(),
   tenant_id text not null references public.schools(id) on delete cascade,
   credential_id uuid,
@@ -146,11 +146,11 @@ create table public.provisioning_audit_event (
     references public.institution_membership (id, tenant_id) on delete set null
 );
 
-create index provisioning_audit_by_tenant_time
+create index if not exists provisioning_audit_by_tenant_time
   on public.provisioning_audit_event (tenant_id, occurred_at desc);
-create index provisioning_audit_by_credential
+create index if not exists provisioning_audit_by_credential
   on public.provisioning_audit_event (credential_id, tenant_id);
-create index provisioning_audit_by_membership
+create index if not exists provisioning_audit_by_membership
   on public.provisioning_audit_event (membership_id, tenant_id);
 
 alter table public.institution_identity_provider enable row level security;
@@ -174,10 +174,12 @@ grant select on table public.scim_group_mapping to authenticated;
 grant select on table public.provisioning_audit_event to authenticated;
 grant insert, update on table public.scim_group_mapping to authenticated;
 
+drop policy if exists "tenant auditors read identity providers" on public.institution_identity_provider;
 create policy "tenant auditors read identity providers" on public.institution_identity_provider
   for select to authenticated
   using (private.has_capability('audit:read', 'school', tenant_id));
 
+drop policy if exists "people read their institutional memberships" on public.institution_membership;
 create policy "people read their institutional memberships" on public.institution_membership
   for select to authenticated
   using (
@@ -185,6 +187,7 @@ create policy "people read their institutional memberships" on public.institutio
     or private.has_capability('audit:read', 'school', tenant_id)
   );
 
+drop policy if exists "people read their external identity" on public.scim_external_identity;
 create policy "people read their external identity" on public.scim_external_identity
   for select to authenticated
   using (
@@ -197,20 +200,24 @@ create policy "people read their external identity" on public.scim_external_iden
     or private.has_capability('audit:read', 'school', tenant_id)
   );
 
+drop policy if exists "tenant administrators read group mappings" on public.scim_group_mapping;
 create policy "tenant administrators read group mappings" on public.scim_group_mapping
   for select to authenticated
   using (
     private.has_capability('tenant:configure', 'school', tenant_id)
     or private.has_capability('audit:read', 'school', tenant_id)
   );
+drop policy if exists "tenant administrators add group mappings" on public.scim_group_mapping;
 create policy "tenant administrators add group mappings" on public.scim_group_mapping
   for insert to authenticated
   with check (private.has_capability('tenant:configure', 'school', tenant_id));
+drop policy if exists "tenant administrators update group mappings" on public.scim_group_mapping;
 create policy "tenant administrators update group mappings" on public.scim_group_mapping
   for update to authenticated
   using (private.has_capability('tenant:configure', 'school', tenant_id))
   with check (private.has_capability('tenant:configure', 'school', tenant_id));
 
+drop policy if exists "tenant auditors read provisioning events" on public.provisioning_audit_event;
 create policy "tenant auditors read provisioning events" on public.provisioning_audit_event
   for select to authenticated
   using (private.has_capability('audit:read', 'school', tenant_id));
@@ -221,7 +228,7 @@ begin
   raise exception 'Provisioning audit events are immutable.';
 end $$;
 
-create trigger provisioning_audit_immutable
+create or replace trigger provisioning_audit_immutable
 before update or delete on public.provisioning_audit_event
 for each row execute function private.refuse_provisioning_audit_change();
 
