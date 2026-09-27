@@ -9,6 +9,12 @@ until the owner (Harrison Rubin) reopens it here.
 
 Status values: **Decided** · **Proposed — needs owner** · **Superseded**.
 
+Owner approvals: D-003, D-005 and D-011 approved 27 Sep 2026 (in the
+session that opened #763). For D-005 the approval covers the recommendation
+as written: definitions and on-device counts now, and each server-collected
+mark still lands with its `ANALYTICS.md` question and migration in the same
+PR, for review.
+
 ---
 
 ## D-001 · The briefs are reconciled into the repo, not re-applied
@@ -39,7 +45,7 @@ item BL-0.3, and needs a redirect note in each retired file.
 
 ## D-003 · Five student destinations vs the eight-shelf navigation
 
-**Proposed — needs owner.** The blueprint mandates five primary destinations
+**Decided by owner 27 Sep 2026 — recommendation approved.** Originally proposed: The blueprint mandates five primary destinations
 (Today, My Path, Search, Plan, Me). The app has 59 screens on eight shelves
 (`app/src/lib/nav.ts` `GROUPS`), each shelf argued for in that file, with
 `ALWAYS_TO_HAND = ['home','me','notifs']`.
@@ -66,7 +72,7 @@ clearance. This matches the brief's rule against degree certification.
 
 ## D-005 · Analytics beyond three marks
 
-**Proposed — needs owner.** `ANALYTICS.md` limits collection to three marks
+**Decided by owner 27 Sep 2026 — recommendation approved.** Originally proposed: `ANALYTICS.md` limits collection to three marks
 (`opened`, `course`, `studied`), enforced by a check constraint in
 `supabase/migrations/20260921151000_activity.sql`, and says a fourth "needs a
 fourth question written down here first". Phase 1 lists eight events.
@@ -115,7 +121,7 @@ lint. New code must add none; reducing the count is backlog BL-0.4.
 
 ## D-011 · Public site as a separate prerendered entry
 
-**Proposed — needs owner.** The app is a hash-routed SPA on GitHub Pages
+**Decided by owner 27 Sep 2026 — recommendation approved.** Originally proposed: The app is a hash-routed SPA on GitHub Pages
 (`app/src/lib/route.ts`, `app/index.html`), and GitHub Pages cannot rewrite
 paths. The blueprint's public routes (`/pricing`, `/about`, …) need real,
 indexable paths.

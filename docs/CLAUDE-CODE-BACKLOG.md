@@ -35,16 +35,16 @@ are referenced as TAB-n rather than duplicated.
 | BL-1.8 | Registration readiness as a grouped action workflow | S | 1.4 | From `registration-day.ts` `CHECKLIST` |
 | BL-1.9 | Advisor Meeting Mode | M | 1.6 | `lib/agenda.ts`; agenda + questions + plan snapshot; export only after a full preview and explicit confirm; no link-sharing |
 | BL-1.10 | Clarity question + report-incorrect from any source label | S | 1.1 | Signed-out fallback |
-| BL-1.11 | Analytics event definitions (docs only) | S | — | **Collection is Blocked on D-005** |
+| BL-1.11 | Analytics event definitions (docs only) | S | — | D-005 approved: definitions + on-device counts; each server mark ships with its `ANALYTICS.md` question |
 | BL-1.12 | Pilot flow E2E (390 px and 1280 px) | M | all | Playwright, per Sprint-1 acceptance item 1 |
-| BL-1.13 | Five-destination tab labels | M | — | **Blocked on D-003** |
+| BL-1.13 | Five-destination tab labels | M | — | D-003 approved |
 | BL-1.14 | Auth settings into `config.toml` `[auth]` (S-7) | S | — | Review only; applying them is a production change |
 
 ## Phase 2 — Public site & membership
 
 | ID | Item | Size | Notes |
 |---|---|---|---|
-| BL-2.1 | `site/` prerendered entry + shared tokens | L | **Blocked on D-011** |
+| BL-2.1 | `site/` prerendered entry + shared tokens | L | D-011 approved |
 | BL-2.2 | Home, Product, Students, Institutions, About, Careers, Contact | L | Careers contact: harrisonjrubin7@gmail.com |
 | BL-2.3 | Pricing (Free / Plus / Pro / Institution Access) | M | No checkout (D-009) |
 | BL-2.4 | Public tools reusing pure libs | M | `graduation.ts`, `registration.ts`, `registration-day.ts` |
