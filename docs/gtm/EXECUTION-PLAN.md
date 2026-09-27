@@ -88,6 +88,26 @@ link that is wrong, expired or withdrawn gets one message. A wrong, revoked or e
 token returns nothing and gives no reason. Engaging the global `kill.sharing` switch stops every grant and
 every open.
 
+## The campaign manager screen
+
+The screen is `app/src/components/institutional/CampaignManager.tsx`, under **University → Campaigns**, behind the
+`VITE_CAMPAIGN_MANAGER` build switch (off in ordinary production builds). The screen decides nothing on its own:
+every read and write runs as the signed-in staff member, under the database's own permissions, through
+`lib/gtm/manager.ts`.
+
+- **Release checklist:** this is the server's own list from `gtm_activation_failures`, read again after every
+  change and written as a sentence per item. Activate is enabled only when that list is empty.
+- **Audience editor:** it offers only the fields in `TARGETABLE_FIELDS`, so no control exists for grades, aid,
+  health, disability, conduct or protected traits. It also shows the exact number of matching contacts.
+- **Link builder:** it builds the landing page from the campaign's own cycle, audience and objective with
+  `campaignUrl`, and refuses an address that already carries other data.
+- **Editing and approval:** content is editable only while the campaign is a draft. Approve appears only for the
+  named approver, and reviews can be recorded only while the campaign is in review.
+- **Results:** they appear once the campaign is live, with every count under ten shown as "fewer than 10".
+
+**Known gap:** the approver is entered as an account ID. A directory of the school's reviewers would be better,
+and it needs a read on role grants that doesn't exist yet.
+
 ## Parts the repository already had
 
 | Plan | Already covered by |
@@ -106,8 +126,8 @@ every open.
    site, whose hosting is the owner's decision). The public-tier rows of `trust_artifacts` are what they render.
 2. **Workflow pages**: two or three, following the §3.2 template. Check the public-site work in progress first
    (`feature/public-site`, `feature/public-tools`) so the routes aren't duplicated.
-3. **Campaign manager screen** over `activationGate` and `gtm_activation_failures`, listing every remaining failure.
-   **Preference center** writing `gtm_consent` for recruitment contacts and `consent_record` for enrolled students.
+3. **Preference center**: this writes `gtm_consent` for recruitment contacts and `consent_record` for enrolled
+   students.
 4. **Email/SMS adapters** (worker, service role) that insert the decision into `gtm_communication_events` first,
    and send only if the insert succeeded. No direct platform publishing for social (§15 phase 2).
 5. **Retention periods** for contacts and sends, with a sweep. `RETENTION.md` records that none exists yet, and a
