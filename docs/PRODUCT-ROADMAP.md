@@ -70,7 +70,7 @@ them already exist in part on main (#761, #762).
 | J | Office Action Feed: [OFFICE-ACTION-FEED.md](OFFICE-ACTION-FEED.md) | **Built** behind `office_action_feed` (off). Its migration awaits owner approval (D-048). Draft PR |
 | K | Course Demand Forecasting: [COURSE-DEMAND-FORECASTING.md](COURSE-DEMAND-FORECASTING.md) | **Built** behind `demand_forecasting` (off). Its migration awaits owner approval (D-051). Draft PR |
 | L | Semester Wrapped: [SEMESTER-WRAPPED.md](SEMESTER-WRAPPED.md) | **Built** behind `semester_wrapped` (off), no server change. Draft PR |
-| M | Offline Mode (extends `public/sw.js`) | Queued |
+| M | Offline Mode: [OFFLINE-MODE.md](OFFLINE-MODE.md) | **Built** behind `offline_mode` (off), with no server or service-worker change. Draft PR |
 | N | Trust Center | Queued; includes the D-018 export gap |
 | O | Visual polish (DS-1…DS-8) | Queued |
 | P | Docs, tests, PRs per phase | Continuous |

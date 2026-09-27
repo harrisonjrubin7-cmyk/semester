@@ -1,4 +1,5 @@
 import { cloud } from './cloud';
+import { requireOnline } from './offline-mode';
 import { readContribution, readDemand, type Contributed, type DemandRow, type MyContribution } from './course-demand';
 
 /**
@@ -9,6 +10,7 @@ import { readContribution, readDemand, type Contributed, type DemandRow, type My
  */
 
 export async function contribute(term: string, courses: readonly Contributed[]): Promise<number> {
+  requireOnline('send');
   const { data, error } = await (await cloud()).rpc('contribute_course_plan', { want_term: term, want_courses: courses });
   if (error) throw new Error(error.message);
   return data as number;

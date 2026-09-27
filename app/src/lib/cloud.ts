@@ -25,6 +25,7 @@
  */
 
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
+import { requireOnline } from './offline-mode';
 import { classify, reference, say, type Code } from './failure';
 import type { Seen } from '../state/shape';
 import { MOVE_MS, fetchWithin, timedOut, tookTooLong } from './net';
@@ -1055,6 +1056,7 @@ export const KEPT_TABLES: KeptTable[] = [
 ];
 
 export async function deleteEverything(): Promise<string> {
+  requireOnline('delete');
   const db = await cloud();
   const { data } = await db.auth.getUser();
   const userId = data.user?.id;

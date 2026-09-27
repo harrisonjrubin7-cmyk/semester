@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { offline } from '../lib/offline';
 import { ELIGIBILITY, programName, whyYouSee, type EligibilityKey, type OfficeAction } from '../lib/office-actions';
 import { useOfficeActions } from '../lib/office-actions.hook';
 import { myAudiences, publishedPrograms, setAudience, type Audiences } from '../lib/office-actions-remote';
@@ -126,7 +127,11 @@ export function OfficeActionFeed({ enabled, accountId }: { enabled: boolean; acc
       {state.kind === 'loading' ? <p role="status">Loading what your school’s offices published…</p> : null}
       {state.kind === 'error' ? (
         <div role="alert">
-          <p>Could not load office actions: {state.message}</p>
+          <p>
+            {offline()
+              ? 'You are offline. Office actions load when you are connected — none are shown rather than an old copy.'
+              : `Could not load office actions: ${state.message}`}
+          </p>
           <button type="button" className="balance-button" onClick={reload}>
             Try again
           </button>

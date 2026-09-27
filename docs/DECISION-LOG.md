@@ -790,3 +790,62 @@ session's range.)
   - The image is drawn on a canvas; where there is none, the card says so and
     saves nothing.
   - Share appears only where the device has a share sheet.
+
+## D-055 · Offline mode reuses the device as the queue, and the merge as the conflict strategy
+
+**Decided 27 Sep 2026 (Phase M).**
+
+- **Already local-first.** The app saves every change on the device first
+  (IndexedDB `semester-store`, or `semester.v1`), and pushes the account copy
+  after it. A second outbox that copied changes would be a second truth that
+  could disagree with the first, so there is none.
+- **A ledger per account instead.** `semester.offline-ledger.v1:<account>`
+  records when the account last took this device's copy and since when it
+  has not.
+  - Going offline while signed in, or a push that fails, starts
+    "not synced".
+  - A sync clears it.
+- **Sync on reconnect.** Coming back online with changes waiting calls the
+  store's own `refresh()`: pull, merge, then push. With nothing waiting or no
+  account, it does nothing.
+- **Conflicts use the existing per-field policy** in `lib/merge.ts`:
+  - lists, by id: both sides are kept;
+  - ticks: unioned;
+  - timestamped records: the newer wins;
+  - settings: the later copy wins, except device settings, which this device
+    keeps.
+
+  The merge notes the app already shows after a sync say what happened. A
+  test holds an offline edit meeting a remote one.
+- **No service-worker change.** `public/sw.js` already serves same-origin
+  files from its cache and refreshes them in the background, so every chunk
+  the app has loaded works offline. No `VERSION` bump is needed, so no
+  rollback note either.
+- **Behind `offline_mode`:** the badge, the refusals and the offline wording.
+  With the flag off, nothing changes. The app was local-first before this
+  phase and still is.
+
+## D-056 · High-risk actions are refused offline, never queued
+
+**Decided 27 Sep 2026 (Phase M).**
+
+- `requireOnline(kind)` throws before any of these runs offline:
+  - sharing with an advisor;
+  - sending to the school: office "Mark done", "What applies to me" and
+    contributing to course demand;
+  - publishing office actions;
+  - deleting the account.
+
+  Each says "nothing was sent and nothing is waiting to be sent".
+- **An official hand-off cannot be confirmed offline.** In an external
+  `ConfirmDialog`, the dialog says so and its confirm button is disabled.
+- **Not blocked: revoking a share and stopping a contribution.** They undo
+  rather than send, and they fail on their own offline with the ordinary
+  error.
+- **Why not queue them.** A queued share or contribution would fire hours
+  later, after the student may have changed their mind, and from a screen
+  they are no longer looking at.
+- **Imported data is never shown as current offline.** The office feed and
+  the demand view keep no cached copy. Offline they say they load when
+  connected. `asOf(at)` is there for any imported figure shown from the
+  device.
