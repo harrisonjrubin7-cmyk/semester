@@ -187,3 +187,26 @@ it('opens a report about the action from its source badge, sending nothing by it
   // Signed out in the test: the form gives the address rather than sending.
   expect(host.querySelector('article .action-note')?.textContent).toMatch(/Write to .*needs an account/);
 });
+
+it('can bring back something marked not relevant, after the Undo is gone', () => {
+  render([make(0), make(1)]);
+  act(() => button(/Not relevant/)?.click());
+  expect(stored().a0.status).toBe('dismissed');
+
+  // A reload: the Undo line lives in component state and does not survive it.
+  act(() => root.unmount());
+  act(() => {
+    root = createRoot(host);
+  });
+  render([make(0), make(1)]);
+  expect(button(/^Undo$/)).toBeUndefined();
+  const active = () => [...host.querySelectorAll('#action-top-title, ol.action-list')].map((e) => e.textContent).join(' ');
+  expect(active()).not.toContain('Task number 0');
+
+  const back = button(/Bring back/);
+  expect(back?.textContent).toMatch(/Task number 0/);
+  act(() => back!.click());
+  expect(stored().a0.status).toBe('open');
+  expect(active()).toContain('Task number 0');
+  expect(button(/Bring back/)).toBeUndefined();
+});
