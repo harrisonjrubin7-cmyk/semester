@@ -64,7 +64,7 @@ export function AccountScreen() {
       `${state.courses.length} ${state.courses.length === 1 ? 'course' : 'courses'}`,
       `${state.updates.length} added`,
       `${state.notes.length} notes`,
-      `${state.tasks.length} tasks`,
+      `${state.tasks.length} action${state.tasks.length === 1 ? '' : 's'}`,
     ].join(' · ');
 
     return (
@@ -154,7 +154,7 @@ export function AccountScreen() {
         <SectionLabel>What syncs</SectionLabel>
         <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed-plus)', textWrap: 'pretty' }}>
           Everything you have typed into this app, not a selection from it: your courses and what
-          you have added to them, your tasks, appointments, notes and connected calendars, the
+          you have added to them, your actions, appointments, notes and connected calendars, the
           documents, spreadsheets, decks and graphs you have made, the email you have drafted,
           your grades and degree plan, what you have recorded the term costing, and how the app is
           set up. Privacy and your rights lists it group by group. Sign in on a laptop and the same

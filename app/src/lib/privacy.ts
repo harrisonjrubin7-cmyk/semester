@@ -86,7 +86,7 @@ export const SYNC_GROUPS: { says: string; keys: string[] }[] = [
     ],
   },
   {
-    says: 'your notes, tasks, appointments, activities and the calendars you subscribe to',
+    says: 'your notes, actions, appointments, activities and the calendars you subscribe to',
     keys: [
       'notes', 'tasks', 'appointments', 'commitments', 'timers', 'alarms',
       'feeds', 'feedEvents', 'feedHidden', 'feedOrder',

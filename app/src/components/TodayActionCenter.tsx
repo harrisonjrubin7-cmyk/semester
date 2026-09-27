@@ -97,7 +97,7 @@ export function TodayActionCenter() {
           id: `task:${task.id}`,
           at: date.getTime() + (readDue(task.time) ?? 24 * 60 - 1) * 60_000,
           title: task.title,
-          meta: 'Your task',
+          meta: 'Your action',
           kind: 'task',
           source: 'student_entered',
         });

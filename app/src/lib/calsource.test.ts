@@ -59,7 +59,7 @@ describe('sourceName', () => {
 
   it('reads inside the sentence the empty states put it in', () => {
     expect(`Nothing from ${sourceName('deadlines')} this week.`).toBe(
-      'Nothing from deadlines or your own tasks this week.',
+      'Nothing from deadlines or your own actions this week.',
     );
   });
 });

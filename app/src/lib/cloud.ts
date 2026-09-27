@@ -1105,7 +1105,7 @@ export const OWNED_TABLES: OwnedTable[] = [
 export const KEPT_TABLES: KeptTable[] = [
   {
     table: 'groups',
-    why: 'A group you started belongs to everyone in it. Deleting it would take its shared tasks away from the other members, so your membership goes and the group stays — with a starter who no longer has a profile.',
+    why: 'A group you started belongs to everyone in it. Deleting it would take its shared actions away from the other members, so your membership goes and the group stays — with a starter who no longer has a profile.',
   },
   {
     table: 'group_tasks',

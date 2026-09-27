@@ -667,7 +667,7 @@ export function Command({ onClose }: { onClose: () => void }) {
                   textWrap: 'pretty',
                 }}
               >
-                Deadlines, courses, study units, your own notes and tasks — and the app’s own
+                Deadlines, courses, study units, your own notes and actions — and the app’s own
                 screens.
               </div>
             )}

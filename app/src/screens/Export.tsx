@@ -49,7 +49,7 @@ const PARTS: { id: PartId; label: string; blurb: string; format: string }[] = [
     format: 'ICS',
   },
   { id: 'notes', label: 'Notes', blurb: 'Everything you wrote, including transcripts and email drafts.', format: 'Markdown' },
-  { id: 'tasks', label: 'Tasks', blurb: 'Your own to-do list, dated and dead.', format: 'CSV' },
+  { id: 'tasks', label: 'Your own actions', blurb: 'The actions you added, with their dates and whether they are done.', format: 'CSV' },
   {
     id: 'files',
     label: 'Attachments',
@@ -422,7 +422,7 @@ export function Export() {
       <Blueprint style={{ paddingBlock: 'calc(13px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))', marginTop: 'calc(18px * var(--density, 1))' }}>
         <div className="kicker">The backup file</div>
         <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)' }}>
-          It holds your courses, notes, tasks, appointments, grades, saved places and what you have
+          It holds your courses, notes, actions, appointments, grades, saved places and what you have
           ticked off — everything except the attachments, which are in the zip beside it. Keys and
           the tokens for connected accounts are deliberately left out: a backup that carries your
           credentials is a liability, not a safety net.

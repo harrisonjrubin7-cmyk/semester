@@ -12,7 +12,7 @@ describe('what is on a day, in words', () => {
     expect(marksLine([mark('due')])).toBe('1 deadline');
     expect(marksLine([mark('due'), mark('due')])).toBe('2 deadlines');
     expect(marksLine([mark('event')])).toBe('1 campus event');
-    expect(marksLine([mark('mine')])).toBe('1 task of your own');
+    expect(marksLine([mark('mine')])).toBe('1 action of your own');
     expect(marksLine([mark('class'), mark('class')])).toBe('2 classes');
   });
 

@@ -58,7 +58,7 @@ const LABELS: Record<string, string> = {
   done: 'Ticked deadlines',
   tickedAt: 'When you ticked them',
   spent: 'Time logged',
-  tasks: 'Your tasks',
+  tasks: 'Your actions',
   appointments: 'Appointments',
   commitments: 'Clubs, jobs and teams',
   feedEvents: 'Calendar events',
