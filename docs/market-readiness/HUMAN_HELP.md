@@ -67,7 +67,9 @@ Drawn only for an account that `my_help_destinations` says answers for an
 office — the database decides, the screen holds no role check. Each inbox
 lists statuses and times. A request's words appear only after **Open (the
 student will see this)**, and only forward moves are offered: seen,
-scheduled, closed. A reply goes back to the student beside their question.
+scheduled, closed. A reply goes back to the student beside their question,
+and stays on the staff card as "Your office's reply" — reopening a request
+shows it (`20260927220000`), and an answer sent with the box empty keeps it.
 
 **Who is asking.** An opened request names the student — their Semester
 display name and the university email the server confirmed — because an

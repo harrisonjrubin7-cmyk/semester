@@ -73,6 +73,7 @@ describe('the staff help inbox', () => {
       question: 'Which statistics course fits?',
       context: { requirement: 'Statistics before PSY 340' },
       status: 'sent',
+      reply: '',
       createdAt: '2099-01-01T00:00:00Z',
     });
     mock.answer.mockResolvedValue(undefined);
@@ -98,8 +99,29 @@ describe('the staff help inbox', () => {
     await act(async () => button(/^mark as scheduled$/i)!.click());
     expect(mock.answer).toHaveBeenCalledWith('req-1', 'sent', 'scheduled', 'Tuesday 2pm, bring your plan');
 
-    // Once scheduled, only closing is left.
+    // Once scheduled, only closing is left — and the reply just sent is on the card.
     expect(button(/^mark as seen$/i)).toBeUndefined();
     expect(button(/^close$/i)).toBeTruthy();
+    expect(host.querySelector('[data-reply]')?.textContent).toBe('Tuesday 2pm, bring your plan');
+  });
+
+  it('shows the reply already sent when a request is reopened, and keeps it on a blank answer', async () => {
+    mock.load.mockResolvedValue([{ ...INBOX, items: [{ ...INBOX.items[0], status: 'scheduled' }] }]);
+    mock.open.mockResolvedValue({
+      studentName: 'harrison_r', studentEmail: 'h.rubin@example.edu',
+      question: 'Which statistics course fits?', context: {},
+      status: 'scheduled', reply: 'Tuesday 2pm, bring your plan', createdAt: '2099-01-01T00:00:00Z',
+    });
+    mock.answer.mockResolvedValue(undefined);
+    await act(async () => root.render(<HelpInbox account={ME} />));
+    expect(host.querySelector('[data-reply]')).toBeNull();
+    await act(async () => button(/student will see this/i)!.click());
+
+    expect(host.querySelector('[data-reply]')?.textContent).toBe('Tuesday 2pm, bring your plan');
+    expect(host.textContent).toContain('Replace your reply');
+
+    await act(async () => button(/^close$/i)!.click());
+    expect(mock.answer).toHaveBeenCalledWith('req-1', 'scheduled', 'closed', '');
+    expect(host.querySelector('[data-reply]')?.textContent).toBe('Tuesday 2pm, bring your plan');
   });
 });

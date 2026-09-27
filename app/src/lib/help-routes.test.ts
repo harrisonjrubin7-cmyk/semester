@@ -10,6 +10,7 @@ import {
   STAFF_MOVES,
   WITHDRAWABLE,
   answerRequest,
+  replyAfter,
   askForHelp,
   helpFromAction,
   helpSeedWaiting,
@@ -183,6 +184,21 @@ describe('the routes', () => {
 });
 
 describe('the staff side', () => {
+  it('a blank answer keeps the reply already sent, as the database does', () => {
+    expect(replyAfter('Tuesday 2pm', '')).toBe('Tuesday 2pm');
+    expect(replyAfter('Tuesday 2pm', '   ')).toBe('Tuesday 2pm');
+    expect(replyAfter('Tuesday 2pm', '  Wednesday instead ')).toBe('Wednesday instead');
+    expect(replyAfter('', 'x'.repeat(1500))).toHaveLength(1000);
+    // The rule it mirrors, in the last definition of answer_help_request.
+    const body = MIGRATION.slice(MIGRATION.lastIndexOf('create or replace function public.answer_help_request'));
+    expect(body).toMatch(/reply = left\(coalesce\(nullif\(trim\(want_reply\), ''\), reply\), 1000\)/);
+  });
+
+  it('opening returns the reply, in the last definition of open_help_request', () => {
+    const at = Math.max(MIGRATION.lastIndexOf('create function public.open_help_request'), MIGRATION.lastIndexOf('create or replace function public.open_help_request'));
+    expect(MIGRATION.slice(at, MIGRATION.indexOf('end $$', at))).toMatch(/r\.reply/);
+  });
+
   it('refuses a backward move before anything is sent', async () => {
     await expect(answerRequest('req', 'scheduled', 'acknowledged', '')).rejects.toThrow(/cannot be moved/);
     await expect(answerRequest('req', 'closed', 'scheduled', '')).rejects.toThrow(/cannot be moved/);
