@@ -76,7 +76,11 @@ export function languageFlag(env: Record<string, unknown>): FeatureState {
   return STATES.includes(value as FeatureState) ? (value as FeatureState) : 'off';
 }
 
-export const LANGUAGE_FLAG: FeatureState = languageFlag(import.meta.env);
+/*
+ * Read defensively: `video/` type-checks and runs this file outside Vite, where
+ * `import.meta.env` does not exist, and there the flag is simply off.
+ */
+export const LANGUAGE_FLAG: FeatureState = languageFlag((import.meta as { env?: Record<string, unknown> }).env ?? {});
 
 /*
  * The flag in force. The build's value, except where a test sets another and
