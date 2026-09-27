@@ -7218,7 +7218,9 @@ section[data-drop] > .grip + * {
    large Next class card as the fallback for role homes where the student-only
    briefing is not rendered, rather than showing the same commitment twice. */
 .today-decision-surface ~ .today-next-class-legacy,
-.today-decision-surface ~ * .today-next-class-legacy {
+.today-decision-surface ~ * .today-next-class-legacy,
+.today-action-center ~ .today-next-class-legacy,
+.today-action-center ~ * .today-next-class-legacy {
   display: none;
 }
 
@@ -7432,6 +7434,359 @@ section[data-drop] > .grip + * {
   font-size: var(--type-xs);
   line-height: var(--leading-normal);
 }
+
+/*
+ * H-2 (docs/UX-ENHANCEMENT-PLAN.md): the text buttons on Today and in the
+ * course hub had a :hover rule in features.css and nothing else, so every one
+ * drew as the browser's own grey button in the system font. A text button is
+ * text: the accent's reading shade, underlined, with a 44px target.
+ */
+.workspace-text-button {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 var(--sp-2);
+  margin: 0 calc(var(--sp-2) * -1);
+  background: none;
+  border: 0;
+  border-radius: var(--r-sm);
+  font: inherit;
+  font-size: var(--type-sm);
+  color: var(--app-accent-deep);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* …and the timeline rows are rows, not grey slabs with a white border. */
+.today-timeline-row {
+  appearance: none;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid var(--app-line-soft);
+  font: inherit;
+  cursor: pointer;
+}
+
+/* ── Today action center (today_action_center, Phase B) ─────────────────── */
+
+.today-action-center {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sp-7);
+  margin: 0 0 var(--sp-7);
+}
+
+.today-action-center.is-wide {
+  grid-template-columns: minmax(0, 1fr) 260px;
+  align-items: start;
+}
+
+.action-center-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sp-6);
+  min-width: 0;
+}
+
+.action-panel {
+  min-width: 0;
+  padding: var(--sp-6);
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-md);
+  background: var(--app-panel);
+}
+
+.action-kicker {
+  margin: 0 0 var(--sp-3);
+  font-size: var(--type-xs);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--app-accent-deep);
+}
+
+.action-title {
+  margin: 0 0 var(--sp-3);
+  font-size: var(--type-lg);
+  line-height: var(--leading-display-sm);
+  color: var(--app-fg);
+  text-wrap: balance;
+}
+
+.action-body,
+.action-meta {
+  margin: 0 0 var(--sp-4);
+  font-size: var(--type-sm);
+  line-height: var(--leading-normal);
+  color: var(--app-dim);
+  text-wrap: pretty;
+}
+
+.action-source .action-meta {
+  margin: 0;
+  font-size: var(--type-xs);
+}
+
+.action-source {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--sp-4);
+  margin: 0 0 var(--sp-5);
+}
+
+.commitment-urgent,
+.commitment-row {
+  appearance: none;
+  display: grid;
+  width: 100%;
+  min-height: 44px;
+  padding: var(--sp-4) 0;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid var(--app-line-soft);
+  font: inherit;
+  color: var(--app-fg);
+  text-align: left;
+  cursor: pointer;
+}
+
+.commitment-urgent {
+  gap: var(--sp-1);
+  margin-bottom: var(--sp-3);
+  padding: var(--sp-5);
+  border: 1px solid var(--app-warn-line);
+  border-radius: var(--r-sm);
+  background: var(--app-warn-wash);
+}
+
+.commitment-row {
+  grid-template-columns: 88px minmax(0, 1fr);
+  gap: var(--sp-5);
+  align-items: baseline;
+}
+
+.commitment-list {
+  margin: 0 0 var(--sp-3);
+  padding: 0;
+  list-style: none;
+}
+
+.commitment-when {
+  font-size: var(--type-xs);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--app-accent-deep);
+}
+
+.commitment-what {
+  display: grid;
+  gap: var(--sp-1);
+  min-width: 0;
+}
+
+.commitment-what strong,
+.commitment-urgent strong {
+  font-size: var(--type-sm);
+  overflow-wrap: anywhere;
+}
+
+.commitment-meta {
+  font-size: var(--type-xs);
+  color: var(--app-dim);
+}
+
+.quick-actions ul {
+  display: flex;
+  gap: var(--sp-3);
+  margin: 0;
+  padding: 0 0 var(--sp-2);
+  list-style: none;
+  overflow-x: auto;
+}
+
+.quick-action {
+  appearance: none;
+  min-height: 44px;
+  padding: 0 var(--sp-6);
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-lg);
+  background: var(--app-panel);
+  font: inherit;
+  font-size: var(--type-sm);
+  white-space: nowrap;
+  color: var(--app-fg);
+  cursor: pointer;
+}
+
+.today-context {
+  position: sticky;
+  top: var(--sp-7);
+  display: grid;
+  gap: var(--sp-6);
+  padding: var(--sp-6);
+  border-left: 1px solid var(--app-line);
+  font-size: var(--type-sm);
+  color: var(--app-dim);
+}
+
+.today-context h3 {
+  margin: 0 0 var(--sp-2);
+  font-size: var(--type-sm);
+  color: var(--app-fg);
+}
+
+.today-context p,
+.today-context ul {
+  margin: 0 0 var(--sp-2);
+  padding: 0;
+  list-style: none;
+  line-height: var(--leading-normal);
+}
+
+/* ── Explanation sheet and drawer ───────────────────────────────────────── */
+
+.explain-wash {
+  position: absolute;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: color-mix(in srgb, var(--app-void) 60%, transparent);
+}
+
+.explain-sheet {
+  position: relative;
+  width: 100%;
+  max-height: 92%;
+  overflow-y: auto;
+  padding: var(--sp-5) var(--sp-7) calc(var(--sp-7) + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--app-line-top);
+  border-radius: var(--r-lg) var(--r-lg) 0 0;
+  background: var(--app-panel);
+  animation: explain-rise 200ms var(--ease);
+}
+
+@media (min-width: 760px) {
+  .explain-sheet {
+    max-width: 560px;
+  }
+}
+
+@keyframes explain-rise {
+  from { transform: translateY(24px); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+
+.explain-handle {
+  display: block;
+  width: 36px;
+  height: 4px;
+  margin: 0 auto var(--sp-5);
+  border-radius: var(--r-sm);
+  background: var(--app-line);
+}
+
+.explain-drawer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 60;
+  width: 400px;
+  overflow-y: auto;
+  padding: var(--sp-7);
+  border-left: 1px solid var(--app-line);
+  background: var(--app-panel);
+  box-shadow: var(--shadow-soft-out);
+}
+
+.explain-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sp-5);
+  margin-bottom: var(--sp-5);
+}
+
+.explain-title {
+  margin: 0;
+  font-size: var(--type-lg);
+  line-height: var(--leading-display-sm);
+  color: var(--app-fg);
+}
+
+.explain-close {
+  appearance: none;
+  flex: none;
+  min-height: 44px;
+  padding: 0 var(--sp-5);
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-sm);
+  background: none;
+  font: inherit;
+  font-size: var(--type-sm);
+  color: var(--app-fg);
+  cursor: pointer;
+}
+
+.explain-body h3 {
+  margin: var(--sp-6) 0 var(--sp-2);
+  font-size: var(--type-xs);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--app-accent-deep);
+}
+
+.explain-body h3:first-child {
+  margin-top: 0;
+}
+
+.explain-body p,
+.explain-body li {
+  margin: 0;
+  font-size: var(--type-sm);
+  line-height: var(--leading-normal);
+  color: var(--app-fg);
+}
+
+.explain-body ul {
+  display: grid;
+  gap: var(--sp-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.explain-controls {
+  margin-top: var(--sp-7);
+  padding-top: var(--sp-5);
+  border-top: 1px solid var(--app-line-soft);
+}
+
+/* BL-1.4's Action Center, when it sits in a Phase B panel rather than in the
+   #761 card whose `.today-decision-surface` rules it was drawn against. */
+.action-panel .action-center h2 {
+  margin: var(--sp-2) 0 var(--sp-3);
+  font-size: var(--type-lg);
+  line-height: var(--leading-display-sm);
+  color: var(--app-fg);
+}
+
+.action-panel .action-center p {
+  margin: 0 0 var(--sp-4);
+  font-size: var(--type-sm);
+  line-height: var(--leading-normal);
+  color: var(--app-dim);
+}
+
+.action-panel .action-center .action-done {
+  margin: 0 0 var(--sp-5);
+}
+
 
 .today-sync-status {
   margin: var(--sp-3) 0 0 !important;
