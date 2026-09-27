@@ -53,7 +53,7 @@ reached.
 | [DESIGN-TOKEN-ARCHITECTURE.md](DESIGN-TOKEN-ARCHITECTURE.md) | Primitive, semantic and component layers; the naming-collision rule; the migration rule |
 | [DESIGN-TOKENS.md](DESIGN-TOKENS.md) | Every token in `tokens.css` with its value, and the primitive scales |
 | [COLOR-AND-DARK-MODE-SPEC.md](COLOR-AND-DARK-MODE-SPEC.md) | Grounds, accents, tonal elevation, the warn colour, contrast testing, Match my device |
-| [TYPOGRAPHY-SYSTEM.md](TYPOGRAPHY-SYSTEM.md) | Faces, scale, leading, reading width, tabular figures, and the open 16px question |
+| [TYPOGRAPHY-SYSTEM.md](TYPOGRAPHY-SYSTEM.md) | Faces, scale, leading, reading width, tabular figures, and body at 16px |
 | [ELEVATION-AND-GLASS-POLICY.md](ELEVATION-AND-GLASS-POLICY.md) | Surfaces, elevation tokens, the four places glass is allowed and their fallbacks |
 | [MICRO-INTERACTION-SYSTEM.md](MICRO-INTERACTION-SYSTEM.md) | Motion tokens, the reduced-motion paths, the interaction matrix |
 | [INFORMATION-HIERARCHY.md](INFORMATION-HIERARCHY.md) | The three questions, one primary action, card rhythm, progressive disclosure, calm density |

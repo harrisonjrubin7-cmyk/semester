@@ -178,12 +178,12 @@ replaced (see [DESIGN-SYSTEM-MIGRATION-PLAN.md](DESIGN-SYSTEM-MIGRATION-PLAN.md)
 | `--type-xs-plus` | 11.5 | The second line under a row |
 | `--type-sm` | 12 | Captions, second-rank prose |
 | `--type-sm-plus` | 12.5 | A caption with something to say |
-| `--type-base` | 13 | Body |
-| `--type-base-plus` | 13.5 | Body that is the row |
-| `--type-md` | 14 | List rows, the thing you tap |
-| `--type-md-plus` | 14.5 | The name on a row you open |
-| `--type-lg` | 15 | A card's own title |
-| `--type-display-xs` | 17 | A card or item title |
+| `--type-base` | 16 | Body |
+| `--type-base-plus` | 16.5 | Body that is the row |
+| `--type-md` | 17 | List rows, the thing you tap |
+| `--type-md-plus` | 17.5 | The name on a row you open |
+| `--type-lg` | 18 | A card's own title |
+| `--type-display-xs` | 19 | A card or item title |
 | `--type-display-sm` | 20 | A section's own heading |
 | `--type-display` | 22 | A figure read at a glance |
 | `--type-display-lg` | 24 | The screen's title |

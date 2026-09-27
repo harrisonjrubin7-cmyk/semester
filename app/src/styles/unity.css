@@ -74,6 +74,10 @@
    40px — it outranks `.bare`, so a quiet link there drew as a grey slab
    across the card. Two classes outrank it back. */
 .bare.link-quiet {
+  /* As wide as its words. `.bare` is `width: 100%` for the rows it was made
+     for, which gave every quiet link a hit area across the whole column —
+     on Mail, "About this screen" ran under the floating Compose button. */
+  width: auto;
   min-height: 0;
   padding: 0;
   background: none;

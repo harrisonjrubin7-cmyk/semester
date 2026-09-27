@@ -66,15 +66,17 @@ Mapped against the brief's roles:
 | Display | 48/56 desktop | Figures only (`--type-2xl` and larger inline sizes) | 28px and up |
 | H1 | 36/44 | `--type-display-lg` (screen title) / `--type-xl` | 24 / 26px |
 | H2 | 28/36 | `--type-display-sm` | 20px |
-| H3 | 20/28 | `--type-display-xs` | 17px |
-| Body | 16/24 | `--type-base` | 13px × `--line-height` 1.55 |
+| H3 | 20/28 | `--type-display-xs` | 19px |
+| Body | 16/24 | `--type-base` | **16px** × `--line-height` 1.55 (was 13px) |
 | Body small | 14/20 | `--type-sm` | 12px |
 | Label | 12/16 | `--type-xs` / `--type-2xs-plus` | 11 / 10.5px |
 | Mono | 14/20 | No dedicated token; mono is a face choice | |
 
-The app's scale is smaller than the brief's throughout. It was pinned to the
-values the app already used most (the comments in `app.css` give the site
-counts), so adopting a token moved nothing.
+Body now meets the brief's 16px, and the reading tier above it moved with it
+(rows 17, a card's title 18, an item title 19). Headings from 20px up and the
+secondary tier below body — captions, labels, the second line under a row —
+did not move, so those stay smaller than the brief's figures; they are the
+text the brief itself sets at 12–14px. See "Body is 16px" below.
 
 ## How the reader controls it
 
@@ -143,23 +145,47 @@ ground (`lib/contrast.test.ts`): `--text-secondary` (`--app-dim`) to 4.5:1, and
 metadata and disabled labels. The shared components use `--text-secondary` for
 explanations and never the faint rung.
 
-## Open decision: body size
+## Body is 16px
 
-The brief sets a 16px minimum for normal reading text. Semester's body is
-`--type-base`, 13px at Normal. At Large it is about 14.2px and at Largest about
-15.3px, so no Text size setting reaches 16px on a 16px browser default. The
-browser font size and zoom do reach it.
+Decided: the brief's 16px floor for reading text is met at the default
+setting. It was the open decision in earlier versions of this document, with
+body at 13px; the product took option 3 of the three set out there — raise
+`--type-base` and re-baseline every screen.
 
-This was left as it is, deliberately, because raising body to 16px changes
-every screen's layout at the default setting — the "uncontrolled whole-app
-visual rewrite" the brief forbids — and the repository's scale was measured
-into place from usage. It is a product decision rather than a token change,
-and it needs a person to make it. Options, in increasing order of reach:
+What moved, at Normal, and nothing else:
 
-1. Keep 13px, and make Large or Largest the recommended setting in onboarding.
-2. Raise only long-form reading surfaces (guides, notes, readings) to 16px via
-   `--reading-width` screens.
-3. Raise `--type-base` and re-baseline every screen with the contrast, target
-   and density sweeps.
+| Token | Was | Now |
+| --- | --- | --- |
+| `--type-base` (body) | 13 | **16** |
+| `--type-base-plus` (body that is the row) | 13.5 | 16.5 |
+| `--type-md` (list rows) | 14 | 17 |
+| `--type-md-plus` (the name on a row you open) | 14.5 | 17.5 |
+| `--type-lg` (a card's title) | 15 | 18 |
+| `--type-display-xs` (an item title) | 17 | 19 |
+| inherited default on `body` and `.device` | 15 | 16 |
 
-Inputs on touch devices already have a 16px floor (see above).
+Every step above body moved with it so rows and titles stay larger than the
+body beside them; the order and every token's job are unchanged. From
+`--type-display-sm` (20) up nothing moved. Below body nothing moved either:
+the captions, labels and kickers are secondary text. The ported portal
+screens (`features.css`) set their own sizes, so their reading text — `p`,
+`dd`, `summary`, fields, buttons, Study Studio's labels — now reads
+`var(--type-base)` and their sub-headings `var(--type-lg)`; their captions
+and notices did not move. At Compact (0.94) body is about 15px; that setting
+is the reader choosing smaller type.
+
+How it was checked, since jsdom has no layout: every screen in the `Screen`
+union at 320px (the reflow width), 420px and 1280px, before and after, for
+sideways overflow, text clipped without an ellipsis, and overlapping tap
+targets. The two runs were identical — the change introduced none. The probe
+was checked first against a planted 580px overflow and a planted clipped
+label, which it found; its first run had measured nothing at all, because
+the dev server was serving stale bundles and no screen rendered, and a
+"no findings" from it would have been false. The one real finding it made —
+"About this screen" running under Mail's floating Compose button — was from
+this PR's own full-bleed work, not the type change, and is fixed: quiet links
+are as wide as their words.
+
+`styles/rules.ts` maps the new pixel values to the same names, so a size
+written longhand at 16, 16.5, 17, 17.5, 18 or 19 is reported as the token it
+is. Inputs on touch devices keep their own 16px floor (see above).

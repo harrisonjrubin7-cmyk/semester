@@ -16,7 +16,7 @@ phases below are sections of that PR. Nothing was deployed or merged.
 | --- | --- | --- | --- |
 | 0 — Audit and migration plan | `feature/design-audit-scorecard` | Scorecard with 37 components scored from evidence ([WCAG-UI-AUDIT-SCORECARD.md](WCAG-UI-AUDIT-SCORECARD.md)); this plan | Visual regression baseline (no snapshot tooling in the repo) |
 | 1 — Token foundation | `feature/design-token-foundation` | `styles/tokens.css`: surface, text, border, action, status, focus, target, duration, motion, layer, elevation, shape, layout, and card/bar/sheet component tokens; `styles/tokens.test.ts`; `.device :focus-visible` now reads `--focus-color`, `--focus-ring-offset`, `--focus-clear-*` | Existing rules still read primitives; z-index literals not migrated (below); brief's full component-token list |
-| 2 — Typography, light/dark, elevation, glass | `feature/typography-dark-mode` | Glass policy with person-preference fallbacks (`unity.css`, `styles/glass.test.ts`); elevation tokens; `.nums` | No palette change and no new dark mode (both existed and are measured); body stays 13px — open decision in [TYPOGRAPHY-SYSTEM.md](TYPOGRAPHY-SYSTEM.md#open-decision-body-size) |
+| 2 — Typography, light/dark, elevation, glass | `feature/typography-dark-mode` | Glass policy with person-preference fallbacks (`unity.css`, `styles/glass.test.ts`); elevation tokens; `.nums` | No palette change and no new dark mode (both existed and are measured); body raised to 16px with the reading tier above it — see [TYPOGRAPHY-SYSTEM.md](TYPOGRAPHY-SYSTEM.md#body-is-16px) |
 | 3 — Platform unity components | `feature/platform-unity-components` | `ContextBar`, `ObjectCard`, `SourceDrawer` + `lib/unity.ts`, `NextSteps`, `QuickCapture`, `lib/status.ts`, `Visibility`, `ScreenGuide` + `lib/explain.ts`, `OpenIn`; `UnityLayer` mounted in all three layouts. Placed: context bars on six surfaces, object cards in Career and University, Next on the deadline, Registration day and Close term | `OpenIn` passed by no placed card; `Visibility` only in Capture; Plan, Research, Data, Community and Advising not reached |
 | 4 — Hierarchy, onboarding, disclosure | `feature/information-hierarchy-progressive-disclosure` | `FirstGoal` + `lib/goals.ts`; `CommandCenter` + `lib/widgets.ts`; `LoadingState`, `ErrorState`, `SuccessState`, `PermissionNotice`, `OfflineStrip`; About this screen on every screen, as a sheet on the three that fill their box (`showExplain`, `.fill-with-guide`) | `OfflineStrip` has no queued count |
 | 5 — Interaction states and motion | `feature/micro-interaction-system` | `--motion-*` roles zeroed for reduced motion and the app's calm settings; `SaveState`, `SyncState`, `Progress`, `StepStatus`, all placed (see [EMPTY-LOADING-ERROR-SUCCESS-STATES.md](EMPTY-LOADING-ERROR-SUCCESS-STATES.md)); sheet entry animation; `.state-body` keeps line breaks | No per-item conflict UI (only `Adopting.tsx`) |
@@ -115,7 +115,6 @@ What is left, highest value and lowest risk first.
 
 ## Follow-ups that are decisions, not adoption
 
-- Body text at 13px against the brief's 16px ([TYPOGRAPHY-SYSTEM.md](TYPOGRAPHY-SYSTEM.md#open-decision-body-size)).
 - Bundling Atkinson Hyperlegible so that choice means the same on every device.
 - Visual regression snapshots (no tooling in the repository).
 - (Withdrawn.) An earlier version of this list said the assistant's panel draws

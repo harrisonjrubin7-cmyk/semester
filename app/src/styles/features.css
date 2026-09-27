@@ -22,15 +22,15 @@
 .portal-workspace :is(h2,h3,h4){font-family:Arial,sans-serif;letter-spacing:normal;text-transform:none;font-weight:500;color:var(--app-fg)}
 .portal-workspace h2{font-size:calc(30px * var(--text-scale, 1));line-height:1.25;margin:calc(8px * var(--density, 1)) 0 calc(12px * var(--density, 1))}
 .portal-workspace h3{font-size:calc(20px * var(--text-scale, 1));line-height:1.35;margin:calc(10px * var(--density, 1)) 0 calc(16px * var(--density, 1))}
-.portal-workspace h4{font-size:calc(15px * var(--text-scale, 1));margin:calc(16px * var(--density, 1)) 0 calc(10px * var(--density, 1))}
-.portal-workspace p{font-size:calc(14px * var(--text-scale, 1));line-height:1.65;margin:calc(8px * var(--density, 1)) 0 calc(16px * var(--density, 1))}
-.portal-workspace button, .portal-button{min-height:40px;border-radius:8px;padding:calc(9px * var(--density, 1)) calc(15px * var(--density, 1));background:var(--app-accent-wash);border:1px solid transparent;font-size:calc(14px * var(--text-scale, 1))!important;color:var(--app-accent-deep);font-family:Arial,sans-serif;letter-spacing:normal!important;text-transform:none!important;line-height:1.4}
+.portal-workspace h4{font-size:var(--type-lg);margin:calc(16px * var(--density, 1)) 0 calc(10px * var(--density, 1))}
+.portal-workspace p{font-size:var(--type-base);line-height:1.65;margin:calc(8px * var(--density, 1)) 0 calc(16px * var(--density, 1))}
+.portal-workspace button, .portal-button{min-height:40px;border-radius:8px;padding:calc(9px * var(--density, 1)) calc(15px * var(--density, 1));background:var(--app-accent-wash);border:1px solid transparent;font-size:var(--type-base)!important;color:var(--app-accent-deep);font-family:Arial,sans-serif;letter-spacing:normal!important;text-transform:none!important;line-height:1.4}
 .portal-workspace button:hover, .portal-button:hover{background:var(--app-accent-wash)}
 .portal-workspace button:disabled{opacity:.5;cursor:default}
 .portal-workspace button.portal-primary, .portal-workspace .portal-primary{background:var(--app-fg)!important;color:var(--app-bg)!important;padding:calc(11px * var(--density, 1)) calc(20px * var(--density, 1));border-radius:24px}
 .portal-primary:hover{filter:brightness(.96)}
 .portal-button{display:inline-flex;align-items:center;text-decoration:none}
-.portal-workspace input:not([type=checkbox]), .portal-workspace select, .portal-workspace textarea{min-height:42px;color:var(--app-fg);background:var(--app-panel);border:1px solid var(--app-accent-wash);border-radius:8px;font-family:Arial,sans-serif;font-size:calc(14px * var(--text-scale, 1));padding:calc(10px * var(--density, 1)) calc(12px * var(--density, 1));max-width:100%}
+.portal-workspace input:not([type=checkbox]), .portal-workspace select, .portal-workspace textarea{min-height:42px;color:var(--app-fg);background:var(--app-panel);border:1px solid var(--app-accent-wash);border-radius:8px;font-family:Arial,sans-serif;font-size:var(--type-base);padding:calc(10px * var(--density, 1)) calc(12px * var(--density, 1));max-width:100%}
 .portal-workspace input[type=checkbox]{width:18px;height:18px;accent-color:var(--app-accent);flex-shrink:0}
 .portal-banner{display:flex;justify-content:space-between;align-items:center;gap:calc(30px * var(--density, 1));background:linear-gradient(110deg,var(--app-accent-wash),var(--app-accent-wash));padding:calc(28px * var(--density, 1)) calc(30px * var(--density, 1));border-radius:22px;margin:calc(10px * var(--density, 1)) 0 calc(24px * var(--density, 1))}
 .portal-banner>div{min-width:0;max-width:720px}
@@ -63,7 +63,7 @@
 .portal-card-grid .portal-panel{margin:0}
 .portal-link-row{display:flex;justify-content:space-between;align-items:center;gap:calc(16px * var(--density, 1));width:100%;padding:calc(16px * var(--density, 1)) calc(5px * var(--density, 1))!important;border-bottom:1px solid var(--app-accent-wash)!important;border-radius:0!important;background:transparent!important;text-align:left}
 .portal-link-row small{display:block;color:var(--app-dim);font-size:calc(12px * var(--text-scale, 1));line-height:1.6;margin-top:calc(5px * var(--density, 1))}
-.portal-link-row strong{font-weight:500;color:var(--app-accent-deep);font-size:calc(15px * var(--text-scale, 1))}
+.portal-link-row strong{font-weight:500;color:var(--app-accent-deep);font-size:var(--type-lg)}
 .portal-tag{display:inline-block;background:var(--app-accent-wash);color:var(--app-accent);font-size:calc(12px * var(--text-scale, 1));border-radius:6px;padding:calc(5px * var(--density, 1)) calc(8px * var(--density, 1));line-height:1.3}
 .portal-empty{background:var(--app-panel);text-align:center;padding:calc(42px * var(--density, 1)) calc(25px * var(--density, 1));border:1px solid var(--app-accent-wash);border-radius:22px;margin:calc(20px * var(--density, 1)) 0}
 .portal-empty p{max-width:650px;margin:calc(10px * var(--density, 1)) auto calc(24px * var(--density, 1));color:var(--app-dim)}
@@ -71,9 +71,9 @@
 .portal-empty-icon{width:65px;height:65px;background:var(--app-accent-wash);color:var(--app-accent);font-size:calc(35px * var(--text-scale, 1));line-height:65px;border-radius:18px;margin:0 auto calc(22px * var(--density, 1))}
 .portal-empty h3{font-size:calc(23px * var(--text-scale, 1))}
 .portal-empty details{text-align:left;max-width:650px;margin:calc(20px * var(--density, 1)) auto 0}
-.portal-workspace summary{cursor:pointer;padding:calc(12px * var(--density, 1)) 0;min-height:40px;color:var(--app-accent);font-size:calc(14px * var(--text-scale, 1))}
+.portal-workspace summary{cursor:pointer;padding:calc(12px * var(--density, 1)) 0;min-height:40px;color:var(--app-accent);font-size:var(--type-base)}
 .portal-workspace dt{font-size:calc(12px * var(--text-scale, 1));color:var(--app-dim);margin:calc(20px * var(--density, 1)) 0 calc(5px * var(--density, 1))}
-.portal-workspace dd{font-size:calc(14px * var(--text-scale, 1));line-height:1.55;margin:0;color:var(--app-accent-deep);white-space:pre-wrap}
+.portal-workspace dd{font-size:var(--type-base);line-height:1.55;margin:0;color:var(--app-accent-deep);white-space:pre-wrap}
 .portal-workspace details p{white-space:pre-wrap}
 .portal-block{display:block;font-size:calc(12px * var(--text-scale, 1));color:var(--app-dim);margin-top:calc(5px * var(--density, 1))}
 .portal-warning{background:var(--app-warn-wash);border:1px solid var(--app-warn-line);color:var(--app-fg);padding:calc(12px * var(--density, 1)) calc(17px * var(--density, 1));border-radius:8px}
@@ -171,7 +171,7 @@
 .study-studio{background:var(--app-accent-wash);color:var(--app-fg);border-radius:20px;font-family:Arial,sans-serif}
 .study-studio-columns{display:grid;grid-template-columns:1fr 1fr;gap:calc(20px * var(--density, 1))}
 .study-studio fieldset{border:0;padding:0;margin:0;min-width:0}
-.study-studio label{font-size:calc(14px * var(--text-scale, 1))}
+.study-studio label{font-size:var(--type-base)}
 /* The ink follows the theme, so the paper has to as well: a literal white
    here put light text on a white field on every dark theme. */
 .study-studio input:not([type=checkbox]), .study-studio textarea, .study-studio select, .studio-course-picker select{color:var(--app-fg);background:var(--app-panel);border:1px solid var(--app-line);border-radius:8px;min-height:40px;padding:calc(8px * var(--density, 1));max-width:100%;box-sizing:border-box}
@@ -201,7 +201,7 @@
 .studio-section h4{font-size:calc(20px * var(--text-scale, 1));margin:0 0 calc(12px * var(--density, 1))}
 .studio-entry{display:flex;align-items:center;gap:calc(16px * var(--density, 1));padding:calc(20px * var(--density, 1));border-radius:16px;margin-bottom:calc(20px * var(--density, 1));border:1px solid var(--app-line)}
 .studio-entry>div{flex:1}
-.studio-entry p{font-size:calc(13px * var(--text-scale, 1));margin:calc(6px * var(--density, 1)) 0}
+.studio-entry p{font-size:var(--type-base);margin:calc(6px * var(--density, 1)) 0}
 .studio-course-picker{padding:calc(12px * var(--density, 1)) calc(28px * var(--density, 1))}
 .studio-course-picker label{display:flex;align-items:center;gap:calc(12px * var(--density, 1))}
 .study-studio>.portal-panel{margin-top:calc(20px * var(--density, 1))}
@@ -217,7 +217,7 @@
 .study-source-list>label{flex-wrap:wrap}
 }
 .study-source-list>label, .study-format-list>label{flex-shrink:0}
-.studio-entry>.portal-primary{background:var(--app-fg);color:var(--app-bg);border:0;border-radius:24px;padding:calc(12px * var(--density, 1)) calc(20px * var(--density, 1));min-height:44px;font-size:calc(14px * var(--text-scale, 1))}
+.studio-entry>.portal-primary{background:var(--app-fg);color:var(--app-bg);border:0;border-radius:24px;padding:calc(12px * var(--density, 1)) calc(20px * var(--density, 1));min-height:44px;font-size:var(--type-base)}
 /* One step down, for the tab that has a filled action of its own. Same place,
    same size, same words — `screens/Study.tsx` says why, and `wallsweep.mjs`
    is what noticed there were two. */
