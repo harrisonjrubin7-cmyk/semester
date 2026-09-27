@@ -128,6 +128,27 @@ export const CHARTERS: readonly ProductCharter[] = [
     owners: { product: 'Platform lead', engineering: 'Platform', support: 'Customer success' },
     killSwitch: 'kill.code_execution.', decision: 'build', route: 'pilot', reviewAt: '2026-12-15',
   },
+  {
+    flag: 'module.institutional_operations', name: 'Operations studio',
+    problem: 'Institutional research assembles lineage, suppressed exports and accreditation evidence by hand across spreadsheets, where a small cell or a per-student figure is one paste away from a slide.',
+    primaryUser: 'Institutional research analyst',
+    jobToBeDone: 'When I owe a governed figure or an evidence pack, I want suppressed aggregates that carry their own definitions and sources, so I can publish without a spreadsheet step or a per-student number.',
+    buyerAndAdoptionHypothesis: 'Provost and institutional research office; adopted if one pilot school produces an accreditation or board export in the studio instead of a spreadsheet.',
+    successMetrics: {
+      behavior: 'Analysts open the studio for export and evidence tasks during the pilot term.',
+      workflow: 'A suppressed, lineage-labelled export is produced without a spreadsheet step.',
+      institutional: 'No export contains a cell under MIN_COHORT or a per-student figure; sensitive reports ship only after a second reviewer approves.',
+    },
+    nonGoals: ['Per-student reporting or lookup', 'Risk, attention, wellbeing or other FORBIDDEN measures', 'Editing source records'],
+    sourceDependency: 'Outcome and course-demand aggregates (n ≥ 10, enforced by database constraints), the data dictionary and lineage in lib/institution-ops.ts.',
+    fallback: 'The institution’s existing IR spreadsheets and reporting runbook.',
+    classification: 'T3',
+    accessibilityAcceptance: 'Keyboard-complete; tables have headers and a text summary; suppression and status are said in words, never by colour alone.',
+    costModel: 'Read-only aggregate queries; drafts stay on the analyst’s device; no AI or media cost.',
+    owners: { product: 'Institutional research product lead', engineering: 'Institutional engineering', support: 'Customer success' },
+    killSwitch: 'Tenant policy row off; drafts are device-only, so nothing server-side to undo.',
+    decision: 'build', route: 'module', reviewAt: '2026-12-15',
+  },
 ];
 
 /** Structural faults in a charter; empty means it may be admitted. `today` is an ISO date. */
