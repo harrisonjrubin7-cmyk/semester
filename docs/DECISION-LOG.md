@@ -378,3 +378,37 @@ school-scoped read policy, the pack staying in its course, and the uses list.
 The suite failed every time.
 
 **Applying the migration to production needs owner approval.**
+
+## D-102 · Course Studio slice 2: the instructor outranks the student's note, and Study Studio uses the same engine
+
+**Decided 27 Sep 2026, building slice 2 of D-100.** This is the student's side.
+
+- **Instructor rules are a layer.** Published rules become
+  `fromInstructor()`, a `course`-layer `PolicySource` with
+  `by: 'instructor'`, the publish date and the instructor's own words and
+  link.
+- **Authority within a layer.** `resolve()` now asks the sources in one layer
+  in order of authority (instructor, then institution, then the student's
+  record). Each source answers with the rule naming that use, or else its
+  blanket. So an instructor's blanket beats a student's named note, and the
+  student's note decides only what the instructor left unsaid.
+- **F3 floor.** A blanket "allowed" is never read as permitting
+  `final-answers`, exactly as `fromCourse` already did.
+- **Study Studio moves onto `resolve()`.** A guide both explains material and
+  asks practice questions, so `explanation` and `practice` must both be
+  permitted:
+  - either prohibited → blocked, with the source named;
+  - either unknown → the existing "I checked the policy" confirmation;
+  - either allowed with disclosure → a disclosure acknowledgement.
+  The prompt gets what each use resolved to, and on whose word, instead of the
+  raw stance.
+- **Nothing changes until something is published.** With nothing published
+  (or the module off, or signed out, or a failed read), everything behaves
+  exactly as before. The student's own note is all there is.
+- **Guidance shows** in Study Studio as "From your instructor · published
+  <date>".
+- **Flag.** `course_studio` (`VITE_COURSE_STUDIO`) is a module flag, off by
+  default (F6), registered in `experience-flags.ts`, the Pages workflow and
+  `SECRETS.md`. Off, nothing published is read.
+- **Account deletion.** The three tables are `KEPT_TABLES` with their reasons:
+  they are course policy the class relies on, and students only read them.

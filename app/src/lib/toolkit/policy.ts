@@ -105,14 +105,58 @@ export function fromCourse(policy: CoursePolicy | undefined): PolicySource | und
   };
 }
 
+/**
+ * A course's rules as its instructor published them in Course Studio
+ * (`course_ai_rules`, D-101). Same floor as `fromCourse`: a blanket "allowed"
+ * is never read as permitting a final answer to an assessment — only a rule
+ * that names `final-answers` does, and Course Studio asks the instructor to
+ * confirm that one by name (F3). Rules that say nothing produce no layer.
+ */
+export interface InstructorRules {
+  blanket: Exclude<UseState, 'unavailable'> | null;
+  uses: Partial<Record<Use, Exclude<UseState, 'unavailable'>>>;
+  words: string;
+  link: string;
+  /** `YYYY-MM-DD`, or '' when the instructor gave none. */
+  effective: string;
+  /** `YYYY-MM-DD` the version was published. */
+  published: string;
+}
+
+export function fromInstructor(rules: InstructorRules | undefined): PolicySource | undefined {
+  if (!rules) return undefined;
+  const named = Object.keys(rules.uses).length > 0;
+  if (!rules.blanket && !named) return undefined;
+  const uses = { ...rules.uses };
+  if (rules.blanket && rules.blanket !== 'prohibited' && !uses['final-answers']) uses['final-answers'] = 'prohibited';
+  return {
+    layer: 'course',
+    link: rules.link,
+    text: rules.words,
+    effective: rules.effective,
+    lastVerified: rules.published,
+    by: 'instructor',
+    blanket: rules.blanket ?? undefined,
+    uses,
+  };
+}
+
+/** Who outranks whom within one layer: the instructor's word over the student's own note. */
+const AUTHORITY: Record<PolicySource['by'], number> = { instructor: 0, institution: 1, 'student-record': 2 };
+
 export function resolve(use: Use, layers: readonly (PolicySource | undefined)[]): Resolved {
   const present = layers.filter((l): l is PolicySource => !!l);
   for (const layer of PRECEDENCE) {
-    const at = present.filter((p) => p.layer === layer);
-    const named = at.find((p) => p.uses?.[use]);
-    if (named) return { use, state: named.uses![use]!, from: named };
-    const blanket = at.find((p) => p.blanket);
-    if (blanket) return { use, state: blanket.blanket!, from: blanket };
+    // Within a layer, sources are asked in order of authority, and each
+    // answers with a rule naming the use or else its blanket. So an
+    // instructor's blanket beats a student's named rule, and the student's
+    // note decides only what the instructor left unsaid.
+    const at = present.filter((p) => p.layer === layer).sort((a, b) => AUTHORITY[a.by] - AUTHORITY[b.by]);
+    for (const p of at) {
+      const named = p.uses?.[use];
+      if (named) return { use, state: named, from: p };
+      if (p.blanket) return { use, state: p.blanket, from: p };
+    }
   }
   return { use, state: 'unavailable' };
 }

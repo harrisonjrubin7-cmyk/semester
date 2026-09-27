@@ -75,6 +75,10 @@ export const MODULE_FLAG_ENV = {
   semester_wrapped: 'VITE_SEMESTER_WRAPPED',
   offline_mode: 'VITE_OFFLINE_MODE',
   trust_center: 'VITE_TRUST_CENTER',
+  // Faculty Course Studio (docs/FACULTY-COURSE-STUDIO-DESIGN.md, D-100 F6):
+  // the studio for faculty and, for students, the instructor's published rules
+  // and guidance. Off, nothing published is read.
+  course_studio: 'VITE_COURSE_STUDIO',
 } as const;
 
 export type ModuleFlag = keyof typeof MODULE_FLAG_ENV;

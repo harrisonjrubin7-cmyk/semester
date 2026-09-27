@@ -249,3 +249,5 @@
 .regday-checklist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:calc(10px * var(--density, 1))}
 .regday-course ol{margin:calc(8px * var(--density, 1)) 0;padding-inline-start:calc(20px * var(--density, 1));display:flex;flex-direction:column;gap:calc(6px * var(--density, 1))}
 .regday-course li{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:calc(8px * var(--density, 1))}
+.studio-guidance{border-inline-start:2px solid var(--app-line);padding-inline-start:var(--sp-3);margin-block:var(--sp-3)}
+.studio-guidance p{margin:var(--sp-2) 0 0;white-space:pre-wrap}

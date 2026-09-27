@@ -110,6 +110,22 @@ it('labels a recorded policy as the student’s own record and lists final answe
   expect(host.textContent).toContain('Generating final answers for an assessment');
 });
 
+it('shows rules the instructor published as theirs, over the student’s own record (Course Studio)', () => {
+  const published = {
+    'PSCI 1104': {
+      rules: { blanket: 'prohibited' as const, uses: { practice: 'allowed' as const }, words: 'No AI on papers; practice quizzes are fine.', link: 'https://example.edu/psci1104', effective: '2026-08-24', published: '2026-09-01' },
+      packs: [],
+    },
+  };
+  act(() => root.render(<Toolkit courses={COURSES} flags={ALL_ON} published={published} now={new Date('2026-09-27T12:00:00')} onOpen={() => {}} onClose={() => {}} />));
+  tab('AI-use policy');
+  expect(host.textContent).toContain('Set by your instructor · published 2026-09-01 · in effect from 2026-08-24.');
+  expect(host.textContent).toContain('“No AI on papers; practice quizzes are fine.”');
+  expect((host.querySelector('a[href="https://example.edu/psci1104"]') as HTMLAnchorElement)?.rel).toContain('noopener');
+  expect(host.textContent).toContain('Practice questions and flashcards');
+  expect(host.textContent).not.toContain('Policy unavailable');
+});
+
 it('will not mark a stage done until the student writes their own note', () => {
   mount();
   tab('Assignments');
