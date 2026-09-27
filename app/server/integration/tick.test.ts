@@ -321,10 +321,18 @@ describe('the job that calls it', () => {
     expect(scheduler).toMatch(/jobname = 'integration-sync'\),\s*active := false/);
   });
 
-  it('reads its token and its address from Vault, and bakes in neither', () => {
-    const body = scheduler.slice(scheduler.indexOf("'integration-sync'"));
-    expect(body).toContain("where name = 'integration_tick_url'");
+  it('calls this project’s integration-tick function, with the token from Vault and nowhere else', () => {
+    const job = scheduler.slice(scheduler.indexOf("'integration-sync'"));
+    const body = job.slice(0, job.indexOf('$job$;'));
+    // The same project `push` calls, so the two cannot drift to different hosts.
+    const host = /https:\/\/([a-z0-9]+)\.supabase\.co\/functions\/v1\/push/.exec(scheduler)?.[1];
+    expect(host, 'scheduler.sql no longer names the project in the push job').toBeTruthy();
+    expect(body).toContain(`url := 'https://${host}.supabase.co/functions/v1/integration-tick'`);
     expect(body).toContain("where name = 'integration_cron_secret'");
-    expect(body.slice(0, body.indexOf('$job$;'))).not.toMatch(/https?:\/\//);
+    expect(body).not.toMatch(/Bearer [A-Za-z0-9_-]{20,}/);
+    // The function is a real directory, declared for deploy.
+    const root = join(process.cwd(), '..', 'supabase');
+    expect(readFileSync(join(root, 'functions', 'integration-tick', 'index.ts'), 'utf8')).toContain('serveTick');
+    expect(readFileSync(join(root, 'config.toml'), 'utf8')).toMatch(/\[functions\.integration-tick\]\s*verify_jwt = false/);
   });
 });

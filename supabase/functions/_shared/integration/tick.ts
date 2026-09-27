@@ -1,3 +1,6 @@
+// Generated from app/server/integration/tick.ts by app/scripts/edge-integration.ts. Do not edit;
+// change the source and run `cd app && node scripts/edge-integration.ts`.
+
 /**
  * The scheduler's tick: which connections are due, and one `runSync` for each.
  *
@@ -34,11 +37,11 @@
  * same connection twice. Nothing is ingested twice: the second batch carries
  * the same idempotency key and `runSync` records it as a duplicate.
  */
-import type { SupabaseClient } from '@supabase/supabase-js';
-import type { AdapterDeclaration } from '../../src/lib/integration/adapter.ts';
-import type { ConnectionStatus } from '../../src/lib/integration/catalog.ts';
-import type { ProviderBatch } from '../../src/lib/integration/pipeline.ts';
-import { DEFAULT_RETRY } from '../../src/lib/integration/retry.ts';
+import type { SupabaseClient } from 'jsr:@supabase/supabase-js@2';
+import type { AdapterDeclaration } from './adapter.ts';
+import type { ConnectionStatus } from './catalog.ts';
+import type { ProviderBatch } from './pipeline.ts';
+import { DEFAULT_RETRY } from './retry.ts';
 import { runSync, type SyncReport } from './worker.ts';
 
 /** The pg_cron job's cadence, in minutes. `scheduler.sql` must agree. */

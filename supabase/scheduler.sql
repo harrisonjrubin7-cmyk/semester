@@ -272,20 +272,17 @@ select cron.schedule(
 
 -- ── Integrations: the sync tick ───────────────────────────────────────────
 --
--- Every fifteen minutes, pg_net calls the Vercel function
--- `app/api/integration/tick.ts`, which pulls each approved connection that is
--- due (`app/server/integration/tick.ts`) and runs any replay an operator has
+-- Every fifteen minutes, pg_net calls the `integration-tick` Edge Function,
+-- which pulls each approved connection that is due
+-- (`app/server/integration/tick.ts`) and runs any replay an operator has
 -- requested. `TICK_MINUTES` there must agree with this cadence. Offset seven
 -- minutes from `push` so the two are never in flight together.
 --
--- Two values, both in Vault so that neither is baked into this file:
---
---   * `integration_cron_secret`, generated below like `push_cron_secret`. The
---     function's `INTEGRATION_CRON_SECRET` environment variable must equal it.
---   * `integration_tick_url`, the deployment's full URL for the function —
---     `https://<production host>/api/integration/tick`. Created by the
---     operator when unparking (INTEGRATION-OPERATOR-RUNBOOK.md §4), because
---     the production host is not recorded anywhere in this repository.
+-- The bearer token is `integration_cron_secret`, generated below like
+-- `push_cron_secret`. Unlike `push` it is not also set on the function: the
+-- function asks the database whether a token matches
+-- (`public.integration_tick_authorized`), so Vault is its only home and
+-- rotating it is one update to one row.
 --
 -- Nothing runs even when unparked until an adapter is registered in
 -- `app/server/integration/registry.ts`, which is empty; each tick then answers
@@ -296,7 +293,7 @@ begin
     perform vault.create_secret(
       translate(encode(gen_random_bytes(32), 'base64'), '+/=', '-_'),
       'integration_cron_secret',
-      'Bearer token the integration-sync pg_cron job sends to /api/integration/tick. Must equal the Vercel function''s INTEGRATION_CRON_SECRET.',
+      'Bearer token the integration-sync pg_cron job sends to the integration-tick Edge Function, which checks it against this row.',
       null
     );
   end if;
@@ -307,7 +304,7 @@ select cron.schedule(
   '7,22,37,52 * * * *',
   $job$
     select net.http_post(
-      url := (select decrypted_secret from vault.decrypted_secrets where name = 'integration_tick_url'),
+      url := 'https://lzrqvlugnawcgywkhqlz.supabase.co/functions/v1/integration-tick',
       headers := jsonb_build_object(
         'Content-Type', 'application/json',
         'Authorization', 'Bearer ' || (
@@ -320,8 +317,9 @@ select cron.schedule(
   $job$
 );
 
--- Parked, for the reason `push` is: until the function has its secret and
--- Vault has its URL, every run would fail about a half-finished deploy.
+-- Parked, for the reason `push` is: until the function is deployed and the
+-- token check exists, every run would fail about a half-finished deploy.
+-- INTEGRATION-OPERATOR-RUNBOOK.md §4 has the one statement that unparks it.
 select cron.alter_job(
   (select jobid from cron.job where jobname = 'integration-sync'),
   active := false

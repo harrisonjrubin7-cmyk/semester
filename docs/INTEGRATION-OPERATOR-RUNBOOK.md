@@ -70,7 +70,7 @@ dead letter.
 | Job | When | Does | State |
 | --- | --- | --- | --- |
 | `integration-retention` | daily 03:29 UTC | `integration_retention_sweep()` (§8) | active |
-| `integration-sync` | :07, :22, :37, :52 | POSTs to `/api/integration/tick` | **parked** |
+| `integration-sync` | :07, :22, :37, :52 | POSTs to the `integration-tick` Edge Function | **parked** |
 
 The tick (`app/server/integration/tick.ts`) first runs replays an operator requested (§5). It then runs `runSync` for each
 connection that meets all of these:
@@ -89,17 +89,27 @@ one connection's many requests cannot crowd out another's. Every other rule is
 still `runSync`'s. The registry is empty, so until an adapter is added a tick runs nothing and reports every
 connection as unregistered.
 
-**Unparking `integration-sync`** (all four steps, in order):
+**Unparking `integration-sync`.** The function and the token check both deploy on merge, and the token lives only in
+Vault, so there is nothing to set by hand. Before unparking, confirm the function answers the job's own request —
+this sends exactly what the job sends:
 
-1. Read the generated token once: `select decrypted_secret from vault.decrypted_secrets where name = 'integration_cron_secret';`
-2. On the Vercel project, set `INTEGRATION_CRON_SECRET` to it. `SEMESTER_AUTH_URL` and `SEMESTER_AUTH_SERVICE_KEY` must
-   already be set. Redeploy. Until all three are set, the endpoint answers 503.
-3. Store the address: `select vault.create_secret('https://<production host>/api/integration/tick', 'integration_tick_url', 'Where integration-sync posts', null);`
-4. `select cron.alter_job((select jobid from cron.job where jobname = 'integration-sync'), active := true);`
+```sql
+select net.http_post(
+  url := 'https://lzrqvlugnawcgywkhqlz.supabase.co/functions/v1/integration-tick',
+  headers := jsonb_build_object('Content-Type', 'application/json', 'Authorization',
+    'Bearer ' || (select decrypted_secret from vault.decrypted_secrets where name = 'integration_cron_secret')),
+  body := '{}'::jsonb, timeout_milliseconds := 60000);
+-- then, a few seconds later:
+select status_code, content from net._http_response order by created desc limit 1;
+```
 
-Check the result in `cron.job_run_details` and `net._http_response`: a healthy tick answers 200 with counts only. Re-running
-`scheduler.sql` parks the job again, as it does `push`. To rotate the token, update the Vault secret and the Vercel
-variable together; in between, every tick answers 401.
+A 200 with a JSON body of counts means it is ready: `select cron.alter_job((select jobid from cron.job where jobname =
+'integration-sync'), active := true);`. A 401 means the token check refused the Vault token; a 503 means the function
+cannot reach its token check (`public.integration_tick_authorized`, from `20260928011000_integration_tick_auth.sql`).
+
+Watch it in `cron.job_run_details` and `net._http_response`. Re-running `scheduler.sql` parks the job again, as it does
+`push`. To rotate the token, update the `integration_cron_secret` row in Vault; the next tick uses the new value on
+both ends.
 
 After a full pull, reconcile: `reconcile(serviceClient, { connectionPublicId, adapter, canonicalEntity, providerIds,
 runId })` marks what the source deleted (values cleared, row kept 30 days as evidence) and warns about what the
