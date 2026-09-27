@@ -145,5 +145,17 @@ set by hand, and `production` is refused for them.
 | scopedPseudonymity | `VITE_SCOPED_PSEUDONYMITY` | **yes** | off | Community-only aliases |
 | accountSafetyState | `VITE_ACCOUNT_SAFETY_STATE` | **yes** | off | Private staff-only 0–100 state |
 
+**Server-side switches.** A build flag hides a screen, but it cannot stop a
+client that ignores it. Scoped pseudonymity and volunteer moderation are
+therefore also gated in the database:
+
+- Each has a `community_programs` row per university.
+- A program is off unless its row is present and `enabled`.
+- Only the service role can write a row, so switching a program on is a
+  reviewed deployment step.
+- Every alias and volunteer function checks the row.
+- Switching a program off stops alias posts and volunteer queues on the next
+  call.
+
 **Rollback.** Unset the variable, or set it to `off`. Nothing persists
 because a flag was on: the domain functions refuse at call time.

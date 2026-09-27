@@ -460,6 +460,7 @@ function CommunityView({
             <li key={post.id} className="portal-panel" style={{ display: 'grid', gap: 'var(--sp-2)' }}>
               <span>
                 <strong>{post.authorName}</strong>
+                {post.asAlias && <span style={{ color: 'var(--app-dim)' }}> · pseudonym</span>}
                 <span style={{ color: 'var(--app-dim)' }}> · {ago(post.createdAt)}{post.editedAt ? ' · edited' : ''}</span>
               </span>
               <span className="pill-soft" style={{ justifySelf: 'start' }}>{labelText(post.label)}</span>

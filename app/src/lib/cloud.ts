@@ -988,6 +988,10 @@ export const OWNED_TABLES: OwnedTable[] = [
   // `community_cases` below. `community.check.sql` walks it.
   { table: 'community_posts', column: null, via: 'forget_my_community' },
   { table: 'community_sessions', column: null, via: 'forget_my_community' },
+  // A member's aliases and volunteer record go in the same call. Neither is
+  // written by this client; both are about the account, so both go with it.
+  { table: 'community_aliases', column: null, via: 'forget_my_community' },
+  { table: 'community_volunteers', column: null, via: 'forget_my_community' },
   { table: 'community_session_participants', column: 'user_id' },
   { table: 'community_mutes', column: 'user_id' },
   { table: 'community_members', column: 'user_id' },

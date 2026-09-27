@@ -35,6 +35,8 @@ export interface PostRow {
   body: string;
   label: SourceLabel;
   status: PostStatus;
+  /** Posted under a community alias. */
+  asAlias: boolean;
   createdAt: string;
   editedAt: string | null;
   mine: boolean;
@@ -133,7 +135,7 @@ export async function loadPosts(communityId: string): Promise<{ posts: PostRow[]
     await Promise.all([
       db
         .from('community_posts')
-        .select('id, community_id, author_ref, author_name, body, label, status, created_at, edited_at')
+        .select('id, community_id, author_ref, author_name, body, label, status, as_alias, created_at, edited_at')
         .eq('community_id', communityId)
         .neq('status', 'withdrawn')
         .order('created_at', { ascending: false })
@@ -155,6 +157,7 @@ export async function loadPosts(communityId: string): Promise<{ posts: PostRow[]
       body: str(r.body),
       label: str(r.label) as SourceLabel,
       status: str(r.status) as PostStatus,
+      asAlias: Boolean(r.as_alias),
       createdAt: str(r.created_at),
       editedAt: r.edited_at ? str(r.edited_at) : null,
       mine: myRef !== null && str(r.author_ref) === myRef,

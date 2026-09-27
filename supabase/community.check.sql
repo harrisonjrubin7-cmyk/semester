@@ -577,4 +577,352 @@ begin
                and body <> 'His schedule is on the board outside 214'$q$, grp)), 0);
 end $$;
 
+-- ═══ Scoped pseudonyms and volunteer moderation ═══════════════════════════
+
+/*
+ * Work a volunteer's queue: fetch tasks and answer each one, `right` or
+ * wrong on purpose for calibration items (the harness can see the expected
+ * answer; the volunteer cannot), and `on_cases` for real cases. Stops after
+ * `n` answers. Returns how many it answered.
+ */
+create or replace function pg_temp.work(who uuid, n int, right_answers int, on_cases text default 'remove')
+returns int language plpgsql as $$
+declare
+  done int := 0;
+  ids uuid[];
+  task uuid;
+  expected text;
+  answer text;
+begin
+  loop
+    exit when done >= n;
+    perform pg_temp.become(who);
+    select array_agg(x.task_id order by x.task_id) into ids from public.volunteer_next_tasks() x;
+    execute 'reset role';
+    exit when ids is null;
+    foreach task in array ids loop
+      exit when done >= n;
+      expected := null;
+      select i.expected_action into expected
+        from public.community_volunteer_tasks t join public.community_calibration_items i on i.id = t.item_id
+       where t.id = task;
+      if expected is null then
+        answer := on_cases;
+      elsif done < right_answers then
+        answer := expected;
+      else
+        answer := case when expected = 'remove' then 'allow' else 'remove' end;
+      end if;
+      perform pg_temp.become(who);
+      perform public.volunteer_decide(task, answer, 'calibration.check');
+      execute 'reset role';
+      done := done + 1;
+    end loop;
+  end loop;
+  return done;
+end $$;
+
+do $$
+declare
+  ana uuid; ben uuid; cal uuid; fox uuid; mgr uuid; rev uuid; senior uuid;
+  v1 uuid; v2 uuid; v3 uuid; young uuid;
+  sup uuid; grp uuid; crs uuid; p uuid; q uuid; spam uuid; minor uuid; harsh uuid; own uuid;
+  n bigint; t text; t2 text; i int; tasks jsonb;
+begin
+  insert into public.schools (id, name, email_domains) values ('pv-u', 'Programme University', array['pv-u.example']);
+  ana    := pg_temp.newuser('ana@pv-u.example', 'pv-u');
+  ben    := pg_temp.newuser('ben@pv-u.example', 'pv-u');
+  cal    := pg_temp.newuser('cal@pv-u.example', 'pv-u');
+  fox    := pg_temp.newuser('quietfox@pv-u.example', 'pv-u');
+  mgr    := pg_temp.newuser('mgr@pv-u.example', 'pv-u');
+  v1     := pg_temp.newuser('v1@pv-u.example', 'pv-u');
+  v2     := pg_temp.newuser('v2@pv-u.example', 'pv-u');
+  v3     := pg_temp.newuser('v3@pv-u.example', 'pv-u');
+  young  := pg_temp.newuser('young@pv-u.example', 'pv-u');
+  rev    := pg_temp.newuser('rev@semester.example', null);
+  senior := pg_temp.newuser('senior2@semester.example', null);
+  insert into public.role_grants (subject, role, scope_kind, scope_id, provenance) values
+    (mgr,    'community_manager',     'school',   'pv-u', 'institution'),
+    (rev,    'trust_safety_reviewer', 'platform', '',     'platform'),
+    (senior, 'trust_safety_senior',   'platform', '',     'platform');
+
+  -- ── Aliases: off until the programme is on ─────────────────────────────
+  perform pg_temp.expect_allowed('a manager starts a support community', mgr,
+    $q$select public.create_community('support', 'First-gen at PV', 'Support', '')$q$);
+  perform pg_temp.expect_allowed('ana starts a study group', ana,
+    $q$select public.create_community('study_group', 'PV macro group', 'Problem sets', '')$q$);
+  perform pg_temp.expect_allowed('the manager starts a course community', mgr,
+    $q$select public.create_community('course', 'PV ECON 1010', 'Course', '')$q$);
+  select id into sup from public.communities where name = 'First-gen at PV';
+  select id into grp from public.communities where name = 'PV macro group';
+  select id into crs from public.communities where name = 'PV ECON 1010';
+  perform pg_temp.expect_refused('pseudonyms cannot be approved while the programme is off', mgr,
+    format('select public.approve_community_pseudonymity(%L, true)', sup));
+  perform pg_temp.expect_refused('nobody signed in can switch a programme on', senior,
+    $q$insert into public.community_programs (tenant_id, program, enabled) values ('pv-u', 'scoped_pseudonymity', true)$q$);
+  perform pg_temp.expect_refused('not even a manager at that school', mgr,
+    $q$insert into public.community_programs (tenant_id, program, enabled) values ('pv-u', 'scoped_pseudonymity', true)$q$);
+
+  -- The service role, as a reviewed deployment step.
+  insert into public.community_programs (tenant_id, program, enabled, approved_ref)
+  values ('pv-u', 'scoped_pseudonymity', true, 'check');
+
+  perform pg_temp.expect_refused('a student cannot approve pseudonyms', ana,
+    format('select public.approve_community_pseudonymity(%L, true)', grp));
+  perform pg_temp.expect_refused('a course community cannot have them', mgr,
+    format('select public.approve_community_pseudonymity(%L, true)', crs));
+  perform pg_temp.expect_allowed('the manager approves them in the support community', mgr,
+    format('select public.approve_community_pseudonymity(%L, true)', sup));
+  perform pg_temp.expect_allowed('and in the study group', mgr,
+    format('select public.approve_community_pseudonymity(%L, true)', grp));
+
+  perform pg_temp.expect_allowed('ana joins the support community', ana, format('select public.join_community(%L)', sup));
+  perform pg_temp.expect_allowed('ben joins it', ben, format('select public.join_community(%L)', sup));
+  perform pg_temp.expect_allowed('ben joins the study group', ben, format('select public.join_community(%L)', grp));
+  perform pg_temp.expect_allowed('cal joins the study group', cal, format('select public.join_community(%L)', grp));
+  perform pg_temp.expect_allowed('ben joins the course', ben, format('select public.join_community(%L)', crs));
+  perform pg_temp.expect_allowed('cal joins the course', cal, format('select public.join_community(%L)', crs));
+  perform pg_temp.expect_refused('no alias in a community that has not approved them', ben,
+    format($q$select public.claim_community_alias(%L, 'Pathfinder2')$q$, crs));
+
+  perform pg_temp.expect_allowed('ana takes an alias', ana,
+    format($q$select public.claim_community_alias(%L, 'Navigator1')$q$, sup));
+  perform pg_temp.expect_refused('ben cannot take it in another case', ben,
+    format($q$select public.claim_community_alias(%L, 'navigator1')$q$, sup));
+  perform pg_temp.expect_refused('or a member''s handle', ben,
+    format($q$select public.claim_community_alias(%L, 'QuietFox')$q$, sup));
+  perform pg_temp.expect_refused('or something that is not a name', ben,
+    format($q$select public.claim_community_alias(%L, 'x')$q$, sup));
+  perform pg_temp.expect_allowed('ben takes his own', ben,
+    format($q$select public.claim_community_alias(%L, 'Lantern7')$q$, sup));
+  perform pg_temp.counted('ben reads only his own alias', pg_temp.seen(ben, 'select name from public.community_aliases'), 1);
+  perform pg_temp.expect_refused('nobody inserts an alias directly', ben,
+    format($q$insert into public.community_aliases (community_id, user_id, name) values (%L, %L, 'Sneaky9')$q$, grp, ben));
+
+  -- Posting under an alias.
+  perform pg_temp.expect_allowed('ana posts under her name', ana,
+    format($q$select public.create_community_post(%L, 'Named post from ana')$q$, sup));
+  perform pg_temp.expect_allowed('and under her alias', ana,
+    format($q$select public.create_community_post(%L, 'Alias post from ana', false, true)$q$, sup));
+  select author_ref into t from public.community_posts where body = 'Named post from ana';
+  select author_ref into t2 from public.community_posts where body = 'Alias post from ana';
+  if t = t2 then raise exception 'FAILED: an alias post shares a ref with its author''s named posts'; end if;
+  raise notice 'ok  an alias post cannot be joined to its author''s named posts';
+  select author_name || '/' || as_alias into t from public.community_posts where body = 'Alias post from ana';
+  perform pg_temp.said('it shows the alias, marked as one', t, 'Navigator1/true');
+  perform pg_temp.counted('ana''s own refs mark both posts as hers', pg_temp.seen(ana,
+    format($q$select p.id from public.community_posts p join public.my_community_refs() r
+               on r.community_id = p.community_id and r.author_ref = p.author_ref where p.community_id = %L$q$, sup)), 2);
+  perform pg_temp.expect_refused('no alias post where you have no alias', ben,
+    format($q$select public.create_community_post(%L, 'x', false, true)$q$, grp));
+
+  -- Aliases post at three an hour, where names post at ten.
+  perform pg_temp.expect_allowed('cal takes an alias in the study group', cal,
+    format($q$select public.claim_community_alias(%L, 'Owl4ever')$q$, grp));
+  for i in 1..3 loop
+    perform pg_temp.expect_allowed('cal posts under the alias', cal,
+      format($q$select public.create_community_post(%L, %L, false, true)$q$, grp, 'alias ' || i));
+  end loop;
+  perform pg_temp.expect_refused('a fourth alias post in an hour', cal,
+    format($q$select public.create_community_post(%L, 'alias 4', false, true)$q$, grp));
+  perform pg_temp.expect_allowed('while a named post is still within its limit', cal,
+    format($q$select public.create_community_post(%L, 'named 1')$q$, grp));
+
+  -- Blocking an alias mutes it here instead of blocking the account.
+  select id into p from public.community_posts where body = 'Alias post from ana';
+  perform pg_temp.expect_allowed('ben blocks the alias', ben, format('select public.block_community_author(%L)', p));
+  select count(*) into n from public.blocks where user_id = ben;
+  perform pg_temp.counted('no account block is written, which would unmask her', n, 0);
+  select count(*) into n from public.community_mutes where user_id = ben and community_id = sup;
+  perform pg_temp.counted('the alias is muted in that community', n, 1);
+  perform pg_temp.counted('and ben still sees her named post', pg_temp.seen(ben,
+    $q$select id from public.community_posts where body = 'Named post from ana'$q$), 1);
+
+  -- Rotation.
+  perform pg_temp.expect_refused('an alias cannot change twice in a day', ana,
+    format($q$select public.claim_community_alias(%L, 'Wayfinder3')$q$, sup));
+  update public.community_aliases set created_at = now() - interval '2 days' where user_id = ana;
+  perform pg_temp.expect_allowed('a day later it can', ana,
+    format($q$select public.claim_community_alias(%L, 'Wayfinder3')$q$, sup));
+  perform pg_temp.expect_allowed('ana posts under the new alias', ana,
+    format($q$select public.create_community_post(%L, 'New alias post', false, true)$q$, sup));
+  select author_ref into t from public.community_posts where body = 'New alias post';
+  if t = t2 then raise exception 'FAILED: a rotated alias kept its ref'; end if;
+  raise notice 'ok  a new alias is a new ref';
+  select id into q from public.community_posts where body = 'New alias post';
+  perform pg_temp.expect_allowed('ben reports the new alias post', ben,
+    format($q$select public.report_community_post(%L, 'other')$q$, q));
+  update public.community_aliases set rotated_at = now() - interval '2 days' where user_id = ana;
+  perform pg_temp.expect_refused('while a case on her posts is open, the name is kept', ana,
+    format($q$select public.claim_community_alias(%L, 'Compass5')$q$, sup));
+
+  update public.community_programs set enabled = false where tenant_id = 'pv-u' and program = 'scoped_pseudonymity';
+  perform pg_temp.expect_refused('switching the programme off stops alias posts at once', ben,
+    format($q$select public.create_community_post(%L, 'after', false, true)$q$, sup));
+  perform pg_temp.expect_allowed('while named posts carry on', ben,
+    format($q$select public.create_community_post(%L, 'named after')$q$, sup));
+
+  -- ── Volunteers: off until the programme is on ──────────────────────────
+  update auth.users set created_at = now() - interval '60 days' where id in (v1, v2, v3);
+  perform pg_temp.expect_refused('nobody can volunteer while the programme is off', v1, 'select public.apply_to_volunteer()');
+  insert into public.community_programs (tenant_id, program, enabled, approved_ref)
+  values ('pv-u', 'volunteer_moderation', true, 'check');
+
+  perform pg_temp.expect_refused('an account under 30 days old cannot volunteer', young, 'select public.apply_to_volunteer()');
+  insert into public.community_restrictions (user_id, community_id, case_id, until)
+  values (v3, null, gen_random_uuid(), now() + interval '1 day');
+  perform pg_temp.expect_refused('nor can a restricted one', v3, 'select public.apply_to_volunteer()');
+  update public.community_restrictions set lifted_at = now() where user_id = v3;
+  perform pg_temp.expect_allowed('v1 applies', v1, 'select public.apply_to_volunteer()');
+  perform pg_temp.expect_refused('once', v1, 'select public.apply_to_volunteer()');
+  perform pg_temp.expect_allowed('v2 applies', v2, 'select public.apply_to_volunteer()');
+  perform pg_temp.expect_allowed('v3 applies', v3, 'select public.apply_to_volunteer()');
+  perform pg_temp.expect_refused('no tasks before training and the agreements', v1, 'select * from public.volunteer_next_tasks()');
+  perform pg_temp.expect_refused('a reviewer who is not senior cannot record training', rev,
+    format($q$select public.manage_volunteer(%L, 'record_training', 'completed module 1')$q$, v1));
+  for i in 1..3 loop
+    perform pg_temp.become((array[v1, v2, v3])[i]);
+    perform public.volunteer_attest('confidentiality');
+    perform public.volunteer_attest('recusal');
+    execute 'reset role';
+    perform pg_temp.become(senior);
+    perform public.manage_volunteer((array[v1, v2, v3])[i], 'record_training', 'completed module 1');
+    execute 'reset role';
+  end loop;
+  raise notice 'ok  three volunteers trained and signed';
+
+  -- Calibration and control items, written by a senior reviewer.
+  perform pg_temp.expect_refused('a reviewer who is not senior cannot write items', rev,
+    $q$insert into public.community_calibration_items (tenant_id, kind, category, severity, body, expected_action)
+       values ('pv-u', 'onboarding', 'other', 'P3', 'x', 'allow')$q$);
+  for i in 1..24 loop
+    perform pg_temp.become(senior);
+    execute format($q$insert into public.community_calibration_items (tenant_id, kind, category, severity, body, expected_action)
+                     values ('pv-u', 'onboarding', 'spam_scam_or_phishing', 'P2', %L, %L)$q$,
+                   'onboarding item ' || i, case when i % 2 = 0 then 'remove' else 'allow' end);
+    execute format($q$insert into public.community_calibration_items (tenant_id, kind, category, severity, body, expected_action)
+                     values ('pv-u', 'control', 'other', 'P3', %L, %L)$q$,
+                   'control item ' || i, case when i % 3 = 0 then 'remove' else 'allow' end);
+    execute 'reset role';
+  end loop;
+  perform pg_temp.counted('a volunteer cannot read the items or their answers', pg_temp.seen(v1,
+    'select id from public.community_calibration_items'), 0);
+
+  -- Onboarding: 17 of 20 passes, 16 does not.
+  perform pg_temp.counted('v1 works twenty onboarding items', pg_temp.work(v1, 20, 17), 20);
+  select status into t from public.community_volunteers where user_id = v1;
+  perform pg_temp.said('17 of 20 makes a volunteer active', t, 'active');
+  perform pg_temp.expect_refused('and 20 in an hour is the cap', v1, 'select * from public.volunteer_next_tasks()');
+  update public.community_volunteer_tasks set answered_at = answered_at - interval '2 hours' where volunteer_id = v1;
+  perform pg_temp.counted('v2 works twenty', pg_temp.work(v2, 20, 16), 20);
+  select status into t from public.community_volunteers where user_id = v2;
+  perform pg_temp.said('16 of 20 stays in onboarding', t, 'onboarding');
+  update public.community_volunteer_tasks set answered_at = answered_at - interval '2 hours' where volunteer_id = v2;
+  -- v2's second attempt is not the point here; a senior reviewer's
+  -- recalibration is walked below with v3.
+  update public.community_volunteers set status = 'active' where user_id = v2;
+  update public.community_volunteer_tasks set answered_at = answered_at - interval '2 hours' where volunteer_id = v2;
+
+  -- Real cases in the course community.
+  for i in 1..5 loop
+    perform pg_temp.become(cal);
+    perform public.create_community_post(crs, (array['Cheap tickets here', 'Off topic musing', 'You are all idiots', 'Her room number is 12', 'Ben post'])[i]);
+    execute 'reset role';
+  end loop;
+  select id into spam from public.community_posts where body = 'Cheap tickets here';
+  select id into minor from public.community_posts where body = 'Off topic musing';
+  select id into harsh from public.community_posts where body = 'You are all idiots';
+  select id into own from public.community_posts where body = 'Ben post';
+  perform pg_temp.expect_allowed('ben reports spam', ben, format($q$select public.report_community_post(%L, 'spam_scam_or_phishing')$q$, spam));
+  perform pg_temp.expect_allowed('ben reports a minor issue', ben, format($q$select public.report_community_post(%L, 'other')$q$, minor));
+  perform pg_temp.expect_allowed('ben reports harassment', ben, format($q$select public.report_community_post(%L, 'harassment_or_bullying')$q$, harsh));
+  perform pg_temp.expect_allowed('v1 joins the course', v1, format('select public.join_community(%L)', crs));
+  perform pg_temp.expect_allowed('v1 reports a post themselves', v1, format($q$select public.report_community_post(%L, 'other')$q$, own));
+
+  perform pg_temp.become(v1);
+  select jsonb_agg(to_jsonb(x)) into tasks from public.volunteer_next_tasks() x;
+  execute 'reset role';
+  create temp table seen_tasks as
+    select * from jsonb_to_recordset(tasks) as r(task_id uuid, category text, severity text, community_kind text, body text);
+  select count(*) into n from seen_tasks s join public.community_volunteer_tasks t on t.id = s.task_id where t.case_id is not null;
+  perform pg_temp.counted('an active volunteer is handed the two eligible cases', n, 2);
+  select count(*) into n from seen_tasks s join public.community_volunteer_tasks t on t.id = s.task_id where t.item_id is not null;
+  perform pg_temp.counted('with a control mixed in', n, 1);
+  select count(*) into n from seen_tasks where body in ('You are all idiots', 'Her room number is 12', 'Ben post', 'New alias post');
+  perform pg_temp.counted('never harassment, never P0, never a post they reported, never a support community', n, 0);
+  select pg_get_function_result('public.volunteer_next_tasks()'::regprocedure) into t;
+  perform pg_temp.said('a task carries no name, author, reporter or vote', t,
+    'TABLE(task_id uuid, category text, severity text, community_kind text, body text)');
+  perform pg_temp.counted('a volunteer reads no cases', pg_temp.seen(v1, 'select id from public.community_cases'), 0);
+  perform pg_temp.counted('and no votes', pg_temp.seen(v1, 'select case_id from public.community_volunteer_votes'), 0);
+
+  -- Two volunteers must agree to remove.
+  select s.task_id into q from seen_tasks s join public.community_volunteer_tasks t on t.id = s.task_id
+   join public.community_cases k on k.id = t.case_id where k.post_id = spam;
+  perform pg_temp.expect_refused('a volunteer cannot restrict an account', v1,
+    format($q$select public.volunteer_decide(%L, 'account_restriction', 'x1')$q$, q));
+  perform pg_temp.expect_refused('or answer somebody else''s task', v2,
+    format($q$select public.volunteer_decide(%L, 'remove', 'spam.link')$q$, q));
+  perform pg_temp.expect_allowed('v1 votes to remove the spam', v1,
+    format($q$select public.volunteer_decide(%L, 'remove', 'spam.link')$q$, q));
+  select status into t from public.community_posts where id = spam;
+  perform pg_temp.said('one vote removes nothing', t, 'published');
+  perform pg_temp.counted('v2 answers a control and three cases', pg_temp.work(v2, 4, 4, 'remove'), 4);
+  select p.status || '/' || k.status into t from public.community_posts p
+    join public.community_cases k on k.post_id = p.id where p.id = spam;
+  perform pg_temp.said('two independent removals decide it', t, 'removed/decided');
+  select count(*) into n from public.community_case_events e join public.community_cases k on k.id = e.case_id
+   where k.post_id = spam and e.actor_kind = 'volunteer' and e.event = 'decided:remove';
+  perform pg_temp.counted('recorded as a volunteer decision', n, 1);
+
+  -- Disagreement goes to a professional.
+  select s.task_id into q from seen_tasks s join public.community_volunteer_tasks t on t.id = s.task_id
+   join public.community_cases k on k.id = t.case_id where k.post_id = minor;
+  perform pg_temp.expect_allowed('v1 votes to allow what v2 removed', v1,
+    format($q$select public.volunteer_decide(%L, 'allow', 'offtopic.minor')$q$, q));
+  select k.route || '/' || k.status into t from public.community_cases k where k.post_id = minor;
+  perform pg_temp.said('disagreement goes to a professional, still open', t, 'professional/open');
+
+  -- Quality: the last twenty controls, 5 points each.
+  update public.community_volunteers set status = 'active' where user_id = v3;
+  insert into public.community_volunteer_tasks (volunteer_id, item_id, assigned_at, answered_at, answer, correct)
+  select v3, i.id, now() - interval '3 days', now() - interval '3 days' + (row_number() over ()) * interval '1 second',
+         'allow', row_number() over () <= 14
+    from public.community_calibration_items i where i.kind = 'control' limit 20;
+  perform pg_temp.expect_refused('70 pauses a volunteer', v3, 'select * from public.volunteer_next_tasks()');
+  select status into t from public.community_volunteers where user_id = v3;
+  perform pg_temp.said('and says so', t, 'paused');
+  perform pg_temp.expect_refused('paused is sticky', v3, 'select * from public.volunteer_next_tasks()');
+  perform pg_temp.expect_allowed('a senior reviewer sends them back to calibration', senior,
+    format($q$select public.manage_volunteer(%L, 'recalibrate', 'retrained on spam')$q$, v3));
+  select status into t from public.community_volunteers where user_id = v3;
+  perform pg_temp.said('onboarding again', t, 'onboarding');
+
+  perform pg_temp.expect_refused('a revocation needs a reason', senior,
+    format($q$select public.manage_volunteer(%L, 'revoke', '')$q$, v2));
+  perform pg_temp.expect_allowed('a senior reviewer revokes v2', senior,
+    format($q$select public.manage_volunteer(%L, 'revoke', 'shared a case outside the queue')$q$, v2));
+  perform pg_temp.expect_refused('a revoked volunteer gets nothing', v2, 'select * from public.volunteer_next_tasks()');
+  select count(*) into n from public.community_volunteer_events
+   where volunteer_sha256 = private.role_audit_sha256(v2::text) and event = 'revoked'
+     and actor_sha256 = private.role_audit_sha256(senior::text);
+  perform pg_temp.counted('the revocation is attributed by hash', n, 1);
+  perform pg_temp.counted('students read no volunteer events', pg_temp.seen(ben, 'select id from public.community_volunteer_events'), 0);
+  perform pg_temp.counted('a volunteer reads their own standing', pg_temp.seen(v1,
+    $q$select 1 from public.my_volunteer_standing() where status = 'active'$q$), 1);
+
+  update public.community_programs set enabled = false where tenant_id = 'pv-u' and program = 'volunteer_moderation';
+  perform pg_temp.expect_refused('switching the programme off stops the queue at once', v1, 'select * from public.volunteer_next_tasks()');
+
+  -- Leaving takes the volunteer record and aliases, not the votes.
+  perform pg_temp.expect_allowed('v1 forgets their Community data', v1, 'select public.forget_my_community()');
+  select count(*) into n from public.community_volunteers where user_id = v1;
+  perform pg_temp.counted('the volunteer record is gone', n, 0);
+  select count(*) into n from public.community_volunteer_votes where volunteer_id = v1;
+  perform pg_temp.counted('the votes stay with the cases they decided', n, 2);
+  perform pg_temp.expect_allowed('ana forgets hers', ana, 'select public.forget_my_community()');
+  select count(*) into n from public.community_aliases where user_id = ana;
+  perform pg_temp.counted('her aliases are gone', n, 0);
+end $$;
+
 rollback;

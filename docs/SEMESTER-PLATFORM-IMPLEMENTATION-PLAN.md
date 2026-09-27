@@ -38,7 +38,7 @@ The database half followed in `supabase/migrations/20260927170000_community.sql`
 - **Row-level security** through `private.has_capability`.
 - **RPCs:** 17, one for every write. Each is on the `grants.check.sql`
   allowlist.
-- **Checks:** `supabase/community.check.sql` walks 190 checks as the accounts
+- **Checks:** `supabase/community.check.sql` walks 292 checks as the accounts
   concerned. Seven guards were shown to fail when reverted: author id hidden,
   appeal independence, high-risk hold, P0 needs a senior reviewer, reporter
   hidden, roster hidden, and the three-reporter threshold.
@@ -70,9 +70,12 @@ It **is not** yet:
 - **A media-safety detector.** Community has no image posting yet.
 - **A slur lexicon.** The hate rules are phrase patterns. A tenant's lexicon
   would be new rows in `community_detector_rules`.
-- **Database tables for the high-risk features:** aliases, volunteer queues,
-  escalation and the safety state. Their rules exist in TypeScript behind
-  flags that are off.
+- **Database tables for escalation and the safety state.** Their rules exist
+  in TypeScript behind flags that are off. (Aliases and volunteer moderation
+  now have tables, functions and 102 more checks. Both stay off at every
+  school until the service role writes a `community_programs` row.)
+- **Screens for aliases and volunteers.** The database side is complete; the
+  UI to claim an alias or work a volunteer queue is not built.
 - **Checked against Postgres 17.** The container has 16, so `check.sh` ran
   with `SEMESTER_CHECK_PG_ANY=1`.
 

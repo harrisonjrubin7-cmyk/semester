@@ -151,6 +151,8 @@ create table if not exists public.community_posts (
                  'student_created', 'ai_assisted_source_linked', 'illustrative_example')),
   status       text        not null default 'published' check (status in (
                  'pending', 'published', 'reduced', 'held', 'removed', 'withdrawn')),
+  -- Posted under a community alias. Shown, so a reader knows it is a pseudonym.
+  as_alias     boolean     not null default false,
   created_at   timestamptz not null default now(),
   edited_at    timestamptz
 );
@@ -159,7 +161,7 @@ create index if not exists community_posts_by_author on public.community_posts (
 create index if not exists community_posts_by_tenant on public.community_posts (tenant_id);
 alter table public.community_posts enable row level security;
 revoke all on table public.community_posts from anon, authenticated;
-grant select (id, community_id, author_ref, author_name, body, label, status, created_at, edited_at)
+grant select (id, community_id, author_ref, author_name, body, label, status, as_alias, created_at, edited_at)
   on table public.community_posts to authenticated;
 
 drop policy if exists "members read visible posts" on public.community_posts;
@@ -278,7 +280,7 @@ $$;
 revoke all on function private.has_contact_details(text) from public, anon, authenticated;
 
 create or replace function public.create_community_post(
-  want_community uuid, want_body text, want_confirmed_own boolean default false
+  want_community uuid, want_body text, want_confirmed_own boolean default false, want_as_alias boolean default false
 )
 returns uuid
 language plpgsql
@@ -294,6 +296,7 @@ declare
   per_hour integer;
   open_posting boolean;
   premoderated boolean;
+  alias text;
   pid uuid;
 begin
   select * into c from public.communities where id = want_community;
@@ -315,6 +318,14 @@ begin
     when 'support' then 3 when 'housing_transport' then 2
     when 'course' then 10 when 'study_group' then 10 when 'student_organization' then 10
     else 5 end;
+  if coalesce(want_as_alias, false) then
+    if not c.pseudonymity_approved or not private.community_program_on(c.tenant_id, 'scoped_pseudonymity') then
+      raise exception 'pseudonyms are not available in this community' using errcode = '42501';
+    end if;
+    select a.name into alias from public.community_aliases a where a.community_id = c.id and a.user_id = me;
+    if alias is null then raise exception 'choose a name for this community first' using errcode = '22023'; end if;
+    per_hour := least(per_hour, 3);
+  end if;
   select count(*) into recent from public.community_posts
    where author_id = me and community_id = want_community and created_at > now() - interval '1 hour';
   if recent >= per_hour then
@@ -327,17 +338,19 @@ begin
   end if;
 
   select p.handle into handle from public.profiles p where p.user_id = me;
-  insert into public.community_posts (community_id, tenant_id, author_id, author_ref, author_name, body, status)
+  insert into public.community_posts (community_id, tenant_id, author_id, author_ref, author_name, body, status, as_alias)
   values (c.id, c.tenant_id, me,
-          substr(private.role_audit_sha256(c.ref_salt || me::text), 1, 12),
-          coalesce(handle, 'Member'), want_body,
-          case when premoderated and my_role = 'member' then 'pending' else 'published' end)
+          case when alias is null then substr(private.role_audit_sha256(c.ref_salt || me::text), 1, 12)
+               else substr(private.role_audit_sha256(c.ref_salt || 'alias:' || lower(alias) || ':' || me::text), 1, 12) end,
+          coalesce(alias, handle, 'Member'), want_body,
+          case when premoderated and my_role = 'member' then 'pending' else 'published' end,
+          alias is not null)
   returning id into pid;
   perform private.community_run_detectors(pid);
   return pid;
 end $$;
-revoke all on function public.create_community_post(uuid, text, boolean) from public, anon, authenticated;
-grant execute on function public.create_community_post(uuid, text, boolean) to authenticated;
+revoke all on function public.create_community_post(uuid, text, boolean, boolean) from public, anon, authenticated;
+grant execute on function public.create_community_post(uuid, text, boolean, boolean) to authenticated;
 
 create or replace function public.edit_community_post(want_post uuid, want_body text, want_confirmed_own boolean default false)
 returns void
@@ -392,7 +405,10 @@ set search_path = ''
 as $$
   select c.id, substr(private.role_audit_sha256(c.ref_salt || (select auth.uid())::text), 1, 12)
     from public.communities c
-    join public.community_members m on m.community_id = c.id and m.user_id = (select auth.uid());
+    join public.community_members m on m.community_id = c.id and m.user_id = (select auth.uid())
+  union
+  -- Alias refs too, including retired ones, so a rotated alias's posts stay editable.
+  select p.community_id, p.author_ref from public.community_posts p where p.author_id = (select auth.uid());
 $$;
 revoke all on function public.my_community_refs() from public, anon, authenticated;
 grant execute on function public.my_community_refs() to authenticated;
@@ -432,6 +448,14 @@ begin
    where p.id = want_post and private.community_role(p.community_id) is not null;
   if author is null then raise exception 'not a post you can see' using errcode = '42501'; end if;
   if author = (select auth.uid()) then raise exception 'you cannot block yourself' using errcode = '22023'; end if;
+  -- Blocking an alias mutes the alias here: an account block would hide the
+  -- person's named posts as well, and which ones vanished would unmask them.
+  if (select p.as_alias from public.community_posts p where p.id = want_post) then
+    insert into public.community_mutes (user_id, community_id, author_ref)
+    select (select auth.uid()), p.community_id, p.author_ref from public.community_posts p where p.id = want_post
+    on conflict do nothing;
+    return;
+  end if;
   insert into public.blocks (user_id, blocked) values ((select auth.uid()), author) on conflict do nothing;
 end $$;
 revoke all on function public.block_community_author(uuid) from public, anon, authenticated;
@@ -506,7 +530,7 @@ create policy "your reports, or a reviewer" on public.community_reports
 create table if not exists public.community_case_events (
   id            bigint      generated always as identity primary key,
   case_id       uuid        not null references public.community_cases(id) on delete cascade,
-  actor_kind    text        not null check (actor_kind in ('triage', 'student', 'reviewer', 'senior_reviewer')),
+  actor_kind    text        not null check (actor_kind in ('triage', 'student', 'volunteer', 'reviewer', 'senior_reviewer')),
   actor_sha256  text        check (actor_sha256 is null or actor_sha256 ~ '^[0-9a-f]{64}$'),
   event         text        not null,
   reason_code   text        not null default '',
@@ -1273,6 +1297,11 @@ begin
   delete from public.community_sessions where host_id = me;
   delete from public.community_session_participants where user_id = me;
   delete from public.community_mutes where user_id = me;
+  delete from public.community_aliases where user_id = me;
+  -- A volunteer's votes stay with the cases they decided; the record of the
+  -- volunteer, and any task still waiting, goes.
+  delete from public.community_volunteer_tasks where volunteer_id = me and answered_at is null;
+  delete from public.community_volunteers where user_id = me;
   delete from public.community_members where user_id = me;
 end $$;
 revoke all on function public.forget_my_community() from public, anon, authenticated;
@@ -1290,6 +1319,9 @@ grant execute on function public.forget_my_community() to authenticated;
 --   * a report no case holds any more       → 90 days after it was made
 --   * a lapsed or lifted restriction        → 90 days after it ended
 --   * a study session                       → 30 days after it ended
+--   * an unanswered volunteer task          → 1 day after it was handed out
+--   * an answered volunteer task, and the
+--     volunteer programme's events          → 1 year
 --   * this sweep's own run log              → 1 year
 --
 -- Deleting a case takes its decisions, its history and its signals with it.
@@ -1305,7 +1337,8 @@ create table if not exists public.community_retention_runs (
   posts_removed        integer     not null,
   reports_removed      integer     not null,
   restrictions_removed integer     not null,
-  sessions_removed     integer     not null
+  sessions_removed     integer     not null,
+  volunteer_tasks_removed integer   not null default 0
 );
 create index if not exists community_retention_runs_by_time on public.community_retention_runs (ran_at desc);
 alter table public.community_retention_runs enable row level security;
@@ -1327,6 +1360,7 @@ declare
   n_reports integer;
   n_restrictions integer;
   n_sessions integer;
+  n_volunteer integer;
 begin
   delete from public.community_cases
    where retain_until < now() and status not in ('open', 'appealed');
@@ -1348,14 +1382,23 @@ begin
   delete from public.community_sessions s where s.ends_at < now() - interval '30 days';
   get diagnostics n_sessions = row_count;
 
+  -- Volunteer work: a task never answered lapses after a day; an answered
+  -- one, and the programme's own events, after a year.
+  delete from public.community_volunteer_tasks t
+   where (t.answered_at is null and t.assigned_at < now() - interval '1 day')
+      or t.answered_at < now() - interval '1 year';
+  get diagnostics n_volunteer = row_count;
+  delete from public.community_volunteer_events e where e.occurred_at < now() - interval '1 year';
+
   delete from public.community_retention_runs where ran_at < now() - interval '1 year';
 
   insert into public.community_retention_runs
-    (cases_removed, posts_removed, reports_removed, restrictions_removed, sessions_removed)
-  values (n_cases, n_posts, n_reports, n_restrictions, n_sessions);
+    (cases_removed, posts_removed, reports_removed, restrictions_removed, sessions_removed, volunteer_tasks_removed)
+  values (n_cases, n_posts, n_reports, n_restrictions, n_sessions, n_volunteer);
 
   return jsonb_build_object('cases', n_cases, 'posts', n_posts, 'reports', n_reports,
-                            'restrictions', n_restrictions, 'sessions', n_sessions);
+                            'restrictions', n_restrictions, 'sessions', n_sessions,
+                            'volunteer_tasks', n_volunteer);
 end $$;
 revoke all on function private.sweep_community_retention() from public, anon, authenticated;
 grant execute on function private.sweep_community_retention() to service_role;
@@ -1401,7 +1444,9 @@ begin
       ('public.community_sessions',             'host_id'),
       ('public.community_session_participants', 'user_id'),
       ('public.community_mutes',                'user_id'),
-      ('public.community_members',              'user_id')
+      ('public.community_members',              'user_id'),
+      ('public.community_aliases',              'user_id'),
+      ('public.community_volunteers',           'user_id')
     ) as x(rel, col)
   loop
     if pg_catalog.to_regclass(t.rel) is null then continue; end if;
@@ -1418,11 +1463,708 @@ revoke all on function public.lti_account_untouched(uuid) from public;
 revoke all on function public.lti_account_untouched(uuid)
   from anon, authenticated;
 
+-- ── 11. Programs that stay off until somebody decides otherwise ───────────
+--
+-- Scoped pseudonyms and volunteer moderation are built here and switched off.
+-- The app's build flags cannot be the switch: a flag is a browser setting and
+-- a client that ignores it would reach these functions anyway. So each
+-- program has a row per university, off unless present and enabled, and only
+-- the service role can write one — turning either on is a reviewed deployment
+-- step (docs/FEATURE-FLAG-REGISTRY.md), never a button in the app.
+
+create table if not exists public.community_programs (
+  tenant_id   text        not null references public.schools(id) on delete cascade,
+  program     text        not null check (program in ('scoped_pseudonymity', 'volunteer_moderation')),
+  enabled     boolean     not null default false,
+  approved_ref text       not null default '' check (length(approved_ref) <= 200),
+  changed_at  timestamptz not null default now(),
+  primary key (tenant_id, program)
+);
+alter table public.community_programs enable row level security;
+revoke all on table public.community_programs from anon, authenticated;
+grant select on table public.community_programs to authenticated;
+drop policy if exists "your school's programs" on public.community_programs;
+create policy "your school's programs" on public.community_programs
+  for select to authenticated
+  using (tenant_id = (select private.school_of()) or private.has_capability('community:review'));
+
+create or replace function private.community_program_on(want_tenant text, want_program text)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select coalesce((select p.enabled from public.community_programs p
+                    where p.tenant_id = want_tenant and p.program = want_program), false);
+$$;
+revoke all on function private.community_program_on(text, text) from public, anon, authenticated;
+
+-- ── 12. Scoped pseudonyms ─────────────────────────────────────────────────
+--
+-- An alias belongs to one community, approved for pseudonyms, at a school
+-- whose program is on. It is unique there, ignoring case, and may not be any
+-- member's handle at that school, so it cannot be used to pass as somebody.
+-- There is no search and no list: a peer meets an alias only on a post.
+--
+-- A post under an alias carries its own author_ref, salted with the alias, so
+-- it cannot be joined to the same person's named posts — and a new alias is a
+-- new ref. Blocking an alias mutes that alias in that community rather than
+-- blocking the account: an account block would make the person's named posts
+-- disappear too, and which ones disappeared would say who the alias is.
+-- Reports, decisions and restrictions still reach the account, because the
+-- server holds author_id for every post.
+--
+-- Rotation is once a day at most, and refused while any case on the person's
+-- posts in that community is open: an investigation keeps the name it began
+-- with. Aliases post at no more than three an hour.
+
+create table if not exists public.community_aliases (
+  community_id uuid        not null references public.communities(id) on delete cascade,
+  user_id      uuid        not null references auth.users on delete cascade,
+  name         text        not null check (name ~ '^[A-Za-z][A-Za-z0-9]{3,23}$'),
+  created_at   timestamptz not null default now(),
+  rotated_at   timestamptz,
+  primary key (community_id, user_id)
+);
+create unique index if not exists community_aliases_unique_name
+  on public.community_aliases (community_id, lower(name));
+create index if not exists community_aliases_by_user on public.community_aliases (user_id);
+alter table public.community_aliases enable row level security;
+revoke all on table public.community_aliases from anon, authenticated;
+grant select (community_id, name, created_at, rotated_at), delete on table public.community_aliases to authenticated;
+drop policy if exists "your own aliases" on public.community_aliases;
+create policy "your own aliases" on public.community_aliases
+  for select to authenticated using (user_id = (select auth.uid()));
+drop policy if exists "drop your own alias" on public.community_aliases;
+create policy "drop your own alias" on public.community_aliases
+  for delete to authenticated using (user_id = (select auth.uid()));
+
+create or replace function public.approve_community_pseudonymity(want_community uuid, want_on boolean)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  c public.communities;
+begin
+  select * into c from public.communities where id = want_community;
+  if c.id is null or not private.has_capability('community:manage', 'school', c.tenant_id) then
+    raise exception 'a community manager at this school approves pseudonyms' using errcode = '42501';
+  end if;
+  if want_on and not private.community_program_on(c.tenant_id, 'scoped_pseudonymity') then
+    raise exception 'pseudonyms are switched off at this school' using errcode = '42501';
+  end if;
+  if want_on and c.kind not in ('support', 'study_group') then
+    raise exception 'pseudonyms are only for support and study-group communities' using errcode = '22023';
+  end if;
+  update public.communities set pseudonymity_approved = coalesce(want_on, false) where id = c.id;
+end $$;
+revoke all on function public.approve_community_pseudonymity(uuid, boolean) from public, anon, authenticated;
+grant execute on function public.approve_community_pseudonymity(uuid, boolean) to authenticated;
+
+create or replace function public.claim_community_alias(want_community uuid, want_name text)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  me uuid := (select auth.uid());
+  c public.communities;
+  mine public.community_aliases;
+begin
+  select * into c from public.communities where id = want_community;
+  if c.id is null or private.community_role(c.id) is null then
+    raise exception 'join the community first' using errcode = '42501';
+  end if;
+  if not c.pseudonymity_approved or not private.community_program_on(c.tenant_id, 'scoped_pseudonymity') then
+    raise exception 'pseudonyms are not available in this community' using errcode = '42501';
+  end if;
+  if want_name is null or want_name !~ '^[A-Za-z][A-Za-z0-9]{3,23}$' then
+    raise exception 'use 4–24 letters and numbers, starting with a letter' using errcode = '22023';
+  end if;
+  if exists (select 1 from public.profiles p where p.school_id = c.tenant_id and lower(p.handle) = lower(want_name)) then
+    raise exception 'that name is taken' using errcode = '22023';
+  end if;
+  if exists (select 1 from public.community_aliases a
+              where a.community_id = c.id and lower(a.name) = lower(want_name) and a.user_id <> me) then
+    raise exception 'that name is taken' using errcode = '22023';
+  end if;
+
+  select * into mine from public.community_aliases where community_id = c.id and user_id = me;
+  if mine.user_id is null then
+    insert into public.community_aliases (community_id, user_id, name) values (c.id, me, want_name);
+    return;
+  end if;
+  if lower(mine.name) = lower(want_name) then return; end if;
+  if coalesce(mine.rotated_at, mine.created_at) > now() - interval '1 day' then
+    raise exception 'you can change this name once a day' using errcode = '54000';
+  end if;
+  -- Deliberately vague: saying a case is open would disclose it.
+  if exists (select 1 from public.community_cases k join public.community_posts p on p.id = k.post_id
+              where p.community_id = c.id and p.author_id = me and k.status <> 'closed') then
+    raise exception 'this name cannot be changed right now' using errcode = '42501';
+  end if;
+  update public.community_aliases set name = want_name, rotated_at = now()
+   where community_id = c.id and user_id = me;
+end $$;
+revoke all on function public.claim_community_alias(uuid, text) from public, anon, authenticated;
+grant execute on function public.claim_community_alias(uuid, text) to authenticated;
+
+-- ── 13. Volunteer moderation ──────────────────────────────────────────────
+--
+-- The programme in docs/VOLUNTEER-MODERATOR-PROGRAM.md, as tables. Off at every
+-- school until community_programs says otherwise, and every function checks.
+--
+-- Joining: a verified student, account at least 30 days old, no active
+-- restriction. Before any task: training (recorded by a senior reviewer), and
+-- a confidentiality agreement and the recusal rules (signed by the volunteer).
+--
+-- Calibration: 20 onboarding items with known answers; 17 right (85%) makes
+-- a volunteer active. After that, control items with known answers are mixed
+-- into the queue and look exactly like real cases — every task is an opaque
+-- id. Quality is the last 20 controls at 5 points each: 85 or more stays
+-- active, 75–80 is probation (controls only), under 75 pauses. A paused or
+-- revoked volunteer gets nothing until a senior reviewer recalibrates them.
+--
+-- Queue: open P3 cases, and P2 spam or "other", on the standard route, at the
+-- volunteer's own school. Never P0/P1, never another category, never an
+-- appeal, and never anything from a support community. Recusal is automatic:
+-- a post they wrote or reported, a community they host or moderate, an author
+-- either of them has blocked. What they see
+-- is the category, the severity, the community type and the text — no name,
+-- no author, no reporter, no other votes.
+--
+-- Deciding: allow, label or close by one volunteer; removal only when a second
+-- volunteer independently agrees; any disagreement goes to a professional.
+-- Caps: 20 an hour and 100 a day, controls included.
+
+create table if not exists public.community_volunteers (
+  user_id                 uuid        primary key references auth.users on delete cascade,
+  tenant_id               text        not null references public.schools(id) on delete cascade,
+  status                  text        not null default 'onboarding'
+                            check (status in ('onboarding', 'active', 'probation', 'paused', 'revoked')),
+  applied_at              timestamptz not null default now(),
+  training_completed_at   timestamptz,
+  confidentiality_signed_at timestamptz,
+  recusal_acknowledged_at timestamptz,
+  revoked_at              timestamptz,
+  revoked_reason          text        not null default '' check (length(revoked_reason) <= 500)
+);
+create index if not exists community_volunteers_by_tenant on public.community_volunteers (tenant_id, status);
+alter table public.community_volunteers enable row level security;
+revoke all on table public.community_volunteers from anon, authenticated;
+grant select on table public.community_volunteers to authenticated;
+drop policy if exists "your own volunteer record, or a reviewer" on public.community_volunteers;
+create policy "your own volunteer record, or a reviewer" on public.community_volunteers
+  for select to authenticated
+  using (user_id = (select auth.uid()) or private.has_capability('community:review'));
+
+create table if not exists public.community_calibration_items (
+  id              uuid        primary key default gen_random_uuid(),
+  tenant_id       text        not null references public.schools(id) on delete cascade,
+  kind            text        not null check (kind in ('onboarding', 'control')),
+  category        text        not null check (category in ('spam_scam_or_phishing', 'other')),
+  severity        text        not null check (severity in ('P2', 'P3')),
+  community_kind  text        not null default 'course',
+  body            text        not null check (length(trim(body)) between 1 and 4000),
+  expected_action text        not null check (expected_action in ('allow', 'remove')),
+  created_at      timestamptz not null default now(),
+  retired_at      timestamptz
+);
+create index if not exists community_calibration_items_by_tenant on public.community_calibration_items (tenant_id, kind);
+alter table public.community_calibration_items enable row level security;
+revoke all on table public.community_calibration_items from anon, authenticated;
+grant select, insert on table public.community_calibration_items to authenticated;
+grant update (retired_at) on table public.community_calibration_items to authenticated;
+-- Volunteers never read these directly; they meet them only as tasks.
+drop policy if exists "reviewers read calibration items" on public.community_calibration_items;
+create policy "reviewers read calibration items" on public.community_calibration_items
+  for select to authenticated using (private.has_capability('community:review'));
+drop policy if exists "senior reviewers write calibration items" on public.community_calibration_items;
+create policy "senior reviewers write calibration items" on public.community_calibration_items
+  for insert to authenticated with check (private.has_capability('community:review_senior'));
+drop policy if exists "senior reviewers retire calibration items" on public.community_calibration_items;
+create policy "senior reviewers retire calibration items" on public.community_calibration_items
+  for update to authenticated
+  using (private.has_capability('community:review_senior'))
+  with check (private.has_capability('community:review_senior'));
+
+-- One row per task handed out. The id is all a volunteer ever holds.
+create table if not exists public.community_volunteer_tasks (
+  id           uuid        primary key default gen_random_uuid(),
+  volunteer_id uuid        not null references auth.users on delete cascade,
+  case_id      uuid        references public.community_cases(id) on delete cascade,
+  item_id      uuid        references public.community_calibration_items(id) on delete cascade,
+  assigned_at  timestamptz not null default now(),
+  answered_at  timestamptz,
+  answer       text,
+  correct      boolean,
+  check (num_nonnulls(case_id, item_id) = 1)
+);
+create index if not exists community_volunteer_tasks_by_volunteer on public.community_volunteer_tasks (volunteer_id, answered_at);
+create index if not exists community_volunteer_tasks_by_case on public.community_volunteer_tasks (case_id);
+create index if not exists community_volunteer_tasks_by_item on public.community_volunteer_tasks (item_id);
+alter table public.community_volunteer_tasks enable row level security;
+revoke all on table public.community_volunteer_tasks from anon, authenticated;
+grant select on table public.community_volunteer_tasks to authenticated;
+drop policy if exists "reviewers audit volunteer tasks" on public.community_volunteer_tasks;
+create policy "reviewers audit volunteer tasks" on public.community_volunteer_tasks
+  for select to authenticated using (private.has_capability('community:review'));
+
+create table if not exists public.community_volunteer_votes (
+  case_id      uuid        not null references public.community_cases(id) on delete cascade,
+  volunteer_id uuid        not null references auth.users on delete cascade,
+  action       text        not null check (action in ('allow', 'label', 'remove', 'close_no_action')),
+  reason_code  text        not null check (length(trim(reason_code)) between 2 and 80),
+  voted_at     timestamptz not null default now(),
+  primary key (case_id, volunteer_id)
+);
+create index if not exists community_volunteer_votes_by_volunteer on public.community_volunteer_votes (volunteer_id);
+alter table public.community_volunteer_votes enable row level security;
+revoke all on table public.community_volunteer_votes from anon, authenticated;
+grant select (case_id, action, reason_code, voted_at) on table public.community_volunteer_votes to authenticated;
+drop policy if exists "reviewers audit volunteer votes" on public.community_volunteer_votes;
+create policy "reviewers audit volunteer votes" on public.community_volunteer_votes
+  for select to authenticated using (private.has_capability('community:review'));
+
+create table if not exists public.community_volunteer_events (
+  id                bigint      generated always as identity primary key,
+  volunteer_sha256  text        not null check (volunteer_sha256 ~ '^[0-9a-f]{64}$'),
+  actor_sha256      text        check (actor_sha256 is null or actor_sha256 ~ '^[0-9a-f]{64}$'),
+  event             text        not null,
+  from_status       text,
+  to_status         text,
+  reason            text        not null default '',
+  occurred_at       timestamptz not null default now()
+);
+create index if not exists community_volunteer_events_by_time on public.community_volunteer_events (occurred_at desc);
+alter table public.community_volunteer_events enable row level security;
+revoke all on table public.community_volunteer_events from anon, authenticated;
+grant select on table public.community_volunteer_events to authenticated;
+drop policy if exists "reviewers read volunteer events" on public.community_volunteer_events;
+create policy "reviewers read volunteer events" on public.community_volunteer_events
+  for select to authenticated using (private.has_capability('community:review'));
+
+create or replace function private.volunteer_event(who uuid, want_event text, want_from text, want_to text, want_reason text)
+returns void
+language sql
+security definer
+set search_path = ''
+as $$
+  insert into public.community_volunteer_events (volunteer_sha256, actor_sha256, event, from_status, to_status, reason)
+  values (private.role_audit_sha256(who::text),
+          case when (select auth.uid()) is null or (select auth.uid()) = who then null
+               else private.role_audit_sha256((select auth.uid())::text) end,
+          want_event, want_from, want_to, coalesce(want_reason, ''));
+$$;
+revoke all on function private.volunteer_event(uuid, text, text, text, text) from public, anon, authenticated;
+
+/*
+ * Status from answers. Mirrors VOLUNTEER_RULES in app/src/community/volunteer.ts:
+ * calibration 20 at 85%, quality window 20 at 5 points each, active at 85,
+ * paused below 75. Revoked and paused are sticky; only recalibration moves them.
+ */
+create or replace function private.volunteer_recompute(who uuid)
+returns text
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v public.community_volunteers;
+  answered integer;
+  right_answers integer;
+  quality integer;
+  next_status text;
+begin
+  select * into v from public.community_volunteers where user_id = who for update;
+  if v.user_id is null or v.status in ('revoked', 'paused') then return v.status; end if;
+
+  if v.status = 'onboarding' then
+    select count(*), count(*) filter (where t.correct) into answered, right_answers
+      from (select t.correct from public.community_volunteer_tasks t
+              join public.community_calibration_items i on i.id = t.item_id
+             where t.volunteer_id = who and t.answered_at is not null and i.kind = 'onboarding'
+             order by t.answered_at desc limit 20) t;
+    next_status := case when answered >= 20 and right_answers >= 17 then 'active' else 'onboarding' end;
+  else
+    select count(*), count(*) filter (where t.correct) into answered, right_answers
+      from (select t.correct from public.community_volunteer_tasks t
+              join public.community_calibration_items i on i.id = t.item_id
+             where t.volunteer_id = who and t.answered_at is not null and i.kind = 'control'
+             order by t.answered_at desc limit 20) t;
+    if answered < 20 then
+      next_status := 'active';
+    else
+      quality := right_answers * 5;
+      next_status := case when quality >= 85 then 'active' when quality >= 75 then 'probation' else 'paused' end;
+    end if;
+  end if;
+
+  if next_status is distinct from v.status then
+    update public.community_volunteers set status = next_status where user_id = who;
+    perform private.volunteer_event(who, 'status', v.status, next_status, 'calibration');
+  end if;
+  return next_status;
+end $$;
+revoke all on function private.volunteer_recompute(uuid) from public, anon, authenticated;
+
+create or replace function public.apply_to_volunteer()
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  me uuid := (select auth.uid());
+  school text := private.school_of();
+begin
+  if school is null or not private.community_program_on(school, 'volunteer_moderation') then
+    raise exception 'volunteer moderation is switched off at this school' using errcode = '42501';
+  end if;
+  if not private.verified_student() then
+    raise exception 'volunteers must be verified students' using errcode = '42501';
+  end if;
+  if (select u.created_at from auth.users u where u.id = me) > now() - interval '30 days' then
+    raise exception 'volunteers need an account at least 30 days old' using errcode = '42501';
+  end if;
+  if exists (select 1 from public.community_restrictions r
+              where r.user_id = me and r.lifted_at is null and r.until > now()) then
+    raise exception 'volunteers cannot have an active restriction' using errcode = '42501';
+  end if;
+  if exists (select 1 from public.community_volunteers v where v.user_id = me) then
+    raise exception 'you have already applied' using errcode = '22023';
+  end if;
+  insert into public.community_volunteers (user_id, tenant_id) values (me, school);
+  perform private.volunteer_event(me, 'applied', null, 'onboarding', '');
+end $$;
+revoke all on function public.apply_to_volunteer() from public, anon, authenticated;
+grant execute on function public.apply_to_volunteer() to authenticated;
+
+create or replace function public.volunteer_attest(want_kind text)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  me uuid := (select auth.uid());
+begin
+  if want_kind = 'confidentiality' then
+    update public.community_volunteers set confidentiality_signed_at = now()
+     where user_id = me and status <> 'revoked';
+  elsif want_kind = 'recusal' then
+    update public.community_volunteers set recusal_acknowledged_at = now()
+     where user_id = me and status <> 'revoked';
+  else
+    raise exception 'unknown attestation' using errcode = '22023';
+  end if;
+  if not found then raise exception 'you are not a volunteer' using errcode = '42501'; end if;
+  perform private.volunteer_event(me, 'attested:' || want_kind, null, null, '');
+end $$;
+revoke all on function public.volunteer_attest(text) from public, anon, authenticated;
+grant execute on function public.volunteer_attest(text) to authenticated;
+
+/*
+ * A senior reviewer's levers: record training, revoke with a reason, or send
+ * a paused volunteer back to calibration. Each writes an event.
+ */
+create or replace function public.manage_volunteer(want_volunteer uuid, want_action text, want_reason text)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v public.community_volunteers;
+begin
+  if not private.has_capability('community:review_senior') then
+    raise exception 'a senior reviewer manages volunteers' using errcode = '42501';
+  end if;
+  if coalesce(length(trim(want_reason)), 0) < 5 then
+    raise exception 'give a reason' using errcode = '22023';
+  end if;
+  select * into v from public.community_volunteers where user_id = want_volunteer for update;
+  if v.user_id is null then raise exception 'no such volunteer' using errcode = '22023'; end if;
+  if want_action = 'record_training' then
+    update public.community_volunteers set training_completed_at = now() where user_id = v.user_id;
+    perform private.volunteer_event(v.user_id, 'training_recorded', v.status, v.status, want_reason);
+  elsif want_action = 'revoke' then
+    update public.community_volunteers set status = 'revoked', revoked_at = now(), revoked_reason = want_reason
+     where user_id = v.user_id;
+    perform private.volunteer_event(v.user_id, 'revoked', v.status, 'revoked', want_reason);
+  elsif want_action = 'recalibrate' then
+    if v.status = 'revoked' then raise exception 'a revoked volunteer cannot be recalibrated' using errcode = '22023'; end if;
+    update public.community_volunteers set status = 'onboarding' where user_id = v.user_id;
+    perform private.volunteer_event(v.user_id, 'recalibrate', v.status, 'onboarding', want_reason);
+  else
+    raise exception 'unknown action' using errcode = '22023';
+  end if;
+end $$;
+revoke all on function public.manage_volunteer(uuid, text, text) from public, anon, authenticated;
+grant execute on function public.manage_volunteer(uuid, text, text) to authenticated;
+
+/* Everything that must hold before a volunteer is handed anything. */
+create or replace function private.volunteer_ready(who uuid)
+returns public.community_volunteers
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v public.community_volunteers;
+  last_hour integer;
+  last_day integer;
+begin
+  select * into v from public.community_volunteers where user_id = who;
+  if v.user_id is null then raise exception 'you are not a volunteer' using errcode = '42501'; end if;
+  if not private.community_program_on(v.tenant_id, 'volunteer_moderation') then
+    raise exception 'volunteer moderation is switched off at this school' using errcode = '42501';
+  end if;
+  if v.status in ('revoked', 'paused') then
+    raise exception 'your volunteer access is paused' using errcode = '42501';
+  end if;
+  if v.training_completed_at is null or v.confidentiality_signed_at is null or v.recusal_acknowledged_at is null then
+    raise exception 'finish training and sign the agreements first' using errcode = '42501';
+  end if;
+  select count(*) filter (where t.answered_at > now() - interval '1 hour'),
+         count(*) filter (where t.answered_at > now() - interval '1 day')
+    into last_hour, last_day
+    from public.community_volunteer_tasks t where t.volunteer_id = who;
+  if last_hour >= 20 or last_day >= 100 then
+    raise exception 'you have reached the review limit for now' using errcode = '54000';
+  end if;
+  return v;
+end $$;
+revoke all on function private.volunteer_ready(uuid) from public, anon, authenticated;
+
+/* Whether a volunteer must stay away from a case. */
+create or replace function private.volunteer_recused(who uuid, want_case uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1 from public.community_cases k join public.community_posts p on p.id = k.post_id
+     where k.id = want_case
+       and (p.author_id = who
+            -- Support communities are professional-only: even without a name,
+            -- what somebody writes there can say who they are.
+            or exists (select 1 from public.communities c where c.id = p.community_id and c.kind = 'support')
+            or exists (select 1 from public.community_reports r where r.post_id = p.id and r.reporter_id = who)
+            or exists (select 1 from public.community_members m
+                        where m.community_id = p.community_id and m.user_id = who and m.role <> 'member')
+            or exists (select 1 from public.blocks b
+                        where (b.user_id = who and b.blocked = p.author_id) or (b.user_id = p.author_id and b.blocked = who)))
+  );
+$$;
+revoke all on function private.volunteer_recused(uuid, uuid) from public, anon, authenticated;
+
+/* Whether a case is one a volunteer may see at all. */
+create or replace function private.volunteer_eligible_case(k public.community_cases)
+returns boolean
+language sql
+immutable
+set search_path = ''
+as $$
+  select k.status = 'open' and k.route = 'standard'
+     and (k.severity = 'P3' or (k.severity = 'P2' and k.category in ('spam_scam_or_phishing', 'other')));
+$$;
+revoke all on function private.volunteer_eligible_case(public.community_cases) from public, anon, authenticated;
+
+/*
+ * Up to five tasks. Onboarding volunteers get onboarding items; probation gets
+ * controls only; active gets real cases with a control mixed in. Every task
+ * looks the same: an opaque id, a category, a severity, a community type, the
+ * text. Unanswered tasks from an earlier call are handed back first.
+ */
+create or replace function public.volunteer_next_tasks()
+returns table (task_id uuid, category text, severity text, community_kind text, body text)
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  me uuid := (select auth.uid());
+  v public.community_volunteers;
+begin
+  v := private.volunteer_ready(me);
+  v.status := private.volunteer_recompute(me);
+  -- Returning nothing rather than raising, so the pause just recorded stands.
+  if v.status = 'paused' then return; end if;
+
+  if (select count(*) from public.community_volunteer_tasks t
+       where t.volunteer_id = me and t.answered_at is null and t.assigned_at > now() - interval '1 hour') = 0 then
+    if v.status = 'onboarding' then
+      insert into public.community_volunteer_tasks (volunteer_id, item_id)
+      select me, i.id from public.community_calibration_items i
+       where i.tenant_id = v.tenant_id and i.kind = 'onboarding' and i.retired_at is null
+         and not exists (select 1 from public.community_volunteer_tasks t where t.volunteer_id = me and t.item_id = i.id)
+       order by random() limit 5;
+    else
+      insert into public.community_volunteer_tasks (volunteer_id, item_id)
+      select me, i.id from public.community_calibration_items i
+       where i.tenant_id = v.tenant_id and i.kind = 'control' and i.retired_at is null
+       order by (select count(*) from public.community_volunteer_tasks t where t.volunteer_id = me and t.item_id = i.id), random()
+       limit case when v.status = 'probation' then 5 else 1 end;
+      if v.status = 'active' then
+        insert into public.community_volunteer_tasks (volunteer_id, case_id)
+        select me, k.id from public.community_cases k
+         where k.tenant_id = v.tenant_id and private.volunteer_eligible_case(k)
+           and not private.volunteer_recused(me, k.id)
+           and not exists (select 1 from public.community_volunteer_tasks t where t.volunteer_id = me and t.case_id = k.id)
+         order by k.created_at limit 4;
+      end if;
+    end if;
+  end if;
+
+  return query
+    select t.id,
+           coalesce(i.category, k.category),
+           coalesce(i.severity, k.severity),
+           coalesce(i.community_kind, c.kind),
+           coalesce(i.body, p.body)
+      from public.community_volunteer_tasks t
+      left join public.community_calibration_items i on i.id = t.item_id
+      left join public.community_cases k on k.id = t.case_id
+      left join public.community_posts p on p.id = k.post_id
+      left join public.communities c on c.id = p.community_id
+     where t.volunteer_id = me and t.answered_at is null and t.assigned_at > now() - interval '1 hour'
+     order by md5(t.id::text);
+end $$;
+revoke all on function public.volunteer_next_tasks() from public, anon, authenticated;
+grant execute on function public.volunteer_next_tasks() to authenticated;
+
+create or replace function public.volunteer_decide(want_task uuid, want_action text, want_reason text)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  me uuid := (select auth.uid());
+  t public.community_volunteer_tasks;
+  i public.community_calibration_items;
+  k public.community_cases;
+  author uuid;
+  agree boolean;
+  differ boolean;
+begin
+  perform private.volunteer_ready(me);
+  if want_action not in ('allow', 'label', 'remove', 'close_no_action') then
+    raise exception 'volunteers may allow, label, remove or close' using errcode = '42501';
+  end if;
+  if coalesce(length(trim(want_reason)), 0) < 2 then
+    raise exception 'a reason code is required' using errcode = '22023';
+  end if;
+  select * into t from public.community_volunteer_tasks
+   where id = want_task and volunteer_id = me and answered_at is null and assigned_at > now() - interval '1 hour'
+   for update;
+  if t.id is null then raise exception 'that task is not yours to answer' using errcode = '42501'; end if;
+
+  -- A calibration or control item: right or wrong, and nothing else happens.
+  if t.item_id is not null then
+    select * into i from public.community_calibration_items where id = t.item_id;
+    update public.community_volunteer_tasks
+       set answered_at = now(), answer = want_action,
+           correct = ((want_action = 'remove') = (i.expected_action = 'remove'))
+     where id = t.id;
+    perform private.volunteer_recompute(me);
+    return;
+  end if;
+
+  -- A real case. Everything is checked again: it may have moved since.
+  select * into k from public.community_cases where id = t.case_id for update;
+  if k.id is null or not private.volunteer_eligible_case(k) or private.volunteer_recused(me, k.id)
+     or (select status from public.community_volunteers where user_id = me) <> 'active' then
+    update public.community_volunteer_tasks set answered_at = now(), answer = 'withdrawn' where id = t.id;
+    raise exception 'this case is no longer yours to decide' using errcode = '42501';
+  end if;
+  update public.community_volunteer_tasks set answered_at = now(), answer = want_action where id = t.id;
+  insert into public.community_volunteer_votes (case_id, volunteer_id, action, reason_code)
+  values (k.id, me, want_action, want_reason);
+  perform private.community_case_event(k.id, 'volunteer', 'volunteer_vote:' || want_action, want_reason, k.status, k.status);
+
+  select exists (select 1 from public.community_volunteer_votes x
+                  where x.case_id = k.id and x.volunteer_id <> me and x.action = 'remove') into agree;
+  select exists (select 1 from public.community_volunteer_votes x
+                  where x.case_id = k.id and x.volunteer_id <> me
+                    and (x.action = 'remove') <> (want_action = 'remove')) into differ;
+
+  if differ then
+    -- Volunteers who disagree do not settle it between them: a professional does.
+    update public.community_cases set route = 'professional', updated_at = now() where id = k.id;
+    perform private.community_case_event(k.id, 'volunteer', 'volunteer_disagreement', want_reason, k.status, k.status);
+    return;
+  end if;
+  if want_action = 'remove' and not agree then
+    return;  -- waiting for a second, independent volunteer
+  end if;
+
+  select p.author_id into author from public.community_posts p where p.id = k.post_id;
+  insert into public.community_decisions (case_id, actor_id, stage, action, reason_code)
+  values (k.id, me, 'decision', want_action, want_reason);
+  perform private.apply_community_action(k, want_action, author);
+  update public.community_signals set human_outcome = want_action || ' (volunteers)'
+   where case_id = k.id and human_outcome is null;
+  update public.community_cases
+     set status = case when want_action in ('allow', 'close_no_action') then 'closed' else 'decided' end,
+         retain_until = now() + case when want_action in ('allow', 'close_no_action')
+                                     then interval '90 days' else interval '1 year' end,
+         updated_at = now()
+   where id = k.id;
+  perform private.community_case_event(k.id, 'volunteer', 'decided:' || want_action, want_reason, 'open',
+    case when want_action in ('allow', 'close_no_action') then 'closed' else 'decided' end);
+end $$;
+revoke all on function public.volunteer_decide(uuid, text, text) from public, anon, authenticated;
+grant execute on function public.volunteer_decide(uuid, text, text) to authenticated;
+
+/* A volunteer's own standing: status, calibration progress, quality, caps. */
+create or replace function public.my_volunteer_standing()
+returns table (status text, onboarding_answered integer, quality integer, reviews_last_hour integer, reviews_today integer)
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select v.status,
+         (select count(*)::integer from public.community_volunteer_tasks t
+            join public.community_calibration_items i on i.id = t.item_id
+           where t.volunteer_id = v.user_id and t.answered_at is not null and i.kind = 'onboarding'),
+         (select case when count(*) < 20 then null else (count(*) filter (where x.correct) * 5)::integer end
+            from (select t.correct from public.community_volunteer_tasks t
+                    join public.community_calibration_items i on i.id = t.item_id
+                   where t.volunteer_id = v.user_id and t.answered_at is not null and i.kind = 'control'
+                   order by t.answered_at desc limit 20) x),
+         (select count(*)::integer from public.community_volunteer_tasks t
+           where t.volunteer_id = v.user_id and t.answered_at > now() - interval '1 hour'),
+         (select count(*)::integer from public.community_volunteer_tasks t
+           where t.volunteer_id = v.user_id and t.answered_at > now() - interval '1 day')
+    from public.community_volunteers v where v.user_id = (select auth.uid());
+$$;
+revoke all on function public.my_volunteer_standing() from public, anon, authenticated;
+grant execute on function public.my_volunteer_standing() to authenticated;
+
 -- ═══════════════════════════════════════════════════════════════════════════
 -- Rolling back
 --
 -- Every object here is new. To remove:
 --
+--   drop function if exists public.my_volunteer_standing(), public.volunteer_decide(uuid, text, text),
+--     public.volunteer_next_tasks(), private.volunteer_eligible_case(public.community_cases),
+--     private.volunteer_recused(uuid, uuid), private.volunteer_ready(uuid),
+--     public.manage_volunteer(uuid, text, text), public.volunteer_attest(text), public.apply_to_volunteer(),
+--     private.volunteer_recompute(uuid), private.volunteer_event(uuid, text, text, text, text),
+--     public.claim_community_alias(uuid, text), public.approve_community_pseudonymity(uuid, boolean),
+--     private.community_program_on(text, text);
+--   drop table if exists public.community_volunteer_events, public.community_volunteer_votes,
+--     public.community_volunteer_tasks, public.community_calibration_items, public.community_volunteers,
+--     public.community_aliases, public.community_programs;
 --   drop function if exists private.sweep_community_retention(), private.community_run_detectors(uuid),
 --     private.community_route(text), private.stamp_detector_rule();
 --   drop table if exists public.community_retention_runs, public.community_signals,

@@ -349,6 +349,9 @@ describe('the clocks that run are still the clocks the document describes', () =
     expect(sweep).toMatch(/< now\(\) - interval '90 days';\s*get diagnostics n_restrictions/);
     expect(sweep).toMatch(/s\.ends_at < now\(\) - interval '30 days'/);
     expect(sweep).toMatch(/ran_at < now\(\) - interval '1 year'/);
+    expect(sweep).toMatch(/t\.answered_at is null and t\.assigned_at < now\(\) - interval '1 day'/);
+    expect(sweep).toMatch(/or t\.answered_at < now\(\) - interval '1 year'/);
+    expect(sweep).toMatch(/e\.occurred_at < now\(\) - interval '1 year'/);
 
     // The dates a decision sets, which are what the sweep then reads.
     expect(sql).toMatch(/then interval '90 days' else interval '1 year' end/);
@@ -359,5 +362,6 @@ describe('the clocks that run are still the clocks the document describes', () =
     expect(doc).toContain('**30 days after the session ended**');
     expect(doc).toContain('**90 days after the restriction ended or was lifted**');
     expect(doc).toContain('**90 days after it was made, once no case holds it**');
+    expect(doc).toContain('**1 day if never answered; 1 year once answered**');
   });
 });

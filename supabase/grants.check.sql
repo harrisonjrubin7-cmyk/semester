@@ -124,7 +124,7 @@ end $$;
 do $$
 declare
   /*
-   * The allowlist. Forty-seven, and each is a deliberate entry point:
+   * The allowlist. Fifty-five, and each is a deliberate entry point:
    *   make_referral_code  — mints this account's own code
    *   claim_referral      — records that this account arrived on somebody's
    *   referral_standing   — two integers and a boolean about the caller
@@ -195,7 +195,7 @@ declare
     'community_reviewer_standing()',
     'community_session_counts(want_community uuid)',
     'create_community(want_kind text, want_name text, want_purpose text, want_integrity_policy text)',
-    'create_community_post(want_community uuid, want_body text, want_confirmed_own boolean)',
+    'create_community_post(want_community uuid, want_body text, want_confirmed_own boolean, want_as_alias boolean)',
     'create_study_session(want_community uuid, want_venue uuid, want_title text, want_starts timestamp with time zone, want_ends timestamp with time zone, want_capacity integer)',
     'decide_community_appeal(want_case uuid, want_uphold boolean, want_reason text)',
     'decide_community_case(want_case uuid, want_action text, want_reason text)',
@@ -207,6 +207,24 @@ declare
     'my_community_notices()',
     'my_community_refs()',
     'report_community_post(want_post uuid, want_category text, want_imminent boolean, want_details text)',
+
+    /*
+     * Scoped pseudonyms and volunteer moderation. Eight, and every one first
+     * asks community_programs whether that school has switched the programme
+     * on — a row only the service role can write — so at every school today
+     * each of them refuses. The volunteer functions then check eligibility,
+     * training, agreements, calibration status, caps and recusal before they
+     * hand out or accept anything; manage_volunteer needs a senior reviewer.
+     * community.check.sql attempts each refusal.
+     */
+    'apply_to_volunteer()',
+    'approve_community_pseudonymity(want_community uuid, want_on boolean)',
+    'claim_community_alias(want_community uuid, want_name text)',
+    'manage_volunteer(want_volunteer uuid, want_action text, want_reason text)',
+    'my_volunteer_standing()',
+    'volunteer_attest(want_kind text)',
+    'volunteer_decide(want_task uuid, want_action text, want_reason text)',
+    'volunteer_next_tasks()',
 
     /*
      * The six ways into `organization_members`, and the reason there are six
@@ -348,7 +366,7 @@ begin
   if missing is not null then
     raise exception 'FAILED: the allowlist names %, which a signed-in account cannot call', missing;
   end if;
-  raise notice 'ok  and can call all forty-seven that it should';
+  raise notice 'ok  and can call all fifty-five that it should';
 end $$;
 
 -- ── The gate's own switch, named because it is the one that was open ──────

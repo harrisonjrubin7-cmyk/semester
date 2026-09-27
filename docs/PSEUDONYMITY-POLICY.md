@@ -1,7 +1,30 @@
 # Pseudonymity policy
 
-Code: `app/src/community/alias.ts`. Flag: `VITE_SCOPED_PSEUDONYMITY` (high-risk,
-off, production refused).
+Code: `app/src/community/alias.ts`, enforced by `community_aliases`,
+`claim_community_alias` and `create_community_post` in
+`20260927170000_community.sql`.
+
+**Two switches, both off:**
+
+- The build flag `VITE_SCOPED_PSEUDONYMITY` is high-risk, off by default, and
+  refuses `production`.
+- The school's `community_programs` row (`scoped_pseudonymity`) is off
+  unless present, and only the service role can write it. A community
+  manager then approves a specific support or study-group community.
+
+**How the server keeps an alias from unmasking its owner:**
+
+- **Separate reference.** An alias post has its own author reference, salted
+  with the alias, so it cannot be joined to the same person's named posts. A
+  new alias gets a new reference.
+- **Blocking mutes instead.** Blocking an alias mutes that alias in that
+  community instead of blocking the account. An account block would hide the
+  person's named posts as well, and which posts vanished would reveal who the
+  alias is.
+- **Accountability stays.** Reports, decisions and restrictions still reach
+  the account.
+- **No lookalike names.** An alias cannot be any member's handle at that
+  school.
 
 - An alias exists only in one community that is both approved for aliases and
   of an eligible type (support, study group).

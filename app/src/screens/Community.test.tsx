@@ -73,6 +73,7 @@ const post = (id: string, patch: Record<string, unknown> = {}) => ({
   body: `Body ${id}`,
   label: 'student_created',
   status: 'published',
+  asAlias: false,
   createdAt: '2026-09-27T10:00:00Z',
   editedAt: null,
   mine: false,
