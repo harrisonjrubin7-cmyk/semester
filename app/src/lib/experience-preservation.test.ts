@@ -39,6 +39,8 @@ describe('the intelligence expansion preserves the existing Semester product', (
       careerSkillsGraph: 'off',
       multimodalCapture: 'off',
       universityControlPlane: 'off',
+      humanHelp: 'off',
+      integrationDashboard: 'off',
     });
   });
 

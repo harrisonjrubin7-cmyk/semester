@@ -1,13 +1,13 @@
 # Procurement Checklist
 
-**Status: `NOT_STARTED`**
+**Status: `IN_PROGRESS`** — the control-by-control register is `HECVAT_READINESS.md`
 
 What a university procurement and security review asks for, and what we could
 hand over today.
 
 | Ask | Have | Note |
 | --- | --- | --- |
-| Security questionnaire (HECVAT or similar) | **No** | Nothing prepared |
+| Security questionnaire (HECVAT or similar) | **Partial** | `HECVAT_READINESS.md` registers every control with its evidence, test-checked; not yet a completed questionnaire |
 | SOC 2 report | **No** | No audit has been performed |
 | Penetration test report | **No** | None commissioned |
 | VPAT / ACR | **No** | Requires formal evaluation; do not fabricate |
@@ -19,13 +19,14 @@ hand over today.
 | Terms of service | **No** | — |
 | DPA | **No** | — |
 | Insurance | **No** | — |
-| SSO support | **No** | Hard blocker for most institutions |
+| SSO support | **Partial** | SAML membership binding and SCIM provisioning exist and are policy-tested; no real institution's IdP has completed an exchange (`HECVAT_READINESS.md` IAM-1) |
 | Accessibility conformance | **Partial** | Automated critical-journey audits run in CI; formal review and VPAT/ACR remain absent |
 | Uptime SLA | **No** | Hourly public synthetic monitoring exists, but no measured availability history, named on-call route or contractual SLO exists |
 
 ## The three that block hardest
 
-1. **SSO.** Many institutions will not proceed past this line.
+1. **SSO.** Many institutions will not proceed past this line. Built and
+   tested; what remains is one live exchange with a real IdP.
 2. **Security questionnaire.** Cannot be answered honestly today; several
    answers would be "no".
 3. **Uptime SLA.** Still unofferable: an hourly probe begins the measurement,
