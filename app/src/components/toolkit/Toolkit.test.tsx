@@ -118,3 +118,14 @@ it('will not mark a stage done until the student writes their own note', () => {
   click('Mark Claim done');
   expect(host.textContent).toContain('1 of 7 stages done');
 });
+
+it('will not verify a source until the student says they opened the original', () => {
+  mount();
+  tab('Research Studio');
+  click('Start a research project');
+  click('Add a source');
+  act(() => (host.querySelector('details.toolkit-evidence') as HTMLDetailsElement).setAttribute('open', ''));
+  click('Mark verified');
+  expect(host.textContent).toContain('Open the original source and confirm you read it.');
+  expect(host.textContent).not.toContain('Marked verified.');
+});
