@@ -171,8 +171,10 @@ export function guess(item: Intake): Verdict {
   }
 
   // Slide numbers in the extracted pages are the strongest signal there is —
-  // only a real deck has them, because only a real deck is asked for them.
-  if (item.pages && item.pages.length > 2) {
+  // only a real deck has them. A PDF has pages too, and says so in
+  // `pageUnit`; a page count says nothing about whether it is a deck. An item
+  // with pages and no unit predates PDFs having any, so it is a deck.
+  if (item.pages && item.pages.length > 2 && item.pageUnit !== 'page') {
     scores.set('slides', (scores.get('slides') ?? 0) + 4);
   }
 

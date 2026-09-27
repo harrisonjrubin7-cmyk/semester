@@ -61,17 +61,17 @@ them already exist in part on main (#761, #762).
 | A | Design and UX audit: [UX-ENHANCEMENT-PLAN.md](UX-ENHANCEMENT-PLAN.md), [DESIGN-SYSTEM-IMPROVEMENTS.md](DESIGN-SYSTEM-IMPROVEMENTS.md), crosswalk | **Done**, docs only (D-014) |
 | B | Today + Action Center: [TODAY-ACTION-CENTER.md](TODAY-ACTION-CENTER.md) | **Built** as an increment on BL-1.4, behind `today_action_center` (off); the H-2 fix is always on. Draft PR (D-021) |
 | C | Registration Day Mode (extends #762): [REGISTRATION-DAY-MODE.md](REGISTRATION-DAY-MODE.md) | **Built** behind `registration_day_mode` (off). Draft PR, stacked on Phase B |
-| D | Graduation Simulator + Cost Planner (extends #762) | Queued |
+| D | Graduation Simulator + Cost Planner (extends #762): [GRADUATION-AND-COST-SIMULATOR.md](GRADUATION-AND-COST-SIMULATOR.md) | **Built** behind `graduation_simulator` and `cost_planner` (off). Carries one additive migration, not applied (D-025). Draft PR, stacked on Phase C |
 | E | Academic Life Balance + Crunch Week (extends `lib/clash.ts`) | Queued |
 | F | Course Detail V2 | Queued |
 | G | Advisor Meeting Mode | Queued; sharing model is D-016 |
 | H | Study Readiness + Source Locker | Queued |
 | I | Career Evidence | Queued |
-| J | Office Action Feed (UI on `institution_actions`) | Queued; needs a follow-up migration |
-| K | Course Demand Forecasting (UI on `course_demand_snapshots`) | Queued |
-| L | Semester Wrapped | Queued |
-| M | Offline Mode (extends `public/sw.js`) | Queued |
-| N | Trust Center | Queued; includes the D-018 export gap |
+| J | Office Action Feed: [OFFICE-ACTION-FEED.md](OFFICE-ACTION-FEED.md) | **Built** behind `office_action_feed` (off). Its migration awaits owner approval (D-048). Draft PR |
+| K | Course Demand Forecasting: [COURSE-DEMAND-FORECASTING.md](COURSE-DEMAND-FORECASTING.md) | **Built** behind `demand_forecasting` (off). Its migration awaits owner approval (D-051). Draft PR |
+| L | Semester Wrapped: [SEMESTER-WRAPPED.md](SEMESTER-WRAPPED.md) | **Built** behind `semester_wrapped` (off), no server change. Draft PR |
+| M | Offline Mode: [OFFLINE-MODE.md](OFFLINE-MODE.md) | **Built** behind `offline_mode` (off), with no server or service-worker change. Draft PR |
+| N | Trust Center: [TRUST-CENTER.md](TRUST-CENTER.md) | **Built** behind `trust_center` (off); Export covers every device store (D-018 fixed). Draft PR |
 | O | Visual polish (DS-1…DS-8) | Queued |
 | P | Docs, tests, PRs per phase | Continuous |
 

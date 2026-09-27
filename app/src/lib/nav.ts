@@ -690,7 +690,7 @@ export const DESTINATIONS: Destination[] = [
     short: 'Pathway',
     blurb: 'Applying somewhere, arriving, a thesis, graduating — the projects that outlast a term.',
     keywords:
-      'pathway program programs application applications apply graduate grad school masters doctoral phd thesis dissertation research publication transfer credit admission admissions arrival orientation graduation alumni milestone milestones tuition cost compare shortlist deadline personal statement essay recommendation',
+      'pathway program programs application applications apply graduate grad school masters doctoral phd thesis dissertation research publication transfer credit admission admissions arrival orientation graduation alumni milestone milestones tuition cost compare shortlist deadline personal statement essay recommendation study abroad exchange semester away course approval pre-approval credit count host university',
     group: 'Beyond',
     taskTags: ['ahead'],
     root: 'mine',
