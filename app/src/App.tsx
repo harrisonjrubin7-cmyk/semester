@@ -98,6 +98,7 @@ import { Adopting } from './components/Adopting';
 import { Watching } from './components/Watching';
 import { forget } from './lib/scrollback';
 import { Fresh } from './components/Fresh';
+import { SyncStrip } from './components/SyncStrip';
 import { useMedium, useTier } from './lib/media';
 import { CloseIcon, MenuIcon } from './components/Icons';
 import { DOW, MONTHS } from './lib/date';
@@ -1243,7 +1244,7 @@ function AppFrame() {
    * the next reload, and a message that fades after four seconds is worse than
    * none because it makes them think they imagined it.
    */
-  const trouble = saveTrouble ? (
+  const banner = saveTrouble ? (
     <div
       role="status"
       style={{
@@ -1260,6 +1261,18 @@ function AppFrame() {
       {saveTrouble}
     </div>
   ) : null;
+  /*
+   * And under it, the account: one quiet line while being offline, a waiting
+   * choice or a failed sync is worth saying, nothing otherwise. Carried in the
+   * same slot so every frame that shows the one shows the other. See
+   * `components/SyncStrip.tsx`.
+   */
+  const trouble = (
+    <>
+      {banner}
+      <SyncStrip />
+    </>
+  );
 
   /*
    * The workspace, at every width.

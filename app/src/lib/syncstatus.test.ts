@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { PUSH_SETTLE_MS, SYNC_WORDS, pushWait, retriesOnItsOwn, waiting } from './syncstatus';
+import { PUSH_SETTLE_MS, SYNC_WORDS, pushWait, retriesOnItsOwn, syncLine, waiting } from './syncstatus';
 import { DEFAULT_PERSISTED, sameFields } from '../state/shape';
 
 /**
@@ -81,5 +81,49 @@ describe('pushWait', () => {
 
   it('takes the longer of the two when both are counting', () => {
     expect(pushWait(20, 20)).toBe(300_000);
+  });
+});
+
+describe('syncLine', () => {
+  const statuses = Object.keys(SYNC_WORDS) as (keyof typeof SYNC_WORDS)[];
+
+  it('gives a line to the five statuses worth one, and to no other', () => {
+    const lined = statuses.filter((s) => syncLine(s, '') !== null).sort();
+    expect(lined).toEqual(['conflict', 'error', 'offline', 'queued', 'review']);
+  });
+
+  it('never says "Saved" on its own — none of these is saved to the account', () => {
+    for (const s of statuses) {
+      const line = syncLine(s, '');
+      if (line) expect(line.title).not.toMatch(/^saved$/i);
+    }
+  });
+
+  it('says the work is safe whenever it says a sync did not happen', () => {
+    expect(syncLine('error', '')?.detail).toMatch(/saved on this device/);
+    expect(syncLine('error', 'The account refused this change. (SEM-1)')?.detail).toMatch(/saved on this device/);
+    // A failure that already says so is not told twice.
+    const told = syncLine('error', 'No answer.\n\nYour changes are safe on this device, and it will try again by itself.');
+    expect(told?.detail).toBe('No answer. Your changes are safe on this device, and it will try again by itself.');
+    expect(told?.detail.match(/on this device/g)?.length).toBe(1);
+  });
+
+  it('keeps being offline quiet and everything else in the warning colour', () => {
+    expect(syncLine('offline', '')?.warn).toBe(false);
+    for (const s of ['queued', 'conflict', 'review', 'error'] as const) expect(syncLine(s, '')?.warn, s).toBe(true);
+  });
+
+  it('asks for a choice where one is waiting', () => {
+    expect(syncLine('review', '')?.act).toBe('Choose');
+  });
+
+  it('says offline to a device with no account, without promising a sync', () => {
+    for (const s of ['off', 'signed-out'] as const) {
+      expect(syncLine(s, '', true), s).toBeNull();
+      const line = syncLine(s, '', false);
+      expect(line?.title, s).toBe('Offline');
+      expect(line?.detail, s).not.toMatch(/sync/i);
+      expect(line?.act, s).toBe('');
+    }
   });
 });
