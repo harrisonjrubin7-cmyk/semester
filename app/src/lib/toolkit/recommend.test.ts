@@ -17,6 +17,11 @@ describe('recommendations', () => {
     expect(Object.keys(explicitOnly(polluted as unknown as Context)).sort()).toEqual(Object.keys(base).sort());
   });
 
+  it('explains a subject recommendation by the course code the student imported', () => {
+    const why = recommend(base).flatMap((r) => r.why).join(' ');
+    expect(why).toContain('PSCI 1104 is Political science');
+  });
+
   it('hides what the student hid and shows fewer when asked', () => {
     const first = recommend(base)[0].workspace.id;
     expect(recommend({ ...base, hidden: [first] }).some((r) => r.workspace.id === first)).toBe(false);
