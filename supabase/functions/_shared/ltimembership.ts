@@ -39,9 +39,14 @@ export function membershipJoin(data: unknown, error: { message?: string } | null
   const tenantId = typeof r.tenant_id === 'string' && r.tenant_id ? r.tenant_id : null;
 
   if (outcome === 'joined') {
-    const roles = Array.isArray(r.roles) ? r.roles.filter((x): x is string => typeof x === 'string') : [];
-    // A join must name all three. One that does not is not trusted as a join.
-    if (tenantId && typeof r.membership_id === 'string' && r.membership_id && roles.length) {
+    // A join must name a school, a membership and an array of role names. The
+    // array may be empty: SCIM creates an active membership with roles '{}'
+    // and group mappings add roles later, so "active, no roles yet" is an
+    // ordinary state. Refusing it would tell a student their access is not
+    // active when it is. What is not trusted is a roles value that is not an
+    // array of strings: that is a malformed row, not an empty one.
+    const roles = Array.isArray(r.roles) && r.roles.every((x) => typeof x === 'string') ? (r.roles as string[]) : null;
+    if (tenantId && typeof r.membership_id === 'string' && r.membership_id && roles) {
       return { joined: true, outcome, tenantId, membershipId: r.membership_id, roles };
     }
     return { joined: false, outcome: 'unreadable', tenantId: null };

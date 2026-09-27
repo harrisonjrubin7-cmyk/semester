@@ -37,6 +37,7 @@ declare
   loner_user uuid := pg_temp.newuser('loner@north-lti.example');
   paused_user uuid := pg_temp.newuser('paused@north-lti.example');
   elsewhere_user uuid := pg_temp.newuser('elsewhere@south-lti.example');
+  fresh_user uuid := pg_temp.newuser('fresh@north-lti.example');
   joined_membership uuid;
   r record;
   before_rows text;
@@ -55,7 +56,8 @@ begin
     ('https://lms.test.edu', 'sub-provisioned', provisioned_user, 'provisioned'),
     ('https://lms.test.edu', 'sub-loner', loner_user, 'linked'),
     ('https://lms.test.edu', 'sub-paused', paused_user, 'linked'),
-    ('https://lms.test.edu', 'sub-elsewhere', elsewhere_user, 'linked');
+    ('https://lms.test.edu', 'sub-elsewhere', elsewhere_user, 'linked'),
+    ('https://lms.test.edu', 'sub-fresh', fresh_user, 'linked');
 
   insert into public.institution_membership (tenant_id, auth_user_id, status, roles)
   values ('north-lti', linked_user, 'active', array['student', 'teaching_assistant'])
@@ -63,7 +65,9 @@ begin
   insert into public.institution_membership (tenant_id, auth_user_id, status, roles) values
     ('north-lti', paused_user, 'suspended', array['student']),
     -- The control for tenant matching: an active membership, in the wrong school.
-    ('south-lti', elsewhere_user, 'active', array['student']);
+    ('south-lti', elsewhere_user, 'active', array['student']),
+    -- As SCIM creates one: active, no roles until a group mapping grants them.
+    ('north-lti', fresh_user, 'active', '{}');
   -- A provisioned account that somehow holds a membership must still not join:
   -- the identity is not linked, and that is checked before any membership is.
   insert into public.institution_membership (tenant_id, auth_user_id, status, roles)
@@ -84,6 +88,10 @@ begin
   perform pg_temp.answered('a provisioned identity is not linked, membership or not', pg_temp.outcome('sub-provisioned'), 'identity-not-linked');
   perform pg_temp.answered('a linked identity with no membership', pg_temp.outcome('sub-loner'), 'no-membership');
   perform pg_temp.answered('a membership in another school does not join', pg_temp.outcome('sub-elsewhere'), 'no-membership');
+
+  select * into r from public.lti_launch_membership('https://lms.test.edu', 'client-lti', 'deploy-north', 'sub-fresh');
+  perform pg_temp.answered('an active membership with no roles yet still joins', r.outcome, 'joined');
+  perform pg_temp.answered('and carries an empty role list, not a missing one', r.roles::text, '{}');
 
   select * into r from public.lti_launch_membership('https://lms.test.edu', 'client-lti', 'deploy-north', 'sub-paused');
   perform pg_temp.answered('a suspended membership is named, not joined', r.outcome, 'membership-suspended');

@@ -26,13 +26,24 @@ describe('reading an LTI launch membership join', () => {
   );
 
   // A row that says joined but is missing a part is not trusted as a join.
+  // An empty roles array is not a missing part (see the next test); a roles
+  // value that is not an array of strings is.
   it.each([
     { ...joined, tenant_id: null },
     { ...joined, membership_id: '' },
-    { ...joined, roles: [] },
     { ...joined, roles: 'student' },
+    { ...joined, roles: null },
+    { ...joined, roles: ['student', 42] },
   ])('refuses a partial join %j', (row) => {
     expect(membershipJoin([row], null)).toEqual({ joined: false, outcome: 'unreadable', tenantId: null });
+  });
+
+  // SCIM creates an active membership with roles '{}' and group mappings add
+  // roles later, so active-with-no-roles is an ordinary state, not a broken row.
+  it('reads an active membership with no roles yet as joined, with no roles', () => {
+    expect(membershipJoin([{ ...joined, roles: [] }], null)).toEqual({
+      joined: true, outcome: 'joined', tenantId: 'north', membershipId: 'm-1', roles: [],
+    });
   });
 
   it('never fails a launch on an error, and tells a missing function from a broken one', () => {
@@ -99,6 +110,14 @@ describe('placing an activity, scoped by the joined roles', () => {
     (...roles) => expect(placementDecision(joinedAs(...roles)))
       .toEqual({ allow: false, reason: 'membership-not-instructor' }),
   );
+
+  // Active but no roles yet: the student may enter (the session gate is about
+  // whether access is active), but nothing makes them an instructor.
+  it('lets an active membership with no roles in, and does not let it place', () => {
+    const noRoles = joinedAs();
+    expect(sessionDecision(noRoles)).toEqual({ allow: true });
+    expect(placementDecision(noRoles)).toEqual({ allow: false, reason: 'membership-not-instructor' });
+  });
 
   it('refuses where the session gate would, before looking at roles', () => {
     const suspended = membershipJoin([{ outcome: 'membership-suspended', tenant_id: 'north' }], null);
