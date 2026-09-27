@@ -9,6 +9,7 @@ import { CRISIS_NOTICE } from '../community/crisis';
 import type { DecisionAction } from '../community/moderation';
 import {
   accountHash,
+  canManageAgreements,
   decideAppeal,
   decideCase,
   lastSweep,
@@ -108,6 +109,8 @@ const ESCALATION_BUILT = () => enabled(COMMUNITY_FLAGS, 'institutionEscalation')
 const SAFETY_BUILT = () => enabled(COMMUNITY_FLAGS, 'accountSafetyState');
 
 function Console({ accountId }: { accountId: string }) {
+  const { dispatch } = useStore();
+  const [agreementStaff, setAgreementStaff] = useState(false);
   const [standing, setStanding] = useState<Standing | null>(null);
   const [cases, setCases] = useState<CaseRow[]>([]);
   const [status, setStatus] = useState('');
@@ -130,6 +133,7 @@ function Console({ accountId }: { accountId: string }) {
           setPolicies(p);
           setEscalations(e);
           setMe(h);
+          setAgreementStaff(await canManageAgreements().catch(() => false));
         }
       }
     } catch (e) {
@@ -186,6 +190,11 @@ function Console({ accountId }: { accountId: string }) {
   return (
     <Page blurb="Most severe first, then oldest. Reporters are never shown. Automation only queued, held or reduced these — every decision is yours.">
       <Notice>{CRISIS_NOTICE}</Notice>
+      {agreementStaff && (
+        <ActionButton style={{ marginBlock: 'var(--sp-4)' }} onClick={() => dispatch({ type: 'go', screen: 'agreements' })}>
+          Escalation agreements
+        </ActionButton>
+      )}
       {status && <p role="status">{status}</p>}
       {sweep !== undefined && (
         <p style={{ color: 'var(--app-dim)' }}>

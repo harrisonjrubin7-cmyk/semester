@@ -1191,6 +1191,10 @@ export const KEPT_TABLES: KeptTable[] = [
     why: 'What an automated detector recorded about a post — the rule, how sure it was, and what a reviewer then decided. It belongs to the moderation case and goes when the case does, on the case\'s retention date.',
   },
   {
+    table: 'community_escalation_agreement_events',
+    why: 'The history of your university\'s escalation agreement — each draft, activation and retirement by Semester\'s Trust & Safety staff. A record about the school\'s agreement, not about you.',
+  },
+  {
     table: 'community_escalation_policies',
     why: 'Whether your university has signed an agreement to receive escalations of serious safety cases, and which kinds it covers. An agreement of the school, not a record about you.',
   },

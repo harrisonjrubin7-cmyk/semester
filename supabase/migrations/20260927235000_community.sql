@@ -38,7 +38,8 @@
 insert into public.app_capabilities (capability, about) values
   ('community:review',        'Decide Community moderation cases (P1–P3) and appeals. Never reads a reporter.'),
   ('community:review_senior', 'Everything community:review does, plus P0 account restrictions.'),
-  ('community:manage',        'Create institution and organization communities, and approved study venues, for one university.')
+  ('community:manage',        'Create institution and organization communities, and approved study venues, for one university.'),
+  ('community:escalation_agreements', 'Record, activate and retire a university''s escalation agreement — one person drafts, another activates. Never reads a case.')
 on conflict (capability) do nothing;
 
 insert into public.app_roles (role, global) values
@@ -51,6 +52,7 @@ insert into public.role_capabilities (role, capability) values
   ('trust_safety_reviewer', 'community:review'),
   ('trust_safety_senior',   'community:review'),
   ('trust_safety_senior',   'community:review_senior'),
+  ('trust_safety_senior',   'community:escalation_agreements'),
   ('community_manager',     'community:manage')
 on conflict do nothing;
 
@@ -2174,7 +2176,7 @@ grant execute on function public.my_volunteer_standing() to authenticated;
 --   * the school's community_programs row for institution_escalation is on;
 --   * the school has an escalation policy that is enabled, names a signed
 --     agreement and a delivery channel, and lists the categories it covers —
---     a row only the service role writes;
+--     a row the service role, or two agreement staff through section 14a, writes;
 --   * the case is P0 or P1, in a covered category, with no escalation already
 --     requested or approved;
 --   * one professional asks, with a written reason, and a *different* one
@@ -2196,14 +2198,24 @@ create table if not exists public.community_escalation_policies (
   categories        text[]      not null default '{}',
   identity_required boolean     not null default false,
   channel           text        not null default '' check (length(channel) <= 200),
-  updated_at        timestamptz not null default now()
+  updated_at        timestamptz not null default now(),
+  -- Written through the admin screen (section 14a): who the school's side is,
+  -- as an office rather than a person; when the agreement ends; and the two
+  -- different people who drafted and activated it, by hash.
+  contact             text      not null default '' check (length(contact) <= 200),
+  expires_on          date,
+  drafted_by_sha256   text      check (drafted_by_sha256 is null or drafted_by_sha256 ~ '^[0-9a-f]{64}$'),
+  drafted_at          timestamptz,
+  activated_by_sha256 text      check (activated_by_sha256 is null or activated_by_sha256 ~ '^[0-9a-f]{64}$'),
+  activated_at        timestamptz
 );
 alter table public.community_escalation_policies enable row level security;
 revoke all on table public.community_escalation_policies from anon, authenticated;
 grant select on table public.community_escalation_policies to authenticated;
 drop policy if exists "reviewers read escalation policies" on public.community_escalation_policies;
 create policy "reviewers read escalation policies" on public.community_escalation_policies
-  for select to authenticated using (private.has_capability('community:review'));
+  for select to authenticated
+  using (private.has_capability('community:review') or private.has_capability('community:escalation_agreements'));
 
 create table if not exists public.community_escalations (
   id                  uuid        primary key default gen_random_uuid(),
@@ -2270,7 +2282,8 @@ begin
     raise exception 'institution escalation is switched off at this school' using errcode = '42501';
   end if;
   select * into pol from public.community_escalation_policies where tenant_id = k.tenant_id;
-  if pol.tenant_id is null or not pol.enabled or pol.agreement_ref = '' or pol.channel = '' then
+  if pol.tenant_id is null or not pol.enabled or pol.agreement_ref = '' or pol.channel = ''
+     or pol.expires_on < current_date then
     raise exception 'this school has no escalation agreement in force' using errcode = '42501';
   end if;
   if k.severity not in ('P0', 'P1') then
@@ -2411,6 +2424,7 @@ as $$
         and (x.claimed_until is null or x.claimed_until < now())
         and e.status = 'approved'
         and pol.enabled and pol.channel = x.channel
+        and (pol.expires_on is null or pol.expires_on >= current_date)
         and private.community_program_on(e.tenant_id, 'institution_escalation')
       order by x.queued_at
       limit 20
@@ -2454,6 +2468,173 @@ as $$
 $$;
 revoke all on function public.mark_escalation_failed(uuid, text, boolean) from public, anon, authenticated;
 grant execute on function public.mark_escalation_failed(uuid, text, boolean) to service_role;
+
+-- ── 14a. Escalation agreements, recorded by people ────────────────────────
+--
+-- The agreement row was service-role only. It is now also written here, by a
+-- holder of community:escalation_agreements (senior Trust & Safety staff at
+-- platform scope — never anybody at the school the agreement is with), under
+-- the same two-person rule as an escalation:
+--
+--   * one person records or edits a draft; any edit, to anything, leaves the
+--     agreement inactive, so what was activated is always what a second
+--     person read;
+--   * a different person activates it, with a reason, before it has ended;
+--   * anybody holding the capability can retire it, alone — off is always safe;
+--   * every change is an event, attributed by hash.
+--
+-- The channel must be a name the delivery adapter knows how to resolve
+-- (webhook:<name>); the address behind it stays in the function's secrets.
+-- The school's own community_programs switch is still a service-role step:
+-- an active agreement with the switch off sends nothing.
+
+create table if not exists public.community_escalation_agreement_events (
+  id           bigint      generated always as identity primary key,
+  tenant_id    text        not null references public.schools(id) on delete cascade,
+  event        text        not null check (event in ('drafted', 'activated', 'retired')),
+  actor_sha256 text        not null check (actor_sha256 ~ '^[0-9a-f]{64}$'),
+  reason       text        not null default '' check (length(reason) <= 500),
+  agreement_ref text       not null default '',
+  occurred_at  timestamptz not null default now()
+);
+create index if not exists community_escalation_agreement_events_by_tenant
+  on public.community_escalation_agreement_events (tenant_id, occurred_at desc);
+alter table public.community_escalation_agreement_events enable row level security;
+revoke all on table public.community_escalation_agreement_events from anon, authenticated;
+grant select on table public.community_escalation_agreement_events to authenticated;
+drop policy if exists "agreement staff read agreement history" on public.community_escalation_agreement_events;
+create policy "agreement staff read agreement history" on public.community_escalation_agreement_events
+  for select to authenticated using (private.has_capability('community:escalation_agreements'));
+
+create or replace function public.can_manage_escalation_agreements()
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$ select private.has_capability('community:escalation_agreements'); $$;
+revoke all on function public.can_manage_escalation_agreements() from public, anon, authenticated;
+grant execute on function public.can_manage_escalation_agreements() to authenticated;
+
+create or replace function public.save_escalation_agreement(
+  want_tenant text, want_agreement_ref text, want_categories text[], want_identity_required boolean,
+  want_channel text, want_contact text, want_expires_on date
+)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  me_hash text := private.role_audit_sha256((select auth.uid())::text);
+  bad text;
+begin
+  if not private.has_capability('community:escalation_agreements') then
+    raise exception 'only Trust & Safety agreement staff record agreements' using errcode = '42501';
+  end if;
+  if not exists (select 1 from public.schools where id = want_tenant) then
+    raise exception 'no such school' using errcode = '22023';
+  end if;
+  if coalesce(length(trim(want_agreement_ref)), 0) < 3 or length(want_agreement_ref) > 200 then
+    raise exception 'name the signed agreement (3–200 characters)' using errcode = '22023';
+  end if;
+  if coalesce(want_channel, '') !~ '^webhook:[a-z0-9_]{1,40}$' then
+    raise exception 'the channel must be webhook:<name>, lowercase letters, digits and underscores' using errcode = '22023';
+  end if;
+  if coalesce(cardinality(want_categories), 0) = 0 then
+    raise exception 'an agreement covers at least one category' using errcode = '22023';
+  end if;
+  select c into bad from unnest(want_categories) c
+   where c not in ('harassment_or_bullying', 'threat_or_safety_concern', 'hate_or_discrimination',
+                   'private_information_or_doxxing', 'impersonation', 'nonconsensual_media',
+                   'spam_scam_or_phishing', 'academic_integrity', 'other')
+   limit 1;
+  if bad is not null then raise exception 'unknown category %', bad using errcode = '22023'; end if;
+  if want_expires_on is null or want_expires_on <= current_date or want_expires_on > current_date + 1096 then
+    raise exception 'an agreement ends between tomorrow and three years from now' using errcode = '22023';
+  end if;
+  if coalesce(length(trim(want_contact)), 0) < 3 or length(want_contact) > 200 then
+    raise exception 'name the office at the school that receives escalations' using errcode = '22023';
+  end if;
+
+  insert into public.community_escalation_policies
+    (tenant_id, enabled, agreement_ref, categories, identity_required, channel, contact, expires_on,
+     drafted_by_sha256, drafted_at, activated_by_sha256, activated_at, updated_at)
+  values (want_tenant, false, trim(want_agreement_ref), (select array_agg(distinct c order by c) from unnest(want_categories) c),
+          coalesce(want_identity_required, false), want_channel, trim(want_contact), want_expires_on,
+          me_hash, now(), null, null, now())
+  on conflict (tenant_id) do update
+     set enabled = false, agreement_ref = excluded.agreement_ref, categories = excluded.categories,
+         identity_required = excluded.identity_required, channel = excluded.channel, contact = excluded.contact,
+         expires_on = excluded.expires_on, drafted_by_sha256 = excluded.drafted_by_sha256, drafted_at = now(),
+         activated_by_sha256 = null, activated_at = null, updated_at = now();
+  insert into public.community_escalation_agreement_events (tenant_id, event, actor_sha256, agreement_ref)
+  values (want_tenant, 'drafted', me_hash, trim(want_agreement_ref));
+end $$;
+revoke all on function public.save_escalation_agreement(text, text, text[], boolean, text, text, date) from public, anon, authenticated;
+grant execute on function public.save_escalation_agreement(text, text, text[], boolean, text, text, date) to authenticated;
+
+create or replace function public.activate_escalation_agreement(want_tenant text, want_reason text)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  me_hash text := private.role_audit_sha256((select auth.uid())::text);
+  pol public.community_escalation_policies;
+begin
+  if not private.has_capability('community:escalation_agreements') then
+    raise exception 'only Trust & Safety agreement staff activate agreements' using errcode = '42501';
+  end if;
+  select * into pol from public.community_escalation_policies where tenant_id = want_tenant for update;
+  if pol.tenant_id is null or pol.enabled then
+    raise exception 'there is no draft agreement to activate' using errcode = '22023';
+  end if;
+  if pol.drafted_by_sha256 is null or pol.drafted_by_sha256 = me_hash then
+    raise exception 'a second, different person must activate it' using errcode = '42501';
+  end if;
+  if pol.expires_on is null or pol.expires_on <= current_date then
+    raise exception 'this agreement has ended; record a new one' using errcode = '22023';
+  end if;
+  if coalesce(length(trim(want_reason)), 0) < 10 then
+    raise exception 'write down what you checked' using errcode = '22023';
+  end if;
+  update public.community_escalation_policies
+     set enabled = true, activated_by_sha256 = me_hash, activated_at = now(), updated_at = now()
+   where tenant_id = want_tenant;
+  insert into public.community_escalation_agreement_events (tenant_id, event, actor_sha256, reason, agreement_ref)
+  values (want_tenant, 'activated', me_hash, left(trim(want_reason), 500), pol.agreement_ref);
+end $$;
+revoke all on function public.activate_escalation_agreement(text, text) from public, anon, authenticated;
+grant execute on function public.activate_escalation_agreement(text, text) to authenticated;
+
+create or replace function public.retire_escalation_agreement(want_tenant text, want_reason text)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  me_hash text := private.role_audit_sha256((select auth.uid())::text);
+  pol public.community_escalation_policies;
+begin
+  if not private.has_capability('community:escalation_agreements') then
+    raise exception 'only Trust & Safety agreement staff retire agreements' using errcode = '42501';
+  end if;
+  select * into pol from public.community_escalation_policies where tenant_id = want_tenant for update;
+  if pol.tenant_id is null or not pol.enabled then
+    raise exception 'there is no active agreement to retire' using errcode = '22023';
+  end if;
+  if coalesce(length(trim(want_reason)), 0) < 10 then
+    raise exception 'write down why' using errcode = '22023';
+  end if;
+  update public.community_escalation_policies set enabled = false, updated_at = now() where tenant_id = want_tenant;
+  insert into public.community_escalation_agreement_events (tenant_id, event, actor_sha256, reason, agreement_ref)
+  values (want_tenant, 'retired', me_hash, left(trim(want_reason), 500), pol.agreement_ref);
+end $$;
+revoke all on function public.retire_escalation_agreement(text, text) from public, anon, authenticated;
+grant execute on function public.retire_escalation_agreement(text, text) to authenticated;
 
 -- ── 15. The private account safety state ──────────────────────────────────
 --
@@ -2584,6 +2765,11 @@ grant execute on function public.my_community_standing() to authenticated;
 --     public.mark_escalation_delivered(uuid), public.take_escalation_deliveries(),
 --     public.decide_community_escalation(uuid, boolean, text), public.request_community_escalation(uuid, text),
 --     private.escalation_allowed(public.community_cases);
+--   drop function if exists public.retire_escalation_agreement(text, text),
+--     public.activate_escalation_agreement(text, text),
+--     public.save_escalation_agreement(text, text, text[], boolean, text, text, date),
+--     public.can_manage_escalation_agreements();
+--   drop table if exists public.community_escalation_agreement_events;
 --   drop table if exists public.community_safety_entries, public.community_escalation_deliveries,
 --     public.community_escalations, public.community_escalation_policies;
 --   drop function if exists public.my_volunteer_standing(), public.volunteer_decide(uuid, text, text),

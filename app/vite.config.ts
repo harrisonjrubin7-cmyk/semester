@@ -601,6 +601,7 @@ const MOCKS_MODULES = [
   'src/screens/Community.test.tsx',
   'src/screens/Moderation.test.tsx',
   'src/screens/Volunteer.test.tsx',
+  'src/screens/Agreements.test.tsx',
   'src/components/TermChoice.test.tsx',
   'src/components/gpascalenote.test.tsx',
   'src/components/institutional/ControlPlane.test.tsx',

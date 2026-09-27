@@ -83,8 +83,9 @@ It **is not** yet:
   parked. It is not a function directory, because here a directory is a
   deployed function, and deploying it waits for a signed agreement.
   `docs/CAMPUS-ESCALATION-POLICY.md` has the steps.
-- **An admin screen for escalation agreements.** Policies are written by the
-  service role; the console only reads them.
+- **Contract review in the app.** The Agreements screen records a
+  reference to the signed agreement; the document itself lives outside
+  Semester, and the person activating is asked what they checked against it.
 - **A reviewer tool to map an alias to an account** (just-in-time access).
   Enforcement already reaches the account server-side.
 

@@ -160,7 +160,9 @@ the account safety state:
   approvals and new safety entries on the next call. Safety entries already
   written stay until the yearly sweep or an appeal reverses them.
 - Escalation also needs a `community_escalation_policies` row naming the
-  agreement, its categories and the channel — again service role only.
+  agreement, its categories and the channel. Two different senior Trust &
+  Safety staff write it through the Agreements screen (one drafts, one
+  activates); the service role can too. School staff cannot.
 - An engaged `kill.sharing` (above), for the school or for every school,
   turns pseudonymity and volunteer moderation off in the database as well as
   in the app. `private.community_program_on` reads it.

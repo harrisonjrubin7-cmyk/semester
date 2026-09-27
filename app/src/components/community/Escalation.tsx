@@ -14,11 +14,12 @@ import { Trouble } from '../Trouble';
 export const REASON_MIN = 10;
 
 /** Said under every reason box, so a disabled button is never unexplained. */
-export function ReasonHint({ reason }: { reason: string }) {
+export function ReasonHint({ reason, keptWith = 'the case' }: { reason: string; keptWith?: string }) {
   const short = REASON_MIN - reason.trim().length;
+  const kept = `It is kept with ${keptWith}.`;
   return (
     <p style={{ margin: 0, color: 'var(--app-dim)' }}>
-      {short > 0 ? `Write at least ${REASON_MIN} characters — ${short} to go. It is kept with the case.` : 'It is kept with the case.'}
+      {short > 0 ? `Write at least ${REASON_MIN} characters — ${short} to go. ${kept}` : kept}
     </p>
   );
 }

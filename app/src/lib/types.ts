@@ -752,6 +752,7 @@ export type Screen =
   | 'classmates'
   | 'community'
   | 'moderation'
+  | 'agreements'
   | 'volunteer'
   | 'activities'
   | 'brief'

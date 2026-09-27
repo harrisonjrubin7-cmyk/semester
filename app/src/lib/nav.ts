@@ -1018,6 +1018,7 @@ if (enabled(COMMUNITY_FLAGS, 'communityFeed') && enabled(COMMUNITY_FLAGS, 'commu
 const NESTED: Partial<Record<Screen, Screen>> = {
   community: 'mine',
   moderation: 'mine',
+  agreements: 'moderation',
   volunteer: 'mine',
   course: 'courses',
   edit: 'courses',
@@ -1090,6 +1091,7 @@ const NESTED_NAMES: Partial<Record<Screen, string>> = {
   // the review queue is a staff tool opened from it. See COMMUNITY_DESTINATION.
   community: 'Community',
   moderation: 'the review queue',
+  agreements: 'escalation agreements',
   volunteer: 'volunteer moderation',
   directory: 'all apps',
   course: 'this course',

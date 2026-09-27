@@ -67,7 +67,7 @@ const SETTINGS = [
  * account that holds a reviewer role; putting it on a student's shelf would be
  * a door that opens onto "you are not a reviewer" for everybody else.
  */
-const STAFF = ['moderation'] as const;
+const STAFF = ['moderation', 'agreements'] as const;
 
 /**
  * Present only while a build switch is on. Community is absent from the

@@ -13,6 +13,8 @@ const mock = vi.hoisted(() => ({
   request: vi.fn(),
   decideEscalation: vi.fn(),
   safety: vi.fn(),
+  canManage: vi.fn(),
+  dispatch: vi.fn(),
   queue: vi.fn(),
   decideCase: vi.fn(),
   decideAppeal: vi.fn(),
@@ -20,7 +22,7 @@ const mock = vi.hoisted(() => ({
 }));
 
 vi.mock('../state/store', () => ({
-  useStore: () => ({ account: { id: 'rev', email: 'rev@semester.example', via: 'email' }, state: { tone: 'plain' }, dispatch: vi.fn() }),
+  useStore: () => ({ account: { id: 'rev', email: 'rev@semester.example', via: 'email' }, state: { tone: 'plain' }, dispatch: mock.dispatch }),
   useNow: () => new Date('2026-09-27T12:00:00Z'),
 }));
 vi.mock('../lib/cloud', () => ({ cloudConfigured: true, cloud: vi.fn() }));
@@ -41,6 +43,7 @@ vi.mock('../community/client', () => ({
   decideEscalation: mock.decideEscalation,
   readAuthorSafety: mock.safety,
   accountHash: async () => 'me-hash',
+  canManageAgreements: mock.canManage,
 }));
 
 import { Moderation } from './Moderation';
@@ -111,6 +114,7 @@ beforeEach(() => {
   mock.request.mockResolvedValue(undefined);
   mock.decideEscalation.mockResolvedValue(undefined);
   mock.safety.mockResolvedValue(60);
+  mock.canManage.mockResolvedValue(false);
   mock.standing.mockResolvedValue('reviewer');
   mock.queue.mockResolvedValue([kase('k0'), kase('k1', { status: 'appealed', severity: 'P2', category: 'spam_scam_or_phishing' })]);
   mock.decideCase.mockResolvedValue(undefined);
@@ -326,6 +330,28 @@ describe('Moderation', () => {
       expect(host.textContent).toContain('Not delivered yet — the university’s system answered 502. Next attempt');
       expect(host.textContent).toContain('No more attempts will be made');
       expect(host.textContent).toContain('held a field the agreement does not allow');
+    });
+  });
+
+  describe('the way to escalation agreements', () => {
+    it('appears only for an account the server says may manage them', async () => {
+      mock.flags.institutionEscalation = true;
+      await render();
+      expect(host.textContent).not.toContain('Escalation agreements');
+      act(() => root.unmount());
+      root = createRoot(host);
+      mock.canManage.mockResolvedValue(true);
+      await render();
+      const open = [...host.querySelectorAll('button')].find((b) => b.textContent === 'Escalation agreements') as HTMLButtonElement;
+      await act(async () => open.click());
+      expect(mock.dispatch).toHaveBeenCalledWith({ type: 'go', screen: 'agreements' });
+    });
+
+    it('is not asked about while escalation is not built', async () => {
+      mock.canManage.mockResolvedValue(true);
+      await render();
+      expect(mock.canManage).not.toHaveBeenCalled();
+      expect(host.textContent).not.toContain('Escalation agreements');
     });
   });
 

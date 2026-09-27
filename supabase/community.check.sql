@@ -1031,6 +1031,10 @@ begin
     format($q$select public.request_community_escalation(%L, 'a phishing wave aimed at the school')$q$, k_spam));
   perform pg_temp.expect_refused('a P0 case outside the agreement''s categories is refused', rev,
     format($q$select public.request_community_escalation(%L, 'a student''s address was posted')$q$, k_dox));
+  update public.community_escalation_policies set expires_on = current_date - 1 where tenant_id = 'es-u';
+  perform pg_temp.expect_refused('an agreement that has ended refuses a request', rev,
+    format($q$select public.request_community_escalation(%L, 'credible threat against a named student')$q$, k_threat));
+  update public.community_escalation_policies set expires_on = null where tenant_id = 'es-u';
   perform pg_temp.expect_refused('a request needs a written reason', rev,
     format($q$select public.request_community_escalation(%L, 'threat')$q$, k_threat));
   perform pg_temp.expect_allowed('a reviewer requests one for the P1 threat', rev,
@@ -1103,7 +1107,10 @@ begin
   update public.community_escalation_policies set channel = 'webhook:somewhere_else' where tenant_id = 'es-u';
   select count(*) into n from public.take_escalation_deliveries();
   perform pg_temp.counted('held too when the agreement now names another channel', n, 0);
-  update public.community_escalation_policies set channel = 'secure-mail:dos' where tenant_id = 'es-u';
+  update public.community_escalation_policies set channel = 'secure-mail:dos', expires_on = current_date - 1 where tenant_id = 'es-u';
+  select count(*) into n from public.take_escalation_deliveries();
+  perform pg_temp.counted('held too once the agreement has ended', n, 0);
+  update public.community_escalation_policies set expires_on = null where tenant_id = 'es-u';
   select count(*) into n from public.take_escalation_deliveries();
   perform pg_temp.counted('taken once the agreement matches again', n, 1);
   select attempts into v from public.community_escalation_deliveries where id = dv;
@@ -1238,6 +1245,101 @@ begin
   t := public.my_community_standing();
   execute 'reset role';
   perform pg_temp.said('with only a reversed entry left, bo is in good standing again', t, 'Your Community account is in good standing.');
+end $$;
+
+
+-- ── Escalation agreements, recorded by two people ────────────────────────
+do $$
+declare
+  s1 uuid; s2 uuid; rev uuid; mgr uuid; stu uuid; n bigint; t text; b boolean;
+  good text := $q$select public.save_escalation_agreement('ag-u', 'AG-DSA-2026-01',
+    array['threat_or_safety_concern', 'private_information_or_doxxing'], false, 'webhook:ag_dos',
+    'Dean of Students office', current_date + 365)$q$;
+begin
+  insert into public.schools (id, name, email_domains) values ('ag-u', 'Agreement University', array['ag-u.example']);
+  s1  := pg_temp.newuser('s1@ag.semester.example', null);
+  s2  := pg_temp.newuser('s2@ag.semester.example', null);
+  rev := pg_temp.newuser('rev@ag.semester.example', null);
+  mgr := pg_temp.newuser('mgr@ag-u.example', 'ag-u');
+  stu := pg_temp.newuser('stu@ag-u.example', 'ag-u');
+  insert into public.role_grants (subject, role, scope_kind, scope_id, provenance) values
+    (s1,  'trust_safety_senior',   'platform', '',     'platform'),
+    (s2,  'trust_safety_senior',   'platform', '',     'platform'),
+    (rev, 'trust_safety_reviewer', 'platform', '',     'platform'),
+    (mgr, 'community_manager',     'school',   'ag-u', 'institution');
+
+  perform pg_temp.counted('a senior reviewer may manage agreements', pg_temp.seen(s1,
+    'select 1 where public.can_manage_escalation_agreements()'), 1);
+  perform pg_temp.counted('a reviewer may not', pg_temp.seen(rev, 'select 1 where public.can_manage_escalation_agreements()'), 0);
+  perform pg_temp.counted('nor the school''s own community manager', pg_temp.seen(mgr,
+    'select 1 where public.can_manage_escalation_agreements()'), 0);
+
+  perform pg_temp.expect_refused('a reviewer cannot record an agreement', rev, good);
+  perform pg_temp.expect_refused('nor can the school''s community manager', mgr, good);
+  perform pg_temp.expect_refused('nor a student', stu, good);
+  perform pg_temp.expect_refused('nobody writes the row directly', s1,
+    $q$update public.community_escalation_policies set enabled = true$q$);
+  perform pg_temp.expect_refused('a channel that is an address is refused', s1, replace(good, 'webhook:ag_dos', 'https://x.example/in'));
+  perform pg_temp.expect_refused('as is a channel the adapter cannot resolve', s1, replace(good, 'webhook:ag_dos', 'secure-mail:dos'));
+  perform pg_temp.expect_refused('an agreement with no categories', s1,
+    replace(good, $q$array['threat_or_safety_concern', 'private_information_or_doxxing']$q$, $q$array[]::text[]$q$));
+  perform pg_temp.expect_refused('or an unknown one', s1,
+    replace(good, $q$'private_information_or_doxxing'$q$, $q$'gossip'$q$));
+  perform pg_temp.expect_refused('an agreement that has already ended', s1, replace(good, 'current_date + 365', 'current_date'));
+  perform pg_temp.expect_refused('or runs past three years', s1, replace(good, 'current_date + 365', 'current_date + 1200'));
+  perform pg_temp.expect_refused('or names no office at the school', s1, replace(good, 'Dean of Students office', ''));
+
+  perform pg_temp.expect_allowed('a senior records a draft', s1, good);
+  select enabled::text || '/' || (drafted_by_sha256 = private.role_audit_sha256(s1::text))::text into t
+    from public.community_escalation_policies where tenant_id = 'ag-u';
+  perform pg_temp.said('it is inactive, and attributed by hash', t, 'false/true');
+  perform pg_temp.expect_refused('the person who drafted it cannot activate it', s1,
+    $q$select public.activate_escalation_agreement('ag-u', 'read it against the signed copy')$q$);
+  perform pg_temp.expect_refused('activation needs a written reason', s2,
+    $q$select public.activate_escalation_agreement('ag-u', 'ok')$q$);
+  perform pg_temp.expect_allowed('a second senior activates it', s2,
+    $q$select public.activate_escalation_agreement('ag-u', 'read it against the signed copy')$q$);
+  select enabled into b from public.community_escalation_policies where tenant_id = 'ag-u';
+  perform pg_temp.counted('it is active', b::int, 1);
+  perform pg_temp.expect_refused('an active agreement cannot be activated twice', s1,
+    $q$select public.activate_escalation_agreement('ag-u', 'read it against the signed copy')$q$);
+
+  -- Any edit is a new draft; the other person may then activate it.
+  perform pg_temp.expect_allowed('the second senior edits the channel', s2, replace(good, 'webhook:ag_dos', 'webhook:ag_dos_v2'));
+  select enabled::text || '/' || (activated_by_sha256 is null)::text into t
+    from public.community_escalation_policies where tenant_id = 'ag-u';
+  perform pg_temp.said('an edit leaves it inactive and clears who activated it', t, 'false/true');
+  perform pg_temp.expect_refused('the editor cannot activate their own edit', s2,
+    $q$select public.activate_escalation_agreement('ag-u', 'checked the new channel name')$q$);
+  perform pg_temp.expect_allowed('the first senior can', s1,
+    $q$select public.activate_escalation_agreement('ag-u', 'checked the new channel name')$q$);
+
+  perform pg_temp.expect_refused('retiring needs a reason', s2, $q$select public.retire_escalation_agreement('ag-u', 'no')$q$);
+  perform pg_temp.expect_refused('a reviewer cannot retire one', rev,
+    $q$select public.retire_escalation_agreement('ag-u', 'the school ended the agreement')$q$);
+  perform pg_temp.expect_allowed('one senior retires it alone', s1,
+    $q$select public.retire_escalation_agreement('ag-u', 'the school ended the agreement')$q$);
+  select enabled into b from public.community_escalation_policies where tenant_id = 'ag-u';
+  perform pg_temp.counted('it is off', b::int, 0);
+  perform pg_temp.expect_refused('there is nothing active left to retire', s2,
+    $q$select public.retire_escalation_agreement('ag-u', 'the school ended the agreement')$q$);
+
+  update public.community_escalation_policies set expires_on = current_date - 1 where tenant_id = 'ag-u';
+  -- s1, who did not draft the current version: only the end date refuses them.
+  perform pg_temp.expect_refused('an agreement past its end cannot be activated', s1,
+    $q$select public.activate_escalation_agreement('ag-u', 'read it against the signed copy')$q$);
+
+  select string_agg(event, ',' order by id) into t from public.community_escalation_agreement_events where tenant_id = 'ag-u';
+  perform pg_temp.said('every change is in the history, in order', t, 'drafted,activated,drafted,activated,retired');
+  select count(*) into n from public.community_escalation_agreement_events
+   where tenant_id = 'ag-u' and actor_sha256 in (private.role_audit_sha256(s1::text), private.role_audit_sha256(s2::text));
+  perform pg_temp.counted('attributed by hash, never by account', n, 5);
+  perform pg_temp.counted('agreement staff read the history', pg_temp.seen(s2,
+    'select 1 from public.community_escalation_agreement_events where tenant_id = ''ag-u'''), 5);
+  perform pg_temp.counted('a reviewer does not', pg_temp.seen(rev, 'select 1 from public.community_escalation_agreement_events'), 0);
+  perform pg_temp.counted('nor the school', pg_temp.seen(mgr, 'select 1 from public.community_escalation_agreement_events'), 0);
+  perform pg_temp.counted('nor a student reads the agreement at all', pg_temp.seen(stu, 'select 1 from public.community_escalation_policies'), 0);
+  perform pg_temp.counted('the screen never switches the school''s programme on', (select count(*) from public.community_programs where tenant_id = 'ag-u'), 0);
 end $$;
 
 rollback;

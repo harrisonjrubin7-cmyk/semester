@@ -663,6 +663,122 @@ export async function accountHash(accountId: string): Promise<string> {
 }
 
 /* ------------------------------------------------------------------ */
+/* Escalation agreements (senior Trust & Safety only)                  */
+/* ------------------------------------------------------------------ */
+
+export interface Agreement {
+  tenantId: string;
+  enabled: boolean;
+  agreementRef: string;
+  categories: string[];
+  identityRequired: boolean;
+  channel: string;
+  contact: string;
+  expiresOn: string | null;
+  /** SHA-256 of who drafted this version, so the screen can say "you drafted this". */
+  draftedBy: string | null;
+  draftedAt: string | null;
+  activatedAt: string | null;
+}
+
+export interface AgreementEvent {
+  tenantId: string;
+  event: 'drafted' | 'activated' | 'retired';
+  actor: string;
+  reason: string;
+  agreementRef: string;
+  occurredAt: string;
+}
+
+export interface AgreementDraft {
+  tenantId: string;
+  agreementRef: string;
+  categories: string[];
+  identityRequired: boolean;
+  channel: string;
+  contact: string;
+  expiresOn: string;
+}
+
+export async function canManageAgreements(): Promise<boolean> {
+  const db = await cloud();
+  const { data, error } = await db.rpc('can_manage_escalation_agreements');
+  if (error) fail(error, 'Could not check your role.');
+  return data === true;
+}
+
+/** Every school, every agreement, and the history — for the agreements screen. */
+export async function loadAgreements(): Promise<{
+  schools: { id: string; name: string }[];
+  agreements: Agreement[];
+  events: AgreementEvent[];
+}> {
+  const db = await cloud();
+  const [schools, policies, events] = await Promise.all([
+    db.from('schools').select('id, name').order('name'),
+    db
+      .from('community_escalation_policies')
+      .select('tenant_id, enabled, agreement_ref, categories, identity_required, channel, contact, expires_on, drafted_by_sha256, drafted_at, activated_at'),
+    db
+      .from('community_escalation_agreement_events')
+      .select('tenant_id, event, actor_sha256, reason, agreement_ref, occurred_at')
+      .order('occurred_at', { ascending: false })
+      .limit(200),
+  ]);
+  for (const r of [schools, policies, events]) if (r.error) fail(r.error, 'Could not load the agreements.');
+  return {
+    schools: ((schools.data ?? []) as Row[]).map((r) => ({ id: str(r.id), name: str(r.name) })),
+    agreements: ((policies.data ?? []) as Row[]).map((r) => ({
+      tenantId: str(r.tenant_id),
+      enabled: Boolean(r.enabled),
+      agreementRef: str(r.agreement_ref),
+      categories: Array.isArray(r.categories) ? (r.categories as unknown[]).map(String) : [],
+      identityRequired: Boolean(r.identity_required),
+      channel: str(r.channel),
+      contact: str(r.contact),
+      expiresOn: r.expires_on ? str(r.expires_on) : null,
+      draftedBy: r.drafted_by_sha256 ? str(r.drafted_by_sha256) : null,
+      draftedAt: r.drafted_at ? str(r.drafted_at) : null,
+      activatedAt: r.activated_at ? str(r.activated_at) : null,
+    })),
+    events: ((events.data ?? []) as Row[]).map((r) => ({
+      tenantId: str(r.tenant_id),
+      event: str(r.event) as AgreementEvent['event'],
+      actor: str(r.actor_sha256),
+      reason: str(r.reason),
+      agreementRef: str(r.agreement_ref),
+      occurredAt: str(r.occurred_at),
+    })),
+  };
+}
+
+export async function saveAgreement(d: AgreementDraft): Promise<void> {
+  const db = await cloud();
+  const { error } = await db.rpc('save_escalation_agreement', {
+    want_tenant: d.tenantId,
+    want_agreement_ref: d.agreementRef,
+    want_categories: d.categories,
+    want_identity_required: d.identityRequired,
+    want_channel: d.channel,
+    want_contact: d.contact,
+    want_expires_on: d.expiresOn,
+  });
+  if (error) fail(error, 'Could not save the agreement.');
+}
+
+export async function activateAgreement(tenantId: string, reason: string): Promise<void> {
+  const db = await cloud();
+  const { error } = await db.rpc('activate_escalation_agreement', { want_tenant: tenantId, want_reason: reason });
+  if (error) fail(error, 'Could not activate the agreement.');
+}
+
+export async function retireAgreement(tenantId: string, reason: string): Promise<void> {
+  const db = await cloud();
+  const { error } = await db.rpc('retire_escalation_agreement', { want_tenant: tenantId, want_reason: reason });
+  if (error) fail(error, 'Could not retire the agreement.');
+}
+
+/* ------------------------------------------------------------------ */
 /* The private safety state                                            */
 /* ------------------------------------------------------------------ */
 

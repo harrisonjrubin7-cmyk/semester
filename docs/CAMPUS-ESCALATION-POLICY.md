@@ -5,8 +5,9 @@ enforced in the database by `request_community_escalation` and
 `decide_community_escalation` (`20260927235000_community.sql`, section 14).
 Flag: `VITE_INSTITUTION_ESCALATION` (high-risk, off, production refused).
 Server switch: the school's `community_programs` row for
-`institution_escalation`, plus a `community_escalation_policies` row. Only the
-service role writes either.
+`institution_escalation`, which only the service role writes, plus an active
+agreement (`community_escalation_policies`), recorded on the Agreements screen
+by two different people (below).
 
 `prepareEscalation` refuses every escalation unless all of these hold:
 
@@ -129,8 +130,31 @@ Redirects are refused, and the reply body is never read.
    all three to each other.
 3. Set `ESCALATION_CRON_SECRET` to the Vault value `escalation_cron_secret`,
    and set the channel's `_URL` and `_KEY`.
-4. Write the school's `community_escalation_policies` row and switch
-   `institution_escalation` on (service role, both).
+4. Have two people record and activate the school's agreement on the
+   Agreements screen. Then switch `institution_escalation` on for that school
+   (service role).
 5. Unpark the job: `select cron.alter_job((select jobid from cron.job where
    jobname = 'escalation-delivery'), active := true);`
+
+## Recording an agreement
+
+On the Agreements screen, opened from the moderation console by a holder of
+`community:escalation_agreements` (senior Trust & Safety staff only; never
+anyone at the school the agreement is with):
+
+1. **One person records it.** They enter the signed agreement's reference, the
+   office that receives escalations, the kinds of case it covers, whether it
+   requires an identity reference, the delivery channel name, and when it
+   ends (at most three years out). It saves as an inactive draft.
+2. **A different person activates it,** after writing down what they checked
+   against the signed copy. The database compares the two by hash.
+3. **Any edit makes it a draft again,** and escalations to that school stop
+   until someone other than the editor activates it.
+4. **One person can retire it.** Switching off is always safe. Deliveries not
+   yet sent are held.
+5. **An agreement past its end date is off everywhere:** requests, approvals
+   and deliveries all refuse it.
+
+Every step is kept in `community_escalation_agreement_events`. The screen
+never touches the school's `community_programs` switch.
 

@@ -124,7 +124,7 @@ end $$;
 do $$
 declare
   /*
-   * The allowlist. Seventy-one, and each is a deliberate entry point:
+   * The allowlist. Seventy-five, and each is a deliberate entry point:
    *   make_referral_code  — mints this account's own code
    *   claim_referral      — records that this account arrived on somebody's
    *   referral_standing   — two integers and a boolean about the caller
@@ -229,11 +229,15 @@ declare
     /*
      * Institution escalation and the private safety state, both off unless
      * the school's community_programs row says otherwise. An escalation needs
-     * a policy only the service role writes, a P0 or P1 case in a covered
+     * an agreement two senior staff recorded (section 14a), a P0 or P1 case in a covered
      * category, and two different reviewers; case_author_safety needs a
      * reviewer and a written reason, and logs every read;
      * my_community_standing answers in words for the caller alone.
      */
+    'activate_escalation_agreement(want_tenant text, want_reason text)',
+    'can_manage_escalation_agreements()',
+    'retire_escalation_agreement(want_tenant text, want_reason text)',
+    'save_escalation_agreement(want_tenant text, want_agreement_ref text, want_categories text[], want_identity_required boolean, want_channel text, want_contact text, want_expires_on date)',
     'case_author_safety(want_case uuid, want_reason text)',
     'decide_community_escalation(want_escalation uuid, want_approve boolean, want_reason text)',
     'my_community_standing()',

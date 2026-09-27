@@ -97,6 +97,7 @@ const Analyse = lazy(() => import('./screens/Analyse').then((m) => ({ default: m
 const Classmates = lazy(() => import('./screens/Classmates').then((m) => ({ default: m.Classmates })));
 const Community = lazy(() => import('./screens/Community').then((m) => ({ default: m.Community })));
 const Moderation = lazy(() => import('./screens/Moderation').then((m) => ({ default: m.Moderation })));
+const Agreements = lazy(() => import('./screens/Agreements').then((m) => ({ default: m.Agreements })));
 const Volunteer = lazy(() => import('./screens/Volunteer').then((m) => ({ default: m.Volunteer })));
 const Activities = lazy(() => import('./screens/Activities').then((m) => ({ default: m.Activities })));
 const Clocks = lazy(() => import('./screens/Clocks').then((m) => ({ default: m.Clocks })));
@@ -197,6 +198,7 @@ export const SCREENS: Record<Exclude<Screen, 'home' | 'onboarding'>, ComponentTy
   community: Community,
   moderation: Moderation,
   volunteer: Volunteer,
+  agreements: Agreements,
   activities: Activities,
   clocks: Clocks,
   proof: Proof,
