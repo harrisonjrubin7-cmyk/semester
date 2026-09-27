@@ -163,6 +163,115 @@ Deployment note: `.github/workflows/functions.yml` deploys changed functions
 after CI passes on main, so **merging this to main is the production deploy**
 and needs owner approval.
 
+## D-033 · Quiz answers reach the review schedule only when the student sends them
+
+**Taken in P3.2 (self-quiz feedback).** (D-030 to D-032 are on their own open
+branches; D-013–D-029 belong to the feature-expansion work.) A quiz answer
+does not update the card's FSRS review by itself. A lucky guess would stretch
+the interval, and a slip on a known card would reset it. After a miss the
+student is offered **Review this card soon**, which records the miss through
+the existing `recordCard` action and can be undone (`restoreReview`).
+
+Students can also report a question: *the marked answer is wrong*, *more than
+one answer is right*, *the question is unclear*, or *I know this — stop asking
+it*. A report is kept on the device (`semester.quizfeedback.v1:{account}`,
+included in the workspace backup). It is sent nowhere, so it needs one tap
+and no confirmation. Its one effect is that `buildQuiz` leaves that card out
+of the student's quizzes, both as a question and as a decoy, until the report
+is taken back.
+
+Rejected: automatic FSRS updates from quiz answers; a hidden difficulty score;
+sending reports to an instructor, which would need its own preview,
+confirmation and recipient, and is left for the institution phase.
+
+## D-034 · Teach-back compares and never grades
+
+**Taken in P3.3.** (D-030 to D-033 are on their own open branches; D-013–D-029
+belong to the feature-expansion work.)
+
+Teach-back sits inside the Study Studio and uses the Studio's own gates:
+selected sources, the consent to send them, and the course AI policy. The
+student writes an explanation, and the model says what the selected material
+shows they covered, left out, or contradicted.
+
+`lib/teachback.ts` holds the reply to four rules:
+- no score, grade or percentage;
+- no model answer or rewrite;
+- every point quotes a selected source word for word, and is checked like a
+  study-guide citation;
+- a contradiction also quotes the student's own words, checked against what
+  they wrote.
+
+A point that fails its check is dropped, and the drop is counted on screen.
+Nothing is stored.
+
+Rejected: a mastery score from teach-back, which is hidden academic scoring;
+feeding teach-back into the review schedule.
+
+## D-035 · A saved study guide keeps its quotations, and only checked ones
+
+**Taken in P3.4.** (D-030 to D-034 are on their own open branches; D-013–D-029
+belong to the feature-expansion work.)
+
+"Save & open in Write" now builds Write blocks directly (`studyBlocks`),
+instead of going through Markdown. The Markdown route put the source's
+internal id into the student's document and left each quotation as a loose
+paragraph.
+
+Now each checked citation becomes a Write `quote` block with its source and
+place, which the Word, PDF and Markdown exports print as "— source". The
+body's inline markers are numbered to match the quotations. A marker naming a
+source that has no checked quotation in that section is removed, since
+nothing verified stands behind it.
+
+A draft restored after a reload has no structured sections, so it still saves
+through Markdown as before.
+
+## D-036 · Study abroad lives in Pathway, unflagged, and every approval is the student's record
+
+**Taken in P4.1.** (D-030 to D-035 are on their own open branches; D-013–D-029
+and D-040 onward belong to the feature-expansion work.)
+
+**Where it lives.** Study abroad is a tab of Pathway, the screen for projects
+that outlast a term, and not a new screen. A new screen would need a nav
+entry, and the only per-screen gate (`lib/school.ts` `REQUIRES`) describes
+what a *school* offers, not a build flag. `Career.tsx` already has a
+nine-step abroad checklist, and #792 is restyling that screen, so the new
+module does not touch it.
+
+**No flag.** The module keeps student-entered data on the device, in the
+workspace backup, sends nothing, and reads no institution data or #762
+table. That is the same risk class as Career's existing checklist, which is
+unflagged. The expansion work's `MODULE_FLAG_ENV` map exists only on its
+unmerged branches, and a new `VITE_` variable would also need the Pages
+workflow changed (`lib/deploy.test.ts`).
+
+**Approvals.** Every course approval is labelled as what the student
+recorded, with where they recorded it from. Only credit recorded as
+pre-approved is counted as credit to plan on; pending and estimated credit
+is shown separately. Costs stay in each program's own currency and are never
+converted or summed.
+
+Rejected: reading `articulation_rules` or `transfer_evaluations`, the
+institution-verified source, which needs a live school connection (Phase 6).
+
+## D-032 · A PDF page is taken from the quote, never from the model
+
+**Taken in P3.1 (Study Studio source anchors).** (D-030 and D-031 are on
+their own open branches; D-013–D-029 belong to the feature-expansion work.)
+`extract.ts` now keeps a PDF's pages as well as its flat text, and marks them
+`pageUnit: 'page'` against a deck's `'slide'`. The flat text is unchanged, with
+no page numbers printed into it, so every existing quote check, word count and
+content hash is too. That means a model reading a PDF's text cannot see its
+page numbers, so a page it names is a guess that merely lands on a page that
+exists. `harvest.ts` therefore takes a PDF card's page from the one page whose
+text contains the card's checked quote, and gives none otherwise. Slide numbers,
+which are printed in a deck's text, keep the old rule. Classification no longer
+reads "has pages" as "is a deck" unless the pages are slides. In Study Studio a
+PDF's pages become excerpts named "Page N", like a deck's slides, and a citation
+opens the original PDF at that page. Rejected: printing "Page N" into the flat
+text, which would move every stored quote and hash.
+
 ---
 
 # Feature-expansion command (27 Sep 2026)
@@ -219,7 +328,8 @@ Phase A documents are [UX-ENHANCEMENT-PLAN.md](UX-ENHANCEMENT-PLAN.md),
 
 ## D-016 · Advisor sharing: authorized grants, not bearer links, in the pilot
 
-**Proposed — needs owner.**
+**Decided 27 Sep 2026 by the owner (Phase G): signed-in grants, no view-only
+links.** Built as below; see D-042 and D-043.
 
 - BL-1.9 said "no link-sharing". The command asks for a view-only link or an
   authorized advisor share, with expiry and revocation.
@@ -256,6 +366,9 @@ Phase A documents are [UX-ENHANCEMENT-PLAN.md](UX-ENHANCEMENT-PLAN.md),
 - The fix goes in whichever of Phases C, D or N touches those stores first,
   and it comes with a test that every `useDeviceLibrary` key is backed up
   (crosswalk N-3).
+- **Resolved in Phase N (D-057).** Both stores are now backed up, together
+  with the nine device stores the later phases added, and a test reads the
+  source to hold it.
 
 ## D-019 · Owner approval of the Phase A recommendations
 
@@ -369,6 +482,531 @@ dropping either outright, which loses tested work the other lacks.
   27 Sep, after the other session had pushed BL-1.10 to BL-1.13).
 - If the other session pushes one, reconcile as in D-021: keep one proposer,
   and one "Registration readiness" group.
+
+## D-025 · Phase D carries one additive migration
+
+**Proposed — needs owner before any merge to `main`.**
+
+- Saving graduation drafts to the account (`graduation_simulator`) writes
+  `graduation_scenarios`.
+- `ltiaccount.test.ts` requires every table the app writes to be visible to
+  `lti_account_untouched`, so account linking never retires an account that
+  holds work.
+- `20260927181500_untouched_graduation_drafts.sql` redefines that function
+  with the table added. It changes no table and no data.
+- It has been checked on a throwaway Postgres 16 with all migrations and the
+  expansion, deletion and three LTI suites.
+- It is **not applied**. Merging this branch to `main` would apply it through
+  Supabase Branching, so that merge needs approval.
+- **Renumbered on 27 Sep 2026** from `20260927180000`: two other branches
+  (`help_requests`, `lti_integration_binding`) claim that version, and
+  `migrationorder.test.ts` allows each version once.
+- **Alternative:** keep drafts device-only and drop both the adaptor and the
+  migration. The simulator still works, but drafts do not follow a student to
+  a new device.
+
+## D-026 · Cost lines are student entered or imported, never verified
+
+**Decided 27 Sep 2026 (Phase D).**
+
+- A cost the student copies from their school's published figures is
+  `imported`, with where and when it was copied.
+- `institution_verified` is refused, because nothing here comes from an
+  institution feed.
+- Aid is neither estimated nor subtracted. Every total says "before any aid".
+
+## D-027 · The Crunch Week Forecast has its own flag
+
+**Decided 27 Sep 2026 (Phase E).**
+
+- `academic_life_balance` draws the week's hours in Plan. `crunch_week_forecast`
+  (`VITE_CRUNCH_WEEK_FORECAST`) adds the forecast under it and the one card on
+  Today.
+- The card needs both flags, because its suggestions live in the balance view.
+- A pilot can show the hours without any recommendation, which is the smaller
+  and safer first step.
+
+## D-028 · A crunch is three major deadlines in six days, one to four weeks out
+
+**Decided 27 Sep 2026 (Phase E).**
+
+- **Major:** an exam, a project, paper, essay, presentation or report, or
+  anything the syllabus weights at 10% or more.
+- **Window:** 7 to 27 days away. Closer than a week is `lib/clash.ts`'s
+  territory, and too late to move much.
+- **Suggestions:** one or two earlier starts (count − 2, at most two), in open
+  blocks of the week before, one a day, never before 9am in the default day.
+  Each is 90 minutes, or half the student's own past time for that kind of
+  work, between one and two hours.
+- These are counts, not a model of the student. The thresholds are constants
+  in `lib/life-balance.ts`, named and tested.
+
+## D-029 · Balance counts hours; it never scores a week or a person
+
+**Decided 27 Sep 2026 (Phase E).**
+
+- The view reports hours by category, overlaps, long stretches and open
+  blocks. It has no "healthy" range, no score, and no wellbeing or burnout
+  wording; a test holds the forecast's words to that.
+- Rest blocks are the student's own. They count as personal time but are never
+  called a conflict or part of a long stretch.
+- The commute is the one new input. It is device-only
+  (`semester.life-balance.v1`), is counted as hours, and is never placed on
+  the clock.
+- A suggested study block is written to the student's own Semester calendar
+  only after a preview and a confirmation. Nothing is written to an external
+  calendar.
+
+## D-040 · Course Detail V2 lives in the registration workspace, as a sheet or a drawer
+
+**Decided 27 Sep 2026 (Phase F).** (D-030 to D-039 are left to the other
+session's range.)
+
+- With `course_detail_v2` on, a catalog result opens Course Detail V2 in place
+  of the side panel:
+  - under 1180px, a modal sheet;
+  - from 1180px, a non-modal drawer, so another result can be opened without
+    closing it first.
+- The page reads only the imported catalog and the student's own records. It
+  adds no table and makes no network call.
+- The saved-course shortlist is a new device store,
+  `semester.course-shortlist.v1`, rather than a field in the registration
+  store, so older builds reading that store neither drop nor trip on it.
+- Search and a `course/:id` route are not wired yet. The crosswalk lists them
+  as later entry points.
+
+## D-041 · Prerequisites are read, never judged
+
+**Decided 27 Sep 2026 (Phase F).**
+
+- Course codes are read from the catalog's own wording. The wording is always
+  shown verbatim beside the reading.
+- Each code is compared with what the student recorded: recorded, in progress,
+  in the cart (corequisites only), or not recorded.
+- The page never says "eligible" and always says the department decides.
+  Other wording ("consent of instructor", "junior standing") is flagged, not
+  interpreted.
+- Seats are "reported in the catalog file", never available. There is no
+  workload claim and no professor rating. The moderated-insight, study-pack
+  and syllabus slots are placeholders with nothing estimated in their place.
+
+## D-042 · How a student names an advisor
+
+**Decided 27 Sep 2026 (Phase G).**
+
+- The student types their advisor's school email address.
+- `share_with_advisor` matches it only against accounts that hold a live
+  `academic_advisor` grant scoped to the student's own school (from the
+  student's profile). A classmate, faculty member, advisor at another school,
+  lapsed advisor or unknown address all get the same message, so the RPC
+  cannot be used to learn whether an address has an account.
+- The advisor never reads `advisor_shares` directly.
+  `list_advisor_shares` returns titles and dates. `read_advisor_share`
+  returns the snapshot and logs the read, which the student sees.
+- A share is a snapshot the student previewed. It can be revoked (never
+  un-revoked) or deleted; it cannot be edited or extended.
+- Expiry is required, at most 120 days (a term), with choices of a week, a
+  month, three months or the maximum.
+
+## D-043 · Phase G carries one additive migration
+
+**Proposed — needs owner before any merge to `main`.**
+
+- `20260927201500_advisor_shares.sql` adds `advisor_shares`,
+  `advisor_share_events` and three functions, and redefines
+  `lti_account_untouched` with the new table (both ends).
+- Checked on a throwaway Postgres 16: every migration applies, and
+  `advisor` (45 new checks), `expansion`, `deletion`, `lti`, `ltiags`,
+  `ltiidentity` and `support-access` pass.
+- **Not applied anywhere.** Merging this branch to `main` would apply it
+  through Supabase Branching, so that merge needs approval, as with D-025.
+- Numbered `20260927201500`, not `20260927200000`: two other branches
+  (`help_request_identity`, `integration_hardening`) claim that version.
+- **Alternative:** hold the migration back. Advisor Meeting Mode still
+  prepares, exports and prints, and the sharing section says sharing is not
+  available.
+
+## D-044 · Source Locker joins existing stores, and records provenance from now on
+
+**Decided 27 Sep 2026 (Phase H).**
+
+- The locker is a view over the four places materials already live:
+  - Drive files;
+  - added materials (`state.updates`);
+  - the syllabus and prepared guide;
+  - the reading list (`state.sources`).
+
+  It adds no fifth store of materials. This follows
+  `docs/ai-toolkit/SOURCE-LOCKER-AND-PROVENANCE.md`.
+- What is new is `semester.source-locker.v1`, which is device-only and holds
+  two things: the materials the student blocked from AI, and which materials
+  each saved Study Studio guide was built from.
+- Guides saved before Phase H have no record, and the locker cannot claim a
+  link it never saw. Links it can read from existing data are shown too: an
+  added material's `fileIds`, and notes' attachments.
+- **Removing** a file moves it to Drive trash (30 days) and detaches it from
+  notes.
+- **Notes are never deleted:** they are the student's own writing.
+- **Generated items** (added materials read from the file, guides built from
+  it) are deleted only if the student ticks the box in the confirmation that
+  lists them.
+- The syllabus cannot be removed here. Removing the course is the way.
+
+## D-045 · Readiness is the student's mark; Semester only counts
+
+**Decided 27 Sep 2026 (Phase H).**
+
+- The student marks each topic Reviewed, Practicing or Needs review, and rates
+  their own confidence from 1 to 5. Semester never sets either.
+- Practice signals are counts the app already holds: cards practiced, right,
+  missed and due; and practice papers as taken.
+- The one recommended session is 25 minutes. It goes to a topic in this order:
+  1. a topic marked Needs review;
+  2. then an unmarked topic;
+  3. then one being practiced;
+  4. within each, the lowest confidence, then the most cards due.
+- No grade prediction, pass likelihood, score or comparison with other
+  students. A test holds those words out.
+
+## D-046 · Career evidence: nothing reaches a résumé that the student did not confirm or write
+
+**Decided 27 Sep 2026 (Phase I).**
+
+- **Skills.** Suggested skills from `lib/skills-graph.ts` stay "suggested"
+  until the student confirms, renames or rejects them. Only confirmed skills
+  appear on a résumé, a pitch or an artifact. A skill the student adds must
+  cite a course or an entry of theirs.
+- **Bullets.** Bullets are composed only from the student's answers to the
+  three metric prompts. An unanswered prompt is left out, never filled in.
+  The only words Semester adds are "using", "reaching" and "people". A test
+  checks that a bullet holds no other word, and no number the student did
+  not give.
+- **Entries and artifacts.** Every bullet belongs to an entry the student
+  made. Every artifact is tied to such an entry or to a course, and is
+  tagged only with confirmed skills.
+- **Pitch.** It uses the student's own name, headline, latest entry and
+  confirmed skills, and leaves a `[bracket]` wherever something is missing.
+- **No applications.** Nothing is ever applied for. A fair contact reaches
+  the student's own tracker only when they press "Add to my tracker".
+
+## D-047 · Career evidence stays on the device for now
+
+**Decided 27 Sep 2026 (Phase I).**
+
+- `semester.career-evidence.v1:<account|device>:<term>` is scoped like the
+  career library it builds on. It holds:
+  - skill decisions and the student's own skills;
+  - artifacts and bullets;
+  - résumé versions;
+  - interview ticks;
+  - fair plans.
+- The server's `skill_claim` tables (`20260923211000_evidence_graphs.sql`)
+  are not written from the app yet. Syncing confirmed skills to them is
+  follow-up work that needs a cloud adaptor and deletion wiring. That work
+  has to map the server's `rejected` state, which the app's `SkillClaim`
+  type lacks.
+
+## D-048 · Phase J finishes `institution_actions` with one additive migration
+
+**Proposed — needs owner before any merge to `main`.**
+
+- `20260927224500_office_action_feed.sql` finishes the table from
+  `20260926150000`. It:
+  - requires an office, an https link, a source note and an update time on
+    every new row, as a check constraint;
+  - adds audiences by school, program and student-selected eligibility,
+    alongside cohort;
+  - adds a draft → review → published → withdrawn workflow, where someone
+    other than the author approves;
+  - adds `institution_action_audiences` and `institution_action_progress`,
+    which only the student can read;
+  - adds six functions. The completion count is null below ten.
+- **Direct writes are revoked.** Insert, update and the old
+  `update (withdrawn_at)` column grant all go; writes go through
+  `draft_office_action` and `move_office_action`. Nothing in the app wrote
+  the table before this.
+- **Rows from before stay.** They are marked `published` (or `withdrawn`)
+  with no office. The app shows only rows with an office, so they stay out of
+  the feed until an office republishes them properly.
+- **Offices.** A table lists the eleven from the command, plus the Counseling
+  Center and the Learning Center (resources and events only), and names the
+  roles that may publish for each.
+  - The migration adds four new roles for offices that had none:
+    `career_center_staff`, `disability_services_staff`,
+    `study_abroad_advisor` and `first_year_staff`.
+  - **No existing role gains a capability.**
+- **A named student is no longer an audience.** The command scopes by tenant,
+  cohort, office, program or student-selected eligibility, so the new
+  workflow does not offer one student. The column stays, for rows that
+  already use it.
+- **Checked on a throwaway Postgres 16.** Every migration applies. `expansion`
+  passes (65), with its institution-action section rewritten for the
+  workflow, and `officeactions` passes (79 new checks).
+  - Seven faithful reverts each turned the suite red: self-approval, the
+    threshold, eligibility matching, the office-role match, a staff read of
+    audiences, the feed showing old rows, and the https check. The seventh
+    was caught by the constraint as well as the function.
+- **Not applied anywhere.** Merging to `main` would apply it through Supabase
+  Branching, so that merge needs approval, as with D-025 and D-043.
+- **Alternative:** hold the migration back. The feed then shows "could not
+  load", and nothing else changes.
+
+## D-049 · Completion reaches an office only when the student says so
+
+**Decided 27 Sep 2026 (Phase J).**
+
+- A student marks an office action done with **Mark done…** in the feed. The
+  confirmation says the office sees only a count, and only at ten or more,
+  and never a name.
+- **Done** in the Action Center stays on the device, like every other
+  Action Center choice. It is the student's own record, not a report to the
+  office.
+- The count is the database's: `office_desk_actions` returns null below
+  ten, and the desk prints "Fewer than 10 students have marked this done, so
+  no count is shown." It never prints a smaller number, even one it was
+  given.
+- An office never reads the progress or audience tables, never sees which
+  students an action reached, and gains no access to plans by publishing.
+  `officeactions.check.sql` holds each of those as the office account.
+
+## D-050 · What a student can say applies to them
+
+**Decided 27 Sep 2026 (Phase J).**
+
+- There are nine eligibilities:
+  - aid applicant;
+  - international;
+  - veteran or military education benefits;
+  - varsity athlete;
+  - campus housing;
+  - study abroad;
+  - first year;
+  - transfer;
+  - graduating.
+- A student can also choose a program from the ones offices at their school
+  publish to.
+- **Deliberately nothing about health or disability.** Disability Services
+  publishes to the whole school, and a student never has to tell Semester
+  they are registered in order to see its reminders.
+- **Nothing is inferred.** The existing `student_context.self_segments` is
+  not reused: those drive module visibility, and a student choosing which
+  office notices to see is a separate decision.
+- Saving shows the whole list first, and says no office can see it.
+
+## D-051 · Phase K finishes course demand with one additive migration
+
+**Proposed — needs owner before any merge to `main`.**
+
+- `20260927234800_course_demand_forecasting.sql` finishes what
+  `20260926150000` began. It adds:
+  - `demand_consents`, a per-term consent record that only the student can
+    read;
+  - three student functions: `contribute_course_plan`, `stop_contributing`
+    and `my_demand_contribution`;
+  - two staff functions: `my_demand_scopes` and `course_demand`;
+  - a refresh wrapper, `refresh_course_demand_snapshots`, callable by the
+    service role only.
+- **The refresh counts only live consent.** `private.refresh_course_demand`
+  now joins `demand_consents`, so a `contributes_to_demand` flag set any
+  other way counts for nothing.
+- **Own school only.** The `term_plan_courses` owner policy now refuses a
+  contributing row at any school but the one on the student's profile.
+  Before, it checked only the owner.
+- **Nothing schedules the refresh.** A school turns it on with the feature.
+  See `docs/COURSE-DEMAND-FORECASTING.md`.
+- **Checked on a throwaway Postgres 16.** Every migration applies and every
+  suite passes, including `demand` (49 new checks).
+  - `expansion` now gives its opted-in students a consent record, since the
+    flag alone no longer counts.
+  - Seven faithful reverts each turned `demand` red:
+    - no consent join;
+    - no own-school check;
+    - the threshold;
+    - a definer view;
+    - stopping that keeps rows;
+    - an open refresh;
+    - backups below ten.
+
+    The last two were caught by the table's own check constraint as well.
+- **Not applied anywhere.** As with D-025, D-043 and D-048.
+
+## D-052 · What a student contributes, and how stopping works
+
+**Decided 27 Sep 2026 (Phase K).**
+
+- **Only course codes, each a primary or a backup.** The term is the
+  cart's. No section, time, instructor, title or name is sent. A test checks
+  every key of the payload.
+- **Codes are normalized.** "econ1010" becomes "ECON 1010", in both the app
+  and the database, because the department scope splits on the space.
+- **Only on confirmation.** The dialog lists exactly what is sent and what
+  is not. A changed cart is pointed out, and never re-sent quietly.
+- **Stopping is prospective.** It removes the rows and stamps the consent
+  at once. Counts already published keep the student until the next
+  refresh, and no refresh after that counts them. Both dialogs say so.
+
+## D-053 · What staff see
+
+**Decided 27 Sep 2026 (Phase K).**
+
+- **A new Demand tab on University, behind the flag.** Only accounts with
+  `demand:read` see counts: the registrar, a department chair, a dean or
+  institutional research. Anyone else is told they have no demand scope.
+- **Counts, never rows.** A course appears at ten or more planning it.
+  Backups below ten show as "Fewer than 10 hold it as a backup". The reader
+  drops any count below ten a second time.
+- **Source labels.**
+  - Counts are labelled **Estimated**, with their time. They are plans, not
+    enrollments.
+  - Capacity and waitlist are **Imported** from synced sections, with the
+    sync time. With no sections synced, the line reads "Capacity not
+    connected".
+- **Stated on both screens:** "Based on anonymized planning data from
+  students who chose to contribute." and "Not used for admissions or for any
+  automated enrollment decision."
+- **No export.** The Operations studio's `suppress()` (complementary
+  suppression) is not needed here, because nothing publishes a total that a
+  hidden cell could be subtracted from.
+
+## D-054 · Semester Wrapped counts outcomes the student chose, on the device
+
+**Decided 27 Sep 2026 (Phase L).**
+
+- **Worked out on the device each time it is shown, from the student's own
+  records.** Nothing is stored and nothing is sent. The sources are:
+  - deadlines ticked (`done` and `tickedAt`);
+  - study sessions finished (`sessions[].doneAt`);
+  - Action Center steps completed;
+  - courses on their own record with a grade for that term;
+  - saved schedules;
+  - advisor agendas with a date in the term;
+  - portfolio projects and finished résumé bullets (Phase I);
+  - career events saved.
+- **Never app usage.** Screens visited, recent screens, `countScreens` and
+  `lib/usage.ts` counts are not inputs (D-005, rule 7). A test passes usage
+  in and gets the same recap. Another sets the component's usage state high
+  and gets the same card.
+- **Nothing from the institution.** No office action, demand count, seat or
+  catalog figure is read.
+- **The term** runs from the first of its season's month to the first of the
+  next season's. Fall is 1 Aug to 30 Nov. The card states the span.
+- **How it speaks:**
+  - a zero is left out;
+  - a quiet term is "fine";
+  - no streak, rank, comparison or "could have";
+  - a test checks every sentence it can produce.
+- **Export, image and share each confirm first**, showing the exact text and
+  where it goes. The text holds counts and the term only — no name, course,
+  agenda text or date.
+  - The image is drawn on a canvas; where there is none, the card says so and
+    saves nothing.
+  - Share appears only where the device has a share sheet.
+
+## D-055 · Offline mode reuses the device as the queue, and the merge as the conflict strategy
+
+**Decided 27 Sep 2026 (Phase M).**
+
+- **Already local-first.** The app saves every change on the device first
+  (IndexedDB `semester-store`, or `semester.v1`), and pushes the account copy
+  after it. A second outbox that copied changes would be a second truth that
+  could disagree with the first, so there is none.
+- **A ledger per account instead.** `semester.offline-ledger.v1:<account>`
+  records when the account last took this device's copy and since when it
+  has not.
+  - Going offline while signed in, or a push that fails, starts
+    "not synced".
+  - A sync clears it.
+- **Sync on reconnect.** Coming back online with changes waiting calls the
+  store's own `refresh()`: pull, merge, then push. With nothing waiting or no
+  account, it does nothing.
+- **Conflicts use the existing per-field policy** in `lib/merge.ts`:
+  - lists, by id: both sides are kept;
+  - ticks: unioned;
+  - timestamped records: the newer wins;
+  - settings: the later copy wins, except device settings, which this device
+    keeps.
+
+  The merge notes the app already shows after a sync say what happened. A
+  test holds an offline edit meeting a remote one.
+- **No service-worker change.** `public/sw.js` already serves same-origin
+  files from its cache and refreshes them in the background, so every chunk
+  the app has loaded works offline. No `VERSION` bump is needed, so no
+  rollback note either.
+- **Behind `offline_mode`:** the badge, the refusals and the offline wording.
+  With the flag off, nothing changes. The app was local-first before this
+  phase and still is.
+
+## D-056 · High-risk actions are refused offline, never queued
+
+**Decided 27 Sep 2026 (Phase M).**
+
+- `requireOnline(kind)` throws before any of these runs offline:
+  - sharing with an advisor;
+  - sending to the school: office "Mark done", "What applies to me" and
+    contributing to course demand;
+  - publishing office actions;
+  - deleting the account.
+
+  Each says "nothing was sent and nothing is waiting to be sent".
+- **An official hand-off cannot be confirmed offline.** In an external
+  `ConfirmDialog`, the dialog says so and its confirm button is disabled.
+- **Not blocked: revoking a share and stopping a contribution.** They undo
+  rather than send, and they fail on their own offline with the ordinary
+  error.
+- **Why not queue them.** A queued share or contribution would fire hours
+  later, after the student may have changed their mind, and from a screen
+  they are no longer looking at.
+- **Imported data is never shown as current offline.** The office feed and
+  the demand view keep no cached copy. Offline they say they load when
+  connected. `asOf(at)` is there for any imported figure shown from the
+  device.
+
+## D-057 · The Trust & Data Center is a hub over what exists, and Export covers every device store
+
+**Decided 27 Sep 2026 (Phase N).**
+
+- **Where it is.** At the top of Your data (`privacy`), with a **Trust &
+  data** row on Me › You that opens it. The rest of that page already had:
+  - account deletion;
+  - erasing this device;
+  - supporter access;
+  - the diagnostics export;
+  - the privacy explanation.
+
+  The center points to those rather than copying them.
+- **New controls, each confirming first and saying exactly what goes:**
+  - revoke an advisor share (Phase G);
+  - forget a line Semester remembers (`aboutMe`, the student's own words);
+  - delete the saved AI conversations (`lib/threads.ts`, archive included),
+    and nothing else.
+- **Shown, read from the stores that already exist:**
+  - connected sources and the last sync;
+  - what the five source labels mean;
+  - imported materials, and which of them AI may not use (Source Locker);
+  - notification permission;
+  - export.
+- **The AI memory panel is `aboutMe`.** The `ai_memories` table is not
+  written by the app; if it ever is, its rows belong on this panel.
+- **Export covers every device store (fixes D-018).** `lib/workspace-backup.ts`
+  gains a `device` scope and these stores:
+  - registration;
+  - registration day;
+  - graduation;
+  - life balance;
+  - shortlist;
+  - advisor meetings;
+  - Source Locker;
+  - study readiness;
+  - career evidence.
+- **Guarded against recurring.** `workspace-backup.coverage.test.ts` lists
+  every file that calls `useDeviceLibrary`, with how many times, and every
+  store prefix: backed up, or exempt with a sentence. A new store fails until
+  somebody decides. Exempt:
+  - the offline ledger, which is sync bookkeeping;
+  - stores other modules added (launchpad, opportunities, hub, support,
+    NIL, toolkit, directory, housing and meal plans, study journal,
+    operations). They are listed as waiting on their owners rather than
+    changed from here.
 
 ## D-031 · Public tool pages may run one same-origin script
 
