@@ -177,8 +177,16 @@ const NEVER =
   'Never describe a feature of this app that is not in the material below. If the app cannot ' +
   `do what is being asked, say so plainly and name the closest thing it can do.\n\n${VOICE}`;
 
-/** The whole system prompt for one question, given how it was read. */
-export function systemPrompt(read: Mode, drawn: string): string {
+/**
+ * The whole system prompt for one question, given how it was read.
+ *
+ * `tutoring` is `lib/socratic.ts`'s contract for the integrity mode the
+ * student chose, or null when the mode is one that answers. It goes last, so
+ * it is the rule nearest the question, and never on an app question: "where
+ * do I set my grade scale" is not something to be Socratic about.
+ */
+export function systemPrompt(read: Mode, drawn: string, tutoring: string | null = null): string {
+  const tutor = tutoring ? `\n\n${tutoring}` : '';
   if (read === 'app') {
     const book = guidebook();
     const facts = book.sections
@@ -195,13 +203,13 @@ export function systemPrompt(read: Mode, drawn: string): string {
       "You are answering a question about this student's own courses and records, and about " +
       'the screen they are looking at. Answer from what is below and say which part you used. ' +
       'Each deadline carries its id in brackets; use those ids when a tool needs one, and ' +
-      `never invent one.\n\n${BOUNDS}\n\n${READING}\n\n${ACTING}\n\n${NEVER}\n\n${drawn}`
+      `never invent one.\n\n${BOUNDS}\n\n${READING}\n\n${ACTING}\n\n${NEVER}\n\n${drawn}${tutor}`
     );
   }
   return (
     'You are helping a university student. Answer the question they asked, well and directly — ' +
     'a concept, a piece of code, a piece of writing, a decision, whatever it is. Do not narrow ' +
     `it to their coursework and do not refuse because it is not about a course.\n\n` +
-    `${BOUNDS}\n\n${READING}\n\n${ACTING}\n\n${NEVER}\n\n${drawn}`
+    `${BOUNDS}\n\n${READING}\n\n${ACTING}\n\n${NEVER}\n\n${drawn}${tutor}`
   );
 }

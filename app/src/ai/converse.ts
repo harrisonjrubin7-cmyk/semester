@@ -23,6 +23,7 @@ import { assembleIntelligenceRequest } from '../intelligence/assemble';
 import type { IntelligenceRequest } from '../intelligence/assemble';
 import type { IntelligenceResponse, IntegrityMode, SourceOrigin } from '../intelligence/contracts';
 import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
+import { taskPolicyFor, tutorContract } from '../lib/socratic';
 import { institutionIntelligence, institutionIntelligencePolicy } from '../lib/university';
 import { dropThread, flight, keepTurns, newThread, openThread, sender, setLive, useLive,
   renameThread,
@@ -464,6 +465,21 @@ export function useConversation(): Conversation {
          * bookkeeping: nobody wants to scroll past "read_grades: ECON 1010"
          * to reread what they were told.
          */
+        /*
+         * What the integrity picker means to the model.
+         *
+         * Until this, the mode was recorded on the request and on the answer
+         * card and told the model nothing, so Hint on a problem set answered
+         * exactly as Explain did. The effective mode — the policy's, not the
+         * button's — sets a ceiling on how much one reply may give. The open
+         * course's recorded AI stance joins in only for a question about the
+         * student's own coursework: "explain elasticity" asked in general is
+         * not governed by the ECON syllabus, and prompt.ts says why.
+         */
+        const tutoring = tutorContract(
+          intelligence.context.integrityMode,
+          how.mode === 'grounded' ? taskPolicyFor(catalog.byId[state.guideId]?.ai) : { graded: false },
+        );
         let sending: Turn[] = next;
         let reply = '';
         /*
@@ -506,7 +522,7 @@ export function useConversation(): Conversation {
 
           const said = await ask({
             about: state.screen,
-            system: systemFor(how.mode, drawn.text),
+            system: systemFor(how.mode, drawn.text, tutoring),
             messages: sending,
             /*
              * Room for an answer that also proposes something.
