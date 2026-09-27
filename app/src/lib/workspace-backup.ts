@@ -11,6 +11,7 @@ import { REGISTRATION_KEY } from './registration-plan';
 import { LOCKER_KEY, readLocker } from './source-locker';
 import { READINESS_KEY, readReadiness } from './study-readiness';
 import { readAthletics } from './athletics';
+import { CLARITY_PREFIX, readClarity } from './clarity';
 import { QUIZ_FEEDBACK_PREFIX, readQuizFeedback } from './quiz-feedback';
 import { readCareer } from './career';
 import { readCreations } from './creations';
@@ -122,6 +123,12 @@ const DEFINITIONS: Record<string, Definition> = {
     prefix: PATH_PROFILE_PREFIX,
     scope: 'account',
     read: readPathProfile,
+  },
+  clarity: {
+    label: 'Your answers to "Did this help?"',
+    prefix: CLARITY_PREFIX,
+    scope: 'account',
+    read: readClarity,
   },
   // The device stores the feature expansion added (DECISION-LOG D-018, D-057).
   // Before these, Export left out a registration-day plan and graduation
