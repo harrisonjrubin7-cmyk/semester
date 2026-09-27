@@ -116,6 +116,13 @@ function screenFromUrl(): Screen | null {
   }
 }
 
+/**
+ * How recently a pull must have happened for coming back to the app not to
+ * start another. A minute: long enough that flicking between tabs costs
+ * nothing, short enough that "I just changed it on my phone" is caught.
+ */
+export const FOCUS_PULL_MS = 60_000;
+
 /** Where the account copy stands, for the Account screen to show honestly. */
 export type SyncStatus =
   | 'off'          // no project configured in this build
@@ -777,6 +784,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
    * `hasRemote` is what stops a signed-in device with a blank account from
    * hydrating a semester's work away.
    */
+  /** When this device last asked the account for its copy. See the focus pull below. */
+  const pulledAt = useRef(0);
   const refresh = useCallback(async (): Promise<string> => {
     const base = { cloud: cloudConfigured, signedIn: Boolean(account), took: false, courses: 0, error: '', at: 0 };
     if (!account) {
@@ -790,6 +799,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       return refreshSaid({ ...base, error: 'No connection. This device will catch up when it is back.' }, Date.now());
     }
     setSync((s) => ({ ...s, status: 'syncing', error: '' }));
+    pulledAt.current = Date.now();
     try {
       const remote = await pull(account.id);
       const seen = seenRows();
@@ -903,6 +913,43 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     if (online && !wasOnline.current && account) void refresh();
     wasOnline.current = online;
   }, [online, account, refresh]);
+
+  /*
+   * Coming back to the app: look at the account.
+   *
+   * The case this is for is the ordinary one — a laptop that stayed online all
+   * night, with the phone used in the morning. Nothing else would pull: the
+   * connection never dropped, the account never changed, and this device has
+   * nothing to push, so it would show last night's semester until somebody
+   * pulled down to refresh. Now switching back to the tab, or unlocking the
+   * phone with the app open, catches it up.
+   *
+   * Both `visibilitychange` and `focus`, because each misses a case the other
+   * sees: a window already visible beside another one gains focus without
+   * becoming visible, and a phone returning to the app becomes visible and
+   * may never fire focus. They often fire together, and switching between two
+   * tabs fires them a dozen times a minute, so a pull within the last
+   * `FOCUS_PULL_MS` — for any reason, sign-in and reconnect included — is
+   * enough and this does nothing.
+   *
+   * Not while the first-sign-in question is open, which is waiting on a pull
+   * that has already happened; and not offline, where `online` returning
+   * pulls instead.
+   */
+  useEffect(() => {
+    if (!account || !online || asking) return;
+    const look = () => {
+      if (document.visibilityState !== 'visible') return;
+      if (Date.now() - pulledAt.current < FOCUS_PULL_MS) return;
+      void refresh();
+    };
+    document.addEventListener('visibilitychange', look);
+    window.addEventListener('focus', look);
+    return () => {
+      document.removeEventListener('visibilitychange', look);
+      window.removeEventListener('focus', look);
+    };
+  }, [account, online, asking, refresh]);
 
   /*
    * How many times in a row a push has found the account moved on.

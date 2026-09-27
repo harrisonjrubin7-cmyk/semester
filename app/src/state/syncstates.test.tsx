@@ -56,7 +56,7 @@ vi.mock('./persist', () => ({
   load: async () => null,
 }));
 
-const { StoreProvider, useStore } = await import('./store');
+const { StoreProvider, useStore, FOCUS_PULL_MS } = await import('./store');
 const { SEEN_KEY, UNPUSHED_KEY } = await import('./shape');
 const { loadSeed } = await import('../data/seed');
 
@@ -65,6 +65,7 @@ const { loadSeed } = await import('../data/seed');
 let host: HTMLDivElement;
 let root: Root;
 let onLine = true;
+let visibility: DocumentVisibilityState = 'visible';
 let store: ReturnType<typeof useStore>;
 
 function Peek() {
@@ -112,7 +113,9 @@ async function connection(on: boolean) {
 
 beforeEach(async () => {
   await loadSeed().catch(() => []);
-  vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+  vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] });
+  visibility = 'visible';
+  Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => visibility });
   Object.defineProperty(navigator, 'onLine', { configurable: true, get: () => onLine });
   onLine = true;
   db = true;
@@ -208,5 +211,67 @@ describe('when another device keeps winning', () => {
     await wait(40_000);
     expect(push.mock.calls.length).toBeGreaterThanOrEqual(3);
     expect(store.sync.status).toBe('conflict');
+  });
+});
+
+describe('coming back to the app', () => {
+  /*
+   * A laptop that stayed online all night: no reconnect, no sign-in, nothing
+   * to push. Without this, nothing pulled until somebody pulled down.
+   */
+  async function focus() {
+    await act(async () => {
+      window.dispatchEvent(new Event('focus'));
+    });
+  }
+
+  it('pulls on focus once the last pull is more than a minute old', async () => {
+    await mount();
+    await wait(3_000);
+    const before = pull.mock.calls.length;
+    await wait(FOCUS_PULL_MS);
+    await focus();
+    await wait(500);
+    expect(pull.mock.calls.length).toBe(before + 1);
+  });
+
+  it('does not pull again within the minute — flicking between tabs costs nothing', async () => {
+    await mount();
+    await wait(3_000); // the sign-in pull is seconds old
+    const before = pull.mock.calls.length;
+    await focus();
+    await focus();
+    await wait(500);
+    expect(pull.mock.calls.length).toBe(before);
+  });
+
+  it('pulls when a hidden tab becomes visible, which a phone may do without focus', async () => {
+    await mount();
+    await wait(3_000);
+    const before = pull.mock.calls.length;
+    visibility = 'hidden';
+    await act(async () => {
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
+    await wait(FOCUS_PULL_MS);
+    visibility = 'visible';
+    await act(async () => {
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
+    await wait(500);
+    expect(pull.mock.calls.length).toBe(before + 1);
+  });
+
+  // Held by two checks, the effect's `online` and `refresh`'s own `offline()`;
+  // removing either alone leaves this green, which is the point of having both.
+  it('does not pull on focus without a connection', async () => {
+    await mount();
+    await wait(3_000);
+    await connection(false);
+    const before = pull.mock.calls.length;
+    await wait(FOCUS_PULL_MS);
+    await focus();
+    await wait(500);
+    expect(pull.mock.calls.length).toBe(before);
   });
 });

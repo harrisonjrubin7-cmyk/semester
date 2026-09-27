@@ -35,8 +35,12 @@ the spec. Paths are under `app/src/`.
     Navigation does trigger a push, because `recent` and `visited` are
     persisted fields.
 - **Pull:** when the signed-in account changes, when the connection comes
-  back, after a push loses a race, and on pull-to-refresh or "Sync now"
-  (`components/PullDown.tsx`). **Not** on focus or on becoming visible.
+  back, after a push loses a race, when the app regains focus or becomes
+  visible again, and on pull-to-refresh or "Sync now"
+  (`components/PullDown.tsx`). The focus pull is skipped if any pull happened
+  in the last minute (`FOCUS_PULL_MS`), so switching between tabs does not
+  hammer the account, and it does not run offline or while the first-sign-in
+  question is open.
 - **First sign-in with data on both sides:** the student is asked which copy to
   keep (`lib/adopt.ts`, `components/Adopting.tsx`).
 - **Merge** (`lib/merge.ts`): each field has a strategy.
@@ -87,8 +91,9 @@ spec's "Conflict needs review".
    blindly until they update.
 2. **A failed push is not retried.** It sets `error` and waits for the next
    change.
-3. **No pull on focus.** Reconnecting pulls now; a laptop that stayed online
-   overnight still shows yesterday's state until something triggers a pull.
+3. **Fixed: pull on focus.** A laptop that stayed online overnight now
+   catches up when the student switches back to it, rather than showing
+   yesterday's semester until a manual refresh.
 4. **No return context after sign-in.** OAuth, SSO and password reset all
    return to the bare `appUrl()`. A notification tap does carry `screen` and
    `item` through the service worker to `lib/land.ts`, so deep links from
