@@ -8,7 +8,9 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { ALIAS_ELIGIBLE_TYPES, ALIAS_RATE_LIMIT } from './alias';
+import { SUMMARY_MAX } from './crisis';
 import { VOLUNTEER_P2_CATEGORIES } from './moderation';
+import { SEVERITY_DELTA, STANDING_WORDS } from './safety-state';
 import { VOLUNTEER_RULES } from './volunteer';
 
 const sql = readFileSync(new URL('../../../supabase/migrations/20260927170000_community.sql', import.meta.url), 'utf8');
@@ -66,5 +68,41 @@ describe('alias rules, in both places', () => {
     expect(sql).toContain(`name ~ '^[A-Za-z][A-Za-z0-9]{3,23}$'`);
     const aliasTs = readFileSync(new URL('./alias.ts', import.meta.url), 'utf8');
     expect(aliasTs).toContain('/^[A-Za-z][A-Za-z0-9]{3,23}$/');
+  });
+});
+
+describe('escalation rules, in both places', () => {
+  it('only P0 and P1', () => {
+    expect(body('private.escalation_allowed')).toContain(`k.severity not in ('P0', 'P1')`);
+  });
+
+  it('the summary that leaves is capped at the same length', () => {
+    const decide = body('public.decide_community_escalation');
+    expect(decide).toContain(`'summary', left(e.requested_reason, ${SUMMARY_MAX})`);
+  });
+
+  it('the payload keys are the fields prepareEscalation builds', () => {
+    const decide = body('public.decide_community_escalation');
+    const built = /jsonb_build_object\(([\s\S]*?)\);/.exec(decide)?.[1] ?? '';
+    const keys = [...built.matchAll(/'([a-z_]+)',/g)].map((m) => m[1]).sort();
+    expect(keys).toEqual(['agreement_ref', 'case_id', 'category', 'occurred_at', 'severity', 'summary', 'tenant_id']);
+  });
+});
+
+describe('safety state, in both places', () => {
+  it('costs the same at each severity, and nothing at P3', () => {
+    const record = body('private.record_safety_outcome');
+    expect(record).toContain(
+      `case k.severity when 'P0' then ${SEVERITY_DELTA.P0} when 'P1' then ${SEVERITY_DELTA.P1} else ${SEVERITY_DELTA.P2} end`,
+    );
+    expect(SEVERITY_DELTA.P3).toBe(0);
+    expect(record).toContain(`if k.severity = 'P3' then return; end if;`);
+  });
+
+  it('tells the student the same words', () => {
+    const start = sql.indexOf('create or replace function public.my_community_standing(');
+    const standing = sql.slice(start, sql.indexOf('$$;', sql.indexOf('as $$', start) + 5));
+    expect(standing).toContain(`'${STANDING_WORDS.affected}'`);
+    expect(standing).toContain(`'${STANDING_WORDS.clear}'`);
   });
 });

@@ -1008,6 +1008,9 @@ begin
   insert into public.community_decisions (case_id, actor_id, stage, action, reason_code)
   values (k.id, (select auth.uid()), 'decision', want_action, want_reason);
   perform private.apply_community_action(k, want_action, author);
+  -- A violation a professional found counts against the author's private
+  -- safety state, where the school has switched that on (section 15).
+  perform private.record_safety_outcome(k, want_action, want_reason, author);
   -- Every automated signal on the case learns what a person decided, which is
   -- how a rule that keeps being overruled shows up in the numbers.
   update public.community_signals set human_outcome = want_action
@@ -1071,6 +1074,7 @@ begin
   if not want_uphold then
     update public.community_restrictions set lifted_at = now() where case_id = k.id and lifted_at is null;
     update public.community_posts set status = 'published' where id = k.post_id and status in ('removed', 'reduced', 'held');
+    update public.community_safety_entries set reversed_at = now() where case_id = k.id and reversed_at is null;
   end if;
   update public.community_signals
      set human_outcome = coalesce(human_outcome, 'none') || case when want_uphold then ' / upheld on appeal' else ' / reversed on appeal' end
@@ -1389,6 +1393,10 @@ begin
       or t.answered_at < now() - interval '1 year';
   get diagnostics n_volunteer = row_count;
   delete from public.community_volunteer_events e where e.occurred_at < now() - interval '1 year';
+  -- The safety state forgets after a year, so it recovers.
+  delete from public.community_safety_entries e where e.created_at < now() - interval '1 year';
+  -- A delivered escalation's copy of the payload has done its job.
+  delete from public.community_escalation_deliveries d where d.delivered_at < now() - interval '90 days';
 
   delete from public.community_retention_runs where ran_at < now() - interval '1 year';
 
@@ -1474,7 +1482,8 @@ revoke all on function public.lti_account_untouched(uuid)
 
 create table if not exists public.community_programs (
   tenant_id   text        not null references public.schools(id) on delete cascade,
-  program     text        not null check (program in ('scoped_pseudonymity', 'volunteer_moderation')),
+  program     text        not null check (program in ('scoped_pseudonymity', 'volunteer_moderation',
+                                                           'institution_escalation', 'account_safety_state')),
   enabled     boolean     not null default false,
   approved_ref text       not null default '' check (length(approved_ref) <= 200),
   changed_at  timestamptz not null default now(),
@@ -2150,11 +2159,372 @@ $$;
 revoke all on function public.my_volunteer_standing() from public, anon, authenticated;
 grant execute on function public.my_volunteer_standing() to authenticated;
 
+-- ── 14. Institution escalation ────────────────────────────────────────────
+--
+-- The most consequential thing Community can do, so the hardest to do. It is
+-- off unless all of these hold, and every function asks again each time:
+--
+--   * the school's community_programs row for institution_escalation is on;
+--   * the school has an escalation policy that is enabled, names a signed
+--     agreement and a delivery channel, and lists the categories it covers —
+--     a row only the service role writes;
+--   * the case is P0 or P1, in a covered category, with no escalation already
+--     requested or approved;
+--   * one professional asks, with a written reason, and a *different* one
+--     approves, with a reason of their own — compared by hash, so no account
+--     id is stored to compare.
+--
+-- What leaves is built here, not supplied: case id, school, category,
+-- severity, a summary of at most 500 characters, when, and the agreement.
+-- Identity is included only when the agreement requires it, and then only as
+-- an opaque reference the service role can resolve against the case — never
+-- a name, an email or an account id. Approval queues one delivery for the
+-- service role's adapter to send. There is no dashboard, no standing feed and
+-- no way for a university account to read any of this.
+
+create table if not exists public.community_escalation_policies (
+  tenant_id         text        primary key references public.schools(id) on delete cascade,
+  enabled           boolean     not null default false,
+  agreement_ref     text        not null default '' check (length(agreement_ref) <= 200),
+  categories        text[]      not null default '{}',
+  identity_required boolean     not null default false,
+  channel           text        not null default '' check (length(channel) <= 200),
+  updated_at        timestamptz not null default now()
+);
+alter table public.community_escalation_policies enable row level security;
+revoke all on table public.community_escalation_policies from anon, authenticated;
+grant select on table public.community_escalation_policies to authenticated;
+drop policy if exists "reviewers read escalation policies" on public.community_escalation_policies;
+create policy "reviewers read escalation policies" on public.community_escalation_policies
+  for select to authenticated using (private.has_capability('community:review'));
+
+create table if not exists public.community_escalations (
+  id                  uuid        primary key default gen_random_uuid(),
+  case_id             uuid        not null references public.community_cases(id) on delete cascade,
+  tenant_id           text        not null references public.schools(id) on delete cascade,
+  status              text        not null default 'requested' check (status in ('requested', 'approved', 'refused')),
+  requested_by_sha256 text        not null check (requested_by_sha256 ~ '^[0-9a-f]{64}$'),
+  requested_reason    text        not null check (length(trim(requested_reason)) between 10 and 500),
+  requested_at        timestamptz not null default now(),
+  decided_by_sha256   text        check (decided_by_sha256 is null or decided_by_sha256 ~ '^[0-9a-f]{64}$'),
+  decided_reason      text        check (decided_reason is null or length(trim(decided_reason)) between 10 and 500),
+  decided_at          timestamptz,
+  payload             jsonb
+);
+create unique index if not exists community_escalations_one_live_per_case
+  on public.community_escalations (case_id) where status in ('requested', 'approved');
+create index if not exists community_escalations_by_case on public.community_escalations (case_id);
+create index if not exists community_escalations_by_tenant on public.community_escalations (tenant_id, status);
+alter table public.community_escalations enable row level security;
+revoke all on table public.community_escalations from anon, authenticated;
+grant select on table public.community_escalations to authenticated;
+drop policy if exists "reviewers read escalations" on public.community_escalations;
+create policy "reviewers read escalations" on public.community_escalations
+  for select to authenticated using (private.has_capability('community:review'));
+
+create table if not exists public.community_escalation_deliveries (
+  id            uuid        primary key default gen_random_uuid(),
+  escalation_id uuid        not null references public.community_escalations(id) on delete cascade,
+  channel       text        not null,
+  payload       jsonb       not null,
+  queued_at     timestamptz not null default now(),
+  attempts      integer     not null default 0,
+  delivered_at  timestamptz
+);
+create index if not exists community_escalation_deliveries_by_escalation on public.community_escalation_deliveries (escalation_id);
+create index if not exists community_escalation_deliveries_pending on public.community_escalation_deliveries (delivered_at, queued_at);
+alter table public.community_escalation_deliveries enable row level security;
+revoke all on table public.community_escalation_deliveries from anon, authenticated;
+grant select (id, escalation_id, queued_at, attempts, delivered_at) on table public.community_escalation_deliveries to authenticated;
+drop policy if exists "reviewers see delivery state" on public.community_escalation_deliveries;
+create policy "reviewers see delivery state" on public.community_escalation_deliveries
+  for select to authenticated using (private.has_capability('community:review'));
+
+/* Everything that must hold for this case to be escalated at all. */
+create or replace function private.escalation_allowed(k public.community_cases)
+returns public.community_escalation_policies
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  pol public.community_escalation_policies;
+begin
+  if not private.community_program_on(k.tenant_id, 'institution_escalation') then
+    raise exception 'institution escalation is switched off at this school' using errcode = '42501';
+  end if;
+  select * into pol from public.community_escalation_policies where tenant_id = k.tenant_id;
+  if pol.tenant_id is null or not pol.enabled or pol.agreement_ref = '' or pol.channel = '' then
+    raise exception 'this school has no escalation agreement in force' using errcode = '42501';
+  end if;
+  if k.severity not in ('P0', 'P1') then
+    raise exception 'only P0 and P1 cases can be escalated' using errcode = '22023';
+  end if;
+  if not (k.category = any (pol.categories)) then
+    raise exception 'the agreement does not cover this category' using errcode = '22023';
+  end if;
+  return pol;
+end $$;
+revoke all on function private.escalation_allowed(public.community_cases) from public, anon, authenticated;
+
+create or replace function public.request_community_escalation(want_case uuid, want_reason text)
+returns uuid
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  k public.community_cases;
+  eid uuid;
+begin
+  if not private.has_capability('community:review') then
+    raise exception 'only Trust & Safety reviewers escalate' using errcode = '42501';
+  end if;
+  select * into k from public.community_cases where id = want_case;
+  if k.id is null then raise exception 'no such case' using errcode = '22023'; end if;
+  perform private.escalation_allowed(k);
+  if coalesce(length(trim(want_reason)), 0) < 10 then
+    raise exception 'write the reason out' using errcode = '22023';
+  end if;
+  if exists (select 1 from public.community_escalations e
+              where e.case_id = k.id and e.status in ('requested', 'approved')) then
+    raise exception 'this case has already been escalated once' using errcode = '22023';
+  end if;
+  insert into public.community_escalations (case_id, tenant_id, requested_by_sha256, requested_reason)
+  values (k.id, k.tenant_id, private.role_audit_sha256((select auth.uid())::text), left(trim(want_reason), 500))
+  returning id into eid;
+  perform private.community_case_event(k.id,
+    case when private.has_capability('community:review_senior') then 'senior_reviewer' else 'reviewer' end,
+    'escalation_requested', 'escalation', k.status, k.status);
+  return eid;
+end $$;
+revoke all on function public.request_community_escalation(uuid, text) from public, anon, authenticated;
+grant execute on function public.request_community_escalation(uuid, text) to authenticated;
+
+create or replace function public.decide_community_escalation(want_escalation uuid, want_approve boolean, want_reason text)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  e public.community_escalations;
+  k public.community_cases;
+  pol public.community_escalation_policies;
+  me_hash text := private.role_audit_sha256((select auth.uid())::text);
+  author uuid;
+  body jsonb;
+begin
+  if not private.has_capability('community:review') then
+    raise exception 'only Trust & Safety reviewers approve escalations' using errcode = '42501';
+  end if;
+  select * into e from public.community_escalations where id = want_escalation for update;
+  if e.id is null or e.status <> 'requested' then
+    raise exception 'no escalation is waiting for a decision' using errcode = '22023';
+  end if;
+  if e.requested_by_sha256 = me_hash then
+    raise exception 'a second, different reviewer must approve' using errcode = '42501';
+  end if;
+  if coalesce(length(trim(want_reason)), 0) < 10 then
+    raise exception 'write the reason out' using errcode = '22023';
+  end if;
+  select * into k from public.community_cases where id = e.case_id;
+
+  if not coalesce(want_approve, false) then
+    update public.community_escalations
+       set status = 'refused', decided_by_sha256 = me_hash, decided_reason = left(trim(want_reason), 500), decided_at = now()
+     where id = e.id;
+    perform private.community_case_event(k.id, 'reviewer', 'escalation_refused', 'escalation', k.status, k.status);
+    return;
+  end if;
+
+  -- Asked again: the switch, the agreement or the case may have changed.
+  pol := private.escalation_allowed(k);
+
+  -- The payload is an allowlist, assembled here.
+  body := jsonb_build_object(
+    'case_id', k.id,
+    'tenant_id', k.tenant_id,
+    'category', k.category,
+    'severity', k.severity,
+    'summary', left(e.requested_reason, 500),
+    'occurred_at', now(),
+    'agreement_ref', pol.agreement_ref);
+  if pol.identity_required then
+    select p.author_id into author from public.community_posts p where p.id = k.post_id;
+    body := body || jsonb_build_object('subject_ref',
+      private.role_audit_sha256('escalation:' || e.id::text || ':' || coalesce(author::text, '')));
+  end if;
+
+  update public.community_escalations
+     set status = 'approved', decided_by_sha256 = me_hash, decided_reason = left(trim(want_reason), 500),
+         decided_at = now(), payload = body
+   where id = e.id;
+  insert into public.community_escalation_deliveries (escalation_id, channel, payload)
+  values (e.id, pol.channel, body);
+  perform private.community_case_event(k.id, 'reviewer', 'escalation_approved', 'escalation', k.status, k.status);
+end $$;
+revoke all on function public.decide_community_escalation(uuid, boolean, text) from public, anon, authenticated;
+grant execute on function public.decide_community_escalation(uuid, boolean, text) to authenticated;
+
+/* For the delivery adapter only: take what is waiting, and mark it sent. */
+create or replace function private.take_escalation_deliveries()
+returns setof public.community_escalation_deliveries
+language sql
+security definer
+set search_path = ''
+as $$
+  update public.community_escalation_deliveries
+     set attempts = attempts + 1
+   where delivered_at is null and attempts < 5
+  returning *;
+$$;
+revoke all on function private.take_escalation_deliveries() from public, anon, authenticated;
+grant execute on function private.take_escalation_deliveries() to service_role;
+
+create or replace function private.mark_escalation_delivered(want_delivery uuid)
+returns void
+language sql
+security definer
+set search_path = ''
+as $$
+  update public.community_escalation_deliveries set delivered_at = now()
+   where id = want_delivery and delivered_at is null;
+$$;
+revoke all on function private.mark_escalation_delivered(uuid) from public, anon, authenticated;
+grant execute on function private.mark_escalation_delivered(uuid) to service_role;
+
+-- ── 15. The private account safety state ──────────────────────────────────
+--
+-- Not karma. A running 0–100 for Trust & Safety, off unless the school's
+-- community_programs row for account_safety_state is on, and:
+--
+--   * written only by a professional's decision that found a violation — never
+--     by triage, a detector, a report count or a volunteer — at the case's
+--     severity: P0 −40, P1 −20, P2 −8, P3 nothing (SEVERITY_DELTA in
+--     safety-state.ts, held to these numbers by programs.test.ts);
+--   * reversed when an appeal is granted, the entry kept and marked;
+--   * forgotten after a year by the retention sweep, so it recovers;
+--   * granted to nobody through the API. A reviewer reads the number for a
+--     case's author through a function that needs a written reason and writes
+--     a case event; the student gets a sentence, never the number; everybody
+--     else gets nothing.
+--
+-- Nothing reads it for ranking, search, academics, aid, admissions, housing,
+-- work or advising — there is no other function that touches the table.
+
+create table if not exists public.community_safety_entries (
+  id           bigint      generated always as identity primary key,
+  user_id      uuid        not null references auth.users on delete cascade,
+  tenant_id    text        not null references public.schools(id) on delete cascade,
+  case_id      uuid        not null,
+  severity     text        not null check (severity in ('P0', 'P1', 'P2')),
+  delta        integer     not null check (delta < 0),
+  reason_code  text        not null,
+  actor_sha256 text        not null check (actor_sha256 ~ '^[0-9a-f]{64}$'),
+  created_at   timestamptz not null default now(),
+  reversed_at  timestamptz
+);
+create index if not exists community_safety_entries_by_user on public.community_safety_entries (user_id, created_at);
+create index if not exists community_safety_entries_by_case on public.community_safety_entries (case_id);
+create index if not exists community_safety_entries_by_tenant on public.community_safety_entries (tenant_id);
+alter table public.community_safety_entries enable row level security;
+revoke all on table public.community_safety_entries from anon, authenticated;
+
+/* Called from the professional decision path only. */
+create or replace function private.record_safety_outcome(k public.community_cases, want_action text, want_reason text, author uuid)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if author is null or not private.community_program_on(k.tenant_id, 'account_safety_state') then return; end if;
+  if want_action in ('allow', 'close_no_action', 'preserve_evidence') then return; end if;
+  if k.severity = 'P3' then return; end if;
+  insert into public.community_safety_entries (user_id, tenant_id, case_id, severity, delta, reason_code, actor_sha256)
+  values (author, k.tenant_id, k.id, k.severity,
+          case k.severity when 'P0' then -40 when 'P1' then -20 else -8 end,
+          want_reason, private.role_audit_sha256((select auth.uid())::text));
+end $$;
+revoke all on function private.record_safety_outcome(public.community_cases, text, text, uuid) from public, anon, authenticated;
+
+create or replace function private.safety_value(who uuid)
+returns integer
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select greatest(0, least(100, 100 + coalesce(sum(e.delta), 0)))::integer
+    from public.community_safety_entries e
+   where e.user_id = who and e.reversed_at is null and e.created_at > now() - interval '1 year';
+$$;
+revoke all on function private.safety_value(uuid) from public, anon, authenticated;
+
+/* A reviewer's read of a case author's state: a reason, and a case event, every time. */
+create or replace function public.case_author_safety(want_case uuid, want_reason text)
+returns integer
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  k public.community_cases;
+  author uuid;
+begin
+  if not private.has_capability('community:review') then
+    raise exception 'only Trust & Safety reviewers read safety state' using errcode = '42501';
+  end if;
+  select * into k from public.community_cases where id = want_case;
+  if k.id is null then raise exception 'no such case' using errcode = '22023'; end if;
+  if not private.community_program_on(k.tenant_id, 'account_safety_state') then
+    raise exception 'safety state is switched off at this school' using errcode = '42501';
+  end if;
+  if coalesce(length(trim(want_reason)), 0) < 10 then
+    raise exception 'write down why you need it' using errcode = '22023';
+  end if;
+  select p.author_id into author from public.community_posts p where p.id = k.post_id;
+  perform private.community_case_event(k.id,
+    case when private.has_capability('community:review_senior') then 'senior_reviewer' else 'reviewer' end,
+    'safety_state_read', left(trim(want_reason), 80), k.status, k.status);
+  return private.safety_value(author);
+end $$;
+revoke all on function public.case_author_safety(uuid, text) from public, anon, authenticated;
+grant execute on function public.case_author_safety(uuid, text) to authenticated;
+
+/* What a student is told about their own standing: words, never the number. */
+create or replace function public.my_community_standing()
+returns text
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select case
+    when exists (select 1 from public.community_safety_entries e
+                  where e.user_id = (select auth.uid()) and e.reversed_at is null
+                    and e.created_at > now() - interval '1 year')
+      then 'A past decision still affects your Community account. You can see each decision about your posts, and appeal eligible ones.'
+    else 'Your Community account is in good standing.'
+  end;
+$$;
+revoke all on function public.my_community_standing() from public, anon, authenticated;
+grant execute on function public.my_community_standing() to authenticated;
+
 -- ═══════════════════════════════════════════════════════════════════════════
 -- Rolling back
 --
 -- Every object here is new. To remove:
 --
+--   drop function if exists public.my_community_standing(), public.case_author_safety(uuid, text),
+--     private.safety_value(uuid), private.record_safety_outcome(public.community_cases, text, text, uuid),
+--     private.mark_escalation_delivered(uuid), private.take_escalation_deliveries(),
+--     public.decide_community_escalation(uuid, boolean, text), public.request_community_escalation(uuid, text),
+--     private.escalation_allowed(public.community_cases);
+--   drop table if exists public.community_safety_entries, public.community_escalation_deliveries,
+--     public.community_escalations, public.community_escalation_policies;
 --   drop function if exists public.my_volunteer_standing(), public.volunteer_decide(uuid, text, text),
 --     public.volunteer_next_tasks(), private.volunteer_eligible_case(public.community_cases),
 --     private.volunteer_recused(uuid, uuid), private.volunteer_ready(uuid),

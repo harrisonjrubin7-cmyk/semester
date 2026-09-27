@@ -27,6 +27,13 @@ export interface SafetyEntry {
 
 export const SEVERITY_DELTA: Record<Severity, number> = { P0: -40, P1: -20, P2: -8, P3: 0 };
 
+/** What a student is told, and all they are told. my_community_standing() says the same. */
+export const STANDING_WORDS = {
+  clear: 'Your Community account is in good standing.',
+  affected:
+    'A past decision still affects your Community account. You can see each decision about your posts, and appeal eligible ones.',
+} as const;
+
 export class SafetyStateRefused extends Error {}
 
 /** Current value: 100 less every unreversed confirmed outcome, floored at 0. */
@@ -61,9 +68,7 @@ export function readSafetyState(reader: SafetyReader, entries: SafetyEntry[]): n
   if (reader === 'trust_and_safety') return safetyValue(entries);
   if (reader === 'student') {
     const active = entries.filter((e) => !e.reversedAt).length;
-    return active === 0
-      ? 'Your Community account is in good standing.'
-      : 'A past decision still affects your Community account. You can see each decision and appeal eligible ones.';
+    return active === 0 ? STANDING_WORDS.clear : STANDING_WORDS.affected;
   }
   return null;
 }

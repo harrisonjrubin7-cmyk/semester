@@ -124,7 +124,7 @@ end $$;
 do $$
 declare
   /*
-   * The allowlist. Fifty-five, and each is a deliberate entry point:
+   * The allowlist. Fifty-nine, and each is a deliberate entry point:
    *   make_referral_code  — mints this account's own code
    *   claim_referral      — records that this account arrived on somebody's
    *   referral_standing   — two integers and a boolean about the caller
@@ -225,6 +225,19 @@ declare
     'volunteer_attest(want_kind text)',
     'volunteer_decide(want_task uuid, want_action text, want_reason text)',
     'volunteer_next_tasks()',
+
+    /*
+     * Institution escalation and the private safety state, both off unless
+     * the school's community_programs row says otherwise. An escalation needs
+     * a policy only the service role writes, a P0 or P1 case in a covered
+     * category, and two different reviewers; case_author_safety needs a
+     * reviewer and a written reason, and logs every read;
+     * my_community_standing answers in words for the caller alone.
+     */
+    'case_author_safety(want_case uuid, want_reason text)',
+    'decide_community_escalation(want_escalation uuid, want_approve boolean, want_reason text)',
+    'my_community_standing()',
+    'request_community_escalation(want_case uuid, want_reason text)',
 
     /*
      * The six ways into `organization_members`, and the reason there are six

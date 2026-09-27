@@ -51,3 +51,24 @@ allowlist.
    and routes it to urgent professional review.
 4. **In search**, the index is built only from presentation fields. Support
    community membership is never visible (`membershipVisibleTo`).
+
+## The account safety state
+
+Semester has no karma. The one running number it can keep about a Community
+account is the private safety state (`safety-state.ts`;
+`community_safety_entries` in the database). It is off unless both the
+`VITE_ACCOUNT_SAFETY_STATE` build flag and the school's `community_programs`
+row for `account_safety_state` are on.
+
+- **What moves it.** Only a professional reviewer's decision that enforces
+  something: P0 −40, P1 −20, P2 −8. Nothing at P3. Never an "allow", a
+  report count, a detector or a volunteer.
+- **What undoes it.** A granted appeal marks the entry reversed; the entry
+  stays for the audit trail but no longer counts. After a year the sweep
+  deletes it.
+- **Who sees it.** No role reads the table through the API. A reviewer
+  calls `case_author_safety` for one case's author with a written reason,
+  and every read is a case event. The student calls `my_community_standing`
+  and gets one of two sentences, never the number. Nobody else gets anything.
+- **What it is never used for.** Ranking, search, academics, aid, admissions,
+  housing, work or advising. No other function reads the table.

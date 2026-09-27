@@ -89,7 +89,7 @@ export interface EscalationPayload {
 
 export class EscalationRefused extends Error {}
 
-const SUMMARY_MAX = 500;
+export const SUMMARY_MAX = 500;
 
 export function prepareEscalation(args: {
   flags: CommunityFlags;

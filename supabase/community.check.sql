@@ -925,4 +925,256 @@ begin
   perform pg_temp.counted('her aliases are gone', n, 0);
 end $$;
 
+
+-- ── Institution escalation and the private safety state ──────────────────
+do $$
+declare
+  amy uuid; bo uuid; cy uuid; dee uuid; rev uuid; rev2 uuid; senior uuid; mgr uuid;
+  grp uuid; threat uuid; dox uuid; spam uuid; minor uuid;
+  k_threat uuid; k_dox uuid; k_spam uuid; k_minor uuid; e uuid; e2 uuid;
+  n bigint; t text; v int; j jsonb;
+begin
+  insert into public.schools (id, name, email_domains) values ('es-u', 'Escalation University', array['es-u.example']);
+  amy    := pg_temp.newuser('amy@es-u.example', 'es-u');
+  bo     := pg_temp.newuser('bo@es-u.example', 'es-u');
+  cy     := pg_temp.newuser('cy@es-u.example', 'es-u');
+  dee    := pg_temp.newuser('dee@es-u.example', 'es-u');
+  mgr    := pg_temp.newuser('mgr@es-u.example', 'es-u');
+  rev    := pg_temp.newuser('rev@es.semester.example', null);
+  rev2   := pg_temp.newuser('rev2@es.semester.example', null);
+  senior := pg_temp.newuser('senior@es.semester.example', null);
+  insert into public.role_grants (subject, role, scope_kind, scope_id, provenance) values
+    (mgr,    'community_manager',     'school',   'es-u', 'institution'),
+    (rev,    'trust_safety_reviewer', 'platform', '',     'platform'),
+    (rev2,   'trust_safety_reviewer', 'platform', '',     'platform'),
+    (senior, 'trust_safety_senior',   'platform', '',     'platform');
+
+  perform pg_temp.expect_allowed('amy starts a study group', amy,
+    $q$select public.create_community('study_group', 'ES stats group', 'Stats', '')$q$);
+  select id into grp from public.communities where name = 'ES stats group';
+  perform pg_temp.expect_allowed('bo joins', bo, format('select public.join_community(%L)', grp));
+  perform pg_temp.expect_allowed('cy joins', cy, format('select public.join_community(%L)', grp));
+  perform pg_temp.expect_allowed('dee joins', dee, format('select public.join_community(%L)', grp));
+  perform pg_temp.expect_allowed('bo posts', bo, format($q$select public.create_community_post(%L, 'Post for a threat report')$q$, grp));
+  perform pg_temp.expect_allowed('bo posts again', bo, format($q$select public.create_community_post(%L, 'Post for a doxxing report')$q$, grp));
+  perform pg_temp.expect_allowed('cy posts', cy, format($q$select public.create_community_post(%L, 'Post for a spam report')$q$, grp));
+  perform pg_temp.expect_allowed('cy posts again', cy, format($q$select public.create_community_post(%L, 'Post for a minor report')$q$, grp));
+  select id into threat from public.community_posts where body = 'Post for a threat report';
+  select id into dox    from public.community_posts where body = 'Post for a doxxing report';
+  select id into spam   from public.community_posts where body = 'Post for a spam report';
+  select id into minor  from public.community_posts where body = 'Post for a minor report';
+  perform pg_temp.expect_allowed('amy reports a threat', amy, format($q$select public.report_community_post(%L, 'threat_or_safety_concern')$q$, threat));
+  perform pg_temp.expect_allowed('amy reports doxxing', amy, format($q$select public.report_community_post(%L, 'private_information_or_doxxing')$q$, dox));
+  perform pg_temp.expect_allowed('amy reports spam', amy, format($q$select public.report_community_post(%L, 'spam_scam_or_phishing')$q$, spam));
+  perform pg_temp.expect_allowed('amy reports something minor', amy, format($q$select public.report_community_post(%L, 'other')$q$, minor));
+  select id into k_threat from public.community_cases where post_id = threat;
+  select id into k_dox    from public.community_cases where post_id = dox;
+  select id into k_spam   from public.community_cases where post_id = spam;
+  select id into k_minor  from public.community_cases where post_id = minor;
+  select severity into t from public.community_cases where id = k_threat;
+  perform pg_temp.said('the threat case is P1', t, 'P1');
+  select severity into t from public.community_cases where id = k_minor;
+  perform pg_temp.said('the minor case is P3', t, 'P3');
+
+  -- ── Escalation: off, then refused until every condition holds ─────────
+  perform pg_temp.expect_refused('escalation is refused while the programme is off', rev,
+    format($q$select public.request_community_escalation(%L, 'credible threat against a named student')$q$, k_threat));
+  perform pg_temp.expect_refused('nobody signed in can switch it on', senior,
+    $q$insert into public.community_programs (tenant_id, program, enabled) values ('es-u', 'institution_escalation', true)$q$);
+  insert into public.community_programs (tenant_id, program, enabled, approved_ref)
+  values ('es-u', 'institution_escalation', true, 'check');
+  perform pg_temp.expect_refused('on, but with no agreement in force, it is still refused', rev,
+    format($q$select public.request_community_escalation(%L, 'credible threat against a named student')$q$, k_threat));
+  perform pg_temp.expect_refused('a senior reviewer cannot write the agreement', senior,
+    $q$insert into public.community_escalation_policies (tenant_id, enabled, agreement_ref, categories, channel)
+       values ('es-u', true, 'forged', array['threat_or_safety_concern'], 'x')$q$);
+  perform pg_temp.expect_refused('nor can the school''s community manager', mgr,
+    $q$insert into public.community_escalation_policies (tenant_id, enabled, agreement_ref, categories, channel)
+       values ('es-u', true, 'forged', array['threat_or_safety_concern'], 'x')$q$);
+  -- The service role, from a signed agreement — written first as a draft.
+  insert into public.community_escalation_policies (tenant_id, enabled, agreement_ref, categories, identity_required, channel)
+  values ('es-u', false, 'ES-DSA-2026-01', array['threat_or_safety_concern', 'spam_scam_or_phishing'], false, 'secure-mail:dos');
+  perform pg_temp.expect_refused('a policy that is not enabled is refused', rev,
+    format($q$select public.request_community_escalation(%L, 'credible threat against a named student')$q$, k_threat));
+  update public.community_escalation_policies set enabled = true where tenant_id = 'es-u';
+  perform pg_temp.counted('a reviewer reads the policy', pg_temp.seen(rev, 'select 1 from public.community_escalation_policies where tenant_id = ''es-u'''), 1);
+  perform pg_temp.counted('a student reads none', pg_temp.seen(amy, 'select 1 from public.community_escalation_policies'), 0);
+  perform pg_temp.counted('nor does the school''s manager', pg_temp.seen(mgr, 'select 1 from public.community_escalation_policies'), 0);
+
+  perform pg_temp.expect_refused('a student cannot request an escalation', amy,
+    format($q$select public.request_community_escalation(%L, 'credible threat against a named student')$q$, k_threat));
+  perform pg_temp.expect_refused('nor can a community manager', mgr,
+    format($q$select public.request_community_escalation(%L, 'credible threat against a named student')$q$, k_threat));
+  perform pg_temp.expect_refused('a P2 case is refused even in a covered category', rev,
+    format($q$select public.request_community_escalation(%L, 'a phishing wave aimed at the school')$q$, k_spam));
+  perform pg_temp.expect_refused('a P0 case outside the agreement''s categories is refused', rev,
+    format($q$select public.request_community_escalation(%L, 'a student''s address was posted')$q$, k_dox));
+  perform pg_temp.expect_refused('a request needs a written reason', rev,
+    format($q$select public.request_community_escalation(%L, 'threat')$q$, k_threat));
+  perform pg_temp.expect_allowed('a reviewer requests one for the P1 threat', rev,
+    format($q$select public.request_community_escalation(%L, 'credible threat against a named student')$q$, k_threat));
+  select id into e from public.community_escalations where case_id = k_threat;
+  perform pg_temp.expect_refused('one live escalation per case', rev2,
+    format($q$select public.request_community_escalation(%L, 'asking a second time over')$q$, k_threat));
+  select count(*) into n from public.community_escalations where case_id = k_threat and requested_by_sha256 = private.role_audit_sha256(rev::text);
+  perform pg_temp.counted('who asked is kept as a hash', n, 1);
+  perform pg_temp.counted('a student reads no escalations', pg_temp.seen(bo, 'select id from public.community_escalations'), 0);
+  perform pg_temp.counted('nor does the manager', pg_temp.seen(mgr, 'select id from public.community_escalations'), 0);
+
+  perform pg_temp.expect_refused('the reviewer who asked cannot approve', rev,
+    format($q$select public.decide_community_escalation(%L, true, 'approving my own request')$q$, e));
+  perform pg_temp.expect_refused('a student cannot approve', amy,
+    format($q$select public.decide_community_escalation(%L, true, 'looks right to me')$q$, e));
+  perform pg_temp.expect_refused('an approval needs its own reason', rev2,
+    format($q$select public.decide_community_escalation(%L, true, 'ok')$q$, e));
+  select count(*) into n from public.community_escalation_deliveries;
+  perform pg_temp.counted('nothing is queued before a second reviewer approves', n, 0);
+  perform pg_temp.expect_allowed('a second reviewer approves', rev2,
+    format($q$select public.decide_community_escalation(%L, true, 'threat names a person and a place')$q$, e));
+  select payload into j from public.community_escalations where id = e;
+  select string_agg(k, ',' order by k) into t from jsonb_object_keys(j) k;
+  perform pg_temp.said('the payload is exactly the allowlist', t,
+    'agreement_ref,case_id,category,occurred_at,severity,summary,tenant_id');
+  perform pg_temp.said('it names the agreement', j->>'agreement_ref', 'ES-DSA-2026-01');
+  perform pg_temp.counted('it carries no account id or email of the author', (position(bo::text in j::text) + position('bo@es-u' in j::text))::bigint, 0);
+  select count(*) into n from public.community_escalation_deliveries d where d.escalation_id = e and d.channel = 'secure-mail:dos';
+  perform pg_temp.counted('approval queues one delivery on the agreed channel', n, 1);
+  perform pg_temp.expect_refused('it cannot be approved twice', senior,
+    format($q$select public.decide_community_escalation(%L, true, 'approving it once more')$q$, e));
+  select count(*) into n from public.community_case_events where case_id = k_threat and event in ('escalation_requested', 'escalation_approved');
+  perform pg_temp.counted('the request and the approval are both in the case history', n, 2);
+  perform pg_temp.expect_refused('a reviewer cannot read what was sent', rev, 'select payload from public.community_escalation_deliveries');
+  perform pg_temp.counted('but can see that it is waiting', pg_temp.seen(rev, 'select id from public.community_escalation_deliveries where delivered_at is null'), 1);
+  perform pg_temp.expect_refused('nobody signed in takes deliveries', senior, 'select * from private.take_escalation_deliveries()');
+  perform pg_temp.expect_refused('or marks one sent', senior,
+    format('select private.mark_escalation_delivered(%L)', (select id from public.community_escalation_deliveries where escalation_id = e)));
+  select count(*) into n from private.take_escalation_deliveries();
+  perform pg_temp.counted('the service role takes the waiting delivery', n, 1);
+  perform private.mark_escalation_delivered((select id from public.community_escalation_deliveries where escalation_id = e));
+  select count(*) into n from private.take_escalation_deliveries();
+  perform pg_temp.counted('and once marked sent it is not taken again', n, 0);
+
+  -- Identity only when the agreement requires it, and then as an opaque ref.
+  update public.community_escalation_policies set identity_required = true, categories = array_append(categories, 'private_information_or_doxxing')
+   where tenant_id = 'es-u';
+  perform pg_temp.expect_allowed('the doxxing case can now be requested', rev2,
+    format($q$select public.request_community_escalation(%L, 'a student''s home address was posted')$q$, k_dox));
+  select id into e2 from public.community_escalations where case_id = k_dox;
+  perform pg_temp.expect_allowed('and a different reviewer approves', senior,
+    format($q$select public.decide_community_escalation(%L, true, 'address is real and current')$q$, e2));
+  select payload into j from public.community_escalations where id = e2;
+  perform pg_temp.counted('a subject ref is added', (j ? 'subject_ref')::int, 1);
+  perform pg_temp.counted('and it is a hash, not the account', (j->>'subject_ref' ~ '^[0-9a-f]{64}$' and position(bo::text in j::text) = 0)::int, 1);
+  perform pg_temp.said('it resolves only by recomputing against the case',
+    j->>'subject_ref', private.role_audit_sha256('escalation:' || e2::text || ':' || bo::text));
+
+  -- Switched off, an approval already waiting stops.
+  update public.community_escalation_policies set identity_required = false where tenant_id = 'es-u';
+  delete from public.community_escalations where id = e;
+  perform pg_temp.expect_allowed('a fresh request on the threat', rev,
+    format($q$select public.request_community_escalation(%L, 'a second threat from the same account')$q$, k_threat));
+  select id into e from public.community_escalations where case_id = k_threat and status = 'requested';
+  update public.community_programs set enabled = false where tenant_id = 'es-u' and program = 'institution_escalation';
+  perform pg_temp.expect_refused('switching the programme off stops an approval already waiting', rev2,
+    format($q$select public.decide_community_escalation(%L, true, 'threat names a person and a place')$q$, e));
+  perform pg_temp.expect_allowed('it can still be refused', rev2,
+    format($q$select public.decide_community_escalation(%L, false, 'the programme has been switched off')$q$, e));
+  select status into t from public.community_escalations where id = e;
+  perform pg_temp.said('and says so', t, 'refused');
+
+  -- ── Safety state: off writes nothing ──────────────────────────────────
+  perform pg_temp.expect_allowed('with the programme off, a reviewer removes the spam', rev,
+    format($q$select public.decide_community_case(%L, 'remove', 'spam.link')$q$, k_spam));
+  select count(*) into n from public.community_safety_entries;
+  perform pg_temp.counted('and no safety entry is written', n, 0);
+  perform pg_temp.expect_refused('the reviewer cannot read safety state while it is off', rev,
+    format($q$select public.case_author_safety(%L, 'repeat spam from this author')$q$, k_spam));
+
+  insert into public.community_programs (tenant_id, program, enabled, approved_ref)
+  values ('es-u', 'account_safety_state', true, 'check');
+  perform pg_temp.expect_allowed('with it on, a reviewer removes the P3 post', rev,
+    format($q$select public.decide_community_case(%L, 'remove', 'offtopic')$q$, k_minor));
+  select count(*) into n from public.community_safety_entries where user_id = cy;
+  perform pg_temp.counted('a P3 removal writes nothing', n, 0);
+  perform pg_temp.expect_allowed('dee posts', dee, format($q$select public.create_community_post(%L, 'Post that is reported and allowed')$q$, grp));
+  perform pg_temp.expect_allowed('amy reports it as a threat', amy,
+    format($q$select public.report_community_post(%L, 'threat_or_safety_concern')$q$,
+           (select id from public.community_posts where body = 'Post that is reported and allowed')));
+  perform pg_temp.expect_allowed('a reviewer allows the P1 report', rev,
+    format($q$select public.decide_community_case(%L, 'allow', 'no.violation')$q$,
+           (select c.id from public.community_cases c join public.community_posts p on p.id = c.post_id
+             where p.body = 'Post that is reported and allowed')));
+  select count(*) into n from public.community_safety_entries where user_id = dee;
+  perform pg_temp.counted('allowing, even at P1, writes nothing', n, 0);
+  perform pg_temp.expect_allowed('a reviewer removes the threat', rev,
+    format($q$select public.decide_community_case(%L, 'remove', 'threat.credible')$q$, k_threat));
+  select delta into v from public.community_safety_entries where case_id = k_threat;
+  perform pg_temp.counted('a P1 violation costs 20', v, -20);
+  perform pg_temp.expect_allowed('a senior reviewer removes the doxxing', senior,
+    format($q$select public.decide_community_case(%L, 'remove', 'privacy.dox')$q$, k_dox));
+  select delta into v from public.community_safety_entries where case_id = k_dox;
+  perform pg_temp.counted('a P0 violation costs 40', v, -40);
+  select count(*) into n from public.community_safety_entries where user_id = bo and actor_sha256 = private.role_audit_sha256(rev::text);
+  perform pg_temp.counted('entries carry who decided as a hash', n, 1);
+
+  perform pg_temp.expect_refused('students cannot read safety entries', bo, 'select id from public.community_safety_entries');
+  perform pg_temp.expect_refused('nor can reviewers read the table directly', rev, 'select id from public.community_safety_entries');
+  perform pg_temp.expect_refused('nobody writes an entry directly', senior,
+    format($q$insert into public.community_safety_entries (user_id, tenant_id, case_id, severity, delta, reason_code, actor_sha256)
+              values (%L, 'es-u', %L, 'P0', -40, 'x', repeat('a', 64))$q$, amy, k_threat));
+  perform pg_temp.expect_refused('nobody signed in calls the recorder', senior,
+    format($q$select private.record_safety_outcome(k, 'remove', 'x', %L) from public.community_cases k where id = %L$q$, amy, k_threat));
+  perform pg_temp.expect_refused('a student cannot read an author''s state', amy,
+    format($q$select public.case_author_safety(%L, 'I want to know about him')$q$, k_threat));
+  perform pg_temp.expect_refused('a reviewer must say why', rev,
+    format($q$select public.case_author_safety(%L, 'why')$q$, k_threat));
+  perform pg_temp.become(rev);
+  v := public.case_author_safety(k_threat, 'deciding a second report on this author');
+  execute 'reset role';
+  perform pg_temp.counted('a reviewer reads 100 less both deductions', v, 40);
+  select count(*) into n from public.community_case_events where case_id = k_threat and event = 'safety_state_read';
+  perform pg_temp.counted('and the read is in the case history', n, 1);
+
+  perform pg_temp.become(bo);
+  t := public.my_community_standing();
+  execute 'reset role';
+  perform pg_temp.counted('the author is told in words, never the number', (t ~ '[0-9]')::int, 0);
+  perform pg_temp.counted('that a past decision still counts', (t like 'A past decision%')::int, 1);
+  perform pg_temp.become(amy);
+  t := public.my_community_standing();
+  execute 'reset role';
+  perform pg_temp.said('somebody with no entries is in good standing', t, 'Your Community account is in good standing.');
+
+  -- A granted appeal reverses the entry; it is kept, marked.
+  perform pg_temp.expect_allowed('bo appeals the threat removal', bo, format('select public.appeal_community_decision(%L)', threat));
+  perform pg_temp.expect_allowed('a reviewer who took no part grants it', rev2,
+    format($q$select public.decide_community_appeal(%L, false, 'quoted lyrics, not a threat')$q$, k_threat));
+  select count(*) into n from public.community_safety_entries where case_id = k_threat and reversed_at is not null;
+  perform pg_temp.counted('the entry is reversed, not deleted', n, 1);
+  perform pg_temp.become(rev);
+  v := public.case_author_safety(k_dox, 'checking the reversal took effect');
+  execute 'reset role';
+  perform pg_temp.counted('and no longer counts', v, 60);
+
+  -- Volunteers never write it.
+  select count(*) into n from pg_proc where proname = 'volunteer_decide'
+     and pg_get_functiondef(oid) like '%record_safety_outcome%';
+  perform pg_temp.counted('the volunteer path never records safety outcomes', n, 0);
+
+  -- The sweep forgets after a year.
+  update public.community_safety_entries set created_at = now() - interval '13 months' where case_id = k_dox;
+  update public.community_escalation_deliveries set delivered_at = now() - interval '100 days' where delivered_at is not null;
+  perform private.sweep_community_retention();
+  select count(*) into n from public.community_safety_entries where case_id = k_dox;
+  perform pg_temp.counted('a year-old entry is swept', n, 0);
+  select count(*) into n from public.community_safety_entries where case_id = k_threat;
+  perform pg_temp.counted('a newer one stays', n, 1);
+  select count(*) into n from public.community_escalation_deliveries where delivered_at is not null;
+  perform pg_temp.counted('a delivery sent 90 days ago is swept', n, 0);
+  perform pg_temp.become(bo);
+  t := public.my_community_standing();
+  execute 'reset role';
+  perform pg_temp.said('with only a reversed entry left, bo is in good standing again', t, 'Your Community account is in good standing.');
+end $$;
+
 rollback;

@@ -62,6 +62,14 @@ Detectors and retention followed as well:
   the human outcome. Only high-confidence doxxing holds a post.
 - **Brigading:** new-joiner clusters and unfounded repeat reports are set
   aside, never used to punish the post's author.
+- **Escalation and safety state in the database:** four tables and six
+  functions, off at every school until the service role writes both a
+  `community_programs` row and, for escalation, an agreement row. Escalation
+  needs a P0/P1 case in a covered category and two different reviewers,
+  compared by hash; the payload is assembled in SQL from an allowlist. Safety
+  entries are written only by a professional's enforcement decision, reversed
+  on a granted appeal and swept after a year; a reviewer reads the number
+  only with a written reason, and the student gets words. 93 more checks.
 - **Retention:** a daily sweep, logged in `community_retention_runs`, removes
   expired evidence and never touches open cases.
 
@@ -70,10 +78,12 @@ It **is not** yet:
 - **A media-safety detector.** Community has no image posting yet.
 - **A slur lexicon.** The hate rules are phrase patterns. A tenant's lexicon
   would be new rows in `community_detector_rules`.
-- **Database tables for escalation and the safety state.** Their rules exist
-  in TypeScript behind flags that are off. (Aliases and volunteer moderation
-  now have tables, functions and 102 more checks. Both stay off at every
-  school until the service role writes a `community_programs` row.)
+- **An escalation delivery adapter.** Approval queues a delivery in
+  `community_escalation_deliveries`; nothing sends it yet. An adapter would
+  run as the service role, call `private.take_escalation_deliveries()` and
+  mark each one sent. No university has an agreement, so none is written.
+- **A reviewer screen for escalation or safety state.** Both exist as
+  functions only (below).
 - **A reviewer tool to map an alias to an account** (just-in-time access).
   Enforcement already reaches the account server-side.
 

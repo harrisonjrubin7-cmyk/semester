@@ -147,15 +147,20 @@ set by hand, and `production` is refused for them.
 
 **Server-side switches.** A build flag hides a screen, but it cannot stop a
 client that ignores it. Scoped pseudonymity and volunteer moderation are
-therefore also gated in the database:
+therefore also gated in the database, and so are institution escalation and
+the account safety state:
 
 - Each has a `community_programs` row per university.
 - A program is off unless its row is present and `enabled`.
 - Only the service role can write a row, so switching a program on is a
   reviewed deployment step.
-- Every alias and volunteer function checks the row.
-- Switching a program off stops alias posts and volunteer queues on the next
-  call.
+- Every alias, volunteer, escalation and safety-state function checks the
+  row.
+- Switching a program off stops alias posts, volunteer queues, escalation
+  approvals and new safety entries on the next call. Safety entries already
+  written stay until the yearly sweep or an appeal reverses them.
+- Escalation also needs a `community_escalation_policies` row naming the
+  agreement, its categories and the channel — again service role only.
 
 **Rollback.** Unset the variable, or set it to `off`. Nothing persists
 because a flag was on: the domain functions refuse at call time.
