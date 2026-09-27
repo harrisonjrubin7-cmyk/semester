@@ -43,6 +43,7 @@ import {
 } from '../lib/degree';
 import { Folding } from '../components/Fold';
 import { GraduationSimulator } from '../components/GraduationSimulator';
+import { PathSnapshotCard } from '../components/PathSnapshotCard';
 import {
   fixFor,
   missingLine,
@@ -86,6 +87,8 @@ export function Degree() {
           that matters against the real thing.
         </div>
       </Blueprint>
+
+      <PathSnapshotCard />
 
       <Segmented
         options={[
