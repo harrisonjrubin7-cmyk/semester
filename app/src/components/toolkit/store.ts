@@ -14,8 +14,14 @@ import { readWorkspaces, type Workspace } from '../../lib/toolkit/templates';
  * and a 2 MB CSV should not be rewritten every time a stage note changes.
  */
 
-export const TOOLKIT_KEY = 'semester.toolkit.v1';
-export const TOOLKIT_DATA_KEY = 'semester.toolkit-data.v1';
+/*
+ * Keyed by account, as Family, Pathway, Career and Athletics are. A shared
+ * laptop is ordinary on a campus, and a toolkit keyed only by device would
+ * show the next student who signs in the last one's research, datasets and
+ * AI-use declaration. `device` is the key for nobody signed in.
+ */
+export const toolkitKey = (accountId?: string) => `semester.toolkit.v1:${accountId || 'device'}`;
+export const toolkitDataKey = (accountId?: string) => `semester.toolkit-data.v1:${accountId || 'device'}`;
 
 export interface ToolkitStore {
   hidden: string[];
@@ -58,10 +64,11 @@ export function readToolkit(v: unknown): ToolkitStore {
  */
 export const TOOLKIT_BUDGET = 750_000;
 
-export const useToolkit = () => useDeviceLibrary(TOOLKIT_KEY, readToolkit, EMPTY, TOOLKIT_BUDGET);
+export const useToolkit = (accountId?: string) => useDeviceLibrary(toolkitKey(accountId), readToolkit, EMPTY, TOOLKIT_BUDGET);
 /* A module constant, not a literal: `useDeviceLibrary` keys its read on `empty`,
    and a fresh `[]` each render re-reads and re-renders without end. */
 const NO_DATA: DataProject[] = [];
-export const useToolkitData = () => useDeviceLibrary<DataProject[]>(TOOLKIT_DATA_KEY, readDataProjects, NO_DATA, DATA_BUDGET);
+export const useToolkitData = (accountId?: string) =>
+  useDeviceLibrary<DataProject[]>(toolkitDataKey(accountId), readDataProjects, NO_DATA, DATA_BUDGET);
 
 export const newId = () => crypto.randomUUID();

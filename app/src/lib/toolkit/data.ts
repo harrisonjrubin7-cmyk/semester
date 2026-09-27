@@ -246,6 +246,8 @@ export function interpretationGaps(p: DataProject): string[] {
   if (!i.cannotConclude.trim()) out.push('Say what this data cannot show — every analysis has limits.');
   if (!p.randomized && causalWording(i.conclude))
     out.push('The conclusion uses causal wording, but the data is not from a randomized design. Say “is associated with” instead.');
+  if (!p.randomized && causalWording(i.shows))
+    out.push('“What the data shows” uses causal wording, but the data is not from a randomized design. Describe what was observed.');
   if (unconfirmed(p).length) out.push(`Confirm the dictionary for: ${unconfirmed(p).join(', ')}.`);
   return out;
 }

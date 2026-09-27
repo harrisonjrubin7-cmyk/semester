@@ -7,83 +7,12 @@
  * gating and bookkeeping.
  */
 import { describe, expect, it } from 'vitest';
-import type { SupabaseClient } from '@supabase/supabase-js';
 import { MOCK_SIS, SIS_FIXTURES } from '../../src/lib/integration/mock-sis.ts';
 import { mockBatch } from '../../src/lib/integration/mock-adapter.ts';
 import type { ExternalRecord } from '../../src/lib/integration/pipeline.ts';
 import { reconcile, reconcilePlan, runSync } from './worker.ts';
+import { fakeDb, type Row, type Tables } from './fakedb.ts';
 
-type Row = Record<string, unknown>;
-type Tables = Record<string, Row[]>;
-
-function fakeDb(tables: Tables) {
-  let seq = 0;
-  const from = (name: string) => {
-    tables[name] ??= [];
-    const rows = tables[name];
-    const filters: ((r: Row) => boolean)[] = [];
-    let op: 'select' | 'insert' | 'update' | 'upsert' | 'delete' = 'select';
-    let payload: Row[] = [];
-    let patch: Row = {};
-    let onConflict: string[] = [];
-    let single: 'none' | 'maybe' | 'one' = 'none';
-    let limit = Infinity;
-    const failing = (tables.__fail as unknown as string[] | undefined) ?? [];
-
-    const run = () => {
-      if (op === 'insert') {
-        for (const p of payload) {
-          if (name === 'integration_webhook_events'
-              && rows.some((r) => r.connection_id === p.connection_id && r.idempotency_key === p.idempotency_key)) {
-            return { data: null, error: { message: 'duplicate key value violates unique constraint' } };
-          }
-        }
-        const made = payload.map((p) => ({ id: `id-${++seq}`, ...p }));
-        rows.push(...made);
-        return { data: single !== 'none' ? made[0] : made, error: null };
-      }
-      if (op === 'delete') {
-        const keep = rows.filter((r) => !filters.every((f) => f(r)));
-        rows.splice(0, rows.length, ...keep);
-        return { data: null, error: null };
-      }
-      if (op === 'upsert') {
-        if (failing.includes(name)) return { data: null, error: { message: 'connection reset by peer' } };
-        for (const p of payload) {
-          const hit = rows.find((r) => onConflict.every((k) => r[k] === p[k]));
-          if (hit) Object.assign(hit, p); else rows.push({ id: `id-${++seq}`, ...p });
-        }
-        return { data: null, error: null };
-      }
-      const matched = rows.filter((r) => filters.every((f) => f(r)));
-      if (op === 'update') {
-        for (const r of matched) Object.assign(r, patch);
-        return { data: null, error: null };
-      }
-      const out = matched.slice(0, limit);
-      if (single === 'maybe') return { data: out[0] ?? null, error: null };
-      if (single === 'one') return out[0] ? { data: out[0], error: null } : { data: null, error: { message: 'no row' } };
-      return { data: out, error: null };
-    };
-    const q: Record<string, unknown> = {
-      select: () => q,
-      eq: (k: string, v: unknown) => { filters.push((r) => r[k] === v); return q; },
-      in: (k: string, vs: unknown[]) => { filters.push((r) => vs.includes(r[k])); return q; },
-      is: (k: string, v: unknown) => { filters.push((r) => (r[k] ?? null) === v); return q; },
-      limit: (n: number) => { limit = n; return q; },
-      order: () => q,
-      maybeSingle: () => { single = 'maybe'; return q; },
-      single: () => { single = 'one'; return q; },
-      insert: (p: Row | Row[]) => { op = 'insert'; payload = Array.isArray(p) ? p : [p]; return q; },
-      upsert: (p: Row[], o: { onConflict: string }) => { op = 'upsert'; payload = p; onConflict = o.onConflict.split(','); return q; },
-      update: (p: Row) => { op = 'update'; patch = p; return q; },
-      delete: () => { op = 'delete'; return q; },
-      then: (ok: (v: unknown) => unknown, bad?: (e: unknown) => unknown) => Promise.resolve(run()).then(ok, bad),
-    };
-    return q;
-  };
-  return { from } as unknown as SupabaseClient;
-}
 
 const NOW = new Date('2026-09-27T12:00:00Z');
 const now = () => NOW;
@@ -237,6 +166,19 @@ describe('found by the Codex review of #779', () => {
     const again = await runSync(fakeDb(t), req([SIS_FIXTURES.term]), now);
     expect(again).toMatchObject({ outcome: 'ran', result: { status: 'succeeded', created: 1 } });
     expect(t.canonical_entity_references).toHaveLength(1);
+  });
+
+  it('remembers a batch refused for good, so its redelivery is a duplicate rather than a fresh failure', async () => {
+    // Found by the Codex review of #808: releasing the claim on every failed
+    // run meant a batch that can never succeed was re-ingested and re-logged
+    // on every redelivery, for ever.
+    const t = world({ consent: false });
+    const first = await runSync(fakeDb(t), req([SIS_FIXTURES.enrollment]), now);
+    expect(first).toMatchObject({ outcome: 'ran', result: { status: 'failed', errors: [{ category: 'consent_block', retryable: false }] } });
+    expect(t.integration_webhook_events[0]).toMatchObject({ processing_status: 'rejected', processed_at: NOW.toISOString() });
+    const again = await runSync(fakeDb(t), req([SIS_FIXTURES.enrollment]), now);
+    expect(again).toMatchObject({ outcome: 'ran', result: { status: 'duplicate' } });
+    expect(t.integration_sync_errors).toHaveLength(1);
   });
 
   it('keeps two connections’ records apart when their ids coincide', async () => {

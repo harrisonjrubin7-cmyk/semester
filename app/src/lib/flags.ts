@@ -100,6 +100,15 @@ export const FLAGS: readonly FlagDefinition[] = [
     killSwitches: [], capability: 'integration:view',
   }),
   flag({
+    key: 'module.institutional_operations',
+    description: 'The staff Operations studio: data dictionary and lineage, suppressed aggregate export, curriculum simulation, accreditation evidence, developer-platform policy and readiness checks.',
+    type: 'module', owner: 'Institutional research', scopes: ['tenant', 'role'], highRisk: false, reviewAt: REVIEW,
+    rollout: 'Preview for one pilot school’s institutional research office, then its production tenant after a governance review.',
+    successCriteria: 'An analyst produces a suppressed, lineage-labelled export without a spreadsheet step; no per-student figure is ever rendered.',
+    rollback: 'Set the tenant policy row to off. The studio stores its drafts on the analyst’s device only; nothing to undo server-side.',
+    killSwitches: [], capability: 'outcomes:read',
+  }),
+  flag({
     key: 'module.source_freshness_cards',
     description: 'Source and freshness labels on Today, Plan and Me cards that show imported institutional facts.',
     type: 'module', owner: 'Student experience', scopes: ['tenant'], highRisk: false, reviewAt: REVIEW,
