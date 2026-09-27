@@ -100,7 +100,7 @@ export interface HelpLevel {
 export type HelpLevelId = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
 export const HELP_LEVELS: readonly HelpLevel[] = [
-  { level: 0, tutor: 'Clarifies the learning goal and constraints', student: 'Knows what the task asks' },
+  { level: 0, tutor: 'Clarifies the learning goal and constraints', student: 'Knows what is being asked' },
   { level: 1, tutor: 'Asks a guiding question', student: 'Begins their own reasoning' },
   { level: 2, tutor: 'Highlights relevant known information', student: 'Connects concepts' },
   { level: 3, tutor: 'Identifies a principle, formula or source', student: 'Selects an approach' },
