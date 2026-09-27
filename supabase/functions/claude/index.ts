@@ -29,6 +29,7 @@
 
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { corsHeaders } from '../_shared/cors.ts';
+import { clampRequest } from '../_shared/clamp.ts';
 
 const ANTHROPIC = 'https://api.anthropic.com/v1/messages';
 
@@ -75,6 +76,19 @@ Deno.serve(async (req) => {
     return json({ error: { message: 'That session is not valid. Sign in again.' } }, 401);
   }
   const userId = user.user.id;
+
+  // ── what they asked for ─────────────────────────────────────────────────
+  //
+  // Read and rebuilt before the call is counted, so a request the shared key
+  // will not pay for is refused without costing one of the caller's sixty. The
+  // rules, and why each exists, are in `../_shared/clamp.ts`: a model the app
+  // offers, `max_tokens` held under a ceiling, the app's own tools and a
+  // five-use web search, and nothing else. A body that cannot be read at all
+  // is the caller's request falling over, and is answered as that.
+  const raw = await req.text();
+  const clamped = clampRequest(raw, new TextEncoder().encode(raw).length);
+  if (!clamped.ok) return json({ error: { message: clamped.message } }, clamped.status);
+  const body = clamped.body;
 
   // ── how much they have used ─────────────────────────────────────────────
   //
@@ -137,11 +151,8 @@ Deno.serve(async (req) => {
   // charge stands and the message says so, which is the honest half of the
   // trade — a student who is told they were charged can decide what to do, and
   // one who is not told simply loses a generation to a blank box.
-  // Read outside the `try`, so the catch below covers reaching Anthropic and
-  // only that. A body this function cannot read is the caller's own request
-  // falling over, and answering that with "Claude could not be reached" would
-  // be a lie in the one place somebody is looking for a reason.
-  const body = await req.text();
+  // The body was read and clamped above, outside this `try`, so the catch
+  // below covers reaching Anthropic and only that.
 
   let upstream: Response;
   try {

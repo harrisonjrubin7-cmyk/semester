@@ -45,6 +45,7 @@ import { Folding } from '../components/Fold';
 import { GraduationSimulator } from '../components/GraduationSimulator';
 import { AdvisorMeeting } from '../components/AdvisorMeeting';
 import { MODULE_FLAGS, moduleOn } from '../lib/experience-flags';
+import { PathSnapshotCard } from '../components/PathSnapshotCard';
 import {
   fixFor,
   missingLine,
@@ -89,6 +90,8 @@ export function Degree({ advisorMeeting = moduleOn(MODULE_FLAGS.advisor_meeting_
           that matters against the real thing.
         </div>
       </Blueprint>
+
+      <PathSnapshotCard />
 
       <Segmented
         options={[
