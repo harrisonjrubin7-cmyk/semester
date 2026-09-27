@@ -7894,6 +7894,92 @@ section[data-drop] > .grip + * {
   color: var(--app-accent-deep);
 }
 
+/* ── Graduation simulator and cost planner (Phase D) ────────────────────── */
+
+.scenario-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--type-sm);
+}
+
+.scenario-table th,
+.scenario-table td {
+  padding: var(--sp-4) var(--sp-5);
+  border-bottom: 1px solid var(--app-line-soft);
+  text-align: left;
+  vertical-align: top;
+}
+
+.scenario-table thead th {
+  font-size: var(--type-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--app-accent-deep);
+}
+
+.scenario-table tbody th {
+  font-weight: 500;
+  color: var(--app-dim);
+}
+
+.scenario-table .is-changed td:last-child {
+  font-weight: 700;
+  color: var(--app-fg);
+}
+
+.scenario-changes,
+.scenario-limits,
+.cost-lines {
+  display: grid;
+  gap: var(--sp-3);
+  margin: 0 0 var(--sp-5);
+  padding-left: var(--sp-7);
+  font-size: var(--type-sm);
+  line-height: var(--leading-normal);
+}
+
+.cost-lines {
+  padding-left: 0;
+  list-style: none;
+}
+
+.cost-line {
+  padding-bottom: var(--sp-5);
+  border-bottom: 1px solid var(--app-line-soft);
+}
+
+.scenario-list {
+  display: grid;
+  gap: var(--sp-2);
+  margin: var(--sp-5) 0;
+  font-size: var(--type-sm);
+}
+
+.scenario-list > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--sp-4);
+  padding: var(--sp-3) 0;
+  border-bottom: 1px solid var(--app-line-soft);
+}
+
+.portal-workspace .scenario-list dt {
+  grid-column: 1;
+  grid-row: 1;
+  margin: 0;
+  font-size: var(--type-sm);
+  color: var(--app-dim);
+}
+
+.portal-workspace .scenario-list dd {
+  grid-column: 2;
+  grid-row: 1;
+  margin: 0;
+  font-size: var(--type-sm);
+  color: var(--app-fg);
+  text-align: right;
+}
+
 /* BL-1.4's Action Center, when it sits in a Phase B panel rather than in the
    #761 card whose `.today-decision-surface` rules it was drawn against. */
 .action-panel .action-center h2 {

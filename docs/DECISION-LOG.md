@@ -369,3 +369,35 @@ dropping either outright, which loses tested work the other lacks.
   27 Sep, after the other session had pushed BL-1.10 to BL-1.13).
 - If the other session pushes one, reconcile as in D-021: keep one proposer,
   and one "Registration readiness" group.
+
+## D-025 · Phase D carries one additive migration
+
+**Proposed — needs owner before any merge to `main`.**
+
+- Saving graduation drafts to the account (`graduation_simulator`) writes
+  `graduation_scenarios`.
+- `ltiaccount.test.ts` requires every table the app writes to be visible to
+  `lti_account_untouched`, so account linking never retires an account that
+  holds work.
+- `20260927181500_untouched_graduation_drafts.sql` redefines that function
+  with the table added. It changes no table and no data.
+- It has been checked on a throwaway Postgres 16 with all migrations and the
+  expansion, deletion and three LTI suites.
+- It is **not applied**. Merging this branch to `main` would apply it through
+  Supabase Branching, so that merge needs approval.
+- **Renumbered on 27 Sep 2026** from `20260927180000`: two other branches
+  (`help_requests`, `lti_integration_binding`) claim that version, and
+  `migrationorder.test.ts` allows each version once.
+- **Alternative:** keep drafts device-only and drop both the adaptor and the
+  migration. The simulator still works, but drafts do not follow a student to
+  a new device.
+
+## D-026 · Cost lines are student entered or imported, never verified
+
+**Decided 27 Sep 2026 (Phase D).**
+
+- A cost the student copies from their school's published figures is
+  `imported`, with where and when it was copied.
+- `institution_verified` is refused, because nothing here comes from an
+  institution feed.
+- Aid is neither estimated nor subtracted. Every total says "before any aid".
