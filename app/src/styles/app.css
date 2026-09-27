@@ -7894,6 +7894,700 @@ section[data-drop] > .grip + * {
   color: var(--app-accent-deep);
 }
 
+/* ── Graduation simulator and cost planner (Phase D) ────────────────────── */
+
+.scenario-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--type-sm);
+}
+
+.scenario-table th,
+.scenario-table td {
+  padding: var(--sp-4) var(--sp-5);
+  border-bottom: 1px solid var(--app-line-soft);
+  text-align: left;
+  vertical-align: top;
+}
+
+.scenario-table thead th {
+  font-size: var(--type-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--app-accent-deep);
+}
+
+.scenario-table tbody th {
+  font-weight: 500;
+  color: var(--app-dim);
+}
+
+.scenario-table .is-changed td:last-child {
+  font-weight: 700;
+  color: var(--app-fg);
+}
+
+.scenario-changes,
+.scenario-limits,
+.cost-lines {
+  display: grid;
+  gap: var(--sp-3);
+  margin: 0 0 var(--sp-5);
+  padding-left: var(--sp-7);
+  font-size: var(--type-sm);
+  line-height: var(--leading-normal);
+}
+
+.cost-lines {
+  padding-left: 0;
+  list-style: none;
+}
+
+.cost-line {
+  padding-bottom: var(--sp-5);
+  border-bottom: 1px solid var(--app-line-soft);
+}
+
+.scenario-list {
+  display: grid;
+  gap: var(--sp-2);
+  margin: var(--sp-5) 0;
+  font-size: var(--type-sm);
+}
+
+.scenario-list > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--sp-4);
+  padding: var(--sp-3) 0;
+  border-bottom: 1px solid var(--app-line-soft);
+}
+
+.portal-workspace .scenario-list dt {
+  grid-column: 1;
+  grid-row: 1;
+  margin: 0;
+  font-size: var(--type-sm);
+  color: var(--app-dim);
+}
+
+.portal-workspace .scenario-list dd {
+  grid-column: 2;
+  grid-row: 1;
+  margin: 0;
+  font-size: var(--type-sm);
+  color: var(--app-fg);
+  text-align: right;
+}
+
+/* ── Academic life balance + Crunch Week Forecast (Phase E) ─────────────── */
+
+.balance {
+  margin: 0 var(--page-pad) var(--sp-7);
+  padding: var(--sp-6);
+  border: 1px solid var(--app-line-soft);
+  border-radius: var(--r-md);
+  background: var(--app-panel);
+}
+
+.balance-title {
+  margin: 0 0 var(--sp-3);
+  font-size: var(--type-lg);
+  color: var(--app-fg);
+}
+
+.balance-heading {
+  margin: var(--sp-6) 0 var(--sp-3);
+  font-size: var(--type-xs);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--app-accent-deep);
+}
+
+.balance-muted,
+.balance-said {
+  margin: 0 0 var(--sp-4);
+  font-size: var(--type-sm);
+  line-height: var(--leading-normal);
+  color: var(--app-dim);
+}
+
+.balance-said {
+  color: var(--app-fg);
+}
+
+.balance-categories,
+.balance-days,
+.balance-list {
+  display: grid;
+  gap: var(--sp-3);
+  margin: 0 0 var(--sp-4);
+  padding: 0;
+  list-style: none;
+  font-size: var(--type-sm);
+  color: var(--app-fg);
+}
+
+.balance-categories li,
+.balance-days li {
+  display: grid;
+  grid-template-columns: minmax(0, 9em) minmax(0, 1fr) auto;
+  gap: var(--sp-4);
+  align-items: center;
+}
+
+.balance-days li {
+  grid-template-columns: 3em minmax(0, 1fr);
+  row-gap: var(--sp-1);
+}
+
+.balance-day-text {
+  grid-column: 2;
+  color: var(--app-dim);
+}
+
+.balance-bar,
+.balance-density {
+  display: flex;
+  height: 0.6rem;
+  overflow: hidden;
+  border-radius: var(--r-sm);
+  background: var(--app-track);
+}
+
+.balance-bar > span {
+  background: var(--app-accent);
+}
+
+.balance-cat-hours {
+  font-variant-numeric: tabular-nums;
+}
+
+[data-category='class'] > .balance-bar > span,
+.balance-density > [data-category='class'] {
+  background: var(--app-accent);
+}
+
+[data-category='athletics'] > .balance-bar > span,
+.balance-density > [data-category='athletics'] {
+  background: var(--app-accent-deep);
+}
+
+[data-category='work'] > .balance-bar > span,
+.balance-density > [data-category='work'] {
+  background: var(--app-accent-bright);
+}
+
+[data-category='study'] > .balance-bar > span,
+.balance-density > [data-category='study'] {
+  background: var(--app-accent-fill);
+}
+
+[data-category='personal'] > .balance-bar > span,
+.balance-density > [data-category='personal'],
+[data-category='commute'] > .balance-bar > span,
+.balance-density > [data-category='commute'] {
+  background: var(--app-faint);
+}
+
+[data-category='open'] > .balance-bar > span,
+.balance-density > [data-category='open'] {
+  background: var(--app-line-soft);
+}
+
+.balance-more {
+  margin: var(--sp-5) 0;
+  font-size: var(--type-sm);
+  color: var(--app-fg);
+}
+
+.balance-more > summary {
+  cursor: pointer;
+  color: var(--app-accent-deep);
+}
+
+.balance-crunch {
+  margin-top: var(--sp-6);
+  padding-top: var(--sp-5);
+  border-top: 1px solid var(--app-line-soft);
+}
+
+.balance-crunch-item + .balance-crunch-item {
+  margin-top: var(--sp-6);
+}
+
+.balance-crunch-line,
+.crunch-card-line {
+  margin: 0 0 var(--sp-3);
+  font-size: var(--type-md);
+  color: var(--app-fg);
+}
+
+.balance-button {
+  min-height: 2.75rem;
+  padding: 0 var(--sp-5);
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--app-fg);
+  font: inherit;
+  cursor: pointer;
+}
+
+.balance-button:disabled {
+  cursor: not-allowed;
+  color: var(--app-faint);
+}
+
+.balance-commute {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-4);
+  margin: var(--sp-4) 0;
+  padding: 0;
+  border: 0;
+}
+
+.balance-commute-minutes {
+  display: grid;
+  gap: var(--sp-2);
+  max-width: 12em;
+  margin: 0 0 var(--sp-4);
+}
+
+.crunch-card {
+  margin: 0 0 var(--sp-6);
+  padding: var(--sp-6);
+  border: 1px solid var(--app-accent-deep);
+  border-radius: var(--r-md);
+  background: var(--app-panel);
+}
+
+.crunch-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+}
+
+/* ── Course Detail V2 (course_detail_v2, Phase F) ───────────────────────── */
+
+.registration-results.is-v2 {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.course-drawer {
+  width: min(480px, 100%);
+}
+
+.course-v2-source {
+  margin: 0 0 var(--sp-5);
+  font-size: var(--type-sm);
+  color: var(--app-dim);
+}
+
+.course-v2-facts {
+  display: grid;
+  gap: var(--sp-2);
+  margin: 0 0 var(--sp-5);
+  font-size: var(--type-sm);
+}
+
+.course-v2-facts > div {
+  display: grid;
+  grid-template-columns: 7em minmax(0, 1fr);
+  gap: var(--sp-4);
+}
+
+.course-v2-facts dt {
+  color: var(--app-dim);
+}
+
+.course-v2-facts dd {
+  margin: 0;
+  color: var(--app-fg);
+}
+
+.course-v2-actions,
+.course-compare-saved li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  align-items: center;
+}
+
+.course-v2-actions {
+  margin: 0 0 var(--sp-4);
+}
+
+.course-v2-section {
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--app-line-soft);
+}
+
+.course-v2-requisites,
+.course-v2-future,
+.course-compare-saved {
+  padding-left: 0;
+  list-style: none;
+}
+
+.course-v2-requisites [data-state='not_recorded'] > span[aria-hidden] {
+  color: var(--app-warn);
+}
+
+.course-v2-requisites [data-state='recorded'] > span[aria-hidden],
+.course-v2-requisites [data-state='in_cart'] > span[aria-hidden] {
+  color: var(--app-passing);
+}
+
+.course-compare-saved {
+  display: grid;
+  gap: var(--sp-3);
+  margin: 0 0 var(--sp-4);
+}
+
+.course-compare-cards {
+  display: grid;
+  gap: var(--sp-5);
+}
+
+/* ── Advisor Meeting Mode (advisor_meeting_mode, Phase G) ───────────────── */
+
+.advisor-lines,
+.advisor-share-list {
+  display: grid;
+  gap: var(--sp-4);
+  margin: 0 0 var(--sp-4);
+  padding-left: 0;
+  list-style: none;
+}
+
+.advisor-lines li,
+.advisor-share-list li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  align-items: end;
+}
+
+.advisor-attach {
+  display: grid;
+  gap: var(--sp-2);
+  margin: var(--sp-4) 0;
+  padding: 0;
+  border: 0;
+}
+
+.advisor-notes {
+  display: grid;
+  gap: var(--sp-2);
+  margin: var(--sp-5) 0;
+}
+
+.advisor-summary {
+  max-height: 16rem;
+  overflow: auto;
+  white-space: pre-wrap;
+  font-size: var(--type-sm);
+}
+
+.advisor-share-list [data-state='expired'],
+.advisor-share-list [data-state='revoked'] {
+  color: var(--app-dim);
+}
+
+/* ── Study Readiness + Source Locker (study_readiness, source_locker, Phase H) ── */
+
+.locker-list,
+.readiness-topics,
+.readiness-materials {
+  display: grid;
+  gap: var(--sp-5);
+  margin: 0 0 var(--sp-5);
+  padding-left: 0;
+  list-style: none;
+}
+
+.locker-list > li,
+.readiness-topics > li {
+  padding-bottom: var(--sp-5);
+  border-bottom: 1px solid var(--app-line-soft);
+}
+
+.readiness-materials {
+  gap: var(--sp-2);
+  font-size: var(--type-sm);
+}
+
+.locker-head {
+  margin: 0 0 var(--sp-3);
+}
+
+/* The course hub is a .portal-workspace, whose dt rule pushes a label below its
+   value; the fact lists here are two-column rows (as .scenario-list in Phase D). */
+.portal-workspace .course-v2-facts dt,
+.portal-workspace .course-v2-facts dd {
+  margin: 0;
+}
+
+.readiness-next {
+  margin: var(--sp-5) 0;
+  padding: var(--sp-5);
+  border: 1px solid var(--app-accent-deep);
+  border-radius: var(--r-md);
+}
+
+/* ── Career Evidence (career_evidence, Phase I) ──────────────────────────── */
+
+.evidence-list {
+  display: grid;
+  gap: var(--sp-4);
+  margin: 0 0 var(--sp-5);
+  padding-left: 0;
+  list-style: none;
+}
+
+.evidence-list > li[data-state='rejected'] {
+  color: var(--app-dim);
+}
+
+.evidence-form {
+  display: grid;
+  gap: var(--sp-3);
+  margin: 0 0 var(--sp-5);
+  padding: 0;
+  border: 0;
+}
+
+.evidence-preview {
+  margin: 0;
+  padding: var(--sp-4);
+  border-left: 2px solid var(--app-accent-deep);
+  color: var(--app-fg);
+}
+
+/* ── Campus office actions (office_action_feed, Phase J) ────────────────── */
+
+.office-feed,
+.office-desk,
+.office-today {
+  margin-top: var(--sp-5);
+}
+
+.office-list {
+  display: grid;
+  gap: var(--sp-4);
+  margin: 0 0 var(--sp-5);
+  padding-left: 0;
+  list-style: none;
+}
+
+.office-card {
+  padding: var(--sp-4);
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-md);
+}
+
+.office-card p {
+  margin: 0 0 var(--sp-2);
+}
+
+.office-from {
+  font-size: var(--type-xs-plus);
+  color: var(--app-dim);
+}
+
+.office-title {
+  font-size: var(--type-md);
+  color: var(--app-fg);
+}
+
+.office-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  margin-top: var(--sp-3);
+}
+
+.office-audiences fieldset {
+  margin: 0 0 var(--sp-4);
+  padding: 0;
+  border: 0;
+}
+
+.office-choice {
+  display: block;
+  padding: var(--sp-2) 0;
+}
+
+.office-form {
+  display: grid;
+  gap: var(--sp-3);
+  margin: 0 0 var(--sp-5);
+}
+
+.office-field {
+  display: grid;
+  gap: var(--sp-1);
+}
+
+.office-field input,
+.office-field select,
+.office-field textarea {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.office-problems {
+  margin: 0;
+  color: var(--app-dim);
+}
+
+/* ── Course demand (demand_forecasting, Phase K) ───────────────────────── */
+
+.demand-contribution,
+.demand-desk {
+  margin-top: var(--sp-5);
+}
+
+.demand-list {
+  display: grid;
+  gap: var(--sp-3);
+  margin: 0 0 var(--sp-4);
+  padding-left: 0;
+  list-style: none;
+}
+
+.demand-row {
+  padding: var(--sp-4);
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-md);
+}
+
+.demand-row p {
+  margin: 0 0 var(--sp-2);
+}
+
+.demand-term {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--sp-3);
+  margin: 0 0 var(--sp-5);
+}
+
+.demand-department h4 {
+  margin: var(--sp-5) 0 var(--sp-3);
+}
+
+/* ── Semester Wrapped (semester_wrapped, Phase L) ─────────────────────── */
+
+.wrapped {
+  margin-bottom: var(--sp-7);
+}
+
+.wrapped-term {
+  max-width: 16rem;
+  margin: var(--sp-3) 0;
+}
+
+.wrapped-list {
+  margin: 0 0 var(--sp-4);
+  padding-left: var(--sp-6);
+}
+
+.wrapped-list li {
+  margin-bottom: var(--sp-2);
+}
+
+.wrapped-sub {
+  margin: var(--sp-4) 0 var(--sp-2);
+  font-weight: 600;
+}
+
+.wrapped-preview {
+  margin: 0 0 var(--sp-4);
+  white-space: pre-wrap;
+  font-family: inherit;
+  font-size: var(--type-sm);
+}
+
+/* ── Offline mode (offline_mode, Phase M) ──────────────────────────────── */
+
+.offline-banner {
+  flex: none;
+  padding: calc(10px * var(--density, 1)) calc(18px * var(--density, 1)) calc(11px * var(--density, 1));
+  border-bottom: 1px solid var(--app-line);
+  background: var(--app-panel);
+  color: var(--app-fg);
+  font-size: var(--type-sm);
+  line-height: var(--leading-normal);
+  text-wrap: pretty;
+}
+
+.offline-banner.is-offline {
+  background: var(--app-warn-wash);
+  border-bottom-color: var(--app-warn-line);
+}
+
+.offline-chip {
+  display: inline-block;
+  margin-right: var(--sp-2);
+  padding: 0 var(--sp-3);
+  border: 1px solid currentColor;
+  border-radius: var(--r-md);
+  font-size: var(--type-xs-plus);
+  font-weight: 600;
+}
+
+/* ── Trust & Data Center (trust_center, Phase N) ────────────────────────── */
+
+.trust-center {
+  margin: var(--sp-5) 0 var(--sp-7);
+}
+
+.trust-title {
+  margin: var(--sp-2) 0 var(--sp-4);
+  font-size: var(--type-lg);
+  line-height: var(--leading-display-sm);
+}
+
+.trust-section {
+  padding: var(--sp-4) 0;
+  border-top: 1px solid var(--app-line);
+}
+
+.trust-section h3 {
+  margin: 0 0 var(--sp-3);
+  font-size: var(--type-md);
+  line-height: var(--leading-tight);
+}
+
+.trust-list {
+  display: grid;
+  gap: var(--sp-3);
+  margin: 0 0 var(--sp-3);
+  padding-left: 0;
+  list-style: none;
+}
+
+.trust-labels {
+  display: grid;
+  gap: var(--sp-3);
+  margin: 0;
+}
+
+.trust-labels div {
+  display: grid;
+  grid-template-columns: minmax(0, 10rem) minmax(0, 1fr);
+  gap: var(--sp-3);
+  align-items: baseline;
+}
+
+.trust-labels dd {
+  margin: 0;
+}
+
 /* BL-1.4's Action Center, when it sits in a Phase B panel rather than in the
    #761 card whose `.today-decision-surface` rules it was drawn against. */
 .action-panel .action-center h2 {

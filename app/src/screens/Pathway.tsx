@@ -7,6 +7,8 @@ import { CardGrid, GridCard } from '../components/GridCard';
 import { secondLine } from '../lib/dim';
 import { useDeviceLibrary } from '../lib/device-library';
 import { download } from '../lib/deliver';
+import { StudyAbroad } from '../components/StudyAbroad';
+import { abroadKey } from '../lib/abroad';
 import { fromMarkdown } from '../lib/document';
 import {
   APPLICATION_STAGES,
@@ -64,6 +66,7 @@ const TABS = [
   { id: 'compare' as const, label: 'Costs' },
   { id: 'profile' as const, label: 'Profile' },
   { id: 'milestones' as const, label: 'Milestones' },
+  { id: 'abroad' as const, label: 'Study abroad' },
   { id: 'backup' as const, label: 'Backup' },
 ];
 
@@ -111,7 +114,7 @@ export function Pathway() {
 }
 
 function Workspace({ storageKey }: { storageKey: string }) {
-  const { dispatch } = useStore();
+  const { dispatch, account } = useStore();
   const lib = useDeviceLibrary(storageKey, readPathway, EMPTY_PATHWAY);
 
   /*
@@ -685,6 +688,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
         </>
       )}
 
+      {tab === 'abroad' && <StudyAbroad storageKey={abroadKey(account?.id)} />}
       {tab === 'profile' && (
         <>
           <p style={{ ...line, marginBlock: '0 var(--sp-5)', textWrap: 'pretty' }}>
