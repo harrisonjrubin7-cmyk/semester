@@ -13,6 +13,7 @@ import {
 import { useDeviceLibrary } from '../lib/device-library';
 import { useNow, useStore } from '../state/store';
 import { ClarityQuestion } from './ClarityQuestion';
+import { ExplanationSheet } from './ExplanationSheet';
 import { SourceBadge } from './SourceBadge';
 import { ActionButton, SectionLabel } from './ui';
 
@@ -78,39 +79,24 @@ function go(action: Action) {
   }
 }
 
-function Why({ s }: { s: Scored }) {
-  const { explanation: e, source } = s.action;
+/** The score's working, in words, for the explanation sheet. */
+export function rankingLine(s: Scored): string {
   const p = s.parts;
+  return `Urgency ${p.urgency} + importance ${p.impact} + ready to do ${p.actionability} + source confidence ${p.confidence}${
+    p.fatigue ? ` − ${p.fatigue} for being snoozed before` : ''
+  } = ${s.score}.`;
+}
+
+/**
+ * "Why this?" opens the explanation sheet (`ExplanationSheet`): a bottom
+ * sheet on a phone, a drawer beside the page on a desktop. It was an inline
+ * `<details>` that pushed the list down by a screen's height when opened.
+ */
+function Why({ s, explain }: { s: Scored; explain: (s: Scored) => void }) {
   return (
-    <details className="today-why">
-      <summary>Why am I seeing this?</summary>
-      <p>{e.trigger}</p>
-      {e.factors.length > 0 && (
-        <>
-          <p><strong>Based on</strong></p>
-          <ul>{e.factors.map((f) => <li key={f}>{f}</li>)}</ul>
-        </>
-      )}
-      <p><strong>What it should change:</strong> {e.expectedImpact}</p>
-      {e.limitations.length > 0 && (
-        <>
-          <p><strong>What Semester cannot see</strong></p>
-          <ul>{e.limitations.map((f) => <li key={f}>{f}</li>)}</ul>
-        </>
-      )}
-      {e.alternatives.length > 0 && (
-        <>
-          <p><strong>Other reasonable choices</strong></p>
-          <ul>{e.alternatives.map((f) => <li key={f}>{f}</li>)}</ul>
-        </>
-      )}
-      <p><strong>Source:</strong> {source.system}</p>
-      <p>
-        <strong>How it was ranked:</strong> urgency {p.urgency} + importance {p.impact} + ready to do {p.actionability} +
-        source confidence {p.confidence}
-        {p.fatigue ? ` − ${p.fatigue} for being snoozed before` : ''} = {s.score}.
-      </p>
-    </details>
+    <button type="button" className="workspace-text-button" aria-haspopup="dialog" onClick={() => explain(s)}>
+      Why this?
+    </button>
   );
 }
 
@@ -207,12 +193,14 @@ function Row({
   act,
   reporting,
   setReporting,
+  explain,
 }: {
   s: Scored;
   now: number;
   act: (id: string, event: ActionEvent, note?: string) => void;
   reporting: string | null;
   setReporting: (id: string | null) => void;
+  explain: (s: Scored) => void;
 }) {
   const due = dueLine(s.action, now);
   return (
@@ -228,12 +216,19 @@ function Row({
       <SourceBadge label={s.action.source.label} at={s.action.source.at} now={now} onReport={() => setReporting(s.action.id)} />
       {reporting === s.action.id && <Report s={s} onClose={() => setReporting(null)} />}
       <Controls s={s} act={act} compact />
-      <Why s={s} />
+      <Why s={s} explain={explain} />
     </li>
   );
 }
 
-export function ActionCenter({ actions }: { actions: Action[] }) {
+export function ActionCenter({
+  actions,
+  closure = null,
+}: {
+  actions: Action[];
+  /** "You are set for today…", when Today has decided the day is done (`lib/today-center.ts`). */
+  closure?: string | null;
+}) {
   const { account } = useStore();
   const now = useNow().getTime();
   const key = `${ACTIONS_PREFIX}:${account?.id || 'device'}`;
@@ -242,6 +237,7 @@ export function ActionCenter({ actions }: { actions: Action[] }) {
   const ranked = useMemo(() => rank(actions, choices, now), [actions, choices, now]);
   const [said, setSaid] = useState<{ text: string; undo?: { id: string; prev: Choice | undefined } } | null>(null);
   const [reporting, setReporting] = useState<string | null>(null);
+  const [explaining, setExplaining] = useState<Scored | null>(null);
 
   const act = (id: string, event: ActionEvent, note?: string) => {
     const prev = choices[id];
@@ -269,7 +265,10 @@ export function ActionCenter({ actions }: { actions: Action[] }) {
   const top = ranked.mostImportant;
   return (
     <div className="action-center">
-      <SectionLabel>Next best step</SectionLabel>
+      {closure && (
+        <h2 className="action-done" id="action-done-line">{closure}</h2>
+      )}
+      <SectionLabel>{closure ? 'When you have a moment' : 'Next best step'}</SectionLabel>
       {library.error && <p role="alert">{library.error}</p>}
       {top ? (
         <article aria-labelledby="action-top-title">
@@ -280,7 +279,7 @@ export function ActionCenter({ actions }: { actions: Action[] }) {
           {reporting === top.action.id && <Report s={top} onClose={() => setReporting(null)} />}
           <ActionButton tone="primary" onClick={() => go(top.action)}>{top.action.primary.label}</ActionButton>
           <Controls s={top} act={act} />
-          <Why s={top} />
+          <Why s={top} explain={setExplaining} />
           <ClarityQuestion />
         </article>
       ) : (
@@ -300,7 +299,7 @@ export function ActionCenter({ actions }: { actions: Action[] }) {
         <>
           <SectionLabel>Next</SectionLabel>
           <ol className="action-list">
-            {ranked.next.map((s) => <Row key={s.action.id} s={s} now={now} act={act} reporting={reporting} setReporting={setReporting} />)}
+            {ranked.next.map((s) => <Row key={s.action.id} s={s} now={now} act={act} reporting={reporting} setReporting={setReporting} explain={setExplaining} />)}
           </ol>
         </>
       )}
@@ -309,7 +308,7 @@ export function ActionCenter({ actions }: { actions: Action[] }) {
         <details className="today-why">
           <summary>View all ({ranked.rest.length} more)</summary>
           <ol className="action-list">
-            {ranked.rest.map((s) => <Row key={s.action.id} s={s} now={now} act={act} reporting={reporting} setReporting={setReporting} />)}
+            {ranked.rest.map((s) => <Row key={s.action.id} s={s} now={now} act={act} reporting={reporting} setReporting={setReporting} explain={setExplaining} />)}
           </ol>
         </details>
       )}
@@ -318,6 +317,10 @@ export function ActionCenter({ actions }: { actions: Action[] }) {
         <p className="today-sync-status">
           {ranked.hidden.filter((h) => h.status === 'snoozed').length} snoozed until tomorrow morning.
         </p>
+      )}
+
+      {explaining && (
+        <ExplanationSheet action={explaining.action} ranking={rankingLine(explaining)} onClose={() => setExplaining(null)} />
       )}
     </div>
   );
