@@ -595,6 +595,7 @@ const MOCKS_MODULES = [
   'src/components/HelpInbox.test.tsx',
   'src/components/ActionCenter.help.test.tsx',
   'src/components/ReportQueue.test.tsx',
+  'src/components/MentorFinder.test.tsx',
   'src/components/schoolrecords.test.tsx',
   'src/components/TermChoice.test.tsx',
   'src/components/gpascalenote.test.tsx',
