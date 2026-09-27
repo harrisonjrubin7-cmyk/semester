@@ -160,6 +160,11 @@ declare
     'claim_referral(given text)',
     'make_referral_code()',
     'make_family_invite(want_categories text[], want_access text, want_resources text[], want_days integer)',
+    -- 20260928141000_family_shared_items.sql: a code and the confirmed copies
+    -- of what it names, in one transaction; and the supporter's one read path,
+    -- which re-checks every grant and logs the read.
+    'make_family_share(want_categories text[], want_resources text[], want_days integer, want_items jsonb, want_shown_as text)',
+    'read_family_share()',
     'note_activity(marks text[])',
     'referral_standing()',
     -- Both are security-invoker reads. Their table RLS remains the boundary:

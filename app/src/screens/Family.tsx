@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { useStore } from '../state/store';
+import { cloudConfigured } from '../lib/cloud';
 import { Page } from '../components/Page';
 import { ActionButton, FilePick, Notice, SectionLabel, Segmented } from '../components/ui';
 import { CardGrid, GridCard } from '../components/GridCard';
 import { secondLine } from '../lib/dim';
 import { endProblem } from '../lib/sharing';
 import { ClaimFamilyCode, FamilyInvite } from '../components/FamilyInvite';
+import { SharedWithYou } from '../components/SharedWithYou';
 import { useDeviceLibrary } from '../lib/device-library';
 import { download } from '../lib/deliver';
 import { fromMarkdown } from '../lib/document';
@@ -118,9 +120,9 @@ function Workspace({ storageKey }: { storageKey: string }) {
   return (
     <Page>
       <p style={{ ...line, marginBlock: 0, textWrap: 'pretty' }}>
-        Private preparation. Nothing here sends an invitation or a message. Separate family accounts,
-        verified acceptance, payments and live access all need a school service this app is not connected
-        to.
+        {cloudConfigured
+          ? 'Private preparation until you share. Nothing here sends an invitation or a message: a plan reaches somebody only as a code you make on Preview and hand over yourself, and you see each time they open it. Payments are not offered.'
+          : 'Private preparation. Nothing here sends an invitation or a message. Separate family accounts, verified acceptance, payments and live access all need an account service this build is not connected to.'}
       </p>
 
       <Segmented options={TABS} value={tab} onChange={setTab} style={{ marginBlock: 'var(--sp-5)' }} />
@@ -308,7 +310,12 @@ function Workspace({ storageKey }: { storageKey: string }) {
           </fieldset>
         </form>
       )}
-      {tab === 'people' && <ClaimFamilyCode />}
+      {tab === 'people' && (
+        <>
+          <ClaimFamilyCode />
+          <SharedWithYou />
+        </>
+      )}
 
       {tab === 'items' &&
         (!person ? (

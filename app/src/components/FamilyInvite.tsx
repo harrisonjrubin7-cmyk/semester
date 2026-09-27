@@ -6,12 +6,12 @@ import {
   inviteRequest,
   inviteState,
   listInvites,
-  makeInvite,
   normaliseCode,
   revokeInvite,
   sayClaim,
   type InviteRow,
 } from '../lib/familyinvites';
+import { localMinute, makeShare, readLog, readsOf, stopSharing, type ReadEvent } from '../lib/familyshare';
 import { useStore } from '../state/store';
 import { SectionLabel } from './ui';
 
@@ -27,10 +27,15 @@ export function FamilyInvite({ member, items, today = new Date().toLocaleDateStr
   const [said, setSaid] = useState('');
   const [busy, setBusy] = useState(false);
   const [codes, setCodes] = useState<InviteRow[]>([]);
+  const [log, setLog] = useState<ReadEvent[]>([]);
+  const [shownAs, setShownAs] = useState('');
+  const [stopping, setStopping] = useState(false);
   const signedIn = cloudConfigured && !!account;
 
   const refresh = () => {
-    if (signedIn) void listInvites().then(setCodes, () => setCodes([]));
+    if (!signedIn) return;
+    void listInvites().then(setCodes, () => setCodes([]));
+    void readLog().then(setLog, () => setLog([]));
   };
   // Re-listed whenever the account changes; the list is the student's own codes.
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -38,6 +43,12 @@ export function FamilyInvite({ member, items, today = new Date().toLocaleDateStr
 
   const req = inviteRequest(member, items, today);
   const name = member.name || 'this person';
+  const chosen = 'problems' in req ? [] : items.filter((i) => req.resources.includes(i.id));
+  // Every item planned for this person, shared or not: stopping has to reach
+  // an item that was shared before and has since been taken off the plan.
+  const theirs = items.filter((i) => i.memberId === member.id).map((i) => i.id);
+  const reads = readsOf(log, theirs);
+  const shared = codes.some((c) => c.claimedAt && c.resourceIds.some((id) => theirs.includes(id)));
 
   return (
     <section aria-labelledby="family-invite-title" className="family-invite">
@@ -71,21 +82,30 @@ export function FamilyInvite({ member, items, today = new Date().toLocaleDateStr
             Share <strong>{req.resources.length} {req.resources.length === 1 ? 'item' : 'items'}</strong> with{' '}
             <strong>{name}</strong> until <strong>{member.expires}</strong>?
           </p>
+          <ul className="sharing-list" aria-label="What they will see">
+            {chosen.map((i) => (
+              <li key={i.id}>{i.title}</li>
+            ))}
+          </ul>
           <ul className="sharing-problems">
-            <li>They see only the items above, exactly as shown.</li>
+            <li>They see a copy of these items as they are now. A later change reaches them only if you share again.</li>
             <li>You see every time they open it, and you can stop it at any time.</li>
             <li>Anything shared can be copied by the person who sees it.</li>
           </ul>
+          <label className="family-claim">
+            <span className="sharing-meta">Your name, as {name} will see it</span>
+            <input className="input" value={shownAs} maxLength={80} autoComplete="given-name" onChange={(e) => setShownAs(e.target.value)} />
+          </label>
           <div className="portal-actions">
             <button
               type="button"
               className="btn btn-primary"
-              disabled={busy}
+              disabled={busy || !shownAs.trim()}
               onClick={async () => {
                 setBusy(true);
                 setSaid('');
                 try {
-                  const made = await makeInvite(req);
+                  const made = await makeShare(req, items, shownAs);
                   setCode(made);
                   setStep('made');
                   refresh();
@@ -109,6 +129,60 @@ export function FamilyInvite({ member, items, today = new Date().toLocaleDateStr
         </button>
       )}
       {said && <p role="alert" className="sharing-lead">{said}</p>}
+
+      {signedIn && (shared || reads.length > 0) && (
+        <>
+          <SectionLabel style={{ marginBlock: 'var(--sp-6) var(--sp-3)' }}>When they opened it</SectionLabel>
+          {reads.length === 0 ? (
+            <p className="sharing-lead">Not opened yet.</p>
+          ) : (
+            <ul className="sharing-list" aria-label={`Times ${name} opened what you shared`}>
+              {reads.slice(0, 20).map((e) => (
+                <li key={e.readAt}>
+                  {localMinute(e.readAt)} · {e.itemIds.length} {e.itemIds.length === 1 ? 'item' : 'items'}
+                </li>
+              ))}
+            </ul>
+          )}
+          {stopping ? (
+            <div className="family-confirm">
+              <p>
+                Stop sharing with <strong>{name}</strong>? From their next look they see only “This share has ended.”, the
+                same words as when a share runs out. The copies are removed.
+              </p>
+              <div className="portal-actions">
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  disabled={busy}
+                  onClick={async () => {
+                    setBusy(true);
+                    try {
+                      await stopSharing(theirs);
+                      setSaid(`Stopped. ${name} can no longer see what you shared.`);
+                      setStopping(false);
+                      refresh();
+                    } catch (e) {
+                      setSaid(`Sharing did not stop: ${(e as Error).message}`);
+                    } finally {
+                      setBusy(false);
+                    }
+                  }}
+                >
+                  Stop sharing
+                </button>
+                <button type="button" className="btn btn-ghost" onClick={() => setStopping(false)}>
+                  Keep sharing
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button type="button" className="btn btn-ghost" onClick={() => setStopping(true)}>
+              Stop sharing with {name}
+            </button>
+          )}
+        </>
+      )}
 
       {codes.length > 0 && (
         <>

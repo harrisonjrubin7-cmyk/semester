@@ -215,6 +215,8 @@ Each slice is small and would ship behind approval of its migration:
    production migration.**
 3. **Supporter recipient page**: read-only, through a security-definer reader
    that logs reads.
+   *Built (D-038): the student's confirmation stores a copy of the named
+   items with the code; `read_family_share()` re-checks and logs every read.*
 4. **`support_shares`**: migration modelled on `accommodation_shares`, check
    suite extended. **Needs approval.**
 5. **Athlete share UI**: item picker from `athletics.ts`, preview, recipient
