@@ -260,6 +260,9 @@ revoke all on function public.help_inbox(uuid) from public, anon, authenticated;
 grant execute on function public.help_inbox(uuid) to authenticated;
 
 -- Opening one is recorded, every time, where the student can see it.
+-- Dropped first so a second run of this file (a repair, a restore rehearsal)
+-- can replace the wider version 20260927232000 and 234000 leave behind.
+drop function if exists public.open_help_request(uuid);
 create or replace function public.open_help_request(want uuid)
 returns table (question text, shared_context jsonb, status text, created_at timestamptz)
 language plpgsql

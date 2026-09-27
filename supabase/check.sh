@@ -183,6 +183,52 @@ done
 # later. `local.stub.sql` now sets the table privileges as default privileges
 # before the migrations run, the way Supabase does, which leaves a revoke
 # standing where a suite can read it. See the note in that file.
+# The second pass. `supabase/README.md` promises that every migration is
+# idempotent — that running the set twice is a no-op — because a migration
+# that only works on an empty database cannot repair a half-built one, which is
+# the state a restore or a failed deploy leaves behind. Nothing had ever run
+# them twice: the first attempt, in launch-readiness Phase 7, found nine files
+# that failed. This applies every one again on top of the built schema, before
+# any check runs, so the suites below also prove the schema survived it.
+#
+# `reapply.known` lists the files allowed to fail, each with its reason. A file
+# not on it that fails is a new non-idempotent migration; a file on it that now
+# passes is a stale entry. Both fail, so the list can only shrink honestly.
+if [ -n "${SEMESTER_CHECK_REAPPLY:-}" ]; then
+  echo "· migrations, a second time"
+  dump() { "$bindir/pg_dump" -s -h "$work" -p "$port" -U postgres postgres | grep -vE '^\\(un)?restrict '; }
+  dump > "$work/schema.1"
+  known=$(sed -e 's/#.*//' "$here/reapply.known" | awk 'NF {print $1}')
+  bad=0
+  for m in "$here"/migrations/*.sql; do
+    name=$(basename "$m")
+    if out=$(psql -v ON_ERROR_STOP=1 -f "$m" 2>&1); then
+      if echo "$known" | grep -qx "$name"; then
+        echo "  ✗ $name passes a second time; remove it from reapply.known"
+        bad=1
+      fi
+    elif echo "$known" | grep -qx "$name"; then
+      echo "  · $name (known: reapply.known)"
+    else
+      echo "  ✗ $name is not idempotent"
+      echo "$out" | grep -E "ERROR" | head -2 | sed 's/^/      /'
+      bad=1
+    fi
+  done
+  [ "$bad" = 0 ] || exit 1
+  # Passing twice is not enough on its own: a file that stops part way on the
+  # second run leaves an older definition behind, and so does one that quietly
+  # re-creates something a later file had replaced. The schema after two passes
+  # has to be the schema after one.
+  dump > "$work/schema.2"
+  if ! diff -q "$work/schema.1" "$work/schema.2" >/dev/null; then
+    echo "  ✗ the schema after a second pass differs from the first:"
+    diff "$work/schema.1" "$work/schema.2" | head -20 | sed 's/^/      /'
+    exit 1
+  fi
+  echo "  ✓ every other migration applied twice, and the schema is unchanged"
+fi
+
 psql -v ON_ERROR_STOP=1 >/dev/null <<'SQL'
 grant usage on schema auth, public to anon, authenticated;
 grant select, insert on auth.users to anon, authenticated;

@@ -30,6 +30,18 @@ politeness: a migration that only works on an empty database cannot be used to
 repair a database that is half set up, which is exactly the state anything
 real is in when you need it most.
 
+**This was a claim until 27 September, and it was false.** The first run of the
+set twice found nine files that stopped on a second run: `create policy`
+without a `drop policy if exists`, `create trigger` without `or replace`, a
+`create table` without `if not exists`, a constraint dropped after foreign keys
+had come to depend on it, and a function re-created over a later, wider version.
+The last one did not merely fail — it stopped part way, and left an older
+`lti_account_untouched` behind that `help-requests.check.sql` caught. All nine
+are fixed. `SEMESTER_CHECK_REAPPLY=1 supabase/check.sh` now applies every file a
+second time, requires the schema to come out identical, and runs the suites on
+the result; CI runs it that way. `reapply.known` is where a file that genuinely
+cannot run twice would be listed with its reason, and it is empty.
+
 **The order is a dependency order, not a history.** The timestamps put them in
 the sequence they have to run in; they are not the dates anything happened.
 
