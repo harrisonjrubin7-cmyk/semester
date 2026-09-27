@@ -7739,6 +7739,48 @@ section[data-drop] > .grip + * {
   line-height: var(--leading-normal);
 }
 
+/* ── Sync strip ─────────────────────────────────────────────────────────── */
+
+/* One quiet line under the header while the account needs saying about. The
+   warn tone is the app's one warning colour; the quiet tone is the panel,
+   because being offline is a condition, not a fault. */
+.sync-strip {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2) var(--sp-5);
+  padding: var(--sp-4) var(--sp-7);
+  border-bottom: 1px solid var(--app-line);
+  background: var(--app-panel);
+  color: var(--app-fg);
+  font-size: var(--type-sm-plus);
+  line-height: var(--leading-normal);
+}
+
+.sync-strip-warn {
+  border-bottom-color: var(--app-warn-line);
+  background: var(--app-warn-wash);
+}
+
+.sync-strip-off {
+  display: none;
+}
+
+.sync-strip-text {
+  flex: 1 1 16em;
+  min-width: 0;
+  text-wrap: pretty;
+}
+
+.sync-strip-btn {
+  width: auto;
+  flex: none;
+  font-size: var(--type-sm-plus);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 /* ── Explanation sheet and drawer ───────────────────────────────────────── */
 
 .explain-wash {
