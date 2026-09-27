@@ -7311,6 +7311,80 @@ section[data-drop] > .grip + * {
   min-height: 44px;
 }
 
+/* The Action Center inside the Next best step card (components/ActionCenter.tsx). */
+.action-center .today-action-tools {
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  row-gap: 0;
+  column-gap: var(--sp-4);
+  margin-top: var(--sp-1);
+}
+
+.action-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  margin: 0 0 var(--sp-3);
+  padding: 0;
+  list-style: none;
+}
+
+.action-row {
+  padding-bottom: var(--sp-3);
+  border-bottom: 1px solid var(--app-line-soft);
+}
+
+.action-row .today-timeline-row {
+  border-bottom: 0;
+}
+
+/*
+ * The Today briefing's buttons, reset.
+ *
+ * `features.css` styles a bare `<button>` only inside `.portal-workspace`,
+ * and the briefing (#761) is not inside one — so "View My Path →", "See
+ * full plan →" and every row of the 72-hour rail drew as the browser's own
+ * grey outset button. Found by looking at the screenshot, not by a test.
+ */
+.today-decision-surface .workspace-text-button {
+  appearance: none;
+  min-height: 44px;
+  padding: var(--sp-2) 0;
+  border: 0;
+  background: none;
+  color: var(--app-accent-deep);
+  font: inherit;
+  font-size: var(--type-sm);
+  text-align: left;
+  cursor: pointer;
+}
+
+.today-decision-surface .workspace-text-button:disabled {
+  color: var(--app-dim);
+  cursor: default;
+}
+
+.today-decision-surface .today-timeline-row {
+  appearance: none;
+  border-width: 0 0 1px;
+  border-style: solid;
+  border-color: var(--app-line-soft);
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}
+
+.today-decision-surface .action-row .today-timeline-row {
+  border-bottom-width: 0;
+}
+
+.action-note label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  font-size: var(--type-sm);
+}
+
 .today-near-term {
   border: 1px solid var(--app-line);
   border-radius: var(--r-md);
