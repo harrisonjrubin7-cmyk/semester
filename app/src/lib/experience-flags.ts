@@ -11,6 +11,11 @@ export interface ExperienceFlags {
   humanHelp: FeatureState;
   /** The staff Integration Dashboard. Tenant flags and `integration:view` still apply. */
   integrationDashboard: FeatureState;
+  /**
+   * The staff Operations studio: data dictionary, suppressed exports,
+   * curriculum simulation, evidence, developer platform and readiness.
+   */
+  institutionalOperations: FeatureState;
 }
 
 const STATES: readonly FeatureState[] = ['off', 'preview', 'sandbox', 'production'];
@@ -32,6 +37,7 @@ export function experienceFlags(env: PreviewEnv): ExperienceFlags {
     universityControlPlane: featureState(env, 'VITE_UNIVERSITY_CONTROL_PLANE', preview),
     humanHelp: featureState(env, 'VITE_HUMAN_HELP', preview),
     integrationDashboard: featureState(env, 'VITE_INTEGRATION_DASHBOARD', preview),
+    institutionalOperations: featureState(env, 'VITE_INSTITUTIONAL_OPERATIONS', preview),
   };
 }
 

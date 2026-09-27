@@ -51,4 +51,16 @@ describe('AI-use policy precedence', () => {
     expect(offered.length).toBeGreaterThan(0);
     expect(offered.every((r) => r.needsAi === null)).toBe(true);
   });
+
+  it('treats a stance it does not recognise as no policy, never as permission', () => {
+    const odd = fromCourse({ stance: 'bogus' as never, note: '' });
+    expect(odd).toBeUndefined();
+    expect(resolve('brainstorming', [odd]).state).toBe('unavailable');
+  });
+
+  it('does not mistake an Object.prototype name for a stance', () => {
+    for (const stance of ['constructor', 'toString', '__proto__', 'hasOwnProperty']) {
+      expect(fromCourse({ stance: stance as never, note: '' })).toBeUndefined();
+    }
+  });
 });

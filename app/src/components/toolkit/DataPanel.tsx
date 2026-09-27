@@ -159,7 +159,11 @@ export function DataPanel({ library, uploadOn, layers, now, onOpen }: { library:
               </button>
             </details>
             <p className="portal-muted">
-              {aiAllowed ? 'AI help with cleaning is allowed for this course — the studio itself sends nothing.' : 'This course has not allowed AI help with data cleaning. The studio sends nothing either way.'}
+              {tier && !gate(tier, 'ai', true).allowed
+                ? 'AI help is not available for this kind of data, whatever the course allows. The studio sends nothing either way.'
+                : aiAllowed
+                  ? 'AI help with cleaning is allowed for this course — the studio itself sends nothing.'
+                  : 'This course has not allowed AI help with data cleaning. The studio sends nothing either way.'}
             </p>
           </>
         )}
