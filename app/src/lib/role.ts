@@ -191,6 +191,8 @@ const STUDENT_ONLY: Screen[] = [
   'activities',
   'costs',
   'applying',
+  // Deposits, orientation and placement tests are addressed to somebody arriving.
+  'launchpad',
 ] as Screen[];
 
 const STUDENT_ONLY_SET = new Set<string>(STUDENT_ONLY);

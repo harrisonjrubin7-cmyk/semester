@@ -141,6 +141,13 @@ export interface TopInput {
    * device library. A count and never an amount — see the case that uses it.
    */
   nilDeals?: number;
+  /**
+   * Launchpad steps still open at the stage the student chose, and
+   * opportunities not yet done or closed — both counted from their device
+   * libraries by whoever could read them, the same exception as `nilDeals`.
+   */
+  launchpadOpen?: number;
+  opportunitiesLive?: number;
 }
 
 /**
@@ -706,6 +713,45 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
 
     case 'career':
       return holds('Applications', state.applications.length, 'application');
+
+    case 'launchpad':
+      return holds('Steps open', input.launchpadOpen ?? 0, 'step');
+
+    case 'opportunities':
+      return holds('In progress', input.opportunitiesLive ?? 0, 'opportunity');
+
+    /*
+     * The hub's figure is the course channel's, because it is the only one
+     * with store data behind it: what is due in the next seven days. The
+     * official channel is empty until a school connects one, and a hero that
+     * counted it would lead every student with a nought that means "not
+     * connected" rather than "nothing to read".
+     */
+    case 'hub':
+      return {
+        hero: {
+          label: 'Notices',
+          figure: num(soon.length),
+          foot: soon.length === 0 ? 'Nothing due this week' : 'from your courses this week',
+        },
+        stats: [],
+      };
+
+    /*
+     * Support leads with nothing about the student. A count of anything here —
+     * visits, saved contacts, notes — would be a figure about somebody's care
+     * drawn in the biggest type on the screen, which is exactly what the
+     * screen promises not to keep.
+     */
+    case 'support':
+      return {
+        hero: {
+          label: 'Support',
+          figure: '988',
+          foot: 'Call or text, any hour (U.S.)',
+        },
+        stats: [],
+      };
 
     case 'pathway':
       return holds('Courses so far', catalog.courses.length, 'course');

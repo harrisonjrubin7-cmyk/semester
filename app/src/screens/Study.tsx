@@ -107,7 +107,7 @@ const PLAN_ROWS = 8;
 export function Study({
   adaptiveLearning = EXPERIENCE_FLAGS.adaptiveLearning !== 'off',
 }: { adaptiveLearning?: boolean } = {}) {
-  const { state, dispatch, catalog, tint } = useStore();
+  const { state, dispatch, catalog, tint, account } = useStore();
   const now = useNow();
   /**
    * Courses whose full list of ways has been asked for.
@@ -271,7 +271,10 @@ export function Study({
 
   // Behind `VITE_AI_TOOLKIT`, off unless an environment names a state. See `lib/toolkit/flags.ts`.
   if (toolkit && on(TOOLKIT_FLAGS.aiToolkit))
-    return <Toolkit courses={catalog.courses} onOpen={(screen) => dispatch({ type: 'go', screen })} onClose={() => setToolkit(false)} />;
+    return (
+      // Keyed by account so a different student signing in starts from their own toolkit, with no panel state carried over.
+      <Toolkit key={account?.id || 'device'} accountId={account?.id} courses={catalog.courses} onOpen={(screen) => dispatch({ type: 'go', screen })} onClose={() => setToolkit(false)} />
+    );
   if(studio && selectedStudioCourse) return <><div className="studio-course-picker"><label>Course<select value={selectedStudioCourse} onChange={e=>setStudioCourse(e.target.value)}>{catalog.courses.map(c=><option key={c.id} value={c.id}>{c.code} · {c.name}</option>)}</select></label></div><StudyStudio key={selectedStudioCourse} courseId={selectedStudioCourse} onClose={()=>setStudio(false)}/></>;
   return (
     <Page>

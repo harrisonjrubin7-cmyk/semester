@@ -17,6 +17,7 @@
  * from `lib/notify.ts` within a term.
  */
 
+import { storedWindow } from '../lib/registration-window';
 import { useEffect, useRef } from 'react';
 import { useNow, useStore } from '../state/store';
 import { enrolled, lastRefill, markRefilled, needsRefill, queueFor } from '../lib/push';
@@ -45,6 +46,7 @@ export function PushTop() {
           items: datedItems(catalog, d).filter((i) => !state.done[i.id]),
           classes: classesToNudge(railFor(catalog, d, state.appointments, state.commitments)),
           registrar: state.registrar,
+          registrationOpens: storedWindow(),
           // Muted courses and quiet hours, which this refill dropped on the
           // floor exactly as `PushSwitch` did. See the note there.
           muted: state.mutedCourses,

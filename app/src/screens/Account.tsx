@@ -8,6 +8,7 @@ import { ActionButton, SectionLabel } from '../components/ui';
 import { Credentials } from '../components/Credentials';
 import { SchoolClaim } from '../components/SchoolClaim';
 import { ReferralLink } from '../components/ReferralLink';
+import { MembershipPanel } from '../components/MembershipPanel';
 import { cloudConfigured, signOut } from '../lib/cloud';
 
 /**
@@ -53,6 +54,7 @@ export function AccountScreen() {
             in to. Everything works without one, and everything stays in this browser.
           </div>
         </Blueprint>
+        <MembershipPanel />
       </Page>
     );
   }
@@ -200,6 +202,7 @@ export function AccountScreen() {
             {error}
           </div>
         )}
+        <MembershipPanel />
       </Page>
     );
   }
@@ -239,6 +242,7 @@ export function AccountScreen() {
         you end up with both sides' courses, notes and ticked boxes.
       </div>
       <StorageRoom />
+      <MembershipPanel />
     </Page>
   );
 }

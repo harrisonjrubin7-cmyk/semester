@@ -193,7 +193,7 @@ export interface Claim {
 }
 
 const CAUSAL =
-  /\b(causes?|caused|causing|leads? to|led to|results? in|resulted in|the effect of|effects? of .* on|impacts?|improves?|reduces?|increases?|decreases?|because of|due to|drives?|prevents?)\b/i;
+  /\b(causes?|caused|causing|leads? to|led to|results? in|resulted in|the effect of|effects? of [^.]{0,200} on|impacts?|improves?|reduces?|increases?|decreases?|because of|due to|drives?|prevents?)\b/i;
 
 /** Wording that already says association, which a causal verb inside it does not undo. */
 const HEDGED = /\b(associated with|associations? between|correlat\w*|linked (to|with)|predict\w*|related to)\b/i;
@@ -250,6 +250,13 @@ export function reference(e: Evidence, style: Style): string {
 const risType = (k: SourceKind) => (k === 'book' ? 'BOOK' : k === 'news' ? 'NEWS' : k === 'institutional-report' ? 'RPRT' : 'JOUR');
 
 /** RIS for reference managers (Zotero, EndNote, Mendeley all read it). */
+/*
+ * One RIS line per field. A line break inside a value would end the field
+ * early, and a value containing "ER  - " on its own line would start a
+ * second, invented reference in the student's reference manager.
+ */
+const line = (s: string) => s.replace(/[\r\n]+/g, ' ').trim();
+
 export function ris(entries: readonly Evidence[]): string {
   return entries
     .filter((e) => citable(e.kind))
@@ -258,14 +265,14 @@ export function ris(entries: readonly Evidence[]): string {
         `TY  - ${risType(e.kind)}`,
         ...e.authors
           .split(/;|\band\b/)
-          .map((a) => a.trim())
+          .map(line)
           .filter(Boolean)
           .map((a) => `AU  - ${a}`),
-        e.year.trim() && `PY  - ${e.year.trim()}`,
-        e.title.trim() && `TI  - ${e.title.trim()}`,
-        e.venue.trim() && `JO  - ${e.venue.trim()}`,
-        e.doi.trim() && `DO  - ${e.doi.trim()}`,
-        e.url.trim() && `UR  - ${e.url.trim()}`,
+        line(e.year) && `PY  - ${line(e.year)}`,
+        line(e.title) && `TI  - ${line(e.title)}`,
+        line(e.venue) && `JO  - ${line(e.venue)}`,
+        line(e.doi) && `DO  - ${line(e.doi)}`,
+        line(e.url) && `UR  - ${line(e.url)}`,
         !e.verified && 'N1  - Not yet verified against the original source',
         'ER  - ',
       ]

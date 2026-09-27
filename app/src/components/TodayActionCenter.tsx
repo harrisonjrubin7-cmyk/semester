@@ -10,6 +10,8 @@ import { goMine } from '../lib/openmine';
 import { fromHash } from '../lib/route';
 import { appointmentsOn, tasksOn, upcomingItems } from '../lib/select';
 import { freshnessLine } from '../lib/source';
+import { registrationActions } from '../lib/registration-actions';
+import { useRegistrationPlan } from '../lib/registration-plan';
 import { todayActions } from '../lib/today-actions';
 import {
   STATUS_SENTENCE,
@@ -45,7 +47,7 @@ const HORIZON_DAYS = 10;
  *
  * With the flag off none of this renders, and Today is the #761 briefing.
  */
-export function TodayActionCenter() {
+export function TodayActionCenter({ registrationDay = false }: { registrationDay?: boolean } = {}) {
   const { state, dispatch, catalog, account } = useStore();
   const now = useNow();
   const wide = useMedia(DESKTOP);
@@ -61,9 +63,14 @@ export function TodayActionCenter() {
     () => Object.values(state.reviews).filter((review) => review.due <= now.getTime()).length,
     [state.reviews, now],
   );
+  const registration = useRegistrationPlan();
   const actions = useMemo(
-    () => todayActions({ path, upcoming, done: state.done, reviewDue, catalogEmpty: catalog.empty }),
-    [path, upcoming, state.done, reviewDue, catalog.empty],
+    () => [
+      ...todayActions({ path, upcoming, done: state.done, reviewDue, catalogEmpty: catalog.empty }),
+      // Registration readiness (Phase C), only while the mode is showing.
+      ...(registrationDay ? registrationActions(registration.data, registration.cart, registration.catalog, now) : []),
+    ],
+    [path, upcoming, state.done, reviewDue, catalog.empty, registrationDay, registration.data, registration.cart, registration.catalog, now],
   );
   const top = useMemo(() => rank(actions, choices, now.getTime()).mostImportant, [actions, choices, now]);
   const leadingRoute = top ? fromHash(top.action.primary.target) : null;
