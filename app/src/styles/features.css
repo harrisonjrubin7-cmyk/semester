@@ -254,3 +254,6 @@
 .sharing-list>li{border-top:1px solid var(--app-line);padding-block:var(--sp-3)}
 .sharing-meta{font-size:var(--type-sm);color:var(--app-dim);margin-top:var(--sp-1)}
 .sharing-problems{font-size:var(--type-sm);margin:var(--sp-2) 0 0;padding-inline-start:1.2em}
+.family-code{font-family:var(--font-mono, ui-monospace, monospace);font-size:var(--type-xl);letter-spacing:0.18em;margin:var(--sp-3) 0}
+.family-confirm{border:1px solid var(--app-line);border-radius:var(--r-md);padding:var(--sp-4);margin-bottom:var(--sp-3)}
+.family-claim{display:grid;gap:var(--sp-2);max-width:320px;margin-bottom:var(--sp-3)}

@@ -5,6 +5,7 @@ import { ActionButton, FilePick, Notice, SectionLabel, Segmented } from '../comp
 import { CardGrid, GridCard } from '../components/GridCard';
 import { secondLine } from '../lib/dim';
 import { endProblem } from '../lib/sharing';
+import { ClaimFamilyCode, FamilyInvite } from '../components/FamilyInvite';
 import { useDeviceLibrary } from '../lib/device-library';
 import { download } from '../lib/deliver';
 import { fromMarkdown } from '../lib/document';
@@ -307,6 +308,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
           </fieldset>
         </form>
       )}
+      {tab === 'people' && <ClaimFamilyCode />}
 
       {tab === 'items' &&
         (!person ? (
@@ -582,6 +584,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
               )}
             </>
           )}
+          {person && <FamilyInvite member={person} items={lib.value.items} />}
         </>
       )}
 

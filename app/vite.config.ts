@@ -590,6 +590,8 @@ const MOCKS_MODULES = [
   'src/data/seed.test.ts',
   'src/components/rework.test.tsx',
   'src/components/StudyStudio.test.tsx',
+  'src/lib/familyinvites.test.ts',
+  'src/components/FamilyInvite.test.tsx',
   'src/components/SupportAccess.test.tsx',
   'src/components/TermChoice.test.tsx',
   'src/components/gpascalenote.test.tsx',
