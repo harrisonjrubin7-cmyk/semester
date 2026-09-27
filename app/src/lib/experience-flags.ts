@@ -8,6 +8,7 @@ export interface ExperienceFlags {
   careerSkillsGraph: FeatureState;
   multimodalCapture: FeatureState;
   universityControlPlane: FeatureState;
+  humanHelp: FeatureState;
   /** The staff Integration Dashboard. Tenant flags and `integration:view` still apply. */
   integrationDashboard: FeatureState;
 }
@@ -29,6 +30,7 @@ export function experienceFlags(env: PreviewEnv): ExperienceFlags {
     careerSkillsGraph: featureState(env, 'VITE_CAREER_SKILLS_GRAPH', preview),
     multimodalCapture: featureState(env, 'VITE_MULTIMODAL_CAPTURE', preview),
     universityControlPlane: featureState(env, 'VITE_UNIVERSITY_CONTROL_PLANE', preview),
+    humanHelp: featureState(env, 'VITE_HUMAN_HELP', preview),
     integrationDashboard: featureState(env, 'VITE_INTEGRATION_DASHBOARD', preview),
   };
 }
