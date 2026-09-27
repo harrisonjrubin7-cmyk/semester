@@ -176,6 +176,27 @@ describe('PDFs', () => {
     expect((await extractText(pdf())).text).toBe('Page one\n\nPage two');
   });
 
+  it('keeps each page with its number, and says they are pages rather than slides', async () => {
+    // So a quote from a forty-page reading can be pointed at page 23 instead of
+    // "page not recorded". The flat text is unchanged: no page numbers are
+    // printed into it, so quotes, word counts and hashes are what they were.
+    pages = [[at(700, 'Scarcity'), at(680, 'means choosing')], [], [at(700, 'Opportunity cost ')]];
+    const out = await extractText(pdf());
+    expect(out.pages).toEqual([
+      { page: 1, text: 'Scarcity\nmeans choosing' },
+      { page: 3, text: 'Opportunity cost' },
+    ]);
+    expect(out.pageUnit).toBe('page');
+    expect(out.text).toBe('Scarcity\nmeans choosing\n\n\n\nOpportunity cost');
+    expect(out.text).not.toMatch(/Page \d/);
+  });
+
+  it('carries no pages for a Word file, which has none', async () => {
+    const out = await extractText(docx(`<w:document><w:body>${para('One')}</w:body></w:document>`));
+    expect(out.pages).toBeUndefined();
+    expect(out.pageUnit).toBeUndefined();
+  });
+
   it('reads a fragment carrying no position at all', async () => {
     pages = [[{ str: 'No transform on this one' }]];
     expect((await extractText(pdf())).text).toBe('No transform on this one');
@@ -321,6 +342,7 @@ describe('slide decks', () => {
 
   it('keeps the slide numbers, which are the only page reference a deck has', async () => {
     const out = await extractText(deck({ 1: slide('Title'), 2: slide('Segmentation') }));
+    expect(out.pageUnit).toBe('slide');
     expect(out.pages).toEqual([
       { page: 1, text: 'Title' },
       { page: 2, text: 'Segmentation' },

@@ -133,3 +133,20 @@ not indexable and bloat the app shell; and moving the app to path routing,
 which would migrate 59 screens and every stored deep link. Changing the
 production host (e.g. to Vercel, where `app/vercel.json` already exists) is a
 production change and needs approval.
+
+## D-032 · A PDF page is taken from the quote, never from the model
+
+**Taken in P3.1 (Study Studio source anchors).** (D-030 and D-031 are on
+their own open branches; D-013–D-029 belong to the feature-expansion work.)
+`extract.ts` now keeps a PDF's pages as well as its flat text, and marks them
+`pageUnit: 'page'` against a deck's `'slide'`. The flat text is unchanged, with
+no page numbers printed into it, so every existing quote check, word count and
+content hash is too. That means a model reading a PDF's text cannot see its
+page numbers, so a page it names is a guess that merely lands on a page that
+exists. `harvest.ts` therefore takes a PDF card's page from the one page whose
+text contains the card's checked quote, and gives none otherwise. Slide numbers,
+which are printed in a deck's text, keep the old rule. Classification no longer
+reads "has pages" as "is a deck" unless the pages are slides. In Study Studio a
+PDF's pages become excerpts named "Page N", like a deck's slides, and a citation
+opens the original PDF at that page. Rejected: printing "Page N" into the flat
+text, which would move every stored quote and hash.

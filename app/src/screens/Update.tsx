@@ -640,7 +640,7 @@ export function AddMaterial({
             door: 'file',
             hash: hashOf(out.text),
             size: piece.file.size,
-            ...(out.pages ? { pages: out.pages } : {}),
+            ...(out.pages ? { pages: out.pages, ...(out.pageUnit ? { pageUnit: out.pageUnit } : {}) } : {}),
             ...(out.pdf ? { pdf: out.pdf } : {}),
           });
         }

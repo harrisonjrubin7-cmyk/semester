@@ -268,8 +268,23 @@ export function assemble(parsed: Reply, item: Intake, base: Omit<Where, 'page'>)
     return undefined;
   };
 
-  /** A page number survives only if the material really has that page. */
-  const pageOf = (n: unknown): number | undefined => {
+  /**
+   * A page number survives only if the material really has that page.
+   *
+   * For a PDF that is not enough. Its page numbers are not in the text the
+   * model reads (see `Extracted.pageUnit`), so any number it gives is a guess
+   * that merely lands on a page that exists — "page 4" of a twelve-page
+   * handout always checks out. A PDF page is therefore taken from the checked
+   * quote: the one page whose text contains it. No quote, or a quote that
+   * runs across a page break, and there is no page, whatever was claimed.
+   */
+  const pageOf = (n: unknown, quote?: string): number | undefined => {
+    if (item.pageUnit === 'page') {
+      if (!quote) return undefined;
+      const want = flatten(quote);
+      const on = (item.pages ?? []).filter((p) => flatten(p.text).includes(want));
+      return on.length === 1 ? on[0].page : undefined;
+    }
     if (typeof n !== 'number' || !Number.isInteger(n)) return undefined;
     return item.pages?.some((p) => p.page === n) ? n : undefined;
   };
@@ -291,14 +306,13 @@ export function assemble(parsed: Reply, item: Intake, base: Omit<Where, 'page'>)
   for (const c of parsed.cards ?? []) {
     if (typeof c?.q !== 'string' || typeof c?.a !== 'string' || !c.q.trim() || !c.a.trim()) continue;
     const card = { q: c.q.trim(), a: c.a.trim() };
+    const quote = checkQuote(c.quote, `a card about "${card.q.slice(0, 40)}"`);
     pieces.push({
       what: 'card',
       unit: unitName,
       card,
-      ...(checkQuote(c.quote, `a card about "${card.q.slice(0, 40)}"`)
-        ? { quote: checkQuote(c.quote, '') }
-        : {}),
-      where: where(pageOf(c.page)),
+      ...(quote ? { quote } : {}),
+      where: where(pageOf(c.page, quote)),
       // Hashed on the substance, not on the wording of the question, so the
       // same card arriving twice from two files is one card. See `merge.ts`.
       hash: hashOf(flatten(card.a)),
