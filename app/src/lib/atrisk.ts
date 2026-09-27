@@ -25,6 +25,8 @@
 import { budget, hasPolicy, readPolicy, tally, type Attended, type AttendPolicy } from './attend';
 import type { AtRisk } from './notify';
 import type { Block, CourseId } from './types';
+import { appLocale } from './locale';
+import { localClock } from './date';
 
 /**
  * How few absences must be left before a class is worth warning about.
@@ -37,6 +39,7 @@ export const WARN_AT = 1;
 
 /** "13:15" from minutes past midnight, in the app's own clock style. */
 export function clockOf(minutes: number): string {
+  if (appLocale()) return localClock(minutes);
   const h = Math.floor(minutes / 60);
   const m = minutes % 60;
   const hour = h % 12 === 0 ? 12 : h % 12;

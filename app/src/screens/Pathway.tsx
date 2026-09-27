@@ -8,6 +8,8 @@ import { ContextBar } from '../components/unity/ContextBar';
 import { safeUrl } from '../lib/apply';
 import { secondLine } from '../lib/dim';
 import { useDeviceLibrary } from '../lib/device-library';
+import { LEARNER_KEY, learnerPathwaysOn } from '../lib/learner-pathways';
+import { LearnerPathways } from '../components/LearnerPathways';
 import { download } from '../lib/deliver';
 import { fromMarkdown } from '../lib/document';
 import {
@@ -29,6 +31,7 @@ import {
   type Program,
 } from '../lib/pathway';
 import type { Screen } from '../lib/types';
+import { formatDateTime } from '../lib/locale';
 
 /**
  * The parts of a degree that outlast a term.
@@ -235,6 +238,19 @@ function Workspace({ storageKey }: { storageKey: string }) {
           >
             Create it
           </ActionButton>
+
+          {learnerPathwaysOn() && (
+            <LearnerPathways
+              storageKey={storageKey.replace('semester.pathway.v1', LEARNER_KEY)}
+              onStart={(kind) => {
+                const p = newPathwayProject(kind);
+                if (lib.update((old) => ({ ...old, projects: [p, ...old.projects] }))) {
+                  setProjectId(p.id);
+                  setTab('milestones');
+                }
+              }}
+            />
+          )}
 
           <SectionLabel
             aside={`${lib.value.programs.length} saved`}
@@ -932,7 +948,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
                   <ul style={{ margin: 'var(--sp-3) 0 0', paddingLeft: 'var(--sp-7)' }}>
                     {project.history.map((h, i) => (
                       <li key={i} style={{ ...line, paddingBlock: 'var(--sp-2)' }}>
-                        {new Date(h.at).toLocaleString()} · {h.message}
+                        {formatDateTime(h.at)} · {h.message}
                       </li>
                     ))}
                   </ul>

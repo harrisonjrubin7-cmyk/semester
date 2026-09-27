@@ -16,6 +16,7 @@ import {
   type Shed,
   type Shelf,
 } from '../lib/downloads';
+import { formatDate } from '../lib/locale';
 
 /**
  * What playing offline has cost, and the button that gives it back.
@@ -140,7 +141,7 @@ export function Downloads() {
             textWrap: 'pretty',
           }}
         >
-          Room was made on {new Date(shed.at).toLocaleDateString(undefined, { day: 'numeric', month: 'long' })}:{' '}
+          Room was made on {formatDate(shed.at, { day: 'numeric', month: 'long' })}:{' '}
           {shedLine(shed)} went, {size(shed.bytes)} in all. Playing any of them again downloads it
           again.
         </div>

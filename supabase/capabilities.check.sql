@@ -232,9 +232,11 @@ begin
   -- university_admin, one for incident_responder), and eight staff roles that
   -- answer help requests (the help_requests migration), and two from the
   -- governance registries (portfolio_council → governance:decide,
-  -- incident_responder → incident:communicate), and seven learner and
-  -- teaching roles → lti:launch (20260928015315_lti_launch_capability.sql), and five community rows.
-  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 87);
+  -- incident_responder → incident:communicate), seven learner and
+  -- teaching roles → lti:launch (20260928015315_lti_launch_capability.sql),
+  -- five community rows, and one from integration quality
+  -- (integration_admin → integration:reconcile).
+  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 88);
 
   perform pg_temp.become_anon();
   perform pg_temp.refused('a signed-out visitor cannot read the matrix',

@@ -30,6 +30,7 @@ import { EscalationItem, EscalationRequest } from '../components/community/Escal
 import { SafetyRead } from '../components/community/SafetyRead';
 import { IdentityCheck } from '../components/community/IdentityCheck';
 import { PostImage } from '../components/community/PostImage';
+import { formatDateTime } from '../lib/locale';
 
 const CATEGORY = Object.fromEntries(CATEGORY_TEXT);
 
@@ -81,7 +82,7 @@ const ACTIONS: [DecisionAction, string][] = [
 const MATCH_ACTIONS: DecisionAction[] = ['remove', 'rate_limit', 'community_restriction', 'account_restriction'];
 
 const when = (iso: string) =>
-  new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }).format(new Date(iso));
+  formatDateTime(new Date(iso), { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
 
 /**
  * The professional Trust & Safety console.

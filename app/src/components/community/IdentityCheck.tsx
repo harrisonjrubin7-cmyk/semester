@@ -10,10 +10,11 @@ import {
   type RevealedIdentity,
 } from '../../community/client';
 import { Trouble } from '../Trouble';
+import { formatDateTime } from '../../lib/locale';
 
 const CATEGORY = Object.fromEntries(CATEGORY_TEXT);
 const when = (iso: string) =>
-  new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }).format(new Date(iso));
+  formatDateTime(new Date(iso), { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
 
 /** A grant that is this reviewer's, approved, and not yet run out. */
 export function liveGrant(grants: IdentityGrant[], me: string, now: Date): IdentityGrant | undefined {

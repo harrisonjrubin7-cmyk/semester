@@ -53,7 +53,7 @@ import {
 } from '../lib/clocks';
 import { Folding } from '../components/Fold';
 // Day and month names come from `lib/date.ts`; see the note there.
-import { DAY_NAMES, DOW_INITIALS } from '../lib/date';
+import { weekdayInitialOf, weekdayLongOf } from '../lib/date';
 
 /**
  * The time, once a second, for as long as this screen is open.
@@ -370,7 +370,7 @@ function Alarms() {
       </div>
 
       <div style={{ display: 'flex', gap: 'var(--sp-3)', marginTop: 'calc(10px * var(--density, 1))', marginInline: '0', marginBottom: '0' }}>
-        {DOW_INITIALS.map((letter, d) => {
+        {[0, 1, 2, 3, 4, 5, 6].map(weekdayInitialOf).map((letter, d) => {
           const on = days.includes(d);
           return (
             <button
@@ -378,7 +378,7 @@ function Alarms() {
               type="button"
               className="bare tappable"
               aria-pressed={on}
-              aria-label={DAY_NAMES[d]}
+              aria-label={weekdayLongOf(d)}
               onClick={() => setDays(on ? days.filter((x) => x !== d) : [...days, d])}
               style={{
                 width: 34,

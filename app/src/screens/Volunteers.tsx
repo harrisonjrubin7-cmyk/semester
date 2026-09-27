@@ -21,12 +21,13 @@ import {
   type RosterEntry,
   type VolunteerEvent,
 } from '../community/client';
+import { formatDateTime } from '../lib/locale';
 
 const BLURB = 'Training, calibration and standing for student volunteer moderators, and the practice cases they calibrate on.';
 
 const when = (iso: string) =>
-  new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }).format(new Date(iso));
-const day = (iso: string) => new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric' }).format(new Date(iso));
+  formatDateTime(new Date(iso), { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+const day = (iso: string) => formatDateTime(new Date(iso), { month: 'short', day: 'numeric' });
 
 /** What a volunteer's row means, in the order a senior reviewer needs to act on it. */
 export function volunteerStage(v: RosterEntry): { order: number; text: string } {

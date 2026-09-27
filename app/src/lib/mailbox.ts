@@ -38,7 +38,8 @@
 
 import type { CourseId } from './types';
 // Day and month names come from `lib/date.ts`; see the note there.
-import { DOW, MONTHS } from './date';
+import { DOW, MONTHS, monthDay } from './date';
+import { appLocale, formatDate, formatDateTime, formatTime } from './locale';
 
 /**
  * The eight folders, which are the same eight in both clients.
@@ -581,6 +582,7 @@ function sameDay(a: Date, b: Date): boolean {
 
 /** `9:01 AM`, written out rather than left to a locale the suite cannot pin. */
 export function clockTime(d: Date): string {
+  if (appLocale()) return formatTime(d, { hour: 'numeric', minute: '2-digit' });
   const h = d.getHours();
   const hour = h % 12 === 0 ? 12 : h % 12;
   return `${hour}:${String(d.getMinutes()).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}`;
@@ -594,13 +596,17 @@ export function clockTime(d: Date): string {
 export function stamp(at: number, now: Date): string {
   const d = new Date(at);
   if (sameDay(d, now)) return clockTime(d);
-  if (d.getFullYear() === now.getFullYear()) return `${MONTHS[d.getMonth()]} ${d.getDate()}`;
+  if (d.getFullYear() === now.getFullYear()) return monthDay(d);
+  if (appLocale()) return formatDate(d, { year: '2-digit', month: 'numeric', day: 'numeric' });
   return `${d.getMonth() + 1}/${d.getDate()}/${String(d.getFullYear()).slice(2)}`;
 }
 
 /** The reader's line: `Thu, Sep 10, 2026, 9:01 AM`. */
 export function fullStamp(at: number): string {
   const d = new Date(at);
+  if (appLocale()) {
+    return formatDateTime(d, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+  }
   return `${DOW[d.getDay()]}, ${MONTHS[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}, ${clockTime(d)}`;
 }
 

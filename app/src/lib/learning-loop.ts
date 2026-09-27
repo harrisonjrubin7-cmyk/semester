@@ -1,5 +1,6 @@
 import { cardIdentity, type Reviews } from './review';
 import type { Guide, StudyMode } from './types';
+import { formatDate } from './locale';
 
 export type ConceptLearningState =
   | 'unseen'
@@ -86,7 +87,7 @@ export function courseLearningInput(
           at: review.seen,
           source: `${guide.source || 'Course material'} · ${unit.name}`,
           mistake: review.wrong > review.right ? ('recall-gap' as const) : undefined,
-          nextReview: new Date(review.due).toLocaleDateString(undefined, {
+          nextReview: formatDate(review.due, {
             month: 'short',
             day: 'numeric',
           }),

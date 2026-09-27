@@ -25,6 +25,7 @@ import {
   type FamilyItem,
   type FamilyMember,
 } from '../lib/family';
+import { formatDateTime } from '../lib/locale';
 
 /**
  * Deciding what a parent gets to see, item by item.
@@ -662,7 +663,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
                 .filter((h) => !selected || h.memberId === selected)
                 .map((h) => (
                   <li key={h.id} style={{ ...line, paddingBlock: 'var(--sp-2)' }}>
-                    {new Date(h.at).toLocaleString()} · {h.message}
+                    {formatDateTime(h.at)} · {h.message}
                   </li>
                 ))}
             </ul>

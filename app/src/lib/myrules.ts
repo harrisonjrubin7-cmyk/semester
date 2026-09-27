@@ -24,6 +24,8 @@
  */
 
 import type { DatedItem } from './types';
+import { appLocale } from './locale';
+import { localHourMark } from './date';
 
 /** What a rule watches. */
 export type Watches = 'deadline' | 'exam';
@@ -89,6 +91,7 @@ export function ruleLine(r: MyRule, courseCode?: (id: string) => string): string
       : `${r.days} ${r.days === 1 ? 'day' : 'days'} before`;
   const what = r.watches === 'exam' ? 'exam' : 'deadline';
   const whose = r.courseId ? `${courseCode?.(r.courseId) ?? r.courseId} ` : 'every ';
+  if (appLocale()) return `${when} ${whose}${what}, at ${localHourMark(r.hour)}.`;
   const h = r.hour % 12 === 0 ? 12 : r.hour % 12;
   const half = r.hour < 12 ? 'am' : 'pm';
   return `${when} ${whose}${what}, at ${h}${half}.`;

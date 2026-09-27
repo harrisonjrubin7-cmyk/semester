@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNow, useStore } from '../../state/store';
 import { Blueprint } from '../../components/Blueprint';
 import { capture, enough, readBack } from '../../lib/capture';
-import { isoToDate, longLabel } from '../../lib/date';
+import { isoToDate, longLabel, shownTime } from '../../lib/date';
 import { timeLabel } from '../../lib/drag';
 
 /**
@@ -93,7 +93,7 @@ export function AddHere({
         },
       });
     }
-    setSaid(`Added to ${when}${at === undefined ? '' : `, ${timeLabel(at)}`}.`);
+    setSaid(`Added to ${when}${at === undefined ? '' : `, ${shownTime(timeLabel(at), at)}`}.`);
     say(`Added · ${caught.title} on ${when}.`, 'calendar');
     setText('');
     box.current?.focus();
@@ -103,7 +103,7 @@ export function AddHere({
     <Blueprint style={{ padding: 'var(--sp-6) var(--sp-7)', marginTop: 'var(--sp-5)' }}>
       <div className="kicker">
         {when}
-        {at === undefined ? '' : ` · ${timeLabel(at)}`}
+        {at === undefined ? '' : ` · ${shownTime(timeLabel(at), at)}`}
       </div>
       <input
         ref={box}

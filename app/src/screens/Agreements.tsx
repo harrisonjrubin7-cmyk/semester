@@ -18,14 +18,15 @@ import {
   type AgreementDraft,
   type AgreementEvent,
 } from '../community/client';
+import { formatDateTime } from '../lib/locale';
 
 const CATEGORY = Object.fromEntries(CATEGORY_TEXT);
 const BLURB = 'Which universities have agreed to receive escalations of serious safety cases, and on what terms.';
 
 const day = (iso: string) =>
-  new Intl.DateTimeFormat(undefined, { year: 'numeric', month: 'short', day: 'numeric' }).format(new Date(`${iso.slice(0, 10)}T12:00:00`));
+  formatDateTime(new Date(`${iso.slice(0, 10)}T12:00:00`), { year: 'numeric', month: 'short', day: 'numeric' });
 const when = (iso: string) =>
-  new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }).format(new Date(iso));
+  formatDateTime(new Date(iso), { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
 
 /** YYYY-MM-DD, local. */
 const isoDay = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;

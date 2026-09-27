@@ -14,6 +14,7 @@ import {
   type QueuedReport,
   type ReportStatus,
 } from '../lib/moderation';
+import { formatDateTime } from '../lib/locale';
 
 /**
  * The trust-and-safety queue, for whoever the database says may read it.
@@ -79,7 +80,7 @@ export function ReportQueue({ account }: { account: Account | null }) {
         <article key={r.id} className="jx-entry">
           <div className="jx-entry-head">
             <span className={r.status === 'open' ? 'jx-tag jx-pri-required' : 'jx-tag'}>{STATUS_LABEL[r.status]}</span>
-            <span className="jx-tag">{r.createdAt ? new Date(r.createdAt).toLocaleString() : 'undated'}</span>
+            <span className="jx-tag">{r.createdAt ? formatDateTime(r.createdAt) : 'undated'}</span>
             {r.messageGone ? <span className="jx-tag">Message since deleted</span> : null}
           </div>
           <div className="jx-entry-title">{r.reason}</div>

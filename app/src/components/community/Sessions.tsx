@@ -9,9 +9,10 @@ import {
   type Venue,
 } from '../../community/client';
 import { ActionButton, Notice, SectionLabel } from '../ui';
+import { formatDateTime } from '../../lib/locale';
 
 const when = (iso: string) =>
-  new Intl.DateTimeFormat(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }).format(new Date(iso));
+  formatDateTime(new Date(iso), { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
 
 /**
  * Study sessions in one course or study-group community.

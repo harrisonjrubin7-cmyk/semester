@@ -29,7 +29,7 @@ import type { Catalog } from '../data/catalog';
 import { blocksFor } from '../data/catalog';
 import type { Commitment } from './activities';
 import { blocksOn, sharePerDay } from './activities';
-import { DOW, dateToIso, decorateItem } from './date';
+import { dateToIso, decorateItem, weekdayShort } from './date';
 import { lengthOf } from './select';
 import type { DoneMap } from './standing';
 import { weekShape, type WeekShape, type Window } from './windows';
@@ -198,7 +198,7 @@ export function week(input: WeekInput): Week {
 
     days.push({
       date,
-      name: DOW[date.getDay()],
+      name: weekdayShort(date),
       classes: round(classes),
       commitments: round(commitments),
       appointments,

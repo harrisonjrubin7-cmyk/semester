@@ -1,16 +1,7 @@
 import { blocksFor, classNote, codeOf, type Catalog } from '../data/catalog';
 import { occursOn } from './repeat';
 import { CAMPUS_CALENDARS } from '../data/events';
-import {
-  dateToIso,
-  daysBetween,
-  shiftIso,
-  decorateEvent,
-  decorateItem,
-  minutesNow,
-  sameDay,
-  untilLabel,
-} from './date';
+import { dateToIso, daysBetween, decorateEvent, decorateItem, minutesNow, sameDay, shiftIso, shownTime, untilLabel } from './date';
 import { blocksOn, type Commitment } from './activities';
 import { hasTime, readDue } from './duetime';
 import { CAMPUS_KIND } from './kinds';
@@ -163,7 +154,7 @@ export function feed(cat: Catalog, now: Date, done: Record<string, boolean>): Fe
       isClass: true,
       c: b.c,
       top: 'Today',
-      bottom: b.time,
+      bottom: shownTime(b.time, b.at),
       code: b.c ? codeOf(cat, b.c) : 'Campus',
       kind: b.optional ? 'Optional' : b.canceled ? 'Canceled' : 'Class',
       title: b.title,
