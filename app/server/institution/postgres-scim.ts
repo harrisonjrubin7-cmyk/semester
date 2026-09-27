@@ -20,7 +20,7 @@ import {
  * `20260924150142_institution_identity_provisioning.sql`.
  *
  * Every write goes through a definer function (reached by the service-role
- * wrappers in `20260927240000_scim_gateway.sql`), so every rule about a write
+ * wrappers in `20260928020000_scim_gateway.sql`), so every rule about a write
  * — tenant-bound credential, idempotent request id, a deactivation clearing
  * roles — lives in one place and is the one with a check suite. This file
  * translates between SCIM's shapes and that schema, and refuses in SCIM's
