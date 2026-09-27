@@ -3,6 +3,7 @@ import type { Account } from '../lib/cloud';
 import {
   CONTEXT_TEXT,
   FIELD_MAX,
+  IDENTITY_SENT,
   KIND_TEXT,
   NEEDS,
   NEVER_SENT,
@@ -38,6 +39,7 @@ export function GetHelp({ account }: { account: Account | null }) {
   const [needId, setNeedId] = useState<NeedId | null>(null);
   const [destinations, setDestinations] = useState<Destination[]>([]);
   const [requests, setRequests] = useState<SentRequest[]>([]);
+  const [myName, setMyName] = useState('');
   const [destinationId, setDestinationId] = useState('');
   const [draft, setDraft] = useState<Draft>(emptyDraft);
   const [confirming, setConfirming] = useState(false);
@@ -50,6 +52,7 @@ export function GetHelp({ account }: { account: Account | null }) {
       const next = await loadHelp();
       setDestinations(next.destinations);
       setRequests(next.requests);
+      setMyName(next.name);
     } catch (error) {
       setNotice(error instanceof Error ? error.message : 'Could not load where to get help.');
     }
@@ -185,11 +188,23 @@ export function GetHelp({ account }: { account: Account | null }) {
               )}
 
               <div aria-live="polite">
-                <SectionLabel aside={`${lines.length}`}>Exactly what will be sent</SectionLabel>
+                <SectionLabel aside={`${lines.length + (canSend ? IDENTITY_SENT.length : 0)}`}>Exactly what will be sent</SectionLabel>
+                {canSend && (
+                  <dl style={{ display: 'grid', gap: 'var(--sp-2)', margin: '0 0 var(--sp-3)' }} data-identity>
+                    {IDENTITY_SENT.map((f) => (
+                      <div key={f.key}>
+                        <dt style={{ fontWeight: 600 }}>{f.label} <span style={{ fontWeight: 400, color: 'var(--app-dim)' }}>(always included, so the office can reach you)</span></dt>
+                        <dd style={{ margin: 0 }}>
+                          {f.key === 'email' ? account?.email || 'Your account email' : myName || 'Your Semester display name'}
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+                )}
                 {lines.length === 0 ? (
                   <p style={{ color: 'var(--app-dim)' }}>Nothing yet. Write your question above.</p>
                 ) : (
-                  <dl style={{ display: 'grid', gap: 'var(--sp-2)', margin: 0 }}>
+                  <dl style={{ display: 'grid', gap: 'var(--sp-2)', margin: 0 }} data-lines>
                     {lines.map((l) => (
                       <div key={l.key}>
                         <dt style={{ fontWeight: 600 }}>{l.label}</dt>

@@ -68,6 +68,8 @@ describe('the staff help inbox', () => {
   it('opens, shows exactly what was shared, and schedules with a reply', async () => {
     mock.load.mockResolvedValue([INBOX]);
     mock.open.mockResolvedValue({
+      studentName: 'harrison_r',
+      studentEmail: 'h.rubin@example.edu',
       question: 'Which statistics course fits?',
       context: { requirement: 'Statistics before PSY 340' },
       status: 'sent',
@@ -75,7 +77,11 @@ describe('the staff help inbox', () => {
     });
     mock.answer.mockResolvedValue(undefined);
     await act(async () => root.render(<HelpInbox account={ME} />));
+    // Before opening, nobody is named.
+    expect(host.textContent).not.toContain('h.rubin@example.edu');
     await act(async () => button(/student will see this/i)!.click());
+    expect(host.querySelector('dl')?.textContent).toContain('Fromharrison_r · h.rubin@example.edu');
+    expect(host.querySelector('a[href="mailto:h.rubin@example.edu"]')).toBeTruthy();
 
     expect(mock.open).toHaveBeenCalledWith('req-1');
     const shown = host.querySelector('dl')?.textContent ?? '';

@@ -38,9 +38,10 @@ const MOVE_TEXT: Record<RequestStatus, string> = {
  *
  * The list is statuses and times. A request's words appear only after
  * **Open**, and the button says beforehand that the student will see it was
- * opened. There is no name on a request: the student's confirm screen listed
- * exactly what would be sent, and who they are was not on it. The reply goes
- * back through the app, where the student reads it beside their question.
+ * opened. The opened request names the student and their confirmed email,
+ * because their confirm screen listed both as always sent (`IDENTITY_SENT`);
+ * the list before it names nobody. The reply goes back through the app, where
+ * the student reads it beside their question.
  */
 export function HelpInbox({ account }: { account: Account | null }) {
   const [inboxes, setInboxes] = useState<StaffInbox[]>([]);
@@ -80,8 +81,9 @@ export function HelpInbox({ account }: { account: Account | null }) {
           Help requests sent to you
         </h2>
         <p style={{ color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed-plus)' }}>
-          Each request holds only what the student wrote and chose to include. Opening one is recorded,
-          and the student sees that it was opened. Replies go back to them here.
+          Each request holds the student's name and university email, and otherwise only what they
+          wrote and chose to include. Opening one is recorded, and the student sees that it was opened.
+          Replies go back to them here.
         </p>
       </div>
 
@@ -112,6 +114,15 @@ export function HelpInbox({ account }: { account: Account | null }) {
                 ) : (
                   <>
                     <dl style={{ display: 'grid', gap: 'var(--sp-2)', margin: 0 }}>
+                      <div>
+                        <dt style={{ fontWeight: 600 }}>From</dt>
+                        <dd style={{ margin: 0 }}>
+                          {open.studentName || 'A student'}
+                          {open.studentEmail && (
+                            <> · <a href={`mailto:${open.studentEmail}`}>{open.studentEmail}</a></>
+                          )}
+                        </dd>
+                      </div>
                       <div>
                         <dt style={{ fontWeight: 600 }}>Question</dt>
                         <dd style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{open.question}</dd>

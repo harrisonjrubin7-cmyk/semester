@@ -98,7 +98,7 @@ declare
   student uuid; classmate uuid; other_school uuid; advisor uuid; tutor uuid;
   implementer uuid; stranger_staff uuid;
   advising uuid; tutoring uuid; aid uuid; elsewhere uuid;
-  req uuid; req2 uuid; n bigint; q text; ctx jsonb;
+  req uuid; req2 uuid; n bigint; q text; ctx jsonb; who_name text; who_email text;
 begin
   insert into public.schools (id, name, email_domains) values
     ('help-u', 'Help University', array['help-u.example']),
@@ -212,12 +212,26 @@ begin
   perform pg_temp.counted('before anyone opens it, the student sees one event',
     pg_temp.seen(student, 'select * from public.help_request_events'), 1);
   perform pg_temp.become(advisor);
-  select o.question, o.shared_context into q, ctx from public.open_help_request(req) o;
+  select o.question, o.shared_context, o.student_name, o.student_email
+    into q, ctx, who_name, who_email from public.open_help_request(req) o;
   reset role;
   if q <> 'Which statistics course fits my plan?' or ctx ->> 'course' <> 'PSY 340' then
     raise exception 'FAILED: the advisor did not receive what the student wrote';
   end if;
   raise notice 'ok  the advisor opens exactly what the student sent';
+  if who_email is distinct from 'student@help-u.example' or who_name is distinct from 'student' then
+    raise exception 'FAILED: the open did not carry the confirmed identity (got %, %)', who_name, who_email;
+  end if;
+  raise notice 'ok  and who sent it: display name and the confirmed email';
+  perform pg_temp.counted('the inbox list still carries no identity',
+    (select count(*) from pg_proc p, unnest(p.proargnames) a(name)
+      where p.proname = 'help_inbox' and p.pronamespace = 'public'::regnamespace
+        and a.name like 'student%'), 0);
+  -- The probe, pointed at what it should see: open_help_request does carry it.
+  perform pg_temp.counted('while open_help_request does, so the probe can see it',
+    (select count(*) from pg_proc p, unnest(p.proargnames) a(name)
+      where p.proname = 'open_help_request' and p.pronamespace = 'public'::regnamespace
+        and a.name like 'student%'), 2);
   perform pg_temp.counted('and the student sees that open',
     pg_temp.seen(student, $q$select * from public.help_request_events where kind = 'opened'$q$), 1);
   perform pg_temp.expect_refused('the tutor opens an advising request', tutor,
