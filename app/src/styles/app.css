@@ -8480,6 +8480,38 @@ section[data-drop] > .grip + * {
   margin: var(--sp-5) 0 var(--sp-3);
 }
 
+/* ── Semester Wrapped (semester_wrapped, Phase L) ─────────────────────── */
+
+.wrapped {
+  margin-bottom: var(--sp-7);
+}
+
+.wrapped-term {
+  max-width: 16rem;
+  margin: var(--sp-3) 0;
+}
+
+.wrapped-list {
+  margin: 0 0 var(--sp-4);
+  padding-left: var(--sp-6);
+}
+
+.wrapped-list li {
+  margin-bottom: var(--sp-2);
+}
+
+.wrapped-sub {
+  margin: var(--sp-4) 0 var(--sp-2);
+  font-weight: 600;
+}
+
+.wrapped-preview {
+  margin: 0 0 var(--sp-4);
+  white-space: pre-wrap;
+  font-family: inherit;
+  font-size: var(--type-sm);
+}
+
 /* BL-1.4's Action Center, when it sits in a Phase B panel rather than in the
    #761 card whose `.today-decision-surface` rules it was drawn against. */
 .action-panel .action-center h2 {

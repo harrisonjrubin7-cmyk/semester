@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { Suspense, lazy, useState } from 'react';
+import { MODULE_FLAGS, moduleOn } from '../lib/experience-flags';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { useRowStyle } from '../components/shell/useShell';
@@ -14,6 +15,9 @@ import type { CourseModule } from '../lib/types';
 import { cardIdentity } from '../lib/review';
 import { TypeToConfirm } from '../components/TypeToConfirm';
 import { You } from './me/You';
+
+// A private recap of the term (Phase L), above the You tab's own content.
+const SemesterWrapped = lazy(() => import('../components/SemesterWrapped').then((m) => ({ default: m.SemesterWrapped })));
 
 /**
  * The shelves, in the order they read: what you study, what you make with it,
@@ -100,7 +104,7 @@ export function CourseRow({ module: c }: { module: CourseModule }) {
   );
 }
 
-export function Me() {
+export function Me({ semesterWrapped = moduleOn(MODULE_FLAGS.semester_wrapped) }: { semesterWrapped?: boolean } = {}) {
   const { state, dispatch } = useStore();
 
   const tab = state.meTab;
@@ -158,6 +162,11 @@ export function Me() {
         style={{ marginBottom: 'var(--sp-7)' }}
       />
 
+      {tab === 'you' && semesterWrapped ? (
+        <Suspense fallback={null}>
+          <SemesterWrapped />
+        </Suspense>
+      ) : null}
       {tab === 'you' && <You />}
 
       {/*
