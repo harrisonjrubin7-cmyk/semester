@@ -1,3 +1,4 @@
+import { CampusDirectory } from '../components/CampusDirectory';
 import { useState } from 'react';
 import { useStore } from '../state/store';
 import { useRowStyle } from '../components/shell/useShell';
@@ -321,6 +322,11 @@ export function Links() {
             These open the system itself — the app on a phone that recognises the address, the site
             otherwise. None of them expose an API a student can use alone, so the app links out rather
             than pretending to read them. Correct any address here and the correction is what sticks.
+          </div>
+
+          {/* Who to ask and where they are, from the school's own directory. See `lib/campusdirectory.ts`. */}
+          <div style={{ marginTop: 'var(--sp-7)' }}>
+            <CampusDirectory kind="departments" />
           </div>
         </>
     </Page>

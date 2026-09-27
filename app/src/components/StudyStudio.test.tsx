@@ -27,6 +27,12 @@ it('regenerates only the chosen section and saves a course-linked editable docum
  await prepare();mock.ask.mockResolvedValue(JSON.stringify({sections:[result('Revised first','Revised body [unit-0].')]}));await press('Regenerate this section');expect(host.textContent).toContain('Second section');expect(host.textContent).toContain('Revised first');
  await press('Save & open in Write');const action=mock.dispatch.mock.calls.find(([a])=>a.type==='makeDocument')?.[0];expect(action).toMatchObject({type:'makeDocument',open:true,doc:{courseId:'econ'}});expect(JSON.stringify(action)).toContain('Keep this other section unchanged');
 });
+it('saves each citation to Write as a quotation with its source, and no internal ids',async()=>{
+ await prepare();await press('Save & open in Write');
+ const doc=mock.dispatch.mock.calls.find(([a])=>a.type==='makeDocument')?.[0].doc;
+ expect(doc.blocks).toContainEqual({kind:'quote',text:'The value of the next best alternative.',source:expect.stringMatching(/^\[1\] Opportunity cost · Prepared course guide/)});
+ expect(JSON.stringify(doc.blocks)).not.toContain('unit-0');
+});
 it('keeps existing sections when regenerated citations cannot be verified',async()=>{
  await prepare();mock.ask.mockResolvedValue(JSON.stringify({sections:[{...result(),citations:[{sourceId:'unit-0',quote:'This invented quotation cannot be verified.'}]}]}));await press('Regenerate this section');expect(host.textContent).toContain('First section');expect(host.textContent).toContain('Second section');expect(host.textContent).toContain('could not be verified');
 });
