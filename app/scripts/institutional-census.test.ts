@@ -15,7 +15,7 @@ describe('institutional census', () => {
   it('finds every registered destination and every accounted screen', async () => {
     const result = await census(new URL('../src/', import.meta.url));
 
-    expect(result.destinations.count).toBe(59);
+    expect(result.destinations.count).toBe(63);
     expect(result.screens.unaccounted).toEqual([]);
     expect(result.migrations.duplicateVersions).toEqual([]);
     expect(result.evidence.every((row) => row.path && row.sha256)).toBe(true);
