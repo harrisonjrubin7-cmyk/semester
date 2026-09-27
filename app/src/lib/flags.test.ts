@@ -24,7 +24,7 @@ const DASHBOARD_ON: FlagContext['tenantPolicy'] = {
 
 const LTI_LIVE: Partial<FlagContext> = {
   tenantPolicy: {
-    'integration.canvas_lti': { state: 'production' },
+    'integration.lms_lti': { state: 'production' },
     'scope.lms.assignment_dates_read': { state: 'production' },
   },
   connection: { publicId: 'conn_0123456789abcdef0123', approved: true, status: 'healthy' },

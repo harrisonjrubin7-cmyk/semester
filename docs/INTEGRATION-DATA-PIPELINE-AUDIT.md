@@ -8,7 +8,7 @@ credentials, a contract or a sandbox, and no provider endpoint has been exercise
 
 | Path | What it does | Through the new gateway? |
 | --- | --- | --- |
-| Brightspace LTI 1.3 (`functions/lti`, `_shared/lti*.ts`, `lti_platform`, `lti_identity`, `lti_line_item`) | Launch, account linking, deep linking, and **score passback** for instructor-graded links | No. Candidate for Phase 4 binding; see D-1 |
+| Brightspace LTI 1.3 (`functions/lti`, `_shared/lti*.ts`, `lti_platform`, `lti_identity`, `lti_line_item`) | Launch, account linking, deep linking, and **score passback** for instructor-graded links | Partly: a registration can be bound to a school and connection (Phase 4); passback is then gated and launches record course context. Unbound registrations behave as before |
 | SAML / SCIM (`institution_identity_provider`, `institution_membership`, `scim_*`, `app/server/institution/scim.ts`) | School-controlled identity and provisioning state | No. Identity is upstream of tenancy |
 | University gateway (`app/server/institution`, `app/api/institution`) | Records/actions contract, journal, rate limits; **adapter registry empty**; sandbox institution | Separate; its adapters should declare the same contract |
 | Student Canvas token (`functions/canvas`) | A student's own token reading their own Canvas | No, by design (student credential) |
@@ -37,7 +37,7 @@ Columns follow the command. Common values, to keep the table readable:
 | sis | Banner / PeopleSoft CS / Workday Student / Jenzabar | incremental API, batch | vendor REST / Ethos; batch file | requires tenant/provider verification | term, program, section, enrollment, registration window, hold summary → same | designed, not built | term code formats; section id reuse across terms; enrollment status enums | term code → canonical; status enum map | read | hourly–daily | 24 h | T3 | yes (enrollment) | Registrar | Registrar / SIS | `integration.sis_read` |
 | degree_audit | uAchieve / Stellic / custom | API, on demand | vendor API | requires verification | requirement → academic_requirement | not started | requirement tree shapes differ by vendor | flatten to requirement + status | read | daily / on demand | 24 h | T3 | yes | Registrar | Degree audit system | `integration.degree_audit_read` |
 | catalog | SIS catalog / scheduling | incremental API, batch | vendor / public feed | requires verification | catalog entry, section meeting → course_catalog_entry, course_section | not started | cross-listing; meeting time formats | ISO times, cross-list groups | read | daily | 24 h | T0 | no | Registrar | Registrar catalog | `integration.sis_read` |
-| lms | Canvas / Brightspace / Blackboard / Moodle / D2L | LTI launch, webhook, API | LTI 1.3 / Advantage (NRPS **not** requested; AGS see D-1) | launch; assignment updated | course → lms_context; assignment → assignment; policy → course_policy | **mock adapter + contract test** | due date time zones; unpublished vs deleted; enum drift | ISO UTC; enum map | read | event / daily | 24 h | T1 (T3 for personal) | yes | Academic technology | LMS | `integration.canvas_lti` |
+| lms | Canvas / Brightspace / Blackboard / Moodle / D2L | LTI launch, webhook, API | LTI 1.3 / Advantage (NRPS **not** requested; AGS see D-1) | launch; assignment updated | course → lms_context; assignment → assignment; policy → course_policy | **mock adapter + contract test** | due date time zones; unpublished vs deleted; enum drift | ISO UTC; enum map | read | event / daily | 24 h | T1 (T3 for personal) | yes | Academic technology | LMS | `integration.lms_lti` |
 | advising | EAB Navigate / Starfish / custom | incremental API | vendor API | requires verification | appointment, referral → same | not started | appointment status enums | enum map | read | near real time | 60 min | T3 | yes | Advising office | Advising system | `integration.advising_crm` |
 | admissions_crm | Slate / Salesforce EDU | batch | vendor API / export | requires verification | admitted status → student_program | not started | — | — | read | daily | 24 h | T3 | yes | Admissions | Admissions CRM | none yet |
 | career | Handshake / 12twenty | incremental API | vendor API | requires verification | job, internship, event → same | not started | posting expiry | — | read | daily | 24 h | T1 | no | Career office | Career platform | `integration.career` |
@@ -52,7 +52,7 @@ Columns follow the command. Common values, to keep the table readable:
 
 ## Gaps this audit found
 
-1. **Grade passback bypasses the flag system** (D-1 in the migration plan).
+1. **Grade passback bypassed the flag system** — closed for bound registrations in Phase 4 (D-1).
 2. **The university gateway's adapter contract and the new adapter declaration are separate shapes.** Real
    adapters should satisfy both; converging them is Phase 4–5 work.
 3. **No worker exists** to run the pipeline against the tables; sync runs, dead letters and freshness events are

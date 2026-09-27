@@ -25,6 +25,8 @@ kill switches · the classification floor.
 | T10 | A kill switch engaged by the wrong person, or without a reason | Global needs `killswitch:engage` over the platform (only `incident_responder`); school rows over the school; engaged needs a reason | check: "a university admin engaging a global switch", "a switch engaged without a reason" |
 | T11 | Stale or estimated data shown as official | `isOfficialCurrent` only for connected sources at live/recent; UI sentence says "Not the official current record" | `pipeline.test.ts`: freshness |
 | T12 | A provider sends an older version and overwrites a newer one | Timestamp regression refused | test: "refuses an older version" |
+| T14 | Grades posted to an LMS a school has not approved, or during an incident | `lti_passback_decision` before any signing: kill switches, both flags in production, approved write-direction healthy connection, approved unexpired `scope.lms.score_publish` | `lti-integration.check.sql` (32 checks; five deliberate breaks each turn it red) |
+| T15 | A launch records who launched | `lti_record_context` stores the context id only, tenant-wide T0, no subject | check: "tenant-wide, T0, LMS as source of truth" |
 | T13 | A mock adapter mistaken for a real connector | `mock: true` in the declaration; named "Mock LMS"; not in any registry | review |
 
 ## Residual risks
@@ -35,6 +37,6 @@ kill switches · the classification floor.
   wrong connection. A code review gate on the worker is required.
 - **Webhook signature validation** is provider-specific and not yet implemented; the worker must verify before
   claiming the idempotency key.
-- **Grade passback** (existing) is outside the flag system — migration plan D-1.
+- **Grade passback on unbound registrations** remains instructor-gated and stoppable only by global kill switches until each registration is bound (D-1). The Edge Function reads a *missing* gate function as "unbound" during a deploy window; any other error refuses.
 - **`tenant_policy_audit_event` stores old/new rows as JSON.** Integration rows are stripped of the credential
   pointer and cursor; other columns (names, scope keys) are configuration, not student data.

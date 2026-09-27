@@ -65,7 +65,18 @@ any view (a detail panel rendering the whole row turned it red, after the test w
 while it is on screen). Pause needs a reason and a second press. A database refusal is shown as a refusal.
 Load failure shown as an alert.
 
+## LTI binding — `supabase/lti-integration.check.sql` (32 checks), `app/src/lib/ltigate.test.ts`
+
+Only the service role may call either function. Unbound registration keeps passback; a global stop reaches it; a
+school's stop does not. Bound: each gate in order (module, flag, preview ≠ production, approval, configuring,
+read-only direction, scope missing, scope expired) and then all open; school, other school's, and connection kill switches; paused;
+flag off as rollback. A launch records one tenant-wide T0 context reference (re-launch updates it), moves the
+connection to healthy, and records nothing when unbound, paused or stopped. The binding cannot name a
+connection without its school, or another school's connection. Five deliberate breaks of the migration
+(unbound before the global stop, scope check removed, preview accepted, paused still recording, connection stop
+ignored) each turned it red. The TypeScript reader covers every word the SQL can return, the deploy-window
+case, closing on other errors, and that `/score` asks before it signs or fetches.
+
 ## Not yet covered (later phases)
 
-Worker against a live database; webhook signature validation; reconciliation job; retention jobs; LTI binding to
-connections; SIS/degree-audit mocks; phone/tablet screenshots of the dashboard in a real browser; device matrix.
+Worker against a live database; webhook signature validation; reconciliation job; retention jobs; SIS/degree-audit mocks; tablet screenshots and a full device matrix (phone and desktop were driven in Chromium).

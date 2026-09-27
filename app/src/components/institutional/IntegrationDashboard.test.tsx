@@ -17,7 +17,7 @@ const DATA: DashboardData = {
     status: 'degraded', authentication_type: 'lti_1_3', data_classification_ceiling: 'T1',
     sync_mode: 'webhook', sync_direction: 'read', freshness_target: '1 day',
     last_successful_sync_at: '2026-09-27T09:00:00Z', last_error_at: '2026-09-27T11:00:00Z',
-    feature_flag_key: 'integration.canvas_lti', owner_account_id: 'u-owner',
+    feature_flag_key: 'integration.lms_lti', owner_account_id: 'u-owner',
     approved_at: '2026-09-20T00:00:00Z', paused_reason: null,
   }],
   scopes: [{ connection_id: 'c1', scope_key: 'scope.lms.assignment_dates_read', approved: true, expires_at: null }],

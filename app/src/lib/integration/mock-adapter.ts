@@ -30,7 +30,7 @@ export const MOCK_LMS: AdapterDeclaration = {
   degradedStates: ['provider_unavailable', 'rate_limited', 'stale'],
   disconnect: 'revoke_token',
   auditEvents: ['connection.approved', 'scope.approved', 'sync.paused', 'sync.resumed', 'replay.requested'],
-  featureFlag: 'integration.canvas_lti',
+  featureFlag: 'integration.lms_lti',
   killSwitch: 'kill.integration_sync',
   contractTests: ['app/src/lib/integration/pipeline.test.ts'],
   mock: true,

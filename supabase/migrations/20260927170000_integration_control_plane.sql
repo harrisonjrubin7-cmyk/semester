@@ -11,7 +11,7 @@
 --
 --   * tenant feature flags and module entitlements are rows in the existing
 --     `public.tenant_feature_policy` (keys such as `module.integration_dashboard`
---     or `integration.canvas_lti`), read through `public.feature_state`. The
+--     or `integration.lms_lti`), read through `public.feature_state`. The
 --     metadata a flag needs — owner, review date, expiry, rollback — lives in
 --     `app/src/lib/flags.ts`, where a test holds every key to it.
 --   * consent is the existing `public.consent_record`, with a capability of

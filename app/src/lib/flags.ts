@@ -123,7 +123,7 @@ export const FLAGS: readonly FlagDefinition[] = [
 
   // ── Connectors (every one high-risk) ────────────────────────────────────
   ...([
-    ['integration.canvas_lti', 'Canvas through LTI 1.3 / LTI Advantage: launch context and assignment dates only.'],
+    ['integration.lms_lti', 'Any LMS through LTI 1.3 / LTI Advantage (Brightspace today): launch context and assignment dates only.'],
     ['integration.sis_read', 'Student information system, read-only: term, program, section, enrollment, registration window.'],
     ['integration.degree_audit_read', 'Degree audit, read-only: requirement status with the audit system named as source.'],
     ['integration.advising_crm', 'Advising CRM: appointment times and referral actions for the student themselves.'],
@@ -155,10 +155,10 @@ export const FLAGS: readonly FlagDefinition[] = [
     key: 'scope.lms.assignment_dates_read',
     description: 'Read assignment titles and due dates to place them on Today and Plan.',
     type: 'scope', owner: 'Integrations', scopes: ['tenant', 'course'], highRisk: true, reviewAt: REVIEW,
-    rollout: 'After integration.canvas_lti is live, one course at a time.',
+    rollout: 'After integration.lms_lti is live, one course at a time.',
     successCriteria: 'Due dates match the LMS; stale dates are labelled stale.',
     rollback: 'Set off and withdraw the scope.',
-    killSwitches: ['kill.integration_sync'], module: 'integration.canvas_lti', needsConnection: true,
+    killSwitches: ['kill.integration_sync'], module: 'integration.lms_lti', needsConnection: true,
     needsScopes: ['scope.lms.assignment_dates_read'], destination: 'semester',
   }),
   flag({
@@ -191,7 +191,7 @@ export const FLAGS: readonly FlagDefinition[] = [
     rollout: 'Not before an instructor opts a single assignment in.',
     successCriteria: 'n/a until approved.',
     rollback: 'Engage kill.writeback.',
-    killSwitches: ['kill.writeback', 'kill.integration_sync'], module: 'integration.canvas_lti',
+    killSwitches: ['kill.writeback', 'kill.integration_sync'], module: 'integration.lms_lti',
     needsConnection: true, needsScopes: ['scope.lms.score_publish'],
   }),
 

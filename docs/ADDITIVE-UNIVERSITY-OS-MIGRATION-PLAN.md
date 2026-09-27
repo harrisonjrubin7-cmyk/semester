@@ -39,20 +39,54 @@ than copied — two stores for one fact is the failure this repository's audits 
 | 1 — Control plane | Migration `20260927170000_integration_control_plane.sql`, capabilities, RLS, `flags.ts`, `classification.ts`, check suite | **Done** |
 | 2 — Gateway core | `app/src/lib/integration/`: adapter contract, pipeline, idempotency, retry/back-off/DLQ, rate limit, redaction, freshness, mock provider, contract tests | **Done** (library; no worker deployed) |
 | 3 — Dashboard | `IntegrationDashboard.tsx`: map + equivalent table, connections, mappings, sync history, conflicts, pause/resume, replay request, export | **Done**, behind `VITE_INTEGRATION_DASHBOARD` and the tenant flags |
-| 4 — LTI foundation | Largely **already exists**: `supabase/functions/lti`, `_shared/lti*.ts`, `lti_*` tables and suites | Next: bind LTI launches to `integration_connections` and D-1 below |
+| 4 — LTI foundation | Launch, OIDC/JWT validation, deep linking and AGS **already existed**. Added: `20260927180000_lti_integration_binding.sql` binds an `lti_platform` to a school and a connection, gates passback in the database, records each launch's course context; `_shared/ltigate.ts`; `lti-integration.check.sql` (32 checks) | **Done** |
 | 5 — SIS / degree audit read | Mock adapters for term, program, section, enrollment, requirement, window, hold summary; freshness cards | Not started |
 | 6 — CRM / ERP / campus | Mock adapters and student workflows | Not started |
 | 7 — Hardening | Worker, reconciliation job, retention jobs, device matrix, operator runbooks | Not started |
 
 ## Decisions that need a person
 
-**D-1. Existing grade passback is outside the new gate.** `supabase/functions/lti` posts practice-quiz scores to a
-Brightspace gradebook column when an instructor placed the link as graded. That is instructor-gated and has
-been since 22 September. The command wants passback off by default behind tenant, instructor, course and
-assignment approval. Putting `writeback.lms_grade_passback` in front of it would switch off working behaviour
-for any school that has not set the flag. Options: (a) leave it, documented, as the instructor-gated exception;
-(b) gate it and backfill a `production` policy row for every tenant with an LTI platform; (c) gate it and let
-it go dark. Recommendation: (b), in its own change, with the backfill as a migration.
+**D-1. Existing grade passback — resolved in Phase 4.** `supabase/functions/lti` posts practice-quiz scores to a
+Brightspace gradebook column when an instructor placed the link as graded, and has since 22 September. A
+backfill (the earlier recommendation) turned out to be impossible: `lti_platform` named no school, so there was
+no tenant to backfill a policy row for. What shipped instead keeps the behaviour and puts the gate where the
+school becomes known:
+
+- **Unbound registration** (every one today): passback as before, except a **global** `kill.writeback` or
+  `kill.integration_sync` now stops it too.
+- **Bound registration**: `integration.lms_lti` and `writeback.lms_grade_passback` in `production`, an
+  approved write-direction connection that is healthy or degraded, `scope.lms.score_publish` approved and unexpired, and no
+  kill switch for the school or the connection. The instructor's graded placement is still required on top —
+  that is the course-and-assignment approval the command asks for.
+
+The gate is `public.lti_passback_decision`, called by `/score` before anything is signed. While the Edge Function
+is deployed ahead of the migration, a *missing* function is read as the unbound answer so passback does not go
+dark for a deploy window; any other error refuses.
+
+### Binding a registration (operator, SQL)
+
+There is no screen for this yet; it is a deliberate, reviewed change per school.
+
+```sql
+-- 1. the connection (born disconnected), as someone with integration:configure
+insert into public.integration_connections (tenant_id, provider_domain, provider_name, connection_name,
+  authentication_type, sync_mode, feature_flag_key)
+values ('<school>', 'lms', 'Brightspace', 'Brightspace LTI', 'lti_1_3', 'lti_launch', 'integration.lms_lti');
+-- 2. approve it (a different person, integration:approve)
+select public.integration_approve_connection('<conn public id>', 'approved_write');
+-- 3. if the school uses passback: the scope, approved, and both flags in production
+insert into public.integration_scopes (tenant_id, connection_id, scope_key, scope_type, purpose)
+values ('<school>', '<conn id>', 'scope.lms.score_publish', 'write', 'Practice-quiz scores to the instructor''s column');
+select public.integration_approve_scope('<scope id>');
+insert into public.tenant_feature_policy (tenant_id, capability, state) values
+  ('<school>', 'integration.lms_lti', 'production'), ('<school>', 'writeback.lms_grade_passback', 'production');
+-- 4. bind (service role / migration; lti_platform has no API grants)
+update public.lti_platform set tenant_id = '<school>', connection_id = '<conn id>'
+ where issuer = '<issuer>' and client_id = '<client>';
+```
+
+Do step 3 **before** step 4 for a school that relies on passback, or its scores stop at the moment of binding.
+The next student launch records the course context and moves the connection to `healthy`.
 
 **D-2. Student-initiated connections.** The Canvas personal-token proxy (`functions/canvas`) and pasted calendar
 feeds (`functions/fetchcal`) are the student's own credentials reading the student's own data. They are not

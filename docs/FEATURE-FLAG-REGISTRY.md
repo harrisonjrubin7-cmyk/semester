@@ -44,7 +44,7 @@ Every flag: default **off**, created 2026-09-27, review 2026-12-15, runbook belo
 | `module.integration_dashboard` | module | Integrations | no | tenant, role | — | Set off; read-only screen. |
 | `module.source_freshness_cards` | module | Student experience | no | tenant | — | Set off; cards show student-entered data as today. |
 | `release.integration_dashboard_v1` | release | Integrations | no | environment, tenant | 2027-03-01 | Set off. |
-| `integration.canvas_lti` | connector | Integrations | **yes** | tenant | — | Connection kill switch, flag off, disconnect. |
+| `integration.lms_lti` | connector | Integrations | **yes** | tenant | — | Connection kill switch, flag off, disconnect. |
 | `integration.sis_read` | connector | Integrations | **yes** | tenant | — | Same. |
 | `integration.degree_audit_read` | connector | Integrations | **yes** | tenant | — | Same. |
 | `integration.advising_crm` | connector | Integrations | **yes** | tenant | — | Same. |
@@ -66,13 +66,13 @@ Every flag: default **off**, created 2026-09-27, review 2026-12-15, runbook belo
 
 Rollout plans and success criteria for each are in `flags.ts` beside the key.
 
-### Grade passback already exists and is not behind this flag
+### Grade passback and this flag
 
-`supabase/functions/lti` already posts practice-quiz scores to a Brightspace gradebook column when an
-instructor placed the Semester link as a *graded* item (`20260922003500_lti_line_item.sql`,
-`_shared/ltiags.ts`). The instructor's placement is its gate. `writeback.lms_grade_passback` does **not** yet
-govern that path: wiring it in would change working behaviour, which this additive work may not do without a
-decision. See `docs/ADDITIVE-UNIVERSITY-OS-MIGRATION-PLAN.md`, decision D-1.
+`writeback.lms_grade_passback` governs the existing Brightspace score passback (`functions/lti`, `/score`) for any
+LTI registration **bound to a school**, through `public.lti_passback_decision`, which the SQL suite
+`lti-integration.check.sql` walks gate by gate. A registration not yet bound keeps the pre-existing behaviour
+(instructor-gated), stopped only by the global `kill.writeback` / `kill.integration_sync`. See the migration
+plan, D-1, for why and for the binding steps.
 
 ## Kill switches
 
