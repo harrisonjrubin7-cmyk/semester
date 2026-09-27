@@ -50,6 +50,8 @@ Every flag: default **off**, created 2026-09-27, review 2026-12-15, runbook belo
 | `module.integration_dashboard` | module | Integrations | no | tenant, role | — | Set off; read-only screen. |
 | `module.institutional_operations` | module | Institutional research | no | tenant, role | — | Set off; drafts stay on the analyst's device, nothing server-side to undo. Needs `outcomes:read`. |
 | `module.source_freshness_cards` | module | Student experience | no | tenant | — | Set off; the Today section disappears. The Privacy panel is not behind this flag. |
+| `module.campaign_manager` | module | Growth | **yes** | tenant, role | — | Set off; sends stop at the next decision. `kill.sharing`. See [docs/gtm](gtm/EXECUTION-PLAN.md). |
+| `module.sponsorship` | module | Trust & Safety | **yes** | tenant | — | Set off; placements disappear. `kill.sharing`. |
 | `release.integration_dashboard_v1` | release | Integrations | no | environment, tenant | 2027-03-01 | Set off. |
 | `integration.lms_lti` | connector | Integrations | **yes** | tenant | — | Connection kill switch, flag off, disconnect. |
 | `integration.sis_read` | connector | Integrations | **yes** | tenant | — | Same. |
