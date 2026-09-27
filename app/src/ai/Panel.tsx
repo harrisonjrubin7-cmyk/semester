@@ -653,11 +653,11 @@ export function Panel({ side }: { side: 'right' | 'left' }) {
               }}
             >
               <div style={COLUMN}>
-                {EXPERIENCE_FLAGS.semesterIntelligence !== 'off' && <IntegrityModePicker
+                <IntegrityModePicker
                   requested={talk.integrityMode}
-                  policy={{ allowed: talk.allowedIntegrityModes, reason: 'Available modes are set by verified university policy.' }}
+                  policy={{ allowed: talk.allowedIntegrityModes, reason: talk.integrityReason }}
                   onChange={talk.setIntegrityMode}
-                />}
+                />
                 {/*
                   The same box the full chat uses, from `Composer.tsx`, so
                   Enter means the same thing on both — including on a touch
