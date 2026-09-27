@@ -133,3 +133,97 @@ not indexable and bloat the app shell; and moving the app to path routing,
 which would migrate 59 screens and every stored deep link. Changing the
 production host (e.g. to Vercel, where `app/vercel.json` already exists) is a
 production change and needs approval.
+
+---
+
+# Feature-expansion command (27 Sep 2026)
+
+Entries D-012 onward come from the feature-expansion command (Phases A–P). The
+Phase A documents are [UX-ENHANCEMENT-PLAN.md](UX-ENHANCEMENT-PLAN.md),
+[DESIGN-SYSTEM-IMPROVEMENTS.md](DESIGN-SYSTEM-IMPROVEMENTS.md) and
+[FEATURE-EXPANSION-CROSSWALK.md](FEATURE-EXPANSION-CROSSWALK.md).
+
+## D-012 · The 14 module flags extend `experience-flags.ts`, off by default
+
+**Decided 27 Sep 2026.**
+
+- The command's 14 flags (`registration_day_mode` … `trust_center`) become
+  keys on the existing `ExperienceFlags`. Each is a `FeatureState` read from
+  `VITE_<NAME>`.
+- There is no second flag system. Tenant-level flags stay in
+  `tenant_feature_policy` (Phase 5).
+- **Unlike the six existing flags, these 14 do not default to `preview` under
+  `institutionalPreview`.** They are `off` unless set explicitly. Each module
+  is enabled on purpose, one at a time.
+
+## D-013 · A flag for the Today polish itself
+
+**Proposed — needs owner.**
+
+- Phase B changes the existing Today, but the command names no flag for it.
+- **Recommendation:** add `today_action_center`, off by default, so the
+  whole of Phase B except the §5.1 CSS defect fix can be switched back.
+- **Alternative:** gate Phase B under the existing `journeyNavigation`. This
+  is rejected because it already gates Directory, and the two would then
+  roll back together.
+
+## D-014 · Phase A changes no code
+
+**Decided 27 Sep 2026.**
+
+- The command allows non-breaking token and shared-component fixes in
+  Phase A, but also says to wait for confirmation before UI changes.
+- The stricter reading holds. The one real defect found, UX plan **H-2**
+  (unstyled `.workspace-text-button` and `.today-timeline-row` on Today,
+  from #761), is documented with its exact fix as the first commit of
+  Phase B rather than applied here.
+
+## D-015 · "Behind" in new copy, and the existing `behind` screen
+
+**Decided / Proposed.**
+
+- **Decided:** new copy never uses "at risk", "failing" or "behind". A
+  Phase B test enforces this on `today-decision` output.
+- **Proposed — needs owner:** relabel the existing screen `behind` ("When you
+  are behind", `lib/nav.ts:571`). For example, "Catching up". The screen id
+  and route stay unchanged (REGRESSION-CHECKLIST §Q).
+
+## D-016 · Advisor sharing: authorized grants, not bearer links, in the pilot
+
+**Proposed — needs owner.**
+
+- BL-1.9 said "no link-sharing". The command asks for a view-only link or an
+  authorized advisor share, with expiry and revocation.
+- **Recommendation:**
+  - Ship the agenda and a confirmed export/print first.
+  - Then add authorized shares through a new `advisor_shares` table
+    modelled on `accommodation_shares`: required term-bounded
+    `expires_at`, `revoked_at`, and access events the student sees
+    (SECURITY-GAP S-8).
+  - Anonymous view-only links wait until after the pilot.
+- The migration is additive, and applying it to production needs approval.
+
+## D-017 · Branches for the feature expansion
+
+**Decided 27 Sep 2026.**
+
+- The command lists `feature/*` branches with draft PRs into
+  `semester-unified-platform`. This session can push only its designated
+  branch (`claude/keen-turing-ao1rin`).
+- Phase A is committed there, and its draft PR targets
+  `semester-unified-platform`.
+- Later phases use a `feature/*` branch where the session's credentials
+  allow it, and otherwise the designated branch. Each gets one draft PR per
+  phase into `semester-unified-platform`.
+- Nothing is merged to `main`.
+
+## D-018 · Export misses two device stores
+
+**Noted 27 Sep 2026.**
+
+- `lib/workspace-backup.ts` does not include `semester.registration-day.v1`
+  or `semester.graduation.v1`, both from #762, so Export omits them.
+- Erase is unaffected, because it empties all of `localStorage`.
+- The fix goes in whichever of Phases C, D or N touches those stores first,
+  and it comes with a test that every `useDeviceLibrary` key is backed up
+  (crosswalk N-3).
