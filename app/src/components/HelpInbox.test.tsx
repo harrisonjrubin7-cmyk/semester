@@ -124,4 +124,69 @@ describe('the staff help inbox', () => {
     expect(mock.answer).toHaveBeenCalledWith('req-1', 'scheduled', 'closed', '');
     expect(host.querySelector('[data-reply]')?.textContent).toBe('Tuesday 2pm, bring your plan');
   });
+
+  describe('the status filter', () => {
+    const at = (id: string, status: string) => ({
+      id, status, createdAt: '2099-01-01T00:00:00Z', updatedAt: '2099-01-01T00:00:00Z',
+    });
+    const MIXED = [
+      {
+        destination: { id: 'adv', kind: 'advisor', name: 'Advising Office' },
+        items: [at('s', 'sent'), at('a', 'acknowledged'), at('k', 'scheduled'), at('c', 'closed')],
+      },
+      { destination: { id: 'reg', kind: 'registrar', name: 'Registrar' }, items: [at('r', 'closed')] },
+    ];
+    const cards = () => [...host.querySelectorAll('article > strong')].map((e) => e.textContent?.split(' · ')[0]);
+    const chip = (name: RegExp) => button(name)!;
+
+    it('starts on Open, the working queue, with a count on every choice', async () => {
+      mock.load.mockResolvedValue(MIXED);
+      await act(async () => root.render(<HelpInbox account={ME} />));
+      expect(chip(/^Open \(3\)$/).getAttribute('aria-pressed')).toBe('true');
+      expect(chip(/^New \(1\)$/)).toBeTruthy();
+      expect(chip(/^Closed \(2\)$/)).toBeTruthy();
+      expect(chip(/^All \(5\)$/)).toBeTruthy();
+      expect(cards()).toEqual(['Sent', 'Seen by the office', 'Scheduled']);
+      // An office with nothing open says so rather than disappearing.
+      expect(host.textContent).toContain('Nothing waiting.');
+    });
+
+    it('narrows to new, to closed, and widens to all', async () => {
+      mock.load.mockResolvedValue(MIXED);
+      await act(async () => root.render(<HelpInbox account={ME} />));
+      act(() => chip(/^New/).click());
+      expect(cards()).toEqual(['Sent']);
+      expect(host.textContent).toContain('Nothing new.');
+      act(() => chip(/^Closed/).click());
+      expect(cards()).toEqual(['Closed', 'Closed']);
+      act(() => chip(/^All/).click());
+      expect(cards()).toHaveLength(5);
+    });
+
+    it('keeps a request closed under Open on screen, reply and all, until the filter changes', async () => {
+      mock.load.mockResolvedValue([{ ...INBOX, items: [{ ...INBOX.items[0], status: 'scheduled' }] }]);
+      mock.open.mockResolvedValue({
+        studentName: 'harrison_r', studentEmail: 'h.rubin@example.edu',
+        question: 'Which statistics course fits?', context: {},
+        status: 'scheduled', reply: '', createdAt: '2099-01-01T00:00:00Z',
+      });
+      mock.answer.mockResolvedValue(undefined);
+      await act(async () => root.render(<HelpInbox account={ME} />));
+      await act(async () => button(/student will see this/i)!.click());
+      act(() => type(host.querySelector('textarea')!, 'All sorted, see you Tuesday'));
+      // The database now holds it as closed.
+      mock.load.mockResolvedValue([{ ...INBOX, items: [{ ...INBOX.items[0], status: 'closed' }] }]);
+      await act(async () => button(/^close$/i)!.click());
+
+      expect(cards()).toEqual(['Closed']);
+      expect(host.querySelector('[data-reply]')?.textContent).toBe('All sorted, see you Tuesday');
+
+      act(() => chip(/^New/).click());
+      act(() => chip(/^Open/).click());
+      expect(cards()).toEqual([]);
+      act(() => chip(/^Closed/).click());
+      expect(cards()).toEqual(['Closed']);
+    });
+  });
 });
+
