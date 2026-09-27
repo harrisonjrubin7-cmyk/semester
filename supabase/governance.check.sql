@@ -249,6 +249,24 @@ begin
   perform pg_temp.counted('the other school reads its campus and the system',
     pg_temp.seen(student_b, 'select 1 from public.governance_policy_nodes'), 2);
 
+  -- 20260927235500_governance_review_fixes.sql
+  perform pg_temp.expect_refused('a school admin attributing a node to someone else', admin_a,
+    format($q$insert into public.governance_policy_nodes (system_id, level, parent_id, tenant_id, name, created_by)
+              values ('state-sys', 'program', %L, 'gv-a', 'Forged', %L)$q$, school_a, platform));
+  perform pg_temp.expect_refused('a school admin rewriting who created a node', admin_a,
+    format($q$update public.governance_policy_nodes set created_by = %L where id = %L$q$, platform, school_a));
+  -- gv-b's campus has no children, so only the guard can stop this delete.
+  -- (gv-a's campus would be refused by its own school's foreign key, and a
+  -- check that passes on that is not a check of the guard.)
+  perform pg_temp.expect_allowed('a school admin editing their own attached campus (Codex, #828)', admin_a,
+    format($q$update public.governance_policy_nodes set brand = '{"name": "North Campus", "accent": "#224466"}' where id = %L$q$, campus_a));
+  perform pg_temp.expect_refused('a school admin detaching their campus from the system', admin_b,
+    format($q$delete from public.governance_policy_nodes where id = %L$q$, campus_b));
+  perform pg_temp.expect_allowed('the platform detaching it', platform,
+    format($q$delete from public.governance_policy_nodes where id = %L$q$, campus_b));
+  perform pg_temp.expect_allowed('a school admin removing their own program', admin_a,
+    $q$delete from public.governance_policy_nodes where tenant_id = 'gv-a' and level = 'program'$q$);
+
   -- ── 2. Steward assignments ─────────────────────────────────────────────
 
   perform pg_temp.expect_allowed('a university admin naming the data owner', admin_a,
@@ -292,6 +310,12 @@ begin
        values ('gv-a', 'integration.sis_read', 'data_owner', 'Robin Castillo')$q$);
   perform pg_temp.expect_refused('deleting the history', admin_a,
     'delete from public.governance_steward_assignments');
+  perform pg_temp.expect_refused('linking a steward to another school''s account', admin_a,
+    format($q$insert into public.governance_steward_assignments (tenant_id, connector, steward_role, person_name, person_account)
+              values ('gv-a', 'integration.sis_read', 'data_steward', 'Pat Morgan', %L)$q$, student_b));
+  perform pg_temp.expect_allowed('linking a steward to an account at the school', admin_a,
+    format($q$insert into public.governance_steward_assignments (tenant_id, connector, steward_role, person_name, person_account)
+              values ('gv-a', 'integration.sis_read', 'data_steward', 'Pat Morgan', %L)$q$, student_a));
 
   -- ── 3. Decisions ───────────────────────────────────────────────────────
 
@@ -405,6 +429,13 @@ begin
     format($q$update public.governance_config_requests
                  set steps_done = steps_done || array['tenant_sandbox_test', 'uat', 'launch_with_monitoring'],
                      status = 'launched' where id = %L$q$, req));
+  perform pg_temp.expect_refused('moving a launched request back to requested', impl_a,
+    format($q$update public.governance_config_requests set status = 'requested' where id = %L$q$, req));
+  perform pg_temp.expect_refused('sunsetting without recording the review (Codex, #828)', impl_a,
+    format($q$update public.governance_config_requests set status = 'sunset' where id = %L$q$, req));
+  perform pg_temp.expect_allowed('sunsetting once the review is recorded', impl_a,
+    format($q$update public.governance_config_requests
+                 set steps_done = steps_done || array['review_sunset_or_scale'], status = 'sunset' where id = %L$q$, req));
   perform pg_temp.counted('the school reads its request',
     pg_temp.seen(admin_a, 'select 1 from public.governance_config_requests'), 1);
   perform pg_temp.counted('another school does not',
@@ -453,6 +484,23 @@ begin
               values ('gv-a', 'INC-2', 'security', %L, '{"data_exposure": "fine"}', array['Security owner', 'Legal'],
                       now() + interval '45 minutes')$q$,
            pg_temp.sections()));
+  perform pg_temp.expect_refused('a security notice approved by the wrong people (Codex, #828)', responder,
+    format($q$insert into public.governance_incident_notices
+                (tenant_id, incident_ref, audience, sections, details, approved_by, next_update_at)
+              values ('gv-a', 'INC-2', 'security', %L, '{"data_exposure": "Not indicated"}', array['anyone'],
+                      now() + interval '45 minutes')$q$,
+           pg_temp.sections()));
+  perform pg_temp.expect_refused('a security notice missing Legal', responder,
+    format($q$insert into public.governance_incident_notices
+                (tenant_id, incident_ref, audience, sections, details, approved_by, next_update_at)
+              values ('gv-a', 'INC-2', 'security', %L, '{"data_exposure": "Not indicated"}', array['Security owner'],
+                      now() + interval '45 minutes')$q$,
+           pg_temp.sections()));
+  perform pg_temp.expect_refused('a notice with a null approver', responder,
+    format($q$insert into public.governance_incident_notices
+                (tenant_id, incident_ref, audience, sections, approved_by, next_update_at)
+              values ('gv-a', 'INC-1', 'admin_outage', %L, array['Incident commander', null], now() + interval '45 minutes')$q$,
+           pg_temp.sections()));
   perform pg_temp.expect_allowed('a security notice with one on the list', responder,
     format($q$insert into public.governance_incident_notices
                 (tenant_id, incident_ref, audience, sections, details, approved_by, next_update_at)
@@ -472,10 +520,10 @@ begin
   perform pg_temp.expect_refused('rewriting a sent notice', responder,
     $q$update public.governance_incident_notices set incident_ref = 'INC-9'$q$);
 
-  perform pg_temp.counted('the school''s auditor reads its own notices',
-    pg_temp.seen(admin_a, 'select 1 from public.governance_incident_notices'), 3);
-  perform pg_temp.counted('another school reads none of them',
-    pg_temp.seen(admin_b, 'select 1 from public.governance_incident_notices'), 0);
+  perform pg_temp.counted('the school''s auditor reads its own notices and the one sent to every school',
+    pg_temp.seen(admin_a, 'select 1 from public.governance_incident_notices'), 4);
+  perform pg_temp.counted('another school reads only the one sent to every school (Codex, #828)',
+    pg_temp.seen(admin_b, 'select 1 from public.governance_incident_notices'), 1);
   perform pg_temp.counted('a student reads none',
     pg_temp.seen(student_a, 'select 1 from public.governance_incident_notices'), 0);
 
@@ -483,13 +531,13 @@ begin
 
   select count(*) into n from public.tenant_policy_audit_event
    where tenant_id = 'gv-a' and entity_type = 'governance_policy_nodes';
-  perform pg_temp.counted('gv-a''s policy node changes are audited', n, 5);
+  perform pg_temp.counted('gv-a''s policy node changes are audited', n, 7);
   select count(*) into n from public.tenant_policy_audit_event
    where tenant_id = 'gv-a' and entity_type = 'governance_steward_assignments' and actor_id = admin_a;
-  perform pg_temp.counted('steward changes are audited against the admin who made them', n, 3);
+  perform pg_temp.counted('steward changes are audited against the admin who made them', n, 4);
   select count(*) into n from public.tenant_policy_audit_event
    where tenant_id = 'gv-a' and entity_type = 'governance_config_requests';
-  perform pg_temp.counted('and each step of the request', n, 3);
+  perform pg_temp.counted('and each step of the request', n, 4);
 end $$;
 
 rollback;

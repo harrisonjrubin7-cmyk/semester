@@ -152,7 +152,7 @@ export const CHARTERS: readonly ProductCharter[] = [
     accessibilityAcceptance: 'Keyboard-complete; tables have headers and a text summary; suppression and status are said in words, never by colour alone. Not met yet for exports: a suppressed cell is written as an empty CSV field and the CSV is shown as text, so it must read as suppressed before any production tenant.',
     costModel: 'Read-only aggregate queries; drafts stay on the analyst’s device; no AI or media cost.',
     owners: { product: 'Institutional research product lead', engineering: 'Institutional engineering', support: 'Customer success' },
-    killSwitch: 'Today, only the build flag VITE_INSTITUTIONAL_OPERATIONS set to off, which needs a rebuild: nothing in the app yet reads a tenant policy row or checks outcomes:read for this studio (the outcomes:read gate is open work in #820). Drafts are device-only, so nothing server-side to undo.',
+    killSwitch: 'The build flag VITE_INSTITUTIONAL_OPERATIONS set to off, which needs a rebuild: nothing in the app reads a tenant policy row for this studio. It also opens only for a verified outcomes:read capability (operationsAllowed in lib/institution-ops.ts), which nothing on the client supplies yet, so the tab stays hidden until that is wired. Drafts are device-only, so nothing server-side to undo.',
     decision: 'build', route: 'module', reviewAt: '2026-12-15',
   },
 ];

@@ -42,6 +42,7 @@ import { INSTITUTIONAL_PREVIEW } from '../lib/institutional-preview';
 import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
 import { GetHelp } from '../components/GetHelp';
 import { HelpInbox } from '../components/HelpInbox';
+import { ReportQueue } from '../components/ReportQueue';
 import { operationsAllowed } from '../lib/institution-ops';
 import { helpSeedWaiting } from '../lib/help-routes';
 import { ControlPlane } from '../components/institutional/ControlPlane';
@@ -616,6 +617,8 @@ function Workspace({ storageKey }: { storageKey: string }) {
 
       {tab === 'overview' && (
         <>
+          {/* Draws nothing unless the database says this account may read reports. */}
+          <ReportQueue account={account} />
           <label style={{ display: 'block', marginBlock: 'var(--sp-5) var(--sp-3)' }}>
             <SectionLabel style={{ marginBlock: 0 }}>Prepare drafts as</SectionLabel>
             <select

@@ -255,6 +255,9 @@ declare
     'help_inbox(want_destination uuid)',
     -- 20260927230000's companion: which of those inboxes are the caller's.
     'my_help_destinations()',
+    -- 20260928000000: the caller's own report:read and moderation:action, so
+    -- the moderation screen can tell an empty queue from no queue.
+    'my_moderation_access()',
     'open_help_request(want uuid)',
     'send_help_request(want_destination uuid, want_question text, want_context jsonb)',
     'withdraw_help_request(want uuid)',
