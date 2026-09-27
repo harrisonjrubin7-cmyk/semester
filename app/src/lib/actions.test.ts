@@ -105,6 +105,19 @@ describe('the status an action has now', () => {
     expect(effectiveStatus(action('a'), c, NOW + DAY)).toBe('open');
   });
 
+  it('lets a snooze that has run out be acted on as the open action it shows as', () => {
+    const c = apply(undefined, 'snooze');
+    const later = NOW + DAY + 1;
+    // Still asleep: a second snooze is refused, as before.
+    expect(transition(c, 'snooze', NOW, { until: NOW + 2 * DAY }).ok).toBe(false);
+    // Awake: every control the list shows for an open action works.
+    const again = transition(c, 'snooze', later, { until: later + DAY });
+    expect(again.ok).toBe(true);
+    if (again.ok) expect(again.choice.history.at(-1)).toMatchObject({ event: 'snooze', from: 'open', to: 'snoozed' });
+    expect(transition(c, 'complete', later).ok).toBe(true);
+    expect(transition(c, 'dismiss', later).ok).toBe(true);
+  });
+
   it('expires a live action past its expiry, but not a finished one', () => {
     const a = action('a', { expiresAt: NOW - 1 });
     expect(effectiveStatus(a, undefined, NOW)).toBe('expired');

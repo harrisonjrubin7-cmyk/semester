@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react';
 import { secondLine } from '../../lib/dim';
+import { AccessModes } from '../../components/AccessModes';
 import { useStore } from '../../state/store';
 import { SettingsPage } from './Page';
 import { CustomRow, Group, SelectRow } from '../../components/shell/Rows';
@@ -232,6 +233,15 @@ export function SettingsLook() {
     >
       {(lit) => (
         <>
+          <Group
+            header="Access and focus"
+            footer="Presets, plain language, one step at a time, a layout that stays put, and quiet places first."
+            lit={lights('access accessibility focus plain language simple reading dyslexia adhd autism neurodivergent neurodiversity sensory quiet chunk step predictable cognitive load distraction', lit)}
+          >
+            <CustomRow>
+              <AccessModes />
+            </CustomRow>
+          </Group>
           <Group
             header="Colour"
             footer="The accent being a metal rather than a colour is most of why the app looks drawn instead of like a dashboard."

@@ -837,6 +837,10 @@ export const OWNED_TABLES: OwnedTable[] = [
   // ── Private to one account ──────────────────────────────────────────────
   { table: 'push_queue', column: 'user_id' },
   { table: 'push_devices', column: 'user_id' },
+  // What a school shared about you through an integration, and the consent
+  // that let it in. Both also cascade on account deletion.
+  { table: 'canonical_entity_references', column: 'subject_user_id' },
+  { table: 'consent_record', column: 'subject_user_id' },
   { table: 'courses', column: 'user_id' },
   { table: 'state', column: 'user_id' },
   { table: 'notes', column: 'user_id' },
@@ -946,6 +950,14 @@ export const OWNED_TABLES: OwnedTable[] = [
   // merely leaving.
   { table: 'organization_members', column: null, via: 'forget_my_organizations' },
 
+  // ── Help requests ───────────────────────────────────────────────────────
+  // No API role holds DELETE on `help_requests`: the only writes into it are
+  // the functions in `20260927230000_help_requests.sql`, so the way out is one
+  // of them too. The events are the student's record of who opened what, and
+  // go with their request.
+  { table: 'help_requests', column: null, via: 'forget_my_help_requests' },
+  { table: 'help_request_events', column: null, cascadesFrom: 'help_requests' },
+
   { table: 'forms', column: 'owner' },
   // Taken by the line above rather than by a request of its own:
   // `form_responses.form_id` references `forms` with `on delete cascade`, and
@@ -994,6 +1006,38 @@ export const KEPT_TABLES: KeptTable[] = [
   {
     table: 'schools',
     why: 'The list of universities the app recognises is not a record about you — no account writes a row in it, and only an administrator can. Leaving is not a way to remove a university, and the entry saying which one you are at lives on your own profile, which does go.',
+  },
+  {
+    table: 'help_destinations',
+    why: 'The offices your university chose to reach through Semester — their names, links and hours — are institutional configuration, not a record about you. Your requests to them go with your account; the list of offices stays.',
+  },
+  {
+    table: 'integration_connections',
+    why: 'A university\'s connections to its other systems, and the record of each sync, belong to the university. Its integration staff read them; a student account never writes a row here, so leaving takes nothing from them. Anything imported about you specifically is held apart, readable only by you, and goes with your account.',
+  },
+  {
+    table: 'integration_scopes',
+    why: 'What each of your university\'s connections is approved to read. University configuration, not a record about you.',
+  },
+  {
+    table: 'integration_mappings',
+    why: 'How your university\'s systems\' fields map onto Semester\'s. University configuration, not a record about you.',
+  },
+  {
+    table: 'integration_sync_runs',
+    why: 'The history of your university\'s syncs: counts and times, never a record about a named student.',
+  },
+  {
+    table: 'integration_sync_errors',
+    why: 'Sync problems for your university\'s integration staff, with any external record identifier replaced by a one-way hash before it is stored.',
+  },
+  {
+    table: 'integration_dead_letter_events',
+    why: 'Sync work that failed and is waiting for review. It points at a stored payload and holds no record about you itself.',
+  },
+  {
+    table: 'feature_kill_switch',
+    why: 'The emergency stops for features across a university or all of Semester. Not a record about anybody.',
   },
   {
     table: 'support_access_event',
