@@ -1,5 +1,6 @@
 import { ACTIONS_PREFIX, readActionChoices } from './actions';
 import { readAthletics } from './athletics';
+import { CLARITY_PREFIX, readClarity } from './clarity';
 import { readCareer } from './career';
 import { readCreations } from './creations';
 import { obj, textValue } from './device-library';
@@ -93,6 +94,12 @@ const DEFINITIONS: Record<string, Definition> = {
     prefix: PATH_PROFILE_PREFIX,
     scope: 'account',
     read: readPathProfile,
+  },
+  clarity: {
+    label: 'Your answers to "Did this help?"',
+    prefix: CLARITY_PREFIX,
+    scope: 'account',
+    read: readClarity,
   },
 };
 

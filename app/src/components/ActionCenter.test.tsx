@@ -149,3 +149,36 @@ it('counts calendar days, so two things due the same day say the same thing', ()
   expect(dueLine(at(0, 18), now)).toBe('Due today');
   expect(dueLine(at(0, 9), now)).toBe('Overdue');
 });
+
+it('asks whether it helped, stores the answer on the device, and then stops asking', () => {
+  render([make(0)]);
+  const legend = [...host.querySelectorAll('legend')].find((l) => /Did this help you understand what to do next\?/.test(l.textContent ?? ''));
+  expect(legend).toBeDefined();
+  act(() => button(/^Somewhat$/)?.click());
+  const stored = JSON.parse(localStorage.getItem('semester.clarity.v1:device')!);
+  expect(stored.answers.map((a: { answer: string }) => a.answer)).toEqual(['somewhat']);
+  expect(host.textContent).toContain('saved on this device only');
+  expect(host.textContent).toContain('Tell us what was unclear');
+
+  act(() => root.unmount());
+  act(() => {
+    root = createRoot(host);
+  });
+  render([make(0)]);
+  expect(host.textContent).not.toContain('Did this help you understand what to do next?');
+});
+
+it('opens a report about the action from its source badge, sending nothing by itself', async () => {
+  render([make(0)]);
+  const report = [...host.querySelectorAll('article [data-source] button')].find((b) => /Report incorrect information/.test(b.textContent ?? ''));
+  expect(report).toBeDefined();
+  act(() => (report as HTMLButtonElement).click());
+  // The form is loaded on demand, so it is not in Today's entry chunk.
+  for (let i = 0; i < 50 && !/Write to/.test(host.querySelector('article .action-note')?.textContent ?? ''); i++) {
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 20));
+    });
+  }
+  // Signed out in the test: the form gives the address rather than sending.
+  expect(host.querySelector('article .action-note')?.textContent).toMatch(/Write to .*needs an account/);
+});

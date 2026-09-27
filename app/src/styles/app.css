@@ -7378,6 +7378,16 @@ section[data-drop] > .grip + * {
   border-bottom-width: 0;
 }
 
+.clarity-question {
+  margin: var(--sp-5) 0 0;
+  padding: 0;
+  border: 0;
+}
+
+.clarity-question > legend {
+  font-size: var(--type-sm);
+}
+
 .action-note label {
   display: flex;
   flex-direction: column;

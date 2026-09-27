@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { Suspense, lazy, useMemo, useState } from 'react';
 import {
   ACTIONS_PREFIX,
   EMPTY_ACTION_CHOICES,
@@ -12,8 +12,16 @@ import {
 } from '../lib/actions';
 import { useDeviceLibrary } from '../lib/device-library';
 import { useNow, useStore } from '../state/store';
+import { ClarityQuestion } from './ClarityQuestion';
 import { SourceBadge } from './SourceBadge';
 import { ActionButton, SectionLabel } from './ui';
+
+/*
+ * Loaded only when a student opens it. The feedback form reaches `lib/privacy`
+ * and `lib/cloud`; imported eagerly it put both into Today's entry chunk
+ * (+17.6 kB) for a panel most visits never open.
+ */
+const SaySomething = lazy(() => import('./SaySomething').then((m) => ({ default: m.SaySomething })));
 
 /**
  * The Action Center: one most important thing, up to five more, the rest
@@ -175,7 +183,37 @@ function Controls({
   );
 }
 
-function Row({ s, now, act }: { s: Scored; now: number; act: (id: string, event: ActionEvent, note?: string) => void }) {
+/**
+ * "Report incorrect information", opened under the action it is about.
+ *
+ * The existing feedback form, started on "Wrong information" and naming the
+ * action and its source, so the student only adds what is wrong. It sends
+ * nothing until they press Send, and signed out it gives the address instead.
+ */
+function Report({ s, onClose }: { s: Scored; onClose: () => void }) {
+  return (
+    <div className="action-note">
+      <Suspense fallback={<p className="today-sync-status">Opening…</p>}>
+        <SaySomething initialKind="wrong" initialNote={`About "${s.action.title}" (${s.action.source.system}): `} />
+      </Suspense>
+      <button type="button" className="workspace-text-button" onClick={onClose}>Close</button>
+    </div>
+  );
+}
+
+function Row({
+  s,
+  now,
+  act,
+  reporting,
+  setReporting,
+}: {
+  s: Scored;
+  now: number;
+  act: (id: string, event: ActionEvent, note?: string) => void;
+  reporting: string | null;
+  setReporting: (id: string | null) => void;
+}) {
   const due = dueLine(s.action, now);
   return (
     <li className="action-row">
@@ -187,7 +225,8 @@ function Row({ s, now, act }: { s: Scored; now: number; act: (id: string, event:
         </span>
         <span aria-hidden="true">→</span>
       </button>
-      <SourceBadge label={s.action.source.label} at={s.action.source.at} now={now} />
+      <SourceBadge label={s.action.source.label} at={s.action.source.at} now={now} onReport={() => setReporting(s.action.id)} />
+      {reporting === s.action.id && <Report s={s} onClose={() => setReporting(null)} />}
       <Controls s={s} act={act} compact />
       <Why s={s} />
     </li>
@@ -202,6 +241,7 @@ export function ActionCenter({ actions }: { actions: Action[] }) {
   const choices = library.value.choices;
   const ranked = useMemo(() => rank(actions, choices, now), [actions, choices, now]);
   const [said, setSaid] = useState<{ text: string; undo?: { id: string; prev: Choice | undefined } } | null>(null);
+  const [reporting, setReporting] = useState<string | null>(null);
 
   const act = (id: string, event: ActionEvent, note?: string) => {
     const prev = choices[id];
@@ -236,10 +276,12 @@ export function ActionCenter({ actions }: { actions: Action[] }) {
           {dueLine(top.action, now) && <p className="today-sync-status">{dueLine(top.action, now)}</p>}
           <h2 id="action-top-title">{top.action.title}</h2>
           <p>{top.action.whyItMatters}</p>
-          <SourceBadge label={top.action.source.label} at={top.action.source.at} now={now} />
+          <SourceBadge label={top.action.source.label} at={top.action.source.at} now={now} onReport={() => setReporting(top.action.id)} />
+          {reporting === top.action.id && <Report s={top} onClose={() => setReporting(null)} />}
           <ActionButton tone="primary" onClick={() => go(top.action)}>{top.action.primary.label}</ActionButton>
           <Controls s={top} act={act} />
           <Why s={top} />
+          <ClarityQuestion />
         </article>
       ) : (
         <p className="today-clear">Nothing needs you right now. Anything you snoozed comes back tomorrow morning.</p>
@@ -258,7 +300,7 @@ export function ActionCenter({ actions }: { actions: Action[] }) {
         <>
           <SectionLabel>Next</SectionLabel>
           <ol className="action-list">
-            {ranked.next.map((s) => <Row key={s.action.id} s={s} now={now} act={act} />)}
+            {ranked.next.map((s) => <Row key={s.action.id} s={s} now={now} act={act} reporting={reporting} setReporting={setReporting} />)}
           </ol>
         </>
       )}
@@ -267,7 +309,7 @@ export function ActionCenter({ actions }: { actions: Action[] }) {
         <details className="today-why">
           <summary>View all ({ranked.rest.length} more)</summary>
           <ol className="action-list">
-            {ranked.rest.map((s) => <Row key={s.action.id} s={s} now={now} act={act} />)}
+            {ranked.rest.map((s) => <Row key={s.action.id} s={s} now={now} act={act} reporting={reporting} setReporting={setReporting} />)}
           </ol>
         </details>
       )}

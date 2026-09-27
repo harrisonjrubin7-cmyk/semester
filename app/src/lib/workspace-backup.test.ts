@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { EMPTY_ACTION_CHOICES } from './actions';
+import { EMPTY_CLARITY } from './clarity';
 import { EMPTY_PATH_PROFILE } from './path-profile';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { EMPTY_ATHLETICS } from './athletics';
@@ -80,10 +81,11 @@ const seed = (storage: FakeStorage, account = ACCOUNT) => {
   storage.setItem(`semester.pathway.v1:${account}`, JSON.stringify(EMPTY_PATHWAY));
   storage.setItem(`semester.actions.v1:${account}`, JSON.stringify(EMPTY_ACTION_CHOICES));
   storage.setItem(`semester.path-profile.v1:${account}`, JSON.stringify(EMPTY_PATH_PROFILE));
+  storage.setItem(`semester.clarity.v1:${account}`, JSON.stringify(EMPTY_CLARITY));
 };
 
 /** How many workspaces `seed` writes: one per definition. */
-const SEEDED = 8;
+const SEEDED = 9;
 
 let storage: FakeStorage;
 beforeEach(() => {
@@ -99,6 +101,7 @@ describe('what goes into a workspace backup', () => {
       'actions',
       'athletics',
       'career',
+      'clarity',
       'creations',
       'family',
       'pathProfile',
