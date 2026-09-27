@@ -165,6 +165,12 @@ declare
     -- which re-checks every grant and logs the read.
     'make_family_share(want_categories text[], want_resources text[], want_days integer, want_items jsonb, want_shown_as text)',
     'read_family_share()',
+    -- 20260928142000_support_shares.sql: an athlete shares with one person
+    -- holding athletic_academic_support at their school; staff list and read
+    -- through functions that re-check that role on every call and log reads.
+    'share_with_support(staff_email text, share_payload jsonb, share_expires timestamp with time zone)',
+    'list_support_shares()',
+    'read_support_share(want_share uuid)',
     'note_activity(marks text[])',
     'referral_standing()',
     -- Both are security-invoker reads. Their table RLS remains the boundary:

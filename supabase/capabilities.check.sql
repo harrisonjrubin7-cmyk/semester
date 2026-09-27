@@ -224,8 +224,9 @@ begin
   -- 20260926150000_expansion_roles_and_features.sql, plus `integration_admin`
   -- and `incident_responder` from 20260927170000_integration_control_plane.sql,
   -- plus the four office publishers from 20260927224500_office_action_feed.sql
-  -- (Phase J).
-  perform pg_temp.counted('a signed-in account reads the fifty-three roles', n, 53);
+  -- (Phase J), and `athletic_academic_support` from
+  -- 20260928142000_support_shares.sql (D1).
+  perform pg_temp.counted('a signed-in account reads the fifty-four roles', n, 54);
   select count(*) into n from public.role_capabilities;
   -- Twenty original rows, thirty-seven expansion rows, eight from the
   -- integration control plane (four for integration_admin, three for

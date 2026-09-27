@@ -954,6 +954,10 @@ export const OWNED_TABLES: OwnedTable[] = [
   // own deletion only clears `reader_id` on the log (`on delete set null`).
   { table: 'family_shared_items', column: 'student_id' },
   { table: 'family_access_events', column: 'student_id' },
+  // An athlete's share with academic support (D-039). The student's, like a
+  // family grant; the staff member's own deletion is the cascade on their
+  // account. Its read log goes with each share (`on delete cascade`).
+  { table: 'support_shares', column: 'student_id' },
 
   // ── Shared forms ────────────────────────────────────────────────────────
   // ── Organizations ───────────────────────────────────────────────────────
