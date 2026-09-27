@@ -50,11 +50,20 @@ describe('the view', () => {
       link: 'https://accounts.example.edu/holds', mine: true });
   });
 
-  it('says "no hold on record" only when both the window and the hold feed are fresh', () => {
-    expect(schoolRecordsView([window()], ME, NOW).readiness).toBe('no_hold_on_record');
-    expect(schoolRecordsView([window({ freshness_status: 'stale' })], ME, NOW).readiness).toBe('unknown');
+  it('says "no hold on record" only with a fresh window and fresh hold data that blocks nothing', () => {
+    const clear = hold(false, { updated_at: '2026-10-01T11:58:00Z' });
+    expect(schoolRecordsView([window(), clear], ME, NOW).readiness).toBe('no_hold_on_record');
+    expect(schoolRecordsView([window({ freshness_status: 'stale' }), clear], ME, NOW).readiness).toBe('unknown');
     const staleClearedHold = hold(false, { updated_at: '2026-09-29T00:00:00Z' });
     expect(schoolRecordsView([window(), staleClearedHold], ME, NOW).readiness).toBe('unknown');
+  });
+
+  // Found by the Codex review of #779: with no hold rows at all — the hold
+  // scope never approved, or the student's consent withheld — `every` over an
+  // empty list is true, and a fresh window alone produced "No registration
+  // hold on record". Absence of rows is not evidence the feed was read.
+  it('says nothing about holds when no hold data has arrived', () => {
+    expect(schoolRecordsView([window()], ME, NOW).readiness).toBe('unknown');
   });
 
   it('marks a stale fact as not official', () => {

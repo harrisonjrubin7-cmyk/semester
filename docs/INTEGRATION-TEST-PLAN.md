@@ -134,6 +134,22 @@ view tabs and Tab reaches a map node that Enter opens. Controls: a planted unnam
 overflow probe measured the dashboard's own box, which the grid keeps inside the viewport whatever its children do,
 and reported the planted element as clean — it was replaced with a per-element check before these figures were taken.
 
+## Found by the Codex review of #779, after merge
+
+Each was reproduced as a failing test on main before its fix, then passed with it.
+
+| Finding | Reproduced by | Fix |
+| --- | --- | --- |
+| The service role could not execute `private.public_id`, so every worker run failed opening | `integration-hardening.check.sql` inserts a run and a source record as the service role: `permission denied for function public_id` | `20260927210000_integration_review_fixes.sql` grants it |
+| The worker never read the connector flag | `worker.test.ts`: absent, `off` and `preview` flags all ran | the worker requires `production` for the adapter's flag at the school |
+| A batch that failed to save stayed "processed", so its retry was skipped as a duplicate | `worker.test.ts`: the redelivery ingested nothing | a failed run releases its event claim |
+| Two connections to one product overwrote each other's records on a shared id | `integration-control-plane.check.sql`: the second connection's row hit the unique key; `worker.test.ts`: one row for two connections | identity includes the connection (unique index, `nulls not distinct`); the worker and `lti_record_context` upsert on it |
+| "No registration hold on record" from a fresh window and no hold data at all | `school-records.test.ts` | the sentence needs fresh hold data that blocks nothing |
+
+The existing school-records test had encoded the fifth as correct and was rewritten. The worker test's in-memory table
+stand-in had an insert that fell through to its read path once a delete branch was added; the type check caught it,
+and the three new tests were re-run against main's worker with the corrected stand-in to confirm they fail there.
+
 ## Two classification layers — `classification.test.ts`
 
 The platform floor matches the migration's seed row for row, and the AI Toolkit's gate (`lib/toolkit/classification.ts`)
