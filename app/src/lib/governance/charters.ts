@@ -45,6 +45,30 @@ export interface ProductCharter {
 
 export const CHARTERS: readonly ProductCharter[] = [
   {
+    // Written from the flag's own definition in flags.ts (#818): its
+    // description, owner, rollout, success criteria and rollback. #813's rule
+    // that every module flag has a charter landed alongside it, and the two
+    // crossed.
+    flag: 'module.institutional_operations', name: 'Operations studio',
+    problem: 'Institutional research assembles data dictionaries, lineage and suppressed aggregate exports by hand in spreadsheets, where a per-student figure can slip through.',
+    primaryUser: 'Institutional research analyst',
+    jobToBeDone: 'When I need to publish or share an aggregate, I want a suppressed, lineage-labelled export straight from the source, so I can hand it on without a spreadsheet step or a privacy review of every cell.',
+    buyerAndAdoptionHypothesis: 'Provost and institutional research office; adopted if one pilot school’s IR office produces its termly exports here instead of by hand.',
+    successMetrics: {
+      behavior: 'Analysts open the studio to prepare an aggregate export.',
+      workflow: 'A suppressed, lineage-labelled export is produced without a spreadsheet step.',
+      institutional: 'No per-student figure is ever rendered or exported; small cells are suppressed at the source.',
+    },
+    nonGoals: ['Showing or exporting per-student records', 'Replacing the institution’s data warehouse', 'Storing analyst drafts server-side'],
+    sourceDependency: 'Institutional aggregates under outcomes:read, with Semester’s small-cell suppression.',
+    fallback: 'The institution’s existing IR reporting process.',
+    classification: 'T2', accessibilityAcceptance: 'Keyboard-complete; tables have headers; suppression shown in text, never by colour alone.',
+    costModel: 'Read-only aggregate queries; drafts stay on the analyst’s device; no AI or media cost.',
+    owners: { product: 'Institutional research', engineering: 'App engineering', support: 'Customer success' },
+    killSwitch: 'Tenant policy row off; drafts live on the analyst’s device only, so nothing to undo server-side.',
+    decision: 'build', route: 'pilot', reviewAt: '2026-12-15',
+  },
+  {
     flag: 'module.integration_dashboard', name: 'Integration Dashboard',
     problem: 'Integration staff cannot see which connection is failing, or why, without opening a ticket.',
     primaryUser: 'Institutional integration owner',
