@@ -58,9 +58,9 @@ meaning on its own.
 | Autosave: Saving… → Saved | `SaveState` in `components/unity/Status.tsx` | Colour eases over `--motion-save` | Glyph and word change (`…` Saving… → `✓` Saved) | `role="status"`, polite |
 | Offline → Syncing → Synced | `SyncState` / `SaveState` with `syncStatusKey` (`lib/status.ts`); `OfflineStrip` from `ShellBody` | None | Word and glyph: `⊘ Offline`, `↻ Syncing`, `✓ Synced` | Offline and conflict are `role="alert"`, assertive; the rest polite |
 | Open details | `SourceDrawer` in `UnityLayer.tsx` | Sheet rises 8px and fades in over `--motion-sheet` | Appears in place | Dialog with a name; focus moves in and returns to the opener |
-| Capture | `QuickCapture` in `UnityLayer.tsx` | Same sheet | Same | Focus lands on the field; after Save, `SaveState` "Saved" and a line saying what it was kept as |
+| Capture | The `+` box (`QuickAdd`), then `QuickCapture` in `UnityLayer.tsx` from "Or keep it as" | Same sheet | Same | Focus lands on the field with the typed line carried over; after Save, `SaveState` "Saved" and a line saying what it was kept as |
 | Upload / long process | `Progress` in `States.tsx` | Bar value transitions over `--motion-progress` | Percentage in words beside a real `<progress>` | Failure is `role="alert"` with Retry |
-| AI output: gathering sources → drafting → ready | `StepStatus` in `States.tsx` | None | Each step has a glyph and a word; current step has `aria-current="step"` | Ordered list |
+| AI output: selecting sources → drafting → matching quotations → ready | `StepStatus` in `States.tsx`, in Study Studio | None | Each step has a glyph and a word; current step has `aria-current="step"` | Ordered list |
 | Complete task / milestone | `SuccessState` in `States.tsx` | None | Title with `✓`, and "Next:" with the next action | `role="status"` |
 | Validation / error | `ErrorState` in `States.tsx`, `Trouble` in `components/Trouble.tsx` | None — no shake | Title with `!`, plain sentence, a required recovery button | `role="alert"` |
 | Delete (reversible) | `Undone` in `components/Undone.tsx` | Toast | Stays 8 seconds (`SHOWN_FOR` in `lib/undo.ts`) with an Undo button | `role="status"`, polite, never takes focus |
@@ -69,11 +69,13 @@ meaning on its own.
 | Source refresh | `StatusChip` with `updated-today` / `stale` | None | Word and glyph change (`↻ Updated today`, `! Out of date`) | Not live; read on demand |
 | Conflict | `statusOf('conflict')` = "Conflict needs review"; the resolution UI is `components/Adopting.tsx` | None | Word, `⇄` glyph | Urgent |
 
-Components that exist but are not yet placed on a screen: `SaveState` (only in
-Capture), `SyncState`, `ErrorState`, `SuccessState`, `Progress`, `StepStatus`,
-`PermissionNotice`. They are tested in `components/unity/unity.test.tsx` and
-are ready for adoption; see
-[DESIGN-SYSTEM-MIGRATION-PLAN.md](DESIGN-SYSTEM-MIGRATION-PLAN.md).
+Each of these is now on real screens: `SaveState` in Write, Mine's note editor,
+Settings → Assistant and context bars; `SyncState` on Account; `Progress` on
+Update, Import and the travel pack; `StepStatus` in Study Studio and Update;
+`SuccessState` on Registration day, Close term, Export and Snapshots;
+`PermissionNotice` on Support access, Family and Share course; `ErrorState`
+on eight screens. The full list is in
+[EMPTY-LOADING-ERROR-SUCCESS-STATES.md](EMPTY-LOADING-ERROR-SUCCESS-STATES.md).
 
 ## Rules
 

@@ -8,42 +8,51 @@ All live in `app/src/components/unity/`, style from `app/src/styles/unity.css`
 (semantic tokens only), and are tested in
 `app/src/components/unity/unity.test.tsx` and `app/src/lib/unity.test.ts`.
 
-## Where each is used today
+## Where each is used
 
-Honest status: the components are built and tested; adoption across screens
-has started, not finished.
+Read from the code. The rollout onto existing screens is covered by
+`components/unity/rollout-a.test.tsx`, `rollout-b.test.tsx` and
+`rollout-c.test.tsx`, each of which mounts the real screen inside the real
+store.
 
-| Pattern | Component | Placed on a screen? |
+| Pattern | Component | Placed on |
 | --- | --- | --- |
-| Status vocabulary | `lib/status.ts`, `StatusChip` | Yes — Today's path snapshot, `NotOfficial`, Settings sync line, soft layout sync card, Study Studio's AI label |
-| Source & details drawer | `SourceDrawer` via `showSource()` | Yes — Today's path snapshot, Study Studio's AI study guide |
-| Quick Capture | `QuickCapture` via `showCapture()` | Yes — from the Search page's quick actions (and so ⌘K / Ctrl+K) |
-| About this screen | `ScreenGuide` | Yes — every non-full-bleed screen, via `ShellBody` |
-| Offline strip | `OfflineStrip` | Yes — every screen, via `ShellBody`, while offline |
-| Command centre, first goal | `CommandCenter`, `FirstGoal` | Yes — Today |
-| Focus bar | `FocusBar` | Yes — all three layouts, in Focused mode |
-| Context Bar | `ContextBar` | **Not yet** — built and tested only |
-| Object Card | `ObjectCard` | **Not yet** |
-| Next | `NextSteps` | **Not yet** |
+| Context Bar | `ContextBar` | The deadline (`ItemDetail` in `screens/Courses.tsx`); the course hub (`components/CourseHub.tsx`, heading 2); the study guide (`screens/Guide.tsx`); Study Studio's draft panel (heading 3); a programme in `screens/Pathway.tsx` (heading 2); the toolkit's open assignment workspace (`components/toolkit/AssignmentPanel.tsx`, heading 3) |
+| Object Card | `ObjectCard` | An open opportunity in `screens/Career.tsx`; school records in `screens/University.tsx` (primary disabled while busy) |
+| Next | `NextSteps` | The deadline (next deadline in the same course); `components/RegistrationDay.tsx` (Add backups, Open cart); `components/CloseTerm.tsx` (See your record, Import next term's syllabus) |
+| Status vocabulary | `StatusChip`, `statusOf` | Today's path snapshot, `screens/Degree.tsx`, `NotOfficial`, every placed context bar and object card, Settings and the soft layout's sync lines |
+| Source & details | `SourceDrawer` via `showSource()` or a `source` prop | Every placed `ContextBar` and `ObjectCard`; Today's path snapshot |
+| Save and sync | `SaveState`, `SyncState` | `screens/Account.tsx` (`SyncState`); `screens/Write.tsx`, the note editor in `screens/Mine.tsx`, `screens/settings/Assistant.tsx`, the Capture sheet, and the context bars that pass `save` |
+| Quick Capture | `QuickCapture` via `showCapture()` | The `+` box's "Or keep it as" row (`KeepItAs` in `QuickAdd`) |
+| About this screen | `ScreenGuide` | Every screen, via `ShellBody` |
+| Offline strip | `OfflineStrip` | Every screen while offline, via `ShellBody` |
+| Command centre, first goal | `CommandCenter`, `FirstGoal` | Today |
+| Focus bar | `FocusBar` | All three layouts, in Focused mode |
 | Visibility | `Visibility` | Only inside Quick Capture (locked to "Only me") |
-| Open in | `OpenIn` | Only inside `ObjectCard` |
+| Open in | `OpenIn` | Supported by `ObjectCard`'s `openIn` prop; no placed card passes it yet |
 
-Rolling the unplaced ones out to Path, Plan, Research, Data, Career, Campus,
-Community and Advising is the main follow-up; see
+The standard states (`ErrorState`, `SuccessState`, `Progress`, `StepStatus`,
+`PermissionNotice`, `LoadingState`) are listed with their placements in
+[EMPTY-LOADING-ERROR-SUCCESS-STATES.md](EMPTY-LOADING-ERROR-SUCCESS-STATES.md).
+
+Not yet reached: Plan, Research, Data, Campus beyond the directory's error,
+Community and Advising. See
 [DESIGN-SYSTEM-MIGRATION-PLAN.md](DESIGN-SYSTEM-MIGRATION-PLAN.md).
 
 ## The overlay bus — `lib/unity.ts`
 
-The Source & details drawer and the Capture sheet are the same on every
-screen, so they are mounted once — `UnityLayer` beside `QuickAdd` in each of
+The Source & details drawer, the Capture sheet and the About this screen
+sheet are the same on every screen, so they are mounted once — `UnityLayer` beside `QuickAdd` in each of
 the three layouts in `App.tsx` — and opened from anywhere:
 
 ```ts
-import { showSource, showCapture, closeOverlay } from '../lib/unity';
+import { showSource, showCapture, showExplain, closeOverlay } from '../lib/unity';
 
 showSource({ title: 'Midterm 2', origin: 'yours', freshness: 'Entered 3 days ago' });
-showCapture();          // attached to the course in view, if any
-showCapture(course.id);  // attached to a given course
+showCapture();                                   // attached to the course you are in, if any
+showCapture(course.id);                          // attached to a given course
+showCapture(undefined, { as: 'advisor', text }); // a kind chosen and a line carried over
+showExplain(screen);                             // About this screen, as a sheet
 closeOverlay();
 ```
 
@@ -77,6 +86,19 @@ Statistical analysis report                    the object
 ```
 
 - A `<section>` named `"{context}: {title}"`.
+- `heading={2}` or `heading={3}` draws the title as a real heading, for the
+  screens where the bar replaced the section's own header (the course hub,
+  Pathway, Study Studio, the toolkit workspace). It never takes 1: the header
+  keeps the screen's one `h1` (`a11y/landmarks.test.ts`). Without `heading`
+  the title is a plain line.
+- `primary` and `secondary` accept `disabled`, for an action that cannot run
+  yet — Study Studio holds "Save & open in Write" while a draft is being
+  generated. `unity.test.tsx` → "holds an action while it cannot run".
+- Inside a surface that is already a card — `.course-banner`,
+  `.portal-panel`, `.blueprint` — the bar drops its own background, border and
+  padding and takes the host's surface (`styles/unity.css`), so it never draws
+  a card inside a card. In the drawn frame (`.blueprint`) its title keeps the
+  size the deadline's title had before (`--type-display-lg`).
 - Not the page header: the header names the screen, this names the object.
 - Never sticky. Sticky chrome is what obscures focus (WCAG 2.4.11), and the
   header already sticks.
@@ -104,6 +126,12 @@ Statistical analysis report                    the object
   level={2}
 />
 ```
+
+Actions accept `disabled`, as on the context bar (`unity.test.tsx` → "holds
+its primary while the action is already running"). Placed in Career with
+"Track it" as primary and Save / Unsave beside it, and in University as a
+connected school record whose first action is primary only when writing is
+allowed (`rollout-b.test.tsx`).
 
 Kinds: `assignment`, `course`, `requirement`, `source`, `study`,
 `opportunity`, `event`, `appointment`, `task`. The kind sets the eyebrow word
@@ -157,30 +185,48 @@ button at least `--target-primary` (44px) tall. Hidden in Focused mode.
 
 ## Quick Capture
 
-`QuickCapture` in `UnityLayer.tsx`, opened with `showCapture(context?)`.
+One launcher, reached the same way everywhere: the header's `+`, which is on
+every screen in every layout and is also opened by `q` and by the search
+home's `+` (`lib/onframe.test.ts` → "keeps the capture box reachable now that
+no sidebar carries it"). It opens
+`QuickAdd`, which reads a dated line ("econ ps4 friday 5pm") and previews
+before writing. Under its field is the **"Or keep it as"** row (`KeepItAs` in
+`UnityLayer.tsx`): pick what the line is and the Capture sheet opens with that
+kind selected and the typed text carried over, so nothing is typed twice. The
+palette's "Capture something" opens the same `+` box.
 
-| Kind | Where it lands |
-| --- | --- |
-| Task | `addTask` — the task list, attached to the course if one is chosen |
-| Course note | `keepNote`, body "Captured as: Course note" |
-| Source | `keepNote`, "Captured as: Source" |
-| Study session | `addTimer`, "Study: …", 25 minutes |
-| Question for advisor | `keepNote`, "Captured as: Question for advisor" |
-| Idea | `keepNote`, "Captured as: Idea" |
+`QuickCapture` in `UnityLayer.tsx` is the sheet those choices open.
 
-- Attaches to the course in view (or the one passed in), says so in an
-  "Attached to" select, and lets the student change it or choose "No course".
+| Kind | Label | Where it lands |
+| --- | --- | --- |
+| `task` | Task, no date | `addTask` — the task list, attached to the course if one is chosen |
+| `note` | Course note | `keepNote`, body "Captured as: Course note" |
+| `source` | Source | `keepNote`, "Captured as: Source" |
+| `session` | Study session | `addTimer`, "Study: …", 25 minutes |
+| `advisor` | Question for advisor | `keepNote`, "Captured as: Question for advisor" |
+| `idea` | Idea | `keepNote`, "Captured as: Idea" |
+
+"Task, no date" says what the kind is for: a dated item belongs to the `+`
+box itself.
+
+- Attaches to the course you are standing in — read through
+  `courseFieldFor(state.screen)` in `lib/parent.ts`, so on Today (where
+  `state.courseId` is only the last course opened) it attaches to none — or to
+  the one passed in. It says so in an "Attached to" select and lets the student
+  change it or choose "No course".
 - States visibility with `<Visibility value="only-me" locked />`: everything
   captured is private to the student.
 - Save is disabled for an empty line. After Save, focus returns to the field,
   "Saved" is announced, and a line says what it was kept as.
-- "Has a due date?" hands the line to `QuickAdd`, which already parses dates
-  and courses and previews before writing; Capture does not grow a second
-  date parser.
-- The brief's research item, data project, assignment workspace and calendar
-  block kinds are not separate: calendar blocks and dated items go through
-  `QuickAdd`; the others are notes until those workspaces have a store to
-  receive them.
+- "Has a due date?" hands the line back to `QuickAdd`; Capture does not grow a
+  second date parser.
+- The brief's research item, data project and assignment workspace kinds are
+  not separate: they are notes until those workspaces have a store to receive
+  them.
+
+Tests: `unity.test.tsx` → "quick capture" (keeps a task, keeps an advisor
+question as a labelled private note, is reached from the `+` box carrying over
+what was typed, will not save an empty line).
 
 ## Status vocabulary
 
@@ -300,7 +346,8 @@ phone.
 `QuickActions.tsx`, on the Search page when the query is empty. Three actions,
 chosen because each changes nothing the student cannot see and undo at once:
 
-- Capture something (opens the Capture sheet, which previews and asks for Save)
+- Capture something (opens the `+` box, whose "Or keep it as" row leads to
+  the Capture sheet; both preview and ask for Save)
 - Start a 25-minute focus session (a timer, which can be stopped)
 - Turn on / Leave Focus mode (presentation)
 

@@ -68,12 +68,15 @@ same help, in the same relative place, on every screen.
 from `app/src/lib/explain.ts`.
 
 - **Placement.** `components/shell/ShellBody.tsx`, which every screen passes
-  through, renders it as the last thing in the screen's content. Because it is
-  rendered there and not by each screen, it cannot be forgotten on one.
-- **Shape.** An `<aside>` named "About this screen" holding a button with
-  `aria-expanded` and `aria-controls`. Closed by default and opened in place —
-  progressive disclosure, not a dialog, so it never covers what it explains and
-  never moves focus unexpectedly.
+  through, renders it as the last thing in the screen's content — on every
+  screen, including the full-bleed ones (below). Because it is rendered there
+  and not by each screen, it cannot be forgotten on one.
+- **Shape.** An `<aside>` named "About this screen" holding a button. On a
+  screen that scrolls, the button has `aria-expanded` and `aria-controls` and
+  opens the answers in place — progressive disclosure, not a dialog, so it
+  never covers what it explains and never moves focus unexpectedly. On a
+  screen that fills its box, the button has `aria-haspopup="dialog"` and opens
+  the same answers in a sheet (below).
 - **Content.** A description list of four answers:
   *What is this? · Why does it matter? · Where does this information come
   from? · What can I do next?* — then "Open the guidebook", except on the
@@ -86,27 +89,30 @@ from `app/src/lib/explain.ts`.
   one. `lib/unity.test.ts` checks every screen in the `Screen` union (more than
   fifty) has all four answers over ten characters.
 
-### The exempt-screen gap
+### On full-bleed screens
 
-`ShellBody` does not render `ScreenGuide` on screens in `EXEMPT`
-(`components/shell/exempt.ts`), because their body is one object drawn
-full-bleed rather than a column with a bottom. That list is:
+Screens in `EXEMPT` (`components/shell/exempt.ts`) draw their body full-bleed
+rather than as an inset column: `guide`, `lesson`, `slides`, `update`, `brief`,
+`essay`, `work`, `solve`, `analyse`, `ask`, `mail`, `proof`, `classmates`,
+`calendar`, `drill`, `quiz`, `guess`, `maps`, `draw`. All nineteen get About
+this screen, in one of two ways:
 
-`guide`, `lesson`, `slides`, `update`, `brief`, `essay`, `work`, `solve`,
-`analyse`, `ask`, `mail`, `proof`, `classmates`, `calendar`, `drill`, `quiz`,
-`guess`, `maps`, `draw`.
+| Kind | Screens | How |
+| --- | --- | --- |
+| Scrolls | The sixteen not in `FILLS` | `ShellBody` renders `<FullBleed>` then `<ScreenGuide screen={screen} />`: the guide sits after the content and opens in place, exactly as on an ordinary screen |
+| Fills its box | `FILLS` = `ask`, `classmates`, `mail` | `ShellBody` wraps both in `.fill-with-guide`, a flex column (`styles/unity.css`) in which the screen takes `flex: 1 1 0` and the guide keeps one compact line (`.screen-guide.is-compact`). The guide is `<ScreenGuide sheet />`: pressing it calls `showExplain(screen)` (`lib/unity.ts`) and `UnityLayer` opens a sheet named "About this screen" showing the same `Answers` |
 
-That is nineteen screens, including some of the most used — Calendar, a
-course's study guide, Assignments (`work`), Ask, Mail and Maps — and two
-(`calendar`, `guide`) have hand-written answers in `explain.ts` that are
-therefore never shown in the app. It is a real gap against 3.2.6, not a
-corner case. Options:
+The sheet exists because opening the answers in place on a chat or a mailbox
+would grow the page and push the pinned composer off the bottom edge. It is
+still the last thing on the screen and still the same four answers (both
+paths render the one `Answers` component), so the help is the same help in
+the same relative order that 3.2.6 asks for. The sheet is modal, traps focus
+and returns it, like the other shared sheets.
 
-1. Offer "About this screen" from the header on every screen (a consistent
-   location that exists on exempt screens too), keeping the in-content one.
-2. Render it after the full-bleed body on exempt screens whose body is a
-   column (the long-form ones: `guide`, `lesson`, `brief`, `essay`, `proof`).
-3. Leave the drawn and chat screens without it and document why.
+`components/unity/unity.test.tsx` → "About this screen on the full-bleed
+screens" holds that it is drawn on every one of them, last, in the same words;
+that it opens in place on a screen that scrolls; and that it opens as a sheet
+on a screen that fills its box, so the composer stays put.
 
 ## Where help lives, in order of reach
 

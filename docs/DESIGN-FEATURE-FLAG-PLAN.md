@@ -8,20 +8,31 @@ patterns. **None were added.** Everything in this change is on by default.
 
 That was a judgement, and the reasons are specific to what shipped:
 
-1. **Nothing changes for somebody who does nothing.** The default workspace
-   mode is Guided, which hides nothing and adds nothing; the semantic tokens
-   resolve to the values already drawn; no colour, size or spacing moved. The
-   visible additions for a default user are the first-goal prompt and pinned
-   widgets on Today, About this screen at the end of non-exempt screens, the
-   quick-action chips on the empty Search page, and the Source & details links
-   on Today's path snapshot and Study Studio.
+1. **No setting, colour, size or spacing moved.** The default workspace mode
+   is Guided, which hides nothing and adds nothing, and the semantic tokens
+   resolve to the values already drawn. What a default user does see is new
+   presentation of things that were already there: the first-goal prompt and
+   pinned widgets on Today; About this screen at the end of every screen; the
+   "Or keep it as" row in the `+` box; and the shared components placed on
+   existing screens — context bars on the deadline, course, guide, Study
+   Studio draft, Pathway and toolkit workspaces, object cards in Career and
+   University, and the shared error, success, progress, step, permission and
+   save states on the screens listed in
+   [SEMESTER-PLATFORM-UNITY-PATTERNS.md](SEMESTER-PLATFORM-UNITY-PATTERNS.md#where-each-is-used).
+   Those placements replaced each screen's own markup for the same
+   information and are meant to carry the same actions; the rollout tests
+   (`components/unity/rollout-a/b/c.test.tsx`) check the actions they cover,
+   but not every action on every placed screen was audited. That is a larger visible
+   change than a flag-free rollout usually carries, and is the strongest
+   argument for the staged option below.
 2. **Presentation only.** No mode, goal or pin decides access, and a test holds
    that (`lib/unity.test.ts` → "are read by nothing that decides access").
    A flag guards against a change in what somebody can do; there is none.
 3. **Theme preference already exists** as the ground and "Match my device",
    and was not changed.
 4. **Opt-in by design.** Workspace modes are chosen by the student in
-   Settings; Quick Capture opens only when pressed.
+   Settings; the Capture sheet opens only from the `+` box's "Or keep it as"
+   row or the palette.
 5. **The existing flags gate capability, not presentation.** The repository
    has build-time flags — `lib/experience-flags.ts` (six `VITE_*` variables
    with states `off`, `preview`, `sandbox`, `production`, following the
@@ -45,6 +56,8 @@ rollback, not turning it on the release:
 | `design.workspaceModes` | The Settings group and `data-workspace` | Group hidden; attribute forced to `guided` |
 | `design.glassFallbacks` | — | Not recommended as a flag: it fixes an accessibility fault |
 | `design.sourceDrawer` | Source & details buttons | Buttons not rendered |
+| `design.keepItAs` | The "Or keep it as" row in `QuickAdd` | The `+` box reads dated lines only, as before |
+| `design.sharedPlacements` | The rollout onto existing screens | Not practical as a runtime flag: each placement replaced a screen's own markup, so "off" would mean keeping two versions of every placed screen. Staging this is a matter of landing it screen by screen instead |
 
 Where a flag would live: not the look, which syncs and is the student's own
 preference. The existing pattern is `lib/experience-flags.ts` — a `VITE_*`
@@ -85,6 +98,10 @@ remediation plan named in the PR (see
   restores the literal values in the same commit, so there is no frame with an
   undefined colour.
 
-Partial rollback without a revert: remove `<ScreenGuide />` from `ShellBody`,
-`<FirstGoal />` and `<CommandCenter />` from `Today.tsx`, or `<QuickActions />`
-from `Command.tsx` — each is one line and none has dependants.
+Partial rollback without a revert: remove `<ScreenGuide />` from `ShellBody`
+(and the `.fill-with-guide` wrapper), `<FirstGoal />` and `<CommandCenter />`
+from `Today.tsx`, `<QuickActions />` from `Command.tsx`, or `<KeepItAs />`
+from `QuickAdd.tsx` — each is a line or two and none has dependants. The
+placements on existing screens are not one-line removals: each replaced that
+screen's own header, error box or save line, so undoing one means restoring
+the markup it replaced, screen by screen.

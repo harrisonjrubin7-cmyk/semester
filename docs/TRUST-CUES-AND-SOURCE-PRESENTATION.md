@@ -44,12 +44,15 @@ The brief's labels, mapped:
 | Official institution source | `official` — Official | Calendar and Connect via `where.ts`; no path returns it yet |
 | Faculty-approved | `faculty-approved` — Faculty-approved | Defined; not yet used |
 | Course-provided | `course-provided` — Course-provided | Defined; not yet used |
-| Student-entered | `yours` — Yours | Today's path snapshot (drawer origin) |
-| AI-assisted, source-linked | `ai-assisted` — AI-assisted, source-linked | Study Studio |
+| Student-entered | `yours` — Yours | Today's path snapshot, Degree, Pathway, a deadline typed by hand, Career's opportunity, the toolkit workspace |
+| AI-assisted, source-linked | `ai-assisted` — AI-assisted, source-linked | Study Studio's draft context bar |
 | Updated today | `updated-today` — Updated today | Defined; not yet used |
-| Needs advisor confirmation | `needs-confirmation` — Needs confirmation | Today's path snapshot; `NotOfficial` |
+| Needs advisor confirmation | `needs-confirmation` — Needs confirmation | Today's path snapshot; Degree; Pathway; `NotOfficial` |
 | Policy-restricted | — | Not in the vocabulary |
 | Stale | `stale` — Out of date | Calendar and Connect feed rows |
+| (Semester-created) | `made` — Made here | A deadline, course hub or study guide from a syllabus the student imported |
+| (connected system) | `connected` — Connected | University's school records |
+| (demonstration) | `sample` — Sample | The deadline, course hub and guide for the sample semester's courses |
 | Unavailable / Current | — | Not in the vocabulary |
 
 Two deliberate wording differences:
@@ -91,10 +94,20 @@ They have different glyphs (`○` and `✦`) and different sentences.
 | --- | --- |
 | Today → "Your path" (`components/TodayDecisionSurface.tsx`) | `StatusChip` "Needs confirmation" (built from what the student typed, never the registrar's audit); "How this status is calculated" disclosure; Source & details with origin `yours`, "Used in" Today / My Path / Registration readiness, limitations, and "Open My Path" |
 | Today → "Next best step" | "Why am I seeing this?" disclosure with a "Source:" line |
+| A deadline (`ItemDetail` in `screens/Courses.tsx`) | Context bar with the origin — `yours` when typed by hand (no syllabus sentence), `made` when its course was imported, `sample` otherwise — plus "Action required" when the date moved; Source & details says where the date came from |
+| The course hub (`components/CourseHub.tsx`) | Context bar: `made` for an imported course, `sample` for a seed course, whatever the term. This corrected a label that had called imported courses "Sample course" |
+| The study guide (`screens/Guide.tsx`) | Context bar with `made` or `sample` and the guide's recorded source |
+| Study Studio's AI draft (`components/StudyStudio.tsx`) | Context bar: "AI-assisted, source-linked", Saved; Source & details with origin `ai-assisted`, the sources used, limitations, and visibility "Only you — kept on this device until you save it to Write"; the line "Saved temporarily on this device. Matched quotations support source review; they do not guarantee an AI explanation is correct." |
+| Pathway and Degree | `yours` and "Needs confirmation" — the student's arithmetic, not the registrar's |
+| Career's open opportunity | Object card, `yours`: "You entered this listing" |
+| University's school records | Object cards, `connected` |
+| The toolkit's assignment workspace | Context bar, `yours`, Saved |
 | `components/NotOfficial.tsx` | `StatusChip` "Needs confirmation", then "This is not official — confirm with your compliance office." |
-| Study Studio AI draft (`components/StudyStudio.tsx`) | Eyebrow "AI-assisted, source-linked · Saved temporarily on this device"; Source & details with origin `ai-assisted`, the sources used, limitations, and visibility "Only you — kept on this device until you save it to Write" |
 | Calendar and Connect feeds | Out of date / Connected with last-pulled time |
 | Every screen | About this screen → "Where does this information come from?" |
+
+`rollout-a.test.tsx` asserts that every seed course's deadline, hub and guide
+reads "Sample" and never "Made here" or "Official".
 
 ## AI presentation
 
@@ -103,15 +116,15 @@ the app stands against each:
 
 | Rule | Status |
 | --- | --- |
-| Label every model draft "AI-assisted, source-linked" | Study Studio does; the vocabulary makes it one word everywhere |
+| Label every model draft "AI-assisted, source-linked" | Study Studio's draft context bar does; the vocabulary makes it one word everywhere |
 | Show the sources it was drawn from | Study Studio: "View cited material" per section, with the quotation, its location, "Open original file" and the passage in context; drawer lists "Sources used" |
 | State limitations | Study Studio: "Matched quotations support source review; they do not guarantee an AI explanation is correct." The drawer repeats it as a limitation |
 | Let the student edit | Study Studio: each section is an editable textarea |
 | Let the student verify | Citations open the original source |
-| Save | "Save & open in Write" |
+| Save | "Save & open in Write", the context bar's primary, held (disabled) while a draft is generating |
 | Report an issue | **Not wired** — `SourceDetail.report` is supported by the drawer, but Study Studio does not pass it |
 | Turn into practice | Not on this panel |
-| Show genuine progress, not fake certainty | `StepStatus` exists for "Gathering sources → Drafting → Ready" and is tested; not yet placed in Study Studio |
+| Show genuine progress, not fake certainty | Study Studio shows its generation as `StepStatus`: Selecting sources → Drafting → Matching quotations → Ready, marking the step that failed (`rollout-a.test.tsx`) |
 | Avoid "Ask anything", "AI genius", "let AI do your work" | The shared components use none of these; not audited app-wide in this change |
 
 The brief's action-first phrasing ("Explain this concept", "Check my

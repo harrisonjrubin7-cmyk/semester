@@ -25,12 +25,16 @@ done. Evidence names the file, test or script.
 - [x] Outlines never removed globally — `focus.test.ts` fails on
   `outline: none` for `:focus-visible` without a redraw.
 - [~] Not hidden by sticky header or tab bar — scroll margins of 96px and
-  84px (`--focus-clear-top`, `--focus-clear-bottom`). Not measured for the new
+  84px (`--focus-clear-top`, `--focus-clear-bottom`). Not measured for the
   Focus bar.
 - [x] Not hidden by sheets and dialogs — they are modal and trap focus
   (`a11y/modal.test.ts`).
 - [x] Focus returns to the opener after a sheet closes — `useModal`;
   `unity.test.tsx` asserts it for Source & details.
+- [x] Actions that cannot run are disabled, not dead — `ContextBar` and
+  `ObjectCard` actions take `disabled` (Study Studio holds Save while a draft
+  is generating; University holds a record's primary while busy);
+  `unity.test.tsx` "holds an action while it cannot run".
 
 ## Drag alternatives
 
@@ -45,8 +49,9 @@ done. Evidence names the file, test or script.
 ## Reflow and zoom
 
 - [~] 320 CSS px with no two-dimensional scrolling — `scripts/accessibility-smoke.mjs`
-  checks six journeys at 320px (not a CI step). New components wrap
-  (`flex-wrap` throughout `unity.css`) but were not measured at 320px.
+  checks six journeys at 320px (not a CI step). The shared components wrap
+  (`flex-wrap` throughout `unity.css`) but have not been measured at 320px on
+  the screens they were placed on.
 - [x] Text scaling and browser font size reach every stylesheet size —
   `styles/textscale.test.ts`, `a11y/type.test.ts`.
 - [x] Inputs never under 16px on touch — `styles/fields.test.ts`.
@@ -77,8 +82,11 @@ done. Evidence names the file, test or script.
 
 - [x] Every field labelled — label lint.
 - [~] Error beside the field with a summary, focus to the first invalid
-  field — `ErrorState` exists for region-level errors; no shared field-level
-  error pattern.
+  field — region-level failures now use `ErrorState` (announced, with a
+  required recovery action) on Registration day, the graduation simulator,
+  the registration portal, the campus directory, the toolkit, Account sync,
+  support access and Import. There is still no shared field-level error
+  pattern.
 - [x] Entered content preserved on failure — Capture keeps focus and clears
   only after a successful save; `Trouble` retries without re-entry.
 - [x] Destructive actions confirmed — `TypeToConfirm`; reversible ones undone —
@@ -115,17 +123,24 @@ done. Evidence names the file, test or script.
 
 ## Consistent help (SC 3.2.6)
 
-- [~] Help in the same relative place on every screen — About this screen is
-  last in every non-exempt screen's content. Missing on the nineteen exempt
-  screens, including Calendar and Assignments; see
-  [ONBOARDING-AND-CONTEXTUAL-HELP.md](ONBOARDING-AND-CONTEXTUAL-HELP.md#the-exempt-screen-gap).
+- [x] Help in the same relative place on every screen — About this screen is
+  the last thing in every screen's content, including all nineteen full-bleed
+  screens; the three that fill their box (`ask`, `classmates`, `mail`) open
+  the same answers in a sheet so the composer stays put.
+  `components/unity/unity.test.tsx` → "About this screen on the full-bleed
+  screens".
 
 ## Open items
 
-1. About this screen on exempt screens.
-2. Field-level error pattern with summary and focus management.
-3. Measure the Focus bar against the assistant button and the bottom focus
-   clearance.
-4. Keyboard and screen-reader audit of data tables, rich-text editors, media
+1. Field-level error pattern with summary and focus management.
+2. Measure the Focus bar against the assistant button and the bottom focus
+   clearance. On wide layouts the assistant's panel draws over the shared
+   sheets' scrim — seen in a 1280px screenshot of the Capture sheet — because
+   the sheets are mounted inside `.device`, whose `isolation: isolate` caps
+   their `z-index`, while the panel is outside it. `QuickAdd` has the same
+   stacking; `styles/stacking.test.ts` explains the context.
+3. Keyboard and screen-reader audit of data tables, rich-text editors, media
    controls and chart alternatives.
-5. Run `smoke:a11y` at 320px over the screens that adopt the new components.
+4. Run `smoke:a11y` at 320px over the screens that now carry the shared
+   components (see the placement table in
+   [SEMESTER-PLATFORM-UNITY-PATTERNS.md](SEMESTER-PLATFORM-UNITY-PATTERNS.md#where-each-is-used)).

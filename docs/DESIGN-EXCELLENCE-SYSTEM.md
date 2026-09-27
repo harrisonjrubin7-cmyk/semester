@@ -35,6 +35,16 @@ only, so the phases are commits and sections of one PR rather than eight PRs.
 [DESIGN-SYSTEM-MIGRATION-PLAN.md](DESIGN-SYSTEM-MIGRATION-PLAN.md) maps each
 phase to what landed and what did not.
 
+The shared components are not only built but placed: context bars on the
+deadline, course hub, study guide, Study Studio's draft, Pathway and the
+toolkit's assignment workspace; object cards in Career and University; Next,
+the standard error, success, progress, step, permission and save states on
+twenty-eight existing screen and component files; About this screen on every screen; and Quick
+Capture behind the header's `+` on every screen.
+[SEMESTER-PLATFORM-UNITY-PATTERNS.md](SEMESTER-PLATFORM-UNITY-PATTERNS.md#where-each-is-used)
+has the full table. Plan, Research, Data, Community and Advising are not yet
+reached.
+
 ## The documents
 
 | Document | What it covers |
@@ -47,9 +57,9 @@ phase to what landed and what did not.
 | [ELEVATION-AND-GLASS-POLICY.md](ELEVATION-AND-GLASS-POLICY.md) | Surfaces, elevation tokens, the four places glass is allowed and their fallbacks |
 | [MICRO-INTERACTION-SYSTEM.md](MICRO-INTERACTION-SYSTEM.md) | Motion tokens, the reduced-motion paths, the interaction matrix |
 | [INFORMATION-HIERARCHY.md](INFORMATION-HIERARCHY.md) | The three questions, one primary action, card rhythm, progressive disclosure, calm density |
-| [SEMESTER-PLATFORM-UNITY-PATTERNS.md](SEMESTER-PLATFORM-UNITY-PATTERNS.md) | Context bar, object card, Source & details, Next, Capture, status vocabulary, visibility, Open in |
+| [SEMESTER-PLATFORM-UNITY-PATTERNS.md](SEMESTER-PLATFORM-UNITY-PATTERNS.md) | Context bar, object card, Source & details, Next, Capture, status vocabulary, visibility, Open in — and where each is used |
 | [TRUST-CUES-AND-SOURCE-PRESENTATION.md](TRUST-CUES-AND-SOURCE-PRESENTATION.md) | The provenance ladder, labels, freshness, AI presentation rules |
-| [ONBOARDING-AND-CONTEXTUAL-HELP.md](ONBOARDING-AND-CONTEXTUAL-HELP.md) | First-session goal, existing onboarding, About this screen and its exempt-screen gap |
+| [ONBOARDING-AND-CONTEXTUAL-HELP.md](ONBOARDING-AND-CONTEXTUAL-HELP.md) | First-session goal, existing onboarding, About this screen on every screen |
 | [ACCESSIBILITY-POLISH-CHECKLIST.md](ACCESSIBILITY-POLISH-CHECKLIST.md) | The checklist, each item ticked or not, with evidence |
 | [WORKSPACE-MODES.md](WORKSPACE-MODES.md) | Guided, Focused, Detailed, Accessibility; the presentation-only guarantee |
 | [EMPTY-LOADING-ERROR-SUCCESS-STATES.md](EMPTY-LOADING-ERROR-SUCCESS-STATES.md) | Every state component and when to use which |
@@ -67,4 +77,4 @@ phase to what landed and what did not.
 | Shared component styles | `app/src/styles/unity.css` |
 | Shared components | `app/src/components/unity/*.tsx` |
 | Vocabulary and small libraries | `app/src/lib/status.ts`, `lib/unity.ts`, `lib/explain.ts`, `lib/goals.ts`, `lib/widgets.ts` |
-| Tests | `app/src/styles/tokens.test.ts`, `styles/glass.test.ts`, `lib/unity.test.ts`, `components/unity/unity.test.tsx` |
+| Tests | `app/src/styles/tokens.test.ts`, `styles/glass.test.ts`, `lib/unity.test.ts`, `components/unity/unity.test.tsx`, `components/unity/rollout-a.test.tsx`, `rollout-b.test.tsx`, `rollout-c.test.tsx` |

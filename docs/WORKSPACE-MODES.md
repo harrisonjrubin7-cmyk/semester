@@ -16,7 +16,7 @@ touching the store.
 | --- | --- | --- | --- |
 | Guided | `guided` | Next steps and short explanations alongside the work. | Nothing is hidden. This is the app as it was, and the default |
 | Focused | `focused` | The current work, its sources and save state — navigation steps back. | Hides `.app-tabs`, `.shelf-nav`, `.today-secondary-journey` and anything marked `.hides-in-focus` (`FirstGoal`, `CommandCenter`, `NextSteps`). Shows the Focus bar |
-| Detailed | `detailed` | Sources, metadata and deadlines shown up front. | Shows elements marked `.detail-only`, which are hidden otherwise |
+| Detailed | `detailed` | Sources, metadata and deadlines shown up front. | Shows elements marked `.detail-only`, which are hidden otherwise — today, the source sentence on placed object cards |
 | Accessibility | `access` | Larger text, more space and less motion, from your own settings. | Sets the existing settings `textSize: 'large'`, `density: 'comfortable'`, `calm: 'still'` (`ACCESS_LOOK`) |
 
 The rules are all in `app/src/styles/unity.css` under "Workspace modes —
@@ -25,9 +25,11 @@ presentation only".
 ### Focused
 
 - Hidden: the tab bar, the shelf navigation, Today's "Also useful" section and
-  every `.hides-in-focus` element.
-- Kept: the header, the screen's content, its sources, its save state, About
-  this screen, and the skip link.
+  every `.hides-in-focus` element — the first goal and pinned widgets on Today,
+  and the Next section wherever it is placed (the deadline, Registration day,
+  Close term).
+- Kept: the header, the screen's content, its context bar with its sources
+  and save state, About this screen, and the skip link.
 - Added: the **Focus bar** (`FocusBar` in `modes.tsx`, mounted by `UnityLayer`
   in all three layouts). A `region` named "Focus mode" fixed at the bottom
   centre, where the tab bar was, holding "Start 25-minute timer" (adds a timer
@@ -47,11 +49,15 @@ Known limits:
 
 ### Detailed
 
-The only element marked `.detail-only` today is the object card's source
-sentence (`.object-card-detail` in `ObjectCard.tsx`). `ObjectCard` is not yet
-placed on any screen, so **Detailed currently has no visible effect in the
-app**. It becomes meaningful as object cards and further `.detail-only`
-content are adopted.
+The only element marked `.detail-only` is the object card's source sentence
+(`.object-card-detail` in `ObjectCard.tsx`): the origin's own sentence from
+`lib/status.ts` and, where given, the freshness. It is drawn only when the card
+has a `source`. Object cards are placed on Career's open opportunity ("You
+entered this yourself. Nothing has checked it.") and on University's school
+records (the `connected` sentence), so Detailed reveals that line there and
+nowhere else yet. Every other screen looks the same in Detailed as in Guided.
+It becomes more useful as object cards and further `.detail-only` content are
+adopted.
 
 ### Accessibility
 
@@ -77,10 +83,6 @@ decides access" walks every non-test `.ts`/`.tsx` source that exports a
 function named `allowed`, `forRole` or `can…` and mentions a permission or
 capability word, asserts it found at least one such file, and fails if any of
 them mentions `workspaceMode` or `data-workspace`.
-
-(The comment above `WORKSPACE_MODES` in `lib/look.ts` names
-`components/unity/modes.test.tsx` as the holder of this rule; that file does
-not exist, and the test is the one in `lib/unity.test.ts`.)
 
 Also by construction:
 

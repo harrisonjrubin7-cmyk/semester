@@ -39,7 +39,10 @@ Rules:
    sheet and the Focus bar add a shadow.
 2. No card on card on card. The object card, context bar, next-step buttons and
    command-centre widgets all sit on `--surface-base` directly; none nests a
-   second bordered surface inside itself.
+   second bordered surface inside itself. Where a context bar is placed inside
+   a surface that is already a card — `.course-banner`, `.portal-panel`,
+   `.blueprint` — `unity.css` removes its background, border and padding so it
+   takes the host's surface instead of drawing a card inside a card.
 3. Nothing is identified by shadow alone. Under `forced-colors: active`
    `unity.css` gives every shared surface a `CanvasText` border, because the
    shadow and the ground colour are both discarded.
@@ -57,7 +60,8 @@ Translucent, blurred surfaces are allowed in four places and nowhere else.
 | Soft layout's folder | `.soft-folder` | `app.css` | A transient overlay over the launcher |
 | Focus bar | `.focus-bar` | `unity.css` | A transient floating control |
 
-Not glass: the Source & details and Capture sheets (`.unity-sheet`) are opaque
+Not glass: the Source & details, Capture and About this screen sheets
+(`.unity-sheet`) are opaque
 `--surface-overlay`, because they hold forms and reading text. The brief lists
 the command palette and the quick-capture panel as places glass *may* be used;
 neither uses it here.

@@ -17,13 +17,13 @@ components existed before this work; the rest were added beside them in
 | Irreversible action | `TypeToConfirm` | `components/TypeToConfirm.tsx` | Yes | Me, Privacy, Downloads, Adopting |
 | Not official | `NotOfficial` | `components/NotOfficial.tsx` | Yes; now leads with the shared "Needs confirmation" chip | Athletics eligibility and NIL (`CaraLog`, `EligibilityCheck`, `Nil`) |
 | Loading | `LoadingState` | `unity/States.tsx` | New | The lazy-screen fallback in `App.tsx` |
-| Error with recovery | `ErrorState` | `unity/States.tsx` | New | Not yet |
-| Success / milestone | `SuccessState` | `unity/States.tsx` | New | Not yet |
-| Determinate progress | `Progress` | `unity/States.tsx` | New | Not yet |
-| Named steps (AI generation) | `StepStatus` | `unity/States.tsx` | New | Not yet |
-| Permission changed | `PermissionNotice` | `unity/States.tsx` | New | Not yet |
+| Error with recovery | `ErrorState` | `unity/States.tsx` | New | Registration day, graduation simulator, registration portal, campus directory, toolkit (recovery-copy errors); Account sync failure; support access load failure; Import retryable failures |
+| Success / milestone | `SuccessState` | `unity/States.tsx` | New | Registration day complete; Close term; Export restore; Snapshots restore |
+| Determinate progress | `Progress` | `unity/States.tsx` | New | Update and Import (reading several files); Travel pack download |
+| Named steps (AI generation) | `StepStatus` | `unity/States.tsx` | New | Study Studio generation; Update reading one file |
+| Permission changed | `PermissionNotice` | `unity/States.tsx` | New | Support access created and revoked; Family permission plan and item saved; Share course after sending |
 | Offline | `OfflineStrip` | `unity/States.tsx` | New | Every screen while offline, via `ShellBody` |
-| Save / sync | `SaveState`, `SyncState` | `unity/Status.tsx` | New | `SaveState` in Capture only |
+| Save / sync | `SaveState`, `SyncState` | `unity/Status.tsx` | New | `SyncState` on Account; `SaveState` in Write, Mine's note editor, Settings → Assistant, the Capture sheet, and context bars that pass `save` |
 
 ## When to use which
 
@@ -67,6 +67,18 @@ wait; use `Progress` when the wait has a size.
   retry button, and never retries by itself.
 - `Notice alert` for a device-library read or save failure, with the recovery
   download inside it.
+Where it is used: the recovery-copy error — a device library that could not
+save, with the download as its recovery — on `RegistrationDay`,
+`GraduationSimulator`, `RegistrationPortal`, `CampusDirectory` and the
+toolkit; Account's sync failure ("Sync did not finish", recovery "Check now",
+with the failure's reference in the reference slot); Support access's failed
+load ("Try again"); and Import's retryable failures, titled by what failed
+(`FAILED_TITLE`), with "Try building it again" for a failed build. Import keeps
+`Trouble` for a failure there is nothing to retry (`rollout-c.test.tsx`).
+
+`.state-body` is `white-space: pre-line`, so an error whose body has several
+paragraphs keeps its line breaks.
+
 - `ScreenTrouble` catches a render failure and a stale deploy, says the work is
   safe, and offers a way out.
 
@@ -85,6 +97,13 @@ glyph and a sentence.
 Acknowledge, then point at what is next. `role="status"`, a `✓` glyph, and
 "Next: …". No streaks, ranks or comparison; the test asserts none of
 "streak", "#1" or "beat" appears.
+
+Where it is used: "Your registration checklist is complete" on Registration
+day, which is followed by a Next section offering only steps the screen does
+not already show; "{term} is closed" on Close term, keeping the archived line,
+with Next offering "See your record" and "Import next term's syllabus";
+"Restored" after restoring a backup on Export and after going back a day in
+Snapshots.
 
 ### Progress — `Progress`
 
@@ -112,9 +131,20 @@ fake instant answer. An ordered list; each step has a glyph and a hidden word
 (waiting, in progress, done, failed); the current step has
 `aria-current="step"`.
 
+Where it is used: Study Studio's generation ("Making your study guide":
+Selecting sources → Drafting → Matching quotations → Ready, showing which step
+failed), and Update reading one file ("Reading this file": Working out what it
+is → Reading what is in it → Comparing with the course).
+
 ### Permission change — `PermissionNotice`
 
 What changed, why, and a link to where it is controlled. `role="status"`.
+
+Where it is used: Support access when a window is created (with the way to
+revoke it) and when it is revoked (with no control, since there is nowhere to
+go); Family when a permission plan or an item is saved (what changed, why it
+is safe, and the preview); Share course after sending (what the file
+carries).
 
 ### Offline — `OfflineStrip`
 
@@ -131,6 +161,11 @@ except `offline`, `conflict` and `sync-error`, which are assertive because they
 change what the student should do next. `SyncState` reads the account's sync
 state and connection through `syncStatusKey`, so it says the same words as
 Settings.
+
+Where it is used: `SyncState` on Account, above the counts it always showed;
+`SaveState` beside Write's save sentence, under the title in Mine's note
+editor, in Settings → Assistant only once something has been saved, in the
+Capture sheet after Save, and in every context bar given a `save` state.
 
 ### Reversible and irreversible actions — `Undone`, `TypeToConfirm`
 
@@ -155,9 +190,15 @@ the freshness row.
 
 ## Tests
 
+`components/unity/rollout-a.test.tsx`, `rollout-b.test.tsx` and
+`rollout-c.test.tsx` mount each placement above on its real screen and check
+it the way a reader would — see
+[DESIGN-REGRESSION-TEST-PLAN.md](DESIGN-REGRESSION-TEST-PLAN.md).
+
 `components/unity/unity.test.tsx` → "the standard states": loading is busy and
 says so; error is an alert and always offers a way out; success points at
 what is next without a streak; progress is a real progress bar with Cancel and
 Retry by name; steps say their state in words and mark the current one.
 `a11y/tellings.test.ts` holds that messages saying something went wrong are
-announced.
+announced, and counts `<ErrorState` as announced because the component is
+`role="alert"` itself.

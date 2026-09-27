@@ -62,8 +62,10 @@ A screen passes when, in its first visible area:
   ([EMPTY-LOADING-ERROR-SUCCESS-STATES.md](EMPTY-LOADING-ERROR-SUCCESS-STATES.md)).
 - [ ] It works at phone width with no loss of capability — same actions, same
   source access, same privacy controls.
-- [ ] "About this screen" appears, or the screen is in `EXEMPT` and the PR says
-  so.
+- [ ] "About this screen" appears last. It does automatically for any screen
+  that goes through `ShellBody`; a new screen that fills its box (a chat, a
+  mailbox) is added to `FILLS` in `components/shell/exempt.ts` so the answers
+  open in a sheet instead of pushing its pinned controls off the bottom.
 
 ## Design-system checklist for a component
 
