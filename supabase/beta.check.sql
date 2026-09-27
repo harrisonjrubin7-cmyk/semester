@@ -1,4 +1,4 @@
--- The invite-only private beta (20260928010000_private_beta.sql).
+-- The invite-only private beta (20260928040000_private_beta.sql).
 -- LOCAL/DISPOSABLE DATABASES ONLY; the transaction is always rolled back.
 --
 -- Each rule is walked by the account it is about and by one it should stop:

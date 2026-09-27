@@ -6,7 +6,7 @@ Launch-readiness Phase 1.
 
 | Where | What |
 | --- | --- |
-| `supabase/migrations/20260928010000_private_beta.sql` | Tables, capabilities and the sixteen functions that are the only way in |
+| `supabase/migrations/20260928040000_private_beta.sql` | Tables, capabilities and the sixteen functions that are the only way in |
 | `supabase/beta.check.sql` | 42 checks, walked by a manager, a triager, an invitee, an unconfirmed address and a stranger |
 | `app/src/lib/beta.ts`, `app/src/components/BetaPanel.tsx` | The member's half, on Help, behind `VITE_PRIVATE_BETA` |
 | `app/src/lib/beta.test.ts`, `app/src/components/betapanel.test.tsx` | The client held to the migration's vocabulary, and the panel's behaviour |

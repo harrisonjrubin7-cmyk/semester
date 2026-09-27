@@ -172,7 +172,7 @@ begin
 
   -- `platform_admin` carries five capabilities and not this one: the three it
   -- was created with, and running the private beta
-  -- (20260928010000_private_beta.sql). Asserted out of the matrix rather than
+  -- (20260928040000_private_beta.sql). Asserted out of the matrix rather than
   -- by granting it, because the claim is about what the seeded rows say — and
   -- asserted as the exact set, so a sixth cannot arrive in passing.
   set local role postgres;
