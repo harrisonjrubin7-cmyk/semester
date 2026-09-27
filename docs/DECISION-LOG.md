@@ -485,3 +485,45 @@ session's range.)
   prepares, exports and prints, and the sharing section says sharing is not
   available.
 
+## D-044 · Source Locker joins existing stores, and records provenance from now on
+
+**Decided 27 Sep 2026 (Phase H).**
+
+- The locker is a view over the four places materials already live:
+  - Drive files;
+  - added materials (`state.updates`);
+  - the syllabus and prepared guide;
+  - the reading list (`state.sources`).
+
+  It adds no fifth store of materials. This follows
+  `docs/ai-toolkit/SOURCE-LOCKER-AND-PROVENANCE.md`.
+- What is new is `semester.source-locker.v1`, which is device-only and holds
+  two things: the materials the student blocked from AI, and which materials
+  each saved Study Studio guide was built from.
+- Guides saved before Phase H have no record, and the locker cannot claim a
+  link it never saw. Links it can read from existing data are shown too: an
+  added material's `fileIds`, and notes' attachments.
+- **Removing** a file moves it to Drive trash (30 days) and detaches it from
+  notes.
+- **Notes are never deleted:** they are the student's own writing.
+- **Generated items** (added materials read from the file, guides built from
+  it) are deleted only if the student ticks the box in the confirmation that
+  lists them.
+- The syllabus cannot be removed here. Removing the course is the way.
+
+## D-045 · Readiness is the student's mark; Semester only counts
+
+**Decided 27 Sep 2026 (Phase H).**
+
+- The student marks each topic Reviewed, Practicing or Needs review, and rates
+  their own confidence from 1 to 5. Semester never sets either.
+- Practice signals are counts the app already holds: cards practiced, right,
+  missed and due; and practice papers as taken.
+- The one recommended session is 25 minutes. It goes to a topic in this order:
+  1. a topic marked Needs review;
+  2. then an unmarked topic;
+  3. then one being practiced;
+  4. within each, the lowest confidence, then the most cards due.
+- No grade prediction, pass likelihood, score or comparison with other
+  students. A test holds those words out.
+

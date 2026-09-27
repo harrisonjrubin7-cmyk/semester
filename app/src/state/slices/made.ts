@@ -52,7 +52,8 @@ export function made(state: State, action: Action): State | null {
 
     case 'makeDocument': {
       const now = Date.now();
-      const doc: Doc = { ...action.doc, id: newId(), created: now, updated: now };
+      const wanted = action.id && !state.documents.some((d) => d.id === action.id) ? action.id : null;
+      const doc: Doc = { ...action.doc, id: wanted ?? newId(), created: now, updated: now };
       const next = { ...state, documents: [doc, ...state.documents].slice(0, LIMIT) };
       return action.open ? push({ ...next, documentId: doc.id }, 'write') : next;
     }
