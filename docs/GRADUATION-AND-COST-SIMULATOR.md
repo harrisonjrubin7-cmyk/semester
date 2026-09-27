@@ -130,6 +130,13 @@ your aid and does not estimate it. Not a bill."
   `graduation_scenarios` added. An LTI-provisioned account holding a draft is
   not empty, so account linking must not retire it. `ltiaccount.test.ts`
   requires this of every table the app writes.
+- **Restated after help requests:**
+  `20260927234500_untouched_graduation_after_help.sql`.
+  `20260927230000_help_requests.sql`, merged into the base later, redefines
+  the function from the definition before this one. Migrations apply in
+  version order, so that definition would win and drop the graduation row.
+  This file is the help-requests definition with the row added back.
+  `ltiaccount.test.ts` failed on the merged branch without it.
 - **Scope:** additive — `CREATE OR REPLACE`, no table or data change, safe to
   re-run.
 - **Checked** locally with `SEMESTER_CHECK_PG_ANY=1 supabase/check.sh` on a
@@ -153,6 +160,7 @@ your aid and does not estimate it. Not a bill."
 | `components/ScenarioComparison.tsx` | The comparison card |
 | `components/CostPlanner.tsx` | The cost lines |
 | `supabase/migrations/20260927181500_untouched_graduation_drafts.sql` | See above |
+| `supabase/migrations/20260927234500_untouched_graduation_after_help.sql` | The same row, restated after `help_requests` |
 
 | Changed | Change |
 |---|---|
