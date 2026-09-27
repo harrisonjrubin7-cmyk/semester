@@ -26,7 +26,7 @@ The first run applied every migration a second time. Nine files stopped:
 
 The last one did not just fail. It stopped part way through and left an older `lti_account_untouched` behind, and `help-requests.check.sql` caught it. A migration that cannot run twice does not merely refuse. It can leave the database wrong.
 
-All nine are fixed. Production never re-runs an applied file: the migration ledger records it once. So these edits change nothing live. They change what a rebuild or repair produces, which is now identical.
+All nine are fixed. Two more reached main while this was in review, from #803, and the check found them on the first rebase: `20260927120000_identity_claim_minimization.sql` added a check constraint without dropping it first, and `20260928011845_tenant_sso_policy.sql` re-created `lti_launch_entitlement_facts` at the three-argument signature a later file installs. Both are fixed here the same way. Production never re-runs an applied file: the migration ledger records it once. So these edits change nothing live. They change what a rebuild or repair produces, which is now identical.
 
 **The check that keeps it true:** `SEMESTER_CHECK_REAPPLY=1 supabase/check.sh`. It:
 

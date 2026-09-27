@@ -141,6 +141,9 @@ for each row execute function private.refuse_tenant_sso_policy_history_change();
 -- account is a campus-SSO one is about the person, not the school.
 
 drop function if exists public.lti_launch_entitlement_facts(text);
+-- And the three-argument form, so a second run of this file (a repair, a
+-- restore rehearsal) can re-create it.
+drop function if exists public.lti_launch_entitlement_facts(text, text, text);
 
 create function public.lti_launch_entitlement_facts(want_tenant text, want_issuer text, want_subject text)
 returns table (
