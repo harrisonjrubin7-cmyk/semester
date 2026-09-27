@@ -445,3 +445,27 @@ The suite failed every time.
   publish. The server stays the authority, and the one that decides who may
   publish at all.
 - **F5.** The screens show nothing about students. A test walks every tab.
+
+## D-104 · Course Studio slice 4: a pack is a reading list, and "do not use" is held back by title
+
+**Decided 27 Sep 2026, building slice 4 of D-100.** The design said packs
+would appear in Study Studio "as source sets: choosing one selects its
+references". A pack's references are links and citations, not text (F4 kept
+Semester from hosting files), so there is nothing for a click to select.
+Instead:
+
+- **Reading list.** Study Studio lists the course's packs as "Study packs from
+  your instructor". Each reference opens where it lives and is labelled
+  Authoritative, Supplemental or Do not use. The student adds one as a source
+  through the existing upload and paste flows.
+- **"Do not use" is enforced on what is sent.** Before generating,
+  `packGuard` compares the ticked sources with the pack's do-not-use
+  references by title, ignoring case, punctuation, spacing and the file
+  extension. A match is held back, named on screen, and never sent, whatever
+  the student ticked. If everything ticked is held back, nothing can be
+  generated.
+- **What the guard is not.** It compares titles, not documents, and the screen
+  and code say so. It is the instructor's list applied to the selection, not a
+  plagiarism detector.
+- **Proof.** A component test shows a held source's text is absent from the
+  AI payload, and it fails when the guard is bypassed.

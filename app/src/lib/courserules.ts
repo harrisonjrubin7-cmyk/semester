@@ -199,3 +199,35 @@ export function studyGate(layers: readonly (PolicySource | undefined)[]): StudyG
     .join('; ');
   return { kind, source: whoSaid(deciding.from), line };
 }
+
+// ── Study packs in Study Studio ────────────────────────────────────────
+
+/** A title as a person would mean it: case, punctuation, spacing and a file's extension don't count. */
+export const sameTitle = (t: string) =>
+  t
+    .toLowerCase()
+    .replace(/\.(pdf|docx?|pptx?|txt|md|rtf)$/i, '')
+    .replace(/[^\p{L}\p{N}]+/gu, ' ')
+    .trim();
+
+/**
+ * Which chosen sources may go to an AI, given the instructor's packs.
+ *
+ * A pack names references, not text, so nothing here can know two documents
+ * are "the same" beyond their titles. That is the guard, stated plainly: a
+ * source whose title matches a reference the instructor marked "do not use"
+ * is held back and named, whatever the student ticked. It is not a
+ * plagiarism detector and does not claim to be — it is the instructor's list,
+ * applied to the student's selection before anything is sent.
+ */
+export function packGuard<T extends { title: string }>(chosen: T[], packs: Pack[]): { send: T[]; held: T[] } {
+  const barred = new Set(packs.flatMap((p) => p.items.filter((i) => i.authority === 'prohibited').map((i) => sameTitle(i.title))).filter(Boolean));
+  const held = chosen.filter((s) => barred.has(sameTitle(s.title)));
+  return { send: chosen.filter((s) => !held.includes(s)), held };
+}
+
+export const AUTHORITY_TEXT: Record<PackItem['authority'], string> = {
+  authoritative: 'Authoritative',
+  supplemental: 'Supplemental',
+  prohibited: 'Do not use',
+};

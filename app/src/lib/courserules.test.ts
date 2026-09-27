@@ -100,3 +100,29 @@ describe('Study Studio’s gate', () => {
     expect(studyGate(courseLayers('HIST 2100', undefined, published({ blanket: 'allowed' }))).kind).toBe('confirm');
   });
 });
+
+describe('do-not-use references in Study Studio', () => {
+  const pack = (items: { title: string; authority: 'authoritative' | 'supplemental' | 'prohibited' }[]) => [
+    { id: 'p', title: 'P', note: '', published: '', items: items.map((i) => ({ citation: '', link: '', ...i })) },
+  ];
+
+  it('matches a title the way a person means it', async () => {
+    const { sameTitle } = await import('./courserules');
+    expect(sameTitle('Old Answer Key.pdf')).toBe(sameTitle('old answer-key'));
+    expect(sameTitle('Week 4 — Slides')).toBe('week 4 slides');
+  });
+
+  it('holds back only sources matching a do-not-use reference', async () => {
+    const { packGuard } = await import('./courserules');
+    const chosen = [{ title: 'Old answer key' }, { title: 'Week 4 slides' }, { title: 'My notes' }];
+    const got = packGuard(chosen, pack([{ title: 'OLD ANSWER KEY.pdf', authority: 'prohibited' }, { title: 'Week 4 slides', authority: 'supplemental' }]));
+    expect(got.held.map((s) => s.title)).toEqual(['Old answer key']);
+    expect(got.send.map((s) => s.title)).toEqual(['Week 4 slides', 'My notes']);
+  });
+
+  it('holds nothing back with no packs, or an empty title', async () => {
+    const { packGuard } = await import('./courserules');
+    expect(packGuard([{ title: 'Anything' }], []).held).toEqual([]);
+    expect(packGuard([{ title: '' }], pack([{ title: '!!!', authority: 'prohibited' }])).held).toEqual([]);
+  });
+});

@@ -182,6 +182,9 @@ production.
    publish, history), behind its flag.
 4. **Study packs:** the pack builder, and packs as source sets in Study
    Studio, with "do not use" references never sent to generation.
+   *Built (D-104): a pack is shown as the instructor's reading list, since its
+   references carry links, not text; a source whose title matches a "do not
+   use" reference is held back and named, whatever the student ticks.*
 
 ## 9. Not in this design
 
