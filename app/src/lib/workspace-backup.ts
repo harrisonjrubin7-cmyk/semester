@@ -1,6 +1,6 @@
 import { ABROAD_PREFIX, readAbroad } from './abroad';
 import { ACTIONS_PREFIX, readActionChoices } from './actions';
-import { MEETING_KEY, readMeetings } from './advisor-meeting';
+import { keepNotes, MEETING_KEY, readMeetings, withoutNotes } from './advisor-meeting';
 import { EVIDENCE_PREFIX, readEvidence } from './career-evidence';
 import { SHORTLIST_KEY, readShortlist } from './course-detail';
 import { GRADUATION_KEY, readGraduation } from './graduation';
@@ -64,6 +64,11 @@ interface Definition {
    */
   scope: 'account' | 'term' | 'device';
   read: (value: unknown) => unknown;
+  /**
+   * What a restore writes, given the validated record and what the device
+   * already holds under that key. Absent, the record replaces it.
+   */
+  restore?: (incoming: unknown, existing: unknown) => unknown;
 }
 
 const DEFINITIONS: Record<string, Definition> = {
@@ -138,7 +143,15 @@ const DEFINITIONS: Record<string, Definition> = {
   graduation: { label: 'Graduation scenarios', prefix: GRADUATION_KEY, scope: 'device', read: readGraduation },
   lifeBalance: { label: 'Life balance settings', prefix: LIFE_BALANCE_KEY, scope: 'device', read: readLifeBalance },
   shortlist: { label: 'Course shortlist', prefix: SHORTLIST_KEY, scope: 'device', read: readShortlist },
-  advisorMeeting: { label: 'Advisor meetings', prefix: MEETING_KEY, scope: 'device', read: readMeetings },
+  // Per account, and without private notes: the meeting screen promises
+  // those never leave the device, and a restore keeps the ones it has.
+  advisorMeeting: {
+    label: 'Advisor meetings',
+    prefix: MEETING_KEY,
+    scope: 'account',
+    read: (v) => withoutNotes(readMeetings(v)),
+    restore: (incoming, existing) => keepNotes(readMeetings(incoming), existing),
+  },
   sourceLocker: { label: 'Source Locker choices', prefix: LOCKER_KEY, scope: 'device', read: readLocker },
   studyReadiness: { label: 'Study readiness marks', prefix: READINESS_KEY, scope: 'device', read: readReadiness },
   careerEvidence: { label: 'Career evidence', prefix: EVIDENCE_PREFIX, scope: 'term', read: readEvidence },
@@ -293,10 +306,18 @@ export function restoreWorkspaces(
   storage: Storage = localStorage,
 ): void {
   const checked = readWorkspaceBackup(JSON.stringify(backup));
-  const entries = checked.records.map((record) => ({
-    key: keyFor(record.kind, record.term, account),
-    value: JSON.stringify(record.value),
-  }));
+  const entries = checked.records.map((record) => {
+    const key = keyFor(record.kind, record.term, account);
+    const merge = DEFINITIONS[record.kind].restore;
+    if (!merge) return { key, value: JSON.stringify(record.value) };
+    let existing: unknown = null;
+    try {
+      existing = JSON.parse(storage.getItem(key) ?? 'null');
+    } catch {
+      existing = null;
+    }
+    return { key, value: JSON.stringify(merge(record.value, existing)) };
+  });
 
   const before = new Map(entries.map((entry) => [entry.key, storage.getItem(entry.key)]));
   const written: string[] = [];

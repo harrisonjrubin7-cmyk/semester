@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { afterEach, beforeAll, beforeEach, expect, it } from 'vitest';
+import { afterEach, beforeAll, beforeEach, expect, it, vi } from 'vitest';
+import { MODULE_FLAGS } from '../lib/experience-flags';
 import { loadSeed } from '../data/seed';
 import type { Action } from '../lib/actions';
 import { StoreProvider } from '../state/store';
@@ -217,4 +218,30 @@ it('can bring back something marked not relevant, after the Undo is gone', () =>
   expect(stored().a0.status).toBe('open');
   expect(active()).toContain('Task number 0');
   expect(button(/Bring back/)).toBeUndefined();
+});
+
+it('with offline mode on, does not open an official site offline, and does online (the control)', () => {
+  const flag = MODULE_FLAGS.offline_mode;
+  const onLine = Object.getOwnPropertyDescriptor(Navigator.prototype, 'onLine');
+  const external: Action = { ...make(0), primary: { label: 'Open the aid portal', kind: 'external', target: 'https://aid.school.edu', requiresConfirmation: true } };
+  const opened = vi.spyOn(window, 'open').mockReturnValue(null);
+  const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true);
+  const alerted = vi.spyOn(window, 'alert').mockImplementation(() => {});
+  try {
+    MODULE_FLAGS.offline_mode = 'production';
+    Object.defineProperty(navigator, 'onLine', { configurable: true, get: () => false });
+    render([external]);
+    act(() => button(/^Open the aid portal/)!.click());
+    expect(opened).not.toHaveBeenCalled();
+    expect(confirm).not.toHaveBeenCalled();
+    expect(alerted.mock.calls[0][0]).toContain('nothing was sent');
+    Object.defineProperty(navigator, 'onLine', { configurable: true, get: () => true });
+    act(() => button(/^Open the aid portal/)!.click());
+    expect(opened).toHaveBeenCalledTimes(1);
+  } finally {
+    MODULE_FLAGS.offline_mode = flag;
+    if (onLine) Object.defineProperty(navigator, 'onLine', onLine);
+    else delete (navigator as { onLine?: boolean }).onLine;
+    vi.restoreAllMocks();
+  }
 });

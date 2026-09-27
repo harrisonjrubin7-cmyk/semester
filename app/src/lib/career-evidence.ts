@@ -147,9 +147,20 @@ export function confirmedSkills(claims: SkillClaim[], ev: Evidence): string[] {
 export function decide(ev: Evidence, claim: SkillClaim, status: Decision['status'] | null, name: string | undefined, at: number): Evidence {
   const key = slug(claim.skill);
   const decisions = { ...ev.decisions };
+  const before = decisions[key]?.status === 'confirmed' ? decisions[key].name : null;
   if (status === null) delete decisions[key];
   else decisions[key] = { status, name: clean(name ?? decisions[key]?.name ?? claim.skill, 60) || claim.skill, at };
-  return { ...ev, decisions };
+  const after = decisions[key]?.status === 'confirmed' ? decisions[key].name : null;
+  // Artifacts are tagged with confirmed skills only. When this one stops being
+  // confirmed, or is renamed, its tags follow — unless a skill of the
+  // student's own still carries the old name.
+  if (before === null || before === after || ev.own.some((o) => o.name === before)) return { ...ev, decisions };
+  const artifacts = ev.artifacts.map((a) =>
+    a.skills.includes(before)
+      ? { ...a, skills: [...new Set(a.skills.flatMap((s) => (s !== before ? [s] : after ? [after] : [])))] }
+      : a,
+  );
+  return { ...ev, decisions, artifacts };
 }
 
 /** A skill the student adds must cite something they did that is on record. */

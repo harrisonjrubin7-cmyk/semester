@@ -18,7 +18,9 @@ let host: HTMLDivElement;
 afterEach(() => {
   act(() => root?.unmount());
   root = undefined;
-  host.remove();
+  // Not every test hydrates: the agenda text test makes no host, and run
+  // first in a shuffled order this read `.remove` of undefined.
+  (host as HTMLDivElement | undefined)?.remove();
 });
 
 function hydrate(id: ToolId, recoverable: (e: unknown) => void = () => {}) {

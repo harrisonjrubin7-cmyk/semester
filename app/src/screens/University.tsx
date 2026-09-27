@@ -754,7 +754,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
 
       {tab === 'demand' && moduleOn(MODULE_FLAGS.demand_forecasting) && (
         <Suspense fallback={null}>
-          <DemandDesk />
+          <DemandDesk key={account?.id ?? 'signed-out'} />
         </Suspense>
       )}
 

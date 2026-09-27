@@ -316,6 +316,20 @@ begin
   perform private.refresh_course_demand('dm-u', '2027SP');
   perform pg_temp.counted('a new contributor brings it back to ten',
     (select count(*) from public.course_demand_snapshots where course_code = 'ECON 1010' and planned_students = 10), 1);
+
+  -- Delete my account takes the contribution with it (review fix
+  -- 20260928160000). The consent allows no client write, and the auth user is
+  -- not deleted, so only the RPC reaches it.
+  perform pg_temp.value_as(crowd[11], $q$select public.forget_my_course_demand()::text$q$);
+  perform pg_temp.counted('deleting the account removes the student''s plan rows',
+    (select count(*) from public.term_plan_courses where user_id = crowd[11]), 0);
+  perform pg_temp.counted('and their consent, revocation history included',
+    (select count(*) from public.demand_consents where user_id = crowd[11]), 0);
+  perform pg_temp.counted('another contributor keeps theirs (the control)',
+    (select count(*) from public.demand_consents where user_id = crowd[1] and revoked_at is null), 1);
+  perform private.refresh_course_demand('dm-u', '2027SP');
+  perform pg_temp.counted('and the next refresh no longer counts the deleted student',
+    (select count(*) from public.course_demand_snapshots where course_code = 'ECON 1010'), 0);
 end $$;
 
 -- Anonymous callers reach none of it.

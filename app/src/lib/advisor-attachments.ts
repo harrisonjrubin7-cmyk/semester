@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { EMPTY_SHORTLIST, SHORTLIST_KEY, meetingLine, readShortlist } from './course-detail';
+import { EMPTY_SHORTLIST, SHORTLIST_KEY, liveShortlist, meetingLine, readShortlist } from './course-detail';
 import { useDeviceLibrary } from './device-library';
 import { useRegistrationPlan } from './registration-plan';
 
@@ -14,9 +14,9 @@ export function useSavedCourses(): { id: string; code: string; section: string; 
   const { catalog } = useRegistrationPlan();
   return useMemo(() => {
     const byId = new Map(catalog.map((c) => [c.id, c]));
-    return shortlist.saved
-      .map((id) => byId.get(id))
+    return liveShortlist(shortlist, catalog)
+      .saved.map((id) => byId.get(id))
       .filter((c) => c !== undefined)
       .map((c) => ({ id: c.id, code: c.code, section: c.section, title: c.title, credits: c.credits, meets: meetingLine(c) }));
-  }, [shortlist.saved, catalog]);
+  }, [shortlist, catalog]);
 }

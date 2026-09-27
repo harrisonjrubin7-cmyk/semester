@@ -46,6 +46,7 @@ const CALLS: Record<string, number> = {
   'components/OfflineBanner.tsx': 1,
   'components/PathProfileForm.tsx': 1,
   'components/PathSnapshotCard.tsx': 1,
+  'components/PushTop.tsx': 1,
   'components/QuizFeedback.tsx': 1,
   'components/RegistrationDay.tsx': 1,
   'components/RegistrationPortal.tsx': 1,
@@ -173,7 +174,7 @@ describe('the stores this phase added to the backup', () => {
       clear: () => store.clear(),
     } as Storage;
     storage.setItem('semester.registration-day.v1', JSON.stringify({ ...EMPTY_REGISTRATION_DAY, creditTarget: 15 }));
-    storage.setItem('semester.advisor-meeting.v1', JSON.stringify({ version: 1, meetings: [] }));
+    storage.setItem('semester.advisor-meeting.v1:acct', JSON.stringify({ version: 1, meetings: [] }));
     storage.setItem('semester.career-evidence.v1:acct:2026FA', JSON.stringify({ version: 1, decisions: {}, own: [], artifacts: [], bullets: [], versions: [], interviewDone: {}, fairs: {} }));
     const backup = workspaceBackup('acct', storage);
     expect(backup.records.map((r) => r.kind).sort()).toEqual(['advisorMeeting', 'careerEvidence', 'registrationDay']);
@@ -181,5 +182,48 @@ describe('the stores this phase added to the backup', () => {
     restoreWorkspaces(backup, 'acct', storage);
     expect(JSON.parse(storage.getItem('semester.registration-day.v1')!).creditTarget).toBe(15);
     expect(storage.getItem('semester.career-evidence.v1:acct:2026FA')).not.toBeNull();
+  });
+});
+
+describe('advisor meetings in a backup', () => {
+  const meeting = (notes: string) => ({
+    id: 'm1', title: 'Spring', date: null, agenda: [{ id: 'a1', text: 'Spring courses' }], questions: [],
+    attach: { scenario: null, courses: [], followUps: false }, followUps: [], notes, created: 1,
+  });
+  const memory = () => {
+    const store = new Map<string, string>();
+    return {
+      get length() {
+        return store.size;
+      },
+      key: (i: number) => [...store.keys()][i] ?? null,
+      getItem: (k: string) => store.get(k) ?? null,
+      setItem: (k: string, v: string) => void store.set(k, v),
+      removeItem: (k: string) => void store.delete(k),
+      clear: () => store.clear(),
+    } as Storage;
+  };
+
+  it('leave private notes out, as the meeting screen promises', () => {
+    const storage = memory();
+    storage.setItem('semester.advisor-meeting.v1:acct', JSON.stringify({ version: 1, meetings: [meeting('I am worried about money')] }));
+    const backup = workspaceBackup('acct', storage);
+    const text = JSON.stringify(backup);
+    expect(text).toContain('Spring courses');
+    expect(text).not.toContain('worried');
+  });
+
+  it('take only this account’s meetings (the control: another account’s are not in it)', () => {
+    const storage = memory();
+    storage.setItem('semester.advisor-meeting.v1:other', JSON.stringify({ version: 1, meetings: [meeting('')] }));
+    expect(workspaceBackup('acct', storage).records).toEqual([]);
+  });
+
+  it('restore without erasing the notes this device already has', () => {
+    const storage = memory();
+    storage.setItem('semester.advisor-meeting.v1:acct', JSON.stringify({ version: 1, meetings: [meeting('Kept here')] }));
+    const backup = workspaceBackup('acct', storage);
+    restoreWorkspaces(backup, 'acct', storage);
+    expect(JSON.parse(storage.getItem('semester.advisor-meeting.v1:acct')!).meetings[0].notes).toBe('Kept here');
   });
 });

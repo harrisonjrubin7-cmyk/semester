@@ -18,7 +18,9 @@ import {
   scheduleFit,
   seatLine,
   toggleCompare,
+  liveShortlist,
   toggleSaved,
+  type Shortlist,
   whyItMayFit,
 } from '../lib/course-detail';
 import { useDeviceLibrary } from '../lib/device-library';
@@ -67,7 +69,12 @@ export function CourseDetailV2({
   const first = useRef<HTMLHeadingElement>(null);
   const { ref: modalRef, onKeyDown: modalKeys } = useModal<HTMLDivElement>({ onClose, initial: first, on: !wide });
   const { data: day } = useRegistrationPlan();
-  const shortlist = useDeviceLibrary(SHORTLIST_KEY, readShortlist, EMPTY_SHORTLIST);
+  const library = useDeviceLibrary(SHORTLIST_KEY, readShortlist, EMPTY_SHORTLIST);
+  // Read and changed against this catalog, so a stale or reused id counts for nothing.
+  const shortlist = {
+    value: liveShortlist(library.value, catalog),
+    update: (f: (l: Shortlist) => Shortlist) => library.update((l) => f(liveShortlist(l, catalog))),
+  };
   const career = useDeviceLibrary(`semester.career.v1:${account?.id || 'device'}:${state.term}`, readCareer, EMPTY_CAREER).value;
   const [confirm, setConfirm] = useState<'add' | 'remove' | 'leave' | null>(null);
   const [said, setSaid] = useState('');
@@ -133,7 +140,7 @@ export function CourseDetailV2({
         </dl>
 
         <div className="course-v2-actions">
-          <button type="button" className="balance-button" aria-pressed={saved} onClick={() => shortlist.update((l) => toggleSaved(l, course.id))}>
+          <button type="button" className="balance-button" aria-pressed={saved} onClick={() => shortlist.update((l) => toggleSaved(l, course.id, course.code))}>
             {saved ? 'Saved' : 'Save'}
           </button>
           <button

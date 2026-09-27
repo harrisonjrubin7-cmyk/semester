@@ -155,6 +155,23 @@ describe('with graduation_simulator on', () => {
     expect(stored().scenarios[0].cloudId).toBeUndefined();
   });
 
+  it('never tells another account on this device that the draft is in theirs', async () => {
+    mount({ simulator: true, costs: false, accountId: 'user-1' });
+    choose('minor');
+    act(() => button(/^Save draft to your account$/)!.click());
+    await act(async () => button(/^Save to account$/)!.click());
+    expect(stored().scenarios[0]).toMatchObject({ cloudId: '0b8f5e6a-1c2d-4e3f-8a9b-0c1d2e3f4a5b', cloudOwner: 'user-1' });
+    mount({ simulator: true, costs: false, accountId: 'user-2' });
+    expect(text()).not.toContain('Saved to your account as an estimate.');
+    expect(button(/^Remove from account$/)).toBeUndefined();
+    act(() => button(/^Save draft to your account$/)!.click());
+    await act(async () => button(/^Save to account$/)!.click());
+    // A new row in the second account, not an update of the first account's.
+    const calls = vi.mocked((await import('../lib/graduation-cloud')).saveDraft).mock.calls;
+    expect(calls.at(-1)?.[0]).toBe('user-2');
+    expect(calls.at(-1)?.[2]).toBeUndefined();
+  });
+
   it('does not offer the account when nobody is signed in', () => {
     mount({ simulator: true, costs: false });
     choose('minor');
@@ -183,13 +200,19 @@ describe('with cost_planner on', () => {
     mount({ simulator: false, costs: true });
     expect(text()).toContain('costs before any aid');
     act(() => button(/^Add$/)!.click());
-    const amount = [...host.querySelectorAll('.cost-line input')].find((i) => i.closest('label')?.textContent?.includes('Amount'))!;
+    // The figures typed before itemising come along as lines of their own,
+    // rather than being replaced by the new line's zero.
+    expect(stored().plan.costPerTerm).toBe(20_000);
+    expect(stored().plan.summerCost).toBe(5_000);
+    const tuition = [...host.querySelectorAll('.cost-line')].at(-1)!;
+    const amount = [...tuition.querySelectorAll('input')].find((i) => i.closest('label')?.textContent?.includes('Amount'))!;
     act(() => {
       Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(amount, '18000');
       amount.dispatchEvent(new Event('input', { bubbles: true }));
     });
-    expect(stored().plan.costPerTerm).toBe(18_000);
-    expect(stored().plan.costLines?.[0]).toMatchObject({ label: 'Tuition', amount: 18_000, source: 'student_entered' });
+    expect(stored().plan.costPerTerm).toBe(38_000);
+    expect(stored().plan.costLines?.[0]).toMatchObject({ label: 'Earlier estimate', amount: 20_000, per: 'term' });
+    expect(stored().plan.costLines?.at(-1)).toMatchObject({ label: 'Tuition', amount: 18_000, source: 'student_entered' });
     // The plain cost fields step aside once the lines decide the total.
     expect([...host.querySelectorAll('label')].some((l) => l.textContent?.startsWith('Cost per fall or spring'))).toBe(false);
   });

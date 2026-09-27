@@ -213,7 +213,7 @@ describe('with course_detail_v2 on', () => {
       await act(async () => button(/^Save$/).click());
       await act(async () => button(/^Compare$/).click());
     }
-    expect(JSON.parse(localStorage.getItem(SHORTLIST_KEY)!)).toEqual({ saved: ['e1', 'p1'], compare: ['e1', 'p1'] });
+    expect(JSON.parse(localStorage.getItem(SHORTLIST_KEY)!)).toEqual({ saved: ['e1', 'p1'], compare: ['e1', 'p1'], codes: { e1: 'ECON 2010', p1: 'PSCI 1100' } });
     const table = host.querySelector('.course-compare-table')!;
     expect([...table.querySelectorAll('thead th')].map((th) => th.textContent)).toEqual(['Course', 'ECON 2010 · 01', 'PSCI 1100 · 01']);
     const row = (label: string) => [...table.querySelectorAll('tbody tr')].find((tr) => tr.querySelector('th')?.textContent === label)!;

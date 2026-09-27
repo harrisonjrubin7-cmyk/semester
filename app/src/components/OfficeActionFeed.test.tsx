@@ -248,6 +248,19 @@ describe('with office_action_feed on', () => {
   });
 });
 
+describe('switching accounts on a shared device', () => {
+  it('never shows the last account’s office actions to the next one', async () => {
+    const remote = await import('../lib/office-actions-remote');
+    await render(<OfficeActionFeed enabled accountId="student-a" />);
+    await settle(() => text().includes('FAFSA verification'));
+    expect(text()).toContain('FAFSA verification');
+    // The next account's request has not answered yet.
+    vi.mocked(remote.myOfficeActions).mockImplementationOnce(() => new Promise(() => {}));
+    await render(<OfficeActionFeed enabled accountId="student-b" />);
+    expect(text()).not.toContain('FAFSA verification');
+  });
+});
+
 describe('the office desk', () => {
   it('is not there for an account that may not publish', async () => {
     await render(<OfficeActionDesk signedIn />);

@@ -1326,3 +1326,27 @@ Instead:
   plagiarism detector.
 - **Proof.** A component test shows a held source's text is absent from the
   AI payload, and it fails when the guard is bypassed.
+## D-058 · Review fixes to the merged feature expansion
+
+**Decided 27 Sep 2026, after the twelve expansion PRs merged into
+`semester-unified-platform`.** Codex reviewed each PR when it left draft,
+and its findings arrived after the merges. Every one was verified and fixed
+together; `docs/EXPANSION-REVIEW-FIXES.md` maps each finding to its fix and
+its test.
+
+- **Staff read only their own office's actions.** The table's read policy
+  now asks `private.may_publish`, as the desk and the workflow already did.
+  Rows from before Phase J keep their original rule.
+- **Delete my account reaches every row it promised.** Two functions:
+  `forget_my_course_demand()` (plan rows and consent) and
+  `forget_my_advisor_shares()` (either end). The auth user is not deleted,
+  so the foreign-key cascades the earlier comments relied on never ran.
+- **A shared device keeps accounts apart.** Advisor meetings are stored
+  per account. Every panel that fetches for an account resets when the
+  account changes. Graduation drafts remember which account saved them.
+- **Private notes stay on the device.** The workspace backup leaves them
+  out. A restore keeps the notes already on the device.
+- **Migration.** `20260928160000_expansion_review_fixes.sql`: one policy
+  and two functions. It changes no table and no data. It needs owner
+  approval with the rest of D-025, D-043, D-048 and D-051 before
+  `semester-unified-platform` goes to `main`.

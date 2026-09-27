@@ -183,6 +183,13 @@ interface Store {
    */
   refresh: () => Promise<string>;
   /**
+   * Send this device's copy to the account now, rather than after the next
+   * edit. Resolves true once the account has it. A reconnect needs this:
+   * `refresh` only pulls, and an edit whose push failed offline would
+   * otherwise wait for another edit before it went up.
+   */
+  pushNow: () => Promise<boolean>;
+  /**
    * Announce one outcome, to the live region and to the change strip.
    *
    * For things somebody would otherwise have to look at the screen to
@@ -862,31 +869,33 @@ export function StoreProvider({ children }: { children: ReactNode }) {
    * account's — which is exactly the copy the account is missing. Letting it
    * go back up is the second half of not losing a note.
    */
-  useEffect(() => {
-    if (!account) return;
-    const timer = setTimeout(() => {
-      const { courses, ...rest } = pickPersisted(state);
-      const removed = state.removedCourses;
-      void pushCloud(
+  const pushNow = useCallback(async (): Promise<boolean> => {
+    if (!account) return false;
+    // The state as it is when the push starts, not when this was created.
+    const state = latest.current;
+    const { courses, ...rest } = pickPersisted(state);
+    const removed = state.removedCourses;
+    try {
+      const seen = await pushCloud(
         account.id,
         rest as Record<string, unknown>,
         courses.map((c) => ({ id: c.course.id, data: c })),
         removed,
-      )
-        .then((seen) => {
-          // What the database stamped, not what this device's clock says.
-          markSeen(seen);
-          setSync({ status: 'synced', at: Date.now(), error: '' });
-          if (removed.length > 0) dispatch({ type: 'removalsPushed', ids: removed });
-        })
-        .catch((e: unknown) =>
-          setSync({
-            status: 'error',
-            at: 0,
-            error: explainSync(e).said,
-          }),
-        );
-    }, 2500);
+      );
+      // What the database stamped, not what this device's clock says.
+      markSeen(seen);
+      setSync({ status: 'synced', at: Date.now(), error: '' });
+      if (removed.length > 0) dispatch({ type: 'removalsPushed', ids: removed });
+      return true;
+    } catch (e) {
+      setSync({ status: 'error', at: 0, error: explainSync(e).said });
+      return false;
+    }
+  }, [account]);
+
+  useEffect(() => {
+    if (!account) return;
+    const timer = setTimeout(() => void pushNow(), 2500);
     return () => clearTimeout(timer);
     // `persisted` stands in for the whole persisted half. `state` is read
     // inside the timer and is deliberately not a dependency — it changes on
@@ -1432,8 +1441,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   );
 
   const value = useMemo(
-    () => ({ state, dispatch, catalog, terms, courseCode, allItems, tint, lastSeen: lastSeen.current, account, sync, saveTrouble, refresh, say, school, facts, asking, settle, adopt }),
-    [state, catalog, terms, courseCode, allItems, tint, account, sync, saveTrouble, refresh, say, school, facts, asking, settle, adopt],
+    () => ({ state, dispatch, catalog, terms, courseCode, allItems, tint, lastSeen: lastSeen.current, account, sync, saveTrouble, refresh, pushNow, say, school, facts, asking, settle, adopt }),
+    [state, catalog, terms, courseCode, allItems, tint, account, sync, saveTrouble, refresh, pushNow, say, school, facts, asking, settle, adopt],
   );
   /*
    * The clock is published beside the store, not inside it.

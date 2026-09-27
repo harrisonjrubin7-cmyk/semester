@@ -211,6 +211,14 @@ describe('long stretches and open blocks', () => {
     const blocks = openBlocks(daySpans(input(), TUE), windows, input().floor, 2);
     expect(blocks).toEqual([{ from: 20 * 60, to: 23 * 60, source: 'student_entered' }]);
   });
+
+  it('keeps a work window off the protected sleep floor', () => {
+    const windows = [{ id: 'w', label: 'Late', days: [2], from: 19 * 60, to: 24 * 60 }];
+    const floor = { from: 23 * 60, to: 7 * 60, on: true };
+    expect(openBlocks([], windows, floor, 2)).toEqual([{ from: 19 * 60, to: 23 * 60, source: 'student_entered' }]);
+    // With the floor off, the window is the student's to the minute (the control).
+    expect(openBlocks([], windows, { ...floor, on: false }, 2)).toEqual([{ from: 19 * 60, to: 24 * 60, source: 'student_entered' }]);
+  });
 });
 
 describe('where each figure came from', () => {

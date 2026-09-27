@@ -1,4 +1,4 @@
-import type { SharePayload } from './advisor-meeting';
+import { readSharePayload, type SharePayload } from './advisor-meeting';
 import { requireOnline } from './offline-mode';
 import { cloud } from './cloud';
 
@@ -131,7 +131,7 @@ export async function sharedWithMe(): Promise<SharedWithMe[]> {
 export async function openShare(id: string): Promise<{ title: string; payload: SharePayload; expires_at: string }> {
   const { data, error } = await (await cloud()).rpc('read_advisor_share', { want_share: id });
   if (error) throw new Error(/not shared/i.test(error.message) ? 'This share has expired or was revoked.' : error.message);
-  const row = (Array.isArray(data) ? data[0] : data) as { title: string; payload: SharePayload; expires_at: string } | undefined;
+  const row = (Array.isArray(data) ? data[0] : data) as { title: string; payload: unknown; expires_at: string } | undefined;
   if (!row) throw new Error('This share has expired or was revoked.');
-  return row;
+  return { title: row.title, expires_at: row.expires_at, payload: readSharePayload(row.payload) };
 }

@@ -116,6 +116,18 @@ describe('with semester_wrapped on', () => {
     expect(button(/^Plan Spring 2027$/)).toBeTruthy();
   });
 
+  it('counts a saved schedule in one term’s recap only', async () => {
+    await render(<SemesterWrapped />);
+    expect(text(host.querySelector('.wrapped')!)).toContain('2 semester plans saved');
+    const pick = host.querySelector<HTMLSelectElement>('select[aria-label="Term"]')!;
+    const other = [...pick.options].map((o) => o.value).find((v) => v !== '2026FA')!;
+    await act(async () => {
+      pick.value = other;
+      pick.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    expect(text(host.querySelector('.wrapped')!)).not.toContain('semester plans saved');
+  });
+
   it('exports only after showing the exact text, with no course in it', async () => {
     await render(<SemesterWrapped />);
     await act(async () => button(/^Export my progress…$/).click());
