@@ -8,6 +8,14 @@ export interface ExperienceFlags {
   careerSkillsGraph: FeatureState;
   multimodalCapture: FeatureState;
   universityControlPlane: FeatureState;
+  humanHelp: FeatureState;
+  /** The staff Integration Dashboard. Tenant flags and `integration:view` still apply. */
+  integrationDashboard: FeatureState;
+  /**
+   * The staff Operations studio: data dictionary, suppressed exports,
+   * curriculum simulation, evidence, developer platform and readiness.
+   */
+  institutionalOperations: FeatureState;
 }
 
 const STATES: readonly FeatureState[] = ['off', 'preview', 'sandbox', 'production'];
@@ -27,6 +35,9 @@ export function experienceFlags(env: PreviewEnv): ExperienceFlags {
     careerSkillsGraph: featureState(env, 'VITE_CAREER_SKILLS_GRAPH', preview),
     multimodalCapture: featureState(env, 'VITE_MULTIMODAL_CAPTURE', preview),
     universityControlPlane: featureState(env, 'VITE_UNIVERSITY_CONTROL_PLANE', preview),
+    humanHelp: featureState(env, 'VITE_HUMAN_HELP', preview),
+    integrationDashboard: featureState(env, 'VITE_INTEGRATION_DASHBOARD', preview),
+    institutionalOperations: featureState(env, 'VITE_INSTITUTIONAL_OPERATIONS', preview),
   };
 }
 
@@ -54,6 +65,7 @@ export const MODULE_FLAG_ENV = {
   graduation_simulator: 'VITE_GRADUATION_SIMULATOR',
   cost_planner: 'VITE_COST_PLANNER',
   academic_life_balance: 'VITE_ACADEMIC_LIFE_BALANCE',
+  crunch_week_forecast: 'VITE_CRUNCH_WEEK_FORECAST',
   course_detail_v2: 'VITE_COURSE_DETAIL_V2',
   advisor_meeting_mode: 'VITE_ADVISOR_MEETING_MODE',
   study_readiness: 'VITE_STUDY_READINESS',

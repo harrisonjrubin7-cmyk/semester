@@ -314,6 +314,11 @@ export interface Persisted {
    * email address — a name is a thing you ask for, not derive.
    */
   myName: string;
+  /**
+   * How to say their name, in their own spelling — "ah-DAY-oh-lah". Theirs to
+   * write and to share; the app never generates or guesses one.
+   */
+  pronounce: string;
   /** Every class marked present, absent or excused. See `lib/attend.ts`. */
   attendance: Attended[];
   /** What each course's syllabus says about turning up, keyed by course id. */
@@ -606,6 +611,12 @@ export interface Persisted {
    * chosen, and that file answers it rather than this one.
    */
   favourites: string;
+  /**
+   * The accessibility modes somebody turned on, as a comma list. A look key
+   * so it follows them between devices; parsed by `lib/accessmode.ts`, which
+   * drops any id this build does not know.
+   */
+  access: string;
   /** `on` or `off` — whether the search home draws its row of shortcuts. */
   shortcuts: string;
   /**
@@ -1102,6 +1113,13 @@ export interface QuizQuestion {
   q: string;
   unit: string;
   full: string;
+  /**
+   * The id of the card a choice or true-or-false was made from, where it has
+   * one, so the screen can name the card by `cardIdentity` — to put it in
+   * review, or leave it out of the next run. A card with no id is named by
+   * its question, which is `q`. None on a match, which is made from terms.
+   */
+  cardId?: string;
   /** The options to pick between. Two on a true-or-false, none on a match. */
   opts: { text: string; ok: boolean }[];
   /**
@@ -1440,6 +1458,7 @@ export const DEFAULT_PERSISTED: Persisted = {
   myRules: [],
   aboutMe: [],
   myName: '',
+  pronounce: '',
   attendance: [],
   attendPolicy: {},
   pieces: {},
@@ -1495,6 +1514,7 @@ export const DEFAULT_PERSISTED: Persisted = {
   // "nobody has arranged their shortcuts", and writing the five defaults in
   // here would spend that state on the first save.
   favourites: '',
+  access: '',
   shortcuts: 'on',
   // Not `list`. Writing a default in here made "never chosen" unreachable —
   // the first save stamped `list` on everybody, and `directoryOf`'s soft
@@ -1525,6 +1545,7 @@ export function currentLook(state: Persisted): Look {
     courseColours: state.courseColours,
     shell: state.shell,
     favourites: state.favourites,
+    access: state.access,
     shortcuts: state.shortcuts,
     directory: state.directory,
     groupOrder: state.groupOrder,
@@ -1803,6 +1824,7 @@ export function loadPersisted(): Persisted {
       myRules: readRules(saved.myRules),
       aboutMe: readFacts(saved.aboutMe),
       myName: typeof saved.myName === 'string' ? saved.myName : '',
+      pronounce: typeof saved.pronounce === 'string' ? saved.pronounce.slice(0, 80) : '',
       attendance: readLog(saved.attendance),
       attendPolicy: Object.fromEntries(
         Object.entries(saved.attendPolicy ?? {}).map(([k, v]) => [k, readPolicy(v)]),
@@ -1953,6 +1975,7 @@ export function pickPersisted(state: State): Persisted {
     myRules: state.myRules,
     aboutMe: state.aboutMe,
     myName: state.myName,
+    pronounce: state.pronounce,
     attendance: state.attendance,
     attendPolicy: state.attendPolicy,
     pieces: state.pieces,
@@ -2036,6 +2059,7 @@ export function pickPersisted(state: State): Persisted {
     courseColours: state.courseColours,
     shell: state.shell,
     favourites: state.favourites,
+    access: state.access,
     shortcuts: state.shortcuts,
     directory: state.directory,
     groupOrder: state.groupOrder,
@@ -2178,6 +2202,7 @@ export type Action =
   | { type: 'setMyRules'; rules: MyRule[] }
   | { type: 'setAboutMe'; facts: Fact[] }
   | { type: 'setMyName'; name: string }
+  | { type: 'setPronounce'; text: string }
   | { type: 'markAttendance'; courseId: CourseId; date: string; mark: Attended['mark'] | null }
   | { type: 'setAttendPolicy'; courseId: CourseId; policy: AttendPolicy }
   /** Stop, or resume, reminders about one course. */
@@ -2255,6 +2280,11 @@ export type Action =
   | { type: 'undoCard' }
   /** An answer recorded against a card, with no drill run around it. */
   | { type: 'recordCard'; got: boolean; key: string }
+  /**
+   * Put a card's review row back as it was before a `recordCard`, or remove
+   * it if there was none. The undo for a student's own "review this soon".
+   */
+  | { type: 'restoreReview'; key: string; was: CardReview | null }
   /**
    * Commit a plan: these sittings, on these days, replacing anything from
    * today forward.
@@ -2356,7 +2386,13 @@ export type Action =
    * knows a course is unchanged. See `lib/forwork.ts`.
    */
   | { type: 'newDocument'; courseId: CourseId | null; itemId?: string | null }
-  | { type: 'makeDocument'; doc: Omit<Doc, 'id' | 'created' | 'updated'>; open?: boolean }
+  | {
+      type: 'makeDocument';
+      doc: Omit<Doc, 'id' | 'created' | 'updated'>;
+      open?: boolean;
+      /** Chosen by the caller when it must record the new document's id (Source Locker). Ignored if taken. */
+      id?: string;
+    }
   | { type: 'openDocument'; id: string }
   /** Back to the shelf. Its own action rather than an open with no id. */
   | { type: 'closeDocument' }
