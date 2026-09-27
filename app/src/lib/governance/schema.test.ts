@@ -17,10 +17,12 @@ import { CRITERIA } from './scorecard';
  * Both directions: a key the SQL has and the code lacks fails as surely as
  * the reverse.
  */
-const sql = readFileSync(
-  resolve(__dirname, '../../../../supabase/migrations/20260927235000_governance_registries.sql'),
-  'utf8',
-);
+const migrations = resolve(__dirname, '../../../../supabase/migrations');
+// The review fixes (#828) carry the approvers block; later files add to the
+// earlier, so both are read as one.
+const sql = ['20260927235000_governance_registries.sql', '20260927235500_governance_review_fixes.sql']
+  .map((f) => readFileSync(resolve(migrations, f), 'utf8'))
+  .join('\n');
 
 function block(name: string): string {
   const m = sql.match(new RegExp(`-- registry:${name}\\n([\\s\\S]*?)-- end registry`));
@@ -34,7 +36,7 @@ const sorted = (xs: Iterable<string>) => [...xs].sort();
 describe('the governance tables enforce the registries’ own lists', () => {
   it('finds every block it reads, so a renamed marker fails here rather than passing on nothing', () => {
     for (const name of ['levels', 'connectors', 'steward-roles', 'criteria', 'approval-steps', 'settings',
-      'audiences', 'sections', 'avoid', 'required-details', 'cadence']) {
+      'audiences', 'sections', 'avoid', 'required-details', 'cadence', 'approvers']) {
       expect(() => block(name), name).not.toThrow();
     }
   });
@@ -86,6 +88,15 @@ describe('the governance tables enforce the registries’ own lists', () => {
     );
     expect(inSql).toEqual(
       Object.fromEntries((Object.keys(AUDIENCES) as Audience[]).map((a) => [a, AUDIENCES[a].updateEveryMinutes])),
+    );
+  });
+
+  it('each audience’s required approvers', () => {
+    const inSql = Object.fromEntries(
+      [...block('approvers').matchAll(/when '([^']+)'\s+then array\[([^\]]*)\]/g)].map((m) => [m[1], quoted(m[2])]),
+    );
+    expect(inSql).toEqual(
+      Object.fromEntries((Object.keys(AUDIENCES) as Audience[]).map((a) => [a, [...AUDIENCES[a].approvers]])),
     );
   });
 });
