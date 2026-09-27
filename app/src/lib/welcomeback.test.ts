@@ -60,6 +60,21 @@ describe('welcomeBack', () => {
   });
 });
 
+describe('what counts as having gone by during the absence', () => {
+  // Last here Oct 3 at noon, as above.
+  const on3 = (id: string, dueAt: number) => ({ ...decorateItem(item(id, 9, 3), NOW), dueAt });
+
+  it('leaves out a deadline that fell on the last day, before they closed the app', () => {
+    const w = welcomeBack([on3('nine-am', 9 * 60)], {}, LAST, NOW);
+    expect(w?.toConfirm).toEqual([]);
+  });
+
+  it('keeps one that fell on the last day, after they closed the app', () => {
+    const w = welcomeBack([on3('five-pm', 17 * 60)], {}, LAST, NOW);
+    expect(w?.toConfirm.map((i) => i.id)).toEqual(['five-pm']);
+  });
+});
+
 describe('the words', () => {
   it('never calls a deadline missed, because it cannot know', () => {
     const w = welcomeBack(items, {}, LAST, NOW)!;

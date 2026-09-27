@@ -185,13 +185,15 @@ used, in place of any tour.
 | Tier | Rules | Delivery | Cap |
 |---|---|---|---|
 | Critical | registrar deadline, tuition payment | In-app notification and push | Never capped |
-| Important | class starting, due today, two-day warning, exam in a week, class you can't miss | In-app notification and push | Counts toward 6 a day |
-| Helpful | time to start, all-clear, Sunday summary | In-app notification and push | First dropped when the day is full |
+| Important | class starting, due today, two-day warning, exam in a week, class you can't miss | In-app notification and push | At most 5 a day, on a budget of their own |
+| Helpful | time to start, all-clear, Sunday summary | In-app notification and push | At most 1 a day; can never use the important budget |
 | Informational | new features, completed syncs | Notices only, never a notification | n/a |
 | Sponsorship | none | Not built; separate opt-in only | n/a |
 
-- The table is `TIER` and `DAILY_CAP` in `lib/notify.ts`. The same cap
-  applies to an open tab (`fire`) and to push (`planAhead`).
+- The table is `TIER`, `IMPORTANT_CAP` and `HELPFUL_CAP` in `lib/notify.ts`
+  (6 a day in all). The same budgets apply to an open tab (`fire`) and to
+  push (`planAhead`). They are separate so that the morning's nudges can
+  never cost an afternoon class warning its place.
 - Every notification now ends with **why it was sent**, naming the Settings
   switch (or "you set this up yourself" for the student's own rules).
 - A new rule does not type-check until it has a tier.

@@ -70,14 +70,21 @@ export function welcomeBack(
   const days = daysBetween(was, now);
   if (days < AWAY_DAYS) return null;
 
-  // From the start of the day they were last here: a deadline due that
-  // evening had not happened yet when they closed the app at lunchtime.
-  const from = new Date(was.getFullYear(), was.getMonth(), was.getDate()).getTime();
+  // Against the due *instant*, not the day: a 9am deadline on the day they
+  // were last here at 5pm had already gone by while they were here, so it is
+  // not something that happened during the absence (Codex review on #854).
+  // An untimed deadline is due at the end of its day — `dueAt` is `24 * 60`
+  // for those — so one due the day they left, after they left, still counts.
   const open = items.filter((i) => !done[i.id]);
-  const toConfirm = open.filter((i) => i.isPast && i.date.getTime() >= from);
+  const toConfirm = open.filter((i) => i.isPast && dueInstant(i) > lastSeen);
   const ahead = open.filter((i) => !i.isPast && i.daysAway <= AHEAD_DAYS);
   const restart = ahead[0] ?? toConfirm[toConfirm.length - 1] ?? null;
   return { days, toConfirm, ahead, restart };
+}
+
+/** When a deadline falls due: its day plus its clock, or the end of the day. */
+export function dueInstant(i: Pick<DatedItem, 'date' | 'dueAt'>): number {
+  return i.date.getTime() + i.dueAt * 60_000;
 }
 
 /** "3 deadlines went by while you were away" — or empty when none did. */

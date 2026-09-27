@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { classesToNudge, DAILY_CAP, dueReminders, inQuiet, planAhead, shownBody, TIER, whyFor, withinCap } from './notify';
+import { classesToNudge, DAILY_CAP, dueReminders, HELPFUL_CAP, IMPORTANT_CAP, inQuiet, NONE_SENT, planAhead, shownBody, TIER, whyFor, withinCap } from './notify';
 import type { Start } from './start';
 import type { DatedItem } from './types';
 import { NOTIF_DEFS, type NotifKey } from '../data/misc';
@@ -593,23 +593,31 @@ describe('notification discipline', () => {
     for (const d of NOTIF_DEFS) expect(TIER[d.k], d.k).toBeDefined();
   });
 
-  it('caps a noisy day, dropping the helpful ones first', () => {
+  it('caps each tier on its own budget', () => {
     const noisy = [
       r('sun'), r('free'), r('start'),
-      ...Array.from({ length: DAILY_CAP }, (_, n) => r('class', `class:${n}`)),
+      ...Array.from({ length: IMPORTANT_CAP + 2 }, (_, n) => r('class', `class:${n}`)),
     ];
-    const out = withinCap(noisy, 0);
-    expect(out).toHaveLength(DAILY_CAP);
-    expect(out.every((x) => x.rule === 'class')).toBe(true);
+    const { keep } = withinCap(noisy, NONE_SENT);
+    expect(keep.filter((x) => x.rule === 'class')).toHaveLength(IMPORTANT_CAP);
+    expect(keep.filter((x) => TIER[x.rule] === 'helpful')).toHaveLength(HELPFUL_CAP);
+    expect(keep).toHaveLength(DAILY_CAP);
   });
 
   it('never caps a critical one, even on a day already full', () => {
-    const out = withinCap([r('today'), r('bill'), r('term')], DAILY_CAP);
-    expect(out.map((x) => x.rule)).toEqual(['bill', 'term']);
+    const { keep } = withinCap([r('today'), r('sun'), r('bill'), r('term')], { important: IMPORTANT_CAP, helpful: HELPFUL_CAP });
+    expect(keep.map((x) => x.rule)).toEqual(['bill', 'term']);
   });
 
-  it('counts what already went out today against the cap', () => {
-    expect(withinCap([r('today'), r('two'), r('exam')], DAILY_CAP - 1)).toHaveLength(1);
+  it('never lets helpful ones sent earlier cost a later important one its place', () => {
+    // The morning's nudges went out; the afternoon's class warning still does.
+    const morning = withinCap(Array.from({ length: DAILY_CAP + 1 }, (_, n) => r('start', `s${n}`)), NONE_SENT);
+    const afternoon = withinCap([r('class')], morning.sent);
+    expect(afternoon.keep.map((x) => x.rule)).toEqual(['class']);
+  });
+
+  it('counts what already went out today against the right budget', () => {
+    expect(withinCap([r('today'), r('two'), r('exam')], { important: IMPORTANT_CAP - 1, helpful: 0 }).keep).toHaveLength(1);
   });
 
   it('says why on every notification, naming the switch that sent it', () => {
