@@ -29,6 +29,7 @@ import {
 import { EscalationItem, EscalationRequest } from '../components/community/Escalation';
 import { SafetyRead } from '../components/community/SafetyRead';
 import { IdentityCheck } from '../components/community/IdentityCheck';
+import { PostImage } from '../components/community/PostImage';
 
 const CATEGORY = Object.fromEntries(CATEGORY_TEXT);
 
@@ -75,6 +76,9 @@ const ACTIONS: [DecisionAction, string][] = [
   ['preserve_evidence', 'Preserve evidence and restore'],
   ['close_no_action', 'Close with no action'],
 ];
+
+/** All a known-abuse match can be given, as `decide_community_case` allows. */
+const MATCH_ACTIONS: DecisionAction[] = ['remove', 'rate_limit', 'community_restriction', 'account_restriction'];
 
 const when = (iso: string) =>
   new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }).format(new Date(iso));
@@ -266,11 +270,16 @@ function CaseCard({
   /** Escalation and safety state, where both switches allow them. */
   extras?: ReactNode;
 }) {
-  const [action, setAction] = useState<DecisionAction>('allow');
+  // A known-abuse match is never put back up: the server refuses anything else.
+  const matched = kase.media?.knownAbuseMatch === true;
+  const [action, setAction] = useState<DecisionAction>(matched ? 'remove' : 'allow');
   const [reason, setReason] = useState('');
   const [busy, setBusy] = useState(false);
   const appealed = kase.status === 'appealed';
-  const choices = ACTIONS.filter(([a]) => !(a === 'account_restriction' && kase.severity === 'P0' && !senior));
+  const choices = ACTIONS.filter(
+    ([a]) =>
+      !(a === 'account_restriction' && kase.severity === 'P0' && !senior) && (!matched || MATCH_ACTIONS.includes(a)),
+  );
 
   const finish = (work: Promise<void>, done: string) => {
     setBusy(true);
@@ -298,6 +307,7 @@ function CaseCard({
             <strong>{kase.post.authorName}</strong>
           </p>
           <p style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{kase.post.body}</p>
+          {kase.media && <PostImage media={kase.media} viewer="reviewer" />}
         </blockquote>
       ) : (
         <p>The post is no longer available.</p>

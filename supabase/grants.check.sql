@@ -124,7 +124,7 @@ end $$;
 do $$
 declare
   /*
-   * The allowlist. Eighty, and each is a deliberate entry point:
+   * The allowlist. Eighty-one, and each is a deliberate entry point:
    *   make_referral_code  — mints this account's own code
    *   claim_referral      — records that this account arrived on somebody's
    *   referral_standing   — two integers and a boolean about the caller
@@ -195,7 +195,7 @@ declare
     'community_reviewer_standing()',
     'community_session_counts(want_community uuid)',
     'create_community(want_kind text, want_name text, want_purpose text, want_integrity_policy text)',
-    'create_community_post(want_community uuid, want_body text, want_confirmed_own boolean, want_as_alias boolean)',
+    'create_community_post(want_community uuid, want_body text, want_confirmed_own boolean, want_as_alias boolean, want_media uuid)',
     'create_study_session(want_community uuid, want_venue uuid, want_title text, want_starts timestamp with time zone, want_ends timestamp with time zone, want_capacity integer)',
     'decide_community_appeal(want_case uuid, want_uphold boolean, want_reason text)',
     'decide_community_case(want_case uuid, want_action text, want_reason text)',
@@ -239,6 +239,7 @@ declare
     'can_manage_escalation_agreements()',
     'retire_escalation_agreement(want_tenant text, want_reason text)',
     'save_escalation_agreement(want_tenant text, want_agreement_ref text, want_categories text[], want_identity_required boolean, want_channel text, want_contact text, want_expires_on date)',
+    'begin_community_image(want_community uuid, want_kind text, want_alt text)',
     'case_author_safety(want_case uuid, want_reason text)',
     'decide_alias_identity(want_grant uuid, want_approve boolean, want_reason text)',
     'request_alias_identity(want_case uuid, want_reason text)',

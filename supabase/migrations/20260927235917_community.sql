@@ -282,7 +282,8 @@ $$;
 revoke all on function private.has_contact_details(text) from public, anon, authenticated;
 
 create or replace function public.create_community_post(
-  want_community uuid, want_body text, want_confirmed_own boolean default false, want_as_alias boolean default false
+  want_community uuid, want_body text, want_confirmed_own boolean default false, want_as_alias boolean default false,
+  want_media uuid default null
 )
 returns uuid
 language plpgsql
@@ -300,6 +301,8 @@ declare
   premoderated boolean;
   alias text;
   pid uuid;
+  -- A record rather than the row type: community_media is created in section 16.
+  m record;
 begin
   select * into c from public.communities where id = want_community;
   my_role := private.community_role(want_community);
@@ -334,6 +337,21 @@ begin
     raise exception 'posting limit reached for this community' using errcode = '54000';
   end if;
 
+  -- An image is held until the scanner clears it (section 16), so the post is
+  -- pending — visible to its author only — until then.
+  if want_media is not null then
+    if coalesce(want_as_alias, false) then
+      raise exception 'images cannot be posted under an alias: a photo can say who took it' using errcode = '22023';
+    end if;
+    select * into m from public.community_media where id = want_media for update;
+    if m.id is null or m.uploader_id <> me or m.community_id <> c.id or m.status <> 'awaiting_upload' then
+      raise exception 'that image is not waiting to be posted here' using errcode = '22023';
+    end if;
+    if not private.media_uploaded(m.object_path) then
+      raise exception 'the image has not finished uploading' using errcode = '22023';
+    end if;
+  end if;
+
   if private.has_contact_details(want_body) and not coalesce(want_confirmed_own, false) then
     raise exception 'this post looks like it includes contact details — remove them, or confirm they are yours'
       using errcode = '22023';
@@ -345,14 +363,17 @@ begin
           case when alias is null then substr(private.role_audit_sha256(c.ref_salt || me::text), 1, 12)
                else substr(private.role_audit_sha256(c.ref_salt || 'alias:' || lower(alias) || ':' || me::text), 1, 12) end,
           coalesce(alias, handle, 'Member'), want_body,
-          case when premoderated and my_role = 'member' then 'pending' else 'published' end,
+          case when want_media is not null or (premoderated and my_role = 'member') then 'pending' else 'published' end,
           alias is not null)
   returning id into pid;
+  if want_media is not null then
+    update public.community_media set post_id = pid, status = 'pending' where id = want_media;
+  end if;
   perform private.community_run_detectors(pid);
   return pid;
 end $$;
-revoke all on function public.create_community_post(uuid, text, boolean, boolean) from public, anon, authenticated;
-grant execute on function public.create_community_post(uuid, text, boolean, boolean) to authenticated;
+revoke all on function public.create_community_post(uuid, text, boolean, boolean, uuid) from public, anon, authenticated;
+grant execute on function public.create_community_post(uuid, text, boolean, boolean, uuid) to authenticated;
 
 create or replace function public.edit_community_post(want_post uuid, want_body text, want_confirmed_own boolean default false)
 returns void
@@ -1007,9 +1028,29 @@ begin
     raise exception 'a P0 account restriction needs a senior reviewer' using errcode = '42501';
   end if;
   select p.author_id into author from public.community_posts p where p.id = k.post_id;
+  -- A known-abuse match is never put back up, whatever else the case says.
+  if want_action not in ('remove', 'account_restriction', 'community_restriction', 'rate_limit')
+     and exists (select 1 from public.community_media m where m.post_id = k.post_id and m.known_abuse_match) then
+    raise exception 'a known-abuse match can only be removed; follow the legal reporting runbook' using errcode = '42501';
+  end if;
   insert into public.community_decisions (case_id, actor_id, stage, action, reason_code)
   values (k.id, (select auth.uid()), 'decision', want_action, want_reason);
   perform private.apply_community_action(k, want_action, author);
+  -- A removed image is remembered by its hashes, so it cannot simply be posted
+  -- again at this school (section 16). Nothing is remembered for a known-abuse
+  -- match: that is the legal runbook's, not a blocklist's.
+  -- A decision that puts the post back up clears an image held for review.
+  if want_action in ('allow', 'close_no_action', 'label', 'preserve_evidence', 'reduce_distribution') then
+    update public.community_media set status = 'clear', reason_code = ''
+     where post_id = k.post_id and status = 'held' and not known_abuse_match;
+  end if;
+  if want_action = 'remove' then
+    update public.community_media set status = 'removed' where post_id = k.post_id and status in ('clear', 'held', 'pending');
+    insert into public.community_media_blocklist (tenant_id, phash, sha256, category, source_media_id, added_by_sha256)
+    select m.tenant_id, m.phash, m.sha256, k.category, m.id, private.role_audit_sha256((select auth.uid())::text)
+      from public.community_media m
+     where m.post_id = k.post_id and m.sha256 is not null and m.phash is not null and not m.known_abuse_match;
+  end if;
   -- A violation a professional found counts against the author's private
   -- safety state, where the school has switched that on (section 15).
   perform private.record_safety_outcome(k, want_action, want_reason, author);
@@ -1071,12 +1112,20 @@ begin
   if exists (select 1 from public.community_decisions d where d.case_id = k.id and d.actor_id = me) then
     raise exception 'a reviewer who decided the case may not decide its appeal' using errcode = '42501';
   end if;
+  if not want_uphold
+     and exists (select 1 from public.community_media m where m.post_id = k.post_id and m.known_abuse_match) then
+    raise exception 'an appeal against a known-abuse removal can only be upheld' using errcode = '42501';
+  end if;
   insert into public.community_decisions (case_id, actor_id, stage, action, reason_code)
   values (k.id, me, 'appeal', case when want_uphold then 'close_no_action' else 'allow' end, want_reason);
   if not want_uphold then
     update public.community_restrictions set lifted_at = now() where case_id = k.id and lifted_at is null;
     update public.community_posts set status = 'published' where id = k.post_id and status in ('removed', 'reduced', 'held');
     update public.community_safety_entries set reversed_at = now() where case_id = k.id and reversed_at is null;
+    update public.community_media set status = 'clear', reason_code = ''
+     where post_id = k.post_id and status in ('removed', 'held') and not known_abuse_match;
+    delete from public.community_media_blocklist b
+     using public.community_media m where m.post_id = k.post_id and b.source_media_id = m.id;
   end if;
   update public.community_signals
      set human_outcome = coalesce(human_outcome, 'none') || case when want_uphold then ' / upheld on appeal' else ' / reversed on appeal' end
@@ -1300,6 +1349,12 @@ begin
    where p.author_id = me and exists (select 1 from public.community_cases k where k.post_id = p.id);
   delete from public.community_posts p
    where p.author_id = me and not exists (select 1 from public.community_cases k where k.post_id = p.id);
+  -- Their images go now, not at the next sweep — except one on a post a case
+  -- is keeping, and a known-abuse match. (The files follow through the
+  -- deletion queue.)
+  delete from public.community_media m
+   where m.uploader_id = me and not m.known_abuse_match
+     and (m.post_id is null or not exists (select 1 from public.community_cases k where k.post_id = m.post_id));
   delete from public.community_sessions where host_id = me;
   delete from public.community_session_participants where user_id = me;
   delete from public.community_mutes where user_id = me;
@@ -1368,8 +1423,10 @@ declare
   n_sessions integer;
   n_volunteer integer;
 begin
-  delete from public.community_cases
-   where retain_until < now() and status not in ('open', 'appealed');
+  delete from public.community_cases k
+   where k.retain_until < now() and k.status not in ('open', 'appealed')
+     -- Evidence of a known-abuse match is kept until the legal runbook says otherwise.
+     and not exists (select 1 from public.community_media m where m.post_id = k.post_id and m.known_abuse_match);
   get diagnostics n_cases = row_count;
 
   delete from public.community_posts p
@@ -1395,6 +1452,12 @@ begin
       or t.answered_at < now() - interval '1 year';
   get diagnostics n_volunteer = row_count;
   delete from public.community_volunteer_events e where e.occurred_at < now() - interval '1 year';
+  -- An image reserved and never posted lapses after a day; an image whose post
+  -- is gone goes with it — except a known-abuse match, which the legal runbook
+  -- decides about.
+  delete from public.community_media where status = 'awaiting_upload' and created_at < now() - interval '1 day';
+  delete from public.community_media
+   where post_id is null and status <> 'awaiting_upload' and not known_abuse_match;
   -- The safety state forgets after a year, so it recovers.
   delete from public.community_safety_entries e where e.created_at < now() - interval '1 year';
   -- A delivered escalation's copy of the payload has done its job.
@@ -1458,7 +1521,8 @@ begin
       ('public.community_mutes',                'user_id'),
       ('public.community_members',              'user_id'),
       ('public.community_aliases',              'user_id'),
-      ('public.community_volunteers',           'user_id')
+      ('public.community_volunteers',           'user_id'),
+      ('public.community_media',                'uploader_id')
     ) as x(rel, col)
   loop
     if pg_catalog.to_regclass(t.rel) is null then continue; end if;
@@ -1487,7 +1551,8 @@ revoke all on function public.lti_account_untouched(uuid)
 create table if not exists public.community_programs (
   tenant_id   text        not null references public.schools(id) on delete cascade,
   program     text        not null check (program in ('scoped_pseudonymity', 'volunteer_moderation',
-                                                           'institution_escalation', 'account_safety_state')),
+                                                           'institution_escalation', 'account_safety_state',
+                                                           'image_posts')),
   enabled     boolean     not null default false,
   approved_ref text       not null default '' check (length(approved_ref) <= 200),
   changed_at  timestamptz not null default now(),
@@ -2979,6 +3044,422 @@ $$;
 revoke all on function public.my_community_standing() from public, anon, authenticated;
 grant execute on function public.my_community_standing() to authenticated;
 
+-- ── 16. Images, held until scanned ────────────────────────────────────────
+--
+-- Community image posts, off twice: the VITE_COMMUNITY_IMAGES build flag and
+-- the school's community_programs row for image_posts. When both are on:
+--
+--   1. begin_community_image reserves a media row (awaiting_upload) and names
+--      the only storage path the author may upload to: media/<random id>. No
+--      account id is in the path.
+--   2. The author uploads the image there — stripped of EXIF/GPS on their own
+--      device first (app/src/community/metadata.ts) — and posts with it. The
+--      post is pending, visible only to its author.
+--   3. The scanner (supabase/functions/_shared/mediascan.ts, service role, not
+--      yet deployed) reads the bytes and reports facts to record_media_scan:
+--      the real type, whether metadata survived, size, dimensions, SHA-256, a
+--      perceptual hash, a known-abuse hash check and, if a school has one, a
+--      classifier's label.
+--   4. This file decides. Nothing clears without a known-abuse check; a match
+--      is held, never shown to anybody — reviewers included — and opens a P0
+--      case. A mismatched type, leftover metadata or an oversize image is
+--      rejected. An image close to one a reviewer removed (Hamming distance
+--      of 8 or less on the perceptual hash, or the same SHA-256) is held for
+--      review. Otherwise it clears and the post publishes.
+--
+-- Not in support communities, and never under an alias: a photograph can say
+-- who took it far more reliably than a name can hide it.
+
+create table if not exists public.community_media (
+  id                 uuid        primary key default gen_random_uuid(),
+  tenant_id          text        not null references public.schools(id) on delete cascade,
+  community_id       uuid        not null references public.communities(id) on delete cascade,
+  -- Both set null rather than cascade, so a known-abuse match outlives the
+  -- account and the post it came with; everything else is swept once its post
+  -- is gone (sweep_community_retention).
+  uploader_id        uuid        references auth.users on delete set null,
+  post_id            uuid        references public.community_posts(id) on delete set null,
+  object_path        text        generated always as ('media/' || id::text) stored,
+  declared_kind      text        not null check (declared_kind in ('jpeg', 'png', 'webp')),
+  -- What the picture shows, for anybody using a screen reader. Required.
+  alt_text           text        not null check (length(trim(alt_text)) between 1 and 300),
+  status             text        not null default 'awaiting_upload'
+                       check (status in ('awaiting_upload', 'pending', 'clear', 'held', 'rejected', 'removed')),
+  reason_code        text        not null default '',
+  detected_kind      text,
+  bytes              integer,
+  width              integer,
+  height             integer,
+  sha256             text        check (sha256 is null or sha256 ~ '^[0-9a-f]{64}$'),
+  phash              bigint,
+  known_abuse_match  boolean     not null default false,
+  scan_version       text,
+  scanned_at         timestamptz,
+  claimed_until      timestamptz,
+  attempts           integer     not null default 0,
+  created_at         timestamptz not null default now()
+);
+create index if not exists community_media_by_post on public.community_media (post_id);
+create index if not exists community_media_by_uploader on public.community_media (uploader_id, created_at);
+create index if not exists community_media_by_community on public.community_media (community_id);
+create index if not exists community_media_by_tenant on public.community_media (tenant_id, status);
+alter table public.community_media enable row level security;
+revoke all on table public.community_media from anon, authenticated;
+-- Never the uploader, the hashes or the scan's working columns.
+grant select (id, post_id, community_id, object_path, declared_kind, alt_text, status, reason_code, width, height,
+              known_abuse_match, created_at)
+  on table public.community_media to authenticated;
+drop policy if exists "who may see an image's row" on public.community_media;
+create policy "who may see an image's row" on public.community_media
+  for select to authenticated
+  using (
+    uploader_id = (select auth.uid())
+    or private.has_capability('community:review')
+    or (status = 'clear' and exists (select 1 from public.community_posts p where p.id = post_id))
+  );
+
+-- Images a reviewer removed, so the same picture cannot simply be posted again.
+create table if not exists public.community_media_blocklist (
+  id               bigint      generated always as identity primary key,
+  tenant_id        text        not null references public.schools(id) on delete cascade,
+  phash            bigint      not null,
+  sha256           text        not null check (sha256 ~ '^[0-9a-f]{64}$'),
+  category         text        not null,
+  source_media_id  uuid        references public.community_media(id) on delete set null,
+  added_by_sha256  text        not null check (added_by_sha256 ~ '^[0-9a-f]{64}$'),
+  created_at       timestamptz not null default now()
+);
+create index if not exists community_media_blocklist_by_tenant on public.community_media_blocklist (tenant_id);
+create index if not exists community_media_blocklist_by_source on public.community_media_blocklist (source_media_id);
+alter table public.community_media_blocklist enable row level security;
+revoke all on table public.community_media_blocklist from anon, authenticated;
+grant select (id, tenant_id, category, source_media_id, created_at) on table public.community_media_blocklist to authenticated;
+drop policy if exists "reviewers see the blocklist" on public.community_media_blocklist;
+create policy "reviewers see the blocklist" on public.community_media_blocklist
+  for select to authenticated using (private.has_capability('community:review'));
+
+-- Storage objects to delete through the Storage API (deleting the row alone
+-- would orphan the file). Known-abuse matches are never queued: what happens
+-- to them is the legal runbook's decision, not a sweep's.
+create table if not exists public.community_media_deletions (
+  object_path text        primary key,
+  queued_at   timestamptz not null default now(),
+  reason      text        not null
+);
+alter table public.community_media_deletions enable row level security;
+revoke all on table public.community_media_deletions from anon, authenticated;
+
+create or replace function private.queue_media_deletion()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if tg_op = 'DELETE' then
+    if (not old.known_abuse_match and old.status <> 'awaiting_upload')
+       or (old.status = 'awaiting_upload' and private.media_uploaded(old.object_path)) then
+      insert into public.community_media_deletions (object_path, reason)
+      values (old.object_path, 'row removed') on conflict do nothing;
+    end if;
+    return old;
+  end if;
+  if new.status = 'rejected' and old.status is distinct from 'rejected' and not new.known_abuse_match then
+    insert into public.community_media_deletions (object_path, reason)
+    values (new.object_path, 'rejected: ' || new.reason_code) on conflict do nothing;
+  end if;
+  return new;
+end $$;
+revoke all on function private.queue_media_deletion() from public, anon, authenticated;
+drop trigger if exists community_media_queue_deletion on public.community_media;
+create trigger community_media_queue_deletion
+  after update of status or delete on public.community_media
+  for each row execute function private.queue_media_deletion();
+
+/* Whether the file for a media row is in the bucket. False where Storage is absent. */
+create or replace function private.media_uploaded(want_path text)
+returns boolean
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+begin
+  if to_regclass('storage.objects') is null then return false; end if;
+  return exists (select 1 from storage.objects o where o.bucket_id = 'community-media' and o.name = want_path);
+end $$;
+revoke all on function private.media_uploaded(text) from public, anon, authenticated;
+
+/* The storage rules, as functions the policies call. */
+create or replace function private.media_upload_allowed(want_path text)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (select 1 from public.community_media m
+                  where m.object_path = want_path and m.uploader_id = (select auth.uid())
+                    and m.status = 'awaiting_upload');
+$$;
+revoke all on function private.media_upload_allowed(text) from public, anon;
+grant execute on function private.media_upload_allowed(text) to authenticated;
+
+create or replace function private.media_read_allowed(want_path text)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1 from public.community_media m
+      left join public.community_posts p on p.id = m.post_id
+     where m.object_path = want_path
+       and not m.known_abuse_match
+       and (
+         m.uploader_id = (select auth.uid())
+         or private.has_capability('community:review')
+         or (m.status = 'clear' and p.status in ('published', 'reduced')
+             and private.community_role(p.community_id) is not null
+             and not private.blocked_either_way(p.author_id))
+       ));
+$$;
+revoke all on function private.media_read_allowed(text) from public, anon;
+grant execute on function private.media_read_allowed(text) to authenticated;
+
+do $$
+begin
+  if to_regclass('storage.objects') is not null then
+    insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+    values ('community-media', 'community-media', false, 10485760, array['image/jpeg', 'image/png', 'image/webp'])
+    on conflict (id) do nothing;
+    drop policy if exists "community media: upload the image you reserved" on storage.objects;
+    create policy "community media: upload the image you reserved" on storage.objects
+      for insert to authenticated
+      with check (bucket_id = 'community-media' and private.media_upload_allowed(name));
+    drop policy if exists "community media: read what you may see" on storage.objects;
+    create policy "community media: read what you may see" on storage.objects
+      for select to authenticated
+      using (bucket_id = 'community-media' and private.media_read_allowed(name));
+    -- No update or delete policy: an image cannot be swapped after it is scanned.
+  end if;
+end $$;
+
+create or replace function public.begin_community_image(want_community uuid, want_kind text, want_alt text)
+returns table (media_id uuid, object_path text)
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  me uuid := (select auth.uid());
+  c public.communities;
+  mid uuid;
+begin
+  select * into c from public.communities where id = want_community;
+  if c.id is null or private.community_role(c.id) is null then
+    raise exception 'join the community to post' using errcode = '42501';
+  end if;
+  if not private.community_program_on(c.tenant_id, 'image_posts') then
+    raise exception 'images are switched off at this school' using errcode = '42501';
+  end if;
+  if c.kind = 'support' then
+    raise exception 'images are not posted in support communities' using errcode = '22023';
+  end if;
+  if private.community_restricted(me, c.id) then
+    raise exception 'you cannot post here right now' using errcode = '42501';
+  end if;
+  if want_kind not in ('jpeg', 'png', 'webp') then
+    raise exception 'JPEG, PNG or WebP only' using errcode = '22023';
+  end if;
+  if coalesce(length(trim(want_alt)), 0) not between 1 and 300 then
+    raise exception 'describe the image in a sentence, for people using a screen reader' using errcode = '22023';
+  end if;
+  if (select count(*) from public.community_media m
+       where m.uploader_id = me and m.created_at > now() - interval '1 hour') >= 10 then
+    raise exception 'image limit reached for now' using errcode = '54000';
+  end if;
+  insert into public.community_media (tenant_id, community_id, uploader_id, declared_kind, alt_text)
+  values (c.tenant_id, c.id, me, want_kind, trim(want_alt))
+  returning id into mid;
+  return query select mid, 'media/' || mid::text;
+end $$;
+revoke all on function public.begin_community_image(uuid, text, text) from public, anon, authenticated;
+grant execute on function public.begin_community_image(uuid, text, text) to authenticated;
+
+/* A case, a signal and a hold for an image, the way the text detectors make them. */
+create or replace function private.media_case(
+  m public.community_media, want_category text, want_severity text, want_rule text, want_confidence numeric
+)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  k public.community_cases;
+  rank_of text[] := array['P0', 'P1', 'P2', 'P3'];
+begin
+  select * into k from public.community_cases where post_id = m.post_id and status <> 'closed';
+  if k.id is null then
+    insert into public.community_cases (tenant_id, post_id, category, severity, route)
+    values (m.tenant_id, m.post_id, want_category, want_severity, private.community_route(want_severity))
+    returning * into k;
+    perform private.community_case_event(k.id, 'triage', 'case_opened', 'detector:' || want_rule, 'open', 'open');
+  elsif array_position(rank_of, want_severity) < array_position(rank_of, k.severity) then
+    update public.community_cases
+       set severity = want_severity, category = want_category, route = private.community_route(want_severity),
+           updated_at = now()
+     where id = k.id returning * into k;
+  end if;
+  insert into public.community_signals (case_id, post_id, detector, rule_id, confidence, version, route)
+  values (k.id, m.post_id, 'media_safety', want_rule, want_confidence, coalesce(m.scan_version, 'media-scan'), k.route);
+  update public.community_cases set protection = 'temporary_hold', updated_at = now() where id = k.id;
+  update public.community_posts set status = 'held' where id = m.post_id and status in ('pending', 'published', 'reduced');
+  perform private.community_case_event(k.id, 'triage', 'protection:temporary_hold', 'detector:' || want_rule, k.status, k.status);
+end $$;
+revoke all on function private.media_case(public.community_media, text, text, text, numeric) from public, anon, authenticated;
+
+/* For the scanner only: claim what is waiting, at schools that still allow images. */
+create or replace function public.take_media_scans()
+returns table (media_id uuid, object_path text, declared_kind text, tenant_id text)
+language sql
+security definer
+set search_path = ''
+as $$
+  update public.community_media m
+     set attempts = m.attempts + 1, claimed_until = now() + interval '5 minutes'
+   where m.id in (
+     select x.id from public.community_media x
+      where x.status = 'pending' and x.attempts < 5
+        and (x.claimed_until is null or x.claimed_until < now())
+        and private.community_program_on(x.tenant_id, 'image_posts')
+      order by x.created_at
+      limit 10
+      for update of x skip locked)
+  returning m.id, m.object_path, m.declared_kind, m.tenant_id;
+$$;
+revoke all on function public.take_media_scans() from public, anon, authenticated;
+grant execute on function public.take_media_scans() to service_role;
+
+/*
+ * The scanner's facts, and the decision. The verdict is:
+ *   { detected_kind, bytes, width, height, sha256, phash (16 hex digits),
+ *     metadata_found, known_abuse: 'clear' | 'match', classifier: null |
+ *     { label, confidence }, scan_version }
+ * Returns what became of the image: clear, held or rejected.
+ */
+create or replace function public.record_media_scan(want_media uuid, want_verdict jsonb)
+returns text
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  m public.community_media;
+  v_kind text := want_verdict->>'detected_kind';
+  v_bytes integer := (want_verdict->>'bytes')::integer;
+  v_width integer := (want_verdict->>'width')::integer;
+  v_height integer := (want_verdict->>'height')::integer;
+  v_sha text := want_verdict->>'sha256';
+  v_phash bigint;
+  known text := want_verdict->>'known_abuse';
+  label text := want_verdict->'classifier'->>'label';
+  label_conf numeric := coalesce((want_verdict->'classifier'->>'confidence')::numeric, 0);
+  near record;
+  why text;
+begin
+  select * into m from public.community_media where id = want_media for update;
+  if m.id is null or m.status <> 'pending' then
+    raise exception 'that image is not waiting for a scan' using errcode = '22023';
+  end if;
+  -- Nothing clears without a known-abuse check, and nothing else is accepted.
+  if known is null or known not in ('clear', 'match') then
+    raise exception 'a known-abuse hash check is required before any image is decided' using errcode = '22023';
+  end if;
+  if coalesce(want_verdict->>'phash', '') !~ '^[0-9a-f]{16}$' or coalesce(v_sha, '') !~ '^[0-9a-f]{64}$' then
+    raise exception 'the scan must report both hashes' using errcode = '22023';
+  end if;
+  v_phash := ('x' || (want_verdict->>'phash'))::bit(64)::bigint;
+
+  update public.community_media
+     set detected_kind = v_kind, bytes = v_bytes, width = v_width, height = v_height,
+         sha256 = v_sha, phash = v_phash, scan_version = left(coalesce(want_verdict->>'scan_version', ''), 60),
+         scanned_at = now(), claimed_until = null
+   where id = m.id
+  returning * into m;
+
+  if known = 'match' then
+    update public.community_media set status = 'held', known_abuse_match = true, reason_code = 'known_abuse_hash'
+     where id = m.id returning * into m;
+    perform private.media_case(m, 'nonconsensual_media', 'P0', 'media.known-abuse-hash', 1.00);
+    return 'held';
+  end if;
+
+  why := case
+    when v_kind is null or v_kind not in ('jpeg', 'png', 'webp') or v_kind <> m.declared_kind then 'type_mismatch'
+    when coalesce((want_verdict->>'metadata_found')::boolean, true) then 'metadata_left'
+    when v_bytes is null or v_bytes > 10485760 then 'too_large'
+    when v_width is null or v_height is null or v_width < 1 or v_height < 1 or v_width > 8000 or v_height > 8000 then 'bad_dimensions'
+  end;
+  if why is not null then
+    update public.community_media set status = 'rejected', reason_code = why where id = m.id;
+    update public.community_posts set status = 'withdrawn' where id = m.post_id and status = 'pending';
+    return 'rejected';
+  end if;
+
+  select b.category, b.id,
+         least(case when b.sha256 = v_sha then 0 else 64 end, bit_count((b.phash # v_phash)::bit(64))) as distance
+    into near
+    from public.community_media_blocklist b
+   where b.tenant_id = m.tenant_id
+     and (b.sha256 = v_sha or bit_count((b.phash # v_phash)::bit(64)) <= 8)
+   order by 3 limit 1;
+  if near.id is not null then
+    update public.community_media set status = 'held', reason_code = 'matches_removed_image' where id = m.id
+    returning * into m;
+    perform private.media_case(m, near.category, private.community_severity(near.category, false),
+                               'media.reupload-of-removed', round(1 - near.distance / 64.0, 2));
+    return 'held';
+  end if;
+
+  if label in ('sexual_explicit', 'graphic_violence', 'self_harm') and label_conf >= 0.80 then
+    update public.community_media set status = 'held', reason_code = 'classifier:' || label where id = m.id
+    returning * into m;
+    perform private.media_case(m,
+      case when label = 'self_harm' then 'threat_or_safety_concern' else 'other' end,
+      case when label = 'self_harm' then 'P1' else 'P2' end,
+      'media.classifier.' || label, round(least(label_conf, 0.99), 2));
+    return 'held';
+  end if;
+
+  update public.community_media set status = 'clear', reason_code = '' where id = m.id;
+  update public.community_posts set status = 'published' where id = m.post_id and status = 'pending';
+  return 'clear';
+end $$;
+revoke all on function public.record_media_scan(uuid, jsonb) from public, anon, authenticated;
+grant execute on function public.record_media_scan(uuid, jsonb) to service_role;
+
+/* For the scanner's clean-up: files to delete through the Storage API. */
+create or replace function public.take_media_deletions()
+returns setof text
+language sql
+security definer
+set search_path = ''
+as $$ select d.object_path from public.community_media_deletions d order by d.queued_at limit 100; $$;
+revoke all on function public.take_media_deletions() from public, anon, authenticated;
+grant execute on function public.take_media_deletions() to service_role;
+
+create or replace function public.mark_media_deleted(want_paths text[])
+returns void
+language sql
+security definer
+set search_path = ''
+as $$ delete from public.community_media_deletions where object_path = any (want_paths); $$;
+revoke all on function public.mark_media_deleted(text[]) from public, anon, authenticated;
+grant execute on function public.mark_media_deleted(text[]) to service_role;
+
 -- ═══════════════════════════════════════════════════════════════════════════
 -- Rolling back
 --
@@ -2990,6 +3471,15 @@ grant execute on function public.my_community_standing() to authenticated;
 --     public.mark_escalation_delivered(uuid), public.take_escalation_deliveries(),
 --     public.decide_community_escalation(uuid, boolean, text), public.request_community_escalation(uuid, text),
 --     private.escalation_allowed(public.community_cases);
+--   drop function if exists public.mark_media_deleted(text[]), public.take_media_deletions(),
+--     public.record_media_scan(uuid, jsonb), public.take_media_scans(),
+--     private.media_case(public.community_media, text, text, text, numeric),
+--     public.begin_community_image(uuid, text, text), private.media_read_allowed(text),
+--     private.media_upload_allowed(text), private.media_uploaded(text), private.queue_media_deletion();
+--   drop policy if exists "community media: upload the image you reserved" on storage.objects;
+--   drop policy if exists "community media: read what you may see" on storage.objects;
+--   -- and empty and delete the community-media bucket through the Storage API.
+--   drop table if exists public.community_media_deletions, public.community_media_blocklist, public.community_media;
 --   drop function if exists public.reveal_alias_identity(uuid), public.decide_alias_identity(uuid, boolean, text),
 --     public.request_alias_identity(uuid, text);
 --   drop table if exists public.community_identity_grants;
@@ -3024,7 +3514,7 @@ grant execute on function public.my_community_standing() to authenticated;
 --     public.report_community_post(uuid, text, boolean, text), private.community_severity(text, boolean),
 --     private.community_case_event(uuid, text, text, text, text, text),
 --     public.block_community_author(uuid), public.delete_community_post(uuid),
---     public.edit_community_post(uuid, text, boolean), public.create_community_post(uuid, text, boolean),
+--     public.edit_community_post(uuid, text, boolean), public.create_community_post(uuid, text, boolean, boolean, uuid),
 --     private.has_contact_details(text), public.create_community(text, text, text, text),
 --     private.blocked_either_way(uuid),
 --     public.join_community(uuid), private.community_restricted(uuid, uuid), private.community_role(uuid);

@@ -344,7 +344,10 @@ describe('the clocks that run are still the clocks the document describes', () =
     const sql = readFileSync(join(MIGRATIONS, '20260927235917_community.sql'), 'utf8');
     const sweep = sql.split('create or replace function private.sweep_community_retention()')[1]?.split('$$')[1] ?? '';
     expect(sweep, 'the sweep is no longer in the migration').not.toBe('');
-    expect(sweep).toMatch(/retain_until < now\(\) and status not in \('open', 'appealed'\)/);
+    expect(sweep).toMatch(/k\.retain_until < now\(\) and k\.status not in \('open', 'appealed'\)/);
+    expect(sweep, 'a case over a known-abuse match outlives its clock').toMatch(
+      /status not in \('open', 'appealed'\)[^;]*and not exists \(select 1 from public\.community_media m where m\.post_id = k\.post_id and m\.known_abuse_match\)/,
+    );
     expect(sweep).toMatch(/r\.case_id is null and r\.created_at < now\(\) - interval '90 days'/);
     expect(sweep).toMatch(/< now\(\) - interval '90 days';\s*get diagnostics n_restrictions/);
     expect(sweep).toMatch(/s\.ends_at < now\(\) - interval '30 days'/);

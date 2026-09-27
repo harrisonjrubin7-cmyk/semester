@@ -42,6 +42,83 @@ export interface PostRow {
   createdAt: string;
   editedAt: string | null;
   mine: boolean;
+  /** An attached image, as far as this viewer may see it. */
+  media: PostMedia | null;
+}
+
+export type MediaStatus = 'awaiting_upload' | 'pending' | 'clear' | 'held' | 'rejected' | 'removed';
+
+export interface PostMedia {
+  id: string;
+  status: MediaStatus;
+  reasonCode: string;
+  width: number | null;
+  height: number | null;
+  /** A short-lived signed address, only where the storage policy lets this viewer read it. */
+  url: string | null;
+  knownAbuseMatch: boolean;
+  altText: string;
+}
+
+const MEDIA_BUCKET = 'community-media';
+
+/** Media rows for some posts, with signed addresses for the ones this viewer may open. */
+async function mediaFor(postIds: string[]): Promise<Map<string, PostMedia>> {
+  if (postIds.length === 0) return new Map();
+  const db = await cloud();
+  const { data, error } = await db
+    .from('community_media')
+    .select('id, post_id, object_path, alt_text, status, reason_code, width, height, known_abuse_match')
+    .in('post_id', postIds);
+  if (error) fail(error, 'Could not load images.');
+  const rows = (data ?? []) as Row[];
+  // Never ask for an address to a known-abuse match; storage would refuse it anyway.
+  const paths = rows.filter((r) => !r.known_abuse_match).map((r) => str(r.object_path));
+  const urls = new Map<string, string>();
+  if (paths.length) {
+    const { data: signed } = await db.storage.from(MEDIA_BUCKET).createSignedUrls(paths, 600);
+    for (const s of (signed ?? []) as { path: string | null; signedUrl: string | null; error: string | null }[]) {
+      if (s.path && s.signedUrl && !s.error) urls.set(s.path, s.signedUrl);
+    }
+  }
+  return new Map(
+    rows.map((r) => [
+      str(r.post_id),
+      {
+        id: str(r.id),
+        status: str(r.status) as MediaStatus,
+        reasonCode: str(r.reason_code),
+        width: r.width === null || r.width === undefined ? null : Number(r.width),
+        height: r.height === null || r.height === undefined ? null : Number(r.height),
+        url: urls.get(str(r.object_path)) ?? null,
+        knownAbuseMatch: Boolean(r.known_abuse_match),
+        altText: str(r.alt_text),
+      },
+    ]),
+  );
+}
+
+/**
+ * Reserve an image, upload it, and hand back its id for createPost. The bytes
+ * must already have been through stripMetadata (metadata.ts); the server
+ * checks again and rejects what still carries any.
+ */
+export async function uploadImage(
+  communityId: string,
+  kind: 'jpeg' | 'png' | 'webp',
+  bytes: Uint8Array,
+  altText: string,
+): Promise<string> {
+  const db = await cloud();
+  const { data, error } = await db.rpc('begin_community_image', { want_community: communityId, want_kind: kind, want_alt: altText });
+  if (error) fail(error, 'Could not start the upload.');
+  const row = ((data ?? []) as Row[])[0];
+  if (!row) fail(null, 'Could not start the upload.');
+  const { error: upError } = await db.storage
+    .from(MEDIA_BUCKET)
+    .upload(str(row.object_path), new Blob([bytes as BlobPart], { type: `image/${kind}` }), { upsert: false, contentType: `image/${kind}` });
+  if (upError) fail({ message: upError.message }, 'Could not upload the image.');
+  return str(row.media_id);
 }
 
 export interface Notice {
@@ -149,6 +226,7 @@ export async function loadPosts(communityId: string): Promise<{ posts: PostRow[]
   if (error) fail(error, 'Could not load posts.');
   if (refError) fail(refError, 'Could not load posts.');
   if (muteError) fail(muteError, 'Could not load your mutes.');
+  const media = await mediaFor((rows ?? []).map((r: Row) => str(r.id)));
   const mine = (refs ?? []).find((r: Row) => str(r.community_id) === communityId);
   const myRef = mine ? str(mine.author_ref) : null;
   return {
@@ -164,6 +242,7 @@ export async function loadPosts(communityId: string): Promise<{ posts: PostRow[]
       createdAt: str(r.created_at),
       editedAt: r.edited_at ? str(r.edited_at) : null,
       mine: myRef !== null && str(r.author_ref) === myRef,
+      media: media.get(str(r.id)) ?? null,
     })),
     muted: (mutes ?? []).map((m: Row) => str(m.author_ref)),
   };
@@ -174,6 +253,7 @@ export async function createPost(
   body: string,
   confirmedOwn: boolean,
   asAlias = false,
+  mediaId: string | null = null,
 ): Promise<string> {
   const db = await cloud();
   const { data, error } = await db.rpc('create_community_post', {
@@ -181,6 +261,7 @@ export async function createPost(
     want_body: body,
     want_confirmed_own: confirmedOwn,
     want_as_alias: asAlias,
+    want_media: mediaId,
   });
   if (error) fail(error, 'Could not post.');
   return str(data);
@@ -352,6 +433,7 @@ export interface CaseRow {
   status: 'open' | 'decided' | 'appealed' | 'closed';
   createdAt: string;
   post: { body: string; authorName: string; status: PostStatus; communityName: string; asAlias: boolean } | null;
+  media: PostMedia | null;
   reports: { category: ReportCategory; imminent: boolean; details: string; createdAt: string }[];
   /** What the detectors recorded. Never a reporter; brigading shows up here. */
   signals: { detector: string; ruleId: string; confidence: number; version: string; createdAt: string }[];
@@ -391,6 +473,7 @@ export async function loadQueue(): Promise<CaseRow[]> {
       : Promise.resolve({ data: [] as Row[], error: null }),
   ]);
   for (const r of [posts, reports, communities, signals]) if (r.error) fail(r.error, 'Could not load the queue.');
+  const media = await mediaFor(postIds);
   const names = new Map<string, string>((communities.data ?? []).map((c: Row) => [str(c.id), str(c.name)]));
   const byPost = new Map<string, Row>((posts.data ?? []).map((p: Row) => [str(p.id), p]));
   return (cases ?? [])
@@ -406,6 +489,7 @@ export async function loadQueue(): Promise<CaseRow[]> {
         route: str(c.route) as CaseRow['route'],
         status: str(c.status) as CaseRow['status'],
         createdAt: str(c.created_at),
+        media: media.get(str(c.post_id)) ?? null,
         post: p
           ? {
               body: str(p.body),
@@ -482,6 +566,7 @@ export interface Programs {
   volunteerModeration: boolean;
   institutionEscalation: boolean;
   accountSafetyState: boolean;
+  imagePosts: boolean;
 }
 
 export const NO_PROGRAMS: Programs = {
@@ -489,6 +574,7 @@ export const NO_PROGRAMS: Programs = {
   volunteerModeration: false,
   institutionEscalation: false,
   accountSafetyState: false,
+  imagePosts: false,
 };
 
 const PROGRAM_KEYS: [keyof Programs, string][] = [
@@ -496,6 +582,7 @@ const PROGRAM_KEYS: [keyof Programs, string][] = [
   ['volunteerModeration', 'volunteer_moderation'],
   ['institutionEscalation', 'institution_escalation'],
   ['accountSafetyState', 'account_safety_state'],
+  ['imagePosts', 'image_posts'],
 ];
 
 function programsFrom(rows: Row[]): Programs {

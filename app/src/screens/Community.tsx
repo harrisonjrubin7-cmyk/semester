@@ -6,6 +6,7 @@ import { Composer } from '../components/community/Composer';
 import { ReportSheet } from '../components/community/ReportSheet';
 import { Sessions } from '../components/community/Sessions';
 import { AliasPanel } from '../components/community/AliasPanel';
+import { PostImage } from '../components/community/PostImage';
 import { WIDE, useMedia } from '../lib/media';
 import { cloudConfigured } from '../lib/cloud';
 import { COMMUNITY_FLAGS, enabled } from '../community/flags';
@@ -25,6 +26,7 @@ import {
   loadPosts,
   loadPrograms,
   muteAuthor,
+  uploadImage,
   myStanding,
   NO_PROGRAMS,
   reportPost,
@@ -289,6 +291,7 @@ function CommunitySignedIn({ accountId, wide }: { accountId: string; wide: boole
       community={open}
       accountId={accountId}
       aliasesOn={enabled(COMMUNITY_FLAGS, 'scopedPseudonymity') && programs.scopedPseudonymity && open.pseudonymityApproved}
+      imagesOn={enabled(COMMUNITY_FLAGS, 'communityImages') && programs.imagePosts && open.kind !== 'support'}
       onBack={wide ? undefined : () => setOpenId(null)}
       onLeft={async () => {
         setOpenId(null);
@@ -354,6 +357,7 @@ function CommunityView({
   community,
   accountId,
   aliasesOn = false,
+  imagesOn = false,
   onBack,
   onLeft,
 }: {
@@ -361,6 +365,8 @@ function CommunityView({
   accountId: string;
   /** Build flag, school switch and this community's approval, all three. */
   aliasesOn?: boolean;
+  /** Build flag, school switch, and not a support community. */
+  imagesOn?: boolean;
   onBack?: () => void;
   onLeft: () => Promise<void>;
 }) {
@@ -445,7 +451,14 @@ function CommunityView({
             label="Write a post"
             submitText={aliasesOn && alias && asAlias ? `Post as ${alias}` : 'Post'}
             integrityPolicy={community.integrityPolicy}
-            onSubmit={(body, own) => createPost(community.id, body, own, aliasesOn && Boolean(alias) && asAlias).then(refresh)}
+            // Never under an alias: a photograph can say who took it.
+            images={imagesOn && !(aliasesOn && alias && asAlias)}
+            onSubmit={async (body, own, image) => {
+              const asTheAlias = aliasesOn && Boolean(alias) && asAlias;
+              const mediaId = image && !asTheAlias ? await uploadImage(community.id, image.kind, image.bytes, image.alt) : null;
+              await createPost(community.id, body, own, asTheAlias, mediaId);
+              await refresh();
+            }}
           />
         </>
       )}
@@ -467,10 +480,12 @@ function CommunityView({
               ) : (
                 <p style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{p.body}</p>
               )}
+              {p.media && <PostImage media={p.media} viewer="author" />}
               <span style={{ color: 'var(--app-dim)' }}>
                 {ago(p.createdAt)}
                 {p.editedAt ? ' · edited' : ''}
-                {STATUS_TEXT[p.status] ? ` · ${STATUS_TEXT[p.status]}` : ''}
+                {/* A post waiting on its image is explained by the image's own note. */}
+                {STATUS_TEXT[p.status] && !(p.status === 'pending' && p.media) ? ` · ${STATUS_TEXT[p.status]}` : ''}
               </span>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-3)' }}>
                 {p.status !== 'removed' && p.status !== 'held' && editing !== p.id && (
@@ -522,6 +537,7 @@ function CommunityView({
               </span>
               <span className="pill-soft" style={{ justifySelf: 'start' }}>{labelText(post.label)}</span>
               <p style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{post.body}</p>
+              {post.media && <PostImage media={post.media} viewer={post.mine ? 'author' : 'member'} />}
               {explanation && (
                 <div aria-label="Why you’re seeing this">
                   <ul style={{ margin: 0 }}>

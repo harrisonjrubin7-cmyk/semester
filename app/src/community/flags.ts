@@ -28,7 +28,8 @@ export type CommunityFlag =
   | 'institutionEscalation'
   | 'volunteerModeration'
   | 'scopedPseudonymity'
-  | 'accountSafetyState';
+  | 'accountSafetyState'
+  | 'communityImages';
 
 export type CommunityFlags = Record<CommunityFlag, FeatureState>;
 
@@ -74,6 +75,11 @@ export const COMMUNITY_FLAG_SPECS: Record<CommunityFlag, FlagSpec> = {
     env: 'VITE_ACCOUNT_SAFETY_STATE',
     highRisk: true,
     purpose: 'Private 0–100 Trust & Safety state, staff-only.',
+  },
+  communityImages: {
+    env: 'VITE_COMMUNITY_IMAGES',
+    highRisk: true,
+    purpose: 'Image posts, held until scanned; nothing clears without a known-abuse check.',
   },
 };
 

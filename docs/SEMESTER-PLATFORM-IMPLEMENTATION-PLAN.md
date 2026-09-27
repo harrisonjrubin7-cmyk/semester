@@ -70,12 +70,22 @@ Detectors and retention followed as well:
   entries are written only by a professional's enforcement decision, reversed
   on a granted appeal and swept after a year; a reviewer reads the number
   only with a written reason, and the student gets words. 94 more checks.
+- **Image posts, held until scanned** (`VITE_COMMUNITY_IMAGES`, high-risk,
+  plus the `image_posts` switch): a private bucket, one upload path per
+  reserved row, metadata stripped on the device and checked again on the
+  server, a known-abuse hash check that is required before anything clears,
+  re-uploads of removed images caught by a perceptual hash, and reviewer
+  holds. A known-abuse match can only be removed, is never shown, and is
+  preserved from every deletion path. `docs/COMMUNITY-MEDIA-SAFETY.md`.
 - **Retention:** a daily sweep, logged in `community_retention_runs`, removes
   expired evidence and never touches open cases.
 
 It **is not** yet:
 
-- **A media-safety detector.** Community has no image posting yet.
+- **A deployed media scanner, or a known-abuse provider.** The scanner is
+  written and tested (`supabase/functions/_shared/mediascan.ts`) and its job
+  is parked. No provider is configured, so no image clears; the steps, and the
+  legal sign-off they start with, are in `docs/COMMUNITY-MEDIA-SAFETY.md`.
 - **A slur lexicon.** The hate rules are phrase patterns. A tenant's lexicon
   would be new rows in `community_detector_rules`.
 - **A deployed escalation adapter.** The adapter is written and tested

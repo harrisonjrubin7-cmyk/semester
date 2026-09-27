@@ -1499,4 +1499,300 @@ begin
     format($q$select public.request_alias_identity(%L, 'pattern of harassment across posts')$q$, k_alias));
 end $$;
 
+
+-- ── Images, held until scanned ───────────────────────────────────────────
+create or replace function pg_temp.fails(statement text)
+returns boolean language plpgsql as $$
+begin
+  execute statement;
+  return false;
+exception when others then
+  return true;
+end $$;
+
+create or replace function pg_temp.verdict(kind text, sha text, phash text, known text,
+                                           meta boolean default false, label text default null, conf numeric default null)
+returns jsonb language sql as $$
+  select jsonb_build_object('detected_kind', kind, 'bytes', 200000, 'width', 800, 'height', 600,
+                            'sha256', sha, 'phash', phash, 'metadata_found', meta, 'known_abuse', known,
+                            'classifier', case when label is null then null
+                                               else jsonb_build_object('label', label, 'confidence', conf) end,
+                            'scan_version', 'media-scan-check')
+$$;
+
+-- Reserve, upload as the reserving account, and post. Returns the post.
+create or replace function pg_temp.image_post(who uuid, community uuid, body text, kind text default 'jpeg')
+returns uuid language plpgsql as $$
+declare mid uuid; path text; pid uuid;
+begin
+  perform pg_temp.become(who);
+  select media_id, object_path into mid, path from public.begin_community_image(community, kind, 'A photo for the check');
+  insert into storage.objects (bucket_id, name, owner) values ('community-media', path, who);
+  pid := public.create_community_post(community, body, false, false, mid);
+  execute 'reset role';
+  return pid;
+end $$;
+
+do $$
+declare
+  ann uuid; ben uuid; cal uuid; eve uuid; mgr uuid; rev uuid; rev2 uuid;
+  crs uuid; sup uuid; mid uuid; mid2 uuid; path text; pid uuid; k uuid; n bigint; t text; b boolean;
+  near_ph text := 'f0f0f0f0f0f0f0f7'; far_ph text := '0f0f0f0f0f0f0f0f';
+begin
+  insert into public.schools (id, name, email_domains) values ('md-u', 'Media University', array['md-u.example']),
+                                                              ('md-other', 'Other Media U', array['md-other.example']);
+  ann := pg_temp.newuser('ann@md-u.example', 'md-u');
+  ben := pg_temp.newuser('ben@md-u.example', 'md-u');
+  cal := pg_temp.newuser('cal@md-u.example', 'md-u');
+  eve := pg_temp.newuser('eve@md-other.example', 'md-other');
+  mgr := pg_temp.newuser('mgr@md-u.example', 'md-u');
+  rev := pg_temp.newuser('rev@md.semester.example', null);
+  rev2 := pg_temp.newuser('rev2@md.semester.example', null);
+  insert into public.role_grants (subject, role, scope_kind, scope_id, provenance) values
+    (mgr, 'community_manager', 'school', 'md-u', 'institution'),
+    (rev, 'trust_safety_reviewer', 'platform', '', 'platform'),
+    (rev2, 'trust_safety_reviewer', 'platform', '', 'platform');
+  perform pg_temp.expect_allowed('a manager starts a course community', mgr,
+    $q$select public.create_community('course', 'MD 101', 'Course', '')$q$);
+  perform pg_temp.expect_allowed('and a support community', mgr,
+    $q$select public.create_community('support', 'MD support', 'Support', '')$q$);
+  select id into crs from public.communities where name = 'MD 101';
+  select id into sup from public.communities where name = 'MD support';
+  perform pg_temp.expect_allowed('ann joins the course', ann, format('select public.join_community(%L)', crs));
+  perform pg_temp.expect_allowed('ben joins it', ben, format('select public.join_community(%L)', crs));
+  perform pg_temp.expect_allowed('ann joins the support community', ann, format('select public.join_community(%L)', sup));
+
+  -- Off until the school switches it on.
+  perform pg_temp.expect_refused('no image while the school has images off', ann,
+    format($q$select * from public.begin_community_image(%L, 'jpeg', 'a photo')$q$, crs));
+  insert into public.community_programs (tenant_id, program, enabled, approved_ref) values ('md-u', 'image_posts', true, 'check');
+  perform pg_temp.expect_refused('not in a support community', ann,
+    format($q$select * from public.begin_community_image(%L, 'jpeg', 'a photo')$q$, sup));
+  perform pg_temp.expect_refused('not for somebody outside the community', cal,
+    format($q$select * from public.begin_community_image(%L, 'jpeg', 'a photo')$q$, crs));
+  perform pg_temp.expect_refused('an image needs a description', ann,
+    format($q$select * from public.begin_community_image(%L, 'jpeg', '  ')$q$, crs));
+  perform pg_temp.expect_refused('JPEG, PNG or WebP only', ann,
+    format($q$select * from public.begin_community_image(%L, 'gif', 'a photo')$q$, crs));
+
+  perform pg_temp.become(ann);
+  select media_id, object_path into mid, path from public.begin_community_image(crs, 'jpeg', 'a photo');
+  execute 'reset role';
+  perform pg_temp.said('the path is a random name, never the account', path, 'media/' || mid::text);
+  perform pg_temp.counted('with no account id in it', position(ann::text in path)::bigint, 0);
+
+  -- Storage: only the reserving account uploads, only to its reserved path, and never replaces it.
+  perform pg_temp.expect_refused('ben cannot upload to ann''s reservation', ben,
+    format($q$insert into storage.objects (bucket_id, name, owner) values ('community-media', %L, %L)$q$, path, ben));
+  perform pg_temp.expect_refused('ann cannot upload to a path she did not reserve', ann,
+    format($q$insert into storage.objects (bucket_id, name, owner) values ('community-media', 'media/%s', %L)$q$, gen_random_uuid(), ann));
+  perform pg_temp.become(ann);
+  select media_id into mid2 from public.begin_community_image(crs, 'jpeg', 'a photo');
+  execute 'reset role';
+  perform pg_temp.expect_refused('a reservation with nothing uploaded cannot be posted', ann,
+    format($q$select public.create_community_post(%L, 'nothing here yet', false, false, %L)$q$, crs, mid2));
+  perform pg_temp.expect_allowed('ann uploads to her reservation', ann,
+    format($q$insert into storage.objects (bucket_id, name, owner) values ('community-media', %L, %L)$q$, path, ann));
+  perform pg_temp.expect_refused('and cannot replace it', ann,
+    format($q$update storage.objects set metadata = '{"x":1}' where name = %L$q$, path));
+  perform pg_temp.expect_refused('or delete it', ann, format('delete from storage.objects where name = %L', path));
+  perform pg_temp.expect_refused('ben cannot post ann''s image', ben,
+    format($q$select public.create_community_post(%L, 'mine now', false, false, %L)$q$, crs, mid));
+  perform pg_temp.expect_allowed('ann posts it', ann,
+    format($q$select public.create_community_post(%L, 'Our lab setup', false, false, %L)$q$, crs, mid));
+  select post_id into pid from public.community_media where id = mid;
+  select status into t from public.community_posts where id = pid;
+  perform pg_temp.said('the post waits for the scan', t, 'pending');
+  perform pg_temp.counted('members cannot see it yet', pg_temp.seen(ben, format('select 1 from public.community_posts where id = %L', pid)), 0);
+  perform pg_temp.counted('nor its image', pg_temp.seen(ben, format('select 1 from storage.objects where name = %L', path)), 0);
+  perform pg_temp.counted('its author can', pg_temp.seen(ann, format('select 1 from storage.objects where name = %L', path)), 1);
+  perform pg_temp.counted('and a reviewer can', pg_temp.seen(rev, format('select 1 from storage.objects where name = %L', path)), 1);
+  perform pg_temp.expect_refused('nobody reads who uploaded an image', rev, 'select uploader_id from public.community_media');
+  perform pg_temp.expect_refused('or its hashes', rev, 'select sha256, phash from public.community_media');
+
+  -- The scanner is the service role's.
+  perform pg_temp.expect_refused('nobody signed in takes scans', rev, 'select * from public.take_media_scans()');
+  perform pg_temp.expect_refused('or records one', rev,
+    format('select public.record_media_scan(%L, %L::jsonb)', mid, pg_temp.verdict('jpeg', repeat('a', 64), 'f0f0f0f0f0f0f0f0', 'clear')));
+  select count(*) into n from public.take_media_scans();
+  perform pg_temp.counted('the scanner takes the waiting image', n, 1);
+  select count(*) into n from public.take_media_scans();
+  perform pg_temp.counted('and an overlapping run does not take it again', n, 0);
+  perform pg_temp.counted('nothing is decided without a known-abuse check',
+    pg_temp.fails(format('select public.record_media_scan(%L, %L::jsonb)', mid,
+      pg_temp.verdict('jpeg', repeat('a', 64), 'f0f0f0f0f0f0f0f0', 'not_checked')))::int, 1);
+  perform pg_temp.counted('or without both hashes',
+    pg_temp.fails(format('select public.record_media_scan(%L, %L::jsonb)', mid,
+      pg_temp.verdict('jpeg', repeat('a', 64), null, 'clear')))::int, 1);
+  perform pg_temp.said('a clean image clears',
+    public.record_media_scan(mid, pg_temp.verdict('jpeg', repeat('a', 64), 'f0f0f0f0f0f0f0f0', 'clear')), 'clear');
+  select status into t from public.community_posts where id = pid;
+  perform pg_temp.said('and the post publishes', t, 'published');
+  perform pg_temp.counted('members now see the image', pg_temp.seen(ben, format('select 1 from storage.objects where name = %L', path)), 1);
+  perform pg_temp.counted('somebody outside the community does not', pg_temp.seen(cal, format('select 1 from storage.objects where name = %L', path)), 0);
+  perform pg_temp.counted('nor another school', pg_temp.seen(eve, format('select 1 from storage.objects where name = %L', path)), 0);
+
+  -- Rejections.
+  pid := pg_temp.image_post(ann, crs, 'Metadata left on');
+  select id into mid from public.community_media where post_id = pid;
+  perform public.take_media_scans();
+  perform pg_temp.said('leftover metadata is rejected',
+    public.record_media_scan(mid, pg_temp.verdict('jpeg', repeat('b', 64), '1111111111111111', 'clear', true)), 'rejected');
+  select status into t from public.community_posts where id = pid;
+  perform pg_temp.said('and the post is withdrawn', t, 'withdrawn');
+  select count(*) into n from public.community_media_deletions d join public.community_media m on m.object_path = d.object_path where m.id = mid;
+  perform pg_temp.counted('and the file is queued for deletion', n, 1);
+  -- Once the rejected file is gone, nothing new can be put at its path.
+  delete from storage.objects where name = (select object_path from public.community_media where id = mid);
+  perform pg_temp.expect_refused('a decided image''s path cannot be uploaded to again', ann,
+    format($q$insert into storage.objects (bucket_id, name, owner) values ('community-media', %L, %L)$q$,
+           (select object_path from public.community_media where id = mid), ann));
+  pid := pg_temp.image_post(ann, crs, 'Not what it says');
+  select id into mid from public.community_media where post_id = pid;
+  perform public.take_media_scans();
+  perform pg_temp.said('a file that is not what it was declared as is rejected',
+    public.record_media_scan(mid, pg_temp.verdict('png', repeat('c', 64), '2222222222222222', 'clear')), 'rejected');
+
+  -- Removal remembers the image; a near copy is held.
+  select post_id into pid from public.community_media where sha256 = repeat('a', 64);
+  perform pg_temp.expect_allowed('ben reports the image post', ben, format($q$select public.report_community_post(%L, 'other')$q$, pid));
+  select id into k from public.community_cases where post_id = pid;
+  perform pg_temp.expect_allowed('a reviewer removes it', rev, format($q$select public.decide_community_case(%L, 'remove', 'offtopic.image')$q$, k));
+  select count(*) into n from public.community_media_blocklist where sha256 = repeat('a', 64) and tenant_id = 'md-u';
+  perform pg_temp.counted('its hashes go on the school''s blocklist', n, 1);
+  perform pg_temp.counted('members can no longer fetch it', pg_temp.seen(ben,
+    format('select 1 from storage.objects where name = %L', 'media/' || (select id from public.community_media where post_id = pid)::text)), 0);
+  perform pg_temp.counted('students cannot read the blocklist', pg_temp.seen(ann, 'select 1 from public.community_media_blocklist'), 0);
+
+  pid := pg_temp.image_post(ann, crs, 'Posting it again, slightly cropped');
+  select id into mid from public.community_media where post_id = pid;
+  perform public.take_media_scans();
+  perform pg_temp.said('a near copy of a removed image is held',
+    public.record_media_scan(mid, pg_temp.verdict('jpeg', repeat('d', 64), near_ph, 'clear')), 'held');
+  select c.route || '/' || s.rule_id into t from public.community_cases c join public.community_signals s on s.case_id = c.id
+   where c.post_id = pid and s.detector = 'media_safety';
+  perform pg_temp.said('with a case and a media-safety signal', t, 'standard/media.reupload-of-removed');
+  select status into t from public.community_posts where id = pid;
+  perform pg_temp.said('and the post held', t, 'held');
+  pid := pg_temp.image_post(ann, crs, 'A different picture');
+  select id into mid from public.community_media where post_id = pid;
+  perform public.take_media_scans();
+  perform pg_temp.said('a different image clears', public.record_media_scan(mid, pg_temp.verdict('jpeg', repeat('e', 64), far_ph, 'clear')), 'clear');
+
+  -- A classifier's warning is held for a person.
+  pid := pg_temp.image_post(ann, crs, 'Rough week');
+  select id into mid from public.community_media where post_id = pid;
+  perform public.take_media_scans();
+  perform pg_temp.said('a confident self-harm label is held',
+    public.record_media_scan(mid, pg_temp.verdict('jpeg', repeat('9', 64), '3333333333333333', 'clear', false, 'self_harm', 0.91)), 'held');
+  select severity into t from public.community_cases where post_id = pid;
+  perform pg_temp.said('as a P1 safety case', t, 'P1');
+  select id into k from public.community_cases where post_id = pid;
+  perform pg_temp.expect_allowed('a reviewer decides it is fine', rev,
+    format($q$select public.decide_community_case(%L, 'allow', 'art.project.context')$q$, k));
+  select p.status || '/' || m.status into t from public.community_posts p join public.community_media m on m.post_id = p.id where p.id = pid;
+  perform pg_temp.said('which puts the post and its image back up', t, 'published/clear');
+  perform pg_temp.counted('so members see the image', pg_temp.seen(ben,
+    format('select 1 from storage.objects where name = %L', 'media/' || mid::text)), 1);
+  -- The read rule itself: a published post does not show an image that is not clear.
+  update public.community_media set status = 'held' where id = mid;
+  perform pg_temp.counted('an image not clear stays unseen, even on a published post', pg_temp.seen(ben,
+    format('select 1 from storage.objects where name = %L', 'media/' || mid::text)), 0);
+  update public.community_media set status = 'clear' where id = mid;
+
+  -- A known-abuse match: held, P0, and never shown to anybody.
+  pid := pg_temp.image_post(ann, crs, 'Match');
+  select id, object_path into mid, path from public.community_media where post_id = pid;
+  perform public.take_media_scans();
+  perform pg_temp.said('a known-abuse match is held', public.record_media_scan(mid, pg_temp.verdict('jpeg', repeat('f', 64), '4444444444444444', 'match')), 'held');
+  select severity || '/' || route || '/' || category into t from public.community_cases where post_id = pid;
+  perform pg_temp.said('as an urgent P0 case', t, 'P0/professional_urgent/nonconsensual_media');
+  perform pg_temp.counted('the reviewer cannot open the file', pg_temp.seen(rev, format('select 1 from storage.objects where name = %L', path)), 0);
+  perform pg_temp.counted('nor can the person who posted it', pg_temp.seen(ann, format('select 1 from storage.objects where name = %L', path)), 0);
+  perform pg_temp.counted('the reviewer is told why', pg_temp.seen(rev,
+    format('select 1 from public.community_media where id = %L and known_abuse_match', mid)), 1);
+  select count(*) into n from public.community_media_deletions where object_path = path;
+  perform pg_temp.counted('it is not queued for deletion', n, 0);
+  select id into k from public.community_cases where post_id = pid;
+  perform pg_temp.expect_refused('it cannot be allowed', rev, format($q$select public.decide_community_case(%L, 'allow', 'looks fine')$q$, k));
+  perform pg_temp.expect_refused('or preserved and put back up', rev,
+    format($q$select public.decide_community_case(%L, 'preserve_evidence', 'keep it')$q$, k));
+  perform pg_temp.expect_allowed('only removed', rev, format($q$select public.decide_community_case(%L, 'remove', 'known.abuse')$q$, k));
+  perform pg_temp.expect_allowed('ann appeals', ann, format('select public.appeal_community_decision(%L)', pid));
+  perform pg_temp.expect_refused('and the appeal cannot be granted', rev2,
+    format($q$select public.decide_community_appeal(%L, false, 'overturning this')$q$, k));
+  select status into t from public.community_posts where id = pid;
+  perform pg_temp.said('the post stays down', t, 'removed');
+  update public.community_cases set status = 'decided', retain_until = now() - interval '1 day' where post_id = pid;
+  perform private.sweep_community_retention();
+  select count(*) into n from public.community_cases where post_id = pid;
+  perform pg_temp.counted('and the sweep keeps its case', n, 1);
+
+  -- Evidence outlives the account and the post; nothing else does.
+  delete from public.community_posts where id = pid;
+  select count(*) into n from public.community_media where id = mid and known_abuse_match and post_id is null;
+  perform pg_temp.counted('a known-abuse match survives its post being deleted', n, 1);
+  perform private.sweep_community_retention();
+  select count(*) into n from public.community_media where id = mid;
+  perform pg_temp.counted('and the sweep leaves it', n, 1);
+  pid := pg_temp.image_post(ann, crs, 'Ordinary, then deleted');
+  select id, object_path into mid2, path from public.community_media where post_id = pid;
+  delete from public.community_posts where id = pid;
+  perform private.sweep_community_retention();
+  select count(*) into n from public.community_media where id = mid2;
+  perform pg_temp.counted('an ordinary image goes once its post is gone', n, 0);
+  select count(*) into n from public.community_media_deletions where object_path = path;
+  perform pg_temp.counted('and its file is queued for deletion', n, 1);
+
+  -- A granted appeal restores the image and lifts its blocklist entry.
+  select post_id into pid from public.community_media where sha256 = repeat('a', 64);
+  select id into k from public.community_cases where post_id = pid;
+  perform pg_temp.expect_allowed('ann appeals the removal', ann, format('select public.appeal_community_decision(%L)', pid));
+  perform pg_temp.expect_allowed('another reviewer grants it', rev2,
+    format($q$select public.decide_community_appeal(%L, false, 'on topic for the lab')$q$, k));
+  select status into t from public.community_media where post_id = pid;
+  perform pg_temp.said('the image is clear again', t, 'clear');
+  select count(*) into n from public.community_media_blocklist where sha256 = repeat('a', 64);
+  perform pg_temp.counted('and off the blocklist', n, 0);
+
+  -- Switched off, waiting images are held, not scanned.
+  pid := pg_temp.image_post(ann, crs, 'Waiting');
+  update public.community_programs set enabled = false where tenant_id = 'md-u' and program = 'image_posts';
+  select count(*) into n from public.take_media_scans();
+  perform pg_temp.counted('with images switched off, nothing is scanned', n, 0);
+  perform pg_temp.expect_refused('and nothing new is reserved', ann,
+    format($q$select * from public.begin_community_image(%L, 'jpeg', 'a photo')$q$, crs));
+
+  -- Clean-up is the service role's.
+  perform pg_temp.expect_refused('nobody signed in reads the deletion queue', rev, 'select * from public.community_media_deletions');
+  perform pg_temp.expect_refused('or takes from it', rev, 'select * from public.take_media_deletions()');
+  select count(*) into n from public.take_media_deletions();
+  perform pg_temp.counted('the service role takes what is queued', (n >= 2)::int, 1);
+  perform public.mark_media_deleted(array(select public.take_media_deletions()));
+  select count(*) into n from public.community_media_deletions;
+  perform pg_temp.counted('and clears it once deleted', n, 0);
+  update public.community_programs set enabled = true where tenant_id = 'md-u' and program = 'image_posts';
+  perform pg_temp.become(ann);
+  select media_id into mid2 from public.begin_community_image(crs, 'jpeg', 'a photo');
+  execute 'reset role';
+  update public.community_media set created_at = now() - interval '2 days' where id = mid2;
+  perform private.sweep_community_retention();
+  select count(*) into n from public.community_media where id = mid2;
+  perform pg_temp.counted('a reservation never posted lapses', n, 0);
+  -- Leaving takes their images with them, except what a case is keeping.
+  pid := pg_temp.image_post(ann, crs, 'Here until I leave');
+  perform pg_temp.expect_allowed('ann forgets her Community data', ann, 'select public.forget_my_community()');
+  select count(*) into n from public.community_media m where m.uploader_id = ann
+     and not exists (select 1 from public.community_cases k where k.post_id = m.post_id) and not m.known_abuse_match;
+  perform pg_temp.counted('her images are gone at once', n, 0);
+  select count(*) into n from public.community_media where known_abuse_match;
+  perform pg_temp.counted('a known-abuse match is kept', n, 1);
+  -- An account whose only trace is an image is not an untouched one.
+  k := pg_temp.newuser('dan@md-u.example', 'md-u');
+  perform pg_temp.counted('a fresh account reads as untouched', public.lti_account_untouched(k)::int, 1);
+  insert into public.community_media (tenant_id, community_id, uploader_id, declared_kind, alt_text)
+  values ('md-u', crs, k, 'jpeg', 'a photo');
+  perform pg_temp.counted('an image of its own makes it touched', public.lti_account_untouched(k)::int, 0);
+end $$;
+
 rollback;

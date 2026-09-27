@@ -25,6 +25,10 @@ Code: `app/src/community/alias.ts`, enforced by `community_aliases`,
   the account.
 - **No lookalike names.** An alias cannot be any member's handle at that
   school.
+- **No images under an alias.** A photo can identify its taker, even with the
+  metadata stripped — a room, a view, a face in a reflection. The composer
+  offers no picker under an alias, and `create_community_post` refuses an
+  image on an alias post (docs/COMMUNITY-MEDIA-SAFETY.md).
 
 - An alias exists only in one community that is both approved for aliases and
   of an eligible type (support, study group).

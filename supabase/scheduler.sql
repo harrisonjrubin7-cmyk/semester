@@ -207,6 +207,49 @@ select cron.alter_job(
   active := false
 );
 
+-- ── Community media scan ─────────────────────────────────────────────────
+--
+-- Scans uploaded Community images and deletes the files of rows that are
+-- gone. The scanner is supabase/functions/_shared/mediascan.ts, not deployed:
+-- docs/COMMUNITY-MEDIA-SAFETY.md has the steps, and they start with a
+-- known-abuse hash provider and legal sign-off. Parked, with a secret of its
+-- own for the same reason as escalation-delivery's.
+do $$
+begin
+  if not exists (select 1 from vault.secrets where name = 'media_scan_cron_secret') then
+    perform vault.create_secret(
+      translate(encode(gen_random_bytes(32), 'base64'), '+/=', '-_'),
+      'media_scan_cron_secret',
+      'Bearer token the media-scan job sends to the media-scan Edge Function. Must equal its MEDIA_SCAN_CRON_SECRET.',
+      null
+    );
+  end if;
+end $$;
+
+select cron.schedule(
+  'media-scan',
+  '* * * * *',
+  $job$
+    select net.http_post(
+      url := 'https://lzrqvlugnawcgywkhqlz.supabase.co/functions/v1/media-scan',
+      headers := jsonb_build_object(
+        'Content-Type', 'application/json',
+        'Authorization', 'Bearer ' || (
+          select decrypted_secret from vault.decrypted_secrets where name = 'media_scan_cron_secret'
+        )
+      ),
+      body := '{}'::jsonb,
+      timeout_milliseconds := 60000
+    );
+  $job$
+);
+
+-- Parked: the function does not exist until somebody deploys it on purpose.
+select cron.alter_job(
+  (select jobid from cron.job where jobname = 'media-scan'),
+  active := false
+);
+
 -- ── Integrations: the retention sweep ─────────────────────────────────────
 --
 -- `public.integration_retention_sweep()` (20260927200000_integration_hardening)

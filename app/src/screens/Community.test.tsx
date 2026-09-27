@@ -7,6 +7,7 @@ const mock = vi.hoisted(() => ({
   on: true,
   flags: {} as Record<string, boolean>,
   myStanding: vi.fn(),
+  uploadImage: vi.fn(),
   account: { id: 'me', email: 'me@example.edu', via: 'email' } as unknown,
   loadCommunities: vi.fn(),
   loadNotices: vi.fn(),
@@ -46,7 +47,8 @@ vi.mock('../community/client', () => ({
   reviewerStanding: mock.standing,
   loadPrograms: mock.programs,
   myStanding: mock.myStanding,
-  NO_PROGRAMS: { scopedPseudonymity: false, volunteerModeration: false, institutionEscalation: false, accountSafetyState: false },
+  uploadImage: mock.uploadImage,
+  NO_PROGRAMS: { scopedPseudonymity: false, volunteerModeration: false, institutionEscalation: false, accountSafetyState: false, imagePosts: false },
   loadAlias: mock.loadAlias,
   claimAlias: mock.claimAlias,
   dropAlias: mock.dropAlias,
@@ -90,6 +92,7 @@ const post = (id: string, patch: Record<string, unknown> = {}) => ({
   createdAt: '2026-09-27T10:00:00Z',
   editedAt: null,
   mine: false,
+  media: null,
   ...patch,
 });
 
@@ -215,7 +218,7 @@ describe('Community', () => {
     });
     click('It’s mine — post anyway');
     await settle();
-    expect(mock.createPost).toHaveBeenCalledWith('c1', 'Call me at 615-555-0142', true, false);
+    expect(mock.createPost).toHaveBeenCalledWith('c1', 'Call me at 615-555-0142', true, false, null);
   });
 
   it('posts clean text without a prompt', async () => {
@@ -224,7 +227,7 @@ describe('Community', () => {
     await act(async () => {
       (host.querySelector('form[aria-label="Write a post"]') as HTMLFormElement).requestSubmit();
     });
-    expect(mock.createPost).toHaveBeenCalledWith('c1', 'Anyone doing problem set 3 tonight?', false, false);
+    expect(mock.createPost).toHaveBeenCalledWith('c1', 'Anyone doing problem set 3 tonight?', false, false, null);
   });
 
   it('reports with the emergency notice first', async () => {
@@ -252,7 +255,7 @@ describe('Community', () => {
     expect(mock.createPost).not.toHaveBeenCalled();
     click('Post anyway');
     await settle();
-    expect(mock.createPost).toHaveBeenCalledWith('c1', 'Does anyone have the answer key for the midterm?', false, false);
+    expect(mock.createPost).toHaveBeenCalledWith('c1', 'Does anyone have the answer key for the midterm?', false, false, null);
   });
 
   it('never stops a post with crisis language, and offers support after it', async () => {
@@ -262,7 +265,7 @@ describe('Community', () => {
       (host.querySelector('form[aria-label="Write a post"]') as HTMLFormElement).requestSubmit();
     });
     await settle();
-    expect(mock.createPost).toHaveBeenCalledWith('c1', 'honestly I want to die this week', false, false);
+    expect(mock.createPost).toHaveBeenCalledWith('c1', 'honestly I want to die this week', false, false, null);
     expect(host.textContent).toContain('988');
   });
 
@@ -323,7 +326,7 @@ describe('Community', () => {
       await act(async () => {
         (host.querySelector('form[aria-label="Write a post"]') as HTMLFormElement).requestSubmit();
       });
-      expect(mock.createPost).toHaveBeenLastCalledWith('c1', 'First post here', false, false);
+      expect(mock.createPost).toHaveBeenLastCalledWith('c1', 'First post here', false, false, null);
       const toggle = [...host.querySelectorAll('label')].find((l) => l.textContent === 'Post as Navigator1')!
         .querySelector('input') as HTMLInputElement;
       act(() => toggle.click());
@@ -331,7 +334,7 @@ describe('Community', () => {
       await act(async () => {
         (host.querySelector('form[aria-label="Write a post"]') as HTMLFormElement).requestSubmit();
       });
-      expect(mock.createPost).toHaveBeenLastCalledWith('c1', 'Second post here', false, true);
+      expect(mock.createPost).toHaveBeenLastCalledWith('c1', 'Second post here', false, true, null);
       expect(host.textContent).toContain('Post as Navigator1');
     });
 
@@ -374,6 +377,118 @@ describe('Community', () => {
       expect(panel.textContent).toContain('A past decision still affects your Community account.');
       expect(panel.textContent).toContain('never affects your feed, your courses');
       expect(panel.textContent).not.toMatch(/\d+ (out of|\/) 100/);
+    });
+  });
+
+  describe('images', () => {
+    /** A small, real JPEG: JFIF header, one frame, one scan. */
+    const jpegBytes = () =>
+      new Uint8Array([
+        0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46, 0x00, 0x01, 0x01, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00,
+        0xff, 0xe1, 0x00, 0x08, 0x45, 0x78, 0x69, 0x66, 0x00, 0x00,
+        0xff, 0xc0, 0x00, 0x11, 0x08, 0x00, 0x10, 0x00, 0x10, 0x03, 0x01, 0x22, 0x00, 0x02, 0x11, 0x01, 0x03, 0x11, 0x01,
+        0xff, 0xda, 0x00, 0x0c, 0x03, 0x01, 0x00, 0x02, 0x11, 0x03, 0x11, 0x00, 0x3f, 0x00, 0x12, 0x34,
+        0xff, 0xd9,
+      ]);
+    const on = () => mock.programs.mockResolvedValue({ scopedPseudonymity: false, volunteerModeration: false, imagePosts: true });
+    const picker = () => [...host.querySelectorAll('input[type="file"]')][0] as HTMLInputElement | undefined;
+    async function choose(bytes: Uint8Array) {
+      const input = picker()!;
+      const file = new File([bytes as BlobPart], 'photo.jpg', { type: 'image/jpeg' });
+      Object.defineProperty(input, 'files', { value: [file], configurable: true });
+      await act(async () => {
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+        await new Promise((r) => setTimeout(r, 0));
+      });
+    }
+
+    beforeEach(() => {
+      URL.createObjectURL = vi.fn(() => 'blob:preview');
+      URL.revokeObjectURL = vi.fn();
+      mock.uploadImage.mockResolvedValue('media-1');
+    });
+
+    it('are not offered while the school has them off', async () => {
+      await openCourse();
+      expect(picker()).toBeUndefined();
+    });
+
+    it('are not offered while the build flag is off, whatever the school says', async () => {
+      on();
+      mock.flags.communityImages = false;
+      await openCourse();
+      expect(picker()).toBeUndefined();
+    });
+
+    it('are not offered in a support community', async () => {
+      on();
+      mock.loadCommunities.mockResolvedValue([{ ...course, kind: 'support' }]);
+      await render();
+      click('ECON 1010 · Support');
+      await settle();
+      expect(picker()).toBeUndefined();
+    });
+
+    it('strip the image on this device, need a description, then upload before posting', async () => {
+      on();
+      await openCourse();
+      await choose(jpegBytes());
+      expect(host.textContent).toContain('Location and camera details were removed on this device.');
+      type(host.querySelector('textarea') as HTMLTextAreaElement, 'Our lab bench');
+      const form = host.querySelector('form[aria-label="Write a post"]') as HTMLFormElement;
+      const post = [...form.querySelectorAll('button')].find((b) => b.textContent === 'Post') as HTMLButtonElement;
+      expect(post.disabled, 'no description yet').toBe(true);
+      type(form.querySelector('input.input') as HTMLInputElement, 'Two microscopes on a bench');
+      await act(async () => form.requestSubmit());
+      const [, kind, sent, alt] = mock.uploadImage.mock.calls[0];
+      expect(kind).toBe('jpeg');
+      expect(alt).toBe('Two microscopes on a bench');
+      // The EXIF segment in the chosen file never leaves the device.
+      expect([...(sent as Uint8Array)].join(',')).not.toContain([0x45, 0x78, 0x69, 0x66].join(','));
+      expect(mock.createPost).toHaveBeenLastCalledWith('c1', 'Our lab bench', false, false, 'media-1');
+    });
+
+    it('refuse a file that is not an image, in words', async () => {
+      on();
+      await openCourse();
+      await choose(new TextEncoder().encode('<svg onload=alert(1)>'));
+      expect(host.textContent).toContain('Only JPEG, PNG and WebP images can be shared in Community');
+    });
+
+    it('are never offered while posting under an alias', async () => {
+      mock.loadCommunities.mockResolvedValue([{ ...course, kind: 'study_group', pseudonymityApproved: true }]);
+      mock.programs.mockResolvedValue({ scopedPseudonymity: true, volunteerModeration: false, imagePosts: true });
+      mock.loadAlias.mockResolvedValue({ name: 'Navigator1', rotatedAt: null });
+      await render();
+      click('ECON 1010 · Study group');
+      await settle();
+      await settle();
+      expect(picker()).toBeDefined();
+      const toggle = [...host.querySelectorAll('label')].find((l) => l.textContent === 'Post as Navigator1')!
+        .querySelector('input') as HTMLInputElement;
+      act(() => toggle.click());
+      expect(picker()).toBeUndefined();
+    });
+
+    it('show a cleared image with its description, and tell the author where theirs stands', async () => {
+      const media = (patch: Record<string, unknown>) => ({
+        id: 'm', status: 'clear', reasonCode: '', width: 800, height: 600, url: 'https://x/signed', knownAbuseMatch: false,
+        altText: 'Two microscopes on a bench', ...patch,
+      });
+      mock.loadPosts.mockResolvedValue({
+        posts: [
+          post('a', { media: media({}) }),
+          post('mine', { mine: true, status: 'pending', media: media({ status: 'pending', url: 'https://x/own', altText: 'My own photo' }) }),
+          post('words', { mine: true, status: 'pending' }),
+        ],
+        muted: [],
+      });
+      await openCourse();
+      const img = host.querySelector('img[alt="Two microscopes on a bench"]') as HTMLImageElement;
+      expect(img.getAttribute('src')).toBe('https://x/signed');
+      expect(host.textContent).toContain('Your image is being checked. The post appears to others once it clears.');
+      // The host-approval words belong to the post without an image, not to the one waiting on its scan.
+      expect(host.textContent?.split('Waiting for a host to approve it').length).toBe(2);
     });
   });
 

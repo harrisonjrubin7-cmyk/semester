@@ -992,6 +992,7 @@ export const OWNED_TABLES: OwnedTable[] = [
   // written by this client; both are about the account, so both go with it.
   { table: 'community_aliases', column: null, via: 'forget_my_community' },
   { table: 'community_volunteers', column: null, via: 'forget_my_community' },
+  { table: 'community_media', column: null, via: 'forget_my_community' },
   { table: 'community_session_participants', column: 'user_id' },
   { table: 'community_mutes', column: 'user_id' },
   { table: 'community_members', column: 'user_id' },

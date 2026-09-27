@@ -393,6 +393,52 @@ describe('Moderation', () => {
     });
   });
 
+  describe('images on a case', () => {
+    const media = (patch: Record<string, unknown>) => ({
+      id: 'm', status: 'held', reasonCode: 'matches_removed_image', width: 800, height: 600, url: 'https://x/held',
+      knownAbuseMatch: false, altText: 'A photo', ...patch,
+    });
+
+    it('shows a held image to the reviewer, with why it was held', async () => {
+      mock.queue.mockResolvedValue([kase('k0', { media: media({}) })]);
+      await render();
+      const card = host.querySelector('article') as HTMLElement;
+      expect(card.querySelector('img')?.getAttribute('src')).toBe('https://x/held');
+      expect(card.textContent).toContain('Image held — matches removed image.');
+    });
+
+    it('never shows a known-abuse match, and says what to do instead', async () => {
+      mock.queue.mockResolvedValue([kase('k0', { media: media({ knownAbuseMatch: true, url: 'https://x/should-never-render' }) })]);
+      await render();
+      const card = host.querySelector('article') as HTMLElement;
+      expect(card.querySelector('img')).toBeNull();
+      expect(card.innerHTML).not.toContain('should-never-render');
+      expect(card.querySelector('[role="alert"]')?.textContent).toContain('Do not try to view it.');
+    });
+
+    it('offers a known-abuse match only removal or a restriction, and starts on removal', async () => {
+      mock.queue.mockResolvedValue([
+        kase('k0', { media: media({ knownAbuseMatch: true, url: null }) }),
+        kase('k1', { media: media({}) }),
+      ]);
+      await render();
+      const [matched, held] = [...host.querySelectorAll('article')].map((a) => a.querySelector('select') as HTMLSelectElement);
+      const offered = [...matched.options].map((o) => o.value);
+      expect(offered).toContain('remove');
+      expect(offered.filter((v) => !['remove', 'rate_limit', 'community_restriction', 'account_restriction'].includes(v))).toEqual([]);
+      expect(matched.value).toBe('remove');
+      // What is sent, not only what is drawn: a select shows its first option whatever the state holds.
+      const card = host.querySelector('article') as HTMLElement;
+      reason(card, 'abuse.known_hash');
+      const record = [...card.querySelectorAll('button')].find((b) => b.textContent === 'Record decision') as HTMLButtonElement;
+      await act(async () => record.click());
+      expect(mock.decideCase).toHaveBeenCalledWith('k0', 'remove', 'abuse.known_hash');
+      // The control: an ordinary held image keeps every choice.
+      expect([...held.options].map((o) => o.value)).toContain('allow');
+      expect(held.value).toBe('allow');
+    });
+  });
+
   describe('who is behind an alias', () => {
     const aliasCase = () => kase('k0', { post: { body: 'Body k0', authorName: 'Wanderer5', status: 'held', communityName: 'Support', asAlias: true } });
     const grant = (patch: Record<string, unknown> = {}) => ({

@@ -144,11 +144,12 @@ set by hand, and `production` is refused for them.
 | volunteerModeration | `VITE_VOLUNTEER_MODERATION` | **yes** | off | Blind low-risk volunteer queues |
 | scopedPseudonymity | `VITE_SCOPED_PSEUDONYMITY` | **yes** | off | Community-only aliases |
 | accountSafetyState | `VITE_ACCOUNT_SAFETY_STATE` | **yes** | off | Private staff-only 0–100 state |
+| communityImages | `VITE_COMMUNITY_IMAGES` | **yes** | off | Image posts, held until scanned |
 
 **Server-side switches.** A build flag hides a screen, but it cannot stop a
 client that ignores it. Scoped pseudonymity and volunteer moderation are
-therefore also gated in the database, and so are institution escalation and
-the account safety state:
+therefore also gated in the database, and so are institution escalation, the
+account safety state and image posts:
 
 - Each has a `community_programs` row per university.
 - A program is off unless its row is present and `enabled`.
@@ -159,6 +160,9 @@ the account safety state:
 - Switching a program off stops alias posts, volunteer queues, escalation
   approvals and new safety entries on the next call. Safety entries already
   written stay until the yearly sweep or an appeal reverses them.
+- Image posts are the `image_posts` row. With it on, an image still clears
+  only after a known-abuse hash check, and none is configured
+  (docs/COMMUNITY-MEDIA-SAFETY.md).
 - Escalation also needs a `community_escalation_policies` row naming the
   agreement, its categories and the channel. Two different senior Trust &
   Safety staff write it through the Agreements screen (one drafts, one
