@@ -200,7 +200,7 @@ try {
     await page.getByRole('button', { name: 'Prepare help request' }).click();
     await open('#/mail', () => page.getByText('Help with Evidence & sampling practice', { exact: false }));
     check(await page.getByText('Help with Evidence & sampling practice', { exact: false }).count() === 1, `${viewport.width}px: could not create pending local action`);
-    const preview = page.locator('aside[aria-label="Institutional preview controls"]');
+    const preview = page.locator('aside[aria-label="Demo environment"]');
     await preview.locator('summary').click();
     await preview.locator('select').nth(0).selectOption('cedar-coast');
     await page.getByText('Cedar Coast College', { exact: false }).first().waitFor();
