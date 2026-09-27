@@ -76,6 +76,18 @@ describe('what each mode tells the model', () => {
     expect(text).toContain('Do not give the final answer to CHEM 101');
   });
 
+  /*
+   * The limit is the course's, not the assistant's. The course in view is
+   * whatever screen the student last opened, so a cap worded as "do not give
+   * final answers" would hold back "explain elasticity" because ECON happened
+   * to be open. Each mode's cap has to name the course's coursework.
+   */
+  it('scopes the cap to that course\u2019s coursework in every mode that carries one', () => {
+    for (const mode of ['hint', 'practice', 'review'] as const) {
+      expect(tutoring(mode, capped)).toContain('final answer to CHEM 101 coursework');
+    }
+  });
+
   it('Practice and Review both hold the feedback contract and never offer the answer under a cap', () => {
     for (const mode of ['practice', 'review'] as const) {
       const text = tutoring(mode, capped);

@@ -11,6 +11,7 @@
  * Nothing here has any dependency beyond types and small pure helpers.
  */
 
+import { readOpened, type Opened } from '../lib/opened';
 import type {
   Appointment,
   CampusLink,
@@ -343,6 +344,17 @@ export interface Persisted {
   courseOrder: CourseId[];
   /** The destinations you opened most recently, newest first. */
   recent: Screen[];
+  /**
+   * The deadlines and courses you opened most recently, newest first.
+   *
+   * `recent` above is screens — "Calendar", "Courses" — which answers where
+   * you go, not what you were in the middle of. This is the thing itself, so
+   * search can offer "continue where you left off" as the deadline you were
+   * reading rather than the list it was in. Ids only: the title is looked up
+   * at render time, so a renamed or deleted deadline is never shown stale.
+   * See `lib/opened.ts`.
+   */
+  opened: Opened[];
   /**
    * Every screen ever opened, so the app can say what has not been.
    *
@@ -1468,6 +1480,7 @@ export const DEFAULT_PERSISTED: Persisted = {
   examCovers: {},
   dayBudget: DEFAULT_BUDGET,
   recent: [],
+  opened: [],
   sittings: [],
   sessions: [],
   liveSession: null,
@@ -1852,6 +1865,7 @@ export function loadPersisted(): Persisted {
       ),
       courseOrder: list(saved.courseOrder),
       recent: list(saved.recent),
+      opened: readOpened(saved.opened),
       // Seeded from `recent` for anybody upgrading: without this the app
       // would tell somebody who has used it all term that they have never
       // opened Today, which is both wrong and the sort of wrong that makes
@@ -2079,6 +2093,7 @@ export function pickPersisted(state: State): Persisted {
     courseOrder: state.courseOrder,
     feedHidden: state.feedHidden,
     recent: state.recent,
+    opened: state.opened,
     visited: state.visited,
     sittings: state.sittings,
     sessions: state.sessions,

@@ -2,7 +2,7 @@
  * The Community detectors, as the device sees them.
  *
  * The authoritative copy runs in the database: `community_detector_rules`, in
- * supabase/migrations/20260928030500_community.sql, applied to every post and
+ * supabase/migrations/20260928032000_community.sql, applied to every post and
  * every edit by `private.community_run_detectors` so no client can skip it.
  * This is the same list, so the composer can say something *before* a post is
  * sent — and `detectors.test.ts` fails if the two differ by a rule, a number
@@ -36,7 +36,7 @@ export interface DetectorRule {
   pattern: string;
 }
 
-// Keep in step with the seed in 20260928030500_community.sql.
+// Keep in step with the seed in 20260928032000_community.sql.
 export const DETECTOR_RULES: readonly DetectorRule[] = [
   { id: 'pii.third-party-contact', detector: 'pii_doxxing', category: 'private_information_or_doxxing', severity: 'P0', confidence: 0.95, pattern: String.raw`\b(her|his|their) (home address|address|phone number|number|dorm room|room number|room) is\b` },
   { id: 'pii.lives-at', detector: 'pii_doxxing', category: 'private_information_or_doxxing', severity: 'P0', confidence: 0.95, pattern: String.raw`\b(she|he) lives (at|in|on) [a-z0-9 ]{0,30}(hall|house|apartments?|street|avenue|road|dorm|room)\b` },

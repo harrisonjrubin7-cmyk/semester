@@ -180,7 +180,7 @@ declare
     'claim_school(want text)',
 
     /*
-     * Community (20260928030500_community.sql). Seventeen, because every write
+     * Community (20260928032000_community.sql). Seventeen, because every write
      * to a community table goes through one: members never learn another
      * member's account id, so posting, blocking and reporting have to resolve
      * it server-side; triage runs inside the report; and decisions and

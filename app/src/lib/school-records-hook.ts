@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { cloud, cloudConfigured } from './cloud';
 import { claimedSchool } from './schoolclaim';
-import { buildEnvironment, cardsEnabled, loadRecords, type RecordRow } from './integration/school-records';
+import { buildEnvironment, cardsEnabled, loadRecords, loadRoomRecords, type RecordRow } from './integration/school-records';
 
 export type SchoolLoad = { status: 'off' | 'loading' } | { status: 'ready'; userId: string; rows: RecordRow[] };
 
@@ -11,7 +11,8 @@ export type SchoolLoad = { status: 'off' | 'loading' } | { status: 'ready'; user
  * student's own rows and the school's tenant-wide ones under RLS. Any failure
  * is "off" — the hub then says no channel is connected, which is true for it.
  */
-export function useSchoolRecords(): SchoolLoad {
+/** `rooms` loads study spaces and their slots instead of the facts Today reads. */
+export function useSchoolRecords(which: 'records' | 'rooms' = 'records'): SchoolLoad {
   const [load, setLoad] = useState<SchoolLoad>({ status: 'loading' });
   useEffect(() => {
     let live = true;
@@ -22,10 +23,10 @@ export function useSchoolRecords(): SchoolLoad {
       if (!data.user?.id) return { status: 'off' };
       const school = await claimedSchool();
       if (!(await cardsEnabled(db, school, buildEnvironment(import.meta.env.MODE), new Date()))) return { status: 'off' };
-      return { status: 'ready', userId: data.user.id, rows: await loadRecords(db) };
+      return { status: 'ready', userId: data.user.id, rows: await (which === 'rooms' ? loadRoomRecords : loadRecords)(db) };
     })().then((next) => { if (live) setLoad(next); }, () => { if (live) setLoad({ status: 'off' }); });
     return () => { live = false; };
-  }, []);
+  }, [which]);
   return load;
 }
 

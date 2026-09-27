@@ -3,7 +3,7 @@
  * adapter joins this file with its own fixtures before it may be registered.
  */
 import { describe, expect, it } from 'vitest';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { validateDeclaration, type AdapterDeclaration } from './adapter';
 import { CANONICAL_ENTITIES, CONFLICT_KINDS, PROVIDER_DOMAINS } from './catalog';
@@ -32,7 +32,12 @@ function run(records: ExternalRecord[], over: Partial<Parameters<typeof ingest>[
     killSwitchEngaged: false, now: NOW, ...over });
 }
 
-const SQL = readFileSync(resolve(__dirname, '../../../../supabase/migrations/20260927170000_integration_control_plane.sql'), 'utf8');
+// Every migration, not only the control plane's: an applied migration is never
+// edited, so a vocabulary word added later (20260928041700 adds
+// 'space_availability') lives in the migration that added it.
+const MIGRATIONS = resolve(__dirname, '../../../../supabase/migrations');
+const SQL = readdirSync(MIGRATIONS).filter((f) => f.endsWith('.sql')).sort()
+  .map((f) => readFileSync(resolve(MIGRATIONS, f), 'utf8')).join('\n');
 
 describe('the vocabulary matches the database', () => {
   it('names every provider domain, canonical entity and conflict kind the SQL does', () => {

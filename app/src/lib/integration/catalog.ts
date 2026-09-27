@@ -25,6 +25,8 @@ export const CANONICAL_ENTITIES = [
   'referral', 'opportunity', 'job', 'internship', 'research_opportunity', 'organization', 'event',
   'service', 'resource', 'study_space', 'library_source', 'calendar_event', 'notification',
   'person_reference', 'lms_context',
+  // A study space's free and busy slots — tenant-wide, T0, never who booked.
+  'space_availability',
 ] as const;
 export type CanonicalEntity = (typeof CANONICAL_ENTITIES)[number];
 

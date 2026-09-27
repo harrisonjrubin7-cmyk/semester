@@ -192,16 +192,16 @@ revoke all on function private.can_read_support_event(text, text, text)
 grant execute on function private.can_read_support_event(text, text, text)
   to authenticated;
 
-create policy "students read their support grants"
-  on public.support_access_grant for select to authenticated
+drop policy if exists "students read their support grants" on public.support_access_grant;
+create policy "students read their support grants" on public.support_access_grant for select to authenticated
   using (student_id = (select auth.uid()));
 
-create policy "supporters read only active grants addressed to them"
-  on public.support_access_grant for select to authenticated
+drop policy if exists "supporters read only active grants addressed to them" on public.support_access_grant;
+create policy "supporters read only active grants addressed to them" on public.support_access_grant for select to authenticated
   using (private.support_grant_active(id));
 
-create policy "students create bounded support grants"
-  on public.support_access_grant for insert to authenticated
+drop policy if exists "students create bounded support grants" on public.support_access_grant;
+create policy "students create bounded support grants" on public.support_access_grant for insert to authenticated
   with check (
     student_id = (select auth.uid())
     and tenant_id = (
@@ -214,8 +214,8 @@ create policy "students create bounded support grants"
     )
   );
 
-create policy "students change their support grants"
-  on public.support_access_grant for update to authenticated
+drop policy if exists "students change their support grants" on public.support_access_grant;
+create policy "students change their support grants" on public.support_access_grant for update to authenticated
   using (student_id = (select auth.uid()))
   with check (
     student_id = (select auth.uid())
@@ -225,8 +225,8 @@ create policy "students change their support grants"
     )
   );
 
-create policy "people read support access evidence about themselves"
-  on public.support_access_event for select to authenticated
+drop policy if exists "people read support access evidence about themselves" on public.support_access_event;
+create policy "people read support access evidence about themselves" on public.support_access_event for select to authenticated
   using (private.can_read_support_event(
     tenant_id, student_sha256, supporter_sha256
   ));
@@ -341,16 +341,16 @@ revoke all on function private.revoke_support_grants_with_consent()
 revoke all on function private.refuse_support_access_event_change()
   from public, anon, authenticated;
 
-create trigger support_grant_is_bounded
+create or replace trigger support_grant_is_bounded
   before insert or update on public.support_access_grant
   for each row execute function private.assert_support_grant();
-create trigger audit_support_grant
+create or replace trigger audit_support_grant
   after insert or update or delete on public.support_access_grant
   for each row execute function private.audit_support_grant_change();
-create trigger consent_revokes_support_grants
+create or replace trigger consent_revokes_support_grants
   after update of status, revoked_at, expires_at on public.consent_record
   for each row execute function private.revoke_support_grants_with_consent();
-create trigger keep_support_access_events_immutable
+create or replace trigger keep_support_access_events_immutable
   before update or delete on public.support_access_event
   for each row execute function private.refuse_support_access_event_change();
 

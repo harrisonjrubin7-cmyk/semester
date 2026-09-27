@@ -42,12 +42,35 @@ async function renderBar() {
 }
 
 describe('institutional preview bar', () => {
-  it('discloses synthetic data, institution, persona, and sandbox connection truth', async () => {
+  it('says it is a demo in the closed state, and nothing technical', async () => {
     await renderBar();
-    expect(host.textContent).toContain('Synthetic preview');
-    expect(host.textContent).toContain('Northstar University');
-    expect(host.textContent).toContain('Avery Student');
-    expect(host.textContent).toContain('Sandbox');
+    const summary = host.querySelector('summary')?.textContent ?? '';
+    expect(summary).toContain('Demo environment');
+    expect(summary).toContain('No real student data');
+    // The adapter vocabulary the old panel led with.
+    expect(summary).not.toMatch(/synthetic|sandbox/i);
+    expect(host.textContent).not.toMatch(/sandbox|transaction network/i);
+  });
+
+  it('keeps the institution, persona and source truth one click away', async () => {
+    await renderBar();
+    const details = host.querySelector('details');
+    expect(details?.open).toBe(false);
+    expect(details?.textContent).toContain('Northstar University');
+    expect(details?.textContent).toContain('Avery Student');
+    expect(details?.textContent).toContain('Payments: not connected');
+  });
+
+  it('hides for this page load, and a fresh mount brings it back', async () => {
+    await renderBar();
+    const hide = [...host.querySelectorAll('button')].find((b) => b.textContent === 'Hide');
+    await act(async () => hide?.click());
+    expect(host.textContent).toBe('');
+
+    act(() => root.unmount());
+    root = createRoot(host);
+    await renderBar();
+    expect(host.textContent).toContain('Demo environment');
   });
 
   it('switches fixture context in memory', async () => {

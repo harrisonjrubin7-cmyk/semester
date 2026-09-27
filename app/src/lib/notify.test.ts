@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { classesToNudge, dueReminders, inQuiet } from './notify';
+import { classesToNudge, DAILY_CAP, dueReminders, HELPFUL_CAP, IMPORTANT_CAP, inQuiet, NONE_SENT, planAhead, shownBody, TIER, whyFor, withinCap } from './notify';
 import type { Start } from './start';
 import type { DatedItem } from './types';
-import type { NotifKey } from '../data/misc';
+import { NOTIF_DEFS, type NotifKey } from '../data/misc';
 
 const ALL: Record<NotifKey, boolean> = {
   class: true, today: true, two: true, start: true, free: true, sun: true, exam: true, term: true, attend: true,
@@ -583,5 +583,62 @@ describe('the start rule', () => {
     expect(dueReminders(THU, ALL, { items: [], classes: [] }).some((r) => r.rule === 'start')).toBe(
       false,
     );
+  });
+});
+
+describe('notification discipline', () => {
+  const r = (rule: NotifKey, id: string = rule) => ({ id, rule, title: id, body: 'b' });
+
+  it('gives every rule a tier, so a new rule cannot arrive without deciding how loud it is', () => {
+    for (const d of NOTIF_DEFS) expect(TIER[d.k], d.k).toBeDefined();
+  });
+
+  it('caps each tier on its own budget', () => {
+    const noisy = [
+      r('sun'), r('free'), r('start'),
+      ...Array.from({ length: IMPORTANT_CAP + 2 }, (_, n) => r('class', `class:${n}`)),
+    ];
+    const { keep } = withinCap(noisy, NONE_SENT);
+    expect(keep.filter((x) => x.rule === 'class')).toHaveLength(IMPORTANT_CAP);
+    expect(keep.filter((x) => TIER[x.rule] === 'helpful')).toHaveLength(HELPFUL_CAP);
+    expect(keep).toHaveLength(DAILY_CAP);
+  });
+
+  it('never caps a critical one, even on a day already full', () => {
+    const { keep } = withinCap([r('today'), r('sun'), r('bill'), r('term')], { important: IMPORTANT_CAP, helpful: HELPFUL_CAP });
+    expect(keep.map((x) => x.rule)).toEqual(['bill', 'term']);
+  });
+
+  it('never lets helpful ones sent earlier cost a later important one its place', () => {
+    // The morning's nudges went out; the afternoon's class warning still does.
+    const morning = withinCap(Array.from({ length: DAILY_CAP + 1 }, (_, n) => r('start', `s${n}`)), NONE_SENT);
+    const afternoon = withinCap([r('class')], morning.sent);
+    expect(afternoon.keep.map((x) => x.rule)).toEqual(['class']);
+  });
+
+  it('counts what already went out today against the right budget', () => {
+    expect(withinCap([r('today'), r('two'), r('exam')], { important: IMPORTANT_CAP - 1, helpful: 0 }).keep).toHaveLength(1);
+  });
+
+  it('says why on every notification, naming the switch that sent it', () => {
+    expect(shownBody(r('two'))).toBe('b\nWhy: “Two-day warning on big assignments” is on in Settings.');
+  });
+
+  it('uses the reminder’s own reason when the switch is not the answer', () => {
+    expect(whyFor({ rule: 'today', why: 'Why: you set this up yourself.' })).toBe('Why: you set this up yourself.');
+  });
+
+  it('keeps push to the same cap as an open tab', () => {
+    const items = Array.from({ length: 12 }, (_, n) => ({
+      id: `i${n}`, c: 'econ', title: `Thing ${n}`, kind: 'hw', isToday: true, isPast: false,
+      daysAway: 0, dueShort: 'Today', weight: '', date: new Date(2026, 8, 10),
+    })) as unknown as DatedItem[];
+    const classes = Array.from({ length: 10 }, (_, n) => ({ label: `C${n}`, at: 9 * 60 + n * 60, where: 'Room' }));
+    const on = Object.fromEntries(NOTIF_DEFS.map((d) => [d.k, true])) as Record<NotifKey, boolean>;
+    const plan = planAhead(new Date(2026, 8, 10, 0, 0), 1, on, () => ({ items, classes }));
+    const firstDay = plan.filter((p) => new Date(p.at).getDate() === 10);
+    expect(firstDay.length).toBeGreaterThan(0);
+    expect(firstDay.length).toBeLessThanOrEqual(DAILY_CAP);
+    expect(firstDay.every((p) => p.body.includes('Why:'))).toBe(true);
   });
 });

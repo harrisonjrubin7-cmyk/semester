@@ -163,6 +163,7 @@ revoke all on table public.role_grants from anon, authenticated;
 -- cannot return a row is a grant worth not making.
 grant select on table public.role_grants to authenticated;
 
+drop policy if exists "your roles are yours to see" on public.role_grants;
 create policy "your roles are yours to see" on public.role_grants
   for select
   to authenticated

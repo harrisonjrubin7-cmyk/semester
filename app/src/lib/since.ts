@@ -134,7 +134,25 @@ export function line(list: Change[]): string {
   return `${said.join(', ')} and ${last}.`;
 }
 
-const SEEN_KEY = 'semester.seen';
+/**
+ * Where the mark lives: a key of its own.
+ *
+ * It was `semester.seen`, which is also `SEEN_KEY` in `state/shape.ts` — the
+ * sync's per-row stamps. The two wrote over each other: a number written here
+ * made `seenRows` read "synced before, holding nothing" and drop the device's
+ * sync memory, and the stamps written there parsed here as `NaN`, so a
+ * signed-in student never saw this line (or the welcome-back card) at all.
+ */
+const MARK_KEY = 'semester.lastOpened';
+/** The old spelling, read once so nobody's mark is lost on upgrade. */
+const OLD_KEY = 'semester.seen';
+
+/** A positive epoch-ms number, or 0. Sync's JSON stamps read as 0. */
+function mark(raw: string | null): number {
+  if (raw === null || raw.trim() === '') return 0;
+  const n = Number(raw);
+  return Number.isFinite(n) && n > 0 ? n : 0;
+}
 
 /**
  * When this device last had the app open.
@@ -145,8 +163,7 @@ const SEEN_KEY = 'semester.seen';
  */
 export function readSeen(): number {
   try {
-    const n = Number(localStorage.getItem(SEEN_KEY));
-    return Number.isFinite(n) && n > 0 ? n : 0;
+    return mark(localStorage.getItem(MARK_KEY)) || mark(localStorage.getItem(OLD_KEY));
   } catch {
     // A private window, or storage off. No mark, so nothing is claimed.
     return 0;
@@ -155,7 +172,7 @@ export function readSeen(): number {
 
 export function writeSeen(at: number): void {
   try {
-    localStorage.setItem(SEEN_KEY, String(at));
+    localStorage.setItem(MARK_KEY, String(at));
   } catch {
     /* storage off; the line simply never appears */
   }
