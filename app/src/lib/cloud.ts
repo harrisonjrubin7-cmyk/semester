@@ -1092,7 +1092,7 @@ export const OWNED_TABLES: OwnedTable[] = [
 
   // ── Support tickets ─────────────────────────────────────────────────────
   // Questions to Semester's own support staff, not to a campus office. No API
-  // role holds any grant on either table (`20260928030000_support_tickets.sql`),
+  // role holds any grant on either table (`20260928060000_support_tickets.sql`),
   // so the way out is the student's own function; messages go with their ticket.
   { table: 'support_tickets', column: null, via: 'forget_my_support_tickets' },
   { table: 'support_ticket_messages', column: null, cascadesFrom: 'support_tickets' },

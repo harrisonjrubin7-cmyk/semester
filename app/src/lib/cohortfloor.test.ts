@@ -23,6 +23,21 @@ const sql = readdirSync(dir)
   .filter((f) => f.endsWith('.sql'))
   .map((f) => ({ file: f, text: readFileSync(join(dir, f), 'utf8') }));
 
+/**
+ * Counts that look like a floor and are not one. Each is matched by file and
+ * line, with the reason, so a new one is a decision someone wrote down rather
+ * than a pattern the scan quietly stopped seeing.
+ */
+const NOT_A_COHORT_FLOOR: readonly { file: RegExp; line: RegExp; why: string }[] = [
+  {
+    file: /_community\.sql$/,
+    line: /count\(distinct r\.reporter_id\) >= 3 into fresh_cluster/,
+    why: 'A moderation trigger: three distinct reporters on one post. It decides when a post is reviewed, not what an aggregate may show.',
+  },
+];
+
+const exempt = (f: { file: string; line: string }) => NOT_A_COHORT_FLOOR.some((n) => n.file.test(f.file) && n.line.test(f.line));
+
 /** Every place a migration states a cohort floor, with the number it states. */
 function floors(files: { file: string; text: string }[]) {
   const found: { file: string; line: string; floor: number }[] = [];
@@ -36,7 +51,7 @@ function floors(files: { file: string; text: string }[]) {
       }
     }
   }
-  return found;
+  return found.filter((f) => !exempt(f));
 }
 
 describe('the small-cell floor', () => {
@@ -53,6 +68,17 @@ describe('the small-cell floor', () => {
   it('is the same number in every migration as in MIN_COHORT', () => {
     const wrong = floors(sql).filter((f) => f.floor !== MIN_COHORT);
     expect(wrong, 'a migration states a cohort floor that is not MIN_COHORT').toEqual([]);
+  });
+
+  it('exempts only what it names, and each exemption still matches something', () => {
+    const raw = (files: { file: string; text: string }[]) =>
+      files.flatMap(({ file, text }) => text.split('\n').map((line) => ({ file, line: line.trim() })));
+    for (const n of NOT_A_COHORT_FLOOR) {
+      expect(raw(sql).some((f) => n.file.test(f.file) && n.line.test(f.line)), n.why).toBe(true);
+    }
+    // The same count in another file is not exempt.
+    const elsewhere = [{ file: '20990101000000_x.sql', text: 'select count(distinct r.reporter_id) >= 3 into fresh_cluster' }];
+    expect(floors(elsewhere)).toHaveLength(1);
   });
 
   it('would notice one floor lowered (control)', () => {

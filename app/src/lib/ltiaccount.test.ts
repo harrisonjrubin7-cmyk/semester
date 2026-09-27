@@ -176,7 +176,7 @@ const NOT_CONTENT = new Set([
    * it is not coursework an attach could strand: the ticket stays with the
    * account whichever way the attach goes, and an account whose only row is
    * "sign-in isn't working" is exactly the account this flow exists to let
-   * attach. `20260928030000_support_tickets.sql` is the tables.
+   * attach. `20260928060000_support_tickets.sql` is the tables.
    */
   'support_tickets',
   'support_ticket_messages',
