@@ -39,9 +39,20 @@ import {
 import type { School } from '../lib/school';
 import type { Screen } from '../lib/types';
 import { INSTITUTIONAL_PREVIEW } from '../lib/institutional-preview';
-import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
+import { EXPERIENCE_FLAGS, MODULE_FLAGS, moduleOn } from '../lib/experience-flags';
+import { GetHelp } from '../components/GetHelp';
+import { HelpInbox } from '../components/HelpInbox';
+import { helpSeedWaiting } from '../lib/help-routes';
 import { ControlPlane } from '../components/institutional/ControlPlane';
+import { IntegrationDashboard } from '../components/institutional/IntegrationDashboard';
 import type { ControlPlaneStatus } from '../lib/control-plane';
+
+const DemandDesk = lazy(() => import('../components/DemandDesk').then((module) => ({ default: module.DemandDesk })));
+const OperationsStudio = lazy(() =>
+  import('../components/institutional/OperationsStudio').then((module) => ({
+    default: module.OperationsStudio,
+  })),
+);
 
 const RoleWorkspace = lazy(() =>
   import('../components/institutional/RoleWorkspace').then((module) => ({
@@ -118,9 +129,24 @@ const TABS = [
   ...(EXPERIENCE_FLAGS.universityControlPlane !== 'off'
     ? [{ id: 'control' as const, label: 'Control' }]
     : []),
+  ...(EXPERIENCE_FLAGS.humanHelp !== 'off' ? [{ id: 'help' as const, label: 'Get help' }] : []),
+  // Staff only in practice: RLS returns nothing to an account without
+  // `integration:view`, and the dashboard says so rather than inventing data.
+  ...(EXPERIENCE_FLAGS.integrationDashboard !== 'off'
+    ? [{ id: 'integrations' as const, label: 'Integrations' }]
+    : []),
+  // Staff only in practice, and governed in code: aggregates at n >= 10, no
+  // per-student grain, forbidden measures refused. See lib/institution-ops.ts.
+  ...(EXPERIENCE_FLAGS.institutionalOperations !== 'off'
+    ? [{ id: 'operations' as const, label: 'Operations' }]
+    : []),
+  // Course demand (Phase K): staff only in practice. The database returns
+  // counts of ten or more, scoped by demand:read, and nothing that names a
+  // person; an account without the scope is told so.
+  ...(moduleOn(MODULE_FLAGS.demand_forecasting) ? [{ id: 'demand' as const, label: 'Demand' }] : []),
 ];
 
-type Tab = 'overview' | 'drafts' | 'records' | 'connections' | 'control';
+type Tab = 'overview' | 'drafts' | 'records' | 'connections' | 'control' | 'help' | 'integrations' | 'operations' | 'demand';
 
 /** What each role is called on screen. */
 const ROLE_LABELS: Record<UniversityRole, string> = {
@@ -254,9 +280,12 @@ function Standing({
 }
 
 function Workspace({ storageKey }: { storageKey: string }) {
-  const { state, dispatch, catalog, school } = useStore();
+  const { state, dispatch, catalog, school, account } = useStore();
 
-  const [tab, setTab] = useState<Tab>('overview');
+  // An Action Center "Ask for help" lands here with a seed waiting; open on it.
+  const [tab, setTab] = useState<Tab>(() =>
+    EXPERIENCE_FLAGS.humanHelp !== 'off' && helpSeedWaiting() ? 'help' : 'overview',
+  );
   const [intent, setIntent] = useState<UniversityRole>('student');
   const [area, setArea] = useState<UniversityArea>('courses');
 
@@ -689,6 +718,13 @@ function Workspace({ storageKey }: { storageKey: string }) {
         </>
       )}
 
+      {tab === 'help' && EXPERIENCE_FLAGS.humanHelp !== 'off' && (
+        <>
+          <GetHelp account={account} />
+          <HelpInbox account={account} />
+        </>
+      )}
+
       {tab === 'control' && EXPERIENCE_FLAGS.universityControlPlane !== 'off' && (
         <ControlPlane
           input={{
@@ -706,6 +742,20 @@ function Workspace({ storageKey }: { storageKey: string }) {
             auditEventCount: 0,
           }}
         />
+      )}
+
+      {tab === 'integrations' && EXPERIENCE_FLAGS.integrationDashboard !== 'off' && <IntegrationDashboard />}
+
+      {tab === 'operations' && EXPERIENCE_FLAGS.institutionalOperations !== 'off' && (
+        <Suspense fallback={null}>
+          <OperationsStudio />
+        </Suspense>
+      )}
+
+      {tab === 'demand' && moduleOn(MODULE_FLAGS.demand_forecasting) && (
+        <Suspense fallback={null}>
+          <DemandDesk />
+        </Suspense>
       )}
 
       {tab === 'drafts' && (

@@ -173,6 +173,16 @@ export function Profile() {
             style={{ width: '100%', fontSize: 'var(--type-base-plus)' }}
           />
         </CustomRow>
+        <CustomRow>
+          <input
+            className="input jx-wide"
+            value={state.pronounce}
+            maxLength={80}
+            placeholder="How to say it (optional) — e.g. ah-DAY-oh-lah"
+            aria-label="How to say your name"
+            onChange={(e) => dispatch({ type: 'setPronounce', text: e.target.value })}
+          />
+        </CustomRow>
       </Group>
 
       {/*

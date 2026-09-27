@@ -1,6 +1,6 @@
 # One app — the thirty-fourth pass: the warning outlived the fault
 
-Against `main` at `593c235`. **<!--screens-->fifty-nine<!--/--> destinations**,
+Against `main` at `593c235`. **<!--screens-->sixty-three<!--/--> destinations**,
 unchanged. No cut, no merge. Five false sentences corrected and one guard
 written.
 

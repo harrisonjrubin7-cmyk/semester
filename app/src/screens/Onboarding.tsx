@@ -1,3 +1,4 @@
+import { PathProfileForm } from '../components/PathProfileForm';
 import { useMemo } from 'react';
 import { useNow, useStore } from '../state/store';
 import { askReminders, type Tone } from '../lib/tone';
@@ -373,6 +374,18 @@ export function Onboarding() {
         <div style={{ marginTop: 'calc(26px * var(--density, 1))', display: 'flex', flexDirection: 'column', gap: 'var(--sp-7)' }}>
           <TermChoice />
           <SchoolPicker />
+          {/*
+            Where the student is headed, optional and folded away: this step
+            already asks "when and where", and a programme, a target term and
+            the credits their audit names are the rest of that question. It
+            is the same form My Path shows, writing the same store.
+          */}
+          <details>
+            <summary style={{ minHeight: 44, display: 'flex', alignItems: 'center', cursor: 'pointer', fontSize: 'var(--type-sm-plus)' }}>
+              Add your degree path (optional)
+            </summary>
+            <PathProfileForm />
+          </details>
         </div>
       )}
 

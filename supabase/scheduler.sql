@@ -149,3 +149,80 @@ select cron.schedule(
   '11 * * * *',
   $job$select public.gateway_purge_journal()$job$
 );
+
+-- ── Integrations: the retention sweep ─────────────────────────────────────
+--
+-- `public.integration_retention_sweep()` (20260927200000_integration_hardening)
+-- removes old sync runs and errors (180 days), processed events (30), resolved
+-- dead letters (90), expired snapshots, and references the source deleted more
+-- than thirty days ago — never anything on a connection under legal hold. The
+-- numbers are `RETENTION.md`'s, decided there; this only runs it.
+--
+-- **Active**, like `tombstones`: it needs no secret and no endpoint. It visits
+-- only schools that have a connection, so until one is configured it deletes
+-- nothing and writes nothing. Each school it visits gets one
+-- `integration_retention_runs` row, which its integration staff can read.
+--
+-- Daily at 03:29 UTC, off every other job's minute.
+select cron.schedule(
+  'integration-retention',
+  '29 3 * * *',
+  $job$select public.integration_retention_sweep()$job$
+);
+
+-- ── Integrations: the sync tick ───────────────────────────────────────────
+--
+-- Every fifteen minutes, pg_net calls the Vercel function
+-- `app/api/integration/tick.ts`, which pulls each approved connection that is
+-- due (`app/server/integration/tick.ts`) and runs any replay an operator has
+-- requested. `TICK_MINUTES` there must agree with this cadence. Offset seven
+-- minutes from `push` so the two are never in flight together.
+--
+-- Two values, both in Vault so that neither is baked into this file:
+--
+--   * `integration_cron_secret`, generated below like `push_cron_secret`. The
+--     function's `INTEGRATION_CRON_SECRET` environment variable must equal it.
+--   * `integration_tick_url`, the deployment's full URL for the function —
+--     `https://<production host>/api/integration/tick`. Created by the
+--     operator when unparking (INTEGRATION-OPERATOR-RUNBOOK.md §4), because
+--     the production host is not recorded anywhere in this repository.
+--
+-- Nothing runs even when unparked until an adapter is registered in
+-- `app/server/integration/registry.ts`, which is empty; each tick then answers
+-- with every connection skipped as unregistered.
+do $$
+begin
+  if not exists (select 1 from vault.secrets where name = 'integration_cron_secret') then
+    perform vault.create_secret(
+      translate(encode(gen_random_bytes(32), 'base64'), '+/=', '-_'),
+      'integration_cron_secret',
+      'Bearer token the integration-sync pg_cron job sends to /api/integration/tick. Must equal the Vercel function''s INTEGRATION_CRON_SECRET.',
+      null
+    );
+  end if;
+end $$;
+
+select cron.schedule(
+  'integration-sync',
+  '7,22,37,52 * * * *',
+  $job$
+    select net.http_post(
+      url := (select decrypted_secret from vault.decrypted_secrets where name = 'integration_tick_url'),
+      headers := jsonb_build_object(
+        'Content-Type', 'application/json',
+        'Authorization', 'Bearer ' || (
+          select decrypted_secret from vault.decrypted_secrets where name = 'integration_cron_secret'
+        )
+      ),
+      body := '{}'::jsonb,
+      timeout_milliseconds := 60000
+    );
+  $job$
+);
+
+-- Parked, for the reason `push` is: until the function has its secret and
+-- Vault has its URL, every run would fail about a half-finished deploy.
+select cron.alter_job(
+  (select jobid from cron.job where jobname = 'integration-sync'),
+  active := false
+);
