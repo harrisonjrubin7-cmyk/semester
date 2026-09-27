@@ -43,6 +43,18 @@
 | No unrestricted visibility | No office policy on the audience or progress tables. `officeactions.check.sql` reads both as each office account and gets nothing |
 | Moderation/publish workflow scaffold | Draft → submit → approve or return with a note → published → withdrawn. Approval must come from a colleague with the same office and scope; nobody approves their own |
 
+## Related: Notices (#818)
+
+#818 added a Notices inbox, `lib/comms.ts`. Its **Official** channel says
+it is not connected, and shows no examples.
+
+This feed is the published, scoped, source-labelled office data that
+channel was waiting for. Connecting the two is follow-up work, not part of
+this PR: map a `my_office_actions` row to a `comms` message on the
+`official` channel. Priority `required` would apply only to an office's own
+hold or compliance action, which `admit` already reserves for official
+channels.
+
 ## What it never does
 
 - **Guess who a student is.** No eligibility or program is inferred. The list

@@ -102,6 +102,15 @@ describe('how it is written', () => {
     expect(visibility?.body).toMatch(/raw notes, sources, recordings and mistake detail remain private/i);
   });
 
+  it('names the help request as an exception, and what it carries', () => {
+    const visibility = CLAIMS.find((c) => c.heading === 'Who can see your rows');
+    expect(visibility?.body).toMatch(/three deliberate exceptions/i);
+    expect(visibility?.body).toMatch(/help request/i);
+    expect(visibility?.body).toMatch(/only what you wrote and ticked/i);
+    expect(visibility?.body).toMatch(/your name, your university email/i);
+    expect(visibility?.body).toMatch(/every time .* opens it is recorded/i);
+  });
+
   it('keeps those counts out of everything that syncs', () => {
     // The claim above is only true while this is. `pickPersisted` is what the
     // push sends, so a count that appeared in it would make the page a lie.
@@ -362,8 +371,19 @@ describe('"delete my account" really means every row', () => {
      */
     const { KEPT_TABLES } = await import('./cloud');
     expect(KEPT_TABLES.map((t) => t.table).sort()).toEqual([
+      'feature_kill_switch',
       'group_tasks',
       'groups',
+      'help_destinations',
+      // A university's integration configuration and sync logs, read by the
+      // Integration Dashboard (lib/integration/dashboard.ts). No student
+      // account writes a row in any of them.
+      'integration_connections',
+      'integration_dead_letter_events',
+      'integration_mappings',
+      'integration_scopes',
+      'integration_sync_errors',
+      'integration_sync_runs',
       'organizations',
       'reports',
       'schools',
