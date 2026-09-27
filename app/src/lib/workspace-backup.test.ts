@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { EMPTY_ACTION_CHOICES } from './actions';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { EMPTY_ATHLETICS } from './athletics';
 import { EMPTY_CAREER } from './career';
@@ -76,7 +77,11 @@ const seed = (storage: FakeStorage, account = ACCOUNT) => {
   storage.setItem(`semester.university.drafts.v1:${account}:${TERM}`, JSON.stringify([]));
   storage.setItem(`semester.family.v1:${account}`, JSON.stringify(EMPTY_FAMILY));
   storage.setItem(`semester.pathway.v1:${account}`, JSON.stringify(EMPTY_PATHWAY));
+  storage.setItem(`semester.actions.v1:${account}`, JSON.stringify(EMPTY_ACTION_CHOICES));
 };
+
+/** How many workspaces `seed` writes: one per definition. */
+const SEEDED = 7;
 
 let storage: FakeStorage;
 beforeEach(() => {
@@ -84,11 +89,12 @@ beforeEach(() => {
 });
 
 describe('what goes into a workspace backup', () => {
-  it('takes all six workspaces', () => {
+  it('takes every workspace', () => {
     seed(storage);
     const backup = workspaceBackup(ACCOUNT, storage);
     expect(backup.format).toBe('semester.workspaces.v1');
     expect(backup.records.map((r) => r.kind).sort()).toEqual([
+      'actions',
       'athletics',
       'career',
       'creations',
@@ -112,7 +118,7 @@ describe('what goes into a workspace backup', () => {
     seed(storage, ACCOUNT);
     seed(storage, 'someone-else');
     const backup = workspaceBackup(ACCOUNT, storage);
-    expect(backup.records).toHaveLength(6);
+    expect(backup.records).toHaveLength(SEEDED);
     expect(JSON.stringify(backup)).not.toContain('someone-else');
   });
 
@@ -125,7 +131,7 @@ describe('what goes into a workspace backup', () => {
     const text = JSON.stringify(workspaceBackup(ACCOUNT, storage));
     expect(text).not.toContain('secret-token');
     expect(text).not.toContain('stray');
-    expect(workspaceBackup(ACCOUNT, storage).records).toHaveLength(6);
+    expect(workspaceBackup(ACCOUNT, storage).records).toHaveLength(SEEDED);
   });
 
   it('refuses to write a backup that would silently omit a corrupted workspace', () => {
@@ -199,7 +205,7 @@ describe('restoring', () => {
     const backup = workspaceBackup(ACCOUNT, storage);
     const fresh = new FakeStorage();
     restoreWorkspaces(backup, ACCOUNT, fresh);
-    expect(workspaceBackup(ACCOUNT, fresh).records).toHaveLength(6);
+    expect(workspaceBackup(ACCOUNT, fresh).records).toHaveLength(SEEDED);
   });
 
   it('tells the screens, so an open one redraws', () => {
