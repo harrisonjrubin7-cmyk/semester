@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { EmptyState } from './ui';
 import { ErrorState, SuccessState } from './unity/States';
 import { NextSteps } from './unity/NextSteps';
+import { SourceBadge } from './SourceBadge';
 import { useDeviceLibrary } from '../lib/device-library';
 import { download } from '../lib/deliver';
 import type { CatalogCourse } from '../lib/registration';
@@ -133,8 +134,8 @@ export function RegistrationDay({
           </label>
         </div>
         <p className="portal-muted">
-          Source: {data.source === 'imported' ? 'Imported' : 'Student entered'}. Semester cannot see your official time
-          ticket — check it in {institution ? `${institution}’s` : 'your school’s'} registration system.
+          <SourceBadge label={data.source} /> Semester cannot see your official time ticket — check it in{' '}
+          {institution ? `${institution}’s` : 'your school’s'} registration system.
         </p>
       </section>
 

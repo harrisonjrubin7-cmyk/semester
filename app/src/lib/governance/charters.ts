@@ -130,7 +130,7 @@ export const CHARTERS: readonly ProductCharter[] = [
   },
   {
     flag: 'module.institutional_operations', name: 'Operations studio',
-    problem: 'Institutional research assembles lineage, suppressed exports and accreditation evidence by hand across spreadsheets, where a small cell or a per-student figure is one paste away from a slide.',
+    problem: 'Institutional research assembles lineage, suppressed exports, curriculum what-ifs, accreditation evidence and launch-readiness checks by hand across spreadsheets, where a small cell or a per-student figure is one paste away from a slide. The studio’s five tabs (Governance, Curriculum, Evidence, Platform, Readiness) replace those spreadsheets.',
     primaryUser: 'Institutional research analyst',
     jobToBeDone: 'When I owe a governed figure or an evidence pack, I want suppressed aggregates that carry their own definitions and sources, so I can publish without a spreadsheet step or a per-student number.',
     buyerAndAdoptionHypothesis: 'Provost and institutional research office; adopted if one pilot school produces an accreditation or board export in the studio instead of a spreadsheet.',
@@ -139,7 +139,13 @@ export const CHARTERS: readonly ProductCharter[] = [
       workflow: 'A suppressed, lineage-labelled export is produced without a spreadsheet step.',
       institutional: 'No export contains a cell under MIN_COHORT or a per-student figure; sensitive reports ship only after a second reviewer approves.',
     },
-    nonGoals: ['Per-student reporting or lookup', 'Risk, attention, wellbeing or other FORBIDDEN measures', 'Editing source records'],
+    nonGoals: [
+      'Per-student reporting or lookup',
+      'Risk, attention, wellbeing or other FORBIDDEN measures',
+      'Editing source records',
+      'Deciding curriculum or accreditation outcomes: the Curriculum and Evidence tabs prepare material for a committee',
+      'Issuing API keys or approving integrations: the Platform tab states policy only',
+    ],
     sourceDependency: 'Outcome and course-demand aggregates (n ≥ 10, enforced by database constraints), the data dictionary and lineage in lib/institution-ops.ts.',
     fallback: 'The institution’s existing IR spreadsheets and reporting runbook.',
     classification: 'T3',

@@ -5,7 +5,9 @@ import { readDue } from '../lib/duetime';
 import { pathSnapshot, nextTodayDecision, showsTodayDecisionSurface } from '../lib/today-decision';
 import { appointmentsOn, tasksOn, upcomingItems } from '../lib/select';
 import { useNow, useStore } from '../state/store';
+import { MODULE_FLAGS, moduleOn } from '../lib/experience-flags';
 import { Blueprint } from './Blueprint';
+import { TodayActionCenter } from './TodayActionCenter';
 import { ActionButton, Meter, SectionLabel } from './ui';
 import { goMine } from '../lib/openmine';
 import { goCal } from '../lib/opencal';
@@ -41,7 +43,23 @@ function syncLabel(lastSync: { at: number } | null | undefined): string {
   }).format(syncedAt)}`;
 }
 
-export function TodayDecisionSurface() {
+/**
+ * Today's briefing.
+ *
+ * With `today_action_center` on (DECISION-LOG D-013, D-021), students get
+ * the Action Center — BL-1.4's ranked list with Phase B around it. With it
+ * off, the default, this is the #761 briefing exactly as it shipped. The prop
+ * exists so tests can choose.
+ */
+export function TodayDecisionSurface({
+  actionCenter = moduleOn(MODULE_FLAGS.today_action_center),
+}: { actionCenter?: boolean } = {}) {
+  const { state } = useStore();
+  if (actionCenter && showsTodayDecisionSurface(state.role)) return <TodayActionCenter />;
+  return <DecisionBriefing />;
+}
+
+function DecisionBriefing() {
   const { state, dispatch, catalog } = useStore();
   const now = useNow();
   const [dismissed, setDismissed] = useState<string | null>(null);
