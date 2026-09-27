@@ -11,7 +11,7 @@ each lives in the code.
 | SCIM 2.0 | Account lifecycle | IdP / directory | Create, replace, patch, deactivate; group membership | **BUILT** |
 | LTI 1.3 | Course-context launch | LMS | Signed launch: issuer, deployment, context, resource, roles | **BUILT** |
 | LTI Advantage: Deep Linking | Instructor places an activity | LMS | Deep-linking request; Semester returns a signed item | **BUILT** |
-| LTI Advantage: AGS | Grade passback | Semester → LMS | Line item captured at launch; score posted on request | **BUILT**, needs `LTI_PRIVATE_KEY` |
+| LTI Advantage: AGS | Grade passback | Semester → LMS | Line item captured at launch; score posted on request | **BUILT**, needs `LTI_PRIVATE_KEY`; gated per school by `lti_passback_decision` |
 | LTI Advantage: NRPS | Course roster | LMS | Names and roles | **NOT BUILT**, on purpose (roster is out of scope) |
 
 ## Which to use

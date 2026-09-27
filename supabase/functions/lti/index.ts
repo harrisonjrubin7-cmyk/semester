@@ -61,7 +61,7 @@
 
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { createRemoteJWKSet, importJWK, jwtVerify, SignJWT, type JWK } from 'npm:jose@5';
-import { checkLaunch, startLogin, type Launch, type Registration } from '../_shared/lti.ts';
+import { checkLaunch, launchTenant, startLogin, type Launch, type Registration } from '../_shared/lti.ts';
 import { landingPath, provisionedEmail, provisionedMetadata } from '../_shared/ltiaccount.ts';
 import { autoPostForm, mayPlace, readSettings, resourceLinkItem, responseClaims } from '../_shared/ltideeplink.ts';
 import { SCOPE, clientAssertion, jwks, keyId, publicJwk, tokenRequest } from '../_shared/ltikey.ts';
@@ -158,10 +158,10 @@ async function registration(
   client: ReturnType<typeof db>,
   issuer: string,
   clientId?: string,
-): Promise<(Registration & { tokenUrl: string | null }) | null> {
+): Promise<(Registration & { tokenUrl: string | null; tenantId: string | null }) | null> {
   let q = client
     .from('lti_platform')
-    .select('issuer, client_id, deployment_id, auth_login_url, jwks_url, token_url')
+    .select('issuer, client_id, deployment_id, auth_login_url, jwks_url, token_url, tenant_id')
     .eq('issuer', issuer);
   if (clientId) q = q.eq('client_id', clientId);
   const { data, error } = await q.limit(2);
@@ -184,6 +184,7 @@ async function registration(
     authLoginUrl: r.auth_login_url,
     jwksUrl: r.jwks_url,
     tokenUrl: r.token_url ?? null,
+    tenantId: r.tenant_id ?? null,
   };
 }
 
@@ -609,6 +610,10 @@ Deno.serve(async (req) => {
     console.log(
       `lti launch ok: iss=${who.issuer} deployment=${who.deploymentId} sub=${who.subject} context=${who.contextId ?? '-'} teaches=${who.teaches}`,
     );
+    // Allowed either way; an unbound registration is logged on every launch
+    // so the row that needs its school recorded is never quiet about it.
+    const tenant = launchTenant(reg.tenantId, reg);
+    if (tenant.warning) console.warn(tenant.warning);
 
     /*
      * ── The launch that asks a question ───────────────────────────────────

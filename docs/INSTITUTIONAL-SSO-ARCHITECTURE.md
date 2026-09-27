@@ -54,9 +54,9 @@ said "create/adapt", and this is the adapt.
 | `tenant_memberships` | `institution_membership` | BUILT |
 | `provisioning_events`, `scim_provisioning_records` | `provisioning_audit_event` (immutable) | BUILT |
 | `scim_group_mappings` | `scim_group_mapping` | BUILT |
-| `lti_platform_configurations`, `lti_deployments` | `lti_platform` (keyed issuer, client, deployment; nullable `tenant_id`) | BUILT; unbound launches allowed and logged |
+| `lti_platform_configurations`, `lti_deployments` | `lti_platform` + `tenant_id`, `connection_id` (University OS, #779) | BUILT; unbound launches allowed and logged |
 | `lti_launch_audits` | function logs only | GAP |
-| `lti_context_mappings` | `lti_line_item` (context → line item) | PARTIAL |
+| `lti_context_mappings` | `canonical_entity_references` via `lti_record_context` (bound registrations), `lti_line_item` | BUILT |
 | `account_link_requests` | `lti_link_ticket` (LTI only) | PARTIAL |
 | `account_link_audits`, `account_unlink_requests` | none | NOT BUILT |
 | `session_security_events` | gateway authorization audit (`membership.ts`) | PARTIAL |
@@ -65,12 +65,12 @@ said "create/adapt", and this is the adapt.
 
 ## Known gaps, in the order they matter
 
-1. **LTI launches are not yet joined to a membership.** `lti_platform.tenant_id`
-   names the school, and a launch reads it. A launch through a registration
-   with no school (one installed before the column) is allowed and logged as
-   `lti launch unbound`. Nothing downstream uses the tenant yet, so LTI context
-   still cannot be joined to `institution_membership`. This comes first
-   because the entitlement chain's course steps depend on it.
+1. **LTI launches are not yet joined to a membership.** Registrations name
+   their school (`lti_platform.tenant_id`, from #779), and grade passback and
+   context recording already read it. Registrations installed before it are
+   unbound: allowed, and logged as `lti launch unbound`. No launch is joined to
+   `institution_membership` yet, and the entitlement chain's course steps depend
+   on that join.
 2. **No LTI launch audit table.** Refusals are logged by reason code and not
    persisted.
 3. **Entitlement tables.** The resolver is a tested contract. Nothing yet

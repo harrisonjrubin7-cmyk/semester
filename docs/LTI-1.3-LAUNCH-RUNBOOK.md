@@ -14,10 +14,12 @@ which role. It is not institution-wide lifecycle, and a launch never creates an
 ## Registration
 
 One `lti_platform` row per issuer × client ID × deployment ID, with
-`auth_login_url` and `jwks_url` constrained to `https`, and `tenant_id` naming
-the Semester school the deployment belongs to. Removing that school removes its
-registrations. The school's LMS
-administrator supplies all of it, and none of it is secret. Semester's own key
+`auth_login_url` and `jwks_url` constrained to `https`. `tenant_id` names the
+Semester school the deployment belongs to and `connection_id` its approved
+integration connection
+(`20260927180000_lti_integration_binding.sql`; removing the school sets
+`tenant_id` null rather than deleting the registration). The school's LMS
+administrator supplies the platform fields, and none of them is secret. Semester's own key
 (`LTI_PRIVATE_KEY`) is needed only to call back, for Deep Linking responses and
 AGS.
 
@@ -52,20 +54,26 @@ submissions or accommodations. NRPS is not implemented.
 
 ## Grade passback
 
-AGS posts a score only when all three hold: the platform granted the score
-scope at launch (a `lti_line_item` row was captured), `LTI_PRIVATE_KEY` is set,
-and the course code matches exactly one line item. Otherwise it answers
-"not reported" with the reason. **Gap:** there is no per-tenant switch. The
-control is the deployment's key and the platform's scope grant.
+AGS posts a score only when the platform granted the score scope at launch (a
+`lti_line_item` row was captured), `LTI_PRIVATE_KEY` is set, the course code
+matches exactly one line item, **and** `lti_passback_decision` allows it. That
+database gate applies kill switches to every registration, and for a bound one
+also the school's `integration.lms_lti` and `writeback.lms_grade_passback`
+flags, an approved write connection and an approved `scope.lms.score_publish`.
+An unbound registration is `allowed-unbound`, unchanged from before binding
+existed. Any refusal answers "not reported" with the reason.
+See [INTEGRATION-OPERATOR-RUNBOOK.md](INTEGRATION-OPERATOR-RUNBOOK.md).
 
 ## Gaps
 
-- `lti_platform.tenant_id` records which school a deployment belongs to. It is
-  nullable, because registrations installed before it have none, and a launch
-  through such a registration is **allowed, with a warning**: `launchTenant`
-  never refuses, and the function logs `lti launch unbound: …` naming the
-  issuer, client and deployment whose school needs recording. Nothing
-  downstream uses the tenant yet, so a launch still cannot be joined to an
-  institutional membership or to the entitlement chain's course steps. An
-  unbound launch must never be treated as belonging to a default school.
+- **Unbound registrations are allowed, with a warning.** A registration
+  installed before `tenant_id` existed has none. Its launches go through, and
+  on every one the function logs `lti launch unbound: …` (`launchTenant` in
+  `_shared/lti.ts`), naming the issuer, client and deployment whose school needs
+  recording. Main's `lti context: unbound` line covers only launches that carry
+  a course context, and does not name the row. An unbound launch must never be
+  treated as belonging to a default school.
+- A bound launch records its course context for the school's integration
+  record, but is still not joined to `institution_membership` or to the
+  entitlement chain's course steps.
 - Launch refusals are logged, not persisted to an audit table.

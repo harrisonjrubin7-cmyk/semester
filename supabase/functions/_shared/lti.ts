@@ -449,9 +449,10 @@ function obj(v: unknown): Record<string, unknown> | null {
  * `lti_platform.tenant_id` arrived after registrations were already installed,
  * and it is null on those until an administrator records their school. A
  * launch through one is **allowed, with a warning** — that was the decision,
- * and the reason is the one `20260927130000_lti_platform_tenant.sql` gives for
- * leaving the column nullable: refusing would break every registration already
- * in use on the day this shipped, for a fact only a person can supply.
+ * and it agrees with `20260927180000_lti_integration_binding.sql`, whose
+ * passback gate answers `allowed-unbound` for the same rows: refusing would
+ * break every registration already in use on the day binding shipped, for a
+ * fact only a person can supply.
  *
  * So this never refuses. It returns the school when there is one, and
  * otherwise the sentence the function logs on every such launch, naming the
