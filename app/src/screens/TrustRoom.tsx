@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { listRoom, openDocument, type Listed, type RoomItem } from '../lib/trustroom';
 import { secondLine } from '../lib/dim';
+import { formatDate } from '../lib/locale';
 
 /**
  * The procurement room, as a reviewer at a university sees it.
@@ -84,7 +85,7 @@ export default function TrustRoom({ token }: { token: string }) {
       <h1 style={heading}>Documents shared with you</h1>
       <p style={{ ...body, marginTop: 'var(--sp-4)' }}>
         These are the exact versions Semester granted for your review. This link works until{' '}
-        {new Date(listed.expiresAt).toLocaleDateString(undefined, { dateStyle: 'long' })}.
+        {formatDate(listed.expiresAt, { dateStyle: 'long' })}.
       </p>
       <p style={{ ...quiet, marginTop: 'var(--sp-3)' }}>
         Generated from commit <code>{listed.packetCommit.slice(0, 12)}</code>.
