@@ -8,6 +8,7 @@ import { validateDeclaration, type AdapterDeclaration } from './adapter';
 import { memoryStore, mockBatch } from './mock-adapter';
 import {
   CAMPUS_ADAPTERS, CAMPUS_FIXTURES, MOCK_ADVISING, MOCK_ALERTS, MOCK_BURSAR, MOCK_CAREER, MOCK_EVENTS, MOCK_TUTORING,
+  MOCK_SPACE_AVAILABILITY, MOCK_SPACE_BOOKING,
 } from './mock-campus';
 import { ingest, type ConnectionState, type ExternalRecord } from './pipeline';
 import { FLAGS } from '../flags';
@@ -104,6 +105,23 @@ describe('ingest, campus', () => {
     const alert = await run(MOCK_ALERTS, [CAMPUS_FIXTURES.alert]);
     expect(alert.references[0]).toMatchObject({ canonicalEntity: 'notification', subjectUserId: null,
       sourceOfTruth: 'Campus alert system', values: { severity: 'advisory' } });
+  });
+
+  it('reads room availability as tenant-wide free/busy, and never who booked', async () => {
+    const r = await run(MOCK_SPACE_AVAILABILITY, [CAMPUS_FIXTURES.slot]);
+    expect(r.references[0]).toMatchObject({ canonicalEntity: 'space_availability', subjectUserId: null, classification: 'T0',
+      values: { status: 'busy', space: 'Library room 214' } });
+    expect(JSON.stringify(r.references)).not.toContain('student@example.edu');
+  });
+
+  it('declares room booking as a gated write that nothing sends', () => {
+    expect(validateDeclaration(MOCK_SPACE_BOOKING)).toEqual([]);
+    expect(MOCK_SPACE_BOOKING).toMatchObject({ direction: 'approved_write', featureFlag: 'writeback.space_booking', killSwitch: 'kill.writeback' });
+    // The control for validateDeclaration: the same write without its writeback flag is refused.
+    expect(validateDeclaration({ ...MOCK_SPACE_BOOKING, featureFlag: 'integration.campus_services' }).join()).toMatch(/writeback/);
+    const f = FLAGS.find((x) => x.key === 'writeback.space_booking')!;
+    expect(f).toMatchObject({ highRisk: true, needsConnection: true, defaultEnabled: false });
+    expect(f.killSwitches).toContain('kill.writeback');
   });
 
   it('refuses an alert level it does not know rather than guessing one', async () => {

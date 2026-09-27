@@ -196,6 +196,16 @@ export const FLAGS: readonly FlagDefinition[] = [
     needsScopes: ['scope.sis.registration_write'], capability: 'integration:approve',
   }),
   flag({
+    key: 'writeback.space_booking',
+    description: 'Book a study room in the school\'s own booking system on the student\'s behalf. Not implemented; the flag exists so the gate does. Until then "Book" opens the school\'s booking page.',
+    type: 'writeback', owner: 'Integrations', scopes: ['tenant', 'user'], highRisk: true, reviewAt: REVIEW,
+    rollout: 'Not before a library agreement, a design review and a confirmation step that shows the room, time and rules before anything is sent.',
+    successCriteria: 'n/a until built.',
+    rollback: 'Engage kill.writeback.',
+    killSwitches: ['kill.writeback', 'kill.integration_sync'], needsConnection: true,
+    needsScopes: ['scope.library.booking_write'], capability: 'integration:approve',
+  }),
+  flag({
     key: 'writeback.lms_grade_passback',
     description: 'LTI Assignment and Grade Services passback. Needs tenant, instructor, course and assignment approval.',
     type: 'writeback', owner: 'Integrations', scopes: ['tenant', 'course', 'assignment'], highRisk: true,
