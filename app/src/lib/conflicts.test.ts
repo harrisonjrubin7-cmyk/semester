@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it } from 'vitest';
 import { strategyFor } from './merge';
-import { DEFAULT_PERSISTED } from '../state/shape';
+import { DEFAULT_PERSISTED, forgetSyncMemory } from '../state/shape';
 import { reducer } from '../state/reducer';
 import type { State } from '../state/shape';
 import {
@@ -17,6 +17,7 @@ import {
   fingerprint,
   putRecord,
   readReview,
+  BASE_KEY,
   REVIEW_KEY,
   writeReview,
   type Conflict,
@@ -319,5 +320,17 @@ describe('dropTicks', () => {
 
   it('touches nothing that is not a per-key map', () => {
     expect(reducer(state, { type: 'dropTicks', removals: { notes: ['0'] } })).toBe(state);
+  });
+});
+
+describe('forgetSyncMemory', () => {
+  it('clears the keys this module actually uses', () => {
+    // `state/shape.ts` names them as literals to avoid an import cycle; this
+    // is what stops a rename here from leaving an account's memory behind.
+    localStorage.setItem(BASE_KEY, '{}');
+    localStorage.setItem(REVIEW_KEY, '[]');
+    forgetSyncMemory();
+    expect(localStorage.getItem(BASE_KEY)).toBeNull();
+    expect(localStorage.getItem(REVIEW_KEY)).toBeNull();
   });
 });

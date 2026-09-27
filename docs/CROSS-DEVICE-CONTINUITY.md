@@ -34,6 +34,16 @@ the spec. Paths are under `app/src/`.
     while adding the Queued state; guarded by `state/syncstates.test.tsx`.
     Navigation does trigger a push, because `recent` and `visited` are
     persisted fields.
+- **One push at a time.** A push started while another is on its way waits
+  for it and goes up on the stamps it returns, rather than racing it and
+  being refused. The "changes waiting" flag is cleared only if nothing was
+  edited after the push left.
+- **Sync memory belongs to one account.** The stamps, the base and the review
+  list are forgotten when a different account signs in on this device
+  (`semester.syncedAs`), so the new account gets a first sign-in's question
+  rather than the last account's comparisons. An account emptied from another
+  device clears this device's stamps too, so its next push creates the rows
+  instead of being refused for ever.
 - **Pull:** when the signed-in account changes, when the connection comes
   back, after a push loses a race, when the app regains focus or becomes
   visible again, and on pull-to-refresh or "Sync now"

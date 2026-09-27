@@ -342,3 +342,76 @@ describe('a push that fails outright', () => {
     expect(store.sync.status).toBe('synced');
   });
 });
+
+/*
+ * Four found by reviewing this branch, each written here red first.
+ */
+describe('what the review found', () => {
+  it('an empty account does not leave this device refused forever', async () => {
+    // This device last read a state row at s1; the account has since been
+    // emptied. The refresh used to record nothing for an empty account, so
+    // every push named s1, was refused, and went round again for ever.
+    pull.mockResolvedValue({ state: null, courses: [], updated: 0, seen: { courses: {} } });
+    push.mockImplementation(async (...a: unknown[]) => {
+      const seen = a[4] as { state?: string } | null;
+      if (seen?.state) throw new Stale();
+      return { state: 's9', courses: {} };
+    });
+    await mount();
+    await wait(20_000);
+    expect(store.sync.status).toBe('synced');
+    expect((push.mock.calls.at(-1)![4] as { state?: string }).state).toBeUndefined();
+  });
+
+  it('does not start a second push while one is still on its way', async () => {
+    let land: (v: unknown) => void = () => {};
+    await mount();
+    await wait(3_000); // the sign-in push, done
+    push.mockImplementationOnce(() => new Promise((r) => (land = r)));
+    await addTask('First');
+    await wait(3_000); // a slow push starts
+    const started = push.mock.calls.length;
+    await addTask('Second');
+    await wait(6_000);
+    // Still one in flight: the second waits rather than racing it on stale stamps.
+    expect(push.mock.calls.length).toBe(started);
+    await act(async () => land({ state: 's5', courses: {} }));
+    await wait(3_000);
+    expect(push.mock.calls.length).toBe(started + 1);
+    // And it goes up on the stamp the first push returned.
+    expect((push.mock.calls.at(-1)![4] as { state?: string }).state).toBe('s5');
+  });
+
+  it('keeps "changes waiting" when a push lands after a newer edit', async () => {
+    let land: (v: unknown) => void = () => {};
+    await mount();
+    await wait(3_000);
+    push.mockImplementationOnce(() => new Promise((r) => (land = r)));
+    await addTask('First');
+    await wait(3_000);
+    await addTask('Second'); // after the slow push left
+    await act(async () => land({ state: 's5', courses: {} }));
+    // The first push is up; the second edit is not. Still waiting.
+    expect(localStorage.getItem(UNPUSHED_KEY)).toBe('1');
+  });
+
+  it('does not carry one account’s sync memory into another', async () => {
+    // Another account was signed in on this device before: its stamps, its
+    // agreed versions and a choice waiting on its review list.
+    localStorage.setItem('semester.syncedAs', 'u0');
+    // This account's own copy, at its own stamp.
+    pull.mockResolvedValue(snapshot('t1'));
+    localStorage.setItem('semester.base', JSON.stringify({ 'notes/n1': 'x' }));
+    localStorage.setItem(
+      'semester.review',
+      JSON.stringify([{ key: 'notes/n1', field: 'notes', id: 'n1', mine: {}, theirs: {}, kept: 'theirs', found: 0 }]),
+    );
+    await mount();
+    await wait(3_000); // the session arrives after first paint
+    expect(store.review).toEqual([]);
+    expect(localStorage.getItem('semester.review')).toBeNull();
+    // The first push for this account names no stamp from the other one.
+    expect((push.mock.calls[0]![4] as { state?: string } | null)?.state).toBe('t1');
+    expect(localStorage.getItem('semester.syncedAs')).toBe('u1');
+  });
+});

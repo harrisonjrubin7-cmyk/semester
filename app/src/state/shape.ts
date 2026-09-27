@@ -1937,6 +1937,43 @@ export function sameFields(a: Persisted, b: Persisted): boolean {
  */
 export const UNPUSHED_KEY = 'semester.unpushed';
 
+/**
+ * The account this device's sync memory belongs to. See `take` in
+ * `state/store.tsx`: signing in as a different account forgets the lot.
+ */
+export const SYNCED_AS_KEY = 'semester.syncedAs';
+
+export function syncedAs(): string | null {
+  try {
+    return localStorage.getItem(SYNCED_AS_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function rememberSyncedAs(id: string): void {
+  try {
+    localStorage.setItem(SYNCED_AS_KEY, id);
+  } catch {
+    // Unremembered, the next sign-in cannot tell a switch; it forgets nothing.
+  }
+}
+
+/**
+ * Everything this device remembers about one account's copy: the stamps it
+ * has read, the versions it last agreed, the choices waiting on its review
+ * list. Not the semester itself, which is the student's and stays.
+ */
+export function forgetSyncMemory(): void {
+  for (const key of [SEEN_KEY, SYNCED_KEY, 'semester.base', 'semester.review']) {
+    try {
+      localStorage.removeItem(key);
+    } catch {
+      // See above.
+    }
+  }
+}
+
 export function unpushed(): boolean {
   try {
     return localStorage.getItem(UNPUSHED_KEY) === '1';

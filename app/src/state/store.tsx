@@ -98,8 +98,11 @@ import {
   STORAGE_KEY,
   initialEphemeral,
   loadPersisted,
+  forgetSyncMemory,
   markSeen,
   markUnpushed,
+  rememberSyncedAs,
+  syncedAs,
   pickPersisted,
   sameFields,
   seenRows,
@@ -712,6 +715,24 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!cloudConfigured) return;
     const take = (s: Session | null) => {
+      /*
+       * Which account this device's sync memory belongs to — its stamps, the
+       * versions it last agreed, the choices waiting on its review list. All
+       * of it is about one account's copy, and none of it was cleared on
+       * signing out, so signing in as somebody else compared their copy
+       * against the last person's: their conflicts offered here, "keep this
+       * one" writing the last account's note into this one. Forgotten here,
+       * before the refresh that would read it, so the new account gets a
+       * first sign-in's question instead.
+       */
+      if (s?.user?.id) {
+        const was = syncedAs();
+        if (was && was !== s.user.id) {
+          forgetSyncMemory();
+          setReview([]);
+        }
+        rememberSyncedAs(s.user.id);
+      }
       setAccount(accountOf(s));
       /*
        * Back to where the sign-in was started. Once per page, and taken
@@ -890,6 +911,20 @@ export function StoreProvider({ children }: { children: ReactNode }) {
        */
       const take = hasRemote && unseen(remote.seen, seen);
 
+      /*
+       * An account with nothing in it has no rows this device can have read.
+       * If this device remembers stamps anyway — the account was emptied from
+       * another device — they name rows that are gone, every push would be
+       * refused for naming them, and the retry would never end. Nothing is
+       * agreed with an empty account, so this device remembers nothing, and
+       * its next push creates the rows. Not on a first sign-in (`seen` null),
+       * which has nothing to forget and a question of its own to ask.
+       */
+      if (!hasRemote && seen !== null && (seen.state || Object.keys(seen.courses).length > 0)) {
+        markSeen(remote.seen);
+        writeBase({});
+      }
+
       if (take) {
         const theirs = {
           ...(remote.state as Partial<Persisted>),
@@ -989,6 +1024,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (edit > 1 && account) markUnpushed(true);
   }, [edit, account]);
+  // The latest `edit`, for a push that lands to ask whether anything changed
+  // while it was on its way. Kept in an effect, not during render.
+  const editNow = useRef(edit);
+  useEffect(() => {
+    editNow.current = edit;
+  }, [edit]);
 
   /*
    * How many times in a row a push has found the account moved on.
@@ -1012,6 +1053,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
    * could fix. See `retriesOnItsOwn` and `pushWait` in `lib/syncstatus.ts`.
    */
   const [failed, setFailed] = useState(0);
+  /** Whether a push is on its way, and a count its landing moves to go again. */
+  const inFlight = useRef(false);
+  const [landed, setLanded] = useState(0);
 
   /*
    * Whether there is a connection, as state, so going offline and coming back
@@ -1106,6 +1150,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }
     const wait = pushWait(lost, failed);
     const timer = setTimeout(() => {
+      // One push at a time. A second started while the first is on its way
+      // names the stamps the first is about to replace, is refused, and its
+      // recovery compares this device's newest copy against its own earlier
+      // one — which could put the earlier one back. It waits; the first one
+      // landing runs this again (`landed`).
+      if (inFlight.current) return;
+      inFlight.current = true;
+      const sentAt = editNow.current;
       const { courses, ...rest } = pickPersisted(state);
       const removed = state.removedCourses;
       void pushCloud(
@@ -1117,16 +1169,21 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       )
         .then((seen) => {
           // What the database stamped, not what this device's clock says.
+          inFlight.current = false;
           markSeen(seen);
           // And the account now holds what was sent.
           writeBase(baseOf({ ...rest, courses } as Record<string, unknown>));
-          markUnpushed(false);
+          // Only if nothing changed while it was on its way: an edit made
+          // after this push left is still waiting, and says so.
+          if (editNow.current === sentAt) markUnpushed(false);
+          else setLanded((n) => n + 1);
           setLost(0);
           setFailed(0);
           setSync({ status: 'synced', at: Date.now(), error: '' });
           if (removed.length > 0) dispatch({ type: 'removalsPushed', ids: removed });
         })
         .catch(async (e: unknown) => {
+          inFlight.current = false;
           if (isStale(e)) {
             // The account has something this device has not read. Take it —
             // `hydrate` merges rather than replaces — and then push the merge.
@@ -1159,7 +1216,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     // inside the timer and is deliberately not a dependency — it changes on
     // every navigation, and none of those are worth a write.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [account, edit, asking, lost, failed, online]);
+  }, [account, edit, asking, lost, failed, online, landed]);
 
   // The sample is fetched the first time it is switched on, and stays in
   // memory after. It is still never copied into storage — an account holds a
