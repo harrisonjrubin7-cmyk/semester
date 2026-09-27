@@ -9,7 +9,8 @@ uncertainty**. It should never sound condescending, alarmist, bureaucratic,
 overly casual, judgmental, vague, or more confident than its data.
 
 > **Enforced, not only written.** The retired words in §2 are checked by
-> `npm run lint` (`app/src/content/terms.ts`). A file may not use more of them
+> `npm run lint` (`app/src/content/terms.ts`), in `.tsx` and `.ts` alike,
+> outside the course material in `data/`. A file may not use more of them
 > than `app/src/content/ledger.ts` allows, and the ledger only goes down. See
 > §9.
 
@@ -38,7 +39,7 @@ obeyed, so they are written down here instead of counted.
 
 | Use | Retired (lint) | Contextual — allowed only as noted | Meaning |
 |---|---|---|---|
-| **Action** | task, to-do, todo | — | A concrete next step. "Your own actions" are the ones a student adds. |
+| **Action** | task, to-do, todo | "task" survives only in other products' names (Google Tasks) and as a search alias | A concrete next step. "Your own actions" are the ones a student adds; Mine's tab is **Actions**. Navigation by purpose is **By goal**. |
 | **Plan** | roadmap | schedule (a timetable), agenda (a meeting's) | A future-oriented arrangement. |
 | **Course** | — | class = *one meeting* of a course ("your 10:00 class"); module = an LMS module inside a course | An enrollment. |
 | **Assignment** | homework, deliverable | work (as a verb) | Course work with a due date or outcome. |
@@ -193,4 +194,5 @@ npm run lint:terms -- --fix  # rewrite the ledger from the tree
 - To retire a new word, add a row to `RETIRED` in `terms.ts`, run `--fix`, and
   add it to §2 in the same change.
 - **Never auto-replace.** Read the sentence. The rename of what is on screen
-  today is **DD-001** and **DD-002** in [DESIGN-DEBT.md](DESIGN-DEBT.md).
+  today is tracked in [DESIGN-DEBT.md](DESIGN-DEBT.md): DD-001 (tasks → actions)
+  is closed; DD-002 is open.

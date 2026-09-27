@@ -342,7 +342,7 @@ export function Privacy() {
         <TypeToConfirm
           title="Erase from this device"
           what={[
-            'Your semester on this device: courses, deadlines, notes, tasks, grades and cards.',
+            'Your semester on this device: courses, deadlines, notes, actions, grades and cards.',
             'Attachments, the daily copies you could have restored from, and the assistant’s threads.',
             'Any connected accounts and keys — this browser signs out.',
             account

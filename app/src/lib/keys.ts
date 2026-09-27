@@ -51,7 +51,7 @@ export const SHORTCUTS: Shortcut[] = [
   { key: 'c', does: 'Courses', screen: 'courses' },
   { key: 's', does: 'Study', screen: 'study' },
   { key: 'k', does: 'The calendar', screen: 'calendar' },
-  { key: 'm', does: 'Mine — your tasks, notes and files', screen: 'mine' },
+  { key: 'm', does: 'Mine — your actions, notes and files', screen: 'mine' },
   /*
    * The assistant, not the Ask screen.
    *

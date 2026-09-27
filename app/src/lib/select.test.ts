@@ -771,10 +771,10 @@ describe('railFor and your own tasks', () => {
 
   it('names the course it is filed against, and says what it is either way', () => {
     const filed = railFor(CAT, NOW, [], [], [], [mine({ courseId: 'econ' })]);
-    expect(filed.find((b) => b.title === 'Draft the memo')?.meta).toBe('ECON 1020 · Task');
+    expect(filed.find((b) => b.title === 'Draft the memo')?.meta).toBe('ECON 1020 · Action');
     expect(
       railFor(CAT, NOW, [], [], [], [mine()]).find((b) => b.title === 'Draft the memo')?.meta,
-    ).toBe('Task');
+    ).toBe('Action');
   });
 
   it('will not invent an hour for a task whose time is not a clock', () => {

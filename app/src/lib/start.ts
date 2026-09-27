@@ -87,7 +87,7 @@ const OPENERS: [RegExp, string][] = [
   [/problem set|pset|homework/i, 'Do question 1. Not all of it — question 1.'],
   [/quiz/i, 'Skim the material once and write down the three things you would ask about.'],
   [/exam|midterm|final|test/i, 'List every topic on it from the syllabus. That list is the plan.'],
-  [/essay|paper|memo/i, 'Write the question you are answering in one sentence. If you cannot, that is the first task.'],
+  [/essay|paper|memo/i, 'Write the question you are answering in one sentence. If you cannot, that is the first step.'],
   [/read/i, 'Read the first and last paragraphs and the section headings, then start properly.'],
   [/case/i, 'Read the case once without notes and write down what it is actually asking.'],
   [/present|deck|slides/i, 'Write the one sentence each slide has to earn. Slides after that.'],

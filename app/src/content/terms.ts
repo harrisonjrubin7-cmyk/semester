@@ -22,9 +22,18 @@ import { sources, withoutComments } from '../styles/rules.ts';
  * from the tree, so a raised number is a line in the diff with a reviewer
  * looking at it, and a lowered one is the migration being recorded.
  *
+ * ## Where it looks
+ *
+ * `.tsx` and `.ts` alike: "Task deleted", the Mine tab's name and the month
+ * grid's "1 task of your own" were all labels in `lib/`, not in a component,
+ * and a `.tsx`-only rule could not see one of them. Two folders are left out.
+ * `data/` is course material — a syllabus, a reading, a lecture transcript —
+ * and "the assignment of tasks by sex" is the author's sentence, not the
+ * app's. `content/` is this rule, whose own table is made of retired words.
+ *
  * ## What counts as user-facing
  *
- * Two kinds of text in a `.tsx` file, with comments blanked first:
+ * Two kinds of text in a `.tsx` or `.ts` file, with comments blanked first:
  *
  * - JSX text: whatever sits between `>` and `<` with no `{` in it.
  * - String literals with a space in them — prose, not keys. `'task'` is a
@@ -119,11 +128,15 @@ export function prose(text: string): { at: number; text: string }[] {
   return out;
 }
 
+/** Folders under `src/` whose text is not the app's own. See "Where it looks". */
+const SKIP = ['data/', 'content/'];
+
 /** Every retired word in user-facing text under `dir`. */
 export function find(dir: string): Hit[] {
   const out: Hit[] = [];
-  for (const f of sources(dir, { tests: false })) {
+  for (const f of sources(dir, { ext: ['.tsx', '.ts'], tests: false })) {
     const rel = f.path.slice(f.path.lastIndexOf('/src/') + 5);
+    if (SKIP.some((d) => rel.startsWith(d))) continue;
     for (const p of prose(f.text)) {
       let text = p.text;
       for (const name of PROPER) text = text.replace(name, ' ');

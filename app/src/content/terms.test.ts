@@ -82,6 +82,19 @@ export const A = () => (
     expect(ids(dir)).toEqual([]);
   });
 
+  it('reads labels in .ts files too, where most of the app\u2019s words live', () => {
+    const dir = withFile('undo.ts', `export const LABELS = { deleteTask: { label: 'Task deleted' } };`);
+    expect(ids(dir)).toEqual(['task']);
+  });
+
+  it('leaves course material in data/ alone: those words are the author\u2019s', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'terms-'));
+    mkdirSync(join(dir, 'src', 'data'), { recursive: true });
+    writeFileSync(join(dir, 'src', 'data', 'guide.ts'), `export const G = 'The assignment of tasks by sex';`);
+    writeFileSync(join(dir, 'src', 'One.tsx'), `export const A = () => <p>Your action</p>;`);
+    expect(ids(join(dir, 'src'))).toEqual([]);
+  });
+
   it('names the generic error message', () => {
     const dir = withFile('One.tsx', `export const A = () => <p>Something went wrong.</p>;`);
     expect(ids(dir)).toEqual(['something went wrong']);

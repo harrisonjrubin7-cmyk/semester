@@ -155,7 +155,7 @@ export function agoLine(at: number, now = Date.now()): string {
 export const SUMMARY: { key: string; label: string }[] = [
   { key: 'courses', label: 'Courses' },
   { key: 'notes', label: 'Notes' },
-  { key: 'tasks', label: 'Tasks' },
+  { key: 'tasks', label: 'Actions' },
   { key: 'appointments', label: 'Appointments' },
   { key: 'sittings', label: 'Practice papers' },
   { key: 'reviews', label: 'Cards reviewed' },

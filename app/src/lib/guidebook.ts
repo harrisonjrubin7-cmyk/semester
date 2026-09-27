@@ -66,7 +66,7 @@ const AREA: Record<Group, string> = {
   Campus:
     'The parts of university that are not coursework — where a building is, what is on your meal plan, where you live, what is on this week.',
   Life:
-    'The term around the coursework. Your own notes and tasks, the hours you sit down for, the people, what it is all costing.',
+    'The term around the coursework. Your own notes and actions, the hours you sit down for, the people, what it is all costing.',
   Beyond:
     'The things that carry on after this term ends — the season you are training for, the job you are applying to, the people supporting you from home, and the degree after this one. Each keeps its own work on this device rather than in your term, because none of it is coursework and none of it should disappear when the term does. And none of it reaches an institution: a status here is what you believe is happening, not what a registrar has recorded.',
   Data:
@@ -265,7 +265,7 @@ export function build(): Guidebook {
   for (const t of TASKS) screens.push(...t.steps);
   sections.push({
     id: 'tasks',
-    title: 'By task',
+    title: 'By goal',
     body: TASKS.map((t) =>
       [`**${t.task}**`, '', t.why, '', t.steps.map((s, i) => `${i + 1}. ${label(s)}`).join('  →  ')].join('\n'),
     ).join('\n\n'),

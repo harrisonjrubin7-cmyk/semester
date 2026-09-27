@@ -108,7 +108,7 @@ function DecisionBriefing() {
           at: date.getTime() + (minutes ?? 24 * 60 - 1) * 60_000,
           when: `${label} · ${timeLabel(minutes, task.time.trim() || 'No time')}`,
           title: task.title,
-          meta: 'Your task',
+          meta: 'Your action',
           open: () => goMine(dispatch, 'tasks'),
         });
       }

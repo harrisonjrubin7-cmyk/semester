@@ -124,7 +124,7 @@ Figures at the commit this file was written at:
 | Files using `SourceBadge` | 5 | ↑ |
 | Hex colour literals in `.tsx` | 28 | ↓ |
 | Off-scale style values (`styles/budget.ts`) | 27 | ↓ |
-| Retired words on screen (`content/ledger.ts`) | 39 | ↓ |
+| Retired words in user-facing text (`content/ledger.ts`, `.tsx` and `.ts`) | 22 — none of them a student's own "task" | ↓ |
 
 Tracked by hand until they can be measured: accessibility issues by severity
 and age, visual-regression failures per release, audit score by module, and
@@ -135,8 +135,9 @@ the time to build a standard new screen.
 1. **Done here:** content standards, interaction standards, this governance
    doc, the debt register, the vocabulary lint with its ledger, and the
    census.
-2. **Next:** the DD-001 rename, one screen group per PR with screenshots; the
+2. **Done:** the DD-001 rename, tasks → actions.
+3. **Next:** DD-002 (the remaining "Something went wrong" messages); the
    DD-003 decision on source-label wording.
-3. **Then:** the DD-010 visual baselines; DD-004 frames; DD-006 error token.
-4. **Then:** object contracts (DD-005) starting with Service, and the screen
+4. **Then:** the DD-010 visual baselines; DD-004 frames; DD-006 error token.
+5. **Then:** object contracts (DD-005) starting with Service, and the screen
    audit table.
