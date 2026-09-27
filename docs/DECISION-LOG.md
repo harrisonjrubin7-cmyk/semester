@@ -133,3 +133,26 @@ not indexable and bloat the app shell; and moving the app to path routing,
 which would migrate 59 screens and every stored deep link. Changing the
 production host (e.g. to Vercel, where `app/vercel.json` already exists) is a
 production change and needs approval.
+
+## D-012 · How the shared AI key is clamped
+
+**Decided 27 Sep 2026 (BL-1.0, S-1).** `supabase/functions/claude` rebuilds
+every request through `supabase/functions/_shared/clamp.ts` before counting
+it.
+
+- **An unknown model is refused, not substituted.** Answering with a model
+  other than the one named misreports who answered.
+- **An oversize `max_tokens` is clamped, not refused.** The 16 000 ceiling is
+  above the app's largest ask (12 000), so no app path is cut.
+- **Fields outside the app's own request shape are dropped** and listed in
+  `dropped`, not passed through.
+- **The clamp runs before `count_call`,** so a malformed request no longer
+  costs one of the student's sixty calls.
+
+The model list and the search cap are tied to `lib/assistant.ts` and
+`lib/research.ts` by test, so adding a model to the app without adding it here
+fails CI rather than failing a student.
+
+Deployment note: `.github/workflows/functions.yml` deploys changed functions
+after CI passes on main, so **merging this to main is the production deploy**
+and needs owner approval.
