@@ -158,6 +158,18 @@ const NOT_CONTENT = new Set([
    * flow exists to allow. `20260921151000_activity.sql` is the table.
    */
   'activity',
+  /*
+   * What a school sent about the account through an integration, and the
+   * consent that let it in. Neither is something the person did: an
+   * enrollment or a hold summary arrives whether or not anybody ever opened
+   * the app, so counting them would call a provisioned account that has only
+   * received its registrar's data "not empty" and refuse the attach this flow
+   * exists for. Same category as `activity` above — about the person, not by
+   * them. `20260927170000_integration_control_plane.sql` and
+   * `20260923210000_intelligence_policy.sql` are the tables.
+   */
+  'canonical_entity_references',
+  'consent_record',
 ]);
 
 /**

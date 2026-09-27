@@ -317,4 +317,14 @@ describe('the clocks that run are still the clocks the document describes', () =
     expect(readiness).toMatch(/last_retention_at > now\(\) - interval '2 hours'/);
     expect(flat()).toContain('hourly sweep');
   });
+
+  it('runs the integration retention sweep daily, as the document says, and nothing parks it', () => {
+    const scheduler = readFileSync(join(ROOT, 'supabase', 'scheduler.sql'), 'utf8');
+    expect(scheduler).toMatch(
+      /cron\.schedule\(\s*'integration-retention',\s*'29 3 \* \* \*',\s*\$job\$select public\.integration_retention_sweep\(\)\$job\$/,
+    );
+    expect(scheduler).not.toMatch(/jobname = 'integration-retention'\),\s*active := false/);
+    expect(flat()).toContain('daily at 03:29 UTC');
+    expect(flat()).not.toContain('nothing schedules it yet');
+  });
 });
