@@ -38,6 +38,16 @@ registrars, tutors, learning-center staff, faculty, TAs, career coaches and
 university staff — always scoped to one office, course or department.
 Destinations are configured by `tenant:implement` during implementation.
 
+## From the Action Center
+
+`askForHelp(action, go)` maps an action to a need — a deadline or study step
+to course help, a path or registration step to advising — pre-fills its title
+and date, and opens Get help on it. It returns false for actions no person
+answers (setup steps), so the caller keeps its note. Three rules, each tested:
+fields arrive **filled but unticked**; the hand-over is **held in memory for
+one navigation** and never stored; and a pre-filled field the need does not
+normally offer is still **shown**, never carried invisibly.
+
 ## Without an integration
 
 If a school has not connected an office, the same preview becomes a note to
@@ -63,8 +73,9 @@ The inbox list, before an open, still names nobody.
 
 ## Not built here, deliberately
 
-- **Linking to the Action Center.** `feature/action-model` (open) records a
-  `help` event on an action. Once it lands, that event should open this route
-  with the action's course and deadline pre-filled — still unticked.
+- **The Action Center's button itself.** The bridge is here —
+  `helpFromAction`, `askForHelp` and `takeHelpSeed` in `lib/help-routes.ts` —
+  but the Action Center is still in open drafts (#768, #769, #772), so the
+  two-line change to its "Ask for help" lands with whichever of them merges.
 - **A time-based purge of closed requests.** `RETENTION.md` says so; a
   university sets the period before production.

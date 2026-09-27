@@ -42,6 +42,7 @@ import { INSTITUTIONAL_PREVIEW } from '../lib/institutional-preview';
 import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
 import { GetHelp } from '../components/GetHelp';
 import { HelpInbox } from '../components/HelpInbox';
+import { helpSeedWaiting } from '../lib/help-routes';
 import { ControlPlane } from '../components/institutional/ControlPlane';
 import type { ControlPlaneStatus } from '../lib/control-plane';
 
@@ -259,7 +260,10 @@ function Standing({
 function Workspace({ storageKey }: { storageKey: string }) {
   const { state, dispatch, catalog, school, account } = useStore();
 
-  const [tab, setTab] = useState<Tab>('overview');
+  // An Action Center "Ask for help" lands here with a seed waiting; open on it.
+  const [tab, setTab] = useState<Tab>(() =>
+    EXPERIENCE_FLAGS.humanHelp !== 'off' && helpSeedWaiting() ? 'help' : 'overview',
+  );
   const [intent, setIntent] = useState<UniversityRole>('student');
   const [area, setArea] = useState<UniversityArea>('courses');
 
