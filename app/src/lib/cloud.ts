@@ -25,6 +25,7 @@
  */
 
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
+import { requireOnline } from './offline-mode';
 import { classify, reference, say, type Code } from './failure';
 import type { Seen } from '../state/shape';
 import { MOVE_MS, fetchWithin, timedOut, tookTooLong } from './net';
@@ -848,6 +849,19 @@ export const OWNED_TABLES: OwnedTable[] = [
   { table: 'appointments', column: 'user_id' },
   { table: 'sittings', column: 'user_id' },
   { table: 'calendar_feeds', column: 'user_id' },
+  // Graduation scenario drafts a student chose to save to their account
+  // (`lib/graduation-cloud.ts`, Phase D). The foreign key cascades from
+  // auth.users too; listed so the delete here does not depend on it.
+  { table: 'graduation_scenarios', column: 'user_id' },
+  // Advisor shares a student made (`lib/advisor-shares.ts`, Phase G). Deleting
+  // them cascades to their read log. Shares received as an advisor go with the
+  // advisor's account through the foreign key on advisor_id.
+  { table: 'advisor_shares', column: 'student_id' },
+  // What a student said applies to them for campus office actions, and which
+  // of those actions they marked done (`lib/office-actions-remote.ts`, Phase
+  // J). Both are the student's alone; no office can read either.
+  { table: 'institution_action_audiences', column: 'user_id' },
+  { table: 'institution_action_progress', column: 'user_id' },
   // A support grant names this account in either of two columns. The RPC
   // removes both sides, which one filtered DELETE cannot express, while its
   // audit trigger leaves only pseudonyms behind.
@@ -1058,6 +1072,7 @@ export const KEPT_TABLES: KeptTable[] = [
 ];
 
 export async function deleteEverything(): Promise<string> {
+  requireOnline('delete');
   const db = await cloud();
   const { data } = await db.auth.getUser();
   const userId = data.user?.id;
