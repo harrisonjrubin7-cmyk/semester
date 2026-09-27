@@ -42,3 +42,54 @@ export function experienceFlags(env: PreviewEnv): ExperienceFlags {
 }
 
 export const EXPERIENCE_FLAGS = experienceFlags(import.meta.env);
+
+/**
+ * The feature-expansion modules (docs/FEATURE-EXPANSION-CROSSWALK.md).
+ *
+ * A second map rather than more keys on `ExperienceFlags`, for one reason:
+ * these never default to `preview`. The six above switch on together when a
+ * build is an institutional preview; each of these is switched on alone, by
+ * its own `VITE_<NAME>` variable, so a pilot can run one module without
+ * inheriting fourteen (DECISION-LOG D-012). `today_action_center` is the
+ * fifteenth, for the Today polish itself (D-013).
+ */
+/**
+ * Each module and the build variable that sets it, written out rather than
+ * built from the name: `lib/deploy.test.ts` finds the app's build inputs by
+ * their literal `VITE_` names, and a name assembled at run time would be one
+ * the Pages workflow never learns to pass.
+ */
+export const MODULE_FLAG_ENV = {
+  today_action_center: 'VITE_TODAY_ACTION_CENTER',
+  registration_day_mode: 'VITE_REGISTRATION_DAY_MODE',
+  graduation_simulator: 'VITE_GRADUATION_SIMULATOR',
+  cost_planner: 'VITE_COST_PLANNER',
+  academic_life_balance: 'VITE_ACADEMIC_LIFE_BALANCE',
+  course_detail_v2: 'VITE_COURSE_DETAIL_V2',
+  advisor_meeting_mode: 'VITE_ADVISOR_MEETING_MODE',
+  study_readiness: 'VITE_STUDY_READINESS',
+  source_locker: 'VITE_SOURCE_LOCKER',
+  career_evidence: 'VITE_CAREER_EVIDENCE',
+  office_action_feed: 'VITE_OFFICE_ACTION_FEED',
+  demand_forecasting: 'VITE_DEMAND_FORECASTING',
+  semester_wrapped: 'VITE_SEMESTER_WRAPPED',
+  offline_mode: 'VITE_OFFLINE_MODE',
+  trust_center: 'VITE_TRUST_CENTER',
+} as const;
+
+export type ModuleFlag = keyof typeof MODULE_FLAG_ENV;
+export const MODULE_FLAG_NAMES = Object.keys(MODULE_FLAG_ENV) as ModuleFlag[];
+export type ModuleFlags = Record<ModuleFlag, FeatureState>;
+
+export function moduleFlags(env: PreviewEnv): ModuleFlags {
+  const flags = {} as ModuleFlags;
+  for (const name of MODULE_FLAG_NAMES) {
+    flags[name] = featureState(env, MODULE_FLAG_ENV[name], false);
+  }
+  return flags;
+}
+
+export const MODULE_FLAGS = moduleFlags(import.meta.env);
+
+/** On in any state but `off`. The one question most call sites ask. */
+export const moduleOn = (state: FeatureState): boolean => state !== 'off';

@@ -27,6 +27,22 @@
 
 export const MIN_COHORT = 10;
 
+/** The capability the Operations studio sits under — `module.institutional_operations` in the flag registry. */
+export const OPERATIONS_CAPABILITY = 'outcomes:read';
+
+/**
+ * Whether this person may open the studio at all.
+ *
+ * Takes *verified* capabilities — what the gateway confirmed over the school —
+ * never a role picked in the UI. Today nothing populates that list on the
+ * client, so this answers no for everybody, and the tab stays hidden even with
+ * the build flag on. That is the intended state until a verified capability
+ * is wired through, the same stance the Control tab takes.
+ */
+export function operationsAllowed(verified: readonly string[]): boolean {
+  return verified.includes(OPERATIONS_CAPABILITY);
+}
+
 export const FORBIDDEN = [
   { id: 'risk_score', says: 'Individual student risk scores' },
   { id: 'reading_time', says: 'Covert reading-time tracking' },
@@ -171,8 +187,12 @@ export function exportReport(r: Report, min = MIN_COHORT): { ok: true; csv: stri
   if (defs.some((d) => !d)) return { ok: false, why: 'unknown_metric' };
   if (r.cells.some((c) => FORBIDDEN_IDS.has(c.key) || FORBIDDEN_IDS.has(c.group))) return { ok: false, why: 'forbidden_field' };
   if (defs.some((d) => d!.sensitive)) {
-    if (!r.review?.reviewer || !r.review.approvedAt) return { ok: false, why: 'needs_review' };
-    if (r.review.reviewer === r.review.author) return { ok: false, why: 'self_review' };
+    // Both names, trimmed: a blank author passes any reviewer comparison and
+    // leaves nobody whose work was checked.
+    const author = r.review?.author?.trim() ?? '';
+    const reviewer = r.review?.reviewer?.trim() ?? '';
+    if (!author || !reviewer || !r.review?.approvedAt) return { ok: false, why: 'needs_review' };
+    if (reviewer.toLowerCase() === author.toLowerCase()) return { ok: false, why: 'self_review' };
   }
   const q = (s: string) => `"${s.replace(/"/g, '""')}"`;
   const lines = [

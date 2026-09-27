@@ -75,7 +75,11 @@ the CLAUDE.md note on measuring against the surface that flatters it).
 
 ## Approval flow
 
-`nextStep()` returns the first step before launch that is not yet recorded.
+`nextStep()` returns the first step before launch that is not yet recorded. Each request is a row in
+`governance_config_requests`. The database refuses a setting at the wrong tier and any key that isn't registered, so
+nothing on the never-permitted list can even be requested. It also refuses to remove a recorded step, to record the
+launch step before the reviews, and to mark a request `launched` until every step before launch is recorded. A school
+makes the request; only its implementation manager (`tenant:implement`) moves it forward.
 
 ```text
 request

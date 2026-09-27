@@ -8,6 +8,9 @@ and update cadence.
 Source: [`app/src/lib/governance/incident-comms.ts`](../../app/src/lib/governance/incident-comms.ts). `compose()`
 refuses to produce a message in any of these cases: a section is missing, a `[BRACKETED]` placeholder is left in,
 speculation or legalese appears, or one of the audience's required fields is empty or outside its allowed answers.
+Every notice sent is recorded in `governance_incident_notices`, which enforces the same rules again. It also refuses a
+next-update time beyond the audience's cadence, because a notice can be recorded by something other than
+`compose()`.
 
 ## Every message says these seven things
 

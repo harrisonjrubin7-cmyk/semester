@@ -39,13 +39,13 @@ never by hierarchy.
 
 | Capability | Status | Note |
 | --- | --- | --- |
-| Central policy inheritance with campus overrides | Rule in code (`hierarchy.ts`) | Needs a `policy_node` table mirroring `PolicyNode`; RLS by `systemId` |
+| Central policy inheritance with campus overrides | **Built**: rule in `hierarchy.ts`, records in `governance_policy_nodes` | The table refuses a node out of level order, in another system, below another school's campus, or opening a class route past the platform floor. Only the platform attaches a campus to a system |
 | Brand inheritance and local branding | Rule in code | Tier 1 settings per node |
 | Shared connectors with campus-specific mapping | Designed | One connection per system; `integration.field_mapping` per campus node |
 | Cross-campus identity and role resolution | Designed | A role is granted at a node and applies to its subtree only |
 | Data isolation between campuses | Rule in code; ADR 0005 in DB | `private.same_school()` generalises to `same_subtree()` |
 | Shared resource directory with local availability | Designed | Resource at system node, availability at campus node |
 | Cross-registration workflow | Designed | Home campus owns the record; host campus gets section-level T3 by agreement, audited |
-| Central reporting with privacy-safe comparisons | Designed | Aggregates only, with a minimum cell size (proposed: 10) before any campus comparison is shown. No suppression rule exists in the code yet |
+| Central reporting with privacy-safe comparisons | Partial | Aggregates only, under the small-cell floor `lib/institution-ops.ts` already applies (n < 10 suppressed, #818). Cross-campus comparison is not built |
 | System-level rollout and feature flags | Rule in code | Set at the system node; campuses narrow |
 | Shared procurement and trust documentation | Process | One HECVAT/VPAT/DPA per system, with campus addenda |

@@ -42,6 +42,7 @@ import { INSTITUTIONAL_PREVIEW } from '../lib/institutional-preview';
 import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
 import { GetHelp } from '../components/GetHelp';
 import { HelpInbox } from '../components/HelpInbox';
+import { operationsAllowed } from '../lib/institution-ops';
 import { helpSeedWaiting } from '../lib/help-routes';
 import { ControlPlane } from '../components/institutional/ControlPlane';
 import { IntegrationDashboard } from '../components/institutional/IntegrationDashboard';
@@ -119,6 +120,13 @@ function RoleWorkspaceSlot() {
  * nothing anywhere is labelled official without a receipt.
  */
 
+/**
+ * Capabilities the gateway has verified for this person over this school.
+ * Empty until that verification is wired to the client — a role picked in the
+ * UI is not authorization — so anything gated on it stays closed.
+ */
+const VERIFIED_CAPABILITIES: readonly string[] = [];
+
 /** The tabs, and what each is for. */
 const TABS = [
   { id: 'overview' as const, label: 'Services' },
@@ -136,7 +144,7 @@ const TABS = [
     : []),
   // Staff only in practice, and governed in code: aggregates at n >= 10, no
   // per-student grain, forbidden measures refused. See lib/institution-ops.ts.
-  ...(EXPERIENCE_FLAGS.institutionalOperations !== 'off'
+  ...(EXPERIENCE_FLAGS.institutionalOperations !== 'off' && operationsAllowed(VERIFIED_CAPABILITIES)
     ? [{ id: 'operations' as const, label: 'Operations' }]
     : []),
 ];
@@ -741,9 +749,9 @@ function Workspace({ storageKey }: { storageKey: string }) {
 
       {tab === 'integrations' && EXPERIENCE_FLAGS.integrationDashboard !== 'off' && <IntegrationDashboard />}
 
-      {tab === 'operations' && EXPERIENCE_FLAGS.institutionalOperations !== 'off' && (
+      {tab === 'operations' && EXPERIENCE_FLAGS.institutionalOperations !== 'off' && operationsAllowed(VERIFIED_CAPABILITIES) && (
         <Suspense fallback={null}>
-          <OperationsStudio />
+          <OperationsStudio verified={VERIFIED_CAPABILITIES} tenantId={school.id} accountId={account?.id || 'device'} />
         </Suspense>
       )}
 

@@ -105,7 +105,7 @@ export const FLAGS: readonly FlagDefinition[] = [
     type: 'module', owner: 'Institutional research', scopes: ['tenant', 'role'], highRisk: false, reviewAt: REVIEW,
     rollout: 'Preview for one pilot school’s institutional research office, then its production tenant after a governance review.',
     successCriteria: 'An analyst produces a suppressed, lineage-labelled export without a spreadsheet step; no per-student figure is ever rendered.',
-    rollback: 'Set the tenant policy row to off. The studio stores its drafts on the analyst’s device only; nothing to undo server-side.',
+    rollback: 'Unset VITE_INSTITUTIONAL_OPERATIONS (or set it to off) and redeploy: the screen reads the build-time flag, not the tenant policy row. The studio stores its drafts on the analyst’s device only; nothing to undo server-side.',
     killSwitches: [], capability: 'outcomes:read',
   }),
   flag({

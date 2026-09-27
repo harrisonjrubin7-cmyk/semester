@@ -11,10 +11,12 @@ import {
   INTERNATIONAL,
   KEY_MAX_AGE_DAYS,
   MIN_COHORT,
+  OPERATIONS_CAPABILITY,
   RATE_LIMITS,
   SCOPES,
   WEBHOOK_EVENTS,
   approve,
+  operationsAllowed,
   bottlenecks,
   capacityScenario,
   continuityGaps,
@@ -90,9 +92,22 @@ const FRESH_TAG: Record<ReturnType<typeof freshness>, string> = {
   unowned: 'jx-tag jx-fresh-unowned',
 };
 
-export function OperationsStudio() {
+/**
+ * `verified` is the gateway-verified capability list, not a role picker; the
+ * studio refuses without `outcomes:read` even if a caller forgets to gate the
+ * tab. Drafts are keyed by school and account so two analysts on one browser
+ * profile never see each other's evidence.
+ */
+export function OperationsStudio({ verified, tenantId, accountId }: { verified: readonly string[]; tenantId: string; accountId: string }) {
+  if (!operationsAllowed(verified)) {
+    return <p className="jx-muted">Operations needs the verified {OPERATIONS_CAPABILITY} capability for this school.</p>;
+  }
+  return <Studio key={`${tenantId}:${accountId}`} storageKey={`semester.operations.v1:${tenantId}:${accountId}`} />;
+}
+
+function Studio({ storageKey }: { storageKey: string }) {
   const [tab, setTab] = useState<Tab>('governance');
-  const lib = useDeviceLibrary('semester.operations.v1', readOps, EMPTY_OPS);
+  const lib = useDeviceLibrary(storageKey, readOps, EMPTY_OPS);
   return (
     <div className="jx-ops">
       <TabList label="Operations" className="portal-tabs" value={tab} onChange={setTab} tabs={TABS} />

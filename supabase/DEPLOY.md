@@ -456,12 +456,39 @@ yet. What it returns is the row count:
     where jobid = (select jobid from cron.job where jobname = 'tombstones')
     order by start_time desc limit 5;
 
-### The integration jobs — not applied
+### Four more jobs — on the project, applied 27 September
 
-`scheduler.sql` also defines `integration-retention`, which runs daily at `29 3 * * *` and is active, and
-`integration-sync`, which runs at `7,22,37,52 * * * *` and is **parked**. Neither has been applied to the project.
-[`docs/INTEGRATION-OPERATOR-RUNBOOK.md`](../docs/INTEGRATION-OPERATOR-RUNBOOK.md) §4 has what each does and the
-four steps that unpark the sync.
+`scheduler.sql` was re-applied in full at 19:56 UTC on 27 September 2026, as one transaction, so
+`integration-sync` never existed unparked. Two of the four jobs it added had been in the file for days and
+never applied; the other two came with the integration scheduler. Read off `cron.job` afterwards:
+
+    ai-runtime-metadata             43 4 * * *           active = true
+    institution-gateway-retention   11 * * * *           active = true
+    integration-retention           29 3 * * *           active = true
+    integration-sync                7,22,37,52 * * * *   active = false
+    push                            */15 * * * *         active = false
+    tombstones                      17 4 * * 0           active = true
+
+- **`ai-runtime-metadata`** calls `private.sweep_ai_runtime_metadata()`. It removes expired AI runtime metadata
+  after each school's retention window, and never touches source content.
+- **`institution-gateway-retention`** calls `public.gateway_purge_journal()` hourly. `/health/ready` fails closed
+  if it is missing or stalled.
+- **`integration-retention`** calls `public.integration_retention_sweep()`. It visits only schools with an
+  integration connection, and there are none yet, so it deletes and writes nothing until one exists.
+- **`integration-sync`** is **parked**. Vault now holds `integration_cron_secret`; it does not yet hold
+  `integration_tick_url`. [`docs/INTEGRATION-OPERATOR-RUNBOOK.md`](../docs/INTEGRATION-OPERATOR-RUNBOOK.md) §4
+  has the four steps that unpark it.
+
+`push` and `tombstones` came through unchanged, and `push_cron_secret` was not regenerated.
+
+Re-running the whole file stays safe. Every statement is idempotent, and it parks `push` and `integration-sync`
+again, so re-run it only while both are meant to be parked. Otherwise run the one `cron.schedule` you need. To
+watch the first runs:
+
+    select j.jobname, d.status, d.return_message, d.start_time
+    from cron.job_run_details d join cron.job j using (jobid)
+    where j.jobname in ('institution-gateway-retention', 'ai-runtime-metadata', 'integration-retention')
+    order by d.start_time desc limit 10;
 
 ## Security advisor
 
