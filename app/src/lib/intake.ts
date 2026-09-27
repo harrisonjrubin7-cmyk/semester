@@ -1,6 +1,6 @@
 import { gather, type Unpacked } from './bundle';
 import { hashOf } from './fnv';
-import { extractText } from './extract';
+import { extractText, unreadLine } from './extract';
 
 /**
  * One way in for everything a course throws at you.
@@ -69,6 +69,8 @@ export interface IntakeResult {
   read: Intake[];
   /** Named, never silently dropped — with what to do about each. */
   refused: { name: string; why: string }[];
+  /** Files read only in part: PDF pages that were pictures. See `unreadLine`. */
+  partly?: string[];
 }
 
 /**
@@ -106,6 +108,7 @@ export async function intakeFiles(
 ): Promise<IntakeResult> {
   const got: Unpacked = await gather(list);
   const read: Intake[] = [];
+  const partly: string[] = [];
   const refused: { name: string; why: string }[] = got.skipped.map((s) => ({
     name: s.name,
     why: s.why,
@@ -126,6 +129,7 @@ export async function intakeFiles(
     }
     try {
       const out = await extractText(piece.file);
+      if (unreadLine(out)) partly.push(unreadLine(out));
       read.push({
         name: out.name,
         text: out.text,
@@ -141,7 +145,7 @@ export async function intakeFiles(
     }
   }
   onProgress?.(done, got.files.length);
-  return { read, refused };
+  return { read, refused, ...(partly.length ? { partly } : {}) };
 }
 
 /** Text somebody pasted. The one door with no file behind it. */

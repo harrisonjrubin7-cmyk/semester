@@ -249,6 +249,15 @@ export interface Extracted {
    */
   pageUnit?: 'slide' | 'page';
   /**
+   * The PDF pages that came back with no text at all, and how many pages the
+   * file has. A page like that is usually a scanned image — a photocopied
+   * reading, a slide exported as a picture — and it is left out of `pages`
+   * and of everything built from them. Said, not guessed at: see
+   * {@link unreadLine}.
+   */
+  unread?: number[];
+  pageCount?: number;
+  /**
    * The file itself, base64, for a PDF small enough to send whole.
    *
    * Extraction is still done — the word count, the preview and every
@@ -296,6 +305,8 @@ export async function extractText(file: File): Promise<Extracted> {
   let original: string | undefined;
   let pages: { page: number; text: string }[] | undefined;
   let pageUnit: 'slide' | 'page' | undefined;
+  let unread: number[] | undefined;
+  let pageCount: number | undefined;
 
   if (/\.pdf$/i.test(name) || file.type === 'application/pdf') {
     const read = await fromPdf(file);
@@ -304,6 +315,8 @@ export async function extractText(file: File): Promise<Extracted> {
     // left out rather than numbered: there is nothing on them to point at.
     pages = read.map((p) => ({ page: p.page, text: tidy(p.text) })).filter((p) => p.text);
     pageUnit = 'page';
+    unread = read.filter((p) => !tidy(p.text)).map((p) => p.page);
+    pageCount = read.length;
     if (file.size <= SENDABLE_PDF) {
       try {
         original = await asBase64(file);
@@ -349,5 +362,43 @@ export async function extractText(file: File): Promise<Extracted> {
     words: text.split(/\s+/).length,
     ...(original ? { pdf: original } : {}),
     ...(pages?.length ? { pages, pageUnit } : {}),
+    ...(unread?.length ? { unread, pageCount } : {}),
   };
+}
+
+/** "3", "3–5", "3–5, 9": page numbers as a person would write them. */
+export function pageRanges(pages: number[]): string {
+  const sorted = [...new Set(pages)].sort((a, b) => a - b);
+  const out: string[] = [];
+  for (let i = 0; i < sorted.length; ) {
+    let j = i;
+    while (j + 1 < sorted.length && sorted[j + 1] === sorted[j] + 1) j++;
+    out.push(i === j ? `${sorted[i]}` : `${sorted[i]}\u2013${sorted[j]}`);
+    i = j + 1;
+  }
+  return out.join(', ');
+}
+
+/**
+ * The sentence for a PDF some of whose pages had no readable text, or ''.
+ *
+ * A file with no text at all is refused outright (see `extractText`). One
+ * with *some* text used to go through without a word, and the pages that
+ * were pictures simply were not there: forty pages of lecture slides saved
+ * as images behind a title page read as one page of material, and every
+ * study format built from it was built from that one page. The student
+ * could not tell. Now they are told which pages, and that a picture of text
+ * is not text.
+ */
+export function unreadLine(x: Pick<Extracted, 'name' | 'unread' | 'pageCount'>): string {
+  if (!x.unread?.length || !x.pageCount) return '';
+  const n = x.unread.length;
+  const most = n / x.pageCount > 0.5;
+  return (
+    `${x.name}: ${n} of ${x.pageCount} ${x.pageCount === 1 ? 'page' : 'pages'} had no text that could be read ` +
+    `(${n === 1 ? 'page' : 'pages'} ${pageRanges(x.unread)}), so ${n === 1 ? 'it is' : 'they are'} not included. ` +
+    (most
+      ? 'Most of this file is probably scanned images. Photograph the pages instead, or paste their text.'
+      : 'Blank pages are expected; if those pages have writing on them, photograph them or paste their text.')
+  );
 }

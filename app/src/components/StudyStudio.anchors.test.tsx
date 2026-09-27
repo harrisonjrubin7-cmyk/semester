@@ -27,7 +27,10 @@ vi.mock('../lib/live', () => ({ useLive: () => ({ guide: { code: 'ECON', source:
 vi.mock('../lib/claude', () => ({ ask: mock.ask }));
 vi.mock('../lib/assistant', () => ({ configured: () => true, routeLabel: () => 'test connection' }));
 vi.mock('./Drawing', () => ({ Drawing: () => null }));
-vi.mock('../lib/extract', () => ({ extractText: () => Promise.resolve(mock.extracted) }));
+vi.mock('../lib/extract', async (actual) => ({
+  ...(await actual<typeof import('../lib/extract')>()),
+  extractText: () => Promise.resolve(mock.extracted),
+}));
 vi.mock('../lib/files', () => ({
   addFile: () => Promise.resolve({ id: 'f1' }),
   listFiles: () => Promise.resolve([]),
@@ -113,4 +116,20 @@ it('names a deck’s excerpts by slide, and does not promise to open a slide', a
   await generate('upload-f1-3', 'Buyers trade features off against price.');
   expect(button('Open original file')).toBeDefined();
   expect(button(/at page/)).toBeUndefined();
+});
+
+it('says which pages of a PDF had no readable text, rather than reading as a shorter file', async () => {
+  mock.extracted = {
+    name: 'Week 4.pdf',
+    text: 'Title page',
+    words: 2,
+    pageUnit: 'page',
+    pages: [{ page: 1, text: 'Title page' }],
+    unread: [2, 3, 4, 5, 6],
+    pageCount: 6,
+  };
+  await upload('Week 4.pdf');
+  expect(host.textContent).toContain('1 source excerpt added.');
+  expect(host.textContent).toContain('Week 4.pdf: 5 of 6 pages had no text that could be read (pages 2\u20136)');
+  expect(host.textContent).toContain('probably scanned images');
 });
