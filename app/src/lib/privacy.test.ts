@@ -371,9 +371,19 @@ describe('"delete my account" really means every row', () => {
      */
     const { KEPT_TABLES } = await import('./cloud');
     expect(KEPT_TABLES.map((t) => t.table).sort()).toEqual([
+      'feature_kill_switch',
       'group_tasks',
       'groups',
       'help_destinations',
+      // A university's integration configuration and sync logs, read by the
+      // Integration Dashboard (lib/integration/dashboard.ts). No student
+      // account writes a row in any of them.
+      'integration_connections',
+      'integration_dead_letter_events',
+      'integration_mappings',
+      'integration_scopes',
+      'integration_sync_errors',
+      'integration_sync_runs',
       'organizations',
       'reports',
       'schools',

@@ -257,7 +257,20 @@ declare
     'my_help_destinations()',
     'open_help_request(want uuid)',
     'send_help_request(want_destination uuid, want_question text, want_context jsonb)',
-    'withdraw_help_request(want uuid)'
+    'withdraw_help_request(want uuid)',
+
+    -- The five in 20260927170000_integration_control_plane.sql. The first four
+    -- are the only way a connection's status or approval, a scope's approval,
+    -- or a replay request moves: those columns are off the API roles' column
+    -- grants, and each function checks its own capability over the row's
+    -- school, refuses the unsafe case (self-approval, no reason, a replay under
+    -- a kill switch) and is audited by trigger. `kill_switch_engaged` answers a
+    -- boolean about a switch key and a school and returns no row.
+    'integration_approve_connection(want_connection text, want_direction text)',
+    'integration_approve_scope(want_scope uuid)',
+    'integration_request_replay(want_dead_letter uuid, want_reason text)',
+    'integration_set_paused(want_connection text, want_paused boolean, want_reason text)',
+    'kill_switch_engaged(want_switch text, want_tenant text)'
   ];
   extra text;
   missing text;
