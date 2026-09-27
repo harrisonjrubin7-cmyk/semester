@@ -269,3 +269,8 @@
 .abroad-table-wrap{overflow-x:auto}
 .abroad-table{border-collapse:collapse;width:100%}
 .abroad-table th,.abroad-table td{text-align:left;padding:var(--sp-2) var(--sp-3);border-bottom:1px solid var(--app-line);vertical-align:top}
+.sharing-lead{font-size:var(--type-base);color:var(--app-dim);line-height:var(--leading-normal);margin:0 0 var(--sp-3)}
+.sharing-list{list-style:none;padding:0;margin:0 0 var(--sp-3)}
+.sharing-list>li{border-top:1px solid var(--app-line);padding-block:var(--sp-3)}
+.sharing-meta{font-size:var(--type-sm);color:var(--app-dim);margin-top:var(--sp-1)}
+.sharing-problems{font-size:var(--type-sm);margin:var(--sp-2) 0 0;padding-inline-start:1.2em}

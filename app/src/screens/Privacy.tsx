@@ -23,6 +23,7 @@ import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from '../components/ui';
+import { SharingList } from '../components/SharingList';
 import { TypeToConfirm } from '../components/TypeToConfirm';
 import { CLAIMS, SUPPORT, region } from '../lib/privacy';
 import { KEEP, LOG_KEY, dump, dumpName, read } from '../lib/diagnose';
@@ -219,6 +220,8 @@ export function Privacy({ trustCenter = moduleOn(MODULE_FLAGS.trust_center) }: {
           </button>
         </div>
       )}
+
+      <SharingList />
 
       <SectionLabel style={{ marginTop: 'calc(22px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(5px * var(--density, 1))' }}>If something is wrong</SectionLabel>
       <div style={{ fontSize: 'var(--type-base-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-loose)', textWrap: 'pretty' }}>
