@@ -2374,7 +2374,13 @@ export type Action =
    * knows a course is unchanged. See `lib/forwork.ts`.
    */
   | { type: 'newDocument'; courseId: CourseId | null; itemId?: string | null }
-  | { type: 'makeDocument'; doc: Omit<Doc, 'id' | 'created' | 'updated'>; open?: boolean }
+  | {
+      type: 'makeDocument';
+      doc: Omit<Doc, 'id' | 'created' | 'updated'>;
+      open?: boolean;
+      /** Chosen by the caller when it must record the new document's id (Source Locker). Ignored if taken. */
+      id?: string;
+    }
   | { type: 'openDocument'; id: string }
   /** Back to the shelf. Its own action rather than an open with no id. */
   | { type: 'closeDocument' }

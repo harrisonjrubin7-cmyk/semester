@@ -8296,6 +8296,47 @@ section[data-drop] > .grip + * {
   color: var(--app-dim);
 }
 
+/* ── Study Readiness + Source Locker (study_readiness, source_locker, Phase H) ── */
+
+.locker-list,
+.readiness-topics,
+.readiness-materials {
+  display: grid;
+  gap: var(--sp-5);
+  margin: 0 0 var(--sp-5);
+  padding-left: 0;
+  list-style: none;
+}
+
+.locker-list > li,
+.readiness-topics > li {
+  padding-bottom: var(--sp-5);
+  border-bottom: 1px solid var(--app-line-soft);
+}
+
+.readiness-materials {
+  gap: var(--sp-2);
+  font-size: var(--type-sm);
+}
+
+.locker-head {
+  margin: 0 0 var(--sp-3);
+}
+
+/* The course hub is a .portal-workspace, whose dt rule pushes a label below its
+   value; the fact lists here are two-column rows (as .scenario-list in Phase D). */
+.portal-workspace .course-v2-facts dt,
+.portal-workspace .course-v2-facts dd {
+  margin: 0;
+}
+
+.readiness-next {
+  margin: var(--sp-5) 0;
+  padding: var(--sp-5);
+  border: 1px solid var(--app-accent-deep);
+  border-radius: var(--r-md);
+}
+
 /* BL-1.4's Action Center, when it sits in a Phase B panel rather than in the
    #761 card whose `.today-decision-surface` rules it was drawn against. */
 .action-panel .action-center h2 {
