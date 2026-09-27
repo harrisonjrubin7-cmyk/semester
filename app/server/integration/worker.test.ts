@@ -168,6 +168,19 @@ describe('found by the Codex review of #779', () => {
     expect(t.canonical_entity_references).toHaveLength(1);
   });
 
+  it('remembers a batch refused for good, so its redelivery is a duplicate rather than a fresh failure', async () => {
+    // Found by the Codex review of #808: releasing the claim on every failed
+    // run meant a batch that can never succeed was re-ingested and re-logged
+    // on every redelivery, for ever.
+    const t = world({ consent: false });
+    const first = await runSync(fakeDb(t), req([SIS_FIXTURES.enrollment]), now);
+    expect(first).toMatchObject({ outcome: 'ran', result: { status: 'failed', errors: [{ category: 'consent_block', retryable: false }] } });
+    expect(t.integration_webhook_events[0]).toMatchObject({ processing_status: 'rejected', processed_at: NOW.toISOString() });
+    const again = await runSync(fakeDb(t), req([SIS_FIXTURES.enrollment]), now);
+    expect(again).toMatchObject({ outcome: 'ran', result: { status: 'duplicate' } });
+    expect(t.integration_sync_errors).toHaveLength(1);
+  });
+
   it('keeps two connections’ records apart when their ids coincide', async () => {
     const t = world();
     t.integration_connections.push({ ...t.integration_connections[0], id: 'c2', public_id: 'conn_sis0000000000000000b' });

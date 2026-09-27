@@ -142,13 +142,20 @@ Each was reproduced as a failing test on main before its fix, then passed with i
 | --- | --- | --- |
 | The service role could not execute `private.public_id`, so every worker run failed opening | `integration-hardening.check.sql` inserts a run and a source record as the service role: `permission denied for function public_id` | `20260927210000_integration_review_fixes.sql` grants it |
 | The worker never read the connector flag | `worker.test.ts`: absent, `off` and `preview` flags all ran | the worker requires `production` for the adapter's flag at the school |
-| A batch that failed to save stayed "processed", so its retry was skipped as a duplicate | `worker.test.ts`: the redelivery ingested nothing | a failed run releases its event claim |
-| Two connections to one product overwrote each other's records on a shared id | `integration-control-plane.check.sql`: the second connection's row hit the unique key; `worker.test.ts`: one row for two connections | identity includes the connection (unique index, `nulls not distinct`); the worker and `lti_record_context` upsert on it |
+| A batch that failed to save stayed "processed", so its retry was skipped as a duplicate | `worker.test.ts`: the redelivery ingested nothing | a run that failed for a retryable reason releases its event claim (narrowed after #808, below) |
+| Two connections to one product overwrote each other's records on a shared id | `integration-control-plane.check.sql`: the second connection's row hit the unique key; `worker.test.ts`: one row for two connections | identity includes the connection (unique index; `nulls not distinct` dropped after #808, below); the worker and `lti_record_context` upsert on it |
 | "No registration hold on record" from a fresh window and no hold data at all | `school-records.test.ts` | the sentence needs fresh hold data that blocks nothing |
 
 The existing school-records test had encoded the fifth as correct and was rewritten. The worker test's in-memory table
 stand-in had an insert that fell through to its read path once a delete branch was added; the type check caught it,
 and the three new tests were re-run against main's worker with the corrected stand-in to confirm they fail there.
+
+## Found by the Codex review of #808, after merge
+
+| Finding | Reproduced by | Fix |
+| --- | --- | --- |
+| Removing two connections that shared a record failed: `on delete set null` left two rows identical under a `nulls not distinct` index | `integration-control-plane.check.sql`: `duplicate key value violates unique constraint "canonical_entity_references_identity"` | `20260927220000_integration_orphan_identity.sql` recreates the index nulls-distinct. Nothing upserts a reference without a connection |
+| Releasing the claim on *every* failed run re-ingested and re-logged a batch refused for good (consent, scope, schema, classification) on every redelivery | `worker.test.ts`: the redelivery ran again and logged a second error | the claim is released only when an error is retryable; otherwise the event is kept as `rejected` and a redelivery is a duplicate |
 
 ## Scheduler — `tick.test.ts`, `registry.test.ts`, `api/integration/tick.test.ts`, `retention.test.ts`
 

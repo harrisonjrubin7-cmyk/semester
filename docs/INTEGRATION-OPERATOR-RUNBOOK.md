@@ -56,7 +56,7 @@ and states only.
 connection is approved and not paused or disconnected, the adapter's connector flag is `production` for the school, and
 no global, school or connection kill switch is engaged. It
 reads only scopes approved and unexpired now, resolves people only through **active** SCIM memberships, records every
-batch as an event (a redelivered key is ingested once; a batch that failed to save releases its key so the retry is
+batch as an event (a redelivered key is ingested once; a batch that failed for a retryable reason, such as a save that did not land, releases its key so the retry is
 ingested), writes references with their display values, and moves the
 connection to `healthy`, `degraded` or `error` by the outcome.
 
