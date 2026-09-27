@@ -65,6 +65,7 @@ export const MODULE_FLAG_ENV = {
   graduation_simulator: 'VITE_GRADUATION_SIMULATOR',
   cost_planner: 'VITE_COST_PLANNER',
   academic_life_balance: 'VITE_ACADEMIC_LIFE_BALANCE',
+  crunch_week_forecast: 'VITE_CRUNCH_WEEK_FORECAST',
   course_detail_v2: 'VITE_COURSE_DETAIL_V2',
   advisor_meeting_mode: 'VITE_ADVISOR_MEETING_MODE',
   study_readiness: 'VITE_STUDY_READINESS',

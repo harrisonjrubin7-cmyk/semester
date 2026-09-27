@@ -58,7 +58,19 @@ export function SourceBadge({
       <span className="sr-only">{SOURCE_MEANING[label]}</span>
       {fresh ? <span>{fresh}</span> : null}
       {onReport ? (
-        <button type="button" className="btn btn-ghost" onClick={onReport}>
+        <button
+          type="button"
+          className="bare"
+          onClick={onReport}
+          style={{
+            width: 'auto',
+            minHeight: 44,
+            fontSize: 'var(--type-xs)',
+            color: 'var(--app-accent-deep)',
+            textDecoration: 'underline',
+            textUnderlineOffset: 3,
+          }}
+        >
           Report incorrect information
         </button>
       ) : null}
