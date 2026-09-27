@@ -1,0 +1,94 @@
+import { readFileSync } from 'node:fs';
+import { describe, expect, it } from 'vitest';
+import {
+  SOURCE_LABELS,
+  SOURCE_MEANING,
+  SOURCE_TEXT,
+  freshnessLine,
+  isSourceLabel,
+  sourceLine,
+  wantsAttention,
+} from './source';
+
+/**
+ * One set of source labels, the same on the device and in the database.
+ *
+ * The migration is read rather than restated: a list typed out a second time
+ * here would agree with this file by construction and prove nothing.
+ */
+const MIGRATION = new URL(
+  '../../../supabase/migrations/20260926150000_expansion_roles_and_features.sql',
+  import.meta.url,
+);
+
+function enumsIn(sql: string): string[][] {
+  const found: string[][] = [];
+  for (const m of sql.matchAll(/source_label\s+in\s*\(([^)]*)\)/g)) {
+    found.push([...m[1].matchAll(/'([a-z_]+)'/g)].map((x) => x[1]));
+  }
+  return found;
+}
+
+describe('the labels are the database’s labels', () => {
+  const sql = readFileSync(MIGRATION, 'utf8');
+  const enums = enumsIn(sql);
+
+  it('finds the check constraints it compares against', () => {
+    // Control: a regex that matched nothing would make the next test vacuous.
+    expect(enums.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('matches every five-value source constraint exactly', () => {
+    const full = enums.filter((e) => e.length === 5);
+    expect(full.length).toBeGreaterThanOrEqual(2);
+    for (const e of full) expect([...e].sort()).toEqual([...SOURCE_LABELS].sort());
+  });
+
+  it('never allows a label in the database that the app cannot name', () => {
+    for (const e of enums) for (const v of e) expect(isSourceLabel(v), v).toBe(true);
+  });
+});
+
+describe('what a student reads', () => {
+  it('names every label, and explains every label', () => {
+    for (const l of SOURCE_LABELS) {
+      expect(SOURCE_TEXT[l].length, l).toBeGreaterThan(0);
+      expect(SOURCE_MEANING[l].length, l).toBeGreaterThan(0);
+    }
+  });
+
+  it('only says "verified" for what the institution verified', () => {
+    for (const l of SOURCE_LABELS) {
+      const says = /verified/i.test(SOURCE_TEXT[l]);
+      expect(says, l).toBe(l === 'institution_verified');
+    }
+  });
+
+  it('draws the eye to estimates and doubtful figures, not to official ones', () => {
+    expect(wantsAttention('estimated')).toBe(true);
+    expect(wantsAttention('needs_review')).toBe(true);
+    expect(wantsAttention('institution_verified')).toBe(false);
+  });
+
+  it('refuses anything that is not one of the five', () => {
+    for (const v of ['verified', 'Imported', '', null, 3]) expect(isSourceLabel(v)).toBe(false);
+  });
+});
+
+describe('freshness', () => {
+  const now = Date.UTC(2026, 8, 27, 12);
+
+  it('says how long ago', () => {
+    expect(freshnessLine(now - 3 * 86_400_000, now)).toBe('Updated 3 days ago');
+    expect(freshnessLine(now - 5 * 60_000, now)).toBe('Updated 5 minutes ago');
+  });
+
+  it('says nothing when the time is unknown, rather than "just now"', () => {
+    for (const at of [null, undefined, 0, Number.NaN]) expect(freshnessLine(at, now)).toBeNull();
+  });
+
+  it('joins label and freshness into one line', () => {
+    expect(sourceLine('imported', now - 86_400_000, now)).toBe('Imported · Updated yesterday');
+    expect(sourceLine('estimated', null, now)).toBe('Estimated');
+  });
+});
