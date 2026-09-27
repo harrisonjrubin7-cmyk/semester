@@ -8340,3 +8340,238 @@ button.adband-bar {
     display: grid;
   }
 }
+
+/* ── Integration dashboard ───────────────────────────────────────────────
+ * Status is a glyph and a word; the border only repeats it, so nothing here
+ * is carried by colour alone. Tables scroll inside their own box so the page
+ * never scrolls sideways on a phone. */
+.integration-dashboard {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sp-5);
+  margin-block: var(--sp-6);
+}
+
+/* A grid item's minimum is its content, so one nowrap table would widen the
+   whole section past a phone's edge. Zero lets the table's own box scroll. */
+.integration-dashboard > *,
+.integration-map > * {
+  min-width: 0;
+}
+
+.integration-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  border-bottom: 1px solid var(--app-line);
+}
+
+.integration-tab {
+  padding: var(--sp-3) var(--sp-4);
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--app-dim);
+  font-size: var(--type-sm);
+}
+
+.integration-tab.is-on {
+  border-bottom-color: var(--app-accent);
+  color: var(--app-fg);
+}
+
+.integration-map {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sp-4);
+}
+
+.integration-layer {
+  display: grid;
+  gap: var(--sp-2);
+  padding: var(--sp-4);
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-md);
+  background: var(--app-panel);
+  font-size: var(--type-sm);
+}
+
+.integration-layer span,
+.integration-node-meta,
+.integration-panel p {
+  color: var(--app-dim);
+  font-size: var(--type-sm);
+  line-height: var(--leading-normal);
+}
+
+.integration-layer-gateway {
+  border-style: dashed;
+}
+
+.integration-nodes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: var(--sp-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.integration-node {
+  display: grid;
+  gap: var(--sp-2);
+  width: 100%;
+  min-height: 44px;
+  padding: var(--sp-4);
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-md);
+  background: var(--app-bg);
+  color: var(--app-fg);
+  text-align: start;
+}
+
+.integration-node.is-on {
+  border-color: var(--app-accent);
+  background: var(--app-accent-wash);
+}
+
+.integration-node-label {
+  font-weight: 600;
+}
+
+.integration-status {
+  font-size: var(--type-sm);
+}
+
+.integration-status.is-warn {
+  color: var(--app-warn);
+}
+
+.integration-panel {
+  display: grid;
+  gap: var(--sp-3);
+  margin-top: var(--sp-5);
+}
+
+.integration-detail {
+  padding: var(--sp-4);
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-md);
+}
+
+.integration-detail h4 {
+  margin: 0 0 var(--sp-3);
+}
+
+.integration-detail dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--sp-2) var(--sp-4);
+  margin: 0 0 var(--sp-4);
+  font-size: var(--type-sm);
+}
+
+.integration-detail dt {
+  color: var(--app-dim);
+}
+
+.integration-detail dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.integration-confirm {
+  display: grid;
+  gap: var(--sp-3);
+}
+
+.integration-confirm label {
+  display: grid;
+  gap: var(--sp-2);
+  font-size: var(--type-sm);
+}
+
+.integration-table-wrap {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.integration-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--type-sm);
+}
+
+.integration-table th,
+.integration-table td {
+  padding: var(--sp-2) var(--sp-3);
+  border-bottom: 1px solid var(--app-line-soft);
+  text-align: start;
+  vertical-align: top;
+  white-space: nowrap;
+}
+
+.integration-table thead th {
+  color: var(--app-dim);
+  font-weight: 500;
+}
+
+.integration-dead-letters {
+  display: grid;
+  gap: var(--sp-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--type-sm);
+}
+
+@media (max-width: 560px) {
+  .integration-detail dl {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── From your school (Today) and what it shares (Privacy) ─────────────── */
+.school-records {
+  display: grid;
+  gap: var(--sp-3);
+}
+
+.school-readiness {
+  margin: 0;
+  font-weight: 600;
+}
+
+.school-fact {
+  display: grid;
+  gap: var(--sp-1);
+}
+
+.school-fact-meta,
+.school-data-lede {
+  color: var(--app-dim);
+  font-size: var(--type-sm);
+  line-height: var(--leading-normal);
+}
+
+.school-data {
+  display: grid;
+  gap: var(--sp-3);
+  margin-block: var(--sp-6);
+}
+
+.school-data-list {
+  display: grid;
+  gap: var(--sp-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  line-height: var(--leading-normal);
+}
+
+.school-twostep {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin-inline-start: var(--sp-2);
+}
