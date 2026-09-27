@@ -1,7 +1,7 @@
 import { useState, type CSSProperties } from 'react';
 import { faintLine, secondLine } from '../lib/dim';
 import { useNow, useStore } from '../state/store';
-import { TOUCH, WIDE, useMedia } from '../lib/media';
+import { TOUCH, WIDE, useMedia, useMedium } from '../lib/media';
 import { chromeFor } from '../lib/chrome';
 import { useKeyboardInset } from '../lib/keyboard';
 import { useConversation } from './converse';
@@ -68,7 +68,8 @@ export function Chat() {
    * has none of its own, and pure clutter beside a tab bar that is already
    * showing five of them.
    */
-  const chrome = chromeFor(state.nav, state.screen, wide);
+  const medium = useMedium();
+  const chrome = chromeFor(state.nav, state.screen, wide, medium);
   /*
    * And how much of the window the keyboard is standing on.
    *

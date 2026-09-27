@@ -39,7 +39,7 @@ with `tiers.test.ts` checking the two agree:
 | Window class | Width | Semester tier | What it draws |
 | --- | --- | --- | --- |
 | compact | < 600px | phone | Tab bar at the foot; in a desktop window, the 402px column the app was drawn at; full width on a touch device |
-| medium | 600–839px | phone | Still the tab bar (the spec allows "bottom navigation or collapsible rail"); the column widens to 560px with 20px gutters |
+| medium | 600–839px | phone | The rail collapsed to icons (72px) in the tab bar's place, opening out over the content with labels and the quieter rows; standalone column 560px, 20px gutters |
 | expanded | 840–1199px | tablet | Rail beside the column; touch sizes kept; reading measure capped at 760px |
 | large | 1200–1599px | desktop | Wide rail, 880px measure, 1240px canvas for grids |
 | extra-large | ≥ 1600px | desktop | Same layout, measure 960px, canvas 1440px, rail 272px |
@@ -58,14 +58,14 @@ devices: 760 was the narrowest iPad held upright, so every portrait iPad got
 the rail. The spec asks for the window, not the device, and the product
 decision was to adopt its classes. What moved:
 
-- **An iPad held upright (744–834px) now has the tab bar**, not the rail. It
-  is medium, which is where the spec puts a portrait tablet. On its side
-  (1024–1194px) it is expanded and has the rail.
+- **An iPad held upright (744–834px) is medium**: the rail collapsed to its
+  icons, opening out on demand. On its side (1024–1194px) it is expanded and
+  has the full rail.
 - **A 13-inch iPad in landscape (1194px) is now the tablet layout**, not the
   desktop one; the desktop layout starts at 1200.
-- **A desktop window between 600 and 839px** now draws a 560px column with
-  the tab bar, rather than a 402px phone column (below 760) or the rail
-  (760–839).
+- **A desktop window between 600 and 839px** now draws the collapsed rail,
+  rather than a 402px phone column with a tab bar (below 760) or the full
+  rail (760–839).
 - Nothing changed below 600px or at 1200px and up.
 
 The same argument covers the **height** rule. The spec says to use width and

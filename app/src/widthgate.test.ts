@@ -27,7 +27,8 @@ import { describe, expect, it } from 'vitest';
  * So this is the structural half, in the manner of `rootunmount.test.ts`: it
  * cannot tell whether a width check is safe, but it can make sure nobody adds
  * one without writing down, here, what the narrow window gets instead. A new
- * file that reads `WIDE`, `DESKTOP`, `HANDHELD` or `useTier()` fails until it
+ * file that reads `WIDE`, `DESKTOP`, `HANDHELD`, `MEDIUM`, `useTier()` or
+ * `useMedium()` fails until it
  * has a row; a row whose file has stopped asking fails too, so the table does
  * not go stale.
  *
@@ -36,11 +37,11 @@ import { describe, expect, it } from 'vitest';
  */
 const ASKS: Record<string, string> = {
   'App.tsx':
-    'Picks the frame: tab bar under a phone, rail beside a tablet or desktop. Every screen is reachable from both — lib/chrome.ts and chrome.test.ts hold that rule.',
+    'Picks the frame: tab bar under a compact window, the rail collapsed to icons at medium (every tab still there, the quieter rows one press away when it opens), the full rail from 840. Every screen is reachable from all three — lib/chrome.ts and chrome.test.ts hold that rule; mediumrail.test.tsx holds the collapsed rail.',
   'ai/Assistant.tsx':
     'Where the assistant button sits (clear of the tab bar on a phone, a corner on a wide window). The assistant itself opens at every width.',
   'ai/Chat.tsx':
-    'Conversation history beside the chat when wide; behind a History button as an overlay (ThreadsOver) when narrow.',
+    'Conversation history beside the chat when wide; behind a History button as an overlay (ThreadsOver) when narrow. Asks chromeFor with the same medium flag as App, so both agree whether a tab bar is drawn.',
   'ai/Panel.tsx':
     'Padding, and a drag handle to expand the sheet that only a narrow sheet has. Same panel, same controls.',
   'components/Adopting.tsx':
@@ -66,7 +67,7 @@ const ASKS: Record<string, string> = {
 };
 
 const ROOT = new URL('.', import.meta.url).pathname;
-const ASK = /useTier\(|useMedia\((WIDE|DESKTOP|HANDHELD)\)/;
+const ASK = /useTier\(|useMedium\(|useMedia\((WIDE|DESKTOP|HANDHELD|MEDIUM)\)/;
 
 function sources(dir: string): string[] {
   const out: string[] = [];

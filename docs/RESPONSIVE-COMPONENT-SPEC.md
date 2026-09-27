@@ -13,7 +13,8 @@ and asserts that no two navigations are ever drawn together.
 
 | Chrome | phone | tablet / desktop |
 | --- | --- | --- |
-| `tabs`: bar at the foot | yes, for tab and feed navigations (compact and medium, under 840px) | no; becomes the rail |
+| `tabs`: bar at the foot | yes, for the tab navigation — compact only, under 600px | no; becomes the rail |
+| `railCollapsed`: the rail as icons, opening out | medium (600–839px), wherever the rail would be drawn | no; the full rail |
 | `rail`: the same destinations down the side | no | yes |
 | `shelves`: two rows of pills | at every width when chosen | at every width when chosen |
 | `desk`: tab strip, one search bar, launcher | at every width when chosen | same, plus the `sidebar` |

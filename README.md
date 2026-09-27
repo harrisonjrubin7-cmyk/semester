@@ -1554,11 +1554,14 @@ expanded to 1199, large from 1200, extra-large from 1600 — written once in
 `app/src/styles/app.css` because a stylesheet cannot import a constant;
 `lib/tiers.test.ts` fails if the two copies ever disagree.
 
-- **Phone** (under 840px) — the tab bar under the thumb. Under 600 (compact)
-  it is the app as drawn, with an 18px gutter; from 600 (medium) the column
-  widens to 560 in a desktop window, with 20px gutters. An iPad held upright
-  (744–834pt) is medium and has the tab bar, as the contract puts a portrait
-  tablet; on a touch device the column fills the screen at full height.
+- **Phone** (under 600px, compact) — as drawn: one column, the tab bar under
+  the thumb, an 18px gutter.
+- **Medium** (600–839px) — the rail collapsed to its icons, 72px, in the tab
+  bar's place; a button at its head opens it out over the content with its
+  labels and the quieter rows (Ask, Add a course, Account, Connect,
+  Settings), and it closes on a choice, on Escape, or on the scrim. An iPad
+  held upright (744–834pt) is here. Open is never stored, so rotating or
+  resizing cannot change a preference.
 - **Tablet** (840–1199px, expanded) — the tab bar unrolls into a rail beside
   the content, for an iPad on its side and any window that wide; Split View
   follows the window live. The touch sizes do not change: the finger holding

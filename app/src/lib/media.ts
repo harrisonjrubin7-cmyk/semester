@@ -42,11 +42,13 @@ export function useMedia(query: string): boolean {
  * window, not the device, and puts a portrait tablet in medium, where the
  * tab bar stays. So:
  *
- *   phone    < 840      the tab bar under the thumb.
- *              < 600    compact: the phone as drawn — in a desktop window,
- *                       the 402px column it was drawn at.
- *              600–839  medium: still the tab bar, but the column widens to
- *                       560 rather than staying a phone held up in a window.
+ *   phone    < 840      no full rail.
+ *              < 600    compact: the phone as drawn, the tab bar under the
+ *                       thumb — in a desktop window, the 402px column it was
+ *                       drawn at.
+ *              600–839  medium: the rail collapsed to its icons in the tab
+ *                       bar's place, opening out over the content on demand
+ *                       (`useMedium`, `chromeFor`'s `medium`).
  *   tablet   840–1199   expanded: the rail beside the column; touch sizes kept.
  *   desktop  ≥ 1200     large: a window — wide rail, a measured reading
  *                       column, and grids given room to be grids.
@@ -119,6 +121,9 @@ export const WIDE = `(min-width: ${TABLET_AT}px)`;
  */
 export const DESKTOP = `(min-width: ${DESKTOP_AT}px)`;
 
+/** The medium window class and up. The medium rail reads it through `useMedium`. */
+export const MEDIUM = `(min-width: ${MEDIUM_AT}px)`;
+
 /**
  * A phone on its side — the one device width gets wrong.
  *
@@ -168,6 +173,23 @@ export function tierFor(width: number, handheld = false): Tier {
  * re-render sixty screens on every frame. Turning a phone crosses one of them
  * too, so the layout follows a rotation without anything listening for one.
  */
+/**
+ * Whether this window is medium — 600 to 839px — and so draws the rail
+ * collapsed to its icons in the tab bar's place (`chromeFor`'s `medium`).
+ *
+ * Not a phone on its side, which is a phone at any width (`HANDHELD`): the
+ * same 700px that is a desktop window or an iPad mini upright is also an
+ * iPhone lying down, and the rail was drawn into its 430px of height once
+ * before. Every caller that asks `chromeFor` must pass this, or two parts of
+ * the shell disagree about whether there is a tab bar.
+ */
+export function useMedium(): boolean {
+  const medium = useMedia(MEDIUM);
+  const wide = useMedia(WIDE);
+  const handheld = useMedia(HANDHELD);
+  return medium && !wide && !handheld;
+}
+
 export function useTier(): Tier {
   const desktop = useMedia(DESKTOP);
   const tablet = useMedia(WIDE);

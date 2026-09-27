@@ -573,18 +573,19 @@ a:hover {
   --cell-aspect: 1;
 }
 
-/* Medium. Still the tab bar — the contract puts a portrait tablet and a
-   narrow window here, and the rail waits for 840 — but no longer a phone held
-   up in a window: a desktop browser at 700px drew the 402px artboard with
-   150px of ground down each side. The column widens to the tablet's 560 and
-   the gutters to its 20. On a touch device the column already fills the
-   screen below the rail (the narrow-and-touch block below), so this changes
-   the window and not the phone. */
+/* Medium. The rail, collapsed to its icons, in the tab bar's place — the
+   contract's "collapsible rail" — and no longer a phone held up in a window:
+   a desktop browser at 700px drew the 402px artboard with 150px of ground
+   down each side. The rail's column is 72px; the standalone column (a drill,
+   onboarding) widens to the tablet's 560 and the gutters to its 20. A phone
+   on its side is set back to the phone's values by the handheld block
+   further down, and `useMedium` keeps the rail off it too. */
 @media (min-width: 600px) {
   :root {
     --page-pad: 20px;
     --chrome-pad: 20px;
     --device-max: 560px;
+    --rail-w: 72px;
   }
 }
 
@@ -789,6 +790,74 @@ a:hover {
 }
 .rail .rail-item:hover {
   color: var(--app-accent-bright);
+}
+
+/* ── The collapsed rail (medium) ──────────────────────────────────────────
+   Icons only, centred in the 72px column, with the words still in the
+   accessibility tree: clipped rather than `display: none`, which would leave
+   each button with no name at all. Opened, the same rail floats over the
+   screen at the sidebar's width, a spacer keeps its column so the pane does
+   not move, and the scrim behind it closes it. No transition: it is a
+   navigation, and it should be where the press put it. */
+.rail-head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: 0 var(--sp-4) var(--sp-5);
+}
+.rail-head .rail-mark {
+  padding: 0;
+}
+/* Under `.rail` for the weight: `.bare`, which the button also wears, sets
+   `width: 100%` later in the sheet and would otherwise push the wordmark out
+   of the head. */
+.rail .rail-toggle {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  color: var(--app-dim);
+  border-radius: var(--r-md);
+}
+.rail .rail-toggle:hover {
+  color: var(--app-accent-bright);
+}
+.rail[data-collapsed]:not([data-open]) .rail-head {
+  justify-content: center;
+  padding-inline: 0;
+}
+.rail[data-collapsed]:not([data-open]) .rail-item {
+  justify-content: center;
+  margin-inline: var(--sp-2);
+  padding-inline: 0;
+  min-height: 44px;
+}
+.rail[data-collapsed]:not([data-open]) .rail-item span {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.rail[data-open] {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 248px;
+  z-index: 45;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+}
+.rail-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 44;
+  border: 0;
+  padding: 0;
+  background: rgba(0, 0, 0, 0.35);
 }
 /*
  * The second group in the sidebar — Ask Claude, Add a course, Account,
