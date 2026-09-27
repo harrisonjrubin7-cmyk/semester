@@ -557,7 +557,7 @@ export function calmOf(id: string | undefined): string {
  * Presentation only, and that is a rule rather than a description: a mode
  * changes what is shown first and what waits behind a disclosure, never what
  * the student is allowed to do. Nothing that checks a permission or a
- * capability reads this. `components/unity/modes.test.tsx` holds that.
+ * capability reads this. `lib/unity.test.ts` holds that.
  *
  * `access` is not a fifth palette. It turns on the accessibility settings the
  * app already has — larger text, comfortable spacing, less motion — through
