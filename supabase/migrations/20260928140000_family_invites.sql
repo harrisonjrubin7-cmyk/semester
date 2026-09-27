@@ -351,6 +351,9 @@ comment on function public.claim_family_invite(text) is
 -- a delta — CREATE OR REPLACE replaces the whole body — so it carries every
 -- row of 20260925103000_support_access.sql, plus `family_invites`.
 --
+-- It carries `help_requests` (20260927230000_help_requests.sql, on main),
+-- because this definition is newer and replaces that one whole.
+--
 -- **Merge order with the feature-expansion work.** Its 20260927181500 (#780)
 -- adds `graduation_scenarios` to this same function and asked every later
 -- redefinition to keep that row. It is not here because that table does not
@@ -390,6 +393,7 @@ begin
       ('public.organization_members', 'user_id'),
       ('public.support_access_grant', 'student_id'),
       ('public.support_access_grant', 'supporter_id'),
+      ('public.help_requests',        'student_id'),
       ('public.family_invites',       'student_id')
     ) as x(rel, col)
   loop

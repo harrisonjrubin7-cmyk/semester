@@ -294,7 +294,8 @@ comment on function public.read_family_share() is
 
 -- ── A shared copy is a used account ──────────────────────────────────────
 --
--- The complete latest definition, every row of 20260928140000 plus the two
+-- The complete latest definition, every row of 20260928140000 (help_requests
+-- included) plus the two
 -- tables above. The note there about `graduation_scenarios` (#780) holds
 -- here too: whichever lands second carries both.
 
@@ -331,6 +332,7 @@ begin
       ('public.organization_members', 'user_id'),
       ('public.support_access_grant', 'student_id'),
       ('public.support_access_grant', 'supporter_id'),
+      ('public.help_requests',        'student_id'),
       ('public.family_invites',       'student_id'),
       ('public.family_shared_items',  'student_id'),
       ('public.family_access_events', 'student_id')
