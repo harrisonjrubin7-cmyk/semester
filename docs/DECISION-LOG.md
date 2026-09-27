@@ -350,12 +350,15 @@ dropping either outright, which loses tested work the other lacks.
 - `ltiaccount.test.ts` requires every table the app writes to be visible to
   `lti_account_untouched`, so account linking never retires an account that
   holds work.
-- `20260927180000_untouched_graduation_drafts.sql` redefines that function
+- `20260927181500_untouched_graduation_drafts.sql` redefines that function
   with the table added. It changes no table and no data.
 - It has been checked on a throwaway Postgres 16 with all migrations and the
   expansion, deletion and three LTI suites.
 - It is **not applied**. Merging this branch to `main` would apply it through
   Supabase Branching, so that merge needs approval.
+- **Renumbered on 27 Sep 2026** from `20260927180000`: two other branches
+  (`help_requests`, `lti_integration_binding`) claim that version, and
+  `migrationorder.test.ts` allows each version once.
 - **Alternative:** keep drafts device-only and drop both the adaptor and the
   migration. The simulator still works, but drafts do not follow a student to
   a new device.
