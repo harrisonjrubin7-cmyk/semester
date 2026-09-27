@@ -7,7 +7,7 @@ import { Rework } from '../components/Rework';
 import { readMaterial, readShots } from '../lib/claude';
 import { DIMMED_ROW } from '../lib/dim';
 import { configured, provider } from '../lib/assistant';
-import { extractText } from '../lib/extract';
+import { extractText, unreadLine } from '../lib/extract';
 import { classify, guess, KIND_LABEL, SURE, type Verdict as Told } from '../lib/classify';
 import { alreadyAdded, hashOf, materialHash, type Intake } from '../lib/intake';
 import { harvest, type Where } from '../lib/harvest';
@@ -606,6 +606,8 @@ export function AddMaterial({
     const got = await gather(list);
     const added: FileMeta[] = [];
     const unread: string[] = [];
+    // Files that were read, but not all of: pages that were pictures. See `unreadLine`.
+    const partly: string[] = [];
     const readable: Intake[] = [];
 
     for (const piece of got.files) {
@@ -631,6 +633,7 @@ export function AddMaterial({
       if (IMAGE.test(piece.name)) continue;
       try {
         const out = await extractText(piece.file);
+        if (unreadLine(out)) partly.push(unreadLine(out));
         if (out.text.trim()) {
           setText((t) => (t ? `${t}\n\n${out.text}` : out.text));
           readable.push({
@@ -669,6 +672,7 @@ export function AddMaterial({
         ? `Left out: ${got.skipped.map((sk) => `${sk.name} (${sk.why})`).join('; ')}.`
         : '',
       unread.length > 0 ? `Attached but not read: ${unread.join('; ')}` : '',
+      ...partly,
     ].filter(Boolean);
     if (notes.length > 0) setReadNote(notes.join('\n'));
     setBusy(false);
