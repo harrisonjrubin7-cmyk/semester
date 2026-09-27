@@ -65,7 +65,7 @@ export type Status = 'not_started' | 'in_progress' | 'done' | 'blocked';
 export function planProblems(tasks: readonly Task[]): string[] {
   const out: string[] = [];
   const byId = new Map(tasks.map((t) => [t.id, t]));
-  if (byId.size !== tasks.length) out.push('a task id is used twice');
+  if (byId.size !== tasks.length) out.push('an id is used twice');
   for (const t of tasks) {
     if (!t.evidence.trim()) out.push(`${t.id}: no evidence named`);
     for (const d of t.after) {
