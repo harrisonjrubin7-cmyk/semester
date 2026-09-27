@@ -21,7 +21,7 @@ import { Export } from '../../screens/Export';
 import { Snapshots } from '../Snapshots';
 import { Toolkit } from '../toolkit/Toolkit';
 import { toolkitFlags } from '../../lib/toolkit/flags';
-import { TOOLKIT_KEY } from '../toolkit/store';
+import { toolkitKey } from '../toolkit/store';
 import { TravelPack } from '../TravelPack';
 import { Import } from '../../screens/Import';
 import * as supportAccess from '../../lib/support-access';
@@ -392,7 +392,7 @@ describe('Toolkit: the assignment workspace and a library that cannot save', () 
     const created = vi.fn(() => 'blob:test');
     Object.assign(URL, { createObjectURL: created, revokeObjectURL: () => {} });
     // Bytes this device cannot read: the library refuses to write over them.
-    localStorage.setItem(TOOLKIT_KEY, '{not json');
+    localStorage.setItem(toolkitKey(), '{not json');
     await show();
     const alert = host.querySelector('.state-error')!;
     expect(alert.textContent).toContain('Could not save on this device');
