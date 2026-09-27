@@ -124,7 +124,7 @@ end $$;
 do $$
 declare
   /*
-   * The allowlist. Thirty, and each is a deliberate entry point:
+   * The allowlist. Forty-seven, and each is a deliberate entry point:
    *   make_referral_code  — mints this account's own code
    *   claim_referral      — records that this account arrived on somebody's
    *   referral_standing   — two integers and a boolean about the caller
@@ -178,6 +178,35 @@ declare
     -- function is the only way in and has to be callable by a signed-in
     -- account. See 20260921170000_schools.sql.
     'claim_school(want text)',
+
+    /*
+     * Community (20260927170000_community.sql). Seventeen, because every write
+     * to a community table goes through one: members never learn another
+     * member's account id, so posting, blocking and reporting have to resolve
+     * it server-side; triage runs inside the report; and decisions and
+     * appeals check `community:review`, seniority and reviewer independence
+     * before they touch anything; `community_reviewer_standing` and
+     * `my_community_refs` answer only for the caller, and
+     * `forget_my_community` removes only the caller's rows. `community.check.sql` attempts each refusal
+     * as the account that should be refused.
+     */
+    'appeal_community_decision(want_post uuid)',
+    'block_community_author(want_post uuid)',
+    'community_reviewer_standing()',
+    'community_session_counts(want_community uuid)',
+    'create_community(want_kind text, want_name text, want_purpose text, want_integrity_policy text)',
+    'create_community_post(want_community uuid, want_body text, want_confirmed_own boolean)',
+    'create_study_session(want_community uuid, want_venue uuid, want_title text, want_starts timestamp with time zone, want_ends timestamp with time zone, want_capacity integer)',
+    'decide_community_appeal(want_case uuid, want_uphold boolean, want_reason text)',
+    'decide_community_case(want_case uuid, want_action text, want_reason text)',
+    'delete_community_post(want_post uuid)',
+    'edit_community_post(want_post uuid, want_body text, want_confirmed_own boolean)',
+    'forget_my_community()',
+    'join_community(want_community uuid)',
+    'join_study_session(want_session uuid)',
+    'my_community_notices()',
+    'my_community_refs()',
+    'report_community_post(want_post uuid, want_category text, want_imminent boolean, want_details text)',
 
     /*
      * The six ways into `organization_members`, and the reason there are six
@@ -319,7 +348,7 @@ begin
   if missing is not null then
     raise exception 'FAILED: the allowlist names %, which a signed-in account cannot call', missing;
   end if;
-  raise notice 'ok  and can call all thirty that it should';
+  raise notice 'ok  and can call all forty-seven that it should';
 end $$;
 
 -- ── The gate's own switch, named because it is the one that was open ──────
