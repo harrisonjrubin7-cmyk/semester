@@ -756,3 +756,37 @@ session's range.)
 - **No export.** The Operations studio's `suppress()` (complementary
   suppression) is not needed here, because nothing publishes a total that a
   hidden cell could be subtracted from.
+
+## D-054 · Semester Wrapped counts outcomes the student chose, on the device
+
+**Decided 27 Sep 2026 (Phase L).**
+
+- **Worked out on the device each time it is shown, from the student's own
+  records.** Nothing is stored and nothing is sent. The sources are:
+  - deadlines ticked (`done` and `tickedAt`);
+  - study sessions finished (`sessions[].doneAt`);
+  - Action Center steps completed;
+  - courses on their own record with a grade for that term;
+  - saved schedules;
+  - advisor agendas with a date in the term;
+  - portfolio projects and finished résumé bullets (Phase I);
+  - career events saved.
+- **Never app usage.** Screens visited, recent screens, `countScreens` and
+  `lib/usage.ts` counts are not inputs (D-005, rule 7). A test passes usage
+  in and gets the same recap. Another sets the component's usage state high
+  and gets the same card.
+- **Nothing from the institution.** No office action, demand count, seat or
+  catalog figure is read.
+- **The term** runs from the first of its season's month to the first of the
+  next season's. Fall is 1 Aug to 30 Nov. The card states the span.
+- **How it speaks:**
+  - a zero is left out;
+  - a quiet term is "fine";
+  - no streak, rank, comparison or "could have";
+  - a test checks every sentence it can produce.
+- **Export, image and share each confirm first**, showing the exact text and
+  where it goes. The text holds counts and the term only — no name, course,
+  agenda text or date.
+  - The image is drawn on a canvas; where there is none, the card says so and
+    saves nothing.
+  - Share appears only where the device has a share sheet.
