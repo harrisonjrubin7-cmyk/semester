@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { Screen } from '../../lib/types';
 import { download } from '../../lib/deliver';
+import { safeName } from '../../lib/export';
 import { show } from '../../lib/stats';
 import { gate, TIERS, type Tier } from '../../lib/toolkit/classification';
 import {
@@ -8,10 +9,12 @@ import {
   altText,
   clean,
   describeColumn,
+  fits,
   importCsv,
   interpretationGaps,
   methodsFor,
   methodsWriteUp,
+  toCsv,
   type Comparison,
   type DataProject,
   type Interpretation,
@@ -59,7 +62,18 @@ export function DataPanel({ library, uploadOn, layers, now, onOpen }: { library:
       setMessage(`${r.reason}${r.route ? ` ${r.route}` : ''}`);
       return;
     }
-    library.update((all) => [r.project, ...all]);
+    // Measured as it will be stored, so the refusal names the real reason
+    // instead of surfacing as a generic write failure.
+    if (!fits([r.project, ...projects])) {
+      setMessage('Not enough room on this device for another dataset. Delete one you have finished with, or import a smaller extract.');
+      return;
+    }
+    // A write the library refused has not happened. Saying "Imported" anyway
+    // is how a student works an evening on data that is gone on reload.
+    if (!library.update((all) => [r.project, ...all])) {
+      setMessage('The dataset could not be saved on this device, so it has not been imported. See the notice above.');
+      return;
+    }
     setOpenId(r.project.id);
     setPaste('');
     setMessage(`Imported ${r.project.name}. The original is kept exactly as imported.`);
@@ -103,6 +117,14 @@ export function DataPanel({ library, uploadOn, layers, now, onOpen }: { library:
 
   return (
     <>
+      {library.error ? (
+        <Notice alert>
+          {library.error}{' '}
+          <button onClick={() => download({ name: 'Semester data studio recovery.json', body: library.recovery(), mime: 'application/json' })}>
+            Download recovery copy
+          </button>
+        </Notice>
+      ) : null}
       <section className="portal-panel" aria-labelledby="ds-import">
         <h3 id="ds-import">1. Import</h3>
         {!uploadOn ? (
@@ -190,6 +212,10 @@ function ProjectView({
   const table = clean(project);
   const d = col ? describeColumn(table, col) : null;
   const gaps = interpretationGaps(project);
+  // The tier was only asked about storing at import. Leaving the device is a
+  // separate question, and an education record's answer is no.
+  const leaving = gate(project.tier, 'export', false);
+  const file = safeName(project.name, 'dataset');
   return (
     <>
       <section className="portal-panel" aria-labelledby="ds-dict">
@@ -364,13 +390,22 @@ function ProjectView({
             ))}
           </ul>
         )}
+        {!leaving.allowed && (
+          <p className="portal-warning" role="status">
+            {leaving.reason} {'route' in leaving ? leaving.route : ''}
+          </p>
+        )}
         <div className="portal-actions">
-          <button disabled={gaps.length > 0} onClick={() => download({ name: `${project.name} — methods and results.txt`, mime: 'text/plain', body: methodsWriteUp(project) })}>
-            5. Export methods and results
-          </button>
-          <button onClick={() => download({ name: `${project.name} — cleaned.csv`, mime: 'text/csv', body: [table.headers, ...table.rows].map((r) => r.map((c) => (/[",\n]/.test(c) ? `"${c.replace(/"/g, '""')}"` : c)).join(',')).join('\n') })}>
-            Export cleaned CSV
-          </button>
+          {leaving.allowed && (
+            <>
+              <button disabled={gaps.length > 0} onClick={() => download({ name: `${file}-methods-and-results.txt`, mime: 'text/plain', body: methodsWriteUp(project) })}>
+                5. Export methods and results
+              </button>
+              <button onClick={() => download({ name: `${file}-cleaned.csv`, mime: 'text/csv', body: toCsv(table) })}>
+                Export cleaned CSV
+              </button>
+            </>
+          )}
           <button onClick={onDelete}>Delete dataset</button>
         </div>
       </section>

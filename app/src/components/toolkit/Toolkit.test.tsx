@@ -1,10 +1,11 @@
 // @vitest-environment jsdom
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { afterEach, beforeEach, expect, it } from 'vitest';
+import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { toolkitFlags } from '../../lib/toolkit/flags';
 import type { Screen } from '../../lib/types';
-import { TOOLKIT_KEY } from './store';
+import { DATA_BUDGET, MAX_RAW } from '../../lib/toolkit/data';
+import { TOOLKIT_DATA_KEY, TOOLKIT_KEY } from './store';
 import { Toolkit, type ToolkitCourse } from './Toolkit';
 
 /**
@@ -39,6 +40,7 @@ beforeEach(() => {
   root = createRoot(host);
 });
 afterEach(() => {
+  vi.restoreAllMocks();
   act(() => root.unmount());
   host.remove();
   localStorage.clear();
@@ -161,4 +163,48 @@ it('shows a restricted workbench as needing review, not as a working tool', () =
   const dna = [...host.querySelectorAll('.toolkit-catalog li')].find((li) => li.textContent?.includes('DNA Learning Lab'))!;
   expect(dna.textContent).toContain('Needs review before use');
   expect(dna.querySelector('button')).toBeNull();
+});
+
+const importPasted = (tierIndex: number, csv: string) => {
+  tab('Data Studio');
+  act(() => ([...host.querySelectorAll('input[type="radio"]')][tierIndex] as HTMLInputElement).click());
+  type([...host.querySelectorAll('label')].find((l) => l.textContent?.startsWith('CSV text'))!.querySelector('textarea')!, csv);
+  click('Import pasted data');
+};
+
+it('keeps an education record on the device: no export, and the reason why', () => {
+  mount();
+  importPasted(3, 'student,grade\nAda,91\n');
+  expect(host.textContent).toContain('Imported');
+  expect([...host.querySelectorAll('button')].some((b) => /Export cleaned CSV|Export methods/.test(b.textContent ?? ''))).toBe(false);
+  expect(host.textContent).toContain('Education records are blocked from AI services, sharing and external tools.');
+});
+
+it('offers export for the student’s own data', () => {
+  mount();
+  importPasted(2, 'x,y\n1,2\n');
+  expect(button('Export cleaned CSV')).toBeTruthy();
+});
+
+it('says a dataset was not imported when the device refuses to save it, and shows why', () => {
+  mount();
+  const real = Storage.prototype.setItem;
+  vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (this: Storage, key: string, value: string) {
+    if (key === TOOLKIT_DATA_KEY) throw new Error('quota');
+    return real.call(this, key, value);
+  });
+  importPasted(2, 'x,y\n1,2\n');
+  expect(host.textContent).not.toContain('Imported');
+  expect(host.textContent).toContain('could not be saved on this device');
+  expect(host.textContent).toContain('Changes could not be saved: quota');
+  expect(button('Download recovery copy')).toBeTruthy();
+});
+
+it('never lets datasets grow past their storage budget, however many are imported', () => {
+  mount();
+  // Quotes and line breaks nearly double in JSON, so each of these is close to the per-file cap once stored.
+  const big = 'a\n' + '"q",\n'.repeat(Math.floor((MAX_RAW - 2) / 5));
+  for (let i = 0; i < 4; i++) importPasted(2, big);
+  expect((localStorage.getItem(TOOLKIT_DATA_KEY) ?? '').length).toBeLessThanOrEqual(DATA_BUDGET);
+  expect(host.textContent).toContain('Not enough room on this device');
 });
