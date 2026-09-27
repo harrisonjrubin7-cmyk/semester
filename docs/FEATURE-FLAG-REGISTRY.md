@@ -110,3 +110,69 @@ global role `incident_responder`. A school row needs it over the school, held by
 Every flag carries a review date. At review: a temporary flag past its purpose is removed from `flags.ts`,
 this page and every `tenant_feature_policy` row in one change; a permanent one gets a new review date. The
 evaluator already treats an expired temporary flag as off, so a missed review fails safe.
+
+## Build switches
+
+These decide what a build contains, not what a school has turned on. Values:
+`off`, `preview`, `sandbox` and `production`; a misspelt value reads as `off`.
+
+### Experience flags (`app/src/lib/experience-flags.ts`)
+
+A preview build (`VITE_INSTITUTIONAL_PREVIEW=true`) turns each of these on as
+`preview`. An explicit value overrides that.
+
+| Flag | Env |
+| --- | --- |
+| semesterIntelligence | `VITE_SEMESTER_INTELLIGENCE` |
+| journeyNavigation | `VITE_JOURNEY_NAVIGATION` |
+| adaptiveLearning | `VITE_ADAPTIVE_LEARNING` |
+| careerSkillsGraph | `VITE_CAREER_SKILLS_GRAPH` |
+| multimodalCapture | `VITE_MULTIMODAL_CAPTURE` |
+| universityControlPlane | `VITE_UNIVERSITY_CONTROL_PLANE` |
+
+### Community flags (`app/src/community/flags.ts`)
+
+High-risk flags ignore the preview default. They are off unless the variable is
+set by hand, and `production` is refused for them.
+
+| Flag | Env | High-risk | Default | Purpose |
+| --- | --- | --- | --- | --- |
+| communityFeed | `VITE_COMMUNITY_FEED` | no | off (preview in preview builds) | Communities, finite feeds, sessions |
+| communityReporting | `VITE_COMMUNITY_REPORTING` | no | off (preview in preview builds) | Report, block, mute, leave, pre-post checks |
+| moderationConsole | `VITE_MODERATION_CONSOLE` | no | off (preview in preview builds) | Professional queue, actions, appeals |
+| institutionEscalation | `VITE_INSTITUTION_ESCALATION` | **yes** | off | Dual-approved, minimum-data escalation |
+| volunteerModeration | `VITE_VOLUNTEER_MODERATION` | **yes** | off | Blind low-risk volunteer queues |
+| scopedPseudonymity | `VITE_SCOPED_PSEUDONYMITY` | **yes** | off | Community-only aliases |
+| accountSafetyState | `VITE_ACCOUNT_SAFETY_STATE` | **yes** | off | Private staff-only 0–100 state |
+| communityImages | `VITE_COMMUNITY_IMAGES` | **yes** | off | Image posts, held until scanned |
+
+**Server-side switches.** A build flag hides a screen, but it cannot stop a
+client that ignores it. Scoped pseudonymity and volunteer moderation are
+therefore also gated in the database, and so are institution escalation, the
+account safety state and image posts:
+
+- Each has a `community_programs` row per university.
+- A program is off unless its row is present and `enabled`.
+- Only the service role can write a row, so switching a program on is a
+  reviewed deployment step.
+- Every alias, volunteer, escalation and safety-state function checks the
+  row.
+- Switching a program off stops alias posts, volunteer queues, escalation
+  approvals and new safety entries on the next call. Safety entries already
+  written stay until the yearly sweep or an appeal reverses them.
+- Image posts are the `image_posts` row. With it on, an image still clears
+  only after a known-abuse hash check, and none is configured
+  (docs/COMMUNITY-MEDIA-SAFETY.md).
+- Escalation also needs a `community_escalation_policies` row naming the
+  agreement, its categories and the channel. Two different senior Trust &
+  Safety staff write it through the Agreements screen (one drafts, one
+  activates); the service role can too. School staff cannot.
+- An engaged `kill.sharing` (above), for the school or for every school,
+  turns pseudonymity and volunteer moderation off in the database as well as
+  in the app. `private.community_program_on` reads it.
+- These `community_programs` rows and the `safety.*` tenant flags above are
+  two switches for the same programmes today. The database enforces
+  `community_programs`; nothing in SQL reads the `safety.*` rows yet.
+
+**Rollback.** Unset the variable, or set it to `off`. Nothing persists
+because a flag was on: the domain functions refuse at call time.

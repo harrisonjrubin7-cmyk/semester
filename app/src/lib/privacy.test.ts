@@ -371,6 +371,20 @@ describe('"delete my account" really means every row', () => {
      */
     const { KEPT_TABLES } = await import('./cloud');
     expect(KEPT_TABLES.map((t) => t.table).sort()).toEqual([
+      'communities',
+      'community_calibration_items',
+      'community_cases',
+      'community_escalation_agreement_events',
+      'community_escalation_deliveries',
+      'community_escalation_policies',
+      'community_escalations',
+      'community_identity_grants',
+      'community_programs',
+      'community_reports',
+      'community_retention_runs',
+      'community_signals',
+      'community_venues',
+      'community_volunteer_events',
       'feature_kill_switch',
       'group_tasks',
       'groups',
@@ -384,6 +398,9 @@ describe('"delete my account" really means every row', () => {
       'integration_scopes',
       'integration_sync_errors',
       'integration_sync_runs',
+      // Verified listings (lib/listings.ts, components/ListingDesk.tsx): an
+      // office's or employer's publication. publisher_id is `on delete set null`.
+      'opportunities',
       'organizations',
       'reports',
       'schools',

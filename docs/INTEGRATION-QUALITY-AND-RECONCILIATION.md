@@ -63,7 +63,7 @@ ignore the report.
 
 ## Built (Phase 1a, second slice): where results are kept, and who may act
 
-`supabase/migrations/20260928030000_integration_quality.sql`, walked by
+`supabase/migrations/20260928040000_integration_quality.sql`, walked by
 `supabase/integration-quality.check.sql` (60 checks) and added to
 `supabase/integration-rls-matrix.check.sql`'s four-account sweep.
 

@@ -578,6 +578,7 @@ const csp = (serving: boolean) => ({
  * fails if this list and the tree disagree.
  */
 const MOCKS_MODULES = [
+  'src/components/unity/rollout-b.test.tsx',
   'src/screens/onboardingcounts.test.tsx',
   'src/components/saysomething.test.tsx',
   'src/screens/mentionbadge.test.tsx',
@@ -598,6 +599,11 @@ const MOCKS_MODULES = [
   'src/components/ReportQueue.test.tsx',
   'src/components/MentorFinder.test.tsx',
   'src/components/schoolrecords.test.tsx',
+  'src/screens/Community.test.tsx',
+  'src/screens/Moderation.test.tsx',
+  'src/screens/Volunteer.test.tsx',
+  'src/screens/Agreements.test.tsx',
+  'src/screens/Volunteers.test.tsx',
   'src/components/TermChoice.test.tsx',
   'src/components/gpascalenote.test.tsx',
   'src/components/institutional/ControlPlane.test.tsx',

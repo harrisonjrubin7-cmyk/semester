@@ -114,7 +114,7 @@ begin
     source_system, source_record_id, source_of_truth, classification)
   values ('mx-a', 'enrollment', 'e1', other, conn, 'SIS', 'x1', 'Registrar', 'T3');
   insert into public.feature_kill_switch (tenant_id, switch_key, engaged, reason) values ('mx-a', 'kill.ai_generation', false, '');
-  -- Integration quality (20260928030000): one row in each, as the worker writes them.
+  -- Integration quality (20260928040000): one row in each, as the worker writes them.
   insert into public.integration_reconciliation_runs (tenant_id, connection_id, sync_run_id) values ('mx-a', conn, run)
   returning id into recon;
   insert into public.integration_reconciliation_discrepancies (tenant_id, run_id, status, entity_type, reference)

@@ -4,6 +4,7 @@ import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { ActionButton, FilePick, Notice, SectionLabel, Segmented } from '../components/ui';
 import { CardGrid, GridCard } from '../components/GridCard';
+import { ObjectCard } from '../components/unity/ObjectCard';
 import { ItemRow } from '../components/shell/Rows';
 import { secondLine } from '../lib/dim';
 import { download } from '../lib/deliver';
@@ -43,6 +44,7 @@ import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
 import { GetHelp } from '../components/GetHelp';
 import { HelpInbox } from '../components/HelpInbox';
 import { ReportQueue } from '../components/ReportQueue';
+import { ListingDesk } from '../components/ListingDesk';
 import { operationsAllowed } from '../lib/institution-ops';
 import { forSchool, useMyCapabilities } from '../lib/capabilities';
 import { helpSeedWaiting, loadInboxes, newRequestCount, type StaffInbox } from '../lib/help-routes';
@@ -652,6 +654,8 @@ function Workspace({ storageKey }: { storageKey: string }) {
         <>
           {/* Draws nothing unless the database says this account may read reports. */}
           <ReportQueue account={account} />
+          {/* Draws nothing unless my_capabilities() reports opportunity:publish or :moderate. */}
+          <ListingDesk school={school.id} />
           <label style={{ display: 'block', marginBlock: 'var(--sp-5) var(--sp-3)' }}>
             <SectionLabel style={{ marginBlock: 0 }}>Prepare drafts as</SectionLabel>
             <select
@@ -1099,54 +1103,51 @@ function Workspace({ storageKey }: { storageKey: string }) {
                 {fetched ? `Fetched ${formatDateTime(fetched)}` : 'Refresh to load records.'} ·
                 Read from your school, never copied into local drafts.
               </p>
-              {records.map((r) => (
-                <section
-                  key={r.id}
-                  style={{
-                    border: '1px solid var(--app-line)',
-                    borderRadius: 'var(--r-md)',
-                    padding: 'var(--sp-5)',
-                    marginBlock: 'var(--sp-4)',
-                  }}
-                >
-                  <SectionLabel aside={r.status} style={{ marginBlock: 0 }}>
-                    {r.title}
-                  </SectionLabel>
-                  <p
-                    style={{
-                      fontSize: 'var(--type-base)',
-                      lineHeight: 'var(--leading-normal)',
-                      marginBlock: 'var(--sp-4)',
-                    }}
-                  >
-                    {r.summary}
-                  </p>
-                  {r.details.map((d, i) => (
-                    <div key={i} style={{ fontSize: 'var(--type-sm)', marginBottom: 'var(--sp-3)' }}>
-                      <span style={secondLine()}>{d.label}: </span>
-                      <span>{d.value}</span>
-                    </div>
-                  ))}
-                  {connection.canWrite &&
-                    r.actions.map((a) => (
-                      <ActionButton
-                        key={a.id}
-                        disabled={busy}
-                        onClick={() => {
-                          setAction({ record: r, action: a });
-                          setValues({});
-                          setReview(null);
-                          setReceipt(null);
-                          setConfirmed(false);
-                          setUnresolved(false);
-                        }}
-                        style={{ marginTop: 'var(--sp-4)' }}
-                      >
+              {records.map((r) => {
+                const start = (a: (typeof r.actions)[number]) => {
+                  setAction({ record: r, action: a });
+                  setValues({});
+                  setReview(null);
+                  setReceipt(null);
+                  setConfirmed(false);
+                  setUnresolved(false);
+                };
+                const [first, ...rest] = connection.canWrite ? r.actions : [];
+                return (
+                  <div key={r.id}>
+                    <ObjectCard
+                      kind="task"
+                      level={2}
+                      title={r.title}
+                      explanation={r.summary}
+                      metadata={[r.status, ...r.details.map((d) => `${d.label}: ${d.value}`)].join(' · ')}
+                      statuses={['connected']}
+                      source={{
+                        title: r.title,
+                        origin: 'connected',
+                        sourceName: connection.provider || undefined,
+                        freshness: fetched ? `Fetched ${formatDateTime(fetched)}` : undefined,
+                      }}
+                      primary={
+                        first
+                          ? {
+                              label: first.label,
+                              run: () => start(first),
+                              // Disabled while a request is in flight, as the
+                              // button this replaced was.
+                              disabled: busy,
+                            }
+                          : undefined
+                      }
+                    />
+                    {rest.map((a) => (
+                      <ActionButton key={a.id} disabled={busy} onClick={() => start(a)} style={{ marginTop: 'var(--sp-4)' }}>
                         {a.label}
                       </ActionButton>
                     ))}
-                </section>
-              ))}
+                  </div>
+                );
+              })}
               {fetched && !records.length && (
                 <p style={{ fontSize: 'var(--type-base)', ...secondLine() }}>No matching records.</p>
               )}

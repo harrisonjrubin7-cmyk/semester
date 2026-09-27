@@ -329,7 +329,13 @@ begin
     format($q$select public.send_help_request(%L, 'Another', '{}'::jsonb)$q$, tutoring));
   perform pg_temp.expect_allowed('the tutor closes the last one', tutor,
     format($q$select public.answer_help_request(%L, 'closed', '')$q$, req3));
-  perform pg_temp.counted('and then the retired inbox is gone from their list',
+  perform pg_temp.counted('the retired inbox stays in their list while it holds a closed request',
+    pg_temp.seen(tutor, 'select * from public.my_help_destinations()'), 1);
+  perform pg_temp.counted('and the closed request is still in it',
+    pg_temp.seen(tutor, format($q$select * from public.help_inbox(%L) where status = 'closed'$q$, tutoring)), 1);
+  perform pg_temp.expect_allowed('the student withdraws the closed request', student,
+    format('select public.withdraw_help_request(%L)', req3));
+  perform pg_temp.counted('and then the retired inbox, holding nothing staff can see, is gone',
     pg_temp.seen(tutor, 'select * from public.my_help_destinations()'), 0);
 
   -- ── an account that asked for help is not a fresh one ──────────────────

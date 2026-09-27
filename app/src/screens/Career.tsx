@@ -4,6 +4,7 @@ import { Page } from '../components/Page';
 import { ActionButton, FilePick, Notice, SectionLabel, Segmented } from '../components/ui';
 import { Group, NavRow } from '../components/shell/Rows';
 import { CardGrid, GridCard } from '../components/GridCard';
+import { ObjectCard } from '../components/unity/ObjectCard';
 import { secondLine } from '../lib/dim';
 import { useDeviceLibrary } from '../lib/device-library';
 import {
@@ -168,6 +169,27 @@ function Workspace({ storageKey, pathwayKey, careerSkillsGraph }: { storageKey: 
   const [notice, setNotice] = useState('');
 
   const open = lib.value.opportunities.find((o) => o.id === selected);
+
+  const toggleSaved = () => {
+    if (!open) return;
+    lib.update((old) => ({
+      ...old,
+      opportunities: old.opportunities.map((o) => (o.id === open.id ? { ...o, saved: !o.saved } : o)),
+    }));
+  };
+
+  const track = () => {
+    if (!open) return;
+    if (state.applications.some((a) => a.org === open.organization && a.role === open.title)) {
+      setNotice('That is already in your application tracker.');
+      return;
+    }
+    dispatch({
+      type: 'addApplication',
+      patch: opportunityApplication(open),
+    });
+    setNotice('Added to your tracker, with its deadline. Nothing has been applied for.');
+  };
   const naturalMatches = new Set(searchOpportunities(query, lib.value.opportunities).map((o) => o.id));
   const matches = lib.value.opportunities
     .filter(
@@ -507,13 +529,30 @@ function Workspace({ storageKey, pathwayKey, careerSkillsGraph }: { storageKey: 
 
           {open && (
             <>
-              <SectionLabel
-                aside="You entered this"
-                style={{ marginBlock: 'var(--sp-7) var(--sp-4)' }}
-              >
-                {open.title}
-              </SectionLabel>
-              <p style={body}>{open.organization}</p>
+              <ObjectCard
+                kind="opportunity"
+                level={2}
+                title={open.title}
+                explanation={open.organization}
+                // Visible, as the section label's aside was: a listing typed in by the
+                // student says so on its face, not only behind Source & details.
+                metadata={`${open.deadline ? `Due ${open.deadline}` : 'No deadline'} · You entered this`}
+                statuses={['yours']}
+                source={{ title: open.title, origin: 'yours', sourceName: 'You entered this listing' }}
+                primary={{ label: 'Track it', run: track }}
+                secondary={{ label: open.saved ? 'Unsave' : 'Save', run: toggleSaved }}
+              />
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-4)', marginTop: 'var(--sp-4)' }}>
+                <ActionButton
+                  onClick={() => write(`${open.organization} · Cover letter`, coverLetter(lib.value, open))}
+                  style={{ flex: '1 1 auto' }}
+                >
+                  Draft a letter
+                </ActionButton>
+                <ActionButton onClick={() => setEdit({ ...open })} style={{ flex: '1 1 auto' }}>
+                  Edit
+                </ActionButton>
+              </div>
               {open.description && (
                 <p style={{ ...body, whiteSpace: 'pre-wrap', marginBlock: 'var(--sp-4)' }}>{open.description}</p>
               )}
@@ -541,46 +580,6 @@ function Workspace({ storageKey, pathwayKey, careerSkillsGraph }: { storageKey: 
                   </p>
                 ))}
 
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-4)', marginTop: 'var(--sp-5)' }}>
-                <ActionButton
-                  onClick={() =>
-                    lib.update((old) => ({
-                      ...old,
-                      opportunities: old.opportunities.map((o) =>
-                        o.id === open.id ? { ...o, saved: !o.saved } : o,
-                      ),
-                    }))
-                  }
-                  style={{ flex: '1 1 auto' }}
-                >
-                  {open.saved ? 'Unsave' : 'Save'}
-                </ActionButton>
-                <ActionButton
-                  onClick={() => {
-                    if (state.applications.some((a) => a.org === open.organization && a.role === open.title)) {
-                      setNotice('That is already in your application tracker.');
-                      return;
-                    }
-                    dispatch({
-                      type: 'addApplication',
-                      patch: opportunityApplication(open),
-                    });
-                    setNotice('Added to your tracker, with its deadline. Nothing has been applied for.');
-                  }}
-                  style={{ flex: '1 1 auto' }}
-                >
-                  Track it
-                </ActionButton>
-                <ActionButton
-                  onClick={() => write(`${open.organization} · Cover letter`, coverLetter(lib.value, open))}
-                  style={{ flex: '1 1 auto' }}
-                >
-                  Draft a letter
-                </ActionButton>
-                <ActionButton onClick={() => setEdit({ ...open })} style={{ flex: '1 1 auto' }}>
-                  Edit
-                </ActionButton>
-              </div>
               {safeUrl(open.url) && (
                 <p style={{ marginTop: 'var(--sp-4)' }}>
                   <a href={safeUrl(open.url)} target="_blank" rel="noreferrer" style={body}>

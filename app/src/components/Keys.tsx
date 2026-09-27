@@ -26,7 +26,7 @@
 import { useEffect, useState } from 'react';
 import { secondLine } from '../lib/dim';
 import { useStore } from '../state/store';
-import { SHORTCUTS, keyLabel, shortcutFor } from '../lib/keys';
+import { PALETTE, SHORTCUTS, keyLabel, shortcutFor } from '../lib/keys';
 import { useAI } from '../ai/store';
 import { FINE, WIDE, useMedia } from '../lib/media';
 import { useSitting } from '../lib/sitting.hook';
@@ -190,7 +190,7 @@ export function Keys() {
       </div>
 
       <div style={{ marginTop: 'var(--sp-5)', display: 'flex', flexDirection: 'column', gap: 'var(--sp-1)' }}>
-        {SHORTCUTS.map((s) => (
+        {[...SHORTCUTS, PALETTE].map((s) => (
           <div
             key={s.key}
             style={{ display: 'flex', gap: 'var(--sp-5)', alignItems: 'baseline', paddingBlock: 'calc(4px * var(--density, 1))', paddingInline: '0' }}

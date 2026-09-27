@@ -58,10 +58,14 @@ const ASKS: Record<string, string> = {
     'Whether the capture box is fixed to the window or the column. Same box.',
   'components/TodayActionCenter.tsx':
     'An at-a-glance pane beside the column on a desktop window. Nothing in it is desktop-only: the planning sentence heads the column, each unchecked date says so on its commitment row, the schedule is in the plan list and Calendar, and sync freshness is on Account.',
+  'components/unity/UnityLayer.tsx':
+    'Whether the shared sheets (Source & details, Capture, About this screen) are fixed to the window or the column. Same sheet, same controls, at every width.',
   'screens/Calendar.tsx':
     'Seven days a row when wide, three when narrow — the arrows step through every day either way, and Month and Agenda are the same at both widths.',
   'screens/Classmates.tsx':
     'Thread list beside the conversation when wide; the list in place of it, one tap back, when narrow.',
+  'screens/Community.tsx':
+    'Community list beside the open community when wide; the list in place of it, with a Back button, when narrow. Every community, post, composer and session is reached at both widths.',
   'screens/Mail.tsx':
     'Folder rail beside the list when wide, behind a Folders button when narrow; compose in the rail or as a floating button; the pager in the toolbar or in a row under it. The reading-pane toggle is wide-only because a phone has no pane: the message replaces the list.',
   'screens/deck/Edit.tsx':

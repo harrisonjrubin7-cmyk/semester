@@ -4,7 +4,7 @@ import { basename, dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { execFileSync } from 'node:child_process';
 
-const ARRAY_NAMES = ['SHELL', 'FIRST_RUN', 'DETAIL', 'SETTINGS'];
+const ARRAY_NAMES = ['SHELL', 'FIRST_RUN', 'DETAIL', 'SETTINGS', 'STAFF', 'SWITCHED'];
 
 function text(path) {
   return readFileSync(path, 'utf8');

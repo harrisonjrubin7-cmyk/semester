@@ -11,6 +11,7 @@ import {
 } from '../lib/support-access';
 import { ActionButton, Notice, SectionLabel } from './ui';
 import { dateFormatter } from '../lib/locale';
+import { ErrorState, PermissionNotice } from './unity/States';
 
 const date = (value: string) => dateFormatter({
   dateStyle: 'medium', timeStyle: 'short',
@@ -24,7 +25,12 @@ export function SupportAccess({ account }: { account: Account | null }) {
   const [reason, setReason] = useState('');
   const [days, setDays] = useState(1);
   const [busy, setBusy] = useState(false);
+  /** A failure to create, revoke or read. Loading has its own state below. */
   const [notice, setNotice] = useState('');
+  /** Why the windows could not be loaded — a state with a way out, not a line. */
+  const [loadError, setLoadError] = useState('');
+  /** What the last grant or revoke changed, said as a permission change. */
+  const [changed, setChanged] = useState<{ changed: string; why: string; control: boolean } | null>(null);
 
   const refresh = useCallback(async () => {
     if (!account) return;
@@ -35,8 +41,10 @@ export function SupportAccess({ account }: { account: Account | null }) {
       setWindows(next.windows);
       setSupporterId((old) => old || next.supporters[0]?.supporterId || '');
       setNotice('');
+      setLoadError('');
     } catch (error) {
-      setNotice(error instanceof Error ? error.message : 'Could not load support access.');
+      setChanged(null);
+      setLoadError(error instanceof Error ? error.message : 'Could not load support access.');
     } finally {
       setBusy(false);
     }
@@ -65,7 +73,29 @@ export function SupportAccess({ account }: { account: Account | null }) {
         <Notice>Sign in with your university-linked Semester account to create or receive support access.</Notice>
       ) : (
         <>
-          {notice && <Notice>{notice}</Notice>}
+          {loadError && (
+            <ErrorState
+              title="Could not load support access"
+              body={loadError}
+              recover={{ label: 'Try again', run: () => void refresh() }}
+              busy={busy}
+            />
+          )}
+          {notice && <Notice alert>{notice}</Notice>}
+          {changed && (
+            <PermissionNotice
+              changed={changed.changed}
+              why={changed.why}
+              control={
+                changed.control && active.length > 0
+                  ? {
+                      label: 'Go to active windows',
+                      run: () => document.getElementById('support-access-active')?.scrollIntoView?.({ block: 'start' }),
+                    }
+                  : undefined
+              }
+            />
+          )}
           {supporters.length > 0 && (
             <form
               onSubmit={(event) => {
@@ -75,9 +105,13 @@ export function SupportAccess({ account }: { account: Account | null }) {
                   .then(async () => {
                     setReason('');
                     await refresh();
-                    setNotice('Support access created. You can revoke it at any time.');
+                    setNotice('');
+                    setChanged({ changed: 'Support access created', why: 'You can revoke it at any time.', control: true });
                   })
-                  .catch((error: unknown) => setNotice(error instanceof Error ? error.message : 'Could not create access.'))
+                  .catch((error: unknown) => {
+                    setChanged(null);
+                    setNotice(error instanceof Error ? error.message : 'Could not create access.');
+                  })
                   .finally(() => setBusy(false));
               }}
               style={{ display: 'grid', gap: 'var(--sp-4)', marginBlock: 'var(--sp-5)' }}
@@ -111,7 +145,11 @@ export function SupportAccess({ account }: { account: Account | null }) {
             </p>
           )}
 
-          {active.length > 0 && <SectionLabel aside={`${active.length}`}>Active windows</SectionLabel>}
+          {active.length > 0 && (
+            <div id="support-access-active">
+              <SectionLabel aside={`${active.length}`}>Active windows</SectionLabel>
+            </div>
+          )}
           {active.map((window) => (
             <article key={window.grantId} className="portal-panel" style={{ marginBlock: 'var(--sp-4)' }}>
               <strong>{window.counterpartLabel}</strong>
@@ -127,9 +165,17 @@ export function SupportAccess({ account }: { account: Account | null }) {
                     void revokeSupportAccess(window.grantId)
                       .then(async () => {
                         await refresh();
-                        setNotice('Support access revoked. The supporter can no longer open this summary.');
+                        setNotice('');
+                        setChanged({
+                          changed: 'Support access revoked',
+                          why: 'The supporter can no longer open this summary.',
+                          control: false,
+                        });
                       })
-                      .catch((error: unknown) => setNotice(error instanceof Error ? error.message : 'Could not revoke access.'))
+                      .catch((error: unknown) => {
+                        setChanged(null);
+                        setNotice(error instanceof Error ? error.message : 'Could not revoke access.');
+                      })
                       .finally(() => setBusy(false));
                   }}
                 >Revoke now</ActionButton>

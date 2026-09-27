@@ -223,8 +223,9 @@ begin
   -- Twenty original roles plus the twenty-seven added by
   -- 20260926150000_expansion_roles_and_features.sql, plus `integration_admin`
   -- and `incident_responder` from 20260927170000_integration_control_plane.sql,
-  -- and `portfolio_council` from 20260927235000_governance_registries.sql.
-  perform pg_temp.counted('a signed-in account reads the fifty roles', n, 50);
+  -- and `portfolio_council` from 20260927235000_governance_registries.sql,
+  -- plus the three Trust & Safety and community roles from the community migration.
+  perform pg_temp.counted('a signed-in account reads the fifty-three roles', n, 53);
   select count(*) into n from public.role_capabilities;
   -- Twenty original rows, thirty-seven expansion rows, eight from the
   -- integration control plane (four for integration_admin, three for
@@ -233,8 +234,9 @@ begin
   -- governance registries (portfolio_council → governance:decide,
   -- incident_responder → incident:communicate), seven learner and
   -- teaching roles → lti:launch (20260928015315_lti_launch_capability.sql),
-  -- and one from integration quality (integration_admin → integration:reconcile).
-  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 83);
+  -- five community rows, and one from integration quality
+  -- (integration_admin → integration:reconcile).
+  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 88);
 
   perform pg_temp.become_anon();
   perform pg_temp.refused('a signed-out visitor cannot read the matrix',

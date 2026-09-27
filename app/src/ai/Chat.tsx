@@ -333,11 +333,11 @@ export function Chat() {
         }
       >
         <div style={COLUMN}>
-          {EXPERIENCE_FLAGS.semesterIntelligence !== 'off' && <IntegrityModePicker
+          <IntegrityModePicker
             requested={talk.integrityMode}
-            policy={{ allowed: talk.allowedIntegrityModes, reason: 'Available modes are set by verified university policy.' }}
+            policy={{ allowed: talk.allowedIntegrityModes, reason: talk.integrityReason }}
             onChange={talk.setIntegrityMode}
-          />}
+          />
           <Composer
             value={draft}
             onChange={setDraft}

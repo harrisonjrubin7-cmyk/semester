@@ -32,6 +32,7 @@ import {
 } from '../../lib/spend';
 import { ActionButton, SectionLabel } from '../../components/ui';
 import { AboutMe } from '../../components/AboutMe';
+import { SaveState } from '../../components/unity/Status';
 
 /**
  * Where the answers come from, what they cost, and what leaves the device.
@@ -298,6 +299,11 @@ export function SettingsAssistant() {
               >
                 {saved ? 'Saved on this device' : 'Save on this device'}
               </ActionButton>
+              {saved && (
+                <div style={{ marginTop: 'var(--sp-3)' }}>
+                  <SaveState status="saved" />
+                </div>
+              )}
               {config.provider !== 'openai' && config.apiKey.trim() !== '' && (
                 <button
                   type="button"

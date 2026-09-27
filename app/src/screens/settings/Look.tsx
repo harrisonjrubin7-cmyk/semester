@@ -69,6 +69,7 @@ function DatesAndNumbers({ lit }: { lit: boolean }) {
     </Group>
   );
 }
+import { WorkspaceModePicker } from '../../components/unity/modes';
 
 /**
  * A hue you can drag, with the reason it is safe to offer.
@@ -561,6 +562,16 @@ export function SettingsLook() {
           {languageOn() && (
             <DatesAndNumbers lit={lights('language region locale format date time number 24-hour clock international', lit)} />
           )}
+
+          <Group
+            header="Workspace mode"
+            footer="Guided shows next steps and explanations; Focused steps the navigation back; Detailed puts sources and metadata up front; Accessibility turns on larger text, more space and less motion. None of them changes what you can do."
+            lit={lights('workspace mode guided focused focus detailed accessibility distraction deep work', lit)}
+          >
+            <CustomRow>
+              <WorkspaceModePicker />
+            </CustomRow>
+          </Group>
 
           <Group
             header="Shape and spacing"

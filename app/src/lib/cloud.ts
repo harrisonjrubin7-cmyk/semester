@@ -980,6 +980,22 @@ export const OWNED_TABLES: OwnedTable[] = [
   // `feedback.check.sql` proves the delete policy this line needs and that it
   // cannot be aimed at anybody else's reports.
   { table: 'feedback', column: 'author' },
+  // Community. A member cannot filter on author_id or host_id — neither is
+  // readable — so one RPC removes posts, hosted sessions, session places,
+  // mutes and memberships together. The two entries call it twice, which is
+  // harmless: the second finds nothing. A post that is the subject of a
+  // moderation case is withdrawn and anonymised rather than deleted; see
+  // `community_cases` below. `community.check.sql` walks it.
+  { table: 'community_posts', column: null, via: 'forget_my_community' },
+  { table: 'community_sessions', column: null, via: 'forget_my_community' },
+  // A member's aliases and volunteer record go in the same call. Neither is
+  // written by this client; both are about the account, so both go with it.
+  { table: 'community_aliases', column: null, via: 'forget_my_community' },
+  { table: 'community_volunteers', column: null, via: 'forget_my_community' },
+  { table: 'community_media', column: null, via: 'forget_my_community' },
+  { table: 'community_session_participants', column: 'user_id' },
+  { table: 'community_mutes', column: 'user_id' },
+  { table: 'community_members', column: 'user_id' },
 
   // ── Classmates: yours, but other people can see them ────────────────────
   //
@@ -1124,6 +1140,10 @@ export const KEPT_TABLES: KeptTable[] = [
     why: 'The list of universities the app recognises is not a record about you — no account writes a row in it, and only an administrator can. Leaving is not a way to remove a university, and the entry saying which one you are at lives on your own profile, which does go.',
   },
   {
+    table: 'opportunities',
+    why: 'A job, internship or scholarship listing an office or employer published is an institutional notice, not a record about you. If you submitted one on behalf of an office, it stays for the students it was meant for, with your account no longer named as its publisher.',
+  },
+  {
     table: 'help_destinations',
     why: 'The offices your university chose to reach through Semester — their names, links and hours — are institutional configuration, not a record about you. Your requests to them go with your account; the list of offices stays.',
   },
@@ -1154,6 +1174,62 @@ export const KEPT_TABLES: KeptTable[] = [
   {
     table: 'feature_kill_switch',
     why: 'The emergency stops for features across a university or all of Semester. Not a record about anybody.',
+  },
+  {
+    table: 'communities',
+    why: 'A community outlives whoever started it — the other members are still in it. Your membership goes; the community stays, with no creator recorded anywhere a member can read.',
+  },
+  {
+    table: 'community_venues',
+    why: 'The study venues your school approved are not a record about you, and only a community manager can add or remove one.',
+  },
+  {
+    table: 'community_cases',
+    why: 'A Trust & Safety case about a post stays when its author deletes their account, and so does the post, withdrawn and shown as "Deleted account" — deleting an account is not a way to make a report disappear. Cases carry a retention date; the sweep that enforces it is not yet scheduled.',
+  },
+  {
+    table: 'community_reports',
+    why: 'A report you filed is a record about somebody else, like `reports`: deleting your account is not a way to withdraw one. Who filed it is readable by nobody through the app, reviewers included.',
+  },
+  {
+    table: 'community_signals',
+    why: 'What an automated detector recorded about a post — the rule, how sure it was, and what a reviewer then decided. It belongs to the moderation case and goes when the case does, on the case\'s retention date.',
+  },
+  {
+    table: 'community_calibration_items',
+    why: 'Practice posts with a known answer, written by Trust & Safety staff for volunteer moderators to calibrate on. Not a record about any student.',
+  },
+  {
+    table: 'community_volunteer_events',
+    why: 'If you volunteered as a moderator: when you applied, trained, signed the agreements, and any change to your standing, each naming you only by a one-way hash. It is removed a year after it happened, by the daily retention sweep.',
+  },
+  {
+    table: 'community_identity_grants',
+    why: 'When Trust & Safety needed to know which account posted something under an alias during an investigation: who asked and who approved, by a one-way hash, and when it ran out. It goes with the case, and never records what was seen.',
+  },
+  {
+    table: 'community_escalation_agreement_events',
+    why: 'The history of your university\'s escalation agreement — each draft, activation and retirement by Semester\'s Trust & Safety staff. A record about the school\'s agreement, not about you.',
+  },
+  {
+    table: 'community_escalation_policies',
+    why: 'Whether your university has signed an agreement to receive escalations of serious safety cases, and which kinds it covers. An agreement of the school, not a record about you.',
+  },
+  {
+    table: 'community_escalations',
+    why: 'A request by Trust & Safety to tell your university about a serious safety case, and a second reviewer\'s decision on it. It goes with the case, on the case\'s retention date; it never holds your name, email or account id, only an opaque reference when the agreement requires one.',
+  },
+  {
+    table: 'community_escalation_deliveries',
+    why: 'The one queued copy of an approved escalation and whether it was delivered. It is removed 90 days after delivery, and goes with its escalation before then.',
+  },
+  {
+    table: 'community_programs',
+    why: 'Whether your university has switched pseudonyms or volunteer moderation on. A setting of the school, not a record about you; only the service role writes it.',
+  },
+  {
+    table: 'community_retention_runs',
+    why: 'How many records each daily retention sweep removed, and when. No row names a person, and the log trims itself after a year.',
   },
   {
     table: 'support_access_event',
