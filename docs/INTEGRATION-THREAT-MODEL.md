@@ -33,6 +33,8 @@ kill switches · the classification floor.
 | T19 | An advisor's notes, or the reason for a referral, reaches Semester | Mappings keep office, time, mode and links only; `notes` and `reason` refused as canonical names and as `display` keys; `instructor_notes` refused as an incoming field | `mock-campus.test.ts`; check: "an advisor's notes" |
 | T20 | A student relies on Semester for an emergency | Alerts carry a caveat on every rendering naming the official system; stale after 15 minutes, then "not the official current record" | `school-records.test.ts`, `schoolrecords.test.tsx` |
 | T21 | A bursar amount or balance shown | Mapping has no amount field; `amount`, `balance` refused as names and keys; connector flag high-risk and off | `mock-campus.test.ts`: "never an amount or balance" |
+| T28 | A connection approved but not switched on by its school still syncs | The worker requires the adapter's connector flag in `production` for the school | `worker.test.ts` (found by Codex on #779) |
+| T29 | One connection's import overwrites another's student record | Reference identity includes the connection | `integration-control-plane.check.sql`, `worker.test.ts` (found by Codex on #779) |
 | T13 | A mock adapter mistaken for a real connector | `mock: true` in the declaration; named "Mock LMS"; not in any registry | review |
 
 ## Phase 7 review

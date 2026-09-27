@@ -22,12 +22,13 @@ function fakeDb(tables: Tables) {
     tables[name] ??= [];
     const rows = tables[name];
     const filters: ((r: Row) => boolean)[] = [];
-    let op: 'select' | 'insert' | 'update' | 'upsert' = 'select';
+    let op: 'select' | 'insert' | 'update' | 'upsert' | 'delete' = 'select';
     let payload: Row[] = [];
     let patch: Row = {};
     let onConflict: string[] = [];
     let single: 'none' | 'maybe' | 'one' = 'none';
     let limit = Infinity;
+    const failing = (tables.__fail as unknown as string[] | undefined) ?? [];
 
     const run = () => {
       if (op === 'insert') {
@@ -41,7 +42,13 @@ function fakeDb(tables: Tables) {
         rows.push(...made);
         return { data: single !== 'none' ? made[0] : made, error: null };
       }
+      if (op === 'delete') {
+        const keep = rows.filter((r) => !filters.every((f) => f(r)));
+        rows.splice(0, rows.length, ...keep);
+        return { data: null, error: null };
+      }
       if (op === 'upsert') {
+        if (failing.includes(name)) return { data: null, error: { message: 'connection reset by peer' } };
         for (const p of payload) {
           const hit = rows.find((r) => onConflict.every((k) => r[k] === p[k]));
           if (hit) Object.assign(hit, p); else rows.push({ id: `id-${++seq}`, ...p });
@@ -70,6 +77,7 @@ function fakeDb(tables: Tables) {
       insert: (p: Row | Row[]) => { op = 'insert'; payload = Array.isArray(p) ? p : [p]; return q; },
       upsert: (p: Row[], o: { onConflict: string }) => { op = 'upsert'; payload = p; onConflict = o.onConflict.split(','); return q; },
       update: (p: Row) => { op = 'update'; patch = p; return q; },
+      delete: () => { op = 'delete'; return q; },
       then: (ok: (v: unknown) => unknown, bad?: (e: unknown) => unknown) => Promise.resolve(run()).then(ok, bad),
     };
     return q;
@@ -81,8 +89,10 @@ const NOW = new Date('2026-09-27T12:00:00Z');
 const now = () => NOW;
 const PUB = 'conn_sis0000000000000000a';
 
-function world(over: { status?: string; approved?: boolean; scopes?: Row[]; switches?: Row[]; membership?: string; consent?: boolean } = {}): Tables {
+function world(over: { status?: string; approved?: boolean; scopes?: Row[]; switches?: Row[]; membership?: string; consent?: boolean;
+  flag?: string | null } = {}): Tables {
   return {
+    tenant_feature_policy: over.flag === null ? [] : [{ tenant_id: 'vu', capability: 'integration.sis_read', state: over.flag ?? 'production' }],
     integration_connections: [{
       id: 'c1', public_id: PUB, tenant_id: 'vu', provider_domain: 'sis', status: over.status ?? 'configuring',
       approved_at: over.approved === false ? null : '2026-09-20T00:00:00Z', data_classification_ceiling: 'T3',
@@ -206,6 +216,37 @@ describe('a run', () => {
     const last = await runSync(fakeDb(t), req([], { fetchBatch: down, attempt: 5 }), now);
     expect(last).toMatchObject({ next: { kind: 'dead_letter' } });
     expect(t.integration_dead_letter_events).toHaveLength(1);
+  });
+});
+
+describe('found by the Codex review of #779', () => {
+  it('refuses a connector whose school flag is absent, off or only in preview', async () => {
+    for (const flag of [null, 'off', 'preview']) {
+      const r = await runSync(fakeDb(world({ flag })), req([SIS_FIXTURES.term]), now);
+      expect(r, String(flag)).toEqual({ outcome: 'refused', reason: 'integration.sis_read is not on for this school' });
+    }
+    expect((await runSync(fakeDb(world({ flag: 'production' })), req([SIS_FIXTURES.term]), now)).outcome).toBe('ran');
+  });
+
+  it('keeps a batch that failed to save retryable, so its redelivery is ingested rather than skipped', async () => {
+    const t = world();
+    (t as Record<string, unknown>).__fail = ['canonical_entity_references'];
+    const first = await runSync(fakeDb(t), req([SIS_FIXTURES.term]), now);
+    expect(first).toMatchObject({ outcome: 'ran', result: { status: 'failed' } });
+    (t as Record<string, unknown>).__fail = [];
+    const again = await runSync(fakeDb(t), req([SIS_FIXTURES.term]), now);
+    expect(again).toMatchObject({ outcome: 'ran', result: { status: 'succeeded', created: 1 } });
+    expect(t.canonical_entity_references).toHaveLength(1);
+  });
+
+  it('keeps two connections’ records apart when their ids coincide', async () => {
+    const t = world();
+    t.integration_connections.push({ ...t.integration_connections[0], id: 'c2', public_id: 'conn_sis0000000000000000b' });
+    t.integration_scopes.push(...MOCK_SIS.scopes.map((k) => ({ connection_id: 'c2', scope_key: k, approved: true, expires_at: null })));
+    const db = fakeDb(t);
+    await runSync(db, req([SIS_FIXTURES.term]), now);
+    await runSync(db, { ...req([SIS_FIXTURES.term]), connectionPublicId: 'conn_sis0000000000000000b' }, now);
+    expect(t.canonical_entity_references.map((r) => r.connection_id).sort()).toEqual(['c1', 'c2']);
   });
 });
 

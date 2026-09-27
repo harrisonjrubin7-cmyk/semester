@@ -166,6 +166,22 @@ it('shows a restricted workbench as needing review, not as a working tool', () =
   expect(dna.querySelector('button')).toBeNull();
 });
 
+it('shows the professional boundary a topic runs into, and nothing for ordinary coursework', () => {
+  mount();
+  const topic = [...host.querySelectorAll('label')].find((l) => l.textContent?.startsWith('Topic'))!.querySelector('input')!;
+  type(topic, 'sleep and memory in first-year students');
+  expect(host.querySelector('.portal-warning')).toBeNull();
+  type(topic, 'answers to the take-home exam');
+  expect(host.textContent).toContain('Semester will not produce answers for an assessment');
+});
+
+it('keeps the AI-use declaration from leaving until it is complete and attested', () => {
+  mount();
+  tab('AI-use policy');
+  expect(button('Download declaration').disabled).toBe(true);
+  expect(host.textContent).toContain('Confirm the attestation.');
+});
+
 const importPasted = (tierIndex: number, csv: string) => {
   tab('Data Studio');
   act(() => ([...host.querySelectorAll('input[type="radio"]')][tierIndex] as HTMLInputElement).click());
