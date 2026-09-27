@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { ActionButton, Notice, SectionLabel } from '../components/ui';
@@ -7,7 +7,24 @@ import { cloudConfigured } from '../lib/cloud';
 import { COMMUNITY_FLAGS, enabled } from '../community/flags';
 import { CRISIS_NOTICE } from '../community/crisis';
 import type { DecisionAction } from '../community/moderation';
-import { decideAppeal, decideCase, lastSweep, loadQueue, reviewerStanding, type CaseRow, type Standing } from '../community/client';
+import {
+  accountHash,
+  decideAppeal,
+  decideCase,
+  lastSweep,
+  loadEscalationPolicies,
+  loadEscalations,
+  loadProgramsBySchool,
+  loadQueue,
+  reviewerStanding,
+  type CaseRow,
+  type Escalation,
+  type EscalationPolicy,
+  type Programs,
+  type Standing,
+} from '../community/client';
+import { EscalationItem, EscalationRequest } from '../components/community/Escalation';
+import { SafetyRead } from '../components/community/SafetyRead';
 
 const CATEGORY = Object.fromEntries(CATEGORY_TEXT);
 
@@ -83,14 +100,22 @@ export function Moderation() {
       </Page>
     );
   }
-  return <Console />;
+  return <Console accountId={account.id} />;
 }
 
-function Console() {
+/** Both high-risk parts need their build flag here and the case's school's switch. */
+const ESCALATION_BUILT = () => enabled(COMMUNITY_FLAGS, 'institutionEscalation');
+const SAFETY_BUILT = () => enabled(COMMUNITY_FLAGS, 'accountSafetyState');
+
+function Console({ accountId }: { accountId: string }) {
   const [standing, setStanding] = useState<Standing | null>(null);
   const [cases, setCases] = useState<CaseRow[]>([]);
   const [status, setStatus] = useState('');
   const [sweep, setSweep] = useState<{ ranAt: string; removed: number } | null | undefined>(undefined);
+  const [programs, setPrograms] = useState<Map<string, Programs>>(new Map());
+  const [policies, setPolicies] = useState<Map<string, EscalationPolicy>>(new Map());
+  const [escalations, setEscalations] = useState<Escalation[]>([]);
+  const [me, setMe] = useState('');
 
   const refresh = useCallback(async () => {
     try {
@@ -99,11 +124,26 @@ function Console() {
       if (who !== 'none') {
         setCases(await loadQueue());
         setSweep(await lastSweep());
+        if (ESCALATION_BUILT() || SAFETY_BUILT()) setPrograms(await loadProgramsBySchool());
+        if (ESCALATION_BUILT()) {
+          const [p, e, h] = await Promise.all([loadEscalationPolicies(), loadEscalations(), accountHash(accountId)]);
+          setPolicies(p);
+          setEscalations(e);
+          setMe(h);
+        }
       }
     } catch (e) {
       setStatus(e instanceof Error ? e.message : 'Could not load the queue.');
     }
-  }, []);
+  }, [accountId]);
+
+  const done = useCallback(
+    async (said: string) => {
+      setStatus(said);
+      await refresh();
+    },
+    [refresh],
+  );
 
   // An account-backed resource, not render-derived state.
   // oxlint-disable-next-line react/set-state-in-effect
@@ -119,6 +159,29 @@ function Console() {
 
   const open = cases.filter((c) => c.status === 'open');
   const appeals = cases.filter((c) => c.status === 'appealed');
+  const escalationOn = (school: string) => ESCALATION_BUILT() && Boolean(programs.get(school)?.institutionEscalation);
+  const safetyOn = (school: string) => SAFETY_BUILT() && Boolean(programs.get(school)?.accountSafetyState);
+  const liveFor = (caseId: string) => escalations.find((x) => x.caseId === caseId && x.status !== 'refused');
+  const extras = (c: CaseRow) => (
+    <>
+      {escalationOn(c.tenantId) && (c.severity === 'P0' || c.severity === 'P1') && (
+        <EscalationRequest kase={c} policy={policies.get(c.tenantId)} live={liveFor(c.id)} onDone={done} />
+      )}
+      {safetyOn(c.tenantId) && <SafetyRead caseId={c.id} />}
+    </>
+  );
+  const waiting = escalations.filter((x) => x.status === 'requested');
+  const decided = escalations.filter((x) => x.status !== 'requested');
+  const item = (x: Escalation) => (
+    <EscalationItem
+      key={x.id}
+      item={x}
+      mine={x.requestedBy === me}
+      categoryText={(c) => CATEGORY[c] ?? c}
+      severityText={(v) => SEVERITY_TEXT[v]}
+      onDone={done}
+    />
+  );
 
   return (
     <Page blurb="Most severe first, then oldest. Reporters are never shown. Automation only queued, held or reduced these — every decision is yours.">
@@ -134,15 +197,30 @@ function Console() {
       <SectionLabel aside={`${open.length}`}>Open cases</SectionLabel>
       {open.length === 0 && <p style={{ color: 'var(--app-dim)' }}>The queue is empty.</p>}
       {open.map((c) => (
-        <CaseCard key={c.id} kase={c} senior={standing === 'senior'} onDone={refresh} onStatus={setStatus} />
+        <CaseCard key={c.id} kase={c} senior={standing === 'senior'} onDone={refresh} onStatus={setStatus} extras={extras(c)} />
       ))}
       <SectionLabel aside={`${appeals.length}`} style={{ marginTop: 'var(--sp-7)' }}>
         Appeals
       </SectionLabel>
       {appeals.length === 0 && <p style={{ color: 'var(--app-dim)' }}>No appeals are waiting.</p>}
       {appeals.map((c) => (
-        <CaseCard key={c.id} kase={c} senior={standing === 'senior'} onDone={refresh} onStatus={setStatus} />
+        <CaseCard key={c.id} kase={c} senior={standing === 'senior'} onDone={refresh} onStatus={setStatus} extras={extras(c)} />
       ))}
+      {ESCALATION_BUILT() && (waiting.length > 0 || decided.length > 0) && (
+        <section aria-label="Escalations to universities">
+          <SectionLabel aside={`${waiting.length}`} style={{ marginTop: 'var(--sp-7)' }}>
+            Escalations waiting
+          </SectionLabel>
+          {waiting.length === 0 && <p style={{ color: 'var(--app-dim)' }}>Nothing is waiting for a second reviewer.</p>}
+          {waiting.map(item)}
+          {decided.length > 0 && (
+            <details>
+              <summary>Decided in the last 30 days ({decided.length})</summary>
+              {decided.map(item)}
+            </details>
+          )}
+        </section>
+      )}
     </Page>
   );
 }
@@ -152,11 +230,14 @@ function CaseCard({
   senior,
   onDone,
   onStatus,
+  extras,
 }: {
   kase: CaseRow;
   senior: boolean;
   onDone: () => Promise<void>;
   onStatus: (s: string) => void;
+  /** Escalation and safety state, where both switches allow them. */
+  extras?: ReactNode;
 }) {
   const [action, setAction] = useState<DecisionAction>('allow');
   const [reason, setReason] = useState('');
@@ -221,6 +302,7 @@ function CaseCard({
           ))}
         </ul>
       </details>
+      {extras}
 
       <label style={{ display: 'grid', gap: 'var(--sp-2)' }}>
         Policy reason code

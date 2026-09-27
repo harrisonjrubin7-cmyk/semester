@@ -72,3 +72,9 @@ row for `account_safety_state` are on.
   and gets one of two sentences, never the number. Nobody else gets anything.
 - **What it is never used for.** Ranking, search, academics, aid, admissions,
   housing, work or advising. No other function reads the table.
+
+In the app, the reviewer's read is `components/community/SafetyRead.tsx`,
+closed until opened and never kept after the card closes. The student's
+sentence appears in Community under "Your standing". Both need the build flag
+and the school's switch.
+

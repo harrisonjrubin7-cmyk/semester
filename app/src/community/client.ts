@@ -343,6 +343,8 @@ export type Standing = 'none' | 'reviewer' | 'senior';
 export interface CaseRow {
   id: string;
   postId: string;
+  /** The school the case belongs to; escalation and safety state are switched on per school. */
+  tenantId: string;
   category: ReportCategory;
   severity: Severity;
   protection: 'queue' | 'monitor' | 'reduce_distribution' | 'temporary_hold';
@@ -369,7 +371,7 @@ export async function loadQueue(): Promise<CaseRow[]> {
   const db = await cloud();
   const { data: cases, error } = await db
     .from('community_cases')
-    .select('id, post_id, category, severity, protection, route, status, created_at')
+    .select('id, post_id, tenant_id, category, severity, protection, route, status, created_at')
     .in('status', ['open', 'appealed'])
     .order('created_at')
     .limit(100);
@@ -397,6 +399,7 @@ export async function loadQueue(): Promise<CaseRow[]> {
       return {
         id: str(c.id),
         postId: str(c.post_id),
+        tenantId: str(c.tenant_id),
         category: str(c.category) as ReportCategory,
         severity: str(c.severity) as Severity,
         protection: str(c.protection) as CaseRow['protection'],
@@ -476,15 +479,191 @@ export async function decideAppeal(caseId: string, uphold: boolean, reasonCode: 
 export interface Programs {
   scopedPseudonymity: boolean;
   volunteerModeration: boolean;
+  institutionEscalation: boolean;
+  accountSafetyState: boolean;
 }
 
-/** Which programmes this student's school has switched on. Absent means off. */
+export const NO_PROGRAMS: Programs = {
+  scopedPseudonymity: false,
+  volunteerModeration: false,
+  institutionEscalation: false,
+  accountSafetyState: false,
+};
+
+const PROGRAM_KEYS: [keyof Programs, string][] = [
+  ['scopedPseudonymity', 'scoped_pseudonymity'],
+  ['volunteerModeration', 'volunteer_moderation'],
+  ['institutionEscalation', 'institution_escalation'],
+  ['accountSafetyState', 'account_safety_state'],
+];
+
+function programsFrom(rows: Row[]): Programs {
+  const out = { ...NO_PROGRAMS };
+  for (const [key, name] of PROGRAM_KEYS) out[key] = rows.some((r) => str(r.program) === name && Boolean(r.enabled));
+  return out;
+}
+
+/**
+ * Which programmes this student's school has switched on. Absent means off.
+ * The database answers kill.sharing on top of these; this is only whether to
+ * show the door.
+ */
 export async function loadPrograms(): Promise<Programs> {
   const db = await cloud();
   const { data, error } = await db.from('community_programs').select('program, enabled');
   if (error) fail(error, 'Could not check which Community programmes are on.');
-  const on = (name: string) => (data ?? []).some((r: Row) => str(r.program) === name && Boolean(r.enabled));
-  return { scopedPseudonymity: on('scoped_pseudonymity'), volunteerModeration: on('volunteer_moderation') };
+  return programsFrom((data ?? []) as Row[]);
+}
+
+/** For a reviewer, who works across schools: each school's switches. */
+export async function loadProgramsBySchool(): Promise<Map<string, Programs>> {
+  const db = await cloud();
+  const { data, error } = await db.from('community_programs').select('tenant_id, program, enabled');
+  if (error) fail(error, 'Could not check which Community programmes are on.');
+  const bySchool = new Map<string, Row[]>();
+  for (const r of (data ?? []) as Row[]) bySchool.set(str(r.tenant_id), [...(bySchool.get(str(r.tenant_id)) ?? []), r]);
+  return new Map([...bySchool].map(([school, rows]) => [school, programsFrom(rows)]));
+}
+
+/* ------------------------------------------------------------------ */
+/* Institution escalation                                              */
+/* ------------------------------------------------------------------ */
+
+export interface EscalationPolicy {
+  tenantId: string;
+  enabled: boolean;
+  agreementRef: string;
+  categories: string[];
+  identityRequired: boolean;
+  /** Whether a channel is named. Where it goes is the service role's business. */
+  hasChannel: boolean;
+}
+
+export interface Escalation {
+  id: string;
+  caseId: string;
+  tenantId: string;
+  /** From the case, when it is still kept. */
+  category: ReportCategory | null;
+  severity: Severity | null;
+  status: 'requested' | 'approved' | 'refused';
+  requestedReason: string;
+  requestedAt: string;
+  /** SHA-256 of the requester's account id, so a reviewer can tell it was them. */
+  requestedBy: string;
+  decidedReason: string | null;
+  decidedAt: string | null;
+  delivery: { queuedAt: string; attempts: number; deliveredAt: string | null } | null;
+}
+
+/** Every school's agreement, as reviewers may read it. */
+export async function loadEscalationPolicies(): Promise<Map<string, EscalationPolicy>> {
+  const db = await cloud();
+  const { data, error } = await db
+    .from('community_escalation_policies')
+    .select('tenant_id, enabled, agreement_ref, categories, identity_required, channel');
+  if (error) fail(error, 'Could not read the escalation agreements.');
+  return new Map(
+    ((data ?? []) as Row[]).map((r) => [
+      str(r.tenant_id),
+      {
+        tenantId: str(r.tenant_id),
+        enabled: Boolean(r.enabled),
+        agreementRef: str(r.agreement_ref),
+        categories: Array.isArray(r.categories) ? (r.categories as unknown[]).map(String) : [],
+        identityRequired: Boolean(r.identity_required),
+        hasChannel: str(r.channel) !== '',
+      },
+    ]),
+  );
+}
+
+/** Escalations from the last 30 days, newest first, with whether each went. */
+export async function loadEscalations(): Promise<Escalation[]> {
+  const db = await cloud();
+  const since = new Date(Date.now() - 30 * 86_400_000).toISOString();
+  const { data, error } = await db
+    .from('community_escalations')
+    .select('id, case_id, tenant_id, status, requested_reason, requested_at, requested_by_sha256, decided_reason, decided_at')
+    .gte('requested_at', since)
+    .order('requested_at', { ascending: false })
+    .limit(100);
+  if (error) fail(error, 'Could not load escalations.');
+  const ids = ((data ?? []) as Row[]).map((r) => str(r.id));
+  const caseIds = [...new Set(((data ?? []) as Row[]).map((r) => str(r.case_id)))];
+  const [deliveries, cases] = await Promise.all([
+    ids.length
+      ? db.from('community_escalation_deliveries').select('escalation_id, queued_at, attempts, delivered_at').in('escalation_id', ids)
+      : Promise.resolve({ data: [] as Row[], error: null }),
+    caseIds.length
+      ? db.from('community_cases').select('id, category, severity').in('id', caseIds)
+      : Promise.resolve({ data: [] as Row[], error: null }),
+  ]);
+  for (const r of [deliveries, cases]) if (r.error) fail(r.error, 'Could not load escalations.');
+  const sent = new Map(((deliveries.data ?? []) as Row[]).map((d) => [str(d.escalation_id), d]));
+  const kases = new Map(((cases.data ?? []) as Row[]).map((k) => [str(k.id), k]));
+  return ((data ?? []) as Row[]).map((r) => {
+    const d = sent.get(str(r.id));
+    const k = kases.get(str(r.case_id));
+    return {
+      id: str(r.id),
+      caseId: str(r.case_id),
+      tenantId: str(r.tenant_id),
+      category: k ? (str(k.category) as ReportCategory) : null,
+      severity: k ? (str(k.severity) as Severity) : null,
+      status: str(r.status) as Escalation['status'],
+      requestedReason: str(r.requested_reason),
+      requestedAt: str(r.requested_at),
+      requestedBy: str(r.requested_by_sha256),
+      decidedReason: r.decided_reason ? str(r.decided_reason) : null,
+      decidedAt: r.decided_at ? str(r.decided_at) : null,
+      delivery: d
+        ? { queuedAt: str(d.queued_at), attempts: Number(d.attempts ?? 0), deliveredAt: d.delivered_at ? str(d.delivered_at) : null }
+        : null,
+    };
+  });
+}
+
+export async function requestEscalation(caseId: string, reason: string): Promise<void> {
+  const db = await cloud();
+  const { error } = await db.rpc('request_community_escalation', { want_case: caseId, want_reason: reason });
+  if (error) fail(error, 'Could not request the escalation.');
+}
+
+export async function decideEscalation(escalationId: string, approve: boolean, reason: string): Promise<void> {
+  const db = await cloud();
+  const { error } = await db.rpc('decide_community_escalation', {
+    want_escalation: escalationId,
+    want_approve: approve,
+    want_reason: reason,
+  });
+  if (error) fail(error, 'Could not record the escalation decision.');
+}
+
+/** The same hash the database stores for a reviewer, so the console can say "you asked". */
+export async function accountHash(accountId: string): Promise<string> {
+  const bytes = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(accountId));
+  return [...new Uint8Array(bytes)].map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+/* ------------------------------------------------------------------ */
+/* The private safety state                                            */
+/* ------------------------------------------------------------------ */
+
+/** One case author's 0–100, for a reviewer, with a reason the case history keeps. */
+export async function readAuthorSafety(caseId: string, reason: string): Promise<number> {
+  const db = await cloud();
+  const { data, error } = await db.rpc('case_author_safety', { want_case: caseId, want_reason: reason });
+  if (error) fail(error, 'Could not read the safety state.');
+  return Number(data);
+}
+
+/** What the student is told: a sentence, never a number. */
+export async function myStanding(): Promise<string> {
+  const db = await cloud();
+  const { data, error } = await db.rpc('my_community_standing');
+  if (error) fail(error, 'Could not check your Community standing.');
+  return str(data);
 }
 
 /* ------------------------------------------------------------------ */

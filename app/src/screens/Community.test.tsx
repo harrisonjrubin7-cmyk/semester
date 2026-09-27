@@ -5,6 +5,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mock = vi.hoisted(() => ({
   on: true,
+  flags: {} as Record<string, boolean>,
+  myStanding: vi.fn(),
   account: { id: 'me', email: 'me@example.edu', via: 'email' } as unknown,
   loadCommunities: vi.fn(),
   loadNotices: vi.fn(),
@@ -30,7 +32,7 @@ vi.mock('../lib/cloud', () => ({ cloudConfigured: true, cloud: vi.fn() }));
 vi.mock('../lib/media', () => ({ WIDE: '(min-width: 840px)', useMedia: () => false }));
 vi.mock('../community/flags', () => ({
   COMMUNITY_FLAGS: {},
-  enabled: () => mock.on,
+  enabled: (_flags: unknown, key: string) => (key in mock.flags ? mock.flags[key] : mock.on),
 }));
 vi.mock('../community/client', () => ({
   loadCommunities: mock.loadCommunities,
@@ -43,6 +45,8 @@ vi.mock('../community/client', () => ({
   blockAuthor: mock.blockAuthor,
   reviewerStanding: mock.standing,
   loadPrograms: mock.programs,
+  myStanding: mock.myStanding,
+  NO_PROGRAMS: { scopedPseudonymity: false, volunteerModeration: false, institutionEscalation: false, accountSafetyState: false },
   loadAlias: mock.loadAlias,
   claimAlias: mock.claimAlias,
   dropAlias: mock.dropAlias,
@@ -102,6 +106,8 @@ beforeEach(() => {
   mock.appeal.mockResolvedValue(undefined);
   mock.standing.mockResolvedValue('none');
   mock.programs.mockResolvedValue({ scopedPseudonymity: false, volunteerModeration: false });
+  mock.flags = {};
+  mock.myStanding.mockResolvedValue('A past decision still affects your Community account.');
   mock.loadAlias.mockResolvedValue(null);
   mock.claimAlias.mockResolvedValue(undefined);
   mock.dropAlias.mockResolvedValue(undefined);
@@ -345,6 +351,30 @@ describe('Community', () => {
     await render();
     click('Volunteer moderation');
     expect(mock.dispatch).toHaveBeenCalledWith({ type: 'go', screen: 'volunteer' });
+  });
+
+  describe('standing', () => {
+    it('is not asked for where the school has not switched safety state on', async () => {
+      await render();
+      expect(mock.myStanding).not.toHaveBeenCalled();
+      expect(host.textContent).not.toContain('Your standing');
+    });
+
+    it('is not asked for while the build flag is off, whatever the school says', async () => {
+      mock.flags.accountSafetyState = false;
+      mock.programs.mockResolvedValue({ accountSafetyState: true });
+      await render();
+      expect(mock.myStanding).not.toHaveBeenCalled();
+    });
+
+    it('is a sentence, never a number, with what it can and cannot touch', async () => {
+      mock.programs.mockResolvedValue({ accountSafetyState: true });
+      await render();
+      const panel = host.querySelector('[aria-label="Your Community standing"]') as HTMLElement;
+      expect(panel.textContent).toContain('A past decision still affects your Community account.');
+      expect(panel.textContent).toContain('never affects your feed, your courses');
+      expect(panel.textContent).not.toMatch(/\d+ (out of|\/) 100/);
+    });
   });
 
   it('hides a post for this viewer only', async () => {

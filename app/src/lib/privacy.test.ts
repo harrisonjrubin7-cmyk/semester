@@ -373,6 +373,9 @@ describe('"delete my account" really means every row', () => {
     expect(KEPT_TABLES.map((t) => t.table).sort()).toEqual([
       'communities',
       'community_cases',
+      'community_escalation_deliveries',
+      'community_escalation_policies',
+      'community_escalations',
       'community_programs',
       'community_reports',
       'community_retention_runs',

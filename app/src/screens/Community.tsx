@@ -25,6 +25,8 @@ import {
   loadPosts,
   loadPrograms,
   muteAuthor,
+  myStanding,
+  NO_PROGRAMS,
   reportPost,
   reviewerStanding,
   type CommunityRow,
@@ -117,7 +119,8 @@ export function Community() {
 function CommunitySignedIn({ accountId, wide }: { accountId: string; wide: boolean }) {
   const { dispatch } = useStore();
   const [reviewer, setReviewer] = useState(false);
-  const [programs, setPrograms] = useState<Programs>({ scopedPseudonymity: false, volunteerModeration: false });
+  const [programs, setPrograms] = useState<Programs>(NO_PROGRAMS);
+  const [standing, setStanding] = useState('');
   const [communities, setCommunities] = useState<CommunityRow[]>([]);
   const [notices, setNotices] = useState<DecisionNotice[]>([]);
   const [openId, setOpenId] = useState<string | null>(null);
@@ -132,11 +135,17 @@ function CommunitySignedIn({ accountId, wide }: { accountId: string; wide: boole
         loadCommunities(),
         loadNotices(),
         // A school that has switched nothing on reads as everything off.
-        loadPrograms().catch(() => ({ scopedPseudonymity: false, volunteerModeration: false })),
+        loadPrograms().catch(() => NO_PROGRAMS),
       ]);
       setCommunities(next);
       setNotices(decided);
       setPrograms(switched);
+      // Asked only where both switches are on; a sentence, never the number.
+      setStanding(
+        enabled(COMMUNITY_FLAGS, 'accountSafetyState') && switched.accountSafetyState
+          ? await myStanding().catch(() => '')
+          : '',
+      );
     } catch (e) {
       setStatus(e instanceof Error ? e.message : 'Could not load Community.');
     }
@@ -171,6 +180,17 @@ function CommunitySignedIn({ accountId, wide }: { accountId: string; wide: boole
         <ActionButton style={{ marginBottom: 'var(--sp-5)' }} onClick={() => dispatch({ type: 'go', screen: 'volunteer' })}>
           Volunteer moderation
         </ActionButton>
+      )}
+      {standing && (
+        <section aria-label="Your Community standing" className="portal-panel" style={{ display: 'grid', gap: 'var(--sp-2)', marginBottom: 'var(--sp-5)' }}>
+          <strong>Your standing</strong>
+          <p style={{ margin: 0 }}>{standing}</p>
+          <p style={{ margin: 0, color: 'var(--app-dim)' }}>
+            Only Trust & Safety staff can see more than this, and only with a written reason that is kept. It never
+            affects your feed, your courses or anything outside Community, and a decision stops counting after a year or
+            when an appeal succeeds.
+          </p>
+        </section>
       )}
       {notices.length > 0 && <NoticeList notices={notices} onChange={refresh} />}
       <SectionLabel aside={mine.length ? `${mine.length}` : undefined}>Yours</SectionLabel>

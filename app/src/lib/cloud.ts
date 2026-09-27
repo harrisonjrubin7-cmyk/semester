@@ -1191,6 +1191,18 @@ export const KEPT_TABLES: KeptTable[] = [
     why: 'What an automated detector recorded about a post — the rule, how sure it was, and what a reviewer then decided. It belongs to the moderation case and goes when the case does, on the case\'s retention date.',
   },
   {
+    table: 'community_escalation_policies',
+    why: 'Whether your university has signed an agreement to receive escalations of serious safety cases, and which kinds it covers. An agreement of the school, not a record about you.',
+  },
+  {
+    table: 'community_escalations',
+    why: 'A request by Trust & Safety to tell your university about a serious safety case, and a second reviewer\'s decision on it. It goes with the case, on the case\'s retention date; it never holds your name, email or account id, only an opaque reference when the agreement requires one.',
+  },
+  {
+    table: 'community_escalation_deliveries',
+    why: 'The one queued copy of an approved escalation and whether it was delivered. It is removed 90 days after delivery, and goes with its escalation before then.',
+  },
+  {
     table: 'community_programs',
     why: 'Whether your university has switched pseudonyms or volunteer moderation on. A setting of the school, not a record about you; only the service role writes it.',
   },

@@ -82,10 +82,19 @@ It **is not** yet:
   `community_escalation_deliveries`; nothing sends it yet. An adapter would
   run as the service role, call `private.take_escalation_deliveries()` and
   mark each one sent. No university has an agreement, so none is written.
-- **A reviewer screen for escalation or safety state.** Both exist as
-  functions only (below).
+- **An admin screen for escalation agreements.** Policies are written by the
+  service role; the console only reads them.
 - **A reviewer tool to map an alias to an account** (just-in-time access).
   Enforcement already reaches the account server-side.
+
+The moderation console's escalation and safety-state parts are built. On a
+P0 or P1 case, "Escalate to the university" lists exactly what would be sent
+before anyone asks; a waiting escalation is decided by a different reviewer,
+and the console says so to whoever asked instead of offering buttons the
+server would refuse. "Author's safety state" reads the number once, with a
+reason the case history keeps. A student sees one sentence about their
+standing in Community, never the number. Each part appears only when its
+build flag and the case's school's `community_programs` switch are both on.
 
 The alias panel and "Post as …" toggle (Community) and the Volunteering screen
 (opened from Community) are built. Each appears only when its build flag, the

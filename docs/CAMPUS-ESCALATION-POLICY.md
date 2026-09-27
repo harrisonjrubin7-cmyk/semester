@@ -56,3 +56,14 @@ There is no dashboard, no standing feed and no bulk export to institutions.
 `programs.test.ts` holds the SQL to the TypeScript: severities, the
 500-character summary and the payload keys.
 
+## In the console
+
+`components/community/Escalation.tsx`, inside the moderation console. It
+appears on P0 and P1 cases only where `VITE_INSTITUTION_ESCALATION` is set and
+the case's school has switched escalation on. `escalationBlock` asks the same
+questions as `private.escalation_allowed`, in the same order, and shows the
+one reason a case can't be escalated instead of a button. Before anyone asks,
+it lists what would be sent. The person who asked sees "You asked for this
+one", not approval buttons. An approved escalation shows whether it has been
+delivered, or that delivery failed five times.
+
