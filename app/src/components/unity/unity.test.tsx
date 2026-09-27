@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, useEffect, type ReactNode } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { StoreProvider, useStore } from '../../state/store';
@@ -364,6 +364,31 @@ describe('workspace modes', () => {
     expect(host.querySelector('[aria-label="Focus mode"]')).not.toBeNull();
     await press('Exit focus');
     expect(seen.workspaceMode).toBe('guided');
+  });
+});
+
+describe('the break reminder in Focused', () => {
+  it('suggests a break after fifty minutes, as a status a reader hears, and takes it', async () => {
+    vi.useFakeTimers({ toFake: ['Date', 'setInterval', 'clearInterval'] });
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ schemaVersion: 6, workspaceMode: 'focused' }));
+      await mount(null);
+      const status = () => host.querySelector('.focus-bar [role="status"]')!;
+      expect(status()).not.toBeNull();
+      expect(status().textContent).toBe('');
+      await act(async () => {
+        vi.advanceTimersByTime(50 * 60_000);
+      });
+      expect(status().textContent).toBe('50 minutes of focus. Time for a short break?');
+      const timers = seen.timers.length;
+      await press('Take a 5-minute break');
+      expect(seen.timers.length).toBe(timers + 1);
+      expect(seen.timers[0].label).toBe('Break');
+      expect(status().textContent).toBe('');
+      expect(button('Exit focus')).toBeTruthy();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
 

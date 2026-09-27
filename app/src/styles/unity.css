@@ -676,6 +676,23 @@
   box-shadow: var(--elevation-floating);
 }
 
+/* On a phone the bar wraps once it carries the break reminder, and a pill
+   that wraps is an oval. It takes the gutters' width and a card's corners. */
+@media (max-width: 759px) {
+  .focus-bar {
+    width: calc(100% - 2 * var(--layout-gutter));
+    border-radius: var(--shape-surface);
+  }
+}
+
+/* The break reminder's line. Empty until a break is due, and then one
+   sentence in the bar — no motion, no colour of its own. */
+.focus-break {
+  margin: 0;
+  font-size: var(--type-sm);
+  color: var(--text-primary);
+}
+
 /* ── Workspace modes — presentation only ────────────────────────────────── */
 
 /* Detail that Detailed puts up front and the others keep one press away. */

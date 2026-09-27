@@ -46,7 +46,17 @@ Known limits:
   on the workspace in Focused, against 248 and 233 from the left in Guided;
   `styles/tokens.test.ts` holds the rules. The header — back, search, `+` —
   stays, and the Focus bar's Exit is the way out.
-- The brief's optional break reminder is not built.
+- The break reminder (`lib/breaks.ts`, drawn by the Focus bar). After fifty
+  minutes of focus the bar says "50 minutes of focus. Time for a short
+  break?" and offers **Take a 5-minute break** (a real Break timer, and the
+  next stretch starts when it ends), **Not now** (ten minutes) and **No more
+  reminders** (for this focus session). A tab hidden for at least five minutes
+  counts as a break. The sentence is in a polite `role="status"` line that is
+  always in the document — never `display: none`, which some readers stop
+  watching — so it is heard without focus being moved; nothing blinks, dims
+  or locks the work. `lib/breaks.test.ts` holds the rules and
+  `unity.test.tsx` drives it through the store's own clock; checked in
+  Chromium at 1280px and 420px with the clock fast-forwarded.
 - The Focus bar sits at `--layer-sticky` (20) near the bottom edge. It has not
   been measured against the assistant's floating button or against
   `--focus-clear-bottom` (84px) in a browser.

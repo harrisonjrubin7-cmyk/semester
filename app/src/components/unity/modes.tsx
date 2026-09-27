@@ -1,7 +1,18 @@
-import { useId } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { ACCESS_LOOK, WORKSPACE_MODES, workspaceModeOf, type WorkspaceMode } from '../../lib/look';
 import { currentLook } from '../../state/shape';
-import { useStore } from '../../state/store';
+import { useNow, useStore } from '../../state/store';
+import {
+  BREAK_MINUTES,
+  breakDue,
+  cameBack,
+  focusedFor,
+  snooze,
+  startClock,
+  switchOff,
+  takeBreak,
+  type BreakClock,
+} from '../../lib/breaks';
 import { SESSION_MINUTES } from '../../lib/unity';
 
 /** The attribute on `<html>` the stylesheet reads the mode from. */
@@ -58,21 +69,81 @@ export function WorkspaceModePicker() {
  * scroll margins already keep a focused control clear of.
  */
 export function FocusBar() {
-  const { dispatch } = useStore();
   const mode = useWorkspaceMode();
-  if (mode !== 'focused') return null;
+  // Mounted only while Focused, so the stretch of focus starts when the mode
+  // is entered and is forgotten when it is left.
+  return mode === 'focused' ? <FocusedBar /> : null;
+}
+
+function FocusedBar() {
+  const { dispatch } = useStore();
+  const now = useNow().getTime();
+  const [clock, setClock] = useState<BreakClock>(() => startClock(now));
+  const due = breakDue(clock, now);
+  const said = `${focusedFor(clock, now)} minutes of focus. Time for a short break?`;
+
+  // Time away counts as a break — see `cameBack`. Set from the event, not in
+  // the effect body, so this is a subscription and not a render loop.
+  useEffect(() => {
+    let hiddenAt = 0;
+    const onVisibility = () => {
+      if (document.hidden) hiddenAt = Date.now();
+      else if (hiddenAt) setClock((c) => cameBack(c, hiddenAt, Date.now()));
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => document.removeEventListener('visibilitychange', onVisibility);
+  }, []);
+
   return (
     <div className="focus-bar" role="region" aria-label="Focus mode">
       <span className="kicker">Focus mode</span>
-      <button
-        type="button"
-        className="btn btn-ghost"
-        onClick={() =>
-          dispatch({ type: 'addTimer', label: 'Focus session', seconds: SESSION_MINUTES * 60, at: Date.now() })
-        }
-      >
-        Start {SESSION_MINUTES}-minute timer
-      </button>
+      {/*
+        The reminder. A polite live region that is always in the document, so
+        a screen reader hears the sentence when it appears without focus being
+        taken from the work — kept out of `display: none`, which some readers
+        stop watching. The buttons follow it in reading order. Nothing
+        moves, blinks or dims — `lib/breaks.ts` has the rules.
+      */}
+      <p className="sr-only" role="status">
+        {due ? said : ''}
+      </p>
+      {due && (
+        // The same sentence for the eye; the status line above is the one a
+        // reader hears, so this one is not read twice.
+        <span className="focus-break" aria-hidden="true">
+          {said}
+        </span>
+      )}
+      {due ? (
+        <>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={() => {
+              dispatch({ type: 'addTimer', label: 'Break', seconds: BREAK_MINUTES * 60, at: now });
+              setClock((c) => takeBreak(c, now));
+            }}
+          >
+            Take a {BREAK_MINUTES}-minute break
+          </button>
+          <button type="button" className="btn btn-ghost" onClick={() => setClock((c) => snooze(c, now))}>
+            Not now
+          </button>
+          <button type="button" className="btn btn-ghost" onClick={() => setClock(switchOff)}>
+            No more reminders
+          </button>
+        </>
+      ) : (
+        <button
+          type="button"
+          className="btn btn-ghost"
+          onClick={() =>
+            dispatch({ type: 'addTimer', label: 'Focus session', seconds: SESSION_MINUTES * 60, at: now })
+          }
+        >
+          Start {SESSION_MINUTES}-minute timer
+        </button>
+      )}
       <button type="button" className="btn btn-secondary" onClick={() => dispatch({ type: 'setLook', look: { workspaceMode: 'guided' } })}>
         Exit focus
       </button>
