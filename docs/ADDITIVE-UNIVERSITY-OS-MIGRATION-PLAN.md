@@ -25,6 +25,7 @@ than copied — two stores for one fact is the failure this repository's audits 
 | `integration_*` (7 tables) | **New**, as named | Nothing like them existed. `public.connections` is peer connections, unrelated. |
 | `source_records`, `source_snapshots`, `source_freshness_events`, `canonical_entity_references` | **New**, as named | `approved_source` is course learning material, a different thing. |
 | `data_classification_rules` | **New**, as named, with the T4+ hard blocks as check constraints | — |
+| T0–T6 classification | `app/src/lib/integration/classification.ts` + `data_classification_rules` (the platform floor), beside the AI Toolkit's student-facing gate `app/src/lib/toolkit/classification.ts` (#781) | Two layers, one rule: the toolkit may be stricter, never looser. `classification.test.ts` walks every tier × action and fails if the toolkit allows what the floor forbids. Aligning found the floor stricter than the command for Community (T1/T2), now corrected |
 | `retention_jobs` | Deferred to the hardening phase | The gateway journal already has retention (`gateway_purge_journal`); jobs for the new tables need a worker first. |
 | capabilities `integration.view` etc. | `integration:view`, `integration:configure`, `integration:approve`, `integration:sync`, `integration:replay`, `killswitch:engage` | Repository convention is `noun:verb`. |
 | `/admin/integrations` | An **Integrations** tab on the University screen | There is no `/admin` route; staff surfaces live on University (see `Control`). No new top-level student navigation. |

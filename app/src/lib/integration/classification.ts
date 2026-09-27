@@ -35,8 +35,8 @@ export type ClassRoute = Record<Destination, boolean>;
 /** The platform floor. Mirrors the seed in 20260927170000_integration_control_plane.sql. */
 export const PLATFORM_ROUTES: Record<DataClass, ClassRoute> = {
   T0: { semester: true, approved_ai: true, consumer_ai: true, external_connector: true, community: true },
-  T1: { semester: true, approved_ai: true, consumer_ai: false, external_connector: true, community: false },
-  T2: { semester: true, approved_ai: true, consumer_ai: false, external_connector: false, community: false },
+  T1: { semester: true, approved_ai: true, consumer_ai: false, external_connector: true, community: true },
+  T2: { semester: true, approved_ai: true, consumer_ai: false, external_connector: false, community: true },
   T3: { semester: true, approved_ai: true, consumer_ai: false, external_connector: false, community: false },
   T4: { semester: false, approved_ai: false, consumer_ai: false, external_connector: false, community: false },
   T5: { semester: false, approved_ai: false, consumer_ai: false, external_connector: false, community: false },

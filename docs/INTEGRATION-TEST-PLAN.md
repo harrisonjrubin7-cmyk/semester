@@ -95,6 +95,12 @@ bug — lax JSON path mode unwrapped arrays, so `{"students":[…]}` was accepte
 component test found another: the cards flag required a connection no student can read, so the section could
 never have appeared.
 
+## Two classification layers — `classification.test.ts`
+
+The platform floor matches the migration's seed row for row, and the AI Toolkit's gate (`lib/toolkit/classification.ts`)
+is walked for every tier, action and course-AI answer: whenever it allows, the floor must allow the matching
+destination. Restoring the old floor (T2 kept out of Community) turned three tests red.
+
 ## Not yet covered (later phases)
 
 Worker against a live database; webhook signature validation; reconciliation job; retention jobs; SIS/degree-audit mocks; tablet screenshots and a full device matrix (phone and desktop were driven in Chromium).

@@ -18,6 +18,12 @@ build at all; they never turn a feature on for a school by themselves.
 | preview | `preview`, `sandbox`, `production` |
 | production | `production` only |
 
+### Beside the AI Toolkit's switches
+
+`app/src/lib/toolkit/flags.ts` (#781) holds the AI Toolkit's *build* switches (`VITE_AI_TOOLKIT`, `VITE_TOOLKIT_*`), with
+`VITE_AI_TOOLKIT=off` as its kill switch. They decide what a build contains. The tenant flags and kill switches here
+decide what a school has turned on at run time; a toolkit feature that reaches institutional data answers to both.
+
 ## Evaluation order
 
 `evaluateFlag(key, context)` stops at the first gate that refuses and reports which one:

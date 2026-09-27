@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { DATA_CLASSES, DESTINATIONS, PLATFORM_ROUTES, routeAllowed, tighten } from './classification';
+import { gate } from '../toolkit/classification';
 
 describe('data classification', () => {
   it('never sends T3 or above to a consumer model', () => {
@@ -14,10 +15,33 @@ describe('data classification', () => {
     }
   });
 
-  it('keeps T2 student work and T3 records out of Community and external connectors', () => {
-    for (const c of ['T2', 'T3'] as const) {
-      expect(routeAllowed(c, 'community')).toBe(false);
-      expect(routeAllowed(c, 'external_connector')).toBe(false);
+  it('keeps T3 records out of Community and external connectors, and T2 work out of connectors', () => {
+    expect(routeAllowed('T3', 'community')).toBe(false);
+    expect(routeAllowed('T3', 'external_connector')).toBe(false);
+    expect(routeAllowed('T2', 'external_connector')).toBe(false);
+  });
+
+  it('leaves T0–T2 in Community to the school, course and student, as the command does', () => {
+    for (const c of ['T0', 'T1', 'T2'] as const) expect(routeAllowed(c, 'community'), c).toBe(true);
+    expect(routeAllowed('T2', 'community', { T2: { community: false } })).toBe(false);
+  });
+
+  /*
+   * Two T0–T6 implementations exist: this one, the platform floor the database
+   * also enforces, and the AI Toolkit's gate (lib/toolkit/classification.ts),
+   * which answers a student about one action. The toolkit may be stricter —
+   * it keeps T3 from every AI path — but it must never allow what the floor
+   * forbids, or a student would be told yes by a screen and no by the server.
+   */
+  it('is never contradicted by a looser AI Toolkit gate', () => {
+    const toDestination = { store: 'semester', ai: 'approved_ai', share: 'community', external: 'external_connector' } as const;
+    for (const t of DATA_CLASSES) {
+      for (const [action, dest] of Object.entries(toDestination)) {
+        for (const courseAllowsAi of [true, false]) {
+          const toolkit = gate(t, action as keyof typeof toDestination, courseAllowsAi);
+          if (toolkit.allowed) expect(routeAllowed(t, dest), `${t} ${action} (course AI ${courseAllowsAi})`).toBe(true);
+        }
+      }
     }
   });
 

@@ -171,7 +171,10 @@ grant execute on function public.kill_switch_engaged(text, text) to authenticate
 
 -- ── 3. Data classification ceiling ────────────────────────────────────────
 --
--- The platform rows (null tenant) are the floor. A tenant may add a row for a
+-- The platform rows (null tenant) are the floor. T0–T2 may reach Community at
+-- the platform level because the command leaves them to tenant, course and
+-- consent policy (a student sharing their own draft, course material shared
+-- within the course); T3 and above never do. A tenant may add a row for a
 -- class to be *stricter*; the check below refuses one that is looser, so no
 -- tenant setting can route an education record to a consumer model.
 
@@ -204,8 +207,8 @@ insert into public.data_classification_rules
    allowed_in_external_connector, allowed_in_community, retention_policy, required_approvals)
 values
   (null, 'T0', true,  true,  true,  true,  true,  'tenant default',                      '[]'),
-  (null, 'T1', true,  true,  false, true,  false, 'course term plus one year',           '["course"]'),
-  (null, 'T2', true,  true,  false, false, false, 'student-controlled',                  '["student"]'),
+  (null, 'T1', true,  true,  false, true,  true,  'course term plus one year',           '["course"]'),
+  (null, 'T2', true,  true,  false, false, true,  'student-controlled',                  '["student"]'),
   (null, 'T3', true,  true,  false, false, false, 'minimum necessary; institution policy','["institution","purpose"]'),
   (null, 'T4', false, false, false, false, false, 'not ingested',                        '["institution","security"]'),
   (null, 'T5', false, false, false, false, false, 'not ingested',                        '["institution","research"]'),
