@@ -1002,3 +1002,141 @@ export async function decideTask(taskId: string, action: VolunteerAction, reason
   const { error } = await db.rpc('volunteer_decide', { want_task: taskId, want_action: action, want_reason: reasonCode });
   if (error) fail(error, 'Could not record your decision.');
 }
+
+/* ------------------------------------------------------------------ */
+/* Managing the volunteer programme (senior reviewers)                 */
+/* ------------------------------------------------------------------ */
+
+export interface RosterEntry {
+  userId: string;
+  handle: string;
+  tenantId: string;
+  status: VolunteerStatus;
+  appliedAt: string;
+  trainedAt: string | null;
+  confidentialityAt: string | null;
+  recusalAt: string | null;
+  calibrationStartedAt: string;
+  revokedAt: string | null;
+  revokedReason: string;
+  onboardingAnswered: number;
+  onboardingRight: number;
+  quality: number | null;
+  reviewsToday: number;
+  lastAnsweredAt: string | null;
+}
+
+export interface VolunteerEvent {
+  volunteer: string;
+  event: string;
+  fromStatus: string | null;
+  toStatus: string | null;
+  reason: string;
+  occurredAt: string;
+}
+
+export interface CalibrationItem {
+  id: string;
+  tenantId: string;
+  kind: 'onboarding' | 'control';
+  category: 'spam_scam_or_phishing' | 'other';
+  severity: 'P2' | 'P3';
+  communityKind: string;
+  body: string;
+  expectedAction: 'allow' | 'remove';
+  retiredAt: string | null;
+}
+
+export type ManageAction = 'record_training' | 'recalibrate' | 'revoke';
+
+const orNull = (v: unknown) => (v === null || v === undefined ? null : str(v));
+
+export async function loadRoster(): Promise<RosterEntry[]> {
+  const db = await cloud();
+  const { data, error } = await db.rpc('volunteer_roster');
+  if (error) fail(error, 'Could not load the volunteers.');
+  return ((data ?? []) as Row[]).map((r) => ({
+    userId: str(r.user_id),
+    handle: str(r.handle),
+    tenantId: str(r.tenant_id),
+    status: str(r.status) as VolunteerStatus,
+    appliedAt: str(r.applied_at),
+    trainedAt: orNull(r.training_completed_at),
+    confidentialityAt: orNull(r.confidentiality_signed_at),
+    recusalAt: orNull(r.recusal_acknowledged_at),
+    calibrationStartedAt: str(r.calibration_started_at),
+    revokedAt: orNull(r.revoked_at),
+    revokedReason: str(r.revoked_reason),
+    onboardingAnswered: Number(r.onboarding_answered ?? 0),
+    onboardingRight: Number(r.onboarding_right ?? 0),
+    quality: r.quality === null || r.quality === undefined ? null : Number(r.quality),
+    reviewsToday: Number(r.reviews_today ?? 0),
+    lastAnsweredAt: orNull(r.last_answered_at),
+  }));
+}
+
+export async function manageVolunteer(userId: string, action: ManageAction, reason: string): Promise<void> {
+  const db = await cloud();
+  const { error } = await db.rpc('manage_volunteer', { want_volunteer: userId, want_action: action, want_reason: reason });
+  if (error) fail(error, 'Could not record that.');
+}
+
+/** The programme's history, newest first. Volunteers are named by hash; see accountHash. */
+export async function loadVolunteerEvents(): Promise<VolunteerEvent[]> {
+  const db = await cloud();
+  const { data, error } = await db
+    .from('community_volunteer_events')
+    .select('volunteer_sha256, event, from_status, to_status, reason, occurred_at')
+    .order('occurred_at', { ascending: false })
+    .limit(300);
+  if (error) fail(error, 'Could not load the volunteer history.');
+  return ((data ?? []) as Row[]).map((r) => ({
+    volunteer: str(r.volunteer_sha256),
+    event: str(r.event),
+    fromStatus: orNull(r.from_status),
+    toStatus: orNull(r.to_status),
+    reason: str(r.reason),
+    occurredAt: str(r.occurred_at),
+  }));
+}
+
+export async function loadCalibrationItems(): Promise<CalibrationItem[]> {
+  const db = await cloud();
+  const { data, error } = await db
+    .from('community_calibration_items')
+    .select('id, tenant_id, kind, category, severity, community_kind, body, expected_action, retired_at')
+    .order('created_at', { ascending: false });
+  if (error) fail(error, 'Could not load the calibration items.');
+  return ((data ?? []) as Row[]).map((r) => ({
+    id: str(r.id),
+    tenantId: str(r.tenant_id),
+    kind: str(r.kind) as CalibrationItem['kind'],
+    category: str(r.category) as CalibrationItem['category'],
+    severity: str(r.severity) as CalibrationItem['severity'],
+    communityKind: str(r.community_kind),
+    body: str(r.body),
+    expectedAction: str(r.expected_action) as CalibrationItem['expectedAction'],
+    retiredAt: orNull(r.retired_at),
+  }));
+}
+
+export async function addCalibrationItem(item: Omit<CalibrationItem, 'id' | 'retiredAt'>): Promise<void> {
+  const db = await cloud();
+  const { error } = await db.from('community_calibration_items').insert({
+    tenant_id: item.tenantId,
+    kind: item.kind,
+    category: item.category,
+    severity: item.severity,
+    community_kind: item.communityKind,
+    body: item.body,
+    expected_action: item.expectedAction,
+  });
+  if (error) fail(error, 'Could not add the item.');
+}
+
+export async function retireCalibrationItem(id: string): Promise<void> {
+  const db = await cloud();
+  const { error } = await db.from('community_calibration_items').update({ retired_at: new Date().toISOString() }).eq('id', id);
+  if (error) fail(error, 'Could not retire the item.');
+}
+

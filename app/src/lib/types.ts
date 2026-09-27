@@ -753,6 +753,7 @@ export type Screen =
   | 'community'
   | 'moderation'
   | 'agreements'
+  | 'volunteers'
   | 'volunteer'
   | 'activities'
   | 'brief'

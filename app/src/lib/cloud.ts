@@ -1191,6 +1191,14 @@ export const KEPT_TABLES: KeptTable[] = [
     why: 'What an automated detector recorded about a post — the rule, how sure it was, and what a reviewer then decided. It belongs to the moderation case and goes when the case does, on the case\'s retention date.',
   },
   {
+    table: 'community_calibration_items',
+    why: 'Practice posts with a known answer, written by Trust & Safety staff for volunteer moderators to calibrate on. Not a record about any student.',
+  },
+  {
+    table: 'community_volunteer_events',
+    why: 'If you volunteered as a moderator: when you applied, trained, signed the agreements, and any change to your standing, each naming you only by a one-way hash. It is removed a year after it happened, by the daily retention sweep.',
+  },
+  {
     table: 'community_identity_grants',
     why: 'When Trust & Safety needed to know which account posted something under an alias during an investigation: who asked and who approved, by a one-way hash, and when it ran out. It goes with the case, and never records what was seen.',
   },

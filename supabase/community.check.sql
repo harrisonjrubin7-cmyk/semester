@@ -884,7 +884,9 @@ begin
   perform pg_temp.said('disagreement goes to a professional, still open', t, 'professional/open');
 
   -- Quality: the last twenty controls, 5 points each.
-  update public.community_volunteers set status = 'active' where user_id = v3;
+  -- A history three days old, from a calibration that began before it. (now() is
+  -- fixed for the whole transaction, so the start is backdated to match.)
+  update public.community_volunteers set status = 'active', calibration_started_at = now() - interval '4 days' where user_id = v3;
   insert into public.community_volunteer_tasks (volunteer_id, item_id, assigned_at, answered_at, answer, correct)
   select v3, i.id, now() - interval '3 days', now() - interval '3 days' + (row_number() over ()) * interval '1 second',
          'allow', row_number() over () <= 14
@@ -897,17 +899,73 @@ begin
     format($q$select public.manage_volunteer(%L, 'recalibrate', 'retrained on spam')$q$, v3));
   select status into t from public.community_volunteers where user_id = v3;
   perform pg_temp.said('onboarding again', t, 'onboarding');
+  -- A fresh start, not a status the old answers undo on the next request.
+  perform pg_temp.become(v3);
+  select count(*) into n from public.volunteer_next_tasks();
+  execute 'reset role';
+  select status into t from public.community_volunteers where user_id = v3;
+  perform pg_temp.said('the old calibration does not re-activate them', t, 'onboarding');
+  select count(*) into n from public.community_volunteer_tasks tk
+    join public.community_calibration_items i on i.id = tk.item_id
+   where tk.volunteer_id = v3 and tk.answered_at is null and i.kind = 'onboarding';
+  perform pg_temp.counted('they are given onboarding items to calibrate on again', (n > 0)::int, 1);
+  perform pg_temp.counted('twenty fresh right answers', pg_temp.work(v3, 20, 20), 20);
+  select status into t from public.community_volunteers where user_id = v3;
+  perform pg_temp.said('make them active again', t, 'active');
+  perform pg_temp.counted('with the old controls no longer counted against them', pg_temp.seen(v3,
+    'select 1 from public.my_volunteer_standing() where quality is null and onboarding_answered = 20'), 1);
+  -- The transaction's clock does not move, so that fresh calibration is moved
+  -- an hour back: out of the hourly cap, and before the next recalibration.
+  update public.community_volunteer_tasks set assigned_at = assigned_at - interval '1 hour',
+         answered_at = answered_at - interval '1 hour' where volunteer_id = v3;
+  perform pg_temp.become(v3);
+  select count(*) into n from public.volunteer_next_tasks();
+  execute 'reset role';
+  select status into t from public.community_volunteers where user_id = v3;
+  perform pg_temp.said('and the next request does not pause them on the old controls', t, 'active');
+
+  -- Sent back a second time, after a calibration they really passed.
+  perform pg_temp.expect_allowed('a senior reviewer sends them back again', senior,
+    format($q$select public.manage_volunteer(%L, 'recalibrate', 'second retraining')$q$, v3));
+  perform pg_temp.become(v3);
+  select count(*) into n from public.volunteer_next_tasks();
+  execute 'reset role';
+  select status into t from public.community_volunteers where user_id = v3;
+  perform pg_temp.said('a calibration already passed does not count for the new one', t, 'onboarding');
+  select count(*) into n from public.community_volunteer_tasks tk
+    join public.community_calibration_items i on i.id = tk.item_id
+   where tk.volunteer_id = v3 and tk.answered_at is null and i.kind = 'onboarding';
+  perform pg_temp.counted('and items they have seen before can be given again', (n > 0)::int, 1);
+  select count(*) into n from public.community_volunteer_tasks
+   where volunteer_id = v3 and answered_at is null and case_id is not null;
+  perform pg_temp.counted('and no real case is left in their queue from before', n, 0);
 
   perform pg_temp.expect_refused('a revocation needs a reason', senior,
     format($q$select public.manage_volunteer(%L, 'revoke', '')$q$, v2));
+  -- Something handed out and not yet answered, so the revocation has work to take back.
+  insert into public.community_volunteer_tasks (volunteer_id, item_id)
+  select v2, i.id from public.community_calibration_items i where i.kind = 'control' limit 1;
   perform pg_temp.expect_allowed('a senior reviewer revokes v2', senior,
     format($q$select public.manage_volunteer(%L, 'revoke', 'shared a case outside the queue')$q$, v2));
   perform pg_temp.expect_refused('a revoked volunteer gets nothing', v2, 'select * from public.volunteer_next_tasks()');
+  select count(*) into n from public.community_volunteer_tasks where volunteer_id = v2 and answered_at is null;
+  perform pg_temp.counted('and nothing handed out before is left with them', n, 0);
   select count(*) into n from public.community_volunteer_events
    where volunteer_sha256 = private.role_audit_sha256(v2::text) and event = 'revoked'
      and actor_sha256 = private.role_audit_sha256(senior::text);
   perform pg_temp.counted('the revocation is attributed by hash', n, 1);
   perform pg_temp.counted('students read no volunteer events', pg_temp.seen(ben, 'select id from public.community_volunteer_events'), 0);
+  perform pg_temp.expect_refused('a volunteer cannot read the roster', v1, 'select * from public.volunteer_roster()');
+  perform pg_temp.expect_refused('nor can a reviewer who is not senior', rev, 'select * from public.volunteer_roster()');
+  perform pg_temp.expect_refused('nor the school''s community manager', mgr, 'select * from public.volunteer_roster()');
+  perform pg_temp.counted('a senior reviewer reads every volunteer', pg_temp.seen(senior,
+    'select 1 from public.volunteer_roster() where tenant_id = ''pv-u'''),
+    (select count(*) from public.community_volunteers where tenant_id = 'pv-u'));
+  perform pg_temp.counted('with the handle, and the reason a revocation gave', pg_temp.seen(senior,
+    format($q$select 1 from public.volunteer_roster() where user_id = %L and handle = 'v2' and status = 'revoked'
+              and revoked_reason = 'shared a case outside the queue'$q$, v2)), 1);
+  perform pg_temp.counted('progress counts only the current calibration', pg_temp.seen(senior,
+    format($q$select 1 from public.volunteer_roster() where user_id = %L and onboarding_answered = 0$q$, v3)), 1);
   perform pg_temp.counted('a volunteer reads their own standing', pg_temp.seen(v1,
     $q$select 1 from public.my_volunteer_standing() where status = 'active'$q$), 1);
 

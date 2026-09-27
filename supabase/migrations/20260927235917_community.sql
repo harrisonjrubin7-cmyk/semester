@@ -1831,7 +1831,12 @@ create table if not exists public.community_volunteers (
   confidentiality_signed_at timestamptz,
   recusal_acknowledged_at timestamptz,
   revoked_at              timestamptz,
-  revoked_reason          text        not null default '' check (length(revoked_reason) <= 500)
+  revoked_reason          text        not null default '' check (length(revoked_reason) <= 500),
+  -- When the current calibration began: at application, and again whenever a
+  -- senior reviewer sends the volunteer back. Onboarding answers and control
+  -- quality count only from here, so a recalibration is a fresh start rather
+  -- than a status that the old answers immediately undo.
+  calibration_started_at  timestamptz not null default now()
 );
 create index if not exists community_volunteers_by_tenant on public.community_volunteers (tenant_id, status);
 alter table public.community_volunteers enable row level security;
@@ -1968,6 +1973,7 @@ begin
       from (select t.correct from public.community_volunteer_tasks t
               join public.community_calibration_items i on i.id = t.item_id
              where t.volunteer_id = who and t.answered_at is not null and i.kind = 'onboarding'
+               and t.answered_at >= v.calibration_started_at
              order by t.answered_at desc limit 20) t;
     next_status := case when answered >= 20 and right_answers >= 17 then 'active' else 'onboarding' end;
   else
@@ -1975,6 +1981,7 @@ begin
       from (select t.correct from public.community_volunteer_tasks t
               join public.community_calibration_items i on i.id = t.item_id
              where t.volunteer_id = who and t.answered_at is not null and i.kind = 'control'
+               and t.answered_at >= v.calibration_started_at
              order by t.answered_at desc limit 20) t;
     if answered < 20 then
       next_status := 'active';
@@ -2075,10 +2082,13 @@ begin
   elsif want_action = 'revoke' then
     update public.community_volunteers set status = 'revoked', revoked_at = now(), revoked_reason = want_reason
      where user_id = v.user_id;
+    delete from public.community_volunteer_tasks where volunteer_id = v.user_id and answered_at is null;
     perform private.volunteer_event(v.user_id, 'revoked', v.status, 'revoked', want_reason);
   elsif want_action = 'recalibrate' then
     if v.status = 'revoked' then raise exception 'a revoked volunteer cannot be recalibrated' using errcode = '22023'; end if;
-    update public.community_volunteers set status = 'onboarding' where user_id = v.user_id;
+    update public.community_volunteers set status = 'onboarding', calibration_started_at = now() where user_id = v.user_id;
+    -- Whatever was handed out while active — real cases included — is taken back.
+    delete from public.community_volunteer_tasks where volunteer_id = v.user_id and answered_at is null;
     perform private.volunteer_event(v.user_id, 'recalibrate', v.status, 'onboarding', want_reason);
   else
     raise exception 'unknown action' using errcode = '22023';
@@ -2184,8 +2194,11 @@ begin
       insert into public.community_volunteer_tasks (volunteer_id, item_id)
       select me, i.id from public.community_calibration_items i
        where i.tenant_id = v.tenant_id and i.kind = 'onboarding' and i.retired_at is null
-         and not exists (select 1 from public.community_volunteer_tasks t where t.volunteer_id = me and t.item_id = i.id)
-       order by random() limit 5;
+         and not exists (select 1 from public.community_volunteer_tasks t
+                          where t.volunteer_id = me and t.item_id = i.id and t.assigned_at >= v.calibration_started_at)
+       -- Items never seen before first; a recalibrating volunteer may see old ones again.
+       order by exists (select 1 from public.community_volunteer_tasks t where t.volunteer_id = me and t.item_id = i.id), random()
+       limit 5;
     else
       insert into public.community_volunteer_tasks (volunteer_id, item_id)
       select me, i.id from public.community_calibration_items i
@@ -2315,11 +2328,13 @@ as $$
   select v.status,
          (select count(*)::integer from public.community_volunteer_tasks t
             join public.community_calibration_items i on i.id = t.item_id
-           where t.volunteer_id = v.user_id and t.answered_at is not null and i.kind = 'onboarding'),
+           where t.volunteer_id = v.user_id and t.answered_at is not null and i.kind = 'onboarding'
+             and t.answered_at >= v.calibration_started_at),
          (select case when count(*) < 20 then null else (count(*) filter (where x.correct) * 5)::integer end
             from (select t.correct from public.community_volunteer_tasks t
                     join public.community_calibration_items i on i.id = t.item_id
                    where t.volunteer_id = v.user_id and t.answered_at is not null and i.kind = 'control'
+                     and t.answered_at >= v.calibration_started_at
                    order by t.answered_at desc limit 20) x),
          (select count(*)::integer from public.community_volunteer_tasks t
            where t.volunteer_id = v.user_id and t.answered_at > now() - interval '1 hour'),
@@ -2329,6 +2344,54 @@ as $$
 $$;
 revoke all on function public.my_volunteer_standing() from public, anon, authenticated;
 grant execute on function public.my_volunteer_standing() to authenticated;
+
+/*
+ * The roster, for the senior reviewers who manage the programme. A volunteer
+ * is staff-adjacent: who they are is known to the people who train and
+ * revoke them, as it is to the volunteer themselves. Progress counts only the
+ * current calibration, as volunteer_recompute does.
+ */
+create or replace function public.volunteer_roster()
+returns table (
+  user_id uuid, handle text, tenant_id text, status text, applied_at timestamptz,
+  training_completed_at timestamptz, confidentiality_signed_at timestamptz, recusal_acknowledged_at timestamptz,
+  calibration_started_at timestamptz, revoked_at timestamptz, revoked_reason text,
+  onboarding_answered integer, onboarding_right integer, quality integer, reviews_today integer,
+  last_answered_at timestamptz
+)
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+begin
+  if not private.has_capability('community:review_senior') then
+    raise exception 'a senior reviewer manages volunteers' using errcode = '42501';
+  end if;
+  return query
+  select v.user_id,
+         coalesce((select pr.handle from public.profiles pr where pr.user_id = v.user_id), 'Deleted account'),
+         v.tenant_id, v.status, v.applied_at, v.training_completed_at, v.confidentiality_signed_at,
+         v.recusal_acknowledged_at, v.calibration_started_at, v.revoked_at, v.revoked_reason,
+         (select count(*)::integer from public.community_volunteer_tasks t
+            join public.community_calibration_items i on i.id = t.item_id
+           where t.volunteer_id = v.user_id and i.kind = 'onboarding' and t.answered_at >= v.calibration_started_at),
+         (select count(*)::integer from public.community_volunteer_tasks t
+            join public.community_calibration_items i on i.id = t.item_id
+           where t.volunteer_id = v.user_id and i.kind = 'onboarding' and t.answered_at >= v.calibration_started_at and t.correct),
+         (select case when count(*) < 20 then null else (count(*) filter (where x.correct) * 5)::integer end
+            from (select t.correct from public.community_volunteer_tasks t
+                    join public.community_calibration_items i on i.id = t.item_id
+                   where t.volunteer_id = v.user_id and i.kind = 'control' and t.answered_at >= v.calibration_started_at
+                   order by t.answered_at desc limit 20) x),
+         (select count(*)::integer from public.community_volunteer_tasks t
+           where t.volunteer_id = v.user_id and t.answered_at > now() - interval '1 day'),
+         (select max(t.answered_at) from public.community_volunteer_tasks t where t.volunteer_id = v.user_id)
+    from public.community_volunteers v
+   order by v.tenant_id, v.status, v.applied_at;
+end $$;
+revoke all on function public.volunteer_roster() from public, anon, authenticated;
+grant execute on function public.volunteer_roster() to authenticated;
 
 -- ── 14. Institution escalation ────────────────────────────────────────────
 --
@@ -2941,6 +3004,7 @@ grant execute on function public.my_community_standing() to authenticated;
 --     public.volunteer_next_tasks(), private.volunteer_eligible_case(public.community_cases),
 --     private.volunteer_recused(uuid, uuid), private.volunteer_ready(uuid),
 --     public.manage_volunteer(uuid, text, text), public.volunteer_attest(text), public.apply_to_volunteer(),
+--     public.volunteer_roster(),
 --     private.volunteer_recompute(uuid), private.volunteer_event(uuid, text, text, text, text),
 --     public.claim_community_alias(uuid, text), public.approve_community_pseudonymity(uuid, boolean),
 --     private.community_program_on(text, text);

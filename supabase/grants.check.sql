@@ -124,7 +124,7 @@ end $$;
 do $$
 declare
   /*
-   * The allowlist. Seventy-eight, and each is a deliberate entry point:
+   * The allowlist. Seventy-nine, and each is a deliberate entry point:
    *   make_referral_code  — mints this account's own code
    *   claim_referral      — records that this account arrived on somebody's
    *   referral_standing   — two integers and a boolean about the caller
@@ -225,6 +225,7 @@ declare
     'volunteer_attest(want_kind text)',
     'volunteer_decide(want_task uuid, want_action text, want_reason text)',
     'volunteer_next_tasks()',
+    'volunteer_roster()',
 
     /*
      * Institution escalation and the private safety state, both off unless

@@ -115,7 +115,7 @@ const button = (scope: Element, text: string) =>
 beforeEach(() => {
   vi.clearAllMocks();
   mock.on = true;
-  mock.flags = { institutionEscalation: false, accountSafetyState: false, scopedPseudonymity: false };
+  mock.flags = { institutionEscalation: false, accountSafetyState: false, scopedPseudonymity: false, volunteerModeration: false };
   mock.grants.mockResolvedValue([]);
   mock.requestId.mockResolvedValue(undefined);
   mock.decideId.mockResolvedValue(undefined);
@@ -347,6 +347,27 @@ describe('Moderation', () => {
       expect(host.textContent).toContain('Not delivered yet — the university’s system answered 502. Next attempt');
       expect(host.textContent).toContain('No more attempts will be made');
       expect(host.textContent).toContain('held a field the agreement does not allow');
+    });
+  });
+
+  describe('the way to the volunteer programme', () => {
+    it('is only for a senior reviewer, with volunteer moderation built', async () => {
+      mock.flags.volunteerModeration = true;
+      await render();
+      expect(host.textContent).not.toContain('Volunteer programme');
+      act(() => root.unmount());
+      root = createRoot(host);
+      mock.standing.mockResolvedValue('senior');
+      await render();
+      const open = [...host.querySelectorAll('button')].find((b) => b.textContent === 'Volunteer programme') as HTMLButtonElement;
+      await act(async () => open.click());
+      expect(mock.dispatch).toHaveBeenCalledWith({ type: 'go', screen: 'volunteers' });
+    });
+
+    it('is not shown to a senior while volunteer moderation is not built', async () => {
+      mock.standing.mockResolvedValue('senior');
+      await render();
+      expect(host.textContent).not.toContain('Volunteer programme');
     });
   });
 

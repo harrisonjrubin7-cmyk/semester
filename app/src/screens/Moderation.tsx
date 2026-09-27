@@ -208,6 +208,11 @@ function Console({ accountId }: { accountId: string }) {
           Escalation agreements
         </ActionButton>
       )}
+      {standing === 'senior' && enabled(COMMUNITY_FLAGS, 'volunteerModeration') && (
+        <ActionButton style={{ marginBlock: 'var(--sp-4)' }} onClick={() => dispatch({ type: 'go', screen: 'volunteers' })}>
+          Volunteer programme
+        </ActionButton>
+      )}
       {status && <p role="status">{status}</p>}
       {sweep !== undefined && (
         <p style={{ color: 'var(--app-dim)' }}>

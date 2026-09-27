@@ -20,6 +20,16 @@ agreement and the recusal rules are signed by the volunteer. Paused and
 revoked are sticky until a senior reviewer acts, and every status change is
 an event carrying hashes.
 
+**Managing it.** Senior reviewers use the Volunteers screen, opened from the
+moderation console. It lists each volunteer's training, agreements,
+calibration progress and quality. Each of the three actions takes a reason:
+record training, send back to calibration, or revoke. Sending back is a fresh
+start: it clears the volunteer's queue, including any real cases handed out,
+and counts only answers from the new calibration (`calibration_started_at`).
+Revoking clears the queue too. The screen also manages each school's practice
+cases. It warns when there are fewer than 20 onboarding items, because nobody
+can finish calibrating until there are.
+
 | Rule | Value |
 | --- | --- |
 | Eligibility | Verified, 30-day account age, no active restriction, training, confidentiality agreement, recusal acknowledged |

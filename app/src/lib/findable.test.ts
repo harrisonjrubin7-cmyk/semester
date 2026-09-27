@@ -50,6 +50,8 @@ const OPENED_FROM_SOMEWHERE_ELSE: Record<string, string> = {
   community:
     'Registered in DESTINATIONS only while its build switches are on (COMMUNITY_DESTINATION in lib/nav.ts); ' +
     'with them off it is not a place in the app at all.',
+  volunteers:
+    'Managing the volunteer programme. A staff tool opened from the Trust & Safety console, only for a senior reviewer.',
   agreements:
     'Escalation agreements. A staff tool opened from the Trust & Safety console, only for an account that holds the agreement capability.',
   volunteer:
