@@ -1,3 +1,4 @@
+import { fromMarkdown, type Block } from './document';
 import type { CourseUpdate, Note, Unit } from './types';
 
 /**
@@ -194,4 +195,46 @@ export const STUDY_SYSTEM = `You prepare educational study materials, not offici
 
 export function studyMarkdown(sections:StudySection[],sources:StudySource[]) {
  return sections.map(s=>`## ${s.title}\n\n${s.body}${s.diagram?`\n\nConcept map:\n\n\`\`\`mermaid\n${s.diagram}\n\`\`\``:''}\n\nSources:\n${s.citations.map(c=>{const source=sources.find(x=>x.id===c.sourceId);return `- [${c.sourceId}] ${source?.title??'Source unavailable'} · ${citationLocation(source,c.at)}\n  “${c.quote}”`;}).join('\n')}`).join('\n\n');
+}
+
+/**
+ * The guide as Write blocks, with every citation kept as a quotation.
+ *
+ * Saving used to go through `studyMarkdown` and `fromMarkdown`, which is a
+ * round trip through a format with no quotation-with-source in it. What came
+ * out the other side was the source's internal id in the student's document
+ * ("[upload-f1-7] Chapter 1.pdf · Page 7"), a bullet naming where, and the
+ * quotation itself as a loose paragraph under it, belonging to nothing. A
+ * document that is going to be printed and handed in beside the reading
+ * should say what the Studio said: this sentence, from this page.
+ *
+ * So each citation becomes Write's own `quote` block, the quotation as its
+ * text and the source's title and place as its `source`, which is what the
+ * Word and PDF exports already print as an attributed quotation. The body and
+ * the concept map still go through `fromMarkdown`, which is what they are.
+ *
+ * The body's own markers go the same way. The model writes "[upload-f1-7]"
+ * after a sentence to say which source it leans on; in the document that
+ * becomes "[1]", the number of the first quotation from that source listed
+ * under the section. A marker naming a source the section has no checked
+ * quotation from is removed: nothing verified stands behind it, and a number
+ * pointing at nothing is worse than no number.
+ */
+export function studyBlocks(sections:StudySection[],sources:StudySource[]):Block[] {
+ return sections.flatMap(s=>{
+  const head=fromMarkdown(`## ${s.title}`);
+  const number=new Map<string,number>();
+  s.citations.forEach((c,i)=>{if(!number.has(c.sourceId))number.set(c.sourceId,i+1);});
+  const ids=new Set(sources.map(x=>x.id));
+  const text=s.body.replace(/ ?\[([^\]\s]+)\]/g,(whole,id:string)=>number.has(id)?` [${number.get(id)}]`:ids.has(id)?'':whole);
+  const body=fromMarkdown(text);
+  const map=s.diagram?fromMarkdown(`Concept map:\n\n\`\`\`mermaid\n${s.diagram}\n\`\`\``):[];
+  const cited:Block[]=s.citations.map(c=>{
+   const source=sources.find(x=>x.id===c.sourceId);
+   return {kind:'quote',text:c.quote,source:source?`${source.title} · ${citationLocation(source,c.at)}`:'Source no longer available'};
+  });
+  // Numbered as the markers in the body are, so "[2]" finds its quotation.
+  cited.forEach((b,i)=>{if(b.kind==='quote')b.source=`[${i+1}] ${b.source}`;});
+  return [...head,...body,...map,...(cited.length?[{kind:'heading',level:3,text:'Sources'} as Block,...cited]:[])];
+ });
 }
