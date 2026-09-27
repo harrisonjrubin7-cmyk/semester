@@ -8169,6 +8169,88 @@ section[data-drop] > .grip + * {
   gap: var(--sp-3);
 }
 
+/* ── Course Detail V2 (course_detail_v2, Phase F) ───────────────────────── */
+
+.registration-results.is-v2 {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.course-drawer {
+  width: min(480px, 100%);
+}
+
+.course-v2-source {
+  margin: 0 0 var(--sp-5);
+  font-size: var(--type-sm);
+  color: var(--app-dim);
+}
+
+.course-v2-facts {
+  display: grid;
+  gap: var(--sp-2);
+  margin: 0 0 var(--sp-5);
+  font-size: var(--type-sm);
+}
+
+.course-v2-facts > div {
+  display: grid;
+  grid-template-columns: 7em minmax(0, 1fr);
+  gap: var(--sp-4);
+}
+
+.course-v2-facts dt {
+  color: var(--app-dim);
+}
+
+.course-v2-facts dd {
+  margin: 0;
+  color: var(--app-fg);
+}
+
+.course-v2-actions,
+.course-compare-saved li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  align-items: center;
+}
+
+.course-v2-actions {
+  margin: 0 0 var(--sp-4);
+}
+
+.course-v2-section {
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--app-line-soft);
+}
+
+.course-v2-requisites,
+.course-v2-future,
+.course-compare-saved {
+  padding-left: 0;
+  list-style: none;
+}
+
+.course-v2-requisites [data-state='not_recorded'] > span[aria-hidden] {
+  color: var(--app-warn);
+}
+
+.course-v2-requisites [data-state='recorded'] > span[aria-hidden],
+.course-v2-requisites [data-state='in_cart'] > span[aria-hidden] {
+  color: var(--app-passing);
+}
+
+.course-compare-saved {
+  display: grid;
+  gap: var(--sp-3);
+  margin: 0 0 var(--sp-4);
+}
+
+.course-compare-cards {
+  display: grid;
+  gap: var(--sp-5);
+}
+
 /* BL-1.4's Action Center, when it sits in a Phase B panel rather than in the
    #761 card whose `.today-decision-surface` rules it was drawn against. */
 .action-panel .action-center h2 {

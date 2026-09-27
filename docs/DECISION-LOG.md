@@ -412,3 +412,36 @@ dropping either outright, which loses tested work the other lacks.
   only after a preview and a confirmation. Nothing is written to an external
   calendar.
 
+## D-040 · Course Detail V2 lives in the registration workspace, as a sheet or a drawer
+
+**Decided 27 Sep 2026 (Phase F).** (D-030 to D-039 are left to the other
+session's range.)
+
+- With `course_detail_v2` on, a catalog result opens Course Detail V2 in place
+  of the side panel:
+  - under 1180px, a modal sheet;
+  - from 1180px, a non-modal drawer, so another result can be opened without
+    closing it first.
+- The page reads only the imported catalog and the student's own records. It
+  adds no table and makes no network call.
+- The saved-course shortlist is a new device store,
+  `semester.course-shortlist.v1`, rather than a field in the registration
+  store, so older builds reading that store neither drop nor trip on it.
+- Search and a `course/:id` route are not wired yet. The crosswalk lists them
+  as later entry points.
+
+## D-041 · Prerequisites are read, never judged
+
+**Decided 27 Sep 2026 (Phase F).**
+
+- Course codes are read from the catalog's own wording. The wording is always
+  shown verbatim beside the reading.
+- Each code is compared with what the student recorded: recorded, in progress,
+  in the cart (corequisites only), or not recorded.
+- The page never says "eligible" and always says the department decides.
+  Other wording ("consent of instructor", "junior standing") is flagged, not
+  interpreted.
+- Seats are "reported in the catalog file", never available. There is no
+  workload claim and no professor rating. The moderated-insight, study-pack
+  and syllabus slots are placeholders with nothing estimated in their place.
+
