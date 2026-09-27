@@ -249,3 +249,8 @@
 .regday-checklist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:calc(10px * var(--density, 1))}
 .regday-course ol{margin:calc(8px * var(--density, 1)) 0;padding-inline-start:calc(20px * var(--density, 1));display:flex;flex-direction:column;gap:calc(6px * var(--density, 1))}
 .regday-course li{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:calc(8px * var(--density, 1))}
+.sharing-lead{font-size:var(--type-base);color:var(--app-dim);line-height:var(--leading-normal);margin:0 0 var(--sp-3)}
+.sharing-list{list-style:none;padding:0;margin:0 0 var(--sp-3)}
+.sharing-list>li{border-top:1px solid var(--app-line);padding-block:var(--sp-3)}
+.sharing-meta{font-size:var(--type-sm);color:var(--app-dim);margin-top:var(--sp-1)}
+.sharing-problems{font-size:var(--type-sm);margin:var(--sp-2) 0 0;padding-inline-start:1.2em}
