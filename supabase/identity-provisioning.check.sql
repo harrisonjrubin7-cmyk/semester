@@ -196,6 +196,41 @@ begin
      ) and c.relrowsecurity;
   perform pg_temp.counted('every identity and provisioning table has RLS', n, 6);
 
+  -- Claim minimization: the mapping names allowed claims only, never a
+  -- FERPA-protected source attribute. The control comes first: a minimal
+  -- mapping is accepted, so a refusal below is the rule and not a broken row.
+  set local role service_role;
+  update public.institution_identity_provider
+     set attribute_mapping = '{"subject": "urn:oid:1.3.6.1.4.1.5923.1.1.1.6", "email": "mail", "affiliation": "eduPersonAffiliation", "groups": "isMemberOf"}'::jsonb
+   where id = north_provider;
+  get diagnostics n = row_count;
+  reset role;
+  perform pg_temp.counted('a minimal attribute mapping is accepted', n, 1);
+
+  if not pg_temp.refused(format(
+    'update public.institution_identity_provider set attribute_mapping = %L::jsonb where id = %L',
+    '{"department": "cumulativeGPA"}', north_provider
+  )) then
+    raise exception 'FAILED: a GPA attribute was accepted into an allowed claim';
+  end if;
+  raise notice 'ok  a prohibited source attribute is refused';
+
+  if not pg_temp.refused(format(
+    'update public.institution_identity_provider set attribute_mapping = %L::jsonb where id = %L',
+    '{"disability_status": "affiliation"}', north_provider
+  )) then
+    raise exception 'FAILED: a claim outside the allowlist was accepted';
+  end if;
+  raise notice 'ok  a claim outside the allowlist is refused';
+
+  if not pg_temp.refused(format(
+    'update public.institution_identity_provider set attribute_mapping = %L::jsonb where id = %L',
+    '{"email": ["mail"]}', north_provider
+  )) then
+    raise exception 'FAILED: a non-string attribute name was accepted';
+  end if;
+  raise notice 'ok  a non-string attribute name is refused';
+
   raise notice 'identity provisioning: every check passed';
 end $$;
 
