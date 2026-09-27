@@ -23,7 +23,7 @@ route. The Phase 0 audit recorded this as finding 4.
 
 | File | What |
 | --- | --- |
-| `supabase/migrations/20260928020000_scim_gateway.sql` | Four `service_role`-only wrappers: credential material, provision a user, replace a group's members, record a refusal. Every rule stays in the private function each one wraps |
+| `supabase/migrations/20260928050000_scim_gateway.sql` | Four `service_role`-only wrappers: credential material, provision a user, replace a group's members, record a refusal. Every rule stays in the private function each one wraps |
 | `app/server/institution/postgres-scim.ts` | The production `ScimRepository` |
 | `app/server/institution/scim-route.ts` | Mounts SCIM at `/scim/v2` on the gateway when `SEMESTER_SCIM=on` |
 | `supabase/scim-gateway.check.sql`, `app/server/institution/postgres-scim.test.ts` | 13 database checks. 17 repository tests, run through the real service |

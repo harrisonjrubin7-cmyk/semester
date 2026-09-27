@@ -1,4 +1,4 @@
--- The SCIM gateway wrappers (20260928020000_scim_gateway.sql).
+-- The SCIM gateway wrappers (20260928050000_scim_gateway.sql).
 -- LOCAL/DISPOSABLE DATABASES ONLY; the transaction is always rolled back.
 --
 -- Two questions. Can anybody but the service role reach them — a signed-in
