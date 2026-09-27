@@ -50,3 +50,8 @@ Tables for tenant plans and modules, personal and sponsored grants, and usage
 counters (`usage_atomic` is the precedent). A server-side caller that builds the
 request from those rows, the current membership and `has_capability`. And an
 audit row for each refusal.
+
+For an LTI launch, the membership input exists: `lti_launch_membership` returns
+the joined membership's lifecycle status and current roles, or why there is
+none ([LTI runbook](LTI-1.3-LAUNCH-RUNBOOK.md#joining-a-membership)). Anything
+but `joined` must fail the `lifecycle` step.

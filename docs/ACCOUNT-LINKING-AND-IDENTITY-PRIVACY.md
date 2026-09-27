@@ -29,6 +29,12 @@ cannot collide with, or be recovered into, a real mailbox. Linking to an account
 the student already has requires a single-use `lti_link_ticket` redeemed from
 inside a signed-in session. That makes it verified on both sides and explicit.
 
+**LTI launch → institutional membership.** A launch joins a membership only
+through a *linked* identity: the ticket above, redeemed by someone signed in to
+their campus SSO account. A never-linked launch opens the `lti.invalid` account,
+which no membership is bound to, so it cannot join, and nothing tries to join it
+by email instead.
+
 ## Not built: personal ↔ institutional for SSO
 
 A student who used Semester personally and then signs in with campus SSO has two

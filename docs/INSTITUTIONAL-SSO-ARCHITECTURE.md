@@ -65,12 +65,14 @@ said "create/adapt", and this is the adapt.
 
 ## Known gaps, in the order they matter
 
-1. **LTI launches are not yet joined to a membership.** Registrations name
-   their school (`lti_platform.tenant_id`, from #779), and grade passback and
-   context recording already read it. Registrations installed before it are
-   unbound: allowed, and logged as `lti launch unbound`. No launch is joined to
-   `institution_membership` yet, and the entitlement chain's course steps depend
-   on that join.
+1. **The LTI membership join is resolved and logged, not yet consumed.** Every
+   launch now asks `lti_launch_membership`: registration → school, *linked*
+   identity → account, account + school → membership. It logs `lti membership:
+   joined …` or the hop that failed. Nothing yet acts on the answer: the
+   entitlement chain has no caller, and the launch session is not scoped by it.
+   It joins only students who have linked their LMS identity to their SSO
+   account. Unbound registrations (school not recorded) are allowed and logged
+   as `lti launch unbound`.
 2. **No LTI launch audit table.** Refusals are logged by reason code and not
    persisted.
 3. **Entitlement tables.** The resolver is a tested contract. Nothing yet

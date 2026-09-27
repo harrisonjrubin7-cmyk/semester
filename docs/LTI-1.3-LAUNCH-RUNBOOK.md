@@ -45,6 +45,45 @@ person gets an account whose address is synthesised under `lti.invalid`, which
 can never receive mail or be recovered into. Attaching an account the student
 already has needs a single-use `lti_link_ticket` *and* a signed-in session.
 
+## Joining a membership
+
+Every launch asks `public.lti_launch_membership`
+(`20260927210000_lti_launch_membership.sql`) which `institution_membership` it
+belongs to, through exactly one path:
+
+```text
+lti_platform (issuer, client, deployment) → tenant_id
+lti_identity (issuer, subject), origin = 'linked' → user_id
+institution_membership (tenant_id, auth_user_id = user_id)
+```
+
+| Answer | Meaning |
+| --- | --- |
+| `joined` | Active membership in the registration's school; returns its id and **current** roles |
+| `unbound` | The registration has no school recorded |
+| `no-registration` | No registration for that issuer, client and deployment |
+| `no-identity` | This LMS person has never launched |
+| `identity-not-linked` | The account is the launch's own `lti.invalid` one; the student has not linked it to their campus account |
+| `no-membership` | Linked, but no membership in *this* school |
+| `membership-<status>` | `pending`, `suspended` or `deprovisioned`; no roles returned |
+
+- **It never matches on email, `lis_person_sourcedid` or an SIS id.** Each is a
+  string a registered platform chooses.
+- **It reads and never writes.** A launch never creates, reactivates or widens a
+  membership; SCIM is the lifecycle.
+- **It never fails a launch.** The function logs `lti membership: …`, and even
+  a database error is logged as `lookup-failed` or `unavailable`.
+- **Roles come from the membership, never from the LMS `roles` claim.**
+
+`supabase/lti-membership.check.sql` walks every answer. Its controls: an active
+membership in another school does not join, a provisioned identity does not
+join even with a membership, and no call changes a membership.
+`ltimembership.test.ts` proves the shell cannot read a partial row as a join.
+
+**What it does not do yet:** nothing consumes the answer. The session the
+launch mints is not scoped by the membership, and the entitlement chain has no
+caller.
+
 ## Minimum claims
 
 Kept: opaque subject, issuer, deployment, context ID and title, resource link,
@@ -73,7 +112,6 @@ See [INTEGRATION-OPERATOR-RUNBOOK.md](INTEGRATION-OPERATOR-RUNBOOK.md).
   recording. Main's `lti context: unbound` line covers only launches that carry
   a course context, and does not name the row. An unbound launch must never be
   treated as belonging to a default school.
-- A bound launch records its course context for the school's integration
-  record, but is still not joined to `institution_membership` or to the
-  entitlement chain's course steps.
+- The membership join is logged but not yet acted on. See
+  **Joining a membership** above.
 - Launch refusals are logged, not persisted to an audit table.

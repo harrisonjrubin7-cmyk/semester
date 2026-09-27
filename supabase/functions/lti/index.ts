@@ -76,6 +76,7 @@ import {
 } from '../_shared/ltiags.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { passbackVerdict } from '../_shared/ltigate.ts';
+import { membershipJoin, membershipLogLine } from '../_shared/ltimembership.ts';
 
 /** How long a launch has between the redirect out and the POST back. */
 const FLIGHT_SECONDS = 300;
@@ -694,6 +695,24 @@ Deno.serve(async (req) => {
 
     const bound = await accountFor(client, who);
     if (!bound.ok) return refuse(bound.reason, bound.detail, 500);
+
+    /*
+     * ── The institutional membership this launch belongs to ───────────────
+     *
+     * After `accountFor`, because the join reads the `lti_identity` row it
+     * guarantees. Through the registration's school and a *linked* identity
+     * only, never an email or an LMS-sent id
+     * (20260927210000_lti_launch_membership.sql). It reads, it never writes a
+     * membership, and whatever it answers the launch goes on: a student
+     * without one is still a student in this course.
+     */
+    const { data: joinRow, error: joinError } = await client.rpc('lti_launch_membership', {
+      want_issuer: who.issuer,
+      want_client: who.clientId,
+      want_deployment: who.deploymentId,
+      want_subject: who.subject,
+    });
+    console.log(membershipLogLine(membershipJoin(joinRow, joinError)));
 
     /*
      * ── The course, for the school's integration record ───────────────────
