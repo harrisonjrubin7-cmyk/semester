@@ -272,6 +272,58 @@ PDF's pages become excerpts named "Page N", like a deck's slides, and a citation
 opens the original PDF at that page. Rejected: printing "Page N" into the flat
 text, which would move every stored quote and hash.
 
+## D-037 · Athlete and supporter sharing: one consent pattern, three tables
+
+**Decided by owner 27 Sep 2026 — every recommendation approved.** The
+decisions are:
+- **D1:** a new `athletic_academic_support` role.
+- **D2:** compliance officers and coaches cannot receive a share.
+- **D3:** the recipient sees only "This share has ended", whether the share
+  was revoked or expired.
+- **D4:** a share lasts at most one term, capped at 200 days.
+- **D5:** supporters get `selected` access only.
+- **D6:** adopt the family-invite branch.
+
+D7 (the school's registrar and compliance review of the consent wording)
+stays open until a pilot school gives it. Applying any migration to
+production still needs separate approval. (D-030 to D-036 are on their own open branches;
+D-013–D-029 and D-040 onward belong to the feature-expansion work.)
+
+The full design is in [CONSENT-SHARING-DESIGN.md](CONSENT-SHARING-DESIGN.md).
+
+Supporter, advisor and athletic academic-support sharing follow one pattern:
+- the student starts it;
+- one named person, not a link;
+- named items, not whole categories;
+- a required expiry of at most one term;
+- revocation that applies at the next read;
+- the recipient accepts;
+- every read is logged and visible to the student;
+- an exact preview before granting;
+- nothing is sent on the student's behalf;
+- nothing is inferred for the recipient.
+
+The three relationships each get their own table:
+- supporter sharing keeps `family_grants`, plus the unmerged invite branch;
+- athletic academic support gets a new `support_shares` table, modelled on
+  `accommodation_shares`;
+- advisors get `advisor_shares`, per D-016.
+
+Keeping them separate means one relationship's policy bug cannot expose
+another relationship's data.
+
+Seven owner decisions are listed in §9 of the design doc (D1–D7). They
+cover:
+- the athletic academic-support recipient role;
+- excluding compliance officers and coaches;
+- what a recipient sees when a share is revoked;
+- the maximum expiry;
+- the pilot's access levels;
+- adopting the invite branch;
+- review of the consent wording by the registrar and compliance office.
+
+Every migration needs approval before it is applied to production.
+
 ---
 
 # Feature-expansion command (27 Sep 2026)
