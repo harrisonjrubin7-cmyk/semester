@@ -311,7 +311,7 @@ begin
   if missing is not null then
     raise exception 'FAILED: the allowlist names %, which a signed-in account cannot call', missing;
   end if;
-  raise notice 'ok  and can call all thirty-two that it should';
+  raise notice 'ok  and can call all forty-four that it should';
 end $$;
 
 -- ── The gate's own switch, named because it is the one that was open ──────
