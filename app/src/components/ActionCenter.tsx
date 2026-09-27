@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { Suspense, lazy, useMemo, useState } from 'react';
 import {
   ACTIONS_PREFIX,
   EMPTY_ACTION_CHOICES,
@@ -12,9 +12,19 @@ import {
 } from '../lib/actions';
 import { useDeviceLibrary } from '../lib/device-library';
 import { useNow, useStore } from '../state/store';
+import { ClarityQuestion } from './ClarityQuestion';
+import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
+import { askForHelp, helpFromAction } from '../lib/help-routes';
 import { ExplanationSheet } from './ExplanationSheet';
 import { SourceBadge } from './SourceBadge';
 import { ActionButton, SectionLabel } from './ui';
+
+/*
+ * Loaded only when a student opens it. The feedback form reaches `lib/privacy`
+ * and `lib/cloud`; imported eagerly it put both into Today's entry chunk
+ * (+17.6 kB) for a panel most visits never open.
+ */
+const SaySomething = lazy(() => import('./SaySomething').then((m) => ({ default: m.SaySomething })));
 
 /**
  * The Action Center: one most important thing, up to five more, the rest
@@ -25,9 +35,12 @@ import { ActionButton, SectionLabel } from './ui';
  * `docs/market-readiness/TODAY_ADAPTIVE_BACKLOG.md`). What the student does is
  * stored on this device under `semester.actions.v1:<account>`; nothing here
  * sends, shares or schedules anything, so nothing here needs a confirmation.
- * "Ask for help" and "Something is wrong" are recorded, not sent — the note
- * says so, because a student who thinks a request went to an advisor and it
- * did not has been failed by the app.
+ * "Something is wrong" is recorded, not sent — the note says so, because a
+ * student who thinks a report went somewhere and it did not has been failed by
+ * the app. "Ask for help" is recorded too, and when the action has a person to
+ * ask (`helpFromAction` in `lib/help-routes.ts`) and `VITE_HUMAN_HELP` is on,
+ * it then opens Get help on that need. It still sends nothing: the student
+ * reads, ticks and confirms there. Otherwise it keeps the note.
  */
 
 const DAY = 86_400_000;
@@ -131,6 +144,7 @@ function Controls({
 }) {
   const [noting, setNoting] = useState<'correct' | 'help' | null>(null);
   const id = s.action.id;
+  const { dispatch } = useStore();
   if (noting) {
     return (
       <NoteForm
@@ -154,9 +168,44 @@ function Controls({
         <>
           <button type="button" className="workspace-text-button" onClick={() => act(id, 'dismiss')}>Not relevant</button>
           <button type="button" className="workspace-text-button" onClick={() => setNoting('correct')}>Something is wrong</button>
-          <button type="button" className="workspace-text-button" onClick={() => setNoting('help')}>Ask for help</button>
+          <button
+            type="button"
+            className="workspace-text-button"
+            onClick={() => {
+              // With a person to ask, go to them: Get help opens on this action's
+              // need with its details filled in and unticked. Otherwise — a
+              // setup step, or the route switched off — keep the note.
+              if (EXPERIENCE_FLAGS.humanHelp !== 'off' && helpFromAction(s.action)) {
+                // The model wants a note on every ask; this one says where it went.
+                act(id, 'help', 'Opened Get help to ask a person. Nothing is sent until you confirm there.');
+                askForHelp(s.action, () => dispatch({ type: 'go', screen: 'university' }));
+              } else {
+                setNoting('help');
+              }
+            }}
+          >
+            Ask for help
+          </button>
         </>
       )}
+    </div>
+  );
+}
+
+/**
+ * "Report incorrect information", opened under the action it is about.
+ *
+ * The existing feedback form, started on "Wrong information" and naming the
+ * action and its source, so the student only adds what is wrong. It sends
+ * nothing until they press Send, and signed out it gives the address instead.
+ */
+function Report({ s, onClose }: { s: Scored; onClose: () => void }) {
+  return (
+    <div className="action-note">
+      <Suspense fallback={<p className="today-sync-status">Opening…</p>}>
+        <SaySomething initialKind="wrong" initialNote={`About "${s.action.title}" (${s.action.source.system}): `} />
+      </Suspense>
+      <button type="button" className="workspace-text-button" onClick={onClose}>Close</button>
     </div>
   );
 }
@@ -165,11 +214,15 @@ function Row({
   s,
   now,
   act,
+  reporting,
+  setReporting,
   explain,
 }: {
   s: Scored;
   now: number;
   act: (id: string, event: ActionEvent, note?: string) => void;
+  reporting: string | null;
+  setReporting: (id: string | null) => void;
   explain: (s: Scored) => void;
 }) {
   const due = dueLine(s.action, now);
@@ -183,7 +236,8 @@ function Row({
         </span>
         <span aria-hidden="true">→</span>
       </button>
-      <SourceBadge label={s.action.source.label} at={s.action.source.at} now={now} />
+      <SourceBadge label={s.action.source.label} at={s.action.source.at} now={now} onReport={() => setReporting(s.action.id)} />
+      {reporting === s.action.id && <Report s={s} onClose={() => setReporting(null)} />}
       <Controls s={s} act={act} compact />
       <Why s={s} explain={explain} />
     </li>
@@ -205,6 +259,7 @@ export function ActionCenter({
   const choices = library.value.choices;
   const ranked = useMemo(() => rank(actions, choices, now), [actions, choices, now]);
   const [said, setSaid] = useState<{ text: string; undo?: { id: string; prev: Choice | undefined } } | null>(null);
+  const [reporting, setReporting] = useState<string | null>(null);
   const [explaining, setExplaining] = useState<Scored | null>(null);
 
   const act = (id: string, event: ActionEvent, note?: string) => {
@@ -243,10 +298,12 @@ export function ActionCenter({
           {dueLine(top.action, now) && <p className="today-sync-status">{dueLine(top.action, now)}</p>}
           <h2 id="action-top-title">{top.action.title}</h2>
           <p>{top.action.whyItMatters}</p>
-          <SourceBadge label={top.action.source.label} at={top.action.source.at} now={now} />
+          <SourceBadge label={top.action.source.label} at={top.action.source.at} now={now} onReport={() => setReporting(top.action.id)} />
+          {reporting === top.action.id && <Report s={top} onClose={() => setReporting(null)} />}
           <ActionButton tone="primary" onClick={() => go(top.action)}>{top.action.primary.label}</ActionButton>
           <Controls s={top} act={act} />
           <Why s={top} explain={setExplaining} />
+          <ClarityQuestion />
         </article>
       ) : (
         <p className="today-clear">Nothing needs you right now. Anything you snoozed comes back tomorrow morning.</p>
@@ -265,7 +322,7 @@ export function ActionCenter({
         <>
           <SectionLabel>Next</SectionLabel>
           <ol className="action-list">
-            {ranked.next.map((s) => <Row key={s.action.id} s={s} now={now} act={act} explain={setExplaining} />)}
+            {ranked.next.map((s) => <Row key={s.action.id} s={s} now={now} act={act} reporting={reporting} setReporting={setReporting} explain={setExplaining} />)}
           </ol>
         </>
       )}
@@ -274,7 +331,7 @@ export function ActionCenter({
         <details className="today-why">
           <summary>View all ({ranked.rest.length} more)</summary>
           <ol className="action-list">
-            {ranked.rest.map((s) => <Row key={s.action.id} s={s} now={now} act={act} explain={setExplaining} />)}
+            {ranked.rest.map((s) => <Row key={s.action.id} s={s} now={now} act={act} reporting={reporting} setReporting={setReporting} explain={setExplaining} />)}
           </ol>
         </details>
       )}
@@ -283,6 +340,29 @@ export function ActionCenter({
         <p className="today-sync-status">
           {ranked.hidden.filter((h) => h.status === 'snoozed').length} snoozed until tomorrow morning.
         </p>
+      )}
+
+      {/*
+        The one way back for something hidden. "Not relevant" says it can be
+        reopened, and the Undo beside it lasts only until the page changes, so
+        without this list an accidental dismissal would be permanent.
+      */}
+      {ranked.hidden.some((h) => h.status === 'dismissed' || h.status === 'snoozed') && (
+        <details className="today-why">
+          <summary>Hidden ({ranked.hidden.filter((h) => h.status === 'dismissed' || h.status === 'snoozed').length})</summary>
+          <ul className="action-list">
+            {ranked.hidden
+              .filter((h) => h.status === 'dismissed' || h.status === 'snoozed')
+              .map((h) => (
+                <li key={h.action.id}>
+                  <button type="button" className="workspace-text-button" onClick={() => act(h.action.id, 'reopen')}>
+                    Bring back: {h.action.title}
+                  </button>
+                  <span className="today-sync-status"> · {h.status === 'dismissed' ? 'Not relevant' : 'Snoozed'}</span>
+                </li>
+              ))}
+          </ul>
+        </details>
       )}
 
       {explaining && (

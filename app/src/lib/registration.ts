@@ -1,6 +1,12 @@
 import {readTable} from './sheet';
 export interface Meeting {days:number[];start:number;end:number}
-export interface CatalogCourse {id:string;code:string;section:string;title:string;term:string;department:string;credits:number;instructor:string;location:string;description:string;prerequisites:string;seats:number|null;meetings:Meeting[]}
+export interface CatalogCourse {id:string;code:string;section:string;title:string;term:string;department:string;credits:number;instructor:string;location:string;description:string;prerequisites:string;seats:number|null;meetings:Meeting[];
+ /** The registration system's course reference number, when the catalog carries one. Optional: most catalogs a student can get do not. */
+ crn?:string;
+ /** The official catalog page for this course, when the catalog carries one. https only; anything else is dropped. */
+ url?:string;
+ /** "In person", "Online", "Hybrid" — as the catalog words it. Absent when the catalog does not say. */
+ modality?:string}
 export interface InstitutionCatalog {institution:string;importedAt:string;courses:CatalogCourse[]}
 const word=(v:unknown,max=200)=>typeof v==='string'?v.trim().slice(0,max):'';
 function time(v:unknown):number {
@@ -8,6 +14,8 @@ function time(v:unknown):number {
  if(typeof v!=='string'||!/^([01]?\d|2[0-3]):[0-5]\d$/.test(v))throw new Error('Meeting times must use 24-hour HH:MM, such as 09:10.');
  const [h,m]=v.split(':').map(Number);return h*60+m;
 }
+/** An https address with a host, or empty. A catalog is imported from a file, so a link in it is never trusted further than that. */
+function httpsUrl(text:string):string{if(!text)return '';try{const u=new URL(text);return u.protocol==='https:'&&u.hostname?u.toString():'';}catch{return '';}}
 export function parseCatalog(text:string):InstitutionCatalog {
  if(text.length>2_000_000)throw new Error('Use a catalog smaller than 2 MB.');
  let raw:unknown;
@@ -38,7 +46,8 @@ export function parseCatalog(text:string):InstitutionCatalog {
    const start=time(m.start),end=time(m.end);if(end<=start)throw new Error(`${code}: the end time must follow the start time.`);
    return{days:[...new Set<number>(m.days)],start,end};
   });
-  return{id,code,section,title,term,credits,seats,meetings,department:word(r.department,60)||code.split(' ')[0],instructor:word(r.instructor),location:word(r.location),description:word(r.description,5000),prerequisites:word(r.prerequisites,1500)};
+  const crn=word(r.crn,20);const url=httpsUrl(word(r.url,2000));const modality=word(r.modality,40);
+  return{id,code,section,title,term,credits,seats,meetings,department:word(r.department,60)||code.split(' ')[0],instructor:word(r.instructor),location:word(r.location),description:word(r.description,5000),prerequisites:word(r.prerequisites,1500),...(crn?{crn}:{}),...(url?{url}:{}),...(modality?{modality}:{})};
  });
  return{institution:word(obj.institution)||'Imported institution',importedAt:new Date().toISOString(),courses};
 }
@@ -51,4 +60,4 @@ export function conflicts(courses:CatalogCourse[]):{a:CatalogCourse;b:CatalogCou
  }return found;
 }
 export const clock24=(n:number)=>`${String(Math.floor(n/60)).padStart(2,'0')}:${String(n%60).padStart(2,'0')}`;
-export const CATALOG_TEMPLATE={institution:'Example University — replace with your institution',courses:[{id:'example-101-01',code:'EXAM 101',section:'01',title:'Example course — replace this row',term:'Fall 2026',department:'EXAM',credits:3,instructor:'Instructor name',location:'Building and room',description:'Course description',prerequisites:'None stated',seats:null,meetings:[{days:[1,3,5],start:'09:00',end:'09:50'}]}]};
+export const CATALOG_TEMPLATE={institution:'Example University — replace with your institution',courses:[{id:'example-101-01',code:'EXAM 101',section:'01',title:'Example course — replace this row',term:'Fall 2026',department:'EXAM',credits:3,instructor:'Instructor name',location:'Building and room',description:'Course description',prerequisites:'None stated',seats:null,modality:'In person',url:'https://catalog.example.edu/courses/exam-101',meetings:[{days:[1,3,5],start:'09:00',end:'09:50'}]}]};

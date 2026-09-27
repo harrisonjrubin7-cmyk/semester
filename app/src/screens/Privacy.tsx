@@ -16,7 +16,9 @@
  * uses — because it is the one thing on this screen that an undo cannot fix.
  */
 
-import { useState } from 'react';
+import { Suspense, lazy, useState } from 'react';
+import { MODULE_FLAGS, moduleOn } from '../lib/experience-flags';
+
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Blueprint } from '../components/Blueprint';
@@ -31,6 +33,7 @@ import { cloudConfigured, deleteEverything } from '../lib/cloud';
 import { eraseDevice } from '../lib/erase';
 import { Toggle } from '../components/ui';
 import { SupportAccess } from '../components/SupportAccess';
+import { SchoolDataPanel } from '../components/SchoolRecords';
 import { DESTINATIONS, offered } from '../lib/nav';
 import {
   USAGE_KEY,
@@ -42,6 +45,9 @@ import {
   usageLine,
   type Counts,
 } from '../lib/usage';
+
+// The Trust & Data Center (Phase N), at the top of this page.
+const TrustCenter = lazy(() => import('../components/TrustCenter').then((m) => ({ default: m.TrustCenter })));
 
 /**
  * A stored value, or null, even where the browser refuses to be asked.
@@ -64,7 +70,7 @@ function stored(key: string): string | null {
   }
 }
 
-export function Privacy() {
+export function Privacy({ trustCenter = moduleOn(MODULE_FLAGS.trust_center) }: { trustCenter?: boolean } = {}) {
   const { account, state, dispatch, school } = useStore();
   // Their app, not the registry. See the note on the count below.
   const theirs = offered(school.capabilities, state.role);
@@ -118,6 +124,12 @@ export function Privacy() {
         </div>
       </Blueprint>
 
+      {trustCenter ? (
+        <Suspense fallback={null}>
+          <TrustCenter />
+        </Suspense>
+      ) : null}
+
       {CLAIMS.map((c) => (
         <div key={c.heading}>
           <SectionLabel style={{ marginTop: 'calc(22px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(5px * var(--density, 1))' }}>{c.heading}</SectionLabel>
@@ -135,6 +147,8 @@ export function Privacy() {
       ))}
 
       <SupportAccess account={account} />
+
+      <SchoolDataPanel />
 
       {/*
         The counting, and what it has actually counted.

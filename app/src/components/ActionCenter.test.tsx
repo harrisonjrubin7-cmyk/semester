@@ -154,3 +154,67 @@ it('counts calendar days, so two things due the same day say the same thing', ()
   expect(dueLine(at(0, 18), now)).toBe('Due today');
   expect(dueLine(at(0, 9), now)).toBe('Overdue');
 });
+
+it('asks whether it helped, stores the answer on the device, and then stops asking', () => {
+  render([make(0)]);
+  const legend = [...host.querySelectorAll('legend')].find((l) => /Did this help you understand what to do next\?/.test(l.textContent ?? ''));
+  expect(legend).toBeDefined();
+  act(() => button(/^Somewhat$/)?.click());
+  const stored = JSON.parse(localStorage.getItem('semester.clarity.v1:device')!);
+  expect(stored.answers.map((a: { answer: string }) => a.answer)).toEqual(['somewhat']);
+  expect(host.textContent).toContain('saved on this device only');
+  expect(host.textContent).toContain('Tell us what was unclear');
+
+  act(() => root.unmount());
+  act(() => {
+    root = createRoot(host);
+  });
+  render([make(0)]);
+  expect(host.textContent).not.toContain('Did this help you understand what to do next?');
+});
+
+it('opens a report about the action from its source badge, sending nothing by itself', async () => {
+  render([make(0)]);
+  const report = [...host.querySelectorAll('article [data-source] button')].find((b) => /Report incorrect information/.test(b.textContent ?? ''));
+  expect(report).toBeDefined();
+  act(() => (report as HTMLButtonElement).click());
+  // The form is loaded on demand, so it is not in Today's entry chunk.
+  for (let i = 0; i < 50 && !/Write to/.test(host.querySelector('article .action-note')?.textContent ?? ''); i++) {
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 20));
+    });
+  }
+  // Signed out in the test: the form gives the address rather than sending.
+  expect(host.querySelector('article .action-note')?.textContent).toMatch(/Write to .*needs an account/);
+});
+
+it('with the help route off, "Ask for help" keeps the note and hands nothing over', async () => {
+  const { helpSeedWaiting } = await import('../lib/help-routes');
+  render([make(0)]);
+  act(() => button(/Ask for help/)?.click());
+  expect(host.querySelector('textarea')?.closest('label')?.textContent).toContain('What do you need help with?');
+  expect(helpSeedWaiting()).toBe(false);
+});
+
+it('can bring back something marked not relevant, after the Undo is gone', () => {
+  render([make(0), make(1)]);
+  act(() => button(/Not relevant/)?.click());
+  expect(stored().a0.status).toBe('dismissed');
+
+  // A reload: the Undo line lives in component state and does not survive it.
+  act(() => root.unmount());
+  act(() => {
+    root = createRoot(host);
+  });
+  render([make(0), make(1)]);
+  expect(button(/^Undo$/)).toBeUndefined();
+  const active = () => [...host.querySelectorAll('#action-top-title, ol.action-list')].map((e) => e.textContent).join(' ');
+  expect(active()).not.toContain('Task number 0');
+
+  const back = button(/Bring back/);
+  expect(back?.textContent).toMatch(/Task number 0/);
+  act(() => back!.click());
+  expect(stored().a0.status).toBe('open');
+  expect(active()).toContain('Task number 0');
+  expect(button(/Bring back/)).toBeUndefined();
+});
