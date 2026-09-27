@@ -945,6 +945,10 @@ export const OWNED_TABLES: OwnedTable[] = [
   // explicitly not that. Closing it belongs with the auth flows that first
   // give a parent an account to delete.
   { table: 'family_grants', column: 'student_id' },
+  // The codes that made them, keyed on the student for the same reason: the
+  // invite is the student's statement. A claimant's link to it is
+  // `claimed_by`, which `on delete set null` clears when their account goes.
+  { table: 'family_invites', column: 'student_id' },
 
   // ── Shared forms ────────────────────────────────────────────────────────
   // ── Organizations ───────────────────────────────────────────────────────
