@@ -45,7 +45,8 @@ const radio = (text: string) =>
   [...host.querySelectorAll('label')].find((l) => l.textContent?.includes(text))?.querySelector('input') as HTMLInputElement;
 const button = (text: string) =>
   [...host.querySelectorAll('button')].find((b) => b.textContent?.includes(text)) as HTMLButtonElement | undefined;
-const sentPreview = () => host.querySelector('dl')?.textContent ?? '';
+const sentPreview = () => host.querySelector('dl[data-lines]')?.textContent ?? '';
+const identity = () => host.querySelector('dl[data-identity]')?.textContent ?? '';
 
 describe('asking a person for help', () => {
   it('signed out, it still helps: a note to take, and nothing is loaded or sent', () => {
@@ -56,10 +57,12 @@ describe('asking a person for help', () => {
     expect(button('Review and send')).toBeUndefined();
     expect(button('Copy as a note')?.disabled).toBe(false);
     expect(host.textContent).toContain('Sign in with your university account');
+    // Nothing is sent from here, so no identity is listed as sent.
+    expect(identity()).toBe('');
   });
 
   it('sends only the question and the lines the student ticked, after they confirm', async () => {
-    mock.load.mockResolvedValue({ destinations: [ADVISING], requests: [] });
+    mock.load.mockResolvedValue({ destinations: [ADVISING], requests: [], name: 'harrison_r' });
     mock.send.mockResolvedValue('req-1');
     await act(async () => root.render(<GetHelp account={ME} />));
 
@@ -79,6 +82,13 @@ describe('asking a person for help', () => {
     act(() => (host.querySelector('input[aria-label="Include which requirement"]') as HTMLInputElement).click());
     expect(sentPreview()).toContain('Statistics before PSY 340');
     expect(sentPreview()).not.toContain('Take PSY 340 in spring');
+
+    // Who they are is listed, with the real values, before anything is sent.
+    expect(identity()).toContain('Your name on Semester');
+    expect(identity()).toContain('harrison_r');
+    expect(identity()).toContain('Your university email');
+    expect(identity()).toContain('me@example.edu');
+    expect(identity()).toMatch(/always included/i);
 
     act(() => button('Review and send')!.click());
     expect(mock.send).not.toHaveBeenCalled();

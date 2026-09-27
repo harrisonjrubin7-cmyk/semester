@@ -107,6 +107,7 @@ describe('how it is written', () => {
     expect(visibility?.body).toMatch(/three deliberate exceptions/i);
     expect(visibility?.body).toMatch(/help request/i);
     expect(visibility?.body).toMatch(/only what you wrote and ticked/i);
+    expect(visibility?.body).toMatch(/your name, your university email/i);
     expect(visibility?.body).toMatch(/every time .* opens it is recorded/i);
   });
 

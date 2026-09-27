@@ -203,6 +203,18 @@ export const NEVER_SENT = [
   'Your location',
 ] as const;
 
+/**
+ * Sent with every request, whatever is ticked, because an office cannot book
+ * an appointment with a question alone. Shown on the confirm screen with the
+ * student's real values before they send, and read by
+ * `open_help_request` at the moment staff open it — never copied into the
+ * request, so there is no second copy of the address to delete.
+ */
+export const IDENTITY_SENT = [
+  { key: 'name', label: 'Your name on Semester' },
+  { key: 'email', label: 'Your university email' },
+] as const;
+
 /** The limits the database checks, so the screen refuses first and says why. */
 export const QUESTION_MAX = 2000;
 export const FIELD_MAX = 600;
@@ -343,12 +355,14 @@ const message = (error: { message?: string } | null, fallback: string) =>
 const isStatus = (v: unknown): v is RequestStatus =>
   typeof v === 'string' && (REQUEST_STATUSES as readonly string[]).includes(v);
 
-export async function loadHelp(): Promise<{ destinations: Destination[]; requests: SentRequest[] }> {
+export async function loadHelp(): Promise<{ destinations: Destination[]; requests: SentRequest[]; name: string }> {
   const db = await cloud();
-  const [dest, reqs, events] = await Promise.all([
+  const { data: me } = await db.auth.getUser();
+  const [dest, reqs, events, profile] = await Promise.all([
     db.from('help_destinations').select('id, kind, name, official_url, hours, accepts_requests'),
     db.from('help_requests').select('id, destination_id, question, shared_context, status, reply, created_at').order('created_at', { ascending: false }),
     db.from('help_request_events').select('request_id, kind'),
+    db.from('profiles').select('handle').eq('user_id', me.user?.id ?? '').maybeSingle(),
   ]);
   if (dest.error) throw new Error(message(dest.error, 'Could not load where to get help.'));
   if (reqs.error) throw new Error(message(reqs.error, 'Could not load your requests.'));
@@ -357,6 +371,7 @@ export async function loadHelp(): Promise<{ destinations: Destination[]; request
     if (e.kind === 'opened') opens.set(String(e.request_id), (opens.get(String(e.request_id)) ?? 0) + 1);
   }
   return {
+    name: String((profile.data as { handle?: string } | null)?.handle ?? ''),
     destinations: ((dest.data ?? []) as Record<string, unknown>[]).map((row) => ({
       id: String(row.id),
       kind: String(row.kind) as DestinationKind,
@@ -411,6 +426,8 @@ export interface StaffInbox {
 }
 
 export interface OpenedRequest {
+  studentName: string;
+  studentEmail: string;
   question: string;
   context: Partial<Record<ContextKey, string>>;
   status: RequestStatus;
@@ -457,6 +474,8 @@ export async function openRequest(requestId: string): Promise<OpenedRequest> {
   const raw = (row.shared_context ?? {}) as Record<string, unknown>;
   for (const key of CONTEXT_KEYS) if (typeof raw[key] === 'string') context[key] = raw[key] as string;
   return {
+    studentName: String(row.student_name ?? ''),
+    studentEmail: String(row.student_email ?? ''),
     question: String(row.question ?? ''),
     context,
     status: isStatus(row.status) ? row.status : 'sent',

@@ -24,7 +24,7 @@ anything leaving that they did not read first.
 
 | Rule | Database | App |
 | --- | --- | --- |
-| Only what the student wrote and ticked is sent | `private.help_context_ok` closes the context to seven named keys | fields start unticked; `payload` is built from `preview` |
+| Only their name, confirmed email, and what they wrote and ticked is sent | `private.help_context_ok` closes the context to seven named keys | fields start unticked; `payload` is built from `preview` |
 | Nobody is referred automatically | the only insert is `send_help_request`, acting as the caller | no code path sends without the confirm step |
 | Wellbeing is never a stored request | no destination kind exists for it | a directory note with 988, nothing sent |
 | Accessibility and money are reached directly | `accepts_requests` refused for those kinds | directory-only, no fields offered |
@@ -52,10 +52,14 @@ lists statuses and times. A request's words appear only after **Open (the
 student will see this)**, and only forward moves are offered: seen,
 scheduled, closed. A reply goes back to the student beside their question.
 
-**No name is shown.** The student's confirm screen listed exactly what would
-be sent, and their identity was not on it. If offices need to know who is
-asking — to book a real appointment — the confirm screen must say so first,
-and that is a decision for the product, not a column to add quietly.
+**Who is asking.** An opened request names the student — their Semester
+display name and the university email the server confirmed — because an
+office cannot book an appointment with a question alone. The student is told
+first: the confirm screen lists both, with their real values, as *always
+included*, above the lines they ticked (`IDENTITY_SENT`). Identity is read
+when staff open the request (`20260927200000_help_request_identity.sql`),
+never copied into it, so there is no second copy of the address to delete.
+The inbox list, before an open, still names nobody.
 
 ## Not built here, deliberately
 
