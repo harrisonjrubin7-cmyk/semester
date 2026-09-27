@@ -23,6 +23,10 @@ import type { ExternalRecord } from './pipeline.ts';
 
 export type DriftKind = 'added' | 'removed' | 'possible_rename' | 'type_changed' | 'enum_changed' | 'unmapped_entity';
 
+export const DRIFT_KINDS: readonly DriftKind[] = [
+  'added', 'removed', 'possible_rename', 'type_changed', 'enum_changed', 'unmapped_entity',
+];
+
 export interface DriftChange {
   kind: DriftKind;
   entity: string;

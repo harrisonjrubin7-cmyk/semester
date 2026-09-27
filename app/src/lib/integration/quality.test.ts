@@ -4,20 +4,45 @@
  * versions — each against #779's own mock SIS and its fixtures, so these hold
  * the real declaration to account rather than one written for the test.
  */
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import type { AdapterDeclaration, EntityMapping } from './adapter';
 import { MOCK_SIS, SIS_FIXTURES } from './mock-sis';
 import type { CanonicalReference, ExternalRecord, IngestError } from './pipeline';
 import { redactReference } from './redact';
-import { detectDrift, fingerprintBatch, withoutHeld } from './drift';
-import { reconcile, type SourceEntry, type StoredEntry } from './reconcile';
-import { findDuplicateCandidates, resolveDuplicate, reverseResolution, type Supersession } from './duplicates';
+import { DRIFT_KINDS, detectDrift, fingerprintBatch, withoutHeld } from './drift';
+import { RECONCILE_STATUSES, reconcile, type SourceEntry, type StoredEntry } from './reconcile';
+import { NATURAL_KEYS, findDuplicateCandidates, resolveDuplicate, reverseResolution, type Supersession } from './duplicates';
 import { alertFor, breachLevel, lineageConflicts, lineageOf, ownerProblems, type SourceOwner } from './lineage';
-import { liveEvidence, providerClaim, providerProblems, type Provider } from './providers';
+import { MATURITIES, liveEvidence, providerClaim, providerProblems, type Provider } from './providers';
 import { asSimulation, simulate } from './simulate';
-import { approve, goLive, propose, recordSimulation, rollback, type MappingVersion } from './mapping-versions';
+import { VERSION_STATUSES, approve, goLive, propose, recordSimulation, rollback, type MappingVersion } from './mapping-versions';
 
 const NOW = new Date('2026-09-27T12:00:00Z');
+
+const SQL = readFileSync(resolve(__dirname, '../../../../supabase/migrations/20260928010000_integration_quality.sql'), 'utf8');
+
+describe('the vocabulary matches the database', () => {
+  /*
+   * The rules are here and their results are kept there; a status one side
+   * knows and the other refuses is a sync run that fails at the insert.
+   */
+  const inCheck = (list: readonly string[]) => list.filter((v) => !SQL.includes(`'${v}'`));
+  it('names every status, kind, entity and maturity the TypeScript does', () => {
+    expect(inCheck(RECONCILE_STATUSES.filter((s) => s !== 'matched'))).toEqual([]);
+    expect(inCheck(DRIFT_KINDS)).toEqual([]);
+    expect(inCheck(Object.keys(NATURAL_KEYS))).toEqual([]);
+    expect(inCheck(MATURITIES)).toEqual([]);
+    expect(inCheck(VERSION_STATUSES)).toEqual([]);
+  });
+
+  it('keeps a matched record as a count, never a discrepancy row', () => {
+    const statusCheck = SQL.slice(SQL.indexOf('create table if not exists public.integration_reconciliation_discrepancies'));
+    const statuses = statusCheck.slice(statusCheck.indexOf('status'), statusCheck.indexOf('entity_type'));
+    expect(statuses).not.toContain("'matched'");
+  });
+});
 const { term, section, window: win, enrollment, hold, requirement } = SIS_FIXTURES;
 const withFields = (r: ExternalRecord, fields: Record<string, unknown>, id = r.id): ExternalRecord => ({ ...r, id, fields });
 

@@ -65,7 +65,7 @@ end $$;
 do $$
 declare
   student uuid; other uuid; integ uuid; integ_b uuid;
-  conn uuid; run uuid; evt uuid; src uuid;
+  conn uuid; run uuid; evt uuid; src uuid; recon uuid; cand uuid;
   tbl text; want_student bigint; got bigint; failures text[] := '{}';
   -- Every school-bound table the integration work added, with how many of
   -- the seeded rows a student at the same school should see.
@@ -74,7 +74,11 @@ declare
     "integration_sync_runs": 0, "integration_sync_errors": 0, "integration_webhook_events": 0,
     "integration_dead_letter_events": 0, "integration_retention_runs": 0,
     "source_records": 0, "source_snapshots": 0, "source_freshness_events": 1,
-    "canonical_entity_references": 0, "feature_kill_switch": 1
+    "canonical_entity_references": 0, "feature_kill_switch": 1,
+    "integration_reconciliation_runs": 0, "integration_reconciliation_discrepancies": 0,
+    "integration_schema_fingerprints": 0, "integration_schema_drift_events": 0,
+    "integration_duplicate_candidates": 0, "integration_duplicate_resolutions": 0,
+    "integration_source_owners": 0, "integration_mapping_versions": 0
   }';
 begin
   insert into public.schools (id, name, email_domains) values
@@ -110,6 +114,23 @@ begin
     source_system, source_record_id, source_of_truth, classification)
   values ('mx-a', 'enrollment', 'e1', other, conn, 'SIS', 'x1', 'Registrar', 'T3');
   insert into public.feature_kill_switch (tenant_id, switch_key, engaged, reason) values ('mx-a', 'kill.ai_generation', false, '');
+  -- Integration quality (20260928010000): one row in each, as the worker writes them.
+  insert into public.integration_reconciliation_runs (tenant_id, connection_id, sync_run_id) values ('mx-a', conn, run)
+  returning id into recon;
+  insert into public.integration_reconciliation_discrepancies (tenant_id, run_id, status, entity_type, reference)
+  values ('mx-a', recon, 'stale', 'term', 'sha256:' || repeat('c', 32));
+  insert into public.integration_schema_fingerprints (tenant_id, connection_id, fingerprint) values ('mx-a', conn, '0badcafe');
+  insert into public.integration_schema_drift_events (tenant_id, connection_id, kind, entity, field)
+  values ('mx-a', conn, 'added', 'term', 'term_name');
+  insert into public.integration_duplicate_candidates (tenant_id, canonical_entity, key_hash, members, suggested_keep)
+  values ('mx-a', 'term', '12345678', array['t1', 't2'], 't1') returning id into cand;
+  insert into public.integration_duplicate_resolutions (tenant_id, candidate_id, kept, superseded, before)
+  values ('mx-a', cand, 't1', array['t2'], '{}');
+  insert into public.integration_source_owners (tenant_id, connection_id, owner_name, backup_owner_name,
+    freshness_target_minutes, stale_threshold_minutes, escalation, correction_route)
+  values ('mx-a', conn, 'Registrar', 'IT', 60, 120, 'CIO', 'registrar@mx-a.example');
+  insert into public.integration_mapping_versions (tenant_id, connection_id, external_entity_type, mapping_version)
+  values ('mx-a', conn, 'term', 2);
 
   -- The list above is every school-bound table the integration migrations create.
   select count(*) into got from pg_class c join pg_namespace s on s.oid = c.relnamespace
@@ -144,7 +165,7 @@ begin
   if array_length(failures, 1) > 0 then
     raise exception 'FAILED: %', array_to_string(failures, '; ');
   end if;
-  raise notice 'ok  13 tables × 4 accounts: reads as the matrix says, and no cross-account write lands';
+  raise notice 'ok  21 tables × 4 accounts: reads as the matrix says, and no cross-account write lands';
 
   -- The school's own integration admin sees every row but cannot delete the
   -- worker's logs or move anything to another school.

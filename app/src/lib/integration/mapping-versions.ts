@@ -21,6 +21,8 @@ import type { EntityMapping, Transform } from './adapter.ts';
 
 export type VersionStatus = 'proposed' | 'approved' | 'live' | 'retired' | 'rolled_back';
 
+export const VERSION_STATUSES: readonly VersionStatus[] = ['proposed', 'approved', 'live', 'retired', 'rolled_back'];
+
 export interface MappingVersion {
   version: number;
   entity: string;

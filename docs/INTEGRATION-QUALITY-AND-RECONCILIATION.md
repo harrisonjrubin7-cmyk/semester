@@ -61,12 +61,43 @@ dropped by the mapping on purpose, so drift now ignores anything
 `namesNeverDisplayed` names. Reporting them would have taught an owner to
 ignore the report.
 
-**Next slice:** the tables (`reconciliation_runs`, `reconciliation_discrepancies`,
-`schema_fingerprints`, `schema_drift_events`, `duplicate_candidates`,
-`duplicate_resolution_actions`, `source_owners`, `tenant_mapping_versions`,
-`provider_registry`, `provider_certifications`, and the `simulation` schema)
-with RLS and `.check.sql` suites; wiring drift and reconciliation into the sync
-worker; and the dashboard views.
+## Built (Phase 1a, second slice): where results are kept, and who may act
+
+`supabase/migrations/20260928010000_integration_quality.sql`, walked by
+`supabase/integration-quality.check.sql` (60 checks) and added to
+`supabase/integration-rls-matrix.check.sql`'s four-account sweep.
+
+- Ten tables beside #779's, plus `integration_simulation_runs` in the private
+  schema, which no API exposes. A reconciliation run hangs off the sync run
+  whose `reconciliation_state` column already existed; a mapping version is a
+  header over the field rows `integration_mappings` already keeps.
+- **Nothing identifying is storable.** A discrepancy's reference must match
+  `^sha256:[0-9a-f]{32}$`; drift events hold field names; duplicate candidates
+  hold a hash of the key.
+- **Nobody records a decision in somebody else's name.** Triggers stamp who
+  resolved, acknowledged, decided, reversed, proposed, approved and recorded,
+  from `auth.uid()`, whatever the request sent.
+- **The workflow is enforced in the database.** A mapping version moves
+  proposed → approved → live → retired/rolled back and nowhere else; approval
+  needs `integration:approve`, a recorded passing simulation, and somebody
+  other than the proposer — checked by trigger *and* constraint, so a person
+  holding both capabilities still cannot approve their own. One live version per
+  entity. A resolution is reversed once and never rewritten or deleted. Drift is
+  acknowledged once.
+- New capability `integration:reconcile` for `integration_admin`. Owners are
+  set with the existing `source:approve`; provider rows and evidence with
+  `platform:configure`.
+
+**Found by the suite:** the first migration's "approved only after a passing
+simulation" check was `status = 'proposed' or simulation_verdict in ('ready',
+'review')`. With no simulation recorded that is `null`, a check constraint
+lets `null` through, and a version could be approved with no simulation at all.
+Fixed with an explicit `is not null`; the suite's "approving before a
+simulation" case is what found it. Three further planted faults — self-approval,
+an unredacted reference, a second acknowledgement — each turned the suite red.
+
+**Next:** wiring drift and reconciliation into the sync worker so it writes
+these rows, and the dashboard views that read them.
 
 ## Entity plan
 
