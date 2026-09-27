@@ -293,7 +293,19 @@ declare
     'my_action_publish_scopes()',
     'my_office_actions()',
     'office_action_programs()',
-    'office_desk_actions()'
+    'office_desk_actions()',
+
+    -- The five in 20260927234800_course_demand_forecasting.sql (Phase K,
+    -- D-051). A student contributes, stops and reads their own contribution,
+    -- always at their own school; staff read their demand:read scopes and the
+    -- snapshot rows those scopes allow, which the table's constraints keep at
+    -- ten or more. None returns a person. `demand.check.sql` holds each.
+    -- The refresh wrapper is the service role's alone and is not here.
+    'contribute_course_plan(want_term text, want_courses jsonb)',
+    'course_demand(want_term text)',
+    'my_demand_contribution(want_term text)',
+    'my_demand_scopes()',
+    'stop_contributing(want_term text)'
   ];
   extra text;
   missing text;

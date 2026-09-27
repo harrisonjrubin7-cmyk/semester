@@ -68,7 +68,7 @@ them already exist in part on main (#761, #762).
 | H | Study Readiness + Source Locker | Queued |
 | I | Career Evidence | Queued |
 | J | Office Action Feed: [OFFICE-ACTION-FEED.md](OFFICE-ACTION-FEED.md) | **Built** behind `office_action_feed` (off). Its migration awaits owner approval (D-048). Draft PR |
-| K | Course Demand Forecasting (UI on `course_demand_snapshots`) | Queued |
+| K | Course Demand Forecasting: [COURSE-DEMAND-FORECASTING.md](COURSE-DEMAND-FORECASTING.md) | **Built** behind `demand_forecasting` (off). Its migration awaits owner approval (D-051). Draft PR |
 | L | Semester Wrapped | Queued |
 | M | Offline Mode (extends `public/sw.js`) | Queued |
 | N | Trust Center | Queued; includes the D-018 export gap |

@@ -149,6 +149,13 @@ begin
     values (pg_temp.newuser('m' || i || '@exp-u.example', 'exp-u'), 'exp-u', '2027SP', 'MATH 200', true);
   end loop;
 
+  -- Since 20260927234800 (Phase K) the refresh counts a flagged row only while
+  -- its owner's consent for the term is live; `demand.check.sql` walks that.
+  -- Here every flagged student consents, as contribute_course_plan would.
+  insert into public.demand_consents (user_id, tenant_id, term_code)
+  select distinct user_id, tenant_id, term_code from public.term_plan_courses
+   where tenant_id = 'exp-u' and term_code = '2027SP' and contributes_to_demand;
+
   perform private.refresh_course_demand('exp-u', '2027SP');
   perform pg_temp.counted('the registrar sees demand only for courses with ten or more',
     pg_temp.seen(registrar, 'select * from public.course_demand_snapshots'), 1);

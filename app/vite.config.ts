@@ -593,6 +593,7 @@ const MOCKS_MODULES = [
   'src/components/SourceLocker.test.tsx',
   'src/components/AdvisorMeeting.test.tsx',
   'src/components/OfficeActionFeed.test.tsx',
+  'src/components/DemandContribution.test.tsx',
   'src/components/rework.test.tsx',
   'src/components/GraduationSimulator.phase-d.test.tsx',
   'src/components/StudyStudio.test.tsx',

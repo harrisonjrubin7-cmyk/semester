@@ -39,7 +39,7 @@ import {
 import type { School } from '../lib/school';
 import type { Screen } from '../lib/types';
 import { INSTITUTIONAL_PREVIEW } from '../lib/institutional-preview';
-import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
+import { EXPERIENCE_FLAGS, MODULE_FLAGS, moduleOn } from '../lib/experience-flags';
 import { GetHelp } from '../components/GetHelp';
 import { HelpInbox } from '../components/HelpInbox';
 import { helpSeedWaiting } from '../lib/help-routes';
@@ -47,6 +47,7 @@ import { ControlPlane } from '../components/institutional/ControlPlane';
 import { IntegrationDashboard } from '../components/institutional/IntegrationDashboard';
 import type { ControlPlaneStatus } from '../lib/control-plane';
 
+const DemandDesk = lazy(() => import('../components/DemandDesk').then((module) => ({ default: module.DemandDesk })));
 const OperationsStudio = lazy(() =>
   import('../components/institutional/OperationsStudio').then((module) => ({
     default: module.OperationsStudio,
@@ -139,9 +140,13 @@ const TABS = [
   ...(EXPERIENCE_FLAGS.institutionalOperations !== 'off'
     ? [{ id: 'operations' as const, label: 'Operations' }]
     : []),
+  // Course demand (Phase K): staff only in practice. The database returns
+  // counts of ten or more, scoped by demand:read, and nothing that names a
+  // person; an account without the scope is told so.
+  ...(moduleOn(MODULE_FLAGS.demand_forecasting) ? [{ id: 'demand' as const, label: 'Demand' }] : []),
 ];
 
-type Tab = 'overview' | 'drafts' | 'records' | 'connections' | 'control' | 'help' | 'integrations' | 'operations';
+type Tab = 'overview' | 'drafts' | 'records' | 'connections' | 'control' | 'help' | 'integrations' | 'operations' | 'demand';
 
 /** What each role is called on screen. */
 const ROLE_LABELS: Record<UniversityRole, string> = {
@@ -744,6 +749,12 @@ function Workspace({ storageKey }: { storageKey: string }) {
       {tab === 'operations' && EXPERIENCE_FLAGS.institutionalOperations !== 'off' && (
         <Suspense fallback={null}>
           <OperationsStudio />
+        </Suspense>
+      )}
+
+      {tab === 'demand' && moduleOn(MODULE_FLAGS.demand_forecasting) && (
+        <Suspense fallback={null}>
+          <DemandDesk />
         </Suspense>
       )}
 
