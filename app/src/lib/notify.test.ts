@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { classesToNudge, dueReminders, inQuiet } from './notify';
+import { classesToNudge, DAILY_CAP, dueReminders, inQuiet, planAhead, shownBody, TIER, whyFor, withinCap } from './notify';
 import type { Start } from './start';
 import type { DatedItem } from './types';
-import type { NotifKey } from '../data/misc';
+import { NOTIF_DEFS, type NotifKey } from '../data/misc';
 
 const ALL: Record<NotifKey, boolean> = {
   class: true, today: true, two: true, start: true, free: true, sun: true, exam: true, term: true, attend: true,
@@ -583,5 +583,54 @@ describe('the start rule', () => {
     expect(dueReminders(THU, ALL, { items: [], classes: [] }).some((r) => r.rule === 'start')).toBe(
       false,
     );
+  });
+});
+
+describe('notification discipline', () => {
+  const r = (rule: NotifKey, id: string = rule) => ({ id, rule, title: id, body: 'b' });
+
+  it('gives every rule a tier, so a new rule cannot arrive without deciding how loud it is', () => {
+    for (const d of NOTIF_DEFS) expect(TIER[d.k], d.k).toBeDefined();
+  });
+
+  it('caps a noisy day, dropping the helpful ones first', () => {
+    const noisy = [
+      r('sun'), r('free'), r('start'),
+      ...Array.from({ length: DAILY_CAP }, (_, n) => r('class', `class:${n}`)),
+    ];
+    const out = withinCap(noisy, 0);
+    expect(out).toHaveLength(DAILY_CAP);
+    expect(out.every((x) => x.rule === 'class')).toBe(true);
+  });
+
+  it('never caps a critical one, even on a day already full', () => {
+    const out = withinCap([r('today'), r('bill'), r('term')], DAILY_CAP);
+    expect(out.map((x) => x.rule)).toEqual(['bill', 'term']);
+  });
+
+  it('counts what already went out today against the cap', () => {
+    expect(withinCap([r('today'), r('two'), r('exam')], DAILY_CAP - 1)).toHaveLength(1);
+  });
+
+  it('says why on every notification, naming the switch that sent it', () => {
+    expect(shownBody(r('two'))).toBe('b\nWhy: “Two-day warning on big assignments” is on in Settings.');
+  });
+
+  it('uses the reminder’s own reason when the switch is not the answer', () => {
+    expect(whyFor({ rule: 'today', why: 'Why: you set this up yourself.' })).toBe('Why: you set this up yourself.');
+  });
+
+  it('keeps push to the same cap as an open tab', () => {
+    const items = Array.from({ length: 12 }, (_, n) => ({
+      id: `i${n}`, c: 'econ', title: `Thing ${n}`, kind: 'hw', isToday: true, isPast: false,
+      daysAway: 0, dueShort: 'Today', weight: '', date: new Date(2026, 8, 10),
+    })) as unknown as DatedItem[];
+    const classes = Array.from({ length: 10 }, (_, n) => ({ label: `C${n}`, at: 9 * 60 + n * 60, where: 'Room' }));
+    const on = Object.fromEntries(NOTIF_DEFS.map((d) => [d.k, true])) as Record<NotifKey, boolean>;
+    const plan = planAhead(new Date(2026, 8, 10, 0, 0), 1, on, () => ({ items, classes }));
+    const firstDay = plan.filter((p) => new Date(p.at).getDate() === 10);
+    expect(firstDay.length).toBeGreaterThan(0);
+    expect(firstDay.length).toBeLessThanOrEqual(DAILY_CAP);
+    expect(firstDay.every((p) => p.body.includes('Why:'))).toBe(true);
   });
 });

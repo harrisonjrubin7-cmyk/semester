@@ -1123,6 +1123,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           rule: 'today' as const,
           title: f.title,
           body: f.body,
+          why: 'Why: you set this up yourself, under “Your own reminders” in Settings.',
         })),
       );
     };

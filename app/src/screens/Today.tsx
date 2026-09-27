@@ -50,6 +50,7 @@ import { Walks } from '../components/Walks';
 import { BehindOffer } from '../components/BehindOffer';
 import { StartList, StartToday } from '../components/StartToday';
 import { changes, line as sinceLine, shouldSpeak, sinceLabel } from '../lib/since';
+import { aheadLine, confirmLine, named, welcomeBack } from '../lib/welcomeback';
 import { GapOffer } from './GapOffer';
 import { HomeWalk } from '../components/HomeWalk';
 import { tally } from '../lib/review';
@@ -996,9 +997,11 @@ function Feed_since() {
     [lastSeen, now, state.tickedAt, state.feeds, state.updates, state.sittings],
   );
 
-  if (list.length === 0) return null;
+  if (list.length === 0) return <WelcomeBack />;
 
   return (
+    <>
+    <WelcomeBack />
     <div
       style={{
         paddingBlock: 'calc(11px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))',
@@ -1013,6 +1016,101 @@ function Feed_since() {
         {sinceLine(list)}
       </div>
     </div>
+    </>
+  );
+}
+
+/**
+ * Back after a real break: what went by, what is ahead, one place to start.
+ *
+ * Drawn above the one-line change report rather than instead of it, because
+ * the two answer different questions — that line says what *arrived* while
+ * the app was closed, this says what *fell due*. Silent for any gap shorter
+ * than `AWAY_DAYS`, which is almost always. See `lib/welcomeback.ts`.
+ *
+ * Deadlines that went by are offered with a tick, not labelled missed: the
+ * app cannot see a paper handed in from somebody else's computer, so it asks.
+ */
+function WelcomeBack() {
+  const { state, catalog, lastSeen, dispatch } = useStore();
+  const now = useNow();
+  const w = useMemo(
+    () => welcomeBack(datedItems(catalog, now), state.done, lastSeen, now),
+    [catalog, now, state.done, lastSeen],
+  );
+  if (!w) return null;
+  const confirm = named(w.toConfirm);
+  return (
+    <section
+      aria-label="Welcome back"
+      style={{
+        paddingBlock: 'calc(11px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))',
+        marginBottom: 'calc(14px * var(--density, 1))',
+        borderRadius: 'var(--r-md)',
+        border: '1px solid var(--app-line)',
+        background: 'var(--app-panel)',
+      }}
+    >
+      <div className="kicker">Welcome back · {w.days} days away</div>
+      <div style={{ fontSize: 'var(--type-base-plus)', lineHeight: 'var(--leading-relaxed)', marginTop: 'calc(5px * var(--density, 1))', textWrap: 'pretty' }}>
+        Your courses, notes and plans are as you left them. {aheadLine(w)}
+      </div>
+      {confirm.shown.length > 0 && (
+        <>
+          <div style={{ fontSize: 'var(--type-sm)', lineHeight: 'var(--leading-relaxed)', marginTop: 'var(--sp-4)', ...secondLine() }}>
+            {confirmLine(w)}
+          </div>
+          <ul style={{ listStyle: 'none', margin: 'var(--sp-3) 0 0', padding: 0 }}>
+            {confirm.shown.map((it) => (
+              <li key={it.id} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)' }}>
+                <button
+                  type="button"
+                  className="bare tappable"
+                  aria-label={`Handed in: ${it.title}`}
+                  onClick={() => dispatch({ type: 'toggleDone', id: it.id })}
+                  style={{ width: 34, flex: 'none', paddingBlock: 'var(--sp-3)' }}
+                >
+                  <TickBox on={false} />
+                </button>
+                <button
+                  type="button"
+                  className="bare"
+                  onClick={() => dispatch({ type: 'openItem', id: it.id })}
+                  style={{ flex: 1, minWidth: 0, display: 'flex', gap: 'var(--sp-3)', alignItems: 'center' }}
+                >
+                  <span style={{ flex: 'none' }}><CourseTag id={it.c} /></span>
+                  <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{it.title}</span>
+                  <span style={{ marginLeft: 'auto', flex: 'none', whiteSpace: 'nowrap', fontSize: 'var(--type-xs)', ...secondLine() }}>{it.dueShort}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+          {confirm.more > 0 && (
+            <button
+              type="button"
+              className="bare tappable"
+              onClick={() => dispatch({ type: 'go', screen: 'behind' })}
+              style={{ marginTop: 'var(--sp-3)', fontSize: 'var(--type-sm)' }}
+            >
+              And {confirm.more} more — see everything that went by
+            </button>
+          )}
+        </>
+      )}
+      {w.restart && (
+        <div style={{ marginTop: 'var(--sp-5)' }}>
+          {/* The title on its own line and the button short: a syllabus
+              title in a caps button ran to four lines on a phone. */}
+          <div style={{ fontSize: 'var(--type-sm)', marginBottom: 'var(--sp-3)', textWrap: 'pretty' }}>
+            <span style={secondLine()}>A place to start: </span>
+            {w.restart.title}
+          </div>
+          <ActionButton tone="primary" onClick={() => dispatch({ type: 'openItem', id: w.restart!.id })}>
+            Start here
+          </ActionButton>
+        </div>
+      )}
+    </section>
   );
 }
 

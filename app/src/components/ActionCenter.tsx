@@ -19,7 +19,7 @@ import { SourceBadge } from './SourceBadge';
 import { ActionButton, SectionLabel } from './ui';
 
 /**
- * The Action Center: one most important thing, up to five more, the rest
+ * The Action Center: one most important thing, up to three more, the rest
  * behind "View all".
  *
  * Every control is a button — no swipe, no long press — so the whole list can

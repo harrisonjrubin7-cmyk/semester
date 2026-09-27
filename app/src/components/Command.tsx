@@ -71,6 +71,7 @@ import { TabStrip } from './Tabs';
 import { BookmarkChips } from './Bookmarks';
 import { here, openInNew, pickTab, record, recordSearch, useStrip } from '../lib/browser.hook';
 import { justGo, tabAt } from '../lib/browser';
+import { continuing, type Continuing } from '../lib/opened';
 import { sounding } from '../lib/sound';
 import { useSound } from '../lib/sound.hook';
 import { readSearches, remember, forget, suggestions, writeSearches } from '../lib/typeahead';
@@ -383,6 +384,24 @@ export function Command({ onClose }: { onClose: () => void }) {
     return out;
   }, [school.capabilities, state.role, state.recent]);
 
+  /**
+   * Continue where you left off: the deadlines and courses opened lately,
+   * unfinished ones only. The shortcuts below are *screens*; these are the
+   * things inside them. See `lib/opened.ts`.
+   */
+  const resume = useMemo(
+    () => continuing(state.opened, catalog, state.done, 4),
+    [state.opened, catalog, state.done],
+  );
+  const pickUp = (c: Continuing) => {
+    const place = c.kind === 'item'
+      ? [{ type: 'openItem' as const, id: c.id }]
+      : [{ type: 'openCourse' as const, id: c.id as never }];
+    record(c.kind, c.title, place);
+    for (const action of place) dispatch(action);
+    onClose();
+  };
+
   const onSearchPage = sent.trim() === '';
   /** The tab the strip is on, which is what the app behind this is showing. */
   const tab = here();
@@ -648,6 +667,39 @@ export function Command({ onClose }: { onClose: () => void }) {
                 Deadlines, courses, study units, your own notes and tasks — and the app’s own
                 screens.
               </div>
+            )}
+
+            {resume.length > 0 && (
+              <section aria-label="Continue where you left off" style={{ width: '100%', maxWidth: size.column }}>
+                <div className="kicker" style={{ marginBottom: 'var(--sp-3)' }}>Continue where you left off</div>
+                <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+                  {resume.map((c) => (
+                    <li key={`${c.kind}:${c.id}`}>
+                      <button
+                        type="button"
+                        className="bare tappable"
+                        onClick={() => pickUp(c)}
+                        style={{
+                          width: '100%',
+                          display: 'flex',
+                          alignItems: 'baseline',
+                          gap: 'var(--sp-4)',
+                          padding: 'var(--sp-3) var(--sp-2)',
+                          borderBottom: '1px solid var(--app-line-soft)',
+                          textAlign: 'left',
+                        }}
+                      >
+                        <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {c.title}
+                        </span>
+                        <span style={{ fontSize: 'var(--type-xs)', ...secondLine() }}>
+                          {c.kind === 'item' ? `Deadline · ${c.context}` : 'Course'}
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </section>
             )}
 
             {/* The shortcuts, which are where you have been rather than where

@@ -18,7 +18,7 @@
  */
 
 import { money } from './bill';
-import type { NotifKey } from '../data/misc';
+import { NOTIF_DEFS, type NotifKey } from '../data/misc';
 import { daysTo, type TermDate } from './registrar';
 import { isExam } from './runway';
 import type { Start } from './start';
@@ -67,6 +67,112 @@ export interface Reminder {
   rule: NotifKey;
   title: string;
   body: string;
+  /**
+   * Why this was sent, when the rule's own switch is not the answer — a
+   * reminder the student wrote themselves rides the `today` rule but was
+   * not asked for by that switch. See `whyFor`.
+   */
+  why?: string;
+}
+
+// ── discipline: tiers, a daily cap, and a reason on every one ─────────────
+
+/**
+ * How much each rule is allowed to interrupt.
+ *
+ * - **critical** — money or registration is at stake and the date is the
+ *   school's, not the student's: a registrar deadline, a tuition payment.
+ *   Never capped.
+ * - **important** — a class about to start, work due today or in two days,
+ *   an exam next week, a class you cannot afford to miss.
+ * - **helpful** — nudges the student can live without: when to start, the
+ *   all-clear, the Sunday summary. First to go when the day is noisy.
+ *
+ * A table rather than a field on each rule, so a rule added next year fails
+ * to type-check until somebody decides how loud it is.
+ */
+export type Tier = 'critical' | 'important' | 'helpful';
+
+export const TIER: Record<NotifKey, Tier> = {
+  term: 'critical',
+  bill: 'critical',
+  attend: 'important',
+  class: 'important',
+  today: 'important',
+  two: 'important',
+  exam: 'important',
+  start: 'helpful',
+  free: 'helpful',
+  sun: 'helpful',
+};
+
+const RANK: Record<Tier, number> = { critical: 0, important: 1, helpful: 2 };
+
+/**
+ * The most non-critical notifications one day may produce.
+ *
+ * A heavy day — three classes, two things due, an exam next week — could
+ * otherwise buzz eight or nine times, and notification volume is the fastest
+ * way to teach somebody to switch all of it off, which costs them the two
+ * that mattered. Critical ones are never counted against it and never
+ * dropped by it.
+ */
+export const DAILY_CAP = 6;
+
+/** "Why you got this", in one line, for the notification itself. */
+export function whyFor(r: Pick<Reminder, 'rule' | 'why'>): string {
+  if (r.why) return r.why;
+  const label = NOTIF_DEFS.find((d) => d.k === r.rule)?.label ?? r.rule;
+  return `Why: “${label}” is on in Settings.`;
+}
+
+/** The body as shown: what happened, then why it was sent. */
+export function shownBody(r: Pick<Reminder, 'rule' | 'why' | 'body'>): string {
+  return r.body ? `${r.body}\n${whyFor(r)}` : whyFor(r);
+}
+
+/**
+ * Which of these may go out, given how many already did today.
+ *
+ * Loudest first, so a cap that bites drops the Sunday summary before the
+ * class warning, then every critical one plus as many others as the cap has
+ * room for. Order within a tier is kept.
+ */
+export function withinCap<T extends Pick<Reminder, 'rule'>>(list: T[], alreadyToday: number): T[] {
+  const sorted = list
+    .map((r, i) => ({ r, i }))
+    .sort((a, b) => RANK[TIER[a.r.rule]] - RANK[TIER[b.r.rule]] || a.i - b.i)
+    .map((x) => x.r);
+  let room = Math.max(0, DAILY_CAP - alreadyToday);
+  const out: T[] = [];
+  for (const r of sorted) {
+    if (TIER[r.rule] === 'critical') out.push(r);
+    else if (room > 0) {
+      out.push(r);
+      room -= 1;
+    }
+  }
+  return out;
+}
+
+const COUNT_KEY = 'semester.notified.count';
+
+/** How many non-critical notifications this device has shown today. */
+function countToday(today: string): number {
+  try {
+    const saved = JSON.parse(localStorage.getItem(COUNT_KEY) ?? 'null') as { day?: string; n?: number } | null;
+    return saved && saved.day === today && typeof saved.n === 'number' ? saved.n : 0;
+  } catch {
+    return 0;
+  }
+}
+
+function writeCount(today: string, n: number): void {
+  try {
+    localStorage.setItem(COUNT_KEY, JSON.stringify({ day: today, n }));
+  } catch {
+    /* storage off; the cap resets with the session */
+  }
 }
 
 interface Source {
@@ -488,23 +594,32 @@ export function dueReminders(
  * Returns how many were shown, which is how the caller stays quiet when the
  * answer is none.
  */
-export function fire(reminders: Reminder[]): number {
+export function fire(reminders: Reminder[], now: Date = new Date()): number {
   if (permission() !== 'granted') return 0;
   const already = seen();
+  const today = day(now);
+  let counted = countToday(today);
   let shown = 0;
-  for (const r of reminders) {
-    if (already.has(r.id)) continue;
+  // Unseen first, then the cap — a reminder already shown must not use up
+  // room. One the cap holds back is not remembered, and its id is per day,
+  // so it simply does not arrive rather than arriving late.
+  const fresh = withinCap(reminders.filter((r) => !already.has(r.id)), counted);
+  for (const r of fresh) {
     try {
-      new Notification(r.title, { body: r.body, tag: r.id, icon: 'icon-192.png' });
+      new Notification(r.title, { body: shownBody(r), tag: r.id, icon: 'icon-192.png' });
       already.add(r.id);
       shown += 1;
+      if (TIER[r.rule] !== 'critical') counted += 1;
     } catch {
       // Some browsers only allow notifications from a service worker. Nothing
       // to fall back to here; the toggle still shows its true state.
       break;
     }
   }
-  if (shown > 0) remember(already);
+  if (shown > 0) {
+    remember(already);
+    writeCount(today, counted);
+  }
   return shown;
 }
 
@@ -533,6 +648,9 @@ export function planAhead(
   const out: { id: string; title: string; body: string; at: number }[] = [];
   const seen = new Set<string>();
   const STEP = 15 * 60 * 1000;
+  // The same daily cap `fire` keeps, counted per calendar day as the walk
+  // crosses them, so a phone reached by push is no noisier than an open tab.
+  const perDay = new Map<string, number>();
 
   const end = from.getTime() + days * 86_400_000;
 
@@ -541,10 +659,13 @@ export function planAhead(
     // The source changes by day — today's classes, today's deadlines — so it
     // is asked for per day rather than computed once.
     const src = forDay(at);
-    for (const r of dueReminders(at, on, src)) {
-      if (seen.has(r.id)) continue;
+    const today = day(at);
+    const counted = perDay.get(today) ?? 0;
+    const fresh = withinCap(dueReminders(at, on, src).filter((r) => !seen.has(r.id)), counted);
+    for (const r of fresh) {
       seen.add(r.id);
-      out.push({ id: r.id, title: r.title, body: r.body, at: t });
+      if (TIER[r.rule] !== 'critical') perDay.set(today, (perDay.get(today) ?? 0) + 1);
+      out.push({ id: r.id, title: r.title, body: shownBody(r), at: t });
     }
   }
 
