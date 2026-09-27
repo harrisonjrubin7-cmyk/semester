@@ -134,11 +134,9 @@ done. Evidence names the file, test or script.
 
 1. Field-level error pattern with summary and focus management.
 2. Measure the Focus bar against the assistant button and the bottom focus
-   clearance. On wide layouts the assistant's panel draws over the shared
-   sheets' scrim — seen in a 1280px screenshot of the Capture sheet — because
-   the sheets are mounted inside `.device`, whose `isolation: isolate` caps
-   their `z-index`, while the panel is outside it. `QuickAdd` has the same
-   stacking; `styles/stacking.test.ts` explains the context.
+   clearance. (The assistant is *under* the shared sheets' scrim, not over it —
+   an earlier note here said otherwise from an unmeasured screenshot. Both are
+   inside `.device`'s one stacking context; measured in Chromium at 1280px in the tab-bar, workspace and shelves layouts, the panel's brightest pixel falls from 716 to 223 when a sheet opens over it; `styles/tokens.test.ts` holds every assistant z-index under `--layer-overlay`.)
 3. Keyboard and screen-reader audit of data tables, rich-text editors, media
    controls and chart alternatives.
 4. Run `smoke:a11y` at 320px over the screens that now carry the shared

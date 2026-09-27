@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { tokensFor } from '../lib/look';
 
 /**
@@ -84,6 +84,28 @@ describe('the semantic token layer', () => {
     expect(defs.get('--layer-skip')).toBe('100');
     expect(APP).toMatch(/\.skip-link\s*\{[^}]*z-index:\s*100;/);
     expect(APP).toMatch(/\.deskwork > \.deskstrip\s*\{\s*z-index:\s*21;/);
+  });
+
+  /*
+   * The shared sheets sit over the assistant, and this is why.
+   *
+   * The assistant's button and panel are `position: fixed` with inline
+   * z-indexes, mounted inside `.device` beside `UnityLayer`, so both are in
+   * the one stacking context `.device`'s `isolation: isolate` makes. The
+   * sheets' scrim is `--layer-overlay`. Measured in Chromium at 1280px, with
+   * the panel open and the Capture sheet over it, in the tab-bar, workspace
+   * and shelves layouts: the brightest pixel in the panel's header fell from
+   * 716 to 223, which is the scrim covering it. That holds for exactly as long
+   * as every assistant layer stays under the overlay's number.
+   */
+  it('keeps every assistant layer under the sheets', () => {
+    const overlay = Number(defs.get('--layer-overlay'));
+    const ai = readdirSync(new URL('../ai/', import.meta.url)).filter((f) => f.endsWith('.tsx') && !f.includes('.test.'));
+    const layers = ai.flatMap((f) =>
+      [...readFileSync(new URL(`../ai/${f}`, import.meta.url), 'utf8').matchAll(/zIndex:\s*(\d+)/g)].map((m) => ({ f, z: Number(m[1]) })),
+    );
+    expect(layers.length).toBeGreaterThan(0);
+    expect(layers.filter(({ z }) => z >= overlay)).toEqual([]);
   });
 
   it('is the ring the app draws, at the same values', () => {
