@@ -2,6 +2,7 @@ import { CourseHub } from '../components/CourseHub';
 import { WhereItStands } from '../components/WhereItStands';
 import { useState } from 'react';
 import { useNow, useStore } from '../state/store';
+import { ADDED_BY_YOU } from '../lib/edit';
 import { draftFor } from '../lib/mail';
 import type { CourseId, CoursesTab } from '../lib/types';
 import { nameFor, renamed } from '../lib/yours';
@@ -692,9 +693,12 @@ export function ItemDetail() {
   const done = !!state.done[item.id];
   const going = isUnderway(item.id, state.started, state.done);
   const code = catalog.byId[item.c]?.code ?? item.c;
-  // Typed by hand has no syllabus sentence behind it; otherwise it is as
-  // imported as the course it sits in. Nothing in this build is official.
-  const origin: StatusKey = !item.quote.trim()
+  // Typed by hand says so in its source line (`blankItem`); otherwise it is
+  // as imported as the course it sits in. Not the quote: the importer keeps an
+  // item whose quote it could not verify and clears only the quote, so a
+  // missing sentence is not a sign the student wrote it. Nothing in this
+  // build is official.
+  const origin: StatusKey = item.source === ADDED_BY_YOU
     ? 'yours'
     : state.courses.some((m) => m.course.id === item.c)
       ? 'made'

@@ -275,6 +275,9 @@ export function QuickCapture({ context, as, text: carried = '' }: { context?: st
             </button>
           ))}
         </fieldset>
+        {/* A timer has no course of its own (`addTimer` takes a label and a
+            length), so the choice is not offered where it would be dropped. */}
+        {kind !== 'session' && (
         <label className="capture-field">
           <span className="kicker">Attached to</span>
           <select className="input" value={courseId} onChange={(e) => setCourseId(e.target.value)}>
@@ -286,6 +289,7 @@ export function QuickCapture({ context, as, text: carried = '' }: { context?: st
             ))}
           </select>
         </label>
+        )}
         <Visibility value="only-me" locked />
         <div className="unity-sheet-actions">
           <button type="submit" className="btn btn-primary" disabled={!text.trim()}>

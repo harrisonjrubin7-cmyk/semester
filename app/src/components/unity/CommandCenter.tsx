@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { standing } from '../../lib/apply';
 import { GOALS, goalOf } from '../../lib/goals';
 import { upcomingItems } from '../../lib/select';
 import { pathSnapshot } from '../../lib/today-decision';
@@ -36,8 +37,10 @@ export function CommandCenter() {
       return due === 0 ? 'No review cards due' : `${due} review card${due === 1 ? '' : 's'} due`;
     })(),
     opportunity: (() => {
-      const next = state.applications.filter((a) => a.due).sort((a, b) => a.due.localeCompare(b.due))[0];
-      return next ? `${next.org} · due ${next.due}` : 'No application deadlines saved';
+      // Live applications only, and only deadlines still ahead: `standing`
+      // already drops closed ones and sorts soonest first.
+      const next = standing(state.applications, now).find((s) => s.what === 'due' && s.daysAway >= 0);
+      return next ? `${next.application.org} · due ${next.date}` : 'No upcoming application deadlines';
     })(),
   };
 

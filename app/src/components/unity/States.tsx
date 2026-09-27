@@ -233,14 +233,31 @@ export function PermissionNotice({
 }
 
 /** An offline strip — says what still works and that work is queued. */
-export function OfflineStrip({ queued = 0, children }: { queued?: number; children?: ReactNode }) {
+/**
+ * `syncs` is whether there is an account copy to catch up with. Without one —
+ * sync off in this build, or signed out — everything is on this device already
+ * and reconnecting changes nothing, so the strip must not promise a sync.
+ */
+export function OfflineStrip({
+  queued = 0,
+  syncs = true,
+  children,
+}: {
+  queued?: number;
+  syncs?: boolean;
+  children?: ReactNode;
+}) {
   return (
     <div className="state-offline" role="status">
       <span className="status-glyph" aria-hidden="true">
         ⊘{' '}
       </span>
       You are offline. You can keep working
-      {queued > 0 ? ` — ${queued} change${queued === 1 ? '' : 's'} will sync when you are back.` : '; changes sync when you are back.'}
+      {!syncs
+        ? '; everything is kept on this device.'
+        : queued > 0
+          ? ` — ${queued} change${queued === 1 ? '' : 's'} will sync when you are back.`
+          : '; changes sync when you are back.'}
       {children}
     </div>
   );

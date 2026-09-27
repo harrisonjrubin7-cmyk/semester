@@ -213,7 +213,8 @@ box itself.
   `courseFieldFor(state.screen)` in `lib/parent.ts`, so on Today (where
   `state.courseId` is only the last course opened) it attaches to none — or to
   the one passed in. It says so in an "Attached to" select and lets the student
-  change it or choose "No course".
+  change it or choose "No course". A study session has no course to keep (the
+  timer takes a label and a length), so the select is not offered for it.
 - States visibility with `<Visibility value="only-me" locked />`: everything
   captured is private to the student.
 - Save is disabled for an empty line. After Save, focus returns to the field,

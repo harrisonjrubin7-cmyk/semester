@@ -149,7 +149,10 @@ carries).
 ### Offline — `OfflineStrip`
 
 "You are offline. You can keep working; changes sync when you are back." — or,
-with `queued`, how many changes will sync. `role="status"`. Rendered by
+with `queued`, how many changes will sync. Where there is no account copy
+(sync off in the build, or signed out) it says "everything is kept on this
+device" instead and promises no sync (`syncs`, from `ShellBody`; held by
+`components/unity/honesty.test.tsx`). `role="status"`. Rendered by
 `ShellBody` in the flow above the screen (not fixed, so it can never cover a
 focused control) whenever `useOffline()` reports no connection. It does not
 yet receive a queued count.

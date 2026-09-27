@@ -83,7 +83,7 @@ layouts):
 | One primary next step | `TodayDecisionSurface` → "Next best step": a title, one sentence, one primary `ActionButton`, "Why am I seeing this?", "Not now" (with Undo) |
 | (context) | `TodayDecisionSurface` → "Your path": covered / total requirements, marked `Needs confirmation`, with Source & details |
 | Three immediate commitments | `TodayDecisionSurface` → "Next 72 hours": at most four rows (`slice(0, 4)`), then "See full plan →" |
-| One study suggestion, one opportunity | `CommandCenter` → "Pinned": three widgets by default (This week's plan, Current assignment, Study progress), up to five, including Upcoming opportunity |
+| One study suggestion, one opportunity | `CommandCenter` → "Pinned": three widgets by default (This week's plan, Current assignment, Study progress), up to five, including Upcoming opportunity (the soonest deadline on a live application that has not passed) |
 | See more | "See full plan →", and the rest of Today below |
 
 The differences are small and on purpose: the near-term list is four rather
