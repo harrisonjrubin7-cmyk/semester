@@ -15,7 +15,7 @@ import { DESTINATIONS } from './nav';
  * exists and cannot be reached from anywhere a person would look.
  *
  * So every member of the union is either registered or named below with the
- * reason it is not. Twenty-two are named, and all twenty-two are genuinely not
+ * reason it is not. Twenty-four are named, and all twenty-four are genuinely not
  * destinations: putting `course` in the launcher would mean "a course",
  * unanswerably, and putting `setLook` there would be a second door into a page
  * Settings already lists.
@@ -62,7 +62,21 @@ const SETTINGS = [
   'setAssistant',
 ] as const;
 
-const NOT_DESTINATIONS = new Set<string>([...SHELL, ...FIRST_RUN, ...DETAIL, ...SETTINGS]);
+/**
+ * Staff tools. The Trust & Safety console is opened from Community by an
+ * account that holds a reviewer role; putting it on a student's shelf would be
+ * a door that opens onto "you are not a reviewer" for everybody else.
+ */
+const STAFF = ['moderation'] as const;
+
+/**
+ * Registered only while a build switch is on. Community is absent from the
+ * registry until its flags are set, rather than present as a tile that opens
+ * onto "not available" — see `COMMUNITY_DESTINATION` in lib/nav.ts.
+ */
+const SWITCHED = ['community'] as const;
+
+const NOT_DESTINATIONS = new Set<string>([...SHELL, ...FIRST_RUN, ...DETAIL, ...SETTINGS, ...STAFF, ...SWITCHED]);
 
 /**
  * The union, read out of the file rather than imported.

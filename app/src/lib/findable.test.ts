@@ -47,6 +47,11 @@ const OPENED_FROM_SOMEWHERE_ELSE: Record<string, string> = {
     'The workspace’s search home — the wordmark, the one field and the shortcuts. ' +
     'What a new tab opens on, and what the Search home row in the sidebar returns to. ' +
     'Not a destination for the same reason a browser’s new-tab page is not a bookmark.',
+  community:
+    'Registered in DESTINATIONS only while its build switches are on (COMMUNITY_DESTINATION in lib/nav.ts); ' +
+    'with them off it is not a place in the app at all.',
+  moderation:
+    'The Trust & Safety review queue. A staff tool, opened from Community by an account the server says holds a reviewer role.',
   directory:
     'Every app this student has, as a list or a grid. Opened from All apps in the ' +
     'sidebar, from the launcher, and from Explore all apps on the search home. It is ' +

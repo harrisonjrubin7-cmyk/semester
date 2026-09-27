@@ -31,17 +31,43 @@ every rule the prompt states as a number or a prohibition, and 153 tests check
 them. Each prohibition has a test that was shown to go red when its guard was
 reverted.
 
+The database half followed in `supabase/migrations/20260927170000_community.sql`:
+
+- **Tables:** communities, members, posts, restrictions, mutes, cases, reports,
+  append-only case events, decisions, venues, sessions and session places.
+- **Row-level security** through `private.has_capability`.
+- **RPCs:** 17, one for every write. Each is on the `grants.check.sql`
+  allowlist.
+- **Checks:** `supabase/community.check.sql` walks 119 checks as the accounts
+  concerned. Seven guards were shown to fail when reverted: author id hidden,
+  appeal independence, high-risk hold, P0 needs a senior reviewer, reporter
+  hidden, roster hidden, and the three-reporter threshold.
+
+The screens followed too:
+
+- **Community** (`screens/Community.tsx`): communities, a finite explained
+  feed, the pre-post privacy check, reporting with the emergency notice
+  first, block, mute, hide, study sessions at approved venues, and decision
+  notices with appeal.
+- **Moderation** (`screens/Moderation.tsx`): the professional queue and
+  appeals.
+- **Gating:** Community is registered in the nav only while
+  `VITE_COMMUNITY_FEED` and `VITE_COMMUNITY_REPORTING` are on. The console is
+  opened from Community, only by an account the server says is a reviewer.
+
 It **is not** yet:
 
-- **Tables and RLS.** The logical entities (`communities`, `community_posts`,
-  `moderation_cases`, `safety_signals`, `community_aliases`, …) need a
-  migration with `private.has_capability` policies and a `*.check.sql` walk,
-  following `20260926150000_expansion_roles_and_features.sql`. The domain
-  functions are the contract that migration must satisfy.
-- **Screens.** Feed, report sheet, moderation console, appeal view.
 - **Server-side detectors** beyond the PII rules. Threat, hate, scam-link,
   media-safety and brigading detectors plug into `SafetySignal` with a
-  `detector`, `confidence` and `version`. None of them exists yet.
+  `detector`, `confidence` and `version`. None of them exists yet. The
+  server's own post check covers email and phone only.
+- **A retention sweep.** Cases carry `retain_until`, but nothing enforces it
+  yet.
+- **Database tables for the high-risk features:** aliases, volunteer queues,
+  escalation and the safety state. Their rules exist in TypeScript behind
+  flags that are off.
+- **Checked against Postgres 17.** The container has 16, so `check.sh` ran
+  with `SEMESTER_CHECK_PG_ANY=1`.
 
 Nothing is deployed, and no flag is on by default.
 

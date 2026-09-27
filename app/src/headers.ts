@@ -218,6 +218,8 @@ export const HEADERS: Record<Screen, (c: HeaderCtx) => Head> = {
   edit: () => ({ kicker: 'A syllabus is a first draft', title: 'Edit the course' }),
   analyse: () => ({ kicker: 'Computed here, not guessed', title: 'Analyse data' }),
   classmates: () => ({ kicker: 'Confirmed Vanderbilt addresses', title: 'Classmates' }),
+  community: () => ({ kicker: 'Found by what you study, not where you are', title: 'Community' }),
+  moderation: () => ({ kicker: 'Trust & Safety', title: 'Moderation' }),
   activities: () => ({ kicker: 'Everything that is not a class', title: 'Activities' }),
   clocks: () => ({ kicker: 'Counting, and ringing', title: 'Timers and alarms' }),
   proof: () => ({ kicker: 'Rules, not a judgement', title: 'Check the writing' }),

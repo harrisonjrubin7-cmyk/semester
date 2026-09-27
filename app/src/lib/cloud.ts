@@ -980,6 +980,17 @@ export const OWNED_TABLES: OwnedTable[] = [
   // `feedback.check.sql` proves the delete policy this line needs and that it
   // cannot be aimed at anybody else's reports.
   { table: 'feedback', column: 'author' },
+  // Community. A member cannot filter on author_id or host_id — neither is
+  // readable — so one RPC removes posts, hosted sessions, session places,
+  // mutes and memberships together. The two entries call it twice, which is
+  // harmless: the second finds nothing. A post that is the subject of a
+  // moderation case is withdrawn and anonymised rather than deleted; see
+  // `community_cases` below. `community.check.sql` walks it.
+  { table: 'community_posts', column: null, via: 'forget_my_community' },
+  { table: 'community_sessions', column: null, via: 'forget_my_community' },
+  { table: 'community_session_participants', column: 'user_id' },
+  { table: 'community_mutes', column: 'user_id' },
+  { table: 'community_members', column: 'user_id' },
 
   // ── Classmates: yours, but other people can see them ────────────────────
   //
@@ -1154,6 +1165,22 @@ export const KEPT_TABLES: KeptTable[] = [
   {
     table: 'feature_kill_switch',
     why: 'The emergency stops for features across a university or all of Semester. Not a record about anybody.',
+  },
+  {
+    table: 'communities',
+    why: 'A community outlives whoever started it — the other members are still in it. Your membership goes; the community stays, with no creator recorded anywhere a member can read.',
+  },
+  {
+    table: 'community_venues',
+    why: 'The study venues your school approved are not a record about you, and only a community manager can add or remove one.',
+  },
+  {
+    table: 'community_cases',
+    why: 'A Trust & Safety case about a post stays when its author deletes their account, and so does the post, withdrawn and shown as "Deleted account" — deleting an account is not a way to make a report disappear. Cases carry a retention date; the sweep that enforces it is not yet scheduled.',
+  },
+  {
+    table: 'community_reports',
+    why: 'A report you filed is a record about somebody else, like `reports`: deleting your account is not a way to withdraw one. Who filed it is readable by nobody through the app, reviewers included.',
   },
   {
     table: 'support_access_event',

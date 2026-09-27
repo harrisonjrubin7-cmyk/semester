@@ -750,6 +750,8 @@ export type Screen =
   | 'edit'
   | 'analyse'
   | 'classmates'
+  | 'community'
+  | 'moderation'
   | 'activities'
   | 'brief'
   | 'essay'

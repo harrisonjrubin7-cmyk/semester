@@ -15,6 +15,7 @@
  * name.
  */
 
+import { COMMUNITY_FLAGS, enabled } from '../community/flags';
 import type { Screen } from './types';
 import { settingsTitle } from './settings';
 import { allowed, cardName, lmsName, showsCash, showsSwipes, swipeUnit, type Capabilities } from './school';
@@ -988,8 +989,35 @@ export const DESTINATIONS: Destination[] = [
   },
 ];
 
+/**
+ * Community, registered only when its build switches are on.
+ *
+ * A switched-off feature is not a place in the app, so it is not in the
+ * registry at all rather than a tile that opens onto "not available". It
+ * turns on only with reporting, because a community without report, block and
+ * mute is not a version of it that should exist (app/src/community/flags.ts).
+ * `lib/nav.registry.test.ts` names it among the screens that may be absent.
+ */
+export const COMMUNITY_DESTINATION: Destination = {
+  screen: 'community',
+  label: 'Community',
+  short: 'Community',
+  blurb: 'Course spaces, study groups and study sessions — found by what you study, never by where you are.',
+  keywords:
+    'community communities study group groups study session sessions course space support group first generation organization club post posts forum discussion peers report block mute',
+  group: 'Beyond',
+  taskTags: ['campus', 'study'],
+  root: 'mine',
+};
+
+if (enabled(COMMUNITY_FLAGS, 'communityFeed') && enabled(COMMUNITY_FLAGS, 'communityReporting')) {
+  DESTINATIONS.push(COMMUNITY_DESTINATION);
+}
+
 /** Screens that are reached from somewhere rather than gone to directly. */
 const NESTED: Partial<Record<Screen, Screen>> = {
+  community: 'mine',
+  moderation: 'mine',
   course: 'courses',
   edit: 'courses',
   item: 'courses',
@@ -1057,6 +1085,10 @@ const NESTED_NAMES: Partial<Record<Screen, string>> = {
   // front door and the other is the index of everything behind it, the way a
   // browser's new-tab page is not one of your bookmarks. See `lib/desk.ts`.
   search: 'the search home',
+  // Community is a registered destination only while its switches are on;
+  // the review queue is a staff tool opened from it. See COMMUNITY_DESTINATION.
+  community: 'Community',
+  moderation: 'the review queue',
   directory: 'all apps',
   course: 'this course',
   item: 'this deadline',
