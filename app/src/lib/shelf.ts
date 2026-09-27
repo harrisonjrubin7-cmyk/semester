@@ -35,6 +35,7 @@
 
 import { dayOf } from './date';
 import type { CourseId } from './types';
+import { formatDate, formatTime } from './locale';
 
 /** The least a thing has to be to sit on a shelf. */
 export interface Filed {
@@ -226,10 +227,10 @@ export function grouped<T extends Filed>(items: T[], by: Sorting, now: number): 
 export function stamp(at: number, now: number): string {
   const d = new Date(at);
   if (ageOf(at, now) === 'today') {
-    return d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+    return formatTime(d, { hour: 'numeric', minute: '2-digit' });
   }
   const sameYear = d.getFullYear() === new Date(now).getFullYear();
-  return d.toLocaleDateString(undefined, {
+  return formatDate(d, {
     month: 'short',
     day: 'numeric',
     ...(sameYear ? {} : { year: 'numeric' }),

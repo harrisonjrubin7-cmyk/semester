@@ -31,6 +31,44 @@ import {
   resolveGround,
 } from '../../lib/look';
 import { Folding } from '../../components/Fold';
+import { FORMAT_LOCALES, chosenLocale, formatDate, formatNumber, formatTime, languageOn, setChosenLocale } from '../../lib/locale';
+
+/**
+ * "Match this device" is the default and the first option: it is what the
+ * app did before there was a choice, so nobody who never opens this group
+ * sees anything change.
+ */
+const DEVICE = 'device';
+
+/*
+ * How dates and numbers are written. Only while `VITE_ME_LANGUAGE` is on — see
+ * `lib/locale.ts`. Choosing reloads, because a formatted date is baked into
+ * whatever a screen memoized, and a half-changed calendar is worse than a
+ * reload.
+ */
+function DatesAndNumbers({ lit }: { lit: boolean }) {
+  const example = new Date(2026, 8, 27, 14, 45);
+  return (
+    <Group
+      header="Dates and numbers"
+      footer={`Written as: ${formatDate(example, { weekday: 'long', day: 'numeric', month: 'long' })} · ${formatTime(example, { hour: 'numeric', minute: '2-digit' })} · ${formatNumber(80000)}. The words in Semester stay in English; this changes how dates, times and numbers are written. Choosing reloads the app.`}
+      lit={lit}
+    >
+      <SelectRow
+        label="Format"
+        value={chosenLocale() ?? DEVICE}
+        options={[
+          { id: DEVICE, label: 'Match this device', sub: 'What your phone or computer is set to' },
+          ...FORMAT_LOCALES.map((l) => ({ id: l.tag, label: l.name, sub: l.name === l.english ? undefined : l.english })),
+        ]}
+        onChange={(id) => {
+          setChosenLocale(id === DEVICE ? null : id);
+          window.location.reload();
+        }}
+      />
+    </Group>
+  );
+}
 
 /**
  * A hue you can drag, with the reason it is safe to offer.
@@ -519,6 +557,10 @@ export function SettingsLook() {
               onChange={(calm) => dispatch({ type: 'setLook', look: { calm } })}
             />
           </Group>
+
+          {languageOn() && (
+            <DatesAndNumbers lit={lights('language region locale format date time number 24-hour clock international', lit)} />
+          )}
 
           <Group
             header="Shape and spacing"

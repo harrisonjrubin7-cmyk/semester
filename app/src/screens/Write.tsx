@@ -79,6 +79,7 @@ import { Paper as Sheet } from './write/Paper';
 import type { Menu } from '../lib/menus';
 import { revealKindly } from '../lib/prefers';
 import { change, forget, keep, restored, versionsOf, type Version } from '../lib/docversions';
+import { formatDateTime, formatTime } from '../lib/locale';
 
 /**
  * Write a document.
@@ -1236,7 +1237,7 @@ function Saved({ doc, words: count }: { doc: Doc; words: number }) {
     >
       {at === null
         ? 'Every change is kept as you type.'
-        : `A copy of this draft was kept at ${new Date(at).toLocaleTimeString(undefined, {
+        : `A copy of this draft was kept at ${formatTime(at, {
             hour: 'numeric',
             minute: '2-digit',
           })}.`}
@@ -1563,7 +1564,7 @@ function History({ doc, onRestore }: { doc: Doc; onRestore: (version: Version) =
                 >
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 'var(--type-md)' }}>
-                      {new Date(version.at).toLocaleString(undefined, {
+                      {formatDateTime(version.at, {
                         month: 'short',
                         day: 'numeric',
                         hour: 'numeric',
@@ -1576,9 +1577,7 @@ function History({ doc, onRestore }: { doc: Doc; onRestore: (version: Version) =
                   </div>
                   <ActionButton
                     onClick={() => onRestore(version)}
-                    aria-label={`Put this document back to the draft kept at ${new Date(
-                      version.at,
-                    ).toLocaleString()}`}
+                    aria-label={`Put this document back to the draft kept at ${formatDateTime(version.at)}`}
                     style={{ width: 'auto', padding: 'var(--sp-2) var(--sp-5)' }}
                   >
                     Put back

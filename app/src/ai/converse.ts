@@ -53,6 +53,7 @@ import { dropThread, flight, keepTurns, newThread, openThread, sender, setLive, 
  */
 
 import type { Held } from './live';
+import { deviceTimeZone } from '../lib/locale';
 export type { Held } from './live';
 
 export interface Conversation {
@@ -415,7 +416,7 @@ export function useConversation(): Conversation {
           allowedModes: ['explain', 'hint', 'practice', 'review', 'draft'],
           policyId: `${state.schoolId || 'unaffiliated'}:local-default`,
           consentIds: [],
-          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+          timezone: deviceTimeZone() || 'UTC',
           providerRoute: provider() === 'openai' ? 'openai' : 'anthropic',
           assembledAt: now.toISOString(),
         });

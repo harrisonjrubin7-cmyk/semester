@@ -1,4 +1,5 @@
 import type { CourseUpdate, Note, Unit } from './types';
+import { formatNumber } from './locale';
 
 /**
  * Everything on this course the Study Studio is allowed to build from.
@@ -137,7 +138,7 @@ export function citationLocation(source:StudySource|undefined,at?:StudySpan) {
  if(!source)return '';
  if(!at)return source.locator;
  const breaks=(s:string)=>(s.match(/\n[^\S\n]*\n/g)??[]).length;
- const range=`characters ${(at.start+1).toLocaleString()}\u2013${at.end.toLocaleString()}`;
+ const range=`characters ${formatNumber(at.start+1)}\u2013${formatNumber(at.end)}`;
  return breaks(source.text)>0
   ?`${source.locator} \u00b7 paragraph ${breaks(source.text.slice(0,at.start))+1}, ${range}`
   :`${source.locator} \u00b7 ${range}`;

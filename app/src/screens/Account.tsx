@@ -11,6 +11,7 @@ import { Credentials } from '../components/Credentials';
 import { SchoolClaim } from '../components/SchoolClaim';
 import { ReferralLink } from '../components/ReferralLink';
 import { cloudConfigured, signOut } from '../lib/cloud';
+import { formatTime } from '../lib/locale';
 
 /**
  * The account screen.
@@ -89,7 +90,7 @@ export function AccountScreen() {
             {(sync.status === 'offline' || sync.status === 'queued' || sync.status === 'conflict' || sync.status === 'review') &&
               SYNC_WORDS[sync.status].sentence}
             {sync.status === 'synced' &&
-              `Synced ${sync.at ? new Date(sync.at).toLocaleTimeString() : ''} · ${counts}`}
+              `Synced ${sync.at ? formatTime(sync.at) : ''} · ${counts}`}
             {sync.status === 'error' && (
               <span style={{ whiteSpace: 'pre-wrap' }}>Sync failed. {sync.error}</span>
             )}

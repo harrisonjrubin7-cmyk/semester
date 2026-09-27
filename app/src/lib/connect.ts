@@ -51,6 +51,7 @@ import { matchCourse } from './ics';
 import { parseAddress, parseAddresses, type FolderId, type Mail } from './mailbox';
 import { PENDING_KEY } from './redirected';
 import { MOVE_MS, fetchWithin, timedOut, tookTooLong } from './net';
+import { deviceTimeZone } from './locale';
 
 export type ProviderId = 'microsoft' | 'google' | 'zoom' | 'apple';
 
@@ -1065,7 +1066,7 @@ function localIso(date: string, minutes: number): string {
  * capturing the corruption for the rest of the run — a test-only failure with
  * a real bug behind it. See `ENGINEERING-AUDIT.md` §3.
  */
-const zone = (): string => Intl.DateTimeFormat().resolvedOptions().timeZone;
+const zone = (): string => deviceTimeZone();
 
 /** Put one thing on the calendar you actually use. */
 export async function addEvent(id: ProviderId, event: OutgoingEvent): Promise<void> {

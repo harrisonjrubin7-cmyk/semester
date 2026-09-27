@@ -49,6 +49,7 @@ import { helpSeedWaiting, loadInboxes, newRequestCount, type StaffInbox } from '
 import { ControlPlane } from '../components/institutional/ControlPlane';
 import { IntegrationDashboard } from '../components/institutional/IntegrationDashboard';
 import type { ControlPlaneStatus } from '../lib/control-plane';
+import { formatDateTime, formatTime } from '../lib/locale';
 
 const OperationsStudio = lazy(() =>
   import('../components/institutional/OperationsStudio').then((module) => ({
@@ -1014,7 +1015,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
                   textWrap: 'pretty',
                 }}
               >
-                Saved {new Date(draft.updatedAt).toLocaleString()} on this device. A ticked checklist
+                Saved {formatDateTime(draft.updatedAt)} on this device. A ticked checklist
                 describes your preparation, never official completion.
               </p>
             </>
@@ -1095,7 +1096,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
                 </button>
               </form>
               <p style={{ fontSize: 'var(--type-sm)', ...secondLine(), lineHeight: 'var(--leading-normal)' }}>
-                {fetched ? `Fetched ${new Date(fetched).toLocaleString()}` : 'Refresh to load records.'} ·
+                {fetched ? `Fetched ${formatDateTime(fetched)}` : 'Refresh to load records.'} ·
                 Read from your school, never copied into local drafts.
               </p>
               {records.map((r) => (
@@ -1209,7 +1210,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
                     </div>
                   ))}
                   <p style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>
-                    This review expires at {new Date(review.expiresAt).toLocaleTimeString()}.
+                    This review expires at {formatTime(review.expiresAt)}.
                   </p>
                   {unresolved && (
                     <p
@@ -1370,7 +1371,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
                 meta={
                   <>
                     {access}
-                    {c?.lastSyncAt ? ` · Last sync ${new Date(c.lastSyncAt).toLocaleString()}` : ''}
+                    {c?.lastSyncAt ? ` · Last sync ${formatDateTime(c.lastSyncAt)}` : ''}
                   </>
                 }
               />

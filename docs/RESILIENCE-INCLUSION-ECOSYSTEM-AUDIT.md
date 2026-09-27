@@ -76,7 +76,7 @@ recurring cases:
 #770 community trust and safety           ──► Phase 5 (extensions must not reach community data)
 ```
 
-**Phase 1 cannot start until #779 and #767/#768 have merged.** Both define the
+**Phase 1 cannot start until #779 and #767/#768 have merged.** (#779 merged later on 27 September, so Phase 1a — integration quality — is unblocked; Phase 1b still waits for #767/#768.) Both define the
 types it extends. Starting before would mean either copying their types (two
 sources of truth) or stacking on unmerged branches (a rebase every time they
 move). The per-area documents name the exact types.

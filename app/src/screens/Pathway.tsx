@@ -27,6 +27,7 @@ import {
   type Program,
 } from '../lib/pathway';
 import type { Screen } from '../lib/types';
+import { formatDateTime } from '../lib/locale';
 
 /**
  * The parts of a degree that outlast a term.
@@ -927,7 +928,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
                   <ul style={{ margin: 'var(--sp-3) 0 0', paddingLeft: 'var(--sp-7)' }}>
                     {project.history.map((h, i) => (
                       <li key={i} style={{ ...line, paddingBlock: 'var(--sp-2)' }}>
-                        {new Date(h.at).toLocaleString()} · {h.message}
+                        {formatDateTime(h.at)} · {h.message}
                       </li>
                     ))}
                   </ul>

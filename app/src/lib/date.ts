@@ -1,5 +1,6 @@
 import type { DatedEvent, DatedItem, CampusEvent, Item } from './types';
 import { dueMinutes } from './duetime';
+import { appLocale, formatDate, formatTime } from './locale';
 
 /**
  * The year the app shipped configured for.
@@ -271,8 +272,29 @@ export function daysBetween(from: Date, to: Date): number {
   return Math.round(ms / 86_400_000);
 }
 
-/** "Fri Sep 4" */
+/**
+ * The drawn names, in the student's chosen locale when there is one.
+ *
+ * `MONTHS` and `DOW` stay English and stay exported: they are also what
+ * parsers and English sentences are built from, and a syllabus that says
+ * "Sep 4" is still English after somebody chooses German. Only what is *drawn*
+ * as a date follows the choice. With nothing chosen these return the English
+ * names exactly, so nothing changes for anybody who has not chosen.
+ */
+export function monthShort(d: Date): string {
+  return appLocale() ? formatDate(d, { month: 'short' }) : MONTHS[d.getMonth()];
+}
+
+export function weekdayShort(d: Date): string {
+  return appLocale() ? formatDate(d, { weekday: 'short' }) : DOW[d.getDay()];
+}
+
+/**
+ * "Fri Sep 4". In a chosen locale, that locale's own order and punctuation —
+ * "vie, 4 sept" in Spanish — rather than English's order with translated words.
+ */
 export function longLabel(d: Date): string {
+  if (appLocale()) return formatDate(d, { weekday: 'short', month: 'short', day: 'numeric' });
   return `${DOW[d.getDay()]} ${MONTHS[d.getMonth()]} ${d.getDate()}`;
 }
 
@@ -302,8 +324,8 @@ export function decorateItem(item: Item, now: Date): DatedItem {
     ...item,
     date,
     dueShort: dueLabel(date, now, item.dueTime),
-    dow: DOW[date.getDay()],
-    mon: MONTHS[date.getMonth()],
+    dow: weekdayShort(date),
+    mon: monthShort(date),
     isToday: away === 0,
     isPast: away < 0,
     daysAway: away,
@@ -319,8 +341,8 @@ export function decorateEvent(event: CampusEvent, now: Date): DatedEvent {
   return {
     ...event,
     date,
-    mon: MONTHS[date.getMonth()],
-    dow: DOW[date.getDay()],
+    mon: monthShort(date),
+    dow: weekdayShort(date),
     isPast: daysBetween(now, date) < 0,
   };
 }
@@ -338,10 +360,16 @@ export function minutesNow(now: Date): number {
   return now.getHours() * 60 + now.getMinutes();
 }
 
-/** "9:05a" / "11:00a" / "2:45p" — the prototype's clock format. */
+/**
+ * "9:05a" / "11:00a" / "2:45p" — the prototype's clock format.
+ *
+ * In a chosen locale, that locale's clock instead: "14:45" in German, where
+ * "2:45p" is not a way anybody writes a time.
+ */
 export function clock(minutes: number): string {
   const h24 = Math.floor(minutes / 60);
   const m = minutes % 60;
+  if (appLocale()) return formatTime(new Date(2000, 0, 1, h24, m), { hour: 'numeric', minute: '2-digit' });
   const h = h24 % 12 === 0 ? 12 : h24 % 12;
   return `${h}:${String(m).padStart(2, '0')}${h24 < 12 ? 'a' : 'p'}`;
 }

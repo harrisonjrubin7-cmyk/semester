@@ -39,6 +39,7 @@ import { describeFigure } from '../lib/figure';
 import { describeStudyParts, type StudyParts } from '../lib/study';
 import { effectiveCapturePolicy } from '../lib/capture-policy';
 import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
+import { formatDate } from '../lib/locale';
 
 /** Handled by the camera path above, which can see them. */
 const IMAGE = /\.(png|jpe?g|webp|gif|heic|heif)$/i;
@@ -1059,7 +1060,7 @@ export function AddMaterial({
             setText((prior) =>
               prior.trim() ? `${prior.trim()}\n\n${transcript}` : transcript,
             );
-            if (!title.trim()) setTitle(`Lecture · ${new Date().toLocaleDateString()}`);
+            if (!title.trim()) setTitle(`Lecture · ${formatDate(new Date())}`);
             if (!source.trim()) setSource(`Recorded in class · ${Math.round(seconds / 60)} min`);
           }}
         />
@@ -1098,7 +1099,7 @@ export function AddMaterial({
           You added this to {guide.code} already —{' '}
           {already.title || 'an earlier import'}
           {already.source ? ` from ${already.source}` : ''}, on{' '}
-          {new Date(already.created).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}.
+          {formatDate(already.created, { month: 'short', day: 'numeric' })}.
           Change something above to add it as a separate piece, or leave it — it is all still here.
         </div>
       )}
@@ -1278,7 +1279,7 @@ export function AddMaterial({
                       can check and material that simply appeared. */}
                   {u.source && ` · from ${u.source}`}
                   {u.created > 0 &&
-                    `, ${new Date(u.created).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}`}
+                    `, ${formatDate(u.created, { day: 'numeric', month: 'short' })}`}
                 </span>
               </span>
               <button

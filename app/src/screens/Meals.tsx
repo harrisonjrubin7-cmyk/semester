@@ -21,6 +21,7 @@ import {
   readSwipes,
   staleLine,
 } from '../lib/meals';
+import { formatDate } from '../lib/locale';
 
 /**
  * Swipes, Commodore Cash, and the week they run out.
@@ -240,7 +241,7 @@ function MealsDetails() {
             <CustomRow key={r.id} pad={9}>
               <div style={{ display: 'flex', gap: 'var(--sp-5)', alignItems: 'baseline' }}>
               <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base)' }}>
-                {new Date(r.at).toLocaleDateString()}
+                {formatDate(r.at)}
               </span>
               <span style={{ flex: 'none', fontSize: 'var(--type-base)', fontVariantNumeric: 'tabular-nums' }}>
                 {r.swipes >= 0 ? `${r.swipes} swipes` : '—'}

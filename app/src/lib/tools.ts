@@ -55,6 +55,7 @@ import type { CourseId, PersonalTask, Screen } from './types';
 import { fromMarkdown, hasContent, summary, type Block } from './document';
 import { fromRows, readTable } from './sheet';
 import { parse, plain } from './maths';
+import { formatDate } from './locale';
 
 /** The screens a proposal may send you to. Everything else is out of bounds. */
 const REACHABLE: Screen[] = [
@@ -512,7 +513,7 @@ function day(value: string): string {
   const d = new Date(`${value}T12:00:00`);
   return Number.isNaN(d.getTime())
     ? value
-    : d.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
+    : formatDate(d, { weekday: 'long', month: 'long', day: 'numeric' });
 }
 
 /**

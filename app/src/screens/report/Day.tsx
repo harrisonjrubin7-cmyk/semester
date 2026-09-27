@@ -25,6 +25,7 @@ import {
 } from '../../lib/brief';
 import { showHours } from '../../lib/activities';
 import { goHome } from '../../lib/openhome';
+import { formatDate } from '../../lib/locale';
 
 /**
  * The day, at both ends of it.
@@ -127,7 +128,7 @@ export function DayReport({ onGrain }: { onGrain: (grain: 'week') => void }) {
 
       <Blueprint style={{ paddingBlock: 'calc(15px * var(--density, 1))', paddingInline: 'calc(16px * var(--density, 1))' }}>
         <div className="kicker">
-          {now.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}
+          {formatDate(now, { weekday: 'long', month: 'short', day: 'numeric' })}
         </div>
         <div
           className="chrome-text"

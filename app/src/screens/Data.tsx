@@ -13,6 +13,7 @@ import { allVersions } from '../lib/docversions';
 import { DRAFTS_KEY } from '../lib/draft';
 import { STORAGE_KEY } from '../state/shape';
 import { firstPaint, readings, saidMs } from '../lib/timing';
+import { formatDate, formatNumber } from '../lib/locale';
 
 /**
  * What data exists, and whether the app is healthy.
@@ -171,8 +172,8 @@ export function DataScreen() {
           </div>
           {store.span && (
             <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)' }}>
-              Spanning {new Date(store.span.from).toLocaleDateString()} to{' '}
-              {new Date(store.span.to).toLocaleDateString()}.
+              Spanning {formatDate(store.span.from)} to{' '}
+              {formatDate(store.span.to)}.
             </div>
           )}
 
@@ -400,7 +401,7 @@ function Collection({
       >
         <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-md)' }}>{row.label}</span>
         <span style={{ fontSize: 'var(--type-sm)', ...secondLine(row.count === 0), fontVariantNumeric: 'tabular-nums', flex: 'none' }}>
-          {row.count.toLocaleString()}
+          {formatNumber(row.count)}
         </span>
         <span style={{ fontSize: 'var(--type-sm)', ...secondLine(row.count === 0), fontVariantNumeric: 'tabular-nums', flex: 'none', minWidth: 62, textAlign: 'right' }}>
           {formatBytes(row.bytes)}

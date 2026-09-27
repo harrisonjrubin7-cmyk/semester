@@ -38,10 +38,23 @@ in step 2 below rebases onto them rather than racing them.
 
 ## Order of work
 
-1. Replace `date.ts`'s hard-coded names with `Intl.DateTimeFormat` for the
-   chosen locale, and route every `toLocale*` call through one helper. This is
-   the change with the most regression risk, so it goes first and alone, with
-   `test:zones` green.
+1. **Done (Phase 4a).** `app/src/lib/locale.ts` is the one place dates, times
+   and numbers are written; about forty `toLocale*` calls now go through it,
+   and `app/src/lib/locale.guard.test.ts` refuses new ones outside it. With
+   nothing chosen every value is byte-identical to before (tested against the
+   calls it replaced); `VITE_ME_LANGUAGE` gates the student's choice, which is
+   offered on the Appearance page as **Dates and numbers**. Looking at the app
+   with German and Arabic chosen found three things the tests had not:
+   - right-to-left values reorder inside an English sentence, so the formatters
+     wrap them in directional isolates (U+2068/U+2069);
+   - 20 files still draw `date.ts`'s English month and day names directly
+     (the calendar grid, the Today header), and
+   - 22 files write their own twelve-hour clocks, and class times arrive
+     pre-formatted ("9:05a") in the course data.
+
+   The last two are ratchet lists in the guard — they may only shrink — and are
+   step 1b. Some entries are parsers that must stay English and twelve-hour,
+   so each needs reading, not a find-and-replace.
 2. Introduce the catalogue for the five destinations' chrome only. Do not
    extract every string in one change.
 3. Glossary and plain-language mode.
