@@ -155,6 +155,45 @@ begin
   perform pg_temp.must('an http token endpoint is refused', not took);
 end $$;
 
+-- ── Which school a registration belongs to ────────────────────────────────
+
+do $$
+declare took boolean;
+begin
+  perform pg_temp.must(
+    'a registration may have no school recorded yet',
+    (select tenant_id is null from public.lti_platform
+      where issuer = 'https://brightspace.test.edu' and deployment_id = 'deploy-b'));
+
+  insert into public.schools (id, name, email_domains)
+  values ('lti-tenant-check', 'LTI Tenant Check University', array['lti-tenant-check.example']);
+
+  -- The control: a real school is accepted, so the refusal below is the
+  -- foreign key and not a row that could never have been written.
+  update public.lti_platform set tenant_id = 'lti-tenant-check'
+   where issuer = 'https://brightspace.test.edu' and deployment_id = 'deploy-b';
+  perform pg_temp.must(
+    'a registration records its school',
+    (select tenant_id = 'lti-tenant-check' from public.lti_platform
+      where issuer = 'https://brightspace.test.edu' and deployment_id = 'deploy-b'));
+
+  begin
+    update public.lti_platform set tenant_id = 'no-such-school'
+     where issuer = 'https://brightspace.test.edu' and deployment_id = 'deploy-a';
+    took := true;
+  exception when foreign_key_violation then
+    took := false;
+  end;
+  perform pg_temp.must('a school that does not exist is refused', not took);
+
+  delete from public.schools where id = 'lti-tenant-check';
+  perform pg_temp.must(
+    'removing a school removes the registrations it owned, and only those',
+    (select count(*) from public.lti_platform where issuer = 'https://brightspace.test.edu') = 1
+    and exists (select 1 from public.lti_platform
+                 where issuer = 'https://brightspace.test.edu' and deployment_id = 'deploy-a'));
+end $$;
+
 -- ── The replay guard ──────────────────────────────────────────────────────
 
 insert into public.lti_nonce (state, nonce, issuer, client_id, expires_at)

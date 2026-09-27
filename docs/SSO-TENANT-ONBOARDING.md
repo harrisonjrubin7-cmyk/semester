@@ -30,7 +30,8 @@ specified. Vanderbilt's filled-in version is
 
 ## 4. LMS (optional)
 
-- [ ] `lti_platform` row per deployment ([LTI runbook](LTI-1.3-LAUNCH-RUNBOOK.md))
+- [ ] `lti_platform` row per deployment, with `tenant_id` set to this school
+      ([LTI runbook](LTI-1.3-LAUNCH-RUNBOOK.md))
 - [ ] AGS left off unless the institution approves grade passback
 
 ## 5. Acceptance and authorization

@@ -14,7 +14,9 @@ which role. It is not institution-wide lifecycle, and a launch never creates an
 ## Registration
 
 One `lti_platform` row per issuer × client ID × deployment ID, with
-`auth_login_url` and `jwks_url` constrained to `https`. The school's LMS
+`auth_login_url` and `jwks_url` constrained to `https`, and `tenant_id` naming
+the Semester school the deployment belongs to. Removing that school removes its
+registrations. The school's LMS
 administrator supplies all of it, and none of it is secret. Semester's own key
 (`LTI_PRIVATE_KEY`) is needed only to call back, for Deep Linking responses and
 AGS.
@@ -58,6 +60,9 @@ control is the deployment's key and the platform's scope grant.
 
 ## Gaps
 
-- `lti_platform` has **no `tenant_id`**, so a launch cannot yet be joined to an
-  institutional membership or to the entitlement chain's course steps.
+- `lti_platform.tenant_id` records which school a deployment belongs to, but
+  it is nullable (registrations installed before it have none) and the launch
+  does not read it yet. So a launch still cannot be joined to an institutional
+  membership or to the entitlement chain's course steps. The next step is to
+  refuse, or at least flag, a launch whose registration has no school.
 - Launch refusals are logged, not persisted to an audit table.
