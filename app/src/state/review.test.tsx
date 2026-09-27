@@ -247,3 +247,43 @@ describe('a setting', () => {
     expect(store.review).toEqual([]);
   });
 });
+
+describe('a per-key map', () => {
+  function grades(mine: Record<string, string>, theirs: Record<string, string>, agreedGrades: Record<string, string>) {
+    localStorage.setItem(
+      'semester.v1',
+      JSON.stringify({ schemaVersion: 6, seenOnboarding: true, registered: true, grades: mine }),
+    );
+    localStorage.setItem(SEEN_KEY, JSON.stringify({ state: 's0', courses: {} }));
+    localStorage.setItem(BASE_KEY, JSON.stringify(baseOf({ grades: agreedGrades })));
+    pull.mockResolvedValue({ state: { grades: theirs }, courses: [], updated: 0, seen: { state: 's1', courses: {} } });
+  }
+
+  it('a grade entered differently on both devices is offered, and keeping this one sends it up', async () => {
+    grades({ econ: 'B+' }, { econ: 'A-' }, { econ: 'B' });
+    await mount();
+    expect(store.state.grades.econ).toBe('A-');
+    expect(store.review.map((c) => c.key)).toEqual(['ticks/grades/econ']);
+    const before = push.mock.calls.length;
+    await act(async () => store.resolve('ticks/grades/econ', 'mine'));
+    expect(store.state.grades.econ).toBe('B+');
+    expect(store.review).toEqual([]);
+    await wait(3_000);
+    expect(push.mock.calls.length).toBe(before + 1);
+    expect((push.mock.calls.at(-1)![1] as { grades: Record<string, string> }).grades.econ).toBe('B+');
+  });
+
+  it('a grade changed only here survives a pull', async () => {
+    grades({ econ: 'B+' }, { econ: 'B' }, { econ: 'B' });
+    await mount();
+    expect(store.state.grades.econ).toBe('B+');
+    expect(store.review).toEqual([]);
+  });
+
+  it('a grade changed only there is taken — the control', async () => {
+    grades({ econ: 'B' }, { econ: 'A-' }, { econ: 'B' });
+    await mount();
+    expect(store.state.grades.econ).toBe('A-');
+    expect(store.review).toEqual([]);
+  });
+});

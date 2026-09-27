@@ -86,6 +86,8 @@ import {
   conflictsIn,
   keptHere,
   readBase,
+  takenTicks,
+  tickConflictsIn,
   readReview,
   writeBase,
   writeReview,
@@ -898,11 +900,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
          * keeps one of each pair; the other is written down so the student
          * can choose it instead. See `lib/conflicts.ts`.
          */
-        const found = conflictsIn(
-          pickPersisted(latest.current) as unknown as Record<string, unknown>,
-          theirs as Record<string, unknown>,
-          readBase(),
-        );
+        const here = pickPersisted(latest.current) as unknown as Record<string, unknown>;
+        const agreedOn = readBase();
+        const found = [
+          ...conflictsIn(here, theirs as Record<string, unknown>, agreedOn),
+          ...tickConflictsIn(here, theirs as Record<string, unknown>, agreedOn),
+        ];
         if (found.length > 0) {
           setReview((was) => {
             const next = addReview(was, found);
@@ -917,10 +920,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
          * focus and on reconnect — put the account's older value back over it.
          * See `keptHere`.
          */
-        const held = new Set(keptHere(theirs as Record<string, unknown>, readBase()));
-        const taken = Object.fromEntries(
-          Object.entries(theirs).filter(([field]) => !held.has(field)),
-        ) as typeof theirs;
+        const held = new Set(keptHere(theirs as Record<string, unknown>, agreedOn));
+        const taken = {
+          ...Object.fromEntries(Object.entries(theirs).filter(([field]) => !held.has(field))),
+          // And the per-key maps cut to the keys the account changed: a box
+          // ticked here and not yet pushed stays ticked. See `takenTicks`.
+          ...takenTicks(theirs as Record<string, unknown>, agreedOn),
+        } as typeof theirs;
         dispatch({ type: 'hydrate', persisted: taken });
         markSeen(remote.seen);
         // The version both sides now agree on is the account's — including
@@ -1698,7 +1704,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         dispatch(
           item.field === 'settings'
             ? { type: 'restoreSettings', values: chosen as Record<string, unknown> }
-            : { type: 'restoreRecord', field: item.field, record: chosen },
+            : item.field === 'ticks'
+              ? {
+                  type: 'restoreTick',
+                  field: item.id.slice(0, item.id.indexOf('/')),
+                  key: item.id.slice(item.id.indexOf('/') + 1),
+                  value: chosen,
+                }
+              : { type: 'restoreRecord', field: item.field, record: chosen },
         );
       }
       const next = was.filter((c) => c.key !== key);

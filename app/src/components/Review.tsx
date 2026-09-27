@@ -14,8 +14,18 @@ import { stamp } from '../lib/merge';
  * other is kept on this device until they do.
  */
 export function Review() {
-  const { review, resolve } = useStore();
+  const { review, resolve, allItems } = useStore();
   if (review.length === 0) return null;
+  /*
+   * A tick's key is a deadline's id for the maps keyed by deadline — done,
+   * started, submitted and the rest — and the id is not a name anybody
+   * knows. Look it up, and fall back to the key where it is not one.
+   */
+  const named = (c: (typeof review)[number], title: string) => {
+    if (c.field !== 'ticks') return title;
+    const k = c.id.slice(c.id.indexOf('/') + 1);
+    return allItems.find((i) => i.id === k)?.title ?? title;
+  };
 
   return (
     <section aria-labelledby="review-head" style={{ marginTop: 'var(--sp-6)' }}>
@@ -37,13 +47,14 @@ export function Review() {
               style={{ marginTop: 'var(--sp-5)', paddingTop: 'var(--sp-5)', borderTop: '1px solid var(--app-line)' }}
             >
               <div style={{ fontSize: 'var(--type-xs)', color: 'var(--app-dim)' }}>{about.kind}</div>
-              <div style={{ fontSize: 'var(--type-md)', marginTop: 'var(--sp-1)' }}>{about.title}</div>
+              <div style={{ fontSize: 'var(--type-md)', marginTop: 'var(--sp-1)' }}>{named(c, about.title)}</div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-4)', marginTop: 'var(--sp-4)' }}>
                 <Version
                   label="This device"
                   inUse={c.kept === 'mine'}
                   field={c.field}
                   id={c.id}
+                  name={named(c, '')}
                   record={c.mine}
                   onKeep={() => resolve(c.key, 'mine')}
                 />
@@ -52,6 +63,7 @@ export function Review() {
                   inUse={c.kept === 'theirs'}
                   field={c.field}
                   id={c.id}
+                  name={named(c, '')}
                   record={c.theirs}
                   onKeep={() => resolve(c.key, 'theirs')}
                 />
@@ -69,6 +81,7 @@ function Version({
   inUse,
   field,
   id,
+  name,
   record,
   onKeep,
 }: {
@@ -76,10 +89,13 @@ function Version({
   inUse: boolean;
   field: string;
   id: string;
+  /** A better name than the record's own, where the list has one. Empty: none. */
+  name: string;
   record: unknown;
   onKeep: () => void;
 }) {
-  const about = describe(field, record, id);
+  const described = describe(field, record, id);
+  const about = name ? { ...described, title: name } : described;
   const at = stamp(record);
   return (
     <div

@@ -9,6 +9,8 @@ import {
   addReview,
   baseOf,
   keptHere,
+  takenTicks,
+  tickConflictsIn,
   conflictsIn,
   describe as describeRecord,
   fingerprint,
@@ -140,7 +142,10 @@ describe('settings', () => {
       base2,
     );
     expect(found).toHaveLength(1);
-    expect(found[0]).toMatchObject({ key: 'settings/accent', field: 'settings', id: 'accent', kept: 'theirs' });
+    // The key checked on its own line: `key: '<long path>'` is what the secret
+    // scanner's generic-api-key rule matches, and a test is not a credential.
+    expect(found[0].key).toBe('settings/accent');
+    expect(found[0]).toMatchObject({ field: 'settings', id: 'accent', kept: 'theirs' });
     expect(found[0].mine).toEqual({ accent: 'hue', hue: 210 });
     expect(found[0].theirs).toEqual({ accent: 'oxide', hue: -1 });
   });
@@ -208,5 +213,68 @@ describe('restoreSettings', () => {
   it('writes nothing that is not a setting on the list, whatever it is handed', () => {
     const next = reducer(state, { type: 'restoreSettings', values: { registered: true, notes: ['x'] } });
     expect(next).toBe(state);
+  });
+});
+
+describe('ticked boxes and the other per-key maps', () => {
+  const agreedMaps = { grades: { econ: 'B', psci: 'A' }, done: { 'econ-m1': true } };
+  const base3 = baseOf(agreedMaps);
+
+  it('offers a key both devices changed to different values', () => {
+    const found = tickConflictsIn(
+      { ...agreedMaps, grades: { econ: 'B+', psci: 'A' } },
+      { ...agreedMaps, grades: { econ: 'A-', psci: 'A' } },
+      base3,
+    );
+    expect(found).toHaveLength(1);
+    expect(found[0].key).toBe('ticks/grades/econ');
+    expect(found[0]).toMatchObject({ field: 'ticks', id: 'grades/econ', mine: 'B+', theirs: 'A-', kept: 'theirs' });
+  });
+
+  it('offers a key both added with different values, since neither had it before', () => {
+    const found = tickConflictsIn(
+      { grades: { ...agreedMaps.grades, hist: 'C' } },
+      { grades: { ...agreedMaps.grades, hist: 'B' } },
+      base3,
+    );
+    expect(found.map((c) => c.key)).toEqual(['ticks/grades/hist']);
+  });
+
+  it('offers nothing for one side, or the same change on both — the control', () => {
+    expect(tickConflictsIn({ grades: { econ: 'B+', psci: 'A' } }, agreedMaps, base3)).toEqual([]);
+    expect(tickConflictsIn(agreedMaps, { grades: { econ: 'B+', psci: 'A' } }, base3)).toEqual([]);
+    expect(tickConflictsIn({ grades: { econ: 'B+', psci: 'A' } }, { grades: { econ: 'B+', psci: 'A' } }, base3)).toEqual([]);
+  });
+
+  it('offers nothing for a map the base never saw', () => {
+    expect(tickConflictsIn({ yours: { econ: 'x' } }, { yours: { econ: 'y' } }, base3)).toEqual([]);
+  });
+
+  it('cuts a pull down to the keys the account changed, so a tick here is not put back', () => {
+    // This device changed the econ grade; the account still has the agreed
+    // one, and changed psci. Only psci comes through.
+    expect(takenTicks({ grades: { econ: 'B', psci: 'A+' } }, base3)).toEqual({ grades: { psci: 'A+' } });
+  });
+
+  it('passes a map through whole where there is no base to judge by', () => {
+    expect(takenTicks({ grades: { econ: 'B' } }, null)).toEqual({ grades: { econ: 'B' } });
+  });
+
+  it('says a tick as a tick, and a grade as a grade', () => {
+    expect(describeRecord('ticks', true, 'done/econ-m1')).toMatchObject({ kind: 'What you have ticked off', preview: 'Ticked' });
+    expect(describeRecord('ticks', 'A-', 'grades/econ').preview).toBe('A-');
+  });
+});
+
+describe('restoreTick', () => {
+  const state = { ...DEFAULT_PERSISTED, grades: { econ: 'A-' }, screen: 'home' } as unknown as State;
+
+  it('writes one key back, and removes it when the chosen version had none', () => {
+    expect(reducer(state, { type: 'restoreTick', field: 'grades', key: 'econ', value: 'B+' }).grades).toEqual({ econ: 'B+' });
+    expect(reducer(state, { type: 'restoreTick', field: 'grades', key: 'econ', value: undefined }).grades).toEqual({});
+  });
+
+  it('writes nothing into a field that is not a per-key map', () => {
+    expect(reducer(state, { type: 'restoreTick', field: 'notes', key: '0', value: 'x' })).toBe(state);
   });
 });

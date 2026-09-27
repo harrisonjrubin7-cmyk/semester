@@ -43,8 +43,13 @@ import { idOf, labelFor, stamp, strategyFor } from './merge';
  * Not the rest of `theirs`, which is the app's own state rather than a
  * choice anybody made — a live session, a cached geocode, whether onboarding
  * was seen. Asking which of two of those to keep would be asking the student
- * a question about the app's plumbing. Nor ticked boxes (`ticks`): a tick is
- * one bit on one key, and the merge notes already say when one moved.
+ * a question about the app's plumbing.
+ *
+ * And the per-key maps (`ticks`): a deadline ticked done, a grade typed in, a
+ * course renamed, a link saved. The merge takes the account's value key by
+ * key; a key changed on both devices to different values since they agreed —
+ * a grade entered as B+ on one and A- on the other, a course given two new
+ * names — is offered like a note is, one key at a time.
  */
 
 /** A short, stable fingerprint of a value. FNV-1a over its JSON; not a security hash. */
@@ -100,6 +105,9 @@ export const SETTINGS: readonly (readonly string[])[] = [
   ['myRules'],
   ['quiet'],
   ['accessLeadDays'],
+  // Access and focus, and how a name is said: both chosen by the person.
+  ['access'],
+  ['pronounce'],
 ];
 
 /** Every field some group covers — what `restoreSettings` may write, and nothing else. */
@@ -129,6 +137,13 @@ export function baseOf(persisted: Record<string, unknown>): Base {
   }
   for (const group of SETTINGS) {
     if (group.some((f) => f in persisted)) out[key('settings', group[0])] = fingerprint(pickGroup(persisted, group));
+  }
+  // Every key of every per-key map, and a mark that the map was seen at all,
+  // so a key missing from the base can be told from a map the base never had.
+  for (const [field, value] of Object.entries(persisted)) {
+    if (strategyFor(field) !== 'ticks' || !isMap(value)) continue;
+    out[key('ticks', field)] = '1';
+    for (const [k, v] of Object.entries(value)) out[`ticks/${field}/${k}`] = fingerprint(v);
   }
   // And every field the merge takes from the account, one by one — what
   // `keptHere` asks whether the account has moved away from.
@@ -246,6 +261,74 @@ export function conflictsIn(
   return out;
 }
 
+function isMap(v: unknown): v is Record<string, unknown> {
+  return typeof v === 'object' && v !== null && !Array.isArray(v);
+}
+
+/** A key's value as the base records it; absent is its own answer. */
+const ABSENT = '∅';
+const tickPrint = (map: Record<string, unknown>, k: string) => (k in map && map[k] !== undefined ? fingerprint(map[k]) : ABSENT);
+
+/**
+ * The keys of the per-key maps changed on both sides since the base, apart.
+ * Only maps the base has seen; a key the base never had counts as absent
+ * there, so one device adding it and the other adding something else is a
+ * conflict, and both adding the same is not.
+ */
+export function tickConflictsIn(
+  local: Record<string, unknown>,
+  remote: Record<string, unknown>,
+  base: Base | null,
+  now = Date.now(),
+): Conflict[] {
+  if (!base) return [];
+  const out: Conflict[] = [];
+  for (const [field, theirsMap] of Object.entries(remote)) {
+    if (strategyFor(field) !== 'ticks' || !isMap(theirsMap) || base[key('ticks', field)] === undefined) continue;
+    const mineMap = isMap(local[field]) ? (local[field] as Record<string, unknown>) : {};
+    for (const k of new Set([...Object.keys(mineMap), ...Object.keys(theirsMap)])) {
+      const agreed = base[`ticks/${field}/${k}`] ?? ABSENT;
+      const a = tickPrint(mineMap, k);
+      const b = tickPrint(theirsMap, k);
+      if (a === b || a === agreed || b === agreed) continue;
+      // The merge only ever adds or overwrites a key from the account, so a
+      // key the account does not carry leaves this device's value in use.
+      out.push({
+        key: `ticks/${field}/${k}`,
+        field: 'ticks',
+        id: `${field}/${k}`,
+        mine: mineMap[k],
+        theirs: theirsMap[k],
+        kept: k in theirsMap ? 'theirs' : 'mine',
+        found: now,
+      });
+    }
+  }
+  return out;
+}
+
+/**
+ * Each per-key map from a pull, cut down to the keys the account changed
+ * since the base — `keptHere` for the maps. The merge lays the account's map
+ * over this device's key by key, so a key this device changed and the
+ * account did not would otherwise be put back. Maps the base never saw come
+ * through whole.
+ */
+export function takenTicks(remote: Record<string, unknown>, base: Base | null): Record<string, Record<string, unknown>> {
+  const out: Record<string, Record<string, unknown>> = {};
+  for (const [field, map] of Object.entries(remote)) {
+    if (strategyFor(field) !== 'ticks' || !isMap(map)) continue;
+    if (!base || base[key('ticks', field)] === undefined) {
+      out[field] = map;
+      continue;
+    }
+    out[field] = Object.fromEntries(
+      Object.entries(map).filter(([k]) => tickPrint(map, k) !== (base[`ticks/${field}/${k}`] ?? ABSENT)),
+    );
+  }
+  return out;
+}
+
 /** Only the group's fields the copy actually carries. */
 function pickPresent(from: Record<string, unknown>, group: readonly string[]): Record<string, unknown> {
   const out: Record<string, unknown> = {};
@@ -278,6 +361,7 @@ export function putRecord(rows: unknown[], record: unknown, now = Date.now()): u
 /** What to call a record on the review list: its kind, and its own name. */
 export function describe(field: string, record: unknown, id = ''): { kind: string; title: string; preview: string } {
   if (field === 'settings') return describeSetting(id, record);
+  if (field === 'ticks') return describeTick(id, record);
   const r = (record ?? {}) as Record<string, unknown>;
   const course = (r.course ?? {}) as Record<string, unknown>;
   const text = (v: unknown) => (typeof v === 'string' ? v.trim() : '');
@@ -311,6 +395,27 @@ function describeSetting(id: string, value: unknown): { kind: string; title: str
   const first = say(v[id]);
   const extra = id === 'accent' && v.accent === 'hue' && typeof v.hue === 'number' ? ` (hue ${v.hue})` : '';
   return { kind: 'Setting', title: labelFor(id), preview: `${first}${extra}` };
+}
+
+/**
+ * One key of a per-key map, in words. The title is the key unless the
+ * caller has a better name for it (the review list looks deadlines up by id);
+ * the value is what a person would call it.
+ */
+function describeTick(id: string, value: unknown): { kind: string; title: string; preview: string } {
+  const slash = id.indexOf('/');
+  const field = id.slice(0, slash);
+  const k = id.slice(slash + 1);
+  let preview: string;
+  if (value === undefined || value === null) preview = 'Not set';
+  else if (typeof value === 'boolean') preview = value ? 'Yes' : 'No';
+  else if (typeof value === 'number') preview = value > 1e11 ? new Date(value).toLocaleString() : String(value);
+  else if (typeof value === 'string') preview = value.length > 60 ? `${value.slice(0, 59)}…` : value || 'Empty';
+  else preview = 'Set';
+  if (field === 'done' || field === 'saved' || field === 'visited' || field === 'feedHidden') {
+    preview = value === true ? 'Ticked' : 'Not ticked';
+  }
+  return { kind: labelFor(field), title: k, preview };
 }
 
 // ── On this device ────────────────────────────────────────────────────────

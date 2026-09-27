@@ -2683,6 +2683,8 @@ export type Action =
   | { type: 'restoreRecord'; field: string; record: unknown }
   /** A setting's version the student chose on the review list, put back. Only `SETTING_FIELDS`. */
   | { type: 'restoreSettings'; values: Record<string, unknown> }
+  /** One key of a per-key map, as the student chose it; `undefined` removes the key. */
+  | { type: 'restoreTick'; field: string; key: string; value: unknown }
   | { type: 'restore'; persisted: Partial<Persisted> }
   /**
    * The browser moved, so the app follows.

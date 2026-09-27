@@ -109,8 +109,8 @@ this change.
   it pulls, merges and retries instead. One record edited on both devices
   still keeps the later edit. See [CROSS-DEVICE-CONTINUITY.md](CROSS-DEVICE-CONTINUITY.md).
 - **Offline, Queued, Conflict and Conflict-needs-review states: done.** A
-  record or setting edited on two devices before either synced is put to
-  the student to choose. Adding the states also uncovered that on IndexedDB an edit never
+  record, setting or ticked box edited on two devices before either synced
+  is put to the student to choose. Adding the states also uncovered that on IndexedDB an edit never
   triggered a push; that is fixed too. See
   [CROSS-DEVICE-CONTINUITY.md](CROSS-DEVICE-CONTINUITY.md).
 - **Return context after sign-in: done** for sign-ins that leave the page

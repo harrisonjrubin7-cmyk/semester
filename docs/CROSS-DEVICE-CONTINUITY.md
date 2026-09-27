@@ -114,9 +114,23 @@ not moved since the two agreed is this device's change on its way up, and
 the pull leaves it (`keptHere`). That matters more now that the app pulls on
 focus and on reconnect.
 
-Not covered: ticked boxes (`ticks`), one bit per key, whose moves the merge
-notes already report; and a device with no base yet — before its first sync —
-where every difference would look like a conflict, so none are reported.
+**And the per-key maps.** Ticked-off deadlines, grades typed in, courses
+renamed, saved links, attendance policies — everything the merge takes from
+the account key by key (`ticks`). The base records each key, and a key
+changed on both devices to different values since they agreed — a grade
+entered as B+ on one and A- on the other — is offered one key at a time
+(`tickConflictsIn`), named by its deadline's title where the key is one.
+Keeping this device's writes that one key back (`restoreTick`, which only
+writes per-key maps). And a key changed here and not yet pushed is no longer
+put back by a pull (`takenTicks`), for the same reason as the settings.
+
+`access` (Access and focus) and `pronounce` (how a name is said), added on
+`main` since the settings list was written, are on it.
+
+Not covered: a device with no base yet — before its first sync — where every
+difference would look like a conflict, so none are reported. And a key
+*removed* on one device still reappears from the other, as it always has:
+the per-key merge only adds and overwrites.
 
 ## Gaps against the spec, in order of risk
 
@@ -126,8 +140,9 @@ where every difference would look like a conflict, so none are reported.
    straight over it. Guarded by `lib/cloudcas.test.ts` (a fake database that
    honours the stamp filter) and `state/syncretry.test.tsx` (pull, merge and
    retry; no push while the first-sign-in question is open). Edits to the
-   same record or setting on both devices are put to the student (below),
-   and a setting changed here but not yet pushed survives a pull. Devices on
+   same record, setting or ticked key on both devices are put to the student
+   (below), and a setting or tick changed here but not yet pushed survives a
+   pull. Devices on
    a release older than this one still write blindly until they update.
 2. **Fixed: a failed push is retried.** It used to set `error` and wait for
    the next edit, so one change made before closing a laptop stayed on the

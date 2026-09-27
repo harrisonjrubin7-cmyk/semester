@@ -101,6 +101,18 @@ export function reducer(state: State, action: Action): State {
     return { ...state, ...Object.fromEntries(allowed) } as State;
   }
 
+  // And one key of a per-key map — a tick, a grade, a course's name. Only
+  // maps the merge treats key by key; `undefined` is the key not being set
+  // on the device the student chose, so it goes.
+  if (action.type === 'restoreTick') {
+    const map = (state as unknown as Record<string, unknown>)[action.field];
+    if (strategyFor(action.field) !== 'ticks' || typeof map !== 'object' || map === null) return state;
+    const next = { ...(map as Record<string, unknown>) };
+    if (action.value === undefined) delete next[action.key];
+    else next[action.key] = action.value;
+    return { ...state, [action.field]: next } as State;
+  }
+
   const undoable = undoableFor(action.type);
   const before = undoable ? snapshot(state, undoable, Date.now()) : null;
 
