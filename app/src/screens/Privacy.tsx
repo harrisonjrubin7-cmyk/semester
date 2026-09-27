@@ -31,6 +31,7 @@ import { cloudConfigured, deleteEverything } from '../lib/cloud';
 import { eraseDevice } from '../lib/erase';
 import { Toggle } from '../components/ui';
 import { SupportAccess } from '../components/SupportAccess';
+import { SchoolDataPanel } from '../components/SchoolRecords';
 import { DESTINATIONS, offered } from '../lib/nav';
 import {
   USAGE_KEY,
@@ -135,6 +136,8 @@ export function Privacy() {
       ))}
 
       <SupportAccess account={account} />
+
+      <SchoolDataPanel />
 
       {/*
         The counting, and what it has actually counted.
