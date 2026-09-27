@@ -8,7 +8,7 @@ import { Folding } from '../../components/Fold';
 import { Insights } from '../../components/Insights';
 import { CourseTag } from '../../components/CourseTag';
 import { allCards } from '../../data/catalog';
-import { DOW, DOW_INITIALS, dateToIso } from '../../lib/date';
+import { dateToIso, weekdayInitialOf, weekdayShortOf } from '../../lib/date';
 import { liveGuide } from '../../lib/live';
 import { learned, showSpan } from '../../lib/pace';
 import { cardIdentity, comeRound, neverMet, tallyKeys } from '../../lib/review';
@@ -788,7 +788,7 @@ function WeekStrip({ days }: { days: Day[] }) {
               color: d.today ? 'var(--app-fg)' : 'var(--app-dim)',
             }}
           >
-            {DOW_INITIALS[d.dow]}
+            {weekdayInitialOf(d.dow)}
           </span>
         </button>
       ))}
@@ -804,7 +804,7 @@ function WeekStrip({ days }: { days: Day[] }) {
  * reads twice.
  */
 function saidDay(d: Day): string {
-  const when = `${DOW[d.dow]} ${d.date.getDate()}${d.today ? ', today' : ''}`;
+  const when = `${weekdayShortOf(d.dow)} ${d.date.getDate()}${d.today ? ', today' : ''}`;
   if (d.due === 0) return `${when}: nothing due`;
   const due = `${d.due} due`;
   return d.done > 0 ? `${when}: ${due}, ${d.done} done` : `${when}: ${due}`;

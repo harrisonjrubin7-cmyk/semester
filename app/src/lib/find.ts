@@ -29,7 +29,7 @@ import { knowingOf, says } from './knowing';
 import type { Catalog } from '../data/catalog';
 import { datedItems } from './select';
 import { forLine } from './forwork';
-import { dueLabel, isoToDate } from './date';
+import { dueLabel, isoToDate, shownTime } from './date';
 import { DESTINATIONS, saysFor } from './nav';
 import { cardIdentity, type Reviews } from './review';
 import { nearAny } from './near';
@@ -539,7 +539,7 @@ export function findEverything(
            * and it should not be the one place it is written in a different
            * language.
            */
-          sub: [t.date ? dueLabel(isoToDate(t.date), now, t.time) : 'Someday', t.time]
+          sub: [t.date ? dueLabel(isoToDate(t.date), now, t.time) : 'Someday', shownTime(t.time)]
             .filter(Boolean)
             .join(' · '),
           tag: t.done ? 'Done' : 'Action',
@@ -557,7 +557,7 @@ export function findEverything(
           id: a.id,
           // The date as the app says dates, and the place, which is half of
           // why somebody looks an appointment up in the first place.
-          sub: [dueLabel(isoToDate(a.date), now, a.time), a.time, a.where].filter(Boolean).join(' · '),
+          sub: [dueLabel(isoToDate(a.date), now, a.time), shownTime(a.time), a.where].filter(Boolean).join(' · '),
           title: a.title,
           tag: 'Appointment',
           score: s,

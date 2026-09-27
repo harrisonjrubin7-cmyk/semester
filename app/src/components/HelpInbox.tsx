@@ -15,9 +15,10 @@ import {
   type StaffInbox,
 } from '../lib/help-routes';
 import { ActionButton, Notice, SectionLabel } from './ui';
+import { dateFormatter } from '../lib/locale';
 
 const when = (value: string) =>
-  new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
+  dateFormatter({ dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
 
 /** What each staff move is called on its button. */
 const MOVE_TEXT: Record<RequestStatus, string> = {

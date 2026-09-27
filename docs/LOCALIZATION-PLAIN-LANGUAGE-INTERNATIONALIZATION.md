@@ -52,9 +52,31 @@ in step 2 below rebases onto them rather than racing them.
    - 22 files write their own twelve-hour clocks, and class times arrive
      pre-formatted ("9:05a") in the course data.
 
-   The last two are ratchet lists in the guard — they may only shrink — and are
-   step 1b. Some entries are parsers that must stay English and twelve-hour,
-   so each needs reading, not a find-and-replace.
+   Both were ratchets in the guard.
+1b. **Done.** Every date and time the app *draws* now follows a chosen
+   locale; with nothing chosen every string is the one the screens built by
+   hand, which `app/src/lib/locale.test.ts` checks for every day of a year.
+   - `app/src/lib/date.ts` has one function per drawn shape (`monthDay`,
+     `dayMonthLong`, `weekdayDay`, `monthYear`, `weekdayInitialOf`…), used by
+     the eighteen files that had assembled them from the English names.
+   - Stored times stay canonical. "9:05a" is what a class block, a task, an
+     appointment and a feed event *store*, and `readDue` parses it back, so the
+     producers of stored strings keep writing it and screens draw it through
+     `shownTime(time, at)`. Two producers were nearly converted by mistake —
+     `yes.ts` (an imported course's schedule and `meets` line) and `drag.ts`
+     (the `time` of an item dropped on the calendar) — and were caught by
+     tracing callers before committing. Both are listed in the guard with that
+     reason.
+   - The guard's rule is now: English names or a hand-written twelve-hour clock
+     only in a documented parser or stored-form producer, or in a file that
+     consults the locale and keeps the English form as its "nothing chosen"
+     branch. It was shown to go red on a planted example of each.
+
+   Still English by design: parsers (`capture.ts`, `registrar.ts`), text for
+   the assistant (`lookup.ts`, `brief.ts`), text sent to staff
+   (`help-routes.ts`), exports, and `school-records.ts`'s UTC records. Weeks
+   still start on Sunday in every locale; that is a layout change, not a format
+   one, and is left for the catalogue work below.
 2. Introduce the catalogue for the five destinations' chrome only. Do not
    extract every string in one change.
 3. Glossary and plain-language mode.

@@ -1,3 +1,4 @@
+import { shownTime } from '../../lib/date';
 import { useMemo, useRef, useState } from 'react';
 import { secondLine } from '../../lib/dim';
 import { Produced } from '../../components/Produced';
@@ -170,10 +171,10 @@ export function DayReport({ onGrain }: { onGrain: (grain: 'week') => void }) {
             ) : (
               <>
                 {am.classes.map((c) => (
-                  <ItemRow key={`c:${c.title}:${c.time}`} title={c.title} trailing={c.time} />
+                  <ItemRow key={`c:${c.title}:${c.time}`} title={c.title} trailing={shownTime(c.time)} />
                 ))}
                 {am.commitments.map((c) => (
-                  <ItemRow key={`m:${c.title}:${c.time}`} title={c.title} trailing={c.time} />
+                  <ItemRow key={`m:${c.title}:${c.time}`} title={c.title} trailing={shownTime(c.time)} />
                 ))}
               </>
             )}
@@ -257,7 +258,7 @@ export function DayReport({ onGrain }: { onGrain: (grain: 'week') => void }) {
                   <ItemRow key={i.id} title={`${code(i.c)} · ${i.title}`} trailing={i.dueTime} />
                 ))}
                 {pm.tomorrowClasses.map((c) => (
-                  <ItemRow key={`t:${c.title}:${c.time}`} title={c.title} trailing={c.time} />
+                  <ItemRow key={`t:${c.title}:${c.time}`} title={c.title} trailing={shownTime(c.time)} />
                 ))}
               </>
             )}

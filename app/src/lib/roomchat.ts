@@ -15,7 +15,8 @@
  */
 
 // Day and month names come from `lib/date.ts`; see the note there.
-import { DOW, MONTHS } from './date';
+import { dayMonth, localClock, weekdayDayMonth, weekdayShort } from './date';
+import { appLocale } from './locale';
 
 /** A message, as little of one as any of this needs. */
 export interface Say {
@@ -59,6 +60,7 @@ export function clockAt(iso: string): string {
   const at = new Date(iso);
   if (Number.isNaN(at.getTime())) return '';
   const h = at.getHours();
+  if (appLocale()) return localClock(h * 60 + at.getMinutes());
   return `${h % 12 === 0 ? 12 : h % 12}:${String(at.getMinutes()).padStart(2, '0')}${h >= 12 ? 'p' : 'a'}`;
 }
 
@@ -79,8 +81,8 @@ export function listStamp(iso: string, now: Date): string {
   if (sameDay(at, yesterday)) return 'Yesterday';
   const week = new Date(now);
   week.setDate(now.getDate() - 6);
-  if (at.getTime() >= week.setHours(0, 0, 0, 0)) return DOW[at.getDay()];
-  return `${at.getDate()} ${MONTHS[at.getMonth()]}`;
+  if (at.getTime() >= week.setHours(0, 0, 0, 0)) return weekdayShort(at);
+  return dayMonth(at);
 }
 
 /** The rule above the first message of a day: Today, Yesterday, or the date. */
@@ -91,7 +93,7 @@ export function dayLabel(iso: string, now: Date): string {
   const yesterday = new Date(now);
   yesterday.setDate(now.getDate() - 1);
   if (sameDay(at, yesterday)) return 'Yesterday';
-  return `${DOW[at.getDay()]}, ${at.getDate()} ${MONTHS[at.getMonth()]}`;
+  return weekdayDayMonth(at);
 }
 
 // ── Mentions ──────────────────────────────────────────────────────────────

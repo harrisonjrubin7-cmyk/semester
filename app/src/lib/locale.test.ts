@@ -16,7 +16,34 @@ import {
   setChosenLocale,
   setLanguageFlag,
 } from './locale';
-import { clock, decorateEvent, longLabel, monthShort, weekdayShort } from './date';
+import {
+  DAY_NAMES,
+  DOW,
+  DOW_INITIALS,
+  MONTHS,
+  MONTH_NAMES,
+  clock,
+  dayMonth,
+  dayMonthLong,
+  decorateEvent,
+  localHourMark,
+  longLabel,
+  monthDay,
+  monthLongOf,
+  monthShort,
+  monthShortOf,
+  monthShortYear,
+  monthYear,
+  shownTime,
+  twentyFourHour,
+  weekdayDay,
+  weekdayDayMonth,
+  weekdayInitial,
+  weekdayInitialOf,
+  weekdayLongOf,
+  weekdayShort,
+  weekdayShortOf,
+} from './date';
 
 /*
  * Module state, in a shared-isolation project: every test here leaves the
@@ -200,5 +227,83 @@ describe('right-to-left values inside English text', () => {
     setChosenLocale('de');
     expect(formatNumber(80000)).toBe('80.000');
     expect(formatDate(AT, { month: 'long' })).toBe('September');
+  });
+});
+
+describe("date.ts's drawn shapes", () => {
+  /*
+   * Every day of a year, against the expression each screen used to build by
+   * hand. With nothing chosen these must be the same strings, character for
+   * character — this is what lets eighteen files change without any screen
+   * changing for a student who never opens the setting.
+   */
+  const YEAR = Array.from({ length: 365 }, (_, i) => new Date(2026, 0, 1 + i));
+
+  it('with nothing chosen, are the English the screens wrote by hand', () => {
+    for (const d of YEAR) {
+      expect(monthDay(d)).toBe(`${MONTHS[d.getMonth()]} ${d.getDate()}`);
+      expect(dayMonth(d)).toBe(`${d.getDate()} ${MONTHS[d.getMonth()]}`);
+      expect(dayMonthLong(d)).toBe(`${d.getDate()} ${MONTH_NAMES[d.getMonth()]}`);
+      expect(weekdayDay(d)).toBe(`${DOW[d.getDay()]} ${d.getDate()}`);
+      expect(weekdayDayMonth(d)).toBe(`${DOW[d.getDay()]}, ${d.getDate()} ${MONTHS[d.getMonth()]}`);
+      expect(weekdayInitial(d)).toBe(DOW_INITIALS[d.getDay()]);
+    }
+    for (let m = 0; m < 12; m++) {
+      expect(monthShortOf(m)).toBe(MONTHS[m]);
+      expect(monthLongOf(m)).toBe(MONTH_NAMES[m]);
+      expect(monthShortYear(2026, m)).toBe(`${MONTHS[m]} 2026`);
+      expect(monthYear(2026, m)).toBe(`${MONTH_NAMES[m]} 2026`);
+    }
+    for (let w = 0; w < 7; w++) {
+      expect(weekdayShortOf(w)).toBe(DOW[w]);
+      expect(weekdayLongOf(w)).toBe(DAY_NAMES[w]);
+      expect(weekdayInitialOf(w)).toBe(DOW_INITIALS[w]);
+    }
+  });
+
+  it('with nothing chosen, a stored time is drawn exactly as stored', () => {
+    for (const t of ['9:05a', '7:00p', '9:05–9:55a', 'All day', 'TBA', '']) {
+      expect(shownTime(t)).toBe(t);
+      expect(shownTime(t, 545)).toBe(t);
+    }
+    expect(twentyFourHour()).toBe(false);
+  });
+
+  describe('with a locale chosen', () => {
+    beforeEach(() => setLanguageFlag('preview'));
+
+    it("follow that locale's order and words", () => {
+      setChosenLocale('de');
+      const d = new Date(2026, 8, 4);
+      expect(monthDay(d)).toBe('4. Sept.');
+      expect(dayMonthLong(d)).toBe('4. September');
+      expect(monthYear(2026, 8)).toBe('September 2026');
+      expect(weekdayLongOf(0)).toBe('Sonntag');
+      expect(weekdayInitialOf(1)).toBe('M');
+      setChosenLocale('es');
+      expect(weekdayShortOf(3)).toBe(new Date(2023, 0, 4).toLocaleDateString('es', { weekday: 'short' }));
+    });
+
+    it('re-draw a stored time from its minutes, or from one plain time, and nothing else', () => {
+      setChosenLocale('de');
+      expect(shownTime('9:05a', 9 * 60 + 5)).toBe('9:05');
+      expect(shownTime('7:00p')).toBe('19:00');
+      expect(shownTime('12:30 PM')).toBe('12:30');
+      expect(shownTime('12a')).toBe('0:00');
+      expect(shownTime('10am')).toBe('10:00');
+      // A range, a word, and a malformed hour come back as they were stored.
+      expect(shownTime('9:05–9:55a')).toBe('9:05–9:55a');
+      expect(shownTime('All day')).toBe('All day');
+      expect(shownTime('13:00p')).toBe('13:00p');
+    });
+
+    it("mark a grid's hours the way the locale's clock runs", () => {
+      setChosenLocale('de');
+      expect(twentyFourHour()).toBe(true);
+      expect(localHourMark(14)).toBe('14');
+      setChosenLocale('en-US');
+      expect(twentyFourHour()).toBe(false);
+      expect(localHourMark(14)).toBe('2 PM');
+    });
   });
 });

@@ -70,7 +70,7 @@ import { meetings, pairings } from './meet';
 import { codeOf } from './call';
 import { bytesOf } from './inventory';
 import { pickPersisted } from '../state/shape';
-import { dateToIso, isoToDate, longLabel, shiftIso } from './date';
+import { dateToIso, isoToDate, longLabel, shiftIso, shownTime } from './date';
 import { billFor, money } from './bill';
 import { forTerm as costsFor, total } from './cost';
 
@@ -374,7 +374,7 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
           ? {
               label: 'Next class',
               meta: next.untilLabel,
-              figure: next.block.time,
+              figure: shownTime(next.block.time, next.block.at),
               foot: next.block.title,
             }
           : { label: 'Today', said: 'No class today.', foot: count(due.length, 'thing') + ' still due' },
@@ -839,7 +839,7 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
       const next = scheduled[0];
       return {
         hero: next
-          ? { label: 'Next call', meta: next.time, said: next.title, foot: longLabel(isoToDate(next.date)) }
+          ? { label: 'Next call', meta: shownTime(next.time), said: next.title, foot: longLabel(isoToDate(next.date)) }
           : { label: 'Video call', said: 'Nothing scheduled.', foot: 'Start one, or join with a code' },
         stats: term,
       };

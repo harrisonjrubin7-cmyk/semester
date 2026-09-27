@@ -4,12 +4,13 @@ import { blockLabel, kindTint } from '../lib/kinds';
 import { useStore } from '../state/store';
 import { ground as groundOf, resolveGround } from '../lib/look';
 import { usePrefersDark } from '../lib/prefers';
-import { DOW_INITIALS, clock } from '../lib/date';
+import { clock, localHourMark, weekdayInitial } from '../lib/date';
 import type { HourBlock } from './HourGrid';
 import { lanesOf } from '../lib/weekpage';
 import { gridAttrs, pointIn, useDragToMove } from '../lib/drag';
 import { hourWindow } from '../lib/hourwindow';
 import { placeBlock } from '../lib/hourplace';
+import { appLocale } from '../lib/locale';
 
 /**
  * A week, by the hour — the timetable shape.
@@ -120,7 +121,7 @@ export function WeekGrid({
                 color: d.isToday ? 'var(--app-fg)' : 'var(--app-faint)',
               }}
             >
-              {DOW_INITIALS[d.date.getDay()]}
+              {weekdayInitial(d.date)}
             </span>
             <span style={{ display: 'block', fontSize: 'var(--type-base)', ...secondLine(d.isToday) }}>
               {d.date.getDate()}
@@ -165,8 +166,14 @@ export function WeekGrid({
                 ...faintLine(),
               }}
             >
-              {h % 12 === 0 ? 12 : h % 12}
-              {h < 12 ? 'a' : 'p'}
+              {appLocale() ? (
+                localHourMark(h)
+              ) : (
+                <>
+                  {h % 12 === 0 ? 12 : h % 12}
+                  {h < 12 ? 'a' : 'p'}
+                </>
+              )}
             </span>
           </div>
         ))}

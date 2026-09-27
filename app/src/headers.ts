@@ -2,7 +2,7 @@ import type { State } from './state/shape';
 import type { Catalog } from './data/catalog';
 import type { School } from './lib/school';
 import type { Screen } from './lib/types';
-import { MONTHS } from './lib/date';
+import { monthShort } from './lib/date';
 import { homeTitle } from './lib/look';
 import { datedEvents, datedItems, nextExam } from './lib/select';
 import { destination } from './lib/nav';
@@ -164,7 +164,7 @@ export const HEADERS: Record<Screen, (c: HeaderCtx) => Head> = {
     // read a second field, so it could name a different month from the grid
     // under it once the two drifted apart. See `calDay` in `state/shape.ts`.
     const on = c.state.calDay ? isoToDate(c.state.calDay) : c.now;
-    return { kicker: `${source} · ${MONTHS[on.getMonth()]}`, title: 'Calendar' };
+    return { kicker: `${source} · ${monthShort(on)}`, title: 'Calendar' };
   },
   event: (c) => {
     const event = datedEvents(c.now, c.state.schoolId, c.state.sample).find((e) => e.id === c.state.eventId);

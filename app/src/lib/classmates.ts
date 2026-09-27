@@ -42,6 +42,8 @@
 
 import { cloud } from './cloud';
 import type { School } from './school';
+import { appLocale } from './locale';
+import { localClock, weekdayShort } from './date';
 
 /**
  * Whether an address is one this school recognises.
@@ -168,7 +170,7 @@ export function whenSaid(iso: string, now = new Date()): string {
   const at = new Date(iso);
   if (Number.isNaN(at.getTime())) return '';
   const h24 = at.getHours();
-  const clock = `${h24 % 12 === 0 ? 12 : h24 % 12}:${String(at.getMinutes()).padStart(2, '0')}${
+  const clock = appLocale() ? localClock(h24 * 60 + at.getMinutes()) : `${h24 % 12 === 0 ? 12 : h24 % 12}:${String(at.getMinutes()).padStart(2, '0')}${
     h24 >= 12 ? 'p' : 'a'
   }`;
   const sameDay =
@@ -176,7 +178,7 @@ export function whenSaid(iso: string, now = new Date()): string {
     at.getMonth() === now.getMonth() &&
     at.getDate() === now.getDate();
   if (sameDay) return clock;
-  const day = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][at.getDay()];
+  const day = weekdayShort(at);
   return `${day} ${clock}`;
 }
 

@@ -17,7 +17,7 @@ import {
 } from '../lib/athletics';
 import { download } from '../lib/deliver';
 import { fromMarkdown } from '../lib/document';
-import { dateToIso, decorateItem } from '../lib/date';
+import { dateToIso, decorateItem, shownTime } from '../lib/date';
 import { lengthOf, railFor } from '../lib/select';
 import { TravelPack } from '../components/TravelPack';
 import { AbsenceNotices } from '../components/AbsenceNotices';
@@ -122,7 +122,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
           b.from?.kind === 'appointment' &&
           state.appointments.find((a) => a.id === b.from?.id)?.note.includes(`athletics:${e.id}:`);
         const runs = b.at < to && b.at + (b.minutes ?? lengthOf(catalog, b)) > from;
-        if (!b.canceled && runs && !mine) found.push(`${day} · ${b.title} · ${b.time}`);
+        if (!b.canceled && runs && !mine) found.push(`${day} · ${b.title} · ${shownTime(b.time, b.at)}`);
       }
 
       for (const i of catalog.items) {

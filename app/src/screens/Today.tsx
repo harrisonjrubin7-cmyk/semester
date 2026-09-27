@@ -32,7 +32,7 @@ import {
   upcomingItems,
   type FeedFilter,
 } from '../lib/select';
-import { MONTHS, clock, minutesNow } from '../lib/date';
+import { clock, minutesNow, monthDay, shownTime } from '../lib/date';
 import { dueByDay, weekDates, weekLabel, weekLine } from '../lib/weekpage';
 import { hasTime, readDue } from '../lib/duetime';
 import { clockOf } from '../lib/atrisk';
@@ -167,7 +167,7 @@ function NextClassCard() {
       </div>
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--sp-6)', marginTop: 'var(--sp-5)' }}>
         <div className="chrome-text" style={{ fontSize: 'calc(34px * var(--text-scale, 1))', lineHeight: 'var(--leading-none)' }}>
-          {next.block.time}
+          {shownTime(next.block.time, next.block.at)}
         </div>
         <div style={{ minWidth: 0 }}>
           <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--type-display-sm)', lineHeight: 'var(--leading-display-lg)' }}>
@@ -295,7 +295,7 @@ function YourTasks() {
                   ) : (
                     ''
                   )}
-                  {t.time}
+                  {shownTime(t.time)}
                 </div>
               )}
             </div>
@@ -420,7 +420,7 @@ function ThisWeek() {
   // Everything still ahead that the seven days do not reach, and the date it
   // is "after" — written out, because "after 14" is not a date.
   const last = weekDates(now)[6];
-  const lastDay = `${MONTHS[last.getMonth()]} ${last.getDate()}`;
+  const lastDay = monthDay(last);
   // The list, not just its length: the aside below offers to show these, and
   // "show them" means landing on the first of them rather than wherever the
   // calendar was left. `datedItems` sorts by date, so `[0]` is the first.
@@ -468,7 +468,7 @@ function ThisWeek() {
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 'var(--type-lg)', lineHeight: 'var(--leading-display-xs)' }}>{nextEvent.title}</div>
               <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}>
-                {nextEvent.time} · {nextEvent.where}
+                {shownTime(nextEvent.time)} · {nextEvent.where}
               </div>
             </div>
             <ChevronRight size={16} style={{ color: 'var(--app-dim)', flex: 'none' }} />
@@ -662,7 +662,7 @@ function ThisWeek() {
                       marginTop: 'var(--sp-1)',
                     }}
                   >
-                    {['Yours', t.courseId ? courseCode(t.courseId) : '', t.time.trim()]
+                    {['Yours', t.courseId ? courseCode(t.courseId) : '', shownTime(t.time.trim())]
                       .filter(Boolean)
                       .join(' · ')}
                   </span>
@@ -1141,7 +1141,7 @@ function Feed_rail() {
                       ...secondLine(gone),
                     }}
                   >
-                    {b.from?.kind === 'item' ? said(b.at) : b.time}
+                    {shownTime(b.from?.kind === 'item' ? said(b.at) : b.time, b.at)}
                   </div>
                   <div style={{ width: 1, background: 'var(--app-line)', position: 'relative' }}>
                     <div
@@ -1187,7 +1187,7 @@ function Feed_rail() {
                           Yours
                         </span>
                       )}
-                      {[b.meta, b.from?.kind === 'item' && b.time !== said(b.at) ? b.time : '']
+                      {[b.meta, b.from?.kind === 'item' && b.time !== said(b.at) ? shownTime(b.time, b.at) : '']
                         .filter(Boolean)
                         .join(' · ')}
                     </div>
@@ -1733,7 +1733,7 @@ function HoursToday() {
               <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base)' }}>
                 {t.title}
                 {t.time.trim() && (
-                  <span style={{ color: 'var(--app-dim)' }}> · {t.time.trim()}</span>
+                  <span style={{ color: 'var(--app-dim)' }}> · {shownTime(t.time.trim())}</span>
                 )}
               </span>
             </button>

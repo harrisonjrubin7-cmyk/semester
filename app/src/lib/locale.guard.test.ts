@@ -40,6 +40,7 @@ const FORMATTING = /\.toLocale(?:Date|Time)?String\(|new Intl\.\w+|Intl\.DateTim
  */
 const DELIBERATE: Record<string, { count: number; why: string }> = {
   'lib/locale.ts': { count: 6, why: 'the formatters themselves' },
+  'lib/date.ts': { count: 1, why: "`twentyFourHour` asks the chosen locale's hour cycle — a question, not a format" },
   'lib/family.ts': {
     count: 1,
     why: "'en-CA' is the one locale whose short date is YYYY-MM-DD in local time; it is a comparison key, not display",
@@ -54,6 +55,10 @@ const DELIBERATE: Record<string, { count: number; why: string }> = {
   },
   'lib/graduation.ts': { count: 1, why: 'US dollars, grouped the way the bill it is checked against groups them' },
   'components/GraduationSimulator.tsx': { count: 1, why: 'the same dollars, on screen' },
+  'lib/help-routes.ts': {
+    count: 1,
+    why: "#791 pre-fills a deadline into a help request a member of staff reads; text for somebody else must not follow the student's format choice",
+  },
   'lib/integration/school-records.ts': {
     count: 2,
     why: "#779's official school records, written in UTC with the zone named beside them so a record reads the same on every device; whether that should follow the student's locale is step 1b's question, not this guard's",
@@ -80,95 +85,87 @@ describe('dates, times and numbers are formatted in one place', () => {
 });
 
 /**
- * The English names `date.ts` exports, drawn directly rather than through
- * `monthShort` / `weekdayShort` / `longLabel`.
+ * A file that consults the chosen locale: its English or twelve-hour form is
+ * the branch for "nothing chosen", which must stay byte-identical to before.
+ */
+const CONSULTS = /\b(?:appLocale|localClock|shownTime|localHourMark|twentyFourHour)\(/;
+
+/**
+ * The English names `date.ts` exports, used directly rather than through
+ * `monthDay`, `weekdayShort` and the rest.
  *
- * Some of these are right as they are — `MONTH_WORDS` and friends are what an
- * English syllabus is *parsed* against, and parsing must stay English whatever
- * is chosen. Others draw a date and will not follow a chosen locale until they
- * are moved. Telling the two apart is the next slice of work; until then this
- * list may only shrink. A new file reaching for the English names directly is
- * refused, and a file that stops needing them must be taken off.
+ * Allowed in two cases only: a parser, which reads English text and must stay
+ * English whatever the student chose; or a file that consults the locale and
+ * keeps the English form as its "nothing chosen" branch.
  */
 const ENGLISH_NAMES = /\b(?:MONTHS|DOW|DOW_INITIALS|MONTH_NAMES|MONTH_WORDS|DAY_NAMES)\b/;
 
-const STILL_ENGLISH = [
-  'App.tsx',
-  'components/WeekGrid.tsx',
-  'headers.ts',
-  'lib/ahead.ts',
-  'lib/announce.ts',
-  'lib/capture.ts',
-  'lib/clocks.ts',
-  'lib/mailbox.ts',
-  'lib/meals.ts',
-  'lib/monthgrid.ts',
-  'lib/officehours.ts',
-  'lib/registrar.ts',
-  'lib/repeat.ts',
-  'lib/roomchat.ts',
-  'lib/suggest.ts',
-  'lib/weekpage.ts',
-  'screens/Calendar.tsx',
-  'screens/Clocks.tsx',
-  'screens/Today.tsx',
-  'screens/me/You.tsx',
-];
+const ENGLISH_PARSERS: Record<string, string> = {
+  'lib/capture.ts': 'reads "Sep 4" out of a photographed or pasted page',
+  'lib/registrar.ts': "reads the registrar's calendar, which is written in English",
+};
 
 describe("date.ts's English names", () => {
-  it('are drawn directly only by the files already known to', () => {
-    const users = FILES.filter(
-      ({ file, text }) => file !== 'lib/date.ts' && /from '[./]*(?:lib\/)?date'/.test(text) && ENGLISH_NAMES.test(code(text)),
-    )
-      .map(({ file }) => file)
-      .sort();
-    expect(users).toEqual(STILL_ENGLISH);
+  it('are used directly only by parsers, or beside the locale', () => {
+    const loose = FILES.filter(
+      ({ file, text }) =>
+        file !== 'lib/date.ts' &&
+        /from '[./]*(?:lib\/)?date'/.test(text) &&
+        ENGLISH_NAMES.test(code(text)) &&
+        !(file in ENGLISH_PARSERS) &&
+        !CONSULTS.test(code(text)),
+    ).map(({ file }) => file);
+    expect(loose).toEqual([]);
+  });
+
+  it('every listed parser still is one', () => {
+    for (const file of Object.keys(ENGLISH_PARSERS)) {
+      const text = FILES.find((f) => f.file === file)?.text ?? '';
+      expect(ENGLISH_NAMES.test(code(text)), file).toBe(true);
+    }
   });
 });
 
 /**
  * Twelve-hour clocks written by hand — `h % 12 === 0 ? 12 : h % 12` and its
- * cousins — which a chosen locale cannot reach.
+ * cousins.
  *
- * Found by looking at the app rather than at the tests: with German chosen,
- * the Settings example read "14:45" while Today's next class still read
- * "9:05a". `date.ts`'s `clock()` follows the choice; these do not. Some are
- * parsers (reading "2pm" out of a feed must stay twelve-hour whatever the
- * student chose), and some draw a time and should move to `clock()`. Same rule
- * as above: the list may only shrink.
+ * Found by looking at the app: with German chosen, Settings read "14:45" while
+ * Today's next class read "9:05a". The app's "9:05a" is also a *stored* form —
+ * a class block's `time`, a task's, a feed event's — and `readDue` parses it
+ * back, so the producers of stored strings and the parsers must stay
+ * twelve-hour whatever is chosen. Everything that draws a time either consults
+ * the locale or is one of these, each with its reason.
  */
 const TWELVE_HOUR = /%\s*12\b/;
 
-const HAND_ROLLED_CLOCKS = [
-  'components/Capacity.tsx',
-  'components/HourGrid.tsx',
-  'components/MyRules.tsx',
-  'components/WeekGrid.tsx',
-  'lib/activities.ts',
-  'lib/arrive.ts',
-  'lib/atrisk.ts',
-  'lib/capture.ts',
-  'lib/classmates.ts',
-  'lib/clocks.ts',
-  'lib/connect.ts',
-  'lib/drag.ts',
-  'lib/duetime.ts',
-  'lib/ics.ts',
-  'lib/mailbox.ts',
-  'lib/myrules.ts',
-  'lib/roomchat.ts',
-  'lib/select.ts',
-  'lib/suggest.ts',
-  'lib/windows.ts',
-  'lib/yes.ts',
-  'screens/Mine.tsx',
-];
+const CANONICAL_CLOCKS: Record<string, string> = {
+  'lib/activities.ts': "writes a commitment's Block.time, the stored form screens draw through shownTime",
+  'lib/arrive.ts': "said() is the key Today compares a block's stored time against; sentences draw it through shownTime",
+  'lib/capture.ts': 'parses "2pm" from captured text and stores the canonical form',
+  'lib/connect.ts': "stores a connected calendar event's time",
+  'lib/drag.ts': "timeLabel writes the stored `time` of an item dropped or added on the calendar; its confirmations draw it through shownTime",
+  'lib/duetime.ts': 'parses stored times',
+  'lib/ics.ts': 'stores a subscribed feed event\'s time',
+  'lib/select.ts': 'parses stored time ranges',
+  'lib/suggest.ts': 'month arithmetic — `% 12` over months, not hours',
+  'screens/Mine.tsx': "turns a time input into the stored form",
+  'lib/yes.ts': "writes an imported course's stored schedule and `meets` line, in the YES registrar's own notation",
+};
 
 describe('twelve-hour clocks', () => {
-  it('are written by hand only in the files already known to', () => {
-    const found = FILES.filter(({ file, text }) => file !== 'lib/date.ts' && TWELVE_HOUR.test(code(text)))
-      .map(({ file }) => file)
-      .sort();
-    expect(found).toEqual(HAND_ROLLED_CLOCKS);
+  it('are written by hand only where a stored form or a parser needs one, or beside the locale', () => {
+    const loose = FILES.filter(
+      ({ file, text }) =>
+        file !== 'lib/date.ts' && TWELVE_HOUR.test(code(text)) && !(file in CANONICAL_CLOCKS) && !CONSULTS.test(code(text)),
+    ).map(({ file }) => file);
+    expect(loose).toEqual([]);
+  });
+
+  it('every listed canonical clock still has one', () => {
+    for (const file of Object.keys(CANONICAL_CLOCKS)) {
+      const text = FILES.find((f) => f.file === file)?.text ?? '';
+      expect(TWELVE_HOUR.test(code(text)), file).toBe(true);
+    }
   });
 });
