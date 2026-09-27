@@ -1,10 +1,11 @@
 // @vitest-environment jsdom
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { afterEach, beforeEach, expect, it } from 'vitest';
+import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { toolkitFlags } from '../../lib/toolkit/flags';
 import type { Screen } from '../../lib/types';
-import { TOOLKIT_KEY } from './store';
+import { DATA_BUDGET, MAX_RAW } from '../../lib/toolkit/data';
+import { toolkitDataKey, toolkitKey } from './store';
 import { Toolkit, type ToolkitCourse } from './Toolkit';
 
 /**
@@ -39,6 +40,7 @@ beforeEach(() => {
   root = createRoot(host);
 });
 afterEach(() => {
+  vi.restoreAllMocks();
   act(() => root.unmount());
   host.remove();
   localStorage.clear();
@@ -74,10 +76,11 @@ it('recommends a finite set with a reason for each, and can hide one', () => {
   const items = host.querySelectorAll('.toolkit-recs > li');
   expect(items.length).toBeGreaterThan(0);
   expect(items.length).toBeLessThanOrEqual(4);
+  expect(host.textContent).toContain('PSCI 1104 is Political science');
   const first = items[0].querySelector('strong')!.textContent!;
   click(`Hide`);
   expect([...host.querySelectorAll('.toolkit-recs strong')].map((s) => s.textContent)).not.toContain(first);
-  expect(JSON.parse(localStorage.getItem(TOOLKIT_KEY)!).hidden.length).toBe(1);
+  expect(JSON.parse(localStorage.getItem(toolkitKey())!).hidden.length).toBe(1);
 });
 
 it('opens a native Semester screen rather than a copy of it', () => {
@@ -117,4 +120,129 @@ it('will not mark a stage done until the student writes their own note', () => {
   type(claim, 'Remote work lowers commuting emissions in mid-size cities.');
   click('Mark Claim done');
   expect(host.textContent).toContain('1 of 7 stages done');
+});
+
+it('will not verify a source until the student says they opened the original', () => {
+  mount();
+  tab('Research Studio');
+  click('Start a research project');
+  click('Add a source');
+  act(() => (host.querySelector('details.toolkit-evidence') as HTMLDetailsElement).setAttribute('open', ''));
+  click('Mark verified');
+  expect(host.textContent).toContain('Open the original source and confirm you read it.');
+  expect(host.textContent).not.toContain('Marked verified.');
+});
+
+it('hides the research and data sections when their flags are off', () => {
+  mount(toolkitFlags({ VITE_AI_TOOLKIT: 'preview' }));
+  const tabs = [...host.querySelectorAll('[role="tab"]')].map((t) => t.textContent);
+  expect(tabs).not.toContain('Research Studio');
+  expect(tabs).not.toContain('Data Studio');
+  expect(tabs).toContain('Assignments');
+});
+
+it('refuses to import data until it is classified, and refuses regulated data outright', () => {
+  mount();
+  tab('Data Studio');
+  const paste = [...host.querySelectorAll('label')].find((l) => l.textContent?.startsWith('CSV text'))!.querySelector('textarea')!;
+  type(paste, 'a,b\n1,2\n');
+  click('Import pasted data');
+  expect(host.textContent).toMatch(/not been classified|Choose what kind of data/);
+  const regulated = [...host.querySelectorAll('input[type="radio"]')][4] as HTMLInputElement;
+  act(() => regulated.click());
+  expect(host.textContent).toContain('Regulated or restricted material is not kept in Semester');
+});
+
+it('shows a restricted workbench as needing review, not as a working tool', () => {
+  mount();
+  tab('All tools');
+  act(() => {
+    const select = host.querySelector('.toolkit-catalog')!.parentElement!.querySelector('select') as HTMLSelectElement;
+    Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value')!.set!.call(select, 'bio');
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+  const dna = [...host.querySelectorAll('.toolkit-catalog li')].find((li) => li.textContent?.includes('DNA Learning Lab'))!;
+  expect(dna.textContent).toContain('Needs review before use');
+  expect(dna.querySelector('button')).toBeNull();
+});
+
+it('shows the professional boundary a topic runs into, and nothing for ordinary coursework', () => {
+  mount();
+  const topic = [...host.querySelectorAll('label')].find((l) => l.textContent?.startsWith('Topic'))!.querySelector('input')!;
+  type(topic, 'sleep and memory in first-year students');
+  expect(host.querySelector('.portal-warning')).toBeNull();
+  type(topic, 'answers to the take-home exam');
+  expect(host.textContent).toContain('Semester will not produce answers for an assessment');
+});
+
+it('keeps the AI-use declaration from leaving until it is complete and attested', () => {
+  mount();
+  tab('AI-use policy');
+  expect(button('Download declaration').disabled).toBe(true);
+  expect(host.textContent).toContain('Confirm the attestation.');
+});
+
+const importPasted = (tierIndex: number, csv: string) => {
+  tab('Data Studio');
+  act(() => ([...host.querySelectorAll('input[type="radio"]')][tierIndex] as HTMLInputElement).click());
+  type([...host.querySelectorAll('label')].find((l) => l.textContent?.startsWith('CSV text'))!.querySelector('textarea')!, csv);
+  click('Import pasted data');
+};
+
+it('keeps an education record on the device: no export, and the reason why', () => {
+  mount();
+  importPasted(3, 'student,grade\nAda,91\n');
+  expect(host.textContent).toContain('Imported');
+  expect([...host.querySelectorAll('button')].some((b) => /Export cleaned CSV|Export methods/.test(b.textContent ?? ''))).toBe(false);
+  expect(host.textContent).toContain('Education records are blocked from AI services, sharing and external tools.');
+});
+
+it('offers export for the student’s own data', () => {
+  mount();
+  importPasted(2, 'x,y\n1,2\n');
+  expect(button('Export cleaned CSV')).toBeTruthy();
+});
+
+it('says a dataset was not imported when the device refuses to save it, and shows why', () => {
+  mount();
+  const real = Storage.prototype.setItem;
+  vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (this: Storage, key: string, value: string) {
+    if (key === toolkitDataKey()) throw new Error('quota');
+    return real.call(this, key, value);
+  });
+  importPasted(2, 'x,y\n1,2\n');
+  expect(host.textContent).not.toContain('Imported');
+  expect(host.textContent).toContain('could not be saved on this device');
+  expect(host.textContent).toContain('Changes could not be saved: quota');
+  expect(button('Download recovery copy')).toBeTruthy();
+});
+
+it('never lets datasets grow past their storage budget, however many are imported', () => {
+  mount();
+  // Quotes and line breaks nearly double in JSON, so each of these is close to the per-file cap once stored.
+  const big = 'a\n' + '"q",\n'.repeat(Math.floor((MAX_RAW - 2) / 5));
+  for (let i = 0; i < 4; i++) importPasted(2, big);
+  expect((localStorage.getItem(toolkitDataKey()) ?? '').length).toBeLessThanOrEqual(DATA_BUDGET);
+  expect(host.textContent).toContain('Not enough room on this device');
+});
+
+it('does not say AI help is allowed for data that may not go to AI', () => {
+  mount();
+  tab('Data Studio');
+  act(() => ([...host.querySelectorAll('input[type="radio"]')][3] as HTMLInputElement).click());
+  expect(host.textContent).toContain('AI help is not available for this kind of data');
+  act(() => ([...host.querySelectorAll('input[type="radio"]')][2] as HTMLInputElement).click());
+  expect(host.textContent).not.toContain('AI help is not available for this kind of data');
+});
+
+it('keeps each account’s toolkit apart on a shared device', () => {
+  act(() => root.render(<Toolkit courses={COURSES} accountId="student-a" flags={ALL_ON} now={new Date('2026-09-27T12:00:00')} onOpen={() => {}} onClose={() => {}} />));
+  tab('Assignments');
+  click(/^Start a essay workspace/);
+  expect(host.textContent).toContain('0 of 7 stages done');
+  expect(localStorage.getItem(toolkitKey('student-a'))).toContain('"essay"');
+  act(() => root.render(<Toolkit key="b" courses={COURSES} accountId="student-b" flags={ALL_ON} now={new Date('2026-09-27T12:00:00')} onOpen={() => {}} onClose={() => {}} />));
+  tab('Assignments');
+  expect(host.textContent).not.toContain('stages done');
+  expect(localStorage.getItem(toolkitKey('student-b'))).toBeNull();
 });

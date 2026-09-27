@@ -2,13 +2,18 @@ import { useMemo, useState } from 'react';
 import type { CoursePolicy, Screen } from '../../lib/types';
 import { download } from '../../lib/deliver';
 import { BOUNDARIES, entitle, SUBJECTS, subjectOf, toolsFor, UNIVERSAL, type Subject } from '../../lib/toolkit/catalog';
+import { interpretationGaps } from '../../lib/toolkit/data';
 import { on, TOOLKIT_FLAGS, type ToolkitFlags } from '../../lib/toolkit/flags';
 import { card, fromCourse, redirect, STATE_LABEL, usageLabel } from '../../lib/toolkit/policy';
 import { GOALS, labelOf, recommend, subjectFor, type Goal, type Recommendation } from '../../lib/toolkit/recommend';
+import { boundaryNotice } from '../../lib/toolkit/safety';
 import { progress, TEMPLATE_IDS, TEMPLATES, type TemplateId } from '../../lib/toolkit/templates';
 import { Notice, TabList } from '../ui';
 import { AssignmentPanel, RubricPanel } from './AssignmentPanel';
-import { useToolkit } from './store';
+import { DataPanel } from './DataPanel';
+import { DisclosurePanel } from './DisclosurePanel';
+import { ResearchPanel } from './ResearchPanel';
+import { useToolkit, useToolkitData } from './store';
 
 /**
  * The AI Toolkit: start from the course and the goal, not from a chat box.
@@ -28,22 +33,26 @@ export interface ToolkitCourse {
   ai?: CoursePolicy;
 }
 
-type Section = 'start' | 'assignment' | 'rubric' | 'policy' | 'catalog';
+type Section = 'start' | 'assignment' | 'research' | 'data' | 'rubric' | 'policy' | 'catalog';
 
 export function Toolkit({
   courses,
+  accountId,
   onOpen,
   onClose,
   flags = TOOLKIT_FLAGS,
   now = new Date(),
 }: {
   courses: readonly ToolkitCourse[];
+  /** The signed-in account, whose own toolkit this is. Undefined is "this device, nobody signed in". */
+  accountId?: string;
   onOpen: (screen: Screen) => void;
   onClose: () => void;
   flags?: ToolkitFlags;
   now?: Date;
 }) {
-  const library = useToolkit();
+  const library = useToolkit(accountId);
+  const dataLibrary = useToolkitData(accountId);
   const store = library.value;
   const [section, setSection] = useState<Section>('start');
   const [goal, setGoal] = useState<Goal | null>(null);
@@ -51,6 +60,7 @@ export function Toolkit({
   const [subjectId, setSubjectId] = useState('');
   const [assignment, setAssignment] = useState<TemplateId | ''>('');
   const [due, setDue] = useState('');
+  const [topic, setTopic] = useState('');
   const [openTemplate, setOpenTemplate] = useState<TemplateId | null>(null);
 
   const course = courses.find((c) => c.code === courseCode);
@@ -58,18 +68,21 @@ export function Toolkit({
   const subject = subjectFor({ courseCode, subjectId });
   const fromCode = subjectOf(courseCode);
   const dueInDays = due ? Math.round((Date.parse(`${due}T12:00:00`) - now.getTime()) / 86_400_000) : undefined;
+  const notice = topic.trim() ? boundaryNotice(topic) : null;
 
   const tabs: { id: Section; label: string }[] = [
     { id: 'start', label: 'Start' },
     { id: 'assignment', label: 'Assignments' },
+    ...(on(flags.researchStudio) ? [{ id: 'research' as const, label: 'Research Studio' }] : []),
+    ...(on(flags.dataStudio) ? [{ id: 'data' as const, label: 'Data Studio' }] : []),
     { id: 'rubric', label: 'Rubric self-check' },
     { id: 'policy', label: 'AI-use policy' },
     { id: 'catalog', label: 'All tools' },
   ];
 
   const reachable = (r: Recommendation) =>
-    r.workspace.opens !== 'research' &&
-    r.workspace.opens !== 'data' &&
+    (r.workspace.opens !== 'research' || on(flags.researchStudio)) &&
+    (r.workspace.opens !== 'data' || on(flags.dataStudio)) &&
     (!r.workspace.id.startsWith('subject-') || on(flags.subjectWorkbenches));
 
   const recs = goal
@@ -94,6 +107,19 @@ export function Toolkit({
       .filter(({ p }) => p.next)
       .slice(0, 3)
       .map(({ w, p }) => ({ key: `ws-${w.id}`, text: `${w.title}: ${p.next!.label}`, go: () => setSection('assignment') })),
+    ...(on(flags.researchStudio)
+      ? store.research
+          .map((r) => ({ r, n: r.evidence.filter((e) => !e.verified && e.screening !== 'exclude').length }))
+          .filter(({ n }) => n)
+          .slice(0, 2)
+          .map(({ r, n }) => ({ key: `rs-${r.id}`, text: `Verify ${n} source${n === 1 ? '' : 's'} for “${r.question || 'your research question'}”`, go: () => setSection('research') }))
+      : []),
+    ...(on(flags.dataStudio)
+      ? dataLibrary.value
+          .filter((p) => interpretationGaps(p).length)
+          .slice(0, 2)
+          .map((p) => ({ key: `ds-${p.id}`, text: `Finish the interpretation for ${p.name}`, go: () => setSection('data') }))
+      : []),
   ].slice(0, 5);
 
   return (
@@ -173,7 +199,16 @@ export function Toolkit({
                 Due date (optional)
                 <input className="input" type="date" value={due} onChange={(e) => setDue(e.target.value)} />
               </label>
+              <label>
+                Topic (optional)
+                <input className="input" value={topic} maxLength={300} onChange={(e) => setTopic(e.target.value)} placeholder="e.g. sleep and memory in first-year students" />
+              </label>
             </div>
+            {notice && (
+              <p className="portal-warning" role="status">
+                {notice.text}
+              </p>
+            )}
           </section>
 
           <section className="portal-panel" aria-labelledby="toolkit-recs">
@@ -253,10 +288,13 @@ export function Toolkit({
           now={now}
         />
       )}
+      {section === 'research' && on(flags.researchStudio) && <ResearchPanel library={library} />}
+      {section === 'data' && on(flags.dataStudio) && <DataPanel library={dataLibrary} uploadOn={on(flags.dataUpload)} layers={layers} now={now} onOpen={onOpen} />}
       {section === 'rubric' && <RubricPanel />}
       {section === 'policy' && (
         <>
           <PolicyCard course={course} layers={layers} onEdit={() => onOpen('edit')} />
+          {on(flags.aiDisclosure) && <DisclosurePanel library={library} course={course?.code ?? ''} />}
         </>
       )}
       {section === 'catalog' && <Catalog subject={subject} workbenchesOn={on(flags.subjectWorkbenches)} onOpen={onOpen} onSection={(s) => setSection(s)} />}
