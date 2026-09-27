@@ -129,3 +129,23 @@ it('will not verify a source until the student says they opened the original', (
   expect(host.textContent).toContain('Open the original source and confirm you read it.');
   expect(host.textContent).not.toContain('Marked verified.');
 });
+
+it('hides the research and data sections when their flags are off', () => {
+  mount(toolkitFlags({ VITE_AI_TOOLKIT: 'preview' }));
+  const tabs = [...host.querySelectorAll('[role="tab"]')].map((t) => t.textContent);
+  expect(tabs).not.toContain('Research Studio');
+  expect(tabs).not.toContain('Data Studio');
+  expect(tabs).toContain('Assignments');
+});
+
+it('refuses to import data until it is classified, and refuses regulated data outright', () => {
+  mount();
+  tab('Data Studio');
+  const paste = [...host.querySelectorAll('label')].find((l) => l.textContent?.startsWith('CSV text'))!.querySelector('textarea')!;
+  type(paste, 'a,b\n1,2\n');
+  click('Import pasted data');
+  expect(host.textContent).toMatch(/not been classified|Choose what kind of data/);
+  const regulated = [...host.querySelectorAll('input[type="radio"]')][4] as HTMLInputElement;
+  act(() => regulated.click());
+  expect(host.textContent).toContain('Regulated or restricted material is not kept in Semester');
+});
