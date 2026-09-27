@@ -315,9 +315,9 @@ The feature-expansion session writes D-040 onward, and reached D-053 on
 logs can merge without renumbering. (D-030–D-039 are this session's earlier
 block.)
 
-## D-100 · Faculty Course Studio: design proposed, decisions F1–F7 open
+## D-100 · Faculty Course Studio: F1–F7 decided as recommended
 
-**Proposed 27 Sep 2026.** The design is in
+**Decided by the owner, 27 Sep 2026.** The design is in
 [FACULTY-COURSE-STUDIO-DESIGN.md](FACULTY-COURSE-STUDIO-DESIGN.md).
 
 - An instructor holding `faculty` at course scope publishes course AI rules,
@@ -328,5 +328,14 @@ block.)
 - There is no gradebook, no file hosting and no roster, and faculty see
   nothing about students.
 
-Nothing is built until the owner decides F1–F7.
+The owner approved F1–F7 as recommended:
+- **F1:** the institution grants `faculty` at course scope; nothing is granted
+  from an LMS launch.
+- **F2:** a course is `school/CODE` plus term.
+- **F3:** "final answers" can be allowed only as its own explicit, confirmed
+  setting.
+- **F4:** published material is readable by the school.
+- **F5:** faculty see nothing about students.
+- **F6:** Course Studio is a contextual module behind a flag.
+- **F7:** this session numbers its decisions D-100–D-119.
 

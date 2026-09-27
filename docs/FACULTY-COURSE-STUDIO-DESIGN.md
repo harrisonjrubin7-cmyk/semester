@@ -1,7 +1,8 @@
 # Faculty Course Studio — design
 
-**Status: proposed, 27 Sep 2026. Decisions F1–F7 (§7) need the owner.** No code
-or migration ships until they are decided; the build plan in §8 follows them.
+**Status: decided by the owner, 27 Sep 2026.** F1–F7 (§7) were approved as
+recommended. Slices follow §8. Every migration still needs separate approval
+before it is applied to production.
 
 The brief (`docs/expansion/Semester-Master-Implementation-Brief-v2.md`) puts
 Faculty Course Studio in Phase 2, "Educator value", beside faculty-approved
