@@ -9,6 +9,7 @@ import {
   answerRequest,
   loadInboxes,
   openRequest,
+  replyAfter,
   type OpenedRequest,
   type RequestStatus,
   type StaffInbox,
@@ -135,10 +136,17 @@ export function HelpInbox({ account }: { account: Account | null }) {
                       ))}
                     </dl>
 
+                    {open.reply && (
+                      <div className="portal-panel" style={{ margin: 0 }}>
+                        <strong style={{ display: 'block', marginBottom: 'var(--sp-1)' }}>Your office's reply</strong>
+                        <p style={{ margin: 0, whiteSpace: 'pre-wrap' }} data-reply>{open.reply}</p>
+                      </div>
+                    )}
+
                     {moves.length > 0 && (
                       <>
                         <label style={{ display: 'grid', gap: 'var(--sp-2)' }}>
-                          Reply to the student (optional)
+                          {open.reply ? 'Replace your reply (optional)' : 'Reply to the student (optional)'}
                           <textarea
                             className="input"
                             maxLength={REPLY_MAX}
@@ -154,7 +162,8 @@ export function HelpInbox({ account }: { account: Account | null }) {
                               disabled={busy}
                               onClick={() => run(async () => {
                                 await answerRequest(item.id, status, to, replies[item.id] ?? '');
-                                setOpened((o) => ({ ...o, [item.id]: { ...open, status: to } }));
+                                const sent = replies[item.id] ?? '';
+                                setOpened((o) => ({ ...o, [item.id]: { ...open, status: to, reply: replyAfter(open.reply, sent) } }));
                                 setReplies((r) => ({ ...r, [item.id]: '' }));
                                 await refresh();
                               })}

@@ -244,6 +244,13 @@ begin
     format($q$select public.answer_help_request(%L, 'closed', '')$q$, req));
   perform pg_temp.expect_allowed('the advisor schedules it', advisor,
     format($q$select public.answer_help_request(%L, 'scheduled', 'Tuesday 2pm, bring your plan')$q$, req));
+  perform pg_temp.become(advisor);
+  select o.reply into q from public.open_help_request(req) o;
+  reset role;
+  if q is distinct from 'Tuesday 2pm, bring your plan' then
+    raise exception 'FAILED: reopening does not show the office its own reply (got %)', q;
+  end if;
+  raise notice 'ok  reopening shows the office the reply it sent';
   perform pg_temp.counted('the student reads the reply',
     pg_temp.seen(student, $q$select * from public.help_requests where reply = 'Tuesday 2pm, bring your plan' and status = 'scheduled'$q$), 1);
   perform pg_temp.expect_refused('moving a scheduled request back to acknowledged', advisor,

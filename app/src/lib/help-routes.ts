@@ -433,10 +433,20 @@ export interface OpenedRequest {
   question: string;
   context: Partial<Record<ContextKey, string>>;
   status: RequestStatus;
+  /** What the office last replied, so staff coming back can see it. */
+  reply: string;
   createdAt: string;
 }
 
 export const REPLY_MAX = 1000;
+
+/**
+ * The reply a request carries after an answer: the new one when there is one,
+ * otherwise the one before — the rule `answer_help_request` applies, so the
+ * card never shows something the database did not keep.
+ */
+export const replyAfter = (previous: string, sent: string): string =>
+  sent.trim() ? sent.trim().slice(0, REPLY_MAX) : previous;
 
 /** Every inbox this account answers for, with what is waiting in each. */
 export async function loadInboxes(): Promise<StaffInbox[]> {
@@ -481,6 +491,7 @@ export async function openRequest(requestId: string): Promise<OpenedRequest> {
     question: String(row.question ?? ''),
     context,
     status: isStatus(row.status) ? row.status : 'sent',
+    reply: String(row.reply ?? ''),
     createdAt: String(row.created_at),
   };
 }
