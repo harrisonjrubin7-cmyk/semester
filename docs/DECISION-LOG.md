@@ -358,7 +358,6 @@ The migration is `20260928141000_family_shared_items.sql`. **Applying it to
 production needs owner approval**, as #815's does, and it must be applied after
 #815's migration.
 
-
 ## D-039 · Support shares follow advisor shares, and re-check the role on every read
 
 **Decided 27 Sep 2026, building slice 4 of D-037.** The table is
@@ -1164,3 +1163,36 @@ functions (`project()`, `conflicts()`, `CHECKLIST`). `site.test.tsx` holds the
 policy per page; `tools/Tools.test.tsx` holds hydration. Rejected: sending
 visitors into the app for each tool (the P2.1 stop-gap), which asks for
 onboarding before an answer.
+
+---
+
+# Phase 4 onward, this session (D-100–D-119)
+
+The feature-expansion session writes D-040 onward, and reached D-053 on
+27 Sep 2026. This session's decisions from here take D-100–D-119, so the two
+logs can merge without renumbering. (D-030–D-039 are this session's earlier
+block.)
+
+## D-100 · Faculty Course Studio: F1–F7 decided as recommended
+
+**Decided by the owner, 27 Sep 2026.** The design is in
+[FACULTY-COURSE-STUDIO-DESIGN.md](FACULTY-COURSE-STUDIO-DESIGN.md).
+
+- An instructor holding `faculty` at course scope publishes course AI rules,
+  guidance and study packs.
+- Publishing adds an audited, versioned record.
+- Students at the school see these labelled "Set by your instructor", and the
+  toolkit's existing rules engine applies them as the instructor course layer.
+- There is no gradebook, no file hosting and no roster, and faculty see
+  nothing about students.
+
+The owner approved F1–F7 as recommended:
+- **F1:** the institution grants `faculty` at course scope; nothing is granted
+  from an LMS launch.
+- **F2:** a course is `school/CODE` plus term.
+- **F3:** "final answers" can be allowed only as its own explicit, confirmed
+  setting.
+- **F4:** published material is readable by the school.
+- **F5:** faculty see nothing about students.
+- **F6:** Course Studio is a contextual module behind a flag.
+- **F7:** this session numbers its decisions D-100–D-119.
