@@ -15,7 +15,7 @@ import { DESTINATIONS } from './nav';
  * exists and cannot be reached from anywhere a person would look.
  *
  * So every member of the union is either registered or named below with the
- * reason it is not. Twenty-four are named, and all twenty-four are genuinely not
+ * reason it is not. Twenty-five are named, and all twenty-five are genuinely not
  * destinations: putting `course` in the launcher would mean "a course",
  * unanswerably, and putting `setLook` there would be a second door into a page
  * Settings already lists.
@@ -70,11 +70,13 @@ const SETTINGS = [
 const STAFF = ['moderation'] as const;
 
 /**
- * Registered only while a build switch is on. Community is absent from the
+ * Present only while a build switch is on. Community is absent from the
  * registry until its flags are set, rather than present as a tile that opens
- * onto "not available" — see `COMMUNITY_DESTINATION` in lib/nav.ts.
+ * onto "not available" — see `COMMUNITY_DESTINATION` in lib/nav.ts. Volunteer
+ * moderation is never a shelf item: it is opened from Community, and only
+ * when both its build flag and the school's own switch are on.
  */
-const SWITCHED = ['community'] as const;
+const SWITCHED = ['community', 'volunteer'] as const;
 
 const NOT_DESTINATIONS = new Set<string>([...SHELL, ...FIRST_RUN, ...DETAIL, ...SETTINGS, ...STAFF, ...SWITCHED]);
 

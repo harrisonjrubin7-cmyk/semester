@@ -5,6 +5,7 @@ import { ActionButton, Notice, SectionLabel } from '../components/ui';
 import { Composer } from '../components/community/Composer';
 import { ReportSheet } from '../components/community/ReportSheet';
 import { Sessions } from '../components/community/Sessions';
+import { AliasPanel } from '../components/community/AliasPanel';
 import { WIDE, useMedia } from '../lib/media';
 import { cloudConfigured } from '../lib/cloud';
 import { COMMUNITY_FLAGS, enabled } from '../community/flags';
@@ -22,11 +23,13 @@ import {
   loadCommunities,
   loadNotices,
   loadPosts,
+  loadPrograms,
   muteAuthor,
   reportPost,
   reviewerStanding,
   type CommunityRow,
   type Notice as DecisionNotice,
+  type Programs,
   type PostRow,
 } from '../community/client';
 import { Trouble } from '../components/Trouble';
@@ -114,6 +117,7 @@ export function Community() {
 function CommunitySignedIn({ accountId, wide }: { accountId: string; wide: boolean }) {
   const { dispatch } = useStore();
   const [reviewer, setReviewer] = useState(false);
+  const [programs, setPrograms] = useState<Programs>({ scopedPseudonymity: false, volunteerModeration: false });
   const [communities, setCommunities] = useState<CommunityRow[]>([]);
   const [notices, setNotices] = useState<DecisionNotice[]>([]);
   const [openId, setOpenId] = useState<string | null>(null);
@@ -124,9 +128,15 @@ function CommunitySignedIn({ accountId, wide }: { accountId: string; wide: boole
 
   const refresh = useCallback(async () => {
     try {
-      const [next, decided] = await Promise.all([loadCommunities(), loadNotices()]);
+      const [next, decided, switched] = await Promise.all([
+        loadCommunities(),
+        loadNotices(),
+        // A school that has switched nothing on reads as everything off.
+        loadPrograms().catch(() => ({ scopedPseudonymity: false, volunteerModeration: false })),
+      ]);
       setCommunities(next);
       setNotices(decided);
+      setPrograms(switched);
     } catch (e) {
       setStatus(e instanceof Error ? e.message : 'Could not load Community.');
     }
@@ -154,6 +164,12 @@ function CommunitySignedIn({ accountId, wide }: { accountId: string; wide: boole
       {reviewer && (
         <ActionButton style={{ marginBottom: 'var(--sp-5)' }} onClick={() => dispatch({ type: 'go', screen: 'moderation' })}>
           Open the review queue
+        </ActionButton>
+      )}
+      {/* Both switches, or no door: the build flag and the school's own. */}
+      {enabled(COMMUNITY_FLAGS, 'volunteerModeration') && programs.volunteerModeration && (
+        <ActionButton style={{ marginBottom: 'var(--sp-5)' }} onClick={() => dispatch({ type: 'go', screen: 'volunteer' })}>
+          Volunteer moderation
         </ActionButton>
       )}
       {notices.length > 0 && <NoticeList notices={notices} onChange={refresh} />}
@@ -252,6 +268,7 @@ function CommunitySignedIn({ accountId, wide }: { accountId: string; wide: boole
       key={open.id}
       community={open}
       accountId={accountId}
+      aliasesOn={enabled(COMMUNITY_FLAGS, 'scopedPseudonymity') && programs.scopedPseudonymity && open.pseudonymityApproved}
       onBack={wide ? undefined : () => setOpenId(null)}
       onLeft={async () => {
         setOpenId(null);
@@ -316,11 +333,14 @@ function NoticeList({ notices, onChange }: { notices: DecisionNotice[]; onChange
 function CommunityView({
   community,
   accountId,
+  aliasesOn = false,
   onBack,
   onLeft,
 }: {
   community: CommunityRow;
   accountId: string;
+  /** Build flag, school switch and this community's approval, all three. */
+  aliasesOn?: boolean;
   onBack?: () => void;
   onLeft: () => Promise<void>;
 }) {
@@ -332,6 +352,12 @@ function CommunityView({
   const [editing, setEditing] = useState<string | null>(null);
   const [why, setWhy] = useState<string | null>(null);
   const [now, setNow] = useState(() => new Date());
+  const [alias, setAlias] = useState<string | null>(null);
+  const [asAlias, setAsAlias] = useState(false);
+  const onAlias = useCallback((name: string | null) => {
+    setAlias(name);
+    if (!name) setAsAlias(false);
+  }, []);
 
   const refresh = useCallback(async () => {
     try {
@@ -383,14 +409,25 @@ function CommunityView({
       {community.integrityPolicy && <Notice>Course policy: {community.integrityPolicy}</Notice>}
       {status && <p role="status">{status}</p>}
 
+      {aliasesOn && <AliasPanel communityId={community.id} onAlias={onAlias} />}
+
       {hostOnly ? (
         <p style={{ color: 'var(--app-dim)' }}>Only hosts post in this community.</p>
       ) : (
-        <Composer
-          label="Write a post"
-          integrityPolicy={community.integrityPolicy}
-          onSubmit={(body, own) => createPost(community.id, body, own).then(refresh)}
-        />
+        <>
+          {aliasesOn && alias && (
+            <label style={{ display: 'flex', gap: 'var(--sp-3)', alignItems: 'center', minHeight: 44 }}>
+              <input type="checkbox" checked={asAlias} onChange={(e) => setAsAlias(e.target.checked)} />
+              Post as {alias}
+            </label>
+          )}
+          <Composer
+            label="Write a post"
+            submitText={aliasesOn && alias && asAlias ? `Post as ${alias}` : 'Post'}
+            integrityPolicy={community.integrityPolicy}
+            onSubmit={(body, own) => createPost(community.id, body, own, aliasesOn && Boolean(alias) && asAlias).then(refresh)}
+          />
+        </>
       )}
 
       {own.length > 0 && (

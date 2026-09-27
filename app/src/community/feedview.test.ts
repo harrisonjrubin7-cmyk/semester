@@ -12,6 +12,7 @@ const course: CommunityRow = {
   purpose: '',
   verification: 'faculty_approved',
   integrityPolicy: '',
+  pseudonymityApproved: false,
   role: 'member',
 };
 const group: CommunityRow = { ...course, id: 'g1', kind: 'study_group', name: 'Study group' };

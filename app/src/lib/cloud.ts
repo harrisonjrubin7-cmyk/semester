@@ -1191,6 +1191,10 @@ export const KEPT_TABLES: KeptTable[] = [
     why: 'What an automated detector recorded about a post — the rule, how sure it was, and what a reviewer then decided. It belongs to the moderation case and goes when the case does, on the case\'s retention date.',
   },
   {
+    table: 'community_programs',
+    why: 'Whether your university has switched pseudonyms or volunteer moderation on. A setting of the school, not a record about you; only the service role writes it.',
+  },
+  {
     table: 'community_retention_runs',
     why: 'How many records each daily retention sweep removed, and when. No row names a person, and the log trims itself after a year.',
   },

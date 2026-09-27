@@ -74,8 +74,13 @@ It **is not** yet:
   in TypeScript behind flags that are off. (Aliases and volunteer moderation
   now have tables, functions and 102 more checks. Both stay off at every
   school until the service role writes a `community_programs` row.)
-- **Screens for aliases and volunteers.** The database side is complete; the
-  UI to claim an alias or work a volunteer queue is not built.
+- **A reviewer tool to map an alias to an account** (just-in-time access).
+  Enforcement already reaches the account server-side.
+
+The alias panel and "Post as …" toggle (Community) and the Volunteering screen
+(opened from Community) are built. Each appears only when its build flag, the
+school's `community_programs` switch and, for aliases, the community's
+approval all allow it.
 - **Checked against Postgres 17.** The container has 16, so `check.sh` ran
   with `SEMESTER_CHECK_PG_ANY=1`.
 

@@ -24,6 +24,8 @@ export interface CommunityRow {
   purpose: string;
   verification: 'institution_verified' | 'organization_verified' | 'faculty_approved' | 'student_created';
   integrityPolicy: string;
+  /** Approved for scoped pseudonyms by a community manager. */
+  pseudonymityApproved: boolean;
   role: CommunityRole | null;
 }
 
@@ -83,7 +85,7 @@ const str = (v: unknown) => String(v ?? '');
 export async function loadCommunities(): Promise<CommunityRow[]> {
   const db = await cloud();
   const [{ data: rows, error }, { data: mine, error: mineError }] = await Promise.all([
-    db.from('communities').select('id, kind, name, purpose, verification, integrity_policy').order('name'),
+    db.from('communities').select('id, kind, name, purpose, verification, integrity_policy, pseudonymity_approved').order('name'),
     db.from('community_members').select('community_id, role'),
   ]);
   if (error) fail(error, 'Could not load communities.');
@@ -96,6 +98,7 @@ export async function loadCommunities(): Promise<CommunityRow[]> {
     purpose: str(r.purpose),
     verification: str(r.verification) as CommunityRow['verification'],
     integrityPolicy: str(r.integrity_policy),
+    pseudonymityApproved: Boolean(r.pseudonymity_approved),
     role: roles.get(str(r.id)) ?? null,
   }));
 }
@@ -166,12 +169,18 @@ export async function loadPosts(communityId: string): Promise<{ posts: PostRow[]
   };
 }
 
-export async function createPost(communityId: string, body: string, confirmedOwn: boolean): Promise<string> {
+export async function createPost(
+  communityId: string,
+  body: string,
+  confirmedOwn: boolean,
+  asAlias = false,
+): Promise<string> {
   const db = await cloud();
   const { data, error } = await db.rpc('create_community_post', {
     want_community: communityId,
     want_body: body,
     want_confirmed_own: confirmedOwn,
+    want_as_alias: asAlias,
   });
   if (error) fail(error, 'Could not post.');
   return str(data);
@@ -458,4 +467,148 @@ export async function decideAppeal(caseId: string, uphold: boolean, reasonCode: 
     want_reason: reasonCode,
   });
   if (error) fail(error, 'Could not record the appeal decision.');
+}
+
+/* ------------------------------------------------------------------ */
+/* Programmes that stay off until a school switches them on            */
+/* ------------------------------------------------------------------ */
+
+export interface Programs {
+  scopedPseudonymity: boolean;
+  volunteerModeration: boolean;
+}
+
+/** Which programmes this student's school has switched on. Absent means off. */
+export async function loadPrograms(): Promise<Programs> {
+  const db = await cloud();
+  const { data, error } = await db.from('community_programs').select('program, enabled');
+  if (error) fail(error, 'Could not check which Community programmes are on.');
+  const on = (name: string) => (data ?? []).some((r: Row) => str(r.program) === name && Boolean(r.enabled));
+  return { scopedPseudonymity: on('scoped_pseudonymity'), volunteerModeration: on('volunteer_moderation') };
+}
+
+/* ------------------------------------------------------------------ */
+/* Scoped aliases                                                      */
+/* ------------------------------------------------------------------ */
+
+/** This student's alias in one community, if any. Only ever their own. */
+export async function loadAlias(communityId: string): Promise<{ name: string; rotatedAt: string | null } | null> {
+  const db = await cloud();
+  const { data, error } = await db
+    .from('community_aliases')
+    .select('name, rotated_at')
+    .eq('community_id', communityId)
+    .maybeSingle();
+  if (error) fail(error, 'Could not load your name in this community.');
+  if (!data) return null;
+  const r = data as Row;
+  return { name: str(r.name), rotatedAt: r.rotated_at ? str(r.rotated_at) : null };
+}
+
+/** Take a name, or change the one you have. The server enforces every rule. */
+export async function claimAlias(communityId: string, name: string): Promise<void> {
+  const db = await cloud();
+  const { error } = await db.rpc('claim_community_alias', { want_community: communityId, want_name: name });
+  if (error) fail(error, 'Could not use that name.');
+}
+
+export async function dropAlias(communityId: string): Promise<void> {
+  const db = await cloud();
+  const { error } = await db.from('community_aliases').delete().eq('community_id', communityId);
+  if (error) fail(error, 'Could not stop using that name.');
+}
+
+/* ------------------------------------------------------------------ */
+/* Volunteer moderation                                                */
+/* ------------------------------------------------------------------ */
+
+export type VolunteerStatus = 'onboarding' | 'active' | 'probation' | 'paused' | 'revoked';
+
+export interface VolunteerRecord {
+  status: VolunteerStatus;
+  trained: boolean;
+  confidentialitySigned: boolean;
+  recusalAcknowledged: boolean;
+}
+
+export interface VolunteerStanding {
+  onboardingAnswered: number;
+  quality: number | null;
+  reviewsLastHour: number;
+  reviewsToday: number;
+}
+
+/** A task as a volunteer sees it: no name, no author, no reporter, no votes. */
+export interface VolunteerTask {
+  taskId: string;
+  category: ReportCategory;
+  severity: Severity;
+  communityKind: CommunityType;
+  body: string;
+}
+
+export type VolunteerAction = 'allow' | 'label' | 'remove' | 'close_no_action';
+
+export async function loadVolunteer(): Promise<{ record: VolunteerRecord | null; standing: VolunteerStanding | null }> {
+  const db = await cloud();
+  const [rec, standing] = await Promise.all([
+    db
+      .from('community_volunteers')
+      .select('status, training_completed_at, confidentiality_signed_at, recusal_acknowledged_at')
+      .maybeSingle(),
+    db.rpc('my_volunteer_standing'),
+  ]);
+  if (rec.error) fail(rec.error, 'Could not load your volunteer record.');
+  if (standing.error) fail(standing.error, 'Could not load your volunteer standing.');
+  const r = rec.data as Row | null;
+  const st = ((standing.data ?? []) as Row[])[0];
+  return {
+    record: r
+      ? {
+          status: str(r.status) as VolunteerStatus,
+          trained: Boolean(r.training_completed_at),
+          confidentialitySigned: Boolean(r.confidentiality_signed_at),
+          recusalAcknowledged: Boolean(r.recusal_acknowledged_at),
+        }
+      : null,
+    standing: st
+      ? {
+          onboardingAnswered: Number(st.onboarding_answered ?? 0),
+          quality: st.quality == null ? null : Number(st.quality),
+          reviewsLastHour: Number(st.reviews_last_hour ?? 0),
+          reviewsToday: Number(st.reviews_today ?? 0),
+        }
+      : null,
+  };
+}
+
+export async function applyToVolunteer(): Promise<void> {
+  const db = await cloud();
+  const { error } = await db.rpc('apply_to_volunteer');
+  if (error) fail(error, 'Could not apply.');
+}
+
+export async function attest(kind: 'confidentiality' | 'recusal'): Promise<void> {
+  const db = await cloud();
+  const { error } = await db.rpc('volunteer_attest', { want_kind: kind });
+  if (error) fail(error, 'Could not record that.');
+}
+
+export async function nextTasks(): Promise<VolunteerTask[]> {
+  const db = await cloud();
+  const { data, error } = await db.rpc('volunteer_next_tasks');
+  if (error) fail(error, 'Could not load tasks.');
+  return ((data ?? []) as Row[]).map((r) => ({
+    taskId: str(r.task_id),
+    category: str(r.category) as ReportCategory,
+    severity: str(r.severity) as Severity,
+    communityKind: str(r.community_kind) as CommunityType,
+    body: str(r.body),
+  }));
+}
+
+export async function decideTask(taskId: string, action: VolunteerAction, reasonCode: string): Promise<void> {
+  const db = await cloud();
+  const { error } = await db.rpc('volunteer_decide', { want_task: taskId, want_action: action, want_reason: reasonCode });
+  if (error) fail(error, 'Could not record your decision.');
 }

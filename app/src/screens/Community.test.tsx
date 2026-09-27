@@ -16,6 +16,10 @@ const mock = vi.hoisted(() => ({
   blockAuthor: vi.fn(),
   standing: vi.fn(),
   dispatch: vi.fn(),
+  programs: vi.fn(),
+  loadAlias: vi.fn(),
+  claimAlias: vi.fn(),
+  dropAlias: vi.fn(),
 }));
 
 vi.mock('../state/store', () => ({
@@ -38,6 +42,10 @@ vi.mock('../community/client', () => ({
   appeal: mock.appeal,
   blockAuthor: mock.blockAuthor,
   reviewerStanding: mock.standing,
+  loadPrograms: mock.programs,
+  loadAlias: mock.loadAlias,
+  claimAlias: mock.claimAlias,
+  dropAlias: mock.dropAlias,
   createStudyGroup: vi.fn(),
   deletePost: vi.fn(),
   editPost: vi.fn(),
@@ -62,6 +70,7 @@ const course = {
   purpose: 'Problem sets',
   verification: 'faculty_approved',
   integrityPolicy: 'No sharing graded answers.',
+  pseudonymityApproved: false,
   role: 'member',
 };
 
@@ -92,6 +101,10 @@ beforeEach(() => {
   mock.reportPost.mockResolvedValue(undefined);
   mock.appeal.mockResolvedValue(undefined);
   mock.standing.mockResolvedValue('none');
+  mock.programs.mockResolvedValue({ scopedPseudonymity: false, volunteerModeration: false });
+  mock.loadAlias.mockResolvedValue(null);
+  mock.claimAlias.mockResolvedValue(undefined);
+  mock.dropAlias.mockResolvedValue(undefined);
   localStorage.clear();
   host = document.createElement('div');
   document.body.append(host);
@@ -196,7 +209,7 @@ describe('Community', () => {
     });
     click('It’s mine — post anyway');
     await settle();
-    expect(mock.createPost).toHaveBeenCalledWith('c1', 'Call me at 615-555-0142', true);
+    expect(mock.createPost).toHaveBeenCalledWith('c1', 'Call me at 615-555-0142', true, false);
   });
 
   it('posts clean text without a prompt', async () => {
@@ -205,7 +218,7 @@ describe('Community', () => {
     await act(async () => {
       (host.querySelector('form[aria-label="Write a post"]') as HTMLFormElement).requestSubmit();
     });
-    expect(mock.createPost).toHaveBeenCalledWith('c1', 'Anyone doing problem set 3 tonight?', false);
+    expect(mock.createPost).toHaveBeenCalledWith('c1', 'Anyone doing problem set 3 tonight?', false, false);
   });
 
   it('reports with the emergency notice first', async () => {
@@ -233,7 +246,7 @@ describe('Community', () => {
     expect(mock.createPost).not.toHaveBeenCalled();
     click('Post anyway');
     await settle();
-    expect(mock.createPost).toHaveBeenCalledWith('c1', 'Does anyone have the answer key for the midterm?', false);
+    expect(mock.createPost).toHaveBeenCalledWith('c1', 'Does anyone have the answer key for the midterm?', false, false);
   });
 
   it('never stops a post with crisis language, and offers support after it', async () => {
@@ -243,7 +256,7 @@ describe('Community', () => {
       (host.querySelector('form[aria-label="Write a post"]') as HTMLFormElement).requestSubmit();
     });
     await settle();
-    expect(mock.createPost).toHaveBeenCalledWith('c1', 'honestly I want to die this week', false);
+    expect(mock.createPost).toHaveBeenCalledWith('c1', 'honestly I want to die this week', false, false);
     expect(host.textContent).toContain('988');
   });
 
@@ -256,6 +269,82 @@ describe('Community', () => {
     await settle();
     expect(mock.createPost).toHaveBeenCalled();
     expect(host.querySelector('form[aria-label="Write a post"] [role="alert"]')).toBeNull();
+  });
+
+  describe('aliases', () => {
+    const approved = () => {
+      mock.loadCommunities.mockResolvedValue([{ ...course, kind: 'support', pseudonymityApproved: true }]);
+      mock.programs.mockResolvedValue({ scopedPseudonymity: true, volunteerModeration: false });
+    };
+
+    it('offer nothing unless the school switched them on', async () => {
+      mock.loadCommunities.mockResolvedValue([{ ...course, kind: 'support', pseudonymityApproved: true }]);
+      await render();
+      click('ECON 1010 · Support');
+      await settle();
+      expect(host.querySelector('[aria-label="Your name in this community"]')).toBeNull();
+      expect(mock.loadAlias).not.toHaveBeenCalled();
+    });
+
+    it('offer nothing in a community that has not approved them', async () => {
+      mock.programs.mockResolvedValue({ scopedPseudonymity: true, volunteerModeration: false });
+      await openCourse();
+      expect(host.querySelector('[aria-label="Your name in this community"]')).toBeNull();
+    });
+
+    it('say who can still see through one, before a name is chosen', async () => {
+      approved();
+      await render();
+      click('ECON 1010 · Support');
+      await settle();
+      const panel = host.querySelector('[aria-label="Your name in this community"]') as HTMLElement;
+      expect(panel.textContent).toContain('Semester still knows it is you');
+      type(panel.querySelector('input') as HTMLInputElement, 'Navigator1');
+      await act(async () => {
+        (panel.querySelector('form') as HTMLFormElement).requestSubmit();
+      });
+      expect(mock.claimAlias).toHaveBeenCalledWith('c1', 'Navigator1');
+    });
+
+    it('post under the alias only when asked to', async () => {
+      approved();
+      mock.loadAlias.mockResolvedValue({ name: 'Navigator1', rotatedAt: null });
+      await render();
+      click('ECON 1010 · Support');
+      await settle();
+      await settle();
+      type(host.querySelector('textarea') as HTMLTextAreaElement, 'First post here');
+      await act(async () => {
+        (host.querySelector('form[aria-label="Write a post"]') as HTMLFormElement).requestSubmit();
+      });
+      expect(mock.createPost).toHaveBeenLastCalledWith('c1', 'First post here', false, false);
+      const toggle = [...host.querySelectorAll('label')].find((l) => l.textContent === 'Post as Navigator1')!
+        .querySelector('input') as HTMLInputElement;
+      act(() => toggle.click());
+      type(host.querySelector('textarea') as HTMLTextAreaElement, 'Second post here');
+      await act(async () => {
+        (host.querySelector('form[aria-label="Write a post"]') as HTMLFormElement).requestSubmit();
+      });
+      expect(mock.createPost).toHaveBeenLastCalledWith('c1', 'Second post here', false, true);
+      expect(host.textContent).toContain('Post as Navigator1');
+    });
+
+    it('mark an alias post as a pseudonym', async () => {
+      mock.loadPosts.mockResolvedValue({ posts: [post('z', { authorName: 'Navigator1', asAlias: true })], muted: [] });
+      await openCourse();
+      expect(host.textContent).toContain('Navigator1 · pseudonym');
+    });
+  });
+
+  it('opens volunteer moderation only when the school has switched it on', async () => {
+    await render();
+    expect(host.textContent).not.toContain('Volunteer moderation');
+    act(() => root.unmount());
+    root = createRoot(host);
+    mock.programs.mockResolvedValue({ scopedPseudonymity: false, volunteerModeration: true });
+    await render();
+    click('Volunteer moderation');
+    expect(mock.dispatch).toHaveBeenCalledWith({ type: 'go', screen: 'volunteer' });
   });
 
   it('hides a post for this viewer only', async () => {
