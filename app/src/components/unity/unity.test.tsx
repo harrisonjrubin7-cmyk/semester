@@ -11,6 +11,8 @@ import { ObjectCard } from './ObjectCard';
 import { UnityLayer } from './UnityLayer';
 import { CommandCenter, FirstGoal } from './CommandCenter';
 import { ScreenGuide } from './ScreenGuide';
+import { ShellBody } from '../shell/ShellBody';
+import { EXEMPT, FILLS } from '../shell/exempt';
 import { WorkspaceModePicker } from './modes';
 import { ErrorState, LoadingState, Progress, StepStatus, SuccessState } from './States';
 import { NextSteps } from './NextSteps';
@@ -252,6 +254,56 @@ describe('About this screen', () => {
     for (const q of ['What is this?', 'Why does it matter?', 'Where does this information come from?', 'What can I do next?']) {
       expect(text()).toContain(q);
     }
+  });
+});
+
+describe('About this screen on the full-bleed screens', () => {
+  it('is drawn on every one of them, last, in the same words', async () => {
+    for (const screen of EXEMPT) {
+      await mount(
+        <ShellBody screen={screen}>
+          <p>the screen</p>
+        </ShellBody>,
+      );
+      const guide = host.querySelector('aside[aria-label="About this screen"]');
+      expect(guide, screen).not.toBeNull();
+      // After the screen's own content, which is what keeps help in the same
+      // relative order everywhere (WCAG 3.2.6).
+      const body = host.querySelector('p')!;
+      expect(body.compareDocumentPosition(guide!) & Node.DOCUMENT_POSITION_FOLLOWING, screen).toBeTruthy();
+    }
+  });
+
+  it('opens in place on a screen that scrolls', async () => {
+    await mount(
+      <ShellBody screen="calendar">
+        <p>the grid</p>
+      </ShellBody>,
+    );
+    await press(/About this screen/);
+    expect(host.querySelector('[role="dialog"]')).toBeNull();
+    expect(text()).toContain('Your classes, deadlines and events on one calendar.');
+  });
+
+  it('opens as a sheet on a screen that fills its box, so the composer stays put', async () => {
+    expect(FILLS).toContain('ask');
+    await mount(
+      <ShellBody screen="ask">
+        <p>the chat</p>
+      </ShellBody>,
+    );
+    expect(host.querySelector('.fill-with-guide')).not.toBeNull();
+    const opener = button(/About this screen/);
+    expect(opener.getAttribute('aria-haspopup')).toBe('dialog');
+    opener.focus();
+    await press(/About this screen/);
+    const dialog = host.querySelector('[role="dialog"]')!;
+    expect(dialog.getAttribute('aria-label')).toBe('About this screen');
+    expect(dialog.textContent).toContain('What can I do next?');
+    await act(async () => {
+      dialog.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    });
+    expect(document.activeElement).toBe(opener);
   });
 });
 

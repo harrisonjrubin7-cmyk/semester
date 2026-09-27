@@ -32,6 +32,7 @@ export function ContextBar({
   primary,
   secondary,
   children,
+  heading,
 }: {
   /** The course, project or path this sits in. */
   context?: string;
@@ -46,11 +47,24 @@ export function ContextBar({
   secondary?: { label: string; run: () => void };
   /** Anything further — a menu of advanced actions, disclosed on request. */
   children?: ReactNode;
+  /**
+   * Draw the title as a heading at this level. The bar replaces a screen's
+   * own header on the course, the assignment and the deadline, where the title
+   * was already the section's heading; `a11y/landmarks.test.ts` holds one h1
+   * per screen, so a bar never takes 1.
+   */
+  heading?: 2 | 3;
 }) {
   return (
     <section className="context-bar" aria-label={context ? `${context}: ${title}` : title}>
       {context && <div className="kicker">{context}</div>}
-      <div className="context-bar-title">{title}</div>
+      {heading === 2 ? (
+        <h2 className="context-bar-title">{title}</h2>
+      ) : heading === 3 ? (
+        <h3 className="context-bar-title">{title}</h3>
+      ) : (
+        <div className="context-bar-title">{title}</div>
+      )}
       {(statuses.length > 0 || save) && (
         <div className="context-bar-states">
           {statuses.map((s) => (

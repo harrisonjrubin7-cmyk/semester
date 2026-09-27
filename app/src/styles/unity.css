@@ -83,6 +83,8 @@
 }
 
 .context-bar-title {
+  margin: 0;
+  font-weight: inherit;
   font-size: var(--type-display-xs);
   line-height: var(--leading-display-xs);
   color: var(--text-primary);
@@ -479,6 +481,25 @@
 .screen-guide-body dd {
   margin: var(--sp-1) 0 0;
   color: var(--text-secondary);
+}
+
+/* The fill screens: the screen takes what is left once the help's one line
+   is placed. See ShellBody. */
+.fill-with-guide {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.fill-with-guide > :not(.screen-guide) {
+  flex: 1 1 0;
+  min-height: 0;
+}
+
+.screen-guide.is-compact {
+  flex: none;
+  margin-block: 0;
+  padding-block: var(--sp-3);
 }
 
 /* ── Quick actions, command centre, first goal ──────────────────────────── */

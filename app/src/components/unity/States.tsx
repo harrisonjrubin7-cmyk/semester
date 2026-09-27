@@ -49,12 +49,15 @@ export function ErrorState({
   recover,
   secondary,
   reference,
+  busy = false,
 }: {
   title: string;
   body: string;
   recover: { label: string; run: () => void };
   secondary?: { label: string; run: () => void };
   reference?: string;
+  /** While the recovery is already running — a retry that is in flight. */
+  busy?: boolean;
 }) {
   return (
     <div className="state-error" role="alert">
@@ -66,7 +69,7 @@ export function ErrorState({
       </div>
       <p className="state-body">{body}</p>
       <div className="state-actions">
-        <button type="button" className="btn btn-primary" onClick={recover.run}>
+        <button type="button" className="btn btn-primary" onClick={recover.run} disabled={busy}>
           {recover.label}
         </button>
         {secondary && (

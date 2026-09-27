@@ -112,7 +112,26 @@ export function ShellBody({ screen, children }: { screen: Screen; children: Reac
            * on the bottom edge. Only for the screens that ask: a guide is a
            * column of prose and wants to be as tall as it is.
            */
-          <FullBleed style={fills(screen) ? { height: '100%' } : undefined}>{children}</FullBleed>
+          <>
+            {fills(screen) ? (
+              /*
+               * A screen that is the whole box keeps the whole box, less one
+               * line for the help. The wrapper is a column; `flex: 1 1 0` on
+               * the screen overrides its own `height: 100%` as the main size
+               * (a non-auto basis wins over height in a column), so the chat's
+               * composer stays on the bottom edge with the help beneath it.
+               */
+              <div className="fill-with-guide">
+                <FullBleed style={{ height: '100%' }}>{children}</FullBleed>
+                <ScreenGuide screen={screen} sheet />
+              </div>
+            ) : (
+              <>
+                <FullBleed>{children}</FullBleed>
+                <ScreenGuide screen={screen} />
+              </>
+            )}
+          </>
         ) : (
           <>
             {children}

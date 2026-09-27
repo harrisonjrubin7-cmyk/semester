@@ -9,6 +9,7 @@ import { courseFieldFor } from '../../lib/parent';
 import { useModernShell } from '../shell-context';
 import { SaveState, StatusChip } from './Status';
 import { Visibility } from './Visibility';
+import { Answers } from './ScreenGuide';
 
 /**
  * The shared overlays, mounted once per layout beside `QuickAdd`.
@@ -25,6 +26,13 @@ export function UnityLayer() {
       <FocusBar />
       {overlay.kind === 'source' && <SourceDrawer detail={overlay.detail} />}
       {overlay.kind === 'capture' && <QuickCapture context={overlay.context} />}
+      {overlay.kind === 'explain' && (
+        <Sheet label="About this screen">
+          <div className="screen-guide-body">
+            <Answers screen={overlay.screen} />
+          </div>
+        </Sheet>
+      )}
     </>
   );
 }
