@@ -153,7 +153,7 @@ declare
   allowed constant text[] := array[
     'accept_family_grant(grant_id uuid)',
     'adopt_lti_identity(want_ticket text)',
-    -- The share-code pair from 20260927210000_family_invites.sql. Minting is
+    -- The share-code pair from 20260928140000_family_invites.sql. Minting is
     -- how a student writes to a table with no insert policy; claiming is how
     -- somebody holding eight characters turns them into accepted grants.
     'claim_family_invite(given text)',

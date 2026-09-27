@@ -20,6 +20,11 @@
 --     did — an edit to an applied migration reaches a fresh database and
 --     never the live one.
 --
+-- Numbered 20260928140000, after every migration on main and on the open
+-- branches when it was written. It was first 20260927210000, which main had
+-- already used for `integration_review_fixes`: Supabase records a migration by
+-- that number, so two files sharing one would leave one of them unapplied.
+--
 -- Run this after schema.sql, in the Supabase dashboard: SQL Editor → New
 -- query → paste → Run. It is safe to run again; every statement is guarded.
 --
