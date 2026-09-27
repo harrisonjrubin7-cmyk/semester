@@ -23,14 +23,14 @@ export const JOURNEYS: Journey[] = [
     label: 'Start my semester',
     outcome: 'Bring in courses, confirm dates and connect the systems you already use.',
     aliases: ['setup', 'syllabus', 'import', 'registration', 'connect accounts'],
-    screens: ['import', 'search', 'directory', 'connect', 'courses', 'edit', 'registrar', 'yes', 'announce'],
+    screens: ['launchpad', 'import', 'search', 'directory', 'connect', 'courses', 'edit', 'registrar', 'yes', 'announce'],
   },
   {
     id: 'plan-today',
     label: 'Plan today',
     outcome: 'Turn confirmed deadlines and available time into a realistic next step.',
     aliases: ['today', 'deadline', 'schedule', 'tasks', 'week', 'behind'],
-    screens: ['home', 'calendar', 'mine', 'clocks', 'brief', 'runway', 'behind', 'notifs'],
+    screens: ['home', 'hub', 'calendar', 'mine', 'clocks', 'brief', 'runway', 'behind', 'notifs'],
   },
   {
     id: 'learn-practice',
@@ -65,6 +65,7 @@ export const JOURNEYS: Journey[] = [
       'costs',
       'family',
       'athletics',
+      'support',
     ],
   },
   {
@@ -77,6 +78,7 @@ export const JOURNEYS: Journey[] = [
       'career',
       'applying',
       'pathway',
+      'opportunities',
       'profile',
       'export',
       'account',

@@ -109,6 +109,11 @@ describe('claim audit', () => {
     expect(audit({ id: 'c', text: 'Short sleep causes lower exam scores.', evidence: ['e1'] }, [verified({ design: 'randomized' })]).status).toBe('verified');
   });
 
+  it('still reads “the effects of X on Y” as causal, within a sentence', () => {
+    expect(causalWording('The effects of sleep on recall were large')).toBe(true);
+    expect(causalWording('Effects of sleep were studied. On recall, scores rose modestly')).toBe(false);
+  });
+
   it('reads hedged wording as hedged even with a causal verb inside it', () => {
     expect(causalWording('Sleep is associated with increases in recall')).toBe(false);
     expect(causalWording('Sleep increases recall')).toBe(true);
@@ -142,5 +147,11 @@ describe('citation export', () => {
 
   it('builds a Boolean string from concepts and synonyms', () => {
     expect(searchString('sleep duration\nmemory', 'sleep length, sleep time\nrecall')).toBe('("sleep duration" OR "sleep length" OR "sleep time") AND (memory OR recall)');
+  });
+
+  it('cannot smuggle a second reference into RIS through a line break', () => {
+    const out = ris([study({ title: 'Real title\nER  - \n\nTY  - JOUR\nTI  - Invented', verified: false })]);
+    expect(out.match(/^ER {2}- /gm)?.length).toBe(1);
+    expect(out.match(/^TY {2}- /gm)?.length).toBe(1);
   });
 });

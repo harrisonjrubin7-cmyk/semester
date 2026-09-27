@@ -592,6 +592,8 @@ const MOCKS_MODULES = [
   'src/components/rework.test.tsx',
   'src/components/StudyStudio.test.tsx',
   'src/components/SupportAccess.test.tsx',
+  'src/components/GetHelp.test.tsx',
+  'src/components/HelpInbox.test.tsx',
   'src/components/schoolrecords.test.tsx',
   'src/components/TermChoice.test.tsx',
   'src/components/gpascalenote.test.tsx',

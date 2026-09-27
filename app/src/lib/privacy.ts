@@ -139,7 +139,7 @@ export const SYNC_GROUPS: { says: string; keys: string[] }[] = [
   },
   {
     says: 'the people you have logged, the letters you have asked for and your advising visits',
-    keys: ['people', 'visits', 'letters', 'myName'],
+    keys: ['people', 'visits', 'letters', 'myName', 'pronounce'],
   },
   {
     says: 'what you have recorded a term costing, and your housing, meal and map records',
@@ -156,7 +156,7 @@ export const SYNC_GROUPS: { says: string; keys: string[] }[] = [
       'tabs', 'yours', 'controls', 'role', 'showAll',
       'schemaVersion', 'accent', 'textSize', 'ground', 'density', 'corners',
       'typeface', 'bodyface', 'lineHeight', 'readingWidth', 'iconShape', 'calm',
-      'labels', 'badges', 'feed', 'courseColours', 'shell', 'favourites',
+      'labels', 'badges', 'feed', 'courseColours', 'shell', 'favourites', 'access',
       'shortcuts', 'directory', 'groupOrder', 'boardOrder', 'hue',
       'workspaceMode', 'pinned', 'goal',
     ],
@@ -262,7 +262,7 @@ export const CLAIMS: Claim[] = [
   {
     heading: 'Who can see your rows',
     body:
-      'Your private rows are protected by row-level security keyed to your account, enforced by the database rather than by the app asking politely. There are two deliberate exceptions. A shared practice paper is visible to anyone holding its link. A support summary is visible only to the one verified university supporter you name, for the one-to-seven-day window you approve; every read is recorded, and raw notes, sources, recordings and mistake detail remain private.',
+      'Your private rows are protected by row-level security keyed to your account, enforced by the database rather than by the app asking politely. There are three deliberate exceptions. A shared practice paper is visible to anyone holding its link. A support summary is visible only to the one verified university supporter you name, for the one-to-seven-day window you approve; every read is recorded, and raw notes, sources, recordings and mistake detail remain private. A help request you send to a campus office carries your name, your university email and only what you wrote and ticked on the confirm screen, is readable only by staff who answer for that office, and every time one of them opens it is recorded where you can see it; withdrawing it erases what it said.',
   },
 ];
 

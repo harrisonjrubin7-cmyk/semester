@@ -225,10 +225,11 @@ begin
   -- and `incident_responder` from 20260927170000_integration_control_plane.sql.
   perform pg_temp.counted('a signed-in account reads the forty-nine roles', n, 49);
   select count(*) into n from public.role_capabilities;
-  -- Twenty original rows, thirty-seven expansion rows, and eight from the
+  -- Twenty original rows, thirty-seven expansion rows, eight from the
   -- integration control plane (four for integration_admin, three for
-  -- university_admin, one for incident_responder).
-  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 65);
+  -- university_admin, one for incident_responder), and eight staff roles that
+  -- answer help requests (the help_requests migration).
+  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 73);
 
   perform pg_temp.become_anon();
   perform pg_temp.refused('a signed-out visitor cannot read the matrix',

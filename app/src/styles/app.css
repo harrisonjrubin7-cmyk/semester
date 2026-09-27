@@ -8619,3 +8619,68 @@ button.adband-bar {
   gap: var(--sp-2);
   margin-inline-start: var(--sp-2);
 }
+
+/*
+ * The journey screens — Launchpad, Notices, Support, Opportunities and the
+ * staff Operations studio — share these, from `components/JourneyKit.tsx`.
+ * Tokens only: every size reaches the Text size setting and every gap the
+ * Density one.
+ */
+.jx-lead { font-size: var(--type-base-plus); line-height: 1.55; margin-block: var(--sp-5); text-wrap: pretty; }
+.jx-muted { font-size: var(--type-sm); color: var(--app-dim); line-height: 1.55; margin-block: var(--sp-3); text-wrap: pretty; }
+.jx-warn { font-size: var(--type-sm-plus); color: var(--app-warn); line-height: 1.55; margin-block: var(--sp-4); }
+.jx-notice { font-size: var(--type-sm); line-height: 1.55; padding: var(--sp-4) var(--sp-5); border: 1px solid var(--app-warn-line); background: var(--app-warn-wash); border-radius: var(--r-sm); margin-block: var(--sp-4); }
+.jx-card { border: 1px solid var(--app-line); border-radius: var(--r-sm); background: var(--app-panel); padding: var(--sp-6) var(--sp-7); margin-block: var(--sp-5); }
+.jx-card p { font-size: var(--type-base); line-height: 1.55; margin-block: var(--sp-3); }
+.jx-card ul, .jx-ol { font-size: var(--type-base); line-height: 1.55; padding-inline-start: var(--sp-7); margin-block: var(--sp-3); }
+.jx-card-title { font-size: var(--type-base-plus); font-weight: 600; margin-block: var(--sp-3); text-wrap: pretty; }
+.jx-chips { display: flex; flex-wrap: wrap; gap: var(--sp-3); margin-block: var(--sp-4); }
+.jx-chip { font: inherit; font-size: var(--type-sm); padding: var(--sp-3) var(--sp-5); min-height: 32px; border-radius: 999px; border: 1px solid var(--app-line); background: transparent; color: var(--app-fg); cursor: pointer; }
+.jx-chip-on { border-color: var(--app-accent); background: var(--app-accent-wash); }
+.jx-list { display: flex; flex-direction: column; gap: var(--sp-3); margin-block: var(--sp-4); }
+.jx-check { display: flex; gap: var(--sp-5); align-items: flex-start; padding: var(--sp-4) 0; border-bottom: 1px solid var(--app-line-soft); cursor: pointer; }
+.jx-check input { margin-top: var(--sp-1); flex: none; width: 18px; height: 18px; accent-color: var(--app-accent); }
+.jx-check-body { display: flex; flex-direction: column; gap: var(--sp-2); min-width: 0; flex: 1; }
+.jx-check-title { font-size: var(--type-base-plus); line-height: 1.4; }
+.jx-check-done .jx-check-title { color: var(--app-dim); text-decoration: line-through; }
+.jx-check-detail { font-size: var(--type-sm); color: var(--app-dim); line-height: 1.55; display: flex; flex-direction: column; gap: var(--sp-2); align-items: flex-start; }
+.jx-door { display: inline-flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-4); align-items: baseline; font-size: var(--type-sm); }
+.jx-door-name { font-weight: 600; color: var(--app-fg); }
+.jx-door-decides { color: var(--app-dim); }
+.jx-door-link { color: var(--app-accent-bright); }
+.jx-door-none { color: var(--app-dim); font-style: italic; }
+.jx-go { font: inherit; font-size: var(--type-sm); color: var(--app-accent-bright); background: none; border: 0; padding: var(--sp-2) 0; cursor: pointer; text-align: left; }
+.jx-bare { font: inherit; background: none; border: 0; padding: 0; color: inherit; text-align: left; cursor: pointer; }
+.jx-never { border-left: 2px solid var(--app-accent); padding: var(--sp-4) var(--sp-6); margin-block: var(--sp-7); background: var(--app-accent-wash); border-radius: 0 var(--r-sm) var(--r-sm) 0; }
+.jx-never-head { font-size: var(--type-xs); text-transform: uppercase; letter-spacing: 0.08em; color: var(--app-dim); margin-bottom: var(--sp-3); }
+.jx-never ul { margin: 0; padding-inline-start: var(--sp-7); font-size: var(--type-sm); line-height: 1.55; }
+.jx-entry { display: flex; flex-direction: column; gap: var(--sp-3); padding: var(--sp-5) 0; border-bottom: 1px solid var(--app-line-soft); width: 100%; }
+.jx-entry-button { font: inherit; color: inherit; background: none; border: 0; border-bottom: 1px solid var(--app-line-soft); text-align: left; cursor: pointer; }
+.jx-entry-read { opacity: 0.72; }
+.jx-entry-head { display: flex; flex-wrap: wrap; gap: var(--sp-3); align-items: center; }
+.jx-entry-title { font-size: var(--type-base-plus); font-weight: 600; line-height: 1.4; }
+.jx-entry-what { font-size: var(--type-sm); color: var(--app-dim); line-height: 1.55; }
+.jx-privacy { font-size: var(--type-xs-plus); line-height: 1.4; padding: var(--sp-2) var(--sp-4); border-radius: var(--r-sm); background: var(--app-raise); align-self: flex-start; }
+.jx-tag { font-size: var(--type-xs); padding: var(--sp-1) var(--sp-3); border-radius: 999px; border: 1px solid var(--app-line); color: var(--app-dim); white-space: nowrap; }
+.jx-tag-student, .jx-tag-semester { border-style: dashed; }
+.jx-tag-official, .jx-pri-required { border-color: var(--app-accent); color: var(--app-fg); }
+.jx-pri-high { border-color: var(--app-warn-line); }
+.jx-fresh-stale, .jx-fresh-unowned { border-color: var(--app-warn-line); color: var(--app-warn); }
+.jx-call { font-size: var(--type-base); font-weight: 600; color: var(--app-accent-bright); }
+.jx-actions { display: flex; flex-wrap: wrap; gap: var(--sp-6); }
+.jx-row, .jx-rowbtn { display: flex; justify-content: space-between; gap: var(--sp-5); padding: var(--sp-4) 0; border-bottom: 1px solid var(--app-line-soft); font-size: var(--type-base); width: 100%; }
+.jx-rowbtn { font: inherit; color: inherit; background: none; border-left: 0; border-right: 0; border-top: 0; text-align: left; cursor: pointer; }
+.jx-inline { display: flex; flex-wrap: wrap; gap: var(--sp-4); align-items: flex-end; margin-block: var(--sp-4); }
+.jx-inline > .input { flex: 1 1 140px; min-width: 0; }
+.jx-inline > .jx-field { flex: 1 1 120px; min-width: 0; }
+.jx-field { display: flex; flex-direction: column; gap: var(--sp-2); margin-block: var(--sp-4); font-size: var(--type-sm); color: var(--app-dim); }
+.jx-field > .input { color: var(--app-fg); }
+.jx-field-row { flex-direction: row; align-items: center; justify-content: space-between; }
+.jx-field-row > .input { max-width: 90px; }
+.jx-area { min-height: 88px; resize: vertical; font: inherit; font-size: var(--type-base); line-height: 1.55; }
+.jx-search, .jx-wide { width: 100%; margin-block: var(--sp-4); }
+.jx-glossary { margin: 0; }
+.jx-glossary > div { padding: var(--sp-4) 0; border-bottom: 1px solid var(--app-line-soft); }
+.jx-glossary dt { font-size: var(--type-base-plus); font-weight: 600; }
+.jx-glossary dd { margin: var(--sp-2) 0 0; font-size: var(--type-base); color: var(--app-dim); line-height: 1.55; }
+.jx-pre { font-size: var(--type-xs-plus); background: var(--app-raise); padding: var(--sp-5); border-radius: var(--r-sm); overflow-x: auto; white-space: pre; }

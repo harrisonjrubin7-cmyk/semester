@@ -202,6 +202,8 @@ export const STRATEGY: Record<string, Strategy> = {
   typeface: 'theirs',
   iconShape: 'theirs',
   calm: 'theirs',
+  // Turned on once, for every device — the reason it is a look key at all.
+  access: 'theirs',
   // The accent hue travels with the accent it replaces, or the two would
   // disagree about what colour the app is.
   hue: 'theirs',
@@ -289,6 +291,7 @@ export const STRATEGY: Record<string, Strategy> = {
   // to from two devices. Whichever they edited last is the one they meant.
   aboutMe: 'theirs',
   myName: 'theirs',
+  pronounce: 'theirs',
   // A choice about whether the app counts anything, so it follows the person.
   // The counts it governs never sync at all — see `lib/usage.ts`.
   countScreens: 'theirs',

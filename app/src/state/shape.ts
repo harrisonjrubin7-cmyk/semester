@@ -314,6 +314,11 @@ export interface Persisted {
    * email address — a name is a thing you ask for, not derive.
    */
   myName: string;
+  /**
+   * How to say their name, in their own spelling — "ah-DAY-oh-lah". Theirs to
+   * write and to share; the app never generates or guesses one.
+   */
+  pronounce: string;
   /** Every class marked present, absent or excused. See `lib/attend.ts`. */
   attendance: Attended[];
   /** What each course's syllabus says about turning up, keyed by course id. */
@@ -606,6 +611,12 @@ export interface Persisted {
    * chosen, and that file answers it rather than this one.
    */
   favourites: string;
+  /**
+   * The accessibility modes somebody turned on, as a comma list. A look key
+   * so it follows them between devices; parsed by `lib/accessmode.ts`, which
+   * drops any id this build does not know.
+   */
+  access: string;
   /** `on` or `off` — whether the search home draws its row of shortcuts. */
   shortcuts: string;
   /**
@@ -1449,6 +1460,7 @@ export const DEFAULT_PERSISTED: Persisted = {
   myRules: [],
   aboutMe: [],
   myName: '',
+  pronounce: '',
   attendance: [],
   attendPolicy: {},
   pieces: {},
@@ -1504,6 +1516,7 @@ export const DEFAULT_PERSISTED: Persisted = {
   // "nobody has arranged their shortcuts", and writing the five defaults in
   // here would spend that state on the first save.
   favourites: '',
+  access: '',
   shortcuts: 'on',
   // Not `list`. Writing a default in here made "never chosen" unreachable —
   // the first save stamped `list` on everybody, and `directoryOf`'s soft
@@ -1537,6 +1550,7 @@ export function currentLook(state: Persisted): Look {
     courseColours: state.courseColours,
     shell: state.shell,
     favourites: state.favourites,
+    access: state.access,
     shortcuts: state.shortcuts,
     directory: state.directory,
     groupOrder: state.groupOrder,
@@ -1818,6 +1832,7 @@ export function loadPersisted(): Persisted {
       myRules: readRules(saved.myRules),
       aboutMe: readFacts(saved.aboutMe),
       myName: typeof saved.myName === 'string' ? saved.myName : '',
+      pronounce: typeof saved.pronounce === 'string' ? saved.pronounce.slice(0, 80) : '',
       attendance: readLog(saved.attendance),
       attendPolicy: Object.fromEntries(
         Object.entries(saved.attendPolicy ?? {}).map(([k, v]) => [k, readPolicy(v)]),
@@ -1968,6 +1983,7 @@ export function pickPersisted(state: State): Persisted {
     myRules: state.myRules,
     aboutMe: state.aboutMe,
     myName: state.myName,
+    pronounce: state.pronounce,
     attendance: state.attendance,
     attendPolicy: state.attendPolicy,
     pieces: state.pieces,
@@ -2051,6 +2067,7 @@ export function pickPersisted(state: State): Persisted {
     courseColours: state.courseColours,
     shell: state.shell,
     favourites: state.favourites,
+    access: state.access,
     shortcuts: state.shortcuts,
     directory: state.directory,
     groupOrder: state.groupOrder,
@@ -2196,6 +2213,7 @@ export type Action =
   | { type: 'setMyRules'; rules: MyRule[] }
   | { type: 'setAboutMe'; facts: Fact[] }
   | { type: 'setMyName'; name: string }
+  | { type: 'setPronounce'; text: string }
   | { type: 'markAttendance'; courseId: CourseId; date: string; mark: Attended['mark'] | null }
   | { type: 'setAttendPolicy'; courseId: CourseId; policy: AttendPolicy }
   /** Stop, or resume, reminders about one course. */

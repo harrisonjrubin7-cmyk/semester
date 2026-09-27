@@ -840,6 +840,7 @@ export const BACKUP_SECTIONS: { key: string; label: string; array: boolean; valu
   { key: 'term', label: 'current term', array: false, valueType: 'string' },
   { key: 'schoolId', label: 'school selection', array: false, valueType: 'string' },
   { key: 'myName', label: 'your name', array: false, valueType: 'string' },
+  { key: 'pronounce', label: 'how to say your name', array: false, valueType: 'string' },
   { key: 'accessLeadDays', label: 'testing lead time', array: false, valueType: 'number' },
 
 ];
@@ -874,6 +875,7 @@ export const NOT_IN_BACKUP: Record<string, string> = {
   pinned: 'the widgets pinned to Today',
   goal: 'what you said would help most on first open',
   calm: 'how much the app may move and decorate itself',
+  access: 'the accessibility modes turned on',
   iconShape: 'how the icons are drawn',
   labels: 'whether the tab bar names its tabs',
   lineHeight: 'how far apart the lines sit',
@@ -1109,6 +1111,7 @@ export function backupOf(state: State) {
     term: state.term,
     schoolId: state.schoolId,
     myName: state.myName,
+    pronounce: state.pronounce,
     accessLeadDays: state.accessLeadDays,
     sample: state.sample,
   };
