@@ -68,6 +68,13 @@ grant is the only thing standing in front of it. It is an allowlist over the
 whole schema rather than a list of cases, because the fault it guards against
 is an omission.
 
+`rls-coverage.check.sql` asks the same way about the policies: every table in
+`public` has RLS on (and `ensure_rls` still turns it on for new ones), every
+definer function pins its search_path, no write policy is `true`, only four
+named tables are readable in full, nothing in `private` is a client's to
+touch, and one connection switching accounts shows each only their own rows.
+Each sweep first proves it can fail, against a probe it plants.
+
 (This list had gone stale by four — it named seven of the eleven, and the four
 it left out include the two whose subject is whether an account can be created
 at all and whether a deleted one really goes. `check.sh` runs every file in the
