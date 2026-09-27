@@ -176,6 +176,32 @@ describe('the launch go/no-go', () => {
       expect(decide(state).reasons).toEqual(['Seat security has not signed.', 'Seat champion is vacant.']);
     });
 
+    it('refuses a council with a seat left out, or one seat twice', () => {
+      const state = ready();
+      state.council = state.council.filter((s) => s.seat !== 'champion');
+      expect(decide(state).reasons).toEqual(['Seat champion is missing from the council.']);
+      const doubled = ready();
+      const founder = doubled.council.find((s) => s.seat === 'founder')!;
+      doubled.council = doubled.council.map((s) => (s.seat === 'champion' ? founder : s));
+      expect(decide(doubled).reasons).toEqual([
+        'Seat founder appears 2 times on the council.',
+        'Seat champion is missing from the council.',
+      ]);
+    });
+
+    it('honours no waiver against a decision date that is not a date', () => {
+      const state: LaunchState = {
+        ...ready(),
+        blockers: [{ id: 'B-2', severity: 'P2', summary: 'slow export on large accounts' }],
+        acceptances: [{ blocker: 'B-2', by: 'founder', reason: 'pilot accounts are small', expires: '2020-01-01' }],
+        on: '',
+      };
+      const { verdict, reasons } = decide(state);
+      expect(verdict).toBe('no-go');
+      expect(reasons[0]).toBe('The decision date "" is not a date (YYYY-MM-DD).');
+      expect(reasons).toContain('Open P2 B-2: slow export on large accounts');
+    });
+
     it('refuses an open blocker of any severity that nobody accepted', () => {
       const state = { ...ready(), blockers: [{ id: 'B-3', severity: 'P3' as const, summary: 'copy typo' }] };
       expect(decide(state).verdict).toBe('no-go');

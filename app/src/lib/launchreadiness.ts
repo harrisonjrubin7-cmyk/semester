@@ -289,6 +289,12 @@ export function invalidAcceptances(state: LaunchState): string[] {
 export function decide(state: LaunchState): Verdict {
   const reasons: string[] = [];
 
+  // The decision date gates every waiver's expiry, and a string comparison
+  // against a malformed date keeps an expired waiver alive. So it is checked
+  // first, and nothing is accepted against a date that is not a real one.
+  const dated = /^\d{4}-\d{2}-\d{2}$/.test(state.on) && !Number.isNaN(Date.parse(state.on));
+  if (!dated) reasons.push(`The decision date "${state.on}" is not a date (YYYY-MM-DD).`);
+
   for (const gate of state.gates) {
     if (gate.status !== 'met') reasons.push(`${gate.id}: ${gate.status} — ${gate.gap ?? 'no gap recorded'}`);
     else if (gate.evidence.length === 0) reasons.push(`${gate.id}: marked met with no evidence.`);
@@ -299,6 +305,14 @@ export function decide(state: LaunchState): Verdict {
     if (open.length > 0) reasons.push(`Launch condition “${part.part}” is not satisfied (${open.join(', ')}).`);
   }
 
+  // Every seat, exactly once. A state that leaves a seat out has no entry
+  // for it to be vacant or unsigned in, and a duplicate can stand in its place.
+  for (const want of SEATS) {
+    const held = state.council.filter((s) => s.seat === want).length;
+    if (held === 0) reasons.push(`Seat ${want} is missing from the council.`);
+    else if (held > 1) reasons.push(`Seat ${want} appears ${held} times on the council.`);
+  }
+
   for (const seat of state.council) {
     if (seat.holder === null) reasons.push(`Seat ${seat.seat} is vacant.`);
     else if (!state.signoffs.includes(seat.seat)) reasons.push(`Seat ${seat.seat} has not signed.`);
@@ -307,7 +321,7 @@ export function decide(state: LaunchState): Verdict {
   const invalid = invalidAcceptances(state);
   reasons.push(...invalid);
   const accepted = new Set(
-    state.acceptances
+    (dated ? state.acceptances : [])
       .filter((a) => invalidAcceptances({ ...state, acceptances: [a] }).length === 0)
       .map((a) => a.blocker),
   );
