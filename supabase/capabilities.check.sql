@@ -222,7 +222,7 @@ begin
   select count(*) into n from public.app_roles;
   -- Twenty original roles, the twenty-seven added by
   -- 20260926150000_expansion_roles_and_features.sql, and
-  -- `athletic_academic_support` from 20260928001500_support_shares.sql (D1).
+  -- `athletic_academic_support` from 20260928142000_support_shares.sql (D1).
   perform pg_temp.counted('a signed-in account reads the forty-eight roles', n, 48);
   select count(*) into n from public.role_capabilities;
   -- Twenty original rows plus thirty-seven expansion rows.

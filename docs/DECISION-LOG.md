@@ -255,7 +255,7 @@ each removed in turn: the read's role re-check, the listing's role re-check,
 the compliance exclusion, the payload keys and the log. The suite failed every
 time.
 
-The migration is `20260928001500_support_shares.sql`. **Applying it to
+The migration is `20260928142000_support_shares.sql`. **Applying it to
 production needs owner approval**, and it goes after #830's migration. The
 athlete's screen is slice 5.
 
