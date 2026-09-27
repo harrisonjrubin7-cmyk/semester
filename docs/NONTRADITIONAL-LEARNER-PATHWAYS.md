@@ -17,6 +17,27 @@ built yet beyond the pathway screen that exists.
   `public.transfer_evaluations` — the database half of the transfer tool, with no
   screen yet.
 
+## Built (Phase 4c), behind `VITE_PATH_LEARNER_PATHWAYS`
+
+- `app/src/lib/learner-pathways.ts`: nine pathways a student can tick, seven new
+  checklists in the voice `PATHWAY_TEMPLATES` already keeps (Review, Confirm,
+  Request, Prepare — never submit, approve or "eligible"), who decides each
+  thing, and when/format filters over the imported catalog.
+- `app/src/components/LearnerPathways.tsx` on the Pathway screen: tick what fits,
+  start a checklist, see who decides. The choice is kept on the device under its
+  own key, outside the synced state; the panel imports no store, profile or
+  record, and `app/src/lib/learner-pathways.test.ts` checks both.
+- Registration's Course search gains "When" and "Format" filters. Format is read
+  from the catalog's location text (a section with no meeting times counts as
+  online), and the screen says so.
+- **Differs from the entity plan above:** the choice is device-only for now
+  rather than a `student_context` row. Nothing on the client writes that table
+  yet, and starting would mean `OWNED_TABLES`, sync and RLS review in the same
+  change. Moving it is a later slice; the rule that no staff role reads it holds
+  either way.
+- Not yet: stackable-credential records, a transfer "what counts where" screen
+  over `articulation_rules`, and the time-budget planner (waits for #794).
+
 ## In flight
 
 - [#780](https://github.com/harrisonjrubin7-cmyk/semester/pull/780) Graduation

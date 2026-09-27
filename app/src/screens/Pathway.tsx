@@ -6,6 +6,8 @@ import { ActionButton, FilePick, Notice, SectionLabel, Segmented } from '../comp
 import { CardGrid, GridCard } from '../components/GridCard';
 import { secondLine } from '../lib/dim';
 import { useDeviceLibrary } from '../lib/device-library';
+import { LEARNER_KEY, learnerPathwaysOn } from '../lib/learner-pathways';
+import { LearnerPathways } from '../components/LearnerPathways';
 import { download } from '../lib/deliver';
 import { fromMarkdown } from '../lib/document';
 import {
@@ -234,6 +236,19 @@ function Workspace({ storageKey }: { storageKey: string }) {
           >
             Create it
           </ActionButton>
+
+          {learnerPathwaysOn() && (
+            <LearnerPathways
+              storageKey={storageKey.replace('semester.pathway.v1', LEARNER_KEY)}
+              onStart={(kind) => {
+                const p = newPathwayProject(kind);
+                if (lib.update((old) => ({ ...old, projects: [p, ...old.projects] }))) {
+                  setProjectId(p.id);
+                  setTab('milestones');
+                }
+              }}
+            />
+          )}
 
           <SectionLabel
             aside={`${lib.value.programs.length} saved`}
