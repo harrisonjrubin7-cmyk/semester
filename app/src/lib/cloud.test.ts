@@ -27,7 +27,7 @@ function makeDb() {
       log.push({ table, op: name, args });
     };
     const self: Record<string, unknown> = {};
-    for (const name of ['eq', 'in', 'select', 'delete', 'insert', 'upsert', 'maybeSingle']) {
+    for (const name of ['eq', 'in', 'select', 'delete', 'insert', 'update', 'upsert', 'maybeSingle']) {
       self[name] = (...args: unknown[]) => {
         record(name, ...args);
         return self;
@@ -527,18 +527,26 @@ describe('push', () => {
   const course = (id: string) => ({ id, data: { code: id.toUpperCase() } });
 
   it('writes the state and the courses', async () => {
+    // A device that has read nothing inserts; `cloudcas.test.ts` has the
+    // updates and what happens when the account moved on.
     const { push } = await load();
     await push('user-1', { term: '2026FA' }, [course('econ')]);
-    const upserts = harness.log.filter((l) => l.op === 'upsert');
-    expect(upserts.map((u) => u.table)).toEqual(['state', 'courses']);
+    const inserts = harness.log.filter((l) => l.op === 'insert');
+    expect(inserts.map((u) => u.table)).toEqual(['state', 'courses']);
+  });
+
+  it('never upserts, which would write over a copy this device has not read', async () => {
+    const { push } = await load();
+    await push('user-1', {}, [course('econ')]);
+    expect(harness.log.filter((l) => l.op === 'upsert')).toEqual([]);
   });
 
   it('sends no course write at all when there are none', async () => {
-    // An empty upsert is a round trip that achieves nothing, and on a phone
+    // An empty write is a round trip that achieves nothing, and on a phone
     // plan that is somebody's data.
     const { push } = await load();
     await push('user-1', {}, []);
-    expect(harness.log.filter((l) => l.op === 'upsert').map((u) => u.table)).toEqual(['state']);
+    expect(harness.log.filter((l) => l.op === 'insert').map((u) => u.table)).toEqual(['state']);
   });
 
   it('deletes only the courses this device actually removed', async () => {

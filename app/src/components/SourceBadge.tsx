@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import { SOURCE_MEANING, SOURCE_TEXT, freshnessLine, wantsAttention, type SourceLabel } from '../lib/source';
+import { TRUST_MEANING, TRUST_TEXT, freshnessLine, wantsAttention, type TrustKind } from '../lib/source';
 
 /**
  * Where a fact came from and how old it is, beside the fact.
@@ -21,7 +21,12 @@ export function SourceBadge({
   onReport,
   style,
 }: {
-  label: SourceLabel;
+  /**
+   * One of the five stored labels, or `ai_assisted` / `external` — the two
+   * display-only kinds in `lib/source.ts`. One badge for all seven, so an AI
+   * answer and a registrar record read in the same vocabulary.
+   */
+  label: TrustKind;
   /** When the fact was last updated or synced, epoch ms. Omit when unknown. */
   at?: number | null;
   now?: number;
@@ -33,7 +38,7 @@ export function SourceBadge({
   return (
     <span
       data-source={label}
-      title={SOURCE_MEANING[label]}
+      title={TRUST_MEANING[label]}
       style={{
         display: 'inline-flex',
         flexWrap: 'wrap',
@@ -53,9 +58,9 @@ export function SourceBadge({
           color: 'var(--app-fg)',
         }}
       >
-        {SOURCE_TEXT[label]}
+        {TRUST_TEXT[label]}
       </span>
-      <span className="sr-only">{SOURCE_MEANING[label]}</span>
+      <span className="sr-only">{TRUST_MEANING[label]}</span>
       {fresh ? <span>{fresh}</span> : null}
       {onReport ? (
         <button type="button" className="btn btn-ghost" onClick={onReport}>

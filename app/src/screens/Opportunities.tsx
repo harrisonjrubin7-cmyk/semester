@@ -3,6 +3,7 @@ import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { SectionLabel, TabList } from '../components/ui';
 import { Card, Checklist, GoTo, Never, OfficeDoor } from '../components/JourneyKit';
+import { MentorFinder } from '../components/MentorFinder';
 import { useDeviceLibrary } from '../lib/device-library';
 import { hasMode } from '../lib/accessmode';
 import { dateToIso } from '../lib/date';
@@ -133,6 +134,10 @@ function List({ lib, onAdd, onOpen }: { lib: OpportunityLibrary; onAdd: (k: Kind
         );
       })}
       {!shown.length ? <p className="jx-muted">Nothing here yet. Add the first one below.</p> : null}
+
+      {kind === 'all' || kind === 'alumni' ? (
+        <MentorFinder kind="alumni" interests={[]} fallback={null} />
+      ) : null}
 
       <SectionLabel>Add</SectionLabel>
       <div className="jx-chips">

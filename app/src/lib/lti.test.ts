@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   CLAIM,
   checkLaunch,
+  launchTenant,
   startLogin,
   type Registration,
 } from '../../../supabase/functions/_shared/lti';
@@ -354,5 +355,29 @@ describe('starting a login', () => {
 
   it('refuses a target_link_uri on somebody else’s origin', () => {
     expect(why(login({ target_link_uri: 'https://evil.test/launch' }))).toBe('foreign-target');
+  });
+});
+
+describe('which school a launch is for', () => {
+  const reg = { issuer: 'https://brightspace.test.edu', clientId: 'client-one', deploymentId: 'deploy-a' };
+
+  it('binds a launch to the school its registration records, with no warning', () => {
+    expect(launchTenant('vanderbilt', reg)).toEqual({ tenantId: 'vanderbilt', warning: null });
+  });
+
+  it.each([null, undefined, '', '   '])('allows an unbound registration (%j) and warns, naming the row', (value) => {
+    const tenant = launchTenant(value, reg);
+    expect(tenant.tenantId).toBeNull();
+    expect(tenant.warning).toContain('iss=https://brightspace.test.edu');
+    expect(tenant.warning).toContain('client=client-one');
+    expect(tenant.warning).toContain('deployment=deploy-a');
+    expect(tenant.warning).toMatch(/Allowed/);
+  });
+
+  // The warning is the whole policy for an unbound launch, so it must never
+  // quietly become a school: blank is none, not the empty-string tenant.
+  it('never turns a blank tenant into a school id', () => {
+    expect(launchTenant(' ', reg).tenantId).toBeNull();
+    expect(launchTenant(' vanderbilt ', reg).tenantId).toBe('vanderbilt');
   });
 });

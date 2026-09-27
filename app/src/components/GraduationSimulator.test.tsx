@@ -33,6 +33,9 @@ it('projects a finish from the transcript hours and calls it an estimate', () =>
   expect(host.textContent).toContain('Fall 2028');
   expect(host.textContent).toContain('Cost of one more semester: about $20,000.');
   expect(host.textContent).toContain('estimate');
+  // Said on the screen, not implied: this is the one figure a student could take
+  // to a registration decision as though an office had checked it.
+  expect(host.textContent).toContain('not an official degree audit');
 });
 
 it('adds a what-if scenario and compares it with the current plan', () => {

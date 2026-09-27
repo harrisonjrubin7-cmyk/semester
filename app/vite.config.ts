@@ -581,6 +581,7 @@ const MOCKS_MODULES = [
   'src/screens/onboardingcounts.test.tsx',
   'src/components/saysomething.test.tsx',
   'src/screens/mentionbadge.test.tsx',
+  'src/components/syncstrip.test.tsx',
   'src/components/waitingrow.test.tsx',
   'src/components/pushstalled.test.tsx',
   'src/components/credentials.test.tsx',
@@ -595,6 +596,7 @@ const MOCKS_MODULES = [
   'src/components/HelpInbox.test.tsx',
   'src/components/ActionCenter.help.test.tsx',
   'src/components/ReportQueue.test.tsx',
+  'src/components/MentorFinder.test.tsx',
   'src/components/schoolrecords.test.tsx',
   'src/components/TermChoice.test.tsx',
   'src/components/gpascalenote.test.tsx',
@@ -617,7 +619,12 @@ const MOCKS_MODULES = [
   'src/state/deeplink.test.tsx',
   'src/state/persist/firstrun.test.ts',
   'src/state/persist/tell.test.ts',
+  'src/state/pushlater.test.tsx',
   'src/state/storetoken.test.tsx',
+  'src/state/syncretry.test.tsx',
+  'src/state/syncstates.test.tsx',
+  'src/state/returnto.test.tsx',
+  'src/state/review.test.tsx',
 ]
 
 export default defineConfig(({ command, mode }) => {

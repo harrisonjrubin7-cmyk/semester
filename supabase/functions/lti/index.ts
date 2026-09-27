@@ -61,7 +61,7 @@
 
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { createRemoteJWKSet, importJWK, jwtVerify, SignJWT, type JWK } from 'npm:jose@5';
-import { checkLaunch, startLogin, type Launch, type Registration } from '../_shared/lti.ts';
+import { checkLaunch, launchTenant, startLogin, type Launch, type Registration } from '../_shared/lti.ts';
 import { landingPath, provisionedEmail, provisionedMetadata } from '../_shared/ltiaccount.ts';
 import { autoPostForm, mayPlace, readSettings, resourceLinkItem, responseClaims } from '../_shared/ltideeplink.ts';
 import { SCOPE, clientAssertion, jwks, keyId, publicJwk, tokenRequest } from '../_shared/ltikey.ts';
@@ -76,6 +76,8 @@ import {
 } from '../_shared/ltiags.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { passbackVerdict } from '../_shared/ltigate.ts';
+import { entitlementLogLine, launchEntitlement, readFacts } from '../_shared/ltientitlement.ts';
+import { membershipJoin, membershipLogLine, placementDecision, sessionDecision, type MembershipJoin } from '../_shared/ltimembership.ts';
 
 /** How long a launch has between the redirect out and the POST back. */
 const FLIGHT_SECONDS = 300;
@@ -129,6 +131,34 @@ function refuse(reason: string, detail: string, status = 400): Response {
   );
 }
 
+/**
+ * The launch was real; the school's membership refuses it: access made
+ * inactive, or (for placing an activity) no instructor role.
+ *
+ * Its own page, because `refuse` says the launch could not be verified, which
+ * here would be false and would send somebody to their LMS administrator for
+ * a problem that is their school's access office's. 403, not 401: we know who
+ * this is. It does not say suspended or deprovisioned; that is the school's
+ * to tell them. The reference carries it for whoever they ask.
+ */
+function membershipRefused(reason: string): Response {
+  if (reason === 'membership-not-instructor') {
+    // Access is fine; what is missing is the school listing them as teaching.
+    console.error(`lti refused: ${reason} — membership holds no faculty or teaching_assistant role`);
+    return page(
+      403,
+      'This activity could not be added',
+      `Your school's records do not list you as an instructor or teaching assistant, so Semester cannot add activities to this course for you. Nothing was changed. Your school's help desk can update your role; the reference is <code>${escape(reason)}</code>.`,
+    );
+  }
+  console.error(`lti refused: ${reason} — institutional membership is not active`);
+  return page(
+    403,
+    'Your school access is not active',
+    `Your school has not made Semester available to your account right now, so this course link cannot open it. Nothing was changed. Your school's help desk can explain; the reference is <code>${escape(reason)}</code>.`,
+  );
+}
+
 function escape(s: string): string {
   return s.replace(/[&<>"']/g, (c) =>
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
@@ -158,10 +188,10 @@ async function registration(
   client: ReturnType<typeof db>,
   issuer: string,
   clientId?: string,
-): Promise<(Registration & { tokenUrl: string | null }) | null> {
+): Promise<(Registration & { tokenUrl: string | null; tenantId: string | null }) | null> {
   let q = client
     .from('lti_platform')
-    .select('issuer, client_id, deployment_id, auth_login_url, jwks_url, token_url')
+    .select('issuer, client_id, deployment_id, auth_login_url, jwks_url, token_url, tenant_id')
     .eq('issuer', issuer);
   if (clientId) q = q.eq('client_id', clientId);
   const { data, error } = await q.limit(2);
@@ -184,7 +214,24 @@ async function registration(
     authLoginUrl: r.auth_login_url,
     jwksUrl: r.jwks_url,
     tokenUrl: r.token_url ?? null,
+    tenantId: r.tenant_id ?? null,
   };
+}
+
+/**
+ * Which institutional membership a verified launch belongs to, logged.
+ * `public.lti_launch_membership` does the join; `ltimembership.ts` reads it.
+ */
+async function membershipFor(client: ReturnType<typeof db>, who: Launch): Promise<MembershipJoin> {
+  const { data, error } = await client.rpc('lti_launch_membership', {
+    want_issuer: who.issuer,
+    want_client: who.clientId,
+    want_deployment: who.deploymentId,
+    want_subject: who.subject,
+  });
+  const join = membershipJoin(data, error);
+  console.log(membershipLogLine(join));
+  return join;
 }
 
 /** Both a GET and a POST arrive here in the wild, so read both the same way. */
@@ -609,6 +656,10 @@ Deno.serve(async (req) => {
     console.log(
       `lti launch ok: iss=${who.issuer} deployment=${who.deploymentId} sub=${who.subject} context=${who.contextId ?? '-'} teaches=${who.teaches}`,
     );
+    // Allowed either way; an unbound registration is logged on every launch
+    // so the row that needs its school recorded is never quiet about it.
+    const tenant = launchTenant(reg.tenantId, reg);
+    if (tenant.warning) console.warn(tenant.warning);
 
     /*
      * ── The launch that asks a question ───────────────────────────────────
@@ -625,6 +676,11 @@ Deno.serve(async (req) => {
     if (who.messageType === 'LtiDeepLinkingRequest') {
       const allowed = mayPlace(who);
       if (!allowed.ok) return refuse(allowed.reason, allowed.detail, 403);
+
+      // The LMS says instructor; when the school has a membership for this
+      // person, it must say so too (placementDecision). Narrows, never widens.
+      const placing = placementDecision(await membershipFor(client, who));
+      if (!placing.allow) return membershipRefused(placing.reason);
 
       const settings = readSettings(claims);
       if (!settings.ok) return refuse(settings.reason, settings.detail, 400);
@@ -689,6 +745,40 @@ Deno.serve(async (req) => {
 
     const bound = await accountFor(client, who);
     if (!bound.ok) return refuse(bound.reason, bound.detail, 500);
+
+    /*
+     * ── The institutional membership this launch belongs to ───────────────
+     *
+     * After `accountFor`, because the join reads the `lti_identity` row it
+     * guarantees. Through the registration's school and a *linked* identity
+     * only, never an email or an LMS-sent id
+     * (20260927235930_lti_launch_membership.sql). It reads and never writes a
+     * membership.
+     *
+     * And it limits the session: when the school has a membership for this
+     * person and it is not active, the LMS is not a way around that, and no
+     * session is minted. Before the context and line-item writes below, so a
+     * refused launch leaves nothing behind. `sessionDecision` is the rule; a
+     * launch that never reached a membership goes on as before.
+     */
+    const join = await membershipFor(client, who);
+
+    /*
+     * The entitlement order, in shadow: evaluated and logged, never enforced
+     * (_shared/ltientitlement.ts says why). Before the session gate, so the
+     * log covers every launch the gate is about to judge. A failure here is
+     * logged and changes nothing about the launch.
+     */
+    const facts = join.tenantId
+      ? await client.rpc('lti_launch_entitlement_facts', {
+          want_tenant: join.tenantId,
+          want_issuer: who.issuer,
+          want_subject: who.subject,
+        })
+      : { data: null, error: null };
+    console.log(entitlementLogLine(launchEntitlement(join, readFacts(facts.data, facts.error), new Date())));
+    const session = sessionDecision(join);
+    if (!session.allow) return membershipRefused(session.reason);
 
     /*
      * ── The course, for the school's integration record ───────────────────
