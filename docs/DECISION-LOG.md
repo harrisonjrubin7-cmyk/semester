@@ -136,7 +136,19 @@ production change and needs approval.
 
 ## D-037 · Athlete and supporter sharing: one consent pattern, three tables
 
-**Proposed — needs owner.** (D-030 to D-036 are on their own open branches;
+**Decided by owner 27 Sep 2026 — every recommendation approved.** The
+decisions are:
+- **D1:** a new `athletic_academic_support` role.
+- **D2:** compliance officers and coaches cannot receive a share.
+- **D3:** the recipient sees only "This share has ended", whether the share
+  was revoked or expired.
+- **D4:** a share lasts at most one term, capped at 200 days.
+- **D5:** supporters get `selected` access only.
+- **D6:** adopt the family-invite branch.
+
+D7 (the school's registrar and compliance review of the consent wording)
+stays open until a pilot school gives it. Applying any migration to
+production still needs separate approval. (D-030 to D-036 are on their own open branches;
 D-013–D-029 and D-040 onward belong to the feature-expansion work.)
 
 The full design is in [CONSENT-SHARING-DESIGN.md](CONSENT-SHARING-DESIGN.md).

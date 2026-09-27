@@ -1,7 +1,9 @@
 # Consent design: athlete academic-support sharing and supporter view
 
-**Status: proposed — needs owner decisions (§9). Nothing here is built or
-applied.** Phase 4 of the brief asks for "student-controlled academic-support
+**Status: decided by owner 27 Sep 2026 — every recommendation in §9 approved
+(D1–D6; D7 is the school's review and stays open until the pilot school
+gives it). Built in the order of §8. No migration is applied to production
+without a separate approval.** Phase 4 of the brief asks for "student-controlled academic-support
 sharing" in the Athlete Plan and "student-consented limited sharing only" in
 the Supporter View. This document says how both would work, what already
 exists to build them on, and what has to be decided before any of it ships.
@@ -235,4 +237,4 @@ the role reads nothing; every read is logged; the student can list and revoke.
   compliance office should review the preview and confirmation wording
   against their FERPA consent requirements. This design does not decide that.
 
-Recorded as D-037 (proposed).
+Recorded as D-037.
