@@ -60,9 +60,12 @@ control is the deployment's key and the platform's scope grant.
 
 ## Gaps
 
-- `lti_platform.tenant_id` records which school a deployment belongs to, but
-  it is nullable (registrations installed before it have none) and the launch
-  does not read it yet. So a launch still cannot be joined to an institutional
-  membership or to the entitlement chain's course steps. The next step is to
-  refuse, or at least flag, a launch whose registration has no school.
+- `lti_platform.tenant_id` records which school a deployment belongs to. It is
+  nullable, because registrations installed before it have none, and a launch
+  through such a registration is **allowed, with a warning**: `launchTenant`
+  never refuses, and the function logs `lti launch unbound: …` naming the
+  issuer, client and deployment whose school needs recording. Nothing
+  downstream uses the tenant yet, so a launch still cannot be joined to an
+  institutional membership or to the entitlement chain's course steps. An
+  unbound launch must never be treated as belonging to a default school.
 - Launch refusals are logged, not persisted to an audit table.

@@ -54,7 +54,7 @@ said "create/adapt", and this is the adapt.
 | `tenant_memberships` | `institution_membership` | BUILT |
 | `provisioning_events`, `scim_provisioning_records` | `provisioning_audit_event` (immutable) | BUILT |
 | `scim_group_mappings` | `scim_group_mapping` | BUILT |
-| `lti_platform_configurations`, `lti_deployments` | `lti_platform` (keyed issuer, client, deployment; nullable `tenant_id`) | BUILT; tenant recorded, not yet read |
+| `lti_platform_configurations`, `lti_deployments` | `lti_platform` (keyed issuer, client, deployment; nullable `tenant_id`) | BUILT; unbound launches allowed and logged |
 | `lti_launch_audits` | function logs only | GAP |
 | `lti_context_mappings` | `lti_line_item` (context → line item) | PARTIAL |
 | `account_link_requests` | `lti_link_ticket` (LTI only) | PARTIAL |
@@ -65,10 +65,11 @@ said "create/adapt", and this is the adapt.
 
 ## Known gaps, in the order they matter
 
-1. **LTI launches do not read `lti_platform.tenant_id` yet.** The column exists
-   and is foreign-keyed to `schools`, but it is null for registrations installed
-   before it, and the launch function does not use it. Until it does, LTI
-   context cannot be joined to `institution_membership`. This comes first
+1. **LTI launches are not yet joined to a membership.** `lti_platform.tenant_id`
+   names the school, and a launch reads it. A launch through a registration
+   with no school (one installed before the column) is allowed and logged as
+   `lti launch unbound`. Nothing downstream uses the tenant yet, so LTI context
+   still cannot be joined to `institution_membership`. This comes first
    because the entitlement chain's course steps depend on it.
 2. **No LTI launch audit table.** Refusals are logged by reason code and not
    persisted.

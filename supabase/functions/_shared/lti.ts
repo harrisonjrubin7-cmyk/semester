@@ -442,3 +442,38 @@ function num(v: unknown): number | null {
 function obj(v: unknown): Record<string, unknown> | null {
   return v && typeof v === 'object' && !Array.isArray(v) ? (v as Record<string, unknown>) : null;
 }
+
+/**
+ * Which Semester school a launch is for, or why it is for none.
+ *
+ * `lti_platform.tenant_id` arrived after registrations were already installed,
+ * and it is null on those until an administrator records their school. A
+ * launch through one is **allowed, with a warning** — that was the decision,
+ * and the reason is the one `20260927130000_lti_platform_tenant.sql` gives for
+ * leaving the column nullable: refusing would break every registration already
+ * in use on the day this shipped, for a fact only a person can supply.
+ *
+ * So this never refuses. It returns the school when there is one, and
+ * otherwise the sentence the function logs on every such launch, naming the
+ * registration so the log says exactly which row needs filling in. The
+ * warning goes to the log and nowhere else: the student arriving did nothing
+ * wrong and has nothing to do about it.
+ *
+ * What the null must never become is a default. Nothing downstream may treat
+ * an unbound launch as belonging to some school; it belongs to none, and any
+ * tenant-scoped decision made later must refuse it rather than guess.
+ */
+export function launchTenant(
+  tenantId: string | null | undefined,
+  reg: Pick<Registration, 'issuer' | 'clientId' | 'deploymentId'>,
+): { tenantId: string; warning: null } | { tenantId: null; warning: string } {
+  const id = typeof tenantId === 'string' ? tenantId.trim() : '';
+  if (id) return { tenantId: id, warning: null };
+  return {
+    tenantId: null,
+    warning:
+      `lti launch unbound: registration iss=${reg.issuer} client=${reg.clientId} ` +
+      `deployment=${reg.deploymentId} has no school recorded (lti_platform.tenant_id is null). ` +
+      'Allowed; record the school to bind it.',
+  };
+}
