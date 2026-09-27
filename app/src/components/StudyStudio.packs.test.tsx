@@ -127,3 +127,26 @@ it('follows the instructor’s rules over the student’s own note, and says who
   expect(host.textContent).toContain('Course AI policy for study guides: Not allowed · set by your instructor, published 2026-09-01');
   expect(button('Create study guide').disabled).toBe(true);
 });
+
+it('holds a do-not-use source back from teach-back too, which sends the same selection', async () => {
+  mount();
+  check('Opportunity cost');
+  check('Old answer key');
+  check('Send the selected text');
+  const field = (name: string) => [...host.querySelectorAll('[aria-labelledby=teachback-title] label')].find((l) => l.textContent?.startsWith(name))!.querySelector('input,textarea') as HTMLInputElement;
+  const type = (el: HTMLInputElement | HTMLTextAreaElement, value: string) => {
+    const set = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(el), 'value')!.set!;
+    act(() => {
+      set.call(el, value);
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+  };
+  type(field('Topic'), 'Opportunity cost');
+  type(field('Your explanation'), 'It is what you give up.');
+  mock.ask.mockResolvedValue(JSON.stringify({ covered: [], missing: [], conflicts: [] }));
+  await act(async () => button('Send my explanation and the selected text to check it').click());
+  expect(mock.ask).toHaveBeenCalledTimes(1);
+  const sent = JSON.stringify(mock.ask.mock.calls[0][0]);
+  expect(sent).toContain('The value of the next best alternative.');
+  expect(sent).not.toContain('The answer to question 3');
+});
