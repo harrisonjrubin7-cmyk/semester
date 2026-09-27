@@ -7,6 +7,7 @@
  * localStorage save, the reminders and the account sync.
  */
 
+import { storedWindow } from '../lib/registration-window';
 import {
   createContext,
   useCallback,
@@ -1075,6 +1076,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           classes: classesToNudge(railFor(catalog, at, state.appointments)),
           muted: state.mutedCourses,
           registrar: state.registrar,
+          registrationOpens: storedWindow(),
           /*
            * The four lists `nextPayment` reads, named rather than passed as
            * the whole store. `Held` in `lib/bill.ts` is structural, so this

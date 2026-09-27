@@ -15,6 +15,7 @@ import { guideDeck, mixedDeck } from '../lib/drilldeck';
 import { useKeepAwake } from '../lib/awake';
 import { unitName } from '../lib/unit';
 import { ActionButton, EmptyState, Toggle } from '../components/ui';
+import { QuizFeedback, useQuizFeedback } from '../components/QuizFeedback';
 import { DIMMED_ROW, secondLine } from '../lib/dim';
 
 /** Tap-to-flip drill, with Again / Got it and an end-of-run score. */
@@ -752,6 +753,8 @@ function Matching({
 export function Quiz() {
   const { state, dispatch, courseCode } = useStore();
   const { guide } = useLive(state.guideId);
+  // Cards the student has asked to be left out. See `components/QuizFeedback.tsx`.
+  const { leave, count: leftOutCount, update: updateFeedback } = useQuizFeedback(state.guideId);
   const over = state.quiz.length > 0 && state.quizIdx >= state.quiz.length;
 
   /*
@@ -807,7 +810,7 @@ export function Quiz() {
    */
   useEffect(() => {
     if (state.quiz.length === 0 && allCards(guide).length > 0) {
-      dispatch({ type: 'startQuiz', quiz: buildQuiz(guide, state.quizSeed) });
+      dispatch({ type: 'startQuiz', quiz: buildQuiz(guide, state.quizSeed, leave) });
     }
     // Only ever on arriving at an empty quiz. Depending on the seed would
     // rebuild the deck under the answer being read, since `startQuiz` moves it.
@@ -892,7 +895,7 @@ export function Quiz() {
             <button
               type="button"
               className="btn btn-primary"
-              onClick={() => dispatch({ type: 'startQuiz', quiz: buildQuiz(guide, state.quizSeed) })}
+              onClick={() => dispatch({ type: 'startQuiz', quiz: buildQuiz(guide, state.quizSeed, leave) })}
               style={{ flex: 1, height: 48, letterSpacing: '0.1em', textTransform: 'uppercase' }}
             >
               New ten
@@ -909,6 +912,24 @@ export function Quiz() {
    * cards have not been written from yet. Say that, and offer the guide,
    * rather than leaving a screen that says it is working when it is not.
    */
+  if (!current && leftOutCount > 0) {
+    // The student's own reports are why, and they can undo them from here —
+    // the questions they would undo them from are the ones not being asked.
+    return (
+      <EmptyState
+        title="Too few questions left"
+        body={`You have left ${leftOutCount} ${leftOutCount === 1 ? 'card' : 'cards'} of ${guide.code || 'this course'} out of your quizzes, and what remains is too few to ask four-option questions from.`}
+        action={{
+          label: `Bring back the ${leftOutCount} left out`,
+          onClick: () => {
+            updateFeedback((f) => ({ reports: f.reports.filter((r) => r.courseId !== state.guideId) }));
+            dispatch({ type: 'startQuiz', quiz: buildQuiz(guide, state.quizSeed) });
+          },
+        }}
+      />
+    );
+  }
+
   if (!current) {
     return (
       <EmptyState
@@ -1157,6 +1178,11 @@ export function Quiz() {
               {current.full}
             </div>
           </Blueprint>
+          <QuizFeedback
+            question={current}
+            courseId={state.guideId}
+            missed={current.kind !== 'match' && state.quizPicked !== null && !current.opts[state.quizPicked]?.ok}
+          />
           <ActionButton
             onClick={() => dispatch({ type: 'nextQuestion' })}
             tone="primary"
