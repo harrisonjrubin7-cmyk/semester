@@ -96,7 +96,7 @@ const WRITTEN: Partial<Record<Screen, Explained>> = {
     what: 'The guidebook: how every part of the app works.',
     why: 'Any screen you are unsure about is explained here in plain words.',
     from: 'Written for this app and kept with it.',
-    next: 'Search for the screen or task you have a question about.',
+    next: 'Search for the screen or action you have a question about.',
   },
 };
 

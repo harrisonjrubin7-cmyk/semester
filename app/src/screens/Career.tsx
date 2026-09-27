@@ -1216,7 +1216,7 @@ function Workspace({ storageKey, pathwayKey, careerSkillsGraph }: { storageKey: 
                   onClick={() => {
                     const from = `career-contact:${c.id}`;
                     if (state.tasks.some((t) => t.from === from)) {
-                      setNotice('That follow-up is already a task.');
+                      setNotice('That follow-up is already an action.');
                       return;
                     }
                     dispatch({
@@ -1230,11 +1230,11 @@ function Workspace({ storageKey, pathwayKey, careerSkillsGraph }: { storageKey: 
                         from,
                       },
                     });
-                    setNotice('Added to your tasks. No message was sent.');
+                    setNotice('Added to your actions. No message was sent.');
                   }}
                   style={{ flex: '1 1 auto' }}
                 >
-                  Make it a task
+                  Make it an action
                 </ActionButton>
                 <ActionButton
                   onClick={() =>

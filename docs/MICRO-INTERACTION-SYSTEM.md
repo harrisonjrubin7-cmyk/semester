@@ -56,7 +56,7 @@ meaning on its own.
 | Behaviour | Component | Motion | Without motion | Announced |
 | --- | --- | --- | --- | --- |
 | Autosave: Saving… → Saved | `SaveState` in `components/unity/Status.tsx` | Colour eases over `--motion-save` | Glyph and word change (`…` Saving… → `✓` Saved) | `role="status"`, polite |
-| Offline → Syncing → Synced | `SyncState` / `SaveState` with `syncStatusKey` (`lib/status.ts`); `OfflineStrip` from `ShellBody` | None | Word and glyph: `⊘ Offline`, `↻ Syncing`, `✓ Synced` | Offline and conflict are `role="alert"`, assertive; the rest polite |
+| Offline → Syncing → Synced | `SyncState` / `SaveState` with `syncStatusKey` (`lib/status.ts`); `SyncStrip` under the header (#860) | None | Word and glyph: `⊘ Offline`, `↻ Syncing`, `✓ Synced` | Offline and conflict are `role="alert"`, assertive; the rest polite |
 | Open details | `SourceDrawer` in `UnityLayer.tsx` | Sheet rises 8px and fades in over `--motion-sheet` | Appears in place | Dialog with a name; focus moves in and returns to the opener |
 | Capture | The `+` box (`QuickAdd`), then `QuickCapture` in `UnityLayer.tsx` from "Or keep it as" | Same sheet | Same | Focus lands on the field with the typed line carried over; after Save, `SaveState` "Saved" and a line saying what it was kept as |
 | Upload / long process | `Progress` in `States.tsx` | Bar value transitions over `--motion-progress` | Percentage in words beside a real `<progress>` | Failure is `role="alert"` with Retry |

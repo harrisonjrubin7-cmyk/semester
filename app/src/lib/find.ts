@@ -542,7 +542,7 @@ export function findEverything(
           sub: [t.date ? dueLabel(isoToDate(t.date), now, t.time) : 'Someday', t.time]
             .filter(Boolean)
             .join(' · '),
-          tag: t.done ? 'Done' : 'Task',
+          tag: t.done ? 'Done' : 'Action',
           score: s,
         });
       }
@@ -722,7 +722,7 @@ export function findEverything(
       { label: 'Lessons', hits: lessonHits },
       { label: 'Courses', hits: courses },
       { label: 'Your notes', hits: noteHits },
-      { label: 'Your tasks', hits: taskHits },
+      { label: 'Your actions', hits: taskHits },
       { label: 'Your appointments', hits: apptHits },
       { label: 'Documents', hits: docHits },
       { label: 'Sheets', hits: sheetHits },

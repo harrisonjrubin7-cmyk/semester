@@ -222,7 +222,7 @@ export function morningBrief(m: Morning, code: (id: string) => string): string {
     lines.push(`Also on today: ${m.commitments.map((c) => `${c.time} ${c.title}`).join('; ')}`);
   }
   if (m.tasks.length) {
-    lines.push(`Your own tasks due: ${m.tasks.map((t) => t.title).join('; ')}`);
+    lines.push(`Your own actions due: ${m.tasks.map((t) => t.title).join('; ')}`);
   }
   lines.push(`Overdue and unticked: ${m.overdue}`);
   if (m.next) {
@@ -239,7 +239,7 @@ export function eveningBrief(e: Evening, code: (id: string) => string): string {
     `Was due today and still not ticked: ${
       e.missed.length === 0 ? 'nothing' : e.missed.map((i) => `${code(i.c)} ${i.title}`).join('; ')
     }`,
-    `Your own tasks: ${e.tasksDone} done, ${e.tasksLeft} open`,
+    `Your own actions: ${e.tasksDone} done, ${e.tasksLeft} open`,
     `Cards answered at least once, all time: ${e.cardsSeen}, right ${e.accuracy}% of the time`,
     `Overdue and unticked across the semester: ${e.overdue}`,
     `Due tomorrow: ${

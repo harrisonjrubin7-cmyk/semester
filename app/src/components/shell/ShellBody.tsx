@@ -5,9 +5,6 @@ import { fills, isCanvas, isExempt } from './exempt';
 import { FoldAll, FoldScope } from '../Fold';
 import { mark, now } from '../../lib/timing';
 import { ScreenGuide } from '../unity/ScreenGuide';
-import { OfflineStrip } from '../unity/States';
-import { useOffline } from '../unity/Status';
-import { useStore } from '../../state/store';
 
 /**
  * The body of whichever screen is open, in the right layout for it.
@@ -47,10 +44,6 @@ import { useStore } from '../../state/store';
  */
 export function ShellBody({ screen, children }: { screen: Screen; children: ReactNode }) {
   const cls = isCanvas(screen) ? 'pane-body is-canvas' : 'pane-body';
-  const off = useOffline();
-  // Whether there is an account copy to catch up with once back online.
-  const { sync } = useStore();
-  const syncs = sync.status !== 'off' && sync.status !== 'signed-out';
   /*
    * How long the screen took to draw, for the Data screen's readings.
    *
@@ -99,9 +92,6 @@ export function ShellBody({ screen, children }: { screen: Screen; children: Reac
             paddingRight: 'var(--page-pad)',
           }}
         />
-        {/* In the flow rather than fixed, so it can never sit over a
-            focused control; see `components/unity/States.tsx`. */}
-        {off && <OfflineStrip syncs={syncs} />}
         {isExempt(screen) ? (
           /*
            * The height goes through, for a screen that is the whole box.

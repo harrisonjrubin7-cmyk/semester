@@ -12,7 +12,6 @@ import type { CourseId, CourseModule } from '../../lib/types';
 import { CommandCenter } from './CommandCenter';
 import { OfflineStrip } from './States';
 import { UnityLayer } from './UnityLayer';
-import { ShellBody } from '../shell/ShellBody';
 
 /**
  * The shared components say only what is true.
@@ -103,21 +102,6 @@ describe('the offline strip', () => {
     await mount(<OfflineStrip syncs={false} />);
     expect(text()).toContain('everything is kept on this device');
     expect(text()).not.toMatch(/sync/i);
-  });
-
-  it('says so on every screen when this device has no account copy', async () => {
-    // A test build has no cloud configured, so sync is off — the device-only
-    // case the strip was promising a sync to.
-    await mount(
-      <ShellBody screen="courses">
-        <p>Today</p>
-      </ShellBody>,
-    );
-    expect(store.sync.status === 'off' || store.sync.status === 'signed-out').toBe(true);
-    await act(async () => window.dispatchEvent(new Event('offline')));
-    const strip = host.querySelector('.state-offline')?.textContent ?? '';
-    expect(strip).toContain('You are offline');
-    expect(strip).not.toMatch(/sync/i);
   });
 });
 

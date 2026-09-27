@@ -363,6 +363,65 @@ export function cycles(dir: string): Problem[] {
   return out;
 }
 
+/**
+ * A stylesheet may not overrule the two shape-and-face settings.
+ *
+ * Typeface and Corners are the student's, and both arrive as tokens:
+ * `--font-heading` and `--font-body` from `TYPEFACES` and `BODYFACES`,
+ * `--r-sm/md/lg` from `CORNERS`. A rule that names `Arial` or `22px` instead
+ * looks the same on the machine it was written on and ignores the setting for
+ * everybody else — somebody on Square corners had 22px panels on every
+ * registration and study-studio screen, and somebody who picked a typeface for
+ * legibility had Arial headings there, because `features.css` arrived from a
+ * port that predated both settings and the style rule only read TSX.
+ *
+ * What stays allowed is what no setting speaks to: `inherit`, a monospace
+ * stack for code, the `@font-face` declarations that define the faces, a
+ * hairline (1–2px), a full round (`50%`, `999px`), and the two radii below
+ * whose comments say why they are fixed geometry rather than a card corner.
+ */
+export const SHEET_RADII: { file: string; value: string; why: string }[] = [
+  { file: 'styles/app.css', value: '14px', why: 'the desktop window frame around .device, not a card' },
+  { file: 'styles/app.css', value: '22px', why: 'the chat composer stays round-ended as it grows' },
+];
+
+export function sheetLiterals(dir: string): Problem[] {
+  const out: Problem[] = [];
+  const face = /font-family\s*:\s*([^;}]+)/g;
+  const radius = /border(?:-(?:top|bottom)-(?:left|right))?-radius\s*:\s*([^;}]+)/g;
+  for (const f of sheets(dir)) {
+    const rel = f.path.slice(f.path.indexOf('/src/') + 5);
+    const code = withoutComments(f.text);
+    for (const m of code.matchAll(face)) {
+      const v = m[1].trim();
+      if (/^(var\(|inherit|ui-monospace)/.test(v)) continue;
+      // Inside `@font-face` the property names a face rather than choosing one.
+      const before = code.slice(0, m.index);
+      if (/@font-face\s*\{[^}]*$/.test(before)) continue;
+      out.push({
+        file: rel,
+        line: lineOf(code, m.index),
+        found: m[0],
+        says: 'a named face overrules the Typeface setting — use `var(--font-body)` or `var(--font-heading)`.',
+      });
+    }
+    for (const m of code.matchAll(radius)) {
+      for (const px of m[1].matchAll(/(\d+(?:\.\d+)?)px/g)) {
+        const n = Number(px[1]);
+        if (n <= 2 || n >= 999) continue;
+        if (SHEET_RADII.some((a) => a.file === rel && a.value === `${px[1]}px`)) continue;
+        out.push({
+          file: rel,
+          line: lineOf(code, m.index),
+          found: m[0],
+          says: `${px[0]} overrules the Corners setting — use \`var(--r-md)\` for a control, \`var(--r-lg)\` for a card, \`999px\` for a pill.`,
+        });
+      }
+    }
+  }
+  return out;
+}
+
 /** The multipliers, read straight out of the stylesheet. */
 export function multipliers(css: string): Problem[] {
   const out: Problem[] = [];

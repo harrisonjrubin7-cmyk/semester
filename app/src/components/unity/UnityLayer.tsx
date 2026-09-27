@@ -147,7 +147,7 @@ export function SourceDrawer({ detail }: { detail: SourceDetail }) {
 
 /** What a capture can be. Each lands in a store the app already has. */
 export const CAPTURE_KINDS = [
-  { id: 'task', label: 'Task, no date' },
+  { id: 'task', label: 'Action, no date' },
   { id: 'note', label: 'Course note' },
   { id: 'source', label: 'Source' },
   { id: 'session', label: 'Study session' },

@@ -228,7 +228,7 @@ export function DayReport({ onGrain }: { onGrain: (grain: 'week') => void }) {
                   <ItemRow key={i.id} title={`${code(i.c)} · ${i.title}`} trailing="done" />
                 ))}
                 {pm.tasksDone > 0 && (
-                  <ItemRow title={`${pm.tasksDone} of your own tasks`} trailing="done" />
+                  <ItemRow title={`${pm.tasksDone} of your own actions`} trailing="done" />
                 )}
               </>
             )}
@@ -263,7 +263,7 @@ export function DayReport({ onGrain }: { onGrain: (grain: 'week') => void }) {
           </Group>
 
           <Group header="Standing" framed={false}>
-            <ItemRow title={`${pm.tasksLeft} of your own tasks still open`} />
+            <ItemRow title={`${pm.tasksLeft} of your own actions still open`} />
             {pm.cardsSeen > 0 && (
               <ItemRow
                 title={`${pm.cardsSeen} cards drilled`}

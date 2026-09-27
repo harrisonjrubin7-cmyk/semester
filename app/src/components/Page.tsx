@@ -14,6 +14,22 @@ import { useFolding } from './Fold';
 const Inside = createContext(false);
 
 /**
+ * The sentence that says what the current screen is for, from the registry.
+ *
+ * Every destination in `lib/nav.ts` carries a `blurb` — one line, in the
+ * second person, in the school's own words through `saysFor` — and for most
+ * of the app's life only 21 of 78 screens showed it; the rest opened on a
+ * heading and a list, and the one sentence that said why you would be here sat
+ * in the directory. `App.tsx` provides it around whichever screen is showing,
+ * and `Page` draws it when the screen has not said something of its own.
+ *
+ * A context rather than a store read, so `Page` still renders in a test with
+ * no store around it, and so the registry lookup happens once, at the one
+ * place that knows which screen this is.
+ */
+export const PagePurpose = createContext<string | undefined>(undefined);
+
+/**
  * The frame every screen sits in.
  *
  * Fifty-nine screens each opened with `<div style={{ padding: 18 }}>` and
@@ -73,8 +89,14 @@ export function Page({
   style,
   folds = true,
 }: {
-  /** What this screen is for, in a sentence or two. Under the heading. */
-  blurb?: ReactNode;
+  /**
+   * What this screen is for, in a sentence or two. Under the heading.
+   *
+   * Left out, the screen's registry sentence is drawn instead (`PagePurpose`).
+   * `null` draws none: for a screen whose body already opens by saying what
+   * it is for, where a second sentence would say it twice.
+   */
+  blurb?: ReactNode | null;
   /** Buttons belonging to this screen, above its content. */
   actions?: ReactNode;
   /** The screen's body. */
@@ -114,6 +136,10 @@ export function Page({
   folds?: boolean;
 }) {
   const nested = useContext(Inside);
+  const purpose = useContext(PagePurpose);
+  // Only the outermost frame takes the default: a sub-view's frame is a
+  // mistake the warning below reports, and it should not repeat the sentence.
+  const said = blurb === undefined ? (nested ? undefined : purpose) : blurb;
   if (nested && import.meta.env.DEV) {
     // Not thrown: a warning is enough to find it, and throwing would take
     // out a screen over a layout mistake.
@@ -148,7 +174,7 @@ export function Page({
   return (
     <Inside.Provider value>
     <div className={className} style={{ padding: wide ? '0' : 'var(--page-pad)', ...style }}>
-      {blurb !== undefined && (
+      {said != null && said !== false && (
         <div
           style={{
             fontSize: 'var(--type-sm)',
@@ -166,7 +192,7 @@ export function Page({
             ...side,
           }}
         >
-          {blurb}
+          {said}
         </div>
       )}
 

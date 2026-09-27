@@ -22,7 +22,7 @@ components existed before this work; the rest were added beside them in
 | Determinate progress | `Progress` | `unity/States.tsx` | New | Update and Import (reading several files); Travel pack download |
 | Named steps (AI generation) | `StepStatus` | `unity/States.tsx` | New | Study Studio generation; Update reading one file |
 | Permission changed | `PermissionNotice` | `unity/States.tsx` | New | Support access created and revoked; Family permission plan and item saved; Share course after sending |
-| Offline | `OfflineStrip` | `unity/States.tsx` | New | Every screen while offline, via `ShellBody` |
+| Offline | `OfflineStrip` | `unity/States.tsx` | New | Not placed: #860's `SyncStrip` under the header says offline on every screen |
 | Save / sync | `SaveState`, `SyncState` | `unity/Status.tsx` | New | `SaveState` in Write, Mine's note editor, Settings → Assistant, the Capture sheet, and context bars that pass `save` |
 
 ## When to use which
@@ -151,11 +151,13 @@ carries).
 "You are offline. You can keep working; changes sync when you are back." — or,
 with `queued`, how many changes will sync. Where there is no account copy
 (sync off in the build, or signed out) it says "everything is kept on this
-device" instead and promises no sync (`syncs`, from `ShellBody`; held by
-`components/unity/honesty.test.tsx`). `role="status"`. Rendered by
-`ShellBody` in the flow above the screen (not fixed, so it can never cover a
-focused control) whenever `useOffline()` reports no connection. It does not
-yet receive a queued count.
+device" instead and promises no sync (`syncs`; held by
+`components/unity/honesty.test.tsx`). `role="status"`.
+
+**Not placed.** It was drawn by `ShellBody` until #860 added `SyncStrip`
+under the header in every layout, which says offline, queued changes, a
+conflict or a failed sync and links to Account. Two offline lines on one
+screen would be one too many, so the shared strip stepped aside.
 
 ### Save and sync — `SaveState`, `SyncState`
 

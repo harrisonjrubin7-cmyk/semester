@@ -25,7 +25,7 @@ store.
 | Save and sync | `SaveState`, `SyncState` | `screens/Write.tsx`, the note editor in `screens/Mine.tsx`, `screens/settings/Assistant.tsx`, the Capture sheet, and the context bars that pass `save` |
 | Quick Capture | `QuickCapture` via `showCapture()` | The `+` box's "Or keep it as" row (`KeepItAs` in `QuickAdd`) |
 | About this screen | `ScreenGuide` | Every screen, via `ShellBody` |
-| Offline strip | `OfflineStrip` | Every screen while offline, via `ShellBody` |
+| Offline strip | `OfflineStrip` | Not placed — `SyncStrip` (#860) says offline under the header on every screen |
 | Command centre, first goal | `CommandCenter`, `FirstGoal` | Today |
 | Focus bar | `FocusBar` | All three layouts, in Focused mode |
 | Visibility | `Visibility` | Only inside Quick Capture (locked to "Only me") |
@@ -199,14 +199,14 @@ palette's "Capture something" opens the same `+` box.
 
 | Kind | Label | Where it lands |
 | --- | --- | --- |
-| `task` | Task, no date | `addTask` — the task list, attached to the course if one is chosen |
+| `task` | Action, no date | `addTask` — the task list, attached to the course if one is chosen |
 | `note` | Course note | `keepNote`, body "Captured as: Course note" |
 | `source` | Source | `keepNote`, "Captured as: Source" |
 | `session` | Study session | `addTimer`, "Study: …", 25 minutes |
 | `advisor` | Question for advisor | `keepNote`, "Captured as: Question for advisor" |
 | `idea` | Idea | `keepNote`, "Captured as: Idea" |
 
-"Task, no date" says what the kind is for: a dated item belongs to the `+`
+"Action, no date" says what the kind is for: a dated item belongs to the `+`
 box itself.
 
 - Attaches to the course you are standing in — read through

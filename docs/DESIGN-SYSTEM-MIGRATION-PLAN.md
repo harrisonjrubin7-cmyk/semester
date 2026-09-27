@@ -33,7 +33,7 @@ The first pass, which wired the shared layer in:
 | `app/src/main.tsx` | Imports `tokens.css` and `unity.css` after the existing sheets |
 | `app/src/App.tsx` | `UnityLayer` in each of the three layouts; screen fallback uses `LoadingState`; sets `data-workspace` on the root |
 | `app/src/styles/app.css` | Focus ring reads the focus tokens at the same values |
-| `app/src/components/shell/ShellBody.tsx` | `ScreenGuide` last on every screen — after `FullBleed` on exempt screens, in `.fill-with-guide` as a sheet on `FILLS`; `OfflineStrip` while offline |
+| `app/src/components/shell/ShellBody.tsx` | `ScreenGuide` last on every screen — after `FullBleed` on exempt screens, in `.fill-with-guide` as a sheet on `FILLS` |
 | `app/src/components/Command.tsx` | `QuickActions` on the empty Search page |
 | `app/src/components/QuickAdd.tsx` | The "Or keep it as" row (`KeepItAs`) |
 | `app/src/lib/keys.ts`, `components/Keys.tsx` | ⌘K / Ctrl+K as the one modified-key exception; shown on the help sheet |
@@ -102,8 +102,7 @@ What is left, highest value and lowest risk first.
    something can actually be shared.
 3. **Source & details on more rows.** Calendar events, Path requirements,
    Campus services.
-4. **The standard states' remaining gaps.** Wire `OfflineStrip`'s queued
-   count; add `report` to AI output's Source & details; a field-level error
+4. **The standard states' remaining gaps.** Add `report` to AI output's Source & details; a field-level error
    pattern.
 5. **Semantic tokens in shared primitives.** `.btn`, `.input`, `.blueprint`,
    `.kicker` in `app.css` — one class per commit.

@@ -196,7 +196,7 @@ export const groupwork: Provide = (look) => {
   const { state, catalog } = look;
   const mine = state.tasks.filter((t) => !t.done && t.courseId);
   return {
-    summary: `Group work — ${mine.length} of your own undone tasks are filed against a course.`,
+    summary: `Group work — ${mine.length} of your own undone actions are filed against a course.`,
     visible: mine.slice(0, 25).map((t) => ({
       id: t.id,
       title: t.title,

@@ -109,6 +109,10 @@ create table if not exists auth.users (
   email              text,
   email_confirmed_at timestamptz,
   raw_user_meta_data jsonb       default '{}'::jsonb,
+  -- Read, not only written: `lti_launch_entitlement_facts` asks whether an
+  -- account's provider is `sso:…`, the marker auth.ts trusts. A SQL function
+  -- is checked when it is created, so without the column the migration fails.
+  raw_app_meta_data  jsonb       default '{}'::jsonb,
   created_at         timestamptz default now(),
   updated_at         timestamptz default now()
 );

@@ -177,7 +177,7 @@ describe('Account: the sync lines', () => {
     // `SYNC_WORDS`, rather than the shared `SyncState`.
     await signedIn({ status: 'synced', at: Date.now(), error: '' }, async () => 'Up to date.');
     const line = [...host.querySelectorAll('[role="status"]')].find((n) => /Synced/.test(n.textContent ?? ''));
-    expect(line?.textContent).toMatch(/Synced .* · \d+ courses? · \d+ added · \d+ notes · \d+ tasks/);
+    expect(line?.textContent).toMatch(/Synced .* · \d+ courses? · \d+ added · \d+ notes · \d+ actions/);
     expect(buttons().filter((b) => b.textContent === 'Check now')).toHaveLength(1);
   });
 

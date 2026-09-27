@@ -261,6 +261,13 @@ declare
     -- 20260928010000: the caller's own live capabilities, same predicate as
     -- private.has_capability, so staff screens can open for staff.
     'my_capabilities()',
+    -- 20260928021700: the only doors to `mentor_requests` — no API role holds
+    -- insert, update or delete on it. Send to an offer the caller can see;
+    -- the recipient accepts or declines, the requester withdraws, capacity is
+    -- checked at acceptance; either end forgets every request they are in.
+    'answer_mentor_request(want uuid, want_status text)',
+    'forget_my_mentor_requests()',
+    'request_mentor(want_kind text, want_recipient uuid, want_cohort text, want_name text, want_topics text[], want_note text)',
     'open_help_request(want uuid)',
     'send_help_request(want_destination uuid, want_question text, want_context jsonb)',
     'withdraw_help_request(want uuid)',

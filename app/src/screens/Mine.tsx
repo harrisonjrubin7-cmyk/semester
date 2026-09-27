@@ -153,7 +153,7 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
             if (e.key === 'Enter') save();
             if (e.key === 'Escape') setEditing(false);
           }}
-          aria-label="What the task is"
+          aria-label="What the action is"
           // eslint-disable-next-line jsx-a11y/no-autofocus
           autoFocus
           style={{ height: 40, fontSize: 'var(--type-md)', width: '100%' }}
@@ -463,7 +463,7 @@ function Tasks({ rows }: { rows?: PersonalTask[] }) {
             onKeyDown={submitOnEnter(add, () => setOpen(false))}
             placeholder="What needs doing?"
             style={{ height: 42, fontSize: 'var(--type-lg)' }}
-            aria-label="Task"
+            aria-label="Action"
             // eslint-disable-next-line jsx-a11y/no-autofocus
             autoFocus
           />
@@ -512,7 +512,7 @@ function Tasks({ rows }: { rows?: PersonalTask[] }) {
               onClick={add}
               style={{ flex: 1, height: 42, textTransform: 'uppercase', letterSpacing: '0.1em' }}
             >
-              Add task
+              Add action
             </button>
           </div>
         </Blueprint>
@@ -521,21 +521,21 @@ function Tasks({ rows }: { rows?: PersonalTask[] }) {
           onClick={() => setOpen(true)}
           tone="primary"
         >
-          + New task
+          + New action
         </ActionButton>
       )}
 
       {state.tasks.length === 0 && !open && (
         <EmptyState
           title="Nothing of your own yet."
-          body="Tasks you add here are yours — they sit alongside coursework on Today without pretending to be it."
+          body="Actions you add here are yours — they sit alongside coursework on Today without pretending to be it."
         />
       )}
 
       {groups.map((g) =>
         g.tasks.length === 0 ? null : (
           <div key={g.label}>
-            <Folding name="Tasks">
+            <Folding name="Actions">
             <SectionLabel>{g.label}</SectionLabel>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
               {g.tasks.map((t) => (
@@ -1443,7 +1443,7 @@ export function Mine() {
       <>
       <Segmented
         options={[
-          { id: 'tasks', label: 'Tasks' },
+          { id: 'tasks', label: 'Actions' },
           { id: 'appointments', label: 'Events' },
           { id: 'notes', label: 'Notes' },
           { id: 'files', label: 'Files' },

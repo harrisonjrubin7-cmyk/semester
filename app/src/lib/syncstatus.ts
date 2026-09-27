@@ -116,3 +116,64 @@ export function pushWait(lost: number, failed: number): number {
   const fail = failed === 0 ? PUSH_SETTLE_MS : Math.min(300_000, PUSH_SETTLE_MS * 2 ** failed);
   return Math.max(race, fail);
 }
+
+/**
+ * The one line under the header, for the statuses worth one — or null.
+ *
+ * `SYNC_WORDS` said all of this already, but only on Account and the soft
+ * bar's card, so a student offline with edits waiting, or with two devices'
+ * versions of a record waiting on a choice, was told nothing unless they went
+ * looking. The state-design brief's rule is a quiet persistent status for the
+ * conditions that matter and silence for the rest: syncing, synced and signed
+ * out are true and routine, and stay off the screen.
+ *
+ * A failure always says the work is still here. "Sync failed" on its own is
+ * the sentence the brief lists under *avoid* — it leaves the student to guess
+ * whether anything was lost.
+ */
+export interface SyncLine {
+  title: string;
+  detail: string;
+  /** The app's one warning colour, or the panel. Offline is a condition, not a fault. */
+  warn: boolean;
+  /** What the button says, or empty for none. It opens Account, where the whole story is. */
+  act: string;
+}
+
+const SAFE = 'Your work is still saved on this device.';
+
+export function syncLine(status: SyncStatus, error: string, online = true): SyncLine | null {
+  /*
+   * No account to sync to, and no connection. The store's status is about
+   * the account, so it stays "signed-out" or "off" here and says nothing —
+   * but the student still needs to know, and must not be promised a sync
+   * that will not happen. No button: Account has nothing more to say.
+   */
+  if (!online && (status === 'off' || status === 'signed-out')) {
+    return {
+      title: 'Offline',
+      detail: 'Everything here is saved on this device. Anything that needs the internet waits for the connection.',
+      warn: false,
+      act: '',
+    };
+  }
+  switch (status) {
+    case 'offline':
+      return { title: 'Offline', detail: SYNC_WORDS.offline.sentence, warn: false, act: 'Details' };
+    case 'queued':
+      return { title: 'Offline · changes waiting', detail: SYNC_WORDS.queued.sentence, warn: true, act: 'Details' };
+    case 'conflict':
+      return { title: 'Sync conflict', detail: SYNC_WORDS.conflict.sentence, warn: true, act: 'Details' };
+    case 'review':
+      return { title: 'Two versions need your review', detail: SYNC_WORDS.review.sentence, warn: true, act: 'Choose' };
+    case 'error': {
+      // The first paragraph only: the rest of an explained failure is a
+      // reference code and advice that belong on Account, not in a strip.
+      const said = (error.split('\n\n')[0] || SYNC_WORDS.error.sentence).trim();
+      const safe = /safe on this device|saved on this device/i.test(error);
+      return { title: 'Couldn’t sync yet', detail: safe ? `${said} ${error.split('\n\n').slice(1).join(' ')}`.trim() : `${said} ${SAFE}`, warn: true, act: 'Details' };
+    }
+    default:
+      return null;
+  }
+}

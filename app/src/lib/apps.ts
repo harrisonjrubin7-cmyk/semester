@@ -38,6 +38,7 @@
 
 import { readOrder, tilesFor } from './launcher';
 import { GROUPS, type Destination, type Group } from './nav';
+import { NAV_AREAS, navAreaOf, type NavAreaInfo } from './navareas';
 import { DEFAULT_ROLE, type Role } from './role';
 import type { Capabilities } from './school';
 
@@ -75,6 +76,36 @@ export function appShelves(
 }
 
 /** How many screens that came to, for the line under the heading. */
-export function appCount(shelves: AppShelf[]): number {
+export function appCount(shelves: { apps: Destination[] }[]): number {
   return shelves.reduce((n, shelf) => n + shelf.apps.length, 0);
+}
+
+export interface AppSection {
+  area: NavAreaInfo;
+  apps: Destination[];
+}
+
+/**
+ * The same apps, headed by navigation area instead of by shelf.
+ *
+ * This is what the launcher draws. A shelf is a filing decision — "Beyond",
+ * "Data" — and the launcher is where somebody goes when they know what they
+ * want to do but not where it lives, so its headings are the seven questions
+ * in `lib/navareas.ts`: Today, Plan, Learn, Help, Campus, Progress, You.
+ *
+ * Built from `appShelves` rather than beside it, so the school gate, the role
+ * gate and the student's own tile order all still apply. Within an area the
+ * apps keep the order they had across the shelves, so somebody who dragged
+ * Essay to the front of Make finds it ahead of Deck here too.
+ */
+export function appSections(
+  caps: Capabilities,
+  saved: string | undefined,
+  role: Role = DEFAULT_ROLE,
+): AppSection[] {
+  const every = appShelves(caps, saved, role).flatMap((shelf) => shelf.apps);
+  return NAV_AREAS.map((area) => ({
+    area,
+    apps: every.filter((d) => navAreaOf(d.screen) === area.id),
+  })).filter((section) => section.apps.length > 0);
 }

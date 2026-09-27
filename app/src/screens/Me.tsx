@@ -151,7 +151,7 @@ export function Me() {
       <Segmented
         options={[
           { id: 'you', label: 'You' },
-          { id: 'task', label: 'By task' },
+          { id: 'task', label: 'By goal' },
         ]}
         value={tab}
         onChange={(next) => dispatch({ type: 'setMeTab', tab: next })}
