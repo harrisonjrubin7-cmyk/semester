@@ -1140,6 +1140,10 @@ export const KEPT_TABLES: KeptTable[] = [
     why: 'The list of universities the app recognises is not a record about you — no account writes a row in it, and only an administrator can. Leaving is not a way to remove a university, and the entry saying which one you are at lives on your own profile, which does go.',
   },
   {
+    table: 'opportunities',
+    why: 'A job, internship or scholarship listing an office or employer published is an institutional notice, not a record about you. If you submitted one on behalf of an office, it stays for the students it was meant for, with your account no longer named as its publisher.',
+  },
+  {
     table: 'help_destinations',
     why: 'The offices your university chose to reach through Semester — their names, links and hours — are institutional configuration, not a record about you. Your requests to them go with your account; the list of offices stays.',
   },
