@@ -127,10 +127,18 @@ put back by a pull (`takenTicks`), for the same reason as the settings.
 `access` (Access and focus) and `pronounce` (how a name is said), added on
 `main` since the settings list was written, are on it.
 
+**Removals sync too.** The per-key merge only adds and overwrites, so a key
+removed on one device — a grade cleared, a link unsaved — used to survive on
+the other and be pushed straight back. Now a key the base has, the account
+no longer carries, and this device still holds unchanged is removed here
+before the merge (`removedThere`, the `dropTicks` action). Removed there and
+changed here is a conflict, offered with "Not set" on the other side;
+keeping that removes it. A key added here and not yet pushed was never in
+the base and is left alone.
+
 Not covered: a device with no base yet — before its first sync — where every
-difference would look like a conflict, so none are reported. And a key
-*removed* on one device still reappears from the other, as it always has:
-the per-key merge only adds and overwrites.
+difference would look like a conflict, so none are reported, and nothing is
+removed.
 
 ## Gaps against the spec, in order of risk
 

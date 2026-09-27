@@ -113,6 +113,20 @@ export function reducer(state: State, action: Action): State {
     return { ...state, [action.field]: next } as State;
   }
 
+  // Keys another device removed, removed here — the one thing the per-key
+  // merge cannot do. Only per-key maps, and only the keys named.
+  if (action.type === 'dropTicks') {
+    let next: State | null = null;
+    for (const [field, keys] of Object.entries(action.removals)) {
+      const map = (state as unknown as Record<string, unknown>)[field];
+      if (strategyFor(field) !== 'ticks' || typeof map !== 'object' || map === null) continue;
+      const kept = { ...(map as Record<string, unknown>) };
+      for (const k of keys) delete kept[k];
+      next = { ...(next ?? state), [field]: kept } as State;
+    }
+    return next ?? state;
+  }
+
   const undoable = undoableFor(action.type);
   const before = undoable ? snapshot(state, undoable, Date.now()) : null;
 

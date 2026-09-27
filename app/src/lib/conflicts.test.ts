@@ -9,6 +9,7 @@ import {
   addReview,
   baseOf,
   keptHere,
+  removedThere,
   takenTicks,
   tickConflictsIn,
   conflictsIn,
@@ -276,5 +277,47 @@ describe('restoreTick', () => {
 
   it('writes nothing into a field that is not a per-key map', () => {
     expect(reducer(state, { type: 'restoreTick', field: 'notes', key: '0', value: 'x' })).toBe(state);
+  });
+});
+
+describe('a key removed on the other device', () => {
+  const agreedMaps = { grades: { econ: 'B', psci: 'A' } };
+  const base4 = baseOf(agreedMaps);
+
+  it('is removed here too, when this device has not touched it since', () => {
+    // The laptop cleared the econ grade and pushed; this device still has
+    // the agreed B. The merge alone would keep it and push it back.
+    expect(removedThere(agreedMaps, { grades: { psci: 'A' } }, base4)).toEqual({ grades: ['econ'] });
+  });
+
+  it('is not removed here when this device changed it since — that is a conflict, and offered', () => {
+    const local = { grades: { econ: 'B+', psci: 'A' } };
+    const remote = { grades: { psci: 'A' } };
+    expect(removedThere(local, remote, base4)).toEqual({});
+    const found = tickConflictsIn(local, remote, base4);
+    expect(found.map((c) => c.key)).toEqual(['ticks/grades/econ']);
+    // The account does not carry it, so the merge leaves this device's in use.
+    expect(found[0]).toMatchObject({ mine: 'B+', theirs: undefined, kept: 'mine' });
+  });
+
+  it('is never a key this device added and has not pushed — the control', () => {
+    expect(removedThere({ grades: { ...agreedMaps.grades, hist: 'C' } }, agreedMaps, base4)).toEqual({});
+  });
+
+  it('removes nothing without a base, or from a map the base never saw', () => {
+    expect(removedThere(agreedMaps, { grades: {} }, null)).toEqual({});
+    expect(removedThere({ yours: { econ: 'x' } }, { yours: {} }, base4)).toEqual({});
+  });
+});
+
+describe('dropTicks', () => {
+  const state = { ...DEFAULT_PERSISTED, grades: { econ: 'B', psci: 'A' }, screen: 'home' } as unknown as State;
+
+  it('removes the keys named, and only those', () => {
+    expect(reducer(state, { type: 'dropTicks', removals: { grades: ['econ'] } }).grades).toEqual({ psci: 'A' });
+  });
+
+  it('touches nothing that is not a per-key map', () => {
+    expect(reducer(state, { type: 'dropTicks', removals: { notes: ['0'] } })).toBe(state);
   });
 });

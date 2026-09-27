@@ -287,3 +287,40 @@ describe('a per-key map', () => {
     expect(store.review).toEqual([]);
   });
 });
+
+describe('a key removed on the other device', () => {
+  function devicesWith(mine: Record<string, string>, theirs: Record<string, string>, agreedGrades: Record<string, string>) {
+    localStorage.setItem(
+      'semester.v1',
+      JSON.stringify({ schemaVersion: 6, seenOnboarding: true, registered: true, grades: mine }),
+    );
+    localStorage.setItem(SEEN_KEY, JSON.stringify({ state: 's0', courses: {} }));
+    localStorage.setItem(BASE_KEY, JSON.stringify(baseOf({ grades: agreedGrades })));
+    pull.mockResolvedValue({ state: { grades: theirs }, courses: [], updated: 0, seen: { state: 's1', courses: {} } });
+  }
+
+  it('goes here too, and the push after it does not bring it back', async () => {
+    devicesWith({ econ: 'B', psci: 'A' }, { psci: 'A' }, { econ: 'B', psci: 'A' });
+    await mount();
+    expect(store.state.grades).toEqual({ psci: 'A' });
+    expect(store.review).toEqual([]);
+    await wait(3_000);
+    const sent = (push.mock.calls.at(-1)![1] as { grades: Record<string, string> }).grades;
+    expect(sent).toEqual({ psci: 'A' });
+  });
+
+  it('a key added here and not yet pushed stays — the control', async () => {
+    devicesWith({ econ: 'B', hist: 'C' }, { econ: 'B' }, { econ: 'B' });
+    await mount();
+    expect(store.state.grades).toEqual({ econ: 'B', hist: 'C' });
+  });
+
+  it('removed there and changed here is offered, and keeping theirs removes it', async () => {
+    devicesWith({ econ: 'B+' }, {}, { econ: 'B' });
+    await mount();
+    expect(store.state.grades.econ).toBe('B+');
+    expect(store.review.map((c) => c.key)).toEqual(['ticks/grades/econ']);
+    await act(async () => store.resolve('ticks/grades/econ', 'theirs'));
+    expect('econ' in store.state.grades).toBe(false);
+  });
+});

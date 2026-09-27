@@ -2685,6 +2685,8 @@ export type Action =
   | { type: 'restoreSettings'; values: Record<string, unknown> }
   /** One key of a per-key map, as the student chose it; `undefined` removes the key. */
   | { type: 'restoreTick'; field: string; key: string; value: unknown }
+  /** Keys another device removed from per-key maps, removed here too. See `removedThere`. */
+  | { type: 'dropTicks'; removals: Record<string, string[]> }
   | { type: 'restore'; persisted: Partial<Persisted> }
   /**
    * The browser moved, so the app follows.

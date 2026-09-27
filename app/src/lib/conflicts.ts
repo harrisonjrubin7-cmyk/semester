@@ -329,6 +329,41 @@ export function takenTicks(remote: Record<string, unknown>, base: Base | null): 
   return out;
 }
 
+/**
+ * The keys the account removed that this device still has and has not
+ * touched since — which the merge cannot remove by itself.
+ *
+ * The per-key merge lays the account's map over this device's, so it can add
+ * and overwrite a key and never take one away. A grade cleared on the laptop
+ * went up as a map without it; the phone pulled, kept its own copy of the
+ * key, and pushed it straight back. With the base it has an answer: a key the
+ * base has, the account no longer carries, and this device still holds
+ * unchanged was removed over there, and goes here too.
+ *
+ * A key this device changed since the base is not in here — removed there and
+ * changed here is a conflict, and `tickConflictsIn` offers it. A key the base
+ * never had was added here and is not the account's to remove.
+ */
+export function removedThere(
+  local: Record<string, unknown>,
+  remote: Record<string, unknown>,
+  base: Base | null,
+): Record<string, string[]> {
+  const out: Record<string, string[]> = {};
+  if (!base) return out;
+  for (const [field, theirsMap] of Object.entries(remote)) {
+    if (strategyFor(field) !== 'ticks' || !isMap(theirsMap) || base[key('ticks', field)] === undefined) continue;
+    const mineMap = local[field];
+    if (!isMap(mineMap)) continue;
+    const gone = Object.keys(mineMap).filter((k) => {
+      const agreed = base[`ticks/${field}/${k}`];
+      return agreed !== undefined && !(k in theirsMap) && tickPrint(mineMap, k) === agreed;
+    });
+    if (gone.length > 0) out[field] = gone;
+  }
+  return out;
+}
+
 /** Only the group's fields the copy actually carries. */
 function pickPresent(from: Record<string, unknown>, group: readonly string[]): Record<string, unknown> {
   const out: Record<string, unknown> = {};

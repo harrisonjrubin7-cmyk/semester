@@ -89,6 +89,7 @@ import {
   takenTicks,
   tickConflictsIn,
   readReview,
+  removedThere,
   writeBase,
   writeReview,
   type Conflict,
@@ -927,6 +928,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           // ticked here and not yet pushed stays ticked. See `takenTicks`.
           ...takenTicks(theirs as Record<string, unknown>, agreedOn),
         } as typeof theirs;
+        /*
+         * And the keys the account removed that this device still holds
+         * unchanged: removed here first, because the merge that follows can
+         * only add and overwrite a key, never take one away. See
+         * `removedThere`.
+         */
+        const gone = removedThere(here, theirs as Record<string, unknown>, agreedOn);
+        if (Object.keys(gone).length > 0) dispatch({ type: 'dropTicks', removals: gone });
         dispatch({ type: 'hydrate', persisted: taken });
         markSeen(remote.seen);
         // The version both sides now agree on is the account's — including
