@@ -1,5 +1,7 @@
 import {StudyJournal} from '../components/StudyJournal';
 import { StudyStudio } from '../components/StudyStudio';
+import { Toolkit } from '../components/toolkit/Toolkit';
+import { on, TOOLKIT_FLAGS } from '../lib/toolkit/flags';
 import { allCards } from '../data/catalog';
 import { lazy, Suspense, useMemo, useState } from 'react';
 import { useNow, useStore } from '../state/store';
@@ -105,7 +107,7 @@ const PLAN_ROWS = 8;
 export function Study({
   adaptiveLearning = EXPERIENCE_FLAGS.adaptiveLearning !== 'off',
 }: { adaptiveLearning?: boolean } = {}) {
-  const { state, dispatch, catalog, tint } = useStore();
+  const { state, dispatch, catalog, tint, account } = useStore();
   const now = useNow();
   /**
    * Courses whose full list of ways has been asked for.
@@ -121,6 +123,7 @@ export function Study({
   /** Whether the ranking below the plan is showing. */
   const [showRest, setShowRest] = useState(false);
   const [studio, setStudio] = useState(false);
+  const [toolkit, setToolkit] = useState(false);
   const [studioCourse, setStudioCourse] = useState(state.guideId);
   const selectedStudioCourse = catalog.courses.find(c=>c.id===studioCourse)?.id ?? catalog.courses[0]?.id;
   const rowTwelve = useRowStyle(12);
@@ -266,6 +269,12 @@ export function Study({
   if (catalog.empty) return <FirstRun where="to study" />;
   const tab = state.studyTab;
 
+  // Behind `VITE_AI_TOOLKIT`, off unless an environment names a state. See `lib/toolkit/flags.ts`.
+  if (toolkit && on(TOOLKIT_FLAGS.aiToolkit))
+    return (
+      // Keyed by account so a different student signing in starts from their own toolkit, with no panel state carried over.
+      <Toolkit key={account?.id || 'device'} accountId={account?.id} courses={catalog.courses} onOpen={(screen) => dispatch({ type: 'go', screen })} onClose={() => setToolkit(false)} />
+    );
   if(studio && selectedStudioCourse) return <><div className="studio-course-picker"><label>Course<select value={selectedStudioCourse} onChange={e=>setStudioCourse(e.target.value)}>{catalog.courses.map(c=><option key={c.id} value={c.id}>{c.code} · {c.name}</option>)}</select></label></div><StudyStudio key={selectedStudioCourse} courseId={selectedStudioCourse} onClose={()=>setStudio(false)}/></>;
   return (
     <Page>
@@ -286,6 +295,7 @@ export function Study({
         size, saying the same thing.
       */}
       <div className="studio-entry"><div><strong>One course. Eleven study formats.</strong><p>Choose sources, create a guide, and save it with your course.</p></div><button className={`portal-primary${tab === 'revise' ? ' is-quiet' : ''}`} onClick={()=>setStudio(true)}>Create study guide</button></div>
+      {on(TOOLKIT_FLAGS.aiToolkit) && <div className="studio-entry"><div><strong>AI Toolkit</strong><p>Start from a course and a goal: assignment stages, research evidence, data, rubrics and AI-use policy.</p></div><button className="is-quiet" onClick={()=>setToolkit(true)}>Open AI Toolkit</button></div>}
       {/*
         Six buttons used to sit here, and removing them is the hierarchy pass
         the UI audit asked for rather than a deletion for its own sake.
