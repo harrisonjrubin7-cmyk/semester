@@ -61,7 +61,8 @@ said "create/adapt", and this is the adapt.
 | `account_link_audits`, `account_unlink_requests` | none | NOT BUILT |
 | `session_security_events` | gateway authorization audit (`membership.ts`) | PARTIAL |
 | `sso_test_runs`, `sso_configuration_audits` | the acceptance checklist in `docs/vanderbilt/` | MANUAL |
-| `tenant_plan_entitlements`, `user_plan_entitlements`, `sponsored_access_entitlements`, `usage_allowances`, `usage_counters` | shape defined by `EntitlementRequest`; `usage_atomic` covers AI usage | CONTRACT ONLY |
+| `tenant_plan_entitlements` | `tenant_plan` + `tenant_plan_history` (service-role writes only) | BUILT |
+| `user_plan_entitlements`, `sponsored_access_entitlements`, `usage_allowances`, `usage_counters` | shape defined by `EntitlementRequest`; `usage_atomic` covers AI usage | CONTRACT ONLY |
 
 ## Known gaps, in the order they matter
 
@@ -79,9 +80,9 @@ said "create/adapt", and this is the adapt.
 2. **No LTI launch audit table.** Refusals are logged by reason code and not
    persisted.
 3. **Entitlement sources.** On LTI launches the order reads the kill switch,
-   the `integration.lms_lti` flag and the membership, and logs the rest as
-   unsourced. Nothing yet stores tenant plans, personal grants or allowances, so
-   it runs in shadow.
+   the school's `tenant_plan`, the `integration.lms_lti` flag and the
+   membership, and logs the rest as unsourced. Nothing yet stores personal
+   grants or allowances, so it runs in shadow.
 4. **OIDC** is not supported. `provider_type` admits only `'saml'`.
 5. **Personal ↔ institutional account linking** for SSO accounts does not exist.
 

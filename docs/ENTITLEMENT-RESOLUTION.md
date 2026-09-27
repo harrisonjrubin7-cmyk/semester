@@ -1,6 +1,7 @@
 # Entitlement resolution
 
-Status: **BUILT; RUNS IN SHADOW ON LTI LAUNCHES; ENFORCES NOTHING.** The order
+Status: **BUILT; RUNS IN SHADOW ON LTI LAUNCHES; ENFORCES NOTHING.** Four
+steps are sourced on a launch: kill-switch, tenant-plan, module and lifecycle. The order
 is `supabase/functions/_shared/entitlement.ts`: one copy, kept where a Deno
 edge function can deploy it. Its tests are `app/src/lib/entitlement.test.ts`,
 beside the other `_shared` rules' tests. It is not re-exported from
@@ -48,10 +49,28 @@ arbitrary:
 - **This is an extra gate.** RLS and the AI Toolkit's `entitle()` still apply.
   A pass here only means no plan, lifecycle or policy reason refuses.
 
+## Where a plan comes from
+
+`public.tenant_plan` holds one current plan per school
+(`20260928004730_tenant_plan.sql`):
+
+- **Tier** uses the deal desk's names (`pilot`, `department`, `campus`,
+  `system`). **Status** uses the order's (`trial`, `active`, `suspended`,
+  `ended`), so a row reads straight into the step.
+- **Only the service role writes it.** A plan is what the school signed. There
+  is no write policy, so a school administrator cannot grant or extend their
+  own school's plan. Tenant administrators and auditors can read their own.
+- **A pilot must have an end date**, and no plan may end before it starts.
+- **Every insert and update is copied to `tenant_plan_history`**, which cannot
+  be edited or deleted.
+
+`supabase/tenant-plan.check.sql` proves each of those. With an administrator
+write policy added, its "cannot extend their own plan" check fails.
+
 ## To wire it
 
-Tables for tenant plans and modules, personal and sponsored grants, and usage
-counters (`usage_atomic` is the precedent). A server-side caller that builds the
+Tables for personal and sponsored grants and usage counters (tenant plans now
+exist, in `tenant_plan`; modules are `tenant_feature_policy`) (`usage_atomic` is the precedent). A server-side caller that builds the
 request from those rows, the current membership and `has_capability`. And an
 audit row for each refusal.
 
@@ -61,7 +80,7 @@ Every LTI launch evaluates the order and logs what it would decide. It refuses
 nothing new (`_shared/ltientitlement.ts`):
 
 ```text
-lti entitlement (shadow): would refuse at module; unsourced=environment,tenant-plan,…
+lti entitlement (shadow): would refuse at module; unsourced=environment,sso-policy,…
 ```
 
 Shadow, because the LTI module flag `integration.lms_lti` defaults to `off`.
@@ -72,6 +91,7 @@ turning it on.
 | Step | Source on a launch |
 | --- | --- |
 | kill-switch | `kill.integration_sync`, platform-wide or the school's (`lti_launch_entitlement_facts`) |
+| tenant-plan | `tenant_plan`: refuses when `suspended` or `ended`, or when `ends_at` has passed; `trial` and `active` pass. **A school with no plan row** passes and is named in `unsourced=` for that launch, because no plan recorded is not a plan ended |
 | module | `feature_state('integration.lms_lti', school)`: anything but `off` is on |
 | lifecycle | the membership join: `joined` is active, `membership-<status>` is that status, anything else is no membership |
 | every other step | **unsourced**: given a passing value and named in the log's `unsourced=` list |
@@ -83,7 +103,9 @@ teach whoever reads it to trust a gate that isn't there.
 Not evaluated, with the reason logged: a launch with no school (`unbound`,
 `no-registration`) or with school facts that could not be read.
 
-**To enforce:** give the unsourced steps sources, and make sure each school's
-`integration.lms_lti` flag is set. Then refuse on the verdict. The session and
+**To enforce:** give the unsourced steps sources, make sure each school's
+`integration.lms_lti` flag is set, and record a `tenant_plan` row for every
+school. Enforcement must then **refuse a school with no plan row**, which shadow
+deliberately does not. Then refuse on the verdict. The session and
 placement gates (`sessionDecision`, `placementDecision`) already enforce the
 membership independently and stay as they are.

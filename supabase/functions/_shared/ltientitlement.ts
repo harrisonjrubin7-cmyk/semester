@@ -2,14 +2,15 @@
  * The entitlement order, run on an LTI launch in shadow: evaluated, logged,
  * never enforced.
  *
- * `entitlement.ts` decides in twelve steps. On a launch, three have a source:
+ * `entitlement.ts` decides in twelve steps. On a launch, four have a source:
  *
  *   kill-switch   `kill.integration_sync` (lti_launch_entitlement_facts)
+ *   tenant-plan   `tenant_plan` (the same function); unsourced for a school
+ *                 with no plan row, which is "not recorded", not "ended"
  *   module        `integration.lms_lti` feature state (the same function)
  *   lifecycle     the membership join (`ltimembership.ts`)
  *
- * The other nine have nothing to read yet: no plan table, no SSO-required
- * policy, no course scope, no data tier, no personal grant, no usage counter,
+ * The other eight have nothing to read yet: no SSO-required policy, no course scope, no data tier, no personal grant, no usage counter,
  * and no service-side capability lookup. They are given the values that pass,
  * and **named in the log as unsourced**, so a pass through one of them reads
  * as "not checked", never as "checked and allowed". A shadow log that hid
@@ -26,15 +27,23 @@ import type { MembershipJoin } from './ltimembership.ts';
 
 export const LTI_MODULE = 'integration.lms_lti';
 
-/** The steps an LTI launch has no source for today. */
+/**
+ * The steps an LTI launch has no source for today. `tenant-plan` is not here:
+ * it is sourced from `tenant_plan`, and added to a launch's unsourced list
+ * only when that school has no plan row (see `launchEntitlement`).
+ */
 export const UNSOURCED_STEPS = [
-  'environment', 'tenant-plan', 'sso-policy', 'capability', 'course-scope',
+  'environment', 'sso-policy', 'capability', 'course-scope',
   'course-policy', 'data-classification', 'individual-plan', 'usage-allowance',
 ] as const;
+
+export type PlanStatus = 'trial' | 'active' | 'suspended' | 'ended';
 
 export interface LaunchFacts {
   killSwitched: boolean;
   moduleState: string;
+  /** The school's recorded plan, or null when it has none. */
+  plan: { status: PlanStatus; endsAt?: string } | null;
 }
 
 export type LaunchEntitlement =
@@ -42,6 +51,7 @@ export type LaunchEntitlement =
   | { evaluated: false; why: string };
 
 const STATES = new Set(['off', 'preview', 'sandbox', 'production']);
+const PLAN_STATUSES = new Set<string>(['trial', 'active', 'suspended', 'ended']);
 
 /** The facts row as the RPC returns it, or null when it cannot be trusted. */
 export function readFacts(data: unknown, error: { message?: string } | null): LaunchFacts | null {
@@ -50,7 +60,21 @@ export function readFacts(data: unknown, error: { message?: string } | null): La
   if (!row || typeof row !== 'object') return null;
   const r = row as Record<string, unknown>;
   if (typeof r.kill_switched !== 'boolean' || typeof r.module_state !== 'string' || !STATES.has(r.module_state)) return null;
-  return { killSwitched: r.kill_switched, moduleState: r.module_state };
+
+  // No plan: null, or absent from a database that predates tenant_plan. Both
+  // mean nothing is recorded, not that a plan ended.
+  const status = r.plan_status ?? null;
+  const ends = r.plan_ends_at ?? null;
+  if (status === null) {
+    return ends === null ? { killSwitched: r.kill_switched, moduleState: r.module_state, plan: null } : null;
+  }
+  if (typeof status !== 'string' || !PLAN_STATUSES.has(status)) return null;
+  if (ends !== null && (typeof ends !== 'string' || !Number.isFinite(Date.parse(ends)))) return null;
+  return {
+    killSwitched: r.kill_switched,
+    moduleState: r.module_state,
+    plan: { status: status as PlanStatus, ...(ends === null ? {} : { endsAt: ends }) },
+  };
 }
 
 const INACTIVE = ['pending', 'suspended', 'deprovisioned'] as const;
@@ -81,7 +105,10 @@ export function launchEntitlement(join: MembershipJoin, facts: LaunchFacts | nul
     moduleEnvironments: everywhere,
     module: LTI_MODULE,
     tenant: {
-      planStatus: 'active', // unsourced
+      // Sourced from tenant_plan. With no plan row, a passing value, and the
+      // step is named unsourced for this launch below.
+      planStatus: facts.plan?.status ?? 'active',
+      ...(facts.plan?.endsAt ? { planEndsAt: facts.plan.endsAt } : {}),
       modules: facts.moduleState === 'off' ? [] : [LTI_MODULE],
       requireSso: false, // unsourced
     },
@@ -93,7 +120,8 @@ export function launchEntitlement(join: MembershipJoin, facts: LaunchFacts | nul
     dataTier: 0, // unsourced
     maxDataTier: 6,
   };
-  return { evaluated: true, verdict: resolveEntitlement(request), unsourced: UNSOURCED_STEPS };
+  const unsourced: readonly string[] = facts.plan ? UNSOURCED_STEPS : ['tenant-plan', ...UNSOURCED_STEPS];
+  return { evaluated: true, verdict: resolveEntitlement(request), unsourced };
 }
 
 /** One log line, ids and step names only. */
