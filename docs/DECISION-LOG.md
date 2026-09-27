@@ -305,3 +305,28 @@ The original proposal is kept below for the record.
 
 **Rejected:** merging both as they are, which would mean two Todays; or
 dropping either outright, which loses tested work the other lacks.
+
+---
+
+# Phase 4 onward, this session (D-100–D-119)
+
+The feature-expansion session writes D-040 onward, and reached D-053 on
+27 Sep 2026. This session's decisions from here take D-100–D-119, so the two
+logs can merge without renumbering. (D-030–D-039 are this session's earlier
+block.)
+
+## D-100 · Faculty Course Studio: design proposed, decisions F1–F7 open
+
+**Proposed 27 Sep 2026.** The design is in
+[FACULTY-COURSE-STUDIO-DESIGN.md](FACULTY-COURSE-STUDIO-DESIGN.md).
+
+- An instructor holding `faculty` at course scope publishes course AI rules,
+  guidance and study packs.
+- Publishing adds an audited, versioned record.
+- Students at the school see these labelled "Set by your instructor", and the
+  toolkit's existing rules engine applies them as the instructor course layer.
+- There is no gradebook, no file hosting and no roster, and faculty see
+  nothing about students.
+
+Nothing is built until the owner decides F1–F7.
+
