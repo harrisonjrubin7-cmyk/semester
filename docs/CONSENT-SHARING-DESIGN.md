@@ -131,14 +131,24 @@ evidence file. The same goes for coaches.
 
 ### Categories and access, tightened for the pilot
 
-The ten categories in `FAMILY_LABELS` stay. The access levels change:
+The ten categories in `FAMILY_LABELS` stay.
+
+**Correction, made while building slice 1.** The first version of this table
+described `view` as "the whole category". It is not, and never was:
+- `allowsFamilyRequest` (`packages/institution/src/index.ts`) reads only
+  items named in `resourceIds`, for `view` and `selected` alike.
+- `familyPreview` does the same, and the Family screen labels `view` as
+  "View selected items".
+
+So rule 3 was already enforced for both levels. D5's decision stands, and its
+effect is:
 
 | Access | Pilot | Why |
 |---|---|---|
 | `none` | Default | |
-| `selected` | **The only granting level** | Named items only (rule 3). |
-| `view` (whole category) | Off | Violates rule 3. Revisit after the pilot. |
-| `payment` | Off | No billing exists (D-009); nothing can be paid through Semester. |
+| `selected` | **The one granting level offered** | Named items only (rule 3). |
+| `view` | Not offered; a stored `view` is read as `selected` | It already meant the same named items, so two labels for one behaviour only confused the choice. |
+| `payment` | Off | No billing exists (D-009); nothing can be paid through Semester. A stored `payment` shows nothing, as it already did. |
 
 Two categories keep their current narrow meanings and the design holds them
 there:
