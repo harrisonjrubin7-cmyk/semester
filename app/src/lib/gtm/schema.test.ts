@@ -61,6 +61,14 @@ describe('lib/gtm and its migration say the same thing', () => {
     expect(sorted(log)).toEqual(sorted(COMMITTEE_ROLES));
   });
 
+  it('asks a procurement-room requester for one of the same committee roles', () => {
+    const room = readFileSync(resolve(__dirname, '../../../../supabase/migrations/20260928100000_trust_room.sql'), 'utf8');
+    const at = room.indexOf('requester_role   text        not null check (requester_role in');
+    expect(at).toBeGreaterThan(-1);
+    const list = room.slice(at, room.indexOf('))', at));
+    expect(sorted([...list.matchAll(/'([a-z_]+)'/g)].map((m) => m[1]))).toEqual(sorted(COMMITTEE_ROLES));
+  });
+
   it('has the same campaign statuses and the same moves', () => {
     const statuses: CampaignStatus[] = ['draft', 'in_review', 'approved', 'active', 'paused', 'completed', 'retired'];
     expect(sorted(listAfter("status                text        not null default 'draft' check (status in"))).toEqual(sorted(statuses));

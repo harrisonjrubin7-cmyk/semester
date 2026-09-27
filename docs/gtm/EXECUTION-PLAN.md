@@ -49,6 +49,30 @@ New roles: `marketing_admin`, `campaign_reviewer`, `marketing_analyst`, and the 
 `university_admin` also gains `sponsor:review`. `RETENTION.md` gives each table its retention period, and says
 plainly that no time-based purge of contacts or sends exists yet.
 
+## The procurement room
+
+[`supabase/migrations/20260928100000_trust_room.sql`](../../supabase/migrations/20260928100000_trust_room.sql)
+turns the NDA process in `docs/SECURITY-ACCESSIBILITY-READINESS.md` (#829) into rules the database enforces.
+[`supabase/trust-room.check.sql`](../../supabase/trust-room.check.sql) walks them, 51 checks.
+
+| Step in #829 | What holds it |
+| --- | --- |
+| A named person asks, in their role | `trust_room_requests`: name, work email, committee role, attached to the account in `gtm_accounts` |
+| The NDA is signed first | `trust_room_grant` refuses any NDA-tier item on a request with no NDA reference on file |
+| The packet comes from a named commit | Every grant names a full 40-character commit and pins the exact artifact versions it covers. Versions are append-only, so one published later never changes what an existing link opens |
+| Shared by an expiring link; recipients recorded | Links last one to thirty days. Only the token's SHA-256 is stored, and the token is shown once. Every open is logged in `trust_room_access_log` |
+| Nothing edited for the audience | Neither a version nor a grant can be edited. A grant can only be revoked, once, with a reason |
+
+Also (§16.1): every artifact has an owner, and every version has a version string, a publish date and a review
+date. A version past its review date can't go into a new grant. Only a `trust_officer` publishes versions, and
+only the account team (`account_executive`) grants or revokes access. An institution's configurers can see
+their own room (who asked, what was granted, every open) once their account is linked to their school.
+
+The reviewer has no Semester account, and nothing in `public` may be callable by a signed-out visitor. So a
+link is opened through `trust_room_open`, which only the service key can execute. A wrong, revoked or expired
+token returns nothing and gives no reason. Engaging the global `kill.sharing` switch stops every grant and
+every open.
+
 ## Parts the repository already had
 
 | Plan | Already covered by |
@@ -63,21 +87,25 @@ plainly that no time-based purge of contacts or sends exists yet.
 
 ## Still to build (§15 backlog), in the order the plan's launch sequence (§18) needs it
 
-1. **Trust Center and procurement room** (§3.3): public summaries, plus controlled access to the artifacts that
-   already exist in `docs/market-readiness/`. Each artifact needs an owner, version, publish date and review date.
-2. **Workflow pages**: two or three, following the §3.2 template. Check the public-site work in progress first
+1. **The procurement room's file server**: a Supabase server function that takes a link token, calls
+   `trust_room_open` with the service key, and hands back a short-lived signed URL into a private `trust-packet`
+   bucket. Server functions deploy on merge, so it gets its own reviewed change. Until it exists, a minted link
+   opens nothing.
+2. **Public Trust Center pages** (§3.3): these wait for #829 (the packet's contents and tiers) and #776 (the public
+   site, whose hosting is the owner's decision). The public-tier rows of `trust_artifacts` are what they render.
+3. **Workflow pages**: two or three, following the §3.2 template. Check the public-site work in progress first
    (`feature/public-site`, `feature/public-tools`) so the routes aren't duplicated.
-3. **Campaign manager screen** over `activationGate` and `gtm_activation_failures`, listing every remaining failure.
+4. **Campaign manager screen** over `activationGate` and `gtm_activation_failures`, listing every remaining failure.
    **Preference center** writing `gtm_consent` for recruitment contacts and `consent_record` for enrolled students.
-4. **Email/SMS adapters** (worker, service role) that insert the decision into `gtm_communication_events` first,
+5. **Email/SMS adapters** (worker, service role) that insert the decision into `gtm_communication_events` first,
    and send only if the insert succeeded. No direct platform publishing for social (§15 phase 2).
-5. **Retention periods** for contacts and sends, with a sweep. `RETENTION.md` records that none exists yet, and a
+6. **Retention periods** for contacts and sends, with a sweep. `RETENTION.md` records that none exists yet, and a
    school has to set one before any campaign goes live.
-6. **Orientation QR/deep-link flow** using `campaignUrl(..., location)`, SSO, and the first-meaningful-action
+7. **Orientation QR/deep-link flow** using `campaignUrl(..., location)`, SSO, and the first-meaningful-action
    instrumentation (§9.2).
-7. **Dashboards** (§11.5) built on `kpi.ts`. Each labels its attribution model, logs access, and uses no risk
+8. **Dashboards** (§11.5) built on `kpi.ts`. Each labels its attribution model, logs access, and uses no risk
    score (§16.4).
-8. **Ambassador program** (§9.4). No peer-data access, by construction.
+9. **Ambassador program** (§9.4). No peer-data access, by construction.
 
 The admissions calendar (§8) and content cadence (§8.1) are operating material, not code. A campaign built
 from them is a `Campaign` whose `funnelStage` matches the calendar row.

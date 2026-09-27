@@ -288,6 +288,8 @@ behind and a client that believes it succeeded.
 | `gtm_report_access` | **kept until the school is removed** | who read which campaign's counts, and when. The reader's account deletion clears actor_id |
 | `gtm_sponsor_policy`, `gtm_sponsor_placements` | **kept until the school is removed** | a school's sponsorship choices and each placement's approval record. A removed placement stays as a record, with its status set to removed |
 | `gtm_accounts`, `gtm_stakeholders`, `gtm_decision_log`, `gtm_pilots`, `gtm_pilot_metrics`, `gtm_pilot_outcomes` | **kept until Semester removes the account**; unlinked, not removed, when the school is removed | Semester's own sales records about an institution: committee members by name and title, questions, evidence links, pilot terms and the signed outcome. No student data |
+| `trust_artifacts`, `trust_artifact_versions` | **kept until Semester retires the artifact**; a version is never edited or removed while a grant points at it (on delete restrict) | the trust packet's own documents, as paths into a private bucket and the commit each was generated from. No student data |
+| `trust_room_requests`, `trust_room_grants`, `trust_room_grant_items`, `trust_room_access_log` | **with their account**; unlinked from the school, not removed, when the school is removed | a named reviewer's name, work email and role, the NDA's reference, the expiring link's hash, and when each document was opened. The link token itself is never stored. **No time-based purge yet**; the grant expires in thirty days at most, but the record of it stays with the account |
 | `invites`, `access_gate` | **no answer yet** — see below | |
 
 ## What has no answer, stated rather than rounded off

@@ -363,7 +363,15 @@ declare
     'gtm_activation_failures(want_campaign uuid)',
     'gtm_audience_count(want_campaign uuid)',
     'gtm_campaign_report(want_campaign uuid)',
-    'gtm_pilot_problems(want_pilot uuid)'
+    'gtm_pilot_problems(want_pilot uuid)',
+
+    -- The two in 20260928100000_trust_room.sql. Each checks account:manage at
+    -- platform scope before it writes. `trust_room_grant` returns a link
+    -- token once and stores its hash; `trust_room_revoke` ends a grant.
+    -- `trust_room_open`, which a link actually reaches, is service_role only
+    -- and so is not here.
+    'trust_room_grant(want_request uuid, want_artifacts text[], want_packet_commit text, want_days integer)',
+    'trust_room_revoke(want_grant uuid, want_reason text)'
   ];
   extra text;
   missing text;
@@ -399,7 +407,7 @@ begin
   if missing is not null then
     raise exception 'FAILED: the allowlist names %, which a signed-in account cannot call', missing;
   end if;
-  raise notice 'ok  and can call all fifty-nine that it should';
+  raise notice 'ok  and can call all sixty-one that it should';
 end $$;
 
 -- ── The gate's own switch, named because it is the one that was open ──────
