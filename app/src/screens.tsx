@@ -124,6 +124,8 @@ const AccountScreen = lazy(() => import('./screens/Account').then((m) => ({ defa
 const SlideDeck = lazy(() => import('./screens/Slides').then((m) => ({ default: m.SlideDeck })));
 export const Springboard = lazy(() => import('./screens/Springboard').then((m) => ({ default: m.Springboard })));
 export const Guides = lazy(() => import('./screens/Guides').then((m) => ({ default: m.Guides })));
+// Offline mode's badge (Phase M), mounted in the app shell under the header.
+export const OfflineBanner = lazy(() => import('./components/OfflineBanner').then((m) => ({ default: m.OfflineBanner })));
 export const InstitutionalPreviewBar = lazy(() =>
   import('./components/InstitutionalPreviewBar').then((m) => ({ default: m.InstitutionalPreviewBar })),
 );
