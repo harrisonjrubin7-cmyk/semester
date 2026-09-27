@@ -227,3 +227,81 @@ Phase A documents are [UX-ENHANCEMENT-PLAN.md](UX-ENHANCEMENT-PLAN.md),
 - The fix goes in whichever of Phases C, D or N touches those stores first,
   and it comes with a test that every `useDeviceLibrary` key is backed up
   (crosswalk N-3).
+
+## D-019 · Owner approval of the Phase A recommendations
+
+**Decided by owner 27 Sep 2026.** "Start Phase B with the recommended
+defaults" approves these recommendations as written:
+
+- **D-013:** `today_action_center` flag, off by default.
+- **D-015:** relabel `behind`. This is approved but not done in Phase B; it is
+  a label-only change in `lib/nav.ts`, with the route unchanged.
+- **D-016:** authorized expiring advisor grants in the pilot, not bearer links.
+- **D-017:** one draft PR per phase into `semester-unified-platform`.
+
+D-012 is implemented as a second map, `MODULE_FLAGS`, beside `ExperienceFlags`
+rather than as 15 more keys on it. That keeps
+`experience-preservation.test.ts`'s six-flag contract intact, and the new
+flags never inherit the preview default.
+
+## D-020 · Phase B stacks on the other session's BL-1.1 to BL-1.3
+
+**Decided 27 Sep 2026.** A second session is working the same backlog:
+
+- BL-1.1 source labels landed on `feature/source-labels` at `7096529`.
+- BL-1.2/1.3, the canonical action model and store, landed on
+  `feature/action-model` at `e153146`.
+
+Both landed while Phase B was being built. Phase B had its own
+`lib/actions.ts`, and it was **dropped** for the canonical one, per
+`CLAUDE.md`: two action models under one storage key would be the duplicate
+that file warns about. Phase B is now the BL-1.4 slice (the Action Center on
+Today) on that model.
+
+The Phase B PR carries those two commits and the Phase A docs until they
+reach `semester-unified-platform`, and should merge after them. The other
+session could not be messaged from here; its next backlog item, BL-1.4, is
+this PR.
+
+## D-021 · Two Action Centers: this Phase B and `feature/action-center`
+
+**Decided by owner 27 Sep 2026: recommendation approved** ("rebase onto
+action-center"). Phase B is now an increment on BL-1.4. That means:
+
+- BL-1.4's `ActionCenter`, `lib/today-actions.ts` and its controls are kept.
+- Their inline `<details>` explanation moved into the sheet/drawer, keeping
+  "How it was ranked".
+- The whole thing is behind `today_action_center`. With the flag off, Today is
+  the #761 briefing.
+- Phase B's own action list, card, controls and hook were deleted, because
+  BL-1.4's cover the same ground.
+- The remaining helpers were renamed to `lib/today-center.ts`, so the two
+  `today-actions.ts` files no longer collide.
+
+The original proposal is kept below for the record.
+
+- At 16:26 the other session pushed BL-1.4 as `feature/action-center`
+  (`45d3877`). That is an Action Center on the same model, built while this
+  Phase B was being finished. Both change `TodayDecisionSurface`, both add a
+  file named `lib/today-actions.ts`, and both fix H-2. They cannot both merge
+  as they stand.
+
+| | `feature/action-center` (BL-1.4) | This Phase B |
+|---|---|---|
+| Flag | **None**: it replaces the Next best step for every student | `today_action_center`, off by default (D-013, approved) |
+| Scope | The Next best step block becomes a ranked list (1 + 5 + View all); the #761 path card and 72-hour rail stay | The whole Today surface |
+| Controls | Start, Done, Snooze until tomorrow, Not relevant, Something is wrong, Ask for help | Snooze (3 times), Dismiss with a reason, Correct |
+| Explanation | Inline `<details>`, including how the action was ranked | Bottom sheet / desktop drawer |
+| Only here | Start / Done / Ask for help; "View all"; the ranking breakdown; the calendar-day due-line fix | The three approved status sentences; Done for today; ≤1 urgent + ≤4 time-first commitment rows; Quick Actions; the desktop context pane; `MODULE_FLAGS`; the undo that leaves no fatigue trace; the H-2 guard test |
+
+**Recommendation:**
+
+1. Merge `feature/action-center` first, since it is the backlog's BL-1.4.
+2. Rebase this Phase B onto it as an increment: its ranked list and controls
+   stay, and this adds the flag gate, the status sentences, Done for today,
+   the commitment rules, Quick Actions, the sheet/drawer and the context
+   pane.
+3. Rename or merge the two `today-actions.ts` files.
+
+**Rejected:** merging both as they are, which would mean two Todays; or
+dropping either outright, which loses tested work the other lacks.

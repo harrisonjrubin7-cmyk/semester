@@ -26,7 +26,7 @@ function rule(selector: string): string {
 }
 
 describe('text buttons are text', () => {
-  for (const selector of ['.workspace-text-button', '.today-timeline-row']) {
+  for (const selector of ['.workspace-text-button', '.today-timeline-row', '.commitment-row', '.quick-action', '.explain-close']) {
     it(`${selector} resets the browser's button`, () => {
       // Every rule naming the class, grouped selectors included.
       const all = css.match(new RegExp(`[^}]*${selector.replace('.', '\\.')}[^{]*\\{[^}]*\\}`, 'g'))?.join('\n') ?? '';

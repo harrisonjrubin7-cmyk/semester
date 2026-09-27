@@ -76,14 +76,19 @@ it('shows one most important, five next, and the rest behind View all', () => {
   expect(host.textContent).toContain('View all (2 more)');
 });
 
-it('shows the source, and the whole explanation with its working', () => {
+it('shows the source, and opens the whole explanation with its working in a sheet', () => {
+  // jsdom has no matchMedia; a narrow window, so "Why this?" is the phone's sheet.
+  window.matchMedia = (() => ({ matches: false, addEventListener: () => {}, removeEventListener: () => {} })) as unknown as typeof window.matchMedia;
   render([make(0)]);
   const top = host.querySelector('article')!;
   expect(top.querySelector('[data-source="estimated"]')).not.toBeNull();
-  const why = top.querySelector('details')!;
+  act(() => button(/^Why this\?$/, top)?.click());
+  const why = host.querySelector('[role="dialog"]')!;
   for (const s of ['Because.', 'A factor', 'Things improve.', 'A limit', 'Something else', 'Test source', 'How it was ranked']) {
     expect(why.textContent, s).toContain(s);
   }
+  act(() => button(/^Close$/, why)?.click());
+  expect(host.querySelector('[role="dialog"]')).toBeNull();
 });
 
 it('marks done, stores it, moves the next one up — and can be undone', () => {

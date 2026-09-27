@@ -59,7 +59,7 @@ them already exist in part on main (#761, #762).
 | Phase | Module | Status |
 |---|---|---|
 | A | Design and UX audit: [UX-ENHANCEMENT-PLAN.md](UX-ENHANCEMENT-PLAN.md), [DESIGN-SYSTEM-IMPROVEMENTS.md](DESIGN-SYSTEM-IMPROVEMENTS.md), crosswalk | **Done**, docs only (D-014) |
-| B | Today + Action Center | Planned; exact files in the UX plan §5. **Awaiting owner confirmation** and D-013 |
+| B | Today + Action Center: [TODAY-ACTION-CENTER.md](TODAY-ACTION-CENTER.md) | **Built** as an increment on BL-1.4, behind `today_action_center` (off); the H-2 fix is always on. Draft PR (D-021) |
 | C | Registration Day Mode (extends #762) | Queued |
 | D | Graduation Simulator + Cost Planner (extends #762) | Queued |
 | E | Academic Life Balance + Crunch Week (extends `lib/clash.ts`) | Queued |
