@@ -228,6 +228,9 @@ links.** Built as below; see D-042 and D-043.
 - The fix goes in whichever of Phases C, D or N touches those stores first,
   and it comes with a test that every `useDeviceLibrary` key is backed up
   (crosswalk N-3).
+- **Resolved in Phase N (D-057).** Both stores are now backed up, together
+  with the nine device stores the later phases added, and a test reads the
+  source to hold it.
 
 ## D-019 · Owner approval of the Phase A recommendations
 
@@ -820,3 +823,50 @@ session's range.)
   the demand view keep no cached copy. Offline they say they load when
   connected. `asOf(at)` is there for any imported figure shown from the
   device.
+
+## D-057 · The Trust & Data Center is a hub over what exists, and Export covers every device store
+
+**Decided 27 Sep 2026 (Phase N).**
+
+- **Where it is.** At the top of Your data (`privacy`), with a **Trust &
+  data** row on Me › You that opens it. The rest of that page already had:
+  - account deletion;
+  - erasing this device;
+  - supporter access;
+  - the diagnostics export;
+  - the privacy explanation.
+
+  The center points to those rather than copying them.
+- **New controls, each confirming first and saying exactly what goes:**
+  - revoke an advisor share (Phase G);
+  - forget a line Semester remembers (`aboutMe`, the student's own words);
+  - delete the saved AI conversations (`lib/threads.ts`, archive included),
+    and nothing else.
+- **Shown, read from the stores that already exist:**
+  - connected sources and the last sync;
+  - what the five source labels mean;
+  - imported materials, and which of them AI may not use (Source Locker);
+  - notification permission;
+  - export.
+- **The AI memory panel is `aboutMe`.** The `ai_memories` table is not
+  written by the app; if it ever is, its rows belong on this panel.
+- **Export covers every device store (fixes D-018).** `lib/workspace-backup.ts`
+  gains a `device` scope and these stores:
+  - registration;
+  - registration day;
+  - graduation;
+  - life balance;
+  - shortlist;
+  - advisor meetings;
+  - Source Locker;
+  - study readiness;
+  - career evidence.
+- **Guarded against recurring.** `workspace-backup.coverage.test.ts` lists
+  every file that calls `useDeviceLibrary`, with how many times, and every
+  store prefix: backed up, or exempt with a sentence. A new store fails until
+  somebody decides. Exempt:
+  - the offline ledger, which is sync bookkeeping;
+  - stores other modules added (launchpad, opportunities, hub, support,
+    NIL, toolkit, directory, housing and meal plans, study journal,
+    operations). They are listed as waiting on their owners rather than
+    changed from here.

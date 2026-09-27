@@ -46,7 +46,7 @@ the duplicate that file warns about.
 | K | Course Demand Forecasting | `demand_forecasting` (D-051, D-052, D-053) | Plan › registration **Cart** (student consent); University › **Demand** (staff, by `demand:read` scope) (built) | **Extend** + migration | `20260927234800_course_demand_forecasting.sql`; `lib/course-demand.ts`, `components/DemandContribution.tsx`, `components/DemandDesk.tsx` |
 | L | Semester Wrapped | `semester_wrapped` (D-054) | Me → `me` › You: the recap card (built) | **Extend** | `lib/wrapped.ts`, `components/SemesterWrapped.tsx`; reads `state.done`/`tickedAt`/`sessions`/`taken` and the device stores of Phases B, G, I and the registration workspace |
 | M | Offline Mode | `offline_mode` (D-055, D-056) | App shell: the offline badge under the header; every screen (refusals in shared `ConfirmDialog` and the remote calls) (built) | **Extend** | `lib/offline-mode.ts`, `components/OfflineBanner.tsx`; reuses `lib/offline.ts`, `lib/merge.ts`, `public/sw.js` (unchanged) |
-| N | Trust Center | `trust_center` | Me → `privacy` / `data` / `export` / `account` | **Extend** | `lib/privacy.ts` `CLAIMS`, `screens/Privacy.tsx`, `lib/erase.ts`, `lib/workspace-backup.ts`, `SupportAccess` (#759/#760); table `ai_memories`, `data_requests` |
+| N | Trust Center | `trust_center` (D-057) | Me › You › **Trust & data** → Your data (`privacy`), the center at the top (built) | **Extend** | `components/TrustCenter.tsx`; `lib/workspace-backup.ts` (device scope, eleven stores), `workspace-backup.coverage.test.ts` |
 | O | Visual polish | — (always on, per-commit revert) | Everywhere | — | [DESIGN-SYSTEM-IMPROVEMENTS.md §3](DESIGN-SYSTEM-IMPROVEMENTS.md#3-problems-to-fix) |
 
 All 14 named flags plus the proposed `today_action_center` are added to
@@ -365,7 +365,7 @@ streaks and no leaderboard.
   - a "What Semester remembers" editor on `ai_memories`;
   - AI history and delete.
 
-**N-3, a gap found in this audit:** `lib/workspace-backup.ts` covers creations,
+**N-3, a gap found in this audit (resolved in Phase N, D-057):** `lib/workspace-backup.ts` covers creations,
 athletics, career, university drafts, family and pathway. It does **not**
 cover these device-only stores:
 
