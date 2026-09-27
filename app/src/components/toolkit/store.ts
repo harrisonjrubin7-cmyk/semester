@@ -1,5 +1,7 @@
 import { obj, textValue, useDeviceLibrary } from '../../lib/device-library';
 import { readDataProjects, type DataProject } from '../../lib/toolkit/data';
+import { blankDeclaration, type Declaration } from '../../lib/toolkit/disclosure';
+import { USES, type Use } from '../../lib/toolkit/policy';
 import { readProjects, type Project } from '../../lib/toolkit/research';
 import { readWorkspaces, type Workspace } from '../../lib/toolkit/templates';
 
@@ -20,9 +22,23 @@ export interface ToolkitStore {
   showLess: boolean;
   workspaces: Workspace[];
   research: Project[];
+  declaration: Declaration;
 }
 
-export const EMPTY: ToolkitStore = { hidden: [], showLess: false, workspaces: [], research: [] };
+export const EMPTY: ToolkitStore = { hidden: [], showLess: false, workspaces: [], research: [], declaration: blankDeclaration() };
+
+const USE_IDS = new Set<string>(USES.map(([u]) => u));
+
+function readDeclaration(v: unknown): Declaration {
+  const base = blankDeclaration();
+  if (!obj(v)) return base;
+  const out = { ...base } as Record<string, unknown>;
+  for (const key of Object.keys(base) as (keyof Declaration)[]) if (typeof base[key] === 'string' && textValue(v[key], 20_000)) out[key] = v[key];
+  out.uses = Array.isArray(v.uses) ? v.uses.filter((u): u is Use => typeof u === 'string' && USE_IDS.has(u)) : [];
+  out.inputTier = ['T0', 'T1', 'T2', 'T3'].includes(v.inputTier as string) ? v.inputTier : 'T2';
+  out.attested = v.attested === true;
+  return out as unknown as Declaration;
+}
 
 export function readToolkit(v: unknown): ToolkitStore {
   if (!obj(v)) throw new Error('The toolkit record is not an object.');
@@ -31,6 +47,7 @@ export function readToolkit(v: unknown): ToolkitStore {
     showLess: v.showLess === true,
     workspaces: readWorkspaces(v.workspaces ?? []),
     research: readProjects(v.research ?? []),
+    declaration: readDeclaration(v.declaration),
   };
 }
 
