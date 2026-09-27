@@ -223,6 +223,9 @@ Each slice is small and would ship behind approval of its migration:
    shares match; the role is re-checked at every read.*
 5. **Athlete share UI**: item picker from `athletics.ts`, preview, recipient
    page.
+   *Built (D-039, slice 5 note): Athletics → Share. Absence notices and
+   travel-pack progress are shown but not offered, because Semester keeps no
+   record of either; nor of "contacted the instructor".*
 
 Each ships with the check suite proving: a non-recipient reads nothing; an
 expired, revoked or unaccepted share reads nothing; a staff recipient without

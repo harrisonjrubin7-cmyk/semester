@@ -940,6 +940,9 @@ export const OWNED_TABLES: OwnedTable[] = [
   // family grant; the staff member's own deletion is the cascade on their
   // account. Its read log goes with each share (`on delete cascade`).
   { table: 'support_shares', column: 'student_id' },
+  // Its read log has no column of the student's: each row goes with the
+  // share it records, by `on delete cascade`.
+  { table: 'support_share_events', column: null, cascadesFrom: 'support_shares' },
 
   // ── Shared forms ────────────────────────────────────────────────────────
   // ── Organizations ───────────────────────────────────────────────────────
