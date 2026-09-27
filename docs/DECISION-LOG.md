@@ -133,3 +133,43 @@ not indexable and bloat the app shell; and moving the app to path routing,
 which would migrate 59 screens and every stored deep link. Changing the
 production host (e.g. to Vercel, where `app/vercel.json` already exists) is a
 production change and needs approval.
+
+## D-037 · Athlete and supporter sharing: one consent pattern, three tables
+
+**Proposed — needs owner.** (D-030 to D-036 are on their own open branches;
+D-013–D-029 and D-040 onward belong to the feature-expansion work.)
+
+The full design is in [CONSENT-SHARING-DESIGN.md](CONSENT-SHARING-DESIGN.md).
+
+Supporter, advisor and athletic academic-support sharing follow one pattern:
+- the student starts it;
+- one named person, not a link;
+- named items, not whole categories;
+- a required expiry of at most one term;
+- revocation that applies at the next read;
+- the recipient accepts;
+- every read is logged and visible to the student;
+- an exact preview before granting;
+- nothing is sent on the student's behalf;
+- nothing is inferred for the recipient.
+
+The three relationships each get their own table:
+- supporter sharing keeps `family_grants`, plus the unmerged invite branch;
+- athletic academic support gets a new `support_shares` table, modelled on
+  `accommodation_shares`;
+- advisors get `advisor_shares`, per D-016.
+
+Keeping them separate means one relationship's policy bug cannot expose
+another relationship's data.
+
+Seven owner decisions are listed in §9 of the design doc (D1–D7). They
+cover:
+- the athletic academic-support recipient role;
+- excluding compliance officers and coaches;
+- what a recipient sees when a share is revoked;
+- the maximum expiry;
+- the pilot's access levels;
+- adopting the invite branch;
+- review of the consent wording by the registrar and compliance office.
+
+Every migration needs approval before it is applied to production.
