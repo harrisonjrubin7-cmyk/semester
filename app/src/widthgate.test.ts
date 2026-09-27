@@ -50,10 +50,14 @@ const ASKS: Record<string, string> = {
     'Menus as one sheet of rows on a phone and a menubar on a wide window — the file says "the phone gets all of them".',
   'components/Command.tsx':
     'Sizes of the search palette. The same palette, the same results.',
+  'components/ExplanationSheet.tsx':
+    'A drawer beside the page on a desktop window, not modal so the page stays usable; a modal bottom sheet on anything narrower. Same explanation, same controls, Escape closes both.',
   'components/Keys.tsx':
     'Asks WIDE together with FINE: shortcuts listen wherever there is probably a keyboard, not only where the window is wide. Every shortcut has a visible control too.',
   'components/QuickAdd.tsx':
     'Whether the capture box is fixed to the window or the column. Same box.',
+  'components/TodayActionCenter.tsx':
+    'An at-a-glance pane beside the column on a desktop window. Nothing in it is desktop-only: the planning sentence heads the column, each unchecked date says so on its commitment row, the schedule is in the plan list and Calendar, and sync freshness is on Account.',
   'screens/Calendar.tsx':
     'Seven days a row when wide, three when narrow — the arrows step through every day either way, and Month and Agenda are the same at both widths.',
   'screens/Classmates.tsx':

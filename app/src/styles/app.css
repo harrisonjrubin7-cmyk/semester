@@ -7763,7 +7763,7 @@ section[data-drop] > .grip + * {
   animation: explain-rise 200ms var(--ease);
 }
 
-@media (min-width: 760px) {
+@media (min-width: 840px) {
   .explain-sheet {
     max-width: 560px;
   }
