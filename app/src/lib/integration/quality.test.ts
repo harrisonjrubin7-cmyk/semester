@@ -21,7 +21,7 @@ import { VERSION_STATUSES, approve, goLive, propose, recordSimulation, rollback,
 
 const NOW = new Date('2026-09-27T12:00:00Z');
 
-const SQL = readFileSync(resolve(__dirname, '../../../../supabase/migrations/20260928020000_integration_quality.sql'), 'utf8');
+const SQL = readFileSync(resolve(__dirname, '../../../../supabase/migrations/20260928030000_integration_quality.sql'), 'utf8');
 
 describe('the vocabulary matches the database', () => {
   /*

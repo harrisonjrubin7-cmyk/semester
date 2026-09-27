@@ -1142,7 +1142,7 @@ function Box({
           type="button"
           className="bare tappable"
           onClick={onAdd}
-          aria-label="Add this as a task"
+          aria-label="Add this as an action"
           title="Add to your plan"
           style={{
             width: 'auto',
