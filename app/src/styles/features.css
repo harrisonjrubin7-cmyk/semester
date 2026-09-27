@@ -287,3 +287,9 @@
 .family-claim{display:grid;gap:var(--sp-2);max-width:320px;margin-bottom:var(--sp-3)}
 .studio-guidance{border-inline-start:2px solid var(--app-line);padding-inline-start:var(--sp-3);margin-block:var(--sp-3)}
 .studio-guidance p{margin:var(--sp-2) 0 0;white-space:pre-wrap}
+.studio-preview{border:1px solid var(--app-line);border-radius:var(--r-md);padding:var(--sp-4);margin-block:var(--sp-4)}
+.studio-preview h4{font-size:var(--type-sm);margin:var(--sp-3) 0 var(--sp-2)}
+.studio-uses{border:0;padding:0;margin:0 0 var(--sp-4);display:grid;gap:var(--sp-3)}
+.studio-use{display:flex;flex-wrap:wrap;gap:var(--sp-3);align-items:center;justify-content:space-between;font-size:var(--type-sm)}
+.studio-use select{max-width:100%}
+.studio-items{padding-inline-start:1.2em;display:grid;gap:var(--sp-4)}

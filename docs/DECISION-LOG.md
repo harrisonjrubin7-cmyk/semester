@@ -1269,3 +1269,36 @@ The suite failed every time.
   `SECRETS.md`. Off, nothing published is read.
 - **Account deletion.** The three tables are `KEPT_TABLES` with their reasons:
   they are course policy the class relies on, and students only read them.
+
+## D-103 · Course Studio slice 3: the faculty screens open from Account, and preview with the students' engine
+
+**Decided 27 Sep 2026, building slice 3 of D-100.**
+
+- **Where it lives.** It opens from the Account screen, under "Teaching". The
+  design said "opened from a course" (F6), but a faculty account usually has
+  no courses of its own in the catalog. Study shows a first-run page to such
+  an account, so there would be no course to open it from. The entry shows
+  nothing at all unless:
+  - the `course_studio` module is on;
+  - somebody is signed in;
+  - `my_course_studio_courses()` names at least one course.
+- **Tabs.** AI rules, Guidance, Study packs and History.
+  - **AI rules:** a blanket plus the ten named uses, the instructor's own
+    words, an optional syllabus link and an effective date.
+  - **Guidance:** one note; publishing it empty is a stated withdrawal.
+  - **Study packs:** named, ordered references (title, citation, http link,
+    and a use: authoritative, supplemental or do-not-use), which can be edited
+    or retired.
+  - **History:** every version, with its time.
+- **Preview.** Every publish is previewed first. The rules preview is drawn by
+  `fromInstructor` and `card`, the same engine the students' screens use, so
+  the preview can't disagree with what they see.
+- **Confirmation.** Every publish asks for confirmation, and says that a
+  published version is never changed.
+- **F3.** Permitting `final-answers` (allowed, with disclosure, or required)
+  needs its own "I mean it" confirmation before Publish is enabled.
+- **Client checks.** The screens check what the server checks (lengths, http
+  links, a named pack, titled references), so a mistake is named before the
+  publish. The server stays the authority, and the one that decides who may
+  publish at all.
+- **F5.** The screens show nothing about students. A test walks every tab.

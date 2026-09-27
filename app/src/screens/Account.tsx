@@ -1,3 +1,4 @@
+import { CourseStudioEntry } from '../components/CourseStudio';
 import { useState } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
@@ -142,6 +143,11 @@ export function AccountScreen() {
             a different fact from the school profile the device picked and the
             only one a policy can ever read. See `components/SchoolClaim.tsx`. */}
         <SchoolClaim />
+
+        {/* Faculty Course Studio (D-100): shown only to an account the school
+            has made faculty on a course, with the module on. See
+            `components/CourseStudio.tsx`. */}
+        <CourseStudioEntry />
 
         <SectionLabel>What syncs</SectionLabel>
         <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed-plus)', textWrap: 'pretty' }}>
