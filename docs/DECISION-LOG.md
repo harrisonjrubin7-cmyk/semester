@@ -134,6 +134,35 @@ which would migrate 59 screens and every stored deep link. Changing the
 production host (e.g. to Vercel, where `app/vercel.json` already exists) is a
 production change and needs approval.
 
+## Numbering
+
+Two sessions write to this log. Entries D-013 to D-029 belong to the
+feature-expansion session (#765, #769). This session's Phase 1 entries
+start at D-030, so the two can merge without renumbering anything.
+
+## D-030 · How the shared AI key is clamped
+
+**Decided 27 Sep 2026 (BL-1.0, S-1).** `supabase/functions/claude` rebuilds
+every request through `supabase/functions/_shared/clamp.ts` before counting
+it.
+
+- **An unknown model is refused, not substituted.** Answering with a model
+  other than the one named misreports who answered.
+- **An oversize `max_tokens` is clamped, not refused.** The 16 000 ceiling is
+  above the app's largest ask (12 000), so no app path is cut.
+- **Fields outside the app's own request shape are dropped** and listed in
+  `dropped`, not passed through.
+- **The clamp runs before `count_call`,** so a malformed request no longer
+  costs one of the student's sixty calls.
+
+The model list and the search cap are tied to `lib/assistant.ts` and
+`lib/research.ts` by test, so adding a model to the app without adding it here
+fails CI rather than failing a student.
+
+Deployment note: `.github/workflows/functions.yml` deploys changed functions
+after CI passes on main, so **merging this to main is the production deploy**
+and needs owner approval.
+
 ## D-036 · Study abroad lives in Pathway, unflagged, and every approval is the student's record
 
 **Taken in P4.1.** (D-030 to D-035 are on their own open branches; D-013–D-029
@@ -333,3 +362,38 @@ The original proposal is kept below for the record.
 
 **Rejected:** merging both as they are, which would mean two Todays; or
 dropping either outright, which loses tested work the other lacks.
+
+## D-022 · Registration Day Mode reminders ride the registrar-deadline rule
+
+**Decided 27 Sep 2026 (Phase C).**
+
+- The window's two reminders (the day before, and the hour before) use the
+  existing `term` rule rather than a new `NotifKey`. A new key would change
+  the synced `notifs` record and the settings screen for one date.
+- To the student it is a registrar date: the same toggle and the same
+  quiet-hours rule apply.
+- The ids are `regday:…` so they land on `yes`, not `registrar`.
+
+## D-023 · Flagged Today surfaces are lazy-loaded
+
+**Decided 27 Sep 2026 (Phase C).**
+
+- `TodayDecisionSurface` loads Phase B's `TodayActionCenter` and Phase C's
+  `RegistrationDayCard` with `lazy()`.
+- With both flags off, the default, neither is in the first download.
+- The entry chunk went from 627.65 kB (Phase B base) to 602.68 kB, which is
+  below BL-1.4's recorded 613.71 kB.
+- The notifier's needs moved to `lib/registration-window.ts`, so the
+  always-loaded reminder code does not pull in the catalog parser.
+
+## D-024 · Registration readiness actions and BL-1.8
+
+**Proposed — needs owner if BL-1.8 lands separately.**
+
+- The Phase 0 backlog's BL-1.8 ("Registration readiness as a grouped action
+  workflow") is what `lib/registration-actions.ts` does, under the
+  `registration_day_mode` flag.
+- No BL-1.8 branch existed when Phase C was finished (checked at 17:20 UTC on
+  27 Sep, after the other session had pushed BL-1.10 to BL-1.13).
+- If the other session pushes one, reconcile as in D-021: keep one proposer,
+  and one "Registration readiness" group.

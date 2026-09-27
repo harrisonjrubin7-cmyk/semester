@@ -577,6 +577,28 @@ export const DESTINATIONS: Destination[] = [
     root: 'home',
   },
   {
+    screen: 'hub',
+    label: 'Notices',
+    short: 'Notices',
+    blurb: 'Everything your courses, your school and Semester are telling you — one list, every message labelled with who sent it.',
+    keywords:
+      'notices notice communications hub inbox messages message announcements alerts official registrar financial aid department instructor lms reminders unread saved follow up quiet hours digest channel preferences priority required',
+    group: 'Semester',
+    taskTags: ['due', 'week'],
+    root: 'home',
+  },
+  {
+    screen: 'launchpad',
+    label: 'Launchpad',
+    short: 'Launch',
+    blurb: 'From the offer letter to week five — deposit, documents, orientation, housing, advisor and first courses, in order.',
+    keywords:
+      'launchpad admitted accepted admission enrollment enrol confirm deposit transcripts immunization vaccine insurance placement test orientation first year first-year freshman transfer international online adult learner commuter veteran military first semester first 30 days new student onboarding checklist move in arrival glossary terminology office hours academic integrity mentor peer ambassador parent supporter reflection',
+    group: 'Semester',
+    taskTags: ['ahead', 'campus'],
+    root: 'home',
+  },
+  {
     screen: 'maps',
     label: 'Getting there',
     short: 'Map',
@@ -671,6 +693,17 @@ export const DESTINATIONS: Destination[] = [
       'pathway program programs application applications apply graduate grad school masters doctoral phd thesis dissertation research publication transfer credit admission admissions arrival orientation graduation alumni milestone milestones tuition cost compare shortlist deadline personal statement essay recommendation study abroad exchange semester away course approval pre-approval credit count host university',
     group: 'Beyond',
     taskTags: ['ahead'],
+    root: 'mine',
+  },
+  {
+    screen: 'opportunities',
+    label: 'Opportunities',
+    short: 'Openings',
+    blurb: 'Campus jobs, research, study abroad, certificates, internships and scholarships — one list, each with its steps.',
+    keywords:
+      'opportunity opportunities job jobs campus job student employment work study workstudy shift payroll research lab undergraduate research irb faculty mentor poster conference study abroad exchange global passport visa credential credentials certificate badge microcredential continuing education internship co-op placement practicum service learning capstone scholarship scholarships grant grants fellowship funding award travel grant reference references alumni mentor mentoring resume skills time budget',
+    group: 'Beyond',
+    taskTags: ['ahead', 'make'],
     root: 'mine',
   },
   {
@@ -812,7 +845,7 @@ export const DESTINATIONS: Destination[] = [
      */
     label: 'Account',
     blurb: 'Sign in so the same semester is on your phone and your laptop.',
-    keywords: 'sign in log in register sync devices password email',
+    keywords: 'sign in log in register sync devices password email membership plan plans pricing upgrade billing subscription',
     group: 'Data',
     taskTags: ['data'],
     root: 'me',
@@ -870,6 +903,17 @@ export const DESTINATIONS: Destination[] = [
     short: 'Links',
     blurb: 'Campus sites, the bookstore, tickets, and any address you add.',
     keywords: 'links bookmarks shortcuts campus yes anchorlink brightspace onevu myvu bookstore books tickets game football basketball commodores social instagram twitter x address url website site',
+    group: 'Life',
+    taskTags: ['campus'],
+    root: 'me',
+  },
+  {
+    screen: 'support',
+    label: 'Support',
+    short: 'Support',
+    blurb: 'Care, basic needs, accommodations, safety and the campus itself — which door, and whether what you say there stays there.',
+    keywords:
+      'support help care counseling counselling mental health wellbeing wellness crisis 988 emergency 911 safety public safety alert closure weather continuity basic needs food pantry hunger homeless homelessness emergency shelter emergency grant emergency fund childcare legal aid transportation disability accommodation accommodations access accessibility assistive technology captioning note-taking testing center study space room booking lab equipment makerspace printing transit shuttle parking commute building hours student government election committee sustainability bike',
     group: 'Life',
     taskTags: ['campus'],
     root: 'me',
