@@ -243,7 +243,45 @@ declare
     -- writes a review and its separate authorship row in one statement, so
     -- the published review never carries who wrote it.
     'read_shared_accommodation(want_share uuid)',
-    'submit_course_review(want_course text, want_term text, want_workload integer, want_difficulty integer, want_usefulness integer, want_body text)'
+    'submit_course_review(want_course text, want_term text, want_workload integer, want_difficulty integer, want_usefulness integer, want_body text)',
+
+    -- The six in 20260927230000_help_requests.sql, and the only doors to
+    -- `help_requests`: no API role holds INSERT, UPDATE or DELETE on it.
+    -- A student sends, withdraws and forgets their own; staff holding
+    -- `help_request:respond` for that destination list, open and answer,
+    -- and every open writes an event the student reads.
+    'answer_help_request(want uuid, want_status text, want_reply text)',
+    'forget_my_help_requests()',
+    'help_inbox(want_destination uuid)',
+    -- 20260927230000's companion: which of those inboxes are the caller's.
+    'my_help_destinations()',
+    'open_help_request(want uuid)',
+    'send_help_request(want_destination uuid, want_question text, want_context jsonb)',
+    'withdraw_help_request(want uuid)',
+
+    -- The five in 20260927170000_integration_control_plane.sql. The first four
+    -- are the only way a connection's status or approval, a scope's approval,
+    -- or a replay request moves: those columns are off the API roles' column
+    -- grants, and each function checks its own capability over the row's
+    -- school, refuses the unsafe case (self-approval, no reason, a replay under
+    -- a kill switch) and is audited by trigger. `kill_switch_engaged` answers a
+    -- boolean about a switch key and a school and returns no row.
+    'integration_approve_connection(want_connection text, want_direction text)',
+    'integration_approve_scope(want_scope uuid)',
+    'integration_request_replay(want_dead_letter uuid, want_reason text)',
+    'integration_set_paused(want_connection text, want_paused boolean, want_reason text)',
+    'kill_switch_engaged(want_switch text, want_tenant text)',
+
+    -- The three in 20260927201500_advisor_shares.sql (Phase G, D-016).
+    -- `share_with_advisor` finds the advisor only among the student's own
+    -- school's `academic_advisor` grants, and every miss reads the same.
+    -- `list_advisor_shares` returns shares addressed to the caller, titles and
+    -- dates only. `read_advisor_share` checks the share is live and addressed
+    -- to the caller, and logs the read for the student. `advisor.check.sql`
+    -- holds each of those as the account refused.
+    'list_advisor_shares()',
+    'read_advisor_share(want_share uuid)',
+    'share_with_advisor(advisor_email text, share_title text, share_payload jsonb, share_expires timestamp with time zone)'
   ];
   extra text;
   missing text;

@@ -47,6 +47,10 @@ const Nil = lazy(() => import('./screens/Nil').then((m) => ({ default: m.Nil }))
 const Career = lazy(() => import('./screens/Career').then((m) => ({ default: m.Career })));
 const Family = lazy(() => import('./screens/Family').then((m) => ({ default: m.Family })));
 const Pathway = lazy(() => import('./screens/Pathway').then((m) => ({ default: m.Pathway })));
+const Launchpad = lazy(() => import('./screens/Launchpad').then((m) => ({ default: m.Launchpad })));
+const Hub = lazy(() => import('./screens/Hub').then((m) => ({ default: m.Hub })));
+const Support = lazy(() => import('./screens/Support').then((m) => ({ default: m.Support })));
+const Opportunities = lazy(() => import('./screens/Opportunities').then((m) => ({ default: m.Opportunities })));
 const Create = lazy(() => import('./screens/Create').then((m) => ({ default: m.Create })));
 const Privacy = lazy(() => import('./screens/Privacy').then((m) => ({ default: m.Privacy })));
 const DataScreen = lazy(() => import('./screens/Data').then((m) => ({ default: m.DataScreen })));
@@ -139,6 +143,10 @@ export const SCREENS: Record<Exclude<Screen, 'home' | 'onboarding'>, ComponentTy
   career: Career,
   family: Family,
   pathway: Pathway,
+  launchpad: Launchpad,
+  hub: Hub,
+  support: Support,
+  opportunities: Opportunities,
   create: Create,
   privacy: Privacy,
   data: DataScreen,
