@@ -1504,8 +1504,13 @@ stable
 security definer
 set search_path = ''
 as $$
+  -- The integration control plane's `kill.sharing` (flags.ts, feature_kill_switch)
+  -- stops pseudonymity and volunteer moderation, globally or for one school. It
+  -- is read here so an engaged switch holds in the database, not only in the app.
   select coalesce((select p.enabled from public.community_programs p
-                    where p.tenant_id = want_tenant and p.program = want_program), false);
+                    where p.tenant_id = want_tenant and p.program = want_program), false)
+     and not (want_program in ('scoped_pseudonymity', 'volunteer_moderation')
+              and public.kill_switch_engaged('kill.sharing', want_tenant));
 $$;
 revoke all on function private.community_program_on(text, text) from public, anon, authenticated;
 

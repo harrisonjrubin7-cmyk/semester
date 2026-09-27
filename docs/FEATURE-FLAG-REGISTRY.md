@@ -161,6 +161,12 @@ the account safety state:
   written stay until the yearly sweep or an appeal reverses them.
 - Escalation also needs a `community_escalation_policies` row naming the
   agreement, its categories and the channel — again service role only.
+- An engaged `kill.sharing` (above), for the school or for every school,
+  turns pseudonymity and volunteer moderation off in the database as well as
+  in the app. `private.community_program_on` reads it.
+- These `community_programs` rows and the `safety.*` tenant flags above are
+  two switches for the same programmes today. The database enforces
+  `community_programs`; nothing in SQL reads the `safety.*` rows yet.
 
 **Rollback.** Unset the variable, or set it to `off`. Nothing persists
 because a flag was on: the domain functions refuse at call time.

@@ -31,7 +31,7 @@ every rule the prompt states as a number or a prohibition, and 153 tests check
 them. Each prohibition has a test that was shown to go red when its guard was
 reverted.
 
-The database half followed in `supabase/migrations/20260927170000_community.sql`:
+The database half followed in `supabase/migrations/20260927210000_community.sql`:
 
 - **Tables:** communities, members, posts, restrictions, mutes, cases, reports,
   append-only case events, decisions, venues, sessions and session places.
@@ -69,7 +69,7 @@ Detectors and retention followed as well:
   compared by hash; the payload is assembled in SQL from an allowlist. Safety
   entries are written only by a professional's enforcement decision, reversed
   on a granted appeal and swept after a year; a reviewer reads the number
-  only with a written reason, and the student gets words. 93 more checks.
+  only with a written reason, and the student gets words. 94 more checks.
 - **Retention:** a daily sweep, logged in `community_retention_runs`, removes
   expired evidence and never touches open cases.
 

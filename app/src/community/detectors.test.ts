@@ -6,7 +6,7 @@ const ids = (text: string, opts = {}) => detect(text, opts).map((h) => h.rule.id
 
 /** The seed rows out of the migration, translated only from `\y` to `\b`. */
 function seeded() {
-  const sql = readFileSync(new URL('../../../supabase/migrations/20260927170000_community.sql', import.meta.url), 'utf8');
+  const sql = readFileSync(new URL('../../../supabase/migrations/20260927210000_community.sql', import.meta.url), 'utf8');
   const start = sql.indexOf('insert into public.community_detector_rules');
   const seed = sql.slice(start, sql.indexOf('on conflict (id) do nothing;', start));
   const rows = [...seed.matchAll(/\('([^']+)', '([^']+)', '([^']+)', '(P\d)', ([\d.]+),\s*'((?:[^']|'')*)'\)/g)];

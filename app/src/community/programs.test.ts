@@ -13,7 +13,7 @@ import { VOLUNTEER_P2_CATEGORIES } from './moderation';
 import { SEVERITY_DELTA, STANDING_WORDS } from './safety-state';
 import { VOLUNTEER_RULES } from './volunteer';
 
-const sql = readFileSync(new URL('../../../supabase/migrations/20260927170000_community.sql', import.meta.url), 'utf8');
+const sql = readFileSync(new URL('../../../supabase/migrations/20260927210000_community.sql', import.meta.url), 'utf8');
 
 function body(fn: string): string {
   const start = sql.indexOf(`create or replace function ${fn}(`);

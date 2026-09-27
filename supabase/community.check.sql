@@ -1,4 +1,4 @@
--- Community: every permission in 20260927170000_community.sql walked as the
+-- Community: every permission in 20260927210000_community.sql walked as the
 -- account it is about, and every refusal attempted as the account that should
 -- be refused. LOCAL/DISPOSABLE DATABASES ONLY; the transaction is always
 -- rolled back.
@@ -911,6 +911,23 @@ begin
   perform pg_temp.counted('a volunteer reads their own standing', pg_temp.seen(v1,
     $q$select 1 from public.my_volunteer_standing() where status = 'active'$q$), 1);
 
+  -- The control plane's kill.sharing holds here too, for one school or all.
+  perform pg_temp.counted('before the kill switch, the programme is on',
+    private.community_program_on('pv-u', 'volunteer_moderation')::int, 1);
+  insert into public.feature_kill_switch (tenant_id, switch_key, engaged, reason, engaged_at)
+  values ('pv-u', 'kill.sharing', true, 'check: incident drill', now());
+  perform pg_temp.expect_refused('an engaged kill.sharing stops the volunteer queue', v1, 'select * from public.volunteer_next_tasks()');
+  perform pg_temp.expect_refused('and alias changes', ana,
+    format($q$select public.claim_community_alias(%L, 'Wayfarer3')$q$, sup));
+  update public.feature_kill_switch set engaged = false where tenant_id = 'pv-u' and switch_key = 'kill.sharing';
+  perform pg_temp.counted('released, the programme is on again',
+    private.community_program_on('pv-u', 'volunteer_moderation')::int, 1);
+  insert into public.feature_kill_switch (tenant_id, switch_key, engaged, reason, engaged_at)
+  values (null, 'kill.sharing', true, 'check: platform-wide drill', now());
+  perform pg_temp.counted('a platform-wide kill.sharing stops it too',
+    private.community_program_on('pv-u', 'volunteer_moderation')::int, 0);
+  delete from public.feature_kill_switch where tenant_id is null and switch_key = 'kill.sharing';
+
   update public.community_programs set enabled = false where tenant_id = 'pv-u' and program = 'volunteer_moderation';
   perform pg_temp.expect_refused('switching the programme off stops the queue at once', v1, 'select * from public.volunteer_next_tasks()');
 
@@ -983,6 +1000,11 @@ begin
     $q$insert into public.community_programs (tenant_id, program, enabled) values ('es-u', 'institution_escalation', true)$q$);
   insert into public.community_programs (tenant_id, program, enabled, approved_ref)
   values ('es-u', 'institution_escalation', true, 'check');
+  insert into public.feature_kill_switch (tenant_id, switch_key, engaged, reason, engaged_at)
+  values ('es-u', 'kill.sharing', true, 'check: control', now());
+  perform pg_temp.counted('kill.sharing is not escalation''s switch',
+    private.community_program_on('es-u', 'institution_escalation')::int, 1);
+  delete from public.feature_kill_switch where tenant_id = 'es-u';
   perform pg_temp.expect_refused('on, but with no agreement in force, it is still refused', rev,
     format($q$select public.request_community_escalation(%L, 'credible threat against a named student')$q$, k_threat));
   perform pg_temp.expect_refused('a senior reviewer cannot write the agreement', senior,

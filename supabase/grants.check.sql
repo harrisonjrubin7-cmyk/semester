@@ -124,7 +124,7 @@ end $$;
 do $$
 declare
   /*
-   * The allowlist. Fifty-nine, and each is a deliberate entry point:
+   * The allowlist. Sixty-four, and each is a deliberate entry point:
    *   make_referral_code  — mints this account's own code
    *   claim_referral      — records that this account arrived on somebody's
    *   referral_standing   — two integers and a boolean about the caller
@@ -180,7 +180,7 @@ declare
     'claim_school(want text)',
 
     /*
-     * Community (20260927170000_community.sql). Seventeen, because every write
+     * Community (20260927210000_community.sql). Seventeen, because every write
      * to a community table goes through one: members never learn another
      * member's account id, so posting, blocking and reporting have to resolve
      * it server-side; triage runs inside the report; and decisions and

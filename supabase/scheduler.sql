@@ -149,7 +149,7 @@ select cron.schedule(
 -- an appeal), the reports and removed posts they were keeping, restrictions
 -- ninety days after they ended, and study sessions thirty days after they
 -- ended. Open and appealed cases are never swept. Each run writes a row to
--- community_retention_runs. See RETENTION.md and 20260927170000_community.sql.
+-- community_retention_runs. See RETENTION.md and 20260927210000_community.sql.
 select cron.schedule(
   'community-retention',
   '29 4 * * *',
