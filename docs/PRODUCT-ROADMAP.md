@@ -67,7 +67,7 @@ them already exist in part on main (#761, #762).
 | G | Advisor Meeting Mode | Queued; sharing model is D-016 |
 | H | Study Readiness + Source Locker | Queued |
 | I | Career Evidence | Queued |
-| J | Office Action Feed (UI on `institution_actions`) | Queued; needs a follow-up migration |
+| J | Office Action Feed: [OFFICE-ACTION-FEED.md](OFFICE-ACTION-FEED.md) | **Built** behind `office_action_feed` (off). Its migration awaits owner approval (D-048). Draft PR |
 | K | Course Demand Forecasting (UI on `course_demand_snapshots`) | Queued |
 | L | Semester Wrapped | Queued |
 | M | Offline Mode (extends `public/sw.js`) | Queued |

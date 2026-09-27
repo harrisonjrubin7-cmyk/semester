@@ -565,3 +565,90 @@ session's range.)
   has to map the server's `rejected` state, which the app's `SkillClaim`
   type lacks.
 
+
+## D-048 · Phase J finishes `institution_actions` with one additive migration
+
+**Proposed — needs owner before any merge to `main`.**
+
+- `20260927224500_office_action_feed.sql` finishes the table from
+  `20260926150000`. It:
+  - requires an office, an https link, a source note and an update time on
+    every new row, as a check constraint;
+  - adds audiences by school, program and student-selected eligibility,
+    alongside cohort;
+  - adds a draft → review → published → withdrawn workflow, where someone
+    other than the author approves;
+  - adds `institution_action_audiences` and `institution_action_progress`,
+    which only the student can read;
+  - adds six functions. The completion count is null below ten.
+- **Direct writes are revoked.** Insert, update and the old
+  `update (withdrawn_at)` column grant all go; writes go through
+  `draft_office_action` and `move_office_action`. Nothing in the app wrote
+  the table before this.
+- **Rows from before stay.** They are marked `published` (or `withdrawn`)
+  with no office. The app shows only rows with an office, so they stay out of
+  the feed until an office republishes them properly.
+- **Offices.** A table lists the eleven from the command, plus the Counseling
+  Center and the Learning Center (resources and events only), and names the
+  roles that may publish for each.
+  - The migration adds four new roles for offices that had none:
+    `career_center_staff`, `disability_services_staff`,
+    `study_abroad_advisor` and `first_year_staff`.
+  - **No existing role gains a capability.**
+- **A named student is no longer an audience.** The command scopes by tenant,
+  cohort, office, program or student-selected eligibility, so the new
+  workflow does not offer one student. The column stays, for rows that
+  already use it.
+- **Checked on a throwaway Postgres 16.** Every migration applies. `expansion`
+  passes (65), with its institution-action section rewritten for the
+  workflow, and `officeactions` passes (79 new checks).
+  - Seven faithful reverts each turned the suite red: self-approval, the
+    threshold, eligibility matching, the office-role match, a staff read of
+    audiences, the feed showing old rows, and the https check. The seventh
+    was caught by the constraint as well as the function.
+- **Not applied anywhere.** Merging to `main` would apply it through Supabase
+  Branching, so that merge needs approval, as with D-025 and D-043.
+- **Alternative:** hold the migration back. The feed then shows "could not
+  load", and nothing else changes.
+
+## D-049 · Completion reaches an office only when the student says so
+
+**Decided 27 Sep 2026 (Phase J).**
+
+- A student marks an office action done with **Mark done…** in the feed. The
+  confirmation says the office sees only a count, and only at ten or more,
+  and never a name.
+- **Done** in the Action Center stays on the device, like every other
+  Action Center choice. It is the student's own record, not a report to the
+  office.
+- The count is the database's: `office_desk_actions` returns null below
+  ten, and the desk prints "Fewer than 10 students have marked this done, so
+  no count is shown." It never prints a smaller number, even one it was
+  given.
+- An office never reads the progress or audience tables, never sees which
+  students an action reached, and gains no access to plans by publishing.
+  `officeactions.check.sql` holds each of those as the office account.
+
+## D-050 · What a student can say applies to them
+
+**Decided 27 Sep 2026 (Phase J).**
+
+- There are nine eligibilities:
+  - aid applicant;
+  - international;
+  - veteran or military education benefits;
+  - varsity athlete;
+  - campus housing;
+  - study abroad;
+  - first year;
+  - transfer;
+  - graduating.
+- A student can also choose a program from the ones offices at their school
+  publish to.
+- **Deliberately nothing about health or disability.** Disability Services
+  publishes to the whole school, and a student never has to tell Semester
+  they are registered in order to see its reminders.
+- **Nothing is inferred.** The existing `student_context.self_segments` is
+  not reused: those drive module visibility, and a student choosing which
+  office notices to see is a separate decision.
+- Saving shows the whole list first, and says no office can see it.

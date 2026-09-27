@@ -42,7 +42,7 @@ the duplicate that file warns about.
 | H | Study Readiness | `study_readiness` (D-045) | Course Companion → `course/:id` › **Readiness** tab (built) | **Extend** | `lib/standing.ts`, `components/Standing.tsx` (words, not scores); `state.reviews`; `lib/runway.ts` |
 | H | Source Locker | `source_locker` (D-044) | Course Companion → `course/:id` › **Sources** tab (built); Me → Trust Center (Phase N) | **Extend** | `lib/sources.ts`, `screens/Sources.tsx`, `lib/studysources.ts`, `intelligence/Disclosure.tsx` |
 | I | Career Evidence + resume bullets | `career_evidence` (D-046, D-047) | Me → `career` › **Evidence** tab; course overview › skills panel (built) | **Extend** | `lib/career.ts`, `screens/Career.tsx` (résumé present), `lib/skills-graph.ts` (`careerSkillsGraph` flag); table `skill_records` |
-| J | Campus Office Action Feed | `office_action_feed` | Today (converted to Actions); `registrar` | **Table only** | Table `institution_actions` with scoped publish policies; `screens/Registrar.tsx`, `Feed_registrar` |
+| J | Campus Office Action Feed | `office_action_feed` (D-048, D-049, D-050) | Today: ranked in the Action Center, or the first three on the briefing; Key dates (`registrar`): full feed and the office desk (built) | **Extend** + migration | `institution_actions` finished by `20260927224500_office_action_feed.sql`; `lib/office-actions.ts`, `components/OfficeActionFeed.tsx`, `components/OfficeActionDesk.tsx` |
 | K | Course Demand Forecasting | `demand_forecasting` | Student: My Path → `yes` cart (opt-in). Staff: `university` | **Table only** | `term_plan_courses.contributes_to_demand` (default false); `course_demand_snapshots` (`planned_students >= 10` check); capability `demand:read` |
 | L | Semester Wrapped | `semester_wrapped` | Me → `me` (Progress) | **Extend** | `screens/Reports.tsx` (`brief`), `lib/usage.ts` (device-only counts), `state.done` |
 | M | Offline Mode | `offline_mode` | Global badge; Today / Plan / My Path read paths | **Extend** | `public/sw.js` (537 lines: network-first shell, cache-first media), `lib/offline.ts`, `ScreenTrouble` offline copy |
@@ -280,7 +280,8 @@ change unless it is approved.
   `publisher_scope_kind`/`_id` by capability, and tenant-scoped cohorts.
 - `Registrar.tsx` term deadlines.
 
-**Gaps against the command (a follow-up migration, which needs approval):**
+**Resolved in Phase J** by `20260927224500_office_action_feed.sql` (D-048); see [OFFICE-ACTION-FEED.md](OFFICE-ACTION-FEED.md). The gaps as first recorded:
+
 
 - `official_url` is **nullable**, but the command requires it.
 - There is **no `source_label` or `published_at`/`updated_at`** column for the

@@ -8366,6 +8366,83 @@ section[data-drop] > .grip + * {
   color: var(--app-fg);
 }
 
+/* ── Campus office actions (office_action_feed, Phase J) ────────────────── */
+
+.office-feed,
+.office-desk,
+.office-today {
+  margin-top: var(--sp-5);
+}
+
+.office-list {
+  display: grid;
+  gap: var(--sp-4);
+  margin: 0 0 var(--sp-5);
+  padding-left: 0;
+  list-style: none;
+}
+
+.office-card {
+  padding: var(--sp-4);
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-md);
+}
+
+.office-card p {
+  margin: 0 0 var(--sp-2);
+}
+
+.office-from {
+  font-size: var(--type-xs-plus);
+  color: var(--app-dim);
+}
+
+.office-title {
+  font-size: var(--type-md);
+  color: var(--app-fg);
+}
+
+.office-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  margin-top: var(--sp-3);
+}
+
+.office-audiences fieldset {
+  margin: 0 0 var(--sp-4);
+  padding: 0;
+  border: 0;
+}
+
+.office-choice {
+  display: block;
+  padding: var(--sp-2) 0;
+}
+
+.office-form {
+  display: grid;
+  gap: var(--sp-3);
+  margin: 0 0 var(--sp-5);
+}
+
+.office-field {
+  display: grid;
+  gap: var(--sp-1);
+}
+
+.office-field input,
+.office-field select,
+.office-field textarea {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.office-problems {
+  margin: 0;
+  color: var(--app-dim);
+}
+
 /* BL-1.4's Action Center, when it sits in a Phase B panel rather than in the
    #761 card whose `.today-decision-surface` rules it was drawn against. */
 .action-panel .action-center h2 {
