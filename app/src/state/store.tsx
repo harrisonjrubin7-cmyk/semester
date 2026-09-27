@@ -32,6 +32,7 @@ import {
   currentSession,
   onAuthChange,
   explainSync,
+  isStale,
   pull,
   push as pushCloud,
   type Account,
@@ -845,6 +846,20 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     void refresh();
   }, [refresh]);
 
+  /*
+   * How many times in a row a push has found the account moved on.
+   *
+   * A push that loses the race pulls, merges and goes again — see `Stale` in
+   * `lib/cloud.ts`. Bumping this is what makes it go again: the merge can
+   * leave the persisted half exactly as it was (the account's news was
+   * already here), and then nothing else would re-run the effect below.
+   * Each round waits twice as long as the last, up to a minute, and from the
+   * third the sync line says why: two devices trading pushes every few
+   * seconds is something to say, not something to spin on. It never stops
+   * trying, because stopping would leave this device's work on this device.
+   */
+  const [lost, setLost] = useState(0);
+
   /**
    * Every later change goes up, once things stop moving.
    *
@@ -863,6 +878,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
    */
   useEffect(() => {
     if (!account) return;
+    // Not while the first-sign-in question is open. Before it is answered
+    // this device has no business writing either copy — and it used to: an
+    // edit made with the dialogue on screen was pushed over the account the
+    // student was in the middle of being asked about.
+    if (asking) return;
+    const wait = lost === 0 ? 2500 : Math.min(60_000, 2500 * 2 ** lost);
     const timer = setTimeout(() => {
       const { courses, ...rest } = pickPersisted(state);
       const removed = state.removedCourses;
@@ -871,27 +892,44 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         rest as Record<string, unknown>,
         courses.map((c) => ({ id: c.course.id, data: c })),
         removed,
+        seenRows(),
       )
         .then((seen) => {
           // What the database stamped, not what this device's clock says.
           markSeen(seen);
+          setLost(0);
           setSync({ status: 'synced', at: Date.now(), error: '' });
           if (removed.length > 0) dispatch({ type: 'removalsPushed', ids: removed });
         })
-        .catch((e: unknown) =>
+        .catch(async (e: unknown) => {
+          if (isStale(e)) {
+            // The account has something this device has not read. Take it —
+            // `hydrate` merges rather than replaces — and then push the merge.
+            await refresh();
+            if (lost >= 2) {
+              setSync({
+                status: 'error',
+                at: 0,
+                error:
+                  'Another device keeps changing this semester at the same moment. Nothing has been overwritten, and this device will keep trying.',
+              });
+            }
+            setLost((n) => n + 1);
+            return;
+          }
           setSync({
             status: 'error',
             at: 0,
             error: explainSync(e).said,
-          }),
-        );
-    }, 2500);
+          });
+        });
+    }, wait);
     return () => clearTimeout(timer);
     // `persisted` stands in for the whole persisted half. `state` is read
     // inside the timer and is deliberately not a dependency — it changes on
     // every navigation, and none of those are worth a write.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [account, persisted]);
+  }, [account, persisted, asking, lost]);
 
   // The sample is fetched the first time it is switched on, and stays in
   // memory after. It is still never copied into storage — an account holds a

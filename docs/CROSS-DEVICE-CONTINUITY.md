@@ -18,7 +18,15 @@ the spec. Paths are under `app/src/`.
 ## How it syncs
 
 - **Push:** 2.5 seconds after any change to persisted state
-  (`state/store.tsx`), the whole state row and every course row are upserted.
+  (`state/store.tsx`), the state row and every course row are written, each
+  as a **compare-and-swap on `updated_at`**: a row this device has read is
+  updated only where its stamp is still the one recorded in `semester.seen`,
+  and a row it has not read is inserted. If another device got there first,
+  `push` throws `Stale` (`lib/cloud.ts`) and writes nothing over it. The store
+  then pulls, merges and pushes again, waiting twice as long each round up to
+  a minute; from the third round the sync line says another device is
+  changing the semester at the same moment. Nothing is pushed while the
+  first-sign-in question is open.
 - **Pull:** when the signed-in account changes, and on pull-to-refresh or
   "Sync now" (`components/PullDown.tsx`). **Not** on focus, on becoming
   visible, or on coming back online.
@@ -48,14 +56,16 @@ soft top bar and Today's decision surface. A local save failure raises a
 
 ## Gaps against the spec, in order of risk
 
-1. **Silent overwrite is possible.** `lib/cloud.ts` says so in its header: when
-   one record is edited on two devices, the later edit survives. Worse, `push`
-   upserts the whole state row with no version check and does not pull first.
-   A device that has not pulled since another device pushed will overwrite
-   that device's `theirs` fields in the account. The fix is a version check on
-   push: send the `updated_at` that was pulled, refuse the write if the row has
-   moved on, then pull, merge and retry. The merge notes `lib/merge.ts`
-   already records would be the input to a Conflict state.
+1. **Fixed: a push no longer overwrites a copy it has not read.** It used to
+   upsert the whole state row with no version check and without pulling
+   first, so a device that had not pulled since another device pushed wrote
+   straight over it. Guarded by `lib/cloudcas.test.ts` (a fake database that
+   honours the stamp filter) and `state/syncretry.test.tsx` (pull, merge and
+   retry; no push while the first-sign-in question is open). What remains is
+   the merge's own rule: **one record** edited on both devices keeps the later
+   edit, and `theirs` settings changed here but not yet pushed give way to
+   the account's. Devices on a release older than this one still write
+   blindly until they update.
 2. **A failed push is not retried.** It sets `error` and waits for the next
    change.
 3. **No pull on focus or reconnect.** A laptop left open overnight shows
@@ -72,5 +82,4 @@ soft top bar and Today's decision surface. A local save failure raises a
    adapts it to the width. Even so, the spec would make `nav` and `mailPane`
    per device as well.
 
-Each of 1–4 is a change to sync semantics that deserves its own branch and
-review. They are recorded here, not attempted in the documentation change.
+Each of 2–5 is a change to sync behaviour that deserves its own review.

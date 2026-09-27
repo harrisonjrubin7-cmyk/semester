@@ -618,6 +618,7 @@ const MOCKS_MODULES = [
   'src/state/persist/firstrun.test.ts',
   'src/state/persist/tell.test.ts',
   'src/state/storetoken.test.tsx',
+  'src/state/syncretry.test.tsx',
 ]
 
 export default defineConfig(({ command, mode }) => {

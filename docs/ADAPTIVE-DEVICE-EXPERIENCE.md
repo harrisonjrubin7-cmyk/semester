@@ -104,9 +104,10 @@ instead.
 These are listed so that they are not mistaken for done. Each is larger than
 this change.
 
-- **Cross-device conflicts.** Sync is last-write-wins per record, using device
-  clocks, and a push does not pull first. An edit from another device can be
-  silently overwritten. See [CROSS-DEVICE-CONTINUITY.md](CROSS-DEVICE-CONTINUITY.md).
+- **Cross-device conflicts: partly fixed.** A push is now a compare-and-swap
+  on each row's `updated_at`, so it cannot overwrite a copy it has not read;
+  it pulls, merges and retries instead. One record edited on both devices
+  still keeps the later edit. See [CROSS-DEVICE-CONTINUITY.md](CROSS-DEVICE-CONTINUITY.md).
 - **Offline, Queued and Conflict states.** The sync status has `syncing`,
   `synced` and `error`, but none of these three.
 - **Return context after sign-in.** OAuth, SSO and password reset all return to
