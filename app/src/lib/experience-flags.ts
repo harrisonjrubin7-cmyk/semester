@@ -8,6 +8,7 @@ export interface ExperienceFlags {
   careerSkillsGraph: FeatureState;
   multimodalCapture: FeatureState;
   universityControlPlane: FeatureState;
+  humanHelp: FeatureState;
 }
 
 const STATES: readonly FeatureState[] = ['off', 'preview', 'sandbox', 'production'];
@@ -27,6 +28,7 @@ export function experienceFlags(env: PreviewEnv): ExperienceFlags {
     careerSkillsGraph: featureState(env, 'VITE_CAREER_SKILLS_GRAPH', preview),
     multimodalCapture: featureState(env, 'VITE_MULTIMODAL_CAPTURE', preview),
     universityControlPlane: featureState(env, 'VITE_UNIVERSITY_CONTROL_PLANE', preview),
+    humanHelp: featureState(env, 'VITE_HUMAN_HELP', preview),
   };
 }
 

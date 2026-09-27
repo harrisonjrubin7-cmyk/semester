@@ -38,7 +38,7 @@ figure, or a cited file is.
 | **Support** | `IN_PROGRESS` | Corrected — "no incident process" was wrong. `SECURITY.md` is the incident-response process (what is stored where, what the access log can and cannot tell you, and what an incident note may honestly claim), written in September; `docs/market-readiness/INCIDENT_RESPONSE.md` and `SUPPORT_PLAYBOOK.md` define the tiers and the runbook. Gaps: nothing has exercised either, no monitoring exists to trigger the process, and there is no operator or support address a university could be given. |
 | **Implementation** | `NOT_STARTED` | No onboarding, pilot or migration playbook. |
 | **Documentation** | `IN_PROGRESS` | Unusually strong internal documentation. `SECURITY.md`, `SECRETS.md`, `RETENTION.md`, `ROLLBACK.md`, `MIGRATION-HISTORY.md`, `docs/UNIVERSITY_CONNECTIONS.md`. Nothing university-facing. |
-| **Procurement** | `NOT_STARTED` | No procurement pack, no security questionnaire responses. |
+| **Procurement** | `IN_PROGRESS` | `docs/market-readiness/HECVAT_READINESS.md` registers 34 controls with their evidence, and `app/src/lib/hecvat-readiness.test.ts` fails on a missing file, an unevidenced `READY`, or a third-party document (ACR, pen test, SOC 2, DPA, insurance) claimed without one filed. No questionnaire has been completed and none of those documents exists. |
 
 ## How this document has been wrong
 

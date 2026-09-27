@@ -40,6 +40,9 @@ import type { School } from '../lib/school';
 import type { Screen } from '../lib/types';
 import { INSTITUTIONAL_PREVIEW } from '../lib/institutional-preview';
 import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
+import { GetHelp } from '../components/GetHelp';
+import { HelpInbox } from '../components/HelpInbox';
+import { helpSeedWaiting } from '../lib/help-routes';
 import { ControlPlane } from '../components/institutional/ControlPlane';
 import type { ControlPlaneStatus } from '../lib/control-plane';
 
@@ -118,9 +121,10 @@ const TABS = [
   ...(EXPERIENCE_FLAGS.universityControlPlane !== 'off'
     ? [{ id: 'control' as const, label: 'Control' }]
     : []),
+  ...(EXPERIENCE_FLAGS.humanHelp !== 'off' ? [{ id: 'help' as const, label: 'Get help' }] : []),
 ];
 
-type Tab = 'overview' | 'drafts' | 'records' | 'connections' | 'control';
+type Tab = 'overview' | 'drafts' | 'records' | 'connections' | 'control' | 'help';
 
 /** What each role is called on screen. */
 const ROLE_LABELS: Record<UniversityRole, string> = {
@@ -254,9 +258,12 @@ function Standing({
 }
 
 function Workspace({ storageKey }: { storageKey: string }) {
-  const { state, dispatch, catalog, school } = useStore();
+  const { state, dispatch, catalog, school, account } = useStore();
 
-  const [tab, setTab] = useState<Tab>('overview');
+  // An Action Center "Ask for help" lands here with a seed waiting; open on it.
+  const [tab, setTab] = useState<Tab>(() =>
+    EXPERIENCE_FLAGS.humanHelp !== 'off' && helpSeedWaiting() ? 'help' : 'overview',
+  );
   const [intent, setIntent] = useState<UniversityRole>('student');
   const [area, setArea] = useState<UniversityArea>('courses');
 
@@ -686,6 +693,13 @@ function Workspace({ storageKey }: { storageKey: string }) {
             channel for anything urgent, and keep medical, payment-card and other sensitive records in
             the service your school approved for them.
           </p>
+        </>
+      )}
+
+      {tab === 'help' && EXPERIENCE_FLAGS.humanHelp !== 'off' && (
+        <>
+          <GetHelp account={account} />
+          <HelpInbox account={account} />
         </>
       )}
 

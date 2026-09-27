@@ -243,7 +243,21 @@ declare
     -- writes a review and its separate authorship row in one statement, so
     -- the published review never carries who wrote it.
     'read_shared_accommodation(want_share uuid)',
-    'submit_course_review(want_course text, want_term text, want_workload integer, want_difficulty integer, want_usefulness integer, want_body text)'
+    'submit_course_review(want_course text, want_term text, want_workload integer, want_difficulty integer, want_usefulness integer, want_body text)',
+
+    -- The six in 20260927180000_help_requests.sql, and the only doors to
+    -- `help_requests`: no API role holds INSERT, UPDATE or DELETE on it.
+    -- A student sends, withdraws and forgets their own; staff holding
+    -- `help_request:respond` for that destination list, open and answer,
+    -- and every open writes an event the student reads.
+    'answer_help_request(want uuid, want_status text, want_reply text)',
+    'forget_my_help_requests()',
+    'help_inbox(want_destination uuid)',
+    -- 20260927180000's companion: which of those inboxes are the caller's.
+    'my_help_destinations()',
+    'open_help_request(want uuid)',
+    'send_help_request(want_destination uuid, want_question text, want_context jsonb)',
+    'withdraw_help_request(want uuid)'
   ];
   extra text;
   missing text;
