@@ -61,7 +61,8 @@ import {
    the directory of everything behind it. See `lib/desk.ts`. */
 
 import { datedItems, nextExam } from './lib/select';
-import { destination, rootOf } from './lib/nav';
+import { destination, rootOf, saysFor } from './lib/nav';
+import { PagePurpose } from './components/Page';
 import { chromeFor, homeShape } from './lib/chrome';
 import { ScreenTrouble } from './components/Boundary';
 import { courseFieldFor, insideCourse } from './lib/parent';
@@ -454,7 +455,7 @@ function Header({
             type="button"
             className="btn btn-ghost btn-icon tap"
             onClick={() => dispatch({ type: 'finder', open: true })}
-            aria-label="Search everything"
+            aria-label="Search, ask or add"
             aria-keyshortcuts="/"
           >
             <SearchIcon size={19} />
@@ -649,7 +650,7 @@ function TabBar() {
 }
 
 function CurrentScreen() {
-  const { state } = useStore();
+  const { state, school } = useStore();
   /*
    * Home first, because it is the one screen whose component is a function of
    * the navigation rather than of `state.screen`.
@@ -690,7 +691,19 @@ function CurrentScreen() {
   // and missing from `SCREENS` remains a build error; this catches the string
   // that is not a screen at all, which used to land on Today and does again.
   const Screen = SCREENS[state.screen as Exclude<typeof state.screen, 'home' | 'onboarding'>] ?? Today;
-  return <Screen />;
+  /*
+   * The sentence under the heading, for every screen that does not write its
+   * own. Today is above and not in this: it is the dashboard, and "What is due
+   * and what to do next" over the thing that shows exactly that says it twice.
+   * `components/Page.tsx` has the rest.
+   */
+  const place = destination(state.screen);
+  const purpose = place ? saysFor(place, school.capabilities).blurb : undefined;
+  return (
+    <PagePurpose.Provider value={purpose}>
+      <Screen />
+    </PagePurpose.Provider>
+  );
 }
 
 /**

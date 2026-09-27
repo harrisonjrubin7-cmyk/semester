@@ -2,38 +2,47 @@ import { DESTINATIONS, rootOf } from './nav';
 import type { Screen } from './types';
 
 /**
- * The student journey: seven areas, each the answer to one question.
+ * The navigation areas: seven, each the answer to one question a student asks.
  *
- * The registry already files every screen twice. `group` is its shelf — where
- * it physically sits in the launcher, eight rows of at most eight — and
- * `taskTags` is every intention it serves, which is the index Progress draws
- * under "By task". Neither answers the question the UI constitution
+ * The registry already files every screen twice. `group` is its shelf — the
+ * pill rows of the shelf navigation and the springboard's pages, five to eight
+ * screens each — and `taskTags` is every intention it serves, which Progress
+ * draws under "By task". Neither answers the question the UI constitution
  * (`docs/design/SEMESTER-UI-CONSTITUTION.md`) starts from: *which part of a
  * student's week is this?* A shelf called "Beyond" or "Data" is a filing
  * decision; a student does not think "I am in Data now".
  *
- * This is that third reading, and it is deliberately a map beside the
- * registry rather than a field in it. `lib/nav.ts` is edited by nearly every
- * branch in this repository, and adding a required field to sixty-four rows
- * there would make every one of them conflict. The completeness a required
- * field would have bought is held by `journey.test.ts` instead: a destination
- * with no area, or an area entry for a screen that no longer exists, fails
- * there with the id in the message.
+ * ## Not to be confused with its two neighbours
  *
- * ## What it is for, and what it does not do yet
+ * - `lib/journeys.ts` is six guided journeys ("Start my semester", "Complete
+ *   an assignment"). A screen can be on several, because a journey is a route
+ *   through the app. A screen has exactly **one** area here, because an area
+ *   is where it lives.
+ * - `lib/journey-areas.ts` is the twenty-six expansion areas from a product
+ *   brief, mapped to the screens that built them. It is a progress record,
+ *   not navigation.
  *
- * It is the vocabulary the screen audit (`scripts/screen-audit.mjs`) and the
- * constitution use, and the one a later pass will draw — the launcher by area
- * rather than by shelf, the bottom bar as one tab per area. Neither of those
- * is done here, because both change what every student sees and need
- * screenshots and a yes first; the constitution lists them under "Decisions
- * awaiting sign-off". What this does do is make the question answerable in
- * code, so that decision is about drawing, not about filing.
+ * ## Why a map beside the registry
+ *
+ * `lib/nav.ts` is edited by nearly every branch in this repository, and adding
+ * a required field to sixty-three rows there would make every one of them
+ * conflict. The completeness a required field would have bought is held by
+ * `navareas.test.ts` instead: a destination with no area, or an entry for a
+ * screen that no longer exists, fails there with the id in the message.
+ *
+ * ## Where it is drawn
+ *
+ * The launcher (the grid button's sheet, the workspace's apps panel and its
+ * directory) is headed by these areas. The default bottom bar is the front
+ * doors of Today, Plan, Learn, Help and Progress (`lib/tabbar.ts`). The shelves remain what the shelf
+ * navigation and the springboard draw, because those are single rows of
+ * pills and tiles and the areas are not sized for that — Learn holds
+ * twenty-two screens.
  */
-export type Area = 'today' | 'plan' | 'learn' | 'help' | 'campus' | 'progress' | 'you';
+export type NavArea = 'today' | 'plan' | 'learn' | 'help' | 'campus' | 'progress' | 'you';
 
-export interface AreaInfo {
-  id: Area;
+export interface NavAreaInfo {
+  id: NavArea;
   /** What a tab or a heading says. One word. */
   label: string;
   /** The question a student is asking when they are here, in their words. */
@@ -52,7 +61,7 @@ export interface AreaInfo {
  * place, the result — and the account last, because it is where you go to
  * change the app rather than to use it.
  */
-export const AREAS: readonly AreaInfo[] = [
+export const NAV_AREAS: readonly NavAreaInfo[] = [
   {
     id: 'today',
     label: 'Today',
@@ -118,7 +127,7 @@ export const AREAS: readonly AreaInfo[] = [
  * constitution calls Phase 3: one front door (`study`) with the specialist
  * tools behind it, instead of twenty-two peers.
  */
-export const AREA_OF: Readonly<Partial<Record<Screen, Area>>> = {
+export const NAV_AREA_OF: Readonly<Partial<Record<Screen, NavArea>>> = {
   // Today — what needs doing now, and what just changed.
   home: 'today',
   hub: 'today',
@@ -207,9 +216,9 @@ export const AREA_OF: Readonly<Partial<Record<Screen, Area>>> = {
  * You. The last fallback is Today, which is also where `rootOf` sends a
  * screen it does not know.
  */
-export function areaOf(screen: Screen): Area {
+export function navAreaOf(screen: Screen): NavArea {
   if (/^set[A-Z]/.test(screen)) return 'you';
-  return AREA_OF[screen] ?? UNROOTED[screen] ?? AREA_OF[rootOf(screen)] ?? 'today';
+  return NAV_AREA_OF[screen] ?? UNROOTED[screen] ?? NAV_AREA_OF[rootOf(screen)] ?? 'today';
 }
 
 /**
@@ -218,17 +227,22 @@ export function areaOf(screen: Screen): Area {
  * study, and saying so here is cheaper than moving them in `lib/nav.ts`, where
  * it would also change which tab lights up.
  */
-const UNROOTED: Partial<Record<Screen, Area>> = {
+const UNROOTED: Partial<Record<Screen, NavArea>> = {
   gap: 'today',
   guess: 'learn',
 };
 
-export function areaInfo(area: Area): AreaInfo {
-  // AREAS is total over Area, which the test holds; the `!` is that fact.
-  return AREAS.find((a) => a.id === area)!;
+export function navAreaInfo(area: NavArea): NavAreaInfo {
+  // NAV_AREAS is total over NavArea, which the test holds; the `!` is that fact.
+  return NAV_AREAS.find((a) => a.id === area)!;
 }
 
 /** The registry's destinations in one area, in registry order. */
-export function destinationsInArea(area: Area) {
-  return DESTINATIONS.filter((d) => AREA_OF[d.screen] === area);
+export function destinationsInNavArea(area: NavArea) {
+  return DESTINATIONS.filter((d) => NAV_AREA_OF[d.screen] === area);
+}
+
+/** The area's name for a screen — what a row prints where it used to print the shelf. */
+export function navAreaLabel(screen: Screen): string {
+  return navAreaInfo(navAreaOf(screen)).label;
 }

@@ -51,6 +51,7 @@ import { dictate, dictationSupported } from '../lib/mic';
 import { ActionButton } from './ui';
 import { DESKTOP, useMedia } from '../lib/media';
 import { DIMMED_ROW } from '../lib/dim';
+import { takeQuickAddSeed } from '../lib/intent';
 
 /**
  * How wide the box gets, the same measure the whole-app search uses.
@@ -65,7 +66,10 @@ const COLUMN = 620;
 export function QuickAdd({ onClose }: { onClose: () => void }) {
   const { catalog, dispatch } = useStore();
   const now = useNow();
-  const [text, setText] = useState('');
+  // Opens on what was typed into the search field when that was an add —
+  // "add econ ps4 friday" there lands here as "econ ps4 friday". See
+  // `lib/intent.ts`. Empty when opened from the `+`, as it always was.
+  const [text, setText] = useState(takeQuickAddSeed);
   const [said, setSaid] = useState('');
   // Which rows of a split run have been added, by their text — not by their
   // index, because editing the box re-splits it and an index would then point

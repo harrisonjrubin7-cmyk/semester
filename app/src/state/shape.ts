@@ -2735,4 +2735,7 @@ export type Action =
    */
   | { type: 'landed'; screen: Screen; id?: string; mode?: StudyMode };
 
-export const ROOTS: Screen[] = ['home', 'courses', 'study', 'calendar', 'mine', 'me'];
+// Support joined when it became a default tab (`lib/tabbar.ts`): tapping a tab
+// resets the back stack, and a default tab that did not would be the one tab
+// in the bar whose Back retraced every earlier screen.
+export const ROOTS: Screen[] = ['home', 'courses', 'study', 'calendar', 'support', 'mine', 'me'];

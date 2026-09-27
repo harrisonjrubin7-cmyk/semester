@@ -1,4 +1,5 @@
 import type { IntelligenceResponse, SourceOrigin } from './contracts';
+import { SourceBadge } from '../components/SourceBadge';
 
 const ORIGIN_LABEL: Record<SourceOrigin, string> = {
   course: 'Course material',
@@ -27,6 +28,14 @@ export function IntelligenceDisclosure({ response }: { response: IntelligenceRes
           marginBottom: 'var(--sp-3)',
         }}
       >
+        {/*
+          The same badge a registrar record or an estimate carries, so an
+          assistant answer is labelled in the app's one trust vocabulary
+          (`lib/source.ts`, constitution §7) rather than only in words of its
+          own. External is added when the answer drew on the web.
+        */}
+        <SourceBadge label="ai_assisted" />
+        {response.origins.includes('web') && <SourceBadge label="external" />}
         <span>{modeLabel(response.mode)}</span>
         {response.origins.map((origin) => (
           <span key={origin}>· {ORIGIN_LABEL[origin]}</span>

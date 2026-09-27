@@ -25,4 +25,4 @@ This is the quality contract from `docs/design/SEMESTER-UI-CONSTITUTION.md` §9.
 - [ ] It shows source and freshness (`SourceBadge`) where a decision depends on outside data.
 - [ ] Screenshots are attached at 390px and 1280px, on one dark and one light ground (`.claude/skills/run`).
 - [ ] It works with keyboard only, and focus is visible. It reflows at 320px and at 200% zoom.
-- [ ] A new destination is in `lib/journey.ts` (`AREA_OF`).
+- [ ] A new destination is in `lib/navareas.ts` (`NAV_AREA_OF`).

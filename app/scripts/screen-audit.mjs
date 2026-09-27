@@ -24,7 +24,7 @@
  *
  * ## Why a parse and not an import
  *
- * The same reason as `destinations.mjs`: `lib/nav.ts` and `lib/journey.ts`
+ * The same reason as `destinations.mjs`: `lib/nav.ts` and `lib/navareas.ts`
  * import half the app and node cannot load them. Each parse throws on a short
  * answer rather than returning one, because an empty inventory prints as a
  * clean one.
@@ -66,9 +66,9 @@ function block(source, name) {
 }
 
 function areas() {
-  const j = read('lib/journey.ts');
+  const j = read('lib/navareas.ts');
   const areaOf = new Map();
-  for (const m of block(j, 'AREA_OF').matchAll(/^\s+(\w+): '(\w+)',$/gm)) areaOf.set(m[1], m[2]);
+  for (const m of block(j, 'NAV_AREA_OF').matchAll(/^\s+(\w+): '(\w+)',$/gm)) areaOf.set(m[1], m[2]);
   need('area entries', areaOf.size, 50);
   for (const m of block(j, 'UNROOTED').matchAll(/^\s+(\w+): '(\w+)',$/gm)) areaOf.set(m[1], m[2]);
   const labels = new Map();
@@ -117,7 +117,9 @@ function measure(file) {
   return {
     lines,
     frame,
-    blurb: /\bblurb=/.test(c),
+    // An explicit sentence, as against `blurb={null}`, which opts out of the default.
+    blurb: /\bblurb=(?!\{null\})/.test(c),
+    optOut: /\bblurb=\{null\}/.test(c),
     hex,
     styles,
     primaries,
@@ -127,9 +129,9 @@ function measure(file) {
   };
 }
 
-function score(m) {
+function score(m, said) {
   const frame = m.frame === 'Page' ? 2 : m.frame === 'SettingsPage' ? 1 : 0;
-  const purpose = m.blurb ? 2 : 0;
+  const purpose = said === '—' ? 0 : 2;
   const colour = m.hex === 0 ? 2 : m.hex <= 3 ? 1 : 0;
   // A module with no primary at all may be a list whose rows are the action;
   // that is not a finding, only not evidence of a clear one.
@@ -154,13 +156,22 @@ function build() {
     const m = cache.get(file);
     const root = nested.get(screen) ?? screen;
     // `search` and `directory` are the workspace shell looking at itself
-    // (`lib/desk.ts`), not places in the journey.
+    // (`lib/desk.ts`), not places in the navigation.
     const area = /^set[A-Z]/.test(screen)
       ? 'you'
       : SHELL.has(screen)
         ? 'shell'
         : areaOf.get(screen) ?? areaOf.get(root) ?? '—';
+    // `App.tsx` hands `Page` the registry sentence for every destination but
+    // Today (`PagePurpose` in components/Page.tsx), so a framed destination
+    // says what it is for unless it opted out or wrote its own.
+    const said = m.blurb
+      ? 'own'
+      : m.frame === 'Page' && label.has(screen) && screen !== 'home' && !m.optOut
+        ? 'registry'
+        : '—';
     rows.push({
+      said,
       screen,
       name: label.get(screen) ?? named.get(screen) ?? (/^set[A-Z]/.test(screen) ? `Settings: ${screen.slice(3)}` : screen),
       area,
@@ -168,7 +179,7 @@ function build() {
       shelf: shelf.get(screen) ?? shelf.get(root) ?? '—',
       file,
       m,
-      s: score(m),
+      s: score(m, said),
     });
   }
   const order = [...labels.keys(), 'shell'];
@@ -194,7 +205,7 @@ function markdown({ rows, labels, modules }) {
   out.push(`Generated ${today} at \`${commit}\` by \`npm run audit:screens -- --write\` (run from \`app/\`). Do not edit by hand.`);
   out.push('');
   out.push(
-    'Every screen in `app/src/screens.tsx`, the journey area `lib/journey.ts` files it under, and the five criteria of the constitution’s rubric (§9) that can be read from source. ' +
+    'Every screen in `app/src/screens.tsx`, the navigation area `lib/navareas.ts` files it under, and the five criteria of the constitution’s rubric (§9) that can be read from source. ' +
       'The other five — responsive layout, verified accessibility, complete states, navigation clarity, plain language — need a person with the app open and are **not scored here**. ' +
       'Scores are per module: screens drawn from the same file share a row’s numbers.',
   );
@@ -203,7 +214,7 @@ function markdown({ rows, labels, modules }) {
   out.push('');
   out.push(`- **${rows.length} screens** from **${modules.size} modules**.`);
   out.push(`- In the shared \`Page\` frame: ${mods.filter((m) => m.frame === 'Page').length} modules; in \`SettingsPage\`: ${mods.filter((m) => m.frame === 'SettingsPage').length}; frameless: ${mods.filter((m) => m.frame === 'none').length}.`);
-  out.push(`- With a purpose sentence (\`blurb\`): ${mods.filter((m) => m.blurb).length} of ${modules.size} modules.`);
+  out.push(`- Showing a purpose sentence: ${rows.filter((r) => r.said !== '—').length} of ${rows.length} screens — ${rows.filter((r) => r.said === 'own').length} their own, ${rows.filter((r) => r.said === 'registry').length} the registry's by default.`);
   out.push(`- With colour literals (hex or \`rgb()\`/\`rgba()\`) instead of tokens: ${mods.filter((m) => m.hex > 0).length} modules, ${mods.reduce((n, m) => n + m.hex, 0)} literals in all.`);
   out.push(`- Using the second primary-button style, \`.portal-primary\` (\`styles/features.css\`), beside \`.btn-primary\`: ${mods.filter((m) => m.portal).length} screen modules (components are not scanned).`);
   out.push(`- Showing a source or trust label: ${mods.filter((m) => m.trust).length} modules. Using the shared \`EmptyState\`: ${mods.filter((m) => m.empty).length}.`);
@@ -226,7 +237,7 @@ function markdown({ rows, labels, modules }) {
   out.push('| Column | 2 | 1 | 0 |');
   out.push('|---|---|---|---|');
   out.push('| Frame | renders `<Page>` | renders `<SettingsPage>` (the second frame) | neither |');
-  out.push('| Purpose | passes a `blurb` | — | no purpose sentence |');
+  out.push('| Purpose | its own `blurb`, or the registry sentence `Page` draws by default | — | neither |');
   out.push('| Colour | no colour literals | 1–3 | 4 or more |');
   out.push('| Action | 1–2 primary buttons | none, or 3–4 | 5 or more |');
   out.push('| Styling | ≤3 inline `style={{` per 100 lines | ≤8 | more |');
@@ -238,7 +249,7 @@ function markdown({ rows, labels, modules }) {
   for (const r of rows) {
     const d = ((r.m.styles / r.m.lines) * 100).toFixed(1);
     out.push(
-      `| ${r.areaLabel} | ${r.name} \`${r.screen}\` | ${r.shelf} | \`${r.file}\` | ${r.m.frame} | ${yes(r.m.blurb)} | ${r.m.hex} | ${r.m.primaries} | ${d} | ${yes(r.m.empty)} | ${yes(r.m.trust)} | ${r.s.total} | ${band(r.s.total)} |`,
+      `| ${r.areaLabel} | ${r.name} \`${r.screen}\` | ${r.shelf} | \`${r.file}\` | ${r.m.frame} | ${r.said} | ${r.m.hex} | ${r.m.primaries} | ${d} | ${yes(r.m.empty)} | ${yes(r.m.trust)} | ${r.s.total} | ${band(r.s.total)} |`,
     );
   }
   out.push('');
