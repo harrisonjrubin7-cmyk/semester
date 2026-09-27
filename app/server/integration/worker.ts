@@ -21,9 +21,9 @@
  * stop them. Consent is `consent_record`, capability
  * `integration:<connection public id>`, status consented and not revoked.
  *
- * Nothing here is scheduled or deployed. It is the function a scheduled job, a
- * webhook endpoint or an operator's replay will call — see
- * `docs/INTEGRATION-OPERATOR-RUNBOOK.md`.
+ * The scheduled tick (`tick.ts`) calls it for connections that are due and for
+ * replays an operator requested; a webhook endpoint would call it the same way.
+ * See `docs/INTEGRATION-OPERATOR-RUNBOOK.md` §4.
  */
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { validateDeclaration, type AdapterDeclaration } from '../../src/lib/integration/adapter.ts';

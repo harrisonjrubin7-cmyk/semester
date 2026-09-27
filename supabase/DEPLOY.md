@@ -456,6 +456,13 @@ yet. What it returns is the row count:
     where jobid = (select jobid from cron.job where jobname = 'tombstones')
     order by start_time desc limit 5;
 
+### The integration jobs — not applied
+
+`scheduler.sql` also defines `integration-retention`, which runs daily at `29 3 * * *` and is active, and
+`integration-sync`, which runs at `7,22,37,52 * * * *` and is **parked**. Neither has been applied to the project.
+[`docs/INTEGRATION-OPERATOR-RUNBOOK.md`](../docs/INTEGRATION-OPERATOR-RUNBOOK.md) §4 has what each does and the
+four steps that unpark the sync.
+
 ## Security advisor
 
 Nine of the ten findings are closed (migration

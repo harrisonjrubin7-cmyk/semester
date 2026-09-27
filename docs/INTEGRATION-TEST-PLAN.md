@@ -150,6 +150,54 @@ The existing school-records test had encoded the fifth as correct and was rewrit
 stand-in had an insert that fell through to its read path once a delete branch was added; the type check caught it,
 and the three new tests were re-run against main's worker with the corrected stand-in to confirm they fail there.
 
+## Scheduler — `tick.test.ts`, `registry.test.ts`, `api/integration/tick.test.ts`, `retention.test.ts`
+
+**What the tick runs:**
+
+- a due connection is pulled from its cursor;
+- a connection that is not due, not pulled, unapproved, paused, disconnected or unregistered is not run;
+- with the empty production registry, nothing runs.
+
+**Kill switches and refusals:**
+
+- the global switch, engaged or unreadable, stops the tick;
+- a school switch is left for the worker to refuse, and the refusal writes nothing.
+
+**Failures and dead letters:**
+
+- a failing connection's attempts are counted, so its fifth failure dead-letters;
+- after that it is held for an operator rather than dead-lettered every tick.
+
+**Replays:**
+
+- a requested replay runs once per connection and resolves its letters;
+- a replay that fails again is handed back to the operator;
+- a letter whose school is not its connection's school is never replayed.
+
+**Limits:**
+
+- the run cap and the time budget are both kept, oldest attempt first;
+- one run that throws does not stop the rest.
+
+**The endpoint:**
+
+- it answers 503 until all three variables are set;
+- it answers 401 to a wrong or missing token, and 405 to anything but POST.
+
+**The schedule is pinned:**
+
+- the job fires every `TICK_MINUTES` and is parked;
+- its address and token come from Vault;
+- the sweep is daily and not parked.
+
+**The registry:** it refuses a mock and a double claim. A control shows that rule catches both.
+
+Each tick rule was checked by reverting it: the hold, the attempt count, the replay's resolve and withdraw, the school
+check, one pull per connection, the run cap, the skip count and the fail-closed switch each turned a test red. So did
+un-parking the job and changing its cadence. `scheduler.sql` was also applied twice to a scratch Postgres with
+stubbed cron, vault and net schemas. That produced both jobs once, with the sync job inactive. The job's body then
+posted to the Vault address with a bearer token.
+
 ## Two classification layers — `classification.test.ts`
 
 The platform floor matches the migration's seed row for row, and the AI Toolkit's gate (`lib/toolkit/classification.ts`)
@@ -158,5 +206,5 @@ destination. Restoring the old floor (T2 kept out of Community) turned three tes
 
 ## Not yet covered
 
-A live provider; webhook signature validation (no webhook endpoint exists); the worker against PostgREST rather than a stand-in; a scheduler for the sweep and the worker; tablet hardware and screen-reader software (the pass above is automated). 
+A live provider; webhook signature validation (no webhook endpoint exists); the worker against PostgREST rather than a stand-in; the scheduled tick against a deployed endpoint (the job is parked); tablet hardware and screen-reader software (the pass above is automated). 
 
