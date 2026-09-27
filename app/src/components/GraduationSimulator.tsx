@@ -73,8 +73,9 @@ export function GraduationSimulator({ done }: { done: number }) {
         <span className="portal-eyebrow">Estimate</span>
         <h3 id="grad-plan">Your current plan</h3>
         <p className="portal-muted">
-          {done} hours finished, counted from your Taken tab. Every figure here is an estimate from numbers you enter —
-          it does not know course sequencing, when classes are offered, or your financial aid.
+          <strong>A planning estimate, not an official degree audit</strong> — confirm with your advisor or the
+          registrar. {done} hours finished, counted from your Taken tab. Every figure here is an estimate from numbers
+          you enter — it does not know course sequencing, when classes are offered, or your financial aid.
         </p>
         <div className="portal-filter-row">
           <label className="portal-check">
