@@ -22,9 +22,9 @@
  * Health, counseling, disability, conduct and financial-aid feeds have no mock
  * here on purpose: there is no scope any of them could be approved for.
  */
-import type { AdapterDeclaration, EntityMapping } from './adapter';
-import type { ProviderDomain } from './catalog';
-import type { ExternalRecord } from './pipeline';
+import type { AdapterDeclaration, EntityMapping } from './adapter.ts';
+import type { ProviderDomain } from './catalog.ts';
+import type { ExternalRecord } from './pipeline.ts';
 
 function mock(
   id: string,

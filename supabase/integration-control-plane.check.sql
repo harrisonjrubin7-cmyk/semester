@@ -103,7 +103,7 @@ begin
                        'integration_scopes', 'integration_mappings', 'integration_sync_runs',
                        'integration_sync_errors', 'integration_webhook_events',
                        'integration_dead_letter_events', 'source_records', 'source_snapshots',
-                       'source_freshness_events', 'canonical_entity_references');
+                       'source_freshness_events', 'canonical_entity_references', 'integration_retention_runs');
   perform pg_temp.counted('new tables without row-level security', n, 0);
 
   -- And none of them has a policy that is simply `true`.
@@ -113,7 +113,7 @@ begin
                        'integration_scopes', 'integration_mappings', 'integration_sync_runs',
                        'integration_sync_errors', 'integration_webhook_events',
                        'integration_dead_letter_events', 'source_records', 'source_snapshots',
-                       'source_freshness_events', 'canonical_entity_references')
+                       'source_freshness_events', 'canonical_entity_references', 'integration_retention_runs')
      and (qual = 'true' or with_check = 'true');
   perform pg_temp.counted('new policies that are USING (true)', n, 0);
 end $$;

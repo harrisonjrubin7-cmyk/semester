@@ -106,12 +106,41 @@ rendered first; a 15-minute-old alert is not official; a bursar item is told fro
 appointment within 30 days, one career deadline within 14 days, one event within 7. Three deliberate breaks (caveat
 removed, a student's own item shown as an alert, the bursar item given the alert's freshness target) each turned it red.
 
+## Hardening — `worker.test.ts`, `integration-hardening.check.sql` (19), `integration-rls-matrix.check.sql`
+
+**Worker** (12 tests, an in-memory table stand-in that enforces the idempotency constraint): refuses a mock unless told,
+an unapproved/paused/disconnected connection, every kill switch but another school's, a wrong domain and an invalid
+declaration; writes references with display values and moves the connection to healthy with its cursor; ingests a
+redelivered batch once; stops importing a deprovisioned student and records why without naming them; never
+resolves through another school's identity or consent; honours revoked consent and expired scopes; records a provider
+failure with a sanitized message, retries, and dead-letters on the fifth attempt; reconciles in both directions.
+Four deliberate breaks (tenant filters dropped, any school's kill switch accepted, scope expiry ignored, duplicates
+ingested) each turned it red.
+
+**Retention** (service role): who may call; health flags a stale live connection and not a fresh one and counts open
+errors; the sweep removes exactly the old rows in each table and none of the recent, open or live ones; a held
+connection keeps everything; the sweep is logged and readable by the school's integration admin and not by a student;
+a hold needs a reason. Two breaks turned it red; a third (the log readable by anyone) did not until the student case
+was added — and it is now also in the control-plane suite's `using (true)` scan.
+
+**Matrix**: 13 tables × {signed out, student, another school's integration admin, the school's integration admin}
+for read, update and delete; fails if an integration table exists that the list omits.
+
+**Dashboard, in a browser** (Chromium, the app's dev build with the flag on): at 320 (the 400%-zoom reflow width the
+accessibility smoke uses), 768 and 1280 CSS pixels, in all five views and the table: no element past the viewport
+outside the tables' own scroll boxes, no unnamed control, no broken ARIA reference, one main; arrow keys cycle the
+view tabs and Tab reaches a map node that Enter opens. Controls: a planted unnamed button and a dangling
+`aria-describedby` were reported; a planted 900-pixel element was reported at 320 and 768. The first version of the
+overflow probe measured the dashboard's own box, which the grid keeps inside the viewport whatever its children do,
+and reported the planted element as clean — it was replaced with a per-element check before these figures were taken.
+
 ## Two classification layers — `classification.test.ts`
 
 The platform floor matches the migration's seed row for row, and the AI Toolkit's gate (`lib/toolkit/classification.ts`)
 is walked for every tier, action and course-AI answer: whenever it allows, the floor must allow the matching
 destination. Restoring the old floor (T2 kept out of Community) turned three tests red.
 
-## Not yet covered (later phases)
+## Not yet covered
 
-Worker against a live database; webhook signature validation; reconciliation job; retention jobs; SIS/degree-audit mocks; tablet screenshots and a full device matrix (phone and desktop were driven in Chromium).
+A live provider; webhook signature validation (no webhook endpoint exists); the worker against PostgREST rather than a stand-in; a scheduler for the sweep and the worker; tablet hardware and screen-reader software (the pass above is automated). 
+

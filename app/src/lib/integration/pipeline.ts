@@ -14,12 +14,12 @@
  * throws on bad provider data — every failure becomes a counted, sanitized,
  * categorised error, which is what the dashboard's conflict view reads.
  */
-import type { DataClass } from './classification';
-import { withinCeiling } from './classification';
-import type { ConflictKind, ConnectionStatus, ErrorCategory, Freshness } from './catalog';
-import { namesNeverIngest, type AdapterDeclaration, type EntityMapping, type FieldMapping } from './adapter';
-import { freshnessFromAge } from './freshness';
-import { redactReference, sanitizeMessage } from './redact';
+import type { DataClass } from './classification.ts';
+import { withinCeiling } from './classification.ts';
+import type { ConflictKind, ConnectionStatus, ErrorCategory, Freshness } from './catalog.ts';
+import { namesNeverIngest, type AdapterDeclaration, type EntityMapping, type FieldMapping } from './adapter.ts';
+import { freshnessFromAge } from './freshness.ts';
+import { redactReference, sanitizeMessage } from './redact.ts';
 
 export interface ExternalRecord {
   entityType: string;
@@ -122,6 +122,7 @@ function typeOk(f: FieldMapping, v: unknown): boolean {
     case 'datetime': return typeof v === 'string' && !Number.isNaN(Date.parse(v));
     case 'url': return typeof v === 'string' && /^https:\/\/[^\s]+$/.test(v);
     case 'enum': return typeof v === 'string';
+    default: return false;
   }
 }
 

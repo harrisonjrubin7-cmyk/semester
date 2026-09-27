@@ -4,7 +4,7 @@
  * Pure functions over explicit inputs (attempt, clock, random), so a worker
  * and a test compute the same schedule.
  */
-import type { ErrorCategory } from './catalog';
+import type { ErrorCategory } from './catalog.ts';
 
 export interface RetryPolicy {
   maxAttempts: number;

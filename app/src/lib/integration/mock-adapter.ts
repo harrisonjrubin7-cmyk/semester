@@ -4,8 +4,8 @@
  * treat a mock as live — this file is not a Canvas connector and must never
  * be described as one.
  */
-import type { AdapterDeclaration } from './adapter';
-import type { ExternalRecord, IngestStore, ProviderBatch } from './pipeline';
+import type { AdapterDeclaration } from './adapter.ts';
+import type { ExternalRecord, IngestStore, ProviderBatch } from './pipeline.ts';
 
 export const MOCK_LMS: AdapterDeclaration = {
   id: 'mock_lms',

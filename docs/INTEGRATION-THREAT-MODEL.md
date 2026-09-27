@@ -35,14 +35,26 @@ kill switches · the classification floor.
 | T21 | A bursar amount or balance shown | Mapping has no amount field; `amount`, `balance` refused as names and keys; connector flag high-risk and off | `mock-campus.test.ts`: "never an amount or balance" |
 | T13 | A mock adapter mistaken for a real connector | `mock: true` in the declaration; named "Mock LMS"; not in any registry | review |
 
+## Phase 7 review
+
+Re-read against what now exists, including the worker that holds the service role.
+
+| # | Threat | Control | Proved by |
+| --- | --- | --- | --- |
+| T22 | The service-role worker writes one school's data under another | The school is read from the connection row, never supplied; every write carries it; a reference for another school aborts the run before anything is written; person and consent lookups are filtered by that school | `worker.test.ts`: "never resolves a person through another school's identity or consent" (dropping the filter turns it red) |
+| T23 | A deprovisioned student keeps receiving imports | Subjects resolve only through an **active** SCIM membership | `worker.test.ts`: "stops importing a student the school has deprovisioned" |
+| T24 | Logs kept forever, or deleted during litigation | `integration_retention_sweep()` with fixed windows; `legal_hold` (service role only, reason required) exempts a connection | `integration-hardening.check.sql` (19 checks; removing the hold filter or sweeping open dead letters turns it red) |
+| T25 | A policy added later leaks a table the case-by-case suites never touch | `integration-rls-matrix.check.sql` walks every integration table as four accounts and fails on a table missing from its list | a `using (tenant_id is not null)` policy on sync runs turned it red, naming both accounts |
+| T26 | A stale connection goes unnoticed | `integration_health()` marks stale past twice the freshness target; runbook alert rules | `integration-hardening.check.sql` |
+| T27 | A redelivered event older than the idempotency window is ingested twice | 30-day window stated in the runbook; timestamp regression still refuses an older version over a newer one | `pipeline.test.ts` (timestamp regression) |
+
 ## Residual risks
 
-- **The service role bypasses RLS.** The future worker will use it. It must pass the connection's own `tenant_id`
-  into every write and never accept a tenant from a payload. The composite foreign keys limit the damage of a
-  mistake (a child row cannot name another school's connection) but do not prevent a worker writing to the
-  wrong connection. A code review gate on the worker is required.
-- **Webhook signature validation** is provider-specific and not yet implemented; the worker must verify before
-  claiming the idempotency key.
+- **The service role bypasses RLS.** The worker now exists and scopes every read and write to the connection's own
+  school (T22). What remains is operational: the service key must live only where the worker runs, and a second
+  code path that uses it must follow the same rules — review any new one against `worker.ts`.
+- **Webhook signature validation** is provider-specific and not yet implemented; the endpoint that receives a webhook
+  must verify it before calling `runSync`. No such endpoint exists yet.
 - **Grade passback on unbound registrations** remains instructor-gated and stoppable only by global kill switches until each registration is bound (D-1). The Edge Function reads a *missing* gate function as "unbound" during a deploy window; any other error refuses.
 - **`tenant_policy_audit_event` stores old/new rows as JSON.** Integration rows are stripped of the credential
   pointer and cursor; other columns (names, scope keys) are configuration, not student data.

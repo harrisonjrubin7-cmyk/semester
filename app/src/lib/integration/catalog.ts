@@ -5,7 +5,7 @@
  * 20260927170000_integration_control_plane.sql spell the same lists, and
  * catalog.test.ts reads that file to keep the two from drifting.
  */
-import type { DataClass } from './classification';
+import type { DataClass } from './classification.ts';
 
 export type ProviderDomain =
   | 'identity' | 'sis' | 'degree_audit' | 'catalog' | 'lms' | 'advising' | 'admissions_crm'

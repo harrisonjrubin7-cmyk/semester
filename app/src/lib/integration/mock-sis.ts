@@ -15,8 +15,8 @@
  * that is not in a mapping is dropped by the pipeline, so "the SIS sent it" is
  * never a reason it was stored.
  */
-import type { AdapterDeclaration } from './adapter';
-import type { ExternalRecord } from './pipeline';
+import type { AdapterDeclaration } from './adapter.ts';
+import type { ExternalRecord } from './pipeline.ts';
 
 const COMMON = {
   version: '1',

@@ -5,7 +5,7 @@
  * manually entered object is never presented as the official current record.
  * `isOfficialCurrent` is the only way a card should decide to say "official".
  */
-import type { Freshness } from './catalog';
+import type { Freshness } from './catalog.ts';
 
 /** Freshness from the age of the last successful sync against its target. */
 export function freshnessFromAge(

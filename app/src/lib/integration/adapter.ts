@@ -8,12 +8,12 @@
  * provenance are the pipeline's (`pipeline.ts`), identically for every
  * provider.
  */
-import type { DataClass } from './classification';
-import { withinCeiling } from './classification';
+import type { DataClass } from './classification.ts';
+import { withinCeiling } from './classification.ts';
 import {
   CANONICAL_ENTITIES, DOMAIN_CEILING, NEVER_DISPLAY, NEVER_INGEST,
   type CanonicalEntity, type ProviderDomain, type SyncDirection, type SyncMode,
-} from './catalog';
+} from './catalog.ts';
 
 export type FieldType = 'string' | 'number' | 'boolean' | 'datetime' | 'enum' | 'url';
 export type Transform = 'none' | 'trim' | 'lower' | 'iso_datetime';

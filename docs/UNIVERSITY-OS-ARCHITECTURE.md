@@ -59,8 +59,9 @@ provider event / API page / batch file
  → audit (database triggers)
 ```
 
-`app/src/lib/integration/pipeline.ts` implements this as a pure function over an injected store. A worker binds
-the store to the tables; the contract tests bind it to memory.
+`app/src/lib/integration/pipeline.ts` implements this as a pure function over an injected store.
+`app/server/integration/worker.ts` binds it to the tables with the service role, scoping every read and write to the
+connection's own school; the contract tests bind it to memory. Operating it is `INTEGRATION-OPERATOR-RUNBOOK.md`.
 
 ## Adapter declaration
 
