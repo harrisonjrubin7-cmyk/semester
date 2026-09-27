@@ -1,0 +1,61 @@
+# Semester platform implementation plan
+
+This maps the *Complete Platform Implementation Prompt* (twelve phases) onto
+what the repository already has, and records what the Community Trust & Safety
+slice in `app/src/community/` adds. The prompt's own rule is one secure vertical
+slice per phase, each ending in a draft pull request. This document says which
+slices already exist, so nobody rebuilds them.
+
+## Where each phase stands
+
+| Phase | Prompt scope | State on main before this change | This change |
+| --- | --- | --- | --- |
+| 0 Foundations | Architecture, threat and privacy model, RLS strategy, source model | ADRs 0001–0006 (`docs/architecture/`), RLS as the authorization boundary, `private.has_capability`, `RETENTION.md`, `SECURITY.md` | Community flag registry, privacy model, permission rules |
+| 1 Today | Finite action centre, sources, freshness | `lib/today-decision.ts`, `TodayDecisionSurface.tsx` (#761), `lib/sources.ts`, `lib/refresh.ts` | — |
+| 2 Path / Plan / Registration | Requirement map, scenarios, term plans, readiness | `lib/degree.ts`, `lib/whatif.ts`, `lib/graduation.ts`, `RegistrationDay.tsx`, `lib/registration.ts` (#762) | — |
+| 3 Search / Advising / Campus hub | Permission-aware search, advising prep, directory | `lib/search.ts` (ADR 0006), `lib/campusdirectory.ts`, support access (#759–760) | Search exclusions for Community identity are in `identity.ts` (`FORBIDDEN_FIELDS`) |
+| 4 Study Studio | Source-grounded assets, integrity | `lib/studystudio.ts`, `StudyStudio.tsx`, `lib/study.ts`, `lib/cite.ts` | — |
+| 5 Multimedia | Audio/video, transcripts, captions | `audio/`, `video/`, `lib/captions`, `lib/episodes.ts` | Upload metadata stripping (`metadata.ts`) for Community media |
+| 6 Integrations | Adapters, consent, sync state | `lib/connect.ts`, `connections` migration, LTI, institution gateway | — |
+| **7 Community foundation** | Communities, memberships, finite explained feeds, sessions, block/mute/leave | **Absent** | `communities.ts`, `feed.ts`, `identity.ts`, `pii.ts`, `metadata.ts` |
+| **8 Moderation core** | Reports, P0–P3, console logic, signals, audit, appeal | `reports` table + status audit only | `moderation.ts` |
+| **9 Crisis / escalation** | Professional P0/P1, disabled escalation adapter | Absent | `crisis.ts` (escalation off by default, dual approval) |
+| **10 Volunteers** | Eligibility, calibration, blind queues | Absent | `volunteer.ts` (flag off, production refused) |
+| **11 Pseudonymity** | Community-scoped aliases | Absent | `alias.ts` (flag off, production refused) |
+| 12 Adaptive / a11y hardening | Device matrix, keyboard, reflow | Existing a11y smoke (#754), style and label audits | — |
+
+## What this change is, and is not
+
+It **is** the domain layer for Phases 7–11: pure TypeScript with no I/O. It holds
+every rule the prompt states as a number or a prohibition, and 153 tests check
+them. Each prohibition has a test that was shown to go red when its guard was
+reverted.
+
+It **is not** yet:
+
+- **Tables and RLS.** The logical entities (`communities`, `community_posts`,
+  `moderation_cases`, `safety_signals`, `community_aliases`, …) need a
+  migration with `private.has_capability` policies and a `*.check.sql` walk,
+  following `20260926150000_expansion_roles_and_features.sql`. The domain
+  functions are the contract that migration must satisfy.
+- **Screens.** Feed, report sheet, moderation console, appeal view.
+- **Server-side detectors** beyond the PII rules. Threat, hate, scam-link,
+  media-safety and brigading detectors plug into `SafetySignal` with a
+  `detector`, `confidence` and `version`. None of them exists yet.
+
+Nothing is deployed, and no flag is on by default.
+
+## Design basis: what Semester takes and refuses from Jodel and Yik Yak
+
+| Mechanism | Yik Yak | Jodel | Semester |
+| --- | --- | --- | --- |
+| Feed scope | GPS radius. Reports vary: about 1.5, 5 or 10 miles | Hyperlocal | Affiliation and purpose. No location input (`FORBIDDEN_SIGNALS`) |
+| Removal | Crowd votes. Historically about −5 hid a post | Several moderators must agree | Humans only. Reports triage and never remove (`triage`, `decide`) |
+| Karma | None platform-wide | Public, with a reported −100 on a blocked post | None. Optional private 0–100 staff-only state (`safety-state.ts`) |
+| Volunteer eligibility | — | Karma plus behaviour | Verification, 30 days, training, NDA, recusal, calibration. No karma |
+| Volunteer accuracy | — | Last 20 control tasks at 5% each | Same, with active at ≥85 and paused below 75 |
+| Reporter's vote | — | Does not count | Reporter recuses (`mustRecuse`); blind view hides the reporter |
+| Brigading | Votes can be brigaded | — | Clustered reports are set aside for integrity review and never punish the target |
+
+Published figures for both apps changed over versions and regions. No
+threshold here depends on any one of them being exact.
