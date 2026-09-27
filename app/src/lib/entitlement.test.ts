@@ -1,5 +1,5 @@
-import { describe, expect, it } from '../../../app/node_modules/vitest/dist/index.js';
-import { ENTITLEMENT_STEPS, resolveEntitlement, type EntitlementRequest } from './entitlement.ts';
+import { describe, expect, it } from 'vitest';
+import { ENTITLEMENT_STEPS, resolveEntitlement, type EntitlementRequest } from '../../../supabase/functions/_shared/entitlement';
 
 const now = new Date('2026-09-27T12:00:00Z');
 

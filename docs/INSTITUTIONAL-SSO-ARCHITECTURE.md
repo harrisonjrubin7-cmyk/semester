@@ -35,7 +35,7 @@ and every read still passes row-level security
 | SCIM lifecycle | `app/server/institution/scim.ts`, `packages/institution/src/provisioning.ts` | `scim_credential`, `scim_external_identity`, `scim_group_mapping`, `provisioning_audit_event` | [SCIM](SCIM-LIFECYCLE-MANAGEMENT.md) |
 | LTI launch, deep linking, AGS | `supabase/functions/lti`, `_shared/lti*.ts` | `lti_platform`, `lti_nonce`, `lti_identity`, `lti_link_ticket`, `lti_line_item` | [LTI runbook](LTI-1.3-LAUNCH-RUNBOOK.md) |
 | Claim minimization | `packages/institution/src/identity.ts` | constraint on `institution_identity_provider.attribute_mapping` | [Claim mapping](SSO-CLAIM-MAPPING-AND-DATA-MINIMIZATION.md) |
-| Entitlement order | `supabase/functions/_shared/entitlement.ts` (re-exported by `packages/institution`); on LTI launches `_shared/ltientitlement.ts` | reads `tenant_feature_policy`, `feature_kill_switch` | [Entitlement](ENTITLEMENT-RESOLUTION.md) |
+| Entitlement order | `supabase/functions/_shared/entitlement.ts`; on LTI launches `_shared/ltientitlement.ts` | reads `tenant_feature_policy`, `feature_kill_switch` | [Entitlement](ENTITLEMENT-RESOLUTION.md) |
 | OIDC | none | none | [OIDC runbook](OIDC-IMPLEMENTATION-RUNBOOK.md) |
 
 ## The requested tables, against what exists

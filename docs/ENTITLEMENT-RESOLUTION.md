@@ -1,9 +1,12 @@
 # Entitlement resolution
 
 Status: **BUILT; RUNS IN SHADOW ON LTI LAUNCHES; ENFORCES NOTHING.** The order
-is `supabase/functions/_shared/entitlement.ts`, re-exported from
-`packages/institution`: one copy, kept where a Deno edge function can deploy it.
-Its tests are `packages/institution/src/entitlement.test.ts`.
+is `supabase/functions/_shared/entitlement.ts`: one copy, kept where a Deno
+edge function can deploy it. Its tests are `app/src/lib/entitlement.test.ts`,
+beside the other `_shared` rules' tests. It is not re-exported from
+`packages/institution`: the gateway's NodeNext compile (`check:university`)
+reads anything under `supabase/functions/` as CommonJS, and nothing in the
+gateway uses it.
 
 ## The order
 
