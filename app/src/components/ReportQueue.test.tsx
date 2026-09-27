@@ -18,7 +18,7 @@ vi.mock('../lib/moderation', async () => {
   return {
     ...real,
     moderationAccess: () => Promise.resolve(access),
-    loadQueue: () => Promise.resolve(real.ordered(rows)),
+    loadQueue: () => Promise.resolve({ reports: real.ordered(rows), moreWaiting: false, closedCapped: false }),
     moveReport: (id: string, to: string) => {
       moved.push([id, to]);
       return Promise.resolve();

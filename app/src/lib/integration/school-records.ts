@@ -245,20 +245,30 @@ export function buildEnvironment(mode: string | undefined): Environment {
  * existing `public.feature_state`; the kill switches the student can see are
  * their school's and the global ones.
  */
-export async function cardsEnabled(db: SupabaseClient, school: string, environment: Environment, now: Date): Promise<boolean> {
-  if (!school) return false;
+/**
+ * Whether the school-records module is on for this school — or whether we could
+ * not tell. A failed read is `'error'`, never `'off'`: "off" is a claim about
+ * the school, and a dropped request is not evidence about the school.
+ */
+export async function cardsState(db: SupabaseClient, school: string, environment: Environment, now: Date): Promise<'on' | 'off' | 'error'> {
+  if (!school) return 'off';
   const [{ data: state, error: stateError }, { data: switches, error: switchError }] = await Promise.all([
     db.rpc('feature_state', { want_capability: 'module.source_freshness_cards', want_tenant: school }),
     db.from('feature_kill_switch').select('switch_key,tenant_id,engaged'),
   ]);
-  if (stateError || switchError) return false;
+  if (stateError || switchError) return 'error';
   const killSwitches: KillSwitchRow[] = (switches ?? []).map((k: { switch_key: string; tenant_id: string | null; engaged: boolean }) =>
     ({ key: k.switch_key, tenantId: k.tenant_id, engaged: k.engaged }));
   return evaluateFlag('module.source_freshness_cards', {
     environment, tenantId: school, now, killSwitches,
     tenantPolicy: { 'module.source_freshness_cards': { state: (state ?? 'off') as FeatureState } },
     capabilities: [],
-  }).allowed;
+  }).allowed ? 'on' : 'off';
+}
+
+/** `cardsState`, with a failed read counted as off — for callers that fail closed. */
+export async function cardsEnabled(db: SupabaseClient, school: string, environment: Environment, now: Date): Promise<boolean> {
+  return (await cardsState(db, school, environment, now)) === 'on';
 }
 
 export async function loadRecords(db: SupabaseClient): Promise<RecordRow[]> {

@@ -1,32 +1,35 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { cloud, cloudConfigured } from './cloud';
-import { claimedSchool } from './schoolclaim';
-import { buildEnvironment, cardsEnabled, loadRecords, loadRoomRecords, type RecordRow } from './integration/school-records';
+import { claimedSchoolOrThrow } from './schoolclaim';
+import { buildEnvironment, loadRecords, loadRoomRecords } from './integration/school-records';
+import { loadOfficial, type OfficialLoad } from './official-notices';
 
-export type SchoolLoad = { status: 'off' | 'loading' } | { status: 'ready'; userId: string; rows: RecordRow[] };
+export type SchoolLoad = OfficialLoad;
 
 /**
  * What the school shared, loaded exactly as the Today card loads it: signed in,
  * a claimed school, the tenant's `module.source_freshness_cards` on, then the
- * student's own rows and the school's tenant-wide ones under RLS. Any failure
- * is "off" — the hub then says no channel is connected, which is true for it.
+ * student's own rows and the school's tenant-wide ones under RLS.
+ *
+ * `off` is a fact about the school or the account; a failed request is
+ * `error` (see `loadOfficial`), and `retry` asks again. `rooms` loads study
+ * spaces and their slots instead of the facts Today reads.
  */
-/** `rooms` loads study spaces and their slots instead of the facts Today reads. */
-export function useSchoolRecords(which: 'records' | 'rooms' = 'records'): SchoolLoad {
+export function useSchoolRecords(which: 'records' | 'rooms' = 'records'): SchoolLoad & { retry: () => void } {
   const [load, setLoad] = useState<SchoolLoad>({ status: 'loading' });
+  const [attempt, setAttempt] = useState(0);
   useEffect(() => {
     let live = true;
-    void (async (): Promise<SchoolLoad> => {
-      if (!cloudConfigured) return { status: 'off' };
-      const db = await cloud();
-      const { data } = await db.auth.getUser();
-      if (!data.user?.id) return { status: 'off' };
-      const school = await claimedSchool();
-      if (!(await cardsEnabled(db, school, buildEnvironment(import.meta.env.MODE), new Date()))) return { status: 'off' };
-      return { status: 'ready', userId: data.user.id, rows: await (which === 'rooms' ? loadRoomRecords : loadRecords)(db) };
-    })().then((next) => { if (live) setLoad(next); }, () => { if (live) setLoad({ status: 'off' }); });
+    void (async () => loadOfficial(
+      cloudConfigured ? await cloud() : null,
+      claimedSchoolOrThrow,
+      buildEnvironment(import.meta.env.MODE),
+      new Date(),
+      which === 'rooms' ? loadRoomRecords : loadRecords,
+    ))().then((next) => { if (live) setLoad(next); }, () => { if (live) setLoad({ status: 'error' }); });
     return () => { live = false; };
-  }, [which]);
-  return load;
+  }, [which, attempt]);
+  const retry = useCallback(() => { setLoad({ status: 'loading' }); setAttempt((n) => n + 1); }, []);
+  // One object per load, so screens that memo on it recompute only when it changes.
+  return useMemo(() => ({ ...load, retry }), [load, retry]);
 }
-

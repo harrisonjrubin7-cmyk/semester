@@ -126,7 +126,15 @@ function Workspace({ who }: { who: string }) {
           {tab === 'inbox' && school.status === 'ready' && !officialCount ? (
             <p className="jx-muted">Nothing from your school right now. Semester is not an emergency channel — follow your school’s own alerts for anything urgent.</p>
           ) : null}
-          {tab === 'inbox' && school.status !== 'ready' ? (
+          {tab === 'inbox' && school.status === 'error' ? (
+            <Card kicker="Official" title="Could not reach your school’s channel">
+              <p role="alert">
+                Semester could not load what your school shared, so holds and alerts may be missing from this list. This is a failed request, not a sign your school has no channel.
+              </p>
+              <button type="button" className="jx-go" onClick={school.retry}>Try again</button>
+            </Card>
+          ) : null}
+          {tab === 'inbox' && school.status === 'off' ? (
             <Card kicker="Official" title="No school channel connected">
               <p>
                 Registrar, financial aid, campus safety and department notices appear here, labelled Official, once your school connects them. Until then they reach you the way they do now — check your school email.
