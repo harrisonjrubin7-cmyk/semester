@@ -126,7 +126,7 @@ export function Privacy({ trustCenter = moduleOn(MODULE_FLAGS.trust_center) }: {
 
       {trustCenter ? (
         <Suspense fallback={null}>
-          <TrustCenter />
+          <TrustCenter key={account?.id ?? 'signed-out'} />
         </Suspense>
       ) : null}
 

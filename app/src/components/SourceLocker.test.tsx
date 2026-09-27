@@ -177,6 +177,20 @@ describe('the Source Locker', () => {
     expect(text()).toContain('2 generated items were deleted.');
   });
 
+  it('changes nothing when the file cannot be moved to the trash', async () => {
+    const files = await import('../lib/files');
+    vi.mocked(files.trashFile).mockRejectedValueOnce(new Error('Storage is unavailable.'));
+    await render(<SourceLocker course={course()} />);
+    const before = { updates: seen!.updates.length, documents: seen!.documents.length };
+    await act(async () => button(/^Remove…$/, row('reading-7.pdf')).click());
+    const tick = dialog().querySelector<HTMLInputElement>('input[type="checkbox"]')!;
+    await act(async () => tick.click());
+    await act(async () => button(/^Remove$/).click());
+    expect(seen!.updates.length).toBe(before.updates);
+    expect(seen!.documents.length).toBe(before.documents);
+    expect(text()).toContain('could not be removed, so nothing was changed.');
+  });
+
   it('turns AI use off per material, and Study Studio then leaves it out', async () => {
     await render(<SourceLocker course={course()} />);
     const ai = [...row('Reading 7 notes').querySelectorAll<HTMLInputElement>('input[type="checkbox"]')][0];

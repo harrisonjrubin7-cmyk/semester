@@ -70,6 +70,26 @@ export interface Wrapped {
   next: Term;
 }
 
+/**
+ * How many saved schedules belong to this recap. A schedule has no date, only
+ * its courses' term, and is made the term before the one it plans — so it
+ * counts once, in the recap of the term it was planned from, and never in
+ * every recap on the picker.
+ */
+export function schedulesFor(plans: readonly { courses: readonly { term: string }[] }[], term: Term): number {
+  const next = nextTerm(term);
+  const names = new Set([next.id.toLowerCase(), next.label.toLowerCase()]);
+  return plans.filter((p) => {
+    const counts = new Map<string, number>();
+    for (const c of p.courses) {
+      const t = c.term.trim().toLowerCase();
+      counts.set(t, (counts.get(t) ?? 0) + 1);
+    }
+    const top = [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0];
+    return top !== undefined && names.has(top[0]);
+  }).length;
+}
+
 /** From the first of the term's start month to the first of the next season's. */
 export function termWindow(term: Term): { start: number; end: number } {
   const at = SEASONS.findIndex((s) => s.startMonth === term.startMonth);

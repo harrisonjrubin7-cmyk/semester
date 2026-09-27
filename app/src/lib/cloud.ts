@@ -853,10 +853,16 @@ export const OWNED_TABLES: OwnedTable[] = [
   // (`lib/graduation-cloud.ts`, Phase D). The foreign key cascades from
   // auth.users too; listed so the delete here does not depend on it.
   { table: 'graduation_scenarios', column: 'user_id' },
-  // Advisor shares a student made (`lib/advisor-shares.ts`, Phase G). Deleting
-  // them cascades to their read log. Shares received as an advisor go with the
-  // advisor's account through the foreign key on advisor_id.
-  { table: 'advisor_shares', column: 'student_id' },
+  // Advisor shares (`lib/advisor-shares.ts`, Phase G), at either end: the ones
+  // a student made and the ones an advisor received. Deleting them cascades to
+  // their read log. The auth user is not deleted, so the foreign keys never
+  // cascade, and an advisor has no delete policy — the RPC removes both sides.
+  { table: 'advisor_shares', column: null, via: 'forget_my_advisor_shares' },
+  // Course demand (Phase K): the courses a student contributed and their
+  // consent. The consent allows no client write, so the RPC removes both;
+  // the plan rows are listed too, since the student may delete those directly.
+  { table: 'demand_consents', column: null, via: 'forget_my_course_demand' },
+  { table: 'term_plan_courses', column: 'user_id' },
   // What a student said applies to them for campus office actions, and which
   // of those actions they marked done (`lib/office-actions-remote.ts`, Phase
   // J). Both are the student's alone; no office can read either.

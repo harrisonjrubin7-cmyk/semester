@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Choice } from './actions';
 import { readTerm } from './term';
-import { nextTerm, termWindow, wrapped, wrappedText, type WrappedInput } from './wrapped';
+import { nextTerm, schedulesFor, termWindow, wrapped, wrappedText, type WrappedInput } from './wrapped';
 
 /**
  * Phase L's model. What the recap counts is what the student chose and did,
@@ -136,5 +136,20 @@ describe('what an export holds', () => {
       expect(text).not.toContain(withheld);
     }
     expect(text).toContain('Made on my own device from my own records.');
+  });
+});
+
+describe('saved schedules', () => {
+  const plan = (...terms: string[]) => ({ courses: terms.map((term) => ({ term })) });
+  const plans = [plan('2027SP', '2027SP'), plan('Spring 2027'), plan('2027FA', '2027FA', '2027SP')];
+
+  it('count once, in the recap of the term they were planned from', () => {
+    expect(schedulesFor(plans, readTerm('2026FA'))).toBe(2);
+    expect(schedulesFor(plans, readTerm('2027SP'))).toBe(1);
+  });
+
+  it('are not the same number in every recap (the control)', () => {
+    expect(schedulesFor(plans, readTerm('2026SP'))).toBe(0);
+    expect(schedulesFor([], readTerm('2026FA'))).toBe(0);
   });
 });

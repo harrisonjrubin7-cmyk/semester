@@ -19,22 +19,28 @@ export type FeedState =
 export function useOfficeActions(enabled: boolean, accountId?: string | null) {
   const { account } = useStore();
   const userId = accountId !== undefined ? accountId : (account?.id ?? null);
-  const [state, setState] = useState<FeedState>({ kind: 'loading' });
+  // Each result is kept with the account it was fetched for, and shown only
+  // to that account: after a switch on a shared device the feed reads as
+  // loading until the new account's answer arrives, never as the last one's.
+  const [state, setState] = useState<{ for: string | null; value: FeedState }>({ for: null, value: { kind: 'loading' } });
   const [round, setRound] = useState(0);
 
   useEffect(() => {
     if (!enabled || !userId) return;
     let live = true;
     myOfficeActions()
-      .then((actions) => live && setState({ kind: 'ready', actions }))
-      .catch((e: unknown) => live && setState({ kind: 'error', message: e instanceof Error ? e.message : String(e) }));
+      .then((actions) => live && setState({ for: userId, value: { kind: 'ready', actions } }))
+      .catch(
+        (e: unknown) =>
+          live && setState({ for: userId, value: { kind: 'error', message: e instanceof Error ? e.message : String(e) } }),
+      );
     return () => {
       live = false;
     };
   }, [enabled, userId, round]);
 
   const reload = useCallback(() => {
-    setState({ kind: 'loading' });
+    setState({ for: null, value: { kind: 'loading' } });
     setRound((r) => r + 1);
   }, []);
 
@@ -48,6 +54,7 @@ export function useOfficeActions(enabled: boolean, accountId?: string | null) {
     [userId],
   );
 
-  const shown: FeedState = !enabled ? { kind: 'off' } : !userId ? { kind: 'signed-out' } : state;
+  const shown: FeedState =
+    !enabled ? { kind: 'off' } : !userId ? { kind: 'signed-out' } : state.for === userId ? state.value : { kind: 'loading' };
   return { state: shown, reload, setDone, userId };
 }

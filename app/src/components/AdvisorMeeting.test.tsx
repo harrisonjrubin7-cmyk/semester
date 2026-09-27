@@ -3,7 +3,7 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { loadSeed } from '../data/seed';
-import { MEETING_KEY } from '../lib/advisor-meeting';
+import { meetingKey } from '../lib/advisor-meeting';
 import type { SharePayload } from '../lib/advisor-meeting';
 import { STORAGE_KEY } from '../state/shape';
 import { StoreProvider } from '../state/store';
@@ -145,7 +145,7 @@ describe('preparing and exporting', () => {
     vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
     await mount(null);
     await prepare();
-    const stored = JSON.parse(localStorage.getItem(MEETING_KEY)!);
+    const stored = JSON.parse(localStorage.getItem(meetingKey(null))!);
     expect(stored.meetings[0]).toMatchObject({ agenda: [{ text: 'Spring courses' }], notes: 'I am worried about money', attach: { courses: ['e3'] } });
 
     await act(async () => button(/^Download summary…$/).click());
@@ -158,6 +158,22 @@ describe('preparing and exporting', () => {
     expect(created).not.toHaveBeenCalled();
     await act(async () => button(/^Download$/).click());
     expect(created).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps each account’s preparation to that account on a shared device', async () => {
+    await mount('student-a');
+    await prepare();
+    expect(JSON.parse(localStorage.getItem(meetingKey('student-a'))!).meetings[0].notes).toBe('I am worried about money');
+    await act(async () => root.unmount());
+    root = createRoot(host);
+    await mount('student-b');
+    expect(text()).not.toContain('Spring courses');
+    expect(localStorage.getItem(meetingKey('student-b'))).toBeNull();
+    await act(async () => root.unmount());
+    root = createRoot(host);
+    await mount('student-a');
+    expect(text()).toContain('Advisor meeting');
+    expect([...host.querySelectorAll('textarea')].some((t) => (t as HTMLTextAreaElement).value === 'I am worried about money')).toBe(true);
   });
 
   it('offers no sharing when signed out, and says why', async () => {
@@ -247,5 +263,21 @@ describe('the advisor’s view', () => {
     expect(text(view)).toContain('Shared by Riley');
     expect(text(view)).toContain('The student can see that you opened it');
     expect(text(view)).toContain('Is PSCI 1100 required?');
+  });
+
+  it('forgets what one advisor opened when another signs in on the same screen', async () => {
+    await mount('advisor-a');
+    const details = host.querySelector<HTMLDetailsElement>('.advisor-view')!;
+    await act(async () => {
+      details.open = true;
+      details.dispatchEvent(new Event('toggle'));
+    });
+    await act(async () => button(/^Spring planning$/, details).click());
+    expect(text()).toContain('Is PSCI 1100 required?');
+    await mount('advisor-b');
+    expect(text()).not.toContain('Is PSCI 1100 required?');
+    expect(text()).not.toContain('Shared by Riley');
+    await mount('advisor-b');
+    expect(text()).not.toContain('Shared by Riley');
   });
 });

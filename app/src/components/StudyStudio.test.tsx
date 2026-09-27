@@ -53,3 +53,12 @@ it('shows a verified quotation where it sits, on the source that has no page to 
 it('blocks AI generation for a course with an AI prohibition',()=>{
  mock.stance='banned';mount();check('Opportunity cost');expect(button('Create study guide').disabled).toBe(true);expect(host.textContent).toContain('does not permit AI');expect(mock.ask).not.toHaveBeenCalled();
 });
+it('records the sources a guide was generated from, not the selection at save time',async()=>{
+ act(()=>root.render(<StudyStudio courseId="econ" onClose={()=>{}} sourceLocker adaptiveLearning={false}/>));
+ check('Opportunity cost');check('Send the selected text');mock.ask.mockResolvedValue(JSON.stringify({sections:[result()]}));await press('Create study guide');
+ // The student unticks the source after generating, then saves the same draft.
+ check('Opportunity cost');
+ await press('Save & open in Write');
+ const built=JSON.parse(localStorage.getItem('semester.source-locker.v1')!).built;
+ expect(built[0].materials).toEqual(['syllabus:econ']);
+});

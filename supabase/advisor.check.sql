@@ -201,6 +201,19 @@ begin
     format('delete from public.advisor_shares where student_id = %L', student));
   perform pg_temp.counted('deleting a share removes its log', (select count(*) from public.advisor_share_events), 0);
   perform pg_temp.counted('the student emptied the table', (select count(*) from public.advisor_shares where student_id = student), 0);
+  -- An advisor deleting their account takes the shares they received with it
+  -- (review fix 20260928160000): the advisor has no delete policy, and the
+  -- auth user is not deleted, so only the RPC reaches those rows.
+  insert into public.advisor_shares (student_id, advisor_id, tenant_id, title, payload, expires_at)
+  values (student, advisor, 'adv-u', 'Fall planning', body, now() + interval '5 days');
+  insert into public.advisor_shares (student_id, advisor_id, tenant_id, title, payload, expires_at)
+  values (classmate, other_advisor, 'adv-u', 'Someone else''s', body, now() + interval '5 days');
+  perform pg_temp.counted('an advisor forgets the shares they received',
+    pg_temp.seen(advisor, 'select public.forget_my_advisor_shares()'), 1);
+  perform pg_temp.counted('so none addressed to them is left',
+    (select count(*) from public.advisor_shares where advisor_id = advisor), 0);
+  perform pg_temp.counted('and a share between two other people is untouched (the control)',
+    (select count(*) from public.advisor_shares where advisor_id = other_advisor), 1);
 end $$;
 
 -- Anonymous callers reach none of it.

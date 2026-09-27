@@ -264,7 +264,7 @@ export function Registrar({
       {officeActions ? (
         <Suspense fallback={<p role="status">Loading campus office actions…</p>}>
           <OfficeActionFeed enabled />
-          <OfficeActionDesk signedIn={Boolean(account)} />
+          <OfficeActionDesk key={account?.id ?? 'signed-out'} signedIn={Boolean(account)} />
         </Suspense>
       ) : null}
 

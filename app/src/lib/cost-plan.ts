@@ -73,6 +73,20 @@ export function readCostLines(value: unknown): CostLine[] {
   return lines;
 }
 
+/**
+ * The lines to keep when the student starts itemising. A plan with no lines
+ * already carries a per-term and a summer figure the student typed; the first
+ * line added must not replace those with its own (usually zero) amount, so
+ * they come in as lines of their own, which the student can edit or remove.
+ */
+export function startItemising(before: CostLine[], next: CostLine[], had: { perTerm: number; summer: number }): CostLine[] {
+  if (before.length || !next.length) return next;
+  const carried: CostLine[] = [];
+  if (had.perTerm > 0) carried.push({ id: 'earlier-term', label: 'Earlier estimate', amount: had.perTerm, per: 'term', source: 'student_entered' });
+  if (had.summer > 0) carried.push({ id: 'earlier-summer', label: 'Earlier estimate', amount: had.summer, per: 'summer', source: 'student_entered' });
+  return [...carried, ...next.filter((l) => !carried.some((c) => c.id === l.id))].slice(0, MAX_LINES);
+}
+
 /** The two numbers `lib/graduation.ts` projects with. */
 export function totals(lines: CostLine[]): { perTerm: number; summer: number } {
   let perTerm = 0;

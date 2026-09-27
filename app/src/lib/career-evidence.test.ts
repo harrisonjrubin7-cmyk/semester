@@ -117,6 +117,16 @@ describe('portfolio artifacts', () => {
     expect(() => saveArtifact(EMPTY_EVIDENCE, { ...base, url: 'http://example.com' }, known)).toThrow('https');
     expect(() => saveArtifact(EMPTY_EVIDENCE, { ...base, date: 'April' }, known)).toThrow('a month');
   });
+
+  it('lose a tag when its skill is no longer confirmed, and follow a rename', () => {
+    const confirmed = decide(EMPTY_EVIDENCE, CLAIMS[0], 'confirmed', undefined, NOW);
+    const tagged = saveArtifact(confirmed, { ...base, skills: ['Data analysis'] }, { ...KNOWN, confirmed: ['Data analysis'] });
+    expect(decide(tagged, CLAIMS[0], 'rejected', undefined, NOW).artifacts[0].skills).toEqual([]);
+    expect(decide(tagged, CLAIMS[0], null, undefined, NOW).artifacts[0].skills).toEqual([]);
+    expect(decide(tagged, CLAIMS[0], 'confirmed', 'Regression analysis', NOW).artifacts[0].skills).toEqual(['Regression analysis']);
+    // Confirming again, unchanged, leaves the tag (the control).
+    expect(decide(tagged, CLAIMS[0], 'confirmed', undefined, NOW).artifacts[0].skills).toEqual(['Data analysis']);
+  });
 });
 
 describe('résumé versions', () => {

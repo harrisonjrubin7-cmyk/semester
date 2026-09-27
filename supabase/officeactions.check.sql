@@ -362,6 +362,16 @@ begin
   perform pg_temp.counted('the same office at another school reads none either',
     pg_temp.seen(far_aid, 'select * from public.office_desk_actions()'), 0);
 
+  -- The table itself answers the same way as the desk (review fix
+  -- 20260928160000): authenticated keeps SELECT on it, so a policy that asked
+  -- only for a publishing capability let another office read the rows.
+  perform pg_temp.counted('another office cannot select Financial Aid''s draft directly',
+    pg_temp.seen(registrar, format('select * from public.institution_actions where id = %L', a_draft)), 0);
+  perform pg_temp.counted('nor can a resources-only publisher',
+    pg_temp.seen(ra, format('select * from public.institution_actions where id = %L', a_draft)), 0);
+  perform pg_temp.counted('Financial Aid itself can (the control)',
+    pg_temp.seen(aid2, format('select * from public.institution_actions where id = %L', a_draft)), 1);
+
   -- ── withdrawal ─────────────────────────────────────────────────────────
   perform pg_temp.says('a colleague withdraws it', pg_temp.move(aid2, a_tenant, 'withdraw'), 'withdrawn');
   perform pg_temp.counted('and it leaves every feed',
@@ -378,6 +388,8 @@ begin
     pg_temp.seen(student, format('select * from public.my_office_actions() where id = %L', legacy)), 0);
   perform pg_temp.says('and cannot be moved through the workflow',
     pg_temp.error_as(registrar, format('select public.move_office_action(%L, ''withdraw'', null)', legacy)), 'No such action in your scope');
+  perform pg_temp.counted('a row with no office keeps the rule it was written under',
+    pg_temp.seen(registrar, format('select * from public.institution_actions where id = %L', legacy)), 1);
 end $$;
 
 -- Anonymous callers reach none of it.

@@ -14,6 +14,23 @@ import { ConfirmDialog } from './ConfirmDialog';
 
 const day = (at: number) => new Date(at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
+function StopDialog({ term, onConfirm, onCancel }: { term: string; onConfirm: () => void; onCancel: () => void }) {
+  return (
+    <ConfirmDialog
+      title={`Stop contributing for ${term}?`}
+      preview={
+        <>
+          <p>Your courses are removed from the demand count now.</p>
+          <p>Counts already published keep you until they are next refreshed. No refresh after that counts you.</p>
+        </>
+      }
+      confirmLabel="Stop contributing"
+      onConfirm={onConfirm}
+      onCancel={onCancel}
+    />
+  );
+}
+
 function CourseList({ courses }: { courses: readonly Contributed[] }) {
   return (
     <ul className="demand-list">
@@ -38,6 +55,11 @@ function CourseList({ courses }: { courses: readonly Contributed[] }) {
 export function DemandContribution({ accountId }: { accountId?: string | null } = {}) {
   const { account } = useStore();
   const userId = accountId !== undefined ? accountId : (account?.id ?? null);
+  // Keyed by account, so a switch on a shared device starts from nothing.
+  return <Contribution key={userId ?? 'signed-out'} userId={userId} />;
+}
+
+function Contribution({ userId }: { userId: string | null }) {
   const plan = useRegistrationPlan();
   const proposed = useMemo(() => contributionFrom(plan.cart, plan.data.backups, plan.catalog), [plan.cart, plan.data.backups, plan.catalog]);
   const term = proposed?.term ?? '';
@@ -58,6 +80,22 @@ export function DemandContribution({ accountId }: { accountId?: string | null } 
     };
   }, [userId, term, round]);
 
+  // With the cart empty there is no term to ask about, but a contribution
+  // sent earlier still counts. Ask about each term in the catalog, so the
+  // student can always see it and stop it.
+  const catalogTerms = useMemo(() => [...new Set(plan.catalog.map((c) => c.term))].sort().slice(0, 4), [plan.catalog]);
+  const [standing, setStanding] = useState<(MyContribution & { term: string }) | null>(null);
+  useEffect(() => {
+    if (!userId || term || !catalogTerms.length) return;
+    let live = true;
+    Promise.all(catalogTerms.map((t) => myContribution(t).then((m) => (m ? { ...m, term: t } : null), () => null)))
+      .then((all) => live && setStanding(all.find((m) => m && m.revokedAt === null && m.courses.length) ?? null))
+      .catch(() => live && setStanding(null));
+    return () => {
+      live = false;
+    };
+  }, [userId, term, catalogTerms, round]);
+
   const header = (
     <>
       <h3>Help your school plan sections</h3>
@@ -76,15 +114,6 @@ export function DemandContribution({ accountId }: { accountId?: string | null } 
       </section>
     );
   }
-  if (!proposed || !proposed.courses.length) {
-    return (
-      <section className="portal-panel demand-contribution" aria-label="Contribute to course demand">
-        {header}
-        <p>Add courses to your cart first.</p>
-      </section>
-    );
-  }
-
   const run = async (what: () => Promise<unknown>, ok: string) => {
     setFailed('');
     try {
@@ -95,6 +124,42 @@ export function DemandContribution({ accountId }: { accountId?: string | null } 
       setFailed(e instanceof Error ? e.message : String(e));
     }
   };
+
+  if (!proposed || !proposed.courses.length) {
+    const was = standing && !term ? standing : null;
+    return (
+      <section className="portal-panel demand-contribution" aria-label="Contribute to course demand">
+        {header}
+        {said ? <p role="status" className="balance-said">{said}</p> : null}
+        {failed ? <p role="alert">{failed}</p> : null}
+        {was ? (
+          <>
+            <p>
+              <strong>You contribute for {was.term}</strong>
+              {was.consentedAt ? ` since ${day(was.consentedAt)}` : ''}. Your cart is empty now, but the counts still use what
+              you sent.
+            </p>
+            <CourseList courses={was.courses} />
+            <button type="button" className="balance-button" onClick={() => setConfirm('stop')}>
+              Stop contributing…
+            </button>
+          </>
+        ) : (
+          <p>Add courses to your cart first.</p>
+        )}
+        {confirm === 'stop' && was ? (
+          <StopDialog
+            term={was.term}
+            onConfirm={() => {
+              setConfirm(null);
+              void run(() => stopContributing(was.term), `You no longer contribute for ${was.term}.`);
+            }}
+            onCancel={() => setConfirm(null)}
+          />
+        ) : null}
+      </section>
+    );
+  }
 
   const live = mine !== 'loading' && mine !== 'error' && mine !== null && mine.revokedAt === null ? mine : null;
   const changed = live ? contributionChanged(live.courses, proposed.courses) : false;
@@ -162,15 +227,8 @@ export function DemandContribution({ accountId }: { accountId?: string | null } 
         />
       ) : null}
       {confirm === 'stop' ? (
-        <ConfirmDialog
-          title={`Stop contributing for ${term}?`}
-          preview={
-            <>
-              <p>Your courses are removed from the demand count now.</p>
-              <p>Counts already published keep you until they are next refreshed. No refresh after that counts you.</p>
-            </>
-          }
-          confirmLabel="Stop contributing"
+        <StopDialog
+          term={term}
           onConfirm={() => {
             setConfirm(null);
             void run(() => stopContributing(term), `You no longer contribute for ${term}.`);

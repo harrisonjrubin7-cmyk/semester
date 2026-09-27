@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { EMPTY_MEETINGS, meetingSummary, newMeeting, payloadLines, readMeetings, sharePayload, type Meeting } from './advisor-meeting';
+import { EMPTY_MEETINGS, meetingSummary, newMeeting, payloadLines, readMeetings, readSharePayload, sharePayload, type Meeting } from './advisor-meeting';
 
 /**
  * Phase G's meeting model: what the device keeps, and — the part that
@@ -45,6 +45,20 @@ describe('what a share carries', () => {
   it('never has a field for notes, history, grades or anything else', () => {
     const p = sharePayload(meeting({ attach: { scenario: 's1', courses: ['e3'], followUps: true } }), resolved);
     expect(Object.keys(p).sort()).toEqual(['agenda', 'courses', 'date', 'followUps', 'questions', 'scenario', 'sharedAs', 'title', 'version']);
+  });
+});
+
+describe('a share as an advisor opens it', () => {
+  it('reads back exactly what the student shared', () => {
+    const p = sharePayload(meeting({ attach: { scenario: 's1', courses: ['e3'], followUps: true } }), resolved);
+    expect(readSharePayload(JSON.parse(JSON.stringify(p)))).toEqual(p);
+  });
+
+  it('refuses a snapshot of the wrong shape before anything renders it', () => {
+    const p = sharePayload(meeting(), resolved);
+    for (const broken of [{}, null, { ...p, agenda: 'Spring courses' }, { ...p, courses: [{ code: 'X' }] }, { ...p, scenario: { name: 'S' } }]) {
+      expect(() => readSharePayload(broken)).toThrow('This share could not be read.');
+    }
   });
 });
 

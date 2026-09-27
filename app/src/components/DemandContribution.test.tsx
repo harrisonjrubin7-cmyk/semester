@@ -183,6 +183,33 @@ describe('a student contributing', () => {
   });
 });
 
+describe('a contribution after the cart is emptied', () => {
+  const emptyCart = () => {
+    const reg = JSON.parse(localStorage.getItem('semester.registration.v1')!);
+    localStorage.setItem('semester.registration.v1', JSON.stringify({ ...reg, cart: [] }));
+  };
+
+  it('stays in view, and can still be stopped', async () => {
+    mine = { consentedAt: Date.now(), revokedAt: null, courses: [{ course: 'ECON 1010', role: 'primary' }] };
+    emptyCart();
+    await render(<DemandContribution accountId="u1" />);
+    await settle(() => text().includes('You contribute for 2027SP'));
+    expect(text()).toContain('Your cart is empty now, but the counts still use what you sent.');
+    await act(async () => button(/^Stop contributing…$/).click());
+    expect(stopped).toEqual([]);
+    await act(async () => button(/^Stop contributing$/, dialog()!).click());
+    await settle(() => stopped.length > 0);
+    expect(stopped).toEqual(['2027SP']);
+  });
+
+  it('asks for a cart when nothing is being counted (the control)', async () => {
+    emptyCart();
+    await render(<DemandContribution accountId="u1" />);
+    expect(text()).toContain('Add courses to your cart first.');
+    expect(() => button(/^Stop contributing…$/)).toThrow();
+  });
+});
+
 describe('the staff view', () => {
   it('tells an account with no demand scope so, and asks for nothing', async () => {
     await render(<DemandDesk accountId="u1" />);

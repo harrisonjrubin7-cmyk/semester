@@ -329,7 +329,14 @@ declare
     'publish_course_rules(want_course text, want_term text, want_blanket text, want_uses jsonb, want_words text, want_link text, want_effective date)',
     'publish_course_guidance(want_course text, want_term text, want_body text)',
     'publish_study_pack(want_course text, want_term text, want_pack uuid, want_title text, want_note text, want_items jsonb, want_retired boolean)',
-    'my_course_studio_courses()'
+    'my_course_studio_courses()',
+
+    -- The two in 20260928160000_expansion_review_fixes.sql. Each deletes only
+    -- rows naming the caller, for "Delete my account": demand contributions
+    -- and consents, and advisor shares at either end. `demand.check.sql` and
+    -- `advisor.check.sql` hold that neither reaches another account's rows.
+    'forget_my_advisor_shares()',
+    'forget_my_course_demand()'
   ];
   extra text;
   missing text;

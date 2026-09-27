@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { ACTIONS_PREFIX, EMPTY_ACTION_CHOICES, readActionChoices } from '../lib/actions';
-import { EMPTY_MEETINGS, MEETING_KEY, readMeetings } from '../lib/advisor-meeting';
+import { EMPTY_MEETINGS, meetingKey, readMeetings } from '../lib/advisor-meeting';
 import { EMPTY_CAREER, readCareer } from '../lib/career';
 import { EMPTY_EVIDENCE, readEvidence } from '../lib/career-evidence';
 import { download } from '../lib/deliver';
@@ -8,7 +8,7 @@ import { useDeviceLibrary } from '../lib/device-library';
 import { EMPTY_REGISTRATION, readRegistration } from '../lib/portal-storage';
 import { REGISTRATION_KEY } from '../lib/registration-plan';
 import { readTerm, termsAround } from '../lib/term';
-import { wrapped, wrappedText } from '../lib/wrapped';
+import { schedulesFor, wrapped, wrappedText } from '../lib/wrapped';
 import { useNow, useStore } from '../state/store';
 import { ConfirmDialog } from './ConfirmDialog';
 
@@ -50,7 +50,7 @@ export function SemesterWrapped() {
   const term = readTerm(termId);
 
   const registration = useDeviceLibrary(REGISTRATION_KEY, readRegistration, EMPTY_REGISTRATION).value;
-  const meetings = useDeviceLibrary(MEETING_KEY, readMeetings, EMPTY_MEETINGS).value.meetings;
+  const meetings = useDeviceLibrary(meetingKey(account?.id), readMeetings, EMPTY_MEETINGS).value.meetings;
   const evidence = useDeviceLibrary(`semester.career-evidence.v1:${who}:${term.id}`, readEvidence, EMPTY_EVIDENCE).value;
   const career = useDeviceLibrary(`semester.career.v1:${who}:${term.id}`, readCareer, EMPTY_CAREER).value;
   const actions = useDeviceLibrary(`${ACTIONS_PREFIX}:${who}`, readActionChoices, EMPTY_ACTION_CHOICES).value.choices;
@@ -63,14 +63,14 @@ export function SemesterWrapped() {
         tickedAt: state.tickedAt,
         sessions: state.sessions,
         taken: state.taken,
-        schedulesSaved: registration.plans.length,
+        schedulesSaved: schedulesFor(registration.plans, term),
         meetings,
         artifacts: evidence.artifacts,
         bullets: evidence.bullets,
         eventsSaved: career.opportunities.filter((o) => o.saved && o.kind === 'Career event').length,
         actionChoices: actions,
       }),
-    [term, state.done, state.tickedAt, state.sessions, state.taken, registration.plans.length, meetings, evidence, career.opportunities, actions],
+    [term, state.done, state.tickedAt, state.sessions, state.taken, registration.plans, meetings, evidence, career.opportunities, actions],
   );
   const text = wrappedText(w);
   const [confirm, setConfirm] = useState<Out | null>(null);
