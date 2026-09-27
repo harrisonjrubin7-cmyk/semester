@@ -227,6 +227,34 @@ nothing verified stands behind it.
 A draft restored after a reload has no structured sections, so it still saves
 through Markdown as before.
 
+## D-036 · Study abroad lives in Pathway, unflagged, and every approval is the student's record
+
+**Taken in P4.1.** (D-030 to D-035 are on their own open branches; D-013–D-029
+and D-040 onward belong to the feature-expansion work.)
+
+**Where it lives.** Study abroad is a tab of Pathway, the screen for projects
+that outlast a term, and not a new screen. A new screen would need a nav
+entry, and the only per-screen gate (`lib/school.ts` `REQUIRES`) describes
+what a *school* offers, not a build flag. `Career.tsx` already has a
+nine-step abroad checklist, and #792 is restyling that screen, so the new
+module does not touch it.
+
+**No flag.** The module keeps student-entered data on the device, in the
+workspace backup, sends nothing, and reads no institution data or #762
+table. That is the same risk class as Career's existing checklist, which is
+unflagged. The expansion work's `MODULE_FLAG_ENV` map exists only on its
+unmerged branches, and a new `VITE_` variable would also need the Pages
+workflow changed (`lib/deploy.test.ts`).
+
+**Approvals.** Every course approval is labelled as what the student
+recorded, with where they recorded it from. Only credit recorded as
+pre-approved is counted as credit to plan on; pending and estimated credit
+is shown separately. Costs stay in each program's own currency and are never
+converted or summed.
+
+Rejected: reading `articulation_rules` or `transfer_evaluations`, the
+institution-verified source, which needs a live school connection (Phase 6).
+
 ---
 
 # Feature-expansion command (27 Sep 2026)

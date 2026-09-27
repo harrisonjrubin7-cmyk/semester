@@ -256,3 +256,16 @@
 .regday-checklist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:calc(10px * var(--density, 1))}
 .regday-course ol{margin:calc(8px * var(--density, 1)) 0;padding-inline-start:calc(20px * var(--density, 1));display:flex;flex-direction:column;gap:calc(6px * var(--density, 1))}
 .regday-course li{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:calc(8px * var(--density, 1))}
+.abroad-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));column-gap:var(--sp-4)}
+.abroad-courses{list-style:none;padding:0;margin:0 0 var(--sp-4);display:grid;gap:var(--sp-4)}
+.abroad-course{border:1px solid var(--app-line);border-radius:var(--r-md);padding:var(--sp-4);margin:0;min-width:0}
+.abroad-course legend{padding:0 var(--sp-2)}
+.abroad-stage{border-top:1px solid var(--app-line);padding-block:var(--sp-2)}
+.abroad-stage summary{min-height:44px;display:flex;align-items:center;gap:var(--sp-2);cursor:pointer}
+.abroad-steps{list-style:none;padding:0;margin:0 0 var(--sp-3)}
+.abroad-steps label{display:flex;gap:var(--sp-3);align-items:flex-start;min-height:44px;padding-block:var(--sp-2)}
+.abroad-steps input{margin-top:calc(3px * var(--density, 1));flex:none}
+.abroad-preview{white-space:pre-wrap;overflow-wrap:anywhere;border:1px solid var(--app-line);border-radius:var(--r-md);padding:var(--sp-4);font-family:inherit}
+.abroad-table-wrap{overflow-x:auto}
+.abroad-table{border-collapse:collapse;width:100%}
+.abroad-table th,.abroad-table td{text-align:left;padding:var(--sp-2) var(--sp-3);border-bottom:1px solid var(--app-line);vertical-align:top}

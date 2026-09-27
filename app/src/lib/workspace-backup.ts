@@ -1,3 +1,4 @@
+import { ABROAD_PREFIX, readAbroad } from './abroad';
 import { ACTIONS_PREFIX, readActionChoices } from './actions';
 import { MEETING_KEY, readMeetings } from './advisor-meeting';
 import { EVIDENCE_PREFIX, readEvidence } from './career-evidence';
@@ -97,6 +98,12 @@ const DEFINITIONS: Record<string, Definition> = {
     prefix: 'semester.pathway.v1',
     scope: 'account',
     read: readPathway,
+  },
+  abroad: {
+    label: 'Study abroad plan',
+    prefix: ABROAD_PREFIX,
+    scope: 'account',
+    read: readAbroad,
   },
   quizfeedback: {
     label: 'Quiz questions you reported',
