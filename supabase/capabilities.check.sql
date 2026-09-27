@@ -221,11 +221,14 @@ begin
   perform pg_temp.become(member);
   select count(*) into n from public.app_roles;
   -- Twenty original roles plus the twenty-seven added by
-  -- 20260926150000_expansion_roles_and_features.sql.
-  perform pg_temp.counted('a signed-in account reads the forty-seven roles', n, 47);
+  -- 20260926150000_expansion_roles_and_features.sql, plus `integration_admin`
+  -- and `incident_responder` from 20260927170000_integration_control_plane.sql.
+  perform pg_temp.counted('a signed-in account reads the forty-nine roles', n, 49);
   select count(*) into n from public.role_capabilities;
-  -- Twenty original rows plus thirty-seven expansion rows.
-  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 57);
+  -- Twenty original rows, thirty-seven expansion rows, and eight from the
+  -- integration control plane (four for integration_admin, three for
+  -- university_admin, one for incident_responder).
+  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 65);
 
   perform pg_temp.become_anon();
   perform pg_temp.refused('a signed-out visitor cannot read the matrix',
