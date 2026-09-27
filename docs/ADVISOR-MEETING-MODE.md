@@ -63,7 +63,7 @@ asserts the payload's keys.
 | `share_with_advisor(email, title, payload, expires)` | Finds the address only among live `academic_advisor` grants scoped to the student's own school, and inserts. Every miss gives the same message |
 | `list_advisor_shares()` | For the advisor: live shares' titles and dates. Logs nothing |
 | `read_advisor_share(id)` | For the advisor: checks the share is theirs, unrevoked and unexpired. Logs the read and returns the snapshot |
-| `lti_account_untouched` | Redefined with `advisor_shares` at both ends, so account linking never retires an account holding shares |
+| `lti_account_untouched` | Redefined with `advisor_shares` at both ends, so account linking never retires an account holding shares. Restated in `20260927234600_untouched_advisor_after_help.sql`, because `20260927230000_help_requests.sql` (merged into the base later) redefines it without them, and the later version wins |
 
 **Deletion:**
 
@@ -77,6 +77,8 @@ asserts the payload's keys.
 | New | Purpose |
 |---|---|
 | `supabase/migrations/20260927201500_advisor_shares.sql` | Above |
+| `supabase/migrations/20260927234600_untouched_advisor_after_help.sql` | The advisor rows restated after `help_requests` |
+| `supabase/grants.check.sql` | The three functions added to the allowlist; the suite failed without them |
 | `supabase/advisor.check.sql` | 45 checks: who may share with whom, who may read, expiry, revocation, the log, deletion, linking |
 | `lib/advisor-meeting.ts` | The device model (`semester.advisor-meeting.v1`), `sharePayload`, `payloadLines`, `meetingSummary` |
 | `lib/advisor-shares.ts` | Expiry choices, `shareState`, `checkPayload`, and the RPC and table calls |
