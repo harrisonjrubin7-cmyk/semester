@@ -112,14 +112,49 @@ export async function moderationAccess(): Promise<ModerationAccess> {
 /** The columns a reviewer needs, and deliberately not `reporter` or `about`. */
 export const QUEUE_COLUMNS = 'id, status, reason, copy, created_at, message_id';
 
-export async function loadQueue(): Promise<QueuedReport[]> {
-  const { data, error } = await (await cloud())
-    .from('reports')
-    .select(QUEUE_COLUMNS)
-    .order('created_at', { ascending: false })
-    .limit(200);
-  if (error) throw new Error(error.message);
-  return ordered((data ?? []).map(readRow).filter((r): r is QueuedReport => r !== null));
+/** Reports still waiting on a moderator. */
+export const ACTIVE: readonly ReportStatus[] = ['open', 'under_review'];
+/** Reports somebody has already closed. */
+export const CLOSED: readonly ReportStatus[] = ['resolved', 'dismissed'];
+
+/** At most this many waiting reports per load — PostgREST's own default ceiling. */
+export const ACTIVE_LIMIT = 1000;
+/** Closed history is the latest this many; it is context, not work. */
+export const CLOSED_LIMIT = 100;
+
+export interface Queue {
+  reports: QueuedReport[];
+  /** More reports are waiting than one load holds; the oldest are the ones shown. */
+  moreWaiting: boolean;
+  /** Closed history was cut to the latest `CLOSED_LIMIT`. */
+  closedCapped: boolean;
+}
+
+type Client = Awaited<ReturnType<typeof cloud>>;
+
+/**
+ * Waiting reports and closed history, fetched separately so neither can crowd
+ * out the other. One capped query over every status let a run of recent
+ * resolutions push older open reports out of the only place a moderator reads
+ * them. Waiting reports are fetched oldest first, so if there are ever more
+ * than one load holds, the ones cut are the newest — never the longest-ignored.
+ */
+export async function loadQueue(client?: Client): Promise<Queue> {
+  const db = client ?? (await cloud());
+  const [active, closed] = await Promise.all([
+    db.from('reports').select(QUEUE_COLUMNS).in('status', [...ACTIVE]).order('created_at', { ascending: true }).limit(ACTIVE_LIMIT + 1),
+    db.from('reports').select(QUEUE_COLUMNS).in('status', [...CLOSED]).order('created_at', { ascending: false }).limit(CLOSED_LIMIT),
+  ]);
+  if (active.error) throw new Error(active.error.message);
+  if (closed.error) throw new Error(closed.error.message);
+  const waiting = (active.data ?? []) as unknown[];
+  const history = (closed.data ?? []) as unknown[];
+  const rows = [...waiting.slice(0, ACTIVE_LIMIT), ...history];
+  return {
+    reports: ordered(rows.map(readRow).filter((r): r is QueuedReport => r !== null)),
+    moreWaiting: waiting.length > ACTIVE_LIMIT,
+    closedCapped: history.length >= CLOSED_LIMIT,
+  };
 }
 
 export async function moveReport(id: string, to: ReportStatus): Promise<void> {

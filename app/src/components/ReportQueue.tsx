@@ -5,6 +5,8 @@ import {
   MOVES,
   NO_ACCESS,
   STATUS_LABEL,
+  ACTIVE_LIMIT,
+  CLOSED_LIMIT,
   counts,
   loadQueue,
   moderationAccess,
@@ -30,13 +32,18 @@ export function ReportQueue({ account }: { account: Account | null }) {
   const [busy, setBusy] = useState('');
   const [notice, setNotice] = useState('');
   const [showClosed, setShowClosed] = useState(false);
+  const [limits, setLimits] = useState({ moreWaiting: false, closedCapped: false });
 
   const refresh = useCallback(async () => {
     if (!account) return;
     try {
       const got = await moderationAccess();
       setAccess(got);
-      if (got.canRead) setReports(await loadQueue());
+      if (got.canRead) {
+        const q = await loadQueue();
+        setReports(q.reports);
+        setLimits({ moreWaiting: q.moreWaiting, closedCapped: q.closedCapped });
+      }
     } catch (error) {
       // An error is not access: say nothing to a student whose call failed,
       // and tell a known moderator what went wrong.
@@ -69,10 +76,13 @@ export function ReportQueue({ account }: { account: Account | null }) {
         Reported messages
       </h2>
       <p className="jx-muted">
-        {n.open} open · {n.under_review} under review · {n.resolved + n.dismissed} closed. Each shows the reason given and the
+        {n.open} open · {n.under_review} under review · {n.resolved + n.dismissed}{limits.closedCapped ? ` most recent` : ''} closed. Each shows the reason given and the
         message as it stood. Who reported it and who it is about are not shown here. Every status change is recorded.
         {access.canAct ? '' : ' You can read this queue but not move reports.'}
       </p>
+      {limits.moreWaiting ? (
+        <Notice alert>More than {ACTIVE_LIMIT} reports are waiting. The oldest {ACTIVE_LIMIT} are shown; close some and reload to see the rest.</Notice>
+      ) : null}
       {notice ? <Notice alert>{notice}</Notice> : null}
       {!shown.length ? <p className="jx-muted">Nothing waiting.</p> : null}
       {shown.map((r) => (
@@ -96,7 +106,7 @@ export function ReportQueue({ account }: { account: Account | null }) {
         </article>
       ))}
       <button type="button" className="jx-go" aria-pressed={showClosed} onClick={() => setShowClosed(!showClosed)}>
-        {showClosed ? 'Hide closed reports' : `Show closed reports (${n.resolved + n.dismissed})`}
+        {showClosed ? 'Hide closed reports' : limits.closedCapped ? `Show the latest ${CLOSED_LIMIT} closed reports` : `Show closed reports (${n.resolved + n.dismissed})`}
       </button>
     </section>
   );

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { officialMessages } from './official-notices';
+import { loadOfficial, officialMessages } from './official-notices';
 import { admit, visible, EMPTY_PREFS } from './comms';
-import type { Fact, SchoolRecordsView } from './integration/school-records';
+import { buildEnvironment, type Fact, type SchoolRecordsView } from './integration/school-records';
 
 /**
  * The school's facts as hub messages. The control is the first case: a current
@@ -72,5 +72,54 @@ describe('official notices', () => {
     const out = shown(view({ alerts: [fact('c', 'Emergency: now'), fact('s', 'Emergency: earlier', { official: false, freshness: 'stale' })] }));
     const late = visible(out, { ...EMPTY_PREFS, muted: ['official'] }, 23 * 60);
     expect(late.now.map((m) => m.id)).toEqual(['official:alert:c']);
+  });
+});
+
+/**
+ * A client that answers the three reads the loader makes: who is signed in,
+ * whether the module is on for the school, and the rows. Each can be made to
+ * fail, which is the case the hub has to tell apart from "not connected".
+ */
+function fakeDb(o: { user?: string | null; state?: string; stateFails?: boolean; switchesFail?: boolean; rowsFail?: boolean; userThrows?: boolean }) {
+  const fail = { message: 'network' };
+  return {
+    auth: {
+      getUser: async () => {
+        if (o.userThrows) throw new Error('offline');
+        return { data: { user: o.user === null ? null : { id: o.user ?? 'u1' } } };
+      },
+    },
+    rpc: async () => (o.stateFails ? { data: null, error: fail } : { data: o.state ?? 'production', error: null }),
+    from: (table: string) => {
+      if (table === 'feature_kill_switch') {
+        return { select: async () => (o.switchesFail ? { data: null, error: fail } : { data: [], error: null }) };
+      }
+      const q = { select: () => q, in: () => q, is: () => q, limit: async () => (o.rowsFail ? { data: null, error: fail } : { data: [], error: null }) };
+      return q;
+    },
+  } as never;
+}
+
+describe('loading the official channel', () => {
+  const env = buildEnvironment('production');
+  const school = async () => 'vanderbilt';
+  const load = (db: unknown, s = school) => loadOfficial(db as never, s, env, NOW);
+
+  it('is ready when the module is on and the rows load — the control', async () => {
+    expect(await load(fakeDb({}))).toEqual({ status: 'ready', userId: 'u1', rows: [] });
+  });
+
+  it('is off for what is true about the school or the account', async () => {
+    expect((await load(null)).status).toBe('off');
+    expect((await load(fakeDb({ user: null }))).status).toBe('off');
+    expect((await load(fakeDb({}), async () => '')).status).toBe('off');
+    expect((await load(fakeDb({ state: 'off' }))).status).toBe('off');
+  });
+
+  it('is an error, never off, when a request fails', async () => {
+    expect((await load(fakeDb({ stateFails: true }))).status).toBe('error');
+    expect((await load(fakeDb({ switchesFail: true }))).status).toBe('error');
+    expect((await load(fakeDb({ rowsFail: true }))).status).toBe('error');
+    expect((await load(fakeDb({ userThrows: true }))).status).toBe('error');
   });
 });
