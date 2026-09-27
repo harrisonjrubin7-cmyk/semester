@@ -261,7 +261,7 @@ export const CLAIMS: Claim[] = [
   {
     heading: 'Who can see your rows',
     body:
-      'Your private rows are protected by row-level security keyed to your account, enforced by the database rather than by the app asking politely. There are two deliberate exceptions. A shared practice paper is visible to anyone holding its link. A support summary is visible only to the one verified university supporter you name, for the one-to-seven-day window you approve; every read is recorded, and raw notes, sources, recordings and mistake detail remain private.',
+      'Your private rows are protected by row-level security keyed to your account, enforced by the database rather than by the app asking politely. There are three deliberate exceptions. A shared practice paper is visible to anyone holding its link. A support summary is visible only to the one verified university supporter you name, for the one-to-seven-day window you approve; every read is recorded, and raw notes, sources, recordings and mistake detail remain private. A help request you send to a campus office carries only what you wrote and ticked on the confirm screen, is readable only by staff who answer for that office, and every time one of them opens it is recorded where you can see it; withdrawing it erases what it said.',
   },
 ];
 

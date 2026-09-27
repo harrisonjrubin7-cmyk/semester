@@ -942,6 +942,14 @@ export const OWNED_TABLES: OwnedTable[] = [
   // merely leaving.
   { table: 'organization_members', column: null, via: 'forget_my_organizations' },
 
+  // ── Help requests ───────────────────────────────────────────────────────
+  // No API role holds DELETE on `help_requests`: the only writes into it are
+  // the functions in `20260927180000_help_requests.sql`, so the way out is one
+  // of them too. The events are the student's record of who opened what, and
+  // go with their request.
+  { table: 'help_requests', column: null, via: 'forget_my_help_requests' },
+  { table: 'help_request_events', column: null, cascadesFrom: 'help_requests' },
+
   { table: 'forms', column: 'owner' },
   // Taken by the line above rather than by a request of its own:
   // `form_responses.form_id` references `forms` with `on delete cascade`, and
@@ -990,6 +998,10 @@ export const KEPT_TABLES: KeptTable[] = [
   {
     table: 'schools',
     why: 'The list of universities the app recognises is not a record about you — no account writes a row in it, and only an administrator can. Leaving is not a way to remove a university, and the entry saying which one you are at lives on your own profile, which does go.',
+  },
+  {
+    table: 'help_destinations',
+    why: 'The offices your university chose to reach through Semester — their names, links and hours — are institutional configuration, not a record about you. Your requests to them go with your account; the list of offices stays.',
   },
   {
     table: 'support_access_event',
