@@ -133,3 +133,22 @@ not indexable and bloat the app shell; and moving the app to path routing,
 which would migrate 59 screens and every stored deep link. Changing the
 production host (e.g. to Vercel, where `app/vercel.json` already exists) is a
 production change and needs approval.
+
+## D-035 · A saved study guide keeps its quotations, and only checked ones
+
+**Taken in P3.4.** (D-030 to D-034 are on their own open branches; D-013–D-029
+belong to the feature-expansion work.)
+
+"Save & open in Write" now builds Write blocks directly (`studyBlocks`),
+instead of going through Markdown. The Markdown route put the source's
+internal id into the student's document and left each quotation as a loose
+paragraph.
+
+Now each checked citation becomes a Write `quote` block with its source and
+place, which the Word, PDF and Markdown exports print as "— source". The
+body's inline markers are numbered to match the quotations. A marker naming a
+source that has no checked quotation in that section is removed, since
+nothing verified stands behind it.
+
+A draft restored after a reload has no structured sections, so it still saves
+through Markdown as before.

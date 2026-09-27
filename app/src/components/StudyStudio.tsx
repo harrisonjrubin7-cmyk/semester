@@ -8,7 +8,7 @@ import { configured, routeLabel } from '../lib/assistant';
 import { extractText } from '../lib/extract';
 import { useDraft } from '../lib/draft.hook';
 import { fromMarkdown } from '../lib/document';
-import { STUDY_FORMATS, STUDY_SYSTEM, citationLocation, parseStudySections, quoteContext, studyPrompt, studyMarkdown, studySources, type StudyFormat, type StudySection, type StudySource, type StudioControls } from '../lib/studystudio';
+import { STUDY_FORMATS, STUDY_SYSTEM, citationLocation, parseStudySections, quoteContext, studyPrompt, studyMarkdown, studyBlocks, studySources, type StudyFormat, type StudySection, type StudySource, type StudioControls } from '../lib/studystudio';
 import { Drawing } from './Drawing';
 import { MasteryGraph } from './MasteryGraph';
 import { courseLearningInput, learningState, readinessForecast } from '../lib/learning-loop';
@@ -62,7 +62,7 @@ export function StudyStudio({courseId,onClose,adaptiveLearning=EXPERIENCE_FLAGS.
   if(file.size>20_000_000){setNotice('Choose a file smaller than 20 MB.');return;}setBusy('reading');setNotice('Reading material…');
   try{const got=await extractText(file);if(!got.text.trim())throw new Error('No selectable text found. Paste a readable excerpt or use the course import tool for scanned material.');const saved=existingId||((await addFile(file,courseId)).id);const prefix=saved;const next:StudySource[]=got.pages?.length?got.pages.filter(p=>p.text.trim()).map(p=>({id:`upload-${prefix}-${p.page}`,title:got.name,fileId:saved,text:p.text,locator:`${/\.pptx$/i.test(file.name)?'Slide':'Page'} ${p.page}`})):[{id:`upload-${prefix}`,title:got.name,fileId:saved,text:got.text,locator:'Uploaded text; page not recorded'}];setUploads(s=>[...s.filter(x=>x.fileId!==saved),...next]);setSelected(s=>[...new Set([...s,...next.map(n=>n.id)])]);setNotice(`${next.length} source excerpts added. Review the selection before generating.`);}catch(e){setNotice((e as Error).message);}finally{setBusy('');}
  };
- const save=()=>{if(!draft.value.trim())return;dispatch({type:'makeDocument',open:true,doc:{title:`${course?.code??guide.code} · Study guide`,subtitle:'AI-assisted study draft · Review explanations against the cited material',courseId,blocks:fromMarkdown(draft.value)}});draft.done();};
+ const save=()=>{if(!draft.value.trim())return;dispatch({type:'makeDocument',open:true,doc:{title:`${course?.code??guide.code} · Study guide`,subtitle:'AI-assisted study draft · Review explanations against the cited material',courseId,blocks:sections.length?studyBlocks(sections,usedSources):fromMarkdown(draft.value)}});draft.done();};
  const speak=(text:string)=>{if(!('speechSynthesis' in window)){setNotice('Read-aloud is not supported by this browser.');return;}window.speechSynthesis.cancel();window.speechSynthesis.speak(new SpeechSynthesisUtterance(text.replace(/[#*`]/g,'')));};
  return <div className="study-studio portal-workspace"><div className="portal-heading"><div><span className="portal-eyebrow">{course?.code} · {state.sample?'Sample material':'Course study workspace'}</span><h2>Make a guide that fits how you study</h2><p>Choose your material and one or more formats. Save the result with your course.</p></div><button onClick={onClose}>← Back to study</button></div>
   {adaptiveLearning && <section className="portal-panel"><h3>Learning evidence</h3><p className="portal-muted">Readiness range {readiness.range[0]}–{readiness.range[1]}%, not a grade. Unanswered concepts stay unmeasured.</p><MasteryGraph concepts={conceptStates}/></section>}
