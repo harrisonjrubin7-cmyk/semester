@@ -1,5 +1,4 @@
 import { ABROAD_PREFIX, readAbroad } from './abroad';
-  },
 import { ACTIONS_PREFIX, readActionChoices } from './actions';
 import { readAthletics } from './athletics';
 import { readCareer } from './career';
