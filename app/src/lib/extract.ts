@@ -64,7 +64,7 @@ async function loadPdfjs(): Promise<PdfLib> {
  * fragment to the last one restores the line breaks, which is what makes a
  * syllabus's dates survive the trip.
  */
-async function fromPdf(file: File): Promise<string> {
+async function fromPdf(file: File): Promise<{ page: number; text: string }[]> {
   const lib = await loadPdfjs();
   let doc: Awaited<ReturnType<PdfLib['getDocument']>['promise']>;
   try {
@@ -80,7 +80,7 @@ async function fromPdf(file: File): Promise<string> {
       `${file.name} could not be opened as a PDF. If it stopped part-way through downloading, fetch it again — or paste the text in by hand.`,
     );
   }
-  const pages: string[] = [];
+  const pages: { page: number; text: string }[] = [];
 
   for (let n = 1; n <= doc.numPages; n += 1) {
     const content = await (await doc.getPage(n)).getTextContent();
@@ -93,9 +93,9 @@ async function fromPdf(file: File): Promise<string> {
       text += str;
       if (y !== null) lastY = y;
     }
-    pages.push(text);
+    pages.push({ page: n, text });
   }
-  return pages.join('\n\n');
+  return pages;
 }
 
 /**
@@ -240,6 +240,15 @@ export interface Extracted {
    */
   pages?: { page: number; text: string }[];
   /**
+   * What `pages` counts. A deck's slide numbers are printed into `text` as
+   * "Slide 3"; a PDF's page numbers are not — the flat text stays exactly as
+   * it was, so quotes, word counts and hashes do not move — which means a
+   * model reading the text cannot see a PDF page number and anything it
+   * claims is a guess. `harvest.ts` takes a PDF page from where the checked
+   * quote sits instead. Absent on anything older, which only a deck set.
+   */
+  pageUnit?: 'slide' | 'page';
+  /**
    * The file itself, base64, for a PDF small enough to send whole.
    *
    * Extraction is still done — the word count, the preview and every
@@ -277,15 +286,24 @@ async function asBase64(file: File): Promise<string> {
   return btoa(binary);
 }
 
+/** The whitespace clean-up every format gets, for the whole text and for each page alike. */
+const tidy = (text: string) => text.replace(/\r\n/g, '\n').replace(/[ \t]+\n/g, '\n').trim();
+
 export async function extractText(file: File): Promise<Extracted> {
   const name = file.name;
   let text: string;
   /** The PDF itself, where it can go whole as well as flattened. */
   let original: string | undefined;
   let pages: { page: number; text: string }[] | undefined;
+  let pageUnit: 'slide' | 'page' | undefined;
 
   if (/\.pdf$/i.test(name) || file.type === 'application/pdf') {
-    text = await fromPdf(file);
+    const read = await fromPdf(file);
+    text = read.map((p) => p.text).join('\n\n');
+    // Pages with nothing on them (a blank divider, a full-page figure) are
+    // left out rather than numbered: there is nothing on them to point at.
+    pages = read.map((p) => ({ page: p.page, text: tidy(p.text) })).filter((p) => p.text);
+    pageUnit = 'page';
     if (file.size <= SENDABLE_PDF) {
       try {
         original = await asBase64(file);
@@ -299,6 +317,7 @@ export async function extractText(file: File): Promise<Extracted> {
   } else if (/\.pptx$/i.test(name)) {
     const slides = await fromPptx(file);
     pages = slides.map((s) => ({ page: s.slide, text: s.text }));
+    pageUnit = 'slide';
     // Numbered in the flat text as well. A model reading this is being asked
     // where something came from, and the number has to be in front of it.
     text = slides.map((s) => `Slide ${s.slide}\n${s.text}`).join('\n\n');
@@ -318,7 +337,7 @@ export async function extractText(file: File): Promise<Extracted> {
     throw new Error(`${name} is not a kind of file this can read — PDF, Word, slides, or text.`);
   }
 
-  text = text.replace(/\r\n/g, '\n').replace(/[ \t]+\n/g, '\n').trim();
+  text = tidy(text);
   if (!text) {
     throw new Error(
       `Nothing readable came out of ${name}. A scanned PDF is a picture of text — it needs to be run through OCR first, or pasted in by hand.`,
@@ -329,6 +348,6 @@ export async function extractText(file: File): Promise<Extracted> {
     text,
     words: text.split(/\s+/).length,
     ...(original ? { pdf: original } : {}),
-    ...(pages ? { pages } : {}),
+    ...(pages?.length ? { pages, pageUnit } : {}),
   };
 }

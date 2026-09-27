@@ -68,7 +68,12 @@ export const STUDY_FORMATS = [
   ['audio','Audio or Read-Aloud Study Guide','Write a natural spoken review, with short sentences and equations explained aloud.'],
 ] as const;
 export type StudyFormat = typeof STUDY_FORMATS[number][0];
-export interface StudySource { id:string; title:string; text:string; locator:string; fileId?:string }
+/**
+ * `page` is the page or slide an excerpt was cut from, where the file said
+ * (see `Extracted.pageUnit`), so a citation can open the original there;
+ * `slide` marks a deck's, which a browser cannot open at a slide.
+ */
+export interface StudySource { id:string; title:string; text:string; locator:string; fileId?:string; page?:number; slide?:boolean }
 export interface StudySpan { start:number; end:number }
 export interface StudyCitation { sourceId:string; quote:string; at?:StudySpan }
 export interface StudySection { id:string; format:StudyFormat; title:string; body:string; diagram?:string; citations:StudyCitation[] }

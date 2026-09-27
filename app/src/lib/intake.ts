@@ -49,6 +49,8 @@ export interface Intake {
    * none, because the point of carrying one is that it can be checked.
    */
   pages?: { page: number; text: string }[];
+  /** Whether `pages` are slides or PDF pages. See `Extracted.pageUnit`. */
+  pageUnit?: 'slide' | 'page';
   /** The original PDF, base64, when small enough to send whole. */
   pdf?: string;
   door: Door;
@@ -131,7 +133,7 @@ export async function intakeFiles(
         door: 'file',
         hash: hashOf(out.text),
         size: piece.file.size,
-        ...(out.pages ? { pages: out.pages } : {}),
+        ...(out.pages ? { pages: out.pages, ...(out.pageUnit ? { pageUnit: out.pageUnit } : {}) } : {}),
         ...(out.pdf ? { pdf: out.pdf } : {}),
       });
     } catch (e) {
