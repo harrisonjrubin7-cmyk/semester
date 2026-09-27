@@ -84,6 +84,7 @@ import {
   addReview,
   baseOf,
   conflictsIn,
+  keptHere,
   readBase,
   readReview,
   writeBase,
@@ -909,9 +910,21 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             return next;
           });
         }
-        dispatch({ type: 'hydrate', persisted: theirs });
+        /*
+         * And the settings the account has not touched since the two agreed:
+         * left as they are here, because the difference is this device's own
+         * change on its way up. Without this a pull — which now happens on
+         * focus and on reconnect — put the account's older value back over it.
+         * See `keptHere`.
+         */
+        const held = new Set(keptHere(theirs as Record<string, unknown>, readBase()));
+        const taken = Object.fromEntries(
+          Object.entries(theirs).filter(([field]) => !held.has(field)),
+        ) as typeof theirs;
+        dispatch({ type: 'hydrate', persisted: taken });
         markSeen(remote.seen);
-        // This device now holds what the account holds, record for record.
+        // The version both sides now agree on is the account's — including
+        // for the fields held back, whose difference here is still to go up.
         writeBase(baseOf(theirs as Record<string, unknown>));
       }
       setSync({ status: 'synced', at: Date.now(), error: '' });
@@ -1681,7 +1694,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setReview((was) => {
       const item = was.find((c) => c.key === key);
       if (item && keep !== item.kept) {
-        dispatch({ type: 'restoreRecord', field: item.field, record: keep === 'mine' ? item.mine : item.theirs });
+        const chosen = keep === 'mine' ? item.mine : item.theirs;
+        dispatch(
+          item.field === 'settings'
+            ? { type: 'restoreSettings', values: chosen as Record<string, unknown> }
+            : { type: 'restoreRecord', field: item.field, record: chosen },
+        );
       }
       const next = was.filter((c) => c.key !== key);
       writeReview(next);

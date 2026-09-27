@@ -30,7 +30,7 @@ export function Review() {
       </p>
       <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
         {review.map((c) => {
-          const about = describe(c.field, c.kept === 'mine' ? c.mine : c.theirs);
+          const about = describe(c.field, c.kept === 'mine' ? c.mine : c.theirs, c.id);
           return (
             <li
               key={c.key}
@@ -43,6 +43,7 @@ export function Review() {
                   label="This device"
                   inUse={c.kept === 'mine'}
                   field={c.field}
+                  id={c.id}
                   record={c.mine}
                   onKeep={() => resolve(c.key, 'mine')}
                 />
@@ -50,6 +51,7 @@ export function Review() {
                   label="Other device"
                   inUse={c.kept === 'theirs'}
                   field={c.field}
+                  id={c.id}
                   record={c.theirs}
                   onKeep={() => resolve(c.key, 'theirs')}
                 />
@@ -66,16 +68,18 @@ function Version({
   label,
   inUse,
   field,
+  id,
   record,
   onKeep,
 }: {
   label: string;
   inUse: boolean;
   field: string;
+  id: string;
   record: unknown;
   onKeep: () => void;
 }) {
-  const about = describe(field, record);
+  const about = describe(field, record, id);
   const at = stamp(record);
   return (
     <div

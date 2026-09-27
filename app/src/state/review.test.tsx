@@ -200,3 +200,50 @@ describe('the version both sides agreed on', () => {
     expect(agreedOn('notes/n1')).toBe(fingerprint(sent));
   });
 });
+
+describe('a setting', () => {
+  /** This device's look, the account's, and the look both last agreed on. */
+  function looks(mine: Record<string, unknown>, theirs: Record<string, unknown>, agreedLook: Record<string, unknown>) {
+    localStorage.setItem(
+      'semester.v1',
+      JSON.stringify({ schemaVersion: 6, seenOnboarding: true, registered: true, ...mine }),
+    );
+    localStorage.setItem(SEEN_KEY, JSON.stringify({ state: 's0', courses: {} }));
+    localStorage.setItem(BASE_KEY, JSON.stringify(baseOf(agreedLook)));
+    pull.mockResolvedValue({ state: theirs, courses: [], updated: 0, seen: { state: 's1', courses: {} } });
+  }
+
+  it('changed on both devices is offered, and keeping this one puts it back and sends it up', async () => {
+    looks({ ground: 'paper' }, { ground: 'fog' }, { ground: 'ink' });
+    await mount();
+    // The merge took the account's, as `theirs` always has.
+    expect(store.state.ground).toBe('fog');
+    expect(store.review.map((c) => c.key)).toEqual(['settings/ground']);
+    expect(store.sync.status).toBe('review');
+
+    const before = push.mock.calls.length;
+    await act(async () => store.resolve('settings/ground', 'mine'));
+    expect(store.state.ground).toBe('paper');
+    expect(store.review).toEqual([]);
+    await wait(3_000);
+    expect(push.mock.calls.length).toBe(before + 1);
+    expect((push.mock.calls.at(-1)![1] as { ground: string }).ground).toBe('paper');
+  });
+
+  it('changed only here survives a pull, rather than being put back to the account’s older value', async () => {
+    // The bug `keptHere` fixes: this device changed the ground and had not
+    // pushed yet; the account still holds the agreed one. A pull used to
+    // take the account's, and the change was gone.
+    looks({ ground: 'paper' }, { ground: 'ink' }, { ground: 'ink' });
+    await mount();
+    expect(store.state.ground).toBe('paper');
+    expect(store.review).toEqual([]);
+  });
+
+  it('changed only there is taken, as before — the control', async () => {
+    looks({ ground: 'ink' }, { ground: 'fog' }, { ground: 'ink' });
+    await mount();
+    expect(store.state.ground).toBe('fog');
+    expect(store.review).toEqual([]);
+  });
+});

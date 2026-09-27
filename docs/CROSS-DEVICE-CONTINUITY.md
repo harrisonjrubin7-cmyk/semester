@@ -95,9 +95,28 @@ Keeping the version in use clears the question. Keeping the other puts it
 back, stamped now, and the ordinary push sends it up, so the other device
 receives it as an edit and is not asked again.
 
-Not covered: settings (`theirs`) and ticked boxes (`ticks`), which are not
-records; and a device with no base yet — before its first sync — where every
-difference would look like a conflict, so none are reported.
+**Settings too.** The settings a student chose — the look (accent with its
+hue, theme, corners, typefaces, icons, calm, course colours, badges, feed),
+the arrangements they made (home screen, groups, favourites, shortcuts row,
+feed and course order), and what they said about themselves and their time
+(name, about me, hours in a day, sleep window, rules, quiet hours, reminder
+lead time) — are offered the same way when changed on both devices. They are
+`SETTINGS` in `lib/conflicts.ts`, grouped where one choice writes several
+fields. The merge keeps the account's value, as `theirs` always has; keeping
+this device's writes it back through `restoreSettings`, which can only
+write those fields. The rest of `theirs` is the app's own state — a live
+session, a cached geocode — and is never asked about.
+
+**And an unpushed setting is no longer lost to a pull.** `theirs` meant the
+incoming value always won, so a setting changed here and pulled over before
+its push went up was gone. With the base, a field whose account value has
+not moved since the two agreed is this device's change on its way up, and
+the pull leaves it (`keptHere`). That matters more now that the app pulls on
+focus and on reconnect.
+
+Not covered: ticked boxes (`ticks`), one bit per key, whose moves the merge
+notes already report; and a device with no base yet — before its first sync —
+where every difference would look like a conflict, so none are reported.
 
 ## Gaps against the spec, in order of risk
 
@@ -106,11 +125,10 @@ difference would look like a conflict, so none are reported.
    first, so a device that had not pulled since another device pushed wrote
    straight over it. Guarded by `lib/cloudcas.test.ts` (a fake database that
    honours the stamp filter) and `state/syncretry.test.tsx` (pull, merge and
-   retry; no push while the first-sign-in question is open). What remains is
-   the merge's own rule: **one record** edited on both devices keeps the later
-   edit, and `theirs` settings changed here but not yet pushed give way to
-   the account's. Devices on a release older than this one still write
-   blindly until they update.
+   retry; no push while the first-sign-in question is open). Edits to the
+   same record or setting on both devices are put to the student (below),
+   and a setting changed here but not yet pushed survives a pull. Devices on
+   a release older than this one still write blindly until they update.
 2. **Fixed: a failed push is retried.** It used to set `error` and wait for
    the next edit, so one change made before closing a laptop stayed on the
    laptop. A push that fails with something repeating could fix — the

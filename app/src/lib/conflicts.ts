@@ -34,9 +34,17 @@ import { idOf, labelFor, stamp, strategyFor } from './merge';
  * ## What it covers
  *
  * Lists of identified records — notes, tasks, appointments, drafts, courses,
- * everything `union` merges. Settings (`theirs`) and ticked boxes (`ticks`)
- * are not records and have no second copy worth choosing between; the merge
- * notes already say when one of those was replaced.
+ * everything `union` merges — and the settings a student chose (`SETTINGS`
+ * below): the look, the arrangements they made, the rules they wrote about
+ * their own time. A setting is `theirs` to the merge, so the incoming value
+ * wins; changed on both devices since they last agreed, the value this
+ * device had is kept on the review list the same way a note is.
+ *
+ * Not the rest of `theirs`, which is the app's own state rather than a
+ * choice anybody made — a live session, a cached geocode, whether onboarding
+ * was seen. Asking which of two of those to keep would be asking the student
+ * a question about the app's plumbing. Nor ticked boxes (`ticks`): a tick is
+ * one bit on one key, and the merge notes already say when one moved.
  */
 
 /** A short, stable fingerprint of a value. FNV-1a over its JSON; not a security hash. */
@@ -55,6 +63,55 @@ export type Base = Record<string, string>;
 
 const key = (field: string, id: string) => `${field}/${id}`;
 
+/**
+ * The settings offered as conflicts, each a group of fields that mean one
+ * thing together. Named by the first field, which is also what `labelFor`
+ * calls it on screen.
+ *
+ * Grouped where one choice writes several fields: a dragged accent colour is
+ * `accent: 'hue'` plus the hue itself, and offering the two apart would let
+ * somebody keep half a colour.
+ */
+export const SETTINGS: readonly (readonly string[])[] = [
+  // The look.
+  ['accent', 'hue'],
+  ['ground'],
+  ['corners'],
+  ['typeface'],
+  ['bodyface'],
+  ['iconShape'],
+  ['calm'],
+  ['courseColours'],
+  ['badges'],
+  ['feed'],
+  // Arrangements somebody made on purpose.
+  ['boardOrder'],
+  ['groupOrder'],
+  ['favourites'],
+  ['shortcuts'],
+  ['feedOrder'],
+  ['courseOrder'],
+  // What they said about themselves and their time.
+  ['myName'],
+  ['aboutMe'],
+  ['dayBudget'],
+  ['floor'],
+  ['contract'],
+  ['myRules'],
+  ['quiet'],
+  ['accessLeadDays'],
+];
+
+/** Every field some group covers — what `restoreSettings` may write, and nothing else. */
+export const SETTING_FIELDS: ReadonlySet<string> = new Set(SETTINGS.flat());
+
+/** The group's fields out of a copy, as one value to compare and to keep. */
+function pickGroup(from: Record<string, unknown>, group: readonly string[]): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const f of group) out[f] = from[f];
+  return out;
+}
+
 function recordLists(persisted: Record<string, unknown>): [string, unknown[]][] {
   return Object.entries(persisted).filter(
     (entry): entry is [string, unknown[]] => strategyFor(entry[0]) === 'union' && Array.isArray(entry[1]),
@@ -70,7 +127,40 @@ export function baseOf(persisted: Record<string, unknown>): Base {
       if (id !== null) out[key(field, id)] = fingerprint(row);
     }
   }
+  for (const group of SETTINGS) {
+    if (group.some((f) => f in persisted)) out[key('settings', group[0])] = fingerprint(pickGroup(persisted, group));
+  }
+  // And every field the merge takes from the account, one by one — what
+  // `keptHere` asks whether the account has moved away from.
+  for (const [field, value] of Object.entries(persisted)) {
+    if (strategyFor(field) === 'theirs' && value !== undefined) out[key('theirs', field)] = fingerprint(value);
+  }
   return out;
+}
+
+/**
+ * The fields a pull must not take, because the account has not changed them
+ * since this device and it last agreed — so any difference is this device's
+ * own change, not yet pushed.
+ *
+ * `theirs` means the incoming value wins, and without a base it had to:
+ * there was no way to tell "the account changed this" from "this device
+ * changed this and the account has not heard yet". So a setting changed here
+ * and pulled over before its push went up was simply lost — rare when a pull
+ * meant signing in, and not rare once the app pulls on focus and on
+ * reconnect. With the base it is a question with an answer: if the account's
+ * value is still the one both sides agreed, this device's is the newer one.
+ *
+ * No base, or a field the base never saw: nothing is held back, and the
+ * merge's old rule stands.
+ */
+export function keptHere(remote: Record<string, unknown>, base: Base | null): string[] {
+  if (!base) return [];
+  return Object.keys(remote).filter((field) => {
+    if (strategyFor(field) !== 'theirs') return false;
+    const agreed = base[key('theirs', field)];
+    return agreed !== undefined && remote[field] !== undefined && fingerprint(remote[field]) === agreed;
+  });
 }
 
 export interface Conflict {
@@ -135,6 +225,31 @@ export function conflictsIn(
       });
     }
   }
+
+  /*
+   * The settings, compared the same three ways. What the merge leaves in use
+   * is the account's value for every field the pull carried — `theirs` — so
+   * the account's side of the comparison is those fields over this device's
+   * for any it did not carry, which is exactly what the merge will produce.
+   */
+  for (const group of SETTINGS) {
+    if (!group.some((f) => f in remote)) continue;
+    const agreed = base[key('settings', group[0])];
+    if (agreed === undefined) continue;
+    const mine = pickGroup(local, group);
+    const theirs = pickGroup({ ...local, ...pickPresent(remote, group) }, group);
+    const a = fingerprint(mine);
+    const b = fingerprint(theirs);
+    if (a === b || a === agreed || b === agreed) continue;
+    out.push({ key: key('settings', group[0]), field: 'settings', id: group[0], mine, theirs, kept: 'theirs', found: now });
+  }
+  return out;
+}
+
+/** Only the group's fields the copy actually carries. */
+function pickPresent(from: Record<string, unknown>, group: readonly string[]): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const f of group) if (f in from && from[f] !== undefined) out[f] = from[f];
   return out;
 }
 
@@ -161,7 +276,8 @@ export function putRecord(rows: unknown[], record: unknown, now = Date.now()): u
 }
 
 /** What to call a record on the review list: its kind, and its own name. */
-export function describe(field: string, record: unknown): { kind: string; title: string; preview: string } {
+export function describe(field: string, record: unknown, id = ''): { kind: string; title: string; preview: string } {
+  if (field === 'settings') return describeSetting(id, record);
   const r = (record ?? {}) as Record<string, unknown>;
   const course = (r.course ?? {}) as Record<string, unknown>;
   const text = (v: unknown) => (typeof v === 'string' ? v.trim() : '');
@@ -173,6 +289,28 @@ export function describe(field: string, record: unknown): { kind: string; title:
     title,
     preview: body.length > 140 ? `${body.slice(0, 139)}…` : body,
   };
+}
+
+/**
+ * A setting, in words: its name, and each version as the value somebody
+ * would recognise — "Oxide", "7", "On" — or, for an arrangement, how many
+ * things are in it. Never the raw JSON of a list of screen ids.
+ */
+function describeSetting(id: string, value: unknown): { kind: string; title: string; preview: string } {
+  const v = (value ?? {}) as Record<string, unknown>;
+  const say = (x: unknown): string => {
+    if (x === null || x === undefined || x === '') return 'Not set';
+    if (typeof x === 'boolean') return x ? 'On' : 'Off';
+    if (typeof x === 'number') return String(x);
+    if (typeof x === 'string') return x.length > 60 ? `${x.slice(0, 59)}…` : x.charAt(0).toUpperCase() + x.slice(1);
+    if (Array.isArray(x)) return x.length === 1 ? '1 item' : `${x.length} items`;
+    return 'Set';
+  };
+  // The first field is the setting; the rest ride along with it (a hue with
+  // its accent) and only show when the first says it is using them.
+  const first = say(v[id]);
+  const extra = id === 'accent' && v.accent === 'hue' && typeof v.hue === 'number' ? ` (hue ${v.hue})` : '';
+  return { kind: 'Setting', title: labelFor(id), preview: `${first}${extra}` };
 }
 
 // ── On this device ────────────────────────────────────────────────────────

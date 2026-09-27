@@ -21,7 +21,7 @@
  */
 
 import { strategyFor } from '../lib/merge';
-import { putRecord } from '../lib/conflicts';
+import { SETTING_FIELDS, putRecord } from '../lib/conflicts';
 import type { Action, State } from './shape';
 import { changedSomething, snapshot, tookSomething, undoableFor } from '../lib/undo';
 import { library } from './slices/library';
@@ -89,6 +89,16 @@ export function reducer(state: State, action: Action): State {
     const rows = (state as unknown as Record<string, unknown>)[action.field];
     if (!Array.isArray(rows) || strategyFor(action.field) !== 'union') return state;
     return { ...state, [action.field]: putRecord(rows, action.record) } as State;
+  }
+
+  // The same, for a setting: the version the student chose, written back
+  // field by field. Only the fields a group on the review list covers — this
+  // is an action any code could dispatch, and a generic "set these fields"
+  // must not become a way round every other action's rules.
+  if (action.type === 'restoreSettings') {
+    const allowed = Object.entries(action.values).filter(([field]) => SETTING_FIELDS.has(field));
+    if (allowed.length === 0) return state;
+    return { ...state, ...Object.fromEntries(allowed) } as State;
   }
 
   const undoable = undoableFor(action.type);

@@ -1,8 +1,14 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it } from 'vitest';
+import { strategyFor } from './merge';
+import { DEFAULT_PERSISTED } from '../state/shape';
+import { reducer } from '../state/reducer';
+import type { State } from '../state/shape';
 import {
+  SETTINGS,
   addReview,
   baseOf,
+  keptHere,
   conflictsIn,
   describe as describeRecord,
   fingerprint,
@@ -120,5 +126,87 @@ describe('fingerprint', () => {
   it('is the same for the same value, and different for a different one', () => {
     expect(fingerprint(note('a', 1))).toBe(fingerprint(note('a', 1)));
     expect(fingerprint(note('a', 1))).not.toBe(fingerprint(note('b', 1)));
+  });
+});
+
+describe('settings', () => {
+  const agreedLook = { accent: 'sterling', hue: -1, ground: 'ink', liveSession: null };
+  const base2 = baseOf(agreedLook);
+
+  it('offers a setting both devices changed, the accent and its hue as one', () => {
+    const found = conflictsIn(
+      { ...agreedLook, accent: 'hue', hue: 210 },
+      { ...agreedLook, accent: 'oxide' },
+      base2,
+    );
+    expect(found).toHaveLength(1);
+    expect(found[0]).toMatchObject({ key: 'settings/accent', field: 'settings', id: 'accent', kept: 'theirs' });
+    expect(found[0].mine).toEqual({ accent: 'hue', hue: 210 });
+    expect(found[0].theirs).toEqual({ accent: 'oxide', hue: -1 });
+  });
+
+  it('does not offer one changed on one side only — the control', () => {
+    expect(conflictsIn({ ...agreedLook, ground: 'paper' }, agreedLook, base2)).toEqual([]);
+    expect(conflictsIn(agreedLook, { ...agreedLook, ground: 'paper' }, base2)).toEqual([]);
+  });
+
+  it("does not ask about the app's own state, whatever both sides did", () => {
+    const found = conflictsIn(
+      { ...agreedLook, liveSession: { id: 'a' } },
+      { ...agreedLook, liveSession: { id: 'b' } },
+      base2,
+    );
+    expect(found).toEqual([]);
+  });
+
+  it('says a setting in words, not as JSON', () => {
+    expect(describeRecord('settings', { accent: 'oxide', hue: -1 }, 'accent')).toMatchObject({ kind: 'Setting', preview: 'Oxide' });
+    expect(describeRecord('settings', { accent: 'hue', hue: 210 }, 'accent').preview).toBe('Hue (hue 210)');
+    expect(describeRecord('settings', { boardOrder: ['a', 'b', 'c'] }, 'boardOrder').preview).toBe('3 items');
+    expect(describeRecord('settings', { calm: true }, 'calm').preview).toBe('On');
+  });
+
+  it('only names fields that exist and that the merge takes from the account', () => {
+    // A typo here would offer a setting nothing writes; a `mine` field here
+    // would offer a choice the merge never took from anybody.
+    for (const field of SETTINGS.flat()) {
+      expect(field in DEFAULT_PERSISTED, `${field} is not a persisted field`).toBe(true);
+      expect(strategyFor(field), field).toBe('theirs');
+    }
+  });
+});
+
+describe('keptHere', () => {
+  const agreed = baseOf({ accent: 'sterling', ground: 'ink' });
+
+  it('holds back a field the account has not changed since the two agreed', () => {
+    // This device changed the accent; the account still has the agreed one.
+    expect(keptHere({ accent: 'sterling', ground: 'ink' }, agreed)).toEqual(['accent', 'ground']);
+  });
+
+  it('takes a field the account did change', () => {
+    expect(keptHere({ accent: 'oxide', ground: 'ink' }, agreed)).toEqual(['ground']);
+  });
+
+  it('holds back nothing without a base — the merge\'s old rule stands', () => {
+    expect(keptHere({ accent: 'sterling' }, null)).toEqual([]);
+  });
+
+  it('never holds back a list the merge unions', () => {
+    expect(keptHere({ notes: [] }, baseOf({ notes: [] }))).toEqual([]);
+  });
+});
+
+describe('restoreSettings', () => {
+  const state = { ...DEFAULT_PERSISTED, screen: 'home' } as unknown as State;
+
+  it('writes back a chosen setting', () => {
+    const next = reducer(state, { type: 'restoreSettings', values: { accent: 'hue', hue: 210 } });
+    expect(next).toMatchObject({ accent: 'hue', hue: 210 });
+  });
+
+  it('writes nothing that is not a setting on the list, whatever it is handed', () => {
+    const next = reducer(state, { type: 'restoreSettings', values: { registered: true, notes: ['x'] } });
+    expect(next).toBe(state);
   });
 });

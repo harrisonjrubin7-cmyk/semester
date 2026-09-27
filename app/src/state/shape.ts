@@ -2681,6 +2681,8 @@ export type Action =
   | { type: 'hydrate'; persisted: Partial<Persisted>; at?: number }
   /** A version the student chose on the review list, put back. See `lib/conflicts.ts`. */
   | { type: 'restoreRecord'; field: string; record: unknown }
+  /** A setting's version the student chose on the review list, put back. Only `SETTING_FIELDS`. */
+  | { type: 'restoreSettings'; values: Record<string, unknown> }
   | { type: 'restore'; persisted: Partial<Persisted> }
   /**
    * The browser moved, so the app follows.
