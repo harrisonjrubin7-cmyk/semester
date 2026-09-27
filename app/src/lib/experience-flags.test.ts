@@ -17,10 +17,11 @@ describe('experience feature states', () => {
 });
 
 describe('feature-expansion module flags', () => {
-  it('has the fifteen names, each read from its own VITE_ variable', () => {
+  it('has the sixteen names — the fifteen modules plus Phase E’s crunch_week_forecast — each read from its own VITE_ variable', () => {
     const flags = moduleFlags({});
     expect(Object.keys(flags)).toEqual([...MODULE_FLAG_NAMES]);
-    expect(MODULE_FLAG_NAMES).toHaveLength(15);
+    expect(MODULE_FLAG_NAMES).toHaveLength(16);
+    expect(moduleFlags({ VITE_CRUNCH_WEEK_FORECAST: 'preview' }).crunch_week_forecast).toBe('preview');
     expect(moduleFlags({ VITE_TODAY_ACTION_CENTER: 'preview' }).today_action_center).toBe('preview');
     expect(moduleFlags({ VITE_TRUST_CENTER: 'production' }).trust_center).toBe('production');
   });
