@@ -45,9 +45,20 @@ const TARGET_MINUTES: Record<string, number> = {
   internship: 24 * 60,
   job: 24 * 60,
   event: 24 * 60,
+  // Free and busy room slots: ten minutes, because an hour-old "free" is a
+  // walk across campus to a taken room.
+  study_space: 24 * 60,
+  space_availability: 10,
 };
 
-export const SHOWN_TYPES = Object.keys(TARGET_MINUTES);
+/**
+ * Room types are loaded on their own (`loadRoomRecords`): a school's free and
+ * busy slots run to hundreds of tenant-wide rows, and sharing one capped query
+ * with a student's holds and alerts would let the slots crowd those out.
+ */
+export const ROOM_TYPES = ['study_space', 'space_availability'];
+
+export const SHOWN_TYPES = Object.keys(TARGET_MINUTES).filter((t) => !ROOM_TYPES.includes(t));
 
 function targetFor(row: RecordRow): number {
   if (row.canonical_entity_type === 'notification' && row.subject_user_id !== null) return 24 * 60;
@@ -258,6 +269,30 @@ export async function loadRecords(db: SupabaseClient): Promise<RecordRow[]> {
     .limit(500);
   if (error) throw new Error(error.message || 'Could not load what your school shared.');
   return (data ?? []) as unknown as RecordRow[];
+}
+
+/**
+ * Study spaces and their slots, apart from the facts Today and Notices read.
+ * Two queries, each bounded to what the screen can use: every space, and only
+ * the slots still running or yet to start today. One capped query over every
+ * slot ever synced let finished ones crowd out today's — and the rooms too.
+ * Slot times are stored as `toISOString()` output, so they compare as text.
+ */
+export async function loadRoomRecords(db: SupabaseClient, now = new Date()): Promise<RecordRow[]> {
+  const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999).toISOString();
+  const [spaces, slots] = await Promise.all([
+    db.from('canonical_entity_references').select(RECORD_COLUMNS)
+      .eq('canonical_entity_type', 'study_space').is('external_deleted_at', null).limit(500),
+    db.from('canonical_entity_references').select(RECORD_COLUMNS)
+      .eq('canonical_entity_type', 'space_availability').is('external_deleted_at', null)
+      .gt('display->>ends_at', now.toISOString())
+      .lte('display->>starts_at', endOfDay)
+      .order('display->>starts_at', { ascending: true })
+      .limit(2000),
+  ]);
+  const error = spaces.error ?? slots.error;
+  if (error) throw new Error(error.message || 'Could not load room availability.');
+  return [...(spaces.data ?? []), ...(slots.data ?? [])] as unknown as RecordRow[];
 }
 
 /** The student's own imported records of one kind, removed now. */
