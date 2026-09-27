@@ -1,4 +1,5 @@
 import type { SyncStatus } from '../state/store';
+import { FAILURES, type Code } from './failure';
 
 /**
  * What each sync state is called, in the three sizes the app says it.
@@ -72,4 +73,40 @@ export const SYNC_WORDS: Record<SyncStatus, SyncWords> = {
 /** The states in which this device holds something the account does not know yet. */
 export function waiting(status: SyncStatus): boolean {
   return status === 'queued' || status === 'conflict';
+}
+
+/**
+ * Whether a failed push should go again on its own.
+ *
+ * `lib/failure.ts` already answers "could repeating the same request
+ * succeed?" per code, and this is that answer with one exception. A
+ * validation error is marked retryable there because a person can correct
+ * the field and press again; a push has no person and no field, and sending
+ * the same copy again would fail the same way forever. Permission and
+ * sign-in failures are not retried either — the next edit, or the next
+ * sign-in, pushes anyway, and a loop against a refused write says nothing
+ * the first refusal did not.
+ */
+export function retriesOnItsOwn(code: Code): boolean {
+  return FAILURES[code].retry && code !== 'VALIDATION_ERROR';
+}
+
+/** The quiet before an ordinary push: long enough for typing to stop. */
+export const PUSH_SETTLE_MS = 2500;
+
+/**
+ * How long before the next push, given how many in a row have lost the race
+ * (`lost`) and how many have failed outright (`failed`).
+ *
+ * Doubling from the settle time either way. A lost race is capped at a
+ * minute: another device is live and the merge is cheap. A failure is capped
+ * at five, because what fails is usually the network or the service, and
+ * neither is helped by being asked every few seconds by every open tab.
+ * Coming back online resets `failed`, so a device that was cut off does not
+ * sit out the rest of a five-minute wait it no longer needs.
+ */
+export function pushWait(lost: number, failed: number): number {
+  const race = lost === 0 ? PUSH_SETTLE_MS : Math.min(60_000, PUSH_SETTLE_MS * 2 ** lost);
+  const fail = failed === 0 ? PUSH_SETTLE_MS : Math.min(300_000, PUSH_SETTLE_MS * 2 ** failed);
+  return Math.max(race, fail);
 }

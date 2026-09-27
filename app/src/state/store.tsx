@@ -79,6 +79,7 @@ import type { School } from '../lib/school';
 import { said as refreshSaid } from '../lib/refresh';
 import { offline, watchConnection } from '../lib/offline';
 import { takeReturn } from '../lib/returnto';
+import { pushWait, retriesOnItsOwn } from '../lib/syncstatus';
 import {
   STORAGE_KEY,
   initialEphemeral,
@@ -924,6 +925,29 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [edit, account]);
 
   /*
+   * How many times in a row a push has found the account moved on.
+   *
+   * A push that loses the race pulls, merges and goes again — see `Stale` in
+   * `lib/cloud.ts`. Bumping this is what makes it go again: the merge can
+   * leave the persisted half exactly as it was (the account's news was
+   * already here), and then nothing else would re-run the effect below.
+   * Each round waits twice as long as the last, up to a minute, and from the
+   * third the sync line says why: two devices trading pushes every few
+   * seconds is something to say, not something to spin on. It never stops
+   * trying, because stopping would leave this device's work on this device.
+   */
+  const [lost, setLost] = useState(0);
+  /*
+   * And how many in a row have failed outright — the network, the service,
+   * a rate limit. It used to be none: a failed push set "Sync trouble" and
+   * waited for the next edit, so a student who made one change and closed
+   * the laptop left it on the laptop. Now it goes again on its own, backing
+   * off to five minutes, for as long as the failure is one that repeating
+   * could fix. See `retriesOnItsOwn` and `pushWait` in `lib/syncstatus.ts`.
+   */
+  const [failed, setFailed] = useState(0);
+
+  /*
    * Whether there is a connection, as state, so going offline and coming back
    * both re-run what depends on it.
    */
@@ -935,7 +959,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   // sends the merge rather than finding out the hard way.
   const wasOnline = useRef(online);
   useEffect(() => {
-    if (online && !wasOnline.current && account) void refresh();
+    if (online && !wasOnline.current && account) {
+      // A failure while cut off was the connection. Start the waits again.
+      setFailed(0);
+      void refresh();
+    }
     wasOnline.current = online;
   }, [online, account, refresh]);
 
@@ -976,28 +1004,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     };
   }, [account, online, asking, refresh]);
 
-  /*
-   * How many times in a row a push has found the account moved on.
-   *
-   * A push that loses the race pulls, merges and goes again — see `Stale` in
-   * `lib/cloud.ts`. Bumping this is what makes it go again: the merge can
-   * leave the persisted half exactly as it was (the account's news was
-   * already here), and then nothing else would re-run the effect below.
-   * Each round waits twice as long as the last, up to a minute, and from the
-   * third the sync line says why: two devices trading pushes every few
-   * seconds is something to say, not something to spin on. It never stops
-   * trying, because stopping would leave this device's work on this device.
-   */
-  const [lost, setLost] = useState(0);
 
   /**
    * Every later change goes up, once things stop moving.
    *
    * The dependency is `edit`, which moves whenever anything in the persisted
    * half does — for the reason written above the localStorage save: this list
-   * used to be seventeen hand-written fields and had fallen a dozen behind. Drilling a card, naming a place,
-   * sitting a practice paper and adding a source all changed state that this
-   * effect was not watching, so none of them reached the account until some
+   * used to be seventeen hand-written fields and had fallen a dozen behind.
+   * Drilling a card, naming a place, sitting a practice paper and adding a
+   * source all changed state that this effect was not watching, so none of them reached the account until some
    * *other* field happened to change. Depending on every field means what is
    * saved is what is synced, and the two cannot drift again.
    *
@@ -1023,7 +1038,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setSync((s) => ({ ...s, status: unpushed() ? 'queued' : 'offline', error: '' }));
       return;
     }
-    const wait = lost === 0 ? 2500 : Math.min(60_000, 2500 * 2 ** lost);
+    const wait = pushWait(lost, failed);
     const timer = setTimeout(() => {
       const { courses, ...rest } = pickPersisted(state);
       const removed = state.removedCourses;
@@ -1039,6 +1054,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           markSeen(seen);
           markUnpushed(false);
           setLost(0);
+          setFailed(0);
           setSync({ status: 'synced', at: Date.now(), error: '' });
           if (removed.length > 0) dispatch({ type: 'removalsPushed', ids: removed });
         })
@@ -1058,11 +1074,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             setLost((n) => n + 1);
             return;
           }
+          const { said, code } = explainSync(e);
+          const again = retriesOnItsOwn(code);
           setSync({
             status: 'error',
             at: 0,
-            error: explainSync(e).said,
+            // Say that it is not over, where it is not: "Sync failed" alone
+            // reads as something the student now has to do something about.
+            error: again ? `${said}\n\nYour changes are safe on this device, and it will try again by itself.` : said,
           });
+          if (again) setFailed((n) => n + 1);
         });
     }, wait);
     return () => clearTimeout(timer);
@@ -1070,7 +1091,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     // inside the timer and is deliberately not a dependency — it changes on
     // every navigation, and none of those are worth a write.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [account, edit, asking, lost, online]);
+  }, [account, edit, asking, lost, failed, online]);
 
   // The sample is fetched the first time it is switched on, and stays in
   // memory after. It is still never copied into storage — an account holds a

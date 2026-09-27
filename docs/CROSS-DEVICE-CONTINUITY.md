@@ -89,8 +89,16 @@ spec's "Conflict needs review".
    edit, and `theirs` settings changed here but not yet pushed give way to
    the account's. Devices on a release older than this one still write
    blindly until they update.
-2. **A failed push is not retried.** It sets `error` and waits for the next
-   change.
+2. **Fixed: a failed push is retried.** It used to set `error` and wait for
+   the next edit, so one change made before closing a laptop stayed on the
+   laptop. A push that fails with something repeating could fix — the
+   network, the service, a rate limit — now goes again by itself, doubling
+   from 5 seconds up to 5 minutes, and the error says the changes are safe
+   and it will try again. A refusal (sign-in expired, permission, not found)
+   and a validation error are not retried, because the same copy would fail
+   the same way; the next edit or sign-in pushes anyway. Reconnecting starts
+   the waits again. `retriesOnItsOwn` and `pushWait` in `lib/syncstatus.ts`;
+   guarded by `state/syncstates.test.tsx`.
 3. **Fixed: pull on focus.** A laptop that stayed online overnight now
    catches up when the student switches back to it, rather than showing
    yesterday's semester until a manual refresh.
@@ -115,4 +123,4 @@ spec's "Conflict needs review".
    adapts it to the width. Even so, the spec would make `nav` and `mailPane`
    per device as well.
 
-Each of 2 and 5 is a change to sync behaviour that deserves its own review.
+5 is a change to sync behaviour that deserves its own review.

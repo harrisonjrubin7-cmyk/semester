@@ -40,7 +40,8 @@ vi.mock('../lib/cloud', () => ({
   currentSession: async () => session,
   onAuthChange: () => () => {},
   explainSyncError: (e: unknown) => String(e),
-  explainSync: (e: unknown) => ({ said: String(e), code: 'INTERNAL_ERROR', ref: 'SEM-TEST' }),
+  // The code rides on the error, so a test can say what kind of failure it is.
+  explainSync: (e: unknown) => ({ said: String(e), code: (e as { code?: string })?.code ?? 'INTERNAL_ERROR', ref: 'SEM-TEST' }),
   isStale: (e: unknown) => e instanceof Error && e.name === 'Stale',
   pull: (...a: unknown[]) => pull(...a),
   push: (...a: unknown[]) => push(...a),
@@ -273,5 +274,71 @@ describe('coming back to the app', () => {
     await focus();
     await wait(500);
     expect(pull.mock.calls.length).toBe(before);
+  });
+});
+
+describe('a push that fails outright', () => {
+  const failing = (code: string) => Object.assign(new Error(code), { code });
+
+  it('goes again by itself, and says Synced when it lands', async () => {
+    // One edit, then the laptop is left alone: nothing else would push.
+    push
+      .mockImplementationOnce(async () => ({ state: 's2', courses: {} })) // sign-in
+      .mockImplementationOnce(async () => {
+        throw failing('INTERNAL_ERROR');
+      })
+      .mockImplementation(async () => ({ state: 's3', courses: {} }));
+    await mount();
+    await wait(3_000);
+    await addTask('Lab report');
+    await wait(3_000);
+    expect(store.sync.status).toBe('error');
+    expect(store.sync.error).toMatch(/try again by itself/);
+    const after = push.mock.calls.length;
+
+    await wait(6_000); // 5s after one failure
+    expect(push.mock.calls.length).toBe(after + 1);
+    expect(store.sync.status).toBe('synced');
+  });
+
+  it('does not go again for a refusal, and does not promise to', async () => {
+    push
+      .mockImplementationOnce(async () => ({ state: 's2', courses: {} }))
+      .mockImplementation(async () => {
+        throw failing('PERMISSION_DENIED');
+      });
+    await mount();
+    await wait(3_000);
+    await addTask('Lab report');
+    await wait(3_000);
+    const after = push.mock.calls.length;
+    expect(store.sync.error).not.toMatch(/try again by itself/);
+    await wait(30_000);
+    expect(push.mock.calls.length).toBe(after);
+  });
+
+  it('starts the waits again when the connection comes back', async () => {
+    push
+      .mockImplementationOnce(async () => ({ state: 's2', courses: {} }))
+      .mockImplementationOnce(async () => {
+        throw failing('INTERNAL_ERROR');
+      })
+      .mockImplementationOnce(async () => {
+        throw failing('INTERNAL_ERROR');
+      })
+      .mockImplementationOnce(async () => {
+        throw failing('INTERNAL_ERROR');
+      })
+      .mockImplementation(async () => ({ state: 's9', courses: {} }));
+    await mount();
+    await wait(3_000);
+    await addTask('Lab report');
+    await wait(3_000 + 6_000 + 11_000); // three failures: the next wait is 20s
+    const after = push.mock.calls.length;
+    await connection(false);
+    await connection(true);
+    await wait(3_000); // back to the settle time, not the rest of 20s
+    expect(push.mock.calls.length).toBe(after + 1);
+    expect(store.sync.status).toBe('synced');
   });
 });
