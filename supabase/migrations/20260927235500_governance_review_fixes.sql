@@ -115,6 +115,16 @@ create trigger steward_is_a_member
   before insert on public.governance_steward_assignments
   for each row execute function private.steward_is_a_member();
 
+-- The trigger guards new rows only. A link made through the hole before this
+-- file ran would still let an outside account read the steward list, so those
+-- links are cleared here. The name stays: the record of who held the role is
+-- kept, and only the access it granted goes (Codex, #835).
+update public.governance_steward_assignments s
+   set person_account = null
+ where s.person_account is not null
+   and not exists (select 1 from public.profiles p
+                    where p.user_id = s.person_account and p.school_id = s.tenant_id);
+
 -- ── 5. A school edits its own attached campus ────────────────────────────
 
 create or replace function private.check_policy_node()
@@ -251,18 +261,25 @@ create trigger check_notice_approvers
 
 -- ── 7. Launched records its launch; sunset records everything ────────────
 
+--
+-- NOT VALID: a request that launched under #828's rule (steps through UAT) is
+-- a true record of what was required then, and adding a step it never took
+-- would falsify it. So existing rows are not re-checked — without this, one
+-- such row would abort the whole migration (Codex, #835) — while every insert
+-- and every update from here on is held to the stricter rule. That includes
+-- sunsetting an old launched request, which will need its launch step first.
 alter table public.governance_config_requests
   drop constraint if exists config_request_launched_after_every_step;
 alter table public.governance_config_requests
   add constraint config_request_launched_after_every_step check (
     status not in ('launched', 'sunset') or steps_done @> array[
       'request', 'classify_tier', 'security_privacy_accessibility_review', 'governance_score',
-      'approve_configure_flag', 'tenant_sandbox_test', 'uat', 'launch_with_monitoring']);
+      'approve_configure_flag', 'tenant_sandbox_test', 'uat', 'launch_with_monitoring']) not valid;
 alter table public.governance_config_requests
   drop constraint if exists config_request_sunset_after_review;
 alter table public.governance_config_requests
   add constraint config_request_sunset_after_review check (
-    status <> 'sunset' or steps_done @> array['launch_with_monitoring', 'review_sunset_or_scale']);
+    status <> 'sunset' or steps_done @> array['launch_with_monitoring', 'review_sunset_or_scale']) not valid;
 
 -- ── 8. Notices to every school are every school's record ─────────────────
 
