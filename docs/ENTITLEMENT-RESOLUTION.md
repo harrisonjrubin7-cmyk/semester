@@ -1,8 +1,9 @@
 # Entitlement resolution
 
-Status: **CONTRACT BUILT, NOT WIRED.** `packages/institution/src/entitlement.ts`
-and its test. Nothing yet stores tenant plans, modules or allowances for it to
-read, and no route calls it.
+Status: **BUILT; RUNS IN SHADOW ON LTI LAUNCHES; ENFORCES NOTHING.** The order
+is `supabase/functions/_shared/entitlement.ts`, re-exported from
+`packages/institution`: one copy, kept where a Deno edge function can deploy it.
+Its tests are `packages/institution/src/entitlement.test.ts`.
 
 ## The order
 
@@ -51,7 +52,35 @@ counters (`usage_atomic` is the precedent). A server-side caller that builds the
 request from those rows, the current membership and `has_capability`. And an
 audit row for each refusal.
 
-For an LTI launch, the membership input exists: `lti_launch_membership` returns
-the joined membership's lifecycle status and current roles, or why there is
-none ([LTI runbook](LTI-1.3-LAUNCH-RUNBOOK.md#joining-a-membership)). Anything
-but `joined` must fail the `lifecycle` step.
+## On an LTI launch, in shadow
+
+Every LTI launch evaluates the order and logs what it would decide. It refuses
+nothing new (`_shared/ltientitlement.ts`):
+
+```text
+lti entitlement (shadow): would refuse at module; unsourced=environment,tenant-plan,…
+```
+
+Shadow, because the LTI module flag `integration.lms_lti` defaults to `off`.
+Enforcing the `module` step would refuse launches at every school that has not
+switched it on. The log is how anyone sees what enforcement would do before
+turning it on.
+
+| Step | Source on a launch |
+| --- | --- |
+| kill-switch | `kill.integration_sync`, platform-wide or the school's (`lti_launch_entitlement_facts`) |
+| module | `feature_state('integration.lms_lti', school)`: anything but `off` is on |
+| lifecycle | the membership join: `joined` is active, `membership-<status>` is that status, anything else is no membership |
+| every other step | **unsourced**: given a passing value and named in the log's `unsourced=` list |
+
+The `unsourced=` list is the point of the log line. A pass through a step
+with no source means "not checked", and a shadow log that hid that would
+teach whoever reads it to trust a gate that isn't there.
+
+Not evaluated, with the reason logged: a launch with no school (`unbound`,
+`no-registration`) or with school facts that could not be read.
+
+**To enforce:** give the unsourced steps sources, and make sure each school's
+`integration.lms_lti` flag is set. Then refuse on the verdict. The session and
+placement gates (`sessionDecision`, `placementDecision`) already enforce the
+membership independently and stay as they are.

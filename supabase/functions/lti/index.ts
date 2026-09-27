@@ -76,6 +76,7 @@ import {
 } from '../_shared/ltiags.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { passbackVerdict } from '../_shared/ltigate.ts';
+import { entitlementLogLine, launchEntitlement, readFacts } from '../_shared/ltientitlement.ts';
 import { membershipJoin, membershipLogLine, placementDecision, sessionDecision, type MembershipJoin } from '../_shared/ltimembership.ts';
 
 /** How long a launch has between the redirect out and the POST back. */
@@ -761,6 +762,17 @@ Deno.serve(async (req) => {
      * launch that never reached a membership goes on as before.
      */
     const join = await membershipFor(client, who);
+
+    /*
+     * The entitlement order, in shadow: evaluated and logged, never enforced
+     * (_shared/ltientitlement.ts says why). Before the session gate, so the
+     * log covers every launch the gate is about to judge. A failure here is
+     * logged and changes nothing about the launch.
+     */
+    const facts = join.tenantId
+      ? await client.rpc('lti_launch_entitlement_facts', { want_tenant: join.tenantId })
+      : { data: null, error: null };
+    console.log(entitlementLogLine(launchEntitlement(join, readFacts(facts.data, facts.error), new Date())));
     const session = sessionDecision(join);
     if (!session.allow) return membershipRefused(session.reason);
 

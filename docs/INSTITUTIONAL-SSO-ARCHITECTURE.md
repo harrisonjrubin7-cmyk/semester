@@ -35,7 +35,7 @@ and every read still passes row-level security
 | SCIM lifecycle | `app/server/institution/scim.ts`, `packages/institution/src/provisioning.ts` | `scim_credential`, `scim_external_identity`, `scim_group_mapping`, `provisioning_audit_event` | [SCIM](SCIM-LIFECYCLE-MANAGEMENT.md) |
 | LTI launch, deep linking, AGS | `supabase/functions/lti`, `_shared/lti*.ts` | `lti_platform`, `lti_nonce`, `lti_identity`, `lti_link_ticket`, `lti_line_item` | [LTI runbook](LTI-1.3-LAUNCH-RUNBOOK.md) |
 | Claim minimization | `packages/institution/src/identity.ts` | constraint on `institution_identity_provider.attribute_mapping` | [Claim mapping](SSO-CLAIM-MAPPING-AND-DATA-MINIMIZATION.md) |
-| Entitlement order | `packages/institution/src/entitlement.ts` | none (pure) | [Entitlement](ENTITLEMENT-RESOLUTION.md) |
+| Entitlement order | `supabase/functions/_shared/entitlement.ts` (re-exported by `packages/institution`); on LTI launches `_shared/ltientitlement.ts` | reads `tenant_feature_policy`, `feature_kill_switch` | [Entitlement](ENTITLEMENT-RESOLUTION.md) |
 | OIDC | none | none | [OIDC runbook](OIDC-IMPLEMENTATION-RUNBOOK.md) |
 
 ## The requested tables, against what exists
@@ -73,13 +73,15 @@ said "create/adapt", and this is the adapt.
    `lti launch unbound`, unlinked identities, and people with no membership in
    that school. When joined, placing activities also requires a `faculty` or
    `teaching_assistant` membership role. Institutional data was already scoped
-   by membership roles through the gateway. The entitlement chain still has no
-   caller. It joins only students who have linked their LMS identity to their
+   by membership roles through the gateway. The entitlement order runs in
+   shadow on every launch and enforces nothing yet. It joins only students who have linked their LMS identity to their
    SSO account.
 2. **No LTI launch audit table.** Refusals are logged by reason code and not
    persisted.
-3. **Entitlement tables.** The resolver is a tested contract. Nothing yet
-   stores tenant plans, modules or allowances for it to read.
+3. **Entitlement sources.** On LTI launches the order reads the kill switch,
+   the `integration.lms_lti` flag and the membership, and logs the rest as
+   unsourced. Nothing yet stores tenant plans, personal grants or allowances, so
+   it runs in shadow.
 4. **OIDC** is not supported. `provider_type` admits only `'saml'`.
 5. **Personal ↔ institutional account linking** for SSO accounts does not exist.
 

@@ -110,7 +110,7 @@ join even with a membership, and no call changes a membership.
   membership refuses placement exactly as it refuses a session. A launch that
   reached no membership keeps the LMS rule alone.
 
-**Still not done:** the entitlement chain has no caller.
+**The entitlement order runs in shadow on every launch** and logs `lti entitlement (shadow): …`. It refuses nothing. See [ENTITLEMENT-RESOLUTION.md](ENTITLEMENT-RESOLUTION.md#on-an-lti-launch-in-shadow).
 
 ## Minimum claims
 
