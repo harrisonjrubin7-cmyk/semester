@@ -339,3 +339,42 @@ The owner approved F1–F7 as recommended:
 - **F6:** Course Studio is a contextual module behind a flag.
 - **F7:** this session numbers its decisions D-100–D-119.
 
+
+## D-101 · Course Studio slice 1: publishing is append-only, and the rows are the audit
+
+**Decided 27 Sep 2026, building slice 1 of D-100.** The server half is
+`20260928150000_course_studio.sql`.
+
+- **One capability.** `course:publish` goes to `faculty` and is checked at
+  course scope, `<school>/<CODE>`. The school is always the caller's own
+  profile school, never a parameter. So a grant for another school's course
+  publishes nothing here, even if the code matches (F1, F2).
+- **Three tables.** `course_ai_rules`, `course_guidance` and `study_packs`,
+  per course and term, one row per version.
+  - Nobody writes them directly. Four security-definer functions do:
+    `publish_course_rules`, `publish_course_guidance`, `publish_study_pack`,
+    and `my_course_studio_courses`, which lists the courses the caller may
+    publish for.
+  - Nothing is updated or deleted through the API, by anybody, the author
+    included.
+  - Each version records who published it and when, so **the rows are the
+    audit trail**. The design proposed `tenant_policy_audit_event`, but it was
+    not used: its entity list is redefined by several open branches, and a
+    table that is never changed has nothing for it to record.
+- **Rules use the toolkit's own vocabulary.** A column check allows only the
+  ten `USES` and four states. `unavailable` means "nobody said", so it is never
+  written. A test holds `USES` to the migration's list.
+- **A pack's references live in the pack** (title, citation, http link,
+  authority), not in `approved_source`. That table feeds server-side AI
+  grounding and is school-scoped, and connecting packs to it is a later
+  decision. A new version of a pack must stay in its own course and term.
+- **Reads (F4).** Any signed-in member of the school can read. Another
+  school's members can't; signed-out visitors can't ask. No table has a column
+  naming a student (F5), and the check suite asserts it.
+
+Proved by `supabase/coursestudio.check.sql` (45 checks). Five guards were
+each removed in turn: the capability check, the caller's-school rule, the
+school-scoped read policy, the pack staying in its course, and the uses list.
+The suite failed every time.
+
+**Applying the migration to production needs owner approval.**

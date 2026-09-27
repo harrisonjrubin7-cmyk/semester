@@ -270,7 +270,14 @@ declare
     'integration_approve_scope(want_scope uuid)',
     'integration_request_replay(want_dead_letter uuid, want_reason text)',
     'integration_set_paused(want_connection text, want_paused boolean, want_reason text)',
-    'kill_switch_engaged(want_switch text, want_tenant text)'
+    'kill_switch_engaged(want_switch text, want_tenant text)',
+    -- 20260928150000_course_studio.sql (D-101): faculty publish course rules,
+    -- guidance and packs, each checked against a live course-scoped grant;
+    -- the last lists which courses that is, and nothing about students.
+    'publish_course_rules(want_course text, want_term text, want_blanket text, want_uses jsonb, want_words text, want_link text, want_effective date)',
+    'publish_course_guidance(want_course text, want_term text, want_body text)',
+    'publish_study_pack(want_course text, want_term text, want_pack uuid, want_title text, want_note text, want_items jsonb, want_retired boolean)',
+    'my_course_studio_courses()'
   ];
   extra text;
   missing text;
@@ -306,7 +313,7 @@ begin
   if missing is not null then
     raise exception 'FAILED: the allowlist names %, which a signed-in account cannot call', missing;
   end if;
-  raise notice 'ok  and can call all thirty that it should';
+  raise notice 'ok  and can call all forty-six that it should';
 end $$;
 
 -- ── The gate's own switch, named because it is the one that was open ──────
