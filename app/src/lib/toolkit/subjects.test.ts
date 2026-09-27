@@ -28,6 +28,16 @@ describe('subject workbenches', () => {
     expect(find('security-sandbox')?.boundary).toBe('cyber');
   });
 
+  it('clinical tools are simulation only and the case library stays behind review', () => {
+    expect(find('med-math')?.boundary).toBe('clinical');
+    expect(entitle(find('clinical-cases')!, new Set(['clinical-cases']), true).available).toBe(false);
+    expect(find('gis-basics')?.boundary).toBe('location');
+  });
+
+  it('knows 32 subjects', () => {
+    expect(SUBJECTS.length).toBe(32);
+  });
+
   it('legal and finance tools carry their boundary', () => {
     expect(find('case-brief')?.boundary).toBe('legal');
     expect(find('finance-models')?.boundary).toBe('finance');
