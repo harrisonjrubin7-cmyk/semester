@@ -57,4 +57,10 @@ describe('AI-use policy precedence', () => {
     expect(odd).toBeUndefined();
     expect(resolve('brainstorming', [odd]).state).toBe('unavailable');
   });
+
+  it('does not mistake an Object.prototype name for a stance', () => {
+    for (const stance of ['constructor', 'toString', '__proto__', 'hasOwnProperty']) {
+      expect(fromCourse({ stance: stance as never, note: '' })).toBeUndefined();
+    }
+  });
 });
