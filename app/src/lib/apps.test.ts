@@ -200,15 +200,15 @@ describe('what the sheet covers', () => {
   const css = () => readFileSync('src/styles/app.css', 'utf8');
 
   it('covers the window rather than the pane once the rail appears', () => {
-    const at = /@media \(min-width: 760px\) \{([\s\S]*?)\n\}/g;
+    const at = /@media \(min-width: 840px\) \{([\s\S]*?)\n\}/g;
     const blocks = [...css().matchAll(at)].map((m) => m[1]);
     const folder = blocks.find((b) => /\.soft-folder \{/.test(b));
-    expect(folder, 'no 760px rule for .soft-folder — the rail is live behind it').toBeDefined();
+    expect(folder, 'no 840px rule for .soft-folder — the rail is live behind it').toBeDefined();
     expect(folder).toMatch(/position:\s*fixed/);
   });
 
   it('draws its content as a column there, not a grid stretched over a laptop', () => {
-    const at = /@media \(min-width: 760px\) \{([\s\S]*?)\n\}/g;
+    const at = /@media \(min-width: 840px\) \{([\s\S]*?)\n\}/g;
     const blocks = [...css().matchAll(at)].map((m) => m[1]);
     expect(blocks.some((b) => /\.soft-folder-body/.test(b) && /max-width/.test(b))).toBe(true);
   });

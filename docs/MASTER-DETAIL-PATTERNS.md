@@ -17,7 +17,7 @@ crosses a boundary.
 | Drive (`screens/mine/Drive.tsx`) | Folders stacked above files | Folders beside files | Current folder |
 
 The selected item lives in store state or in the component's own state, never
-in the layout. Crossing 760px therefore redraws the same selection in a
+in the layout. Crossing 840px therefore redraws the same selection in a
 different arrangement. It does not reset it. Mail's paging resets only when the
 folder, tab or search changes, and not when the width does.
 

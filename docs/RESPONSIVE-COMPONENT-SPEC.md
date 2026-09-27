@@ -13,7 +13,7 @@ and asserts that no two navigations are ever drawn together.
 
 | Chrome | phone | tablet / desktop |
 | --- | --- | --- |
-| `tabs`: bar at the foot | yes, for tab and feed navigations | no; becomes the rail |
+| `tabs`: bar at the foot | yes, for tab and feed navigations (compact and medium, under 840px) | no; becomes the rail |
 | `rail`: the same destinations down the side | no | yes |
 | `shelves`: two rows of pills | at every width when chosen | at every width when chosen |
 | `desk`: tab strip, one search bar, launcher | at every width when chosen | same, plus the `sidebar` |
@@ -38,13 +38,13 @@ chrome" never means "no way out".
 Set on `:root` in `styles/app.css`, so a screen that uses them adapts without
 reading the width itself:
 
-| Token | phone | ≥ 760 | ≥ 1180 | ≥ 1600 |
-| --- | --- | --- | --- | --- |
-| `--page-pad` | base | 20px | 30px | 30px |
-| `--measure` (reading width) | column | 760px | 880px | 960px |
-| `--canvas` (grids) | column | column | 1240px | 1440px |
-| `--rail-w` | none | clamp(196px, 23vw, 232px) | 248px | 272px |
-| `--device-max` | 402px in a desktop window; 100% on a coarse-pointer device | 560px | 860px | 860px |
+| Token | compact | medium ≥ 600 | expanded ≥ 840 | large ≥ 1200 | extra-large ≥ 1600 |
+| --- | --- | --- | --- | --- | --- |
+| `--page-pad` | 18px | 20px | 20px | 30px | 30px |
+| `--measure` (reading width) | column | column | 760px | 880px | 960px |
+| `--canvas` (grids) | column | column | column | 1240px | 1440px |
+| `--rail-w` | none | none | clamp(196px, 23vw, 232px) | 248px | 272px |
+| `--device-max` | 402px in a desktop window; 100% on a coarse-pointer device | 560px in a desktop window; 100% on a coarse-pointer device | 560px | 860px | 860px |
 
 `--measure` is the spec's "controlled max line length" on extra-large screens.
 It steps rather than grows, so the line length does not end up different on

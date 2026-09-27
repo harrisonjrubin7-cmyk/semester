@@ -9,7 +9,7 @@ them is detected as a device.
 - **Three media queries, not a resize listener.** `useTier()` in
   `lib/media.ts` subscribes to `WIDE`, `DESKTOP` and `HANDHELD` through
   `matchMedia`, which fires only when a boundary is crossed. Dragging a window
-  edge re-renders nothing until it crosses 760 or 1180. Rotation and folding
+  edge re-renders nothing until it crosses 840 or 1200; the 600 and 1600 steps are stylesheet tokens and re-render nothing at all. Rotation and folding
   cross the same boundaries, so the layout follows them with no orientation
   handler.
 - **Nothing is written on resize.** No resize or rotation writes to app state.
@@ -29,10 +29,11 @@ them is detected as a device.
 | --- | --- | --- |
 | Folded outer screen / phone portrait | 360–430 × 700+ | phone |
 | Phone landscape | 700–932 × 360–430 | phone (the `HANDHELD` rule) |
-| Unfolded portrait / iPad mini portrait | 600–744 × 800+ | phone (column fills the device on a coarse pointer) |
-| iPad portrait | 768–834 × 1000+ | tablet |
+| Unfolded portrait / iPad mini portrait | 600–744 × 800+ | phone, medium (column fills the device on a coarse pointer) |
+| iPad portrait | 768–834 × 1000+ | phone, medium — the tab bar, as the spec puts a portrait tablet |
 | iPad Split View, half | 507–678 | phone |
-| iPad landscape | 1080–1194 | tablet or desktop |
+| iPad landscape | 1024–1194 | tablet, expanded (the rail) |
+| 13-inch iPad landscape | 1366 | desktop, large |
 | Laptop window | any | by width |
 
 ## Known edges

@@ -10,8 +10,8 @@ All of them are in `app/src/lib/media.ts`:
 
 | Query | Constant | Answers |
 | --- | --- | --- |
-| `(min-width: 760px)` | `WIDE` | Is there room for the rail? |
-| `(min-width: 1180px)` | `DESKTOP` | Is there room for the desktop layout? |
+| `(min-width: 840px)` | `WIDE` | Is there room for the rail? |
+| `(min-width: 1200px)` | `DESKTOP` | Is there room for the desktop layout? |
 | `(max-height: 599px) and (pointer: coarse)` | `HANDHELD` | Is this a phone on its side? |
 | `(pointer: coarse)` | `TOUCH` | Is the primary input a finger? |
 | `(any-pointer: fine)` | `FINE` | Is there a mouse or trackpad anywhere? Probably a keyboard too. |
@@ -39,10 +39,10 @@ screen: a 13-inch iPad is 1366px wide.
 
 - a laptop at any window width → listens
 - an iPad with a trackpad keyboard, in Split View → listens
-- an iPad with no fine pointer, at 760px or wider → listens (as before)
+- an iPad with no fine pointer, at 840px or wider → listens (as before)
 - a phone → does not listen, and costs nothing
 
-What it still cannot see is an iPad at under 760px with a keyboard that has no
+What it still cannot see is an iPad at under 840px — which now includes every iPad held upright — with a keyboard that has no
 trackpad. No media query reports a keyboard. The remedy, if that case matters,
 is to start listening on the first physical key event rather than on a query.
 That was not done here because every shortcut already has a visible

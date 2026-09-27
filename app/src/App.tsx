@@ -860,7 +860,7 @@ function Workspace({
           Out here each one is a sibling of those strips rather than a
           grandchild of the body, so the number it already carries is
           compared with theirs and wins. Nothing else changes: all three are
-          `position: fixed` above 1180px and laid out against the window
+          `position: fixed` above 1200px and laid out against the window
           wherever they are mounted.
         */}
         <Assistant />

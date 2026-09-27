@@ -232,7 +232,7 @@ export function TopBar({
             about a key.
           */}
           {/*
-            Named here as well as in the span, because below 760px the span is
+            Named here as well as in the span, because below 840px the span is
             not drawn: `.desktop-ai span { display: none }` in app.css leaves
             the glyph alone in the bar. The name then came only from text that
             had been display-none'd, which is no name at all — a screen reader

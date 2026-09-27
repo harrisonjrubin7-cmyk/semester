@@ -42,7 +42,7 @@ counted as adapted when it has not been built.
 
 | Spec capability | Semester screen(s) | Adapts by |
 | --- | --- | --- |
-| Today action center | `Today.tsx` | CSS: one column below 1180, a two-column decision surface at ≥ 1180 |
+| Today action center | `Today.tsx` | CSS: one column below 1200, a two-column decision surface at ≥ 1200 |
 | Degree / path planning | `Pathway.tsx`, `Degree.tsx` | Reflow |
 | Course / global search | Command palette (`components/Command.tsx`); `Search.tsx` is the workspace new-tab page | Palette sizing |
 | Term planner | `Calendar.tsx`, `Runway.tsx` | 3-day ↔ 7-day, Agenda at all widths |

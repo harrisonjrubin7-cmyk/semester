@@ -32,41 +32,41 @@ is listed in `app/src/widthgate.test.ts`.
 
 ## The layouts as built
 
-The spec asks for five window classes. Semester has three tiers plus a stepped
-large-monitor measure, decided in one place (`app/src/lib/media.ts`) and
-repeated in `styles/app.css`, with `tiers.test.ts` checking the two agree:
+The layouts follow the spec's five window classes, decided in one place
+(`app/src/lib/media.ts`, `windowClassFor`) and repeated in `styles/app.css`,
+with `tiers.test.ts` checking the two agree:
 
-| Semester tier | Width | What it draws |
-| --- | --- | --- |
-| phone | < 760px, **or** any window under 600px tall with a coarse pointer (a phone on its side) | One column, tab bar at the foot, sheets and full-screen detail |
-| tablet | 760–1179px | Rail beside the column; touch sizes kept; reading measure capped at 760px |
-| desktop | ≥ 1180px | Wide rail, 880px measure, 1240px canvas for grids |
-| (desktop, large monitor) | ≥ 1600px | Same layout, measure 960px, canvas 1440px, rail 272px |
+| Window class | Width | Semester tier | What it draws |
+| --- | --- | --- | --- |
+| compact | < 600px | phone | Tab bar at the foot; in a desktop window, the 402px column the app was drawn at; full width on a touch device |
+| medium | 600–839px | phone | Still the tab bar (the spec allows "bottom navigation or collapsible rail"); the column widens to 560px with 20px gutters |
+| expanded | 840–1199px | tablet | Rail beside the column; touch sizes kept; reading measure capped at 760px |
+| large | 1200–1599px | desktop | Wide rail, 880px measure, 1240px canvas for grids |
+| extra-large | ≥ 1600px | desktop | Same layout, measure 960px, canvas 1440px, rail 272px |
+
+A phone on its side — any window under 600px tall with a coarse pointer — is
+the phone tier at any width (`HANDHELD`).
 
 The workspace navigation (`nav: 'desk'`) is a fourth frame drawn at every
 width, with a tab strip at the top and a sidebar that appears where there is
 room. `lib/chrome.ts` guarantees that no two navigations are drawn at once.
 
-### How that maps onto the spec's five classes
+### The move from 760/1180
 
-| Spec class | Width | Semester today |
-| --- | --- | --- |
-| compact | < 600 | phone |
-| medium | 600–839 | phone below 760, tablet from 760 |
-| expanded | 840–1199 | tablet below 1180, desktop from 1180 |
-| large | 1200–1599 | desktop |
-| extra_large | ≥ 1600 | desktop with the large-monitor measure |
+Until this change the boundaries were 760 and 1180, measured against
+devices: 760 was the narrowest iPad held upright, so every portrait iPad got
+the rail. The spec asks for the window, not the device, and the product
+decision was to adopt its classes. What moved:
 
-**A decision for the product owner, not taken in this change:** the spec's
-600/840/1200 boundaries do not match Semester's 760/1180. The existing figures
-come from measurements recorded in `lib/media.ts`. 760 is the narrowest iPad
-held upright (the 9.7-inch at 768), so every portrait iPad gets the rail.
-1180 is where a laptop browser window fits the rail, a full reading measure and
-a second column. Moving to 600/840 would put the rail on an iPad mini
-held upright (744) and on phone-sized Split View panes. That can be done, but it
-is a change to `media.ts`, `app.css` and `tiers.test.ts` together, and it
-should be decided on with screenshots at those widths rather than slipped in
-with documentation.
+- **An iPad held upright (744–834px) now has the tab bar**, not the rail. It
+  is medium, which is where the spec puts a portrait tablet. On its side
+  (1024–1194px) it is expanded and has the rail.
+- **A 13-inch iPad in landscape (1194px) is now the tablet layout**, not the
+  desktop one; the desktop layout starts at 1200.
+- **A desktop window between 600 and 839px** now draws a 560px column with
+  the tab bar, rather than a 402px phone column (below 760) or the rail
+  (760–839).
+- Nothing changed below 600px or at 1200px and up.
 
 The same argument covers the **height** rule. The spec says to use width and
 not device labels. Semester uses width, plus one exception: a window under

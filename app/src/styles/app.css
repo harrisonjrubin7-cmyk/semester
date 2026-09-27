@@ -538,13 +538,15 @@ a:hover {
 
 /* ── The three layouts ────────────────────────────────────────────────────
  *
- * The app is drawn as a phone, and at phone size that is what it is. Above
- * 760px it gains the rail; above 1180px it stops being a phone held up and
- * becomes a desktop window. The two boundaries are the same numbers as
- * `lib/media.ts`, which is where the components read them, and
- * `tiers.test.ts` asserts the two copies agree — a stylesheet cannot import a
- * constant, so the next best thing is a test that fails when one of them
- * moves without the other.
+ * The app is drawn as a phone, and at phone size that is what it is. From
+ * 600px (medium) the column widens past the phone it was drawn as; from
+ * 840px (expanded) it gains the rail; from 1200px (large) it stops being a
+ * tablet and becomes a desktop window; at 1600px (extra-large) the measure
+ * takes a last step. The boundaries are the adaptive-device contract's window
+ * classes and the same numbers as `lib/media.ts`, which is where the
+ * components read them, and `tiers.test.ts` asserts the two copies agree — a
+ * stylesheet cannot import a constant, so the next best thing is a test that
+ * fails when one of them moves without the other.
  *
  * Every difference between the three is a value in this block, not a rule
  * written twice. A screen asks for the page gutter and gets the phone's 18px
@@ -571,11 +573,26 @@ a:hover {
   --cell-aspect: 1;
 }
 
+/* Medium. Still the tab bar — the contract puts a portrait tablet and a
+   narrow window here, and the rail waits for 840 — but no longer a phone held
+   up in a window: a desktop browser at 700px drew the 402px artboard with
+   150px of ground down each side. The column widens to the tablet's 560 and
+   the gutters to its 20. On a touch device the column already fills the
+   screen below the rail (the narrow-and-touch block below), so this changes
+   the window and not the phone. */
+@media (min-width: 600px) {
+  :root {
+    --page-pad: 20px;
+    --chrome-pad: 20px;
+    --device-max: 560px;
+  }
+}
+
 /* Tablet. The rail arrives; the touch sizes do not change, because the finger
    holding an iPad is the same finger that held the phone. The column fills
    whatever the rail leaves rather than sitting at a fixed 560 with a band of
    black beside it — at 834 that band was 88px of nothing. */
-@media (min-width: 760px) {
+@media (min-width: 840px) {
   :root {
     --page-pad: 20px;
     --chrome-pad: 20px;
@@ -601,7 +618,7 @@ a:hover {
    hairline with a chevron at the end of it, and a canvas for the screens that
    are genuinely grids — the month, the week, a map — which have more to say
    the more room they get. */
-@media (min-width: 1180px) {
+@media (min-width: 1200px) {
   :root {
     --page-pad: 30px;
     --chrome-pad: 30px;
@@ -646,7 +663,7 @@ a:hover {
    The same sentence appears once more, in the last block of this section,
    for a phone turned on its side — the two cannot be one query without `or`,
    which is newer than the oldest iPad this runs on. */
-@media (max-width: 759px) and (pointer: coarse) {
+@media (max-width: 839px) and (pointer: coarse) {
   :root {
     --device-max: 100%;
   }
@@ -714,11 +731,12 @@ a:hover {
 }
 
 /* ── The desk ─────────────────────────────────────────────────────────────
-   From 760px the rail sits beside the content, so an iPad or a laptop shows
-   the navigation instead of hiding it behind a tab bar that only fits a
-   thumb. 760 rather than 900 because an iPad in portrait is 768–834pt wide,
-   and on a tablet held upright the rail is the whole point. Below that the
-   app is the phone it was. */
+   From 840px (expanded) the rail sits beside the content, so an iPad on its
+   side or a laptop shows the navigation instead of hiding it behind a tab bar
+   that only fits a thumb. It was 760, so an iPad held upright got the rail;
+   the adaptive-device contract puts a portrait tablet in medium, with the tab
+   bar, and the window rather than the device decides. Below that the app is
+   the phone it was. */
 
 .desk {
   /* The same keyboard inset as `.device`: on a tablet held upright the rail
@@ -818,7 +836,7 @@ a:hover {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-@media (max-width: 1179px) {
+@media (max-width: 1199px) {
   .rail .rail-quiet {
     letter-spacing: 0.08em;
   }
@@ -837,9 +855,9 @@ a:hover {
  *
  * A floor rather than a height, so larger text still grows the row, and on
  * `pointer: coarse` rather than on a width, because it is the input that
- * decides this and not the window: an iPad at 1194 gets it in the desktop
- * layout too, and a laptop at 820 — a browser window dragged narrow — does
- * not, since a mouse hits a 41px row perfectly well and a rail of 44s on a
+ * decides this and not the window: a 13-inch iPad at 1366 gets it in the
+ * desktop layout too, and a laptop at 900 — a browser window dragged narrow
+ * — does not, since a mouse hits a 41px row perfectly well and a rail of 44s on a
  * desktop is just a taller rail.
  *
  * The rail scrolls (`overflow-y: auto` above), so the extra height cannot
@@ -854,7 +872,7 @@ a:hover {
 /* On a desktop the rail is a sidebar rather than a strip: more air at the
    top, a heavier mark, and rows tall enough to aim at with a mouse without
    being the 48px a thumb needs. */
-@media (min-width: 1180px) {
+@media (min-width: 1200px) {
   .rail {
     padding: calc(30px * var(--density, 1)) 0 calc(24px * var(--density, 1));
   }
@@ -898,7 +916,7 @@ a:hover {
  * ── The measure ──────────────────────────────────────────────────────────
  *
  * Every screen's body sits in this, and it is the one place the reading width
- * is decided. Below 1180 it is `100%` and this does nothing at all; above it,
+ * is decided. Below 1200 it is `100%` and this does nothing at all; above it,
  * ordinary content — a list of rows, a stack of cards, a form — stops at
  * `--measure` and centres, and a screen whose body is a grid or a map takes
  * `--canvas` instead.
@@ -995,11 +1013,11 @@ a:hover {
  * shelves' pills started at 14. Neither is a judgement call about taste —
  * they are the one thing on the screen not lined up with anything.
  *
- * No base declaration, deliberately. Below 1180px each strip keeps whatever
+ * No base declaration, deliberately. Below 1200px each strip keeps whatever
  * padding it already had, so nothing moves on a phone or a tablet; this only
  * ever adds the gutter a wide window needs.
  */
-/* The banner's own gutter below 1180px, where `.pane-strip` does nothing.
+/* The banner's own gutter below 1200px, where `.pane-strip` does nothing.
    In the sheet rather than inline on the element: an inline padding beats a
    media query, and the strip would have stayed exactly where it was.
 
@@ -1012,7 +1030,7 @@ a:hover {
   padding-inline: var(--chrome-pad);
 }
 
-@media (min-width: 1180px) {
+@media (min-width: 1200px) {
   /* `.device-pane` on the front, because `.app-header` sets `padding-inline`
      itself further down this sheet and a later rule of equal weight wins:
      without the extra class this one is dead and the title sits at the window
@@ -1046,7 +1064,7 @@ a:hover {
  * a near-black ground is the difference between a scrollbar and a stripe of
  * grey.
  */
-@media (min-width: 1180px) and (pointer: fine) {
+@media (min-width: 1200px) and (pointer: fine) {
   .scrollarea {
     scrollbar-width: thin;
     scrollbar-color: var(--app-track) transparent;
@@ -1078,7 +1096,7 @@ a:hover {
  * four in two columns is a semester you can see at once.
  *
  * A screen opts in by putting `.cards` on the container it was already
- * stacking things in, and gets one column below 1180 — exactly what it had —
+ * stacking things in, and gets one column below 1200 — exactly what it had —
  * and as many as fit above it. `auto-fill` with a floor rather than a fixed
  * count so a two-card screen does not stretch two cards across a monitor.
  */
@@ -1088,7 +1106,7 @@ a:hover {
   grid-template-columns: minmax(0, 1fr);
   align-items: start;
 }
-@media (min-width: 1180px) {
+@media (min-width: 1200px) {
   .cards {
     grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
   }
@@ -1218,7 +1236,7 @@ a:hover {
  * are what let the backdrop reach the page gutter — a pinned bar that stops
  * short of the edge lets tiles slide up the sides of it.
  */
-@media (min-width: 760px) {
+@media (min-width: 840px) {
   .task-bar {
     position: sticky;
     top: 0;
@@ -1242,7 +1260,7 @@ a:hover {
  * the bottom and had to be scrolled, which is the one thing a month view
  * exists not to make you do.
  *
- * So above 1180 the cell turns landscape, the dots become the names of what
+ * So above 1200 the cell turns landscape, the dots become the names of what
  * is on the day, and the whole month fits again. The markup is identical at
  * both — `Calendar.tsx` draws the names always and this hides them — because
  * the alternative is reading the window width in JavaScript and having two
@@ -1296,7 +1314,7 @@ a:hover {
   display: none;
 }
 
-@media (min-width: 1180px) {
+@media (min-width: 1200px) {
   .mcell {
     align-items: stretch;
     justify-content: flex-start;
@@ -1355,7 +1373,7 @@ a:hover {
  * sections are different heights and a grid would leave a hole under the
  * short one, where a column flow just carries on.
  */
-@media (min-width: 1180px) {
+@media (min-width: 1200px) {
   .flow-cols {
     columns: 2;
     column-gap: calc(26px * var(--density, 1));
@@ -3401,9 +3419,9 @@ input[type='search'].input {
  * On a desk, the window rather than the pane.
  *
  * `absolute` is right on a phone, where `.device` is the app, and on a browser
- * window between 402 and 760px, where the app is a column with ground either
+ * window between 402 and 840px, where the app is a column with ground either
  * side and a sheet spilling onto the ground would be the only thing that does.
- * Above 760px `.device-pane` is a strip beside the rail, and a sheet that
+ * Above 840px `.device-pane` is a strip beside the rail, and a sheet that
  * covers only the strip leaves the rail lit and clickable behind a dialog
  * saying `aria-modal="true"` — so a tap on Courses navigated the screen
  * underneath while the sheet stayed over it, and a screen reader was told the
@@ -3418,7 +3436,7 @@ input[type='search'].input {
  * laptop, which is what makes a covered window read as a sheet and not as a
  * screen that has been pulled out of shape.
  */
-@media (min-width: 760px) {
+@media (min-width: 840px) {
   .soft-folder {
     position: fixed;
     padding: calc(26px * var(--density, 1));
@@ -3706,14 +3724,14 @@ section[data-drop] > .grip + * {
 /*
  * On a wide window the gutter is the strip's, not the row's.
  *
- * `.shelf-nav` wears `pane-strip`, so above 1180px the nav's own padding is
+ * `.shelf-nav` wears `pane-strip`, so above 1200px the nav's own padding is
  * whatever puts its contents on the content column. The 14px below belongs
  * to a phone, where the strip rule does nothing, and adding it to the
  * column's gutter would leave the pills fourteen pixels right of everything
  * they navigate to. Zeroed on the two children rather than folded into the
  * nav, because the scroller and its fade have to end where the column does.
  */
-@media (min-width: 1180px) {
+@media (min-width: 1200px) {
   .device-pane .shelf-nav-row,
   .device-pane .shelf-nav-said {
     padding-inline: 0;
@@ -3855,7 +3873,7 @@ section[data-drop] > .grip + * {
   padding-bottom: var(--sp-3);
 }
 
-@media (max-width: 759px) {
+@media (max-width: 839px) {
   .deskwork:has(.institutional-navigation) > .desktop-bar {
     padding-inline: var(--sp-5);
   }
@@ -3909,7 +3927,7 @@ section[data-drop] > .grip + * {
   border: 1px solid var(--app-line);
 }
 
-@media (max-width: 759px) {
+@media (max-width: 839px) {
   .institutional-navigation {
     padding-inline: calc(14px * var(--density, 1));
   }
@@ -4112,7 +4130,7 @@ section[data-drop] > .grip + * {
    `components/Bench.tsx` from the list in `lib/menus.ts`.
 
    It is the shape every editor a student has ever opened already has, which
-   is the whole argument for it: the reading is free. Below 760px the menu
+   is the whole argument for it: the reading is free. Below 840px the menu
    bar collapses to one button, because eight words in a row on a phone is
    either eight unreadable words or a row you have to drag. */
 
@@ -5331,7 +5349,7 @@ section[data-drop] > .grip + * {
 
 /* Three lines on a phone, one row on anything wider — the same information
    either way, and a list that can be scanned rather than scrolled. */
-@media (min-width: 760px) {
+@media (min-width: 840px) {
   .fnlib-row {
     grid-template-columns: minmax(0, 15rem) minmax(0, 1fr) minmax(0, 13rem);
     align-items: baseline;
@@ -5673,7 +5691,7 @@ section[data-drop] > .grip + * {
  * list you can scan a row a second, and the message beside it. Drawn here
  * rather than inline in the screen for three reasons — a row has four hover
  * states and an inline style has none; the whole thing has to restack at
- * 760px and a component cannot hold a media query; and every size in it is a
+ * 840px and a component cannot hold a media query; and every size in it is a
  * token, so the Text size and Spacing settings reach the mailbox like they
  * reach everything else.
  *
@@ -6219,7 +6237,7 @@ section[data-drop] > .grip + * {
  * time, the folders behind a button, the message full screen, and the
  * composer as a sheet. The same components — only the frame changes.
  */
-@media (max-width: 759px) {
+@media (max-width: 839px) {
   .mb-rail {
     position: absolute;
     inset: 0 auto 0 0;
@@ -6356,7 +6374,7 @@ section[data-drop] > .grip + * {
 
 /* Below the desktop tier the wordmark goes and the mark carries the name. A
    34px square and a search field do fit across a phone; the word does not. */
-@media (max-width: 1179px) {
+@media (max-width: 1199px) {
   .desktop-word {
     display: none;
   }
@@ -6470,7 +6488,7 @@ section[data-drop] > .grip + * {
   background: var(--app-accent-wash);
 }
 
-@media (max-width: 759px) {
+@media (max-width: 839px) {
   .desktop-ai span {
     display: none;
   }
@@ -6494,7 +6512,7 @@ section[data-drop] > .grip + * {
 
 /* Two of the four go on a phone: alerts and settings are both one row down in
    the launcher, and the avatar and the nine dots are the two that are not. */
-@media (max-width: 759px) {
+@media (max-width: 839px) {
   .desktop-tools > :nth-child(1),
   .desktop-tools > :nth-child(2) {
     display: none;
@@ -6573,7 +6591,7 @@ section[data-drop] > .grip + * {
   flex: none;
 }
 
-@media (max-width: 759px) {
+@media (max-width: 839px) {
   .desktop-hit-group {
     display: none;
   }
@@ -7079,7 +7097,7 @@ section[data-drop] > .grip + * {
   font-size: var(--type-sm);
 }
 
-@media (max-width: 759px) {
+@media (max-width: 839px) {
   .deskhome-foot {
     flex-direction: column;
     align-items: flex-start;
@@ -7802,7 +7820,7 @@ section[data-drop] > .grip + * {
   padding-block: var(--sp-3);
 }
 
-@media (max-width: 1179px) {
+@media (max-width: 1199px) {
   /* The phone promises one primary recommendation. These existing secondary
      modules remain available on expanded Today and through their own routes. */
   .today-secondary-journey,
@@ -7811,7 +7829,7 @@ section[data-drop] > .grip + * {
   }
 }
 
-@media (min-width: 1180px) {
+@media (min-width: 1200px) {
   .today-decision-surface {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--sp-5);
@@ -7978,7 +7996,7 @@ section[data-drop] > .grip + * {
   }
 }
 
-@media (max-width: 759px) {
+@media (max-width: 839px) {
   .journey-cards {
     grid-template-columns: 1fr;
   }
