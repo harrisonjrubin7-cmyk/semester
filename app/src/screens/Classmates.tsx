@@ -57,8 +57,10 @@ import { Talk } from '../components/room/Talk';
  * Blocking is enforced by a database policy, so a blocked person's messages
  * never reach the device at all.
  *
- * Reports are stored and nobody is watching a queue. Saying otherwise would be
- * the worst kind of lie here, because somebody would rely on it.
+ * Reports go to a queue a moderator can read (`components/ReportQueue.tsx`),
+ * and the screen says exactly that and no more: a queue existing is not a
+ * promise that somebody reads it quickly, and saying otherwise would be the
+ * worst kind of lie here, because somebody would rely on it.
  *
  * ## What is on the device and what is on the server
  *
@@ -452,8 +454,9 @@ export function Classmates() {
             >
               {termLabel(term)}. Leaving a room removes you from it and nothing you posted. Blocking
               somebody is immediate and is enforced by the database, so their messages stop reaching
-              this device — reports are recorded, but nobody is watching a queue, and it would be
-              wrong to imply otherwise.
+              this device. Reports go to a review queue that only people holding a moderator role
+              can read; they see the reason and the message, not who sent the report. Nobody
+              promises how quickly it is read, so blocking is the step that works at once.
             </div>
           </div>
         )}

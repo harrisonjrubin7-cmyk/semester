@@ -198,7 +198,7 @@ Organizations and Events: absent entirely. Courses: **Built**.
 | | |
 | --- | --- |
 | Blocking | **Built** — `public.blocks`, RLS-enforced |
-| Reporting | **Built**, stored — §58 |
+| Reporting | **Built**, stored and reviewed — §58 |
 | Shared courses | **Built** — the room *is* the shared course |
 | Connection requests, accept, decline, remove | **Absent** — no table |
 | Following, followers, mutual connections | **Absent** — no table |
@@ -340,7 +340,15 @@ leaves the device; `screens/Export.tsx` takes it all with you; `screens/Data.tsx
 shows what is running. Controls for who sees your profile, courses,
 organizations and connections are absent because those entities are.
 
-## §58 Moderation standard — **P0. Partly built, and the gap is named in the spec**
+## §58 Moderation standard — **Built** (was the P0; closed 28 September 2026)
+
+> **Update.** All three gaps below are closed: `status` with its four values
+> (`20260921214500`), read and move policies on `report:read` /
+> `moderation:action` (`20260922012000`), an append-only audit of every move
+> (`20260924223000`), and the admin interface — `components/ReportQueue.tsx`
+> on University › Services, gated by `public.my_moderation_access()`
+> (`20260928000000`), showing reason and copy but never reporter or subject.
+> The text below is the finding as it stood, kept for the reasoning.
 
 §58 says: *"Reports must persist and have statuses"*, *"Review reports through
 admin interface"*, and *"Do not implement report buttons that disappear into
