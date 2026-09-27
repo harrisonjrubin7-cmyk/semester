@@ -149,6 +149,9 @@ export function settings(state: State, action: Action): State | null {
       // from somewhere else cannot arrive as a paragraph.
       return { ...state, myName: action.name.trim().slice(0, 40) };
 
+    case 'setPronounce':
+      return { ...state, pronounce: action.text.slice(0, 80) };
+
     // Attendance is the one record here the app must never write on its own —
     // no inference from a phone that did not move, no default once a class
     // has ended. See `lib/attend.ts`.

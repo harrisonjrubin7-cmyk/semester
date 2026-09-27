@@ -13,6 +13,8 @@ import {
 import { useDeviceLibrary } from '../lib/device-library';
 import { useNow, useStore } from '../state/store';
 import { ClarityQuestion } from './ClarityQuestion';
+import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
+import { askForHelp, helpFromAction } from '../lib/help-routes';
 import { ExplanationSheet } from './ExplanationSheet';
 import { SourceBadge } from './SourceBadge';
 import { ActionButton, SectionLabel } from './ui';
@@ -33,9 +35,12 @@ const SaySomething = lazy(() => import('./SaySomething').then((m) => ({ default:
  * `docs/market-readiness/TODAY_ADAPTIVE_BACKLOG.md`). What the student does is
  * stored on this device under `semester.actions.v1:<account>`; nothing here
  * sends, shares or schedules anything, so nothing here needs a confirmation.
- * "Ask for help" and "Something is wrong" are recorded, not sent — the note
- * says so, because a student who thinks a request went to an advisor and it
- * did not has been failed by the app.
+ * "Something is wrong" is recorded, not sent — the note says so, because a
+ * student who thinks a report went somewhere and it did not has been failed by
+ * the app. "Ask for help" is recorded too, and when the action has a person to
+ * ask (`helpFromAction` in `lib/help-routes.ts`) and `VITE_HUMAN_HELP` is on,
+ * it then opens Get help on that need. It still sends nothing: the student
+ * reads, ticks and confirms there. Otherwise it keeps the note.
  */
 
 const DAY = 86_400_000;
@@ -139,6 +144,7 @@ function Controls({
 }) {
   const [noting, setNoting] = useState<'correct' | 'help' | null>(null);
   const id = s.action.id;
+  const { dispatch } = useStore();
   if (noting) {
     return (
       <NoteForm
@@ -162,7 +168,24 @@ function Controls({
         <>
           <button type="button" className="workspace-text-button" onClick={() => act(id, 'dismiss')}>Not relevant</button>
           <button type="button" className="workspace-text-button" onClick={() => setNoting('correct')}>Something is wrong</button>
-          <button type="button" className="workspace-text-button" onClick={() => setNoting('help')}>Ask for help</button>
+          <button
+            type="button"
+            className="workspace-text-button"
+            onClick={() => {
+              // With a person to ask, go to them: Get help opens on this action's
+              // need with its details filled in and unticked. Otherwise — a
+              // setup step, or the route switched off — keep the note.
+              if (EXPERIENCE_FLAGS.humanHelp !== 'off' && helpFromAction(s.action)) {
+                // The model wants a note on every ask; this one says where it went.
+                act(id, 'help', 'Opened Get help to ask a person. Nothing is sent until you confirm there.');
+                askForHelp(s.action, () => dispatch({ type: 'go', screen: 'university' }));
+              } else {
+                setNoting('help');
+              }
+            }}
+          >
+            Ask for help
+          </button>
         </>
       )}
     </div>

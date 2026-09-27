@@ -1,6 +1,8 @@
 import {readTable} from './sheet';
 export interface Meeting {days:number[];start:number;end:number}
-export interface CatalogCourse {id:string;code:string;section:string;title:string;term:string;department:string;credits:number;instructor:string;location:string;description:string;prerequisites:string;seats:number|null;meetings:Meeting[]}
+export interface CatalogCourse {id:string;code:string;section:string;title:string;term:string;department:string;credits:number;instructor:string;location:string;description:string;prerequisites:string;seats:number|null;meetings:Meeting[];
+ /** The registration system's course reference number, when the catalog carries one. Optional: most catalogs a student can get do not. */
+ crn?:string}
 export interface InstitutionCatalog {institution:string;importedAt:string;courses:CatalogCourse[]}
 const word=(v:unknown,max=200)=>typeof v==='string'?v.trim().slice(0,max):'';
 function time(v:unknown):number {
@@ -38,7 +40,8 @@ export function parseCatalog(text:string):InstitutionCatalog {
    const start=time(m.start),end=time(m.end);if(end<=start)throw new Error(`${code}: the end time must follow the start time.`);
    return{days:[...new Set<number>(m.days)],start,end};
   });
-  return{id,code,section,title,term,credits,seats,meetings,department:word(r.department,60)||code.split(' ')[0],instructor:word(r.instructor),location:word(r.location),description:word(r.description,5000),prerequisites:word(r.prerequisites,1500)};
+  const crn=word(r.crn,20);
+  return{id,code,section,title,term,credits,seats,meetings,department:word(r.department,60)||code.split(' ')[0],instructor:word(r.instructor),location:word(r.location),description:word(r.description,5000),prerequisites:word(r.prerequisites,1500),...(crn?{crn}:{})};
  });
  return{institution:word(obj.institution)||'Imported institution',importedAt:new Date().toISOString(),courses};
 }

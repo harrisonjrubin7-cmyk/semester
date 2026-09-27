@@ -47,6 +47,12 @@ import { ControlPlane } from '../components/institutional/ControlPlane';
 import { IntegrationDashboard } from '../components/institutional/IntegrationDashboard';
 import type { ControlPlaneStatus } from '../lib/control-plane';
 
+const OperationsStudio = lazy(() =>
+  import('../components/institutional/OperationsStudio').then((module) => ({
+    default: module.OperationsStudio,
+  })),
+);
+
 const RoleWorkspace = lazy(() =>
   import('../components/institutional/RoleWorkspace').then((module) => ({
     default: module.RoleWorkspace,
@@ -128,9 +134,14 @@ const TABS = [
   ...(EXPERIENCE_FLAGS.integrationDashboard !== 'off'
     ? [{ id: 'integrations' as const, label: 'Integrations' }]
     : []),
+  // Staff only in practice, and governed in code: aggregates at n >= 10, no
+  // per-student grain, forbidden measures refused. See lib/institution-ops.ts.
+  ...(EXPERIENCE_FLAGS.institutionalOperations !== 'off'
+    ? [{ id: 'operations' as const, label: 'Operations' }]
+    : []),
 ];
 
-type Tab = 'overview' | 'drafts' | 'records' | 'connections' | 'control' | 'help' | 'integrations';
+type Tab = 'overview' | 'drafts' | 'records' | 'connections' | 'control' | 'help' | 'integrations' | 'operations';
 
 /** What each role is called on screen. */
 const ROLE_LABELS: Record<UniversityRole, string> = {
@@ -729,6 +740,12 @@ function Workspace({ storageKey }: { storageKey: string }) {
       )}
 
       {tab === 'integrations' && EXPERIENCE_FLAGS.integrationDashboard !== 'off' && <IntegrationDashboard />}
+
+      {tab === 'operations' && EXPERIENCE_FLAGS.institutionalOperations !== 'off' && (
+        <Suspense fallback={null}>
+          <OperationsStudio />
+        </Suspense>
+      )}
 
       {tab === 'drafts' && (
         <>

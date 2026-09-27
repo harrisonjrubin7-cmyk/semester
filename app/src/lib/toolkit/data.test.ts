@@ -97,4 +97,10 @@ describe('data studio', () => {
     expect(fits([quoted.project, { ...quoted.project, id: 'e' }, { ...quoted.project, id: 'f' }])).toBe(false);
     expect(JSON.stringify([quoted.project]).length).toBeLessThanOrEqual(DATA_BUDGET);
   });
+
+  it('flags causal wording in the descriptive result as well as the conclusion', () => {
+    const p = { ...project(), interpretation: { shows: 'Group b causes lower scores', method: 'b', uncertainty: 'c', conclude: 'Group b scores lower on average', cannotConclude: 'd' } };
+    expect(interpretationGaps(p).join(' ')).toMatch(/What the data shows/);
+    expect(interpretationGaps({ ...p, randomized: true }).join(' ')).not.toMatch(/What the data shows/);
+  });
 });
