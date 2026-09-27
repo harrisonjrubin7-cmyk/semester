@@ -184,9 +184,25 @@ create index if not exists gtm_consent_latest on public.gtm_consent (prospect_id
 create index if not exists gtm_consent_by_tenant on public.gtm_consent (tenant_id);
 create index if not exists gtm_consent_by_prospect_tenant on public.gtm_consent (prospect_id, tenant_id);
 
+-- Whether an update does nothing but clear the named person-reference
+-- columns to null — the update `on delete set null` makes when an account is
+-- deleted. Every guard below lets exactly that through: a staff member's
+-- account deletion must never be refused because they once wrote a row.
+create or replace function private.gtm_only_cleared(o jsonb, n jsonb, cols text[])
+returns boolean language sql immutable set search_path = '' as $$
+  select (o - cols) = (n - cols)
+     and not exists (select 1 from unnest(cols) c where n -> c <> 'null'::jsonb and n -> c is distinct from o -> c);
+$$;
+
+-- Append-only, except for the person-reference columns named as trigger
+-- arguments, which account deletion may clear.
 create or replace function private.gtm_append_only()
 returns trigger language plpgsql set search_path = '' as $$
 begin
+  if tg_nargs > 0 and to_jsonb(new) <> to_jsonb(old)
+     and private.gtm_only_cleared(to_jsonb(old), to_jsonb(new), tg_argv::text[]) then
+    return new;
+  end if;
   raise exception '% is append-only; record a new row instead', tg_table_name using errcode = '42501';
 end $$;
 drop trigger if exists gtm_consent_append_only on public.gtm_consent;
@@ -222,7 +238,8 @@ create table if not exists public.gtm_campaigns (
   review_date           date,
   primary_cta           text        not null default '' check (length(primary_cta) <= 200),
   budget                numeric(12, 2) check (budget >= 0),
-  owner_id              uuid        not null default auth.uid() references auth.users(id) on delete restrict,
+  -- Cleared if the owner's account is deleted; the campaign stays with the school.
+  owner_id              uuid        default auth.uid() references auth.users(id) on delete set null,
   approver_id           uuid        references auth.users(id) on delete set null,
   privacy_basis         text        not null default '' check (length(privacy_basis) <= 500),
   consent_requirements  text[]      not null default '{}',
@@ -268,7 +285,7 @@ create table if not exists public.gtm_campaign_reviews (
   tenant_id    text        not null,
   campaign_id  uuid        not null,
   kind         text        not null check (kind in ('privacy', 'accessibility', 'brand')),
-  reviewer_id  uuid        not null default auth.uid() references auth.users(id) on delete restrict,
+  reviewer_id  uuid        default auth.uid() references auth.users(id) on delete set null,
   decision     text        not null check (decision in ('approved', 'changes_requested')),
   note         text        not null default '' check (length(note) <= 2000),
   recorded_at  timestamptz not null default now(),
@@ -281,7 +298,7 @@ create index if not exists gtm_campaign_reviews_by_campaign_tenant on public.gtm
 
 drop trigger if exists gtm_campaign_reviews_append_only on public.gtm_campaign_reviews;
 create trigger gtm_campaign_reviews_append_only before update on public.gtm_campaign_reviews
-  for each row execute function private.gtm_append_only();
+  for each row execute function private.gtm_append_only('reviewer_id');
 
 -- The reviews still owed: a kind whose latest review, since the last content
 -- change, is not an approval by someone other than the owner.
@@ -326,6 +343,7 @@ begin
   if public.feature_state('module.campaign_manager', c.tenant_id) <> 'production' then out := out || 'flag'::text; end if;
   if public.kill_switch_engaged('kill.sharing', c.tenant_id) then out := out || 'kill_switch'::text; end if;
   if c.status not in ('approved', 'paused') then out := out || ('status:' || c.status); end if;
+  if c.owner_id is null then out := out || 'owner'::text; end if;
   if c.approver_id is null or c.approver_id = c.owner_id then out := out || 'approver'::text; end if;
   if length(trim(c.privacy_basis)) = 0 then out := out || 'privacy_basis'::text; end if;
   if length(trim(c.primary_cta)) = 0 then out := out || 'primary_cta'::text; end if;
@@ -362,7 +380,12 @@ begin
     return new;
   end if;
 
-  if new.tenant_id <> old.tenant_id or new.owner_id <> old.owner_id or new.public_id <> old.public_id then
+  if private.gtm_only_cleared(to_jsonb(old), to_jsonb(new), array['owner_id', 'approver_id'])
+     and to_jsonb(new) <> to_jsonb(old) then
+    return new;
+  end if;
+
+  if new.tenant_id <> old.tenant_id or new.owner_id is distinct from old.owner_id or new.public_id <> old.public_id then
     raise exception 'A campaign''s school, owner and id do not change' using errcode = '42501';
   end if;
 
@@ -694,7 +717,7 @@ create table if not exists public.gtm_sponsor_placements (
   why_shown        text        not null check (length(trim(why_shown)) between 1 and 500),
   complaint_route  text        not null check (length(trim(complaint_route)) between 1 and 300),
   status           text        not null default 'draft' check (status in ('draft', 'approved', 'live', 'removed')),
-  created_by       uuid        not null default auth.uid() references auth.users(id) on delete restrict,
+  created_by       uuid        default auth.uid() references auth.users(id) on delete set null,
   approved_by      uuid        references auth.users(id) on delete set null,
   approved_at      timestamptz,
   audit_due        date,
@@ -712,6 +735,10 @@ declare pol public.gtm_sponsor_policy;
 begin
   if tg_op = 'INSERT' and new.status <> 'draft' then
     raise exception 'A placement is created as a draft' using errcode = '42501';
+  end if;
+  if tg_op = 'UPDATE' and to_jsonb(new) <> to_jsonb(old)
+     and private.gtm_only_cleared(to_jsonb(old), to_jsonb(new), array['created_by', 'approved_by']) then
+    return new;
   end if;
   if tg_op = 'UPDATE' and old.status = 'removed' then
     raise exception 'A removed placement stays removed; write a new one' using errcode = '42501';
@@ -764,7 +791,7 @@ create table if not exists public.gtm_accounts (
   tenant_id   text        references public.schools(id) on delete set null,
   status      text        not null default 'target' check (status in (
                 'target', 'engaged', 'pilot', 'customer', 'paused', 'closed_lost')),
-  owner_id    uuid        not null default auth.uid() references auth.users(id) on delete restrict,
+  owner_id    uuid        default auth.uid() references auth.users(id) on delete set null,
   created_at  timestamptz not null default now(),
   updated_at  timestamptz not null default now()
 );
@@ -1146,6 +1173,14 @@ declare
   caller uuid := auth.uid();
   grant_id uuid;
 begin
+  -- Account deletion clearing a person reference is not a change anyone made
+  -- to the campaign, and its caller is often the account being deleted, which
+  -- an audit row could not name. The deletion is its own record.
+  if tg_op = 'UPDATE' and before_row <> after_row
+     and private.gtm_only_cleared(before_row, after_row, array['owner_id', 'approver_id', 'reviewer_id', 'created_by', 'approved_by']) then
+    return new;
+  end if;
+
   select g.id into grant_id
     from public.role_grants g
     join public.role_capabilities rc on rc.role = g.role

@@ -603,4 +603,36 @@ begin
   perform pg_temp.counted('the school admin reads the outcome', pg_temp.seen(admin, 'select 1 from public.gtm_pilot_outcomes'), 1);
 end $$;
 
+-- ── A staff member can still delete their account ─────────────────────────
+--
+-- Every account here has left a mark: the manager owns an active campaign,
+-- the reviewers' reviews are on it, the approver approved it, one admin wrote
+-- a placement and another approved it, and sales owns a pipeline account.
+-- Deleting any of them must succeed and leave the record, with the reference
+-- cleared — not refuse the deletion, and not remove the school's campaign.
+
+do $$
+declare
+  camp uuid := (select id from ids where name = 'camp');
+  who text;
+  n bigint;
+begin
+  foreach who in array array['mgr', 'reviewer', 'reviewer2', 'approver', 'admin', 'admin2', 'sales'] loop
+    begin
+      delete from auth.users where id = (select id from ids where name = who);
+      raise notice 'ok  % can delete their account', who;
+    exception when others then
+      raise exception 'FAILED: deleting % was refused: %', who, sqlerrm;
+    end;
+  end loop;
+  perform pg_temp.said('the campaign stays, with no owner', (select (owner_id is null)::text from public.gtm_campaigns where id = camp), 'true');
+  perform pg_temp.said('and no approver', (select (approver_id is null)::text from public.gtm_campaigns where id = camp), 'true');
+  select count(*) into n from public.gtm_campaign_reviews where campaign_id = camp and reviewer_id is null;
+  perform pg_temp.counted('its reviews stay, unattributed', n, 3);
+  perform pg_temp.said('the placement stays', (select count(*)::text from public.gtm_sponsor_placements where tenant_id = 'gtm-u'), '1');
+  perform set_config('request.jwt.claims', '', true); -- as the worker, not whoever signed in last
+  perform pg_temp.said('an ownerless campaign names that as unfinished',
+    (select ('owner' = any (public.gtm_activation_failures(camp)))::text), 'true');
+end $$;
+
 rollback;

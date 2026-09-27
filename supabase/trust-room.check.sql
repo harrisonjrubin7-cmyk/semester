@@ -367,4 +367,23 @@ begin
      or has_function_privilege('authenticated', 'private.trust_packet_bucket_ensure()', 'execute'))::text, 'false');
 end $$;
 
+-- ── The trust officer and the account team can still delete their accounts ─
+
+do $$
+declare who text;
+begin
+  foreach who in array array['officer', 'sales'] loop
+    begin
+      delete from auth.users where id = (select id from ids where name = who);
+      raise notice 'ok  % can delete their account', who;
+    exception when others then
+      raise exception 'FAILED: deleting % was refused: %', who, sqlerrm;
+    end;
+  end loop;
+  perform pg_temp.said('the published versions stay, unattributed',
+    (select count(*)::text from public.trust_artifact_versions where published_by is null), '4');
+  perform pg_temp.said('and so do the grants, revoked one included',
+    (select count(*)::text from public.trust_room_grants where granted_by is null), '2');
+end $$;
+
 rollback;

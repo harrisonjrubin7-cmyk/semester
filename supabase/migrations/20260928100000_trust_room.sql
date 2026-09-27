@@ -67,7 +67,7 @@ create table if not exists public.trust_artifact_versions (
   source_commit  text        check (source_commit ~ '^[0-9a-f]{40}$'),
   published_on   date        not null default current_date,
   review_on      date        not null,
-  published_by   uuid        not null default auth.uid() references auth.users(id) on delete restrict,
+  published_by   uuid        default auth.uid() references auth.users(id) on delete set null,
   created_at     timestamptz not null default clock_timestamp(),
   unique (artifact_key, version),
   constraint trust_version_reviewed_later check (review_on > published_on)
@@ -77,7 +77,7 @@ create index if not exists trust_versions_by_publisher on public.trust_artifact_
 
 drop trigger if exists trust_versions_append_only on public.trust_artifact_versions;
 create trigger trust_versions_append_only before update on public.trust_artifact_versions
-  for each row execute function private.gtm_append_only();
+  for each row execute function private.gtm_append_only('published_by');
 
 -- ── 3. Requests, grants, what each grant covers, and every open ───────────
 
@@ -107,7 +107,7 @@ create table if not exists public.trust_room_grants (
   request_id     uuid        not null references public.trust_room_requests(id) on delete cascade,
   token_sha256   text        not null unique check (token_sha256 ~ '^[0-9a-f]{64}$'),
   packet_commit  text        not null check (packet_commit ~ '^[0-9a-f]{40}$'),
-  granted_by     uuid        not null references auth.users(id) on delete restrict,
+  granted_by     uuid        references auth.users(id) on delete set null,
   granted_at     timestamptz not null default now(),
   expires_at     timestamptz not null,
   revoked_at     timestamptz,
@@ -145,6 +145,11 @@ create trigger trust_access_append_only before update on public.trust_room_acces
 create or replace function private.trust_grant_guard()
 returns trigger language plpgsql set search_path = '' as $$
 begin
+  -- Account deletion clearing who granted or revoked it is not an edit.
+  if to_jsonb(new) <> to_jsonb(old)
+     and private.gtm_only_cleared(to_jsonb(old), to_jsonb(new), array['granted_by', 'revoked_by']) then
+    return new;
+  end if;
   if old.revoked_at is not null
      or (to_jsonb(new) - array['revoked_at', 'revoked_by', 'revoke_reason'])
         is distinct from (to_jsonb(old) - array['revoked_at', 'revoked_by', 'revoke_reason']) then
