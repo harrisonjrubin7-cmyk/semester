@@ -18,6 +18,8 @@ export { BOUNDARIES, type Boundary, type Family, type Subject, type Tool, type T
 
 /** Tools any subject can use. Every department inherits these. */
 export const UNIVERSAL: readonly Tool[] = [
+  t('assignment-workspace', 'Assignment workspace', 'Stages, deliverables, rubric self-check and submission checklist', 'guided', { opens: 'assignment' }),
+  t('rubric-interpreter', 'Rubric self-check', 'A rubric criterion turned into a checklist — never a grade prediction', 'guided', { opens: 'rubric' }),
   t('study-guide', 'Study guide from sources', 'Guides built only from material you select, with quotations matched', 'native', { screen: 'study' }),
   t('practice-paper', 'Practice paper', 'A timed paper marked against a key', 'native', { screen: 'exam' }),
   t('sources', 'Sources', 'Your readings with what each is for, out as BibTeX', 'native', { screen: 'sources' }),
