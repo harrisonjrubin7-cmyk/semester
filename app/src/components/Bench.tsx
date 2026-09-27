@@ -30,7 +30,7 @@ import { Check, ChevronRight } from './Icons';
  *
  * ## The menus are a value, and the phone gets all of them
  *
- * `lib/menus.ts` holds the list and the rules; this draws it. Above 760px it
+ * `lib/menus.ts` holds the list and the rules; this draws it. Above 840px it
  * is the row of names everybody knows. Below, all of them fold into one
  * button, because eight words across a phone is either eight words too small
  * to read or a row that has to be dragged — and a menu you have to discover by

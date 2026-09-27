@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useStore } from '../state/store';
 import { ActionButton } from './ui';
+import { rememberReturn, returnPoint } from '../lib/returnto';
 import {
   appUrl,
   institutionSsoConfig,
@@ -64,6 +65,26 @@ export function Credentials({
    * had, and otherwise the list. The three are not interchangeable and the
    * rendering below turns on all three — see `providersOn`.
    */
+  /*
+   * A sign-in that leaves the page: write down where to come back to first.
+   *
+   * The provider sends the tab back to the bare app address, where the app
+   * would otherwise start on its first screen — see `lib/returnto.ts`. The
+   * point is where the student is, or, since they are usually on Account to
+   * do this, the screen they came to Account from. The store takes it when
+   * the session arrives.
+   */
+  const leaving = <A,>(go: (arg: A) => Promise<void>, arg: A): Promise<void> => {
+    // A convenience, and never a reason not to sign in: whatever goes wrong
+    // writing it down, the sign-in still goes.
+    try {
+      rememberReturn(returnPoint(window.location.hash, state.history ?? []));
+    } catch {
+      // Lands on the first screen, as it always did.
+    }
+    return go(arg);
+  };
+
   const [on, setOn] = useState<Provider[] | null | undefined>(undefined);
   const [institutionSso, setInstitutionSso] = useState<InstitutionSsoConfig | null>(null);
 
@@ -231,7 +252,7 @@ export function Credentials({
           tone="primary"
           spacing="0.08em"
           disabled={busy}
-          onClick={() => void run(() => signInWithSSO({
+          onClick={() => void run(() => leaving(signInWithSSO, {
             domain: institutionSso.domain,
             redirectTo: appUrl(),
           }))}
@@ -252,7 +273,7 @@ export function Credentials({
               type="button"
               className="btn btn-secondary"
               disabled={busy}
-              onClick={() => void run(() => signInWith(p))}
+              onClick={() => void run(() => leaving(signInWith, p))}
               style={{
                 flex: 1,
                 height: 42,

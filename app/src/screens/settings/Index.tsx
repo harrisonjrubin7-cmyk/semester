@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { SYNC_WORDS } from '../../lib/syncstatus';
 import { useStore } from '../../state/store';
 import { NavRow, Group } from '../../components/shell/Rows';
 import { SETTINGS, SEARCH_PLACEHOLDER, findSetting, markLooking, nothingFound } from '../../lib/settings';
@@ -32,16 +33,7 @@ export function SettingsIndex() {
     setQuery('');
   };
 
-  const standing =
-    sync.status === 'synced'
-      ? 'Synced'
-      : sync.status === 'signed-out'
-        ? 'Not signed in'
-        : sync.status === 'syncing'
-          ? 'Syncing'
-          : sync.status === 'error'
-            ? 'Sync trouble'
-            : 'On this device only';
+  const standing = SYNC_WORDS[sync.status].standing;
 
   return (
     // In whichever layout the app is set to, for the reason in `Page.tsx`:

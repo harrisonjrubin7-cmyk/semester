@@ -1191,7 +1191,7 @@ export function Connect() {
         say the app feels like two systems.
 
         There is one now. It already knows what to do with a wide screen: from
-        760px the tab bar unrolls into a rail beside the reading column, which
+        840px the tab bar unrolls into a rail beside the reading column, which
         is what a laptop was being sent somewhere else for.
       */}
       <SectionLabel>On a desktop</SectionLabel>
