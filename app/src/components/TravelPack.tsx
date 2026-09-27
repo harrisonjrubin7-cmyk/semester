@@ -11,6 +11,7 @@ import {
   type PackMiss,
 } from '../lib/travelpack';
 import { MEDIA_CAP } from '../lib/downloads';
+import { Progress } from './unity/States';
 
 /**
  * The course, on the phone, before the bus leaves.
@@ -51,6 +52,8 @@ export function TravelPack({ event }: { event: AthleticEvent }) {
   const [busy, setBusy] = useState(false);
   const [said, setSaid] = useState('');
   const [missed, setMissed] = useState<PackMiss[]>([]);
+  /** The run ended with nothing on this device — a failure with a retry, not a line. */
+  const [nothing, setNothing] = useState(false);
   const stop = useRef<AbortController | null>(null);
 
   const files = useMemo(() => {
@@ -91,6 +94,7 @@ export function TravelPack({ event }: { event: AthleticEvent }) {
     setBusy(true);
     setSaid('');
     setMissed([]);
+    setNothing(false);
     setDone(0);
     stop.current = new AbortController();
     const out = await fetchPack(files, {
@@ -98,6 +102,7 @@ export function TravelPack({ event }: { event: AthleticEvent }) {
       signal: stop.current.signal,
     });
     setMissed(out.missed);
+    setNothing(out.got.length === 0);
     setSaid(
       out.got.length === 0
         ? 'Nothing was downloaded. Check the connection and try again — anything already on this device is still there.'
@@ -152,14 +157,25 @@ export function TravelPack({ event }: { event: AthleticEvent }) {
         <ActionButton onClick={() => void run()} disabled={busy} style={{ flex: '1 1 auto' }}>
           {busy ? `Downloading ${done} of ${files.length}…` : 'Download for this trip'}
         </ActionButton>
-        {busy && (
-          <ActionButton onClick={() => stop.current?.abort()} style={{ flex: '1 1 auto' }}>
-            Stop
-          </ActionButton>
-        )}
       </div>
 
-      {said && (
+      {/* The shared determinate wait: a real bar, the percentage in words and
+          Cancel, which is the stop this had. When nothing landed it becomes
+          the reason; "Download for this trip" above is the retry, so the
+          bar does not offer a second button for the same run. */}
+      {(busy || nothing) && (
+        <div style={{ marginTop: 'var(--sp-4)' }}>
+          <Progress
+            label="Downloading for this trip"
+            done={busy ? done : 0}
+            total={files.length}
+            onCancel={() => stop.current?.abort()}
+            failed={!busy && nothing ? said : undefined}
+          />
+        </div>
+      )}
+
+      {said && !nothing && (
         <p
           role="status"
           style={{

@@ -47,13 +47,11 @@ import { fills } from '../shell/exempt';
 import { Hero, Stat, StatRow } from './Soft';
 
 /*
- * What each sync state is called on a stat card.
- *
- * One word each, because the slot is a stat's value and set at the size of
- * one: "Signed out" wrapped to two lines and made the card taller than the
- * two beside it. "None" for a signed-out account says the same thing in the
- * space there is — there is no account — and the card's label already
- * supplies the noun.
+ * What each sync state is called on a stat card: the one-word `short` form
+ * from `lib/syncstatus.ts`, because the slot is a stat's value and set at the
+ * size of one — "Signed out" wrapped to two lines and made the card taller
+ * than the two beside it. The long forms are the settings screen's, from the
+ * same table, so the two cannot drift apart.
  */
 const SYNC_SAID = Object.fromEntries(
   Object.entries(SYNC_WORDS).map(([status, words]) => [status, words.short]),
