@@ -848,6 +848,10 @@ export const OWNED_TABLES: OwnedTable[] = [
   // (`lib/graduation-cloud.ts`, Phase D). The foreign key cascades from
   // auth.users too; listed so the delete here does not depend on it.
   { table: 'graduation_scenarios', column: 'user_id' },
+  // Advisor shares a student made (`lib/advisor-shares.ts`, Phase G). Deleting
+  // them cascades to their read log. Shares received as an advisor go with the
+  // advisor's account through the foreign key on advisor_id.
+  { table: 'advisor_shares', column: 'student_id' },
   // A support grant names this account in either of two columns. The RPC
   // removes both sides, which one filtered DELETE cannot express, while its
   // audit trigger leaves only pseudonyms behind.

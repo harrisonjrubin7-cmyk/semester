@@ -190,7 +190,8 @@ Phase A documents are [UX-ENHANCEMENT-PLAN.md](UX-ENHANCEMENT-PLAN.md),
 
 ## D-016 · Advisor sharing: authorized grants, not bearer links, in the pilot
 
-**Proposed — needs owner.**
+**Decided 27 Sep 2026 by the owner (Phase G): signed-in grants, no view-only
+links.** Built as below; see D-042 and D-043.
 
 - BL-1.9 said "no link-sharing". The command asks for a view-only link or an
   authorized advisor share, with expiry and revocation.
@@ -444,4 +445,38 @@ session's range.)
 - Seats are "reported in the catalog file", never available. There is no
   workload claim and no professor rating. The moderated-insight, study-pack
   and syllabus slots are placeholders with nothing estimated in their place.
+
+## D-042 · How a student names an advisor
+
+**Decided 27 Sep 2026 (Phase G).**
+
+- The student types their advisor's school email address.
+- `share_with_advisor` matches it only against accounts that hold a live
+  `academic_advisor` grant scoped to the student's own school (from the
+  student's profile). A classmate, faculty member, advisor at another school,
+  lapsed advisor or unknown address all get the same message, so the RPC
+  cannot be used to learn whether an address has an account.
+- The advisor never reads `advisor_shares` directly.
+  `list_advisor_shares` returns titles and dates. `read_advisor_share`
+  returns the snapshot and logs the read, which the student sees.
+- A share is a snapshot the student previewed. It can be revoked (never
+  un-revoked) or deleted; it cannot be edited or extended.
+- Expiry is required, at most 120 days (a term), with choices of a week, a
+  month, three months or the maximum.
+
+## D-043 · Phase G carries one additive migration
+
+**Proposed — needs owner before any merge to `main`.**
+
+- `20260927200000_advisor_shares.sql` adds `advisor_shares`,
+  `advisor_share_events` and three functions, and redefines
+  `lti_account_untouched` with the new table (both ends).
+- Checked on a throwaway Postgres 16: every migration applies, and
+  `advisor` (45 new checks), `expansion`, `deletion`, `lti`, `ltiags`,
+  `ltiidentity` and `support-access` pass.
+- **Not applied anywhere.** Merging this branch to `main` would apply it
+  through Supabase Branching, so that merge needs approval, as with D-025.
+- **Alternative:** hold the migration back. Advisor Meeting Mode still
+  prepares, exports and prints, and the sharing section says sharing is not
+  available.
 

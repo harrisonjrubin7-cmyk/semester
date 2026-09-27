@@ -589,6 +589,8 @@ const MOCKS_MODULES = [
   'src/components/downloads.test.tsx',
   'src/data/seed.test.ts',
   'src/lib/graduation-cloud.test.ts',
+  'src/lib/advisor-shares.test.ts',
+  'src/components/AdvisorMeeting.test.tsx',
   'src/components/rework.test.tsx',
   'src/components/GraduationSimulator.phase-d.test.tsx',
   'src/components/StudyStudio.test.tsx',

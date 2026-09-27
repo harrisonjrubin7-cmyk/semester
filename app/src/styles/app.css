@@ -8251,6 +8251,51 @@ section[data-drop] > .grip + * {
   gap: var(--sp-5);
 }
 
+/* ── Advisor Meeting Mode (advisor_meeting_mode, Phase G) ───────────────── */
+
+.advisor-lines,
+.advisor-share-list {
+  display: grid;
+  gap: var(--sp-4);
+  margin: 0 0 var(--sp-4);
+  padding-left: 0;
+  list-style: none;
+}
+
+.advisor-lines li,
+.advisor-share-list li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  align-items: end;
+}
+
+.advisor-attach {
+  display: grid;
+  gap: var(--sp-2);
+  margin: var(--sp-4) 0;
+  padding: 0;
+  border: 0;
+}
+
+.advisor-notes {
+  display: grid;
+  gap: var(--sp-2);
+  margin: var(--sp-5) 0;
+}
+
+.advisor-summary {
+  max-height: 16rem;
+  overflow: auto;
+  white-space: pre-wrap;
+  font-size: var(--type-sm);
+}
+
+.advisor-share-list [data-state='expired'],
+.advisor-share-list [data-state='revoked'] {
+  color: var(--app-dim);
+}
+
 /* BL-1.4's Action Center, when it sits in a Phase B panel rather than in the
    #761 card whose `.today-decision-surface` rules it was drawn against. */
 .action-panel .action-center h2 {
