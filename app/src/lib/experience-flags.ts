@@ -9,6 +9,8 @@ export interface ExperienceFlags {
   multimodalCapture: FeatureState;
   universityControlPlane: FeatureState;
   humanHelp: FeatureState;
+  /** The staff Integration Dashboard. Tenant flags and `integration:view` still apply. */
+  integrationDashboard: FeatureState;
 }
 
 const STATES: readonly FeatureState[] = ['off', 'preview', 'sandbox', 'production'];
@@ -29,6 +31,7 @@ export function experienceFlags(env: PreviewEnv): ExperienceFlags {
     multimodalCapture: featureState(env, 'VITE_MULTIMODAL_CAPTURE', preview),
     universityControlPlane: featureState(env, 'VITE_UNIVERSITY_CONTROL_PLANE', preview),
     humanHelp: featureState(env, 'VITE_HUMAN_HELP', preview),
+    integrationDashboard: featureState(env, 'VITE_INTEGRATION_DASHBOARD', preview),
   };
 }
 

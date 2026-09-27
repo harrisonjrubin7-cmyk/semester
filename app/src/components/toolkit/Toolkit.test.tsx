@@ -76,6 +76,7 @@ it('recommends a finite set with a reason for each, and can hide one', () => {
   const items = host.querySelectorAll('.toolkit-recs > li');
   expect(items.length).toBeGreaterThan(0);
   expect(items.length).toBeLessThanOrEqual(4);
+  expect(host.textContent).toContain('PSCI 1104 is Political science');
   const first = items[0].querySelector('strong')!.textContent!;
   click(`Hide`);
   expect([...host.querySelectorAll('.toolkit-recs strong')].map((s) => s.textContent)).not.toContain(first);
@@ -150,6 +151,19 @@ it('refuses to import data until it is classified, and refuses regulated data ou
   const regulated = [...host.querySelectorAll('input[type="radio"]')][4] as HTMLInputElement;
   act(() => regulated.click());
   expect(host.textContent).toContain('Regulated or restricted material is not kept in Semester');
+});
+
+it('shows a restricted workbench as needing review, not as a working tool', () => {
+  mount();
+  tab('All tools');
+  act(() => {
+    const select = host.querySelector('.toolkit-catalog')!.parentElement!.querySelector('select') as HTMLSelectElement;
+    Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value')!.set!.call(select, 'bio');
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+  const dna = [...host.querySelectorAll('.toolkit-catalog li')].find((li) => li.textContent?.includes('DNA Learning Lab'))!;
+  expect(dna.textContent).toContain('Needs review before use');
+  expect(dna.querySelector('button')).toBeNull();
 });
 
 const importPasted = (tierIndex: number, csv: string) => {

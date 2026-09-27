@@ -1,7 +1,7 @@
 -- Semester — which help inboxes a staff account answers for.
 --
 -- `help_inbox`, `open_help_request` and `answer_help_request` in
--- 20260927180000_help_requests.sql each take a destination or request the
+-- 20260927230000_help_requests.sql each take a destination or request the
 -- caller must already know. This is how the staff screen learns which
 -- destinations those are: the ones `private.answers_for` says yes to, and no
 -- others. It returns the office, never a request or a student.

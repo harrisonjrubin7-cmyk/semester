@@ -40,6 +40,7 @@ describe('the intelligence expansion preserves the existing Semester product', (
       multimodalCapture: 'off',
       universityControlPlane: 'off',
       humanHelp: 'off',
+      integrationDashboard: 'off',
     });
   });
 
