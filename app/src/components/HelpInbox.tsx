@@ -132,6 +132,8 @@ export function HelpInbox({
           value={filter}
           labels={labels}
           onChange={(f) => {
+            // The chip already chosen reports a change too; only a new filter lets go of kept cards.
+            if (f === filter) return;
             setFilter(f);
             setKept(new Set());
           }}

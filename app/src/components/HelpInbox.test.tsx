@@ -181,6 +181,10 @@ describe('the staff help inbox', () => {
       expect(cards()).toEqual(['Closed']);
       expect(host.querySelector('[data-reply]')?.textContent).toBe('All sorted, see you Tuesday');
 
+      // Pressing the chip already chosen changes nothing, so the card stays.
+      act(() => chip(/^Open/).click());
+      expect(cards()).toEqual(['Closed']);
+
       act(() => chip(/^New/).click());
       act(() => chip(/^Open/).click());
       expect(cards()).toEqual([]);
