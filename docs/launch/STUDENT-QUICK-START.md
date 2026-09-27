@@ -26,9 +26,9 @@ Check every date before you keep it. A syllabus can be wrong or out of date, and
 
 **Privacy and your rights** lists what stays on your device and what leaves it. In short:
 
-- Signed out, nothing leaves your device.
-- Signed in, what you typed syncs to your account, so your other device has it.
-- Asking the AI sends that question to Anthropic, only when you press the button.
+- Signed out, your semester stays on your device. Two things can still leave it: an AI question, when you press the button, and map tiles, while the map is open.
+- Signed in, what you typed also syncs to your account, so your other device has it.
+- Asking the AI sends that question to the AI provider set in Settings: Anthropic unless you or your school chose another, such as OpenAI. It goes only when you press the button.
 - There is no third-party analytics in this app.
 
 ## 6. Know how to leave

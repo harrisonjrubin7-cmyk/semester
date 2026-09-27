@@ -14,7 +14,7 @@ Today shows what is due next. The calendar shows your week. Study gives you card
 
 It runs on your device. You do not need an account. If you sign in, your phone and your laptop show the same semester.
 
-When you ask the AI a question, that question goes to Anthropic, and only when you press the button. There is no third-party analytics.
+When you ask the AI a question, it goes to the AI provider in your settings, Anthropic unless you chose another, and only when you press the button. There is no third-party analytics.
 
 Semester does not submit anything to your school, change your records or score you.
 

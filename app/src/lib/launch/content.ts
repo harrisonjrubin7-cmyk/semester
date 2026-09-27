@@ -108,17 +108,20 @@ const DAY = 86_400_000;
  * What stops a record being called ready. A row that does not claim READY is
  * not held to anything — an honest NOT_STARTED is the point of the register.
  */
-export function readinessProblems(r: ReadinessRecord, today: string): string[] {
+export function readinessProblems(r: ReadinessRecord, today: string, exists: (path: string) => boolean = () => false): string[] {
   const item = CONTENT_READINESS.find((c) => c.id === r.item);
   if (!item) return [`${r.item}: not a content item`];
   if (r.status !== 'READY') return [];
   const out: string[] = [];
   if (!namedPerson(r.owner)) out.push(`${r.item}: owner must be a named person, not "${r.owner}"`);
-  if (!/^https:\/\/\S+$/.test(r.source) && !/^docs\/evidence\/\S+$/.test(r.source)) {
+  if (/^docs\/evidence\/\S+$/.test(r.source)) {
+    if (!exists(r.source)) out.push(`${r.item}: ${r.source} is not filed`);
+  } else if (!/^https:\/\/\S+$/.test(r.source)) {
     out.push(`${r.item}: source must be an https link or a filed record under docs/evidence/`);
   }
   const reviewed = Date.parse(r.reviewed);
   if (Number.isNaN(reviewed)) out.push(`${r.item}: no review date`);
+  else if (reviewed > Date.parse(today)) out.push(`${r.item}: reviewed ${r.reviewed}, which is after today`)
   else if (Date.parse(today) - reviewed > item.reviewEveryDays * DAY) out.push(`${r.item}: review overdue (every ${item.reviewEveryDays} days)`);
   if (r.estimate && !item.estimateAllowed) out.push(`${r.item}: may not go out as an estimate`);
   return out;

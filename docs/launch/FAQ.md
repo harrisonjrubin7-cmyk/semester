@@ -14,7 +14,7 @@ No. Semester runs on your device. An account adds one thing: the same semester o
 
 ### What leaves my device?
 
-Signed out, nothing. Signed in, what you typed syncs to your account. When you ask the AI a question, that text goes to Anthropic, only when you press the button. The Privacy screen lists every case.
+Signed out, your semester stays on your device. Two things can still leave it: an AI question, when you press the button, and map tiles, while the map is open. Signed in, what you typed also syncs to your account. An AI question goes to the AI provider set in Settings: Anthropic unless you or your school chose another, such as OpenAI. The Privacy screen lists every case.
 
 ### Does my school see my work in Semester?
 

@@ -70,6 +70,9 @@ describe('content readiness', () => {
     expect(readinessProblems(ready({ reviewed: '2026-01-01' }), '2026-09-27').join()).toMatch(/overdue/);
     expect(readinessProblems(ready({ item: 'emergency_safety', estimate: true }), '2026-09-27').join()).toMatch(/estimate/);
     expect(readinessProblems(ready({ item: 'programs_degrees', estimate: true }), '2026-09-27')).toEqual([]);
+    expect(readinessProblems(ready({ reviewed: '2027-01-01' }), '2026-09-27').join()).toMatch(/after today/);
+    expect(readinessProblems(ready({ source: 'docs/evidence/missing.md' }), '2026-09-27', () => false).join()).toMatch(/not filed/);
+    expect(readinessProblems(ready({ source: 'docs/evidence/calendar.md' }), '2026-09-27', () => true)).toEqual([]);
   });
 
   it('has a register row for every item, and no READY row that fails its rules', () => {
@@ -77,11 +80,14 @@ describe('content readiness', () => {
       .split('\n')
       .filter((l) => /^\| [a-z_]+ \| /.test(l))
       .map((l) => l.split('|').slice(1, -1).map((c) => c.trim()))
-      .map(([item, status, owner, source, reviewed, estimate]) => ({ item, status, owner, source, reviewed, estimate: estimate === 'yes' }) as ReadinessRecord);
+      .map(([item, status, owner, source, reviewed, estimate]) => ({ item, status, owner, source, reviewed, estimate }));
+    // The column is exactly yes or no. Anything else would read as "no" and
+    // let a forbidden estimate through.
+    for (const r of rows) expect(['yes', 'no'], `${r.item} estimate "${r.estimate}"`).toContain(r.estimate);
     expect(rows.map((r) => r.item)).toEqual(CONTENT_READINESS.map((c) => c.id));
     for (const r of rows) {
       expect(['NOT_STARTED', 'IN_PROGRESS', 'READY'], r.item).toContain(r.status);
-      expect(readinessProblems(r, new Date().toISOString().slice(0, 10)), r.item).toEqual([]);
+      expect(readinessProblems({ ...r, status: r.status as ReadinessRecord['status'], estimate: r.estimate === 'yes' }, new Date().toISOString().slice(0, 10), exists), r.item).toEqual([]);
     }
   });
 });
