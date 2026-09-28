@@ -42,10 +42,31 @@ begin
     -- and both pass. The second now waits, then counts the first's accept.
     -- A peer offer is per cohort, so its capacity counts that cohort only.
     if r.kind = 'peer' then
+      -- A request can wait a long time. At acceptance, both ends must still be
+      -- where the request put them — the student at the school and in the
+      -- cohort, the mentor holding mentee:read over it — the same test the
+      -- retired direct-insert policy made, or the assignment below would give
+      -- a mentor a student who has left.
+      if not exists (
+        select 1 from public.profiles p where p.user_id = r.requester and p.school_id = r.tenant_id
+      ) or not exists (
+        select 1 from public.role_grants g
+         where g.subject = r.requester and g.scope_kind = 'cohort' and g.scope_id = r.cohort_scope
+           and g.revoked_at is null and (g.expires_at is null or g.expires_at > now())
+      ) then
+        raise exception 'That student is no longer in this cohort.';
+      end if;
+      if not private.subject_has_capability(me, 'mentee:read', 'cohort', r.cohort_scope) then
+        raise exception 'You no longer mentor this cohort.';
+      end if;
       select capacity into cap from public.peer_mentor_offers
        where user_id = me and cohort_scope = r.cohort_scope for update;
-      select count(*) into taken from public.mentor_requests
-       where recipient = me and kind = 'peer' and cohort_scope = r.cohort_scope and status = 'accepted';
+      -- Capacity is live mentorships in this cohort, whichever way they began
+      -- (an assignment from before 20260928110700 counts too). Re-accepting a
+      -- student whose earlier assignment ended does not count them twice.
+      select count(*) into taken from public.peer_mentor_assignments a
+       where a.mentor_id = me and a.cohort_scope = r.cohort_scope and a.student_id <> r.requester
+         and a.revoked_at is null and a.expires_at > now();
     else
       select capacity into cap from public.alumni_mentor_offers where user_id = me for update;
       select count(*) into taken from public.mentor_requests
@@ -65,6 +86,16 @@ begin
       set accepted_at = excluded.accepted_at, expires_at = excluded.expires_at, revoked_at = null;
   end if;
 end $$;
+
+-- Peer requests accepted between 20260928021700 and this migration made no
+-- assignment. Both people said yes to those, so they get one now — the
+-- mentor had nothing to see before, and capacity now counts assignments.
+insert into public.peer_mentor_assignments (tenant_id, cohort_scope, mentor_id, student_id, accepted_at, expires_at)
+select r.tenant_id, r.cohort_scope, r.recipient, r.requester, coalesce(r.decided_at, now()), coalesce(r.decided_at, now()) + interval '180 days'
+  from public.mentor_requests r
+ where r.kind = 'peer' and r.status = 'accepted'
+   and coalesce(r.decided_at, now()) + interval '180 days' > now()
+on conflict (mentor_id, student_id, cohort_scope) do nothing;
 
 -- ── 2. A moderator changes a listing's status, and nothing else ───────────
 -- "a moderator publishes or removes" was an UPDATE policy with no column
