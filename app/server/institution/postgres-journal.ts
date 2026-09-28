@@ -119,13 +119,17 @@ export class PostgresActionJournal implements ActionJournalStore {
     area: string,
     event: string,
     reviewId: string | null = null,
+    correlationId: string | null = null,
   ): Promise<void> {
-    const saved = await this.rpc<boolean>('gateway_write_audit', {
+    // `_v2` carries the correlation id; see 20260928320000_audit_correlation_and_outbox.sql
+    // for why it is a second function rather than a sixth parameter on the first.
+    const saved = await this.rpc<boolean>('gateway_write_audit_v2', {
       want_tenant: identity.institutionId,
       want_actor: identity.userId,
       want_area: area,
       want_event: event,
       want_review: reviewId,
+      want_correlation: correlationId,
     }, 'write an audit event');
     if (!saved) failed(null, 'write an audit event');
   }

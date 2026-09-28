@@ -45,6 +45,8 @@ What was missing is the sentence saying so, and the list of the exceptions.
 | `activity` | **400 days** | `supabase/migrations/20260921151000_activity.sql` | On write, inside `note_activity()`, scoped to the account being written to |
 | `gateway_review` | **Unconfirmed reviews: one day after expiry; completed/refused reviews: ninety days after expiry; unresolved processing/pending/uncertain reviews: until reconciliation** | `private.gateway_purge_journal()` in `supabase/migrations/20260924184500_gateway_action_journal.sql` | Server-only hourly sweep; encrypted bodies remain inaccessible to browser roles |
 | `gateway_audit`, `gateway_intelligence_audit` | **180 days** | `private.gateway_purge_journal()` in `supabase/migrations/20260924184500_gateway_action_journal.sql` | Server-only hourly sweep; metadata only, never source text, prompts or model prose |
+| `gateway_audit.correlation_id` | **With the row — 180 days** | `private.gateway_purge_journal()` as above; the column is added by `supabase/migrations/20260928320000_audit_correlation_and_outbox.sql` | An opaque request id, held to the gateway's own pattern by a check constraint; never a session token or a name |
+| `domain_outbox_events`, `domain_event_receipts` | **No sweep yet — stated below** | `supabase/migrations/20260928320000_audit_correlation_and_outbox.sql` | Every event row declares its retention class (operational, student record, audit or commercial); the sweep that reads it is owed before the first producer writes in production (ADR 0008) |
 | `gateway_rate_limit` | **One day** | `private.gateway_purge_journal()` in `supabase/migrations/20260924184500_gateway_action_journal.sql` | Server-only hourly sweep of fixed-window counters |
 | `direct_rate_limit` | **The limit's own window — at most one day; with the account, by foreign key** | `private.take_direct_rate_limit()` in `supabase/migrations/20260928230000_direct_rate_limits.sql` | On write: each call deletes that account's expired hits for the bucket, plus up to 200 day-old hits from anybody. Holds an account id, a table name and a time — never what was written |
 | `gateway_intelligence_action` | **Unconfirmed actions: one day after expiry; claimed actions: ninety days** | `private.gateway_purge_journal()` in `supabase/migrations/20260924184500_gateway_action_journal.sql` | Server-only hourly sweep; action bodies are encrypted and single-use |
@@ -363,6 +365,15 @@ except a delete of a row past three years, inside the sweep's own transaction.
 `tenant_policy_audit_event` goes with its school. A school whose agreement needs
 a longer period changes two intervals, and `retention.test.ts` holds them
 together.
+
+**The outbox and its receipts: no sweep yet.** `domain_outbox_events` and
+`domain_event_receipts` (`20260928320000_audit_correlation_and_outbox.sql`)
+are service-role only and, as of that migration, empty: no producer writes to
+them yet. Each event row declares a retention class precisely so that a sweep
+can apply this file's policy without reading the payload — but the sweep is
+not written, and a published row is kept until it is. It is owed before the
+first producer lands, and ADR 0008 says so; this entry is so that the producer
+cannot land without somebody reading this.
 
 ## Changing any of this
 

@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { DatabaseSync } from 'node:sqlite';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
@@ -82,9 +83,9 @@ function asynchronousJournal(inner: ActionJournal, events: string[]): ActionJour
       inner.finish(row, state, receipt);
       events.push(`finish:${state}`);
     },
-    audit: async (identity, area, event, reviewId = null) => {
+    audit: async (identity, area, event, reviewId = null, correlationId = null) => {
       await turn();
-      inner.audit(identity, area, event, reviewId);
+      inner.audit(identity, area, event, reviewId, correlationId);
       events.push(`audit:${event}`);
     },
   };
@@ -293,7 +294,7 @@ describe('university gateway boundaries', () => {
     f.mode('refuse');
     const refused = await f.request('/actions/prepare', f.input);
     expect(refused.status, 'a refusal is the caller’s fault, not a 5xx').toBe(400);
-    expect((await refused.json()).error).toBe('That deadline has already passed.');
+    expect((await refused.json()).error.message).toBe('That deadline has already passed.');
   });
 
   it('does not tell somebody to retry a thing that will never work', async () => {
@@ -322,7 +323,7 @@ describe('university gateway boundaries', () => {
     f.mode('refuse');
     const refused = await f.request('/actions/commit', { reviewId: review.id, confirmed: true });
     expect(refused.status).toBe(400);
-    expect((await refused.json()).error).toBe('That deadline has already passed.');
+    expect((await refused.json()).error.message).toBe('That deadline has already passed.');
     expect(f.calls(), 'nothing was executed').toBe(0);
     // And the review is still usable, because nothing consumed it.
     f.mode('ok');
@@ -341,7 +342,7 @@ describe('university gateway boundaries', () => {
     f.mode('crash');
     const broke = await f.request('/actions/prepare', f.input);
     expect(broke.status).toBe(503);
-    expect((await broke.json()).error).toBe('The university service is unavailable. Please try again later.');
+    expect((await broke.json()).error.message).toBe('The university service is unavailable. Please try again later.');
   });
 
   it('delivers a refusal thrown at the write, and marks it refused rather than unknown', async () => {
@@ -358,7 +359,7 @@ describe('university gateway boundaries', () => {
     f.mode('refuse-late');
     const refused = await f.request('/actions/commit', { reviewId: review.id, confirmed: true });
     expect(refused.status).toBe(400);
-    expect((await refused.json()).error).toBe('You are already enrolled in this course.');
+    expect((await refused.json()).error.message).toBe('You are already enrolled in this course.');
     expect(f.journal.get(review.id, actor)?.state, 'left hanging as unknown').toBe('refused');
 
     // And it is spent: sending it again says so, rather than sending the
@@ -366,7 +367,7 @@ describe('university gateway boundaries', () => {
     f.mode('ok');
     const again = await f.request('/actions/commit', { reviewId: review.id, confirmed: true });
     expect(again.status).toBe(409);
-    expect((await again.json()).error).toMatch(/refused/i);
+    expect((await again.json()).error.message).toMatch(/refused/i);
     expect((await f.request('/actions/reconcile', { reviewId: review.id })).status).toBe(409);
   });
 
@@ -669,5 +670,106 @@ describe('request limits', () => {
     const response = await f.request('/status');
     expect(response.status).toBe(429);
     expect(calls).toEqual(['school-a:student-a']);
+  });
+});
+
+describe('correlation ids and the error envelope', () => {
+  const given = 'browser-tap-0001-abcdef';
+
+  it('carries a well-formed correlation id from the request to the response, the audit row and the telemetry line', async () => {
+    const events: GatewayTelemetryEvent[] = [];
+    const f = fixture({ telemetry: (event) => { events.push(event); } });
+    const response = await f.request('/records?area=assignments', undefined, { 'x-correlation-id': given });
+    expect(response.status).toBe(200);
+    expect(response.headers.get('x-correlation-id')).toBe(given);
+    // The request id is minted here every time, whatever the client sent.
+    expect(response.headers.get('x-request-id')).toMatch(/^[0-9a-f-]{36}$/);
+    expect(response.headers.get('x-request-id')).not.toBe(given);
+    expect(response.headers.get('access-control-expose-headers')).toContain('X-Correlation-Id');
+    expect(events[0].correlationId).toBe(given);
+
+    const rows = new DatabaseSync(f.path).prepare('SELECT event, correlation_id FROM audit').all() as Array<{ event: string; correlation_id: string | null }>;
+    expect(rows).toEqual([{ event: 'records.read', correlation_id: given }]);
+  });
+
+  it('mints one when the client sent none, and when what it sent is not an id', async () => {
+    const f = fixture();
+    const minted = await f.request('/status');
+    expect(minted.headers.get('x-correlation-id')).toMatch(/^[0-9a-f-]{36}$/);
+    for (const bad of ['short', 'has spaces in it', 'x'.repeat(129), '<script>alert(1)</script>', 'a\tb']) {
+      const response = await f.request('/status', undefined, { 'x-correlation-id': bad });
+      const id = response.headers.get('x-correlation-id')!;
+      expect(id).not.toBe(bad);
+      expect(id).toMatch(/^[0-9a-f-]{36}$/);
+    }
+  });
+
+  it('the audit row written for an action carries the id of the request that caused it', async () => {
+    const f = fixture();
+    const review = await f.prepare();
+    const commit = await f.request('/actions/commit', { reviewId: review.id, confirmed: true }, { 'x-correlation-id': given });
+    expect(commit.status).toBe(200);
+    const rows = new DatabaseSync(f.path).prepare('SELECT event, correlation_id FROM audit ORDER BY id').all() as Array<{ event: string; correlation_id: string | null }>;
+    expect(rows.map((r) => r.event)).toEqual(['action.prepared', 'action.started', 'action.receipt']);
+    // Prepared under a minted id; started and receipted under the one the client sent.
+    expect(rows[0].correlation_id).toMatch(/^[0-9a-f-]{36}$/);
+    expect(rows.slice(1).map((r) => r.correlation_id)).toEqual([given, given]);
+  });
+
+  it('opens a journal written before the correlation column existed', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'semester-gateway-'));
+    dirs.push(dir);
+    const path = join(dir, 'old.sqlite');
+    const old = new DatabaseSync(path);
+    old.exec('CREATE TABLE audit(id INTEGER PRIMARY KEY, at TEXT NOT NULL, tenant TEXT NOT NULL, actor TEXT NOT NULL, area TEXT NOT NULL, event TEXT NOT NULL, review_id TEXT)');
+    old.close();
+    const journal = new ActionJournal(path, key);
+    journals.push(journal);
+    journal.audit(actor, 'assignments', 'records.read', null, given);
+    const rows = new DatabaseSync(path).prepare('SELECT correlation_id FROM audit').all();
+    expect(rows).toEqual([{ correlation_id: given }]);
+  });
+
+  it('every refusal is the same envelope, with a code, the correlation id and whether to try again', async () => {
+    const f = fixture();
+    const unauthenticated = await f.request('/status', undefined, { authorization: '', 'x-correlation-id': given });
+    expect(unauthenticated.status).toBe(401);
+    expect(await unauthenticated.json()).toEqual({
+      error: { code: 'unauthenticated', message: 'Sign in to your school-approved Semester account.', correlation_id: given, retryable: false },
+      message: 'Sign in to your school-approved Semester account.',
+    });
+
+    const wrongOrigin = await f.request('/status', undefined, { origin: 'https://evil.example' });
+    expect(wrongOrigin.status).toBe(403);
+    expect((await wrongOrigin.json()).error.code).toBe('origin_not_allowed');
+
+    f.identity({ ...actor, institutionId: 'school-b' });
+    const unconfigured = await f.request('/records?area=assignments');
+    expect(unconfigured.status).toBe(503);
+    expect((await unconfigured.json()).error).toMatchObject({ code: 'adapter_not_configured', retryable: true });
+  });
+
+  it('says a refused action is refused and an unknown outcome must not be retried', async () => {
+    const f = fixture();
+    f.mode('refuse');
+    const refused = await f.request('/actions/prepare', f.input);
+    expect(refused.status).toBe(400);
+    expect((await refused.json()).error).toMatchObject({ code: 'refused', retryable: false });
+
+    f.mode('ok');
+    const review = await f.prepare();
+    f.mode('timeout');
+    const broke = await f.request('/actions/commit', { reviewId: review.id, confirmed: true });
+    expect(broke.status).toBe(502);
+    const body = await broke.json();
+    expect(body.error).toMatchObject({ code: 'outcome_uncertain', retryable: false, user_action: { kind: 'contact_support' } });
+    expect(JSON.stringify(body)).not.toContain('Vendor secret');
+
+    f.mode('crash');
+    const crashed = await f.request('/actions/prepare', f.input);
+    expect(crashed.status).toBe(503);
+    const crash = await crashed.json();
+    expect(crash.error).toMatchObject({ code: 'unavailable', retryable: true });
+    expect(JSON.stringify(crash)).not.toContain('password');
   });
 });
