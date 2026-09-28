@@ -30,10 +30,11 @@
  * still need a UAT, a drill, a certification or a contract, and its `gap` says
  * which. The row statuses were first assessed against `origin/main` at
  * `5bc0330` on 2026-09-28 and re-assessed the same day at `fd8fc0b`, after
- * #814, #819, #839, #893, #895, #896, #900, #901, #902 and #903 landed. Ten
+ * #814, #819, #839, #893, #895, #896, #900, #901, #902 and #903 landed. Nine
  * rows rose to `tested` (IAM-004, STU-006, STU-008, STU-012, LMS-002, TRUST-005,
- * SRE-001, SRE-010, SUP-001, UOS-006), and sixteen more gained evidence or a
- * narrower gap without changing status. Nothing fell.
+ * SRE-001, SUP-001, UOS-006), and sixteen more gained evidence or a narrower
+ * gap without changing status; #908 then moved SRE-010 to `building` and its
+ * call stands. Nothing fell.
  */
 
 export const STATUSES = [
@@ -453,8 +454,8 @@ export const REGISTER: readonly Requirement[] = [
     validation: 'Support ticket UAT',
     severity: 'P0',
     status: 'tested',
-    evidence: [{ path: 'app/src/lib/supporttickets.ts', shows: 'Support tickets: six app-context keys, every detail unticked by default, 24h/72h targets (#839)' }, { path: 'supabase/support-tickets.check.sql', shows: '25 checks: no identity reaches the queue, five a day, only the student closes' }, { path: 'app/src/components/supportticketspanel.test.tsx', shows: 'Nothing unticked is sent, and the preview shows all of it' }, { path: 'app/src/lib/help-routes.ts', shows: 'Help requests to campus offices with minimal context, withdrawable, DB-enforced' }, { path: 'app/public/status.html', shows: 'A status page that checks from the reader\'s browser (#902)' }, { path: 'MONITORING.md', shows: 'Still declines a status page in writing; the refusal predates #902' }],
-    gap: 'Tickets are off by default (VITE_SUPPORT_TICKETS), have no staff screen and no notification to the student, and no ticket id is shown in the app. The status page exists but MONITORING.md and SUPPORT-RELIABILITY-AND-ABUSE-PREVENTION.md still record the refusal; reconcile them. No support ticket UAT.',
+    evidence: [{ path: 'app/src/lib/supporttickets.ts', shows: 'Support tickets: six app-context keys, every detail unticked by default, 24h/72h targets (#839)' }, { path: 'supabase/support-tickets.check.sql', shows: '25 checks: no identity reaches the queue, five a day, only the student closes' }, { path: 'app/src/components/supportticketspanel.test.tsx', shows: 'Nothing unticked is sent, and the preview shows all of it' }, { path: 'app/src/lib/help-routes.ts', shows: 'Help requests to campus offices with minimal context, withdrawable, DB-enforced' }, { path: 'app/public/status.html', shows: 'A status page that checks from the reader\'s browser (#902)' }, { path: 'app/src/lib/statuspage.test.ts', shows: 'Holds the page\'s probes and key to .env.production (#902, #908)' }],
+    gap: 'Tickets are off by default (VITE_SUPPORT_TICKETS), have no staff screen and no notification to the student, and no ticket id is shown in the app. The status page is live at /status.html but not linked from Help. No support ticket UAT.',
   },
   {
     id: 'LMS-001',
@@ -1482,9 +1483,9 @@ export const REGISTER: readonly Requirement[] = [
     requirement: 'Public status and subscriber/customer update process work',
     validation: 'Status-page drill',
     severity: 'P0',
-    status: 'tested',
-    evidence: [{ path: 'app/public/status.html', shows: 'Outside the bundle; probes the app\'s index and Supabase auth health from the reader\'s browser; claims no uptime it never measured (#902)' }, { path: 'app/public/status-incidents.json', shows: 'Incidents are an edit to this file' }, { path: 'app/src/lib/statuspage.test.ts', shows: 'Holds the page\'s URL and key to .env.production and requires a publishable key' }, { path: 'MONITORING.md', shows: 'Still declines a status page in writing; the refusal predates #902' }],
-    gap: 'No subscriber notification, no uptime history, incidents are a manual JSON edit, no drill; MONITORING.md and SUPPORT-RELIABILITY-AND-ABUSE-PREVENTION.md still record the refusal and need reconciling. Needs the customer update process and a drill.',
+    status: 'building',
+    evidence: [{ path: 'app/public/status.html', shows: 'public status page: live browser probes of the app, sign-in and the database API, and a hand-kept incident list' }, { path: 'app/src/lib/statuspage.test.ts', shows: 'holds the page to the production project, the smoke probes and the service worker' }, { path: 'MONITORING.md', shows: 'the refusal reversed on 28 September' }],
+    gap: 'No subscriber notification process and no drill yet; incidents are written by hand into status-incidents.json.',
   },
   {
     id: 'SUP-001',

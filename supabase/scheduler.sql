@@ -284,7 +284,7 @@ select cron.schedule(
 -- (`public.integration_tick_authorized`), so Vault is its only home and
 -- rotating it is one update to one row.
 --
--- Nothing runs even when unparked until an adapter is registered in
+-- Nothing runs until an adapter is registered in
 -- `app/server/integration/registry.ts`, which is empty; each tick then answers
 -- with every connection skipped as unregistered.
 do $$
@@ -317,12 +317,15 @@ select cron.schedule(
   $job$
 );
 
--- Parked, for the reason `push` is: until the function is deployed and the
--- token check exists, every run would fail about a half-finished deploy.
--- INTEGRATION-OPERATOR-RUNBOOK.md §4 has the one statement that unparks it.
+-- **Active** since 28 September 2026. It was parked until the function was
+-- deployed and the token check existed; the runbook's test request
+-- (INTEGRATION-OPERATOR-RUNBOOK.md §4) then answered 200 with every count zero
+-- and the job was unparked. Stated here so re-running this file keeps it on
+-- rather than parking it again. In an incident, stop syncs with the kill
+-- switches (runbook §6) rather than by parking the job.
 select cron.alter_job(
   (select jobid from cron.job where jobname = 'integration-sync'),
-  active := false
+  active := true
 );
 
 -- ── Housekeeping the code was already waiting for ─────────────────────────

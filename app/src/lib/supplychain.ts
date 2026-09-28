@@ -100,7 +100,7 @@ export const NAMED: readonly Named[] = [
     pkg: 'axe-core',
     lockfile: 'app',
     license: 'MPL-2.0',
-    why: 'Accessibility rules engine run by src/a11y/axe.test.tsx and app/scripts/keyboard-pass.mjs (#906). A devDependency: it runs in vitest and in a CI browser; none of its code is in the bundle. Landed on main beside the policy (#904) and neither saw the other.',
+    why: 'Accessibility rules engine, a devDependency run only by the test suite (src/a11y/axe.test.tsx, src/lib/dim.test.ts), used unmodified. None of its code is in the bundle.',
     decision: 'accepted',
   },
   {

@@ -584,8 +584,12 @@ never applied; the other two came with the integration scheduler. Read off `cron
 
 `push` and `tombstones` came through unchanged, and `push_cron_secret` was not regenerated.
 
-Re-running the whole file stays safe. Every statement is idempotent, and it parks `push` and `integration-sync`
-again, so re-run it only while both are meant to be parked. Otherwise run the one `cron.schedule` you need. To
+**28 September: `integration-sync` unparked.** The runbook's test request, sent from the project with pg_net,
+answered 200 with `{"outcome":"ran","due":0,"ran":0,...}`; `cron.alter_job(..., active := true)` followed and
+`cron.job` reads `active = true`. `scheduler.sql` now states it active, so a re-run keeps it on.
+
+Re-running the whole file stays safe. Every statement is idempotent, and it parks `push` again (and keeps
+`integration-sync` on), so re-run it only while `push` is meant to be parked. Otherwise run the one `cron.schedule` you need. To
 watch the first runs:
 
     select j.jobname, d.status, d.return_message, d.start_time

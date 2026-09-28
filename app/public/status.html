@@ -75,7 +75,10 @@ a{color:inherit}
 
   var CHECKS = [
     { name: 'The app', detail: 'the page students open', url: './index.html', headers: {} },
-    { name: 'Sign-in and your saved work', detail: 'accounts and sync', url: SUPABASE_URL + '/auth/v1/health', headers: { apikey: SUPABASE_KEY } },
+    { name: 'Sign-in', detail: 'accounts', url: SUPABASE_URL + '/auth/v1/health', headers: { apikey: SUPABASE_KEY } },
+    // The same read production-smoke.yml makes every hour: sign-in can be up
+    // while the database API that saves and syncs work is not.
+    { name: 'Your saved work', detail: 'saving and sync', url: SUPABASE_URL + '/rest/v1/schools?select=id&limit=1', headers: { apikey: SUPABASE_KEY, authorization: 'Bearer ' + SUPABASE_KEY } },
   ];
 
   function el(id) { return document.getElementById(id); }

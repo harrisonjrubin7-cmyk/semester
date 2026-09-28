@@ -312,13 +312,14 @@ describe('found by the Codex review of #811', () => {
 describe('the job that calls it', () => {
   const scheduler = readFileSync(join(process.cwd(), '..', 'supabase', 'scheduler.sql'), 'utf8');
 
-  it('fires every TICK_MINUTES and is parked until it is configured', () => {
+  it('fires every TICK_MINUTES and stays active when the file is re-run', () => {
     const job = /cron\.schedule\(\s*'integration-sync',\s*'([^']+)'/.exec(scheduler);
     expect(job, 'scheduler.sql no longer schedules integration-sync').not.toBeNull();
     const minutes = job![1].split(' ')[0].split(',').map(Number);
     expect(minutes).toHaveLength(60 / TICK_MINUTES);
     expect(minutes.slice(1).map((m, i) => m - minutes[i])).toEqual(Array(minutes.length - 1).fill(TICK_MINUTES));
-    expect(scheduler).toMatch(/jobname = 'integration-sync'\),\s*active := false/);
+    expect(scheduler).toMatch(/jobname = 'integration-sync'\),\s*active := true/);
+    expect(scheduler).not.toMatch(/jobname = 'integration-sync'\),\s*active := false/);
   });
 
   it('calls this project’s integration-tick function, with the token from Vault and nowhere else', () => {
