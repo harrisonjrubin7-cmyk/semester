@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
+import { EXTRA_CONNECT, parsePolicy, uncoveredOrigins } from './cspheader';
 
 /**
  * The response headers a host sends, written down for the hosts that let the
@@ -8,9 +9,9 @@ import { join } from 'node:path';
  *
  * GitHub Pages, where the app is served today, sends its own headers and takes
  * none — which is why `index.html` carries the Content-Security-Policy as a
- * <meta> tag, and why the tag's comment names the two things a meta tag cannot
- * carry. These files are those two things and the rest of the usual set, in
- * the two formats a static host reads:
+ * <meta> tag. These files carry the *whole* policy again as a header, plus
+ * `frame-ancestors` and the rest of the usual set, in the two formats a static
+ * host reads:
  *
  *   · `vercel.json`, the first `headers` rule (`/(.*)`).
  *   · `public/_headers`, which Vite copies into `dist/` and which Netlify and
@@ -31,10 +32,14 @@ import { join } from 'node:path';
  *     every school launch. The policy is `'self'` plus each school's LMS
  *     origin, and nothing broader: no bare `*`, no scheme-only source, no
  *     `http:`. Adding a school means adding its LMS origin here.
- *   · **The header CSP carries only what a meta tag cannot.** Two policies are
- *     both enforced, so a `script-src` here would silently intersect with the
- *     tag's and `csp.test.ts` would no longer describe what the browser does.
- *     The tag stays the one list of load sources.
+ *   · **The header CSP is the tag's policy, directive for directive.** It used
+ *     to carry only `frame-ancestors`, on the grounds that two enforced
+ *     policies intersect and a second list would drift. But a meta policy
+ *     cannot carry `frame-ancestors`, `report-uri` or `sandbox` and applies
+ *     late, so on a host that can send the header the whole policy belongs in
+ *     it. The drift is answered by a test instead: the tag stays the one place
+ *     a source is decided (`csp.test.ts` holds it to the code), and the
+ *     headers are held to the tag. `src/lib/cspheader.ts` has the rest.
  *   · **Every browser feature the code calls is permitted.** A
  *     `Permissions-Policy` that omits `microphone` turns recording off on the
  *     deployed build only, with no error anywhere a developer would look — the
@@ -109,7 +114,16 @@ const FEATURES: [RegExp, string[]][] = [
 
 describe('host security headers', () => {
   it('vercel.json and public/_headers send the same headers', () => {
-    expect(Object.fromEntries(fromNetlify())).toEqual(Object.fromEntries(fromVercel()));
+    // The CSP is compared on its own below, directive by directive, because it
+    // is the one value the two files are allowed to spell differently.
+    const strip = (h: Headers) => {
+      const out = Object.fromEntries(h);
+      delete out['content-security-policy'];
+      return out;
+    };
+    expect(strip(fromNetlify())).toEqual(strip(fromVercel()));
+    expect(fromNetlify().has('content-security-policy')).toBe(true);
+    expect(fromVercel().has('content-security-policy')).toBe(true);
   });
 
   it('carries the set a meta tag cannot', () => {
@@ -134,13 +148,6 @@ describe('host security headers', () => {
     }
   });
 
-  it('keeps load sources in the index.html tag, not here', () => {
-    const extra = [...csp(fromVercel()).keys()].filter(
-      (d) => !['frame-ancestors', 'report-uri', 'report-to'].includes(d),
-    );
-    expect(extra, 'directives a meta tag can carry belong in index.html').toEqual([]);
-  });
-
   it('permits every browser feature the code calls', () => {
     const allowed = permissions(fromVercel());
     const missing: string[] = [];
@@ -159,5 +166,136 @@ describe('host security headers', () => {
     // app records audio and scans barcodes, so these two must be seen.
     expect([...found]).toEqual(expect.arrayContaining(['microphone', 'camera']));
     expect(missing).toEqual([]);
+  });
+});
+
+/** The `<meta http-equiv="Content-Security-Policy">` in index.html, as written. */
+function metaPolicy(): string {
+  const html = readFileSync(join(ROOT, 'index.html'), 'utf8');
+  const tags = [
+    ...html.matchAll(/<meta\s+http-equiv="Content-Security-Policy"\s+content="([\s\S]*?)"\s*\/>/gi),
+  ];
+  expect(tags.length, 'index.html should carry exactly one CSP tag').toBe(1);
+  return tags[0][1];
+}
+
+/** A policy with `frame-ancestors` taken out — the one directive a tag cannot carry. */
+function withoutFraming(policy: Map<string, string[]>): Record<string, string[]> {
+  const out = Object.fromEntries(policy);
+  delete out['frame-ancestors'];
+  return out;
+}
+
+const netlifyPolicy = () => parsePolicy(fromNetlify().get('content-security-policy') ?? '');
+const vercelPolicy = () => parsePolicy(fromVercel().get('content-security-policy') ?? '');
+
+describe('the header policy is the tag policy, sent where it can be enforced properly', () => {
+  /*
+   * The finding: the full policy lived only in the <meta> tag, and the header
+   * carried `frame-ancestors` alone. A meta policy ignores `frame-ancestors`,
+   * `report-uri` and `sandbox`, and applies only from the point the parser
+   * reaches it. So on the hosts that can send a header, the whole policy is
+   * sent as one — and the tag stays for GitHub Pages, which cannot.
+   *
+   * Two copies drift, and a drift is not harmless: a browser enforces both
+   * policies, so a source the header lacks is refused even where the tag
+   * allows it, on one host's deployed build only. These tests are what make
+   * the tag the single source of truth.
+   */
+
+  it('public/_headers carries every directive of the tag, source for source, plus frame-ancestors', () => {
+    // Placeholder and all: the build writes the same deployment origins into
+    // both (the `csp()` plugin in vite.config.ts rewrites dist/_headers).
+    expect(withoutFraming(netlifyPolicy())).toEqual(withoutFraming(parsePolicy(metaPolicy())));
+    expect(netlifyPolicy().get('connect-src')).toContain(EXTRA_CONNECT);
+    expect(netlifyPolicy().get('frame-ancestors')).toBeTruthy();
+  });
+
+  it('vercel.json carries the same, less the placeholder it cannot have', () => {
+    /*
+     * Vercel reads vercel.json before the build, so nothing can substitute
+     * into it: a literal `%VITE_…%` would ship as an unparseable source. Its
+     * `connect-src` may be a *superset* of the tag's fixed sources — that is
+     * where a Vercel build's own origin goes when `vercelUncovered` fails the
+     * build — and every other directive must match exactly.
+     */
+    const tag = withoutFraming(parsePolicy(metaPolicy()));
+    const header = withoutFraming(vercelPolicy());
+    expect(JSON.stringify(header)).not.toContain(EXTRA_CONNECT);
+    const tagConnect = (tag['connect-src'] ?? []).filter((s) => s !== EXTRA_CONNECT);
+    const headerConnect = header['connect-src'] ?? [];
+    expect(headerConnect.slice(0, tagConnect.length), "vercel.json connect-src must open with the tag's sources").toEqual(
+      tagConnect,
+    );
+    for (const extra of headerConnect.slice(tagConnect.length)) {
+      // Only a literal https origin may be appended: no wildcard, no scheme-only source.
+      expect(extra, `${extra} is too broad to append to connect-src`).toMatch(/^https:\/\/[a-z0-9-]+(\.[a-z0-9-]+)+$/);
+    }
+    delete tag['connect-src'];
+    delete header['connect-src'];
+    expect(header).toEqual(tag);
+  });
+
+  it('control: the comparison can see a difference', () => {
+    // A parser that returned an empty map for everything would pass both
+    // tests above. Pin that the tag is really read, and that one changed
+    // source really registers as a disagreement.
+    const tag = parsePolicy(metaPolicy());
+    expect(tag.size).toBeGreaterThanOrEqual(10);
+    expect(tag.get('script-src')).toEqual(["'self'"]);
+    const tampered = parsePolicy(metaPolicy().replace("script-src 'self'", "script-src 'self' 'unsafe-inline'"));
+    expect(withoutFraming(tampered)).not.toEqual(withoutFraming(netlifyPolicy()));
+  });
+
+  it('neither header is looser than the tag where it matters most', () => {
+    for (const [name, h] of [
+      ['vercel.json', fromVercel()],
+      ['_headers', fromNetlify()],
+    ] as const) {
+      const p = csp(h);
+      expect(p.get('default-src'), name).toEqual(["'self'"]);
+      expect(p.get('object-src'), name).toEqual(["'none'"]);
+      expect(p.get('script-src'), name).toEqual(["'self'"]);
+      expect(p.get('base-uri'), name).toEqual(["'self'"]);
+      expect(h.get('content-security-policy'), name).not.toContain("'unsafe-eval'");
+    }
+  });
+
+  it('the build substitutes the placeholder in dist/_headers, as it does in the tag', () => {
+    // Vite copies public/ verbatim; only the plugin puts the origins in. If it
+    // goes, Netlify ships a literal placeholder and refuses a Supabase custom
+    // domain the tag allows.
+    const config = readFileSync(join(ROOT, 'vite.config.ts'), 'utf8');
+    expect(config).toMatch(/closeBundle\(\)\s*\{[\s\S]*?_headers[\s\S]*?EXTRA_CONNECT/);
+    expect(config).toContain('vercelUncovered(process.env.VITE_CSP_EXTRA_CONNECT)');
+  });
+});
+
+describe('uncoveredOrigins, which fails a Vercel build its header would break', () => {
+  const sources = ["'self'", 'blob:', 'https://*.supabase.co', 'wss://*.supabase.co', 'https://api.anthropic.com'];
+
+  it('passes what the fixed sources already allow', () => {
+    expect(
+      uncoveredOrigins(sources, 'https://abc.supabase.co wss://abc.supabase.co https://api.anthropic.com'),
+    ).toEqual([]);
+    expect(uncoveredOrigins(sources, '')).toEqual([]);
+  });
+
+  it('names what they do not', () => {
+    // The control: a checker that allowed everything would pass the case above.
+    expect(uncoveredOrigins(sources, 'https://fn.semester.app https://abc.supabase.co')).toEqual([
+      'https://fn.semester.app',
+    ]);
+    // A wildcard matches subdomains, not the bare domain or a lookalike.
+    expect(uncoveredOrigins(sources, 'https://supabase.co https://evilsupabase.co')).toEqual([
+      'https://supabase.co',
+      'https://evilsupabase.co',
+    ]);
+    // The scheme must match: an https source does not allow wss.
+    expect(uncoveredOrigins(['https://x.example'], 'wss://x.example')).toEqual(['wss://x.example']);
+  });
+
+  it("exempts the deployment's own origin, which is 'self'", () => {
+    expect(uncoveredOrigins(sources, 'https://app.vercel.app', ['https://app.vercel.app'])).toEqual([]);
   });
 });
