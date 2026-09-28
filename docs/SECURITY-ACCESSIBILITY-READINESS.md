@@ -25,7 +25,7 @@ This is an index. The claims live in the registers, which are test-checked:
 | Architecture, data flows and retention (`RETENTION.md`, `SECURITY.md`, `docs/UNIVERSITY-OS-ARCHITECTURE.md`) | Yes | **NDA** |
 | CI evidence: policy-suite and accessibility-audit results for a named commit | Yes, on request | **NDA** |
 | Incident response process and notice templates | Yes; never exercised | **NDA** |
-| Security contact and disclosure policy | **No.** No `security.txt` is published | Public, when it exists |
+| Security contact and disclosure policy | Yes: `app/public/.well-known/security.txt` (RFC 9116), with `SECURITY.md` as its policy — the reporting rules, four severities and a remediation target each. Safe-harbour wording waits on counsel | **Public** |
 | Accessibility statement | **No** | Public, when it exists |
 | VPAT / ACR | **No.** Needs a formal evaluation | Public, when it exists |
 | Penetration test report | **No** | NDA, when it exists |

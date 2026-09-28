@@ -49,7 +49,7 @@ control is implemented, and says nothing about whether anybody operates it.
 ## The scorecard
 
 Statuses were read at main commit 68e1342 on 28 September 2026. 26 domains:
-2 at 0, 21 at 1, 3 at 2, none above the ceiling.
+1 at 0, 22 at 1, 3 at 2, none above the ceiling.
 
 | Domain | Score | Overlap | TrustEd rubric | EDUCAUSE 2026 | Rests on (level) |
 | --- | ---: | --- | --- | --- | --- |
@@ -62,7 +62,7 @@ Statuses were read at main commit 68e1342 on 28 September 2026. 26 domains:
 | **Encryption and secrets** | 1 | High | Security Practices Rubric | Student trust and data agency | CRYPTO-1 (1), SDLC-2 (2), IAM-009 (2), DR-04 (0) |
 | **Multi-tenant separation** | 2 | High | Security Practices Rubric | Connected technology ecosystem | TEN-1 (1), IAM-007 (2), IAM-008 (2), UOS-009 (2), FERPA-8 (1) |
 | **Monitoring and logging** | 1 | Medium-high | Security Practices Rubric | Collaborative cybersecurity | LOG-1 (2), MON-1 (1), SEC-006 (1), FERPA-4 (2), SRE-003 (1) |
-| **Vulnerability management** | 0 | High | Security Practices Rubric | Collaborative cybersecurity | VULN-1 (0), VULN-2 (0), SEC-004 (1), SEC-005 (1) |
+| **Vulnerability management** | 1 | High | Security Practices Rubric | Collaborative cybersecurity | VULN-1 (1), VULN-2 (0), SEC-004 (1), SEC-005 (1) |
 | **Incident response** | 1 | High | Security Practices Rubric | Resilient digital services | IR-1 (1), SEC-007 (1), AI-014 (1), FERPA-10 (1) |
 | **Business continuity** | 1 | Medium | Security Practices Rubric | Resilient digital services | BCP-1 (0), SRE-004 (1), SRE-005 (1), SRE-006 (1), EX-05 (1) |
 | **Data inventory and classification** | 1 | High | Data Privacy Rubric | Data foundations and governance | PRIV-1 (2), SEC-008 (1), TRUST-003 (1), RM-01 (1) |
@@ -137,7 +137,7 @@ master rows at P0 not yet tested. Per register, over every row this page names:
 
 ### Data Privacy Rubric
 
-15 items: 10 carried, 4 partly, 1 not carried.
+15 items: 10 carried, 5 partly, 0 not carried.
 
 | Section | Item | Rests on (level) | Standing |
 | --- | --- | --- | --- |
@@ -152,7 +152,7 @@ master rows at P0 not yet tested. Per register, over every row this page names:
 | Deletion and retention | Backup lifecycle and legal-hold override are documented. | RM-02 (0), RM-04 (0), SRE-004 (1) | partly |
 | Policy transparency | Public privacy policy and terms are current, plain-language, versioned and operationally accurate. | LEG-003 (1), PRIV-3 (2) | carried |
 | Policy transparency | Cookies, analytics, advertising and third parties are disclosed. | COPPA-2 (2), PRIV-5 (1) | carried |
-| Policy transparency | A privacy contact and an escalation process are published. | VULN-1 (0) | not carried |
+| Policy transparency | A privacy contact and an escalation process are published. | VULN-1 (1) | partly |
 | Social interactions | Community, club and mentorship data use is disclosed. | TS-1 (1), UOS-003 (1) | partly |
 | Social interactions | Visibility, messaging, reporting, moderation and retention rules are clear. | TS-1 (1) | partly |
 | Social interactions | No undisclosed social-graph analysis or sensitive inference. | FERPA-2 (1), UOS-008 (2) | carried |
@@ -163,9 +163,9 @@ master rows at P0 not yet tested. Per register, over every row this page names:
 
 | Section | Item | Rests on (level) | Standing |
 | --- | --- | --- | --- |
-| Documentation and company information | Security contact, policy set, risk ownership, incident process and external-assessment posture exist. | GOV-1 (1), GOV-2 (0), VULN-1 (0), IR-1 (1) | partly |
+| Documentation and company information | Security contact, policy set, risk ownership, incident process and external-assessment posture exist. | GOV-1 (1), GOV-2 (0), VULN-1 (1), IR-1 (1) | partly |
 | Data | Encryption, access control, separation, backup, retention, secure deletion and sensitive-data handling are documented and tested. | CRYPTO-1 (1), IAM-2 (2), TEN-1 (1), BCP-1 (0), PRIV-2 (2) | carried |
-| Systems management | Secure SDLC, patching, vulnerability management, monitoring, logging, authentication, authorization, incident response and continuity operate. | SDLC-1 (2), SDLC-2 (2), VULN-1 (0), MON-1 (1), LOG-1 (2), IAM-1 (2), IR-1 (1), BCP-1 (0) | carried |
+| Systems management | Secure SDLC, patching, vulnerability management, monitoring, logging, authentication, authorization, incident response and continuity operate. | SDLC-1 (2), SDLC-2 (2), VULN-1 (1), MON-1 (1), LOG-1 (2), IAM-1 (2), IR-1 (1), BCP-1 (0) | carried |
 | Third-party assessment | Cloud and subprocessor inventory, due diligence, contractual controls, attestation review, change notification and an exit plan are maintained. | PRIV-5 (1), SEC-010 (1), EX-10 (0) | partly |
 
 ### Accessibility Rubric
@@ -338,7 +338,7 @@ The quarterly proofs that would carry it are on [`docs/PROOF-CALENDAR.md`](../PR
 
 - **docs/evidence/.** The first artifact filed there lifts the ceiling from 2 to 4 and
   makes a 3 possible; the proof calendar names the first twelve.
-- **A domain at 0** has its middle row at *not started* or *owed*: vulnerability management; physical and workforce security.
+- **A domain at 0** has its middle row at *not started* or *owed*: physical and workforce security.
 - **A domain at 1** has a middle row *in progress* or *designed*: the rows
   above name which, and the register that owns the row names what moves it.
 - **The evidence package.** Four artifacts only a third party can produce (an

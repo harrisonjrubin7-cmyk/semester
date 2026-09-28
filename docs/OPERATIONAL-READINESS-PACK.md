@@ -63,7 +63,7 @@ Ordinary ownership apart from high-risk decision rights. A reviewer is never the
 
 ## The seven pillars of production safety
 
-68 checklist items: 11 at 0, 43 at 1, 14 at 2, none above the ceiling. An item’s level is the
+68 checklist items: 10 at 0, 44 at 1, 14 at 2, none above the ceiling. An item’s level is the
 lower median of the rows it rests on; `gate:` rows are launch gates (unmet 0,
 partial 1, met 2).
 
@@ -129,7 +129,7 @@ partial 1, met 2).
 | Tenant isolation and role authorization have automated positive and negative tests. | IAM-007 (2), IAM-008 (2), TEN-1 (1) | 2 |
 | Private storage, signed URLs, upload validation and content access rules are enforced. | IAM-009 (2) | 2 |
 | Encryption in transit and at rest is verified. | CRYPTO-1 (1) | 1 |
-| Vulnerability, dependency, secrets and infrastructure scanning are enabled and triaged. | SEC-004 (1), VULN-1 (0), SDLC-2 (2) | 1 |
+| Vulnerability, dependency, secrets and infrastructure scanning are enabled and triaged. | SEC-004 (1), VULN-1 (1), SDLC-2 (2) | 1 |
 | Production-access grants are least privilege, time-bound, reason-coded and logged. | IAM-010 (2), IAM-2 (2) | 2 |
 | The data map, retention schedule, deletion and export workflow and legal hold are current. | PRIV-1 (2), PRIV-2 (2), RM-02 (0) | 2 |
 | Subprocessors and AI providers are inventoried and approved. | PRIV-5 (1), AI-002 (1), SEC-010 (1) | 1 |
@@ -170,7 +170,7 @@ partial 1, met 2).
 
 ### User support, accessibility and operational ownership
 
-*Can a student, staff member, institution or operator use the service, get help and understand what happens next?* Required evidence: Accessibility reports, support workflow, knowledge-base inventory, ticket SLA dashboard, training plan, ownership registry. — 2 at 0, 5 at 1, 2 at 2.
+*Can a student, staff member, institution or operator use the service, get help and understand what happens next?* Required evidence: Accessibility reports, support workflow, knowledge-base inventory, ticket SLA dashboard, training plan, ownership registry. — 1 at 0, 6 at 1, 2 at 2.
 
 | Item | Rests on (level) | Level |
 | --- | --- | ---: |
@@ -178,7 +178,7 @@ partial 1, met 2).
 | An accessibility feedback route with triage, remediation, workaround and communication exists. | A11Y-4 (0), A11Y-006 (1) | 0 |
 | A help center, knowledge base, in-product support and customer-admin support exist. | SUP-001 (2), STU-012 (2) | 2 |
 | Support cases have category, severity, owner, target response, escalation and closure. | SUP-1 (1), SUP-001 (2) | 1 |
-| Student support is distinct from institutional technical support and security or privacy contact. | SUP-1 (1), VULN-1 (0) | 0 |
+| Student support is distinct from institutional technical support and security or privacy contact. | SUP-1 (1), VULN-1 (1) | 1 |
 | Every user-facing domain displays source, scope, status and authority where material. | TRUST-001 (2), TRUST-003 (1) | 1 |
 | Empty, loading, permission-denied, error, offline, stale-data and recovery states exist. | UX-001 (2), TRUST-002 (1) | 1 |
 | Implementation, training, hypercare, adoption review and renewal handoff are defined. | IMP-001 (1), SUP-003 (1), gate:onboarding-support (1) | 1 |
@@ -253,14 +253,14 @@ None has an owner, a last-tested date or an escalation path in the pack’s sens
 | **GO WITH CONDITIONS** | No P0 risk remains. Time-bound P1 and P2 conditions have owners, target dates, mitigation, customer communication and executive acceptance. |
 | **NO-GO** | A P0 or unresolved mandatory gate exists: security or privacy breach risk, a critical accessibility failure, data-loss or grade-integrity risk, an unsupported claim, an untested recovery path, or no accountable owner. |
 
-Thirteen areas, each resting on rows and launch gates. **An area’s level is its lowest row**, not a median: one unmet control fails the area, because the pack says an unresolved mandatory gate is NO-GO. A required area at 0 is a failed mandatory gate; at 1 it is a condition. **Today: NO-GO** — 7 areas at 0, 6 at 1, 0 passing.
+Thirteen areas, each resting on rows and launch gates. **An area’s level is its lowest row**, not a median: one unmet control fails the area, because the pack says an unresolved mandatory gate is NO-GO. A required area at 0 is a failed mandatory gate; at 1 it is a condition. **Today: NO-GO** — 6 areas at 0, 7 at 1, 0 passing.
 
 | Area | Gate | Required for GO | Rests on (level) | Lowest |
 | --- | --- | --- | --- | ---: |
 | **Scope** | Enabled and excluded features are explicit. | Yes | PRG-003 (1), PRG-007 (2), gate:known-limitations (2) | 1 |
 | **Ownership** | Product, technical, operational, support, security, privacy and accessibility owners are assigned. | Yes | PRG-001 (1), gate:escalation-owners (1) | 1 |
 | **Data** | Data map, permissions, retention, source and freshness, and export and deletion behaviour are documented. | Yes | PRIV-1 (2), PRIV-2 (2), TRUST-001 (2), gate:data-scope (0) | 0 |
-| **Security** | Authentication, tenant isolation, secrets, logging, vulnerability gates and the incident route are tested. | Yes | IAM-008 (2), SDLC-2 (2), SEC-006 (1), VULN-1 (0), IR-1 (1) | 0 |
+| **Security** | Authentication, tenant isolation, secrets, logging, vulnerability gates and the incident route are tested. | Yes | IAM-008 (2), SDLC-2 (2), SEC-006 (1), VULN-1 (1), IR-1 (1) | 1 |
 | **Accessibility** | Critical workflows are tested; no unresolved critical barrier; alternatives documented. | Yes | A11Y-001 (2), A11Y-3 (0), gate:no-blockers (0) | 0 |
 | **Reliability** | SLOs, monitoring, alerting, status communications, dependency health and runbooks are ready. | Yes | SRE-001 (2), SRE-002 (1), SRE-010 (1), gate:operations-live (1) | 1 |
 | **Recovery** | Backup restore, rollback, reconciliation and failure behaviour are tested. | Yes | SRE-005 (1), BCP-1 (0), gate:backup-restore (1), gate:flags-rollback (1) | 0 |

@@ -1716,7 +1716,47 @@ it.
   says `restore.sh` is not in CI and that no ticketing exists; both are now
   false. `docs/SUPPORT-RELIABILITY-AND-ABUSE-PREVENTION.md` says no status
   page is built; `app/public/status.html` exists.
-## D-114 · The compliance crosswalk computes its scores; the evidence index exists before any evidence; the memo's promises are counted
+
+## D-114 · The security contact is the address the owner has, and the disclosure clocks are the patch policy's
+
+**Decided 28 Sep 2026.** HECVAT VULN-1 ("written severity model and patch
+SLAs, public disclosure contact") had sat at `NOT_STARTED` while the
+repository held both halves of an answer apart: a severity-to-days table in
+`app/src/lib/supplychain.ts` that only the supply-chain register rendered, and
+a contact address in `SECURITY.md` that nothing outside a GitHub reader could
+find. The compliance crosswalk counted the absence three times over.
+
+- **The published security contact is `harrisonjrubin7@gmail.com`**, in
+  `app/public/.well-known/security.txt` (RFC 9116 in form; served under the
+  app's base path, not the origin root a scanner starts from, until the app
+  has a domain of its own)
+  and on the site's `/security/` page — the address the owner actually holds,
+  which the app's privacy page already names. D-110 rejected addresses at a
+  domain the company does not own, and the same reasoning applies with more
+  force to a security contact: an invented one is worse than none. A
+  dedicated address replaces this one in three files when the domain exists,
+  and `app/src/lib/security.test.ts` fails while the three disagree.
+- **One severity model, not two.** `SECURITY.md` carries the four rows of the
+  patch policy — critical 2 days, high 14, medium 60, low 180 — for a report
+  from outside, a Dependabot advisory and the owner's own finding alike, and
+  the test holds the two tables to each other row for row. The clock starts at
+  confirmation. The numbers stay **proposed internal targets** until a security
+  lead accepts them or a contract or `docs/trust/SLA.md` says otherwise, so the
+  public site goes on promising no response time; the one commitment in the
+  file is still the 72-hour notice.
+- **`security.txt` expires** (six months out) and the test goes red the day it
+  does, so renewing it is part of reviewing `SECURITY.md` rather than a
+  memory. VULN-1 moves to `IN_PROGRESS` — the writing is done; the record of
+  findings answered inside their clocks is not — and the rows that said "no
+  security.txt" in the HECVAT draft, the whitepaper, the readiness table and
+  the master register's SEC-004 now say what exists.
+- **Rejected:** a bounty (no money and no triage capacity behind it); an
+  acknowledgement clock in hours or days (one person reads the mailbox, and a
+  number would dress that up); and safe-harbour wording written here (legal
+  language, held to the same counsel as the notification statutes the file
+  already flags as unverified).
+
+## D-115 · The compliance crosswalk computes its scores; the evidence index exists before any evidence; the memo's promises are counted
 
 **Decided 28 Sep 2026.** Nine documents arrived on 28 September — five on
 HECVAT 4, the 1EdTech TrustEd Apps rubrics and the EDUCAUSE 2026 priorities

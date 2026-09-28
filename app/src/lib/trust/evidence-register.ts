@@ -174,9 +174,13 @@ export const EVIDENCE: readonly EvidenceRow[] = [
   {
     id: 'SEC-VULN-001', control: 'Vulnerability management — a finding with no owner and no deadline', rubric: 'security',
     rests: ['VULN-1', 'SEC-004'],
-    evidence: 'Scan report, a severity-to-SLA table, remediation evidence.', frequency: 'Continuous; monthly', owner: 'security', visibility: 'summary', status: 'owed',
-    holds: [{ path: 'SECURITY.md', shows: 'how a report is handled and what is disclosed; no severity model and no remediation clock' }],
-    produce: 'Write the severity model and the clocks into SECURITY.md, publish a security contact, then a monthly report against them.',
+    evidence: 'Scan report, a severity-to-SLA table, remediation evidence.', frequency: 'Continuous; monthly', owner: 'security', visibility: 'summary', status: 'defined',
+    holds: [
+      { path: 'SECURITY.md', shows: 'how a report is made and handled, the four severities and the remediation target each is held to (2, 14, 60, 180 days), the clock starting at confirmation; the targets are proposed, not accepted' },
+      { path: 'app/public/.well-known/security.txt', shows: 'the published disclosure contact, RFC 9116 in form, served under the app\'s base path rather than an origin root' },
+      { path: 'app/src/lib/security.test.ts', shows: 'holds the contact to the privacy page and the site, and the severity table to PATCH_POLICY row for row' },
+    ],
+    produce: 'A security lead accepts or changes the targets; then a monthly report of findings answered inside their clocks, which nothing records today.',
   },
   {
     id: 'SEC-PENT-001', control: 'Independent penetration test — the defect nobody inside would find', rubric: 'security',
