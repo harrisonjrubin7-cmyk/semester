@@ -22,9 +22,9 @@ never a person, and a seat is held only once somebody accepted it in writing.
 
 | Status | Meaning | Entries |
 | --- | --- | ---: |
-| current | Read on the review date, and stands | 27 |
+| current | Read on the review date, and stands | 28 |
 | draft | The authoritative version, but not yet fit to act on | 2 |
-| missing | No authoritative version exists; the gap says what would close it | 5 |
+| missing | No authoritative version exists; the gap says what would close it | 4 |
 | **total** |  | **34** |
 
 `version` counts reviews of the entry — the decision that this path is the
@@ -46,7 +46,7 @@ The nineteen categories the closing brief names, in its order.
 | Claims register | **none** | missing | `founder` | 1 | 2026-09-28 | 2026-10-28 | — | — |
 | Architecture decision records | [`docs/architecture/README.md`](docs/architecture/README.md) | current | `engineering` | 1 | 2026-09-28 | 2026-12-28 | — | `ADR-0001`, `ADR-0002`, `ADR-0003`, `ADR-0004`, `ADR-0005`, `ADR-0006` |
 | Roadmap | [`docs/PRODUCT-ROADMAP.md`](docs/PRODUCT-ROADMAP.md) | current | `product` | 1 | 2026-09-28 | 2026-12-28 | — | `D-002` |
-| Risk register | **none** | missing | `founder` | 1 | 2026-09-28 | 2026-10-28 | — | — |
+| Risk register | [`docs/operating-model/RISK-GOVERNANCE.md`](docs/operating-model/RISK-GOVERNANCE.md) | current | `founder` | 1 | 2026-09-28 | 2026-10-28 | — | — |
 | Design system | [`docs/design/SEMESTER-UI-CONSTITUTION.md`](docs/design/SEMESTER-UI-CONSTITUTION.md) | current | `product` | 1 | 2026-09-28 | 2026-12-28 | — | — |
 | Accessibility register | [`docs/WCAG-UI-AUDIT-SCORECARD.md`](docs/WCAG-UI-AUDIT-SCORECARD.md) | current | `accessibility` | 1 | 2026-09-28 | 2026-10-28 | — | — |
 | Security/compliance evidence index | **none** | missing | `security` | 1 | 2026-09-28 | 2026-10-28 | — | — |
@@ -90,7 +90,7 @@ What the repository also runs on, and the brief’s list did not name.
 - **Claims register** — *missing.* No register maps each external marketing or sales claim to its evidence and approved scope (master register PRG-002). The capability inventory covers product promises only. ops/customer-commitments/ holds promises made to a named customer; the general claims register is still to write. Read next: [`app/src/lib/rollout-capabilities.ts`](app/src/lib/rollout-capabilities.ts), [`docs/launch/CONTENT-READINESS-REGISTER.md`](docs/launch/CONTENT-READINESS-REGISTER.md).
 - **Architecture decision records** — Six records. Product decisions are not here: settled ones are in DECISIONS.md and the programme log is docs/DECISION-LOG.md.
 - **Roadmap** — The unified-platform plan of record. The root-level plans it overtook (IMPLEMENTATION-PLAN.md, COMPLETION-PLAN.md, ACTION-PLAN.md) are not listed as superseded because none carries a redirect yet; D-002 makes that backlog item BL-0.3. Read next: [`docs/90-DAY-LAUNCH-PROGRAM.md`](docs/90-DAY-LAUNCH-PROGRAM.md), [`docs/LMS-LEARNING-ROADMAP.md`](docs/LMS-LEARNING-ROADMAP.md).
-- **Risk register** — *missing.* No risk register exists (master register SEC-001 names its absence). Risk acceptances have a shape in app/src/lib/launchreadiness.ts — founder seat, expiry date, never P0/P1 — but nothing lists the risks themselves with owner, likelihood, impact and treatment. Read next: [`docs/LAUNCH-READINESS-COUNCIL.md`](docs/LAUNCH-READINESS-COUNCIL.md), [`docs/trust/SOC2-READINESS.md`](docs/trust/SOC2-READINESS.md).
+- **Risk register** — Rendered from app/src/lib/governance/risk.ts: seventeen risks with likelihood, impact, tolerance, controls that must exist, residual and an owner seat; the appetite tiers; the exception rules reviewException() enforces (no indefinite exception, 90 days at most, P0 needs executive, security and legal); sixteen game days, none held. Owners are seats, not people, and no exception has been approved. Read next: [`docs/LAUNCH-READINESS-COUNCIL.md`](docs/LAUNCH-READINESS-COUNCIL.md), [`docs/trust/SOC2-READINESS.md`](docs/trust/SOC2-READINESS.md), [`docs/EDGE-CASE-CATALOG.md`](docs/EDGE-CASE-CATALOG.md).
 - **Design system** — The quality contract the pull-request template cites (§9). Tokens live in app/src/styles/, primitives in app/src/components/ui.tsx, and the style and label audits run in `npm run lint`. Read next: [`docs/design/README.md`](docs/design/README.md), [`docs/DO-NOT-BUILD.md`](docs/DO-NOT-BUILD.md).
 - **Accessibility register** — A per-component WCAG 2.2 scorecard where every score cites its test. It is not yet a findings register with remediation dates; the VPAT/ACR (master register A11Y-007) is on the proof calendar. Read next: [`docs/market-readiness/ACCESSIBILITY_READINESS.md`](docs/market-readiness/ACCESSIBILITY_READINESS.md), [`docs/operating-model/ACCESSIBILITY-GOVERNANCE.md`](docs/operating-model/ACCESSIBILITY-GOVERNANCE.md).
 - **Security/compliance evidence index** — *missing.* docs/evidence/ does not exist, and the master register lets no row above `tested` until it does. The trust package (docs/trust/) is the set of documents a reviewer reads; the evidence that any of them is operated has not been produced. docs/PROOF-CALENDAR.md schedules it. Read next: [`docs/trust/README.md`](docs/trust/README.md), [`docs/market-readiness/HECVAT_READINESS.md`](docs/market-readiness/HECVAT_READINESS.md), [`SECURITY.md`](SECURITY.md).

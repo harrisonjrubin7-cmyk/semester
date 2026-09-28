@@ -41,6 +41,8 @@ The central rule, stated once:
 | 18 | SLOs, error budgets and the release rules they impose | [SLOS-AND-ERROR-BUDGETS.md](SLOS-AND-ERROR-BUDGETS.md) | Code: `error-budgets.ts` |
 | 19 | AI lifecycle gates G0–G5 (NIST AI RMF) | [AI-LIFECYCLE-GATES.md](AI-LIFECYCLE-GATES.md) | Code: `ai-lifecycle.ts` |
 | 20 | Release readiness score, proof before scale | [QUALITY-MANAGEMENT.md](QUALITY-MANAGEMENT.md#release-readiness) | Code: `release-readiness.ts` |
+| 21 | Risk register, appetite, exceptions, game days, the maturity crosswalk | [RISK-GOVERNANCE.md](RISK-GOVERNANCE.md) | Code: `risk.ts`; rendered by its test |
+| 22 | Edge-case catalog: which cases have a guard, which are owed | [../EDGE-CASE-CATALOG.md](../EDGE-CASE-CATALOG.md) | Code: `edgecases.ts`; rendered by its test |
 | — | Change management and adoption | [CHANGE-MANAGEMENT.md](CHANGE-MANAGEMENT.md) | Process |
 | — | AI financial sustainability, ROI measurement | [COMMERCIAL-GOVERNANCE.md](COMMERCIAL-GOVERNANCE.md#ai-cost-controls) | Existing metered gateway (ADR 0004) |
 
