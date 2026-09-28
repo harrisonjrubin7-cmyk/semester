@@ -218,6 +218,13 @@ interface Store {
    */
   refresh: () => Promise<string>;
   /**
+   * Send this device's copy to the account now, rather than after the next
+   * edit. Resolves true once the account has it. A reconnect needs this:
+   * `refresh` only pulls, and an edit whose push failed offline would
+   * otherwise wait for another edit before it went up.
+   */
+  pushNow: () => Promise<boolean>;
+  /**
    * Announce one outcome, to the live region and to the change strip.
    *
    * For things somebody would otherwise have to look at the screen to
@@ -1219,6 +1226,19 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [account, edit, asking, lost, failed, online, landed]);
 
+  /*
+   * Push without waiting for the next edit: the offline banner asks for this
+   * when the connection comes back (D-058). It runs the push above rather than
+   * a second one beside it, so there is still one push in flight at a time,
+   * with the same retries. `landed` is what that effect already re-runs on.
+   * Resolves true once a push is asked for, false with no account to push to.
+   */
+  const pushNow = useCallback(async (): Promise<boolean> => {
+    if (!account) return false;
+    setLanded((n) => n + 1);
+    return true;
+  }, [account]);
+
   // The sample is fetched the first time it is switched on, and stays in
   // memory after. It is still never copied into storage — an account holds a
   // flag saying it wants the sample, not 330 KB of somebody else's semester.
@@ -1801,8 +1821,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   );
 
   const value = useMemo(
-    () => ({ state, dispatch, catalog, terms, courseCode, allItems, tint, lastSeen: lastSeen.current, account, sync: shownSync, saveTrouble, refresh, say, school, facts, asking, settle, adopt, review, resolve }),
-    [state, catalog, terms, courseCode, allItems, tint, account, shownSync, saveTrouble, refresh, say, school, facts, asking, settle, adopt, review, resolve],
+    () => ({ state, dispatch, catalog, terms, courseCode, allItems, tint, lastSeen: lastSeen.current, account, sync: shownSync, saveTrouble, refresh, pushNow, say, school, facts, asking, settle, adopt, review, resolve }),
+    [state, catalog, terms, courseCode, allItems, tint, account, shownSync, saveTrouble, refresh, pushNow, say, school, facts, asking, settle, adopt, review, resolve],
   );
   /*
    * The clock is published beside the store, not inside it.

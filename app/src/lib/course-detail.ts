@@ -26,7 +26,17 @@ import type { SourceLabel } from './source';
  * department decides.
  */
 
-const CODE = /\b([A-Z]{2,5})[\s-]?(\d{3,4}[A-Z]?)\b/g;
+// Any case: catalogs write "Econ 1010" and "math-1100" as often as "ECON 1010".
+const CODE = /\b([A-Za-z]{2,5})[\s-]?(\d{3,4}[A-Za-z]?)\b/g;
+// Words that sit before a number in prerequisite prose without being a
+// department: "ECON 1010 or 1020", "any 3000-level course". Written in
+// capitals they are read as a department, since that is how codes look.
+const NOT_A_DEPARTMENT = new Set([
+  'or', 'and', 'nor', 'of', 'in', 'on', 'at', 'by', 'to', 'for', 'from', 'with', 'the', 'plus', 'any', 'one', 'two',
+  'both', 'also', 'then', 'than', 'over', 'under', 'above', 'below', 'level', 'grade', 'min', 'max', 'take', 'taken',
+  'has', 'have', 'into', 'least', 'after', 'before', 'each', 'all', 'some', 'only', 'units', 'hours', 'year', 'fall',
+  'spring', 'summer', 'winter', 'term',
+]);
 
 /** "econ-1010", "ECON1010" and "ECON 1010" are the same course. */
 export function tidyCode(code: string): string {
@@ -35,7 +45,10 @@ export function tidyCode(code: string): string {
 }
 
 function codesIn(text: string): string[] {
-  return [...new Set([...text.matchAll(CODE)].map((m) => `${m[1]} ${m[2]}`))];
+  const codes = [...text.matchAll(CODE)]
+    .filter((m) => m[1] === m[1].toUpperCase() || !NOT_A_DEPARTMENT.has(m[1].toLowerCase()))
+    .map((m) => `${m[1].toUpperCase()} ${m[2].toUpperCase()}`);
+  return [...new Set(codes)];
 }
 
 /**
@@ -131,8 +144,12 @@ export function scheduleFit(course: CatalogCourse, cart: CatalogCourse[], commit
   for (const hit of conflicts([course, ...others]).filter((x) => x.a.id === course.id || x.b.id === course.id)) {
     const other = hit.a.id === course.id ? hit.b : hit.a;
     for (const day of hit.days) {
-      const m = course.meetings.find((x) => x.days.includes(day))!;
-      out.push({ with: `${other.code} (in your cart)`, day, from: m.start, to: m.end, source: 'imported' });
+      // The meeting that overlaps, not the first one that day: a section can
+      // meet twice on a Monday, and only one of those clashes.
+      for (const m of course.meetings.filter((x) => x.days.includes(day))) {
+        const overlaps = other.meetings.some((o) => o.days.includes(day) && m.start < o.end && o.start < m.end);
+        if (overlaps) out.push({ with: `${other.code} (in your cart)`, day, from: m.start, to: m.end, source: 'imported' });
+      }
     }
   }
   for (const c of commitments) {
@@ -269,6 +286,12 @@ export const MAX_COMPARE = 3;
 export interface Shortlist {
   saved: string[];
   compare: string[];
+  /**
+   * The course code each saved id had when it was saved. The store outlives a
+   * catalog import, and another institution's file can reuse an id for an
+   * unrelated section; the code is how a reused id is told apart.
+   */
+  codes?: Record<string, string>;
 }
 
 export const EMPTY_SHORTLIST: Shortlist = { saved: [], compare: [] };
@@ -281,13 +304,37 @@ export function readShortlist(value: unknown): Shortlist {
   if (!obj(value)) throw new Error('The saved courses are not valid.');
   const saved = ids(value.saved, MAX_SAVED);
   const compare = ids(value.compare ?? [], MAX_COMPARE).filter((id) => saved.includes(id));
-  return { saved, compare };
+  if (value.codes === undefined) return { saved, compare };
+  const codes = value.codes;
+  if (!obj(codes) || Object.values(codes).some((c) => typeof c !== 'string' || c.length > 40)) throw new Error('The saved courses are not valid.');
+  return { saved, compare, codes: Object.fromEntries(saved.filter((id) => typeof codes[id] === 'string').map((id) => [id, codes[id] as string])) };
 }
 
-export function toggleSaved(list: Shortlist, id: string): Shortlist {
-  if (list.saved.includes(id)) return { saved: list.saved.filter((x) => x !== id), compare: list.compare.filter((x) => x !== id) };
+/**
+ * The shortlist as it stands against the catalog on this device: a saved id
+ * whose section is gone, or whose id now names a different course, is dropped
+ * — so it neither takes a place in the limit nor makes an unrelated section
+ * look saved.
+ */
+export function liveShortlist(list: Shortlist, catalog: readonly { id: string; code: string }[]): Shortlist {
+  const byId = new Map(catalog.map((c) => [c.id, c]));
+  const keep = (id: string) => {
+    const c = byId.get(id);
+    return c !== undefined && (list.codes?.[id] === undefined || tidyCode(c.code) === list.codes[id]);
+  };
+  const saved = list.saved.filter(keep);
+  const out: Shortlist = { saved, compare: list.compare.filter((id) => saved.includes(id)) };
+  if (list.codes) out.codes = Object.fromEntries(saved.filter((id) => list.codes![id] !== undefined).map((id) => [id, list.codes![id]]));
+  return out;
+}
+
+export function toggleSaved(list: Shortlist, id: string, code?: string): Shortlist {
+  if (list.saved.includes(id)) {
+    const codes = list.codes ? Object.fromEntries(Object.entries(list.codes).filter(([k]) => k !== id)) : undefined;
+    return { saved: list.saved.filter((x) => x !== id), compare: list.compare.filter((x) => x !== id), ...(codes ? { codes } : {}) };
+  }
   if (list.saved.length >= MAX_SAVED) return list;
-  return { ...list, saved: [...list.saved, id] };
+  return { ...list, saved: [...list.saved, id], ...(code ? { codes: { ...list.codes, [id]: tidyCode(code) } } : {}) };
 }
 
 export function toggleCompare(list: Shortlist, id: string): Shortlist {

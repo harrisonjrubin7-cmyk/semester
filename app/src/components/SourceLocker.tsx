@@ -73,8 +73,18 @@ export function SourceLocker({ course }: { course: Course }) {
       setRemoving(null);
       return;
     }
+    // The file goes first, because it is the step that can fail (IndexedDB
+    // can be unavailable). If it does, nothing else has happened yet: the
+    // generated work is still there and the student is told.
+    try {
+      for (const s of steps) if (s.do === 'trashFile') await trashFile(s.id);
+    } catch (e) {
+      setSaid(`${m.title} could not be removed, so nothing was changed. ${e instanceof Error ? e.message : ''}`.trim());
+      setRemoving(null);
+      return;
+    }
     for (const s of steps) {
-      if (s.do === 'trashFile') await trashFile(s.id);
+      if (s.do === 'trashFile') continue;
       else if (s.do === 'detachFile') dispatch({ type: 'detachFile', noteId: s.noteId, fileId: s.fileId });
       else if (s.do === 'deleteUpdate') dispatch({ type: 'deleteUpdate', id: s.id });
       else if (s.do === 'deleteDocument') dispatch({ type: 'deleteDocument', id: s.id });

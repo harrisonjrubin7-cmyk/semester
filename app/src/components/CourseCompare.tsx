@@ -1,5 +1,5 @@
 import { useId } from 'react';
-import { EMPTY_SHORTLIST, MAX_COMPARE, SHORTLIST_KEY, meetingLine, readShortlist, requirementFit, requisites, scheduleFit, toggleCompare, toggleSaved } from '../lib/course-detail';
+import { EMPTY_SHORTLIST, MAX_COMPARE, SHORTLIST_KEY, liveShortlist, meetingLine, readShortlist, requirementFit, requisites, scheduleFit, toggleCompare, toggleSaved, type Shortlist } from '../lib/course-detail';
 import { useDeviceLibrary } from '../lib/device-library';
 import { WIDE, useMedia } from '../lib/media';
 import type { CatalogCourse } from '../lib/registration';
@@ -18,7 +18,8 @@ export function CourseCompare({ catalog, cart, onOpen }: { catalog: CatalogCours
   const { state } = useStore();
   const wide = useMedia(WIDE);
   const headingId = useId();
-  const shortlist = useDeviceLibrary(SHORTLIST_KEY, readShortlist, EMPTY_SHORTLIST);
+  const library = useDeviceLibrary(SHORTLIST_KEY, readShortlist, EMPTY_SHORTLIST);
+  const shortlist = { value: liveShortlist(library.value, catalog), update: (f: (l: Shortlist) => Shortlist) => library.update((l) => f(liveShortlist(l, catalog))) };
   const byId = new Map(catalog.map((c) => [c.id, c]));
   const saved = shortlist.value.saved.map((id) => byId.get(id)).filter((c): c is CatalogCourse => !!c);
   const compared = shortlist.value.compare.map((id) => byId.get(id)).filter((c): c is CatalogCourse => !!c);
@@ -57,7 +58,7 @@ export function CourseCompare({ catalog, cart, onOpen }: { catalog: CatalogCours
               />
               Compare
             </label>
-            <button type="button" aria-label={`Unsave ${c.code} section ${c.section}`} onClick={() => shortlist.update((l) => toggleSaved(l, c.id))}>
+            <button type="button" aria-label={`Unsave ${c.code} section ${c.section}`} onClick={() => shortlist.update((l) => toggleSaved(l, c.id, c.code))}>
               Unsave
             </button>
           </li>

@@ -75,6 +75,12 @@ export interface Scenario {
   abroad?: Abroad;
   /** The id of this draft in the student's account, once saved there. */
   cloudId?: string;
+  /**
+   * Which account `cloudId` belongs to. The scenarios are a device store, so
+   * on a shared browser another account must not be told this draft is in
+   * its account, or update and delete a row it does not own.
+   */
+  cloudOwner?: string;
 }
 
 export interface Abroad {
@@ -162,6 +168,10 @@ export function readGraduation(value: unknown): GraduationData {
     if (s.cloudId !== undefined) {
       if (!textValue(s.cloudId, 64) || !/^[0-9a-f-]{36}$/i.test(s.cloudId)) throw new Error('A saved scenario is not valid.');
       out.cloudId = s.cloudId;
+    }
+    if (s.cloudOwner !== undefined) {
+      if (!textValue(s.cloudOwner, 64) || !s.cloudOwner) throw new Error('A saved scenario is not valid.');
+      out.cloudOwner = s.cloudOwner;
     }
     return out;
   });

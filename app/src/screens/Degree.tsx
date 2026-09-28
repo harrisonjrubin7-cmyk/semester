@@ -116,7 +116,7 @@ export function Degree({ advisorMeeting = moduleOn(MODULE_FLAGS.advisor_meeting_
       {tab === 'taken' ? <Transcript rows={state.taken} /> : null}
       {tab === 'rules' ? <Rules /> : null}
       {tab === 'ahead' ? <GraduationSimulator done={hours(state.taken).withThisTerm} accountId={account?.id ?? null} /> : null}
-      {tab === 'meeting' && advisorMeeting ? <AdvisorMeeting accountId={account?.id ?? null} /> : null}
+      {tab === 'meeting' && advisorMeeting ? <AdvisorMeeting key={account?.id ?? 'device'} accountId={account?.id ?? null} /> : null}
       </>
     </Page>
   );

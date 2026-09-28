@@ -112,4 +112,12 @@ describe('managing and reading', () => {
     reply = { data: [], error: null };
     await expect(shares.openShare('s1')).rejects.toThrow('expired or was revoked');
   });
+
+  it('refuses a share whose snapshot is not one the app made, rather than crashing the view', async () => {
+    reply = { data: [{ title: 'Odd', payload: {}, expires_at: '2026-10-20T00:00:00Z' }], error: null };
+    await expect(shares.openShare('s1')).rejects.toThrow('could not be read');
+    const good = { version: 1, sharedAs: 'Riley', title: 'Spring', date: null, agenda: ['Minor'], questions: [], scenario: null, courses: [], followUps: [] };
+    reply = { data: [{ title: 'Spring', payload: good, expires_at: '2026-10-20T00:00:00Z' }], error: null };
+    await expect(shares.openShare('s1')).resolves.toMatchObject({ payload: good });
+  });
 });

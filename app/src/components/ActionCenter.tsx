@@ -15,6 +15,7 @@ import { useNow, useStore } from '../state/store';
 import { ClarityQuestion } from './ClarityQuestion';
 import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
 import { askForHelp, helpFromAction } from '../lib/help-routes';
+import { requireOnline } from '../lib/offline-mode';
 import { ExplanationSheet } from './ExplanationSheet';
 import { SourceBadge } from './SourceBadge';
 import { ActionButton, SectionLabel } from './ui';
@@ -79,7 +80,17 @@ export function dueLine(action: Action, now: number): string | null {
 function go(action: Action) {
   if (action.primary.kind === 'navigate') {
     location.hash = action.primary.target;
-  } else if (window.confirm(`This opens ${action.primary.target} in your browser. Continue?`)) {
+    return;
+  }
+  // An official site offline would open a page that cannot load, and with
+  // offline mode on, the hand-off is refused like every other (Phase M).
+  try {
+    requireOnline('handoff');
+  } catch (e) {
+    window.alert(e instanceof Error ? e.message : String(e));
+    return;
+  }
+  if (window.confirm(`This opens ${action.primary.target} in your browser. Continue?`)) {
     window.open(action.primary.target, '_blank', 'noopener,noreferrer');
   }
 }

@@ -7,6 +7,7 @@ import {
   careerDirections,
   catalogAge,
   describedSkills,
+  liveShortlist,
   planImpact,
   readRequisites,
   readShortlist,
@@ -83,6 +84,14 @@ describe('prerequisites', () => {
     expect(r.unread).toBe(false);
   });
 
+  it('reads codes written in any case, as the same course', () => {
+    expect(readRequisites('Econ 1010 and math-1100').prerequisites).toEqual(['ECON 1010', 'MATH 1100']);
+  });
+
+  it('does not read ordinary words before a number as a department (the control)', () => {
+    expect(readRequisites('ECON 1010 or 1020; any 3000 level course').prerequisites).toEqual(['ECON 1010']);
+  });
+
   it('says when the wording holds conditions it cannot read', () => {
     expect(requisites(course({ prerequisites: 'ECON 1010 or consent of instructor; junior standing' }), [], []).unread).toBe(true);
     expect(requisites(course({ prerequisites: 'None stated' }), [], []).unread).toBe(false);
@@ -115,6 +124,12 @@ describe('schedule fit', () => {
       ['PSCI 1100 (in your cart)', 1, 'imported'],
       ['Library desk', 3, 'student_entered'],
     ]);
+  });
+
+  it('names the meeting that actually overlaps when a section meets twice a day', () => {
+    const twice = course({ meetings: [{ days: [1], start: 9 * 60, end: 10 * 60 }, { days: [1], start: 14 * 60, end: 15 * 60 }] });
+    const clash = course({ id: 'b', code: 'PSCI 1100', meetings: [{ days: [1], start: 14 * 60 + 30, end: 15 * 60 + 30 }] });
+    expect(scheduleFit(twice, [clash], []).map((c) => [c.day, c.from, c.to])).toEqual([[1, 14 * 60, 15 * 60]]);
   });
 
   it('ignores another section of the same course, which is a swap, not a clash', () => {
@@ -228,5 +243,17 @@ describe('the shortlist', () => {
     expect(readShortlist({ saved: ['a', 'b'], compare: ['b', 'z'] })).toEqual({ saved: ['a', 'b'], compare: ['b'] });
     expect(() => readShortlist({ saved: [3] })).toThrow();
     expect(() => readShortlist(null)).toThrow();
+  });
+
+  it('holds against the catalog on the device: gone or reused ids count for nothing', () => {
+    let l = EMPTY_SHORTLIST;
+    l = toggleSaved(l, 's1', 'econ-1010');
+    l = toggleSaved(l, 's2', 'MATH 1100');
+    expect(readShortlist(JSON.parse(JSON.stringify(l)))).toEqual(l);
+    // A new school's file: s1 is gone, and s2 now names a different course.
+    const next = [{ id: 's2', code: 'HIST 2000' }, { id: 's3', code: 'ECON 1010' }];
+    expect(liveShortlist(l, next).saved).toEqual([]);
+    // The same catalog keeps both (the control).
+    expect(liveShortlist(l, [{ id: 's1', code: 'ECON 1010' }, { id: 's2', code: 'MATH 1100' }]).saved).toEqual(['s1', 's2']);
   });
 });

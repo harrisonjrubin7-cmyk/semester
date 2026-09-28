@@ -251,6 +251,23 @@ export interface OpenBlock {
   source: Extract<SourceLabel, 'student_entered' | 'estimated'>;
 }
 
+/** The parts of a window outside the protected floor, when it is on. */
+function offTheFloor(w: { from: number; to: number }, floor: Floor): { from: number; to: number }[] {
+  if (!floor.on || floor.from === floor.to) return [{ from: w.from, to: w.to }];
+  const night = floor.from < floor.to ? [[floor.from, floor.to]] : [[floor.from, 24 * 60], [0, floor.to]];
+  let parts = [{ from: w.from, to: w.to }];
+  for (const [a, b] of night) {
+    parts = parts.flatMap((p) => {
+      if (b <= p.from || a >= p.to) return [p];
+      return [
+        ...(a > p.from ? [{ from: p.from, to: a }] : []),
+        ...(b < p.to ? [{ from: b, to: p.to }] : []),
+      ];
+    });
+  }
+  return parts;
+}
+
 /**
  * Open blocks of an hour or more: inside the student's work windows where they
  * set any for this weekday, else inside the waking day — and outside every
@@ -259,7 +276,9 @@ export interface OpenBlock {
 export function openBlocks(spans: Span[], windows: Window[], floor: Floor, dow: number): OpenBlock[] {
   const theirs = windows.filter((w) => w.days.includes(dow) && w.to > w.from);
   const waking = wakingDay(floor);
-  const frames: { from: number; to: number }[] = theirs.length ? theirs.map((w) => ({ from: w.from, to: w.to })) : [waking];
+  // A work window the student set is still kept off the protected floor:
+  // 19:00–24:00 with a 23:00–07:00 floor is open until 23:00, not midnight.
+  const frames: { from: number; to: number }[] = theirs.length ? theirs.flatMap((w) => offTheFloor(w, floor)) : [waking];
   const source: OpenBlock['source'] = theirs.length ? 'student_entered' : 'estimated';
   const busy = [...spans].sort((x, y) => x.from - y.from);
   const out: OpenBlock[] = [];

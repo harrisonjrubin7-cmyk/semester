@@ -137,6 +137,15 @@ describe('where a launch lands', () => {
  * is the whole point.
  */
 const NOT_CONTENT = new Set([
+  /*
+   * Course demand (Phase K). The plan rows are a copy of the registration
+   * cart, which lives on the device, sent only to be counted; the consent is
+   * a record that the student agreed. Neither is work that exists nowhere
+   * else, and both are listed in `OWNED_TABLES` only so Delete my account
+   * removes them.
+   */
+  'demand_consents',
+  'term_plan_courses',
   'push_devices',
   'push_queue',
   'access_log',

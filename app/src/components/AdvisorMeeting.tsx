@@ -2,7 +2,7 @@ import { useCallback, useEffect, useId, useMemo, useState } from 'react';
 import {
   EMPTY_MEETINGS,
   LIMITS,
-  MEETING_KEY,
+  meetingKey,
   meetingSummary,
   newMeeting,
   payloadLines,
@@ -56,7 +56,7 @@ const day = (iso: string) => new Date(iso).toLocaleDateString('en-US', { month: 
 export function AdvisorMeeting({ accountId }: { accountId: string | null }) {
   const { state } = useStore();
   const now = useNow();
-  const library = useDeviceLibrary(MEETING_KEY, readMeetings, EMPTY_MEETINGS);
+  const library = useDeviceLibrary(meetingKey(accountId), readMeetings, EMPTY_MEETINGS);
   const meetings = library.value.meetings;
   const [openId, setOpenId] = useState<string | null>(null);
   const meeting = meetings.find((m) => m.id === openId) ?? meetings[0] ?? null;
@@ -98,7 +98,7 @@ export function AdvisorMeeting({ accountId }: { accountId: string | null }) {
           Prepare a meeting
         </button>
         {library.error ? <p role="alert">{library.error}</p> : null}
-        <AdvisorSharedView signedIn={Boolean(accountId)} />
+        <AdvisorSharedView key={accountId ?? 'signed-out'} signedIn={Boolean(accountId)} />
       </section>
     );
   }
@@ -333,13 +333,14 @@ export function AdvisorMeeting({ accountId }: { accountId: string | null }) {
           >
             Preview and share…
           </button>
-          <SharingPanel refresh={refresh} onSaid={setSaid} />
+          {/* Keyed by account: after a switch on a shared device it starts empty and reloads, never showing the last account's shares. */}
+          <SharingPanel key={accountId} refresh={refresh} onSaid={setSaid} />
         </>
       ) : (
         <p className="portal-muted">Sign in to share with an advisor. You can still download or print the summary and bring it.</p>
       )}
 
-      <AdvisorSharedView signedIn={Boolean(accountId)} />
+      <AdvisorSharedView key={accountId ?? 'signed-out'} signedIn={Boolean(accountId)} />
 
       {confirm === 'download' || confirm === 'print' ? (
         <ConfirmDialog

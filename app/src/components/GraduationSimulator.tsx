@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { ConfirmDialog } from './ConfirmDialog';
 import { CostPlanner } from './CostPlanner';
 import { ScenarioComparison } from './ScenarioComparison';
-import { totals, type CostLine } from '../lib/cost-plan';
+import { startItemising, totals, type CostLine } from '../lib/cost-plan';
 import { MODULE_FLAGS, moduleOn } from '../lib/experience-flags';
 import { deleteDraft, draftPreview, draftRow, saveDraft } from '../lib/graduation-cloud';
 import { MORE_PRESETS, comparisonText } from '../lib/scenario-compare';
@@ -70,21 +70,30 @@ export function GraduationSimulator({
   const compared = data.scenarios.find((s) => s.id === compareId) ?? data.scenarios[0] ?? null;
 
   const setPlan = (patch: Partial<Plan>) => library.update((d) => ({ ...d, plan: { ...d.plan, ...patch } }));
-  const setCostLines = (lines: CostLine[]) => {
-    const t = totals(lines);
-    setPlan({ costLines: lines, costPerTerm: t.perTerm, summerCost: t.summer });
-  };
-  const setCloudId = (id: string, cloudId: string | undefined) =>
+  const setCostLines = (lines: CostLine[]) =>
+    library.update((d) => {
+      const kept = startItemising(d.plan.costLines ?? [], lines, { perTerm: d.plan.costPerTerm, summer: d.plan.summerCost });
+      const t = totals(kept);
+      return { ...d, plan: { ...d.plan, costLines: kept, costPerTerm: t.perTerm, summerCost: t.summer } };
+    });
+  const setCloudId = (id: string, cloudId: string | undefined, owner: string | null) =>
     library.update((d) => ({
       ...d,
       scenarios: d.scenarios.map((x) => {
         if (x.id !== id) return x;
         const next = { ...x };
-        if (cloudId) next.cloudId = cloudId;
-        else delete next.cloudId;
+        if (cloudId && owner) {
+          next.cloudId = cloudId;
+          next.cloudOwner = owner;
+        } else {
+          delete next.cloudId;
+          delete next.cloudOwner;
+        }
         return next;
       }),
     }));
+  // A draft is in this account only if this account saved it.
+  const inAccount = (s: Scenario): string | undefined => (s.cloudId && accountId && s.cloudOwner === accountId ? s.cloudId : undefined);
 
   const confirmed = async () => {
     const c = confirm;
@@ -92,12 +101,12 @@ export function GraduationSimulator({
     if (!c) return;
     try {
       if (c.kind === 'save' && accountId) {
-        const id = await saveDraft(accountId, draftRow(plan, done, c.scenario), c.scenario.cloudId);
-        setCloudId(c.scenario.id, id);
+        const id = await saveDraft(accountId, draftRow(plan, done, c.scenario), inAccount(c.scenario));
+        setCloudId(c.scenario.id, id, accountId);
         setStatus(`“${c.scenario.name}” saved to your account as an estimate.`);
-      } else if (c.kind === 'unsave' && c.scenario.cloudId) {
-        await deleteDraft(c.scenario.cloudId);
-        setCloudId(c.scenario.id, undefined);
+      } else if (c.kind === 'unsave' && inAccount(c.scenario)) {
+        await deleteDraft(inAccount(c.scenario)!);
+        setCloudId(c.scenario.id, undefined, null);
         setStatus(`“${c.scenario.name}” removed from your account. It is still on this device.`);
       } else if (c.kind === 'share') {
         try {
@@ -368,7 +377,7 @@ export function GraduationSimulator({
                     </button>
                   ) : null}
                   {simulator && accountId ? (
-                    s.cloudId ? (
+                    inAccount(s) ? (
                       <>
                         <button onClick={() => setConfirm({ kind: 'save', scenario: s })}>Update in your account</button>
                         <button onClick={() => setConfirm({ kind: 'unsave', scenario: s })}>Remove from account</button>
@@ -381,7 +390,7 @@ export function GraduationSimulator({
                     Remove
                   </button>
                 </div>
-                {simulator && s.cloudId ? <p className="portal-muted">Saved to your account as an estimate.</p> : null}
+                {simulator && inAccount(s) ? <p className="portal-muted">Saved to your account as an estimate.</p> : null}
               </article>
             );
           })

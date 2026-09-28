@@ -17,6 +17,13 @@ import { obj, textValue } from './device-library';
  */
 
 export const MEETING_KEY = 'semester.advisor-meeting.v1';
+
+/**
+ * The store for one account on this device, or for the signed-out device.
+ * Meeting preparation — private notes included — is a person's own, so two
+ * accounts on a shared browser never read each other's.
+ */
+export const meetingKey = (accountId: string | null | undefined): string => `${MEETING_KEY}:${accountId || 'device'}`;
 export const LIMITS = { meetings: 20, items: 30, text: 500, title: 120, courses: 12 } as const;
 
 export interface Line {
@@ -104,6 +111,30 @@ export function readMeetings(value: unknown): MeetingLibrary {
   return { version: 1, meetings };
 }
 
+/**
+ * The library as it may leave the device in a backup: every private note
+ * emptied. Notes are promised to stay on this device.
+ */
+export function withoutNotes(library: MeetingLibrary): MeetingLibrary {
+  return { version: 1, meetings: library.meetings.map((m) => ({ ...m, notes: '' })) };
+}
+
+/**
+ * A restored library, keeping the private notes this device already has for
+ * the same meetings — a backup never carried them, so restoring one must not
+ * erase them.
+ */
+export function keepNotes(incoming: MeetingLibrary, existing: unknown): MeetingLibrary {
+  let before: MeetingLibrary;
+  try {
+    before = readMeetings(existing);
+  } catch {
+    return incoming;
+  }
+  const notes = new Map(before.meetings.map((m) => [m.id, m.notes]));
+  return { version: 1, meetings: incoming.meetings.map((m) => ({ ...m, notes: m.notes || notes.get(m.id) || '' })) };
+}
+
 export function newMeeting(now: number): Meeting {
   return {
     id: crypto.randomUUID(),
@@ -164,6 +195,44 @@ export function sharePayload(
 }
 
 /** The payload in words — the preview before a share, and the advisor's view. */
+/**
+ * A shared snapshot as it comes back from the database. The table accepts any
+ * JSON object, and a student can call the share function directly, so what an
+ * advisor opens is checked here before anything reads a field of it.
+ */
+export function readSharePayload(value: unknown): SharePayload {
+  const bad = () => new Error('This share could not be read. Ask the student to share it again.');
+  const texts = (v: unknown, max: number = LIMITS.items): string[] => {
+    if (!Array.isArray(v) || v.length > max || v.some((x) => !textValue(x, LIMITS.text))) throw bad();
+    return v as string[];
+  };
+  if (!obj(value) || value.version !== 1 || !textValue(value.sharedAs, LIMITS.title) || !textValue(value.title, LIMITS.title)) throw bad();
+  if (value.date !== null && !textValue(value.date, 10)) throw bad();
+  let scenario: AttachedScenario | null = null;
+  if (value.scenario !== null) {
+    const sc = value.scenario;
+    if (!obj(sc) || !textValue(sc.name, LIMITS.title)) throw bad();
+    scenario = { name: sc.name, lines: texts(sc.lines, 60) };
+  }
+  if (!Array.isArray(value.courses) || value.courses.length > LIMITS.courses) throw bad();
+  const courses = value.courses.map((c): AttachedCourse => {
+    if (!obj(c) || !textValue(c.code, 40) || !textValue(c.section, 40) || !textValue(c.title, 200) || !textValue(c.meets, 200)) throw bad();
+    if (typeof c.credits !== 'number' || !Number.isFinite(c.credits)) throw bad();
+    return { code: c.code, section: c.section, title: c.title, credits: c.credits, meets: c.meets };
+  });
+  return {
+    version: 1,
+    sharedAs: value.sharedAs,
+    title: value.title,
+    date: value.date as string | null,
+    agenda: texts(value.agenda),
+    questions: texts(value.questions),
+    scenario,
+    courses,
+    followUps: texts(value.followUps),
+  };
+}
+
 export function payloadLines(p: SharePayload): { heading: string; items: string[] }[] {
   return [
     { heading: 'Agenda', items: p.agenda },
