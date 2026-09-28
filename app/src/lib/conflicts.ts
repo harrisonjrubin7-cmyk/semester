@@ -1,4 +1,5 @@
 import { idOf, labelFor, stamp, strategyFor } from './merge';
+import { formatDateTime } from './locale';
 
 /**
  * Two devices edited the same thing, and the student gets to choose.
@@ -444,7 +445,7 @@ function describeTick(id: string, value: unknown): { kind: string; title: string
   let preview: string;
   if (value === undefined || value === null) preview = 'Not set';
   else if (typeof value === 'boolean') preview = value ? 'Yes' : 'No';
-  else if (typeof value === 'number') preview = value > 1e11 ? new Date(value).toLocaleString() : String(value);
+  else if (typeof value === 'number') preview = value > 1e11 ? formatDateTime(value) : String(value);
   else if (typeof value === 'string') preview = value.length > 60 ? `${value.slice(0, 59)}…` : value || 'Empty';
   else preview = 'Set';
   if (field === 'done' || field === 'saved' || field === 'visited' || field === 'feedHidden') {

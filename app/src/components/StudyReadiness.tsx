@@ -1,3 +1,4 @@
+import { formatDate } from '../lib/locale';
 import { useId, useMemo, useState } from 'react';
 import { useDeviceLibrary } from '../lib/device-library';
 import { useLive } from '../lib/live';
@@ -146,7 +147,7 @@ export function StudyReadiness({ course }: { course: Course }) {
         <ul className="readiness-materials">
           {papers.slice(0, 5).map((p) => (
             <li key={p.id}>
-              {p.title}: {p.got} of {p.outOf} on {new Date(p.at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+              {p.title}: {p.got} of {p.outOf} on {formatDate(new Date(p.at), { month: 'short', day: 'numeric' })}
               {p.missed.length ? `, ${p.missed.length} to look back at` : ''}
             </li>
           ))}

@@ -36,6 +36,7 @@ import { Folding } from '../components/Fold';
 import { NeedsKey } from '../components/NeedsKey';
 import { reviewReady } from '../lib/import-review';
 import { DOCUMENTS } from '../lib/extract';
+import { formatNumber } from '../lib/locale';
 
 /**
  * What the picker will offer.
@@ -266,7 +267,7 @@ export function Import() {
     setFiles((f) => [...f.filter((x) => x.name !== read.name), read]);
     setPasted('');
     setPasting(false);
-    say(`${read.words.toLocaleString()} words taken. Build the course when you are ready.`);
+    say(`${formatNumber(read.words)} words taken. Build the course when you are ready.`);
   };
 
   /**
@@ -300,7 +301,7 @@ export function Import() {
       }
       setFiles((f) => [...f.filter((x) => x.name !== read.name), read]);
       setShots([]);
-      say(`${read.words.toLocaleString()} words read off the photographs. Check them before building.`);
+      say(`${formatNumber(read.words)} words read off the photographs. Check them before building.`);
     } catch (e) {
       setFailedAt('photos');
       trouble.failed(e, () => void readShotsIn());
@@ -729,7 +730,7 @@ export function Import() {
             {f.name}
           </span>
           <span style={{ fontSize: 'var(--type-xs)', color: 'var(--app-dim)', flex: 'none' }}>
-            {f.words.toLocaleString()} words
+            {formatNumber(f.words)} words
           </span>
           <button
             type="button"
@@ -783,7 +784,7 @@ export function Import() {
               tone="primary"
               style={{ fontSize: 'var(--type-lg)', marginTop: 'calc(14px * var(--density, 1))' }}
             >
-              {busy && !busy.startsWith('Reading ') ? busy : `Build the course from ${words.toLocaleString()} words`}
+              {busy && !busy.startsWith('Reading ') ? busy : `Build the course from ${formatNumber(words)} words`}
             </ActionButton>
           ) : (
             <NeedsKey also={NO_KEY_HERE} />

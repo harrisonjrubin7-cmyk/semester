@@ -1,3 +1,4 @@
+import { dateToIso } from '../lib/date';
 import { useEffect, useState } from 'react';
 import type { AthleticsLibrary } from '../lib/athletics';
 import {
@@ -99,7 +100,7 @@ export function SupportPayloadView({ payload }: { payload: SupportPayload }) {
 const inDays = (today: string, n: number) => {
   const d = new Date(`${today}T12:00`);
   d.setDate(d.getDate() + n);
-  return d.toLocaleDateString('en-CA');
+  return dateToIso(d);
 };
 
 /**
@@ -107,7 +108,7 @@ const inDays = (today: string, n: number) => {
  * opened and stop it. Nothing is sent until the preview is confirmed, and
  * nothing is sent anywhere but to the one person named.
  */
-export function AthleteShare({ library, today = new Date().toLocaleDateString('en-CA') }: { library: AthleticsLibrary; today?: string }) {
+export function AthleteShare({ library, today = dateToIso(new Date()) }: { library: AthleticsLibrary; today?: string }) {
   const { account, catalog } = useStore();
   const now = useNow();
   const [chosen, setChosen] = useState<AthleteShareable[]>([]);

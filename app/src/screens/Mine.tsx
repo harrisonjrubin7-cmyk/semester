@@ -11,7 +11,7 @@ import { ActionButton, EmptyState, FilePick, SectionLabel, Segmented, TickBox } 
 import { ChevronRight, Plus, StarIcon } from '../components/Icons';
 import { addFile, formatBytes, listFiles, openFile, type FileMeta } from '../lib/files';
 import { Drive } from './mine/Drive';
-import { dateToIso, isoToDate, longLabel } from '../lib/date';
+import { dateToIso, isoToDate, longLabel, shownTime } from '../lib/date';
 import { codeOf } from '../lib/call';
 import { DIMMED_ROW, secondLine } from '../lib/dim';
 import type { CourseId, Note, PersonalTask } from '../lib/types';
@@ -368,7 +368,7 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
             {t.courseId ? courseCode(t.courseId) : 'Personal'}
           </span>
           {t.date ? longLabel(isoToDate(t.date)) : 'No date'}
-          {t.time ? ` \u00b7 ${t.time}` : ''}
+          {t.time ? ` \u00b7 ${shownTime(t.time)}` : ''}
           {/* Only the first letter: `describe` returns a sentence, and
               lower-casing the whole of it turned December into december. */}
           {t.repeat ? ` \u00b7 ${lowerFirst(describeRepeat(t.repeat))}` : ''}
@@ -1043,7 +1043,7 @@ function AppointmentRow({ appointment: a }: { appointment: Appointment }) {
       }}
     >
       <div style={{ width: 52, flex: 'none', fontFamily: 'var(--font-heading)', lineHeight: 'var(--leading-display-lg)' }}>
-        <div style={{ fontSize: 'var(--type-display-xs)' }}>{a.time}</div>
+        <div style={{ fontSize: 'var(--type-display-xs)' }}>{shownTime(a.time)}</div>
         <div style={{ fontSize: 'var(--type-2xs)', color: 'var(--app-dim)', letterSpacing: '0.1em' }}>
           {longLabel(isoToDate(a.date)).replace(/^\w+ /, '')}
         </div>

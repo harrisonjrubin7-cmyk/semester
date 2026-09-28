@@ -30,7 +30,7 @@
  * is either the rule or a row, never a half-detached third thing.
  */
 
-import { isoToDate, shiftIso } from './date';
+import { dayMonthLong, isoToDate, shiftIso } from './date';
 
 export type Every = 'daily' | 'weekdays' | 'weekly' | 'fortnightly' | 'monthly';
 
@@ -179,32 +179,19 @@ export function howMany(from: string, repeat: Repeat | undefined, toIso: string)
   return occurrences(from, repeat, from, toIso).length;
 }
 
-/*
- * Written out rather than read off `lib/date.ts`'s `MONTHS`, which holds the
- * three-letter forms the grids use. A sentence wants the whole word.
+/**
+ * The rule as a sentence — "Every week until 12 December".
+ *
+ * The date is the whole word, as a sentence wants: `dayMonthLong`, which also
+ * follows a chosen locale. This file used to keep its own twelve month names
+ * for it — one more of the copies `date.ts` warns about.
  */
-const MONTH_NAMES = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
-];
-
-/** The rule as a sentence — "Every week until 12 December". */
 export function describe(repeat: Repeat | undefined): string {
   if (!repeat) return 'Once';
   const said = everyNamed(repeat.every).label;
   if (!real(repeat.until)) return said;
   const d = isoToDate(repeat.until);
-  return `${said} until ${d.getDate()} ${MONTH_NAMES[d.getMonth()]}`;
+  return `${said} until ${dayMonthLong(d)}`;
 }
 
 /**

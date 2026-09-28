@@ -1,3 +1,4 @@
+import { formatDate } from '../lib/locale';
 import { useEffect, useState } from 'react';
 import { offline } from '../lib/offline';
 import { ELIGIBILITY, programName, whyYouSee, type EligibilityKey, type OfficeAction } from '../lib/office-actions';
@@ -8,7 +9,7 @@ import { ConfirmDialog } from './ConfirmDialog';
 import { SourceBadge } from './SourceBadge';
 
 export const dueLine = (at: number | null) =>
-  at === null ? null : `Due ${new Date(at).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' })}`;
+  at === null ? null : `Due ${formatDate(new Date(at), { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' })}`;
 
 type Confirm =
   | { kind: 'open'; action: OfficeAction }

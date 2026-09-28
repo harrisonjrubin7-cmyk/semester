@@ -18,6 +18,7 @@ import { ScoreShot } from '../components/ScoreShot';
 import { configured } from '../lib/assistant';
 import { datedItems } from '../lib/select';
 import { isExam } from '../lib/runway';
+import { formatDate } from '../lib/locale';
 
 /**
  * What you have, and what the rest has to be.
@@ -448,7 +449,7 @@ export function Grades() {
 function PaperTag({ paper }: { paper: Sitting }) {
   const { dispatch } = useStore();
   const [armed, setArmed] = useState(false);
-  const when = new Date(paper.at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  const when = formatDate(paper.at, { month: 'short', day: 'numeric' });
 
   return (
     <button

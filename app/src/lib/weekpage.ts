@@ -28,7 +28,8 @@
  * alike, grouped by the day they fall on.
  */
 
-import { DOW, MONTHS, dateToIso, sameDay } from './date';
+import { dateToIso, monthDay, sameDay, weekdayDay } from './date';
+import { appLocale, formatDate } from './locale';
 import type { DatedItem, PersonalTask } from './types';
 
 export interface DayDue {
@@ -87,7 +88,7 @@ export function dueByDay(
     const iso = dateToIso(date);
     return {
       date,
-      label: `${DOW[date.getDay()]} ${date.getDate()}`,
+      label: weekdayDay(date),
       items: items.filter((i) => sameDay(i.date, date)),
       tasks: tasks.filter((t) => t.date === iso),
     };
@@ -100,9 +101,11 @@ export function weekLabel(start: Date, span: Span = 7): string {
   const end = dates[dates.length - 1];
   const tail =
     start.getMonth() === end.getMonth()
-      ? `${end.getDate()}`
-      : `${MONTHS[end.getMonth()]} ${end.getDate()}`;
-  return `${MONTHS[start.getMonth()]} ${start.getDate()} – ${tail}`;
+      ? appLocale()
+        ? formatDate(end, { day: 'numeric' })
+        : `${end.getDate()}`
+      : monthDay(end);
+  return `${monthDay(start)} – ${tail}`;
 }
 
 /**

@@ -202,6 +202,7 @@ import {
 import { pictureFileName, standalone } from '../lib/svgout';
 import { handOver } from '../lib/draft.hook';
 import type { Menu } from '../lib/menus';
+import { formatDate } from '../lib/locale';
 
 /**
  * A sheet, or a table.
@@ -710,10 +711,7 @@ function Shelf() {
                             sheet.courseId ? courseCode(sheet.courseId) : 'Personal',
                             forLine(allItems, sheet.itemId),
                             size.rows === 0 ? 'empty' : `${size.rows} × ${size.cols}`,
-                            new Date(order === 'edited' ? sheet.updated : seenAt(sheet)).toLocaleDateString(
-                              undefined,
-                              { month: 'short', day: 'numeric' },
-                            ),
+                            formatDate(order === 'edited' ? sheet.updated : seenAt(sheet), { month: 'short', day: 'numeric' }),
                           ]
                             .filter(Boolean)
                             .join(' · ')}

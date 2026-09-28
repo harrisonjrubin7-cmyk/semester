@@ -1,5 +1,6 @@
 import { finite, isoDay, obj, textValue } from './device-library';
 import { safeUrl } from './apply';
+import { LEARNER_TEMPLATES } from './learner-pathways';
 
 /**
  * The parts of a degree that are longer than a term.
@@ -280,7 +281,8 @@ export function newPathwayProject(kind: string): PathwayProject {
     title: kind,
     kind,
     notes: '',
-    steps: (PATHWAY_TEMPLATES[kind] || []).map((title) => ({
+    // The learner-pathway checklists live beside these, in `learner-pathways.ts`.
+    steps: (PATHWAY_TEMPLATES[kind] || LEARNER_TEMPLATES[kind] || []).map((title) => ({
       id: crypto.randomUUID(),
       title,
       owner: '',

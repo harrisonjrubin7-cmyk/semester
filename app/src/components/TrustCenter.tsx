@@ -1,3 +1,4 @@
+import { formatDate, formatDateTime } from '../lib/locale';
 import { useEffect, useState } from 'react';
 import { shareState, type ShareRow } from '../lib/advisor-shares';
 import { myShares, revokeShare } from '../lib/advisor-shares';
@@ -12,8 +13,8 @@ import { useNow, useStore } from '../state/store';
 import { ConfirmDialog } from './ConfirmDialog';
 import { SourceBadge } from './SourceBadge';
 
-const when = (at: number) => new Date(at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
-const day = (iso: string) => new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+const when = (at: number) => formatDateTime(new Date(at), { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+const day = (iso: string) => formatDate(new Date(iso), { month: 'short', day: 'numeric', year: 'numeric' });
 
 /** Conversations kept on this device (`lib/threads.ts`), counted; null when there are none. */
 function conversationsOnDevice(): { threads: number; messages: number } | null {

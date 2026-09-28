@@ -94,6 +94,18 @@ export function readMoney(text: string): number | null {
  * The minus sign is U+2212, not a hyphen: it is the one that lines up with
  * digits in a tabular-nums column.
  */
+/**
+ * Whole US dollars, grouped by hand for the same reason `money` is: the
+ * figure is dollars whatever the student's format choice, and a locale's
+ * grouping beside a "$" reads as a different amount. `$-1,234` for a
+ * negative, which is what the callers it replaced wrote.
+ */
+export function dollars(n: number): string {
+  const r = Math.round(n);
+  const whole = String(Math.abs(r)).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return `$${r < 0 ? '-' : ''}${whole}`;
+}
+
 export function money(cents: number): string {
   const sign = cents < 0 ? '−' : '';
   const abs = Math.abs(cents);

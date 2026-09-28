@@ -1,3 +1,4 @@
+import { formatDate } from '../lib/locale';
 import { useEffect, useMemo, useState } from 'react';
 import {
   DEMAND_SOURCE_LINE,
@@ -12,7 +13,7 @@ import { useRegistrationPlan } from '../lib/registration-plan';
 import { useStore } from '../state/store';
 import { ConfirmDialog } from './ConfirmDialog';
 
-const day = (at: number) => new Date(at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+const day = (at: number) => formatDate(new Date(at), { month: 'short', day: 'numeric', year: 'numeric' });
 
 function StopDialog({ term, onConfirm, onCancel }: { term: string; onConfirm: () => void; onCancel: () => void }) {
   return (

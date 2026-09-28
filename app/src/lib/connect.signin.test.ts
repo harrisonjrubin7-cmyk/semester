@@ -31,6 +31,8 @@ function spec(parts: { clientId: string; needsProxy: boolean }): ProviderSpec {
     tokenUrl: 'https://example.com/token',
     scopes: '',
     calendar: true,
+    reads: [],
+    writes: [],
     ...parts,
   };
 }

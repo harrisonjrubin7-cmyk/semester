@@ -1,3 +1,4 @@
+import { formatNumber } from '../lib/locale';
 import { useState } from 'react';
 import {
   ABROAD_LIMITS,
@@ -333,7 +334,7 @@ function Compare({ plan }: { plan: AbroadPlan }) {
                   <th scope="row">{p.name || 'Untitled program'}</th>
                   <td>{p.term || '—'}</td>
                   <td>{p.deadline || '—'}</td>
-                  <td>{p.cost === null ? 'Not entered' : `${p.cost.toLocaleString()} ${p.currency}`}</td>
+                  <td>{p.cost === null ? 'Not entered' : `${formatNumber(p.cost)} ${p.currency}`}</td>
                   <td>
                     {c.approved} of {c.planned}
                   </td>

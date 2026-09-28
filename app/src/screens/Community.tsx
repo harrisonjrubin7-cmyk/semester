@@ -37,6 +37,7 @@ import {
   type PostRow,
 } from '../community/client';
 import { Trouble } from '../components/Trouble';
+import { formatDateTime } from '../lib/locale';
 
 const KIND_TEXT: Record<CommunityRow['kind'], string> = {
   course: 'Course',
@@ -78,7 +79,7 @@ const ACTION_TEXT: Record<string, string> = {
 };
 
 const ago = (iso: string) =>
-  new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }).format(new Date(iso));
+  formatDateTime(new Date(iso), { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
 
 /**
  * Community: purpose-built spaces for courses, study groups and support — not

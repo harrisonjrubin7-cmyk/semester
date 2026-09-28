@@ -1,5 +1,7 @@
 import { FRESHNESS_TEXT } from './integration/freshness';
-import type { Fact, SchoolRecordsView } from './integration/school-records';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Environment } from './flags';
+import { cardsState, loadRecords, type Fact, type RecordRow, type SchoolRecordsView } from './integration/school-records';
 import type { Message, Priority } from './comms';
 
 /**
@@ -61,4 +63,36 @@ export function officialMessages(view: SchoolRecordsView, now: Date): Message[] 
   if (view.window) out.push(message(view.window, 'window', 'normal', at));
   if (view.appointment) out.push(message(view.appointment, 'appointment', 'normal', at));
   return out;
+}
+
+/**
+ * Where the official channel stands for this person. `off` is a fact about the
+ * school or the account — not signed in, no school claimed, the module off.
+ * `error` is a fact about the request, and the hub says so and offers a retry
+ * rather than telling a connected student their school has no channel.
+ */
+export type OfficialLoad =
+  | { status: 'off' | 'loading' | 'error' }
+  | { status: 'ready'; userId: string; rows: RecordRow[] };
+
+export async function loadOfficial(
+  db: SupabaseClient | null,
+  school: () => Promise<string>,
+  environment: Environment,
+  now: Date,
+  load: (db: SupabaseClient) => Promise<RecordRow[]> = loadRecords,
+): Promise<OfficialLoad> {
+  if (!db) return { status: 'off' };
+  try {
+    // A missing session is signed out; any other auth error is a failed request,
+    // which Supabase returns rather than throws.
+    const { data, error } = await db.auth.getUser();
+    if (error && error.name !== 'AuthSessionMissingError') return { status: 'error' };
+    if (!data.user?.id) return { status: 'off' };
+    const state = await cardsState(db, await school(), environment, now);
+    if (state !== 'on') return { status: state };
+    return { status: 'ready', userId: data.user.id, rows: await load(db) };
+  } catch {
+    return { status: 'error' };
+  }
 }

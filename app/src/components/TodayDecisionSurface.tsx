@@ -1,6 +1,7 @@
 import { lazy, Suspense, useMemo, useState } from 'react';
 import { blocksFor } from '../data/catalog';
 import { clock, dateToIso, daysBetween } from '../lib/date';
+import { dateFormatter } from '../lib/locale';
 import { readDue } from '../lib/duetime';
 import { pathSnapshot, nextTodayDecision, showsTodayDecisionSurface } from '../lib/today-decision';
 import { appointmentsOn, tasksOn, upcomingItems } from '../lib/select';
@@ -31,7 +32,7 @@ interface TimelineRow {
 function dayName(date: Date, offset: number): string {
   if (offset === 0) return 'Today';
   if (offset === 1) return 'Tomorrow';
-  return new Intl.DateTimeFormat(undefined, { weekday: 'short' }).format(date);
+  return dateFormatter({ weekday: 'short' }).format(date);
 }
 
 function timeLabel(minutes: number | null, fallback = 'All day'): string {
@@ -42,7 +43,7 @@ function syncLabel(lastSync: { at: number } | null | undefined): string {
   if (!lastSync) return 'No account sync recorded on this device';
   const syncedAt = new Date(lastSync.at);
   if (Number.isNaN(syncedAt.getTime())) return 'Last account sync time is unavailable';
-  return `Last account sync ${new Intl.DateTimeFormat(undefined, {
+  return `Last account sync ${dateFormatter({
     dateStyle: 'medium',
     timeStyle: 'short',
   }).format(syncedAt)}`;

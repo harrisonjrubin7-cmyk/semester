@@ -16,6 +16,11 @@ export interface ExperienceFlags {
    * curriculum simulation, evidence, developer platform and readiness.
    */
   institutionalOperations: FeatureState;
+  /**
+   * The staff campaign manager (lib/gtm, gtm_* tables). RLS decides what each
+   * account sees; activation also needs `module.campaign_manager` in production.
+   */
+  campaignManager: FeatureState;
 }
 
 const STATES: readonly FeatureState[] = ['off', 'preview', 'sandbox', 'production'];
@@ -38,6 +43,7 @@ export function experienceFlags(env: PreviewEnv): ExperienceFlags {
     humanHelp: featureState(env, 'VITE_HUMAN_HELP', preview),
     integrationDashboard: featureState(env, 'VITE_INTEGRATION_DASHBOARD', preview),
     institutionalOperations: featureState(env, 'VITE_INSTITUTIONAL_OPERATIONS', preview),
+    campaignManager: featureState(env, 'VITE_CAMPAIGN_MANAGER', preview),
   };
 }
 

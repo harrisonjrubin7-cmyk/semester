@@ -1,3 +1,5 @@
+import { dollars } from '../lib/cost';
+import { dateToIso } from '../lib/date';
 import { useState } from 'react';
 import { cloudConfigured } from '../lib/cloud';
 import { useDeviceLibrary } from '../lib/device-library';
@@ -19,7 +21,7 @@ const NOBODY: Record<string, string> = {};
  * copy each student confirmed, exactly; nothing is summarised, counted across
  * categories or dated by activity (design §7).
  */
-export function SharedWithYou({ today = new Date().toLocaleDateString('en-CA') }: { today?: string }) {
+export function SharedWithYou({ today = dateToIso(new Date()) }: { today?: string }) {
   const { account } = useStore();
   const seen = useDeviceLibrary(`${SEEN_PREFIX}:${account?.id || 'device'}`, readSeen, NOBODY);
   const [shares, setShares] = useState<ShareFrom[] | null>(null);
@@ -69,7 +71,7 @@ export function SharedWithYou({ today = new Date().toLocaleDateString('en-CA') }
                 <div className="sharing-meta">
                   {FAMILY_LABELS[i.category] ?? i.category}
                   {i.due ? ` · due ${i.due}` : ''}
-                  {i.kind === 'budget' && i.amount > 0 ? ` · $${i.amount.toLocaleString('en-US')}` : ''}
+                  {i.kind === 'budget' && i.amount > 0 ? ` · ${dollars(i.amount)}` : ''}
                   {i.kind === 'checklist' ? (i.done ? ' · done' : ' · not done yet') : ''}
                 </div>
                 {i.body && <p className="shared-body">{i.body}</p>}

@@ -112,17 +112,32 @@ export async function claimSchool(schoolId: string): Promise<Claim> {
   return { ok: true, schoolId: String(data ?? schoolId) };
 }
 
-/** The school the server currently believes you are at, or ''. */
-export async function claimedSchool(): Promise<string> {
+/**
+ * The school the server currently believes you are at, or '' — and a failed
+ * request throws rather than reading as "no school". Screens that must tell a
+ * dropped request from an account with no claim (the Notices hub) use this.
+ */
+export async function claimedSchoolOrThrow(): Promise<string> {
   if (!cloudConfigured) return '';
   const db = await cloud();
-  const { data } = await db.auth.getUser();
+  const { data, error } = await db.auth.getUser();
+  if (error && error.name !== 'AuthSessionMissingError') throw new Error(error.message);
   const id = data.user?.id;
   if (!id) return '';
-  const { data: row } = await db
+  const { data: row, error: rowError } = await db
     .from('profiles')
     .select('school_id')
     .eq('user_id', id)
     .maybeSingle();
+  if (rowError) throw new Error(rowError.message);
   return row?.school_id ? String(row.school_id) : '';
+}
+
+/** The school the server currently believes you are at, or ''. A failure reads as ''. */
+export async function claimedSchool(): Promise<string> {
+  try {
+    return await claimedSchoolOrThrow();
+  } catch {
+    return '';
+  }
 }

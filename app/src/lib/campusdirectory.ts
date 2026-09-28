@@ -1,3 +1,4 @@
+import { formatDate } from './locale';
 export type DirectoryKind='housing'|'dining'|'clubs'|'departments'|'events';
 /**
  * One entry in a school-supplied directory.
@@ -37,7 +38,7 @@ export function upcomingEvents(items:CampusListing[],today:string):{upcoming:Cam
 
 /** "Thu 8 Oct, 18:30" or "Thu 8 Oct", read as written — no time zone is invented. */
 export function whenLine(i:CampusListing):string{
- const one=(v:string)=>{const [d,t]=v.split('T');const date=new Date(`${d}T00:00:00Z`).toLocaleDateString('en-US',{weekday:'short',day:'numeric',month:'short',timeZone:'UTC'});return t?`${date}, ${t}`:date;};
+ const one=(v:string)=>{const [d,t]=v.split('T');const date=formatDate(new Date(`${d}T00:00:00Z`), {weekday:'short',day:'numeric',month:'short',timeZone:'UTC'});return t?`${date}, ${t}`:date;};
  if(!i.starts)return '';
  if(!i.ends||i.ends===i.starts)return one(i.starts);
  // The same day twice reads as a mistake: "11:00 – 15:00" after the date, not the date again.

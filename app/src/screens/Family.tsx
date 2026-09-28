@@ -1,3 +1,4 @@
+import { dateToIso } from '../lib/date';
 import { useState } from 'react';
 import { useStore } from '../state/store';
 import { cloudConfigured } from '../lib/cloud';
@@ -29,6 +30,7 @@ import {
   type FamilyItem,
   type FamilyMember,
 } from '../lib/family';
+import { formatDateTime } from '../lib/locale';
 
 /**
  * Deciding what a parent gets to see, item by item.
@@ -258,9 +260,9 @@ function Workspace({ storageKey }: { storageKey: string }) {
                 style={input}
               />
               {/* Held to the sharing rules now, so the plan says why before anyone is asked to accept it. D-037 / D4. */}
-              {endProblem(member.expires, new Date().toLocaleDateString('en-CA')) && (
+              {endProblem(member.expires, dateToIso(new Date())) && (
                 <span style={{ display: 'block', fontSize: 'var(--type-sm)', marginTop: 'var(--sp-2)', ...secondLine() }}>
-                  {endProblem(member.expires, new Date().toLocaleDateString('en-CA'))}
+                  {endProblem(member.expires, dateToIso(new Date()))}
                 </span>
               )}
             </label>
@@ -680,7 +682,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
                 .filter((h) => !selected || h.memberId === selected)
                 .map((h) => (
                   <li key={h.id} style={{ ...line, paddingBlock: 'var(--sp-2)' }}>
-                    {new Date(h.at).toLocaleString()} · {h.message}
+                    {formatDateTime(h.at)} · {h.message}
                   </li>
                 ))}
             </ul>

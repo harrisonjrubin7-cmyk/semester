@@ -1,3 +1,4 @@
+import { formatDate } from './locale';
 import type { Choice } from './actions';
 import type { Taken } from './degree';
 import type { Session } from './sessions';
@@ -106,7 +107,7 @@ export function nextTerm(term: Term): Term {
 
 const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 const fmt = (at: number, withYear: boolean) =>
-  new Date(at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', ...(withYear ? { year: 'numeric' } : {}) });
+  formatDate(new Date(at), { month: 'short', day: 'numeric', ...(withYear ? { year: 'numeric' } : {}) });
 
 export function wrapped(input: WrappedInput): Wrapped {
   const { start, end } = termWindow(input.term);

@@ -353,6 +353,10 @@ declare
     'answer_mentor_request(want uuid, want_status text)',
     'forget_my_mentor_requests()',
     'request_mentor(want_kind text, want_recipient uuid, want_cohort text, want_name text, want_topics text[], want_note text)',
+    -- 20260928110700: the only way a moderator touches a listing. Writes
+    -- `status` alone (published or removed), for a caller holding
+    -- opportunity:moderate; the moderator's unrestricted update policy is gone.
+    'moderate_opportunity(want uuid, want_status text)',
     'open_help_request(want uuid)',
     'send_help_request(want_destination uuid, want_question text, want_context jsonb)',
     'withdraw_help_request(want uuid)',
@@ -369,6 +373,25 @@ declare
     'integration_request_replay(want_dead_letter uuid, want_reason text)',
     'integration_set_paused(want_connection text, want_paused boolean, want_reason text)',
     'kill_switch_engaged(want_switch text, want_tenant text)',
+
+    -- The four in 20260928090000_gtm_foundation.sql. Contacts, consent and
+    -- sends have no API grant at all, so these are the only way a school's
+    -- staff learn anything about them, and each checks its capability over the
+    -- campaign's school. `gtm_campaign_report` returns counts suppressed below
+    -- ten and logs the read; `gtm_audience_count` returns one number; the two
+    -- gate functions return the names of unmet checks, never a row.
+    'gtm_activation_failures(want_campaign uuid)',
+    'gtm_audience_count(want_campaign uuid)',
+    'gtm_campaign_report(want_campaign uuid)',
+    'gtm_pilot_problems(want_pilot uuid)',
+
+    -- The two in 20260928100000_trust_room.sql. Each checks account:manage at
+    -- platform scope before it writes. `trust_room_grant` returns a link
+    -- token once and stores its hash; `trust_room_revoke` ends a grant.
+    -- `trust_room_open`, which a link actually reaches, is service_role only
+    -- and so is not here.
+    'trust_room_grant(want_request uuid, want_artifacts text[], want_packet_commit text, want_days integer)',
+    'trust_room_revoke(want_grant uuid, want_reason text)',
 
     -- The three in 20260928131000_advisor_shares.sql (Phase G, D-016).
     -- `share_with_advisor` finds the advisor only among the student's own

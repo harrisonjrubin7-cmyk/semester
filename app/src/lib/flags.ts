@@ -120,6 +120,25 @@ export const FLAGS: readonly FlagDefinition[] = [
     // the student read, and there are none without a live connection.
     killSwitches: ['kill.integration_sync'],
   }),
+  flag({
+    key: 'module.campaign_manager',
+    description: 'A school’s enrollment and adoption campaigns: audience, approvals, consented email/SMS/push, UTM links (lib/gtm).',
+    type: 'module', owner: 'Growth', scopes: ['tenant', 'role'], highRisk: true, reviewAt: REVIEW,
+    rollout: 'Sandbox tenant with seeded prospects only; then one school after privacy, accessibility and brand review of its first campaign.',
+    successCriteria: 'No message leaves without consent, quiet-hour and cap checks; every link carries the UTM convention; opt-outs apply at once.',
+    rollback: 'Set off. Scheduled sends stop at the next decision; nothing already sent is recalled.',
+    // Until a dedicated marketing capability exists, only a school's configurers.
+    killSwitches: ['kill.sharing'], capability: 'tenant:configure',
+  }),
+  flag({
+    key: 'module.sponsorship',
+    description: 'Labelled, contextual sponsor placements in approved categories, away from every academic decision surface (lib/gtm/sponsor).',
+    type: 'module', owner: 'Trust & Safety', scopes: ['tenant'], highRisk: true, reviewAt: REVIEW,
+    rollout: 'Not before a school opts in with its own categories and surfaces, and the review workflow and complaint path exist.',
+    successCriteria: 'No placement on a protected surface, none unlabelled, no sponsor receives anything but suppressed aggregates.',
+    rollback: 'Set off. Every placement disappears on the next render.',
+    killSwitches: ['kill.sharing'], capability: 'tenant:configure',
+  }),
 
   // ── Release (temporary) ─────────────────────────────────────────────────
   flag({

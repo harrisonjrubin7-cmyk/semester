@@ -1,5 +1,6 @@
 import { cloud, cloudConfigured } from './cloud';
 import { dateToIso, isoToDate } from './date';
+import { formatDate } from './locale';
 import type { RecordRow } from './integration/school-records';
 import { newOpportunity, type Kind, type Opportunity } from './opportunities';
 
@@ -147,7 +148,7 @@ export function deadlineDay(deadline: string): string {
 
 /** A deadline to show. A bare date is never parsed as UTC midnight. */
 export function deadlineLabel(deadline: string): string {
-  return isoToDate(deadlineDay(deadline)).toLocaleDateString();
+  return formatDate(isoToDate(deadlineDay(deadline)));
 }
 
 /**
@@ -222,4 +223,19 @@ export async function loadReviewQueue(client?: Awaited<ReturnType<typeof cloud>>
   if (error) throw new Error(error.message);
   const got = (data ?? []) as unknown as QueuedListing[];
   return { rows: got.slice(0, QUEUE_LIMIT), more: got.length > QUEUE_LIMIT };
+}
+
+/**
+ * Publish or remove a listing — the only change a moderator can make.
+ * `moderate_opportunity` (20260928110700) writes `status` alone; a moderator
+ * has no update policy on the table, so nothing else they could send lands.
+ */
+export async function moderateListing(
+  id: string,
+  status: 'published' | 'removed',
+  client?: Awaited<ReturnType<typeof cloud>>,
+): Promise<void> {
+  const db = client ?? (await cloud());
+  const { error } = await db.rpc('moderate_opportunity', { want: id, want_status: status });
+  if (error) throw new Error(error.message);
 }

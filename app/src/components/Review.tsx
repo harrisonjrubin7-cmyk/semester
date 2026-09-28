@@ -1,6 +1,7 @@
 import { useStore } from '../state/store';
 import { describe } from '../lib/conflicts';
 import { stamp } from '../lib/merge';
+import { formatDateTime } from '../lib/locale';
 
 /**
  * The records two devices edited before either synced, and a choice for each.
@@ -112,7 +113,7 @@ function Version({
       <div style={{ fontSize: 'var(--type-xs)', color: 'var(--app-dim)' }}>
         {label}
         {inUse ? ' · in use now' : ''}
-        {at > 1e11 ? ` · edited ${new Date(at).toLocaleString()}` : ''}
+        {at > 1e11 ? ` · edited ${formatDateTime(at)}` : ''}
       </div>
       <div style={{ fontSize: 'var(--type-sm-plus)', marginTop: 'var(--sp-2)', overflowWrap: 'anywhere' }}>{about.title}</div>
       {about.preview ? (

@@ -158,6 +158,10 @@ jobs:
           VITE_HUMAN_HELP: ${{ vars.VITE_HUMAN_HELP || secrets.VITE_HUMAN_HELP }}
           VITE_INTEGRATION_DASHBOARD: ${{ vars.VITE_INTEGRATION_DASHBOARD || secrets.VITE_INTEGRATION_DASHBOARD }}
           VITE_INSTITUTIONAL_OPERATIONS: ${{ vars.VITE_INSTITUTIONAL_OPERATIONS || secrets.VITE_INSTITUTIONAL_OPERATIONS }}
+          # Whether a student may choose how dates and numbers are written (lib/locale.ts). Absent is off.
+          VITE_ME_LANGUAGE: ${{ vars.VITE_ME_LANGUAGE || secrets.VITE_ME_LANGUAGE }}
+          # Whether Pathway offers learner pathways and Registration offers when/format filters (lib/learner-pathways.ts). Absent is off.
+          VITE_PATH_LEARNER_PATHWAYS: ${{ vars.VITE_PATH_LEARNER_PATHWAYS || secrets.VITE_PATH_LEARNER_PATHWAYS }}
           VITE_COMMUNITY_FEED: ${{ vars.VITE_COMMUNITY_FEED || secrets.VITE_COMMUNITY_FEED }}
           VITE_COMMUNITY_REPORTING: ${{ vars.VITE_COMMUNITY_REPORTING || secrets.VITE_COMMUNITY_REPORTING }}
           VITE_MODERATION_CONSOLE: ${{ vars.VITE_MODERATION_CONSOLE || secrets.VITE_MODERATION_CONSOLE }}
@@ -166,6 +170,7 @@ jobs:
           VITE_SCOPED_PSEUDONYMITY: ${{ vars.VITE_SCOPED_PSEUDONYMITY || secrets.VITE_SCOPED_PSEUDONYMITY }}
           VITE_ACCOUNT_SAFETY_STATE: ${{ vars.VITE_ACCOUNT_SAFETY_STATE || secrets.VITE_ACCOUNT_SAFETY_STATE }}
           VITE_COMMUNITY_IMAGES: ${{ vars.VITE_COMMUNITY_IMAGES || secrets.VITE_COMMUNITY_IMAGES }}
+          VITE_CAMPAIGN_MANAGER: ${{ vars.VITE_CAMPAIGN_MANAGER || secrets.VITE_CAMPAIGN_MANAGER }}
           VITE_CLAUDE_PROXY: ${{ vars.VITE_CLAUDE_PROXY || secrets.VITE_CLAUDE_PROXY }}
           VITE_ICS_PROXY: ${{ vars.VITE_ICS_PROXY || secrets.VITE_ICS_PROXY }}
           # The shared key's monthly allowance, as the app *says* it. The cap
@@ -205,10 +210,12 @@ jobs:
                  VITE_TOOLKIT_DATA_UPLOAD VITE_TOOLKIT_WORKBENCHES VITE_TOOLKIT_DISCLOSURE
                  VITE_HUMAN_HELP
                  VITE_INTEGRATION_DASHBOARD VITE_INSTITUTIONAL_OPERATIONS
+                 VITE_ME_LANGUAGE VITE_PATH_LEARNER_PATHWAYS
                  VITE_COMMUNITY_FEED VITE_COMMUNITY_REPORTING
                  VITE_MODERATION_CONSOLE VITE_INSTITUTION_ESCALATION
                  VITE_VOLUNTEER_MODERATION VITE_SCOPED_PSEUDONYMITY
                  VITE_ACCOUNT_SAFETY_STATE VITE_COMMUNITY_IMAGES
+                 VITE_CAMPAIGN_MANAGER
                  VITE_CLAUDE_PROXY VITE_ICS_PROXY
                  VITE_OAUTH_PROXY VITE_MS_CLIENT_ID VITE_GOOGLE_CLIENT_ID
                  VITE_ZOOM_CLIENT_ID VITE_APPLE_CLIENT_ID VITE_STUN_URLS
@@ -321,6 +328,19 @@ jobs:
               echo "::error title=Connect::$needs is set and VITE_OAUTH_PROXY is not. Those providers exchange tokens only through the proxy. Set VITE_OAUTH_PROXY, or unset them to build without that sign-in."
               exit 1
             fi
+          fi
+
+          # A demo build is a legitimate thing to deploy, and a surprising one
+          # to open: it wears the "Demo environment" label on every screen,
+          # swaps the student's own work for Northstar University fixtures and
+          # a persona switcher, and switches on every experience that inherits
+          # the flag. Somebody who set the variable once to try the preview
+          # and forgot it sees that on every visit and cannot tell why, so the
+          # run says it where the deploy is looked at. A warning, not an
+          # error: the demo is allowed, it is just never the product by
+          # accident.
+          if [ "$VITE_INSTITUTIONAL_PREVIEW" = "true" ]; then
+            echo "::warning title=Demo build::VITE_INSTITUTIONAL_PREVIEW is true, so this site is a demo with synthetic data and a persona switcher, not the product. To deploy the real app, delete the VITE_INSTITUTIONAL_PREVIEW repository variable (Settings → Secrets and variables → Actions) and re-run this workflow."
           fi
 
           if [ -n "$VITE_SUPABASE_URL" ] && [ -n "$VITE_SUPABASE_KEY" ]; then

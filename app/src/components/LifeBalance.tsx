@@ -1,9 +1,10 @@
+import { clock } from '../lib/date';
+import { formatDate } from '../lib/locale';
 import { useId, useMemo, useState } from 'react';
 import { dateToIso, isoToDate } from '../lib/date';
 import {
   CATEGORIES,
   CATEGORY_LABEL,
-  clockLabel,
   crunchAction,
   crunchForecast,
   suggestionAppointment,
@@ -20,8 +21,8 @@ import { SourceBadge } from './SourceBadge';
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const hours = (n: number) => `${Math.round(n * 10) / 10} h`;
 const dayLabel = (iso: string) =>
-  new Date(`${iso}T00:00:00`).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-const range = (from: number, to: number) => `${clockLabel(from)}–${clockLabel(to)}`;
+  formatDate(new Date(`${iso}T00:00:00`), { weekday: 'short', month: 'short', day: 'numeric' });
+const range = (from: number, to: number) => `${clock(from)}–${clock(to)}`;
 
 /**
  * Academic life balance in Plan (`academic_life_balance`, Phase E), under

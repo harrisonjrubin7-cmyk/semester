@@ -20,6 +20,7 @@ import { StoreProvider } from './state/store';
 import { AIProvider } from './ai/store';
 import { redirected } from './lib/redirected';
 import { askedForm } from './lib/formshare';
+import { askedRoom } from './lib/trustlink';
 import { takeFromUrl } from './lib/referral';
 import { takeHandoff } from './lib/ltiarrival';
 // Type-only, so it is erased at build and pulls nothing onto the critical path.
@@ -62,8 +63,24 @@ function finishAnyRedirect(): Promise<{ id: ProviderId; error?: string } | null>
  * a `?form=` carrying anything but a uuid falls through to the ordinary app
  * rather than mounting this against rubbish.
  */
-const formLink = askedForm(window.location.search);
-if (formLink) {
+/*
+ * A procurement-room link: a reviewer at a university, holding a token the
+ * account team minted, with no account and no semester. Mounted in place of
+ * the app for the same reasons as a published form, below, and ahead of it.
+ * The token is read from the fragment, which no server is ever sent. See
+ * `screens/TrustRoom.tsx` and `lib/trustlink.ts`.
+ */
+const roomLink = askedRoom(window.location.hash);
+const formLink = roomLink ? null : askedForm(window.location.search);
+if (roomLink) {
+  void import('./screens/TrustRoom').then(({ default: TrustRoom }) => {
+    createRoot(document.getElementById('root')!).render(
+      <StrictMode>
+        <TrustRoom token={roomLink} />
+      </StrictMode>,
+    );
+  });
+} else if (formLink) {
   void import('./screens/Respond').then(({ default: Respond }) => {
     createRoot(document.getElementById('root')!).render(
       <StrictMode>

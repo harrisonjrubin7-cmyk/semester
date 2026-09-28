@@ -9,6 +9,7 @@ import {
   type EscalationPolicy,
 } from '../../community/client';
 import { Trouble } from '../Trouble';
+import { formatDateTime } from '../../lib/locale';
 
 /** Fewer than this and the server refuses; said here so the button agrees. */
 export const REASON_MIN = 10;
@@ -181,7 +182,7 @@ export function EscalationItem({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const when = (iso: string) =>
-    new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }).format(new Date(iso));
+    formatDateTime(new Date(iso), { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
 
   const decide = (approve: boolean) => {
     setBusy(true);

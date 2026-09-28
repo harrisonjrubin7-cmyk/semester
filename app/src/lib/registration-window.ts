@@ -1,3 +1,4 @@
+import { formatTime } from './locale';
 /**
  * The registration window, for the notifier.
  *
@@ -43,7 +44,7 @@ export function windowReminders(opensAt: number | null, now: Date): WindowRemind
   if (opensAt === null) return [];
   const minutes = (opensAt - now.getTime()) / 60_000;
   const at = new Date(opensAt);
-  const clockText = at.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+  const clockText = formatTime(at, { hour: 'numeric', minute: '2-digit' });
   const out: WindowReminder[] = [];
   const opens = new Date(at.getFullYear(), at.getMonth(), at.getDate());
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());

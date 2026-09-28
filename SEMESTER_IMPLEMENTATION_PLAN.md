@@ -38,6 +38,10 @@ since 24 September (`20260924223000_moderation_audit.sql`). The screen is
 or who it is about. The sentence in `lib/classmates.ts` and on the Classmates
 screen changed with it: reports reach a queue, with no promise of how fast.
 
+That closes the P0, not §58. The standard also asks for reporting a user, an
+organization and an event. Message reports and Community post reports
+exist; neither has an organization or event target. That remains open.
+
 What follows is the plan as written, kept for the reasoning.
 
 The only row in either part that is a defect rather than an absence, and the
