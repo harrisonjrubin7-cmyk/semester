@@ -303,4 +303,4 @@ create trigger zz_rate_limit before insert on public.form_responses
 
 comment on table private.direct_rate_limit is
   'One row per counted insert from a browser (anon/authenticated) into a rate-limited table. '
-  'Written only by private.take_direct_rate_limit; see 20260928120000_direct_rate_limits.sql.';
+  'Written only by private.take_direct_rate_limit; see 20260928210000_direct_rate_limits.sql.';

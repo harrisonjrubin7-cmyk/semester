@@ -419,7 +419,7 @@ Two layers, and only one of them is in this repository.
 **The browser's direct writes** — class chat, reactions, both report queues,
 feedback, help and mentor requests, community posts, communities and study
 sessions, groups and their parts, listings, and form answers — are limited in
-the database by `migrations/20260928120000_direct_rate_limits.sql`: a BEFORE
+the database by `migrations/20260928210000_direct_rate_limits.sql`: a BEFORE
 INSERT trigger on each of the fourteen tables, a per-account sliding window
 (per form for signed-out answers), SQLSTATE 54000 and a sentence the app shows
 as it stands. The limits and the reasoning for each are in that file's header;

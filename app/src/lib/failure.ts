@@ -144,7 +144,7 @@ const BY_CODE: Record<string, Code> = {
   '40001': 'CONFLICT', // serialization_failure
   '53300': 'RATE_LIMITED', // too_many_connections
   // program_limit_exceeded — what the direct-write rate limits raise
-  // (`20260928120000_direct_rate_limits.sql`), and the per-community posting
+  // (`20260928210000_direct_rate_limits.sql`), and the per-community posting
   // and image limits before them. PostgREST answers it as HTTP 413, which
   // `byStatus` would not read as a rate limit, so the code has to.
   '54000': 'RATE_LIMITED',
