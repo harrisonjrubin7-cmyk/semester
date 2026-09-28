@@ -27,6 +27,13 @@ import { loadSeed } from '../data/seed';
  * zero. The one finding on the first pass was `html-has-lang`, which is the
  * test's own document (jsdom's is bare) rather than the app's, and is handled
  * by copying `lang` from `index.html` rather than by disabling the rule.
+ * `document-title` is the same finding one line down: `index.html` ships
+ * `<title>Semester</title>`, the onboarding screen is drawn above the router
+ * and never writes a title of its own, and jsdom starts with none — so the
+ * static title is copied in the same way, and cleared between cases so that
+ * no case passes on the title an earlier one left behind. It was found by a
+ * shuffled run that happened to put first run first (seed 1790574758766);
+ * in file order it had passed on `#/home`'s leftover title every time.
  * `moderate` and `minor` findings are not failed on here.
  *
  * ## What jsdom cannot tell axe
@@ -72,8 +79,11 @@ let hadObserver = false;
 let hadHitTest = false;
 let hadHitOne = false;
 
+const INDEX = readFileSync(join(__dirname, '..', '..', 'index.html'), 'utf8');
 /** The page's own `lang`, read from the page rather than assumed. */
-const LANG = /<html\s+lang="([^"]+)"/.exec(readFileSync(join(__dirname, '..', '..', 'index.html'), 'utf8'))?.[1];
+const LANG = /<html\s+lang="([^"]+)"/.exec(INDEX)?.[1];
+/** The page's own static `<title>`, which stands until a screen writes its own. */
+const TITLE = /<title>([^<]+)<\/title>/.exec(INDEX)?.[1];
 
 function width(px: number) {
   window.matchMedia = ((query: string) => {
@@ -123,6 +133,7 @@ afterEach(async () => {
   localStorage.clear();
   history.replaceState(null, '', '/');
   document.documentElement.removeAttribute('lang');
+  document.title = '';
   if (!hadObserver) delete (globalThis as { ResizeObserver?: unknown }).ResizeObserver;
   if (!hadHitTest) delete (document as { elementsFromPoint?: unknown }).elementsFromPoint;
   if (!hadHitOne) delete (document as { elementFromPoint?: unknown }).elementFromPoint;
@@ -132,6 +143,7 @@ async function show(hash: string, stored: Record<string, unknown> = { nav: 'tabs
   localStorage.setItem('semester.v1', JSON.stringify({ schemaVersion: 6, ...stored }));
   history.replaceState(null, '', `/${hash}`);
   if (LANG) document.documentElement.lang = LANG;
+  if (TITLE) document.title = TITLE;
   host = document.createElement('div');
   document.body.append(host);
   root = createRoot(host);
@@ -177,8 +189,15 @@ async function serious(): Promise<{ findings: Finding[]; passed: number }> {
 }
 
 describe('the probe', () => {
-  it('reads the page language from index.html', () => {
+  it('reads the page language and static title from index.html', () => {
     expect(LANG).toBe('en');
+    expect(TITLE).toBe('Semester');
+  });
+
+  it('starts every case without a title, so first run cannot pass on a leftover one', () => {
+    // The control for the fix above: with the copy removed, first run alone
+    // has no title at all. Asserted here on the bare document, before `show`.
+    expect(document.title).toBe('');
   });
 
   /*
