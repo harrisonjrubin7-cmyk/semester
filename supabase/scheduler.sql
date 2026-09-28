@@ -422,3 +422,32 @@ select cron.schedule(
   '23 3 * * *',
   $job$select private.console_audit_seal(); select private.console_audit_verify();$job$
 );
+
+-- ── Commercial: the dunning worker ────────────────────────────────────────
+--
+-- `public.run_dunning()` (20260929010000_commercial_automation.sql) works every
+-- open dunning case: a reminder after three quiet days, one final notice with
+-- the exact restriction date three days before grace ends, and at grace end
+-- the case is restricted and the subscription's paid entitlements removed. It
+-- never touches a student's data, export or deletion.
+--
+-- **Active**, like `tombstones`: it needs no secret and no endpoint, and until
+-- a payment fails there is no open case, so it writes nothing. Hourly, at
+-- minute 23, off every other job's minute.
+select cron.schedule(
+  'commercial-dunning',
+  '23 * * * *',
+  $job$select public.run_dunning()$job$
+);
+
+-- ── Commercial: account health ────────────────────────────────────────────
+--
+-- `public.compute_account_health()` writes one snapshot per institutional
+-- billing account per day, from account-level signals only, each with a
+-- reason and a next action. Anything not healthy is written `pending_review`:
+-- a person reads it before it drives any outreach. Nightly at 05:41 UTC.
+select cron.schedule(
+  'account-health',
+  '41 5 * * *',
+  $job$select public.compute_account_health()$job$
+);

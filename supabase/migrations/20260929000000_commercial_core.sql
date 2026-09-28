@@ -141,12 +141,16 @@ create index if not exists plan_entitlements_by_key on public.plan_entitlements 
 
 -- The catalog is public: the pricing page reads it, signed in or not. Only
 -- active rows are visible; nobody writes through the API.
+alter table public.commercial_products enable row level security;
+alter table public.commercial_plans enable row level security;
+alter table public.commercial_prices enable row level security;
+alter table public.entitlement_definitions enable row level security;
+alter table public.plan_entitlements enable row level security;
 do $$
 declare t text;
 begin
   foreach t in array array['commercial_products', 'commercial_plans', 'commercial_prices',
                            'entitlement_definitions', 'plan_entitlements'] loop
-    execute format('alter table public.%I enable row level security', t);
     execute format('revoke all on public.%I from public, anon, authenticated', t);
     execute format('grant select on public.%I to anon, authenticated', t);
   end loop;
@@ -706,6 +710,36 @@ insert into public.compliance_frameworks (code, name, version) values
 on conflict (code) do nothing;
 
 -- ── 10. RLS for everything above that is not the public catalog ───────────
+--
+-- Stated per table, not left to the `ensure_rls` event trigger
+-- (app/src/lib/tablerls.test.ts says why).
+
+alter table public.billing_accounts enable row level security;
+alter table public.billing_account_tenants enable row level security;
+alter table public.quotes enable row level security;
+alter table public.quote_lines enable row level security;
+alter table public.contracts enable row level security;
+alter table public.subscriptions enable row level security;
+alter table public.subscription_entitlements enable row level security;
+alter table public.invoices enable row level security;
+alter table public.invoice_lines enable row level security;
+alter table public.payment_events enable row level security;
+alter table public.credits_refunds enable row level security;
+alter table public.dunning_cases enable row level security;
+alter table public.dunning_actions enable row level security;
+alter table public.cancellation_requests enable row level security;
+alter table public.implementation_projects enable row level security;
+alter table public.implementation_milestones enable row level security;
+alter table public.success_plans enable row level security;
+alter table public.qbrs enable row level security;
+alter table public.renewal_opportunities enable row level security;
+alter table public.account_health_snapshots enable row level security;
+alter table public.compliance_frameworks enable row level security;
+alter table public.compliance_controls enable row level security;
+alter table public.control_evidence enable row level security;
+alter table public.claims_register enable row level security;
+alter table public.content_register enable row level security;
+alter table public.cta_routes enable row level security;
 
 do $$
 declare t text;
@@ -717,7 +751,6 @@ begin
     'implementation_projects', 'implementation_milestones', 'success_plans', 'qbrs',
     'renewal_opportunities', 'account_health_snapshots', 'compliance_frameworks',
     'compliance_controls', 'control_evidence', 'claims_register', 'content_register', 'cta_routes'] loop
-    execute format('alter table public.%I enable row level security', t);
     execute format('revoke all on public.%I from public, anon, authenticated', t);
   end loop;
 end $$;

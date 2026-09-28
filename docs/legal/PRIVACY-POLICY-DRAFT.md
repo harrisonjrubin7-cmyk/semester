@@ -109,6 +109,8 @@ needs.
 | GitHub Pages | Serves the app's files | Every visit |
 | Vercel | Runs the institutional gateway | Only for school deployments |
 | Anthropic | AI answers, when you use AI features without your own key | Only when you press an AI button |
+| Stripe | Payments for a paid plan: the checkout page you type your card into, and recurring billing. Semester never sees your card | Only if you subscribe to a paid plan |
+| Resend | Delivers the message you send through a form on Semester's website to our team | Only when you send such a form |
 
 **Services you or your school choose to connect.** These receive information
 only because you, or your school, turned them on:
