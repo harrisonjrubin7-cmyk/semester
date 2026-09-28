@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useId, useState } from 'react';
+import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
 import type { Account } from '../lib/cloud';
 import {
   FEEDBACK_KINDS,
@@ -25,7 +26,26 @@ import { ActionButton, Notice, SectionLabel } from './ui';
  * only, nothing official sent, feedback read without their name, leave any
  * time.
  */
-export function BetaPanel({ account }: { account: Account | null }) {
+export function BetaPanel({
+  account,
+  offerInvitations = EXPERIENCE_FLAGS.privateBeta !== 'off',
+}: {
+  account: Account | null;
+  /**
+   * Whether an invitation is offered. `VITE_PRIVATE_BETA` off is the
+   * documented rollback, and it stops new people joining — it does not take
+   * away a member's export and way out, which they were promised before they
+   * joined. So the panel always mounts, and this is all the flag decides.
+   */
+  offerInvitations?: boolean;
+}) {
+  // Everything below belongs to one account. Keyed by it, a change of account
+  // under a mounted Help screen starts from nothing, and an answer still in
+  // flight for the old account lands on a panel that no longer exists.
+  return account ? <AccountBeta key={account.id} offerInvitations={offerInvitations} /> : null;
+}
+
+function AccountBeta({ offerInvitations }: { offerInvitations: boolean }) {
   const [invitation, setInvitation] = useState<BetaInvitation | null>(null);
   const [membership, setMembership] = useState<BetaMembership | null>(null);
   const [issues, setIssues] = useState<KnownIssue[]>([]);
@@ -40,7 +60,6 @@ export function BetaPanel({ account }: { account: Account | null }) {
   const heading = useId();
 
   const refresh = useCallback(async () => {
-    if (!account) return;
     try {
       const next = await loadBeta();
       setInvitation(next.invitation);
@@ -49,7 +68,7 @@ export function BetaPanel({ account }: { account: Account | null }) {
     } catch (error) {
       setNotice(error instanceof Error ? error.message : 'Could not load the beta.');
     }
-  }, [account]);
+  }, []);
 
   // An account-backed resource, not render-derived state.
   // oxlint-disable-next-line react/set-state-in-effect
@@ -66,7 +85,6 @@ export function BetaPanel({ account }: { account: Account | null }) {
       .finally(() => setBusy(false));
   };
 
-  if (!account) return null;
   if (left) {
     return (
       <section aria-labelledby={heading} style={{ marginBottom: 'var(--sp-7)' }}>
@@ -82,27 +100,31 @@ export function BetaPanel({ account }: { account: Account | null }) {
       </section>
     );
   }
-  if (!invitation && !membership) return notice ? <Notice>{notice}</Notice> : null;
+  // With the flag off, only a member is shown anything: not an invitation,
+  // and not a load error, which is what every account would see before the
+  // migration is applied.
+  const offered = offerInvitations ? invitation : null;
+  if (!offered && !membership) return notice && offerInvitations ? <Notice>{notice}</Notice> : null;
 
   return (
     <section aria-labelledby={heading} style={{ marginBottom: 'var(--sp-7)' }}>
       <SectionLabel aside={membership ? cohortLabel(membership.cohortKind) : undefined}>Private beta</SectionLabel>
       {notice && <Notice>{notice}</Notice>}
 
-      {!membership && invitation && (
+      {!membership && offered && (
         <>
           <h2 id={heading} style={{ fontSize: 'var(--type-xl)', marginBlock: 'var(--sp-3)' }}>
-            You are invited to {invitation.programName}
+            You are invited to {offered.programName}
           </h2>
-          <p style={{ color: 'var(--app-dim)' }}>As one of the {cohortLabel(invitation.cohortKind).toLowerCase()}. If you join:</p>
+          <p style={{ color: 'var(--app-dim)' }}>As one of the {cohortLabel(offered.cohortKind).toLowerCase()}. If you join:</p>
           <ul style={{ lineHeight: 'var(--leading-relaxed-plus)' }}>
             <li>Some features may change or be switched off while the beta runs.</li>
             <li>Nothing official is sent anywhere. No registration, no grade, no form goes to your university.</li>
             <li>Beta feedback is read by Semester’s support staff without your name or address.</li>
             <li>You can leave at any time, and take your data with you first.</li>
           </ul>
-          <p style={{ color: 'var(--app-dim)' }}>A person to contact: {invitation.supportContact}</p>
-          <ActionButton tone="primary" disabled={busy} onClick={() => run(() => joinBeta(invitation.invitationId), 'You have joined the beta.')}>
+          <p style={{ color: 'var(--app-dim)' }}>A person to contact: {offered.supportContact}</p>
+          <ActionButton tone="primary" disabled={busy} onClick={() => run(() => joinBeta(offered.invitationId), 'You have joined the beta.')}>
             Join the beta
           </ActionButton>
         </>

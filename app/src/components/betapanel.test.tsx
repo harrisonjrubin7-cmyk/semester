@@ -17,6 +17,10 @@ interface World {
   membership: Record<string, unknown>[];
   issues: Record<string, unknown>[];
   calls: { name: string; args?: Record<string, unknown> }[];
+  /** Holds the next call to an RPC until the test releases it. */
+  gates: Map<string, Promise<void>>;
+  /** Every RPC fails, as it would before the migration is applied. */
+  broken?: boolean;
 }
 let world: World;
 
@@ -25,8 +29,14 @@ vi.mock('../lib/cloud', () => ({
   cloud: async () => ({
     rpc: async (name: string, args?: Record<string, unknown>) => {
       world.calls.push({ name, args });
-      if (name === 'my_beta') return { data: world.membership, error: null };
-      if (name === 'beta_invitation_for_me') return { data: world.invitation, error: null };
+      if (world.broken) return { data: null, error: { message: 'Could not find the function' } };
+      // What the world held when the call was made, not when it returns.
+      const membership = world.membership;
+      const invitation = world.invitation;
+      const gate = world.gates.get(name);
+      if (gate) { world.gates.delete(name); await gate; }
+      if (name === 'my_beta') return { data: membership, error: null };
+      if (name === 'beta_invitation_for_me') return { data: invitation, error: null };
       if (name === 'beta_known_issues_for_me') return { data: world.issues, error: null };
       return { data: null, error: null };
     },
@@ -45,7 +55,7 @@ let host: HTMLDivElement;
 let root: Root;
 
 beforeEach(() => {
-  world = { invitation: [], membership: [], issues: [], calls: [] };
+  world = { invitation: [], membership: [], issues: [], calls: [], gates: new Map() };
   host = document.createElement('div');
   document.body.append(host);
   root = createRoot(host);
@@ -56,9 +66,19 @@ afterEach(() => {
   host.remove();
 });
 
-async function draw(who: unknown = account) {
-  await act(async () => { root.render(<BetaPanel account={who as never} />); });
+async function draw(who: unknown = account, offerInvitations: boolean | undefined = true) {
+  await act(async () => {
+    root.render(offerInvitations === undefined
+      ? <BetaPanel account={who as never} />
+      : <BetaPanel account={who as never} offerInvitations={offerInvitations} />);
+  });
   await act(async () => { await Promise.resolve(); });
+}
+
+function hold(name: string): () => Promise<void> {
+  let release!: () => void;
+  world.gates.set(name, new Promise<void>((r) => { release = r; }));
+  return async () => { await act(async () => { release(); await Promise.resolve(); }); };
 }
 
 const button = (label: RegExp) =>
@@ -135,5 +155,59 @@ describe('the private-beta panel', () => {
     expect(world.calls.find((c) => c.name === 'leave_beta')?.args).toEqual({ want_reason: '', want_keeps_account: false });
     expect(host.textContent).toMatch(/You have left the beta/);
     expect(host.querySelector('a[href="#/privacy"]')).not.toBeNull();
+  });
+});
+
+describe('with the beta flag off, which is the documented rollback', () => {
+  it('still gives a member the export and the way out', async () => {
+    world.membership = [member(true)];
+    await draw(account, false);
+    expect(button(/Leave the beta…/)).toBeDefined();
+    await act(async () => { button(/Leave the beta…/)!.click(); });
+    expect(host.querySelector('a[href="#/export"]')).not.toBeNull();
+  });
+
+  it('offers no new invitation', async () => {
+    world.invitation = [{ invitation_id: 'i1', program_name: 'Fall pilot', cohort_kind: 'students', support_contact: 'x@x.example' }];
+    await draw(account, false);
+    expect(host.textContent).toBe('');
+    expect(button(/Join the beta/)).toBeUndefined();
+  });
+
+  it('draws nothing, and no error, before the database has the beta at all', async () => {
+    world.broken = true;
+    await draw(account, false);
+    expect(host.textContent).toBe('');
+  });
+
+  it('follows VITE_PRIVATE_BETA when no one says otherwise; unset here, so a member still sees the way out', async () => {
+    world.membership = [member(true)];
+    world.invitation = [];
+    await draw(account, undefined);
+    expect(button(/Leave the beta…/)).toBeDefined();
+  });
+});
+
+describe('when the signed-in account changes under the panel', () => {
+  it('shows the next account nothing of the last one’s beta, even when the old answer arrives last', async () => {
+    world.membership = [member(true)];
+    const aliceAnswers = hold('my_beta');
+    await draw({ id: 'alice', email: 'alice@x.example' });
+    world.membership = [];
+    await draw({ id: 'ben', email: 'ben@x.example' });
+    await aliceAnswers();
+    await act(async () => { await Promise.resolve(); });
+    expect(host.textContent).not.toMatch(/Fall pilot/);
+  });
+
+  it('clears what was on screen at once, before the new account’s answer', async () => {
+    world.membership = [member(true)];
+    await draw({ id: 'alice', email: 'alice@x.example' });
+    expect(host.textContent).toMatch(/Fall pilot/);
+    world.membership = [];
+    const benAnswers = hold('my_beta');
+    await draw({ id: 'ben', email: 'ben@x.example' });
+    expect(host.textContent).not.toMatch(/Fall pilot/);
+    await benAnswers();
   });
 });

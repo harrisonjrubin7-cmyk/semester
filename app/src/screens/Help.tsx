@@ -5,7 +5,6 @@ import { build, toMarkdown, type Section } from '../lib/guidebook';
 import { download } from '../lib/deliver';
 import { useStore } from '../state/store';
 import { BetaPanel } from '../components/BetaPanel';
-import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
 
 /**
  * The guide, in the app.
@@ -59,7 +58,7 @@ export function Help() {
       }
     >
         <>
-          {EXPERIENCE_FLAGS.privateBeta !== 'off' && <BetaPanel account={account} />}
+          <BetaPanel account={account} />
           {book.sections.map((s) => (
             <Chapter
               key={s.id}

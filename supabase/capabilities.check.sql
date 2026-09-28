@@ -172,7 +172,7 @@ begin
 
   -- `platform_admin` carries five capabilities and not this one: the three it
   -- was created with, and running the private beta
-  -- (20260928070000_private_beta.sql). Asserted out of the matrix rather than
+  -- (20260928220000_private_beta.sql). Asserted out of the matrix rather than
   -- by granting it, because the claim is about what the seeded rows say — and
   -- asserted as the exact set, so a sixth cannot arrive in passing.
   set local role postgres;
@@ -230,8 +230,10 @@ begin
   -- 20260926150000_expansion_roles_and_features.sql, plus `integration_admin`
   -- and `incident_responder` from 20260927170000_integration_control_plane.sql,
   -- and `portfolio_council` from 20260927235000_governance_registries.sql,
-  -- plus the three Trust & Safety and community roles from the community migration.
-  perform pg_temp.counted('a signed-in account reads the fifty-three roles', n, 53);
+  -- plus the three Trust & Safety and community roles from the community migration,
+  -- the four go-to-market roles from 20260928090000_gtm_foundation.sql,
+  -- and `trust_officer` from 20260928100000_trust_room.sql.
+  perform pg_temp.counted('a signed-in account reads the fifty-eight roles', n, 58);
   select count(*) into n from public.role_capabilities;
   -- Twenty original rows, thirty-seven expansion rows, eight from the
   -- integration control plane (four for integration_admin, three for
@@ -241,10 +243,13 @@ begin
   -- incident_responder → incident:communicate), seven learner and
   -- teaching roles → lti:launch (20260928015315_lti_launch_capability.sql),
   -- five community rows, one from integration quality
-  -- (integration_admin → integration:reconcile), and three from the private
-  -- beta (beta:manage and beta:triage for platform_admin, beta:triage for
-  -- support_agent).
-  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 91);
+  -- (integration_admin → integration:reconcile), six from the go-to-market
+  -- foundation (two for marketing_admin, one each for campaign_reviewer,
+  -- marketing_analyst, account_executive, and sponsor:review for
+  -- university_admin), trust:publish for trust_officer, and three from the
+  -- private beta (beta:manage and beta:triage for platform_admin, beta:triage
+  -- for support_agent).
+  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 98);
 
   perform pg_temp.become_anon();
   perform pg_temp.refused('a signed-out visitor cannot read the matrix',

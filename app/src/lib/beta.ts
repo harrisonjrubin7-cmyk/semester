@@ -2,7 +2,7 @@
  * The member's half of the invite-only private beta.
  *
  * Every call is an RPC. The beta tables have no grant at all
- * (`supabase/migrations/20260928070000_private_beta.sql`), so there is no
+ * (`supabase/migrations/20260928220000_private_beta.sql`), so there is no
  * `.from()` here to get wrong. Each function answers for the signed-in caller
  * and nobody else. The staff half — programs, cohorts, invitations,
  * activation, triage — lives in the database functions and is not wrapped

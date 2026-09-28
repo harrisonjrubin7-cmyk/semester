@@ -120,6 +120,11 @@ create table if not exists public.beta_memberships (
 );
 create index if not exists beta_memberships_by_user on public.beta_memberships (user_id);
 create index if not exists beta_memberships_by_invitation on public.beta_memberships (invitation_id);
+-- One live membership per account, held by the database rather than by the
+-- check in join_beta: two joins for invitations in different cohorts lock
+-- different rows, and each could see no membership before either inserted.
+create unique index if not exists beta_memberships_one_live
+  on public.beta_memberships (user_id) where left_at is null;
 
 -- What the program turns on for its members. A record for the members'
 -- "what's in this beta" list; flag state itself stays in
@@ -425,6 +430,10 @@ begin
   if (select auth.uid()) is null then
     raise exception 'sign in first' using errcode = 'insufficient_privilege';
   end if;
+  -- Joins by one account run one at a time, so the second sees the first's
+  -- membership and gets the sentence below instead of the unique index's error.
+  perform pg_catalog.pg_advisory_xact_lock(
+    pg_catalog.hashtextextended('beta_join:' || (select auth.uid())::text, 0));
   select * into i from public.beta_invitations where id = want_invitation for update;
   if not found or i.email is distinct from private.beta_confirmed_email() then
     raise exception 'that invitation is not to this account''s confirmed address'

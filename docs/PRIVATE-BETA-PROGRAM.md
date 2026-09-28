@@ -6,9 +6,9 @@ Launch-readiness Phase 1.
 
 | Where | What |
 | --- | --- |
-| `supabase/migrations/20260928070000_private_beta.sql` | Tables, capabilities and the sixteen functions that are the only way in |
+| `supabase/migrations/20260928220000_private_beta.sql` | Tables, capabilities and the sixteen functions that are the only way in |
 | `supabase/beta.check.sql` | 42 checks, walked by a manager, a triager, an invitee, an unconfirmed address and a stranger |
-| `app/src/lib/beta.ts`, `app/src/components/BetaPanel.tsx` | The member's half, on Help, behind `VITE_PRIVATE_BETA` |
+| `app/src/lib/beta.ts`, `app/src/components/BetaPanel.tsx` | The member's half, on Help. `VITE_PRIVATE_BETA` decides whether invitations are offered; a member's view and way out do not depend on it |
 | `app/src/lib/beta.test.ts`, `app/src/components/betapanel.test.tsx` | The client held to the migration's vocabulary, and the panel's behaviour |
 
 ## The rules, and where each is enforced
@@ -23,7 +23,7 @@ Launch-readiness Phase 1.
 | Known-issues page | `beta_known_issues`. Only published issues are shown, and only to members of that program |
 | Export / exit path | "Leave the beta" links to Export first, and ends membership in the same statement. It asks whether to keep the account. Deleting the account uses the existing flow on Privacy |
 | Weekly review | Operational: `beta_feedback_queue` sorts accessibility reports first. See *Running a program* |
-| Rapid rollback | Leave `VITE_PRIVATE_BETA` unset and the panel does not draw. `beta_set_status(..., 'paused')` pauses the program for every member without touching their data |
+| Rapid rollback | Leave `VITE_PRIVATE_BETA` unset and no invitation is offered, so nobody new joins. A member still sees their beta, its export and **Leave the beta**, because they were told before joining that they could leave at any time; the flag does not take that back. `beta_set_status(..., 'paused')` pauses the program for every member without touching their data |
 | No sponsor or advertising campaigns; no unsupported claims | Nothing in this change sends anything. The join screen makes four statements, and each is true of the code |
 
 ## What a member agrees to

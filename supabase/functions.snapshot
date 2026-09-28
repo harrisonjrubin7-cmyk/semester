@@ -1,5 +1,5 @@
 # Which pipeline last deployed each Edge Function, read off the project at
-# 01:08 UTC on 22 September 2026.
+# 00:49 UTC on 28 September 2026.
 #
 # Four columns: slug, version, the pipeline that deployed that version, and when.
 # `app/src/lib/functionsdeployed.test.ts` holds `supabase/functions/` to this
@@ -57,15 +57,28 @@
 # next merge is the freeze.** Re-read before concluding, which is the same
 # instruction `ledger.snapshot` carries and for the same reason.
 #
+# ## A new function's first row
+#
+# A new function cannot have a `platform` row yet. The platform deploys only
+# what main declares in config.toml, and `functionconfig.test.ts` will not let
+# main declare a function until it is live. So a function's first deploy is by
+# hand, from its branch (Actions → Deploy Edge Functions, run on that branch),
+# and it reads `runner`. Its row carries a fifth column, `first`, which is the
+# only thing that excuses a runner row: it says the merge that adds the
+# function hands it to the platform. The next reading drops the note, and a
+# `first` row that survives that reading is a freeze like any other.
+#
 # ## Re-reading it
 #
 # Nothing in a test run can reach the project. The reading comes from the
 # Management API's function list (the dashboard's Edge Functions page shows the
 # same versions), and the columns below are transcribed from it.
 
-claude     64  platform  2026-09-22T01:08:08Z
-push       28  platform  2026-09-22T01:08:08Z
-calendar   24  platform  2026-09-22T01:08:08Z
-fetchcal   56  platform  2026-09-22T01:08:08Z
-canvas     49  platform  2026-09-22T01:08:08Z
-lti        49  platform  2026-09-22T01:08:08Z
+claude     159 platform  2026-09-28T00:49:07Z
+push       120 platform  2026-09-28T00:49:07Z
+calendar   115 platform  2026-09-28T00:49:07Z
+fetchcal   151 platform  2026-09-28T00:49:07Z
+canvas     144 platform  2026-09-28T00:49:07Z
+lti        144 platform  2026-09-28T00:49:07Z
+integration-tick  2  platform  2026-09-28T00:49:07Z
+trust-room  7  platform  2026-09-28T00:49:07Z

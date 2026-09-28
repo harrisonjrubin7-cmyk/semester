@@ -1,4 +1,4 @@
--- The invite-only private beta (20260928070000_private_beta.sql).
+-- The invite-only private beta (20260928220000_private_beta.sql).
 -- LOCAL/DISPOSABLE DATABASES ONLY; the transaction is always rolled back.
 --
 -- Each rule is walked by the account it is about and by one it should stop:
@@ -67,6 +67,7 @@ declare
   bob_unconfirmed uuid;
   stranger uuid;
   students uuid;
+  students_two uuid;
   inv_alice uuid;
   inv_bob uuid;
   issue uuid;
@@ -164,6 +165,22 @@ begin
   select count(*), bool_and(live) into n, live_now from public.my_beta();
   reset role;
   perform pg_temp.counted('joining makes one live membership', n, 1);
+
+  -- Two joins racing for invitations in different cohorts each lock their
+  -- own rows, so the rule that holds is the database's: a second live
+  -- membership for the same account is refused whoever writes it.
+  begin
+    insert into public.beta_cohorts (program_id, kind, capacity) values ('fall-pilot', 'transfer_students', 2)
+      returning id into students_two;
+    insert into public.beta_memberships (cohort_id, user_id) values (students_two, alice);
+    raise exception 'FAILED: an account held two live memberships';
+  exception when unique_violation then
+    raise notice 'ok  a second live membership for one account is refused by the database';
+  end;
+  select count(*) into n from pg_catalog.pg_proc p
+   where p.oid = 'public.join_beta(uuid)'::regprocedure
+     and position('pg_advisory_xact_lock' in p.prosrc) between 1 and position('beta_my_membership' in p.prosrc);
+  perform pg_temp.counted('joins by one account are serialized before the membership check', n, 1);
   if not live_now then raise exception 'FAILED: an active program with writeback stopped reads as not live'; end if;
   perform pg_temp.must_refuse('an accepted invitation cannot be taken twice', alice,
     format('select public.join_beta(%L)', inv_alice));

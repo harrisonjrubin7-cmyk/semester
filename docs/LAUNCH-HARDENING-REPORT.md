@@ -68,7 +68,7 @@ Across all 226 tracked Markdown files there are 261 dead relative links, nearly 
 
 The three open launch-readiness PRs that carry migrations were applied on top of this branch and run through the second pass. All three apply twice with the schema unchanged:
 
-- private beta, `20260928070000`;
+- private beta, `20260928040000`;
 - SCIM gateway, `20260928050000`;
 - support tickets, `20260928060000`.
 

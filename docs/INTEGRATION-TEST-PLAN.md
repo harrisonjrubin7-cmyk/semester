@@ -157,7 +157,7 @@ and the three new tests were re-run against main's worker with the corrected sta
 | Removing two connections that shared a record failed: `on delete set null` left two rows identical under a `nulls not distinct` index | `integration-control-plane.check.sql`: `duplicate key value violates unique constraint "canonical_entity_references_identity"` | `20260927220000_integration_orphan_identity.sql` recreates the index nulls-distinct. Nothing upserts a reference without a connection |
 | Releasing the claim on *every* failed run re-ingested and re-logged a batch refused for good (consent, scope, schema, classification) on every redelivery | `worker.test.ts`: the redelivery ran again and logged a second error | the claim is released only when an error is retryable; otherwise the event is kept as `rejected` and a redelivery is a duplicate |
 
-## Scheduler — `tick.test.ts`, `registry.test.ts`, `api/integration/tick.test.ts`, `retention.test.ts`
+## Scheduler — `tick.test.ts`, `registry.test.ts`, `integrationtick.test.ts`, `edge-integration.test.ts`, `integration-tick-auth.check.sql`, `retention.test.ts`
 
 **What the tick runs:**
 
@@ -186,10 +186,17 @@ and the three new tests were re-run against main's worker with the corrected sta
 - the run cap and the time budget are both kept, oldest attempt first;
 - one run that throws does not stop the rest.
 
-**The endpoint:**
+**The `integration-tick` Edge Function:**
 
-- it answers 503 until all three variables are set;
-- it answers 401 to a wrong or missing token, and 405 to anything but POST.
+- it answers 503 without service credentials, or when the database cannot check the token, and never runs then;
+- it answers 401 to a wrong, missing or malformed token, and 405 to anything but POST;
+- a failed tick says only that it failed.
+- The token check accepts the Vault secret and nothing else: one character off, a prefix, empty or null are refused,
+  with no secret stored everything is, and only the service role may call it. Making it return true, or granting it to
+  `authenticated`, each turned `integration-tick-auth.check.sql` red.
+- The function runs a generated copy of the tick (`app/scripts/edge-integration.ts`). `edge-integration.test.ts` fails
+  when the copy differs from the source; changing `DEFAULT_RETRY` without regenerating turned it red.
+- `deno check` passes on `supabase/functions/integration-tick/index.ts`.
 
 **The schedule is pinned:**
 

@@ -17,11 +17,17 @@ export interface ExperienceFlags {
    */
   institutionalOperations: FeatureState;
   /**
-   * The private-beta panel on Help. Never on in an institutional preview:
-   * everything it shows comes from a real account's membership, which a
-   * preview does not have. Membership still decides whether anything draws.
+   * Whether Help offers a private-beta invitation. Never on in an
+   * institutional preview: an invitation is to a real account's confirmed
+   * address, which a preview does not have. Off does not hide a member's own
+   * beta or their way out of it; membership alone decides that.
    */
   privateBeta: FeatureState;
+  /**
+   * The staff campaign manager (lib/gtm, gtm_* tables). RLS decides what each
+   * account sees; activation also needs `module.campaign_manager` in production.
+   */
+  campaignManager: FeatureState;
 }
 
 const STATES: readonly FeatureState[] = ['off', 'preview', 'sandbox', 'production'];
@@ -45,6 +51,7 @@ export function experienceFlags(env: PreviewEnv): ExperienceFlags {
     integrationDashboard: featureState(env, 'VITE_INTEGRATION_DASHBOARD', preview),
     institutionalOperations: featureState(env, 'VITE_INSTITUTIONAL_OPERATIONS', preview),
     privateBeta: featureState(env, 'VITE_PRIVATE_BETA', false),
+    campaignManager: featureState(env, 'VITE_CAMPAIGN_MANAGER', preview),
   };
 }
 
