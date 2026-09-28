@@ -109,6 +109,15 @@ export interface Live {
   integrityMode: IntegrityMode;
   /** Modes returned by verified institutional policy for the active account. */
   allowedIntegrityModes: IntegrityMode[];
+  /**
+   * Where the institutional policy lookup has got to. Only read while the
+   * gateway governs the modes: `checking` until it answers, `unreachable` when
+   * it failed — which is not the same as a school that allows no mode, and the
+   * screen says which one it is rather than "no help mode" for both.
+   */
+  policyLookup: 'checking' | 'ready' | 'unreachable';
+  /** Bumped by "Try again" to ask the school's policy once more. */
+  policyTry: number;
   proposals: Proposal[];
   /** The one waiting on a second answer, or null. See `lib/reach.ts`. */
   holding: Held | null;
@@ -157,6 +166,8 @@ function empty(): Live {
     response: null,
     integrityMode: 'explain',
     allowedIntegrityModes: [],
+    policyLookup: 'checking',
+    policyTry: 0,
     proposals: [],
     holding: null,
     applied: [],

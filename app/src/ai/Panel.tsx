@@ -1,11 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { secondLine } from '../lib/dim';
 import { focusablesIn, nextInRing } from '../a11y/modal';
 import { useStore } from '../state/store';
 import { useAI, useSeed } from './store';
 import { assemble } from './assemble';
 import { TOUCH, WIDE, useMedia } from '../lib/media';
-import { useConversation } from './converse';
+import { canSend, useConversation } from './converse';
 import { Composer, sendHint } from './Composer';
 import { useVoice } from './usevoice';
 import { Dropped, Question, Reply, Waiting, Looked, Using, useFollowing } from './Turns';
@@ -16,7 +16,7 @@ import { nameOf } from '../lib/threads';
 import { Trouble } from '../components/Trouble';
 import { Applied, Locally, Proposals } from './Actions';
 import { IntelligenceDisclosure } from '../intelligence/Disclosure';
-import { IntegrityModePicker } from '../intelligence/ModePicker';
+import { HowItHelps } from './HelpNotice';
 import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
 
 /**
@@ -94,6 +94,7 @@ export function Panel({ side }: { side: 'right' | 'left' }) {
    * views of one assistant rather than two assistants. See its header.
    */
   const talk = useConversation();
+  const noticeId = useId();
   const voice = useVoice(talk);
   /** Whether the "what's included" panel is open. Nothing hidden, on request. */
   const [showing, setShowing] = useState(false);
@@ -490,7 +491,9 @@ export function Panel({ side }: { side: 'right' | 'left' }) {
                 {/* Nothing asked yet. The same opening the tab draws, from
                     `Opening.tsx` — a sentence about what it can see and four
                     things worth asking here, rather than four naked buttons. */}
-                {empty && <Opening onPick={(q) => void talk.send(q)} tight />}
+                {empty && canSend(talk.help) && (
+                  <Opening onPick={(q) => void talk.send(q)} tight help={talk.help} />
+                )}
 
                 {/*
                   The same two components the full chat draws, from
@@ -653,10 +656,15 @@ export function Panel({ side }: { side: 'right' | 'left' }) {
               }}
             >
               <div style={COLUMN}>
-                <IntegrityModePicker
+                <HowItHelps
+                  help={talk.help}
                   requested={talk.integrityMode}
-                  policy={{ allowed: talk.allowedIntegrityModes, reason: talk.integrityReason }}
+                  allowed={talk.allowedIntegrityModes}
+                  reason={talk.integrityReason}
                   onChange={talk.setIntegrityMode}
+                  onRetry={talk.retryPolicy}
+                  noticeId={noticeId}
+                  noticeVariant="full"
                 />
                 {/*
                   The same box the full chat uses, from `Composer.tsx`, so
@@ -677,12 +685,15 @@ export function Panel({ side }: { side: 'right' | 'left' }) {
                   }}
                   busy={talk.busy}
                   placeholder={
-                    voice.on
+                    !canSend(talk.help)
+                      ? 'Sending is paused'
+                      : voice.on
                       ? 'Listening — say it out loud'
                       : `Ask about ${assembled.label} — ${sendHint(touch)}`
                   }
-                  autoFocus
+                  autoFocus={canSend(talk.help)}
                   voice={voice}
+                  blockedBy={canSend(talk.help) ? undefined : noticeId}
                 />
                 <div
                   style={{

@@ -24,8 +24,8 @@ import type { IntelligenceRequest } from '../intelligence/assemble';
 import { effectiveIntegrityMode, type IntelligenceResponse, type IntegrityMode, type SourceOrigin } from '../intelligence/contracts';
 import { tutorPolicy, tutoring } from '../lib/socratic';
 import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
-import { institutionIntelligence, institutionIntelligencePolicy } from '../lib/university';
-import { dropThread, flight, keepTurns, newThread, openThread, sender, setLive, useLive,
+import { gatewayConfigured, institutionIntelligence, institutionIntelligencePolicy } from '../lib/university';
+import { dropThread, flight, keepTurns, liveNow, newThread, openThread, sender, setLive, useLive,
   renameThread,
   pinThread,
   openedOn,
@@ -82,6 +82,10 @@ export interface Conversation {
   allowedIntegrityModes: IntegrityMode[];
   /** Where the limits on those modes came from, for the line under the picker. */
   integrityReason: string;
+  /** Whether help is available now, and if not, which kind of not. See `HelpState`. */
+  help: HelpState;
+  /** Ask the school's policy again after `help.kind === 'unreachable'`. */
+  retryPolicy: () => void;
   setIntegrityMode: (mode: IntegrityMode) => void;
   /** Offers waiting on a tap. Nothing here has happened. */
   proposals: Proposal[];
@@ -207,16 +211,34 @@ export function useConversation(): Conversation {
     v: { p: Proposal; before: Lists }[] | ((was: { p: Proposal; before: Lists }[]) => { p: Proposal; before: Lists }[]),
   ) => setLive('applied', v);
   const setSpend = (v: ReturnType<typeof readSpend>) => setLive('spend', v);
+  /*
+   * Whether the university gateway decides the modes and answers.
+   *
+   * The flag alone used to decide it. A build with Semester Intelligence on
+   * and no gateway configured — every preview deploy — then asked a gateway
+   * that could not exist for its policy, got an error, stored "no modes", and
+   * drew every mode disabled beside four live suggestions and a composer
+   * whose sends went to the same missing gateway. The flag says the feature
+   * is on; only a configured gateway can govern it.
+   */
+  const governed = governs(EXPERIENCE_FLAGS.semesterIntelligence, gatewayConfigured);
   useEffect(() => {
-    if (EXPERIENCE_FLAGS.semesterIntelligence === 'off') return;
+    if (!governed) return;
     let alive = true;
+    setLive('policyLookup', 'checking');
     void institutionIntelligencePolicy().then(({ allowedModes }) => {
       if (!alive) return;
       setLive('allowedIntegrityModes', allowedModes);
-      if (!allowedModes.includes(integrityMode) && allowedModes[0]) setLive('integrityMode', allowedModes[0]);
-    }, () => { if (alive) setLive('allowedIntegrityModes', []); });
+      setLive('policyLookup', 'ready');
+      const mode = liveNow().integrityMode;
+      if (!allowedModes.includes(mode) && allowedModes[0]) setLive('integrityMode', allowedModes[0]);
+    }, () => {
+      if (!alive) return;
+      setLive('allowedIntegrityModes', []);
+      setLive('policyLookup', 'unreachable');
+    });
     return () => { alive = false; };
-  }, [account?.id, integrityMode, state.schoolId]);
+  }, [governed, account?.id, state.schoolId, live.policyTry]);
 
   /**
    * What the app holds, for checking a tool call against reality.
@@ -295,7 +317,6 @@ export function useConversation(): Conversation {
    * come from the AI policy the student recorded for the course in view, read
    * by the same resolver the toolkit uses. See `lib/socratic.ts`.
    */
-  const governed = EXPERIENCE_FLAGS.semesterIntelligence !== 'off';
   const limits = useMemo(() => tutorPolicy(catalog.byId[state.guideId]), [catalog, state.guideId]);
 
   const send = useCallback(
@@ -441,8 +462,8 @@ export function useConversation(): Conversation {
         for (const item of intelligence.evidence) drew.add(`${item.title} — ${item.locator}`);
         setUsed([...drew]);
 
-        if (EXPERIENCE_FLAGS.semesterIntelligence !== 'off') {
-          const governed = await institutionIntelligence({
+        if (governed) {
+          const answer = await institutionIntelligence({
             version: 1,
             clientState: EXPERIENCE_FLAGS.semesterIntelligence,
             tenantId: intelligence.context.scope.tenantId,
@@ -454,18 +475,18 @@ export function useConversation(): Conversation {
             evidenceIds: intelligence.context.evidenceIds,
             proposedActions: [],
           });
-          const allowed = new Set(governed.evidenceIds);
+          const allowed = new Set(answer.evidenceIds);
           const evidence = intelligence.evidence.filter((item) => allowed.has(item.id));
           const origins = [...new Set(evidence.map((item) => item.origin))];
           setResponse({
-            text: governed.text,
+            text: answer.text,
             evidence,
             informationUsed: [...drew],
             origins: origins.length ? origins : ['inference'],
-            mode: governed.mode,
+            mode: answer.mode,
             actions: [],
           });
-          remember([...next, { role: 'assistant', content: governed.text }]);
+          remember([...next, { role: 'assistant', content: answer.text }]);
           return;
         }
 
@@ -696,7 +717,7 @@ export function useConversation(): Conversation {
     },
     // No `dispatch`: the one call `send` made was the search the card
     // promised and no screen ran. See the note on `Proposal` in `lib/tools.ts`.
-    [busy, turns, remember, trouble, ai, state, catalog, now, school, account?.id, integrityMode, systemFor, held, limits],
+    [busy, turns, remember, trouble, ai, state, catalog, now, school, account?.id, integrityMode, systemFor, held, limits, governed],
   );
 
   /*
@@ -802,6 +823,14 @@ export function useConversation(): Conversation {
     integrityMode,
     allowedIntegrityModes: governed ? live.allowedIntegrityModes : limits.allowed,
     integrityReason: governed ? 'Available modes are set by verified university policy.' : limits.reason,
+    help: helpState({
+      governed,
+      lookup: live.policyLookup,
+      allowed: governed ? live.allowedIntegrityModes : limits.allowed,
+      course: limits.code,
+      instead: limits.instead,
+    }),
+    retryPolicy: () => setLive('policyTry', liveNow().policyTry + 1),
     setIntegrityMode: (mode) => setLive('integrityMode', mode),
     proposals,
     applied,
@@ -868,3 +897,55 @@ export function useConversation(): Conversation {
 
 /** What to call the thing answering — Claude or GPT, whichever is set. */
 export { provider };
+
+/**
+ * Whether the university gateway decides the modes and carries the answers.
+ *
+ * Both halves, not the flag alone: see the note where `useConversation`
+ * reads it. A flag that is on with no gateway behind it is the ordinary
+ * preview build, and the local assistant is what should answer there.
+ */
+export const governs = (flag: string, gatewayConfigured: boolean) => flag !== 'off' && gatewayConfigured;
+
+/**
+ * Whether the assistant can help right now, and if not, which kind of not.
+ *
+ * The screen used to have one sentence for every way this could be false —
+ * "No help mode is available for this course." — printed under five disabled
+ * pills while the suggestions and the composer above it stayed live. Four
+ * different situations wore it, and they want four different screens:
+ *
+ * - `checking`: the school has not answered yet. Nothing is wrong.
+ * - `unreachable`: the school's policy could not be read. Sending would go to
+ *   the same place and fail, so the composer waits, and says so, with a retry.
+ * - `school-off`: the school answered and allows no mode. Course help is off;
+ *   the composer is off with it, because every answer goes through the school.
+ * - `course-off`: the AI policy the student recorded for the course in view
+ *   bans AI help with its work. Planning help — deadlines, the week — still
+ *   works, because the tutoring paragraph then refuses coursework itself.
+ */
+export type HelpState =
+  | { kind: 'ready' }
+  | { kind: 'checking' }
+  | { kind: 'unreachable' }
+  | { kind: 'school-off' }
+  | { kind: 'course-off'; course: string; instead: string[] };
+
+export function helpState(input: {
+  governed: boolean;
+  lookup: 'checking' | 'ready' | 'unreachable';
+  allowed: readonly IntegrityMode[];
+  course?: string;
+  instead?: readonly string[];
+}): HelpState {
+  if (input.governed) {
+    if (input.lookup === 'checking') return { kind: 'checking' };
+    if (input.lookup === 'unreachable') return { kind: 'unreachable' };
+    return input.allowed.length ? { kind: 'ready' } : { kind: 'school-off' };
+  }
+  if (input.allowed.length) return { kind: 'ready' };
+  return { kind: 'course-off', course: input.course ?? 'this course', instead: [...(input.instead ?? [])] };
+}
+
+/** Whether the composer can send at all in this state. Planning help survives a course ban. */
+export const canSend = (help: HelpState) => help.kind === 'ready' || help.kind === 'course-off';

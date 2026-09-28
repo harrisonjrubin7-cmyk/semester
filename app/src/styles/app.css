@@ -2413,9 +2413,10 @@ a:hover {
   padding: 0;
   margin-bottom: var(--sp-2);
   font-size: var(--type-xs);
+  font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--app-dim);
+  color: var(--app-fg);
 }
 .device .mode-picker-row {
   display: flex;
@@ -2430,12 +2431,13 @@ a:hover {
   border: 1px solid var(--app-line);
   border-radius: var(--r-lg);
   color: var(--app-fg);
-  font-size: var(--type-xs);
+  font-size: var(--type-sm);
   cursor: pointer;
 }
 .device .mode-picker-option:has(input:checked) {
   background: var(--app-accent-wash);
   border-color: var(--app-accent);
+  box-shadow: inset 0 0 0 1px var(--app-accent);
   font-weight: 600;
 }
 .device .mode-picker-option:has(input:checked)::before {
@@ -2448,14 +2450,14 @@ a:hover {
   border-style: dashed;
 }
 .device .mode-picker-option:has(input:focus-visible) {
-  outline: 2px solid var(--focus-color);
+  outline: 3px solid var(--focus-color);
   outline-offset: var(--focus-ring-offset);
 }
 .device .mode-picker-help {
   margin: var(--sp-2) 0 0;
-  font-size: var(--type-xs);
+  font-size: var(--type-sm);
   line-height: var(--leading-normal);
-  color: var(--app-dim);
+  color: var(--app-fg);
 }
 
 /* Round, and the size of a thumb. 34x32 was the old one and it was a small
@@ -10152,20 +10154,31 @@ button.adband-bar {
  */
 .device .ask-context {
   margin-top: var(--sp-6);
-  padding: var(--sp-4) var(--sp-5);
+  padding: var(--sp-5) var(--sp-6);
   border: 1px solid var(--app-line);
   border-radius: var(--r-md);
-  font-size: var(--type-xs);
+  background: var(--app-raise);
+  font-size: var(--type-sm);
   line-height: var(--leading-normal);
-  color: var(--app-dim);
+  /* The body of the tray is read, not glanced at: full ink, not `--app-dim`.
+     The grey version was the "faint support copy" the design review named. */
+  color: var(--app-fg);
+}
+.device .ask-context-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2) var(--sp-4);
+  align-items: baseline;
 }
 .device .ask-context-kicker {
+  font-size: var(--type-xs);
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--app-fg);
 }
 .device .ask-context-more {
-  margin-top: var(--sp-2);
+  margin-top: var(--sp-3);
 }
 .device .ask-context-more summary {
   cursor: pointer;
@@ -10175,7 +10188,146 @@ button.adband-bar {
   min-height: 24px;
   display: list-item;
 }
+.device .ask-context-more summary:focus-visible {
+  outline: 3px solid var(--focus-color);
+  outline-offset: 2px;
+  border-radius: var(--r-sm);
+}
 .device .ask-context-more ul {
   margin: var(--sp-3) 0 0;
   padding-left: var(--sp-7);
+}
+
+/*
+ * ── Ask Semester: the opening and the states around it ──────────────────
+ *
+ * `ai/Opening.tsx` and `ai/HelpNotice.tsx`. The lede and the starters are
+ * operational type — normal case, normal tracking, full ink — because they
+ * are read and tapped, not glanced at. The starters were full-width 56px
+ * rows of tracked bold type, four of them stacked, and they were most of
+ * the screen; on a wide window they are a two-column grid of cards, each
+ * saying what its answer is built from.
+ */
+.device .ask-opening-lede {
+  margin: 0;
+  font-size: var(--type-sm);
+  line-height: var(--leading-normal);
+  color: var(--app-fg);
+  max-width: 60ch;
+}
+.device .ask-starters-label {
+  margin: var(--sp-7) 0 var(--sp-4);
+  font-size: var(--type-xs);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--app-fg);
+}
+.device .ask-starters {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sp-4);
+}
+@media (min-width: 600px) {
+  .device .ask-starters.is-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.device .ask-starter {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-2);
+  width: 100%;
+  min-height: 44px;
+  padding: var(--sp-5) var(--sp-6);
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-md);
+  background: var(--app-panel);
+  color: var(--app-fg);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--fast), background var(--fast);
+}
+.device .ask-starter:hover {
+  border-color: var(--app-accent);
+}
+.device .ask-starter:active {
+  background: var(--app-accent-wash);
+}
+.device .ask-starter:focus-visible {
+  outline: 3px solid var(--focus-color);
+  outline-offset: 2px;
+}
+.device .ask-starter-q {
+  font-size: var(--type-sm);
+  font-weight: 600;
+  line-height: var(--leading-tight);
+}
+.device .ask-starter-uses {
+  font-size: var(--type-xs);
+  line-height: var(--leading-normal);
+  color: var(--app-dim);
+}
+
+/*
+ * Why help is not available, with ways out.
+ *
+ * A neutral information surface — the accent edge, not the danger colour —
+ * because a school or a course that switched AI help off is a boundary, not
+ * a fault. Only a policy that could not be read is marked as trouble.
+ */
+.device .ask-help {
+  padding: var(--sp-6) var(--sp-7);
+  border: 1px solid var(--app-line);
+  border-left: 3px solid var(--app-accent);
+  border-radius: var(--r-md);
+  background: var(--app-raise);
+  color: var(--app-fg);
+  margin-bottom: var(--sp-4);
+}
+.device .ask-help[data-kind='unreachable'] {
+  border-left-color: var(--app-warn);
+}
+.device .ask-help-title {
+  margin: 0 0 var(--sp-3);
+  font-size: var(--type-md);
+  font-weight: 600;
+  line-height: var(--leading-tight);
+}
+.device .ask-help-body {
+  margin: 0;
+  font-size: var(--type-sm);
+  line-height: var(--leading-normal);
+  max-width: 62ch;
+}
+.device .ask-help-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  margin-top: var(--sp-5);
+}
+.device .ask-help-action {
+  width: auto;
+  min-height: 44px;
+  padding: 0 var(--sp-6);
+}
+.device .ask-help-line {
+  margin: 0 0 var(--sp-3);
+  font-size: var(--type-sm);
+  line-height: var(--leading-normal);
+  color: var(--app-fg);
+}
+/* A box that cannot send looks like one: no hover lift, the field muted but
+   still legible, and the reason sits directly above it. */
+.device .ai-composer[data-blocked] {
+  border-style: dashed;
+}
+.device .ai-composer[data-blocked]:hover {
+  border-color: var(--app-line);
+}
+.device .ai-composer[data-blocked] .ai-composer-field {
+  cursor: not-allowed;
+  color: var(--app-dim);
 }
