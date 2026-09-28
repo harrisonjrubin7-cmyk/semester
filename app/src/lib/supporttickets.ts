@@ -2,7 +2,7 @@
  * The student's half of support tickets.
  *
  * Every call is an RPC; the tables have no grant
- * (`supabase/migrations/20260928120000_support_tickets.sql`). The rule this
+ * (`supabase/migrations/20260928210000_support_tickets.sql`). The rule this
  * module exists to keep is the one that migration opens with: the student
  * decides what context goes with a ticket, sees it before it is sent, and
  * none of it is about them rather than about the app.

@@ -358,7 +358,7 @@ declare
     'integration_set_paused(want_connection text, want_paused boolean, want_reason text)',
     'kill_switch_engaged(want_switch text, want_tenant text)',
 
-    -- The nine in 20260928120000_support_tickets.sql. The tables have no grant,
+    -- The nine in 20260928210000_support_tickets.sql. The tables have no grant,
     -- so these are the only way in. The first six act on the caller's own
     -- tickets; the last three check `support:ticket` and return no column
     -- that names the student.

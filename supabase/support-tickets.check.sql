@@ -1,4 +1,4 @@
--- Support tickets (20260928120000_support_tickets.sql).
+-- Support tickets (20260928210000_support_tickets.sql).
 -- LOCAL/DISPOSABLE DATABASES ONLY; the transaction is always rolled back.
 --
 -- Two students and a support agent. Each rule is walked by the account it is

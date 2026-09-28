@@ -21,7 +21,7 @@ links to the Support screen so nobody asks the app about financial aid.
 
 | Piece | File |
 | --- | --- |
-| Tables, functions, limits | `supabase/migrations/20260928120000_support_tickets.sql` |
+| Tables, functions, limits | `supabase/migrations/20260928210000_support_tickets.sql` |
 | Every rule walked with two students and an agent | `supabase/support-tickets.check.sql` |
 | Client, and the six context keys | `app/src/lib/supporttickets.ts` |
 | Client held to the migration's lists and hours | `app/src/lib/supporttickets.test.ts` |
@@ -83,7 +83,7 @@ checks it on a schedule, no history kept), `UNPROBED` (nothing checks it).
 | SLO-2 | The institutional gateway answers, where one is configured | 99.5% of hourly probes pass, per calendar month | `.github/workflows/production-smoke.yml` running `app/scripts/production-smoke.mjs` | PROBED | — |
 | SLO-3 | A merged migration reaches production the same day | No `MIGRATIONS_FAILED` branch record older than 24 hours | `supabase/ledger.snapshot`, held by `app/src/lib/migrationorder.test.ts`; the deploy itself only by the weekly look in `MONITORING.md` | PROBED | — |
 | SLO-4 | Sync keeps writing | A pilot account's newest `state` row is under 7 days old during term | `supabase/health.sql` block 2, weekly, by a person | PROBED | — |
-| SLO-5 | Support answers first within target | 24 hours for accessibility and privacy, 72 for the rest, for 90% of tickets | `supabase/migrations/20260928120000_support_tickets.sql` (`support_ticket_queue` returns `overdue`) | UNPROBED | — |
+| SLO-5 | Support answers first within target | 24 hours for accessibility and privacy, 72 for the rest, for 90% of tickets | `supabase/migrations/20260928210000_support_tickets.sql` (`support_ticket_queue` returns `overdue`) | UNPROBED | — |
 | SLO-6 | AI spend stays under cap | Provider alert fires at half the cap; no month exceeds it | `supabase/functions/claude/index.ts` (`MONTHLY_CALL_LIMIT`) and `supabase/health.sql` block 1 | PROBED | — |
 
 `SLO-5` is `UNPROBED` even though the column it needs exists: nothing reads the
