@@ -38,6 +38,9 @@ The central rule, stated once:
 | 15 | Strategic defensibility | [DEFENSIBILITY.md](DEFENSIBILITY.md) | Process |
 | 16 | Founding-team operating rhythm | [OPERATING-RHYTHM.md](OPERATING-RHYTHM.md) | Process |
 | 17 | Pilot-to-production lifecycle, migration tracker | [PILOT-TO-PRODUCTION.md](PILOT-TO-PRODUCTION.md) | Code: `rollout.ts`; database: `tenant_rollout` trigger |
+| 18 | SLOs, error budgets and the release rules they impose | [SLOS-AND-ERROR-BUDGETS.md](SLOS-AND-ERROR-BUDGETS.md) | Code: `error-budgets.ts` |
+| 19 | AI lifecycle gates G0–G5 (NIST AI RMF) | [AI-LIFECYCLE-GATES.md](AI-LIFECYCLE-GATES.md) | Code: `ai-lifecycle.ts` |
+| 20 | Release readiness score, proof before scale | [QUALITY-MANAGEMENT.md](QUALITY-MANAGEMENT.md#release-readiness) | Code: `release-readiness.ts` |
 | — | Change management and adoption | [CHANGE-MANAGEMENT.md](CHANGE-MANAGEMENT.md) | Process |
 | — | AI financial sustainability, ROI measurement | [COMMERCIAL-GOVERNANCE.md](COMMERCIAL-GOVERNANCE.md#ai-cost-controls) | Existing metered gateway (ADR 0004) |
 

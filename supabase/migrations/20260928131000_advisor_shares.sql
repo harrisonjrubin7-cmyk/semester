@@ -137,6 +137,15 @@ as $$
    where s.advisor_id = (select auth.uid())
      and s.revoked_at is null
      and s.expires_at > now()
+     -- The advisor's role, checked at every read and not only when the share
+     -- was made: a grant the school revoked or let expire ends access now.
+     and exists (select 1 from public.role_grants g
+                  where g.subject = s.advisor_id
+                    and g.role = 'academic_advisor'
+                    and g.scope_kind = 'school'
+                    and g.scope_id = s.tenant_id
+                    and g.revoked_at is null
+                    and (g.expires_at is null or g.expires_at > now()))
    order by s.created_at desc;
 $$;
 revoke all on function public.list_advisor_shares() from public, anon, authenticated;
@@ -155,7 +164,16 @@ begin
    where x.id = want_share
      and x.advisor_id = (select auth.uid())
      and x.revoked_at is null
-     and x.expires_at > now();
+     and x.expires_at > now()
+     -- The advisor's role, checked at every read and not only when the share
+     -- was made: a grant the school revoked or let expire ends access now.
+     and exists (select 1 from public.role_grants g
+                  where g.subject = x.advisor_id
+                    and g.role = 'academic_advisor'
+                    and g.scope_kind = 'school'
+                    and g.scope_id = x.tenant_id
+                    and g.revoked_at is null
+                    and (g.expires_at is null or g.expires_at > now()));
   if not found then
     raise exception 'not shared with you' using errcode = '42501';
   end if;

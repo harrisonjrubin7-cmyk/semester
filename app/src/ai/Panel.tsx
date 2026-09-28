@@ -11,7 +11,7 @@ import { useVoice } from './usevoice';
 import { Dropped, Question, Reply, Waiting, Looked, Using, useFollowing } from './Turns';
 import { Opening } from './Opening';
 import { money } from '../lib/spend';
-import { configured, modelLabel } from '../lib/assistant';
+import { configured } from '../lib/assistant';
 import { nameOf } from '../lib/threads';
 import { Trouble } from '../components/Trouble';
 import { Applied, Locally, Proposals } from './Actions';
@@ -706,7 +706,7 @@ export function Panel({ side }: { side: 'right' | 'left' }) {
                     }}
                     style={QUIET}
                   >
-                    {configured() ? modelLabel().toUpperCase() : 'SET A KEY'}
+                    {configured() ? 'ASSISTANT SETTINGS' : 'SET A KEY'}
                   </button>
                   <span style={{ flex: 1 }} />
                   {/* The same conversation, with the page to itself. Not a

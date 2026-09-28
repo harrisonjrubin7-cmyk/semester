@@ -112,7 +112,7 @@ end $$;
 do $$
 declare
   athlete uuid; teammate uuid; support uuid; other_support uuid; learning uuid;
-  compliance uuid; dual uuid; lapsed uuid; share uuid; miss text; ended text;
+  compliance uuid; dual uuid; lapsed uuid; share uuid; miss text; ended text; gone bigint;
   body jsonb := '{"sharedAs":"Sam","travel":[{"from":"2026-10-09","to":"2026-10-11","misses":["ECON 1020"]}],"courses":["ECON 1020"]}'::jsonb;
 begin
   insert into public.schools (id, name, email_domains) values
@@ -266,6 +266,26 @@ begin
   execute 'reset role';
   perform pg_temp.counted('the athlete deletes it, and its log goes with it',
     (select count(*) from public.support_share_events), 0);
+
+  -- ── Delete my account, at the staff end ─────────────────────────────────
+  -- A staff member has no delete policy on the shares they received, and
+  -- deleting an account deletes no auth user, so only the RPC reaches them.
+  insert into public.support_shares (student_id, staff_id, tenant_id, payload, expires_at)
+  values (athlete, support, 'ath-u', '{"courses":[]}', now() + interval '5 days');
+  insert into public.support_shares (student_id, staff_id, tenant_id, payload, expires_at)
+  values (teammate, other_support, 'ath-u', '{"courses":[]}', now() + interval '5 days');
+  perform pg_temp.become(support);
+  gone := public.forget_my_support_shares();
+  execute 'reset role';
+  perform pg_temp.counted('a staff member forgets the shares they received', gone, 1);
+  perform pg_temp.counted('so none addressed to them is left',
+    (select count(*) from public.support_shares where staff_id = support), 0);
+  perform pg_temp.counted('and a share between two other people is untouched (the control)',
+    (select count(*) from public.support_shares where staff_id = other_support), 1);
+  perform pg_temp.become(teammate);
+  gone := public.forget_my_support_shares();
+  execute 'reset role';
+  perform pg_temp.counted('a student forgets the shares they made, the same way', gone, 1);
 end $$;
 
 set local role anon;

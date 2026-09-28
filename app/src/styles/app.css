@@ -2395,6 +2395,69 @@ a:hover {
   border: 0;
   box-shadow: none;
 }
+/*
+ * ── How it helps: the assistant's mode, as a radio group ────────────────
+ *
+ * `intelligence/ModePicker.tsx`. The radios are visually hidden and the
+ * labels are drawn as a row of pills; the choice is marked by a check and the
+ * full ink as well as the wash, so it is never colour alone, and the keyboard
+ * ring is moved onto the pill because the input it belongs to is clipped.
+ */
+.device .mode-picker {
+  border: 0;
+  margin: 0 0 var(--sp-3);
+  padding: 0;
+  min-width: 0;
+}
+.device .mode-picker-legend {
+  padding: 0;
+  margin-bottom: var(--sp-2);
+  font-size: var(--type-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--app-dim);
+}
+.device .mode-picker-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+.device .mode-picker-option {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 var(--sp-4);
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-lg);
+  color: var(--app-fg);
+  font-size: var(--type-xs);
+  cursor: pointer;
+}
+.device .mode-picker-option:has(input:checked) {
+  background: var(--app-accent-wash);
+  border-color: var(--app-accent);
+  font-weight: 600;
+}
+.device .mode-picker-option:has(input:checked)::before {
+  content: '✓';
+  margin-right: var(--sp-2);
+}
+.device .mode-picker-option[data-disabled] {
+  color: var(--app-dim);
+  cursor: not-allowed;
+  border-style: dashed;
+}
+.device .mode-picker-option:has(input:focus-visible) {
+  outline: 2px solid var(--focus-color);
+  outline-offset: var(--focus-ring-offset);
+}
+.device .mode-picker-help {
+  margin: var(--sp-2) 0 0;
+  font-size: var(--type-xs);
+  line-height: var(--leading-normal);
+  color: var(--app-dim);
+}
+
 /* Round, and the size of a thumb. 34x32 was the old one and it was a small
    rectangle in the corner of a rectangle. */
 .device .ai-send {
@@ -10079,3 +10142,40 @@ button.adband-bar {
 .jx-glossary dt { font-size: var(--type-base-plus); font-weight: 600; }
 .jx-glossary dd { margin: var(--sp-2) 0 0; font-size: var(--type-base); color: var(--app-dim); line-height: 1.55; }
 .jx-pre { font-size: var(--type-xs-plus); background: var(--app-raise); padding: var(--sp-5); border-radius: var(--r-sm); overflow-x: auto; white-space: pre; }
+
+/*
+ * ── What the assistant can see ───────────────────────────────────────────
+ *
+ * `ai/Opening.tsx`. One summary line with the scope in numbers, and a
+ * disclosure for the boundary. Drawn as a quiet tray, not a card: it is
+ * context for the composer below, not a thing to act on.
+ */
+.device .ask-context {
+  margin-top: var(--sp-6);
+  padding: var(--sp-4) var(--sp-5);
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-md);
+  font-size: var(--type-xs);
+  line-height: var(--leading-normal);
+  color: var(--app-dim);
+}
+.device .ask-context-kicker {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--app-fg);
+}
+.device .ask-context-more {
+  margin-top: var(--sp-2);
+}
+.device .ask-context-more summary {
+  cursor: pointer;
+  color: var(--app-fg);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  min-height: 24px;
+  display: list-item;
+}
+.device .ask-context-more ul {
+  margin: var(--sp-3) 0 0;
+  padding-left: var(--sp-7);
+}

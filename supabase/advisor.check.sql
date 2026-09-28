@@ -178,6 +178,18 @@ begin
     format($q$update public.advisor_shares set expires_at = now() + interval '119 days' where id = %L$q$, share));
   perform pg_temp.expect_refused('the advisor deletes it', advisor, format('delete from public.advisor_shares where id = %L', share));
 
+  -- ── the advisor's own role, at every read ────────────────────────────────
+  -- The share is live here. The school revoking the advisor's grant, or the
+  -- grant expiring, ends their access at once, not when the share expires.
+  update public.role_grants set revoked_at = now() where subject = advisor and role = 'academic_advisor';
+  perform pg_temp.expect_refused('an advisor whose role was revoked cannot open a live share', advisor, format('select * from public.read_advisor_share(%L)', share));
+  perform pg_temp.counted('nor list it', pg_temp.seen(advisor, 'select * from public.list_advisor_shares()'), 0);
+  update public.role_grants set revoked_at = null, expires_at = now() - interval '1 second' where subject = advisor and role = 'academic_advisor';
+  perform pg_temp.expect_refused('nor one whose role expired', advisor, format('select * from public.read_advisor_share(%L)', share));
+  perform pg_temp.counted('and it is not listed then either', pg_temp.seen(advisor, 'select * from public.list_advisor_shares()'), 0);
+  update public.role_grants set expires_at = null where subject = advisor and role = 'academic_advisor';
+  perform pg_temp.counted('with the role restored, it lists again (the control)', pg_temp.seen(advisor, 'select * from public.list_advisor_shares()'), 1);
+
   -- ── revocation ────────────────────────────────────────────────────────────
   perform pg_temp.expect_allowed('the student revokes it', student,
     format($q$update public.advisor_shares set revoked_at = now() where id = %L$q$, share));

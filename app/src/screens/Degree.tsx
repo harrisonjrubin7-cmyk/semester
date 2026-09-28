@@ -24,7 +24,7 @@ import { DIMMED_ROW, secondLine } from '../lib/dim';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Blueprint } from '../components/Blueprint';
-import { StatusChip } from '../components/unity/Status';
+import { SourceBadge } from '../components/SourceBadge';
 import { ActionButton, PickChips, SectionLabel, Segmented } from '../components/ui';
 import {
   countingIn,
@@ -78,8 +78,15 @@ export function Degree({ advisorMeeting = moduleOn(MODULE_FLAGS.advisor_meeting_
       <Blueprint style={{ paddingBlock: 'calc(14px * var(--density, 1))', paddingInline: 'calc(15px * var(--density, 1))' }}>
         <div className="kicker">Your arithmetic, not the registrar’s</div>
         <div className="context-bar-states" style={{ marginTop: 'var(--sp-3)' }}>
-          <StatusChip status="yours" />
-          <StatusChip status="needs-confirmation" />
+          {/*
+            The app's one trust badge (`lib/source.ts`), not the status
+            chips' "Yours" and "Needs confirmation": the same provenance in a
+            second vocabulary is a second fact to a reader. What you typed in
+            is Student entered; everything below it is worked out from that,
+            which is Estimated — "not an official figure" is its meaning.
+          */}
+          <SourceBadge label="student_entered" />
+          <SourceBadge label="estimated" />
         </div>
         <div
           style={{

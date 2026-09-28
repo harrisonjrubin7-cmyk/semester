@@ -1380,3 +1380,29 @@ the deploy off main would have failed on the first of them:
   `ltiaccount.test.ts` fails without them.
 - **References.** Code comments, docs, check suites and RETENTION name the new
   files. Earlier entries in this log keep the numbers they were written with.
+
+## D-106 · Three findings on the merge to main, fixed before it
+
+**Decided 28 Sep 2026.** Codex reviewed #893 (integration → main) and raised
+three P1 findings, each about who can see a student's shared data. All three
+are fixed in migrations that have not been applied anywhere live, and each fix
+has a check that fails against a faithful revert of it.
+
+- **A family share's copy belonged to the item, not to the share.**
+  `family_shared_items` was keyed by student and item, so sharing an item
+  again rewrote the row every earlier grant read: a second share changed what
+  the first supporter saw, which D-038 says never happens. Copies are now
+  keyed by code and item, a claimed grant records its `invite_code`, and
+  `read_family_share()` reads only its own code's copies. Stopping a share
+  still removes every copy of those items.
+- **An advisor's role was checked only when a share was made.** An advisor
+  whose `academic_advisor` grant was later revoked or expired could still list
+  and open shares. `list_advisor_shares()` and `read_advisor_share()` now
+  re-check the live grant at the share's school on every call, as the
+  support-share readers already did.
+- **Delete my account left support shares at the staff end.** Deleting an
+  account signs out and deletes no auth user, so nothing cascades, and a
+  staff member has no delete policy on shares addressed to them.
+  `forget_my_support_shares()` removes every share naming the caller at
+  either end, and the deletion list uses it, as it does for advisor shares.
+

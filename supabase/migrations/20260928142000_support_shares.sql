@@ -253,6 +253,33 @@ grant execute on function public.read_support_share(uuid) to authenticated;
 -- The complete latest definition: 20260928141000's rows plus both ends of
 -- `support_shares`. `graduation_scenarios` (#780) and `advisor_shares`
 -- (#802) are not on this branch's base; whichever lands second carries every
+
+-- ── Forgetting support shares at either end ─────────────────────────────
+-- "Delete my account" signs out; it does not delete the auth user, so no
+-- cascade runs. A student's own shares go by the table's delete policy, but a
+-- staff member has no delete policy on shares addressed to them, and those
+-- would survive to be read again after signing back in. This removes every
+-- share naming the caller at either end, as forget_my_advisor_shares does.
+create or replace function public.forget_my_support_shares()
+returns bigint
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  who uuid := (select auth.uid());
+  removed bigint;
+begin
+  if who is null then
+    raise exception 'semester: not signed in' using errcode = 'insufficient_privilege';
+  end if;
+  delete from public.support_shares where student_id = who or staff_id = who;
+  get diagnostics removed = row_count;
+  return removed;
+end $$;
+revoke all on function public.forget_my_support_shares() from public, anon, authenticated;
+grant execute on function public.forget_my_support_shares() to authenticated;
+
 -- row, as the notes in 20260928140000 and 20260928141000 say.
 
 create or replace function public.lti_account_untouched(who uuid)
