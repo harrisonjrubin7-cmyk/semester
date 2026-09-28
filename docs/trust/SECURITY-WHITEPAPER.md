@@ -236,8 +236,9 @@ The institution is responsible for:
 ## 19. Contact and vulnerability disclosure
 
 Security reports go to the repository owner's address, as `SECURITY.md`
-states and as `/.well-known/security.txt` (RFC 9116) publishes on the deployed
-app, with `SECURITY.md` as its policy. A dedicated security address arrives
+states and as a `security.txt` in RFC 9116 form publishes under the deployed
+app's base path, with `SECURITY.md` as its policy; origin-root discovery
+waits on a domain the project controls. A dedicated security address arrives
 with the company domain (D-110), and safe-harbor language waits on counsel
 (HECVAT VULN-1).
 

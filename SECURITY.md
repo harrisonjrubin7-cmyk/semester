@@ -37,8 +37,14 @@ Anybody who finds a way to read rows that are not theirs, or a key that is
 out, writes to **`harrisonjrubin7@gmail.com`** with *Security report* in the
 subject. The same address is published in machine-readable form at
 [`app/public/.well-known/security.txt`](app/public/.well-known/security.txt),
-which the deployed app serves at `/.well-known/security.txt` and whose
-`Policy` field points back at this file (RFC 9116). It is the owner's own
+which the deployed app serves under its own base path
+(`…/semester/.well-known/security.txt`) and whose `Policy` field points back
+at this file. The format is RFC 9116's; the *discovery* is not yet, because
+the app is a project site on a shared origin and the origin-root
+`/.well-known/security.txt` that scanners start from is not this project's to
+serve. Until the app is served from a domain the project controls, the URL is
+found by a person on the site's `/security/` page rather than by a scanner.
+It is the owner's own
 address and not a company one, on purpose: [`D-110`](docs/DECISION-LOG.md)
 rejected addresses at a domain the company does not own, because they would be
 invented, and an invented security contact is worse than none. A dedicated

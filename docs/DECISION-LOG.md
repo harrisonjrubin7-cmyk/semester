@@ -1727,7 +1727,9 @@ a contact address in `SECURITY.md` that nothing outside a GitHub reader could
 find. The compliance crosswalk counted the absence three times over.
 
 - **The published security contact is `harrisonjrubin7@gmail.com`**, in
-  `app/public/.well-known/security.txt` (RFC 9116, served by the deployed app)
+  `app/public/.well-known/security.txt` (RFC 9116 in form; served under the
+  app's base path, not the origin root a scanner starts from, until the app
+  has a domain of its own)
   and on the site's `/security/` page — the address the owner actually holds,
   which the app's privacy page already names. D-110 rejected addresses at a
   domain the company does not own, and the same reasoning applies with more

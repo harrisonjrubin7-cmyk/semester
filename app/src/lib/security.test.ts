@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { CONTACT_EMAIL } from '../site/config';
+import { CONTACT_EMAIL, DEFAULT_SITE } from '../site/config';
 import { SUPPORT } from './privacy';
 import { PATCH_POLICY } from './supplychain';
 
@@ -244,7 +244,13 @@ describe('a stranger can find the contact, and the clocks are the ones the patch
      */
     const f = fields();
     expect(f.get('Policy'), 'Policy does not name SECURITY.md').toMatch(/\/SECURITY\.md$/);
-    expect(f.get('Canonical')).toMatch(/\/\.well-known\/security\.txt$/);
+    /*
+     * Canonical is the app's own address, so the day the app moves to a
+     * domain of its own — the one change that makes origin-root discovery
+     * possible — this line and the file's comment about base paths both go
+     * red rather than pointing at the old project site.
+     */
+    expect(f.get('Canonical')).toBe(`${DEFAULT_SITE.appUrl}.well-known/security.txt`);
     const expires = Date.parse(f.get('Expires') ?? '');
     expect(Number.isNaN(expires), 'Expires is not a date').toBe(false);
     expect(expires, 'security.txt has expired — renew the date as part of reviewing SECURITY.md').toBeGreaterThan(
