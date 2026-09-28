@@ -28,7 +28,7 @@ are referenced as TAB-n rather than duplicated.
 | BL-1.1 | `SourceLabel` type + `SourceBadge` + freshness line | S | — | Five values matching the DB enum; replace `TicketSource`; axe + label tests |
 | BL-1.2 | `lib/actions.ts` canonical Action model | M | 1.1 | Pure: lifecycle transitions (invalid ones refused), history, priority/ranking (urgency + impact + actionability + confidence − fatigue), explanation shape. Unit tests with revert checks |
 | BL-1.3 | Action store `semester.actions.v1` | S | 1.2 | Device library pattern. Store only student choices; derived actions are recomputed |
-| BL-1.4 | Action Center on Today | M | 1.3 | Extends `TodayDecisionSurface`: Most Important + ≤5 Next, snooze/dismiss/correct/ask-for-help without swipe (TAB compact items). Explanation via `intelligence/Disclosure` |
+| BL-1.4 | Action Center on Today | M | 1.3 | Extends `TodayDecisionSurface`: Most Important + ≤3 Next (was ≤5; see EXPERIENCE-CONTINUITY.md §2), snooze/dismiss/correct/ask-for-help without swipe (TAB compact items). Explanation via `intelligence/Disclosure` |
 | BL-1.5 | Path profile step in onboarding | M | 1.1 | Optional program / target term / credit target / goals; `semester.path-profile.v1` |
 | BL-1.6 | Path Snapshot on My Path (`degree`) | M | 1.5 | Complete/planned/remaining against the student's own total; "planning estimate, not official degree clearance" |
 | BL-1.7 | Personal/work/study blocks vs course meetings | M | — | Extends `lib/registration.ts` `conflicts()` |

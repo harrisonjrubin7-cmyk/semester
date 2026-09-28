@@ -10,6 +10,11 @@
  */
 
 :root {
+  /* The public site's corners. It is not the app, so the student's Corners
+     setting does not reach it; the sizes live here instead of in each rule. */
+  --site-r-sm: 6px;
+  --site-r-md: 8px;
+  --site-r-lg: 12px;
   --site-bg: #090a0e;
   --site-panel: #12141a;
   --site-fg: #eceef2;
@@ -138,7 +143,7 @@ h3 {
   align-items: center;
   min-height: 44px;
   padding: 0 18px;
-  border-radius: 8px;
+  border-radius: var(--site-r-md);
   background: var(--site-accent);
   color: var(--site-bg);
   font-family: var(--site-heading);
@@ -164,7 +169,7 @@ h3 {
   min-height: 44px;
   padding: 0 12px;
   border: 1px solid var(--site-line);
-  border-radius: 8px;
+  border-radius: var(--site-r-md);
   cursor: pointer;
   list-style: none;
 }
@@ -253,7 +258,7 @@ main:focus {
 .site-plans > li {
   padding: 20px;
   border: 1px solid var(--site-line);
-  border-radius: 12px;
+  border-radius: var(--site-r-lg);
   background: var(--site-panel);
 }
 
@@ -300,7 +305,7 @@ main:focus {
   max-width: 420px;
   padding: 20px;
   border: 1px solid var(--site-line);
-  border-radius: 12px;
+  border-radius: var(--site-r-lg);
   background: var(--site-panel);
 }
 
@@ -324,7 +329,7 @@ main:focus {
   display: inline-block;
   padding: 0 8px;
   border: 1px solid var(--site-line);
-  border-radius: 6px;
+  border-radius: var(--site-r-sm);
   font-size: 0.875rem;
 }
 
@@ -416,7 +421,7 @@ main:focus {
   min-height: 44px;
   padding: 8px 12px;
   border: 1px solid var(--site-line);
-  border-radius: 8px;
+  border-radius: var(--site-r-md);
   background: var(--site-panel);
   color: var(--site-fg);
   font: inherit;
@@ -442,7 +447,7 @@ textarea.tool-input {
   margin: 0;
   padding: 16px;
   border: 1px solid var(--site-line);
-  border-radius: 12px;
+  border-radius: var(--site-r-lg);
   background: var(--site-panel);
 }
 
@@ -501,7 +506,7 @@ textarea.tool-input {
   min-height: 44px;
   padding: 0 18px;
   border: 1px solid var(--site-accent-deep);
-  border-radius: 8px;
+  border-radius: var(--site-r-md);
   background: transparent;
   color: var(--site-fg);
   font-family: var(--site-heading);
@@ -521,7 +526,7 @@ textarea.tool-input {
   padding: 16px 20px;
   border-left: 3px solid var(--site-accent-deep);
   background: var(--site-panel);
-  border-radius: 0 12px 12px 0;
+  border-radius: 0 var(--site-r-lg) var(--site-r-lg) 0;
 }
 
 .tool-result p {
@@ -542,7 +547,7 @@ textarea.tool-input {
   padding: 16px;
   overflow-x: auto;
   border: 1px solid var(--site-line);
-  border-radius: 12px;
+  border-radius: var(--site-r-lg);
   background: var(--site-panel);
   font-family: var(--site-body);
   font-size: 0.9375rem;

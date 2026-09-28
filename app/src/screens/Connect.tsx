@@ -416,7 +416,7 @@ export function Connect() {
       for (const t of mine) {
         await addTask(id, { title: t.title, date: t.date, note: t.note });
       }
-      return `${mine.length} of your own tasks sent to ${id === 'google' ? 'Google Tasks' : 'Microsoft To Do'}.`;
+      return `${mine.length} of your own actions sent to ${id === 'google' ? 'Google Tasks' : 'Microsoft To Do'}.`;
     });
 
   const browse = async (id: ProviderId) => {
@@ -915,7 +915,7 @@ export function Connect() {
                 <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginTop: 'calc(9px * var(--density, 1))' }}>
                   Reading Gmail may not be switched on for your account yet: Google reviews that
                   one permission separately, and until it passes, only accounts this copy has
-                  named can use it. Calendar, Drive and Tasks work immediately.
+                  named can use it. Calendar, Drive and Google Tasks work immediately.
                 </div>
               )}
 
@@ -1006,7 +1006,7 @@ export function Connect() {
               textWrap: 'pretty',
             }}
           >
-            Your dates onto the calendar and task list you already live in. These add rather than
+            Your dates onto the calendar and the Google Tasks or Microsoft To Do list you already live in. These add rather than
             sync — running one twice makes duplicates, and nothing here removes anything.
           </div>
 
@@ -1191,7 +1191,7 @@ export function Connect() {
         say the app feels like two systems.
 
         There is one now. It already knows what to do with a wide screen: from
-        760px the tab bar unrolls into a rail beside the reading column, which
+        840px the tab bar unrolls into a rail beside the reading column, which
         is what a laptop was being sent somewhere else for.
       */}
       <SectionLabel>On a desktop</SectionLabel>

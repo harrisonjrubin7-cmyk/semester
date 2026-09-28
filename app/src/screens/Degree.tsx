@@ -24,6 +24,7 @@ import { DIMMED_ROW, secondLine } from '../lib/dim';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Blueprint } from '../components/Blueprint';
+import { StatusChip } from '../components/unity/Status';
 import { ActionButton, PickChips, SectionLabel, Segmented } from '../components/ui';
 import {
   countingIn,
@@ -76,6 +77,10 @@ export function Degree({ advisorMeeting = moduleOn(MODULE_FLAGS.advisor_meeting_
       <>
       <Blueprint style={{ paddingBlock: 'calc(14px * var(--density, 1))', paddingInline: 'calc(15px * var(--density, 1))' }}>
         <div className="kicker">Your arithmetic, not the registrar’s</div>
+        <div className="context-bar-states" style={{ marginTop: 'var(--sp-3)' }}>
+          <StatusChip status="yours" />
+          <StatusChip status="needs-confirmation" />
+        </div>
         <div
           style={{
             marginTop: 'var(--sp-3)',

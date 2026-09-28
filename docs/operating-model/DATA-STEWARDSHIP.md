@@ -27,6 +27,10 @@ data Semester may not store at all (T4+).
 owner, data steward, integration owner and privacy owner roles for that contract. `readiness()` reports every missing
 role. This is the human gap the code can't close, and the registry says so openly.
 
+The people themselves are rows in `governance_steward_assignments`: one live holder per school, connector and role,
+named rather than an address or a placeholder (the table refuses `TBD` and anything with an `@`). An assignment is
+revoked and replaced, never edited into someone else, so the record shows who held a role and when.
+
 ## What every contract states
 
 Definition · owner and steward · source system · field definitions · classification · allowed uses · authorized roles ·

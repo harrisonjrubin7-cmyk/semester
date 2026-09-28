@@ -2,9 +2,11 @@
 
 drop policy if exists "people own evidence references" on public.evidence_reference;
 
+drop policy if exists "people read their evidence references" on public.evidence_reference;
 create policy "people read their evidence references" on public.evidence_reference
   for select to authenticated
   using (private.owns_evidence_scope(tenant_id, person_id));
+drop policy if exists "people add only personal evidence references" on public.evidence_reference;
 create policy "people add only personal evidence references" on public.evidence_reference
   for insert to authenticated
   with check (
@@ -13,13 +15,16 @@ create policy "people add only personal evidence references" on public.evidence_
     and origin = 'student'
     and authority in ('confirmed', 'unverified')
   );
+drop policy if exists "people update only personal evidence references" on public.evidence_reference;
 create policy "people update only personal evidence references" on public.evidence_reference
   for update to authenticated
   using (private.owns_evidence_scope(tenant_id, person_id) and origin = 'student' and authority in ('confirmed', 'unverified'))
   with check (private.owns_evidence_scope(tenant_id, person_id) and origin = 'student' and authority in ('confirmed', 'unverified'));
+drop policy if exists "people delete their evidence references" on public.evidence_reference;
 create policy "people delete their evidence references" on public.evidence_reference
   for delete to authenticated
   using (private.owns_evidence_scope(tenant_id, person_id));
+drop policy if exists "source approvers manage authoritative evidence" on public.evidence_reference;
 create policy "source approvers manage authoritative evidence" on public.evidence_reference
   for all to authenticated
   using (private.has_capability('source:approve', 'school', tenant_id))
@@ -30,6 +35,7 @@ create policy "source approvers manage authoritative evidence" on public.evidenc
   );
 
 drop policy if exists "people own capture assets" on public.capture_asset;
+drop policy if exists "people read active consented capture assets" on public.capture_asset;
 create policy "people read active consented capture assets" on public.capture_asset
   for select to authenticated
   using (
@@ -45,6 +51,7 @@ create policy "people read active consented capture assets" on public.capture_as
          and (c.expires_at is null or c.expires_at > now())
     )
   );
+drop policy if exists "people add consented capture assets" on public.capture_asset;
 create policy "people add consented capture assets" on public.capture_asset
   for insert to authenticated
   with check (
@@ -52,6 +59,7 @@ create policy "people add consented capture assets" on public.capture_asset
     and tenant_id = (select p.school_id from public.profiles p where p.user_id = (select auth.uid()))
     and state = 'active'
   );
+drop policy if exists "people remove their capture assets" on public.capture_asset;
 create policy "people remove their capture assets" on public.capture_asset
   for delete to authenticated
   using (private.owns_evidence_scope(tenant_id, person_id));

@@ -9,7 +9,7 @@ import { SourceBadge } from './SourceBadge';
 /**
  * Saved courses, and up to three side by side (`course_detail_v2`, Phase F).
  *
- * A real table from 760px, with the courses as column headers; on a phone,
+ * A real table from the `WIDE` width (840px), with the courses as column headers; on a phone,
  * one card per course with the same rows as a list. Rows are facts from the
  * catalog and readings against the student's own records — no ranking and no
  * "best" pick.

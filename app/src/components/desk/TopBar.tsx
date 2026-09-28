@@ -50,8 +50,10 @@
 
 import { createElement, useEffect, useId, useState } from 'react';
 import { useStore } from '../../state/store';
+import { addIntent, seedQuickAdd } from '../../lib/intent';
 import { findApps } from '../../lib/desk';
 import { saysFor } from '../../lib/nav';
+import { navAreaLabel } from '../../lib/navareas';
 import { secondLine } from '../../lib/dim';
 import { glyphFor } from '../icons.pick';
 import { recordSearch } from '../../lib/browser.hook';
@@ -160,8 +162,8 @@ export function TopBar({
             className="bare desktop-input"
             type="search"
             value={text}
-            placeholder="Search apps and features"
-            aria-label="Search apps and features"
+            placeholder="Search apps and features, or add something"
+            aria-label="Search apps and features, or add something"
             aria-expanded={open}
             aria-controls={open ? listId : undefined}
             aria-activedescendant={open ? `${listId}-${cursor}` : undefined}
@@ -181,6 +183,14 @@ export function TopBar({
               } else if (e.key === 'ArrowUp') {
                 e.preventDefault();
                 setAt((n) => Math.max(n - 1, 0));
+              } else if (e.key === 'Enter' && addIntent(text) !== null) {
+                // The same explicit verbs as the search palette ("add …",
+                // "remind me to …"): the capture box opens on the rest.
+                // See `lib/intent.ts`.
+                e.preventDefault();
+                seedQuickAdd(addIntent(text)!);
+                setText('');
+                dispatch({ type: 'quickAdd', open: true });
               } else if (e.key === 'Enter' && rows > 0) {
                 e.preventDefault();
                 openApp(cursor);
@@ -232,7 +242,7 @@ export function TopBar({
             about a key.
           */}
           {/*
-            Named here as well as in the span, because below 760px the span is
+            Named here as well as in the span, because below 840px the span is
             not drawn: `.desktop-ai span { display: none }` in app.css leaves
             the glyph alone in the bar. The name then came only from text that
             had been display-none'd, which is no name at all — a screen reader
@@ -295,7 +305,7 @@ export function TopBar({
                     </span>
                   </span>
                   <span className="desktop-hit-group" style={secondLine()}>
-                    {d.group}
+                    {navAreaLabel(d.screen)}
                   </span>
                 </button>
               );

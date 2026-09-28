@@ -8,7 +8,7 @@ import type { SourceLabel } from './source';
  * and a dozen screens each keeping their own idea of what was outstanding.
  * The blueprint's Action Center is the one place those meet: every module may
  * *propose* an action, and the student sees a single ranked list — the most
- * important one, then up to five more.
+ * important one, then up to three more.
  *
  * ## Actions are derived; only the student's choices are stored
  *
@@ -260,13 +260,22 @@ export interface Ranked {
   mostImportant: Scored | null;
   /** Up to `NEXT_LIMIT`, after the most important. */
   next: Scored[];
-  /** Visible but beyond the first six: shown behind "View all". */
+  /** Visible but beyond the first four: shown behind "View all". */
   rest: Scored[];
   /** Snoozed, done, dismissed, expired or cancelled: not in the list. */
   hidden: Scored[];
 }
 
-export const NEXT_LIMIT = 5;
+/**
+ * One most important, then up to three.
+ *
+ * Was five. Today is a decision surface rather than a dashboard, and a list
+ * of six on a phone is a list somebody scrolls rather than chooses from — the
+ * product brief for continuity (docs/EXPERIENCE-CONTINUITY.md §2) sets the
+ * surface at one plus three, with everything else one tap away behind
+ * "View all". Nothing is hidden by this: it only moves the fold.
+ */
+export const NEXT_LIMIT = 3;
 
 /**
  * The Action Center's order. Ties break on due date, then title, so the list

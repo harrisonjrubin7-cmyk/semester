@@ -88,7 +88,7 @@ export function Adopting({
          * "answer this first" is the whole of its meaning — a student who can
          * walk into Courses instead has been told something untrue.
          *
-         * So the window on a desk, and the app's own column below 760px,
+         * So the window on a desk, and the app's own column below 840px,
          * where `.device` is a column with ground either side and spilling
          * across the ground would be the only thing in the app that does.
          * Same rule and same breakpoint as the search and the capture box.

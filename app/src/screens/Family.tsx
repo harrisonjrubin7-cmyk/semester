@@ -4,6 +4,7 @@ import { cloudConfigured } from '../lib/cloud';
 import { Page } from '../components/Page';
 import { ActionButton, FilePick, Notice, SectionLabel, Segmented } from '../components/ui';
 import { CardGrid, GridCard } from '../components/GridCard';
+import { PermissionNotice } from '../components/unity/States';
 import { secondLine } from '../lib/dim';
 import { endProblem } from '../lib/sharing';
 import { ClaimFamilyCode, FamilyInvite } from '../components/FamilyInvite';
@@ -87,7 +88,17 @@ function Workspace({ storageKey }: { storageKey: string }) {
   const [selected, setSelected] = useState('');
   const [member, setMember] = useState<FamilyMember>(() => newFamilyMember());
   const [item, setItem] = useState<FamilyItem>(() => newFamilyItem(''));
-  const [notice, setNotice] = useState('');
+  const [notice, setShown] = useState('');
+  /** A plan or an item saved for somebody — said as the permission change it is. */
+  const [planned, setPlanned] = useState<{ changed: string; why: string } | null>(null);
+  const setNotice = (said: string) => {
+    setPlanned(null);
+    setShown(said);
+  };
+  const setPlan = (changed: string, why: string) => {
+    setShown('');
+    setPlanned({ changed, why });
+  };
 
   const person = lib.value.members.find((m) => m.id === selected);
   const preview = familyPreview(lib.value, selected);
@@ -110,7 +121,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
     if (!ok) return;
     setSelected(member.id);
     setItem(newFamilyItem(member.id));
-    setNotice('Saved on this device. It grants no account access to anybody.');
+    setPlan(`Permission plan saved for ${member.name}`, 'Saved on this device. It grants no account access to anybody.');
   };
 
   const line = { fontSize: 'var(--type-sm)', ...secondLine(), lineHeight: 'var(--leading-normal)' } as const;
@@ -131,6 +142,13 @@ function Workspace({ storageKey }: { storageKey: string }) {
         <Notice>
           {lib.error || notice}
         </Notice>
+      )}
+      {!lib.error && planned && (
+        <PermissionNotice
+          changed={planned.changed}
+          why={planned.why}
+          control={tab === 'preview' ? undefined : { label: 'Preview what they would see', run: () => setTab('preview') }}
+        />
       )}
 
       {lib.value.members.length > 0 && (
@@ -360,7 +378,10 @@ function Workspace({ storageKey }: { storageKey: string }) {
                 );
                 if (!ok) return;
                 setItem(newFamilyItem(selected));
-                setNotice('Saved privately. Look at the preview before you share anything.');
+                setPlan(
+                  `Item saved for ${person?.name || 'this person'}`,
+                  'Saved privately. Look at the preview before you share anything.',
+                );
               }}
             >
               <fieldset disabled={lib.blocked} style={{ border: 0, padding: 0, minWidth: 0 }}>

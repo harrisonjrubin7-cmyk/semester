@@ -51,6 +51,8 @@ import { dictate, dictationSupported } from '../lib/mic';
 import { ActionButton } from './ui';
 import { DESKTOP, useMedia } from '../lib/media';
 import { DIMMED_ROW } from '../lib/dim';
+import { takeQuickAddSeed } from '../lib/intent';
+import { KeepItAs } from './unity/UnityLayer';
 
 /**
  * How wide the box gets, the same measure the whole-app search uses.
@@ -65,7 +67,10 @@ const COLUMN = 620;
 export function QuickAdd({ onClose }: { onClose: () => void }) {
   const { catalog, dispatch } = useStore();
   const now = useNow();
-  const [text, setText] = useState('');
+  // Opens on what was typed into the search field when that was an add —
+  // "add econ ps4 friday" there lands here as "econ ps4 friday". See
+  // `lib/intent.ts`. Empty when opened from the `+`, as it always was.
+  const [text, setText] = useState(takeQuickAddSeed);
   const [said, setSaid] = useState('');
   // Which rows of a split run have been added, by their text — not by their
   // index, because editing the box re-splits it and an index would then point
@@ -185,8 +190,8 @@ export function QuickAdd({ onClose }: { onClose: () => void }) {
          * them: the field a student types the whole capture into was a white
          * browser textbox with a blue focus ring, on a laptop.
          *
-         * Below 760px `.device` is a column with ground either side, and the
-         * box fills the column, as it always has. At 760px and up the pane is
+         * Below 840px `.device` is a column with ground either side, and the
+         * box fills the column, as it always has. At 840px and up the pane is
          * a strip in the middle of the window and shrinking to it would leave
          * the box hanging in the middle of the screen, so it is `fixed` there
          * and covers the window — which is what it did before this moved.
@@ -260,6 +265,8 @@ export function QuickAdd({ onClose }: { onClose: () => void }) {
           fontSize: 'var(--type-display-xs)',
         }}
       />
+      {/* Everything that is not a dated line — see `KeepItAs`. */}
+      <KeepItAs text={text} onLeave={onClose} />
 
       {micError ? (
         <div

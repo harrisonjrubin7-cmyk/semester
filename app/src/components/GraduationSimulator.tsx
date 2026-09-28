@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react';
-import { Notice } from './ui';
 import { ConfirmDialog } from './ConfirmDialog';
 import { CostPlanner } from './CostPlanner';
 import { ScenarioComparison } from './ScenarioComparison';
@@ -7,6 +6,7 @@ import { startItemising, totals, type CostLine } from '../lib/cost-plan';
 import { MODULE_FLAGS, moduleOn } from '../lib/experience-flags';
 import { deleteDraft, draftPreview, draftRow, saveDraft } from '../lib/graduation-cloud';
 import { MORE_PRESETS, comparisonText } from '../lib/scenario-compare';
+import { ErrorState } from './unity/States';
 import { useDeviceLibrary } from '../lib/device-library';
 import { download } from '../lib/deliver';
 import {
@@ -138,24 +138,24 @@ export function GraduationSimulator({
   return (
     <div className="portal-workspace graduation-simulator">
       {library.error ? (
-        <Notice alert>
-          {library.error}
-          <button
-            onClick={() =>
-              download({ name: 'Semester graduation recovery.json', body: library.recovery(), mime: 'application/json' })
-            }
-          >
-            Download recovery copy
-          </button>
-        </Notice>
+        <ErrorState
+          title="Could not save on this device"
+          body={library.error}
+          recover={{
+            label: 'Download recovery copy',
+            run: () =>
+              download({ name: 'Semester graduation recovery.json', body: library.recovery(), mime: 'application/json' }),
+          }}
+        />
       ) : null}
 
       <section className="portal-panel" aria-labelledby="grad-plan">
         <span className="portal-eyebrow">Estimate</span>
         <h3 id="grad-plan">Your current plan</h3>
         <p className="portal-muted">
-          {done} hours finished, counted from your Taken tab. Every figure here is an estimate from numbers you enter —
-          it does not know course sequencing, when classes are offered, or your financial aid.
+          <strong>A planning estimate, not an official degree audit</strong> — confirm with your advisor or the
+          registrar. {done} hours finished, counted from your Taken tab. Every figure here is an estimate from numbers
+          you enter — it does not know course sequencing, when classes are offered, or your financial aid.
         </p>
         <div className="portal-filter-row">
           <label className="portal-check">

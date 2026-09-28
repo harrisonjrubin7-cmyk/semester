@@ -7,6 +7,9 @@ export type ControlPlaneStatus =
   | 'connected but degraded'
   | 'production verified';
 
+/** What "tenant administrator" is in the database: see the policies on public.tenant_feature_policy. */
+export const TENANT_ADMIN_CAPABILITY = 'tenant:configure';
+
 export interface VerifiedTenantCapability {
   tenantId: string;
   capability: string;
@@ -55,7 +58,11 @@ export function controlPlaneView(input: ControlPlaneInput): ControlPlaneView {
     (grant) =>
       grant.verified &&
       grant.tenantId === input.viewedTenantId &&
-      grant.capability === 'tenant_admin',
+      // `tenant:configure` over this school — the capability the database's own
+      // "tenant administrators" policies on tenant_feature_policy require to
+      // insert or update it. This checked a 'tenant_admin' capability that no
+      // migration defines, so it could never be true.
+      grant.capability === TENANT_ADMIN_CAPABILITY,
   );
   const canCreateProductionReceipt =
     canEdit && input.featureState === 'production' && input.gatewayStatus === 'production verified';

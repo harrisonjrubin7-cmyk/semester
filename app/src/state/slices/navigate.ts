@@ -15,6 +15,7 @@ import { ROOTS, type Action, type State } from '../shape';
 import { ONB_STEPS } from '../../data/misc';
 import { firstScreen } from '../../lib/chrome';
 import { screenForRole } from '../../lib/role';
+import { rememberOpened } from '../../lib/opened';
 
 /**
  * Where the run lets somebody out, which is not the same as where the app
@@ -193,10 +194,10 @@ export function navigate(state: State, action: Action): State | null {
     }
 
     case 'openItem':
-      return push({ ...state, itemId: action.id }, 'item');
+      return push({ ...state, itemId: action.id, opened: rememberOpened(state.opened, { kind: 'item', id: action.id }) }, 'item');
 
     case 'openCourse':
-      return push({ ...state, courseId: action.id }, 'course');
+      return push({ ...state, courseId: action.id, opened: rememberOpened(state.opened, { kind: 'course', id: action.id }) }, 'course');
 
     case 'openEvent':
       return push({ ...state, eventId: action.id }, 'event');

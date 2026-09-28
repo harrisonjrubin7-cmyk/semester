@@ -16,6 +16,8 @@ const TodayActionCenter = lazy(() => import('./TodayActionCenter').then((m) => (
 import { ActionButton, Meter, SectionLabel } from './ui';
 import { goMine } from '../lib/openmine';
 import { goCal } from '../lib/opencal';
+import { showSource } from '../lib/unity';
+import { StatusChip } from './unity/Status';
 
 interface TimelineRow {
   id: string;
@@ -158,7 +160,7 @@ function DecisionBriefing() {
           at: date.getTime() + (minutes ?? 24 * 60 - 1) * 60_000,
           when: `${label} · ${timeLabel(minutes, task.time.trim() || 'No time')}`,
           title: task.title,
-          meta: 'Your task',
+          meta: 'Your action',
           open: () => goMine(dispatch, 'tasks'),
         });
       }
@@ -202,6 +204,9 @@ function DecisionBriefing() {
     <section className="today-decision-surface" aria-label="Today decision briefing">
       <Blueprint className="today-path-snapshot">
         <SectionLabel>Your path</SectionLabel>
+        {/* Built from what the student typed in, so it wears the shared
+            words for that: never the registrar's audit. */}
+        <StatusChip status="needs-confirmation" />
         <h2>{path.heading}</h2>
         <p>{path.detail}</p>
         <div className="today-path-numbers">
@@ -223,6 +228,21 @@ function DecisionBriefing() {
           <summary>How this status is calculated</summary>
           <p>{path.source}</p>
         </details>
+        <button
+          type="button"
+          className="workspace-text-button"
+          onClick={() =>
+            showSource({
+              title: 'Your path',
+              origin: 'yours',
+              sourceName: 'The degree requirements and courses you entered',
+              usedIn: ['Today', 'My Path', 'Registration readiness'],
+              limitations: path.source,
+            })
+          }
+        >
+          Source &amp; details
+        </button>
       </Blueprint>
 
       <Blueprint className="today-next-action">

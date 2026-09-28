@@ -64,4 +64,4 @@ store without registering it. It is registered here.
 
 Revert the commit. The migration changes one policy and adds two functions.
 To undo it, a later migration restores the policy from
-`20260927224500_office_action_feed.sql` and drops the functions.
+`20260928132000_office_action_feed.sql` and drops the functions.

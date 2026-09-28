@@ -31,6 +31,7 @@ import { ActionButton, ChipScroll, FilePick, SectionLabel } from '../components/
 import { addFile, deleteFile, formatBytes, type FileMeta } from '../lib/files';
 import { gather } from '../lib/bundle';
 import { describeParse, parseMaterial } from '../lib/parse';
+import { Progress, StepStatus } from '../components/unity/States';
 import type { CourseId, Figure, Term } from '../lib/types';
 
 /** No frames, no out-loud questions, no cases — the starting state and the reset. */
@@ -167,6 +168,10 @@ export function AddMaterial({
    */
   const [pastedAs, setPastedAs] = useState<Where | null>(null);
   const [looking, setLooking] = useState(false);
+  /** Which of `look`'s three steps a file is on, and whether it stopped there. */
+  const [lookStep, setLookStep] = useState<{ at: 0 | 1 | 2; failed: boolean } | null>(null);
+  /** How far through a batch of picked files `pick` has read. */
+  const [picking, setPicking] = useState<{ done: number; total: number } | null>(null);
 
   /**
    * Where the review is drawn, and the fact that you can watch it arrive.
@@ -376,6 +381,8 @@ export function AddMaterial({
     setLooking(true);
     setReadError('');
     setSet(null);
+    let at: 0 | 1 | 2 = 0;
+    setLookStep({ at, failed: false });
     try {
       const first = guess(item);
       setTold(first);
@@ -385,14 +392,20 @@ export function AddMaterial({
       // once from being eleven requests.
       const verdict = first.confidence >= SURE ? first : await classifyWith(item, first);
       setTold(verdict);
+      at = 1;
+      setLookStep({ at, failed: false });
       // What this course's own cards look like, so a new one does not stand
       // out among them. See `lib/house.ts`.
       const got = await harvest(item, verdict.kind, context, styleFor(houseOf(guide, updates)));
       setSaidOf(got.says);
       setDroppedBy(got.dropped);
+      at = 2;
       setSet(diff(got.pieces, held()));
+      // Done: the review below is what it finished with.
+      setLookStep(null);
     } catch (e) {
       setReadError(e instanceof Error ? e.message : String(e));
+      setLookStep({ at, failed: true });
     } finally {
       setLooking(false);
     }
@@ -609,6 +622,8 @@ export function AddMaterial({
     // Files that were read, but not all of: pages that were pictures. See `unreadLine`.
     const partly: string[] = [];
     const readable: Intake[] = [];
+    let read = 0;
+    if (got.files.length > 1) setPicking({ done: 0, total: got.files.length });
 
     for (const piece of got.files) {
       try {
@@ -630,7 +645,11 @@ export function AddMaterial({
        * Images are left out on purpose: they go through the camera path
        * above, which can actually see them.
        */
-      if (IMAGE.test(piece.name)) continue;
+      if (IMAGE.test(piece.name)) {
+        read += 1;
+        if (got.files.length > 1) setPicking({ done: read, total: got.files.length });
+        continue;
+      }
       try {
         const out = await extractText(piece.file);
         if (unreadLine(out)) partly.push(unreadLine(out));
@@ -652,7 +671,10 @@ export function AddMaterial({
         // because a silent miss is how somebody studies from half a folder.
         unread.push(`${piece.name} (${e instanceof Error ? e.message : String(e)})`);
       }
+      read += 1;
+      if (got.files.length > 1) setPicking({ done: read, total: got.files.length });
     }
+    setPicking(null);
 
     setFiles((f) => [...f, ...added]);
 
@@ -1070,7 +1092,12 @@ export function AddMaterial({
       )}
 
       <SectionLabel>Files</SectionLabel>
-      {busy && <div className="course-capture-working" role="status">Reading the selected course material…</div>}
+      {busy &&
+        (picking ? (
+          <Progress label="Reading your files" done={picking.done} total={picking.total} />
+        ) : (
+          <div className="course-capture-working" role="status">Reading the selected course material…</div>
+        ))}
       {files.map((f) => (
         <div
           key={f.id}
@@ -1137,6 +1164,17 @@ export function AddMaterial({
         one is cheapest to catch above the change set rather than after it.
       */}
       <div ref={reviewAt}>
+        {/* The three steps `look` takes, each shown before the next runs on
+            it — and, if one fails, which one. */}
+        {lookStep && (
+          <StepStatus
+            label="Reading this file"
+            steps={['Working out what it is', 'Reading what is in it', 'Comparing with the course'].map((label, i) => ({
+              label,
+              state: i < lookStep.at ? 'done' : i > lookStep.at ? 'waiting' : lookStep.failed ? 'failed' : 'working',
+            }))}
+          />
+        )}
         {told && arrived && (
           <>
             <SectionLabel>What you added</SectionLabel>

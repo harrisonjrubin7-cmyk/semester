@@ -14,6 +14,13 @@
  * field on the device — see `lib/merge.ts` — so lists you add to keep both
  * sides and settings take the copy that synced later.
  *
+ * And a device never writes over a copy it has not read. Every push names the
+ * `updated_at` it last saw for each row, and a row that has moved on refuses
+ * the write — the store then pulls, merges, and pushes the merge. See `push`
+ * and `Stale` below. Before that, the merge only ran for a device that
+ * happened to pull first, and a laptop left open overnight pushed straight
+ * over the phone's morning.
+ *
  * What still does not merge is one record edited on both devices: the later
  * edit of the same note is the one that survives. Anything cleverer is a
  * distributed-systems project, and pretending otherwise in the UI would be
@@ -551,7 +558,64 @@ export async function pull(userId: string): Promise<Snapshot> {
 }
 
 /**
- * Send this device's copy up.
+ * The account's copy moved on since this device last read it.
+ *
+ * Thrown by `push` instead of writing, and caught by the store, which pulls,
+ * merges and pushes again. It is not a failure anybody needs to read about:
+ * it is the sync working, and it never reaches `explainSync`.
+ */
+export class Stale extends Error {
+  constructor(what: string) {
+    super(`The account's copy of ${what} changed on another device since this one last read it.`);
+    this.name = 'Stale';
+  }
+}
+
+/**
+ * A write's failure as an Error that keeps the database's code and status.
+ *
+ * `new Error(error.message)` kept only the prose, and the retry decision is
+ * made by `classify`, which reads the code first. A check-constraint refusal
+ * (23514) then fell through to INTERNAL_ERROR and was sent again every five
+ * minutes, with a line telling the student it might recover by itself. It
+ * will not: the same snapshot fails the same check.
+ */
+export function failed(error: { message: string; code?: string; status?: number }): Error {
+  return Object.assign(new Error(error.message), { code: error.code, status: error.status });
+}
+
+export function isStale(e: unknown): e is Stale {
+  return e instanceof Error && e.name === 'Stale';
+}
+
+/** Postgres's unique_violation: an insert found the row already there. */
+const TAKEN = '23505';
+
+/**
+ * Send this device's copy up — but only over the copy it last read.
+ *
+ * ## Why every write names the stamp it expects
+ *
+ * This was an upsert, and an upsert overwrites whatever is there. The pull
+ * side has merged field by field since `lib/merge.ts`, but a merge only helps
+ * a device that pulls before it pushes, and this one never did: a laptop left
+ * open overnight pushed its copy over the phone's morning and the phone's
+ * edits were gone from the account, with nothing to say so. `lib/merge.ts`
+ * could not help, because the account never held both copies at once.
+ *
+ * So each row is now a compare-and-swap on `updated_at`, which the database
+ * sets and no client can (`touch_updated_at`). A row this device has read is
+ * updated only where its stamp is still the one `seen` recorded; a row it has
+ * never read is inserted, and an insert that finds the row already there has
+ * lost the same race. Either way nothing is written over a copy this device
+ * has not seen — `push` throws `Stale`, and the store pulls, merges and
+ * pushes the merged copy back.
+ *
+ * What this does not solve is the same record edited on both devices before
+ * either syncs: the merge still keeps the later edit of it. The difference is
+ * that the merge now gets to run. Before, the account never saw the loser.
+ *
+ * ## The rest of it, unchanged
  *
  * `removed` is the courses this device has actually deleted since it last
  * pushed — not "everything the account has that this device does not hold",
@@ -570,39 +634,85 @@ export async function push(
   state: CloudState,
   courses: { id: string; data: unknown }[],
   removed: string[] = [],
+  seen: Seen | null = null,
 ): Promise<Seen> {
   const db = (await cloud());
 
   /*
-   * `.select('updated_at')` on the way out, and it is the point of this
+   * `.select('updated_at')` on every write, and it is the point of this
    * function returning anything at all.
    *
    * The device has to write down what it has now taken, and the only honest
    * value is the stamp the database just wrote. This used to be `Date.now()`
    * on the device — see `state/shape.ts` for what that cost — and reading the
    * stamp back costs nothing, because the row is already being returned by the
-   * statement that wrote it.
+   * statement that wrote it. It is also how a stale update is noticed: an
+   * update whose filter matched nothing returns no row.
    */
-  const { data: stateRow, error: stateError } = await db
-    .from('state')
-    .upsert({ user_id: userId, data: state }, { onConflict: 'user_id' })
-    .select('updated_at')
-    .maybeSingle();
-  if (stateError) throw new Error(stateError.message);
+  let stateAt: string | undefined;
+  if (seen?.state) {
+    const { data, error } = await db
+      .from('state')
+      .update({ data: state })
+      .eq('user_id', userId)
+      .eq('updated_at', seen.state)
+      .select('updated_at');
+    if (error) throw failed(error);
+    const rows = (data ?? []) as { updated_at: string }[];
+    if (rows.length === 0) throw new Stale('your semester');
+    stateAt = rows[0].updated_at;
+  } else {
+    const { data, error } = await db
+      .from('state')
+      .insert({ user_id: userId, data: state })
+      .select('updated_at')
+      .maybeSingle();
+    if (error) {
+      if (error.code === TAKEN) throw new Stale('your semester');
+      throw failed(error);
+    }
+    stateAt = (data as { updated_at?: string } | null)?.updated_at;
+  }
 
   const stamps: Record<string, string> = {};
-  if (courses.length > 0) {
+  const known = courses.filter((c) => seen?.courses[c.id]);
+  const fresh = courses.filter((c) => !seen?.courses[c.id]);
+
+  // New to this device: one insert for all of them. A clash on any means
+  // another device got there first, and the whole push goes round again.
+  if (fresh.length > 0) {
     const { data, error } = await db
       .from('courses')
-      .upsert(
-        courses.map((c) => ({ user_id: userId, id: c.id, data: c.data })),
-        { onConflict: 'user_id,id' },
-      )
+      .insert(fresh.map((c) => ({ user_id: userId, id: c.id, data: c.data })))
       .select('id, updated_at');
-    if (error) throw new Error(error.message);
+    if (error) {
+      if (error.code === TAKEN) throw new Stale('a course');
+      throw failed(error);
+    }
     for (const row of (data ?? []) as { id: string; updated_at: string }[]) {
       stamps[row.id] = row.updated_at;
     }
+  }
+
+  // Read before: one update each, because each names its own stamp. A term
+  // is a handful of courses, so this is a handful of small requests.
+  const updated = await Promise.all(
+    known.map((c) =>
+      db
+        .from('courses')
+        .update({ data: c.data })
+        .eq('user_id', userId)
+        .eq('id', c.id)
+        .eq('updated_at', seen!.courses[c.id])
+        .select('id, updated_at')
+        .then(({ data, error }) => ({ id: c.id, data, error })),
+    ),
+  );
+  for (const { id, data, error } of updated) {
+    if (error) throw failed(error);
+    const rows = (data ?? []) as { id: string; updated_at: string }[];
+    if (rows.length === 0) throw new Stale('a course');
+    stamps[id] = rows[0].updated_at;
   }
 
   // A course deleted on this device has to be deleted there too, or the next
@@ -626,8 +736,7 @@ export async function push(
    * takes them, and records them — which is exactly the behaviour that used to
    * depend on their stamp beating a clock reading.
    */
-  const at = (stateRow as { updated_at?: string } | null)?.updated_at;
-  return { ...(at ? { state: at } : {}), courses: stamps };
+  return { ...(stateAt ? { state: stateAt } : {}), courses: stamps };
 }
 
 
@@ -891,6 +1000,22 @@ export const OWNED_TABLES: OwnedTable[] = [
   // `feedback.check.sql` proves the delete policy this line needs and that it
   // cannot be aimed at anybody else's reports.
   { table: 'feedback', column: 'author' },
+  // Community. A member cannot filter on author_id or host_id — neither is
+  // readable — so one RPC removes posts, hosted sessions, session places,
+  // mutes and memberships together. The two entries call it twice, which is
+  // harmless: the second finds nothing. A post that is the subject of a
+  // moderation case is withdrawn and anonymised rather than deleted; see
+  // `community_cases` below. `community.check.sql` walks it.
+  { table: 'community_posts', column: null, via: 'forget_my_community' },
+  { table: 'community_sessions', column: null, via: 'forget_my_community' },
+  // A member's aliases and volunteer record go in the same call. Neither is
+  // written by this client; both are about the account, so both go with it.
+  { table: 'community_aliases', column: null, via: 'forget_my_community' },
+  { table: 'community_volunteers', column: null, via: 'forget_my_community' },
+  { table: 'community_media', column: null, via: 'forget_my_community' },
+  { table: 'community_session_participants', column: 'user_id' },
+  { table: 'community_mutes', column: 'user_id' },
+  { table: 'community_members', column: 'user_id' },
 
   // ── Classmates: yours, but other people can see them ────────────────────
   //
@@ -990,6 +1115,17 @@ export const OWNED_TABLES: OwnedTable[] = [
   { table: 'help_requests', column: null, via: 'forget_my_help_requests' },
   { table: 'help_request_events', column: null, cascadesFrom: 'help_requests' },
 
+  // ── Mentor requests ─────────────────────────────────────────────────────
+  // Same shape: no API role writes `mentor_requests` directly, so it leaves
+  // through `forget_my_mentor_requests()` (20260928021700), which removes every
+  // request the account sent or received.
+  { table: 'mentor_requests', column: null, via: 'forget_my_mentor_requests' },
+  // The offers themselves, with the display name the mentor chose. Deleting
+  // an account here does not delete `auth.users`, so their cascade never
+  // runs; each table's owner-delete policy is what this line relies on.
+  { table: 'peer_mentor_offers', column: 'user_id' },
+  { table: 'alumni_mentor_offers', column: 'user_id' },
+
   { table: 'forms', column: 'owner' },
   // Taken by the line above rather than by a request of its own:
   // `form_responses.form_id` references `forms` with `on delete cascade`, and
@@ -1021,7 +1157,7 @@ export const OWNED_TABLES: OwnedTable[] = [
 export const KEPT_TABLES: KeptTable[] = [
   {
     table: 'groups',
-    why: 'A group you started belongs to everyone in it. Deleting it would take its shared tasks away from the other members, so your membership goes and the group stays — with a starter who no longer has a profile.',
+    why: 'A group you started belongs to everyone in it. Deleting it would take its shared actions away from the other members, so your membership goes and the group stays — with a starter who no longer has a profile.',
   },
   {
     table: 'group_tasks',
@@ -1050,6 +1186,10 @@ export const KEPT_TABLES: KeptTable[] = [
   {
     table: 'schools',
     why: 'The list of universities the app recognises is not a record about you — no account writes a row in it, and only an administrator can. Leaving is not a way to remove a university, and the entry saying which one you are at lives on your own profile, which does go.',
+  },
+  {
+    table: 'opportunities',
+    why: 'A job, internship or scholarship listing an office or employer published is an institutional notice, not a record about you. If you submitted one on behalf of an office, it stays for the students it was meant for, with your account no longer named as its publisher.',
   },
   {
     table: 'help_destinations',
@@ -1082,6 +1222,62 @@ export const KEPT_TABLES: KeptTable[] = [
   {
     table: 'feature_kill_switch',
     why: 'The emergency stops for features across a university or all of Semester. Not a record about anybody.',
+  },
+  {
+    table: 'communities',
+    why: 'A community outlives whoever started it — the other members are still in it. Your membership goes; the community stays, with no creator recorded anywhere a member can read.',
+  },
+  {
+    table: 'community_venues',
+    why: 'The study venues your school approved are not a record about you, and only a community manager can add or remove one.',
+  },
+  {
+    table: 'community_cases',
+    why: 'A Trust & Safety case about a post stays when its author deletes their account, and so does the post, withdrawn and shown as "Deleted account" — deleting an account is not a way to make a report disappear. Cases carry a retention date; the sweep that enforces it is not yet scheduled.',
+  },
+  {
+    table: 'community_reports',
+    why: 'A report you filed is a record about somebody else, like `reports`: deleting your account is not a way to withdraw one. Who filed it is readable by nobody through the app, reviewers included.',
+  },
+  {
+    table: 'community_signals',
+    why: 'What an automated detector recorded about a post — the rule, how sure it was, and what a reviewer then decided. It belongs to the moderation case and goes when the case does, on the case\'s retention date.',
+  },
+  {
+    table: 'community_calibration_items',
+    why: 'Practice posts with a known answer, written by Trust & Safety staff for volunteer moderators to calibrate on. Not a record about any student.',
+  },
+  {
+    table: 'community_volunteer_events',
+    why: 'If you volunteered as a moderator: when you applied, trained, signed the agreements, and any change to your standing, each naming you only by a one-way hash. It is removed a year after it happened, by the daily retention sweep.',
+  },
+  {
+    table: 'community_identity_grants',
+    why: 'When Trust & Safety needed to know which account posted something under an alias during an investigation: who asked and who approved, by a one-way hash, and when it ran out. It goes with the case, and never records what was seen.',
+  },
+  {
+    table: 'community_escalation_agreement_events',
+    why: 'The history of your university\'s escalation agreement — each draft, activation and retirement by Semester\'s Trust & Safety staff. A record about the school\'s agreement, not about you.',
+  },
+  {
+    table: 'community_escalation_policies',
+    why: 'Whether your university has signed an agreement to receive escalations of serious safety cases, and which kinds it covers. An agreement of the school, not a record about you.',
+  },
+  {
+    table: 'community_escalations',
+    why: 'A request by Trust & Safety to tell your university about a serious safety case, and a second reviewer\'s decision on it. It goes with the case, on the case\'s retention date; it never holds your name, email or account id, only an opaque reference when the agreement requires one.',
+  },
+  {
+    table: 'community_escalation_deliveries',
+    why: 'The one queued copy of an approved escalation and whether it was delivered. It is removed 90 days after delivery, and goes with its escalation before then.',
+  },
+  {
+    table: 'community_programs',
+    why: 'Whether your university has switched pseudonyms or volunteer moderation on. A setting of the school, not a record about you; only the service role writes it.',
+  },
+  {
+    table: 'community_retention_runs',
+    why: 'How many records each daily retention sweep removed, and when. No row names a person, and the log trims itself after a year.',
   },
   {
     table: 'support_access_event',

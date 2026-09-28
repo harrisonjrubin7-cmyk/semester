@@ -448,6 +448,43 @@ export const REPLY_MAX = 1000;
 export const replyAfter = (previous: string, sent: string): string =>
   sent.trim() ? sent.trim().slice(0, REPLY_MAX) : previous;
 
+/**
+ * How the staff inbox can be narrowed. "Open" is the working queue — anything
+ * not yet closed — and is where the inbox starts. Withdrawn requests never
+ * reach an inbox (`help_inbox` leaves them out), so no filter names them.
+ */
+export const INBOX_FILTERS = ['new', 'open', 'closed', 'all'] as const;
+export type InboxFilter = (typeof INBOX_FILTERS)[number];
+
+export const INBOX_FILTER_TEXT: Record<InboxFilter, string> = {
+  new: 'New',
+  open: 'Open',
+  closed: 'Closed',
+  all: 'All',
+};
+
+/** Whether a request with this status shows under this filter. */
+export function inFilter(status: RequestStatus, filter: InboxFilter): boolean {
+  switch (filter) {
+    case 'new':
+      return status === 'sent';
+    case 'open':
+      return status === 'sent' || status === 'acknowledged' || status === 'scheduled';
+    case 'closed':
+      return status === 'closed';
+    case 'all':
+      return true;
+  }
+}
+
+/**
+ * Requests nobody at the office has marked seen yet, across every inbox this
+ * account answers for. Opening a request does not change its status, so a
+ * request stays new until someone moves it on.
+ */
+export const newRequestCount = (inboxes: readonly StaffInbox[]): number =>
+  inboxes.reduce((n, box) => n + box.items.filter((item) => item.status === 'sent').length, 0);
+
 /** Every inbox this account answers for, with what is waiting in each. */
 export async function loadInboxes(): Promise<StaffInbox[]> {
   const db = await cloud();

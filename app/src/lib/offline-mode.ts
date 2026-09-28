@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { MODULE_FLAGS, moduleOn } from './experience-flags';
 import { offline, watchConnection } from './offline';
+import type { SyncStatus } from '../state/store';
 
 /**
  * Offline mode (`offline_mode`, Phase M, D-055).
@@ -47,12 +48,16 @@ export function readLedger(value: unknown): Ledger {
   return { version: 1, lastSyncedAt: stamp(v.lastSyncedAt), unsyncedSince: stamp(v.unsyncedSince) };
 }
 
-export type SyncState = { status: 'off' | 'signed-out' | 'syncing' | 'synced' | 'error'; at: number };
+export type SyncState = { status: SyncStatus; at: number };
 
-/** The ledger after the store reports a sync result. */
+/**
+ * The ledger after the store reports a sync result. `review` is synced with a
+ * choice waiting, so it counts as synced; `queued` and `conflict` mean changes
+ * have not reached the account yet, the same as a failure.
+ */
 export function afterSync(l: Ledger, sync: SyncState, now: number): Ledger {
-  if (sync.status === 'synced') return { version: 1, lastSyncedAt: sync.at || now, unsyncedSince: null };
-  if (sync.status === 'error') return { ...l, unsyncedSince: l.unsyncedSince ?? now };
+  if (sync.status === 'synced' || sync.status === 'review') return { version: 1, lastSyncedAt: sync.at || now, unsyncedSince: null };
+  if (sync.status === 'error' || sync.status === 'queued' || sync.status === 'conflict') return { ...l, unsyncedSince: l.unsyncedSince ?? now };
   return l;
 }
 
@@ -147,7 +152,7 @@ export function useOnline(): boolean {
  * loaded once. `offline-mode.test.ts` reads each back with the network gone.
  */
 export const AVAILABLE_OFFLINE = [
-  { what: 'Today snapshot', where: 'The saved state (`semester.v1` or IndexedDB `semester-store`): deadlines, tasks, the plan' },
+  { what: 'Today snapshot', where: 'The saved state (`semester.v1` or IndexedDB `semester-store`): deadlines, actions, the plan' },
   { what: 'Saved schedules', where: '`semester.registration.v1` (the cart and potential schedules)' },
   { what: 'Saved degree plan', where: 'The saved state: `requirements` and `taken`' },
   { what: 'Registration checklist', where: '`semester.registration-day.v1`' },

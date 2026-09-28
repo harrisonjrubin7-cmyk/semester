@@ -48,6 +48,11 @@ describe('the ledger', () => {
     const waiting: Ledger = { version: 1, lastSyncedAt: null, unsyncedSince: EARLIER };
     expect(afterSync(waiting, { status: 'synced', at: NOW }, NOW)).toEqual({ version: 1, lastSyncedAt: NOW, unsyncedSince: null });
     expect(afterSync(waiting, { status: 'syncing', at: 0 }, NOW)).toBe(waiting);
+    // The statuses the store gained after this was written (main's sync work).
+    expect(afterSync(waiting, { status: 'review', at: NOW }, NOW).unsyncedSince).toBeNull();
+    expect(afterSync(EMPTY_LEDGER, { status: 'queued', at: 0 }, NOW).unsyncedSince).toBe(NOW);
+    expect(afterSync(EMPTY_LEDGER, { status: 'conflict', at: 0 }, NOW).unsyncedSince).toBe(NOW);
+    expect(afterSync(waiting, { status: 'offline', at: 0 }, NOW)).toBe(waiting);
   });
 
   it('syncs on reconnect only with an account and something waiting', () => {

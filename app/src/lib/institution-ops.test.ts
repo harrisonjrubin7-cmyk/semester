@@ -16,6 +16,7 @@ import {
   isRtl,
   keyProblems,
   mayRetire,
+  operationsAllowed,
   questionThemes,
   suppress,
   termsTo,
@@ -126,6 +127,18 @@ describe('export', () => {
     expect(exportReport(base)).toEqual({ ok: false, why: 'needs_review' });
     expect(exportReport({ ...base, review: { author: 'ana', reviewer: 'ana', approvedAt: '2026-09-27' } })).toEqual({ ok: false, why: 'self_review' });
     expect(exportReport({ ...base, review: { author: 'ana', reviewer: 'ben', approvedAt: '2026-09-27' } }).ok).toBe(true);
+  });
+
+  it('will not accept a review with no author, or the same person in another case', () => {
+    const base = { id: 'e', title: 'Gaps', metrics: ['equity_gap'], cells };
+    expect(exportReport({ ...base, review: { author: '  ', reviewer: 'ben', approvedAt: '2026-09-27' } })).toEqual({ ok: false, why: 'needs_review' });
+    expect(exportReport({ ...base, review: { author: 'Ana', reviewer: ' ana ', approvedAt: '2026-09-27' } })).toEqual({ ok: false, why: 'self_review' });
+  });
+
+  it('opens the studio only on a verified outcomes:read, never on nothing', () => {
+    expect(operationsAllowed([])).toBe(false);
+    expect(operationsAllowed(['integration:view'])).toBe(false);
+    expect(operationsAllowed(['outcomes:read'])).toBe(true);
   });
 
   it('refuses unknown metrics and forbidden fields', () => {

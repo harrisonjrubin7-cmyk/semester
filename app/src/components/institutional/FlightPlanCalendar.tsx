@@ -32,7 +32,7 @@ export function FlightPlanCalendar() {
     }
     return result;
   }, []);
-  const taskLabel = `${groups.length} task${groups.length === 1 ? '' : 's'}`;
+  const taskLabel = `${groups.length} action${groups.length === 1 ? '' : 's'}`;
   const sessionLabel = `${plan.sessions.length} session${plan.sessions.length === 1 ? '' : 's'}`;
 
   return (
@@ -45,7 +45,7 @@ export function FlightPlanCalendar() {
           </summary>
           <div className="flight-plan-body">
             <p className="flight-plan-intro">
-              Confirmed work is grouped by task and split into focused sessions within your available week.
+              Confirmed work is grouped by action and split into focused sessions within your available week.
             </p>
             <div className="flight-plan-groups">
               {groups.map((group) => {
@@ -74,7 +74,7 @@ export function FlightPlanCalendar() {
             {uncertain.length > 0 && (
               <details className="flight-plan-warning">
                 <summary>
-                  {uncertain.length} task{uncertain.length === 1 ? '' : 's'} needs a source-date check
+                  {uncertain.length} action{uncertain.length === 1 ? '' : 's'} needs a source-date check
                 </summary>
                 {uncertain.map((task) => (
                   <div className="flight-plan-warning-body" key={task.id}>

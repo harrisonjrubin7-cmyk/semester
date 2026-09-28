@@ -8,6 +8,10 @@ and update cadence.
 Source: [`app/src/lib/governance/incident-comms.ts`](../../app/src/lib/governance/incident-comms.ts). `compose()`
 refuses to produce a message in any of these cases: a section is missing, a `[BRACKETED]` placeholder is left in,
 speculation or legalese appears, or one of the audience's required fields is empty or outside its allowed answers.
+Every notice sent is recorded in `governance_incident_notices`, which enforces the same rules again. It also refuses a
+next-update time beyond the audience's cadence, and a notice that doesn't name every approver its audience requires
+(the Approvers column below), because a notice can be recorded by something other than `compose()`. A notice sent to
+every school is readable by every school's auditor.
 
 ## Every message says these seven things
 

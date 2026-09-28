@@ -226,10 +226,22 @@ describe('the notices hub', () => {
     expect(r.refused).toBe(2);
   });
 
-  it('only an official channel can say Required', () => {
-    const r = admit([m({ channel: 'semester', priority: 'required' }), m({ channel: 'official', priority: 'required', source: 'Registrar' })]);
-    expect(r.shown.find((x) => x.channel === 'semester')!.priority).toBe('high');
-    expect(r.shown[0].channel).toBe('official');
+  it('only an official channel can say Required, and only while its record is current', () => {
+    const r = admit([
+      m({ id: 'sem', channel: 'semester', priority: 'required' }),
+      m({ id: 'cur', channel: 'official', priority: 'required', source: 'Registrar', current: true }),
+      m({ id: 'old', channel: 'official', priority: 'required', source: 'Registrar', current: false }),
+      m({ id: 'unsaid', channel: 'official', priority: 'required', source: 'Registrar' }),
+    ]);
+    const p = (id: string) => r.shown.find((x) => x.id === id)!.priority;
+    expect(p('cur')).toBe('required');
+    expect([p('sem'), p('old'), p('unsaid')]).toEqual(['high', 'high', 'high']);
+    expect(r.shown[0].id).toBe('cur');
+  });
+
+  it('keeps only https links', () => {
+    const r = admit([m({ id: 'a', url: 'https://registrar.example.edu' }), m({ id: 'b', url: 'javascript:alert(1)' }), m({ id: 'c', url: 'http://plain.example.edu' })]);
+    expect(r.shown.map((x) => x.url)).toEqual(['https://registrar.example.edu', undefined, undefined]);
   });
 
   it('quiet hours wrap midnight', () => {

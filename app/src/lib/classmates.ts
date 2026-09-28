@@ -28,7 +28,9 @@
  * removed by a row-level policy, so they never reach the device. Filtering in
  * the client would leave the words sitting in the browser.
  *
- * **Reports are stored, not moderated.** Nobody is watching a queue. Saying
+ * **Reports reach a queue, with no promise of speed.** A holder of
+ * `report:read` reads them in `components/ReportQueue.tsx`, without the
+ * reporter's or subject's identity. Nothing guarantees how soon, and saying
  * otherwise would be the worst kind of lie in a feature like this — somebody
  * would rely on it. Blocking is the remedy that works, and it is immediate.
  *
