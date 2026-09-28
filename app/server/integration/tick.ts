@@ -1,8 +1,10 @@
 /**
  * The scheduler's tick: which connections are due, and one `runSync` for each.
  *
- * `supabase/scheduler.sql` calls this every fifteen minutes through
- * `api/integration/tick.ts`, and the daily retention sweep is a separate job
+ * `supabase/scheduler.sql` calls this every fifteen minutes through the
+ * `integration-tick` Edge Function (`supabase/functions/integration-tick/`,
+ * which runs a generated copy — see `app/scripts/edge-integration.ts`), and
+ * the daily retention sweep is a separate job
  * there that needs nothing from here. The tick decides only *whether* and
  * *when*; every rule about what a run may do — approval, pause, flags, kill
  * switches, scopes, consent, the school boundary — is `runSync`'s, and the tick
