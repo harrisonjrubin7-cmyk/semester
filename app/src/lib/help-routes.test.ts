@@ -15,6 +15,7 @@ import {
   helpFromAction,
   helpSeedWaiting,
   takeHelpSeed,
+  seedHelp,
   asNote,
   emptyDraft,
   followUp,
@@ -252,5 +253,17 @@ describe('from an Action Center action to a person', () => {
     expect(takeHelpSeed()?.fields.assignment).toBe('PS3');
     expect(takeHelpSeed()).toBeNull();
     expect(helpSeedWaiting()).toBe(false);
+  });
+});
+
+describe('a seed from another screen', () => {
+  it('carries the student’s own sentence as the question, once', () => {
+    let went = 0;
+    seedHelp({ need: 'registration', from: 'From “Describe the problem” on Help', fields: {}, question: 'I cannot register and the portal says HOLD' }, () => { went += 1; });
+    expect(went).toBe(1);
+    const seed = takeHelpSeed();
+    expect(seed?.need).toBe('registration');
+    expect(seed?.question).toBe('I cannot register and the portal says HOLD');
+    expect(takeHelpSeed()).toBeNull();
   });
 });

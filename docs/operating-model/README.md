@@ -47,6 +47,10 @@ The central rule, stated once:
 | 24 | Operations Console checks: customer promises kept, release impact, on-call workload | `app/src/lib/governance/consolechecks.ts` | Code: `consolechecks.ts`; held by its test. The console’s own controls are `lib/ops/console.ts` (D-110); no console screen exists yet |
 | 25 | AI assurance: the NIST AI RMF audit matrix, the AI 800-1 misuse-risk checklist, the evaluation risk tiers, the artifact set, the release gate held to `AI_RELEASE_GATE` | [AI-ASSURANCE.md](AI-ASSURANCE.md) | Code: `ai-assurance.ts`; rendered by its test |
 | 26 | Privacy by module: what each module holds by default, the role matrix held to `app_roles`, the share screen, the liability controls, the twelve launch gates, the council | [../MODULE-PRIVACY-MODEL.md](../MODULE-PRIVACY-MODEL.md) | Code: `module-privacy.ts`; rendered by its test |
+| 27 | The benchmark register: the strategy brief’s six commitments and twenty-five initiatives, item by item | [BENCHMARK.md](BENCHMARK.md) | Code: `benchmark.ts`; rendered by its test |
+| 28 | The four-pillar audit: website, app and console, operations, funnels — 45 controls scored 0–4, the priority formula, the leak detector | [FOUR-PILLAR-AUDIT.md](FOUR-PILLAR-AUDIT.md) | Code: `audit.ts`; rendered by its test; `scripts/audit-workbook.py` fills the workbook from it |
+| 29 | The interoperability roadmap: standards in priority order, each with the claims register’s word | [../INTEROPERABILITY-ROADMAP.md](../INTEROPERABILITY-ROADMAP.md) | Code: `interop.ts`; rendered by its test; printed at `/platform/integrations/` |
+| 30 | The policy simulator: who sees a change, workflows, alternatives, support content, the audit event; retention classes, exports, deletions, contracts | `app/src/lib/governance/policysim.ts` | Code: `policysim.ts`; held by its test; drawn in the control plane |
 | — | Change management and adoption | [CHANGE-MANAGEMENT.md](CHANGE-MANAGEMENT.md) | Process |
 | — | AI financial sustainability, ROI measurement | [COMMERCIAL-GOVERNANCE.md](COMMERCIAL-GOVERNANCE.md#ai-cost-controls) | Existing metered gateway (ADR 0004) |
 

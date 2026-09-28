@@ -9895,6 +9895,104 @@ button.adband-bar {
   }
 }
 
+/* ── Policy simulator (components/institutional/PolicySimulator.tsx) ───── */
+.policy-sim {
+  display: grid;
+  gap: var(--sp-4);
+  padding-top: var(--sp-5);
+  border-top: 1px solid var(--app-line);
+}
+
+.policy-sim-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: var(--sp-4);
+}
+
+.policy-sim-field {
+  display: grid;
+  gap: var(--sp-2);
+  color: var(--app-dim);
+  font-size: var(--type-sm);
+}
+
+.policy-sim-change {
+  margin: 0 0 var(--sp-3);
+  color: var(--app-fg);
+  line-height: var(--leading-normal);
+}
+
+.policy-sim-refused {
+  margin: 0;
+  color: var(--app-fg);
+  line-height: var(--leading-normal);
+}
+
+.policy-sim-dl {
+  display: grid;
+  gap: var(--sp-3);
+  margin: 0;
+}
+
+.policy-sim-dl dt {
+  color: var(--app-dim);
+  font-size: var(--type-sm);
+}
+
+.policy-sim-dl dd {
+  margin: var(--sp-1) 0 0;
+  line-height: var(--leading-normal);
+}
+
+.policy-sim-dl ul {
+  margin: 0;
+  padding-left: var(--sp-5);
+}
+
+/* ── Customer trust dashboard (components/institutional/TrustDashboard.tsx) ─ */
+.trust-dashboard {
+  display: grid;
+  gap: var(--sp-4);
+  margin-block: var(--sp-6);
+}
+
+.trust-dashboard-dl {
+  display: grid;
+  gap: var(--sp-4);
+  margin: 0;
+}
+
+.trust-dashboard-row {
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--app-line);
+}
+
+.trust-dashboard-row dt {
+  color: var(--app-dim);
+  font-size: var(--type-sm);
+}
+
+.trust-dashboard-row dd {
+  margin: var(--sp-1) 0 0;
+}
+
+.trust-dashboard-row p {
+  margin: 0;
+  line-height: var(--leading-normal);
+}
+
+.trust-dashboard-row ul {
+  margin: var(--sp-2) 0 0;
+  padding-left: var(--sp-5);
+  color: var(--app-dim);
+  font-size: var(--type-sm);
+  line-height: var(--leading-normal);
+}
+
+.trust-dashboard-row.is-none p {
+  color: var(--app-dim);
+}
+
 /* ── Integration dashboard ───────────────────────────────────────────────
  * Status is a glyph and a word; the border only repeats it, so nothing here
  * is carried by colour alone. Tables scroll inside their own box so the page

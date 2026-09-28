@@ -24,6 +24,55 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### Describe the problem, and be sent to the right door
+
+Help now opens with one field: describe the problem in your own words — “I
+do not understand why I cannot register”, “I need help with a paper”, “I need
+an accommodation” — and Semester says whose question it is, what it can do
+first, what to bring, and offers a summary to take with you. When the person
+is one the help route can reach, one button opens the request with your
+sentence as the question; you still read exactly what will be sent before it
+goes. Distress is heard before the subject it is about, and routed to campus
+counseling. Nothing you type there is kept.
+
+Nothing to do.
+
+### How to read an answer, and six ways to mark it
+
+Under every reply from Ask Semester there is now **How to read this answer**:
+source strength (strong, limited or none, from what was actually read), policy
+state (allowed, limited or unavailable, from the policy in force), what it can
+support, what it cannot determine, and what needs a person or the official
+record. The two marks under a reply became six: Helpful and Not helpful stay
+on this device as before; Incorrect, Source issue, Policy issue and
+Accessibility issue open a report on the right kind with the first words
+filled in.
+
+Nothing to do.
+
+### For institutions: simulate a policy change, and a Trust tab
+
+On the Control tab of the institution screen, **Before you change a policy**
+simulates turning a module off in a course or for the whole institution, or
+changing a retention clock: who sees it, which workflows and alternatives,
+what support content to update, the audit event it writes, and the reviewers
+it needs. A clock on a student’s own work is refused, and so is one under its
+legal floor. Beside Control there is a **Trust** tab: version, modules,
+connections and freshness, open issues, known limitations, trust documents,
+accessibility status, maintenance, retention, AI policy, feature changes and
+usage aggregates, each read from the product itself, with an absence said
+plainly.
+
+Nothing to do. Both tabs appear only where the control plane is switched on.
+
+### On the public site
+
+Six new pages — the Semester Standard, Data & AI Transparency, Integrations
+and standards, The words we use, the AI Governance Readiness Canvas, and
+Research and community — and a fifth free tool, the academic navigation
+diagnostic. Every capability the new pages name carries the register’s status
+word; no certification, customer or number is claimed.
+
 ### One place under Me for what Semester knows about you
 
 Me now opens with one list, in the order the questions come: My profile, My

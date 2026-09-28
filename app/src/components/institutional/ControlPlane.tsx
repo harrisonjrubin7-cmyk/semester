@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { controlPlaneView, type ControlPlaneInput } from '../../lib/control-plane';
 import { Blueprint } from '../Blueprint';
 import { ActionButton, SectionLabel } from '../ui';
+import { PolicySimulator } from './PolicySimulator';
 
 export function ControlPlane({ input, onApply }: { input: ControlPlaneInput; onApply?: () => Promise<{ receiptId: string }> }) {
   const view = useMemo(() => controlPlaneView(input), [input]);
@@ -27,6 +28,8 @@ export function ControlPlane({ input, onApply }: { input: ControlPlaneInput; onA
           </Blueprint>
         ))}
       </div>
+
+      <PolicySimulator />
 
       <div className="control-plane-actions">
         <ActionButton

@@ -582,6 +582,8 @@ export interface HelpSeed {
   fields: Partial<Record<ContextKey, string>>;
   /** Shown above the form, so the student knows why it is filled in. */
   from: string;
+  /** The question, when the screen that sent the student already has it in their words. */
+  question?: string;
 }
 
 const dateLine = (at: number) =>
@@ -623,7 +625,17 @@ export function takeHelpSeed(): HelpSeed | null {
 export function askForHelp(action: ActionLike, go: () => void): boolean {
   const seed = helpFromAction(action);
   if (!seed) return false;
+  seedHelp(seed, go);
+  return true;
+}
+
+/**
+ * Leave a seed for the help screen and go there. The no-wrong-door router
+ * (`lib/nowrongdoor.ts`) uses it with the student's own sentence as the
+ * question; the seed is taken once by `GetHelp`, and nothing is sent until
+ * the student reads the preview and confirms, the same as every other route.
+ */
+export function seedHelp(seed: HelpSeed, go: () => void): void {
   pending = seed;
   go();
-  return true;
 }

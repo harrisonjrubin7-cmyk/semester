@@ -3,6 +3,7 @@ import { renderToStaticMarkup, renderToString } from 'react-dom/server';
 import { defaultNext } from '../lib/graduation';
 import { PROMISE, type SiteConfig } from './config';
 import { Layout, href } from './Layout';
+import * as B from './benchmark';
 import * as M from './more';
 import * as P from './pages';
 import { TOOL_LIST, Tool, type ToolId, type ToolProps } from './tools/Tools';
@@ -59,6 +60,15 @@ export const ROUTES: Route[] = [
   { path: '/launch/', title: 'Your launch site — Semester', description: 'The private page a department or institution gets when it signs: timeline, contacts, training, templates, known issues and readiness.', Page: M.Launch },
   { path: '/pricing/how-it-works/', title: 'How Semester pricing works', description: 'What drives individual, institutional and enterprise pricing, what implementation and migration cover, and how renewals avoid surprises.', Page: M.HowWePrice },
   { path: '/resources/campus-launch-kit/', title: 'Campus launch kit — Semester', description: 'Email, announcement, signage and social templates, an FAQ, the source-label explainer and a launch agenda, ready to adapt.', Page: M.CampusLaunchKit },
+  // The benchmark pages (`benchmark.tsx`): the public standard, data and AI
+  // transparency, the integration registry, the vocabulary, the AI governance
+  // canvas and the research programmes.
+  { path: '/semester-standard/', title: 'The Semester Standard', description: 'Eleven public commitments, each with what holds it in the code today and the gap where it is only partly held.', Page: B.SemesterStandard },
+  { path: '/trust/data-and-ai-transparency/', title: 'Data & AI Transparency — Semester', description: 'What information Semester uses, where it came from, who can access it, how long it is kept, and when AI is involved, each line linked to what holds it.', Page: B.DataAndAITransparency },
+  { path: '/platform/integrations/', title: 'Integrations and standards — Semester', description: 'Every standard Semester supports or intends to — LTI, OneRoster, SSO, SCIM, Caliper, QTI, Open Badges, CLR — each with its status word.', Page: B.Integrations },
+  { path: '/platform/vocabulary/', title: 'The words we use — Semester', description: 'Nine terms, what each means and the page each lives on: Student Action Layer, Academic Navigation, No Wrong Door and six more.', Page: B.Vocabulary },
+  { path: '/resources/ai-governance-canvas/', title: 'AI Governance Readiness Canvas — Semester', description: 'Ten boxes an institution fills in before it turns on an assistant: allowed, restricted and prohibited uses, sources, review, data, retention, escalation.', Page: B.AIGovernanceCanvas },
+  { path: '/research/', title: 'Research and community — Semester', description: 'The Academic Friction Index, its method set before its data, and the design-partner council, clinics, advisory network and design challenge.', Page: B.Research },
   ...TOOL_LIST.map(
     (t): Route => ({
       path: `/tools/${t.id}/`,

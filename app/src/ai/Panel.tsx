@@ -548,6 +548,7 @@ export function Panel({ side }: { side: 'right' | 'left' }) {
                         text={t.content}
                         incomplete={t.incomplete}
                         onRetry={i === talk.turns.length - 1 ? (talk.redo ?? undefined) : undefined}
+                        quality={t.quality}
                         /*
                          * The offers belong to the answer that made them.
                          *

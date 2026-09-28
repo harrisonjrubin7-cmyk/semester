@@ -47,7 +47,7 @@ export function GetHelp({ account }: { account: Account | null }) {
   const [myName, setMyName] = useState('');
   const [destinationId, setDestinationId] = useState('');
   // Pre-filled from the action, never pre-ticked: `ticked` starts empty either way.
-  const [draft, setDraft] = useState<Draft>(() => (seed ? { ...emptyDraft(), fields: { ...seed.fields } } : emptyDraft()));
+  const [draft, setDraft] = useState<Draft>(() => (seed ? { ...emptyDraft(), question: (seed.question ?? '').slice(0, QUESTION_MAX), fields: { ...seed.fields } } : emptyDraft()));
   const [from, setFrom] = useState(seed?.from ?? '');
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);

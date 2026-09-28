@@ -242,6 +242,7 @@ export function Chat() {
                   text={t.content}
                   incomplete={t.incomplete}
                   onRetry={i === talk.turns.length - 1 ? (talk.redo ?? undefined) : undefined}
+                  quality={t.quality}
                   /*
                    * The offers belong to the answer that made them, and sit
                    * inside it rather than in a tray at the bottom.
