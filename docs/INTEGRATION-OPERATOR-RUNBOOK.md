@@ -70,7 +70,7 @@ dead letter.
 | Job | When | Does | State |
 | --- | --- | --- | --- |
 | `integration-retention` | daily 03:29 UTC | `integration_retention_sweep()` (§8) | active |
-| `integration-sync` | :07, :22, :37, :52 | POSTs to the `integration-tick` Edge Function | **parked** |
+| `integration-sync` | :07, :22, :37, :52 | POSTs to the `integration-tick` Edge Function | active since 28 Sept |
 
 The tick (`app/server/integration/tick.ts`) first runs replays an operator requested (§5). It then runs `runSync` for each
 connection that meets all of these:
@@ -89,7 +89,7 @@ one connection's many requests cannot crowd out another's. Every other rule is
 still `runSync`'s. The registry is empty, so until an adapter is added a tick runs nothing and reports every
 connection as unregistered.
 
-**Unparking `integration-sync`.** The function and the token check both deploy on merge, and the token lives only in
+**Unparking `integration-sync`** (done 28 September 2026; kept in case it is ever parked again). The function and the token check both deploy on merge, and the token lives only in
 Vault, so there is nothing to set by hand. Before unparking, confirm the function answers the job's own request —
 this sends exactly what the job sends:
 

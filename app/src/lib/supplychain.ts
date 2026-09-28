@@ -97,6 +97,13 @@ export const NAMED: readonly Named[] = [
     decision: 'accepted',
   },
   {
+    pkg: 'axe-core',
+    lockfile: 'app',
+    license: 'MPL-2.0',
+    why: 'Accessibility rules engine, a devDependency run only by the test suite (src/a11y/axe.test.tsx, src/lib/dim.test.ts), used unmodified. None of its code is in the bundle.',
+    decision: 'accepted',
+  },
+  {
     pkg: 'mediabunny',
     lockfile: 'video',
     license: 'MPL-2.0',

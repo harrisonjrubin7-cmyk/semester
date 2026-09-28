@@ -148,7 +148,7 @@ export const GATES: readonly Gate[] = [
       { path: '.github/workflows/production-smoke.yml', shows: 'hourly synthetic check of the public app, its assets and PostgREST' },
       { path: 'docs/market-readiness/INCIDENT_RESPONSE.md', shows: 'the incident process, written and never exercised' },
     ],
-    gap: 'No alert reaches a named person and no support address exists that a university could be given. MONITORING.md declines a status page in writing; the command asks for one, so the council must uphold or overturn that refusal.',
+    gap: 'No alert reaches a named person and no support address exists that a university could be given. A public status page is live at /status.html (28 September); it has no subscriber notifications yet.',
     goLive: [/Error monitoring live and alerting/, /Incident process with named owner/],
   },
   {

@@ -98,8 +98,10 @@ must not imply otherwise.
    - close sign-ups (`select public.set_invite_only(true);`);
    - pause an integration;
    - rotate a key (`SECURITY.md`).
-5. **Update the status page.** There is none yet, and publishing one is on
-   the path to an SLA.
+5. **Update the status page.** Add the incident, and each update, to
+   `app/public/status-incidents.json` (`date`, `status`, `title`, `detail`)
+   and merge it; `/status.html` shows it once Pages redeploys. Change its
+   `status` when it is over.
 6. **Notify affected institution contacts,** using
    `docs/market-readiness/INCIDENT_COMMUNICATION_TEMPLATES.md`.
 7. **Preserve evidence:** logs are kept for a month, and `access_log` for
