@@ -27,13 +27,6 @@ import { loadSeed } from '../data/seed';
  * zero. The one finding on the first pass was `html-has-lang`, which is the
  * test's own document (jsdom's is bare) rather than the app's, and is handled
  * by copying `lang` from `index.html` rather than by disabling the rule.
- * `document-title` is the same finding one line down: `index.html` ships
- * `<title>Semester</title>`, the onboarding screen is drawn above the router
- * and never writes a title of its own, and jsdom starts with none — so the
- * static title is copied in the same way, and cleared between cases so that
- * no case passes on the title an earlier one left behind. It was found by a
- * shuffled run that happened to put first run first (seed 1790574758766);
- * in file order it had passed on `#/home`'s leftover title every time.
  * `moderate` and `minor` findings are not failed on here.
  *
  * ## What jsdom cannot tell axe
@@ -79,11 +72,22 @@ let hadObserver = false;
 let hadHitTest = false;
 let hadHitOne = false;
 
-const INDEX = readFileSync(join(__dirname, '..', '..', 'index.html'), 'utf8');
+const PAGE = readFileSync(join(__dirname, '..', '..', 'index.html'), 'utf8');
+
 /** The page's own `lang`, read from the page rather than assumed. */
-const LANG = /<html\s+lang="([^"]+)"/.exec(INDEX)?.[1];
-/** The page's own static `<title>`, which stands until a screen writes its own. */
-const TITLE = /<title>([^<]+)<\/title>/.exec(INDEX)?.[1];
+const LANG = /<html\s+lang="([^"]+)"/.exec(PAGE)?.[1];
+
+/**
+ * The page's own `<title>`, for the same reason. A browser starts every visit
+ * with it; `Titled` in `App.tsx` then names the screen. jsdom starts with no
+ * title at all, and the one screen `Titled` is not drawn above — first-run
+ * onboarding — therefore audited as a document with no title, or with whatever
+ * title an earlier case in this worker happened to leave (`isolate: false`
+ * shares a document across files). Seeded like `lang`, cleared after each
+ * case, so what is audited is what a visitor's document holds and not the
+ * order the cases ran in.
+ */
+const TITLE = /<title>([^<]+)<\/title>/.exec(PAGE)?.[1];
 
 function width(px: number) {
   window.matchMedia = ((query: string) => {
@@ -189,14 +193,14 @@ async function serious(): Promise<{ findings: Finding[]; passed: number }> {
 }
 
 describe('the probe', () => {
-  it('reads the page language and static title from index.html', () => {
+  it('reads the page language from index.html', () => {
     expect(LANG).toBe('en');
-    expect(TITLE).toBe('Semester');
   });
 
-  it('starts every case without a title, so first run cannot pass on a leftover one', () => {
-    // The control for the fix above: with the copy removed, first run alone
-    // has no title at all. Asserted here on the bare document, before `show`.
+  it('reads the page title from index.html, and gives each case a fresh one', () => {
+    expect(TITLE).toBe('Semester');
+    // The teardown cleared the last case's title, so a case that sets none
+    // is audited with the page's own and not with a neighbour's.
     expect(document.title).toBe('');
   });
 

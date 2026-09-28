@@ -48,7 +48,7 @@ function fakeClient() {
         body = String(args.want_body);
         return { data: true, error: null };
       }
-      if (name === 'gateway_write_audit') return { data: true, error: null };
+      if (name === 'gateway_write_audit_v2') return { data: true, error: null };
       if (name === 'gateway_write_intelligence_audit') return { data: true, error: null };
       if (name === 'gateway_purge_journal') return { data: 0, error: null };
       return { data: null, error: new Error(`unexpected ${name}`) };

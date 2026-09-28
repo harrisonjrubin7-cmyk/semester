@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import {
+  CORRELATION_ID_PATTERN,
   UNIVERSITY_AREAS,
   isRefusal,
   isUniversityArea,
@@ -8,6 +9,7 @@ import {
   type ActionInput,
   type UniversityArea,
   type UniversityIdentity,
+  type UserAction,
 } from '../../../packages/institution/src/index.ts';
 import type { AdapterContext, InstitutionAdapter } from './adapter.ts';
 import type { ActionJournalStore } from './journal.ts';
@@ -49,6 +51,25 @@ import type { ReadinessResult } from './readiness.ts';
  * The identity (it comes from `auth.ts`), the institution (from the identity),
  * the adapter (an installed module, looked up by the identity's own tenant),
  * or whether an action is permitted (the adapter decides, every call).
+ *
+ * ## One id, carried through
+ *
+ * Every response carries two ids. `X-Request-Id` is minted here, once per
+ * request, and is never anything a client sent. `X-Correlation-Id` is the
+ * client's if it sent a well-formed one, and minted otherwise — it is the id
+ * that follows one student action from the tap in the browser through this
+ * request, its audit rows, its telemetry line and, if it comes to that, the
+ * support ticket. The audit row and the telemetry event both carry it, so
+ * "which audit event proves this happened" is a lookup rather than a search.
+ *
+ * ## Every refusal has the same shape
+ *
+ * `{ error: { code, message, correlation_id, retryable, user_action? } }`,
+ * plus a top-level `message` for the client that predates the envelope.
+ * `retryable` is a statement, not a hint: a 429 or a 503 may be tried again,
+ * and a 502 from an unknown outcome **may not** — the sentence says to
+ * reconcile, and the flag says the same thing to a client that only reads
+ * flags.
  */
 
 interface Config {
@@ -68,6 +89,7 @@ interface Config {
 export interface GatewayTelemetryEvent {
   event: 'institution.request';
   requestId: string;
+  correlationId: string;
   method: string;
   route: string;
   status: number;
@@ -88,11 +110,39 @@ function telemetryRoute(pathname: string): string {
   return TELEMETRY_ROUTES.has(pathname) ? pathname : '/unmatched';
 }
 
+/**
+ * The machine-readable name for each refusal, by status, unless a `fail`
+ * names a more specific one. The names are the envelope's vocabulary and a
+ * client may switch on them; a status alone is not enough to tell "the
+ * review expired" from "the record moved", and both are 4xx.
+ */
+const CODE_BY_STATUS: Record<number, string> = {
+  400: 'invalid_request',
+  401: 'unauthenticated',
+  403: 'forbidden',
+  404: 'not_found',
+  405: 'method_not_supported',
+  409: 'conflict',
+  410: 'expired',
+  413: 'too_large',
+  415: 'unsupported_media_type',
+  429: 'rate_limited',
+  502: 'outcome_uncertain',
+  503: 'unavailable',
+};
+
+/** Whether the same request may be sent again. Only two statuses say yes. */
+const retryable = (status: number) => status === 429 || status === 503;
+
 class HttpError extends Error {
   status: number;
-  constructor(status: number, message: string) {
+  code: string;
+  userAction?: UserAction;
+  constructor(status: number, message: string, code?: string, userAction?: UserAction) {
     super(message);
     this.status = status;
+    this.code = code ?? CODE_BY_STATUS[status] ?? 'error';
+    if (userAction) this.userAction = userAction;
   }
 }
 
@@ -102,8 +152,37 @@ class HttpError extends Error {
  * function declaration (or a const with an explicit type annotation). As an
  * arrow, every `fail(...)` guard below would still leave its subject nullable.
  */
-function fail(status: number, message: string): never {
-  throw new HttpError(status, message);
+function fail(status: number, message: string, code?: string, userAction?: UserAction): never {
+  throw new HttpError(status, message, code, userAction);
+}
+
+export interface ErrorEnvelope {
+  error: {
+    code: string;
+    message: string;
+    correlation_id: string;
+    retryable: boolean;
+    user_action?: UserAction;
+  };
+  /** The same sentence, where a client written before the envelope looks for it. */
+  message: string;
+}
+
+function envelope(status: number, code: string, message: string, correlationId: string, userAction?: UserAction): ErrorEnvelope {
+  const error: ErrorEnvelope['error'] = { code, message, correlation_id: correlationId, retryable: retryable(status) };
+  if (userAction) error.user_action = userAction;
+  return { error, message };
+}
+
+/**
+ * The correlation id for this request: the client's, if it sent one that is
+ * plainly an id, and a fresh one otherwise. The pattern is the same the audit
+ * column checks, so nothing accepted here is refused there — and nothing
+ * outside it (a sentence, a script, four kilobytes) reaches a log line.
+ */
+export function correlationIdFor(request: Request): string {
+  const given = request.headers.get('x-correlation-id');
+  return given && CORRELATION_ID_PATTERN.test(given) ? given : randomUUID();
 }
 
 /** How long somebody has to read a review and confirm it. */
@@ -129,13 +208,15 @@ export function createGateway(config: Config) {
   const installed = new Map(config.adapters.map((a) => [`${a.institutionId}:${a.area}`, a]));
   const rateLimiter = config.rateLimiter ?? new MemoryRateLimiter();
 
-  const handle = async (request: Request): Promise<Response> => {
+  const handle = async (request: Request, correlationId: string): Promise<Response> => {
     const headers = new Headers({
       'Content-Type': 'application/json',
       'Cache-Control': 'no-store',
       'X-Content-Type-Options': 'nosniff',
       Vary: 'Origin',
     });
+    const refuse = (status: number, code: string, message: string, userAction?: UserAction) =>
+      Response.json(envelope(status, code, message, correlationId, userAction), { status, headers });
 
     /*
      * One exact origin, echoed only when it matches.
@@ -145,11 +226,15 @@ export function createGateway(config: Config) {
      */
     const origin = request.headers.get('origin');
     if (origin && origin !== config.origin) {
-      return new Response(JSON.stringify({ error: 'This origin is not allowed.' }), { status: 403, headers });
+      return refuse(403, 'origin_not_allowed', 'This origin is not allowed.');
     }
-    if (origin) headers.set('Access-Control-Allow-Origin', origin);
+    if (origin) {
+      headers.set('Access-Control-Allow-Origin', origin);
+      // Without this a browser client can send the id but never read it back.
+      headers.set('Access-Control-Expose-Headers', 'X-Request-Id, X-Correlation-Id');
+    }
     if (request.method === 'OPTIONS') {
-      headers.set('Access-Control-Allow-Headers', 'Authorization, Content-Type');
+      headers.set('Access-Control-Allow-Headers', 'Authorization, Content-Type, X-Correlation-Id');
       headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
       return new Response(null, { status: 204, headers });
     }
@@ -224,7 +309,7 @@ export function createGateway(config: Config) {
 
       const intelligenceConfirm = /^\/v1\/intelligence\/actions\/([^/]+)\/confirm$/.exec(path);
       if (request.method === 'GET' && path === '/v1/intelligence/policy') {
-        if (!config.intelligence) return Response.json({ code: 'policy-disabled', message: 'Semester Intelligence is not configured for this gateway.' }, { status: 503, headers });
+        if (!config.intelligence) return refuse(503, 'policy-disabled', 'Semester Intelligence is not configured for this gateway.');
         const response = await config.intelligence.policy(who);
         return Response.json(response.body, { status: response.status, headers });
       }
@@ -233,10 +318,7 @@ export function createGateway(config: Config) {
         (path === '/v1/intelligence/respond' || intelligenceConfirm)
       ) {
         if (!config.intelligence) {
-          return Response.json(
-            { code: 'policy-disabled', message: 'Semester Intelligence is not configured for this gateway.' },
-            { status: 503, headers },
-          );
+          return refuse(503, 'policy-disabled', 'Semester Intelligence is not configured for this gateway.');
         }
         if (!request.headers.get('content-type')?.startsWith('application/json')) fail(415, 'Send JSON.');
         const text = await request.text();
@@ -264,10 +346,10 @@ export function createGateway(config: Config) {
       /** The adapter for an area, if it exists and currently permits this. */
       const adapterFor = async (area: UniversityArea, write = false) => {
         const adapter = installed.get(`${who.institutionId}:${area}`);
-        if (!adapter) fail(503, 'An approved university connection is not configured for this service.');
+        if (!adapter) fail(503, 'An approved university connection is not configured for this service.', 'adapter_not_configured');
         const status = await adapter.status(context);
         if (status.state !== 'connected' || !status.canRead || (write && !status.canWrite)) {
-          fail(403, 'This connection does not permit that action.');
+          fail(403, 'This connection does not permit that action.', 'connection_forbids');
         }
         return adapter;
       };
@@ -287,7 +369,7 @@ export function createGateway(config: Config) {
           fail(404, 'Record not available to this account.');
         }
         if (record.version !== input.version) {
-          fail(409, 'This record changed. Refresh it and review your action again.');
+          fail(409, 'This record changed. Refresh it and review your action again.', 'record_changed');
         }
         const action = record.actions.find((a) => a.id === input.actionId);
         if (!action) fail(403, 'This action is not available for this record.');
@@ -352,7 +434,7 @@ export function createGateway(config: Config) {
           search: (url.searchParams.get('search') || '').slice(0, 200),
           cursor: (url.searchParams.get('cursor') || '').slice(0, 500) || null,
         });
-        await config.journal.audit(who, area, 'records.read');
+        await config.journal.audit(who, area, 'records.read', null, correlationId);
         return Response.json(page, { headers });
       }
 
@@ -387,7 +469,7 @@ export function createGateway(config: Config) {
           expiresAt: new Date(now + REVIEW_MINUTES * 60_000).toISOString(),
         };
         await config.journal.save({ review, input, identity: who, state: 'ready' });
-        await config.journal.audit(who, input.area, 'action.prepared', review.id);
+        await config.journal.audit(who, input.area, 'action.prepared', review.id, correlationId);
         return Response.json(review, { headers });
       }
 
@@ -405,7 +487,7 @@ export function createGateway(config: Config) {
       // Terminal, and there is nothing to look up: it was answered by a
       // refusal, not left hanging. Said before the two generic 409s below,
       // both of which would tell the person to reconcile it.
-      if (row.state === 'refused') fail(409, 'This action was refused. Prepare a new review.');
+      if (row.state === 'refused') fail(409, 'This action was refused. Prepare a new review.', 'review_refused');
 
       if (path === '/actions/reconcile') {
         if (row.state === 'ready') fail(409, 'This action has not been submitted.');
@@ -419,10 +501,10 @@ export function createGateway(config: Config) {
          * because the guess that costs somebody money is "it probably failed".
          */
         if (!result || !result.id || !['completed', 'pending'].includes(result.status)) {
-          fail(409, 'The school has not confirmed the result yet. Do not submit it again.');
+          fail(409, 'The school has not confirmed the result yet. Do not submit it again.', 'outcome_uncertain');
         }
         await config.journal.finish(row, result.status === 'pending' ? 'pending' : 'completed', result);
-        await config.journal.audit(who, row.input.area, 'action.reconciled', row.review.id);
+        await config.journal.audit(who, row.input.area, 'action.reconciled', row.review.id, correlationId);
         return Response.json(result, { headers });
       }
 
@@ -431,7 +513,7 @@ export function createGateway(config: Config) {
         fail(409, 'This action is processing or needs reconciliation. Do not submit it again.');
       }
       if (Date.parse(row.review.expiresAt) <= now) {
-        fail(410, 'Review expired. Refresh and review the action again.');
+        fail(410, 'Review expired. Refresh and review the action again.', 'review_expired');
       }
 
       if (config.refreshIdentity) {
@@ -455,21 +537,21 @@ export function createGateway(config: Config) {
       await recordFor(adapter, row.input);
       const checked = await adapter.review(context, row.input);
       if (JSON.stringify(checked) !== JSON.stringify({ title: row.review.title, details: row.review.details })) {
-        fail(409, 'The action details changed. Prepare a new review.');
+        fail(409, 'The action details changed. Prepare a new review.', 'review_changed');
       }
 
       if (!(await config.journal.claim(row.review.id, who, Date.now()))) {
-        fail(409, 'This action was already claimed or expired.');
+        fail(409, 'This action was already claimed or expired.', 'already_claimed');
       }
 
       try {
-        await config.journal.audit(who, row.input.area, 'action.started', row.review.id);
+        await config.journal.audit(who, row.input.area, 'action.started', row.review.id, correlationId);
         const receipt = await adapter.execute(context, row.input, row.review.id);
         if (!receipt.id || !['completed', 'pending'].includes(receipt.status) || !receipt.recordedAt) {
           throw new Error('Invalid upstream receipt.');
         }
         await config.journal.finish(row, receipt.status === 'pending' ? 'pending' : 'completed', receipt);
-        await config.journal.audit(who, row.input.area, 'action.receipt', row.review.id);
+        await config.journal.audit(who, row.input.area, 'action.receipt', row.review.id, correlationId);
         return Response.json(receipt, { headers });
       } catch (e) {
         /*
@@ -483,8 +565,8 @@ export function createGateway(config: Config) {
          */
         if (isRefusal(e)) {
           await config.journal.finish(row, 'refused');
-          await config.journal.audit(who, row.input.area, 'action.refused', row.review.id);
-          return fail(400, e.message);
+          await config.journal.audit(who, row.input.area, 'action.refused', row.review.id, correlationId);
+          return fail(400, e.message, 'refused');
         }
         /*
          * The one place this gateway refuses to guess.
@@ -494,10 +576,12 @@ export function createGateway(config: Config) {
          * is marked unknown, and only `/actions/reconcile` can resolve it.
          */
         await config.journal.finish(row, 'uncertain');
-        await config.journal.audit(who, row.input.area, 'action.uncertain', row.review.id);
+        await config.journal.audit(who, row.input.area, 'action.uncertain', row.review.id, correlationId);
         return fail(
           502,
           'The result could not be confirmed. Ask the institution to reconcile this action before submitting again.',
+          'outcome_uncertain',
+          { label: 'Ask the institution to reconcile', kind: 'contact_support' },
         );
       }
     } catch (e) {
@@ -516,24 +600,25 @@ export function createGateway(config: Config) {
        * carry a connection string or a stack — so it becomes one flat
        * sentence, which is still the default and still the right one.
        */
-      if (isRefusal(e)) return Response.json({ error: e.message }, { status: 400, headers });
-      return Response.json(
-        { error: e instanceof HttpError ? e.message : 'The university service is unavailable. Please try again later.' },
-        { status: e instanceof HttpError ? e.status : 503, headers },
-      );
+      if (isRefusal(e)) return refuse(400, 'refused', e.message);
+      if (e instanceof HttpError) return refuse(e.status, e.code, e.message, e.userAction);
+      return refuse(503, 'unavailable', 'The university service is unavailable. Please try again later.');
     }
   };
 
   return async (request: Request): Promise<Response> => {
     const requestId = randomUUID();
+    const correlationId = correlationIdFor(request);
     const started = performance.now();
-    const response = await handle(request);
+    const response = await handle(request, correlationId);
     response.headers.set('X-Request-Id', requestId);
+    response.headers.set('X-Correlation-Id', correlationId);
     const pathname = new URL(request.url).pathname;
     const route = telemetryRoute(pathname);
     const event: GatewayTelemetryEvent = {
       event: 'institution.request',
       requestId,
+      correlationId,
       method: request.method,
       route,
       status: response.status,

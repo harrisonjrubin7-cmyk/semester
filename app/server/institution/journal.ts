@@ -84,6 +84,7 @@ export interface ActionJournalStore {
     area: string,
     event: string,
     reviewId?: string | null,
+    correlationId?: string | null,
   ): void | Promise<void>;
   auditIntelligence?(
     identity: UniversityIdentity,
@@ -128,7 +129,8 @@ export class ActionJournal implements ActionJournalStore {
         actor TEXT NOT NULL,
         area TEXT NOT NULL,
         event TEXT NOT NULL,
-        review_id TEXT
+        review_id TEXT,
+        correlation_id TEXT
       );
       CREATE TABLE IF NOT EXISTS intelligence_audit(
         id INTEGER PRIMARY KEY,
@@ -146,6 +148,16 @@ export class ActionJournal implements ActionJournalStore {
         confirmation TEXT
       );
     `);
+    /*
+     * A journal file written before the correlation column existed has an
+     * `audit` table without it, and `CREATE TABLE IF NOT EXISTS` does not
+     * widen a table it found. One guarded ALTER, so an old file opens rather
+     * than failing its first audit write with "no such column".
+     */
+    const columns = this.db.prepare('PRAGMA table_info(audit)').all() as Array<{ name: string }>;
+    if (!columns.some((c) => c.name === 'correlation_id')) {
+      this.db.exec('ALTER TABLE audit ADD COLUMN correlation_id TEXT');
+    }
   }
 
   /**
@@ -275,10 +287,16 @@ export class ActionJournal implements ActionJournalStore {
       .run(state, this.seal({ ...row, state, receipt }), row.review.id);
   }
 
-  audit(identity: UniversityIdentity, area: string, event: string, reviewId: string | null = null): void {
+  audit(
+    identity: UniversityIdentity,
+    area: string,
+    event: string,
+    reviewId: string | null = null,
+    correlationId: string | null = null,
+  ): void {
     this.db
-      .prepare('INSERT INTO audit(at,tenant,actor,area,event,review_id) VALUES(?,?,?,?,?,?)')
-      .run(new Date().toISOString(), identity.institutionId, identity.userId, area, event, reviewId);
+      .prepare('INSERT INTO audit(at,tenant,actor,area,event,review_id,correlation_id) VALUES(?,?,?,?,?,?,?)')
+      .run(new Date().toISOString(), identity.institutionId, identity.userId, area, event, reviewId, correlationId);
   }
 
   /**

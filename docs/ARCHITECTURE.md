@@ -1,7 +1,7 @@
 # Architecture — current system and the unified-platform target
 
 Baseline `origin/main` `c029822`. This page is the map. The reasoning lives in
-the six ADRs in [`docs/architecture/`](architecture/README.md) and in the
+the ADRs in [`docs/architecture/`](architecture/README.md) and in the
 source files they point to; this page does not restate either.
 
 ## Current system
@@ -24,7 +24,8 @@ source files they point to; this page does not restate either.
      prepare-only adapters: advising, athletics, career, clubs, family,
      housing, money; SSO membership; governed intelligence actions;
      encrypted journal (journal-crypto.ts, postgres-journal.ts)
-     shared vocabulary: packages/institution (ActionInput, Receipt, Refusal)
+     shared vocabulary: packages/institution (ActionInput, Receipt, Refusal;
+     policy decision point, event envelope and outbox, workflow machines — ADRs 0007–0009)
 ```
 
 | Concern | Where | ADR |
