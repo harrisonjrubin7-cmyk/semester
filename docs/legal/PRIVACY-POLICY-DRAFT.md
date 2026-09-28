@@ -21,14 +21,17 @@ formed] ("Semester", "we"). Contact: harrisonjrubin7@gmail.com
 
 ## 1. The short version
 
-- Semester works without an account. Signed out, nothing you enter leaves
-  your device.
+- Semester works without an account. Signed out, your semester stays on
+  your device. What leaves it is only what you choose to send: an answer to
+  someone else's shared form, a question to the assistant, an address you
+  look up, and the map tiles for the area on screen (section 5).
 - Signing in copies your semester to your account so your other devices have
   it. It copies all of it, and section 3 lists what that means.
 - We do not sell your information, show you advertising, use third-party
   analytics, or use your information to train AI models.
-- You can export everything and delete your account from inside the app, at
-  any time.
+- You can export everything, and delete everything the app synced, from
+  inside the app at any time. Removing the sign-in itself — the email address
+  you registered — takes an email to us (section 7).
 
 ## 2. Two ways you might be using Semester
 
@@ -57,6 +60,9 @@ history; your grades, returned work, degree plan and applications; the people
 and advising visits you log; cost, housing, meal and map records you enter;
 and your app settings. The in-app **Privacy** page lists these groups from the
 same data the sync uses, so it cannot list less than is sent.
+
+**Answers to shared forms.** If you answer a form someone shared with you,
+your answers go to that form's owner, whether or not you are signed in.
 
 **Your account.** Your email address and, if you sign in with Google,
 Microsoft or Apple, the basic profile that provider shares.
@@ -135,8 +141,11 @@ once sent. For school deployments, retention follows the school's contract.
 
 - **Export**: *Take it with you* downloads everything in portable formats.
 - **Delete**: *Delete my account* in Settings empties every table Semester
-  can reach on your behalf. The in-app Privacy page names the few shared rows
-  that survive it and why.
+  can reach on your behalf. It does not remove the sign-in record (your email
+  address): an app running in your browser should not be able to delete a
+  sign-in, so we remove it when you email us. The in-app Privacy page names
+  the few shared rows that survive and why. [DECIDE: whether to build
+  server-side removal of the sign-in so no email is needed.]
 - **Correct**: edit anything you entered, in the app.
 - **Stop syncing**: sign out. The app keeps working on your device.
 - **Ask us**: email the address above. We will answer within

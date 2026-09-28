@@ -94,7 +94,9 @@ exports everything. Service commitments for schools are in their contracts.
 
 ## 10. Ending
 
-You can stop using Semester and delete your account at any time. We may
+You can stop using Semester, and delete everything it synced, at any time.
+Removing the sign-in itself takes an email to us, as the Privacy Policy
+explains. We may
 suspend or end your access if you seriously or repeatedly break these Terms,
 or if the law requires it. Sections 4 (ownership), 11, 12 and 13 survive.
 
