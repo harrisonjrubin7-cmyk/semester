@@ -1,7 +1,7 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { ACCOUNT_STATUSES, ACCOUNT_STATUS_OF, SALES_STAGES, salesMoveProblems } from './stages';
+import { ACCOUNT_STATUSES, ACCOUNT_STATUS_OF, SALES_EXIT, SALES_STAGES, salesMoveProblems } from './stages';
 
 const root = join(import.meta.dirname, '../../../..');
 
@@ -19,8 +19,17 @@ describe('sales stages', () => {
 
   it('never goes live without passing the contract and the council', () => {
     expect(salesMoveProblems('proposal', 'live').map((p) => p.split(':')[0])).toEqual([
-      'Skips pilot_or_implementation_SOW', 'Skips contracted',
+      'Skips pilot_or_implementation_SOW', 'Skips contracted', 'Enters live without',
     ]);
+  });
+
+  it('holds the stage being entered to its own gate', () => {
+    // contracted → live skips nothing gated, and still needs the launch council.
+    expect(salesMoveProblems('contracted', 'live')).toEqual([`Enters live without: ${SALES_EXIT.live}`]);
+    expect(salesMoveProblems('contracted', 'live', new Set(['live']))).toEqual([]);
+    expect(salesMoveProblems('target_account', 'qualified')[0]).toMatch(/^Enters qualified without/);
+    // An ungated stage needs nothing.
+    expect(salesMoveProblems('renewal', 'expansion')).toEqual([]);
   });
 
   it('does not move backwards or reopen a lost deal', () => {

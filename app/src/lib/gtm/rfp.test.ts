@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { LIBRARY, NEEDS_EVIDENCE, SECTIONS, renderLibrary, unsupportedClaims } from './rfp';
+import { LIBRARY, NEEDS_EVIDENCE, REGULATED, SECTIONS, renderLibrary, unsupportedClaims } from './rfp';
 
 /**
  * The RFP library may not say more than the tree can show.
@@ -60,6 +60,11 @@ describe('the RFP response library', () => {
       for (const a of LIBRARY) for (const h of a.hecvat ?? []) expect(register.has(h), `${a.id} cites ${h}`).toBe(true);
     });
 
+    it('rests every available security, privacy, accessibility and AI answer on at least one control', () => {
+      const bare = LIBRARY.filter((a) => a.status === 'available' && REGULATED.includes(a.section) && !(a.hecvat?.length));
+      expect(bare.map((a) => a.id)).toEqual([]);
+    });
+
     it('says "available now" only where every control it rests on is READY', () => {
       for (const a of LIBRARY.filter((x) => x.status === 'available')) {
         for (const h of a.hecvat ?? []) {
@@ -78,8 +83,20 @@ describe('the RFP response library', () => {
     });
 
     it('claims no approved integration while the registry is empty', () => {
-      if (!empty) return; // the day an adapter is installed, this rule has nothing to refuse
+      if (!empty) return; // the day an adapter is installed, the rule below takes over
       expect(LIBRARY.filter((a) => a.status === 'approved-integration').map((a) => a.id)).toEqual([]);
+    });
+
+    it('ties each approved integration to the installed adapter it names', () => {
+      const installed = (id: string) => new RegExp(`id:\\s*['"]${id}['"]`).test(registry);
+      for (const a of LIBRARY.filter((x) => x.status === 'approved-integration')) {
+        expect(a.adapter, `${a.id} names no adapter`).toBeTruthy();
+        expect(installed(a.adapter!), `${a.id} names ${a.adapter}, which is not installed`).toBe(true);
+      }
+      // The control: a registry with only a Canvas adapter does not stand behind a SIS answer.
+      const canvasOnly = "export const adapters: InstitutionAdapter[] = [{ id: 'canvas' }];";
+      expect(new RegExp(`id:\\s*['"]canvas['"]`).test(canvasOnly)).toBe(true);
+      expect(new RegExp(`id:\\s*['"]banner-sis['"]`).test(canvasOnly)).toBe(false);
     });
   });
 
@@ -90,6 +107,9 @@ describe('the RFP response library', () => {
       expect(unsupportedClaims('Semester does not claim WCAG conformance.')).toEqual([]);
       // A negation in an earlier sentence does not cover a claim in the next.
       expect(unsupportedClaims('No pen test yet. It is certified.')).toEqual(['certified']);
+      // Nor does one in an earlier clause, across a comma or a contrast.
+      expect(unsupportedClaims('No audit, but Semester is certified.')).toEqual(['certified']);
+      expect(unsupportedClaims('There is no audit however Semester is certified.')).toEqual(['certified']);
     });
 
     it('appears nowhere in an answer unless negated', () => {

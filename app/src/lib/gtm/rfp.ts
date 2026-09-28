@@ -78,7 +78,12 @@ export interface Answer {
   evidence: string[];
   /** HECVAT register controls the answer rests on. */
   hecvat?: string[];
+  /** For `approved-integration`: the installed adapter's id in app/server/institution/adapters.ts. */
+  adapter?: string;
 }
+
+/** Sections whose `available` answers must rest on at least one HECVAT control. */
+export const REGULATED: readonly Section[] = ['security', 'privacy-ferpa', 'accessibility', 'ai-governance'];
 
 /**
  * Words that assert an outside party's judgement, or a promise no code makes.
@@ -92,8 +97,9 @@ export function unsupportedClaims(text: string): string[] {
   const found: string[] = [];
   for (const m of text.matchAll(CLAIM_WORDS)) {
     const before = text.slice(Math.max(0, (m.index ?? 0) - 40), m.index);
-    // A sentence boundary ends the reach of a negation.
-    const clause = before.split(/[.;:!?]/).pop() ?? '';
+    // A sentence boundary, a comma or a contrast ends the reach of a negation:
+    // "No audit, but it is certified" negates the audit, not the certificate.
+    const clause = before.split(/[.;:!?,]|\b(?:but|however|yet|although|though)\b/i).pop() ?? '';
     if (!NEGATION.test(clause)) found.push(m[0]);
   }
   return found;

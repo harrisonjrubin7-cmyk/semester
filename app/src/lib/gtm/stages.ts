@@ -60,15 +60,19 @@ export const SALES_EXIT: Partial<Record<SalesStage, string>> = {
 
 /**
  * Whether an opportunity may move to `to`. Forward moves skip nothing that
- * carries a gate; `closed_lost` is reachable from anywhere; a closed deal
- * reopens only as a new target account.
+ * carries a gate, and the stage being entered has its own gate met: `met` is
+ * the stages whose requirement the opportunity has already shown.
+ * `closed_lost` is reachable from anywhere; a closed deal reopens only as a
+ * new target account.
  */
-export function salesMoveProblems(from: SalesStage, to: SalesStage): string[] {
+export function salesMoveProblems(from: SalesStage, to: SalesStage, met: ReadonlySet<SalesStage> = new Set()): string[] {
   if (from === 'closed_lost') return ['A lost deal reopens as a new target account, with fresh discovery.'];
   if (to === 'closed_lost') return [];
   const a = SALES_STAGES.indexOf(from);
   const b = SALES_STAGES.indexOf(to);
   if (b <= a) return [`${to} comes before ${from}; move forward, or close the opportunity.`];
   const skipped = SALES_STAGES.slice(a + 1, b).filter((s) => SALES_EXIT[s]);
-  return skipped.map((s) => `Skips ${s}: ${SALES_EXIT[s]}`);
+  const out = skipped.map((s) => `Skips ${s}: ${SALES_EXIT[s]}`);
+  if (SALES_EXIT[to] && !met.has(to)) out.push(`Enters ${to} without: ${SALES_EXIT[to]}`);
+  return out;
 }
