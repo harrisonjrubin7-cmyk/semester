@@ -1,0 +1,344 @@
+import { describe, expect, it } from '../../../app/node_modules/vitest/dist/index.js';
+import {
+  CORRELATION_ID_PATTERN,
+  POLICY_ACTIONS,
+  applyObligations,
+  decide,
+  liveConsentGrant,
+  type AuthorizationRequest,
+  type ConsentGrant,
+  type PolicyObligation,
+} from './policy.ts';
+
+/**
+ * The refusal suite the specification's zero-trust checklist asks for:
+ * "negative/refusal/revocation tests". Every case here is a request the
+ * decision point must say no to, and each is built by taking a request it
+ * says yes to and changing exactly one thing — so the control (the
+ * unchanged request is allowed) is inside every test, and a probe that
+ * refused everything would fail here rather than pass.
+ */
+
+const NOW = Date.parse('2026-09-28T12:00:00Z');
+const later = (minutes: number) => new Date(NOW + minutes * 60_000).toISOString();
+const correlationId = 'req-0123456789abcdef';
+
+const supportGrant: ConsentGrant = {
+  id: 'grant-1',
+  kind: 'support_access',
+  grantedBy: 'student-a',
+  grantedTo: 'agent-1',
+  scopes: ['learning-progress'],
+  ticketId: 'ticket-77',
+  expiresAt: later(60),
+  revokedAt: null,
+};
+
+function supportRead(): AuthorizationRequest {
+  return {
+    actor: { id: 'agent-1', type: 'user', authenticatedAt: later(-5), mfaLevel: 'standard' },
+    tenant: { id: 'school-a', environment: 'production', verifiedBy: 'membership' },
+    action: 'support.case.read_context',
+    resource: { type: 'support_context', id: 'ctx-1', ownerId: 'student-a', classification: 'student_private' },
+    context: {
+      membershipIds: ['m-agent-1'],
+      roleGrants: [{ role: 'support_agent', scopeKind: 'tenant', scopeId: 'school-a' }],
+      capabilities: ['support:read_context'],
+      consentGrants: [supportGrant],
+      featureFlags: [],
+      policyVersions: { support: '1' },
+      purpose: 'ticket-77: cannot see this week\'s plan',
+      ticketId: 'ticket-77',
+      correlationId,
+    },
+  };
+}
+
+function retrieval(): AuthorizationRequest {
+  return {
+    actor: { id: 'student-a', type: 'user', authenticatedAt: later(-5) },
+    tenant: { id: 'school-a', environment: 'production', verifiedBy: 'membership' },
+    action: 'ai.retrieve_source',
+    resource: {
+      type: 'source_chunk',
+      id: 'src-9',
+      classification: 'education_record',
+      sourceKind: 'institution_verified',
+      attributes: { courseId: 'cs101', sourceState: 'active', mode: 'study', permittedModes: ['study', 'explain'], providerCeiling: 'education_record' },
+    },
+    context: {
+      membershipIds: ['m-student-a'],
+      roleGrants: [{ role: 'student', scopeKind: 'course', scopeId: 'cs101', expiresAt: later(60 * 24 * 90) }],
+      capabilities: ['ai:retrieve'],
+      consentGrants: [],
+      featureFlags: ['ai'],
+      policyVersions: { ai: '3' },
+      correlationId,
+    },
+  };
+}
+
+function passback(): AuthorizationRequest {
+  return {
+    actor: { id: 'faculty-1', type: 'user', authenticatedAt: later(-1), mfaLevel: 'fresh' },
+    tenant: { id: 'school-a', environment: 'production', verifiedBy: 'membership' },
+    action: 'grade.passback.submit',
+    resource: {
+      type: 'grade_line_item',
+      id: 'li-4',
+      classification: 'education_record',
+      attributes: { deploymentBound: true, gradeState: 'ready_for_passback', institutionPermitsPassback: true },
+    },
+    context: {
+      membershipIds: ['m-faculty-1'],
+      roleGrants: [{ role: 'faculty', scopeKind: 'course', scopeId: 'cs101' }],
+      capabilities: ['grades:passback'],
+      consentGrants: [],
+      featureFlags: [],
+      policyVersions: { grades: '2' },
+      idempotencyKey: 'li-4:attempt-1',
+      correlationId,
+    },
+  };
+}
+
+const refused = (request: AuthorizationRequest, reasonCode: string) => {
+  const decision = decide(request, NOW);
+  expect(decision.allow).toBe(false);
+  if (!decision.allow) {
+    expect(decision.reasonCode).toBe(reasonCode);
+    expect(decision.userMessage).not.toMatch(/undefined|null|\bat \b.*\.ts/);
+  }
+  return decision;
+};
+
+const obligationTypes = (d: ReturnType<typeof decide>) => (d.allow ? d.obligations.map((o) => o.type) : []);
+
+describe('the checks every action shares', () => {
+  it('allows the three controls', () => {
+    for (const build of [supportRead, retrieval, passback]) {
+      expect(decide(build(), NOW).allow).toBe(true);
+    }
+  });
+
+  it('fails closed on an action it has no rule for', () => {
+    refused({ ...supportRead(), action: 'support.case.delete' }, 'action_unknown');
+    refused({ ...supportRead(), action: '' }, 'action_unknown');
+    refused({ ...supportRead(), action: '__proto__' }, 'action_unknown');
+  });
+
+  it('refuses a request it cannot trace', () => {
+    const r = supportRead();
+    r.context.correlationId = '';
+    refused(r, 'correlation_missing');
+    r.context.correlationId = 'short';
+    refused(r, 'correlation_missing');
+    r.context.correlationId = 'has spaces in it';
+    refused(r, 'correlation_missing');
+    expect(CORRELATION_ID_PATTERN.test('a'.repeat(129))).toBe(false);
+  });
+
+  it('refuses a tenant the server did not verify', () => {
+    const r = supportRead();
+    delete r.tenant.verifiedBy;
+    refused(r, 'tenant_unverified');
+    r.tenant.verifiedBy = 'client_said_so' as never;
+    refused(r, 'tenant_unverified');
+  });
+
+  it('refuses a person with no active membership', () => {
+    const r = supportRead();
+    r.context.membershipIds = [];
+    refused(r, 'membership_missing');
+  });
+
+  it('refuses an actor whose authentication time is not a time', () => {
+    const r = supportRead();
+    r.actor.authenticatedAt = 'yesterday';
+    refused(r, 'authentication_unverified');
+  });
+
+  it('keeps the demo away from education records', () => {
+    const r = retrieval();
+    r.tenant.environment = 'demo';
+    refused(r, 'demo_cannot_touch_records');
+  });
+
+  it('refuses a resource above the action\'s classification ceiling', () => {
+    const r = supportRead();
+    r.resource.classification = 'education_record';
+    refused(r, 'classification_exceeds_action');
+  });
+});
+
+describe('support.case.read_context', () => {
+  it('needs a live grant to this agent, for this ticket', () => {
+    let r = supportRead();
+    r.context.consentGrants = [];
+    refused(r, 'grant_missing');
+
+    r = supportRead();
+    r.context.consentGrants = [{ ...supportGrant, grantedTo: 'agent-2' }];
+    refused(r, 'grant_missing');
+
+    r = supportRead();
+    r.context.ticketId = 'ticket-78';
+    r.context.purpose = 'ticket-78';
+    refused(r, 'grant_missing');
+  });
+
+  it('a revoked or expired grant is not a grant', () => {
+    let r = supportRead();
+    r.context.consentGrants = [{ ...supportGrant, revokedAt: later(-1) }];
+    refused(r, 'grant_not_live');
+
+    r = supportRead();
+    r.context.consentGrants = [{ ...supportGrant, expiresAt: later(-1) }];
+    refused(r, 'grant_not_live');
+
+    // Revocation takes effect at once: the same grant, one instant later.
+    expect(liveConsentGrant(supportGrant, NOW)).toBe(true);
+    expect(liveConsentGrant(supportGrant, Date.parse(supportGrant.expiresAt))).toBe(false);
+  });
+
+  it('needs the ticket, the purpose and the capability', () => {
+    let r = supportRead();
+    delete r.context.ticketId;
+    refused(r, 'ticket_missing');
+    r = supportRead();
+    delete r.context.purpose;
+    refused(r, 'purpose_missing');
+    r = supportRead();
+    r.context.capabilities = [];
+    refused(r, 'capability_missing');
+    r = supportRead();
+    r.actor.type = 'service';
+    refused(r, 'actor_not_person');
+  });
+
+  it('allows with audit, masking and the grant\'s expiry', () => {
+    const d = decide(supportRead(), NOW);
+    expect(obligationTypes(d)).toEqual(['audit', 'mask_fields', 'expire_at']);
+    if (d.allow) {
+      expect(d.obligations[0]).toEqual({ type: 'audit', eventType: POLICY_ACTIONS['support.case.read_context'].auditEvent });
+      expect(d.obligations[2]).toEqual({ type: 'expire_at', at: supportGrant.expiresAt });
+    }
+  });
+});
+
+describe('ai.retrieve_source', () => {
+  it('needs enrolment in the course, and an expired course grant is not enrolment', () => {
+    let r = retrieval();
+    r.context.roleGrants = [];
+    refused(r, 'not_enrolled');
+    r = retrieval();
+    r.context.roleGrants[0].expiresAt = later(-1);
+    refused(r, 'not_enrolled');
+  });
+
+  it('accepts an authorized share in place of enrolment', () => {
+    const r = retrieval();
+    r.context.roleGrants = [];
+    r.context.consentGrants = [{ id: 'share-1', kind: 'share', grantedBy: 'student-b', grantedTo: 'student-a', scopes: ['source:src-9'], expiresAt: later(60) }];
+    expect(decide(r, NOW).allow).toBe(true);
+  });
+
+  it('refuses a revoked, deleted or quarantined source with a safe alternative', () => {
+    for (const state of ['revoked', 'deleted', 'quarantined', undefined]) {
+      const r = retrieval();
+      r.resource.attributes = { ...r.resource.attributes, sourceState: state };
+      const d = refused(r, 'source_unavailable');
+      if (!d.allow) expect(d.userAction?.kind).toBe('open_screen');
+    }
+  });
+
+  it('refuses a mode the course policy does not permit', () => {
+    const r = retrieval();
+    r.resource.attributes = { ...r.resource.attributes, mode: 'answer' };
+    refused(r, 'mode_not_permitted');
+  });
+
+  it('refuses a chunk above the provider\'s clearance', () => {
+    const r = retrieval();
+    r.resource.attributes = { ...r.resource.attributes, providerCeiling: 'internal' };
+    refused(r, 'classification_exceeds_provider');
+    r.resource.attributes = { ...r.resource.attributes, providerCeiling: 'top_secret' };
+    refused(r, 'classification_exceeds_provider');
+  });
+
+  it('allows with audit, citation and a field allowlist', () => {
+    expect(obligationTypes(decide(retrieval(), NOW))).toEqual(['audit', 'cite_sources', 'limit_fields']);
+  });
+});
+
+describe('grade.passback.submit', () => {
+  it('refuses when the deployment, the grade or the institution is not ready', () => {
+    for (const [key, value, code] of [
+      ['deploymentBound', false, 'deployment_unbound'],
+      ['gradeState', 'draft', 'grade_not_ready'],
+      ['institutionPermitsPassback', false, 'institution_forbids'],
+    ] as const) {
+      const r = passback();
+      r.resource.attributes = { ...r.resource.attributes, [key]: value };
+      refused(r, code);
+    }
+  });
+
+  it('refuses without an idempotency key', () => {
+    const r = passback();
+    delete r.context.idempotencyKey;
+    refused(r, 'idempotency_missing');
+  });
+
+  it('a service must be bound to the tenant; an integration or system actor may not send grades', () => {
+    let r = passback();
+    r.actor = { id: 'grade-service', type: 'service', authenticatedAt: later(-1) };
+    r.context.membershipIds = [];
+    refused(r, 'service_unbound');
+    r.tenant.verifiedBy = 'service_binding';
+    expect(decide(r, NOW).allow).toBe(true);
+
+    r = passback();
+    r.actor.type = 'integration';
+    refused(r, 'actor_not_permitted');
+  });
+
+  it('a person without fresh authentication is allowed with the obligation to re-authenticate', () => {
+    const fresh = decide(passback(), NOW);
+    expect(obligationTypes(fresh)).toEqual(['audit', 'reconcile', 'notify']);
+    const r = passback();
+    r.actor.mfaLevel = 'standard';
+    expect(obligationTypes(decide(r, NOW))).toEqual(['require_fresh_mfa', 'audit', 'reconcile', 'notify']);
+  });
+
+  it('a person without the capability is refused', () => {
+    const r = passback();
+    r.context.capabilities = [];
+    refused(r, 'capability_missing');
+  });
+});
+
+describe('applyObligations', () => {
+  const record = { chunkId: 'c1', text: 'a', grades: [90], ai_memory: 'x', anchor: 'p3' };
+
+  it('masks and limits, and hands back what it cannot apply', () => {
+    const obligations: PolicyObligation[] = [
+      { type: 'audit', eventType: 'x' },
+      { type: 'mask_fields', fields: ['grades', 'ai_memory'] },
+      { type: 'require_fresh_mfa' },
+    ];
+    const { record: out, remaining } = applyObligations(record, obligations);
+    expect(out).toEqual({ chunkId: 'c1', text: 'a', anchor: 'p3' });
+    expect(remaining.map((o) => o.type)).toEqual(['audit', 'require_fresh_mfa']);
+    // The input is not mutated: the unmasked record must not survive by alias.
+    expect(record.grades).toEqual([90]);
+  });
+
+  it('applies a limit after a mask, and keeps only the allowlist', () => {
+    const { record: out } = applyObligations(record, [
+      { type: 'mask_fields', fields: ['text'] },
+      { type: 'limit_fields', allowlist: ['chunkId', 'text', 'anchor'] },
+    ]);
+    expect(out).toEqual({ chunkId: 'c1', anchor: 'p3' });
+  });
+});

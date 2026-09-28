@@ -76,6 +76,24 @@ begin
   if not public.gateway_write_audit('gateway-a', 'student-a', 'assignments', 'action.checked', second_id) then
     raise exception 'FAILED: an audit event was not recorded';
   end if;
+  -- The second writer carries the request's correlation id, and holds it to
+  -- the shape the gateway accepts: a row that would lose its trace is refused
+  -- rather than stored with the id quietly nulled.
+  if not public.gateway_write_audit_v2('gateway-a', 'student-a', 'assignments', 'action.started', second_id, 'browser-tap-0001-abcdef') then
+    raise exception 'FAILED: an audit event with a correlation id was not recorded';
+  end if;
+  if not exists (select 1 from private.gateway_audit where event = 'action.started' and correlation_id = 'browser-tap-0001-abcdef') then
+    raise exception 'FAILED: the correlation id was not stored on the audit row';
+  end if;
+  if not public.gateway_write_audit_v2('gateway-a', 'student-a', 'assignments', 'records.read') then
+    raise exception 'FAILED: an audit event without a correlation id was refused';
+  end if;
+  if public.gateway_write_audit_v2('gateway-a', 'student-a', 'assignments', 'action.started', second_id, 'short') then
+    raise exception 'FAILED: a malformed correlation id was stored on an audit row';
+  end if;
+  if public.gateway_write_audit_v2('gateway-a', 'student-a', 'assignments', 'action.started', second_id, repeat('x', 129)) then
+    raise exception 'FAILED: an overlong correlation id was stored on an audit row';
+  end if;
   if not public.gateway_write_intelligence_audit(
     'gateway-a', 'student-a', 'study', 'openai', 'gpt-5-mini', 100, 20, 1.25,
     'sandbox:explain', null, null

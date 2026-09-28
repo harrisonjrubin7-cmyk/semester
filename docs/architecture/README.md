@@ -33,6 +33,10 @@ have been made.
 | [0004](0004-ai-through-a-metered-gateway.md) | AI through a server-side metered gateway, tool-based | Accepted, **not deployed** |
 | [0005](0005-multi-campus-scoping.md) | Campus scoping via an admin-written `schools` table | Accepted — `20260921170000_schools.sql` |
 | [0006](0006-search-is-one-ranker.md) | One ranker for search, extended rather than duplicated | Accepted |
+| [0007](0007-policy-decision-point.md) | One policy decision point, asked in one vocabulary | Accepted; adoption by route is incremental |
+| [0008](0008-event-envelope-and-outbox.md) | One event envelope, written through a transactional outbox | Accepted; no producer writes yet |
+| [0009](0009-workflow-state-machines.md) | Consequential workflows are state machines | Accepted |
+| [0010](0010-correlation-ids-and-error-envelope.md) | One correlation id to the audit row; one error envelope | Accepted, live in the gateway |
 
 Not yet decided, and deliberately not recorded as if they were: messaging
 fan-out, notification digests, payments processor, object storage for generated
