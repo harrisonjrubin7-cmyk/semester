@@ -26,12 +26,12 @@
 --      (§4), enforced by a column check, so grades, NIL, the hours log and
 --      health never fit in the shape whatever a client sends.
 --
--- Numbered 20260928142000 (first 20260928001500) so it runs after the two
+-- Numbered 20260928308000 (first 20260928001500) so it runs after the two
 -- renumbered family migrations it follows, and after every migration on main
 -- and the open branches when it was written.
 --
 -- The UI is slice 5. NOT APPLIED to production; applying it needs owner
--- approval, and it goes after 20260928141000_family_shared_items.sql.
+-- approval, and it goes after 20260928307000_family_shared_items.sql.
 
 -- ── The role ──────────────────────────────────────────────────────────────
 --
@@ -250,7 +250,7 @@ grant execute on function public.read_support_share(uuid) to authenticated;
 
 -- ── A share, at either end, is a used account ────────────────────────────
 --
--- The complete latest definition: 20260928141000's rows plus both ends of
+-- The complete latest definition: 20260928307000's rows plus both ends of
 -- `support_shares`. `graduation_scenarios` (#780) and `advisor_shares`
 -- (#802) are not on this branch's base; whichever lands second carries every
 
@@ -280,7 +280,7 @@ end $$;
 revoke all on function public.forget_my_support_shares() from public, anon, authenticated;
 grant execute on function public.forget_my_support_shares() to authenticated;
 
--- row, as the notes in 20260928140000 and 20260928141000 say.
+-- row, as the notes in 20260928306000 and 20260928307000 say.
 
 create or replace function public.lti_account_untouched(who uuid)
 returns boolean
@@ -365,4 +365,4 @@ revoke all on function public.lti_account_untouched(uuid)
 --   delete from public.app_roles where role = 'athletic_academic_support';
 --   commit;
 --
--- and re-run the lti_account_untouched definition from 20260928141000.
+-- and re-run the lti_account_untouched definition from 20260928307000.

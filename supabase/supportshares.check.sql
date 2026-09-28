@@ -1,6 +1,6 @@
 -- supabase/supportshares.check.sql — an athlete's share with academic support.
 --
--- For 20260928142000_support_shares.sql, slice 4 of the owner-approved consent
+-- For 20260928308000_support_shares.sql, slice 4 of the owner-approved consent
 -- design (D-037). The design's list of what every slice must prove (§8), and
 -- where each is below:
 --

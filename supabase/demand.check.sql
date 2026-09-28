@@ -318,7 +318,7 @@ begin
     (select count(*) from public.course_demand_snapshots where course_code = 'ECON 1010' and planned_students = 10), 1);
 
   -- Delete my account takes the contribution with it (review fix
-  -- 20260928160000). The consent allows no client write, and the auth user is
+  -- 20260928310000). The consent allows no client write, and the auth user is
   -- not deleted, so only the RPC reaches it.
   perform pg_temp.value_as(crowd[11], $q$select public.forget_my_course_demand()::text$q$);
   perform pg_temp.counted('deleting the account removes the student''s plan rows',

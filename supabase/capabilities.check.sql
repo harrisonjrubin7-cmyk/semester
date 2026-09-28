@@ -229,7 +229,7 @@ begin
   -- `trust_officer` from 20260928100000_trust_room.sql,
   -- plus the four office publishers from the office action feed migration
   -- (Phase J), and `athletic_academic_support` from
-  -- 20260928142000_support_shares.sql (D1).
+  -- 20260928308000_support_shares.sql (D1).
   perform pg_temp.counted('a signed-in account reads the sixty-three roles', n, 63);
   select count(*) into n from public.role_capabilities;
   -- Twenty original rows, thirty-seven expansion rows, eight from the
@@ -245,7 +245,7 @@ begin
   -- marketing_analyst, account_executive, and sponsor:review for
   -- university_admin), trust:publish for trust_officer, four for the Phase J
   -- office publishers, and `faculty` → `course:publish` from
-  -- 20260928150000_course_studio.sql.
+  -- 20260928309000_course_studio.sql.
   perform pg_temp.counted('and the whole matrix, including tenant controls', n, 100);
 
   perform pg_temp.become_anon();

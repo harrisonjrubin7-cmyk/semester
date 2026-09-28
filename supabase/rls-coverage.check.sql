@@ -126,7 +126,7 @@ returns text language sql stable as $$
        'app_capabilities',  -- the capability vocabulary; no rows about anyone
        'app_roles',         -- the role vocabulary; likewise
        'institution_action_offices', -- which offices exist and which roles
-                            -- publish for each (20260928132000); configuration
+                            -- publish for each (20260928302000); configuration
                             -- naming no person, signed in only (anon has no grant)
        'role_capabilities', -- which role carries which capability; the matrix
                             -- itself, not who holds what (that is role_grants)

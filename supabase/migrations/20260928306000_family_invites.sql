@@ -20,7 +20,7 @@
 --     did — an edit to an applied migration reaches a fresh database and
 --     never the live one.
 --
--- Numbered 20260928140000, after every migration on main and on the open
+-- Numbered 20260928306000, after every migration on main and on the open
 -- branches when it was written. It was first 20260927210000, which main had
 -- already used for `integration_review_fixes`: Supabase records a migration by
 -- that number, so two files sharing one would leave one of them unapplied.
@@ -124,7 +124,7 @@ create table if not exists public.family_invites (
 alter table public.family_invites enable row level security;
 
 -- Which code a grant came from. The copies a student confirmed are stored
--- under that code (20260928141000_family_shared_items.sql), and a grant reads
+-- under that code (20260928307000_family_shared_items.sql), and a grant reads
 -- only its own code's copies, so sharing the same item again later, with
 -- anyone, cannot change what an earlier supporter was shown. Null for a grant
 -- made any other way, which then reads no copies at all.
@@ -364,7 +364,7 @@ comment on function public.claim_family_invite(text) is
 -- It carries `help_requests` (20260927230000_help_requests.sql, on main),
 -- because this definition is newer and replaces that one whole.
 --
--- **Merge order with the feature-expansion work.** Its 20260928130000 (#780)
+-- **Merge order with the feature-expansion work.** Its 20260928300000 (#780)
 -- adds `graduation_scenarios` to this same function and asked every later
 -- redefinition to keep that row. It is not here because that table does not
 -- exist on this branch's base, and `ltiaccount.test.ts` refuses a row for a

@@ -8,7 +8,7 @@ import { SOURCE_TEXT, type SourceLabel } from './source';
 
 /**
  * An athlete's share with athletic academic support: the screen side of
- * `supabase/migrations/20260928142000_support_shares.sql` (D-037 slice 5,
+ * `supabase/migrations/20260928308000_support_shares.sql` (D-037 slice 5,
  * D-039 for the server).
  *
  * Everything shared is built here, from what is already on the device, into

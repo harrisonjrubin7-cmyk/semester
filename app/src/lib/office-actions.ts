@@ -3,7 +3,7 @@ import { UNCALM } from './today-center';
 
 /**
  * The campus office action feed (`office_action_feed`, Phase J, D-048),
- * against `supabase/migrations/20260928132000_office_action_feed.sql`.
+ * against `supabase/migrations/20260928302000_office_action_feed.sql`.
  *
  * An office (Registrar, Financial Aid, …) publishes an action: what to do,
  * why it matters, when, and a link to the official page. The student sees the

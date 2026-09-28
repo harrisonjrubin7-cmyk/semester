@@ -67,7 +67,7 @@ describe('AI-use policy precedence', () => {
 
 /*
  * The server stores course rules published in Course Studio, and checks each
- * use against its own list in 20260928150000_course_studio.sql. A use added
+ * use against its own list in 20260928309000_course_studio.sql. A use added
  * here and not there would be offered to an instructor and refused on publish;
  * one there and not here would be a rule the engine never reads.
  */
@@ -75,7 +75,7 @@ describe('the Course Studio migration', () => {
   it('accepts exactly the uses and states this engine knows', async () => {
     const { readFileSync } = await import('node:fs');
     const { join } = await import('node:path');
-    const sql = readFileSync(join(__dirname, '../../../../supabase/migrations/20260928150000_course_studio.sql'), 'utf8');
+    const sql = readFileSync(join(__dirname, '../../../../supabase/migrations/20260928309000_course_studio.sql'), 'utf8');
     const listed = /uses - array\[([^\]]+)\]::text\[\]/.exec(sql)?.[1] ?? '';
     expect([...listed.matchAll(/'([^']+)'/g)].map((m) => m[1]).sort()).toEqual(USES.map(([u]) => u).sort());
     const states = /\$\.\* \? \(([^)]+)\)/.exec(sql)?.[1] ?? '';

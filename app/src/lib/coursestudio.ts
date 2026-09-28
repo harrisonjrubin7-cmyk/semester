@@ -7,7 +7,7 @@ import { USES, type InstructorRules, type Use, type UseState } from './toolkit/p
  * The faculty side of Course Studio (D-100 slice 3): what an instructor
  * publishes, checked here as the server checks it so a mistake is named
  * before the publish rather than after. The server is the authority —
- * `supabase/migrations/20260928150000_course_studio.sql` refuses the same
+ * `supabase/migrations/20260928309000_course_studio.sql` refuses the same
  * things again, and more (who may publish at all).
  */
 

@@ -12,7 +12,7 @@
 - **Key dates** (`registrar`). The full feed, what applies to me, and the
   office desk for accounts that may publish.
 
-**Migration:** `supabase/migrations/20260928132000_office_action_feed.sql`
+**Migration:** `supabase/migrations/20260928302000_office_action_feed.sql`
 (D-048). It needs the owner's approval before any merge to `main`.
 
 **Builds on:**
@@ -94,7 +94,7 @@ channels.
 
 | New | Purpose |
 |---|---|
-| `supabase/migrations/20260928132000_office_action_feed.sql` | The above |
+| `supabase/migrations/20260928302000_office_action_feed.sql` | The above |
 | `supabase/officeactions.check.sql` | 79 checks, each refusal tried as the account refused |
 | `lib/office-actions.ts` | Reader, `whyYouSee`, `officeActionToAction`, `completionLine`, `deskSteps`, `draftProblems` |
 | `lib/office-actions-remote.ts` | The calls |

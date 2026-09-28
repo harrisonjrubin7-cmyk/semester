@@ -1,4 +1,4 @@
-# What production's migration ledger holds, read at 21:5x UTC on 21 September 2026.
+# What production's migration ledger holds, read on 28 September 2026 (see below); first read 21 September.
 #
 # `supabase_migrations.schema_migrations` on the live project, one line per row:
 # version, then name. This is a reading, not a wish — `app/src/lib/migrationorder.test.ts`
@@ -74,6 +74,17 @@
 # rather than passes when the directory stops matching it.
 #
 #   version         name
+#
+# ## The reading of 28 September, and the finding it is
+#
+# Read through the Supabase connector (`list_migrations`) with ninety-three rows,
+# ending at `20260928210000  support_tickets`. Every row has a file here. The
+# finding: `20260928200000_scim_gateway` and `20260928210000_support_tickets`
+# reached main and were applied within minutes, while the integration branch
+# (#893) still carried eleven migrations numbered `20260928130000`–`160000`,
+# pending and now below the watermark. This test, held to the 21 September
+# reading, could not see it. `MIGRATION-HISTORY.md` has the entry.
+
 20260901000100  schema
 20260901000200  classmates
 20260901000300  classmates_schools
@@ -111,3 +122,59 @@
 20260921170000  schools
 20260921174500  index_lti_link_ticket_user
 20260921211500  pin_profile_school
+20260921214500  report_status
+20260921215800  feedback
+20260921223000  role_grants
+20260921230000  organizations
+20260921234500  organization_succession
+20260921235500  untouched_accounts
+20260922003000  connections
+20260922003500  lti_line_item
+20260922012000  capabilities
+20260923210000  intelligence_policy
+20260923211000  evidence_graphs
+20260923212000  harden_evidence_capture
+20260924150142  institution_identity_provisioning
+20260924154500  bind_institution_sso_membership
+20260924163000  intelligence_provider_runtime
+20260924184500  gateway_action_journal
+20260924200000  gateway_observability
+20260924213000  role_grant_audit
+20260924223000  moderation_audit
+20260925103000  support_access
+20260925160000  support_access_ui
+20260926150000  expansion_roles_and_features
+20260927120000  identity_claim_minimization
+20260927170000  integration_control_plane
+20260927180000  lti_integration_binding
+20260927190000  canonical_display
+20260927200000  integration_hardening
+20260927210000  integration_review_fixes
+20260927220000  integration_orphan_identity
+20260927230000  help_requests
+20260927231000  help_inbox
+20260927232000  help_request_identity
+20260927233000  help_request_review_fixes
+20260927234000  help_request_reply_on_open
+20260927235000  governance_registries
+20260927235500  governance_review_fixes
+20260927235930  lti_launch_membership
+20260927235945  lti_launch_entitlement_facts
+20260928000000  moderation_queue_access
+20260928004730  tenant_plan
+20260928010000  my_capabilities
+20260928011845  tenant_sso_policy
+20260928015315  lti_launch_capability
+20260928021700  mentor_rosters
+20260928030000  help_inbox_closed_history
+20260928031700  opportunity_links
+20260928032000  community
+20260928040000  integration_quality
+20260928041700  space_availability
+20260928050000  tenant_rollout
+20260928090000  gtm_foundation
+20260928100000  trust_room
+20260928101000  integration_tick_auth
+20260928110700  consent_and_moderation_narrowing
+20260928200000  scim_gateway
+20260928210000  support_tickets

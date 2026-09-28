@@ -1,15 +1,13 @@
--- Graduation scenario drafts are a person's work, restated after help requests.
+-- Advisor shares are a person's work, restated after help requests.
 --
--- 20260928130000_untouched_graduation_drafts.sql added
--- `public.graduation_scenarios` to `lti_account_untouched` (Phase D, D-025).
--- 20260927230000_help_requests.sql then redefined the function from the
--- definition before that, adding `help_requests`. Migrations apply in version
--- order, so without this file the later definition wins and a saved
--- graduation draft stops counting: an LTI account holding one would read as
--- empty and could be retired.
+-- 20260928301000_advisor_shares.sql added `public.advisor_shares` (both ends)
+-- to `lti_account_untouched` (Phase G, D-043). 20260927230000_help_requests.sql
+-- later redefined the function without it, and migrations apply in version
+-- order, so that definition would win. 20260928303000 restored the graduation
+-- row only.
 --
 -- This is the complete latest definition — CREATE OR REPLACE replaces the
--- whole body — and it is 20260927230000's with the graduation row added.
+-- whole body — and it is 20260928303000's with the two advisor rows added.
 -- `app/src/lib/ltiaccount.test.ts` reads whichever migration defines the
 -- function last and holds it against OWNED_TABLES.
 --
@@ -48,7 +46,9 @@ begin
       ('public.support_access_grant', 'student_id'),
       ('public.support_access_grant', 'supporter_id'),
       ('public.help_requests',        'student_id'),
-      ('public.graduation_scenarios', 'user_id')
+      ('public.graduation_scenarios', 'user_id'),
+      ('public.advisor_shares',       'student_id'),
+      ('public.advisor_shares',       'advisor_id')
     ) as x(rel, col)
   loop
     if pg_catalog.to_regclass(t.rel) is null then continue; end if;

@@ -2,7 +2,7 @@ import type { CatalogCourse } from './registration';
 
 /**
  * Privacy-safe course demand forecasting (`demand_forecasting`, Phase K,
- * D-051), against `supabase/migrations/20260928135000_course_demand_forecasting.sql`.
+ * D-051), against `supabase/migrations/20260928305000_course_demand_forecasting.sql`.
  *
  * **The student's side.** A student may contribute their registration cart
  * for one term: course codes, each a primary or a backup. Nothing else — no

@@ -5,7 +5,7 @@ import type { InviteRequest } from './familyinvites';
 
 /**
  * What a supporter reads, and what the student sees of that reading: the
- * client side of `supabase/migrations/20260928141000_family_shared_items.sql`
+ * client side of `supabase/migrations/20260928307000_family_shared_items.sql`
  * (D-037 slice 3, D-038).
  *
  * The rule that shapes all of it: a supporter sees a **copy** of what the

@@ -8,7 +8,7 @@ import type { CoursePolicy } from './types';
 /**
  * What instructors have published for a student's courses, read for the
  * student's side of Course Studio (D-100 slice 2). The server half is
- * `supabase/migrations/20260928150000_course_studio.sql`.
+ * `supabase/migrations/20260928309000_course_studio.sql`.
  *
  * The student reads the latest published version of each course's rules and
  * guidance for the term, and the latest non-retired version of each pack.

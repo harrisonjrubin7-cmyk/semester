@@ -1,6 +1,6 @@
 -- supabase/familyshare.check.sql — what a supporter reads, and the log of it.
 --
--- For 20260928141000_family_shared_items.sql, slice 3 of the owner-approved
+-- For 20260928307000_family_shared_items.sql, slice 3 of the owner-approved
 -- consent design (D-037). The design's own list of what every slice's check
 -- suite must prove (§8), and where each is below:
 --

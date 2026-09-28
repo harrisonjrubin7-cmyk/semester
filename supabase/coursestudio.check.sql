@@ -1,6 +1,6 @@
 -- supabase/coursestudio.check.sql — who may publish for a course, and who reads it.
 --
--- For 20260928150000_course_studio.sql (D-100, F1–F7; D-101). What it proves,
+-- For 20260928309000_course_studio.sql (D-100, F1–F7; D-101). What it proves,
 -- from the design's §8:
 --
 --   * only a live `faculty` grant on exactly this course, at the caller's own

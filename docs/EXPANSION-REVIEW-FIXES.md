@@ -5,7 +5,7 @@ Its findings arrived after the PRs had merged into
 `semester-unified-platform`, so they are fixed here together. Some findings
 were raised on more than one PR; each appears once below.
 
-**Decision:** D-058. **Migration:** `20260928160000_expansion_review_fixes.sql`.
+**Decision:** D-058. **Migration:** `20260928310000_expansion_review_fixes.sql`.
 
 ## How each fix was proved
 
@@ -74,4 +74,4 @@ store without registering it. It is registered here.
 
 Revert the commit. The migration changes one policy and adds two functions.
 To undo it, a later migration restores the policy from
-`20260928132000_office_action_feed.sql` and drops the functions.
+`20260928302000_office_action_feed.sql` and drops the functions.

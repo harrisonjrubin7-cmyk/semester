@@ -149,7 +149,7 @@ begin
     values (pg_temp.newuser('m' || i || '@exp-u.example', 'exp-u'), 'exp-u', '2027SP', 'MATH 200', true);
   end loop;
 
-  -- Since 20260928135000 (Phase K) the refresh counts a flagged row only while
+  -- Since 20260928305000 (Phase K) the refresh counts a flagged row only while
   -- its owner's consent for the term is live; `demand.check.sql` walks that.
   -- Here every flagged student consents, as contribute_course_plan would.
   insert into public.demand_consents (user_id, tenant_id, term_code)
@@ -273,7 +273,7 @@ begin
     pg_temp.seen(mentor, 'select * from public.onboarding_progress'), 0);
 
   -- ── institution actions ────────────────────────────────────────────────
-  -- Writes go through the Phase J functions (20260928132000); the direct
+  -- Writes go through the Phase J functions (20260928302000); the direct
   -- insert this section used to make is refused now, and a draft reaches no
   -- student until a second person approves it. `officeactions.check.sql`
   -- walks the whole workflow.

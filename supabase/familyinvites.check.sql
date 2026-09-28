@@ -1,6 +1,6 @@
 -- supabase/familyinvites.check.sql — the share codes behind supporter sharing.
 --
--- Ported with 20260928140000_family_invites.sql from the unmerged
+-- Ported with 20260928306000_family_invites.sql from the unmerged
 -- `claude/inspiring-goldberg-kv3yzn`, and extended for the owner-approved
 -- consent design (D-037): `selected` only, 1–200 days, a 7-day code, named
 -- items required, and revocation as the one write, one way.

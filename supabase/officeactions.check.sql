@@ -363,7 +363,7 @@ begin
     pg_temp.seen(far_aid, 'select * from public.office_desk_actions()'), 0);
 
   -- The table itself answers the same way as the desk (review fix
-  -- 20260928160000): authenticated keeps SELECT on it, so a policy that asked
+  -- 20260928310000): authenticated keeps SELECT on it, so a policy that asked
   -- only for a publishing capability let another office read the rows.
   perform pg_temp.counted('another office cannot select Financial Aid''s draft directly',
     pg_temp.seen(registrar, format('select * from public.institution_actions where id = %L', a_draft)), 0);

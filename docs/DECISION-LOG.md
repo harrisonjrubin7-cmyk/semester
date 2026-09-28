@@ -354,7 +354,7 @@ student's device. So a supporter had nothing to read.
 Proved by `supabase/familyshare.check.sql` (38 checks). Five guards were each
 removed in turn, and the suite failed every time.
 
-The migration is `20260928141000_family_shared_items.sql`. **Applying it to
+The migration is `20260928307000_family_shared_items.sql`. **Applying it to
 production needs owner approval**, as #815's does, and it must be applied after
 #815's migration.
 
@@ -392,7 +392,7 @@ each removed in turn: the read's role re-check, the listing's role re-check,
 the compliance exclusion, the payload keys and the log. The suite failed every
 time.
 
-The migration is `20260928142000_support_shares.sql`. **Applying it to
+The migration is `20260928308000_support_shares.sql`. **Applying it to
 production needs owner approval**, and it goes after #830's migration. The
 athlete's screen is slice 5.
 
@@ -1200,7 +1200,7 @@ The owner approved F1–F7 as recommended:
 ## D-101 · Course Studio slice 1: publishing is append-only, and the rows are the audit
 
 **Decided 27 Sep 2026, building slice 1 of D-100.** The server half is
-`20260928150000_course_studio.sql`.
+`20260928309000_course_studio.sql`.
 
 - **One capability.** `course:publish` goes to `faculty` and is checked at
   course scope, `<school>/<CODE>`. The school is always the caller's own
@@ -1346,7 +1346,7 @@ its test.
   account changes. Graduation drafts remember which account saved them.
 - **Private notes stay on the device.** The workspace backup leaves them
   out. A restore keeps the notes already on the device.
-- **Migration.** `20260928160000_expansion_review_fixes.sql`: one policy
+- **Migration.** `20260928310000_expansion_review_fixes.sql`: one policy
   and two functions. It changes no table and no data. It needs owner
   approval with the rest of D-025, D-043, D-048 and D-051 before
   `semester-unified-platform` goes to `main`.
@@ -1405,4 +1405,35 @@ has a check that fails against a faithful revert of it.
   staff member has no delete policy on shares addressed to them.
   `forget_my_support_shares()` removes every share naming the caller at
   either end, and the deletion list uses it, as it does for advisor shares.
+
+## D-107 · The eleven integration migrations renumbered again, above 28 September's ledger
+
+**Decided 28 Sep 2026, merging main into the integration branch (#893).**
+Production's ledger now ends at `20260928210000_support_tickets`: #819 and
+#839 landed `200000` and `210000` on main, and both were applied. The eleven
+migrations D-105 placed at `20260928130000`–`160000` were then below the
+watermark, and the deploy off main would have refused the first of them.
+
+| Was | Now |
+|---|---|
+| `20260928130000_untouched_graduation_drafts` | `20260928300000` |
+| `20260928131000_advisor_shares` | `20260928301000` |
+| `20260928132000_office_action_feed` | `20260928302000` |
+| `20260928133000_untouched_graduation_after_help` | `20260928303000` |
+| `20260928134000_untouched_advisor_after_help` | `20260928304000` |
+| `20260928135000_course_demand_forecasting` | `20260928305000` |
+| `20260928140000_family_invites` | `20260928306000` |
+| `20260928141000_family_shared_items` | `20260928307000` |
+| `20260928142000_support_shares` | `20260928308000` |
+| `20260928150000_course_studio` | `20260928309000` |
+| `20260928160000_expansion_review_fixes` | `20260928310000` |
+
+- **Order kept**, and nothing on main or in the ledger sits between them.
+  No live database ever recorded the `13xxxx`–`16xxxx` numbers.
+- **The guard, refreshed.** `supabase/ledger.snapshot` now holds the live
+  reading of 28 September. With it, `migrationorder.test.ts` names all eleven
+  at their old numbers; renumbered, it passes. `MIGRATION-HISTORY.md` has the
+  reading.
+- **References.** Code comments, docs, check suites and RETENTION name the new
+  files. D-105's table keeps the numbers it was written with.
 

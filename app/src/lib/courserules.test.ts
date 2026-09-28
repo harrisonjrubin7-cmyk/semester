@@ -19,7 +19,7 @@ describe('the course key', () => {
   });
 
   it('accepts exactly the codes the migration accepts', () => {
-    const sql = readFileSync(join(__dirname, '../../../supabase/migrations/20260928150000_course_studio.sql'), 'utf8');
+    const sql = readFileSync(join(__dirname, '../../../supabase/migrations/20260928309000_course_studio.sql'), 'utf8');
     expect(sql).toContain(`c ~ '${/^[A-Z]{2,4} [0-9]{3,4}[A-Z]?$/.source}'`);
   });
 });

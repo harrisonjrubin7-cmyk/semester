@@ -42,8 +42,8 @@ the duplicate that file warns about.
 | H | Study Readiness | `study_readiness` (D-045) | Course Companion → `course/:id` › **Readiness** tab (built) | **Extend** | `lib/standing.ts`, `components/Standing.tsx` (words, not scores); `state.reviews`; `lib/runway.ts` |
 | H | Source Locker | `source_locker` (D-044) | Course Companion → `course/:id` › **Sources** tab (built); Me → Trust Center (Phase N) | **Extend** | `lib/sources.ts`, `screens/Sources.tsx`, `lib/studysources.ts`, `intelligence/Disclosure.tsx` |
 | I | Career Evidence + resume bullets | `career_evidence` (D-046, D-047) | Me → `career` › **Evidence** tab; course overview › skills panel (built) | **Extend** | `lib/career.ts`, `screens/Career.tsx` (résumé present), `lib/skills-graph.ts` (`careerSkillsGraph` flag); table `skill_records` |
-| J | Campus Office Action Feed | `office_action_feed` (D-048, D-049, D-050) | Today: ranked in the Action Center, or the first three on the briefing; Key dates (`registrar`): full feed and the office desk (built) | **Extend** + migration | `institution_actions` finished by `20260928132000_office_action_feed.sql`; `lib/office-actions.ts`, `components/OfficeActionFeed.tsx`, `components/OfficeActionDesk.tsx` |
-| K | Course Demand Forecasting | `demand_forecasting` (D-051, D-052, D-053) | Plan › registration **Cart** (student consent); University › **Demand** (staff, by `demand:read` scope) (built) | **Extend** + migration | `20260928135000_course_demand_forecasting.sql`; `lib/course-demand.ts`, `components/DemandContribution.tsx`, `components/DemandDesk.tsx` |
+| J | Campus Office Action Feed | `office_action_feed` (D-048, D-049, D-050) | Today: ranked in the Action Center, or the first three on the briefing; Key dates (`registrar`): full feed and the office desk (built) | **Extend** + migration | `institution_actions` finished by `20260928302000_office_action_feed.sql`; `lib/office-actions.ts`, `components/OfficeActionFeed.tsx`, `components/OfficeActionDesk.tsx` |
+| K | Course Demand Forecasting | `demand_forecasting` (D-051, D-052, D-053) | Plan › registration **Cart** (student consent); University › **Demand** (staff, by `demand:read` scope) (built) | **Extend** + migration | `20260928305000_course_demand_forecasting.sql`; `lib/course-demand.ts`, `components/DemandContribution.tsx`, `components/DemandDesk.tsx` |
 | L | Semester Wrapped | `semester_wrapped` (D-054) | Me → `me` › You: the recap card (built) | **Extend** | `lib/wrapped.ts`, `components/SemesterWrapped.tsx`; reads `state.done`/`tickedAt`/`sessions`/`taken` and the device stores of Phases B, G, I and the registration workspace |
 | M | Offline Mode | `offline_mode` (D-055, D-056) | App shell: the offline badge under the header; every screen (refusals in shared `ConfirmDialog` and the remote calls) (built) | **Extend** | `lib/offline-mode.ts`, `components/OfflineBanner.tsx`; reuses `lib/offline.ts`, `lib/merge.ts`, `public/sw.js` (unchanged) |
 | N | Trust Center | `trust_center` (D-057) | Me › You › **Trust & data** → Your data (`privacy`), the center at the top (built) | **Extend** | `components/TrustCenter.tsx`; `lib/workspace-backup.ts` (device scope, eleven stores), `workspace-backup.coverage.test.ts` |
@@ -280,7 +280,7 @@ change unless it is approved.
   `publisher_scope_kind`/`_id` by capability, and tenant-scoped cohorts.
 - `Registrar.tsx` term deadlines.
 
-**Resolved in Phase J** by `20260928132000_office_action_feed.sql` (D-048); see [OFFICE-ACTION-FEED.md](OFFICE-ACTION-FEED.md). The gaps as first recorded:
+**Resolved in Phase J** by `20260928302000_office_action_feed.sql` (D-048); see [OFFICE-ACTION-FEED.md](OFFICE-ACTION-FEED.md). The gaps as first recorded:
 
 
 - `official_url` is **nullable**, but the command requires it.

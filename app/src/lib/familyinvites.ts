@@ -4,7 +4,7 @@ import { SHARE_MAX_DAYS, checkSupporterPlan, daysBetween } from './sharing';
 
 /**
  * Share codes for supporter plans: the client side of
- * `supabase/migrations/20260928140000_family_invites.sql` (D-037, slice 2).
+ * `supabase/migrations/20260928306000_family_invites.sql` (D-037, slice 2).
  *
  * A student turns a finished plan into eight characters and hands them over
  * themselves; whoever enters them becomes the recipient of an accepted grant.

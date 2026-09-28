@@ -214,7 +214,7 @@ begin
   perform pg_temp.counted('deleting a share removes its log', (select count(*) from public.advisor_share_events), 0);
   perform pg_temp.counted('the student emptied the table', (select count(*) from public.advisor_shares where student_id = student), 0);
   -- An advisor deleting their account takes the shares they received with it
-  -- (review fix 20260928160000): the advisor has no delete policy, and the
+  -- (review fix 20260928310000): the advisor has no delete policy, and the
   -- auth user is not deleted, so only the RPC reaches those rows.
   insert into public.advisor_shares (student_id, advisor_id, tenant_id, title, payload, expires_at)
   values (student, advisor, 'adv-u', 'Fall planning', body, now() + interval '5 days');

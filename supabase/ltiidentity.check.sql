@@ -97,7 +97,7 @@ begin
 end $$;
 
 -- A saved graduation draft is work too (Phase D,
--- 20260928130000_untouched_graduation_drafts.sql): an account holding one is
+-- 20260928300000_untouched_graduation_drafts.sql): an account holding one is
 -- not empty, and account linking must not retire it.
 do $$
 declare drafted uuid;
