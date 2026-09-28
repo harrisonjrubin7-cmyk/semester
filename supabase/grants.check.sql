@@ -354,7 +354,7 @@ declare
     'integration_set_paused(want_connection text, want_paused boolean, want_reason text)',
     'kill_switch_engaged(want_switch text, want_tenant text)',
 
-    -- The sixteen in 20260928040000_private_beta.sql. Every beta table has
+    -- The sixteen in 20260928070000_private_beta.sql. Every beta table has
     -- RLS on, no policy and no grant, so these are the only way in. The first
     -- nine check `beta:manage` or `beta:triage` themselves; the queue returns
     -- feedback with no sender identity. The last seven act on the caller's

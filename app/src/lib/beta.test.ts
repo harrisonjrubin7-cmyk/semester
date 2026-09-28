@@ -14,7 +14,7 @@ import { FEEDBACK_KINDS, FEEDBACK_LABELS, cohortLabel, toIssue, toMembership } f
  */
 
 const root = join(import.meta.dirname, '../../..');
-const migration = readFileSync(join(root, 'supabase/migrations/20260928040000_private_beta.sql'), 'utf8');
+const migration = readFileSync(join(root, 'supabase/migrations/20260928070000_private_beta.sql'), 'utf8');
 const client = readFileSync(join(import.meta.dirname, 'beta.ts'), 'utf8');
 
 /** The body of one `create table` in the migration. */

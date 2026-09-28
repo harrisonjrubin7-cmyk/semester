@@ -176,7 +176,7 @@ const NOT_CONTENT = new Set([
    * this flow could retire can never have them: joining needs an invitation
    * to a *confirmed* address, and a provisioned account's address is on a
    * domain that cannot receive mail (`provisionedEmail` above), so no
-   * invitation can match it. `20260928040000_private_beta.sql`.
+   * invitation can match it. `20260928070000_private_beta.sql`.
    */
   'beta_memberships',
   'beta_feedback',
