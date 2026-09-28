@@ -224,6 +224,10 @@ jobs:
             value="${!name}"
             [ -z "$value" ] && continue
 
+            # This site is the product, so the demo switch never reaches it.
+            # See the note after the loop.
+            [ "$name" = "VITE_INSTITUTIONAL_PREVIEW" ] && continue
+
             # A value with a newline in it would corrupt $GITHUB_ENV and take
             # the next variable with it. None of these is multi-line; a pasted
             # PEM or a trailing blank line is the mistake, and it is worth
@@ -328,16 +332,19 @@ jobs:
             fi
           fi
 
-          # The demo is its own site now, at /demo/ beside the product, and the
-          # product is never built as a demo whatever this variable says — see
-          # the two build steps below. The variable used to decide what the
-          # whole address was: set once to try the preview and forgotten, it
-          # put "Demo environment", Northstar fixtures and a persona switcher
-          # on every visit, and sent the company site's "Log in" into a demo
-          # instead of a sign-in page. It no longer changes anything, so the
-          # run says so rather than leaving somebody to wonder why it stopped.
-          if [ -n "$VITE_INSTITUTIONAL_PREVIEW" ]; then
-            echo "::notice title=Demo build::VITE_INSTITUTIONAL_PREVIEW is set but no longer decides anything: the product is always built at the site root and the demo always at /demo/. The repository variable can be deleted (Settings → Secrets and variables → Actions)."
+          # This workflow deploys the product: the address the company site's
+          # Log in button sends people to. A demo build here wore the "Demo
+          # environment" label on every screen, swapped the student's own work
+          # for Northstar University fixtures and a persona switcher, and put
+          # a real person arriving to sign in inside a fictional account. It
+          # happened once from a repository variable set to try the preview
+          # and left on, and a warning on the run did not stop it — nobody
+          # reads a run that succeeded. So the switch is not carried into this
+          # build at all (the loop above skips it). A demo is its own
+          # deployment: "Build the demo" below builds one into /demo/, and
+          # `npm run preview:institutional` runs one locally.
+          if [ "$VITE_INSTITUTIONAL_PREVIEW" = "true" ]; then
+            echo "::notice title=Demo switch ignored::VITE_INSTITUTIONAL_PREVIEW is set to true in the repository, and this deploy ignored it: the Pages site is the real app, never the demo. Delete the variable (Settings → Secrets and variables → Actions) to silence this."
           fi
 
           if [ -n "$VITE_SUPABASE_URL" ] && [ -n "$VITE_SUPABASE_KEY" ]; then
