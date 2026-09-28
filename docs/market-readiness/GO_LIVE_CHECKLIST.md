@@ -17,6 +17,10 @@ Every line requires evidence, not an opinion.
 - [x] Hourly synthetic monitoring covers the public Pages HTML, deployed
   module/stylesheet assets and production Supabase PostgREST
 - [ ] Security headers configured at the host
+  Written, not served: `app/vercel.json` and `app/public/_headers` carry the
+  set, held equal and complete by `app/src/lib/hostheaders.test.ts`. GitHub
+  Pages reads neither. Tick this when production is served from a host that
+  reads one and a probe of the live response shows the headers.
 - [x] Append-only audit evidence records tenant-setting, future role-grant and
   current report-moderation status changes; isolation, pseudonymization and
   immutability checks pass
