@@ -37,6 +37,7 @@ reviewer asking "where does data go" deserves the whole answer.
 | Service | What leaves the device | When | Where in the code |
 | --- | --- | --- | --- |
 | Anthropic, OpenAI (student's own key) | The student's prompts, sent straight from the browser | Only if the student pastes their own key; the key never leaves the device | `app/src/lib/claude.ts`, `app/src/lib/openai.ts` |
+| Claude.ai, ChatGPT, Perplexity (handoff) | A question, and optionally one course name and a pasted excerpt, that the student has read in full before sending. It opens the service in a new tab; nothing signs in and nothing comes back. Grok is listed but refused until the school reviews it | Only when the student presses send on the review | `app/src/lib/aihandoff.ts` |
 | Google, Microsoft, Apple, Zoom | OAuth sign-in; calendar, mail or meeting data the student authorizes | Only after the student connects the account | `app/src/lib/connect.ts` |
 | OpenStreetMap Nominatim, Komoot Photon | Text the student types into a lookup box; position only for reverse lookup, which is behind its own switch and off by default | Only when switched on | `app/src/lib/geocode.ts` |
 | OpenStreetMap tile servers | The visitor's IP address and the map area viewed | When a map is shown | `app/index.html` |
