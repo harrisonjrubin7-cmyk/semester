@@ -160,8 +160,12 @@ export const GATES: readonly Gate[] = [
     requirement: 'Terms, privacy, consent, and acceptable-use content reviewed.',
     owner: 'privacy',
     status: 'partial',
-    evidence: [{ path: 'app/src/lib/privacy.ts', shows: 'the privacy disclosure written as data and tested against the code' }],
-    gap: 'No qualified legal or privacy review of terms, privacy notice, consent or acceptable use has been recorded.',
+    evidence: [
+      { path: 'app/src/lib/privacy.ts', shows: 'the privacy disclosure written as data and tested against the code' },
+      { path: 'docs/legal/PRIVACY-POLICY-DRAFT.md', shows: 'a privacy policy draft for counsel, held to the subprocessor register' },
+      { path: 'docs/legal/TERMS-OF-SERVICE-DRAFT.md', shows: 'a terms of service draft for counsel, with acceptable use' },
+    ],
+    gap: 'No qualified legal or privacy review of terms, privacy notice, consent or acceptable use has been recorded. The drafts carry open [DECIDE] items: legal entity, minimum age, liability, governing law.',
   },
   {
     id: 'data-scope',
