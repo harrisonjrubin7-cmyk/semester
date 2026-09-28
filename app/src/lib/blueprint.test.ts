@@ -132,6 +132,8 @@ describe('the modernization blueprint crosswalk', () => {
       expect(prioritised([RULE[0]])).toBe(false);
       expect(prioritised([RULE[0], RULE[0]])).toBe(false);
       expect(prioritised([RULE[0], 'Looks impressive in a demo.'])).toBe(false);
+      // Two real reasons do not carry a made-up third.
+      expect(prioritised([RULE[0], RULE[3], 'Looks impressive in a demo.'])).toBe(false);
       expect(prioritised([RULE[0], RULE[3]], [DEFER[2]])).toBe(false);
     });
 

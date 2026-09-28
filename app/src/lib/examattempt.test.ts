@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   ATTEMPT_KEY,
   KEEP_MS,
+  NOT_KEPT_LINE,
   answered,
   begun,
   dayOf,
@@ -179,20 +180,22 @@ describe('the Exam screen keeps the paper through this file', () => {
   // test of the pure functions could never notice.
   const screen = readFileSync(new URL('../screens/Exam.tsx', import.meta.url), 'utf8');
 
-  it('reads the kept paper when it opens, and offers it back', () => {
+  it('reads the kept paper when it opens, and offers it back on the guide it was built from', () => {
     expect(screen).toContain('readAttempt(localStorage.getItem(ATTEMPT_KEY)');
-    expect(screen).toContain('line: offerLine(paper, now)');
+    expect(screen).toContain('paper && paper.guideId === state.guideId ? { paper, line: offerLine(paper, now) } : null');
     expect(screen).toContain('onClick={() => resume(offer.paper)}');
   });
 
-  it('writes every answer through as it is given', () => {
-    expect(screen).toMatch(/withAnswers\(attempt\.current, answers, Date\.now\(\)\);\s*storeAttempt\(attempt\.current\);/);
+  it('writes every answer through as it is given, and says so only when the write took', () => {
+    expect(screen).toMatch(/withAnswers\(attempt\.current, answers, Date\.now\(\)\);\s*setKeptOk\(storeAttempt\(attempt\.current\)\);/);
+    expect(screen).toContain('{kept_ ? KEPT_LINE : NOT_KEPT_LINE}');
+    expect(NOT_KEPT_LINE).toMatch(/not keeping your answers/);
+    expect(NOT_KEPT_LINE).not.toMatch(/still here/);
   });
 
   it('records the finish, says so, and forgets the paper only on "Another paper"', () => {
     expect(screen).toContain('finished(withAnswers(attempt.current, answers, now), now)');
     expect(screen).toContain('setReceipt(receiptLine(attempt.current, now))');
     expect(screen).toMatch(/onClick=\{\(\) => \{\s*forget\(\);\s*setStage\('setup'\);/);
-    expect(screen).toContain('{KEPT_LINE}');
   });
 });

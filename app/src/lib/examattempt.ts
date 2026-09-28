@@ -232,3 +232,11 @@ export function receiptLine(a: Attempt, now: number): string {
 
 /** Said under the paper while sitting it, so the autosave is visible. */
 export const KEPT_LINE = 'Your answers are kept on this device as you go. Close the tab and this paper is still here.';
+
+/**
+ * Said instead when the device refused the write — storage off in a private
+ * window, or full. The one thing worse than not keeping a paper is saying it
+ * is kept: a student who reads KEPT_LINE closes the tab on that promise.
+ */
+export const NOT_KEPT_LINE =
+  'This device is not keeping your answers — its storage is off or full. Finish in this tab, or copy what matters before you leave.';

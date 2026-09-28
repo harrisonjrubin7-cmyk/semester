@@ -42,6 +42,7 @@ import { NeedsKey } from '../components/NeedsKey';
 import {
   ATTEMPT_KEY,
   KEPT_LINE,
+  NOT_KEPT_LINE,
   begun,
   finished,
   offerLine,
@@ -65,13 +66,18 @@ function loadAttempt(now: number): Attempt | null {
   }
 }
 
-function storeAttempt(a: Attempt | null): void {
+/**
+ * Whether the write took. Storage full or off leaves the paper on the screen
+ * unaffected, but the line under it must then stop saying the paper is kept —
+ * see `NOT_KEPT_LINE`.
+ */
+function storeAttempt(a: Attempt | null): boolean {
   try {
     if (a) localStorage.setItem(ATTEMPT_KEY, JSON.stringify(a));
     else localStorage.removeItem(ATTEMPT_KEY);
+    return true;
   } catch {
-    // Storage full or off: the paper on the screen is unaffected, and the
-    // line under it still says it is kept only where it can be.
+    return false;
   }
 }
 
@@ -180,16 +186,22 @@ export function Exam() {
   // the screen is drawn from it; what is drawn (the offer, the put-back line,
   // the receipt) has its own state below.
   const attempt = useRef<Attempt | null>(null);
-  // A paper found on the device when the screen opened, offered on Setup. Its
-  // line is worded once, here, rather than against a clock read during render.
+  // A paper found on the device when the screen opened, offered on Setup — and
+  // only on the guide it was built from: a paper for ECON put back while PSCI
+  // is open would be marked, filed and printed under the wrong course. It
+  // waits, for its week, until that guide is open again. Its line is worded
+  // once, here, rather than against a clock read during render.
   const [offer, setOffer] = useState<{ paper: Attempt; line: string } | null>(() => {
     const now = Date.now();
     const paper = loadAttempt(now);
-    return paper ? { paper, line: offerLine(paper, now) } : null;
+    return paper && paper.guideId === state.guideId ? { paper, line: offerLine(paper, now) } : null;
   });
   // Said once, under the clock, when a paper has been put back.
   const [said, setSaid] = useState('');
   const [receipt, setReceipt] = useState('');
+  // Whether the last write to the device took. False turns the "kept" line
+  // into its opposite rather than leaving a promise the device is not keeping.
+  const [kept_, setKeptOk] = useState(true);
 
   // Dropped as soon as it has been read, so coming back later opens on your
   // own last choice rather than on what the quiz asked for an hour ago.
@@ -205,7 +217,7 @@ export function Exam() {
   useEffect(() => {
     if (stage === 'setup' || !attempt.current) return;
     attempt.current = withAnswers(attempt.current, answers, Date.now());
-    storeAttempt(attempt.current);
+    setKeptOk(storeAttempt(attempt.current));
   }, [answers, stage]);
 
   // The clock. Stops at zero rather than going negative, and does not end the
@@ -1001,8 +1013,8 @@ export function Exam() {
             here; the written ones you mark yourself against the key, which is the part that
             teaches.
           </div>
-          <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
-            {KEPT_LINE}
+          <div role={kept_ ? undefined : 'status'} style={{ fontSize: 'var(--type-xs-plus)', color: kept_ ? 'var(--app-dim)' : 'var(--app-ink)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
+            {kept_ ? KEPT_LINE : NOT_KEPT_LINE}
           </div>
         </>
       )}

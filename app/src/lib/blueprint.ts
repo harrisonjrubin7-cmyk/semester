@@ -464,12 +464,14 @@ export const RULE_MINIMUM = 2;
 /**
  * Whether a piece of work passes the rule: at least two criteria, every one of
  * them a real criterion, and none of the deferrals. A criterion named twice
- * counts once.
+ * counts once, and one that is not on the list refuses the whole claim — a
+ * justification with a made-up reason beside two real ones is not a
+ * justification with two real reasons, it is one nobody checked.
  */
 export function prioritised(criteria: readonly string[], deferrals: readonly string[] = []): boolean {
   if (deferrals.some((d) => DEFER.includes(d))) return false;
-  const real = new Set(criteria.filter((c) => RULE.includes(c)));
-  return real.size >= RULE_MINIMUM;
+  if (criteria.some((c) => !RULE.includes(c))) return false;
+  return new Set(criteria).size >= RULE_MINIMUM;
 }
 
 /** What this change built, and which criteria each satisfies. */
