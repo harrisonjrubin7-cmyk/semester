@@ -162,7 +162,8 @@ describe('a student contributing', () => {
   });
 
   it('points out a changed cart instead of re-sending it', async () => {
-    mine = { consentedAt: Date.parse('2026-09-20T00:00:00Z'), revokedAt: null, courses: [{ course: 'ECON 1010', role: 'primary' }] };
+    // 07:00 UTC is Sep 20 from UTC-5 to UTC+14 (`npm run test:zones`); midnight UTC is Sep 19 in Chicago.
+    mine = { consentedAt: Date.parse('2026-09-20T07:00:00Z'), revokedAt: null, courses: [{ course: 'ECON 1010', role: 'primary' }] };
     await render(<DemandContribution accountId="u1" />);
     expect(text()).toContain('You contribute for 2027SP since Sep 20, 2026.');
     expect(text()).toContain('Your cart has changed since you sent it. The counts still use what you sent.');
