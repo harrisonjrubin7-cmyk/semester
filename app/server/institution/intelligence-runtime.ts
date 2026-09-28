@@ -59,6 +59,7 @@ export function createInstitutionIntelligenceRuntime(options: IntelligenceRuntim
   };
   return createIntelligenceService({
     status: options.status,
+    killSwitch: repository.killSwitchEngaged,
     loadPolicy: repository.loadPolicy,
     loadApprovedSources: repository.loadApprovedSources,
     modelTask: async () => task,

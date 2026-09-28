@@ -1439,3 +1439,60 @@ watermark, and the deploy off main would have refused the first of them.
 - **References.** Code comments, docs, check suites and RETENTION name the new
   files. D-105's table keeps the numbers it was written with.
 
+
+## D-108 · The modernization blueprint is a crosswalk onto the master register, not a second register
+
+**Decided 28 Sep 2026.** Three documents arrived on 28 September — the
+*Semester Product Modernization Blueprint*, the *Product architecture audit*
+it was written from, and the longer enhancement paper behind both — and are
+kept under `docs/expansion/` as supplied. Nearly every item they name is
+already a row of the master launch readiness register: the two plans describe
+the same platform. So they are held to the tree as
+[MODERNIZATION-BLUEPRINT.md](MODERNIZATION-BLUEPRINT.md), rendered from
+`app/src/lib/blueprint.ts`, where each of the blueprint's twelve points,
+twenty-seven front-end priorities and eighteen platform items points at the
+master rows that carry it, with a standing read off the tree and held by a
+test to the kind of file it cites. Rejected: a fourth register with its own
+statuses, which would drift from the master's within a week.
+
+Four master rows were re-read for it: LMS-002 and LMS-016 after Course Studio
+(#893), SRE-010 after the status page (#902), AI-012 after the kill switch was
+wired (below). The blueprint's decision rule — prioritise work that does at
+least two of ten things — is `prioritised()` in the same file, and everything
+built in the same change is scored against it.
+
+**Where the blueprint conflicts with a decision already on main, the decision
+holds until the owner reopens it.** The conflicts:
+
+| Blueprint asks | Decision on main | Held as |
+|---|---|---|
+| Five student destinations as *the* navigation | D-003: the five are the primary tab bar behind `journeyNavigation`, the shelves stay; roots fixed by DO-NOT-BUILD rule 1 | BP-01, FE-01 partial. D-003 also misstates `DEFAULT_TABS`, which is `home, calendar, study, support, me` |
+| A native gradebook, module builder, batch and anonymous grading | [FACULTY-COURSE-STUDIO-DESIGN.md](FACULTY-COURSE-STUDIO-DESIGN.md), 27 Sep: no duplicate LMS or gradebook; instructors see no individual student data | BP-05, FE-16, FE-19 held; the student-side pieces (autosave, what-if) proceed |
+| A Revenue Operations console module | D-009: billing stays out | OC-01 names it; no revenue module |
+| A server-side permission-aware search index; an external immutable audit archive | ADR 0006 (search is one ranker, on the device); ADR 0003 (no second database, no event bus) | BE-04 held; BE-03's archive named as needing the ADR reopened |
+| No "behind" or "at risk" labels anywhere | `When you are behind` is a screen (`lib/nav.ts`) that states facts without red or encouragement; the `UNCALM` guard covers Today | Not held: nothing forbids it. Recorded so the rename is a decision, not a drift. Proposed — needs owner |
+| A Semester-internal, cross-tenant operations console | DO-NOT-BUILD rule 1: no new top-level navigation; the school-side tools live under `university` | OC-01 partial: the console would live under an existing root |
+
+One thing the blueprint asks for that was already decided *for* it: a modular
+monolith, not microservices, which ADR 0003 has said since the gateway was
+designed.
+
+## D-109 · The AI kill switch is read by everything that generates, and an unreadable switch is thrown
+
+**Decided 28 Sep 2026.** `kill.ai_generation` had been a row in
+`feature_kill_switch`, the rollback named by every AI flag in the registry, and
+the gap in AI-012 — nothing that called a model asked. Now both runtimes do:
+the `claude` edge function before the body is read or the call counted, and
+the institution gateway before the policy is loaded, refusing `policy` and
+`respond` with `ai-generation-killed` and journaling the refusal as
+`kill-switch`. The rules are the integration worker's, copied rather than
+reinvented: the global row stops everyone, a school's row stops its school,
+and a switch that cannot be read is engaged, because the moment the switch is
+needed is the moment a read is likeliest to fail. The decision is one pure
+function (`supabase/functions/_shared/killswitch.ts`); the gateway repeats its
+two lines rather than importing them, because nothing the NodeNext build
+compiles may reach under `supabase/functions/` (the #803 lesson).
+
+Outside the switch by design: a student's own key on their own device
+(`lib/claude.ts`). That is their key and their bill, and a switch on
+Semester's generation is not a switch on theirs.

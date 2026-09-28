@@ -953,9 +953,9 @@ export const REGISTER: readonly Requirement[] = [
     requirement: 'Tenant/mode/provider emergency disable works and is tested',
     validation: 'Kill-switch drill',
     severity: 'P0',
-    status: 'building',
-    evidence: [{ path: 'supabase/migrations/20260927170000_integration_control_plane.sql', shows: 'feature_kill_switch table accepts kill.ai_generation, global or per tenant' }, { path: 'supabase/integration-control-plane.check.sql', shows: 'kill_switch_engaged(\'kill.ai_generation\') scoped per tenant' }, { path: 'app/src/lib/flags.test.ts', shows: 'Flag evaluator lets a kill switch override tenant policy' }, { path: 'app/server/institution/intelligence.ts', shows: 'AI gateway never consults feature_kill_switch; claude edge function doesn\'t either' }],
-    gap: 'Neither AI runtime (institution gateway, claude edge function, device-key path) checks kill.ai_generation. No provider- or mode-level switch; ai_policy edits are the only lever. No drill has been run.',
+    status: 'tested',
+    evidence: [{ path: 'supabase/migrations/20260927170000_integration_control_plane.sql', shows: 'feature_kill_switch table accepts kill.ai_generation, global or per tenant' }, { path: 'supabase/integration-control-plane.check.sql', shows: 'kill_switch_engaged(\'kill.ai_generation\') scoped per tenant' }, { path: 'supabase/functions/_shared/killswitch.ts', shows: 'The claude edge function refuses on kill.ai_generation before the body is read or the call counted; an unreadable switch is thrown' }, { path: 'app/server/institution/intelligence.ts', shows: 'The institution gateway refuses policy and respond with ai-generation-killed, audited as kill-switch' }, { path: 'app/src/lib/aikillswitch.test.ts', shows: 'Holds the decision and holds both runtimes to asking before they generate' }],
+    gap: 'The device-key path (a student\'s own key, lib/claude.ts) is outside the switch by design. No provider- or mode-level switch; ai_policy edits are the only lever for those. No drill has been run.',
   },
   {
     id: 'AI-013',

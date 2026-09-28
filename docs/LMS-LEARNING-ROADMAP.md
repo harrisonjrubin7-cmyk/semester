@@ -103,9 +103,12 @@ The picker was also hidden unless the institution gateway was on. Now:
 The order follows the documents' phases: student layer, then teaching layer,
 then assessment layer.
 
-1. **Exam autosave and a submission receipt.** Keep the practice-paper answers
-   in `Exam.tsx` through `lib/draft.ts`, the way the essay screen does. The
-   documents' own line is "no lost work", and it is the smallest item left.
+1. ~~**Exam autosave and a submission receipt.**~~ **Done, 28 Sep 2026.** The
+   practice paper is kept on the device through `lib/examattempt.ts` (its own
+   slot rather than a draft: the questions, the seed and the clock go with the
+   answers), offered back on Setup, and receipted when finished. The clock is
+   the wall clock, so a paper closed with twelve minutes left and reopened an
+   hour later has none — which is what a paper does.
 2. **Let `open_screen` reach Get help,** so the tutor's handoff is a button
    rather than a sentence.
 3. **Objective map:** unit → objective → assignment. The objective map, the

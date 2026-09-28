@@ -146,6 +146,18 @@ Two further limits on what the columns below prove:
 | `marketing_analyst` | modeled | ✓ ✓ · ✓ ✓ · · | `campaign:report` | `app/src/components/institutional/CampaignManager.tsx` | `gtm.check.sql` | — | — | Read campaign reports | Editing or sending campaigns; any student data |
 | `campaign_reviewer` | modeled | ✓ ✓ · ✓ ✓ · · | `campaign:review` | `app/src/components/institutional/CampaignManager.tsx` | `gtm.check.sql` | — | — | Review a campaign before it is sent | Authoring the campaign they review |
 
+## The internal boundary
+
+No Semester-internal role — the platform operations and commercial rows above —
+inherits access to a student's records because it is internal. `rolelaunch.test.ts`
+holds the matrix to two lists in `rolelaunch.ts`, in both directions: an internal
+role may hold only an operations capability, and never one that reaches a student's
+own records. A grant outside either list fails the build until somebody judges it.
+
+| Internal roles may hold | Internal roles never hold |
+| --- | --- |
+| `beta:manage`<br>`beta:triage`<br>`platform:configure`<br>`support:ticket`<br>`incident:communicate`<br>`killswitch:engage`<br>`moderation:action`<br>`report:read`<br>`review:moderate`<br>`opportunity:moderate`<br>`community:review`<br>`community:review_senior`<br>`community:escalation_agreements`<br>`community:manage`<br>`account:manage`<br>`campaign:manage`<br>`campaign:report`<br>`campaign:review`<br>`trust:publish` | `mentee:read`<br>`help_request:respond`<br>`accommodation:verify`<br>`skill:verify`<br>`support:read`<br>`data_request:handle`<br>`talent:search`<br>`lti:launch`<br>`audit:read`<br>`outcomes:read`<br>`demand:read` |
+
 ## Role × capability
 
 One row per row of `public.role_capabilities`. A capability's checks are the SQL checks that name it.
