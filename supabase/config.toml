@@ -82,6 +82,9 @@ verify_jwt = false
 [functions.fetchcal]
 verify_jwt = false
 
+[functions.integration-tick]
+verify_jwt = false
+
 [functions.lti]
 verify_jwt = false
 

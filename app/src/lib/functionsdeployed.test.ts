@@ -41,6 +41,8 @@ interface Row {
   version: string;
   pipeline: string;
   at: string;
+  /** `first` on a function's first, hand-started deploy; see `frozen`. */
+  note?: string;
 }
 
 /** `slug version pipeline at` per line, comments and blanks dropped. */
@@ -50,8 +52,8 @@ function reading(): Row[] {
     .map((l) => l.replace(/#.*/, '').trim())
     .filter(Boolean)
     .map((l) => {
-      const [slug, version, pipeline, at] = l.split(/\s+/);
-      return { slug, version, pipeline, at };
+      const [slug, version, pipeline, at, note] = l.split(/\s+/);
+      return { slug, version, pipeline, at, note };
     });
 }
 
@@ -67,9 +69,23 @@ function slugs(): string[] {
     .sort();
 }
 
-/** The rows this reading says are outside the continuous pipeline. A pending row has no reading yet. */
+/**
+ * The rows this reading says are outside the continuous pipeline. A pending row
+ * has no reading yet.
+ *
+ * One more exception, and it is written on the row rather than granted here: a
+ * `runner` row marked `first`. A new function cannot be read off the platform
+ * deploy before the merge that adds it, because the platform deploys only what
+ * main declares, and `functionconfig.test.ts` will not let main declare it
+ * until it is live or pending. A function deployed by hand from its branch
+ * first reads `runner` honestly. `first` says so, and says the merge that adds
+ * it hands it to the platform — whoever takes the next reading drops the note.
+ * A `first` row that survives that reading is the freeze this test exists for.
+ */
 function frozen(rows: Row[]): string[] {
-  return rows.filter((r) => r.pipeline === 'runner').map((r) => `${r.slug} (${r.pipeline})`);
+  return rows
+    .filter((r) => r.pipeline === 'runner' && r.note !== 'first')
+    .map((r) => `${r.slug} (${r.pipeline})`);
 }
 
 /**
@@ -126,6 +142,17 @@ describe('the functions snapshot is a reading, and still reads like one', () => 
       ]),
     ).toEqual(['push (runner)', 'calendar (runner)']);
     expect(frozen([{ slug: 'claude', version: '44', pipeline: 'platform', at }])).toEqual([]);
+    // A first deploy is excused only as a runner row that says so.
+    expect(frozen([{ slug: 'new-fn', version: '1', pipeline: 'runner', at, note: 'first' }])).toEqual([]);
+    expect(frozen([{ slug: 'new-fn', version: '1', pipeline: 'runner', at }])).toEqual(['new-fn (runner)']);
+  });
+
+  it('accepts no note but `first`, and `first` only on a runner row', () => {
+    for (const r of reading()) {
+      if (r.note === undefined) continue;
+      expect(r.note, `unknown note on ${r.slug}`).toBe('first');
+      expect(r.pipeline, `${r.slug} is marked first but was not deployed by hand`).toBe('runner');
+    }
   });
 
   it('replaces a pending row with a real reading within two weeks', () => {
