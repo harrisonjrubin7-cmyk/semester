@@ -936,8 +936,8 @@ argued for on its own rather than smuggled in here.
 
 ### The reading of 28 September
 
-The ledger was read again through the Supabase connector: ninety-three rows,
-ending at `20260928210000  support_tickets`. Every row has a file here. It
+The ledger was read again through the Supabase connector: ninety-four rows,
+ending at `20260928220000  private_beta`. Every row has a file here. It
 also held a finding the snapshot could not show.
 
 `20260928200000_scim_gateway` (#819) and `20260928210000_support_tickets`
