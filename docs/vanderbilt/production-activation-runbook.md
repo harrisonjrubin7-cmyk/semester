@@ -20,6 +20,7 @@ Configure these as server-only Vercel values in Preview and Production separatel
 - `SEMESTER_JOURNAL_KEY`
 - `SEMESTER_INSTITUTION_NAME`
 - `SEMESTER_SSO_DOMAIN`, `SEMESTER_SSO_LABEL`
+- `SEMESTER_SCIM=on` and `SEMESTER_SCIM_PUBLIC_URL` only after a SCIM credential is issued, its group mappings are approved, and a sandbox IdP has provisioned and deprovisioned a test user (`docs/INSTITUTIONAL-SSO-LAUNCH-READINESS.md`)
 - `SEMESTER_MINIMUM_ADAPTERS`
 - `SEMESTER_INTEGRATIONS_READY=1` only after required adapters pass authoritative synthetic checks
 - `SEMESTER_MONITORING_READY=1` only after alert delivery is exercised
