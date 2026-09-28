@@ -18,7 +18,7 @@ evidence. A role is enabled for a customer only at **launch approved**.
 | modeled | Role/capability/scope exists in authorization model | 63 | 63 |
 | provisionable | Admin/SCIM/SSO/manual workflow can assign and revoke it | 0 | 0 |
 | usable | Role-specific screens and workflow are implemented | 0 | 23 |
-| secure | Positive and negative authorization tests pass | 0 | 40 |
+| secure | Positive and negative authorization tests pass | 0 | 41 |
 | supportable | Training, runbook, audit trail, support routing, and recovery exist | 0 | 2 |
 | launch-approved | All required role acceptance criteria and sign-offs pass | 0 | 0 |
 
@@ -107,7 +107,7 @@ Two further limits on what the columns below prove:
 | Role | State | Def · Mod · Prov · Use · Sec · Sup · Appr | Capabilities | Interface | Authorization checks | Runbook | Training | Must be able to | Must never |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `platform_admin` | modeled | ✓ ✓ · ✓ ✓ · · | `report:read`<br>`moderation:action`<br>`platform:configure` | `app/src/screens/Moderation.tsx` | `capabilities.check.sql`<br>`community.check.sql`<br>`governance.check.sql`<br>`integration-quality.check.sql`<br>`lti-capability.check.sql`<br>`rolegrants.check.sql` | — | — | Maintain platform operations under least privilege and audit | Automatic access to all application data |
-| `support_agent` | modeled | ✓ ✓ · · · · · | `support:ticket` | — | — | `docs/market-readiness/SUPPORT_PLAYBOOK.md` | — | Handle support tickets and approved support-access sessions | Student data without live student-created grant |
+| `support_agent` | modeled | ✓ ✓ · · ✓ · · | `support:ticket` | — | `support-tickets.check.sql` | `docs/market-readiness/SUPPORT_PLAYBOOK.md` | — | Handle support tickets and approved support-access sessions | Student data without live student-created grant |
 | `incident_responder` | modeled | ✓ ✓ · · ✓ · · | `killswitch:engage`<br>`incident:communicate` | — | `governance.check.sql`<br>`integration-control-plane.check.sql` | `docs/CRISIS-RESPONSE-RUNBOOK.md` | — | Engage a kill switch and communicate an incident | Student data beyond what the incident requires |
 | `moderator` | modeled | ✓ ✓ · ✓ ✓ ✓ · | `report:read`<br>`moderation:action`<br>`review:moderate`<br>`opportunity:moderate` | `app/src/screens/Moderation.tsx`<br>`app/src/components/ListingDesk.tsx` | `capabilities.check.sql`<br>`community.check.sql`<br>`expansion.check.sql`<br>`listings.check.sql`<br>`moderation-audit.check.sql`<br>`my-capabilities.check.sql`<br>`reports.check.sql`<br>`rolegrants.check.sql` | `docs/CAMPUS-MODERATION-SOP.md` | `docs/VOLUNTEER-MODERATOR-PROGRAM.md` | Moderate reviews/opportunities, with author access strictly audited | Unrelated private student data |
 | `trust_safety_reviewer` | modeled | ✓ ✓ · ✓ ✓ ✓ · | `community:review` | `app/src/components/community/Escalation.tsx` | `community.check.sql` | `docs/CAMPUS-MODERATION-SOP.md`<br>`docs/CAMPUS-ESCALATION-POLICY.md` | `docs/VOLUNTEER-MODERATOR-PROGRAM.md` | Review community cases and propose actions for a second reviewer | Private student data outside the case |

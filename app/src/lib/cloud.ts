@@ -1127,6 +1127,13 @@ export const OWNED_TABLES: OwnedTable[] = [
   { table: 'peer_mentor_offers', column: 'user_id' },
   { table: 'alumni_mentor_offers', column: 'user_id' },
 
+  // ── Support tickets ─────────────────────────────────────────────────────
+  // Questions to Semester's own support staff, not to a campus office. No API
+  // role holds any grant on either table (`20260928210000_support_tickets.sql`),
+  // so the way out is the student's own function; messages go with their ticket.
+  { table: 'support_tickets', column: null, via: 'forget_my_support_tickets' },
+  { table: 'support_ticket_messages', column: null, cascadesFrom: 'support_tickets' },
+
   { table: 'forms', column: 'owner' },
   // Taken by the line above rather than by a request of its own:
   // `form_responses.form_id` references `forms` with `on delete cascade`, and

@@ -17,6 +17,12 @@ export interface ExperienceFlags {
    */
   institutionalOperations: FeatureState;
   /**
+   * Asking Semester's own support about the app, on Help. Never on in an
+   * institutional preview: a ticket is a real message to real staff, which a
+   * synthetic preview account must not send.
+   */
+  supportTickets: FeatureState;
+  /**
    * The staff campaign manager (lib/gtm, gtm_* tables). RLS decides what each
    * account sees; activation also needs `module.campaign_manager` in production.
    */
@@ -43,6 +49,7 @@ export function experienceFlags(env: PreviewEnv): ExperienceFlags {
     humanHelp: featureState(env, 'VITE_HUMAN_HELP', preview),
     integrationDashboard: featureState(env, 'VITE_INTEGRATION_DASHBOARD', preview),
     institutionalOperations: featureState(env, 'VITE_INSTITUTIONAL_OPERATIONS', preview),
+    supportTickets: featureState(env, 'VITE_SUPPORT_TICKETS', false),
     campaignManager: featureState(env, 'VITE_CAMPAIGN_MANAGER', preview),
   };
 }
