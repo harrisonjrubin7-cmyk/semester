@@ -82,8 +82,8 @@ red. The file was then restored.
 | --- | --- | --- |
 | Synthetic monitoring | `.github/workflows/production-smoke.yml` (hourly) | Covered for public paths |
 | Incident / degraded / read-only / kill switch | `app/src/lib/flags.test.ts`, `supabase/integration-hardening.check.sql` (kill switches); `app/src/lib/rollback.test.ts` (runbook preconditions) | Kill switches covered. **Owed**: no degraded banner or read-only mode exists |
-| Support ticket with consented context | `supabase/support-access.check.sql` (consented, aggregate-only, 7-day, revocable access) | Access covered. **Owed**: no ticketing exists to attach the context to |
-| Backup / restore and load test | `supabase/restore.sh` (local rehearsal, not in CI) | **Owed**: production has never been restored, and no load test exists |
+| Support ticket with consented context | `supabase/support-access.check.sql` (consented, aggregate-only, 7-day, revocable access); `supabase/support-tickets.check.sql` (tickets, off by default, 24 h / 72 h targets by category) | Access and tickets covered. **Owed**: a ticket does not yet attach a consented context grant, and nobody owns the queue |
+| Backup / restore and load test | `supabase/restore.sh` (in CI, `.github/workflows/ci.yml` “Rehearse a backup and restore”: dump, restore into an empty database, compare six ways) | Rehearsal covered. **Owed**: production has never been restored, so no RTO or RPO can be stated, and no load test exists |
 
 ## Analytics and content (Phases 5–6)
 
