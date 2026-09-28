@@ -353,6 +353,17 @@ export const VERDICT_MEANING: Record<Verdict, string> = {
 };
 
 /**
+ * A gate area's level is its **lowest** row, never a median: the pack says an
+ * unresolved mandatory gate is NO-GO, so one unmet control fails the area
+ * however many others pass. (Checklist items on the pillars keep the
+ * crosswalk's median, because an item is a reading, not a gate.) Pure.
+ */
+export function areaLevel(levels: readonly Level[], ceiling: Level = 4): Level {
+  if (levels.length === 0) return 0;
+  return Math.min(ceiling, ...levels) as Level;
+}
+
+/**
  * The pack's decision, from the gate areas' levels. Both AI and integrations
  * are enabled in this repository, so every area is applied. A required area
  * at 0 is a failed mandatory gate; at 1 it is a condition; at 2 or above it

@@ -531,21 +531,28 @@ export const TIERS: readonly { tier: Tier; trigger: string; review: string }[] =
 ];
 
 /**
- * Where Semester lands when a university applies the policy to it. `high`,
- * on four triggers, each pointing at the row that makes it true; not
- * `critical`, and the reasons are named so the line can be re-read when one
- * of them changes.
+ * Where Semester lands when a university applies the policy to it.
+ * `critical`, on one trigger the tier table names outright — grades are
+ * high-stakes data, and LTI grade services write scores into the
+ * institution's gradebook — with the four `high` triggers underneath it.
+ * The other five critical triggers are absent, and each absence is named
+ * with the row that makes it true, so the line is re-read when a row moves.
+ * Not `high`: a tier is the highest trigger present, and a reviewer who
+ * found the grade write after being told `high` would be right to distrust
+ * the rest of the page.
  */
-export const SELF_TIER: Tier = 'high';
+export const SELF_TIER: Tier = 'critical';
 
-export const SELF_TRIGGERS: readonly { trigger: string; because: string; rows: readonly string[] }[] = [
-  { trigger: 'Education-record data', because: 'A student’s synced courses, grades and plan are education records once an institution is the source.', rows: ['FERPA-1', 'STU-011'] },
-  { trigger: 'SSO, SCIM and LTI', because: 'SAML sign-in with provisioning, SCIM lifecycle and an LTI 1.3 launch exist.', rows: ['IAM-1', 'IAM-004', 'INT-002'] },
-  { trigger: 'AI', because: 'Two AI runtimes: the metered edge function and the institution gateway.', rows: ['AI-1', 'AI-003'] },
-  { trigger: 'Community and student-generated content', because: 'Clubs, groups and a moderated report queue.', rows: ['TS-1', 'UOS-003'] },
+export const SELF_TRIGGERS: readonly { trigger: string; tier: Tier; because: string; rows: readonly string[] }[] = [
+  { trigger: 'Grades and grade passback', tier: 'critical', because: 'Synced grades are high-stakes education records, and LTI Assignment and Grade Services write scores into the institution’s own gradebook. Semester grades nothing itself: the gradebook is designed only, and no AI may assign a grade.', rows: ['INT-005', 'EDT-3', 'LMS-011', 'AI-009'] },
+  { trigger: 'Education-record data', tier: 'high', because: 'A student’s synced courses, grades and plan are education records once an institution is the source.', rows: ['FERPA-1', 'STU-011'] },
+  { trigger: 'SSO, SCIM and LTI', tier: 'high', because: 'SAML sign-in with provisioning, SCIM lifecycle and an LTI 1.3 launch exist.', rows: ['IAM-1', 'IAM-004', 'INT-002'] },
+  { trigger: 'AI', tier: 'high', because: 'Two AI runtimes: the metered edge function and the institution gateway.', rows: ['AI-1', 'AI-003'] },
+  { trigger: 'Community and student-generated content', tier: 'high', because: 'Clubs, groups and a moderated report queue.', rows: ['TS-1', 'UOS-003'] },
 ];
 
-export const NOT_CRITICAL: readonly { trigger: string; why: string; rows: readonly string[] }[] = [
+/** The critical triggers that are absent, each held to a row. */
+export const NOT_TRIGGERED: readonly { trigger: string; why: string; rows: readonly string[] }[] = [
   { trigger: 'Payments', why: 'Billing stays out (D-009); the bill screen reads a statement and holds no card data.', rows: ['COM-001'] },
   { trigger: 'Proctoring', why: 'No proctoring or surveillance, held mechanically by the boundaries register.', rows: ['TRUST-003'] },
   { trigger: 'Basic-needs intake', why: 'The navigator is a directory that routes to an office; nothing is taken in, and nobody is notified.', rows: ['STU-012'] },
@@ -584,6 +591,11 @@ export const REQUIRED_EVIDENCE: readonly Artifact[] = [
   { artifact: 'Data-export and offboarding guide', key: 'export_and_offboarding', have: 'draft', path: 'docs/DATA-PORTABILITY-AND-OFFBOARDING.md', note: 'The student export exists and is tested; the institutional offboarding path is written, not built (FERPA-7).' },
   { artifact: 'Independent security assessment or penetration-test summary', key: 'security_assessment_or_penetration_test_summary', have: 'none', path: null, note: 'The plan exists; no test has been performed (VULN-2).' },
   { artifact: 'AI feature inventory, providers, data flow, training terms, user notice, decision boundaries, evaluation and incident process', key: 'ai_data_use_and_provider_disclosure', have: 'draft', path: 'docs/operating-model/AI-ASSURANCE.md', note: 'The audit matrix and the no-training policy draft; provider terms are not on file and no evaluation has run (AI-2).' },
+  // What the critical tier adds to the high tier’s package.
+  { artifact: 'Data protection or privacy impact assessment (DPIA/PIA)', key: 'dpia_or_pia', have: 'none', path: null, note: 'Owed by the critical tier; the module privacy model is the material one would be written from, not the assessment.' },
+  { artifact: 'Threat model', key: 'threat_model', have: 'draft', path: 'docs/INTEGRATION-THREAT-MODEL.md', note: 'The integration threat model is written; the platform threat model is designed only (SEC-002).' },
+  { artifact: 'Legal review', key: 'legal_review', have: 'none', path: null, note: 'No counsel has reviewed any document; the trust index lists what blocks a signature.' },
+  { artifact: 'Executive risk acceptance and periodic re-review', key: 'executive_risk_acceptance', have: 'none', path: null, note: 'The risk register’s exception record is empty and the founder seat, which accepts risk, is vacant.' },
 ];
 
 /** The gates before a `high` or `critical` service may go live, each resting on rows. */
@@ -661,7 +673,7 @@ export function allRests(): string[] {
   for (const i of RUBRIC_ITEMS) for (const id of i.rests) ids.add(id);
   for (const o of AI_OVERLAY) for (const id of o.rests) ids.add(id);
   for (const t of SELF_TRIGGERS) for (const id of t.rows) ids.add(id);
-  for (const n of NOT_CRITICAL) for (const id of n.rows) ids.add(id);
+  for (const n of NOT_TRIGGERED) for (const id of n.rows) ids.add(id);
   for (const g of LAUNCH_GATES) for (const id of g.rests) ids.add(id);
   return [...ids];
 }

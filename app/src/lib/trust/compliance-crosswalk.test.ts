@@ -7,7 +7,7 @@ import { REGISTER } from '../masterregister';
 import { cell, controlLine, link, renderedFrom, table } from '../ops/render';
 import {
   AI_OVERLAY, CEILING_WITHOUT_EVIDENCE, DECISION_STATES, DOMAINS, EDUCAUSE, EVIDENCE_DIR, FIT, INTAKE_RULE, LAUNCH_GATES, MASTER_LEVEL, MATURITY_LEVEL,
-  NOT_CRITICAL, REASSESSMENT, REGISTER_LEVEL, REQUIRED_EVIDENCE, RUBRIC_ITEMS, RUBRIC_TITLE, SCALE, SELF_TIER, SELF_TRIGGERS, SOURCES, TIERS, allRests, dashboard,
+  NOT_TRIGGERED, REASSESSMENT, REGISTER_LEVEL, REQUIRED_EVIDENCE, RUBRIC_ITEMS, RUBRIC_TITLE, SCALE, SELF_TIER, SELF_TRIGGERS, SOURCES, TIERS, allRests, dashboard,
   registerOf, score,
   type Level, type Register, type Rubric, type Standing,
 } from './compliance-crosswalk';
@@ -133,16 +133,22 @@ describe('the compliance crosswalk', () => {
     for (const o of AI_OVERLAY) expect(o.rests.length, o.domain).toBeGreaterThan(0);
   });
 
-  it('puts Semester at the tier its triggers say, and says why it is not the one above', () => {
+  it('puts Semester at the highest tier any trigger reaches, and names the critical triggers that are absent', () => {
     expect(TIERS.map((t) => t.tier)).toEqual(['low', 'moderate', 'high', 'critical']);
-    expect(SELF_TIER).toBe('high');
-    expect(SELF_TRIGGERS.length).toBeGreaterThanOrEqual(3);
-    expect(NOT_CRITICAL.length).toBeGreaterThanOrEqual(4);
-    for (const t of [...SELF_TRIGGERS, ...NOT_CRITICAL]) expect(t.rows.length, t.trigger).toBeGreaterThan(0);
+    const order = TIERS.map((t) => t.tier);
+    const highest = SELF_TRIGGERS.map((t) => t.tier).sort((a, b) => order.indexOf(b) - order.indexOf(a))[0];
+    expect(SELF_TIER).toBe(highest); // the tier is the highest trigger present, never a softer reading
+    expect(SELF_TIER).toBe('critical');
+    expect(SELF_TRIGGERS.filter((t) => t.tier === 'critical').length).toBeGreaterThan(0);
+    expect(SELF_TRIGGERS.length).toBeGreaterThanOrEqual(4);
+    expect(NOT_TRIGGERED.length).toBeGreaterThanOrEqual(4);
+    for (const t of [...SELF_TRIGGERS, ...NOT_TRIGGERED]) expect(t.rows.length, t.trigger).toBeGreaterThan(0);
+    // The critical tier owes more than the high tier: the package carries its four additions.
+    for (const key of ['dpia_or_pia', 'threat_model', 'legal_review', 'executive_risk_acceptance']) expect(REQUIRED_EVIDENCE.some((a) => a.key === key), key).toBe(true);
   });
 
   it('cites a file for every artifact it says it has or has drafted, and none for one it lacks', () => {
-    expect(REQUIRED_EVIDENCE.length).toBeGreaterThanOrEqual(14);
+    expect(REQUIRED_EVIDENCE.length).toBeGreaterThanOrEqual(18);
     for (const a of REQUIRED_EVIDENCE) {
       expect(/^[a-z0-9_]+$/.test(a.key), a.key).toBe(true);
       if (a.have === 'none') expect(a.path, a.key).toBeNull();
@@ -154,7 +160,7 @@ describe('the compliance crosswalk', () => {
     }
     expect(REQUIRED_EVIDENCE.some((a) => a.have === 'none')).toBe(true);
     // Nothing that only a third party can produce may be marked `have`.
-    for (const a of REQUIRED_EVIDENCE.filter((a) => /penetration|ACR|VPAT|TrustEd|HECVAT/i.test(a.artifact))) expect(a.have, a.key).not.toBe('have');
+    for (const a of REQUIRED_EVIDENCE.filter((a) => /penetration|ACR|VPAT|TrustEd|HECVAT|legal review|risk acceptance|DPIA/i.test(a.artifact))) expect(a.have, a.key).not.toBe('have');
     // The security-contact note says the security seat is vacant; it must go when the seat is filled.
     const contact = REQUIRED_EVIDENCE.find((a) => a.key === 'security_contact')!;
     expect(contact.note).toMatch(/security seat is vacant/);
@@ -335,19 +341,21 @@ function render(all: Map<string, Standing>): string {
     '',
     ...table(['Tier', 'Trigger', 'Review'], TIERS.map((t) => [`**${t.tier}**`, cell(t.trigger), cell(t.review)])),
     '',
-    `**Semester is a \`${SELF_TIER}\`-tier vendor**, on these triggers:`,
+    `**Semester is a \`${SELF_TIER}\`-tier vendor.** A tier is the highest trigger present, and these are present:`,
     '',
-    ...SELF_TRIGGERS.map((t) => `- **${t.trigger}.** ${t.because} (${withLevel(t.rows)})`),
+    ...SELF_TRIGGERS.map((t) => `- **${t.trigger}** (${t.tier}). ${t.because} (${withLevel(t.rows)})`),
     '',
-    'And not `critical`, for reasons that are each a row and are re-read when the row changes:',
+    'The other critical triggers are absent, for reasons that are each a row and are re-read when the row changes:',
     '',
-    ...NOT_CRITICAL.map((t) => `- **${t.trigger}.** ${t.why} (${withLevel(t.rows)})`),
+    ...NOT_TRIGGERED.map((t) => `- **${t.trigger}.** ${t.why} (${withLevel(t.rows)})`),
     '',
-    '### The evidence package a high-tier vendor owes',
+    `### The evidence package a ${SELF_TIER}-tier vendor owes`,
     '',
     `${REQUIRED_EVIDENCE.filter((a) => a.have === 'have').length} have, ${REQUIRED_EVIDENCE.filter((a) => a.have === 'draft').length} drafted,`,
     `${REQUIRED_EVIDENCE.filter((a) => a.have === 'none').length} none, of ${REQUIRED_EVIDENCE.length}. Nothing a third party produces is`,
-    'marked *have*, by test.',
+    'marked *have*, by test. The last four are what the critical tier adds to the',
+    'high tier’s package: an impact assessment, a threat model, legal review and',
+    'executive risk acceptance with periodic re-review.',
     '',
     ...table(
       ['Artifact', 'Key', 'Standing', 'Where', 'Note'],

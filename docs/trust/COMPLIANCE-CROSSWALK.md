@@ -235,14 +235,15 @@ vendor. Applied to Semester:
 | **high** | Education records, LTI/SIS/SCIM, AI, assessments, community, student-generated content, or a broad user population. | HECVAT, TrustEd evidence, ACR/VPAT, integration review, DPA, AI review. |
 | **critical** | Payments, proctoring, minors, health or basic-needs intake, agentic writes, high-stakes data or export. | Full HECVAT, DPIA/PIA, threat model, legal and executive approval, strict launch gates. |
 
-**Semester is a `high`-tier vendor**, on these triggers:
+**Semester is a `critical`-tier vendor.** A tier is the highest trigger present, and these are present:
 
-- **Education-record data.** A student’s synced courses, grades and plan are education records once an institution is the source. (FERPA-1 (0), STU-011 (2))
-- **SSO, SCIM and LTI.** SAML sign-in with provisioning, SCIM lifecycle and an LTI 1.3 launch exist. (IAM-1 (2), IAM-004 (2), INT-002 (2))
-- **AI.** Two AI runtimes: the metered edge function and the institution gateway. (AI-1 (2), AI-003 (1))
-- **Community and student-generated content.** Clubs, groups and a moderated report queue. (TS-1 (1), UOS-003 (1))
+- **Grades and grade passback** (critical). Synced grades are high-stakes education records, and LTI Assignment and Grade Services write scores into the institution’s own gradebook. Semester grades nothing itself: the gradebook is designed only, and no AI may assign a grade. (INT-005 (1), EDT-3 (2), LMS-011 (1), AI-009 (2))
+- **Education-record data** (high). A student’s synced courses, grades and plan are education records once an institution is the source. (FERPA-1 (0), STU-011 (2))
+- **SSO, SCIM and LTI** (high). SAML sign-in with provisioning, SCIM lifecycle and an LTI 1.3 launch exist. (IAM-1 (2), IAM-004 (2), INT-002 (2))
+- **AI** (high). Two AI runtimes: the metered edge function and the institution gateway. (AI-1 (2), AI-003 (1))
+- **Community and student-generated content** (high). Clubs, groups and a moderated report queue. (TS-1 (1), UOS-003 (1))
 
-And not `critical`, for reasons that are each a row and are re-read when the row changes:
+The other critical triggers are absent, for reasons that are each a row and are re-read when the row changes:
 
 - **Payments.** Billing stays out (D-009); the bill screen reads a statement and holds no card data. (COM-001 (1))
 - **Proctoring.** No proctoring or surveillance, held mechanically by the boundaries register. (TRUST-003 (1))
@@ -250,11 +251,13 @@ And not `critical`, for reasons that are each a row and are re-read when the row
 - **Minors.** The service is not directed at children; dual enrollment is identified by the institution, not guessed. The stated minimum age is still owed. (COPPA-1 (0), COPPA-3 (1))
 - **Agentic writes.** No consequential write without exact review and confirmation; the two-phase journal never retries an uncertain action. (AI-009 (2))
 
-### The evidence package a high-tier vendor owes
+### The evidence package a critical-tier vendor owes
 
-3 have, 8 drafted,
-5 none, of 16. Nothing a third party produces is
-marked *have*, by test.
+3 have, 9 drafted,
+8 none, of 20. Nothing a third party produces is
+marked *have*, by test. The last four are what the critical tier adds to the
+high tier’s package: an impact assessment, a threat model, legal review and
+executive risk acceptance with periodic re-review.
 
 | Artifact | Key | Standing | Where | Note |
 | --- | --- | --- | --- | --- |
@@ -274,6 +277,10 @@ marked *have*, by test.
 | Data-export and offboarding guide | `export_and_offboarding` | Draft | [`docs/DATA-PORTABILITY-AND-OFFBOARDING.md`](../DATA-PORTABILITY-AND-OFFBOARDING.md) | The student export exists and is tested; the institutional offboarding path is written, not built (FERPA-7). |
 | Independent security assessment or penetration-test summary | `security_assessment_or_penetration_test_summary` | None | — | The plan exists; no test has been performed (VULN-2). |
 | AI feature inventory, providers, data flow, training terms, user notice, decision boundaries, evaluation and incident process | `ai_data_use_and_provider_disclosure` | Draft | [`docs/operating-model/AI-ASSURANCE.md`](../operating-model/AI-ASSURANCE.md) | The audit matrix and the no-training policy draft; provider terms are not on file and no evaluation has run (AI-2). |
+| Data protection or privacy impact assessment (DPIA/PIA) | `dpia_or_pia` | None | — | Owed by the critical tier; the module privacy model is the material one would be written from, not the assessment. |
+| Threat model | `threat_model` | Draft | [`docs/INTEGRATION-THREAT-MODEL.md`](../INTEGRATION-THREAT-MODEL.md) | The integration threat model is written; the platform threat model is designed only (SEC-002). |
+| Legal review | `legal_review` | None | — | No counsel has reviewed any document; the trust index lists what blocks a signature. |
+| Executive risk acceptance and periodic re-review | `executive_risk_acceptance` | None | — | The risk register’s exception record is empty and the founder seat, which accepts risk, is vacant. |
 
 ### The launch gates
 

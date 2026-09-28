@@ -253,23 +253,23 @@ None has an owner, a last-tested date or an escalation path in the pack’s sens
 | **GO WITH CONDITIONS** | No P0 risk remains. Time-bound P1 and P2 conditions have owners, target dates, mitigation, customer communication and executive acceptance. |
 | **NO-GO** | A P0 or unresolved mandatory gate exists: security or privacy breach risk, a critical accessibility failure, data-loss or grade-integrity risk, an unsupported claim, an untested recovery path, or no accountable owner. |
 
-Thirteen areas, each resting on rows and launch gates. A required area at 0 is a failed mandatory gate; at 1 it is a condition. **Today: NO-GO** — 2 areas at 0, 9 at 1, 2 passing.
+Thirteen areas, each resting on rows and launch gates. **An area’s level is its lowest row**, not a median: one unmet control fails the area, because the pack says an unresolved mandatory gate is NO-GO. A required area at 0 is a failed mandatory gate; at 1 it is a condition. **Today: NO-GO** — 7 areas at 0, 6 at 1, 0 passing.
 
-| Area | Gate | Required for GO | Rests on (level) | Level |
+| Area | Gate | Required for GO | Rests on (level) | Lowest |
 | --- | --- | --- | --- | ---: |
-| **Scope** | Enabled and excluded features are explicit. | Yes | PRG-003 (1), PRG-007 (2), gate:known-limitations (2) | 2 |
+| **Scope** | Enabled and excluded features are explicit. | Yes | PRG-003 (1), PRG-007 (2), gate:known-limitations (2) | 1 |
 | **Ownership** | Product, technical, operational, support, security, privacy and accessibility owners are assigned. | Yes | PRG-001 (1), gate:escalation-owners (1) | 1 |
-| **Data** | Data map, permissions, retention, source and freshness, and export and deletion behaviour are documented. | Yes | PRIV-1 (2), PRIV-2 (2), TRUST-001 (2), gate:data-scope (0) | 2 |
-| **Security** | Authentication, tenant isolation, secrets, logging, vulnerability gates and the incident route are tested. | Yes | IAM-008 (2), SDLC-2 (2), SEC-006 (1), VULN-1 (0), IR-1 (1) | 1 |
+| **Data** | Data map, permissions, retention, source and freshness, and export and deletion behaviour are documented. | Yes | PRIV-1 (2), PRIV-2 (2), TRUST-001 (2), gate:data-scope (0) | 0 |
+| **Security** | Authentication, tenant isolation, secrets, logging, vulnerability gates and the incident route are tested. | Yes | IAM-008 (2), SDLC-2 (2), SEC-006 (1), VULN-1 (0), IR-1 (1) | 0 |
 | **Accessibility** | Critical workflows are tested; no unresolved critical barrier; alternatives documented. | Yes | A11Y-001 (2), A11Y-3 (0), gate:no-blockers (0) | 0 |
 | **Reliability** | SLOs, monitoring, alerting, status communications, dependency health and runbooks are ready. | Yes | SRE-001 (2), SRE-002 (1), SRE-010 (1), gate:operations-live (1) | 1 |
-| **Recovery** | Backup restore, rollback, reconciliation and failure behaviour are tested. | Yes | SRE-005 (1), BCP-1 (0), gate:backup-restore (1), gate:flags-rollback (1) | 1 |
+| **Recovery** | Backup restore, rollback, reconciliation and failure behaviour are tested. | Yes | SRE-005 (1), BCP-1 (0), gate:backup-restore (1), gate:flags-rollback (1) | 0 |
 | **Performance** | Peak-load and capacity evidence meets the defined thresholds. | Yes | SRE-007 (0), SRE-009 (1) | 0 |
-| **AI** | Provider, policy, data use, evaluation, monitoring and disable controls are approved. | If AI is enabled (it is) | AI-1 (2), AI-2 (0), AI-006 (1), AI-012 (2) | 1 |
+| **AI** | Provider, policy, data use, evaluation, monitoring and disable controls are approved. | If AI is enabled (it is) | AI-1 (2), AI-2 (0), AI-006 (1), AI-012 (2) | 0 |
 | **Integration** | Sandbox validation, scopes, reconciliation, failure fallback and a customer owner are approved. | If integrations are enabled (they are) | INT-001 (1), INT-014 (1), INT-1 (1) | 1 |
 | **Support** | Help, escalation, incident communication and the implementation and hypercare plan are ready. | Yes | SUP-001 (2), SUP-1 (1), IMP-001 (1), gate:onboarding-support (1) | 1 |
 | **Commercial** | Entitlement, price, invoicing, contract, support tier and renewal and exit terms are ready. | Yes | COM-001 (1), COM-002 (1), LEG-002 (1), gate:terms-reviewed (1) | 1 |
-| **Evidence** | All test results and sign-offs are stored; open exceptions are approved and time-bound. | Yes | SEC-011 (1), GOV-2 (0), gate:pilot-outcome (1) | 1 |
+| **Evidence** | All test results and sign-offs are stored; open exceptions are approved and time-bound. | Yes | SEC-011 (1), GOV-2 (0), gate:pilot-outcome (1) | 0 |
 
 ### The review packet
 

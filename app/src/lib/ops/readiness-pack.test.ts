@@ -7,7 +7,7 @@ import { REGISTER } from '../masterregister';
 import { MASTER_LEVEL, MATURITY_LEVEL, REGISTER_LEVEL, registerOf, score, type Level } from '../trust/compliance-crosswalk';
 import {
   CADENCES, DECISION_DOMAINS, DEPENDENCIES, DRI_RULES, FINAL_STANDARD, GATE, INITIATIVES, PACKET, PILLARS, PLAN_FIELDS, RULE, RUNBOOKS, RUNBOOK_STEPS, SIGNOFFS,
-  SOURCES, VERDICT_MEANING, WORKSTREAMS, allPaths, allRests, verdict,
+  SOURCES, VERDICT_MEANING, WORKSTREAMS, allPaths, allRests, areaLevel, verdict,
   type Priority, type Required,
 } from './readiness-pack';
 import { cell, controlLine, link, renderedFrom, table } from './render';
@@ -129,14 +129,27 @@ describe('the operational readiness pack', () => {
     for (const r of RUNBOOKS) if (r.path) expect(/last[- ]tested:\s*\d{4}/i.test(read(r.path)), `${r.path} carries a tested date the page does not show`).toBe(false);
   });
 
+  it('scores a gate area by its lowest row, so one unmet control fails the area', () => {
+    expect(areaLevel([2, 2, 0])).toBe(0);
+    expect(areaLevel([2, 1, 2])).toBe(1);
+    expect(areaLevel([2, 2, 2])).toBe(2);
+    expect(areaLevel([4, 4], 2)).toBe(2);
+    expect(areaLevel([])).toBe(0);
+    expect(score([2, 2, 0])).toBe(2); // the control: the median would have passed it
+  });
+
   it('decides GO, GO WITH CONDITIONS or NO-GO from the gates, and decides NO-GO today', () => {
     expect(verdict([{ required: 'yes', level: 2 }, { required: 'if-ai', level: 0 }], { ai: false, integrations: false })).toBe('go');
     expect(verdict([{ required: 'yes', level: 2 }, { required: 'if-ai', level: 0 }])).toBe('no-go');
     expect(verdict([{ required: 'yes', level: 2 }, { required: 'yes', level: 1 }])).toBe('go-with-conditions');
     expect(verdict([{ required: 'yes', level: 2 }, { required: 'yes', level: 3 }])).toBe('go');
     expect(GATE).toHaveLength(13);
-    const today = GATE.map((g) => ({ required: g.required, level: score(g.rests.map(level), ceiling()) }));
+    const today = GATE.map((g) => ({ required: g.required, level: areaLevel(g.rests.map(level), ceiling()) }));
     expect(verdict(today)).toBe('no-go');
+    // A required area with one row at 0 is 0 whatever the rest: the finding that made this a min.
+    const data = GATE.find((g) => g.area === 'Data')!;
+    expect(data.rests.map(level)).toContain(0);
+    expect(areaLevel(data.rests.map(level), ceiling())).toBe(0);
     expect(Object.keys(VERDICT_MEANING)).toEqual(['go', 'go-with-conditions', 'no-go']);
     for (const r of ['yes', 'if-ai', 'if-integration'] as Required[]) expect(GATE.some((g) => g.required === r), r).toBe(true);
   });
@@ -176,7 +189,7 @@ function render(all: Map<string, Level>): string {
   const holder = (seat: string) => COUNCIL.find((c) => c.seat === seat)?.holder ?? '*vacant*';
   const held = COUNCIL.filter((c) => c.holder !== null);
   const heldLine = held.length ? `${held.length} of ${COUNCIL.length} seats are held (${held.map((c) => `\`${c.seat}\` — ${c.holder}`).join(', ')}), the rest vacant` : 'No seat is held';
-  const today = GATE.map((g) => ({ ...g, level: itemScore(g.rests) }));
+  const today = GATE.map((g) => ({ ...g, level: areaLevel(g.rests.map(lv), cap) }));
   const decision = verdict(today);
   const VERDICT_TITLE = { go: 'GO', 'go-with-conditions': 'GO WITH CONDITIONS', 'no-go': 'NO-GO' };
   const REQUIRED_TITLE: Record<Required, string> = { yes: 'Yes', 'if-ai': 'If AI is enabled (it is)', 'if-integration': 'If integrations are enabled (they are)' };
@@ -271,9 +284,9 @@ function render(all: Map<string, Level>): string {
     '',
     ...table(['Outcome', 'Meaning'], (Object.keys(VERDICT_MEANING) as (keyof typeof VERDICT_MEANING)[]).map((k) => [`**${VERDICT_TITLE[k]}**`, cell(VERDICT_MEANING[k])])),
     '',
-    `Thirteen areas, each resting on rows and launch gates. A required area at 0 is a failed mandatory gate; at 1 it is a condition. **Today: ${VERDICT_TITLE[decision]}** — ${today.filter((g) => g.level === 0).length} areas at 0, ${today.filter((g) => g.level === 1).length} at 1, ${today.filter((g) => g.level >= 2).length} passing.`,
+    `Thirteen areas, each resting on rows and launch gates. **An area’s level is its lowest row**, not a median: one unmet control fails the area, because the pack says an unresolved mandatory gate is NO-GO. A required area at 0 is a failed mandatory gate; at 1 it is a condition. **Today: ${VERDICT_TITLE[decision]}** — ${today.filter((g) => g.level === 0).length} areas at 0, ${today.filter((g) => g.level === 1).length} at 1, ${today.filter((g) => g.level >= 2).length} passing.`,
     '',
-    ...table(['Area', 'Gate', 'Required for GO', 'Rests on (level)', 'Level'], today.map((g) => [`**${g.area}**`, cell(g.gate), REQUIRED_TITLE[g.required], withLevel(g.rests), String(g.level)]), ['left', 'left', 'left', 'left', 'right']),
+    ...table(['Area', 'Gate', 'Required for GO', 'Rests on (level)', 'Lowest'], today.map((g) => [`**${g.area}**`, cell(g.gate), REQUIRED_TITLE[g.required], withLevel(g.rests), String(g.level)]), ['left', 'left', 'left', 'left', 'right']),
     '',
     '### The review packet',
     '',

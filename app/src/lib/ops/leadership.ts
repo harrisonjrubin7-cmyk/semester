@@ -360,9 +360,9 @@ export const PLAYS: readonly Item[] = [
     rows: ['COM-003', 'SEC-013'], standing: 'partial',
     evidence: [
       { path: 'app/src/lib/trustroom.test.ts', shows: 'the NDA room: named reviewer, expiring link, every read recorded' },
-      { path: 'docs/trust/COMPLIANCE-CROSSWALK.md', shows: 'the sixteen artifacts a high-tier vendor owes and what Semester could hand over today' },
+      { path: 'docs/trust/COMPLIANCE-CROSSWALK.md', shows: 'the twenty artifacts a critical-tier vendor owes and what Semester could hand over today' },
     ],
-    gap: 'Three artifacts exist, eight are drafts, five do not exist; the crosswalk page counts them. A day is possible when the drafts are in force.',
+    gap: 'Three artifacts exist, nine are drafts, eight do not exist; the crosswalk page counts them, and the critical tier (grade passback) adds an impact assessment, legal review and executive risk acceptance that nothing carries. A day is possible when the drafts are in force.',
   },
   {
     id: 'PL-09', item: 'Promise portability and prove it',
