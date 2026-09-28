@@ -1,5 +1,7 @@
 # Decision log — Semester unified platform
 
+> Owner, version, last and next review, status, supersedes and related decisions: [`SEMESTER-OPERATING-SYSTEM.md`](../SEMESTER-OPERATING-SYSTEM.md).
+
 Running log for the unified-platform programme. Settled, long-lived product
 decisions stay in [`/DECISIONS.md`](../DECISIONS.md); architecture decisions in
 [`docs/architecture/`](architecture/README.md). This file records the

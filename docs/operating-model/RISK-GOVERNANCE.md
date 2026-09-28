@@ -2,6 +2,8 @@
 
 <!-- Rendered from app/src/lib/governance/risk.ts by risk.test.ts. Edit the data, then run `npm run registers` from app/. -->
 
+> Owner, version, last and next review, status, supersedes and related decisions: [`SEMESTER-OPERATING-SYSTEM.md`](../../SEMESTER-OPERATING-SYSTEM.md).
+
 The bodies that decide, the register of what could go wrong, the appetite
 for each kind of risk, the rules an exception has to meet, the game days that
 would prove the runbooks, and what the board is told. Written as data in

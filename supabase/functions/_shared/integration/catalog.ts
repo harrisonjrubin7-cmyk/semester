@@ -7,6 +7,9 @@
  * no connector ingests by default. The SQL check constraints in
  * 20260927170000_integration_control_plane.sql spell the same lists, and
  * catalog.test.ts reads that file to keep the two from drifting.
+ *
+ * This file is the authoritative integration catalog. Its owner, version and
+ * review dates are held in SEMESTER-OPERATING-SYSTEM.md at the repository root.
  */
 import type { DataClass } from './classification.ts';
 

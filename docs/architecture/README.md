@@ -1,5 +1,7 @@
 # Architecture decision records
 
+> Owner, version, last and next review, status, supersedes and related decisions: [`SEMESTER-OPERATING-SYSTEM.md`](../../SEMESTER-OPERATING-SYSTEM.md).
+
 What §43 of the transformation command asks for: the significant decisions, and
 **why** rather than what.
 

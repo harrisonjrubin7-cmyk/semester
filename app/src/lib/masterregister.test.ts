@@ -200,6 +200,8 @@ function render(): string {
     '',
     '<!-- Rendered from app/src/lib/masterregister.ts by masterregister.test.ts. Edit the data, then run `npm run registers` from app/. -->',
     '',
+    '> Owner, version, last and next review, status, supersedes and related decisions: [`SEMESTER-OPERATING-SYSTEM.md`](../SEMESTER-OPERATING-SYSTEM.md).',
+    '',
     'Every requirement the Day-One Enterprise Launch Master Plan sets for Semester',
     'as a complete university platform — student platform, native LMS,',
     'interoperability, governed AI, campus modules, trust, reliability, support and',

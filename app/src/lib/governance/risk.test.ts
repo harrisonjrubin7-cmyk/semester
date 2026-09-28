@@ -1,6 +1,7 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { controlLine } from '../ops/render';
 import {
   APPETITE,
   BOARD_REPORT,
@@ -238,6 +239,8 @@ function render(): string {
     '# Risk governance',
     '',
     '<!-- Rendered from app/src/lib/governance/risk.ts by risk.test.ts. Edit the data, then run `npm run registers` from app/. -->',
+    '',
+    controlLine(DOC),
     '',
     'The bodies that decide, the register of what could go wrong, the appetite',
     'for each kind of risk, the rules an exception has to meet, the game days that',

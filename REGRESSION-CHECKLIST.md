@@ -1,5 +1,7 @@
 # REGRESSION-CHECKLIST.md
 
+> Owner, version, last and next review, status, supersedes and related decisions: [`SEMESTER-OPERATING-SYSTEM.md`](SEMESTER-OPERATING-SYSTEM.md).
+
 Every existing behaviour that must still work identically after the Workspace
 work. Run this at the end of **each** phase and report pass/fail before moving
 on, per §1 of the build prompt.

@@ -1,5 +1,7 @@
 # WCAG 2.2 UI audit scorecard
 
+> Owner, version, last and next review, status, supersedes and related decisions: [`SEMESTER-OPERATING-SYSTEM.md`](../SEMESTER-OPERATING-SYSTEM.md).
+
 A reusable scorecard for component and screen release review, and the first
 pass of it over the components the brief lists. Every score below cites the
 test, script or file it rests on. A score with no evidence is not given: those

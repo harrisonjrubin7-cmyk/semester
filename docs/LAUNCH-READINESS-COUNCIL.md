@@ -1,5 +1,7 @@
 # Launch Readiness Council
 
+> Owner, version, last and next review, status, supersedes and related decisions: [`SEMESTER-OPERATING-SYSTEM.md`](../SEMESTER-OPERATING-SYSTEM.md).
+
 Who decides whether Semester goes live for a cohort, what each seat decides,
 and the rules the decision follows. The decision itself is computed. The seats,
 gates and rules below are written as data in
