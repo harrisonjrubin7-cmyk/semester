@@ -565,11 +565,59 @@ textarea.tool-input {
   }
 }
 
-/* ── The platform, trust and buying pages (more.tsx) ────────────────────── */
+/* Claim statuses: the word is the signal; the border only echoes it. */
+.site-claims {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
 
-.site-table-wrap {
+.site-claim {
+  padding: 12px 0;
+  border-top: 1px solid var(--site-line);
+}
+
+.site-claim-text {
+  font-weight: 600;
+}
+
+.site-claim-scope {
+  display: block;
+  margin-top: 4px;
+}
+
+.site-status {
+  margin-right: 4px;
+  white-space: nowrap;
+}
+
+.site-status-available {
+  border-color: var(--site-accent);
+}
+
+.site-status-in-preparation,
+.site-status-planned {
+  color: var(--site-dim);
+}
+
+.site-legend {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+  gap: 12px 24px;
+  margin: 0;
+}
+
+.site-legend dt {
+  margin: 0;
+}
+
+.site-legend dd {
+  margin: 4px 0 0;
+  color: var(--site-dim);
+}
+
+.site-scroll {
   overflow-x: auto;
-  margin: 0 0 32px;
 }
 
 .site-table {
@@ -581,18 +629,15 @@ textarea.tool-input {
 .site-table caption {
   padding: 0 0 8px;
   color: var(--site-dim);
-  font-family: var(--site-heading);
-  letter-spacing: 0.06em;
   text-align: left;
-  text-transform: uppercase;
 }
 
 .site-table th,
 .site-table td {
-  padding: 10px 12px;
+  padding: 10px 12px 10px 0;
   border-top: 1px solid var(--site-line);
-  text-align: left;
   vertical-align: top;
+  text-align: left;
 }
 
 .site-table thead th {
@@ -600,31 +645,39 @@ textarea.tool-input {
   color: var(--site-dim);
   font-family: var(--site-heading);
   font-weight: 600;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .site-table tbody th {
   font-weight: 600;
 }
 
-.site-table tbody tr:nth-child(odd) {
+.site-router {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.site-router a {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 12px 16px;
+  border: 1px solid var(--site-line);
+  border-radius: var(--site-r-md);
   background: var(--site-panel);
+  text-decoration: none;
 }
 
-/* The four statuses. Each is a word first; the border only agrees with it. */
-.site-status-available {
-  border-color: var(--site-accent-deep);
+.site-router a:hover {
+  border-color: var(--site-accent);
 }
 
-.site-status-pilot,
-.site-status-planned {
-  border-color: var(--site-warn-line);
-  background: var(--site-warn-wash);
-}
-
-.site-status-services {
-  border-style: dashed;
-}
+/* ── Flows, definition lists and templates on the platform pages (more.tsx) ── */
 
 .site-flow {
   display: grid;

@@ -2,7 +2,9 @@ import type { ReactNode } from 'react';
 import { CONTACT_EMAIL, type SiteConfig } from './config';
 import { appHref, href } from './Layout';
 import { Cards, Hero, Section, Start } from './pages';
-import { AUTHORITIES, AVAILABILITY, BOUNDARIES, DEMO_PATHS, SERVICES, STATUS, TIERS } from './platform';
+import { claim } from '../lib/ops/claims';
+import { StatusBadge, StatusLegend } from './claims';
+import { AUTHORITIES, AVAILABILITY, BOUNDARIES, DEMO_PATHS, SERVICES, TIERS } from './platform';
 
 /*
  * The platform, trust and buying pages.
@@ -46,8 +48,8 @@ const mail = (subject: string) => `mailto:${CONTACT_EMAIL}?subject=${subject}`;
 
 export const Availability: Page = ({ config }) => (
   <>
-    <Hero title="What is available, to whom" lead="One table, so a plan is never mistaken for a product. Every row says which it is." />
-    <div className="site-table-wrap">
+    <Hero title="What is available, to whom" lead="One table, so a plan is never mistaken for a product. Every row carries the word the claims register gives it." />
+    <div className="site-scroll">
       <table className="site-table">
         <caption>Capabilities by plan, with the status of each</caption>
         <thead>
@@ -58,38 +60,35 @@ export const Availability: Page = ({ config }) => (
           </tr>
         </thead>
         <tbody>
-          {AVAILABILITY.map((c) => (
-            <tr key={c.name}>
-              <th scope="row">{c.name}</th>
-              {TIERS.map((t) => <td key={t.id}>{c.tiers[t.id]}</td>)}
-              <td><span className={`site-badge site-status-${c.status}`}>{STATUS[c.status].label}</span></td>
-            </tr>
-          ))}
+          {AVAILABILITY.map((row) => {
+            const c = claim(row.claim);
+            return (
+              <tr key={c.id} data-claim={c.id}>
+                <th scope="row">{c.claim}</th>
+                {TIERS.map((t) => <td key={t.id}>{row.tiers[t.id]}</td>)}
+                <td><StatusBadge c={c} /></td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
     <Section title="What each status means" id="av-status">
-      <dl className="site-dl">
-        {(Object.keys(STATUS) as (keyof typeof STATUS)[]).map((k) => (
-          <div key={k}>
-            <dt><span className={`site-badge site-status-${k}`}>{STATUS[k].label}</span></dt>
-            <dd>{STATUS[k].means}</dd>
-          </div>
-        ))}
-      </dl>
+      <StatusLegend />
     </Section>
     <Section title="The sentence behind each row" id="av-notes">
       <dl className="site-dl">
-        {AVAILABILITY.map((c) => (
-          <div key={c.name}>
-            <dt>{c.name}</dt>
-            <dd>{c.note}</dd>
+        {AVAILABILITY.map((row) => (
+          <div key={row.claim}>
+            <dt>{claim(row.claim).claim}</dt>
+            <dd>{row.note}</dd>
           </div>
         ))}
       </dl>
       <p className="site-small">
-        No institutional connection is live today. Anything marked Pilot or Planned for an institution starts read-only,
-        least-privilege and under a written agreement. <a href={href(config, '/platform/system-boundaries/')}>What stays official elsewhere</a>{' · '}
+        No institutional connection is live today. Anything not yet available to an institution starts read-only,
+        least-privilege and under a written agreement. <a href={href(config, '/launch-readiness/')}>Everything else that is ready or not</a>{' · '}
+        <a href={href(config, '/platform/system-boundaries/')}>What stays official elsewhere</a>{' · '}
         <a href={href(config, '/platform/service-map/')}>How the services fit together</a>
       </p>
     </Section>
@@ -258,7 +257,7 @@ export const ProductQuality: Page = ({ config }) => {
       <Section title="What is not published, and why" id="pq-not">
         <ul>
           <li>No uptime percentage, response time or satisfaction score: none has been measured for long enough to be real, current and interpretable, and a number that is not all three is worse than none.</li>
-          <li>No customer names, logos or outcomes: there is no customer yet. <a href={href(config, '/proof-standards/')}>How we will prove things</a> when there is.</li>
+          <li>No customer names, logos or outcomes: there is no customer yet. <a href={href(config, '/proof/')}>How we show proof</a> when there is.</li>
         </ul>
         <p className="site-small">
           <a href={href(config, '/security/')}>Security</a> · <a href={href(config, '/accessibility/')}>Accessibility</a> · <a href={href(config, '/privacy/')}>Privacy</a>
@@ -363,41 +362,6 @@ export const HowWePrice: Page = ({ config }) => (
         Every line on an invoice maps to one of the drivers above. If something appears that does not, it is a mistake,
         and it is ours. Write to <a href={mail('Pricing%20question')}>{CONTACT_EMAIL}</a> with any question before or after a quote.
       </p>
-    </Section>
-  </>
-);
-
-// ── /proof-standards/ ───────────────────────────────────────────────────────
-
-export const ProofStandards: Page = ({ config }) => (
-  <>
-    <Hero title="How we prove things" lead="Before there is a case study, here is the standard any case study will have to meet." />
-    <Section title="What we will not do" id="ps-not">
-      <ul>
-        <li>We do not invent customer outcomes.</li>
-        <li>We do not use an institution’s name or logo without its written permission.</li>
-        <li>We do not claim a causal effect on grades, retention or graduation without a study design that could show one.</li>
-        <li>We do not report a measure without its methodology, cohort, timeframe and limitations beside it.</li>
-        <li>We do not quote a student or staff member without their consent to that quote, in that place.</li>
-      </ul>
-    </Section>
-    <Section title="Four different things, kept apart" id="ps-four">
-      <Cards
-        items={[
-          ['Adoption', 'People signed up or were provisioned. It says nothing about whether they came back.'],
-          ['Meaningful use', 'People did the thing the product is for: saved a plan, chose a backup, prepared an agenda.'],
-          ['Experience', 'What people said: “I knew what to do next.” Self-reported, and labelled as such.'],
-          ['Institutional outcomes', 'Registration on time, advising prepared, fewer conflicts. Measured against a baseline, with a design that could be wrong.'],
-        ]}
-      />
-    </Section>
-    <Section title="Where it stands" id="ps-now">
-      <p>
-        There is no customer, so there is no case study, no logo and no testimonial on this site. The evidence that would
-        come first — an accessibility baseline by a person, a timed restore drill, a usability study with students — is
-        scheduled, and none of it is filed yet. When it is, it will be reported to this standard.
-      </p>
-      <p><a href={href(config, '/trust/product-quality/')}>What is measured today</a></p>
     </Section>
   </>
 );

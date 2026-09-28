@@ -41,6 +41,9 @@ export const ROUTES: Route[] = [
   { path: '/privacy/', title: 'Privacy at Semester', description: 'Student data is the student’s: export or delete it at any time.', Page: P.Privacy },
   { path: '/accessibility/', title: 'Accessibility at Semester', description: 'Built toward WCAG 2.2 AA, with checks on every build and known gaps listed.', Page: P.Accessibility },
   { path: '/help/', title: 'Semester help', description: 'Answers to the questions students ask first.', Page: P.Help },
+  { path: '/launch-readiness/', title: 'Are we ready? — Semester', description: 'What runs today, what is built but not deployed, and what is still planned, for students, departments, institutions and reviewers.', Page: P.LaunchReadiness },
+  { path: '/proof/', title: 'How Semester shows proof', description: 'No invented metrics, no unapproved logos, no causal claims without a method. The rules, written before there is proof to show.', Page: P.Proof },
+  { path: '/legal/', title: 'Semester legal and policies', description: 'Every policy, its status, version and effective date. Nothing is in force yet, and this page says so.', Page: P.Legal },
   { path: '/login/', title: 'Log in to Semester', description: 'Sign in inside the Semester app.', Page: P.Login },
   { path: '/signup/', title: 'Get started with Semester', description: 'Start free, with no card and no account required.', Page: P.Signup },
   { path: '/account/', title: 'Your Semester account', description: 'Your profile, sign-in and data controls, in the Semester app.', Page: P.Account },
@@ -55,7 +58,6 @@ export const ROUTES: Route[] = [
   { path: '/trust/product-quality/', title: 'Product quality — Semester', description: 'What is checked on every build, what is known, and which measures are deliberately not published yet.', Page: M.ProductQuality },
   { path: '/launch/', title: 'Your launch site — Semester', description: 'The private page a department or institution gets when it signs: timeline, contacts, training, templates, known issues and readiness.', Page: M.Launch },
   { path: '/pricing/how-it-works/', title: 'How Semester pricing works', description: 'What drives individual, institutional and enterprise pricing, what implementation and migration cover, and how renewals avoid surprises.', Page: M.HowWePrice },
-  { path: '/proof-standards/', title: 'How Semester proves things', description: 'No invented outcomes, no logos without permission, and adoption, use, experience and outcomes kept apart.', Page: M.ProofStandards },
   { path: '/resources/campus-launch-kit/', title: 'Campus launch kit — Semester', description: 'Email, announcement, signage and social templates, an FAQ, the source-label explainer and a launch agenda, ready to adapt.', Page: M.CampusLaunchKit },
   ...TOOL_LIST.map(
     (t): Route => ({

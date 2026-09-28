@@ -7,9 +7,8 @@
  * rather than prose in a component, for the reason the pricing page reads
  * `lib/plans.ts`: a claim in a table is a claim a test can hold to, and the
  * rule for this site (`pages.tsx`) is that nothing is said that is not true of
- * the tree today. `platform.test.ts` checks the vocabulary and the one claim
- * that matters most: nothing is called *Available* to an institution while no
- * institutional connection is live.
+ * the tree today. The availability matrix's status words are the claims
+ * register's (`lib/ops/claims.ts`), so `claims.test.ts` is what holds them.
  */
 
 /** Who is buying. The four columns of the availability matrix. */
@@ -23,69 +22,51 @@ export const TIERS: { id: Tier; label: string }[] = [
 ];
 
 /**
- * How far along a capability is. Four words, and the page defines each one
- * beside the table, so a buyer cannot mistake a plan for a product.
+ * One row of the matrix. The wording and the status word are the claims
+ * register's (`lib/ops/claims.ts`, D-110): the row names the claim, and the
+ * page prints the register's word beside it, so this table cannot call a
+ * thing available that the register calls planned. What is the matrix's own
+ * is the four tier columns — who gets it — and the sentence behind the row.
  */
-export type Status = 'available' | 'pilot' | 'planned' | 'services';
-
-export const STATUS: Record<Status, { label: string; means: string }> = {
-  available: { label: 'Available', means: 'In the app today, on the live page, for anyone on the plan.' },
-  pilot: { label: 'Pilot', means: 'Built and switched on one institution at a time, under a written agreement. Not on by default.' },
-  planned: { label: 'Planned', means: 'Designed and documented. Not in the app yet, and not a promise of a date.' },
-  services: { label: 'Services-led', means: 'Done with the institution as project work, not as a self-serve feature.' },
-};
-
 export interface Capability {
-  name: string;
+  /** A claim id in `CLAIMS`. */
+  claim: string;
   /** What the column gets. Short: a word or two a table cell can hold. */
   tiers: Record<Tier, string>;
-  status: Status;
   /** The sentence behind the row, so the table is not the whole story. */
   note: string;
 }
 
 export const AVAILABILITY: Capability[] = [
   {
-    name: 'Personal planning',
+    claim: 'personal-planning',
     tiers: { individual: 'Yes', department: 'Yes', institution: 'Yes', enterprise: 'Yes' },
-    status: 'available',
     note: 'Today, My Path, the registration plan with backups, the calendar and the study tools, from what the student adds. No account is needed.',
   },
   {
-    name: 'Sign in with a university account',
+    claim: 'sso',
     tiers: { individual: 'No', department: 'Optional', institution: 'Yes', enterprise: 'Yes' },
-    status: 'planned',
-    note: 'Single sign-on through the institution’s own identity provider, configured per institution. Designed; no institution is connected today.',
+    note: 'Single sign-on through the institution’s own identity provider, configured per institution. No institution is connected today.',
   },
   {
-    name: 'Course Studio for faculty',
+    claim: 'course-studio',
     tiers: { individual: 'No', department: 'Optional', institution: 'Yes', enterprise: 'Yes' },
-    status: 'pilot',
     note: 'An instructor publishes the course’s rules and guidance; students see them beside the course. Switched on per institution.',
   },
   {
-    name: 'Grade passback',
+    claim: 'grade-passback',
     tiers: { individual: 'No', department: 'No', institution: 'Configured', enterprise: 'Configured' },
-    status: 'planned',
     note: 'A grade written back to the institution’s learning system needs that system’s approval and a write scope Semester does not hold today.',
   },
   {
-    name: 'Learning-system migration',
+    claim: 'lms-migration',
     tiers: { individual: 'No', department: 'No', institution: 'Optional', enterprise: 'Yes' },
-    status: 'services',
     note: 'Moving courses from an existing learning system is project work with the institution, run twice before it counts. No migration has been run.',
   },
   {
-    name: 'Student credential wallet',
-    tiers: { individual: 'Yes', department: 'Yes', institution: 'Yes', enterprise: 'Yes' },
-    status: 'planned',
-    note: 'A student’s own record of what they have earned, shared on their terms. Designed; not in the app.',
-  },
-  {
-    name: 'AI course policy',
+    claim: 'ai-course-policy',
     tiers: { individual: 'Personal controls', department: 'Department policy', institution: 'Institution and course policy', enterprise: 'Multi-campus policy' },
-    status: 'pilot',
-    note: 'A student always controls what the assistant may see. A course policy set in Course Studio is shown before the assistant answers; department and multi-campus policy are planned.',
+    note: 'A student always controls what the assistant may see. A course policy set in Course Studio is shown before the assistant answers; department and multi-campus policy are under way.',
   },
 ];
 
@@ -152,6 +133,6 @@ export const DEMO_PATHS: DemoPath[] = [
   { who: 'Advisor', came: 'to see what a student brings to a meeting', action: 'Try the advisor meeting planner', to: '/tools/advisor/' },
   { who: 'Faculty', came: 'to see how a course’s rules reach students', action: 'Read what Course Studio is, and its status', to: '/platform/availability/' },
   { who: 'Registrar', came: 'to see how registration is prepared and handed off', action: 'Read the system boundaries', to: '/platform/system-boundaries/' },
-  { who: 'IT and security', came: 'to see how data is held and what is not done yet', action: 'Request the architecture and procurement package', to: 'Architecture%20and%20procurement%20package', mail: true },
+  { who: 'IT and security', came: 'to see how data is held and what is not done yet', action: 'Read what is ready, and what is not', to: '/launch-readiness/' },
   { who: 'Enterprise', came: 'to see how a multi-campus arrangement would run', action: 'Ask for an enterprise briefing', to: 'Enterprise%20briefing', mail: true },
 ];

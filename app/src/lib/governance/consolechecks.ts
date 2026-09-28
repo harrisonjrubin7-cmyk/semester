@@ -6,7 +6,7 @@
  * There is no Operations Console yet — the operating system lists its map as
  * missing — so these are the rules written before the screens, the way the
  * error budgets and the AI gates were. Each takes facts in and gives a verdict
- * out, reads nothing itself, and is held by `console.test.ts` to refuse from a
+ * out, reads nothing itself, and is held by `consolechecks.test.ts` to refuse from a
  * state that would otherwise pass, one rule at a time.
  *
  * ## The customer promise checker

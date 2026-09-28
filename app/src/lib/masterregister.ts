@@ -34,7 +34,9 @@
  * rows rose to `tested` (IAM-004, STU-006, STU-008, STU-012, LMS-002, TRUST-005,
  * SRE-001, SUP-001, UOS-006), and sixteen more gained evidence or a narrower
  * gap without changing status; #908 then moved SRE-010 to `building` and its
- * call stands. Nothing fell.
+ * call stands. PRG-002 then rose to `tested` with the claims register
+ * (`ops/claims/`), which maps the public site's claims and no more. Nothing
+ * fell.
  */
 
 export const STATUSES = [
@@ -163,9 +165,9 @@ export const REGISTER: readonly Requirement[] = [
     requirement: 'Every marketing/sales/product claim maps to implemented evidence and approved scope',
     validation: 'Claims register review',
     severity: 'P0',
-    status: 'building',
-    evidence: [{ path: 'app/src/lib/rollout-capabilities.ts', shows: 'Capability inventory with state (verified/partial/absent) and evidence refs; not marketing claims' }, { path: 'app/src/lib/rollout-traceability.test.ts', shows: 'Tests evidence references resolve for rollout capabilities' }, { path: 'app/src/lib/marketreadiness.test.ts', shows: 'Probes readiness-scorecard absence claims against the tree' }, { path: 'docs/LAUNCH-READINESS-TEST-PLAN.md', shows: 'Lists as Owed: a claim register that rejects \'available\' without evidence' }],
-    gap: 'No register of marketing/sales claims exists; capability inventory covers product promises only. Needs a claims register mapping each external claim to evidence and approved scope, a test rejecting unevidenced claims, and a recorded review.',
+    status: 'tested',
+    evidence: [{ path: 'app/src/lib/ops/claims.ts', shows: 'Every capability the public site asserts, with the word it may carry, the rows and tests behind it, and the pages it appears on' }, { path: 'app/src/lib/ops/claims.test.ts', shows: 'Refuses a word above its rows, an available with no test, a page that does not print the wording, and a label the register does not know; each check shown a fixture it must catch' }, { path: 'ops/claims/README.md', shows: 'The rendered register' }, { path: 'app/src/lib/rollout-capabilities.ts', shows: 'Capability inventory with state (verified/partial/absent) and evidence refs; product promises, not marketing claims' }, { path: 'app/src/lib/marketreadiness.test.ts', shows: 'Probes readiness-scorecard absence claims against the tree' }],
+    gap: 'The register covers the public site only: sales decks, RFP answers and anything said in a meeting are not yet mapped, and no seat has approved a wording. Needs the sales and RFP material catalogued as rows, and the founder seat held to approve.',
   },
   {
     id: 'PRG-003',
@@ -1764,7 +1766,7 @@ export const ARTIFACTS: readonly {
   { name: 'ENTERPRISE-IMPLEMENTATION-METHODOLOGY.md', state: 'partly-covered', covered: ['docs/market-readiness/IMPLEMENTATION_PLAYBOOK.md', 'docs/INSTITUTIONAL-CHANGE-MANAGEMENT.md'], note: 'Written for a pilot; no enterprise implementation has been run.' },
   { name: 'CUSTOMER-SUCCESS-AND-RENEWAL-PLAYBOOK.md', state: 'partly-covered', covered: ['docs/PILOT-TO-ANNUAL-CONVERSION.md'], note: 'Conversion only; no QBR, outcome-report or renewal process (SUP-003).' },
   { name: 'COMMERCIAL-OPERATIONS-READINESS.md', state: 'partly-covered', covered: ['docs/operating-model/COMMERCIAL-GOVERNANCE.md', 'docs/PAID-PILOT-FRAMEWORK.md'], note: 'Entity, insurance, billing and tax are LEG-001 and COM-001; none is in place.' },
-  { name: 'PRODUCT-CLAIMS-REGISTER.md', state: 'missing', covered: [], note: 'Not written: it needs every external claim catalogued first (PRG-002). Individual guards exist, e.g. no certification may be affirmed in docs/trust/.' },
+  { name: 'PRODUCT-CLAIMS-REGISTER.md', state: 'partly-covered', covered: ['ops/claims/README.md'], note: 'The public site’s claims are catalogued, each with its word, rows, tests and pages, and held by claims.test.ts. Sales and RFP material is not yet mapped (PRG-002).' },
   { name: 'FULL-PRODUCTION-TEST-STRATEGY.md', state: 'partly-covered', covered: ['docs/LAUNCH-READINESS-TEST-PLAN.md', 'REGRESSION-CHECKLIST.md'], note: 'No load, chaos or end-to-end production suite (SRE-007).' },
   { name: 'DISASTER-RECOVERY-AND-RESTORE-EXERCISE-PLAN.md', state: 'partly-covered', covered: ['RESTORE.md', 'docs/market-readiness/DISASTER_RECOVERY.md', 'supabase/restore.sh'], note: 'A rehearsal passes locally; production has never been restored (SRE-005).' },
   { name: 'SECURITY-PROCUREMENT-EVIDENCE-INDEX.md', state: 'partly-covered', covered: ['docs/trust/README.md', 'docs/market-readiness/HECVAT_READINESS.md', 'docs/market-readiness/PROCUREMENT_CHECKLIST.md'], note: 'The trust package is indexed and held to the tree; the HECVAT workbook is not complete (SEC-011).' },

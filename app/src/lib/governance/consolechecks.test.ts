@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_RULES, PROMISES, impact, verify, workload, type ImpactCatalog, type Shift } from './console';
+import { DEFAULT_RULES, PROMISES, impact, verify, workload, type ImpactCatalog, type Shift } from './consolechecks';
 
 describe('the customer promise checker', () => {
   const support = PROMISES.find((p) => p.id === 'support-24-7')!;

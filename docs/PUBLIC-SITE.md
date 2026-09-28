@@ -12,13 +12,14 @@ an injected script inert. The four tool pages are the only exception (below).
 
 | | |
 |---|---|
-| Pages | `app/src/site/pages.tsx` (18 content routes) and `app/src/site/more.tsx` (10 platform, trust and buying routes, with their tables as data in `app/src/site/platform.ts`), plus 4 tool routes, all listed in `app/src/site/render.tsx` `ROUTES` |
+| Pages | `app/src/site/pages.tsx` (21 content routes) and `app/src/site/more.tsx` (9 platform, trust and buying routes, with their tables as data in `app/src/site/platform.ts`), plus 4 tool routes, all listed in `app/src/site/render.tsx` `ROUTES` |
+| Claims | `app/src/lib/ops/claims.ts`: every capability a page names, its status word, its rows and evidence; `app/src/site/claims.tsx` prints them (D-110). The availability matrix prints its status column from here |
 | Tools | `app/src/site/tools/Tools.tsx` (the four tools), `tools/client.tsx` (hydration, bundled as `tools/tools.js`) |
 | Frame | `app/src/site/Layout.tsx`: skip link, header, a script-free `<details>` phone menu, footer |
 | Styles | `app/src/site/site.css`, with the app's `@font-face` rules prepended at build |
 | Plans | `app/src/lib/plans.ts`: one source for the pricing page and the in-app Membership panel |
 | Build | `app/scripts/build-site.mjs` renders with Vite's own module loader, writing to `app/dist-site/` (git-ignored) |
-| Tests | `app/src/site/site.test.tsx`, `app/src/site/tools/Tools.test.tsx`, `app/src/lib/plans.test.ts` |
+| Tests | `app/src/site/site.test.tsx`, `app/src/site/tools/Tools.test.tsx`, `app/src/lib/plans.test.ts`, `app/src/lib/ops/claims.test.ts` |
 
 ```bash
 cd app
@@ -28,13 +29,13 @@ npm run site:preview    # serves dist-site on http://localhost:4175
 
 ## The platform, trust and buying pages
 
-Ten pages added for buyers who cannot tell a plan from a product, each saying
-which is which. Their tables are data in `app/src/site/platform.ts`, so a
-claim is a row a test can read:
+Nine pages added for buyers who cannot tell a plan from a product, each saying
+which is which. Their tables are data in `app/src/site/platform.ts`, and the
+availability matrix prints its status words from the claims register (D-110):
 
 | Route | Says |
 |---|---|
-| `/platform/availability/` | Every capability by plan — Individual students, Department, Institution, Enterprise — marked Available, Pilot, Planned or Services-led, with the sentence behind each row |
+| `/platform/availability/` | Every capability by plan — Individual students, Department, Institution, Enterprise — each row a claim of the register with its word, and the sentence behind it |
 | `/platform/service-map/` | The eight services in the order a student meets them, and who decides what: Semester coordinates, the record system certifies, the registrar registers, faculty own course policy, students control their plans |
 | `/platform/system-boundaries/` | Area by area, what Semester does and what stays authoritative elsewhere |
 | `/start/` | A student's first session, step by step, and the nine steps of an institution's pilot |
@@ -42,7 +43,6 @@ claim is a row a test can read:
 | `/trust/product-quality/` | What is checked on every build, what is known, and what is deliberately not published; a build stamp when `SITE_COMMIT` or `GITHUB_SHA` is set |
 | `/launch/` | What a customer's private launch site holds, and that none exists yet |
 | `/pricing/how-it-works/` | What drives each tier's price, what implementation, support tiers, AI usage and migration mean, and how renewals avoid surprises |
-| `/proof-standards/` | No invented outcomes, no logos without permission, and adoption, use, experience and outcomes kept apart |
 | `/resources/campus-launch-kit/` | Email, announcement, signage and social templates, an FAQ, the source-label explainer and a launch agenda |
 
 ## Rules the tests hold
@@ -57,12 +57,34 @@ claim is a row a test can read:
 - No checkout. Every paid price is marked *(planned)*, and export, deletion
   and saved plans are listed as on every plan.
 - The product preview is labelled demo data.
+- Every capability a page names carries one of six status words from the
+  claims register (`ops/claims/README.md`), and the word may not be above
+  what the master-register rows behind it support. Nothing on the site prints
+  a `data-claim` the register does not know, and `/launch-readiness/` lists
+  every claim with what the words mean.
+- The home page asks what brought the visitor and sends each answer to a real
+  page. Contact routes each topic to a council seat and promises no response
+  time it cannot keep. Pricing states currency, billing period, tax,
+  cancellation and refunds before anything is for sale. `/legal/` lists every
+  policy with its status; none is in force, and the page says so.
+- The site sets no cookie, has no form (`form-action 'none'`), and stores
+  nothing anyone types.
 - The site's colours equal the app's `:root` tokens.
 - Only tool pages have a script: exactly one, `tools/tools.js`, same-origin,
   nothing inline. Their policy is `script-src 'self'` and `connect-src 'none'`,
   so a tool cannot send what is typed into it even if its code tried.
 - Every tool hydrates without a mismatch (checked by prerendering, then
   hydrating, in the test).
+
+## The readiness pages
+
+`/launch-readiness/` answers four audiences — students, advisors and
+departments, institutions, and IT, security, privacy and accessibility
+reviewers — from the claims register, and links the status page
+(`app/public/status.html`), which probes Semester from the reader's browser.
+`/proof/` is the customer proof policy, written before there is proof.
+`/legal/` is the policy table: status, version, effective date and owner for
+each, with what the page will show once one is in force.
 
 ## The public tools
 
