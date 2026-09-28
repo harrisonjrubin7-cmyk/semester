@@ -28,9 +28,12 @@
  *
  * `tested` is a claim about code, never about launch: a row can be `tested` and
  * still need a UAT, a drill, a certification or a contract, and its `gap` says
- * which. The row statuses were assessed against `origin/main` at `5bc0330` on
- * 2026-09-28, and the rows #888 touched (AI-008, AI-013, TRUST-001, TRUST-004)
- * re-read at `1e70521`; none changed status.
+ * which. The row statuses were first assessed against `origin/main` at
+ * `5bc0330` on 2026-09-28 and re-assessed the same day at `fd8fc0b`, after
+ * #814, #819, #839, #893, #895, #896, #900, #901, #902 and #903 landed. Ten
+ * rows rose to `tested` (IAM-004, STU-006, STU-008, STU-012, LMS-002, TRUST-005,
+ * SRE-001, SRE-010, SUP-001, UOS-006), and sixteen more gained evidence or a
+ * narrower gap without changing status. Nothing fell.
  */
 
 export const STATUSES = [
@@ -150,7 +153,7 @@ export const REGISTER: readonly Requirement[] = [
     validation: 'RACI, operating cadence, escalation tree',
     severity: 'P0',
     status: 'designed',
-    evidence: [{ path: 'docs/LAUNCH-READINESS-COUNCIL.md', shows: 'Council seats and decision rights described; no people named' }, { path: 'app/src/lib/launchreadiness.ts', shows: 'Seats (product, eng, security, privacy, a11y, success...) all holder: null; no AI/SRE/GTM seat' }, { path: 'docs/operating-model/PILOT-TO-PRODUCTION.md', shows: 'Pilot RACI section for institution/vendor roles' }],
+    evidence: [{ path: 'docs/LAUNCH-DECISIONS.md', shows: 'Step 1 names the seats the owner can hold this week and the three that need someone qualified; none is yet written into the council' }, { path: 'docs/LAUNCH-READINESS-COUNCIL.md', shows: 'Council seats and decision rights described; no people named' }, { path: 'app/src/lib/launchreadiness.ts', shows: 'Seats (product, eng, security, privacy, a11y, success...) all holder: null; no AI/SRE/GTM seat' }, { path: 'docs/operating-model/PILOT-TO-PRODUCTION.md', shows: 'Pilot RACI section for institution/vendor roles' }],
     gap: 'Every seat is vacant (holder null). No named people, no AI/SRE/legal/GTM owner, no operating cadence or escalation tree approved. Needs named owners recorded and signed, cadence calendar and escalation tree.',
   },
   {
@@ -200,8 +203,8 @@ export const REGISTER: readonly Requirement[] = [
     validation: 'Environment diagram, deployment evidence',
     severity: 'P0',
     status: 'building',
-    evidence: [{ path: 'STAGING.md', shows: 'Supabase preview branch per PR; parity with production never established' }, { path: '.github/workflows/pages.yml', shows: 'Production deploy workflow to GitHub Pages' }, { path: 'app/src/lib/flags.ts', shows: 'Environment gate: development/preview/production tenant states' }],
-    gap: 'No dedicated staging or demo environment, preview-to-production parity unproven, no environment diagram or promotion approvals. Needs isolated staging/demo projects, documented promotion path and deployment evidence.',
+    evidence: [{ path: 'STAGING.md', shows: 'Supabase preview branch per PR; parity with production never established' }, { path: '.github/workflows/pages.yml', shows: 'Production deploy to GitHub Pages; the product build pins the demo switch off and the demo is built separately into /demo/ with the account service blanked (#900, #901)' }, { path: 'app/src/lib/pagesdemo.test.ts', shows: 'Runs the workflow\'s own script with the demo switch set and reads $GITHUB_ENV; fails against the old workflow' }, { path: 'app/src/lib/flags.ts', shows: 'Environment gate: development/preview/production tenant states' }],
+    gap: 'Demo and product are now separate builds, but on one host and one Supabase project: there is no staging project, preview-to-production parity is unproven, and there is no environment diagram or promotion approval. Needs an isolated staging project, a documented promotion path and deployment evidence.',
   },
   {
     id: 'PRG-007',
@@ -220,8 +223,8 @@ export const REGISTER: readonly Requirement[] = [
     validation: 'Production data scan, demo policy',
     severity: 'P0',
     status: 'tested',
-    evidence: [{ path: 'app/src/data/institutional-preview.ts', shows: 'Fictional tenants, every record marked synthetic: true, sandbox-labelled connections' }, { path: 'app/src/data/institutional-preview.test.ts', shows: 'Tests reserved domains, no real school identity, import only via preview boundary' }, { path: 'app/src/data/seed.ts', shows: 'Sample semester loaded only on explicit opt-in' }],
-    gap: 'No production data scan has been run and no written demo-data policy approved; no dedicated demo tenant/environment. Needs a scan of production for fixture data and a signed demo policy.',
+    evidence: [{ path: 'app/src/lib/pagesdemo.test.ts', shows: 'The product deploy can never carry the demo switch; the demo is its own build at /demo/' }, { path: 'app/src/data/institutional-preview.ts', shows: 'Fictional tenants, every record marked synthetic: true, sandbox-labelled connections' }, { path: 'app/src/data/institutional-preview.test.ts', shows: 'Tests reserved domains, no real school identity, import only via preview boundary' }, { path: 'app/src/data/seed.ts', shows: 'Sample semester loaded only on explicit opt-in' }],
+    gap: 'No production data scan has been run and no written demo-data policy approved. The demo is a separate build at /demo/ (#900), not a separate tenant or project. Needs a scan of production for fixture data and a signed demo policy.',
   },
   {
     id: 'IAM-001',
@@ -230,7 +233,7 @@ export const REGISTER: readonly Requirement[] = [
     validation: 'E2E auth suite',
     severity: 'P0',
     status: 'tested',
-    evidence: [{ path: 'app/src/lib/cloud.ts', shows: 'signUp, signInWithPassword, resetPasswordForEmail, signInWithSSO via Supabase Auth' }, { path: 'app/src/lib/cloud.test.ts', shows: 'Unit tests for cloud auth helpers' }, { path: 'app/src/components/credentials.test.tsx', shows: 'Tests sign-in/sign-up form behaviour' }, { path: 'supabase/deletion.check.sql', shows: 'Tests account deletion lifecycle in SQL' }],
+    evidence: [{ path: 'app/src/lib/route.ts', shows: '#/login, #/signin and #/signup open the account screen directly with the form the link meant (#900)' }, { path: 'app/src/lib/cloud.ts', shows: 'signUp, signInWithPassword, resetPasswordForEmail, signInWithSSO via Supabase Auth' }, { path: 'app/src/lib/cloud.test.ts', shows: 'Unit tests for cloud auth helpers' }, { path: 'app/src/components/credentials.test.tsx', shows: 'Tests sign-in/sign-up form behaviour' }, { path: 'supabase/deletion.check.sql', shows: 'Tests account deletion lifecycle in SQL' }],
     gap: 'No end-to-end auth suite against a real mailbox; session expiry/refresh policy relies on Supabase defaults with no configured evidence. Needs E2E sign-up/verify/recover/expire tests and exported auth config.',
   },
   {
@@ -259,9 +262,9 @@ export const REGISTER: readonly Requirement[] = [
     requirement: 'Provision, update, deprovision, group/role mapping, audit, error reconciliation',
     validation: 'SCIM conformance/UAT',
     severity: 'P1',
-    status: 'building',
-    evidence: [{ path: 'app/server/institution/scim.ts', shows: 'createScimService built' }, { path: 'app/server/institution/scim.test.ts', shows: 'Unit tests for SCIM service' }, { path: 'supabase/identity-provisioning.check.sql', shows: 'SQL tests for provisioning tables/definer functions' }, { path: 'docs/LAUNCH-READINESS-AUDIT.md', shows: 'Finding 4: SCIM built but no gateway route mounts it, no Postgres repository' }],
-    gap: 'SCIM service is unreachable: no gateway route and no Postgres repository. Needs mounting, persistence, error reconciliation, conformance run and UAT with an IdP.',
+    status: 'tested',
+    evidence: [{ path: 'app/server/institution/scim-route.ts', shows: '/scim/v2 is served when SEMESTER_SCIM=on; startup refuses without an HTTPS public URL (#819)' }, { path: 'app/server/institution/postgres-scim.ts', shows: 'Production ScimRepository over service-role-only wrappers; an externalId cannot change; members resolve within the tenant only' }, { path: 'app/server/institution/postgres-scim.test.ts', shows: 'Tests the production repository\'s refusals' }, { path: 'supabase/scim-gateway.check.sql', shows: '13 checks over the wrappers: no grant to authenticated, accepted writes audited once' }, { path: 'supabase/identity-provisioning.check.sql', shows: 'SQL tests for provisioning tables and definer functions' }],
+    gap: 'Reachable but off by default (SEMESTER_SCIM) and enabled for no tenant. No SCIM conformance run, no UAT with an IdP and no error-reconciliation view. A SCIM group maps to an institutional membership role; nothing assigns an app role (ROLE-LAUNCH-REGISTER.md).',
   },
   {
     id: 'IAM-005',
@@ -321,7 +324,7 @@ export const REGISTER: readonly Requirement[] = [
     severity: 'P0',
     status: 'tested',
     evidence: [{ path: 'supabase/migrations/20260925103000_support_access.sql', shows: 'Consent-bound grant, scoped, <=7 days, revocable, reason required' }, { path: 'supabase/support-access.check.sql', shows: 'SQL tests for support grants' }, { path: 'app/src/components/SupportAccess.test.tsx', shows: 'Tests student grant UI' }],
-    gap: 'Grant carries free-text reason, not a ticket ID (no ticketing system). No grant workflow UAT. Needs ticket linkage and UAT evidence.',
+    gap: 'Support tickets now exist (20260928210000_support_tickets.sql, off by default), but a grant still carries a free-text reason, not a ticket id. No grant workflow UAT. Needs ticket linkage and UAT evidence.',
   },
   {
     id: 'IAM-011',
@@ -360,8 +363,8 @@ export const REGISTER: readonly Requirement[] = [
     validation: 'E2E planning test',
     severity: 'P0',
     status: 'tested',
-    evidence: [{ path: 'app/src/lib/degree.ts', shows: 'Student-supplied requirements; in-progress vs done; assumptions stated' }, { path: 'app/src/lib/degree.test.ts', shows: 'Tests requirement arithmetic' }, { path: 'app/src/lib/graduation.test.ts', shows: 'Tests advisor summary labelled as estimate' }],
-    gap: 'No screen named My Path (label opens Degree.tsx). No institution-verified data, so \'verified\' side is empty. No E2E planning test.',
+    evidence: [{ path: 'app/src/lib/tabbar.ts', shows: 'Today · My Path · Search · Plan · Me, behind journeyNavigation (off in a normal build)' }, { path: 'app/src/lib/path-profile.ts', shows: 'Path details the student records' }, { path: 'app/src/components/PathSnapshotCard.test.tsx', shows: 'Tests the Path Snapshot on My Path' }, { path: 'app/src/lib/degree.ts', shows: 'Student-supplied requirements; in-progress vs done; assumptions stated' }, { path: 'app/src/lib/degree.test.ts', shows: 'Tests requirement arithmetic' }, { path: 'app/src/lib/graduation.test.ts', shows: 'Tests advisor summary labelled as estimate' }],
+    gap: 'My Path is a destination only behind journeyNavigation; a normal build opens Degree.tsx. No institution-verified data, so the verified side is empty. No E2E planning test.',
   },
   {
     id: 'STU-004',
@@ -389,9 +392,9 @@ export const REGISTER: readonly Requirement[] = [
     requirement: 'Course search, compare, constraints, source labels, and save-to-plan work',
     validation: 'Search/relevance/a11y test',
     severity: 'P0',
-    status: 'implemented',
-    evidence: [{ path: 'app/src/components/RegistrationPortal.tsx', shows: 'Catalog search, filters, saved schedules to compare, \'seat counts reflect this file\' labels' }, { path: 'app/src/lib/registration.ts', shows: 'Catalog parsing and conflict detection' }],
-    gap: 'Search/filter logic untested; time/format constraints behind learner-pathways flag; works only on an imported catalog. Needs search/relevance/a11y tests and an institutional catalog source.',
+    status: 'tested',
+    evidence: [{ path: 'app/src/lib/course-detail.ts', shows: 'Course detail: fit, conflicts, skills and source labels for one course' }, { path: 'app/src/lib/course-detail.test.ts', shows: 'Tests course detail derivation' }, { path: 'app/src/components/CourseCompare.tsx', shows: 'Side-by-side course comparison' }, { path: 'app/src/components/RegistrationPortal.tsx', shows: 'Catalog search, filters, saved schedules to compare, \'seat counts reflect this file\' labels' }, { path: 'app/src/lib/registration.ts', shows: 'Catalog parsing and conflict detection' }],
+    gap: 'Compare and detail are tested; search/filter relevance is not. Time/format constraints are behind the learner-pathways flag, and it works only on an imported catalog. Needs relevance/a11y tests and an institutional catalog source.',
   },
   {
     id: 'STU-007',
@@ -409,9 +412,9 @@ export const REGISTER: readonly Requirement[] = [
     requirement: 'Student creates, edits, safely shares/exports, revokes, and follows agenda',
     validation: 'Sharing/privacy test',
     severity: 'P0',
-    status: 'building',
-    evidence: [{ path: 'app/src/lib/graduation.ts', shows: 'Writes an advisor summary from scenarios' }, { path: 'app/src/components/QuickActions.tsx', shows: '\'Prepare for advising\' opens degree; agenda deferred to Advisor Meeting Mode' }, { path: 'app/server/institution/advising.ts', shows: 'Sandbox advising appointments, labelled demonstration' }],
-    gap: 'No editable agenda object, no safe share/revoke or follow-up tracking. Needs agenda model, share/revoke with audit and sharing/privacy tests.',
+    status: 'tested',
+    evidence: [{ path: 'app/src/lib/advisor-meeting.ts', shows: 'Agenda, questions, attachments limited to one scenario and saved courses, follow-ups, and private notes that never leave the device (Phase G)' }, { path: 'app/src/lib/advisor-meeting.test.ts', shows: 'Tests the agenda model and the share payload' }, { path: 'app/src/lib/advisor-shares.ts', shows: 'Share only to an advisor at the student\'s own school; every share expires within 120 days; a revoke cannot be undone; every advisor read is logged and shown to the student' }, { path: 'supabase/advisor.check.sql', shows: 'SQL tests for advisor shares' }, { path: 'app/src/components/AdvisorMeeting.test.tsx', shows: 'Tests the meeting screen' }],
+    gap: 'Behind advisor_meeting_mode. No advisor has used it: no sharing/privacy UAT, and the advisor\'s page is read-only with no reply.',
   },
   {
     id: 'STU-009',
@@ -430,7 +433,7 @@ export const REGISTER: readonly Requirement[] = [
     validation: 'Calendar E2E/offline tests',
     severity: 'P1',
     status: 'tested',
-    evidence: [{ path: 'app/src/screens/Calendar.tsx', shows: 'Calendar views and actions' }, { path: 'app/src/screens/Calendar.keyboard.test.tsx', shows: 'Calendar keyboard tests' }, { path: 'supabase/calendar.check.sql', shows: 'SQL tests for calendar persistence' }, { path: 'app/src/lib/offline.test.ts', shows: 'Offline behaviour tests' }],
+    evidence: [{ path: 'app/src/lib/offline-mode.ts', shows: 'Offline Mode behind offline_mode: writes that need the network are refused with a reason (Phase M)' }, { path: 'app/src/components/OfflineBanner.test.tsx', shows: 'Tests the offline banner' }, { path: 'app/src/screens/Calendar.tsx', shows: 'Calendar views and actions' }, { path: 'app/src/screens/Calendar.keyboard.test.tsx', shows: 'Calendar keyboard tests' }, { path: 'supabase/calendar.check.sql', shows: 'SQL tests for calendar persistence' }, { path: 'app/src/lib/offline.test.ts', shows: 'Offline behaviour tests' }],
     gap: 'No E2E calendar journey; connection status depends on unconnected providers. Needs E2E/offline run on target devices.',
   },
   {
@@ -440,7 +443,7 @@ export const REGISTER: readonly Requirement[] = [
     validation: 'Privacy workflow UAT',
     severity: 'P0',
     status: 'tested',
-    evidence: [{ path: 'app/src/lib/privacy.test.ts', shows: 'Tests disclosure matches code' }, { path: 'app/src/lib/export.test.ts', shows: 'Tests data export' }, { path: 'supabase/deletion.check.sql', shows: 'Tests account deletion' }, { path: 'app/src/lib/aiflags.test.ts', shows: 'Tests AI control flags' }],
+    evidence: [{ path: 'app/src/components/TrustCenter.test.tsx', shows: 'Trust & Data Center behind trust_center; Export covers every device store (Phase N)' }, { path: 'app/src/lib/privacy.test.ts', shows: 'Tests disclosure matches code' }, { path: 'app/src/lib/export.test.ts', shows: 'Tests data export' }, { path: 'supabase/deletion.check.sql', shows: 'Tests account deletion' }, { path: 'app/src/lib/aiflags.test.ts', shows: 'Tests AI control flags' }],
     gap: 'No privacy workflow UAT; activity opt-out toggle absent; connections not live. Needs UAT and opt-out control.',
   },
   {
@@ -449,9 +452,9 @@ export const REGISTER: readonly Requirement[] = [
     requirement: 'In-app issue reporting, knowledge base, status link, ticket ID, and safe diagnostics work',
     validation: 'Support ticket UAT',
     severity: 'P0',
-    status: 'building',
-    evidence: [{ path: 'app/src/lib/help-routes.ts', shows: 'Help requests with minimal context, withdrawable, DB-enforced' }, { path: 'supabase/help-requests.check.sql', shows: 'SQL tests for help requests' }, { path: 'app/src/components/GetHelp.test.tsx', shows: 'Tests help request UI' }, { path: 'MONITORING.md', shows: 'Declines a status page in writing' }],
-    gap: 'Status page refused (council decision pending); no ticketing/SLA for product issues, feedback has no staff triage. Needs status link decision, ticket IDs surfaced, and support ticket UAT.',
+    status: 'tested',
+    evidence: [{ path: 'app/src/lib/supporttickets.ts', shows: 'Support tickets: six app-context keys, every detail unticked by default, 24h/72h targets (#839)' }, { path: 'supabase/support-tickets.check.sql', shows: '25 checks: no identity reaches the queue, five a day, only the student closes' }, { path: 'app/src/components/supportticketspanel.test.tsx', shows: 'Nothing unticked is sent, and the preview shows all of it' }, { path: 'app/src/lib/help-routes.ts', shows: 'Help requests to campus offices with minimal context, withdrawable, DB-enforced' }, { path: 'app/public/status.html', shows: 'A status page that checks from the reader\'s browser (#902)' }, { path: 'MONITORING.md', shows: 'Still declines a status page in writing; the refusal predates #902' }],
+    gap: 'Tickets are off by default (VITE_SUPPORT_TICKETS), have no staff screen and no notification to the student, and no ticket id is shown in the app. The status page exists but MONITORING.md and SUPPORT-RELIABILITY-AND-ABUSE-PREVENTION.md still record the refusal; reconcile them. No support ticket UAT.',
   },
   {
     id: 'LMS-001',
@@ -469,9 +472,9 @@ export const REGISTER: readonly Requirement[] = [
     requirement: 'Accessible authoring for modules, pages, files, media, objectives, conditional release, versions',
     validation: 'Authoring/accessibility UAT',
     severity: 'P0',
-    status: 'designed',
-    evidence: [{ path: 'docs/trust/ENTERPRISE-READINESS.md', shows: 'Level 3 plan lists Course Studio: modules, accessible authoring, version history, conditional release' }, { path: 'docs/LMS-LEARNING-ROADMAP.md', shows: 'Instructor tools table: Course Studio (instructor authoring) = missing' }],
-    gap: 'No authoring code: no module/page/file/media builder, objectives, conditional release or course versioning (lib/docversions.ts is student docs). Needs a spec, build, a11y tests, then authoring/accessibility UAT.',
+    status: 'tested',
+    evidence: [{ path: 'app/src/lib/coursestudio.ts', shows: 'Faculty publish course rules, guidance and study packs as immutable versions' }, { path: 'app/src/components/CourseStudio.tsx', shows: 'The faculty screens: rules, guidance, packs, previews, history' }, { path: 'supabase/coursestudio.check.sql', shows: 'Only a live faculty grant on exactly this course publishes; versions are immutable; the school reads, another does not' }, { path: 'app/src/components/CourseStudio.test.tsx', shows: 'Tests the faculty screens' }, { path: 'docs/FACULTY-COURSE-STUDIO-DESIGN.md', shows: 'F1–F7 decided by the owner (D-100)' }],
+    gap: 'Publishes rules, guidance and study packs only: no modules, pages, files, media, objectives or conditional release. No authoring or accessibility UAT with faculty.',
   },
   {
     id: 'LMS-003',
@@ -480,8 +483,8 @@ export const REGISTER: readonly Requirement[] = [
     validation: 'Student/device/a11y test',
     severity: 'P0',
     status: 'building',
-    evidence: [{ path: 'app/src/components/ReadingProgress.tsx', shows: 'Student reading progress over their own imported course material' }, { path: 'app/src/components/TravelPack.tsx', shows: 'Offline content pack for a student (off by default)' }, { path: 'docs/LMS-LEARNING-ROADMAP.md', shows: 'Layer 3: progress reachable, rest off; gap is modules, prerequisites, conditional release' }],
-    gap: 'Content is student-imported, not faculty-published; no modules, requirements or release rules, no media/file delivery from a course. Needs native delivery with release rules, device/a11y tests and student UAT.',
+    evidence: [{ path: 'app/src/lib/courserules.ts', shows: 'Instructor rules as the course layer students see; Study Studio on resolve()' }, { path: 'app/src/components/ReadingProgress.tsx', shows: 'Student reading progress over their own imported course material' }, { path: 'app/src/components/TravelPack.tsx', shows: 'Offline content pack for a student (off by default)' }, { path: 'docs/LMS-LEARNING-ROADMAP.md', shows: 'Layer 3: progress reachable, rest off; gap is modules, prerequisites, conditional release' }],
+    gap: 'Faculty-published content reaches students only as rules, guidance and study packs; no modules, requirements or release rules, no media/file delivery from a course. Needs native delivery with release rules, device/a11y tests and student UAT.',
   },
   {
     id: 'LMS-004',
@@ -610,8 +613,8 @@ export const REGISTER: readonly Requirement[] = [
     validation: 'Permission test suite',
     severity: 'P0',
     status: 'building',
-    evidence: [{ path: 'supabase/migrations/20260921223000_role_grants.sql', shows: 'role_grants with course scope for faculty and teaching_assistant' }, { path: 'supabase/migrations/20260928015315_lti_launch_capability.sql', shows: 'Faculty and TA are granted only lti:launch — no distinct course capabilities' }, { path: 'supabase/rolegrants.check.sql', shows: 'Tests course-scoped TA grant and holds_role' }],
-    gap: 'Course-scoped role grants exist and are tested, but faculty and TA have no distinct least-privilege course capabilities (grade, edit, publish) because those features do not exist. Needs capability matrix and permission suite.',
+    evidence: [{ path: 'supabase/coursestudio.check.sql', shows: 'A live faculty grant on exactly this course publishes; a student, another course\'s faculty, another school\'s faculty or a revoked grant does not' }, { path: 'supabase/migrations/20260921223000_role_grants.sql', shows: 'role_grants with course scope for faculty and teaching_assistant' }, { path: 'supabase/migrations/20260928015315_lti_launch_capability.sql', shows: 'Faculty and TA are granted only lti:launch — no distinct course capabilities' }, { path: 'supabase/rolegrants.check.sql', shows: 'Tests course-scoped TA grant and holds_role' }],
+    gap: 'Faculty now has one distinct course capability (publish to Course Studio) with negative tests; no grade or edit capabilities because those features do not exist, and no TA distinction. Needs the capability matrix and permission suite.',
   },
   {
     id: 'LMS-017',
@@ -860,8 +863,8 @@ export const REGISTER: readonly Requirement[] = [
     validation: 'Architecture/test suite',
     severity: 'P0',
     status: 'building',
-    evidence: [{ path: 'app/server/institution/intelligence.ts', shows: 'Gateway: server-side policy, mode check, model route, budget reserve, journal; provider error gives 503, no fallback' }, { path: 'packages/institution/src/intelligence.ts', shows: 'chooseModel picks the cheapest allowed model under the tenant cost ceiling' }, { path: 'app/server/institution/intelligence.test.ts', shows: 'Tests policy refusal, budget reservation/settlement, journaling without source bodies' }, { path: 'docs/architecture/0004-ai-through-a-metered-gateway.md', shows: 'Separate Claude edge-function path and device-key path; gateway \'not deployed\'' }],
-    gap: 'No provider fallback on failure; only an OpenAI adapter exists. Student device-key and claude edge-function paths bypass the policy gateway. Gateway not deployed or proven in staging.',
+    evidence: [{ path: 'app/src/ai/converse.ts', shows: 'The gateway governs only when the flag is on and a gateway is configured; otherwise the local assistant answers under the recorded course policy (#903)' }, { path: 'app/src/ai/helpstate.test.tsx', shows: 'Checking, unreachable, school-off and course-off are four states with their own actions' }, { path: 'app/server/institution/intelligence.ts', shows: 'Gateway: server-side policy, mode check, model route, budget reserve, journal; provider error gives 503, no fallback' }, { path: 'packages/institution/src/intelligence.ts', shows: 'chooseModel picks the cheapest allowed model under the tenant cost ceiling' }, { path: 'app/server/institution/intelligence.test.ts', shows: 'Tests policy refusal, budget reservation/settlement, journaling without source bodies' }, { path: 'docs/architecture/0004-ai-through-a-metered-gateway.md', shows: 'Separate Claude edge-function path and device-key path; gateway \'not deployed\'' }],
+    gap: 'No provider fallback on failure; only an OpenAI adapter exists in the gateway. The device-key and claude edge-function paths bypass the policy gateway. The gateway is not deployed or proven in staging.',
   },
   {
     id: 'AI-004',
@@ -1010,7 +1013,7 @@ export const REGISTER: readonly Requirement[] = [
     validation: 'Student/privacy UAT',
     severity: 'P1',
     status: 'building',
-    evidence: [{ path: 'app/src/lib/career.ts', shows: 'Résumé, openings and contacts in one module; generated letters are scaffolds' }, { path: 'app/src/lib/apply.ts', shows: 'Application tracker for internships, jobs and research posts' }, { path: 'app/src/lib/skills-graph.ts', shows: 'Skill verification: suggested / student-confirmed / institution-verified' }, { path: 'app/src/lib/experience-flags.ts', shows: 'Skills graph behind VITE_CAREER_SKILLS_GRAPH (preview)' }],
+    evidence: [{ path: 'app/src/lib/career-evidence.ts', shows: 'Career evidence and the résumé bullet builder (Phase I)' }, { path: 'app/src/lib/career-evidence.test.ts', shows: 'Tests the evidence model' }, { path: 'app/src/lib/career.ts', shows: 'Résumé, openings and contacts in one module; generated letters are scaffolds' }, { path: 'app/src/lib/apply.ts', shows: 'Application tracker for internships, jobs and research posts' }, { path: 'app/src/lib/skills-graph.ts', shows: 'Skill verification: suggested / student-confirmed / institution-verified' }, { path: 'app/src/lib/experience-flags.ts', shows: 'Skills graph behind VITE_CAREER_SKILLS_GRAPH (preview)' }],
     gap: 'The skills graph is behind a preview flag, and institution verification has no live source. There is no career map or portfolio surface. Student/privacy UAT has not been done.',
   },
   {
@@ -1029,9 +1032,9 @@ export const REGISTER: readonly Requirement[] = [
     requirement: 'Scenario planning, approval-packet support and correct labels: pre-approved/pending/estimated/not evaluated',
     validation: 'Source/authority UAT',
     severity: 'P1',
-    status: 'building',
-    evidence: [{ path: 'app/src/lib/career.ts', shows: 'ABROAD_STEPS checklist in deadline order' }, { path: 'supabase/migrations/20260926150000_expansion_roles_and_features.sql', shows: 'articulation_rules draft/proposed/approved and transfer_evaluations' }, { path: 'app/src/lib/journey-areas.ts', shows: 'Study abroad waits on a program catalog and course-equivalency database' }],
-    gap: 'No scenario planner or approval packet. The required labels (pre-approved, pending, estimated, not evaluated) aren\'t shown to students. No program catalog source. Source/authority UAT has not been done.',
+    status: 'tested',
+    evidence: [{ path: 'app/src/lib/abroad.ts', shows: 'Study-abroad plan: programmes weighed, host courses mapped to home courses, and whose word each approval is' }, { path: 'app/src/lib/abroad.test.ts', shows: 'Tests the plan and the approval labels' }, { path: 'app/src/components/StudyAbroad.test.tsx', shows: 'Tests the planner screen' }, { path: 'supabase/migrations/20260926150000_expansion_roles_and_features.sql', shows: 'articulation_rules draft/proposed/approved and transfer_evaluations' }],
+    gap: 'No program catalog source and no approval packet export; approvals are what the student records, not the institution\'s word. Source/authority UAT has not been done.',
   },
   {
     id: 'UOS-007',
@@ -1040,8 +1043,8 @@ export const REGISTER: readonly Requirement[] = [
     validation: 'Consent/access test',
     severity: 'P0',
     status: 'tested',
-    evidence: [{ path: 'supabase/support-access.check.sql', shows: 'Student-granted support access: 7-day cap, revoke stops reads, immutable evidence' }, { path: 'supabase/family.check.sql', shows: 'Parent grant visible only when accepted, not revoked, not expired' }, { path: 'supabase/migrations/20260926150000_expansion_roles_and_features.sql', shows: 'accommodation_shares with expiry, revoke and access events' }, { path: 'supabase/mentor-rosters.check.sql', shows: 'Tests mentor roster access' }],
-    gap: 'Coverage varies by relationship: advisor and career/talent-profile sharing lack the same scope, expiry, revoke and audit tests. No single consent/access matrix across all four roles, and no UAT.',
+    evidence: [{ path: 'supabase/advisor.check.sql', shows: 'Advisor shares: own-school advisors only, expiry within 120 days, revoke final, every read logged' }, { path: 'supabase/supportshares.check.sql', shows: 'Support shares re-check the recipient\'s role on every read' }, { path: 'supabase/familyinvites.check.sql', shows: 'Family invites and what a supporter may see' }, { path: 'supabase/support-access.check.sql', shows: 'Student-granted support access: 7-day cap, revoke stops reads, immutable evidence' }, { path: 'supabase/family.check.sql', shows: 'Parent grant visible only when accepted, not revoked, not expired' }, { path: 'supabase/migrations/20260926150000_expansion_roles_and_features.sql', shows: 'accommodation_shares with expiry, revoke and access events' }, { path: 'supabase/mentor-rosters.check.sql', shows: 'Tests mentor roster access' }],
+    gap: 'Coverage is now per relationship for support, family, advisor, athletics/supporter and mentor; there is still no single consent/access matrix across roles and no UAT.',
   },
   {
     id: 'UOS-008',
@@ -1209,9 +1212,9 @@ export const REGISTER: readonly Requirement[] = [
     requirement: 'Automated/manual production checks keep fixtures from appearing as user data',
     validation: 'Release gate',
     severity: 'P0',
-    status: 'building',
-    evidence: [{ path: 'app/src/lib/where.ts', shows: 'Seed/demo content carries the \'sample\' provenance' }, { path: 'app/server/institution/housing.test.ts', shows: 'Sandbox adapter records are all marked SANDBOX' }, { path: 'app/scripts/production-smoke.mjs', shows: 'Probes production health and auth refusal only; no fixture scan' }],
-    gap: 'No release gate scans a production build or tenant for seed or sandbox records. Nothing blocks sandbox adapters or sample courses in a production tenant. No manual production check is recorded.',
+    status: 'tested',
+    evidence: [{ path: 'app/src/lib/pagesdemo.test.ts', shows: 'Release gate: the product deploy can never carry the demo switch, proved by running the workflow\'s own script with it set (#901)' }, { path: '.github/workflows/pages.yml', shows: 'The product build pins VITE_INSTITUTIONAL_PREVIEW off; a set variable is ignored with a notice; the demo is built separately into /demo/ (#900)' }, { path: 'app/src/lib/where.ts', shows: 'Seed/demo content carries the \'sample\' provenance' }, { path: 'app/server/institution/housing.test.ts', shows: 'Sandbox adapter records are all marked SANDBOX' }, { path: 'app/scripts/production-smoke.mjs', shows: 'Probes production health and auth refusal only; no fixture scan' }],
+    gap: 'The gate covers the build: the live site was the demo until 28 September (#900, #901) and cannot be again. Nothing yet scans a production tenant for seed or sandbox records, and nothing blocks sandbox adapters or sample courses in a production tenant. Needs the tenant scan and a recorded manual production check.',
   },
   {
     id: 'SEC-001',
@@ -1340,8 +1343,8 @@ export const REGISTER: readonly Requirement[] = [
     validation: 'Public/private pages',
     severity: 'P0',
     status: 'building',
-    evidence: [{ path: 'supabase/migrations/20260928100000_trust_room.sql', shows: 'NDA-gated procurement room: requests, grants, expiring links, open log' }, { path: 'app/src/screens/TrustRoom.tsx', shows: 'trust room screen for named reviewers' }, { path: 'supabase/trust-room.check.sql', shows: 'tests trust room grant/NDA rules' }, { path: 'docs/SECURITY-ACCESSIBILITY-READINESS.md', shows: 'trust packet index marking items public, NDA or not existing' }],
-    gap: 'No public Trust Center page is live; status, accessibility, AI and retention content not published; several packet items do not exist yet.',
+    evidence: [{ path: 'app/src/components/TrustCenter.tsx', shows: 'In-app Trust & Data Center behind trust_center (off): connected sources, what leaves the device, export' }, { path: 'app/src/components/TrustCenter.test.tsx', shows: 'Tests the center with the flag on and off' }, { path: 'supabase/migrations/20260928100000_trust_room.sql', shows: 'NDA-gated procurement room: requests, grants, expiring links, open log' }, { path: 'app/src/screens/TrustRoom.tsx', shows: 'trust room screen for named reviewers' }, { path: 'supabase/trust-room.check.sql', shows: 'tests trust room grant/NDA rules' }, { path: 'docs/SECURITY-ACCESSIBILITY-READINESS.md', shows: 'trust packet index marking items public, NDA or not existing' }],
+    gap: 'The in-app center is for the student and is off by default. No public Trust Center page is live; status, accessibility, AI and retention content not published; several packet items do not exist yet.',
   },
   {
     id: 'LEG-001',
@@ -1370,8 +1373,8 @@ export const REGISTER: readonly Requirement[] = [
     validation: 'Published policies',
     severity: 'P0',
     status: 'building',
-    evidence: [{ path: 'app/src/lib/privacy.ts', shows: 'in-app privacy disclosure written as data' }, { path: 'app/src/screens/Privacy.tsx', shows: 'privacy surface in the app' }, { path: 'app/src/lib/privacy.test.ts', shows: 'holds the disclosure true to the code' }],
-    gap: 'No terms of service, acceptable use policy, student AI policy, billing/refund terms or cookie/marketing notice; no legal review of the privacy notice.',
+    evidence: [{ path: 'docs/legal/TERMS-OF-SERVICE-DRAFT.md', shows: 'Terms draft for counsel: acceptable use, AI features, official information, price, ending; marked not in force' }, { path: 'docs/legal/PRIVACY-POLICY-DRAFT.md', shows: 'Privacy policy draft for counsel, held to the subprocessor register' }, { path: 'app/src/lib/trust/legal-drafts.test.ts', shows: 'The drafts name every subprocessor and no more, and say they are not in force' }, { path: 'app/src/lib/privacy.ts', shows: 'in-app privacy disclosure written as data' }, { path: 'app/src/screens/Privacy.tsx', shows: 'privacy surface in the app' }, { path: 'app/src/lib/privacy.test.ts', shows: 'holds the disclosure true to the code' }],
+    gap: 'Drafts exist for terms, acceptable use and AI use; nothing is in force, there is no legal entity to be the party, and there is no billing/refund or cookie/marketing notice. Every [DECIDE] waits on counsel (docs/LAUNCH-DECISIONS.md items 4–5).',
   },
   {
     id: 'LEG-004',
@@ -1389,9 +1392,9 @@ export const REGISTER: readonly Requirement[] = [
     requirement: 'Critical journeys have SLI/SLO, measurement, owner, error budget, alert thresholds',
     validation: 'SLO catalog/dashboard',
     severity: 'P0',
-    status: 'designed',
-    evidence: [{ path: 'docs/trust/SLA.md', shows: 'SLA formula and target tables; no agreed error budget' }, { path: 'docs/SERVICE-RELIABILITY-AND-SUPPORT-OPERATIONS.md', shows: 'plans SLO definitions and error budgets; nothing built' }, { path: 'app/src/lib/sla.ts', shows: 'SLA arithmetic only (allowed downtime), not SLI measurement' }],
-    gap: 'No SLO catalog per critical journey, no SLI measurement or retained availability history, no owners, error budgets or alert thresholds.',
+    status: 'tested',
+    evidence: [{ path: 'app/src/lib/governance/error-budgets.ts', shows: 'Eight student journeys with objectives, the six bad-write outcomes and the release rule each budget state imposes (#895)' }, { path: 'app/src/lib/governance/error-budgets.test.ts', shows: 'Arithmetic in parts per ten thousand; an empty window reads no_data, never healthy' }, { path: 'docs/operating-model/SLOS-AND-ERROR-BUDGETS.md', shows: 'The prose half, held row by row by docs.test.ts' }, { path: 'docs/SUPPORT-RELIABILITY-AND-ABUSE-PREVENTION.md', shows: 'SLO-1 to SLO-6 with the probe for each; every row PROBED or UNPROBED, none MEASURED' }, { path: 'docs/trust/SLA.md', shows: 'SLA formula and target tables' }],
+    gap: 'Objectives and budgets are defined and computed; nothing measures an SLI or retains availability history, no journey has an owner, and no alert threshold reaches a person. Needs measurement, owners and alerts.',
   },
   {
     id: 'SRE-002',
@@ -1460,8 +1463,8 @@ export const REGISTER: readonly Requirement[] = [
     validation: 'Rollback drill',
     severity: 'P0',
     status: 'building',
-    evidence: [{ path: 'app/src/lib/flags.ts', shows: 'flag registry, evaluator and database-backed kill switches' }, { path: 'app/src/lib/flags.test.ts', shows: 'tests the flag evaluator' }, { path: 'ROLLBACK.md', shows: 'rollback runbook with measured timings' }, { path: 'docs/FEATURE-FLAG-REGISTRY.md', shows: 'flag owners and kill-switch runbook' }],
-    gap: 'No canary release, no change calendar, no kill switch engaged in production, no rollback drill on the production deployment path.',
+    evidence: [{ path: 'app/scripts/golden-path.mjs', shows: 'The signed-out student journey at two viewports in CI, including restore into a fresh browser (#896)' }, { path: 'app/src/lib/governance/release-readiness.ts', shows: 'promote() refuses to skip a rung' }, { path: 'app/src/lib/flags.ts', shows: 'flag registry, evaluator and database-backed kill switches' }, { path: 'app/src/lib/flags.test.ts', shows: 'tests the flag evaluator' }, { path: 'ROLLBACK.md', shows: 'rollback runbook with measured timings' }, { path: 'docs/FEATURE-FLAG-REGISTRY.md', shows: 'flag owners and kill-switch runbook' }],
+    gap: 'No canary release, no change calendar, no kill switch engaged in production, no rollback drill on the production deployment path; the golden path is not yet account-synced.',
   },
   {
     id: 'SRE-009',
@@ -1479,9 +1482,9 @@ export const REGISTER: readonly Requirement[] = [
     requirement: 'Public status and subscriber/customer update process work',
     validation: 'Status-page drill',
     severity: 'P0',
-    status: 'designed',
-    evidence: [{ path: 'MONITORING.md', shows: 'declines a status page in writing' }, { path: 'docs/SERVICE-RELIABILITY-AND-SUPPORT-OPERATIONS.md', shows: 'plans service_incidents tables for status page; not built' }],
-    gap: 'No public status page, no subscriber notification process, no drill; council must overturn MONITORING.md refusal.',
+    status: 'tested',
+    evidence: [{ path: 'app/public/status.html', shows: 'Outside the bundle; probes the app\'s index and Supabase auth health from the reader\'s browser; claims no uptime it never measured (#902)' }, { path: 'app/public/status-incidents.json', shows: 'Incidents are an edit to this file' }, { path: 'app/src/lib/statuspage.test.ts', shows: 'Holds the page\'s URL and key to .env.production and requires a publishable key' }, { path: 'MONITORING.md', shows: 'Still declines a status page in writing; the refusal predates #902' }],
+    gap: 'No subscriber notification, no uptime history, incidents are a manual JSON edit, no drill; MONITORING.md and SUPPORT-RELIABILITY-AND-ABUSE-PREVENTION.md still record the refusal and need reconciling. Needs the customer update process and a drill.',
   },
   {
     id: 'SUP-001',
@@ -1489,9 +1492,9 @@ export const REGISTER: readonly Requirement[] = [
     requirement: 'Ticketing, KB, in-app reporting, severity routing, customer comms, diagnostics operate',
     validation: 'Support UAT',
     severity: 'P0',
-    status: 'building',
-    evidence: [{ path: 'supabase/feedback.check.sql', shows: 'tests in-app feedback/bug report storage and what it refuses' }, { path: 'app/src/lib/diagnose.ts', shows: 'local diagnostics a user can attach' }, { path: 'docs/market-readiness/SUPPORT_PLAYBOOK.md', shows: 'T1-T3 support tiers' }, { path: 'docs/launch/FAQ.md', shows: 'FAQ as a starting knowledge base' }],
-    gap: 'No ticketing system, no severity routing, no support address given to customers, no customer comms workflow or support UAT.',
+    status: 'tested',
+    evidence: [{ path: 'supabase/migrations/20260928210000_support_tickets.sql', shows: 'Two tables with RLS and no grants; nine definer functions; 24h/72h first-response targets computed from the category' }, { path: 'supabase/support-tickets.check.sql', shows: '25 checks, three of which fail against a faithful revert' }, { path: 'app/src/lib/supporttickets.ts', shows: 'Client and the six context keys' }, { path: 'app/src/components/supportticketspanel.test.tsx', shows: 'Nothing unticked is sent' }, { path: 'docs/market-readiness/SUPPORT_PLAYBOOK.md', shows: 'T1-T3 support tiers' }, { path: 'docs/launch/FAQ.md', shows: 'FAQ as a starting knowledge base' }],
+    gap: 'Off by default; no staff screen (an agent answers from the SQL editor), no notification to the student, no retention for closed tickets, no support address separate from a personal mailbox, no owner or hours, no customer comms workflow, no support UAT.',
   },
   {
     id: 'SUP-002',
