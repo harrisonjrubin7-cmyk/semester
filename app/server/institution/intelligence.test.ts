@@ -185,6 +185,37 @@ describe('governed institution intelligence', () => {
     expect((await service.confirm(identity, action.id, confirmation)).status).toBe(404);
   });
 
+  it('refuses to generate, and to say what the policy allows, while kill.ai_generation is engaged', async () => {
+    const generate = vi.fn();
+    const audit = vi.fn();
+    let engaged = true;
+    const service = createIntelligenceService({
+      status: 'configured-sandbox',
+      killSwitch: async () => engaged,
+      loadPolicy: async () => policy(),
+      loadApprovedSources: async () => [{ id: 'syllabus', evidenceIds: ['evidence-1'], body: 'body' }],
+      modelTask: async () => ({ candidates: [{ model: 'openai:gpt-5-mini', provider: 'openai', estimatedCents: 1 }] }),
+      generate,
+      execute: async () => ({ verified: false }),
+      audit,
+    });
+    const identity: UniversityIdentity = { userId: 'student-1', institutionId: 'northstar', roles: ['student'] };
+
+    const stopped = await service.respond(identity, request());
+    expect(stopped.status).toBe(503);
+    expect(stopped.body).toMatchObject({ code: 'ai-generation-killed' });
+    expect(generate).not.toHaveBeenCalled();
+    expect((await service.policy(identity)).status).toBe(503);
+    // The refusal is in the journal, as the switch working rather than a gap.
+    expect(audit).toHaveBeenCalledWith(identity, expect.objectContaining({ policyDecision: 'kill-switch', provider: 'none', costCents: 0 }));
+
+    // Released, the same service generates again: the check is per request.
+    engaged = false;
+    generate.mockResolvedValue({ text: 'Review elasticity.', citedSourceIds: ['syllabus'], inputTokens: 1, outputTokens: 1, providerRequestId: 'r' });
+    expect((await service.respond(identity, request())).status).toBe(200);
+    expect((await service.policy(identity)).status).toBe(200);
+  });
+
   it('exposes the versioned route and journals metadata without protected source bodies', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'semester-intelligence-'));
     const file = join(dir, 'journal.sqlite');

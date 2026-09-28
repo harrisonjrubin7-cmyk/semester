@@ -1439,3 +1439,104 @@ watermark, and the deploy off main would have refused the first of them.
 - **References.** Code comments, docs, check suites and RETENTION name the new
   files. D-105's table keeps the numbers it was written with.
 
+
+## D-108 · The modernization blueprint is a crosswalk onto the master register, not a second register
+
+**Decided 28 Sep 2026.** Three documents arrived on 28 September — the
+*Semester Product Modernization Blueprint*, the *Product architecture audit*
+it was written from, and the longer enhancement paper behind both — and are
+kept under `docs/expansion/` as supplied. Nearly every item they name is
+already a row of the master launch readiness register: the two plans describe
+the same platform. So they are held to the tree as
+[MODERNIZATION-BLUEPRINT.md](MODERNIZATION-BLUEPRINT.md), rendered from
+`app/src/lib/blueprint.ts`, where each of the blueprint's twelve points,
+twenty-seven front-end priorities and eighteen platform items points at the
+master rows that carry it, with a standing read off the tree and held by a
+test to the kind of file it cites. Rejected: a fourth register with its own
+statuses, which would drift from the master's within a week.
+
+Four master rows were re-read for it: LMS-002 and LMS-016 after Course Studio
+(#893), SRE-010 after the status page (#902), AI-012 after the kill switch was
+wired (below). The blueprint's decision rule — prioritise work that does at
+least two of ten things — is `prioritised()` in the same file, and everything
+built in the same change is scored against it.
+
+**Where the blueprint conflicts with a decision already on main, the decision
+holds until the owner reopens it.** The conflicts:
+
+| Blueprint asks | Decision on main | Held as |
+|---|---|---|
+| Five student destinations as *the* navigation | D-003: the five are the primary tab bar behind `journeyNavigation`, the shelves stay; roots fixed by DO-NOT-BUILD rule 1 | BP-01, FE-01 partial. D-003 also misstates `DEFAULT_TABS`, which is `home, calendar, study, support, me` |
+| A native gradebook, module builder, batch and anonymous grading | [FACULTY-COURSE-STUDIO-DESIGN.md](FACULTY-COURSE-STUDIO-DESIGN.md), 27 Sep: no duplicate LMS or gradebook; instructors see no individual student data | BP-05, FE-16, FE-19 held; the student-side pieces (autosave, what-if) proceed |
+| A Revenue Operations console module | D-009: billing stays out | OC-01 names it; no revenue module |
+| A server-side permission-aware search index; an external immutable audit archive | ADR 0006 (search is one ranker, on the device); ADR 0003 (no second database, no event bus) | BE-04 held; BE-03's archive named as needing the ADR reopened |
+| No "behind" or "at risk" labels anywhere | `When you are behind` is a screen (`lib/nav.ts`) that states facts without red or encouragement; the `UNCALM` guard covers Today | Not held: nothing forbids it. Recorded so the rename is a decision, not a drift. Proposed — needs owner |
+| A Semester-internal, cross-tenant operations console | DO-NOT-BUILD rule 1: no new top-level navigation; the school-side tools live under `university` | OC-01 partial: the console would live under an existing root |
+
+One thing the blueprint asks for that was already decided *for* it: a modular
+monolith, not microservices, which ADR 0003 has said since the gateway was
+designed.
+
+## D-109 · The AI kill switch is read by everything that generates, and an unreadable switch is thrown
+
+**Decided 28 Sep 2026.** `kill.ai_generation` had been a row in
+`feature_kill_switch`, the rollback named by every AI flag in the registry, and
+the gap in AI-012 — nothing that called a model asked. Now both runtimes do:
+the `claude` edge function before the body is read or the call counted, and
+the institution gateway before the policy is loaded, refusing `policy` and
+`respond` with `ai-generation-killed` and journaling the refusal as
+`kill-switch`. The rules are the integration worker's, copied rather than
+reinvented: the global row stops everyone, a school's row stops its school,
+and a switch that cannot be read is engaged, because the moment the switch is
+needed is the moment a read is likeliest to fail. The decision is one pure
+function (`supabase/functions/_shared/killswitch.ts`); the gateway repeats its
+two lines rather than importing them, because nothing the NodeNext build
+compiles may reach under `supabase/functions/` (the #803 lesson).
+
+Outside the switch by design: a student's own key on their own device
+(`lib/claude.ts`). That is their key and their bill, and a switch on
+Semester's generation is not a switch on theirs.
+
+## D-110 · Public claims carry a register word; the console's controls are data before the console
+
+**Decided 28 Sep 2026.** Two reviews of the company-site and operations-console
+prototypes reached the same finding from different sides: the prototypes said
+"SAML SSO", "193 tables under RLS" and "over 10,000 tests" as strings in a
+file, and nothing tied a public sentence to what the deployed product could
+show. The repository's public site (`app/src/site/`) had never made those
+claims, but it had no mechanism that would stop it either, and
+`SEMESTER-OPERATING-SYSTEM.md` listed the claims register PRG-002 asks for as
+missing.
+
+- **Every capability the public site names is a row of
+  `app/src/lib/ops/claims.ts`**, with its wording, one of six words
+  (Available now, Limited beta, Institution-configured, Built and tested,
+  In preparation, Planned), the master-register rows it rests on, the tests
+  or documents behind it, and the pages it appears on. Each word has a floor:
+  the lowest register status its rows may hold. `claims.test.ts` renders the
+  site and refuses a word above its rows, an "available" with no test, a
+  page that does not print the wording, and any `data-claim` the register
+  does not know. Each check was shown a fixture it must catch. PRG-002 moves
+  to `tested`; its gap is that sales and RFP material is not yet mapped.
+- **Three pages join the site:** `/launch-readiness/` (every claim, by the
+  audience it answers, and what the words mean), `/proof/` (the customer
+  proof policy, written before there is proof) and `/legal/` (every policy,
+  its status, version and effective date; none in force). The home page asks
+  what brought the visitor; contact routes each topic to a council seat and
+  promises no response time; pricing says currency, period, tax,
+  cancellation and refunds before anything is for sale.
+- **The operations console's controls are `app/src/lib/ops/console.ts`**,
+  rendered to `ops/operations-console/README.md`: segregation of duties (a
+  requester is never an approver; every party is a seat, an `app_roles` row
+  or the student), data classification and the controls each class imposes,
+  the context bar and access basis every page shows, the evidence-freshness
+  ladder, the production rules a browser prototype could not hold, and the
+  five conversion steps. The console map stays missing until there is a
+  console.
+- **Rejected:** company-domain addresses on the contact page before the
+  company owns a domain (they would be invented, which is the fault the
+  register exists to stop); a backend for the site's forms (the site has no
+  forms and its policy forbids `form-action`, so nothing typed is stored, by
+  construction); and marking anything `limited-beta` or
+  `institution-configured`, since no design partner and no configured
+  institution exists.

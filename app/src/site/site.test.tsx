@@ -15,6 +15,7 @@ const hrefs = (html: string) => [...html.matchAll(/<a [^>]*href="([^"]*)"/g)].ma
 describe('every page', () => {
   it('covers the routes the brief names', () => {
     const want = ['/', '/product/', '/students/', '/institutions/', '/pricing/', '/tools/', '/resources/', '/about/', '/careers/', '/contact/', '/security/', '/privacy/', '/accessibility/', '/help/', '/login/', '/signup/', '/account/', '/membership/',
+      '/launch-readiness/', '/proof/', '/legal/',
       '/tools/graduation/', '/tools/schedule/', '/tools/checklist/', '/tools/advisor/'];
     expect(ROUTES.map((r) => r.path).sort()).toEqual([...want].sort());
   });
@@ -115,6 +116,44 @@ describe('what the site says', () => {
     const security = pages.find((p) => p.route.path === '/security/')!.html;
     expect(security).toContain('Not done yet');
     expect(security).toMatch(/SOC 2/);
+  });
+
+  it('asks each visitor what brought them, and sends them to a real page', () => {
+    const home = pages[0].html;
+    expect(home).toContain('What brings you to Semester?');
+    expect(home).toMatch(/I am a student/);
+    expect(home).toMatch(/security/);
+  });
+
+  it('puts a status word beside every capability it names, and explains the words once', () => {
+    const labelled = pages.filter((p) => /data-claim="/.test(p.html)).map((p) => p.route.path);
+    expect(labelled).toEqual(expect.arrayContaining(['/', '/security/', '/accessibility/', '/institutions/', '/pricing/', '/privacy/', '/contact/', '/legal/', '/launch-readiness/']));
+    const ready = pages.find((p) => p.route.path === '/launch-readiness/')!.html;
+    expect(ready).toContain('Available now');
+    expect(ready).toContain('Planned');
+    expect(ready).toContain('status.html');
+  });
+
+  it('says every price in dollars, with what happens at cancellation, and no checkout', () => {
+    const pricing = pages.find((p) => p.route.path === '/pricing/')!.html;
+    expect(pricing).toContain('US dollars');
+    expect(pricing).toMatch(/[Cc]ancel/);
+    expect(pricing).toMatch(/[Rr]efund/);
+  });
+
+  it('routes every contact topic to a seat, and promises no response time it cannot keep', () => {
+    const contact = pages.find((p) => p.route.path === '/contact/')!.html;
+    expect(contact).toContain('Security / vCISO');
+    expect(contact).toContain('Accessibility lead');
+    expect(contact).toContain('No response time is promised yet');
+    expect(contact).not.toMatch(/within (one|two|1|2) business day/i);
+  });
+
+  it('shows no policy as in force', () => {
+    const legal = pages.find((p) => p.route.path === '/legal/')!.html;
+    expect(legal).toContain('Nothing is in force');
+    expect(legal).toContain('Terms of Service');
+    expect(legal).not.toMatch(/has (been )?reviewed by a lawyer|in force since/i);
   });
 });
 

@@ -20,12 +20,22 @@
           learn from here that this policy is breaking something for a student
           on a device nobody is holding.
 
-      Both close the moment this is served from somewhere that can set a
-      header — Cloudflare Pages, Netlify, a Supabase-fronted host — and the
-      set they would send is already written, in `vercel.json` and
-      `public/_headers`, guarded by `src/lib/hostheaders.test.ts`. Until then
-      this covers script, style, image, font, media, worker and connect, which
-      is where an injected script would actually have to go to do anything.
+      (A third: a tag applies only from the point the parser reaches it, so
+      nothing earlier in this head is policed by it. There is nothing earlier
+      that loads anything, which is why this tag comes first.)
+
+      All three close wherever this is served from a host that sets headers.
+      `vercel.json` and `public/_headers` send this same policy as a header,
+      directive for directive, with `frame-ancestors` added for the LMS
+      iframe; the build writes this deployment's connect origins into the
+      `_headers` copy just as it does here. On those hosts both policies are
+      enforced, and since they agree the effect is this one plus framing.
+      `src/lib/hostheaders.test.ts` fails if the header and this tag disagree
+      on any directive, so THIS TAG IS WHERE A SOURCE IS ADDED — then copy
+      the change into both header files, and the test says where you missed.
+      On Pages the tag alone covers script, style, image, font, media, worker
+      and connect, which is where an injected script would actually have to
+      go to do anything.
 
       ## Every source below is here because something loads from it
 

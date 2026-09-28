@@ -564,3 +564,115 @@ textarea.tool-input {
     display: none;
   }
 }
+
+/* Claim statuses: the word is the signal; the border only echoes it. */
+.site-claims {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.site-claim {
+  padding: 12px 0;
+  border-top: 1px solid var(--site-line);
+}
+
+.site-claim-text {
+  font-weight: 600;
+}
+
+.site-claim-scope {
+  display: block;
+  margin-top: 4px;
+}
+
+.site-status {
+  margin-right: 4px;
+  white-space: nowrap;
+}
+
+.site-status-available {
+  border-color: var(--site-accent);
+}
+
+.site-status-in-preparation,
+.site-status-planned {
+  color: var(--site-dim);
+}
+
+.site-legend {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+  gap: 12px 24px;
+  margin: 0;
+}
+
+.site-legend dt {
+  margin: 0;
+}
+
+.site-legend dd {
+  margin: 4px 0 0;
+  color: var(--site-dim);
+}
+
+.site-scroll {
+  overflow-x: auto;
+}
+
+.site-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+}
+
+.site-table caption {
+  padding: 0 0 8px;
+  color: var(--site-dim);
+  text-align: left;
+}
+
+.site-table th,
+.site-table td {
+  padding: 10px 12px 10px 0;
+  border-top: 1px solid var(--site-line);
+  vertical-align: top;
+  text-align: left;
+}
+
+.site-table thead th {
+  border-top: 0;
+  color: var(--site-dim);
+  font-family: var(--site-heading);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.site-table tbody th {
+  font-weight: 600;
+}
+
+.site-router {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.site-router a {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 12px 16px;
+  border: 1px solid var(--site-line);
+  border-radius: var(--site-r-md);
+  background: var(--site-panel);
+  text-decoration: none;
+}
+
+.site-router a:hover {
+  border-color: var(--site-accent);
+}

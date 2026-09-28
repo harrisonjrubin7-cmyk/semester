@@ -23,6 +23,8 @@ export interface IntelligenceRepositoryOptions {
 }
 
 export interface IntelligenceRepository {
+  /** Whether `kill.ai_generation` is engaged for this school or for everyone. */
+  killSwitchEngaged(identity: UniversityIdentity): Promise<boolean>;
   loadPolicy(identity: UniversityIdentity): Promise<TenantIntelligencePolicy>;
   loadApprovedSources(identity: UniversityIdentity, sourceIds: string[]): Promise<ApprovedIntelligenceSource[]>;
   reserveBudget(identity: UniversityIdentity, maximumCents: number): Promise<IntelligenceBudgetReservation | null>;
@@ -45,6 +47,25 @@ export function createSupabaseIntelligenceRepository(options: IntelligenceReposi
     : 0;
 
   return {
+    // The same two rules as `supabase/functions/_shared/killswitch.ts`, and
+    // written out again rather than imported: this file compiles under the
+    // gateway's NodeNext build, where nothing under `supabase/functions/` may
+    // be reached (CLAUDE.md, the #803 lesson). A switch that cannot be read is
+    // thrown; the global row stops every school, a school's row stops its own.
+    async killSwitchEngaged(identity) {
+      try {
+        const { data, error } = await client
+          .from('feature_kill_switch')
+          .select('tenant_id, engaged')
+          .eq('switch_key', 'kill.ai_generation');
+        if (error) return true;
+        const rows = (data ?? []) as Array<{ tenant_id: string | null; engaged: boolean }>;
+        return rows.some((k) => k.engaged && (k.tenant_id === null || k.tenant_id === identity.institutionId));
+      } catch {
+        return true;
+      }
+    },
+
     async loadPolicy(identity) {
       const [feature, policy, usage] = await Promise.all([
         client

@@ -42,7 +42,7 @@
     "smoke:production": "node scripts/production-smoke.mjs",
     "smoke:public-production": "node scripts/public-production-smoke.mjs",
     "rollout:census": "node scripts/institutional-census.mjs",
-    "registers": "REGISTERS=write vitest run src/lib/rolelaunch.test.ts src/lib/masterregister.test.ts src/lib/supplychain.test.ts src/lib/expansionregister.test.ts src/lib/ops/ src/lib/governance/risk.test.ts src/lib/governance/edgecases.test.ts",
+    "registers": "REGISTERS=write vitest run src/lib/rolelaunch.test.ts src/lib/masterregister.test.ts src/lib/supplychain.test.ts src/lib/expansionregister.test.ts src/lib/ops/ src/lib/governance/risk.test.ts src/lib/governance/edgecases.test.ts src/lib/blueprint.test.ts",
     "sbom": "npm sbom --sbom-format cyclonedx --omit dev"
   },
   "dependencies": {

@@ -700,4 +700,151 @@ begin
   raise notice 'ok  the answer keys are not reachable by a signed-out visitor';
 end $$;
 
+-- ── A definer function outside `public` is callable only because a policy needs it
+--
+-- `public` is swept above against an allowlist, because PostgREST publishes
+-- it. `private` is not published, and that is the only reason its definer
+-- helpers being executable by `anon` and `authenticated` has not been a
+-- finding: a `security definer` function runs as its owner whoever calls it,
+-- so the grant is the whole of its fence, and "nobody can reach it" is a fact
+-- about today's API settings rather than about the function.
+--
+-- The rule: a client role may execute a definer function outside `public`
+-- only when something evaluated *as that role* calls it — a row-level
+-- security policy, or a view (which, being invoker now, runs as its reader).
+-- Both are recorded in `pg_depend`, so this asks the catalogue rather than
+-- reading bodies. A definer function called only by other definer functions
+-- needs no client grant at all, since those run as the owner.
+--
+-- This is also the whole of what makes a *new* definer helper default to
+-- closed. Postgres still grants EXECUTE to PUBLIC on every function as it is
+-- created — `20260929050000` explains why it does not change that default —
+-- so a migration that forgets its revoke ships a callable helper, and this is
+-- the check that refuses it until the revoke is written or the reason is.
+--
+-- Two exceptions, named because a text search is not a dependency:
+--   same_school            — reserved for the classmate policies when they
+--                            tighten; tenancy.check.sql exercises it as a
+--                            signed-in account today
+--   gtm_reviews_outstanding — called by private.gtm_campaign_guard, an
+--                            *invoker* trigger, which runs as whoever updated
+--                            the campaign
+
+create or replace function pg_temp.unneeded_definers()
+returns text language sql stable as $$
+  select string_agg(fn, ', ' order by fn) from (
+    select n.nspname || '.' || p.proname || '(' || pg_get_function_identity_arguments(p.oid) || ')' as fn
+      from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+     where n.nspname not in ('public', 'pg_catalog', 'information_schema')
+       and n.nspname not like 'pg_temp%'
+       and p.prosecdef
+       and not pg_temp.from_extension(p.oid)
+       and (has_function_privilege('anon', p.oid, 'execute')
+         or has_function_privilege('authenticated', p.oid, 'execute'))
+       and not exists (
+         select 1 from pg_depend d
+          where d.refclassid = 'pg_proc'::regclass and d.refobjid = p.oid
+            and d.classid in ('pg_policy'::regclass, 'pg_rewrite'::regclass))
+  ) t where not (t.fn = any(array[
+    'private.gtm_reviews_outstanding(want_campaign uuid)',
+    'private.same_school(other uuid)'
+  ]));
+$$;
+
+do $$
+declare
+  extra text;
+  needed int;
+begin
+  extra := pg_temp.unneeded_definers();
+  if extra is not null then
+    raise exception 'FAILED: a client role can execute %, a definer function no policy or view calls — '
+      'revoke it, or name it here with the reason', extra;
+  end if;
+
+  -- Control one: the exemption must be doing work. If `pg_depend` stopped
+  -- recording policy dependencies, or the join stopped matching, every
+  -- definer helper would look unneeded and the check above would fail on all
+  -- of them — loud, but let it say why. The count is printed so a run shows
+  -- what the rule is standing on.
+  select count(distinct p.oid) into needed
+    from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+    join pg_depend d on d.refobjid = p.oid and d.refclassid = 'pg_proc'::regclass
+                    and d.classid = 'pg_policy'::regclass
+   where n.nspname = 'private' and p.prosecdef;
+  if needed < 10 then
+    raise exception 'FAILED: only % private definer function(s) are called by a policy — the dependency probe has stopped matching', needed;
+  end if;
+
+  -- Control two: the case this exists for. A migration adds a definer helper
+  -- to `private` and writes no grant at all, so it has PUBLIC's EXECUTE from
+  -- the moment it exists. The sweep must name it. Rolled back by the
+  -- deliberate raise.
+  begin
+    create function private.grants_check_probe() returns int
+      language sql security definer set search_path = '' as 'select 1';
+    extra := pg_temp.unneeded_definers();
+    raise exception using errcode = 'P0001', message = 'control:' || coalesce(extra, '');
+  exception when raise_exception then
+    if sqlerrm not like 'control:%private.grants_check_probe()%' then
+      raise exception 'FAILED: a new definer helper with only its default grant was not seen (%)', sqlerrm;
+    end if;
+  end;
+  raise notice 'ok  no definer function outside public is executable by a client role without a policy or view needing it (% policy helpers), and a new one with the default grant is refused', needed;
+end $$;
+
+-- ── And every function a policy calls can be executed by the role it applies to
+--
+-- The other half of the rule above, and what makes it safe to push on. The
+-- sweep above says "revoke it"; this is what stops a revoke going one helper
+-- too far. A policy is evaluated as the querying role, so a helper that role
+-- cannot execute is not a closed door but a broken one: "permission denied
+-- for function" on an ordinary select, for every account, on a table that was
+-- working. This finds it at build time, for every policy, without waiting for
+-- a suite to happen to query that table as that role.
+--
+-- Only where the role can reach the table with the policy's verb: a policy
+-- `to public` on a table `anon` holds no grant on is never evaluated for
+-- `anon`, and demanding the helper be executable there would be asking for a
+-- grant nothing uses.
+
+create or replace function pg_temp.policies_that_cannot_run()
+returns text language sql stable as $$
+  select string_agg(r.rolname || ' → ' || pol.polrelid::regclass || ' "' || pol.polname || '" → '
+                    || d.refobjid::regprocedure, '; ' order by 1)
+    from pg_policy pol
+    join pg_depend d on d.classid = 'pg_policy'::regclass and d.objid = pol.oid
+                    and d.refclassid = 'pg_proc'::regclass
+    cross join (values ('anon'), ('authenticated')) as r(rolname)
+   where (0::oid = any(pol.polroles)
+          or (select oid from pg_roles where rolname = r.rolname) = any(pol.polroles))
+     and has_table_privilege(r.rolname, pol.polrelid,
+           case pol.polcmd when 'a' then 'insert' when 'w' then 'update'
+                           when 'd' then 'delete' else 'select' end)
+     and not has_function_privilege(r.rolname, d.refobjid, 'execute');
+$$;
+
+do $$
+declare broken text;
+begin
+  broken := pg_temp.policies_that_cannot_run();
+  if broken is not null then
+    raise exception 'FAILED: a policy calls a function its role cannot execute: %', broken;
+  end if;
+
+  -- The control: take away the grant the forms insert policy depends on, and
+  -- the sweep must name it. Rolled back by the deliberate raise.
+  begin
+    revoke execute on function private.form_open(uuid) from anon;
+    broken := pg_temp.policies_that_cannot_run();
+    raise exception using errcode = 'P0001', message = 'control:' || coalesce(broken, '');
+  exception when raise_exception then
+    if sqlerrm not like 'control:%anon%form_responses%form_open%' then
+      raise exception 'FAILED: the policy sweep did not see form_open revoked from anon (%)', sqlerrm;
+    end if;
+  end;
+  raise notice 'ok  every policy can execute the functions it calls, and the sweep sees one that cannot';
+end $$;
+
+
 rollback;

@@ -302,6 +302,13 @@ export async function confirmAction(input: ConfirmActionInput): Promise<Intellig
 
 export interface IntelligenceServiceConfig {
   status: 'policy-disabled' | 'configured-sandbox' | 'configured-production';
+  /**
+   * Whether `kill.ai_generation` is engaged for this identity's school, or
+   * for everyone. Asked before the policy is loaded and before anything is
+   * generated; a switch that cannot be read answers true. Absent only for the
+   * policy-disabled runtime, which generates nothing anyway.
+   */
+  killSwitch?: (identity: UniversityIdentity) => Promise<boolean>;
   loadPolicy: (identity: UniversityIdentity) => Promise<TenantIntelligencePolicy>;
   loadApprovedSources: (identity: UniversityIdentity, sourceIds: string[]) => Promise<ApprovedIntelligenceSource[]>;
   modelTask: (identity: UniversityIdentity, request: IntelligenceGatewayRequest) => Promise<ModelTask>;
@@ -322,9 +329,24 @@ export interface IntelligenceService {
 
 export function createIntelligenceService(config: IntelligenceServiceConfig): IntelligenceService {
   const actions = config.actionStore ?? new MemoryIntelligenceActionStore();
+  // The refusal every generating path gives when the switch is engaged. Audited
+  // like a provider refusal, with no provider, so the journal shows the switch
+  // doing its job rather than a quiet gap where requests used to be.
+  const killed = async (identity: UniversityIdentity, category: string): Promise<IntelligenceResult | null> => {
+    if (!config.killSwitch || !(await config.killSwitch(identity))) return null;
+    await config.audit?.(identity, {
+      category, provider: 'none', model: 'none', inputTokens: 0, outputTokens: 0, costCents: 0, policyDecision: 'kill-switch',
+    });
+    return result(503, {
+      code: 'ai-generation-killed',
+      message: 'AI generation is switched off right now. Everything else in Semester still works, and nothing you typed has been lost.',
+    });
+  };
   return {
     status: config.status,
     policy: async (identity) => {
+      const stopped = await killed(identity, 'policy');
+      if (stopped) return stopped;
       const policy = await config.loadPolicy(identity);
       if (policy.state === 'off' || !identity.roles.some((role) => policy.permittedRoles.includes(role))) {
         return result(403, { code: 'policy-disabled', message: 'Semester Intelligence is unavailable for this account.' });
@@ -338,6 +360,8 @@ export function createIntelligenceService(config: IntelligenceServiceConfig): In
       } catch (error) {
         return result(400, { code: 'invalid-request', message: error instanceof Error ? error.message : 'Invalid intelligence request.' });
       }
+      const stopped = await killed(identity, request.category);
+      if (stopped) return stopped;
       const response = await respond({
         identity,
         request,

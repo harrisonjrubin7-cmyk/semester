@@ -2,6 +2,9 @@ import react from '@vitejs/plugin-react'
 import { defineConfig, loadEnv } from 'vite'
 import { configDefaults } from 'vitest/config'
 import { fileURLToPath } from 'node:url'
+import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+import { join } from 'node:path'
+import { EXTRA_CONNECT, parsePolicy, uncoveredOrigins } from './src/lib/cspheader.ts'
 import { privateHost, publicCalendarUrl } from './src/lib/publichost.ts'
 import { unregisteredHosts } from './src/lib/trust/subprocessors.ts'
 
@@ -550,17 +553,75 @@ function cspExtraConnect(read: (name: string) => string | undefined): string {
  *
  * `order: 'pre'` so this runs before Vite's own `%VITE_…%` substitution, which
  * would otherwise spend a moment resolving a tag that is about to be deleted.
+ *
+ * ## And the header copy, while building
+ *
+ * `public/_headers` carries the same policy as a header, placeholder and all
+ * (`src/lib/cspheader.ts` says why the policy is sent twice). Vite copies
+ * `public/` into `dist/` verbatim — it substitutes `%VITE_…%` in the HTML and
+ * nowhere else — so without this the header would ship the literal
+ * placeholder, a source the browser cannot parse, and would *lack* the
+ * deployment's own origins. And since a browser enforces both policies, a
+ * Supabase custom domain the tag allows would then be refused by the header:
+ * the feature would work under `vite preview` and fail on Netlify. So once
+ * the bundle is written, the copy in `dist/` gets the same value the tag got.
+ * A `_headers` that has lost its placeholder is left alone; `hostheaders.test.ts`
+ * is what notices that.
  */
-const csp = (serving: boolean) => ({
-  name: 'csp',
-  transformIndexHtml: {
-    order: 'pre' as const,
-    handler: (html: string) =>
-      serving
-        ? html.replace(/[ \t]*<meta\s+http-equiv="Content-Security-Policy"[\s\S]*?\/>\n?/i, '')
-        : html,
-  },
-})
+const csp = (serving: boolean) => {
+  let outDir = 'dist'
+  return {
+    name: 'csp',
+    configResolved(config: { root: string; build: { outDir: string } }) {
+      outDir = join(config.root, config.build.outDir)
+    },
+    transformIndexHtml: {
+      order: 'pre' as const,
+      handler: (html: string) =>
+        serving
+          ? html.replace(/[ \t]*<meta\s+http-equiv="Content-Security-Policy"[\s\S]*?\/>\n?/i, '')
+          : html,
+    },
+    closeBundle() {
+      if (serving) return
+      const file = join(outDir, '_headers')
+      if (!existsSync(file)) return
+      const text = readFileSync(file, 'utf8')
+      if (!text.includes(EXTRA_CONNECT)) return
+      writeFileSync(
+        file,
+        text.split(EXTRA_CONNECT).join(process.env.VITE_CSP_EXTRA_CONNECT ?? ''),
+      )
+    },
+  }
+}
+
+/**
+ * The origins a Vercel build would configure and its header would refuse.
+ *
+ * `vercel.json` is read before the build runs, so its policy cannot take the
+ * substitution `_headers` gets above; it carries the fixed sources only. A
+ * browser enforces the header *and* the tag, so an origin the tag gains from a
+ * build variable but the header does not name is refused — on the Vercel
+ * deployment only, silently, as a feature that looks switched off. That is the
+ * failure this repository keeps finding, so on Vercel (which sets `VERCEL=1`
+ * in its builds) it is a build failure instead, naming the origin and the
+ * line to add it to. The deployment's own addresses are exempt: a gateway on
+ * the same host is `'self'`.
+ */
+function vercelUncovered(extra: string): string[] {
+  const config = JSON.parse(readFileSync(new URL('./vercel.json', import.meta.url), 'utf8')) as {
+    headers: { source: string; headers: { key: string; value: string }[] }[]
+  }
+  const all = config.headers.find((r) => r.source === '/(.*)')
+  const policy = all?.headers.find((h) => h.key.toLowerCase() === 'content-security-policy')
+  const sources = parsePolicy(policy?.value ?? '').get('connect-src') ?? []
+  const self = ['VERCEL_URL', 'VERCEL_BRANCH_URL', 'VERCEL_PROJECT_PRODUCTION_URL']
+    .map((name) => process.env[name])
+    .filter((v): v is string => !!v)
+    .map((host) => `https://${host}`)
+  return uncoveredOrigins(sources, extra, self)
+}
 
 /**
  * The test files that must keep a module registry of their own.
@@ -723,6 +784,20 @@ export default defineConfig(({ command, mode }) => {
         'subprocessor register (app/src/lib/trust/subprocessors.ts) does not list. ' +
         'Add its row before this build is deployed.\n',
     )
+  }
+
+  // See `vercelUncovered`: on Vercel, an origin the header would refuse is a
+  // failed build rather than a feature that quietly does not work.
+  if (command === 'build' && process.env.VERCEL) {
+    const refused = vercelUncovered(process.env.VITE_CSP_EXTRA_CONNECT)
+    if (refused.length > 0) {
+      throw new Error(
+        `The Content-Security-Policy header in app/vercel.json would refuse ${refused.join(', ')}, ` +
+          'which this build is configured to connect to (index.html gains it from the build ' +
+          'variables, and a browser enforces both policies). Add it to the end of connect-src ' +
+          'in app/vercel.json — src/lib/cspheader.ts explains why that file cannot be substituted.',
+      )
+    }
   }
 
   /*

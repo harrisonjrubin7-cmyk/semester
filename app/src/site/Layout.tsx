@@ -24,7 +24,7 @@ const PRIMARY: [string, string][] = [
 const FOOTER: [string, [string, string][]][] = [
   ['Product', [['Product', '/product/'], ['Pricing', '/pricing/'], ['Tools', '/tools/'], ['Help', '/help/']]],
   ['Company', [['About', '/about/'], ['Careers', '/careers/'], ['Contact', '/contact/'], ['Resources', '/resources/']]],
-  ['Trust', [['Security', '/security/'], ['Privacy', '/privacy/'], ['Accessibility', '/accessibility/']]],
+  ['Trust', [['Security', '/security/'], ['Privacy', '/privacy/'], ['Accessibility', '/accessibility/'], ['Are we ready?', '/launch-readiness/'], ['How we show proof', '/proof/'], ['Legal', '/legal/']]],
 ];
 
 /**
