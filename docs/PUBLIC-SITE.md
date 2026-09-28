@@ -12,13 +12,14 @@ an injected script inert. The four tool pages are the only exception (below).
 
 | | |
 |---|---|
-| Pages | `app/src/site/pages.tsx`: 18 content routes and 4 tool routes, listed in `app/src/site/render.tsx` `ROUTES` |
+| Pages | `app/src/site/pages.tsx`: 21 content routes and 4 tool routes, listed in `app/src/site/render.tsx` `ROUTES` |
+| Claims | `app/src/lib/ops/claims.ts`: every capability a page names, its status word, its rows and evidence; `app/src/site/claims.tsx` prints them (D-110) |
 | Tools | `app/src/site/tools/Tools.tsx` (the four tools), `tools/client.tsx` (hydration, bundled as `tools/tools.js`) |
 | Frame | `app/src/site/Layout.tsx`: skip link, header, a script-free `<details>` phone menu, footer |
 | Styles | `app/src/site/site.css`, with the app's `@font-face` rules prepended at build |
 | Plans | `app/src/lib/plans.ts`: one source for the pricing page and the in-app Membership panel |
 | Build | `app/scripts/build-site.mjs` renders with Vite's own module loader, writing to `app/dist-site/` (git-ignored) |
-| Tests | `app/src/site/site.test.tsx`, `app/src/site/tools/Tools.test.tsx`, `app/src/lib/plans.test.ts` |
+| Tests | `app/src/site/site.test.tsx`, `app/src/site/tools/Tools.test.tsx`, `app/src/lib/plans.test.ts`, `app/src/lib/ops/claims.test.ts` |
 
 ```bash
 cd app
@@ -38,12 +39,34 @@ npm run site:preview    # serves dist-site on http://localhost:4175
 - No checkout. Every paid price is marked *(planned)*, and export, deletion
   and saved plans are listed as on every plan.
 - The product preview is labelled demo data.
+- Every capability a page names carries one of six status words from the
+  claims register (`ops/claims/README.md`), and the word may not be above
+  what the master-register rows behind it support. Nothing on the site prints
+  a `data-claim` the register does not know, and `/launch-readiness/` lists
+  every claim with what the words mean.
+- The home page asks what brought the visitor and sends each answer to a real
+  page. Contact routes each topic to a council seat and promises no response
+  time it cannot keep. Pricing states currency, billing period, tax,
+  cancellation and refunds before anything is for sale. `/legal/` lists every
+  policy with its status; none is in force, and the page says so.
+- The site sets no cookie, has no form (`form-action 'none'`), and stores
+  nothing anyone types.
 - The site's colours equal the app's `:root` tokens.
 - Only tool pages have a script: exactly one, `tools/tools.js`, same-origin,
   nothing inline. Their policy is `script-src 'self'` and `connect-src 'none'`,
   so a tool cannot send what is typed into it even if its code tried.
 - Every tool hydrates without a mismatch (checked by prerendering, then
   hydrating, in the test).
+
+## The readiness pages
+
+`/launch-readiness/` answers four audiences — students, advisors and
+departments, institutions, and IT, security, privacy and accessibility
+reviewers — from the claims register, and links the status page
+(`app/public/status.html`), which probes Semester from the reader's browser.
+`/proof/` is the customer proof policy, written before there is proof.
+`/legal/` is the policy table: status, version, effective date and owner for
+each, with what the page will show once one is in force.
 
 ## The public tools
 

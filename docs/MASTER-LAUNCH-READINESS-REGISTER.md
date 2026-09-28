@@ -27,9 +27,9 @@ state is in [`ROLE-LAUNCH-REGISTER.md`](ROLE-LAUNCH-REGISTER.md).
 | --- | --- | ---: | ---: |
 | not-started | No implemented control/capability exists | 3 | 2 |
 | designed | Requirements/architecture approved; not implemented | 31 | 29 |
-| building | Implementation in progress | 66 | 50 |
+| building | Implementation in progress | 65 | 49 |
 | implemented | Deployed in non-production or production but not fully validated | 0 | 0 |
-| tested | Functional/security/accessibility/reliability tests pass | 42 | 36 |
+| tested | Functional/security/accessibility/reliability tests pass | 43 | 37 |
 | evidenced | Current artifacts are collected and reviewed | 0 | 0 |
 | operational | Monitored, supported, and used in production-like operation | 0 | 0 |
 | launch-approved | All required columns complete and accountable owners signed off | 0 | 0 |
@@ -49,14 +49,14 @@ and also needs every sign-off. **No gate passes.**
 
 | Gate | Title | Rows | not-started | designed | building | implemented | tested | evidenced | operational | blocked | Passes |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
-| A | Foundation readiness | 22 | 0 | 3 | 5 | 0 | 14 | 0 | 0 | 0 | no |
+| A | Foundation readiness | 22 | 0 | 3 | 4 | 0 | 15 | 0 | 0 | 0 | no |
 | B | Student platform readiness | 31 | 0 | 0 | 10 | 0 | 21 | 0 | 0 | 0 | no |
 | C | Native LMS readiness | 25 | 0 | 13 | 11 | 0 | 1 | 0 | 0 | 0 | no |
 | D | Integration and data readiness | 14 | 2 | 2 | 8 | 0 | 2 | 0 | 0 | 0 | no |
 | E | AI readiness | 14 | 0 | 0 | 12 | 0 | 2 | 0 | 0 | 0 | no |
 | F | Security, privacy, accessibility, procurement readiness | 22 | 0 | 8 | 14 | 0 | 0 | 0 | 0 | 0 | no |
 | G | Reliability, support, and operations readiness | 14 | 1 | 5 | 6 | 0 | 2 | 0 | 0 | 0 | no |
-| H | Full dress rehearsal and executive launch approval | 142 | 3 | 31 | 66 | 0 | 42 | 0 | 0 | 0 | no |
+| H | Full dress rehearsal and executive launch approval | 142 | 3 | 31 | 65 | 0 | 43 | 0 | 0 | 0 | no |
 
 ### Gate A — Foundation readiness
 
@@ -169,7 +169,7 @@ Owns every row below.
 | ID | Capability | Launch requirement | Validation | Sev | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | PRG-001 | Product operating model | Named owners for product, engineering, security, privacy, accessibility, AI, SRE, implementation, support, legal, and GTM | RACI, operating cadence, escalation tree | P0 | designed | `docs/LAUNCH-DECISIONS.md` — Step 1 names the seats the owner can hold this week and the three that need someone qualified; none is yet written into the council<br>`docs/LAUNCH-READINESS-COUNCIL.md` — Council seats and decision rights described; no people named<br>`app/src/lib/launchreadiness.ts` — Seats (product, eng, security, privacy, a11y, success...) all holder: null; no AI/SRE/GTM seat<br>`docs/operating-model/PILOT-TO-PRODUCTION.md` — Pilot RACI section for institution/vendor roles | Every seat is vacant (holder null). No named people, no AI/SRE/legal/GTM owner, no operating cadence or escalation tree approved. Needs named owners recorded and signed, cadence calendar and escalation tree. |
-| PRG-002 | Master claims register | Every marketing/sales/product claim maps to implemented evidence and approved scope | Claims register review | P0 | building | `app/src/lib/rollout-capabilities.ts` — Capability inventory with state (verified/partial/absent) and evidence refs; not marketing claims<br>`app/src/lib/rollout-traceability.test.ts` — Tests evidence references resolve for rollout capabilities<br>`app/src/lib/marketreadiness.test.ts` — Probes readiness-scorecard absence claims against the tree<br>`docs/LAUNCH-READINESS-TEST-PLAN.md` — Lists as Owed: a claim register that rejects 'available' without evidence | No register of marketing/sales claims exists; capability inventory covers product promises only. Needs a claims register mapping each external claim to evidence and approved scope, a test rejecting unevidenced claims, and a recorded review. |
+| PRG-002 | Master claims register | Every marketing/sales/product claim maps to implemented evidence and approved scope | Claims register review | P0 | tested | `app/src/lib/ops/claims.ts` — Every capability the public site asserts, with the word it may carry, the rows and tests behind it, and the pages it appears on<br>`app/src/lib/ops/claims.test.ts` — Refuses a word above its rows, an available with no test, a page that does not print the wording, and a label the register does not know; each check shown a fixture it must catch<br>`ops/claims/README.md` — The rendered register<br>`app/src/lib/rollout-capabilities.ts` — Capability inventory with state (verified/partial/absent) and evidence refs; product promises, not marketing claims<br>`app/src/lib/marketreadiness.test.ts` — Probes readiness-scorecard absence claims against the tree | The register covers the public site only: sales decks, RFP answers and anything said in a meeting are not yet mapped, and no seat has approved a wording. Needs the sales and RFP material catalogued as rows, and the founder seat held to approve. |
 | PRG-003 | Feature governance | Every feature has job, owner, data, risk, a11y criteria, metric, fallback, support plan, and sunset condition | Feature brief archive | P1 | building | `app/src/lib/flags.ts` — FlagDefinition carries owner, highRisk, reviewAt, expiresAt, rollout for flagged features<br>`app/src/lib/rollout-capabilities.ts` — Per-capability promise, owner, dependencies, acceptance line<br>`docs/COMPONENT-RELEASE-CHECKLIST.md` — Release checklist for components | Owner/risk/expiry exist only for flags and capability rows. No per-feature brief with data, a11y criteria, metric, fallback, support plan and sunset condition; no brief archive or test enforcing completeness. |
 | PRG-004 | Design system | Shared tokens, AppShell, components, content standards, responsive/a11y rules operate across all routes | Component inventory, visual regression suite | P0 | tested | `app/src/styles/tokens.css` — Shared design tokens<br>`app/src/styles/tokens.test.ts` — Tests token usage/definitions<br>`app/src/components/shell/rows.aria.test.tsx` — Tests shell rows a11y semantics<br>`app/src/lib/contrast.test.ts` — Walks full contrast ramp for every ground | No component inventory and no visual regression (screenshot diff) suite; no single AppShell component by that name. Needs a published component inventory and a visual regression suite across routes/themes. |
 | PRG-005 | Route/feature crosswalk | Every route mapped to owner, user job, source/privacy needs, metrics, tests, and support | Signed crosswalk | P1 | building | `docs/ROUTE-AND-FEATURE-CROSSWALK.md` — Maps every screen to destinations with preserve/extend/defer call<br>`app/src/lib/rollout-capabilities.ts` — Capabilities mapped to destinations with owner<br>`app/src/lib/rollout-capabilities.test.ts` — Tests capability-to-destination mapping | Crosswalk lacks per-route source/privacy needs, metrics, tests and support owner, and is unsigned. Needs those columns filled for every nav destination and a sign-off. |
@@ -441,7 +441,7 @@ are not written, for the reason given.
 | `ENTERPRISE-IMPLEMENTATION-METHODOLOGY.md` | partly-covered | `docs/market-readiness/IMPLEMENTATION_PLAYBOOK.md`<br>`docs/INSTITUTIONAL-CHANGE-MANAGEMENT.md` | Written for a pilot; no enterprise implementation has been run. |
 | `CUSTOMER-SUCCESS-AND-RENEWAL-PLAYBOOK.md` | partly-covered | `docs/PILOT-TO-ANNUAL-CONVERSION.md` | Conversion only; no QBR, outcome-report or renewal process (SUP-003). |
 | `COMMERCIAL-OPERATIONS-READINESS.md` | partly-covered | `docs/operating-model/COMMERCIAL-GOVERNANCE.md`<br>`docs/PAID-PILOT-FRAMEWORK.md` | Entity, insurance, billing and tax are LEG-001 and COM-001; none is in place. |
-| `PRODUCT-CLAIMS-REGISTER.md` | missing | — | Not written: it needs every external claim catalogued first (PRG-002). Individual guards exist, e.g. no certification may be affirmed in docs/trust/. |
+| `PRODUCT-CLAIMS-REGISTER.md` | partly-covered | `ops/claims/README.md` | The public site’s claims are catalogued, each with its word, rows, tests and pages, and held by claims.test.ts. Sales and RFP material is not yet mapped (PRG-002). |
 | `FULL-PRODUCTION-TEST-STRATEGY.md` | partly-covered | `docs/LAUNCH-READINESS-TEST-PLAN.md`<br>`REGRESSION-CHECKLIST.md` | No load, chaos or end-to-end production suite (SRE-007). |
 | `DISASTER-RECOVERY-AND-RESTORE-EXERCISE-PLAN.md` | partly-covered | `RESTORE.md`<br>`docs/market-readiness/DISASTER_RECOVERY.md`<br>`supabase/restore.sh` | A rehearsal passes locally; production has never been restored (SRE-005). |
 | `SECURITY-PROCUREMENT-EVIDENCE-INDEX.md` | partly-covered | `docs/trust/README.md`<br>`docs/market-readiness/HECVAT_READINESS.md`<br>`docs/market-readiness/PROCUREMENT_CHECKLIST.md` | The trust package is indexed and held to the tree; the HECVAT workbook is not complete (SEC-011). |

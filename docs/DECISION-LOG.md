@@ -1496,3 +1496,47 @@ compiles may reach under `supabase/functions/` (the #803 lesson).
 Outside the switch by design: a student's own key on their own device
 (`lib/claude.ts`). That is their key and their bill, and a switch on
 Semester's generation is not a switch on theirs.
+
+## D-110 · Public claims carry a register word; the console's controls are data before the console
+
+**Decided 28 Sep 2026.** Two reviews of the company-site and operations-console
+prototypes reached the same finding from different sides: the prototypes said
+"SAML SSO", "193 tables under RLS" and "over 10,000 tests" as strings in a
+file, and nothing tied a public sentence to what the deployed product could
+show. The repository's public site (`app/src/site/`) had never made those
+claims, but it had no mechanism that would stop it either, and
+`SEMESTER-OPERATING-SYSTEM.md` listed the claims register PRG-002 asks for as
+missing.
+
+- **Every capability the public site names is a row of
+  `app/src/lib/ops/claims.ts`**, with its wording, one of six words
+  (Available now, Limited beta, Institution-configured, Built and tested,
+  In preparation, Planned), the master-register rows it rests on, the tests
+  or documents behind it, and the pages it appears on. Each word has a floor:
+  the lowest register status its rows may hold. `claims.test.ts` renders the
+  site and refuses a word above its rows, an "available" with no test, a
+  page that does not print the wording, and any `data-claim` the register
+  does not know. Each check was shown a fixture it must catch. PRG-002 moves
+  to `tested`; its gap is that sales and RFP material is not yet mapped.
+- **Three pages join the site:** `/launch-readiness/` (every claim, by the
+  audience it answers, and what the words mean), `/proof/` (the customer
+  proof policy, written before there is proof) and `/legal/` (every policy,
+  its status, version and effective date; none in force). The home page asks
+  what brought the visitor; contact routes each topic to a council seat and
+  promises no response time; pricing says currency, period, tax,
+  cancellation and refunds before anything is for sale.
+- **The operations console's controls are `app/src/lib/ops/console.ts`**,
+  rendered to `ops/operations-console/README.md`: segregation of duties (a
+  requester is never an approver; every party is a seat, an `app_roles` row
+  or the student), data classification and the controls each class imposes,
+  the context bar and access basis every page shows, the evidence-freshness
+  ladder, the production rules a browser prototype could not hold, and the
+  five conversion steps. The console map stays missing until there is a
+  console.
+- **Rejected:** company-domain addresses on the contact page before the
+  company owns a domain (they would be invented, which is the fault the
+  register exists to stop); a backend for the site's forms (the site has no
+  forms and its policy forbids `form-action`, so nothing typed is stored, by
+  construction); and marking anything `limited-beta` or
+  `institution-configured`, since no design partner and no configured
+  institution exists.
