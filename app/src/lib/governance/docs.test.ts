@@ -6,6 +6,9 @@ import { NEVER, SETTINGS, APPROVAL_FLOW } from './config-tiers';
 import { CONTRACTS } from './data-contracts';
 import { AUDIENCE_LABEL, AUDIENCES, SECTION_HEADING } from './incident-comms';
 import { DEFINITION_OF_DONE, DEFINITION_OF_READY, QUALITY_METRICS, RELEASE_APPROVALS } from './quality-gates';
+import {
+  CUTOVER_CHECKLIST, DECISION_OPTIONS, KPIS, LTI_SECURITY, MIGRATION_ACCEPTANCE, PHASES, RACI, RISKS, ROLLOUT_STATES, STEERING_AGENDA,
+} from './rollout';
 import { ROUTE_LABEL } from './scorecard';
 
 /*
@@ -42,6 +45,23 @@ describe('operating-model docs match the registries', () => {
     for (const label of Object.values(AUDIENCE_LABEL)) expect(d, label).toContain(`| ${label} |`);
     for (const h of Object.values(SECTION_HEADING)) expect(d, h).toContain(h);
     for (const a of Object.values(AUDIENCES)) for (const r of a.requires) expect(d, r.heading).toContain(r.heading);
+  });
+
+  it('pilot to production: every state, gate, milestone, checklist item, risk, RACI row and KPI', () => {
+    const d = doc('PILOT-TO-PRODUCTION.md');
+    for (const s of ROLLOUT_STATES) {
+      const gates = s.exitGates.map((g) => `\`${g}\``).join(', ') || '—';
+      expect(d, s.state).toContain(`| ${s.label} | ${s.uiLabel || '—'} | ${s.access} | ${s.authority} | ${s.allowed} | ${gates} |`);
+    }
+    for (const p of PHASES) {
+      expect(d, p.name).toContain(`### Phase ${p.number} — ${p.name}`);
+      for (const m of p.milestones) expect(d, m.name).toContain(`| ${m.name} | ${m.owner} | ${m.evidence} | ${m.exit} |`);
+    }
+    for (const i of [...DECISION_OPTIONS, ...MIGRATION_ACCEPTANCE, ...LTI_SECURITY, ...CUTOVER_CHECKLIST]) expect(d, i).toContain(`- ${i}`);
+    for (const r of RISKS) expect(d, r.id).toContain(`| ${r.id} | ${r.risk} | ${r.likelihood} | ${r.impact} |`);
+    for (const r of RACI) expect(d, r.workstream).toContain(`| ${r.workstream} | ${r.accountable} | ${r.responsible} |`);
+    for (const k of KPIS) expect(d, k.metric).toContain(`| ${k.metric} | ${k.source} | ${k.owner} | ${k.cadence} |`);
+    STEERING_AGENDA.forEach((a, i) => expect(d, a).toContain(`${i + 1}. ${a}`));
   });
 
   it('quality: every gate item and metric', () => {
