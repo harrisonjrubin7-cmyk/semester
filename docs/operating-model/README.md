@@ -52,6 +52,8 @@ The central rule, stated once:
 | 29 | The interoperability roadmap: standards in priority order, each with the claims register’s word | [../INTEROPERABILITY-ROADMAP.md](../INTEROPERABILITY-ROADMAP.md) | Code: `interop.ts`; rendered by its test; printed at `/platform/integrations/` |
 | 30 | The policy simulator: who sees a change, workflows, alternatives, support content, the audit event; retention classes, exports, deletions, contracts | `app/src/lib/governance/policysim.ts` | Code: `policysim.ts`; held by its test; drawn in the control plane |
 | 31 | AI in grading and integrity: the three products without a single accuracy number, the evaluation that compares them, the procurement rules, the AI roles at their lifecycle gates, the fairness controls | [AI-GRADING-AND-INTEGRITY.md](AI-GRADING-AND-INTEGRITY.md) | Code: `grading-ai.ts`; rendered by its test |
+| 32 | The SaaS launch kit: entity, insurance, the pilot agreement, module pricing, the GTM plan, the council charter, each held to the rules and outlines the tree already has | [../SAAS-LAUNCH-KIT.md](../SAAS-LAUNCH-KIT.md) | Code: `launchkit.ts`; rendered by its test |
+| 33 | Operational reality: workstreams, service tiers, production checks and their guards, failure scenarios held to the registers, support, implementation, revenue operations, the go-live dossier, the final checklist | [../OPERATIONAL-REALITY-REGISTER.md](../OPERATIONAL-REALITY-REGISTER.md) | Code: `operationalreality.ts`; rendered by its test |
 | — | Change management and adoption | [CHANGE-MANAGEMENT.md](CHANGE-MANAGEMENT.md) | Process |
 | — | AI financial sustainability, ROI measurement | [COMMERCIAL-GOVERNANCE.md](COMMERCIAL-GOVERNANCE.md#ai-cost-controls) | Existing metered gateway (ADR 0004) |
 

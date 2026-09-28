@@ -1649,3 +1649,70 @@ rows).
   names `components/SourceScopeStatus.tsx`, which does not exist;
   `lib/comms.ts` names `comms.test.ts`, which does not exist. The last two are
   held true by a test until they are fixed.
+## D-113 · The SaaS launch kit and the operational-reality documents are held to the tree as crosswalks, and the entity is held to the owner’s attestation
+
+**Decided 28 Sep 2026.** Five documents arrived on 28 September — the
+*Semester SaaS Launch Kit* and its summary; the answer to "what should be in
+our first pilot agreement, how do we price this module by module, what is our
+go-to-market plan, what legal entities and insurance do we need, draft our
+governance council charter"; "anything else needed to make this a reality";
+and "anything missing for this to be operational" — and are kept under
+`docs/expansion/` as supplied. They describe the company around the product:
+entity, insurance, contracts, pricing, go-to-market, a governance council, and
+the execution, verification and evidence layer that turns a platform into a
+business. Almost none of that is code, and the repository can form no company,
+bind no policy and sign nothing. So they are held the way D-108 and D-111 held
+theirs: as data under `app/src/lib/`, rendered by a test, with every cited file
+existing, every standing held to the kind of file it cites, and every id they
+name — seats, sales stages, `PilotPlan` fields, edge cases, risks, game days,
+maturity controls, launch-kit modules — checked against the register that owns
+it.
+
+- **`launchkit.ts` → [SAAS-LAUNCH-KIT.md](SAAS-LAUNCH-KIT.md).** Commercial
+  rules, the twenty-item formation checklist, nine coverages with the broker's
+  question, the underwriting packet, the seven-document pilot package, the
+  fourteen-position term sheet, the eighteen agreement sections mapped onto the
+  outline's twenty-six, the SOW on `PilotPlan`, eight pricing layers, twelve
+  modules, the bands beside the deal desk's proposed minimums (quoted from
+  `DEAL_POLICY` by the test, so they cannot drift), the GTM plan on the sixteen
+  sales stages, the council charter on the ten seats, the first thirty days.
+- **`operationalreality.ts` → [OPERATIONAL-REALITY-REGISTER.md](OPERATIONAL-REALITY-REGISTER.md).**
+  The master-plan fields and five workstreams on the seats, the company
+  operating system, the customer-proof engine, five service tiers, seventeen
+  factory assets, the readiness test, sixty-four production checks each with a
+  guard or none (fifteen have none; seven of nine payment checks, because
+  D-009 keeps billing out), eighteen failure scenarios on the edge-case, risk,
+  game-day and maturity registers (one, storage outage, is named by nothing),
+  the load and cost thresholds, data quality, support, implementation
+  capacity, the mutual success plan, revenue operations, key-person
+  resilience, the go-live dossier, and the final checklist answered: one yes,
+  eight partly, three no.
+- **The entity is `held`, not missing.** The kit recommends a Delaware C-Corp
+  when venture funding is likely. The owner attested on 28 September (HECVAT
+  COMP-01, #925) that Semester is a single-member LLC, which is what
+  LAUNCH-DECISIONS item 4 asked for. An LLC exists; converting it is a
+  question for counsel when a priced round is planned. Three rows that still
+  said there was no company are re-read here: master LEG-001's gap, maturity
+  DV-01, and LAUNCH-DECISIONS item 4 itself. LEG-001 stays `designed`: an
+  attestation is not a formation record, and `docs/evidence/` does not exist.
+- **The pilot term is `held` to the code.** The kit says 90–180 days;
+  `gtm/pilot.ts` refuses anything outside 60–120 and the deal desk caps a
+  pilot at six months. The code's rule holds until the owner reopens it.
+- **No fourth council.** The Product Governance Council's twelve roles are
+  mapped onto the launch readiness council's ten seats; three (student
+  advisor, finance, operations) have no seat, and the page says so. Forming a
+  council means filling seats that exist, not adopting a new charter.
+- **Where the tree disagrees with the documents, the disagreement is
+  recorded, not resolved:** four of the kit's eight ideal-customer profiles
+  are absent from the GTM playbook; the student price band ($8–25) does not
+  match the planned plans ($7.99, $14.99); GO WITH CONDITIONS is a verdict
+  the code does not have; the module catalogue has no entitlement behind it.
+- **Not changed:** `pilot.ts`, `deal-desk.ts`, `launchreadiness.ts`,
+  `plans.ts`, `edgecases.ts`. A storage-outage edge case, a `with-conditions`
+  verdict, a finance seat, a backup owner per register row, and the
+  accessibility-forward customer profile are proposals the pages make, for the
+  owner to take up.
+- **Found on the way, not fixed here:** `docs/LAUNCH-READINESS-TEST-PLAN.md`
+  says `restore.sh` is not in CI and that no ticketing exists; both are now
+  false. `docs/SUPPORT-RELIABILITY-AND-ABUSE-PREVENTION.md` says no status
+  page is built; `app/public/status.html` exists.

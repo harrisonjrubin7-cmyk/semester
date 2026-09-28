@@ -1356,8 +1356,8 @@ export const REGISTER: readonly Requirement[] = [
     validation: 'Legal records',
     severity: 'P0',
     status: 'designed',
-    evidence: [{ path: 'IP.md', shows: 'ownership and naming questions set out as open, not legal advice' }, { path: 'docs/market-readiness/HECVAT_READINESS.md', shows: 'LEGAL-2 cyber insurance NOT_STARTED' }],
-    gap: 'No record of entity formation, IP assignment, contractor agreements, signing authority, or insurance certificate in evidence.',
+    evidence: [{ path: 'IP.md', shows: 'ownership and naming questions set out as open, not legal advice' }, { path: 'docs/market-readiness/HECVAT_DRAFT_RESPONSE.md', shows: 'COMP-01: a single-member LLC by owner attestation, legal name, state and date still to add; COMP-03: no cyber policy' }, { path: 'docs/market-readiness/HECVAT_READINESS.md', shows: 'LEGAL-2 cyber insurance NOT_STARTED' }, { path: 'docs/SAAS-LAUNCH-KIT.md', shows: 'the formation checklist and nine coverages, item by item' }],
+    gap: 'The entity exists by attestation only: no formation record, IP assignment, contractor agreement, signing authority or insurance certificate is in evidence, and docs/evidence/ does not exist.',
   },
   {
     id: 'LEG-002',
