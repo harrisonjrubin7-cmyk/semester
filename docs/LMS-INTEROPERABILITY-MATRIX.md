@@ -414,7 +414,8 @@ system can prove these, never on who claims the most AI.
 4. Human accountability: AI assists but does not silently decide grades or misconduct.
 5. Student rights: source visibility, accessible alternatives, feedback, correction, appeal, export and privacy are built into the workflow.
 
-## Found on the way, not fixed here
+## Found on the way
 
-- docs/LTI-1.3-LAUNCH-RUNBOOK.md says the nonce is spent only after checkLaunch returns ok; supabase/functions/lti/index.ts spends the state first, atomically, before the signature is verified, and says why. The runbook line is out of date.
-- docs/INTEGRATION-DATA-PIPELINE-AUDIT.md gap 3 says no worker exists; app/server/integration/worker.ts does.
+Two faults found on 28 September — the LTI runbook’s line on when the nonce is spent, and the pipeline audit’s line that no worker existed — were fixed the next day, and the test holds both pages to the corrected wording. Still open:
+
+- supabase/functions/lti/index.ts says, above the spend, that lti.check.sql removes the guard and watches a replay go through. The check spends a live state twice in sequence and asserts the second spend returns nothing; it removes no guard and races nothing. The comment overstates, and a comment-only change under supabase/functions/ belongs with the next change there.

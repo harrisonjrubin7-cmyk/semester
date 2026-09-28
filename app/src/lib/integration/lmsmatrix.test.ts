@@ -153,7 +153,12 @@ describe('the LMS interoperability matrix', () => {
     expect(SUCCESS).toHaveLength(5);
     expect(API_TARGET).toHaveLength(7);
     expect(DECISION_RULE).toHaveLength(5);
-    expect(FOUND).toHaveLength(2);
+    expect(FOUND).toHaveLength(1);
+    expect(read('supabase/functions/lti/index.ts'), 'the function comment was corrected; drop the finding').toMatch(/removes the guard and watches this go through/);
+    expect(read('docs/LTI-1.3-LAUNCH-RUNBOOK.md')).toMatch(/spends the launch state \(`lti_nonce`\) first, atomically/);
+    expect(read('docs/LTI-1.3-LAUNCH-RUNBOOK.md')).not.toMatch(/only after `checkLaunch` returns ok/);
+    expect(read('docs/INTEGRATION-DATA-PIPELINE-AUDIT.md')).toMatch(/The worker exists and has nothing to run/);
+    expect(read('docs/INTEGRATION-DATA-PIPELINE-AUDIT.md')).not.toMatch(/\*\*No worker exists\*\*/);
   });
 
   it(`is what ${DOC} says`, () => {
@@ -366,9 +371,11 @@ function render(): string {
     '',
     ...numbered(DECISION_RULE),
     '',
-    '## Found on the way, not fixed here',
+    '## Found on the way',
     '',
-    ...list(FOUND),
+    'Two faults found on 28 September — the LTI runbook’s line on when the nonce is spent, and the pipeline audit’s line that no worker existed — were fixed the next day, and the test holds both pages to the corrected wording. Still open:',
+    '',
+    ...(FOUND.length ? list(FOUND) : ['Two faults found on 28 September — the LTI runbook’s line on when the nonce is spent, and the pipeline audit’s line that no worker existed — were fixed the same day, and the test holds both pages to the corrected wording. Nothing is open.']),
     '',
   ];
   return out.join('\n');

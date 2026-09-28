@@ -14,7 +14,12 @@
  *
  * This file is the shape and the sentence. It decides nothing about any
  * particular row; the caller says what the three are, and the app says them
- * the same way everywhere. `components/SourceScopeStatus.tsx` draws it.
+ * the same way everywhere. `sourceScopeStatus` is the sentence, and
+ * `lib/journal.ts` is its one consumer today, holding every entry to
+ * `wellFormed` in `journal.test.ts`. No component draws the three together
+ * yet: `SourceBadge` shows source and freshness, and the one-system page
+ * (`docs/ONE-SYSTEM-PLATFORM-GRAMMAR.md`) counts one trust component among
+ * what to converge.
  */
 
 export interface Provenance {

@@ -40,9 +40,17 @@ keeps the two files equal.
 `no-deployment` `wrong-deployment` `no-sub` `no-target` `foreign-target`
 `no-roles`
 
-The function shell verifies the signature against the platform's JWKS. It
-spends the nonce (`lti_nonce`) only after `checkLaunch` returns ok, so a token
-failing a later rule cannot burn the nonce a real launch still needs.
+The function shell spends the launch state (`lti_nonce`) first, atomically,
+through `spend_lti_nonce`, before it fetches the registration or verifies the
+signature against the platform's JWKS. Two POSTs carrying the same state would
+race otherwise, and the loser of that race would be a replayed launch that both
+halves believe; the RPC does the check and the write in one statement
+(`spent_at is null` in its `update … returning`), and `lti.check.sql` spends a
+live state once, asserts the same state spends a second time for nobody, and
+asserts an expired or never-issued state is refused. So a token that fails a
+later rule has already spent its state, and the student starts again from
+`/login`, which issues a fresh one. The registration comes from the flight
+that was recorded, never from the token in hand.
 
 ## Which account a launch opens
 

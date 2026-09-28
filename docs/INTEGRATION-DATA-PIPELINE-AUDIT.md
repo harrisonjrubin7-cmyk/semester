@@ -55,7 +55,9 @@ Columns follow the command. Common values, to keep the table readable:
 1. **Grade passback bypassed the flag system** — closed for bound registrations in Phase 4 (D-1).
 2. **The university gateway's adapter contract and the new adapter declaration are separate shapes.** Real
    adapters should satisfy both; converging them is Phase 4–5 work.
-3. **No worker exists** to run the pipeline against the tables; sync runs, dead letters and freshness events are
-   modelled and tested, not produced.
+3. **The worker exists and has nothing to run.** `app/server/integration/worker.ts` runs the pipeline against the
+   tables on the fifteen-minute `integration-sync` tick (`app/server/integration/tick.ts`), writes sync runs and dead
+   letters, and is tested; but `ADAPTERS` in `app/server/integration/registry.ts` is empty, so no connection syncs
+   until an adapter is registered.
 4. **Freshness on student screens** — closed in Phase 5: Today's *From your school* section shows source and freshness for
    every fact and labels anything not live or recent as not the official current record.

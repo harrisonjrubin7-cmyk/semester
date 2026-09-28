@@ -243,7 +243,6 @@ Before any new feature is released:
 | R7 | IntegrationConnection data always retains source, freshness and external id | tested | `supabase/migrations/20260927170000_integration_control_plane.sql`: source records with provider ids and freshness<br>`app/src/lib/integration/pipeline.test.ts`: the external id and the timestamp on every record | None. |
 | **total** | | not-started 0, designed 0, building 1, tested 6 | | |
 
-## Found on the way, not fixed here
+## Found on the way
 
-- app/src/lib/provenance.ts says `components/SourceScopeStatus.tsx` draws the Source/Scope/Status line; no such component exists. The only consumer is the journal.
-- app/src/lib/comms.ts says `comms.test.ts` guards admit; no such test exists.
+Two faults found on 28 September — a trust component `provenance.ts` named that did not exist, and a test `comms.ts` named that did not exist — were fixed the same day, and the test holds them fixed. Nothing is open.
