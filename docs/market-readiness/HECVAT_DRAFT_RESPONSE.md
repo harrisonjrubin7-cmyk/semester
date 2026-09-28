@@ -74,7 +74,7 @@ commit, and not before.
 | VULN-01 | Vulnerabilities | Severity model with remediation deadlines | No | Findings are prioritised P0–P2 internally; a published severity-to-fix-time table does not exist yet. | HECVAT VULN-1 |
 | PRIV-01 | Privacy | Signed DPA with FERPA school-official terms | No | None signed; counsel drafts one on request. Semester describes its controls and leaves any FERPA judgment to the institution's counsel. | HECVAT PRIV-4 |
 | PRIV-02 | Privacy | Student data sold, used for advertising, or used for risk scoring | No | None of the three, and the privacy disclosure is held to the code by a test. | `app/src/lib/privacy.ts`, HECVAT PRIV-3 |
-| PRIV-03 | Privacy | Students can export and delete their own data | Partial | A portable export, including what the server holds, and deletion that erases every row in one transaction and then removes the sign-in identity, proven by a database check. Answer Yes once the `delete-account` function is confirmed deployed in production. | `supabase/deletion.check.sql`, `supabase/functions/delete-account/index.ts`, HECVAT PRIV-2 |
+| PRIV-03 | Privacy | Students can export and delete their own data | Yes | A portable export, including what the server holds, and deletion that erases every row in one transaction and then removes the sign-in identity, proven by a database check. The `delete-account` function was confirmed active in production on 28 September. | `supabase/deletion.check.sql`, `supabase/functions/delete-account/index.ts`, HECVAT PRIV-2 |
 | PRIV-04 | Privacy | Minimum-necessary sharing with institution staff, with consent and audit | Yes | Students see exactly what is sent before sending; only staff answering for that office can read it; every open is shown to the student. | HECVAT PRIV-6 |
 | THRD-01 | Third parties | Published list of subprocessors | Partial | The list exists and is held to the code by a test; it is not published until counsel reviews it. | `docs/SUBPROCESSORS.md`, HECVAT PRIV-5 |
 | THRD-02 | Third parties | Vendor risk assessment of subprocessors | No | A register of every subprocessor with its tier exists; no vendor has been assessed yet. | `docs/trust/VENDOR-RISK-REGISTER.md` |
@@ -90,8 +90,7 @@ commit, and not before.
 ## Before this goes to anyone
 
 1. Fill in every *Company to supply* row.
-2. Recheck PRIV-03 against the deployed functions, CHNG-01 against the
-   repository's branch settings, and AIML-02 against each AI
+2. Recheck CHNG-01 against the repository's branch settings, and AIML-02 against each AI
    provider's terms on the day you send.
 3. After running `supabase/restore-drill.sh`, update BCDR-02 and the register's
    BCP-1 row from its output.
