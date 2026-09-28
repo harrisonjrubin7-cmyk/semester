@@ -82,7 +82,7 @@ end $$;
 do $$
 declare
   student   uuid; classmate uuid; stranger uuid; other_school uuid;
-  registrar uuid; dso uuid; prof uuid; mentor uuid; employer uuid;
+  registrar uuid; dso uuid; prof uuid; mentor uuid; employer uuid; mreq uuid;
   partner   uuid; moderator uuid; steward uuid; ir uuid; alum uuid;
   passport  uuid; share uuid; rid uuid; n bigint; i int;
 begin
@@ -242,9 +242,25 @@ begin
   perform pg_temp.expect_refused('a student outside the cohort accepts a mentor', classmate,
     format($q$insert into public.peer_mentor_assignments (tenant_id, cohort_scope, mentor_id, student_id, expires_at)
               select 'exp-u', 'exp-u/first-year', %L, (select auth.uid()), now() + interval '90 days'$q$, mentor));
-  perform pg_temp.expect_allowed('a cohort student accepts the mentor', student,
+  -- A student can no longer make an assignment alone (20260928110700): the
+  -- mentor's yes is what creates it, through a mentor request.
+  perform pg_temp.expect_refused('a cohort student making an assignment without the mentor', student,
     format($q$insert into public.peer_mentor_assignments (tenant_id, cohort_scope, mentor_id, student_id, expires_at)
               select 'exp-u', 'exp-u/first-year', %L, (select auth.uid()), now() + interval '90 days'$q$, mentor));
+  perform pg_temp.expect_allowed('the mentor offering in the cohort', mentor,
+    $q$insert into public.peer_mentor_offers (user_id, tenant_id, cohort_scope, display_name, topics, capacity)
+       select (select auth.uid()), 'exp-u', 'exp-u/first-year', 'Mentor', array['Study habits'], 2$q$);
+  perform pg_temp.become(student);
+  mreq := public.request_mentor('peer', mentor, 'exp-u/first-year', 'Student', array['Study habits'], '');
+  execute 'reset role';
+  perform pg_temp.counted('a request alone makes no assignment',
+    (select count(*) from public.peer_mentor_assignments where student_id = student), 0);
+  perform pg_temp.counted('and the mentor still sees nothing',
+    pg_temp.seen(mentor, 'select * from public.onboarding_progress'), 0);
+  perform pg_temp.expect_allowed('the mentor accepting the request', mentor,
+    format($q$select public.answer_mentor_request(%L, 'accepted')$q$, mreq));
+  perform pg_temp.counted('the accept makes exactly one assignment',
+    (select count(*) from public.peer_mentor_assignments where student_id = student and mentor_id = mentor and revoked_at is null), 1);
   perform pg_temp.counted('the mentor sees checklist progress',
     pg_temp.seen(mentor, 'select * from public.onboarding_progress'), 1);
   perform pg_temp.counted('and nothing else the student owns',

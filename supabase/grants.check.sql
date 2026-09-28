@@ -353,6 +353,10 @@ declare
     'answer_mentor_request(want uuid, want_status text)',
     'forget_my_mentor_requests()',
     'request_mentor(want_kind text, want_recipient uuid, want_cohort text, want_name text, want_topics text[], want_note text)',
+    -- 20260928110700: the only way a moderator touches a listing. Writes
+    -- `status` alone (published or removed), for a caller holding
+    -- opportunity:moderate; the moderator's unrestricted update policy is gone.
+    'moderate_opportunity(want uuid, want_status text)',
     'open_help_request(want uuid)',
     'send_help_request(want_destination uuid, want_question text, want_context jsonb)',
     'withdraw_help_request(want uuid)',

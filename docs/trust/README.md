@@ -1,0 +1,85 @@
+# Trust Package: the Documents
+
+These are the long-form documents a university's security, privacy,
+accessibility and procurement reviewers read. The brief they came from asked
+for:
+
+- a security whitepaper;
+- a DPA and a pilot agreement;
+- an SLA and monitoring runbooks;
+- a SOC 2 readiness matrix;
+- a HECVAT/VPAT plan;
+- a four-level enterprise roadmap.
+
+**This folder is not the packet index.** Three other documents do that job:
+
+- [`docs/SECURITY-ACCESSIBILITY-READINESS.md`](../SECURITY-ACCESSIBILITY-READINESS.md)
+  lists every item in the trust packet, marks each one public, NDA or not
+  existing yet, and explains how NDA material is granted.
+- [`docs/SUBPROCESSORS.md`](../SUBPROCESSORS.md) lists every third party data
+  can reach, held by test to the app's Content Security Policy.
+- [`docs/FERPA-COPPA-1EDTECH-READINESS.md`](../FERPA-COPPA-1EDTECH-READINESS.md)
+  and `docs/market-readiness/HECVAT_READINESS.md` are the control registers.
+
+The documents here fill items those indexes list. The NDA-gated room in
+`supabase/migrations/20260928100000_trust_room.sql` and
+`app/src/screens/TrustRoom.tsx` is how they reach a named reviewer.
+
+**Three rules hold for everything here:**
+
+1. **No certification claims.** Semester has no SOC 2 report, no ACR, no
+   penetration test, no signed DPA, and no insurance. It has not completed a
+   HECVAT.
+2. **Legal documents are outlines for counsel.** Nothing in this folder is
+   contract language anyone should sign as written.
+3. **Every path cited in this folder exists.** `app/src/lib/trust.test.ts`
+   fails when one does not, and it enforces the scoring rules in
+   [`SOC2-READINESS.md`](SOC2-READINESS.md). The SLA figures are checked
+   against code by `app/src/lib/sla.test.ts`.
+
+## Start here
+
+| Document | What it is |
+| --- | --- |
+| [`ENTERPRISE-READINESS.md`](ENTERPRISE-READINESS.md) | The four readiness levels, what "done" means at each, and where Semester is |
+| [`SECURITY-WHITEPAPER.md`](SECURITY-WHITEPAPER.md) | The 20-section whitepaper, true to the tree, gaps stated inline |
+| [`SOC2-READINESS.md`](SOC2-READINESS.md) | Gap assessment: CC1, CC6 and A1 checklists, scored, plus the HECVAT v4 mapping and a 12-month plan |
+| [`DPA-CHECKLIST.md`](DPA-CHECKLIST.md) | FERPA school-official checklist, DPA clause requirements, and starting language for counsel |
+| [`SLA.md`](SLA.md) | Availability formula, downtime tables, recommended SLA, credit schedule, exclusions |
+| [`APM-RUNBOOK.md`](APM-RUNBOOK.md) | Target telemetry and alert thresholds, marked with what exists; the incident runbook |
+| [`PILOT-AGREEMENT-OUTLINE.md`](PILOT-AGREEMENT-OUTLINE.md) | Sections for a 90-day pilot agreement, sample scope, scorecard |
+| [`HECVAT-VPAT-PLAN.md`](HECVAT-VPAT-PLAN.md) | HECVAT workstreams, a 90-day plan, and the VPAT/ACR checklist |
+| [`BRIDGE-LETTER.md`](BRIDGE-LETTER.md) | The SOC 2 bridge-letter process, for when a report exists |
+
+## What blocks a signature, and none of it is code
+
+Engineering is ahead of everything in this list, and this list is what stops
+an institution signing:
+
+1. A legal entity to be the contracting party.
+2. Cyber-liability insurance (HECVAT LEGAL-2).
+3. A DPA drafted by counsel (HECVAT PRIV-4). The 1EdTech DPSA template is
+   the place to start.
+4. A penetration test by an independent firm (HECVAT VULN-2).
+5. An ACR from a human evaluation (HECVAT A11Y-2).
+6. A restore drill, timed, so an RTO and RPO can be stated (HECVAT BCP-1).
+7. A privacy policy, terms of service and a vulnerability disclosure policy.
+
+The order matters. Items 1 and 2 come before a pilot conversation turns into
+paperwork. Item 6 is an afternoon's work and the cheapest credibility in this
+list.
+
+## Readiness is reached when Semester can truthfully say
+
+- We know what data we process.
+- We isolate every tenant and user.
+- We can explain every AI use.
+- We can show sources and control data sharing.
+- We can monitor and respond when something fails.
+- We can restore data and recover a service.
+- We can support a real course cohort.
+- We can export and delete data when the contract ends.
+- We can document our security, accessibility, privacy and operations.
+
+Today the first three are true, and the rest are not yet. That is the point to
+start sending this package: when they are all true, not before.

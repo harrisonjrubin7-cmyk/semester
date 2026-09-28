@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { LISTING_COLUMNS, QUEUE_COLUMNS, QUEUE_LIMIT, arrange, deadlineForStorage, deadlineLabel, deadlinePassed, eligibilityLines, fromCareerFeed, loadReviewQueue, readModerated, trackId, trackerEntry, type Listing } from './listings';
+import { LISTING_COLUMNS, QUEUE_COLUMNS, QUEUE_LIMIT, arrange, deadlineForStorage, deadlineLabel, deadlinePassed, eligibilityLines, fromCareerFeed, loadReviewQueue, moderateListing, readModerated, trackId, trackerEntry, type Listing } from './listings';
 import type { RecordRow } from './integration/school-records';
 
 const NOW = new Date('2026-09-28T12:00:00Z');
@@ -124,5 +124,22 @@ describe('the moderator review queue', () => {
     expect(q.rows).toHaveLength(QUEUE_LIMIT);
     expect(q.rows[0].id).toBe('w0');
     expect(q.more).toBe(true);
+  });
+});
+
+describe('moderating a listing', () => {
+  it('goes through moderate_opportunity with the status alone — never a table update', async () => {
+    const calls: unknown[] = [];
+    const db = {
+      rpc: async (name: string, args: unknown) => { calls.push([name, args]); return { error: null }; },
+      from: () => { throw new Error('a moderator does not update the table'); },
+    } as never;
+    await moderateListing('l1', 'published', db);
+    expect(calls).toEqual([['moderate_opportunity', { want: 'l1', want_status: 'published' }]]);
+  });
+
+  it('says what the database refused', async () => {
+    const db = { rpc: async () => ({ error: { message: 'Only a listings moderator can do that.' } }) } as never;
+    await expect(moderateListing('l1', 'removed', db)).rejects.toThrow('Only a listings moderator');
   });
 });
