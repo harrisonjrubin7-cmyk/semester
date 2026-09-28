@@ -13,6 +13,12 @@ export interface SiteConfig {
   base: string;
   /** Origin for canonical and social links, without a trailing slash. Empty to omit them. */
   origin: string;
+  /**
+   * The commit and the day this build was made, for the product-quality page.
+   * Optional: a build that is not stamped says so rather than showing a date
+   * it made up.
+   */
+  build?: { commit: string; at: string };
 }
 
 export const DEFAULT_SITE: SiteConfig = {

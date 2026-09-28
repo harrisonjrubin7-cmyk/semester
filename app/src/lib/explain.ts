@@ -98,6 +98,45 @@ const WRITTEN: Partial<Record<Screen, Explained>> = {
     from: 'Written for this app and kept with it.',
     next: 'Search for the screen or action you have a question about.',
   },
+  // The moments the brief says confuse people most, answered where they
+  // stand: registration, the assistant, a practice paper, and the three
+  // screens the Me control surface opens.
+  registrar: {
+    what: 'The term’s official dates — add/drop, withdrawal, registration — and how ready your plan is for them.',
+    why: 'Semester prepares and explains; it never registers you. Your university’s own system does that, and this screen hands you to it ready, with conflicts checked and backups chosen.',
+    from: 'Dates you entered or your registrar published, marked with their source. Nothing here is the registrar’s record of you.',
+    next: 'Check the plan for conflicts, pick a backup, then open official registration when the window opens.',
+  },
+  ask: {
+    what: 'A conversation with your own material: syllabi, notes and study material, with the source of each answer shown.',
+    why: 'An answer you can check beats one you have to trust. Every reply says what it read, and a course’s AI policy is shown before it answers where your school publishes one.',
+    from: 'Only what you gave the app and what your course published. It cannot see your grades of record, your registration or anyone else’s work.',
+    next: 'Open a citation to read the source, or say the answer is wrong so it can be fixed.',
+  },
+  exam: {
+    what: 'A practice paper with a shape, a total and a clock, sat and then marked against a key.',
+    why: 'A rehearsal under the conditions of the real thing, without the stakes: every answer is kept as you go, and the clock is yours.',
+    from: 'Questions built from your own course material, each traceable to the piece it came from. Nothing is submitted anywhere but this device.',
+    next: 'Sit it, then review each answer against its source; the marks are yours alone.',
+  },
+  activity: {
+    what: 'Your own trail: what you did and what you shared, in order.',
+    why: 'A person who cannot see their own record cannot check it. Each line says where it came from, who can see it and whether it still stands.',
+    from: 'Recorded on this device as you act; it holds no content, only that a thing happened.',
+    next: 'Take back anything that should not stand, from Sharing or Support access.',
+  },
+  whatsnew: {
+    what: 'What changed in the app, dated by when it reached the live page.',
+    why: 'Anything you can notice is written down, including things taken away, and filtered to the parts of the app your school has switched on.',
+    from: 'Written for this app and kept with it.',
+    next: 'Open the screen a note names, or say something if a change is wrong for you.',
+  },
+  recovery: {
+    what: 'Where to start when something went missing or would not save.',
+    why: 'In the order panic asks: is my work safe, is anything waiting, give me a copy, let me reconnect, let me ask a person.',
+    from: 'This device’s own sync record and libraries. It reads nothing from anyone else.',
+    next: 'Download a recovery copy before a big change; reconnect a calendar or account if one stopped.',
+  },
 };
 
 /** The four answers for a screen — written where they are, built where they are not. */

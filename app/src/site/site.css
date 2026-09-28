@@ -676,3 +676,106 @@ textarea.tool-input {
 .site-router a:hover {
   border-color: var(--site-accent);
 }
+
+/* ── Flows, definition lists and templates on the platform pages (more.tsx) ── */
+
+.site-flow {
+  display: grid;
+  gap: 12px;
+  max-width: 760px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: flow;
+}
+
+.site-flow > li {
+  position: relative;
+  display: grid;
+  gap: 2px;
+  padding: 12px 16px 12px 56px;
+  border: 1px solid var(--site-line);
+  border-radius: var(--site-r-lg);
+  background: var(--site-panel);
+  counter-increment: flow;
+}
+
+.site-flow > li::before {
+  position: absolute;
+  left: 16px;
+  top: 12px;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--site-accent-deep);
+  border-radius: 50%;
+  color: var(--site-accent);
+  font-family: var(--site-heading);
+  font-size: 0.9375rem;
+  line-height: 26px;
+  text-align: center;
+  content: counter(flow);
+}
+
+.site-flow strong {
+  font-family: var(--site-heading);
+  font-size: 1.1875rem;
+  font-weight: 600;
+}
+
+.site-flow span {
+  color: var(--site-dim);
+}
+
+.site-dl {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  max-width: 760px;
+}
+
+.site-dl > div {
+  display: grid;
+  grid-template-columns: minmax(140px, 220px) 1fr;
+  gap: 8px 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--site-line);
+}
+
+.site-dl dt {
+  font-family: var(--site-heading);
+  font-weight: 600;
+}
+
+.site-dl dd {
+  margin: 0;
+  color: var(--site-dim);
+}
+
+.site-template {
+  margin: 0 0 16px;
+}
+
+.site-template figcaption {
+  margin-bottom: 8px;
+  color: var(--site-dim);
+  font-size: 0.9375rem;
+}
+
+.site-template pre {
+  margin: 0;
+  padding: 16px;
+  overflow-x: auto;
+  border: 1px solid var(--site-line);
+  border-radius: var(--site-r-lg);
+  background: var(--site-panel);
+  font-family: var(--site-body);
+  font-size: 0.9375rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 600px) {
+  .site-dl > div {
+    grid-template-columns: 1fr;
+  }
+}

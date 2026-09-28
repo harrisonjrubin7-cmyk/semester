@@ -29,7 +29,7 @@ import { TOOL_LIST, type ToolId } from './tools/Tools';
 
 type Page = (props: { config: SiteConfig }) => ReactNode;
 
-function Section({ title, children, id }: { title: string; children: ReactNode; id?: string }) {
+export function Section({ title, children, id }: { title: string; children: ReactNode; id?: string }) {
   return (
     <section className="site-section" aria-labelledby={id}>
       <h2 id={id}>{title}</h2>
@@ -38,7 +38,7 @@ function Section({ title, children, id }: { title: string; children: ReactNode; 
   );
 }
 
-function Cards({ items }: { items: [string, string][] }) {
+export function Cards({ items }: { items: [string, string][] }) {
   return (
     <ul className="site-cards">
       {items.map(([title, body]) => (
@@ -51,7 +51,7 @@ function Cards({ items }: { items: [string, string][] }) {
   );
 }
 
-function Hero({ title, lead, children }: { title: string; lead: string; children?: ReactNode }) {
+export function Hero({ title, lead, children }: { title: string; lead: string; children?: ReactNode }) {
   return (
     <div className="site-hero">
       <h1>{title}</h1>
@@ -61,7 +61,7 @@ function Hero({ title, lead, children }: { title: string; lead: string; children
   );
 }
 
-function Start({ config }: { config: SiteConfig }) {
+export function Start({ config }: { config: SiteConfig }) {
   return (
     <p className="site-actions">
       <a className="site-button" href={href(config, '/signup/')}>Get started free</a>
@@ -303,6 +303,11 @@ const RESOURCE_STANDARD: string[] = [
 export const Resources: Page = ({ config }) => (
   <>
     <Hero title="Resources" lead="Guides for registration, advising and planning your degree." />
+    <Section title="For institutions" id="r-institutions">
+      <p>
+        The <a href={href(config, '/resources/campus-launch-kit/')}>campus launch kit</a> has the emails, announcements, signage, FAQ and launch agenda an institution needs to tell its campus about Semester, ready to adapt.
+      </p>
+    </Section>
     <Section title="Coming soon" id="r-soon">
       <p>Guides are being written with students during the pilot. Until then, <a href={href(config, '/help/')}>Help</a> covers how Semester works.</p>
     </Section>

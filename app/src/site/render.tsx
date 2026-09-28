@@ -3,6 +3,7 @@ import { renderToStaticMarkup, renderToString } from 'react-dom/server';
 import { defaultNext } from '../lib/graduation';
 import { PROMISE, type SiteConfig } from './config';
 import { Layout, href } from './Layout';
+import * as M from './more';
 import * as P from './pages';
 import { TOOL_LIST, Tool, type ToolId, type ToolProps } from './tools/Tools';
 
@@ -47,6 +48,17 @@ export const ROUTES: Route[] = [
   { path: '/signup/', title: 'Get started with Semester', description: 'Start free, with no card and no account required.', Page: P.Signup },
   { path: '/account/', title: 'Your Semester account', description: 'Your profile, sign-in and data controls, in the Semester app.', Page: P.Account },
   { path: '/membership/', title: 'Your Semester membership', description: 'Plans, and what every plan always includes.', Page: P.Membership },
+  // The platform, trust and buying pages (`more.tsx`): what is available to
+  // whom, what stays official elsewhere, and what happens after a signature.
+  { path: '/platform/availability/', title: 'What is available, to whom — Semester', description: 'Every capability by plan, each marked Available, Pilot, Planned or Services-led, so a plan is never mistaken for a product.', Page: M.Availability },
+  { path: '/platform/service-map/', title: 'The Semester service map', description: 'Identity, planning, course learning, AI, integrations, support, status and export — and who decides what.', Page: M.ServiceMap },
+  { path: '/platform/system-boundaries/', title: 'System boundaries — Semester', description: 'Area by area: what Semester does, and what remains authoritative with the registrar, the record system, faculty and students.', Page: M.SystemBoundaries },
+  { path: '/start/', title: 'What happens after you get started — Semester', description: 'A student’s first session, step by step, and the nine steps of an institution’s pilot.', Page: M.StartPage },
+  { path: '/demo/', title: 'The Semester demo', description: 'A sample institution with sample students, and a next step that matches why you came: student, advisor, faculty, registrar, IT or enterprise.', Page: M.Demo },
+  { path: '/trust/product-quality/', title: 'Product quality — Semester', description: 'What is checked on every build, what is known, and which measures are deliberately not published yet.', Page: M.ProductQuality },
+  { path: '/launch/', title: 'Your launch site — Semester', description: 'The private page a department or institution gets when it signs: timeline, contacts, training, templates, known issues and readiness.', Page: M.Launch },
+  { path: '/pricing/how-it-works/', title: 'How Semester pricing works', description: 'What drives individual, institutional and enterprise pricing, what implementation and migration cover, and how renewals avoid surprises.', Page: M.HowWePrice },
+  { path: '/resources/campus-launch-kit/', title: 'Campus launch kit — Semester', description: 'Email, announcement, signage and social templates, an FAQ, the source-label explainer and a launch agenda, ready to adapt.', Page: M.CampusLaunchKit },
   ...TOOL_LIST.map(
     (t): Route => ({
       path: `/tools/${t.id}/`,

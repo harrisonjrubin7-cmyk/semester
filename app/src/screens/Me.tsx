@@ -15,6 +15,7 @@ import type { CourseModule } from '../lib/types';
 import { cardIdentity } from '../lib/review';
 import { TypeToConfirm } from '../components/TypeToConfirm';
 import { You } from './me/You';
+import { MeControls } from '../components/MeControls';
 
 // A private recap of the term (Phase L), above the You tab's own content.
 const SemesterWrapped = lazy(() => import('../components/SemesterWrapped').then((m) => ({ default: m.SemesterWrapped })));
@@ -161,6 +162,14 @@ export function Me({
           onClick={() => dispatch({ type: 'go', screen: 'directory' })}
         />
       </Panel>
+
+      {/*
+        The one control surface: what Semester knows about you, who can see
+        it, and how to change either — fifteen rows in the order the questions
+        come, each opening the screen that already held the thing. See
+        `lib/mecontrols.ts` for why it is one list and not a third tab.
+      */}
+      <MeControls />
 
       <Segmented
         options={[

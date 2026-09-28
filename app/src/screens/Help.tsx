@@ -3,11 +3,15 @@ import { secondLine } from '../lib/dim';
 import { Page } from '../components/Page';
 import { build, toMarkdown, type Section } from '../lib/guidebook';
 import { download } from '../lib/deliver';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { BetaPanel } from '../components/BetaPanel';
 import { SupportTicketsPanel } from '../components/SupportTicketsPanel';
 import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
 import { availableContext } from '../lib/supporttickets';
+import { LOG_KEY, read as readLog } from '../lib/diagnose';
+import { asOf } from '../lib/offline-mode';
+import { SYNC_WORDS } from '../lib/syncstatus';
+import { handoff } from '../lib/tickethandoff';
 
 /**
  * The guide, in the app.
@@ -26,7 +30,8 @@ import { availableContext } from '../lib/supporttickets';
  * smaller than the dependency that would parse all of it.
  */
 export function Help() {
-  const { dispatch, account, sync } = useStore();
+  const { dispatch, account, sync, state } = useStore();
+  const now = useNow();
   const book = useMemo(() => build(), []);
   const [open, setOpen] = useState<string | null>('what');
 
@@ -62,9 +67,23 @@ export function Help() {
     >
         <>
           <BetaPanel account={account} />
+          <p style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', margin: '0 0 var(--sp-6)', lineHeight: 'var(--leading-relaxed)' }}>
+            Is it just you? The <a href={`${import.meta.env.BASE_URL}status.html`}>status page</a> checks the service from your own browser and lists incidents and planned maintenance.
+          </p>
           {EXPERIENCE_FLAGS.supportTickets !== 'off' && (
             <SupportTicketsPanel
               account={account}
+              handoff={handoff({
+                hash: window.location.hash,
+                action: '',
+                lastError: lastLogged(),
+                reference: null,
+                userAgent: navigator.userAgent,
+                width: window.innerWidth,
+                saved: SYNC_WORDS[sync.status].standing,
+                sources: state.feeds.map((f) => ({ name: f.name, state: f.synced > 0 ? asOf(f.synced, now.getTime()) : 'never synced' })),
+                now: now.getTime(),
+              })}
               context={availableContext({
                 build: (import.meta.env.VITE_BUILD_ID as string | undefined) ?? '',
                 width: window.innerWidth,
@@ -221,4 +240,13 @@ function inline(text: string) {
     }
     return <span key={key}>{part}</span>;
   });
+}
+
+/** The most recent failure this device logged (`lib/diagnose.ts`), or null; storage that refuses is null too. */
+function lastLogged() {
+  try {
+    return readLog(localStorage.getItem(LOG_KEY)).filter((e) => e.kind === 'error').sort((a, b) => b.at - a.at)[0] ?? null;
+  } catch {
+    return null;
+  }
 }

@@ -43,6 +43,8 @@ The central rule, stated once:
 | 20 | Release readiness score, proof before scale | [QUALITY-MANAGEMENT.md](QUALITY-MANAGEMENT.md#release-readiness) | Code: `release-readiness.ts` |
 | 21 | Risk register, appetite, exceptions, game days, the maturity crosswalk | [RISK-GOVERNANCE.md](RISK-GOVERNANCE.md) | Code: `risk.ts`; rendered by its test |
 | 22 | Edge-case catalog: which cases have a guard, which are owed | [../EDGE-CASE-CATALOG.md](../EDGE-CASE-CATALOG.md) | Code: `edgecases.ts`; rendered by its test |
+| 23 | Operational maturity: records holds, content rights, analytics ethics, minors, cost, exit, residency, disaster scenarios and twelve more, control by control | [OPERATIONAL-MATURITY.md](OPERATIONAL-MATURITY.md) | Code: `maturity.ts`; rendered by its test |
+| 24 | Operations Console checks: customer promises kept, release impact, on-call workload | `app/src/lib/governance/consolechecks.ts` | Code: `consolechecks.ts`; held by its test. The console’s own controls are `lib/ops/console.ts` (D-110); no console screen exists yet |
 | — | Change management and adoption | [CHANGE-MANAGEMENT.md](CHANGE-MANAGEMENT.md) | Process |
 | — | AI financial sustainability, ROI measurement | [COMMERCIAL-GOVERNANCE.md](COMMERCIAL-GOVERNANCE.md#ai-cost-controls) | Existing metered gateway (ADR 0004) |
 

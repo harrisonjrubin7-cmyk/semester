@@ -834,7 +834,15 @@ export type Screen =
   | 'setGrading'
   | 'setWorkload'
   | 'setAbout'
-  | 'setAssistant';
+  | 'setAssistant'
+  /*
+   * Under Me, the three screens the one control surface opens that nothing
+   * else did: the student's own trail (`lib/journal.ts`), what changed in the
+   * app (`lib/whatsnew.ts`), and the way back when something went missing.
+   */
+  | 'activity'
+  | 'whatsnew'
+  | 'recovery';
 
 /**
  * The report's grain, the post a changed date arrived in, and the grain of

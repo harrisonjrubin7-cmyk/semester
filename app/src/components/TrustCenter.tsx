@@ -2,6 +2,7 @@ import { formatDate, formatDateTime } from '../lib/locale';
 import { useEffect, useState } from 'react';
 import { shareState, type ShareRow } from '../lib/advisor-shares';
 import { myShares, revokeShare } from '../lib/advisor-shares';
+import { record, yours } from '../lib/journal';
 import { clearAll as clearConversations, load as loadThreads, loadArchive } from '../lib/threads';
 import { useDeviceLibrary } from '../lib/device-library';
 import { permission } from '../lib/notify';
@@ -86,6 +87,7 @@ export function TrustCenter({ accountId }: { accountId?: string | null } = {}) {
     try {
       if (c.kind === 'revoke') {
         await revokeShare(c.share.id);
+        record(userId, { kind: 'share-revoked', detail: c.share.title, about: { type: 'share', id: c.share.id, label: c.share.title }, provenance: yours('Nobody', 'Revoked') });
         setSaid(`“${c.share.title}” is revoked. Your advisor can no longer open it.`);
         setRound((r) => r + 1);
       } else if (c.kind === 'forget') {
@@ -93,6 +95,7 @@ export function TrustCenter({ accountId }: { accountId?: string | null } = {}) {
         setSaid('Forgotten. Semester no longer has that line.');
       } else {
         clearConversations();
+        record(userId, { kind: 'ai-deleted', detail: 'every conversation on this device', provenance: yours('This device only', 'Done') });
         setConversation(null);
         setSaid('Your conversations with Semester are deleted from this device.');
       }

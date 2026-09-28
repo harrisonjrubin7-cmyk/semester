@@ -32,6 +32,16 @@ export interface Change {
   said: string;
   /** Where to go to see it, or empty. */
   screen: string;
+  /**
+   * The three things the brief says every changed item should carry beside
+   * the change itself: where it came from, why it matters, and what to do.
+   * `freshness` is when the source last spoke, as epoch ms, or 0 when the
+   * change has no single moment.
+   */
+  source: string;
+  freshness: number;
+  why: string;
+  action: string;
 }
 
 export interface SinceInput {
@@ -78,6 +88,10 @@ export function changes(input: SinceInput): Change[] {
     out.push({
       said: `${elsewhere.length} ${elsewhere.length === 1 ? 'deadline was' : 'deadlines were'} ticked on your other device`,
       screen: 'home',
+      source: 'Your other device, through your account',
+      freshness: Math.max(...elsewhere.map(([, at]) => at)),
+      why: 'Today no longer lists them, so the list here is shorter than you left it.',
+      action: 'Look under Done if one should not have been ticked.',
     });
   }
 
@@ -87,6 +101,10 @@ export function changes(input: SinceInput): Change[] {
     out.push({
       said: `${pulled[0].name} brought in ${total} ${total === 1 ? 'event' : 'events'}`,
       screen: 'connect',
+      source: `${pulled[0].name}, a calendar you subscribed to`,
+      freshness: Math.max(...pulled.map((f) => f.synced)),
+      why: 'Dates from a feed move when the course moves them; these are the ones that did.',
+      action: 'Check the calendar, and say if a date looks wrong.',
     });
   }
 
@@ -95,6 +113,10 @@ export function changes(input: SinceInput): Change[] {
     out.push({
       said: `${added.length} ${added.length === 1 ? 'reading was' : 'readings were'} added to a course`,
       screen: 'courses',
+      source: 'Material added to a course, from another device or an import',
+      freshness: Math.max(...added.map((u) => u.created)),
+      why: 'New material changes what the study guide and the cards cover.',
+      action: 'Open the course to see what was added.',
     });
   }
 
@@ -103,6 +125,10 @@ export function changes(input: SinceInput): Change[] {
     out.push({
       said: `${sat.length} practice ${sat.length === 1 ? 'paper was' : 'papers were'} sat`,
       screen: 'exam',
+      source: 'A practice paper sat on another device',
+      freshness: Math.max(...sat.map((x) => x.at)),
+      why: 'Its marks count toward what the study tools think you know.',
+      action: 'Review the paper against its key.',
     });
   }
 

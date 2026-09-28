@@ -1083,6 +1083,11 @@ export function destination(screen: Screen): Destination | undefined {
  */
 const NESTED_NAMES: Partial<Record<Screen, string>> = {
   onboarding: 'setting up',
+  // The three pages the Me control surface opens (`lib/mecontrols.ts`), which
+  // lists them itself the way Settings lists its pages.
+  activity: 'Your activity',
+  whatsnew: 'What changed',
+  recovery: 'Recovery',
   // The two screens the workspace shell is made of. Named here rather than in
   // the registry because neither is a place in the app — one is the app's own
   // front door and the other is the index of everything behind it, the way a

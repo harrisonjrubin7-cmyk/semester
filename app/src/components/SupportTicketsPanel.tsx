@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
+import { lines as handoffLines, withHandoff, type Handoff } from '../lib/tickethandoff';
 import type { Account } from '../lib/cloud';
 import {
   CATEGORIES,
@@ -33,7 +34,10 @@ import { ActionButton, Notice, SectionLabel } from './ui';
 export function SupportTicketsPanel({
   account,
   context,
+  handoff,
 }: {
+  /** What the student was doing, offered as lines they read before sending; null offers nothing. */
+  handoff?: Handoff | null;
   account: Account | null;
   context: Record<ContextKey, string>;
 }) {
@@ -41,10 +45,10 @@ export function SupportTicketsPanel({
   // account — another tab signing out and someone else in — starts from
   // nothing, and an answer still in flight for the old one lands on a panel
   // that no longer exists rather than on the new student's screen.
-  return account ? <AccountTickets key={account.id} context={context} /> : null;
+  return account ? <AccountTickets key={account.id} context={context} handoff={handoff ?? null} /> : null;
 }
 
-function AccountTickets({ context }: { context: Record<ContextKey, string> }) {
+function AccountTickets({ context, handoff }: { context: Record<ContextKey, string>; handoff: Handoff | null }) {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState('');
@@ -53,6 +57,8 @@ function AccountTickets({ context }: { context: Record<ContextKey, string> }) {
   const [subject, setSubject] = useState('');
   const [body, setBody] = useState('');
   const [ticked, setTicked] = useState<ReadonlySet<ContextKey>>(new Set());
+  // Whether the handoff lines (`lib/tickethandoff.ts`) go in the body. Off until ticked, like every context key.
+  const [withDetails, setWithDetails] = useState(false);
   const [reviewing, setReviewing] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
   const [thread, setThread] = useState<Message[]>([]);
@@ -166,6 +172,19 @@ function AccountTickets({ context }: { context: Record<ContextKey, string> }) {
               </label>
             ))}
           </fieldset>
+          {handoff ? (
+            <fieldset style={{ border: 0, padding: 0 }}>
+              <legend>What I was doing (optional)</legend>
+              <label style={{ display: 'block' }}>
+                <input type="checkbox" checked={withDetails} onChange={() => setWithDetails((v) => !v)} />
+                {' '}Add these lines to my message, exactly as shown:
+              </label>
+              <ul style={{ margin: 'var(--sp-2) 0 0', paddingLeft: 'var(--sp-6)', color: 'var(--app-dim)' }}>
+                {handoffLines(handoff).map((l) => <li key={l}>{l}</li>)}
+              </ul>
+              <p style={{ color: 'var(--app-dim)', margin: 'var(--sp-2) 0 0' }}>Never included: your notes, files, grades, conversations with the assistant, or anything from your student record.</p>
+            </fieldset>
+          ) : null}
           <button className="btn btn-primary btn-block" disabled={!subject.trim() || !body.trim()}>Check before sending</button>
           <button type="button" className="btn btn-secondary btn-block" onClick={reset}>Cancel</button>
         </form>
@@ -175,7 +194,7 @@ function AccountTickets({ context }: { context: Record<ContextKey, string> }) {
           <dl aria-label="What will be sent">
             <dt>About</dt><dd>{CATEGORY_LABELS[category]}</dd>
             <dt>Subject</dt><dd>{subject.trim()}</dd>
-            <dt>Your question</dt><dd style={{ whiteSpace: 'pre-wrap' }}>{body.trim()}</dd>
+            <dt>Your question</dt><dd style={{ whiteSpace: 'pre-wrap' }}>{withHandoff(body, withDetails ? handoff : null)}</dd>
             <dt>App details</dt>
             <dd>
               {Object.keys(sending).length === 0
@@ -187,7 +206,7 @@ function AccountTickets({ context }: { context: Record<ContextKey, string> }) {
           <ActionButton
             tone="primary"
             disabled={busy}
-            onClick={() => run(async () => { await openTicket(category, subject, body, sending); reset(); }, 'Sent. The reply will appear here.')}
+            onClick={() => run(async () => { await openTicket(category, subject, withHandoff(body, withDetails ? handoff : null), sending); reset(); }, 'Sent. The reply will appear here.')}
           >
             Send to Semester support
           </ActionButton>

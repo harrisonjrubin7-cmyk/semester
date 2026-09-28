@@ -44,6 +44,7 @@ const CALLS: Record<string, number> = {
   'components/GraduationSimulator.tsx': 1,
   'components/NilTaxNote.tsx': 1,
   'components/OfflineBanner.tsx': 1,
+  'screens/Recovery.tsx': 1,
   'components/PathProfileForm.tsx': 1,
   'components/PathSnapshotCard.tsx': 1,
   'components/PushTop.tsx': 1,

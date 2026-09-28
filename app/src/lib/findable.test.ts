@@ -31,6 +31,9 @@ import type { Screen } from './types';
  * which cards you meant.
  */
 const OPENED_FROM_SOMEWHERE_ELSE: Record<string, string> = {
+  activity: 'Your own activity trail. Opened from the control surface under Me, which is its home the way Settings is its pages’ (lib/mecontrols.ts).',
+  whatsnew: 'What changed in the app. Opened from the control surface under Me, which is its home.',
+  recovery: 'Where to start when something went missing. Opened from the control surface under Me, and from Activity.',
   onboarding: 'The first run. It opens itself, once, and Settings → About can replay it.',
   course: 'One course. Opened from Courses, from a deadline, or from a search result.',
   item: 'One deadline. Opened from the course it belongs to, or from Today.',

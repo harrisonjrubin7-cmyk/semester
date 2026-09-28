@@ -16,7 +16,8 @@ describe('every page', () => {
   it('covers the routes the brief names', () => {
     const want = ['/', '/product/', '/students/', '/institutions/', '/pricing/', '/tools/', '/resources/', '/about/', '/careers/', '/contact/', '/security/', '/privacy/', '/accessibility/', '/help/', '/login/', '/signup/', '/account/', '/membership/',
       '/launch-readiness/', '/proof/', '/legal/',
-      '/tools/graduation/', '/tools/schedule/', '/tools/checklist/', '/tools/advisor/'];
+      '/tools/graduation/', '/tools/schedule/', '/tools/checklist/', '/tools/advisor/',
+      '/platform/availability/', '/platform/service-map/', '/platform/system-boundaries/', '/start/', '/demo/', '/trust/product-quality/', '/launch/', '/pricing/how-it-works/', '/resources/campus-launch-kit/'];
     expect(ROUTES.map((r) => r.path).sort()).toEqual([...want].sort());
   });
 
