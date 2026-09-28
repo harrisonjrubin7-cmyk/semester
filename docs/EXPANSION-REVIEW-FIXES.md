@@ -55,6 +55,16 @@ pattern without a finding, and are keyed by account too.
 | Reconnecting pulled but did not push (#845) | `pushNow()` after the pull | `OfflineBanner.reconnect.test.tsx`, with a no-account control |
 | Action Center opened official sites offline (#845) | `requireOnline('handoff')` | `ActionCenter.test.tsx`, with the online control |
 
+## Second round: Codex on #879
+
+#879 merged while Codex's reviews were still running. They found two more
+problems, both introduced by #879's own fixes:
+
+| Finding | Fix | Test |
+|---|---|---|
+| The reconnect push ran even when the pull had failed, and `push` overwrote the account's copy | Already fixed on the base by main's sync work (#885): every push names the rows this device has read, the server refuses a push naming stale ones, and the device pulls, merges and retries. `pushNow` reuses that push. Nothing added here | main's own sync tests |
+| A second account saving the same draft replaced the first account's id | `cloudIds` keeps one id per account; the older one-owner form is read into it | `GraduationSimulator.phase-d.test.tsx`, `graduation.test.ts` |
+
 ## Also here
 
 The base branch's backup coverage guard was failing. #793 added a device

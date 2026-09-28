@@ -109,6 +109,18 @@ describe('saved scenarios', () => {
     expect(() => readGraduation({ ...d, plan: { ...d.plan, next: { season: 'Winter', year: 2027 } } })).toThrow();
   });
 
+  it('keeps account draft ids per account, and reads the older one-owner form', () => {
+    const d = addScenario(EMPTY_GRADUATION, { name: 'Minor', extra: 18, perTerm: 15, summer: 0 }, 'a');
+    const id = '0b8f5e6a-1c2d-4e3f-8a9b-0c1d2e3f4a5b';
+    const two = { ...d, scenarios: [{ ...d.scenarios[0], cloudIds: { u1: id, u2: id } }] };
+    expect(readGraduation(JSON.parse(JSON.stringify(two))).scenarios[0].cloudIds).toEqual({ u1: id, u2: id });
+    const older = { ...d, scenarios: [{ ...d.scenarios[0], cloudId: id, cloudOwner: 'u1' }] };
+    expect(readGraduation(older).scenarios[0].cloudIds).toEqual({ u1: id });
+    // An id with no owner was never shown to anyone, and is dropped (the control).
+    expect(readGraduation({ ...d, scenarios: [{ ...d.scenarios[0], cloudId: id }] }).scenarios[0].cloudIds).toBeUndefined();
+    expect(() => readGraduation({ ...d, scenarios: [{ ...d.scenarios[0], cloudIds: { u1: 'not-a-uuid' } }] })).toThrow();
+  });
+
   it('caps the number of scenarios and removes by id', () => {
     let d = EMPTY_GRADUATION;
     for (let i = 0; i < MAX_SCENARIOS + 3; i++) d = addScenario(d, { name: `S${i}`, extra: 0, perTerm: 15, summer: 0 }, `id${i}`);
