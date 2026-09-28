@@ -216,7 +216,7 @@ export const CONTROLS: readonly Control[] = [
   c('LW-07', 'lawwatch', 'Keep the accessibility vendor and subprocessor review current.', 'partial', 'docs/SUBPROCESSORS.md', 'Subprocessors are registered and held to the content-security policy. Their accessibility (of anything user-facing) is not reviewed.'),
 
   // ── Physical security and device management ────────────────────────────
-  c('DV-01', 'devices', 'Company device-management policy.', 'owed', null, 'There is no company yet (LAUNCH-DECISIONS item 4) and no policy. One founder’s device operates everything.'),
+  c('DV-01', 'devices', 'Company device-management policy.', 'owed', null, 'The company is a single-member LLC by the owner’s attestation (HECVAT COMP-01, 28 September) and has no device policy. One founder’s device operates everything.'),
   c('DV-02', 'devices', 'Disk encryption.', 'owed', null, 'Not attested. Would be the first line of DV-01.'),
   c('DV-03', 'devices', 'Endpoint protection.', 'owed', null, 'Not attested.'),
   c('DV-04', 'devices', 'Screen lock and password policy.', 'owed', null, 'Not attested.'),
