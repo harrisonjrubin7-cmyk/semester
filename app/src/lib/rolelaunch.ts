@@ -19,11 +19,18 @@
  * `public.role_capabilities`; the test reads both out of the migrations and
  * fails if this file names a role the database does not, or misses one it does.
  *
- * The finding, as of `5bc0330`: nothing assigns an app role. `role_grants` is
- * written by the service key and by nothing else — no admin screen, no SSO
- * claim, no SCIM group — so no role has reached `provisionable`, and every role
- * is `modeled`. The test asserts that too, and goes red the day a provisioning
- * path lands, which is the day this paragraph needs rewriting.
+ * The finding, as of `5bc0330`, was that nothing assigns an app role:
+ * `role_grants` was written by the service key and by nothing else, so every
+ * role was `modeled`. Since `20260929110000_console_approvals_and_break_glass.sql`
+ * there is one provisioning path, and only one: the operations console's
+ * `role-grant` duty. A request names the person, the role, the scope and the
+ * expiry; the security seat approves it; `console_act()` writes the mandatory
+ * audit event and only then the grant, and fails closed if the event cannot be
+ * written (`supabase/console-approvals.check.sql`). No SSO claim and no SCIM
+ * group assigns an app role, and the test still asserts that from the code: a
+ * second writer of `role_grants` turns it red and says which paragraph to
+ * rewrite. Every role therefore reaches `provisionable` through the same path,
+ * and the register's right-hand column counts what each holds beyond it.
  */
 
 export const ROLE_STATES = [
@@ -85,6 +92,9 @@ export const CATEGORY_TITLE: Record<RoleCategory, string> = {
  * which is how a new grant gets looked at before it is inherited.
  */
 export const OPERATIONS_ONLY: readonly string[] = [
+  'console:operate',
+  'approval:decide',
+  'breakglass:request',
   'beta:manage',
   'beta:triage',
   'platform:configure',
@@ -181,8 +191,20 @@ const VOLUNTEERS: RoleEvidence = { path: 'docs/VOLUNTEER-MODERATOR-PROGRAM.md', 
 type Seed = Omit<RoleRow, 'provisioning' | 'runbook' | 'training' | 'approved'> &
   Partial<Pick<RoleRow, 'runbook' | 'training'>>;
 
+/**
+ * The one provisioning path. It serves every role the same way — a request, an
+ * approval by somebody other than the requester, an audit event that must be
+ * written first — so every row cites it, and `rolelaunch.test.ts` asserts that
+ * nothing else writes `role_grants`.
+ */
+export const CONSOLE_PROVISIONING: readonly RoleEvidence[] = [
+  { path: 'supabase/migrations/20260929110000_console_approvals_and_break_glass.sql', shows: 'console_act(): the role-grant duty writes role_grants after its audit event, and fails closed without it' },
+  { path: 'supabase/console-approvals.check.sql', shows: 'self-approval refused; the grant exists only after the audit row; nothing written when the audit writer cannot insert' },
+  { path: 'app/src/screens/Console.tsx', shows: 'the Approvals view: request, decide, act' },
+];
+
 function row(seed: Seed): RoleRow {
-  return { runbook: [], training: [], ...seed, provisioning: [], approved: false };
+  return { runbook: [], training: [], ...seed, provisioning: [...CONSOLE_PROVISIONING], approved: false };
 }
 
 export const ROLES: readonly RoleRow[] = [

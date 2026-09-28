@@ -10,8 +10,11 @@ that does not exist, and when a gate is marked met while a
 depends on is unticked.
 
 **Current verdict: `NO-GO`.** Audited against `origin/main` at `1dd79cd`,
-2026-09-27. No gate is met. Nine are partial and three are unmet. All ten council
-seats are vacant.
+2026-09-27, and moved on 2026-09-28. One gate is met (`known-limitations`),
+nine are partial and two are unmet. Four council seats are held (founder, and
+product, engineering and customer success held by the founder, acting) and
+none has signed; six are vacant. `decide()` gives 29 reasons, down from 30: the
+met gate and four "is vacant" lines became four "has not signed" lines.
 
 ## How this relates to the go-live checklist
 
@@ -36,10 +39,10 @@ the two documents in agreement.
 | `escalation-owners` | Named escalation owners and response windows. | success | `PARTIAL` | `docs/vanderbilt/incident-routing.md`: windows per signal | Every owner is unassigned |
 | `terms-reviewed` | Terms, privacy, consent, and acceptable-use content reviewed. | privacy | `PARTIAL` | `app/src/lib/privacy.ts`: disclosure as data, tested against code; `docs/legal/`: terms and privacy policy drafts for counsel | No qualified review recorded. The drafts are not in force and carry open `[DECIDE]` items: legal entity, minimum age, liability, governing law |
 | `data-scope` | Pilot data scope/source ownership approved. | data | `UNMET` | — | No scope to approve, and no source owner named |
-| `onboarding-support` | Student/staff onboarding and accessibility support ready. | success | `UNMET` | — | No quick-start, first-day checklist or accessibility support route, and no audit of piloted workflows |
-| `flags-rollback` | Feature flags, kill switches, rollback runbooks tested. | engineering | `PARTIAL` | `ROLLBACK.md` with measured timings; `app/src/lib/flags.ts` registry and six kill switches; `docs/FEATURE-FLAG-REGISTRY.md` runbook | No kill switch engaged against production, no app-wide read-only mode, and rollback not tested on the production path |
+| `onboarding-support` | Student/staff onboarding and accessibility support ready. | success | `PARTIAL` | `docs/pilot/QUICK-START.md` and `docs/pilot/FIRST-DAY-CHECKLIST.md`, every address checked against the router by `pilotdocs.test.ts`; the accessibility support route is "Report a barrier" on `/accessibility/` (`app/src/site/pages.tsx`), with escalation to the accessibility seat, and both documents point at it | Only the qualified accessibility audit of the piloted workflows (decision 11); its go-live line is unticked |
+| `flags-rollback` | Feature flags, kill switches, rollback runbooks tested. | engineering | `PARTIAL` | `ROLLBACK.md` with measured timings; `app/src/lib/flags.ts` registry and six kill switches; `docs/FEATURE-FLAG-REGISTRY.md` runbook and the read-only mode; `app/src/lib/readonly.ts` — `VITE_READ_ONLY` stops every push and shows a standing banner, `SEMESTER_READ_ONLY` makes the gateway refuse every write with a retryable 503, each side tested and each guard shown red under revert | No kill switch and no read-only mode engaged against production, and rollback not tested on the production path |
 | `pilot-outcome` | Pilot outcome baseline and decision criteria agreed. | champion | `PARTIAL` | `PILOT_PLAYBOOK.md` lists what to agree | Nothing agreed and no baseline measured |
-| `known-limitations` | Known limitations published internally and appropriately to pilot users. | product | `PARTIAL` | `SEMESTER_MARKET_READINESS.md`, internally | Nothing written for pilot users. No known-issues page |
+| `known-limitations` | Known limitations published internally and appropriately to pilot users. | product | `MET` | `SEMESTER_MARKET_READINESS.md`, internally; `docs/pilot/KNOWN-LIMITATIONS.md` for pilot users, dated 2026-09-28, rendered from `app/src/lib/knownlimitations.ts` where every entry cites the file that states it; printed on the Help screen of the deployed app (`app/src/components/KnownLimitations.tsx`) and on the site at `/known-limitations/` from the same data | — (the site itself has no deployment yet, so the copy pilot users have is the one in the app) |
 
 ## The launch condition, part by part
 

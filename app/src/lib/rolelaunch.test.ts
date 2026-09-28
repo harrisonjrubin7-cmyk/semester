@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   CATEGORY_TITLE,
+  CONSOLE_PROVISIONING,
   INTERNAL_CATEGORIES,
   NOT_APP_ROLES,
   OPERATIONS_ONLY,
@@ -30,10 +31,10 @@ import {
  *   - **A state is claimed.** It is not stored; `stateOf` derives it. What is
  *     checked is the evidence each rung rests on — every cited file exists, and
  *     every SQL check counted as a role's authorization test names that role.
- *   - **The finding goes stale.** Every role is `modeled` because nothing but
- *     the service key writes `role_grants`. That is asserted from the code, so
- *     the commit that adds a provisioning path turns this red and says which
- *     paragraph of the register to rewrite.
+ *   - **The finding goes stale.** Every role is provisionable through exactly
+ *     one path, the console's `role-grant` duty, and nothing else writes
+ *     `role_grants`. That is asserted from the code, so a commit that adds a
+ *     second path turns this red and says which paragraph to rewrite.
  *
  * `docs/ROLE-LAUNCH-REGISTER.md` is rendered from this data. Run
  * `npm run registers` to rewrite it; the last test fails while it is stale.
@@ -173,13 +174,13 @@ describe('the role launch register', () => {
   });
 
   describe('its finding', () => {
-    it('has no path that assigns an app role, so no role is provisionable', () => {
-      // A provisioning path would be one of these. When one lands, give the
-      // roles it serves `provisioning` evidence and rewrite the register's
-      // opening finding.
-      for (const { file, sql } of migrations) {
-        expect(sql, `${file} writes role_grants`).not.toMatch(/insert into public\.role_grants/i);
-      }
+    it('has exactly one path that assigns an app role: the console’s role-grant duty', () => {
+      // The console migration is the one writer of `role_grants`. A second one
+      // — another migration, an SSO claim binder, a SCIM group mapper — turns
+      // this red and means the register's finding and CONSOLE_PROVISIONING
+      // both need rewriting.
+      const writers = migrations.filter(({ sql }) => /insert into public\.role_grants/i.test(sql)).map(({ file }) => file);
+      expect(writers).toEqual(['20260929110000_console_approvals_and_break_glass.sql']);
       const servers = ['supabase/functions', 'app/server', 'app/api', 'packages/institution/src'];
       const writes: string[] = [];
       const walk = (dir: string) => {
@@ -194,11 +195,16 @@ describe('the role launch register', () => {
       };
       servers.forEach(walk);
       expect(writes).toEqual([]);
-      expect(ROLES.filter((r) => r.provisioning.length > 0)).toEqual([]);
+      for (const r of ROLES) expect(r.provisioning, r.role).toEqual(CONSOLE_PROVISIONING);
+      for (const e of CONSOLE_PROVISIONING) expect(existsSync(join(root, e.path)), e.path).toBe(true);
     });
 
-    it('therefore holds every role at modeled, whatever else it has', () => {
-      for (const role of ROLES) expect(stateOf(role, factsFor(role.role)), role.role).toBe('modeled');
+    it('therefore holds every role at provisionable or above, and none at modeled', () => {
+      for (const role of ROLES) {
+        const state = stateOf(role, factsFor(role.role));
+        expect(state, role.role).not.toBe('undefined');
+        expect((ROLE_STATES as readonly string[]).indexOf(state), `${role.role} is ${state}`).toBeGreaterThanOrEqual(ROLE_STATES.indexOf('provisionable'));
+      }
     });
 
     it('approves nothing', () => {
@@ -280,12 +286,15 @@ function render(): string {
     '',
     '## The finding',
     '',
-    `All ${rows.length} roles are **modeled** and none is provisionable. \`role_grants\``,
-    'is written by the service key and by nothing else: no admin screen, SSO claim',
-    'or SCIM group assigns an app role (`supabase/migrations/20260921223000_role_grants.sql`',
-    'says so, and `rolelaunch.test.ts` asserts it from the code). Until a',
-    'provisioning path exists, no role can climb past this rung however much of the',
-    'rest it has — the right-hand column above counts that rest.',
+    `All ${rows.length} roles are at least **provisionable**, through one path: the`,
+    'operations console’s `role-grant` duty (`supabase/migrations/20260929110000_console_approvals_and_break_glass.sql`).',
+    'A request names the person, the role, the scope and the expiry; the security',
+    'seat approves it, never the requester; `console_act()` writes the audit event',
+    'first and the grant second, and writes nothing when the event cannot be',
+    'written (`supabase/console-approvals.check.sql`). No SSO claim or SCIM group',
+    'assigns an app role, and `rolelaunch.test.ts` asserts from the code that',
+    'nothing else writes `role_grants`. What each role holds beyond this rung is',
+    'what the right-hand column above counts.',
     '',
     'Two further limits on what the columns below prove:',
     '',

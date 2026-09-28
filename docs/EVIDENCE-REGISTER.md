@@ -1,0 +1,68 @@
+# Evidence register
+
+<!-- Rendered from app/src/lib/ops/evidence.ts by evidence.test.ts. Edit the data, then run `npm run registers` from app/. -->
+
+> Owner, version, last and next review, status, supersedes and related decisions: [`SEMESTER-OPERATING-SYSTEM.md`](../SEMESTER-OPERATING-SYSTEM.md).
+
+Every dated artifact the repository holds today: the date its file states,
+how long it is good for, and the public claims and register rows resting on
+it. A record carries a date and a validity rather than the word “current”,
+because a word beside a document is a claim nothing re-checks; the state is
+computed for the day it is asked on, by the console’s Evidence view and by
+[`app/src/lib/ops/claims.test.ts`](../app/src/lib/ops/claims.test.ts), which refuses an “available” claim
+resting on a record that has expired.
+
+`docs/evidence/` does not exist, and nothing here says it does. The
+[master register](MASTER-LAUNCH-READINESS-REGISTER.md) still lets no row above
+`tested`, and the [proof calendar](PROOF-CALENDAR.md) still schedules the
+artifacts that would move one. This page is what does exist, with when it
+runs out.
+
+## The records
+
+| Artifact | Produced | Valid for | Expires | Owner | Claims resting on it | Rows | Stated in |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| **Backup restore rehearsal: a logical dump restored locally, schema and row counts compared**<br>The go/no-go checklist records the pass date; RESTORE.md and supabase/restore.sh hold the procedure and state no date. Production has never been restored, which is why the claim stays in preparation. Renewed by the quarterly disaster-recovery exercise. | 2026-09-21 | 91 days | 2026-12-21 | `engineering` | `restore-drill` (In preparation) | `SRE-004` (designed), `SRE-005` (building) | [`docs/GO-NO-GO-CHECKLIST.md`](GO-NO-GO-CHECKLIST.md) |
+| **HECVAT draft response, not sent**<br>A draft written from the repository; the claim stays planned until one is sent. A HECVAT is re-issued yearly. | 2026-09-28 | 365 days | 2027-09-28 | `security` | `hecvat` (Planned) | `SEC-001` (designed), `SEC-011` (designed) | [`docs/market-readiness/HECVAT_DRAFT_RESPONSE.md`](market-readiness/HECVAT_DRAFT_RESPONSE.md) |
+| **Owner attestations: company ownership, and multi-factor sign-in on the GitHub, Google and Supabase accounts**<br>Attested, not independently checked; the file says to keep a screenshot of each account’s security page. Renewed at the quarterly access review. | 2026-09-28 | 91 days | 2026-12-28 | `security` | — | `IAM-005` (designed) | [`docs/market-readiness/HECVAT_DRAFT_RESPONSE.md`](market-readiness/HECVAT_DRAFT_RESPONSE.md) |
+| **Security whitepaper, version 0.1, draft**<br>Its own control table says: next review before the first institutional security review, and at least every six months. | 2026-09-28 | 182 days | 2027-03-29 | `security` | — | `SEC-013` (building) | [`docs/trust/SECURITY-WHITEPAPER.md`](trust/SECURITY-WHITEPAPER.md) |
+| **Master launch readiness register re-read, row by row, against origin/main at fd8fc0b**<br>Every public claim rests on rows of this register, so the re-read is the evidence that their floors were checked. Reviewed monthly, per SEMESTER-OPERATING-SYSTEM.md. | 2026-09-28 | 30 days | 2026-10-28 | `founder` | — | `PRG-002` (tested) | [`docs/MASTER-LAUNCH-READINESS-REGISTER.md`](MASTER-LAUNCH-READINESS-REGISTER.md) |
+| **Operating-system register review: every authoritative document read and standing**<br>The registers that change with every merge are reviewed monthly, the rest quarterly; the earlier of the two is the register’s own validity. | 2026-09-28 | 30 days | 2026-10-28 | `founder` | — | `PRG-002` (tested) | [`SEMESTER-OPERATING-SYSTEM.md`](../SEMESTER-OPERATING-SYSTEM.md) |
+| **Regression checklist: the full suite, typecheck, lint and build re-taken and recorded**<br>A measured run with its figures, not the suite itself; CI runs the suite on every change, and this record is the last time somebody wrote the figures down. | 2026-09-21 | 30 days | 2026-10-21 | `engineering` | — | `SRE-008` (building) | [`REGRESSION-CHECKLIST.md`](../REGRESSION-CHECKLIST.md) |
+
+## What the state means
+
+| State | Meaning |
+| --- | --- |
+| **current** | More than thirty days to expiry; nothing is due |
+| **expiring** | Thirty days or fewer; the escalation step for the days left applies |
+| **expired** | Past its validity: superseded, out of the procurement pack, and every claim resting on it flagged |
+
+The steps are the escalation ladder in
+[`ops/operations-console/README.md`](../ops/operations-console/README.md): at thirty days the owning seat is
+notified; at seven the security and privacy seats are, and the item is on the
+weekly operations review; at expiry the artifact is superseded, leaves the
+procurement pack, and every claim resting on it is flagged. The state is not
+printed here on purpose: a page that said “current” would be the word this
+register replaces.
+
+## How a record counts
+
+1. The artifact exists in the tree and states its own date. A record names
+   the file that states it, and the test reads the file.
+2. Its validity is the cadence that renews it: monthly for the registers,
+   quarterly for the reviews the operating rhythm schedules, six months for
+   the whitepaper by its own control table, yearly for a HECVAT.
+3. The claims it names are ids of the claims register; the rows are ids of
+   the master register. A record that supports nothing is refused.
+4. When an artifact under `docs/evidence/` is filed, it joins this page with
+   its date, and the master register rows it moves cite it.
+
+## How this page is held
+
+[`app/src/lib/ops/evidence.test.ts`](../app/src/lib/ops/evidence.test.ts) fails when a record cites a file
+that does not exist or does not state the record’s date, when its owner is
+not a seat, when a claim or row it names is not registered, when the state
+is wrong on either side of a step, when — on the day the test runs — an
+expired record sits under an “available” claim that `problems()` does not
+name, or when this page is stale.

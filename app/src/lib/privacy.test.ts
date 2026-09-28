@@ -400,6 +400,9 @@ describe('"delete my account" really means every row', () => {
       'community_signals',
       'community_venues',
       'community_volunteer_events',
+      // The operations console's duty matrix (lib/console/client.ts): policy
+      // seeded by a migration, read-only from the browser, naming no person.
+      'console_duty',
       // What an instructor published in Course Studio (D-101). Students only
       // read these; they are course policy, kept for the class.
       'course_ai_rules',

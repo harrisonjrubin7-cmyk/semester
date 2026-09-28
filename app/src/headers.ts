@@ -227,6 +227,7 @@ export const HEADERS: Record<Screen, (c: HeaderCtx) => Head> = {
   moderation: () => ({ kicker: 'Trust & Safety', title: 'Moderation' }),
   agreements: () => ({ kicker: 'Trust & Safety', title: 'Agreements' }),
   volunteers: () => ({ kicker: 'Trust & Safety', title: 'Volunteers' }),
+  console: () => ({ kicker: 'Operations', title: 'Operations console' }),
   volunteer: () => ({ kicker: 'Community moderation', title: 'Volunteering' }),
   activities: () => ({ kicker: 'Everything that is not a class', title: 'Activities' }),
   clocks: () => ({ kicker: 'Counting, and ringing', title: 'Timers and alarms' }),

@@ -61,6 +61,9 @@ const OPENED_FROM_SOMEWHERE_ELSE: Record<string, string> = {
     'Volunteer moderation. Opened from Community, and only when the build flag and the school’s programme switch are both on.',
   moderation:
     'The Trust & Safety review queue. A staff tool, opened from Community by an account the server says holds a reviewer role.',
+  console:
+    'The operations console. A staff tool at #/console for an account the server says holds console:operate at platform scope; ' +
+    'anyone else sees one sentence, and no student surface offers it.',
   directory:
     'Every app this student has, as a list or a grid. Opened from All apps in the ' +
     'sidebar, from the launcher, and from Explore all apps on the search home. It is ' +

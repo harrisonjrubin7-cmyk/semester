@@ -43,14 +43,23 @@ export interface SeatDefinition {
   institutional?: true;
 }
 
+/*
+ * Four seats held since 2026-09-28, on the founder's instruction (decision 1 in
+ * `docs/LAUNCH-DECISIONS.md`): the founder seat, and product, engineering and
+ * customer success held by the same person, acting, until someone else
+ * accepts each — which the council document allows at pilot scale. Role
+ * labels, as the document requires; never an address. Holding a seat is not
+ * signing: `signoffs` stays empty until there is a decision to sign for, so
+ * `decide()` now says "has not signed" for these four rather than "is vacant".
+ */
 export const COUNCIL: readonly SeatDefinition[] = [
-  { seat: 'founder', title: 'Founder / CEO', decides: 'Risk acceptance, customer commitment, commercial launch', holder: null },
-  { seat: 'product', title: 'Product lead', decides: 'Golden path and its acceptance criteria', holder: null },
-  { seat: 'engineering', title: 'Engineering lead', decides: 'Reliability, release, rollback', holder: null },
+  { seat: 'founder', title: 'Founder / CEO', decides: 'Risk acceptance, customer commitment, commercial launch', holder: 'Founder' },
+  { seat: 'product', title: 'Product lead', decides: 'Golden path and its acceptance criteria', holder: 'Founder, acting' },
+  { seat: 'engineering', title: 'Engineering lead', decides: 'Reliability, release, rollback', holder: 'Founder, acting' },
   { seat: 'security', title: 'Security / vCISO', decides: 'Threat model, pen-test findings, access controls', holder: null },
   { seat: 'privacy', title: 'Privacy / legal', decides: 'Terms, privacy, DPA/FERPA/COPPA posture, consent', holder: null },
   { seat: 'accessibility', title: 'Accessibility lead', decides: 'WCAG/VPAT status, blockers, remediation', holder: null },
-  { seat: 'success', title: 'Customer success', decides: 'Onboarding, training, support, communication', holder: null },
+  { seat: 'success', title: 'Customer success', decides: 'Onboarding, training, support, communication', holder: 'Founder, acting' },
   { seat: 'trust', title: 'Trust & Safety', decides: 'Reporting, escalation, moderation scope', holder: null },
   { seat: 'data', title: 'Data / integration owner', decides: 'Source quality, freshness, connector health', holder: null },
   { seat: 'champion', title: 'Pilot institution champion', decides: 'Institutional workflow and communications', holder: null, institutional: true },
@@ -87,12 +96,14 @@ const GO_LIVE = 'docs/market-readiness/GO_LIVE_CHECKLIST.md';
 
 /**
  * The twelve go/no-go requirements, audited against `origin/main` at
- * `1dd79cd` on 2026-09-27. `docs/LAUNCH-READINESS-AUDIT.md` has the long form.
+ * `1dd79cd` on 2026-09-27 and moved on 2026-09-28. `docs/LAUNCH-READINESS-AUDIT.md`
+ * has the long form.
  *
- * Nothing is `met`. That is the finding, not a placeholder: the repository has
- * a great deal of the machinery, and none of these twelve is a statement about
- * machinery alone — each needs something to have been run, reviewed, agreed or
- * published.
+ * One is `met` (`known-limitations`, the one that asked only for something to
+ * be published). The other eleven are not, and that is the finding, not a
+ * placeholder: the repository has a great deal of the machinery, and none of
+ * those eleven is a statement about machinery alone — each needs something to
+ * have been run, reviewed, agreed or signed by someone the tree cannot name.
  */
 export const GATES: readonly Gate[] = [
   {
@@ -183,9 +194,13 @@ export const GATES: readonly Gate[] = [
     id: 'onboarding-support',
     requirement: 'Student/staff onboarding and accessibility support ready.',
     owner: 'success',
-    status: 'unmet',
-    evidence: [],
-    gap: 'No quick-start, first-day checklist or accessibility support route for pilot users, and no accessibility audit of the piloted workflows.',
+    status: 'partial',
+    evidence: [
+      { path: 'docs/pilot/QUICK-START.md', shows: 'the first session for a pilot student, from the five-screen first run to the first deadline on Today, with every address checked against the router by pilotdocs.test.ts' },
+      { path: 'docs/pilot/FIRST-DAY-CHECKLIST.md', shows: 'the first-day list for a student and for the staff member running the pilot' },
+      { path: 'app/src/site/pages.tsx', shows: 'the accessibility support route — "Report a barrier" on /accessibility/, with escalation to the accessibility seat — which both documents point at' },
+    ],
+    gap: 'Only the qualified accessibility audit of the piloted workflows remains (decision 11 in docs/LAUNCH-DECISIONS.md); the go-live line for it is unticked.',
     goLive: [/Accessibility audit of the piloted workflows/],
   },
   {
@@ -196,9 +211,10 @@ export const GATES: readonly Gate[] = [
     evidence: [
       { path: 'ROLLBACK.md', shows: 'the rollback runbook, with measured timings' },
       { path: 'app/src/lib/flags.ts', shows: 'the flag registry, its evaluator, and six database-backed kill switches' },
-      { path: 'docs/FEATURE-FLAG-REGISTRY.md', shows: 'each flag\'s owner and rollback, and the kill-switch runbook' },
+      { path: 'docs/FEATURE-FLAG-REGISTRY.md', shows: 'each flag\'s owner and rollback, the kill-switch runbook, and the read-only mode with its engage, confirm and rollback steps' },
+      { path: 'app/src/lib/readonly.ts', shows: 'the app-wide read-only mode: VITE_READ_ONLY stops every push and shows a standing banner; SEMESTER_READ_ONLY makes the gateway refuse every write with a retryable 503; each side tested, and each guard shown red under revert' },
     ],
-    gap: 'No kill switch has been engaged against production, there is no app-wide read-only mode, and rollback has not been tested on the production deployment path.',
+    gap: 'No kill switch and no read-only mode has been engaged against production, and rollback has not been tested on the production deployment path.',
     goLive: [/Rollback tested on the production deployment path/],
   },
   {
@@ -213,9 +229,18 @@ export const GATES: readonly Gate[] = [
     id: 'known-limitations',
     requirement: 'Known limitations published internally and appropriately to pilot users.',
     owner: 'product',
-    status: 'partial',
-    evidence: [{ path: 'SEMESTER_MARKET_READINESS.md', shows: 'the internal scorecard, including how it has been wrong' }],
-    gap: 'Published internally. Nothing is written for pilot users.',
+    status: 'met',
+    evidence: [
+      { path: 'SEMESTER_MARKET_READINESS.md', shows: 'the internal scorecard, including how it has been wrong' },
+      {
+        path: 'docs/pilot/KNOWN-LIMITATIONS.md',
+        shows: 'the same limitations for pilot users, dated 2026-09-28, each with what to do instead, how to report, and the file that states it — rendered from app/src/lib/knownlimitations.ts and held to it by pilotdocs.test.ts',
+      },
+      {
+        path: 'app/src/components/KnownLimitations.tsx',
+        shows: 'the list printed on the Help screen of the deployed app, the copy a pilot user can open; the public site prints it at /known-limitations/ from the same data',
+      },
+    ],
   },
 ];
 

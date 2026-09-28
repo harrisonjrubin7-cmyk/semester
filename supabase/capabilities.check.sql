@@ -170,21 +170,30 @@ begin
   select private.has_capability('platform:configure') into a;
   perform pg_temp.answered('and may not configure the platform', a, false);
 
-  -- `platform_admin` carries five capabilities and not this one: the three it
-  -- was created with, and running the private beta
-  -- (20260928220000_private_beta.sql). Asserted out of the matrix rather than
-  -- by granting it, because the claim is about what the seeded rows say — and
-  -- asserted as the exact set, so a sixth cannot arrive in passing.
+  -- `platform_admin` carries eight capabilities and not this one: the three it
+  -- was created with, running the private beta
+  -- (20260928220000_private_beta.sql), and the three the operations console
+  -- added (20260929100000_console_control_plane.sql: console:operate,
+  -- approval:decide, breakglass:request — each judged operations-only in
+  -- app/src/lib/rolelaunch.ts before it was granted). Asserted out of the
+  -- matrix rather than by granting it, because the claim is about what the
+  -- seeded rows say — and asserted as the exact set, so a ninth cannot arrive
+  -- in passing.
   set local role postgres;
   select count(*) into n from public.role_capabilities
    where role = 'platform_admin' and capability = 'member:manage';
   perform pg_temp.counted('platform_admin does not implicitly hold member:manage', n, 0);
   select count(*) into n from public.role_capabilities where role = 'platform_admin';
-  perform pg_temp.counted('it holds exactly the five it was given', n, 5);
+  perform pg_temp.counted('it holds exactly the eight it was given', n, 8);
+  select count(*) into n from public.role_capabilities
+   where role = 'platform_admin'
+     and capability in ('console:operate', 'approval:decide', 'breakglass:request');
+  perform pg_temp.counted('three of them are the console’s', n, 3);
   select count(*) into n from public.role_capabilities where role = 'platform_admin'
      and capability not in ('report:read', 'moderation:action', 'platform:configure',
-                            'beta:manage', 'beta:triage');
-  perform pg_temp.counted('and they are those five', n, 0);
+                            'beta:manage', 'beta:triage',
+                            'console:operate', 'approval:decide', 'breakglass:request');
+  perform pg_temp.counted('and they are those eight', n, 0);
 
   -- ── The split, as a measurement ────────────────────────────────────────
   --
@@ -253,8 +262,11 @@ begin
   -- office publishers, `faculty` → `course:publish` from
   -- 20260928309000_course_studio.sql, and three from the private beta
   -- (beta:manage and beta:triage for platform_admin, beta:triage for
-  -- support_agent).
-  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 103);
+  -- support_agent), and nine from the operations console
+  -- (20260929100000_console_control_plane.sql: console:operate for six
+  -- operator roles, approval:decide for platform_admin, breakglass:request
+  -- for platform_admin and incident_responder).
+  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 112);
 
   perform pg_temp.become_anon();
   perform pg_temp.refused('a signed-out visitor cannot read the matrix',

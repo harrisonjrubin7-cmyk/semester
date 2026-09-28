@@ -330,3 +330,13 @@ Say what happened in [`CHANGELOG.md`](CHANGELOG.md), including that a rollback
 happened and what a tester will see change back. A pilot tester who watches a
 feature disappear without a word learns to distrust the whole thing, and that
 is harder to recover than the deploy was.
+
+## Read-only mode, for the window a rollback cannot cover
+
+The schema row above says the one thing this document cannot fix. What it can
+do is stop clients writing while somebody fixes it by hand: `VITE_READ_ONLY=true`
+on a deploy stops every device pushing its copy and says so on screen, and
+`SEMESTER_READ_ONLY=on` makes the gateway refuse every write with a retryable
+503. Both are registered, with the engage, confirm and rollback steps, in
+[`docs/FEATURE-FLAG-REGISTRY.md`](docs/FEATURE-FLAG-REGISTRY.md) under
+**Read-only mode**. Neither has been engaged against production yet.

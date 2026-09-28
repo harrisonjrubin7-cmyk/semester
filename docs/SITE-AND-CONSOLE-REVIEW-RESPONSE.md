@@ -73,3 +73,29 @@ rendered from `app/src/lib/ops/console.ts`.
   the seats are vacant.
 - It does not build a console, a form backend, a search, or an integrations
   directory. Each is listed above with what would have to exist first.
+
+## Addendum, 28 September 2026: the console was built
+
+The section above was written when the policy existed and the console did
+not. The same day, the thirteen capabilities the prototype faked were built
+in the repository, each held to the tree by a test:
+
+- **Backend.** `supabase/migrations/20260929100000_console_control_plane.sql`
+  (operator preferences, council seat holders, the fresh-MFA predicate, the
+  duty matrix as rows, a hash-chained insert-only audit archive with its own
+  writer role, signed daily manifests, a nightly integrity job and audited
+  reads, the demo flag on a school, and figures with provenance) and
+  `20260929110000_console_approvals_and_break_glass.sql` (approval requests
+  with server-side refusal of self-approval, the fail-closed `console_act()`,
+  break-glass with expiry and post-use review, and the tenant-scoped customer,
+  commitment and contract records). `supabase/console-control-plane.check.sql`
+  and `supabase/console-approvals.check.sql` prove each, including that a
+  high-risk write leaves nothing behind when its audit event cannot be written.
+- **Screen.** `app/src/screens/Console.tsx`, behind `console:operate`, with the
+  context bar, approvals, break-glass, audit, customers, figures, evidence and
+  saved views. The map is [`OPERATIONS-CONSOLE-MAP.md`](OPERATIONS-CONSOLE-MAP.md).
+- **Register.** The rows and what holds each are the "From prototype to
+  control plane" table of [`ops/operations-console/README.md`](../ops/operations-console/README.md).
+
+The last bullet of "What this does not do" is therefore out of date for the
+console; the form backend, search and integrations directory stand as written.

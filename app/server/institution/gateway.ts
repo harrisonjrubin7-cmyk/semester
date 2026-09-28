@@ -84,6 +84,15 @@ interface Config {
   rateLimiter?: RateLimiter;
   readiness?: () => Promise<ReadinessResult>;
   telemetry?: (event: GatewayTelemetryEvent) => void | Promise<void>;
+  /**
+   * Read-only mode: every write is refused with a 503 `read_only` that says
+   * to try again later, and reads go on as before. Asked each request rather
+   * than read once, so an operator can turn it on and off without a restart
+   * when the process is given a way to. `start.ts` reads
+   * `SEMESTER_READ_ONLY=on`; the app has its own copy in `lib/readonly.ts`,
+   * and the two are registered together in `docs/FEATURE-FLAG-REGISTRY.md`.
+   */
+  readOnly?: () => boolean;
 }
 
 export interface GatewayTelemetryEvent {
@@ -281,6 +290,8 @@ export function createGateway(config: Config) {
             status: ready ? 'ready' : 'unavailable',
             adapters: config.adapters.length,
             intelligence: config.intelligence?.status ?? 'policy-disabled',
+            // So the runbook's "confirm" step is a curl, not a guess.
+            readOnly: config.readOnly?.() === true,
           },
           { status: ready ? 200 : 503, headers },
         );
@@ -304,6 +315,25 @@ export function createGateway(config: Config) {
 
       const now = Date.now();
       if (!(await rateLimiter.allow(who, now))) fail(429, 'Please wait a minute before trying again.');
+
+      /*
+       * Read-only mode. After authentication and the rate limit, so that a
+       * frozen gateway is not also an open one; before any route that can
+       * write, so that no route has to remember to check.
+       *
+       * Every POST but one: `/actions/reconcile` does not do anything at the
+       * school, it *asks* what already happened to an action whose outcome is
+       * unknown, and refusing it would leave that student's action stuck at
+       * `uncertain` for as long as the mode lasts — which is exactly when a
+       * restore or a repair may have made the answer worth asking for. The
+       * journal row it finishes records a result the school already has.
+       *
+       * 503, which is the one refusal that says "the same request may be sent
+       * again" and means it here: the mode ends, the request works.
+       */
+      if (request.method === 'POST' && path !== '/actions/reconcile' && config.readOnly?.()) {
+        fail(503, 'Semester is in read-only mode for maintenance. Nothing was sent; try again later.', 'read_only');
+      }
 
       const context: AdapterContext = { identity: who, signal: AbortSignal.timeout(20_000) };
 

@@ -16,16 +16,16 @@ delete or renumber anything (D-002). It says which page wins.
 
 Owner is a seat of the [launch readiness council](docs/LAUNCH-READINESS-COUNCIL.md),
 never a person, and a seat is held only once somebody accepted it in writing.
-**Every seat is vacant.** No document below has a person behind it yet; the owner column says which seat will.
+**4 of 10 seats are held:** `founder` (Founder), `product` (Founder, acting), `engineering` (Founder, acting), `success` (Founder, acting).
 
 ## Where it stands
 
 | Status | Meaning | Entries |
 | --- | --- | ---: |
-| current | Read on the review date, and stands | 41 |
+| current | Read on the review date, and stands | 43 |
 | draft | The authoritative version, but not yet fit to act on | 2 |
-| missing | No authoritative version exists; the gap says what would close it | 3 |
-| **total** |  | **46** |
+| missing | No authoritative version exists; the gap says what would close it | 2 |
+| **total** |  | **47** |
 
 `version` counts reviews of the entry — the decision that this path is the
 authoritative one and its content was read and stands — not the document’s
@@ -57,7 +57,7 @@ The nineteen categories the closing brief names, in its order.
 | Commercial catalog | [`docs/operating-model/COMMERCIAL-GOVERNANCE.md`](docs/operating-model/COMMERCIAL-GOVERNANCE.md) | draft | `founder` | 1 | 2026-09-28 | 2026-12-28 | — | `D-009` |
 | Contract templates | [`docs/trust/PILOT-AGREEMENT-OUTLINE.md`](docs/trust/PILOT-AGREEMENT-OUTLINE.md) | draft | `privacy` | 1 | 2026-09-28 | 2026-12-28 | — | — |
 | Company site map | [`docs/PUBLIC-SITE.md`](docs/PUBLIC-SITE.md) | current | `product` | 1 | 2026-09-28 | 2026-12-28 | — | `D-011`, `D-031` |
-| Operations Console map | **none** | missing | `engineering` | 1 | 2026-09-28 | 2026-12-28 | — | — |
+| Operations Console map | [`docs/OPERATIONS-CONSOLE-MAP.md`](docs/OPERATIONS-CONSOLE-MAP.md) | current | `engineering` | 1 | 2026-09-28 | 2026-12-28 | — | `D-110` |
 
 ### Anything else
 
@@ -70,6 +70,7 @@ What the repository also runs on, and the brief’s list did not name.
 | Strategic boundaries | [`ops/strategic-boundaries/README.md`](ops/strategic-boundaries/README.md) | current | `founder` | 1 | 2026-09-28 | 2026-12-28 | — | `D-029`, `D-034`, `D-045` |
 | Customer commitment register | [`ops/customer-commitments/README.md`](ops/customer-commitments/README.md) | current | `founder` | 1 | 2026-09-28 | 2026-10-28 | — | — |
 | Operations console controls | [`ops/operations-console/README.md`](ops/operations-console/README.md) | current | `engineering` | 1 | 2026-09-28 | 2026-12-28 | — | `D-110` |
+| Evidence register | [`docs/EVIDENCE-REGISTER.md`](docs/EVIDENCE-REGISTER.md) | current | `security` | 1 | 2026-09-28 | 2026-10-28 | — | `D-110` |
 | Proof calendar | [`docs/PROOF-CALENDAR.md`](docs/PROOF-CALENDAR.md) | current | `founder` | 1 | 2026-09-28 | 2026-10-28 | — | — |
 | Launch war room | [`docs/LAUNCH-WAR-ROOM.md`](docs/LAUNCH-WAR-ROOM.md) | current | `founder` | 1 | 2026-09-28 | 2026-10-28 | — | — |
 | First-year success measures | [`docs/FIRST-YEAR-SUCCESS.md`](docs/FIRST-YEAR-SUCCESS.md) | current | `founder` | 1 | 2026-09-28 | 2026-12-28 | — | `D-005`, `D-009` |
@@ -113,12 +114,13 @@ What the repository also runs on, and the brief’s list did not name.
 - **Commercial catalog** — Pricing governance and the deal desk, not a price list. The four packages are named in docs/LAUNCH-DECISIONS.md step 3 and the student plans in app/src/lib/plans.ts; no institutional price exists, and D-009 keeps billing out of the app for now. Read next: [`app/src/lib/plans.ts`](app/src/lib/plans.ts), [`docs/LAUNCH-DECISIONS.md`](docs/LAUNCH-DECISIONS.md).
 - **Contract templates** — Outlines for counsel, not agreement language: nothing in the repository may be signed. docs/LAUNCH-DECISIONS.md items 4 and 5 say what has to happen first. Read next: [`docs/trust/DPA-CHECKLIST.md`](docs/trust/DPA-CHECKLIST.md), [`docs/legal/TERMS-OF-SERVICE-DRAFT.md`](docs/legal/TERMS-OF-SERVICE-DRAFT.md), [`docs/legal/PRIVACY-POLICY-DRAFT.md`](docs/legal/PRIVACY-POLICY-DRAFT.md).
 - **Company site map** — The routes are `ROUTES` in app/src/site/render.tsx: 21 content pages and 4 tools, prerendered to static HTML. Every capability a page names is printed from the claims register with its status word.
-- **Operations Console map** — *missing.* There is no operations console and no /admin. Staff surfaces are tabs of app/src/screens/University.tsx behind build-time flags, and the operator runbook names functions and tables rather than screens. A map is written once there is a console to map. Read next: [`ops/operations-console/README.md`](ops/operations-console/README.md), [`docs/CURRENT-SEMESTER-ARTIFACT-INVENTORY.md`](docs/CURRENT-SEMESTER-ARTIFACT-INVENTORY.md), [`docs/INTEGRATION-OPERATOR-RUNBOOK.md`](docs/INTEGRATION-OPERATOR-RUNBOOK.md).
+- **Operations Console map** — Rendered from VIEWS and CONTEXT_BAR in app/src/lib/ops/console.ts by console.test.ts: the console screen (app/src/screens/Console.tsx, behind console:operate), the context bar every view shows, its seven views, and the migration, check suite, screen and test that hold the capability behind each. The integration operator runbook still names functions and tables; the map names the screen that reads them. Read next: [`ops/operations-console/README.md`](ops/operations-console/README.md), [`docs/CURRENT-SEMESTER-ARTIFACT-INVENTORY.md`](docs/CURRENT-SEMESTER-ARTIFACT-INVENTORY.md), [`docs/INTEGRATION-OPERATOR-RUNBOOK.md`](docs/INTEGRATION-OPERATOR-RUNBOOK.md).
 - **Decision log** — The programme log, numbered D-nnn; DECISIONS.md holds the two long-lived product decisions. Every `decisions` entry on this page resolves to one of them or to an ADR. Read next: [`DECISIONS.md`](DECISIONS.md).
 - **Do-not-build register** — Product-level anti-patterns, with the test that holds each. The company-level lines are ops/strategic-boundaries/. Read next: [`ops/strategic-boundaries/README.md`](ops/strategic-boundaries/README.md).
 - **Strategic boundaries** — The twelve things Semester will not build, whoever asks, and what holds each.
 - **Customer commitment register** — Every promise made to a named customer, with its product dependency and its evidence. Empty until a customer exists, and the test says why.
-- **Operations console controls** — The policy the console will read before it exists: segregation of duties, data classification, the context bar and access basis, evidence-freshness escalation, the production rules a browser prototype could not hold, and the five conversion steps. The Operations Console map above stays missing until there is a console to map. Read next: [`docs/operating-model/CHANGE-MANAGEMENT.md`](docs/operating-model/CHANGE-MANAGEMENT.md), [`docs/LAUNCH-WAR-ROOM.md`](docs/LAUNCH-WAR-ROOM.md).
+- **Operations console controls** — The policy the console reads, written before it existed: segregation of duties, data classification, the context bar and access basis, evidence-freshness escalation, the production rules a browser prototype could not hold (each now held by a check or a test), the five conversion steps at what exists today, and the thirteen capabilities the prototype faked with the file that replaced each. The Operations Console map above is rendered from the same file. Read next: [`docs/operating-model/CHANGE-MANAGEMENT.md`](docs/operating-model/CHANGE-MANAGEMENT.md), [`docs/LAUNCH-WAR-ROOM.md`](docs/LAUNCH-WAR-ROOM.md).
+- **Evidence register** — Rendered from app/src/lib/ops/evidence.ts: every dated artifact the tree holds today, the date its file states, how long it is good for, and the claims and register rows resting on it. Not the evidence index above, which stays missing until docs/evidence/ exists; this is the register that says when what does exist runs out, and claims.test.ts refuses an “available” claim resting on an expired record. Read next: [`docs/PROOF-CALENDAR.md`](docs/PROOF-CALENDAR.md), [`ops/claims/README.md`](ops/claims/README.md).
 - **Proof calendar** — The schedule for producing the evidence needed to sell: three months, then quarterly, each item naming the artifact it files and the register rows it moves.
 - **Launch war room** — The daily board for the final weeks before launch: thirteen items, each with an owner and the document it is read from. Read next: [`docs/LAUNCH-READINESS-COUNCIL.md`](docs/LAUNCH-READINESS-COUNCIL.md).
 - **First-year success measures** — What "lead the category" means in the first twelve months, as measures with sources. No target is set here; each is a founder decision recorded in the log. Read next: [`ANALYTICS.md`](ANALYTICS.md).

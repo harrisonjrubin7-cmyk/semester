@@ -57,6 +57,11 @@ export const SYNC_WORDS: Record<SyncStatus, SyncWords> = {
     standing: 'Queued to sync',
     sentence: 'No connection. Your latest changes are saved on this device and will go to your account as soon as the connection is back.',
   },
+  'read-only': {
+    short: 'Read-only',
+    standing: 'Read-only mode',
+    sentence: 'Read-only mode: this build does not send changes to your account. Everything you change is saved on this device and goes up once read-only mode ends.',
+  },
   conflict: {
     short: 'Conflict',
     standing: 'Sync conflict',
@@ -162,6 +167,10 @@ export function syncLine(status: SyncStatus, error: string, online = true): Sync
       return { title: 'Offline', detail: SYNC_WORDS.offline.sentence, warn: false, act: 'Details' };
     case 'queued':
       return { title: 'Offline · changes waiting', detail: SYNC_WORDS.queued.sentence, warn: true, act: 'Details' };
+    // Said by `components/ReadOnlyBanner.tsx` on every screen already, for
+    // the whole build; a second line under it would say the same thing twice.
+    case 'read-only':
+      return null;
     case 'conflict':
       return { title: 'Sync conflict', detail: SYNC_WORDS.conflict.sentence, warn: true, act: 'Details' };
     case 'review':

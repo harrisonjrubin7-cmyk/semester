@@ -1,18 +1,21 @@
 /**
- * The operations console's controls, as data, before there is a console.
+ * The operations console's controls, as data, and the console that reads them.
  *
- * ## Why now
+ * ## Why this is data
  *
- * There is no operations console and no `/admin` (SEMESTER-OPERATING-SYSTEM.md,
- * "Operations Console map"). What exists is a prototype that showed the right
- * workflows — tiered roles, a sensitive-action dialog, an append-only audit
- * chain, a launch war room — on illustrative data in a browser. The review of
- * that prototype said what has to be true before anyone runs a customer tenant
- * from it, and most of that is *policy*: who may approve what, which records
- * carry which classification, what every page must show, and what happens
- * when evidence goes stale. Policy written into a screen is policy that gets
- * re-decided by whoever builds the next screen, so it is written here first,
- * where a test can hold it and the page that will be built has to read it.
+ * What came first was a prototype that showed the right workflows — tiered
+ * roles, a sensitive-action dialog, an append-only audit chain, a launch war
+ * room — on illustrative data in a browser. The review of that prototype said
+ * what has to be true before anyone runs a customer tenant from it, and most
+ * of that is *policy*: who may approve what, which records carry which
+ * classification, what every page must show, and what happens when evidence
+ * goes stale. Policy written into a screen is policy that gets re-decided by
+ * whoever builds the next screen, so it was written here first (D-110), where
+ * a test holds it, and the console (`app/src/screens/Console.tsx`) reads it.
+ * The thirteen things the prototype faked, and what replaced each — a
+ * migration, a check suite, a screen and its test — are `CAPABILITIES` below,
+ * and `console.test.ts` refuses a `done` row without a test among its holders
+ * or with a holder that is not in the tree.
  *
  * ## What is here
  *
@@ -35,10 +38,14 @@
  * - **Production rules.** The lines the prototype could not hold — an audit
  *   log in browser memory is not immutable — and what holds each now.
  * - **The conversion.** The five steps from prototype to control plane, each
- *   tied to the master-register rows it would move.
+ *   tied to the master-register rows it would move, and what exists today.
+ * - **The thirteen capabilities.** What the prototype faked, what production
+ *   needed instead, and the files that hold each.
+ * - **The views.** What the console shows, one line each, for the map.
  *
- * `ops/operations-console/README.md` is rendered from this file by
- * `console.test.ts`; edit the data, then `npm run registers` from app/.
+ * `ops/operations-console/README.md` and `docs/OPERATIONS-CONSOLE-MAP.md` are
+ * rendered from this file by `console.test.ts`; edit the data, then `npm run
+ * registers` from app/.
  */
 
 import type { Seat } from '../launchreadiness';
@@ -330,8 +337,11 @@ export const PRODUCTION_RULES: readonly Rule[] = [
   {
     id: 'fail-closed',
     rule: 'A high-risk action fails closed when its audit event cannot be written.',
-    holders: [{ path: 'docs/operating-model/CHANGE-MANAGEMENT.md', how: 'The change policy the console will implement; no code holds this yet' }],
-    status: 'stated',
+    holders: [
+      { path: 'supabase/console-approvals.check.sql', how: 'With the audit insert revoked inside a savepoint, console_act raises and leaves no grant, no action record and no status change; on the happy path the audit row’s seq precedes the effect' },
+      { path: 'docs/operating-model/CHANGE-MANAGEMENT.md', how: 'The change policy the function implements' },
+    ],
+    status: 'held',
   },
   {
     id: 'no-impersonation',
@@ -360,8 +370,11 @@ export const PRODUCTION_RULES: readonly Rule[] = [
   {
     id: 'classification-everywhere',
     rule: 'Every record view names its classification, and search, export, AI retrieval and support access obey it.',
-    holders: [{ path: 'app/src/lib/integration/classification.ts', how: 'Field-level classes for integrated data; the console’s record classes are this page' }],
-    status: 'stated',
+    holders: [
+      { path: 'app/src/screens/console.test.tsx', how: 'Every customer record the console renders names its class from RECORD_KINDS and answers “Why can I see this?” with the ACCESS_BASIS fields' },
+      { path: 'app/src/lib/integration/classification.ts', how: 'Field-level classes for integrated data; the console’s record classes are this page' },
+    ],
+    status: 'held',
   },
 ];
 
@@ -376,9 +389,252 @@ export interface Step {
 }
 
 export const CONVERSION: readonly Step[] = [
-  { step: 'Replace demo and browser-local state with authenticated backend data', today: 'Supabase Auth and the invite-only beta exist; staff surfaces are tabs of the University screen behind build-time flags', rows: ['IAM-001', 'PRG-006', 'PRG-008'] },
-  { step: 'Server-side RBAC, RLS, support grants and real tenant context', today: 'Role grants, RLS on every table and support grants are tested; no console reads them', rows: ['IAM-006', 'IAM-007', 'IAM-008', 'IAM-010'] },
-  { step: 'Append-only server-side audit with integrity controls', today: 'Grants, moderation, support reads and gateway actions are audited; there is no unified event schema or tamper-evident export', rows: ['SEC-006'] },
-  { step: 'Every dashboard value from evidence, monitoring, contracts, tickets and integrations', today: 'Registers are rendered from data and held to the tree; monitoring and connector health are behind flags', rows: ['SRE-002', 'INT-014', 'PRG-002'] },
-  { step: 'Approval, segregation of duties and environment safeguards on every high-risk write', today: 'This page, and the change-management policy; nothing enforces the matrix yet', rows: ['IAM-011', 'SRE-008'] },
+  { step: 'Replace demo and browser-local state with authenticated backend data', today: 'The console is a screen (app/src/screens/Console.tsx) opened only with console:operate on a real account; saved views and the last tab live in operator_preference, owner-only under RLS, never in the browser', rows: ['IAM-001', 'PRG-006', 'PRG-008'] },
+  { step: 'Server-side RBAC, RLS, support grants and real tenant context', today: 'Role grants, RLS on every table and support grants are tested, and the console reads them: the context bar shows the live grants, the open support windows, MFA freshness and the session’s expiry, from the server', rows: ['IAM-006', 'IAM-007', 'IAM-008', 'IAM-010'] },
+  { step: 'Append-only server-side audit with integrity controls', today: 'private.console_audit_event is hash-chained and insert-only, written by a separate writer role, sealed nightly into a signed manifest and re-verified; every read of it is itself an audit event', rows: ['SEC-006'] },
+  { step: 'Every dashboard value from evidence, monitoring, contracts, tickets and integrations', today: 'Registers are rendered from data and held to the tree; console_figures returns each figure with its source, window, owner, refresh, evidence and known limitation, and the billing figure says there is no billing (D-009)', rows: ['SRE-002', 'INT-014', 'PRG-002'] },
+  { step: 'Approval, segregation of duties and environment safeguards on every high-risk write', today: 'approval_request and approval_decision enforce this matrix in the database: self-approval refused, two people where the row says so, fresh MFA, and console_act fails closed when its audit event cannot be written', rows: ['IAM-011', 'SRE-008'] },
+];
+
+// ── the thirteen capabilities ──────────────────────────────────────────────
+
+export type CapabilityStatus = 'done' | 'partial' | 'planned' | 'not-started';
+
+export interface Holder {
+  /** Repository-relative; must exist. */
+  path: string;
+  how: string;
+}
+
+/**
+ * One thing the prototype faked, and what replaced it. A row is `done` only
+ * when at least one holder is a test (`.test.ts(x)` or `.check.sql`) and every
+ * holder is in the tree; `partial` when something exists but no test holds it
+ * all; `planned` when only a document does; `not-started` otherwise.
+ */
+export interface Capability {
+  id: string;
+  capability: string;
+  /** What the prototype did instead. */
+  prototype: string;
+  /** What production needs, and now has. */
+  replacement: string;
+  status: CapabilityStatus;
+  holders: readonly Holder[];
+  note?: string;
+}
+
+const MIGRATION_A = 'supabase/migrations/20260929100000_console_control_plane.sql';
+const MIGRATION_B = 'supabase/migrations/20260929110000_console_approvals_and_break_glass.sql';
+const CHECK_A = 'supabase/console-control-plane.check.sql';
+const CHECK_B = 'supabase/console-approvals.check.sql';
+const SCREEN = 'app/src/screens/Console.tsx';
+const SCREEN_TEST = 'app/src/screens/console.test.tsx';
+const CLIENT = 'app/src/lib/console/client.ts';
+const CLIENT_TEST = 'app/src/lib/console/client.test.ts';
+
+export const CAPABILITIES: readonly Capability[] = [
+  {
+    id: 'saved-views',
+    capability: 'Saved table views, nav state',
+    prototype: 'Table views and the active tab kept in browser memory, lost on reload and belonging to nobody',
+    replacement: 'Per-user preferences stored server-side: public.operator_preference, owner-only under RLS, read and written through PostgREST as the operator',
+    status: 'done',
+    holders: [
+      { path: MIGRATION_A, how: 'The operator_preference table, keyed by subject and key, with owner-only policies on every verb' },
+      { path: CHECK_A, how: 'A second account cannot read or write another operator’s preference' },
+      { path: CLIENT, how: 'loadPreferences and savePreference' },
+      { path: SCREEN, how: 'The Views tab and the last tab, persisted through operator_preference, never localStorage' },
+      { path: SCREEN_TEST, how: 'A saved view round-trips through the mocked table and nothing is written to the browser' },
+    ],
+  },
+  {
+    id: 'operator-identity',
+    capability: 'Operator identity',
+    prototype: 'A name typed into a header and a role picked from a menu',
+    replacement: 'Supabase Auth with the account’s real identity; a privileged action needs fresh MFA (aal2 within fifteen minutes), asserted by private.assert_fresh_mfa on the server',
+    status: 'done',
+    holders: [
+      { path: MIGRATION_A, how: 'private.mfa_fresh reads aal and amr from the JWT; private.assert_fresh_mfa raises “Fresh MFA required”' },
+      { path: CHECK_A, how: 'Both branches: a claim set with a fresh totp entry passes, one without aal2 or with a stale timestamp raises' },
+      { path: 'app/src/components/MfaStep.tsx', how: 'Enrol TOTP and challenge/verify before a privileged action' },
+      { path: 'app/src/components/MfaStep.test.tsx', how: 'The step is shown when the assurance level is not aal2, and clears when verification succeeds' },
+      { path: CLIENT, how: 'mfaLevel, enrollTotp, challengeTotp, verifyTotp and sessionExpiry' },
+      { path: CLIENT_TEST, how: 'Each wrapper calls the supabase-js auth.mfa method it names' },
+    ],
+    note: 'SSO for operators is the institution SSO row (IAM-003); the console does not add a second sign-in.',
+  },
+  {
+    id: 'roles',
+    capability: 'Roles and capabilities',
+    prototype: 'A role switcher in the header that changed what the page showed',
+    replacement: 'Scoped role_grants with capability, scope and expiry, checked server-side; console:operate, approval:decide and breakglass:request are capabilities of public.app_capabilities. There is no role switching in production',
+    status: 'done',
+    holders: [
+      { path: MIGRATION_A, how: 'The three capabilities and their role_capabilities rows; audit:read at platform scope for platform_admin' },
+      { path: CHECK_A, how: 'Each console capability is held by the roles the contract names and by nobody else' },
+      { path: 'supabase/rolegrants.check.sql', how: 'A grant has a scope, an expiry and an audited grantor' },
+      { path: 'supabase/my-capabilities.check.sql', how: 'my_capabilities returns the live grants and only those' },
+      { path: SCREEN, how: 'The Role field is the live grants from my_capabilities; there is no selector' },
+      { path: SCREEN_TEST, how: 'The screen renders the granted roles and offers no way to change them' },
+    ],
+  },
+  {
+    id: 'authorization',
+    capability: 'Authorization',
+    prototype: 'The page hid buttons the chosen role should not see; the data was already in the browser',
+    replacement: 'Server-side authorization, RLS and object rules on every request; the UI gate is a courtesy and never the authorization',
+    status: 'done',
+    holders: [
+      { path: 'supabase/rls-coverage.check.sql', how: 'Every table in public has RLS on and at least one policy' },
+      { path: 'supabase/grants.check.sql', how: 'Every public function is on the allowlist, and anon holds nothing it should not' },
+      { path: MIGRATION_A, how: 'Every console function checks private.has_capability itself; definer functions pin search_path' },
+      { path: CHECK_A, how: 'A session without console:operate is refused by the function, not by the screen' },
+      { path: SCREEN_TEST, how: 'Without the capability the screen is a Notice, never a demo' },
+    ],
+  },
+  {
+    id: 'audit-log',
+    capability: 'Audit log',
+    prototype: 'An array in browser memory called an append-only chain',
+    replacement: 'private.console_audit_event: server-written, insert-only, hash-chained, written only by the semester_audit_writer role, sealed nightly into a signed manifest, re-verified nightly, outside the retention sweep, and every read of it logged',
+    status: 'done',
+    holders: [
+      { path: MIGRATION_A, how: 'The table, its triggers, the writer role, console_audit_write, the key, the manifest, seal and verify, and console_audit_read' },
+      { path: CHECK_A, how: 'Update and delete raise; the service role cannot insert directly; a plain session cannot call the writer; the sweep leaves the rows; a read writes audit.read first' },
+      { path: 'supabase/scheduler.sql', how: 'The console-audit-integrity job at 03:23 seals yesterday and verifies the chain' },
+      { path: CLIENT, how: 'loadAudit and auditStatus' },
+      { path: SCREEN, how: 'The Audit view shows the chain status and says that every read is itself logged' },
+    ],
+  },
+  {
+    id: 'fail-closed',
+    capability: 'High-risk writes',
+    prototype: 'A confirmation dialog, then the write; the audit entry came after, if at all',
+    replacement: 'public.console_act writes the audit event first and performs the effect in the same function body; if the event cannot be written the call fails and nothing else happens',
+    status: 'done',
+    holders: [
+      { path: MIGRATION_B, how: 'console_act: audit through private.console_audit_write, then the duty’s effect, then the request is executed' },
+      { path: CHECK_B, how: 'With the audit insert revoked inside a savepoint the call raises and leaves no grant, no action record and no status change; on the happy path the audit seq precedes the effect' },
+    ],
+  },
+  {
+    id: 'two-person',
+    capability: 'Two-person approvals',
+    prototype: 'A second click by the same person',
+    replacement: 'public.approval_request and approval_decision: a request routed to a different person’s session, self-approval refused on the server, two distinct approvers where the duty says so, fresh MFA on every decision',
+    status: 'done',
+    holders: [
+      { path: MIGRATION_B, how: 'request_approval, decide_approval and the party check against private.party_held' },
+      { path: CHECK_B, how: 'Self-approval raises; a second decision by the same approver is refused by the key; a two-person duty stays pending after one approve' },
+      { path: SCREEN, how: 'The Approvals view: request, decide, act, with PRODUCTION_WRITE_NOTICE under every production write and the duty’s evidence requirement shown' },
+      { path: SCREEN_TEST, how: 'The notice and the evidence requirement are rendered for each duty' },
+    ],
+  },
+  {
+    id: 'commercial-core',
+    capability: 'Tenant, customer, commitment, contract data',
+    prototype: 'Illustrative customers in a JavaScript array',
+    replacement: 'public.customer, customer_commitment and customer_contract, tenant-scoped under RLS, written only through operations and read by console_customers',
+    status: 'done',
+    holders: [
+      { path: MIGRATION_B, how: 'The three tables, their policies and console_customers' },
+      { path: CHECK_B, how: 'A tenant:configure holder reads only their tenant; a browser session cannot write; a demo tenant is absent from the default read' },
+      { path: CLIENT, how: 'loadCustomers' },
+      { path: SCREEN, how: 'The Customers view: each record names its class per RECORD_KINDS and answers “Why can I see this?” per ACCESS_BASIS' },
+      { path: SCREEN_TEST, how: 'Every rendered record carries its classification and the five access-basis fields' },
+    ],
+  },
+  {
+    id: 'figures',
+    capability: 'Billing and reliability metrics',
+    prototype: 'Numbers typed into a file and styled as a dashboard',
+    replacement: 'public.console_figures: each figure from a real query with the seven provenance fields; the billing figure says “not applicable” with its source (D-009), never a number',
+    status: 'done',
+    holders: [
+      { path: MIGRATION_A, how: 'console_figures with the rows the control plane can read: audit, verification, grants, seats, support windows, schools, gateway health, billing' },
+      { path: MIGRATION_B, how: 'console_figures replaced with the approvals, break-glass, customer and contract rows added' },
+      { path: CHECK_A, how: 'Every row carries a source, a window, an owner seat and a refresh; billing is not applicable and cites D-009' },
+      { path: CHECK_B, how: 'The replaced function keeps every row of the first' },
+      { path: SCREEN, how: 'The Figures view shows all seven FIGURE_PROVENANCE fields for each figure' },
+      { path: SCREEN_TEST, how: 'No figure renders without its seven fields' },
+    ],
+  },
+  {
+    id: 'support-access',
+    capability: 'Support access',
+    prototype: 'A support role that could open any student’s record',
+    replacement: 'Student-approved, case-scoped, time-bound grants with the session banner and a per-read audit; the console shows the open grant in its context bar',
+    status: 'done',
+    holders: [
+      { path: 'supabase/support-access.check.sql', how: 'A support read needs a grant with a scope and an expiry, and each read is logged' },
+      { path: CLIENT, how: 'openSupportGrants over the support_access_windows RPC' },
+      { path: SCREEN, how: 'The Support access field: “None”, or the student, the ticket and when it ends' },
+      { path: SCREEN_TEST, how: 'The bar reads None with no grant and the grant’s scope with one' },
+    ],
+  },
+  {
+    id: 'break-glass',
+    capability: 'Break-glass',
+    prototype: 'A checkbox that widened the role for the session',
+    replacement: 'public.break_glass_grant opened only by console_act on an approved two-person request, with a ticket, fresh MFA, an expiry no later than four hours, a review due after it, and a post-use review by someone else',
+    status: 'done',
+    holders: [
+      { path: MIGRATION_B, how: 'The grant table, break_glass_active, close_break_glass and review_break_glass, each audited first' },
+      { path: CHECK_B, how: 'An expiry past four hours is refused; the subject cannot review their own grant; an unreviewed grant past its review blocks the next request' },
+      { path: SCREEN, how: 'The Break-glass view: open grants, close, review' },
+      { path: SCREEN_TEST, how: 'A grant renders with its expiry and review due, and the review control is not offered to its subject' },
+    ],
+  },
+  {
+    id: 'evidence',
+    capability: 'Evidence and claims',
+    prototype: 'A list of documents marked “current”',
+    replacement: 'Evidence records with a produced date and a validity, whose state drives the claims register and the procurement pack: a claim resting on an expired record cannot stay “available”',
+    status: 'done',
+    holders: [
+      { path: 'app/src/lib/ops/evidence.ts', how: 'EVIDENCE and evidenceState, using the escalation ladder above' },
+      { path: 'app/src/lib/ops/evidence.test.ts', how: 'Every record cites a file that states its date; the state is shown each side of each step; the real date leaves no expired record under an available claim' },
+      { path: 'app/src/lib/ops/claims.test.ts', how: 'problems() names a claim that rests on an expired record' },
+      { path: 'docs/EVIDENCE-REGISTER.md', how: 'The rendered register' },
+      { path: SCREEN, how: 'The Evidence view, from EVIDENCE and evidenceState' },
+    ],
+  },
+  {
+    id: 'environment',
+    capability: 'Environment separation',
+    prototype: 'The word “Production” in the header of a page full of invented records',
+    replacement: 'A separate demo tenant (schools.is_demo) with synthetic data, excluded from every console read unless asked for; the environment word comes from the deployment, and production never shows an illustrative record',
+    status: 'done',
+    holders: [
+      { path: MIGRATION_A, how: 'schools.is_demo, and include_demo defaulting to false on every reader' },
+      { path: CHECK_A, how: 'A demo school’s rows are absent from the default read' },
+      { path: 'app/src/lib/environment.ts', how: 'environment() from the deployment’s variables, never from a setting; ENVIRONMENT_SHAPE is a word and a shape' },
+      { path: 'app/src/lib/environment.test.ts', how: 'Demo, Staging and Production from each variable, and never from anything an operator can change' },
+      { path: 'app/src/lib/pagesdemo.test.ts', how: 'The deployed site is the product; the demo is beside it (TRUST-005)' },
+      { path: 'app/src/lib/demosplit.test.ts', how: 'Demo data does not reach the production bundle' },
+      { path: 'app/src/lib/ops/boundaries.test.ts', how: 'No fake production data and no browser service-role credential' },
+      { path: SCREEN, how: 'The Environment field, as a word and a shape' },
+    ],
+  },
+];
+
+// ── the views ──────────────────────────────────────────────────────────────
+
+export interface View {
+  id: string;
+  view: string;
+  /** What it shows, and what it reads, in one line. */
+  shows: string;
+}
+
+/** The console's views, in the order the screen offers them. */
+export const VIEWS: readonly View[] = [
+  { id: 'approvals', view: 'Approvals', shows: 'Requests against the duties matrix: raise one, decide one as a different person, and act on an approved one — the fail-closed write — with the production notice and the duty’s evidence requirement' },
+  { id: 'break-glass', view: 'Break-glass', shows: 'Open grants with their ticket, expiry and review due; close one as its subject, review one as somebody else' },
+  { id: 'audit', view: 'Audit', shows: 'The chain’s status (rows, head hash, last seal, last verification) and recent events; every read is itself an audit event, and the view says so' },
+  { id: 'customers', view: 'Customers', shows: 'Tenants, commitments and contracts, each record with its classification and why the operator can see it' },
+  { id: 'figures', view: 'Figures', shows: 'Every figure with its source, time window, environment, owner, last refresh, evidence and known limitation; billing says there is no billing' },
+  { id: 'evidence', view: 'Evidence', shows: 'Every evidence record with its expiry, its escalation step and the claims resting on it' },
+  { id: 'views', view: 'Views', shows: 'Saved table views and the last tab, stored per operator in operator_preference' },
 ];

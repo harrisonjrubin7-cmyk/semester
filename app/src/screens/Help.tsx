@@ -5,6 +5,7 @@ import { build, toMarkdown, type Section } from '../lib/guidebook';
 import { download } from '../lib/deliver';
 import { useNow, useStore } from '../state/store';
 import { BetaPanel } from '../components/BetaPanel';
+import { KnownLimitations } from '../components/KnownLimitations';
 import { NoWrongDoor } from '../components/NoWrongDoor';
 import { SupportTicketsPanel } from '../components/SupportTicketsPanel';
 import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
@@ -75,6 +76,7 @@ export function Help() {
           <p style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', margin: '0 0 var(--sp-6)', lineHeight: 'var(--leading-relaxed)' }}>
             Is it just you? The <a href={`${import.meta.env.BASE_URL}status.html`}>status page</a> checks the service from your own browser and lists incidents and planned maintenance.
           </p>
+          <KnownLimitations />
           {EXPERIENCE_FLAGS.supportTickets !== 'off' && (
             <SupportTicketsPanel
               account={account}

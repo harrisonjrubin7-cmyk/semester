@@ -238,6 +238,10 @@ const handler = createGateway({
   rateLimiter,
   intelligence,
   loadSsoConfig,
+  // `SEMESTER_READ_ONLY=on` refuses every write (docs/FEATURE-FLAG-REGISTRY.md,
+  // "Read-only mode"). Only the exact word, so a stray value cannot freeze a
+  // gateway by accident; read per request so a restart is not part of ending it.
+  readOnly: () => (process.env.SEMESTER_READ_ONLY || '').trim().toLowerCase() === 'on',
 });
 
 async function serve(req: IncomingMessage, res: ServerResponse): Promise<void> {

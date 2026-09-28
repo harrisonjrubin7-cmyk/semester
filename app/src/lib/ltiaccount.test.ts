@@ -210,6 +210,15 @@ const NOT_CONTENT = new Set([
    */
   'support_tickets',
   'support_ticket_messages',
+  /*
+   * An operator's saved console views and last-open tab
+   * (`lib/console/client.ts`, `20260929100000_console_control_plane.sql`).
+   * A preference about how a staff screen is arranged, not work that exists
+   * nowhere else — and it belongs to an operator holding `console:operate`,
+   * which is not an account an LTI launch attaches to. Listed in
+   * `OWNED_TABLES` only so Delete my account removes it.
+   */
+  'operator_preference',
 ]);
 
 /**

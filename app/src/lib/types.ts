@@ -752,6 +752,9 @@ export type Screen =
   | 'classmates'
   | 'community'
   | 'moderation'
+  // The operations console: a staff tool behind a platform-scope capability,
+  // nested like the review queue rather than registered. See `lib/nav.ts`.
+  | 'console'
   | 'agreements'
   | 'volunteers'
   | 'volunteer'

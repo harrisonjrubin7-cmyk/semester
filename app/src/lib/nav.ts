@@ -1018,6 +1018,16 @@ if (enabled(COMMUNITY_FLAGS, 'communityFeed') && enabled(COMMUNITY_FLAGS, 'commu
 const NESTED: Partial<Record<Screen, Screen>> = {
   community: 'mine',
   moderation: 'mine',
+  /*
+   * The operations console is a staff tool the way the review queue is, and
+   * for the same reason it is nested rather than registered: the registry is
+   * per school and per role, and `offered()` cannot see a *capability*. A
+   * `console:operate` grant at platform scope is what opens it, the screen
+   * asks the database for that (`lib/console/client.ts`, `holdsConsole`) and
+   * shows one sentence to anyone without it. Reached at `#/console`; it is
+   * offered from nothing a student sees.
+   */
+  console: 'me',
   agreements: 'moderation',
   volunteers: 'moderation',
   volunteer: 'mine',
@@ -1097,6 +1107,7 @@ const NESTED_NAMES: Partial<Record<Screen, string>> = {
   // the review queue is a staff tool opened from it. See COMMUNITY_DESTINATION.
   community: 'Community',
   moderation: 'the review queue',
+  console: 'the operations console',
   agreements: 'escalation agreements',
   volunteers: 'the volunteer programme',
   volunteer: 'volunteer moderation',

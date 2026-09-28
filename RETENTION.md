@@ -368,6 +368,38 @@ except a delete of a row past three years, inside the sweep's own transaction.
 a longer period changes two intervals, and `retention.test.ts` holds them
 together.
 
+**The operations console (`20260929100000_console_control_plane.sql`).**
+`operator_preference` is one operator's own saved views and navigation state
+and goes with the account (cascade from `auth.users`). `council_seat_holder`
+is the record of who held which council seat over which period: an ended seat
+keeps its row with an end time, and the row goes only with the account.
+`console_duty` is the duty matrix as rows, written only by migration.
+`console_audit_event` is the console's append-only, hash-chained audit archive
+and is **never swept**: it is a protected archive, its trigger refuses every
+update and delete, and `private.sweep_audit_retention()` does not name it —
+`supabase/console-control-plane.check.sql` asserts the sweep leaves its rows.
+`console_audit_manifest` (one signed manifest per day) and
+`console_audit_verification` (one row per nightly verification run) are
+insert-only for the same reason, and `console_audit_key` is the one signing
+key, seeded once and rotated only by a recorded decision.
+
+**Approvals, break-glass and the commercial core
+(`20260929110000_console_approvals_and_break_glass.sql`).** `approval_request`
+and `approval_decision` are the record of who asked for a high-risk action and
+who approved or refused it, and are kept for as long as the accounts they name:
+a requester's or approver's rows go with that account (cascade), and nothing
+else deletes them, because a decision with no record is the failure the
+two-person rule exists to stop. `console_action_record` is the effect of an
+approved action that has no table of its own; it is pinned column by column,
+and only its actor column clears when that account is erased. `break_glass_grant`
+is every emergency access ever opened, with its ticket, expiry and post-use
+review, and goes only with the subject's account. `customer`,
+`customer_commitment` and `customer_contract` are a school's commercial
+record, scoped to the tenant, written by the service role and never by a
+browser; they follow the tenant, and a contract row is kept for the life of
+the school row it belongs to. None of these has a time-based sweep, and each
+is small: one row per request, decision, grant or contract, never per student.
+
 **The outbox and its receipts: no sweep yet.** `domain_outbox_events` and
 `domain_event_receipts` (`20260928320000_audit_correlation_and_outbox.sql`)
 are service-role only and, as of that migration, empty: no producer writes to

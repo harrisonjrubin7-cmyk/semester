@@ -486,7 +486,41 @@ declare
     -- argument to aim it elsewhere; `deletion.check.sql` proves both. Its
     -- sibling `erase_account(uuid)` takes an account id and so is
     -- service_role only, and is not here.
-    'export_my_data()'
+    'export_my_data()',
+
+    -- The three in 20260929100000_console_control_plane.sql. Each checks
+    -- `console:operate` itself and raises 42501 without it (never
+    -- `audit:read`, which is a tenant's word for its own events). `console_audit_read` is the only client
+    -- path to `private.console_audit_event`, and writes an `audit.read` event
+    -- through the writer role before it returns a row; the writer itself,
+    -- the sealer and the verifier are service_role only and are not here.
+    -- `console_figures` returns figures with their provenance and leaves
+    -- demo tenants out unless asked. `console-control-plane.check.sql`
+    -- attempts each refusal.
+    'console_audit_read(since timestamp with time zone, want_limit integer)',
+    'console_audit_status()',
+    'console_figures(include_demo boolean)',
+
+    -- The eight in 20260929110000_console_approvals_and_break_glass.sql.
+    -- Three writers on the approval path: requesting checks the duty's
+    -- requester party, deciding checks fresh MFA, refuses self-approval and
+    -- needs an approver party, acting needs console:operate, fresh MFA, an
+    -- approved request and the caller to be its requester or an approver —
+    -- and writes its audit event through the writer role before anything
+    -- else, raising if it cannot. Two on break-glass: the subject closes,
+    -- somebody else with the security or founder seat reviews. Three
+    -- readers, `security invoker`, so the tables' own policies decide the
+    -- rows and the function adds only the demo exclusion.
+    -- `console-approvals.check.sql` attempts each refusal, and the
+    -- fail-closed one with the writer's INSERT revoked.
+    'request_approval(want_duty text, want_tenant text, want_target text, want_detail jsonb, want_evidence text, want_ticket text, want_correlation text)',
+    'decide_approval(want_request uuid, want_decision text)',
+    'console_act(want_request uuid, want_correlation text)',
+    'close_break_glass(want_id uuid)',
+    'review_break_glass(want_id uuid, want_note text)',
+    'console_approvals(include_demo boolean)',
+    'console_break_glass(include_demo boolean)',
+    'console_customers(include_demo boolean)'
   ];
   extra text;
   missing text;

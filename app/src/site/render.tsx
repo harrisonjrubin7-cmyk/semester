@@ -42,6 +42,7 @@ export const ROUTES: Route[] = [
   { path: '/privacy/', title: 'Privacy at Semester', description: 'Student data is the student’s: export or delete it at any time.', Page: P.Privacy },
   { path: '/accessibility/', title: 'Accessibility at Semester', description: 'Built toward WCAG 2.2 AA, with checks on every build and known gaps listed.', Page: P.Accessibility },
   { path: '/help/', title: 'Semester help', description: 'Answers to the questions students ask first.', Page: P.Help },
+  { path: '/known-limitations/', title: 'Known limitations — Semester', description: 'What does not work yet for pilot users, what to do instead, and how to report something. Dated, and held to the code by a test.', Page: P.KnownLimitations },
   { path: '/launch-readiness/', title: 'Are we ready? — Semester', description: 'What runs today, what is built but not deployed, and what is still planned, for students, departments, institutions and reviewers.', Page: P.LaunchReadiness },
   { path: '/proof/', title: 'How Semester shows proof', description: 'No invented metrics, no unapproved logos, no causal claims without a method. The rules, written before there is proof to show.', Page: P.Proof },
   { path: '/legal/', title: 'Semester legal and policies', description: 'Every policy, its status, version and effective date. Nothing is in force yet, and this page says so.', Page: P.Legal },

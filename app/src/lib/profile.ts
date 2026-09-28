@@ -113,7 +113,7 @@ export function saidAbout({ account, status, at }: AccountState, now = Date.now(
     };
   }
   const sub =
-    status === 'syncing' || status === 'offline' || status === 'queued' || status === 'conflict' || status === 'review'
+    status === 'syncing' || status === 'offline' || status === 'queued' || status === 'read-only' || status === 'conflict' || status === 'review'
       ? SYNC_WORDS[status].sentence
       : status === 'error'
         ? 'Sync failed — open Account for what went wrong.'
