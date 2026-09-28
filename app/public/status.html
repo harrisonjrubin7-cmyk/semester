@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Semester status</title>
+<meta name="description" content="Whether Semester is up right now, checked from your own browser.">
+<link rel="icon" href="./icon.svg" type="image/svg+xml">
+<!--
+  The status page. Deliberately not part of the app bundle: if the app fails to
+  build or load, this still has to render and say so.
+
+  Every check runs in the reader's browser at the moment they look, so there is
+  no server that could itself be down, and nothing here claims more than it
+  measured: "up" means this browser reached it just now, not an uptime figure.
+
+  SUPABASE_URL and SUPABASE_KEY must equal app/.env.production — both are the
+  publishable values already compiled into the app. src/lib/statuspage.test.ts
+  holds the two files together.
+
+  Incidents come from status-incidents.json beside this file. Posting one is an
+  edit to that file and a merge; SECURITY.md's 72-hour notice still goes by
+  email, this is where the public sees the same thing.
+-->
+<style>
+:root{--bg:#faf9f5;--panel:#ffffff;--ink:#141413;--dim:#55544f;--line:#dedcd3;--ok:#2f6b3a;--bad:#9b2c2c;--warn:#7a5500}
+@media (prefers-color-scheme:dark){:root{--bg:#101113;--panel:#17181b;--ink:#f4f3ef;--dim:#b4b3ae;--line:#2b2c30;--ok:#8fc49a;--bad:#e8a3a3;--warn:#e2bd6a}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:720px;margin:0 auto;padding:32px 16px 64px}
+h1{font-size:28px;margin:0 0 4px}
+h2{font-size:18px;margin:32px 0 8px}
+p{margin:0}
+.dim{color:var(--dim)}
+.overall{margin:20px 0;padding:16px;border:2px solid var(--line);border-radius:8px;background:var(--panel);font-weight:600}
+.overall[data-state=up]{border-color:var(--ok)}
+.overall[data-state=down]{border-color:var(--bad)}
+.overall[data-state=partial]{border-color:var(--warn)}
+ul{list-style:none;margin:0;padding:0;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+li{display:flex;justify-content:space-between;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+li:last-child{border-bottom:0}
+.state{font-weight:600;white-space:nowrap}
+.state[data-state=up]{color:var(--ok)}
+.state[data-state=down]{color:var(--bad)}
+.state[data-state=checking]{color:var(--dim)}
+.incident{padding:12px 16px;border-bottom:1px solid var(--line)}
+.incident:last-child{border-bottom:0}
+.incident time{color:var(--dim);font-size:14px}
+button{font:inherit;font-size:15px;min-height:44px;padding:8px 16px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--ink);cursor:pointer;margin-top:16px}
+button:focus-visible,a:focus-visible{outline:2px solid currentColor;outline-offset:2px}
+a{color:inherit}
+</style>
+</head>
+<body>
+<main>
+  <h1>Semester status</h1>
+  <p class="dim">Checked from your browser, just now. Nothing here is a cached report.</p>
+  <p class="overall" id="overall" data-state="checking" role="status" aria-live="polite">Checking…</p>
+
+  <h2>Services</h2>
+  <ul id="checks"></ul>
+  <p class="dim" id="when"></p>
+  <button type="button" id="again">Check again</button>
+
+  <h2>Incidents</h2>
+  <div id="incidents"><p class="dim">Loading…</p></div>
+
+  <p class="dim" style="margin-top:32px"><a href="./">Open Semester</a></p>
+</main>
+<script>
+(function () {
+  var SUPABASE_URL = 'https://lzrqvlugnawcgywkhqlz.supabase.co';
+  var SUPABASE_KEY = 'sb_publishable_aU09VKFZdGCrO-RM_rVzMQ_j17FqKRj';
+  var TIMEOUT_MS = 8000;
+
+  var CHECKS = [
+    { name: 'The app', detail: 'the page students open', url: './index.html', headers: {} },
+    { name: 'Sign-in and your saved work', detail: 'accounts and sync', url: SUPABASE_URL + '/auth/v1/health', headers: { apikey: SUPABASE_KEY } },
+  ];
+
+  function el(id) { return document.getElementById(id); }
+  function text(tag, value, cls) { var n = document.createElement(tag); n.textContent = value; if (cls) n.className = cls; return n; }
+
+  function probe(check) {
+    var ctrl = typeof AbortController === 'function' ? new AbortController() : null;
+    var timer = setTimeout(function () { if (ctrl) ctrl.abort(); }, TIMEOUT_MS);
+    return fetch(check.url, { cache: 'no-store', headers: check.headers, signal: ctrl ? ctrl.signal : undefined })
+      .then(function (r) { return r.ok; }, function () { return false; })
+      .then(function (ok) { clearTimeout(timer); return ok; });
+  }
+
+  function run() {
+    var list = el('checks');
+    list.textContent = '';
+    el('overall').dataset.state = 'checking';
+    el('overall').textContent = 'Checking…';
+    var rows = CHECKS.map(function (c) {
+      var li = document.createElement('li');
+      var left = document.createElement('span');
+      left.appendChild(text('span', c.name));
+      left.appendChild(text('span', ' · ' + c.detail, 'dim'));
+      var state = text('span', 'Checking…', 'state');
+      state.dataset.state = 'checking';
+      li.appendChild(left); li.appendChild(state); list.appendChild(li);
+      return state;
+    });
+    if (!navigator.onLine) {
+      el('overall').dataset.state = 'down';
+      el('overall').textContent = 'Your device is offline, so nothing could be checked.';
+      rows.forEach(function (s) { s.dataset.state = 'down'; s.textContent = 'Not checked'; });
+      return;
+    }
+    Promise.all(CHECKS.map(probe)).then(function (results) {
+      results.forEach(function (ok, i) {
+        rows[i].dataset.state = ok ? 'up' : 'down';
+        rows[i].textContent = ok ? 'Up' : 'Not responding';
+      });
+      var up = results.filter(Boolean).length;
+      var o = el('overall');
+      if (up === results.length) { o.dataset.state = 'up'; o.textContent = 'Everything is up.'; }
+      else if (up === 0) { o.dataset.state = 'down'; o.textContent = 'Semester is not responding. We are looking at it.'; }
+      else { o.dataset.state = 'partial'; o.textContent = 'Part of Semester is not responding. Work already on your device is safe and will sync when it is back.'; }
+      el('when').textContent = 'Last checked ' + new Date().toLocaleTimeString() + '.';
+    });
+  }
+
+  function incidents() {
+    var box = el('incidents');
+    fetch('./status-incidents.json', { cache: 'no-store' })
+      .then(function (r) { if (!r.ok) throw new Error(); return r.json(); })
+      .then(function (data) {
+        box.textContent = '';
+        var items = (data && data.incidents) || [];
+        if (!items.length) { box.appendChild(text('p', 'No incidents reported.', 'dim')); return; }
+        var ul = document.createElement('ul');
+        items.forEach(function (x) {
+          var li = document.createElement('li');
+          li.className = 'incident';
+          li.style.display = 'block';
+          var t = document.createElement('time'); t.dateTime = x.date; t.textContent = x.date + ' · ' + x.status;
+          li.appendChild(t);
+          li.appendChild(text('p', x.title, 'state'));
+          li.appendChild(text('p', x.detail));
+          ul.appendChild(li);
+        });
+        box.appendChild(ul);
+      })
+      .catch(function () { box.textContent = ''; box.appendChild(text('p', 'The incident list could not be loaded.', 'dim')); });
+  }
+
+  el('again').addEventListener('click', run);
+  run();
+  incidents();
+  setInterval(function () { if (document.visibilityState === 'visible') run(); }, 60000);
+})();
+</script>
+</body>
+</html>
