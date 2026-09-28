@@ -31,6 +31,7 @@ import {
   RATES_READ,
 } from '../../lib/spend';
 import { ActionButton, SectionLabel } from '../../components/ui';
+import { FieldMessage, fieldProps } from '../../components/FieldMessage';
 import { AboutMe } from '../../components/AboutMe';
 import { SaveState } from '../../components/unity/Status';
 
@@ -243,7 +244,7 @@ export function SettingsAssistant() {
                   onChange={(e) => setConfig({ ...config, proxy: e.target.value })}
                   style={{ fontSize: 'var(--type-base)', marginTop: 'var(--sp-4)' }}
                   aria-label="Proxy URL"
-                  aria-invalid={proxyProblem(config.proxy) ? true : undefined}
+                  {...fieldProps('assistant-proxy', proxyProblem(config.proxy) || undefined)}
                 />
                 {/*
                   * Said here, where it was typed, rather than as a number in
@@ -256,19 +257,8 @@ export function SettingsAssistant() {
                   * ignored now, so the key above answers; this is the line
                   * that says so before somebody spends an evening on it.
                   */}
-                {proxyProblem(config.proxy) && (
-                  <div
-                    style={{
-                      fontSize: 'var(--type-sm)',
-                      color: 'var(--app-accent)',
-                      marginTop: 'var(--sp-3)',
-                      lineHeight: 'var(--leading-normal)',
-                      textWrap: 'pretty',
-                    }}
-                  >
-                    {proxyProblem(config.proxy)}
-                  </div>
-                )}
+                {/* Checked as it is typed; announced politely — see `FieldMessage`. */}
+                <FieldMessage id="assistant-proxy" error={proxyProblem(config.proxy) || undefined} />
                 <div style={{ display: 'flex', gap: 'var(--sp-3)', marginTop: 'var(--sp-5)', flexWrap: 'wrap' }}>
                   {MODELS.map((m) => (
                     <button

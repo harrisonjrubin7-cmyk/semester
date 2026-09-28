@@ -169,8 +169,23 @@ describe('searching the springboard', () => {
   });
 
   it('searches only what this school has', () => {
-    expect(searchable(ALL)).toContain('meals');
-    expect(searchable(NONE)).not.toContain('meals');
+    expect(searchable(ALL, 'student')).toContain('meals');
+    expect(searchable(NONE, 'student')).not.toContain('meals');
+  });
+
+  /*
+   * The role gate, failing closed. `searchable` used to default its role to
+   * the student and hand it to `offered`, so an `undefined` — a role not read
+   * yet, or a lookup that failed — searched the widest set there is.
+   */
+  it('searches the narrower set when the role is missing or unknown', () => {
+    expect(searchable(ALL, undefined)).not.toContain('meals');
+    expect(searchable(ALL, null)).not.toContain('housing');
+    expect(searchable(ALL, 'vice-chancellor' as 'student')).not.toContain('meals');
+    // The control: a screen every role has is still there, and the student
+    // still has the one the others do not.
+    expect(searchable(ALL, undefined)).toContain('calendar');
+    expect(searchable(ALL, 'student')).toContain('meals');
   });
 });
 

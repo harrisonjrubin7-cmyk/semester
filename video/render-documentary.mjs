@@ -11,7 +11,7 @@
  *
  * Normally reached through `python3 pipeline/documentary.py <course>`.
  */
-import { existsSync, mkdirSync, readFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { bundle } from '@remotion/bundler';
@@ -205,6 +205,13 @@ await renderMedia({
   browserExecutable,
 });
 console.log('done');
+
+// The picture burns the captions in; the sidecar is for a player that wants
+// them as text — a screen reader, a search, a viewer who needs them larger.
+// It is the episode's own track from `app/scripts/captions.ts`.
+const sidecar = join(ROOT, 'app/public/audio', `${episode.id}.vtt`);
+if (existsSync(sidecar)) copyFileSync(sidecar, out.replace(/\.mp4$/, '.vtt'));
+else console.warn(`! no ${sidecar} — run \`npm run captions\` in app/, and this cut ships without a text track`);
 
 function mmss(seconds) {
   const whole = Math.max(0, Math.floor(seconds));

@@ -1164,7 +1164,9 @@ function Feed_rail() {
   const nowRule = (
     <div
       key="now"
-      aria-label={`Now, ${clockOf(minutes)}`}
+      // Said as text, not as an `aria-label` on a role-less div: readers
+      // ignore a name there (axe `aria-prohibited-attr`), so a screen reader
+      // heard a bare "3:11" with nothing saying it was now.
       style={{ display: 'flex', gap: RAIL_GAP, alignItems: 'center', padding: 'var(--sp-2) 0' }}
     >
       <div
@@ -1177,6 +1179,7 @@ function Feed_rail() {
           color: 'var(--app-warn)',
         }}
       >
+        <span className="sr-only">Now, </span>
         {clockOf(minutes)}
       </div>
       <div style={{ width: 1, flex: 'none', position: 'relative' }}>

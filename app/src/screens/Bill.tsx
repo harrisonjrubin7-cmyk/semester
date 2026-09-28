@@ -26,6 +26,7 @@ import { useNow, useStore } from '../state/store';
 import { CustomRow, Group } from '../components/shell/Rows';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel, Segmented } from '../components/ui';
+import { FieldMessage, useFieldErrors } from '../components/FieldMessage';
 import { CAMPUS_LINKS } from '../data/campus';
 import {
   AID_KINDS,
@@ -81,30 +82,32 @@ export function Bill() {
   const [pending, setPending] = useState(false);
   const [on, setOn] = useState('');
   const [adding, setAdding] = useState<'charge' | 'aid' | 'payment'>('charge');
-  const [bad, setBad] = useState('');
+  const fields = useFieldErrors(['what', 'amount', 'on'] as const);
 
   const clear = () => {
     setWhat('');
     setAmount('');
     setPending(false);
     setOn('');
-    setBad('');
+    fields.clear();
   };
 
   const add = () => {
     const cents = readMoney(amount);
-    if (cents === null) {
-      setBad('That is not an amount the app can read. Try 3241.50, or $3,241.50.');
-      return;
-    }
-    if (cents === 0) {
-      setBad('A line of $0.00 tells a December version of you nothing. Leave it out.');
-      return;
-    }
-    if (!what.trim()) {
-      setBad('Say what it is, so the list still means something in December.');
-      return;
-    }
+    const ok = fields.check({
+      what: what.trim() ? '' : 'Say what it is, so the list still means something in December.',
+      amount:
+        cents === null
+          ? 'That is not an amount the app can read. Try 3241.50, or $3,241.50.'
+          : cents === 0
+            ? 'A line of $0.00 tells a December version of you nothing. Leave it out.'
+            : '',
+      on:
+        adding === 'payment' && !on
+          ? 'Say when you paid it. A payment with no date cannot be set against an instalment.'
+          : '',
+    });
+    if (!ok || cents === null) return;
     if (adding === 'charge') {
       dispatch({
         type: 'addCharge',
@@ -116,10 +119,6 @@ export function Bill() {
         aid: { term: state.term, what: what.trim(), kind: aidKind, cents, pending },
       });
     } else {
-      if (!on) {
-        setBad('Say when you paid it. A payment with no date cannot be set against an instalment.');
-        return;
-      }
       dispatch({
         type: 'addPayment',
         payment: { term: state.term, what: what.trim(), cents, on },
@@ -397,7 +396,7 @@ export function Bill() {
         value={adding}
         onChange={(which) => {
           setAdding(which);
-          setBad('');
+          fields.clear();
         }}
         style={{ marginBottom: 'var(--sp-4)' }}
       />
@@ -413,9 +412,16 @@ export function Bill() {
               ? 'Need-based grant'
               : 'Instalment 1'
         }
-        onChange={(e) => setWhat(e.target.value)}
-        style={{ width: '100%', marginBottom: 'var(--sp-4)' }}
+        {...fields.control('what')}
+        onChange={(e) => {
+          setWhat(e.target.value);
+          fields.clear('what');
+        }}
+        style={{ width: '100%' }}
       />
+      <div style={{ marginBottom: 'var(--sp-4)' }}>
+        <FieldMessage {...fields.message('what')} />
+      </div>
 
       <div style={{ display: 'flex', gap: 'var(--sp-4)', marginBottom: 'var(--sp-4)' }}>
         <input
@@ -424,7 +430,11 @@ export function Bill() {
           aria-label="How much"
           placeholder="3241.50"
           inputMode="decimal"
-          onChange={(e) => setAmount(e.target.value)}
+          {...fields.control('amount')}
+          onChange={(e) => {
+            setAmount(e.target.value);
+            fields.clear('amount');
+          }}
           style={{ width: 120, flex: 'none' }}
         />
         {adding === 'charge' && (
@@ -463,10 +473,18 @@ export function Bill() {
             type="date"
             value={on}
             aria-label="When you paid it"
-            onChange={(e) => setOn(e.target.value)}
+            {...fields.control('on')}
+            onChange={(e) => {
+              setOn(e.target.value);
+              fields.clear('on');
+            }}
             style={{ flex: 1, minWidth: 0 }}
           />
         )}
+      </div>
+      <div style={{ marginBottom: fields.errors.amount || fields.errors.on ? 'var(--sp-4)' : 0 }}>
+        <FieldMessage {...fields.message('amount')} />
+        <FieldMessage {...fields.message('on')} />
       </div>
 
       {adding === 'aid' && (
@@ -505,18 +523,6 @@ export function Bill() {
         </div>
       )}
 
-      {bad ? (
-        <div
-          style={{
-            fontSize: 'var(--type-sm-plus)',
-            color: 'var(--app-warn)',
-            marginBottom: 'var(--sp-4)',
-            lineHeight: 'var(--leading-normal)',
-          }}
-        >
-          {bad}
-        </div>
-      ) : null}
 
       <button type="button" className="btn btn-primary btn-block" onClick={add} style={{ height: 44 }}>
         Add it

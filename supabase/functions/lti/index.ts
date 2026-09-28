@@ -404,7 +404,7 @@ Deno.serve(async (req) => {
    * for a quiz that went perfectly well.
    */
   if (path.endsWith('/score')) {
-    const cors = corsHeaders(Deno.env.get('ALLOWED_ORIGIN'), req.headers.get('Origin'));
+    const cors = corsHeaders(Deno.env.get('ALLOWED_ORIGIN'), req.headers.get('Origin'), Deno.env.get('CORS_ALLOW_DEV'));
     const answer = (body: Record<string, unknown>, status = 200) =>
       new Response(JSON.stringify(body), {
         status,

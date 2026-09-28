@@ -19,6 +19,7 @@ reading:
     lti               ACTIVE, v144, verify_jwt off   platform
     integration-tick  ACTIVE, v2, verify_jwt off     platform
     trust-room        ACTIVE, v7, verify_jwt off     platform
+    delete-account    PENDING, live on merge, verify_jwt off  (see below)
 
 **This file once said two, at v1, and filed three of the other four under "Not
 deployed yet".** `fetchcal` had been live since 9 September when that was
@@ -405,6 +406,39 @@ was v7 on a platform path, and that reading replaced the pending row.
 **Not built yet:** the page a reviewer opens. It should read the token from the
 URL fragment (never the query string, which servers log) and post it here.
 
+## `delete-account`
+
+The Privacy page's **Delete my account**. A signed-in student posts
+`{"confirm": "DELETE"}` with their own access token; the function finds the
+account from the token (never from the body), calls
+`public.erase_account(uuid)` with the service key — every row naming the
+account, in one transaction, by each foreign key's own `on delete` rule — and
+then deletes the auth user through the Admin API. The order and every answer
+are in `_shared/deleteaccount.ts` and its test; the SQL half is
+`migrations/20260929010000_account_erasure_and_export.sql`, proved by
+`deletion.check.sql`.
+
+**`verify_jwt` is off** for the reason it is off for `claude`: the function
+checks the token itself, and the platform check would reject the CORS
+preflight.
+
+**One setting it reads:** `ALLOWED_ORIGIN`, the same list as the others. It
+needs no secret of its own; the service credentials are injected.
+
+**Its answers carry `erased` and `signInRemoved`**, and the page reads those.
+The one partial state — rows erased, the Admin API refusing the sign-in — says
+so, and pressing the button again finishes it.
+
+**Pending.** It goes up with the merge that adds it, like `trust-room` did;
+`functions.snapshot` carries a `pending` row until the project is read again.
+The migration has to be applied before or with it: without
+`erase_account`, the function answers that nothing was deleted, which is true.
+
+**Known refusal:** a staff account that ever wrote a row in one of the four
+immutable tenant history tables cannot be erased this way yet — the history
+triggers refuse the clear its `on delete set null` asks for, the transaction
+rolls back, and the student-facing answer is that nothing was deleted.
+
 ## Tables
 
 `usage` (claude) and `push_devices` + `push_queue` (push) exist, with row-level
@@ -558,6 +592,60 @@ watch the first runs:
     from cron.job_run_details d join cron.job j using (jobid)
     where j.jobname in ('institution-gateway-retention', 'ai-runtime-metadata', 'integration-retention')
     order by d.start_time desc limit 10;
+
+### Three more, applied by somebody else on 28 September
+
+Read off `cron.job` shortly before 03:00 UTC on 28 September 2026, the project held the six
+jobs listed above and nothing else: `community-retention`, `escalation-delivery`
+and `media-scan` had been in `scheduler.sql` for a day and never applied. Read
+again at 03:02 UTC the same morning, all three were there, as jobs 9, 10 and 11,
+owned by `postgres` — applied in between from outside this branch:
+
+    community-retention             29 4 * * *           active = true
+    escalation-delivery             */5 * * * *          active = false
+    media-scan                      * * * * *            active = false
+
+That is the state `scheduler.sql` asks for: the Community sweep runs, and the
+two jobs whose functions are not deployed are parked. `escalation-delivery` is
+unparked by `docs/CAMPUS-ESCALATION-POLICY.md` step 5 and `media-scan` by
+`docs/COMMUNITY-MEDIA-SAFETY.md`, each only after its function is deployed.
+
+### Six jobs the code expected and nothing scheduled — not applied yet
+
+`app/src/lib/scheduler.test.ts` now fails when a sweep function in the
+migrations has no job, and it found three that never had one. Three more come
+with `migrations/20260929030000_retention_sweeps.sql`, which decides the
+retention `RETENTION.md` had listed as missing. All six are **active** in the
+file — none needs a secret or an endpoint:
+
+    lti-nonce                       41 * * * *     public.sweep_lti_nonce()
+    lti-link-ticket                 47 * * * *     public.sweep_lti_link_ticket()
+    capture-expiry                  19 * * * *     private.expire_capture_assets()
+    invite-retention                13 5 * * *     private.sweep_stale_invites()
+    abandoned-signups               23 5 * * *     private.sweep_abandoned_signups()
+    audit-retention                 33 5 * * *     private.sweep_audit_retention()
+
+**None of these is on the project until the owner applies them**, and the last
+three need the migration first. In order:
+
+1. Deploy the schema so `20260929030000_retention_sweeps.sql` is applied (the
+   usual migration path). Confirm the three functions exist:
+
+       select p.proname from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+        where n.nspname = 'private'
+          and p.proname in ('sweep_stale_invites', 'sweep_abandoned_signups', 'sweep_audit_retention');
+
+2. Apply the jobs. Re-running the whole of `scheduler.sql` is safe while
+   `push`, `integration-sync`, `escalation-delivery` and `media-scan` are all
+   meant to be parked (it parks them again); otherwise run only the six
+   `cron.schedule` statements from its last two sections.
+
+3. Check it landed: block 6 of `health.sql` should read `ok` on every active
+   job and `parked` on the four parked ones, with no `MISSING` row.
+
+4. After a day, the second query in that block shows each new job's runs. A
+   first run of `invite-retention` removing one row is expected: on 28
+   September the project held one invitation whose address has no account.
 
 ## Security advisor
 
@@ -714,8 +802,18 @@ deployment has no shared key. Add your own under Ask Claude → Settings."* A
 student with their own key is unaffected either way — the app prefers a key set
 on the device and only falls back to this one.
 
-Optional: `MONTHLY_CALL_LIMIT` (default 60 calls per account per month) and
-`ALLOWED_ORIGIN` (default `*`).
+Optional: `MONTHLY_CALL_LIMIT` (default 60 calls per account per month),
+`ALLOWED_ORIGIN` (extra https origins; the Pages origin is built in) and
+`CORS_ALLOW_DEV` (unset on the live project).
+
+**CORS fails closed (since 29 September 2026).** There is no `*` any more.
+`https://harrisonjrubin7-cmyk.github.io` is built into
+`supabase/functions/_shared/cors.ts`, so an unset or wrong secret can no longer
+take the deployed site out. `ALLOWED_ORIGIN` only *adds* exact `https://`
+origins; `*`, paths and plain http entries are ignored. An origin that is not
+allowed gets no `Access-Control-Allow-Origin` header at all. Localhost is
+answered only when `CORS_ALLOW_DEV=1` — set that for a local
+`supabase functions serve`, never on the live project.
 
 **`ALLOWED_ORIGIN` is a comma-separated list, and setting it to one origin is
 how this was broken for weeks.** It is read by `claude`, `fetchcal` and
@@ -730,12 +828,14 @@ rejects the response before the page sees it, so the app can only say *"could
 not reach"* — the same sentence it prints for a dead host — and the function's
 own side shows a request that arrived and was answered. Nothing logs it.
 
-So list every origin that must work, the deployed site **and** any dev server:
+So list every *other* https origin that must work (a second deployment, a
+custom domain); the Pages origin needs no entry:
 
-    supabase secrets set ALLOWED_ORIGIN=https://<user>.github.io,http://localhost:5173
+    supabase secrets set ALLOWED_ORIGIN=https://semester.example.edu
 
-The header echoes back whichever entry the request came from, so both work at
-once rather than one silently breaking the other. No trailing slashes — though
+The header echoes back whichever entry the request came from. A `localhost`
+entry here does nothing on the live project: local development sets
+`CORS_ALLOW_DEV=1` in its own `supabase/functions/.env` instead. No trailing slashes — though
 `supabase/functions/_shared/cors.ts` trims them, because the address bar adds
 one and that is the mistake this is most likely to meet. After changing it,
 press **Check the shared key works** on Settings → The assistant from the

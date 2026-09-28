@@ -14,7 +14,7 @@ const IDENTITY = new Set(['openid', 'profile', 'offline_access', 'User.Read', 'u
 /** Each content scope, the word its disclosure must contain, and whether it writes. */
 const RULES: { scope: RegExp; word: RegExp; writes: boolean }[] = [
   { scope: /^Calendars\.ReadWrite$/, word: /calendar/i, writes: true },
-  { scope: /calendar\.events$/, word: /calendar/i, writes: true },
+  { scope: /calendar\.events\.owned$/, word: /calendar/i, writes: true },
   { scope: /^Mail\.Read$/, word: /mail/i, writes: false },
   { scope: /gmail\.readonly$/, word: /mail/i, writes: false },
   { scope: /^Tasks\.ReadWrite$/, word: /to do/i, writes: true },

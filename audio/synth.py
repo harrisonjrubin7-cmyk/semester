@@ -194,7 +194,13 @@ def main() -> int:
     size_mb = mp3_path.stat().st_size / 1_000_000
     print(f"\n{mp3_path}  {meta['len']}  {size_mb:.1f} MB  {len(chapters)} chapters")
     print(f"{meta_path}\n{lines_path}  {len(times)} lines")
-    return 0
+
+    # The caption track, from the words above and the times just written.
+    # A recording that ships without one is the audit finding this closes, so
+    # a failure here fails the render rather than printing a warning nobody
+    # reads; `app/src/lib/webvtt.test.ts` is the second line.
+    app = Path(__file__).resolve().parent.parent / "app"
+    return subprocess.run(["node", "scripts/captions.ts"], cwd=app).returncode
 
 
 if __name__ == "__main__":

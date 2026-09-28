@@ -470,7 +470,24 @@ describe('search is a gate too', () => {
     expect(hits('calendar', 'faculty').some((h) => h.kind === 'screen')).toBe(true);
   });
 
-  it('searches as a student when no role is given', () => {
-    expect(hits('housing').some((h) => h.kind === 'screen')).toBe(true);
+  /*
+   * This test used to say the opposite — "searches as a student when no role
+   * is given" — and that was the gate failing open. `role` had a default of
+   * `'student'`, and a JavaScript default fires on an explicit `undefined`
+   * too, so the palette passing a role that had not been read, or whose
+   * lookup failed, searched with the widest set there is. An unknown role
+   * now gets the narrower set; a caller that means student says so.
+   */
+  it('fails closed when the role is missing or unknown', () => {
+    expect(hits('housing').some((h) => h.kind === 'screen')).toBe(false);
+    const nobody = (role: unknown) =>
+      findEverything(cat, NOW, 'housing', [], [], undefined, [], {}, [], {}, role as 'student')
+        .flatMap((g) => g.hits)
+        .some((h) => h.kind === 'screen');
+    expect(nobody(undefined)).toBe(false);
+    expect(nobody(null)).toBe(false);
+    expect(nobody('vice-chancellor')).toBe(false);
+    // The control: the same query, as the role that does have the screen.
+    expect(nobody('student')).toBe(true);
   });
 });

@@ -479,7 +479,14 @@ declare
     'forget_my_advisor_shares()',
     -- 20260928308000_support_shares.sql: shares naming the caller at either end.
     'forget_my_support_shares()',
-    'forget_my_course_demand()'
+    'forget_my_course_demand()',
+
+    -- The one in 20260929010000_account_erasure_and_export.sql. Returns every
+    -- row naming the caller and nobody else, keyed on auth.uid() with no
+    -- argument to aim it elsewhere; `deletion.check.sql` proves both. Its
+    -- sibling `erase_account(uuid)` takes an account id and so is
+    -- service_role only, and is not here.
+    'export_my_data()'
   ];
   extra text;
   missing text;
@@ -552,7 +559,8 @@ end $$;
 --
 -- `20260921143455_forms.sql` created `public.published_forms` exactly that way
 -- — definer's rights on purpose, so its WHERE clause could stand in front of
--- `forms`' owner-only policies — and granted SELECT on top of the ALL that
+-- `forms`' owner-only policies (since `20260929000000` it runs as the caller,
+-- and the sweep after this one holds every view to that) — and granted SELECT on top of the ALL that
 -- Supabase's default privileges had already given `anon`. Applied to the live
 -- project on 21 September 2026, a signed-out visitor could
 --
@@ -630,6 +638,53 @@ begin
       'the revoke took the feature with it';
   end if;
   raise notice 'ok  published_forms exists and is readable by a signed-out respondent';
+end $$;
+
+-- ── Every view answers to the caller ──────────────────────────────────────
+--
+-- The write sweep above asks whether a view can be written through. This asks
+-- the question underneath it: whether a view runs as the person asking at
+-- all. A view created without `security_invoker = true` runs with its owner's
+-- rights, so the base tables' row-level security never sees the caller —
+-- whatever its WHERE lets through, it lets through to everybody holding the
+-- grant. That is Supabase's lint 0010, level ERROR, and `published_forms` was
+-- the one finding on the live project on 28 September 2026 until
+-- `20260929000000_published_forms_invoker.sql`.
+--
+-- No allowlist, for the reason the write sweep has none: there is no view
+-- here that should run as its owner. One that genuinely must is a decision,
+-- and gets written down here when it exists.
+
+create or replace function pg_temp.definer_views()
+returns text language sql stable as $$
+  select string_agg(c.relname, ', ' order by c.relname)
+    from pg_class c join pg_namespace n on n.oid = c.relnamespace
+   where n.nspname = 'public' and c.relkind in ('v', 'm')
+     and not ('security_invoker=true' = any(coalesce(c.reloptions, '{}'))
+           or 'security_invoker=on'   = any(coalesce(c.reloptions, '{}')));
+$$;
+
+do $$
+declare got text;
+begin
+  -- The control. A sweep whose `relkind` or `reloptions` test had stopped
+  -- lining up would pass against any schema; this one has to name a definer
+  -- view it was just handed.
+  create view public.grants_probe_definer_view as select 1 as one;
+  got := pg_temp.definer_views();
+  if got is null or got not like '%grants_probe_definer_view%' then
+    raise exception 'FAILED: a definer view was planted and the sweep did not name it (got %)', got;
+  end if;
+  raise notice 'ok  the definer-view sweep names a planted view';
+  drop view public.grants_probe_definer_view;
+
+  got := pg_temp.definer_views();
+  if got is not null then
+    raise exception 'FAILED: views in public that run with their owner''s rights: % — '
+                    'create them `with (security_invoker = true)` and let the base '
+                    'tables'' policies decide', got;
+  end if;
+  raise notice 'ok  every view in public runs as the caller';
 end $$;
 
 -- And the owner-only table underneath it, named for the same reason
