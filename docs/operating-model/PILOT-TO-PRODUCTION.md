@@ -1,5 +1,7 @@
 # Pilot to production
 
+> Owner, version, last and next review, status, supersedes and related decisions: [`SEMESTER-OPERATING-SYSTEM.md`](../../SEMESTER-OPERATING-SYSTEM.md).
+
 How a school moves from a directory listing to a production tenant, what lets it move, and what must be true before anyone calls it live. The human copy of `app/src/lib/governance/rollout.ts`; `docs.test.ts` holds this file to that registry, and `supabase/migrations/20260928050000_tenant_rollout.sql` enforces the state machine.
 
 **The rule over all of it.** Semester does not claim an official connection, a completed migration, an authoritative record or a successful writeback until the gates below are met. A directory listing is not a connection. A queued or sandbox action is not an official one. The official-system fallback stays until Semester has earned that authority.

@@ -1,5 +1,7 @@
 # Subprocessors and Data Destinations
 
+> Owner, version, last and next review, status, supersedes and related decisions: [`SEMESTER-OPERATING-SYSTEM.md`](../SEMESTER-OPERATING-SYSTEM.md).
+
 Every third party a student's data can reach, and whose decision sends it
 there. Launch-readiness Phase 4. This closes the procurement checklist's
 "Subprocessor list: constructible from this tree" row and HECVAT PRIV-5's

@@ -1,5 +1,7 @@
 # When data has got out
 
+> Owner, version, last and next review, status, supersedes and related decisions: [`SEMESTER-OPERATING-SYSTEM.md`](SEMESTER-OPERATING-SYSTEM.md).
+
 What to do when somebody can read rows that are not theirs, who does it, and in
 what order. Written because the pre-pilot checklist asks for a *formal*
 incident-response process and what this project had instead was a sentence —

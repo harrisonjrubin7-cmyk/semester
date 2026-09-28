@@ -2,6 +2,8 @@
 
 <!-- Rendered from app/src/lib/supplychain.ts and the lockfiles by supplychain.test.ts. Edit the data, then run `npm run registers` from app/. -->
 
+> Owner, version, last and next review, status, supersedes and related decisions: [`SEMESTER-OPERATING-SYSTEM.md`](../SEMESTER-OPERATING-SYSTEM.md).
+
 What a dependency or a build step is allowed to be, held by a test rather
 than by review. Every row below is checked on every change; a new package
 under an unlisted licence, a lockfile entry from outside the registry, or a

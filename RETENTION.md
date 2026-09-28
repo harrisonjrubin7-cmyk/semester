@@ -1,5 +1,7 @@
 # How long this project keeps things
 
+> Owner, version, last and next review, status, supersedes and related decisions: [`SEMESTER-OPERATING-SYSTEM.md`](SEMESTER-OPERATING-SYSTEM.md).
+
 The schedule exists. It was never written down in one place, which is a
 different problem from not having one, and it is the problem this file is for.
 

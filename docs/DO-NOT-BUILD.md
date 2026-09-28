@@ -1,5 +1,7 @@
 # Do not build
 
+> Owner, version, last and next review, status, supersedes and related decisions: [`SEMESTER-OPERATING-SYSTEM.md`](../SEMESTER-OPERATING-SYSTEM.md).
+
 The anti-patterns that may not enter Semester, whoever asks and however small
 the feature. Each rule says **how it is held**: by a test that fails the build,
 or by review against this page. A rule held only by review is a rule somebody
