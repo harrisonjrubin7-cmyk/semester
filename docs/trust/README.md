@@ -50,6 +50,8 @@ The documents here fill items those indexes list. The NDA-gated room in
 | [`PILOT-AGREEMENT-OUTLINE.md`](PILOT-AGREEMENT-OUTLINE.md) | Sections for a 90-day pilot agreement, sample scope, scorecard |
 | [`HECVAT-VPAT-PLAN.md`](HECVAT-VPAT-PLAN.md) | HECVAT workstreams, a 90-day plan, and the VPAT/ACR checklist |
 | [`BRIDGE-LETTER.md`](BRIDGE-LETTER.md) | The SOC 2 bridge-letter process, for when a report exists |
+| [`VENDOR-RISK-REGISTER.md`](VENDOR-RISK-REGISTER.md) | One row per subprocessor: data shared, attestation (to confirm), DPA status, tier, and the review procedure. No vendor has been assessed yet |
+| [`PENETRATION-TEST-PLAN.md`](PENETRATION-TEST-PLAN.md) | Scope, rules of engagement, test accounts, success criteria and remediation commitments for the first external test. No test has been performed |
 
 ## What blocks a signature, and none of it is code
 

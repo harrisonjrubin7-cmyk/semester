@@ -593,6 +593,60 @@ watch the first runs:
     where j.jobname in ('institution-gateway-retention', 'ai-runtime-metadata', 'integration-retention')
     order by d.start_time desc limit 10;
 
+### Three more, applied by somebody else on 28 September
+
+Read off `cron.job` shortly before 03:00 UTC on 28 September 2026, the project held the six
+jobs listed above and nothing else: `community-retention`, `escalation-delivery`
+and `media-scan` had been in `scheduler.sql` for a day and never applied. Read
+again at 03:02 UTC the same morning, all three were there, as jobs 9, 10 and 11,
+owned by `postgres` — applied in between from outside this branch:
+
+    community-retention             29 4 * * *           active = true
+    escalation-delivery             */5 * * * *          active = false
+    media-scan                      * * * * *            active = false
+
+That is the state `scheduler.sql` asks for: the Community sweep runs, and the
+two jobs whose functions are not deployed are parked. `escalation-delivery` is
+unparked by `docs/CAMPUS-ESCALATION-POLICY.md` step 5 and `media-scan` by
+`docs/COMMUNITY-MEDIA-SAFETY.md`, each only after its function is deployed.
+
+### Six jobs the code expected and nothing scheduled — not applied yet
+
+`app/src/lib/scheduler.test.ts` now fails when a sweep function in the
+migrations has no job, and it found three that never had one. Three more come
+with `migrations/20260929030000_retention_sweeps.sql`, which decides the
+retention `RETENTION.md` had listed as missing. All six are **active** in the
+file — none needs a secret or an endpoint:
+
+    lti-nonce                       41 * * * *     public.sweep_lti_nonce()
+    lti-link-ticket                 47 * * * *     public.sweep_lti_link_ticket()
+    capture-expiry                  19 * * * *     private.expire_capture_assets()
+    invite-retention                13 5 * * *     private.sweep_stale_invites()
+    abandoned-signups               23 5 * * *     private.sweep_abandoned_signups()
+    audit-retention                 33 5 * * *     private.sweep_audit_retention()
+
+**None of these is on the project until the owner applies them**, and the last
+three need the migration first. In order:
+
+1. Deploy the schema so `20260929030000_retention_sweeps.sql` is applied (the
+   usual migration path). Confirm the three functions exist:
+
+       select p.proname from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+        where n.nspname = 'private'
+          and p.proname in ('sweep_stale_invites', 'sweep_abandoned_signups', 'sweep_audit_retention');
+
+2. Apply the jobs. Re-running the whole of `scheduler.sql` is safe while
+   `push`, `integration-sync`, `escalation-delivery` and `media-scan` are all
+   meant to be parked (it parks them again); otherwise run only the six
+   `cron.schedule` statements from its last two sections.
+
+3. Check it landed: block 6 of `health.sql` should read `ok` on every active
+   job and `parked` on the four parked ones, with no `MISSING` row.
+
+4. After a day, the second query in that block shows each new job's runs. A
+   first run of `invite-retention` removing one row is expected: on 28
+   September the project held one invitation whose address has no account.
+
 ## Security advisor
 
 Nine of the ten findings are closed (migration

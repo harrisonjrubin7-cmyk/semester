@@ -113,6 +113,10 @@ create table if not exists auth.users (
   -- account's provider is `sso:…`, the marker auth.ts trusts. A SQL function
   -- is checked when it is created, so without the column the migration fails.
   raw_app_meta_data  jsonb       default '{}'::jsonb,
+  -- Read by `private.sweep_abandoned_signups()`, which removes accounts that
+  -- never confirmed and never signed in. A real `auth.users` has it; without
+  -- it here the function would fail to create.
+  last_sign_in_at    timestamptz,
   created_at         timestamptz default now(),
   updated_at         timestamptz default now()
 );

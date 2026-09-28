@@ -1240,8 +1240,8 @@ export const REGISTER: readonly Requirement[] = [
     validation: 'CI/repository evidence',
     severity: 'P0',
     status: 'building',
-    evidence: [{ path: '.github/workflows/ci.yml', shows: 'every change runs npm audit, tsc, lint, tests, shuffle, build, policy checks, gitleaks scans' }, { path: '.github/dependabot.yml', shows: 'dependency advisories raised automatically' }, { path: '.github/pull_request_template.md', shows: 'PR template for change description' }, { path: 'ROLLBACK.md', shows: 'rollback runbook with measured timings' }],
-    gap: 'Single-owner repo: no evidence of required peer review or branch protection settings; no release/change approval record; rollback not tested on the production deployment path.',
+    evidence: [{ path: '.github/workflows/ci.yml', shows: 'every change runs npm audit, tsc, lint, tests, shuffle, build, policy checks, gitleaks scans' }, { path: '.github/dependabot.yml', shows: 'dependency advisories raised automatically' }, { path: '.github/pull_request_template.md', shows: 'PR template for change description' }, { path: 'ROLLBACK.md', shows: 'rollback runbook with measured timings' }, { path: '.github/rulesets/main.json', shows: 'branch ruleset definition: PR, code-owner review, stale approvals dismissed, build and secrets required, no force-push or deletion' }, { path: '.github/CODEOWNERS', shows: 'one code owner for every path' }, { path: 'docs/BRANCH-PROTECTION.md', shows: 'how the owner applies the ruleset; states it is not active until then' }, { path: 'app/src/lib/branchprotection.test.ts', shows: 'holds the ruleset\'s required checks to the ci.yml jobs' }],
+    gap: 'The ruleset is a file in the repository, not a setting: it is not active until the owner imports it, and with one code owner it cannot be satisfied without a second reviewer or a recorded bypass. No release/change approval record; rollback not tested on the production deployment path.',
   },
   {
     id: 'SEC-004',
@@ -1251,7 +1251,7 @@ export const REGISTER: readonly Requirement[] = [
     severity: 'P0',
     status: 'building',
     evidence: [{ path: '.github/workflows/ci.yml', shows: 'npm audit --audit-level=high and gitleaks secret scans on every change' }, { path: '.github/dependabot.yml', shows: 'automated dependency vulnerability updates' }, { path: 'docs/trust/HECVAT-VPAT-PLAN.md', shows: 'vulnerability disclosure policy listed as still to be written' }],
-    gap: 'No finding tracker, no triage/patch SLA, no patch evidence record, no published vulnerability disclosure policy or security.txt, and no pen-test plan or vendor.',
+    gap: 'No finding tracker, no triage/patch SLA, no patch evidence record, no published vulnerability disclosure policy or security.txt, and no pen-test vendor (the plan is docs/trust/PENETRATION-TEST-PLAN.md).',
   },
   {
     id: 'SEC-005',
@@ -1259,9 +1259,9 @@ export const REGISTER: readonly Requirement[] = [
     requirement: 'Independent test performed; critical/high findings resolved or formally accepted',
     validation: 'Executive summary/remediation',
     severity: 'P0',
-    status: 'not-started',
-    evidence: [{ path: 'docs/trust/README.md', shows: 'states Semester has no penetration test' }],
-    gap: 'No independent penetration test has been scoped, performed or reported; no findings register or risk-acceptance record exists.',
+    status: 'designed',
+    evidence: [{ path: 'docs/trust/PENETRATION-TEST-PLAN.md', shows: 'scope, rules of engagement, test accounts, success criteria and remediation SLAs; states no test has been performed' }, { path: 'app/src/lib/trust/vendorrisk.test.ts', shows: 'fails if the plan stops saying no test was performed or drops an Edge Function from scope' }, { path: 'docs/trust/README.md', shows: 'states Semester has no penetration test' }],
+    gap: 'Planned only: no firm engaged, no test environment built, no test performed or reported; no findings register or risk-acceptance record exists.',
   },
   {
     id: 'SEC-006',
@@ -1271,7 +1271,7 @@ export const REGISTER: readonly Requirement[] = [
     severity: 'P0',
     status: 'building',
     evidence: [{ path: 'supabase/migrations/20260924184500_gateway_action_journal.sql', shows: 'tenant-scoped gateway_audit and intelligence audit tables for gateway actions' }, { path: 'supabase/role-grant-audit.check.sql', shows: 'tests that role grant changes are audited' }, { path: 'supabase/moderation-audit.check.sql', shows: 'tests moderation actions are audited' }, { path: 'supabase/support-access.check.sql', shows: 'tests support grants and every support read are recorded' }],
-    gap: 'Audit covers grants, moderation, support reads and gateway actions only; no unified event schema for data reads/exports/shares/security events, no documented retention period or tamper-evident export/sample for reviewers.',
+    gap: 'Audit covers grants, moderation, support reads and gateway actions only; no unified event schema for data reads/exports/shares/security events, no tamper-evident export/sample for reviewers. Retention is now decided (3 years for role-grant, moderation and provisioning events; support-access events kept per FERPA 99.32) in 20260929030000_retention_sweeps.sql, but its audit-retention job is not yet applied to production.',
   },
   {
     id: 'SEC-007',
@@ -1310,8 +1310,8 @@ export const REGISTER: readonly Requirement[] = [
     validation: 'Vendor tracker',
     severity: 'P0',
     status: 'building',
-    evidence: [{ path: 'docs/SUBPROCESSORS.md', shows: 'subprocessor register' }, { path: 'app/src/lib/trust/subprocessors.ts', shows: 'subprocessor list as data' }, { path: 'app/src/lib/trust/subprocessors.test.ts', shows: 'holds the register to CSP and Edge Functions' }],
-    gap: 'No vendor risk assessments, no flow-down/DPA terms per subprocessor, no hosting-region confirmation, no renewal/exit tracking, list not counsel-reviewed or published.',
+    evidence: [{ path: 'docs/SUBPROCESSORS.md', shows: 'subprocessor register' }, { path: 'app/src/lib/trust/subprocessors.ts', shows: 'subprocessor list as data' }, { path: 'app/src/lib/trust/subprocessors.test.ts', shows: 'holds the register to CSP and Edge Functions' }, { path: 'docs/trust/VENDOR-RISK-REGISTER.md', shows: 'a risk row per party (data, attestation to confirm, DPA, tier) and the review procedure; no vendor assessed' }, { path: 'app/src/lib/trust/vendorrisk.test.ts', shows: 'holds the risk register to the subprocessor list and refuses review dates with nothing filed' }],
+    gap: 'Register and procedure documented, not operated: no vendor assessed, no attestation report obtained, no DPA signed or filed per subprocessor, only the Supabase region confirmed, no owner or review dates, list not counsel-reviewed or published.',
   },
   {
     id: 'SEC-011',
@@ -1420,8 +1420,8 @@ export const REGISTER: readonly Requirement[] = [
     validation: 'Backup evidence',
     severity: 'P0',
     status: 'designed',
-    evidence: [{ path: 'RESTORE.md', shows: 'production backup questions (tier, retention, PITR) left to confirm; measurements blank' }],
-    gap: 'Backup tier/retention/PITR not confirmed for production; no backup monitoring or retained evidence of successful backups.',
+    evidence: [{ path: 'RESTORE.md', shows: 'production backup questions (tier, retention, PITR) left to confirm; PITR enable-and-restore-to-timestamp procedure written, results table blank and marked not verified' }],
+    gap: 'Backup tier/retention/PITR not confirmed for production and no PITR restore performed; no backup monitoring or retained evidence of successful backups.',
   },
   {
     id: 'SRE-005',

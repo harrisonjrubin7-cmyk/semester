@@ -367,4 +367,53 @@ describe('the clocks that run are still the clocks the document describes', () =
     expect(doc).toContain('**90 days after it was made, once no case holds it**');
     expect(doc).toContain('**1 day if never answered; 1 year once answered**');
   });
+
+  /*
+   * The three answers 20260929030000 gave to what this document used to list
+   * as unanswered. Each period is read out of the statement that applies it,
+   * and the audit period out of both places it lives — the sweep that deletes
+   * and the trigger that lets it — because a sweep at two years against a
+   * trigger at three deletes nothing and reports success.
+   */
+  it('agrees with the migration and the scheduler about invitations, sign-ups and audit events', () => {
+    const sql = readFileSync(join(MIGRATIONS, '20260929030000_retention_sweeps.sql'), 'utf8');
+    const body = (fn: string) => sql.split(`create or replace function ${fn}`)[1]?.split('$$')[1] ?? '';
+
+    const invites = body('private.sweep_stale_invites()');
+    expect(invites).toMatch(/i\.invited_at < now\(\) - interval '90 days'\s*and not exists/);
+    expect(invites).toMatch(/b\.invited_at < now\(\) - interval '90 days'/);
+    expect(invites).toMatch(/b\.revoked_at < now\(\) - interval '90 days'/);
+
+    const signups = body('private.sweep_abandoned_signups()');
+    expect(signups).toMatch(
+      /email_confirmed_at is null\s*and u\.last_sign_in_at is null\s*and u\.created_at < now\(\) - interval '30 days'/,
+    );
+
+    const audit = body('private.sweep_audit_retention()');
+    const allowed = body('private.audit_purge_allowed(occurred timestamptz)');
+    const periods = [...audit.matchAll(/occurred_at < now\(\) - interval '([^']+)'/g)].map((m) => m[1]);
+    expect(periods).toEqual(['3 years', '3 years', '3 years']);
+    expect(allowed).toMatch(/occurred < now\(\) - interval '3 years'/);
+    expect(audit, 'the FERPA disclosure record is swept').not.toContain('support_access_event');
+
+    const scheduler = readFileSync(join(ROOT, 'supabase', 'scheduler.sql'), 'utf8');
+    for (const [job, fn] of [
+      ['invite-retention', 'sweep_stale_invites'],
+      ['abandoned-signups', 'sweep_abandoned_signups'],
+      ['audit-retention', 'sweep_audit_retention'],
+    ]) {
+      expect(scheduler).toMatch(
+        new RegExp(`cron\\.schedule\\(\\s*'${job}',\\s*'[^']+',\\s*\\$job\\$select private\\.${fn}\\(\\)\\$job\\$`),
+      );
+      expect(scheduler).not.toMatch(new RegExp(`jobname = '${job}'\\),\\s*active := false`));
+    }
+
+    const said = flat();
+    expect(said).toContain('**90 days after sending, when no account has the address**');
+    expect(said).toContain('**30 days after creation, for an account never confirmed and never signed in**');
+    expect(said).toContain('**3 years after the event**');
+    expect(said).toContain('deliberately not on the 3-year clock');
+    expect(said).not.toContain('**no answer yet**');
+    expect(said).not.toContain('An invitation that is never taken up has no clock yet');
+  });
 });
