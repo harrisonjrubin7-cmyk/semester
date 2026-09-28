@@ -224,3 +224,18 @@ export async function loadReviewQueue(client?: Awaited<ReturnType<typeof cloud>>
   const got = (data ?? []) as unknown as QueuedListing[];
   return { rows: got.slice(0, QUEUE_LIMIT), more: got.length > QUEUE_LIMIT };
 }
+
+/**
+ * Publish or remove a listing — the only change a moderator can make.
+ * `moderate_opportunity` (20260928110700) writes `status` alone; a moderator
+ * has no update policy on the table, so nothing else they could send lands.
+ */
+export async function moderateListing(
+  id: string,
+  status: 'published' | 'removed',
+  client?: Awaited<ReturnType<typeof cloud>>,
+): Promise<void> {
+  const db = client ?? (await cloud());
+  const { error } = await db.rpc('moderate_opportunity', { want: id, want_status: status });
+  if (error) throw new Error(error.message);
+}
