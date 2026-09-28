@@ -45,6 +45,8 @@ The central rule, stated once:
 | 22 | Edge-case catalog: which cases have a guard, which are owed | [../EDGE-CASE-CATALOG.md](../EDGE-CASE-CATALOG.md) | Code: `edgecases.ts`; rendered by its test |
 | 23 | Operational maturity: records holds, content rights, analytics ethics, minors, cost, exit, residency, disaster scenarios and twelve more, control by control | [OPERATIONAL-MATURITY.md](OPERATIONAL-MATURITY.md) | Code: `maturity.ts`; rendered by its test |
 | 24 | Operations Console checks: customer promises kept, release impact, on-call workload | `app/src/lib/governance/consolechecks.ts` | Code: `consolechecks.ts`; held by its test. The console’s own controls are `lib/ops/console.ts` (D-110); no console screen exists yet |
+| 25 | AI assurance: the NIST AI RMF audit matrix, the AI 800-1 misuse-risk checklist, the evaluation risk tiers, the artifact set, the release gate held to `AI_RELEASE_GATE` | [AI-ASSURANCE.md](AI-ASSURANCE.md) | Code: `ai-assurance.ts`; rendered by its test |
+| 26 | Privacy by module: what each module holds by default, the role matrix held to `app_roles`, the share screen, the liability controls, the twelve launch gates, the council | [../MODULE-PRIVACY-MODEL.md](../MODULE-PRIVACY-MODEL.md) | Code: `module-privacy.ts`; rendered by its test |
 | — | Change management and adoption | [CHANGE-MANAGEMENT.md](CHANGE-MANAGEMENT.md) | Process |
 | — | AI financial sustainability, ROI measurement | [COMMERCIAL-GOVERNANCE.md](COMMERCIAL-GOVERNANCE.md#ai-cost-controls) | Existing metered gateway (ADR 0004) |
 
