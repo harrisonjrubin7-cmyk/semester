@@ -4,6 +4,7 @@ import { Page } from '../components/Page';
 import { build, toMarkdown, type Section } from '../lib/guidebook';
 import { download } from '../lib/deliver';
 import { useStore } from '../state/store';
+import { BetaPanel } from '../components/BetaPanel';
 import { SupportTicketsPanel } from '../components/SupportTicketsPanel';
 import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
 import { availableContext } from '../lib/supporttickets';
@@ -60,6 +61,7 @@ export function Help() {
       }
     >
         <>
+          <BetaPanel account={account} />
           {EXPERIENCE_FLAGS.supportTickets !== 'off' && (
             <SupportTicketsPanel
               account={account}

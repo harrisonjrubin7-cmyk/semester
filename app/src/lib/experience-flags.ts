@@ -17,6 +17,13 @@ export interface ExperienceFlags {
    */
   institutionalOperations: FeatureState;
   /**
+   * Whether Help offers a private-beta invitation. Never on in an
+   * institutional preview: an invitation is to a real account's confirmed
+   * address, which a preview does not have. Off does not hide a member's own
+   * beta or their way out of it; membership alone decides that.
+   */
+  privateBeta: FeatureState;
+  /**
    * Asking Semester's own support about the app, on Help. Never on in an
    * institutional preview: a ticket is a real message to real staff, which a
    * synthetic preview account must not send.
@@ -49,6 +56,7 @@ export function experienceFlags(env: PreviewEnv): ExperienceFlags {
     humanHelp: featureState(env, 'VITE_HUMAN_HELP', preview),
     integrationDashboard: featureState(env, 'VITE_INTEGRATION_DASHBOARD', preview),
     institutionalOperations: featureState(env, 'VITE_INSTITUTIONAL_OPERATIONS', preview),
+    privateBeta: featureState(env, 'VITE_PRIVATE_BETA', false),
     supportTickets: featureState(env, 'VITE_SUPPORT_TICKETS', false),
     campaignManager: featureState(env, 'VITE_CAMPAIGN_MANAGER', preview),
   };
