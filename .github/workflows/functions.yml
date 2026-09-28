@@ -177,7 +177,7 @@ jobs:
           fi
           echo "list=$list" >> "$GITHUB_OUTPUT"
 
-      - uses: supabase/setup-cli@v1
+      - uses: supabase/setup-cli@v3
         if: steps.what.outputs.list != ''
         with:
           version: latest
