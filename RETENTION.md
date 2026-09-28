@@ -178,6 +178,7 @@ behind and a client that believes it succeeded.
 | `messages`, `message_reactions` | account deletion | |
 | `groups`, `group_members`, `group_tasks` | account deletion of the member | a group you started **stays** — other members rely on it. `KEPT_TABLES` in `deletion.check.sql` holds the three exceptions with the reason the privacy page prints |
 | `forms`, `form_responses` | account deletion | |
+| `form_publications` | its form's withdrawal or its owner's account deletion | the respondent's half of a form — questions and window, no answer key and no owner — kept in step with `forms` by a trigger and taken with it by `on delete cascade` (`20260929000000_published_forms_invoker.sql`) |
 | `calendar_feeds` | account deletion | the published feed token; the Export screen can retire and reissue it |
 | `connections` | account deletion of **either** end | both columns are `on delete cascade`, which is the whole answer and is deliberate: a connection is a fact two accounts agreed on, so it cannot outlive either of them. There is no tombstone and no sweep — the row *is* the agreement, and a removed connection is removed rather than marked, because "we kept a record of who you used to be connected to" is not a sentence this project wants to be able to say |
 | `reports` | account deletion of the reporter | |
