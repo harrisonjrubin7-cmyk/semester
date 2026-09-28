@@ -38,6 +38,32 @@ describe('the status page', () => {
     expect(key.startsWith('sb_publishable_')).toBe(true);
   });
 
+  it('probes the database API the hourly smoke check probes, not only sign-in', () => {
+    const read = '/rest/v1/schools?select=id&limit=1';
+    expect(readFileSync(join(root, 'scripts', 'public-production-smoke.mjs'), 'utf8')).toContain(read);
+    expect(page).toContain(`SUPABASE_URL + '${read}'`);
+  });
+
+  /**
+   * The service worker answers same-origin GETs from its cache. Anyone who has
+   * used the app has `index.html` and the incident list in there, so without
+   * this the page reports the app up because it was up once, and shows the
+   * incident list from before the incident. The page asks with `no-store`; the
+   * worker has to honour that before any branch that could answer from cache.
+   */
+  it('is never answered from the service worker’s cache', () => {
+    const sw = readFileSync(join(root, 'public', 'sw.js'), 'utf8');
+    const pass = sw.indexOf("if (request.cache === 'no-store') return;");
+    expect(pass, 'sw.js no longer passes no-store requests to the network').toBeGreaterThan(-1);
+    expect(pass).toBeLessThan(sw.indexOf("request.mode === 'navigate'"));
+    expect(pass).toBeLessThan(sw.indexOf('caches.match(request'));
+    // And every same-origin request the page makes asks for it.
+    const sameOrigin = [...page.matchAll(/fetch\('(\.\/[^']+)'([^)]*)\)/g)];
+    expect(sameOrigin.map((m) => m[1])).toContain('./status-incidents.json');
+    for (const m of sameOrigin) expect(m[2], m[1]).toContain("cache: 'no-store'");
+    expect(page).toMatch(/fetch\(check\.url, \{ cache: 'no-store'/);
+  });
+
   it('has an incident list that parses', () => {
     const data = JSON.parse(readFileSync(join(root, 'public', 'status-incidents.json'), 'utf8'));
     expect(Array.isArray(data.incidents)).toBe(true);

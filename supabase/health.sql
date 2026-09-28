@@ -158,7 +158,7 @@ with expected(jobname, parked) as (values
   ('escalation-delivery',           true),
   ('institution-gateway-retention', false),
   ('integration-retention',         false),
-  ('integration-sync',              true),
+  ('integration-sync',              false),
   ('invite-retention',              false),
   ('lti-link-ticket',               false),
   ('lti-nonce',                     false),

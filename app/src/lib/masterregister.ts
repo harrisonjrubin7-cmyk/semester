@@ -32,8 +32,8 @@
  * 2026-09-28, and the rows #888 touched (AI-008, AI-013, TRUST-001, TRUST-004)
  * re-read at `1e70521`; none changed status. Four rows were re-read at
  * `fd8fc0b` for the modernization blueprint (`lib/blueprint.ts`): LMS-002 and
- * LMS-016 after Course Studio (#893), SRE-010 after the status page (#902),
- * and AI-012 after the kill switch was wired into both runtimes.
+ * LMS-016 after Course Studio (#893), and AI-012 after the kill switch was
+ * wired into both runtimes. SRE-010 was re-read by #908 in the same hour.
  */
 
 export const STATUSES = [
@@ -453,8 +453,8 @@ export const REGISTER: readonly Requirement[] = [
     validation: 'Support ticket UAT',
     severity: 'P0',
     status: 'building',
-    evidence: [{ path: 'app/src/lib/help-routes.ts', shows: 'Help requests with minimal context, withdrawable, DB-enforced' }, { path: 'supabase/help-requests.check.sql', shows: 'SQL tests for help requests' }, { path: 'app/src/components/GetHelp.test.tsx', shows: 'Tests help request UI' }, { path: 'MONITORING.md', shows: 'Declines a status page in writing' }],
-    gap: 'Status page refused (council decision pending); no ticketing/SLA for product issues, feedback has no staff triage. Needs status link decision, ticket IDs surfaced, and support ticket UAT.',
+    evidence: [{ path: 'app/src/lib/help-routes.ts', shows: 'Help requests with minimal context, withdrawable, DB-enforced' }, { path: 'supabase/help-requests.check.sql', shows: 'SQL tests for help requests' }, { path: 'app/src/components/GetHelp.test.tsx', shows: 'Tests help request UI' }, { path: 'MONITORING.md', shows: 'Records the status page decision' }],
+    gap: 'Status page live at /status.html but not linked from Help; no ticketing/SLA for product issues, feedback has no staff triage. Needs a status link in Help, ticket IDs surfaced, and support ticket UAT.',
   },
   {
     id: 'LMS-001',
@@ -1482,9 +1482,9 @@ export const REGISTER: readonly Requirement[] = [
     requirement: 'Public status and subscriber/customer update process work',
     validation: 'Status-page drill',
     severity: 'P0',
-    status: 'tested',
-    evidence: [{ path: 'app/public/status.html', shows: 'A public status page that checks each service from the reader\'s own browser (#902)' }, { path: 'app/src/lib/statuspage.test.ts', shows: 'Holds the page to the services it claims to check' }, { path: 'docs/SERVICE-RELIABILITY-AND-SUPPORT-OPERATIONS.md', shows: 'plans service_incidents tables and subscriber updates; not built' }],
-    gap: 'The page reports reachability, not incidents: no service_incidents table, no subscriber notification process, no drill. MONITORING.md still records the earlier refusal and needs its line updated.',
+    status: 'building',
+    evidence: [{ path: 'app/public/status.html', shows: 'public status page: live browser probes of the app, sign-in and the database API, and a hand-kept incident list' }, { path: 'app/src/lib/statuspage.test.ts', shows: 'holds the page to the production project, the smoke probes and the service worker' }, { path: 'MONITORING.md', shows: 'the refusal reversed on 28 September' }],
+    gap: 'No subscriber notification process and no drill yet; incidents are written by hand into status-incidents.json.',
   },
   {
     id: 'SUP-001',

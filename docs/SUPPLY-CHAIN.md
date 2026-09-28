@@ -66,7 +66,7 @@ Never allowed, even by name: GPL, AGPL, LGPL, SSPL, BUSL, Commons Clause, Elasti
 | `elkjs` | app | EPL-2.0 | accepted | Graph layout pulled in by mermaid. EPL-2.0 is file-level copyleft: using it unmodified in a bundle creates no obligation on Semester's own code; a modified copy would have to be published. Used unmodified. |
 | `khroma` | app | MIT | accepted | Mermaid's colour library. Its package.json has no licence field; the LICENSE file shipped in the package is MIT. |
 | `lightningcss` | app | MPL-2.0 | accepted | Build-time CSS transform (and its per-platform binaries). Runs on the build machine; none of its code is in the bundle. |
-| `axe-core` | app | MPL-2.0 | accepted | The accessibility rules engine, a devDependency (#906) run by the test suite and the accessibility smoke. Runs on the build machine and in CI; none of its code is in the bundle. Used unmodified. |
+| `axe-core` | app | MPL-2.0 | accepted | Accessibility rules engine, a devDependency run only by the test suite (src/a11y/axe.test.tsx, src/lib/dim.test.ts), used unmodified. None of its code is in the bundle. |
 | `mediabunny` | video | MPL-2.0 | accepted | Media container library for local rendering, used unmodified. |
 | `@mediabunny/` | video | MPL-2.0 | accepted | Audio encoders for mediabunny, used unmodified. |
 | `caniuse-lite` | video | CC-BY-4.0 | accepted | Browser-support data read by the bundler at build time. Attribution is to caniuse.com; nothing is redistributed. |

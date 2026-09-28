@@ -25,6 +25,9 @@ files that prove the status, and what would move it.
 
 Raise a status by changing its evidence in the same commit.
 
+The answers prepared from this register for a university's workbook are in
+[`HECVAT_DRAFT_RESPONSE.md`](HECVAT_DRAFT_RESPONSE.md).
+
 ## Register
 
 | ID | Domain | Control | Status | Evidence | What moves it |
@@ -43,8 +46,8 @@ Raise a status by changing its evidence in the same commit.
 | WEB-1 | Application security | Content Security Policy, verified against a control | `READY` | `app/src/lib/csp.test.ts`, `app/index.html` | Header-only directives wait on a host that sets headers |
 | LOG-1 | Logging | Immutable audit of institutional policy, role and moderation changes | `READY` | `supabase/role-grant-audit.check.sql`, `supabase/moderation-audit.check.sql`, `supabase/support-access.check.sql` | — |
 | IR-1 | Incident response | Written process, roles and customer notice templates | `IN_PROGRESS` | `docs/market-readiness/INCIDENT_RESPONSE.md`, `docs/market-readiness/INCIDENT_COMMUNICATION_TEMPLATES.md`, `docs/vanderbilt/incident-routing.md` | Run and record a tabletop exercise; nothing has exercised the process |
-| BCP-1 | Resilience | Backup restore performed and timed; stated RTO/RPO | `NOT_STARTED` | — | Restore into a scratch project and time it, as `docs/market-readiness/DISASTER_RECOVERY.md` lays out; no restore has ever been performed |
-| MON-1 | Reliability | Synthetic monitoring of production | `IN_PROGRESS` | `.github/workflows/production-smoke.yml`, `MONITORING.md` | Retained availability history and an alert that reaches an accountable person |
+| BCP-1 | Resilience | Backup restore performed and timed; stated RTO/RPO | `NOT_STARTED` | — | Run `supabase/restore-drill.sh` against the second project, as `RESTORE.md` lays out, and record its output; no restore of production data has ever been performed |
+| MON-1 | Reliability | Synthetic monitoring of production | `IN_PROGRESS` | `.github/workflows/production-smoke.yml`, `MONITORING.md`, `app/public/status.html` | Retained availability history and an alert that reaches an accountable person |
 | PRIV-1 | Privacy | Data inventory and retention answer for every table | `READY` | `RETENTION.md`, `app/src/lib/retention.test.ts` | — |
 | PRIV-2 | Privacy | Student export and account deletion that empties what it claims | `READY` | `app/src/lib/export.ts`, `app/src/lib/erase.ts`, `supabase/deletion.check.sql`, `app/src/lib/privacy.test.ts` | — |
 | PRIV-3 | Privacy | Disclosure kept true by test | `READY` | `app/src/lib/privacy.ts`, `app/src/lib/privacy.test.ts` | — |

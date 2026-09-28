@@ -12,8 +12,8 @@ eight gates that decide launch.
 it is implemented, tested, accessible, secure, observable, recoverable,
 documented, supportable, contractable, deployable and auditable, and its
 owners have signed. The statuses below were assessed against `origin/main` at
-`5bc0330` (the rows #888 touched re-read at `1e70521`; LMS-002, LMS-016, SRE-010
-and AI-012 re-read at `fd8fc0b`), and a test holds each to the kind of file it
+`5bc0330` (the rows #888 touched re-read at `1e70521`; LMS-002, LMS-016 and
+AI-012 re-read at `fd8fc0b`), and a test holds each to the kind of file it
 cites.
 
 The narrower go/no-go for a first pilot school is
@@ -26,9 +26,9 @@ state is in [`ROLE-LAUNCH-REGISTER.md`](ROLE-LAUNCH-REGISTER.md).
 | --- | --- | ---: | ---: |
 | not-started | No implemented control/capability exists | 3 | 2 |
 | designed | Requirements/architecture approved; not implemented | 32 | 30 |
-| building | Implementation in progress | 70 | 52 |
+| building | Implementation in progress | 71 | 53 |
 | implemented | Deployed in non-production or production but not fully validated | 1 | 1 |
-| tested | Functional/security/accessibility/reliability tests pass | 36 | 32 |
+| tested | Functional/security/accessibility/reliability tests pass | 35 | 31 |
 | evidenced | Current artifacts are collected and reviewed | 0 | 0 |
 | operational | Monitored, supported, and used in production-like operation | 0 | 0 |
 | launch-approved | All required columns complete and accountable owners signed off | 0 | 0 |
@@ -54,8 +54,8 @@ and also needs every sign-off. **No gate passes.**
 | D | Integration and data readiness | 14 | 2 | 2 | 8 | 0 | 2 | 0 | 0 | 0 | no |
 | E | AI readiness | 14 | 0 | 0 | 12 | 0 | 2 | 0 | 0 | 0 | no |
 | F | Security, privacy, accessibility, procurement readiness | 22 | 0 | 8 | 14 | 0 | 0 | 0 | 0 | 0 | no |
-| G | Reliability, support, and operations readiness | 14 | 1 | 6 | 6 | 0 | 1 | 0 | 0 | 0 | no |
-| H | Full dress rehearsal and executive launch approval | 142 | 3 | 32 | 70 | 1 | 36 | 0 | 0 | 0 | no |
+| G | Reliability, support, and operations readiness | 14 | 1 | 6 | 7 | 0 | 0 | 0 | 0 | 0 | no |
+| H | Full dress rehearsal and executive launch approval | 142 | 3 | 32 | 71 | 1 | 35 | 0 | 0 | 0 | no |
 
 ### Gate A — Foundation readiness
 
@@ -207,7 +207,7 @@ Owns every row below.
 | STU-009 | Search | Search finds courses, people, resources, policies, events, and opportunities with source/owner/freshness | Search test suite | P1 | building | `app/src/lib/find.ts` — Ranks items, courses, units, notes, docs, actions, appointments, screens<br>`app/src/lib/find.test.ts` — Tests ranking | No people, policies, resources, events or opportunities indexes; no source/owner/freshness on results. Needs those sources and a search test suite. |
 | STU-010 | Plan/calendar | Actions, study blocks, calendar views, connection status, and conflict handling are durable | Calendar E2E/offline tests | P1 | tested | `app/src/screens/Calendar.tsx` — Calendar views and actions<br>`app/src/screens/Calendar.keyboard.test.tsx` — Calendar keyboard tests<br>`supabase/calendar.check.sql` — SQL tests for calendar persistence<br>`app/src/lib/offline.test.ts` — Offline behaviour tests | No E2E calendar journey; connection status depends on unconnected providers. Needs E2E/offline run on target devices. |
 | STU-011 | Me/Privacy | Profile, connections, AI controls, sharing, notifications, export, deletion, and accessibility preferences work | Privacy workflow UAT | P0 | tested | `app/src/lib/privacy.test.ts` — Tests disclosure matches code<br>`app/src/lib/export.test.ts` — Tests data export<br>`supabase/deletion.check.sql` — Tests account deletion<br>`app/src/lib/aiflags.test.ts` — Tests AI control flags | No privacy workflow UAT; activity opt-out toggle absent; connections not live. Needs UAT and opt-out control. |
-| STU-012 | Help/support | In-app issue reporting, knowledge base, status link, ticket ID, and safe diagnostics work | Support ticket UAT | P0 | building | `app/src/lib/help-routes.ts` — Help requests with minimal context, withdrawable, DB-enforced<br>`supabase/help-requests.check.sql` — SQL tests for help requests<br>`app/src/components/GetHelp.test.tsx` — Tests help request UI<br>`MONITORING.md` — Declines a status page in writing | Status page refused (council decision pending); no ticketing/SLA for product issues, feedback has no staff triage. Needs status link decision, ticket IDs surfaced, and support ticket UAT. |
+| STU-012 | Help/support | In-app issue reporting, knowledge base, status link, ticket ID, and safe diagnostics work | Support ticket UAT | P0 | building | `app/src/lib/help-routes.ts` — Help requests with minimal context, withdrawable, DB-enforced<br>`supabase/help-requests.check.sql` — SQL tests for help requests<br>`app/src/components/GetHelp.test.tsx` — Tests help request UI<br>`MONITORING.md` — Records the status page decision | Status page live at /status.html but not linked from Help; no ticketing/SLA for product issues, feedback has no staff triage. Needs a status link in Help, ticket IDs surfaced, and support ticket UAT. |
 
 ### Native LMS
 
@@ -365,7 +365,7 @@ Owns every row below.
 | SRE-007 | Load/capacity | Registration, assessment, gradebook, search, AI, and integration load tests pass targets | Load reports | P0 | not-started | `docs/LAUNCH-READINESS-TEST-PLAN.md` — records that no load test exists | No load or capacity tests for any journey, no targets, no load reports. |
 | SRE-008 | Release safety | Canary/flag/rollback process and change calendar operate | Rollback drill | P0 | building | `app/src/lib/flags.ts` — flag registry, evaluator and database-backed kill switches<br>`app/src/lib/flags.test.ts` — tests the flag evaluator<br>`ROLLBACK.md` — rollback runbook with measured timings<br>`docs/FEATURE-FLAG-REGISTRY.md` — flag owners and kill-switch runbook | No canary release, no change calendar, no kill switch engaged in production, no rollback drill on the production deployment path. |
 | SRE-009 | Academic peak operations | Registration/finals/grade-window calendar, freeze, capacity review, on-call plan active | Peak-period runbook | P0 | designed | `docs/operating-model/PILOT-TO-PRODUCTION.md` — go-live rule to avoid registration and finals windows | No academic peak calendar, change freeze policy, capacity review or peak on-call plan. |
-| SRE-010 | Status page | Public status and subscriber/customer update process work | Status-page drill | P0 | tested | `app/public/status.html` — A public status page that checks each service from the reader's own browser (#902)<br>`app/src/lib/statuspage.test.ts` — Holds the page to the services it claims to check<br>`docs/SERVICE-RELIABILITY-AND-SUPPORT-OPERATIONS.md` — plans service_incidents tables and subscriber updates; not built | The page reports reachability, not incidents: no service_incidents table, no subscriber notification process, no drill. MONITORING.md still records the earlier refusal and needs its line updated. |
+| SRE-010 | Status page | Public status and subscriber/customer update process work | Status-page drill | P0 | building | `app/public/status.html` — public status page: live browser probes of the app, sign-in and the database API, and a hand-kept incident list<br>`app/src/lib/statuspage.test.ts` — holds the page to the production project, the smoke probes and the service worker<br>`MONITORING.md` — the refusal reversed on 28 September | No subscriber notification process and no drill yet; incidents are written by hand into status-incidents.json. |
 
 ### Support
 

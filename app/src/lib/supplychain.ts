@@ -18,11 +18,9 @@
  *
  * The four lockfiles' licences, as measured when this was written:
  *
- *   - `app/` (what ships): 293 packages, every one under an approved licence or
+ *   - `app/` (what ships): 292 packages, every one under an approved licence or
  *     a named weak-copyleft one used unmodified. No open decision. (dompurify's
- *     `MPL-2.0 OR Apache-2.0` is taken as Apache-2.0.) The 293rd is axe-core,
- *     which #906 added while this file was in review — two green pull
- *     requests whose merge was red, and this entry is the fix.
+ *     `MPL-2.0 OR Apache-2.0` is taken as Apache-2.0.)
  *   - `video/` (a local rendering tool, never deployed): 297, of which the
  *     Remotion family is under the Remotion licence — source-available, free
  *     only for individuals and small companies. That is an open decision, and
@@ -102,7 +100,7 @@ export const NAMED: readonly Named[] = [
     pkg: 'axe-core',
     lockfile: 'app',
     license: 'MPL-2.0',
-    why: 'The accessibility rules engine, a devDependency (#906) run by the test suite and the accessibility smoke. Runs on the build machine and in CI; none of its code is in the bundle. Used unmodified.',
+    why: 'Accessibility rules engine, a devDependency run only by the test suite (src/a11y/axe.test.tsx, src/lib/dim.test.ts), used unmodified. None of its code is in the bundle.',
     decision: 'accepted',
   },
   {

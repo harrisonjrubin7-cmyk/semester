@@ -26,4 +26,4 @@ What Semester does not do yet, or does only partly, stated plainly so nobody fin
 ## Getting help
 
 - **Asking Semester support from inside the app is not switched on yet.** Use Say something in Settings › About, which reaches the same people.
-- **There is no status page.** If Semester is down, the pilot contact your school named will say so.
+- **The status page does not send notifications.** Open `/status.html` to see whether Semester is up; it checks from your browser each time. The pilot contact your school named will also tell you about an outage.

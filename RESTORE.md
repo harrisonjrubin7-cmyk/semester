@@ -129,6 +129,33 @@ seeded contents went red; the three schema checks stayed green. A drill whose
 data comparison cannot fail is a drill that reports success for a backup with
 no data in it.
 
+## The drill against the real project, scripted
+
+```bash
+SOURCE_DB_URL='…lzrqvlugnawcgywkhqlz…'  TARGET_DB_URL='…kpuulmnicidgdmwgfngv…' \
+DRILL_WIPE_TARGET=kpuulmnicidgdmwgfngv  DRILL_CLEANUP=1  supabase/restore-drill.sh
+```
+
+[`supabase/restore-drill.sh`](supabase/restore-drill.sh) runs steps 1, 2 and
+4–7 above with a logical dump: it reads the live project (read-only), restores
+`public`, `private`, the accounts and the event triggers into the second
+project, Semester2, and prints the four rows of the table below that it can
+answer. The header lists what it copies and what it deliberately leaves out —
+`cron` above all, so the copy never runs production's jobs. It refuses to
+target the live project, and refuses to overwrite a target that already has
+tables unless `DRILL_WIPE_TARGET` names it.
+
+It does not replace step 3. How far back Supabase's own backups reach, and the
+recovery point, are properties of the platform's physical backups: read them
+off Database → Backups and write them in.
+
+Proved against two local databases on 28 September before it was ever pointed
+at the real ones: every check green; with the dump sabotaged to
+`--schema-only`, row counts and the control went red and the schema checks
+stayed green, as they should. Its first run found that `restore.sh` itself
+had been red since 27 September — see
+`migrations/20260929040000_round_trip_stable_checks.sql`.
+
 ## Point-in-time recovery — **not verified**
 
 **Nobody has confirmed that point-in-time recovery (PITR) is enabled on the
