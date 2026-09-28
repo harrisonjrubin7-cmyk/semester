@@ -25,7 +25,8 @@ Quorum is five members, and it must include privacy/legal and a student or facul
 ## Responsibilities
 
 - Approve new AI use cases (each one needs a charter and a scorecard; see
-  [PORTFOLIO-GOVERNANCE.md](PORTFOLIO-GOVERNANCE.md)).
+  [PORTFOLIO-GOVERNANCE.md](PORTFOLIO-GOVERNANCE.md)), and pass them through the G0–G5 gates in
+  [AI-LIFECYCLE-GATES.md](AI-LIFECYCLE-GATES.md).
 - Review high-risk changes: a new data class reaching a model, a new destination, or anything touching assessment.
 - Approve provider changes, including a model version change behind the gateway.
 - Review evaluation results each quarter, and any evaluation failure as it happens.

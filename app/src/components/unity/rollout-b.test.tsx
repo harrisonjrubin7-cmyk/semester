@@ -247,10 +247,17 @@ describe('a programme in Pathway', () => {
 });
 
 describe('the degree screen', () => {
-  it('marks its arithmetic as yours and needing confirmation, and keeps the sentence', async () => {
+  /*
+   * In the one trust vocabulary (constitution §7), not the status chips'.
+   * It said "Yours" and "Needs confirmation" here while Grades and the
+   * assistant's answers said "Student entered" and "Estimated" for the same
+   * kinds of fact.
+   */
+  it('marks its figures as student entered and estimated, and keeps the sentence', async () => {
     await mount(<Degree />);
-    const chips = [...host.querySelectorAll('.status-chip')].map((c) => c.textContent?.replace(/^\W+/, ''));
-    expect(chips).toEqual(expect.arrayContaining(['Yours', 'Needs confirmation']));
+    const badges = [...host.querySelectorAll('[data-source]')].map((b) => b.getAttribute('data-source'));
+    expect(badges).toEqual(['student_entered', 'estimated']);
+    expect(host.querySelectorAll('.status-chip')).toHaveLength(0);
     expect(text()).toContain('Your arithmetic, not the registrar’s');
     expect(text()).toContain('This app ships no degree requirements');
   });

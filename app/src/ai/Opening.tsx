@@ -1,5 +1,7 @@
 import { useAI } from './store';
 import { assemble, suggestionsFor } from './assemble';
+import { useNow, useStore } from '../state/store';
+import { upcomingItems } from '../lib/select';
 
 /**
  * A new conversation, which is not a blank page.
@@ -49,27 +51,46 @@ export function Opening({
    * saying.
    */
   const seen = ai.screen === 'ask' ? null : assemble(ai).label;
+  const { catalog } = useStore();
+  const now = useNow();
+  const courses = catalog.courses.length;
+  const soon = upcomingItems(catalog, now).filter((i) => i.daysAway <= 14).length;
 
   return (
     <div style={{ marginBottom: tight ? 'var(--sp-7)' : 'calc(var(--sp-7) * 1.6)' }}>
-      <div
+      {/*
+        A question, not a slogan.
+
+        This was "Ask about your term." in the display serif — a second page
+        title under the header's own, and a decoration rather than an
+        invitation. The operational type and a question that names the job
+        is the pattern every other empty state here follows.
+      */}
+      <h2
         style={{
+          margin: 0,
           fontSize: big ? 'var(--type-xl)' : tight ? 'var(--type-lg)' : 'var(--type-md)',
-          fontFamily: big ? 'var(--font-display)' : undefined,
+          fontWeight: 600,
           lineHeight: 'var(--leading-tight)',
           textWrap: 'pretty',
           marginBottom: big ? 'var(--sp-3)' : undefined,
         }}
       >
-        {seen ? `You are on ${seen}.` : 'Ask about your term.'}
-      </div>
+        {seen ? `You are on ${seen}.` : 'What can I help you with?'}
+      </h2>
+      {!seen && (
+        <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)' }}>
+          Explain course material, plan your study time, practice a concept or work on a draft you
+          review.
+        </div>
+      )}
       {suggestions.length > 0 && (
         <div
           style={{
             display: 'flex',
             flexDirection: 'column',
-            gap: 'var(--sp-4)',
-            marginTop: big ? 'var(--sp-7)' : 'var(--sp-6)',
+            gap: 'var(--sp-3)',
+            marginTop: 'var(--sp-6)',
           }}
         >
           {suggestions.map((s) => (
@@ -83,7 +104,7 @@ export function Opening({
                 // A thumb, not a hairline. 10px of padding was fine as a row
                 // in a stack of rows; as the only thing on an empty screen a
                 // suggestion is the thing you are being invited to tap.
-                padding: big ? 'var(--sp-6) var(--sp-7)' : 'var(--sp-5) var(--sp-6)',
+                padding: big ? 'var(--sp-5) var(--sp-7)' : 'var(--sp-5) var(--sp-6)',
                 textAlign: 'left',
                 justifyContent: 'flex-start',
                 fontSize: big ? 'var(--type-md)' : 'var(--type-sm)',
@@ -97,18 +118,32 @@ export function Opening({
           ))}
         </div>
       )}
-      <div
-        style={{
-          fontSize: 'var(--type-xs)',
-          color: 'var(--app-dim)',
-          lineHeight: 'var(--leading-normal)',
-          marginTop: 'var(--sp-6)',
-          textWrap: 'pretty',
-        }}
-      >
-        {seen ? 'It sees what this screen is showing, your ' : 'It sees your '}
-        deadlines and your grades — never your notes, your drafts or anyone in People. It can offer
-        to change something, and nothing happens until you tap it.
+      {/*
+        What it can see, as a tray rather than a sentence of small print.
+
+        The old line was right and too quiet: one grey paragraph under the
+        suggestions that nobody read, and nothing to open. The summary line
+        says what is in scope now, with numbers; the details say what is never
+        in scope, and that nothing changes until you confirm it.
+      */}
+      <div className="ask-context" role="group" aria-label="What Semester Intelligence can see">
+        <div className="ask-context-line">
+          <span className="ask-context-kicker">Uses</span>{' '}
+          {seen ? 'this screen · ' : ''}
+          {courses} {courses === 1 ? 'course' : 'courses'} · {soon}{' '}
+          {soon === 1 ? 'deadline' : 'deadlines'} in the next two weeks · your grades
+        </div>
+        <details className="ask-context-more">
+          <summary>What it can and cannot see</summary>
+          <ul>
+            <li>
+              It can see {seen ? 'what this screen is showing, ' : ''}your courses, deadlines and
+              grades.
+            </li>
+            <li>It never sees your notes, your drafts or anyone in People.</li>
+            <li>It can offer to change something. Nothing happens until you tap to confirm.</li>
+          </ul>
+        </details>
       </div>
     </div>
   );

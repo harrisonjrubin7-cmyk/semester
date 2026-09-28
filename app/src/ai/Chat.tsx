@@ -6,7 +6,7 @@ import { chromeFor } from '../lib/chrome';
 import { useKeyboardInset } from '../lib/keyboard';
 import { useConversation } from './converse';
 import { useVoice } from './usevoice';
-import { configured, modelLabel } from '../lib/assistant';
+import { configured } from '../lib/assistant';
 import { Composer, sendHint } from './Composer';
 import { Dropped, Question, Reply, Waiting, Looked, Using, useFollowing } from './Turns';
 import { Threads, ThreadsOver } from './Threads';
@@ -436,7 +436,13 @@ export function Chat() {
               onClick={() => dispatch({ type: 'go', screen: 'setAssistant' })}
               style={QUIET}
             >
-              {configured() ? modelLabel().toUpperCase() : 'SET A KEY'}
+              {/*
+                Not the model's name. "OPUS 5" under the box was a vendor
+                label in the student's view, read as a price tag or a
+                version to worry about. Which model answers is a setting,
+                and the setting is where it is named.
+              */}
+              {configured() ? 'ASSISTANT SETTINGS' : 'SET A KEY'}
             </button>
           </div>
           {/* A failed request, and the retry for it. The sheet has had this

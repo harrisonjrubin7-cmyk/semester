@@ -7,18 +7,18 @@ are missing.
 
 ## What is live
 
-Read off the project at 01:08 UTC on 22 September 2026, not remembered. The
+Read off the project at 00:49 UTC on 28 September 2026, not remembered. The
 last column is which pipeline deployed that version, and it is the one worth
 reading:
 
-    claude     ACTIVE, v64, verify_jwt off   platform
-    push       ACTIVE, v28, verify_jwt off   platform
-    calendar   ACTIVE, v24, verify_jwt off   platform
-    fetchcal   ACTIVE, v56, verify_jwt off   platform
-    canvas     ACTIVE, v49, verify_jwt off   platform
-    lti        ACTIVE, v49, verify_jwt off   platform
-    integration-tick  ACTIVE, v1, verify_jwt off   runner (first deploy, 2026-09-27T21:48:27Z)
-    trust-room PENDING, live on merge, verify_jwt off  (see below)
+    claude            ACTIVE, v159, verify_jwt off   platform
+    push              ACTIVE, v120, verify_jwt off   platform
+    calendar          ACTIVE, v115, verify_jwt off   platform
+    fetchcal          ACTIVE, v151, verify_jwt off   platform
+    canvas            ACTIVE, v144, verify_jwt off   platform
+    lti               ACTIVE, v144, verify_jwt off   platform
+    integration-tick  ACTIVE, v2, verify_jwt off     platform
+    trust-room        ACTIVE, v7, verify_jwt off     platform
 
 **This file once said two, at v1, and filed three of the other four under "Not
 deployed yet".** `fetchcal` had been live since 9 September when that was
@@ -373,7 +373,7 @@ passback — and the two that sign do so with the key described above. There is
 still no key material in any migration: the key was always going to live as a
 function secret, and both things that needed it arrived without changing that.
 
-## Live on merge: `trust-room`
+## `trust-room`
 
 The procurement room's file server. A reviewer at a university posts the link
 token the account team minted (`trust_room_grant`) and gets back either the list
@@ -389,7 +389,7 @@ returns nothing for a wrong, revoked or expired token, for a document the grant
 does not cover, or while `kill.sharing` is engaged. The HTTP answer is the same
 404 in every one of those cases.
 
-**It is inert until someone uses it on purpose.** Merging deploys it, and it
+**It is inert until someone uses it on purpose.** It is deployed, and it
 refuses every request until a trust officer publishes a document version and
 the account team mints a grant. There is nothing to switch off first.
 
@@ -397,11 +397,10 @@ the account team mints a grant. There is nothing to switch off first.
 other functions read (see `_shared/cors.ts`). The reviewer's page is the only
 browser that calls it.
 
-**Its snapshot row is `pending`.** `functions.snapshot` records readings of the
-live project, and there is none until the first merge deploys it. Replace the
-pending row with a real reading (slug, version, pipeline, time) after that
-merge; `functionsdeployed.test.ts` fails once a pending row is fourteen days
-old.
+**Live since #817's merge.** It went up with a `pending` row in
+`functions.snapshot`, because there is no reading of a function before the
+merge that deploys it. Read off the project at 00:49 UTC on 28 September, it
+was v7 on a platform path, and that reading replaced the pending row.
 
 **Not built yet:** the page a reviewer opens. It should read the token from the
 URL fragment (never the query string, which servers log) and post it here.
@@ -514,7 +513,8 @@ never applied; the other two came with the integration scheduler. Read off `cron
   `integration-tick` Edge Function rather than a Vercel route. That function went up by hand at 2026-09-27T21:48:27Z, from its
   branch, before the merge that declares it: v1, on a runner path, `verify_jwt` off. Read from the project with pg_net
   before the token check existed, it answered 401 without a token and 503 with the Vault token, which is how it fails
-  closed. [`docs/INTEGRATION-OPERATOR-RUNBOOK.md`](../docs/INTEGRATION-OPERATOR-RUNBOOK.md) §4 has the test request
+  closed. #856's merge moved it to the platform (v2) and applied the token check; the runbook's test request then
+  answered 200 with `outcome: ran` and every count zero, at 00:49 UTC on 28 September, because no adapter is registered. [`docs/INTEGRATION-OPERATOR-RUNBOOK.md`](../docs/INTEGRATION-OPERATOR-RUNBOOK.md) §4 has the test request
   and the one statement that unparks it.
 
 `push` and `tombstones` came through unchanged, and `push_cron_secret` was not regenerated.
