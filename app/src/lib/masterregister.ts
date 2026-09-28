@@ -457,7 +457,7 @@ export const REGISTER: readonly Requirement[] = [
     severity: 'P0',
     status: 'tested',
     evidence: [{ path: 'app/src/lib/supporttickets.ts', shows: 'Support tickets: six app-context keys, every detail unticked by default, 24h/72h targets (#839)' }, { path: 'supabase/support-tickets.check.sql', shows: '25 checks: no identity reaches the queue, five a day, only the student closes' }, { path: 'app/src/components/supportticketspanel.test.tsx', shows: 'Nothing unticked is sent, and the preview shows all of it' }, { path: 'app/src/lib/help-routes.ts', shows: 'Help requests to campus offices with minimal context, withdrawable, DB-enforced' }, { path: 'app/public/status.html', shows: 'A status page that checks from the reader\'s browser (#902)' }, { path: 'app/src/lib/statuspage.test.ts', shows: 'Holds the page\'s probes and key to .env.production (#902, #908)' }],
-    gap: 'Tickets are off by default (VITE_SUPPORT_TICKETS), have no staff screen and no notification to the student, and no ticket id is shown in the app. The status page is live at /status.html but not linked from Help. No support ticket UAT.',
+    gap: 'Tickets are off by default (VITE_SUPPORT_TICKETS), have no staff screen and no notification to the student, and no ticket id is shown in the app. The status page is live at /status.html and linked from Help (#922; held by help.statuslink.test.ts). No support ticket UAT.',
   },
   {
     id: 'LMS-001',
