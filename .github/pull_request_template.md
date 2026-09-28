@@ -13,6 +13,15 @@ Run from `app/`, not the repository root (see `CLAUDE.md`).
 - [ ] `npm run build`
 - [ ] Every new guard is shown to fail against a revert of the fix, and then restored.
 
+## New dependency (skip if no package or Action is added)
+
+`docs/SUPPLY-CHAIN.md` is the policy; `app/src/lib/supplychain.test.ts` fails on a licence or Action nobody has named.
+
+- [ ] What it is for, and why an existing dependency or a few lines of our own code will not do.
+- [ ] What it touches: student data, the network, the build only, or nothing at runtime.
+- [ ] Its licence, and if it is not on the approved list, its entry in `NAMED` with the reason.
+- [ ] A new Action is added to `ACTIONS` with its publisher and what its token can do.
+
 ## Screens (skip if this PR changes nothing a student sees)
 
 This is the quality contract from `docs/design/SEMESTER-UI-CONSTITUTION.md` §9.

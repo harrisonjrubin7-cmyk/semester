@@ -416,6 +416,23 @@ jobs:
           npx vite build --outDir dist-demo
           mv dist-demo dist/demo
 
+      # A software bill of materials for exactly what this deploy ships: the
+      # production dependencies of the lockfile `npm ci` just installed, as
+      # CycloneDX. It is kept with the run for 90 days, so "were we running
+      # the bad version of X on the 14th?" has an answer that does not depend
+      # on reconstructing a lockfile from git history under pressure. It is not
+      # published with the site. `app/src/lib/supplychain.test.ts` asserts this
+      # step exists, runs after the build and before the deploy.
+      - name: Software bill of materials
+        working-directory: app
+        run: npm run --silent sbom > sbom.cdx.json
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sbom-${{ github.sha }}
+          path: app/sbom.cdx.json
+          retention-days: 90
+
       # Pages serves static files, so a deep link like /semester/?screen=study
       # is fine but any unknown path 404s. Copying index.html to 404.html makes
       # the app answer those too.
