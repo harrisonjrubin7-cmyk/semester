@@ -109,15 +109,15 @@ export const PARTIES: readonly Party[] = [
   },
   {
     name: 'Microsoft', kind: 'student-directed',
-    purpose: 'Signing in with Microsoft, and connecting the student’s own Outlook calendar and mail.',
-    receives: 'Whatever the student’s own Microsoft account returns to their browser, read under the permission they granted.',
+    purpose: 'Signing in with Microsoft, and connecting the student’s own Outlook calendar and mail, OneDrive and Microsoft To Do.',
+    receives: 'Reads: whatever the student’s own Microsoft account returns to their browser, under the permission they granted. Writes, only when the student asks: a file saved to OneDrive (its name and contents), a calendar event (title, time and note) and a Microsoft To Do item (title and note).',
     when: 'student-opt-in', hosts: ['login.microsoftonline.com', 'graph.microsoft.com'],
     evidence: ['app/src/lib/connect.ts'],
   },
   {
     name: 'Google', kind: 'student-directed',
-    purpose: 'Signing in with Google, and connecting the student’s own Google Calendar, Gmail and Google Tasks.',
-    receives: 'Whatever the student’s own Google account returns to their browser, read under the permission they granted.',
+    purpose: 'Signing in with Google, and connecting the student’s own Google Calendar, Gmail, Google Drive and Google Tasks.',
+    receives: 'Reads: whatever the student’s own Google account returns to their browser, under the permission they granted. Writes, only when the student asks: a file saved to Google Drive (its name and contents), a calendar event (title, time and note) and a Google Tasks item (title and note).',
     when: 'student-opt-in',
     hosts: ['accounts.google.com', 'oauth2.googleapis.com', 'www.googleapis.com', 'gmail.googleapis.com', 'tasks.googleapis.com'],
     evidence: ['app/src/lib/connect.ts'],
@@ -179,6 +179,28 @@ const WHEN_LABEL: Record<When, string> = {
 };
 
 /** The register as a Markdown table, which the document must contain verbatim. */
+/** Whether a host is covered by a registered host, `*.example.org` included. */
+export function registered(host: string, parties: readonly Party[] = PARTIES): boolean {
+  return parties.some((p) =>
+    p.hosts.some((h) => (h.startsWith('*.') ? host.endsWith(h.slice(1)) && host.length > h.length - 1 : host === h)),
+  );
+}
+
+/**
+ * The hosts in a space-separated list of origins (the build's extra
+ * `connect-src`) that no party in the register covers.
+ */
+export function unregisteredHosts(origins: string | undefined, parties: readonly Party[] = PARTIES): string[] {
+  const hosts = (origins ?? '').split(/\s+/).filter(Boolean).flatMap((o) => {
+    try {
+      return [new URL(o).host];
+    } catch {
+      return [];
+    }
+  });
+  return [...new Set(hosts)].filter((h) => !registered(h, parties)).sort();
+}
+
 export function renderRegister(parties: readonly Party[] = PARTIES): string {
   const rows = parties.map((p) => `| ${p.name} | ${KIND_LABEL[p.kind]} | ${p.purpose} | ${p.receives} | ${WHEN_LABEL[p.when]} |`);
   return ['| Party | Kind | Purpose | Receives | When |', '| --- | --- | --- | --- | --- |', ...rows].join('\n');

@@ -62,7 +62,11 @@ of a deployment configures, and none can be set by a student:
 | `VITE_UNIVERSITY_GATEWAY_URL` | The institutional gateway (Vercel, above) | Subprocessor |
 
 A deployment that points any of these at a new third party adds a
-subprocessor, and must add its row above.
+subprocessor, and must add its row above. CI can check only what is committed:
+`subprocessors.test.ts` holds any origin set in `app/.env.production` to the
+register. An origin set as a repository variable reaches the build without
+passing through CI. For that case, `npm run build` prints a warning naming each
+configured host the register does not list.
 
 ## The register
 
@@ -76,8 +80,8 @@ subprocessor, and must add its row above.
 | The institution’s LMS (LTI 1.3 platform) | Institution-directed | Course launch, deep linking and, where an instructor placed a graded link, a quiz score. | Launch verification traffic; a score only for a graded link the instructor placed. | Only once an institution enables it |
 | Anthropic (student’s own key) | Student-directed | AI features using a key the student entered on their device. | The student’s AI request, sent from their browser under their own key. | Only when the student turns it on |
 | OpenAI (student’s own key) | Student-directed | AI features using a key the student entered on their device. | The student’s AI request, sent from their browser under their own key. | Only when the student turns it on |
-| Microsoft | Student-directed | Signing in with Microsoft, and connecting the student’s own Outlook calendar and mail. | Whatever the student’s own Microsoft account returns to their browser, read under the permission they granted. | Only when the student turns it on |
-| Google | Student-directed | Signing in with Google, and connecting the student’s own Google Calendar, Gmail and Google Tasks. | Whatever the student’s own Google account returns to their browser, read under the permission they granted. | Only when the student turns it on |
+| Microsoft | Student-directed | Signing in with Microsoft, and connecting the student’s own Outlook calendar and mail, OneDrive and Microsoft To Do. | Reads: whatever the student’s own Microsoft account returns to their browser, under the permission they granted. Writes, only when the student asks: a file saved to OneDrive (its name and contents), a calendar event (title, time and note) and a Microsoft To Do item (title and note). | Only when the student turns it on |
+| Google | Student-directed | Signing in with Google, and connecting the student’s own Google Calendar, Gmail, Google Drive and Google Tasks. | Reads: whatever the student’s own Google account returns to their browser, under the permission they granted. Writes, only when the student asks: a file saved to Google Drive (its name and contents), a calendar event (title, time and note) and a Google Tasks item (title and note). | Only when the student turns it on |
 | Zoom | Student-directed | Connecting the student’s own Zoom meetings. | The student’s own meeting list, read in their browser. | Only when the student turns it on |
 | Apple | Student-directed | Signing in with Apple. | The sign-in exchange the student starts. | Only when the student turns it on |
 | OpenStreetMap tile servers | Student-directed | Map images when the student opens the map. | The student’s IP address and which map area is being viewed. | Only when the student turns it on |

@@ -64,6 +64,9 @@ records, other institutions' configurations or contacts, or anything under
 - **When a status goes up** (an ACR delivered, a pen test done, a DPA signed),
   the document goes under `docs/evidence/` in the same commit that raises the
   status. The tests refuse the raise otherwise.
-- **When a new third party is added,** the subprocessor register fails CI
-  until the party is listed. That is how the register stays current without
-  anyone remembering to update it.
+- **When a new third party is added** to the code or to the page's fixed
+  policy, the subprocessor register fails CI until the party is listed.
+  That is how the register stays current without anyone remembering to
+  update it. It cannot see a proxy origin set only as a deployment's build
+  variable. For those, the build prints a warning naming every configured host
+  the register does not list, and the operator adds the row before deploying.

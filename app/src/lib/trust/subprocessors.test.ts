@@ -1,7 +1,7 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { PARTIES, renderRegister } from './subprocessors';
+import { PARTIES, renderRegister, unregisteredHosts } from './subprocessors';
 
 /**
  * The subprocessor register, held to the two places the tree itself says
@@ -95,6 +95,23 @@ describe('the subprocessor register', () => {
     expect(settings).toContain('VITE_UNIVERSITY_GATEWAY_URL');
     const doc = read('docs/SUBPROCESSORS.md');
     for (const name of settings) expect(doc, name).toContain(`| \`${name}\` |`);
+  });
+
+  it('covers every proxy origin committed for the deployed build', () => {
+    const env = read('app/.env.production');
+    const origins = ['VITE_CLAUDE_PROXY', 'VITE_ICS_PROXY', 'VITE_OAUTH_PROXY', 'VITE_UNIVERSITY_GATEWAY_URL', 'VITE_SUPABASE_URL']
+      .map((name) => new RegExp(`^${name}=(\\S+)`, 'm').exec(env)?.[1] ?? '')
+      .filter((v) => /^https:\/\//.test(v));
+    // The control: the deployed Supabase project is committed there, so the parse found something.
+    expect(origins.some((o) => o.includes('.supabase.co'))).toBe(true);
+    expect(unregisteredHosts(origins.join(' '))).toEqual([]);
+  });
+
+  it('names an unregistered host, and passes registered and wildcard ones (controls)', () => {
+    expect(unregisteredHosts('https://abc.supabase.co wss://abc.supabase.co https://api.anthropic.com')).toEqual([]);
+    expect(unregisteredHosts('https://proxy.example.net https://abc.supabase.co')).toEqual(['proxy.example.net']);
+    expect(unregisteredHosts('https://supabase.co')).toEqual(['supabase.co']);
+    expect(unregisteredHosts(undefined)).toEqual([]);
   });
 
   it('is published verbatim in the register document', () => {
