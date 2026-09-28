@@ -30,7 +30,10 @@
  * still need a UAT, a drill, a certification or a contract, and its `gap` says
  * which. The row statuses were assessed against `origin/main` at `5bc0330` on
  * 2026-09-28, and the rows #888 touched (AI-008, AI-013, TRUST-001, TRUST-004)
- * re-read at `1e70521`; none changed status.
+ * re-read at `1e70521`; none changed status. Four rows were re-read at
+ * `fd8fc0b` for the modernization blueprint (`lib/blueprint.ts`): LMS-002 and
+ * LMS-016 after Course Studio (#893), SRE-010 after the status page (#902),
+ * and AI-012 after the kill switch was wired into both runtimes.
  */
 
 export const STATUSES = [
@@ -469,9 +472,9 @@ export const REGISTER: readonly Requirement[] = [
     requirement: 'Accessible authoring for modules, pages, files, media, objectives, conditional release, versions',
     validation: 'Authoring/accessibility UAT',
     severity: 'P0',
-    status: 'designed',
-    evidence: [{ path: 'docs/trust/ENTERPRISE-READINESS.md', shows: 'Level 3 plan lists Course Studio: modules, accessible authoring, version history, conditional release' }, { path: 'docs/LMS-LEARNING-ROADMAP.md', shows: 'Instructor tools table: Course Studio (instructor authoring) = missing' }],
-    gap: 'No authoring code: no module/page/file/media builder, objectives, conditional release or course versioning (lib/docversions.ts is student docs). Needs a spec, build, a11y tests, then authoring/accessibility UAT.',
+    status: 'tested',
+    evidence: [{ path: 'app/src/components/CourseStudio.tsx', shows: 'Faculty studio (#893): publishes AI rules, guidance and study packs with versions and a student-card preview' }, { path: 'supabase/migrations/20260928309000_course_studio.sql', shows: 'Versioned course_ai_rules, course_guidance and course_packs; course:publish capability' }, { path: 'supabase/coursestudio.check.sql', shows: 'Faculty publish within their course; students read only what is published' }, { path: 'docs/FACULTY-COURSE-STUDIO-DESIGN.md', shows: 'The decided scope: rules, guidance, packs; no duplicate LMS content builder' }],
+    gap: 'The studio publishes rules, guidance and packs only. No module/page/file/media builder, objectives, conditional release, templates, course copy, accessible-content checks or bulk publish — and the design decision (27 Sep) refuses a duplicate LMS builder, so the plan\'s row is open until that decision is reopened. Needs authoring/accessibility UAT for what exists.',
   },
   {
     id: 'LMS-003',
@@ -609,9 +612,9 @@ export const REGISTER: readonly Requirement[] = [
     requirement: 'Course roles have distinct least-privilege capabilities',
     validation: 'Permission test suite',
     severity: 'P0',
-    status: 'building',
-    evidence: [{ path: 'supabase/migrations/20260921223000_role_grants.sql', shows: 'role_grants with course scope for faculty and teaching_assistant' }, { path: 'supabase/migrations/20260928015315_lti_launch_capability.sql', shows: 'Faculty and TA are granted only lti:launch — no distinct course capabilities' }, { path: 'supabase/rolegrants.check.sql', shows: 'Tests course-scoped TA grant and holds_role' }],
-    gap: 'Course-scoped role grants exist and are tested, but faculty and TA have no distinct least-privilege course capabilities (grade, edit, publish) because those features do not exist. Needs capability matrix and permission suite.',
+    status: 'tested',
+    evidence: [{ path: 'supabase/migrations/20260921223000_role_grants.sql', shows: 'role_grants with course scope for faculty and teaching_assistant' }, { path: 'supabase/migrations/20260928309000_course_studio.sql', shows: 'course:publish granted to faculty alone (#893), scoped to one course' }, { path: 'supabase/coursestudio.check.sql', shows: 'A faculty grant publishes within its course and not another; students, school-wide staff, revoked and expired grants are refused' }, { path: 'supabase/rolegrants.check.sql', shows: 'Tests course-scoped TA grant and holds_role' }],
+    gap: 'Faculty now hold one distinct course capability, course:publish. Grade and edit capabilities do not exist because grading and content editing do not. Needs the rest of the capability matrix as those features are decided.',
   },
   {
     id: 'LMS-017',
@@ -949,9 +952,9 @@ export const REGISTER: readonly Requirement[] = [
     requirement: 'Tenant/mode/provider emergency disable works and is tested',
     validation: 'Kill-switch drill',
     severity: 'P0',
-    status: 'building',
-    evidence: [{ path: 'supabase/migrations/20260927170000_integration_control_plane.sql', shows: 'feature_kill_switch table accepts kill.ai_generation, global or per tenant' }, { path: 'supabase/integration-control-plane.check.sql', shows: 'kill_switch_engaged(\'kill.ai_generation\') scoped per tenant' }, { path: 'app/src/lib/flags.test.ts', shows: 'Flag evaluator lets a kill switch override tenant policy' }, { path: 'app/server/institution/intelligence.ts', shows: 'AI gateway never consults feature_kill_switch; claude edge function doesn\'t either' }],
-    gap: 'Neither AI runtime (institution gateway, claude edge function, device-key path) checks kill.ai_generation. No provider- or mode-level switch; ai_policy edits are the only lever. No drill has been run.',
+    status: 'tested',
+    evidence: [{ path: 'supabase/migrations/20260927170000_integration_control_plane.sql', shows: 'feature_kill_switch table accepts kill.ai_generation, global or per tenant' }, { path: 'supabase/integration-control-plane.check.sql', shows: 'kill_switch_engaged(\'kill.ai_generation\') scoped per tenant' }, { path: 'supabase/functions/_shared/killswitch.ts', shows: 'The claude edge function refuses on kill.ai_generation before the body is read or the call counted; an unreadable switch is thrown' }, { path: 'app/server/institution/intelligence.ts', shows: 'The institution gateway refuses policy and respond with ai-generation-killed, audited as kill-switch' }, { path: 'app/src/lib/aikillswitch.test.ts', shows: 'Holds the decision and holds both runtimes to asking before they generate' }],
+    gap: 'The device-key path (a student\'s own key, lib/claude.ts) is outside the switch by design. No provider- or mode-level switch; ai_policy edits are the only lever for those. No drill has been run.',
   },
   {
     id: 'AI-013',
@@ -1479,9 +1482,9 @@ export const REGISTER: readonly Requirement[] = [
     requirement: 'Public status and subscriber/customer update process work',
     validation: 'Status-page drill',
     severity: 'P0',
-    status: 'designed',
-    evidence: [{ path: 'MONITORING.md', shows: 'declines a status page in writing' }, { path: 'docs/SERVICE-RELIABILITY-AND-SUPPORT-OPERATIONS.md', shows: 'plans service_incidents tables for status page; not built' }],
-    gap: 'No public status page, no subscriber notification process, no drill; council must overturn MONITORING.md refusal.',
+    status: 'tested',
+    evidence: [{ path: 'app/public/status.html', shows: 'A public status page that checks each service from the reader\'s own browser (#902)' }, { path: 'app/src/lib/statuspage.test.ts', shows: 'Holds the page to the services it claims to check' }, { path: 'docs/SERVICE-RELIABILITY-AND-SUPPORT-OPERATIONS.md', shows: 'plans service_incidents tables and subscriber updates; not built' }],
+    gap: 'The page reports reachability, not incidents: no service_incidents table, no subscriber notification process, no drill. MONITORING.md still records the earlier refusal and needs its line updated.',
   },
   {
     id: 'SUP-001',

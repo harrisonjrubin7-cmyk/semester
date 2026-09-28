@@ -70,6 +70,59 @@ export const CATEGORY_TITLE: Record<RoleCategory, string> = {
   commercial: 'Semester commercial team',
 };
 
+/**
+ * The boundary an internal role may not cross.
+ *
+ * No Semester-internal role inherits access to a student's records because it
+ * is internal: a support agent sees a ticket, an incident responder sees a
+ * switch, and neither sees a plan, a grade or an accommodation. The blueprint
+ * states it as a principle; here it is two lists and a test. `OPERATIONS_ONLY`
+ * is everything a `platform` or `commercial` role may hold, and
+ * `STUDENT_RECORD` is every capability that reaches one student's own records.
+ * `rolelaunch.test.ts` reads the matrix out of the migrations and refuses, in
+ * both directions, a grant that puts one of the second list on a role of the
+ * first kind — or a capability on such a role that neither list has heard of,
+ * which is how a new grant gets looked at before it is inherited.
+ */
+export const OPERATIONS_ONLY: readonly string[] = [
+  'beta:manage',
+  'beta:triage',
+  'platform:configure',
+  'support:ticket',
+  'incident:communicate',
+  'killswitch:engage',
+  'moderation:action',
+  'report:read',
+  'review:moderate',
+  'opportunity:moderate',
+  'community:review',
+  'community:review_senior',
+  'community:escalation_agreements',
+  'community:manage',
+  'account:manage',
+  'campaign:manage',
+  'campaign:report',
+  'campaign:review',
+  'trust:publish',
+];
+
+export const STUDENT_RECORD: readonly string[] = [
+  'mentee:read',
+  'help_request:respond',
+  'accommodation:verify',
+  'skill:verify',
+  'support:read',
+  'data_request:handle',
+  'talent:search',
+  'lti:launch',
+  'audit:read',
+  'outcomes:read',
+  'demand:read',
+];
+
+/** The categories whose roles are Semester's own people rather than a school's. */
+export const INTERNAL_CATEGORIES: readonly RoleCategory[] = ['platform', 'commercial'];
+
 /** A repository file and what it shows for this role. */
 export interface RoleEvidence {
   path: string;

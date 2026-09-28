@@ -3,8 +3,11 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   CATEGORY_TITLE,
+  INTERNAL_CATEGORIES,
   NOT_APP_ROLES,
+  OPERATIONS_ONLY,
   ROLES,
+  STUDENT_RECORD,
   ROLE_STATES,
   SCREENS,
   STATE_MEANING,
@@ -101,6 +104,44 @@ describe('the role launch register', () => {
 
     it('keeps the roles the brief names but the database deliberately does not', () => {
       for (const { brief } of NOT_APP_ROLES) expect(appRoles.has(brief.toLowerCase().replace(/\W+/g, '_'))).toBe(false);
+    });
+  });
+
+  describe('the internal boundary: no Semester role inherits a student’s records', () => {
+    const internal = ROLES.filter((r) => INTERNAL_CATEGORIES.includes(r.category));
+    const every = [...new Set([...matrix.values()].flat())];
+
+    it('has roles on both sides of the line, and lists that name real capabilities', () => {
+      // The controls. An empty internal set, or a list naming capabilities the
+      // database never grants, would make the two rules below pass vacuously.
+      expect(internal.length).toBeGreaterThanOrEqual(8);
+      expect(internal.map((r) => r.category)).toContain('platform');
+      expect(internal.map((r) => r.category)).toContain('commercial');
+      for (const c of [...OPERATIONS_ONLY, ...STUDENT_RECORD]) expect(every, `${c} is granted to nobody`).toContain(c);
+      expect(OPERATIONS_ONLY.filter((c) => STUDENT_RECORD.includes(c)), 'a capability on both lists').toEqual([]);
+    });
+
+    it('grants an internal role nothing that reaches one student’s records', () => {
+      for (const r of internal) {
+        const crossing = (matrix.get(r.role) ?? []).filter((c) => STUDENT_RECORD.includes(c));
+        expect(crossing, `${r.role} holds ${crossing.join(', ')}`).toEqual([]);
+      }
+    });
+
+    it('grants an internal role only what the operations list allows, so a new grant is read before it is inherited', () => {
+      for (const r of internal) {
+        const unknown = (matrix.get(r.role) ?? []).filter((c) => !OPERATIONS_ONLY.includes(c));
+        expect(unknown, `${r.role} holds ${unknown.join(', ')}, which neither list has judged`).toEqual([]);
+      }
+    });
+
+    it('would notice the grant it exists to refuse', () => {
+      // The guard, run against the fault it guards: a support agent handed a
+      // student's help requests.
+      const granted = new Map(matrix);
+      granted.set('support_agent', [...(granted.get('support_agent') ?? []), 'help_request:respond']);
+      const crossing = (granted.get('support_agent') ?? []).filter((c) => STUDENT_RECORD.includes(c));
+      expect(crossing).toEqual(['help_request:respond']);
     });
   });
 
@@ -272,6 +313,21 @@ function render(): string {
     }
     out.push('');
   }
+
+  out.push(
+    '## The internal boundary',
+    '',
+    'No Semester-internal role — the platform operations and commercial rows above —',
+    'inherits access to a student\'s records because it is internal. `rolelaunch.test.ts`',
+    'holds the matrix to two lists in `rolelaunch.ts`, in both directions: an internal',
+    'role may hold only an operations capability, and never one that reaches a student\'s',
+    'own records. A grant outside either list fails the build until somebody judges it.',
+    '',
+    '| Internal roles may hold | Internal roles never hold |',
+    '| --- | --- |',
+    `| ${OPERATIONS_ONLY.map((c) => `\`${c}\``).join('<br>')} | ${STUDENT_RECORD.map((c) => `\`${c}\``).join('<br>')} |`,
+    '',
+  );
 
   out.push('## Role × capability', '', 'One row per row of `public.role_capabilities`. A capability\'s checks are the SQL checks that name it.', '');
   out.push('| Role | Capability | Interface | Checks naming the capability |', '| --- | --- | --- | --- |');

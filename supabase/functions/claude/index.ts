@@ -30,6 +30,7 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { corsHeaders } from '../_shared/cors.ts';
 import { clampRequest } from '../_shared/clamp.ts';
+import { KILLED_MESSAGE, aiGenerationKilled } from '../_shared/killswitch.ts';
 
 const ANTHROPIC = 'https://api.anthropic.com/v1/messages';
 
@@ -76,6 +77,17 @@ Deno.serve(async (req) => {
     return json({ error: { message: 'That session is not valid. Sign in again.' } }, 401);
   }
   const userId = user.user.id;
+
+  // ── whether generation is switched off ──────────────────────────────────
+  //
+  // Before the body is read and long before the call is counted: an engaged
+  // switch costs nobody one of their sixty. The shared key serves individual
+  // accounts with no school, so only the global row can stop it — see
+  // `../_shared/killswitch.ts` for the two rules, including that a switch
+  // which cannot be read is treated as thrown.
+  if (await aiGenerationKilled(admin, null)) {
+    return json({ error: { message: KILLED_MESSAGE } }, 503);
+  }
 
   // ── what they asked for ─────────────────────────────────────────────────
   //

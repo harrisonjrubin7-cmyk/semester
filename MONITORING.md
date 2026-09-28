@@ -127,8 +127,12 @@ against production.
 
 ## What was deliberately not built
 
-**A status page.** It would need something to watch it, and the thing watching
-it would be the thing that needs watching.
+**A status page** — until #902, and this paragraph is kept for why: it would
+need something to watch it, and the thing watching it would be the thing that
+needs watching. `app/public/status.html` answers that objection by watching
+nothing: each check runs from the reader's own browser when they open the page,
+so there is no watcher to go quiet. It reports reachability, not incidents;
+the subscriber process the register asks for (SRE-010) is still not built.
 
 **Automated alerting from the database.** A `pg_cron` job that emails when a
 number looks wrong is a fourth thing to deploy and a fifth thing to notice has
