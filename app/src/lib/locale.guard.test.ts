@@ -63,6 +63,10 @@ const DELIBERATE: Record<string, { count: number; why: string }> = {
     count: 2,
     why: "#779's official school records, written in UTC with the zone named beside them so a record reads the same on every device; whether that should follow the student's locale is step 1b's question, not this guard's",
   },
+  'lib/gtm/messaging.ts': {
+    count: 1,
+    why: "quiet hours ask what hour it is where the recipient is, as a number to compare; nothing is shown to anyone",
+  },
 };
 
 describe('dates, times and numbers are formatted in one place', () => {

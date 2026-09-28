@@ -126,7 +126,8 @@ describe('there is one main', () => {
     // would leave both rules below passing against any file at all, and the
     // failure would be silent — so the set is named here once, where a fourth
     // root has to be looked at rather than absorbed.
-    expect([...ROOTS].sort()).toEqual(['Onboarding', 'Respond', 'StrictMode']);
+    // TrustRoom: a university reviewer's procurement-room link, mounted like Respond.
+    expect([...ROOTS].sort()).toEqual(['Onboarding', 'Respond', 'StrictMode', 'TrustRoom']);
     expect(isRoot('src/screens/Respond.tsx')).toBe(true);
     expect(isRoot('src/screens/Degree.tsx')).toBe(false);
   });
