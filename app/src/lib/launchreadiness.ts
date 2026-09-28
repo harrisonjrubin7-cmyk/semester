@@ -103,8 +103,12 @@ export const GATES: readonly Gate[] = [
     evidence: [
       { path: 'app/scripts/accessibility-smoke.mjs', shows: 'critical journeys driven in a real browser for accessibility' },
       { path: 'app/scripts/cold-smoke.mjs', shows: 'the built app boots cold in a browser' },
+      {
+        path: 'app/scripts/golden-path.mjs',
+        shows: 'one student journey in CI at two viewports: first run and the account step, an action made and seen on Today, the Guide and Support, completion, resume after reload and in a second tab, and restore from the backup file into a fresh browser context',
+      },
     ],
-    gap: 'No scripted journey walks sign-in → Today → next action → Path/Plan → workspace → help → completion → resume on a second device, asserting each step. Phase 1.',
+    gap: 'The scripted journey never signs in, so resuming on a second device through an account is unproved: nothing drives sign-in and sync against a live or local Supabase with auth. It also skips Path/Plan and adding a course from a syllabus. Phase 1.',
   },
   {
     id: 'no-blockers',
@@ -160,8 +164,12 @@ export const GATES: readonly Gate[] = [
     requirement: 'Terms, privacy, consent, and acceptable-use content reviewed.',
     owner: 'privacy',
     status: 'partial',
-    evidence: [{ path: 'app/src/lib/privacy.ts', shows: 'the privacy disclosure written as data and tested against the code' }],
-    gap: 'No qualified legal or privacy review of terms, privacy notice, consent or acceptable use has been recorded.',
+    evidence: [
+      { path: 'app/src/lib/privacy.ts', shows: 'the privacy disclosure written as data and tested against the code' },
+      { path: 'docs/legal/PRIVACY-POLICY-DRAFT.md', shows: 'a privacy policy draft for counsel, held to the subprocessor register' },
+      { path: 'docs/legal/TERMS-OF-SERVICE-DRAFT.md', shows: 'a terms of service draft for counsel, with acceptable use' },
+    ],
+    gap: 'No qualified legal or privacy review of terms, privacy notice, consent or acceptable use has been recorded. The drafts carry open [DECIDE] items: legal entity, minimum age, liability, governing law.',
   },
   {
     id: 'data-scope',

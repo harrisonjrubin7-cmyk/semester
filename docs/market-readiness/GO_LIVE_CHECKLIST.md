@@ -17,10 +17,25 @@ Every line requires evidence, not an opinion.
 - [x] Hourly synthetic monitoring covers the public Pages HTML, deployed
   module/stylesheet assets and production Supabase PostgREST
 - [ ] Security headers configured at the host
+  Written, not served: `app/vercel.json` and `app/public/_headers` carry the
+  set, held equal and complete by `app/src/lib/hostheaders.test.ts`. GitHub
+  Pages reads neither. Tick this when production is served from a host that
+  reads one and a probe of the live response shows the headers.
 - [x] Append-only audit evidence records tenant-setting, future role-grant and
   current report-moderation status changes; isolation, pseudonymization and
   immutability checks pass
 - [ ] Rate limiting on the Supabase-direct paths, not just the gateway
+  - *Built, not yet live.* `supabase/migrations/20260928230000_direct_rate_limits.sql`
+    puts a per-account sliding-window limit (per form for signed-out answers)
+    on the fourteen tables the browser writes to that reach other people or a
+    staff queue — messages, reactions, both report queues, feedback, help and
+    mentor requests, community posts, communities, study sessions, groups,
+    group tasks, listings, form answers. `supabase/rate-limits.check.sql` is
+    the evidence in this repository. Still open before this is ticked: the
+    migration applied to production and its fourteen triggers read off the
+    project, and the Auth endpoint limits (sign-in, sign-up, OTP, token
+    refresh, email) read off the dashboard and recorded — both are in
+    `supabase/DEPLOY.md` under **Rate limits**.
 - [x] Data export and account deletion available to users: **Take it with you**
   downloads portable CSV, Markdown, calendar, attachment and restorable JSON
   files; specialized workspaces have a second explicit backup; **Privacy**

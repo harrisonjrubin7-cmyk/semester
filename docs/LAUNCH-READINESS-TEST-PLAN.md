@@ -44,8 +44,8 @@ red. The file was then restored.
 
 | Requirement | Covered by | State |
 | --- | --- | --- |
-| End-to-end student journey | Partly covered: `app/scripts/accessibility-smoke.mjs` visits six screens separately. No script follows one student through the whole journey | **Owed**: Phase 1 golden-path script |
-| Cross-device continuity | `app/src/lib/merge.test.ts` (field-level merge) | Unit only. **Owed**: two-browser resume |
+| End-to-end student journey | `app/scripts/golden-path.mjs` (`npm run smoke:golden`, in CI): one student from a cold first run through an action made, Today, the Guide and Support, completion and resume, at a phone and a desktop viewport | Covered signed out. **Owed**: the same journey signed in; Path/Plan and adding a course from a syllabus |
+| Cross-device continuity | `app/src/lib/merge.test.ts` (field-level merge); `app/scripts/golden-path.mjs` restores the backup file into a fresh browser context | File-carried resume covered. **Owed**: two-browser resume through an account |
 | Poor-network continuity | `app/src/lib/offline.test.ts` | Unit only. **Owed**: throttled browser run |
 | Feedback / exit / export | `supabase/feedback.check.sql`, `app/src/lib/export.test.ts` | Export covered. **Owed**: beta feedback and exit request |
 | No irreversible transaction in beta | The gateway's adapter registry is empty by design (`app/server/institution/`) | Holds today by construction. **Owed**: an assertion that fails if a beta flag allows a write |

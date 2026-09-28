@@ -33,6 +33,19 @@ and includes a control. **It is not yet in `ci.yml`.** Adding it there, once
 that stack merges, is the first step toward making this script a regression
 test.
 
+`npm run smoke:golden` (`app/scripts/golden-path.mjs`, #896) **is** in
+`ci.yml`. It walks the signed-out app at 390 px and 1280 px through:
+- first run;
+- the account step, declined;
+- an action made and seen on Today;
+- the Guide and Support;
+- completion;
+- resume after a reload and in a second tab;
+- a restore from the backup file into a fresh browser context.
+
+It is the regression test for the signed-out journey. Steps 1 and 9 still
+need an account, as below.
+
 To finish the journey, that smoke needs:
 
 | Step | Addition | Needs |
