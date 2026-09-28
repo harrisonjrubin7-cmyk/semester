@@ -1092,7 +1092,7 @@ export const OWNED_TABLES: OwnedTable[] = [
 
   // ── Support tickets ─────────────────────────────────────────────────────
   // Questions to Semester's own support staff, not to a campus office. No API
-  // role holds any grant on either table (`20260928060000_support_tickets.sql`),
+  // role holds any grant on either table (`20260928120000_support_tickets.sql`),
   // so the way out is the student's own function; messages go with their ticket.
   { table: 'support_tickets', column: null, via: 'forget_my_support_tickets' },
   { table: 'support_ticket_messages', column: null, cascadesFrom: 'support_tickets' },
@@ -1126,6 +1126,14 @@ export const OWNED_TABLES: OwnedTable[] = [
  * sentence, and it is better than an empty category or a loosened guard.
  */
 export const KEPT_TABLES: KeptTable[] = [
+  {
+    table: 'gtm_campaigns',
+    why: 'A campaign you ran for your school belongs to the school, and its record is how the school shows what it sent and why. Deleting your account removes you as its owner or approver; the campaign stays, and one with no owner cannot be switched on again.',
+  },
+  {
+    table: 'gtm_campaign_reviews',
+    why: 'A privacy, accessibility or brand review you recorded is part of the record of why a campaign was allowed to go out. It stays with the campaign, no longer attributed to you.',
+  },
   {
     table: 'groups',
     why: 'A group you started belongs to everyone in it. Deleting it would take its shared actions away from the other members, so your membership goes and the group stays — with a starter who no longer has a profile.',

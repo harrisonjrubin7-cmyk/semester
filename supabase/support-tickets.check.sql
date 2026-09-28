@@ -1,4 +1,4 @@
--- Support tickets (20260928060000_support_tickets.sql).
+-- Support tickets (20260928120000_support_tickets.sql).
 -- LOCAL/DISPOSABLE DATABASES ONLY; the transaction is always rolled back.
 --
 -- Two students and a support agent. Each rule is walked by the account it is
@@ -173,6 +173,15 @@ begin
   perform pg_temp.counted('forget_my_support_tickets removes the tickets', n, 0);
   select count(*) into n from public.support_ticket_messages;
   perform pg_temp.counted('and their messages', n, 0);
+
+  -- The daily limit is a count followed by an insert. Two sessions cannot
+  -- run in one check, so this asks the structural question instead: does the
+  -- function take its per-account lock before it counts? Unlocked, concurrent
+  -- calls each count the same rows and all of them insert.
+  select count(*) into n from pg_catalog.pg_proc p
+   where p.oid = 'public.open_support_ticket(text, text, text, jsonb)'::regprocedure
+     and position('pg_advisory_xact_lock' in p.prosrc) between 1 and position('count(*)' in p.prosrc);
+  perform pg_temp.counted('the daily limit is counted under a per-account lock', n, 1);
 
   raise notice 'support tickets: every check passed';
 end $$;

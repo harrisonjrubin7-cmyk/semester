@@ -10,7 +10,7 @@ import { CATEGORIES, CATEGORY_LABELS, CONTEXT_KEYS, CONTEXT_LABELS, availableCon
  */
 
 const root = join(import.meta.dirname, '../../..');
-const migration = readFileSync(join(root, 'supabase/migrations/20260928060000_support_tickets.sql'), 'utf8');
+const migration = readFileSync(join(root, 'supabase/migrations/20260928120000_support_tickets.sql'), 'utf8');
 const client = readFileSync(join(import.meta.dirname, 'supporttickets.ts'), 'utf8');
 const quoted = (s: string) => [...s.matchAll(/'([a-z_]+)'/g)].map((m) => m[1]);
 

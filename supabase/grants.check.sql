@@ -354,7 +354,7 @@ declare
     'integration_set_paused(want_connection text, want_paused boolean, want_reason text)',
     'kill_switch_engaged(want_switch text, want_tenant text)',
 
-    -- The nine in 20260928060000_support_tickets.sql. The tables have no grant,
+    -- The nine in 20260928120000_support_tickets.sql. The tables have no grant,
     -- so these are the only way in. The first six act on the caller's own
     -- tickets; the last three check `support:ticket` and return no column
     -- that names the student.
@@ -366,7 +366,26 @@ declare
     'forget_my_support_tickets()',
     'support_ticket_queue()',
     'support_ticket_thread(want_ticket uuid)',
-    'support_reply(want_ticket uuid, want_body text, want_status text)'
+    'support_reply(want_ticket uuid, want_body text, want_status text)',
+
+    -- The four in 20260928090000_gtm_foundation.sql. Contacts, consent and
+    -- sends have no API grant at all, so these are the only way a school's
+    -- staff learn anything about them, and each checks its capability over the
+    -- campaign's school. `gtm_campaign_report` returns counts suppressed below
+    -- ten and logs the read; `gtm_audience_count` returns one number; the two
+    -- gate functions return the names of unmet checks, never a row.
+    'gtm_activation_failures(want_campaign uuid)',
+    'gtm_audience_count(want_campaign uuid)',
+    'gtm_campaign_report(want_campaign uuid)',
+    'gtm_pilot_problems(want_pilot uuid)',
+
+    -- The two in 20260928100000_trust_room.sql. Each checks account:manage at
+    -- platform scope before it writes. `trust_room_grant` returns a link
+    -- token once and stores its hash; `trust_room_revoke` ends a grant.
+    -- `trust_room_open`, which a link actually reaches, is service_role only
+    -- and so is not here.
+    'trust_room_grant(want_request uuid, want_artifacts text[], want_packet_commit text, want_days integer)',
+    'trust_room_revoke(want_grant uuid, want_reason text)'
   ];
   extra text;
   missing text;
@@ -402,7 +421,7 @@ begin
   if missing is not null then
     raise exception 'FAILED: the allowlist names %, which a signed-in account cannot call', missing;
   end if;
-  raise notice 'ok  and can call all fifty-five that it should';
+  raise notice 'ok  and can call all sixty-one that it should';
 end $$;
 
 -- ── The gate's own switch, named because it is the one that was open ──────

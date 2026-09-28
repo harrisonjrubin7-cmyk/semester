@@ -50,6 +50,8 @@ import { forSchool, useMyCapabilities } from '../lib/capabilities';
 import { helpSeedWaiting, loadInboxes, newRequestCount, type StaffInbox } from '../lib/help-routes';
 import { ControlPlane } from '../components/institutional/ControlPlane';
 import { IntegrationDashboard } from '../components/institutional/IntegrationDashboard';
+import { CampaignManager } from '../components/institutional/CampaignManager';
+import { campaignsAllowed } from '../lib/gtm/manager';
 import type { ControlPlaneStatus } from '../lib/control-plane';
 import { formatDateTime, formatTime } from '../lib/locale';
 
@@ -149,9 +151,14 @@ const tabsFor = (verified: readonly string[]) => [
   ...(EXPERIENCE_FLAGS.institutionalOperations !== 'off' && operationsAllowed(verified)
     ? [{ id: 'operations' as const, label: 'Operations' }]
     : []),
+  // Only for an account holding a verified campaign capability at this school;
+  // RLS would return it nothing otherwise.
+  ...(EXPERIENCE_FLAGS.campaignManager !== 'off' && campaignsAllowed(verified)
+    ? [{ id: 'campaigns' as const, label: 'Campaigns' }]
+    : []),
 ];
 
-type Tab = 'overview' | 'drafts' | 'records' | 'connections' | 'control' | 'help' | 'integrations' | 'operations';
+type Tab = 'overview' | 'drafts' | 'records' | 'connections' | 'control' | 'help' | 'integrations' | 'operations' | 'campaigns';
 
 /** What each role is called on screen. */
 const ROLE_LABELS: Record<UniversityRole, string> = {
@@ -788,6 +795,10 @@ function Workspace({ storageKey }: { storageKey: string }) {
       )}
 
       {tab === 'integrations' && EXPERIENCE_FLAGS.integrationDashboard !== 'off' && <IntegrationDashboard />}
+
+      {tab === 'campaigns' && EXPERIENCE_FLAGS.campaignManager !== 'off' && campaignsAllowed(verified) && (
+        <CampaignManager tenantId={school.id} viewerId={account?.id ?? null} />
+      )}
 
       {tab === 'operations' && EXPERIENCE_FLAGS.institutionalOperations !== 'off' && operationsAllowed(verified) && (
         <Suspense fallback={null}>

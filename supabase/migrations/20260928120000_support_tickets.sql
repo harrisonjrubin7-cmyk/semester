@@ -106,6 +106,12 @@ begin
   -- Five a day is more than a student with a real problem sends and fewer
   -- than a script would. The queue is read by people; flooding it is the
   -- cheapest way to make a real accessibility ticket wait.
+  --
+  -- The count and the insert are one decision, so they happen under a lock
+  -- held per account until this transaction ends. Without it, concurrent
+  -- calls each count the same four rows and all of them insert.
+  perform pg_catalog.pg_advisory_xact_lock(
+    pg_catalog.hashtextextended('support_ticket:' || (select auth.uid())::text, 0));
   if (select count(*) from public.support_tickets t
        where t.student_id = (select auth.uid()) and t.created_at > now() - interval '1 day') >= 5 then
     raise exception 'five questions a day is the limit; reply on an open one instead'

@@ -37,6 +37,7 @@ The central rule, stated once:
 | 14 | Ethical AI governance board | [AI-GOVERNANCE-BOARD.md](AI-GOVERNANCE-BOARD.md) | Process; classification and kill switches in code |
 | 15 | Strategic defensibility | [DEFENSIBILITY.md](DEFENSIBILITY.md) | Process |
 | 16 | Founding-team operating rhythm | [OPERATING-RHYTHM.md](OPERATING-RHYTHM.md) | Process |
+| 17 | Pilot-to-production lifecycle, migration tracker | [PILOT-TO-PRODUCTION.md](PILOT-TO-PRODUCTION.md) | Code: `rollout.ts`; database: `tenant_rollout` trigger |
 | — | Change management and adoption | [CHANGE-MANAGEMENT.md](CHANGE-MANAGEMENT.md) | Process |
 | — | AI financial sustainability, ROI measurement | [COMMERCIAL-GOVERNANCE.md](COMMERCIAL-GOVERNANCE.md#ai-cost-controls) | Existing metered gateway (ADR 0004) |
 

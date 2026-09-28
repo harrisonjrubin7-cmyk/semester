@@ -17,8 +17,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 interface World {
   tickets: Record<string, unknown>[];
-  thread: Record<string, unknown>[];
+  thread: Record<string, unknown>[] | ((args?: Record<string, unknown>) => Record<string, unknown>[]);
   calls: { name: string; args?: Record<string, unknown> }[];
+  /** Holds the next call to an RPC until the test releases it. */
+  gates: Map<string, Promise<void>>;
 }
 let world: World;
 
@@ -27,8 +29,13 @@ vi.mock('../lib/cloud', () => ({
   cloud: async () => ({
     rpc: async (name: string, args?: Record<string, unknown>) => {
       world.calls.push({ name, args });
-      if (name === 'my_support_tickets') return { data: world.tickets, error: null };
-      if (name === 'my_support_thread') return { data: world.thread, error: null };
+      // What the world held when the call was made, not when it returns.
+      const tickets = world.tickets;
+      const thread = typeof world.thread === 'function' ? world.thread(args) : world.thread;
+      const gate = world.gates.get(name);
+      if (gate) { world.gates.delete(name); await gate; }
+      if (name === 'my_support_tickets') return { data: tickets, error: null };
+      if (name === 'my_support_thread') return { data: thread, error: null };
       if (name === 'open_support_ticket') return { data: 'new-ticket', error: null };
       return { data: null, error: null };
     },
@@ -47,7 +54,7 @@ let host: HTMLDivElement;
 let root: Root;
 
 beforeEach(() => {
-  world = { tickets: [], thread: [], calls: [] };
+  world = { tickets: [], thread: [], calls: [], gates: new Map() };
   host = document.createElement('div');
   document.body.append(host);
   root = createRoot(host);
@@ -56,6 +63,18 @@ beforeEach(() => {
 afterEach(() => {
   act(() => root.unmount());
   host.remove();
+});
+
+/** Hold the next call to `name`; the returned function lets it answer. */
+function hold(name: string): () => Promise<void> {
+  let release!: () => void;
+  world.gates.set(name, new Promise<void>((r) => { release = r; }));
+  return async () => { await act(async () => { release(); }); };
+}
+
+const ticket = (id: string, subject: string) => ({
+  id, category: 'bug', subject, status: 'open', priority: 'normal',
+  created_at: '2026-09-27T00:00:00Z', first_response_due: '2026-09-30T00:00:00Z', first_responded_at: null,
 });
 
 async function draw(who: unknown = account) {
@@ -147,5 +166,46 @@ describe('asking Semester support', () => {
     expect(host.textContent).toContain('Semester support · Which browser?');
     await click(button('Close this question'));
     expect(world.calls.find((c) => c.name === 'close_my_ticket')?.args).toEqual({ want_ticket: 't1' });
+  });
+
+  it('shows the next account none of the last one’s questions, even when the old answer arrives last', async () => {
+    world.tickets = [ticket('a1', 'Ada’s private question')];
+    const adaAnswers = hold('my_support_tickets');
+    await draw({ id: 'ada', email: 'ada@x.example' });
+    // Another tab signs Ada out and Ben in, while Ada's list is still coming.
+    world.tickets = [ticket('b1', 'Ben’s question')];
+    await draw({ id: 'ben', email: 'ben@x.example' });
+    expect(host.textContent).toContain('Ben’s question');
+    await adaAnswers();
+    expect(host.textContent).not.toContain('Ada’s private question');
+    expect(host.textContent).toContain('Ben’s question');
+  });
+
+  it('clears an opened conversation when the account changes', async () => {
+    world.tickets = [ticket('a1', 'Ada’s private question')];
+    world.thread = [{ from_side: 'student', body: 'Ada’s words', created_at: '2026-09-27T00:00:00Z' }];
+    await draw({ id: 'ada', email: 'ada@x.example' });
+    await click(button('Ada’s private question · Waiting for Semester support'));
+    expect(host.textContent).toContain('Ada’s words');
+    // Ben's list has not arrived yet; until it does, nothing of Ada's shows.
+    world.tickets = [];
+    const benAnswers = hold('my_support_tickets');
+    await draw({ id: 'ben', email: 'ben@x.example' });
+    expect(host.textContent).not.toContain('Ada’s words');
+    expect(host.textContent).not.toContain('Ada’s private question');
+    await benAnswers();
+  });
+
+  it('shows the thread of the question last opened, not the one whose answer came last', async () => {
+    world.tickets = [ticket('t1', 'First'), ticket('t2', 'Second')];
+    world.thread = (args) => [{ from_side: 'student', body: `Thread of ${String(args?.want_ticket)}`, created_at: '2026-09-27T00:00:00Z' }];
+    await draw();
+    const firstAnswers = hold('my_support_thread');
+    await click(button('First · Waiting for Semester support'));
+    await click(button('Second · Waiting for Semester support'));
+    expect(host.textContent).toContain('Thread of t2');
+    await firstAnswers();
+    expect(host.textContent).toContain('Thread of t2');
+    expect(host.textContent).not.toContain('Thread of t1');
   });
 });

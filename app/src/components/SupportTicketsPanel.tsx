@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useState } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import type { Account } from '../lib/cloud';
 import {
   CATEGORIES,
@@ -37,6 +37,14 @@ export function SupportTicketsPanel({
   account: Account | null;
   context: Record<ContextKey, string>;
 }) {
+  // Everything below belongs to one account. Keyed by it, a change of
+  // account — another tab signing out and someone else in — starts from
+  // nothing, and an answer still in flight for the old one lands on a panel
+  // that no longer exists rather than on the new student's screen.
+  return account ? <AccountTickets key={account.id} context={context} /> : null;
+}
+
+function AccountTickets({ context }: { context: Record<ContextKey, string> }) {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState('');
@@ -50,15 +58,16 @@ export function SupportTicketsPanel({
   const [thread, setThread] = useState<Message[]>([]);
   const [reply, setReply] = useState('');
   const heading = useId();
+  /** The conversation last asked for; any other answer is stale. */
+  const wanted = useRef<string | null>(null);
 
   const refresh = useCallback(async () => {
-    if (!account) return;
     try {
       setTickets(await myTickets());
     } catch (error) {
       setNotice(error instanceof Error ? error.message : 'Could not load your questions.');
     }
-  }, [account]);
+  }, []);
 
   // An account-backed resource, not render-derived state.
   // oxlint-disable-next-line react/set-state-in-effect
@@ -75,12 +84,18 @@ export function SupportTicketsPanel({
       .finally(() => setBusy(false));
   };
 
-  const show = (id: string) => {
+  const show = (id: string | null) => {
+    wanted.current = id;
     setOpenId(id);
     setThread([]);
+    if (id === null) return;
+    // Opening one question and then another before the first answers must
+    // not end with the first one's messages under the second one's reply box.
     void myThread(id)
-      .then(setThread)
-      .catch((error: unknown) => setNotice(error instanceof Error ? error.message : 'Could not load the conversation.'));
+      .then((messages) => { if (wanted.current === id) setThread(messages); })
+      .catch((error: unknown) => {
+        if (wanted.current === id) setNotice(error instanceof Error ? error.message : 'Could not load the conversation.');
+      });
   };
 
   const toggle = (key: ContextKey) => {
@@ -98,7 +113,6 @@ export function SupportTicketsPanel({
     setTicked(new Set());
   };
 
-  if (!account) return null;
   const sending = contextToSend(context, ticked);
   const current = tickets.find((t) => t.id === openId) ?? null;
 
@@ -187,7 +201,7 @@ export function SupportTicketsPanel({
           <ul aria-label="Your questions" style={{ paddingLeft: 0, listStyle: 'none' }}>
             {tickets.map((t) => (
               <li key={t.id} className="portal-panel" style={{ marginBlock: 'var(--sp-3)' }}>
-                <button type="button" className="btn btn-secondary btn-block" aria-expanded={openId === t.id} onClick={() => (openId === t.id ? setOpenId(null) : show(t.id))}>
+                <button type="button" className="btn btn-secondary btn-block" aria-expanded={openId === t.id} onClick={() => show(openId === t.id ? null : t.id)}>
                   {t.subject} · {STATUS_LABELS[t.status]}
                 </button>
               </li>

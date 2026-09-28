@@ -22,6 +22,11 @@ export interface ExperienceFlags {
    * synthetic preview account must not send.
    */
   supportTickets: FeatureState;
+  /**
+   * The staff campaign manager (lib/gtm, gtm_* tables). RLS decides what each
+   * account sees; activation also needs `module.campaign_manager` in production.
+   */
+  campaignManager: FeatureState;
 }
 
 const STATES: readonly FeatureState[] = ['off', 'preview', 'sandbox', 'production'];
@@ -45,6 +50,7 @@ export function experienceFlags(env: PreviewEnv): ExperienceFlags {
     integrationDashboard: featureState(env, 'VITE_INTEGRATION_DASHBOARD', preview),
     institutionalOperations: featureState(env, 'VITE_INSTITUTIONAL_OPERATIONS', preview),
     supportTickets: featureState(env, 'VITE_SUPPORT_TICKETS', false),
+    campaignManager: featureState(env, 'VITE_CAMPAIGN_MANAGER', preview),
   };
 }
 
