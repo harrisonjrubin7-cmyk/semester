@@ -1,6 +1,6 @@
 -- Rate limits on the browser's direct writes, and what they must not touch.
 --
--- `20260928210000_direct_rate_limits.sql` puts a BEFORE INSERT trigger on
+-- `20260928220000_direct_rate_limits.sql` puts a BEFORE INSERT trigger on
 -- every table a signed-in script could flood — class chat, the two report
 -- queues, feedback, help requests, mentor requests, community posts and the
 -- rest — backed by one sliding-window counter in `private.direct_rate_limit`.

@@ -8,7 +8,7 @@ import { classify } from './failure';
  * The rate limit on the browser's direct writes speaks to the student in the
  * database's own words.
  *
- * `20260928210000_direct_rate_limits.sql` refuses an insert past its limit
+ * `20260928220000_direct_rate_limits.sql` refuses an insert past its limit
  * with SQLSTATE 54000 and a sentence written to be shown as it stands, because
  * most write paths show `error.message` verbatim — `lib/feedback.ts`,
  * `lib/mentors.ts`, `lib/help-routes.ts`, `community/client.ts` — and the rest
@@ -27,7 +27,7 @@ const MIGRATION = join(
   '..',
   'supabase',
   'migrations',
-  '20260928210000_direct_rate_limits.sql',
+  '20260928220000_direct_rate_limits.sql',
 );
 
 function refusal(): { message: string; code: string } {

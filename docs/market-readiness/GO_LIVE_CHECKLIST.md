@@ -25,7 +25,7 @@ Every line requires evidence, not an opinion.
   current report-moderation status changes; isolation, pseudonymization and
   immutability checks pass
 - [ ] Rate limiting on the Supabase-direct paths, not just the gateway
-  - *Built, not yet live.* `supabase/migrations/20260928210000_direct_rate_limits.sql`
+  - *Built, not yet live.* `supabase/migrations/20260928220000_direct_rate_limits.sql`
     puts a per-account sliding-window limit (per form for signed-out answers)
     on the fourteen tables the browser writes to that reach other people or a
     staff queue — messages, reactions, both report queues, feedback, help and
