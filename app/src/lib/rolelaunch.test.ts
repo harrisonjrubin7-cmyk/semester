@@ -202,7 +202,8 @@ describe('the role launch register', () => {
     it('therefore holds every role at provisionable or above, and none at modeled', () => {
       for (const role of ROLES) {
         const state = stateOf(role, factsFor(role.role));
-        expect(ROLE_STATES.indexOf(state), `${role.role} is ${state}`).toBeGreaterThanOrEqual(ROLE_STATES.indexOf('provisionable'));
+        expect(state, role.role).not.toBe('undefined');
+        expect((ROLE_STATES as readonly string[]).indexOf(state), `${role.role} is ${state}`).toBeGreaterThanOrEqual(ROLE_STATES.indexOf('provisionable'));
       }
     });
 
