@@ -72,8 +72,22 @@ let hadObserver = false;
 let hadHitTest = false;
 let hadHitOne = false;
 
+const PAGE = readFileSync(join(__dirname, '..', '..', 'index.html'), 'utf8');
+
 /** The page's own `lang`, read from the page rather than assumed. */
-const LANG = /<html\s+lang="([^"]+)"/.exec(readFileSync(join(__dirname, '..', '..', 'index.html'), 'utf8'))?.[1];
+const LANG = /<html\s+lang="([^"]+)"/.exec(PAGE)?.[1];
+
+/**
+ * The page's own `<title>`, for the same reason. A browser starts every visit
+ * with it; `Titled` in `App.tsx` then names the screen. jsdom starts with no
+ * title at all, and the one screen `Titled` is not drawn above — first-run
+ * onboarding — therefore audited as a document with no title, or with whatever
+ * title an earlier case in this worker happened to leave (`isolate: false`
+ * shares a document across files). Seeded like `lang`, cleared after each
+ * case, so what is audited is what a visitor's document holds and not the
+ * order the cases ran in.
+ */
+const TITLE = /<title>([^<]+)<\/title>/.exec(PAGE)?.[1];
 
 function width(px: number) {
   window.matchMedia = ((query: string) => {
@@ -123,6 +137,7 @@ afterEach(async () => {
   localStorage.clear();
   history.replaceState(null, '', '/');
   document.documentElement.removeAttribute('lang');
+  document.title = '';
   if (!hadObserver) delete (globalThis as { ResizeObserver?: unknown }).ResizeObserver;
   if (!hadHitTest) delete (document as { elementsFromPoint?: unknown }).elementsFromPoint;
   if (!hadHitOne) delete (document as { elementFromPoint?: unknown }).elementFromPoint;
@@ -132,6 +147,7 @@ async function show(hash: string, stored: Record<string, unknown> = { nav: 'tabs
   localStorage.setItem('semester.v1', JSON.stringify({ schemaVersion: 6, ...stored }));
   history.replaceState(null, '', `/${hash}`);
   if (LANG) document.documentElement.lang = LANG;
+  if (TITLE) document.title = TITLE;
   host = document.createElement('div');
   document.body.append(host);
   root = createRoot(host);
@@ -179,6 +195,13 @@ async function serious(): Promise<{ findings: Finding[]; passed: number }> {
 describe('the probe', () => {
   it('reads the page language from index.html', () => {
     expect(LANG).toBe('en');
+  });
+
+  it('reads the page title from index.html, and gives each case a fresh one', () => {
+    expect(TITLE).toBe('Semester');
+    // The teardown cleared the last case's title, so a case that sets none
+    // is audited with the page's own and not with a neighbour's.
+    expect(document.title).toBe('');
   });
 
   /*
