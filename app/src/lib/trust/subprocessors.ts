@@ -53,7 +53,7 @@ export const PARTIES: readonly Party[] = [
     purpose: 'Database, authentication, storage of synced rows, and Edge Functions.',
     receives: 'Account email and sign-in records; what a signed-in student chose to sync; usage counts; audit records.',
     when: 'signed-in', hosts: ['*.supabase.co'],
-    functions: ['calendar', 'trust-room'],
+    functions: ['calendar', 'trust-room', 'integration-tick'],
     evidence: ['supabase/config.toml', 'app/src/lib/cloud.ts', 'RETENTION.md'],
   },
   {
