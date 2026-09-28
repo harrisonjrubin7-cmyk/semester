@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { ActionButton, Notice } from './ui';
+import { ActionButton } from './ui';
+import { Trouble } from './Trouble';
 import { challengeTotp, enrollTotp, totpFactors, verifyTotp, type TotpEnrolment } from '../lib/console/client';
 
 /**
@@ -114,7 +115,7 @@ export function MfaStep({ onVerified, onCancel }: { onVerified: () => void; onCa
           </div>
         </form>
       )}
-      {error && <Notice alert>{error}</Notice>}
+      {error && <Trouble said={error} />}
     </section>
   );
 }

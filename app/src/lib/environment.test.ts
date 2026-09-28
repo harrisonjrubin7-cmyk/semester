@@ -27,10 +27,10 @@ describe('environment', () => {
     expect(environment({ ...production, VITE_INSTITUTIONAL_PREVIEW: '' })).toBe('Production');
   });
 
-  it('is Staging when the deployment says staging, or is a Vercel preview', () => {
+  it('is Staging when the deployment says staging, and nothing else it says counts', () => {
     expect(environment({ ...production, VITE_DEPLOY_ENVIRONMENT: 'staging' })).toBe('Staging');
-    expect(environment({ ...production, VITE_VERCEL_ENV: 'preview' })).toBe('Staging');
-    expect(environment({ ...production, VITE_VERCEL_ENV: 'production' })).toBe('Production');
+    expect(environment({ ...production, VITE_DEPLOY_ENVIRONMENT: 'production' })).toBe('Production');
+    expect(environment({ ...production, VITE_DEPLOY_ENVIRONMENT: 'Staging' })).toBe('Production');
   });
 
   it('is Staging for every build that is not a production build', () => {

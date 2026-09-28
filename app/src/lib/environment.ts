@@ -15,8 +15,8 @@
  *   (`.github/workflows/pages.yml`, `lib/institutional-preview.ts`), and
  *   nothing it shows is a customer.
  * - **Staging** when the deployment says so (`VITE_DEPLOY_ENVIRONMENT` of
- *   `staging`, or a Vercel preview), and for every build that is not a
- *   production build at all — `vite dev`, the test runner, a local preview.
+ *   `staging`, mapped into the build by `.github/workflows/pages.yml`), and
+ *   for every build that is not a production build at all — `vite dev`, the test runner, a local preview.
  *   A build nobody deployed is not production, whatever it is pointed at.
  * - **Production** otherwise.
  */
@@ -35,7 +35,6 @@ export type BuildEnv = Record<string, string | undefined>;
 export function environment(env: BuildEnv = import.meta.env as BuildEnv): Environment {
   if (env.VITE_INSTITUTIONAL_PREVIEW === 'true') return 'Demo';
   if (env.VITE_DEPLOY_ENVIRONMENT === 'staging') return 'Staging';
-  if (env.VITE_VERCEL_ENV === 'preview') return 'Staging';
   if (env.MODE !== 'production') return 'Staging';
   return 'Production';
 }
