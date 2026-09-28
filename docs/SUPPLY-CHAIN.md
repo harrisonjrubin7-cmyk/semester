@@ -101,8 +101,10 @@ replaced, before Semester is a company above that threshold.
 
 Proposed internal targets, for the security lead to accept or change. Not a
 customer commitment until a contract or [`trust/SLA.md`](trust/SLA.md) says so.
-This is the severity model `market-readiness/HECVAT_READINESS.md` VULN-1 asks for;
-that row also needs a published security contact, which this does not supply.
+This is the severity model `market-readiness/HECVAT_READINESS.md` VULN-1 asks for.
+The same four rows stand in `SECURITY.md` beside the published contact
+(`app/public/.well-known/security.txt`), and `security.test.ts` holds the two
+tables to each other.
 
 | Severity | Example | Response | Fixed within | Escalate to |
 | --- | --- | --- | ---: | --- |

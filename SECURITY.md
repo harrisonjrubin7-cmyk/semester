@@ -2,8 +2,9 @@
 
 > Owner, version, last and next review, status, supersedes and related decisions: [`SEMESTER-OPERATING-SYSTEM.md`](SEMESTER-OPERATING-SYSTEM.md).
 
-What to do when somebody can read rows that are not theirs, who does it, and in
-what order. Written because the pre-pilot checklist asks for a *formal*
+What to do when somebody can read rows that are not theirs, who does it, in
+what order, how a problem is reported from outside, and how fast each severity
+is answered. Written because the pre-pilot checklist asks for a *formal*
 incident-response process and what this project had instead was a sentence —
 that the owner would tell people the same day — which is a commitment about the
 one step that comes last.
@@ -29,6 +30,76 @@ worse here: a rollback can wait an hour with no one harmed, and a live read of
 other people's rows cannot. During a pilot there is nobody else to page, so the
 commitments below are about **mechanism** — how long each step takes once
 somebody starts — and not about how quickly somebody wakes up.
+
+## Reporting a problem from outside
+
+Anybody who finds a way to read rows that are not theirs, or a key that is
+out, writes to **`harrisonjrubin7@gmail.com`** with *Security report* in the
+subject. The same address is published in machine-readable form at
+[`app/public/.well-known/security.txt`](app/public/.well-known/security.txt),
+which the deployed app serves at `/.well-known/security.txt` and whose
+`Policy` field points back at this file (RFC 9116). It is the owner's own
+address and not a company one, on purpose: [`D-110`](docs/DECISION-LOG.md)
+rejected addresses at a domain the company does not own, because they would be
+invented, and an invented security contact is worse than none. A dedicated
+address arrives with the domain and replaces this one in three places — this
+file, `security.txt`, and `app/src/site/config.ts` — and
+[`app/src/lib/security.test.ts`](app/src/lib/security.test.ts) fails while any
+of the three disagrees with the app's privacy page.
+
+What a useful report says: which screen or endpoint, what was readable or
+writable that should not have been, the account it was seen from, and the
+steps to see it again. What is asked of a reporter: do not test against other
+students' accounts, do not read more than proves the point, and give the owner
+time to close the gate before saying anything in public. A report made in good
+faith inside those rules is treated as a report and not as an incident about
+the reporter. Formal safe-harbour wording is not written here, because it is
+legal language and every other legal sentence in this file is flagged as
+unverified; it waits on the same counsel as the clocks under *Telling people*.
+
+`security.txt` carries an `Expires` date. It is renewed at each review of this
+file, and the test above goes red the day it lapses, so a stale contact cannot
+sit unnoticed.
+
+## Severity, and the clock each is held to
+
+One severity model, used for a report from outside, a Dependabot advisory and
+a finding of the owner's own, so that a question about "how fast" has one
+answer wherever it is asked. The four rows are the patch policy in
+[`app/src/lib/supplychain.ts`](app/src/lib/supplychain.ts) (PATCH_POLICY),
+which [`docs/SUPPLY-CHAIN.md`](docs/SUPPLY-CHAIN.md) renders, and
+[`app/src/lib/security.test.ts`](app/src/lib/security.test.ts) holds this table
+to that one — the day counts cannot drift apart without a test going red.
+
+| Severity | What it looks like here | First response | Fixed within | Escalate to |
+| --- | --- | --- | ---: | --- |
+| **Critical** | Another account's rows readable; a service-role or signing key out; an exploit in the wild against a package or Action this project ships | The same day: rotate, close the gate or roll back before anything else ships (the moves above) | 2 days | Owner; every affected account, per *Telling people* |
+| **High** | An auth, tenancy or infrastructure flaw with a credible path to it, not yet shown to expose a row | A prioritised patch; a compensating control recorded if the patch waits | 14 days | Owner |
+| **Medium** | Exploitable only under constrained conditions, or with limited impact | Scheduled by risk | 60 days | Owner |
+| **Low** | Minimal impact, or only in a tool that never ships (`video/`, `pipeline/`) | Normal maintenance; the grouped Dependabot update is usually the fix | 180 days | Nobody |
+
+The clock starts when the finding is **confirmed**, not when it is reported —
+a report that turns out to be nothing has no clock, and one that turns out to
+be critical starts at zero on the hour it is confirmed. Any suspected read of
+another account's rows is critical until disproven, as
+[`docs/market-readiness/INCIDENT_RESPONSE.md`](docs/market-readiness/INCIDENT_RESPONSE.md)
+says of its SEV1; the asymmetry is deliberate and the same in both files.
+
+Two honest limits. The day counts are **proposed internal targets**: they are
+what a security lead accepts or changes, nobody has yet held a finding against
+them, and nothing here is a commitment to a customer until a contract or
+[`docs/trust/SLA.md`](docs/trust/SLA.md) says so — which is why the public site
+still says that no response time is promised. And a target for *fixing* is not
+a target for *acknowledging*: with one person reading the mailbox, the honest
+acknowledgement clock is "when the owner next reads mail", and this file does
+not dress that up as a number. The 72-hour clock under *Telling people* is the
+one clock in this file that is a commitment rather than a target, and it is
+about notice, not repair.
+
+The row this closes in the HECVAT register is `VULN-1`
+([`docs/market-readiness/HECVAT_READINESS.md`](docs/market-readiness/HECVAT_READINESS.md)),
+as far as writing can close it: to *in progress*, with the record of findings
+answered inside their clocks still to be produced.
 
 ## What counts
 

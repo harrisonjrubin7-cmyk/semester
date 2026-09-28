@@ -146,10 +146,13 @@ Alerting on errors, auth failures and RLS denials is defined in
 
 ## 11. Vulnerability management and penetration testing
 
-Dependencies and secrets are scanned on every change. There is no published
-severity-to-remediation table (HECVAT VULN-1), and no independent penetration
-test has been performed (HECVAT VULN-2). Both are prerequisites for an
-institutional contract.
+Dependencies and secrets are scanned on every change. `SECURITY.md` publishes
+the severity model — four severities, with a remediation target of 2, 14, 60
+or 180 days — and a test holds it to the patch policy the supply-chain register
+renders (HECVAT VULN-1, in progress: the targets are proposed, and no finding
+has yet been answered against them). No independent penetration test has been
+performed (HECVAT VULN-2). Both are prerequisites for an institutional
+contract.
 
 ## 12. Incident response and breach notification
 
@@ -232,9 +235,11 @@ The institution is responsible for:
 
 ## 19. Contact and vulnerability disclosure
 
-Security reports currently go to the repository owner, as `SECURITY.md`
-states. A dedicated security address and a published disclosure policy with
-safe-harbor language are still to come (HECVAT VULN-1).
+Security reports go to the repository owner's address, as `SECURITY.md`
+states and as `/.well-known/security.txt` (RFC 9116) publishes on the deployed
+app, with `SECURITY.md` as its policy. A dedicated security address arrives
+with the company domain (D-110), and safe-harbor language waits on counsel
+(HECVAT VULN-1).
 
 ## 20. Document owner, version and review
 

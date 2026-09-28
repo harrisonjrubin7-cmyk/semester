@@ -1,0 +1,12 @@
+# Semester: how to report a security problem (RFC 9116).
+#
+# The address is the one the owner holds. A company-domain address would be
+# invented, which docs/DECISION-LOG.md D-110 forbids; one arrives with the
+# domain. What happens to a report, the severity model and the clock each
+# severity is held to are in the Policy document. app/src/lib/security.test.ts
+# holds this file to that document and fails once Expires has passed.
+Contact: mailto:harrisonjrubin7@gmail.com
+Expires: 2027-03-31T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://harrisonjrubin7-cmyk.github.io/semester/.well-known/security.txt
+Policy: https://github.com/harrisonjrubin7-cmyk/semester/blob/main/SECURITY.md
