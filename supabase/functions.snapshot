@@ -1,5 +1,5 @@
 # Which pipeline last deployed each Edge Function, read off the project at
-# 01:08 UTC on 22 September 2026.
+# 00:49 UTC on 28 September 2026.
 #
 # Four columns: slug, version, the pipeline that deployed that version, and when.
 # `app/src/lib/functionsdeployed.test.ts` holds `supabase/functions/` to this
@@ -74,17 +74,11 @@
 # Management API's function list (the dashboard's Edge Functions page shows the
 # same versions), and the columns below are transcribed from it.
 
-claude     64  platform  2026-09-22T01:08:08Z
-push       28  platform  2026-09-22T01:08:08Z
-calendar   24  platform  2026-09-22T01:08:08Z
-fetchcal   56  platform  2026-09-22T01:08:08Z
-canvas     49  platform  2026-09-22T01:08:08Z
-lti        49  platform  2026-09-22T01:08:08Z
-# Deployed by hand from its branch before its first merge; see "A new function's first row".
-integration-tick  1  runner  2026-09-27T21:48:27Z  first
-
-# Not a reading. `trust-room` was added in #817 and has not been deployed, so
-# there is nothing to read; the time is when this row was written. Replace it
-# with the project's reading after the merge that deploys it —
-# functionsdeployed.test.ts fails fourteen days after this time.
-trust-room  -   pending   2026-09-27T21:10:00Z
+claude     159 platform  2026-09-28T00:49:07Z
+push       120 platform  2026-09-28T00:49:07Z
+calendar   115 platform  2026-09-28T00:49:07Z
+fetchcal   151 platform  2026-09-28T00:49:07Z
+canvas     144 platform  2026-09-28T00:49:07Z
+lti        144 platform  2026-09-28T00:49:07Z
+integration-tick  2  platform  2026-09-28T00:49:07Z
+trust-room  7  platform  2026-09-28T00:49:07Z

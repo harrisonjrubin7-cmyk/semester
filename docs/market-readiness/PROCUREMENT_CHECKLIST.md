@@ -8,7 +8,7 @@ hand over today.
 | Ask | Have | Note |
 | --- | --- | --- |
 | Security questionnaire (HECVAT or similar) | **Partial** | `HECVAT_READINESS.md` registers every control with its evidence, test-checked; not yet a completed questionnaire |
-| SOC 2 report | **No** | No audit has been performed |
+| SOC 2 report | **No** | No audit has been performed; the gap assessment is `docs/trust/SOC2-READINESS.md` |
 | Penetration test report | **No** | None commissioned |
 | VPAT / ACR | **No** | Requires formal evaluation; do not fabricate |
 | Data flow diagram | **No** | Constructible from this tree today |
@@ -17,11 +17,11 @@ hand over today.
 | Business continuity / DR | **No** | No tested restore |
 | Privacy policy | **No** | — |
 | Terms of service | **No** | — |
-| DPA | **No** | — |
+| DPA | **No** | Requirements and starting language for counsel: `docs/trust/DPA-CHECKLIST.md` |
 | Insurance | **No** | — |
 | SSO support | **Partial** | SAML membership binding and SCIM provisioning exist and are policy-tested; no real institution's IdP has completed an exchange (`HECVAT_READINESS.md` IAM-1) |
 | Accessibility conformance | **Partial** | Automated critical-journey audits run in CI; formal review and VPAT/ACR remain absent |
-| Uptime SLA | **No** | Hourly public synthetic monitoring exists, but no measured availability history, named on-call route or contractual SLO exists |
+| Uptime SLA | **No** | Hourly public synthetic monitoring exists, but no measured availability history, named on-call route or contractual SLO exists. The formula, tables and credit schedule are drafted and test-checked in `docs/trust/SLA.md` |
 
 ## The three that block hardest
 
