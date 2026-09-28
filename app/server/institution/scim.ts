@@ -80,7 +80,13 @@ interface ScimConfig {
   clock?: () => Date;
 }
 
-class ScimError extends Error {
+/**
+ * A refusal with the status a SCIM client should see. Exported so a
+ * repository can refuse in SCIM's terms — "that group is not mapped" is a 400
+ * the identity provider can act on, where any other error thrown from the
+ * repository is reported as 503.
+ */
+export class ScimError extends Error {
   constructor(readonly status: number, message: string) {
     super(message);
   }

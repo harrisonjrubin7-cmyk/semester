@@ -7,6 +7,7 @@ import { PostgresRateLimiter } from './rate-limit.ts';
 import { PostgresIntelligenceActionStore } from './intelligence-action-store.ts';
 import { createInstitutionIntelligenceRuntime } from './intelligence-runtime.ts';
 import { institutionReadiness } from './readiness.ts';
+import { createProductionScim, withScim } from './scim-route.ts';
 
 export type InstitutionEnvironment = Record<string, string | undefined>;
 
@@ -67,7 +68,11 @@ export function createProductionInstitutionRuntime(env: InstitutionEnvironment) 
   if (!Number.isInteger(minimumAdapters) || minimumAdapters < 0) {
     throw new Error('SEMESTER_MINIMUM_ADAPTERS must be a non-negative integer.');
   }
-  return createGateway({
+  // SCIM is off unless SEMESTER_SCIM=on; see scim-route.ts. Built before the
+  // gateway so a half-configured SCIM stops the runtime rather than the first
+  // provisioning request.
+  const scim = createProductionScim(env, { url: authUrl, serviceKey });
+  return withScim(createGateway({
     origin: exactAppOrigin(env),
     institutionName: env.SEMESTER_INSTITUTION_NAME || 'Your university',
     authenticate,
@@ -89,5 +94,5 @@ export function createProductionInstitutionRuntime(env: InstitutionEnvironment) 
     loadSsoConfig: ssoDomain && ssoLabel
       ? supabaseSsoConfigLoader(authUrl, serviceKey, ssoDomain, ssoLabel)
       : async () => null,
-  });
+  }), scim);
 }
