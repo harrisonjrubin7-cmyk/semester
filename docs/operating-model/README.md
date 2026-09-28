@@ -45,6 +45,10 @@ The central rule, stated once:
 | 22 | Edge-case catalog: which cases have a guard, which are owed | [../EDGE-CASE-CATALOG.md](../EDGE-CASE-CATALOG.md) | Code: `edgecases.ts`; rendered by its test |
 | 23 | Operational maturity: records holds, content rights, analytics ethics, minors, cost, exit, residency, disaster scenarios and twelve more, control by control | [OPERATIONAL-MATURITY.md](OPERATIONAL-MATURITY.md) | Code: `maturity.ts`; rendered by its test |
 | 24 | Operations Console checks: customer promises kept, release impact, on-call workload | `app/src/lib/governance/consolechecks.ts` | Code: `consolechecks.ts`; held by its test. The console’s own controls are `lib/ops/console.ts` (D-110); no console screen exists yet |
+| 25 | The benchmark register: the strategy brief’s six commitments and twenty-five initiatives, item by item | [BENCHMARK.md](BENCHMARK.md) | Code: `benchmark.ts`; rendered by its test |
+| 26 | The four-pillar audit: website, app and console, operations, funnels — 45 controls scored 0–4, the priority formula, the leak detector | [FOUR-PILLAR-AUDIT.md](FOUR-PILLAR-AUDIT.md) | Code: `audit.ts`; rendered by its test; `scripts/audit-workbook.py` fills the workbook from it |
+| 27 | The interoperability roadmap: standards in priority order, each with the claims register’s word | [../INTEROPERABILITY-ROADMAP.md](../INTEROPERABILITY-ROADMAP.md) | Code: `interop.ts`; rendered by its test; printed at `/platform/integrations/` |
+| 28 | The policy simulator: who sees a change, workflows, alternatives, support content, the audit event; retention classes, exports, deletions, contracts | `app/src/lib/governance/policysim.ts` | Code: `policysim.ts`; held by its test; drawn in the control plane |
 | — | Change management and adoption | [CHANGE-MANAGEMENT.md](CHANGE-MANAGEMENT.md) | Process |
 | — | AI financial sustainability, ROI measurement | [COMMERCIAL-GOVERNANCE.md](COMMERCIAL-GOVERNANCE.md#ai-cost-controls) | Existing metered gateway (ADR 0004) |
 

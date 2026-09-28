@@ -797,6 +797,55 @@
   }
 }
 
+/* "Describe the problem": the no-wrong-door front of Help (components/NoWrongDoor.tsx). */
+.no-wrong-door {
+  margin: 0 0 var(--sp-6);
+  padding-bottom: var(--sp-5);
+  border-bottom: 1px solid var(--app-line);
+}
+
+.no-wrong-door-lead,
+.no-wrong-door-never {
+  margin: 0 0 var(--sp-3);
+  color: var(--app-dim);
+  font-size: var(--type-sm);
+  line-height: var(--leading-relaxed);
+}
+
+.no-wrong-door-never {
+  margin: var(--sp-3) 0 0;
+}
+
+.no-wrong-door-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  margin-top: var(--sp-3);
+}
+
+.no-wrong-door-answer {
+  margin-top: var(--sp-4);
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--app-line);
+}
+
+.no-wrong-door-owner {
+  margin: 0 0 var(--sp-3);
+  line-height: var(--leading-relaxed);
+}
+
+.no-wrong-door-head {
+  margin: var(--sp-3) 0 var(--sp-1);
+  color: var(--app-dim);
+  font-size: var(--type-sm);
+}
+
+.no-wrong-door-list {
+  margin: 0;
+  padding-left: var(--sp-5);
+  line-height: var(--leading-relaxed);
+}
+
 /* "Fix this": the correction paths under About this screen (components/FixThis.tsx). */
 .fix-this {
   margin-top: var(--sp-4);

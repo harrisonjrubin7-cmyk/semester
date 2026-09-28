@@ -17,7 +17,8 @@ describe('every page', () => {
     const want = ['/', '/product/', '/students/', '/institutions/', '/pricing/', '/tools/', '/resources/', '/about/', '/careers/', '/contact/', '/security/', '/privacy/', '/accessibility/', '/help/', '/login/', '/signup/', '/account/', '/membership/',
       '/launch-readiness/', '/proof/', '/legal/',
       '/tools/graduation/', '/tools/schedule/', '/tools/checklist/', '/tools/advisor/',
-      '/platform/availability/', '/platform/service-map/', '/platform/system-boundaries/', '/start/', '/demo/', '/trust/product-quality/', '/launch/', '/pricing/how-it-works/', '/resources/campus-launch-kit/'];
+      '/platform/availability/', '/platform/service-map/', '/platform/system-boundaries/', '/start/', '/demo/', '/trust/product-quality/', '/launch/', '/pricing/how-it-works/', '/resources/campus-launch-kit/',
+      '/semester-standard/', '/trust/data-and-ai-transparency/', '/platform/integrations/', '/platform/vocabulary/', '/resources/ai-governance-canvas/', '/research/', '/tools/navigation/'];
     expect(ROUTES.map((r) => r.path).sort()).toEqual([...want].sort());
   });
 
@@ -47,7 +48,7 @@ describe('every page', () => {
 
   it('gives each tool page exactly one script, from its own origin, and no way to send', () => {
     const tools = pages.filter((p) => p.route.tool);
-    expect(tools.map((p) => p.route.tool)).toEqual(['graduation', 'schedule', 'checklist', 'advisor']);
+    expect(tools.map((p) => p.route.tool)).toEqual(['graduation', 'schedule', 'checklist', 'advisor', 'navigation']);
     for (const { route, html } of tools) {
       expect([...html.matchAll(/<script\b[^>]*>/gi)].map((m) => m[0]), route.path).toEqual(['<script type="module" src="/tools/tools.js">']);
       expect(html, route.path).not.toMatch(/<script[^>]*>[^<]/i);

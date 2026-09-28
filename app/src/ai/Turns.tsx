@@ -3,6 +3,8 @@ import { faintLine, secondLine } from '../lib/dim';
 import type { Read } from '../lib/mode';
 import { scrollKindly } from '../lib/prefers';
 import { Answer } from './Answer';
+import { REASONS, type Quality, type Reason } from './quality';
+import { SaySomething } from '../components/SaySomething';
 
 /**
  * How a turn looks, on both surfaces.
@@ -160,6 +162,7 @@ export function Reply({
   incomplete,
   onRetry,
   extra,
+  quality,
 }: {
   text: string;
   /** Stopped part-way. Says so rather than passing a fragment off as an answer. */
@@ -167,6 +170,8 @@ export function Reply({
   onRetry?: () => void;
   /** Action cards and tool rows, inside the flow rather than after it. */
   extra?: ReactNode;
+  /** Source strength, policy state and limits, for the answer that is current. See `quality.ts`. */
+  quality?: Quality;
 }) {
   return (
     <div style={{ fontSize: 'var(--type-sm)' }}>
@@ -177,8 +182,36 @@ export function Reply({
         </div>
       )}
       {extra}
+      {quality && <HowToRead q={quality} />}
       <Beneath text={text} onRetry={onRetry} />
     </div>
+  );
+}
+
+/**
+ * How to read this answer: source strength, policy state, and what it can
+ * and cannot claim. Folded, because on most turns the answer is the point;
+ * open, because on the turn where a number looks wrong the first question is
+ * how much this was allowed to know. A native `<details>`, so it is a real
+ * disclosure to a screen reader and keyboard without any script of its own.
+ */
+export function HowToRead({ q }: { q: Quality }) {
+  return (
+    <details className="how-to-read" style={{ marginTop: 'var(--sp-4)', fontSize: 'var(--type-xs)', color: 'var(--app-dim)' }}>
+      <summary style={{ cursor: 'pointer', letterSpacing: '0.06em' }}>How to read this answer</summary>
+      <dl style={{ margin: 'var(--sp-2) 0 0', lineHeight: 'var(--leading-relaxed)' }}>
+        <dt style={{ color: 'var(--app-fg)' }}>Source strength</dt>
+        <dd style={{ margin: '0 0 var(--sp-2)' }} data-source={q.source.level}>{q.source.says}</dd>
+        <dt style={{ color: 'var(--app-fg)' }}>Policy state</dt>
+        <dd style={{ margin: '0 0 var(--sp-2)' }} data-policy={q.policy.level}>{q.policy.says}</dd>
+        <dt style={{ color: 'var(--app-fg)' }}>What it can support</dt>
+        <dd style={{ margin: '0 0 var(--sp-2)' }}>{q.can}</dd>
+        <dt style={{ color: 'var(--app-fg)' }}>What it cannot determine</dt>
+        <dd style={{ margin: '0 0 var(--sp-2)' }}>{q.cannot}</dd>
+        <dt style={{ color: 'var(--app-fg)' }}>What needs a person or the official record</dt>
+        <dd style={{ margin: 0 }}>{q.confirm}</dd>
+      </dl>
+    </details>
   );
 }
 
@@ -196,7 +229,21 @@ export function Reply({
  */
 function Beneath({ text, onRetry }: { text: string; onRetry?: () => void }) {
   const [copied, setCopied] = useState(false);
-  const [mark, setMark] = useState<'' | 'good' | 'bad'>('');
+  const [mark, setMark] = useState<'' | Reason['id']>('');
+  const [report, setReport] = useState<Reason | null>(null);
+  if (report?.report) {
+    return (
+      <div style={{ marginTop: 'var(--sp-3)' }}>
+        <p style={{ margin: '0 0 var(--sp-2)', fontSize: 'var(--type-xs)', color: 'var(--app-dim)' }}>
+          {report.label}{' '}
+          <button type="button" className="bare link-quiet" onClick={() => setReport(null)}>
+            Back
+          </button>
+        </p>
+        <SaySomething key={report.id} initialKind={report.report.kind} initialNote={report.report.note} />
+      </div>
+    );
+  }
   return (
     <div style={{ display: 'flex', gap: 'var(--sp-6)', marginTop: 'var(--sp-3)', flexWrap: 'wrap' }}>
       <button
@@ -217,24 +264,29 @@ function Beneath({ text, onRetry }: { text: string; onRetry?: () => void }) {
           ASK AGAIN
         </button>
       )}
-      <button
-        type="button"
-        className="bare"
-        aria-pressed={mark === 'good'}
-        onClick={() => setMark((was) => (was === 'good' ? '' : 'good'))}
-        style={{ ...QUIET, color: mark === 'good' ? 'var(--app-fg)' : 'var(--app-dim)' }}
-      >
-        GOOD
-      </button>
-      <button
-        type="button"
-        className="bare"
-        aria-pressed={mark === 'bad'}
-        onClick={() => setMark((was) => (was === 'bad' ? '' : 'bad'))}
-        style={{ ...QUIET, color: mark === 'bad' ? 'var(--app-fg)' : 'var(--app-dim)' }}
-      >
-        NOT USEFUL
-      </button>
+      {/*
+        The six reasons (`quality.ts`). Helpful and Not helpful stay on this
+        device, as the pair always did. The other four open the report the
+        app already sends, on the right kind with the right first words.
+      */}
+      {REASONS.map((r) =>
+        r.report ? (
+          <button key={r.id} type="button" className="bare" onClick={() => setReport(r)} style={QUIET}>
+            {r.label.toUpperCase()}
+          </button>
+        ) : (
+          <button
+            key={r.id}
+            type="button"
+            className="bare"
+            aria-pressed={mark === r.id}
+            onClick={() => setMark((was) => (was === r.id ? '' : r.id))}
+            style={{ ...QUIET, color: mark === r.id ? 'var(--app-fg)' : 'var(--app-dim)' }}
+          >
+            {r.label.toUpperCase()}
+          </button>
+        ),
+      )}
       {mark && (
         <span style={{ fontSize: 'var(--type-xs)', ...faintLine() }}>
           Marked on this device. Nothing is sent.

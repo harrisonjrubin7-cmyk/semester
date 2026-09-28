@@ -49,6 +49,7 @@ import { operationsAllowed } from '../lib/institution-ops';
 import { forSchool, useMyCapabilities } from '../lib/capabilities';
 import { helpSeedWaiting, loadInboxes, newRequestCount, type StaffInbox } from '../lib/help-routes';
 import { ControlPlane } from '../components/institutional/ControlPlane';
+import { TrustDashboard } from '../components/institutional/TrustDashboard';
 import { IntegrationDashboard } from '../components/institutional/IntegrationDashboard';
 import { CampaignManager } from '../components/institutional/CampaignManager';
 import { campaignsAllowed } from '../lib/gtm/manager';
@@ -139,7 +140,7 @@ const tabsFor = (verified: readonly string[]) => [
   { id: 'records' as const, label: 'Records' },
   { id: 'connections' as const, label: 'Connections' },
   ...(EXPERIENCE_FLAGS.universityControlPlane !== 'off'
-    ? [{ id: 'control' as const, label: 'Control' }]
+    ? [{ id: 'control' as const, label: 'Control' }, { id: 'trust' as const, label: 'Trust' }]
     : []),
   ...(EXPERIENCE_FLAGS.humanHelp !== 'off' ? [{ id: 'help' as const, label: 'Get help' }] : []),
   // Staff only in practice: RLS returns nothing to an account without
@@ -163,7 +164,7 @@ const tabsFor = (verified: readonly string[]) => [
     : []),
 ];
 
-type Tab = 'overview' | 'drafts' | 'records' | 'connections' | 'control' | 'help' | 'integrations' | 'operations' | 'demand' | 'campaigns';
+type Tab = 'overview' | 'drafts' | 'records' | 'connections' | 'control' | 'trust' | 'help' | 'integrations' | 'operations' | 'demand' | 'campaigns';
 
 /** What each role is called on screen. */
 const ROLE_LABELS: Record<UniversityRole, string> = {
@@ -798,6 +799,8 @@ function Workspace({ storageKey }: { storageKey: string }) {
           }}
         />
       )}
+
+      {tab === 'trust' && EXPERIENCE_FLAGS.universityControlPlane !== 'off' && <TrustDashboard />}
 
       {tab === 'integrations' && EXPERIENCE_FLAGS.integrationDashboard !== 'off' && <IntegrationDashboard />}
 

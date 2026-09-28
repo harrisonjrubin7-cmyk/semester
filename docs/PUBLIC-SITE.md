@@ -12,14 +12,14 @@ an injected script inert. The four tool pages are the only exception (below).
 
 | | |
 |---|---|
-| Pages | `app/src/site/pages.tsx` (21 content routes) and `app/src/site/more.tsx` (9 platform, trust and buying routes, with their tables as data in `app/src/site/platform.ts`), plus 4 tool routes, all listed in `app/src/site/render.tsx` `ROUTES` |
+| Pages | `app/src/site/pages.tsx` (21 content routes), `app/src/site/more.tsx` (9 platform, trust and buying routes, with their tables as data in `app/src/site/platform.ts`) and `app/src/site/benchmark.tsx` (6 benchmark routes, with their data in `lib/standard.ts`, `lib/transparency.ts`, `lib/interop.ts` and `lib/vocabulary.ts`), plus 5 tool routes, all listed in `app/src/site/render.tsx` `ROUTES` |
 | Claims | `app/src/lib/ops/claims.ts`: every capability a page names, its status word, its rows and evidence; `app/src/site/claims.tsx` prints them (D-110). The availability matrix prints its status column from here |
-| Tools | `app/src/site/tools/Tools.tsx` (the four tools), `tools/client.tsx` (hydration, bundled as `tools/tools.js`) |
+| Tools | `app/src/site/tools/Tools.tsx` (the five tools), `tools/client.tsx` (hydration, bundled as `tools/tools.js`) |
 | Frame | `app/src/site/Layout.tsx`: skip link, header, a script-free `<details>` phone menu, footer |
 | Styles | `app/src/site/site.css`, with the app's `@font-face` rules prepended at build |
 | Plans | `app/src/lib/plans.ts`: one source for the pricing page and the in-app Membership panel |
 | Build | `app/scripts/build-site.mjs` renders with Vite's own module loader, writing to `app/dist-site/` (git-ignored) |
-| Tests | `app/src/site/site.test.tsx`, `app/src/site/tools/Tools.test.tsx`, `app/src/lib/plans.test.ts`, `app/src/lib/ops/claims.test.ts` |
+| Tests | `app/src/site/site.test.tsx`, `app/src/site/tools/Tools.test.tsx`, `app/src/lib/plans.test.ts`, `app/src/lib/ops/claims.test.ts`, `app/src/lib/standard.test.ts`, `app/src/lib/transparency.test.ts`, `app/src/lib/interop.test.ts`, `app/src/lib/vocabulary.test.ts` |
 
 ```bash
 cd app
@@ -44,6 +44,25 @@ availability matrix prints its status words from the claims register (D-110):
 | `/launch/` | What a customer's private launch site holds, and that none exists yet |
 | `/pricing/how-it-works/` | What drives each tier's price, what implementation, support tiers, AI usage and migration mean, and how renewals avoid surprises |
 | `/resources/campus-launch-kit/` | Email, announcement, signage and social templates, an FAQ, the source-label explainer and a launch agenda |
+
+## The benchmark pages
+
+Six pages the benchmark briefs asked for, each printed from a data module
+whose test holds every cited path to the tree:
+
+| Route | Says |
+|---|---|
+| `/semester-standard/` | Eleven public commitments — every fact has a source, every estimate its limitation, every share a scope and revoke, every critical path keyboard-operable, every AI answer its context, every AI feature a policy boundary, every integration its health, every incident a communication path, every customer an export, every high-risk action an audit, every claim its evidence — each Held, Partly held or Owed, with what holds it and the gap on the page (`lib/standard.ts`) |
+| `/trust/data-and-ai-transparency/` | The plain-language commitment; source, scope and status; the information table built from the app's own inventory; how AI works and the six things shown when it is used; the controls as the rows under Me; four things Semester never does, each held by a path; retention and portability; the required supporting documents with the legal register's status for each (`lib/transparency.ts`) |
+| `/platform/integrations/` | The public integration registry: LTI, LTI Advantage, OneRoster, identity, SCIM, APIs, SIS, Caliper, QTI and CASE, Open Badges and CLR, each with the claims register's word, the implementation principles, the credential lifecycle and the four-stage 1EdTech plan with where each stands (`lib/interop.ts`) |
+| `/platform/vocabulary/` | The nine owned terms, what each means and where it lives; the home page of each is held to print it (`lib/vocabulary.ts`) |
+| `/resources/ai-governance-canvas/` | Ten boxes an institution fills in before turning on an assistant, and how Semester answers the same ten |
+| `/research/` | The Academic Friction Index as a method set before its data, and the design-partners council, clinics, student advisory network and design challenge, each marked not yet running |
+
+And a fifth tool, `/tools/navigation/`: the academic navigation diagnostic, a
+guided self-assessment for institutions from `lib/navdiagnostic.ts` — seven
+questions, a score, the top friction patterns and an action brief, labelled a
+self-assessment and never a ranking.
 
 ## Rules the tests hold
 

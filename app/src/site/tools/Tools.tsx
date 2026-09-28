@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { SEASONS, project, type Season, type Term } from '../../lib/graduation';
 import { CHECKLIST } from '../../lib/registration-day';
 import { conflicts, type CatalogCourse } from '../../lib/registration';
+import { LABEL as DIAGNOSTIC_LABEL, QUESTIONS, SCALE, briefText, diagnose, type Answers } from '../../lib/navdiagnostic';
 
 /**
  * The public tools: useful before anybody signs up.
@@ -17,7 +18,7 @@ import { conflicts, type CatalogCourse } from '../../lib/registration';
  * render the same thing both times: nothing reads the clock during render.
  */
 
-export type ToolId = 'graduation' | 'schedule' | 'checklist' | 'advisor';
+export type ToolId = 'graduation' | 'schedule' | 'checklist' | 'advisor' | 'navigation';
 
 export interface ToolProps {
   /** The first term still to come, fixed at build time so hydration matches. */
@@ -48,6 +49,12 @@ export const TOOL_LIST: { id: ToolId; title: string; lead: string; description: 
     title: 'Advisor meeting planner',
     lead: 'Your questions and your plan, ready for the meeting.',
     description: 'Prepare an agenda and questions for a meeting with your academic advisor.',
+  },
+  {
+    id: 'navigation',
+    title: 'Academic navigation diagnostic',
+    lead: 'Seven questions about where students get lost at your institution, and an action brief from your own answers.',
+    description: 'A guided self-assessment for institutions: where students get lost, a navigation score, the top friction patterns and an action brief.',
   },
 ];
 
@@ -336,6 +343,73 @@ export function AdvisorTool() {
   );
 }
 
+// ── navigation diagnostic ────────────────────────────────────────────────
+
+export function NavigationTool() {
+  const [answers, setAnswers] = useState<Answers>({});
+  const [said, setSaid] = useState('');
+  const result = diagnose(answers);
+  const text = briefText(answers);
+  return (
+    <div className="tool">
+      <ol className="tool-checklist">
+        {QUESTIONS.map((q) => (
+          <li key={q.id}>
+            <fieldset className="tool-field">
+              <legend>{q.ask}</legend>
+              {SCALE.map((s) => (
+                <label key={s.value} className="tool-check">
+                  <input
+                    type="radio"
+                    name={`nav-${q.id}`}
+                    checked={answers[q.id] === s.value}
+                    onChange={() => setAnswers((a) => ({ ...a, [q.id]: s.value }))}
+                  />
+                  <span>{s.label}</span>
+                </label>
+              ))}
+            </fieldset>
+          </li>
+        ))}
+      </ol>
+      <div className="tool-result" role="status" aria-live="polite">
+        <p className="site-kicker">Self-assessment</p>
+        <p className="tool-answer">
+          {result.answered === 0
+            ? 'Answer the questions above to see a score, the friction patterns and an action brief.'
+            : `${result.score} of ${result.max} · ${result.maturity.level} — ${result.maturity.means}`}
+        </p>
+        {result.patterns.length > 0 && (
+          <>
+            <p className="site-kicker">Top friction patterns</p>
+            <ul>
+              {result.patterns.map((q) => (
+                <li key={q.id}>
+                  <strong>{q.pattern}.</strong> {q.action}
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+        <p className="site-small">{DIAGNOSTIC_LABEL}</p>
+      </div>
+      <div className="tool-actions">
+        <button
+          type="button"
+          className="site-button"
+          onClick={() => {
+            void navigator.clipboard?.writeText(text).then(() => setSaid('Copied.')).catch(() => setSaid('Could not copy; select the text and copy it yourself.'));
+          }}
+        >
+          Copy the action brief
+        </button>
+        <span className="site-small">{said}</span>
+      </div>
+      <pre className="tool-agenda">{text}</pre>
+    </div>
+  );
+}
+
 export function Tool({ id, props }: { id: ToolId; props: ToolProps }) {
   return (
     <>
@@ -343,6 +417,7 @@ export function Tool({ id, props }: { id: ToolId; props: ToolProps }) {
       {id === 'schedule' && <ScheduleTool />}
       {id === 'checklist' && <ChecklistTool />}
       {id === 'advisor' && <AdvisorTool />}
+      {id === 'navigation' && <NavigationTool />}
       <p className="site-small">{EPHEMERAL}</p>
     </>
   );

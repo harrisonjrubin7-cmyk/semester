@@ -150,6 +150,12 @@ export const Product: Page = ({ config }) => (
         ]}
       />
     </Section>
+    <Section title="A Student Action Layer, not another portal" id="p-layer">
+      <p>
+        Semester sits over the systems your university already runs and turns what they say into the next thing to do. That is Academic Navigation: finding the official deadline, the right office and the next step, without claiming any authority the institution holds. For the moments that matter most — registration, an advising meeting — it prepares Decision Packets: the options, their requirement and cost impact, the assumptions, and what needs official approval, in one place.
+      </p>
+      <p className="site-small"><a href={href(config, '/platform/vocabulary/')}>The words we use</a></p>
+    </Section>
     <Section title="What it will not do" id="p-not">
       <ul>
         <li>Register, add, drop or withdraw you. Your university’s system does that.</li>
@@ -434,7 +440,7 @@ export const Privacy: Page = ({ config }) => (
 
 export const Accessibility: Page = ({ config }) => (
   <>
-    <Hero title="Accessibility" lead="Semester is built toward WCAG 2.2 AA." />
+    <Hero title="Accessibility" lead="Semester is built toward WCAG 2.2 AA. An Accessible University OS treats every accessibility need as ordinary product quality, not a setting." />
     <Section title="What is checked on every build" id="ac-checked">
       <ul>
         <li>Every control has a name a screen reader can read.</li>
@@ -468,6 +474,7 @@ export const Help: Page = ({ config }) => (
     <Section title="Do I need an account?" id="hp-account"><p>No. Everything works on your device without one. An account keeps your work in step across devices.</p></Section>
     <Section title="Does Semester register me for classes?" id="hp-register"><p>No. It helps you plan, check conflicts and choose backups, then you register in your university’s own system.</p></Section>
     <Section title="Is my Path Snapshot official?" id="hp-official"><p>No. It is a planning estimate from what you entered. Confirm anything that matters with your advisor and registrar.</p></Section>
+    <Section title="I do not know who to ask" id="hp-door"><p>No Wrong Door: on the app’s Help screen, describe the problem in your own words and Semester says whose question it is, what it can do first, and what to bring — with a summary to take to the person. Nothing you type there is kept.</p></Section>
     <Section title="Still stuck?" id="hp-more"><p>The app has a full guide to every screen: <a href={appHref(config, '#/help')}>How this works</a>. Or write to <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.</p></Section>
   </>
 );

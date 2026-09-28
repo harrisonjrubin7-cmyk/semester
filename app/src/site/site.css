@@ -779,3 +779,34 @@ textarea.tool-input {
     grid-template-columns: 1fr;
   }
 }
+
+/* The Semester Standard's three words (benchmark.tsx). Colour is not the only carrier: the word is printed. */
+.site-held-held {
+  border-color: var(--site-line);
+}
+
+.site-held-partly {
+  border-color: var(--site-warn-line);
+}
+
+.site-plain {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.site-plain li + li {
+  margin-top: 4px;
+}
+
+/* The navigation diagnostic's questions are fieldsets that reuse the field layout. */
+fieldset.tool-field {
+  padding: 0;
+  border: 0;
+  min-inline-size: 0;
+}
+
+fieldset.tool-field legend {
+  padding: 0;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
