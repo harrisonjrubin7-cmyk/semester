@@ -6,6 +6,8 @@ import {
   DATA_DELETION_STATES,
   GRADE_PASSBACK,
   GRADE_PASSBACK_STATES,
+  ORGANIZATION_RECOGNITION,
+  ORGANIZATION_RECOGNITION_STATES,
   SUPPORT_ACCESS,
   SUPPORT_ACCESS_STATES,
   WORKFLOWS,
@@ -28,6 +30,7 @@ const machines: Array<[WorkflowDefinition, readonly string[]]> = [
   [ASSESSMENT_SUBMISSION, ASSESSMENT_SUBMISSION_STATES],
   [SUPPORT_ACCESS, SUPPORT_ACCESS_STATES],
   [DATA_DELETION, DATA_DELETION_STATES],
+  [ORGANIZATION_RECOGNITION, ORGANIZATION_RECOGNITION_STATES],
   [GRADE_PASSBACK, GRADE_PASSBACK_STATES],
 ];
 
@@ -119,6 +122,15 @@ describe('the moves the specification names as illegal', () => {
     expect(transition(SUPPORT_ACCESS, 'revoked', 'active').ok).toBe(false);
     expect(transition(SUPPORT_ACCESS, 'expired', 'active').ok).toBe(false);
     expect(transition(SUPPORT_ACCESS, 'declined', 'requested').ok).toBe(false);
+  });
+
+  it('recognition is given by the review, never taken by the organization', () => {
+    expect(transition(ORGANIZATION_RECOGNITION, 'draft', 'active').ok).toBe(false);
+    expect(transition(ORGANIZATION_RECOGNITION, 'submitted', 'active').ok).toBe(false);
+    expect(transition(ORGANIZATION_RECOGNITION, 'under_review', 'active').ok).toBe(true);
+    expect(transition(ORGANIZATION_RECOGNITION, 'inactive', 'active').ok).toBe(true);
+    expect(transition(ORGANIZATION_RECOGNITION, 'dissolved', 'active').ok).toBe(false);
+    expect(transition(ORGANIZATION_RECOGNITION, 'dissolved', 'draft').ok).toBe(false);
   });
 
   it('walk stops at the first refusal and says which', () => {

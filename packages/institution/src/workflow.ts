@@ -192,11 +192,50 @@ export const GRADE_PASSBACK: WorkflowDefinition<GradePassbackState> = {
   ],
 };
 
+export const ORGANIZATION_RECOGNITION_STATES = [
+  'draft', 'submitted', 'under_review', 'active', 'active_with_conditions', 'inactive', 'archived', 'dissolved',
+] as const;
+export type OrganizationRecognitionState = (typeof ORGANIZATION_RECOGNITION_STATES)[number];
+
+/**
+ * A student organization's standing with its institution. Recognition is
+ * given by the institution (`under_review → active`) and never by the
+ * organization itself, which is why `submitted` and `under_review` have no
+ * exit to `active` except through the review. `active_with_conditions` is
+ * the remediation state: the organization keeps operating while it fixes
+ * what the review named, and either returns to `active` or falls to
+ * `inactive`. An inactive or archived organization can be renewed — a club
+ * that lost its officers over a summer is not a dissolved club — but
+ * `dissolved` is final, and a new organization starts at `draft` again.
+ * `app/src/community/lifecycle.ts` says who may make each move and what a
+ * move must record.
+ */
+export const ORGANIZATION_RECOGNITION: WorkflowDefinition<OrganizationRecognitionState> = {
+  type: 'organization_recognition',
+  initial: 'draft',
+  terminal: ['dissolved'],
+  transitions: {
+    draft: ['submitted', 'archived'],
+    submitted: ['under_review', 'draft'],
+    under_review: ['active', 'active_with_conditions', 'draft'],
+    active: ['active_with_conditions', 'inactive', 'archived', 'dissolved'],
+    active_with_conditions: ['active', 'inactive', 'archived', 'dissolved'],
+    inactive: ['active', 'archived', 'dissolved'],
+    archived: ['active', 'dissolved'],
+    dissolved: [],
+  },
+  exceptional: [
+    ['submitted', 'draft'], ['under_review', 'draft'], ['under_review', 'active_with_conditions'],
+    ['active', 'active_with_conditions'], ['active', 'dissolved'], ['active_with_conditions', 'dissolved'],
+  ],
+};
+
 export const WORKFLOWS = {
   assessment_submission: ASSESSMENT_SUBMISSION,
   support_access: SUPPORT_ACCESS,
   data_deletion: DATA_DELETION,
   grade_passback: GRADE_PASSBACK,
+  organization_recognition: ORGANIZATION_RECOGNITION,
 } as const;
 
 export type WorkflowType = keyof typeof WORKFLOWS;
