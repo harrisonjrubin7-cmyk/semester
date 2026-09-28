@@ -416,7 +416,7 @@ export function Privacy({ trustCenter = moduleOn(MODULE_FLAGS.trust_center) }: {
           what={[
             'Your semester on this device: courses, deadlines, notes, actions, grades and cards.',
             'Attachments, the daily copies you could have restored from, and the assistant’s threads.',
-            'Any connected accounts and keys — this browser signs out.',
+            'Any connected accounts and keys — this browser signs out. Semester asks Google to withdraw its access too; Microsoft, Zoom and Apple give apps no way to do that, so remove Semester in those accounts yourself.',
             account
               ? `Nothing belonging to ${account.email} on the server is touched, and it can be synced back.`
               : 'Nothing has ever left this device, so there is nowhere to sync it back from.',

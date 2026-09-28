@@ -104,6 +104,16 @@ function empty(store: Storage): number {
   return keys.length;
 }
 
+/** Whether any account is connected, read without loading `lib/connect.ts`. */
+function holdsTokens(): boolean {
+  try {
+    const raw = localStorage.getItem('semester.tokens.v1');
+    return Boolean(raw && Object.keys(JSON.parse(raw) as object).length > 0);
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Take this device back to how it was before the app ran.
  *
@@ -119,6 +129,18 @@ function empty(store: Storage): number {
  */
 export async function eraseDevice(): Promise<Erased> {
   stopWriting();
+
+  /*
+   * The connected accounts' tokens are about to go with everything else, so
+   * the grants behind them are withdrawn first, where the provider allows it
+   * (`lib/revoke.ts`). Deleting a token without that leaves the permission
+   * live at the provider with nothing on this device able to withdraw it.
+   * Loaded only when something is connected: `lib/connect.ts` is kept out of
+   * the first load on purpose (see `main.tsx`).
+   */
+  if (holdsTokens()) {
+    await import('./revoke').then((m) => m.disconnectAll()).catch(() => undefined);
+  }
 
   const keys = empty(localStorage) + empty(sessionStorage);
 
