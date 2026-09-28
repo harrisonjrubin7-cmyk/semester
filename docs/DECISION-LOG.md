@@ -1586,3 +1586,66 @@ columns) checked against the register that owns it.
 - **Found on the way, not fixed here:** `risk.ts` R-07 still says the AI
   runtimes do not consult `kill.ai_generation`, which D-109 closed; the row is
   out of date and should be re-read.
+
+## D-112 · Seven documents on learning, assessment, grading, LMS interoperability and one system are held to the tree, and the faculty side is named as the sandbox it is
+
+**Decided 28 Sep 2026.** Seven documents arrived on 28 September — the
+learning, work-completion, assessment and gradebook system; the EdTech stack
+audit; the sortable LMS matrix; the Gradescope, Copyleaks and Turnitin
+comparison with the QTI 3 migration checklist; the LMS API comparison; the
+developer migration guide with the one-system grammar; and the migration
+runbook with the shared object model — and are kept under `docs/expansion/`
+as supplied. Each is held to the tree the way D-111 held its five: as data
+under `app/src/lib/` rendered by a test, with every cited file existing,
+every status held to the kind of file it cites, and every id or name it uses
+checked against the thing that owns it (master rows, the tutor's modes, the
+`lti_platform` columns, the key module's scopes, the question kinds, the
+`Question` type's properties, the lifecycle gates, the forbidden measures,
+the prohibited modes, the app's roots, the provenance words, the Me control
+rows).
+
+- **A supplied PDF is never evidence.** Every test refuses a status that
+  cites one, so each page reads as what the tree can show.
+- **The faculty side is the sandbox, and every mark that rests on it says
+  so.** The only submit → grade → release loop in the tree is the labelled
+  sandbox in `app/server/institution/sandbox.ts`, which loads only when asked
+  for. The learning register's rubric engine, gradebook and grading workflow
+  areas are `tested` on its tests, and a guard holds each of their gaps to
+  the word "sandbox"; the grading page's fairness controls say the same.
+- **No universal accuracy number, by test.** The three-product comparison
+  refuses any cell that quotes a percentage. The two rules the documents
+  repeat most are held to the AI intake, the one gate every use case passes:
+  an automatic misconduct accusation is refused there as a disciplinary
+  judgment; an AI-only grade is refused by nothing there. No grading
+  workflow holds either, because none exists, and the analytics guard that
+  refuses an integrity-flag metric refuses a measure, not an action. The
+  test imports the intake list and the prohibited modes, so a refusal added
+  later fails the page until it is re-read.
+- **Standards first, discovery second, proprietary APIs third.** The LMS
+  page holds the registration record the documents ask for to `lti_platform`
+  (eight of twenty-four fields have a column; the AGS and Deep Linking
+  endpoints arrive per launch by design), the Canvas scopes to the four the
+  key module defines and the roster scope it refuses, and the grade write to
+  what the AGS post has: an institutional gate, and no preview, idempotency,
+  reconciliation, exception queue or emitted audit event.
+- **Present means a renderer, a property or a row.** The QTI page's
+  interaction library names the question kind that delivers each pattern
+  (five of sixteen), and its item metadata names the `Question` property
+  that carries each field (two of fifteen). The one-system page names the
+  app root that carries each of the documents' nine areas (Messages and
+  Search have none; `courses` has no area), the provenance word for each
+  status (none for "needs review"), and the control row for each Me item
+  (none for community privacy or consent history).
+- **Not changed:** `socratic.ts`, `provenance.ts`, `mecontrols.ts`,
+  `ai-lifecycle.ts`, `ltikey.ts`, the migrations and the sandbox. Adding an
+  intake refusal for automated grading, a `SourceScopeStatus` component, a
+  registration record, a preview on the grade write and NRPS are proposals
+  the pages make, for the owner to take up; none is made here.
+- **Found on the way, not fixed here:** `docs/LTI-1.3-LAUNCH-RUNBOOK.md` says
+  the nonce is spent only after `checkLaunch` returns ok, and the function
+  spends the state first, atomically, before the signature is verified, and
+  says why; `docs/INTEGRATION-DATA-PIPELINE-AUDIT.md` gap 3 says no worker
+  exists, and `app/server/integration/worker.ts` does; `lib/provenance.ts`
+  names `components/SourceScopeStatus.tsx`, which does not exist;
+  `lib/comms.ts` names `comms.test.ts`, which does not exist. The last two are
+  held true by a test until they are fixed.

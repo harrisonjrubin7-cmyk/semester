@@ -51,6 +51,7 @@ The central rule, stated once:
 | 28 | The four-pillar audit: website, app and console, operations, funnels — 45 controls scored 0–4, the priority formula, the leak detector | [FOUR-PILLAR-AUDIT.md](FOUR-PILLAR-AUDIT.md) | Code: `audit.ts`; rendered by its test; `scripts/audit-workbook.py` fills the workbook from it |
 | 29 | The interoperability roadmap: standards in priority order, each with the claims register’s word | [../INTEROPERABILITY-ROADMAP.md](../INTEROPERABILITY-ROADMAP.md) | Code: `interop.ts`; rendered by its test; printed at `/platform/integrations/` |
 | 30 | The policy simulator: who sees a change, workflows, alternatives, support content, the audit event; retention classes, exports, deletions, contracts | `app/src/lib/governance/policysim.ts` | Code: `policysim.ts`; held by its test; drawn in the control plane |
+| 31 | AI in grading and integrity: the three products without a single accuracy number, the evaluation that compares them, the procurement rules, the AI roles at their lifecycle gates, the fairness controls | [AI-GRADING-AND-INTEGRITY.md](AI-GRADING-AND-INTEGRITY.md) | Code: `grading-ai.ts`; rendered by its test |
 | — | Change management and adoption | [CHANGE-MANAGEMENT.md](CHANGE-MANAGEMENT.md) | Process |
 | — | AI financial sustainability, ROI measurement | [COMMERCIAL-GOVERNANCE.md](COMMERCIAL-GOVERNANCE.md#ai-cost-controls) | Existing metered gateway (ADR 0004) |
 
