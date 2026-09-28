@@ -1,0 +1,65 @@
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:04.780
+Sampling
+
+2
+00:00:04.780 --> 00:00:08.940
+The margin-of-error rule of thumb?
+
+3
+00:00:08.940 --> 00:00:20.770
+≈ 1 ÷ √n. A thousand people gets about ±3 points; halving that needs four times the sample — 4,000 for ±1.6.
+
+4
+00:00:20.770 --> 00:00:25.640
+Does population size affect margin of error?
+
+5
+00:00:25.640 --> 00:00:34.250
+No. 1,500 is as good for Nashville as for the United States, so long as the population is at least about 100× the sample.
+
+6
+00:00:34.250 --> 00:00:39.020
+What are the two parts of a confidence statement?
+
+7
+00:00:39.020 --> 00:00:44.270
+A margin of error and a confidence level. Reporting one without the other is incomplete.
+
+8
+00:00:44.270 --> 00:00:50.200
+Literary Digest 1936 — what killed it?
+
+9
+00:00:50.200 --> 00:01:05.650
+Coverage error (car registrations, phone books, magazine subscribers — affluent in 1936) plus voluntary response. Ten million ballots, 2.4 million returned, and Gallup beat them with a far smaller, better-designed sample.
+
+10
+00:01:05.650 --> 00:01:10.550
+Simple random sample — the exact wording?
+
+11
+00:01:10.550 --> 00:01:18.580
+Every set of n individuals has an equal chance of being the sample. “Every individual has an equal chance” is necessary but not sufficient.
+
+12
+00:01:18.580 --> 00:01:22.450
+Bias vs. variability?
+
+13
+00:01:22.450 --> 00:01:32.540
+Bias is consistently off target and is fixed only by better design. Variability is scatter and is fixed by a bigger sample. Same dartboard as validity vs. reliability.
+
+14
+00:01:32.540 --> 00:01:36.800
+Parameter vs. statistic?
+
+15
+00:01:36.800 --> 00:01:47.330
+Parameter is the true population number — fixed and unknown. Statistic is your sample’s number — known, and it varies sample to sample. Statistics estimate parameters.
+
+16
+00:01:47.330 --> 00:01:49.000
+Sampling — 7 cards

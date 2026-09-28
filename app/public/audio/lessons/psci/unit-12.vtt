@@ -1,0 +1,49 @@
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:05.450
+Correlation and regression
+
+2
+00:00:05.450 --> 00:00:10.110
+What do the sign and size of r tell you?
+
+3
+00:00:10.110 --> 00:00:20.330
+Sign is direction, size is strength, range −1 to +1. r = 0 means no straight-line relationship — a perfect U-shape has r near zero.
+
+4
+00:00:20.330 --> 00:00:23.960
+What is r²?
+
+5
+00:00:23.960 --> 00:00:35.970
+The share of variation in Y that X accounts for. Chocolate and Nobels: r = 0.79, so r² ≈ 0.62 — impressive-sounding and still not causal.
+
+6
+00:00:35.970 --> 00:00:40.040
+The sentence to write about a slope?
+
+7
+00:00:40.040 --> 00:00:49.250
+“A one-unit increase in X is associated with a change of b units in Y” — holding the other variables constant, and never “causes” unless the design earns it.
+
+8
+00:00:49.250 --> 00:00:53.370
+How do you read a regression table?
+
+9
+00:00:53.370 --> 00:01:02.900
+Each row is a variable. The coefficient b gives direction and size; the standard error beside it gives precision; asterisks or a p-column give significance.
+
+10
+00:01:02.900 --> 00:01:07.860
+Quick significance check on a regression table?
+
+11
+00:01:07.860 --> 00:01:13.620
+If the coefficient is more than about twice its standard error, it is significant at p &lt; .05.
+
+12
+00:01:13.620 --> 00:01:16.000
+Correlation and regression — 5 cards

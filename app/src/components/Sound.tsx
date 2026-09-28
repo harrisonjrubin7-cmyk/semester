@@ -27,6 +27,7 @@ import { useEffect, useRef } from 'react';
 import { nowPlaying, playbackIs } from '../lib/device';
 import { useKeepAwake } from '../lib/awake';
 import { asset } from '../lib/asset';
+import { captionsFor } from '../lib/webvtt';
 import { mutedTab } from '../lib/browser';
 import { useStrip } from '../lib/browser.hook';
 import {
@@ -105,6 +106,13 @@ export function Sound() {
 
   if (!sound) return null;
 
+  // The words, timed, for every recording that has them (`lib/webvtt.ts`).
+  // An `<audio>` element draws no captions itself; the track is there for
+  // assistive technology and for any screen that reads `textTracks`. The four
+  // single-narrator reads have no line times anywhere, so they carry no track
+  // rather than an empty one that claims captions it does not have.
+  const captions = captionsFor(sound.src);
+
   return (
     <audio
       ref={el}
@@ -118,7 +126,7 @@ export function Sound() {
       onEnded={() => heard({ going: false })}
       style={{ display: 'none' }}
     >
-      <track kind="captions" />
+      {captions && <track kind="captions" src={asset(captions)} srcLang="en" label="English" default />}
     </audio>
   );
 }
