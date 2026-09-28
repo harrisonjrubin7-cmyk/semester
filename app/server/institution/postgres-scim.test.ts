@@ -21,6 +21,7 @@ import { SCIM_INTERNAL_BASE, createProductionScim, withScim } from './scim-route
 
 const TENANT = 'northstar';
 const CRED = '11111111-1111-4111-8111-111111111111';
+const REVOKED = '55555555-5555-4555-8555-555555555555';
 const OTHER_CRED = '22222222-2222-4222-8222-222222222222';
 const SECRET = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGH';
 const SALT = Buffer.from('00112233445566778899aabbccddeeff', 'hex');
@@ -30,6 +31,8 @@ const hex = (b: Buffer) => `\\x${b.toString('hex')}`;
 type Row = Record<string, unknown>;
 
 class FakeDb {
+  static readonly MAX_ROWS = 1000;
+  static readonly URL_LIMIT = 8000;
   identities: Row[] = [];
   memberships: Row[] = [];
   mappings: Row[] = [
@@ -48,9 +51,9 @@ class FakeDb {
   rpc(name: string, args: Row): { data: unknown; error: unknown } {
     this.rpcs.push({ name, args });
     if (name === 'scim_gateway_credential') {
-      return args.want_id === CRED
-        ? { data: [{ credential_id: CRED, tenant_id: TENANT, secret_salt: hex(SALT), secret_hash: hex(HASH) }], error: null }
-        : { data: [], error: null };
+      if (args.want_id === CRED) return { data: [{ credential_id: CRED, tenant_id: TENANT, secret_salt: hex(SALT), secret_hash: hex(HASH), active: true }], error: null };
+      if (args.want_id === REVOKED) return { data: [{ credential_id: REVOKED, tenant_id: TENANT, secret_salt: hex(SALT), secret_hash: hex(HASH), active: false }], error: null };
+      return { data: [], error: null };
     }
     if (name === 'scim_gateway_provision_user') {
       const prior = this.events.find((e) => e.tenant_id === args.want_tenant && e.request_id === args.want_request_id);
@@ -102,14 +105,23 @@ class FakeDb {
     const db = this;
     const from = (table: string) => {
       const tests: ((r: Row) => boolean)[] = [];
+      let window: [number, number] | null = null;
+      let url = 0;
       const q = {
         select: () => q,
         order: () => q,
+        range: (from: number, to: number) => { window = [from, to]; return q; },
         eq: (k: string, v: unknown) => { tests.push((r) => r[k] === v); return q; },
-        in: (k: string, vs: unknown[]) => { tests.push((r) => vs.includes(r[k])); return q; },
-        overlaps: (k: string, vs: unknown[]) => { tests.push((r) => ((r[k] ?? []) as unknown[]).some((x) => vs.includes(x))); return q; },
-        then: (ok: (v: unknown) => unknown, bad?: (e: unknown) => unknown) =>
-          Promise.resolve({ data: db.table(table).filter((r) => tests.every((t) => t(r))).map((r) => ({ ...r })), error: null }).then(ok, bad),
+        in: (k: string, vs: unknown[]) => { url += vs.join(',').length; tests.push((r) => vs.includes(r[k])); return q; },
+        overlaps: (k: string, vs: unknown[]) => { url += vs.join(',').length; tests.push((r) => ((r[k] ?? []) as unknown[]).some((x) => vs.includes(x))); return q; },
+        then: (ok: (v: unknown) => unknown, bad?: (e: unknown) => unknown) => {
+          // PostgREST's two limits: a filter too long for a URL is refused,
+          // and no response carries more than max-rows (1,000 on Supabase).
+          if (url > FakeDb.URL_LIMIT) return Promise.resolve({ data: null, error: { message: '414 URI Too Long' } }).then(ok, bad);
+          const all = db.table(table).filter((r) => tests.every((t) => t(r)));
+          const [from, to] = window ?? [0, all.length - 1];
+          return Promise.resolve({ data: all.slice(from, to + 1).slice(0, FakeDb.MAX_ROWS).map((r) => ({ ...r })), error: null }).then(ok, bad);
+        },
       };
       return q;
     };
@@ -235,6 +247,57 @@ describe('groups are the administrator’s mappings', () => {
     const res = await call('PATCH', `/Groups/${group.id}`, { schemas: [SCIM_PATCH_SCHEMA], Operations: [{ op: 'replace', path: 'members', value: [{ value: id }] }] });
     expect(res.status).toBe(200);
     expect((await res.json() as Row).members).toEqual([{ value: id, display: 'ada@northstar.example' }]);
+  });
+});
+
+describe('a credential that is no longer live', () => {
+  it('is refused, and the refusal is recorded against its tenant', async () => {
+    const { db, call } = setup();
+    const res = await call('POST', '/Users', user('ext-late', 'late@example.edu'), 'req-revoked', `Bearer ${REVOKED}.${SECRET}`);
+    expect(res.status).toBe(401);
+    expect(db.rpcs.some((r) => r.name === 'scim_gateway_provision_user')).toBe(false);
+    const refusal = db.rpcs.find((r) => r.name === 'scim_gateway_record_refusal');
+    expect(refusal?.args).toMatchObject({ want_tenant: TENANT, want_credential: REVOKED, want_request_id: 'req-revoked', want_status: 401 });
+  });
+
+  it('control: an unknown credential is refused with nothing to record it against', async () => {
+    const { db, call } = setup();
+    const res = await call('POST', '/Users', user('ext-x', 'x@example.edu'), 'req-unknown', `Bearer dddddddd-dddd-4ddd-8ddd-dddddddddddd.${SECRET}`);
+    expect(res.status).toBe(401);
+    expect(db.rpcs.some((r) => r.name === 'scim_gateway_record_refusal')).toBe(false);
+  });
+});
+
+describe('a directory larger than one PostgREST response', () => {
+  // 1,205 people: past max-rows, and far past what fits in one URL as ids.
+  function seedDirectory(db: FakeDb, n: number) {
+    for (let k = 0; k < n; k++) {
+      const id = `cccccccc-cccc-4ccc-8ccc-${String(k).padStart(12, '0')}`;
+      db.identities.push({ membership_id: id, tenant_id: TENANT, external_id: `ext-${k}`, user_name: `u${k}@example.edu`, active: true, group_external_ids: ['grp-advisors'], created_at: '2026-09-27T00:00:00Z', updated_at: '2026-09-27T00:00:00Z' });
+      db.memberships.push({ id, tenant_id: TENANT, roles: ['student'] });
+    }
+  }
+
+  it('counts and pages every user, not the first thousand', async () => {
+    const { db, call } = setup();
+    seedDirectory(db, 1205);
+    const last = await (await call('GET', '/Users?startIndex=1201&count=10')).json() as { totalResults: number; Resources: { userName: string; roles?: unknown }[] };
+    expect(last.totalResults).toBe(1205);
+    expect(last.Resources.map((r) => r.userName)).toEqual(['u1200@example.edu', 'u1201@example.edu', 'u1202@example.edu', 'u1203@example.edu', 'u1204@example.edu']);
+  });
+
+  it('lists every member of a large group', async () => {
+    const { db, call } = setup();
+    seedDirectory(db, 1205);
+    const groups = await (await call('GET', '/Groups')).json() as { Resources: { displayName: string; members: unknown[] }[] };
+    expect(groups.Resources.find((g) => g.displayName === 'Advisors')?.members).toHaveLength(1205);
+  });
+
+  it('control: the fake really does cap a response at max-rows', async () => {
+    const db = new FakeDb();
+    seedDirectory(db, 1205);
+    const { data } = await db.client().from('scim_external_identity').select('*');
+    expect((data as Row[]).length).toBe(FakeDb.MAX_ROWS);
   });
 });
 

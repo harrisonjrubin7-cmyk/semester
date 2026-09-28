@@ -31,6 +31,9 @@ do $$
 declare
   cred uuid := gen_random_uuid();
   other_cred uuid := gen_random_uuid();
+  revoked_cred uuid := gen_random_uuid();
+  expired_cred uuid := gen_random_uuid();
+  live boolean;
   member uuid;
   again uuid;
   n bigint;
@@ -46,6 +49,11 @@ begin
      digest(decode('00112233445566778899aabbccddeeff', 'hex') || convert_to('secret', 'utf8'), 'sha256'), 'active'),
     (other_cred, 'scim-gw-other', 'Other', decode('ffeeddccbbaa99887766554433221100', 'hex'),
      digest(decode('ffeeddccbbaa99887766554433221100', 'hex') || convert_to('other', 'utf8'), 'sha256'), 'active');
+  insert into public.scim_credential (id, tenant_id, label, secret_salt, secret_hash, status, revoked_at, expires_at) values
+    (revoked_cred, 'scim-gw', 'Revoked', decode('00112233445566778899aabbccddeeff', 'hex'),
+     digest(decode('00112233445566778899aabbccddeeff', 'hex') || convert_to('old', 'utf8'), 'sha256'), 'revoked', now(), null),
+    (expired_cred, 'scim-gw', 'Expired', decode('00112233445566778899aabbccddeeff', 'hex'),
+     digest(decode('00112233445566778899aabbccddeeff', 'hex') || convert_to('late', 'utf8'), 'sha256'), 'active', null, now() - interval '1 day');
 
   -- ── Nobody but the service role ────────────────────────────────────────
 
@@ -80,6 +88,21 @@ begin
 
   select count(*) into n from public.scim_gateway_credential(cred);
   perform pg_temp.counted('an active credential''s material is returned', n, 1);
+  select c.active into live from public.scim_gateway_credential(cred) c;
+  if live is not true then raise exception 'FAILED: a live credential came back inactive'; end if;
+  raise notice 'ok  a live credential is marked active';
+
+  -- A known but dead credential still names its tenant, so its refusal can
+  -- be recorded; it is never marked active.
+  select count(*) into n from public.scim_gateway_credential(revoked_cred) c where c.tenant_id = 'scim-gw' and not c.active;
+  perform pg_temp.counted('a revoked credential is returned, inactive, with its tenant', n, 1);
+  select count(*) into n from public.scim_gateway_credential(expired_cred) c where c.tenant_id = 'scim-gw' and not c.active;
+  perform pg_temp.counted('an expired credential is returned, inactive, with its tenant', n, 1);
+  select count(*) into n from public.scim_gateway_credential(gen_random_uuid());
+  perform pg_temp.counted('an unknown id returns nothing', n, 0);
+  wrote := public.scim_gateway_record_refusal('scim-gw', revoked_cred, 'req-revoked', 'User', 401, 'revoked');
+  select count(*) into n from public.provisioning_audit_event where credential_id = revoked_cred and request_id = 'req-revoked';
+  perform pg_temp.counted('a refusal from a revoked credential is recorded', n, 1);
 
   member := public.scim_gateway_provision_user('scim-gw', cred, 'req-1', 'ext-1', 'Ada@Scim-GW.example', 'Ada', true);
   again := public.scim_gateway_provision_user('scim-gw', cred, 'req-1', 'ext-1', 'Ada@Scim-GW.example', 'Ada', true);

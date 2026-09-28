@@ -31,10 +31,23 @@
 -- credential a tenant administrator issued. `docs/INSTITUTIONAL-SSO-LAUNCH-
 -- READINESS.md` is the activation order.
 
-create or replace function public.scim_gateway_credential(want_id uuid)
-returns table (credential_id uuid, tenant_id text, secret_salt bytea, secret_hash bytea)
+-- A known credential comes back whether or not it is live, with `active`
+-- saying which. The gateway refuses an inactive one exactly as it refuses a
+-- stranger; what it gains is the tenant, so a revoked or expired secret still
+-- in an IdP's configuration leaves a refusal in provisioning_audit_event
+-- rather than nothing. Which credentials are live is still the private
+-- function's rule: `active` is true only for a row it returned.
+drop function if exists public.scim_gateway_credential(uuid);
+create function public.scim_gateway_credential(want_id uuid)
+returns table (credential_id uuid, tenant_id text, secret_salt bytea, secret_hash bytea, active boolean)
 language sql stable security definer set search_path = '' as $$
-  select * from private.scim_credential_material(want_id);
+  select m.credential_id, m.tenant_id, m.secret_salt, m.secret_hash, true
+    from private.scim_credential_material(want_id) m
+  union all
+  select c.id, c.tenant_id, c.secret_salt, c.secret_hash, false
+    from public.scim_credential c
+   where c.id = want_id
+     and not exists (select 1 from private.scim_credential_material(want_id));
 $$;
 
 create or replace function public.scim_gateway_provision_user(

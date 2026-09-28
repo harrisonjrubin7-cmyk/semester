@@ -61,6 +61,14 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 type Row = Record<string, unknown>;
 
+/** A list query not yet sent: `range` bounds it and returns the awaitable read. */
+type Ranged = { range(from: number, to: number): PromiseLike<{ data: unknown; error: unknown }> };
+
+/** Rows asked for per read. Supabase's default max-rows, so one read per page. */
+const PAGE = 1000;
+/** Values per `in`/`overlaps` filter: 100 UUIDs is under 4 KB of URL. */
+const IN_CHUNK = 100;
+
 /** PostgREST returns bytea as `\x` followed by hex. */
 export function byteaToBytes(value: unknown): Uint8Array {
   if (typeof value !== 'string' || !/^\\x([0-9a-f]{2})*$/i.test(value)) {
@@ -103,6 +111,33 @@ export class PostgresScimRepository implements ScimRepository {
     return (data ?? []) as Row[];
   }
 
+  /**
+   * Every row a list query matches. PostgREST caps each response at the
+   * project's max-rows (1,000 on Supabase) and says nothing when it does, so a
+   * single read of a university directory silently stops at the cap. `build`
+   * makes a fresh query per page, which must carry a total order; this reads
+   * until a page comes back empty rather than short, so a smaller cap than
+   * PAGE cannot end it early.
+   */
+  private async all(build: () => Ranged, operation: string): Promise<Row[]> {
+    const out: Row[] = [];
+    for (;;) {
+      const page = await this.rows(build().range(out.length, out.length + PAGE - 1), operation);
+      if (page.length === 0) return out;
+      out.push(...page);
+    }
+  }
+
+  /** An `in` filter is a URL, so a long list is asked for in pieces. */
+  private async allIn(values: string[], build: (chunk: string[]) => Ranged, operation: string): Promise<Row[]> {
+    const out: Row[] = [];
+    for (let k = 0; k < values.length; k += IN_CHUNK) {
+      const chunk = values.slice(k, k + IN_CHUNK);
+      out.push(...await this.all(() => build(chunk), operation));
+    }
+    return out;
+  }
+
   async credential(id: string): Promise<CredentialMaterial | null> {
     if (!UUID.test(id)) return null;
     const found = await this.rpc<Row[]>('scim_gateway_credential', { want_id: id }, 'read a credential');
@@ -113,23 +148,27 @@ export class PostgresScimRepository implements ScimRepository {
       tenantId: String(row.tenant_id),
       salt: byteaToBytes(row.secret_salt),
       hash: byteaToBytes(row.secret_hash),
-      // The function returns active, unexpired credentials only.
-      status: 'active',
+      // Known but revoked or expired comes back too, so a refusal can be
+      // recorded against its tenant; the service refuses anything not active.
+      status: row.active === true ? 'active' : 'revoked',
     };
   }
 
   // ── Users ─────────────────────────────────────────────────────────────
 
   private async users(tenantId: string, where: { column: string; value: string } | null): Promise<ProvisioningResult[]> {
-    let query = this.client.from('scim_external_identity')
-      .select('membership_id, external_id, user_name, display_name, active, group_external_ids, created_at, updated_at')
-      .eq('tenant_id', tenantId);
-    if (where) query = query.eq(where.column, where.value);
-    const identities = await this.rows(query.order('created_at'), 'list users');
+    const identities = await this.all(() => {
+      let query = this.client.from('scim_external_identity')
+        .select('membership_id, external_id, user_name, display_name, active, group_external_ids, created_at, updated_at')
+        .eq('tenant_id', tenantId);
+      if (where) query = query.eq(where.column, where.value);
+      return query.order('created_at').order('membership_id');
+    }, 'list users');
     if (identities.length === 0) return [];
-    const memberships = await this.rows(
-      this.client.from('institution_membership').select('id, roles')
-        .eq('tenant_id', tenantId).in('id', identities.map((i) => String(i.membership_id))),
+    const memberships = await this.allIn(
+      identities.map((i) => String(i.membership_id)),
+      (ids) => this.client.from('institution_membership').select('id, roles')
+        .eq('tenant_id', tenantId).in('id', ids).order('id'),
       'read memberships',
     );
     const roles = new Map(memberships.map((m) => [String(m.id), (m.roles ?? []) as UniversityRole[]]));
@@ -190,22 +229,28 @@ export class PostgresScimRepository implements ScimRepository {
   // ── Groups ────────────────────────────────────────────────────────────
 
   private async groups(tenantId: string, where: { column: string; value: string } | null): Promise<StoredScimGroup[]> {
-    let query = this.client.from('scim_group_mapping')
-      .select('id, external_group_id, display_name, updated_at')
-      .eq('tenant_id', tenantId).eq('active', true);
-    if (where) query = query.eq(where.column, where.value);
-    const mappings = await this.rows(query.order('display_name'), 'list groups');
+    const mappings = await this.all(() => {
+      let query = this.client.from('scim_group_mapping')
+        .select('id, external_group_id, display_name, updated_at')
+        .eq('tenant_id', tenantId).eq('active', true);
+      if (where) query = query.eq(where.column, where.value);
+      return query.order('display_name').order('id');
+    }, 'list groups');
     if (mappings.length === 0) return [];
-    const members = await this.rows(
-      this.client.from('scim_external_identity')
+    const members = await this.allIn(
+      mappings.map((m) => String(m.external_group_id)),
+      (groups) => this.client.from('scim_external_identity')
         .select('membership_id, user_name, group_external_ids, created_at')
         .eq('tenant_id', tenantId).eq('active', true)
-        .overlaps('group_external_ids', mappings.map((m) => String(m.external_group_id))),
+        .overlaps('group_external_ids', groups).order('membership_id'),
       'list group members',
     );
+    // A person in two groups that fell in different chunks came back twice.
+    const seen = new Set<string>();
+    const unique = members.filter((i) => !seen.has(String(i.membership_id)) && seen.add(String(i.membership_id)));
     return mappings.map((m) => {
       const external = String(m.external_group_id);
-      const inGroup: ScimMember[] = members
+      const inGroup: ScimMember[] = unique
         .filter((i) => ((i.group_external_ids ?? []) as string[]).includes(external))
         .map((i) => ({ value: String(i.membership_id), display: String(i.user_name) }));
       const updated = new Date(String(m.updated_at)).toISOString();
@@ -241,9 +286,10 @@ export class PostgresScimRepository implements ScimRepository {
     const ids = [...new Set(members.map((m) => m.value))];
     if (ids.length === 0) return [];
     if (!ids.every((v) => UUID.test(v))) throw new ScimError(400, 'A group member is not a SCIM user of this university.');
-    const found = await this.rows(
-      this.client.from('scim_external_identity').select('membership_id, external_id')
-        .eq('tenant_id', tenantId).in('membership_id', ids),
+    const found = await this.allIn(
+      ids,
+      (chunk) => this.client.from('scim_external_identity').select('membership_id, external_id')
+        .eq('tenant_id', tenantId).in('membership_id', chunk).order('membership_id'),
       'resolve group members',
     );
     if (found.length !== ids.length) throw new ScimError(400, 'A group member is not a SCIM user of this university.');
