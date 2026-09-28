@@ -22,10 +22,10 @@ never a person, and a seat is held only once somebody accepted it in writing.
 
 | Status | Meaning | Entries |
 | --- | --- | ---: |
-| current | Read on the review date, and stands | 39 |
+| current | Read on the review date, and stands | 41 |
 | draft | The authoritative version, but not yet fit to act on | 2 |
 | missing | No authoritative version exists; the gap says what would close it | 3 |
-| **total** |  | **44** |
+| **total** |  | **46** |
 
 `version` counts reviews of the entry — the decision that this path is the
 authoritative one and its content was read and stands — not the document’s
@@ -90,6 +90,8 @@ What the repository also runs on, and the brief’s list did not name.
 | QTI 3 assessment content and migration | [`docs/QTI-3-ASSESSMENT-AND-MIGRATION.md`](docs/QTI-3-ASSESSMENT-AND-MIGRATION.md) | current | `product` | 1 | 2026-09-28 | 2026-12-28 | — | `D-112` |
 | AI in grading and integrity | [`docs/operating-model/AI-GRADING-AND-INTEGRITY.md`](docs/operating-model/AI-GRADING-AND-INTEGRITY.md) | current | `trust` | 1 | 2026-09-28 | 2026-12-28 | — | `D-112` |
 | One-system platform grammar | [`docs/ONE-SYSTEM-PLATFORM-GRAMMAR.md`](docs/ONE-SYSTEM-PLATFORM-GRAMMAR.md) | current | `product` | 1 | 2026-09-28 | 2026-12-28 | — | `D-112` |
+| SaaS launch kit | [`docs/SAAS-LAUNCH-KIT.md`](docs/SAAS-LAUNCH-KIT.md) | current | `founder` | 1 | 2026-09-28 | 2026-10-28 | — | `D-113`, `D-009` |
+| Operational reality register | [`docs/OPERATIONAL-REALITY-REGISTER.md`](docs/OPERATIONAL-REALITY-REGISTER.md) | current | `founder` | 1 | 2026-09-28 | 2026-10-28 | — | `D-113` |
 
 ## Notes and gaps
 
@@ -137,6 +139,8 @@ What the repository also runs on, and the brief’s list did not name.
 - **QTI 3 assessment content and migration** — Rendered from app/src/lib/assessment/qti.ts: QTI 3 as the content model — the principles, the interaction library held to the five question kinds the app has, the authoring flow, the item analytics and their prohibition, the AI item-generation workflow with its metadata held to the Question type and its controls, and the ten-phase migration programme with its toolchain and thresholds. Read next: [`docs/LEARNING-ASSESSMENT-GRADEBOOK-REGISTER.md`](docs/LEARNING-ASSESSMENT-GRADEBOOK-REGISTER.md), [`docs/LMS-LEARNING-ROADMAP.md`](docs/LMS-LEARNING-ROADMAP.md).
 - **AI in grading and integrity** — Rendered from app/src/lib/governance/grading-ai.ts: Gradescope, Turnitin and Copyleaks compared without a single accuracy number, the institution-controlled evaluation that does compare them, the procurement pass/fail rules, the roles AI may hold in assessment at their lifecycle gates, the two rules at the AI intake — an automatic misconduct accusation is refused there as a disciplinary judgment; an AI-only grade is refused by nothing — and the twelve fairness controls, every tested one the sandbox. Read next: [`docs/operating-model/AI-ASSURANCE.md`](docs/operating-model/AI-ASSURANCE.md), [`docs/operating-model/AI-LIFECYCLE-GATES.md`](docs/operating-model/AI-LIFECYCLE-GATES.md), [`GRADESCOPE-TURNITIN.md`](GRADESCOPE-TURNITIN.md).
 - **One-system platform grammar** — Rendered from app/src/lib/onesystem.ts: what makes Semester one system — the nine areas held to the app’s roots, the object envelope, the trust pattern held to the provenance words, the action model, the notification centre, search, the Me centre held to its control rows, the operations console views, the twelve consistency release gates, the eleven foundations and the seven relationship rules — each at what the tree has. The foundations exist as parts; the page says what to converge. Read next: [`docs/design/SEMESTER-UI-CONSTITUTION.md`](docs/design/SEMESTER-UI-CONSTITUTION.md), [`docs/DO-NOT-BUILD.md`](docs/DO-NOT-BUILD.md), [`ops/operations-console/README.md`](ops/operations-console/README.md).
+- **SaaS launch kit** — Rendered from app/src/lib/launchkit.ts: the company around the product — entity and formation, nine insurance coverages, the pilot agreement package and term sheet held to the pilot and deal-desk rules, twelve modules and the price bands beside the deal desk’s proposed minimums, the go-to-market plan on the sales stages, the governance council charter on the seats that already exist, and the first thirty days. A crosswalk, not a price book or a contract: nothing in it may be signed. The entity is held to the owner’s attestation of an LLC; the pilot term is held to the code’s 60–120 days. Read next: [`docs/operating-model/COMMERCIAL-GOVERNANCE.md`](docs/operating-model/COMMERCIAL-GOVERNANCE.md), [`docs/trust/PILOT-AGREEMENT-OUTLINE.md`](docs/trust/PILOT-AGREEMENT-OUTLINE.md), [`docs/LAUNCH-DECISIONS.md`](docs/LAUNCH-DECISIONS.md).
+- **Operational reality register** — Rendered from app/src/lib/operationalreality.ts: what it takes to run the platform as a company — the master-plan fields and five workstreams on the seats, the company operating system, the customer-proof engine, five service tiers, the seventeen implementation-factory assets, the whole-platform readiness test, sixty-four production checks each with its guard or none, eighteen failure scenarios held to the edge-case, risk, game-day and maturity registers, the load and cost thresholds, data quality, support, implementation capacity, revenue operations, key-person resilience, the go-live dossier and the final twelve-line checklist, answered. Read next: [`docs/MASTER-LAUNCH-READINESS-REGISTER.md`](docs/MASTER-LAUNCH-READINESS-REGISTER.md), [`docs/GO-NO-GO-CHECKLIST.md`](docs/GO-NO-GO-CHECKLIST.md), [`docs/PROOF-CALENDAR.md`](docs/PROOF-CALENDAR.md).
 
 ## What every controlled document displays
 

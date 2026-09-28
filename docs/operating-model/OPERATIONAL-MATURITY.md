@@ -225,7 +225,7 @@ Exposure `internal` · owner `security` · 0 of 11 in place.
 
 | ID | Control | Status | Evidence | What it shows, or what would close it |
 | --- | --- | --- | --- | --- |
-| DV-01 | Company device-management policy. | owed | — | There is no company yet (LAUNCH-DECISIONS item 4) and no policy. One founder’s device operates everything. |
+| DV-01 | Company device-management policy. | owed | — | The company is a single-member LLC by the owner’s attestation (HECVAT COMP-01, 28 September) and has no device policy. One founder’s device operates everything. |
 | DV-02 | Disk encryption. | owed | — | Not attested. Would be the first line of DV-01. |
 | DV-03 | Endpoint protection. | owed | — | Not attested. |
 | DV-04 | Screen lock and password policy. | owed | — | Not attested. |
