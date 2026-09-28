@@ -1,5 +1,6 @@
 import { Suspense, lazy, useMemo, useState } from 'react';
 import { MODULE_FLAGS, moduleOn } from '../lib/experience-flags';
+import { SourceBadge } from '../components/SourceBadge';
 import { DIMMED_ROW, secondLine } from '../lib/dim';
 import { useNow, useStore } from '../state/store';
 import { Page } from '../components/Page';
@@ -230,6 +231,10 @@ export function Registrar({
       <Blueprint style={{ paddingBlock: 'calc(14px * var(--density, 1))', paddingInline: 'calc(15px * var(--density, 1))' }}>
         <div className="kicker">
           {done.done} of {done.of} filled in
+        </div>
+        {/* The app ships none of these dates: each is typed or confirmed by the student, pasted and school-calendar ones included. */}
+        <div className="context-bar-states" style={{ marginTop: 'var(--sp-3)' }}>
+          <SourceBadge label="student_entered" />
         </div>
         <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 'calc(7px * var(--density, 1))', lineHeight: 'var(--leading-relaxed)' }}>
           Every other date in this app came off a syllabus. These come from your registrar, and

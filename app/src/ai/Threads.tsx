@@ -264,8 +264,16 @@ export function Threads({
 
               Written out rather than behind a menu or a long-press: both of
               those are gestures nobody finds, and there are only three.
+
+              Under the open conversation only, and only once something has
+              been asked in it. Repeated under every row, forty conversations
+              were forty copies of PIN RENAME DELETE, and the list read as a
+              table of controls rather than a list of conversations; under an
+              empty "New conversation" there was nothing yet to pin, name or
+              lose. Open it, and its three are right there — still words,
+              still one tap, never hidden behind a gesture.
             */}
-            {naming?.id !== t.id && (
+            {naming?.id !== t.id && t.id === openId && t.turns.length > 0 && (
               <div style={ACTIONS}>
                 <button
                   type="button"

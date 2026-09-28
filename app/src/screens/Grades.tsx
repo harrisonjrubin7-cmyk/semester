@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { SourceBadge } from '../components/SourceBadge';
 import { DIMMED_ROW } from '../lib/dim';
 import { useNow, useStore } from '../state/store';
 import { useRowStyle } from '../components/shell/useShell';
@@ -416,6 +417,16 @@ export function Grades() {
     <div>
       <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
         {intro}
+      </div>
+      {/*
+        Where these figures come from, in the one trust vocabulary. The marks
+        are what you typed; the projections and "what you need on the final"
+        are arithmetic on them — a student decides how hard to work from
+        those numbers, so they say they are not the registrar's.
+      */}
+      <div className="context-bar-states" style={{ marginTop: 'var(--sp-3)', marginBottom: 'var(--sp-4)' }}>
+        <SourceBadge label="student_entered" />
+        <SourceBadge label="estimated" />
       </div>
       {body(catalog.courses)}
       <div style={{ height: 22 }} />

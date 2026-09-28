@@ -47,6 +47,10 @@
 
 create table if not exists public.family_shared_items (
   student_id uuid        not null references auth.users on delete cascade,
+  -- The code this copy was confirmed with. A copy belongs to one share: a
+  -- second share of the same item is a second copy under its own code, so
+  -- what one supporter was shown never changes because of another share.
+  code       text        not null references public.family_invites (code) on delete cascade,
   item_id    text        not null check (length(item_id) between 1 and 100),
   -- How the student is named on the supporter's page, in their own words.
   -- A supporter has no other way to tell two students apart: the student's
@@ -62,8 +66,11 @@ create table if not exists public.family_shared_items (
   done       boolean     not null default false,
   amount     numeric     not null default 0 check (amount >= 0 and amount <= 10000000),
   shared_at  timestamptz not null default now(),
-  primary key (student_id, item_id)
+  primary key (code, item_id)
 );
+
+-- Deleting an account finds its copies by student; the key leads with code.
+create index if not exists family_shared_items_student_idx on public.family_shared_items (student_id);
 
 alter table public.family_shared_items enable row level security;
 
@@ -181,18 +188,13 @@ begin
     ids := ids || (it->>'id');
 
     insert into public.family_shared_items
-      (student_id, item_id, shown_as, category, kind, title, body, due, done, amount)
+      (student_id, code, item_id, shown_as, category, kind, title, body, due, done, amount)
     values (
-      me, it->>'id', btrim(want_shown_as), it->>'category',
+      me, made, it->>'id', btrim(want_shown_as), it->>'category',
       coalesce(it->>'kind', 'information'), coalesce(it->>'title', ''),
       coalesce(it->>'body', ''), coalesce(it->>'due', ''),
       coalesce((it->>'done')::boolean, false), coalesce((it->>'amount')::numeric, 0)
-    )
-    on conflict (student_id, item_id) do update
-      set shown_as = excluded.shown_as, category = excluded.category,
-          kind = excluded.kind, title = excluded.title, body = excluded.body,
-          due = excluded.due, done = excluded.done, amount = excluded.amount,
-          shared_at = now();
+    );
   end loop;
 
   -- Named but not carried is the reverse mismatch: a grant pointing at an id
@@ -259,6 +261,7 @@ begin
       on si.student_id = g.student_id
      and si.category = g.category
      and si.item_id = any(g.resource_ids)
+     and si.code = g.invite_code
    where g.recipient_id = me
      and g.accepted_at is not null
      and g.accepted_at <= now()
@@ -275,6 +278,7 @@ begin
         on si.student_id = g.student_id
        and si.category = g.category
        and si.item_id = any(g.resource_ids)
+       and si.code = g.invite_code
      where g.recipient_id = me
        and g.accepted_at is not null
        and g.accepted_at <= now()

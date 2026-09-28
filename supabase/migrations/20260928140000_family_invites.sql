@@ -123,6 +123,16 @@ create table if not exists public.family_invites (
 
 alter table public.family_invites enable row level security;
 
+-- Which code a grant came from. The copies a student confirmed are stored
+-- under that code (20260928141000_family_shared_items.sql), and a grant reads
+-- only its own code's copies, so sharing the same item again later, with
+-- anyone, cannot change what an earlier supporter was shown. Null for a grant
+-- made any other way, which then reads no copies at all.
+alter table public.family_grants
+  add column if not exists invite_code text
+    references public.family_invites (code) on delete set null;
+create index if not exists family_grants_invite_code_idx on public.family_grants (invite_code);
+
 create index if not exists family_invites_by_student on public.family_invites (student_id);
 -- `claimed_by` is a foreign key the cascade will follow — deleting an account
 -- has to prove no invite names it — and `supabase/indexes.check.sql` is the
@@ -328,9 +338,9 @@ begin
   foreach cat in array inv.categories loop
     insert into public.family_grants
       (institution_id, student_id, recipient_id, category, access,
-       resource_ids, accepted_at, expires_at)
+       resource_ids, accepted_at, expires_at, invite_code)
     values (inv.institution_id, inv.student_id, me, cat, inv.access,
-            inv.resource_ids, now(), inv.grant_expires_at);
+            inv.resource_ids, now(), inv.grant_expires_at, inv.code);
   end loop;
 
   return 'claimed';

@@ -441,6 +441,8 @@ declare
     -- and consents, and advisor shares at either end. `demand.check.sql` and
     -- `advisor.check.sql` hold that neither reaches another account's rows.
     'forget_my_advisor_shares()',
+    -- 20260928142000_support_shares.sql: shares naming the caller at either end.
+    'forget_my_support_shares()',
     'forget_my_course_demand()'
   ];
   extra text;
