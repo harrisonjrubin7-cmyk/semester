@@ -156,8 +156,13 @@ export function find(dir: string): Hit[] {
 }
 
 export function countsByFile(dir: string): Ledger {
+  return countHits(find(dir));
+}
+
+/** The hits as a ledger: per file, per retired word, how many. */
+export function countHits(hits: readonly Hit[]): Ledger {
   const out: Ledger = {};
-  for (const h of find(dir)) {
+  for (const h of hits) {
     const row = (out[h.file] ??= {});
     row[h.id] = (row[h.id] ?? 0) + 1;
   }
@@ -182,8 +187,11 @@ export interface Problem {
  * one is somewhere among them and a count alone sends the next person to grep.
  */
 export function overLedger(dir: string, ledger: Ledger): Problem[] {
+  // One walk of the tree. This read it twice — `find` here and again inside
+  // `countsByFile` — and on a thousand files that was 4.5 s alone and past the
+  // 5 s test timeout under a loaded full run, about one run in two.
   const hits = find(dir);
-  const now = countsByFile(dir);
+  const now = countHits(hits);
   const out: Problem[] = [];
   for (const [file, row] of Object.entries(now)) {
     for (const [id, n] of Object.entries(row)) {
