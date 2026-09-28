@@ -389,7 +389,7 @@ returns nothing for a wrong, revoked or expired token, for a document the grant
 does not cover, or while `kill.sharing` is engaged. The HTTP answer is the same
 404 in every one of those cases.
 
-**It is inert until someone uses it on purpose.** Merging deploys it, and it
+**It is inert until someone uses it on purpose.** It is deployed, and it
 refuses every request until a trust officer publishes a document version and
 the account team mints a grant. There is nothing to switch off first.
 
@@ -397,11 +397,10 @@ the account team mints a grant. There is nothing to switch off first.
 other functions read (see `_shared/cors.ts`). The reviewer's page is the only
 browser that calls it.
 
-**Its snapshot row is `pending`.** `functions.snapshot` records readings of the
-live project, and there is none until the first merge deploys it. Replace the
-pending row with a real reading (slug, version, pipeline, time) after that
-merge; `functionsdeployed.test.ts` fails once a pending row is fourteen days
-old.
+**Live since #817's merge.** It went up with a `pending` row in
+`functions.snapshot`, because there is no reading of a function before the
+merge that deploys it. Read off the project at 00:49 UTC on 28 September, it
+was v7 on a platform path, and that reading replaced the pending row.
 
 **Not built yet:** the page a reviewer opens. It should read the token from the
 URL fragment (never the query string, which servers log) and post it here.
