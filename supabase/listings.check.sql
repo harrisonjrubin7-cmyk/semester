@@ -121,8 +121,23 @@ begin
   -- ── Before and after publishing ─────────────────────────────────────────
   perform pg_temp.counted('a student sees nothing before a moderator publishes',
     pg_temp.seen(student, 'select 1 from public.opportunities'), 0);
-  perform pg_temp.expect_allowed('a moderator publishing the listing', moderator,
+  -- Moderation is status only, through moderate_opportunity (20260928110700).
+  perform pg_temp.expect_refused('a moderator rewriting a listing''s title', moderator,
+    format($q$update public.opportunities set title = 'Something else' where id = %L$q$, oid));
+  perform pg_temp.expect_refused('a moderator rewriting a listing''s body and link', moderator,
+    format($q$update public.opportunities set body = 'Unsaid', url = 'https://elsewhere.example' where id = %L$q$, oid));
+  perform pg_temp.expect_refused('a moderator setting status by a direct update', moderator,
     format($q$update public.opportunities set status = 'published' where id = %L$q$, oid));
+  perform pg_temp.expect_refused('a publisher calling the moderation function', employer,
+    format($q$select public.moderate_opportunity(%L, 'published')$q$, oid));
+  perform pg_temp.expect_refused('a moderator moving a listing to anything but published or removed', moderator,
+    format($q$select public.moderate_opportunity(%L, 'draft')$q$, oid));
+  perform pg_temp.expect_allowed('the publisher still editing their own listing under review', employer,
+    format($q$update public.opportunities set body = 'Paid, 10 hours a week' where id = %L$q$, oid));
+  perform pg_temp.expect_allowed('a moderator publishing the listing', moderator,
+    format($q$select public.moderate_opportunity(%L, 'published')$q$, oid));
+  perform pg_temp.counted('and the title and body are the publisher''s, as written',
+    (select count(*) from public.opportunities where id = oid and title = 'Data intern' and body = 'Paid, 10 hours a week' and status = 'published'), 1);
   perform pg_temp.counted('a student at the school reads the published listing — THE CONTROL',
     pg_temp.seen(student, 'select 1 from public.opportunities'), 1);
   perform pg_temp.counted('a student at another school does not',

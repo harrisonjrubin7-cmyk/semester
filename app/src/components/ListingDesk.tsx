@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Notice, SectionLabel } from './ui';
 import { cloud } from '../lib/cloud';
 import { useMyCapabilities } from '../lib/capabilities';
-import { LISTING_KINDS, QUEUE_LIMIT, deadlineForStorage, deadlineLabel, eligibilityLines, loadReviewQueue, type ListingKind, type QueuedListing } from '../lib/listings';
+import { LISTING_KINDS, QUEUE_LIMIT, deadlineForStorage, deadlineLabel, eligibilityLines, loadReviewQueue, moderateListing, type ListingKind, type QueuedListing } from '../lib/listings';
 
 /**
  * The staff side of verified listings: publishers draft and submit, moderators
@@ -10,9 +10,9 @@ import { LISTING_KINDS, QUEUE_LIMIT, deadlineForStorage, deadlineLabel, eligibil
  * `opportunity:publish` or `opportunity:moderate` — and the table's own
  * policies still decide every write.
  *
- * A moderator here only ever changes `status`. The database would currently
- * let a moderator rewrite a listing's title and body too; this screen offers
- * no way to, and the PR asks whether the policy should be narrowed to match.
+ * A moderator only ever changes `status`, and the database holds them to it:
+ * `moderate_opportunity` is their one door, and it writes nothing else. The
+ * title, body, link, deadline and eligibility stay the publisher's words.
  */
 
 type Row = QueuedListing;
@@ -65,7 +65,14 @@ export function ListingDesk({ school }: { school: string }) {
   };
 
   const setStatus = (id: string, status: 'published' | 'removed') =>
-    act(async () => (await cloud()).from('opportunities').update({ status }).eq('id', id));
+    act(async () => {
+      try {
+        await moderateListing(id, status);
+        return { error: null };
+      } catch (e) {
+        return { error: { message: e instanceof Error ? e.message : 'Could not change that listing.' } };
+      }
+    });
 
   const pending = rows;
 

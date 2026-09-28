@@ -17,6 +17,7 @@ reading:
     fetchcal   ACTIVE, v56, verify_jwt off   platform
     canvas     ACTIVE, v49, verify_jwt off   platform
     lti        ACTIVE, v49, verify_jwt off   platform
+    integration-tick  ACTIVE, v1, verify_jwt off   runner (first deploy, 2026-09-27T21:48:27Z)
     trust-room PENDING, live on merge, verify_jwt off  (see below)
 
 **This file once said two, at v1, and filed three of the other four under "Not
@@ -509,9 +510,12 @@ never applied; the other two came with the integration scheduler. Read off `cron
   if it is missing or stalled.
 - **`integration-retention`** calls `public.integration_retention_sweep()`. It visits only schools with an
   integration connection, and there are none yet, so it deletes and writes nothing until one exists.
-- **`integration-sync`** is **parked**. Vault now holds `integration_cron_secret`; it does not yet hold
-  `integration_tick_url`. [`docs/INTEGRATION-OPERATOR-RUNBOOK.md`](../docs/INTEGRATION-OPERATOR-RUNBOOK.md) §4
-  has the four steps that unpark it.
+- **`integration-sync`** is **parked**. Vault holds `integration_cron_secret`. The job now posts to the
+  `integration-tick` Edge Function rather than a Vercel route. That function went up by hand at 2026-09-27T21:48:27Z, from its
+  branch, before the merge that declares it: v1, on a runner path, `verify_jwt` off. Read from the project with pg_net
+  before the token check existed, it answered 401 without a token and 503 with the Vault token, which is how it fails
+  closed. [`docs/INTEGRATION-OPERATOR-RUNBOOK.md`](../docs/INTEGRATION-OPERATOR-RUNBOOK.md) §4 has the test request
+  and the one statement that unparks it.
 
 `push` and `tombstones` came through unchanged, and `push_cron_secret` was not regenerated.
 
