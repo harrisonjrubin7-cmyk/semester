@@ -76,24 +76,20 @@ export function GraduationSimulator({
       const t = totals(kept);
       return { ...d, plan: { ...d.plan, costLines: kept, costPerTerm: t.perTerm, summerCost: t.summer } };
     });
-  const setCloudId = (id: string, cloudId: string | undefined, owner: string | null) =>
+  const setCloudId = (id: string, cloudId: string | undefined, owner: string) =>
     library.update((d) => ({
       ...d,
       scenarios: d.scenarios.map((x) => {
         if (x.id !== id) return x;
-        const next = { ...x };
-        if (cloudId && owner) {
-          next.cloudId = cloudId;
-          next.cloudOwner = owner;
-        } else {
-          delete next.cloudId;
-          delete next.cloudOwner;
-        }
-        return next;
+        const ids = { ...x.cloudIds };
+        if (cloudId) ids[owner] = cloudId;
+        else delete ids[owner];
+        const { cloudIds: _old, ...rest } = x;
+        return Object.keys(ids).length ? { ...rest, cloudIds: ids } : rest;
       }),
     }));
   // A draft is in this account only if this account saved it.
-  const inAccount = (s: Scenario): string | undefined => (s.cloudId && accountId && s.cloudOwner === accountId ? s.cloudId : undefined);
+  const inAccount = (s: Scenario): string | undefined => (accountId ? s.cloudIds?.[accountId] : undefined);
 
   const confirmed = async () => {
     const c = confirm;
@@ -106,7 +102,7 @@ export function GraduationSimulator({
         setStatus(`“${c.scenario.name}” saved to your account as an estimate.`);
       } else if (c.kind === 'unsave' && inAccount(c.scenario)) {
         await deleteDraft(inAccount(c.scenario)!);
-        setCloudId(c.scenario.id, undefined, null);
+        setCloudId(c.scenario.id, undefined, accountId!);
         setStatus(`“${c.scenario.name}” removed from your account. It is still on this device.`);
       } else if (c.kind === 'share') {
         try {

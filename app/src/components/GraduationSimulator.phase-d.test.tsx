@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { GRADUATION_KEY, type GraduationData } from '../lib/graduation';
 
 const saved: unknown[] = [];
@@ -146,13 +146,13 @@ describe('with graduation_simulator on', () => {
     expect(document.activeElement?.textContent).toBe('Cancel');
     await act(async () => button(/^Save to account$/)!.click());
     expect(saved).toHaveLength(1);
-    expect(stored().scenarios[0].cloudId).toBe('0b8f5e6a-1c2d-4e3f-8a9b-0c1d2e3f4a5b');
+    expect(stored().scenarios[0].cloudIds).toEqual({ 'user-1': '0b8f5e6a-1c2d-4e3f-8a9b-0c1d2e3f4a5b' });
     expect(text()).toContain('Saved to your account as an estimate.');
     act(() => button(/^Remove from account$/)!.click());
     const confirmRemove = [...host.querySelectorAll('[role="dialog"] button')].find((b) => b.textContent === 'Remove from account') as HTMLButtonElement;
     await act(async () => confirmRemove.click());
     expect(removed).toEqual(['0b8f5e6a-1c2d-4e3f-8a9b-0c1d2e3f4a5b']);
-    expect(stored().scenarios[0].cloudId).toBeUndefined();
+    expect(stored().scenarios[0].cloudIds).toBeUndefined();
   });
 
   it('never tells another account on this device that the draft is in theirs', async () => {
@@ -160,7 +160,7 @@ describe('with graduation_simulator on', () => {
     choose('minor');
     act(() => button(/^Save draft to your account$/)!.click());
     await act(async () => button(/^Save to account$/)!.click());
-    expect(stored().scenarios[0]).toMatchObject({ cloudId: '0b8f5e6a-1c2d-4e3f-8a9b-0c1d2e3f4a5b', cloudOwner: 'user-1' });
+    expect(stored().scenarios[0].cloudIds).toEqual({ 'user-1': '0b8f5e6a-1c2d-4e3f-8a9b-0c1d2e3f4a5b' });
     mount({ simulator: true, costs: false, accountId: 'user-2' });
     expect(text()).not.toContain('Saved to your account as an estimate.');
     expect(button(/^Remove from account$/)).toBeUndefined();
@@ -170,6 +170,34 @@ describe('with graduation_simulator on', () => {
     const calls = vi.mocked((await import('../lib/graduation-cloud')).saveDraft).mock.calls;
     expect(calls.at(-1)?.[0]).toBe('user-2');
     expect(calls.at(-1)?.[2]).toBeUndefined();
+  });
+
+  it('keeps each account’s draft when two save the same scenario on one device', async () => {
+    const cloudMod = await import('../lib/graduation-cloud');
+    const original = vi.mocked(cloudMod.saveDraft).getMockImplementation()!;
+    onTestFinished(() => void vi.mocked(cloudMod.saveDraft).mockImplementation(original));
+    vi.mocked(cloudMod.saveDraft).mockImplementation(async (user: string, row: unknown, id?: string) => {
+      saved.push(row);
+      return id ?? (user === 'user-1' ? '11111111-1111-4111-8111-111111111111' : '22222222-2222-4222-8222-222222222222');
+    });
+    mount({ simulator: true, costs: false, accountId: 'user-1' });
+    choose('minor');
+    act(() => button(/^Save draft to your account$/)!.click());
+    await act(async () => button(/^Save to account$/)!.click());
+    mount({ simulator: true, costs: false, accountId: 'user-2' });
+    act(() => button(/^Save draft to your account$/)!.click());
+    await act(async () => button(/^Save to account$/)!.click());
+    expect(stored().scenarios[0].cloudIds).toEqual({
+      'user-1': '11111111-1111-4111-8111-111111111111',
+      'user-2': '22222222-2222-4222-8222-222222222222',
+    });
+    // Back to the first account: its draft is still its own, and updating it
+    // updates that row rather than making a second one.
+    mount({ simulator: true, costs: false, accountId: 'user-1' });
+    act(() => button(/^Update in your account$/)!.click());
+    await act(async () => button(/^Save to account$/)!.click());
+    expect(vi.mocked(cloudMod.saveDraft).mock.calls.at(-1)?.slice(0, 1)).toEqual(['user-1']);
+    expect(vi.mocked(cloudMod.saveDraft).mock.calls.at(-1)?.[2]).toBe('11111111-1111-4111-8111-111111111111');
   });
 
   it('does not offer the account when nobody is signed in', () => {

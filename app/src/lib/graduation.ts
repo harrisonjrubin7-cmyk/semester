@@ -73,14 +73,13 @@ export interface Scenario {
    * transfer, at `costPerTerm` (null: the same as a term at home).
    */
   abroad?: Abroad;
-  /** The id of this draft in the student's account, once saved there. */
-  cloudId?: string;
   /**
-   * Which account `cloudId` belongs to. The scenarios are a device store, so
-   * on a shared browser another account must not be told this draft is in
-   * its account, or update and delete a row it does not own.
+   * The id of this draft in each account that saved it, by account id. The
+   * scenarios are a device store, so on a shared browser each account keeps
+   * its own row: one account saving never takes over another's, and none is
+   * told a draft is in its account unless it saved it.
    */
-  cloudOwner?: string;
+  cloudIds?: Record<string, string>;
 }
 
 export interface Abroad {
@@ -165,13 +164,21 @@ export function readGraduation(value: unknown): GraduationData {
       }
       out.abroad = { terms: a.terms, credits: a.credits, costPerTerm: a.costPerTerm as number | null };
     }
-    if (s.cloudId !== undefined) {
-      if (!textValue(s.cloudId, 64) || !/^[0-9a-f-]{36}$/i.test(s.cloudId)) throw new Error('A saved scenario is not valid.');
-      out.cloudId = s.cloudId;
-    }
-    if (s.cloudOwner !== undefined) {
-      if (!textValue(s.cloudOwner, 64) || !s.cloudOwner) throw new Error('A saved scenario is not valid.');
-      out.cloudOwner = s.cloudOwner;
+    const uuid = (v: unknown): v is string => textValue(v, 64) && /^[0-9a-f-]{36}$/i.test(v);
+    if (s.cloudIds !== undefined) {
+      const ids = s.cloudIds;
+      if (!obj(ids) || Object.keys(ids).length > 20 || Object.entries(ids).some(([k, v]) => !k || k.length > 64 || !uuid(v))) {
+        throw new Error('A saved scenario is not valid.');
+      }
+      out.cloudIds = { ...(ids as Record<string, string>) };
+    } else if (s.cloudId !== undefined) {
+      // Saved before drafts were kept per account (#879): one id, and since
+      // #879 its owner. An id with no owner was never shown to any account.
+      if (!uuid(s.cloudId)) throw new Error('A saved scenario is not valid.');
+      if (s.cloudOwner !== undefined) {
+        if (!textValue(s.cloudOwner, 64) || !s.cloudOwner) throw new Error('A saved scenario is not valid.');
+        out.cloudIds = { [s.cloudOwner]: s.cloudId };
+      }
     }
     return out;
   });

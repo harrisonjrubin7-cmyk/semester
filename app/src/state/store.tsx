@@ -189,6 +189,8 @@ interface Store {
    * otherwise wait for another edit before it went up.
    */
   pushNow: () => Promise<boolean>;
+  /** Pull and merge, then push — only if the pull succeeded. For a reconnect. */
+  catchUp: () => Promise<boolean>;
   /**
    * Announce one outcome, to the live region and to the change strip.
    *
@@ -777,11 +779,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
    * `hasRemote` is what stops a signed-in device with a blank account from
    * hydrating a semester's work away.
    */
-  const refresh = useCallback(async (): Promise<string> => {
+  // The pull and merge, saying whether this device now holds what the account
+  // held. Only then may a push follow it: `push` overwrites the account's copy.
+  const pullAndMerge = useCallback(async (): Promise<{ said: string; ok: boolean }> => {
     const base = { cloud: cloudConfigured, signedIn: Boolean(account), took: false, courses: 0, error: '', at: 0 };
     if (!account) {
       if (cloudConfigured) setSync({ status: 'signed-out', at: 0, error: '' });
-      return refreshSaid(base, Date.now());
+      return { said: refreshSaid(base, Date.now()), ok: false };
     }
     setSync((s) => ({ ...s, status: 'syncing', error: '' }));
     try {
@@ -812,7 +816,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         if (decide(both).do === 'ask') {
           setAsking({ sides: both, say: decide(both).say, remote });
           setSync({ status: 'synced', at: Date.now(), error: '' });
-          return refreshSaid({ ...base, took: false }, Date.now());
+          // Both sides hold a semester and the student has not chosen yet.
+          return { said: refreshSaid({ ...base, took: false }, Date.now()), ok: false };
         }
       }
 
@@ -835,18 +840,22 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         markSeen(remote.seen);
       }
       setSync({ status: 'synced', at: Date.now(), error: '' });
-      return refreshSaid(
-        { ...base, took: take, courses: take ? remote.courses.length : 0, at: take ? remote.updated : 0 },
-        Date.now(),
-      );
+      return {
+        said: refreshSaid(
+          { ...base, took: take, courses: take ? remote.courses.length : 0, at: take ? remote.updated : 0 },
+          Date.now(),
+        ),
+        ok: true,
+      };
     } catch (e) {
       // The object, not its message: `explainSync` reads PostgREST's `code`
       // and Supabase's `status`, which this line used to drop one step early.
       const { said: error } = explainSync(e);
       setSync({ status: 'error', at: 0, error });
-      return refreshSaid({ ...base, error }, Date.now());
+      return { said: refreshSaid({ ...base, error }, Date.now()), ok: false };
     }
   }, [account]);
+  const refresh = useCallback(async (): Promise<string> => (await pullAndMerge()).said, [pullAndMerge]);
 
   // On sign-in, whichever copy is newer wins — and the app says which.
   useEffect(() => {
@@ -892,6 +901,21 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       return false;
     }
   }, [account]);
+
+  /**
+   * Back online: pull and merge, then send the merged copy. The push waits on
+   * a pull that succeeded — `push` overwrites the account's copy, so pushing
+   * after a failed pull would replace changes made on another device that
+   * this one never saw. A first sign-in waiting on the student's choice does
+   * not push either.
+   */
+  const catchUp = useCallback(async (): Promise<boolean> => {
+    const pulled = await pullAndMerge();
+    if (!pulled.ok) return false;
+    // Let a merged copy from the pull render first, so it is the one sent.
+    await new Promise((r) => setTimeout(r, 0));
+    return pushNow();
+  }, [pullAndMerge, pushNow]);
 
   useEffect(() => {
     if (!account) return;
@@ -1441,8 +1465,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   );
 
   const value = useMemo(
-    () => ({ state, dispatch, catalog, terms, courseCode, allItems, tint, lastSeen: lastSeen.current, account, sync, saveTrouble, refresh, pushNow, say, school, facts, asking, settle, adopt }),
-    [state, catalog, terms, courseCode, allItems, tint, account, sync, saveTrouble, refresh, pushNow, say, school, facts, asking, settle, adopt],
+    () => ({ state, dispatch, catalog, terms, courseCode, allItems, tint, lastSeen: lastSeen.current, account, sync, saveTrouble, refresh, pushNow, catchUp, say, school, facts, asking, settle, adopt }),
+    [state, catalog, terms, courseCode, allItems, tint, account, sync, saveTrouble, refresh, pushNow, catchUp, say, school, facts, asking, settle, adopt],
   );
   /*
    * The clock is published beside the store, not inside it.
