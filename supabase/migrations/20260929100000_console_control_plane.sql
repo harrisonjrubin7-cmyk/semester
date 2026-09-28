@@ -474,7 +474,16 @@ begin
   end if;
 end $$;
 
-grant usage on schema private to semester_audit_writer;
+-- USAGE lets the writer reach the schema; CREATE is what lets it *own* a
+-- function there. `alter function … owner to` requires the new owner to hold
+-- CREATE on the function's schema, and the Supabase preview branch for this
+-- change refused the ownership step below with "permission denied for schema
+-- private" until this grant existed. The harness never noticed, because its
+-- `postgres` is a superuser and a superuser owns anything anywhere; on the
+-- live project `postgres` is not. The widening is small — a nologin role that
+-- nothing connects as may create objects in `private` — and is the price of
+-- the writer owning its own function, which is the whole point of the role.
+grant usage, create on schema private to semester_audit_writer;
 
 -- ── sha256 and HMAC, resolved once ────────────────────────────────────────
 --
