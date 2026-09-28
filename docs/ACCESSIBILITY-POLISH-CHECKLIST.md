@@ -24,9 +24,12 @@ done. Evidence names the file, test or script.
   one rule app-wide; `Highlight` under forced colours.
 - [x] Outlines never removed globally — `focus.test.ts` fails on
   `outline: none` for `:focus-visible` without a redraw.
-- [~] Not hidden by sticky header or tab bar — scroll margins of 96px and
-  84px (`--focus-clear-top`, `--focus-clear-bottom`). Not measured for the
-  Focus bar.
+- [x] Not hidden by sticky header, tab bar or Focus bar — scroll margins of
+  96px and 84px (`--focus-clear-top`, `--focus-clear-bottom`). In Focused mode
+  the scroller's `scroll-padding-bottom` clears the Focus bar and the
+  assistant button on it, and the assistant button moves off whatever has
+  focus. `ai/focusbar.test.tsx`, `ai/dock.test.ts`, measured in
+  [accessibility/AT-PASS-PROTOCOL.md](accessibility/AT-PASS-PROTOCOL.md) §6.
 - [x] Not hidden by sheets and dialogs — they are modal and trap focus
   (`a11y/modal.test.ts`).
 - [x] Focus returns to the opener after a sheet closes — `useModal`;
@@ -81,12 +84,18 @@ done. Evidence names the file, test or script.
 ## Forms and errors
 
 - [x] Every field labelled — label lint.
-- [~] Error beside the field with a summary, focus to the first invalid
-  field — region-level failures now use `ErrorState` (announced, with a
-  required recovery action) on Registration day, the graduation simulator,
-  the registration portal, the campus directory, the toolkit, Account sync,
-  support access and Import. There is still no shared field-level error
-  pattern.
+- [x] Error beside the field, focus to the first invalid field — field-level
+  errors go through `components/FieldMessage.tsx` (`useFieldErrors`,
+  `fieldProps`): `aria-invalid`, `aria-describedby` to hint and message, an
+  icon plus words, a polite live region, and focus to the first invalid field
+  on submit. Used by Meals, Housing, Costs, Bill, Timers and the Assistant
+  proxy field. `a11y/fielderror.test.ts` fails on a hand-written
+  `aria-invalid` or a `[bad, setBad]`-style error state beside a form
+  control. Region-level failures use `ErrorState` (announced, with a required
+  recovery action) on Registration day, the graduation simulator, the
+  registration portal, the campus directory, the toolkit, Account sync,
+  support access and Import. No form yet has enough fields to need an error
+  summary.
 - [x] Entered content preserved on failure — Capture keeps focus and clears
   only after a successful save; `Trouble` retries without re-entry.
 - [x] Destructive actions confirmed — `TypeToConfirm`; reversible ones undone —
@@ -132,9 +141,12 @@ done. Evidence names the file, test or script.
 
 ## Open items
 
-1. Field-level error pattern with summary and focus management.
-2. Measure the Focus bar against the assistant button and the bottom focus
-   clearance. (The assistant is *under* the shared sheets' scrim, not over it —
+1. ~~Field-level error pattern with summary and focus management.~~ Done
+   without a summary (see Forms and errors). Add a summary when a form grows
+   past one screen.
+2. ~~Measure the Focus bar against the assistant button and the bottom focus
+   clearance.~~ Measured and fixed at 320px and 1280px (see Focus).
+   (The assistant is *under* the shared sheets' scrim, not over it —
    an earlier note here said otherwise from an unmeasured screenshot. Both are
    inside `.device`'s one stacking context; measured in Chromium at 1280px in the tab-bar, workspace and shelves layouts, the panel's brightest pixel falls from 716 to 223 when a sheet opens over it; `styles/tokens.test.ts` holds every assistant z-index under `--layer-overlay`.)
 3. Keyboard and screen-reader audit of data tables, rich-text editors, media

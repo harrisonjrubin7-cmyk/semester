@@ -258,6 +258,20 @@ export function costOf(el: Element | null, self: Element | null, at: DOMRect | n
    */
   if (node.hasAttribute('data-danger')) return graded(share);
 
+  /*
+   * And whatever has keyboard focus, at any overlap (WCAG 2.4.11, Focus Not
+   * Obscured).
+   *
+   * The proportional rule asks whether a pointer can still reach the control.
+   * A keyboard user is not reaching for it — they are on it, and what they
+   * need is to see the focus ring. Found by the automated keyboard pass in
+   * `docs/accessibility/AT-PASS-PROTOCOL.md`: at 320x640 on Timers, tabbing
+   * to Start left it under this button with only "ST" showing, because 46%
+   * of it scored under `COVERED`. Read through `ownerDocument` so the plain
+   * objects `ai/dock.test.ts` passes in, which have none, are unaffected.
+   */
+  if (node.ownerDocument?.activeElement === node) return graded(share);
+
   return share;
 }
 
@@ -620,9 +634,14 @@ export function Assistant() {
      */
     const watch = new MutationObserver(soon);
     if (area) watch.observe(area, { childList: true, subtree: true });
+    // And when focus moves, since what has focus costs more — see `costOf`.
+    // Tabbing to a control that does not need scrolling to is none of the
+    // three triggers above.
+    document.addEventListener('focusin', soon);
     return () => {
       for (const t of timers) window.clearTimeout(t);
       if (waiting) window.cancelAnimationFrame(waiting);
+      document.removeEventListener('focusin', soon);
       area?.removeEventListener('scroll', soon);
       window.removeEventListener('resize', soon);
       watch.disconnect();
@@ -801,7 +820,13 @@ export function Assistant() {
              * a layout effect, so a bar that exists has been measured before
              * the button is ever painted.
              */
-            bottom: wide ? 20 + lift : `calc(var(--bottom-chrome, 0px) + ${12 + lift}px)`,
+            /*
+             * And above the Focus bar, which is fixed over the bottom too and
+             * is not bottom chrome — see `FOCUS_BAR_INSET`. The larger of the
+             * two, because in Focused mode the tab bar is hidden and the Focus
+             * bar stands where it was. Unset outside Focused mode, so zero.
+             */
+            bottom: wide ? `calc(var(--focus-bar-inset, 0px) + ${20 + lift}px)` : `calc(max(var(--bottom-chrome, 0px), var(--focus-bar-inset, 0px)) + ${12 + lift}px)`,
             width: 52,
             height: 52,
             borderRadius: '50%',

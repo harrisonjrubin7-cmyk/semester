@@ -1066,6 +1066,17 @@ a:hover {
   height: var(--assistant-strip);
 }
 
+/*
+ * In Focused mode the Focus bar is fixed over the bottom as well, and the
+ * button stands on top of it (`ai/Assistant.tsx`), so the reservation is the
+ * bar's inset plus the button's strip. Without it the last card on a screen
+ * ended under a bar 110px tall at 320px wide with 30px of padding to clear it.
+ * `--focus-bar-inset` is written by the bar itself and unset when it is gone.
+ */
+:root[data-workspace='focused'] .pane-body::after {
+  height: calc(var(--assistant-strip) + var(--focus-bar-inset, 0px));
+}
+
 
 .pane-body.is-canvas {
   max-width: var(--canvas);
@@ -2328,6 +2339,34 @@ a:hover {
 }
 
 /*
+ * A field that is wrong, and the line that says why — `components/FieldMessage.tsx`.
+ *
+ * The border is the warning colour, but colour is never the only signal: the
+ * message under it carries an icon and words. The message element is always
+ * in the document so `aria-describedby` never dangles; empty, it takes no room.
+ */
+.device .input[aria-invalid='true'] {
+  border-color: var(--app-warn);
+}
+.field-message {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-3);
+  margin: var(--sp-3) 0 0;
+  font-size: var(--type-sm);
+  line-height: var(--leading-normal);
+  color: var(--app-warn);
+  text-wrap: pretty;
+}
+.field-message:empty {
+  margin: 0;
+}
+.field-message-icon {
+  flex: none;
+  margin-top: var(--sp-1);
+}
+
+/*
  * ── The composer ─────────────────────────────────────────────────────────
  *
  * One pill: the field, the send button and the ring around both. Drawn here
@@ -2600,6 +2639,17 @@ a:hover {
      underneath it and the ring is half hidden. */
   scroll-margin-top: var(--focus-clear-top);
   scroll-margin-bottom: var(--focus-clear-bottom);
+}
+
+/* In Focused mode the Focus bar is fixed over the bottom of the scroller,
+   where the tab bar was beside it. A control under the bar is still inside
+   the scroller's own box, so tabbing to it scrolled nothing and the ring sat
+   under the bar — measured at 320x640 on Today, eight of its 39 stops. The
+   scroller's padding is what focus scrolling treats as out of view, so it is
+   set there: the bar's inset plus the assistant's button standing on it
+   (`--focus-bar-inset`, written by the bar; `lib/bottomchrome.hook.ts`). */
+:root[data-workspace='focused'] .scrollarea {
+  scroll-padding-bottom: calc(var(--focus-bar-inset, 0px) + var(--assistant-strip));
 }
 
 /*
