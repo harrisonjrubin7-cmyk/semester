@@ -167,6 +167,11 @@ export const ROLES: readonly RoleRow[] = [
   row({ role: 'resident_assistant', category: 'campus-office', mayDo: 'Publish approved resource/event information', mustNever: 'Resident academic or private data' }),
   row({ role: 'counseling_liaison', category: 'campus-office', mayDo: 'Publish resource-only actions', mustNever: 'Student records or private wellbeing data' }),
   row({ role: 'athletics_compliance_officer', category: 'campus-office', mayDo: 'Publish approved compliance actions', mustNever: 'Health, injury, private study behavior, motivation inference' }),
+  row({ role: 'career_center_staff', category: 'campus-office', mayDo: 'Publish career-office actions and events to the students they reach (D-048)', mustNever: 'Individual private plans, grades, or who acted on an action below a group of ten' }),
+  row({ role: 'disability_services_staff', category: 'campus-office', mayDo: 'Publish disability-services resources and events (D-048)', mustNever: 'Accommodation records, health information, or which student opened a resource' }),
+  row({ role: 'study_abroad_advisor', category: 'campus-office', mayDo: 'Publish study-abroad actions, deadlines and events (D-048)', mustNever: 'A student’s own study-abroad plan unless the student shares it' }),
+  row({ role: 'first_year_staff', category: 'campus-office', mayDo: 'Publish first-year actions and events to the students they reach (D-048)', mustNever: 'Individual private plans or study activity' }),
+  row({ role: 'athletic_academic_support', category: 'campus-office', mayDo: 'Read only what an athlete chose to share with them, while the share is live (D-039)', mustNever: 'Grades, NIL, hours logs, health, finances, location, or any share once revoked or expired' }),
 
   // ── institutional administration ─────────────────────────────────────────
   row({ role: 'university_admin', category: 'institution-admin', mayDo: 'Configure tenant, modules, branding, approved sources, policy, aggregate dashboards', mustNever: 'Unrestricted education-record browsing', training: [FIRST_DAY, SSO_ONBOARDING] }),
