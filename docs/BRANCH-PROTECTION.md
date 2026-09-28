@@ -25,7 +25,7 @@ in the format GitHub's ruleset import and API both take.
 | Up to date with `main` | required (strict) | three collisions landed on `main` in one review (`VALIDATED.md` item 4), each green on its own branch |
 | Force-push to `main` | blocked | history on `main` is what every deploy and every rollback reads |
 | Deleting `main` | blocked | |
-| Bypass list | empty | a rule with a bypass is a rule for everybody else |
+| Bypass list | the admin role, through a pull request only | the owner's choice on 28 September (option 2 below): one person has access, and GitHub does not let an author approve their own pull request. Every bypass is recorded on the pull request; a direct push to `main` is still refused |
 
 Linear history is **not** required. `main` already has merge commits (#792),
 and the choice between merge, squash and rebase is left open rather than
@@ -52,8 +52,13 @@ the audit asks for is a second person. The honest options are:
    "RepositoryRole", "actor_id": 5, "bypass_mode": "pull_request" }]` for the
    admin role). Every bypass is then recorded on the pull request, which is an
    audit trail, but it is not peer review — SEC-003 stays `building` and says
-   so. Change the file and this document if you choose it; the test asserts an
-   empty bypass list so that the choice is made in a commit, not in the UI.
+   so.
+
+**Chosen: option 2**, by the owner on 28 September. `main.json` carries that
+one bypass actor and `branchprotection.test.ts` asserts exactly it, so
+widening it is a commit, not a click. When a second reviewer joins, add them
+to `CODEOWNERS`, empty `bypass_actors`, and change the test back: that is
+what closes SEC-003.
 
 ## Applying it
 
