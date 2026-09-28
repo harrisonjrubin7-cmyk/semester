@@ -24,9 +24,8 @@
  *    who can see it, and whether it stands.
  *  - **Capped and on the device.** `LIMIT` entries, oldest dropped, under a
  *    key per account so two people on one device do not read each other's.
- *    Erased with the other device libraries (`lib/erase.ts` clears the
- *    prefix); not yet in the recovery copy, which reads only the libraries
- *    `workspace-backup.ts` defines.
+ *    Backed up with the other device libraries (`workspace-backup.ts` lists
+ *    it) and erased with them (`lib/erase.ts` clears the prefix).
  *
  * `record()` is a plain function rather than a hook so a library that does the
  * thing — revoking a grant in `lib/support-access.ts`, exporting in

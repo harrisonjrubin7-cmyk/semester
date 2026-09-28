@@ -100,6 +100,34 @@ export function lines(h: Handoff): string[] {
 
 export const HEADING = '— App details, as shown to me before sending —';
 
+/**
+ * Where the student was, and what they were doing, when they asked for help.
+ *
+ * By the time Help renders, the hash is `#/help` and the failure's screen is
+ * gone from the address bar. The screen that sends someone to Help notes
+ * where they were and what they were trying to do first, and Help reads it
+ * once. Module state, on purpose: it is one hop, it must not survive a
+ * reload, and it is not the student's data.
+ */
+export interface Origin {
+  hash: string;
+  action: string;
+  reference: string | null;
+}
+
+let origin: Origin | null = null;
+
+export function noteOrigin(o: Origin): void {
+  origin = o;
+}
+
+/** The noted origin, and it is forgotten on reading. */
+export function takeOrigin(): Origin | null {
+  const o = origin;
+  origin = null;
+  return o;
+}
+
 /** The student's words, then the details under a heading; or the words alone. */
 export function withHandoff(body: string, h: Handoff | null): string {
   const text = body.trim();

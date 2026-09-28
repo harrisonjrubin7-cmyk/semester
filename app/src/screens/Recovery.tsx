@@ -28,6 +28,12 @@ export function Recovery() {
   const id = account?.id ?? null;
   const ledger = useDeviceLibrary(`${LEDGER_PREFIX}:${id || 'device'}`, readLedger, EMPTY_LEDGER);
   const words = SYNC_WORDS[sync.status];
+  // The live sync state answers first: `queued`, `conflict`, `review` and
+  // `error` all mean something on this device has not reached the account,
+  // whatever the offline ledger says — the ledger is only kept while the
+  // offline module is on, so on its own it would answer "no" to a signed-in
+  // student whose sync strip says the opposite (Codex, #922).
+  const pending = account !== null && ['queued', 'conflict', 'review', 'error'].includes(sync.status);
   const waiting = ledger.value.unsyncedSince;
 
   return (
@@ -42,8 +48,8 @@ export function Recovery() {
 
       <Section title="Is anything waiting?">
         <p style={line}>
-          {waiting
-            ? `Yes. Changes made on this device since ${formatDateTime(waiting)} have not reached your account yet. They are kept here and sent when the connection returns; you do not have to do anything.`
+          {pending || waiting
+            ? `Yes. ${waiting ? `Changes made on this device since ${formatDateTime(waiting)} have not reached your account yet.` : words.sentence} They are kept here; ${sync.status === 'review' || sync.status === 'conflict' ? 'Account is where you choose between the two versions.' : 'they are sent when the connection returns, and you do not have to do anything.'}`
             : account
               ? 'No. Everything you did on this device has reached your account.'
               : 'You are not signed in, so nothing waits on a connection: everything is on this device, and only here.'}
@@ -52,7 +58,7 @@ export function Recovery() {
 
       <Section title="A copy I can keep">
         <p style={dim}>
-          Every library kept on this device — plans, scenarios, advisor meetings, study readiness, career evidence, your activity — in one file you can open elsewhere or restore from Export.
+          The libraries kept on this device — saved schedules, scenarios, advisor meetings, study readiness, career evidence and your activity trail — in one file that Export can restore. Your courses, deadlines, notes and calendar are the app’s own record and are not in it: Export makes that copy, under Backup.
         </p>
         <ActionButton
           onClick={() =>
