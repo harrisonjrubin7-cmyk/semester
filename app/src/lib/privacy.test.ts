@@ -104,11 +104,18 @@ describe('how it is written', () => {
 
   it('names the help request as an exception, and what it carries', () => {
     const visibility = CLAIMS.find((c) => c.heading === 'Who can see your rows');
-    expect(visibility?.body).toMatch(/three deliberate exceptions/i);
+    expect(visibility?.body).toMatch(/four deliberate exceptions/i);
     expect(visibility?.body).toMatch(/help request/i);
     expect(visibility?.body).toMatch(/only what you wrote and ticked/i);
     expect(visibility?.body).toMatch(/your name, your university email/i);
     expect(visibility?.body).toMatch(/every time .* opens it is recorded/i);
+  });
+
+  it('names a support ticket as an exception, and what it leaves out', () => {
+    const visibility = CLAIMS.find((c) => c.heading === 'Who can see your rows');
+    expect(visibility?.body).toMatch(/Semester support is read by Semester's support staff/i);
+    expect(visibility?.body).toMatch(/only what you wrote and the app details you ticked/i);
+    expect(visibility?.body).toMatch(/never your name or email address/i);
   });
 
   it('keeps those counts out of everything that syncs', () => {

@@ -4,6 +4,9 @@ import { Page } from '../components/Page';
 import { build, toMarkdown, type Section } from '../lib/guidebook';
 import { download } from '../lib/deliver';
 import { useStore } from '../state/store';
+import { SupportTicketsPanel } from '../components/SupportTicketsPanel';
+import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
+import { availableContext } from '../lib/supporttickets';
 
 /**
  * The guide, in the app.
@@ -22,7 +25,7 @@ import { useStore } from '../state/store';
  * smaller than the dependency that would parse all of it.
  */
 export function Help() {
-  const { dispatch } = useStore();
+  const { dispatch, account, sync } = useStore();
   const book = useMemo(() => build(), []);
   const [open, setOpen] = useState<string | null>('what');
 
@@ -57,6 +60,19 @@ export function Help() {
       }
     >
         <>
+          {EXPERIENCE_FLAGS.supportTickets !== 'off' && (
+            <SupportTicketsPanel
+              account={account}
+              context={availableContext({
+                build: (import.meta.env.VITE_BUILD_ID as string | undefined) ?? '',
+                width: window.innerWidth,
+                hash: window.location.hash,
+                signedIn: account !== null,
+                sync: sync.status,
+                online: navigator.onLine,
+              })}
+            />
+          )}
           {book.sections.map((s) => (
             <Chapter
               key={s.id}
