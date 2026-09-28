@@ -52,6 +52,7 @@ import { parseAddress, parseAddresses, type FolderId, type Mail } from './mailbo
 import { PENDING_KEY } from './redirected';
 import { MOVE_MS, fetchWithin, timedOut, tookTooLong } from './net';
 import { deviceTimeZone } from './locale';
+import { scopeParam } from './oauthscopes';
 
 export type ProviderId = 'microsoft' | 'google' | 'zoom' | 'apple';
 
@@ -93,9 +94,8 @@ export const PROVIDERS: Record<ProviderId, ProviderSpec> = {
     // Read the calendar and mail, write the calendar and To Do. Files.ReadWrite
     // is what lets an export be saved back to OneDrive; nothing here deletes
     // anything, and Mail stays read-only — the app never sends mail as you.
-    scopes:
-      'openid profile offline_access User.Read Calendars.ReadWrite Mail.Read ' +
-      'Tasks.ReadWrite Files.ReadWrite',
+    // The list, and why each is the narrowest that works: `lib/oauthscopes.ts`.
+    scopes: scopeParam('microsoft'),
     clientId: env.VITE_MS_CLIENT_ID ?? '',
     needsProxy: false,
     calendar: true,
@@ -112,15 +112,10 @@ export const PROVIDERS: Record<ProviderId, ProviderSpec> = {
     // unverified app is limited to the test users you list in the console
     // until it passes review. The Connect screen says so rather than letting
     // the button fail mysteriously.
-    scopes:
-      'openid https://www.googleapis.com/auth/calendar.events ' +
-      'https://www.googleapis.com/auth/drive.readonly ' +
-      // drive.file is the narrow one: it grants access only to files this app
-      // itself creates, so an export can be saved to Drive without the app
-      // gaining any right to read what is already there.
-      'https://www.googleapis.com/auth/drive.file ' +
-      'https://www.googleapis.com/auth/gmail.readonly ' +
-      'https://www.googleapis.com/auth/tasks',
+    // drive.file is the narrow one for writing: it reaches only files this app
+    // itself creates. The list, and why each is the narrowest that works:
+    // `lib/oauthscopes.ts`.
+    scopes: scopeParam('google'),
     clientId: env.VITE_GOOGLE_CLIENT_ID ?? '',
     needsProxy: false,
     calendar: true,
@@ -133,7 +128,7 @@ export const PROVIDERS: Record<ProviderId, ProviderSpec> = {
     blurb: 'Scheduled meetings on the day rail, cloud recordings by course.',
     authorizeUrl: 'https://zoom.us/oauth/authorize',
     tokenUrl: 'https://zoom.us/oauth/token',
-    scopes: 'user:read meeting:read recording:read',
+    scopes: scopeParam('zoom'),
     clientId: env.VITE_ZOOM_CLIENT_ID ?? '',
     // Zoom's API sends no CORS headers, so browser calls have to go through
     // the dev proxy. Saying so beats a silent network error.
@@ -151,7 +146,7 @@ export const PROVIDERS: Record<ProviderId, ProviderSpec> = {
     // Asking for name or email forces response_mode=form_post, which POSTs to
     // the redirect and a single-page app cannot receive. Identity alone comes
     // back on the query string, which is all this needs.
-    scopes: '',
+    scopes: scopeParam('apple'),
     clientId: env.VITE_APPLE_CLIENT_ID ?? '',
     // Apple's client secret is a JWT signed with a private key. That signing
     // cannot happen in a browser, so this one always goes through the proxy.

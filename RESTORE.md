@@ -129,6 +129,60 @@ seeded contents went red; the three schema checks stayed green. A drill whose
 data comparison cannot fail is a drill that reports success for a backup with
 no data in it.
 
+## Point-in-time recovery — **not verified**
+
+**Nobody has confirmed that point-in-time recovery (PITR) is enabled on the
+production project, and nobody has restored from it.** Until the table at the
+end of this section has a row with a date, an owner and a measured recovery
+point, the honest answer to "can you restore to a moment before the bad
+`delete`?" is *we do not know*. A daily backup, if the tier has one, is up to a
+day of every student's work; PITR is what shrinks that to minutes, and it is a
+paid add-on that has to be switched on.
+
+What could be read from here on 28 September 2026, and what could not: the
+project (`lzrqvlugnawcgywkhqlz`, us-west-2, Postgres 17) is healthy. Its plan
+tier, its backup schedule and whether PITR is on are dashboard settings no
+query in this repository can read. That is the gap.
+
+### The procedure, for the owner
+
+1. **Turn it on.** Dashboard → Project Settings → Add-ons → Point in Time
+   Recovery. It needs a paid plan and, on the smaller compute sizes, a compute
+   upgrade the dashboard names. Record the retention chosen (7, 14 or 28 days)
+   and the monthly cost in the table below. **Also note the plan tier and
+   whether daily backups are listed under Database → Backups** — that answers
+   the first question at the top of this file even if PITR is not bought.
+2. **Wait for the first base backup.** PITR can only restore to a moment after
+   it has one; the Backups page shows the earliest restorable time. Write it
+   down.
+3. **Pick a target moment and a marker.** At a known time `T`, write one row you
+   can recognise — a note in a test account, never a real student's — and
+   record the fingerprint and row counts from step 2 of *The drill* above.
+   Wait a few minutes and write a second row after `T`.
+4. **Restore to `T` somewhere that is not production.** Use *Restore to a new
+   project* (or a branch, where the plan offers restoring a branch to a point in
+   time). **Never restore over the live project to test this** — see step 4 of
+   the drill. Note the wall-clock time from clicking restore to the new project
+   answering queries: that is the recovery time.
+5. **Verify.** The first marker row must be there and the second must not —
+   that pair *is* the recovery-point measurement, and a restore missing both
+   has proved nothing. Then run steps 5 and 6 of the drill against the restored
+   project: fingerprints, `ensure_rls`, row-level security enabled.
+6. **Check what a database restore does not bring back**: Edge Function
+   secrets, Vault secrets (`push_cron_secret` and the others — check they are
+   present), the `cron.job` list (`supabase/health.sql` block 6), and Storage
+   objects, which are not in the database. Write down each one that needed
+   putting back by hand.
+7. **Record, then delete the restored project.**
+
+Repeat after any plan change, and at least once a term.
+
+### PITR results
+
+| Date | Owner | PITR enabled? retention | Earliest restorable time | Target `T` | Recovery point (marker before `T` present, after `T` absent?) | Recovery time (restore clicked → queries answered) | Secrets / cron / storage needing manual repair | Verdict |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| | | | | | | | | not yet verified |
+
 ## After the drill, fill this in
 
 Nothing below is known yet, and saying so is the point of the table. A row

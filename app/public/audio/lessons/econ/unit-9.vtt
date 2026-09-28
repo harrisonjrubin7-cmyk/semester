@@ -1,0 +1,41 @@
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:04.070
+Game theory
+
+2
+00:00:04.070 --> 00:00:09.220
+Nash equilibrium vs. dominant strategy?
+
+3
+00:00:09.220 --> 00:00:17.520
+Nash: both players are playing a best response, so neither would unilaterally switch. Dominant: your best response no matter what the other does.
+
+4
+00:00:17.520 --> 00:00:21.800
+How do you solve a payoff matrix?
+
+5
+00:00:21.800 --> 00:00:30.780
+For each of P2’s columns mark P1’s best payoff; for each of P1’s rows mark P2’s best. Any cell marked twice is a Nash equilibrium.
+
+6
+00:00:30.780 --> 00:00:35.120
+Prisoner’s dilemma — what is the point?
+
+7
+00:00:35.120 --> 00:00:45.660
+(Fink, Fink) is the unique Nash equilibrium at 1,1 even though (Quiet, Quiet) pays 2,2. The gap between individual rationality and the group outcome is the whole dilemma.
+
+8
+00:00:45.660 --> 00:00:49.620
+How do you solve a game tree?
+
+9
+00:00:49.620 --> 00:01:01.400
+Backward induction — start at the end, work out the last player’s move at each node, cross off branches they would never take, and work backwards. That is how you see that B’s threat to fight is not credible.
+
+10
+00:01:01.400 --> 00:01:04.000
+Game theory — 4 cards

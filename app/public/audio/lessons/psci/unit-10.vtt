@@ -1,0 +1,49 @@
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:05.860
+Probability and the normal curve
+
+2
+00:00:05.860 --> 00:00:11.190
+The 68–95–99.7 rule?
+
+3
+00:00:11.190 --> 00:00:20.000
+About 68% of cases within one SD of the mean, 95% within two, 99.7% within three.
+
+4
+00:00:20.000 --> 00:00:23.640
+What is a z-score?
+
+5
+00:00:23.640 --> 00:00:33.350
+z = (value − mean) ÷ standard deviation. A z of 2 means two SDs above average — only about 2.5% of cases are higher.
+
+6
+00:00:33.350 --> 00:00:37.420
+What is a sampling distribution?
+
+7
+00:00:37.420 --> 00:00:46.040
+Not the distribution of your data — the distribution of a statistic across all the samples you could have drawn. It is normal and centered on the true parameter.
+
+8
+00:00:46.040 --> 00:00:50.200
+Standard error, in words?
+
+9
+00:00:50.200 --> 00:00:57.930
+The SD of the sampling distribution — how much your estimate would bounce from sample to sample. Bigger n, smaller standard error.
+
+10
+00:00:57.930 --> 00:01:02.350
+What does the central limit theorem buy you?
+
+11
+00:01:02.350 --> 00:01:11.420
+Sample means are normally distributed even when the underlying variable is not, provided n is decently large. That is why the normal curve is everywhere.
+
+12
+00:01:11.420 --> 00:01:14.000
+Probability and the normal curve — 5 cards

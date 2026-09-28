@@ -172,4 +172,8 @@ for (const stem of stems) {
   }
 }
 
+// New times mean new caption tracks: `app/scripts/captions.ts` builds them
+// from these times and the script's words.
+if (!dry) execFileSync('node', ['scripts/captions.ts'], { cwd: join(ROOT, 'app'), stdio: 'inherit' });
+
 process.exit(refused ? 1 : 0);

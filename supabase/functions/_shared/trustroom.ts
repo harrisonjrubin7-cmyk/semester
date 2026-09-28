@@ -53,6 +53,8 @@ export interface RoomDeps {
   sign(bucket: string, path: string, seconds: number): Promise<string | null>;
   /** The raw `ALLOWED_ORIGIN` secret, as `cors.ts` reads it. */
   allowedOrigin: string | undefined;
+  /** The raw `CORS_ALLOW_DEV` flag: loopback origins are answered only when it is on. */
+  allowDev?: string | undefined;
 }
 
 export const BUCKET = 'trust-packet';
@@ -72,7 +74,7 @@ const SAFETY = {
 } as const;
 
 export async function handleTrustRoom(req: Request, deps: RoomDeps): Promise<Response> {
-  const cors = corsHeaders(deps.allowedOrigin, req.headers.get('Origin'));
+  const cors = corsHeaders(deps.allowedOrigin, req.headers.get('Origin'), deps.allowDev);
   const reply = (status: number, body: unknown, extra: Record<string, string> = {}) =>
     new Response(body === null ? null : JSON.stringify(body), {
       status,

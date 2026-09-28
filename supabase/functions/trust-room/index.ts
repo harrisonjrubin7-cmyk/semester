@@ -24,6 +24,7 @@ const db = createClient(
 Deno.serve((req) =>
   handleTrustRoom(req, {
     allowedOrigin: Deno.env.get('ALLOWED_ORIGIN'),
+    allowDev: Deno.env.get('CORS_ALLOW_DEV'),
     async open(token, artifact) {
       const { data, error } = await db.rpc('trust_room_open', { want_token: token, want_artifact: artifact });
       if (error) throw new Error('trust_room_open failed');

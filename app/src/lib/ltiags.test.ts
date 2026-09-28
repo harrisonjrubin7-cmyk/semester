@@ -312,7 +312,7 @@ describe('the route, read as text', () => {
   it('answers the score route with per-request CORS and a preflight', () => {
     expect(source).toContain("_shared/cors.ts");
     expect(source).toMatch(
-      /const cors = corsHeaders\(Deno\.env\.get\('ALLOWED_ORIGIN'\), req\.headers\.get\('Origin'\)\)/,
+      /const cors = corsHeaders\(Deno\.env\.get\('ALLOWED_ORIGIN'\), req\.headers\.get\('Origin'\), Deno\.env\.get\('CORS_ALLOW_DEV'\)\)/,
     );
     expect(source).toContain("req.method === 'OPTIONS'");
     // By name, not by value: the route must post as the media type the shared

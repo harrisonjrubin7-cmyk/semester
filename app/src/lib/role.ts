@@ -210,7 +210,12 @@ const STUDENT_ONLY_SET = new Set<string>(STUDENT_ONLY);
  * a screen added later and forgotten here stays visible rather than vanishing
  * for every role but one.
  */
-export function forRole(screen: string, role: Role): boolean {
+export function forRole(screen: string, role: Role | null | undefined): boolean {
+  // Only a role that *is* the student's opens the student-only screens. A
+  // role that is missing, null or not one this file names — a lookup that
+  // failed, a state not yet read — gets the narrower set, never the wider:
+  // a gate that grants on "don't know" is not a gate. See `find.test.ts`,
+  // "search is a gate too".
   return role === 'student' ? true : !STUDENT_ONLY_SET.has(screen);
 }
 

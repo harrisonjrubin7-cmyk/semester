@@ -5,6 +5,7 @@ import { addFile, getFile } from '../../lib/files';
 import { download } from '../../lib/deliver';
 import { projectFile } from '../../lib/export';
 import { splitClip, videoSeconds, type CreativeProject, type VideoClip } from '../../lib/creations';
+import { clipCaption } from '../../lib/webvtt';
 
 /**
  * Trim, arrange and caption clips, and record the result.
@@ -161,6 +162,25 @@ export function VideoEditor({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clip?.fileId]);
+
+  /*
+   * The clip's caption as a real captions track, so the player's own captions
+   * menu and assistive technology have it — not only the line drawn under the
+   * video. A blob URL because the content-security policy allows `blob:` for
+   * media and not `data:`. Footage with no caption typed has no words this
+   * app knows, so it gets no track rather than an empty one.
+   */
+  const vtt = clip ? clipCaption(clip) : null;
+  const [captionUrl, setCaptionUrl] = useState('');
+  useEffect(() => {
+    if (!vtt) {
+      setCaptionUrl('');
+      return;
+    }
+    const made = URL.createObjectURL(new Blob([vtt], { type: 'text/vtt' }));
+    setCaptionUrl(made);
+    return () => URL.revokeObjectURL(made);
+  }, [vtt]);
 
   /* Leaving mid-export must stop it. See the note at the top. */
   useEffect(
@@ -486,7 +506,9 @@ export function VideoEditor({
               }
             }}
             style={{ width: '100%', borderRadius: 'var(--r-md)', background: '#000' }}
-          />
+          >
+            {captionUrl && <track key={captionUrl} kind="captions" src={captionUrl} srcLang="en" label="Clip caption" />}
+          </video>
           {clip.caption && <p style={{ ...line, marginBlock: 'var(--sp-3)' }}>{clip.caption}</p>}
         </>
       ) : (

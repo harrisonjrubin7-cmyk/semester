@@ -220,6 +220,10 @@ def render(course: str, code: str, units: list[dict], only: int | None, mp4: boo
         write_module(course, ordered)
         print(f"\n{meta}")
 
+        # The caption tracks, from the cue list just written — the same cues
+        # the lesson screen draws. See `app/scripts/captions.ts`.
+        subprocess.run(["node", "scripts/captions.ts"], cwd=ROOT / "app", check=True)
+
 
 def write_module(course: str, lessons: dict) -> None:
     """Emit the TypeScript the course module imports.
