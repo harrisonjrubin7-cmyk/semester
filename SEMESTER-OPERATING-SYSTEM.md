@@ -22,10 +22,10 @@ never a person, and a seat is held only once somebody accepted it in writing.
 
 | Status | Meaning | Entries |
 | --- | --- | ---: |
-| current | Read on the review date, and stands | 30 |
+| current | Read on the review date, and stands | 33 |
 | draft | The authoritative version, but not yet fit to act on | 2 |
 | missing | No authoritative version exists; the gap says what would close it | 3 |
-| **total** |  | **35** |
+| **total** |  | **38** |
 
 `version` counts reviews of the entry — the decision that this path is the
 authoritative one and its content was read and stands — not the document’s
@@ -81,6 +81,9 @@ What the repository also runs on, and the brief’s list did not name.
 | Strategic expansion register | [`docs/STRATEGIC-EXPANSION-REGISTER.md`](docs/STRATEGIC-EXPANSION-REGISTER.md) | current | `founder` | 1 | 2026-09-28 | 2026-10-28 | — | `DECISIONS §1` |
 | Supply-chain policy | [`docs/SUPPLY-CHAIN.md`](docs/SUPPLY-CHAIN.md) | current | `engineering` | 1 | 2026-09-28 | 2026-12-28 | — | — |
 | Security policy | [`SECURITY.md`](SECURITY.md) | current | `security` | 1 | 2026-09-28 | 2026-12-28 | — | `ADR-0002` |
+| Service expansion register | [`docs/SERVICE-EXPANSION-REGISTER.md`](docs/SERVICE-EXPANSION-REGISTER.md) | current | `product` | 1 | 2026-09-28 | 2026-10-28 | — | `D-111` |
+| Module privacy model | [`docs/MODULE-PRIVACY-MODEL.md`](docs/MODULE-PRIVACY-MODEL.md) | current | `privacy` | 1 | 2026-09-28 | 2026-12-28 | — | `D-111`, `D-037` |
+| AI assurance | [`docs/operating-model/AI-ASSURANCE.md`](docs/operating-model/AI-ASSURANCE.md) | current | `trust` | 1 | 2026-09-28 | 2026-12-28 | — | `D-111` |
 
 ## Notes and gaps
 
@@ -119,6 +122,9 @@ What the repository also runs on, and the brief’s list did not name.
 - **Strategic expansion register** — Rendered from app/src/lib/expansionregister.ts: the phased expansion, each phase gated. The plan of record says what is built next; this says what may be entered at all. Read next: [`docs/PRODUCT-ROADMAP.md`](docs/PRODUCT-ROADMAP.md).
 - **Supply-chain policy** — Rendered from app/src/lib/supplychain.ts and the lockfiles; the test fails on a licence or Action nobody has named, and every deploy carries an SBOM.
 - **Security policy** — How a report is handled and what is disclosed; app/src/lib/security.test.ts holds it to the variables the Edge Functions read. Read next: [`SECRETS.md`](SECRETS.md), [`docs/trust/SECURITY-WHITEPAPER.md`](docs/trust/SECURITY-WHITEPAPER.md).
+- **Service expansion register** — Rendered from app/src/lib/serviceregister.ts: the twenty-six service layers beyond coursework, each capability marked present or absent in the tree, the twelve questions a proposed service answers, and the strategic sequence. The transfer hub and the basic-needs navigator, its first two, have pages of their own held to the launchpad, the pathways, the support directory and the transfer_evaluations constraint. Read next: [`docs/TRANSFER-TRANSITION-HUB.md`](docs/TRANSFER-TRANSITION-HUB.md), [`docs/BASIC-NEEDS-NAVIGATOR.md`](docs/BASIC-NEEDS-NAVIGATOR.md), [`docs/STRATEGIC-EXPANSION-REGISTER.md`](docs/STRATEGIC-EXPANSION-REGISTER.md).
+- **Module privacy model** — Rendered from app/src/lib/governance/module-privacy.ts: what each module holds by default and when staff see it, the role matrix held to app_roles, the share screen, the authority boundaries, the risk controls, the twelve launch gates and the governance council. The FERPA consent workflow behind the share screen is held field by field to the share tables. Read next: [`docs/trust/FERPA-CONSENT-WORKFLOW.md`](docs/trust/FERPA-CONSENT-WORKFLOW.md), [`docs/CONSENT-SHARING-DESIGN.md`](docs/CONSENT-SHARING-DESIGN.md), [`docs/ROLE-LAUNCH-REGISTER.md`](docs/ROLE-LAUNCH-REGISTER.md).
+- **AI assurance** — Rendered from app/src/lib/governance/ai-assurance.ts: the NIST AI RMF audit matrix with each row at its lifecycle gate, the AI 800-1 misuse-risk checklist, the evaluation risk tiers held to the intake refusals, the artifact set, and the release gate held to AI_RELEASE_GATE. AI 800-1 is a second public draft and is cited as voluntary guidance only. The no-training policy is a draft for counsel. Read next: [`docs/operating-model/AI-LIFECYCLE-GATES.md`](docs/operating-model/AI-LIFECYCLE-GATES.md), [`docs/trust/AI-MODEL-TRAINING-AND-DATA-USE-POLICY.md`](docs/trust/AI-MODEL-TRAINING-AND-DATA-USE-POLICY.md), [`docs/operating-model/AI-GOVERNANCE-BOARD.md`](docs/operating-model/AI-GOVERNANCE-BOARD.md).
 
 ## What every controlled document displays
 

@@ -1540,3 +1540,49 @@ missing.
   construction); and marking anything `limited-beta` or
   `institution-configured`, since no design partner and no configured
   institution exists.
+
+## D-111 · Five research documents are held to the tree as crosswalks, and the PDFs are never their own evidence
+
+**Decided 28 Sep 2026.** Five documents arrived on 28 September — the
+twenty-six service layers beyond coursework; the transfer hub, career OS,
+safe-AI and basic-needs designs; privacy by module and the liability controls;
+the FERPA consent workflow, the AI model-training policy and the NIST AI 800-1
+checklist; and the NIST AI RMF audit matrix — and are kept under
+`docs/expansion/` as supplied. Each is held to the tree the way D-108 held the
+modernization blueprint: as data under `app/src/lib/` rendered by a test, with
+every cited file existing, every status held to the kind of file it cites, and
+every id it names (master rows, expansion areas, `app_roles`, source labels,
+lifecycle gates, `AI_RELEASE_GATE`, `PROHIBITED_STARTING_SCOPE`, migration
+columns) checked against the register that owns it.
+
+- **A supplied PDF is never evidence.** A design that arrived this morning is
+  not a design the repository had; every test refuses a status that cites one.
+  So the pages read as what the tree can show, which is a great deal less than
+  the documents describe, and the gap column says so.
+- **The service register marks capabilities, not only modules.** A status is a
+  claim about the best piece of a module, so nearly every module is `tested`;
+  each capability the document asks for is marked present or absent and the
+  page counts them, so a module `tested` at 3 of 12 reads as mostly missing.
+- **Crosswalk, not a second register.** The AI assurance matrix puts each row
+  at the gate `ai-lifecycle.ts` already owns for its function, and holds a
+  tier-4 "do not deploy" domain to the intake refusals: two domains the
+  document names (admissions, accommodation) are not yet refused in code, and
+  the page says so rather than implying they are. The release gate names the
+  `AI_RELEASE_GATE` item that carries each line, and four lines have none. The
+  privacy model's role matrix names the `app_roles` row for each role, and a
+  basic-needs case manager has none. The FERPA data model names the column
+  that carries each field, and six fields have none.
+- **NIST AI 800-1 is a second public draft.** It is cited as a voluntary
+  source of controls, never as a certification or a finalized requirement,
+  and the rendered page carries that caveat by test.
+- **The no-training policy is a draft for counsel**, in `docs/trust/`, held
+  to the privacy page's existing "Nothing is used to train anything" and to
+  the privacy-policy draft; the DPA checklist's unchecked no-training clause
+  stays unchecked until provider terms are on file.
+- **Not changed:** `ai-lifecycle.ts`, `rolelaunch.ts`, `source.ts` and the
+  migrations. Adding the two missing intake refusals, a `purpose` and an
+  `access` column on the share tables, and a case-manager role are proposals
+  the pages make, for the owner to take up; none is made here.
+- **Found on the way, not fixed here:** `risk.ts` R-07 still says the AI
+  runtimes do not consult `kill.ai_generation`, which D-109 closed; the row is
+  out of date and should be re-read.
