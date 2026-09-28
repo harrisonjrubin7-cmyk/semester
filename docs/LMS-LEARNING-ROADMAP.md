@@ -118,6 +118,21 @@ then assessment layer.
 5. **Course Studio, question banks and QTI / Common Cartridge.** This is the
    faculty layer, and the largest piece.
 
+## Read next, 28 September 2026
+
+Seven further documents of 28 September are held to the tree as data with a
+test each, the way this page checked its three:
+[`LEARNING-ASSESSMENT-GRADEBOOK-REGISTER.md`](LEARNING-ASSESSMENT-GRADEBOOK-REGISTER.md)
+covers the fourteen areas, the faculty side included, capability by capability;
+[`QTI-3-ASSESSMENT-AND-MIGRATION.md`](QTI-3-ASSESSMENT-AND-MIGRATION.md) says
+what "QTI import" and "question banks" above would have to mean;
+[`LMS-INTEROPERABILITY-MATRIX.md`](LMS-INTEROPERABILITY-MATRIX.md) is the
+four-LMS comparison and the grade write, preview to audit;
+[`operating-model/AI-GRADING-AND-INTEGRITY.md`](operating-model/AI-GRADING-AND-INTEGRITY.md)
+is AI's place in grading; and
+[`ONE-SYSTEM-PLATFORM-GRAMMAR.md`](ONE-SYSTEM-PLATFORM-GRAMMAR.md) is what
+makes the whole feel like one system.
+
 ## The thirteen layers
 
 The capability map in the "expand" document is organised as thirteen layers
