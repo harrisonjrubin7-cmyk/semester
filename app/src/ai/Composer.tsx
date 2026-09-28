@@ -4,7 +4,7 @@ import { MicIcon, SpeakerIcon } from '../components/Icons';
 
 /** What the microphone button says it will do, per phase. */
 const VOICE_LABEL: Record<string, string> = {
-  off: 'Ask out loud',
+  off: 'Start voice input',
   listening: 'Listening — tap to stop',
   thinking: 'Thinking — tap to stop',
   speaking: 'Speaking — tap to stop',
@@ -40,6 +40,7 @@ export function Composer({
   placeholder,
   autoFocus = false,
   voice,
+  blockedBy,
 }: {
   value: string;
   onChange: (next: string) => void;
@@ -72,6 +73,15 @@ export function Composer({
     supported: boolean;
     toggle: () => void;
   };
+  /**
+   * The id of the sentence that says why nothing can be sent, when nothing can.
+   *
+   * A box that looks ready while every send is going to fail was the bug on
+   * the Ask tab: the reason sat three controls away in grey, attached to
+   * nothing. Disabled here, with the reason named as its description, so a
+   * screen reader reaching the field hears why in the same breath.
+   */
+  blockedBy?: string;
 }) {
   const box = useRef<HTMLTextAreaElement>(null);
   const touch = useMedia(TOUCH);
@@ -119,7 +129,7 @@ export function Composer({
     }
     if (e.key !== 'Enter' || e.shiftKey || e.altKey || touch) return;
     e.preventDefault();
-    if (!busy && value.trim()) onSend();
+    if (!busy && !blockedBy && value.trim()) onSend();
   };
 
   return (
@@ -140,7 +150,7 @@ export function Composer({
      * as every other control's, rather than as inline styles that only this
      * component knows how to keep in step with the themes.
      */
-    <div className="ai-composer">
+    <div className="ai-composer" data-blocked={blockedBy ? '' : undefined}>
       <textarea
         ref={box}
         id="ai-composer"
@@ -154,6 +164,8 @@ export function Composer({
         // is gone the moment there is any text in the box, and a screen reader
         // that reaches the field mid-question would otherwise find it unnamed.
         aria-label="Your question"
+        disabled={!!blockedBy}
+        aria-describedby={blockedBy}
         style={{
           margin: 0,
           resize: 'none',
@@ -171,12 +183,12 @@ export function Composer({
         microphone invites tapping, and Firefox has no speech recognition at
         all, which is not a state somebody can fix by trying again.
       */}
-      {voice?.supported ? (
+      {voice?.supported && !blockedBy ? (
         <button
           type="button"
           className={`btn ai-mic${voice.on ? ' is-on' : ''}`}
           onClick={voice.toggle}
-          aria-label={VOICE_LABEL[voice.phase] ?? 'Ask out loud'}
+          aria-label={VOICE_LABEL[voice.phase] ?? 'Start voice input'}
           aria-pressed={voice.on}
         >
           {/*
@@ -195,9 +207,9 @@ export function Composer({
         className="btn btn-primary ai-send"
         // Never disabled while answering — Stop has to be reachable, including
         // by keyboard, and a disabled button is not.
-        disabled={busy ? false : !value.trim()}
+        disabled={busy ? false : !value.trim() || !!blockedBy}
         onClick={() => (busy ? onStop() : onSend())}
-        aria-label={busy ? 'Stop answering' : 'Send your question'}
+        aria-label={busy ? 'Stop answering' : 'Send message'}
       >
         <span aria-hidden>{busy ? '■' : '↑'}</span>
       </button>

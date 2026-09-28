@@ -203,5 +203,8 @@ export const TERM_STARTERS = [
   'What is due this week?',
   'What should I study next?',
   'Help me plan my week',
-  'How am I doing in my courses?',
+  // Not "How am I doing in my courses?": a starter that invites a verdict on
+  // academic standing, offered before anything says what it would be drawn
+  // from. Grades are still one question away for anyone who asks.
+  'Prepare questions for my advisor',
 ] as const;

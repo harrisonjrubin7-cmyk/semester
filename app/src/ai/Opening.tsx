@@ -2,6 +2,7 @@ import { useAI } from './store';
 import { assemble, suggestionsFor } from './assemble';
 import { useNow, useStore } from '../state/store';
 import { upcomingItems } from '../lib/select';
+import type { HelpState } from './converse';
 
 /**
  * A new conversation, which is not a blank page.
@@ -21,6 +22,7 @@ export function Opening({
   onPick,
   tight = false,
   big = false,
+  help = { kind: 'ready' },
 }: {
   onPick: (q: string) => void;
   tight?: boolean;
@@ -35,6 +37,8 @@ export function Opening({
    * surface has to give them.
    */
   big?: boolean;
+  /** Whether help is available; a course ban trims the starters to planning. */
+  help?: HelpState;
 }) {
   const ai = useAI();
   const suggestions = suggestionsFor(ai).slice(0, 4);
@@ -56,8 +60,17 @@ export function Opening({
   const courses = catalog.courses.length;
   const soon = upcomingItems(catalog, now).filter((i) => i.daysAway <= 14).length;
 
+  /*
+   * The starters, less any that could not be answered here.
+   *
+   * A course whose AI policy bans help with its work still gets planning
+   * help, so the planning starters stay and the rest go: a suggestion is an
+   * invitation, and one that is going to be refused should not be offered.
+   */
+  const offered = help.kind === 'course-off' ? suggestions.filter((s) => PLANNING.has(s)) : suggestions;
+
   return (
-    <div style={{ marginBottom: tight ? 'var(--sp-7)' : 'calc(var(--sp-7) * 1.6)' }}>
+    <div className="ask-opening" style={{ marginBottom: tight ? 'var(--sp-7)' : 'calc(var(--sp-7) * 1.6)' }}>
       {/*
         A question, not a slogan.
 
@@ -76,62 +89,30 @@ export function Opening({
           marginBottom: big ? 'var(--sp-3)' : undefined,
         }}
       >
-        {seen ? `You are on ${seen}.` : 'What can I help you with?'}
+        {seen ? `You are on ${seen}.` : 'What would you like help with?'}
       </h2>
       {!seen && (
-        <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)' }}>
-          Explain course material, plan your study time, practice a concept or work on a draft you
-          review.
-        </div>
-      )}
-      {suggestions.length > 0 && (
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 'var(--sp-3)',
-            marginTop: 'var(--sp-6)',
-          }}
-        >
-          {suggestions.map((s) => (
-            <button
-              key={s}
-              type="button"
-              className="btn btn-secondary"
-              onClick={() => onPick(s)}
-              style={{
-                height: 'auto',
-                // A thumb, not a hairline. 10px of padding was fine as a row
-                // in a stack of rows; as the only thing on an empty screen a
-                // suggestion is the thing you are being invited to tap.
-                padding: big ? 'var(--sp-5) var(--sp-7)' : 'var(--sp-5) var(--sp-6)',
-                textAlign: 'left',
-                justifyContent: 'flex-start',
-                fontSize: big ? 'var(--type-md)' : 'var(--type-sm)',
-                lineHeight: 'var(--leading-normal)',
-                // Round, to match the composer they are a shortcut to.
-                borderRadius: big ? '16px' : undefined,
-              }}
-            >
-              {s}
-            </button>
-          ))}
-        </div>
+        <p className="ask-opening-lede">
+          I can explain your course material, help you practise, plan your time, or help with a
+          draft you review.
+        </p>
       )}
       {/*
-        What it can see, as a tray rather than a sentence of small print.
+        What it can see, before what to ask it.
 
-        The old line was right and too quiet: one grey paragraph under the
-        suggestions that nobody read, and nothing to open. The summary line
-        says what is in scope now, with numbers; the details say what is never
-        in scope, and that nothing changes until you confirm it.
+        It used to come last, under the suggestions, as a grey sentence — so a
+        student was invited to ask before being told what the answer could be
+        drawn from. Context first: what is in use now, and a disclosure for
+        what is never used and that nothing changes until you confirm.
       */}
       <div className="ask-context" role="group" aria-label="What Semester Intelligence can see">
         <div className="ask-context-line">
-          <span className="ask-context-kicker">Uses</span>{' '}
-          {seen ? 'this screen · ' : ''}
-          {courses} {courses === 1 ? 'course' : 'courses'} · {soon}{' '}
-          {soon === 1 ? 'deadline' : 'deadlines'} in the next two weeks · your grades
+          <span className="ask-context-kicker">Using right now</span>
+          <span>
+            {seen ? 'this screen · ' : ''}
+            {courses} {courses === 1 ? 'course' : 'courses'} · {soon}{' '}
+            {soon === 1 ? 'deadline' : 'deadlines'} in the next two weeks · your grades
+          </span>
         </div>
         <details className="ask-context-more">
           <summary>What it can and cannot see</summary>
@@ -141,10 +122,42 @@ export function Opening({
               grades.
             </li>
             <li>It never sees your notes, your drafts or anyone in People.</li>
+            <li>It is not your registrar: it cannot change your official record.</li>
             <li>It can offer to change something. Nothing happens until you tap to confirm.</li>
           </ul>
         </details>
       </div>
+      {offered.length > 0 && (
+        <>
+          <h3 className="ask-starters-label">Suggested starting points</h3>
+          <div className={`ask-starters${big ? ' is-grid' : ''}`}>
+            {offered.map((s) => (
+              <button key={s} type="button" className="ask-starter" onClick={() => onPick(s)}>
+                <span className="ask-starter-q">{s}</span>
+                {USES[s] && <span className="ask-starter-uses">{USES[s]}</span>}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }
+
+/** The starters that are planning rather than coursework, which a course ban leaves standing. */
+const PLANNING = new Set<string>(['What is due this week?', 'Help me plan my week']);
+
+/**
+ * What each Ask-tab starter reads, said under it.
+ *
+ * Every suggestion has an input and an output; this is the input, so a
+ * student can see what the answer will be built from before tapping. Only
+ * the term-wide starters have one — a screen's own suggestions are about the
+ * screen, and the opening already says it is looking at it.
+ */
+const USES: Record<string, string> = {
+  'What is due this week?': 'Uses your deadlines and calendar',
+  'What should I study next?': 'Uses your courses and what is coming up',
+  'Help me plan my week': 'Uses your calendar — nothing changes until you confirm',
+  'Prepare questions for my advisor': 'Uses your courses and your saved plan',
+};

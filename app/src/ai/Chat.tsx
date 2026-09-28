@@ -1,10 +1,10 @@
-import { useState, type CSSProperties } from 'react';
+import { useId, useState, type CSSProperties } from 'react';
 import { faintLine, secondLine } from '../lib/dim';
 import { useNow, useStore } from '../state/store';
 import { TOUCH, WIDE, useMedia, useMedium } from '../lib/media';
 import { chromeFor } from '../lib/chrome';
 import { useKeyboardInset } from '../lib/keyboard';
-import { useConversation } from './converse';
+import { canSend, useConversation } from './converse';
 import { useVoice } from './usevoice';
 import { configured } from '../lib/assistant';
 import { Composer, sendHint } from './Composer';
@@ -14,7 +14,7 @@ import { Opening } from './Opening';
 import { Applied, Holding, Locally, Proposals } from './Actions';
 import { Trouble } from '../components/Trouble';
 import { IntelligenceDisclosure } from '../intelligence/Disclosure';
-import { IntegrityModePicker } from '../intelligence/ModePicker';
+import { HelpNotice, HowItHelps } from './HelpNotice';
 import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
 
 /**
@@ -93,6 +93,25 @@ export function Chat() {
   };
 
   const empty = talk.turns.length === 0 && !talk.busy;
+  /*
+   * Whether anything can be sent, and where the reason goes when not.
+   *
+   * With nothing asked yet the reason is the screen — the panel with its
+   * actions takes the opening's place, since suggestions that cannot be sent
+   * are the contradiction this replaced — and the dock keeps one line of it,
+   * directly over the disabled box, as that box's description.
+   */
+  const noticeId = useId();
+  const blocked = !canSend(talk.help);
+  const helpInLog = empty && blocked && talk.help.kind !== 'ready';
+  /*
+   * The history beside the conversation only once there is history.
+   *
+   * A 232px column holding one row reading "New conversation · Nothing asked
+   * yet" was a third of the window spent saying there was nothing in it.
+   */
+  const kept = talk.threads.filter((t) => t.turns.length > 0).length;
+  const rail = wide && (kept > 0 || talk.archived.length > 0);
   const list = {
     threads: talk.threads,
     openId: talk.openId,
@@ -115,7 +134,7 @@ export function Chat() {
         not. A 200px rail on a 430px phone leaves 230px for the answer, which
         is narrower than the measure this whole layout exists to protect.
       */}
-      {wide && (
+      {rail && (
         <div
           style={{
             flex: 'none',
@@ -181,7 +200,10 @@ export function Chat() {
         }}
       >
         <div style={COLUMN}>
-          {empty && <Opening onPick={(q) => ask(q)} big />}
+          {empty && talk.help.kind !== 'ready' && helpInLog && (
+            <HelpNotice help={talk.help} onRetry={talk.retryPolicy} />
+          )}
+          {empty && !helpInLog && <Opening onPick={(q) => ask(q)} big help={talk.help} />}
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(var(--sp-7) * 1.6)' }}>
             <Dropped n={talk.dropped} />
@@ -289,7 +311,7 @@ export function Chat() {
       </div>
 
       {/* Never yanks anybody back down: it appears, and it waits. */}
-      {!following && (
+      {!following && !empty && (
         <div style={{ position: 'relative' }}>
           <button
             type="button"
@@ -333,10 +355,15 @@ export function Chat() {
         }
       >
         <div style={COLUMN}>
-          <IntegrityModePicker
+          <HowItHelps
+            help={talk.help}
             requested={talk.integrityMode}
-            policy={{ allowed: talk.allowedIntegrityModes, reason: talk.integrityReason }}
+            allowed={talk.allowedIntegrityModes}
+            reason={talk.integrityReason}
             onChange={talk.setIntegrityMode}
+            onRetry={talk.retryPolicy}
+            noticeId={noticeId}
+            noticeVariant={helpInLog ? 'line' : 'full'}
           />
           <Composer
             value={draft}
@@ -351,9 +378,18 @@ export function Chat() {
               return null;
             }}
             busy={talk.busy}
-            placeholder={voice.on ? 'Listening — say it out loud' : sendHint(touch)}
-            autoFocus={!touch}
+            placeholder={
+              blocked
+                ? 'Sending is paused'
+                : voice.on
+                ? 'Listening — say it out loud'
+                : talk.help.kind === 'course-off'
+                  ? `Ask about your deadlines or your week — ${sendHint(touch)}`
+                  : sendHint(touch)
+            }
+            autoFocus={!touch && !blocked}
             voice={voice}
+            blockedBy={blocked ? noticeId : undefined}
           />
           {/*
             One line, centred, under the pill — the shape every chat has, and
@@ -397,7 +433,7 @@ export function Chat() {
               </>
             )}
             {/* Only where the panel is not already showing the list. */}
-            {!wide && (
+            {!rail && kept > 0 && (
               <>
                 <button
                   type="button"
