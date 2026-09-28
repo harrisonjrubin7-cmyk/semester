@@ -102,7 +102,30 @@ if [ "$target_tables" -gt 0 ]; then
 fi
 
 work=$(mktemp -d)
-trap 'rm -rf "$work"' EXIT
+touched=""
+# DRILL_CLEANUP runs from the EXIT trap, not at the end of the script: a
+# restore that fails half way (`set -e`, `--exit-on-error`) would otherwise
+# leave a partial copy of real accounts in the target, which is the case
+# cleanup exists for.
+clear_target() {
+  echo "· clearing the copy from the target (DRILL_CLEANUP)"
+  dst >/dev/null <<'SQL'
+drop schema if exists private cascade;
+drop schema if exists public cascade;
+create schema public;
+grant usage on schema public to anon, authenticated, service_role;
+truncate auth.users cascade;
+SQL
+}
+finish() {
+  status=$?
+  if [ -n "$touched" ] && [ -n "${DRILL_CLEANUP:-}" ]; then
+    clear_target || { echo "  ✗ clearing the target failed; clear it by hand" >&2; status=1; }
+  fi
+  rm -rf "$work"
+  exit "$status"
+}
+trap finish EXIT
 
 # ── What production looks like now ──────────────────────────────────────────
 
@@ -159,6 +182,7 @@ size=$(stat -c %s "$work/app.dump" 2>/dev/null || stat -f %z "$work/app.dump")
 
 echo "· restoring into the target"
 tr0=$(date +%s)
+touched=1
 dst >/dev/null <<'SQL'
 drop schema if exists private cascade;
 drop schema if exists public cascade;
@@ -204,7 +228,10 @@ rls_off=$(dst -At -c "
   select coalesce(string_agg(relname, ','), 'none') from pg_class c
     join pg_namespace n on n.oid = c.relnamespace
    where n.nspname = 'public' and c.relkind = 'r' and not c.relrowsecurity")
-say "the ensure_rls event trigger survived" "$before_triggers" "$after_triggers"
+# Exactly one on each side, not merely equal: a source that has already lost
+# the trigger reads 0 = 0, and that is the drift this check is for.
+say "the ensure_rls event trigger is on the source" "1" "$before_triggers"
+say "the ensure_rls event trigger survived" "1" "$after_triggers"
 say "row-level security is still on for every table" "none" "$rls_off"
 
 # The control on the controls: every comparison above also passes between two
@@ -222,24 +249,13 @@ fi
 
 t1=$(date +%s)
 
-if [ -n "${DRILL_CLEANUP:-}" ]; then
-  echo "· clearing the copy from the target (DRILL_CLEANUP)"
-  dst >/dev/null <<'SQL'
-drop schema if exists private cascade;
-drop schema if exists public cascade;
-create schema public;
-grant usage on schema public to anon, authenticated, service_role;
-truncate auth.users cascade;
-SQL
-fi
-
 yes_no() { [ "$1" = "$2" ] && echo yes || echo no; }
 day=$(date -u +%Y-%m-%d)
 echo
 echo "· for the table at the bottom of RESTORE.md"
 echo "| Time to restore, start to finish (logical, this drill) | $((t1 - t0))s: dump $((td1 - td0))s ($size bytes), restore $((tr1 - tr0))s | $day |"
 echo "| Did the six fingerprints match? | $(yes_no "$before_fp" "$after_fp") | $day |"
-echo "| Did \`ensure_rls\` survive? | $(yes_no "$before_triggers" "$after_triggers") | $day |"
+echo "| Did \`ensure_rls\` survive? | $(yes_no 11 "$before_triggers$after_triggers") | $day |"
 echo "| Was row-level security still enforced? | $(yes_no none "$rls_off") | $day |"
 echo
 [ "$fail" = 0 ] && echo "· the live project's data restored faithfully into the target" \
