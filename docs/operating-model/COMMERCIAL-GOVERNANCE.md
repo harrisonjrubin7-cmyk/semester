@@ -1,5 +1,7 @@
 # Commercial governance: pricing, AI economics, ROI and financial controls
 
+> Owner, version, last and next review, status, supersedes and related decisions: [`SEMESTER-OPERATING-SYSTEM.md`](../../SEMESTER-OPERATING-SYSTEM.md).
+
 ## Pricing governance and the deal desk
 
 Hybrid pricing becomes chaotic without controls. Student plans, institutional licences, implementation, AI capacity

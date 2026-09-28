@@ -1,5 +1,7 @@
 # The Semester UI constitution
 
+> Owner, version, last and next review, status, supersedes and related decisions: [`SEMESTER-OPERATING-SYSTEM.md`](../../SEMESTER-OPERATING-SYSTEM.md).
+
 Semester has a lot of capability: sixty-three destinations, eighty-four
 screens, and a component directory of more than two hundred files. The main
 design risk is not a missing feature. It is that a student experiences all of

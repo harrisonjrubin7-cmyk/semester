@@ -12,6 +12,11 @@ and finance when cost or pricing is in question. **Cadence:** every two weeks fo
 portfolio review (see [OPERATING-RHYTHM.md](OPERATING-RHYTHM.md)). **Quorum:** product, engineering and one of
 privacy/security.
 
+The rule over intake is in [`SEMESTER-OPERATING-SYSTEM.md`](../../SEMESTER-OPERATING-SYSTEM.md): no new module launches
+unless it replaces, improves, or connects an existing student or institution workflow with measurable value. The nine
+questions it asks of every addition are in the pull-request template, and a request that cannot answer them does not
+reach the scorecard.
+
 ### Decision workflow
 
 ```text

@@ -1,5 +1,7 @@
 # Semester
 
+> Owner, version, last and next review, status, supersedes and related decisions: [`SEMESTER-OPERATING-SYSTEM.md`](SEMESTER-OPERATING-SYSTEM.md).
+
 Upload your syllabi; get the semester back as an app — every deadline with the
 sentence it came from, a study guide you can drill, narrated lessons, a deck, a
 document, and a calendar that knows when your classes are.
