@@ -152,18 +152,4 @@ describe('the trust package', () => {
     }
     expect(CLAIM.test('Semester is SOC 2 certified.')).toBe(true);
   });
-
-  it('marks every procurement-room item with a status, and backs every non-absent one', () => {
-    const index = readFileSync(join(TRUST, 'README.md'), 'utf8');
-    const after = index.split('<!-- trust:room -->')[1].split('\n').map((l) => l.trim());
-    const start = after.findIndex((l) => l.startsWith('|'));
-    const end = after.findIndex((l, i) => i > start && !l.startsWith('|'));
-    const room = after.slice(start + 2, end);
-    expect(room.length).toBeGreaterThanOrEqual(40);
-    for (const line of room) {
-      const [folder, item, status, where] = line.split('|').slice(1, -1).map((c) => c.trim());
-      expect(status.length, `${folder} / ${item}`).toBeGreaterThan(0);
-      if (status !== 'Absent') expect(citedPaths(where).length, `${folder} / ${item}`).toBeGreaterThan(0);
-    }
-  });
 });

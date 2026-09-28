@@ -27,7 +27,7 @@ is the plan that moves those rows.
 
 | Days | Work |
 | --- | --- |
-| 1 to 15 | Inventory systems, vendors, data, policies, environments, access and evidence gaps. Mostly done: the register and [`VENDOR-REGISTER.md`](VENDOR-REGISTER.md) |
+| 1 to 15 | Inventory systems, vendors, data, policies, environments, access and evidence gaps. Mostly done: the register and [`docs/SUBPROCESSORS.md`](../SUBPROCESSORS.md) |
 | 16 to 30 | Write the missing policies: privacy, acceptable use, vulnerability disclosure, accessibility statement. Assign an owner to each register row |
 | 31 to 45 | Implement missing controls: MFA, legacy RLS re-keying, alert wiring, journal backup, restore drill, incident tabletop |
 | 46 to 60 | Compile evidence into `docs/evidence/`: architecture and data flow, restore timings, tabletop record, console MFA screenshots, access-review export |

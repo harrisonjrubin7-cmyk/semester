@@ -81,7 +81,7 @@ integration outage cannot corrupt data, or make stale data look current.
 | VPAT/ACR | **Absent** | [`HECVAT-VPAT-PLAN.md`](HECVAT-VPAT-PLAN.md) |
 | DPA and security addendum | Checklist; not drafted by counsel | [`DPA-CHECKLIST.md`](DPA-CHECKLIST.md) |
 | Pilot agreement and SOW | Outline | [`PILOT-AGREEMENT-OUTLINE.md`](PILOT-AGREEMENT-OUTLINE.md) |
-| Subprocessor list | Written; diligence not done | [`VENDOR-REGISTER.md`](VENDOR-REGISTER.md) |
+| Subprocessor list | Written; diligence not done | [`docs/SUBPROCESSORS.md`](../SUBPROCESSORS.md) |
 | Support, onboarding, escalation | Playbooks | `docs/market-readiness/SUPPORT_PLAYBOOK.md`, `docs/market-readiness/UNIVERSITY_ONBOARDING.md` |
 | Pilot scorecard | Template | [`PILOT-AGREEMENT-OUTLINE.md`](PILOT-AGREEMENT-OUTLINE.md) |
 | Penetration test, insurance, legal entity | **Absent** | [`README.md`](README.md) |

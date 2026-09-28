@@ -5,6 +5,10 @@ language.** It sets out what a 90-day institutional pilot agreement has to
 cover, and a sample scope that matches what Semester can actually support.
 `docs/market-readiness/PILOT_PLAYBOOK.md` is the operational side: how a pilot
 is run once it is signed.
+`docs/PAID-PILOT-FRAMEWORK.md` and `docs/PILOT-TO-ANNUAL-CONVERSION.md` cover
+the commercial side: price, how long a pilot may run, who approves it, and how
+a pilot becomes, or does not become, an annual agreement. This outline covers
+only what the contract has to say.
 
 ## Sections the agreement needs
 

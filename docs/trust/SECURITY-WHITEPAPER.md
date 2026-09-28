@@ -31,7 +31,7 @@ DPAs. [`SOC2-READINESS.md`](SOC2-READINESS.md) scores each gap.
 
 | Layer | Responsible |
 | --- | --- |
-| Physical data centers, host OS, managed Postgres, TLS termination | Supabase and GitHub (inherited; see [`VENDOR-REGISTER.md`](VENDOR-REGISTER.md)) |
+| Physical data centers, host OS, managed Postgres, TLS termination | Supabase and GitHub (inherited; see [`docs/SUBPROCESSORS.md`](../SUBPROCESSORS.md)) |
 | Schema, row-level security, functions, application code, secrets | Semester |
 | Identity provider, SSO attributes, LMS configuration | The institution |
 | AI enablement and course AI policy | The institution, enforced by Semester |
@@ -187,10 +187,12 @@ Tenant-wide export and deletion at contract end do not yet exist. See
 
 ## 15. Subprocessors and vendor management
 
-The subprocessors are Supabase, GitHub, Anthropic, and OpenAI where a tenant
-enables institutional AI. They are listed, with data categories and exit
-plans, in [`VENDOR-REGISTER.md`](VENDOR-REGISTER.md). Their DPAs and assurance
-reports have not yet been reviewed.
+Every third party a student's data can reach is listed in
+[`docs/SUBPROCESSORS.md`](../SUBPROCESSORS.md). It separates Semester's own
+subprocessors from destinations an institution configures and from services a
+student connects. A test holds the list to the app's Content Security Policy
+and its edge functions. Counsel's review, each subprocessor's DPA and the
+hosting regions are still owed, and that document says so.
 
 ## 16. AI governance and model-provider controls
 

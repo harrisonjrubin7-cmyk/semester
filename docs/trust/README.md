@@ -1,28 +1,35 @@
-# Trust and Procurement Package
+# Trust Package: the Documents
 
-This is what a university's security, privacy, accessibility and procurement
-reviewers ask for, laid out as a procurement room, with every item pointing
-at the file that answers it or marked **Absent**.
+These are the long-form documents a university's security, privacy,
+accessibility and procurement reviewers read. The brief they came from asked
+for:
 
-It was built from an outside brief. That brief asked for a security
-whitepaper, a DPA, a pilot agreement, an SLA, a SOC 2 readiness matrix,
-monitoring runbooks, a HECVAT/VPAT plan and a four-level enterprise roadmap.
-Where this repository already had the answer, the room points at it rather
-than copying it. `docs/market-readiness/` and `docs/market-readiness/HECVAT_READINESS.md`
-remain the operating registers. This folder is what gets handed across the
-table.
+- a security whitepaper;
+- a DPA and a pilot agreement;
+- an SLA and monitoring runbooks;
+- a SOC 2 readiness matrix;
+- a HECVAT/VPAT plan;
+- a four-level enterprise roadmap.
 
-How it gets handed across is a separate piece: the NDA-gated, expiring,
-logged room in `supabase/migrations/20260928100000_trust_room.sql` and
-`app/src/screens/TrustRoom.tsx` publishes exact versions of documents like
-these to a named reviewer. This folder is the content, and the room is the
-delivery mechanism.
+**This folder is not the packet index.** Three other documents do that job:
+
+- [`docs/SECURITY-ACCESSIBILITY-READINESS.md`](../SECURITY-ACCESSIBILITY-READINESS.md)
+  lists every item in the trust packet, marks each one public, NDA or not
+  existing yet, and explains how NDA material is granted.
+- [`docs/SUBPROCESSORS.md`](../SUBPROCESSORS.md) lists every third party data
+  can reach, held by test to the app's Content Security Policy.
+- [`docs/FERPA-COPPA-1EDTECH-READINESS.md`](../FERPA-COPPA-1EDTECH-READINESS.md)
+  and `docs/market-readiness/HECVAT_READINESS.md` are the control registers.
+
+The documents here fill items those indexes list. The NDA-gated room in
+`supabase/migrations/20260928100000_trust_room.sql` and
+`app/src/screens/TrustRoom.tsx` is how they reach a named reviewer.
 
 **Three rules hold for everything here:**
 
 1. **No certification claims.** Semester has no SOC 2 report, no ACR, no
    penetration test, no signed DPA, and no insurance. It has not completed a
-   HECVAT. Where one of those appears below, it says Absent.
+   HECVAT.
 2. **Legal documents are outlines for counsel.** Nothing in this folder is
    contract language anyone should sign as written.
 3. **Every path cited in this folder exists.** `app/src/lib/trust.test.ts`
@@ -42,56 +49,7 @@ delivery mechanism.
 | [`APM-RUNBOOK.md`](APM-RUNBOOK.md) | Target telemetry and alert thresholds, marked with what exists; the incident runbook |
 | [`PILOT-AGREEMENT-OUTLINE.md`](PILOT-AGREEMENT-OUTLINE.md) | Sections for a 90-day pilot agreement, sample scope, scorecard |
 | [`HECVAT-VPAT-PLAN.md`](HECVAT-VPAT-PLAN.md) | HECVAT workstreams, a 90-day plan, and the VPAT/ACR checklist |
-| [`VENDOR-REGISTER.md`](VENDOR-REGISTER.md) | Every outside service the code sends data to, with the diligence still owed |
 | [`BRIDGE-LETTER.md`](BRIDGE-LETTER.md) | The SOC 2 bridge-letter process, for when a report exists |
-
-## The procurement room
-
-<!-- trust:room -->
-| Folder | Item | Status | Where |
-| --- | --- | --- | --- |
-| Company | Legal entity | Absent | — |
-| Company | Insurance certificates | Absent | — |
-| Company | Executive and security contacts | Partial | `SECURITY.md` |
-| Security | Security whitepaper | Draft | `docs/trust/SECURITY-WHITEPAPER.md` |
-| Security | HECVAT 4 response | Register only | `docs/market-readiness/HECVAT_READINESS.md` |
-| Security | Architecture diagram | Partial | `docs/market-readiness/INFRASTRUCTURE_READINESS.md`, `docs/ARCHITECTURE.md` |
-| Security | Data-flow diagrams | Absent | — |
-| Security | Penetration-test summary | Absent | — |
-| Security | Secure SDLC policy | Partial | `REGRESSION-CHECKLIST.md`, `.github/workflows/ci.yml` |
-| Security | Incident response plan | Written, not exercised | `SECURITY.md`, `docs/market-readiness/INCIDENT_RESPONSE.md` |
-| Security | Business continuity and DR summary | Not started | `docs/market-readiness/DISASTER_RECOVERY.md` |
-| Security | Vulnerability disclosure policy | Absent | — |
-| Security | SOC 2 readiness | Gap assessment | `docs/trust/SOC2-READINESS.md` |
-| Privacy | Privacy Policy | Absent | — |
-| Privacy | DPA | Checklist for counsel | `docs/trust/DPA-CHECKLIST.md` |
-| Privacy | Data inventory and retention | Written, tested | `RETENTION.md` |
-| Privacy | Subprocessor list | Written, diligence owed | `docs/trust/VENDOR-REGISTER.md` |
-| Privacy | FERPA data-use statement | Partial | `docs/FERPA-IDENTITY-GUARDRAILS.md`, `docs/trust/DPA-CHECKLIST.md` |
-| Privacy | Export and offboarding plan | Partial | `docs/DATA-PORTABILITY-AND-OFFBOARDING.md` |
-| Accessibility | VPAT/ACR | Absent | `docs/trust/HECVAT-VPAT-PLAN.md` |
-| Accessibility | Accessibility statement | Absent | — |
-| Accessibility | Testing methodology | Written, in CI | `docs/market-readiness/ACCESSIBILITY_READINESS.md` |
-| Accessibility | Known issues and remediation SLA | Absent | — |
-| AI | AI governance brief | Written | `docs/market-readiness/AI_GOVERNANCE.md` |
-| AI | Model and provider inventory | Written | `docs/trust/VENDOR-REGISTER.md` |
-| AI | Evaluation and red-team summary | Absent | `docs/AI-RECOMMENDATION-EVALUATION-HARNESS.md` |
-| AI | AI incident plan | Absent | — |
-| Operations | SLA | Framework only | `docs/trust/SLA.md` |
-| Operations | Support policy | Playbook | `docs/market-readiness/SUPPORT_PLAYBOOK.md` |
-| Operations | Status page | Absent | — |
-| Operations | Change management | Written | `docs/operating-model/CHANGE-MANAGEMENT.md`, `ROLLBACK.md` |
-| Operations | Monitoring and incident runbook | Partial | `MONITORING.md`, `docs/trust/APM-RUNBOOK.md` |
-| Operations | Implementation plan | Playbook | `docs/market-readiness/IMPLEMENTATION_PLAYBOOK.md` |
-| Interoperability | LTI 1.3 architecture | Written, tested | `docs/LTI-1.3-LAUNCH-RUNBOOK.md` |
-| Interoperability | SSO architecture | Written, tested | `docs/INSTITUTIONAL-SSO-ARCHITECTURE.md` |
-| Interoperability | SIS/LMS adapter catalog | Registry empty by design | `docs/market-readiness/INTEGRATION_READINESS.md` |
-| Interoperability | OneRoster, QTI, Common Cartridge plan | Roadmap | `docs/LMS-LEARNING-ROADMAP.md` |
-| Interoperability | Migration plan | Playbook | `docs/market-readiness/MIGRATION_PLAYBOOK.md` |
-| Contracts | MSA and order form | Absent | — |
-| Contracts | Pilot SOW | Outline for counsel | `docs/trust/PILOT-AGREEMENT-OUTLINE.md` |
-| Contracts | DPA and security addendum | Checklist for counsel | `docs/trust/DPA-CHECKLIST.md` |
-| Contracts | SLA and support schedule | Framework only | `docs/trust/SLA.md` |
 
 ## What blocks a signature, and none of it is code
 

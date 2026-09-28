@@ -15,6 +15,10 @@ product cannot keep is worse than negotiating it.
 
 ## FERPA school-official checklist
 
+`docs/FERPA-COPPA-1EDTECH-READINESS.md` keeps the FERPA, COPPA and 1EdTech
+controls as a register with a status for each, enforced by test. This page is
+the contract side of the same obligations.
+
 FERPA lets an institution disclose education records without consent to a
 "school official" with a legitimate educational interest. That covers a
 contractor only when every line below holds:
@@ -54,8 +58,8 @@ support for each is in the next table.
 | Direct control | Institution directs use and maintenance of records | Institution admins hold capability grants: `supabase/capabilities.check.sql` |
 | Legitimate educational interest | Access limited to the users and data the purpose needs | Capability-scoped access and consented, expiring staff access: `supabase/support-access.check.sql` |
 | No sale or advertising | No sale, behavioral advertising, profiling or commercial exploitation | No advertising code exists; needs the written commitment |
-| No secondary use | No product or external model training on identifiable records without written authorization | Institutional AI calls OpenAI with `store: false` (`app/server/institution/providers/openai.ts`). Provider training terms are not yet recorded ([`VENDOR-REGISTER.md`](VENDOR-REGISTER.md)) |
-| No re-disclosure | Only to approved subprocessors under equivalent terms | Subprocessors are listed in [`VENDOR-REGISTER.md`](VENDOR-REGISTER.md); their DPAs are not reviewed |
+| No secondary use | No product or external model training on identifiable records without written authorization | Institutional AI calls OpenAI with `store: false` (`app/server/institution/providers/openai.ts`). Provider training terms are not yet recorded ([`docs/SUBPROCESSORS.md`](../SUBPROCESSORS.md)) |
+| No re-disclosure | Only to approved subprocessors under equivalent terms | Subprocessors are listed in [`docs/SUBPROCESSORS.md`](../SUBPROCESSORS.md); their DPAs are not reviewed |
 | Data minimization | Each integration limited to minimum fields | Integration permission matrix: `docs/INTEGRATION-PERMISSION-MATRIX.md` |
 | Security measures | A security schedule of technical and organizational measures | [`SECURITY-WHITEPAPER.md`](SECURITY-WHITEPAPER.md) is the draft of that schedule |
 | Subprocessors | Current list, diligence, flow-down terms, notice and objection | List exists; diligence and notice process do not |

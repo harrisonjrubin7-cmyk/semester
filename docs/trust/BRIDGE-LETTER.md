@@ -57,7 +57,7 @@ Security contact: [name, title, email]
       the source.
 - [ ] The security incident register.
 - [ ] The material vulnerability and finding register.
-- [ ] Major vendor or subprocessor changes ([`VENDOR-REGISTER.md`](VENDOR-REGISTER.md) history).
+- [ ] Major vendor or subprocessor changes ([`docs/SUBPROCESSORS.md`](../SUBPROCESSORS.md) history).
 - [ ] Access-review results for the period.
 - [ ] Backup, restore and availability evidence.
 - [ ] Any material customer-impacting outage review.
