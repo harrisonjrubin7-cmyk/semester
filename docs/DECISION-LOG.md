@@ -1716,3 +1716,102 @@ it.
   says `restore.sh` is not in CI and that no ticketing exists; both are now
   false. `docs/SUPPORT-RELIABILITY-AND-ABUSE-PREVENTION.md` says no status
   page is built; `app/public/status.html` exists.
+## D-114 · The compliance crosswalk computes its scores; the evidence index exists before any evidence; the memo's promises are counted
+
+**Decided 28 Sep 2026.** Nine documents arrived on 28 September — five on
+HECVAT 4, the 1EdTech TrustEd Apps rubrics and the EDUCAUSE 2026 priorities
+(a scorecard, a compliance matrix with a dashboard API, two crosswalks and a
+vendor intake policy), the university edtech audit with its faculty playbook,
+an audit scorecard with an evidence register and a retention policy draft, a
+memo on what would make Semester the benchmark, and the whole-platform
+business model — and are kept under `docs/expansion/` as supplied (three
+copies of the crosswalk arrived; one is kept). They are held to the tree the
+way D-108 and D-111 held theirs: data under `app/src/lib/`, a test that
+renders each page, every cited file existing, every status held to the kind
+of file it cites, and every id checked against the register that owns it.
+Four pages, and the rules that were decided rather than inherited:
+
+- **A score is computed, never typed.**
+  [docs/trust/COMPLIANCE-CROSSWALK.md](trust/COMPLIANCE-CROSSWALK.md)
+  (`app/src/lib/trust/compliance-crosswalk.ts`) puts twenty-six domains on the
+  documents' 0–4 scale, and each domain names only the rows of the four
+  registers it rests on — the HECVAT and FERPA/1EdTech readiness registers, the
+  master register and the maturity register. The test reads those registers and
+  takes the lower median of the rows' levels. A `tested` or `READY` row is a 2,
+  not a 3, because a test proves a control is implemented and nothing about
+  whether anybody operates it; a 3 needs an artifact under `docs/evidence/`,
+  and while that directory is absent the ceiling is 2 for every domain, held
+  by the test to the directory. Twenty-one domains score 1, three score 2, two
+  score 0. Rejected: a fifth register with its own statuses (D-108's reason),
+  and a single "compliance percentage" (the documents' own guardrail: four
+  values, never one).
+- **The evidence index exists before any evidence, and says so on every row.**
+  [docs/trust/EVIDENCE-REGISTER.md](trust/EVIDENCE-REGISTER.md)
+  (`app/src/lib/trust/evidence-register.ts`) fills the operating system's
+  "Security/compliance evidence index", missing since it was written: twenty
+  rows with the artifact that would prove each control operates, an owner
+  seat, a frequency, a visibility class and what the tree holds today. The
+  word `produced` is refused by the test while `docs/evidence/` does not
+  exist; fifteen rows are `defined` (the control and a test exist) and five
+  `owed`. With it: the seven leads as council seats (held or vacant as
+  `COUNCIL` says, never written on the page), the feature
+  map to HECVAT, the twenty cloud areas marked tree, provider or owed, the
+  seven release blockers and what holds each, the retention policy draft read
+  into `RETENTION.md`'s classes (nothing customer-configurable, no legal hold,
+  no stated backup lifecycle), the twelve sprints and the tiered backlog.
+- **The memo's promises are counted, and the count is the finding.**
+  [docs/MARKET-LEADERSHIP.md](MARKET-LEADERSHIP.md)
+  (`app/src/lib/ops/leadership.ts`) holds the fourteen plays, the thirteen
+  *one X* promises, the shared-services rule, the eleven revenue lines and the
+  fifteen lines not crossed, the friction index against the first-year
+  measures, No Wrong Door against the help routes, the Launch System against
+  the ninety-day tasks, and the faculty playbook. Of the thirteen ones, four
+  are built, eight partial, one held. The memo's benchmark is `benchmark()`;
+  what this change built is scored against it and does not pass, and the page
+  says why. The memo's own rule — do not say all-in-one without being precise
+  — is a test: the position statement may not contain the phrase.
+- **The operational readiness pack reads the gates; it adds none.**
+  [docs/OPERATIONAL-READINESS-PACK.md](OPERATIONAL-READINESS-PACK.md)
+  (`app/src/lib/ops/readiness-pack.ts`), from two further documents that
+  arrived the same day, holds the pack's seven pillars of production safety
+  to the registers: every checklist item rests on rows of the four registers
+  and the twelve launch gates of `launchreadiness.ts`, and its level is the
+  crosswalk's lower median. The launch verdict — GO, GO WITH CONDITIONS,
+  NO-GO — is `verdict()`, a pure function of the thirteen gate areas' levels,
+  and the test asserts NO-GO today rather than letting the page decide. The
+  fifteen dependencies carry the status the tree can show (nothing has been
+  tested against a failure; the legal dependency is failed); the eighteen
+  minimum runbooks name the document that stands in for each, and no runbook
+  carries a tested date because none has one. Rejected: a second gate list
+  beside `launchreadiness.ts`, and a master operating plan beside the master
+  register — the pack's twenty plan fields are read against the register's
+  columns, and the missing ones are named.
+- **Two documents #927 anticipated are read against it, not duplicated.**
+  #927 landed while this was in review with a no-wrong-door router, a customer
+  trust dashboard and the public Semester Standard. The leadership page now
+  holds the memo's eight student situations to the router's own `match()`,
+  its eleven trust-evidence panels to the dashboard's rows, and its ten
+  standard lines to the eleven public commitments of `standard.ts`, which is
+  the authoritative version; three plays rose to `built` on that evidence.
+- **Four seats were filled while this was in review, and the pages read it.**
+  #933 held the founder, product, engineering and success seats to the
+  founder, acting, on decision 1 of `docs/LAUNCH-DECISIONS.md`. The four pages
+  here had asserted every seat vacant; they now read each holder from
+  `COUNCIL` and count the held seats, and nothing is signed because
+  `signoffs` is empty. The security seat is still vacant, and the crosswalk's
+  security-contact row says so under a test that fails the day it is filled.
+- **Where the documents conflict with a decision on main, the decision
+  holds:** payments and checkout (D-009), an Operations Console as navigation
+  (DO-NOT-BUILD rule 1, D-110), a native gradebook (the Course Studio design),
+  a separate trust service (ADR 0003). Each is a row on the leadership page.
+- **Two of the fifteen lines are proposed, not held:** nothing forbids
+  pay-to-win placement or a premium accessibility module today. They are
+  recorded so that a rule is a decision and not a drift; neither is added
+  here.
+- **Not changed:** the four readiness registers, `boundaries.ts`, the
+  ninety-day tasks, the first-year measures. A score moves only when a row
+  moves in the register that owns it.
+- **Found on the way, not fixed here:** `risk.ts` R-07 (D-111's finding)
+  still stands; the retention schedule does not state the provider backups'
+  lifecycle; no security contact is published, which the crosswalk counts
+  against three rubric items at once.
