@@ -51,6 +51,9 @@ const PAGES = join(ROOT, '.github', 'workflows', 'pages.yml');
 const STAMPED: Record<string, string> = {
   VITE_BUILD_ID:
     'stamped by vite.config.ts on every build, so the service worker can tell one build from another. Not an operator setting.',
+  VITE_CSP_EXTRA_CONNECT:
+    'derived by vite.config.ts on every build from the Supabase, proxy and gateway URLs, and always assigned over anything set. ' +
+    'src/lib/cspheader.ts names it as the placeholder the build substitutes into public/_headers. Not an operator setting.',
 };
 
 /**
