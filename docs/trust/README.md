@@ -54,6 +54,8 @@ The documents here fill items those indexes list. The NDA-gated room in
 | [`PENETRATION-TEST-PLAN.md`](PENETRATION-TEST-PLAN.md) | Scope, rules of engagement, test accounts, success criteria and remediation commitments for the first external test. No test has been performed |
 | [`FERPA-CONSENT-WORKFLOW.md`](FERPA-CONSENT-WORKFLOW.md) | When consent is needed, the decision gate, the consent screen, the data model field by field against the share tables, and the fifteen workflow controls. Rendered from `app/src/lib/trust/ferpa-consent.ts` |
 | [`AI-MODEL-TRAINING-AND-DATA-USE-POLICY.md`](AI-MODEL-TRAINING-AND-DATA-USE-POLICY.md) | The no-training-by-default policy in full and the eleven implementation requirements, each held to the tree. A draft for counsel, rendered from `app/src/lib/trust/ai-training-policy.ts` |
+| [`COMPLIANCE-CROSSWALK.md`](COMPLIANCE-CROSSWALK.md) | HECVAT 4, the four 1EdTech TrustEd Apps rubrics and EDUCAUSE 2026 as one control library: every domain rests on rows of the four readiness registers and every 0–4 score is computed by the test, capped at 2 until `docs/evidence/` exists. Also Semester through a university's own vendor intake. Rendered from `app/src/lib/trust/compliance-crosswalk.ts` |
+| [`EVIDENCE-REGISTER.md`](EVIDENCE-REGISTER.md) | The evidence index the operating system listed as missing: for every control, the artifact that would prove it operates, its owner seat, frequency and visibility, and what the tree holds today. No evidence has been produced, and the word is refused by test until `docs/evidence/` exists. Rendered from `app/src/lib/trust/evidence-register.ts` |
 
 ## What blocks a signature, and none of it is code
 
