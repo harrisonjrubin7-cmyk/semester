@@ -1853,5 +1853,7 @@ Four pages, and the rules that were decided rather than inherited:
   moves in the register that owns it.
 - **Found on the way, not fixed here:** `risk.ts` R-07 (D-111's finding)
   still stands; the retention schedule does not state the provider backups'
-  lifecycle; no security contact is published, which the crosswalk counts
-  against three rubric items at once.
+  lifecycle. #934 published the security contact while this was in review
+  (D-114), so the crosswalk's security-contact artifact is `have` and VULN-1
+  is read as in progress; the remediation targets are still proposed, not
+  accepted, and no finding has been answered against them.

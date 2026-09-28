@@ -280,7 +280,7 @@ function render(): string {
     '',
     ...table(['Supplied document', 'What it holds'], SOURCES.map((x) => [`[${cell(x.title)}](${link(DOC, x.path)})`, cell(x.what)])),
     '',
-    `Standings: ${STANDINGS.map((s) => `**${s}** — ${STANDING_MEANING[s]}`).join('; ')}. Statuses were read at main commit 68e1342 on 28 September 2026.`,
+    `Standings: ${STANDINGS.map((s) => `**${s}** — ${STANDING_MEANING[s]}`).join('; ')}. Statuses were read at main commit 7476aca on 28 September 2026.`,
     '',
     '## The position',
     '',

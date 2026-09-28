@@ -176,7 +176,7 @@ export const EVIDENCE: readonly EvidenceRow[] = [
     rests: ['VULN-1', 'SEC-004'],
     evidence: 'Scan report, a severity-to-SLA table, remediation evidence.', frequency: 'Continuous; monthly', owner: 'security', visibility: 'summary', status: 'defined',
     holds: [
-      { path: 'SECURITY.md', shows: 'how a report is made and handled, the four severities and the remediation target each is held to (2, 14, 60, 180 days), the clock starting at confirmation; the targets are proposed, not accepted' },
+      { path: 'SECURITY.md', shows: 'how a report is made and handled, the four severities and the remediation target each is held to (2, 14, 60, 180 days), the clock starting at confirmation; the targets are proposed, not accepted (D-114)' },
       { path: 'app/public/.well-known/security.txt', shows: 'the published disclosure contact, RFC 9116 in form, served under the app\'s base path rather than an origin root' },
       { path: 'app/src/lib/security.test.ts', shows: 'holds the contact to the privacy page and the site, and the severity table to PATCH_POLICY row for row' },
     ],

@@ -48,7 +48,7 @@ control is implemented, and says nothing about whether anybody operates it.
 
 ## The scorecard
 
-Statuses were read at main commit 68e1342 on 28 September 2026. 26 domains:
+Statuses were read at main commit 7476aca on 28 September 2026. 26 domains:
 1 at 0, 22 at 1, 3 at 2, none above the ceiling.
 
 | Domain | Score | Overlap | TrustEd rubric | EDUCAUSE 2026 | Rests on (level) |
@@ -253,8 +253,8 @@ The other critical triggers are absent, for reasons that are each a row and are 
 
 ### The evidence package a critical-tier vendor owes
 
-3 have, 9 drafted,
-8 none, of 20. Nothing a third party produces is
+4 have, 9 drafted,
+7 none, of 20. Nothing a third party produces is
 marked *have*, by test. The last four are what the critical tier adds to the
 high tier’s package: an impact assessment, a threat model, legal review and
 executive risk acceptance with periodic re-review.
@@ -265,7 +265,7 @@ executive risk acceptance with periodic re-review.
 | Accessibility statement | `accessibility_statement` | None | — | Owed (A11Y-4); the public site’s accessibility evidence table is not a statement. |
 | Data categories and data-use description | `data_use_description` | Have | [`RETENTION.md`](../../RETENTION.md) | Every table has a retention answer; the disclosure is kept true by test. |
 | Subprocessor and third-party disclosure | `subprocessor_list` | Draft | [`docs/SUBPROCESSORS.md`](../SUBPROCESSORS.md) | Held to the CSP and the Edge Functions by test; public once counsel has read it. |
-| Security contact and incident contact | `security_contact` | None | — | No security.txt and no published address; the site routes topics to council seats, and the security seat is vacant. |
+| Security contact and incident contact | `security_contact` | Have | [`app/public/.well-known/security.txt`](../../app/public/.well-known/security.txt) | A security.txt in RFC 9116 form under the app’s base path, linked from the site’s /security/ page, with SECURITY.md as its policy (D-114). The address is the owner’s: the security seat is vacant, so the incident contact is the same person. |
 | Retention and deletion approach | `retention_and_deletion` | Have | [`RETENTION.md`](../../RETENTION.md) | Per table and per device store; a legal-hold override does not exist. |
 | Current HECVAT 4 workbook | `hecvat_4_current_workbook` | Draft | [`docs/market-readiness/HECVAT_DRAFT_RESPONSE.md`](../market-readiness/HECVAT_DRAFT_RESPONSE.md) | A first draft for owner review, held to the readiness register; not the workbook and not complete. |
 | 1EdTech TrustEd Apps self-assessment materials | `trust_ed_apps_self_assessment` | None | — | The four rubrics are read against the registers on this page; no self-assessment has been submitted (EDT-7). |

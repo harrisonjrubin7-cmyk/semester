@@ -20,7 +20,7 @@ thirteen *one X* promises are counted one by one, and the count is the finding.
 | [What sets Semester apart is that it has everything: the whole business model and core principle](expansion/Whole-Platform-Business-Model.pdf) | The one-X promise, the connected graph and flywheel, the five layers, the shared services no module may re-create, the reusable workflows, the revenue lines, the business-model boundaries, the disruption table, the live-business standard and the enablement scopes. |
 | [University edtech audit: the faculty change-management playbook](expansion/University-EdTech-Audit-IT-Compliance-and-Faculty-Playbook.pdf) | The six phases, the faculty segments, the policy families and what every policy carries, the moment-by-moment support table, the champion programme, the measures and the communications. |
 
-Standings: **built** — Exists and an automated test exercises it; **partial** — Some of it exists in code; the gap says what does not; **not-built** — Nothing of it exists beyond a document; **held** — Conflicts with a decision already on main, which holds until the owner reopens it. Statuses were read at main commit 68e1342 on 28 September 2026.
+Standings: **built** — Exists and an automated test exercises it; **partial** — Some of it exists in code; the gap says what does not; **not-built** — Nothing of it exists beyond a document; **held** — Conflicts with a decision already on main, which holds until the owner reopens it. Statuses were read at main commit 7476aca on 28 September 2026.
 
 ## The position
 

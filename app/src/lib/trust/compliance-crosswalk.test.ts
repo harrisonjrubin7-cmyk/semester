@@ -266,7 +266,7 @@ function render(all: Map<string, Standing>): string {
     '',
     '## The scorecard',
     '',
-    `Statuses were read at main commit 68e1342 on 28 September 2026. ${DOMAINS.length} domains:`,
+    `Statuses were read at main commit 7476aca on 28 September 2026. ${DOMAINS.length} domains:`,
     `${count(0)} at 0, ${count(1)} at 1, ${count(2)} at 2, none above the ceiling.`,
     '',
     ...table(
