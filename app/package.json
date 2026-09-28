@@ -39,7 +39,8 @@
     "smoke:institutional": "node scripts/institutional-preview-smoke.mjs",
     "smoke:production": "node scripts/production-smoke.mjs",
     "smoke:public-production": "node scripts/public-production-smoke.mjs",
-    "rollout:census": "node scripts/institutional-census.mjs"
+    "rollout:census": "node scripts/institutional-census.mjs",
+    "registers": "REGISTERS=write vitest run src/lib/rolelaunch.test.ts src/lib/masterregister.test.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.116.0",

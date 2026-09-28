@@ -66,3 +66,41 @@ The release gate is made of signatures, not checkboxes, because releasing means 
 
 "Adoption against intended outcome" compares against the charter's own hypothesis, not against other features. A
 feature that is heavily used but misses its intended outcome is a candidate for redesign.
+
+## Release readiness
+
+**Code: `release-readiness.ts`.** The three gates above ask whether a *change* is ready, done and approved. Release
+readiness asks something else, later: is a *feature* ready to meet more people than it has met so far? Each owning
+reviewer scores their dimension 0–100, and the weights make a total out of 100.
+
+| Dimension | Weight | Release question |
+| --- | --- | --- |
+| User value | 20% | Does it solve a demonstrated student or institution job? |
+| Usability | 15% | Can target users finish the job unaided? |
+| Accessibility | 15% | Does it pass critical WCAG 2.2 and assistive-technology checks? |
+| Security and privacy | 15% | Is data minimized, authorized, auditable and revocable? |
+| Reliability | 15% | Does it have SLOs, monitoring, recovery and rollback? |
+| Data trust | 10% | Are source, freshness, uncertainty and limits visible? |
+| Supportability | 5% | Can support explain, diagnose and resolve it? |
+| Commercial readiness | 5% | Are scope, packaging and documentation ready to sell? |
+
+### Proof before scale
+
+A feature climbs one stage at a time. `promote()` refuses to skip a rung, so the evidence that it survived each
+stage is what earns the next.
+
+| Stage | Evidence | Total needed | High-stakes total |
+| --- | --- | --- | --- |
+| Internal | Works with synthetic or test data, staff workflows and automated tests | 0 | 0 |
+| Design partner | Used by a narrow permissioned cohort under direct observation | 70 | 75 |
+| Pilot | Used by real students or institution users under a defined agreement and support | 85 | 90 |
+| General availability | Meets adoption, reliability, accessibility, security and support evidence thresholds | 90 | 95 |
+| Enterprise | Meets contractual SLA, integration, migration, audit and 24/7 support requirements | 95 | 97 |
+
+"High-stakes" means assessment and grade workflows, where a wrong answer is a student's mark.
+
+**No dimension may score under 60 past internal, whatever the total.** A feature at 100 on user value and 40 on
+accessibility has not averaged its way to ready, for the same reason one zero overrides a high total on the portfolio
+scorecard. The pilot threshold of 85 comes from the execution plan; the others, and the floor, were chosen for this
+file and are open to the council to change. Change them in code, and this table's test will say where the doc
+disagrees.
