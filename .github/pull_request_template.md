@@ -21,6 +21,19 @@ Run from `app/`, not the repository root (see `CLAUDE.md`).
 - [ ] What it touches: student data, the network, the build only, or nothing at runtime.
 - [ ] Its licence, and if it is not on the approved list, its entry in `NAMED` with the reason.
 - [ ] A new Action is added to `ACTIONS` with its publisher and what its token can do.
+## New module (skip unless this PR adds a module, screen family or integration)
+
+The rule, from `SEMESTER-OPERATING-SYSTEM.md`: No new module launches unless it replaces, improves, or connects an existing student or institution workflow with measurable value.
+
+1. What does this replace?
+2. What student decision does it clarify?
+3. What institution decision does it improve?
+4. What data does it require?
+5. Who owns it?
+6. How is it supported?
+7. How is it tested?
+8. How does it fail?
+9. How is it removed if it does not work?
 
 ## Screens (skip if this PR changes nothing a student sees)
 

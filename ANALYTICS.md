@@ -1,5 +1,7 @@
 # The three figures, and what each is worth
 
+> Owner, version, last and next review, status, supersedes and related decisions: [`SEMESTER-OPERATING-SYSTEM.md`](SEMESTER-OPERATING-SYSTEM.md).
+
 Stage 1 of the build-out plan cannot be closed until the pilot is "reporting".
 This is what it reports, how, and — the part that decides whether any of it is
 useful — what each number is not able to say.

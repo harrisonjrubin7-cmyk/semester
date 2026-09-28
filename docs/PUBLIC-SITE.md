@@ -1,5 +1,7 @@
 # Public site
 
+> Owner, version, last and next review, status, supersedes and related decisions: [`SEMESTER-OPERATING-SYSTEM.md`](../SEMESTER-OPERATING-SYSTEM.md).
+
 The company and product website, built as D-011 approved: a separate set of
 pages **prerendered to static HTML at real paths**, sharing the app's colours
 and typefaces. Content pages ship no JavaScript: every one is indexable,

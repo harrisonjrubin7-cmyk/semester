@@ -96,6 +96,8 @@ function render(): string {
     '',
     '<!-- Rendered from app/src/lib/expansionregister.ts and expansiongovernance.ts by expansionregister.test.ts. Edit the data, then run `npm run registers` from app/. -->',
     '',
+    '> Owner, version, last and next review, status, supersedes and related decisions: [`SEMESTER-OPERATING-SYSTEM.md`](../SEMESTER-OPERATING-SYSTEM.md).',
+    '',
     'The long-horizon capabilities that make Semester durable for a decade, not',
     'merely launchable: supply chain, credentials, research, continuity,',
     'architecture, the learner profile, data quality, content and service',

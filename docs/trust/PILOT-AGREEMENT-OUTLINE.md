@@ -1,5 +1,7 @@
 # Pilot Agreement Outline
 
+> Owner, version, last and next review, status, supersedes and related decisions: [`SEMESTER-OPERATING-SYSTEM.md`](../../SEMESTER-OPERATING-SYSTEM.md).
+
 **A business outline for counsel. It is not legal advice and not agreement
 language.** It sets out what a 90-day institutional pilot agreement has to
 cover, and a sample scope that matches what Semester can actually support.

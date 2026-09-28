@@ -21,6 +21,7 @@ const md = (dir: string) => readdirSync(join(root, dir)).filter((f) => f.endsWit
 const OPERATIONAL = [
   'ROLLBACK.md', 'RESTORE.md', 'MONITORING.md', 'SECURITY.md', 'SECRETS.md', 'RETENTION.md',
   'REGRESSION-CHECKLIST.md', 'PILOT.md', 'README.md', 'SETUP.md', 'STAGING.md', 'MIGRATION-HISTORY.md', 'CLAUDE.md',
+  'docs/RUNBOOKS.md', 'SEMESTER-OPERATING-SYSTEM.md',
   ...md('supabase'), ...md('docs/vanderbilt'), ...md('docs/market-readiness'),
 ];
 

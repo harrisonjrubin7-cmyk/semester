@@ -1,5 +1,7 @@
 # Product roadmap — Semester unified platform
 
+> Owner, version, last and next review, status, supersedes and related decisions: [`SEMESTER-OPERATING-SYSTEM.md`](../SEMESTER-OPERATING-SYSTEM.md).
+
 Baseline: `origin/main` at `c029822` (26 September 2026). Governing inputs: the
 *Unified Product, Company, and Implementation Blueprint* (uploaded .docx, 27
 September 2026) and `docs/expansion/Semester-Master-Implementation-Brief-v2.md`.

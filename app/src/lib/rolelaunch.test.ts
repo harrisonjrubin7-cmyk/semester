@@ -262,6 +262,8 @@ function render(): string {
     '',
     '<!-- Rendered from app/src/lib/rolelaunch.ts by rolelaunch.test.ts. Edit the data, then run `npm run registers` from app/. -->',
     '',
+    '> Owner, version, last and next review, status, supersedes and related decisions: [`SEMESTER-OPERATING-SYSTEM.md`](../SEMESTER-OPERATING-SYSTEM.md).',
+    '',
     'Every role the database can grant, and how far each has come towards being',
     'switched on in a customer tenant. The roles are the rows of `public.app_roles`',
     'and their capabilities the rows of `public.role_capabilities`, read out of',

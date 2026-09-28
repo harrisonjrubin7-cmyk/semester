@@ -1,5 +1,7 @@
 # Founding-team operating rhythm
 
+> Owner, version, last and next review, status, supersedes and related decisions: [`SEMESTER-OPERATING-SYSTEM.md`](../../SEMESTER-OPERATING-SYSTEM.md).
+
 A platform this broad needs decision discipline. Every meeting below produces something written down. If a meeting
 has no output, it can be cancelled.
 
@@ -39,8 +41,14 @@ has no output, it can be cancelled.
 | Legal and regulatory horizon scan | Written summary ([TRUST-BRAND-AND-LEGAL.md](TRUST-BRAND-AND-LEGAL.md#horizon-scanning)) |
 | Customer advisory input | Themes |
 | Security, privacy and accessibility review | Findings |
+| Access review | Every privileged grant re-justified or revoked, read from the role-grant audit; filed under `docs/evidence/` |
+| Vendor and subprocessor review | [`docs/SUBPROCESSORS.md`](../SUBPROCESSORS.md) re-read against what runs; each vendor's assurance current |
+| Disaster-recovery exercise | A restore into another project or region, timed against the recovery objective; filed under `docs/evidence/` |
 | Incident and postmortem themes | Recurring causes and the structural fix for each |
 | Board/advisor review | Board deck |
+
+The quarterly rows that produce an artifact are the quarterly half of
+[`../PROOF-CALENDAR.md`](../PROOF-CALENDAR.md), which names the seat and the file for each.
 
 ## Annually
 
