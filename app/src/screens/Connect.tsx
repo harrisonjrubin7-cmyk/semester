@@ -29,6 +29,7 @@ import {
 } from '../lib/connect';
 import { datedItems, railFor } from '../lib/select';
 import { dateToIso } from '../lib/date';
+import { formatDateTime } from '../lib/locale';
 import type { FeedSource } from '../lib/types';
 import { AiHandoffReview } from '../components/AiHandoffReview';
 import {
@@ -891,7 +892,7 @@ export function Connect() {
             <ul style={{ margin: 0, marginTop: 'var(--sp-3)', paddingLeft: '1.2em', fontSize: 'var(--type-sm)', lineHeight: 'var(--leading-relaxed)' }}>
               {aiSent.slice(0, 5).map((r) => (
                 <li key={`${r.to}-${r.at}`}>
-                  {EXTERNAL_AI[r.to].name} · {new Date(r.at).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })} ·{' '}
+                  {EXTERNAL_AI[r.to].name} · {formatDateTime(r.at, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })} ·{' '}
                   {r.shared.join(', ').toLowerCase()}
                   {r.course ? ` (${r.course})` : ''}
                 </li>

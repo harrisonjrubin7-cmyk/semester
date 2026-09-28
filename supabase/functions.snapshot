@@ -69,3 +69,9 @@ calendar   24  platform  2026-09-22T01:08:08Z
 fetchcal   56  platform  2026-09-22T01:08:08Z
 canvas     49  platform  2026-09-22T01:08:08Z
 lti        49  platform  2026-09-22T01:08:08Z
+
+# Not a reading. `trust-room` was added in #817 and has not been deployed, so
+# there is nothing to read; the time is when this row was written. Replace it
+# with the project's reading after the merge that deploys it —
+# functionsdeployed.test.ts fails fourteen days after this time.
+trust-room  -   pending   2026-09-27T21:10:00Z
