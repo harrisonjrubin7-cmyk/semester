@@ -1,8 +1,9 @@
+import { formatDate } from '../lib/locale';
 import { useState } from 'react';
 import { payloadLines, type SharePayload } from '../lib/advisor-meeting';
 import { openShare, sharedWithMe, type SharedWithMe } from '../lib/advisor-shares';
 
-const day = (iso: string) => new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+const day = (iso: string) => formatDate(new Date(iso), { month: 'short', day: 'numeric', year: 'numeric' });
 
 /**
  * The advisor's side of a share (`advisor_meeting_mode`, Phase G).

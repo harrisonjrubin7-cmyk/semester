@@ -50,7 +50,10 @@ import { forSchool, useMyCapabilities } from '../lib/capabilities';
 import { helpSeedWaiting, loadInboxes, newRequestCount, type StaffInbox } from '../lib/help-routes';
 import { ControlPlane } from '../components/institutional/ControlPlane';
 import { IntegrationDashboard } from '../components/institutional/IntegrationDashboard';
+import { CampaignManager } from '../components/institutional/CampaignManager';
+import { campaignsAllowed } from '../lib/gtm/manager';
 import type { ControlPlaneStatus } from '../lib/control-plane';
+import { formatDateTime, formatTime } from '../lib/locale';
 
 const DemandDesk = lazy(() => import('../components/DemandDesk').then((module) => ({ default: module.DemandDesk })));
 const OperationsStudio = lazy(() =>
@@ -153,9 +156,14 @@ const tabsFor = (verified: readonly string[]) => [
   // counts of ten or more, scoped by demand:read, and nothing that names a
   // person; an account without the scope is told so.
   ...(moduleOn(MODULE_FLAGS.demand_forecasting) ? [{ id: 'demand' as const, label: 'Demand' }] : []),
+  // Only for an account holding a verified campaign capability at this school;
+  // RLS would return it nothing otherwise.
+  ...(EXPERIENCE_FLAGS.campaignManager !== 'off' && campaignsAllowed(verified)
+    ? [{ id: 'campaigns' as const, label: 'Campaigns' }]
+    : []),
 ];
 
-type Tab = 'overview' | 'drafts' | 'records' | 'connections' | 'control' | 'help' | 'integrations' | 'operations' | 'demand';
+type Tab = 'overview' | 'drafts' | 'records' | 'connections' | 'control' | 'help' | 'integrations' | 'operations' | 'demand' | 'campaigns';
 
 /** What each role is called on screen. */
 const ROLE_LABELS: Record<UniversityRole, string> = {
@@ -793,6 +801,10 @@ function Workspace({ storageKey }: { storageKey: string }) {
 
       {tab === 'integrations' && EXPERIENCE_FLAGS.integrationDashboard !== 'off' && <IntegrationDashboard />}
 
+      {tab === 'campaigns' && EXPERIENCE_FLAGS.campaignManager !== 'off' && campaignsAllowed(verified) && (
+        <CampaignManager tenantId={school.id} viewerId={account?.id ?? null} />
+      )}
+
       {tab === 'operations' && EXPERIENCE_FLAGS.institutionalOperations !== 'off' && operationsAllowed(verified) && (
         <Suspense fallback={null}>
           <OperationsStudio verified={verified} tenantId={school.id} accountId={account?.id || 'device'} />
@@ -1029,7 +1041,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
                   textWrap: 'pretty',
                 }}
               >
-                Saved {new Date(draft.updatedAt).toLocaleString()} on this device. A ticked checklist
+                Saved {formatDateTime(draft.updatedAt)} on this device. A ticked checklist
                 describes your preparation, never official completion.
               </p>
             </>
@@ -1110,7 +1122,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
                 </button>
               </form>
               <p style={{ fontSize: 'var(--type-sm)', ...secondLine(), lineHeight: 'var(--leading-normal)' }}>
-                {fetched ? `Fetched ${new Date(fetched).toLocaleString()}` : 'Refresh to load records.'} ·
+                {fetched ? `Fetched ${formatDateTime(fetched)}` : 'Refresh to load records.'} ·
                 Read from your school, never copied into local drafts.
               </p>
               {records.map((r) => {
@@ -1136,7 +1148,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
                         title: r.title,
                         origin: 'connected',
                         sourceName: connection.provider || undefined,
-                        freshness: fetched ? `Fetched ${new Date(fetched).toLocaleString()}` : undefined,
+                        freshness: fetched ? `Fetched ${formatDateTime(fetched)}` : undefined,
                       }}
                       primary={
                         first
@@ -1221,7 +1233,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
                     </div>
                   ))}
                   <p style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>
-                    This review expires at {new Date(review.expiresAt).toLocaleTimeString()}.
+                    This review expires at {formatTime(review.expiresAt)}.
                   </p>
                   {unresolved && (
                     <p
@@ -1382,7 +1394,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
                 meta={
                   <>
                     {access}
-                    {c?.lastSyncAt ? ` · Last sync ${new Date(c.lastSyncAt).toLocaleString()}` : ''}
+                    {c?.lastSyncAt ? ` · Last sync ${formatDateTime(c.lastSyncAt)}` : ''}
                   </>
                 }
               />

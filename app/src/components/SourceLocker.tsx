@@ -1,3 +1,4 @@
+import { formatDate } from '../lib/locale';
 import { useId, useMemo, useState } from 'react';
 import { useFiles } from '../lib/clips';
 import { useDeviceLibrary } from '../lib/device-library';
@@ -27,7 +28,7 @@ const ACCESS: Record<Material['access'], string> = {
   not_on_device: 'Original file not stored on this device',
 };
 
-const day = (ms: number) => new Date(ms).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+const day = (ms: number) => formatDate(new Date(ms), { month: 'short', day: 'numeric', year: 'numeric' });
 
 /**
  * Source Locker (`source_locker`, Phase H), a tab in the course hub.

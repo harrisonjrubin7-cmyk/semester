@@ -51,6 +51,7 @@ import { matchCourse } from './ics';
 import { parseAddress, parseAddresses, type FolderId, type Mail } from './mailbox';
 import { PENDING_KEY } from './redirected';
 import { MOVE_MS, fetchWithin, timedOut, tookTooLong } from './net';
+import { deviceTimeZone } from './locale';
 
 export type ProviderId = 'microsoft' | 'google' | 'zoom' | 'apple';
 
@@ -68,6 +69,14 @@ export interface ProviderSpec {
   calendar: boolean;
   /** Anything the person has to know before they try. */
   caveat?: string;
+  /**
+   * What the scopes above let Semester read and write, said the way a student
+   * would say it. Shown on the account's card before and after sign-in.
+   * `connect.scopes.test.ts` holds these to the scope string, so a scope added
+   * without a line here fails rather than widening access in silence.
+   */
+  reads: string[];
+  writes: string[];
 }
 
 const env = import.meta.env as unknown as Record<string, string | undefined>;
@@ -76,6 +85,8 @@ export const PROVIDERS: Record<ProviderId, ProviderSpec> = {
   microsoft: {
     id: 'microsoft',
     name: 'Microsoft 365',
+    reads: ['Outlook calendar', 'Outlook mail', 'Microsoft To Do', 'OneDrive files'],
+    writes: ['Calendar entries you add from Semester', 'Microsoft To Do items you add from Semester', 'Exports you save to OneDrive'],
     blurb: 'Outlook calendar and mail, To Do, OneDrive — the Vanderbilt account.',
     authorizeUrl: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
     tokenUrl: 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
@@ -92,6 +103,8 @@ export const PROVIDERS: Record<ProviderId, ProviderSpec> = {
   google: {
     id: 'google',
     name: 'Google',
+    reads: ['Google Calendar', 'Gmail', 'Google checklist items', 'Drive files'],
+    writes: ['Calendar entries you add from Semester', 'Checklist items you add from Semester', 'Exports you save to Drive'],
     blurb: 'Google Calendar, Gmail, Tasks, and Drive documents to pull into a course.',
     authorizeUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
     tokenUrl: 'https://oauth2.googleapis.com/token',
@@ -115,6 +128,8 @@ export const PROVIDERS: Record<ProviderId, ProviderSpec> = {
   zoom: {
     id: 'zoom',
     name: 'Zoom',
+    reads: ['Your scheduled meetings', 'Your cloud recordings'],
+    writes: [],
     blurb: 'Scheduled meetings on the day rail, cloud recordings by course.',
     authorizeUrl: 'https://zoom.us/oauth/authorize',
     tokenUrl: 'https://zoom.us/oauth/token',
@@ -128,6 +143,8 @@ export const PROVIDERS: Record<ProviderId, ProviderSpec> = {
   apple: {
     id: 'apple',
     name: 'Apple',
+    reads: ['Who you are, for sign-in'],
+    writes: [],
     blurb: 'Sign in with Apple, for who you are. Your calendar comes the other way — see below.',
     authorizeUrl: 'https://appleid.apple.com/auth/authorize',
     tokenUrl: 'https://appleid.apple.com/auth/token',
@@ -1065,7 +1082,7 @@ function localIso(date: string, minutes: number): string {
  * capturing the corruption for the rest of the run — a test-only failure with
  * a real bug behind it. See `ENGINEERING-AUDIT.md` §3.
  */
-const zone = (): string => Intl.DateTimeFormat().resolvedOptions().timeZone;
+const zone = (): string => deviceTimeZone();
 
 /** Put one thing on the calendar you actually use. */
 export async function addEvent(id: ProviderId, event: OutgoingEvent): Promise<void> {

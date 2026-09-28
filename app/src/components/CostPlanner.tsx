@@ -1,8 +1,9 @@
+import { dollars } from '../lib/cost';
 import { useId, useState } from 'react';
 import { LINE_KINDS, MAX_LINES, staleness, totalSource, totals, type CostLine, type CostSource } from '../lib/cost-plan';
 import { SourceBadge } from './SourceBadge';
 
-const money = (n: number) => `$${Math.round(n).toLocaleString('en-US')}`;
+const money = dollars;
 const num = (v: string) => {
   const n = Number(v);
   return Number.isFinite(n) ? Math.min(1_000_000, Math.max(0, n)) : 0;

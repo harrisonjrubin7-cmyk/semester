@@ -13,6 +13,7 @@ import { SchoolClaim } from '../components/SchoolClaim';
 import { ReferralLink } from '../components/ReferralLink';
 import { MembershipPanel } from '../components/MembershipPanel';
 import { cloudConfigured, signOut } from '../lib/cloud';
+import { formatTime } from '../lib/locale';
 import { ErrorState } from '../components/unity/States';
 
 /**
@@ -111,7 +112,7 @@ export function AccountScreen() {
             {(sync.status === 'offline' || sync.status === 'queued' || sync.status === 'conflict' || sync.status === 'review') &&
               SYNC_WORDS[sync.status].sentence}
             {sync.status === 'synced' &&
-              `Synced ${sync.at ? new Date(sync.at).toLocaleTimeString() : ''} · ${counts}`}
+              `Synced ${sync.at ? formatTime(sync.at) : ''} · ${counts}`}
             {/* An error is said once, by the announced ErrorState below,
                 which carries the failure and the way to retry. */}
           </div>

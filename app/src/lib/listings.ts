@@ -1,5 +1,6 @@
 import { cloud, cloudConfigured } from './cloud';
 import { dateToIso, isoToDate } from './date';
+import { formatDate } from './locale';
 import type { RecordRow } from './integration/school-records';
 import { newOpportunity, type Kind, type Opportunity } from './opportunities';
 
@@ -147,7 +148,7 @@ export function deadlineDay(deadline: string): string {
 
 /** A deadline to show. A bare date is never parsed as UTC midnight. */
 export function deadlineLabel(deadline: string): string {
-  return isoToDate(deadlineDay(deadline)).toLocaleDateString();
+  return formatDate(isoToDate(deadlineDay(deadline)));
 }
 
 /**

@@ -128,7 +128,7 @@ try {
       await page.locator('main#main').waitFor({ state: 'visible', timeout: 10_000 });
       if (expectedPreview) {
         await page.locator('nav[aria-label="Primary"]').waitFor({ state: 'visible', timeout: 10_000 });
-        await page.getByText('Synthetic preview', { exact: false }).first().waitFor({ state: 'visible' });
+        await page.getByText('Demo environment', { exact: false }).first().waitFor({ state: 'visible' });
         if (probe.module) await page.getByText(probe.module, { exact: false }).first().waitFor({ state: 'visible' });
         const workspace = page.locator('details.institutional-workspace-disclosure');
         await workspace.locator('summary').click();
@@ -156,7 +156,7 @@ try {
       if (expectedPreview && JSON.stringify(result.primary) !== JSON.stringify(expectedPrimary)) {
         findings.push(`${probe.hash}: primary navigation was ${JSON.stringify(result.primary)}`);
       }
-      if (!expectedPreview && result.text.includes('Synthetic preview')) findings.push(`${probe.hash}: preview bar rendered with flag off`);
+      if (!expectedPreview && (result.text.includes('Synthetic preview') || result.text.includes('Demo environment'))) findings.push(`${probe.hash}: preview bar rendered with flag off`);
       if (!expectedPreview && result.text.includes('Synthetic Flight Plan')) findings.push(`${probe.hash}: Flight Plan rendered with flag off`);
       if (!expectedPreview && result.flightKeys.length) findings.push(`${probe.hash}: preview storage initialized with flag off`);
       await page.keyboard.press('Tab');
@@ -216,7 +216,7 @@ try {
       await page.goto(`${base}#/mail`, { waitUntil: 'domcontentloaded' });
       await page.getByText('Help with Evidence & sampling practice', { exact: false }).waitFor();
 
-      const previewControls = page.locator('aside[aria-label="Institutional preview controls"]');
+      const previewControls = page.locator('aside[aria-label="Demo environment"]');
       await previewControls.locator('summary').click();
       await previewControls.locator('select').nth(0).selectOption('cedar-coast');
       await page.getByText('Cedar Coast College', { exact: false }).first().waitFor();

@@ -107,7 +107,7 @@ import { Fresh } from './components/Fresh';
 import { SyncStrip } from './components/SyncStrip';
 import { useMedium, useTier } from './lib/media';
 import { CloseIcon, MenuIcon } from './components/Icons';
-import { DOW, MONTHS } from './lib/date';
+import { monthDay, weekdayShort } from './lib/date';
 import { windowTitle } from './a11y/title';
 import type { Screen } from './lib/types';
 import { InstitutionalPreviewRoot } from './components/institutional/PreviewRoot';
@@ -193,7 +193,7 @@ function useHeader(): Head {
     code,
     about: (what: string) => (code ? `${code} · ${what}` : what),
     exam: nextExam(catalog, now),
-    today: `${DOW[now.getDay()]} · ${MONTHS[now.getMonth()]} ${now.getDate()}`,
+    today: `${weekdayShort(now)} · ${monthDay(now)}`,
     courseCount,
     load: credits > 0 ? `${courseCount} · ${credits} credits` : courseCount,
   });

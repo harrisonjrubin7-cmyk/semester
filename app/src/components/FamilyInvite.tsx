@@ -1,3 +1,4 @@
+import { dateToIso } from '../lib/date';
 import { useEffect, useState } from 'react';
 import { cloudConfigured } from '../lib/cloud';
 import type { FamilyItem, FamilyMember } from '../lib/family';
@@ -20,7 +21,7 @@ import { SectionLabel } from './ui';
  * exact recipient view, so the confirmation is given looking at what will be
  * shared. See `lib/familyinvites.ts` and docs/CONSENT-SHARING-DESIGN.md §6.
  */
-export function FamilyInvite({ member, items, today = new Date().toLocaleDateString('en-CA') }: { member: FamilyMember; items: FamilyItem[]; today?: string }) {
+export function FamilyInvite({ member, items, today = dateToIso(new Date()) }: { member: FamilyMember; items: FamilyItem[]; today?: string }) {
   const { account } = useStore();
   const [step, setStep] = useState<'idle' | 'confirm' | 'made'>('idle');
   const [code, setCode] = useState('');

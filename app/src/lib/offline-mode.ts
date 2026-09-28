@@ -1,3 +1,4 @@
+import { formatDateTime, formatTime } from './locale';
 import { useEffect, useState } from 'react';
 import { MODULE_FLAGS, moduleOn } from './experience-flags';
 import { offline, watchConnection } from './offline';
@@ -68,8 +69,8 @@ const clock = (at: number, now: number) => {
   const d = new Date(at);
   const today = new Date(now).toDateString() === d.toDateString();
   return today
-    ? d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
-    : d.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+    ? formatTime(d, { hour: 'numeric', minute: '2-digit' })
+    : formatDateTime(d, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
 };
 
 export interface Badge {

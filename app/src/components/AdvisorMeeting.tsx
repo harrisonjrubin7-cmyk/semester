@@ -1,3 +1,4 @@
+import { formatDate } from '../lib/locale';
 import { useCallback, useEffect, useId, useMemo, useState } from 'react';
 import {
   EMPTY_MEETINGS,
@@ -37,7 +38,7 @@ import { useNow, useStore } from '../state/store';
 import { AdvisorSharedView } from './AdvisorSharedView';
 import { ConfirmDialog } from './ConfirmDialog';
 
-const day = (iso: string) => new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+const day = (iso: string) => formatDate(new Date(iso), { month: 'short', day: 'numeric', year: 'numeric' });
 
 /**
  * Advisor Meeting Mode (`advisor_meeting_mode`, Phase G), in My Path.

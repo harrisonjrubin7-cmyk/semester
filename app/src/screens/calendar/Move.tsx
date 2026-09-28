@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { revealKindly } from '../../lib/prefers';
 import { useStore } from '../../state/store';
 import { Blueprint } from '../../components/Blueprint';
-import { isoToDate, longLabel } from '../../lib/date';
+import { isoToDate, longLabel, shownTime } from '../../lib/date';
 import { timeLabel } from '../../lib/drag';
 import type { Catalog } from '../../data/catalog';
 import type { CourseId } from '../../lib/types';
@@ -158,7 +158,7 @@ export function useCalendarMove() {
       say(
         to.at === undefined
           ? `Moved · ${what.title} to ${when}.`
-          : `Moved · ${what.title} to ${when}, ${timeLabel(to.at)}.`,
+          : `Moved · ${what.title} to ${when}, ${shownTime(timeLabel(to.at), to.at)}.`,
         'mine',
       );
       return;
@@ -189,8 +189,8 @@ export function useCalendarMove() {
        */
       say(
         series
-          ? `Moved · just this ${what.title} to ${when}, ${timeLabel(at)}. The rest of the series is where it was.`
-          : `Moved · ${what.title} to ${when}, ${timeLabel(at)}.`,
+          ? `Moved · just this ${what.title} to ${when}, ${shownTime(timeLabel(at), at)}. The rest of the series is where it was.`
+          : `Moved · ${what.title} to ${when}, ${shownTime(timeLabel(at), at)}.`,
         'calendar',
       );
       return;

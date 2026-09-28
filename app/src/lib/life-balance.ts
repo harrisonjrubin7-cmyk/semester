@@ -1,3 +1,4 @@
+import { formatDate } from './locale';
 import { blocksFor, codeOf, type Catalog } from '../data/catalog';
 import type { Action } from './actions';
 import { activityKind, type ActivityKind, type Commitment } from './activities';
@@ -454,7 +455,7 @@ const WORDS = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eig
 const word = (n: number) => WORDS[n] ?? String(n);
 const DAY_MS = 86_400_000;
 const dayNumber = (d: Date) => Math.round(new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime() / DAY_MS);
-const monthDay = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+const monthDay = (d: Date) => formatDate(d, { month: 'short', day: 'numeric' });
 
 /** The Sunday a date's week starts on. */
 export function weekStart(d: Date): Date {

@@ -392,6 +392,8 @@ describe('"delete my account" really means every row', () => {
       'feature_kill_switch',
       'group_tasks',
       'groups',
+      'gtm_campaign_reviews',
+      'gtm_campaigns',
       'help_destinations',
       // A university's integration configuration and sync logs, read by the
       // Integration Dashboard (lib/integration/dashboard.ts). No student

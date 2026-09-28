@@ -10,7 +10,7 @@ import type { Pin } from '../components/LiveMap';
 import { ActionButton, ChipRow, SectionLabel, Segmented } from '../components/ui';
 import { ChevronRight } from '../components/Icons';
 import { blocksFor, codeOf } from '../data/catalog';
-import { minutesNow } from '../lib/date';
+import { minutesNow, shownTime } from '../lib/date';
 import { nextClass } from '../lib/select';
 import type { Block } from '../lib/types';
 import {
@@ -438,7 +438,7 @@ export function Maps() {
       >
         <span style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'baseline' }}>
           {stop.time && (
-            <span style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', flex: 'none' }}>{stop.time}</span>
+            <span style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', flex: 'none' }}>{shownTime(stop.time)}</span>
           )}
           <span style={{ fontSize: 'var(--type-lg)', lineHeight: 'var(--leading-tight)', flex: 1, minWidth: 0 }}>
             {stop.label}
@@ -498,7 +498,7 @@ export function Maps() {
             }}
           >
             {upNext.block.c ? codeOf(catalog, upNext.block.c) : upNext.block.title} ·{' '}
-            {upNext.block.time}
+            {shownTime(upNext.block.time, upNext.block.at)}
           </div>
           <div style={{ fontSize: 'var(--type-md)', color: 'var(--app-dim)', marginTop: 'var(--sp-2)' }}>
             {[nextStop?.detail ?? 'No room on the syllabus', nextReach?.line]

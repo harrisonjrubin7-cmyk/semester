@@ -1,3 +1,4 @@
+import { dollars } from './cost';
 import { project, termLabel, type Plan, type Projection, type Scenario } from './graduation';
 
 /**
@@ -24,7 +25,7 @@ export interface CompareRow {
   changed: boolean;
 }
 
-const money = (n: number) => `$${Math.round(n).toLocaleString('en-US')}`;
+const money = dollars;
 const signed = (n: number, one: string, many = `${one}s`) =>
   n === 0 ? 'No change' : `${n > 0 ? '+' : '−'}${Math.abs(n)} ${Math.abs(n) === 1 ? one : many}`;
 

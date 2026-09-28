@@ -109,8 +109,11 @@ describe('Opportunities', () => {
 });
 
 describe('Notices', () => {
-  it('says the official channel is not connected rather than showing an example', () => {
+  it('says the official channel is not connected rather than showing an example', async () => {
     draw(<Hub />);
+    // Nothing is claimed while the channel is still loading.
+    expect(host.textContent).not.toContain('No school channel connected');
+    await act(async () => {});
     expect(host.textContent).toContain('No school channel connected');
     expect(host.querySelectorAll('.jx-tag-official')).toHaveLength(0);
   });

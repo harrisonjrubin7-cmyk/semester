@@ -19,9 +19,10 @@ import {
   type StaffInbox,
 } from '../lib/help-routes';
 import { ActionButton, ChipRow, Notice, SectionLabel } from './ui';
+import { dateFormatter } from '../lib/locale';
 
 const when = (value: string) =>
-  new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
+  dateFormatter({ dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
 
 /** What an office's list says when this filter leaves nothing in it. */
 const EMPTY_TEXT: Record<InboxFilter, string> = {

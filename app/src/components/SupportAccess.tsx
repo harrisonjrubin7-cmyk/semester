@@ -10,9 +10,10 @@ import {
   type SupporterChoice,
 } from '../lib/support-access';
 import { ActionButton, Notice, SectionLabel } from './ui';
+import { dateFormatter } from '../lib/locale';
 import { ErrorState, PermissionNotice } from './unity/States';
 
-const date = (value: string) => new Intl.DateTimeFormat(undefined, {
+const date = (value: string) => dateFormatter({
   dateStyle: 'medium', timeStyle: 'short',
 }).format(new Date(value));
 

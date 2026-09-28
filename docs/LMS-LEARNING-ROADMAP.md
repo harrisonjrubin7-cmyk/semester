@@ -94,7 +94,7 @@ The picker was also hidden unless the institution gateway was on. Now:
 
 | Item | Status | Where / gap |
 |---|---|---|
-| LTI 1.3 / Advantage | exists | `lib/lti*.ts`, `supabase/functions/lti` |
+| LTI 1.3 / Advantage | partial | Launch, Deep Linking and Assignment and Grade Services exist (`lib/lti*.ts`, `supabase/functions/lti`). Names and Role Provisioning Services (NRPS, the roster service) does not; launches check the school's own membership table instead |
 | QTI / Common Cartridge import | missing | |
 | Duolingo / Quizlet / Khanmigo matrix route | missing | The documents themselves call it "future" |
 
@@ -114,3 +114,39 @@ then assessment layer.
 4. **Personal weekly goals** with no penalty for missing one.
 5. **Course Studio, question banks and QTI / Common Cartridge.** This is the
    faculty layer, and the largest piece.
+
+## The thirteen layers
+
+The capability map in the "expand" document is organised as thirteen layers
+rather than as the items above. This section reads it that way, so the gap to
+a full LMS can be seen in one table.
+
+Semester today is a student companion that sits alongside an LMS, not an LMS
+itself. Most course data is kept on the device, built from an imported
+syllabus. The server tables `courses`, `enrollments` and `catalog_sections`
+exist, but little of the app reads them. "Off" means the code exists behind a
+switch that is off by default (`lib/experience-flags.ts`, `lib/flags.ts`).
+
+| # | Layer | What exists | Standing | Largest gap |
+|---|---|---|---|---|
+| 1 | Course and enrollment | `lib/term.ts`, `lib/rollover.ts`, `screens/Import.tsx`, mock SIS in `lib/integration/` | Import reachable; SIS mock, off | Real SIS sync, sections, roster roles, course copy |
+| 2 | Faculty Course Studio | The faculty role reuses Import, `EditCourse`, `toolkit/templates.ts`, `lib/docversions.ts` | Student tools, reused | Module builder, templates, publishing to students |
+| 3 | Module and content delivery | `ReadingProgress`, `TravelPack`, `FlightPlanLearning` | Progress reachable; the rest off | Modules, prerequisites, conditional release |
+| 4 | Assignments and submissions | `lib/assignment.ts`, `lib/groupwork.ts`, `toolkit/rubric.ts` | Student side only | Assignment builder, submission, receipts, grading workflow |
+| 5 | Assessment engine | `lib/quiz.ts`, `lib/exam.ts`, `lib/pretest.ts`, `lib/interleave.ts` | Self-practice only | Question banks, timing, accommodations, QTI |
+| 6 | Gradebook and feedback | `lib/grades.ts`, `lib/whatif.ts`, grade passback in `lib/ltiscore.ts` | What-if reachable; passback off | Instructor gradebook, drop rules, grade history |
+| 7 | Discussion and collaboration | `lib/rooms.ts`, `lib/roomchat.ts`, `lib/officehours.ts`, `lib/moderation.ts` | Reachable | Course discussions, peer review, office-hours sign-up |
+| 8 | Outcomes and mastery | `lib/review.ts`, `MasteryGraph`, `lib/skills-graph.ts`, table `concept_evidence` | Mastery reachable; skills graph off | Outcome authoring, alignment, curriculum map |
+| 9 | Learning intelligence and AI | `ai/converse.ts`, `lib/socratic.ts`, `lib/ladder.ts`, `lib/fsrs.ts`, `lib/again.ts`, `lib/toolkit/policy.ts` | Student side reachable; gateway off | A course AI policy that instructors set |
+| 10 | Communication | `Calendar`, `lib/ics.ts`, `lib/notify.ts`, `Mail`, `TodayActionCenter` | Mostly reachable | Messages from instructors to students |
+| 11 | Student success bridge | `GetHelp`, `HelpInbox`, `lib/help-routes.ts`, tables `accommodation_passports` and `consent_record` | Help reachable; `humanHelp` off | Booking; accommodations exist only in the schema |
+| 12 | Institutional administration | `role_grants`, SCIM, `lib/governance/hierarchy.ts`, kill switches, audit tables | Server side; console off | An admin console in production |
+| 13 | Interoperability and migration | LTI launch, Deep Linking and grade services (`supabase/functions/lti`), Canvas token (`lib/canvas.ts`) | Reachable through Connect | NRPS, OneRoster, QTI, Common Cartridge, Blackboard, content migration |
+
+Read against the phases in the "expand" document, the student layers (9, 10
+and 11) are ahead of the rest. Every layer that needs an instructor (2, 4, 6
+and 7) waits on one precondition: the course record has to live on the
+server rather than on each student's device. That makes it the largest item
+not already in the list above. The quickest gain for institutions is layer
+13: build NRPS, then take grade passback to production for one pilot school.
+

@@ -1,3 +1,4 @@
+import { formatNumber } from './locale';
 import { locateQuote, type StudySource, type StudySpan } from './studystudio';
 
 /**
@@ -73,7 +74,7 @@ At most ${MAX_POINTS} items in each list.`;
 export function teachBackPrompt(topic: string, explanation: string, sources: StudySource[]): string {
   if (!topic.trim()) throw new Error('Name the topic you are explaining.');
   if (!explanation.trim()) throw new Error('Write your explanation first.');
-  if (explanation.length > MAX_EXPLANATION) throw new Error(`Keep the explanation under ${MAX_EXPLANATION.toLocaleString()} characters. Nothing has been sent.`);
+  if (explanation.length > MAX_EXPLANATION) throw new Error(`Keep the explanation under ${formatNumber(MAX_EXPLANATION)} characters. Nothing has been sent.`);
   if (!sources.length || sources.some((s) => !s.text.trim())) throw new Error('Select at least one source with text.');
   if (sources.reduce((n, s) => n + s.text.length, 0) > MAX_SOURCES)
     throw new Error('Selected sources exceed 80,000 characters. Select fewer. Nothing has been sent.');

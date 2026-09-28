@@ -1,3 +1,4 @@
+import { dollars } from './cost';
 import { cloud } from './cloud';
 import { project, termLabel, type Plan, type Scenario } from './graduation';
 
@@ -67,9 +68,9 @@ export function draftPreview(row: DraftRow): string[] {
     `Change: ${i.change.extra >= 0 ? '+' : ''}${i.change.extra} credits, ${i.change.perTerm} a term, ${i.change.summer} each summer${
       i.change.abroad ? `, ${i.change.abroad.terms} term abroad earning ${i.change.abroad.credits}` : ''
     }`,
-    `Costs you entered: $${i.costPerTerm.toLocaleString('en-US')} a term, $${i.summerCost.toLocaleString('en-US')} a summer`,
+    `Costs you entered: ${dollars(i.costPerTerm)} a term, ${dollars(i.summerCost)} a summer`,
     `Estimated finish: ${row.projected_grad_term ?? 'not reached at this pace'}`,
-    `Estimated remaining cost: ${row.projected_cost_cents === null ? 'not estimated' : `$${Math.round(row.projected_cost_cents / 100).toLocaleString('en-US')}`}`,
+    `Estimated remaining cost: ${row.projected_cost_cents === null ? 'not estimated' : dollars(row.projected_cost_cents / 100)}`,
     'Labelled: Estimated',
   ];
 }

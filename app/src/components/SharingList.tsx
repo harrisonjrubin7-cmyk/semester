@@ -1,3 +1,4 @@
+import { dateToIso } from '../lib/date';
 import { useDeviceLibrary } from '../lib/device-library';
 import { EMPTY_FAMILY, readFamily } from '../lib/family';
 import { checkSupporterPlan } from '../lib/sharing';
@@ -16,7 +17,7 @@ import { SectionLabel } from './ui';
  * end date, nothing chosen, payment access — says why here, before anyone is
  * asked to accept it.
  */
-export function SharingList({ today = new Date().toLocaleDateString('en-CA') }: { today?: string }) {
+export function SharingList({ today = dateToIso(new Date()) }: { today?: string }) {
   const { account, dispatch } = useStore();
   const family = useDeviceLibrary(`semester.family.v1:${account?.id || 'device'}`, readFamily, EMPTY_FAMILY);
   const rows = family.value.members.map((m) => ({ member: m, check: checkSupporterPlan(m, family.value.items, today) }));
