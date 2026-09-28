@@ -633,6 +633,18 @@ begin
   reset role;
   perform pg_temp.counted('the demo flag cannot be set through the API (rows a client''s update reaches)', n, 0);
 
+  -- Appends are serialized. Two writers reading the same tail would both
+  -- chain to it and the verifier would find a fork, so the chaining trigger
+  -- takes a transaction advisory lock before it reads. A single session
+  -- cannot stage the race, so what is held here is the lock's presence in
+  -- the trigger, before the read.
+  select count(*) into n
+    from pg_proc p join pg_namespace ns on ns.oid = p.pronamespace
+   where ns.nspname = 'private' and p.proname = 'console_audit_chain'
+     and position('pg_advisory_xact_lock' in p.prosrc) > 0
+     and position('pg_advisory_xact_lock' in p.prosrc) < position('order by e.seq desc' in p.prosrc);
+  perform pg_temp.counted('the chaining trigger takes an advisory lock before it reads the tail', n, 1);
+
   raise notice 'console control plane: every check passed';
 end $$;
 

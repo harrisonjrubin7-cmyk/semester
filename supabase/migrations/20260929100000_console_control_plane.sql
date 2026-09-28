@@ -588,6 +588,15 @@ as $$
 declare
   last_hash text;
 begin
+  -- Appends are serialized. Two transactions inserting at once would each
+  -- read the same committed tail (neither can see the other's uncommitted
+  -- row), both would chain to it, and the verifier would find a fork: two
+  -- rows with one prev_hash, and a chain that reads as tampered when it was
+  -- merely concurrent. A transaction-scoped advisory lock on the table's
+  -- name makes the second writer wait for the first to commit, so it then
+  -- reads that row as its tail. The lock is released at commit or rollback,
+  -- and costs nothing while writes do not overlap.
+  perform pg_advisory_xact_lock(hashtext('private.console_audit_event'));
   select e.hash into last_hash
     from private.console_audit_event e
    order by e.seq desc

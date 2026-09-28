@@ -214,12 +214,17 @@ export function Approvals({ env, scope, filter, onStatus, privileged }: ViewProp
                 {r.mine ? 'Yours to ask, not to decide: self-approval is refused.' : r.decidedByMe ? 'You have already decided this one.' : 'Not yours to decide: you hold none of this duty’s approver parties, or the request has expired.'}
               </p>
             )}
-            {r.status === 'approved' && (
+            {r.status === 'approved' && (r.mine || r.decidedByMe) && (
               <div>
                 <button type="button" className="btn btn-primary" onClick={() => act(r)}>
                   Act on this request
                 </button>
               </div>
+            )}
+            {r.status === 'approved' && !(r.mine || r.decidedByMe) && (
+              <p style={{ marginBlock: 0, color: 'var(--app-dim)' }}>
+                Not yours to act on: only the requester, or an approver who decided it, may.
+              </p>
             )}
             {(r.status === 'pending' || r.status === 'approved') && <WriteNotice env={env} />}
           </article>

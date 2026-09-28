@@ -132,7 +132,7 @@ beforeEach(() => {
   mock.env = 'Production';
   mock.caps.mockResolvedValue(PLATFORM);
   mock.duties.mockResolvedValue(DUTIES);
-  mock.approvals.mockResolvedValue([request(), request({ id: 'req-2', tenantId: 'other', ticket: 'CHG-200', status: 'approved' })]);
+  mock.approvals.mockResolvedValue([request(), request({ id: 'req-2', tenantId: 'other', ticket: 'CHG-200', status: 'approved', decidedByMe: true })]);
   mock.request.mockResolvedValue('req-3');
   mock.decide.mockResolvedValue('approved');
   mock.act.mockResolvedValue({ request: 'req-2', duty: 'role-grant', status: 'executed', auditSeq: 41, effect: {} });
@@ -396,6 +396,17 @@ describe('approvals', () => {
     await press('Cancel');
     expect(mock.decide).not.toHaveBeenCalled();
     expect(host.querySelector('[aria-label="Second factor"]')).toBeNull();
+  });
+
+  it('offers the action only to the requester or an approver who decided it', async () => {
+    // The server refuses anybody else; the screen does not send them through
+    // the second factor to be told so.
+    mock.approvals.mockResolvedValue([request({ id: 'req-3', status: 'approved', mine: false, decidedByMe: false })]);
+    await render();
+    expect(button('Act on this request')).toBeUndefined();
+    expect(host.textContent).toContain('Not yours to act on');
+    // The approver who decided req-2 in the default fixture is offered it:
+    // the next test presses that button.
   });
 
   it('acts on an approved request, and a refused action is shown as the refusal', async () => {

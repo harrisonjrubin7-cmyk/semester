@@ -419,7 +419,7 @@ begin
     pg_temp.attempt(eng, false, format(
       'select public.request_approval(%L, %L, %L, %L::jsonb, %L, %L)',
       'break-glass', 'console-b-check', 'tenant console-b-check, read-only',
-      format('{"expires_at": "%s", "scope": "tenant console-b-check, read-only"}', (now() + interval '5 hours')::text),
+      format('{"expires_at": "%s", "scope": "tenant:configure integration:view"}', (now() + interval '5 hours')::text),
       'Incident INC-42, fresh MFA, expiry at the incident close, review booked', 'INC-42')),
     'more than four hours');
 
@@ -432,7 +432,7 @@ begin
 
   perform pg_temp.become(eng);
   req := public.request_approval('break-glass', 'console-b-check', 'tenant console-b-check, read-only',
-           format('{"expires_at": "%s", "scope": "tenant console-b-check, read-only"}', (now() + interval '3 hours')::text)::jsonb,
+           format('{"expires_at": "%s", "scope": "tenant:configure integration:view"}', (now() + interval '3 hours')::text)::jsonb,
            'Incident INC-42, fresh MFA, expiry at the incident close, review booked', 'INC-42');
   perform pg_temp.nobody();
   perform pg_temp.remember('req3', req::text);
@@ -461,6 +461,44 @@ begin
   perform pg_temp.counted('private.break_glass_active says so',
     (private.break_glass_active(eng, 'console-b-check'))::int, 1);
 
+  -- The grant is heard where every tenant policy asks: has_capability. The
+  -- engineer holds no role over the tenant, so before this each answer was
+  -- false; now the two scoped capabilities are true, one outside the scope
+  -- stays false, and the platform scope stays false whatever the grant says.
+  perform pg_temp.become(eng);
+  perform pg_temp.counted('under break-glass the engineer holds tenant:configure over the tenant',
+    (private.has_capability('tenant:configure', 'school', 'console-b-check'))::int, 1);
+  perform pg_temp.counted('and integration:view, the other capability the approvers read',
+    (private.has_capability('integration:view', 'school', 'console-b-check'))::int, 1);
+  perform pg_temp.counted('but not audit:read, which the scope does not name',
+    (private.has_capability('audit:read', 'school', 'console-b-check'))::int, 0);
+  perform pg_temp.counted('nor anything over another tenant',
+    (private.has_capability('tenant:configure', 'school', 'console-b-demo'))::int, 0);
+  perform pg_temp.counted('nor at platform scope',
+    (private.has_capability('tenant:configure'))::int, 0);
+  perform pg_temp.nobody();
+  perform pg_temp.become(stranger);
+  perform pg_temp.counted('and the grant is the engineer''s alone',
+    (private.has_capability('tenant:configure', 'school', 'console-b-check'))::int, 0);
+  perform pg_temp.nobody();
+
+  -- A scope that is not a capability list, or names a capability that does
+  -- not exist, is refused at request time.
+  perform pg_temp.refused_with('a break-glass scope that is prose is refused',
+    pg_temp.attempt(eng, false, format(
+      'select public.request_approval(%L, %L, %L, %L::jsonb, %L, %L)',
+      'break-glass', 'console-b-check', 'x',
+      format('{"expires_at": "%s", "scope": "tenant console-b-check, read-only"}', (now() + interval '3 hours')::text),
+      'Incident INC-43', 'INC-43')),
+    'needs a scope');
+  perform pg_temp.refused_with('a break-glass scope naming a capability that does not exist is refused',
+    pg_temp.attempt(eng, false, format(
+      'select public.request_approval(%L, %L, %L, %L::jsonb, %L, %L)',
+      'break-glass', 'console-b-check', 'x',
+      format('{"expires_at": "%s", "scope": "tenant:configure everything:always"}', (now() + interval '3 hours')::text),
+      'Incident INC-43', 'INC-43')),
+    'do not exist');
+
   select seq into open_seq from private.console_audit_event
    where action = 'breakglass.opened' and target = grant_id::text;
   if open_seq is null or open_seq <= act_seq then
@@ -472,7 +510,7 @@ begin
   perform pg_temp.nobody();
   begin
     insert into public.break_glass_grant (request_id, subject, tenant_id, ticket, scope, expires_at, review_due)
-    values (req, eng, 'console-b-check', 'INC-42', 'too long', now() + interval '5 hours', now() + interval '6 hours');
+    values (req, eng, 'console-b-check', 'INC-42', 'tenant:configure', now() + interval '5 hours', now() + interval '6 hours');
     raise exception 'FAILED: the table accepted a five-hour break-glass grant';
   exception when check_violation then
     raise notice 'ok  the table itself refuses a break-glass grant longer than four hours';
@@ -488,6 +526,10 @@ begin
     pg_temp.attempt(eng, false, format('select public.close_break_glass(%L)', grant_id)));
   perform pg_temp.counted('and it is no longer active',
     (private.break_glass_active(eng, 'console-b-check'))::int, 0);
+  perform pg_temp.become(eng);
+  perform pg_temp.counted('and has_capability no longer hears it',
+    (private.has_capability('tenant:configure', 'school', 'console-b-check'))::int, 0);
+  perform pg_temp.nobody();
   select count(*) into n from private.console_audit_event where action = 'breakglass.closed' and target = grant_id::text;
   perform pg_temp.counted('the close was audited', n, 1);
 
@@ -516,13 +558,13 @@ begin
   -- A grant from three days ago whose review was due yesterday and never
   -- happened; written as operations would, not through the function.
   insert into public.break_glass_grant (request_id, subject, tenant_id, ticket, scope, opened_at, expires_at, review_due)
-  values (req3, eng, 'console-b-check', 'INC-41', 'tenant console-b-check',
+  values (req3, eng, 'console-b-check', 'INC-41', 'tenant:configure',
           now() - interval '3 days', now() - interval '3 days' + interval '4 hours', now() - interval '1 day')
   returning id into overdue;
 
   perform pg_temp.become(eng);
   req := public.request_approval('break-glass', 'console-b-check', 'tenant console-b-check',
-           format('{"expires_at": "%s"}', (now() + interval '2 hours')::text)::jsonb,
+           format('{"expires_at": "%s", "scope": "tenant:configure"}', (now() + interval '2 hours')::text)::jsonb,
            'Incident INC-43', 'INC-43');
   perform pg_temp.nobody();
   perform pg_temp.remember('req4', req::text);
@@ -563,7 +605,7 @@ declare
   operator uuid := pg_temp.who('operator'); uadmin uuid := pg_temp.who('uadmin');
   otheradmin uuid := pg_temp.who('otheradmin'); stranger uuid := pg_temp.who('stranger');
   eng uuid := pg_temp.who('eng');
-  c_check uuid; c_other uuid; c_demo uuid; req uuid; n bigint; got text;
+  c_check uuid; c_other uuid; c_demo uuid; req uuid; stale uuid; n bigint; got text;
 begin
   perform pg_temp.nobody();
   set local role service_role;
@@ -601,13 +643,31 @@ begin
   perform pg_temp.nobody();
   perform pg_temp.remember('req_demo', req::text);
   insert into public.break_glass_grant (request_id, subject, tenant_id, ticket, scope, expires_at, review_due)
-  values (req, eng, 'console-b-demo', 'INC-DEMO', 'demo tenant', now() + interval '1 hour', now() + interval '1 day');
+  values (req, eng, 'console-b-demo', 'INC-DEMO', 'tenant:configure', now() + interval '1 hour', now() + interval '1 day');
 
   perform pg_temp.become(operator);
   select count(*) into n from public.console_approvals() where id = req;
   perform pg_temp.counted('the demo tenant''s approval request is absent from the default read', n, 0);
   select count(*) into n from public.console_approvals(true) where id = req and is_demo;
   perform pg_temp.counted('and present, marked demo, when asked for', n, 1);
+  -- Nothing rewrites a stored status when its window closes, so the reader
+  -- derives it: a pending request whose expiry has passed reads `expired`,
+  -- and the console offers nothing on it.
+  -- The expiry is pinned once written, so the elapsed request is made as
+  -- one whose window has already closed, still `pending` in the row.
+  perform pg_temp.nobody();
+  insert into public.approval_request (duty_id, requester, tenant_id, target, evidence, ticket, expires_at)
+  values ('tenant-suspension', operator, 'console-b-demo', 'console-b-demo', 'Stale change ticket', 'CH-DEMO-OLD', now() - interval '1 minute')
+  returning id into stale;
+  select status into got from public.approval_request where id = stale;
+  if got <> 'pending' then raise exception 'FAILED: the stale row is stored as %', got; end if;
+  perform pg_temp.become(operator);
+  select status into got from public.console_approvals(true) where id = stale;
+  if got <> 'expired' then raise exception 'FAILED: an elapsed pending request reads as %', got; end if;
+  raise notice 'ok  an elapsed pending request reads as expired, whatever the row still says';
+  select count(*) into n from public.console_approvals(true) where id = stale and can_decide;
+  perform pg_temp.counted('and cannot be decided', n, 0);
+  perform pg_temp.nobody();
   select count(*) into n from public.console_break_glass() where tenant_id = 'console-b-demo';
   perform pg_temp.counted('the demo tenant''s break-glass grant is absent from the default read', n, 0);
   select count(*) into n from public.console_break_glass(true) where tenant_id = 'console-b-demo' and active;

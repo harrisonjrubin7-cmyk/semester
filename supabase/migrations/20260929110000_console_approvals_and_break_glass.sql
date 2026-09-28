@@ -182,7 +182,13 @@ create table if not exists public.break_glass_grant (
   subject     uuid        not null references auth.users (id) on delete cascade,
   tenant_id   text        not null references public.schools (id) on delete cascade,
   ticket      text        not null check (ticket ~ '^[A-Za-z0-9._:-]{3,80}$'),
-  scope       text        not null check (length(trim(scope)) between 1 and 400),
+  -- What the access is: the capabilities it confers over the tenant, as a
+  -- space-separated list of `public.app_capabilities` names. Break-glass
+  -- widens who, never what — the scope is what the two approvers approved,
+  -- and `private.has_capability` grants exactly these, for exactly this
+  -- tenant, while the grant is open. Free text here would be a grant of
+  -- nothing (the fault the first version of this table had).
+  scope       text        not null check (scope ~ '^[a-z_]+:[a-z_]+( [a-z_]+:[a-z_]+)*$' and length(scope) <= 400),
   opened_at   timestamptz not null default now(),
   expires_at  timestamptz not null,
   closed_at   timestamptz,
@@ -318,6 +324,77 @@ as $$
   );
 $$;
 revoke all on function private.break_glass_active(uuid, text) from public, anon, authenticated;
+
+-- A break-glass scope names capabilities, every one of them real. Checked at
+-- request time (so the refusal reaches the requester before an approver
+-- spends time) and again when the grant is opened.
+create or replace function private.assert_break_glass_scope(want_scope text)
+returns void
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  missing text;
+begin
+  if want_scope is null or want_scope !~ '^[a-z_]+:[a-z_]+( [a-z_]+:[a-z_]+)*$' then
+    raise exception 'Break-glass needs a scope (detail.scope): the capabilities it confers, space-separated, such as tenant:configure integration:view.';
+  end if;
+  select string_agg(c, ', ') into missing
+    from unnest(string_to_array(want_scope, ' ')) as c
+   where not exists (select 1 from public.app_capabilities a where a.capability = c);
+  if missing is not null then
+    raise exception 'Break-glass scope names capabilities that do not exist: %.', missing;
+  end if;
+end $$;
+revoke all on function private.assert_break_glass_scope(text) from public, anon, authenticated;
+
+-- ── What a break-glass grant does ──────────────────────────────────────────
+--
+-- `private.has_capability` is the one predicate every tenant policy asks, so
+-- it is where a break-glass grant has to be heard, or the grant is a row the
+-- console reports and nothing obeys. Redefined here, after the table exists,
+-- with the original path from 20260922012000_capabilities.sql unchanged and
+-- one more: an open, unexpired grant held by the caller over this tenant
+-- whose scope names the wanted capability. School scope only — break-glass
+-- is access to a production tenant, never to the platform — and never a
+-- capability the scope does not name: the widening is who, not what.
+create or replace function private.has_capability(
+  want_capability text,
+  want_scope_kind text default 'platform',
+  want_scope_id   text default ''
+)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1
+      from public.role_grants g
+      join public.role_capabilities rc on rc.role = g.role
+     where g.subject = (select auth.uid())
+       and rc.capability = want_capability
+       and g.scope_kind = want_scope_kind
+       and g.scope_id = want_scope_id
+       and g.revoked_at is null
+       and (g.expires_at is null or g.expires_at > now())
+  )
+  or (
+    want_scope_kind = 'school'
+    and exists (
+      select 1
+        from public.break_glass_grant b
+       where b.subject = (select auth.uid())
+         and b.tenant_id = want_scope_id
+         and b.closed_at is null
+         and b.expires_at > now()
+         and want_capability = any (string_to_array(b.scope, ' '))
+    )
+  );
+$$;
 
 -- A grant whose review is overdue and has not happened. While one exists for
 -- a person, no new break-glass request of theirs can be approved: the review
@@ -473,6 +550,9 @@ begin
     if until <= now() then
       raise exception 'The break-glass expiry is already past.';
     end if;
+    -- The scope is the capabilities the access confers, and every one must
+    -- exist, so that what the approvers read is what the grant will do.
+    perform private.assert_break_glass_scope(detail ->> 'scope');
   end if;
 
   -- The audit event first. If this raises, nothing below runs.
@@ -675,12 +755,12 @@ begin
       jsonb_build_object('request', req.id, 'ticket', req.ticket, 'expires_at', until,
                          'review_due', due, 'opened_by', me),
       coalesce(want_correlation, req.correlation_id));
+    perform private.assert_break_glass_scope(req.detail ->> 'scope');
     insert into public.break_glass_grant
       (id, request_id, subject, tenant_id, ticket, scope, expires_at, review_due)
     values
       (grant_id, req.id, req.requester, req.tenant_id, req.ticket,
-       coalesce(nullif(trim(req.detail ->> 'scope'), ''), req.target, duty.action),
-       until, due);
+       req.detail ->> 'scope', until, due);
     effect := jsonb_build_object('break_glass_grant', grant_id, 'expires_at', until);
 
   else
@@ -799,7 +879,13 @@ security invoker
 set search_path = ''
 as $$
   select r.id, r.duty_id, r.requester, r.tenant_id, s.name, coalesce(s.is_demo, false),
-         r.target, r.detail, r.evidence, r.ticket, r.status, r.correlation_id,
+         r.target, r.detail, r.evidence, r.ticket,
+         -- Nothing rewrites a stored status when its expiry passes, so the
+         -- reader says `expired` for an elapsed request that was still
+         -- pending or approved: the console must not offer an action the
+         -- server will refuse for lateness, nor sort a dead request to the top.
+         case when r.status in ('pending', 'approved') and r.expires_at <= now() then 'expired' else r.status end,
+         r.correlation_id,
          r.created_at, r.expires_at, r.decided_at, r.executed_at,
          (select count(*)::integer from public.approval_decision d
            where d.request_id = r.id and d.decision = 'approve'),
