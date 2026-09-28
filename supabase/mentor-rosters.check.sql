@@ -97,7 +97,7 @@ end $$;
 
 do $$
 declare
-  mentor uuid; student uuid; second uuid; third uuid; outsider uuid; far uuid; alum uuid;
+  mentor uuid; student uuid; second uuid; third uuid; fourth uuid; outsider uuid; far uuid; alum uuid;
   req uuid; req2 uuid; n bigint; st text;
 begin
   insert into public.schools (id, name, email_domains) values
@@ -111,6 +111,7 @@ begin
   far      := pg_temp.newuser('far@mr-other.example', 'mr-other');
   alum     := pg_temp.newuser('alum@mr-u.example', 'mr-u');
   third    := pg_temp.newuser('third@mr-u.example', 'mr-u');
+  fourth   := pg_temp.newuser('fourth@mr-u.example', 'mr-u');
 
   insert into public.role_grants (subject, role, scope_kind, scope_id, provenance) values
     (mentor,  'peer_mentor', 'cohort', 'mr-u/first-year', 'institution'),
@@ -118,7 +119,9 @@ begin
     (second,  'student',     'cohort', 'mr-u/first-year', 'institution'),
     (alum,    'alumni',      'school', 'mr-u',            'institution'),
     (mentor,  'peer_mentor', 'cohort', 'mr-u/second-year', 'institution'),
-    (third,   'student',     'cohort', 'mr-u/second-year', 'institution');
+    (third,   'student',     'cohort', 'mr-u/second-year', 'institution'),
+    (mentor,  'peer_mentor', 'cohort', 'mr-u/third-year',  'institution'),
+    (fourth,  'student',     'cohort', 'mr-u/third-year',  'institution');
 
   -- ── Publishing an offer ─────────────────────────────────────────────────
   perform pg_temp.expect_allowed('a peer mentor publishing an offer in their cohort', mentor,
@@ -189,6 +192,37 @@ begin
   execute 'reset role';
   perform pg_temp.expect_allowed('accepting in a cohort with room, while full in another', mentor,
     format($q$select public.answer_mentor_request(%L, 'accepted')$q$, req2));
+
+  -- Capacity counts live assignments, however they began (20260928110700).
+  -- A mentor with room for one and an assignment from the retired
+  -- direct-insert path has no room left.
+  perform pg_temp.expect_allowed('the mentor offering one place in a third cohort', mentor,
+    $q$insert into public.peer_mentor_offers (user_id, tenant_id, cohort_scope, display_name, topics, capacity)
+       select (select auth.uid()), 'mr-u', 'mr-u/third-year', 'Sam (junior)', array['Study habits'], 1$q$);
+  insert into public.peer_mentor_assignments (tenant_id, cohort_scope, mentor_id, student_id, expires_at)
+  values ('mr-u', 'mr-u/third-year', mentor, second, now() + interval '90 days');
+  perform pg_temp.become(fourth);
+  req2 := public.request_mentor('peer', mentor, 'mr-u/third-year', 'Rio', '{}', '');
+  execute 'reset role';
+  perform pg_temp.expect_refused('accepting past capacity when the place is held by an older assignment', mentor,
+    format($q$select public.answer_mentor_request(%L, 'accepted')$q$, req2));
+  update public.peer_mentor_assignments set revoked_at = now()
+   where mentor_id = mentor and student_id = second and cohort_scope = 'mr-u/third-year';
+
+  -- A request waits; the student can leave the cohort meanwhile. Accepting it
+  -- then must not hand the mentor a student who is no longer theirs.
+  update public.role_grants set revoked_at = now()
+   where subject = fourth and scope_id = 'mr-u/third-year';
+  perform pg_temp.expect_refused('accepting a request from a student who has since left the cohort', mentor,
+    format($q$select public.answer_mentor_request(%L, 'accepted')$q$, req2));
+  perform pg_temp.counted('and no assignment was made',
+    (select count(*) from public.peer_mentor_assignments where student_id = fourth), 0);
+  update public.role_grants set revoked_at = null
+   where subject = fourth and scope_id = 'mr-u/third-year';
+  perform pg_temp.expect_allowed('the same request once the student is back in the cohort — the control', mentor,
+    format($q$select public.answer_mentor_request(%L, 'accepted')$q$, req2));
+  perform pg_temp.counted('which makes the assignment',
+    (select count(*) from public.peer_mentor_assignments where student_id = fourth and revoked_at is null), 1);
 
   -- ── Alumni ──────────────────────────────────────────────────────────────
   perform pg_temp.expect_allowed('an alum publishing an offer with a display name', alum,
