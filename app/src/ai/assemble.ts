@@ -177,6 +177,15 @@ export function assemble(ai: Inputs): Assembled {
 
 export function suggestionsFor(ai: Inputs): string[] {
   const assembled = assemble(ai);
+  /*
+   * The Ask tab itself is not a screen with something on it.
+   *
+   * It sits in the Learn area, so the journey line used to offer "What should
+   * I do next in Learn and practice?" as the one and only starting point — a
+   * question about a menu heading, alone in the middle of an empty page. Opened
+   * directly, the useful starters are the term-wide ones.
+   */
+  if (assembled.screen === 'ask') return [...TERM_STARTERS];
   const journey = journeyPositionFor(assembled.screen);
   const fromJourney = journey ? [`What should I do next in ${journey.journey.label}?`] : [];
   const fromScreen = assembled.own?.suggestions ?? [];
@@ -188,3 +197,11 @@ export function suggestionsFor(ai: Inputs): string[] {
     ? all.slice(0, 3)
     : ['What is due this week?', 'How am I doing?', 'How does this app work?'];
 }
+
+/** Where a conversation opened on the Ask tab starts. Four, each a job. */
+export const TERM_STARTERS = [
+  'What is due this week?',
+  'What should I study next?',
+  'Help me plan my week',
+  'How am I doing in my courses?',
+] as const;
