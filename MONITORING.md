@@ -127,8 +127,16 @@ against production.
 
 ## What was deliberately not built
 
-**A status page.** It would need something to watch it, and the thing watching
-it would be the thing that needs watching.
+**A status page** was declined here until 28 September 2026, because "it would
+need something to watch it, and the thing watching it would be the thing that
+needs watching." The founder reversed that, and `app/public/status.html` (#902)
+answers the objection by not having a watcher: each visitor's browser probes
+the app, sign-in and the database API at the moment they look — the same
+things `production-smoke.yml` probes hourly. It asks with `no-store`, and
+`public/sw.js` passes such requests straight to the network, because a status
+page answered from the app's cache reported the app up while it was returning
+503. Incidents are written by hand into `status-incidents.json` (see
+`docs/trust/APM-RUNBOOK.md` step 5). It sends no notifications.
 
 **Automated alerting from the database.** A `pg_cron` job that emails when a
 number looks wrong is a fourth thing to deploy and a fifth thing to notice has

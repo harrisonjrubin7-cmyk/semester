@@ -411,6 +411,12 @@ self.addEventListener('fetch', (event) => {
   // worse than no answer.
   if (url.origin !== self.location.origin) return;
 
+  // A request that asks not to be served from a cache is not. The status page
+  // (status.html) probes `index.html` and reads its incident list this way, and
+  // answered from here it would report the app up because it was up once, and
+  // show an incident list from before the incident.
+  if (request.cache === 'no-store') return;
+
   if (request.mode === 'navigate') {
     event.respondWith(
       fetch(request).catch(() =>

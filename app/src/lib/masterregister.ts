@@ -450,8 +450,8 @@ export const REGISTER: readonly Requirement[] = [
     validation: 'Support ticket UAT',
     severity: 'P0',
     status: 'building',
-    evidence: [{ path: 'app/src/lib/help-routes.ts', shows: 'Help requests with minimal context, withdrawable, DB-enforced' }, { path: 'supabase/help-requests.check.sql', shows: 'SQL tests for help requests' }, { path: 'app/src/components/GetHelp.test.tsx', shows: 'Tests help request UI' }, { path: 'MONITORING.md', shows: 'Declines a status page in writing' }],
-    gap: 'Status page refused (council decision pending); no ticketing/SLA for product issues, feedback has no staff triage. Needs status link decision, ticket IDs surfaced, and support ticket UAT.',
+    evidence: [{ path: 'app/src/lib/help-routes.ts', shows: 'Help requests with minimal context, withdrawable, DB-enforced' }, { path: 'supabase/help-requests.check.sql', shows: 'SQL tests for help requests' }, { path: 'app/src/components/GetHelp.test.tsx', shows: 'Tests help request UI' }, { path: 'MONITORING.md', shows: 'Records the status page decision' }],
+    gap: 'Status page live at /status.html but not linked from Help; no ticketing/SLA for product issues, feedback has no staff triage. Needs a status link in Help, ticket IDs surfaced, and support ticket UAT.',
   },
   {
     id: 'LMS-001',
@@ -1479,9 +1479,9 @@ export const REGISTER: readonly Requirement[] = [
     requirement: 'Public status and subscriber/customer update process work',
     validation: 'Status-page drill',
     severity: 'P0',
-    status: 'designed',
-    evidence: [{ path: 'MONITORING.md', shows: 'declines a status page in writing' }, { path: 'docs/SERVICE-RELIABILITY-AND-SUPPORT-OPERATIONS.md', shows: 'plans service_incidents tables for status page; not built' }],
-    gap: 'No public status page, no subscriber notification process, no drill; council must overturn MONITORING.md refusal.',
+    status: 'building',
+    evidence: [{ path: 'app/public/status.html', shows: 'public status page: live browser probes of the app, sign-in and the database API, and a hand-kept incident list' }, { path: 'app/src/lib/statuspage.test.ts', shows: 'holds the page to the production project, the smoke probes and the service worker' }, { path: 'MONITORING.md', shows: 'the refusal reversed on 28 September' }],
+    gap: 'No subscriber notification process and no drill yet; incidents are written by hand into status-incidents.json.',
   },
   {
     id: 'SUP-001',

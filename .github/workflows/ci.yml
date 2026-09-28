@@ -471,6 +471,13 @@ jobs:
       - name: Rehearse the deploy against production's shape
         run: supabase/rehearse.sh
 
+      # Dump, restore into an empty database, compare six ways. It had been red
+      # since 27 September on the constraints fingerprint — checks whose
+      # `between` did not survive a dump's round trip — and nothing ran it, so
+      # nobody knew. A restore procedure is only a capability while it passes.
+      - name: Rehearse a backup and restore
+        run: supabase/restore.sh
+
   # ── A key that got committed ────────────────────────────────────────────
   #
   # The one kind of breakage in this repository that a test cannot see and a
