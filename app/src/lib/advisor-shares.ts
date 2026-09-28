@@ -4,7 +4,7 @@ import { cloud } from './cloud';
 
 /**
  * Authorized advisor shares (Phase G, D-016), against
- * `supabase/migrations/20260927201500_advisor_shares.sql`.
+ * `supabase/migrations/20260928131000_advisor_shares.sql`.
  *
  * - **Sharing** goes through `share_with_advisor`, which only finds the
  *   address among advisors at the student's own school. A miss always reads

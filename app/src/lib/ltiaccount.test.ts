@@ -171,7 +171,7 @@ const NOT_CONTENT = new Set([
   'canonical_entity_references',
   'consent_record',
   /*
-   * Phase J (`20260927224500_office_action_feed.sql`). Which programs and
+   * Phase J (`20260928132000_office_action_feed.sql`). Which programs and
    * eligibilities a student said apply to them, and which office actions they
    * marked done. Settings and ticks about someone else's content — an office's
    * action — rather than anything the student wrote, and all of it can be set

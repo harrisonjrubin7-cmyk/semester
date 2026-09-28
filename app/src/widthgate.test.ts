@@ -48,6 +48,12 @@ const ASKS: Record<string, string> = {
     'Whether the first-sign-in question is fixed to the window or the column. Same question, same answers.',
   'components/Bench.tsx':
     'Menus as one sheet of rows on a phone and a menubar on a wide window — the file says "the phone gets all of them".',
+  'components/CourseCompare.tsx':
+    'Two or three compared sections as a real table when wide; one labelled card per section when narrow. Same rows, same facts.',
+  'components/CourseDetailV2.tsx':
+    'A side drawer beside the catalog on a desktop; a modal sheet with its own focus trap below that. Same course details and the same cart button.',
+  'components/ScenarioComparison.tsx':
+    'Current plan against a change as a real table from 840px; on a phone the rows that changed come first, and a switch shows either whole plan. Nothing is left out at either width.',
   'components/Command.tsx':
     'Sizes of the search palette. The same palette, the same results.',
   'components/ExplanationSheet.tsx':

@@ -152,7 +152,7 @@ export function useOnline(): boolean {
  * loaded once. `offline-mode.test.ts` reads each back with the network gone.
  */
 export const AVAILABLE_OFFLINE = [
-  { what: 'Today snapshot', where: 'The saved state (`semester.v1` or IndexedDB `semester-store`): deadlines, tasks, the plan' },
+  { what: 'Today snapshot', where: 'The saved state (`semester.v1` or IndexedDB `semester-store`): deadlines, actions, the plan' },
   { what: 'Saved schedules', where: '`semester.registration.v1` (the cart and potential schedules)' },
   { what: 'Saved degree plan', where: 'The saved state: `requirements` and `taken`' },
   { what: 'Registration checklist', where: '`semester.registration-day.v1`' },

@@ -335,7 +335,7 @@ export const Accessibility: Page = () => (
       <ul>
         <li>Every control has a name a screen reader can read.</li>
         <li>Every page has one main region and a skip link.</li>
-        <li>Visible focus, reduced motion, and no task that needs dragging.</li>
+        <li>Visible focus, reduced motion, and nothing that needs dragging.</li>
         <li>Nothing is said only with colour or shape.</li>
       </ul>
     </Section>

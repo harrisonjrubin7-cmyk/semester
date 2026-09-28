@@ -370,7 +370,7 @@ declare
     'integration_set_paused(want_connection text, want_paused boolean, want_reason text)',
     'kill_switch_engaged(want_switch text, want_tenant text)',
 
-    -- The three in 20260927201500_advisor_shares.sql (Phase G, D-016).
+    -- The three in 20260928131000_advisor_shares.sql (Phase G, D-016).
     -- `share_with_advisor` finds the advisor only among the student's own
     -- school's `academic_advisor` grants, and every miss reads the same.
     -- `list_advisor_shares` returns shares addressed to the caller, titles and
@@ -381,7 +381,7 @@ declare
     'read_advisor_share(want_share uuid)',
     'share_with_advisor(advisor_email text, share_title text, share_payload jsonb, share_expires timestamp with time zone)',
 
-    -- The six in 20260927224500_office_action_feed.sql (Phase J, D-048).
+    -- The six in 20260928132000_office_action_feed.sql (Phase J, D-048).
     -- The feed returns only published rows that reach the caller; the desk
     -- only rows in the caller's own office scope, with a count that is null
     -- below ten; the two writers check office, role and scope themselves.
@@ -393,7 +393,7 @@ declare
     'office_action_programs()',
     'office_desk_actions()',
 
-    -- The five in 20260927234800_course_demand_forecasting.sql (Phase K,
+    -- The five in 20260928135000_course_demand_forecasting.sql (Phase K,
     -- D-051). A student contributes, stops and reads their own contribution,
     -- always at their own school; staff read their demand:read scopes and the
     -- snapshot rows those scopes allow, which the table's constraints keep at

@@ -1,6 +1,6 @@
 -- Graduation scenario drafts are a person's work, restated after help requests.
 --
--- 20260927181500_untouched_graduation_drafts.sql added
+-- 20260928130000_untouched_graduation_drafts.sql added
 -- `public.graduation_scenarios` to `lti_account_untouched` (Phase D, D-025).
 -- 20260927230000_help_requests.sql then redefined the function from the
 -- definition before that, adding `help_requests`. Migrations apply in version

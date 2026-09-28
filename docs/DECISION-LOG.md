@@ -1326,3 +1326,33 @@ Instead:
   plagiarism detector.
 - **Proof.** A component test shows a held source's text is absent from the
   AI payload, and it fails when the guard is bypassed.
+
+## D-105 · Six integration migrations renumbered above production's ledger
+
+**Decided 27 Sep 2026, merging main into the integration branch so it can reach
+main (owner-approved).** Production's ledger ends at
+`20260928041700_space_availability`. Six integration migrations were numbered
+below that, and Supabase refuses a version older than one already recorded, so
+the deploy off main would have failed on the first of them:
+
+| Was | Now |
+|---|---|
+| `20260927181500_untouched_graduation_drafts` | `20260928130000` |
+| `20260927201500_advisor_shares` | `20260928131000` |
+| `20260927224500_office_action_feed` | `20260928132000` |
+| `20260927234500_untouched_graduation_after_help` | `20260928133000` |
+| `20260927234600_untouched_advisor_after_help` | `20260928134000` |
+| `20260927234800_course_demand_forecasting` | `20260928135000` |
+
+- **Order kept.** They stay in their own order, after everything production has
+  run and before the sharing and Course Studio migrations
+  (`20260928140000`–`150000`). No live database ever recorded the old numbers;
+  preview branches that did are rebuilt from the files.
+- **What moving them changes.** Moving past production's migrations, the only
+  object any of them shares with one it now follows is `lti_account_untouched`,
+  which `help_requests`, `mentor_rosters` and `community` also define. The
+  sharing migrations define it last, so they now carry every row: main's
+  mentor and community rows had been missing from all three, and
+  `ltiaccount.test.ts` fails without them.
+- **References.** Code comments, docs, check suites and RETENTION name the new
+  files. Earlier entries in this log keep the numbers they were written with.

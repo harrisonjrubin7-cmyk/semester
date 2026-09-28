@@ -354,7 +354,7 @@ comment on function public.claim_family_invite(text) is
 -- It carries `help_requests` (20260927230000_help_requests.sql, on main),
 -- because this definition is newer and replaces that one whole.
 --
--- **Merge order with the feature-expansion work.** Its 20260927181500 (#780)
+-- **Merge order with the feature-expansion work.** Its 20260928130000 (#780)
 -- adds `graduation_scenarios` to this same function and asked every later
 -- redefinition to keep that row. It is not here because that table does not
 -- exist on this branch's base, and `ltiaccount.test.ts` refuses a row for a
@@ -394,6 +394,18 @@ begin
       ('public.support_access_grant', 'student_id'),
       ('public.support_access_grant', 'supporter_id'),
       ('public.help_requests',        'student_id'),
+      ('public.mentor_requests',      'requester'),
+      ('public.mentor_requests',      'recipient'),
+      ('public.peer_mentor_offers',   'user_id'),
+      ('public.alumni_mentor_offers', 'user_id'),
+      ('public.community_posts',      'author_id'),
+      ('public.community_sessions',   'host_id'),
+      ('public.community_session_participants', 'user_id'),
+      ('public.community_mutes',      'user_id'),
+      ('public.community_members',    'user_id'),
+      ('public.community_aliases',    'user_id'),
+      ('public.community_volunteers', 'user_id'),
+      ('public.community_media',      'uploader_id'),
       ('public.graduation_scenarios', 'user_id'),
       ('public.advisor_shares',       'student_id'),
       ('public.advisor_shares',       'advisor_id'),
