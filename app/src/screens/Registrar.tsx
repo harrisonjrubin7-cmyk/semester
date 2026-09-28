@@ -7,6 +7,7 @@ import { Page } from '../components/Page';
 import { useRowStyle } from '../components/shell/useShell';
 import { Group, ItemRow } from '../components/shell/Rows';
 import { CloseTerm } from '../components/CloseTerm';
+import { TermTransition } from '../components/TermTransition';
 import { TermSwitch } from '../components/TermSwitch';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel, Segmented } from '../components/ui';
@@ -391,6 +392,7 @@ export function Registrar({
       <TermSwitch />
       {/* The end-of-term five minutes. See `lib/rollover.ts`. */}
       <CloseTerm />
+      <TermTransition />
 
     </>
     </Page>

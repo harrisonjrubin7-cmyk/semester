@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { record, yours } from '../lib/journal';
 import type { Account } from '../lib/cloud';
 import {
   createSupportAccess,
@@ -103,6 +104,7 @@ export function SupportAccess({ account }: { account: Account | null }) {
                 setBusy(true);
                 void createSupportAccess(supporterId, reason, days)
                   .then(async () => {
+                    record(account?.id ?? null, { kind: 'support-granted', detail: `for ${days} ${days === 1 ? 'day' : 'days'}`, provenance: yours(`Semester support, ${days} ${days === 1 ? 'day' : 'days'}`) });
                     setReason('');
                     await refresh();
                     setNotice('');
@@ -164,6 +166,7 @@ export function SupportAccess({ account }: { account: Account | null }) {
                     setBusy(true);
                     void revokeSupportAccess(window.grantId)
                       .then(async () => {
+                        record(account?.id ?? null, { kind: 'support-revoked', detail: '', provenance: yours('Nobody', 'Revoked') });
                         await refresh();
                         setNotice('');
                         setChanged({

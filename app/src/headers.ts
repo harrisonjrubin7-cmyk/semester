@@ -194,6 +194,11 @@ export const HEADERS: Record<Screen, (c: HeaderCtx) => Head> = {
   setWorkload: settingsPage,
   setAbout: settingsPage,
   setAssistant: settingsPage,
+  // The Me control surface's three pages: named here, as Settings' are, since
+  // neither set is in the registry (`lib/nav.registry.test.ts`).
+  activity: () => ({ kicker: 'You', title: 'Your activity' }),
+  whatsnew: () => ({ kicker: 'You', title: 'What changed' }),
+  recovery: () => ({ kicker: 'You', title: 'Recovery' }),
   mine: () => ({ kicker: 'Yours, not the syllabus', title: 'Personal' }),
   note: () => ({ kicker: 'Note', title: 'Editing' }),
   lesson: (c) => ({ kicker: c.about('lesson'), title: 'Watch' }),

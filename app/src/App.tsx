@@ -24,6 +24,7 @@ import { MODE_ATTR } from './components/unity/modes';
 import { CALM_ATTR, scrollKindly, usePrefersContrast, usePrefersDark } from './lib/prefers';
 import { Today } from './screens/Today';
 import { Guides, InstitutionalPreviewBar, OfflineBanner, SCREENS, Springboard } from './screens';
+import { StatusNotice } from './components/StatusNotice';
 import { headOf, type Head } from './headers';
 import {
   calmOf,
@@ -1277,6 +1278,7 @@ function AppFrame() {
     <>
       {banner}
       <SyncStrip />
+      <StatusNotice />
       {OFFLINE_MODE ? (
         <Suspense fallback={null}>
           <OfflineBanner />

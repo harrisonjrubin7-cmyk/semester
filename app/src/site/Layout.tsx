@@ -22,9 +22,10 @@ const PRIMARY: [string, string][] = [
 ];
 
 const FOOTER: [string, [string, string][]][] = [
-  ['Product', [['Product', '/product/'], ['Pricing', '/pricing/'], ['Tools', '/tools/'], ['Help', '/help/']]],
-  ['Company', [['About', '/about/'], ['Careers', '/careers/'], ['Contact', '/contact/'], ['Resources', '/resources/']]],
-  ['Trust', [['Security', '/security/'], ['Privacy', '/privacy/'], ['Accessibility', '/accessibility/']]],
+  ['Product', [['Product', '/product/'], ['Demo', '/demo/'], ['Pricing', '/pricing/'], ['How pricing works', '/pricing/how-it-works/'], ['Tools', '/tools/'], ['Help', '/help/']]],
+  ['Platform', [['What is available', '/platform/availability/'], ['Service map', '/platform/service-map/'], ['System boundaries', '/platform/system-boundaries/'], ['After you start', '/start/'], ['Launch sites', '/launch/']]],
+  ['Company', [['About', '/about/'], ['Careers', '/careers/'], ['Contact', '/contact/'], ['Resources', '/resources/'], ['Campus launch kit', '/resources/campus-launch-kit/']]],
+  ['Trust', [['Security', '/security/'], ['Privacy', '/privacy/'], ['Accessibility', '/accessibility/'], ['Product quality', '/trust/product-quality/'], ['How we prove things', '/proof-standards/']]],
 ];
 
 /**

@@ -78,7 +78,15 @@ const STAFF = ['moderation', 'agreements', 'volunteers'] as const;
  */
 const SWITCHED = ['community', 'volunteer'] as const;
 
-const NOT_DESTINATIONS = new Set<string>([...SHELL, ...FIRST_RUN, ...DETAIL, ...SETTINGS, ...STAFF, ...SWITCHED]);
+/**
+ * Pages inside the Me control surface, which lists them itself
+ * (`lib/mecontrols.ts`, drawn by `components/MeControls.tsx`) and is
+ * registered. The same arrangement as Settings and its pages: a second door
+ * on a shelf would be a second home, and the Data shelf is full.
+ */
+const ME_CONTROLS = ['activity', 'whatsnew', 'recovery'] as const;
+
+const NOT_DESTINATIONS = new Set<string>([...SHELL, ...FIRST_RUN, ...DETAIL, ...SETTINGS, ...STAFF, ...SWITCHED, ...ME_CONTROLS]);
 
 /**
  * The union, read out of the file rather than imported.

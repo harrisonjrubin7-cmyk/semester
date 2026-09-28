@@ -24,6 +24,81 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### One place under Me for what Semester knows about you
+
+Me now opens with one list, in the order the questions come: My profile, My
+data, Connected accounts, Sharing, AI controls, Notifications, Accessibility
+preferences, Activity, What changed, Recovery, Export data, Request deletion,
+Support access, Billing and Security. Each row opens the screen that already
+held the thing; nothing moved.
+
+Three of those screens are new. **Activity** is your own trail — a plan saved,
+an agenda shared, support let in or shut out, an export requested — each line
+with where it came from, who can see it and whether it still stands. It stays
+on this device and holds no content. **What changed** is this list, inside the
+app, filtered to the parts your school has switched on, with known issues
+listed apart. **Recovery** is where to start when something went missing: is
+your work safe, is anything waiting to sync, a recovery copy of this device's
+libraries, how to reconnect, how to reach a person.
+
+Nothing to do.
+
+### Fix this, on every screen
+
+Under **About this screen**, which every screen has, there is now a short
+list: this deadline looks wrong, this source is out of date, this
+recommendation is not relevant, this answer is incorrect, this should be
+private, report an accessibility barrier, get help. The first four open a
+report on the right kind with the first words filled in; the other three open
+the screen where the thing is done.
+
+Nothing to do.
+
+### Service notices only where they apply
+
+When the service has an incident or planned maintenance, the screens it
+affects say so in one line, with what still works. Unrelated screens say
+nothing. Help now links to the status page.
+
+Nothing to do.
+
+### A support ticket can carry what you were doing
+
+Where Semester support is switched on, the ticket form offers to add, as lines
+you read before sending: where you were, what you were trying to do, an error
+reference, your browser and device, the last error this device logged, whether
+your work is saved, and which sources are connected. Off until you tick it.
+Never your notes, files, grades, conversations with the assistant or anything
+from your student record.
+
+Nothing to do.
+
+### The term, start to finish
+
+On the registrar screen, beside closing the term, two lists: what to do at the
+start of a term (confirm courses, read in syllabi, set your week, read each
+course's rules, choose reminders, set the term's goal, connect your calendar)
+and at the end (review, archive, keep what is worth keeping, export, update
+your goals, plan next term, refresh career evidence, review shares, clear old
+deadlines). Each opens the screen where it is done.
+
+Nothing to do.
+
+### "Since you last opened" says why
+
+The line on Today that lists what changed while you were away now carries,
+for each change, where it came from, when, why it matters and what to do.
+
+Nothing to do.
+
+### Written help on the registrar screen, Ask Semester and the practice paper
+
+About this screen on those three now has answers written for them rather than
+the built fallback: what the screen is, why it matters, where its information
+comes from, and what to do next.
+
+Nothing to do.
+
 ### Setting up ends at your first course, not at somebody else's Today
 
 Finishing the introduction used to land you on Today with the shipped sample

@@ -3,6 +3,7 @@ import { explain } from '../../lib/explain';
 import type { Screen } from '../../lib/types';
 import { useStore } from '../../state/store';
 import { showExplain } from '../../lib/unity';
+import { FixThis } from '../FixThis';
 
 /**
  * "About this screen" — the same help, in the same place, on every screen.
@@ -61,6 +62,12 @@ export function ScreenGuide({ screen, sheet = false }: { screen: Screen; sheet?:
       */}
       <div id={region} className="screen-guide-body" hidden={!open}>
         <Answers screen={screen} />
+        {/*
+          The correction path, on every screen: a deadline that looks wrong, a
+          source out of date, an answer that is incorrect, something that
+          should be private, a barrier. See `lib/fixthis.ts`.
+        */}
+        <FixThis />
         {screen !== 'help' && (
           <button type="button" className="bare link-quiet tap-y" onClick={() => dispatch({ type: 'go', screen: 'help' })}>
             Open the guidebook

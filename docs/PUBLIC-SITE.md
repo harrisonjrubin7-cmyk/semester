@@ -12,7 +12,7 @@ an injected script inert. The four tool pages are the only exception (below).
 
 | | |
 |---|---|
-| Pages | `app/src/site/pages.tsx`: 18 content routes and 4 tool routes, listed in `app/src/site/render.tsx` `ROUTES` |
+| Pages | `app/src/site/pages.tsx` (18 content routes) and `app/src/site/more.tsx` (10 platform, trust and buying routes, with their tables as data in `app/src/site/platform.ts`), plus 4 tool routes, all listed in `app/src/site/render.tsx` `ROUTES` |
 | Tools | `app/src/site/tools/Tools.tsx` (the four tools), `tools/client.tsx` (hydration, bundled as `tools/tools.js`) |
 | Frame | `app/src/site/Layout.tsx`: skip link, header, a script-free `<details>` phone menu, footer |
 | Styles | `app/src/site/site.css`, with the app's `@font-face` rules prepended at build |
@@ -25,6 +25,25 @@ cd app
 npm run site:build      # SITE_BASE, SITE_ORIGIN and SITE_APP_URL are optional
 npm run site:preview    # serves dist-site on http://localhost:4175
 ```
+
+## The platform, trust and buying pages
+
+Ten pages added for buyers who cannot tell a plan from a product, each saying
+which is which. Their tables are data in `app/src/site/platform.ts`, so a
+claim is a row a test can read:
+
+| Route | Says |
+|---|---|
+| `/platform/availability/` | Every capability by plan — Individual students, Department, Institution, Enterprise — marked Available, Pilot, Planned or Services-led, with the sentence behind each row |
+| `/platform/service-map/` | The eight services in the order a student meets them, and who decides what: Semester coordinates, the record system certifies, the registrar registers, faculty own course policy, students control their plans |
+| `/platform/system-boundaries/` | Area by area, what Semester does and what stays authoritative elsewhere |
+| `/start/` | A student's first session, step by step, and the nine steps of an institution's pilot |
+| `/demo/` | The demo (built to `/demo/` beside the app), ending in a next step per audience rather than "Contact us" |
+| `/trust/product-quality/` | What is checked on every build, what is known, and what is deliberately not published; a build stamp when `SITE_COMMIT` or `GITHUB_SHA` is set |
+| `/launch/` | What a customer's private launch site holds, and that none exists yet |
+| `/pricing/how-it-works/` | What drives each tier's price, what implementation, support tiers, AI usage and migration mean, and how renewals avoid surprises |
+| `/proof-standards/` | No invented outcomes, no logos without permission, and adoption, use, experience and outcomes kept apart |
+| `/resources/campus-launch-kit/` | Email, announcement, signage and social templates, an FAQ, the source-label explainer and a launch agenda |
 
 ## Rules the tests hold
 

@@ -127,6 +127,9 @@ const Registrar = lazy(() => import('./screens/Registrar').then((m) => ({ defaul
 const Sources = lazy(() => import('./screens/Sources').then((m) => ({ default: m.Sources })));
 const AccountScreen = lazy(() => import('./screens/Account').then((m) => ({ default: m.AccountScreen })));
 const SlideDeck = lazy(() => import('./screens/Slides').then((m) => ({ default: m.SlideDeck })));
+const Activity = lazy(() => import('./screens/Activity').then((m) => ({ default: m.Activity })));
+const WhatsNew = lazy(() => import('./screens/WhatsNew').then((m) => ({ default: m.WhatsNew })));
+const Recovery = lazy(() => import('./screens/Recovery').then((m) => ({ default: m.Recovery })));
 export const Springboard = lazy(() => import('./screens/Springboard').then((m) => ({ default: m.Springboard })));
 export const Guides = lazy(() => import('./screens/Guides').then((m) => ({ default: m.Guides })));
 // Offline mode's badge (Phase M), mounted in the app shell under the header.
@@ -230,4 +233,7 @@ export const SCREENS: Record<Exclude<Screen, 'home' | 'onboarding'>, ComponentTy
   sources: Sources,
   account: AccountScreen,
   slides: SlideDeck,
+  activity: Activity,
+  whatsnew: WhatsNew,
+  recovery: Recovery,
 };

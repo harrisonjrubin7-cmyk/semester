@@ -32,6 +32,7 @@ import { migrationReport } from '../state/shape';
 import { cloudConfigured, deleteEverything, exportAccount } from '../lib/cloud';
 import { download } from '../lib/deliver';
 import { eraseDevice } from '../lib/erase';
+import { record, yours } from '../lib/journal';
 import { Toggle } from '../components/ui';
 import { SupportAccess } from '../components/SupportAccess';
 import { SchoolDataPanel } from '../components/SchoolRecords';
@@ -321,6 +322,7 @@ export function Privacy({ trustCenter = moduleOn(MODULE_FLAGS.trust_center) }: {
               void exportAccount()
                 .then((file) => {
                   download({ name: file.name, body: file.body, mime: 'application/json' });
+                  record(account?.id ?? null, { kind: 'export-requested', detail: file.name, provenance: yours('This device only', 'Done') });
                   setGot(`Saved “${file.name}”, with rows from ${file.tables} ${file.tables === 1 ? 'table' : 'tables'}.`);
                 })
                 .catch((e: unknown) =>
