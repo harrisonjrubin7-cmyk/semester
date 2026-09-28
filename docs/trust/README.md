@@ -12,6 +12,12 @@ than copying it. `docs/market-readiness/` and `docs/market-readiness/HECVAT_READ
 remain the operating registers. This folder is what gets handed across the
 table.
 
+How it gets handed across is a separate piece: the NDA-gated, expiring,
+logged room in `supabase/migrations/20260928100000_trust_room.sql` and
+`app/src/screens/TrustRoom.tsx` publishes exact versions of documents like
+these to a named reviewer. This folder is the content, and the room is the
+delivery mechanism.
+
 **Three rules hold for everything here:**
 
 1. **No certification claims.** Semester has no SOC 2 report, no ACR, no
