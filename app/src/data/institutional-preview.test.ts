@@ -77,7 +77,9 @@ describe('synthetic institutional preview fixtures', () => {
     const importers = readdirSync(sourceRoot, { recursive: true, withFileTypes: true })
       .filter((entry) => entry.isFile() && /\.(ts|tsx)$/.test(entry.name) && !entry.name.includes('.test.'))
       .map((entry) => resolve(entry.parentPath, entry.name))
-      .filter((path) => readFileSync(path, 'utf8').includes("data/institutional-preview"))
+      // An import specifier, static or dynamic — not any mention of the path, so
+      // a readiness register citing this file as evidence is not an importer.
+      .filter((path) => /(?:from|import\()\s*['"][^'"]*data\/institutional-preview['"]/.test(readFileSync(path, 'utf8')))
       .map((path) => relative(sourceRoot, path));
     expect(importers).toEqual(['components/institutional/PreviewContext.tsx']);
   });

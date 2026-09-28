@@ -46,7 +46,7 @@ Part 5 of the expansion command. Phase 3. **Waits for #779 (kill switches) and
 | `support_slas` | **Columns** on `help_destinations` | Response target per destination |
 | `on_call_rotations` | **Not a table** | The pager tool owns the rotation; the incident stores who was on call |
 | `war_room_events` | **Flag** `ops.war_room` + incidents | Registration-week mode is heightened monitoring and a staffed channel |
-| `slo_definitions`, `error_budgets` | **Documentation** + CI thresholds | An SLO a machine checks lives beside the check |
+| `slo_definitions`, `error_budgets` | **Documentation** + CI thresholds: [SLOS-AND-ERROR-BUDGETS.md](operating-model/SLOS-AND-ERROR-BUDGETS.md), `error-budgets.ts` | An SLO a machine checks lives beside the check |
 | `sli_measurements` | **New**, aggregate per component per hour | No per-user rows |
 | `synthetic_monitor_checks` | **Reuse** the smoke workflows | They already run hourly |
 | `capacity_plans`, `load_test_runs`, `backup_restore_verifications` | **Documents** with dated evidence, like `docs/institutional-rollout` | Evidence, not live data |

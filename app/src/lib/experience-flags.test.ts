@@ -14,6 +14,11 @@ describe('experience feature states', () => {
       'off',
     );
   });
+
+  it('never lets an institutional preview send a real support ticket', () => {
+    expect(experienceFlags({ VITE_INSTITUTIONAL_PREVIEW: 'true' }).supportTickets).toBe('off');
+    expect(experienceFlags({ VITE_SUPPORT_TICKETS: 'sandbox' }).supportTickets).toBe('sandbox');
+  });
 });
 
 describe('feature-expansion module flags', () => {
