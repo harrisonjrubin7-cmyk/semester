@@ -70,7 +70,7 @@ interface Rule {
  * school, study abroad. Wellbeing first, for the reason in the header.
  */
 const RULES: Rule[] = [
-  { need: 'wellbeing', patterns: [/\b(anxious|anxiety|depress|panic|overwhelm|can'?t cope|cannot cope|lonely|hopeless|hurt myself|crisis|counsel|therap|mental health|stress(ed)? out|burn(ed|t)? out)/i] },
+  { need: 'wellbeing', patterns: [/\b(kill(ing)? myself|suicid|end (it all|my life|everything)|want to die|wish i (was|were) dead|don[’']?t want to (live|be here|be alive|wake up)|no reason to live|self.?harm|hurt(ing)? myself|cut(ting)? myself|overdose)/i, /\b(anxious|anxiety|depress|panic|overwhelm|can[’']?t cope|cannot cope|lonely|hopeless|crisis|counsel|therap|mental health|stress(ed)? out|burn(ed|t)? out)/i] },
   { need: 'accessibility', patterns: [/\b(accommodat|disabilit|accessib|screen reader|extended time|extra time|note.?taker|adhd|dyslex|captions?\b)/i] },
   { need: 'money', patterns: [/\b(pay(ing)? for|afford|tuition|financial aid|fafsa|scholarship|loan\b|loans\b|bursar|bill\b|bills\b|balance due|refund|work.?study|cost of)/i] },
   { need: 'registration', patterns: [/\b(regist(er|ration)|enrol+|hold on my|waitlist|add.?drop|withdraw|degree audit|requirement|prerequisite|prereq|credits? (count|transfer)|transfer|study abroad|abroad|change (my )?major|declare|minor\b|schedule|graduat)/i] },

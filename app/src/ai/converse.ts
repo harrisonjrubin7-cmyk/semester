@@ -5,6 +5,7 @@ import { provider } from '../lib/assistant';
 import type { Usage } from '../lib/spend';
 import { build as buildContext } from '../lib/context';
 import { readMode, type Mode, type Read } from '../lib/mode';
+import { quality, sourcesRead } from './quality';
 import type { Thread } from '../lib/threads';
 import { systemPrompt } from './prompt';
 import { answerLocally, type Local } from '../lib/localask';
@@ -319,6 +320,19 @@ export function useConversation(): Conversation {
    */
   const limits = useMemo(() => tutorPolicy(catalog.byId[state.guideId]), [catalog, state.guideId]);
 
+  /** Whether help is available now — the same answer the screen shows, recorded on each reply. */
+  const helpNow = useMemo(
+    () =>
+      helpState({
+        governed,
+        lookup: live.policyLookup,
+        allowed: governed ? live.allowedIntegrityModes : limits.allowed,
+        course: limits.code,
+        instead: limits.instead,
+      }),
+    [governed, live.policyLookup, live.allowedIntegrityModes, limits],
+  );
+
   const send = useCallback(
     /*
      * `from` is which conversation this question is being added to, and
@@ -367,8 +381,12 @@ export function useConversation(): Conversation {
        */
       let spent: Usage | null = null;
       let responseContext: IntelligenceRequest | null = null;
+      /** Everything this answer drew on: what travelled, plus what it fetched. Outside the try so a stopped answer keeps its context too. */
+      let drew = new Set<string>();
+      const how = readMode(text);
+      /** How to read the answer, recorded on its turn: see `ai/quality.ts`. */
+      const qualityNow = () => quality({ read: how, help: helpNow, sources: sourcesRead([...drew], responseContext?.evidence.length ?? 0) });
       try {
-        const how = readMode(text);
         setRead(how);
         const local = localFor(text, how.mode, offered(school.capabilities, state.role));
         setLocally(local);
@@ -457,8 +475,7 @@ export function useConversation(): Conversation {
           assembledAt: now.toISOString(),
         });
         responseContext = intelligence;
-        /** Everything this answer drew on: what travelled, plus what it fetched. */
-        const drew = new Set(drawn.used);
+        drew = new Set(drawn.used);
         for (const item of intelligence.evidence) drew.add(`${item.title} — ${item.locator}`);
         setUsed([...drew]);
 
@@ -671,7 +688,7 @@ export function useConversation(): Conversation {
         }
         remember([
           ...next,
-          { role: 'assistant', content: reply, ...(ranOut ? { incomplete: true } : {}) },
+          { role: 'assistant', content: reply, quality: qualityNow(), ...(ranOut ? { incomplete: true } : {}) },
         ]);
       } catch (e) {
         // Pressing Stop is a decision, not a failure. Keep what had arrived.
@@ -679,7 +696,7 @@ export function useConversation(): Conversation {
           // Kept, and marked. Half an answer is context worth having; half an
           // answer that looks whole is a conclusion the model never reached.
           if (sofar.trim()) {
-            remember([...next, { role: 'assistant', content: sofar, incomplete: true }]);
+            remember([...next, { role: 'assistant', content: sofar, incomplete: true, quality: qualityNow() }]);
           }
         } else {
           trouble.failed(e, () => void sender.run(text));
@@ -717,7 +734,7 @@ export function useConversation(): Conversation {
     },
     // No `dispatch`: the one call `send` made was the search the card
     // promised and no screen ran. See the note on `Proposal` in `lib/tools.ts`.
-    [busy, turns, remember, trouble, ai, state, catalog, now, school, account?.id, integrityMode, systemFor, held, limits, governed],
+    [busy, turns, remember, trouble, ai, state, catalog, now, school, account?.id, integrityMode, systemFor, held, limits, governed, helpNow],
   );
 
   /*
@@ -823,13 +840,7 @@ export function useConversation(): Conversation {
     integrityMode,
     allowedIntegrityModes: governed ? live.allowedIntegrityModes : limits.allowed,
     integrityReason: governed ? 'Available modes are set by verified university policy.' : limits.reason,
-    help: helpState({
-      governed,
-      lookup: live.policyLookup,
-      allowed: governed ? live.allowedIntegrityModes : limits.allowed,
-      course: limits.code,
-      instead: limits.instead,
-    }),
+    help: helpNow,
     retryPolicy: () => setLive('policyTry', liveNow().policyTry + 1),
     setIntegrityMode: (mode) => setLive('integrityMode', mode),
     proposals,

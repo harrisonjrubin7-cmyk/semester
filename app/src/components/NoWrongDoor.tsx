@@ -26,7 +26,7 @@ export function NoWrongDoor() {
 
   const ask = (d: Door) => {
     if (EXPERIENCE_FLAGS.humanHelp === 'off' || d.handoff === 'directory') return;
-    seedHelp({ need: d.need.id, from: 'From “Describe the problem” on Help', fields: {} }, () => dispatch({ type: 'go', screen: 'university' }));
+    seedHelp({ need: d.need.id, from: 'From “Describe the problem” on Help', fields: {}, question: (asked ?? '').trim() }, () => dispatch({ type: 'go', screen: 'university' }));
   };
 
   return (

@@ -34,6 +34,11 @@ describe('the policy simulator', () => {
     expect(s.reviewers).toEqual([...TIER_REVIEWERS[3]]);
     expect(s.refused).toBeNull();
     expect(simulateModule({ kind: 'module-off', module: 'offline_mode', scope: 'tenant' }).who).toContain('institution');
+    // Only Course Studio has a per-course switch; a course scope on any other module is refused, not described.
+    expect(Object.entries(MODULE_EFFECTS).filter(([, e]) => e.perCourse).map(([m]) => m)).toEqual(['course_studio']);
+    const wrong = simulateModule({ kind: 'module-off', module: 'offline_mode', scope: 'course', course: 'ECON 1020' });
+    expect(wrong.refused).toMatch(/no per-course switch/);
+    expect(wrong.workflows).toEqual([]);
   });
 
   it('answers the three questions the brief asks before a retention clock changes', () => {

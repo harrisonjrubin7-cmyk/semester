@@ -46,26 +46,35 @@ export interface ModuleEffect {
   support: string[];
   /** The configuration tier of the switch, which decides the reviewers. */
   tier: Tier;
+  /**
+   * Whether a course can switch it. Every module is switched by an
+   * institution-wide build variable (`MODULE_FLAG_ENV`); only Course Studio
+   * also has a per-course policy an instructor publishes, so only it can be
+   * simulated for one course. Simulating a course scope for any other module
+   * is refused rather than described, because the described consequence is
+   * one the implemented controls cannot produce.
+   */
+  perCourse: boolean;
 }
 
 export const MODULE_EFFECTS: Record<ModuleFlag, ModuleEffect> = {
-  today_action_center: { label: 'Action Center on Today', screens: ['home'], workflows: ['Ranked actions on Today', '“Ask for help” from an action'], alternatives: ['The Today briefing with due, on and next', 'Key dates on the registrar screen'], support: ['docs/TODAY-ACTION-CENTER.md', 'docs/launch/FAQ.md'], tier: 2 },
-  registration_day_mode: { label: 'Registration day mode', screens: ['registrar'], workflows: ['The registration-day checklist and countdown', 'Backup picks beside the plan'], alternatives: ['The registrar screen’s dates and the plan’s conflict check', 'The public registration checklist tool'], support: ['docs/REGISTRATION-DAY-MODE.md', 'docs/launch/FAQ.md'], tier: 2 },
-  graduation_simulator: { label: 'Graduation simulator', screens: ['pathway'], workflows: ['Terms-to-finish scenarios on the degree path'], alternatives: ['The degree path’s remaining requirements', 'The public graduation timeline tool'], support: ['docs/GRADUATION-AND-COST-SIMULATOR.md'], tier: 2 },
-  cost_planner: { label: 'Cost planner', screens: ['costs'], workflows: ['Term cost scenarios'], alternatives: ['Costs as entered, without scenarios', 'The financial-aid office, by directory'], support: ['docs/GRADUATION-AND-COST-SIMULATOR.md', 'docs/FINANCIAL-READINESS-WORKSPACE.md'], tier: 2 },
-  academic_life_balance: { label: 'Academic-life balance', screens: ['home', 'calendar'], workflows: ['Load and balance on the week'], alternatives: ['The calendar and the week as they are'], support: ['docs/ACADEMIC-LIFE-BALANCE.md'], tier: 2 },
-  crunch_week_forecast: { label: 'Crunch-week forecast', screens: ['home', 'calendar'], workflows: ['The heavy-week warning'], alternatives: ['The calendar’s own view of the week'], support: ['docs/ACADEMIC-LIFE-BALANCE.md'], tier: 2 },
-  course_detail_v2: { label: 'Course detail, second design', screens: ['courses'], workflows: ['The redesigned course screen'], alternatives: ['The course screen as it was'], support: ['docs/COURSE-DETAIL-V2.md'], tier: 2 },
-  advisor_meeting_mode: { label: 'Advisor meeting mode', screens: ['meet'], workflows: ['The advising agenda and its sharing'], alternatives: ['The public advisor meeting planner', 'A note the student writes and brings'], support: ['docs/ADVISOR-MEETING-MODE.md', 'docs/launch/FAQ.md'], tier: 2 },
-  study_readiness: { label: 'Study readiness', screens: ['study'], workflows: ['Readiness per unit before an exam'], alternatives: ['The study guide and practice as they are'], support: ['docs/STUDY-READINESS-AND-SOURCE-LOCKER.md'], tier: 2 },
-  source_locker: { label: 'Source locker', screens: ['study'], workflows: ['Locking the sources a study session may use'], alternatives: ['Sources chosen per session, unlocked'], support: ['docs/STUDY-READINESS-AND-SOURCE-LOCKER.md'], tier: 3 },
-  career_evidence: { label: 'Career evidence', screens: ['career'], workflows: ['Evidence of skills collected from coursework'], alternatives: ['Applications and deadlines without evidence'], support: ['docs/CAREER-EVIDENCE.md'], tier: 2 },
-  office_action_feed: { label: 'Office action feed', screens: ['home', 'registrar'], workflows: ['Actions published by campus offices reaching students', 'The office desk for accounts that may publish'], alternatives: ['Offices reach students through their own portals and mail', 'Key dates entered by the student'], support: ['docs/OFFICE-ACTION-FEED.md', 'docs/launch/FAQ.md'], tier: 3 },
-  demand_forecasting: { label: 'Course demand forecasting', screens: ['university'], workflows: ['Staff demand counts at n ≥ 10'], alternatives: ['The institution’s own enrollment reports'], support: ['docs/COURSE-DEMAND-FORECASTING.md'], tier: 3 },
-  semester_wrapped: { label: 'Semester wrapped', screens: ['home'], workflows: ['The end-of-term summary'], alternatives: ['Grades and the calendar as they stand'], support: ['docs/SEMESTER-WRAPPED.md'], tier: 2 },
-  offline_mode: { label: 'Offline mode', screens: ['home', 'recovery'], workflows: ['Working without a connection, with the sync record'], alternatives: ['The device copy still opens; sync waits for a connection'], support: ['docs/OFFLINE-MODE.md', 'docs/launch/KNOWN-LIMITATIONS.md'], tier: 2 },
-  trust_center: { label: 'Trust center', screens: ['privacy'], workflows: ['The in-app trust center'], alternatives: ['The public security, privacy and accessibility pages'], support: ['docs/TRUST-CENTER.md'], tier: 3 },
-  course_studio: { label: 'Course Studio', screens: ['courses', 'ask', 'study'], workflows: ['An instructor publishing rules and guidance', 'The course’s AI policy shown before the assistant answers', 'Faculty-approved study packs'], alternatives: ['The AI policy the student records for the course', 'Rules the instructor publishes on the syllabus'], support: ['docs/FACULTY-COURSE-STUDIO-DESIGN.md', 'docs/FACULTY-ENABLEMENT.md', 'docs/launch/FAQ.md'], tier: 3 },
+  today_action_center: { label: 'Action Center on Today', screens: ['home'], workflows: ['Ranked actions on Today', '“Ask for help” from an action'], alternatives: ['The Today briefing with due, on and next', 'Key dates on the registrar screen'], support: ['docs/TODAY-ACTION-CENTER.md', 'docs/launch/FAQ.md'], tier: 2, perCourse: false },
+  registration_day_mode: { label: 'Registration day mode', screens: ['registrar'], workflows: ['The registration-day checklist and countdown', 'Backup picks beside the plan'], alternatives: ['The registrar screen’s dates and the plan’s conflict check', 'The public registration checklist tool'], support: ['docs/REGISTRATION-DAY-MODE.md', 'docs/launch/FAQ.md'], tier: 2, perCourse: false },
+  graduation_simulator: { label: 'Graduation simulator', screens: ['pathway'], workflows: ['Terms-to-finish scenarios on the degree path'], alternatives: ['The degree path’s remaining requirements', 'The public graduation timeline tool'], support: ['docs/GRADUATION-AND-COST-SIMULATOR.md'], tier: 2, perCourse: false },
+  cost_planner: { label: 'Cost planner', screens: ['costs'], workflows: ['Term cost scenarios'], alternatives: ['Costs as entered, without scenarios', 'The financial-aid office, by directory'], support: ['docs/GRADUATION-AND-COST-SIMULATOR.md', 'docs/FINANCIAL-READINESS-WORKSPACE.md'], tier: 2, perCourse: false },
+  academic_life_balance: { label: 'Academic-life balance', screens: ['home', 'calendar'], workflows: ['Load and balance on the week'], alternatives: ['The calendar and the week as they are'], support: ['docs/ACADEMIC-LIFE-BALANCE.md'], tier: 2, perCourse: false },
+  crunch_week_forecast: { label: 'Crunch-week forecast', screens: ['home', 'calendar'], workflows: ['The heavy-week warning'], alternatives: ['The calendar’s own view of the week'], support: ['docs/ACADEMIC-LIFE-BALANCE.md'], tier: 2, perCourse: false },
+  course_detail_v2: { label: 'Course detail, second design', screens: ['courses'], workflows: ['The redesigned course screen'], alternatives: ['The course screen as it was'], support: ['docs/COURSE-DETAIL-V2.md'], tier: 2, perCourse: false },
+  advisor_meeting_mode: { label: 'Advisor meeting mode', screens: ['meet'], workflows: ['The advising agenda and its sharing'], alternatives: ['The public advisor meeting planner', 'A note the student writes and brings'], support: ['docs/ADVISOR-MEETING-MODE.md', 'docs/launch/FAQ.md'], tier: 2, perCourse: false },
+  study_readiness: { label: 'Study readiness', screens: ['study'], workflows: ['Readiness per unit before an exam'], alternatives: ['The study guide and practice as they are'], support: ['docs/STUDY-READINESS-AND-SOURCE-LOCKER.md'], tier: 2, perCourse: false },
+  source_locker: { label: 'Source locker', screens: ['study'], workflows: ['Locking the sources a study session may use'], alternatives: ['Sources chosen per session, unlocked'], support: ['docs/STUDY-READINESS-AND-SOURCE-LOCKER.md'], tier: 3, perCourse: false },
+  career_evidence: { label: 'Career evidence', screens: ['career'], workflows: ['Evidence of skills collected from coursework'], alternatives: ['Applications and deadlines without evidence'], support: ['docs/CAREER-EVIDENCE.md'], tier: 2, perCourse: false },
+  office_action_feed: { label: 'Office action feed', screens: ['home', 'registrar'], workflows: ['Actions published by campus offices reaching students', 'The office desk for accounts that may publish'], alternatives: ['Offices reach students through their own portals and mail', 'Key dates entered by the student'], support: ['docs/OFFICE-ACTION-FEED.md', 'docs/launch/FAQ.md'], tier: 3, perCourse: false },
+  demand_forecasting: { label: 'Course demand forecasting', screens: ['university'], workflows: ['Staff demand counts at n ≥ 10'], alternatives: ['The institution’s own enrollment reports'], support: ['docs/COURSE-DEMAND-FORECASTING.md'], tier: 3, perCourse: false },
+  semester_wrapped: { label: 'Semester wrapped', screens: ['home'], workflows: ['The end-of-term summary'], alternatives: ['Grades and the calendar as they stand'], support: ['docs/SEMESTER-WRAPPED.md'], tier: 2, perCourse: false },
+  offline_mode: { label: 'Offline mode', screens: ['home', 'recovery'], workflows: ['Working without a connection, with the sync record'], alternatives: ['The device copy still opens; sync waits for a connection'], support: ['docs/OFFLINE-MODE.md', 'docs/launch/KNOWN-LIMITATIONS.md'], tier: 2, perCourse: false },
+  trust_center: { label: 'Trust center', screens: ['privacy'], workflows: ['The in-app trust center'], alternatives: ['The public security, privacy and accessibility pages'], support: ['docs/TRUST-CENTER.md'], tier: 3, perCourse: false },
+  course_studio: { label: 'Course Studio', screens: ['courses', 'ask', 'study'], workflows: ['An instructor publishing rules and guidance', 'The course’s AI policy shown before the assistant answers', 'Faculty-approved study packs'], alternatives: ['The AI policy the student records for the course', 'Rules the instructor publishes on the syllabus'], support: ['docs/FACULTY-COURSE-STUDIO-DESIGN.md', 'docs/FACULTY-ENABLEMENT.md', 'docs/launch/FAQ.md'], tier: 3, perCourse: true },
 };
 
 export type Scope = 'course' | 'tenant';
@@ -142,6 +151,22 @@ const AUDIT_RECORDS = ['Who made it and under which capability', 'The tenant, an
 
 export function simulateModule(change: ModuleChange): Simulation {
   const e = MODULE_EFFECTS[change.module];
+  if (change.scope === 'course' && !e.perCourse) {
+    return {
+      change: `Turn ${e.label} off in one course.`,
+      who: '',
+      workflows: [],
+      alternatives: [],
+      support: [],
+      dataClasses: [],
+      exports: [],
+      deletions: [],
+      contracts: [],
+      audit: { event: `policy.module.${change.module}.off`, records: [] },
+      reviewers: [],
+      refused: `${e.label} is switched for the whole institution by its build setting; there is no per-course switch, so a course-only change cannot be simulated. Simulate it for the whole institution.`,
+    };
+  }
   const where = change.scope === 'course' ? `in ${change.course?.trim() || 'this course'}` : 'for the whole institution';
   return {
     change: `Turn ${e.label} off ${where}.`,

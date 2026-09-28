@@ -582,6 +582,8 @@ export interface HelpSeed {
   fields: Partial<Record<ContextKey, string>>;
   /** Shown above the form, so the student knows why it is filled in. */
   from: string;
+  /** The question, when the screen that sent the student already has it in their words. */
+  question?: string;
 }
 
 const dateLine = (at: number) =>

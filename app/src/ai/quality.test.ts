@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { isKind } from '../lib/feedback';
-import { REASONS, policyState, quality, sourceStrength } from './quality';
+import { REASONS, policyState, quality, sourceStrength, sourcesRead } from './quality';
 
 const grounded = { mode: 'grounded' as const, says: 'Using: your courses', because: '', screens: [] };
 const app = { mode: 'app' as const, says: 'About the app', because: '', screens: ['help'] };
@@ -42,5 +42,14 @@ describe('answer quality', () => {
       expect(isKind(r.report!.kind), r.id).toBe(true);
       expect(r.report!.note.endsWith(': '), r.id).toBe(true);
     }
+  });
+
+  it('counts material read, never the generic context lines', () => {
+    const generic = ["today's date", 'the active term', 'which screen you are on', 'what this screen is showing'];
+    expect(sourcesRead(generic, 0)).toBe(0);
+    expect(sourceStrength(grounded, sourcesRead(generic, 0))).toBe('limited');
+    expect(sourcesRead([...generic, 'ECON 1020 study material', 'PSCI 1100 study material'], 0)).toBe(2);
+    expect(sourcesRead(generic, 3)).toBe(3);
+    expect(sourceStrength(grounded, sourcesRead(['ECON 1020 study material'], 0))).toBe('strong');
   });
 });

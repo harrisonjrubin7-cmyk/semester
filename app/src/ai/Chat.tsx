@@ -9,7 +9,6 @@ import { useVoice } from './usevoice';
 import { configured } from '../lib/assistant';
 import { Composer, sendHint } from './Composer';
 import { Dropped, Question, Reply, Waiting, Looked, Using, useFollowing } from './Turns';
-import { quality } from './quality';
 import { Threads, ThreadsOver } from './Threads';
 import { Opening } from './Opening';
 import { Applied, Holding, Locally, Proposals } from './Actions';
@@ -243,7 +242,7 @@ export function Chat() {
                   text={t.content}
                   incomplete={t.incomplete}
                   onRetry={i === talk.turns.length - 1 ? (talk.redo ?? undefined) : undefined}
-                  quality={i === talk.turns.length - 1 && !talk.busy ? quality({ read: talk.read, help: talk.help, sources: talk.used.length }) : undefined}
+                  quality={t.quality}
                   /*
                    * The offers belong to the answer that made them, and sit
                    * inside it rather than in a tray at the bottom.

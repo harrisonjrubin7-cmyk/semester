@@ -9,7 +9,6 @@ import { canSend, useConversation } from './converse';
 import { Composer, sendHint } from './Composer';
 import { useVoice } from './usevoice';
 import { Dropped, Question, Reply, Waiting, Looked, Using, useFollowing } from './Turns';
-import { quality } from './quality';
 import { Opening } from './Opening';
 import { money } from '../lib/spend';
 import { configured } from '../lib/assistant';
@@ -549,7 +548,7 @@ export function Panel({ side }: { side: 'right' | 'left' }) {
                         text={t.content}
                         incomplete={t.incomplete}
                         onRetry={i === talk.turns.length - 1 ? (talk.redo ?? undefined) : undefined}
-                        quality={i === talk.turns.length - 1 && !talk.busy ? quality({ read: talk.read, help: talk.help, sources: talk.used.length }) : undefined}
+                        quality={t.quality}
                         /*
                          * The offers belong to the answer that made them.
                          *

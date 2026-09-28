@@ -45,6 +45,18 @@ export interface QualityInput {
   sources: number;
 }
 
+/**
+ * How many pieces of the student's own material an answer had: the saved
+ * sources attached as evidence, plus each course whose study material the
+ * context builder read. The generic lines it always adds — today's date, the
+ * active term, which screen — are not material and are not counted, so a
+ * grounded answer that read nothing of the student's is “limited”, not
+ * “strong”.
+ */
+export function sourcesRead(used: readonly string[], evidence: number): number {
+  return evidence + used.filter((u) => /study material$/.test(u)).length;
+}
+
 export function sourceStrength(read: Read | null, sources: number): SourceStrength {
   if (!read) return 'none';
   if (read.mode === 'grounded') return sources > 0 ? 'strong' : 'limited';

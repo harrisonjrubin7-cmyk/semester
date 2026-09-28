@@ -17,6 +17,11 @@ describe('no wrong door', () => {
   it('hears distress before the subject it is about', () => {
     expect(match('I am so overwhelmed by my schedule I cannot cope')).toBe('wellbeing');
     expect(match('I feel anxious about the exam')).toBe('wellbeing');
+    // The direct formulations, each of which must never fall through to the list of every door.
+    for (const s of ['I want to kill myself', 'I am suicidal', 'I am thinking about suicide', 'I want to end my life', 'I want to die', 'I don’t want to be here anymore', 'I have been self-harming', 'I keep hurting myself', 'there is no reason to live']) {
+      expect(match(s), s).toBe('wellbeing');
+      expect(route(s)?.need.id, s).toBe('wellbeing');
+    }
     expect(door('wellbeing').handoff).toBe('directory');
     expect(door('wellbeing').owner).toBe('Campus counseling service');
   });

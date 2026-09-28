@@ -38,6 +38,7 @@ import {
 
 import { sessionToken } from './token';
 import { held, preamble } from './aboutme';
+import type { Quality } from '../ai/quality';
 import { readFound, searchTool, type Found } from './research';
 import { NOTHING_ARRIVED, askOpenAI } from './openai';
 import {
@@ -71,6 +72,13 @@ export interface Turn {
    * API that validates them.
    */
   incomplete?: boolean;
+  /**
+   * How to read this answer — source strength, policy state, limits — as it
+   * stood when the answer was made. Ours, like `incomplete`: recorded on the
+   * assistant turn so every reply keeps its own context, and stripped by
+   * `asSent` before the turns go to a provider.
+   */
+  quality?: Quality;
   /**
    * The tools this answer asked to have run, on an assistant turn.
    *
@@ -727,8 +735,8 @@ export const CUT_OFF = '[This answer was stopped here and is unfinished.]';
  * the stopped turn" is exactly the kind of thing four call sites do three ways.
  */
 export function asSent(messages: Turn[]): Turn[] {
-  if (!messages.some((m) => m.incomplete)) return messages;
-  return messages.map(({ incomplete, ...turn }) =>
+  if (!messages.some((m) => m.incomplete || m.quality)) return messages;
+  return messages.map(({ incomplete, quality: _quality, ...turn }) =>
     // Spread rather than rebuilt from two fields: this used to name `role` and
     // `content` and nothing else, which quietly dropped the tool calls off a
     // conversation the moment anything in it had been stopped — and a

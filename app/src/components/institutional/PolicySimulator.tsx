@@ -17,7 +17,7 @@ export function PolicySimulator() {
   const [days, setDays] = useState('180');
 
   const change: Change = useMemo(
-    () => (kind === 'module-off' ? { kind, module, scope, course } : { kind, clock, toDays: Number(days) }),
+    () => (kind === 'module-off' ? { kind, module, scope: MODULE_EFFECTS[module].perCourse ? scope : 'tenant', course } : { kind, clock, toDays: Number(days) }),
     [kind, module, scope, course, clock, days],
   );
   const sim = useMemo(() => simulate(change), [change]);
@@ -50,12 +50,12 @@ export function PolicySimulator() {
             </label>
             <label className="policy-sim-field">
               <span>Scope</span>
-              <select className="input" value={scope} onChange={(e) => setScope(e.target.value as 'course' | 'tenant')}>
-                <option value="course">One course</option>
+              <select className="input" value={MODULE_EFFECTS[module].perCourse ? scope : 'tenant'} onChange={(e) => setScope(e.target.value as 'course' | 'tenant')}>
+                {MODULE_EFFECTS[module].perCourse && <option value="course">One course</option>}
                 <option value="tenant">Whole institution</option>
               </select>
             </label>
-            {scope === 'course' && (
+            {scope === 'course' && MODULE_EFFECTS[module].perCourse && (
               <label className="policy-sim-field">
                 <span>Course</span>
                 <input className="input" value={course} placeholder="ECON 1020" onChange={(e) => setCourse(e.target.value)} />
