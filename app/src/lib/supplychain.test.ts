@@ -126,6 +126,18 @@ describe('the workflows', () => {
     for (const w of workflows()) for (const u of usesIn(w.text)) expect(u, w.file).toMatch(/@\S+$/);
   });
 
+  it('gives every workflow a least-privilege token by default', () => {
+    // A write scope at the top applies to every job; only the Pages deploy needs one.
+    const allowed: Record<string, string[]> = { 'pages.yml': ['pages', 'id-token'] };
+    for (const w of workflows()) {
+      const top = /^permissions:\n((?:[ \t]+.*\n)+)/m.exec(w.text);
+      expect(top, `${w.file} declares no top-level permissions`).not.toBeNull();
+      const writes = [...top![1].matchAll(/^\s+([\w-]+):\s*write/gm)].map((m) => m[1]);
+      expect(writes, w.file).toEqual(allowed[w.file] ?? []);
+      expect(top![1], w.file).toMatch(/contents:\s*read/);
+    }
+  });
+
   it('keeps Actions updated by Dependabot alongside npm', () => {
     const dependabot = read('.github/dependabot.yml');
     expect(dependabot).toMatch(/package-ecosystem: github-actions/);
@@ -191,7 +203,8 @@ function render(): string {
     '| Control | Held by |',
     '| --- | --- |',
     '| Lockfile installed exactly (`npm ci`) | `ci.yml`, `pages.yml` |',
-    '| Known advisories fail the build | `ci.yml` — `npm audit --audit-level=high` |',
+    '| Known advisories reported on every run — non-blocking by design, so an advisory published overnight does not turn an unrelated PR red; see the comment on the step | `ci.yml` — `npm audit --audit-level=high` |',
+    '| Every workflow\'s job token is read-only unless a job asks for more | `app/src/lib/supplychain.test.ts` |',
     '| Fix PRs for advisories and updates, npm and Actions | `.github/dependabot.yml` |',
     '| Secrets never committed | `ci.yml` — gitleaks, `.gitleaks.toml` |',
     '| Every package under an approved or named licence | `app/src/lib/supplychain.test.ts` |',

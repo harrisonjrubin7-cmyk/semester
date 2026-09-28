@@ -10,7 +10,8 @@ workflow step from an unapproved publisher fails CI.
 | Control | Held by |
 | --- | --- |
 | Lockfile installed exactly (`npm ci`) | `ci.yml`, `pages.yml` |
-| Known advisories fail the build | `ci.yml` — `npm audit --audit-level=high` |
+| Known advisories reported on every run — non-blocking by design, so an advisory published overnight does not turn an unrelated PR red; see the comment on the step | `ci.yml` — `npm audit --audit-level=high` |
+| Every workflow's job token is read-only unless a job asks for more | `app/src/lib/supplychain.test.ts` |
 | Fix PRs for advisories and updates, npm and Actions | `.github/dependabot.yml` |
 | Secrets never committed | `ci.yml` — gitleaks, `.gitleaks.toml` |
 | Every package under an approved or named licence | `app/src/lib/supplychain.test.ts` |

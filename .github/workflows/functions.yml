@@ -76,6 +76,14 @@ concurrency:
   group: functions
   cancel-in-progress: false
 
+# The job token may read the repository and nothing else, unless a job says
+# otherwise below. Without this line every job gets the repository's default
+# token, which a Settings change can make read-write, and a compromised Action
+# or dependency runs with whatever that is. `supplychain.test.ts` requires
+# every workflow to declare this.
+permissions:
+  contents: read
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
