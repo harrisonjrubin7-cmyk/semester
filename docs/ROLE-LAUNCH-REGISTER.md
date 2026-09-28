@@ -101,8 +101,8 @@ Two further limits on what the columns below prove:
 
 | Role | State | Def · Mod · Prov · Use · Sec · Sup · Appr | Capabilities | Interface | Authorization checks | Runbook | Training | Must be able to | Must never |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `platform_admin` | modeled | ✓ ✓ · ✓ ✓ · · | `report:read`<br>`moderation:action`<br>`platform:configure` | `app/src/screens/Moderation.tsx` | `capabilities.check.sql`<br>`community.check.sql`<br>`governance.check.sql`<br>`integration-quality.check.sql`<br>`lti-capability.check.sql`<br>`rolegrants.check.sql` | — | — | Maintain platform operations under least privilege and audit | Automatic access to all application data |
-| `support_agent` | modeled | ✓ ✓ · · ✓ · · | `support:ticket` | — | `support-tickets.check.sql` | `docs/market-readiness/SUPPORT_PLAYBOOK.md` | — | Handle support tickets and approved support-access sessions | Student data without live student-created grant |
+| `platform_admin` | modeled | ✓ ✓ · ✓ ✓ · · | `report:read`<br>`moderation:action`<br>`platform:configure`<br>`beta:manage`<br>`beta:triage` | `app/src/screens/Moderation.tsx` | `beta.check.sql`<br>`capabilities.check.sql`<br>`community.check.sql`<br>`governance.check.sql`<br>`integration-quality.check.sql`<br>`lti-capability.check.sql`<br>`rolegrants.check.sql` | — | — | Maintain platform operations under least privilege and audit | Automatic access to all application data |
+| `support_agent` | modeled | ✓ ✓ · · ✓ · · | `support:ticket`<br>`beta:triage` | — | `beta.check.sql`<br>`support-tickets.check.sql` | `docs/market-readiness/SUPPORT_PLAYBOOK.md` | — | Handle support tickets and approved support-access sessions | Student data without live student-created grant |
 | `incident_responder` | modeled | ✓ ✓ · · ✓ · · | `killswitch:engage`<br>`incident:communicate` | — | `governance.check.sql`<br>`integration-control-plane.check.sql` | `docs/CRISIS-RESPONSE-RUNBOOK.md` | — | Engage a kill switch and communicate an incident | Student data beyond what the incident requires |
 | `moderator` | modeled | ✓ ✓ · ✓ ✓ ✓ · | `report:read`<br>`moderation:action`<br>`review:moderate`<br>`opportunity:moderate` | `app/src/screens/Moderation.tsx`<br>`app/src/components/ListingDesk.tsx` | `capabilities.check.sql`<br>`community.check.sql`<br>`expansion.check.sql`<br>`listings.check.sql`<br>`moderation-audit.check.sql`<br>`my-capabilities.check.sql`<br>`reports.check.sql`<br>`rolegrants.check.sql` | `docs/CAMPUS-MODERATION-SOP.md` | `docs/VOLUNTEER-MODERATOR-PROGRAM.md` | Moderate reviews/opportunities, with author access strictly audited | Unrelated private student data |
 | `trust_safety_reviewer` | modeled | ✓ ✓ · ✓ ✓ ✓ · | `community:review` | `app/src/components/community/Escalation.tsx` | `community.check.sql` | `docs/CAMPUS-MODERATION-SOP.md`<br>`docs/CAMPUS-ESCALATION-POLICY.md` | `docs/VOLUNTEER-MODERATOR-PROGRAM.md` | Review community cases and propose actions for a second reviewer | Private student data outside the case |
@@ -206,7 +206,10 @@ One row per row of `public.role_capabilities`. A capability's checks are the SQL
 | `platform_admin` | `report:read` | `app/src/screens/Moderation.tsx` | `capabilities.check.sql`<br>`my-capabilities.check.sql`<br>`reports.check.sql` |
 | `platform_admin` | `moderation:action` | `app/src/screens/Moderation.tsx` | `capabilities.check.sql`<br>`reports.check.sql` |
 | `platform_admin` | `platform:configure` | — | `capabilities.check.sql`<br>`institutional-foundation.check.sql` |
+| `platform_admin` | `beta:manage` | — | `capabilities.check.sql` |
+| `platform_admin` | `beta:triage` | — | `capabilities.check.sql` |
 | `support_agent` | `support:ticket` | — | — |
+| `support_agent` | `beta:triage` | — | `capabilities.check.sql` |
 | `incident_responder` | `killswitch:engage` | — | — |
 | `incident_responder` | `incident:communicate` | — | — |
 | `moderator` | `report:read` | `app/src/screens/Moderation.tsx` | `capabilities.check.sql`<br>`my-capabilities.check.sql`<br>`reports.check.sql` |

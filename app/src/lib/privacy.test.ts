@@ -104,11 +104,19 @@ describe('how it is written', () => {
 
   it('names the help request as an exception, and what it carries', () => {
     const visibility = CLAIMS.find((c) => c.heading === 'Who can see your rows');
-    expect(visibility?.body).toMatch(/four deliberate exceptions/i);
+    expect(visibility?.body).toMatch(/five deliberate exceptions/i);
     expect(visibility?.body).toMatch(/help request/i);
     expect(visibility?.body).toMatch(/only what you wrote and ticked/i);
     expect(visibility?.body).toMatch(/your name, your university email/i);
     expect(visibility?.body).toMatch(/every time .* opens it is recorded/i);
+  });
+
+  it('names beta feedback as an exception, and that it carries no name or address', () => {
+    // `beta_feedback_queue` returns no column that could name the sender;
+    // `supabase/beta.check.sql` proves it. This is the sentence that promises it.
+    const visibility = CLAIMS.find((c) => c.heading === 'Who can see your rows');
+    expect(visibility?.body).toMatch(/invite-only beta/i);
+    expect(visibility?.body).toMatch(/without your name or address/i);
   });
 
   it('names a support ticket as an exception, and what it leaves out', () => {

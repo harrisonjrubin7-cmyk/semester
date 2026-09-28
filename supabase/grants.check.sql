@@ -358,6 +358,28 @@ declare
     'integration_set_paused(want_connection text, want_paused boolean, want_reason text)',
     'kill_switch_engaged(want_switch text, want_tenant text)',
 
+    -- The sixteen in 20260928220000_private_beta.sql. Every beta table has
+    -- RLS on, no policy and no grant, so these are the only way in. The first
+    -- nine check `beta:manage` or `beta:triage` themselves; the queue returns
+    -- feedback with no sender identity. The last seven act on the caller's
+    -- own confirmed address or live membership and nothing else.
+    'beta_create_program(want_id text, want_name text, want_school text, want_support_contact text)',
+    'beta_add_cohort(want_program text, want_kind text, want_capacity integer)',
+    'beta_invite(want_cohort uuid, want_email text)',
+    'beta_revoke_invitation(want_invitation uuid)',
+    'beta_set_status(want_program text, want_status text)',
+    'beta_declare_flag(want_program text, want_flag text, want_about text)',
+    'beta_post_issue(want_id uuid, want_program text, want_title text, want_detail text, want_workaround text, want_status text, want_published boolean)',
+    'beta_feedback_queue(want_program text)',
+    'beta_triage_feedback(want_feedback uuid, want_status text)',
+    'beta_invitation_for_me()',
+    'join_beta(want_invitation uuid)',
+    'my_beta()',
+    'beta_known_issues_for_me()',
+    'beta_send_feedback(want_kind text, want_body text, want_route text)',
+    'leave_beta(want_reason text, want_keeps_account boolean)',
+    'forget_my_beta()',
+
     -- The nine in 20260928210000_support_tickets.sql. The tables have no grant,
     -- so these are the only way in. The first six act on the caller's own
     -- tickets; the last three check `support:ticket` and return no column
