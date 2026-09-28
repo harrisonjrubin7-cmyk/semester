@@ -390,9 +390,15 @@ file rather than editing these figures.
   the study journal and the toolkit panels. The audit counts screen modules
   only, so it understates this. Migrate the family to `ActionButton` /
   `.btn-primary`, together with DS-1 and DS-2.
-- **Trust labels.** 3 screen modules show a source label. Registration, the
-  degree and grades are the screens where a student decides something on the
-  strength of a figure, so they come first.
+- **Trust labels.** 5 screen modules show a source label. Registration, the
+  degree and grades, the screens where a student decides something on the
+  strength of a figure, now carry the one badge (`SourceBadge`): Student
+  entered for what was typed or confirmed, Estimated for what is worked out
+  from it. The degree screen said the same thing with the status chips'
+  "Yours" and "Needs confirmation", a second vocabulary for one fact; it no
+  longer does. `lib/status.ts` still words provenance through `lib/where.ts`
+  ("Yours", "Made here"), so two provenance vocabularies remain in the code —
+  converging them is the next step, and it touches every `where` caller.
 - **Empty states.** 13 modules use `EmptyState`. The others either hold no
   list or write their own.
 
