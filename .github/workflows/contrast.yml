@@ -117,7 +117,7 @@ jobs:
       # are how you notice the sweep quietly measuring less than it used to.
       - name: Keep the output
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: contrast-sweep
           path: |
