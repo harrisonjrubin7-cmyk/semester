@@ -52,6 +52,8 @@ The documents here fill items those indexes list. The NDA-gated room in
 | [`BRIDGE-LETTER.md`](BRIDGE-LETTER.md) | The SOC 2 bridge-letter process, for when a report exists |
 | [`VENDOR-RISK-REGISTER.md`](VENDOR-RISK-REGISTER.md) | One row per subprocessor: data shared, attestation (to confirm), DPA status, tier, and the review procedure. No vendor has been assessed yet |
 | [`PENETRATION-TEST-PLAN.md`](PENETRATION-TEST-PLAN.md) | Scope, rules of engagement, test accounts, success criteria and remediation commitments for the first external test. No test has been performed |
+| [`FERPA-CONSENT-WORKFLOW.md`](FERPA-CONSENT-WORKFLOW.md) | When consent is needed, the decision gate, the consent screen, the data model field by field against the share tables, and the fifteen workflow controls. Rendered from `app/src/lib/trust/ferpa-consent.ts` |
+| [`AI-MODEL-TRAINING-AND-DATA-USE-POLICY.md`](AI-MODEL-TRAINING-AND-DATA-USE-POLICY.md) | The no-training-by-default policy in full and the eleven implementation requirements, each held to the tree. A draft for counsel, rendered from `app/src/lib/trust/ai-training-policy.ts` |
 
 ## What blocks a signature, and none of it is code
 
