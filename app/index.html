@@ -21,7 +21,9 @@
           on a device nobody is holding.
 
       Both close the moment this is served from somewhere that can set a
-      header — Cloudflare Pages, Netlify, a Supabase-fronted host. Until then
+      header — Cloudflare Pages, Netlify, a Supabase-fronted host — and the
+      set they would send is already written, in `vercel.json` and
+      `public/_headers`, guarded by `src/lib/hostheaders.test.ts`. Until then
       this covers script, style, image, font, media, worker and connect, which
       is where an injected script would actually have to go to do anything.
 

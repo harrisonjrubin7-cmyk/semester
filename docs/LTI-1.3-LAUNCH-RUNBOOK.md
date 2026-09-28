@@ -23,6 +23,12 @@ administrator supplies the platform fields, and none of them is secret. Semester
 (`LTI_PRIVATE_KEY`) is needed only to call back, for Deep Linking responses and
 AGS.
 
+Add the school's LMS origin (for example `https://brightspace.vanderbilt.edu`)
+to `frame-ancestors` in both `app/vercel.json` and `app/public/_headers`. A
+course link opens Semester inside the LMS's iframe, and a host that sends
+those headers refuses to be framed by any origin not listed. `hostheaders.test.ts`
+keeps the two files equal.
+
 ## Launch validation
 
 `startLogin` and `checkLaunch` refuse by named reason. These are the codes in

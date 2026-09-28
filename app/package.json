@@ -35,6 +35,7 @@
     "smoke:cold": "node scripts/cold-smoke.mjs",
     "smoke:a11y": "node scripts/accessibility-smoke.mjs",
     "smoke:pilot": "node scripts/pilot-smoke.mjs",
+    "smoke:golden": "node scripts/golden-path.mjs",
     "preview:institutional": "node scripts/institutional-preview.mjs",
     "smoke:institutional": "node scripts/institutional-preview-smoke.mjs",
     "smoke:production": "node scripts/production-smoke.mjs",
