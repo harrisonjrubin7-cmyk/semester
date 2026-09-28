@@ -59,10 +59,13 @@ hours; consent is never pre-ticked.
 
 ## Tests
 
-- A structural test over rendered strings and component names: no
-  `leaderboard`, `rank among`, `streak` in rendered text (the scheduler's card field is not rendered),
-  `you're falling behind`, `don't break`, or percentage-of-you. It is shown to
-  fail once against a planted string.
+- `app/src/community/engagement.test.ts`, a structural test over rendered
+  strings: no `leaderboard`, `rank among`, `streak` in rendered text (the
+  scheduler's card field is a property access, not text), `you're falling
+  behind`, `don't break`, or percentage-of-you. A refusal ("no streak") is told
+  from an offer by a negation rule the test checks on itself. It was shown to
+  fail against a planted `Your streak: 4 days`. The list of forbidden mechanics
+  it reads is `FORBIDDEN_MECHANICS` in `app/src/community/governance.ts`.
 - `notify.ts`: nothing fires inside quiet hours; the rate limit holds across a
   day with forty due items.
 - The consent control starts unchecked (accessibility tree snapshot).
