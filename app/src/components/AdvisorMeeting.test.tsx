@@ -223,11 +223,13 @@ describe('sharing with an advisor', () => {
   it('lists shares by state and reads, and revokes only after confirming', async () => {
     listed = {
       shares: [
-        { id: 's-live', title: 'Spring planning', created_at: '2026-09-20T12:00:00Z', expires_at: '2099-01-01T12:00:00Z', revoked_at: null },
-        { id: 's-old', title: 'Fall check-in', created_at: '2026-08-01T12:00:00Z', expires_at: '2026-08-08T12:00:00Z', revoked_at: null },
-        { id: 's-off', title: 'Minor question', created_at: '2026-09-01T12:00:00Z', expires_at: '2099-01-01T12:00:00Z', revoked_at: '2026-09-02T12:00:00Z' },
+      // 07:00 UTC is the same calendar day from UTC-5 to UTC+14, the range
+      // `npm run test:zones` runs in; noon UTC is tomorrow in Kiritimati.
+        { id: 's-live', title: 'Spring planning', created_at: '2026-09-20T07:00:00Z', expires_at: '2099-01-01T07:00:00Z', revoked_at: null },
+        { id: 's-old', title: 'Fall check-in', created_at: '2026-08-01T07:00:00Z', expires_at: '2026-08-08T07:00:00Z', revoked_at: null },
+        { id: 's-off', title: 'Minor question', created_at: '2026-09-01T07:00:00Z', expires_at: '2099-01-01T07:00:00Z', revoked_at: '2026-09-02T07:00:00Z' },
       ],
-      events: [{ share_id: 's-live', read_at: '2026-09-22T12:00:00Z' }],
+      events: [{ share_id: 's-live', read_at: '2026-09-22T07:00:00Z' }],
     };
     await mount('u1');
     await act(async () => button(/^Prepare a meeting$/).click());
