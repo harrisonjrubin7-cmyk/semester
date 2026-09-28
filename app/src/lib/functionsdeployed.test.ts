@@ -67,9 +67,23 @@ function slugs(): string[] {
     .sort();
 }
 
-/** The rows this reading says are outside the continuous pipeline. */
+/** The rows this reading says are outside the continuous pipeline. A pending row has no reading yet. */
 function frozen(rows: Row[]): string[] {
-  return rows.filter((r) => r.pipeline !== 'platform').map((r) => `${r.slug} (${r.pipeline})`);
+  return rows.filter((r) => r.pipeline === 'runner').map((r) => `${r.slug} (${r.pipeline})`);
+}
+
+/**
+ * A new function has no reading until the merge that adds it deploys it, and
+ * that merge needs this file to pass. So it may carry a `pending` row — a
+ * dash for the version and the time it was added — for at most this long,
+ * after which the reading is overdue and the test says so.
+ */
+const PENDING_DAYS = 14;
+
+function overdue(rows: Row[], now: number): string[] {
+  return rows
+    .filter((r) => r.pipeline === 'pending' && now - Date.parse(r.at) > PENDING_DAYS * 86_400_000)
+    .map((r) => `${r.slug} (pending since ${r.at})`);
 }
 
 describe('the functions snapshot is a reading, and still reads like one', () => {
@@ -88,8 +102,9 @@ describe('the functions snapshot is a reading, and still reads like one', () => 
     expect(rows.length, 'no rows parsed out of functions.snapshot').toBeGreaterThan(4);
     for (const r of rows) {
       expect(r.slug, `slug missing in: ${JSON.stringify(r)}`).toMatch(/^[a-z][a-z0-9-]*$/);
-      expect(r.version, `version not a number for ${r.slug}`).toMatch(/^\d+$/);
-      expect(['platform', 'runner'], `unknown pipeline for ${r.slug}`).toContain(r.pipeline);
+      if (r.pipeline === 'pending') expect(r.version, `a pending row has no version yet: ${r.slug}`).toBe('-');
+      else expect(r.version, `version not a number for ${r.slug}`).toMatch(/^\d+$/);
+      expect(['platform', 'runner', 'pending'], `unknown pipeline for ${r.slug}`).toContain(r.pipeline);
       expect(r.at, `timestamp not ISO for ${r.slug}`).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/);
     }
   });
@@ -111,6 +126,30 @@ describe('the functions snapshot is a reading, and still reads like one', () => 
       ]),
     ).toEqual(['push (runner)', 'calendar (runner)']);
     expect(frozen([{ slug: 'claude', version: '44', pipeline: 'platform', at }])).toEqual([]);
+  });
+
+  it('replaces a pending row with a real reading within two weeks', () => {
+    const late = overdue(reading(), Date.now());
+    expect(
+      late,
+      `no reading recorded since these were added: ${late.join(', ')}. Read the project's ` +
+        `function list after the merge that deployed them, and write the row.`,
+    ).toEqual([]);
+  });
+
+  it('can tell an overdue pending row from a fresh one (the control)', () => {
+    const now = Date.parse('2026-10-15T00:00:00Z');
+    expect(
+      overdue(
+        [
+          { slug: 'old', version: '-', pipeline: 'pending', at: '2026-09-30T00:00:00Z' },
+          { slug: 'new', version: '-', pipeline: 'pending', at: '2026-10-10T00:00:00Z' },
+          { slug: 'claude', version: '64', pipeline: 'platform', at: '2026-09-01T00:00:00Z' },
+        ],
+        now,
+      ),
+    ).toEqual(['old (pending since 2026-09-30T00:00:00Z)']);
+    expect(frozen([{ slug: 'new', version: '-', pipeline: 'pending', at: '2026-10-10T00:00:00Z' }])).toEqual([]);
   });
 
   it('has a row for every function that exists', () => {

@@ -85,7 +85,28 @@ const directories = (): string[] =>
 function live(): string[] {
   const block = /## What is live\n([\s\S]*?)\n## /.exec(deploydoc());
   expect(block, 'DEPLOY.md no longer has a "What is live" section').toBeTruthy();
-  return [...block![1].matchAll(/^\s{2,}([a-z0-9_-]+)\s+ACTIVE/gm)].map((m) => m[1]).sort();
+  return [...block![1].matchAll(/^\s{2,}([a-z0-9_-]+)\s+(?:ACTIVE|PENDING)/gm)].map((m) => m[1]).sort();
+}
+
+/**
+ * Lines in the live block marked PENDING: a function added on a branch, which
+ * the merge that adds it deploys. There is no reading of it until then, so
+ * `functions.snapshot` must carry a matching `pending` row, and
+ * `functionsdeployed.test.ts` holds that row to fourteen days. That clock is
+ * what keeps PENDING from becoming a way to declare something and never check.
+ */
+function pendingLive(): string[] {
+  const block = /## What is live\n([\s\S]*?)\n## /.exec(deploydoc())!;
+  return [...block[1].matchAll(/^\s{2,}([a-z0-9_-]+)\s+PENDING/gm)].map((m) => m[1]).sort();
+}
+
+function pendingSnapshot(): string[] {
+  return readFileSync(join(repo, 'supabase/functions.snapshot'), 'utf8')
+    .split('\n')
+    .map((l) => l.replace(/#.*/, '').trim().split(/\s+/))
+    .filter((cols) => cols[2] === 'pending')
+    .map((cols) => cols[0])
+    .sort();
 }
 
 describe('the probes read their subjects', () => {
@@ -139,6 +160,12 @@ describe('config.toml and what is actually live', () => {
       `these are declared but DEPLOY.md does not record them as live: ${extra.join(', ')}. ` +
         'Declaring a function is how Branching deploys it — deploy it for real and say so there first.',
     ).toEqual([]);
+  });
+});
+
+describe('a function that is live on merge', () => {
+  it('is PENDING in DEPLOY.md exactly when the snapshot has a pending row for it', () => {
+    expect(pendingLive(), 'DEPLOY.md PENDING lines and functions.snapshot pending rows disagree').toEqual(pendingSnapshot());
   });
 });
 
