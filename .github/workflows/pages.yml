@@ -224,6 +224,10 @@ jobs:
             value="${!name}"
             [ -z "$value" ] && continue
 
+            # This site is the product, so the demo switch never reaches it.
+            # See the note after the loop.
+            [ "$name" = "VITE_INSTITUTIONAL_PREVIEW" ] && continue
+
             # A value with a newline in it would corrupt $GITHUB_ENV and take
             # the next variable with it. None of these is multi-line; a pasted
             # PEM or a trailing blank line is the mistake, and it is worth
@@ -328,17 +332,18 @@ jobs:
             fi
           fi
 
-          # A demo build is a legitimate thing to deploy, and a surprising one
-          # to open: it wears the "Demo environment" label on every screen,
-          # swaps the student's own work for Northstar University fixtures and
-          # a persona switcher, and switches on every experience that inherits
-          # the flag. Somebody who set the variable once to try the preview
-          # and forgot it sees that on every visit and cannot tell why, so the
-          # run says it where the deploy is looked at. A warning, not an
-          # error: the demo is allowed, it is just never the product by
-          # accident.
+          # This workflow deploys the product: the address the company site's
+          # Log in button sends people to. A demo build here wore the "Demo
+          # environment" label on every screen, swapped the student's own work
+          # for Northstar University fixtures and a persona switcher, and put
+          # a real person arriving to sign in inside a fictional account. It
+          # happened once from a repository variable set to try the preview
+          # and left on, and a warning on the run did not stop it — nobody
+          # reads a run that succeeded. So the switch is not carried into this
+          # build at all (the loop above skips it). A demo is its own
+          # deployment; `npm run preview:institutional` runs one locally.
           if [ "$VITE_INSTITUTIONAL_PREVIEW" = "true" ]; then
-            echo "::warning title=Demo build::VITE_INSTITUTIONAL_PREVIEW is true, so this site is a demo with synthetic data and a persona switcher, not the product. To deploy the real app, delete the VITE_INSTITUTIONAL_PREVIEW repository variable (Settings → Secrets and variables → Actions) and re-run this workflow."
+            echo "::notice title=Demo switch ignored::VITE_INSTITUTIONAL_PREVIEW is set to true in the repository, and this deploy ignored it: the Pages site is the real app, never the demo. Delete the variable (Settings → Secrets and variables → Actions) to silence this."
           fi
 
           if [ -n "$VITE_SUPABASE_URL" ] && [ -n "$VITE_SUPABASE_KEY" ]; then
