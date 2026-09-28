@@ -53,8 +53,11 @@ export const PARTIES: readonly Party[] = [
     purpose: 'Database, authentication, storage of synced rows, and Edge Functions.',
     receives: 'Account email and sign-in records; what a signed-in student chose to sync; usage counts; audit records.',
     when: 'signed-in', hosts: ['*.supabase.co'],
-    functions: ['calendar', 'trust-room'],
-    evidence: ['supabase/config.toml', 'app/src/lib/cloud.ts', 'RETENTION.md'],
+    // `integration-tick` is the scheduler's sync job (#856). It talks to no
+    // outside party while `app/server/integration/registry.ts` holds no
+    // adapter; an adapter that reaches a vendor adds that vendor here.
+    functions: ['calendar', 'trust-room', 'integration-tick'],
+    evidence: ['supabase/config.toml', 'app/src/lib/cloud.ts', 'RETENTION.md', 'supabase/functions/integration-tick/index.ts'],
   },
   {
     name: 'GitHub Pages', kind: 'subprocessor',
