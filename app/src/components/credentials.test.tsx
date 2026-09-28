@@ -28,11 +28,13 @@ import type { ReactNode } from 'react';
 
 /** What the device remembers, per test. See `state.registered`. */
 let registered = false;
+/** Which way a link asked the form to open. See `state.accountDoor`. */
+let accountDoor: 'in' | 'up' | null = null;
 const dispatched: { type: string }[] = [];
 
 vi.mock('../state/store', () => ({
   useStore: () => ({
-    state: { registered },
+    state: { registered, accountDoor },
     dispatch: (action: { type: string }) => dispatched.push(action),
   }),
 }));
@@ -147,6 +149,7 @@ async function enter(address = 'you@vanderbilt.edu', secret = 'a-real-password')
 
 beforeEach(() => {
   registered = false;
+  accountDoor = null;
   dispatched.length = 0;
   signUp.mockClear();
   signIn.mockClear();
@@ -534,4 +537,32 @@ describe('when the service says no', () => {
 afterEach(() => {
   if (root) act(() => root.unmount());
   host?.remove();
+});
+
+/**
+ * A link's say, spent on the form it opened.
+ *
+ * `#/login` and `#/signup` choose which way the form opens. The choice is for
+ * that one form: left standing, arriving through `#/signup` and making an
+ * account meant every later visit to Account opened on "Create the account".
+ */
+describe('a form opened by a link', () => {
+  it('opens the way the link asked, over the device’s own default', async () => {
+    accountDoor = 'in';
+    await showAnswered(<Credentials />, []);
+    expect(password().getAttribute('autocomplete')).toBe('current-password');
+  });
+
+  it('clears the choice once used, so the next form decides for itself', async () => {
+    accountDoor = 'up';
+    registered = true;
+    await showAnswered(<Credentials />, []);
+    expect(password().getAttribute('autocomplete')).toBe('new-password');
+    expect(dispatched).toContainEqual({ type: 'setAccountDoor', door: null });
+  });
+
+  it('control: without a link it asks nothing of the store', async () => {
+    await showAnswered(<Credentials />, []);
+    expect(dispatched.some((a) => a.type === 'setAccountDoor')).toBe(false);
+  });
 });

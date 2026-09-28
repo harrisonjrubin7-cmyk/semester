@@ -928,7 +928,9 @@ export interface Ephemeral {
    * site's two buttons. The account screen is lazy, so by the time its form
    * mounts the address has already been rewritten to `#/account` — the form
    * cannot read the answer from the URL and has to find it here. Null means
-   * no link asked, and the form decides for itself.
+   * no link asked, and the form decides for itself. The form clears it once
+   * it has opened the way the link asked, so it answers one visit, not the
+   * rest of the session.
    */
   accountDoor: 'in' | 'up' | null;
   /** Which half of the money screen is showing. See `lib/types.ts`. */
@@ -2474,7 +2476,7 @@ export type Action =
   | { type: 'setMineTab'; tab: 'tasks' | 'appointments' | 'notes' | 'files' }
   | { type: 'setCostsTab'; tab: CostsTab }
   | { type: 'setHomeTab'; tab: HomeTab }
-  | { type: 'setAccountDoor'; door: 'in' | 'up' }
+  | { type: 'setAccountDoor'; door: 'in' | 'up' | null }
   | { type: 'setCoursesTab'; tab: CoursesTab }
   | { type: 'setMeTab'; tab: 'you' | 'task' }
   | { type: 'setTone'; tone: Tone }
