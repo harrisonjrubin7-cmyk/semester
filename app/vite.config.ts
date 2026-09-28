@@ -3,6 +3,7 @@ import { defineConfig, loadEnv } from 'vite'
 import { configDefaults } from 'vitest/config'
 import { fileURLToPath } from 'node:url'
 import { privateHost, publicCalendarUrl } from './src/lib/publichost.ts'
+import { unregisteredHosts } from './src/lib/trust/subprocessors.ts'
 
 /**
  * The dev server doubles as the OAuth token proxy.
@@ -687,6 +688,18 @@ export default defineConfig(({ command, mode }) => {
   process.env.VITE_CSP_EXTRA_CONNECT = cspExtraConnect(
     (name) => process.env[name] ?? local[name],
   )
+
+  // A configured origin the subprocessor register does not list is a third
+  // party nobody recorded. CI cannot see a repository variable, so the build
+  // says so here, where the value finally arrives (docs/SUBPROCESSORS.md).
+  const unlisted = unregisteredHosts(process.env.VITE_CSP_EXTRA_CONNECT)
+  if (command === 'build' && unlisted.length > 0) {
+    console.warn(
+      `\n! The content-security policy allows ${unlisted.join(', ')}, which the ` +
+        'subprocessor register (app/src/lib/trust/subprocessors.ts) does not list. ' +
+        'Add its row before this build is deployed.\n',
+    )
+  }
 
   /*
    * With a key on the server, point the app at the proxy holding it — unless

@@ -12,7 +12,7 @@ hand over today.
 | Penetration test report | **No** | None commissioned |
 | VPAT / ACR | **No** | Requires formal evaluation; do not fabricate |
 | Data flow diagram | **No** | Constructible from this tree today |
-| Subprocessor list | **No** | Constructible: Supabase, GitHub Pages, AI providers |
+| Subprocessor list | **Partial** | `docs/SUBPROCESSORS.md`: every destination, held by test to the app's content-security policy and its Edge Functions; not yet reviewed by counsel or published |
 | Incident response plan | **Partial** | Process defined here; never exercised |
 | Business continuity / DR | **No** | No tested restore |
 | Privacy policy | **No** | — |

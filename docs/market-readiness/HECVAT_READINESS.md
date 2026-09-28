@@ -49,7 +49,7 @@ Raise a status by changing its evidence in the same commit.
 | PRIV-2 | Privacy | Student export and account deletion that empties what it claims | `READY` | `app/src/lib/export.ts`, `app/src/lib/erase.ts`, `supabase/deletion.check.sql`, `app/src/lib/privacy.test.ts` | — |
 | PRIV-3 | Privacy | Disclosure kept true by test | `READY` | `app/src/lib/privacy.ts`, `app/src/lib/privacy.test.ts` | — |
 | PRIV-4 | Privacy | Signed DPA with FERPA school-official terms | `NOT_STARTED` | — | Counsel drafts the DPA; a signed copy per institution goes under `docs/evidence/` |
-| PRIV-5 | Privacy | Published subprocessor list | `NOT_STARTED` | — | Constructible today from the tree: Supabase, GitHub Pages, the approved AI provider. Write it and date it |
+| PRIV-5 | Privacy | Published subprocessor list | `IN_PROGRESS` | `docs/SUBPROCESSORS.md`, `app/src/lib/trust/subprocessors.test.ts` | The register exists and is held to the CSP and Edge Functions by test; counsel's review, each subprocessor's terms and hosting regions, then publication |
 | PRIV-6 | Privacy | Minimum-necessary sharing with staff, consented and audited | `READY` | `supabase/help-requests.check.sql`, `supabase/support-access.check.sql`, `app/src/lib/help-routes.test.ts` | — |
 | AI-1 | AI governance | Tenant-approved providers, server-held sources, metered budget | `TESTING` | `docs/market-readiness/AI_GOVERNANCE.md`, `supabase/migrations/20260924163000_intelligence_provider_runtime.sql`, `supabase/intelligence-policy.check.sql` | Institutional approval of the provider project and data terms |
 | AI-2 | AI governance | Model evaluation set, hallucination and bias testing | `NOT_STARTED` | — | Build an evaluation set from approved course sources and record a run |
