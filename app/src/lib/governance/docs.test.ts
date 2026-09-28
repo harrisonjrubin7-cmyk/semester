@@ -1,10 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { readdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import {
+  AI_RELEASE_GATE, LIFECYCLE, NIST_FUNCTIONS, NIST_LABEL, NIST_PRACTICES, PROHIBITED_STARTING_SCOPE, STARTING_USE_CASES,
+} from './ai-lifecycle';
 import { CHARTERS } from './charters';
 import { NEVER, SETTINGS, APPROVAL_FLOW } from './config-tiers';
 import { CONTRACTS } from './data-contracts';
 import { AUDIENCE_LABEL, AUDIENCES, SECTION_HEADING } from './incident-comms';
+import { BAD_WRITE_OUTCOMES, FRONTEND_TARGETS, JOURNEYS, PERMITTED_EXCLUSION, POLICY } from './error-budgets';
+import { DIMENSIONS, STAGES, THRESHOLD } from './release-readiness';
 import { DEFINITION_OF_DONE, DEFINITION_OF_READY, QUALITY_METRICS, RELEASE_APPROVALS } from './quality-gates';
 import {
   CUTOVER_CHECKLIST, DECISION_OPTIONS, KPIS, LTI_SECURITY, MIGRATION_ACCEPTANCE, PHASES, RACI, RISKS, ROLLOUT_STATES, STEERING_AGENDA,
@@ -68,6 +73,39 @@ describe('operating-model docs match the registries', () => {
     const d = doc('QUALITY-MANAGEMENT.md');
     for (const i of [...DEFINITION_OF_READY, ...DEFINITION_OF_DONE, ...RELEASE_APPROVALS]) expect(d, i).toContain(`- ${i}`);
     for (const m of QUALITY_METRICS) expect(d, m.name).toContain(`| ${m.name} |`);
+  });
+
+  it('release readiness: every dimension, weight, stage and threshold', () => {
+    const d = doc('QUALITY-MANAGEMENT.md');
+    for (const x of DIMENSIONS) expect(d, x.key).toContain(`| ${x.label} | ${x.weight}% | ${x.question} |`);
+    for (const s of STAGES) {
+      const t = THRESHOLD[s.key];
+      expect(d, s.key).toContain(`| ${s.label} | ${s.evidence} | ${t.standard} | ${t.highStakes} |`);
+    }
+  });
+
+  it('SLOs: every journey, bad outcome, budget state and frontend target', () => {
+    const d = doc('SLOS-AND-ERROR-BUDGETS.md');
+    for (const j of JOURNEYS) expect(d, j.id).toContain(`| ${j.name} | ${j.slo}% | ${j.good} | ${j.why} |`);
+    for (const b of BAD_WRITE_OUTCOMES) expect(d, b).toContain(`- ${b}`);
+    expect(d).toContain(PERMITTED_EXCLUSION);
+    for (const p of Object.values(POLICY)) expect(d, p.label).toContain(`| ${p.label} | ${p.remaining} | ${p.release} | ${p.action} |`);
+    for (const t of FRONTEND_TARGETS) {
+      expect(d, t.metric).toContain(`| ${t.metric} | ${t.target} | ${t.failure} | ${t.guard ? `\`${t.guard}\`` : 'Not measured'} |`);
+    }
+  });
+
+  it('AI lifecycle: every gate, release-gate item, prohibited scope, starting use case and practice', () => {
+    const d = doc('AI-LIFECYCLE-GATES.md');
+    for (const g of LIFECYCLE) {
+      expect(d, g.id).toContain(`| ${g.id} | ${g.name} | ${NIST_LABEL[g.owner]} | ${g.decision} | ${g.evidence.join(', ')} |`);
+    }
+    for (const i of [...AI_RELEASE_GATE, ...PROHIBITED_STARTING_SCOPE]) expect(d, i).toContain(`- ${i}`);
+    STARTING_USE_CASES.forEach((u, i) => expect(d, u).toContain(`${i + 1}. ${u}`));
+    for (const f of NIST_FUNCTIONS) {
+      const section = d.split(`### ${NIST_LABEL[f]}\n`)[1]?.split('\n### ')[0] ?? '';
+      for (const p of NIST_PRACTICES[f]) expect(section, `${f}: ${p}`).toContain(`- ${p}`);
+    }
   });
 
   it('links only to files that exist', () => {
