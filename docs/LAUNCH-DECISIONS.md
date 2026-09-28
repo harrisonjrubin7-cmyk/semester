@@ -49,7 +49,19 @@ above it.
 
 ## What does not need you
 
-The following is engineering work that can proceed in parallel: the golden-path
-journey script, rate limits on the Supabase-direct paths, host headers, an
-app-wide read-only mode, and a known-issues page. Once a decision above is
-made, tell Claude which one and it can carry out the repository side.
+The following is engineering work that can proceed in parallel. Three pieces
+are already built but not yet proven in production:
+
+- **Host security headers**: `app/vercel.json`, `app/public/_headers`. These
+  wait on item 6.
+- **Rate limits on the Supabase-direct paths**:
+  `supabase/migrations/20260928120000_direct_rate_limits.sql`. They reach
+  production when merged. After that, confirm them with the query in
+  `supabase/DEPLOY.md`, and read the Auth endpoint limits off the dashboard.
+- **The golden-path journey**: `app/scripts/golden-path.mjs`, which runs in CI.
+  Resuming through an account on a second device still needs a backend it can
+  sign in to.
+
+Still to build: an app-wide read-only mode and a known-issues page. Once a
+decision above is made, tell Claude which one and it can carry out the
+repository side.
