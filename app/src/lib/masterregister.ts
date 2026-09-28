@@ -156,7 +156,7 @@ export const REGISTER: readonly Requirement[] = [
     validation: 'RACI, operating cadence, escalation tree',
     severity: 'P0',
     status: 'designed',
-    evidence: [{ path: 'docs/LAUNCH-DECISIONS.md', shows: 'Step 1 names the seats the owner can hold this week and the three that need someone qualified; none is yet written into the council' }, { path: 'docs/LAUNCH-READINESS-COUNCIL.md', shows: 'Council seats and decision rights described; no people named' }, { path: 'app/src/lib/launchreadiness.ts', shows: 'Seats (product, eng, security, privacy, a11y, success...) all holder: null; no AI/SRE/GTM seat' }, { path: 'docs/operating-model/PILOT-TO-PRODUCTION.md', shows: 'Pilot RACI section for institution/vendor roles' }],
+    evidence: [{ path: 'docs/LAUNCH-DECISIONS.md', shows: 'Step 1 names the seats the owner can hold this week and the three that need someone qualified; four of them are written into the council as of 2026-09-28 (founder, and product, engineering and success as acting) and none has signed; the three that need someone qualified stay vacant' }, { path: 'docs/LAUNCH-READINESS-COUNCIL.md', shows: 'Council seats and decision rights described; no people named' }, { path: 'app/src/lib/launchreadiness.ts', shows: 'Seats (product, eng, security, privacy, a11y, success...) all holder: null; no AI/SRE/GTM seat' }, { path: 'docs/operating-model/PILOT-TO-PRODUCTION.md', shows: 'Pilot RACI section for institution/vendor roles' }],
     gap: 'Every seat is vacant (holder null). No named people, no AI/SRE/legal/GTM owner, no operating cadence or escalation tree approved. Needs named owners recorded and signed, cadence calendar and escalation tree.',
   },
   {

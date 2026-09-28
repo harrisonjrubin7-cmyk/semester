@@ -150,8 +150,23 @@ describe('the launch go/no-go', () => {
     it('is no-go today, and says why at length', () => {
       const { verdict, reasons } = decide(CURRENT);
       expect(verdict).toBe('no-go');
-      expect(reasons.filter((r) => r.endsWith('is vacant.'))).toHaveLength(SEATS.length);
+      // Four seats held since 2026-09-28 and none signed: holding is not signing.
+      const held = COUNCIL.filter((s) => s.holder !== null).map((s) => s.seat);
+      expect(held).toEqual(['founder', 'product', 'engineering', 'success']);
+      expect(reasons.filter((r) => r.endsWith('is vacant.'))).toHaveLength(SEATS.length - held.length);
+      for (const seat of held) expect(reasons).toContain(`Seat ${seat} has not signed.`);
+      expect(CURRENT.signoffs).toEqual([]);
       expect(reasons.some((r) => r.startsWith('golden-path:'))).toBe(true);
+      // The one met gate is not a reason; every other gate is.
+      expect(reasons.some((r) => r.startsWith('known-limitations:'))).toBe(false);
+      expect(reasons.filter((r) => /^[a-z-]+: (partial|unmet) — /.test(r))).toHaveLength(GATES.length - 1);
+    });
+
+    it('holds a seat only by a role label, never an address or a username', () => {
+      for (const seat of COUNCIL) {
+        if (seat.holder === null) continue;
+        expect(seat.holder, seat.seat).not.toMatch(/@|github|harrison/i);
+      }
     });
 
     it('refuses a gate that is not met', () => {

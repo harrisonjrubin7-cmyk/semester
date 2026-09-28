@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { COUNCIL } from '../lib/launchreadiness';
+import { KNOWN_LIMITATIONS, KNOWN_LIMITATIONS_AS_OF, REPORT } from '../lib/knownlimitations';
 import { AUDIENCES, CLAIMS, PROOF_RULES, STATUS_LABEL } from '../lib/ops/claims';
 import { ALWAYS_INCLUDED, PILOT_NOTE, PLANS, priceLine } from '../lib/plans';
 import { AudienceClaims, ClaimItem, ClaimList, ClaimTable, PolicyTable, StatusLegend } from './claims';
@@ -476,6 +477,34 @@ export const Help: Page = ({ config }) => (
     <Section title="Is my Path Snapshot official?" id="hp-official"><p>No. It is a planning estimate from what you entered. Confirm anything that matters with your advisor and registrar.</p></Section>
     <Section title="I do not know who to ask" id="hp-door"><p>No Wrong Door: on the app’s Help screen, describe the problem in your own words and Semester says whose question it is, what it can do first, and what to bring — with a summary to take to the person. Nothing you type there is kept.</p></Section>
     <Section title="Still stuck?" id="hp-more"><p>The app has a full guide to every screen: <a href={appHref(config, '#/help')}>How this works</a>. Or write to <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.</p></Section>
+  </>
+);
+
+/**
+ * Known limitations, for pilot users: the same list the Help screen prints
+ * and `docs/pilot/KNOWN-LIMITATIONS.md` is rendered from, so the three cannot
+ * disagree. No claim register word here — nothing on this page is a
+ * capability a reader might buy on; each is a thing that does not work yet.
+ */
+export const KnownLimitations: Page = ({ config }) => (
+  <>
+    <Hero title="Known limitations" lead={`What does not work yet, what to do instead, and how to report something. As of ${KNOWN_LIMITATIONS_AS_OF}.`} />
+    <Section title="What does not work yet" id="kl-list">
+      <p className="site-small">Semester works on your device without an account; everything below is about the edges of that. Each item is stated in a file in the repository, and a test fails when that file goes missing or this page differs from it.</p>
+      {KNOWN_LIMITATIONS.map((l) => (
+        <div key={l.id} id={`kl-${l.id}`}>
+          <h3>{l.title}</h3>
+          <p><strong>What does not work yet.</strong> {l.what}</p>
+          <p><strong>What to do instead.</strong> {l.instead}</p>
+        </div>
+      ))}
+    </Section>
+    <Section title="How to report something" id="kl-report">
+      <ul>
+        {REPORT.lines.map((line) => <li key={line}>{line}</li>)}
+      </ul>
+      <p className="site-small"><a href={href(config, '/accessibility/')}>Accessibility</a> says the same for barriers · <a href={href(config, '/launch-readiness/')}>Are we ready?</a> is the status of every capability</p>
+    </Section>
   </>
 );
 

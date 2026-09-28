@@ -16,7 +16,7 @@ only as an advisor.
 
 | # | Decision | Why it blocks | Unlocks |
 | --- | --- | --- | --- |
-| 1 | **Take the seats you can hold**: founder, product, engineering and customer success. Write your name into [`LAUNCH-READINESS-COUNCIL.md`](LAUNCH-READINESS-COUNCIL.md). | Every seat is vacant. "A vacant seat is an unowned risk." | `escalation-owners`, and every sign-off |
+| 1 | **Done, 2026-09-28.** The founder seat, and product, engineering and customer success as "Founder, acting", written into `COUNCIL` in `app/src/lib/launchreadiness.ts` and the table in [`LAUNCH-READINESS-COUNCIL.md`](LAUNCH-READINESS-COUNCIL.md), with a dated note there. No sign-off was added: a signature is for a decision, and none is before the council yet. The verdict reads "has not signed" for these four instead of "is vacant". | Was: every seat vacant. Still open: `escalation-owners` names people, not seats — item 2's address and item 3's alert are what let an owner be assigned there. | Every sign-off, once there is a decision to sign |
 | 2 | **Create a support address** separate from your personal email, e.g. a Google Workspace mailbox on the product domain. Update `SUPPORT` in `app/src/lib/privacy.ts`. | The app and both legal drafts point at a personal Gmail. | `operations-live` (support routing), `onboarding-support` |
 | 3 | **Make a failed production check reach you.** In GitHub, watch the repository with Actions notifications on, and confirm a failed `Production smoke` run arrives on your phone. | Go-live says "alerting to a named person". Today no alert reaches anyone. | Go-live: error monitoring (partly), `operations-live` |
 | 4 | **Form the company**, e.g. an LLC, and choose the state. | Terms, the privacy policy, contracts and a DPA all need a party to sign as. | Item 5, every customer contract |
@@ -62,6 +62,22 @@ are already built but not yet proven in production:
   Resuming through an account on a second device still needs a backend it can
   sign in to.
 
-Still to build: an app-wide read-only mode and a known-issues page. Once a
-decision above is made, tell Claude which one and it can carry out the
+- **Read-only mode**, built 2026-09-28: `VITE_READ_ONLY=true` on a deploy
+  stops every device pushing and shows a standing banner; `SEMESTER_READ_ONLY=on`
+  makes the gateway refuse every write with a retryable 503. Registered with
+  its engage, confirm and rollback steps in
+  [`FEATURE-FLAG-REGISTRY.md`](FEATURE-FLAG-REGISTRY.md) under **Read-only
+  mode**; `app/src/lib/readonly.ts` is the app side. Never yet engaged against
+  production, which waits on item 10.
+- **Known limitations for pilot users**, published 2026-09-28:
+  [`pilot/KNOWN-LIMITATIONS.md`](pilot/KNOWN-LIMITATIONS.md), rendered from
+  `app/src/lib/knownlimitations.ts` where every entry cites the file that
+  states it; printed on the Help screen in the app and at
+  `/known-limitations/` on the public site from the same data. Beside it,
+  [`pilot/QUICK-START.md`](pilot/QUICK-START.md) and
+  [`pilot/FIRST-DAY-CHECKLIST.md`](pilot/FIRST-DAY-CHECKLIST.md), which point
+  at the accessibility route on `/accessibility/`. The `known-limitations`
+  gate is met; `onboarding-support` is partial, waiting only on item 11.
+
+Once a decision above is made, tell Claude which one and it can carry out the
 repository side.

@@ -219,6 +219,8 @@ export function syncStatusKey(sync: SyncState, isOffline = false): StatusKey {
     case 'offline':
       return 'offline';
     case 'queued':
+    // Saved on this device and waiting to sync, which is what the key says.
+    case 'read-only':
       return 'queued';
     case 'conflict':
     case 'review':

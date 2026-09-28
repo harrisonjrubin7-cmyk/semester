@@ -397,3 +397,28 @@ select cron.schedule(
   '33 5 * * *',
   $job$select private.sweep_audit_retention()$job$
 );
+
+-- ── The console audit chain: seal yesterday, verify everything ────────────
+--
+-- `private.console_audit_event` (20260929100000_console_control_plane.sql)
+-- is the operations console's append-only, hash-chained archive. Two things
+-- have to happen to it every night and neither is a sweep: nothing is ever
+-- removed from that table, and `audit-retention` above does not name it.
+--
+--   seal    `private.console_audit_seal()` writes yesterday's manifest —
+--           first and last seq, the count, the head hash — HMAC-signed with
+--           a key no API role can read. A day is sealed once; sealing it
+--           again with different rows raises, which is the finding.
+--   verify  `private.console_audit_verify()` recomputes every hash and every
+--           link in the chain and re-checks every manifest's signature, and
+--           records the result where `public.console_audit_status()` shows it.
+--
+-- Both run as the owner of the functions. 03:23 UTC is a few minutes before
+-- `integration-retention` and clear of every other job's minute. **Active**:
+-- nothing needs a secret or an endpoint, and an empty chain verifies in an
+-- instant.
+select cron.schedule(
+  'console-audit-integrity',
+  '23 3 * * *',
+  $job$select private.console_audit_seal(); select private.console_audit_verify();$job$
+);

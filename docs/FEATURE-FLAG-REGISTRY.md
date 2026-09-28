@@ -179,3 +179,24 @@ account safety state and image posts:
 
 **Rollback.** Unset the variable, or set it to `off`. Nothing persists
 because a flag was on: the domain functions refuse at call time.
+
+### Read-only mode (`app/src/lib/readonly.ts`, `app/server/institution/start.ts`)
+
+The one switch that stops the ordinary sync, for the window `ROLLBACK.md` and
+`RESTORE.md` describe: a restore of the production project, or a schema repair
+done by hand, during which a device pushing its copy writes into a database
+that is about to be replaced. The six kill switches above each stop one
+feature; none of them stops a student's semester going up.
+
+| Side | Switch | On | What it does |
+| --- | --- | --- | --- |
+| App (static bundle) | `VITE_READ_ONLY` | exactly `true` | `state/store.tsx` does not push; `cloud.push` refuses even if called; `components/ReadOnlyBanner.tsx` says "Read-only mode: your changes stay on this device until it ends." on every screen; the sync status reads `read-only`, not `offline`. Reads, sign-in and every other write are unchanged. |
+| Gateway | `SEMESTER_READ_ONLY` | exactly `on` | Every `POST` but `/actions/reconcile` is refused after authentication with `503` `read_only`, `retryable: true`, and the envelope. Reads and `/health` go on; `/health` reports `readOnly`. Reconcile stays open because it asks what already happened to an uncertain action and refusing it would leave that student stuck for the whole window. |
+
+- **Owner:** the `engineering` seat (`docs/LAUNCH-READINESS-COUNCIL.md`).
+- **Type:** ops, build-time on the app, environment on the gateway. Default off. Not a tenant flag: it is for every school at once, which is what a restore is.
+- **Engage (app):** set `VITE_READ_ONLY=true` in the deploy's environment and run `pages.yml`; the deploy is the switch, measured under five minutes in `ROLLBACK.md`. **Engage (gateway):** set `SEMESTER_READ_ONLY=on` on the process; it is read per request.
+- **Confirm:** the banner is on the live page, and `curl …/health` answers `"readOnly": true`.
+- **Rollback:** unset the variable (or any value but the exact word) and deploy again; restart nothing on the gateway. Every edit made in the window is on the device, marked unpushed, and the first build without the flag pushes it by the same path a reconnect takes — nothing is lost and nothing has to be replayed by hand.
+- **Not yet done:** it has never been engaged against production. `docs/GO-NO-GO-CHECKLIST.md` (`flags-rollback`) keeps that line open.
+- **Tests:** `app/src/lib/readonly.test.ts`, `cloud.test.ts` ("push under read-only mode"), `app/src/state/readonly.test.tsx`, `app/src/components/ReadOnlyBanner.test.tsx`, `app/server/institution/gateway.test.ts` ("read-only mode").

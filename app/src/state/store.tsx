@@ -38,6 +38,7 @@ import {
   push as pushCloud,
   type Account,
 } from '../lib/cloud';
+import { READ_ONLY } from '../lib/readonly';
 import type { Session } from '@supabase/supabase-js';
 import { loadSeed } from '../data/seed';
 import { nextPayment } from '../lib/bill';
@@ -151,6 +152,7 @@ export type SyncStatus =
   | 'synced'
   | 'offline'      // no connection, and nothing waiting to go up
   | 'queued'       // no connection, and changes waiting to go up when it returns
+  | 'read-only'    // this build does not push (lib/readonly.ts); changes wait for one that does
   | 'conflict'     // another device keeps writing at the same moment; retrying
   | 'review'       // synced, but two devices' edits of something wait on a choice
   | 'error';
@@ -1149,6 +1151,17 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     // edit made with the dialogue on screen was pushed over the account the
     // student was in the middle of being asked about.
     if (asking) return;
+    /*
+     * Read-only mode (`lib/readonly.ts`): this build does not push. The edits
+     * are on disk and `unpushed` remembers them, exactly as offline below; the
+     * next build without the flag runs this effect and sends them. Said as
+     * its own status rather than `queued`, because `queued` says there is no
+     * connection, and there is.
+     */
+    if (READ_ONLY) {
+      setSync((s) => ({ ...s, status: 'read-only', error: '' }));
+      return;
+    }
     /*
      * No connection: say so, and wait. A push now would fail and read as
      * "Sync trouble" for what is only a train going through a tunnel. The

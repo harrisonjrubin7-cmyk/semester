@@ -13,13 +13,13 @@ through informal messaging and memory.**
 
 | Line | Reads |
 | --- | --- |
-| Launch status | **NO-GO** as of 2026-09-27, for 30 reasons listed in [`docs/GO-NO-GO-CHECKLIST.md`](GO-NO-GO-CHECKLIST.md) |
+| Launch status | **NO-GO** as of 2026-09-27, for 29 reasons listed in [`docs/GO-NO-GO-CHECKLIST.md`](GO-NO-GO-CHECKLIST.md) |
 | P0/P1 blockers | none recorded (0 open blockers of any severity) |
 | Readiness register | 142 rows: 3 not-started, 31 designed, 65 building, 43 tested |
 | Role launch register | 63 roles; every rung is in [`docs/ROLE-LAUNCH-REGISTER.md`](ROLE-LAUNCH-REGISTER.md) |
 | Billing/contract status | no customer commitments recorded |
-| Go-live approvals | 0 of 10 seats signed; 0 of 10 seats held |
-| Board ownership | **0 of 13 items owned** — every seat is vacant |
+| Go-live approvals | 0 of 10 seats signed; 4 of 10 seats held |
+| Board ownership | 9 of 13 items owned |
 
 The rest of the board is read by a person each morning from the document
 in the table below. A line on the board names its document; a line with no
@@ -29,19 +29,19 @@ document is a rumour.
 
 | # | Item | Owner | Held by | Read from | The daily line |
 | --- | --- | --- | --- | --- | --- |
-| 1 | Launch status | `founder` | *vacant* | [`docs/GO-NO-GO-CHECKLIST.md`](GO-NO-GO-CHECKLIST.md) | The council verdict, and which gate moved since yesterday |
-| 2 | P0/P1 blockers | `engineering` | *vacant* | [`app/src/lib/launchreadiness.ts`](../app/src/lib/launchreadiness.ts) | Each open P0 and P1 with its owner and age; none closed without the test that proves it |
-| 3 | Readiness register | `founder` | *vacant* | [`docs/MASTER-LAUNCH-READINESS-REGISTER.md`](MASTER-LAUNCH-READINESS-REGISTER.md) | Rows that moved, and the count per gate |
+| 1 | Launch status | `founder` | Founder | [`docs/GO-NO-GO-CHECKLIST.md`](GO-NO-GO-CHECKLIST.md) | The council verdict, and which gate moved since yesterday |
+| 2 | P0/P1 blockers | `engineering` | Founder, acting | [`app/src/lib/launchreadiness.ts`](../app/src/lib/launchreadiness.ts) | Each open P0 and P1 with its owner and age; none closed without the test that proves it |
+| 3 | Readiness register | `founder` | Founder | [`docs/MASTER-LAUNCH-READINESS-REGISTER.md`](MASTER-LAUNCH-READINESS-REGISTER.md) | Rows that moved, and the count per gate |
 | 4 | Role launch register | `security` | *vacant* | [`docs/ROLE-LAUNCH-REGISTER.md`](ROLE-LAUNCH-REGISTER.md) | The roles the cohort needs switched on, and the rung each has reached |
 | 5 | Security/accessibility findings | `security` | *vacant* | [`docs/SECURITY-ACCESSIBILITY-READINESS.md`](SECURITY-ACCESSIBILITY-READINESS.md) | Open findings by severity; the accessibility seat reads its half from the WCAG scorecard |
 | 6 | Integration test status | `data` | *vacant* | [`docs/UNIVERSITY_CONNECTIONS.md`](UNIVERSITY_CONNECTIONS.md) | Each connector the cohort depends on: tested, syncing, or not |
-| 7 | Billing/contract status | `founder` | *vacant* | [`ops/customer-commitments/README.md`](../ops/customer-commitments/README.md) | The agreement’s state, and every commitment it carries with its due date |
-| 8 | Support staffing | `success` | *vacant* | [`docs/market-readiness/SUPPORT_PLAYBOOK.md`](market-readiness/SUPPORT_PLAYBOOK.md) | Who is on the queue, the hours covered, and yesterday’s volume |
+| 7 | Billing/contract status | `founder` | Founder | [`ops/customer-commitments/README.md`](../ops/customer-commitments/README.md) | The agreement’s state, and every commitment it carries with its due date |
+| 8 | Support staffing | `success` | Founder, acting | [`docs/market-readiness/SUPPORT_PLAYBOOK.md`](market-readiness/SUPPORT_PLAYBOOK.md) | Who is on the queue, the hours covered, and yesterday’s volume |
 | 9 | Customer communications | `champion` | *vacant* | [`docs/launch/ANNOUNCEMENT-TEMPLATES.md`](launch/ANNOUNCEMENT-TEMPLATES.md) | What the school has been told, what goes out next, and who approved it |
-| 10 | Go-live approvals | `founder` | *vacant* | [`docs/LAUNCH-READINESS-COUNCIL.md`](LAUNCH-READINESS-COUNCIL.md) | Seats signed for this decision, and seats still to sign |
-| 11 | Rollback readiness | `engineering` | *vacant* | [`ROLLBACK.md`](../ROLLBACK.md) | The last rehearsed rollback, its duration, and whether today’s deploy changed the plan |
-| 12 | Incident contacts | `engineering` | *vacant* | [`docs/vanderbilt/incident-routing.md`](vanderbilt/incident-routing.md) | That the routing was tested today, and reached a person |
-| 13 | Academic critical-period plan | `product` | *vacant* | [`docs/operating-model/PILOT-TO-PRODUCTION.md`](operating-model/PILOT-TO-PRODUCTION.md) | Days to the next registration or finals window, and what is frozen until it passes |
+| 10 | Go-live approvals | `founder` | Founder | [`docs/LAUNCH-READINESS-COUNCIL.md`](LAUNCH-READINESS-COUNCIL.md) | Seats signed for this decision, and seats still to sign |
+| 11 | Rollback readiness | `engineering` | Founder, acting | [`ROLLBACK.md`](../ROLLBACK.md) | The last rehearsed rollback, its duration, and whether today’s deploy changed the plan |
+| 12 | Incident contacts | `engineering` | Founder, acting | [`docs/vanderbilt/incident-routing.md`](vanderbilt/incident-routing.md) | That the routing was tested today, and reached a person |
+| 13 | Academic critical-period plan | `product` | Founder, acting | [`docs/operating-model/PILOT-TO-PRODUCTION.md`](operating-model/PILOT-TO-PRODUCTION.md) | Days to the next registration or finals window, and what is frozen until it passes |
 
 ## The rules
 

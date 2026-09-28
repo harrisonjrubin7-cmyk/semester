@@ -832,3 +832,31 @@ describe('saveQueue', () => {
     expect(row.send_at).toBe('2026-09-20T14:00:00.000Z');
   });
 });
+
+describe('push under read-only mode', () => {
+  /** Fresh, with the flag set — the module reads it at import, like the project URL. */
+  async function loadReadOnly() {
+    vi.resetModules();
+    vi.stubEnv('VITE_SUPABASE_URL', 'https://project.supabase.co');
+    vi.stubEnv('VITE_SUPABASE_KEY', 'a-publishable-key');
+    vi.stubEnv('VITE_READ_ONLY', 'true');
+    harness = makeDb();
+    vi.doMock('@supabase/supabase-js', () => ({ createClient: () => harness.db }));
+    return import('./cloud');
+  }
+
+  it('refuses before it writes anything, or even fetches the client', async () => {
+    const mod = await loadReadOnly();
+    await expect(mod.push('user-1', { term: '2026FA' }, [{ id: 'c1', data: {} }])).rejects.toMatchObject({ name: 'ReadOnly' });
+    expect(harness.log, 'no table was touched').toEqual([]);
+  });
+
+  it('is the ordinary push when the flag is anything but true — the control', async () => {
+    vi.resetModules();
+    vi.stubEnv('VITE_READ_ONLY', 'on');
+    const mod = await load();
+    harness.rows.state = { updated_at: '2026-09-28T10:00:00Z' };
+    await expect(mod.push('user-1', { term: '2026FA' }, [])).resolves.toBeTruthy();
+    expect(harness.log.some((l) => l.table === 'state' && l.op === 'insert')).toBe(true);
+  });
+});

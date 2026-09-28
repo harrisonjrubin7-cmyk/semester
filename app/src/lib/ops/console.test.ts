@@ -6,6 +6,7 @@ import { REGISTER } from '../masterregister';
 import { ROLES } from '../rolelaunch';
 import {
   ACCESS_BASIS,
+  CAPABILITIES,
   CLASSIFICATIONS,
   CLASSIFICATION_MEANING,
   CONTEXT_BAR,
@@ -20,6 +21,7 @@ import {
   PRODUCTION_RULES,
   PRODUCTION_WRITE_NOTICE,
   RECORD_KINDS,
+  VIEWS,
   escalation,
   type Party,
 } from './console';
@@ -34,14 +36,20 @@ import { cell, controlLine, link, renderedFrom, table } from './render';
  * drawing of a control rather than one. Each is refused here. The escalation
  * ladder is shown a day count on each side of each step before it is trusted.
  *
- * `ops/operations-console/README.md` is rendered from the data; `npm run
- * registers` from app/ rewrites it, and the last test fails while it is stale.
+ * The thirteen capabilities are held the same way the production rules are: a
+ * `done` row needs a test or a check among its holders, and every holder must
+ * be in the tree, so a row cannot be done by assertion.
+ *
+ * `ops/operations-console/README.md` and `docs/OPERATIONS-CONSOLE-MAP.md` are
+ * rendered from the data; `npm run registers` from app/ rewrites them, and the
+ * last tests fail while either is stale.
  */
 
 const root = join(import.meta.dirname, '../../../..');
 const at = (p: string) => join(root, p);
 const read = (p: string) => readFileSync(at(p), 'utf8');
 const DOC = 'ops/operations-console/README.md';
+const MAP = 'docs/OPERATIONS-CONSOLE-MAP.md';
 
 const roles = new Set(ROLES.map((r) => r.role));
 const isParty = (p: Party): boolean => p === 'student' || (SEATS as readonly string[]).includes(p) || (p.startsWith('role:') && roles.has(p.slice(5)));
@@ -160,6 +168,59 @@ describe('production rules and the conversion', () => {
   });
 });
 
+describe('the thirteen capabilities', () => {
+  it('names the thirteen the prototype faked, each once, with what replaced it', () => {
+    expect(CAPABILITIES).toHaveLength(13);
+    expect(new Set(CAPABILITIES.map((c) => c.id)).size).toBe(13);
+    expect(CAPABILITIES.map((c) => c.id)).toEqual([
+      'saved-views', 'operator-identity', 'roles', 'authorization', 'audit-log', 'fail-closed', 'two-person',
+      'commercial-core', 'figures', 'support-access', 'break-glass', 'evidence', 'environment',
+    ]);
+    for (const c of CAPABILITIES) {
+      expect(/^[a-z0-9-]+$/.test(c.id), c.id).toBe(true);
+      expect(c.prototype.length, `${c.id}: what the prototype did`).toBeGreaterThan(20);
+      expect(c.replacement.length, `${c.id}: what replaced it`).toBeGreaterThan(20);
+    }
+  });
+
+  it('holds every row with files that exist, and calls it done only when a test or check is among them', () => {
+    // Every fault at once, so a missing holder cannot hide a row that is done by assertion.
+    const faults: string[] = [];
+    for (const c of CAPABILITIES) {
+      if (c.holders.length === 0) faults.push(`${c.id} has no holder.`);
+      if (new Set(c.holders.map((h) => h.path)).size !== c.holders.length) faults.push(`${c.id} names a holder twice.`);
+      for (const h of c.holders) if (!existsSync(at(h.path))) faults.push(`${c.id} cites ${h.path}, which does not exist.`);
+      if (c.status === 'done' && !c.holders.some((h) => isTest(h.path))) faults.push(`${c.id} is done with no test among its holders.`);
+    }
+    expect(faults).toEqual([]);
+  });
+
+  it('can tell a test from a document', () => {
+    expect(isTest('supabase/console-approvals.check.sql')).toBe(true);
+    expect(isTest('app/src/screens/console.test.tsx')).toBe(true);
+    expect(isTest('supabase/migrations/20260929100000_console_control_plane.sql')).toBe(false);
+    expect(isTest('docs/EVIDENCE-REGISTER.md')).toBe(false);
+  });
+
+  it('says billing is not a number, and the audit is not in a browser', () => {
+    expect(CAPABILITIES.find((c) => c.id === 'figures')!.replacement).toMatch(/D-009/);
+    expect(CAPABILITIES.find((c) => c.id === 'audit-log')!.replacement).toMatch(/insert-only/);
+    expect(CAPABILITIES.find((c) => c.id === 'roles')!.replacement).toMatch(/no role switching/);
+  });
+
+  it('lists the views the screen offers, each once, and each in the map', () => {
+    expect(new Set(VIEWS.map((v) => v.id)).size).toBe(VIEWS.length);
+    expect(VIEWS.map((v) => v.view)).toEqual(['Approvals', 'Break-glass', 'Audit', 'Customers', 'Figures', 'Evidence', 'Views']);
+    for (const v of VIEWS) expect(v.shows.length, v.id).toBeGreaterThan(40);
+  });
+
+  it(`is what ${MAP} says`, () => {
+    const rendered = renderMap();
+    if (process.env.REGISTERS === 'write') writeFileSync(at(MAP), rendered);
+    expect(read(MAP), `${MAP} is stale; run \`npm run registers\` from app/`).toBe(rendered);
+  });
+});
+
 // ── rendering ──────────────────────────────────────────────────────────────
 
 function render(): string {
@@ -173,11 +234,14 @@ function render(): string {
     '',
     controlLine(DOC),
     '',
-    'There is no operations console yet. This is the policy the one that gets',
-    'built will read: who may approve what, which records carry which class,',
-    'what every page shows, what happens when evidence goes stale, and the lines',
-    'a prototype in a browser could not hold. Written as data first so that a',
-    'test holds it and a screen cannot quietly re-decide it.',
+    'The policy the operations console reads: who may approve what, which',
+    'records carry which class, what every page shows, what happens when evidence',
+    'goes stale, and the lines a prototype in a browser could not hold. Written',
+    'as data first (D-110) so that a test holds it and a screen cannot quietly',
+    're-decide it; the console (`app/src/screens/Console.tsx`) and the',
+    'migrations behind it now read it, and the last two sections say which file',
+    `holds each of the thirteen things the prototype faked. ${ref(MAP)} is the`,
+    'map of the console’s views.',
     '',
     `Parties: ${Object.entries(PARTY_MEANING).map(([k, v]) => `**${k}** — ${v}`).join('; ')}.`,
     '',
@@ -249,11 +313,13 @@ function render(): string {
     '',
     ...table(['Days before expiry', 'Action'], ESCALATION.map((e) => [e.daysLeft === 0 ? 'Expiry' : String(e.daysLeft), cell(e.action)])),
     '',
-    'It applies to every artifact under `docs/evidence/`: HECVAT, VPAT/ACR,',
-    'penetration test, SOC report, access review, restore drill, AI evaluation,',
-    'vendor review, insurance certificate, subprocessor review, policy review.',
-    'The last step is the claim-to-evidence control: an expired artifact takes',
-    `the public claims resting on it with it, per ${ref('ops/claims/README.md')}.`,
+    `It applies to every record of ${ref('docs/EVIDENCE-REGISTER.md')} today,`,
+    'and to every artifact under `docs/evidence/` once one is filed: HECVAT,',
+    'VPAT/ACR, penetration test, SOC report, access review, restore drill, AI',
+    'evaluation, vendor review, insurance certificate, subprocessor review,',
+    'policy review. The last step is the claim-to-evidence control: an expired',
+    `artifact takes the public claims resting on it with it, per ${ref('ops/claims/README.md')},`,
+    'and `claims.test.ts` refuses an “available” that rests on an expired record.',
     '',
     '## Production rules',
     '',
@@ -277,6 +343,97 @@ function render(): string {
       CONVERSION.map((s, i) => [`**${i + 1}. ${cell(s.step)}**`, cell(s.today), s.rows.map((r) => `\`${r}\` (${status(r)})`).join(', ')]),
     ),
     '',
+    '## From prototype to control plane',
+    '',
+    'The thirteen things the prototype faked, what production needed instead, and',
+    'the files that hold each. `done` needs a test or a check among the holders',
+    'and every holder in the tree; the test refuses a row that is done by',
+    'assertion.',
+    '',
+    ...table(
+      ['Capability', 'In the prototype', 'Production replacement', 'Status', 'Held by'],
+      CAPABILITIES.map((c) => [
+        `**${cell(c.capability)}**${c.note ? `<br>${cell(c.note)}` : ''}`,
+        cell(c.prototype),
+        cell(c.replacement),
+        c.status,
+        c.holders.map((h) => `${ref(h.path)} — ${cell(h.how)}`).join('<br>'),
+      ]),
+    ),
+    '',
+    '## Console views',
+    '',
+    `What the console shows, one line each; ${ref(MAP)} is the map.`,
+    '',
+    ...table(['View', 'Shows'], VIEWS.map((v) => [`**${v.view}**`, cell(v.shows)])),
+    '',
   );
+  return out.join('\n');
+}
+
+function renderMap(): string {
+  const ref = (p: string) => `[\`${p}\`](${link(MAP, p)})`;
+  const holds = (id: string) => CAPABILITIES.find((c) => c.id === id)!;
+  const out: string[] = [
+    '# Operations console map',
+    '',
+    renderedFrom('app/src/lib/ops/console.ts', 'console.test.ts'),
+    '',
+    controlLine(MAP),
+    '',
+    `The operations console is ${ref('app/src/screens/Console.tsx')}, at \`#/console\`,`,
+    'opened only by a signed-in account holding `console:operate` at platform',
+    'scope; without it the screen is a notice, never a demo. Every view reads the',
+    `controls in ${ref('ops/operations-console/README.md')} and the control plane`,
+    `in ${ref(holds('audit-log').holders[0].path)} and`,
+    `${ref(holds('two-person').holders[0].path)}.`,
+    '',
+    '## The context bar',
+    '',
+    'On every view. The environment is a word and a shape, never colour alone.',
+    '',
+    ...table(['Field', 'Shows'], CONTEXT_BAR.map((f) => [`**${f.field}**`, cell(f.shows)])),
+    '',
+    `Under any production write: *${PRODUCTION_WRITE_NOTICE}*`,
+    '',
+    '## The views',
+    '',
+    ...table(['View', 'Shows'], VIEWS.map((v) => [`**${v.view}**`, cell(v.shows)])),
+    '',
+    '## What holds each view',
+    '',
+    'The capability behind each view, and its holders, from the same file.',
+    '',
+  ];
+  const behind: Record<string, string[]> = {
+    approvals: ['two-person', 'fail-closed'],
+    'break-glass': ['break-glass'],
+    audit: ['audit-log'],
+    customers: ['commercial-core'],
+    figures: ['figures'],
+    evidence: ['evidence'],
+    views: ['saved-views'],
+  };
+  for (const v of VIEWS) {
+    out.push(`### ${v.view}`, '');
+    for (const id of behind[v.id]) {
+      const c = holds(id);
+      out.push(`**${c.capability}** (${c.status}) — ${c.replacement}.`, '');
+      for (const h of c.holders) out.push(`- ${ref(h.path)} — ${h.how}.`);
+      out.push('');
+    }
+  }
+  out.push(
+    '## Everywhere',
+    '',
+    'The bar and the gate rest on these, whichever view is open.',
+    '',
+  );
+  for (const id of ['operator-identity', 'roles', 'authorization', 'support-access', 'environment']) {
+    const c = holds(id);
+    out.push(`**${c.capability}** (${c.status}) — ${c.replacement}.`, '');
+    for (const h of c.holders) out.push(`- ${ref(h.path)} — ${h.how}.`);
+    out.push('');
+  }
   return out.join('\n');
 }

@@ -14,7 +14,7 @@ for each. The [UI constitution](design/SEMESTER-UI-CONSTITUTION.md) is the
 design system’s own law; the [do-not-build page](DO-NOT-BUILD.md) holds the
 roots.
 
-**Build one platform with many domains, not many products stitched together.** The shared foundations mostly exist as parts. The gap is how they are joined: three navigation models where the documents want one, a trust vocabulary in three components, the pieces of an action model with no single pipeline, notification controls spread across files, and an operations console that is policy-as-data with no screen. So this page is less a list of things to build than a list of things to converge, and each row says which.
+**Build one platform with many domains, not many products stitched together.** The shared foundations mostly exist as parts. The gap is how they are joined: three navigation models where the documents want one, a trust vocabulary in three components, the pieces of an action model with no single pipeline, notification controls spread across files, and an operations console whose screen unifies seven views while five more stay data or University tabs. So this page is less a list of things to build than a list of things to converge, and each row says which.
 
 | Supplied document | What it holds |
 | --- | --- |
@@ -173,7 +173,7 @@ item at the `CONTROLS` row in `lib/mecontrols.ts` that carries it:
 
 ## One operational control plane
 
-The console may use domain-specific views, but it uses the same identity, permission, audit, case, notification and runbook services; there is no separate admin tool per module. There is no operations console yet ([ops/operations-console](../ops/operations-console/README.md)); the views it would unify, at what the tree has:
+The console may use domain-specific views, but it uses the same identity, permission, audit, case, notification and runbook services; there is no separate admin tool per module. The console exists ([docs/OPERATIONS-CONSOLE-MAP.md](OPERATIONS-CONSOLE-MAP.md), from [ops/operations-console](../ops/operations-console/README.md)); the views it unifies and the ones still outside it, at what the tree has:
 
 | ID | View | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- |
@@ -187,7 +187,7 @@ The console may use domain-specific views, but it uses the same identity, permis
 | ai-policy | AI policy | tested | `app/src/lib/governance/ai-lifecycle.ts`: the gates<br>`app/src/lib/aiflags.ts`: the AI flags<br>`app/src/lib/governance/ai-lifecycle.test.ts`: the gates held | Data only; no screen. |
 | privacy | Privacy and consent | tested | `app/src/lib/governance/module-privacy.ts`: the model<br>`app/src/lib/governance/module-privacy.test.ts`: held to app_roles | Data only; no screen. |
 | a11y-issues | Accessibility issues | designed | `docs/WCAG-UI-AUDIT-SCORECARD.md`: the scorecard | No view and no issue record. |
-| commitments | Contracts and customer commitments | tested | `app/src/lib/ops/commitments.ts`: the register<br>`app/src/lib/ops/commitments.test.ts`: held | Register only. |
+| commitments | Contracts and customer commitments | tested | `app/src/lib/ops/commitments.ts`: the register<br>`supabase/migrations/20260929110000_console_approvals_and_break_glass.sql`: customer, commitment and contract rows scoped to the tenant<br>`app/src/screens/console.test.tsx`: the Customers view, with classification and access basis on every record | None. |
 | billing | Billing | not-started | `docs/DECISION-LOG.md`: D-009: no billing exists | None exists, by decision. |
 | evidence | Audit and evidence | tested | `app/src/lib/ops/claims.ts`: the claims register<br>`app/src/lib/ops/proofcalendar.ts`: the proof calendar<br>`app/src/lib/ops/claims.test.ts`: every claim with a register word | Registers, not a view. |
 | release-impact | Release impact | tested | `app/src/lib/governance/release-readiness.ts`: the score<br>`app/src/lib/governance/consolechecks.ts`: promises kept, release impact, on-call workload<br>`app/src/lib/governance/consolechecks.test.ts`: the checks | Data only; no screen. |
@@ -227,8 +227,8 @@ Before any new feature is released:
 | me | One data-agency centre | tested | `app/src/lib/mecontrols.test.ts`: the rows | Two of the documents’ ten items have no row. |
 | events | One audit and event model | tested | `app/server/institution/gateway.test.ts`: the error envelope and correlation id<br>`docs/architecture/0010-correlation-ids-and-error-envelope.md`: the ADR | Four audit tables; edge functions answer in their own shapes. |
 | gateway | One integration gateway | tested | `app/server/institution/gateway.ts`: the gateway<br>`app/server/institution/gateway.test.ts`: prepare, commit, reconcile<br>`docs/LMS-INTEROPERABILITY-MATRIX.md`: the LMS side of it | AGS and the integration tick bypass it. |
-| console | One operations console | designed | `ops/operations-console/README.md`: there is no operations console yet<br>`app/src/lib/ops/console.ts`: the controls as data (D-110) | No screen. |
-| **total** | | not-started 0, designed 1, building 4, tested 6 | | |
+| console | One operations console | tested | `app/src/screens/Console.tsx`: the console: context bar, approvals, break-glass, audit, customers, figures, evidence, saved views<br>`app/src/screens/console.test.tsx`: gated by console:operate; every write under the production notice<br>`docs/OPERATIONS-CONSOLE-MAP.md`: the map, rendered from the controls (D-110) | Tenant configuration, flags, incidents, AI policy and privacy are still data or University tabs, not console views. |
+| **total** | | not-started 0, designed 0, building 4, tested 7 | | |
 
 ## Cross-domain relationship rules
 

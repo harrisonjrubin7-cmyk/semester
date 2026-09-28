@@ -104,6 +104,16 @@ describe('the checks', () => {
     ]);
   });
 
+  it('catch an available claim resting on evidence that has expired', () => {
+    const facts: Facts = { ...fixtureFacts, expiredEvidence: (id) => (id === 'fixture' ? ['stale-record'] : []) };
+    expect(problems([sound], facts)).toEqual(['fixture is available and rests on stale-record, which has expired.']);
+    // The control: a claim that is not available may rest on it; the register says so in its own words.
+    const planned = `<li data-claim="fixture"><span class="site-badge site-status site-status-planned">Planned</span> A fixture</li>`;
+    expect(problems([{ ...sound, status: 'planned', rows: ['IAM-005'] }], { ...facts, page: () => planned })).toEqual([]);
+    // And a caller with no register is not told anything expired.
+    expect(problems([sound], fixtureFacts)).toEqual([]);
+  });
+
   it('catch a page that prints the wrong label, no label, or the wording missing', () => {
     expect(problems([sound], { ...fixtureFacts, page: () => `<li data-claim="fixture"><span class="site-badge site-status site-status-planned">Planned</span> A fixture</li>` })).toEqual([
       '/ labels fixture “Planned”, but it is Available now.',

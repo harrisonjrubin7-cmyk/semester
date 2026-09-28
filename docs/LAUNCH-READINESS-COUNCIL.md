@@ -9,8 +9,9 @@ gates and rules below are written as data in
 [`launchreadiness.test.ts`](../app/src/lib/launchreadiness.test.ts) fails if
 this document and that data disagree.
 
-**Current verdict: `NO-GO`.** Every seat is vacant, and no gate is met.
-[`GO-NO-GO-CHECKLIST.md`](GO-NO-GO-CHECKLIST.md) lists each open reason.
+**Current verdict: `NO-GO`.** Four seats are held and none has signed; six
+are vacant; one gate is met. [`GO-NO-GO-CHECKLIST.md`](GO-NO-GO-CHECKLIST.md)
+lists each open reason.
 
 ## Why the council is written as data
 
@@ -32,23 +33,25 @@ P1, it must come from the founder seat, and it must carry an expiry date.
 
 | Seat | Decides | Holder |
 | --- | --- | --- |
-| `founder` — Founder / CEO | Risk acceptance, customer commitment, commercial launch | Vacant |
-| `product` — Product lead | Golden path and its acceptance criteria | Vacant |
-| `engineering` — Engineering lead | Reliability, release, rollback | Vacant |
+| `founder` — Founder / CEO | Risk acceptance, customer commitment, commercial launch | Founder |
+| `product` — Product lead | Golden path and its acceptance criteria | Founder, acting |
+| `engineering` — Engineering lead | Reliability, release, rollback | Founder, acting |
 | `security` — Security / vCISO | Threat model, pen-test findings, access controls | Vacant |
 | `privacy` — Privacy / legal | Terms, privacy, DPA/FERPA/COPPA posture, consent | Vacant |
 | `accessibility` — Accessibility lead | WCAG/VPAT status, blockers, remediation | Vacant |
-| `success` — Customer success | Onboarding, training, support, communication | Vacant |
+| `success` — Customer success | Onboarding, training, support, communication | Founder, acting |
 | `trust` — Trust & Safety | Reporting, escalation, moderation scope | Vacant |
 | `data` — Data / integration owner | Source quality, freshness, connector health | Vacant |
 | `champion` — Pilot institution champion | Institutional workflow and communications | Vacant; must be someone at the institution |
 
-**Why every seat reads "Vacant", when `ROLLBACK.md` and `RESTORE.md` both name
+**Why six seats read "Vacant", when `ROLLBACK.md` and `RESTORE.md` both name
 an owner.** Those documents name the person who can *run the workflows*. They
 also call that single person the project's standing problem. A council seat
 is an accountability that someone has accepted in writing. Filling all ten
 seats with one repository username would make the council look complete when
-it is not. [`docs/vanderbilt/incident-routing.md`](vanderbilt/incident-routing.md)
+it is not — which is why the four that are held say "Founder" and "Founder,
+acting", not a username, and why security, privacy, accessibility, trust,
+data and champion stay vacant until someone qualified accepts each. [`docs/vanderbilt/incident-routing.md`](vanderbilt/incident-routing.md)
 applies the same rule to incident owners: "A repository username is not an
 operational on-call assignment."
 
@@ -66,6 +69,17 @@ anyone at Semester. A champion from the vendor side is a sales contact.
 3. A holder signs off by adding the seat to `signoffs` for the specific
    decision. A signature is valid only for the decision it was given for. A
    later decision needs a new signature.
+
+**2026-09-28 — four seats accepted.** On the founder's instruction (decision 1
+in [`LAUNCH-DECISIONS.md`](LAUNCH-DECISIONS.md)), the `founder` seat is held
+by the founder, and `product`, `engineering` and `success` are held by the
+same person, acting, until someone else accepts each — this document allows
+one person to hold several seats at pilot scale. The four holders were written
+into `launchreadiness.ts` and this table in the same change. Nothing was added
+to `signoffs`: there is no decision before the council yet, and a signature is
+given for a decision, not for a seat. `decide()` therefore now reads "has not
+signed" for these four and "is vacant" for the other six, and the verdict is
+unchanged.
 
 ## The rules `decide()` enforces
 

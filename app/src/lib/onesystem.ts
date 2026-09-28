@@ -16,9 +16,9 @@
  * joined: three navigation models where the documents want one; a trust
  * vocabulary in three components where they want one; the pieces of an action
  * model with no single pipeline; notification controls spread across files;
- * an operations console that is policy-as-data with no screen. So this page
- * is less a list of things to build than a list of things to converge, and
- * each row says which.
+ * an operations console whose screen unifies seven views while five more
+ * stay data or University tabs. So this page is less a list of things to
+ * build than a list of things to converge, and each row says which.
  *
  * ## What is held to what
  *
@@ -233,7 +233,7 @@ export const CONSOLE: readonly Held[] = held([
   { id: 'ai-policy', what: 'AI policy', status: 'tested', evidence: [['app/src/lib/governance/ai-lifecycle.ts', 'the gates'], ['app/src/lib/aiflags.ts', 'the AI flags'], ['app/src/lib/governance/ai-lifecycle.test.ts', 'the gates held']], gap: 'Data only; no screen.' },
   { id: 'privacy', what: 'Privacy and consent', status: 'tested', evidence: [['app/src/lib/governance/module-privacy.ts', 'the model'], ['app/src/lib/governance/module-privacy.test.ts', 'held to app_roles']], gap: 'Data only; no screen.' },
   { id: 'a11y-issues', what: 'Accessibility issues', status: 'designed', evidence: [['docs/WCAG-UI-AUDIT-SCORECARD.md', 'the scorecard']], gap: 'No view and no issue record.' },
-  { id: 'commitments', what: 'Contracts and customer commitments', status: 'tested', evidence: [['app/src/lib/ops/commitments.ts', 'the register'], ['app/src/lib/ops/commitments.test.ts', 'held']], gap: 'Register only.' },
+  { id: 'commitments', what: 'Contracts and customer commitments', status: 'tested', evidence: [['app/src/lib/ops/commitments.ts', 'the register'], ['supabase/migrations/20260929110000_console_approvals_and_break_glass.sql', 'customer, commitment and contract rows scoped to the tenant'], ['app/src/screens/console.test.tsx', 'the Customers view, with classification and access basis on every record']], gap: 'None.' },
   { id: 'billing', what: 'Billing', status: 'not-started', evidence: [['docs/DECISION-LOG.md', 'D-009: no billing exists']], gap: 'None exists, by decision.' },
   { id: 'evidence', what: 'Audit and evidence', status: 'tested', evidence: [['app/src/lib/ops/claims.ts', 'the claims register'], ['app/src/lib/ops/proofcalendar.ts', 'the proof calendar'], ['app/src/lib/ops/claims.test.ts', 'every claim with a register word']], gap: 'Registers, not a view.' },
   { id: 'release-impact', what: 'Release impact', status: 'tested', evidence: [['app/src/lib/governance/release-readiness.ts', 'the score'], ['app/src/lib/governance/consolechecks.ts', 'promises kept, release impact, on-call workload'], ['app/src/lib/governance/consolechecks.test.ts', 'the checks']], gap: 'Data only; no screen.' },
@@ -271,7 +271,7 @@ export const FOUNDATIONS: readonly Held[] = held([
   { id: 'me', what: 'One data-agency centre', status: 'tested', evidence: [['app/src/lib/mecontrols.test.ts', 'the rows']], gap: 'Two of the documents’ ten items have no row.' },
   { id: 'events', what: 'One audit and event model', status: 'tested', evidence: [['app/server/institution/gateway.test.ts', 'the error envelope and correlation id'], ['docs/architecture/0010-correlation-ids-and-error-envelope.md', 'the ADR']], gap: 'Four audit tables; edge functions answer in their own shapes.' },
   { id: 'gateway', what: 'One integration gateway', status: 'tested', evidence: [['app/server/institution/gateway.ts', 'the gateway'], ['app/server/institution/gateway.test.ts', 'prepare, commit, reconcile'], ['docs/LMS-INTEROPERABILITY-MATRIX.md', 'the LMS side of it']], gap: 'AGS and the integration tick bypass it.' },
-  { id: 'console', what: 'One operations console', status: 'designed', evidence: [['ops/operations-console/README.md', 'there is no operations console yet'], ['app/src/lib/ops/console.ts', 'the controls as data (D-110)']], gap: 'No screen.' },
+  { id: 'console', what: 'One operations console', status: 'tested', evidence: [['app/src/screens/Console.tsx', 'the console: context bar, approvals, break-glass, audit, customers, figures, evidence, saved views'], ['app/src/screens/console.test.tsx', 'gated by console:operate; every write under the production notice'], ['docs/OPERATIONS-CONSOLE-MAP.md', 'the map, rendered from the controls (D-110)']], gap: 'Tenant configuration, flags, incidents, AI policy and privacy are still data or University tabs, not console views.' },
 ]);
 
 // ── Cross-domain relationship rules ──────────────────────────────────────────

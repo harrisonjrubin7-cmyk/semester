@@ -671,6 +671,8 @@ export interface Facts {
   routes: readonly string[];
   /** The rendered HTML of a route, or `undefined` when there is none. */
   page: (route: string) => string | undefined;
+  /** The evidence records under a claim that have expired (`expiredUnder` in evidence.ts); absent when the caller holds no register. */
+  expiredEvidence?: (claimId: string) => readonly string[];
 }
 
 export const isTest = (path: string): boolean => /\.test\.tsx?$/.test(path) || /\.check\.sql$/.test(path);
@@ -689,6 +691,7 @@ export function problems(claims: readonly Claim[], facts: Facts): string[] {
     if (!/^[a-z0-9-]+$/.test(c.id)) out.push(`${c.id} is not a slug.`);
     if (/["&<>]|'/.test(c.claim)) out.push(`${c.id}: the wording carries a character the page would escape; use ’ and “ ”.`);
     if (c.status === 'available' && !c.evidence.some((e) => isTest(e.path))) out.push(`${c.id} is available and cites no test.`);
+    if (c.status === 'available') for (const e of facts.expiredEvidence?.(c.id) ?? []) out.push(`${c.id} is available and rests on ${e}, which has expired.`);
     if (c.status === 'built-tested' && !c.evidence.some((e) => isTest(e.path))) out.push(`${c.id} is built and tested and cites no test.`);
     if (c.status !== 'available' && c.rows.length === 0) out.push(`${c.id} is ${c.status} and names no register row that would move it.`);
     for (const e of c.evidence) if (!facts.exists(e.path)) out.push(`${c.id} cites ${e.path}, which does not exist.`);

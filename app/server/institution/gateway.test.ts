@@ -96,11 +96,13 @@ function fixture({
   rateLimiter,
   readiness,
   telemetry,
+  readOnly,
 }: {
   asynchronous?: boolean;
   rateLimiter?: RateLimiter;
   readiness?: () => Promise<ReadinessResult>;
   telemetry?: (event: GatewayTelemetryEvent) => void | Promise<void>;
+  readOnly?: () => boolean;
 } = {}) {
   const dir = mkdtempSync(join(tmpdir(), 'semester-gateway-'));
   dirs.push(dir);
@@ -197,6 +199,7 @@ function fixture({
     rateLimiter,
     readiness,
     telemetry,
+    readOnly,
   });
 
   const input: ActionInput = {
@@ -771,5 +774,70 @@ describe('correlation ids and the error envelope', () => {
     const crash = await crashed.json();
     expect(crash.error).toMatchObject({ code: 'unavailable', retryable: true });
     expect(JSON.stringify(crash)).not.toContain('password');
+  });
+});
+
+describe('read-only mode', () => {
+  /*
+   * `SEMESTER_READ_ONLY=on` in `start.ts`, `config.readOnly` here. The window
+   * it exists for is a restore or a schema repair (`ROLLBACK.md`), during
+   * which a write that lands is a write into a database about to be replaced.
+   * Refused with the envelope's own vocabulary and `retryable: true`, because
+   * that is the truth of it: the mode ends, the same request works.
+   */
+  it('refuses commit with the envelope, retryable, and executes nothing', async () => {
+    let on = false;
+    const f = fixture({ readOnly: () => on });
+    const review = await f.prepare();
+    on = true;
+    const refused = await f.request('/actions/commit', { reviewId: review.id, confirmed: true });
+    expect(refused.status).toBe(503);
+    const body = await refused.json();
+    expect(body.error).toMatchObject({ code: 'read_only', retryable: true, correlation_id: expect.any(String) });
+    expect(body.message).toMatch(/read-only mode/);
+    expect(f.calls(), 'nothing was executed').toBe(0);
+    // The mode ends, and the same review commits: the refusal consumed nothing.
+    on = false;
+    const done = await f.request('/actions/commit', { reviewId: review.id, confirmed: true });
+    expect(done.status).toBe(200);
+    expect(f.calls()).toBe(1);
+  });
+
+  it('refuses every other write the same way — prepare and an intelligence confirm', async () => {
+    const f = fixture({ readOnly: () => true });
+    const prepare = await f.request('/actions/prepare', f.input);
+    expect(prepare.status).toBe(503);
+    expect((await prepare.json()).error.code).toBe('read_only');
+    const confirm = await f.request('/v1/intelligence/actions/a-1/confirm', { confirmed: true });
+    expect(confirm.status).toBe(503);
+    expect((await confirm.json()).error.code).toBe('read_only');
+    // And nothing was journalled: no review to commit later, no audit of an
+    // action that was never prepared.
+    expect(f.journal.get).toBeTypeOf('function');
+    const status = await f.request('/status');
+    expect(status.status, 'reads go on').toBe(200);
+  });
+
+  it('still reads, still reconciles, and says so on /health', async () => {
+    let on = false;
+    const f = fixture({ readOnly: () => on });
+    // An action left uncertain before the mode began.
+    const review = await f.prepare();
+    f.mode('timeout');
+    expect((await f.request('/actions/commit', { reviewId: review.id, confirmed: true })).status).toBe(502);
+    on = true;
+    const records = await f.request('/records?area=assignments');
+    expect(records.status).toBe(200);
+    const reconciled = await f.request('/actions/reconcile', { reviewId: review.id });
+    expect(reconciled.status, 'asking what happened is not a write at the school').toBe(200);
+    const health = await f.request('/health', undefined, { authorization: '' });
+    expect((await health.json()).readOnly).toBe(true);
+  });
+
+  it('is off unless asked — the control', async () => {
+    const f = fixture();
+    const health = await f.request('/health', undefined, { authorization: '' });
+    expect((await health.json()).readOnly).toBe(false);
+    expect((await f.request('/actions/prepare', f.input)).status).toBe(200);
   });
 });

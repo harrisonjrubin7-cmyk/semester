@@ -37,6 +37,7 @@ import { classify, reference, say, type Code } from './failure';
 import type { Seen } from '../state/shape';
 import { MOVE_MS, fetchWithin, timedOut, tookTooLong } from './net';
 import { explainSignUp } from './invite';
+import { READ_ONLY, ReadOnly } from './readonly';
 
 const env = import.meta.env as unknown as Record<string, string | undefined>;
 const URL = env.VITE_SUPABASE_URL ?? '';
@@ -636,6 +637,13 @@ export async function push(
   removed: string[] = [],
   seen: Seen | null = null,
 ): Promise<Seen> {
+  /*
+   * Read-only mode (`lib/readonly.ts`): nothing leaves this device, and the
+   * refusal is here as well as in the store so that no other caller can push
+   * around it. Before the client is even fetched — a build in read-only mode
+   * has no reason to load the SDK for a write it will not make.
+   */
+  if (READ_ONLY) throw new ReadOnly();
   const db = (await cloud());
 
   /*
@@ -1157,6 +1165,13 @@ export const OWNED_TABLES: OwnedTable[] = [
   // `forms.check.sql` proves that, because a cascade nobody has watched fire
   // is a cascade this file is only assuming.
   { table: 'form_responses', column: null, cascadesFrom: 'forms' },
+
+  // ── The operations console ──────────────────────────────────────────────
+  // An operator's saved views and last-open tab (`lib/console/client.ts`).
+  // Keyed by `subject`, which references `auth.users` with `on delete
+  // cascade` (`20260929100000_console_control_plane.sql`), and owner-only by
+  // row-level security, so the rows go with the account.
+  { table: 'operator_preference', column: 'subject' },
 ];
 
 /**
@@ -1313,6 +1328,10 @@ export const KEPT_TABLES: KeptTable[] = [
   {
     table: 'support_access_event',
     why: 'Support-access evidence stays after the grant is deleted so a student or university can establish that a read occurred. It contains typed tenant, grant, scope, expiry, revocation, action and time fields plus SHA-256 pseudonyms — never a name, email, free-form reason, note, source excerpt, recording, protected trait or emotion inference — and ordinary accounts cannot change or delete it.',
+  },
+  {
+    table: 'console_duty',
+    why: 'The segregation-of-duties matrix the operations console reads: which party asks for each high-risk action and which approves. It is policy seeded by a migration from lib/ops/console.ts, names no person, and the browser only reads it.',
   },
 ];
 

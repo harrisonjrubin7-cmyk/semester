@@ -651,6 +651,18 @@ three need the migration first. In order:
    first run of `invite-retention` removing one row is expected: on 28
    September the project held one invitation whose address has no account.
 
+### The console audit chain's nightly job — not applied yet
+
+`migrations/20260929100000_console_control_plane.sql` adds the operations
+console's hash-chained audit archive, and `scheduler.sql` adds the one job that
+keeps it honest. **Active** in the file; nothing to park and no secret:
+
+    console-audit-integrity         23 3 * * *     private.console_audit_seal(); private.console_audit_verify()
+
+It seals yesterday's manifest and re-verifies the whole chain, recording the
+result where `public.console_audit_status()` reads it. Apply after that
+migration, the same way as the six above; block 6 of `health.sql` expects it.
+
 ## Security advisor
 
 Nine of the ten findings are closed (migration

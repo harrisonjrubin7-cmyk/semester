@@ -109,7 +109,7 @@ export function AccountScreen() {
               finding out on the next visit to this screen. */}
           <div role="status" style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
             {sync.status === 'syncing' && SYNC_WORDS.syncing.sentence}
-            {(sync.status === 'offline' || sync.status === 'queued' || sync.status === 'conflict' || sync.status === 'review') &&
+            {(sync.status === 'offline' || sync.status === 'queued' || sync.status === 'read-only' || sync.status === 'conflict' || sync.status === 'review') &&
               SYNC_WORDS[sync.status].sentence}
             {sync.status === 'synced' &&
               `Synced ${sync.at ? formatTime(sync.at) : ''} · ${counts}`}
