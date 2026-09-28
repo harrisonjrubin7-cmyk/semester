@@ -120,6 +120,17 @@ describe('what the site says', () => {
     expect(security).toMatch(/SOC 2/);
   });
 
+  it('gives the security page the contact address and its security.txt, and promises no response time', () => {
+    // HECVAT VULN-1: the disclosure contact is public in both forms, the human
+    // one and the RFC 9116 one, and they are the same address. The site still
+    // promises no response time — the remediation clocks are internal targets.
+    const security = pages.find((p) => p.route.path === '/security/')!.html;
+    expect(security).toContain(`mailto:${CONTACT_EMAIL}?subject=Security%20report`);
+    expect(security).toContain(`href="${DEFAULT_SITE.appUrl}.well-known/security.txt"`);
+    expect(security).toContain('No response time is promised yet');
+    expect(security).not.toMatch(/within (one|two|1|2) business day/i);
+  });
+
   it('asks each visitor what brought them, and sends them to a real page', () => {
     const home = pages[0].html;
     expect(home).toContain('What brings you to Semester?');

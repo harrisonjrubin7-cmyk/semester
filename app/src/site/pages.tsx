@@ -415,7 +415,10 @@ export const Security: Page = ({ config }) => (
     </Section>
     <Section title="Report a problem" id="se-report">
       <p>Write to <a href={`mailto:${CONTACT_EMAIL}?subject=Security%20report`}>{CONTACT_EMAIL}</a>. Please do not test against other students’ accounts.</p>
-      <p className="site-small">Read by a person. No response time is promised yet, and there is no bounty; a confirmed exposure of your data brings notice within 72 hours.</p>
+      <p>
+        The same address is published in machine-readable form at <a href={appHref(config, '.well-known/security.txt')}>/.well-known/security.txt</a>, whose policy link is the written process: how a report is handled, the four severities a finding is sorted into, and the remediation target each is held to.
+      </p>
+      <p className="site-small">Read by a person. No response time is promised yet, and there is no bounty; the remediation targets are internal, and a confirmed exposure of your data brings notice within 72 hours.</p>
     </Section>
   </>
 );

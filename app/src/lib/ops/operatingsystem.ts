@@ -601,7 +601,7 @@ export const SOURCES: readonly Source[] = [
     supersedes: [],
     decisions: ['ADR-0002'],
     alsoRead: ['SECRETS.md', 'docs/trust/SECURITY-WHITEPAPER.md'],
-    note: 'How a report is handled and what is disclosed; app/src/lib/security.test.ts holds it to the variables the Edge Functions read.',
+    note: 'How a report is made and handled, the severity model with its remediation targets, and what is disclosed; app/src/lib/security.test.ts holds it to the variables the Edge Functions read, to the patch policy and to the published security.txt.',
   },
   {
     id: 'services',
