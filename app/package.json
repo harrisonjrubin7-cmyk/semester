@@ -27,6 +27,7 @@
     "sweep:targets": "node scripts/targets-sweep.mjs",
     "smoke:gateway": "node scripts/gateway-smoke.mjs",
     "transcripts": "node scripts/transcripts.mjs",
+    "captions": "node scripts/captions.ts",
     "audio": "node scripts/audio.ts",
     "check:university": "tsc -p tsconfig.university.json",
     "check:video": "tsc -p ../video/tsconfig.json",
@@ -41,7 +42,8 @@
     "smoke:production": "node scripts/production-smoke.mjs",
     "smoke:public-production": "node scripts/public-production-smoke.mjs",
     "rollout:census": "node scripts/institutional-census.mjs",
-    "registers": "REGISTERS=write vitest run src/lib/rolelaunch.test.ts src/lib/masterregister.test.ts src/lib/governance/risk.test.ts src/lib/governance/edgecases.test.ts"
+    "registers": "REGISTERS=write vitest run src/lib/rolelaunch.test.ts src/lib/masterregister.test.ts src/lib/supplychain.test.ts src/lib/expansionregister.test.ts src/lib/governance/risk.test.ts src/lib/governance/edgecases.test.ts",
+    "sbom": "npm sbom --sbom-format cyclonedx --omit dev"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.116.0",
@@ -59,6 +61,7 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.0",
+    "axe-core": "^4.13.0",
     "jsdom": "^30.1.0",
     "jsqr": "^1.4.0",
     "oxlint": "^1.83.0",

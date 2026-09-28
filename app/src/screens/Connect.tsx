@@ -18,7 +18,6 @@ import {
   addTask,
   beginAuth,
   describe,
-  forget,
   listRemoteFiles,
   pullCalendar,
   signInReady,
@@ -27,6 +26,7 @@ import {
   type ProviderId,
   type RemoteFile,
 } from '../lib/connect';
+import { MANAGE, disconnect, lastRevocation, saidAboutDisconnect } from '../lib/revoke';
 import { datedItems, railFor } from '../lib/select';
 import { dateToIso } from '../lib/date';
 import { formatDateTime } from '../lib/locale';
@@ -964,6 +964,41 @@ export function Connect() {
                 )}
               </div>
 
+              {(() => {
+                /*
+                  After a disconnect the provider did not confirm, say so on
+                  the card until the student connects again: the permission
+                  may still be live there, and this is where to remove it.
+                */
+                const last = token ? undefined : lastRevocation(id);
+                if (!last || last.status === 'revoked') return null;
+                return (
+                  <div
+                    style={{
+                      fontSize: 'var(--type-sm)',
+                      color: 'var(--app-dim)',
+                      lineHeight: 'var(--leading-relaxed)',
+                      marginTop: 'var(--sp-4)',
+                      textWrap: 'pretty',
+                      overflowWrap: 'anywhere',
+                    }}
+                  >
+                    {spec.name} may still list Semester as allowed.{' '}
+                    {last.status === 'failed' ? 'Withdrawing it did not work. ' : ''}
+                    Remove it at{' '}
+                    {MANAGE[id].map((link, i) => (
+                      <span key={link.url}>
+                        {i > 0 ? ' or ' : ''}
+                        <a href={link.url} target="_blank" rel="noreferrer">
+                          {link.label}
+                        </a>
+                      </span>
+                    ))}
+                    .
+                  </div>
+                );
+              })()}
+
               {/*
                 A sign-in is offered only where one can finish: `signInReady`
                 asks the client ID and the proxy together, because Zoom and
@@ -1054,16 +1089,25 @@ export function Connect() {
                           {id === 'zoom' ? 'Recordings' : 'Recent files'}
                         </button>
                       )}
+                      {/*
+                        Withdrawn at the provider where it allows it, and the
+                        local copy deleted whatever the provider says —
+                        `lib/revoke.ts` has what each provider permits. The
+                        sentence says which of the two actually happened.
+                      */}
                       <button
                         type="button"
                         className="bare"
+                        disabled={busy !== ''}
                         onClick={() => {
-                          forget(id);
-                          setNote(`${spec.name} disconnected. The token is gone from this device.`);
+                          setBusy(id);
+                          void disconnect(id)
+                            .then((outcome) => setNote(saidAboutDisconnect(outcome)))
+                            .finally(() => setBusy(''));
                         }}
                         style={{ fontSize: 'var(--type-xs)', color: 'var(--app-dim)', letterSpacing: '0.1em' }}
                       >
-                        DISCONNECT
+                        {busy === id ? 'DISCONNECTING…' : 'DISCONNECT'}
                       </button>
                     </>
                   )}

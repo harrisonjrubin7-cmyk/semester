@@ -37,7 +37,7 @@ import { queryWords, worthSplitting } from './search';
 import { allowed, type Capabilities } from './school';
 import { DOING } from './doing';
 import { SETTINGS } from './settings';
-import { DEFAULT_ROLE, forRole, type Role } from './role';
+import { forRole, type Role } from './role';
 
 /**
  * The default for a caller that has not been given a school.
@@ -367,8 +367,16 @@ export function findEverything(
    * reach a meal-plan screen their university does not have, and a role is
    * the same kind of hole — a professor typing "housing" should not be
    * offered a dorm screen the directory has already stopped showing them.
+   *
+   * No default, and that is the fix rather than a tidy-up. It used to be
+   * `role: Role = DEFAULT_ROLE`, and a JavaScript default fires on an
+   * explicit `undefined` as well as on an omitted argument — so the palette
+   * passing `state.role` before a role had been read, or after reading one
+   * failed, searched as a student: the widest set there is. The gate failed
+   * open. Now an unknown role reaches `forRole`, which gives it the narrower
+   * set; a caller that means "student" says so.
    */
-  role: Role = DEFAULT_ROLE,
+  role?: Role | null,
 ): HitGroup[] {
   const q = query.trim().toLowerCase();
   if (!q) return [];

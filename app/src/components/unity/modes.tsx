@@ -1,4 +1,5 @@
-import { useEffect, useId, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
+import { FOCUS_BAR_INSET, useBottomChrome } from '../../lib/bottomchrome.hook';
 import { ACCESS_LOOK, WORKSPACE_MODES, workspaceModeOf, type WorkspaceMode } from '../../lib/look';
 import { currentLook } from '../../state/shape';
 import { useNow, useStore } from '../../state/store';
@@ -82,6 +83,17 @@ function FocusedBar() {
   const due = breakDue(clock, now);
   const said = `${focusedFor(clock, now)} minutes of focus. Time for a short break?`;
 
+  /*
+   * The bar is fixed over the bottom of the window, and so is the assistant's
+   * button. Nothing told the button the bar was there: at 320px the bar is
+   * the gutters' full width, and the button sat on top of its "Start" and
+   * "Exit focus" controls. Measured at 320x640 before this, bar 518–628 and
+   * button 576–628 on the same right edge. The bar now reports its inset, the
+   * button stands on it, and the pane reserves it — see `FOCUS_BAR_INSET`.
+   */
+  const bar = useRef<HTMLDivElement>(null);
+  useBottomChrome(bar, FOCUS_BAR_INSET);
+
   // Time away counts as a break — see `cameBack`. Set from the event, not in
   // the effect body, so this is a subscription and not a render loop.
   useEffect(() => {
@@ -95,7 +107,7 @@ function FocusedBar() {
   }, []);
 
   return (
-    <div className="focus-bar" role="region" aria-label="Focus mode">
+    <div ref={bar} className="focus-bar" role="region" aria-label="Focus mode">
       <span className="kicker">Focus mode</span>
       {/*
         The reminder. A polite live region that is always in the document, so

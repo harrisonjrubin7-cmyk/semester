@@ -324,3 +324,73 @@ select cron.alter_job(
   (select jobid from cron.job where jobname = 'integration-sync'),
   active := false
 );
+
+-- ── Housekeeping the code was already waiting for ─────────────────────────
+--
+-- Three functions were written to be called on a schedule and never were.
+-- Each says so in its own migration: `sweep_lti_nonce()` is "called from the
+-- same place the rest of this project's housekeeping is called from", and
+-- that place is this file, which did not call it; `sweep_lti_link_ticket()` is
+-- its twin; `expire_capture_assets()` is "run by the deployment retention
+-- worker", and there is no such worker. `app/src/lib/scheduler.test.ts` now
+-- fails when a sweep function exists in the migrations and no job here calls
+-- it, which is how these three were found.
+--
+-- **Active**, like `tombstones`: none needs a secret or an endpoint, and each
+-- removes only what its own function already refuses to use.
+--
+-- The two LTI sweeps delete launch state and link tickets an hour past
+-- expiry — minutes-old rows that name nobody. Hourly, at minutes no other job
+-- uses.
+select cron.schedule(
+  'lti-nonce',
+  '41 * * * *',
+  $job$select public.sweep_lti_nonce()$job$
+);
+
+select cron.schedule(
+  'lti-link-ticket',
+  '47 * * * *',
+  $job$select public.sweep_lti_link_ticket()$job$
+);
+
+-- Marks capture originals `removed` (and their segments and derived artifacts
+-- `withdrawn`) once their retention date passes or their consent is withdrawn
+-- or expires. Row-level security already hides such a capture from its owner;
+-- this makes the state say so for every other reader too. It does **not**
+-- delete the storage object a `storage_key` names — the function's own comment
+-- says that needs a worker with storage access, and none exists yet.
+-- RETENTION.md says so beside the row.
+select cron.schedule(
+  'capture-expiry',
+  '19 * * * *',
+  $job$select private.expire_capture_assets()$job$
+);
+
+-- ── Retention decided in 20260929030000_retention_sweeps.sql ──────────────
+--
+-- RETENTION.md has the reasons; these run them, daily, in the quiet hour
+-- after the other retention jobs and a few minutes apart.
+--
+--   invite-retention    invitations never taken up, 90 days after sending
+--   abandoned-signups   accounts never confirmed and never signed in, 30 days
+--                       after creation. Accounts that were ever used are kept.
+--   audit-retention     role-grant, moderation and provisioning audit events
+--                       after 3 years. Never support_access_event (FERPA).
+select cron.schedule(
+  'invite-retention',
+  '13 5 * * *',
+  $job$select private.sweep_stale_invites()$job$
+);
+
+select cron.schedule(
+  'abandoned-signups',
+  '23 5 * * *',
+  $job$select private.sweep_abandoned_signups()$job$
+);
+
+select cron.schedule(
+  'audit-retention',
+  '33 5 * * *',
+  $job$select private.sweep_audit_retention()$job$
+);

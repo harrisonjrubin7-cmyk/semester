@@ -841,34 +841,42 @@ export async function queuedSendAts(): Promise<number[]> {
 }
 
 /**
- * Delete the rows belonging to this account.
+ * Delete this account: its rows, and the sign-in itself.
  *
- * Not a flag, not an archive. `on delete cascade` in the schema means removing
- * the auth user would take everything with it — but a browser holding an anon
- * key cannot delete an auth user, and it should not be able to. **So that
- * cascade never fires**, and what a deleted account is actually emptied of is
- * exactly `OWNED_TABLES` and nothing else. For a long time the privacy page
- * said the opposite, in those words, while eleven tables in `classmates.ts`
- * and `formshare.ts` were in no list at all.
+ * ## Where it happens now, and why it moved
+ *
+ * This used to run here, in the browser: one filtered DELETE per entry in
+ * `OWNED_TABLES`, each its own request, then a sign-out. A browser holding a
+ * publishable key cannot delete an `auth.users` row and must not be able to,
+ * so the email address and the sign-in outlived the button, and a failure half
+ * way left half an account behind (SECURITY-GAP-ANALYSIS.md, S-2).
+ *
+ * So the button calls the `delete-account` Edge Function, which erases every
+ * row naming the account in **one transaction** (`public.erase_account`, in
+ * `supabase/migrations/20260929010000_account_erasure_and_export.sql`) and
+ * then deletes the auth user with the service role. Its answer says what
+ * happened — `erased`, `signInRemoved` — and this function signs out only when
+ * both are true. On anything else the student stays signed in, is told
+ * exactly which of the two happened, and can press the button again.
+ *
+ * ## What the lists below are now
+ *
+ * The server does not read them: it derives its list from the database's own
+ * foreign keys to `auth.users`, so a table added later is erased the day it
+ * lands. `OWNED_TABLES` and `KEPT_TABLES` stay as the privacy page's account
+ * of what goes and what stays, and `erasure.test.ts` holds that account to the
+ * schema — every owned table reachable by a cascade from `auth.users` or by
+ * one of the `forget_my_*` functions `erase_account` calls, and no kept table
+ * hanging off `auth.users` by a cascade that would take it.
  *
  * ## What it does not touch
  *
  * This device's own copy. Somebody deleting their account has asked to be off
  * the server, not to lose their semester — and the two are separate on purpose,
- * with Erase from this device as its own deliberate action. Saying so plainly
- * is the difference between a button people can press and one they will not.
- *
- * The sign-in itself. The `auth.users` row, and so the address it was created
- * with, is the one thing here no client can remove; `privacy.ts` says so and
- * gives the address to write to.
+ * with Erase from this device as its own deliberate action.
  *
  * `KEPT_TABLES` — the rows other people are relying on. Each carries its
  * reason, and the page prints them.
- *
- * The tables are named rather than discovered, so a table added later and
- * forgotten here leaves rows behind. `privacy.test.ts` is what catches that,
- * and it now reads every module rather than this one: a table in either list
- * is a decision, a table in neither is the bug.
  */
 /** A table a deleted account is emptied from, and the column that owns a row. */
 export type OwnedTable = {
@@ -964,8 +972,8 @@ export const OWNED_TABLES: OwnedTable[] = [
   { table: 'graduation_scenarios', column: 'user_id' },
   // Advisor shares (`lib/advisor-shares.ts`, Phase G), at either end: the ones
   // a student made and the ones an advisor received. Deleting them cascades to
-  // their read log. The auth user is not deleted, so the foreign keys never
-  // cascade, and an advisor has no delete policy — the RPC removes both sides.
+  // their read log. `erase_account` runs the RPC before the auth user goes,
+  // and an advisor has no delete policy — the RPC removes both sides.
   { table: 'advisor_shares', column: null, via: 'forget_my_advisor_shares' },
   // Course demand (Phase K): the courses a student contributed and their
   // consent. The consent allows no client write, so the RPC removes both;
@@ -1093,8 +1101,8 @@ export const OWNED_TABLES: OwnedTable[] = [
   { table: 'family_shared_items', column: 'student_id' },
   { table: 'family_access_events', column: 'student_id' },
   // An athlete's share with academic support (D-039), gone at either end:
-  // the student's shares and the ones a staff member received. Deleting an
-  // account signs out and deletes no auth user, so no cascade would reach the
+  // the student's shares and the ones a staff member received. `erase_account`
+  // runs the RPC, and the auth cascade takes anything left; the RPC reaches the
   // received ones. Its read log goes with each share (`on delete cascade`).
   { table: 'support_shares', column: null, via: 'forget_my_support_shares' },
   // Its read log has no column of the student's: each row goes with the
@@ -1128,9 +1136,9 @@ export const OWNED_TABLES: OwnedTable[] = [
   // through `forget_my_mentor_requests()` (20260928021700), which removes every
   // request the account sent or received.
   { table: 'mentor_requests', column: null, via: 'forget_my_mentor_requests' },
-  // The offers themselves, with the display name the mentor chose. Deleting
-  // an account here does not delete `auth.users`, so their cascade never
-  // runs; each table's owner-delete policy is what this line relies on.
+  // The offers themselves, with the display name the mentor chose. Both hang
+  // off `auth.users` by `on delete cascade`, which `erase_account` follows;
+  // each table's owner-delete policy is what the old client path relied on.
   { table: 'peer_mentor_offers', column: 'user_id' },
   { table: 'alumni_mentor_offers', column: 'user_id' },
 
@@ -1180,15 +1188,15 @@ export const KEPT_TABLES: KeptTable[] = [
   },
   {
     table: 'groups',
-    why: 'A group you started belongs to everyone in it. Deleting it would take its shared actions away from the other members, so your membership goes and the group stays — with a starter who no longer has a profile.',
+    why: 'A group you started belongs to everyone in it. Deleting it would take its shared actions away from the other members, so your membership goes and the group stays, with no starter recorded.',
   },
   {
     table: 'group_tasks',
-    why: 'Parts of a group project you added are what the rest of the group is working from, so they stay with the group.',
+    why: 'Parts of a group project you added are what the rest of the group is working from, so they stay with the group, no longer attributed to you.',
   },
   {
     table: 'reports',
-    why: 'A report you filed is a record about somebody else. It has no delete policy at all, deliberately: deleting your account is not a way to withdraw one.',
+    why: 'A report you filed is a record about somebody else. It has no delete policy at all, deliberately: deleting your account is not a way to withdraw one. It stays, no longer naming you as its reporter.',
   },
   {
     table: 'organizations',
@@ -1308,32 +1316,83 @@ export const KEPT_TABLES: KeptTable[] = [
   },
 ];
 
+/** What the `delete-account` function answers; see `_shared/deleteaccount.ts`. */
+type Erasure = { erased?: unknown; signInRemoved?: unknown; message?: unknown };
+
+/** Said when no answer came back, because then nobody here knows what happened. */
+export const ERASURE_UNKNOWN =
+  'No answer came back from the server, so this cannot say whether anything was deleted. You are still signed in here. Press Delete my account again — it is safe to repeat, and the answer will say what is left.';
+
 export async function deleteEverything(): Promise<string> {
   requireOnline('delete');
   const db = await cloud();
-  const { data } = await db.auth.getUser();
-  const userId = data.user?.id;
-  if (!userId) throw new Error('Sign in first — there is no account to delete.');
+  const { data } = await db.auth.getSession();
+  const token = data.session?.access_token;
+  if (!token) throw new Error('Sign in first — there is no account to delete.');
 
-  const failed: string[] = [];
-  for (const { table, column, via } of OWNED_TABLES) {
-    if (via) {
-      const { error } = await db.rpc(via);
-      if (error && !/does not exist|schema cache/i.test(error.message)) failed.push(table);
-      continue;
-    }
-    if (column === null) continue;
-    const { error } = await db.from(table).delete().eq(column, userId);
-    // A table this project does not have is not a failure — a build without
-    // reminders has no queue to empty. Anything else is reported rather than
-    // swallowed, because "deleted" is a promise.
-    if (error && !/does not exist|schema cache/i.test(error.message)) failed.push(table);
+  let res: Response;
+  try {
+    res = await fetchWithin(
+      `${feedBase()}/delete-account`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, apikey: KEY },
+        body: JSON.stringify({ confirm: 'DELETE' }),
+      },
+      MOVE_MS,
+    );
+  } catch {
+    // Not "nothing was deleted". A CORS refusal is exactly this rejection, and
+    // it arrives *after* the function has run — `_shared/cors.ts` has the
+    // incident. Not knowing is the only true thing to say.
+    return ERASURE_UNKNOWN;
   }
-  await db.auth.signOut();
-  if (failed.length > 0) {
-    return `Signed out, and most of your account is gone — but ${failed.join(' and ')} could not be removed. Email ${'harrisonjrubin7@gmail.com'} and it will be done by hand.`;
+
+  let said: Erasure = {};
+  try {
+    said = (await res.json()) as Erasure;
+  } catch {
+    said = {};
   }
-  return 'Your rows are gone and you are signed out. What a deleted account leaves behind, and why, is on the Privacy page. This device still has its own copy — Erase from this device removes that.';
+  const message = typeof said.message === 'string' && said.message ? said.message : '';
+
+  if (res.ok && said.erased === true && said.signInRemoved === true) {
+    // Local only: the sessions on the server went with the auth user, and a
+    // global sign-out would ask a server that no longer knows this token.
+    await db.auth.signOut({ scope: 'local' });
+    return `${message || 'Your account is deleted.'} You are signed out. What stays, and why, is on this page. This device still has its own copy — Erase from this device removes that.`;
+  }
+  if (said.erased === true) {
+    return message || 'Your data is deleted, but the sign-in could not be removed yet. Press Delete my account again to finish.';
+  }
+  if (said.erased === false) {
+    return message || 'Nothing was deleted. Try again in a minute.';
+  }
+  return res.status === 404
+    ? 'Account deletion is not available on this server yet, so nothing was deleted. Email the address on this page and it will be done by hand.'
+    : ERASURE_UNKNOWN;
+}
+
+/**
+ * Everything the server holds about this account, as one JSON file.
+ *
+ * `export_my_data()` (same migration as `erase_account`) walks the same list
+ * the erasure does — every foreign key to `auth.users`, and every row hanging
+ * off those by a cascade — so what can be downloaded and what is deleted are
+ * one list rather than two that drift. Three kinds of row are left out
+ * because they are another person's record about this account, and the file
+ * says so in its own `withheld` field.
+ */
+export async function exportAccount(now = new Date()): Promise<{ name: string; body: string; tables: number }> {
+  const db = await cloud();
+  const { data, error } = await db.rpc('export_my_data');
+  if (error) throw failed(error);
+  const file = (data ?? {}) as { tables?: Record<string, unknown> };
+  return {
+    name: `Semester account export ${now.toISOString().slice(0, 10)}.json`,
+    body: JSON.stringify(data, null, 2),
+    tables: Object.keys(file.tables ?? {}).length,
+  };
 }
 
 /** Switching reminders off deletes what was waiting to be sent. */

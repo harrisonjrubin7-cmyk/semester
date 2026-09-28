@@ -96,7 +96,7 @@ export const EDGE_CASES: readonly EdgeCase[] = [
   { id: 'EC-AI-10', domain: 'ai', case: 'Student deletes AI history but a linked study artifact remains.', guard: null, note: 'No link from a conversation to a saved study artifact is recorded, so nothing can be reconciled.' },
 
   // ── Integrations and infrastructure ────────────────────────────────────
-  { id: 'EC-INF-01', domain: 'infra', case: 'OAuth refresh token is revoked.', guard: null, note: 'No OAuth-connected provider is live.' },
+  { id: 'EC-INF-01', domain: 'infra', case: 'OAuth refresh token is revoked.', guard: null, note: 'Disconnect now revokes the grant at Google or Microsoft (app/src/lib/revoke.ts); a revocation the provider makes on its own is not detected before the next call fails.' },
   { id: 'EC-INF-02', domain: 'infra', case: 'LTI issuer or JWKS rotates unexpectedly.', guard: 'app/src/lib/ltikey.test.ts', note: 'Key rotation and the JWKS the platform publishes are tested. A tool-side issuer change mid-term is not.' },
   { id: 'EC-INF-03', domain: 'infra', case: 'SAML certificate expires.', guard: null, note: 'SAML is not activated for any tenant; no certificate rotation process: IAM-003.' },
   { id: 'EC-INF-04', domain: 'infra', case: 'API provider returns partial success.', guard: null, note: 'No connector writes to an external system yet.' },
@@ -121,7 +121,7 @@ export const EDGE_CASES: readonly EdgeCase[] = [
   { id: 'EC-COM-10', domain: 'commercial', case: 'Customer offboards but retains archive or export requirements.', guard: null, note: 'docs/DATA-PORTABILITY-AND-OFFBOARDING.md describes the process; no institutional export exists to test.' },
 
   // ── Accessibility and inclusion ────────────────────────────────────────
-  { id: 'EC-A11Y-01', domain: 'a11y', case: 'Focus is hidden under a sticky composer or banner.', guard: null, note: 'No focus-obscured test: maturity system 12.' },
+  { id: 'EC-A11Y-01', domain: 'a11y', case: 'Focus is hidden under a sticky composer or banner.', guard: null, note: 'app/scripts/keyboard-pass.mjs records whether each Tab stop\'s centre is covered, but it is a manual pass, not in CI; focusbar.test.tsx keeps two fixed bars off each other, not off the focused element.' },
   { id: 'EC-A11Y-02', domain: 'a11y', case: 'Screen reader announces streamed AI text too aggressively.', guard: null, note: 'No live-region test over a streamed answer.' },
   { id: 'EC-A11Y-03', domain: 'a11y', case: 'Chart or table becomes unreadable at 200% zoom.', guard: 'app/src/styles/textscale.test.ts', note: 'Text scaling is held; charts and wide tables are not screenshot-tested at zoom.' },
   { id: 'EC-A11Y-04', domain: 'a11y', case: 'Timer or accommodation is not announced.', guard: null, note: 'No timed assessment exists.' },

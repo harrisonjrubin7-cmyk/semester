@@ -44,7 +44,8 @@ Target: **WCAG 2.2 AA**, plus the applicable Section 508 and ADA requirements.
       (`app/src/a11y`, `app/src/lib/contrast.test.ts`)
 - [ ] Inventory every journey: student, faculty, advisor, admin, public site
 - [ ] Manual keyboard pass on each journey
-- [ ] Screen-reader pass with NVDA and VoiceOver (HECVAT A11Y-3)
+- [ ] Screen-reader pass with NVDA and VoiceOver (HECVAT A11Y-3); the script and results form are
+      [`docs/accessibility/AT-PASS-PROTOCOL.md`](../accessibility/AT-PASS-PROTOCOL.md)
 - [ ] Focus-not-obscured, target size and non-text contrast checked by hand
 - [ ] Reflow at 320 CSS px and 200% zoom confirmed by a person, not only the probe
 - [ ] Captions and transcripts on media, and media controls

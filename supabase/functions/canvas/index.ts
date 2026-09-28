@@ -142,7 +142,7 @@ Deno.serve(async (req) => {
    * the request came from — see `../_shared/cors.ts`, which carries the
    * incident this shape exists because of.
    */
-  const cors = corsHeaders(Deno.env.get('ALLOWED_ORIGIN'), req.headers.get('Origin'));
+  const cors = corsHeaders(Deno.env.get('ALLOWED_ORIGIN'), req.headers.get('Origin'), Deno.env.get('CORS_ALLOW_DEV'));
   const json = (body: unknown, status = 200) =>
     new Response(JSON.stringify(body), {
       status,

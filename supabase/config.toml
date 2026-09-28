@@ -95,3 +95,8 @@ verify_jwt = false
 # token in the POST body is the credential. See DEPLOY.md → trust-room.
 [functions.trust-room]
 verify_jwt = false
+
+# Delete my account. The caller is a signed-in student and the function checks
+# their token itself, like `claude`; see DEPLOY.md → delete-account.
+[functions.delete-account]
+verify_jwt = false

@@ -444,9 +444,11 @@ describe('"delete my account" really means every row', () => {
      * it has never once fired. And it claimed "every row belonging to you"
      * while eleven tables were in no list at all.
      *
-     * A narrower true claim beats a broad false one, so what replaces it has
-     * to name the account record it cannot reach, and offer the address that
-     * can.
+     * A narrower true claim beat a broad false one, so the page then named the
+     * account record it could not reach and offered the address that could.
+     * Since `delete-account` (20260929010000) the record *is* reached, on the
+     * server, after the rows — so the page says that instead, and keeps the
+     * address for the case where the button cannot finish.
      */
     // Two paragraphs rather than one, because the sentence that matters most
     // here — that some rows stay — was the fifteenth line of twenty-seven when
@@ -457,6 +459,9 @@ describe('"delete my account" really means every row', () => {
     expect(said).not.toMatch(/cascades in the database/i);
     expect(said).not.toMatch(/every row belonging to you/i);
     expect(said).toMatch(/account record/i);
+    expect(said).not.toMatch(/outlives the button/i);
+    expect(said).toMatch(/one step that either happens completely or not at all/i);
+    expect(said).toMatch(/download my account data/i);
     expect(said).toContain(SUPPORT);
     // The named tables a person would not have guessed were being kept.
     for (const word of ['display name', 'messages', 'blocked', 'group', 'practice paper']) {

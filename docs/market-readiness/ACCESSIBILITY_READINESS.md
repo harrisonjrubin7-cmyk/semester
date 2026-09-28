@@ -43,7 +43,11 @@ not formal conformance evidence.
 - **No WCAG 2.2 AA audit** against the critical workflows as workflows —
   the guards are unit-level, not journey-level.
 - **No screen-reader pass** recorded against registration, degree tracker,
-  calendar or documents.
+  calendar or documents. The script, results template and WCAG 2.2 AA
+  checklist for it are in
+  [`docs/accessibility/AT-PASS-PROTOCOL.md`](../accessibility/AT-PASS-PROTOCOL.md),
+  with an automated keyboard, landmark and axe pass recorded there. That
+  pass is not a screen-reader pass.
 - **No independent 200% text-zoom review.** Automated 400% reflow coverage is
   present for six critical journeys, but it does not replace manual browser
   zoom and assistive-technology review.

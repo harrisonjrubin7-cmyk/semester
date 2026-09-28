@@ -88,7 +88,7 @@ engine, billing, a live SIS), and the note says which.
 
 | ID | Case | Guard | What it proves, and what it does not |
 | --- | --- | --- | --- |
-| EC-INF-01 | OAuth refresh token is revoked. | owed | No OAuth-connected provider is live. |
+| EC-INF-01 | OAuth refresh token is revoked. | owed | Disconnect now revokes the grant at Google or Microsoft (app/src/lib/revoke.ts); a revocation the provider makes on its own is not detected before the next call fails. |
 | EC-INF-02 | LTI issuer or JWKS rotates unexpectedly. | `app/src/lib/ltikey.test.ts` | Key rotation and the JWKS the platform publishes are tested. A tool-side issuer change mid-term is not. |
 | EC-INF-03 | SAML certificate expires. | owed | SAML is not activated for any tenant; no certificate rotation process: IAM-003. |
 | EC-INF-04 | API provider returns partial success. | owed | No connector writes to an external system yet. |
@@ -123,7 +123,7 @@ engine, billing, a live SIS), and the note says which.
 
 | ID | Case | Guard | What it proves, and what it does not |
 | --- | --- | --- | --- |
-| EC-A11Y-01 | Focus is hidden under a sticky composer or banner. | owed | No focus-obscured test: maturity system 12. |
+| EC-A11Y-01 | Focus is hidden under a sticky composer or banner. | owed | app/scripts/keyboard-pass.mjs records whether each Tab stop's centre is covered, but it is a manual pass, not in CI; focusbar.test.tsx keeps two fixed bars off each other, not off the focused element. |
 | EC-A11Y-02 | Screen reader announces streamed AI text too aggressively. | owed | No live-region test over a streamed answer. |
 | EC-A11Y-03 | Chart or table becomes unreadable at 200% zoom. | `app/src/styles/textscale.test.ts` | Text scaling is held; charts and wide tables are not screenshot-tested at zoom. |
 | EC-A11Y-04 | Timer or accommodation is not announced. | owed | No timed assessment exists. |

@@ -52,6 +52,7 @@ import {
   type Timer,
 } from '../lib/clocks';
 import { Folding } from '../components/Fold';
+import { FieldMessage, useFieldErrors } from '../components/FieldMessage';
 // Day and month names come from `lib/date.ts`; see the note there.
 import { weekdayInitialOf, weekdayLongOf } from '../lib/date';
 
@@ -105,7 +106,7 @@ function Timers() {
   const { state, dispatch, say } = useStore();
   const [text, setText] = useState('');
   const [label, setLabel] = useState('');
-  const [refused, setRefused] = useState('');
+  const fields = useFieldErrors(['length'] as const);
 
   const at = useNow();
 
@@ -114,7 +115,7 @@ function Timers() {
     say(`${name.trim() || 'Timer'} started, ${Math.round(seconds / 60)} minutes.`);
     setText('');
     setLabel('');
-    setRefused('');
+    fields.clear();
     // The first sound a browser makes has to follow a gesture. Starting a
     // timer is a gesture, so the audio context is unlocked here rather than
     // at the moment the timer fires — by which point the tab may have been in
@@ -124,11 +125,8 @@ function Timers() {
 
   const startTyped = () => {
     const seconds = readDuration(text);
-    if (seconds === null) {
-      setRefused('Try 25, 1:30, 90s or 1h20.');
-      return;
-    }
-    start(seconds);
+    if (!fields.check({ length: seconds === null ? 'Try 25, 1:30, 90s or 1h20.' : '' })) return;
+    if (seconds !== null) start(seconds);
   };
 
   return (
@@ -162,7 +160,7 @@ function Timers() {
           value={text}
           onChange={(e) => {
             setText(e.target.value);
-            setRefused('');
+            fields.clear('length');
           }}
           onKeyDown={(e) => {
             if (e.key === 'Enter') startTyped();
@@ -170,6 +168,7 @@ function Timers() {
           placeholder="25, 1:30, 90s, 1h20"
           aria-label="How long"
           inputMode="text"
+          {...fields.control('length')}
           style={{ flex: 1, height: 42 }}
         />
         <button
@@ -181,6 +180,7 @@ function Timers() {
           Start
         </button>
       </div>
+      <FieldMessage {...fields.message('length')} />
       <input
         className="input"
         value={label}
@@ -189,18 +189,6 @@ function Timers() {
         aria-label="What the timer is for"
         style={{ width: '100%', height: 40, marginTop: 'var(--sp-4)' }}
       />
-      {refused ? (
-        <div
-          role="status"
-          style={{
-            fontSize: 'var(--type-sm)',
-            marginTop: 'calc(7px * var(--density, 1))',
-            color: 'var(--app-warn-ink, var(--app-fg))',
-          }}
-        >
-          {refused}
-        </div>
-      ) : null}
 
       {state.timers.length > 0 ? (
         <>

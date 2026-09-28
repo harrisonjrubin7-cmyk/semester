@@ -28,7 +28,7 @@
 
 import { arranged, readLists, writeLists } from './arrange';
 import { DESTINATIONS, offered } from './nav';
-import { DEFAULT_ROLE, type Role } from './role';
+import { DEFAULT_ROLE, forRole, type Role } from './role';
 import { has } from './search';
 import type { Capabilities } from './school';
 
@@ -330,7 +330,17 @@ export function matches(screen: string, query: string): boolean {
   return has(q, d.label, d.short, d.blurb, d.keywords);
 }
 
-/** Everything on offer, flattened, for the search results grid. */
-export function searchable(caps: Capabilities, role: Role = DEFAULT_ROLE): string[] {
-  return offered(caps, role).map((d) => d.screen as string);
+/**
+ * Everything on offer, flattened, for the search results grid.
+ *
+ * The role gate is applied here rather than handed to `offered`, whose own
+ * default is the student: passed an `undefined` role — one not read yet, or
+ * whose lookup failed — it would search as a student, the widest set there
+ * is. `forRole` gives an unknown role the narrower one. Same fix, same reason,
+ * as `findEverything` in `lib/find.ts`.
+ */
+export function searchable(caps: Capabilities, role: Role | null | undefined): string[] {
+  return offered(caps, 'student')
+    .filter((d) => forRole(d.screen, role))
+    .map((d) => d.screen as string);
 }

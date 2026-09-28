@@ -15,7 +15,7 @@ export const LEDGER: Ledger = {
   'community/detectors.ts': { homework: 2 },
   'components/HelpInbox.tsx': { 'something went wrong': 1 },
   'lib/assignment.ts': { deliverable: 2 },
-  'lib/connect.ts': { task: 3, 'to-do': 1 },
+  'lib/connect.ts': { task: 2, 'to-do': 1 },
   'lib/failure.ts': { 'something went wrong': 1 },
   'lib/flight-plan.ts': { task: 1 },
   'lib/governance/charters.ts': { task: 1 },
