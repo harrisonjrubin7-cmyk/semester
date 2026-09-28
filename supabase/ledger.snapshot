@@ -77,8 +77,8 @@
 #
 # ## The reading of 28 September, and the finding it is
 #
-# Read through the Supabase connector (`list_migrations`) with ninety-four rows,
-# ending at `20260928220000  private_beta`. Every row has a file here. The
+# Read through the Supabase connector (`list_migrations`) with ninety-five rows,
+# ending at `20260928230000  direct_rate_limits`. Every row has a file here. The
 # finding: `20260928200000_scim_gateway` and `20260928210000_support_tickets`
 # reached main and were applied within minutes, while the integration branch
 # (#893) still carried eleven migrations numbered `20260928130000`–`160000`,
@@ -179,3 +179,4 @@
 20260928200000  scim_gateway
 20260928210000  support_tickets
 20260928220000  private_beta
+20260928230000  direct_rate_limits

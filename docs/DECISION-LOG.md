@@ -1409,8 +1409,8 @@ has a check that fails against a faithful revert of it.
 ## D-107 · The eleven integration migrations renumbered again, above 28 September's ledger
 
 **Decided 28 Sep 2026, merging main into the integration branch (#893).**
-Production's ledger now ends at `20260928220000_private_beta`: #819, #839 and
-#814 landed `200000`, `210000` and `220000` on main, and all three were applied. The eleven
+Production's ledger now ends at `20260928230000_direct_rate_limits`: #819, #839,
+#814 and #896 landed `200000`–`230000` on main, and all four were applied. The eleven
 migrations D-105 placed at `20260928130000`–`160000` were then below the
 watermark, and the deploy off main would have refused the first of them.
 
