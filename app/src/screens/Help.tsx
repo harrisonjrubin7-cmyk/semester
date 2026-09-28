@@ -11,7 +11,7 @@ import { availableContext } from '../lib/supporttickets';
 import { LOG_KEY, read as readLog } from '../lib/diagnose';
 import { asOf } from '../lib/offline-mode';
 import { SYNC_WORDS } from '../lib/syncstatus';
-import { handoff } from '../lib/tickethandoff';
+import { handoff, takeOrigin } from '../lib/tickethandoff';
 
 /**
  * The guide, in the app.
@@ -32,6 +32,9 @@ import { handoff } from '../lib/tickethandoff';
 export function Help() {
   const { dispatch, account, sync, state } = useStore();
   const now = useNow();
+  // Noted by whichever screen sent the student here (`noteOrigin`), read
+  // once; without it the handoff would say they were on Help.
+  const [origin] = useState(() => takeOrigin());
   const book = useMemo(() => build(), []);
   const [open, setOpen] = useState<string | null>('what');
 
@@ -74,10 +77,10 @@ export function Help() {
             <SupportTicketsPanel
               account={account}
               handoff={handoff({
-                hash: window.location.hash,
-                action: '',
+                hash: origin?.hash ?? window.location.hash,
+                action: origin?.action ?? '',
                 lastError: lastLogged(),
-                reference: null,
+                reference: origin?.reference ?? null,
                 userAgent: navigator.userAgent,
                 width: window.innerWidth,
                 saved: SYNC_WORDS[sync.status].standing,

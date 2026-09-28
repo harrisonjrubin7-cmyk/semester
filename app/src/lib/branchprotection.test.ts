@@ -77,8 +77,17 @@ describe('the ruleset', () => {
     expect(r.conditions.ref_name.include).toEqual(['~DEFAULT_BRANCH']);
   });
 
-  it('lets nobody past it', () => {
-    expect(ruleset().bypass_actors).toEqual([]);
+  // The owner's decision, 28 September: one person has access, and GitHub
+  // will not let an author approve their own pull request, so an empty list
+  // would stop every merge. The admin role may bypass, and only through a
+  // pull request (`bypass_mode: "pull_request"`), which GitHub records on the
+  // pull request — never by pushing to main. Anything wider fails here, and
+  // docs/BRANCH-PROTECTION.md says SEC-003 stays `building` until a second
+  // reviewer replaces this.
+  it('lets only the admin role past it, and only through a pull request', () => {
+    expect(ruleset().bypass_actors).toEqual([
+      { actor_type: 'RepositoryRole', actor_id: 5, bypass_mode: 'pull_request' },
+    ]);
   });
 
   it('forbids deleting main and force-pushing to it', () => {

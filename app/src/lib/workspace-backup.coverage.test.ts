@@ -90,6 +90,7 @@ const STORES: Record<string, 'backed up' | { exempt: string }> = {
   'semester.career.v1': 'backed up',
   'semester.university.drafts.v1': 'backed up',
   'semester.family.v1': 'backed up',
+  'semester.journal.v1': 'backed up',
   'semester.pathway.v1': 'backed up',
   'semester.actions.v1': 'backed up',
   'semester.registration.v1': 'backed up',

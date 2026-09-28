@@ -1845,6 +1845,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   );
 }
 
+/**
+ * The signed-in account's id, or null: signed out, or rendered with no
+ * provider (a component's own test). For a library that keys its device store
+ * by account and must never throw for want of one — the journal.
+ */
+export function useAccountId(): string | null {
+  return useContext(StoreContext)?.account?.id ?? null;
+}
+
 export function useStore(): Store {
   const store = useContext(StoreContext);
   if (!store) throw new Error('useStore must be used inside StoreProvider');

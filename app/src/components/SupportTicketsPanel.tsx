@@ -31,6 +31,9 @@ import { ActionButton, Notice, SectionLabel } from './ui';
  * it is sent, and the student is told what support will and will not see
  * before they write a word.
  */
+/** What `public.support_tickets.body` accepts after trimming. */
+const BODY_LIMIT = 4000;
+
 export function SupportTicketsPanel({
   account,
   context,
@@ -117,7 +120,15 @@ function AccountTickets({ context, handoff }: { context: Record<ContextKey, stri
     setSubject('');
     setBody('');
     setTicked(new Set());
+    setWithDetails(false);
   };
+
+  // The database holds the body to 4000 characters after trimming. The lines
+  // go in the body, so when they are ticked the editable limit shrinks by
+  // their length, and the review step cannot send a body the database would
+  // refuse (Codex, #922).
+  const composed = withHandoff(body, withDetails ? handoff : null);
+  const room = withDetails && handoff ? Math.max(0, BODY_LIMIT - (composed.length - body.trim().length)) : BODY_LIMIT;
 
   const sending = contextToSend(context, ticked);
   const current = tickets.find((t) => t.id === openId) ?? null;
@@ -160,7 +171,7 @@ function AccountTickets({ context, handoff }: { context: Record<ContextKey, stri
           </label>
           <label>
             What happened, or what you want to do
-            <textarea className="input" required maxLength={4000} value={body} onChange={(event) => setBody(event.target.value)} />
+            <textarea className="input" required maxLength={room} value={body} onChange={(event) => setBody(event.target.value.slice(0, room))} />
           </label>
           <p style={{ color: 'var(--app-dim)' }}>Please leave out grades, health details and anything about other people. Support does not need them to help with the app.</p>
           <fieldset style={{ border: 0, padding: 0 }}>
@@ -185,7 +196,7 @@ function AccountTickets({ context, handoff }: { context: Record<ContextKey, stri
               <p style={{ color: 'var(--app-dim)', margin: 'var(--sp-2) 0 0' }}>Never included: your notes, files, grades, conversations with the assistant, or anything from your student record.</p>
             </fieldset>
           ) : null}
-          <button className="btn btn-primary btn-block" disabled={!subject.trim() || !body.trim()}>Check before sending</button>
+          <button className="btn btn-primary btn-block" disabled={!subject.trim() || !body.trim() || composed.length > BODY_LIMIT}>Check before sending</button>
           <button type="button" className="btn btn-secondary btn-block" onClick={reset}>Cancel</button>
         </form>
       ) : (
@@ -194,7 +205,7 @@ function AccountTickets({ context, handoff }: { context: Record<ContextKey, stri
           <dl aria-label="What will be sent">
             <dt>About</dt><dd>{CATEGORY_LABELS[category]}</dd>
             <dt>Subject</dt><dd>{subject.trim()}</dd>
-            <dt>Your question</dt><dd style={{ whiteSpace: 'pre-wrap' }}>{withHandoff(body, withDetails ? handoff : null)}</dd>
+            <dt>Your question</dt><dd style={{ whiteSpace: 'pre-wrap' }}>{composed}</dd>
             <dt>App details</dt>
             <dd>
               {Object.keys(sending).length === 0
@@ -206,7 +217,7 @@ function AccountTickets({ context, handoff }: { context: Record<ContextKey, stri
           <ActionButton
             tone="primary"
             disabled={busy}
-            onClick={() => run(async () => { await openTicket(category, subject, withHandoff(body, withDetails ? handoff : null), sending); reset(); }, 'Sent. The reply will appear here.')}
+            onClick={() => run(async () => { await openTicket(category, subject, composed, sending); reset(); }, 'Sent. The reply will appear here.')}
           >
             Send to Semester support
           </ActionButton>

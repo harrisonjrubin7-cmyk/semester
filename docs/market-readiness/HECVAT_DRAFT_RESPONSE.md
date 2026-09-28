@@ -38,8 +38,8 @@ commit, and not before.
 
 | ID | Area | Question (paraphrased) | Answer | Explanation | Basis |
 | --- | --- | --- | --- | --- | --- |
-| COMP-01 | Company | Legal name, ownership, size, years in operation | Company to supply | One-person company at present; the owner writes this per response. | — |
-| COMP-02 | Company | Named person accountable for information security | Company to supply | The founder holds the role today. Name him, with contact details and an annual review date. | HECVAT GOV-1 |
+| COMP-01 | Company | Legal name, ownership, size, years in operation | Company to supply | A single-member LLC, wholly owned by its founder, Harrison Rubin, with one person working in it (owner attestation, 28 September 2026). Still to add: the LLC's exact legal name, its state of formation and its formation date. | `docs/market-readiness/HECVAT_DRAFT_RESPONSE.md` |
+| COMP-02 | Company | Named person accountable for information security | Partial | Harrison Rubin, founder and sole owner, is accountable for information security. No annual policy review date has been set yet. Add a contact address per response. | HECVAT GOV-1 |
 | COMP-03 | Company | Cyber liability insurance | No | No policy is held. A certificate will be filed under `docs/evidence/` once one is bought. | HECVAT LEGAL-2 |
 | DOCU-01 | Documentation | Independent audit report (SOC 2 Type II, ISO 27001) | No | Neither exists or is claimed, and neither is planned before a first pilot. This questionnaire and the readiness register are offered instead. | HECVAT LEGAL-1, `docs/market-readiness/HECVAT_READINESS.md` |
 | DOCU-02 | Documentation | Written information security policy set | Partial | Security, secrets, incident and rollback procedures are written and in use. A consolidated policy with an owner and an annual review date is still a draft. | `SECURITY.md`, `SECRETS.md`, `ROLLBACK.md`, HECVAT GOV-1 |
@@ -52,7 +52,7 @@ commit, and not before.
 | AAAI-01 | Access | Institutional single sign-on (SAML) | Partial | Built and tested at the database: one identity provider per institution, first sign-in bound to a provisioned membership. No institution's IdP has completed a live exchange yet. | HECVAT IAM-1 |
 | AAAI-02 | Access | Role-based, least-privilege access with audited grants | Yes | Access is granted by named capability over a scope, every grant is audited, and the database checks the capability on each protected read and write. | HECVAT IAM-2 |
 | AAAI-03 | Access | Periodic access reviews with retained evidence | No | Not yet scheduled. A quarterly review of role grants, keeping each export, is the plan. | HECVAT IAM-3 |
-| AAAI-04 | Access | Multi-factor authentication on staff and administrative accounts (GitHub, Google, Supabase) | Company to supply | Confirm on each account before answering; the onboarding checklist has it as an unticked item. | — |
+| AAAI-04 | Access | Multi-factor authentication on staff and administrative accounts (GitHub, Google, Supabase) | Yes | The owner attests that multi-factor sign-in is on for GitHub, Google and Supabase, the only administrative accounts (28 September 2026). Nobody has checked this independently; keep a screenshot of each account's security page as evidence. | `docs/market-readiness/HECVAT_DRAFT_RESPONSE.md` |
 | AAAI-05 | Access | Audit logging of administrative and policy changes | Yes | Role, moderation and support-access changes are written to append-only audit tables, checked by database suites. | HECVAT LOG-1 |
 | CHNG-01 | Change management | Every production change is reviewed by a second person | No | One-person team. A ruleset requiring review and passing checks is written but not yet applied in GitHub's settings. Every change does pass CI before merge. | `.github/workflows/ci.yml`, `docs/BRANCH-PROTECTION.md` |
 | CHNG-02 | Change management | Documented rollback procedure | Partial | Written, and a page rollback has been performed. Database schema changes do not roll back, and the procedure says so. | `ROLLBACK.md` |
@@ -86,6 +86,17 @@ commit, and not before.
 | AIML-02 | AI | Institutional or student data used to train models | No | Semester does not use student data to train models. AI requests go to providers under API terms; confirm each provider's current no-training terms before sending. | `app/src/lib/privacy.ts` |
 | AIML-03 | AI | Evaluation for accuracy and bias | No | No evaluation set or results yet; one built from approved course sources is planned. | HECVAT AI-2 |
 | AIML-04 | AI | AI-specific incident response | No | Not yet written. | HECVAT AI-3 |
+
+## Owner attestations
+
+Facts only the owner can supply, recorded as given, with the date given.
+They are statements, not verified evidence; a reviewer who asks for proof
+gets the screenshots or filings behind them.
+
+| Date | Fact | Rows |
+| --- | --- | --- |
+| 28 September 2026 | Semester is a single-member LLC, 100% owned by Harrison Rubin. | COMP-01, COMP-02 |
+| 28 September 2026 | Multi-factor sign-in is on for the GitHub, Google and Supabase accounts. | AAAI-04 |
 
 ## Before this goes to anyone
 
