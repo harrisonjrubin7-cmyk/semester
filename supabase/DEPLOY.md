@@ -19,6 +19,7 @@ reading:
     lti               ACTIVE, v144, verify_jwt off   platform
     integration-tick  ACTIVE, v2, verify_jwt off     platform
     trust-room        ACTIVE, v7, verify_jwt off     platform
+    delete-account    PENDING, live on merge, verify_jwt off  (see below)
 
 **This file once said two, at v1, and filed three of the other four under "Not
 deployed yet".** `fetchcal` had been live since 9 September when that was
@@ -404,6 +405,39 @@ was v7 on a platform path, and that reading replaced the pending row.
 
 **Not built yet:** the page a reviewer opens. It should read the token from the
 URL fragment (never the query string, which servers log) and post it here.
+
+## `delete-account`
+
+The Privacy page's **Delete my account**. A signed-in student posts
+`{"confirm": "DELETE"}` with their own access token; the function finds the
+account from the token (never from the body), calls
+`public.erase_account(uuid)` with the service key — every row naming the
+account, in one transaction, by each foreign key's own `on delete` rule — and
+then deletes the auth user through the Admin API. The order and every answer
+are in `_shared/deleteaccount.ts` and its test; the SQL half is
+`migrations/20260929010000_account_erasure_and_export.sql`, proved by
+`deletion.check.sql`.
+
+**`verify_jwt` is off** for the reason it is off for `claude`: the function
+checks the token itself, and the platform check would reject the CORS
+preflight.
+
+**One setting it reads:** `ALLOWED_ORIGIN`, the same list as the others. It
+needs no secret of its own; the service credentials are injected.
+
+**Its answers carry `erased` and `signInRemoved`**, and the page reads those.
+The one partial state — rows erased, the Admin API refusing the sign-in — says
+so, and pressing the button again finishes it.
+
+**Pending.** It goes up with the merge that adds it, like `trust-room` did;
+`functions.snapshot` carries a `pending` row until the project is read again.
+The migration has to be applied before or with it: without
+`erase_account`, the function answers that nothing was deleted, which is true.
+
+**Known refusal:** a staff account that ever wrote a row in one of the four
+immutable tenant history tables cannot be erased this way yet — the history
+triggers refuse the clear its `on delete set null` asks for, the transaction
+rolls back, and the student-facing answer is that nothing was deleted.
 
 ## Tables
 

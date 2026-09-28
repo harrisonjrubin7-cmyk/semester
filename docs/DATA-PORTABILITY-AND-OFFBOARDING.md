@@ -13,6 +13,16 @@ Part 13 of the expansion command. Phase 5. Much of the student half exists.
 - [`RETENTION.md`](../RETENTION.md) and its bidirectional tripwire
   `app/src/lib/retention.test.ts`.
 - `public.data_requests` (`export` kind) for requests a person handles.
+- **The server's half, self-serve**: *Download my account data* on the Privacy
+  screen calls `public.export_my_data()`
+  (`supabase/migrations/20260929010000_account_erasure_and_export.sql`), which
+  returns every row naming the account — every foreign key to `auth.users`,
+  and every row hanging off those by a cascade — plus the sign-in record, as
+  one JSON file, and records the export in `data_requests`. It walks the same
+  list `erase_account` deletes by (`private.account_data_map()`), so the two
+  cannot drift; `app/src/lib/erasure.test.ts` and `supabase/deletion.check.sql`
+  hold them to it. Three kinds of row are withheld as another person's record
+  about the account, and the file names them.
 
 ## In flight
 

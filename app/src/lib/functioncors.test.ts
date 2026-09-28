@@ -117,12 +117,12 @@ describe('every function that reads the secret uses the shared rule', () => {
    * The tripwire. Three functions read `ALLOWED_ORIGIN`, and the fault was
    * that they each spread one fixed value. A fourth written the old way — or
    * one of these three quietly reverted — is the recurrence, and nothing else
-   * here would notice.
+   * here would notice. `delete-account` is the fourth, written the new way.
    */
   const root = join(process.cwd(), '..');
   const read = (p: string) => readFileSync(join(root, p), 'utf8');
 
-  for (const fn of ['claude', 'fetchcal', 'canvas']) {
+  for (const fn of ['claude', 'fetchcal', 'canvas', 'delete-account']) {
     it(`${fn} builds its headers per request`, () => {
       const src = read(`supabase/functions/${fn}/index.ts`);
       expect(src, `${fn} no longer imports the shared rule`).toContain("_shared/cors.ts");

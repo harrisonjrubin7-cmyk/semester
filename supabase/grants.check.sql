@@ -479,7 +479,14 @@ declare
     'forget_my_advisor_shares()',
     -- 20260928308000_support_shares.sql: shares naming the caller at either end.
     'forget_my_support_shares()',
-    'forget_my_course_demand()'
+    'forget_my_course_demand()',
+
+    -- The one in 20260929010000_account_erasure_and_export.sql. Returns every
+    -- row naming the caller and nobody else, keyed on auth.uid() with no
+    -- argument to aim it elsewhere; `deletion.check.sql` proves both. Its
+    -- sibling `erase_account(uuid)` takes an account id and so is
+    -- service_role only, and is not here.
+    'export_my_data()'
   ];
   extra text;
   missing text;
