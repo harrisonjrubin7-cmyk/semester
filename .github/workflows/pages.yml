@@ -345,7 +345,8 @@ jobs:
           # and left on, and a warning on the run did not stop it — nobody
           # reads a run that succeeded. So the switch is not carried into this
           # build at all (the loop above skips it). A demo is its own
-          # deployment; `npm run preview:institutional` runs one locally.
+          # deployment: "Build the demo" below builds one into /demo/, and
+          # `npm run preview:institutional` runs one locally.
           if [ "$VITE_INSTITUTIONAL_PREVIEW" = "true" ]; then
             echo "::notice title=Demo switch ignored::VITE_INSTITUTIONAL_PREVIEW is set to true in the repository, and this deploy ignored it: the Pages site is the real app, never the demo. Delete the variable (Settings → Secrets and variables → Actions) to silence this."
           fi
@@ -372,13 +373,48 @@ jobs:
           count=$(set -- $carried; echo $#)
           echo "::notice title=Build inputs::$count of $offered carried into this build:${carried:- none}"
 
+      # The product: real accounts, the student's own work, no demo chrome.
+      #
+      # VITE_INSTITUTIONAL_PREVIEW is pinned off here rather than left to the
+      # repository variable, because the address students and the company
+      # site's "Log in" reach must never be a demo by accident — which is what
+      # it was, for as long as that variable was set. `false` rather than
+      # unset, so a value carried in from the step above cannot win.
       - name: Build
         working-directory: app
         env:
           # e.g. /semester/ — supplied by configure-pages, so a rename of the
           # repo cannot silently break every asset path.
           VITE_BASE: ${{ steps.pages.outputs.base_path }}/
-        run: npm run build
+        run: |
+          export VITE_INSTITUTIONAL_PREVIEW=false
+          npm run build
+
+      # The demo, as a separate site at /demo/: the "Demo environment" label,
+      # the fictional Northstar fixtures and the persona switcher, for sales
+      # walkthroughs and for the company site's "See the demo".
+      #
+      # It is built with the account service blanked, so the demo has no
+      # sign-in and cannot read or write a real account however it is driven:
+      # fictional data only, and no connection to production. Empty values,
+      # not unset ones — Vite lets a process variable win over
+      # app/.env.production, which is where the real project's address lives.
+      #
+      # The separate base path gives it its own service-worker scope, narrower
+      # than the product's, so a device that has opened both keeps their
+      # caches apart. Its routes are hashes like the product's, so Pages' one
+      # root 404.html is not needed under it. The audio is copied twice
+      # (~210 MB each), well inside the 1 GB Pages limit.
+      - name: Build the demo
+        working-directory: app
+        env:
+          VITE_BASE: ${{ steps.pages.outputs.base_path }}/demo/
+        run: |
+          export VITE_INSTITUTIONAL_PREVIEW=true
+          export VITE_SUPABASE_URL=
+          export VITE_SUPABASE_KEY=
+          npx vite build --outDir dist-demo
+          mv dist-demo dist/demo
 
       # Pages serves static files, so a deep link like /semester/?screen=study
       # is fine but any unknown path 404s. Copying index.html to 404.html makes
