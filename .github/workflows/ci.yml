@@ -365,6 +365,21 @@ jobs:
           SMOKE_URL: http://localhost:4173/${{ github.event.repository.name }}/
         run: npm run smoke:a11y
 
+      # The two smokes above open screens; this one uses them, in order. One
+      # student's first session against the same served build: the first run
+      # walked (the account step asserted and declined, never submitted), an
+      # action made on Personal and seen on Today, the Guide and Support,
+      # the action ticked, resumed after a reload and in a second tab, and
+      # carried to a fresh browser context through the backup file. It does
+      # not sign in, so account-synced resume is not what it proves — the
+      # script's header says exactly what is. About fifteen seconds.
+      - name: Walk the golden student path
+        working-directory: app
+        env:
+          SMOKE_PLAYWRIGHT: /tmp/smoke/node_modules/playwright
+          SMOKE_URL: http://localhost:4173/${{ github.event.repository.name }}/
+        run: npm run smoke:golden
+
       # Runs at the repo root and needs no dependencies of its own — it reads
       # the course modules as source.
       - name: Validate the course data

@@ -103,8 +103,12 @@ export const GATES: readonly Gate[] = [
     evidence: [
       { path: 'app/scripts/accessibility-smoke.mjs', shows: 'critical journeys driven in a real browser for accessibility' },
       { path: 'app/scripts/cold-smoke.mjs', shows: 'the built app boots cold in a browser' },
+      {
+        path: 'app/scripts/golden-path.mjs',
+        shows: 'one student journey in CI at two viewports: first run and the account step, an action made and seen on Today, the Guide and Support, completion, resume after reload and in a second tab, and restore from the backup file into a fresh browser context',
+      },
     ],
-    gap: 'No scripted journey walks sign-in → Today → next action → Path/Plan → workspace → help → completion → resume on a second device, asserting each step. Phase 1.',
+    gap: 'The scripted journey never signs in, so resuming on a second device through an account is unproved: nothing drives sign-in and sync against a live or local Supabase with auth. It also skips Path/Plan and adding a course from a syllabus. Phase 1.',
   },
   {
     id: 'no-blockers',
