@@ -50,7 +50,10 @@ export function Credentials({
   onDone?: () => void;
 }) {
   const { state, dispatch } = useStore();
-  const [mode, setMode] = useState<'in' | 'up'>(state.registered ? 'in' : 'up');
+  // Unless a link said which: `#/login` and `#/signup` are the company site's
+  // two buttons (see `DOORS` in `lib/route.ts`), and "Log in" opening on a
+  // create form is the wall the paragraph above is about, the other way round.
+  const [mode, setMode] = useState<'in' | 'up'>(state.accountDoor ?? (state.registered ? 'in' : 'up'));
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);

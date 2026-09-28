@@ -61,7 +61,7 @@ import { readSeen, writeSeen } from '../lib/since';
 import { badge } from '../lib/device';
 import { SHARE_FLAG } from '../lib/shared';
 import { linkedScreen } from '../lib/deeplink';
-import { NAMED, fromHash, replaces, same, toHash, type Route } from '../lib/route';
+import { NAMED, fromHash, opensAccount, replaces, same, toHash, type Route } from '../lib/route';
 import { onOtherTab, tellOtherTabs } from '../lib/tabs';
 import { itemsDueToday } from '../lib/select';
 import { reducer } from './reducer';
@@ -351,7 +351,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(reducer, undefined, () => {
     const persisted = loadPersisted();
     const ephemeral = initialEphemeral();
-    if (!persisted.seenOnboarding) {
+    // A "Log in" link is the exception: it came for the form, not the tour,
+    // and onboarding still opens on the next visit until it is finished.
+    if (!persisted.seenOnboarding && !opensAccount(window.location.hash)) {
       return { ...persisted, ...ephemeral, screen: 'onboarding' as Screen };
     }
     /*
@@ -377,6 +379,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         ...(landed.opens?.changes ? { changes: landed.opens.changes } : {}),
         ...(landed.opens?.courses ? { coursesTab: landed.opens.courses } : {}),
         ...(landed.opens?.home ? { homeTab: landed.opens.home } : {}),
+        ...(landed.opens?.account ? { accountDoor: landed.opens.account } : {}),
       };
     }
     /*
@@ -1569,6 +1572,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       if (asked.opens?.changes) dispatch({ type: 'setChanges', source: asked.opens.changes });
       if (asked.opens?.courses) dispatch({ type: 'setCoursesTab', tab: asked.opens.courses });
       if (asked.opens?.home) dispatch({ type: 'setHomeTab', tab: asked.opens.home });
+      if (asked.opens?.account) dispatch({ type: 'setAccountDoor', door: asked.opens.account });
 
       if (same(asked, shown.current)) return;
       shown.current = asked;

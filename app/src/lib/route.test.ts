@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { NAMED, fromHash, replaces, same, toHash } from './route';
+import { NAMED, fromHash, opensAccount, replaces, same, toHash } from './route';
 import type { Screen } from './types';
 
 describe('writing an address', () => {
@@ -270,5 +270,31 @@ describe('a retired link whose survivor is a screen you may already be on', () =
     expect(fromHash('#/ahead')!.opens).toEqual({ home: 'week' });
     expect(fromHash('#/tonight')!.opens).toEqual({ home: 'hours' });
     expect(fromHash('#/home')!.opens).toBeUndefined();
+  });
+});
+
+/**
+ * The company site's two buttons.
+ *
+ * Read, never written: the doors land on the account screen with the form
+ * turned the way the button meant, and nothing writes `#/login` back.
+ */
+describe('the addresses the company site links to', () => {
+  it('opens the account form on sign in or on create', () => {
+    expect(fromHash('#/login')).toEqual({ screen: 'account', id: '', opens: { account: 'in' } });
+    expect(fromHash('#/signin')).toEqual({ screen: 'account', id: '', opens: { account: 'in' } });
+    expect(fromHash('#/signup')).toEqual({ screen: 'account', id: '', opens: { account: 'up' } });
+  });
+
+  it('writes the account screen back as itself', () => {
+    expect(toHash(fromHash('#/login')!)).toBe('#/account');
+  });
+
+  it('says which addresses a first visit may open before onboarding', () => {
+    expect(opensAccount('#/login')).toBe(true);
+    expect(opensAccount('#/signup')).toBe(true);
+    expect(opensAccount('#/account')).toBe(true);
+    expect(opensAccount('#/study')).toBe(false);
+    expect(opensAccount('')).toBe(false);
   });
 });
