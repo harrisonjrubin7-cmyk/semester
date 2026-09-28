@@ -802,8 +802,18 @@ deployment has no shared key. Add your own under Ask Claude → Settings."* A
 student with their own key is unaffected either way — the app prefers a key set
 on the device and only falls back to this one.
 
-Optional: `MONTHLY_CALL_LIMIT` (default 60 calls per account per month) and
-`ALLOWED_ORIGIN` (default `*`).
+Optional: `MONTHLY_CALL_LIMIT` (default 60 calls per account per month),
+`ALLOWED_ORIGIN` (extra https origins; the Pages origin is built in) and
+`CORS_ALLOW_DEV` (unset on the live project).
+
+**CORS fails closed (since 29 September 2026).** There is no `*` any more.
+`https://harrisonjrubin7-cmyk.github.io` is built into
+`supabase/functions/_shared/cors.ts`, so an unset or wrong secret can no longer
+take the deployed site out. `ALLOWED_ORIGIN` only *adds* exact `https://`
+origins; `*`, paths and plain http entries are ignored. An origin that is not
+allowed gets no `Access-Control-Allow-Origin` header at all. Localhost is
+answered only when `CORS_ALLOW_DEV=1` — set that for a local
+`supabase functions serve`, never on the live project.
 
 **`ALLOWED_ORIGIN` is a comma-separated list, and setting it to one origin is
 how this was broken for weeks.** It is read by `claude`, `fetchcal` and
@@ -818,12 +828,14 @@ rejects the response before the page sees it, so the app can only say *"could
 not reach"* — the same sentence it prints for a dead host — and the function's
 own side shows a request that arrived and was answered. Nothing logs it.
 
-So list every origin that must work, the deployed site **and** any dev server:
+So list every *other* https origin that must work (a second deployment, a
+custom domain); the Pages origin needs no entry:
 
-    supabase secrets set ALLOWED_ORIGIN=https://<user>.github.io,http://localhost:5173
+    supabase secrets set ALLOWED_ORIGIN=https://semester.example.edu
 
-The header echoes back whichever entry the request came from, so both work at
-once rather than one silently breaking the other. No trailing slashes — though
+The header echoes back whichever entry the request came from. A `localhost`
+entry here does nothing on the live project: local development sets
+`CORS_ALLOW_DEV=1` in its own `supabase/functions/.env` instead. No trailing slashes — though
 `supabase/functions/_shared/cors.ts` trims them, because the address bar adds
 one and that is the mistake this is most likely to meet. After changing it,
 press **Check the shared key works** on Settings → The assistant from the

@@ -122,10 +122,12 @@ describe('the procurement room file server', () => {
       const res = await handleTrustRoom(req, d);
       expect(res.headers.get('Cache-Control'), req.method).toBe('no-store');
       expect(res.headers.get('Referrer-Policy'), req.method).toBe('no-referrer');
-      expect(res.headers.get('Access-Control-Allow-Origin'), req.method).toBe(ORIGIN);
+      // Echoed to the allowed origin; a request with no Origin is no browser
+      // and gets no CORS header at all (`_shared/cors.ts` fails closed).
+      expect(res.headers.get('Access-Control-Allow-Origin'), req.method).toBe(req.headers.get('Origin') ? ORIGIN : null);
     }
     const elsewhere = await handleTrustRoom(post({ token: TOKEN }, { Origin: 'https://evil.example' }), d);
-    expect(elsewhere.headers.get('Access-Control-Allow-Origin')).toBe(ORIGIN);
+    expect(elsewhere.headers.get('Access-Control-Allow-Origin')).toBeNull();
     const preflight = await handleTrustRoom(new Request('https://x/', { method: 'OPTIONS' }), d);
     expect(preflight.status).toBe(204);
   });
