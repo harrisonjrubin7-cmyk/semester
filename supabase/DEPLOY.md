@@ -412,6 +412,37 @@ security on and own-row policies. The push tables were applied as the
 `push_devices_and_queue` migration; the SQL is `push.sql` in this directory and
 is idempotent, so re-running it is safe.
 
+## Rate limits
+
+Two layers, and only one of them is in this repository.
+
+**The browser's direct writes** — class chat, reactions, both report queues,
+feedback, help and mentor requests, community posts, communities and study
+sessions, groups and their parts, listings, and form answers — are limited in
+the database by `migrations/20260928120000_direct_rate_limits.sql`: a BEFORE
+INSERT trigger on each of the fourteen tables, a per-account sliding window
+(per form for signed-out answers), SQLSTATE 54000 and a sentence the app shows
+as it stands. The limits and the reasoning for each are in that file's header;
+`rate-limits.check.sql` is the suite. It reaches production the way every
+migration does, on the schema deploy. To confirm it did:
+
+    select tgrelid::regclass from pg_trigger where tgname = 'zz_rate_limit' order by 1;
+
+should list fourteen tables. An account locked out by mistake is cleared with
+the service role: `delete from private.direct_rate_limit where user_id = '…';`.
+
+**The auth endpoints** — sign-up, sign-in, OTP and magic-link verification,
+token refresh, the emails Auth sends — are limited by Supabase Auth, not by the
+database, and `config.toml` deliberately says nothing about them (its header:
+a setting written there silently overrides the dashboard on the next deploy).
+They are set in the dashboard, in the Auth rate-limit settings, which in
+`config.toml` terms are `[auth.rate_limit]`'s `email_sent`, `sms_sent`,
+`token_refresh`, `token_verifications`, `sign_in_sign_ups` and
+`anonymous_users`. **Nobody has yet read them off the production project and
+recorded them here**; until someone does, the go-live line for rate limiting
+stays open. Record the reading beside the date, as the scheduler section below
+does, rather than the value somebody meant to set.
+
 ## The scheduler
 
 `pg_cron` 1.6.4 and `pg_net` 0.20.4 are installed (migration
