@@ -592,7 +592,7 @@ jobs:
       # again. Removed is not gone: it is still in the pack and still readable
       # by anyone who clones.
       - name: Scan what this branch changed
-        uses: gitleaks/gitleaks-action@v2
+        uses: gitleaks/gitleaks-action@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITLEAKS_CONFIG: .gitleaks.toml
