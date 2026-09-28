@@ -31,6 +31,7 @@ import {
 import { useSavedCourses } from '../lib/advisor-attachments';
 import { hours } from '../lib/degree';
 import { download } from '../lib/deliver';
+import { record, yours } from '../lib/journal';
 import { useDeviceLibrary } from '../lib/device-library';
 import { EMPTY_GRADUATION, GRADUATION_KEY, readGraduation } from '../lib/graduation';
 import { comparisonText } from '../lib/scenario-compare';
@@ -55,7 +56,7 @@ const day = (iso: string) => formatDate(new Date(iso), { month: 'short', day: 'n
  * Nothing is shared by default, and no link-based access exists (D-016).
  */
 export function AdvisorMeeting({ accountId }: { accountId: string | null }) {
-  const { state } = useStore();
+  const { state, account } = useStore();
   const now = useNow();
   const library = useDeviceLibrary(meetingKey(accountId), readMeetings, EMPTY_MEETINGS);
   const meetings = library.value.meetings;
@@ -134,6 +135,12 @@ export function AdvisorMeeting({ accountId }: { accountId: string | null }) {
     if (!payload) return;
     try {
       await shareWithAdvisor(email, meeting.title, payload, days, now.getTime());
+      record(account?.id ?? null, {
+        kind: 'agenda-shared',
+        detail: `with ${email.trim()} until ${day(expiryFrom(days, now.getTime()))}`,
+        about: { type: 'agenda', id: meeting.id, label: meeting.title },
+        provenance: yours(`Shared with ${email.trim()} until ${day(expiryFrom(days, now.getTime()))}`),
+      });
       setSaid(`Shared with ${email.trim()} until ${day(expiryFrom(days, now.getTime()))}. You can revoke it below at any time.`);
       setRefresh((n) => n + 1);
     } catch (e) {

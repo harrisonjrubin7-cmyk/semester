@@ -239,25 +239,35 @@ export function workload(shifts: readonly Shift[], rules: WorkloadRules = DEFAUL
   const out: Finding[] = [];
   const sorted = [...shifts].sort((a, b) => a.from.localeCompare(b.from));
 
-  // Consecutive coverage: shifts by the same seat that touch or overlap.
-  let run: { seat: string; start: number; end: number } | null = null;
   for (const s of sorted) {
-    const start = day(s.from);
-    const end = day(s.to);
-    if (run && run.seat === s.seat && start <= run.end + 1) run.end = Math.max(run.end, end);
-    else {
-      if (run && run.end - run.start + 1 > rules.maxConsecutiveDays) out.push(consecutive(run, rules));
-      run = { seat: s.seat, start, end };
-    }
-  }
-  if (run && run.end - run.start + 1 > rules.maxConsecutiveDays) out.push(consecutive(run, rules));
-
-  for (const [i, s] of sorted.entries()) {
     if (!s.backup) out.push({ rule: 'no-backup', seat: s.seat, said: `${s.seat} has no backup from ${s.from} to ${s.to}.` });
     else if (s.backup === s.seat) out.push({ rule: 'self-backup', seat: s.seat, said: `${s.seat} is their own backup from ${s.from} to ${s.to}.` });
-    const next = sorted[i + 1];
-    if (s.incidents > rules.heavyShift && next && next.seat === s.seat) {
-      out.push({ rule: 'no-recovery', seat: s.seat, said: `${s.seat} handled ${s.incidents} incidents to ${s.to} and is on again from ${next.from}.` });
+  }
+
+  // The run and recovery rules are about one person's calendar, so each seat's
+  // shifts are read on their own: another seat's shift between two of A's
+  // does not end A's run, and does not count as A's rest (Codex, #922).
+  const seats = [...new Set(sorted.map((s) => s.seat))];
+  for (const seat of seats) {
+    const own = sorted.filter((s) => s.seat === seat);
+    let run: { seat: string; start: number; end: number } | null = null;
+    for (const s of own) {
+      const start = day(s.from);
+      const end = day(s.to);
+      if (run && start <= run.end + 1) run.end = Math.max(run.end, end);
+      else {
+        if (run && run.end - run.start + 1 > rules.maxConsecutiveDays) out.push(consecutive(run, rules));
+        run = { seat, start, end };
+      }
+    }
+    if (run && run.end - run.start + 1 > rules.maxConsecutiveDays) out.push(consecutive(run, rules));
+
+    for (const [i, s] of own.entries()) {
+      const next = own[i + 1];
+      // Rest is a gap in this seat's own calendar, not somebody else's shift.
+      if (s.incidents > rules.heavyShift && next && day(next.from) <= day(s.to) + 1) {
+        out.push({ rule: 'no-recovery', seat, said: `${seat} handled ${s.incidents} incidents to ${s.to} and is on again from ${next.from}.` });
+      }
     }
   }
 

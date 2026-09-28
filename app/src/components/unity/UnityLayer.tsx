@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { FixThis } from '../FixThis';
 import { useModal } from '../../a11y/modal';
 import { DESKTOP, useMedia } from '../../lib/media';
 import { statusOf } from '../../lib/status';
@@ -30,6 +31,7 @@ export function UnityLayer() {
         <Sheet label="About this screen">
           <div className="screen-guide-body">
             <Answers screen={overlay.screen} />
+            <FixThis />
           </div>
         </Sheet>
       )}

@@ -1,4 +1,5 @@
 import { ABROAD_PREFIX, readAbroad } from './abroad';
+import { PREFIX as JOURNAL_PREFIX, readEntries } from './journal';
 import { ACTIONS_PREFIX, readActionChoices } from './actions';
 import { keepNotes, MEETING_KEY, readMeetings, withoutNotes } from './advisor-meeting';
 import { EVIDENCE_PREFIX, readEvidence } from './career-evidence';
@@ -98,6 +99,12 @@ const DEFINITIONS: Record<string, Definition> = {
     prefix: 'semester.family.v1',
     scope: 'account',
     read: readFamily,
+  },
+  journal: {
+    label: 'Activity trail',
+    prefix: JOURNAL_PREFIX,
+    scope: 'account',
+    read: readEntries,
   },
   pathway: {
     label: 'Education pathway',

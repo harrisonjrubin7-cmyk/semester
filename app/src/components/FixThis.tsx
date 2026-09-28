@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { FIXES, type Fix } from '../lib/fixthis';
+import { noteOrigin } from '../lib/tickethandoff';
 import { useStore } from '../state/store';
 import { SaySomething } from './SaySomething';
 
@@ -38,7 +39,12 @@ export function FixThis() {
             <button
               type="button"
               className="bare link-quiet tap-y"
-              onClick={() => (f.screen ? dispatch({ type: 'go', screen: f.screen }) : setOpen(f))}
+              onClick={() => {
+                if (!f.screen) return setOpen(f);
+                // Help's ticket form reads where this was pressed, and why.
+                if (f.screen === 'help') noteOrigin({ hash: window.location.hash, action: f.label, reference: null });
+                dispatch({ type: 'go', screen: f.screen });
+              }}
             >
               {f.label}
             </button>

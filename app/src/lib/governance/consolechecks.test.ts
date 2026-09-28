@@ -92,6 +92,20 @@ describe('on-call workload', () => {
     expect(workload([shift('a', '2026-10-01', '2026-10-07'), shift('a', '2026-10-09', '2026-10-10')])).toEqual([]);
   });
 
+  it('reads each seat’s calendar on its own: another seat’s shift in between neither ends a run nor counts as rest', () => {
+    // A covers Oct 1–4 and Oct 5–8 with B in between: eight consecutive days for A.
+    const interleaved = [shift('a', '2026-10-01', '2026-10-04'), shift('b', '2026-10-02', '2026-10-03', { backup: 'a' }), shift('a', '2026-10-05', '2026-10-08')];
+    const f = workload(interleaved);
+    expect(f.map((x) => x.rule)).toEqual(['consecutive']);
+    expect(f[0].said).toContain('a covers 8 consecutive days');
+    // A heavy shift, B for a day, then A again the next day: no rest for A.
+    const tired = [shift('a', '2026-10-01', '2026-10-03', { incidents: 4 }), shift('b', '2026-10-03', '2026-10-03', { backup: 'a' }), shift('a', '2026-10-04', '2026-10-05')];
+    expect(workload(tired).map((x) => x.rule)).toEqual(['no-recovery']);
+    // A day off between them is rest, whoever covered it.
+    const rested = [shift('a', '2026-10-01', '2026-10-03', { incidents: 4 }), shift('b', '2026-10-04', '2026-10-04', { backup: 'a' }), shift('a', '2026-10-05', '2026-10-06')];
+    expect(workload(rested)).toEqual([]);
+  });
+
   it('wants a backup who is somebody else', () => {
     expect(workload([shift('a', '2026-10-01', '2026-10-02', { backup: null })]).map((x) => x.rule)).toEqual(['no-backup']);
     expect(workload([shift('a', '2026-10-01', '2026-10-02', { backup: 'a' })]).map((x) => x.rule)).toEqual(['self-backup']);
