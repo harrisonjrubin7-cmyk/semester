@@ -241,10 +241,11 @@ describe('step 6: the workspace again', () => {
    * workspace, so they disagree on purpose, and the argument turns out to
    * reach less far than it reads:
    *
-   *   - `nav` syncs. `lib/merge.ts` resolves it as `theirs`, so a signed-in
-   *     second device takes the first one's navigation and never sees a
-   *     default at all. The case the old invariant protected is the case that
-   *     does not arise.
+   *   - `nav` is per device (`mine` in `lib/merge.ts`), so a phone and a
+   *     laptop in different navigations is not a defect to guard against —
+   *     it is what each of them was chosen for. A new device starts on the
+   *     default and the width decides the rest; the case the old invariant
+   *     protected is now the intended behaviour.
    *   - Signed out, two devices share nothing by construction — each has its
    *     own stored copy and its own independent choices — so there is no pair
    *     to keep in step.

@@ -73,7 +73,7 @@ describe('the snapshot', () => {
 
   it('carries the label and the moment', () => {
     const took = snapshot(DEFAULT_PERSISTED, UNDOABLE.deleteTask, AT);
-    expect(took.label).toBe('Task deleted');
+    expect(took.label).toBe('Action deleted');
     expect(took.at).toBe(AT);
   });
 });

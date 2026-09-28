@@ -3,21 +3,33 @@ import type { Account } from '../lib/cloud';
 import {
   CONTEXT_KEYS,
   CONTEXT_TEXT,
+  INBOX_FILTERS,
+  INBOX_FILTER_TEXT,
   REPLY_MAX,
   STAFF_MOVES,
   STATUS_TEXT,
   answerRequest,
+  inFilter,
   loadInboxes,
   openRequest,
   replyAfter,
+  type InboxFilter,
   type OpenedRequest,
   type RequestStatus,
   type StaffInbox,
 } from '../lib/help-routes';
-import { ActionButton, Notice, SectionLabel } from './ui';
+import { ActionButton, ChipRow, Notice, SectionLabel } from './ui';
 
 const when = (value: string) =>
   new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
+
+/** What an office's list says when this filter leaves nothing in it. */
+const EMPTY_TEXT: Record<InboxFilter, string> = {
+  new: 'Nothing new.',
+  open: 'Nothing waiting.',
+  closed: 'Nothing closed yet.',
+  all: 'No requests yet.',
+};
 
 /** What each staff move is called on its button. */
 const MOVE_TEXT: Record<RequestStatus, string> = {
@@ -44,27 +56,53 @@ const MOVE_TEXT: Record<RequestStatus, string> = {
  * the list before it names nobody. The reply goes back through the app, where
  * the student reads it beside their question.
  */
-export function HelpInbox({ account }: { account: Account | null }) {
+export function HelpInbox({
+  account,
+  onInboxes,
+}: {
+  account: Account | null;
+  /** Told each time the inboxes load, so the Get help tab's count follows moves made here. */
+  onInboxes?: (inboxes: StaffInbox[]) => void;
+}) {
   const [inboxes, setInboxes] = useState<StaffInbox[]>([]);
   const [opened, setOpened] = useState<Record<string, OpenedRequest>>({});
   const [replies, setReplies] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState('');
+  /*
+   * Requests moved while this filter is showing. They stay on screen, with
+   * their new status and reply, until the filter changes, so closing one
+   * under "Open" does not make the card and its reply vanish mid-task.
+   */
+  const [kept, setKept] = useState<ReadonlySet<string>>(() => new Set());
+  const [filter, setFilter] = useState<InboxFilter>('open');
 
   const refresh = useCallback(async () => {
     if (!account) return;
     try {
-      setInboxes(await loadInboxes());
+      const next = await loadInboxes();
+      setInboxes(next);
+      onInboxes?.(next);
     } catch (error) {
       setNotice(error instanceof Error ? error.message : 'Could not load your inboxes.');
     }
-  }, [account]);
+  }, [account, onInboxes]);
 
   // An account-backed resource, not render-derived state.
   // oxlint-disable-next-line react/set-state-in-effect
   useEffect(() => { void refresh(); }, [refresh]);
 
   if (!account || inboxes.length === 0) return null;
+
+  const counts = Object.fromEntries(
+    INBOX_FILTERS.map((f) => [
+      f,
+      inboxes.reduce((n, box) => n + box.items.filter((it) => inFilter(it.status, f)).length, 0),
+    ]),
+  ) as Record<InboxFilter, number>;
+  const labels = Object.fromEntries(
+    INBOX_FILTERS.map((f) => [f, `${INBOX_FILTER_TEXT[f]} (${counts[f]})`]),
+  );
 
   const run = (work: () => Promise<void>) => {
     setBusy(true);
@@ -88,13 +126,29 @@ export function HelpInbox({ account }: { account: Account | null }) {
         </p>
       </div>
 
+      <div role="group" aria-label="Show requests">
+        <ChipRow
+          options={INBOX_FILTERS}
+          value={filter}
+          labels={labels}
+          onChange={(f) => {
+            // The chip already chosen reports a change too; only a new filter lets go of kept cards.
+            if (f === filter) return;
+            setFilter(f);
+            setKept(new Set());
+          }}
+        />
+      </div>
+
       {notice && <Notice alert>{notice}</Notice>}
 
-      {inboxes.map(({ destination, items }) => (
+      {inboxes.map(({ destination, items }) => {
+        const shown = items.filter((it) => inFilter(it.status, filter) || kept.has(it.id));
+        return (
         <div key={destination.id} style={{ display: 'grid', gap: 'var(--sp-3)' }}>
-          <SectionLabel aside={`${items.length}`}>{destination.name}</SectionLabel>
-          {items.length === 0 && <p style={{ color: 'var(--app-dim)', margin: 0 }}>Nothing waiting.</p>}
-          {items.map((item) => {
+          <SectionLabel aside={`${shown.length}`}>{destination.name}</SectionLabel>
+          {shown.length === 0 && <p style={{ color: 'var(--app-dim)', margin: 0 }}>{EMPTY_TEXT[filter]}</p>}
+          {shown.map((item) => {
             const open = opened[item.id];
             const status = open?.status ?? item.status;
             const moves = STAFF_MOVES[status];
@@ -165,6 +219,15 @@ export function HelpInbox({ account }: { account: Account | null }) {
                                 const sent = replies[item.id] ?? '';
                                 setOpened((o) => ({ ...o, [item.id]: { ...open, status: to, reply: replyAfter(open.reply, sent) } }));
                                 setReplies((r) => ({ ...r, [item.id]: '' }));
+                                // The move is saved: say so to the tab's count now, so a
+                                // reload that fails after it cannot leave the count behind.
+                                const moved = inboxes.map((box) => ({
+                                  ...box,
+                                  items: box.items.map((it) => (it.id === item.id ? { ...it, status: to } : it)),
+                                }));
+                                setInboxes(moved);
+                                onInboxes?.(moved);
+                                setKept((k) => new Set(k).add(item.id));
                                 await refresh();
                               })}
                             >
@@ -180,7 +243,8 @@ export function HelpInbox({ account }: { account: Account | null }) {
             );
           })}
         </div>
-      ))}
+        );
+      })}
     </section>
   );
 }

@@ -154,7 +154,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
   const remind = (c: (typeof due)[number]) => {
     const from = `nil:${c.deal.id}`;
     if (state.tasks.some((t) => t.from === from)) {
-      setSaid('That reminder is already on your list. Its date is editable under Tasks.');
+      setSaid('That reminder is already on your list. Its date is editable under Actions.');
       return;
     }
     dispatch({
@@ -172,7 +172,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
         from,
       },
     });
-    setSaid('Added to your tasks, so it shows up on Today like everything else you owe.');
+    setSaid('Added to your actions, so it shows up on Today like everything else you owe.');
   };
 
   const thisYear = years(lib.value.deals)[0] ?? String(new Date().getFullYear());

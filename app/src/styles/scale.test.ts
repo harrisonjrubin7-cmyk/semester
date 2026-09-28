@@ -11,6 +11,7 @@ import {
   multipliers,
   overBudget,
   render,
+  sheetLiterals,
   sources,
 } from './rules';
 import { BUDGET } from './budget';
@@ -47,6 +48,36 @@ describe('the style rule', () => {
     // The rule that matters most and shows least: a cycle does not fail, it
     // silently deletes the token for a whole subtree. See `cycles`.
     expect(cycles(src).map((p) => `${p.file}:${p.line} ${p.found}`)).toEqual([]);
+  });
+
+  it('leaves the Typeface and Corners settings to the student', () => {
+    // A named face or a card-sized px radius in a stylesheet is a screen the
+    // two settings cannot reach. See `sheetLiterals`.
+    expect(sheetLiterals(src).map((p) => `${p.file}:${p.line} ${p.found}`)).toEqual([]);
+  });
+
+  it('names the setting a stylesheet literal overrules, and allows what none speaks to', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'sheets-'));
+    mkdirSync(join(dir, 'src', 'styles'), { recursive: true });
+    writeFileSync(
+      join(dir, 'src', 'styles', 'x.css'),
+      [
+        '.a{font-family:Arial,sans-serif;border-radius:22px}',
+        '.b{font-family:var(--font-body);border-radius:var(--r-lg)}',
+        '.c{border-radius:999px}.d{border-radius:1px}.e{border-radius:50%}',
+        '.f{border-top-left-radius:8px}',
+        '@font-face{font-family:\'Barlow\';src:url(x.woff2)}',
+        'pre{font-family:ui-monospace, Menlo, monospace}',
+      ].join('\n'),
+    );
+    const found = sheetLiterals(join(dir, 'src'));
+    expect(found.map((p) => `${p.file}:${p.line} ${p.found}`)).toEqual([
+      'styles/x.css:1 font-family:Arial,sans-serif',
+      'styles/x.css:1 border-radius:22px',
+      'styles/x.css:4 border-top-left-radius:8px',
+    ]);
+    expect(found[0].says).toContain('Typeface');
+    expect(found[1].says).toContain('Corners');
   });
 
   it('holds every file to its own count, with no slack to spend', () => {
@@ -137,7 +168,7 @@ export const d = <i style={{ fontSize: '0.92em' }} />;`),
   });
 
   it('fails on a size written longhand that a token already names', () => {
-    const [p] = on(`export const x = <i style={{ fontSize: 'calc(13px * var(--text-scale, 1))' }} />;`);
+    const [p] = on(`export const x = <i style={{ fontSize: 'calc(16px * var(--text-scale, 1))' }} />;`);
     expect(p.says).toContain('var(--type-base)');
   });
 

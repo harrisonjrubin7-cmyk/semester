@@ -96,10 +96,38 @@ export const MOCK_EVENTS = mock('mock_events', 'events', 'Mock Events', 'integra
     fields: [s('name'), u('url')] },
 ]);
 
+/**
+ * Room availability: free and busy slots per study space, on its own adapter
+ * because it moves in minutes where the space list moves in days. Carries a
+ * slot's space, start, end and free/busy — never who holds a busy slot.
+ */
+export const MOCK_SPACE_AVAILABILITY = mock('mock_space_availability', 'library', 'Mock Room Availability', 'integration.campus_services', 'Library room booking', 10, [
+  { externalEntity: 'slot', canonicalEntity: 'space_availability', version: 1, scope: 'scope.library.availability_read',
+    classification: 'T0', personal: false,
+    fields: [s('space'), t('from', 'starts_at'), t('to', 'ends_at'), e('state', ['free', 'busy'], 'status'), u('book', 'book_url')] },
+]);
+
+/**
+ * Booking a room on a student's behalf is a write to the school's system, so
+ * it sits behind `writeback.space_booking` (high-risk, off, needs an approved
+ * connection) and `kill.writeback`. It declares the contract only: there is no
+ * code path that sends a booking, and `validateDeclaration` holds that any
+ * write direction is behind a writeback flag with a kill switch.
+ */
+export const MOCK_SPACE_BOOKING = {
+  ...mock('mock_space_booking', 'library', 'Mock Room Booking', 'writeback.space_booking', 'Library room booking', 10, []),
+  scopes: ['scope.library.booking_write'],
+  direction: 'approved_write' as const,
+  killSwitch: 'kill.writeback',
+};
+
 export const MOCK_LIBRARY = mock('mock_library', 'library', 'Mock Library', 'integration.campus_services', 'Library', 24 * 60, [
   { externalEntity: 'space', canonicalEntity: 'study_space', version: 1, scope: 'scope.library.space_read',
     classification: 'T0', personal: false,
-    fields: [s('name'), s('hours', 'hours', false), u('book_url')] },
+    // `quiet` feeds the sensory-friendly ordering on Support › Campus; a
+    // provider that does not send it leaves every room unmarked, never guessed.
+    fields: [s('name'), s('hours', 'hours', false), u('book_url'),
+      { external: 'quiet', canonical: 'quiet', type: 'boolean' as const, required: false }] },
 ]);
 
 export const MOCK_TUTORING = mock('mock_tutoring', 'tutoring', 'Mock Tutoring', 'integration.campus_services', 'Tutoring center', 24 * 60, [
@@ -135,6 +163,7 @@ export const MOCK_BURSAR = mock('mock_bursar', 'bursar', 'Mock Bursar', 'integra
 
 export const CAMPUS_ADAPTERS = [
   MOCK_ADVISING, MOCK_CAREER, MOCK_EVENTS, MOCK_LIBRARY, MOCK_TUTORING, MOCK_CALENDAR, MOCK_ALERTS, MOCK_TRANSIT, MOCK_BURSAR,
+  MOCK_SPACE_AVAILABILITY,
 ];
 
 const at = '2026-09-27T06:00:00Z';
@@ -151,6 +180,11 @@ export const CAMPUS_FIXTURES: Record<string, ExternalRecord> = {
               url: 'https://careers.example.edu/p/1' } },
   event: { entityType: 'event', id: 'ev-1', updatedAt: at,
     fields: { name: 'Career fair', start: '2026-10-03T17:00:00Z', where: 'Student Center', url: 'https://events.example.edu/1' } },
+  // `booked_by` is what a real booking system would send; the contract test
+  // proves it never reaches a stored fact.
+  slot: { entityType: 'slot', id: 'sl-1', updatedAt: at,
+    fields: { space: 'Library room 214', from: '2026-09-27T14:00:00Z', to: '2026-09-27T16:00:00Z', state: 'busy',
+              book: 'https://rooms.example.edu/214', booked_by: 'student@example.edu' } },
   alert: { entityType: 'alert', id: 'al-1', updatedAt: at,
     fields: { level: 'advisory', headline: 'Shuttle service suspended on West Loop', issued: '2026-09-27T05:50:00Z',
               expires: '2026-09-27T20:00:00Z', url: 'https://alerts.example.edu/1' } },

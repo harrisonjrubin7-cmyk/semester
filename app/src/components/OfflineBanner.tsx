@@ -22,7 +22,7 @@ export function OfflineBanner({
   signedIn: forcedSignedIn,
   syncNow,
 }: { online?: boolean; signedIn?: boolean; syncNow?: () => Promise<unknown> } = {}) {
-  const { account, sync, catchUp } = useStore();
+  const { account, sync, refresh, pushNow } = useStore();
   const live = useOnline();
   const online = forced ?? live;
   const signedIn = forcedSignedIn ?? Boolean(account);
@@ -47,14 +47,23 @@ export function OfflineBanner({
     }
   }, [online, signedIn, ledger]);
 
-  // Back online with changes waiting: pull, merge, push — the push only after
-  // a pull that succeeded (`catchUp` in the store says why).
+  // Back online with changes waiting: pull, merge, push. The push is asked
+  // for explicitly — `refresh` only pulls, and when the account had nothing
+  // new it changes nothing that would set off the ordinary push, so an edit
+  // whose push failed offline would otherwise stay on the device.
   const wasOnline = useRef(online);
   useEffect(() => {
     const cameBack = online && !wasOnline.current;
     wasOnline.current = online;
-    if (cameBack && syncOnReconnect(ledger.value, signedIn)) void (syncNow ?? catchUp)();
-  }, [online, signedIn, ledger.value, syncNow, catchUp]);
+    if (!cameBack || !syncOnReconnect(ledger.value, signedIn)) return;
+    const catchUp = async () => {
+      await refresh();
+      // Let a merged copy from the pull render first, so it is the one sent.
+      await new Promise((r) => setTimeout(r, 0));
+      await pushNow();
+    };
+    void (syncNow ?? catchUp)();
+  }, [online, signedIn, ledger.value, syncNow, refresh, pushNow]);
 
   const b = badge({ online, signedIn, ledger: ledger.value, sync, now });
   if (!b) return null;

@@ -3,8 +3,11 @@ import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { SectionLabel, TabList } from '../components/ui';
 import { Card, Checklist, GoTo, Never, OfficeDoor } from '../components/JourneyKit';
+import { MentorFinder } from '../components/MentorFinder';
+import { VerifiedListings } from '../components/VerifiedListings';
 import { useDeviceLibrary } from '../lib/device-library';
 import { hasMode } from '../lib/accessmode';
+import { dateToIso } from '../lib/date';
 import {
   ABROAD_NOTICE,
   EMPTY_OPPORTUNITIES,
@@ -76,6 +79,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
       {tab === 'list' && !selected ? (
         <List
           lib={lib.value}
+          onTrack={(o) => update((old) => ({ ...old, items: [o, ...old.items] }))}
           onAdd={(kind) => {
             const o = newOpportunity(kind);
             update((old) => ({ ...old, items: [o, ...old.items] }));
@@ -90,9 +94,9 @@ function Workspace({ storageKey }: { storageKey: string }) {
   );
 }
 
-function List({ lib, onAdd, onOpen }: { lib: OpportunityLibrary; onAdd: (k: Kind) => void; onOpen: (id: string) => void }) {
+function List({ lib, onAdd, onOpen, onTrack }: { lib: OpportunityLibrary; onAdd: (k: Kind) => void; onOpen: (id: string) => void; onTrack: (o: Opportunity) => void }) {
   const [kind, setKind] = useState<Kind | 'all'>('all');
-  const today = new Date().toISOString().slice(0, 10);
+  const today = dateToIso(new Date());
   const soon = deadlines(lib.items, today).slice(0, 3);
   const shown = lib.items.filter((o) => kind === 'all' || o.kind === kind);
   return (
@@ -132,6 +136,12 @@ function List({ lib, onAdd, onOpen }: { lib: OpportunityLibrary; onAdd: (k: Kind
         );
       })}
       {!shown.length ? <p className="jx-muted">Nothing here yet. Add the first one below.</p> : null}
+
+      {kind === 'all' || kind === 'alumni' ? (
+        <MentorFinder kind="alumni" interests={[]} fallback={null} />
+      ) : null}
+
+      <VerifiedListings onTrack={onTrack} tracked={lib.items.flatMap((o) => [o.id, o.source]).filter(Boolean)} />
 
       <SectionLabel>Add</SectionLabel>
       <div className="jx-chips">
@@ -266,7 +276,7 @@ function Editor({ item: o, onChange, onDelete, onDone }: { item: Opportunity; on
           ))}
           <div className="jx-inline">
             <input className="input" value={ref} onChange={(e) => setRef(e.target.value)} placeholder="Who you asked" aria-label="Reference name" />
-            <button type="button" className="btn btn-secondary" onClick={() => { if (ref.trim()) { set({ references: [...o.references, { ...newReference(ref.trim()), asked: new Date().toISOString().slice(0, 10) }] }); setRef(''); } }}>
+            <button type="button" className="btn btn-secondary" onClick={() => { if (ref.trim()) { set({ references: [...o.references, { ...newReference(ref.trim()), asked: dateToIso(new Date()) }] }); setRef(''); } }}>
               Add
             </button>
           </div>

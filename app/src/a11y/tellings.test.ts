@@ -109,7 +109,8 @@ describe('every message that says something went wrong', () => {
         // The node it renders, or the component it delegates to, has to be
         // one a reader is told about.
         const shown = lines.slice(i, i + 12).join('\n');
-        if (/<Trouble|<Problem|role="alert"|role="status"|aria-live/.test(shown)) return;
+        // `ErrorState` is `role="alert"` itself — `components/unity/States.tsx`.
+        if (/<Trouble|<Problem|<ErrorState|role="alert"|role="status"|aria-live/.test(shown)) return;
         out.push(`${file}:${i + 1}`);
       });
     }

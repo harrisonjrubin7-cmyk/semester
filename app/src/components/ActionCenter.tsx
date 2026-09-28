@@ -28,7 +28,7 @@ import { ActionButton, SectionLabel } from './ui';
 const SaySomething = lazy(() => import('./SaySomething').then((m) => ({ default: m.SaySomething })));
 
 /**
- * The Action Center: one most important thing, up to five more, the rest
+ * The Action Center: one most important thing, up to three more, the rest
  * behind "View all".
  *
  * Every control is a button — no swipe, no long press — so the whole list can

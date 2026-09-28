@@ -4,6 +4,8 @@ import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { ActionButton, FilePick, Notice, SectionLabel, Segmented } from '../components/ui';
 import { CardGrid, GridCard } from '../components/GridCard';
+import { ContextBar } from '../components/unity/ContextBar';
+import { safeUrl } from '../lib/apply';
 import { secondLine } from '../lib/dim';
 import { useDeviceLibrary } from '../lib/device-library';
 import { download } from '../lib/deliver';
@@ -341,16 +343,35 @@ function Workspace({ storageKey }: { storageKey: string }) {
 
           {selected && (
             <>
-              <SectionLabel
-                aside={`You recorded: ${selected.status}`}
-                style={{ marginBlock: 'var(--sp-7) var(--sp-4)' }}
-              >
-                {selected.school} · {selected.program}
-              </SectionLabel>
+              <ContextBar
+                heading={2}
+                context={selected.school}
+                title={selected.program}
+                statuses={['yours', 'needs-confirmation']}
+                source={{
+                  title: `${selected.school} · ${selected.program}`,
+                  origin: 'yours',
+                  sourceName: selected.url ? 'The program page you recorded' : 'What you recorded',
+                  openSource: safeUrl(selected.url)
+                    ? {
+                        label: 'Open the source you recorded ↗',
+                        run: () => void window.open(safeUrl(selected.url), '_blank', 'noopener,noreferrer'),
+                      }
+                    : undefined,
+                }}
+                primary={{
+                  label: 'Edit',
+                  run: () => {
+                    setProgram(structuredClone(selected));
+                    setTab('edit');
+                  },
+                }}
+              />
               <p style={{ ...body, whiteSpace: 'pre-wrap' }}>
                 {selected.requirements || 'Add the requirements from the program’s own instructions.'}
               </p>
               <p style={line}>
+                You recorded: {selected.status} ·{' '}
                 {programReadiness(selected).missing} materials still in preparation
                 {!selected.materials.length ? ' · none listed yet' : ''}
                 {!selected.deadline ? ' · deadline missing' : ''}
@@ -428,15 +449,6 @@ function Workspace({ storageKey }: { storageKey: string }) {
 
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-4)' }}>
                 <ActionButton
-                  onClick={() => {
-                    setProgram(structuredClone(selected));
-                    setTab('edit');
-                  }}
-                  style={{ flex: '1 1 auto' }}
-                >
-                  Edit
-                </ActionButton>
-                <ActionButton
                   onClick={() =>
                     write(
                       `${selected.school} · Essay preparation`,
@@ -462,13 +474,6 @@ function Workspace({ storageKey }: { storageKey: string }) {
                   Start the essay
                 </ActionButton>
               </div>
-              {selected.url && (
-                <p style={{ marginTop: 'var(--sp-4)' }}>
-                  <a href={selected.url} target="_blank" rel="noreferrer" style={body}>
-                    Open the source you recorded ↗
-                  </a>
-                </p>
-              )}
             </>
           )}
         </>

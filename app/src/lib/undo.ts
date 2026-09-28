@@ -66,7 +66,7 @@ export const UNDOABLE: Record<string, Undoable> = {
    * moment the thing lands, and on a phone a mis-drop is one finger's width.
    * So a move offers the old date back for eight seconds.
    */
-  moveTask: { label: 'Task moved', fields: ['tasks'], onChange: true },
+  moveTask: { label: 'Action moved', fields: ['tasks'], onChange: true },
   moveAppointment: { label: 'Moved', fields: ['appointments'], onChange: true },
   moveItem: { label: 'Deadline moved', fields: ['courses'], onChange: true },
   /*
@@ -81,7 +81,7 @@ export const UNDOABLE: Record<string, Undoable> = {
    * back from, and the picker is a list of near-identical rows one tap apart.
    */
   moveFolder: { label: 'Folder moved', fields: ['folders'], onChange: true },
-  deleteTask: { label: 'Task deleted', fields: ['tasks'] },
+  deleteTask: { label: 'Action deleted', fields: ['tasks'] },
   deleteAppointment: { label: 'Appointment deleted', fields: ['appointments'] },
   removeCommitment: { label: 'Activity removed', fields: ['commitments'] },
   removePlace: { label: 'Place removed', fields: ['places'] },

@@ -9,6 +9,10 @@ import './styles/app.css';
 // directories, registration and the graphing calculator) bring their own
 // scoped rules — see `styles/features.css`.
 import './styles/features.css';
+// The semantic token layer over the primitives above, and the shared
+// components built on it — see `styles/tokens.css` and `styles/unity.css`.
+import './styles/tokens.css';
+import './styles/unity.css';
 import App from './App';
 import { Splash } from './components/Splash';
 import { askToPersist } from './lib/device';

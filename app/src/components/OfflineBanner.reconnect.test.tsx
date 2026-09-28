@@ -4,11 +4,11 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 
 /**
- * Reconnecting catches up — pull, merge, then push — and does not only pull
- * (review fix). `refresh` pulls, and when the account had nothing new it
- * changes nothing that would set off the ordinary push, so an edit whose push
- * failed offline stayed on the device while the badge cleared. That the push
- * waits on a pull that succeeded is `state/catchup.test.tsx`.
+ * Reconnecting pushes, and does not only pull (review fix). `refresh` pulls,
+ * and when the account had nothing new it changes nothing that would set off
+ * the ordinary push, so an edit whose push failed offline stayed on the
+ * device while the badge cleared. The store is mocked so the two calls, and
+ * their order, are what is measured.
  */
 
 const calls: string[] = [];
@@ -20,8 +20,12 @@ vi.mock('../state/store', () => ({
   useStore: () => ({
     account: store.account,
     sync: { status: 'error', at: 0, error: 'offline' },
-    catchUp: async () => {
-      calls.push('catch up');
+    refresh: async () => {
+      calls.push('pull');
+      return '';
+    },
+    pushNow: async () => {
+      calls.push('push');
       return true;
     },
   }),
@@ -50,13 +54,13 @@ afterEach(async () => {
 
 const settle = () => act(async () => new Promise((r) => setTimeout(r, 20)));
 
-it('catches up when the connection comes back with changes waiting', async () => {
+it('pulls, then pushes this device’s copy, when the connection comes back with changes waiting', async () => {
   await act(async () => root.render(<OfflineBanner online={false} />));
   await settle();
   expect(JSON.parse(localStorage.getItem('semester.offline-ledger.v1:u1')!).unsyncedSince).not.toBeNull();
   await act(async () => root.render(<OfflineBanner online />));
   await settle();
-  expect(calls).toEqual(['catch up']);
+  expect(calls).toEqual(['pull', 'push']);
 });
 
 it('does neither with no account (the control)', async () => {

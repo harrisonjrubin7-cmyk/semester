@@ -1,13 +1,13 @@
 -- Advisor shares are a person's work, restated after help requests.
 --
--- 20260927201500_advisor_shares.sql added `public.advisor_shares` (both ends)
+-- 20260928131000_advisor_shares.sql added `public.advisor_shares` (both ends)
 -- to `lti_account_untouched` (Phase G, D-043). 20260927230000_help_requests.sql
 -- later redefined the function without it, and migrations apply in version
--- order, so that definition would win. 20260927234500 restored the graduation
+-- order, so that definition would win. 20260928133000 restored the graduation
 -- row only.
 --
 -- This is the complete latest definition — CREATE OR REPLACE replaces the
--- whole body — and it is 20260927234500's with the two advisor rows added.
+-- whole body — and it is 20260928133000's with the two advisor rows added.
 -- `app/src/lib/ltiaccount.test.ts` reads whichever migration defines the
 -- function last and holds it against OWNED_TABLES.
 --

@@ -62,7 +62,7 @@ problems, both introduced by #879's own fixes:
 
 | Finding | Fix | Test |
 |---|---|---|
-| The reconnect push ran even when the pull had failed, and `push` overwrites the account's copy | `catchUp()` in the store pushes only after a pull that succeeded, and not while a first sign-in waits on the student's choice | `state/catchup.test.tsx`: no push after a failed pull; a push after a good one (control) |
+| The reconnect push ran even when the pull had failed, and `push` overwrote the account's copy | Already fixed on the base by main's sync work (#885): every push names the rows this device has read, the server refuses a push naming stale ones, and the device pulls, merges and retries. `pushNow` reuses that push. Nothing added here | main's own sync tests |
 | A second account saving the same draft replaced the first account's id | `cloudIds` keeps one id per account; the older one-owner form is read into it | `GraduationSimulator.phase-d.test.tsx`, `graduation.test.ts` |
 
 ## Also here
@@ -74,4 +74,4 @@ store without registering it. It is registered here.
 
 Revert the commit. The migration changes one policy and adds two functions.
 To undo it, a later migration restores the policy from
-`20260927224500_office_action_feed.sql` and drops the functions.
+`20260928132000_office_action_feed.sql` and drops the functions.

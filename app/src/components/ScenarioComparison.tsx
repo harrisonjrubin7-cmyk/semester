@@ -8,7 +8,7 @@ import { Segmented } from './ui';
 /**
  * Current plan against one proposed change (DESIGN-SYSTEM-IMPROVEMENTS §4.11).
  *
- * At 760px and wider, a real table — the data is tabular, so a screen reader
+ * At the `WIDE` width (840px) and up, a real table — the data is tabular, so a screen reader
  * gets its headers — with the change in words and a sign in its own column.
  * On a phone, the rows that changed come first as "What changes", and a
  * switch shows the whole of either plan: two columns side by side do not

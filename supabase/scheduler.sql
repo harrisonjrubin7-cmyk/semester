@@ -150,6 +150,106 @@ select cron.schedule(
   $job$select public.gateway_purge_journal()$job$
 );
 
+-- Community Trust & Safety evidence. Daily: closed cases past their
+-- retain_until (90 days after a no-action close, a year after enforcement or
+-- an appeal), the reports and removed posts they were keeping, restrictions
+-- ninety days after they ended, and study sessions thirty days after they
+-- ended. Open and appealed cases are never swept. Each run writes a row to
+-- community_retention_runs. See RETENTION.md and 20260928032000_community.sql.
+select cron.schedule(
+  'community-retention',
+  '29 4 * * *',
+  $job$select private.sweep_community_retention()$job$
+);
+
+
+-- ── Escalation delivery ───────────────────────────────────────────────────
+--
+-- Sends an approved Community escalation to the university that agreed to
+-- receive it. The adapter is supabase/functions/_shared/escalation.ts, and it
+-- is not deployed: docs/CAMPUS-ESCALATION-POLICY.md has the steps, and they
+-- start with a signed agreement. So the job is created parked, the way `push`
+-- was, and the secret it will send is its own — not push_cron_secret, so the
+-- reminder sender's key can never call the one function that sends cases out.
+do $$
+begin
+  if not exists (select 1 from vault.secrets where name = 'escalation_cron_secret') then
+    perform vault.create_secret(
+      translate(encode(gen_random_bytes(32), 'base64'), '+/=', '-_'),
+      'escalation_cron_secret',
+      'Bearer token the escalation-delivery job sends to the escalate Edge Function. Must equal its ESCALATION_CRON_SECRET.',
+      null
+    );
+  end if;
+end $$;
+
+select cron.schedule(
+  'escalation-delivery',
+  '*/5 * * * *',
+  $job$
+    select net.http_post(
+      url := 'https://lzrqvlugnawcgywkhqlz.supabase.co/functions/v1/escalate',
+      headers := jsonb_build_object(
+        'Content-Type', 'application/json',
+        'Authorization', 'Bearer ' || (
+          select decrypted_secret from vault.decrypted_secrets where name = 'escalation_cron_secret'
+        )
+      ),
+      body := '{}'::jsonb,
+      timeout_milliseconds := 60000
+    );
+  $job$
+);
+
+-- Parked: the function does not exist until somebody deploys it on purpose.
+select cron.alter_job(
+  (select jobid from cron.job where jobname = 'escalation-delivery'),
+  active := false
+);
+
+-- ── Community media scan ─────────────────────────────────────────────────
+--
+-- Scans uploaded Community images and deletes the files of rows that are
+-- gone. The scanner is supabase/functions/_shared/mediascan.ts, not deployed:
+-- docs/COMMUNITY-MEDIA-SAFETY.md has the steps, and they start with a
+-- known-abuse hash provider and legal sign-off. Parked, with a secret of its
+-- own for the same reason as escalation-delivery's.
+do $$
+begin
+  if not exists (select 1 from vault.secrets where name = 'media_scan_cron_secret') then
+    perform vault.create_secret(
+      translate(encode(gen_random_bytes(32), 'base64'), '+/=', '-_'),
+      'media_scan_cron_secret',
+      'Bearer token the media-scan job sends to the media-scan Edge Function. Must equal its MEDIA_SCAN_CRON_SECRET.',
+      null
+    );
+  end if;
+end $$;
+
+select cron.schedule(
+  'media-scan',
+  '* * * * *',
+  $job$
+    select net.http_post(
+      url := 'https://lzrqvlugnawcgywkhqlz.supabase.co/functions/v1/media-scan',
+      headers := jsonb_build_object(
+        'Content-Type', 'application/json',
+        'Authorization', 'Bearer ' || (
+          select decrypted_secret from vault.decrypted_secrets where name = 'media_scan_cron_secret'
+        )
+      ),
+      body := '{}'::jsonb,
+      timeout_milliseconds := 60000
+    );
+  $job$
+);
+
+-- Parked: the function does not exist until somebody deploys it on purpose.
+select cron.alter_job(
+  (select jobid from cron.job where jobname = 'media-scan'),
+  active := false
+);
+
 -- ── Integrations: the retention sweep ─────────────────────────────────────
 --
 -- `public.integration_retention_sweep()` (20260927200000_integration_hardening)

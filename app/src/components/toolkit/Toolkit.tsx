@@ -9,7 +9,8 @@ import { courseLayers, type CoursePublication } from '../../lib/courserules';
 import { GOALS, labelOf, recommend, subjectFor, type Goal, type Recommendation } from '../../lib/toolkit/recommend';
 import { boundaryNotice } from '../../lib/toolkit/safety';
 import { progress, TEMPLATE_IDS, TEMPLATES, type TemplateId } from '../../lib/toolkit/templates';
-import { Notice, TabList } from '../ui';
+import { TabList } from '../ui';
+import { ErrorState } from '../unity/States';
 import { AssignmentPanel, RubricPanel } from './AssignmentPanel';
 import { DataPanel } from './DataPanel';
 import { DisclosurePanel } from './DisclosurePanel';
@@ -138,12 +139,14 @@ export function Toolkit({
       </div>
 
       {library.error ? (
-        <Notice alert>
-          {library.error}{' '}
-          <button onClick={() => download({ name: 'Semester toolkit recovery.json', body: library.recovery(), mime: 'application/json' })}>
-            Download recovery copy
-          </button>
-        </Notice>
+        <ErrorState
+          title="Could not save on this device"
+          body={library.error}
+          recover={{
+            label: 'Download recovery copy',
+            run: () => download({ name: 'Semester toolkit recovery.json', body: library.recovery(), mime: 'application/json' }),
+          }}
+        />
       ) : null}
 
       <TabList label="Toolkit sections" className="portal-tabs" tabs={tabs} value={section} onChange={setSection} />

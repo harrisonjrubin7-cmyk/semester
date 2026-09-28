@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { appCount, appShelves } from './apps';
+import { appCount, appSections, appShelves } from './apps';
+import { NAV_AREAS, navAreaOf } from './navareas';
 import { glyphFor } from '../components/icons.pick';
 import { GROUPS, offered, saysFor, shortFor } from './nav';
 import { headerRow } from './header';
@@ -200,15 +201,15 @@ describe('what the sheet covers', () => {
   const css = () => readFileSync('src/styles/app.css', 'utf8');
 
   it('covers the window rather than the pane once the rail appears', () => {
-    const at = /@media \(min-width: 760px\) \{([\s\S]*?)\n\}/g;
+    const at = /@media \(min-width: 840px\) \{([\s\S]*?)\n\}/g;
     const blocks = [...css().matchAll(at)].map((m) => m[1]);
     const folder = blocks.find((b) => /\.soft-folder \{/.test(b));
-    expect(folder, 'no 760px rule for .soft-folder — the rail is live behind it').toBeDefined();
+    expect(folder, 'no 840px rule for .soft-folder — the rail is live behind it').toBeDefined();
     expect(folder).toMatch(/position:\s*fixed/);
   });
 
   it('draws its content as a column there, not a grid stretched over a laptop', () => {
-    const at = /@media \(min-width: 760px\) \{([\s\S]*?)\n\}/g;
+    const at = /@media \(min-width: 840px\) \{([\s\S]*?)\n\}/g;
     const blocks = [...css().matchAll(at)].map((m) => m[1]);
     expect(blocks.some((b) => /\.soft-folder-body/.test(b) && /max-width/.test(b))).toBe(true);
   });
@@ -285,5 +286,38 @@ describe('the button in the header', () => {
       const gap = Math.min(...launchers.map((at2) => Math.abs(at2 - at)));
       expect(gap, 'a layout that can search but cannot open the launcher').toBeLessThan(60);
     }
+  });
+});
+
+describe('the launcher, headed by navigation area', () => {
+  const sectioned = (caps: Capabilities, saved?: string) =>
+    appSections(caps, saved).flatMap((s) => s.apps.map((d) => d.screen));
+
+  it('holds exactly what the shelves hold, each app once', () => {
+    for (const caps of [CAPS, FULL]) {
+      expect(sectioned(caps).slice().sort()).toEqual(flat(caps).slice().sort());
+      expect(new Set(sectioned(caps)).size).toBe(sectioned(caps).length);
+    }
+  });
+
+  it('is headed by the areas, in their order, and files each app under its own', () => {
+    const sections = appSections(FULL, undefined);
+    const order = NAV_AREAS.map((a) => a.id);
+    const ids = sections.map((s) => s.area.id);
+    expect(ids).toEqual(order.filter((id) => ids.includes(id)));
+    for (const s of sections) for (const d of s.apps) expect(navAreaOf(d.screen), d.screen).toBe(s.area.id);
+    // An area with nothing to open is not a heading over an empty grid.
+    for (const s of sections) expect(s.apps.length).toBeGreaterThan(0);
+  });
+
+  it('keeps the order the student dragged their tiles into', () => {
+    // Export and Connect are both on the Data shelf and both in You. Drag
+    // Export to the front of Data and it moves ahead of Connect here too.
+    // (Profile still leads You: it is on Life, an earlier shelf.)
+    const where = (saved: string | undefined, screen: Screen) =>
+      appSections(FULL, saved).find((s) => s.area.id === 'you')!.apps.findIndex((d) => d.screen === screen);
+    expect(where(undefined, 'export')).toBeGreaterThan(where(undefined, 'connect'));
+    const dragged = writeOrder({ Data: ['export'] });
+    expect(where(dragged, 'export')).toBeLessThan(where(dragged, 'connect'));
   });
 });

@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { WIDE } from '../lib/media';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
@@ -43,7 +44,7 @@ beforeEach(() => {
   localStorage.clear();
   localStorage.setItem(GRADUATION_KEY, JSON.stringify(PLAN));
   window.matchMedia = ((q: string) => ({
-    matches: wide && q.includes('760px'),
+    matches: wide && q === WIDE,
     addEventListener: () => {},
     removeEventListener: () => {},
   })) as unknown as typeof window.matchMedia;

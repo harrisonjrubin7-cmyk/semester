@@ -684,9 +684,9 @@ export function railFor(
       at,
       title: t.title,
       // The course it is filed against, then the word for what it is. A task
-      // with no course says only "Task", which is still more than the blank
+      // with no course says only "Action", which is still more than the blank
       // second line it would otherwise draw.
-      meta: [t.courseId ? codeOf(cat, t.courseId) : '', 'Task'].filter(Boolean).join(' · '),
+      meta: [t.courseId ? codeOf(cat, t.courseId) : '', 'Action'].filter(Boolean).join(' · '),
       // As with a deadline: a task is an hour, not a room.
       where: '',
       c: t.courseId,

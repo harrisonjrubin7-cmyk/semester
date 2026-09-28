@@ -11,6 +11,7 @@
  * Nothing here has any dependency beyond types and small pure helpers.
  */
 
+import { readOpened, type Opened } from '../lib/opened';
 import type {
   Appointment,
   CampusLink,
@@ -344,6 +345,17 @@ export interface Persisted {
   /** The destinations you opened most recently, newest first. */
   recent: Screen[];
   /**
+   * The deadlines and courses you opened most recently, newest first.
+   *
+   * `recent` above is screens — "Calendar", "Courses" — which answers where
+   * you go, not what you were in the middle of. This is the thing itself, so
+   * search can offer "continue where you left off" as the deadline you were
+   * reading rather than the list it was in. Ids only: the title is looked up
+   * at render time, so a renamed or deleted deadline is never shown stale.
+   * See `lib/opened.ts`.
+   */
+  opened: Opened[];
+  /**
    * Every screen ever opened, so the app can say what has not been.
    *
    * Separate from `recent`, which keeps twelve — a screen opened once in
@@ -647,6 +659,15 @@ export interface Persisted {
   boardOrder: string;
   /** A dragged accent hue, 0–360, or -1 for "use the named accent". */
   hue: number;
+  /**
+   * `guided`, `focused`, `detailed` or `access` — how much of each workspace
+   * is drawn. Presentation only: see `WORKSPACE_MODES` in `lib/look.ts`.
+   */
+  workspaceMode: string;
+  /** The widgets pinned to Today's command centre, comma-separated ids. Empty is nobody has chosen. */
+  pinned: string;
+  /** What the student said would help most on first open. Empty until they say. See `lib/goals.ts`. */
+  goal: string;
   /**
    * Whether the ten ways to study stay unrolled on a guide.
    *
@@ -1466,6 +1487,7 @@ export const DEFAULT_PERSISTED: Persisted = {
   examCovers: {},
   dayBudget: DEFAULT_BUDGET,
   recent: [],
+  opened: [],
   sittings: [],
   sessions: [],
   liveSession: null,
@@ -1523,6 +1545,9 @@ export const DEFAULT_PERSISTED: Persisted = {
   groupOrder: '',
   boardOrder: '',
   hue: -1,
+  workspaceMode: 'guided',
+  pinned: '',
+  goal: '',
 };
 
 /** The look, gathered off the state it is spread across. */
@@ -1551,6 +1576,9 @@ export function currentLook(state: Persisted): Look {
     groupOrder: state.groupOrder,
     boardOrder: state.boardOrder,
     hue: state.hue,
+    workspaceMode: state.workspaceMode,
+    pinned: state.pinned,
+    goal: state.goal,
   };
 }
 
@@ -1844,6 +1872,7 @@ export function loadPersisted(): Persisted {
       ),
       courseOrder: list(saved.courseOrder),
       recent: list(saved.recent),
+      opened: readOpened(saved.opened),
       // Seeded from `recent` for anybody upgrading: without this the app
       // would tell somebody who has used it all term that they have never
       // opened Today, which is both wrong and the sort of wrong that makes
@@ -1912,6 +1941,92 @@ export function loadPersisted(): Persisted {
  * The half of the state that outlives the session — what localStorage keeps,
  * and what an account syncs. Written once here so the two can never drift.
  */
+/**
+ * Whether two persisted halves are the same, field by field, by reference.
+ *
+ * The push to the account needs to know "did anything worth syncing change?"
+ * and must not answer yes to a navigation, which changes `state` and nothing
+ * in here. It used to depend on `JSON.stringify` of the whole half — and on
+ * the database path that string is never built (serialising the account on
+ * every change is what the move to IndexedDB removed), so it was `''` on
+ * every render and the push never re-ran after an edit at all.
+ *
+ * By reference is exact rather than approximate: `pickPersisted` copies no
+ * field, it hands each one straight through from `state`, and the reducer
+ * replaces a field only when it changes it. So two picks share every
+ * reference exactly when nothing persisted has changed.
+ */
+export function sameFields(a: Persisted, b: Persisted): boolean {
+  const keys = Object.keys(a) as (keyof Persisted)[];
+  if (keys.length !== Object.keys(b).length) return false;
+  return keys.every((k) => a[k] === b[k]);
+}
+
+/**
+ * Whether this device has changes the account does not.
+ *
+ * A flag on disk rather than in memory, so that closing the app offline and
+ * opening it again still says "Queued" rather than "Offline" — the edits are
+ * still waiting, and the student should not have to remember that they are.
+ * Set on any change to the persisted half while signed in, cleared by a push
+ * that lands.
+ */
+export const UNPUSHED_KEY = 'semester.unpushed';
+
+/**
+ * The account this device's sync memory belongs to. See `take` in
+ * `state/store.tsx`: signing in as a different account forgets the lot.
+ */
+export const SYNCED_AS_KEY = 'semester.syncedAs';
+
+export function syncedAs(): string | null {
+  try {
+    return localStorage.getItem(SYNCED_AS_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function rememberSyncedAs(id: string): void {
+  try {
+    localStorage.setItem(SYNCED_AS_KEY, id);
+  } catch {
+    // Unremembered, the next sign-in cannot tell a switch; it forgets nothing.
+  }
+}
+
+/**
+ * Everything this device remembers about one account's copy: the stamps it
+ * has read, the versions it last agreed, the choices waiting on its review
+ * list. Not the semester itself, which is the student's and stays.
+ */
+export function forgetSyncMemory(): void {
+  for (const key of [SEEN_KEY, SYNCED_KEY, 'semester.base', 'semester.review']) {
+    try {
+      localStorage.removeItem(key);
+    } catch {
+      // See above.
+    }
+  }
+}
+
+export function unpushed(): boolean {
+  try {
+    return localStorage.getItem(UNPUSHED_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+export function markUnpushed(on: boolean): void {
+  try {
+    if (on) localStorage.setItem(UNPUSHED_KEY, '1');
+    else localStorage.removeItem(UNPUSHED_KEY);
+  } catch {
+    // A storage that refuses a one-byte flag has bigger news than this.
+  }
+}
+
 export function pickPersisted(state: State): Persisted {
   return {
     nav: state.nav,
@@ -1985,6 +2100,7 @@ export function pickPersisted(state: State): Persisted {
     courseOrder: state.courseOrder,
     feedHidden: state.feedHidden,
     recent: state.recent,
+    opened: state.opened,
     visited: state.visited,
     sittings: state.sittings,
     sessions: state.sessions,
@@ -2065,6 +2181,9 @@ export function pickPersisted(state: State): Persisted {
     groupOrder: state.groupOrder,
     boardOrder: state.boardOrder,
     hue: state.hue,
+    workspaceMode: state.workspaceMode,
+    pinned: state.pinned,
+    goal: state.goal,
   };
 }
 
@@ -2648,6 +2767,14 @@ export type Action =
   | { type: 'settleCourse'; guideId?: CourseId; courseId?: CourseId }
   | { type: 'removalsPushed'; ids: CourseId[] }
   | { type: 'hydrate'; persisted: Partial<Persisted>; at?: number }
+  /** A version the student chose on the review list, put back. See `lib/conflicts.ts`. */
+  | { type: 'restoreRecord'; field: string; record: unknown }
+  /** A setting's version the student chose on the review list, put back. Only `SETTING_FIELDS`. */
+  | { type: 'restoreSettings'; values: Record<string, unknown> }
+  /** One key of a per-key map, as the student chose it; `undefined` removes the key. */
+  | { type: 'restoreTick'; field: string; key: string; value: unknown }
+  /** Keys another device removed from per-key maps, removed here too. See `removedThere`. */
+  | { type: 'dropTicks'; removals: Record<string, string[]> }
   | { type: 'restore'; persisted: Partial<Persisted> }
   /**
    * The browser moved, so the app follows.
@@ -2659,4 +2786,7 @@ export type Action =
    */
   | { type: 'landed'; screen: Screen; id?: string; mode?: StudyMode };
 
-export const ROOTS: Screen[] = ['home', 'courses', 'study', 'calendar', 'mine', 'me'];
+// Support joined when it became a default tab (`lib/tabbar.ts`): tapping a tab
+// resets the back stack, and a default tab that did not would be the one tab
+// in the bar whose Back retraced every earlier screen.
+export const ROOTS: Screen[] = ['home', 'courses', 'study', 'calendar', 'support', 'mine', 'me'];

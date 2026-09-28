@@ -10,7 +10,7 @@ test holds both.
 - **University › Demand.** Registrar, department, dean and institutional
   research accounts read counts.
 
-**Migration:** `supabase/migrations/20260927234800_course_demand_forecasting.sql`
+**Migration:** `supabase/migrations/20260928135000_course_demand_forecasting.sql`
 (D-051). It needs the owner's approval before any merge to `main`.
 
 **Builds on** `20260926150000_expansion_roles_and_features.sql`:
@@ -100,7 +100,7 @@ account, and the snapshot entry now names it.
 
 | New | Purpose |
 |---|---|
-| `supabase/migrations/20260927234800_course_demand_forecasting.sql` | Above |
+| `supabase/migrations/20260928135000_course_demand_forecasting.sql` | Above |
 | `supabase/demand.check.sql` | 49 checks, each refusal tried as the account refused |
 | `lib/course-demand.ts` | `contributionFrom`, `normalizeCode`, `readContribution`, `contributionChanged`, `readDemandRow`, `byDepartment`, `backupLine`, `capacityLine`, `pressureLine` |
 | `lib/course-demand-remote.ts` | The calls |

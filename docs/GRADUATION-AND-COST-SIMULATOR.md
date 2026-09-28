@@ -124,14 +124,14 @@ your aid and does not estimate it. Not a bill."
 - `OWNED_TABLES` in `lib/cloud.ts` now lists the table, so **Delete my account**
   deletes the rows, and `privacy.test.ts` holds that.
 
-**Migration: `supabase/migrations/20260927181500_untouched_graduation_drafts.sql`.**
+**Migration: `supabase/migrations/20260928130000_untouched_graduation_drafts.sql`.**
 
 - **What it does:** redefines `lti_account_untouched` with
   `graduation_scenarios` added. An LTI-provisioned account holding a draft is
   not empty, so account linking must not retire it. `ltiaccount.test.ts`
   requires this of every table the app writes.
 - **Restated after help requests:**
-  `20260927234500_untouched_graduation_after_help.sql`.
+  `20260928133000_untouched_graduation_after_help.sql`.
   `20260927230000_help_requests.sql`, merged into the base later, redefines
   the function from the definition before this one. Migrations apply in
   version order, so that definition would win and drop the graduation row.
@@ -159,8 +159,8 @@ your aid and does not estimate it. Not a bill."
 | `lib/graduation-cloud.ts` | `draftRow`, `draftPreview`, `saveDraft`, `deleteDraft` |
 | `components/ScenarioComparison.tsx` | The comparison card |
 | `components/CostPlanner.tsx` | The cost lines |
-| `supabase/migrations/20260927181500_untouched_graduation_drafts.sql` | See above |
-| `supabase/migrations/20260927234500_untouched_graduation_after_help.sql` | The same row, restated after `help_requests` |
+| `supabase/migrations/20260928130000_untouched_graduation_drafts.sql` | See above |
+| `supabase/migrations/20260928133000_untouched_graduation_after_help.sql` | The same row, restated after `help_requests` |
 
 | Changed | Change |
 |---|---|

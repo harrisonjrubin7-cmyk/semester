@@ -11,14 +11,24 @@
  * Nothing here renders on a phone. The sheet would be a panel of keys nobody
  * can press, and the listener would be dead weight in the one place where
  * every byte of the bundle is somebody's data allowance.
+ *
+ * "Where there is a keyboard" used to be spelled `WIDE`, and width is the
+ * wrong question. A laptop's browser window dragged to half a 1280 screen is
+ * 640px and has a keyboard under it; so does an iPad in Split View with a
+ * Magic Keyboard attached. Both were handed the phone's answer — `?`, `/` and
+ * `n` did nothing — because the window was narrow, which says nothing about
+ * what is plugged in. So it is wide *or* a fine pointer anywhere on the
+ * device (`FINE` in `lib/media.ts`), which keeps every window that had the
+ * keys and adds the narrow ones with a trackpad or mouse beside them. A phone
+ * answers no to both and still costs nothing.
  */
 
 import { useEffect, useState } from 'react';
 import { secondLine } from '../lib/dim';
 import { useStore } from '../state/store';
-import { SHORTCUTS, keyLabel, shortcutFor } from '../lib/keys';
+import { PALETTE, SHORTCUTS, keyLabel, shortcutFor } from '../lib/keys';
 import { useAI } from '../ai/store';
-import { WIDE, useMedia } from '../lib/media';
+import { FINE, WIDE, useMedia } from '../lib/media';
 import { useSitting } from '../lib/sitting.hook';
 import { hold, running } from '../lib/session';
 import { here } from '../lib/browser.hook';
@@ -29,7 +39,9 @@ import { useFocusBar } from './desk/barfocus';
 export function Keys() {
   const { state, dispatch, say } = useStore();
   const ai = useAI();
-  const wide = useMedia(WIDE);
+  const roomy = useMedia(WIDE);
+  const pointer = useMedia(FINE);
+  const keyboard = roomy || pointer;
   const [open, setOpen] = useState(false);
   const [sitting, setSitting] = useSitting();
   /*
@@ -41,7 +53,7 @@ export function Keys() {
   const focusBar = useFocusBar();
 
   useEffect(() => {
-    if (!wide) return;
+    if (!keyboard) return;
 
     const onKey = (e: KeyboardEvent) => {
       const hit = shortcutFor(e);
@@ -135,13 +147,13 @@ export function Keys() {
 
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [wide, open, dispatch, sitting, setSitting, ai, say, focusBar]);
+  }, [keyboard, open, dispatch, sitting, setSitting, ai, say, focusBar]);
 
   // No effect to close it when the window narrows: the guard below already
   // hides it, and resetting the state in an effect would be a second render
   // to achieve what the first one already did. Widening again brings it back,
   // which is what somebody who narrowed the window mid-look would want.
-  if (!wide || !open) return null;
+  if (!keyboard || !open) return null;
 
   return (
     <div
@@ -178,7 +190,7 @@ export function Keys() {
       </div>
 
       <div style={{ marginTop: 'var(--sp-5)', display: 'flex', flexDirection: 'column', gap: 'var(--sp-1)' }}>
-        {SHORTCUTS.map((s) => (
+        {[...SHORTCUTS, PALETTE].map((s) => (
           <div
             key={s.key}
             style={{ display: 'flex', gap: 'var(--sp-5)', alignItems: 'baseline', paddingBlock: 'calc(4px * var(--density, 1))', paddingInline: '0' }}

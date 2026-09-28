@@ -1,5 +1,7 @@
 import { CourseStudioEntry } from '../components/CourseStudio';
 import { useState } from 'react';
+import { SYNC_WORDS } from '../lib/syncstatus';
+import { Review } from '../components/Review';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Blueprint } from '../components/Blueprint';
@@ -11,6 +13,7 @@ import { SchoolClaim } from '../components/SchoolClaim';
 import { ReferralLink } from '../components/ReferralLink';
 import { MembershipPanel } from '../components/MembershipPanel';
 import { cloudConfigured, signOut } from '../lib/cloud';
+import { ErrorState } from '../components/unity/States';
 
 /**
  * The account screen.
@@ -65,8 +68,26 @@ export function AccountScreen() {
       `${state.courses.length} ${state.courses.length === 1 ? 'course' : 'courses'}`,
       `${state.updates.length} added`,
       `${state.notes.length} notes`,
-      `${state.tasks.length} tasks`,
+      `${state.tasks.length} action${state.tasks.length === 1 ? '' : 's'}`,
     ].join(' · ');
+
+    // The same check the pull-down gesture makes. The error state's recovery
+    // and the button below are one function, so they cannot drift apart.
+    const check = () => {
+      setChecking(true);
+      setChecked('');
+      void refresh().then((line) => {
+        setChecking(false);
+        setChecked(line);
+      });
+    };
+    // `explainSync` ends its sentence with "Reference: SEM-…"; the error state
+    // has a slot for exactly that, so it goes there rather than in the body.
+    const ref = /\n\nReference: (\S+)\s*$/.exec(sync.error);
+    const syncFailure = {
+      body: (ref ? sync.error.slice(0, ref.index) : sync.error).trim(),
+      reference: ref?.[1],
+    };
 
     return (
       <Page>
@@ -82,14 +103,29 @@ export function AccountScreen() {
               Through {account.via}.
             </div>
           )}
-          <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
-            {sync.status === 'syncing' && 'Catching up with your account…'}
+          {/* A live region, so a screen reader hears "Queued" when the
+              connection drops and "Synced" when it comes back, rather than
+              finding out on the next visit to this screen. */}
+          <div role="status" style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
+            {sync.status === 'syncing' && SYNC_WORDS.syncing.sentence}
+            {(sync.status === 'offline' || sync.status === 'queued' || sync.status === 'conflict' || sync.status === 'review') &&
+              SYNC_WORDS[sync.status].sentence}
             {sync.status === 'synced' &&
               `Synced ${sync.at ? new Date(sync.at).toLocaleTimeString() : ''} · ${counts}`}
-            {sync.status === 'error' && (
-              <span style={{ whiteSpace: 'pre-wrap' }}>Sync failed. {sync.error}</span>
-            )}
+            {/* An error is said once, by the announced ErrorState below,
+                which carries the failure and the way to retry. */}
           </div>
+          {sync.status === 'error' && (
+            <div style={{ marginTop: 'var(--sp-4)' }}>
+              <ErrorState
+                title="Sync did not finish"
+                body={syncFailure.body}
+                reference={syncFailure.reference}
+                recover={{ label: checking ? 'Checking…' : 'Check now', run: check }}
+                busy={checking}
+              />
+            </div>
+          )}
           {/*
             What the last sync actually did, which was never reported.
 
@@ -103,25 +139,23 @@ export function AccountScreen() {
             </div>
           ) : null}
 
+          {/* Two devices' edits of one thing, and the choice. See `lib/conflicts.ts`. */}
+          <Review />
+
           {/* The same check the pull-down gesture makes, for a laptop, which
               has no pull-down. It answers in a sentence rather than leaving a
               spinner to be interpreted — see `lib/refresh.ts`. */}
-          <button
-            type="button"
-            className="btn btn-block"
-            disabled={checking}
-            onClick={() => {
-              setChecking(true);
-              setChecked('');
-              void refresh().then((line) => {
-                setChecking(false);
-                setChecked(line);
-              });
-            }}
-            style={{ marginTop: 'calc(14px * var(--density, 1))' }}
-          >
-            {checking ? 'Checking…' : 'Check now'}
-          </button>
+          {sync.status !== 'error' && (
+            <button
+              type="button"
+              className="btn btn-block"
+              disabled={checking}
+              onClick={check}
+              style={{ marginTop: 'calc(14px * var(--density, 1))' }}
+            >
+              {checking ? 'Checking…' : 'Check now'}
+            </button>
+          )}
           {checked && (
             <div
               role="status"
@@ -152,7 +186,7 @@ export function AccountScreen() {
         <SectionLabel>What syncs</SectionLabel>
         <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed-plus)', textWrap: 'pretty' }}>
           Everything you have typed into this app, not a selection from it: your courses and what
-          you have added to them, your tasks, appointments, notes and connected calendars, the
+          you have added to them, your actions, appointments, notes and connected calendars, the
           documents, spreadsheets, decks and graphs you have made, the email you have drafted,
           your grades and degree plan, what you have recorded the term costing, and how the app is
           set up. Privacy and your rights lists it group by group. Sign in on a laptop and the same

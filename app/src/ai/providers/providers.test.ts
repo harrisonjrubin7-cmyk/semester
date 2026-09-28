@@ -521,14 +521,14 @@ describe('a capped list says how much it is not sending', () => {
       done: false,
     }));
     const out = providerFor('gap')!(look({ tasks } as unknown as Partial<State>))!;
-    expect(out.summary, '25 undone tasks should not read as 10').toContain('25 undone tasks');
+    expect(out.summary, '25 undone tasks should not read as 10').toContain('25 undone actions');
     expect(out.summary).toMatch(/shortest 10 below/);
   });
 
   it('says nothing about a cap when nothing was cut', () => {
     const tasks = [{ id: 't0', title: 'One thing', done: false }];
     const out = providerFor('gap')!(look({ tasks } as unknown as Partial<State>))!;
-    expect(out.summary).toContain('1 undone tasks');
+    expect(out.summary).toContain('1 undone actions');
     expect(out.summary).not.toMatch(/below/);
   });
 });

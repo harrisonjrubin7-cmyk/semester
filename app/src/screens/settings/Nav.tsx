@@ -103,7 +103,7 @@ export function SettingsNav() {
       screen="setNav"
       // Counted, for the reason `NavPicker` gives: a number in prose beside
       // the list it counts is a number that goes stale on the next change.
-      blurb={`${NAVS.length} navigations and ${SHELLS.length} layouts, in every combination. Nothing here hides anything — every screen stays reachable whichever you pick.`}
+      blurb={`${NAVS.length} navigations and ${SHELLS.length} layouts, in every combination. Nothing here hides anything — every screen stays reachable whichever you pick. Your choice here is for this device, so a phone and a laptop can each keep their own.`}
     >
       {(lit) => (
         <>

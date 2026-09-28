@@ -40,6 +40,27 @@ The central rule, stated once:
 | — | Change management and adoption | [CHANGE-MANAGEMENT.md](CHANGE-MANAGEMENT.md) | Process |
 | — | AI financial sustainability, ROI measurement | [COMMERCIAL-GOVERNANCE.md](COMMERCIAL-GOVERNANCE.md#ai-cost-controls) | Existing metered gateway (ADR 0004) |
 
+## Where the records live
+
+The rules are code; what a school or the company *did* under them is a row in one of five tables, added by
+[`20260927235000_governance_registries.sql`](../../supabase/migrations/20260927235000_governance_registries.sql) and walked account by account in
+[`supabase/governance.check.sql`](../../supabase/governance.check.sql):
+
+| Table | Holds | Who writes it |
+| --- | --- | --- |
+| `governance_policy_nodes` | The system → campus → school → program → course hierarchy | The platform (systems, and attaching a campus); a school's `tenant:configure` holders (their own nodes) |
+| `governance_steward_assignments` | The named person in each stewardship role, per school and connector | A school's `tenant:configure` holders; revoked, never edited |
+| `governance_decisions` | The portfolio council's decision log; total and route computed by the database | `governance:decide` (the `portfolio_council` role). Append-only |
+| `governance_config_requests` | A school's configuration request and the approval steps it has passed | Requested by `tenant:configure`; advanced by `tenant:implement` |
+| `governance_incident_notices` | Every incident notice as sent | `incident:communicate` (the `incident_responder` role). Append-only |
+
+Charters, the settings list, contract definitions and the deal desk stay in code, not in tables: they define what
+Semester *is*, the same way `flags.ts` defines a flag while `tenant_feature_policy` holds its state. Deals belong in
+the sales and finance systems, not in the product's database.
+
+`app/src/lib/governance/schema.test.ts` holds each list the tables enforce (settings and tiers, audiences and what each
+must say, criteria, steps, levels, connectors, roles) to the TypeScript registry it copies.
+
 ## What is still missing, and it isn't code
 
 Every "Process" row needs a named person, and the repository cannot hire one. The registries mark their gaps openly
