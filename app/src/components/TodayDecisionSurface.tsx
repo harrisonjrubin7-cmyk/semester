@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { lazy, Suspense, useMemo, useState } from 'react';
 import { blocksFor } from '../data/catalog';
 import { clock, dateToIso, daysBetween } from '../lib/date';
 import { dateFormatter } from '../lib/locale';
@@ -8,7 +8,12 @@ import { appointmentsOn, tasksOn, upcomingItems } from '../lib/select';
 import { useNow, useStore } from '../state/store';
 import { MODULE_FLAGS, moduleOn } from '../lib/experience-flags';
 import { Blueprint } from './Blueprint';
-import { TodayActionCenter } from './TodayActionCenter';
+// Loaded only when their flags are on, so a build with both off — the
+// default — does not carry them in the first download.
+const RegistrationDayCard = lazy(() => import('./RegistrationDayCard').then((m) => ({ default: m.RegistrationDayCard })));
+const CrunchWeekCard = lazy(() => import('./CrunchWeekCard').then((m) => ({ default: m.CrunchWeekCard })));
+const OfficeActionsToday = lazy(() => import('./OfficeActionsToday').then((m) => ({ default: m.OfficeActionsToday })));
+const TodayActionCenter = lazy(() => import('./TodayActionCenter').then((m) => ({ default: m.TodayActionCenter })));
 import { ActionButton, Meter, SectionLabel } from './ui';
 import { goMine } from '../lib/openmine';
 import { goCal } from '../lib/opencal';
@@ -54,10 +59,55 @@ function syncLabel(lastSync: { at: number } | null | undefined): string {
  */
 export function TodayDecisionSurface({
   actionCenter = moduleOn(MODULE_FLAGS.today_action_center),
-}: { actionCenter?: boolean } = {}) {
+  registrationDay = moduleOn(MODULE_FLAGS.registration_day_mode),
+  // The forecast's suggestions live in Plan's balance view, so the card
+  // needs both flags (Phase E).
+  crunchWeek = moduleOn(MODULE_FLAGS.crunch_week_forecast) && moduleOn(MODULE_FLAGS.academic_life_balance),
+  // Campus office actions (Phase J): ranked in the Action Center when it is
+  // on, and otherwise the first three in a card of their own.
+  officeActions = moduleOn(MODULE_FLAGS.office_action_feed),
+  // The signed-in account, for tests; the store's otherwise.
+  officeAccountId,
+}: {
+  actionCenter?: boolean;
+  registrationDay?: boolean;
+  crunchWeek?: boolean;
+  officeActions?: boolean;
+  officeAccountId?: string | null;
+} = {}) {
   const { state } = useStore();
-  if (actionCenter && showsTodayDecisionSurface(state.role)) return <TodayActionCenter />;
-  return <DecisionBriefing />;
+  const student = showsTodayDecisionSurface(state.role);
+  // Registration Day Mode (Phase C) sits above whichever Today is showing,
+  // and renders nothing unless the window is close or the student asked.
+  // The Crunch Week Forecast (Phase E) sits with it, and renders nothing
+  // unless a crunch is coming.
+  const registration = (registrationDay || crunchWeek) && student ? (
+    <Suspense fallback={null}>
+      {registrationDay ? <RegistrationDayCard /> : null}
+      {crunchWeek ? <CrunchWeekCard /> : null}
+    </Suspense>
+  ) : null;
+  if (actionCenter && student) {
+    return (
+      <>
+        {registration}
+        <Suspense fallback={null}>
+          <TodayActionCenter registrationDay={registrationDay} officeActions={officeActions} officeAccountId={officeAccountId} />
+        </Suspense>
+      </>
+    );
+  }
+  return (
+    <>
+      {registration}
+      {officeActions && student ? (
+        <Suspense fallback={null}>
+          <OfficeActionsToday accountId={officeAccountId} />
+        </Suspense>
+      ) : null}
+      <DecisionBriefing />
+    </>
+  );
 }
 
 function DecisionBriefing() {

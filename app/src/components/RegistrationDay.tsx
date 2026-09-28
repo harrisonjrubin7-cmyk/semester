@@ -13,15 +13,22 @@ import {
   REGISTRATION_DAY_KEY,
   addBackup,
   candidates,
+  clockDigits,
   countdown,
+  courseReferences,
+  derivedChecks,
   moveBackup,
   prune,
   readRegistrationDay,
   readiness,
   removeBackup,
+  safePortalUrl,
   sectionList,
+  summaryLines,
   toggleCheck,
 } from '../lib/registration-day';
+import { MODULE_FLAGS, moduleOn } from '../lib/experience-flags';
+import { ConfirmDialog } from './ConfirmDialog';
 
 /**
  * The registration-day tab of the registration workspace.
@@ -34,23 +41,32 @@ export function RegistrationDay({
   catalog,
   cart,
   institution,
+  importedAt = null,
   onOpenCart,
+  mode = moduleOn(MODULE_FLAGS.registration_day_mode),
 }: {
   catalog: CatalogCourse[];
   cart: CatalogCourse[];
   institution: string | null;
+  /** When the catalog was imported, for the seat counts' freshness. */
+  importedAt?: string | null;
   onOpenCart: () => void;
+  /** Registration Day Mode (Phase C). Off, this tab is exactly what #762 shipped. */
+  mode?: boolean;
 }) {
   const library = useDeviceLibrary(REGISTRATION_DAY_KEY, readRegistrationDay, EMPTY_REGISTRATION_DAY);
   const data = library.value;
   const [now, setNow] = useState(() => new Date());
   const [status, setStatus] = useState('');
+  const [leaving, setLeaving] = useState(false);
+  const [portalDraft, setPortalDraft] = useState('');
 
   // A minute is the resolution anybody reads a registration clock at.
+  const digits = mode ? clockDigits(data.opensAt, now) : null;
   useEffect(() => {
-    const id = window.setInterval(() => setNow(new Date()), 30_000);
+    const id = window.setInterval(() => setNow(new Date()), digits ? 1000 : 30_000);
     return () => window.clearInterval(id);
-  }, []);
+  }, [digits]);
 
   // Backups pointing at sections that left the cart or the catalog go quietly.
   useEffect(() => {
@@ -72,6 +88,17 @@ export function RegistrationDay({
     } catch {
       download({ name: 'Semester registration plan.txt', body: list, mime: 'text/plain' });
       setStatus('Your browser blocked copying, so the list was downloaded instead.');
+    }
+  };
+
+  const copyReferences = async () => {
+    const text = courseReferences(cart);
+    try {
+      await navigator.clipboard.writeText(text);
+      setStatus('Course references copied. Nothing was submitted.');
+    } catch {
+      download({ name: 'Semester course references.txt', body: text, mime: 'text/plain' });
+      setStatus('Your browser blocked copying, so the references were downloaded instead.');
     }
   };
 
@@ -114,7 +141,7 @@ export function RegistrationDay({
         <span className="portal-eyebrow">Registration day</span>
         <h3 id="regday-when">When your window opens</h3>
         <p role="timer" aria-live="off">
-          <strong>{clock.line}</strong>
+          <strong>{digits ? `Opens in ${digits}` : clock.line}</strong>
         </p>
         {clock.phase === 'soon' ? (
           <p className="portal-notice">Less than three days to go. Work through the checklist below today.</p>
@@ -137,7 +164,69 @@ export function RegistrationDay({
           <SourceBadge label={data.source} /> Semester cannot see your official time ticket — check it in{' '}
           {institution ? `${institution}’s` : 'your school’s'} registration system.
         </p>
+        {mode ? (
+          <div className="regday-mode">
+            <label className="portal-check">
+              <input
+                type="checkbox"
+                checked={data.remind}
+                onChange={(e) => library.update((d) => ({ ...d, remind: e.target.checked }))}
+              />
+              <span>
+                <strong>Remind me the day before and an hour before</strong>
+                <small className="portal-block">
+                  Uses your “registrar deadline” reminder setting and stays silent in your quiet hours.
+                </small>
+              </span>
+            </label>
+            <label className="portal-check">
+              <input
+                type="checkbox"
+                checked={data.manual}
+                onChange={(e) => library.update((d) => ({ ...d, manual: e.target.checked }))}
+              />
+              <span>
+                <strong>Show Registration Day Mode on Today now</strong>
+                <small className="portal-block">It appears by itself in the week before your window opens.</small>
+              </span>
+            </label>
+          </div>
+        ) : null}
       </section>
+
+      {mode ? (
+        <section className="portal-panel" aria-labelledby="regday-plan">
+          <h3 id="regday-plan">Your plan at a glance</h3>
+          <ul className="regday-card-lines" aria-label="Registration readiness summary">
+            {summaryLines(data, cart, catalog).map((line) => (
+              <li key={line.text} className={line.ok ? 'is-ok' : 'is-open'}>
+                <span aria-hidden="true">{line.ok ? '✓' : '!'}</span>
+                <span className="sr-only">{line.ok ? 'Ready: ' : 'Needs attention: '}</span>
+                {line.text}
+              </li>
+            ))}
+          </ul>
+          <label className="portal-check">
+            Credits I plan to register for
+            <input
+              className="input"
+              type="number"
+              inputMode="numeric"
+              min={1}
+              max={40}
+              aria-label="Credits I plan to register for"
+              value={data.creditTarget ?? ''}
+              onChange={(e) => {
+                const n = Number(e.target.value);
+                library.update((d) => ({ ...d, creditTarget: e.target.value && n > 0 && n <= 40 ? n : null }));
+              }}
+            />
+          </label>
+          <p className="portal-muted">
+            <SourceBadge label="student_entered" /> Your own target. Semester does not know what load is right for you.
+          </p>
+        </section>
+      ) : null}
 
       <div className="portal-stats" aria-label="Registration readiness">
         <div>
@@ -169,6 +258,13 @@ export function RegistrationDay({
           Up to {MAX_BACKUPS} backups per section, tried in order. Other sections of the same course come first, and
           nothing is offered that clashes with the rest of your cart. Seat counts are from your imported catalog, not live.
         </p>
+        {mode ? (
+          <p className="portal-muted">
+            <SourceBadge label="imported" at={importedAt ? Date.parse(importedAt) : undefined} /> Seat counts as of your
+            last catalog import. Seat alerts are not available: your school has not connected a live seat feed, so
+            Semester cannot tell you when a seat opens.
+          </p>
+        ) : null}
         {cart.map((primary) => {
           const chosen = data.backups[primary.id] ?? [];
           const offer = candidates(primary, catalog, cart, chosen);
@@ -270,6 +366,20 @@ export function RegistrationDay({
             </li>
           ))}
         </ul>
+        {mode ? (
+          <>
+            <h4>Worked out from your plan</h4>
+            <ul className="regday-card-lines" aria-label="Checks Semester can see">
+              {derivedChecks(data, cart, catalog).map((c) => (
+                <li key={c.id} className={c.ok ? 'is-ok' : 'is-open'}>
+                  <span aria-hidden="true">{c.ok ? '✓' : '!'}</span>
+                  <span className="sr-only">{c.ok ? 'Ready: ' : 'Not yet: '}</span>
+                  {c.label}
+                </li>
+              ))}
+            </ul>
+          </>
+        ) : null}
       </section>
 
       <section className="portal-panel" aria-labelledby="regday-list">
@@ -283,6 +393,50 @@ export function RegistrationDay({
             Download
           </button>
         </div>
+        {mode ? (
+          <>
+            <h4>Course references</h4>
+            <pre className="regday-list">{courseReferences(cart)}</pre>
+            <div className="portal-actions">
+              <button onClick={() => void copyReferences()}>Copy course references</button>
+            </div>
+            <h4>Your official registration system</h4>
+            {data.portalUrl ? (
+              <div className="portal-actions">
+                <button className="portal-primary" onClick={() => setLeaving(true)}>Open official registration system</button>
+                <button onClick={() => library.update((d) => ({ ...d, portalUrl: null }))}>Change address</button>
+              </div>
+            ) : (
+              <form
+                className="portal-filter-row"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const url = safePortalUrl(portalDraft);
+                  if (!url) {
+                    setStatus('Use the https:// address of your school’s registration system.');
+                    return;
+                  }
+                  library.update((d) => ({ ...d, portalUrl: url }));
+                  setPortalDraft('');
+                }}
+              >
+                <input
+                  className="input"
+                  type="url"
+                  inputMode="url"
+                  aria-label="Your school’s registration system address"
+                  placeholder="https://"
+                  value={portalDraft}
+                  onChange={(e) => setPortalDraft(e.target.value)}
+                />
+                <button type="submit">Save address</button>
+              </form>
+            )}
+            <p className="portal-muted">
+              <SourceBadge label="student_entered" /> The address you saved. Semester is not connected to it.
+            </p>
+          </>
+        ) : null}
         <p className="portal-muted">
           Semester never registers for you. Enroll in your school’s official registration system.
         </p>
@@ -308,6 +462,25 @@ export function RegistrationDay({
           { label: 'Open cart', why: 'Change the sections you are planning around.', run: onOpenCart },
         ]}
       />
+      {leaving && data.portalUrl ? (
+        <ConfirmDialog
+          tone="external"
+          title="Open your registration system?"
+          confirmLabel="Open in a new tab"
+          onCancel={() => setLeaving(false)}
+          onConfirm={() => {
+            setLeaving(false);
+            window.open(data.portalUrl!, '_blank', 'noopener,noreferrer');
+          }}
+          preview={(
+            <>
+              <p>This opens the address you saved:</p>
+              <p className="dialog-url">{data.portalUrl}</p>
+              <p>Semester does not sign you in or send it your plan. Paste your course references there yourself.</p>
+            </>
+          )}
+        />
+      ) : null}
     </div>
   );
 }

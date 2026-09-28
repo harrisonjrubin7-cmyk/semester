@@ -46,7 +46,8 @@ import {
   missingSkillPlan,
   searchOpportunities,
 } from '../lib/skills-graph';
-import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
+import { EXPERIENCE_FLAGS, MODULE_FLAGS, moduleOn } from '../lib/experience-flags';
+import { CareerEvidence } from '../components/CareerEvidence';
 
 /**
  * What is open, what you have done, and who you have spoken to.
@@ -105,6 +106,7 @@ const TABS = [
   { id: 'fairs' as const, label: 'Fairs' },
   { id: 'resume' as const, label: 'Résumé' },
   { id: 'skills' as const, label: 'Skills & fit' },
+  { id: 'evidence' as const, label: 'Evidence' },
   { id: 'network' as const, label: 'Contacts' },
   { id: 'abroad' as const, label: 'Abroad' },
   { id: 'library' as const, label: 'Library' },
@@ -130,7 +132,8 @@ const FIELD_LABELS: Record<string, string> = {
 
 export function Career({
   careerSkillsGraph = EXPERIENCE_FLAGS.careerSkillsGraph !== 'off',
-}: { careerSkillsGraph?: boolean } = {}) {
+  careerEvidence = moduleOn(MODULE_FLAGS.career_evidence),
+}: { careerSkillsGraph?: boolean; careerEvidence?: boolean } = {}) {
   const { state, account } = useStore();
   const scope = `${account?.id || 'device'}:${state.term}`;
   /*
@@ -145,11 +148,12 @@ export function Career({
       storageKey={`semester.career.v1:${scope}`}
       pathwayKey={`semester.pathway.v1:${account?.id || 'device'}`}
       careerSkillsGraph={careerSkillsGraph}
+      careerEvidence={careerEvidence}
     />
   );
 }
 
-function Workspace({ storageKey, pathwayKey, careerSkillsGraph }: { storageKey: string; pathwayKey: string; careerSkillsGraph: boolean }) {
+function Workspace({ storageKey, pathwayKey, careerSkillsGraph, careerEvidence }: { storageKey: string; pathwayKey: string; careerSkillsGraph: boolean; careerEvidence: boolean }) {
   const { state, dispatch, catalog } = useStore();
   const lib = useDeviceLibrary(storageKey, readCareer, EMPTY_CAREER);
   const education = useDeviceLibrary(pathwayKey, readPathway, EMPTY_PATHWAY).value.profile.education;
@@ -292,7 +296,7 @@ function Workspace({ storageKey, pathwayKey, careerSkillsGraph }: { storageKey: 
         need approved school services this app is not connected to.
       </p>
 
-      <Segmented options={TABS.filter(({ id }) => id !== 'skills' || careerSkillsGraph)} value={tab} onChange={setTab} style={{ marginBlock: 'var(--sp-5)' }} />
+      <Segmented options={TABS.filter(({ id }) => (id !== 'skills' || careerSkillsGraph) && (id !== 'evidence' || careerEvidence))} value={tab} onChange={setTab} style={{ marginBlock: 'var(--sp-5)' }} />
 
       {/*
        * Where the Applications tab used to be, as a row rather than a second
@@ -928,6 +932,21 @@ function Workspace({ storageKey, pathwayKey, careerSkillsGraph }: { storageKey: 
             </>
           )}
         </>
+      )}
+
+      {/*
+       * Career Evidence (Phase I, `career_evidence`): the student's review of
+       * suggested skills, portfolio, bullets, résumé versions, interview
+       * cards and fair plans. Only what they confirm reaches a résumé.
+       */}
+      {tab === 'evidence' && careerEvidence && (
+        <CareerEvidence
+          career={lib.value}
+          claims={claims}
+          courses={catalog.courses.map((c) => ({ id: c.id, label: `${c.code} · ${c.name}` }))}
+          events={events}
+          onWrite={write}
+        />
       )}
 
       {tab === 'skills' && careerSkillsGraph && (

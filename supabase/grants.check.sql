@@ -153,8 +153,24 @@ declare
   allowed constant text[] := array[
     'accept_family_grant(grant_id uuid)',
     'adopt_lti_identity(want_ticket text)',
+    -- The share-code pair from 20260928306000_family_invites.sql. Minting is
+    -- how a student writes to a table with no insert policy; claiming is how
+    -- somebody holding eight characters turns them into accepted grants.
+    'claim_family_invite(given text)',
     'claim_referral(given text)',
     'make_referral_code()',
+    'make_family_invite(want_categories text[], want_access text, want_resources text[], want_days integer)',
+    -- 20260928307000_family_shared_items.sql: a code and the confirmed copies
+    -- of what it names, in one transaction; and the supporter's one read path,
+    -- which re-checks every grant and logs the read.
+    'make_family_share(want_categories text[], want_resources text[], want_days integer, want_items jsonb, want_shown_as text)',
+    'read_family_share()',
+    -- 20260928308000_support_shares.sql: an athlete shares with one person
+    -- holding athletic_academic_support at their school; staff list and read
+    -- through functions that re-check that role on every call and log reads.
+    'share_with_support(staff_email text, share_payload jsonb, share_expires timestamp with time zone)',
+    'list_support_shares()',
+    'read_support_share(want_share uuid)',
     'note_activity(marks text[])',
     'referral_standing()',
     -- Both are security-invoker reads. Their table RLS remains the boundary:
@@ -411,7 +427,59 @@ declare
     -- `trust_room_open`, which a link actually reaches, is service_role only
     -- and so is not here.
     'trust_room_grant(want_request uuid, want_artifacts text[], want_packet_commit text, want_days integer)',
-    'trust_room_revoke(want_grant uuid, want_reason text)'
+    'trust_room_revoke(want_grant uuid, want_reason text)',
+
+    -- The three in 20260928301000_advisor_shares.sql (Phase G, D-016).
+    -- `share_with_advisor` finds the advisor only among the student's own
+    -- school's `academic_advisor` grants, and every miss reads the same.
+    -- `list_advisor_shares` returns shares addressed to the caller, titles and
+    -- dates only. `read_advisor_share` checks the share is live and addressed
+    -- to the caller, and logs the read for the student. `advisor.check.sql`
+    -- holds each of those as the account refused.
+    'list_advisor_shares()',
+    'read_advisor_share(want_share uuid)',
+    'share_with_advisor(advisor_email text, share_title text, share_payload jsonb, share_expires timestamp with time zone)',
+
+    -- The six in 20260928302000_office_action_feed.sql (Phase J, D-048).
+    -- The feed returns only published rows that reach the caller; the desk
+    -- only rows in the caller's own office scope, with a count that is null
+    -- below ten; the two writers check office, role and scope themselves.
+    -- `officeactions.check.sql` holds each as the account refused.
+    'draft_office_action(want_office text, want_scope_kind text, want_scope_id text, want_type text, want_audience text, want_target text, want_title text, want_why text, want_due timestamp with time zone, want_url text, want_source text)',
+    'move_office_action(want_id uuid, want_step text, want_note text)',
+    'my_action_publish_scopes()',
+    'my_office_actions()',
+    'office_action_programs()',
+    'office_desk_actions()',
+
+    -- The five in 20260928305000_course_demand_forecasting.sql (Phase K,
+    -- D-051). A student contributes, stops and reads their own contribution,
+    -- always at their own school; staff read their demand:read scopes and the
+    -- snapshot rows those scopes allow, which the table's constraints keep at
+    -- ten or more. None returns a person. `demand.check.sql` holds each.
+    -- The refresh wrapper is the service role's alone and is not here.
+    'contribute_course_plan(want_term text, want_courses jsonb)',
+    'course_demand(want_term text)',
+    'my_demand_contribution(want_term text)',
+    'my_demand_scopes()',
+    'stop_contributing(want_term text)',
+
+    -- 20260928309000_course_studio.sql (D-101): faculty publish course rules,
+    -- guidance and packs, each checked against a live course-scoped grant;
+    -- the last lists which courses that is, and nothing about students.
+    'publish_course_rules(want_course text, want_term text, want_blanket text, want_uses jsonb, want_words text, want_link text, want_effective date)',
+    'publish_course_guidance(want_course text, want_term text, want_body text)',
+    'publish_study_pack(want_course text, want_term text, want_pack uuid, want_title text, want_note text, want_items jsonb, want_retired boolean)',
+    'my_course_studio_courses()',
+
+    -- The two in 20260928310000_expansion_review_fixes.sql. Each deletes only
+    -- rows naming the caller, for "Delete my account": demand contributions
+    -- and consents, and advisor shares at either end. `demand.check.sql` and
+    -- `advisor.check.sql` hold that neither reaches another account's rows.
+    'forget_my_advisor_shares()',
+    -- 20260928308000_support_shares.sql: shares naming the caller at either end.
+    'forget_my_support_shares()',
+    'forget_my_course_demand()'
   ];
   extra text;
   missing text;
@@ -447,7 +515,7 @@ begin
   if missing is not null then
     raise exception 'FAILED: the allowlist names %, which a signed-in account cannot call', missing;
   end if;
-  raise notice 'ok  and can call all sixty-one that it should';
+  raise notice 'ok  and can call every function it should';
 end $$;
 
 -- ── The gate's own switch, named because it is the one that was open ──────

@@ -26,6 +26,7 @@
  * kind of change as "add a minor" — a different load, not a different formula.
  */
 
+import { readCostLines, type CostLine } from './cost-plan';
 import { finite, obj, textValue } from './device-library';
 
 export const GRADUATION_KEY = 'semester.graduation.v1';
@@ -51,6 +52,12 @@ export interface Plan {
   summerCost: number;
   /** The first term still to come. */
   next: Term;
+  /**
+   * The cost planner's lines (`cost_planner`). When present, `costPerTerm`
+   * and `summerCost` are their totals, kept in step on every write, so the
+   * projection reads the same two numbers either way.
+   */
+  costLines?: CostLine[];
 }
 
 export interface Scenario {
@@ -60,6 +67,25 @@ export interface Scenario {
   extra: number;
   perTerm: number;
   summer: number;
+  /**
+   * Study abroad (`graduation_simulator`): the first `terms` fall or spring
+   * terms are taken away, earning `credits` that the student expects to
+   * transfer, at `costPerTerm` (null: the same as a term at home).
+   */
+  abroad?: Abroad;
+  /**
+   * The id of this draft in each account that saved it, by account id. The
+   * scenarios are a device store, so on a shared browser each account keeps
+   * its own row: one account saving never takes over another's, and none is
+   * told a draft is in its account unless it saved it.
+   */
+  cloudIds?: Record<string, string>;
+}
+
+export interface Abroad {
+  terms: number;
+  credits: number;
+  costPerTerm: number | null;
 }
 
 export interface GraduationData {
@@ -124,7 +150,37 @@ export function readGraduation(value: unknown): GraduationData {
     ) {
       throw new Error('A saved scenario is not valid.');
     }
-    return { id: s.id, name: s.name, extra: s.extra, perTerm: s.perTerm, summer: s.summer };
+    const out: Scenario = { id: s.id, name: s.name, extra: s.extra, perTerm: s.perTerm, summer: s.summer };
+    if (s.abroad !== undefined) {
+      const a = s.abroad;
+      if (
+        !obj(a) ||
+        !finite(a.terms, 1, 4) ||
+        !Number.isInteger(a.terms) ||
+        !finite(a.credits, 0, 30) ||
+        !(a.costPerTerm === null || finite(a.costPerTerm, 0, 1_000_000))
+      ) {
+        throw new Error('A saved study-abroad plan is not valid.');
+      }
+      out.abroad = { terms: a.terms, credits: a.credits, costPerTerm: a.costPerTerm as number | null };
+    }
+    const uuid = (v: unknown): v is string => textValue(v, 64) && /^[0-9a-f-]{36}$/i.test(v);
+    if (s.cloudIds !== undefined) {
+      const ids = s.cloudIds;
+      if (!obj(ids) || Object.keys(ids).length > 20 || Object.entries(ids).some(([k, v]) => !k || k.length > 64 || !uuid(v))) {
+        throw new Error('A saved scenario is not valid.');
+      }
+      out.cloudIds = { ...(ids as Record<string, string>) };
+    } else if (s.cloudId !== undefined) {
+      // Saved before drafts were kept per account (#879): one id, and since
+      // #879 its owner. An id with no owner was never shown to any account.
+      if (!uuid(s.cloudId)) throw new Error('A saved scenario is not valid.');
+      if (s.cloudOwner !== undefined) {
+        if (!textValue(s.cloudOwner, 64) || !s.cloudOwner) throw new Error('A saved scenario is not valid.');
+        out.cloudIds = { [s.cloudOwner]: s.cloudId };
+      }
+    }
+    return out;
   });
   if (new Set(scenarios.map((s) => s.id)).size !== scenarios.length) throw new Error('Scenario ids must be unique.');
   return {
@@ -135,6 +191,7 @@ export function readGraduation(value: unknown): GraduationData {
       costPerTerm: p.costPerTerm,
       summerCost: p.summerCost,
       next: readTerm(p.next),
+      ...(p.costLines !== undefined ? { costLines: readCostLines(p.costLines) } : {}),
     },
     scenarios,
   };
@@ -164,10 +221,15 @@ export interface Projection {
  * A term counts only if it adds credit: a summer with a zero load is skipped,
  * not counted as a term taken.
  */
-export function project(plan: Plan, done: number, change?: Pick<Scenario, 'extra' | 'perTerm' | 'summer'>): Projection {
+export function project(
+  plan: Plan,
+  done: number,
+  change?: Pick<Scenario, 'extra' | 'perTerm' | 'summer'> & { abroad?: Abroad },
+): Projection {
   const needed = Math.max(0, plan.needed + (change?.extra ?? 0));
   const perTerm = change?.perTerm ?? plan.perTerm;
   const summer = change?.summer ?? plan.summer;
+  const abroad = change?.abroad;
   const remaining = Math.max(0, needed - done);
   const costKnown = plan.costPerTerm > 0;
   if (remaining === 0) return { finish: null, terms: 0, summers: 0, cost: costKnown ? 0 : null, remaining };
@@ -176,15 +238,24 @@ export function project(plan: Plan, done: number, change?: Pick<Scenario, 'extra
   let t = plan.next;
   let terms = 0;
   let summers = 0;
+  let cost = 0;
   for (let i = 0; i < HORIZON; i++) {
-    const load = t.season === 'Summer' ? summer : perTerm;
-    if (load > 0) {
+    // A term away is one of the first `abroad.terms` falls or springs: its
+    // load is the credit expected to transfer, and its cost the one entered
+    // for it (or a term at home, when none was).
+    const away = t.season !== 'Summer' && !!abroad && terms < abroad.terms;
+    const load = t.season === 'Summer' ? summer : away ? abroad!.credits : perTerm;
+    if (load > 0 || away) {
       have += load;
-      if (t.season === 'Summer') summers++;
-      else terms++;
+      if (t.season === 'Summer') {
+        summers++;
+        cost += plan.summerCost;
+      } else {
+        terms++;
+        cost += away && abroad!.costPerTerm !== null ? abroad!.costPerTerm : plan.costPerTerm;
+      }
       if (have >= needed) {
-        const cost = costKnown ? terms * plan.costPerTerm + summers * plan.summerCost : null;
-        return { finish: t, terms, summers, cost, remaining };
+        return { finish: t, terms, summers, cost: costKnown ? cost : null, remaining };
       }
     }
     t = after(t);

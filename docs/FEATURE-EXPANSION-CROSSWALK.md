@@ -36,17 +36,17 @@ the duplicate that file warns about.
 | C | Registration Day Mode | `registration_day_mode` | Today (takeover of Next Best Step) + My Path → `yes` › Registration day | **Exists → extend** | `lib/registration-day.ts`, `components/RegistrationDay.tsx` (#762); tables `registration_windows`, `registration_time_tickets`, `seat_watches` |
 | D | Graduation Simulator | `graduation_simulator` | My Path → `degree` › Scenarios | **Exists → extend** | `lib/graduation.ts`, `components/GraduationSimulator.tsx` (#762); table `graduation_scenarios` |
 | D | Cost Planner | `cost_planner` | My Path → `degree` › Scenarios; Plan → `costs` | **Extend** | "Cost of one more semester" in `graduation.ts`; `screens/Costs.tsx`; table `cost_plans` |
-| E | Academic Life Balance + Crunch Week Forecast | `academic_life_balance` | Plan → `calendar` (week view); Today (one crunch card) | **Extend** | `lib/clash.ts` (deadline pile-ups, 14 days out), `lib/runway.ts`, `lib/registration.ts` `conflicts()`; `state.appointments`; `screens/Work.tsx` hours |
-| F | Course Detail V2 | `course_detail_v2` | Search → drawer; My Path → `yes` cart; `course/:id` | **Extend** | `screens/Courses.tsx` `CourseDetail`, `components/CourseHub.tsx`, portal search results |
-| G | Advisor Meeting Mode | `advisor_meeting_mode` | My Path → `degree` (agenda); Me → shares | **New** (UI) | `GraduationSimulator` advisor `.txt`; the `accommodation_shares` pattern (expiry, revocation, access events) |
-| H | Study Readiness | `study_readiness` | Course Companion → `course/:id` › Study tools; `exam`, `runway` | **Extend** | `lib/standing.ts`, `components/Standing.tsx` (words, not scores); `state.reviews`; `lib/runway.ts` |
-| H | Source Locker | `source_locker` | Course Companion → `course/:id` › Readings; Me → Trust Center | **Extend** | `lib/sources.ts`, `screens/Sources.tsx`, `lib/studysources.ts`, `intelligence/Disclosure.tsx` |
-| I | Career Evidence + resume bullets | `career_evidence` | Me → `career` | **Extend** | `lib/career.ts`, `screens/Career.tsx` (résumé present), `lib/skills-graph.ts` (`careerSkillsGraph` flag); table `skill_records` |
-| J | Campus Office Action Feed | `office_action_feed` | Today (converted to Actions); `registrar` | **Table only** | Table `institution_actions` with scoped publish policies; `screens/Registrar.tsx`, `Feed_registrar` |
-| K | Course Demand Forecasting | `demand_forecasting` | Student: My Path → `yes` cart (opt-in). Staff: `university` | **Table only** | `term_plan_courses.contributes_to_demand` (default false); `course_demand_snapshots` (`planned_students >= 10` check); capability `demand:read` |
-| L | Semester Wrapped | `semester_wrapped` | Me → `me` (Progress) | **Extend** | `screens/Reports.tsx` (`brief`), `lib/usage.ts` (device-only counts), `state.done` |
-| M | Offline Mode | `offline_mode` | Global badge; Today / Plan / My Path read paths | **Extend** | `public/sw.js` (537 lines: network-first shell, cache-first media), `lib/offline.ts`, `ScreenTrouble` offline copy |
-| N | Trust Center | `trust_center` | Me → `privacy` / `data` / `export` / `account` | **Extend** | `lib/privacy.ts` `CLAIMS`, `screens/Privacy.tsx`, `lib/erase.ts`, `lib/workspace-backup.ts`, `SupportAccess` (#759/#760); table `ai_memories`, `data_requests` |
+| E | Academic Life Balance + Crunch Week Forecast | `academic_life_balance`, `crunch_week_forecast` (D-027) | Plan → `calendar` (week view); Today (one crunch card) | **Extend** | `lib/clash.ts` (deadline pile-ups, 14 days out), `lib/runway.ts`, `lib/registration.ts` `conflicts()`; `state.appointments`; `screens/Work.tsx` hours |
+| F | Course Detail V2 | `course_detail_v2` (D-040) | My Path → `yes` › Course search (sheet / drawer; built); Search → drawer and `course/:id` (later) | **Extend** | `screens/Courses.tsx` `CourseDetail`, `components/CourseHub.tsx`, portal search results |
+| G | Advisor Meeting Mode | `advisor_meeting_mode` (D-016, D-042) | My Path → `degree` › Advisor meeting (agenda, sharing panel, advisor view; built) | **New** (UI + `advisor_shares`, D-043) | `GraduationSimulator` advisor `.txt`; the `accommodation_shares` pattern (expiry, revocation, access events) |
+| H | Study Readiness | `study_readiness` (D-045) | Course Companion → `course/:id` › **Readiness** tab (built) | **Extend** | `lib/standing.ts`, `components/Standing.tsx` (words, not scores); `state.reviews`; `lib/runway.ts` |
+| H | Source Locker | `source_locker` (D-044) | Course Companion → `course/:id` › **Sources** tab (built); Me → Trust Center (Phase N) | **Extend** | `lib/sources.ts`, `screens/Sources.tsx`, `lib/studysources.ts`, `intelligence/Disclosure.tsx` |
+| I | Career Evidence + resume bullets | `career_evidence` (D-046, D-047) | Me → `career` › **Evidence** tab; course overview › skills panel (built) | **Extend** | `lib/career.ts`, `screens/Career.tsx` (résumé present), `lib/skills-graph.ts` (`careerSkillsGraph` flag); table `skill_records` |
+| J | Campus Office Action Feed | `office_action_feed` (D-048, D-049, D-050) | Today: ranked in the Action Center, or the first three on the briefing; Key dates (`registrar`): full feed and the office desk (built) | **Extend** + migration | `institution_actions` finished by `20260928302000_office_action_feed.sql`; `lib/office-actions.ts`, `components/OfficeActionFeed.tsx`, `components/OfficeActionDesk.tsx` |
+| K | Course Demand Forecasting | `demand_forecasting` (D-051, D-052, D-053) | Plan › registration **Cart** (student consent); University › **Demand** (staff, by `demand:read` scope) (built) | **Extend** + migration | `20260928305000_course_demand_forecasting.sql`; `lib/course-demand.ts`, `components/DemandContribution.tsx`, `components/DemandDesk.tsx` |
+| L | Semester Wrapped | `semester_wrapped` (D-054) | Me → `me` › You: the recap card (built) | **Extend** | `lib/wrapped.ts`, `components/SemesterWrapped.tsx`; reads `state.done`/`tickedAt`/`sessions`/`taken` and the device stores of Phases B, G, I and the registration workspace |
+| M | Offline Mode | `offline_mode` (D-055, D-056) | App shell: the offline badge under the header; every screen (refusals in shared `ConfirmDialog` and the remote calls) (built) | **Extend** | `lib/offline-mode.ts`, `components/OfflineBanner.tsx`; reuses `lib/offline.ts`, `lib/merge.ts`, `public/sw.js` (unchanged) |
+| N | Trust Center | `trust_center` (D-057) | Me › You › **Trust & data** → Your data (`privacy`), the center at the top (built) | **Extend** | `components/TrustCenter.tsx`; `lib/workspace-backup.ts` (device scope, eleven stores), `workspace-backup.coverage.test.ts` |
 | O | Visual polish | — (always on, per-commit revert) | Everywhere | — | [DESIGN-SYSTEM-IMPROVEMENTS.md §3](DESIGN-SYSTEM-IMPROVEMENTS.md#3-problems-to-fix) |
 
 All 14 named flags plus the proposed `today_action_center` are added to
@@ -280,7 +280,8 @@ change unless it is approved.
   `publisher_scope_kind`/`_id` by capability, and tenant-scoped cohorts.
 - `Registrar.tsx` term deadlines.
 
-**Gaps against the command (a follow-up migration, which needs approval):**
+**Resolved in Phase J** by `20260928302000_office_action_feed.sql` (D-048); see [OFFICE-ACTION-FEED.md](OFFICE-ACTION-FEED.md). The gaps as first recorded:
+
 
 - `official_url` is **nullable**, but the command requires it.
 - There is **no `source_label` or `published_at`/`updated_at`** column for the
@@ -303,6 +304,8 @@ change unless it is approved.
   constraint.
 - `demand:read` limited to registrar, department chair, dean and
   institutional researcher.
+
+**Built in Phase K** — see [COURSE-DEMAND-FORECASTING.md](COURSE-DEMAND-FORECASTING.md) (D-051). As first planned:
 
 **New:**
 
@@ -362,7 +365,7 @@ streaks and no leaderboard.
   - a "What Semester remembers" editor on `ai_memories`;
   - AI history and delete.
 
-**N-3, a gap found in this audit:** `lib/workspace-backup.ts` covers creations,
+**N-3, a gap found in this audit (resolved in Phase N, D-057):** `lib/workspace-backup.ts` covers creations,
 athletics, career, university drafts, family and pathway. It does **not**
 cover these device-only stores:
 

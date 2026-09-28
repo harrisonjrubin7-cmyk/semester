@@ -400,6 +400,10 @@ describe('"delete my account" really means every row', () => {
       'community_signals',
       'community_venues',
       'community_volunteer_events',
+      // What an instructor published in Course Studio (D-101). Students only
+      // read these; they are course policy, kept for the class.
+      'course_ai_rules',
+      'course_guidance',
       'feature_kill_switch',
       'group_tasks',
       'groups',
@@ -421,6 +425,7 @@ describe('"delete my account" really means every row', () => {
       'organizations',
       'reports',
       'schools',
+      'study_packs',
       'support_access_event',
     ]);
     const said = deletionClaims().map((c) => c.body).join(' ');

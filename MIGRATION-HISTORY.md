@@ -934,6 +934,27 @@ means comparing the repository against a live project on every run, which is a
 different kind of check from everything else in this repository and should be
 argued for on its own rather than smuggled in here.
 
+### The reading of 28 September
+
+The ledger was read again through the Supabase connector: ninety-five rows,
+ending at `20260928230000  direct_rate_limits`. Every row has a file here. It
+also held a finding the snapshot could not show.
+
+`20260928200000_scim_gateway` (#819) and `20260928210000_support_tickets`
+(#839) reached main and were applied within minutes. The integration branch
+(#893) still carried eleven migrations numbered `20260928130000`–`160000`, the
+numbers D-105 gave them against the reading of the day before. Every one was
+pending and below the new watermark: the fault this file opens with, a second
+time, on the one merge that would have carried all eleven. `migrationorder.test.ts`
+was green throughout, because it was holding the directory to the reading of
+21 September.
+
+With the new reading in `supabase/ledger.snapshot`, that test names all eleven.
+They move to `20260928300000`–`310000` in their own order (D-107), and it
+passes again. The lesson is the one above, sharper: a guard held to a reading
+is only as current as the reading, and on a day with several merges an hour,
+a day-old watermark is a guess.
+
 ## What this costs, and what it does not fix
 
 Steps 1–4 touch no live system and can be abandoned at any point with nothing

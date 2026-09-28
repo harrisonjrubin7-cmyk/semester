@@ -1,9 +1,23 @@
+import { ABROAD_PREFIX, readAbroad } from './abroad';
 import { ACTIONS_PREFIX, readActionChoices } from './actions';
+import { keepNotes, MEETING_KEY, readMeetings, withoutNotes } from './advisor-meeting';
+import { EVIDENCE_PREFIX, readEvidence } from './career-evidence';
+import { SHORTLIST_KEY, readShortlist } from './course-detail';
+import { GRADUATION_KEY, readGraduation } from './graduation';
+import { LIFE_BALANCE_KEY, readSettings as readLifeBalance } from './life-balance';
+import { readRegistration } from './portal-storage';
+import { REGISTRATION_DAY_KEY, readRegistrationDay } from './registration-day';
+import { REGISTRATION_KEY } from './registration-plan';
+import { LOCKER_KEY, readLocker } from './source-locker';
+import { READINESS_KEY, readReadiness } from './study-readiness';
 import { readAthletics } from './athletics';
+import { CLARITY_PREFIX, readClarity } from './clarity';
+import { QUIZ_FEEDBACK_PREFIX, readQuizFeedback } from './quiz-feedback';
 import { readCareer } from './career';
 import { readCreations } from './creations';
 import { obj, textValue } from './device-library';
 import { readFamily } from './family';
+import { PATH_PROFILE_PREFIX, readPathProfile } from './path-profile';
 import { readPathway } from './pathway';
 import { readUniversityDrafts } from './university';
 
@@ -43,8 +57,18 @@ import { readUniversityDrafts } from './university';
 interface Definition {
   label: string;
   prefix: string;
-  scope: 'account' | 'term';
+  /**
+   * `device` is a store keyed by its name alone, shared by whoever uses this
+   * browser — the registration workspace and the stores built on it. It
+   * restores to the same key, and carries no term.
+   */
+  scope: 'account' | 'term' | 'device';
   read: (value: unknown) => unknown;
+  /**
+   * What a restore writes, given the validated record and what the device
+   * already holds under that key. Absent, the record replaces it.
+   */
+  restore?: (incoming: unknown, existing: unknown) => unknown;
 }
 
 const DEFINITIONS: Record<string, Definition> = {
@@ -81,13 +105,60 @@ const DEFINITIONS: Record<string, Definition> = {
     scope: 'account',
     read: readPathway,
   },
+  abroad: {
+    label: 'Study abroad plan',
+    prefix: ABROAD_PREFIX,
+    scope: 'account',
+    read: readAbroad,
+  },
+  quizfeedback: {
+    label: 'Quiz questions you reported',
+    prefix: QUIZ_FEEDBACK_PREFIX,
+    scope: 'account',
+    read: readQuizFeedback,
+  },
   actions: {
     label: 'What you did about your next steps',
     prefix: ACTIONS_PREFIX,
     scope: 'account',
     read: readActionChoices,
   },
+  pathProfile: {
+    label: 'Your degree path details',
+    prefix: PATH_PROFILE_PREFIX,
+    scope: 'account',
+    read: readPathProfile,
+  },
+  clarity: {
+    label: 'Your answers to "Did this help?"',
+    prefix: CLARITY_PREFIX,
+    scope: 'account',
+    read: readClarity,
+  },
+  // The device stores the feature expansion added (DECISION-LOG D-018, D-057).
+  // Before these, Export left out a registration-day plan and graduation
+  // scenarios, and everything after them.
+  registration: { label: 'Registration cart and saved schedules', prefix: REGISTRATION_KEY, scope: 'device', read: readRegistration },
+  registrationDay: { label: 'Registration day plan', prefix: REGISTRATION_DAY_KEY, scope: 'device', read: readRegistrationDay },
+  graduation: { label: 'Graduation scenarios', prefix: GRADUATION_KEY, scope: 'device', read: readGraduation },
+  lifeBalance: { label: 'Life balance settings', prefix: LIFE_BALANCE_KEY, scope: 'device', read: readLifeBalance },
+  shortlist: { label: 'Course shortlist', prefix: SHORTLIST_KEY, scope: 'device', read: readShortlist },
+  // Per account, and without private notes: the meeting screen promises
+  // those never leave the device, and a restore keeps the ones it has.
+  advisorMeeting: {
+    label: 'Advisor meetings',
+    prefix: MEETING_KEY,
+    scope: 'account',
+    read: (v) => withoutNotes(readMeetings(v)),
+    restore: (incoming, existing) => keepNotes(readMeetings(incoming), existing),
+  },
+  sourceLocker: { label: 'Source Locker choices', prefix: LOCKER_KEY, scope: 'device', read: readLocker },
+  studyReadiness: { label: 'Study readiness marks', prefix: READINESS_KEY, scope: 'device', read: readReadiness },
+  careerEvidence: { label: 'Career evidence', prefix: EVIDENCE_PREFIX, scope: 'term', read: readEvidence },
 };
+
+/** Every prefix this backup covers, for the guard in `workspace-backup.coverage.test.ts`. */
+export const BACKED_UP_PREFIXES: readonly string[] = Object.values(DEFINITIONS).map((d) => d.prefix);
 
 export interface WorkspaceRecord {
   kind: string;
@@ -121,9 +192,10 @@ function keyFor(kind: string, term: string, account: string): string {
   if (definition.scope === 'term' && !validTerm(term)) {
     throw new Error('A workspace in this backup has a term it could not have been saved under.');
   }
-  if (definition.scope === 'account' && term !== '') {
+  if (definition.scope !== 'term' && term !== '') {
     throw new Error('A workspace in this backup carries a term it cannot have.');
   }
+  if (definition.scope === 'device') return definition.prefix;
   return definition.scope === 'term' ? `${definition.prefix}:${account}:${term}` : `${definition.prefix}:${account}`;
 }
 
@@ -234,10 +306,18 @@ export function restoreWorkspaces(
   storage: Storage = localStorage,
 ): void {
   const checked = readWorkspaceBackup(JSON.stringify(backup));
-  const entries = checked.records.map((record) => ({
-    key: keyFor(record.kind, record.term, account),
-    value: JSON.stringify(record.value),
-  }));
+  const entries = checked.records.map((record) => {
+    const key = keyFor(record.kind, record.term, account);
+    const merge = DEFINITIONS[record.kind].restore;
+    if (!merge) return { key, value: JSON.stringify(record.value) };
+    let existing: unknown = null;
+    try {
+      existing = JSON.parse(storage.getItem(key) ?? 'null');
+    } catch {
+      existing = null;
+    }
+    return { key, value: JSON.stringify(merge(record.value, existing)) };
+  });
 
   const before = new Map(entries.map((entry) => [entry.key, storage.getItem(entry.key)]));
   const written: string[] = [];

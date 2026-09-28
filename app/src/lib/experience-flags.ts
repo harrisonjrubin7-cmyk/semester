@@ -86,6 +86,7 @@ export const MODULE_FLAG_ENV = {
   graduation_simulator: 'VITE_GRADUATION_SIMULATOR',
   cost_planner: 'VITE_COST_PLANNER',
   academic_life_balance: 'VITE_ACADEMIC_LIFE_BALANCE',
+  crunch_week_forecast: 'VITE_CRUNCH_WEEK_FORECAST',
   course_detail_v2: 'VITE_COURSE_DETAIL_V2',
   advisor_meeting_mode: 'VITE_ADVISOR_MEETING_MODE',
   study_readiness: 'VITE_STUDY_READINESS',
@@ -96,6 +97,10 @@ export const MODULE_FLAG_ENV = {
   semester_wrapped: 'VITE_SEMESTER_WRAPPED',
   offline_mode: 'VITE_OFFLINE_MODE',
   trust_center: 'VITE_TRUST_CENTER',
+  // Faculty Course Studio (docs/FACULTY-COURSE-STUDIO-DESIGN.md, D-100 F6):
+  // the studio for faculty and, for students, the instructor's published rules
+  // and guidance. Off, nothing published is read.
+  course_studio: 'VITE_COURSE_STUDIO',
 } as const;
 
 export type ModuleFlag = keyof typeof MODULE_FLAG_ENV;

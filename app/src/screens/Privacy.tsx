@@ -16,11 +16,14 @@
  * uses — because it is the one thing on this screen that an undo cannot fix.
  */
 
-import { useState } from 'react';
+import { Suspense, lazy, useState } from 'react';
+import { MODULE_FLAGS, moduleOn } from '../lib/experience-flags';
+
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from '../components/ui';
+import { SharingList } from '../components/SharingList';
 import { TypeToConfirm } from '../components/TypeToConfirm';
 import { CLAIMS, SUPPORT, region } from '../lib/privacy';
 import { KEEP, LOG_KEY, dump, dumpName, read } from '../lib/diagnose';
@@ -43,6 +46,9 @@ import {
   type Counts,
 } from '../lib/usage';
 
+// The Trust & Data Center (Phase N), at the top of this page.
+const TrustCenter = lazy(() => import('../components/TrustCenter').then((m) => ({ default: m.TrustCenter })));
+
 /**
  * A stored value, or null, even where the browser refuses to be asked.
  *
@@ -64,7 +70,7 @@ function stored(key: string): string | null {
   }
 }
 
-export function Privacy() {
+export function Privacy({ trustCenter = moduleOn(MODULE_FLAGS.trust_center) }: { trustCenter?: boolean } = {}) {
   const { account, state, dispatch, school } = useStore();
   // Their app, not the registry. See the note on the count below.
   const theirs = offered(school.capabilities, state.role);
@@ -117,6 +123,12 @@ export function Privacy() {
           {!cloudConfigured && ' This build has no account service at all — nothing can leave the device.'}
         </div>
       </Blueprint>
+
+      {trustCenter ? (
+        <Suspense fallback={null}>
+          <TrustCenter key={account?.id ?? 'signed-out'} />
+        </Suspense>
+      ) : null}
 
       {CLAIMS.map((c) => (
         <div key={c.heading}>
@@ -208,6 +220,8 @@ export function Privacy() {
           </button>
         </div>
       )}
+
+      <SharingList />
 
       <SectionLabel style={{ marginTop: 'calc(22px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(5px * var(--density, 1))' }}>If something is wrong</SectionLabel>
       <div style={{ fontSize: 'var(--type-base-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-loose)', textWrap: 'pretty' }}>

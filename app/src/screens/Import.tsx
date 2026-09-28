@@ -232,6 +232,9 @@ export function Import() {
           ...got.read,
         ]);
       }
+      // Read, but not all of it: said even when nothing was refused, because
+      // the pages that were pictures are not in the course that gets built.
+      if (got.partly?.length) say(got.partly.join(' '));
       if (got.refused.length > 0) {
         // Choosing them again would refuse them again — a .pages file is still
         // a .pages file on the second go — so this is said without a retry.

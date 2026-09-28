@@ -137,6 +137,15 @@ describe('where a launch lands', () => {
  * is the whole point.
  */
 const NOT_CONTENT = new Set([
+  /*
+   * Course demand (Phase K). The plan rows are a copy of the registration
+   * cart, which lives on the device, sent only to be counted; the consent is
+   * a record that the student agreed. Neither is work that exists nowhere
+   * else, and both are listed in `OWNED_TABLES` only so Delete my account
+   * removes them.
+   */
+  'demand_consents',
+  'term_plan_courses',
   'push_devices',
   'push_queue',
   'access_log',
@@ -170,6 +179,16 @@ const NOT_CONTENT = new Set([
    */
   'canonical_entity_references',
   'consent_record',
+  /*
+   * Phase J (`20260928302000_office_action_feed.sql`). Which programs and
+   * eligibilities a student said apply to them, and which office actions they
+   * marked done. Settings and ticks about someone else's content — an office's
+   * action — rather than anything the student wrote, and all of it can be set
+   * again in a few taps. Counting them would make an account that once ticked
+   * "I applied for financial aid" read as holding work.
+   */
+  'institution_action_audiences',
+  'institution_action_progress',
   /*
    * A private beta's membership, feedback and exit record. Not because they
    * are nothing — the feedback is the person's words — but because an account

@@ -40,7 +40,7 @@ import {
 import type { School } from '../lib/school';
 import type { Screen } from '../lib/types';
 import { INSTITUTIONAL_PREVIEW } from '../lib/institutional-preview';
-import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
+import { EXPERIENCE_FLAGS, MODULE_FLAGS, moduleOn } from '../lib/experience-flags';
 import { GetHelp } from '../components/GetHelp';
 import { HelpInbox } from '../components/HelpInbox';
 import { ReportQueue } from '../components/ReportQueue';
@@ -55,6 +55,7 @@ import { campaignsAllowed } from '../lib/gtm/manager';
 import type { ControlPlaneStatus } from '../lib/control-plane';
 import { formatDateTime, formatTime } from '../lib/locale';
 
+const DemandDesk = lazy(() => import('../components/DemandDesk').then((module) => ({ default: module.DemandDesk })));
 const OperationsStudio = lazy(() =>
   import('../components/institutional/OperationsStudio').then((module) => ({
     default: module.OperationsStudio,
@@ -151,6 +152,10 @@ const tabsFor = (verified: readonly string[]) => [
   ...(EXPERIENCE_FLAGS.institutionalOperations !== 'off' && operationsAllowed(verified)
     ? [{ id: 'operations' as const, label: 'Operations' }]
     : []),
+  // Course demand (Phase K): staff only in practice. The database returns
+  // counts of ten or more, scoped by demand:read, and nothing that names a
+  // person; an account without the scope is told so.
+  ...(moduleOn(MODULE_FLAGS.demand_forecasting) ? [{ id: 'demand' as const, label: 'Demand' }] : []),
   // Only for an account holding a verified campaign capability at this school;
   // RLS would return it nothing otherwise.
   ...(EXPERIENCE_FLAGS.campaignManager !== 'off' && campaignsAllowed(verified)
@@ -158,7 +163,7 @@ const tabsFor = (verified: readonly string[]) => [
     : []),
 ];
 
-type Tab = 'overview' | 'drafts' | 'records' | 'connections' | 'control' | 'help' | 'integrations' | 'operations' | 'campaigns';
+type Tab = 'overview' | 'drafts' | 'records' | 'connections' | 'control' | 'help' | 'integrations' | 'operations' | 'demand' | 'campaigns';
 
 /** What each role is called on screen. */
 const ROLE_LABELS: Record<UniversityRole, string> = {
@@ -803,6 +808,12 @@ function Workspace({ storageKey }: { storageKey: string }) {
       {tab === 'operations' && EXPERIENCE_FLAGS.institutionalOperations !== 'off' && operationsAllowed(verified) && (
         <Suspense fallback={null}>
           <OperationsStudio verified={verified} tenantId={school.id} accountId={account?.id || 'device'} />
+        </Suspense>
+      )}
+
+      {tab === 'demand' && moduleOn(MODULE_FLAGS.demand_forecasting) && (
+        <Suspense fallback={null}>
+          <DemandDesk key={account?.id ?? 'signed-out'} />
         </Suspense>
       )}
 

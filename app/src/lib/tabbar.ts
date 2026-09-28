@@ -228,3 +228,79 @@ export function tabLabel(screen: Screen): string {
   const d = destination(screen);
   return d?.short ?? d?.label ?? screen;
 }
+
+// ── the five student destinations (D-003) ────────────────────────────────────
+
+/**
+ * Today, My Path, Search, Plan, Me — the blueprint's five, drawn over screens
+ * that already exist. Nothing is renamed or moved: the ids, the hash routes and
+ * `lib/nav.ts`'s shelves are untouched (`REGRESSION-CHECKLIST.md` §Q); only the
+ * bar's five slots and their words change.
+ *
+ * Behind `journeyNavigation` (D-003, approved), off in a normal build, so a
+ * student's own arranged bar is what they keep unless the flag is on. When it
+ * is on the bar is these five, fixed — the point of the five is that they are
+ * the same for everyone — and every other screen is still one tap from Me.
+ */
+export const FIVE_DESTINATIONS: Screen[] = ['home', 'degree', 'search', 'calendar', 'me'];
+
+export const FIVE_LABELS: Partial<Record<Screen, string>> = {
+  home: 'Today',
+  degree: 'My Path',
+  search: 'Search',
+  calendar: 'Plan',
+  me: 'Me',
+};
+
+/**
+ * Which destination a screen lives under, from
+ * `docs/ROUTE-AND-FEATURE-CROSSWALK.md`. Anything not named is under Me,
+ * which is where the directory is.
+ */
+const UNDER: Partial<Record<Screen, Screen>> = {
+  brief: 'home',
+  behind: 'home',
+  notifs: 'home',
+  yes: 'degree',
+  registrar: 'degree',
+  pathway: 'degree',
+  applying: 'degree',
+  courses: 'degree',
+  course: 'degree',
+  item: 'degree',
+  import: 'degree',
+  edit: 'degree',
+  announce: 'degree',
+  ask: 'search',
+  help: 'search',
+  directory: 'search',
+  runway: 'calendar',
+  clocks: 'calendar',
+  costs: 'calendar',
+  meals: 'calendar',
+  housing: 'calendar',
+  maps: 'calendar',
+  activities: 'calendar',
+  work: 'calendar',
+  event: 'calendar',
+};
+
+/** The bar to draw: the five when the flag is on, the student's own bar otherwise. */
+export function barForMode(saved: Screen[], c: Capabilities, role: Role, five: boolean): Screen[] {
+  if (!five) return barFor(saved, c, role);
+  const kept = FIVE_DESTINATIONS.filter((s) => allowed(s, c) && forRole(s, role));
+  return kept.filter((s) => s !== PINNED).length < FEWEST_CHOSEN ? barFor(saved, c, role) : kept;
+}
+
+/** The bar's word for a screen, in the five-destination bar or the ordinary one. */
+export function labelForMode(screen: Screen, five: boolean): string {
+  return (five && FIVE_LABELS[screen]) || tabLabel(screen);
+}
+
+/** Which tab to light for the screen on show. */
+export function litForMode(screen: Screen, chosen: Screen[], five: boolean): Screen | null {
+  if (!five) return litTab(screen, chosen);
+  if (chosen.includes(screen)) return screen;
+  const under = UNDER[screen] ?? PINNED;
+  return chosen.includes(under) ? under : null;
+}

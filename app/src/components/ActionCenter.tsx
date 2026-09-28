@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { Suspense, lazy, useMemo, useState } from 'react';
 import {
   ACTIONS_PREFIX,
   EMPTY_ACTION_CHOICES,
@@ -12,11 +12,20 @@ import {
 } from '../lib/actions';
 import { useDeviceLibrary } from '../lib/device-library';
 import { useNow, useStore } from '../state/store';
+import { ClarityQuestion } from './ClarityQuestion';
 import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
 import { askForHelp, helpFromAction } from '../lib/help-routes';
+import { requireOnline } from '../lib/offline-mode';
 import { ExplanationSheet } from './ExplanationSheet';
 import { SourceBadge } from './SourceBadge';
 import { ActionButton, SectionLabel } from './ui';
+
+/*
+ * Loaded only when a student opens it. The feedback form reaches `lib/privacy`
+ * and `lib/cloud`; imported eagerly it put both into Today's entry chunk
+ * (+17.6 kB) for a panel most visits never open.
+ */
+const SaySomething = lazy(() => import('./SaySomething').then((m) => ({ default: m.SaySomething })));
 
 /**
  * The Action Center: one most important thing, up to three more, the rest
@@ -71,7 +80,17 @@ export function dueLine(action: Action, now: number): string | null {
 function go(action: Action) {
   if (action.primary.kind === 'navigate') {
     location.hash = action.primary.target;
-  } else if (window.confirm(`This opens ${action.primary.target} in your browser. Continue?`)) {
+    return;
+  }
+  // An official site offline would open a page that cannot load, and with
+  // offline mode on, the hand-off is refused like every other (Phase M).
+  try {
+    requireOnline('handoff');
+  } catch (e) {
+    window.alert(e instanceof Error ? e.message : String(e));
+    return;
+  }
+  if (window.confirm(`This opens ${action.primary.target} in your browser. Continue?`)) {
     window.open(action.primary.target, '_blank', 'noopener,noreferrer');
   }
 }
@@ -184,15 +203,37 @@ function Controls({
   );
 }
 
+/**
+ * "Report incorrect information", opened under the action it is about.
+ *
+ * The existing feedback form, started on "Wrong information" and naming the
+ * action and its source, so the student only adds what is wrong. It sends
+ * nothing until they press Send, and signed out it gives the address instead.
+ */
+function Report({ s, onClose }: { s: Scored; onClose: () => void }) {
+  return (
+    <div className="action-note">
+      <Suspense fallback={<p className="today-sync-status">Opening…</p>}>
+        <SaySomething initialKind="wrong" initialNote={`About "${s.action.title}" (${s.action.source.system}): `} />
+      </Suspense>
+      <button type="button" className="workspace-text-button" onClick={onClose}>Close</button>
+    </div>
+  );
+}
+
 function Row({
   s,
   now,
   act,
+  reporting,
+  setReporting,
   explain,
 }: {
   s: Scored;
   now: number;
   act: (id: string, event: ActionEvent, note?: string) => void;
+  reporting: string | null;
+  setReporting: (id: string | null) => void;
   explain: (s: Scored) => void;
 }) {
   const due = dueLine(s.action, now);
@@ -206,7 +247,8 @@ function Row({
         </span>
         <span aria-hidden="true">→</span>
       </button>
-      <SourceBadge label={s.action.source.label} at={s.action.source.at} now={now} />
+      <SourceBadge label={s.action.source.label} at={s.action.source.at} now={now} onReport={() => setReporting(s.action.id)} />
+      {reporting === s.action.id && <Report s={s} onClose={() => setReporting(null)} />}
       <Controls s={s} act={act} compact />
       <Why s={s} explain={explain} />
     </li>
@@ -228,6 +270,7 @@ export function ActionCenter({
   const choices = library.value.choices;
   const ranked = useMemo(() => rank(actions, choices, now), [actions, choices, now]);
   const [said, setSaid] = useState<{ text: string; undo?: { id: string; prev: Choice | undefined } } | null>(null);
+  const [reporting, setReporting] = useState<string | null>(null);
   const [explaining, setExplaining] = useState<Scored | null>(null);
 
   const act = (id: string, event: ActionEvent, note?: string) => {
@@ -266,10 +309,12 @@ export function ActionCenter({
           {dueLine(top.action, now) && <p className="today-sync-status">{dueLine(top.action, now)}</p>}
           <h2 id="action-top-title">{top.action.title}</h2>
           <p>{top.action.whyItMatters}</p>
-          <SourceBadge label={top.action.source.label} at={top.action.source.at} now={now} />
+          <SourceBadge label={top.action.source.label} at={top.action.source.at} now={now} onReport={() => setReporting(top.action.id)} />
+          {reporting === top.action.id && <Report s={top} onClose={() => setReporting(null)} />}
           <ActionButton tone="primary" onClick={() => go(top.action)}>{top.action.primary.label}</ActionButton>
           <Controls s={top} act={act} />
           <Why s={top} explain={setExplaining} />
+          <ClarityQuestion />
         </article>
       ) : (
         <p className="today-clear">Nothing needs you right now. Anything you snoozed comes back tomorrow morning.</p>
@@ -288,7 +333,7 @@ export function ActionCenter({
         <>
           <SectionLabel>Next</SectionLabel>
           <ol className="action-list">
-            {ranked.next.map((s) => <Row key={s.action.id} s={s} now={now} act={act} explain={setExplaining} />)}
+            {ranked.next.map((s) => <Row key={s.action.id} s={s} now={now} act={act} reporting={reporting} setReporting={setReporting} explain={setExplaining} />)}
           </ol>
         </>
       )}
@@ -297,7 +342,7 @@ export function ActionCenter({
         <details className="today-why">
           <summary>View all ({ranked.rest.length} more)</summary>
           <ol className="action-list">
-            {ranked.rest.map((s) => <Row key={s.action.id} s={s} now={now} act={act} explain={setExplaining} />)}
+            {ranked.rest.map((s) => <Row key={s.action.id} s={s} now={now} act={act} reporting={reporting} setReporting={setReporting} explain={setExplaining} />)}
           </ol>
         </details>
       )}

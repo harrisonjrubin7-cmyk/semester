@@ -20,6 +20,7 @@
 import { money } from './bill';
 import { NOTIF_DEFS, type NotifKey } from '../data/misc';
 import { daysTo, type TermDate } from './registrar';
+import { windowReminders } from './registration-window';
 import { isExam } from './runway';
 import type { Start } from './start';
 import type { DatedItem } from './types';
@@ -228,6 +229,13 @@ interface Source {
   muted?: string[];
   /** The university's own dates, if the student has filled any in. */
   registrar?: TermDate[];
+  /**
+   * When the student's registration window opens, epoch ms, from their
+   * registration-day plan (`storedWindow` in `lib/registration-day.ts`). Rides
+   * on the `term` rule: a registration window is a registrar date the student
+   * typed in themselves.
+   */
+  registrationOpens?: number | null;
   /**
    * Classes today in a course whose absence allowance is nearly or already
    * gone. Worked out by the caller with `lib/attend.ts`, not here: the absence
@@ -536,6 +544,16 @@ export function dueReminders(
         title: away === 1 ? `Tomorrow: ${d.label}` : `One week: ${d.label}`,
         body: d.cost || 'From your registrar.',
       });
+    }
+  }
+
+  // The student's own registration window: the day before, and the hour
+  // before (`windowReminders`). Same toggle as the registrar dates, because to
+  // the student it is one — and inside the same quiet-hours check as
+  // everything else, which returned early above.
+  if (on.term) {
+    for (const r of windowReminders(src.registrationOpens ?? null, now)) {
+      out.push({ id: r.id, rule: 'term', title: r.title, body: r.body });
     }
   }
 

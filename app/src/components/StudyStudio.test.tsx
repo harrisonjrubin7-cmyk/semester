@@ -27,6 +27,12 @@ it('regenerates only the chosen section and saves a course-linked editable docum
  await prepare();mock.ask.mockResolvedValue(JSON.stringify({sections:[result('Revised first','Revised body [unit-0].')]}));await press('Regenerate this section');expect(host.textContent).toContain('Second section');expect(host.textContent).toContain('Revised first');
  await press('Save & open in Write');const action=mock.dispatch.mock.calls.find(([a])=>a.type==='makeDocument')?.[0];expect(action).toMatchObject({type:'makeDocument',open:true,doc:{courseId:'econ'}});expect(JSON.stringify(action)).toContain('Keep this other section unchanged');
 });
+it('saves each citation to Write as a quotation with its source, and no internal ids',async()=>{
+ await prepare();await press('Save & open in Write');
+ const doc=mock.dispatch.mock.calls.find(([a])=>a.type==='makeDocument')?.[0].doc;
+ expect(doc.blocks).toContainEqual({kind:'quote',text:'The value of the next best alternative.',source:expect.stringMatching(/^\[1\] Opportunity cost · Prepared course guide/)});
+ expect(JSON.stringify(doc.blocks)).not.toContain('unit-0');
+});
 it('keeps existing sections when regenerated citations cannot be verified',async()=>{
  await prepare();mock.ask.mockResolvedValue(JSON.stringify({sections:[{...result(),citations:[{sourceId:'unit-0',quote:'This invented quotation cannot be verified.'}]}]}));await press('Regenerate this section');expect(host.textContent).toContain('First section');expect(host.textContent).toContain('Second section');expect(host.textContent).toContain('could not be verified');
 });
@@ -46,4 +52,13 @@ it('shows a verified quotation where it sits, on the source that has no page to 
 });
 it('blocks AI generation for a course with an AI prohibition',()=>{
  mock.stance='banned';mount();check('Opportunity cost');expect(button('Create study guide').disabled).toBe(true);expect(host.textContent).toContain('does not permit AI');expect(mock.ask).not.toHaveBeenCalled();
+});
+it('records the sources a guide was generated from, not the selection at save time',async()=>{
+ act(()=>root.render(<StudyStudio courseId="econ" onClose={()=>{}} sourceLocker adaptiveLearning={false}/>));
+ check('Opportunity cost');check('Send the selected text');mock.ask.mockResolvedValue(JSON.stringify({sections:[result()]}));await press('Create study guide');
+ // The student unticks the source after generating, then saves the same draft.
+ check('Opportunity cost');
+ await press('Save & open in Write');
+ const built=JSON.parse(localStorage.getItem('semester.source-locker.v1')!).built;
+ expect(built[0].materials).toEqual(['syllabus:econ']);
 });

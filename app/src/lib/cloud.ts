@@ -32,6 +32,7 @@
  */
 
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
+import { requireOnline } from './offline-mode';
 import { classify, reference, say, type Code } from './failure';
 import type { Seen } from '../state/shape';
 import { MOVE_MS, fetchWithin, timedOut, tookTooLong } from './net';
@@ -957,6 +958,25 @@ export const OWNED_TABLES: OwnedTable[] = [
   { table: 'appointments', column: 'user_id' },
   { table: 'sittings', column: 'user_id' },
   { table: 'calendar_feeds', column: 'user_id' },
+  // Graduation scenario drafts a student chose to save to their account
+  // (`lib/graduation-cloud.ts`, Phase D). The foreign key cascades from
+  // auth.users too; listed so the delete here does not depend on it.
+  { table: 'graduation_scenarios', column: 'user_id' },
+  // Advisor shares (`lib/advisor-shares.ts`, Phase G), at either end: the ones
+  // a student made and the ones an advisor received. Deleting them cascades to
+  // their read log. The auth user is not deleted, so the foreign keys never
+  // cascade, and an advisor has no delete policy — the RPC removes both sides.
+  { table: 'advisor_shares', column: null, via: 'forget_my_advisor_shares' },
+  // Course demand (Phase K): the courses a student contributed and their
+  // consent. The consent allows no client write, so the RPC removes both;
+  // the plan rows are listed too, since the student may delete those directly.
+  { table: 'demand_consents', column: null, via: 'forget_my_course_demand' },
+  { table: 'term_plan_courses', column: 'user_id' },
+  // What a student said applies to them for campus office actions, and which
+  // of those actions they marked done (`lib/office-actions-remote.ts`, Phase
+  // J). Both are the student's alone; no office can read either.
+  { table: 'institution_action_audiences', column: 'user_id' },
+  { table: 'institution_action_progress', column: 'user_id' },
   // A support grant names this account in either of two columns. The RPC
   // removes both sides, which one filtered DELETE cannot express, while its
   // audit trigger leaves only pseudonyms behind.
@@ -1063,6 +1083,23 @@ export const OWNED_TABLES: OwnedTable[] = [
   // explicitly not that. Closing it belongs with the auth flows that first
   // give a parent an account to delete.
   { table: 'family_grants', column: 'student_id' },
+  // The codes that made them, keyed on the student for the same reason: the
+  // invite is the student's statement. A claimant's link to it is
+  // `claimed_by`, which `on delete set null` clears when their account goes.
+  { table: 'family_invites', column: 'student_id' },
+  // The confirmed copies behind a share, and the log of every read of them.
+  // Both are the student's; a supporter holds no row in either, and a reader's
+  // own deletion only clears `reader_id` on the log (`on delete set null`).
+  { table: 'family_shared_items', column: 'student_id' },
+  { table: 'family_access_events', column: 'student_id' },
+  // An athlete's share with academic support (D-039), gone at either end:
+  // the student's shares and the ones a staff member received. Deleting an
+  // account signs out and deletes no auth user, so no cascade would reach the
+  // received ones. Its read log goes with each share (`on delete cascade`).
+  { table: 'support_shares', column: null, via: 'forget_my_support_shares' },
+  // Its read log has no column of the student's: each row goes with the
+  // share it records, by `on delete cascade`.
+  { table: 'support_share_events', column: null, cascadesFrom: 'support_shares' },
 
   // ── Shared forms ────────────────────────────────────────────────────────
   // ── Organizations ───────────────────────────────────────────────────────
@@ -1156,6 +1193,18 @@ export const KEPT_TABLES: KeptTable[] = [
   {
     table: 'organizations',
     why: 'A student organization outlives everybody in it — that is most of what makes it one rather than a study group. Your membership goes and it stays, with no founder recorded if you started it. If you were its last administrator it is left with none, and any member can take it on; if you were its last member it goes with you, because an organization nobody is in is not anything.',
+  },
+  {
+    table: 'course_ai_rules',
+    why: 'The AI rules an instructor published for a course are course policy the whole class relies on, not a record about you. A student account never writes a row; an instructor who leaves has their name cleared from the rules they published, and the rules stay.',
+  },
+  {
+    table: 'course_guidance',
+    why: 'Guidance an instructor published for a course belongs to the course, not to any one account. Students only read it; an instructor who leaves has their name cleared from what they published, and it stays for the class.',
+  },
+  {
+    table: 'study_packs',
+    why: 'A study pack an instructor published is a list of course references for the whole class. Students only read it; an instructor who leaves has their name cleared from the packs they published, and the packs stay.',
   },
   {
     table: 'schools',
@@ -1260,6 +1309,7 @@ export const KEPT_TABLES: KeptTable[] = [
 ];
 
 export async function deleteEverything(): Promise<string> {
+  requireOnline('delete');
   const db = await cloud();
   const { data } = await db.auth.getUser();
   const userId = data.user?.id;

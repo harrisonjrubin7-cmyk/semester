@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { Suspense, lazy, useMemo, useState } from 'react';
+import { MODULE_FLAGS, moduleOn } from '../lib/experience-flags';
 import { SourceBadge } from '../components/SourceBadge';
 import { DIMMED_ROW, secondLine } from '../lib/dim';
 import { useNow, useStore } from '../state/store';
@@ -22,6 +23,9 @@ import {
 } from '../lib/registrar';
 import { SEMESTER_YEAR, isoToDate, longLabel } from '../lib/date';
 
+const OfficeActionFeed = lazy(() => import('../components/OfficeActionFeed').then((m) => ({ default: m.OfficeActionFeed })));
+const OfficeActionDesk = lazy(() => import('../components/OfficeActionDesk').then((m) => ({ default: m.OfficeActionDesk })));
+
 /**
  * The dates the university sets, entered once.
  *
@@ -35,8 +39,12 @@ import { SEMESTER_YEAR, isoToDate, longLabel } from '../lib/date';
  * screen too: a wrong withdrawal deadline that looks confident is worse than
  * an empty field that asks.
  */
-export function Registrar() {
-  const { state, dispatch, school } = useStore();
+export function Registrar({
+  // Campus office actions (Phase J): the full feed, and the office desk for
+  // an account the database says may publish.
+  officeActions = moduleOn(MODULE_FLAGS.office_action_feed),
+}: { officeActions?: boolean } = {}) {
+  const { state, dispatch, school, account } = useStore();
   const now = useNow();
   const rowEleven = useRowStyle(11);
   const [tab, setTab] = useState<'dates' | 'paste' | 'school'>('dates');
@@ -257,6 +265,13 @@ export function Registrar() {
           ))}
         </Group>
       )}
+
+      {officeActions ? (
+        <Suspense fallback={<p role="status">Loading campus office actions…</p>}>
+          <OfficeActionFeed enabled />
+          <OfficeActionDesk key={account?.id ?? 'signed-out'} signedIn={Boolean(account)} />
+        </Suspense>
+      ) : null}
 
       <Segmented
         options={[

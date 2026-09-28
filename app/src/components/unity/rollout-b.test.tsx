@@ -255,7 +255,9 @@ describe('the degree screen', () => {
    */
   it('marks its figures as student entered and estimated, and keeps the sentence', async () => {
     await mount(<Degree />);
-    const badges = [...host.querySelectorAll('[data-source]')].map((b) => b.getAttribute('data-source'));
+    // The degree section's own badges. The Path Snapshot card on the same
+    // screen (BL-1.6) labels its own figures, and is held to that in its test.
+    const badges = [...host.querySelectorAll('.context-bar-states [data-source]')].map((b) => b.getAttribute('data-source'));
     expect(badges).toEqual(['student_entered', 'estimated']);
     expect(host.querySelectorAll('.status-chip')).toHaveLength(0);
     expect(text()).toContain('Your arithmetic, not the registrar’s');

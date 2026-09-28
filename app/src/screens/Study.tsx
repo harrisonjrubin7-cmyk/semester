@@ -1,3 +1,4 @@
+import { useCoursePublications } from '../lib/courserules';
 import {StudyJournal} from '../components/StudyJournal';
 import { StudyStudio } from '../components/StudyStudio';
 import { Toolkit } from '../components/toolkit/Toolkit';
@@ -124,6 +125,8 @@ export function Study({
   const [showRest, setShowRest] = useState(false);
   const [studio, setStudio] = useState(false);
   const [toolkit, setToolkit] = useState(false);
+  // What instructors published for these courses, when Course Studio is on (`lib/courserules.ts`); {} otherwise.
+  const published = useCoursePublications(catalog.courses.map((c) => c.code), state.term, !!account);
   const [studioCourse, setStudioCourse] = useState(state.guideId);
   const selectedStudioCourse = catalog.courses.find(c=>c.id===studioCourse)?.id ?? catalog.courses[0]?.id;
   const rowTwelve = useRowStyle(12);
@@ -273,7 +276,7 @@ export function Study({
   if (toolkit && on(TOOLKIT_FLAGS.aiToolkit))
     return (
       // Keyed by account so a different student signing in starts from their own toolkit, with no panel state carried over.
-      <Toolkit key={account?.id || 'device'} accountId={account?.id} courses={catalog.courses} onOpen={(screen) => dispatch({ type: 'go', screen })} onClose={() => setToolkit(false)} />
+      <Toolkit key={account?.id || 'device'} accountId={account?.id} courses={catalog.courses} published={published} onOpen={(screen) => dispatch({ type: 'go', screen })} onClose={() => setToolkit(false)} />
     );
   if(studio && selectedStudioCourse) return <><div className="studio-course-picker"><label>Course<select value={selectedStudioCourse} onChange={e=>setStudioCourse(e.target.value)}>{catalog.courses.map(c=><option key={c.id} value={c.id}>{c.code} · {c.name}</option>)}</select></label></div><StudyStudio key={selectedStudioCourse} courseId={selectedStudioCourse} onClose={()=>setStudio(false)}/></>;
   return (

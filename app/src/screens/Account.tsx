@@ -1,3 +1,4 @@
+import { CourseStudioEntry } from '../components/CourseStudio';
 import { useState } from 'react';
 import { SYNC_WORDS } from '../lib/syncstatus';
 import { Review } from '../components/Review';
@@ -10,6 +11,7 @@ import { ActionButton, SectionLabel } from '../components/ui';
 import { Credentials } from '../components/Credentials';
 import { SchoolClaim } from '../components/SchoolClaim';
 import { ReferralLink } from '../components/ReferralLink';
+import { MembershipPanel } from '../components/MembershipPanel';
 import { cloudConfigured, signOut } from '../lib/cloud';
 import { formatTime } from '../lib/locale';
 import { ErrorState } from '../components/unity/States';
@@ -57,6 +59,7 @@ export function AccountScreen() {
             in to. Everything works without one, and everything stays in this browser.
           </div>
         </Blueprint>
+        <MembershipPanel />
       </Page>
     );
   }
@@ -176,6 +179,11 @@ export function AccountScreen() {
             only one a policy can ever read. See `components/SchoolClaim.tsx`. */}
         <SchoolClaim />
 
+        {/* Faculty Course Studio (D-100): shown only to an account the school
+            has made faculty on a course, with the module on. See
+            `components/CourseStudio.tsx`. */}
+        <CourseStudioEntry />
+
         <SectionLabel>What syncs</SectionLabel>
         <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed-plus)', textWrap: 'pretty' }}>
           Everything you have typed into this app, not a selection from it: your courses and what
@@ -235,6 +243,7 @@ export function AccountScreen() {
             {error}
           </div>
         )}
+        <MembershipPanel />
       </Page>
     );
   }
@@ -274,6 +283,7 @@ export function AccountScreen() {
         you end up with both sides' courses, notes and ticked boxes.
       </div>
       <StorageRoom />
+      <MembershipPanel />
     </Page>
   );
 }

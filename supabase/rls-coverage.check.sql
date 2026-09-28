@@ -125,6 +125,9 @@ returns text language sql stable as $$
      and tablename not in (
        'app_capabilities',  -- the capability vocabulary; no rows about anyone
        'app_roles',         -- the role vocabulary; likewise
+       'institution_action_offices', -- which offices exist and which roles
+                            -- publish for each (20260928302000); configuration
+                            -- naming no person, signed in only (anon has no grant)
        'role_capabilities', -- which role carries which capability; the matrix
                             -- itself, not who holds what (that is role_grants)
        'schools'            -- the school directory, readable signed out so the
@@ -280,7 +283,7 @@ begin
     raise exception 'FAILED: tables any client may read in full, not on the allowlist: % — '
                     'narrow the policy, or add the table to open_read_tables() with the reason', got;
   end if;
-  raise notice 'ok  only the four vocabulary and directory tables are readable in full';
+  raise notice 'ok  only the five vocabulary and directory tables are readable in full';
 end $$;
 
 -- ── Nothing in private is a client's to touch ─────────────────────────────

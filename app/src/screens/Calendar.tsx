@@ -64,12 +64,37 @@ import { Folding } from '../components/Fold';
 import { goMine } from '../lib/openmine';
 import { goCal } from '../lib/opencal';
 import { INSTITUTIONAL_PREVIEW } from '../lib/institutional-preview';
+import { MODULE_FLAGS, moduleOn } from '../lib/experience-flags';
 
 const FlightPlanCalendar = lazy(() =>
   import('../components/institutional/FlightPlanCalendar').then((module) => ({
     default: module.FlightPlanCalendar,
   })),
 );
+
+const LifeBalance = lazy(() => import('../components/LifeBalance').then((m) => ({ default: m.LifeBalance })));
+
+/**
+ * Academic life balance (Phase E), under the week view: the week's hours by
+ * category, each day's shape, and — with `crunch_week_forecast` on too — the
+ * Crunch Week Forecast. Always the Sunday-to-Saturday week around the day the
+ * calendar is on, whether the grid above shows seven days or three.
+ */
+function LifeBalanceSlot({
+  balance = moduleOn(MODULE_FLAGS.academic_life_balance),
+  crunch = moduleOn(MODULE_FLAGS.crunch_week_forecast),
+}: { balance?: boolean; crunch?: boolean }) {
+  const { state } = useStore();
+  const now = useNow();
+  if (!balance) return null;
+  const anchor = state.calDay ? isoToDate(state.calDay) : now;
+  const start = new Date(anchor.getFullYear(), anchor.getMonth(), anchor.getDate() - anchor.getDay());
+  return (
+    <Suspense fallback={null}>
+      <LifeBalance start={dateToIso(start)} crunch={crunch} />
+    </Suspense>
+  );
+}
 
 function FlightPlanCalendarSlot() {
   if (!INSTITUTIONAL_PREVIEW) return null;
@@ -2883,7 +2908,10 @@ export function Calendar() {
       ) : state.calView === 'day' ? (
         <DayView />
       ) : state.calView === 'week' ? (
-        <WeekView />
+        <>
+          <WeekView />
+          <LifeBalanceSlot />
+        </>
       ) : state.calView === 'semester' ? (
         <SemesterView />
       ) : (

@@ -151,6 +151,7 @@ const CANONICAL_CLOCKS: Record<string, string> = {
   'lib/drag.ts': "timeLabel writes the stored `time` of an item dropped or added on the calendar; its confirmations draw it through shownTime",
   'lib/duetime.ts': 'parses stored times',
   'lib/ics.ts': 'stores a subscribed feed event\'s time',
+  'lib/life-balance.ts': "clockLabel writes a suggested study block's stored `time`; Life balance draws its ranges through date.ts clock()",
   'lib/select.ts': 'parses stored time ranges',
   'lib/suggest.ts': 'month arithmetic — `% 12` over months, not hours',
   'screens/Mine.tsx': "turns a time input into the stored form",

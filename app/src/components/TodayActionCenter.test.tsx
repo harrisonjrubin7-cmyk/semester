@@ -31,6 +31,9 @@ beforeAll(async () => {
     removeEventListener: () => {},
   })) as unknown as typeof window.matchMedia;
   await loadSeed();
+  // Today loads these lazily (`TodayDecisionSurface`); loaded once here so a
+  // mount only has to wait for React, not for the module.
+  await import('./TodayActionCenter');
 });
 
 afterAll(() => {
@@ -63,6 +66,10 @@ const mount = async (actionCenter: boolean) => {
         <TodayDecisionSurface actionCenter={actionCenter} />
       </StoreProvider>,
     );
+  });
+  // One more turn for the lazy boundary to swap its fallback for the surface.
+  await act(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 0));
   });
 };
 
