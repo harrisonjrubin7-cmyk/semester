@@ -280,7 +280,9 @@ describe('a stranger can find the contact, and the clocks are the ones the patch
     // A "fixed within 2 days" read as a promise to a customer is a promise this
     // project cannot keep with one person; the document has to say the numbers
     // are targets, and the row that is a commitment (notice) has to say it is.
-    expect(flat()).toMatch(/proposed internal targets/);
+    expect(flat()).toMatch(/accepted internal targets/);
+    expect(flat()).toMatch(/accepted them unchanged on 29 September 2026 \(D-124\)/);
+    expect(flat()).not.toMatch(/proposed internal targets/);
     expect(flat()).toMatch(/clock starts when the finding is \*\*confirmed\*\*/);
     expect(flat()).toMatch(/nothing here is a commitment to a customer/);
   });
