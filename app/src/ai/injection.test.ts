@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { breakDownPrompt, critiquePrompt } from '../lib/assignment';
 import { classifyPrompt } from '../lib/classify';
-import { readMaterialPrompt, readShotsPrompt } from '../lib/claude';
+import { readMaterialPrompt, readShotsPrompt, withAttachments } from '../lib/claude';
+import { generatePrompt } from '../lib/generate';
+import { styleFor } from '../lib/house';
 import { harvestPrompt } from '../lib/harvest';
 import type { Intake } from '../lib/intake';
 import { studyPrompt, type StudioControls } from '../lib/studystudio';
@@ -95,6 +97,12 @@ const BUILDERS: Record<string, (material: string) => string> = {
   'harvest, material': (m) => whole(harvestPrompt(intake(m), 'reading', 'ECON 1020', 'Short sentences.')),
   'harvest, file name': (m) => whole(harvestPrompt(intake('A reading.', m), 'reading', 'ECON 1020', 'Short sentences.')),
   'harvest, course': (m) => whole(harvestPrompt(intake('A reading.'), 'reading', m, 'Short sentences.')),
+  // The house style carries the course's own cards, which a poisoned import
+  // could have written; Codex found this slot outside every fence on #948.
+  'harvest, style samples': (m) => whole(harvestPrompt(intake('A reading.'), 'reading', 'ECON 1020', styleFor({ samples: m, rules: ['Short sentences.'], from: 10 }))),
+  'course generator, note from the student': (m) => whole(generatePrompt({ documents: [{ name: 'Econ.pdf', text: 'A syllabus.' }], hint: m, year: 2026 })),
+  'course generator, pasted material': (m) => whole(generatePrompt({ documents: [{ name: 'Econ.pdf', text: m }], hint: '', year: 2026 })),
+  'course generator, file name': (m) => whole(generatePrompt({ documents: [{ name: m, text: 'A syllabus.' }], hint: '', year: 2026 })),
 };
 
 describe('the fence', () => {
@@ -123,6 +131,30 @@ describe('every builder keeps the material inside the fence and the instructions
       });
     }
   }
+});
+
+describe('attachments, which no fence can wrap', () => {
+  // A PDF goes to the model as a document block, not as text, so the fence
+  // cannot hold it; the rule has to name attachments as material instead,
+  // and the request has to put the document where the rule says it is.
+  it('the course generator sends a PDF as a document block ahead of the fenced text, under the rule that names attachments', () => {
+    const built = generatePrompt({ documents: [{ name: 'Econ.pdf', text: 'A syllabus.', pdf: 'JVBERi0=' }], hint: 'ECON', year: 2026 });
+    expect(built.docs).toHaveLength(1);
+    expect(built.system).toContain('every document and image attached to this request');
+    const sent = withAttachments(built.messages, undefined, built.docs, built.cite);
+    const last = sent[sent.length - 1];
+    expect(Array.isArray(last.content)).toBe(true);
+    const blocks = last.content as { type: string; title?: string }[];
+    expect(blocks[0].type).toBe('document');
+    expect(blocks[0].title).toBe('Econ.pdf');
+    expect(blocks[blocks.length - 1].type).toBe('text');
+    // The PDF's text is not pasted as well: a document sent whole is sent once.
+    expect(JSON.stringify(built.messages)).not.toContain('A syllabus.');
+  });
+
+  it('the photograph reader carries the same sentence for its images', () => {
+    expect(readShotsPrompt('ECON 1020').system).toContain('every document and image attached to this request');
+  });
 });
 
 describe('the two builders that carry material as JSON', () => {

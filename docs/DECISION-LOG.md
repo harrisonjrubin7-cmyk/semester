@@ -2061,6 +2061,16 @@ institution gateway (developer role, sources as JSON) kept the two apart.
   with the limit in its note, and R-07's description says "structurally,
   not behaviourally" with the red-team as its mitigation. The residual does
   not move.
+- **Codex's review of the change found two slots the suite had not
+  reached, both right.** The harvester's house style carries the course's
+  own cards verbatim — which a poisoned import could have written — and put
+  them in the instructions outside every fence; the samples are now fenced
+  inside `styleFor`, and the suite exercises that slot. And a PDF goes to
+  the model as a document block, which no text fence can wrap: the rule now
+  names every attached document and image as material in so many words, the
+  course generator's prompt is a pure builder the suite reads, and a test
+  serialises the request to show the document block ahead of the fenced
+  text under that rule. Where a fence cannot reach, the rule has to say so.
 - **Not changed:** the study studio's JSON prompt and the gateway's role
   separation, both read by the suite as they are; the model calls
   themselves, which send exactly what the builders return.
