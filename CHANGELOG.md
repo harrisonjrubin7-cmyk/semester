@@ -49,6 +49,24 @@ programme is switched on for any campus today, no ambassador has been
 recruited, no story published, no partner listed and no event scheduled.
 Every next step is a page or a person.
 
+### On the public site: one operating system, and why not another tool
+
+Two new pages under Platform. *One Operating System. Every Student Moment.*
+puts the student at the centre and nine areas around them — academic path,
+courses and learning, schedule and planning, advising and support, campus
+life, career and portfolio, money and important dates, community and
+opportunities, institution operations — each opening to the student problem,
+the Semester workflow, who benefits, what connects, what stays official, and
+how it connects back to Today, the Action Center, Search, Plan, the Workspace
+and Semester Intelligence. *Why not another tool?* sets the traditional
+approach beside the Semester approach in eight rows. Beside every area and
+every row is one of four words — held by a test, being built, designed, not
+started — computed from the register behind the page, never written by hand,
+so neither page can say “fully built” where the code says “being built”.
+Both pages ship no script; an area opens as a plain disclosure.
+
+Nothing to do.
+
 ### Describe the problem, and be sent to the right door
 
 Help now opens with one field: describe the problem in your own words — “I
