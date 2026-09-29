@@ -252,7 +252,7 @@ function render(): string {
     '| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |',
     ...WORKFLOWS.map((w) => `| ${w.id} | ${w.first ? '★ ' : ''}${cell(w.name)} | ${w.audience} | ${cell(w.job)} | ${w.reaches} | ${cell(w.prohibited)} | ${w.refusedBy.length ? w.refusedBy.map((r) => `*${r}*`).join(', ') : '—'} | ${w.status} | ${ev(w.evidence)} | ${cell(w.gap)} |`),
     '',
-    'Four of these refusals were added to `PROHIBITED_STARTING_SCOPE` for this playbook (D-128): automated hiring decisions, ranking students for employers, auto-publishing institutional policy, and unapproved production changes. A use case that touches any of them is refused at intake, whatever evidence it brings.',
+    'Four of these refusals were added to `PROHIBITED_STARTING_SCOPE` for this playbook (D-129): automated hiring decisions, ranking students for employers, auto-publishing institutional policy, and unapproved production changes. A use case that touches any of them is refused at intake, whatever evidence it brings.',
     '',
     '### ROI scorecards',
     '',
