@@ -507,7 +507,9 @@ The company site's forms post here:
 is written out at the top of `_shared/leadintake.ts`; the database side is
 `submit_site_lead`.
 
-    SITE_ORIGINS        required; the site's origin(s), comma-separated. Unset answers 503
+    SITE_ORIGINS        optional; origins to add, comma-separated. The site's own three
+                        (www.semester.website, semester.website, the vercel.app address)
+                        are built in as SITE_PRODUCTION_ORIGINS, so unset no longer means off
     RESEND_API_KEY      optional; with LEAD_NOTIFY_EMAIL, each lead is emailed to the owner
     LEAD_NOTIFY_EMAIL   optional; the owner's inbox. Configuration, never code
     LEAD_NOTIFY_FROM    optional; a verified Resend sender (default: Resend's onboarding sender)

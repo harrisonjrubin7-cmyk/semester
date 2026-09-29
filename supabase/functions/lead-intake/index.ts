@@ -10,7 +10,8 @@
  * owner's notification through Resend.
  *
  * `verify_jwt` is off (supabase/config.toml): the site's visitors have no
- * Semester account. Off (503) until `SITE_ORIGINS` is set. Email goes out only
+ * Semester account. The site's own origins are built in (`SITE_PRODUCTION_ORIGINS`
+ * in the shared file); `SITE_ORIGINS` only adds to them. Email goes out only
  * when both `RESEND_API_KEY` and `LEAD_NOTIFY_EMAIL` are set; the address is
  * configuration, never code. See `docs/COMMERCIAL-CORE.md`.
  */

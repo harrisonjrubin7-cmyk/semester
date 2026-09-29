@@ -152,7 +152,7 @@ functions answer 503 with a plain sentence.
 | `STRIPE_SECRET_KEY` | billing-checkout | Stripe secret key. Unset: checkout answers 503 |
 | `STRIPE_WEBHOOK_SECRET` | billing-webhook | The webhook endpoint's signing secret. Unset: webhook answers 503 |
 | `ALLOWED_ORIGIN` | billing-checkout | The app's origin(s), comma-separated, read strictly (unset or `*` allows nobody) |
-| `SITE_ORIGINS` | lead-intake | The company site's origin(s), comma-separated. Unset: 503 |
+| `SITE_ORIGINS` | lead-intake | Origins to add, comma-separated. The site's own are built in (`SITE_PRODUCTION_ORIGINS`), so unset adds nothing and still serves the site |
 | `RESEND_API_KEY` | lead-intake | Resend key; with `LEAD_NOTIFY_EMAIL`, every lead is emailed |
 | `LEAD_NOTIFY_EMAIL` | lead-intake | The owner's inbox: set it to `harrisonjrubin7@gmail.com`. Configuration, never code |
 | `LEAD_NOTIFY_FROM` | lead-intake | Optional: a verified Resend sender (default Resend's onboarding sender, which only delivers to the Resend account's own address) |

@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
-  committeeRole, handleLeadIntake, notificationEmail, validateLead, type LeadDeps, type SubmitRow,
+  SITE_PRODUCTION_ORIGINS, committeeRole, handleLeadIntake, notificationEmail, validateLead, type LeadDeps, type SubmitRow,
 } from '../../../../supabase/functions/_shared/leadintake';
 
 const SITE = 'https://semester.example';
@@ -82,14 +82,45 @@ describe('lead intake: the contract the site is built against', () => {
     expect(d.notify).not.toHaveBeenCalled();
   });
 
-  it('is 503 when not configured', async () => {
-    for (const over of [{ siteOrigins: undefined }, { siteOrigins: ' ' }, { ipSalt: undefined }]) {
-      const d = deps(over);
-      const res = await handleLeadIntake(post(GOOD), d);
-      expect(res.status).toBe(503);
-      expect((await res.json()).ok).toBe(false);
-      expect(d.submit).not.toHaveBeenCalled();
+  it('is 503 when the salt is missing', async () => {
+    const d = deps({ ipSalt: undefined });
+    const res = await handleLeadIntake(post(GOOD), d);
+    expect(res.status).toBe(503);
+    expect((await res.json()).ok).toBe(false);
+    expect(d.submit).not.toHaveBeenCalled();
+  });
+
+  /*
+   * The site's own origins are built in, so an unset or stale `SITE_ORIGINS`
+   * no longer takes the forms out. On 29 September the site was live on
+   * www.semester.website and every form answered 503: the secret was unset.
+   */
+  it("takes the site's own origins with no secret set, and still nobody else", async () => {
+    expect(SITE_PRODUCTION_ORIGINS).toEqual([
+      'https://www.semester.website', 'https://semester.website', 'https://semester-company-site.vercel.app',
+    ]);
+    for (const siteOrigins of [undefined, '', ' ']) {
+      for (const origin of SITE_PRODUCTION_ORIGINS) {
+        const d = deps({ siteOrigins });
+        const res = await handleLeadIntake(post(GOOD, { Origin: origin }), d);
+        expect(res.status, `${JSON.stringify(siteOrigins)} / ${origin}`).toBe(200);
+        expect(res.headers.get('Access-Control-Allow-Origin')).toBe(origin);
+        expect(d.submit).toHaveBeenCalledOnce();
+      }
+      // The secret adds; it does not open. Another origin is still refused.
+      const other = deps({ siteOrigins });
+      const res = await handleLeadIntake(post(GOOD, { Origin: 'https://evil.example' }), other);
+      expect(res.status).toBe(403);
+      expect(res.headers.get('Access-Control-Allow-Origin')).toBeNull();
+      expect(other.submit).not.toHaveBeenCalled();
     }
+    // A preflight from the live site, with nothing configured, is answered.
+    const pre = await handleLeadIntake(
+      new Request('https://x', { method: 'OPTIONS', headers: { Origin: 'https://www.semester.website' } }),
+      deps({ siteOrigins: undefined }),
+    );
+    expect(pre.status).toBe(204);
+    expect(pre.headers.get('Access-Control-Allow-Origin')).toBe('https://www.semester.website');
   });
 
   it('fails closed on CORS: another origin, no origin, or * gets 403 and no Allow-Origin', async () => {

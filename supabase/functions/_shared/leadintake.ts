@@ -18,10 +18,11 @@
  *
  * ## What it refuses to do
  *
- * - **Answer a page it does not know.** `SITE_ORIGINS` is the list of the
- *   site's origins, read strictly (`strictOrigin` in `cors.ts`): unset answers
- *   503, and an origin not on it — or no `Origin` at all — answers 403 with no
- *   `Access-Control-Allow-Origin`, so the browser refuses it too.
+ * - **Answer a page it does not know.** The site's own origins are built in
+ *   (`SITE_PRODUCTION_ORIGINS`), and `SITE_ORIGINS` only adds to them. Both are
+ *   read strictly (`strictOrigin` in `cors.ts`): an origin not on the list — or
+ *   no `Origin` at all — answers 403 with no `Access-Control-Allow-Origin`, so
+ *   the browser refuses it too, and `*` is never an entry.
  * - **Tell a bot it was caught.** A filled honeypot gets the same 200 and a
  *   reference in the same shape, and nothing is stored or sent.
  * - **Keep an IP address.** The caller's address is HMAC-hashed with a secret
@@ -53,8 +54,34 @@ export interface SubmitRow {
   respond_by: string | null;
 }
 
+/**
+ * The company site's own origins, built in.
+ *
+ * The same rule `PRODUCTION_ORIGINS` in `cors.ts` already follows for the
+ * app, and for the same reason. This list used to live only in the
+ * `SITE_ORIGINS` secret, and unset meant off: on 29 September the site was
+ * live on www.semester.website with every form answering 503, because the
+ * secret named nothing, and then only the old vercel.app address. An unset
+ * or stale secret no longer takes the forms out; it can still add an origin,
+ * never remove one of these, and never open the endpoint to everyone.
+ *
+ * The apex redirects to www, so a form only ever posts from www; the apex is
+ * listed for the day that redirect changes. The vercel.app address is the
+ * project's own and stays until nothing links to it.
+ */
+export const SITE_PRODUCTION_ORIGINS: readonly string[] = [
+  'https://www.semester.website',
+  'https://semester.website',
+  'https://semester-company-site.vercel.app',
+];
+
+/** The origin list this handler reads: the built-in origins, then the secret's. */
+export function siteOriginList(configured: string | undefined): string {
+  return [...SITE_PRODUCTION_ORIGINS, configured ?? ''].join(',');
+}
+
 export interface LeadDeps {
-  /** `SITE_ORIGINS`, comma-separated. Unset turns intake off. */
+  /** `SITE_ORIGINS`, comma-separated. Adds to `SITE_PRODUCTION_ORIGINS`; unset adds nothing. */
   siteOrigins: string | undefined;
   /** The key the IP hash is salted with. Unset turns intake off. */
   ipSalt: string | undefined;
@@ -187,17 +214,18 @@ export function notificationEmail(lead: LeadInput, row: SubmitRow): { subject: s
 
 export async function handleLeadIntake(req: Request, deps: LeadDeps): Promise<Response> {
   const origin = req.headers.get('Origin');
-  const cors = strictCorsHeaders(deps.siteOrigins, origin);
+  const origins = siteOriginList(deps.siteOrigins);
+  const cors = strictCorsHeaders(origins, origin);
   const reply = (status: number, body: unknown, extra: Record<string, string> = {}) =>
     new Response(body === null ? null : JSON.stringify(body), {
       status,
       headers: { ...cors, 'Cache-Control': 'no-store', ...(body === null ? {} : { 'Content-Type': 'application/json' }), ...extra },
     });
 
-  if (!deps.siteOrigins?.trim() || !deps.ipSalt) {
+  if (!deps.ipSalt) {
     return reply(503, { ok: false, error: 'This form is not accepting submissions yet. Please email us instead.' });
   }
-  if (!strictOrigin(deps.siteOrigins, origin)) return reply(403, { ok: false, error: 'This page may not send this form.' });
+  if (!strictOrigin(origins, origin)) return reply(403, { ok: false, error: 'This page may not send this form.' });
   if (req.method === 'OPTIONS') return reply(204, null);
   if (req.method !== 'POST') return reply(405, { ok: false, error: 'Method not allowed.' }, { Allow: 'POST, OPTIONS' });
 
