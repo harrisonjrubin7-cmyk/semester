@@ -137,7 +137,7 @@ describe('the operational reality register', () => {
         if (f.seat) expect(SEATS, `${f.fn} → ${f.seat}`).toContain(f.seat);
         else expect(f.note, f.fn).toMatch(/No seat/);
       }
-      expect(FUNCTIONS.filter((f) => f.seat === null)).toHaveLength(1);
+      expect(FUNCTIONS.filter((f) => f.seat === null)).toHaveLength(0);
     });
 
     it('names only launch-kit modules that exist in the packages', () => {
