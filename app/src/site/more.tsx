@@ -3,6 +3,7 @@ import { CONTACT_EMAIL, type SiteConfig } from './config';
 import { appHref, href } from './Layout';
 import { Cards, Hero, Section, Start } from './pages';
 import { claim } from '../lib/ops/claims';
+import { CORE_MODULES, coreClaimId } from '../lib/ops/modules';
 import { StatusBadge, StatusLegend } from './claims';
 import { AUTHORITIES, AVAILABILITY, BOUNDARIES, DEMO_PATHS, SERVICES, TIERS } from './platform';
 
@@ -104,7 +105,7 @@ export const ServiceMap: Page = ({ config }) => (
       <Flow steps={SERVICES} label="Semester’s services, in order" />
     </Section>
     <Section title="Who decides what" id="sm-authority">
-      <p>Semester coordinates. It does not become the record, the registrar or the instructor.</p>
+      <p>Today Semester coordinates, and is not the record, the registrar or the instructor. Where a school switches a module to Core, which is planned, Semester becomes the record for that module.</p>
       <Cards items={AUTHORITIES} />
     </Section>
     <Section title="Read next" id="sm-next">
@@ -120,32 +121,76 @@ export const ServiceMap: Page = ({ config }) => (
 
 export const SystemBoundaries: Page = ({ config }) => (
   <>
-    <Hero title="System boundaries" lead="Exactly what Semester does in each area, and what remains authoritative somewhere else." />
+    <Hero title="Replacing the stack, module by module" lead="Semester works beside a school’s systems today. Semester Core is the plan to take each one over, one module at a time. None is built yet, and each row says so in the register’s own word." />
+    <Section title="Two modes, one product" id="sb-modes">
+      <Cards
+        items={[
+          ['Semester Connect: today', 'Semester sits beside your systems, shows a student where they stand and prepares the next action. Your systems stay official.'],
+          ['Semester Core: planned', 'For one module at a time, Semester becomes the system of record and the old system is switched off. A school chooses the module and the term.'],
+        ]}
+      />
+      <p className="site-small">
+        The design is that a school switches one module to Core at a time, with a second person’s approval, and that switching back never deletes what Core recorded. That design is not built. Until a module is switched, the system named beside it stays official, and nothing here promises a date.
+      </p>
+    </Section>
     <div className="site-table-wrap">
       <table className="site-table">
-        <caption>What Semester does, and who is official</caption>
+        <caption>Each system Semester Core is planned to take over</caption>
         <thead>
           <tr>
-            <th scope="col">Area</th>
-            <th scope="col">Semester does</th>
-            <th scope="col">Official authority</th>
+            <th scope="col">Module</th>
+            <th scope="col">Status</th>
+            <th scope="col">Products it would replace</th>
+            <th scope="col">Semester today, beside them</th>
+            <th scope="col">In Core, once built</th>
+            <th scope="col">What is missing</th>
           </tr>
         </thead>
         <tbody>
-          {BOUNDARIES.map((b) => (
-            <tr key={b.area}>
-              <th scope="row">{b.area}</th>
-              <td>{b.does}</td>
-              <td>{b.authority}</td>
-            </tr>
-          ))}
+          {CORE_MODULES.map((m) => {
+            const c = claim(coreClaimId(m.id));
+            return (
+              <tr key={m.id} data-claim={c.id}>
+                <th scope="row">{c.claim}</th>
+                <td><StatusBadge c={c} /></td>
+                <td>{m.replaces.join(', ')}</td>
+                <td>{m.connect}</td>
+                <td>{m.core}</td>
+                <td>{m.gap}</td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
-    <Section title="Why it is written down" id="sb-why">
+    <StatusLegend />
+    <Section title="Until a module is switched, who is official" id="sb-official">
+      <p>These are the rows that hold today, in every school. They change only when a school switches the module above to Core.</p>
+      <div className="site-table-wrap">
+        <table className="site-table">
+          <caption>What Semester does today, and who is official</caption>
+          <thead>
+            <tr>
+              <th scope="col">Area</th>
+              <th scope="col">Semester does</th>
+              <th scope="col">Official authority</th>
+            </tr>
+          </thead>
+          <tbody>
+            {BOUNDARIES.map((b) => (
+              <tr key={b.area}>
+                <th scope="row">{b.area}</th>
+                <td>{b.does}</td>
+                <td>{b.authority}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </Section>
+    <Section title="What does not change" id="sb-never">
       <p>
-        A student should never wonder whether a Path Snapshot is a degree audit, and a registrar should never wonder
-        whether Semester registered anyone. It did not. Every fact in the app carries where it came from —{' '}
+        In Core or Connect, the AI never decides a grade, an admission, a financial-aid award or a discipline case, and Semester stores no card number. A person decides, and the record shows who. Every fact in the app carries where it came from —{' '}
         <em>Institution verified</em>, <em>Imported</em>, <em>Student entered</em>, <em>Estimated</em> or{' '}
         <em>Needs review</em> — and a planning estimate is labelled as one wherever it appears.
       </p>

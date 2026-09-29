@@ -33,6 +33,7 @@
 
 import type { Seat } from '../launchreadiness';
 import type { Status as RegisterStatus } from '../masterregister';
+import { CORE_MODULES, coreClaimId } from './modules';
 
 export type ClaimStatus = 'available' | 'limited-beta' | 'institution-configured' | 'built-tested' | 'in-preparation' | 'planned';
 
@@ -600,6 +601,18 @@ export const CLAIMS: readonly Claim[] = [
     evidence: [{ path: 'app/src/lib/statuspage.test.ts', shows: 'The page probes the same project the app is built against' }],
     rows: [],
   },
+  // ── Semester Core, module by module (D-145) ──
+  ...CORE_MODULES.map((m): Claim => ({
+    id: coreClaimId(m.id),
+    claim: `${m.name}: Semester Core is planned to replace ${m.replaces.slice(0, 3).join(', ')}`,
+    scope: `${m.gap} Until a school switches this module to Core, Semester works beside its system and that system stays official.`,
+    status: 'planned',
+    owner: 'product',
+    pages: ['/platform/system-boundaries/'],
+    audiences: ['institutions'],
+    evidence: [{ path: 'app/src/lib/ops/modules.ts', shows: 'What this module would do in Core, what it does today, and that none of it is built' }],
+    rows: m.rows,
+  })),
 ];
 
 export function claim(id: string): Claim {

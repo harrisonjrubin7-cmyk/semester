@@ -2888,3 +2888,39 @@ writes down what the edition is, and puts it on the site without offering it.
   `districtReady()`, and the page prints its answer. Today that is no.
 - **`/k-12/`** says no district or school uses Semester today, and the site
   test holds it there.
+
+## D-145 · Semester becomes the system of record for a school, one module at a time, and the site says so with the register's word beside each module
+
+**Decided by owner 29 Sep 2026** ("yes, start S2", to the recommendation that
+the product keep today's Connect and add Core). Until now the site said
+"Semester does not replace your SIS, degree audit or official records", and the
+briefs held that to be a rule. The owner's direction is the opposite end state:
+a school runs on Semester.
+
+- **Two modes, one product.** *Semester Connect* is today: it works beside a
+  school's systems, reads from them and prepares the next action. *Semester
+  Core* is the plan for Semester to be the system of record for one module,
+  the old system switched off, module by module and term by term. Core is not
+  built: no mode switch, assignment, submission, grade, attendance, enrolment
+  or ledger table exists, and no school has switched anything.
+- **Fourteen modules, one list.** `lib/ops/modules.ts` names each system a
+  school runs today, what Semester does beside it now, what Core would do and
+  what is missing. `claims.ts` builds one claim per module from it
+  (`core-<id>`), and every claim is *Planned*, held to a master-register row.
+  The site prints that word; a module cannot be shown as available in Core
+  while its claim is not (`modules.test.ts` raises one and watches it refused).
+- **What the site now says.** `/platform/system-boundaries/` is the replacement
+  map (the route is unchanged, so links and the sitemap still work); the
+  company site's "What Semester does not do" and system-boundaries pages carry
+  the same fourteen rows, copied from `modules.ts` between two markers that
+  `npm run registers` rewrites. The rows of who is official today stay, under
+  the map, because they are still true in every school.
+- **What did not change.** The AI never decides a grade, an admission, an aid
+  award or a discipline case, and Semester stores no card number, in either
+  mode. The `OVERCLAIMS` test still refuses "Semester replaces your SIS" in the
+  present tense: the site may say what is planned and label it planned, and
+  may not say a system is replaced before it is.
+- **Not done here.** Recording the same decision in `STRATEGIC-EXPANSION-
+  REGISTER.md` (direct registration writes remain Tier 4 there), a DO-NOT-BUILD
+  rule that no Core module ships without row-level-security tests, and the mode
+  switch itself, are the Core brief's Prompts 1 and 2.
