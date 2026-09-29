@@ -2716,6 +2716,15 @@ standing is held to the kind of file it cites.
   form, and the support page's business-day support, customer-success
   manager and critical-period cover, now say one person reads everything and
   no time is promised. The policy-versions table lists the drafts.
+- **No reply time is promised anywhere on the company site.** The reporting
+  center gave eight report types an owner seat nobody else holds and a one-
+  to three-day target; every form printed a reply target from a table of
+  hours, the contact directory listed one per topic, the security form
+  promised acknowledgement within 24 hours and the privacy form within 72,
+  and the disclosure page within two business days. `SECURITY.md` already
+  refuses an acknowledgement number while one person reads the mailbox; the
+  site now says the same everywhere, keeps the same-day action on a critical
+  security issue, and says no independent advisor is appointed.
 - **Not written here, because the repository cannot write them:** the MSA,
   counsel's review of every policy, a VPAT, customer data migration, and
   anything with an institution's name on it. Each is a row that says so.
