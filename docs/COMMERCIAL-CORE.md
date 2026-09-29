@@ -141,11 +141,19 @@ role's alone; nothing is callable by a visitor or a signed-in account.
    written `review_state = 'pending_review'`: a person marks it reviewed or
    dismissed before it drives any outreach.
 
-## Off until the owner sets these
+## Secrets: what is off until they are set, and what is not
 
-Nothing charges anyone, and no form is accepted, until these are set as Edge
-Function secrets (Dashboard → Edge Functions → Secrets). Until then the three
-functions answer 503 with a plain sentence.
+Nothing charges anyone until the Stripe secrets are set as Edge Function
+secrets (Dashboard → Edge Functions → Secrets). Until then `billing-checkout`
+and `billing-webhook` answer 503 with a plain sentence.
+
+`lead-intake` is different: it is **on** as soon as it is deployed. The site's
+own origins are built in (`SITE_PRODUCTION_ORIGINS`) and the IP salt defaults
+to the service key, so a form sent from www.semester.website is stored with no
+secret set at all. What stays off is the email: without `RESEND_API_KEY` and
+`LEAD_NOTIFY_EMAIL`, leads accumulate in `site_leads` (and the institutional
+and procurement tables) and nobody is told. Set those two, or read the tables,
+or leads go unanswered.
 
 | Secret | Function | What it does |
 | --- | --- | --- |

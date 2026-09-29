@@ -500,7 +500,13 @@ the expected result of that run is no row, not a failed job; the first
 snapshot follows the first signed order form. The catalog seeded as the
 migration wrote it: nine plans, nine prices, thirteen `cta_routes`.
 
-## Live on merge, off until configured: `lead-intake`
+## Live on merge, and on from the first deploy: `lead-intake`
+
+It no longer waits for a secret. The site's origins are built in and the
+salt defaults to the service key, so forms from www.semester.website are
+stored as soon as this is deployed. Only the owner's email is off until
+`RESEND_API_KEY` and `LEAD_NOTIFY_EMAIL` are set: until then leads collect
+in the database with nobody told.
 
 The company site's forms post here:
 `POST https://<project-ref>.supabase.co/functions/v1/lead-intake`. The contract
