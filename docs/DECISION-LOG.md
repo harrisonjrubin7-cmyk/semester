@@ -2457,7 +2457,45 @@ never their own evidence.
   Fixing the weights and scoring a provider are the owner's; neither is made
   here.
 
-## D-132 · The AI providers are scored from their own documentation, and model quality has an evaluation set that has not yet been run
+## D-132 · Cancelling Plus reaches Stripe, and financial records are kept seven years
+
+**Decided by owner 29 Sep 2026.** D-128 left two things open before a live
+key: a cancellation that stopped at Semester's own record, and no retention
+period for payment records. The owner asked for both.
+
+- **Cancel reaches Stripe.** `supabase/functions/billing-cancel` (rules in
+  `_shared/billingcancel.ts`, driven by `app/src/lib/billing/cancel.test.ts`)
+  finds the caller's own live subscription *as the caller*, sets
+  `cancel_at_period_end=true` on the Stripe subscription with an idempotency
+  key per subscription, and only then calls `request_cancellation()` — also as
+  the caller, so whose subscription it is stays decided in one place. No
+  service key. If Stripe refuses, nothing is recorded and the person is told
+  they are still subscribed; if the record lags, the webhook's
+  `customer.subscription.updated` applies it. Before this, a cancellation
+  recorded only here would have been reverted by the next such event, and
+  Stripe would have renewed. The Membership panel calls the function, never
+  the bare RPC, and now says "you will not be charged again" because it is
+  true. A `provider_ref` that is not a Stripe subscription id is never put in
+  Stripe's path.
+- **Seven years after the end of the year a record was made.** The owner chose
+  it over six and ten: the IRS's longest ordinary look-back is six years, and
+  a year's margin. `purge_financial_records()`
+  (`20260929130000_financial_retention.sql`) removes, for **individual**
+  billing accounts only, finished subscriptions and their checkouts, invoices,
+  payment events and refunds past that line, and an emptied account whose
+  owner already deleted theirs. A live subscription is never removed;
+  institutional records follow their contract. It runs monthly
+  (`commercial-financial-retention`) and removes nothing before 1 January 2034.
+- **Two things `financial-retention.check.sql` caught on its first run.** A
+  completed checkout must name its subscription, so checkouts are removed
+  first; and payment events and dunning actions refuse every update and
+  delete. `refuse_commercial_rewrite()` now lets a *delete* through only
+  inside the purge's own transaction (a transaction-local mark it sets and
+  clears); an update is still refused for everybody, and payment events are
+  removed before their invoices so none is ever updated.
+- **Not changed:** who may read or write any billing table; the webhook.
+
+## D-133 · The AI providers are scored from their own documentation, and model quality has an evaluation set that has not yet been run
 
 **Decided 29 Sep 2026.** D-131 put every AI party on the vendor scorecard and
 scored none, because no provider terms were on file. The owner asked for the
