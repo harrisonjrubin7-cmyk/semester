@@ -2842,3 +2842,27 @@ K–12 edition behind it. This is its first prerequisite.
 - **Not settled here.** Counsel has not reviewed the terms' minimum age, and a
   district's own data rules are the next decision's.
 
+
+## D-140 · The K–12 edition waits on sixteen baseline items, and a district's student data is refused until every one is tested
+
+**Decided 29 Sep 2026, by the owner.** With the minimum age set (D-139), the
+owner asked for the full K–12 edition. Two briefs of 29 September set the
+gate: the feature benchmark's list of sixteen things to have before accepting
+student data from a district, and the compliance playbook's K–12 note. This
+decision writes that gate down before any of the edition exists.
+
+- **K–12 here means 13 and over:** in practice high school, early college and
+  career and technical education. Nothing younger is served, whatever a
+  district asks.
+- **The baseline is data.** `app/src/lib/k12/requirements.ts` holds the
+  sixteen items (KB-01 to KB-16), each with a status the tree can show and
+  its evidence, and renders `docs/k12/K12-REQUIREMENTS.md`. Today 11 are
+  tested, 1 is building (a district-controlled AI policy) and 4 are
+  designed: the district data-privacy agreement, the guardian consent
+  approach, accessibility documentation and the security questionnaire
+  package.
+- **One question, one answer.** `districtReady()` answers "may a district's
+  student data be accepted?" and is false while any item is short of tested.
+  It is false today, and the edition asks it before anything else.
+- **What only counsel can answer** is listed with the baseline items each
+  answer would move, so the review is a list, not a conversation.
