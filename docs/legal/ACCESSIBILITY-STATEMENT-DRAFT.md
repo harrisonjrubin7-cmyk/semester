@@ -5,9 +5,9 @@
 > ([`app/src/a11y/`](../../app/src/a11y/),
 > [`WCAG-UI-AUDIT-SCORECARD.md`](../WCAG-UI-AUDIT-SCORECARD.md)). It must not
 > claim conformance: no manual assistive-technology review has been done.
-> **The company site currently promises a one-day response target and a
-> staffed report form**; nothing staffs them, and that copy must match this
-> statement before either is published. Every `[DECIDE: …]` is a question only
+> The company site promised a one-day response target and a staffed report
+> form until 29 September; it now says the founder reads every report and no
+> time is promised, as this statement does. Every `[DECIDE: …]` is a question only
 > the owner or counsel can answer.
 
 **Date of this statement:** [DECIDE]

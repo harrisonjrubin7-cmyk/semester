@@ -2709,6 +2709,13 @@ standing is held to the kind of file it cites.
   and a five-day target; no process, agent or owner exists. It now says the
   policy is drafted and not in force, and names the email address a person
   reads meanwhile.
+- **The company site's other overclaims are corrected to the code.** Its
+  cookie copy and preference toggles described sign-in and marketing cookies
+  nothing sets; it now says no cookie is set and describes the campaign tags
+  a form carries. The accessibility center's one-day target and "staffed"
+  form, and the support page's business-day support, customer-success
+  manager and critical-period cover, now say one person reads everything and
+  no time is promised. The policy-versions table lists the drafts.
 - **Not written here, because the repository cannot write them:** the MSA,
   counsel's review of every policy, a VPAT, customer data migration, and
   anything with an institution's name on it. Each is a row that says so.

@@ -640,12 +640,12 @@ Each word the brief says must not outrun its evidence, and the rows of [`ops/cla
 | Community Guidelines | [`docs/legal/COMMUNITY-GUIDELINES-DRAFT.md`](legal/COMMUNITY-GUIDELINES-DRAFT.md) | Draft; published only when a school turns Community on. |
 | Copyright / DMCA process | [`docs/legal/COPYRIGHT-AND-TAKEDOWN-POLICY-DRAFT.md`](legal/COPYRIGHT-AND-TAKEDOWN-POLICY-DRAFT.md) | Draft; no designated agent is registered. |
 | AI Policy | [`docs/legal/AI-USE-POLICY-DRAFT.md`](legal/AI-USE-POLICY-DRAFT.md) | Draft; the training policy prevails where they differ. |
-| Cookie / analytics policy | [`docs/legal/COOKIE-AND-STORAGE-NOTICE-DRAFT.md`](legal/COOKIE-AND-STORAGE-NOTICE-DRAFT.md) | Draft; no cookie is set. The company site’s cookie copy contradicts it. |
+| Cookie / analytics policy | [`docs/legal/COOKIE-AND-STORAGE-NOTICE-DRAFT.md`](legal/COOKIE-AND-STORAGE-NOTICE-DRAFT.md) | Draft; no cookie is set, and the company site now says so. |
 | Accessibility Statement | [`docs/legal/ACCESSIBILITY-STATEMENT-DRAFT.md`](legal/ACCESSIBILITY-STATEMENT-DRAFT.md) | Draft; claims no conformance. |
 | Security contact and responsible disclosure | [`SECURITY.md`](../SECURITY.md) | Published, with security.txt. |
 | Subprocessor Register | [`docs/SUBPROCESSORS.md`](SUBPROCESSORS.md) | In progress. |
 | Data Retention and Deletion Policy | [`docs/legal/DATA-RETENTION-AND-DELETION-POLICY-DRAFT.md`](legal/DATA-RETENTION-AND-DELETION-POLICY-DRAFT.md) | Draft; RETENTION.md prevails. |
-| Support Policy | [`docs/legal/SUPPORT-POLICY-DRAFT.md`](legal/SUPPORT-POLICY-DRAFT.md) | Draft; the company site’s /support-policy promises more. |
+| Support Policy | [`docs/legal/SUPPORT-POLICY-DRAFT.md`](legal/SUPPORT-POLICY-DRAFT.md) | Draft; the company site’s /support-policy now matches it. |
 | Incident Response Summary | [`docs/legal/INCIDENT-RESPONSE-SUMMARY-DRAFT.md`](legal/INCIDENT-RESPONSE-SUMMARY-DRAFT.md) | Draft; the procedure is unexercised. |
 | Advertising and Sponsorship Policy | [`docs/legal/ADVERTISING-AND-SPONSORSHIP-POLICY-DRAFT.md`](legal/ADVERTISING-AND-SPONSORSHIP-POLICY-DRAFT.md) | Draft. |
 

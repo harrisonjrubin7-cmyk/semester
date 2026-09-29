@@ -3,10 +3,10 @@
 > **Not in force. Not reviewed by a lawyer.** A working draft for counsel,
 > written from the code: nothing in the app, the app's site or the company
 > site sets a cookie, and neither loads a script from another origin.
-> **The company site currently says otherwise** — its privacy copy mentions
-> sign-in cookies and marketing-attribution cookies, and its preferences panel
-> offers toggles for both; neither exists. That copy must be corrected, or the
-> cookies built and this notice rewritten, before either is published. Every
+>
+> The company site said otherwise until 29 September — sign-in and
+> marketing-attribution cookies, with toggles for both — and was corrected to
+> match this notice. Any cookie added later changes this notice first. Every
 > `[DECIDE: …]` is a question only the owner or counsel can answer.
 
 **Effective date:** [DECIDE]
@@ -32,7 +32,11 @@ own storage, where only Semester's pages can read it:
 | Offline cache | The app's files and media, so it works offline | Until the app updates or you clear site data |
 
 On the company site, your choices on its preferences panel and your progress
-on its checklists are kept in local storage on your device.
+on its checklists are kept in local storage on your device. For each visit it
+also keeps, in session storage, the campaign tags in the page address (if
+any), the page you landed on, and the address of the site that linked you
+there; these are sent only with a form you choose to send, and are gone when
+the tab closes.
 
 ## 3. Analytics
 

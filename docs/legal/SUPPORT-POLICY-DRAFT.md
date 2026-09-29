@@ -1,10 +1,9 @@
 # Semester Support Policy — DRAFT
 
 > **Not in force. Not reviewed by a lawyer.** A working draft, written from
-> what exists today. **The company site's /support-policy page promises more**
-> — business-day email support, an escalation path through a customer-success
-> manager, and 24/7 cover "once on-call is staffed"; none of that is staffed.
-> That page must match this draft before either is published. Commitments to
+> what exists today. The company site's /support-policy page promised
+> business-day support, a customer-success manager and critical-period cover
+> until 29 September; it now says what this draft says. Commitments to
 > schools belong in their contracts and the [SLA outline](../trust/SLA.md), not
 > here. Every `[DECIDE: …]` is a question only the owner or counsel can answer.
 
