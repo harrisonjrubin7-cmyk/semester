@@ -13,6 +13,8 @@ import { Blueprint } from './Blueprint';
 const RegistrationDayCard = lazy(() => import('./RegistrationDayCard').then((m) => ({ default: m.RegistrationDayCard })));
 const CrunchWeekCard = lazy(() => import('./CrunchWeekCard').then((m) => ({ default: m.CrunchWeekCard })));
 const OfficeActionsToday = lazy(() => import('./OfficeActionsToday').then((m) => ({ default: m.OfficeActionsToday })));
+// Plus, offered at the foot of the briefing to a signed-in student on Free.
+const PlusPrompt = lazy(() => import('./PlusPrompt').then((m) => ({ default: m.PlusPrompt })));
 const TodayActionCenter = lazy(() => import('./TodayActionCenter').then((m) => ({ default: m.TodayActionCenter })));
 import { ActionButton, Meter, SectionLabel } from './ui';
 import { goMine } from '../lib/openmine';
@@ -81,6 +83,11 @@ export function TodayDecisionSurface({
   // and renders nothing unless the window is close or the student asked.
   // The Crunch Week Forecast (Phase E) sits with it, and renders nothing
   // unless a crunch is coming.
+  const plus = student ? (
+    <Suspense fallback={null}>
+      <PlusPrompt />
+    </Suspense>
+  ) : null;
   const registration = (registrationDay || crunchWeek) && student ? (
     <Suspense fallback={null}>
       {registrationDay ? <RegistrationDayCard /> : null}
@@ -94,6 +101,7 @@ export function TodayDecisionSurface({
         <Suspense fallback={null}>
           <TodayActionCenter registrationDay={registrationDay} officeActions={officeActions} officeAccountId={officeAccountId} />
         </Suspense>
+        {plus}
       </>
     );
   }
@@ -106,6 +114,7 @@ export function TodayDecisionSurface({
         </Suspense>
       ) : null}
       <DecisionBriefing />
+      {plus}
     </>
   );
 }
