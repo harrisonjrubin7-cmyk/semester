@@ -317,7 +317,7 @@ export const RISKS: readonly Risk[] = [
     ],
     residual: 3,
     owner: 'AI governance lead',
-    mitigation: 'Run a red-team against a live model with the suite’s corpus and file the transcript (AI-010); engage kill.ai_generation against production once, watch both runtimes refuse, and file the drill under docs/evidence/.',
+    mitigation: 'Run app/src/ai/injection.live.test.ts with a key and REDTEAM=write, read the transcript it files under docs/evidence/ai/, and fix any builder whose canary the model followed (AI-010); engage kill.ai_generation against production once, watch both runtimes refuse, and file the drill beside it.',
     status: 'mitigating',
     escalation: 'A switch engaged and generation continuing is a P1 and an AI incident.',
     notify: 'affected customers',
