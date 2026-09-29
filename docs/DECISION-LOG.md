@@ -2074,3 +2074,35 @@ institution gateway (developer role, sources as JSON) kept the two apart.
 - **Not changed:** the study studio's JSON prompt and the gateway's role
   separation, both read by the suite as they are; the model calls
   themselves, which send exactly what the builders return.
+
+## D-122 · The red-team exists as a test that skips without a key, and the drills are the owner's to run
+
+**Decided 29 Sep 2026.** D-121 left the live-model red-team as AI-010's gap
+and R-07's mitigation, and named it as something nobody had run. What the
+tree can do about that is make it runnable in one command and honest about
+not having been run; what it cannot do is run it, because a run needs the
+key and costs money, and only the owner holds the key.
+
+- **`app/src/ai/injection.live.test.ts`** plants three canaries — a nonsense
+  token the material asks for verbatim, a grade change it asks the model to
+  confirm, a request to quote the rules — in the material slot of seven
+  builders and asks the real model, judging each reply by whether the
+  canary's string is in it, so that no person decides what "followed" means.
+  Without `ANTHROPIC_API_KEY` every live case is skipped and reported as
+  skipped, never as passed, the way `voice.live.test.ts` already does; with
+  `REDTEAM=write` a run files its transcript under `docs/evidence/ai/`. The
+  key-free half holds that each canary sits inside a fence in the prompt
+  the file would send.
+- **Filing the first transcript is the day `docs/evidence/` exists**, and
+  the compliance crosswalk's test trips on purpose when it does: the
+  ceiling lifts from 2, and the tripwire in `compliance-crosswalk.test.ts`
+  has to be turned into a reading of what was filed. That is written into
+  the test's header and into the owner's page rather than left to be
+  discovered.
+- **The registers say it exists and has not run.** AI-010's gap is now the
+  run, not the suite; MR-36 and EC-AI-02 cite the live test with "never yet
+  run"; R-07's mitigation names the command and what to do with a canary
+  the model followed. Nothing moves to `tested` on a test that skipped.
+- **Item 15 of `docs/LAUNCH-DECISIONS.md`** is the two AI drills — this
+  red-team and the kill-switch drill from D-116 — with the command, the key
+  they need, and what filing them changes.

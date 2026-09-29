@@ -72,7 +72,7 @@ engine, billing, a live SIS), and the note says which.
 | ID | Case | Guard | What it proves, and what it does not |
 | --- | --- | --- | --- |
 | EC-AI-01 | AI source permission is revoked during generation. **(important)** | owed | Source access is checked before retrieval at the gateway, not during a stream. |
-| EC-AI-02 | Prompt injection embedded in an uploaded document. | `app/src/ai/injection.test.ts` | Structural: twelve injection-shaped texts through every prompt builder stay inside a fence and leave the instructions byte-for-byte unchanged. It does not test what a live model does with the fence; that red-team is AI-010’s remaining gap. |
+| EC-AI-02 | Prompt injection embedded in an uploaded document. | `app/src/ai/injection.test.ts` | Structural: twelve injection-shaped texts through every prompt builder stay inside a fence and leave the instructions byte-for-byte unchanged. It does not test what a live model does with the fence; app/src/ai/injection.live.test.ts does, with a key, and has not been run — AI-010’s remaining gap. |
 | EC-AI-03 | AI cites a stale or retracted source. | owed | Citations point at the student's own sources; nothing marks one retracted. |
 | EC-AI-04 | Provider outage or a safety-filter false positive. | `app/src/ai/helpstate.test.tsx` | An unreachable gateway is named to the student with a retry, and the local assistant answers when no gateway is configured. A safety-filter refusal is not distinguished from an outage. |
 | EC-AI-05 | Course policy changes while a conversation remains open. | owed | Policy is read when a conversation is assembled, not on every turn. |
