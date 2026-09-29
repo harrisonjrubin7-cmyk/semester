@@ -177,9 +177,16 @@ so every migration on main is applied; the direct rate-limit trigger is on
 fourteen tables (the go-live checklist's line now says so); and `cron.job`
 lists eighteen jobs, fifteen active, with `push`, `media-scan` and
 `escalation-delivery` inactive, as `supabase/DEPLOY.md` expects until each
-is keyed. The plan tier, the backup schedule, its retention and PITR were
-still not readable that way: a database connection cannot see the dashboard.
-They stay the owner's reading, for the table below.
+is keyed. The organization record, read the same afternoon through the same
+connector, says the plan is **Pro** (pay-as-you-go), which on Supabase's own
+backups page means daily backups with the last seven days accessible and
+point-in-time recovery only as a paid add-on; and `pg_settings` shows WAL
+archiving on (`archive_mode` on, WAL-G `wal-push`, `archive_timeout` 120 s),
+which is the mechanism the physical daily backup and PITR both use, so it
+says nothing about whether the add-on is bought. The backup schedule as the
+Backups page shows it, whether PITR is on and its retention were still not
+readable that way: a database connection cannot see the dashboard. They stay
+the owner's reading, for the table below.
 
 ### The procedure, for the owner
 
