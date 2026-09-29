@@ -39,7 +39,9 @@ const write = vi.fn<(w: unknown[]) => Promise<boolean>>();
 
 vi.mock('./db', async () => {
   const real = await vi.importActual<typeof import('./db')>('./db');
-  return { ...real, open: vi.fn(async () => ({}) as unknown), write: (w: unknown[]) => write(w) };
+  // `held` too: `load` now checks the handle is still there after the first
+  // run's write, and this file's database never lets go of it.
+  return { ...real, open: vi.fn(async () => ({}) as unknown), held: () => true, write: (w: unknown[]) => write(w) };
 });
 
 /*

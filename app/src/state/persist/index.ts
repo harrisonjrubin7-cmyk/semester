@@ -21,7 +21,7 @@
  * and all.
  */
 
-import { readAll, isEmpty, open, write, MAPS_STORE, SETTINGS_STORE, type Write } from './db';
+import { readAll, isEmpty, held, open, write, MAPS_STORE, SETTINGS_STORE, type Write } from './db';
 import { COLLECTIONS, MAPS, SETTINGS, idOf } from './shape';
 import { readIncoming } from '../../lib/stored';
 import { migrate, versionOf } from '../../lib/migrate';
@@ -58,9 +58,17 @@ export const FIRST_DB_SCHEMA = 3;
 
 let ready = false;
 
-/** Whether the database opened. False means the app is on the old path. */
+/**
+ * Whether the database opened and is still answering. False means the app is
+ * on the old path.
+ *
+ * Both halves. `ready` is what `load` found; `held` is whether `db.ts` still
+ * has the handle, which it lets go of when a transaction hits its limit. With
+ * only the first, a stall after load left the app choosing a database that
+ * could no longer take a write, for the rest of the session.
+ */
 export function available(): boolean {
-  return ready;
+  return ready && held();
 }
 
 /**
@@ -70,19 +78,24 @@ export function available(): boolean {
  * `loadPersisted` does — a field the database has never heard of takes its
  * default rather than becoming undefined halfway down a screen.
  */
-async function readEverything(): Promise<Partial<Persisted>> {
+async function readEverything(): Promise<Partial<Persisted> | null> {
   const out: Record<string, unknown> = {};
 
   for (const key of COLLECTIONS) {
     const rows = await readAll(key);
+    if (rows === null) return null;
     if (rows.length > 0) out[key] = rows.map(([, value]) => value);
   }
 
-  for (const [key, value] of await readAll(MAPS_STORE)) {
+  const maps = await readAll(MAPS_STORE);
+  if (maps === null) return null;
+  for (const [key, value] of maps) {
     if (MAPS.includes(key as keyof Persisted)) out[key] = value;
   }
 
-  for (const [key, value] of await readAll(SETTINGS_STORE)) {
+  const settings = await readAll(SETTINGS_STORE);
+  if (settings === null) return null;
+  for (const [key, value] of settings) {
     if (key === MIGRATED) continue;
     if (SETTINGS.includes(key as keyof Persisted)) out[key] = value;
   }
@@ -165,15 +178,34 @@ async function migrateFromLocalStorage(): Promise<FirstRun> {
  * Open the database, migrate if this is the first run, and read.
  *
  * Returns null when the database is unavailable, which is the caller's signal
- * to stay on localStorage.
+ * to stay on localStorage. Unavailable includes a database that opened and
+ * then did not answer: a read that hits its limit is `null` rather than an
+ * empty store, and the whole load falls back rather than migrating an account
+ * onto a handle that has just been dropped.
  */
 export async function load(): Promise<Persisted | null> {
   const db = await open(COLLECTIONS as string[]);
   if (!db) return null;
   ready = true;
 
-  if (await isEmpty()) {
+  /*
+   * The database stopped answering under the load. `db.ts` has let go of the
+   * handle, and whatever this had read or written is not to be trusted as an
+   * account: the caller stays on localStorage, exactly as if the open had
+   * never answered.
+   */
+  const lost = (): null => {
+    ready = false;
+    return null;
+  };
+
+  const empty = await isEmpty();
+  if (empty === null) return lost();
+  if (empty) {
     const first = await migrateFromLocalStorage();
+    // The move's own write can be the transaction that stalls. Read as
+    // `incomplete`, that handed a returning student `freshPersisted()`.
+    if (!held()) return lost();
     if (first.kind === 'moved') return first.state;
     /*
      * A genuinely new account has nothing to migrate and nothing to read —
@@ -213,6 +245,7 @@ export async function load(): Promise<Persisted | null> {
   }
 
   const found = await readEverything();
+  if (found === null || !held()) return lost();
   // The database path never goes near `loadPersisted` — the value is primed
   // before the reducer's initialiser runs, so its field rules are not in the
   // way. The third door, through the same reader as the other two. See
