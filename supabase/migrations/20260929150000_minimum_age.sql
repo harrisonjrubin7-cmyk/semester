@@ -20,9 +20,11 @@
 -- The birth date is removed from the account's metadata as soon as it is
 -- read.
 --
--- An account that never stated an age (created before this, or by a
--- provider, institution SSO or LTI) is not a known minor. The app asks those
--- accounts once; `public.state_my_age` takes the answer and never a second.
+-- An account that never stated an age (created before this, or by Google,
+-- Microsoft, Apple, institution SSO or LTI) is not cleared: the owner chose to
+-- ask, then gate. It keeps everything that is its own and is kept out of
+-- everything a minor is kept out of until it answers. The app asks it once;
+-- `public.state_my_age` takes the answer and never a second.
 -- `student_context.is_minor`, which the owner can set, can only make the
 -- rules stricter: it is read as minor, never as adult.
 
@@ -59,11 +61,30 @@ as $$
   );
 $$;
 revoke all on function private.is_minor(uuid) from public;
+-- No client role calls it: every caller is a security definer function or
+-- trigger running as its owner. The grants check refuses a grant nothing needs.
+
+-- Has this account said it is 13 or over and 18 or over today? An account
+-- that never said — made through Google, Microsoft or Apple, or before the age
+-- was asked — is not cleared: the owner chose to ask, then gate (D-136), so
+-- it is kept out of everything a minor is kept out of until it answers.
+create or replace function private.age_cleared(who uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select who is not null
+     and exists (select 1 from private.account_ages a where a.user_id = who)
+     and not private.is_minor(who);
+$$;
+revoke all on function private.age_cleared(uuid) from public;
 -- The classmate and study-match read policies at the end of this file call it
 -- as whoever reads, signed in or not, so both roles may execute it — as they
 -- may `private.classmate`, which the same policy calls. It answers only yes or
 -- no about one account, never the date.
-grant execute on function private.is_minor(uuid) to anon, authenticated;
+grant execute on function private.age_cleared(uuid) to anon, authenticated;
 
 -- A confirmed account: what `verified_student` meant before this. Reporting
 -- and sharing with a guardian use it, because a minor must be able to do both.
@@ -84,9 +105,9 @@ $$;
 revoke all on function private.verified_account() from public;
 grant execute on function private.verified_account() to anon, authenticated;
 
--- A confirmed account that is not a minor. Every policy and function that
--- lets one person be found by, matched with, message or be seen by another
--- already asks this, so the rule is one line.
+-- A confirmed account that has said it is 18 or over. Every policy and
+-- function that lets one person be found by, matched with, message or be seen
+-- by another already asks this, so the rule is one line.
 create or replace function private.verified_student()
 returns boolean
 language sql
@@ -94,7 +115,7 @@ stable
 security definer
 set search_path = ''
 as $$
-  select private.verified_account() and not private.is_minor((select auth.uid()));
+  select private.verified_account() and private.age_cleared((select auth.uid()));
 $$;
 revoke all on function private.verified_student() from public;
 grant execute on function private.verified_student() to anon, authenticated;
@@ -337,17 +358,17 @@ begin
     -- A request is refused when it is made and again when it is accepted, so
     -- one sent before anybody said their age cannot become a relationship.
     when 'mentor_requests'    then (tg_op = 'INSERT' or r ->> 'status' = 'accepted')
-                                   and (private.is_minor((r ->> 'requester')::uuid) or private.is_minor((r ->> 'recipient')::uuid))
+                                   and not (private.age_cleared((r ->> 'requester')::uuid) and private.age_cleared((r ->> 'recipient')::uuid))
     when 'connections'        then (tg_op = 'INSERT' or r ->> 'state' = 'accepted')
-                                   and (private.is_minor((r ->> 'requester')::uuid) or private.is_minor((r ->> 'addressee')::uuid))
-    when 'study_match_optins' then private.is_minor((r ->> 'user_id')::uuid)
-    when 'talent_profiles'    then coalesce((r ->> 'opted_in')::boolean, false) and private.is_minor((r ->> 'user_id')::uuid)
-    when 'peer_mentor_offers'   then coalesce((r ->> 'active')::boolean, true) and private.is_minor((r ->> 'user_id')::uuid)
-    when 'alumni_mentor_offers' then coalesce((r ->> 'active')::boolean, true) and private.is_minor((r ->> 'user_id')::uuid)
+                                   and not (private.age_cleared((r ->> 'requester')::uuid) and private.age_cleared((r ->> 'addressee')::uuid))
+    when 'study_match_optins' then not private.age_cleared((r ->> 'user_id')::uuid)
+    when 'talent_profiles'    then coalesce((r ->> 'opted_in')::boolean, false) and not private.age_cleared((r ->> 'user_id')::uuid)
+    when 'peer_mentor_offers'   then coalesce((r ->> 'active')::boolean, true) and not private.age_cleared((r ->> 'user_id')::uuid)
+    when 'alumni_mentor_offers' then coalesce((r ->> 'active')::boolean, true) and not private.age_cleared((r ->> 'user_id')::uuid)
     else false
   end;
   if refuse then
-    raise exception 'semester: not available to a student under 18' using errcode = 'insufficient_privilege';
+    raise exception 'semester: not available under 18, or before an age is stated' using errcode = 'insufficient_privilege';
   end if;
   return new;
 end $$;
@@ -374,19 +395,19 @@ create trigger refuse_for_minors before insert or update of active on public.alu
 
 -- ── What others can already see ───────────────────────────────────────────
 --
--- A minor's classmate profile and study-match opt-in are hidden from everyone
--- but the minor, however the account came to be a minor. The two policies are
+-- The classmate profile and study-match opt-in of a minor, or of an account
+-- that has not said its age, are hidden from everyone but its owner. The two policies are
 -- `20260901000200_classmates.sql`'s and `20260926150000`'s, with that one
 -- clause added.
 
 drop policy if exists "profiles are visible to classmates" on public.profiles;
 create policy "profiles are visible to classmates" on public.profiles
   for select
-  using ((select auth.uid()) = user_id or (private.classmate(user_id) and not private.is_minor(user_id)));
+  using ((select auth.uid()) = user_id or (private.classmate(user_id) and private.age_cleared(user_id)));
 
 drop policy if exists "opted-in classmates see each other" on public.study_match_optins;
 create policy "opted-in classmates see each other" on public.study_match_optins
   for select using (
     user_id = (select auth.uid())
-    or (expires_at > now() and private.opted_into_match(tenant_id, course_code, section) and not private.is_minor(user_id))
+    or (expires_at > now() and private.opted_into_match(tenant_id, course_code, section) and private.age_cleared(user_id))
   );

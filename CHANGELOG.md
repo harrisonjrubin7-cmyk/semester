@@ -34,8 +34,11 @@ requests, being listed as a mentor, connections, study matching and the talent
 profile — stay off until your 18th birthday. Plans, courses, study work, reports and sharing with a
 parent or guardian work as usual.
 
-If your account was made before this, the Account screen asks once for your
-date of birth. It is asked once and cannot be changed afterwards.
+If you signed in with Google, Microsoft or Apple, or your account was made
+before this, a line under the header asks for your date of birth, once.
+Until you answer, classmates, community, matching and mentoring stay off;
+your own plans, courses and study work are unaffected. It cannot be changed
+afterwards, and the date itself is not kept.
 
 Nothing else to do.
 

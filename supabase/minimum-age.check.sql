@@ -23,6 +23,9 @@
 --   How to run it: supabase/check.sh minimum-age
 
 begin;
+-- This suite tests the age rules themselves, so it turns off check.sh's
+-- fixture that records every other suite's accounts as adults.
+set local semester.fixture_age = 'off';
 
 create or replace function pg_temp.become(who uuid)
 returns void language plpgsql as $$
@@ -78,7 +81,7 @@ end $$;
 
 do $$
 declare
-  nobody uuid; young uuid; teen uuid; adult uuid; parent uuid; unsaid uuid; child_later uuid; self_said uuid; flip uuid;
+  nobody uuid; young uuid; teen uuid; adult uuid; parent uuid; unsaid uuid; child_later uuid; self_said uuid; flip uuid; grown uuid;
   n bigint;
   o text;
 begin
@@ -115,9 +118,15 @@ begin
   perform pg_temp.answered('and sees their standing as adult', public.my_age_status(), 'adult');
   reset role;
   perform pg_temp.become(nobody);
-  perform pg_temp.answered('an account that never said is not a known minor', private.verified_student()::text, 'true');
+  perform pg_temp.answered('an account that never said is kept out until it does', private.verified_student()::text, 'false');
+  perform pg_temp.answered('but is still a verified account', private.verified_account()::text, 'true');
   perform pg_temp.answered('and sees its standing as unknown', public.my_age_status(), 'unknown');
   reset role;
+  begin
+    insert into public.connections (requester, addressee) values (adult, nobody);
+    raise exception 'FAILED: a connection reached an account that never said its age';
+  exception when insufficient_privilege then raise notice 'ok  nor can anybody connect to it';
+  end;
 
   perform pg_temp.answered('a minor cannot pick a classmate profile',
     pg_temp.refused(teen, format($q$insert into public.profiles (user_id, handle) values (%L, 'teen')$q$, teen))::text, 'true');
@@ -215,6 +224,9 @@ begin
   -- Out in the world before anybody asked its age: listed as a mentor, open to
   -- employers, a classmate profile in a shared class, a study-match opt-in
   -- beside an adult's, and a connection and a mentor request not yet answered.
+  -- Rows like these exist from before the age was asked; the triggers would
+  -- refuse them today, so they are seeded with triggers off.
+  set local session_replication_role = replica;
   insert into public.peer_mentor_offers (user_id, tenant_id, cohort_scope, display_name) values (unsaid, 'age-u', 'age-u/cohort-a', 'Unsaid');
   insert into public.alumni_mentor_offers (user_id, tenant_id) values (unsaid, 'age-u');
   insert into public.talent_profiles (user_id, opted_in) values (unsaid, true);
@@ -223,10 +235,25 @@ begin
   insert into public.study_match_optins (user_id, tenant_id, course_code) values (unsaid, 'age-u', 'MATH 101'), (adult, 'age-u', 'MATH 101');
   insert into public.connections (requester, addressee) values (adult, unsaid);
   insert into public.mentor_requests (kind, tenant_id, requester, recipient, requester_name) values ('alumni', 'age-u', adult, unsaid, 'Adult');
+  set local session_replication_role = origin;
   perform pg_temp.become(adult);
   select count(*) into n from public.profiles where user_id = unsaid;
-  perform pg_temp.answered('a classmate sees the profile while the age is unknown', n::text, '1');
+  perform pg_temp.answered('a classmate does not see the profile of an account that never said', n::text, '0');
   reset role;
+
+  -- The same account saying it is an adult is let back in.
+  grown := pg_temp.account('grown@age.example', null);
+  insert into public.profiles (user_id, handle) values (grown, 'grown');
+  insert into public.enrollments (user_id, term, code) values (grown, '2026FA', 'vanderbilt/MATH 1100');
+  perform pg_temp.become(grown);
+  perform pg_temp.answered('an account that never said may say it is an adult', public.state_my_age((current_date - interval '25 years')::date), 'adult');
+  perform pg_temp.answered('and is a verified student from then on', private.verified_student()::text, 'true');
+  reset role;
+  perform pg_temp.become(adult);
+  select count(*) into n from public.profiles where user_id = grown;
+  perform pg_temp.answered('and its classmates see its profile again', n::text, '1');
+  reset role;
+
   perform pg_temp.become(unsaid);
   perform pg_temp.answered('an account that never said may state an age', public.state_my_age((current_date - interval '16 years')::date), 'minor');
   perform pg_temp.answered('and becomes a minor', private.verified_student()::text, 'false');
@@ -253,8 +280,10 @@ begin
   -- A request sent before an age was known cannot be accepted after one is,
   -- whichever way the account came to be a minor.
   flip := pg_temp.account('flip@age.example', null);
+  set local session_replication_role = replica;
   insert into public.connections (requester, addressee) values (adult, flip);
   insert into public.mentor_requests (kind, tenant_id, requester, recipient, requester_name) values ('alumni', 'age-u', adult, flip, 'Adult');
+  set local session_replication_role = origin;
   insert into public.student_context (user_id, is_minor) values (flip, true);
   begin
     update public.connections set state = 'accepted', responded_at = now() where requester = adult and addressee = flip;

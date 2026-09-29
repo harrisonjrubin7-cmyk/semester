@@ -84,7 +84,8 @@ export function AgeStatement({
       <SectionLabel>Your date of birth</SectionLabel>
       <p style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed-plus)' }}>
         This account was made without one. Semester asks once, because features where other people can find or message you
-        are for people 18 and over. The date itself is not kept, and it cannot be changed later.
+        are for people 18 and over, and they stay off until you answer. The date itself is not kept, and it cannot be
+        changed later.
       </p>
       <label htmlFor="age-born" className="sr-only">
         Date of birth

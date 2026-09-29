@@ -196,12 +196,12 @@ declare
     'forget_my_help_requests',     jsonb_build_object('answers', '^done$', 'why', 'deletes the caller''s own help requests'),
     'forget_my_support_tickets',   jsonb_build_object('answers', '^done$', 'why', 'deletes the caller''s own tickets'),
     'make_referral_code',          jsonb_build_object('answers', '^"[A-Z0-9]{8}"$', 'why', 'mints the caller''s own code'),
-    'my_age_status',               jsonb_build_object('answers', '^"(unknown|under_minimum)"$', 'why', 'the caller''s own age standing, a fixed word'),
+    'my_age_status',               jsonb_build_object('answers', '^"(adult|unknown|under_minimum)"$', 'why', 'the caller''s own age standing, a fixed word'),
     'my_community_standing',       jsonb_build_object('answers', '^"Your Community account is in good standing\."$', 'why', 'the caller''s own standing'),
     'my_moderation_access',        jsonb_build_object('answers', '^1 rows: \{"can_act": false, "can_read": false\}$', 'why', 'the caller''s own two capabilities, both false'),
     'note_activity',               jsonb_build_object('answers', '^done$', 'why', 'marks the caller''s own day'),
     'referral_standing',           jsonb_build_object('answers', '^1 rows: ', 'why', 'the caller''s own code and counts; the leak check holds it to the caller'),
-    'state_my_age',                jsonb_build_object('answers', '^"under_minimum_age"$', 'why', 'states the caller''s own age, once; today''s date is under 13'),
+    'state_my_age',                jsonb_build_object('answers', '^"(already_stated|under_minimum_age)"$', 'why', 'states the caller''s own age, once; check.sh records the stranger as an adult who already said'),
     'stop_contributing',           jsonb_build_object('answers', '^done$', 'why', 'withdraws the caller''s own course plan')
   );
 begin

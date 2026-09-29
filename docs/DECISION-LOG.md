@@ -2652,8 +2652,18 @@ K–12 edition behind it. This is its first prerequisite.
   made before this states its age once on the Account screen
   (`state_my_age`); a second statement is `already_stated`.
 - **A minor is kept out, by the database.** `private.verified_student()` now
-  also requires `not private.is_minor(auth.uid())`, so every policy that gates
-  on it closes to a minor. Mentor requests and connections (a minor at either
+  also requires `private.age_cleared(auth.uid())` — an age stated, and not
+  under 18 — so every policy that gates on it closes to a minor.
+- **Ask, then gate.** Google, Microsoft, Apple, institution SSO and LTI
+  sign-ups never see the sign-up form's date field, and neither did accounts
+  made before it. Codex's review found those accounts were treated as adults;
+  the owner chose to ask, then gate. An account that has not said its age is
+  kept out of everything a minor is kept out of, and a line under the header
+  on every screen (`AgeBanner`) takes it to Account, where it is asked once.
+  Everything that is the account's own keeps working meanwhile. The check
+  suites' accounts are made with no birth date, so `supabase/check.sh`
+  records them as adults with a fixture trigger that is never a migration;
+  `minimum-age.check.sql` turns it off. Mentor requests and connections (a minor at either
   end), study matching, opting into the talent profile, and an active peer or
   alumni mentor offer are refused by a trigger as well, so a policy added
   later cannot open them by accident, and a request is refused again when it
@@ -2664,10 +2674,11 @@ K–12 edition behind it. This is its first prerequisite.
   profile is hidden from others by the read policy, not deleted. Reports and
   family sharing move to `private.verified_account()`: a minor can still report
   and share with a parent or guardian.
-- **Proved.** `supabase/minimum-age.check.sql` runs 58 checks; removing the
-  minor test from `verified_student`, the connections trigger, the recipient
-  check, the peer-offer check, the roster clean-up, the check on acceptance or
-  the profile policy's clause each turned it
+- **Proved.** `supabase/minimum-age.check.sql` runs 63 checks; removing the
+  minor test from `verified_student`, putting back "unknown is an adult", the
+  connections trigger, the recipient check, the peer-offer check, the roster
+  clean-up, the check on acceptance or the profile policy's clause each turned
+  it
   red. COPPA-1 is `TESTING`; MN-01, MN-03 and MN-06 are in place; CTL-006,
   K12-001 and K12-002 are tested.
 - **Not settled here.** Counsel has not reviewed the terms' minimum age, and a
