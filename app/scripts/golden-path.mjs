@@ -16,19 +16,28 @@
  *      student presses — Show me, Good, Next — not skipped, and step 4 of 5
  *      is the account step. See "What sign-in means here" below.
  *   2. **Land where a first run lands.** "Add your first course" ends on the
- *      import screen (`doneScreen` in `state/slices/navigate.ts`); then Today.
- *   3. **Make something in the workspace.** An action of the student's own on
+ *      import screen (`doneScreen` in `state/slices/navigate.ts`).
+ *   3. **Add a course from its syllabus**, right there: pasted, built, the
+ *      review's dates checked and approved, saved, and both dates listed on
+ *      the course. The one model request in it is answered by a stub — see
+ *      "The syllabus" above `journey` for exactly what that does and does not
+ *      prove. Then Today.
+ *   4. **Make something in the workspace.** An action of the student's own on
  *      Personal (`#/mine`), through "+ New action" and "Add action", and the
  *      same action shown on Today as the next thing of theirs.
- *   4. **Get help.** The Guide (`#/help`): its "When things go wrong" chapter
+ *   5. **Plan.** The calendar (`#/calendar`) marks the course's first deadline
+ *      on its day, and double-clicking that day adds something to it.
+ *   6. **Path.** My Path (`#/degree`): the path details saved, and the Path
+ *      Snapshot rewritten to show them — still saying it is not an audit.
+ *   7. **Get help.** The Guide (`#/help`): its "When things go wrong" chapter
  *      opens and says what to do when two devices disagree. Then Support
  *      (`#/support`): its first tab carries a working `tel:` crisis line.
- *   5. **Finish it.** The action's tick box, and the row reading back as done
+ *   8. **Finish it.** The action's tick box, and the row reading back as done
  *      — named "Mark … not done" and struck through.
- *   6. **Resume.** The same browser reloaded, then a second tab of it: the
+ *   9. **Resume.** The same browser reloaded, then a second tab of it: the
  *      action is still there and still done, and the first run is not shown
  *      again.
- *   7. **Resume on a second device.** See the next section, which is the part
+ *  10. **Take it with you**, then **resume on a second device.** See the next section, which is the part
  *      of this that is easiest to overclaim.
  *
  * All of it at a phone viewport (390×844) and a desktop one (1280×900), each
@@ -105,8 +114,11 @@ const VIEWPORTS = [
 const STEPS = [
   'arrive and sign in or decline',
   'land where a first run lands',
+  'add a course from its syllabus',
   'make an action in the workspace',
   'see it on Today',
+  'plan: the deadline on the calendar, and something added there',
+  'path: record the degree',
   'get help',
   'complete it',
   'resume on this device',
@@ -161,13 +173,142 @@ async function go(page, hash, heading) {
   await page.locator('h1', { hasText: heading }).first().waitFor({ state: 'visible', timeout: WAIT });
 }
 
-async function visible(locator) {
+async function visible(locator, timeout = WAIT) {
   try {
-    await locator.first().waitFor({ state: 'visible', timeout: WAIT });
+    await locator.first().waitFor({ state: 'visible', timeout });
     return true;
   } catch {
     return false;
   }
+}
+
+// ── The syllabus, and the one part of adding it that is not the app's ──────
+//
+// Turning a syllabus into a course is a model call (`generateCourse` in
+// `lib/generate.ts`, through `ask` in `lib/claude.ts`) — there is no local
+// parser that finds deadlines. CI has no model and should not spend on one,
+// so that single request is answered here. Everything either side of it is
+// the app's own: taking the pasted text, sending it, streaming the reply,
+// `validate` checking every quote against the text the student gave, the
+// review with its approval box, and the save.
+//
+// The answer is not free to be anything. The stub refuses (500) unless the
+// request carries the syllabus the student pasted — its title and every
+// sentence the reply will quote as a deadline — and its reply quotes that
+// syllabus verbatim — so `validate` keeps the quotes rather than stripping
+// them as invented. What this does not prove is that a real model reads a
+// real syllabus well; that is a question for an evaluation, not a journey.
+//
+// Dates are this month's, so the deadline is on the calendar Plan opens to.
+
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July',
+  'August', 'September', 'October', 'November', 'December'];
+const CODE = 'GOLD 101';
+
+function syllabus() {
+  const now = new Date();
+  const month = now.getMonth();
+  const last = new Date(now.getFullYear(), month + 1, 0).getDate();
+  const first = Math.min(now.getDate() + 2, last);
+  const second = Math.min(first + 5, last);
+  const due = [
+    { title: 'Problem Set 1', day: first, time: '11:59 PM', kind: 'Problem set',
+      quote: `Problem Set 1 is due ${MONTHS[month]} ${first} at 11:59 PM.` },
+    { title: 'Project proposal', day: second, time: '5:00 PM', kind: 'Project',
+      quote: `The project proposal is due ${MONTHS[month]} ${second} at 5:00 PM.` },
+  ];
+  const text = [
+    `${CODE}: Walking the Golden Path`,
+    'Instructor: Dr. Ada Example. Office hours by appointment.',
+    'Meets Tuesdays and Thursdays, 10:00 to 11:15 in the morning.',
+    '',
+    'This course follows one student through a first week: reading a syllabus,',
+    'planning the work it sets, and keeping track of what is finished. There',
+    'are no prerequisites. Bring the syllabus of another course you are taking.',
+    '',
+    'Grading: problem sets 40%, final project 60%.',
+    '',
+    'Schedule',
+    ...due.map((d) => d.quote),
+  ].join('\n');
+  const reply = {
+    course: {
+      id: 'gold', code: CODE, name: 'Walking the Golden Path', prof: 'Dr. Ada Example',
+      email: '', meets: 'TR · 10:00–11:15a', room: '', credits: '', lms: '',
+      grading: [{ what: 'Problem sets', pct: '40%' }, { what: 'Final project', pct: '60%' }],
+    },
+    attendance: { allowed: 0, penaltyPer: 0, worth: 0, note: '' },
+    schedule: [],
+    items: due.map((d, n) => ({
+      id: `gold-${n + 1}`, c: 'gold', kind: d.kind, title: d.title, month, day: d.day,
+      dueTime: d.time, where: '', weight: '', detail: '', quote: d.quote,
+    })),
+    guide: {
+      code: CODE, name: 'Walking the Golden Path', blurb: 'One student, one first week.',
+      source: '', mastery: 0, audio: false,
+      units: [{ name: '1 · The first week', mastery: 0, cards: [
+        { q: 'What is due first in GOLD 101?', a: due[0].quote },
+      ] }],
+      terms: [{ t: 'Golden path', d: 'The one journey every student takes first.' }],
+      selfTest: [{ q: 'When is the project proposal due?', a: due[1].quote }],
+    },
+  };
+  // What the request must carry before the stub answers it: the title, and
+  // every sentence the reply quotes as a deadline.
+  const needed = [`${CODE}: Walking the Golden Path`, ...due.map((d) => d.quote)];
+  return { text, reply, month, first, due, needed };
+}
+
+/** Anthropic's streamed Messages reply, carrying `text` as one delta. */
+function streamed(text) {
+  const events = [
+    ['message_start', { type: 'message_start', message: { id: 'msg_golden_path', type: 'message',
+      role: 'assistant', model: 'golden-path-stub', content: [], stop_reason: null,
+      usage: { input_tokens: 1, output_tokens: 1 } } }],
+    ['content_block_start', { type: 'content_block_start', index: 0, content_block: { type: 'text', text: '' } }],
+    ['content_block_delta', { type: 'content_block_delta', index: 0, delta: { type: 'text_delta', text } }],
+    ['content_block_stop', { type: 'content_block_stop', index: 0 }],
+    ['message_delta', { type: 'message_delta', delta: { stop_reason: 'end_turn' }, usage: { output_tokens: 1 } }],
+    ['message_stop', { type: 'message_stop' }],
+  ];
+  return events.map(([name, data]) => `event: ${name}\ndata: ${JSON.stringify(data)}\n\n`).join('');
+}
+
+/**
+ * Answer every model request this context makes — whichever route the build
+ * takes (`route()` in `lib/assistant.ts`: a proxy's `/v1/messages`, the API's
+ * own, or the shared Edge Function) — and count what was asked.
+ */
+async function stubModel(context, course) {
+  const asked = { calls: 0, withSyllabus: 0, missing: [] };
+  const cors = {
+    'access-control-allow-origin': '*',
+    'access-control-allow-headers': '*',
+    'access-control-allow-methods': 'POST, OPTIONS',
+  };
+  await context.route(
+    (url) => /\/v1\/messages$/.test(url.pathname) || /\/functions\/v1\/claude/.test(url.pathname),
+    async (route) => {
+      const request = route.request();
+      if (request.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: cors });
+      asked.calls += 1;
+      // Every sentence the reply will quote, not only the title: a request
+      // that carried the heading and lost the schedule must not be answered
+      // with the deadlines it never sent (found by review on #978, and shown:
+      // with the pasted text cut to 60 characters, a title-only check passed).
+      const body = request.postData() ?? '';
+      const missing = course.needed.filter((line) => !body.includes(line));
+      if (missing.length) {
+        asked.missing = missing;
+        return route.fulfill({ status: 500, headers: cors, contentType: 'application/json',
+          body: JSON.stringify({ error: { message: `the golden-path stub was sent a request without: ${missing.join(' | ')}` } }) });
+      }
+      asked.withSyllabus += 1;
+      return route.fulfill({ status: 200, headers: cors, contentType: 'text/event-stream',
+        body: streamed(JSON.stringify(course.reply)) });
+    },
+  );
+  return asked;
 }
 
 async function journey(label, viewport) {
@@ -176,6 +317,8 @@ async function journey(label, viewport) {
   const done = new RegExp(`^Mark ${title.replace(/[()]/g, '\\$&')} not done$`);
   const open = new RegExp(`^Mark ${title.replace(/[()]/g, '\\$&')} done$`);
   const first = await device(viewport, errors);
+  const course = syllabus();
+  const asked = await stubModel(first.context, course);
   let second;
   let backup = '';
   let step = '';
@@ -218,10 +361,57 @@ async function journey(label, viewport) {
     await page.getByRole('button', { name: /^add your first course$/i }).click();
     expect(await visible(page.locator('h1', { hasText: 'New course' })), 'the first run did not end on the import screen');
     expect(page.url().includes('#/import'), `the first run ended at ${page.url()}, not #/import`);
+
+    // ── 3 · A course from its syllabus, where the first run left the student ─
+    at(STEPS[2]);
+    const paste = async () => {
+      await page.getByRole('button', { name: /paste the syllabus in as text/i }).click();
+      await page.getByLabel('Paste the syllabus').fill(course.text);
+      await page.getByRole('button', { name: /^take this text$/i }).click();
+    };
+    await paste();
+    const buildIt = page.getByRole('button', { name: /^build the course from \d+ words$/i });
+    if (!(await visible(buildIt, 5_000))) {
+      // A build with no model configured says so and offers the one door out.
+      // A student's own key is that door; this one is never sent anywhere,
+      // because the stub above answers the request it would authorise.
+      const setUp = page.getByRole('button', { name: /^set up the assistant$/i });
+      expect(await visible(setUp), 'the import screen offered neither a build button nor a way to set up the assistant');
+      notes.push(`${label}: no model configured in this build; set a placeholder key the stub answers for`);
+      await setUp.click();
+      await page.getByLabel('API key').fill('sk-ant-golden-path-placeholder');
+      await page.getByRole('button', { name: /^save on this device$/i }).click();
+      await go(page, '#/import', 'New course');
+      await paste();
+    }
+    expect(await visible(buildIt), 'the pasted syllabus did not offer to build the course');
+    await buildIt.click();
+    const approve = page.getByRole('checkbox', { name: /i checked the course information/i });
+    expect(
+      await visible(approve, 30_000),
+      asked.missing.length
+        ? `the model request did not carry the syllabus it is answered from — missing: ${asked.missing.join(' | ')}`
+        : 'building the course did not reach the review',
+    );
+    expect(asked.withSyllabus === 1, `the model was asked ${asked.calls} time(s), ${asked.withSyllabus} with the pasted syllabus`);
+    const fields = await page.locator('input, textarea').evaluateAll((els) => els.map((e) => e.value));
+    const shown = await page.locator('body').innerText();
+    for (const d of course.due) {
+      expect(fields.includes(d.title) || shown.includes(d.title), `the review does not list "${d.title}"`);
+    }
+    await approve.check();
+    await page.getByRole('button', { name: new RegExp(`^Add ${CODE} — ${course.due.length} dates$`) }).click();
+    expect(await visible(page.locator('h1', { hasText: CODE })), `saving the course did not open ${CODE}`);
+    expect(page.url().includes('#/course/'), `saving the course landed at ${page.url()}, not the course`);
+    // The overview shows only what is next; the tab lists every date taken.
+    await page.getByRole('tab', { name: 'Assignments', exact: true }).click();
+    for (const d of course.due) {
+      expect(await visible(page.locator('main').getByText(d.title, { exact: true })), `${CODE}'s assignments do not list "${d.title}"`);
+    }
     await go(page, '#/home', 'Today');
 
     // ── 3 · Make something of the student's own ────────────────────────────
-    at(STEPS[2]);
+    at(STEPS[3]);
     await go(page, '#/mine', 'Personal');
     expect(await visible(page.getByText('Nothing of your own yet.')), 'a brand-new profile already has actions of its own');
     await page.getByRole('button', { name: /new action/i }).click();
@@ -230,12 +420,43 @@ async function journey(label, viewport) {
     expect(await visible(page.getByRole('button', { name: open })), 'the new action is not on Personal as something to tick');
 
     // ── 4 · …and it is on Today, as the student's next thing ───────────────
-    at(STEPS[3]);
+    at(STEPS[4]);
     await go(page, '#/home', 'Today');
     expect(await visible(page.locator('main').getByText(title, { exact: true })), 'Today does not show the action just made');
 
+    // ── 6 · Plan: the course's deadline is on its day, and a day takes more ─
+    at(STEPS[5]);
+    await go(page, '#/calendar', 'Calendar');
+    const day = page.getByRole('gridcell', {
+      name: new RegExp(`^\\w+ ${course.first} ${MONTHS[course.month]}\\..*\\b\\d+ deadlines?\\b`),
+    });
+    expect(await visible(day), `the calendar does not show a deadline on ${MONTHS[course.month]} ${course.first}`);
+    await day.first().dblclick();
+    const what = page.getByRole('textbox', { name: /^what is on /i });
+    expect(await visible(what), 'double-clicking the day did not offer to add something there');
+    await what.fill(`Study group for ${CODE}`);
+    await page.getByRole('button', { name: /^add it$/i }).click();
+    expect(await visible(page.getByText(/^Added to /)), 'adding to the day did not say it was added');
+
+    // ── 7 · Path: what the degree needs, recorded ──────────────────────────
+    at(STEPS[6]);
+    await go(page, '#/degree', 'The degree');
+    const card = page.locator('section[aria-labelledby="path-snapshot-title"]');
+    const year = String(new Date().getFullYear() + 3);
+    await card.getByText(/add your path details/i).click();
+    await card.getByLabel(/programme or major/i).fill('Economics BA');
+    await card.getByLabel('Graduation season').selectOption('Spring');
+    await card.getByLabel('Graduation year').fill(year);
+    await card.getByRole('button', { name: /save path details/i }).click();
+    // The form closes on save, taking its "Saved on this device." with it;
+    // what stays is the card rewritten and the door to edit what was saved.
+    expect(await visible(card.getByRole('button', { name: /^edit your path details$/i })), 'saving the path details did not close the form into its saved state');
+    const snapshot = await card.innerText();
+    expect(/Economics BA/.test(snapshot) && snapshot.includes(`Spring ${year}`), 'the Path Snapshot does not show the path just saved');
+    expect(/not an official degree audit/i.test(snapshot), 'the Path Snapshot no longer says it is not an official audit');
+
     // ── 5 · Help ───────────────────────────────────────────────────────────
-    at(STEPS[4]);
+    at(STEPS[7]);
     await go(page, '#/help', 'Guide');
     const wrong = page.getByRole('button', { name: /^when things go wrong/i });
     expect(await visible(wrong), 'the Guide has no "When things go wrong" chapter');
@@ -247,7 +468,7 @@ async function journey(label, viewport) {
     expect(await visible(crisis), 'Support drew no telephone line to call');
 
     // ── 6 · Complete it ────────────────────────────────────────────────────
-    at(STEPS[5]);
+    at(STEPS[8]);
     await go(page, '#/mine', 'Personal');
     await page.getByRole('button', { name: open }).click();
     expect(await visible(page.getByRole('button', { name: done })), 'ticking the action did not mark it done');
@@ -259,7 +480,7 @@ async function journey(label, viewport) {
     expect(struck.includes('line-through'), `the done action is not struck through (text-decoration: ${struck})`);
 
     // ── 7 · Resume here: a reload, then a second tab ───────────────────────
-    at(STEPS[6]);
+    at(STEPS[9]);
     await page.reload({ waitUntil: 'domcontentloaded' });
     expect(await visible(page.locator('h1', { hasText: 'Personal' })), 'a reload did not come back to Personal');
     expect(await visible(page.getByRole('button', { name: done })), 'after a reload the action is gone or no longer done');
@@ -270,7 +491,7 @@ async function journey(label, viewport) {
     await tab.close();
 
     // ── 8 · Take it with you ───────────────────────────────────────────────
-    at(STEPS[7]);
+    at(STEPS[10]);
     await go(page, '#/export', 'Take it with you');
     for (const part of ['Courses', 'Deadlines', 'Calendar', 'Notes', 'Your own actions']) {
       await page.getByRole('button', { name: `Leave out ${part}`, exact: true }).click();
@@ -289,7 +510,7 @@ async function journey(label, viewport) {
     expect(carried?.done === true, 'the backup file does not carry the action as done');
 
     // ── 9 · A second device: fresh context, restore through the picker ─────
-    at(STEPS[8]);
+    at(STEPS[11]);
     second = await device(viewport, errors);
     const other = second.page;
     await other.goto(BASE, { waitUntil: 'domcontentloaded' });
@@ -344,6 +565,7 @@ if (walked !== VIEWPORTS.length) {
 }
 console.log(
   `golden path ok — ${STEPS.length} steps at ${VIEWPORTS.map(([l]) => l).join(' and ')}: ` +
-    'first run, Today, an action made, help, completion, resume after reload and in a second tab, ' +
-    'and restored from its backup file into a fresh context. Account-synced resume is not exercised.',
+    'first run, a course added from its syllabus, Today, an action made, Plan, Path, help, completion, ' +
+    'resume after reload and in a second tab, and restored from its backup file into a fresh context. ' +
+    'Account-synced resume is account-sync.mjs.',
 );
