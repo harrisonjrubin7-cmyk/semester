@@ -201,8 +201,11 @@ export function newShowcaseItem(id: string, title: string, kind: ShowcaseItem['k
 export function publish(item: ShowcaseItem, to: ShowcaseVisibility, by: 'student' | 'advisor' | 'institution' | 'system', at: Date, optInUntil?: string): ShowcaseItem {
   if (by !== 'student') throw new Error('Only the student publishes their own work.');
   if (to === 'employers') {
-    if (!optInUntil || new Date(optInUntil).getTime() <= at.getTime()) throw new Error('Employer visibility needs a talent profile that is switched on and has not expired.');
-    const days = (new Date(optInUntil).getTime() - at.getTime()) / 86_400_000;
+    // A date that does not parse is NaN, and every comparison with NaN is
+    // false: without the finite check it would pass both bounds and never end.
+    const until = optInUntil ? new Date(optInUntil).getTime() : NaN;
+    if (!Number.isFinite(until) || until <= at.getTime()) throw new Error('Employer visibility needs a talent profile that is switched on and has not expired.');
+    const days = (until - at.getTime()) / 86_400_000;
     if (days > EMPLOYER_OPT_IN_DAYS) throw new Error(`A talent-profile opt-in lasts ${EMPLOYER_OPT_IN_DAYS} days at most.`);
     return { ...item, visibility: to, chosenBy: 'student', talentOptInUntil: optInUntil };
   }
@@ -214,10 +217,16 @@ export function publish(item: ShowcaseItem, to: ShowcaseVisibility, by: 'student
 export const publishedWithoutChoice = (items: readonly ShowcaseItem[]): ShowcaseItem[] =>
   items.filter((i) => i.visibility !== 'private' && i.chosenBy !== 'student');
 
-/** What an item is visible as right now: an expired employer opt-in falls back to campus. */
+/**
+ * What an item is visible as right now. An employer opt-in that has expired,
+ * or whose date does not parse, makes the item private: the student chose
+ * employers, and falling back to any wider audience would be a disclosure
+ * nobody chose.
+ */
 export function visibleAs(item: ShowcaseItem, at: Date): ShowcaseVisibility {
-  if (item.visibility === 'employers' && (!item.talentOptInUntil || new Date(item.talentOptInUntil).getTime() <= at.getTime())) return 'campus';
-  return item.visibility;
+  if (item.visibility !== 'employers') return item.visibility;
+  const until = item.talentOptInUntil ? new Date(item.talentOptInUntil).getTime() : NaN;
+  return Number.isFinite(until) && until > at.getTime() ? 'employers' : 'private';
 }
 
 export const NEVER_INFERRED = 'A portfolio claim is never inferred from coursework. The student writes it, links the evidence, and says who may see it.';

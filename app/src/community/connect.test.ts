@@ -85,7 +85,19 @@ describe('the showcase', () => {
     expect(() => publish(item, 'employers', 'student', at, days(EMPLOYER_OPT_IN_DAYS + 1))).toThrow(/180 days at most/);
     const shownTo = publish(item, 'employers', 'student', at, days(30));
     expect(visibleAs(shownTo, at)).toBe('employers');
-    expect(visibleAs(shownTo, new Date(days(31)))).toBe('campus');
+  });
+
+  it('becomes private when the opt-in expires, never a wider audience nobody chose', () => {
+    const shownTo = publish(item, 'employers', 'student', at, days(30));
+    expect(visibleAs(shownTo, new Date(days(31)))).toBe('private');
+    expect(visibleAs({ ...shownTo, talentOptInUntil: undefined }, at)).toBe('private');
+  });
+
+  it('refuses an opt-in date that does not parse, and never treats one as unexpired', () => {
+    for (const bad of ['not a date', '', '2026-13-45']) {
+      expect(() => publish(item, 'employers', 'student', at, bad), bad).toThrow(/talent profile/);
+    }
+    expect(visibleAs({ ...item, visibility: 'employers', chosenBy: 'student', talentOptInUntil: 'not a date' }, at)).toBe('private');
   });
 
   it('never publishes without a choice', () => {

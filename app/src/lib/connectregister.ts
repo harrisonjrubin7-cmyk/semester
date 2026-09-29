@@ -144,7 +144,7 @@ const AREA_LIST: readonly (Area & { rows: readonly Row[] })[] = [
     why: 'A student-controlled space to share work, each item with a chosen visibility, never auto-published and never inferred.',
     rows: [
       ['Twelve kinds of work a student can publish from their record', 'tested', [[CONNECT, 'SHOWCASE_KINDS'], [CONNECT_TEST, 'held'], ['app/src/lib/career-evidence.ts', 'the private save']], 'Evidence is saved; nothing publishes it.', ['OPP-005', 'OPP-006']],
-      ['Visibility ladder: private, advisor, group, campus-only, public portfolio, approved employers', 'tested', [[CONNECT, 'SHOWCASE_VISIBILITY, VISIBILITY_MEANS, publish, visibleAs'], [CONNECT_TEST, 'only the student publishes; employers only while a talent profile is on']], 'A rule with no table or screen.'],
+      ['Visibility ladder: private, advisor, group, campus-only, public portfolio, approved employers', 'tested', [[CONNECT, 'SHOWCASE_VISIBILITY, VISIBILITY_MEANS, publish, visibleAs'], [CONNECT_TEST, 'only the student publishes; employers only while a talent profile is on; expired or unparseable opt-in becomes private']], 'A rule with no table or screen.'],
       ['Never auto-published; never a portfolio claim inferred from coursework', 'tested', [[CONNECT, 'newShowcaseItem is private; publishedWithoutChoice; NEVER_INFERRED'], [CONNECT_TEST, 'a planted public item is caught']], ''],
       ['Each item connected to verified or student-confirmed skills, coursework, goals and career interests', 'building', [[EXPANSION_SQL, 'skill_records: self-reported → verification requested → verified or declined']], 'Skills verify; nothing links an item to one.', ['OPP-005']],
     ],
