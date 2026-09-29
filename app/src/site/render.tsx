@@ -4,6 +4,7 @@ import { defaultNext } from '../lib/graduation';
 import { PROMISE, type SiteConfig } from './config';
 import { Layout, href } from './Layout';
 import * as B from './benchmark';
+import * as C from './community';
 import * as M from './more';
 import * as P from './pages';
 import { TOOL_LIST, Tool, type ToolId, type ToolProps } from './tools/Tools';
@@ -70,6 +71,12 @@ export const ROUTES: Route[] = [
   { path: '/platform/vocabulary/', title: 'The words we use — Semester', description: 'Nine terms, what each means and the page each lives on: Student Action Layer, Academic Navigation, No Wrong Door and six more.', Page: B.Vocabulary },
   { path: '/resources/ai-governance-canvas/', title: 'AI Governance Readiness Canvas — Semester', description: 'Ten boxes an institution fills in before it turns on an assistant: allowed, restricted and prohibited uses, sources, review, data, retention, escalation.', Page: B.AIGovernanceCanvas },
   { path: '/research/', title: 'Research and community — Semester', description: 'The Academic Friction Index, its method set before its data, and the design-partner council, clinics, advisory network and design challenge.', Page: B.Research },
+  // The community pages (community.tsx).
+  { path: '/community/', title: 'The Semester Community', description: 'Students, organizations, mentors, educators, ambassadors and institutions: what each gets, what is built instead of a social network, and in what order.', Page: C.Community },
+  { path: '/community/ambassadors/', title: 'Campus ambassadors — Semester', description: 'What an ambassador does, what they get, and the boundaries: never paid per sign-up, and no access to other students’ data.', Page: C.Ambassadors },
+  { path: '/community/stories/', title: 'Student stories — Semester', description: 'Real campus journeys in the student’s own words, published only with permission, anonymous, attributed, campus-only or public as they chose.', Page: C.Stories },
+  { path: '/community/partners/', title: 'Partner community directory — Semester', description: 'Who can be listed, the four verification labels, and the rules: visibility is never sold and a partner never sees a student’s record.', Page: C.Partners },
+  { path: '/community/events/', title: 'Events and sessions — Semester', description: 'Workshops, registration-prep sessions, roundtables and panels, each with registration, calendar save, accessibility information, a replay and a next step.', Page: C.Events },
   ...TOOL_LIST.map(
     (t): Route => ({
       path: `/tools/${t.id}/`,

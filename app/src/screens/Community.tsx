@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { ActionButton, Notice, SectionLabel } from '../components/ui';
+import { ConnectHub } from '../components/ConnectHub';
 import { Composer } from '../components/community/Composer';
 import { ReportSheet } from '../components/community/ReportSheet';
 import { Sessions } from '../components/community/Sessions';
@@ -106,6 +107,7 @@ export function Community() {
           Community isn’t switched on in this build. It turns on only together with reporting, blocking and muting,
           so there is never a version of it without them.
         </Notice>
+        <ConnectHub />
       </Page>
     );
   }
@@ -113,6 +115,7 @@ export function Community() {
     return (
       <Page blurb="Study groups, course spaces and campus communities.">
         <Notice>Community needs a signed-in account at your school. Everything else in Semester works without one.</Notice>
+        <ConnectHub />
       </Page>
     );
   }
@@ -283,6 +286,10 @@ function CommunitySignedIn({ accountId, wide }: { accountId: string; wide: boole
           </div>
         </form>
       )}
+
+      <div style={{ marginTop: 'var(--sp-7)' }}>
+        <ConnectHub />
+      </div>
     </nav>
   );
 

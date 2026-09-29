@@ -181,6 +181,13 @@ export const Students: Page = ({ config }) => (
     <Section title="Every week" id="s-week">
       <p>Today puts the next deadline first and tells you why. Snooze it, mark it done, or say it is wrong.</p>
     </Section>
+    <Section title="When you need people" id="s-people">
+      <p>
+        Who else is in your classes, a study group for a course, clubs and events, a mentor who opted in, and the
+        people who will one day write about you — found by what you study, never by where you are.{' '}
+        <a href={href(config, '/community/')}>The Semester Community</a> says what is built and in what order.
+      </p>
+    </Section>
     <Start config={config} />
   </>
 );
@@ -307,9 +314,44 @@ const RESOURCE_STANDARD: string[] = [
   'A way to report an error in it, and the product screen it relates to.',
 ];
 
+/**
+ * The free resource library. A resource with a path exists as a tool that
+ * sends nothing anywhere; one without is being written, and is listed so a
+ * reader knows it is coming rather than sent to a page that is not.
+ */
+export const LIBRARY: { title: string; path?: string }[] = [
+  { title: 'Registration checklist', path: '/tools/checklist/' },
+  { title: 'Advisor meeting agenda', path: '/tools/advisor/' },
+  { title: 'Schedule builder', path: '/tools/schedule/' },
+  { title: 'Graduation timeline', path: '/tools/graduation/' },
+  { title: 'Academic navigation diagnostic', path: '/tools/navigation/' },
+  { title: 'First-semester checklist' },
+  { title: 'Transfer-credit planning guide' },
+  { title: 'Study-plan template' },
+  { title: 'Scholarship tracker template' },
+  { title: 'Internship application tracker' },
+  { title: 'Campus-club launch guide' },
+  { title: 'Student organization event-planning kit' },
+  { title: 'Group-project template' },
+  { title: 'Career fair preparation checklist' },
+  { title: '“How to ask for help in college” guide' },
+];
+
 export const Resources: Page = ({ config }) => (
   <>
     <Hero title="Resources" lead="Guides for registration, advising and planning your degree." />
+    <Section title="Free, before you sign up" id="r-library">
+      <p>
+        Each of these is useful on its own and sends nothing anywhere. Use it free; save it to Semester if you make an
+        account; turn it into your plan; put its deadlines where you will see them; share it with an advisor or a
+        mentor. The ones without a link are being written with students during the pilot.
+      </p>
+      <ul>
+        {LIBRARY.map((r) => (
+          <li key={r.title}>{r.path ? <a href={href(config, r.path)}>{r.title}</a> : <>{r.title} <span className="site-small">(being written)</span></>}</li>
+        ))}
+      </ul>
+    </Section>
     <Section title="For institutions" id="r-institutions">
       <p>
         The <a href={href(config, '/resources/campus-launch-kit/')}>campus launch kit</a> has the emails, announcements, signage, FAQ and launch agenda an institution needs to tell its campus about Semester, ready to adapt.

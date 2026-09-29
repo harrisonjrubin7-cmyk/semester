@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { CONTACT_EMAIL, DEFAULT_SITE, PROMISE, type SiteConfig } from './config';
 import { ROUTES, renderPage, renderSite } from './render';
+import { NOT_ON_YET } from './community';
 
 /**
  * The public site, as it ships: the same `renderSite` the build script
@@ -18,7 +19,8 @@ describe('every page', () => {
       '/launch-readiness/', '/proof/', '/legal/', '/known-limitations/',
       '/tools/graduation/', '/tools/schedule/', '/tools/checklist/', '/tools/advisor/',
       '/platform/availability/', '/platform/service-map/', '/platform/system-boundaries/', '/start/', '/demo/', '/trust/product-quality/', '/launch/', '/pricing/how-it-works/', '/resources/campus-launch-kit/',
-      '/semester-standard/', '/trust/data-and-ai-transparency/', '/platform/integrations/', '/platform/vocabulary/', '/resources/ai-governance-canvas/', '/research/', '/tools/navigation/'];
+      '/semester-standard/', '/trust/data-and-ai-transparency/', '/platform/integrations/', '/platform/vocabulary/', '/resources/ai-governance-canvas/', '/research/', '/tools/navigation/',
+      '/community/', '/community/ambassadors/', '/community/stories/', '/community/partners/', '/community/events/'];
     expect(ROUTES.map((r) => r.path).sort()).toEqual([...want].sort());
   });
 
@@ -160,6 +162,27 @@ describe('what the site says', () => {
     expect(contact).toContain('Accessibility lead');
     expect(contact).toContain('No response time is promised yet');
     expect(contact).not.toMatch(/within (one|two|1|2) business day/i);
+  });
+
+  it('offers a community, and says no programme is running, no ambassador recruited, no story, partner or event yet', () => {
+    const community = pages.find((p) => p.route.path === '/community/')!.html;
+    expect(community).toContain(NOT_ON_YET);
+    expect(community).toContain('What we build instead of a social network');
+    expect(community).not.toMatch(/\d+ (students|members|campuses|universities)/i);
+    for (const [path, sentence] of [
+      ['/community/ambassadors/', 'never paid per sign-up'],
+      ['/community/stories/', 'No story has been published yet'],
+      ['/community/partners/', 'No partner is listed yet'],
+      ['/community/events/', 'No event is scheduled yet'],
+    ]) {
+      const html = pages.find((p) => p.route.path === path)!.html;
+      expect(html, path).toContain(sentence);
+      expect(html, path).toContain(`href="${DEFAULT_SITE.base}community/"`);
+    }
+    // The community pages carry no follower count, ranking or streak: the words the community layer forbids.
+    const all = ['/community/', '/community/ambassadors/', '/community/stories/', '/community/partners/', '/community/events/'].map((path) => pages.find((p) => p.route.path === path)!.html).join('\n');
+    expect(all).not.toMatch(/followers?\b(?! count)/i);
+    expect(all).not.toMatch(/\bstreaks?\b/i);
   });
 
   it('shows no policy as in force', () => {
