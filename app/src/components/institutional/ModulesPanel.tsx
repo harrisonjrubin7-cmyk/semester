@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { CORE_MODULES, type CoreModuleId } from '@semester/contract';
 import { MODULES } from '../../site/modules';
 import { STATUS_LABEL } from '../../lib/ops/claims';
@@ -26,23 +26,30 @@ export function ModulesPanel({ school, me, canEdit }: { school: string; me: stri
   const [reason, setReason] = useState('');
   const [said, setSaid] = useState('');
 
-  const refresh = useCallback(async () => {
-    setRows(await moduleModes(school, true));
-    setRequests(await loadRequests(school, me));
-  }, [school, me]);
+  // Bumped after a change, so the effect below reads again.
+  const [tick, setTick] = useState(0);
+  const refresh = () => setTick((t) => t + 1);
 
-  useEffect(() => { void refresh(); }, [refresh]);
+  useEffect(() => {
+    let live = true;
+    void (async () => {
+      const r = await moduleModes(school, tick > 0);
+      const q = await loadRequests(school, me);
+      if (live) { setRows(r); setRequests(q); }
+    })();
+    return () => { live = false; };
+  }, [school, me, tick]);
 
   const send = async (module: CoreModuleId, to: 'core' | 'connect') => {
     const err = await requestModuleMode(school, me, module, to, reason);
     setSaid(err ?? (to === 'connect' ? 'Back to Connect. Nothing was deleted; the module’s Core data is kept, read-only.' : 'Requested. Two other administrators must approve it.'));
     if (!err) { setAsking(null); setReason(''); }
-    await refresh();
+    refresh();
   };
   const approve = async (id: string) => {
     const err = await approveModuleMode(school, me, id);
     setSaid(err ?? 'Approved.');
-    await refresh();
+    refresh();
   };
 
   if (!school) return <EmptyState title="No school" body="Modules are set per school; sign in with your school account." inline />;
