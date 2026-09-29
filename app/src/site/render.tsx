@@ -4,6 +4,7 @@ import { defaultNext } from '../lib/graduation';
 import { PROMISE, type SiteConfig } from './config';
 import { Layout, href } from './Layout';
 import * as B from './benchmark';
+import * as C from './community';
 import * as O from './oneos';
 import * as M from './more';
 import * as P from './pages';
@@ -75,6 +76,12 @@ export const ROUTES: Route[] = [
   // brief asked for and the comparison, each area and row at the register's word.
   { path: '/platform/one-operating-system/', title: 'One Operating System. Every Student Moment. — Semester', description: 'The student at the centre and nine areas around them, each with what connects, what stays official, and the register’s word for where it stands today.', Page: O.OneOperatingSystem },
   { path: '/platform/why-not-another-tool/', title: 'Why not another tool? — Semester', description: 'The traditional approach beside the Semester approach, eight rows, each with the register’s word for where Semester stands today.', Page: O.WhyNotAnotherTool },
+  // The community pages (community.tsx).
+  { path: '/community/', title: 'The Semester Community', description: 'Students, organizations, mentors, educators, ambassadors and institutions: what each gets, what is built instead of a social network, and in what order.', Page: C.Community },
+  { path: '/community/ambassadors/', title: 'Campus ambassadors — Semester', description: 'What an ambassador does, what they get, and the boundaries: never paid per sign-up, and no access to other students’ data.', Page: C.Ambassadors },
+  { path: '/community/stories/', title: 'Student stories — Semester', description: 'Real campus journeys in the student’s own words, published only with permission, anonymous, attributed, campus-only or public as they chose.', Page: C.Stories },
+  { path: '/community/partners/', title: 'Partner community directory — Semester', description: 'Who can be listed, the four verification labels, and the rules: visibility is never sold and a partner never sees a student’s record.', Page: C.Partners },
+  { path: '/community/events/', title: 'Events and sessions — Semester', description: 'Workshops, registration-prep sessions, roundtables and panels, each with registration, calendar save, accessibility information, a replay and a next step.', Page: C.Events },
   ...TOOL_LIST.map(
     (t): Route => ({
       path: `/tools/${t.id}/`,

@@ -73,6 +73,22 @@ rates each at the weakest of them (D-125):
 The test holds both pages to printing every word, and to never printing
 “fully built”.
 
+## The community pages
+
+Five pages the community brief of 29 September asked for, printed from
+`site/community.tsx`, whose data `lib/connectregister.ts` cites:
+
+| Route | Says |
+|---|---|
+| `/community/` | *The Semester Community.* The five questions it helps a student answer, six audiences and what each gets, what is built instead of a social network, the rollout order, and seven calls to action, each a page or a person |
+| `/community/ambassadors/` | What an ambassador does and gets; never paid per sign-up, and no access to other students’ data |
+| `/community/stories/` | Eight prompts and four consent choices; no story published yet |
+| `/community/partners/` | Twelve kinds of partner, four verification labels matching what the database can say, and the rules; no partner listed yet |
+| `/community/events/` | Ten kinds of session and what every one carries; no event scheduled yet |
+
+The site test holds every one to saying that nothing is running yet, and to
+printing no follower or streak word.
+
 And a fifth tool, `/tools/navigation/`: the academic navigation diagnostic, a
 guided self-assessment for institutions from `lib/navdiagnostic.ts` — seven
 questions, a score, the top friction patterns and an action brief, labelled a

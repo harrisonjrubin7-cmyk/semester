@@ -24,6 +24,31 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### Find people, groups and opportunities, from Community
+
+Community now ends with one list — **Find people, groups and opportunities** —
+and shows it even where Community itself is switched off or you are not
+signed in: who else is in your classes, study groups and course spaces,
+clubs and events, project teams, peer and alumni mentors, research and
+internships, the people who will write about you, and the campus map. Every
+row opens a screen you already had; nothing is recommended, so nothing
+needs a reason beside it. Three things the list will hold have no screen
+yet and are not drawn: your portfolio, the verified-communities directory,
+and saved things in one place.
+
+Nothing to do.
+
+### On the public site: the Semester Community
+
+Five new pages under **Community** in the footer — The Semester Community,
+Campus ambassadors, Student stories, Partner directory, and Events and
+sessions — and a free resource library at the top of Resources: five tools
+that exist and ten guides named as being written. Each page says what is
+built instead of a social network, and says plainly that no community
+programme is switched on for any campus today, no ambassador has been
+recruited, no story published, no partner listed and no event scheduled.
+Every next step is a page or a person.
+
 ### On the public site: one operating system, and why not another tool
 
 Two new pages under Platform. *One Operating System. Every Student Moment.*
