@@ -38,13 +38,13 @@ specialists and procurement come before any agreement or representation.
 | not-started | Nothing in the tree beyond a document naming the gap |
 | held | A decision already on main answers it differently, and holds until the owner reopens it |
 
-Across the 210 items with a standing: tested 116 · building 40 · designed 41 · not-started 11 · held 2.
+Across the 210 items with a standing: tested 117 · building 40 · designed 41 · not-started 10 · held 2.
 
 ## The finding
 
 Most of what the briefs ask for exists on main as a part, and the part is usually
 held by a test. What does not exist is concentrated: customer data migration,
-the MSA, ten of the fourteen public policies, a human accessibility pass, a
+the MSA, counsel’s review of every public policy, a human accessibility pass, a
 production restore, error tracking, and anything with an institution’s name on it.
 Those are not code the repository can write; they are the owner’s, counsel’s and a
 first customer’s. The one conflict with the code is the pilot’s length.
@@ -72,7 +72,7 @@ have no readiness control today: those are what the brief adds to the thirty.
 The due date is the seat’s to set; a date typed here on nobody’s behalf is a claim
 nobody made.
 
-All 81: tested 40 · building 8 · designed 27 · not-started 5 · held 1.
+All 81: tested 41 · building 8 · designed 27 · not-started 4 · held 1.
 
 ### 2.1 Company and governance
 
@@ -93,7 +93,7 @@ All 81: tested 40 · building 8 · designed 27 · not-started 5 · held 1.
 
 ### 2.2 Data privacy and FERPA posture
 
-14 rows, the weakest not-started: tested 7 · building 1 · designed 5 · not-started 1 · held 0.
+14 rows, the weakest designed: tested 8 · building 1 · designed 5 · not-started 0 · held 0.
 
 | ID | Control | Owner | Readiness control | Due | Standing | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -103,7 +103,7 @@ All 81: tested 40 · building 8 · designed 27 · not-started 5 · held 1.
 | LC-HV2-04 | Authorized purpose documented per institutional deployment | `privacy` | `PRIV-4` | owner sets | building | [`app/src/lib/gtm/pilot.ts`](../app/src/lib/gtm/pilot.ts) — the pilot’s data plan | No DPA or SOW signed that states a purpose. |
 | LC-HV2-05 | Minimum-necessary data rule is implemented | `data` | `PRIV-6` | owner sets | tested | [`app/src/lib/advisor-meeting.test.ts`](../app/src/lib/advisor-meeting.test.ts) — a share carries nothing the student did not tick<br>[`supabase/advisor.check.sql`](../supabase/advisor.check.sql) — advisors read only what was shared<br>[`app/server/integration/registry.test.ts`](../app/server/integration/registry.test.ts) — connector scopes declared per adapter | Integrations declare scopes; no field-mapping registry per institution. |
 | LC-HV2-06 | No sale of student data, published | `privacy` | **none** | owner sets | tested | [`app/src/lib/ops/claims.test.ts`](../app/src/lib/ops/claims.test.ts) — the no-sale claim held to its evidence<br>[`docs/legal/PRIVACY-POLICY-DRAFT.md`](legal/PRIVACY-POLICY-DRAFT.md) — the promise in the policy draft | The privacy policy is a draft awaiting counsel. |
-| LC-HV2-07 | No behavioral advertising on education records | `privacy` | **none** | owner sets | not-started | [`docs/legal/PRIVACY-POLICY-DRAFT.md`](legal/PRIVACY-POLICY-DRAFT.md) — the nearest promise | No Advertising and Sponsorship Policy exists. |
+| LC-HV2-07 | No behavioral advertising on education records | `privacy` | **none** | owner sets | tested | [`app/src/donotbuild.test.ts`](../app/src/donotbuild.test.ts) — no advertising or tracking SDK loads<br>[`docs/legal/ADVERTISING-AND-SPONSORSHIP-POLICY-DRAFT.md`](legal/ADVERTISING-AND-SPONSORSHIP-POLICY-DRAFT.md) — the policy, drafted | The policy is a draft awaiting counsel. |
 | LC-HV2-08 | Subprocessor register is current | `privacy` | `PRIV-5` | owner sets | designed | [`docs/SUBPROCESSORS.md`](SUBPROCESSORS.md) — the subprocessors | Publication is in progress. |
 | LC-HV2-09 | Retention schedule exists, with deletion jobs | `privacy` | `PRIV-1` | owner sets | tested | [`supabase/retention-sweeps.check.sql`](../supabase/retention-sweeps.check.sql) — the sweeps delete what the schedule says | None. |
 | LC-HV2-10 | Export and deletion workflow exists | `privacy` | `PRIV-2` | owner sets | tested | [`app/src/lib/deleteaccount.test.ts`](../app/src/lib/deleteaccount.test.ts) — delete-account<br>[`supabase/deletion.check.sql`](../supabase/deletion.check.sql) — what deletion empties<br>[`app/src/lib/export.test.ts`](../app/src/lib/export.test.ts) — the export | Per student; no tenant-wide export and no deletion certificate. |
@@ -191,7 +191,7 @@ All 81: tested 40 · building 8 · designed 27 · not-started 5 · held 1.
 
 | ID | Control | Owner | Readiness control | Due | Standing | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| LC-HV7-01 | Accessibility statement published, with a reporting contact | `accessibility` | **none** | owner sets | building | [`app/src/site/render.tsx`](../app/src/site/render.tsx) — the /accessibility/ route | A page, not a dated statement with a reporting contact. |
+| LC-HV7-01 | Accessibility statement published, with a reporting contact | `accessibility` | **none** | owner sets | building | [`app/src/site/render.tsx`](../app/src/site/render.tsx) — the /accessibility/ route<br>[`docs/legal/ACCESSIBILITY-STATEMENT-DRAFT.md`](legal/ACCESSIBILITY-STATEMENT-DRAFT.md) — the dated statement, drafted | The statement is a draft; the page is not yet it. |
 | LC-HV7-02 | WCAG 2.2 AA baseline adopted | `accessibility` | **none** | owner sets | tested | [`app/src/a11y/axe.test.tsx`](../app/src/a11y/axe.test.tsx) — the automated probe<br>[`docs/WCAG-UI-AUDIT-SCORECARD.md`](WCAG-UI-AUDIT-SCORECARD.md) — the scorecard | Automated only. |
 | LC-HV7-03 | VPAT or dated VPAT plan exists | `accessibility` | **none** | owner sets | designed | [`docs/trust/HECVAT-VPAT-PLAN.md`](trust/HECVAT-VPAT-PLAN.md) — the plan | No VPAT. |
 | LC-HV7-04 | Keyboard navigation tested | `accessibility` | **none** | owner sets | tested | [`app/src/screens/Calendar.keyboard.test.tsx`](../app/src/screens/Calendar.keyboard.test.tsx) — the calendar by keyboard | No manual test record across the core path. |
@@ -274,7 +274,7 @@ All 81: tested 40 · building 8 · designed 27 · not-started 5 · held 1.
 | LC-LMS1-05 | Student reviews extracted syllabus dates before they create actions or calendar entries | designed | [`docs/STUDY-READINESS-AND-SOURCE-LOCKER.md`](STUDY-READINESS-AND-SOURCE-LOCKER.md) — the source locker | No review step in code. |
 | LC-LMS1-06 | Study assets show citations and allow correction or deletion | tested | [`app/src/lib/studystudio.test.ts`](../app/src/lib/studystudio.test.ts) — the study studio | None. |
 | LC-LMS1-07 | Course AI policy visible and enforced | tested | [`supabase/intelligence-policy.check.sql`](../supabase/intelligence-policy.check.sql) — the policy<br>[`app/src/lib/coursestudio.test.ts`](../app/src/lib/coursestudio.test.ts) — published rules | None. |
-| LC-LMS1-08 | Active-assessment restrictions offer safe alternatives, not dead ends | tested | [`app/src/lib/coursestudio.test.ts`](../app/src/lib/coursestudio.test.ts) — never final answers without the instructor’s confirmation | None. |
+| LC-LMS1-08 | Active-assessment restrictions offer safe alternatives, not dead ends | tested | [`app/src/lib/coursestudio.test.ts`](../app/src/lib/coursestudio.test.ts) — never final answers without the instructor’s confirmation | The rule is held; no study alternative is offered in its place. |
 | LC-LMS1-09 | Student can create study plans and use practice tools | tested | [`app/src/components/StudyStudio.test.tsx`](../app/src/components/StudyStudio.test.tsx) — practice | None. |
 | LC-LMS1-10 | Student workspace files and drafts private by default | tested | [`supabase/rls-coverage.check.sql`](../supabase/rls-coverage.check.sql) — every table under row-level security<br>[`app/src/lib/files.test.ts`](../app/src/lib/files.test.ts) — the drive | None. |
 | LC-LMS1-11 | Any sharing is explicit, scoped, expiring where appropriate and auditable | tested | [`supabase/supportshares.check.sql`](../supabase/supportshares.check.sql) — support shares<br>[`supabase/familyshare.check.sql`](../supabase/familyshare.check.sql) — family shares | None. |
@@ -630,24 +630,24 @@ Each word the brief says must not outrun its evidence, and the rows of [`ops/cla
 
 ### Public legal documents
 
-9 of 14 have something in the tree; every one needs counsel before publication.
+14 of 14 have something in the tree; every one needs counsel before publication.
 
 | Document | Nearest in the tree | Note |
 | --- | --- | --- |
 | Privacy Policy | [`docs/legal/PRIVACY-POLICY-DRAFT.md`](legal/PRIVACY-POLICY-DRAFT.md) | Draft. |
 | Terms of Service | [`docs/legal/TERMS-OF-SERVICE-DRAFT.md`](legal/TERMS-OF-SERVICE-DRAFT.md) | Draft. |
-| Acceptable Use Policy | [`docs/legal/TERMS-OF-SERVICE-DRAFT.md`](legal/TERMS-OF-SERVICE-DRAFT.md) | A section of the terms. |
-| Community Guidelines | [`docs/CAMPUS-MODERATION-SOP.md`](CAMPUS-MODERATION-SOP.md) | Inside the moderation SOP; not a public page. |
-| Copyright / DMCA process | **none** | None. |
-| AI Policy | [`docs/trust/AI-MODEL-TRAINING-AND-DATA-USE-POLICY.md`](trust/AI-MODEL-TRAINING-AND-DATA-USE-POLICY.md) | Training and data use only. |
-| Cookie / analytics policy | **none** | None. |
-| Accessibility Statement | **none** | The /accessibility/ page is not a dated statement. |
+| Acceptable Use Policy | [`docs/legal/ACCEPTABLE-USE-POLICY-DRAFT.md`](legal/ACCEPTABLE-USE-POLICY-DRAFT.md) | Draft. |
+| Community Guidelines | [`docs/legal/COMMUNITY-GUIDELINES-DRAFT.md`](legal/COMMUNITY-GUIDELINES-DRAFT.md) | Draft; published only when a school turns Community on. |
+| Copyright / DMCA process | [`docs/legal/COPYRIGHT-AND-TAKEDOWN-POLICY-DRAFT.md`](legal/COPYRIGHT-AND-TAKEDOWN-POLICY-DRAFT.md) | Draft; no designated agent is registered. |
+| AI Policy | [`docs/legal/AI-USE-POLICY-DRAFT.md`](legal/AI-USE-POLICY-DRAFT.md) | Draft; the training policy prevails where they differ. |
+| Cookie / analytics policy | [`docs/legal/COOKIE-AND-STORAGE-NOTICE-DRAFT.md`](legal/COOKIE-AND-STORAGE-NOTICE-DRAFT.md) | Draft; no cookie is set. The company site’s cookie copy contradicts it. |
+| Accessibility Statement | [`docs/legal/ACCESSIBILITY-STATEMENT-DRAFT.md`](legal/ACCESSIBILITY-STATEMENT-DRAFT.md) | Draft; claims no conformance. |
 | Security contact and responsible disclosure | [`SECURITY.md`](../SECURITY.md) | Published, with security.txt. |
 | Subprocessor Register | [`docs/SUBPROCESSORS.md`](SUBPROCESSORS.md) | In progress. |
-| Data Retention and Deletion Policy | [`RETENTION.md`](../RETENTION.md) | Internal inventory. |
-| Support Policy | **none** | A /support-policy page on the company site; no document. |
-| Incident Response Summary | [`docs/market-readiness/INCIDENT_RESPONSE.md`](market-readiness/INCIDENT_RESPONSE.md) | Internal. |
-| Advertising and Sponsorship Policy | **none** | None. |
+| Data Retention and Deletion Policy | [`docs/legal/DATA-RETENTION-AND-DELETION-POLICY-DRAFT.md`](legal/DATA-RETENTION-AND-DELETION-POLICY-DRAFT.md) | Draft; RETENTION.md prevails. |
+| Support Policy | [`docs/legal/SUPPORT-POLICY-DRAFT.md`](legal/SUPPORT-POLICY-DRAFT.md) | Draft; the company site’s /support-policy promises more. |
+| Incident Response Summary | [`docs/legal/INCIDENT-RESPONSE-SUMMARY-DRAFT.md`](legal/INCIDENT-RESPONSE-SUMMARY-DRAFT.md) | Draft; the procedure is unexercised. |
+| Advertising and Sponsorship Policy | [`docs/legal/ADVERTISING-AND-SPONSORSHIP-POLICY-DRAFT.md`](legal/ADVERTISING-AND-SPONSORSHIP-POLICY-DRAFT.md) | Draft. |
 
 ### Institutional documents
 
@@ -667,7 +667,7 @@ Each word the brief says must not outrun its evidence, and the rows of [`ops/cla
 
 ### The Trust Room
 
-14 of 18 artifacts have a file to publish into the procurement room ([`supabase/trust-room.check.sql`](../supabase/trust-room.check.sql)).
+15 of 18 artifacts have a file to publish into the procurement room ([`supabase/trust-room.check.sql`](../supabase/trust-room.check.sql)).
 
 | Artifact | Carried by |
 | --- | --- |
@@ -680,7 +680,7 @@ Each word the brief says must not outrun its evidence, and the rows of [`ops/cla
 | Privacy and FERPA summary | [`docs/FERPA-COPPA-1EDTECH-READINESS.md`](FERPA-COPPA-1EDTECH-READINESS.md) |
 | DPA | [`docs/trust/DPA-CHECKLIST.md`](trust/DPA-CHECKLIST.md) |
 | AI data-use and governance policy | [`docs/trust/AI-MODEL-TRAINING-AND-DATA-USE-POLICY.md`](trust/AI-MODEL-TRAINING-AND-DATA-USE-POLICY.md) |
-| Accessibility statement and VPAT | **none** |
+| Accessibility statement and VPAT | [`docs/legal/ACCESSIBILITY-STATEMENT-DRAFT.md`](legal/ACCESSIBILITY-STATEMENT-DRAFT.md) |
 | Subprocessor register | [`docs/SUBPROCESSORS.md`](SUBPROCESSORS.md) |
 | Incident-response summary | [`docs/market-readiness/INCIDENT_RESPONSE.md`](market-readiness/INCIDENT_RESPONSE.md) |
 | Business-continuity summary | [`docs/market-readiness/DISASTER_RECOVERY.md`](market-readiness/DISASTER_RECOVERY.md) |
@@ -760,7 +760,7 @@ The complete-company brief also covers these; each already has a register, and i
 | playbook | Complete the Registration and LMS checklists with actual test evidence | Sections 3 and 4: every row cites a test or says what is missing. |
 | playbook | Run an accessibility review of the core path, plan, agenda and support flow | Owed: docs/accessibility/AT-PASS-PROTOCOL.md, unrun. |
 | playbook | Run an incident-response and backup-restore tabletop | Owed: LC-HV5-04 and LC-HV5-09. |
-| playbook | Prepare the Trust Room and HECVAT response library | Section 11: fourteen of eighteen artifacts carried; the procurement room is checked. |
+| playbook | Prepare the Trust Room and HECVAT response library | Section 11: fifteen of eighteen artifacts carried; the procurement room is checked. |
 | playbook | Select one cohort, one sponsor, one workflow and one date | Owed: LC-GATE4-06. |
 | playbook | Conduct the formal go/no-go meeting and document the decision | Section 8 holds the agenda; docs/GO-NO-GO-CHECKLIST.md holds the gates. |
 | summary | Assign an owner, status, due date and evidence link to each HECVAT row | Section 2. |

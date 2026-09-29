@@ -300,7 +300,7 @@ function render(): string {
     '',
     'Most of what the briefs ask for exists on main as a part, and the part is usually',
     'held by a test. What does not exist is concentrated: customer data migration,',
-    'the MSA, ten of the fourteen public policies, a human accessibility pass, a',
+    'the MSA, counsel’s review of every public policy, a human accessibility pass, a',
     'production restore, error tracking, and anything with an institution’s name on it.',
     'Those are not code the repository can write; they are the owner’s, counsel’s and a',
     'first customer’s. The one conflict with the code is the pilot’s length.',

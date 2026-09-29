@@ -2678,8 +2678,8 @@ hold every brief: `docs/LAUNCH-COMPLETENESS.md`, rendered from
 `app/src/lib/launchcompleteness.ts`, cites a file for every row, and every
 standing is held to the kind of file it cites.
 
-- **Most of it exists as parts.** 210 items: 116 held by a test, 40 building,
-  41 designed, 11 not started, 2 held by a decision already on main.
+- **Most of it exists as parts.** 210 items: 117 held by a test, 40 building,
+  41 designed, 10 not started, 2 held by a decision already on main.
 - **The HECVAT tracker the briefs ask for first** is the 81 rows of their
   seven domains, each with a council seat as owner and the
   `HECVAT_READINESS.md` control it moves; 40 rows have none, which is what the
@@ -2696,7 +2696,20 @@ standing is held to the kind of file it cites.
   the same module: the brief's nine questions, the launch acceptance rule and
   twelve journeys, each beside where the tree asks it. The engineering
   checklist in `QUALITY-MANAGEMENT.md` stays where it is.
+- **Eleven public policies drafted for counsel** under `docs/legal/`: the
+  acceptable use policy, community guidelines, copyright and takedown, AI use,
+  cookie and storage notice, accessibility statement, retention and deletion,
+  support, incident response summary, advertising and sponsorship, and refund
+  and cancellation (owed before a live key since D-128). Each is written from
+  the code, carries the *Not in force* banner, and says where the company site
+  promises more; `legal-drafts.test.ts` now holds every file in the folder to
+  the banner and the contact, and `/legal/` lists each as a draft. None may be
+  published until counsel reviews it.
+- **The company site's takedown row said "Available now"** with a Legal owner
+  and a five-day target; no process, agent or owner exists. It now says the
+  policy is drafted and not in force, and names the email address a person
+  reads meanwhile.
 - **Not written here, because the repository cannot write them:** the MSA,
-  the ten missing public policies, a VPAT, customer data migration, and
+  counsel's review of every policy, a VPAT, customer data migration, and
   anything with an institution's name on it. Each is a row that says so.
 - **Not changed:** every other register, every status, the go/no-go verdict.
