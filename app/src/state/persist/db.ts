@@ -61,6 +61,19 @@ function abandon(database: IDBDatabase): void {
 }
 
 /**
+ * Whether a handle is still held.
+ *
+ * False before `open` and false again after `abandon`, and the second is the
+ * one that matters: `persist/index.ts` decided "database or localStorage"
+ * once, at load, and kept that answer for the session. After a transaction
+ * hit its limit the handle was gone, every later write answered false, and
+ * the app went on choosing the path that could no longer save anything.
+ */
+export function held(): boolean {
+  return db !== null;
+}
+
+/**
  * One open request, answered exactly once.
  *
  * `version` is left off for "whatever is on disk", which is also what creates
@@ -235,8 +248,20 @@ async function adopt(needed: string[]): Promise<IDBDatabase | null> {
   return keep(database);
 }
 
-/** Read a whole store as [key, value] pairs. Empty on any trouble. */
-export function readAll(store: string): Promise<[string, unknown][]> {
+/**
+ * Read a whole store as [key, value] pairs. Empty on any trouble — except the
+ * one trouble that has to be told apart.
+ *
+ * A transaction that hits `TRANSACTION_LIMIT_MS` answers `null`, not `[]`.
+ * The two used to be the same answer, and `load` could only read it one way:
+ * the store is empty, so migrate — and the migration's write then failed
+ * against the handle this had just dropped, so a returning student on the
+ * exact Mobile WebKit stall this file exists for was handed a fresh account
+ * instead of the localStorage copy that was sitting right there (Codex on
+ * #954). `null` says "the database did not answer", and `load` stays on the
+ * old path for the session, which is what the contract at the top promises.
+ */
+export function readAll(store: string): Promise<[string, unknown][] | null> {
   return new Promise((resolve) => {
     if (!db || !db.objectStoreNames.contains(store)) {
       resolve([]);
@@ -249,7 +274,7 @@ export function readAll(store: string): Promise<[string, unknown][]> {
       const keys = s.getAllKeys();
       const values = s.getAll();
       let answered = false;
-      const finish = (rows: [string, unknown][] = []) => {
+      const finish = (rows: [string, unknown][] | null = []) => {
         if (answered) return;
         answered = true;
         clearTimeout(limit);
@@ -258,7 +283,9 @@ export function readAll(store: string): Promise<[string, unknown][]> {
       const limit = setTimeout(() => {
         try { t.abort(); } catch { /* The browser may already have stopped it. */ }
         abandon(database);
-        finish();
+        // After `abandon`, so the abort's own `onabort` cannot answer `[]`
+        // first: it fires on a later tick, and `answered` is already true.
+        finish(null);
       }, TRANSACTION_LIMIT_MS);
       t.oncomplete = () => {
         const k = keys.result as IDBValidKey[];
@@ -337,10 +364,15 @@ export function write(writes: Write[]): Promise<boolean> {
   });
 }
 
-/** Whether anything has ever been written. Decides whether to migrate. */
-export async function isEmpty(): Promise<boolean> {
+/**
+ * Whether anything has ever been written. Decides whether to migrate.
+ *
+ * `null` when the database did not answer, which is not "empty": see
+ * `readAll`.
+ */
+export async function isEmpty(): Promise<boolean | null> {
   const settings = await readAll(SETTINGS_STORE);
-  return settings.length === 0;
+  return settings === null ? null : settings.length === 0;
 }
 
 /** For tests and for "delete everything on this device". */
