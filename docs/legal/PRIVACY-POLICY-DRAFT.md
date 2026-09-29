@@ -145,7 +145,9 @@ delete, including your account, can remain in a backup for up to that long;
 nobody reads backups, and they exist only to restore the service after a
 failure. If the service is ever restored from a backup taken before you
 deleted something, that item can come back: we re-apply the deletions we can
-identify, and we tell you if yours is one we cannot. [DECIDE with counsel:
+identify before the restored service is opened, and we tell everyone who used
+Semester in that period that a deletion made then may need to be made again,
+because we cannot tell whose it was. [DECIDE with counsel:
 the wording. The number and the exception track `RETENTION.md`, *Backups*,
 and change there first.]
 

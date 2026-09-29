@@ -459,15 +459,16 @@ expires by itself is what keeps that sentence true.
 brings the deleted rows back, because the backup predates the delete. A
 restore is therefore not finished when the fingerprints match: the deletions
 and the sweeps that ran between the backup time and the restore have to be run
-again, and a row that a restore brought back can outlive its deletion by more
-than the backup retention until they are. `RESTORE.md` now carries that as
+again before the restored project is opened to anyone; a row that a restore
+brought back would otherwise outlive its deletion by more than the backup
+retention, reachable, for as long as the replay waited. `RESTORE.md` now carries that as
 its own step, *Re-apply the deletions made after the backup point*, with what
 it can use today — the sweeps, which re-run on their schedule, and whatever
 was kept outside the database — and what it cannot: a student's own deletion of a note
 or an account leaves a record with the date and the row counts and
 deliberately no account, so a self-deletion inside that window cannot be
-replayed from anything the tree holds, and the step says to tell the students
-concerned rather than pretend. A durable deletion record that a restore
+replayed from anything the tree holds, and the step says to tell every account
+that existed in the window rather than pretend to know whose it was. A durable deletion record that a restore
 cannot undo — it has to live outside the database being restored — is owed
 (`RM-02`'s neighbour, not its twin); until it exists the promise above carries
 this exception, and the privacy-policy draft says so in the same words.

@@ -1954,6 +1954,18 @@ than the tree can show.
 - **"Logical" was the wrong word.** `RESTORE.md` reserves it for the CI
   rehearsal's dump and calls the provider's copies physical; the section now
   says which it means.
+- **Codex's review of the fix found two more, both right.** The re-apply
+  step had ended its window at "the moment the restored database went live",
+  which would have had resurrected rows reachable for as long as a weekly
+  sweep took; the step now keeps the restored project closed — the drill's
+  own rule, a restore into a new project, never over the live one — runs the
+  sweeps by hand from `scheduler.sql`, replays what can be replayed, and only
+  then cuts over, with the live project in read-only mode meanwhile. And the
+  draft policy had promised to tell a student if theirs was a deletion that
+  could not be replayed, which the same step says nothing can identify; the
+  notice is now to everyone who used Semester in the window, and the policy
+  promises no more than that.
 - **Held by test:** `retention.test.ts` reads the unverified-figure sentence
   in both files, the exception in the promise, the re-apply step in
-  `RESTORE.md`, and the verify marker and the exception in the draft policy.
+  `RESTORE.md` with its cutover rule and its broad notice, and the verify
+  marker, the exception and the broad notice in the draft policy.

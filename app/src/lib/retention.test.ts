@@ -231,12 +231,22 @@ describe('the provider’s backups have a lifecycle here, held to the HECVAT ans
     // most seven days" is only true if the deletions are re-applied. The
     // restore procedure has to carry that step, and the draft policy has to
     // carry the exception, or the promise is one the tree cannot keep.
-    const restore = readFileSync(join(ROOT, 'RESTORE.md'), 'utf8');
+    const restore = readFileSync(join(ROOT, 'RESTORE.md'), 'utf8').replace(/\s+/g, ' ');
     expect(restore).toMatch(/## Re-apply the deletions made after the backup point/);
     expect(restore).toMatch(/cannot be replayed/);
+    // Codex on #944: the restored rows are an incident the moment they are
+    // reachable, so the replay happens before the cutover, not after; and a
+    // deletion record with no account cannot support an individual notice,
+    // so the promise is a broad one.
+    expect(restore).toMatch(/Do not cut over until steps 2 to 4 are done/);
+    expect(restore).toMatch(/tell every account that existed in the window/);
+    expect(flat()).toMatch(/before the restored project is opened to anyone/);
     const policy = readFileSync(join(ROOT, 'docs', 'legal', 'PRIVACY-POLICY-DRAFT.md'), 'utf8').replace(/\s+/g, ' ');
     expect(policy).toMatch(/\[VERIFY on the provider dashboard before publishing/);
     expect(policy).toMatch(/restored from a backup taken before you deleted something/);
+    expect(policy).toMatch(/before the restored service is opened/);
+    expect(policy).toMatch(/may need to be made again, because we cannot tell whose it was/);
+    expect(policy).not.toMatch(/tell you if yours/);
   });
 
   it('says what a deletion means for the copy in a backup, and that a restore owes the deletions again', () => {
