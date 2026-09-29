@@ -16,11 +16,10 @@ Designed → Built → Internally verified → Production-certified GO → Pilot
 
 ## The decision: NOT GO
 
-**39 blockers.** GO is computed from the gate, the domains and the council below, never declared. Of the 28 gate items, 3 have passed, 21 are partial and 4 are owed.
+**38 blockers.** GO is computed from the gate, the domains and the council below, never declared. Of the 28 gate items, 4 have passed, 21 are partial and 3 are owed.
 
 - P-1 is partial: Every planned module has UI, service layer, schema, API and permissions.
 - T-2 is partial: Tenant-isolation, RLS and SECURITY DEFINER tests.
-- T-3 is owed: Production RLS, grants and function remediation applied and verified.
 - T-7 is partial: Penetration test or equivalent assessment.
 - R-1 is partial: Student data export and deletion work.
 - R-2 is partial: Backup restore drill succeeds in an isolated environment.
@@ -104,7 +103,7 @@ Code: [`app/src/lib/cloud.ts`](../../app/src/lib/cloud.ts), [`app/src/screens/Re
 | Check | State | Evidence | Note |
 | --- | --- | --- | --- |
 | Automated tests | passed | [`app/src/lib/cloud.test.ts`](../../app/src/lib/cloud.test.ts) | Sign-in, sign-up and recovery paths are held by the suite. |
-| Security | partial | [`docs/DEFINER-RLS-REGISTER.md`](../DEFINER-RLS-REGISTER.md) | Every definer function has a disposition in source; the reviewed migration is not yet confirmed applied and advisor-clean in production. |
+| Security | partial | [`docs/DEFINER-RLS-REGISTER.md`](../DEFINER-RLS-REGISTER.md) | Production matches the approved advisor baseline one for one (T-3); no penetration test, and the negative checks have run on a copy of the schema, not against production. |
 | Accessibility | partial | [`app/src/a11y/axe.test.tsx`](../../app/src/a11y/axe.test.tsx) | Automated axe checks run in the suite; manual keyboard, screen-reader, zoom and mobile QA is owed. |
 | Privacy | partial | [`docs/MODULE-PRIVACY-MODEL.md`](../MODULE-PRIVACY-MODEL.md) | Defaults and roles are modelled; export, deletion and revocation have not been exercised against production. |
 
@@ -117,7 +116,7 @@ Code: [`app/src/lib/pathway.ts`](../../app/src/lib/pathway.ts), [`app/src/screen
 | Check | State | Evidence | Note |
 | --- | --- | --- | --- |
 | Automated tests | passed | [`app/src/lib/conflicts.test.ts`](../../app/src/lib/conflicts.test.ts) | Plans, the path grid and conflict detection are held by the suite. |
-| Security | partial | [`docs/DEFINER-RLS-REGISTER.md`](../DEFINER-RLS-REGISTER.md) | Every definer function has a disposition in source; the reviewed migration is not yet confirmed applied and advisor-clean in production. |
+| Security | partial | [`docs/DEFINER-RLS-REGISTER.md`](../DEFINER-RLS-REGISTER.md) | Production matches the approved advisor baseline one for one (T-3); no penetration test, and the negative checks have run on a copy of the schema, not against production. |
 | Accessibility | partial | [`app/src/a11y/axe.test.tsx`](../../app/src/a11y/axe.test.tsx) | Automated axe checks run in the suite; manual keyboard, screen-reader, zoom and mobile QA is owed. |
 | Privacy | partial | [`docs/MODULE-PRIVACY-MODEL.md`](../MODULE-PRIVACY-MODEL.md) | Defaults and roles are modelled; export, deletion and revocation have not been exercised against production. |
 
@@ -130,7 +129,7 @@ Code: [`app/src/lib/registration-plan.ts`](../../app/src/lib/registration-plan.t
 | Check | State | Evidence | Note |
 | --- | --- | --- | --- |
 | Automated tests | passed | [`app/src/lib/advisor-meeting.test.ts`](../../app/src/lib/advisor-meeting.test.ts) | The advisor agenda and registration-day plan are held by the suite. |
-| Security | partial | [`docs/DEFINER-RLS-REGISTER.md`](../DEFINER-RLS-REGISTER.md) | Every definer function has a disposition in source; the reviewed migration is not yet confirmed applied and advisor-clean in production. |
+| Security | partial | [`docs/DEFINER-RLS-REGISTER.md`](../DEFINER-RLS-REGISTER.md) | Production matches the approved advisor baseline one for one (T-3); no penetration test, and the negative checks have run on a copy of the schema, not against production. |
 | Accessibility | partial | [`app/src/a11y/axe.test.tsx`](../../app/src/a11y/axe.test.tsx) | Automated axe checks run in the suite; manual keyboard, screen-reader, zoom and mobile QA is owed. |
 | Privacy | partial | [`docs/MODULE-PRIVACY-MODEL.md`](../MODULE-PRIVACY-MODEL.md) | Defaults and roles are modelled; export, deletion and revocation have not been exercised against production. |
 
@@ -143,7 +142,7 @@ Code: [`app/src/lib/source.ts`](../../app/src/lib/source.ts)
 | Check | State | Evidence | Note |
 | --- | --- | --- | --- |
 | Automated tests | passed | [`app/src/lib/source.test.ts`](../../app/src/lib/source.test.ts) | The five source labels are held to the database’s check constraint. |
-| Security | partial | [`docs/DEFINER-RLS-REGISTER.md`](../DEFINER-RLS-REGISTER.md) | Every definer function has a disposition in source; the reviewed migration is not yet confirmed applied and advisor-clean in production. |
+| Security | partial | [`docs/DEFINER-RLS-REGISTER.md`](../DEFINER-RLS-REGISTER.md) | Production matches the approved advisor baseline one for one (T-3); no penetration test, and the negative checks have run on a copy of the schema, not against production. |
 | Accessibility | partial | [`app/src/a11y/axe.test.tsx`](../../app/src/a11y/axe.test.tsx) | Automated axe checks run in the suite; manual keyboard, screen-reader, zoom and mobile QA is owed. |
 | Privacy | partial | [`docs/MODULE-PRIVACY-MODEL.md`](../MODULE-PRIVACY-MODEL.md) | Defaults and roles are modelled; export, deletion and revocation have not been exercised against production. |
 
@@ -156,7 +155,7 @@ Code: [`app/src/lib/support.ts`](../../app/src/lib/support.ts), [`app/src/lib/su
 | Check | State | Evidence | Note |
 | --- | --- | --- | --- |
 | Automated tests | passed | [`app/src/lib/supporttickets.test.ts`](../../app/src/lib/supporttickets.test.ts) | Ticket creation and routing are held by the suite. |
-| Security | partial | [`docs/DEFINER-RLS-REGISTER.md`](../DEFINER-RLS-REGISTER.md) | Every definer function has a disposition in source; the reviewed migration is not yet confirmed applied and advisor-clean in production. |
+| Security | partial | [`docs/DEFINER-RLS-REGISTER.md`](../DEFINER-RLS-REGISTER.md) | Production matches the approved advisor baseline one for one (T-3); no penetration test, and the negative checks have run on a copy of the schema, not against production. |
 | Accessibility | partial | [`app/src/a11y/axe.test.tsx`](../../app/src/a11y/axe.test.tsx) | Automated axe checks run in the suite; manual keyboard, screen-reader, zoom and mobile QA is owed. |
 | Privacy | partial | [`docs/MODULE-PRIVACY-MODEL.md`](../MODULE-PRIVACY-MODEL.md) | Defaults and roles are modelled; export, deletion and revocation have not been exercised against production. |
 
@@ -169,7 +168,7 @@ Code: [`app/src/lib/assistant.ts`](../../app/src/lib/assistant.ts), [`app/src/li
 | Check | State | Evidence | Note |
 | --- | --- | --- | --- |
 | Automated tests | passed | [`app/src/lib/aikillswitch.test.ts`](../../app/src/lib/aikillswitch.test.ts) | The kill switch and injection fencing are held by the suite. |
-| Security | partial | [`docs/DEFINER-RLS-REGISTER.md`](../DEFINER-RLS-REGISTER.md) | Every definer function has a disposition in source; the reviewed migration is not yet confirmed applied and advisor-clean in production. |
+| Security | partial | [`docs/DEFINER-RLS-REGISTER.md`](../DEFINER-RLS-REGISTER.md) | Production matches the approved advisor baseline one for one (T-3); no penetration test, and the negative checks have run on a copy of the schema, not against production. |
 | Accessibility | partial | [`app/src/a11y/axe.test.tsx`](../../app/src/a11y/axe.test.tsx) | Automated axe checks run in the suite; manual keyboard, screen-reader, zoom and mobile QA is owed. |
 | Privacy | partial | [`docs/MODULE-PRIVACY-MODEL.md`](../MODULE-PRIVACY-MODEL.md) | Defaults and roles are modelled; export, deletion and revocation have not been exercised against production. |
 
@@ -182,7 +181,7 @@ Code: [`app/src/screens/Console.tsx`](../../app/src/screens/Console.tsx), [`app/
 | Check | State | Evidence | Note |
 | --- | --- | --- | --- |
 | Automated tests | passed | [`app/src/screens/console.test.tsx`](../../app/src/screens/console.test.tsx) | The console’s views are held by the suite. |
-| Security | partial | [`docs/DEFINER-RLS-REGISTER.md`](../DEFINER-RLS-REGISTER.md) | Every definer function has a disposition in source; the reviewed migration is not yet confirmed applied and advisor-clean in production. |
+| Security | partial | [`docs/DEFINER-RLS-REGISTER.md`](../DEFINER-RLS-REGISTER.md) | Production matches the approved advisor baseline one for one (T-3); no penetration test, and the negative checks have run on a copy of the schema, not against production. |
 | Accessibility | partial | [`app/src/a11y/axe.test.tsx`](../../app/src/a11y/axe.test.tsx) | Automated axe checks run in the suite; manual keyboard, screen-reader, zoom and mobile QA is owed. |
 | Privacy | partial | [`docs/MODULE-PRIVACY-MODEL.md`](../MODULE-PRIVACY-MODEL.md) | Defaults and roles are modelled; export, deletion and revocation have not been exercised against production. |
 
@@ -195,7 +194,7 @@ Code: [`app/src/lib/coursestudio.ts`](../../app/src/lib/coursestudio.ts), [`supa
 | Check | State | Evidence | Note |
 | --- | --- | --- | --- |
 | Automated tests | passed | [`app/src/lib/coursestudio.test.ts`](../../app/src/lib/coursestudio.test.ts) | Course shells and studio drafts are held by the suite. |
-| Security | partial | [`docs/DEFINER-RLS-REGISTER.md`](../DEFINER-RLS-REGISTER.md) | Every definer function has a disposition in source; the reviewed migration is not yet confirmed applied and advisor-clean in production. |
+| Security | partial | [`docs/DEFINER-RLS-REGISTER.md`](../DEFINER-RLS-REGISTER.md) | Production matches the approved advisor baseline one for one (T-3); no penetration test, and the negative checks have run on a copy of the schema, not against production. |
 | Accessibility | partial | [`app/src/a11y/axe.test.tsx`](../../app/src/a11y/axe.test.tsx) | Automated axe checks run in the suite; manual keyboard, screen-reader, zoom and mobile QA is owed. |
 | Privacy | partial | [`docs/MODULE-PRIVACY-MODEL.md`](../MODULE-PRIVACY-MODEL.md) | Defaults and roles are modelled; export, deletion and revocation have not been exercised against production. |
 
@@ -208,7 +207,7 @@ Code: [`app/src/lib/career.ts`](../../app/src/lib/career.ts), [`app/src/screens/
 | Check | State | Evidence | Note |
 | --- | --- | --- | --- |
 | Automated tests | passed | [`app/src/screens/Community.test.tsx`](../../app/src/screens/Community.test.tsx) | Community screens and moderation paths are held by the suite. |
-| Security | partial | [`docs/DEFINER-RLS-REGISTER.md`](../DEFINER-RLS-REGISTER.md) | Every definer function has a disposition in source; the reviewed migration is not yet confirmed applied and advisor-clean in production. |
+| Security | partial | [`docs/DEFINER-RLS-REGISTER.md`](../DEFINER-RLS-REGISTER.md) | Production matches the approved advisor baseline one for one (T-3); no penetration test, and the negative checks have run on a copy of the schema, not against production. |
 | Accessibility | partial | [`app/src/a11y/axe.test.tsx`](../../app/src/a11y/axe.test.tsx) | Automated axe checks run in the suite; manual keyboard, screen-reader, zoom and mobile QA is owed. |
 | Privacy | partial | [`docs/MODULE-PRIVACY-MODEL.md`](../MODULE-PRIVACY-MODEL.md) | Defaults and roles are modelled; export, deletion and revocation have not been exercised against production. |
 
@@ -221,7 +220,7 @@ Code: [`app/src/lib/housing.ts`](../../app/src/lib/housing.ts), [`app/src/screen
 | Check | State | Evidence | Note |
 | --- | --- | --- | --- |
 | Automated tests | passed | [`app/src/lib/housing.test.ts`](../../app/src/lib/housing.test.ts) | The student-side housing sums are held by the suite. |
-| Security | partial | [`docs/DEFINER-RLS-REGISTER.md`](../DEFINER-RLS-REGISTER.md) | Every definer function has a disposition in source; the reviewed migration is not yet confirmed applied and advisor-clean in production. |
+| Security | partial | [`docs/DEFINER-RLS-REGISTER.md`](../DEFINER-RLS-REGISTER.md) | Production matches the approved advisor baseline one for one (T-3); no penetration test, and the negative checks have run on a copy of the schema, not against production. |
 | Accessibility | partial | [`app/src/a11y/axe.test.tsx`](../../app/src/a11y/axe.test.tsx) | Automated axe checks run in the suite; manual keyboard, screen-reader, zoom and mobile QA is owed. |
 | Privacy | partial | [`docs/MODULE-PRIVACY-MODEL.md`](../MODULE-PRIVACY-MODEL.md) | Defaults and roles are modelled; export, deletion and revocation have not been exercised against production. |
 
@@ -234,7 +233,7 @@ Code: [`app/src/lib/enrollment/service.ts`](../../app/src/lib/enrollment/service
 | Check | State | Evidence | Note |
 | --- | --- | --- | --- |
 | Automated tests | passed | [`supabase/registration_transaction.check.sql`](../../supabase/registration_transaction.check.sql) | Enroll, waitlist, drop, withdraw, holds and overrides, allowed and denied; the last seat cannot be taken twice. |
-| Security | partial | [`docs/DEFINER-RLS-REGISTER.md`](../DEFINER-RLS-REGISTER.md) | Every definer function has a disposition in source; the reviewed migration is not yet confirmed applied and advisor-clean in production. |
+| Security | partial | [`docs/DEFINER-RLS-REGISTER.md`](../DEFINER-RLS-REGISTER.md) | Production matches the approved advisor baseline one for one (T-3); no penetration test, and the negative checks have run on a copy of the schema, not against production. |
 | Accessibility | partial | [`app/src/a11y/axe.test.tsx`](../../app/src/a11y/axe.test.tsx) | Automated axe checks run in the suite; manual keyboard, screen-reader, zoom and mobile QA is owed. |
 | Privacy | partial | [`docs/MODULE-PRIVACY-MODEL.md`](../MODULE-PRIVACY-MODEL.md) | Defaults and roles are modelled; export, deletion and revocation have not been exercised against production. |
 
@@ -247,7 +246,7 @@ Code: [`app/src/lib/gradebook/ledger.ts`](../../app/src/lib/gradebook/ledger.ts)
 | Check | State | Evidence | Note |
 | --- | --- | --- | --- |
 | Automated tests | passed | [`supabase/gradebook.check.sql`](../../supabase/gradebook.check.sql) | Drafts visible only to the course’s authors, released grades to their student, append-only history, passback of released versions only. |
-| Security | partial | [`docs/DEFINER-RLS-REGISTER.md`](../DEFINER-RLS-REGISTER.md) | Every definer function has a disposition in source; the reviewed migration is not yet confirmed applied and advisor-clean in production. |
+| Security | partial | [`docs/DEFINER-RLS-REGISTER.md`](../DEFINER-RLS-REGISTER.md) | Production matches the approved advisor baseline one for one (T-3); no penetration test, and the negative checks have run on a copy of the schema, not against production. |
 | Accessibility | partial | [`app/src/a11y/axe.test.tsx`](../../app/src/a11y/axe.test.tsx) | Automated axe checks run in the suite; manual keyboard, screen-reader, zoom and mobile QA is owed. |
 | Privacy | partial | [`docs/MODULE-PRIVACY-MODEL.md`](../MODULE-PRIVACY-MODEL.md) | Defaults and roles are modelled; export, deletion and revocation have not been exercised against production. |
 
@@ -260,7 +259,7 @@ Code: [`app/src/lib/studentaccount/ledger.ts`](../../app/src/lib/studentaccount/
 | Check | State | Evidence | Note |
 | --- | --- | --- | --- |
 | Automated tests | passed | [`supabase/student_accounts.check.sql`](../../supabase/student_accounts.check.sql) | Ledger, holds, plans, refunds and aid, allowed and denied; work-study never reduces the balance. |
-| Security | partial | [`docs/DEFINER-RLS-REGISTER.md`](../DEFINER-RLS-REGISTER.md) | Every definer function has a disposition in source; the reviewed migration is not yet confirmed applied and advisor-clean in production. |
+| Security | partial | [`docs/DEFINER-RLS-REGISTER.md`](../DEFINER-RLS-REGISTER.md) | Production matches the approved advisor baseline one for one (T-3); no penetration test, and the negative checks have run on a copy of the schema, not against production. |
 | Accessibility | partial | [`app/src/a11y/axe.test.tsx`](../../app/src/a11y/axe.test.tsx) | Automated axe checks run in the suite; manual keyboard, screen-reader, zoom and mobile QA is owed. |
 | Privacy | partial | [`docs/MODULE-PRIVACY-MODEL.md`](../MODULE-PRIVACY-MODEL.md) | Defaults and roles are modelled; export, deletion and revocation have not been exercised against production. |
 
@@ -273,7 +272,7 @@ Code: [`app/src/lib/dining/service.ts`](../../app/src/lib/dining/service.ts), [`
 | Check | State | Evidence | Note |
 | --- | --- | --- | --- |
 | Automated tests | passed | [`supabase/dining.check.sql`](../../supabase/dining.check.sql) | Plans, ledger, orders held to capacity and the shared-swipe pool, allowed and denied; staff cannot tell a shared swipe. |
-| Security | partial | [`docs/DEFINER-RLS-REGISTER.md`](../DEFINER-RLS-REGISTER.md) | Every definer function has a disposition in source; the reviewed migration is not yet confirmed applied and advisor-clean in production. |
+| Security | partial | [`docs/DEFINER-RLS-REGISTER.md`](../DEFINER-RLS-REGISTER.md) | Production matches the approved advisor baseline one for one (T-3); no penetration test, and the negative checks have run on a copy of the schema, not against production. |
 | Accessibility | partial | [`app/src/a11y/axe.test.tsx`](../../app/src/a11y/axe.test.tsx) | Automated axe checks run in the suite; manual keyboard, screen-reader, zoom and mobile QA is owed. |
 | Privacy | partial | [`docs/MODULE-PRIVACY-MODEL.md`](../MODULE-PRIVACY-MODEL.md) | Defaults and roles are modelled; export, deletion and revocation have not been exercised against production. |
 
@@ -295,7 +294,7 @@ Items marked **P0** are conditions of a full GO: while one is open the answer is
 | --- | --- | --- | --- | --- | --- |
 | T-1 | Unit tests for all domain logic. | partial |  | [`REGRESSION-CHECKLIST.md`](../../REGRESSION-CHECKLIST.md) | A large suite runs in order and shuffled; unbuilt domains have none. |
 | T-2 | Tenant-isolation, RLS and SECURITY DEFINER tests. | partial | P0 | [`supabase/check.sh`](../../supabase/check.sh) | The check suite exists; it has not been run against production. |
-| T-3 | Production RLS, grants and function remediation applied and verified. | owed | P0 | — | The reviewed migration is not confirmed applied; advisors not re-run. |
+| T-3 | Production RLS, grants and function remediation applied and verified. | passed | P0 | [`docs/DEFINER-RLS-REGISTER.md`](../DEFINER-RLS-REGISTER.md) | Read on production at 21:38 UTC on 29 September: the remediation migrations are applied, and the security advisor lists exactly the 151 callable definer functions and 45 policy-less tables the register gives a disposition, one for one, with nothing at error level. |
 | T-4 | Webhook replay, idempotency, ordering and signature tests. | passed |  | [`app/src/lib/billing/webhook.test.ts`](../../app/src/lib/billing/webhook.test.ts) | The Stripe webhook’s signature and replay are held. |
 | T-5 | Load tests for registration, learning, search, gradebook and notifications. | partial |  | [`supabase/load.sh`](../../supabase/load.sh) | Concurrency scenarios for flag reads, plan saves and demand reads run against the full schema, and found and fixed a plan-save deadlock; registration, gradebook and notification scenarios are owed, and no run is against production-like infrastructure. |
 | T-6 | Visual regression and cross-device testing for core surfaces. | partial |  | [`docs/DESIGN-REGRESSION-TEST-PLAN.md`](../DESIGN-REGRESSION-TEST-PLAN.md) | Planned; the contrast workflow runs, cross-browser does not. |

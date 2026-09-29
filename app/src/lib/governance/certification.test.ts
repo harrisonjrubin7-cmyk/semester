@@ -108,12 +108,12 @@ describe('the release-certification register', () => {
     const d = goDecision();
     expect(d.go).toBe(false);
     expect(counts()).toMatchObject({ designed: 0, built: 14, internally_verified: 0, go_certified: 0 });
-    expect(gateCounts()).toEqual({ passed: 3, partial: 21, owed: 4 });
-    // Thirteen P0 gate items open, fourteen domains unverified, twelve seats unsigned.
-    expect(d.blockers.filter((b) => /^[A-Z]-\d/.test(b))).toHaveLength(13);
+    expect(gateCounts()).toEqual({ passed: 4, partial: 21, owed: 3 });
+    // Twelve P0 gate items open, fourteen domains unverified, twelve seats unsigned.
+    expect(d.blockers.filter((b) => /^[A-Z]-\d/.test(b))).toHaveLength(12);
     expect(d.blockers.filter((b) => b.endsWith('not internally verified.'))).toHaveLength(DOMAINS.length);
     expect(d.blockers.filter((b) => b.includes('seat'))).toHaveLength(SEATS.length);
-    expect(d.blockers).toHaveLength(13 + DOMAINS.length + SEATS.length);
+    expect(d.blockers).toHaveLength(12 + DOMAINS.length + SEATS.length);
   });
 
   it('reaches GO only when every condition holds, and a refusal blocks it', () => {

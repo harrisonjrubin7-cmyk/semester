@@ -108,7 +108,7 @@ export interface Domain {
 const SECURITY_PARTIAL: Check = {
   state: 'partial',
   evidence: 'docs/DEFINER-RLS-REGISTER.md',
-  note: 'Every definer function has a disposition in source; the reviewed migration is not yet confirmed applied and advisor-clean in production.',
+  note: 'Production matches the approved advisor baseline one for one (T-3); no penetration test, and the negative checks have run on a copy of the schema, not against production.',
 };
 const A11Y_PARTIAL: Check = {
   state: 'partial',
@@ -280,7 +280,7 @@ export const GO_GATE: readonly GateItem[] = [
   g('P-3', 'product', 'Every module has tenant, role, cohort and feature configuration.', 'partial', 'app/src/lib/flags.ts', 'Tenant, cohort, role and feature scopes exist in the evaluator and the database; not every module is yet behind a flag.'),
   g('T-1', 'technical', 'Unit tests for all domain logic.', 'partial', 'REGRESSION-CHECKLIST.md', 'A large suite runs in order and shuffled; unbuilt domains have none.'),
   g('T-2', 'technical', 'Tenant-isolation, RLS and SECURITY DEFINER tests.', 'partial', 'supabase/check.sh', 'The check suite exists; it has not been run against production.', true),
-  g('T-3', 'technical', 'Production RLS, grants and function remediation applied and verified.', 'owed', null, 'The reviewed migration is not confirmed applied; advisors not re-run.', true),
+  g('T-3', 'technical', 'Production RLS, grants and function remediation applied and verified.', 'passed', 'docs/DEFINER-RLS-REGISTER.md', 'Read on production at 21:38 UTC on 29 September: the remediation migrations are applied, and the security advisor lists exactly the 151 callable definer functions and 45 policy-less tables the register gives a disposition, one for one, with nothing at error level.', true),
   g('T-4', 'technical', 'Webhook replay, idempotency, ordering and signature tests.', 'passed', 'app/src/lib/billing/webhook.test.ts', 'The Stripe webhook’s signature and replay are held.'),
   g('T-5', 'technical', 'Load tests for registration, learning, search, gradebook and notifications.', 'partial', 'supabase/load.sh', 'Concurrency scenarios for flag reads, plan saves and demand reads run against the full schema, and found and fixed a plan-save deadlock; registration, gradebook and notification scenarios are owed, and no run is against production-like infrastructure.'),
   g('T-6', 'technical', 'Visual regression and cross-device testing for core surfaces.', 'partial', 'docs/DESIGN-REGRESSION-TEST-PLAN.md', 'Planned; the contrast workflow runs, cross-browser does not.'),
