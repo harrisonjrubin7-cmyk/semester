@@ -1,5 +1,6 @@
 import { realMonthDay } from './date';
 import { ask } from './claude';
+import { DATA_RULE, fence } from '../ai/untrusted';
 import { flatten } from './cite';
 import type { Kind } from './classify';
 import { hashOf, type Intake } from './intake';
@@ -210,6 +211,18 @@ export async function harvest(
     signal,
     think: true,
     maxTokens: 6000,
+    ...harvestPrompt(item, kind, context, style),
+  });
+
+  const start = reply.indexOf('{');
+  const end = reply.lastIndexOf('}');
+  if (start === -1 || end === -1) return { pieces: [], says: '', dropped: [] };
+  return harvested(reply.slice(start, end + 1), item, base);
+}
+
+/** The prompt `harvest` sends, pure, so `ai/injection.test.ts` can hold its shape. */
+export function harvestPrompt(item: Intake, kind: Kind, context: string, style: string) {
+  return {
     system:
       'You read course material a university student has added, and you turn it into the shapes ' +
       'their study app already holds. You do not invent content types and you do not invent ' +
@@ -225,22 +238,24 @@ export async function harvest(
       'leave the field out. A quote that is not there is worse than no quote, because the app ' +
       'shows it as the source\'s own words.\n' +
       '- Where the material gives a page or slide number, carry it. Never guess one.\n' +
-      '- Plain, direct, second person where you address the student. No exclamation marks.',
+      '- Plain, direct, second person where you address the student. No exclamation marks.\n\n' +
+      DATA_RULE,
     messages: [
       {
-        role: 'user',
-        content: `The course as it stands:\n${context}\n\nThe material — "${item.name}":\n\n${item.text.slice(0, 140_000)}`,
+        role: 'user' as const,
+        content:
+          `The course as it stands:\n${fence('course', context)}\n\n` +
+          `The material is called:\n${fence('file name', item.name)}\n\n` +
+          `The material:\n\n${fence('material', item.text.slice(0, 140_000))}`,
       },
     ],
-  });
+  };
+}
 
-  const start = reply.indexOf('{');
-  const end = reply.lastIndexOf('}');
-  if (start === -1 || end === -1) return { pieces: [], says: '', dropped: [] };
-
+function harvested(json: string, item: Intake, base: Omit<Where, 'page'>): Harvest {
   let parsed: Reply;
   try {
-    parsed = JSON.parse(reply.slice(start, end + 1)) as Reply;
+    parsed = JSON.parse(json) as Reply;
   } catch {
     return { pieces: [], says: '', dropped: [] };
   }

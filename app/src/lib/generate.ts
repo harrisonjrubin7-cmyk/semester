@@ -1,3 +1,4 @@
+import { DATA_RULE, fence } from '../ai/untrusted';
 import { realMonthDay } from './date';
 /**
  * A syllabus in, a course out.
@@ -198,7 +199,7 @@ export async function generateCourse(
      * which is the worst kind of broken setting: no error, no clue, and the
      * app quietly behaving as though you had not asked.
      */
-    system: rules.length > 0 ? `${SYSTEM}\n${rules.map((r, i) => `${8 + i}. ${r}`).join('\n')}` : SYSTEM,
+    system: `${rules.length > 0 ? `${SYSTEM}\n${rules.map((r, i) => `${8 + i}. ${r}`).join('\n')}` : SYSTEM}\n\n${DATA_RULE}`,
     docs,
     cite: worthCiting(docs),
     onCitation: (c) => citations.push(c),
@@ -207,8 +208,8 @@ export async function generateCourse(
         role: 'user',
         content:
           `The semester falls in ${input.year}.` +
-          (input.hint ? `\nThe student says: ${input.hint}` : '') +
-          (pasted ? `\n\n${pasted}` : ''),
+          (input.hint ? `\nThe student says:\n${fence('note from the student', input.hint)}` : '') +
+          (pasted ? `\n\n${fence('pasted material', pasted)}` : ''),
       },
     ],
   });

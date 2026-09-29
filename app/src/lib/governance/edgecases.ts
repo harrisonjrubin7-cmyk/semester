@@ -85,7 +85,7 @@ export const EDGE_CASES: readonly EdgeCase[] = [
 
   // ── AI ─────────────────────────────────────────────────────────────────
   { id: 'EC-AI-01', domain: 'ai', case: 'AI source permission is revoked during generation.', guard: null, note: 'Source access is checked before retrieval at the gateway, not during a stream.', critical: true },
-  { id: 'EC-AI-02', domain: 'ai', case: 'Prompt injection embedded in an uploaded document.', guard: null, note: 'No injection suite exists: AI-010, R-07.' },
+  { id: 'EC-AI-02', domain: 'ai', case: 'Prompt injection embedded in an uploaded document.', guard: 'app/src/ai/injection.test.ts', note: 'Structural: twelve injection-shaped texts through every prompt builder stay inside a fence and leave the instructions byte-for-byte unchanged. It does not test what a live model does with the fence; that red-team is AI-010’s remaining gap.' },
   { id: 'EC-AI-03', domain: 'ai', case: 'AI cites a stale or retracted source.', guard: null, note: 'Citations point at the student\'s own sources; nothing marks one retracted.' },
   { id: 'EC-AI-04', domain: 'ai', case: 'Provider outage or a safety-filter false positive.', guard: 'app/src/ai/helpstate.test.tsx', note: 'An unreachable gateway is named to the student with a retry, and the local assistant answers when no gateway is configured. A safety-filter refusal is not distinguished from an outage.' },
   { id: 'EC-AI-05', domain: 'ai', case: 'Course policy changes while a conversation remains open.', guard: null, note: 'Policy is read when a conversation is assembled, not on every turn.' },

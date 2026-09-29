@@ -2023,3 +2023,44 @@ calendar's restore rehearsals were the engineering seat's by default.
   and it is deliberately not one: the council decides launch; a student
   advisory voice belongs to the customer advisory board in
   RISK-GOVERNANCE.md, which has no members either.
+
+## D-121 · Untrusted text is fenced in every prompt, and the injection suite holds the structure, not the model
+
+**Decided 29 Sep 2026.** AI-010, EC-AI-02 and R-07 all said the same thing:
+no prompt-injection suite exists, and nothing on the local assistant path
+separates a syllabus somebody uploaded from the rules around it. Read
+builder by builder, that was true and a little worse: the assignment
+breakdown, the draft critique, the classifier, the photograph reader, the
+material reader, the harvester and the course generator each interpolated
+the student's material into the prompt as prose, in the same voice and at
+the same level as the instructions, and the assistant's system prompt ended
+with whatever the screen had drawn. Only the study studio (JSON) and the
+institution gateway (developer role, sources as JSON) kept the two apart.
+
+- **One fence, one rule.** `app/src/ai/untrusted.ts` puts text somebody
+  else wrote between a fixed pair of tags and disarms any copy of the tags
+  inside it, so the fence cannot be closed early; and `DATA_RULE` is the one
+  sentence every builder now carries, saying what the fence is — material,
+  quoted, never addressed to the model. Every builder that carries such text
+  is now a pure function beside the call that sends it, so the shape can be
+  tested without a model.
+- **The suite is structural, and says so.** `app/src/ai/injection.test.ts`
+  runs twelve injection-shaped texts — an override, a fake system block, a
+  closing tag, a role spoof, a tool call, a right-to-left mark, a fake
+  message from the app — through every slot of every builder, and holds
+  four things: the text is only ever inside a fence; the prompt with its
+  fences emptied is byte-for-byte the one built from benign text, so
+  nothing in the material reaches the instructions; the rule is present;
+  and the material's own closing tag closed nothing. Three controls show
+  the probe failing a builder that writes the material as prose, one whose
+  instructions bend to it, and one that lets it close the fence.
+- **What it does not hold.** A fence is a guarantee about the prompt, not
+  about the answer; what a live model does with a fenced instruction is a
+  red-team, and none has been run. So AI-010 stays `building` with that as
+  its gap, MR-36 stays `building`, EC-AI-02 gains the suite as its guard
+  with the limit in its note, and R-07's description says "structurally,
+  not behaviourally" with the red-team as its mitigation. The residual does
+  not move.
+- **Not changed:** the study studio's JSON prompt and the gateway's role
+  separation, both read by the suite as they are; the model calls
+  themselves, which send exactly what the builders return.

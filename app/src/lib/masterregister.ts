@@ -936,8 +936,8 @@ export const REGISTER: readonly Requirement[] = [
     validation: 'Red-team suite',
     severity: 'P0',
     status: 'building',
-    evidence: [{ path: 'app/server/institution/providers/openai.ts', shows: 'Instructions in the developer role, sources as JSON user content, strict schema output' }, { path: 'app/server/institution/intelligence.ts', shows: 'Limits impact: citations limited to request ids, actions prepare-only' }, { path: 'docs/PLATFORM_REQUIREMENTS.md', shows: 'Lists prompt-injection defence and testing as a requirement' }],
-    gap: 'No explicit injection handling (source delimiting/sanitising, instruction-hierarchy checks), and nothing on the local assistant path. No red-team suite or injection test cases exist.',
+    evidence: [{ path: 'app/src/ai/injection.test.ts', shows: 'Twelve injection-shaped texts through every builder that carries someone else’s text: the text only ever inside a fence, the instructions byte-for-byte unchanged, a closing tag inside the material disarmed' }, { path: 'app/src/ai/untrusted.ts', shows: 'The fence and the one rule every builder carries' }, { path: 'app/server/institution/providers/openai.ts', shows: 'Instructions in the developer role, sources as JSON user content, strict schema output' }, { path: 'app/server/institution/intelligence.ts', shows: 'Limits impact: citations limited to request ids, actions prepare-only' }, { path: 'docs/PLATFORM_REQUIREMENTS.md', shows: 'Lists prompt-injection defence and testing as a requirement' }],
+    gap: 'The suite is structural: it proves the material cannot reach the instructions, not what a model does with a fence. No red-team against a live model has been run, and no classifier screens material before it is sent.',
   },
   {
     id: 'AI-011',

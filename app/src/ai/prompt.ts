@@ -1,5 +1,6 @@
 import { build as guidebook } from '../lib/guidebook';
 import type { Mode } from '../lib/mode';
+import { DATA_RULE, fence } from './untrusted';
 
 /**
  * The system prompt, as a function of two things and nothing else.
@@ -204,13 +205,13 @@ export function systemPrompt(read: Mode, drawn: string, tutor = ''): string {
       "You are answering a question about this student's own courses and records, and about " +
       'the screen they are looking at. Answer from what is below and say which part you used. ' +
       'Each deadline carries its id in brackets; use those ids when a tool needs one, and ' +
-      `never invent one.\n\n${BOUNDS}\n\n${teach}${READING}\n\n${ACTING}\n\n${NEVER}\n\n${drawn}`
+      `never invent one.\n\n${BOUNDS}\n\n${teach}${READING}\n\n${ACTING}\n\n${NEVER}\n\n${DATA_RULE}\n\n${fence('what the student is looking at', drawn)}`
     );
   }
   return (
     'You are helping a university student. Answer the question they asked, well and directly — ' +
     'a concept, a piece of code, a piece of writing, a decision, whatever it is. Do not narrow ' +
     `it to their coursework and do not refuse because it is not about a course.\n\n` +
-    `${BOUNDS}\n\n${teach}${READING}\n\n${ACTING}\n\n${NEVER}\n\n${drawn}`
+    `${BOUNDS}\n\n${teach}${READING}\n\n${ACTING}\n\n${NEVER}\n\n${DATA_RULE}\n\n${fence('what the student is looking at', drawn)}`
   );
 }

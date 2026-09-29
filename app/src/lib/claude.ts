@@ -27,6 +27,7 @@ import { UNNAMED, record, type Usage } from './spend';
 import type { CaseFile, CourseId, Example, Figure, Frame, StudyCard } from './types';
 import { figureShapes, readFigures } from './figure';
 import { fetchWithin, timedOut, tookTooLong } from './net';
+import { DATA_RULE, fence } from '../ai/untrusted';
 import { readStudyParts, studyShapes } from './study';
 import {
   DEFAULTS as NO_CONTROLS,
@@ -1482,6 +1483,14 @@ export async function readShots(
     images,
     think: true,
     maxTokens: 3000,
+    ...readShotsPrompt(context),
+  });
+  return readCards(reply);
+}
+
+/** The prompt `readShots` sends, pure, so `ai/injection.test.ts` can hold its shape. */
+export function readShotsPrompt(context: string) {
+  return {
     system:
       'You are reading photographs of a university student\'s course material — a lecture ' +
       'board, a page of notes, a handout, a slide. Transcribe and organise; do not invent.\n\n' +
@@ -1491,15 +1500,17 @@ export async function readShots(
       '- cards: questions an exam could ask, answered from what is written in the image, with ' +
       'the specific numbers, names and steps that appear there. Between 0 and 12.\n' +
       '- Anything you cannot read, leave out. Do not fill a gap from general knowledge, and do ' +
-      'not guess at a word that is cut off or out of focus.',
+      `not guess at a word that is cut off or out of focus.\n\n${DATA_RULE}`,
     messages: [
       {
-        role: 'user',
-        content: `Course context:\n${context}\n\nRead these and make cards from what they show.`,
+        role: 'user' as const,
+        content: `Course context:\n${fence('course', context)}\n\nRead these and make cards from what they show.`,
       },
     ],
-  });
+  };
+}
 
+function readCards(reply: string): { cards: StudyCard[]; note: string } {
   const start = reply.indexOf('{');
   const end = reply.lastIndexOf('}');
   if (start === -1 || end === -1) return { cards: [], note: '' };
@@ -1613,7 +1624,6 @@ export async function readMaterial(
   note: string;
 }> {
   const caps = capsFor(controls);
-  const says = shapeSays(controls);
 
   const reply = await ask({
     signal,
@@ -1626,6 +1636,20 @@ export async function readMaterial(
     // cut off mid-JSON parses as nothing at all — the student would see "could
     // not read it" for a reading the model read perfectly well.
     maxTokens: Math.min(16_000, 8_000 + Math.max(0, caps.cards - MOST.cards) * 160),
+    ...readMaterialPrompt(text, context, controls),
+  });
+  return readParts(reply, caps);
+}
+
+/**
+ * The prompt `readMaterial` sends, as a pure function, so `ai/injection.test.ts`
+ * can hold its shape: the course and the material are fenced, and the rules
+ * say what a fence is.
+ */
+export function readMaterialPrompt(text: string, context: string, controls: Controls = NO_CONTROLS) {
+  const caps = capsFor(controls);
+  const says = shapeSays(controls);
+  return {
     system:
       'You are reading course material a university student has added to a study guide — a ' +
       'reading, a handout, a set of lecture notes. Turn it into study material; do not invent.\n\n' +
@@ -1643,14 +1667,18 @@ export async function readMaterial(
       'from general knowledge, and leave out anything the material only alludes to.' +
       // Empty on the defaults, so the prompt is unchanged for anybody who has
       // not touched a control.
-      (says ? `\n- ${says}` : ''),
+      (says ? `\n- ${says}` : '') +
+      `\n\n${DATA_RULE}`,
     messages: [
       {
-        role: 'user',
-        content: `Course context:\n${context}\n\nThe material:\n\n${text.slice(0, 120_000)}`,
+        role: 'user' as const,
+        content: `Course context:\n${fence('course', context)}\n\nThe material:\n\n${fence('material', text.slice(0, 120_000))}`,
       },
     ],
-  });
+  };
+}
+
+function readParts(reply: string, caps: ReturnType<typeof capsFor>) {
 
   const start = reply.indexOf('{');
   const end = reply.lastIndexOf('}');
