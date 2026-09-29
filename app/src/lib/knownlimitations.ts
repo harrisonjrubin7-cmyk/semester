@@ -103,7 +103,7 @@ export const KNOWN_LIMITATIONS: readonly Limitation[] = [
   {
     id: 'backup',
     title: 'Your own backup is the one that has been rehearsed.',
-    what: 'A restore of the account database has passed as a local rehearsal. The production database has never been restored, and how long that would take is unmeasured.',
+    what: 'A restore of the account database is rehearsed on every change, into an empty database. The production database has never been restored, and how long that would take is unmeasured.',
     instead: 'Download “Everything, as data” from Take it with you (#/export) at the start of term and after big changes. Restoring that file into a fresh browser is exercised on every build.',
     sources: ['RESTORE.md', 'app/scripts/golden-path.mjs'],
   },

@@ -22,10 +22,10 @@ never a person, and a seat is held only once somebody accepted it in writing.
 
 | Status | Meaning | Entries |
 | --- | --- | ---: |
-| current | Read on the review date, and stands | 47 |
+| current | Read on the review date, and stands | 48 |
 | draft | The authoritative version, but not yet fit to act on | 2 |
 | missing | No authoritative version exists; the gap says what would close it | 1 |
-| **total** |  | **50** |
+| **total** |  | **51** |
 
 `version` counts reviews of the entry — the decision that this path is the
 authoritative one and its content was read and stands — not the document’s
@@ -96,6 +96,7 @@ What the repository also runs on, and the brief’s list did not name.
 | Compliance crosswalk | [`docs/trust/COMPLIANCE-CROSSWALK.md`](docs/trust/COMPLIANCE-CROSSWALK.md) | current | `security` | 1 | 2026-09-28 | 2026-10-28 | — | `D-115` |
 | Market leadership register | [`docs/MARKET-LEADERSHIP.md`](docs/MARKET-LEADERSHIP.md) | current | `founder` | 1 | 2026-09-28 | 2026-12-28 | — | `D-115` |
 | Operational readiness pack | [`docs/OPERATIONAL-READINESS-PACK.md`](docs/OPERATIONAL-READINESS-PACK.md) | current | `engineering` | 1 | 2026-09-28 | 2026-10-28 | — | `D-115` |
+| Privacy impact assessment | [`docs/operating-model/PRIVACY-IMPACT-ASSESSMENT.md`](docs/operating-model/PRIVACY-IMPACT-ASSESSMENT.md) | current | `privacy` | 1 | 2026-09-29 | 2026-10-29 | — | `D-123` |
 
 ## Notes and gaps
 
@@ -149,6 +150,7 @@ What the repository also runs on, and the brief’s list did not name.
 - **Compliance crosswalk** — Rendered from app/src/lib/trust/compliance-crosswalk.ts: HECVAT 4, the four 1EdTech TrustEd Apps rubrics and the EDUCAUSE 2026 priorities as one control library with three views, every domain resting on rows of the four registers and every 0–4 score computed from their statuses by the test. The ceiling is 2 until docs/evidence/ exists. Also Semester’s own intake tier, the evidence package a high-tier vendor owes, the launch gates and the AI overlay. Neither HECVAT nor a TrustEd rubric is a certification; Semester has completed neither. Read next: [`docs/trust/EVIDENCE-REGISTER.md`](docs/trust/EVIDENCE-REGISTER.md), [`docs/market-readiness/HECVAT_READINESS.md`](docs/market-readiness/HECVAT_READINESS.md), [`docs/FERPA-COPPA-1EDTECH-READINESS.md`](docs/FERPA-COPPA-1EDTECH-READINESS.md), [`docs/operating-model/OPERATIONAL-MATURITY.md`](docs/operating-model/OPERATIONAL-MATURITY.md).
 - **Market leadership register** — Rendered from app/src/lib/ops/leadership.ts: the fourteen plays, the thirteen one-X promises and the shared-services rule, the revenue lines and the lines not crossed, the friction index against the first-year measures, No Wrong Door against the help routes, the Launch System against the ninety-day programme, the benchmark test, and the faculty playbook — each pointed at what the tree holds, with a standing. Nothing on it says Semester is a whole platform; the count of promises kept is the finding. Read next: [`ops/strategic-boundaries/README.md`](ops/strategic-boundaries/README.md), [`docs/DO-NOT-BUILD.md`](docs/DO-NOT-BUILD.md), [`docs/FIRST-YEAR-SUCCESS.md`](docs/FIRST-YEAR-SUCCESS.md), [`docs/90-DAY-LAUNCH-PROGRAM.md`](docs/90-DAY-LAUNCH-PROGRAM.md).
 - **Operational readiness pack** — Rendered from app/src/lib/ops/readiness-pack.ts: the five workstreams and nine decision domains as council seats, the seven pillars of production safety with every checklist item resting on register rows and launch gates and scored by the test, the dependency register (nothing tested), the eighteen minimum runbooks and what stands in for each, the launch gate whose verdict is computed — NO-GO today — the review packet, the sign-off record (nothing signed), the cadences and the first twelve initiatives. It adds no gate to the twelve of launchreadiness.ts; it reads them. Read next: [`docs/LAUNCH-READINESS-COUNCIL.md`](docs/LAUNCH-READINESS-COUNCIL.md), [`docs/RUNBOOKS.md`](docs/RUNBOOKS.md), [`docs/operating-model/OPERATING-RHYTHM.md`](docs/operating-model/OPERATING-RHYTHM.md), [`docs/PROOF-CALENDAR.md`](docs/PROOF-CALENDAR.md).
+- **Privacy impact assessment** — Rendered from app/src/lib/governance/pia.ts: the eleven questions a surface that touches student data answers before it ships, five surfaces answered against the tree (support tickets, beta feedback, the pilot figures, AI conversations, billing) with the answers a test holds told apart from the ones only written, six surfaces owed, and the gate line the pull-request template asks of every new module, held there by the test. The privacy seat is vacant; the answers are the founder’s reading until it reads them. Read next: [`docs/operating-model/RISK-GOVERNANCE.md`](docs/operating-model/RISK-GOVERNANCE.md), [`docs/PRODUCT-ANALYTICS-DATA-ETHICS.md`](docs/PRODUCT-ANALYTICS-DATA-ETHICS.md), [`docs/MODULE-PRIVACY-MODEL.md`](docs/MODULE-PRIVACY-MODEL.md), [`RETENTION.md`](RETENTION.md).
 
 ## What every controlled document displays
 
