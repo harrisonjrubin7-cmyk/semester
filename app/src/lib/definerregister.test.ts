@@ -141,6 +141,10 @@ describe('the Security Definer and RLS remediation register', () => {
   it('cites briefs that exist and keeps every open item closable', () => {
     for (const s of SOURCES) expect(existsSync(join(root, s.path)), s.path).toBe(true);
     for (const o of OPEN) {
+      if (o.closedBy) {
+        expect(existsSync(join(root, o.closedBy)), `${o.id} is closed by ${o.closedBy}`).toBe(true);
+        expect(read(o.closedBy), `${o.id}'s closing suite names every callable definer function`).toMatch(/has_function_privilege\('authenticated', p\.oid, 'execute'\)/);
+      }
       expect(o.what.length, o.id).toBeGreaterThan(40);
       expect(o.closes.length, o.id).toBeGreaterThan(20);
     }
@@ -240,9 +244,9 @@ function render(): string {
     '',
     '## Open',
     '',
-    '| ID | Severity | What | What closes it |',
-    '| --- | --- | --- | --- |',
-    ...OPEN.map((o) => `| ${o.id} | ${o.severity} | ${cell(o.what)} | ${cell(o.closes)} |`),
+    '| ID | Severity | State | What | What closes it |',
+    '| --- | --- | --- | --- | --- |',
+    ...OPEN.map((o) => `| ${o.id} | ${o.severity} | ${o.closedBy ? `closed by \`${o.closedBy}\`` : 'open'} | ${cell(o.what)} | ${cell(o.closes)} |`),
     '',
   );
   return out.join('\n');
