@@ -1,5 +1,6 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 // The typefaces both sheets below name, declared once and served from this
 // origin rather than from Google — see `styles/typefaces.css` for why.
 import './styles/typefaces.css';
@@ -77,6 +78,7 @@ if (roomLink) {
     createRoot(document.getElementById('root')!).render(
       <StrictMode>
         <TrustRoom token={roomLink} />
+        <SpeedInsights />
       </StrictMode>,
     );
   });
@@ -85,6 +87,7 @@ if (roomLink) {
     createRoot(document.getElementById('root')!).render(
       <StrictMode>
         <Respond id={formLink} />
+        <SpeedInsights />
       </StrictMode>,
     );
   });
@@ -245,6 +248,7 @@ finishAnyLaunch()
                 grid on a wide window. See `components/Splash.tsx`. */}
             <Splash />
             <App />
+            <SpeedInsights />
           </AIProvider>
         </StoreProvider>
       </StrictMode>,
