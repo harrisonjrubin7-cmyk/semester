@@ -2328,7 +2328,34 @@ and named a remediation register for them as the audit's first artifact.
 - **Not changed:** the allowlist, every grant, every policy; the migration is
   not yet applied to production.
 
-## D-128 · Seven briefs on leading the market are held to the tree as one register, and the site refuses the five overclaims they name
+## D-128 · Plus can be bought in the app, and D-009 steps aside for that one plan
+
+**Decided by owner 29 Sep 2026.** D-009 kept checkout out until a
+server-side environment existed and the owner approved. Both now hold: the
+commercial core (#942) runs checkout and the webhook server-side, the owner
+set the Stripe test keys and the webhook secret on the live project, and asked
+for the upgrade screen to be built and deployed.
+
+- **Where:** the Membership panel on the Account screen
+  (`components/MembershipPanel.tsx`, `lib/membership.ts`). Nothing else in
+  the app, and nothing on the public site, sells anything. The site's pricing
+  page still says it has no checkout, which stays true.
+- **The price is the catalog's.** The panel reads `commercial_prices` (anyone
+  may) and names what `begin_checkout` charges, $3.99 a month or $29.99 a year,
+  not the planned figures in `plans.ts`. With no catalog (a device-only build,
+  a network that is gone) the panel says what it said before.
+- **Consent before anything is sent:** a checkbox naming amount, interval,
+  renewal and where to cancel, re-cleared when the price changes, versioned
+  `plus-v1` and recorded by `billing-checkout` before Stripe is asked. The
+  card goes into Stripe's page.
+- **Cancel** calls `request_cancellation`, which marks the subscription to end
+  at the period's end. **It does not yet reach Stripe**: until a function
+  cancels the Stripe subscription too, the owner cancels it in Stripe by hand.
+  That, and the financial retention period, stay open before a live key.
+- **Not tested end to end.** The owner asked for it deployed on the assumption
+  that the keys are right; the first test-card checkout is the test.
+
+## D-129 · Seven briefs on leading the market are held to the tree as one register, and the site refuses the five overclaims they name
 
 **Decided 29 Sep 2026.** Seven briefs of 29 September ask what else would
 make Semester the leader and the benchmark: the operating disciplines, the

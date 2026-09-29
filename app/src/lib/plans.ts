@@ -2,12 +2,11 @@
  * Semester's plans, in one place, for the pricing page and the in-app
  * Membership panel.
  *
- * **Nothing here is for sale yet.** There is no billing provider, no checkout
- * and no stored payment detail anywhere in this repository, and there will not
- * be until it runs server-side with the owner's approval (DECISION-LOG D-009).
- * The prices are the blueprint's *suggested* figures and are shown as
- * "planned", never as a button that takes money. During the pilot everything a
- * student can use is free.
+ * **These are descriptions, not prices anyone is charged.** The figures are
+ * the blueprint's *suggested* ones and are shown as "planned". Plus is the one
+ * plan that can be bought, from the Membership panel, and it is bought at the
+ * price in the server's catalog (`commercial_prices`), which the panel reads —
+ * never at a figure here (DECISION-LOG D-128).
  *
  * Two promises are written into the data rather than the copy, so no plan can
  * drop them by accident (blueprint §12, `plans.test.ts`):
