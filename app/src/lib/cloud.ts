@@ -1194,6 +1194,10 @@ export const OWNED_TABLES: OwnedTable[] = [
  */
 export const KEPT_TABLES: KeptTable[] = [
   {
+    table: 'articulation_rules',
+    why: 'Transfer equivalencies are your school’s published rules, not a record about you. The transfer credit workspace only reads the approved ones; your own prior courses stay on your device.',
+  },
+  {
     table: 'commercial_prices',
     why: 'The price list is not a record about you. Anyone can read it, no account writes a row in it, and the Membership panel only reads it to name what Plus costs.',
   },

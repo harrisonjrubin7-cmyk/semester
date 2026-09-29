@@ -75,6 +75,7 @@ export const MODULE_EFFECTS: Record<ModuleFlag, ModuleEffect> = {
   offline_mode: { label: 'Offline mode', screens: ['home', 'recovery'], workflows: ['Working without a connection, with the sync record'], alternatives: ['The device copy still opens; sync waits for a connection'], support: ['docs/OFFLINE-MODE.md', 'docs/launch/KNOWN-LIMITATIONS.md'], tier: 2, perCourse: false },
   trust_center: { label: 'Trust center', screens: ['privacy'], workflows: ['The in-app trust center'], alternatives: ['The public security, privacy and accessibility pages'], support: ['docs/TRUST-CENTER.md'], tier: 3, perCourse: false },
   course_studio: { label: 'Course Studio', screens: ['courses', 'ask', 'study'], workflows: ['An instructor publishing rules and guidance', 'The course’s AI policy shown before the assistant answers', 'Faculty-approved study packs'], alternatives: ['The AI policy the student records for the course', 'Rules the instructor publishes on the syllabus'], support: ['docs/FACULTY-COURSE-STUDIO-DESIGN.md', 'docs/FACULTY-ENABLEMENT.md', 'docs/launch/FAQ.md'], tier: 3, perCourse: true },
+  transfer_credit: { label: 'Transfer credit workspace', screens: ['degree'], workflows: ['Prior courses matched against published equivalencies', 'The official-evaluation packet'], alternatives: ['The transfer or registrar office’s own evaluation request', 'Notes the student keeps'], support: ['docs/TRANSFER-CREDIT-WORKSPACE.md'], tier: 2, perCourse: false },
 };
 
 export type Scope = 'course' | 'tenant';

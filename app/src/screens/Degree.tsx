@@ -45,6 +45,9 @@ import {
 import { Folding } from '../components/Fold';
 import { GraduationSimulator } from '../components/GraduationSimulator';
 import { AdvisorMeeting } from '../components/AdvisorMeeting';
+import { TransferCredit } from '../components/TransferCredit';
+import { publishedRules } from '../lib/transfer-published';
+import { cloudConfigured } from '../lib/cloud';
 import { MODULE_FLAGS, moduleOn } from '../lib/experience-flags';
 import { PathSnapshotCard } from '../components/PathSnapshotCard';
 import {
@@ -59,10 +62,13 @@ import {
   type TermInput,
 } from '../lib/termgpa';
 
-/** `advisorMeeting` defaults to the `advisor_meeting_mode` flag; tests choose. */
-export function Degree({ advisorMeeting = moduleOn(MODULE_FLAGS.advisor_meeting_mode) }: { advisorMeeting?: boolean } = {}) {
+/** `advisorMeeting` and `transferCredit` default to their module flags; tests choose. */
+export function Degree({
+  advisorMeeting = moduleOn(MODULE_FLAGS.advisor_meeting_mode),
+  transferCredit = moduleOn(MODULE_FLAGS.transfer_credit),
+}: { advisorMeeting?: boolean; transferCredit?: boolean } = {}) {
   const { state, account } = useStore();
-  const [tab, setTab] = useState<'left' | 'taken' | 'rules' | 'ahead' | 'meeting'>('left');
+  const [tab, setTab] = useState<'left' | 'taken' | 'rules' | 'ahead' | 'meeting' | 'transfer'>('left');
 
   /*
    * The transcript, which is the one list here that gets long.
@@ -113,6 +119,8 @@ export function Degree({ advisorMeeting = moduleOn(MODULE_FLAGS.advisor_meeting_
           { id: 'ahead', label: 'Scenarios' },
           // Advisor Meeting Mode (Phase G), only with its flag on.
           ...(advisorMeeting ? [{ id: 'meeting' as const, label: 'Advisor meeting' }] : []),
+          // The transfer credit workspace (E3), only with its flag on.
+          ...(transferCredit ? [{ id: 'transfer' as const, label: 'Transfer credit' }] : []),
         ]}
         value={tab}
         onChange={setTab}
@@ -123,6 +131,13 @@ export function Degree({ advisorMeeting = moduleOn(MODULE_FLAGS.advisor_meeting_
       {tab === 'taken' ? <Transcript rows={state.taken} /> : null}
       {tab === 'rules' ? <Rules /> : null}
       {tab === 'ahead' ? <GraduationSimulator done={hours(state.taken).withThisTerm} accountId={account?.id ?? null} /> : null}
+      {tab === 'transfer' && transferCredit ? (
+        <TransferCredit
+          key={account?.id ?? 'device'}
+          school={state.schoolPack?.school.name ?? null}
+          loadPublished={account && cloudConfigured ? publishedRules : null}
+        />
+      ) : null}
       {tab === 'meeting' && advisorMeeting ? <AdvisorMeeting key={account?.id ?? 'device'} accountId={account?.id ?? null} /> : null}
       </>
     </Page>

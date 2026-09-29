@@ -101,6 +101,9 @@ export const MODULE_FLAG_ENV = {
   // the studio for faculty and, for students, the instructor's published rules
   // and guidance. Off, nothing published is read.
   course_studio: 'VITE_COURSE_STUDIO',
+  // The transfer credit workspace (brief v2 §28.4, sprint E3): prior courses,
+  // the school's published equivalencies, and the evaluation packet.
+  transfer_credit: 'VITE_TRANSFER_CREDIT',
 } as const;
 
 export type ModuleFlag = keyof typeof MODULE_FLAG_ENV;
