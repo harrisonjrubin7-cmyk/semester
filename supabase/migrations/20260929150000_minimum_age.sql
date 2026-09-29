@@ -59,8 +59,11 @@ as $$
   );
 $$;
 revoke all on function private.is_minor(uuid) from public;
--- No client role calls it: every caller is a security definer function or
--- trigger running as its owner. The grants check refuses a grant nothing needs.
+-- The classmate and study-match read policies at the end of this file call it
+-- as whoever reads, signed in or not, so both roles may execute it — as they
+-- may `private.classmate`, which the same policy calls. It answers only yes or
+-- no about one account, never the date.
+grant execute on function private.is_minor(uuid) to anon, authenticated;
 
 -- A confirmed account: what `verified_student` meant before this. Reporting
 -- and sharing with a guardian use it, because a minor must be able to do both.
@@ -224,6 +227,30 @@ create trigger record_stated_age
 
 -- ── Once, for an account that never said ─────────────────────────────────
 
+-- What an account made before the age was asked may already have out in the
+-- world, taken back the moment it says it is under 18: every roster entry,
+-- the employer opt-in, study matching, and every request not yet answered.
+-- The classmate profile is hidden by its read policy below rather than
+-- deleted, so it comes back on the eighteenth birthday.
+create or replace function private.withdraw_minor(who uuid)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  update public.peer_mentor_offers   set active = false where user_id = who and active;
+  update public.alumni_mentor_offers set active = false where user_id = who and active;
+  update public.talent_profiles      set opted_in = false where user_id = who and opted_in;
+  delete from public.study_match_optins where user_id = who;
+  update public.mentor_requests
+     set status = case when requester = who then 'withdrawn' else 'declined' end, decided_at = now()
+   where status = 'pending' and (requester = who or recipient = who);
+  delete from public.connections
+   where state = 'pending' and (requester = who or addressee = who);
+end $$;
+revoke all on function private.withdraw_minor(uuid) from public, anon, authenticated;
+
 create or replace function public.state_my_age(want_birth_date date)
 returns text
 language plpgsql
@@ -246,9 +273,7 @@ begin
   end if;
   if want_birth_date > current_date - interval '13 years' then
     insert into private.account_ages (user_id, under_minimum, source) values (me, true, 'statement');
-    update public.peer_mentor_offers   set active = false where user_id = me and active;
-    update public.alumni_mentor_offers set active = false where user_id = me and active;
-    update public.talent_profiles      set opted_in = false where user_id = me and opted_in;
+    perform private.withdraw_minor(me);
     return 'under_minimum_age';
   end if;
   insert into private.account_ages (user_id, minor_until, source)
@@ -259,9 +284,7 @@ begin
   -- An account made before the age was asked may already be listed. A minor
   -- comes off every roster other people browse the moment they say so.
   if want_birth_date > current_date - interval '18 years' then
-    update public.peer_mentor_offers   set active = false where user_id = me and active;
-    update public.alumni_mentor_offers set active = false where user_id = me and active;
-    update public.talent_profiles      set opted_in = false where user_id = me and opted_in;
+    perform private.withdraw_minor(me);
   end if;
   return case when want_birth_date > current_date - interval '18 years' then 'minor' else 'adult' end;
 end $$;
@@ -311,8 +334,12 @@ declare
   refuse boolean;
 begin
   refuse := case tg_table_name
-    when 'mentor_requests'    then private.is_minor((r ->> 'requester')::uuid) or private.is_minor((r ->> 'recipient')::uuid)
-    when 'connections'        then private.is_minor((r ->> 'requester')::uuid) or private.is_minor((r ->> 'addressee')::uuid)
+    -- A request is refused when it is made and again when it is accepted, so
+    -- one sent before anybody said their age cannot become a relationship.
+    when 'mentor_requests'    then (tg_op = 'INSERT' or r ->> 'status' = 'accepted')
+                                   and (private.is_minor((r ->> 'requester')::uuid) or private.is_minor((r ->> 'recipient')::uuid))
+    when 'connections'        then (tg_op = 'INSERT' or r ->> 'state' = 'accepted')
+                                   and (private.is_minor((r ->> 'requester')::uuid) or private.is_minor((r ->> 'addressee')::uuid))
     when 'study_match_optins' then private.is_minor((r ->> 'user_id')::uuid)
     when 'talent_profiles'    then coalesce((r ->> 'opted_in')::boolean, false) and private.is_minor((r ->> 'user_id')::uuid)
     when 'peer_mentor_offers'   then coalesce((r ->> 'active')::boolean, true) and private.is_minor((r ->> 'user_id')::uuid)
@@ -327,10 +354,10 @@ end $$;
 revoke all on function private.refuse_for_minors() from public;
 
 drop trigger if exists refuse_for_minors on public.mentor_requests;
-create trigger refuse_for_minors before insert on public.mentor_requests
+create trigger refuse_for_minors before insert or update of status on public.mentor_requests
   for each row execute function private.refuse_for_minors();
 drop trigger if exists refuse_for_minors on public.connections;
-create trigger refuse_for_minors before insert on public.connections
+create trigger refuse_for_minors before insert or update of state on public.connections
   for each row execute function private.refuse_for_minors();
 drop trigger if exists refuse_for_minors on public.study_match_optins;
 create trigger refuse_for_minors before insert on public.study_match_optins
@@ -344,3 +371,22 @@ create trigger refuse_for_minors before insert or update of active on public.pee
 drop trigger if exists refuse_for_minors on public.alumni_mentor_offers;
 create trigger refuse_for_minors before insert or update of active on public.alumni_mentor_offers
   for each row execute function private.refuse_for_minors();
+
+-- ── What others can already see ───────────────────────────────────────────
+--
+-- A minor's classmate profile and study-match opt-in are hidden from everyone
+-- but the minor, however the account came to be a minor. The two policies are
+-- `20260901000200_classmates.sql`'s and `20260926150000`'s, with that one
+-- clause added.
+
+drop policy if exists "profiles are visible to classmates" on public.profiles;
+create policy "profiles are visible to classmates" on public.profiles
+  for select
+  using ((select auth.uid()) = user_id or (private.classmate(user_id) and not private.is_minor(user_id)));
+
+drop policy if exists "opted-in classmates see each other" on public.study_match_optins;
+create policy "opted-in classmates see each other" on public.study_match_optins
+  for select using (
+    user_id = (select auth.uid())
+    or (expires_at > now() and private.opted_into_match(tenant_id, course_code, section) and not private.is_minor(user_id))
+  );

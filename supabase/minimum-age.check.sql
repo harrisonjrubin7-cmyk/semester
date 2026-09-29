@@ -78,7 +78,7 @@ end $$;
 
 do $$
 declare
-  nobody uuid; young uuid; teen uuid; adult uuid; parent uuid; unsaid uuid; child_later uuid; self_said uuid;
+  nobody uuid; young uuid; teen uuid; adult uuid; parent uuid; unsaid uuid; child_later uuid; self_said uuid; flip uuid;
   n bigint;
   o text;
 begin
@@ -212,10 +212,21 @@ begin
 
   -- ── Stated once, for an account that never said ─────────────────────────
   unsaid := pg_temp.account('unsaid@age.example', null);
-  -- Listed before anybody asked its age.
+  -- Out in the world before anybody asked its age: listed as a mentor, open to
+  -- employers, a classmate profile in a shared class, a study-match opt-in
+  -- beside an adult's, and a connection and a mentor request not yet answered.
   insert into public.peer_mentor_offers (user_id, tenant_id, cohort_scope, display_name) values (unsaid, 'age-u', 'age-u/cohort-a', 'Unsaid');
   insert into public.alumni_mentor_offers (user_id, tenant_id) values (unsaid, 'age-u');
   insert into public.talent_profiles (user_id, opted_in) values (unsaid, true);
+  insert into public.profiles (user_id, handle) values (unsaid, 'unsaid');
+  insert into public.enrollments (user_id, term, code) values (unsaid, '2026FA', 'vanderbilt/MATH 1100'), (adult, '2026FA', 'vanderbilt/MATH 1100');
+  insert into public.study_match_optins (user_id, tenant_id, course_code) values (unsaid, 'age-u', 'MATH 101'), (adult, 'age-u', 'MATH 101');
+  insert into public.connections (requester, addressee) values (adult, unsaid);
+  insert into public.mentor_requests (kind, tenant_id, requester, recipient, requester_name) values ('alumni', 'age-u', adult, unsaid, 'Adult');
+  perform pg_temp.become(adult);
+  select count(*) into n from public.profiles where user_id = unsaid;
+  perform pg_temp.answered('a classmate sees the profile while the age is unknown', n::text, '1');
+  reset role;
   perform pg_temp.become(unsaid);
   perform pg_temp.answered('an account that never said may state an age', public.state_my_age((current_date - interval '16 years')::date), 'minor');
   perform pg_temp.answered('and becomes a minor', private.verified_student()::text, 'false');
@@ -226,6 +237,37 @@ begin
   perform pg_temp.answered('and the alumni one', n::text, '0');
   select count(*) into n from public.talent_profiles where user_id = unsaid and opted_in;
   perform pg_temp.answered('and out of employer view', n::text, '0');
+  select count(*) into n from public.study_match_optins where user_id = unsaid;
+  perform pg_temp.answered('and out of study matching', n::text, '0');
+  select count(*) into n from public.connections where (requester = unsaid or addressee = unsaid) and state = 'pending';
+  perform pg_temp.answered('and the connection nobody answered is gone', n::text, '0');
+  select status into o from public.mentor_requests where recipient = unsaid;
+  perform pg_temp.answered('and the mentor request is declined', o, 'declined');
+  perform pg_temp.become(adult);
+  select count(*) into n from public.profiles where user_id = unsaid;
+  perform pg_temp.answered('a classmate no longer sees the profile', n::text, '0');
+  reset role;
+  select count(*) into n from public.profiles where user_id = unsaid;
+  perform pg_temp.answered('which is hidden, not deleted', n::text, '1');
+
+  -- A request sent before an age was known cannot be accepted after one is,
+  -- whichever way the account came to be a minor.
+  flip := pg_temp.account('flip@age.example', null);
+  insert into public.connections (requester, addressee) values (adult, flip);
+  insert into public.mentor_requests (kind, tenant_id, requester, recipient, requester_name) values ('alumni', 'age-u', adult, flip, 'Adult');
+  insert into public.student_context (user_id, is_minor) values (flip, true);
+  begin
+    update public.connections set state = 'accepted', responded_at = now() where requester = adult and addressee = flip;
+    raise exception 'FAILED: a connection to a minor was accepted';
+  exception when insufficient_privilege then raise notice 'ok  a connection sent before is not accepted after';
+  end;
+  begin
+    update public.mentor_requests set status = 'accepted', decided_at = now() where requester = adult and recipient = flip;
+    raise exception 'FAILED: a mentor request to a minor was accepted';
+  exception when insufficient_privilege then raise notice 'ok  nor a mentor request';
+  end;
+  update public.mentor_requests set status = 'declined', decided_at = now() where requester = adult and recipient = flip;
+  raise notice 'ok  but either may still be declined';
   perform pg_temp.become(unsaid);
   perform pg_temp.answered('but may not state it again', public.state_my_age((current_date - interval '30 years')::date), 'already_stated');
   perform pg_temp.answered('so it stays a minor', public.my_age_status(), 'minor');

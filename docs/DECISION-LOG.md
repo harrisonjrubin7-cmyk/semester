@@ -2656,13 +2656,18 @@ K–12 edition behind it. This is its first prerequisite.
   on it closes to a minor. Mentor requests and connections (a minor at either
   end), study matching, opting into the talent profile, and an active peer or
   alumni mentor offer are refused by a trigger as well, so a policy added
-  later cannot open them by accident. An account made before the age was
-  asked comes off every roster when it states it is a minor. Reports and
+  later cannot open them by accident, and a request is refused again when it
+  is accepted, so one sent before an age was known cannot become a
+  relationship after. An account made before the age was asked, once it says
+  it is under 18, comes off every roster and out of study matching and
+  employer view, and its unanswered requests are withdrawn; its classmate
+  profile is hidden from others by the read policy, not deleted. Reports and
   family sharing move to `private.verified_account()`: a minor can still report
   and share with a parent or guardian.
-- **Proved.** `supabase/minimum-age.check.sql` runs 49 checks; removing the
+- **Proved.** `supabase/minimum-age.check.sql` runs 58 checks; removing the
   minor test from `verified_student`, the connections trigger, the recipient
-  check, the peer-offer check or the roster clean-up each turned it
+  check, the peer-offer check, the roster clean-up, the check on acceptance or
+  the profile policy's clause each turned it
   red. COPPA-1 is `TESTING`; MN-01, MN-03 and MN-06 are in place; CTL-006,
   K12-001 and K12-002 are tested.
 - **Not settled here.** Counsel has not reviewed the terms' minimum age, and a
