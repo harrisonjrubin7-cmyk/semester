@@ -7,23 +7,23 @@ are missing.
 
 ## What is live
 
-Read off the project at 19:55 UTC on 29 September 2026, not remembered. The
+Read off the project at 21:27 UTC on 29 September 2026, not remembered. The
 last column is which pipeline deployed that version, and it is the one worth
 reading:
 
-    claude            ACTIVE, v234, verify_jwt off  platform
-    push              ACTIVE, v189, verify_jwt off  platform
-    calendar          ACTIVE, v186, verify_jwt off  platform
-    fetchcal          ACTIVE, v229, verify_jwt off  platform
-    canvas            ACTIVE, v220, verify_jwt off  platform
-    lti               ACTIVE, v222, verify_jwt off  platform
-    integration-tick  ACTIVE, v78, verify_jwt off  platform
-    trust-room        ACTIVE, v85, verify_jwt off  platform
-    delete-account    ACTIVE, v62, verify_jwt off  platform
-    billing-cancel    PENDING, live on merge, verify_jwt off  (see below)
-    billing-checkout  ACTIVE, v22, verify_jwt off  platform
-    billing-webhook   ACTIVE, v22, verify_jwt off  platform
-    lead-intake       ACTIVE, v22, verify_jwt off  platform
+    claude            ACTIVE, v244, verify_jwt off  platform
+    push              ACTIVE, v198, verify_jwt off  platform
+    calendar          ACTIVE, v195, verify_jwt off  platform
+    fetchcal          ACTIVE, v239, verify_jwt off  platform
+    canvas            ACTIVE, v230, verify_jwt off  platform
+    lti               ACTIVE, v232, verify_jwt off  platform
+    integration-tick  ACTIVE, v88, verify_jwt off   platform
+    trust-room        ACTIVE, v95, verify_jwt off   platform
+    delete-account    ACTIVE, v72, verify_jwt off   platform
+    billing-cancel    ACTIVE, v2, verify_jwt off    platform
+    billing-checkout  ACTIVE, v32, verify_jwt off   platform
+    billing-webhook   ACTIVE, v32, verify_jwt off   platform
+    lead-intake       ACTIVE, v32, verify_jwt off   platform
 
 **This file once said two, at v1, and filed three of the other four under "Not
 deployed yet".** `fetchcal` had been live since 9 September when that was
@@ -479,10 +479,11 @@ The webhook endpoint to register in Stripe (Developers → Webhooks) is
 `customer.subscription.deleted`, `invoice.paid`, `invoice.payment_failed`,
 `charge.refunded` and `charge.dispute.created`.
 
-**Live since #942's merge.** Both went up with `pending` rows in
-`functions.snapshot`, like trust-room did. Read off the project at 19:55 UTC on
-29 September, each was v22 on a platform path, and that reading replaced the
-pending rows.
+**Live since #942's merge**, and `billing-cancel` since #971's. Each went up
+with a `pending` row in `functions.snapshot`, like trust-room did. The checkout
+and the webhook read v22 on a platform path at 19:55 UTC on 29 September;
+`billing-cancel` read v2 on a platform path at 21:27 UTC the same day; and
+those readings replaced the pending rows.
 
 **Two cron jobs come with them**, both in `scheduler.sql` and both active
 because neither needs a secret or an endpoint: `commercial-dunning` hourly at
@@ -502,6 +503,15 @@ by hand. Read off `cron.job` at 02:51 UTC on 29 September 2026:
     account-health       41 5 * * *    active = true
     commercial-dunning   23 * * * *    active = true
 
+`public.run_dunning()` was called once by hand at the same moment, exactly
+as the job calls it, and answered `{"reminders": 0, "restricted": 0,
+"final_notices": 0}`: correct on a project with no failed payment, not a
+failure. `account-health` first runs at 05:41 UTC, and writes one snapshot
+per institutional billing account — of which the project has none yet, so
+the expected result of that run is no row, not a failed job; the first
+snapshot follows the first signed order form. The catalog seeded as the
+migration wrote it: nine plans, nine prices, thirteen `cta_routes`.
+
 **A third job came with `billing-cancel`** (D-132):
 `commercial-financial-retention`, monthly on the 2nd at 04:37 UTC
 (`public.purge_financial_records()`, from
@@ -511,14 +521,16 @@ they were made, so nothing is eligible before 1 January 2034. Active, no
 secret; like the other two, its `cron.schedule` statement is run by hand after
 the migration is applied, and `health.sql` expects it.
 
-`public.run_dunning()` was called once by hand at the same moment, exactly
-as the job calls it, and answered `{"reminders": 0, "restricted": 0,
-"final_notices": 0}`: correct on a project with no failed payment, not a
-failure. `account-health` first runs at 05:41 UTC, and writes one snapshot
-per institutional billing account — of which the project has none yet, so
-the expected result of that run is no row, not a failed job; the first
-snapshot follows the first signed order form. The catalog seeded as the
-migration wrote it: nine plans, nine prices, thirteen `cta_routes`.
+**Applied.** #971's migration was on the project when it merged, and the
+applied `purge_financial_records()` was checked against the merged text before
+anything was scheduled: it keeps an invoice a payment event still references,
+has no branch for an event it cannot attribute, and touches individual
+accounts only. The `cron.schedule` statement was then run by hand. Read off
+`cron.job` at 21:20 UTC on 29 September 2026:
+
+    commercial-financial-retention   37 4 2 * *   active = true
+
+It was not run by hand: it deletes, and nothing is eligible yet.
 
 ## Live on merge, and on from the first deploy: `lead-intake`
 
@@ -940,6 +952,17 @@ function answered exactly that 501. The secret is not set, and the kill-switch
 drill and the red-team's proxy route (`docs/LAUNCH-DECISIONS.md` item 15) wait
 on it; the red-team's direct route, with the raw key in the environment, does
 not.
+
+By 21:26 UTC the secret was set (an unsigned call answered 401, not 501), and
+two signed-in calls still answered 502, "Claude could not be reached": the
+`fetch` to Anthropic threw with nothing sent (0 tokens metered), and nothing in
+the logs said why. The function now checks the key before anybody is
+authenticated or counted. A key that cannot be sent as a header (the `…` of
+the placeholder above, a quote mark, a break inside it) is refused with 503,
+*"This deployment's shared key is set but cannot be used"*, and its shape is
+logged without a character of it; a send that still throws is logged by its
+kind, `header`, `network` or `other` (`functions/_shared/sharedkey.ts`). Look
+for `claude:` in the function's logs.
 
 Optional: `MONTHLY_CALL_LIMIT` (default 60 calls per account per month),
 `ALLOWED_ORIGIN` (extra https origins; the Pages origin is built in) and

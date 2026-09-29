@@ -22,8 +22,8 @@ export interface Plan {
   forWhom: string;
   /** Planned list price, or null when there is none (Free) or it is negotiated (Institution). */
   price: { monthly: number; yearly: number } | null;
-  /** `planned` until a billing provider is approved and live. */
-  priceStatus: 'free' | 'planned' | 'contact';
+  /** `planned` until it can be bought; `in-app` when checkout on the Account screen sells it (D-128). */
+  priceStatus: 'free' | 'planned' | 'in-app' | 'contact';
   includes: string[];
 }
 
@@ -54,7 +54,7 @@ export const PLANS: Plan[] = [
     name: 'Semester Plus',
     forWhom: 'Students who plan several terms ahead',
     price: { monthly: 7.99, yearly: 59 },
-    priceStatus: 'planned',
+    priceStatus: 'in-app',
     includes: [
       'Unlimited saved plans and schedules',
       'Side-by-side plan comparison',
@@ -91,7 +91,11 @@ export const PLANS: Plan[] = [
 ];
 
 export const PILOT_NOTE =
-  'Plus and Pro are not on sale yet. During the pilot, every feature a student can use is free.';
+  'Plus can be bought from the Account screen in the app; Pro is not on sale yet. During the pilot, every feature a student can use is free.';
+
+/** What a build with no catalog — a device-only build, or a network that is gone — says instead. */
+export const NOT_ON_SALE_HERE =
+  'Plus and Pro are not on sale in this build. During the pilot, every feature a student can use is free.';
 
 export function plan(id: PlanId): Plan {
   const found = PLANS.find((p) => p.id === id);
@@ -99,10 +103,10 @@ export function plan(id: PlanId): Plan {
   return found;
 }
 
-/** "$7.99 a month or $59 a year (planned)", or the plain word for Free and Institution. */
+/** "$7.99 a month or $59 a year" (with "(planned)" until it can be bought), or the plain word for Free and Institution. */
 export function priceLine(p: Plan): string {
   if (p.priceStatus === 'free') return 'Free';
   if (p.priceStatus === 'contact' || !p.price) return 'Through your university';
   const money = (n: number) => `$${Number.isInteger(n) ? n : n.toFixed(2)}`;
-  return `${money(p.price.monthly)} a month or ${money(p.price.yearly)} a year (planned)`;
+  return `${money(p.price.monthly)} a month or ${money(p.price.yearly)} a year${p.priceStatus === 'planned' ? ' (planned)' : ''}`;
 }

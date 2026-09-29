@@ -101,7 +101,7 @@ What the repository also runs on, and the brief’s list did not name.
 | Market leadership register | [`docs/MARKET-LEADERSHIP.md`](docs/MARKET-LEADERSHIP.md) | current | `founder` | 1 | 2026-09-28 | 2026-12-28 | — | `D-115` |
 | Operational readiness pack | [`docs/OPERATIONAL-READINESS-PACK.md`](docs/OPERATIONAL-READINESS-PACK.md) | current | `engineering` | 1 | 2026-09-28 | 2026-10-28 | — | `D-115` |
 | Privacy impact assessment | [`docs/operating-model/PRIVACY-IMPACT-ASSESSMENT.md`](docs/operating-model/PRIVACY-IMPACT-ASSESSMENT.md) | current | `privacy` | 1 | 2026-09-29 | 2026-10-29 | — | `D-123` |
-| AI integration playbook | [`docs/operating-model/AI-INTEGRATION-PLAYBOOK.md`](docs/operating-model/AI-INTEGRATION-PLAYBOOK.md) | current | `trust` | 1 | 2026-09-29 | 2026-12-29 | — | `D-131` |
+| AI integration playbook | [`docs/operating-model/AI-INTEGRATION-PLAYBOOK.md`](docs/operating-model/AI-INTEGRATION-PLAYBOOK.md) | current | `trust` | 1 | 2026-09-29 | 2026-12-29 | — | `D-131`, `D-135` |
 
 ## Notes and gaps
 

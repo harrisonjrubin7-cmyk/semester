@@ -191,13 +191,13 @@ export const CLAIMS: readonly Claim[] = [
   {
     id: 'no-payment-data',
     claim: 'Semester never stores payment cards, bank details or university passwords.',
-    scope: 'There is no billing provider and no checkout (D-009). Sign-in to an institution is by its identity provider, so its password never reaches Semester.',
+    scope: 'Plus checkout (D-128) sends the person to Stripe’s own page, so the card never reaches Semester. Sign-in to an institution is by its identity provider, so its password never reaches Semester.',
     status: 'available',
     owner: 'privacy',
     pages: ['/security/'],
     audiences: ['students'],
     evidence: [
-      { path: 'app/src/lib/plans.test.ts', shows: 'No plan is for sale and nothing collects a card' },
+      { path: 'app/src/lib/plans.test.ts', shows: 'Nothing on the site or in the app collects a card; checkout hands off to Stripe' },
       { path: 'app/src/lib/ops/boundaries.test.ts', shows: 'No database driver or connection string to any institution’s system' },
     ],
     rows: [],
@@ -482,13 +482,13 @@ export const CLAIMS: readonly Claim[] = [
   // ── commercial and legal ──
   {
     id: 'no-sale',
-    claim: 'Plus and Pro are not on sale yet',
-    scope: 'Planned prices are shown so a student knows what to expect. Currency, tax, trial, refund and cancellation terms are published before any checkout exists.',
-    status: 'planned',
+    claim: 'Plus can be bought from the Account screen, and nowhere else; Pro is not on sale',
+    scope: 'Checkout and cancellation are built (D-128, D-132) and run on Stripe test keys; no live payment has been taken and the first end-to-end check is not recorded. The public site sells nothing. The refund policy is still a proposal.',
+    status: 'in-preparation',
     owner: 'founder',
     pages: ['/pricing/'],
     audiences: ['students'],
-    evidence: [{ path: 'app/src/lib/plans.test.ts', shows: 'Every price is planned, and nothing is a button that takes money' }],
+    evidence: [{ path: 'app/src/lib/plans.test.ts', shows: 'Every price matches the catalog, and no public page is a button that takes money' }],
     rows: ['LEG-003'],
   },
   {
@@ -644,7 +644,7 @@ export const POLICIES: readonly Policy[] = [
   { id: 'dpa', policy: 'Data Processing Agreement', status: 'outline', path: 'docs/trust/DPA-CHECKLIST.md', version: '0', effective: null, owner: 'privacy', rows: ['LEG-002'] },
   { id: 'student-data', policy: 'Student data addendum', status: 'not-started', path: null, version: '0', effective: null, owner: 'privacy', rows: ['LEG-002', 'SEC-009'] },
   { id: 'sla', policy: 'Service Level Agreement', status: 'outline', path: 'docs/trust/SLA.md', version: '0', effective: null, owner: 'engineering', rows: ['SRE-001'] },
-  { id: 'refunds', policy: 'Refund and cancellation policy', status: 'not-started', path: null, version: '0', effective: null, owner: 'founder', rows: ['LEG-003'], note: 'Owed before any checkout exists (D-009).' },
+  { id: 'refunds', policy: 'Refund and cancellation policy', status: 'not-started', path: null, version: '0', effective: null, owner: 'founder', rows: ['LEG-003'], note: 'Owed before a live payment: checkout exists since D-128, and the terms on the pricing page are still proposed.' },
   { id: 'a11y-statement', policy: 'Accessibility statement', status: 'not-started', path: null, version: '0', effective: null, owner: 'accessibility', rows: ['A11Y-007'] },
   { id: 'subprocessors', policy: 'Subprocessor list', status: 'draft', path: 'docs/SUBPROCESSORS.md', version: '0', effective: null, owner: 'privacy', rows: ['SEC-010'], note: 'Held to the code by a test; public once counsel has read it.' },
 ];

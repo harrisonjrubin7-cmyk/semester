@@ -184,17 +184,52 @@ its rules.
 
 ### The providers Semester can call
 
-Every AI party in `trust/subprocessors.ts`, held there by the test. None is
-scored: no provider’s training, retention or incident-notice terms are on
-file ([`DPA-CHECKLIST.md`](../trust/DPA-CHECKLIST.md)), and a score without
-them would be invented. An unscored provider is not approvable.
+Every AI party in `trust/subprocessors.ts`, held there by the test, scored from the provider’s own public documentation read on 2026-09-29. Each score cites the page it rests on, and the test refuses a citation to any other host. These are desk scores, not contract review: no DPA is signed (see [`DPA-CHECKLIST.md`](../trust/DPA-CHECKLIST.md)).
 
-| Provider | Agentic? | Verdict | Note |
-| --- | --- | --- | --- |
-| Anthropic (Semester’s key) | No | unscored | Retention settings and attestations are marked “to confirm” in the vendor risk register; the shared key drops code execution, web fetch and MCP tools (claudeclamp.test.ts), so it is scored as non-agentic. |
-| OpenAI (institution-approved) | Yes | unscored | Called with store: false; training terms are not recorded. The gateway issues server-side, single-use actions, so it is scored as agentic and the tool-use floor binds. |
-| Anthropic (student’s own key) | No | unscored | The student’s own contract with the provider; Semester can score it only to decide whether to offer the option. |
-| OpenAI (student’s own key) | No | unscored | The student’s own contract with the provider; as above. |
+**No provider is approvable yet.** Model quality is performance on Semester’s own evaluation set, `app/src/lib/governance/model-quality.ts`: fifteen synthetic cases through the prompts Semester sends, graded by fixed checks. It has not been run against either provider, so every verdict is *unscored*. The provisional reading is the weighted score over the dimensions that are scored, and any floor already missed.
+
+| Provider | Agentic? | Verdict | Provisional | Scored weight | Floors missed | Note |
+| --- | --- | --- | ---: | ---: | --- | --- |
+| Anthropic (Semester’s key) | No | unscored | 4.02 | 92% | none | The shared key drops code execution, web fetch and MCP tools (claudeclamp.test.ts), so it is scored as non-agentic. Some newer models cannot run with zero retention. |
+| OpenAI (institution-approved) | Yes | unscored | 4.08 | 87% | none | Called with store: false. The gateway issues server-side, single-use actions, so it is scored as agentic and the tool-use floor binds. Security and education scores rest on coverage OpenAI should confirm in writing. |
+| Anthropic (student’s own key) | No | unscored | 4.02 | 92% | none | The student’s own contract with the provider; scored only to decide whether to offer the option. |
+| OpenAI (student’s own key) | No | unscored | 4.08 | 87% | none | As above. |
+
+#### Anthropic
+
+| Dimension | Weight | Score | What the provider’s own page says |
+| --- | ---: | ---: | --- |
+| Data-use restrictions | 15% | 5 | Contractual: “Anthropic may not train models on Customer Content from Services”; the only use is feedback a user explicitly sends. [source](https://www.anthropic.com/legal/commercial-terms) |
+| Privacy and retention controls | 10% | 4 | Inputs and outputs deleted within 30 days; flagged content kept up to 2 years; zero retention only by arrangement with sales, and not for every model; subprocessors published. [source](https://privacy.claude.com/en/articles/7996866-how-long-do-you-store-my-organization-s-data) |
+| Security posture | 15% | 5 | Breach notice “in any event within 48 hours”; AES-256 at rest, TLS 1.2+; SOC 2 Type II, ISO 27001 and ISO 42001 cover the API. [source](https://www.anthropic.com/legal/data-processing-addendum) |
+| Education-policy fit | 8% | 3 | Safeguards required for minors (age checks, AI disclosure, COPPA); no FERPA terms for the API — the K-12 DPA covers only Claude for Teachers. [source](https://support.claude.com/en/articles/9307344-responsible-use-of-anthropic-s-models-guidelines-for-organizations-serving-minors) |
+| Source and citation support | 8% | 5 | Citations “return the exact passages that support each claim”; generally available on all active models. [source](https://platform.claude.com/docs/en/build-with-claude/citations) |
+| Tool-use safety | 8% | 4 | Client tools run in the application; strict schemas make tool calls match exactly; server tools exist and must be left off. [source](https://platform.claude.com/docs/en/agents-and-tools/tool-use/overview) |
+| Prompt-injection resilience | 8% | 3 | Documented guidance (screens, layered defences, monitoring); no tested mitigation evidence Semester can inspect. [source](https://platform.claude.com/docs/en/test-and-evaluate/strengthen-guardrails/mitigate-jailbreaks) |
+| Model quality | 8% | — | Unscored: Scored against Semester’s own evaluation set (app/src/lib/governance/model-quality.ts, run by app/src/ai/modelquality.live.test.ts), which has not been run against this provider. A run filed under docs/evidence/ai/ is the only thing this score may cite. |
+| Accessibility capability | 5% | 3 | Strong multilingual performance and strict structured output; no speech-to-text in the API. [source](https://platform.claude.com/docs/en/build-with-claude/multilingual-support) |
+| Reliability and latency | 5% | 2 | Standard tier is “best-effort availability”; no SLA in the terms; 60 days’ notice before a model is retired. [source](https://platform.claude.com/docs/en/api/service-tiers) |
+| Cost transparency | 5% | 5 | Published per-tier rate limits, customer-set spend limits per organisation or workspace, and a usage and cost API. [source](https://platform.claude.com/docs/en/api/rate-limits) |
+| Portability | 5% | 2 | An OpenAI-compatible endpoint exists but is “not considered a long-term or production-ready solution”. [source](https://platform.claude.com/docs/en/cli-sdks-libraries/libraries/openai-sdk) |
+
+#### OpenAI
+
+| Dimension | Weight | Score | What the provider’s own page says |
+| --- | ---: | ---: | --- |
+| Data-use restrictions | 15% | 5 | Contractual: “OpenAI will not use Customer Content to develop or improve the Services, unless Customer explicitly agrees”. [source](https://cdn.openai.com/osa/openai-services-agreement.pdf) |
+| Privacy and retention controls | 10% | 4 | Abuse logs up to 30 days; zero retention by approval for eligible customers; some endpoints keep data until deleted; twelve storage regions. [source](https://developers.openai.com/api/docs/guides/your-data) |
+| Security posture | 15% | 4 | Breach notice “without undue delay”, with no fixed hours; the trust portal lists SOC 2, ISO 27001 and 42001 but describes itself as for ChatGPT, so API coverage is not confirmed on an official page. [source](https://cdn.openai.com/pdf/openai-data-processing-addendum.pdf) |
+| Education-policy fit | 8% | 4 | A Student Data Privacy Agreement names OpenAI a FERPA school official, but its text names ChatGPT Edu, so API coverage needs confirming; under-13 data requires zero retention. [source](https://cdn.openai.com/osa/openai-sdpa.pdf) |
+| Source and citation support | 8% | 4 | File search returns “file citations”; citations come through the hosted file tool, not arbitrary passages. [source](https://developers.openai.com/api/docs/guides/tools-file-search) |
+| Tool-use safety | 8% | 4 | Function calls run in the application; strict mode enforces the schema; hosted tools (web search, code execution, MCP) exist and must be left off. [source](https://developers.openai.com/api/docs/guides/function-calling) |
+| Prompt-injection resilience | 8% | 3 | Documented guidance and a free moderation endpoint; no tested mitigation evidence Semester can inspect. [source](https://developers.openai.com/api/docs/guides/safety-best-practices) |
+| Model quality | 8% | — | Unscored: Scored against Semester’s own evaluation set (app/src/lib/governance/model-quality.ts, run by app/src/ai/modelquality.live.test.ts), which has not been run against this provider. A run filed under docs/evidence/ai/ is the only thing this score may cite. |
+| Accessibility capability | 5% | 4 | Native transcription with timestamps and speaker labels, strict structured output; translation only into English. [source](https://developers.openai.com/api/docs/guides/speech-to-text) |
+| Reliability and latency | 5% | 3 | At least six months’ notice before a GA model is retired; no SLA in the services agreement. [source](https://developers.openai.com/api/docs/deprecations) |
+| Cost transparency | 5% | 5 | Hard spend limits per organisation or project that return 429 when reached, and a usage and costs API. [source](https://developers.openai.com/api/docs/guides/spend-limits) |
+| Portability | 5% | — | Unscored: No official page speaks to portability or lock-in. |
+
+What would change a score: a signed DPA with a FERPA school-official clause (education fit, both providers); written confirmation that OpenAI’s certifications cover the API (security, OpenAI); an uptime SLA (reliability, both); a filed run of the model-quality set (model quality, both).
 
 ### What a provider must show before approval
 
