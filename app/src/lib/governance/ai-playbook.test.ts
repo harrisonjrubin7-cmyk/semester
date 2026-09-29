@@ -133,6 +133,15 @@ describe('the AI integration playbook', () => {
     for (const f of FLOORS) expect(DIMENSIONS).toContain(f.id);
   });
 
+  it('compares the unrounded score with the minimum, and rounds only what it reports', () => {
+    const near: Scores = Object.fromEntries(DIMENSIONS.map((d) => [d, 4]));
+    near.accessibility = 3.92; // raw 3.996, which rounds to 4.00
+    const r = scoreVendor(near, { agentic: false });
+    expect(r.verdict).toBe('refuse');
+    expect(r.weighted).toBe(4);
+    expect(r.reasons.join(' ')).toContain('below 4.0');
+  });
+
   it('holds tool-use safety only for agentic workflows', () => {
     const scores = { ...all5, 'tool-safety': 3 };
     expect(scoreVendor(scores, { agentic: true }).verdict).toBe('refuse');

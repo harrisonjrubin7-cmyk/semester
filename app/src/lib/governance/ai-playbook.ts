@@ -338,8 +338,10 @@ export function scoreVendor(scores: Scores, opts: { agentic: boolean; blocker?: 
     reasons.push(`Unscored: ${missing.map((d) => DIMENSION_ROWS.find((r) => r.id === d)!.name).join(', ')}`);
     return { verdict: opts.blocker ? 'refuse' : 'unscored', weighted: null, reasons };
   }
-  const weighted = Math.round((DIMENSION_ROWS.reduce((s, d) => s + d.weight * scores[d.id]!, 0) / WEIGHT_SUM) * 100) / 100;
-  if (weighted < OVERALL_MINIMUM) reasons.push(`Weighted ${weighted.toFixed(2)} is below ${OVERALL_MINIMUM.toFixed(1)}`);
+  // The threshold is compared with the unrounded mean: 3.996 must not round up into an approval.
+  const raw = DIMENSION_ROWS.reduce((s, d) => s + d.weight * scores[d.id]!, 0) / WEIGHT_SUM;
+  const weighted = Math.round(raw * 100) / 100;
+  if (raw < OVERALL_MINIMUM) reasons.push(`Weighted ${raw.toFixed(3)} is below ${OVERALL_MINIMUM.toFixed(1)}`);
   for (const f of FLOORS) {
     if (f.agenticOnly && !opts.agentic) continue;
     if (scores[f.id]! < f.min) reasons.push(`${DIMENSION_ROWS.find((r) => r.id === f.id)!.name} ${scores[f.id]} is below its floor of ${f.min.toFixed(1)}`);
