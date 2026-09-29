@@ -190,7 +190,7 @@ Exposure `staff` · owner `privacy` · 3 of 10 in place.
 
 | ID | Control | Status | Evidence | What it shows, or what would close it |
 | --- | --- | --- | --- | --- |
-| MN-01 | Source for minor age or status. | in place | [`supabase/minimum-age.check.sql`](../../supabase/minimum-age.check.sql) | Stated at sign-up or once afterwards, never changed; only the day a minor turns 18 is kept (D-137). Self-reported, so it is a stated age, not a verified one. |
+| MN-01 | Source for minor age or status. | in place | [`supabase/minimum-age.check.sql`](../../supabase/minimum-age.check.sql) | Stated at sign-up or once afterwards, never changed; only the day a minor turns 18 is kept (D-138). Self-reported, so it is a stated age, not a verified one. |
 | MN-02 | Guardian consent where required. | owed | — | No guardian model. The supporter and family privacy model says it needs the minors decision before building. |
 | MN-03 | Age-of-majority transition. | in place | [`supabase/minimum-age.check.sql`](../../supabase/minimum-age.check.sql) | The restriction lifts on the 18th birthday with nothing to run. Nobody is told; the Account screen stops saying it. |
 | MN-04 | Dual-enrollment sharing rules. | owed | — | A high-school student in a university course would be a minor in an institutional tenant; no rule exists. |

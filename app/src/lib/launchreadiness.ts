@@ -192,7 +192,7 @@ export const GATES: readonly Gate[] = [
       { path: 'docs/legal/PRIVACY-POLICY-DRAFT.md', shows: 'a privacy policy draft for counsel, held to the subprocessor register' },
       { path: 'docs/legal/TERMS-OF-SERVICE-DRAFT.md', shows: 'a terms of service draft for counsel, with acceptable use' },
     ],
-    gap: 'No qualified legal or privacy review of terms, privacy notice, consent or acceptable use has been recorded. The drafts carry open [DECIDE] items: legal entity, liability, governing law; the minimum age is set at 13 (D-137) and awaits counsel.',
+    gap: 'No qualified legal or privacy review of terms, privacy notice, consent or acceptable use has been recorded. The drafts carry open [DECIDE] items: legal entity, liability, governing law; the minimum age is set at 13 (D-138) and awaits counsel.',
   },
   {
     id: 'data-scope',

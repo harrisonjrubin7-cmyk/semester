@@ -8,7 +8,7 @@ import { currentSession, myAgeStatus, onAuthChange, type AgeStatus } from '../li
  *
  * Accounts made through Google, Microsoft, Apple, institution SSO or LTI never
  * saw the sign-up form's date of birth, and neither did accounts made before
- * it was asked. The owner chose to ask, then gate (D-137): until the account
+ * it was asked. The owner chose to ask, then gate (D-138): until the account
  * answers, the database keeps it out of everything that involves other people,
  * so this says why and takes it to Account, where `AgeStatement` asks once.
  * Account already asks, so the line is not drawn there.

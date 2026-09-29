@@ -248,7 +248,7 @@ The other critical triggers are absent, for reasons that are each a row and are 
 - **Payments.** Billing stays out (D-009); the bill screen reads a statement and holds no card data. (COM-001 (1))
 - **Proctoring.** No proctoring or surveillance, held mechanically by the boundaries register. (TRUST-003 (1))
 - **Basic-needs intake.** The navigator is a directory that routes to an office; nothing is taken in, and nobody is notified. (STU-012 (2))
-- **Minors.** The service is not directed at children: the minimum age is 13, refused at sign-up by the database (D-137), and a minor aged 13 to 17 is kept out of every feature where others can find or message them. Dual enrollment is identified by the institution, not guessed. (COPPA-1 (2), COPPA-3 (1))
+- **Minors.** The service is not directed at children: the minimum age is 13, refused at sign-up by the database (D-138), and a minor aged 13 to 17 is kept out of every feature where others can find or message them. Dual enrollment is identified by the institution, not guessed. (COPPA-1 (2), COPPA-3 (1))
 - **Agentic writes.** No consequential write without exact review and confirmation; the two-phase journal never retries an uncertain action. (AI-009 (2))
 
 ### The evidence package a critical-tier vendor owes

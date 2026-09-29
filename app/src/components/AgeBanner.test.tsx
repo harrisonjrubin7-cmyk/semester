@@ -9,7 +9,7 @@ import { AgeBanner } from './AgeBanner';
 
 /**
  * The line under the header that asks a signed-in account for its date of
- * birth until it gives one (D-137), and says nothing to anyone else.
+ * birth until it gives one (D-138), and says nothing to anyone else.
  */
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
