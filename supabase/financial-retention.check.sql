@@ -13,6 +13,9 @@
 --   * an individual billing account goes only once its owner has deleted
 --     their account and nothing of it is left; one whose owner is still here
 --     stays;
+--   * a payment event received after the cutoff (a late refund on an old
+--     invoice) keeps its invoice until it ages out too, and never aborts the
+--     run — an event is never updated, and its invoice's removal would;
 --   * running it twice at one moment removes nothing the second time.
 
 begin;
@@ -41,6 +44,7 @@ declare
   gone_acct uuid; here_acct uuid; inst_acct uuid;
   old_sub uuid; recent_sub uuid; live_sub uuid;
   old_inv uuid; inst_inv uuid;
+  late_sub uuid; late_inv uuid;
   n bigint;
   total bigint;
 begin
@@ -81,6 +85,17 @@ begin
   values ('stripe', 'evt_retention_old', 'payment_succeeded', old_inv, 399, repeat('a', 64), '2026-10-01');
   insert into public.credits_refunds (billing_account_id, invoice_id, kind, amount_cents, reason, created_at)
   values (gone_acct, old_inv, 'refund', 100, 'Partial refund for the retention check', '2026-10-15');
+
+  -- Finished in 2026 too, but refunded in February 2027: the event is late.
+  insert into public.subscriptions (billing_account_id, plan_code, price_id, status, current_period_start, current_period_end,
+                                    consent_at, consent_text_version, created_at)
+  values (here_acct, 'plus', plus_price, 'canceled', '2026-06-01', '2026-07-01', '2026-06-01', 'plus-v1', '2026-06-01')
+  returning id into late_sub;
+  insert into public.invoices (billing_account_id, subscription_id, status, subtotal_cents, issued_at, due_at, paid_at, created_at)
+  values (here_acct, late_sub, 'paid', 399, '2026-06-01', '2026-06-01', '2026-06-01', '2026-06-01') returning id into late_inv;
+  insert into public.payment_events (provider, provider_event_id, kind, invoice_id, amount_cents, payload_sha256, received_at)
+  values ('stripe', 'evt_retention_paid', 'payment_succeeded', late_inv, 399, repeat('b', 64), '2026-06-01'),
+         ('stripe', 'evt_retention_late', 'refund', late_inv, 399, repeat('c', 64), '2027-02-10');
 
   -- Ended in 2027: kept through 2034.
   insert into public.subscriptions (billing_account_id, plan_code, price_id, status, current_period_start, current_period_end,
@@ -123,6 +138,9 @@ begin
   perform pg_temp.counted('its refund', (select count(*) from public.credits_refunds where billing_account_id = gone_acct), 0);
   perform pg_temp.counted('and the emptied account of a deleted owner', (select count(*) from public.billing_accounts where id = gone_acct), 0);
 
+  perform pg_temp.counted('an invoice with a 2027 event stays', (select count(*) from public.invoices where id = late_inv), 1);
+  perform pg_temp.counted('and so does that late event', (select count(*) from public.payment_events where provider_event_id = 'evt_retention_late'), 1);
+  perform pg_temp.counted('while its 2026 event goes', (select count(*) from public.payment_events where provider_event_id = 'evt_retention_paid'), 0);
   perform pg_temp.counted('a subscription that ended in 2027 stays', (select count(*) from public.subscriptions where id = recent_sub), 1);
   perform pg_temp.counted('a live subscription stays however old', (select count(*) from public.subscriptions where id = live_sub), 1);
   perform pg_temp.counted('an account whose owner is here stays', (select count(*) from public.billing_accounts where id = here_acct), 1);
@@ -133,6 +151,13 @@ begin
   select coalesce(sum(removed), 0) into n from public.purge_financial_records('2034-01-01 00:00:00+00');
   reset role;
   perform pg_temp.counted('run again, it removes nothing', n, 0);
+
+  -- ── A year later, the late event and its invoice go together ───────────
+  set local role service_role;
+  perform public.purge_financial_records('2035-01-01 00:00:00+00');
+  reset role;
+  perform pg_temp.counted('in 2035 the invoice with the 2027 event goes', (select count(*) from public.invoices where id = late_inv), 0);
+  perform pg_temp.counted('with its late event', (select count(*) from public.payment_events where provider_event_id = 'evt_retention_late'), 0);
 
   raise notice 'financial retention: every check passed';
 end $$;

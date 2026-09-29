@@ -21,7 +21,8 @@
 --   3. payment events received before the cutoff whose invoice is going too
 --      (or is gone) — the provider's event id and a hash, never a payload;
 --   4. invoices dated before the cutoff that no longer point at a
---      subscription, with their lines (cascade);
+--      subscription and that no remaining event names, with their lines
+--      (cascade) — an invoice with a late event waits for it;
 --   5. credits and refunds made before the cutoff;
 --   6. finally, an individual billing account whose owner deleted their
 --      account (user_id is null) and which has nothing left.
@@ -105,7 +106,12 @@ begin
    where a.id = i.billing_account_id
      and a.kind = 'individual'
      and i.subscription_id is null
-     and coalesce(i.paid_at, i.issued_at, i.created_at) < cutoff;
+     and coalesce(i.paid_at, i.issued_at, i.created_at) < cutoff
+     -- Not while an event still names it: one received after the cutoff (a
+     -- late refund on an old invoice) would have its link cleared, which is
+     -- an update, and the run would abort. The invoice waits for its last
+     -- event to age out, and they go together.
+     and not exists (select 1 from public.payment_events e where e.invoice_id = i.id);
   get diagnostics n = row_count;
   kind := 'invoices'; removed := n; return next;
 
