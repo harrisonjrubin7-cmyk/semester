@@ -2692,6 +2692,15 @@ AI training policy each said the providers' training and retention terms were
   terms are not in force for Semester: production has no shared key, and
   there is no legal entity to be the Customer. OpenAI's are the institution's
   to accept. The page lists what only the owner can do.
+- **Codex's review found three things, all fixed.** The OpenAI security row
+  quoted breach assistance, not a security measure; it now quotes DPA 2.5
+  and reads it against the Services Agreement's 5.1 and 5.2 (updatable
+  Security Measures, audit reports once a year on request). The Anthropic
+  deletion quote stopped at a colon; it now carries the return-and-delete
+  subclauses. And four registers (launch kit, AI assurance, compliance
+  crosswalk, readiness pack) still said the terms were not on file; each is
+  re-read, and a test now walks `app/src/lib/` for that sentence so a fifth
+  copy is caught.
 - **Not changed:** `docs/evidence/` is not created. An executed agreement is
   what the vendor register and the compliance crosswalk wait for there, and
   a published web page is not one.

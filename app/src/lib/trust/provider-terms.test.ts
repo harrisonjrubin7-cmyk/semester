@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { CLAUSES, DOCUMENTS, OWNER_STEPS, QUESTIONS, READ_ON, STANDING, type Provider } from './provider-terms';
@@ -64,6 +64,24 @@ describe('the provider terms record', () => {
       expect(s.today, s.party).toMatch(/^Not in force\./);
     }
     expect(OWNER_STEPS.length).toBeGreaterThanOrEqual(4);
+  });
+
+  it('leaves no register saying the provider terms are not on file or not recorded', () => {
+    // Codex found four registers still saying so after this record landed; the
+    // walk is the guard, so a fifth copy is caught rather than hunted for.
+    const stale = /(provider|training) terms[^.\n'`]{0,30}\bnot\s+(yet\s+)?(on file|recorded)|until provider terms are on file|provider terms not on file/i;
+    const walk = (dir: string): string[] =>
+      readdirSync(dir).flatMap((f) => {
+        const full = join(dir, f);
+        if (statSync(full).isDirectory()) return f === 'node_modules' ? [] : walk(full);
+        return /\.(ts|tsx)$/.test(f) && !f.endsWith('.test.ts') ? [full] : [];
+      });
+    const hits = walk(join(root, 'app', 'src', 'lib')).filter((f) => stale.test(readFileSync(f, 'utf8')));
+    expect(hits.map((f) => f.slice(root.length + 1))).toEqual([]);
+    // The control: the pattern does catch the sentence the four registers used to carry.
+    expect(stale.test('A draft for counsel; provider terms not on file.')).toBe(true);
+    expect(stale.test('training terms per provider are not yet recorded')).toBe(true);
+    expect(stale.test('Published terms are recorded; none is accepted or signed.')).toBe(false);
   });
 
   it(`is what ${DOC} says`, () => {
