@@ -285,7 +285,7 @@ function render(): string {
     '',
     `Fourteen positions, each held to where the tree already takes it: ${counts(TERM_SHEET)}.`,
     'The one conflict is the term: the kit says 90–180 days and `gtm/pilot.ts` runs',
-    'every pilot for exactly 26 weeks, 182 days, as the owner set it (D-133).',
+    'every pilot for exactly 26 weeks, 182 days, as the owner set it (D-134).',
     '',
     ...itemTable(TERM_SHEET),
     '',

@@ -7,8 +7,8 @@ in `grants`, `capabilities` and `rls-coverage`. What runs it is below.
 
 Nothing here charges anyone yet. Stripe is wired but not connected: nothing
 happens until the secrets under "Off until the owner sets these" are set. The
-seed priced Plus at $3.99/month and $29.99/year; `20260929130000_plus_price.sql`
-retired those rows and set Plus at $7.99/month and $59/year (D-133), the
+seed priced Plus at $3.99/month and $29.99/year; `20260929131000_plus_price.sql`
+retired those rows and set Plus at $7.99/month and $59/year (D-134), the
 figures the pricing page prints. `plans.test.ts` holds the two to each other.
 
 ## Four ideas kept apart
@@ -158,9 +158,9 @@ or leads go unanswered.
 
 | Secret | Function | What it does |
 | --- | --- | --- |
-| `STRIPE_SECRET_KEY` | billing-checkout | Stripe secret key. Unset: checkout answers 503 |
+| `STRIPE_SECRET_KEY` | billing-checkout, billing-cancel | Stripe secret key. Unset: checkout and cancel answer 503 |
 | `STRIPE_WEBHOOK_SECRET` | billing-webhook | The webhook endpoint's signing secret. Unset: webhook answers 503 |
-| `ALLOWED_ORIGIN` | billing-checkout | The app's origin(s), comma-separated, read strictly (unset or `*` allows nobody) |
+| `ALLOWED_ORIGIN` | billing-checkout, billing-cancel | The app's origin(s), comma-separated, read strictly (unset or `*` allows nobody) |
 | `SITE_ORIGINS` | lead-intake | Origins to add, comma-separated. The site's own are built in (`SITE_PRODUCTION_ORIGINS`), so unset adds nothing and still serves the site |
 | `RESEND_API_KEY` | lead-intake | Resend key; with `LEAD_NOTIFY_EMAIL`, every lead is emailed |
 | `LEAD_NOTIFY_EMAIL` | lead-intake | The owner's inbox: set it to `harrisonjrubin7@gmail.com`. Configuration, never code |
@@ -175,24 +175,31 @@ The Stripe webhook to register (Developers → Webhooks) is
 `charge.refunded` and `charge.dispute.created`. The two jobs are in
 `supabase/scheduler.sql`, applied by hand like the rest of that file.
 
-Before the first live charge, three things are still open:
+Before the first live charge, what was open is closed:
 
-- **Cancelling must reach Stripe.** `request_cancellation()` marks the
-  subscription `cancel_at_period_end` in Semester; nothing yet tells Stripe,
-  which would go on charging. Either a function that sets
-  `cancel_at_period_end` on the Stripe subscription when a cancellation is
-  requested, or Stripe's customer portal, has to exist before a real card is
-  taken. (The webhook already applies a cancellation made on Stripe's side.)
-- **The app's upgrade and cancel screens** that call `billing-checkout` and
-  `request_cancellation` do not exist yet.
-- **The financial-retention period** (RETENTION.md) and the recurring-charge
-  consent wording, whose version string the app sends as
-  `consent_text_version`.
+- **Cancelling reaches Stripe** (D-132). The app's Cancel Plus calls
+  `billing-cancel`, which sets `cancel_at_period_end` on the Stripe
+  subscription first and records it with `request_cancellation()` second. If
+  Stripe does not agree, nothing is recorded and the person is told they are
+  still subscribed; if the record lags, the webhook's
+  `customer.subscription.updated` brings it into line.
+- **The app's upgrade and cancel screens** exist (D-128): the Membership panel
+  on the Account screen.
+- **The financial-retention period is seven years** after the end of the year
+  a record was made (D-132), enforced by `purge_financial_records()` — below.
+  The consent wording the app sends is versioned `plus-v1`.
 
 ## Financial retention
 
 Invoices, payment events and contracts are financial records with their own
-retention (typically seven years). They are deliberately **not** in
+retention: **seven years after the end of the calendar year they were made**
+(D-132). `public.purge_financial_records()`
+(`migrations/20260929130000_financial_retention.sql`,
+`financial-retention.check.sql`) removes an *individual* subscriber's finished
+records past that line, monthly (`commercial-financial-retention` in
+`scheduler.sql`). A live subscription is never removed, and an institution's
+contract records are governed by the contract, not this job. Nothing is
+eligible before 1 January 2034. They are deliberately **not** in
 `OWNED_TABLES`: deleting a student account removes their product data but not
 the invoice that records what they paid. `billing_accounts.user_id` is
 `on delete set null`, so the invoice survives without pointing at a person.

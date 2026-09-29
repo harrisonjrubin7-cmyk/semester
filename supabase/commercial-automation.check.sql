@@ -187,7 +187,7 @@ begin
   perform pg_temp.counted('the rate limit keeps hashes, never an address', n, 0);
 
   -- ── Checkout ────────────────────────────────────────────────────────────
-  -- Plus is $7.99 a month or $59 a year (20260929130000_plus_price): one current
+  -- Plus is $7.99 a month or $59 a year (20260929131000_plus_price): one current
   -- row each, and the seed's 399 and 2999 retired, never deleted.
   select string_agg(amount_cents::text || ' ' || billing_interval, ', ' order by billing_interval) into o
     from public.commercial_prices

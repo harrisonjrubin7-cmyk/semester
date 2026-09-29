@@ -2457,7 +2457,45 @@ never their own evidence.
   Fixing the weights and scoring a provider are the owner's; neither is made
   here.
 
-## D-132 · Seven briefs on leading the market are held to the tree as one register, and the site refuses the five overclaims they name
+## D-132 · Cancelling Plus reaches Stripe, and financial records are kept seven years
+
+**Decided by owner 29 Sep 2026.** D-128 left two things open before a live
+key: a cancellation that stopped at Semester's own record, and no retention
+period for payment records. The owner asked for both.
+
+- **Cancel reaches Stripe.** `supabase/functions/billing-cancel` (rules in
+  `_shared/billingcancel.ts`, driven by `app/src/lib/billing/cancel.test.ts`)
+  finds the caller's own live subscription *as the caller*, sets
+  `cancel_at_period_end=true` on the Stripe subscription with an idempotency
+  key per subscription, and only then calls `request_cancellation()` — also as
+  the caller, so whose subscription it is stays decided in one place. No
+  service key. If Stripe refuses, nothing is recorded and the person is told
+  they are still subscribed; if the record lags, the webhook's
+  `customer.subscription.updated` applies it. Before this, a cancellation
+  recorded only here would have been reverted by the next such event, and
+  Stripe would have renewed. The Membership panel calls the function, never
+  the bare RPC, and now says "you will not be charged again" because it is
+  true. A `provider_ref` that is not a Stripe subscription id is never put in
+  Stripe's path.
+- **Seven years after the end of the year a record was made.** The owner chose
+  it over six and ten: the IRS's longest ordinary look-back is six years, and
+  a year's margin. `purge_financial_records()`
+  (`20260929130000_financial_retention.sql`) removes, for **individual**
+  billing accounts only, finished subscriptions and their checkouts, invoices,
+  payment events and refunds past that line, and an emptied account whose
+  owner already deleted theirs. A live subscription is never removed;
+  institutional records follow their contract. It runs monthly
+  (`commercial-financial-retention`) and removes nothing before 1 January 2034.
+- **Two things `financial-retention.check.sql` caught on its first run.** A
+  completed checkout must name its subscription, so checkouts are removed
+  first; and payment events and dunning actions refuse every update and
+  delete. `refuse_commercial_rewrite()` now lets a *delete* through only
+  inside the purge's own transaction (a transaction-local mark it sets and
+  clears); an update is still refused for everybody, and payment events are
+  removed before their invoices so none is ever updated.
+- **Not changed:** who may read or write any billing table; the webhook.
+
+## D-133 · Seven briefs on leading the market are held to the tree as one register, and the site refuses the five overclaims they name
 
 **Decided 29 Sep 2026.** Seven briefs of 29 September ask what else would
 make Semester the leader and the benchmark: the operating disciplines, the
@@ -2499,17 +2537,17 @@ under `docs/expansion/` as supplied.
 - **Not changed.** K–12: absent, neither planned nor refused, behind COPPA-1.
   The Plus price, the pilot length, the statement's "payments" and the name of
   the first-year measures document were open here too, and the owner settled
-  all four (D-133).
+  all four (D-134).
 
-## D-133 · Plus is $7.99 a month or $59 a year everywhere, every pilot runs 26 weeks, the statement no longer lists payments, and the company's first-year measures are named for what they are
+## D-134 · Plus is $7.99 a month or $59 a year everywhere, every pilot runs 26 weeks, the statement no longer lists payments, and the company's first-year measures are named for what they are
 
-**Decided 29 Sep 2026, by the owner.** D-132 found four things left open
+**Decided 29 Sep 2026, by the owner.** D-133 found four things left open
 between the briefs and the tree; the owner settled each.
 
 - **Plus.** `plans.ts` printed $7.99 and $59 on the pricing page, while the
   catalog the commercial core seeded — and, since D-128, what `begin_checkout`
   charges — said 399 and 2999 cents, so the Account screen sold Plus at $3.99.
-  `20260929130000_plus_price.sql` retires the seed's two rows (inactive, window
+  `20260929131000_plus_price.sql` retires the seed's two rows (inactive, window
   closed, never deleted, so what was sold on them still names them) and opens
   799 and 5900. Nothing reaches Stripe: checkout sends the catalog's amount, so
   the next checkout charges the new price, and a subscription Stripe already

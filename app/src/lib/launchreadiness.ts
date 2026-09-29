@@ -124,14 +124,14 @@ export const GATES: readonly Gate[] = [
       { path: 'app/scripts/cold-smoke.mjs', shows: 'the built app boots cold in a browser' },
       {
         path: 'app/scripts/golden-path.mjs',
-        shows: 'one student journey in CI at two viewports: first run and the account step, an action made and seen on Today, the Guide and Support, completion, resume after reload and in a second tab, and restore from the backup file into a fresh browser context',
+        shows: 'one student journey in CI at two viewports: first run and the account step, a course added from a pasted syllabus through the review and its approval (the one model reply stubbed, and refused unless it carries the syllabus), an action made and seen on Today, the deadline on Plan and something added to its day, path details saved on My Path, the Guide and Support, completion, resume after reload and in a second tab, and restore from the backup file into a fresh browser context',
       },
       {
         path: 'app/scripts/account-sync.mjs',
         shows: 'resume on a second device through an account, in CI at two viewports against a local Supabase built from this repository: sign-up in the first run, an action made and finished, the server shown to hold it, a fresh second context signed in and showing it done, and a change from the second device carried back to the first',
       },
     ],
-    gap: 'The scripted journeys skip Path/Plan and adding a course from a syllabus. Account sync is proved against a local Supabase, not the production project. Phase 1.',
+    gap: 'Two steps of docs/GOLDEN-PATH-TEST-SCRIPT.md are not driven: opening a source-linked assignment workspace, and reaching human help. Syllabus import is proved with the model reply stubbed, and account sync against a local Supabase rather than the production project. Phase 1.',
   },
   {
     id: 'no-blockers',

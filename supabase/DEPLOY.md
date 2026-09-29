@@ -20,6 +20,7 @@ reading:
     integration-tick  ACTIVE, v78, verify_jwt off  platform
     trust-room        ACTIVE, v85, verify_jwt off  platform
     delete-account    ACTIVE, v62, verify_jwt off  platform
+    billing-cancel    PENDING, live on merge, verify_jwt off  (see below)
     billing-checkout  ACTIVE, v22, verify_jwt off  platform
     billing-webhook   ACTIVE, v22, verify_jwt off  platform
     lead-intake       ACTIVE, v22, verify_jwt off  platform
@@ -444,26 +445,32 @@ immutable tenant history tables cannot be erased this way yet — the history
 triggers refuse the clear its `on delete set null` asks for, the transaction
 rolls back, and the student-facing answer is that nothing was deleted.
 
-## Live on merge, off until configured: `billing-checkout`, `billing-webhook`
+## Live on merge, off until configured: `billing-checkout`, `billing-webhook`, `billing-cancel`
 
-The commercial core's two payment functions (`docs/COMMERCIAL-CORE.md`). The
-rules are in `_shared/billingcheckout.ts` and `_shared/billingwebhook.ts`,
+The commercial core's three payment functions (`docs/COMMERCIAL-CORE.md`). The
+rules are in `_shared/billingcheckout.ts`, `_shared/billingwebhook.ts` and
+`_shared/billingcancel.ts`,
 driven by `app/src/lib/billing/`; the database side is
 `migrations/20260929080000_commercial_automation.sql` and
 `commercial-automation.check.sql`.
 
-**Both answer 503 until their secret is set**, so merging deploys two
+**All three answer 503 until their secret is set**, so merging deploys
 functions that charge nobody:
 
-    STRIPE_SECRET_KEY       billing-checkout   the secret API key (sk_live_… or sk_test_…)
+    STRIPE_SECRET_KEY       billing-checkout,  the secret API key (sk_live_… or sk_test_…)
+                            billing-cancel
     STRIPE_WEBHOOK_SECRET   billing-webhook    the endpoint's signing secret (whsec_…)
-    ALLOWED_ORIGIN          billing-checkout   the app's origin(s), read strictly: unset or * allows nobody
+    ALLOWED_ORIGIN          billing-checkout,  the app's origin(s), read strictly: unset or * allows nobody
+                            billing-cancel
     CHECKOUT_RETURN_URL     billing-checkout   optional; where Stripe returns the student (default: the calling origin)
 
-**`verify_jwt` is off on both.** Stripe has no Supabase token: the webhook's
+**`verify_jwt` is off on all three.** Stripe has no Supabase token: the webhook's
 credential is the `Stripe-Signature` HMAC over the raw body, checked before the
-body is parsed, with a five-minute tolerance. The checkout checks the caller's
-access token itself after answering the CORS preflight, which carries none.
+body is parsed, with a five-minute tolerance. The checkout and the cancel check the
+caller's access token themselves after answering the CORS preflight, which
+carries none. The cancel uses no service key: it reads the subscription and
+calls `request_cancellation` *as the caller*, over the anon key, after telling
+Stripe.
 The webhook sends no CORS header at all and refuses anything with an `Origin`.
 
 The webhook endpoint to register in Stripe (Developers → Webhooks) is
@@ -494,6 +501,15 @@ by hand. Read off `cron.job` at 02:51 UTC on 29 September 2026:
 
     account-health       41 5 * * *    active = true
     commercial-dunning   23 * * * *    active = true
+
+**A third job came with `billing-cancel`** (D-132):
+`commercial-financial-retention`, monthly on the 2nd at 04:37 UTC
+(`public.purge_financial_records()`, from
+`20260929130000_financial_retention.sql`). It removes an individual
+subscriber's finished payment records seven years after the end of the year
+they were made, so nothing is eligible before 1 January 2034. Active, no
+secret; like the other two, its `cron.schedule` statement is run by hand after
+the migration is applied, and `health.sql` expects it.
 
 `public.run_dunning()` was called once by hand at the same moment, exactly
 as the job calls it, and answered `{"reminders": 0, "restricted": 0,
@@ -918,6 +934,12 @@ Until it is set the function returns 501 and the app says so plainly: *"This
 deployment has no shared key. Add your own under Ask Claude → Settings."* A
 student with their own key is unaffected either way — the app prefers a key set
 on the device and only falls back to this one.
+
+Read on 29 September 2026 at 20:24:59 UTC: a signed-in call to the deployed
+function answered exactly that 501. The secret is not set, and the kill-switch
+drill and the red-team's proxy route (`docs/LAUNCH-DECISIONS.md` item 15) wait
+on it; the red-team's direct route, with the raw key in the environment, does
+not.
 
 Optional: `MONTHLY_CALL_LIMIT` (default 60 calls per account per month),
 `ALLOWED_ORIGIN` (extra https origins; the Pages origin is built in) and

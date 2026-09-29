@@ -440,6 +440,21 @@ select cron.schedule(
   $job$select public.run_dunning()$job$
 );
 
+-- ── Commercial: financial retention ───────────────────────────────────────
+--
+-- `public.purge_financial_records()` (20260929130000_financial_retention.sql)
+-- removes an individual subscriber's finished payment records seven years
+-- after the end of the year they were made (D-132). Nothing is eligible before
+-- 1 January 2034, so for years it removes nothing; it runs anyway, so the
+-- promise is kept by a job that has been running rather than one written the
+-- week it first matters. **Active**: no secret, no endpoint. Monthly, on the
+-- 2nd at 04:37, off every other job's minute.
+select cron.schedule(
+  'commercial-financial-retention',
+  '37 4 2 * *',
+  $job$select * from public.purge_financial_records()$job$
+);
+
 -- ── Commercial: account health ────────────────────────────────────────────
 --
 -- `public.compute_account_health()` writes one snapshot per institutional
