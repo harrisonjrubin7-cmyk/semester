@@ -1954,3 +1954,48 @@ give.
 - **Not done:** the deal desk's `Approver` type still says `'finance'` as its
   own string rather than the seat; the student-advisor and operations roles
   still have no seat.
+
+## D-119 · The backup retention is the tier's documentation until the dashboard is read, and a restore re-applies the deletions
+
+**Decided 29 Sep 2026.** Codex's review of #940 arrived after the merge with
+three findings, all right, all about D-116's *Backups* section saying more
+than the tree can show.
+
+- **Seven days is not a verified number.** `RESTORE.md` had already said the
+  plan tier, the schedule and the enabled features are dashboard settings
+  nothing in the repository can read; BCDR-01 in the HECVAT draft repeated the
+  same figure with no date; and the retention test that held the two files to
+  one number proved consistency, not the provider. The section now says the
+  figure is the tier's documentation, not yet read off the dashboard on any
+  date, and that the test cannot verify the provider; BCDR-01 says the same;
+  and the privacy-policy draft brackets the number as *verify on the provider
+  dashboard before publishing*. The number is unchanged. What changed is
+  whose number it is said to be.
+- **A restore can break "at most seven days".** A backup taken before a
+  deletion holds the rows, and restoring it brings them back until the
+  deletions are re-applied — a step `RESTORE.md` did not carry and the
+  section itself said nothing recorded. The promise now carries that one
+  exception in `RETENTION.md` and in the privacy-policy draft, and
+  `RESTORE.md` carries the step: let the sweeps re-run, replay what the
+  console's manifests and the operator's notes can identify, and tell the
+  students whose own deletions cannot be found — because their deletion
+  record deliberately holds no account, and that is not changed here. A
+  durable deletion record that survives a restore is owed, named as such.
+- **"Logical" was the wrong word.** `RESTORE.md` reserves it for the CI
+  rehearsal's dump and calls the provider's copies physical; the section now
+  says which it means.
+- **Codex's review of the fix found two more, both right.** The re-apply
+  step had ended its window at "the moment the restored database went live",
+  which would have had resurrected rows reachable for as long as a weekly
+  sweep took; the step now keeps the restored project closed — the drill's
+  own rule, a restore into a new project, never over the live one — runs the
+  sweeps by hand from `scheduler.sql`, replays what can be replayed, and only
+  then cuts over, with the live project in read-only mode meanwhile. And the
+  draft policy had promised to tell a student if theirs was a deletion that
+  could not be replayed, which the same step says nothing can identify; the
+  notice is now to everyone who used Semester in the window, and the policy
+  promises no more than that.
+- **Held by test:** `retention.test.ts` reads the unverified-figure sentence
+  in both files, the exception in the promise, the re-apply step in
+  `RESTORE.md` with its cutover rule and its broad notice, and the verify
+  marker, the exception and the broad notice in the draft policy.

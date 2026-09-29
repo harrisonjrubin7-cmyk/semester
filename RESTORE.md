@@ -210,6 +210,69 @@ Repeat after any plan change, and at least once a term.
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | | | | | | | | | not yet verified |
 
+## Re-apply the deletions made after the backup point
+
+This step is for a restore that is real, not the drill: the day production
+is put back from a backup. It exists because of what `RETENTION.md` promises
+under *Backups* — that a deleted row outlives its deletion by at most the
+backup retention — and a restore is the one way to break that promise: a
+backup taken before a deletion holds the rows, and restoring it brings them
+back, live, as though nothing had been deleted. A restore is therefore not
+finished when the fingerprints match and row-level security is on. It is
+finished when the deletions and sweeps that ran between the backup time and
+the restore have been run again.
+
+1. **Fix the window, and keep the restored project closed.** The backup's
+   own time is the start. The end is the cutover — the moment the app and
+   the gateway are pointed at the restored project — and it has not happened
+   yet. The drill's own rule applies here: the restore goes into a new
+   project, never over the live one, so until the cutover nothing serves the
+   restored rows. If the live project is the one that lost the data, put it
+   in read-only mode meanwhile (*Read-only mode* in
+   [`docs/FEATURE-FLAG-REGISTRY.md`](docs/FEATURE-FLAG-REGISTRY.md):
+   `VITE_READ_ONLY=true` on the deploy, `SEMESTER_READ_ONLY=on` on the
+   gateway) so the window stops growing. **Do not cut over until steps 2 to
+   4 are done.** A restored row is a privacy incident the moment it is
+   reachable, and a weekly sweep is not a schedule anybody may wait for with
+   the doors open.
+2. **Run the sweeps by hand, now.** Do not wait for `pg_cron`. Against the
+   restored project, run each retention job's command from
+   [`supabase/scheduler.sql`](supabase/scheduler.sql) — the `$$…$$` body
+   beside its name: `tombstones`, `invite-retention`, `abandoned-signups`,
+   `audit-retention`, `lti-nonce`, `lti-link-ticket`, `capture-expiry`,
+   `institution-gateway-retention`, `community-retention`,
+   `integration-retention`. That re-applies every clock `RETENTION.md`
+   lists. Then check `cron.job` is populated (a restore does not always
+   bring it back; block 6 of `supabase/health.sql`) so they keep running
+   after the cutover.
+3. **Replay the deletions that can be identified from outside the
+   database.** Every row written after the backup point went with the restore
+   — the audit events, the console's archive and its manifests included, since
+   they live in the same database — so nothing inside the restored project can
+   list the window's deletions. What can is whatever was kept outside it: the
+   operator's own notes, the support mailbox, GitHub for provisioning changes
+   made through the repository, and a manifest only if one had been exported
+   off the project before the restore. Re-apply each deletion those name.
+4. **Say what cannot be replayed, to everyone.** A student's own deletion
+   of a note, a task or an account leaves a record with the date and the row
+   counts and deliberately no account id — that is the privacy design, and
+   it is the reason this step cannot find them. Those rows are back and
+   nothing in the tree can name whose they are, so the notice cannot be
+   individual: tell every account that existed in the window, in the notice
+   the incident process prescribes, that a deletion made in it may need to
+   be made again. Do not promise more than that anywhere, because nothing
+   here can keep more than that.
+5. **Cut over.** Only now point the app and the gateway at the restored
+   project, and lift read-only mode.
+6. **Write it down.** The window, which sweeps ran, which deletions were
+   re-applied from what record, and that the broad notice went out, filed
+   with the restore record below.
+
+A durable deletion record that survives a restore — it has to live outside
+the database being restored, which nothing in the tree does today — would
+let step 4 name the accounts instead of writing to all of them. It is owed, and `RETENTION.md` says so; until it exists,
+the promise carries this exception and the privacy-policy draft states it.
+
 ## After the drill, fill this in
 
 Nothing below is known yet, and saying so is the point of the table. A row

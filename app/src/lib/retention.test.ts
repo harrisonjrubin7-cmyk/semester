@@ -214,7 +214,39 @@ describe('the provider’s backups have a lifecycle here, held to the HECVAT ans
     const days = daysFromHecvat();
     expect(days).toBeGreaterThan(0);
     expect(flat()).toMatch(new RegExp(`Each daily backup expires \\*\\*${days} days\\*\\* after it is taken`));
-    expect(flat()).toMatch(new RegExp(`outlives its deletion by at most the backup retention — ${days} days — and then by nothing`));
+    expect(flat()).toMatch(new RegExp(`outlives its deletion by at most the backup retention — ${days} days — and then by nothing, with one exception`));
+  });
+
+  it('says the number is the tier’s documentation and not a dashboard reading, and that the test cannot verify the provider', () => {
+    // Codex on #940: holding two documents to one number proves consistency,
+    // not the provider's configuration. The section must say which it is.
+    expect(flat()).toMatch(/not yet read off the dashboard on any date/);
+    expect(flat()).toMatch(/it cannot verify the provider/);
+    const hecvatRow = hecvat().split('\n').find((l) => l.startsWith('| BCDR-01 '))!;
+    expect(hecvatRow).toMatch(/not yet read from the project dashboard/);
+  });
+
+  it('carries the restore exception into RESTORE.md and the privacy-policy draft', () => {
+    // A restore from a pre-deletion backup brings deleted rows back, so "at
+    // most seven days" is only true if the deletions are re-applied. The
+    // restore procedure has to carry that step, and the draft policy has to
+    // carry the exception, or the promise is one the tree cannot keep.
+    const restore = readFileSync(join(ROOT, 'RESTORE.md'), 'utf8').replace(/\s+/g, ' ');
+    expect(restore).toMatch(/## Re-apply the deletions made after the backup point/);
+    expect(restore).toMatch(/cannot be replayed/);
+    // Codex on #944: the restored rows are an incident the moment they are
+    // reachable, so the replay happens before the cutover, not after; and a
+    // deletion record with no account cannot support an individual notice,
+    // so the promise is a broad one.
+    expect(restore).toMatch(/Do not cut over until steps 2 to 4 are done/);
+    expect(restore).toMatch(/tell every account that existed in the window/);
+    expect(flat()).toMatch(/before the restored project is opened to anyone/);
+    const policy = readFileSync(join(ROOT, 'docs', 'legal', 'PRIVACY-POLICY-DRAFT.md'), 'utf8').replace(/\s+/g, ' ');
+    expect(policy).toMatch(/\[VERIFY on the provider dashboard before publishing/);
+    expect(policy).toMatch(/restored from a backup taken before you deleted something/);
+    expect(policy).toMatch(/before the restored service is opened/);
+    expect(policy).toMatch(/may need to be made again, because we cannot tell whose it was/);
+    expect(policy).not.toMatch(/tell you if yours/);
   });
 
   it('says what a deletion means for the copy in a backup, and that a restore owes the deletions again', () => {

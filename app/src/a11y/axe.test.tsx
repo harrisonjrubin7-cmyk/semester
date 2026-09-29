@@ -71,6 +71,7 @@ let root: Root | undefined;
 let hadObserver = false;
 let hadHitTest = false;
 let hadHitOne = false;
+let rootStyle: string | null = null;
 
 const PAGE = readFileSync(join(__dirname, '..', '..', 'index.html'), 'utf8');
 
@@ -117,6 +118,7 @@ beforeEach(() => {
   hadObserver = 'ResizeObserver' in globalThis;
   hadHitTest = typeof document.elementsFromPoint === 'function';
   hadHitOne = typeof document.elementFromPoint === 'function';
+  rootStyle = document.documentElement.getAttribute('style');
   if (!hadObserver) {
     globalThis.ResizeObserver = class {
       observe() {}
@@ -138,6 +140,11 @@ afterEach(async () => {
   history.replaceState(null, '', '/');
   document.documentElement.removeAttribute('lang');
   document.title = '';
+  // The app's theme effect writes every look token onto <html> as inline
+  // style, and unmounting does not take them off; the next file in this
+  // worker would read this suite's theme as its own (`svgout.test.ts` did).
+  if (rootStyle === null) document.documentElement.removeAttribute('style');
+  else document.documentElement.setAttribute('style', rootStyle);
   if (!hadObserver) delete (globalThis as { ResizeObserver?: unknown }).ResizeObserver;
   if (!hadHitTest) delete (document as { elementsFromPoint?: unknown }).elementsFromPoint;
   if (!hadHitOne) delete (document as { elementFromPoint?: unknown }).elementFromPoint;
