@@ -69,13 +69,13 @@ either direction, that is a bug: report it the same way.
 
 *Stated in:* `docs/legal/TERMS-OF-SERVICE-DRAFT.md`, `docs/legal/PRIVACY-POLICY-DRAFT.md`, `app/src/lib/privacy.ts`
 
-### Nothing is for sale, and nothing can be bought.
+### Only Plus can be bought, only in the app, and there is no refund policy yet.
 
-**What does not work yet.** Plus and Pro show planned prices so you know what to expect. There is no checkout and no billing in the app, and during the pilot every student feature is free.
+**What does not work yet.** Plus can be bought from the Account screen at $7.99 a month or $59 a year, after a consent you tick; the card goes into Stripe’s page, and cancelling reaches Stripe and ends Plus at the end of the period you paid for. Checkout has not been tested end to end with a real charge, there is no written refund policy, and receipts are not shown in your account. Pro and institution plans are not on sale, and the public site sells nothing.
 
-**What to do instead.** Nothing to do. If a page asks you to pay for Semester, it is not Semester.
+**What to do instead.** Buy or cancel Plus only on the Account screen. For a refund, write to the address below. If any other page asks you to pay for Semester, it is not Semester.
 
-*Stated in:* `app/src/lib/plans.ts`, `ops/claims/README.md`
+*Stated in:* `app/src/lib/plans.ts`, `app/src/components/MembershipPanel.tsx`, `docs/DECISION-LOG.md`, `ops/claims/README.md`
 
 ### Support is one address, read by a person, with no promised response time.
 

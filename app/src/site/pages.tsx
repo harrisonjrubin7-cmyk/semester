@@ -219,17 +219,17 @@ export const Institutions: Page = ({ config }) => (
   </>
 );
 
-/** What a student is told before anything is for sale. Each line is a promise the pricing page will keep. */
+/** What buying Plus means, line by line. Each line is true of the checkout that runs today (D-128, D-132, D-134). */
 const COMMERCIAL_TERMS: [string, string][] = [
   ['Currency', 'US dollars.'],
   ['Billing period', 'Monthly or yearly, as shown. No other period.'],
-  ['Tax', 'Determined for your location before anything is sold; the price shown is before tax.'],
-  ['Free trial', 'Not decided. Everything a student can use is free during the pilot, which is more than a trial.'],
-  ['Upgrading', 'Not available yet. When it is, the change takes effect at once and the price is shown first.'],
-  ['Cancelling', 'Nothing to cancel today. When there is, cancelling ends the charge and keeps everything you built.'],
+  ['Tax', 'None is added at checkout today: the amount on Stripe’s page is the amount charged.'],
+  ['Free trial', 'None. Free stays free, so there is nothing to trial.'],
+  ['Upgrading', 'Plus only, from the Membership panel on the Account screen in the app, after a consent you tick that names the amount, the interval, the renewal and where to cancel.'],
+  ['Cancelling', 'From the same panel. It reaches Stripe, which stops the renewal; Plus stays on until the end of the period you paid for, and everything you built stays.'],
   ['What stays available', 'Everything on Free, always, and every plan you saved.'],
-  ['Refunds', 'The policy is published on the legal page before any checkout exists, not after.'],
-  ['Receipts and invoices', 'None exist, because nothing has been charged. They will be in your account, not only in email.'],
+  ['Refunds', 'Not yet written. This page promised the policy before any checkout existed, and checkout came first; until it is published, write to us from the contact page.'],
+  ['Receipts and invoices', 'Semester records each invoice Stripe reports. They are not shown in your account yet.'],
   ['Institution-sponsored access', 'If your university provides Semester, you sign in with your university account and pay nothing.'],
 ];
 
@@ -252,9 +252,9 @@ export const Pricing: Page = ({ config }) => (
       <ul>
         {ALWAYS_INCLUDED.map((i) => <li key={i}>{i}</li>)}
       </ul>
-      <p>Nothing you built on a free plan is taken away. There is no checkout on this site, and no payment details are collected anywhere in Semester.</p>
+      <p>Nothing you built on a free plan is taken away. There is no checkout on this site: Plus is bought in the app, and the card goes into Stripe’s page, so Semester never sees it.</p>
     </Section>
-    <Section title="Before anything goes on sale" id="pr-terms">
+    <Section title="Buying Plus, and what is not on sale" id="pr-terms">
       <ClaimList ids={['no-sale']} />
       <dl className="site-legend">
         {COMMERCIAL_TERMS.map(([term, detail]) => (

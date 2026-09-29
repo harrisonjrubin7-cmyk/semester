@@ -2,11 +2,12 @@
  * Semester's plans, in one place, for the pricing page and the in-app
  * Membership panel.
  *
- * **These are descriptions, not prices anyone is charged.** The figures are
- * the blueprint's *suggested* ones and are shown as "planned". Plus is the one
- * plan that can be bought, from the Membership panel, and it is bought at the
- * price in the server's catalog (`commercial_prices`), which the panel reads —
- * never at a figure here (DECISION-LOG D-128).
+ * Plus is the one plan that can be bought (`priceStatus: 'in-app'`): from the
+ * Membership panel on the Account screen, at the price in the server's catalog
+ * (`commercial_prices`), which the panel reads and which `plans.test.ts` holds
+ * equal to the figure here (DECISION-LOG D-128, D-134). Every other paid figure
+ * is the blueprint's *suggested* one and is shown as "planned". The public site
+ * sells nothing; it says where Plus is bought.
  *
  * Two promises are written into the data rather than the copy, so no plan can
  * drop them by accident (blueprint §12, `plans.test.ts`):
@@ -22,8 +23,8 @@ export interface Plan {
   forWhom: string;
   /** Planned list price, or null when there is none (Free) or it is negotiated (Institution). */
   price: { monthly: number; yearly: number } | null;
-  /** `planned` until a billing provider is approved and live. */
-  priceStatus: 'free' | 'planned' | 'contact';
+  /** `in-app`: bought from the Membership panel at the catalog's price. `planned`: not on sale. */
+  priceStatus: 'free' | 'in-app' | 'planned' | 'contact';
   includes: string[];
 }
 
@@ -54,7 +55,7 @@ export const PLANS: Plan[] = [
     name: 'Semester Plus',
     forWhom: 'Students who plan several terms ahead',
     price: { monthly: 7.99, yearly: 59 },
-    priceStatus: 'planned',
+    priceStatus: 'in-app',
     includes: [
       'Unlimited saved plans and schedules',
       'Side-by-side plan comparison',
@@ -91,7 +92,7 @@ export const PLANS: Plan[] = [
 ];
 
 export const PILOT_NOTE =
-  'Plus and Pro are not on sale yet. During the pilot, every feature a student can use is free.';
+  'Plus is bought in the app, signed in, from the Account screen. Pro is not on sale yet. Free stays free.';
 
 export function plan(id: PlanId): Plan {
   const found = PLANS.find((p) => p.id === id);
@@ -99,10 +100,11 @@ export function plan(id: PlanId): Plan {
   return found;
 }
 
-/** "$7.99 a month or $59 a year (planned)", or the plain word for Free and Institution. */
+/** "$7.99 a month or $59 a year, bought in the app", "… (planned)", or the plain word for Free and Institution. */
 export function priceLine(p: Plan): string {
   if (p.priceStatus === 'free') return 'Free';
   if (p.priceStatus === 'contact' || !p.price) return 'Through your university';
   const money = (n: number) => `$${Number.isInteger(n) ? n : n.toFixed(2)}`;
-  return `${money(p.price.monthly)} a month or ${money(p.price.yearly)} a year (planned)`;
+  const amount = `${money(p.price.monthly)} a month or ${money(p.price.yearly)} a year`;
+  return p.priceStatus === 'in-app' ? `${amount}, bought in the app` : `${amount} (planned)`;
 }

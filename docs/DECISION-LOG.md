@@ -2635,3 +2635,30 @@ four to be scored, and for the evaluation set model quality needs.
 - **Not changed:** the weights, the floors, the thresholds, the subprocessor
   register. The pass-rate bands and the critical cap are the owner's to
   change; the set has not been run, because this session had no key.
+
+## D-136 · Every page that said nothing can be bought now says Plus is sold in the app, and a test keeps it that way
+
+**Decided by owner 29 Sep 2026.** D-128 put Plus on sale in the Membership
+panel and D-132 made cancelling reach Stripe, but nine places still said
+nothing could be bought: the known limitation (`no-sale`), two claims
+(`no-payment-data`, `no-sale`), `plans.ts` (`PILOT_NOTE`, Plus `planned`),
+the pricing page's terms and closing line, the company site's pricing,
+commercial terms and membership pages, and its contact table. Two tests held
+the old sentence in place.
+
+- **Now:** Plus is `priceStatus: 'in-app'` — "$7.99 a month or $59 a year,
+  bought in the app"; Pro stays planned. The `no-sale` claim is "Plus is sold
+  in the app; Pro is not on sale yet", In preparation on `COM-001` and
+  `LEG-003`, because checkout has not been tested end to end with a real
+  charge. The public site still sells nothing; it says where Plus is bought.
+- **What stays owed, said where it is owed:** there is no refund policy. The
+  pricing page promised one before any checkout existed, and checkout came
+  first; the policy row is marked overdue, the pricing and company-site terms
+  say so, and a refund request goes to the contact address. No tax is added
+  at checkout (`billingcheckout.ts` sets none), and receipts are recorded
+  from Stripe but not shown in an account.
+- **The guard nobody wrote:** `plans.test.ts` fails when a plan the catalog
+  charges for is not `in-app` (or the reverse), and when the known
+  limitations, the claims, `plans.ts`, the pricing page or the company site
+  say nothing can be bought while a plan is sold. Putting the old limitation
+  title back, and the old company-site warning back, each turned it red.
