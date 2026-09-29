@@ -425,7 +425,7 @@ export const FAILURES: readonly Failure[] = [
   { scenario: 'Webhook flood or duplicate events', ids: ['EC-DQ-04', 'EC-DQ-05', 'EC-INF-05', 'GD-07'], runbook: 'docs/INTEGRATION-OPERATOR-RUNBOOK.md' },
   { scenario: 'AI-provider outage or unsafe-response surge', ids: ['EC-AI-04', 'EC-AI-09', 'GD-04', 'R-07'], runbook: 'docs/RUNBOOKS.md' },
   { scenario: 'Queue backlog', ids: ['GD-06'], runbook: 'docs/INTEGRATION-OPERATOR-RUNBOOK.md' },
-  { scenario: 'Storage or upload outage', ids: [], runbook: null },
+  { scenario: 'Storage or upload outage', ids: ['EC-INF-12'], runbook: null },
   { scenario: 'Expired certificate', ids: ['EC-INF-03'], runbook: null },
   { scenario: 'Secret or key-rotation failure', ids: ['EC-INF-01', 'EC-INF-02'], runbook: 'SECRETS.md' },
   { scenario: 'Malicious account or rate-limit attack', ids: ['EC-AI-09', 'R-12'], runbook: null },
