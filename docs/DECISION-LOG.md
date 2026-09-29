@@ -2635,3 +2635,29 @@ four to be scored, and for the evaluation set model quality needs.
 - **Not changed:** the weights, the floors, the thresholds, the subprocessor
   register. The pass-rate bands and the critical cap are the owner's to
   change; the set has not been run, because this session had no key.
+
+## D-136 · Semester replaces the university stack, one module at a time, and the site stops saying it does not
+
+**Decided by owner 29 Sep 2026.** The site said "it does not replace your SIS"
+and the register deferred registration writes, while the owner's goal is one
+system that replaces the SIS, the LMS, the registrar, student accounts and the
+rest. Two modes on one codebase: **Connect** (today, the default) reads from a
+school's systems and prepares actions; **Core** makes Semester the record for
+one module, switched per tenant, in writing, with a rollback that freezes and
+never deletes.
+
+- **Site.** `site/modules.ts` is the takeover map: fourteen modules, the kinds
+  of system each would replace, what it does in Connect, what changes in Core,
+  and the claims register's status word. Every module reads *planned*; none is
+  built. `/platform/system-boundaries/` and the company site's boundaries block
+  print it, and `modules.test.ts` refuses a module above *planned* whose
+  tables or `<module>.check.sql` suite are missing, and one still *planned*
+  whose tables have landed.
+- **Rule 13** in `DO-NOT-BUILD.md`: no Core module without row-level-security
+  tests, an immutable history and a kill switch.
+- **Kept:** AI never decides grades, admissions, aid or discipline (rules 3
+  and 7); no card numbers are stored; the Known Limitations already say what
+  checkout does (#986).
+- **Not done here:** moving "Direct registration writes" off the deferred list
+  in `expansiongovernance.ts` (its test counts sixteen). That edit relaxes a
+  Tier 4 refusal and waits for the owner to confirm it.
