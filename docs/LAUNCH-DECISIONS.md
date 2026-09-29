@@ -33,6 +33,7 @@ only as an advisor.
 | 10 | **Grant engineering access to production Supabase** so the restore drill, the rollback test and the rate-limit migration can run against it. Then watch the drill run. | Owner (dashboard) | `backup-restore`, `flags-rollback`, go-live restore / rollback / rate limits |
 | 11 | **Commission an accessibility review** of the piloted screens by someone qualified. A university disability-services office or an accessibility firm can do it. | Owner | Go-live accessibility audit, `onboarding-support` |
 | 12 | **Hold security and privacy seats**, even as part-time advisors. | Owner recruits | `no-blockers` sign-off, `terms-reviewed` sign-off |
+| 13 | **Accept or change the four remediation targets** in [`SECURITY.md`](../SECURITY.md) (critical 2 days, high 14, medium 60, low 180; `PATCH_POLICY` in `app/src/lib/supplychain.ts`). They are proposed internal targets until the security seat, or you acting in it, accepts them in writing. Accepting means: the word *proposed* comes out of `SECURITY.md` and `supplychain.ts`, the acceptance is dated in the decision log, and `app/src/lib/security.test.ts` is changed to expect the acceptance line instead. | Security seat, or owner acting | HECVAT `VULN-1` toward `TESTING`, once a finding has also been answered inside its clock |
 
 ## Step 3 — Before selling each package
 

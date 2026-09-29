@@ -137,6 +137,13 @@ are records *about* your use: the log of who read your rows (ninety days) and
 the daily usage facts (a little over a year). Queued reminders are deleted
 once sent. For school deployments, retention follows the school's contract.
 
+Our hosting provider backs up the whole database daily, and each backup
+expires 7 days after it is taken. Something you delete, including your
+account, can remain in a backup for up to that long; nobody reads backups,
+and they exist only to restore the service after a failure. [DECIDE with
+counsel: the wording. The number tracks `RETENTION.md`, *Backups*, and
+changes there first.]
+
 ## 7. Your choices and rights
 
 - **Export**: *Take it with you* downloads everything in portable formats.

@@ -409,6 +409,59 @@ not written, and a published row is kept until it is. It is owed before the
 first producer lands, and ADR 0008 says so; this entry is so that the producer
 cannot land without somebody reading this.
 
+## Backups: the provider's copies, and how long a deleted row outlives its deletion
+
+Everything above is about rows in the live database. Supabase also keeps
+backups of the whole database, and nothing in this file reached them until
+now — which [`docs/trust/DPA-CHECKLIST.md`](docs/trust/DPA-CHECKLIST.md)
+recorded as "backup retention not recorded" and the evidence register counted
+as the gap in its *Backups* class. This section is the lifecycle.
+
+**What they are.** Daily logical backups taken by the provider on its
+schedule, encrypted at rest, in the project's own region (us-west-2; `DR-03`
+in the maturity register says the same), and readable by nobody in the
+ordinary running of the service: no code in this repository, no Edge Function
+and no browser role can open one. A backup is used for exactly one thing,
+restoring the database after the day the data is wrong, and
+[`RESTORE.md`](RESTORE.md) is the procedure.
+
+**How long they live.** Each daily backup expires **7 days** after it is
+taken, on a rolling schedule the provider runs. The number is the plan tier's,
+as recorded for BCDR-01 in
+[`docs/market-readiness/HECVAT_DRAFT_RESPONSE.md`](docs/market-readiness/HECVAT_DRAFT_RESPONSE.md),
+and `app/src/lib/retention.test.ts` holds the two files to the same number.
+Point-in-time recovery, which would keep a continuous log for 7, 14 or 28
+days, is not confirmed to be on: the table in `RESTORE.md` is where that gets
+written once somebody reads it off the dashboard, and if it is switched on,
+its retention becomes the number here.
+
+**What that means for a deletion.** When a student deletes a note or their
+account, the live rows go at once, as the sections above say. The copy of
+those rows in a backup taken before the deletion stays until that backup
+expires, so **a deleted row outlives its deletion by at most the backup
+retention — 7 days — and then by nothing.** No process reads it in that
+window, and nothing restores it on its own. This is the period
+[`docs/legal/TERMS-OF-SERVICE-DRAFT.md`](docs/legal/TERMS-OF-SERVICE-DRAFT.md)
+refers to as "backups kept for the period our Privacy Policy states", and the
+privacy-policy draft now states it. It is not an archive: the app's privacy
+text promises no archive kept after an account is deleted, and a backup that
+nobody can read, that exists only to put the whole database back, and that
+expires by itself is what keeps that sentence true.
+
+**What a restore owes this file.** A restore to a moment before a deletion
+brings the deleted rows back, because the backup predates the delete. A
+restore is therefore not finished when the fingerprints match: the deletions
+and the sweeps that ran between the backup time and the restore have to be run
+again. Today nothing lists them — the deletion record that `privacy.ts`
+describes keeps the date and the row counts and deliberately no account — so
+that step is owed in `RESTORE.md`'s procedure, and this file records the
+obligation rather than pretending the drill covers it.
+
+**Not yet true.** No drill has restored production data, so the recovery point
+and time in `RESTORE.md` are unmeasured; the 7 days is the tier's number, not
+one read off the dashboard on a date; and a legal hold, which would have to
+stop a backup expiring, does not exist (`RM-02`).
+
 ## Changing any of this
 
 1. Decide it, and write the reason here — this file is the record.

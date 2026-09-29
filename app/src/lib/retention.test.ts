@@ -199,6 +199,37 @@ describe('every table in the schema has a retention answer', () => {
   });
 });
 
+describe('the provider’s backups have a lifecycle here, held to the HECVAT answer', () => {
+  const hecvat = () => readFileSync(join(ROOT, 'docs', 'market-readiness', 'HECVAT_DRAFT_RESPONSE.md'), 'utf8');
+  const daysFromHecvat = () => {
+    const row = hecvat().split('\n').find((l) => l.startsWith('| BCDR-01 '));
+    expect(row, 'HECVAT_DRAFT_RESPONSE.md has no BCDR-01 row').toBeDefined();
+    return Number(/(\d+)-day retention/.exec(row!)?.[1]);
+  };
+
+  it('states how long a backup lives, with the number BCDR-01 gives', () => {
+    // Two documents answer "how long are backups kept"; they may not answer
+    // differently. The HECVAT row is where a reviewer reads it, this file is
+    // where the deletion consequence is worked out from it.
+    const days = daysFromHecvat();
+    expect(days).toBeGreaterThan(0);
+    expect(flat()).toMatch(new RegExp(`Each daily backup expires \\*\\*${days} days\\*\\* after it is taken`));
+    expect(flat()).toMatch(new RegExp(`outlives its deletion by at most the backup retention — ${days} days — and then by nothing`));
+  });
+
+  it('says what a deletion means for the copy in a backup, and that a restore owes the deletions again', () => {
+    expect(flat()).toMatch(/No process reads it in that window, and nothing restores it on its own/);
+    expect(flat()).toMatch(/have to be run again/);
+    expect(flat()).toMatch(/is not confirmed to be on/);
+  });
+
+  it('and the probe would catch a different number', () => {
+    // The control: the same pattern with the wrong number must miss.
+    const probe = new RegExp(`Each daily backup expires \\*\\*${daysFromHecvat()} days\\*\\* after it is taken`);
+    expect('Each daily backup expires **14 days** after it is taken').not.toMatch(probe);
+  });
+});
+
 describe('the clocks that run are still the clocks the document describes', () => {
   /*
    * Not an assertion that ninety is right — see the header. An assertion that
