@@ -176,7 +176,7 @@ The Stripe webhook to register (Developers → Webhooks) is
 
 Before the first live charge, what was open is closed:
 
-- **Cancelling reaches Stripe** (D-130). The app's Cancel Plus calls
+- **Cancelling reaches Stripe** (D-131). The app's Cancel Plus calls
   `billing-cancel`, which sets `cancel_at_period_end` on the Stripe
   subscription first and records it with `request_cancellation()` second. If
   Stripe does not agree, nothing is recorded and the person is told they are
@@ -185,14 +185,14 @@ Before the first live charge, what was open is closed:
 - **The app's upgrade and cancel screens** exist (D-128): the Membership panel
   on the Account screen.
 - **The financial-retention period is seven years** after the end of the year
-  a record was made (D-130), enforced by `purge_financial_records()` — below.
+  a record was made (D-131), enforced by `purge_financial_records()` — below.
   The consent wording the app sends is versioned `plus-v1`.
 
 ## Financial retention
 
 Invoices, payment events and contracts are financial records with their own
 retention: **seven years after the end of the calendar year they were made**
-(D-130). `public.purge_financial_records()`
+(D-131). `public.purge_financial_records()`
 (`migrations/20260929130000_financial_retention.sql`,
 `financial-retention.check.sql`) removes an *individual* subscriber's finished
 records past that line, monthly (`commercial-financial-retention` in

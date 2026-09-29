@@ -307,7 +307,7 @@ export const TABLES: readonly (readonly [table: string, disposition: Disposition
  * What the register leaves open, each with its severity on the scale
  * SECURITY.md defines and what would close it.
  */
-export const OPEN: readonly { id: string; severity: 'low' | 'medium' | 'high'; what: string; closes: string }[] = [
+export const OPEN: readonly { id: string; severity: 'low' | 'medium' | 'high'; what: string; closes: string; closedBy?: string }[] = [
   {
     id: 'DR-01',
     severity: 'low',
@@ -317,8 +317,9 @@ export const OPEN: readonly { id: string; severity: 'low' | 'medium' | 'high'; w
   {
     id: 'DR-02',
     severity: 'medium',
-    what: 'The gates here are structural: this register proves each check is present in the body, not that it is correct. Behaviour is proved per function by the `supabase/*.check.sql` suites, and not every one of the 151 has a suite that calls it as a second account.',
-    closes: 'A sweep in `grants.check.sql` that calls every allowlisted definer function as an account with no grants and requires a refusal or an empty answer, with the self-service reads listed as expected exceptions.',
+    what: 'The gates here are structural: this register proves each check is present in the body, not that it is correct. Behaviour is proved per function by the `supabase/*.check.sql` suites, and not every one of the 151 had a suite that calls it as a second account.',
+    closes: 'Closed by `supabase/definer-sweep.check.sql`: a signed-in account holding nothing calls every callable definer function with neutral arguments and must be refused or told nothing, except fifteen that act only on the caller\'s own account, each named with the answer it may give; a victim\'s id, email, referral code and ticket may appear in no answer. Shown red on a function stripped of its owner filter, a self-service function taken off the list and a stale list entry; two planted probes are named on every run. Left to the feature suites: a caller holding a real id of somebody else\'s object, which neutral arguments cannot name.',
+    closedBy: 'supabase/definer-sweep.check.sql',
   },
   {
     id: 'DR-03',

@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="semester-routing" content="path">
 <meta name="description" content="Semester is a student action platform: plan your path, prepare for registration, learn from approved sources and stay in control of your data. Private beta.">
-<link rel="canonical" href="https://semester-company-site.vercel.app/">
+<link rel="canonical" href="https://www.semester.website/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Semester">
 <meta property="og:title" content="Semester — College is complicated. Your path should not be.">
 <meta property="og:description" content="Semester is a student action platform: plan your path, prepare for registration, learn from approved sources and stay in control of your data. Private beta.">
-<meta property="og:url" content="https://semester-company-site.vercel.app/">
+<meta property="og:url" content="https://www.semester.website/">
 <meta name="twitter:card" content="summary">
 <meta name="theme-color" content="#060607">
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Organization", "name": "Semester", "url": "https://semester-company-site.vercel.app", "email": "harrisonjrubin7@gmail.com", "founder": {"@type": "Person", "name": "Harrison Rubin"}, "sameAs": ["https://www.youtube.com/channel/UCtjKvFwHxfYxiy3-3WgdHwg", "https://www.instagram.com/semester_app/", "https://www.linkedin.com/company/semester-app/"], "description": "Semester is a student action platform: plan your path, prepare for registration, learn from approved sources and stay in control of your data. Private beta."}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Organization", "name": "Semester", "url": "https://www.semester.website", "email": "harrisonjrubin7@gmail.com", "founder": {"@type": "Person", "name": "Harrison Rubin"}, "sameAs": ["https://www.youtube.com/channel/UCtjKvFwHxfYxiy3-3WgdHwg", "https://www.instagram.com/semester_app/", "https://www.linkedin.com/company/semester-app/"], "description": "Semester is a student action platform: plan your path, prepare for registration, learn from approved sources and stay in control of your data. Private beta."}</script>
 </head>
 <body>
 
@@ -3888,7 +3888,7 @@ SPAN 1102 Spanish II, MW, 14:30-15:45, 3</textarea></label>
   const TITLES={home:"Semester · Stay ahead of college",product:"Product · Semester",students:"For students · Semester",institutions:"For institutions · Semester",pricing:"Pricing · Semester",trust:"Trust Center · Semester",tools:"Free student tools · Semester",company:"About · Semester",careers:"Careers · Semester",contact:"Contact · Semester",experience:"Interactive demo · Semester","build-my-semester":"Build my semester · Semester","launch-estimator":"Institution launch estimator · Semester",integrations:"Integrations · Semester","design-partners":"Design partners · Semester",principles:"Principles · Semester",roadmap:"Roadmap · Semester",help:"Help center · Semester",notfound:"Page not found · Semester"};
   const PATHMODE=!!document.querySelector('meta[name="semester-routing"][content="path"]');
   let pathMode=PATHMODE;
-  const SITE="https://semester-company-site.vercel.app";
+  const SITE="https://www.semester.website";
   const DEFAULT_DESC=((document.querySelector('meta[name="description"]')||{}).content)||"Semester — the student action platform.";
   let CUR="home";
   const ROUTE_ALIAS={"proof-standards":"proof-policy"};
@@ -4844,11 +4844,11 @@ SPAN 1102 Spanish II, MW, 14:30-15:45, 3</textarea></label>
   // ---------- live status: checked from this browser ----------
   const APP_BASE="https://harrisonjrubin7-cmyk.github.io/semester/";
   const SB_URL="https://lzrqvlugnawcgywkhqlz.supabase.co",SB_KEY="sb_publishable_aU09VKFZdGCrO-RM_rVzMQ_j17FqKRj";
-  const PROBES=[{name:"The app",detail:"the page students open",url:APP_BASE,opaque:true},{name:"Sign-in and saved work",detail:"accounts and sync",url:SB_URL+"/auth/v1/health",headers:{apikey:SB_KEY}},{name:"Product status page",detail:"the app's own status page",url:APP_BASE+"status.html",opaque:true}];
+  const PROBES=[{name:"The app",detail:"the page students open",url:APP_BASE},{name:"Sign-in and saved work",detail:"accounts and sync",url:SB_URL+"/auth/v1/health",headers:{apikey:SB_KEY}},{name:"Product status page",detail:"the app's own status page",url:APP_BASE+"status.html"}];
   function probe(c){const ctrl=typeof AbortController==="function"?new AbortController():null;const timer=setTimeout(()=>{if(ctrl)ctrl.abort()},8000);
-    const opt={cache:"no-store",signal:ctrl?ctrl.signal:undefined};if(c.opaque)opt.mode="no-cors";else opt.headers=c.headers;
+    const opt={cache:"no-store",signal:ctrl?ctrl.signal:undefined};if(c.headers)opt.headers=c.headers;
     let p;try{p=fetch(c.url,opt)}catch(e){p=Promise.reject(e)}
-    return p.then(r=>c.opaque?true:r.ok,()=>false).then(ok=>{clearTimeout(timer);return ok})}
+    return p.then(r=>r.ok,()=>false).then(ok=>{clearTimeout(timer);return ok})}
   let stRunning=false;
   function stRun(){if(stRunning)return;const box=document.getElementById("st-comp"),ov=document.getElementById("st-overall"),sum=document.getElementById("st-sum"),when=document.getElementById("st-when");if(!box)return;stRunning=true;
     box.innerHTML=PROBES.map((c,i)=>`<div class="probe"><div><span class="nm">${esc(c.name)}</span> <span class="dt">· ${esc(c.detail)}</span><div class="dt" id="pb-t${i}">Not checked yet</div></div><span class="st" id="pb-s${i}" data-state="checking">Checking…</span></div>`).join("");

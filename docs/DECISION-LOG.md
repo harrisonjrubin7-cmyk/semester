@@ -2379,7 +2379,38 @@ for the upgrade screen to be built and deployed.
   classes are constrained; they are not. B03 in the definer register moves
   to held.
 
-## D-130 · Cancelling Plus reaches Stripe, and financial records are kept seven years
+## D-130 · Every callable definer function is called by a stranger, and DR-02 is closed
+
+**Decided 29 Sep 2026.** DR-02, the one medium item the definer register
+left open: it proved each function's check is present, not that it works,
+and not every one of the 151 had a suite calling it as somebody with no
+business calling it.
+
+- **`supabase/definer-sweep.check.sql`.** A signed-in account with no school,
+  role, capability or share calls every callable definer function in
+  `public` with a neutral argument of each type, and must be refused or told
+  nothing. On this tree: 99 refused, 37 empty, 15 answered.
+- **The fifteen that answer are named**, each with the exact shape of what it
+  may say and why: status words that name nothing ("stale", "unknown",
+  "none") and functions whose whole job is the caller's own account (export
+  my data, mint my code, forget my history). A new answer is a failure until
+  somebody decides; a listed function that stops answering is a failure
+  until it is taken off.
+- **A victim is given something to lose first** (a referral code and a
+  support ticket, through its own functions), and no answer to the stranger
+  may carry its id, email, code or ticket. That is what turns "answered" into
+  a finding rather than a count.
+- **Shown red:** `my_support_tickets` stripped of its owner filter (named,
+  "leaked Victim ticket subject"); `note_activity` taken off the list; a stale
+  list entry. Two probes are planted on every run and must be named: one
+  counting every account, one returning the victim's email.
+- **What it does not prove**, written into the suite: neutral arguments name
+  nothing real, so a function that answers anyone holding a real id of
+  somebody else's object passes here, the shape of the `gtm_pilot_problems`
+  fault. That stays with the feature suites. `beta_triage_feedback` was the
+  one function no suite called at all; the sweep now does, as a stranger.
+
+## D-131 · Cancelling Plus reaches Stripe, and financial records are kept seven years
 
 **Decided by owner 29 Sep 2026.** D-128 left two things open before a live
 key: a cancellation that stopped at Semester's own record, and no retention
