@@ -130,7 +130,7 @@ begin
     pg_temp.refused(teen, format($q$insert into public.family_grants (institution_id, student_id, recipient_id, category, access, expires_at)
       values ('vanderbilt', %L, %L, 'academic', 'selected', now() + interval '30 days')$q$, teen, parent))::text, 'false');
 
-  -- ── The four ways in that do not ask verified_student ───────────────────
+  -- ── The ways in that do not ask verified_student ────────────────────────
   -- Inserted as the table owner, so only the trigger stands in the way.
   begin
     insert into public.connections (requester, addressee) values (teen, adult);
@@ -174,6 +174,34 @@ begin
       raise exception 'FAILED: the mentor request fixture is incomplete (%), so the trigger was not what refused it', sqlerrm;
   end;
 
+  begin
+    insert into public.mentor_requests (kind, tenant_id, requester, recipient, requester_name) values ('alumni', 'age-u', adult, teen, 'Adult');
+    raise exception 'FAILED: a minor was sent a mentor request';
+  exception
+    when insufficient_privilege then raise notice 'ok  nor be sent one';
+    when not_null_violation or check_violation then
+      raise exception 'FAILED: the mentor request fixture is incomplete (%), so the trigger was not what refused it', sqlerrm;
+  end;
+  begin
+    insert into public.peer_mentor_offers (user_id, tenant_id, cohort_scope, display_name) values (teen, 'age-u', 'age-u/cohort-a', 'Teen');
+    raise exception 'FAILED: a minor was listed as a peer mentor';
+  exception when insufficient_privilege then raise notice 'ok  a minor cannot be listed as a peer mentor';
+  end;
+  begin
+    insert into public.alumni_mentor_offers (user_id, tenant_id) values (teen, 'age-u');
+    raise exception 'FAILED: a minor was listed as an alumni mentor';
+  exception when insufficient_privilege then raise notice 'ok  nor as an alumni mentor';
+  end;
+  insert into public.peer_mentor_offers (user_id, tenant_id, cohort_scope, display_name, active) values (teen, 'age-u', 'age-u/cohort-a', 'Teen', false);
+  raise notice 'ok  an inactive offer is nobody''s roster, so it may be kept';
+  begin
+    update public.peer_mentor_offers set active = true where user_id = teen;
+    raise exception 'FAILED: a minor turned a peer mentor offer on';
+  exception when insufficient_privilege then raise notice 'ok  but not turned on';
+  end;
+  insert into public.peer_mentor_offers (user_id, tenant_id, cohort_scope, display_name) values (adult, 'age-u', 'age-u/cohort-a', 'Adult');
+  raise notice 'ok  an adult is still listed';
+
   -- ── Turning 18 ──────────────────────────────────────────────────────────
   update private.account_ages set minor_until = current_date where user_id = teen;
   perform pg_temp.become(teen);
@@ -184,9 +212,21 @@ begin
 
   -- ── Stated once, for an account that never said ─────────────────────────
   unsaid := pg_temp.account('unsaid@age.example', null);
+  -- Listed before anybody asked its age.
+  insert into public.peer_mentor_offers (user_id, tenant_id, cohort_scope, display_name) values (unsaid, 'age-u', 'age-u/cohort-a', 'Unsaid');
+  insert into public.alumni_mentor_offers (user_id, tenant_id) values (unsaid, 'age-u');
+  insert into public.talent_profiles (user_id, opted_in) values (unsaid, true);
   perform pg_temp.become(unsaid);
   perform pg_temp.answered('an account that never said may state an age', public.state_my_age((current_date - interval '16 years')::date), 'minor');
   perform pg_temp.answered('and becomes a minor', private.verified_student()::text, 'false');
+  reset role;
+  select count(*) into n from public.peer_mentor_offers where user_id = unsaid and active;
+  perform pg_temp.answered('saying so takes them off the peer mentor roster', n::text, '0');
+  select count(*) into n from public.alumni_mentor_offers where user_id = unsaid and active;
+  perform pg_temp.answered('and the alumni one', n::text, '0');
+  select count(*) into n from public.talent_profiles where user_id = unsaid and opted_in;
+  perform pg_temp.answered('and out of employer view', n::text, '0');
+  perform pg_temp.become(unsaid);
   perform pg_temp.answered('but may not state it again', public.state_my_age((current_date - interval '30 years')::date), 'already_stated');
   perform pg_temp.answered('so it stays a minor', public.my_age_status(), 'minor');
   reset role;

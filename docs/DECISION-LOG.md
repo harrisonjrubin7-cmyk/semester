@@ -2604,13 +2604,16 @@ K–12 edition behind it. This is its first prerequisite.
   (`state_my_age`); a second statement is `already_stated`.
 - **A minor is kept out, by the database.** `private.verified_student()` now
   also requires `not private.is_minor(auth.uid())`, so every policy that gates
-  on it closes to a minor. Mentor requests, connections (either side), study
-  matching and opting into the talent profile are refused by a trigger as
-  well, so a policy added later cannot open them by accident. Reports and
+  on it closes to a minor. Mentor requests and connections (a minor at either
+  end), study matching, opting into the talent profile, and an active peer or
+  alumni mentor offer are refused by a trigger as well, so a policy added
+  later cannot open them by accident. An account made before the age was
+  asked comes off every roster when it states it is a minor. Reports and
   family sharing move to `private.verified_account()`: a minor can still report
   and share with a parent or guardian.
-- **Proved.** `supabase/minimum-age.check.sql` runs 40 checks; removing the
-  minor test from `verified_student`, or the connections trigger, turned it
+- **Proved.** `supabase/minimum-age.check.sql` runs 49 checks; removing the
+  minor test from `verified_student`, the connections trigger, the recipient
+  check, the peer-offer check or the roster clean-up each turned it
   red. COPPA-1 is `TESTING`; MN-01, MN-03 and MN-06 are in place; CTL-006,
   K12-001 and K12-002 are tested.
 - **Not settled here.** Counsel has not reviewed the terms' minimum age, and a

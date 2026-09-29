@@ -246,6 +246,9 @@ begin
   end if;
   if want_birth_date > current_date - interval '13 years' then
     insert into private.account_ages (user_id, under_minimum, source) values (me, true, 'statement');
+    update public.peer_mentor_offers   set active = false where user_id = me and active;
+    update public.alumni_mentor_offers set active = false where user_id = me and active;
+    update public.talent_profiles      set opted_in = false where user_id = me and opted_in;
     return 'under_minimum_age';
   end if;
   insert into private.account_ages (user_id, minor_until, source)
@@ -253,6 +256,13 @@ begin
           case when want_birth_date > current_date - interval '18 years'
                then (want_birth_date + interval '18 years')::date end,
           'statement');
+  -- An account made before the age was asked may already be listed. A minor
+  -- comes off every roster other people browse the moment they say so.
+  if want_birth_date > current_date - interval '18 years' then
+    update public.peer_mentor_offers   set active = false where user_id = me and active;
+    update public.alumni_mentor_offers set active = false where user_id = me and active;
+    update public.talent_profiles      set opted_in = false where user_id = me and opted_in;
+  end if;
   return case when want_birth_date > current_date - interval '18 years' then 'minor' else 'adult' end;
 end $$;
 revoke all on function public.state_my_age(date) from public, anon;
@@ -280,11 +290,13 @@ $$;
 revoke all on function public.my_age_status() from public, anon;
 grant execute on function public.my_age_status() to authenticated;
 
--- ── The four ways in that do not ask `verified_student` ──────────────────
+-- ── The ways in that do not ask `verified_student` ───────────────────────
 --
--- Mentor requests, connection requests, study-match opt-ins and an employer
--- opt-in are written by functions and policies of their own. A trigger on
--- each table refuses the row however it arrives.
+-- Mentor requests, connection requests, study-match opt-ins, an employer
+-- opt-in and the two mentor offers are written by functions and policies of
+-- their own. A trigger on each table refuses the row however it arrives: a
+-- request with a minor at either end, and an active offer from a minor, which
+-- is what puts a name on a roster that other people browse.
 
 create or replace function private.refuse_for_minors()
 returns trigger
@@ -299,10 +311,12 @@ declare
   refuse boolean;
 begin
   refuse := case tg_table_name
-    when 'mentor_requests'    then private.is_minor((r ->> 'requester')::uuid)
+    when 'mentor_requests'    then private.is_minor((r ->> 'requester')::uuid) or private.is_minor((r ->> 'recipient')::uuid)
     when 'connections'        then private.is_minor((r ->> 'requester')::uuid) or private.is_minor((r ->> 'addressee')::uuid)
     when 'study_match_optins' then private.is_minor((r ->> 'user_id')::uuid)
     when 'talent_profiles'    then coalesce((r ->> 'opted_in')::boolean, false) and private.is_minor((r ->> 'user_id')::uuid)
+    when 'peer_mentor_offers'   then coalesce((r ->> 'active')::boolean, true) and private.is_minor((r ->> 'user_id')::uuid)
+    when 'alumni_mentor_offers' then coalesce((r ->> 'active')::boolean, true) and private.is_minor((r ->> 'user_id')::uuid)
     else false
   end;
   if refuse then
@@ -323,4 +337,10 @@ create trigger refuse_for_minors before insert on public.study_match_optins
   for each row execute function private.refuse_for_minors();
 drop trigger if exists refuse_for_minors on public.talent_profiles;
 create trigger refuse_for_minors before insert or update of opted_in on public.talent_profiles
+  for each row execute function private.refuse_for_minors();
+drop trigger if exists refuse_for_minors on public.peer_mentor_offers;
+create trigger refuse_for_minors before insert or update of active on public.peer_mentor_offers
+  for each row execute function private.refuse_for_minors();
+drop trigger if exists refuse_for_minors on public.alumni_mentor_offers;
+create trigger refuse_for_minors before insert or update of active on public.alumni_mentor_offers
   for each row execute function private.refuse_for_minors();

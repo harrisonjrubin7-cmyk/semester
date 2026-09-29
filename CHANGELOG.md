@@ -30,8 +30,8 @@ When you create an account, the form asks for your date of birth. You need to
 be at least 13: a younger date is refused before anything is sent, and the
 database refuses it too. If you are 13 to 17, the account is made and the
 features where other people can find, match with or message you — mentor
-requests, connections, study matching and the talent profile — stay off until
-your 18th birthday. Plans, courses, study work, reports and sharing with a
+requests, being listed as a mentor, connections, study matching and the talent
+profile — stay off until your 18th birthday. Plans, courses, study work, reports and sharing with a
 parent or guardian work as usual.
 
 If your account was made before this, the Account screen asks once for your
