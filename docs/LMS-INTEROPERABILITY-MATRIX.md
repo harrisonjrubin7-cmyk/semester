@@ -416,6 +416,4 @@ system can prove these, never on who claims the most AI.
 
 ## Found on the way
 
-Two faults found on 28 September — the LTI runbook’s line on when the nonce is spent, and the pipeline audit’s line that no worker existed — were fixed the next day, and the test holds both pages to the corrected wording. Still open:
-
-- supabase/functions/lti/index.ts says, above the spend, that lti.check.sql removes the guard and watches a replay go through. The check spends a live state twice in sequence and asserts the second spend returns nothing; it removes no guard and races nothing. The comment overstates, and a comment-only change under supabase/functions/ belongs with the next change there.
+Three faults found on 28 September — the LTI runbook’s line on when the nonce is spent, the pipeline audit’s line that no worker existed, and the LTI function’s own comment on what the check proves — were fixed since, and the test holds all three to the corrected wording. Nothing is open.
