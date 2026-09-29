@@ -613,10 +613,13 @@ Deno.serve(async (req) => {
 
     /*
      * Spent first, and atomically, before anything is fetched or verified.
-     * Two POSTs carrying the same state race otherwise, and the loser of that
-     * race is a replayed launch that both halves believe. The function does
-     * the check and the write in one statement for exactly that reason —
-     * `lti.check.sql` removes the guard and watches this go through.
+     * Two POSTs carrying the same state would race otherwise, and the loser
+     * of that race would be a replayed launch that both halves believe. The
+     * RPC does the check and the write in one statement for exactly that
+     * reason (`spent_at is null` in its `update … returning`), and
+     * `lti.check.sql` spends a live state once, then asserts the same state
+     * spends a second time for nobody and that an expired or never-issued
+     * state is refused.
      */
     const { data: spent, error: spendError } = await client
       .rpc('spend_lti_nonce', { want_state: state })

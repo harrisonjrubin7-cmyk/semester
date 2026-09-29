@@ -763,12 +763,13 @@ function steps(rows: readonly Row[]): readonly Step[] {
 export const ALL_STEPS: readonly Step[] = [...PROCESSOR, ...CLIENT, ...GRADE_WRITE];
 
 /**
- * Found while reading the tree on 28 September and fixed the next day: the
- * LTI runbook said the nonce was spent after `checkLaunch`, and the function
+ * Found while reading the tree on 28 September and fixed since: the LTI
+ * runbook said the nonce was spent after `checkLaunch`, and the function
  * spends the state first; the pipeline audit said no worker existed, and
- * `app/server/integration/worker.ts` does. The test holds both pages to the
- * corrected wording. What is still open is listed here.
+ * `app/server/integration/worker.ts` does; and the function's own comment
+ * above the spend said the check removes the guard and watches a replay go
+ * through, where it asserts a sequential single use. The test holds all three
+ * to the corrected wording, so the list stays empty until something new is
+ * found.
  */
-export const FOUND: readonly string[] = [
-  'supabase/functions/lti/index.ts says, above the spend, that lti.check.sql removes the guard and watches a replay go through. The check spends a live state twice in sequence and asserts the second spend returns nothing; it removes no guard and races nothing. The comment overstates, and a comment-only change under supabase/functions/ belongs with the next change there.',
-];
+export const FOUND: readonly string[] = [];
