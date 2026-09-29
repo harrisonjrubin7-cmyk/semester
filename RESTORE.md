@@ -171,6 +171,16 @@ project (`lzrqvlugnawcgywkhqlz`, us-west-2, Postgres 17) is healthy. Its plan
 tier, its backup schedule and whether PITR is on are dashboard settings no
 query in this repository can read. That is the gap.
 
+Read again on 29 September 2026 through the project's database connector,
+read-only: the migration ledger ends at `20260929110000_console_approvals_and_break_glass`,
+so every migration on main is applied; the direct rate-limit trigger is on
+fourteen tables (the go-live checklist's line now says so); and `cron.job`
+lists eighteen jobs, fifteen active, with `push`, `media-scan` and
+`escalation-delivery` inactive, as `supabase/DEPLOY.md` expects until each
+is keyed. The plan tier, the backup schedule, its retention and PITR were
+still not readable that way: a database connection cannot see the dashboard.
+They stay the owner's reading, for the table below.
+
 ### The procedure, for the owner
 
 1. **Turn it on.** Dashboard → Project Settings → Add-ons → Point in Time
@@ -268,10 +278,12 @@ the restore have been run again.
    re-applied from what record, and that the broad notice went out, filed
    with the restore record below.
 
-A durable deletion record that survives a restore — it has to live outside
-the database being restored, which nothing in the tree does today — would
-let step 4 name the accounts instead of writing to all of them. It is owed, and `RETENTION.md` says so; until it exists,
-the promise carries this exception and the privacy-policy draft states it.
+A durable deletion record that survives a restore — it would have to live
+outside the database being restored — would let step 4 name the accounts
+instead of writing to all of them. It was considered and not built (D-124,
+29 September 2026): it keeps a trace of who deleted what, which the privacy
+design does not, so the broad notice is the standing rule and `RETENTION.md`
+and the privacy-policy draft carry the exception in the same words.
 
 ## After the drill, fill this in
 

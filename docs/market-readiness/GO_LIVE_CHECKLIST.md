@@ -31,10 +31,13 @@ Every line requires evidence, not an opinion.
     staff queue — messages, reactions, both report queues, feedback, help and
     mentor requests, community posts, communities, study sessions, groups,
     group tasks, listings, form answers. `supabase/rate-limits.check.sql` is
-    the evidence in this repository. Still open before this is ticked: the
-    migration applied to production and its fourteen triggers read off the
-    project, and the Auth endpoint limits (sign-in, sign-up, OTP, token
-    refresh, email) read off the dashboard and recorded — both are in
+    the evidence in this repository. Read off the project on 29 September
+    2026: the migration is applied and `zz_rate_limit` is on fourteen tables
+    (communities, community_posts, community_reports, community_sessions,
+    feedback, form_responses, group_tasks, groups, help_requests,
+    mentor_requests, message_reactions, messages, opportunities, reports).
+    Still open before this is ticked: the Auth endpoint limits (sign-in,
+    sign-up, OTP, token refresh, email) read off the dashboard and recorded —
     `supabase/DEPLOY.md` under **Rate limits**.
 - [x] Data export and account deletion available to users: **Take it with you**
   downloads portable CSV, Markdown, calendar, attachment and restorable JSON

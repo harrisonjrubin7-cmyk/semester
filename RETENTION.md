@@ -476,9 +476,13 @@ or an account leaves a record with the date and the row counts and
 deliberately no account, so a self-deletion inside that window cannot be
 replayed from anything the tree holds, and the step says to tell every account
 that existed in the window rather than pretend to know whose it was. A durable deletion record that a restore
-cannot undo — it has to live outside the database being restored — is owed
-(`RM-02`'s neighbour, not its twin); until it exists the promise above carries
-this exception, and the privacy-policy draft says so in the same words.
+cannot undo — a salted hash of the account, the table and the time, kept
+outside the database being restored — was considered and not built (D-124,
+29 September 2026): it would keep a trace of who deleted what, which this
+file's design does not, and the founder chose the exception over the trace.
+So the promise above carries this exception as its standing form, not as an
+interim, and the privacy-policy draft says so in the same words. Counsel may
+reopen the choice with the legal drafts.
 
 **Not yet true.** No drill has restored production data, so the recovery point
 and time in `RESTORE.md` are unmeasured; the 7 days is the tier's number, not

@@ -208,9 +208,10 @@ export const actionOf = (uses: string): string => uses.split('@')[0].split('/').
 /**
  * How fast a supply-chain finding is answered, by severity. This is the
  * "severity model and patch SLAs" that `HECVAT_READINESS.md` VULN-1 lists as
- * not started. The day counts are **proposed internal targets**: they are what
- * the security lead accepts or changes, and nothing here is a commitment to a
- * customer until a contract or `docs/trust/SLA.md` says so.
+ * not started. The day counts are **accepted internal targets**: the founder,
+ * acting in the security seat, accepted them unchanged on 29 September 2026
+ * (D-124). No finding has yet been held against them, and nothing here is a
+ * commitment to a customer until a contract or `docs/trust/SLA.md` says so.
  */
 export const PATCH_POLICY = [
   {

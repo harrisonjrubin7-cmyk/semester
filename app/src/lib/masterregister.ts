@@ -1257,7 +1257,7 @@ export const REGISTER: readonly Requirement[] = [
     severity: 'P0',
     status: 'building',
     evidence: [{ path: '.github/workflows/ci.yml', shows: 'npm audit --audit-level=high and gitleaks secret scans on every change' }, { path: '.github/dependabot.yml', shows: 'automated dependency vulnerability updates' }, { path: 'SECURITY.md', shows: 'how a report is made, the four severities and the remediation target each is held to' }, { path: 'app/public/.well-known/security.txt', shows: 'the published disclosure contact (RFC 9116), pointing at SECURITY.md as its policy' }, { path: 'app/src/lib/security.test.ts', shows: 'holds the contact to the privacy page and the severity table to PATCH_POLICY' }],
-    gap: 'No finding tracker, no patch evidence record, the remediation targets are proposed rather than accepted, no safe-harbour wording (counsel), and no pen-test vendor (the plan is docs/trust/PENETRATION-TEST-PLAN.md).',
+    gap: 'No finding tracker, no patch evidence record, no finding yet answered inside its clock (the targets were accepted on 29 September 2026, D-124), no safe-harbour wording (counsel), and no pen-test vendor (the plan is docs/trust/PENETRATION-TEST-PLAN.md).',
   },
   {
     id: 'SEC-005',

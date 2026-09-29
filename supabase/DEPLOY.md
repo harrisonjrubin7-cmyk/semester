@@ -543,6 +543,10 @@ migration does, on the schema deploy. To confirm it did:
 
     select tgrelid::regclass from pg_trigger where tgname = 'zz_rate_limit' order by 1;
 
+Run against the project on 29 September 2026 through the database connector:
+fourteen rows, the fourteen tables the migration names. The Auth endpoint
+limits below are still unread.
+
 should list fourteen tables. An account locked out by mistake is cleared with
 the service role: `delete from private.direct_rate_limit where user_id = '…';`.
 

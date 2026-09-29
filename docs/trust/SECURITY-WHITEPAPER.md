@@ -149,8 +149,8 @@ Alerting on errors, auth failures and RLS denials is defined in
 Dependencies and secrets are scanned on every change. `SECURITY.md` publishes
 the severity model — four severities, with a remediation target of 2, 14, 60
 or 180 days — and a test holds it to the patch policy the supply-chain register
-renders (HECVAT VULN-1, in progress: the targets are proposed, and no finding
-has yet been answered against them). No independent penetration test has been
+renders (HECVAT VULN-1, in progress: the targets were accepted on 29 September
+2026, and no finding has yet been answered against them). No independent penetration test has been
 performed (HECVAT VULN-2). Both are prerequisites for an institutional
 contract.
 
