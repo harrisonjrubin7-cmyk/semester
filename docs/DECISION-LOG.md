@@ -2636,7 +2636,36 @@ four to be scored, and for the evaluation set model quality needs.
   register. The pass-rate bands and the critical cap are the owner's to
   change; the set has not been run, because this session had no key.
 
-## D-136 · Semester replaces the university stack, one module at a time, and the site stops saying it does not
+## D-136 · Plus is offered once on Today, the same way to everyone, below the day's own next step
+
+**Decided by owner 29 Sep 2026.** Plus could be bought since D-128, but only
+from Account → Membership, and nothing pointed there: by 21:26 UTC no
+checkout had been opened. The owner asked for an upgrade prompt in the app.
+
+- **Where:** the foot of Today's briefing (`components/PlusPrompt.tsx`, lazy
+  in `TodayDecisionSurface`), under the Action Center or the briefing, so it
+  never sits above the one next step Today exists for.
+- **Who:** a signed-in student on Free, while the catalog has a Plus price,
+  once they have a semester: not on the first-run screen Today shows before a
+  student has added anything, so nobody is sold to during setup.
+  Never someone with a live subscription, never signed out. It is shown the
+  same way to everyone: nothing about what, when or how well a student studies
+  decides whether they see it (D-133's line against using study activity to
+  label or target anyone).
+- **What:** the catalog's price, read through the helper the Membership panel
+  charges from (`fetchPlusPrices`, so the two cannot drift, the fault D-134
+  found between the pricing page and the catalog), what Plus includes from
+  `plans.ts`, and that Free stays free with export and deletion on every plan.
+  "See Plus" opens Account with the upgrade already open
+  (`askToOpenUpgrade` / `takeOpenUpgrade`, one session key, used once);
+  nothing is bought on Today. "Not now" hides it on that device for thirty
+  days.
+- **Fails closed.** If the subscription read fails, the card stays away
+  (`fetchOwnSubscriptions` throws on a PostgREST error rather than returning
+  no rows, which would read as "not a subscriber"). Arriving from "See Plus",
+  Account scrolls to the open upgrade and focuses it (Codex's review of #985).
+- **Not changed:** checkout, consent, cancellation, prices.
+## D-137 · Semester replaces the university stack, one module at a time, and the site stops saying it does not
 
 **Decided by owner 29 Sep 2026.** The site said "it does not replace your SIS"
 and the register deferred registration writes, while the owner's goal is one

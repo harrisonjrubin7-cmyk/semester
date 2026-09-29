@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ALWAYS_INCLUDED, NOT_ON_SALE_HERE, PLANS, plan, priceLine, type PlanId } from '../lib/plans';
 import { cloud, cloudConfigured, currentSession } from '../lib/cloud';
 import { formatDate } from '../lib/locale';
@@ -7,9 +7,11 @@ import {
   checkoutReturn,
   consentText,
   currentSubscription,
+  fetchOwnSubscriptions,
+  fetchPlusPrices,
   hasPaidBefore,
-  plusPrices,
   priceWords,
+  takeOpenUpgrade,
   startCheckout,
   type PlusPrice,
   type Subscription,
@@ -55,7 +57,17 @@ const when = (iso: string) => (iso ? formatDate(iso, { month: 'long', day: 'nume
 
 export function MembershipPanel() {
   const { dispatch, account } = useStore();
-  const [said, setSaid] = useState<'upgrade' | 'cancel' | null>(null);
+  // Opened already when Today's "See Plus" brought the person here.
+  const [handedOver] = useState(() => takeOpenUpgrade());
+  const [said, setSaid] = useState<'upgrade' | 'cancel' | null>(handedOver ? 'upgrade' : null);
+  // Membership is the last thing on a long Account page: arriving from
+  // Today's "See Plus" at the top of it would look like nothing happened.
+  const section = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (!handedOver || !section.current) return;
+    section.current.scrollIntoView?.({ block: 'start' });
+    section.current.focus({ preventScroll: true });
+  }, [handedOver]);
   const [prices, setPrices] = useState<PlusPrice[]>([]);
   const [sub, setSub] = useState<Subscription | null>(null);
   const [choice, setChoice] = useState<string>('');
@@ -75,21 +87,11 @@ export function MembershipPanel() {
     void (async () => {
       try {
         const db = await cloud();
-        const { data } = await db
-          .from('commercial_prices')
-          .select('id, plan_code, amount_cents, currency, billing_interval')
-          .eq('plan_code', 'plus');
-        if (live) setPrices(plusPrices(data));
+        const found = await fetchPlusPrices(db);
+        if (live) setPrices(found);
         if (!accountId) return;
-        // Only this person's own, individual billing account. A billing
-        // contact or operator can read other accounts' rows under RLS, and
-        // none of those is their plan.
-        const read = () =>
-          db
-            .from('subscriptions')
-            .select('id, plan_code, status, current_period_end, cancel_at_period_end, billing_accounts!inner(kind, user_id)')
-            .eq('billing_accounts.kind', 'individual')
-            .eq('billing_accounts.user_id', accountId);
+        // Only this person's own, individual billing account.
+        const read = async () => ({ data: await fetchOwnSubscriptions(db, accountId) });
         // Stripe can send the buyer back before its webhook has written the
         // subscription, so after a successful return keep looking for a
         // minute rather than showing Free until the next reload.
@@ -182,7 +184,7 @@ export function MembershipPanel() {
       : NOT_ON_SALE_HERE;
 
   return (
-    <section aria-labelledby="membership-title" style={{ marginTop: 'var(--sp-7)' }}>
+    <section ref={section} tabIndex={-1} aria-labelledby="membership-title" style={{ marginTop: 'var(--sp-7)' }}>
       <SectionLabel>
         <span id="membership-title">Membership</span>
       </SectionLabel>
