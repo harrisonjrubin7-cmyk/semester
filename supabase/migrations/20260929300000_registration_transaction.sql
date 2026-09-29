@@ -196,8 +196,12 @@ create table if not exists public.registration_overrides (
   section_id  uuid        not null references public.registration_sections(id) on delete cascade,
   student     uuid        not null references auth.users on delete cascade,
   -- A hold is not on the list: the registrar cannot waive another office's hold here.
+  -- Written without BETWEEN: a BETWEEN inside an AND is stored nested, a dump
+  -- prints it that way and a restore reads it back flat, so the constraint
+  -- would not survive a restore unchanged (supabase/restore.sh).
   waives      text[]      not null check (
-                cardinality(waives) between 1 and 6
+                cardinality(waives) >= 1
+                and cardinality(waives) <= 6
                 and waives <@ array['capacity', 'prerequisite', 'time_conflict', 'credit_limit', 'approval', 'late_add']::text[]),
   reason      text        not null check (length(btrim(reason)) between 1 and 1000),
   granted_by  uuid        references auth.users on delete set null,
