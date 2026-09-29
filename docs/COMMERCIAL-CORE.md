@@ -68,8 +68,8 @@ replayed webhook returns `duplicate` and changes nothing.
 ## What runs it
 
 Schema: `supabase/migrations/20260929080000_commercial_automation.sql`.
-Proof: `supabase/commercial-automation.check.sql` (68 checks) and
-`app/src/lib/billing/` (50 tests). Every SQL function below is the service
+Proof: `supabase/commercial-automation.check.sql` (79 checks) and
+`app/src/lib/billing/` (51 tests). Every SQL function below is the service
 role's alone; nothing is callable by a visitor or a signed-in account.
 
 1. **Webhook** — `supabase/functions/billing-webhook`. Verifies Stripe's
@@ -81,12 +81,19 @@ role's alone; nothing is callable by a visitor or a signed-in account.
    `invoice.payment_failed` → `upsert_provider_invoice` then
    `apply_payment_event`; refunds and disputes by kind. `apply_payment_event`
    runs last and is the idempotency key, so a half-applied event is finished by
-   the provider's retry. No CORS header on any response; a request with an
+   the provider's retry. An invoice event that arrives before the checkout
+   event that creates its subscription is answered 500 with nothing recorded,
+   for the same reason: recorded, every retry would read as a duplicate. A
+   payment recovers every open or restricted dunning case on the
+   subscription; a failure reported for an invoice already paid is recorded
+   and changes nothing. No CORS header on any response; a request with an
    `Origin` is refused. Nothing about an event is ever logged.
 2. **Checkout** — `supabase/functions/billing-checkout`. A signed-in student
    posts `{ price_id, consent: true, consent_text_version }`; `begin_checkout`
    records the consent in `checkout_sessions` (refusing prices sold by quote
-   and anyone already paying), then a Stripe Checkout Session is created with
+   and anyone already paying; begun again, it returns the same open row with
+   the consent re-stamped, and a partial unique index allows one open checkout
+   per billing account and price), then a Stripe Checkout Session is created with
    `price_data` from the catalog row and an idempotency key per checkout. The
    card goes into Stripe's page, never Semester's. The subscription is created
    by the webhook, carrying that consent. CORS fails closed on

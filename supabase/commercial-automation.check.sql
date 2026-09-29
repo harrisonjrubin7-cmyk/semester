@@ -11,11 +11,15 @@
 --     hash unaffected), refused for an unknown or inactive route, and an
 --     institutional route needs an organization, reaches the GTM pipeline
 --     once per account and person, and procurement queues a trust request;
---   * checkout records consent before a subscription exists, and completing
---     it twice makes one subscription carrying that consent;
+--   * checkout records consent before a subscription exists, beginning it
+--     again returns the same open checkout (one per person and price, the
+--     table refuses a second), and completing it twice makes one
+--     subscription carrying that consent;
 --   * the dunning worker reminds, gives one final notice with the date, then
 --     restricts paid entitlements and nothing else; running it twice at one
---     moment writes nothing the second time; a payment gives them back;
+--     moment writes nothing the second time; a payment gives them back and
+--     closes the restricted case as recovered; a failure reported for an
+--     invoice already paid is recorded and changes nothing;
 --   * signing an order form writes the tenant's plan, one implementation
 --     project and one renewal at ends_at − 120 days, and signing it again
 --     writes nothing; an MSA triggers nothing; a pilot needs an end date;
@@ -198,7 +202,23 @@ begin
   if not pg_temp.refused(format($q$select * from public.begin_checkout(%L, %L, 'Not A Version!')$q$, ana, plus_price)) then
     raise exception 'FAILED: a malformed consent version was accepted';
   end if;
+  again := co.checkout_id;
+  select * into co from public.begin_checkout(ana, plus_price, 'plus-v2');
+  perform pg_temp.answered('beginning the same checkout again returns the open one', (co.checkout_id = again)::text, 'true');
+  perform pg_temp.answered('with the consent re-stamped',
+    (select consent_text_version from public.checkout_sessions where id = again), 'plus-v2');
+  select count(*) into n from public.checkout_sessions c join public.billing_accounts a on a.id = c.billing_account_id
+   where a.user_id = ana and c.status = 'open';
+  perform pg_temp.counted('one open checkout per person and price', n, 1);
+  if not pg_temp.refused(format($q$insert into public.checkout_sessions (billing_account_id, price_id, plan_code, consent_text_version)
+      select billing_account_id, price_id, plan_code, 'plus-v1' from public.checkout_sessions where id = %L$q$, again)) then
+    raise exception 'FAILED: a second open checkout for the same person and price was inserted';
+  end if;
+  select * into co from public.begin_checkout(ana, plus_price, 'plus-v1');
+  perform public.attach_checkout_session(co.checkout_id, 'cs_test_0');
   perform public.attach_checkout_session(co.checkout_id, 'cs_test_1');
+  perform pg_temp.answered('a checkout begun again names the latest page opened for it',
+    (select provider_session_id from public.checkout_sessions where id = co.checkout_id), 'cs_test_1');
 
   select public.complete_checkout(co.checkout_id, 'sub_test_1', 'cus_test_1', null) into ana_sub;
   select public.complete_checkout(co.checkout_id, 'sub_test_1', 'cus_test_1', null) into again;
@@ -260,6 +280,22 @@ begin
   select public.apply_payment_event('stripe', 'evt_auto_ok', 'payment_succeeded', inv, 399, repeat('f', 64)) into t;
   select count(*) into n from public.subscription_entitlements where subscription_id = ana_sub;
   perform pg_temp.counted('a payment afterwards gives the paid features back', n, 4);
+  select count(*) into n from public.dunning_cases where subscription_id = ana_sub and status = 'restricted';
+  perform pg_temp.counted('and the restricted case is closed', n, 0);
+  select count(*) into n from public.dunning_cases c join public.dunning_actions a on a.case_id = c.id
+   where c.subscription_id = ana_sub and c.status = 'recovered' and c.closed_at is not null and a.action = 'recover';
+  perform pg_temp.counted('as recovered, with the recovery on record', n, 1);
+  perform pg_temp.answered('and the subscription is active again',
+    (select status from public.subscriptions where id = ana_sub), 'active');
+
+  select public.apply_payment_event('stripe', 'evt_auto_late_fail', 'payment_failed', inv, 399, repeat('9', 64)) into t;
+  perform pg_temp.answered('a failure reported for an invoice already paid is only recorded', t, 'recorded');
+  perform pg_temp.answered('the subscription stays active',
+    (select status from public.subscriptions where id = ana_sub), 'active');
+  select count(*) into n from public.dunning_cases where subscription_id = ana_sub and status = 'open';
+  perform pg_temp.counted('and no dunning case is opened', n, 0);
+  perform pg_temp.answered('while the invoice stays paid',
+    (select status from public.invoices where id = inv), 'paid');
 
   select public.sync_provider_subscription('sub_test_1', 'ended', null, null, false, base + interval '20 days') into t;
   select count(*) into n from public.subscription_entitlements where subscription_id = ana_sub;

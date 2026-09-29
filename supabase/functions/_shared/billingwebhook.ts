@@ -17,7 +17,11 @@
  * `apply_payment_event` is called **last**, and it is the idempotency key
  * (`provider_event_id`). Every step before it is idempotent on its own, so a
  * failure half-way answers 500, the provider retries, and the retry does the
- * remaining work instead of being dismissed as a duplicate.
+ * remaining work instead of being dismissed as a duplicate. An invoice event
+ * that arrives before the `checkout.session.completed` that creates its
+ * subscription is answered the same way, 500 with nothing recorded: recording
+ * it would answer every retry `duplicate`, and the first payment would never
+ * reach the subscription.
  *
  * ## What it refuses to do
  *
@@ -134,6 +138,12 @@ export async function handleBillingWebhook(req: Request, deps: WebhookDeps): Pro
           sub, id, num(o.amount_due), str(o.currency), isoFromSeconds(o.created),
           isoFromSeconds(o.due_date) ?? isoFromSeconds(o.created),
         );
+        if (invoiceId === null) {
+          // The subscription is not stored yet: its checkout event is still on
+          // its way. Nothing is recorded, so the provider's retry is not a duplicate.
+          console.error('billing-webhook: an invoice arrived before its subscription; asked for a retry');
+          return reply(500, { error: 'Not ready for this event.' });
+        }
       }
     } else if (type === 'charge.refunded') {
       kind = 'refund';

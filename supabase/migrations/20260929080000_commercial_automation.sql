@@ -75,6 +75,11 @@ create index if not exists checkout_sessions_by_account on public.checkout_sessi
 create index if not exists checkout_sessions_by_price on public.checkout_sessions (price_id);
 create index if not exists checkout_sessions_by_plan on public.checkout_sessions (plan_code);
 create index if not exists checkout_sessions_by_subscription on public.checkout_sessions (subscription_id);
+-- One open checkout per person and price. A second click, a second tab or
+-- a retried request all come back to the same row, so however many hosted
+-- pages the provider opens for it, `complete_checkout` makes one subscription.
+create unique index if not exists checkout_sessions_one_open_per_price
+  on public.checkout_sessions (billing_account_id, price_id) where status = 'open';
 
 alter table public.checkout_sessions enable row level security;
 revoke all on public.checkout_sessions from public, anon, authenticated;
@@ -85,6 +90,9 @@ create policy "billing readers read" on public.checkout_sessions for select to a
 
 -- Start a checkout for a person and one current, individually sold price.
 -- Returns one row; `outcome` is 'ok', 'no_such_price' or 'already_subscribed'.
+-- Beginning the same checkout again returns the open row it began, with the
+-- consent re-stamped now, rather than a second row that could become a
+-- second subscription.
 create or replace function public.begin_checkout(want_user uuid, want_price uuid, want_consent_version text)
 returns table (outcome text, checkout_id uuid, billing_account_id uuid, customer_ref text, email text,
                plan_name text, amount_cents integer, currency text, billing_interval text)
@@ -92,6 +100,7 @@ language plpgsql
 security definer
 set search_path = ''
 as $$
+#variable_conflict use_column
 declare
   p record;
   who_email text;
@@ -131,16 +140,20 @@ begin
 
   insert into public.checkout_sessions (billing_account_id, price_id, plan_code, consent_text_version)
   values (acct.id, p.id, p.plan_code, want_consent_version)
+  on conflict (billing_account_id, price_id) where status = 'open'
+  do update set consent_at = now(), consent_text_version = excluded.consent_text_version
   returning id into started;
 
   return query select 'ok'::text, started, acct.id, acct.provider_ref, who_email,
                       p.name::text, p.amount_cents, p.currency::text, p.billing_interval::text;
 end $$;
 
+-- The provider's page most recently opened for an open checkout. A reused
+-- checkout gets a fresh page each time it is begun; the row names the latest.
 create or replace function public.attach_checkout_session(want_checkout uuid, want_session text)
 returns void language sql security definer set search_path = '' as $$
   update public.checkout_sessions set provider_session_id = want_session
-   where id = want_checkout and status = 'open' and provider_session_id is null;
+   where id = want_checkout and status = 'open' and provider_session_id is distinct from want_session;
 $$;
 
 -- The provider confirmed the checkout: a subscription, active, with the
@@ -257,9 +270,12 @@ begin
   return found_id;
 end $$;
 
--- `apply_payment_event`, once more, with one addition: a payment that clears a
--- subscription whose paid features the dunning worker restricted gives them
--- back. Everything else is as 20260929070000 wrote it.
+-- `apply_payment_event`, once more, with three changes from 20260929070000:
+-- a payment that clears a subscription gives back the paid features the
+-- dunning worker restricted; it recovers every case still open *or*
+-- restricted, not only an open one; and a failure reported for an invoice
+-- that is already paid is recorded and otherwise ignored, so a late-delivered
+-- or out-of-order failure never puts a paying subscription back into dunning.
 create or replace function public.apply_payment_event(
   want_provider text, want_event_id text, want_kind text, want_invoice uuid,
   want_amount_cents bigint, want_payload_sha256 text, grace interval default interval '14 days'
@@ -290,12 +306,13 @@ begin
     if inv.subscription_id is not null then
       update public.subscriptions set status = 'active', updated_at = now()
        where id = inv.subscription_id and status in ('past_due', 'grace');
-      select id into open_case from public.dunning_cases
-       where subscription_id = inv.subscription_id and status = 'open';
-      if open_case is not null then
-        update public.dunning_cases set status = 'recovered', closed_at = now() where id = open_case;
-        insert into public.dunning_actions (case_id, action, detail) values (open_case, 'recover', 'Payment received.');
-      end if;
+      with recovered as (
+        update public.dunning_cases set status = 'recovered', closed_at = now()
+         where subscription_id = inv.subscription_id and status in ('open', 'restricted')
+        returning id
+      )
+      insert into public.dunning_actions (case_id, action, detail)
+      select id, 'recover', 'Payment received.' from recovered;
       insert into public.subscription_entitlements (subscription_id, entitlement_key, value, source)
       select inv.subscription_id, e.entitlement_key, e.value, 'plan'
         from public.subscriptions s join public.plan_entitlements e on e.plan_code = s.plan_code
@@ -303,7 +320,7 @@ begin
       on conflict (subscription_id, entitlement_key) do nothing;
     end if;
     return 'paid';
-  elsif want_kind = 'payment_failed' and inv.subscription_id is not null then
+  elsif want_kind = 'payment_failed' and inv.subscription_id is not null and inv.status <> 'paid' then
     update public.subscriptions set status = 'past_due', updated_at = now()
      where id = inv.subscription_id and status in ('active', 'trialing', 'grace');
     insert into public.dunning_cases (subscription_id, invoice_id, grace_ends_at)

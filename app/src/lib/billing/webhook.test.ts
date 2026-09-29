@@ -132,6 +132,23 @@ describe('the billing webhook', () => {
     for (const leak of ['in_secret_1', 'sub_secret', 'student@example.edu', 'evt_1', body]) expect(logged).not.toContain(leak);
   });
 
+  it('asks for a retry, recording nothing, when an invoice arrives before its subscription', async () => {
+    const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const { d } = deps({ upsertInvoice: vi.fn(async () => null) });
+    const body = event('invoice.paid', { id: 'in_secret_2', subscription: 'sub_not_yet', amount_paid: 399 });
+    const res = await handleBillingWebhook(post(body), d);
+    expect(res.status).toBe(500);
+    expect(d.upsertInvoice).toHaveBeenCalledTimes(1);
+    expect(d.applyEvent).not.toHaveBeenCalled();
+    const logged = JSON.stringify(log.mock.calls);
+    for (const leak of ['in_secret_2', 'sub_not_yet', 'evt_1', body]) expect(logged).not.toContain(leak);
+    // An invoice that bills no subscription has nothing to wait for: recorded as before.
+    const one = await handleBillingWebhook(post(event('invoice.paid', { id: 'in_once', amount_paid: 500 }, 'evt_2')), d);
+    expect(one.status).toBe(200);
+    expect(d.upsertInvoice).toHaveBeenCalledTimes(1);
+    expect(d.applyEvent).toHaveBeenCalledWith('evt_2', 'payment_succeeded', null, 500, expect.any(String));
+  });
+
   it('refuses a body over the limit without reading it', async () => {
     const { d } = deps();
     const res = await handleBillingWebhook(post('{}', { 'Content-Length': String(10 * 1024 * 1024) }), d);
