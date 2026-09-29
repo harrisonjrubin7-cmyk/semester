@@ -2327,3 +2327,49 @@ and named a remediation register for them as the audit's first artifact.
   (low).
 - **Not changed:** the allowlist, every grant, every policy; the migration is
   not yet applied to production.
+
+## D-128 · Seven briefs on leading the market are held to the tree as one register, and the site refuses the five overclaims they name
+
+**Decided 29 Sep 2026.** Seven briefs of 29 September ask what else would
+make Semester the leader and the benchmark: the operating disciplines, the
+final moats, the executive benchmark answer, the feature benchmark with
+TrustEd Apps, pricing and K–12, the 1EdTech compliance and go-to-market
+playbook with its summary, and the leader-and-pioneer brief. They are kept
+under `docs/expansion/` as supplied.
+
+- **One register, not seven.** The briefs repeat each other — the graph four
+  times, the procurement package five. `docs/REINFORCEMENT-REGISTER.md`,
+  rendered from `app/src/lib/reinforceregister.ts`, has 116 rows in twenty
+  areas; each cites every brief item that asks for it and names the oneos,
+  leadership or Connect item it is the same as, and the test holds each to
+  exist. Read against `beaa839`: 61 tested, 16 building, 21 designed, 18 not
+  started.
+- **The operating model is data.** `app/src/lib/ops/operatingmodel.ts` gives
+  the ten product areas the first brief names their fourteen fields, every
+  owner a council seat. 33 of 50 ownerships rest on a vacant seat; the table
+  says which.
+- **The playbook's P0 blockers are owned.** Its 36 P0 rows, each with a seat
+  and the tree's reading in place of the playbook's (it marks the definer
+  review not started; D-127 landed it). 26 are owned by a vacant seat.
+- **"Fully built" has a gate.** The feature benchmark's 0–5 scorecard on ten
+  criteria, and `mayClaimFullyBuilt`: at least 4 on depth, privacy,
+  accessibility, reliability and source integrity, an unscored criterion
+  failing. No module has been scored, so none may be called fully built.
+- **Two promises added where the site already makes them.** The briefs ask
+  for a Student Data Promise. `/trust/data-and-ai-transparency/` and the
+  Semester Standard already publish it, line by line, each held to the tree;
+  two lines were missing and are added to `NEVER`: no behavioural advertising
+  on education records, plans or study activity (held by `campaign.test.ts`),
+  and study activity never used to label ability or motivation (held by
+  `institution-ops.test.ts`). No separate page, which would drift from these.
+- **The site refuses five overclaims.** `site.test.tsx` now refuses, on every
+  page, a claim to replace an official system, to guarantee an outcome, to
+  improve retention, persistence, graduation or grades, to be fully
+  compliant, or to be AI-safe — with a control showing each pattern catches
+  its own example and passes the sentence the site actually uses.
+- **Not changed, put to the seat that owns it.** Plus is $7.99 or $59 in
+  `plans.ts` and 399 or 2999 cents in the billing seed; checkout would charge
+  the seed's (finance). The briefs' 26-week pilot against the enforced 60–120
+  days (founder). The one-operating-system statement listing payments against
+  the briefs' rule on replacement claims (founder). K–12: absent, neither
+  planned nor refused, behind COPPA-1.

@@ -24,6 +24,16 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### On the public site: two more things Semester will never do
+
+**Data & AI Transparency**, under Trust, lists what Semester never does with
+student data. It now says two more things: education records, personal plans
+and study activity are never used for behavioural advertising, and study
+activity is never used to label a student capable or incapable, motivated or
+unmotivated. Each line links to the check that holds it, like the others.
+
+Nothing to do.
+
 ### Find people, groups and opportunities, from Community
 
 Community now ends with one list — **Find people, groups and opportunities** —
