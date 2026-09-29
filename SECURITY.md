@@ -91,9 +91,10 @@ another account's rows is critical until disproven, as
 [`docs/market-readiness/INCIDENT_RESPONSE.md`](docs/market-readiness/INCIDENT_RESPONSE.md)
 says of its SEV1; the asymmetry is deliberate and the same in both files.
 
-Two honest limits. The day counts are **proposed internal targets**: they are
-what a security lead accepts or changes, nobody has yet held a finding against
-them, and nothing here is a commitment to a customer until a contract or
+Two honest limits. The day counts are **accepted internal targets**: the
+founder, acting in the security seat, accepted them unchanged on 29 September
+2026 (D-124); nobody has yet held a finding against them, and nothing here is a
+commitment to a customer until a contract or
 [`docs/trust/SLA.md`](docs/trust/SLA.md) says so — which is why the public site
 still says that no response time is promised. And a target for *fixing* is not
 a target for *acknowledging*: with one person reading the mailbox, the honest

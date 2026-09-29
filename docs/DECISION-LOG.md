@@ -2155,3 +2155,52 @@ key and costs money, and only the owner holds the key.
 - **Not changed:** nothing on `docs/LAUNCH-DECISIONS.md`; every remaining
   item there is the owner's.
 
+## D-124 · The remediation targets are accepted, no deletion record survives a restore, and the production reading that a connector can take
+
+**Decided 29 Sep 2026.** The owner said "execute on those" of the four items
+`docs/LAUNCH-DECISIONS.md` had left as the owner's. Each is executed as far
+as the tree and this session's connectors reach, and the page says where
+each stands.
+
+- **Item 13, the four remediation targets, are accepted unchanged** —
+  critical 2 days, high 14, medium 60, low 180 — by the founder acting in the
+  security seat, on the owner's instruction. *Proposed* is out of
+  `SECURITY.md`, `supplychain.ts`, the whitepaper and HECVAT VULN-01;
+  `security.test.ts` now expects the acceptance sentence and refuses the old
+  one; SEC-004's gap names what is still owed, a finding answered inside its
+  clock. Codex's review found four more copies the first pass had missed —
+  HECVAT VULN-1's readiness row, the supply-chain page's sentence, the
+  expansion register's patch-targets row and the evidence register's
+  SEC-VULN-001 row — all re-read the same way, and a whole-tree search now
+  finds only the test's refusal of the old sentence. The targets are internal: nothing is a customer commitment until a
+  contract or `docs/trust/SLA.md` says so, as before.
+- **Item 14: no deletion record survives a restore.** The ledger outside
+  the database — a salted hash of the account, the table and the time, that a
+  restore would re-apply — is not built, because it keeps a trace of who
+  deleted what, which the privacy design does not. The restore exception in
+  `RETENTION.md` and the privacy-policy draft, and the broad notice in
+  `RESTORE.md`, are the standing policy rather than an interim; the three
+  files say so in the same words. Made on the owner's instruction without
+  counsel, and counsel may reopen it with the legal drafts (item 5).
+- **Item 10, as far as a database connection reaches.** Read off the project
+  on 29 September, read-only: the migration ledger ends at
+  `20260929110000_console_approvals_and_break_glass`; the direct rate-limit
+  trigger is on the fourteen tables the migration names, which the go-live
+  checklist and `DEPLOY.md` now record; `cron.job` lists eighteen jobs,
+  fifteen active, the three inactive ones being the ones that wait on a key.
+  The plan tier, backup schedule, retention and PITR are dashboard settings a
+  database connection cannot see, so the seven days in `RETENTION.md` is
+  still the tier's documentation, and the drill has not run. Nothing was
+  filed under `docs/evidence/`: a dated query result is recorded where the
+  repository records readings, and the ceiling lifts on the first transcript,
+  not on this.
+- **Item 15 could not run here.** The shared key is a Supabase function
+  secret and nothing else (`SECRETS.md`), so the red-team has no key in a
+  cloud session; and the kill-switch drill's observation — both runtimes
+  refusing — needs a signed-in call to the function, which no connector
+  makes. Engaging a production switch without being able to watch the
+  refusal would be the SQL half of a drill and not the drill, so it was not
+  done. The item stays the owner's, and says why.
+- **Not changed:** the verdict, still `NO-GO`; the HECVAT VULN-1 status,
+  still in progress; every number in the patch policy.
+
