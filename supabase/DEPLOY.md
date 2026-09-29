@@ -919,6 +919,10 @@ deployment has no shared key. Add your own under Ask Claude → Settings."* A
 student with their own key is unaffected either way — the app prefers a key set
 on the device and only falls back to this one.
 
+Read on 29 September 2026 at 20:24:59 UTC: a signed-in call to the deployed
+function answered exactly that 501. The secret is not set, and both AI drills
+(`docs/LAUNCH-DECISIONS.md` item 15) wait on it.
+
 Optional: `MONTHLY_CALL_LIMIT` (default 60 calls per account per month),
 `ALLOWED_ORIGIN` (extra https origins; the Pages origin is built in) and
 `CORS_ALLOW_DEV` (unset on the live project).
