@@ -4,9 +4,11 @@
 /**
  * The vocabulary the gateway, the dashboard and the database share: provider
  * domains, canonical entities, freshness, sync classes, and the list of things
- * no connector ingests by default. The SQL check constraints in
- * 20260927170000_integration_control_plane.sql spell the same lists, and
- * catalog.test.ts reads that file to keep the two from drifting.
+ * no connector ingests by default. The SQL check constraints spell four of
+ * these lists — provider domains, canonical entities, conflict kinds and
+ * connection statuses — and catalog.test.ts holds each to the constraint
+ * that wins across the migrations, value for value. Freshness and the sync
+ * classes have no constraint; they are this file's alone.
  *
  * This file is the authoritative integration catalog. Its owner, version and
  * review dates are held in SEMESTER-OPERATING-SYSTEM.md at the repository root.
