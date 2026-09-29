@@ -2168,7 +2168,11 @@ each stands.
   `SECURITY.md`, `supplychain.ts`, the whitepaper and HECVAT VULN-01;
   `security.test.ts` now expects the acceptance sentence and refuses the old
   one; SEC-004's gap names what is still owed, a finding answered inside its
-  clock. The targets are internal: nothing is a customer commitment until a
+  clock. Codex's review found four more copies the first pass had missed —
+  HECVAT VULN-1's readiness row, the supply-chain page's sentence, the
+  expansion register's patch-targets row and the evidence register's
+  SEC-VULN-001 row — all re-read the same way, and a whole-tree search now
+  finds only the test's refusal of the old sentence. The targets are internal: nothing is a customer commitment until a
   contract or `docs/trust/SLA.md` says so, as before.
 - **Item 14: no deletion record survives a restore.** The ledger outside
   the database — a salted hash of the account, the table and the time, that a
