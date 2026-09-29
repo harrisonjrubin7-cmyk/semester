@@ -2665,3 +2665,38 @@ checkout had been opened. The owner asked for an upgrade prompt in the app.
   no rows, which would read as "not a subscriber"). Arriving from "See Plus",
   Account scrolls to the open upgrade and focuses it (Codex's review of #985).
 - **Not changed:** checkout, consent, cancellation, prices.
+
+
+## D-137 · Three launch-readiness briefs are held to the tree, and Semester has one Definition of Done
+
+**Decided 29 Sep 2026.** Three documents arrived: the *University Launch
+Readiness, HECVAT, Data Migration, and Pilot Contract Playbook*, its one-page
+summary, and the answer to "anything else missing for the company, site,
+application, market, launch and contracts". They are kept under
+`docs/expansion/` as supplied and held to the tree the way D-108 and D-111
+hold every brief: `docs/LAUNCH-COMPLETENESS.md`, rendered from
+`app/src/lib/launchcompleteness.ts`, cites a file for every row, and every
+standing is held to the kind of file it cites.
+
+- **Most of it exists as parts.** 210 items: 116 held by a test, 40 building,
+  41 designed, 11 not started, 2 held by a decision already on main.
+- **The HECVAT tracker the briefs ask for first** is the 81 rows of their
+  seven domains, each with a council seat as owner and the
+  `HECVAT_READINESS.md` control it moves; 40 rows have none, which is what the
+  brief adds to the thirty. **Due dates are the seats' to set**, not typed
+  here on their behalf; the test holds any that is set to an ISO date after
+  the reading.
+- **The pilot term conflict is held, not reopened.** The brief's Registration
+  and Path pilot runs 12–26 weeks; `gtm/pilot.ts` refuses anything outside
+  60–120 days (D-113's reading). Twelve to seventeen weeks satisfies both.
+- **Four claim words may not be said**: "Replaces", "Improves student
+  success", "Trusted by" and "Compliant" rest on no row of the claims
+  register. The five that can be said name the rows they rest on.
+- **The Semester Definition of Done** is `docs/DEFINITION-OF-DONE.md`, from
+  the same module: the brief's nine questions, the launch acceptance rule and
+  twelve journeys, each beside where the tree asks it. The engineering
+  checklist in `QUALITY-MANAGEMENT.md` stays where it is.
+- **Not written here, because the repository cannot write them:** the MSA,
+  the ten missing public policies, a VPAT, customer data migration, and
+  anything with an institution's name on it. Each is a row that says so.
+- **Not changed:** every other register, every status, the go/no-go verdict.
