@@ -738,7 +738,7 @@ export const CADENCE: readonly { when: string; does: string; tree: string }[] = 
 /** The six outcomes the kit asks for, beside the vocabularies the tree already uses. */
 export const OUTCOMES: readonly { outcome: string; tree: string }[] = [
   { outcome: 'Approved', tree: '`governance_decisions.decision` build; `launchreadiness.decide()` GO; `gtm/pilot.ts` approved' },
-  { outcome: 'Approved with required conditions', tree: 'GO WITH CONDITIONS exists nowhere; a `RiskAcceptance` with an expiry is the nearest' },
+  { outcome: 'Approved with required conditions', tree: '`launchreadiness.decide()` go-with-conditions: a founder-accepted P2/P3 with a reason, an expiry and a disclosure, listed on the verdict (D-117)' },
   { outcome: 'Pilot only', tree: '`governance_decisions.route` pilot; `release-readiness.ts` stage pilot' },
   { outcome: 'Deferred pending evidence', tree: '`governance_decisions.decision` defer' },
   { outcome: 'Rejected', tree: '`governance_decisions.decision` decline; `route` reject_or_redesign' },

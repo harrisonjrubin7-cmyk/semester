@@ -554,7 +554,7 @@ the scope questions in [`app/src/lib/ops/operatingsystem.ts`](../app/src/lib/ops
 | Outcome | The tree’s word for it |
 | --- | --- |
 | Approved | `governance_decisions.decision` build; `launchreadiness.decide()` GO; `gtm/pilot.ts` approved |
-| Approved with required conditions | GO WITH CONDITIONS exists nowhere; a `RiskAcceptance` with an expiry is the nearest |
+| Approved with required conditions | `launchreadiness.decide()` go-with-conditions: a founder-accepted P2/P3 with a reason, an expiry and a disclosure, listed on the verdict (D-117) |
 | Pilot only | `governance_decisions.route` pilot; `release-readiness.ts` stage pilot |
 | Deferred pending evidence | `governance_decisions.decision` defer |
 | Rejected | `governance_decisions.decision` decline; `route` reject_or_redesign |

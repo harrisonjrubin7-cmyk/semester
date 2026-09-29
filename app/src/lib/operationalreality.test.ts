@@ -148,11 +148,11 @@ describe('the operational reality register', () => {
       }
     });
 
-    it('holds the review decisions to the binary verdict the code has', () => {
+    it('holds the three review decisions to the three verdicts the code has', () => {
       const code = read('app/src/lib/launchreadiness.ts');
-      expect(code).toMatch(/'go' \| 'no-go'/);
-      expect(code).not.toMatch(/with-conditions/);
-      expect(REVIEW_DECISIONS[1].tree).toMatch(/No such verdict/);
+      expect(code).toMatch(/'go' \| 'go-with-conditions' \| 'no-go'/);
+      expect(REVIEW_DECISIONS.map((d) => d.decision)).toEqual(['GO', 'GO WITH CONDITIONS', 'NO-GO']);
+      expect(REVIEW_DECISIONS[1].tree).toMatch(/go-with-conditions/);
     });
 
     it('counts what nobody carries', () => {

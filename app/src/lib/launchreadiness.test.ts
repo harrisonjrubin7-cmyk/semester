@@ -124,7 +124,8 @@ describe('the launch go/no-go', () => {
     });
 
     it('states the verdict the function gives', () => {
-      const verdict = decide(CURRENT).verdict === 'go' ? 'GO' : 'NO-GO';
+      const word = { go: 'GO', 'go-with-conditions': 'GO WITH CONDITIONS', 'no-go': 'NO-GO' } as const;
+      const verdict = word[decide(CURRENT).verdict];
       for (const doc of ['docs/LAUNCH-READINESS-COUNCIL.md', 'docs/GO-NO-GO-CHECKLIST.md']) {
         expect(read(doc), doc).toContain(`**Current verdict: \`${verdict}\`.**`);
       }
@@ -144,7 +145,7 @@ describe('the launch go/no-go', () => {
 
   describe('deciding', () => {
     it('is go from a state that meets everything — the control for every refusal below', () => {
-      expect(decide(ready())).toEqual({ verdict: 'go', reasons: [] });
+      expect(decide(ready())).toEqual({ verdict: 'go', reasons: [], conditions: [] });
     });
 
     it('is no-go today, and says why at length', () => {
@@ -208,7 +209,7 @@ describe('the launch go/no-go', () => {
       const state: LaunchState = {
         ...ready(),
         blockers: [{ id: 'B-2', severity: 'P2', summary: 'slow export on large accounts' }],
-        acceptances: [{ blocker: 'B-2', by: 'founder', reason: 'pilot accounts are small', expires: '2020-01-01' }],
+        acceptances: [{ blocker: 'B-2', by: 'founder', reason: 'pilot accounts are small', disclosure: 'Large exports are slow.', expires: '2020-01-01' }],
         on: '',
       };
       const { verdict, reasons } = decide(state);
@@ -222,17 +223,56 @@ describe('the launch go/no-go', () => {
       expect(decide(state).verdict).toBe('no-go');
     });
 
-    it('lets the founder accept a P2 until it expires', () => {
+    it('lets the founder accept a P2 until it expires — and that is go with conditions, never a clean go', () => {
+      const acceptance = { blocker: 'B-2', by: 'founder' as const, reason: 'pilot accounts are small', disclosure: 'Exporting a very large account can take a few minutes.', expires: '2026-11-01' };
       const state: LaunchState = {
         ...ready(),
         blockers: [{ id: 'B-2', severity: 'P2', summary: 'slow export on large accounts' }],
-        acceptances: [{ blocker: 'B-2', by: 'founder', reason: 'pilot accounts are small', expires: '2026-11-01' }],
+        acceptances: [acceptance],
       };
-      expect(decide(state).verdict).toBe('go');
-      expect(decide({ ...state, on: '2026-11-01' }).reasons).toEqual([
+      expect(decide(state)).toEqual({
+        verdict: 'go-with-conditions',
+        reasons: [],
+        conditions: [{ blocker: 'B-2', severity: 'P2', by: 'founder', reason: acceptance.reason, disclosure: acceptance.disclosure, expires: '2026-11-01' }],
+      });
+      const expired = decide({ ...state, on: '2026-11-01' });
+      expect(expired.verdict).toBe('no-go');
+      expect(expired.conditions).toEqual([]);
+      expect(expired.reasons).toEqual([
         'Risk acceptance for B-2 expired on 2026-11-01.',
         'Open P2 B-2: slow export on large accounts',
       ]);
+    });
+
+    it('lists every condition in the blockers’ order, and none while anything else is open', () => {
+      const state: LaunchState = {
+        ...ready(),
+        blockers: [
+          { id: 'B-3', severity: 'P3', summary: 'copy typo' },
+          { id: 'B-2', severity: 'P2', summary: 'slow export' },
+        ],
+        acceptances: [
+          { blocker: 'B-2', by: 'founder', reason: 'small accounts', disclosure: 'Large exports are slow.', expires: '2026-11-01' },
+          { blocker: 'B-3', by: 'founder', reason: 'cosmetic', disclosure: 'One label is misspelt.', expires: '2026-10-15' },
+        ],
+      };
+      expect(decide(state).verdict).toBe('go-with-conditions');
+      expect(decide(state).conditions.map((c) => c.blocker)).toEqual(['B-3', 'B-2']);
+      const unsigned = { ...state, signoffs: SEATS.filter((s) => s !== 'privacy') };
+      expect(decide(unsigned).verdict).toBe('no-go');
+      expect(decide(unsigned).conditions).toEqual([]);
+    });
+
+    it('refuses an acceptance that says nothing about what pilot users are told', () => {
+      const state: LaunchState = {
+        ...ready(),
+        blockers: [{ id: 'B-2', severity: 'P2', summary: 'slow export' }],
+        acceptances: [{ blocker: 'B-2', by: 'founder', reason: 'small accounts', disclosure: '  ', expires: '2026-11-01' }],
+      };
+      const { verdict, reasons, conditions } = decide(state);
+      expect(verdict).toBe('no-go');
+      expect(conditions).toEqual([]);
+      expect(reasons).toEqual(['Risk acceptance for B-2 says nothing about what pilot users are told.', 'Open P2 B-2: slow export']);
     });
 
     it('never lets a P0 or P1 be accepted, by anyone', () => {
@@ -240,7 +280,7 @@ describe('the launch go/no-go', () => {
         const state: LaunchState = {
           ...ready(),
           blockers: [{ id: 'B-1', severity, summary: 'cross-tenant read' }],
-          acceptances: [{ blocker: 'B-1', by: 'founder', reason: 'deadline', expires: '2027-01-01' }],
+          acceptances: [{ blocker: 'B-1', by: 'founder', reason: 'deadline', disclosure: 'none', expires: '2027-01-01' }],
         };
         const { verdict, reasons } = decide(state);
         expect(verdict).toBe('no-go');
@@ -251,17 +291,17 @@ describe('the launch go/no-go', () => {
 
     it('does not let any seat but the founder accept risk, or accept without a reason or an end date', () => {
       const base: LaunchState = { ...ready(), blockers: [{ id: 'B-2', severity: 'P2', summary: 'x' }] };
-      const by = decide({ ...base, acceptances: [{ blocker: 'B-2', by: 'engineering', reason: 'fine', expires: '2027-01-01' }] });
+      const by = decide({ ...base, acceptances: [{ blocker: 'B-2', by: 'engineering', reason: 'fine', disclosure: 'told', expires: '2027-01-01' }] });
       expect(by.reasons).toContain('Risk acceptance for B-2 is by engineering; only founder accepts risk.');
-      const why = decide({ ...base, acceptances: [{ blocker: 'B-2', by: 'founder', reason: ' ', expires: '2027-01-01' }] });
+      const why = decide({ ...base, acceptances: [{ blocker: 'B-2', by: 'founder', reason: ' ', disclosure: 'told', expires: '2027-01-01' }] });
       expect(why.reasons).toContain('Risk acceptance for B-2 gives no reason.');
-      const when = decide({ ...base, acceptances: [{ blocker: 'B-2', by: 'founder', reason: 'fine', expires: 'later' }] });
+      const when = decide({ ...base, acceptances: [{ blocker: 'B-2', by: 'founder', reason: 'fine', disclosure: 'told', expires: 'later' }] });
       expect(when.reasons).toContain('Risk acceptance for B-2 has no valid expiry.');
       for (const v of [by, why, when]) expect(v.verdict).toBe('no-go');
     });
 
     it('reports an acceptance for something that is not a blocker, rather than ignoring it', () => {
-      const state: LaunchState = { ...ready(), acceptances: [{ blocker: 'B-9', by: 'founder', reason: 'r', expires: '2027-01-01' }] };
+      const state: LaunchState = { ...ready(), acceptances: [{ blocker: 'B-9', by: 'founder', reason: 'r', disclosure: 'd', expires: '2027-01-01' }] };
       expect(decide(state).reasons).toEqual(['Risk acceptance names B-9, which is not an open blocker.']);
     });
   });

@@ -5,8 +5,12 @@
  * function rather than a checklist. In short: every readiness document in this
  * repository has been wrong at least once, and a checkbox is ticked by whoever
  * is holding the pen. `decide()` can only answer `go` when the evidence it
- * cites exists, the named people have signed, and nothing it cannot waive is
- * open. There is deliberately no argument that forces the answer.
+ * cites exists, the named people have signed, and nothing at all is open. It
+ * answers `go-with-conditions` when the only things open are P2/P3 blockers
+ * the founder has accepted in writing — each with a reason, an expiry and what
+ * pilot users are told — and it lists those conditions, so a go that rests on
+ * waivers is never mistaken for a clean one (D-117). There is deliberately no
+ * argument that forces the answer.
  *
  * Nothing here reads the network, the database or the clock. The state is
  * passed in, so the same inputs always give the same verdict, and a verdict can
@@ -147,7 +151,7 @@ export const GATES: readonly Gate[] = [
       { path: 'supabase/restore.sh', shows: 'a logical-dump restore rehearsal, run on 2026-09-21 and passing' },
       { path: 'RESTORE.md', shows: 'the production procedure, with every measurement still blank' },
     ],
-    gap: 'The production project has never been restored: recovery point, recovery time and post-restore policy checks are all unmeasured, and the rehearsal is not in CI.',
+    gap: 'The production project has never been restored: recovery point, recovery time and post-restore policy checks are all unmeasured. The rehearsal runs in CI on every change, against a disposable database.',
     goLive: [/Restore tested from backup/, /Gateway journal backed up/],
   },
   {
@@ -270,6 +274,13 @@ export interface RiskAcceptance {
   blocker: string;
   by: Seat;
   reason: string;
+  /**
+   * What pilot users are told about the accepted blocker, in their words. An
+   * accepted risk the affected people do not know about is not a condition of
+   * launch; it is a surprise. Required, and it is what `go-with-conditions`
+   * discloses.
+   */
+  disclosure: string;
   /** ISO date. Required; an acceptance nobody has to revisit is not one. */
   expires: string;
 }
@@ -284,9 +295,25 @@ export interface LaunchState {
   on: string;
 }
 
+/** An accepted blocker the launch proceeds under: time-bound, owned, disclosed. */
+export interface Condition {
+  blocker: string;
+  severity: Severity;
+  by: Seat;
+  reason: string;
+  disclosure: string;
+  expires: string;
+}
+
 export interface Verdict {
-  verdict: 'go' | 'no-go';
+  /**
+   * `go`: nothing open. `go-with-conditions`: nothing open except P2/P3
+   * blockers under a valid acceptance, listed in `conditions`. `no-go`:
+   * anything in `reasons`.
+   */
+  verdict: 'go' | 'go-with-conditions' | 'no-go';
   reasons: string[];
+  conditions: Condition[];
 }
 
 /** Only these may be waived, and only by this seat. */
@@ -308,6 +335,7 @@ export function invalidAcceptances(state: LaunchState): string[] {
     }
     if (a.by !== ACCEPTS_RISK) reasons.push(`Risk acceptance for ${a.blocker} is by ${a.by}; only ${ACCEPTS_RISK} accepts risk.`);
     if (!a.reason.trim()) reasons.push(`Risk acceptance for ${a.blocker} gives no reason.`);
+    if (!a.disclosure.trim()) reasons.push(`Risk acceptance for ${a.blocker} says nothing about what pilot users are told.`);
     if (!/^\d{4}-\d{2}-\d{2}$/.test(a.expires)) reasons.push(`Risk acceptance for ${a.blocker} has no valid expiry.`);
     else if (a.expires <= state.on) reasons.push(`Risk acceptance for ${a.blocker} expired on ${a.expires}.`);
   }
@@ -353,16 +381,26 @@ export function decide(state: LaunchState): Verdict {
 
   const invalid = invalidAcceptances(state);
   reasons.push(...invalid);
-  const accepted = new Set(
-    (dated ? state.acceptances : [])
-      .filter((a) => invalidAcceptances({ ...state, acceptances: [a] }).length === 0)
-      .map((a) => a.blocker),
-  );
+  const accepted = (dated ? state.acceptances : []).filter((a) => invalidAcceptances({ ...state, acceptances: [a] }).length === 0);
+  const acceptedIds = new Set(accepted.map((a) => a.blocker));
   for (const blocker of state.blockers) {
-    if (!accepted.has(blocker.id)) reasons.push(`Open ${blocker.severity} ${blocker.id}: ${blocker.summary}`);
+    if (!acceptedIds.has(blocker.id)) reasons.push(`Open ${blocker.severity} ${blocker.id}: ${blocker.summary}`);
   }
 
-  return { verdict: reasons.length === 0 ? 'go' : 'no-go', reasons };
+  // A valid acceptance removes the blocker from the reasons, not from the
+  // record: the verdict carries each one as a condition, in the blockers'
+  // order, so the decision record says what the launch proceeds under.
+  const conditions: Condition[] = state.blockers
+    .filter((b) => acceptedIds.has(b.id))
+    .map((b) => {
+      const a = accepted.find((x) => x.blocker === b.id)!;
+      return { blocker: b.id, severity: b.severity, by: a.by, reason: a.reason, disclosure: a.disclosure, expires: a.expires };
+    });
+
+  // A no-go carries no conditions: nothing is proceeding, so nothing is
+  // proceeding under them. The reasons are the whole of that record.
+  if (reasons.length > 0) return { verdict: 'no-go', reasons, conditions: [] };
+  return { verdict: conditions.length > 0 ? 'go-with-conditions' : 'go', reasons, conditions };
 }
 
 /** Where things stand. What the council would be handed today. */
