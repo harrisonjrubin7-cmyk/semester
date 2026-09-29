@@ -21,7 +21,7 @@ in the format GitHub's ruleset import and API both take.
 | Dismiss stale approvals | on | an approval is of the code that was reviewed, not of whatever was pushed after it |
 | Approval of the most recent push | required | the person who pushed last cannot be the only approver of that push |
 | Conversations resolved | required | a review comment cannot be merged past unanswered |
-| Required status checks | `build`, `secrets`, from GitHub Actions only | the two jobs in `.github/workflows/ci.yml` that run on a pull request; `notify` runs on push only and is not a check |
+| Required status checks | `build`, `secrets`, `account-sync`, from GitHub Actions only | the three jobs in `.github/workflows/ci.yml` that run on a pull request; `notify` runs on push only and is not a check |
 | Up to date with `main` | required (strict) | three collisions landed on `main` in one review (`VALIDATED.md` item 4), each green on its own branch |
 | Force-push to `main` | blocked | history on `main` is what every deploy and every rollback reads |
 | Deleting `main` | blocked | |
@@ -67,7 +67,7 @@ Either way works; both need repository admin.
 **In the browser.** Settings → Rules → Rulesets → New ruleset → Import a
 ruleset, and choose `.github/rulesets/main.json` from a checkout. Check that
 the imported ruleset shows *Active*, targets the default branch, and lists
-`build` and `secrets` under required status checks, then save.
+`build`, `secrets` and `account-sync` under required status checks, then save.
 
 **With the GitHub CLI**, from the repository root:
 
@@ -100,7 +100,7 @@ gh api repos/harrisonjrubin7-cmyk/semester/rules/branches/main --jq '.[].type'
 It should list `deletion`, `non_fast_forward`, `pull_request` and
 `required_status_checks`. Then try it: push a commit straight to `main` from a
 scratch clone (it must be refused), and open a pull request (it must show
-`build` and `secrets` as required).
+`build`, `secrets` and `account-sync` as required).
 
 ## Applied
 
