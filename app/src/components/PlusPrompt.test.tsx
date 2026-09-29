@@ -12,11 +12,13 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 
 const mock = vi.hoisted(() => {
   const tables: Record<string, unknown[]> = { commercial_prices: [], subscriptions: [] };
+  const failing = new Set<string>();
   const from = (t: string) => {
-    const q = { select: () => q, eq: () => q, then: (ok: (r: unknown) => unknown) => Promise.resolve({ data: tables[t] ?? [], error: null }).then(ok) };
+    const answer = () => (failing.has(t) ? { data: null, error: { message: 'down' } } : { data: tables[t] ?? [], error: null });
+    const q = { select: () => q, eq: () => q, then: (ok: (r: unknown) => unknown) => Promise.resolve(answer()).then(ok) };
     return q;
   };
-  return { tables, from: vi.fn(from), dispatch: vi.fn(), account: { id: 'u1' } as { id: string } | null };
+  return { tables, failing, from: vi.fn(from), dispatch: vi.fn(), account: { id: 'u1' } as { id: string } | null };
 });
 vi.mock('../lib/cloud', () => ({ cloudConfigured: true, cloud: () => Promise.resolve({ from: mock.from }) }));
 vi.mock('../state/store', () => ({ useStore: () => ({ account: mock.account, dispatch: mock.dispatch }) }));
@@ -36,6 +38,7 @@ beforeEach(() => {
   sessionStorage.clear();
   mock.tables.commercial_prices = [MONTH, YEAR];
   mock.tables.subscriptions = [];
+  mock.failing.clear();
   mock.account = { id: 'u1' };
   mock.dispatch.mockReset();
   host = document.createElement('div');
@@ -94,6 +97,12 @@ it('appears once the account arrives, when the first paint came before it', asyn
 
 it('is never shown to someone who has Plus', async () => {
   mock.tables.subscriptions = [{ id: 's1', plan_code: 'plus', status: 'active', current_period_end: '2026-10-29T12:00:00Z' }];
+  await render();
+  expect(host.textContent).toBe('');
+});
+
+it('stays away when it cannot tell whether they already pay', async () => {
+  mock.failing.add('subscriptions');
   await render();
   expect(host.textContent).toBe('');
 });

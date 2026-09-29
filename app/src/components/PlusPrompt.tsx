@@ -28,7 +28,9 @@ function snoozedUntil(accountId: string): number {
  * Plus, offered once on Today, at the bottom of the briefing.
  *
  * Below the day's own next step rather than above it, so it never competes
- * with the thing Today is for. It is shown the same way to every signed-in
+ * with the thing Today is for. Not on the first-run screen Today shows before
+ * a student has added anything: nobody is sold to before they have set up a
+ * semester. It is shown the same way to every signed-in
  * student on Free — never chosen from what they study, how often, or how
  * well (D-133: study activity is never used to label or target anyone) — and
  * only while the catalog has a Plus price to name. The price is the
@@ -59,7 +61,7 @@ export function PlusPrompt({ now = Date.now }: { now?: () => number } = {}) {
         // Someone with Plus is offered nothing.
         setOffer({ accountId, prices: currentSubscription(own) ? [] : found });
       } catch {
-        /* No catalog, no card. */
+        /* No catalog, or no way to tell whether they already pay: no card. */
       }
     })();
     return () => {

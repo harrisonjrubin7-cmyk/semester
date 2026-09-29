@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ALWAYS_INCLUDED, NOT_ON_SALE_HERE, PLANS, plan, priceLine, type PlanId } from '../lib/plans';
 import { cloud, cloudConfigured, currentSession } from '../lib/cloud';
 import { formatDate } from '../lib/locale';
@@ -58,7 +58,16 @@ const when = (iso: string) => (iso ? formatDate(iso, { month: 'long', day: 'nume
 export function MembershipPanel() {
   const { dispatch, account } = useStore();
   // Opened already when Today's "See Plus" brought the person here.
-  const [said, setSaid] = useState<'upgrade' | 'cancel' | null>(() => (takeOpenUpgrade() ? 'upgrade' : null));
+  const [handedOver] = useState(() => takeOpenUpgrade());
+  const [said, setSaid] = useState<'upgrade' | 'cancel' | null>(handedOver ? 'upgrade' : null);
+  // Membership is the last thing on a long Account page: arriving from
+  // Today's "See Plus" at the top of it would look like nothing happened.
+  const section = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (!handedOver || !section.current) return;
+    section.current.scrollIntoView?.({ block: 'start' });
+    section.current.focus({ preventScroll: true });
+  }, [handedOver]);
   const [prices, setPrices] = useState<PlusPrice[]>([]);
   const [sub, setSub] = useState<Subscription | null>(null);
   const [choice, setChoice] = useState<string>('');
@@ -175,7 +184,7 @@ export function MembershipPanel() {
       : NOT_ON_SALE_HERE;
 
   return (
-    <section aria-labelledby="membership-title" style={{ marginTop: 'var(--sp-7)' }}>
+    <section ref={section} tabIndex={-1} aria-labelledby="membership-title" style={{ marginTop: 'var(--sp-7)' }}>
       <SectionLabel>
         <span id="membership-title">Membership</span>
       </SectionLabel>

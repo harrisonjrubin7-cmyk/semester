@@ -182,7 +182,11 @@ it('keeps Plus on screen, and says why, when the cancellation is refused', async
 
 it('opens with the upgrade showing when Today’s “See Plus” brought the person here', async () => {
   sessionStorage.setItem('semester.open-upgrade', '1');
+  const scrolled = vi.fn();
+  Element.prototype.scrollIntoView = scrolled;
   await render();
+  expect(scrolled).toHaveBeenCalled();
+  expect(document.activeElement?.getAttribute('aria-labelledby')).toBe('membership-title');
   expect(button(/^Upgrade$/)!.getAttribute('aria-expanded')).toBe('true');
   expect(button(/Continue to secure checkout/)).toBeDefined();
   expect(sessionStorage.getItem('semester.open-upgrade')).toBeNull();

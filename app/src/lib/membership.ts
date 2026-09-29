@@ -220,13 +220,18 @@ export async function fetchPlusPrices(db: Db): Promise<PlusPrice[]> {
  * The signed-in person's own subscription rows: their *individual* billing
  * account only. A billing contact or operator can read other accounts' rows
  * under RLS, and none of those is their plan.
+ *
+ * A failed read throws rather than returning nothing: PostgREST reports an
+ * error in the result instead of rejecting, and "no rows" would read as "not
+ * a subscriber" — which would offer Plus to someone already paying for it.
  */
 export async function fetchOwnSubscriptions(db: Db, accountId: string): Promise<unknown> {
-  const { data } = await db
+  const { data, error } = await db
     .from('subscriptions')
     .select('id, plan_code, status, current_period_end, cancel_at_period_end, billing_accounts!inner(kind, user_id)')
     .eq('billing_accounts.kind', 'individual')
     .eq('billing_accounts.user_id', accountId);
+  if (error) throw new Error('subscription read failed');
   return data;
 }
 

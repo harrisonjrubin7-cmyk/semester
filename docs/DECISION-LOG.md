@@ -2645,7 +2645,9 @@ checkout had been opened. The owner asked for an upgrade prompt in the app.
 - **Where:** the foot of Today's briefing (`components/PlusPrompt.tsx`, lazy
   in `TodayDecisionSurface`), under the Action Center or the briefing, so it
   never sits above the one next step Today exists for.
-- **Who:** a signed-in student on Free, while the catalog has a Plus price.
+- **Who:** a signed-in student on Free, while the catalog has a Plus price,
+  once they have a semester: not on the first-run screen Today shows before a
+  student has added anything, so nobody is sold to during setup.
   Never someone with a live subscription, never signed out. It is shown the
   same way to everyone: nothing about what, when or how well a student studies
   decides whether they see it (D-133's line against using study activity to
@@ -2658,4 +2660,8 @@ checkout had been opened. The owner asked for an upgrade prompt in the app.
   (`askToOpenUpgrade` / `takeOpenUpgrade`, one session key, used once);
   nothing is bought on Today. "Not now" hides it on that device for thirty
   days.
+- **Fails closed.** If the subscription read fails, the card stays away
+  (`fetchOwnSubscriptions` throws on a PostgREST error rather than returning
+  no rows, which would read as "not a subscriber"). Arriving from "See Plus",
+  Account scrolls to the open upgrade and focuses it (Codex's review of #985).
 - **Not changed:** checkout, consent, cancellation, prices.
