@@ -785,6 +785,20 @@ export const SOURCES: readonly Source[] = [
     alsoRead: ['docs/LAUNCH-READINESS-COUNCIL.md', 'docs/RUNBOOKS.md', 'docs/operating-model/OPERATING-RHYTHM.md', 'docs/PROOF-CALENDAR.md'],
     note: 'Rendered from app/src/lib/ops/readiness-pack.ts: the five workstreams and nine decision domains as council seats, the seven pillars of production safety with every checklist item resting on register rows and launch gates and scored by the test, the dependency register (nothing tested), the eighteen minimum runbooks and what stands in for each, the launch gate whose verdict is computed — NO-GO today — the review packet, the sign-off record (nothing signed), the cadences and the first twelve initiatives. It adds no gate to the twelve of launchreadiness.ts; it reads them.',
   },
+  {
+    id: 'pia',
+    category: 'Privacy impact assessment',
+    path: 'docs/operating-model/PRIVACY-IMPACT-ASSESSMENT.md',
+    status: 'current',
+    owner: 'privacy',
+    version: 1,
+    lastReviewed: '2026-09-29',
+    nextReview: '2026-10-29',
+    supersedes: [],
+    decisions: ['D-123'],
+    alsoRead: ['docs/operating-model/RISK-GOVERNANCE.md', 'docs/PRODUCT-ANALYTICS-DATA-ETHICS.md', 'docs/MODULE-PRIVACY-MODEL.md', 'RETENTION.md'],
+    note: 'Rendered from app/src/lib/governance/pia.ts: the eleven questions a surface that touches student data answers before it ships, five surfaces answered against the tree (support tickets, beta feedback, the pilot figures, AI conversations, billing) with the answers a test holds told apart from the ones only written, six surfaces owed, and the gate line the pull-request template asks of every new module, held there by the test. The privacy seat is vacant; the answers are the founder’s reading until it reads them.',
+  },
 ];
 
 /**

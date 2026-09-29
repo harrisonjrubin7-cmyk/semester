@@ -54,6 +54,7 @@ The central rule, stated once:
 | 31 | AI in grading and integrity: the three products without a single accuracy number, the evaluation that compares them, the procurement rules, the AI roles at their lifecycle gates, the fairness controls | [AI-GRADING-AND-INTEGRITY.md](AI-GRADING-AND-INTEGRITY.md) | Code: `grading-ai.ts`; rendered by its test |
 | 32 | The SaaS launch kit: entity, insurance, the pilot agreement, module pricing, the GTM plan, the council charter, each held to the rules and outlines the tree already has | [../SAAS-LAUNCH-KIT.md](../SAAS-LAUNCH-KIT.md) | Code: `launchkit.ts`; rendered by its test |
 | 33 | Operational reality: workstreams, service tiers, production checks and their guards, failure scenarios held to the registers, support, implementation, revenue operations, the go-live dossier, the final checklist | [../OPERATIONAL-REALITY-REGISTER.md](../OPERATIONAL-REALITY-REGISTER.md) | Code: `operationalreality.ts`; rendered by its test |
+| 34 | Privacy impact assessment: the eleven questions, five surfaces answered against the tree with held and written answers told apart, six owed, the pull-request gate | [PRIVACY-IMPACT-ASSESSMENT.md](PRIVACY-IMPACT-ASSESSMENT.md) | Code: `pia.ts`; rendered by its test; the gate line held in `.github/pull_request_template.md` |
 | — | Change management and adoption | [CHANGE-MANAGEMENT.md](CHANGE-MANAGEMENT.md) | Process |
 | — | AI financial sustainability, ROI measurement | [COMMERCIAL-GOVERNANCE.md](COMMERCIAL-GOVERNANCE.md#ai-cost-controls) | Existing metered gateway (ADR 0004) |
 

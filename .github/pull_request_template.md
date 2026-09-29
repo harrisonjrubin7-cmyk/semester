@@ -34,6 +34,7 @@ The rule, from `SEMESTER-OPERATING-SYSTEM.md`: No new module launches unless it 
 7. How is it tested?
 8. How does it fail?
 9. How is it removed if it does not work?
+10. What does it hold about a student? Its row in `app/src/lib/governance/pia.ts` with every question answered, or the sentence that says it touches no student data.
 
 ## Screens (skip if this PR changes nothing a student sees)
 

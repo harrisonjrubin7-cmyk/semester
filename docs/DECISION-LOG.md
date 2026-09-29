@@ -2106,3 +2106,46 @@ key and costs money, and only the owner holds the key.
 - **Item 15 of `docs/LAUNCH-DECISIONS.md`** is the two AI drills — this
   red-team and the kill-switch drill from D-116 — with the command, the key
   they need, and what filing them changes.
+
+## D-123 · The privacy impact assessment exists, and four registers stop saying what later merges undid
+
+**Decided 29 Sep 2026.** Two kinds of open item, both closable by code.
+
+- **R-15's mitigation asked for a privacy impact assessment template**, and
+  the maturity crosswalk's eighth system said no template, no register and
+  no gate existed. `app/src/lib/governance/pia.ts` is the three:
+  `QUESTIONS` is the template (eleven questions, each saying what a
+  clearly-yes answer looks like), `ASSESSMENTS` and `OWED` are the register
+  (support tickets, beta feedback, the pilot figures, AI conversations and
+  billing answered against the tree; community, school records, Course
+  Studio, LTI launches, the three designed modules and support grants owed),
+  and `GATE` is the line the pull-request template now asks of every new
+  module, held there verbatim by the test. An answer whose evidence includes
+  a test is *held*; one whose evidence is code or a document is *written*,
+  and the page says which: 33 held, 22 written. Every assessment names what
+  is not clearly yes. The privacy seat is vacant, so the answers are the
+  founder's reading; system 8 moves to `partly`, not `covered`.
+- **The fifth copy of the rehearsal line.** SRE-005's evidence and gap,
+  R-03's mitigation, R-10's evidence, the DR plan's row and the claims register
+  still said `supabase/restore.sh` was local and not in CI, which #935 found
+  false and #939 and D-115 corrected elsewhere. Re-read to what CI does, and
+  `app/src/lib/rehearsal.test.ts` now holds every data module that cites the
+  script to the workflow step, so a sixth copy cannot be written. It does not
+  say the rehearsal proves a production restore: it runs against an empty
+  database, and production has never been restored (R-10).
+- **The billing lines** in COM-001, R-17, EC-COM-01 and EC-COM-03 said no
+  billing existed; #942 built it, off until keyed. Each now says so, with the
+  webhook, checkout and commercial checks as evidence, and the gaps that
+  remain: nothing charged, no reconciliation, no price decided.
+- **Five owed edge cases had a guard already, or needed a small one.**
+  EC-DQ-04 (the pipeline refuses a timestamp regression), EC-AI-09 (the
+  shared key's clamp is tested), EC-COM-01 (the webhook applies an event
+  once and retries an invoice before its subscription), EC-A11Y-01 (every
+  focused control carries the clearance scroll-margins) each cite the test
+  that was there; EC-A11Y-02 gains `app/src/ai/streamlive.shape.test.ts`,
+  which reads both conversation surfaces for a polite log and an
+  `aria-hidden` streaming block. 37 of 81 cases guarded, 44 owed. Each note
+  says what the guard does not prove.
+- **Not changed:** nothing on `docs/LAUNCH-DECISIONS.md`; every remaining
+  item there is the owner's.
+
