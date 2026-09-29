@@ -2868,3 +2868,23 @@ decision writes that gate down before any of the edition exists.
   of #998). It is false today, and the edition asks it before anything else.
 - **What only counsel can answer** is listed with the baseline items each
   answer would move, so the review is a list, not a conversation.
+
+## D-141 · The K–12 edition is the same platform configured for a high school, described on the site and offered to nobody yet
+
+**Decided 29 Sep 2026, by the owner.** The owner chose the full K–12 edition.
+With the minimum age (D-139) and the district baseline (D-140) in place, this
+writes down what the edition is, and puts it on the site without offering it.
+
+- **Not a separate product.** `app/src/lib/k12/edition.ts` holds the
+  positioning, the five places it would start (high schools, career and
+  technical education, early college, college and career centres, district
+  teams), what it is not for, and ten modules, each set up for a school and
+  each pointed at the code it would build on.
+- **One pilot, when it can be offered:** grades 9 to 12, 50 to 250 students,
+  all 13 or over, for `PILOT_WEEKS` — the same 26 weeks as every pilot
+  (D-134). It leaves out anything the student information system or the
+  gradebook does.
+- **Nothing takes district data early.** `mayTakeDistrictData()` is
+  `districtReady()`, and the page prints its answer. Today that is no.
+- **`/k-12/`** says no district or school uses Semester today, and the site
+  test holds it there.
