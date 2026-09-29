@@ -288,8 +288,11 @@ export const RULES: readonly Held[] = held([
 
 export const ALL: readonly Held[] = [...NAVIGATION, ...ENVELOPE, ...TRUST, ...ACTION_MODEL, ...NOTIFICATIONS, ...SEARCH, ...CONSOLE, ...GATES, ...FOUNDATIONS, ...RULES];
 
-/** Found while reading the tree, and not fixed here. */
-export const FOUND: readonly string[] = [
-  'app/src/lib/provenance.ts says `components/SourceScopeStatus.tsx` draws the Source/Scope/Status line; no such component exists. The only consumer is the journal.',
-  'app/src/lib/comms.ts says `comms.test.ts` guards admit; no such test exists.',
-];
+/**
+ * Found while reading the tree on 28 September and fixed the same day:
+ * `provenance.ts` named a `SourceScopeStatus` component that did not exist,
+ * and `comms.ts` named a `comms.test.ts` that did not exist. The test holds
+ * both fixed — the reference is gone and the test file is there — so the list
+ * stays empty until something new is found.
+ */
+export const FOUND: readonly string[] = [];

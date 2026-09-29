@@ -87,7 +87,7 @@ describe('one system', () => {
     expect(GATES).toHaveLength(12);
     expect(FOUNDATIONS).toHaveLength(11);
     expect(RULES).toHaveLength(7);
-    expect(FOUND).toHaveLength(2);
+    expect(FOUND).toHaveLength(0);
     const ids = [...ENVELOPE, ...GATES, ...FOUNDATIONS, ...RULES, ...CONSOLE].map((h) => h.id);
     expect(new Set(ids).size).toBe(ids.length);
   });
@@ -106,11 +106,10 @@ describe('one system', () => {
     }
   });
 
-  it('keeps the two found faults true until they are fixed', () => {
-    expect(read('app/src/lib/provenance.ts')).toMatch(/components\/SourceScopeStatus\.tsx/);
-    expect(existsSync(join(root, 'app/src/components/SourceScopeStatus.tsx')), 'the component now exists; drop the finding').toBe(false);
+  it('keeps the two faults found on 28 September fixed', () => {
+    expect(read('app/src/lib/provenance.ts')).not.toMatch(/components\/SourceScopeStatus\.tsx/);
+    expect(existsSync(join(root, 'app/src/lib/comms.test.ts')), 'comms.ts names comms.test.ts; it must exist').toBe(true);
     expect(read('app/src/lib/comms.ts')).toMatch(/comms\.test\.ts/);
-    expect(existsSync(join(root, 'app/src/lib/comms.test.ts')), 'the test now exists; drop the finding').toBe(false);
   });
 
   it(`is what ${DOC} says`, () => {
@@ -239,9 +238,9 @@ function render(): string {
     '## Cross-domain relationship rules',
     '',
     ...table(RULES, 'Rule'),
-    '## Found on the way, not fixed here',
+    '## Found on the way',
     '',
-    ...list(FOUND),
+    ...(FOUND.length ? list(FOUND) : ['Two faults found on 28 September — a trust component `provenance.ts` named that did not exist, and a test `comms.ts` named that did not exist — were fixed the same day, and the test holds them fixed. Nothing is open.']),
     '',
   ];
   return out.join('\n');
