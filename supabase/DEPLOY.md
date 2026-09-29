@@ -953,6 +953,17 @@ drill and the red-team's proxy route (`docs/LAUNCH-DECISIONS.md` item 15) wait
 on it; the red-team's direct route, with the raw key in the environment, does
 not.
 
+By 21:26 UTC the secret was set (an unsigned call answered 401, not 501), and
+two signed-in calls still answered 502, "Claude could not be reached": the
+`fetch` to Anthropic threw with nothing sent (0 tokens metered), and nothing in
+the logs said why. The function now checks the key before anybody is
+authenticated or counted. A key that cannot be sent as a header (the `…` of
+the placeholder above, a quote mark, a break inside it) is refused with 503,
+*"This deployment's shared key is set but cannot be used"*, and its shape is
+logged without a character of it; a send that still throws is logged by its
+kind, `header`, `network` or `other` (`functions/_shared/sharedkey.ts`). Look
+for `claude:` in the function's logs.
+
 Optional: `MONTHLY_CALL_LIMIT` (default 60 calls per account per month),
 `ALLOWED_ORIGIN` (extra https origins; the Pages origin is built in) and
 `CORS_ALLOW_DEV` (unset on the live project).

@@ -31,6 +31,7 @@ import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { corsHeaders } from '../_shared/cors.ts';
 import { clampRequest } from '../_shared/clamp.ts';
 import { KILLED_MESSAGE, aiGenerationKilled } from '../_shared/killswitch.ts';
+import { KEY_UNUSABLE_MESSAGE, describeThrow, keyShape, sharedKey } from '../_shared/sharedkey.ts';
 
 const ANTHROPIC = 'https://api.anthropic.com/v1/messages';
 
@@ -55,12 +56,24 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors });
   if (req.method !== 'POST') return json({ error: { message: 'POST only.' } }, 405);
 
-  const key = Deno.env.get('ANTHROPIC_API_KEY');
+  const key = sharedKey(Deno.env.get('ANTHROPIC_API_KEY'));
   if (!key) {
     return json(
       { error: { message: 'This deployment has no shared key. Add your own under Ask Claude → Settings.' } },
       501,
     );
+  }
+
+  // A key that cannot travel as a header makes the `fetch` below throw
+  // before anything is sent, which reads as "Claude could not be reached"
+  // and, because the call is counted first, costs a student one of their
+  // sixty for nothing. Refused here instead, before anybody is authenticated
+  // or counted, with its shape in the log and none of its characters. See
+  // `../_shared/sharedkey.ts` for the day this was found.
+  const shape = keyShape(key);
+  if (!shape.sendable) {
+    console.error('claude: ANTHROPIC_API_KEY is set but cannot be sent', shape);
+    return json({ error: { message: KEY_UNUSABLE_MESSAGE } }, 503);
   }
 
   // ── who is asking ───────────────────────────────────────────────────────
@@ -177,9 +190,12 @@ Deno.serve(async (req) => {
       },
       body,
     });
-  } catch {
+  } catch (e) {
     // Deliberately not the thrown message: it carries the upstream host and,
-    // depending on the runtime, the request that was being sent.
+    // depending on the runtime, the request that was being sent. The log gets
+    // its kind (a header the runtime refused, the network, or neither) and
+    // the key's shape, which is enough to tell a bad paste from an outage.
+    console.error('claude: the call to Anthropic threw', { ...describeThrow(e), key: shape });
     return json(
       {
         error: {
