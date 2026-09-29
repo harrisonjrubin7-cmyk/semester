@@ -6,8 +6,9 @@ same page. It adds one thing to the product — support tickets, off by default 
 and otherwise records what is already here against what a launch needs.
 
 [`MONITORING.md`](../MONITORING.md) is still the operating document for noticing
-things. This does not replace it, and it keeps its refusals: no status page, no
-automated alerting from the database, no dashboard nobody opens.
+things. This does not replace it, and it keeps its refusals: no automated
+alerting from the database, no dashboard nobody opens. The status page refusal
+was reversed on 28 September (`app/public/status.html`, #902); see §2.
 
 ## 1. Support tickets
 
@@ -90,11 +91,18 @@ checks it on a schedule, no history kept), `UNPROBED` (nothing checks it).
 `overdue` flag on a schedule, and nobody owns the queue. Changing that is a
 named owner and a weekly look, not more code.
 
+**Built since this was written.**
+
+- **A status page.** `MONITORING.md` §"What was deliberately not built" had
+  declined one, because the thing watching it would be the thing that needs
+  watching. The founder reversed that on 28 September: `app/public/status.html`
+  (#902) checks from the reader's browser, `public/sw.js` passes its requests
+  straight to the network, and incidents are written by hand into
+  `status-incidents.json`. `app/src/lib/statuspage.test.ts` holds it. Still
+  owed: a subscriber notification process (master register SRE-010).
+
 **Not built, and deliberately so.**
 
-- **A status page.** `MONITORING.md` §"What was deliberately not built" is the
-  argument, and it still holds: the thing watching it would be the thing that
-  needs watching. When there is an on-call rota, revisit.
 - **A degradation banner.** The app shows sync status on the Account screen
   (`SyncStatus` in `app/src/state/store.tsx`) and works offline by design, so a
   database outage shows up to a student as "not synced", not as a broken app.
