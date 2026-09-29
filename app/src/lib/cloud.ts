@@ -1187,6 +1187,18 @@ export const OWNED_TABLES: OwnedTable[] = [
   { table: 'student_payment_intents', column: 'student_id' },
   { table: 'dining_plans', column: 'student' },
   { table: 'dining_orders', column: 'student' },
+
+  // ── The official registration ledger and gradebook ──────────────────────
+  // Your enrollments (`lib/enrollment/client.ts`), and every version of your
+  // grades and your regrade requests (`lib/gradebook/client.ts`). Each names
+  // you by a column that references `auth.users` with `on delete cascade`
+  // (`20260929300000_registration_transaction.sql`,
+  // `20260929310000_gradebook.sql`), so they go with the account; a regrade's
+  // answer goes with its request. The school's own record keeps its copy.
+  { table: 'registration_enrollments', column: 'student' },
+  { table: 'grade_entries', column: 'student_id' },
+  { table: 'regrade_requests', column: 'student_id' },
+  { table: 'regrade_resolutions', column: null, cascadesFrom: 'regrade_requests' },
 ];
 
 /**
@@ -1367,6 +1379,22 @@ export const KEPT_TABLES: KeptTable[] = [
   {
     table: 'dining_hours',
     why: 'When your school’s dining locations open. Not a record about you, and no student account writes a row.',
+  },
+  {
+    table: 'registration_terms',
+    why: 'Your school’s registration calendar: when enrollment opens, when add/drop and withdrawal end. A setting of the school, not a record about you; if you set it, your name is cleared and the term stays.',
+  },
+  {
+    table: 'registration_sections',
+    why: 'Your school’s course sections, their seats and meeting times. A setting of the school, not a record about you; if you set one, your name is cleared and the section stays.',
+  },
+  {
+    table: 'gradebook_schemes',
+    why: 'How a course weights its grades. The course’s, not any student’s; if you set it as an instructor, your name is cleared and the scheme stays.',
+  },
+  {
+    table: 'gradebook_items',
+    why: 'A course’s graded items, such as a midterm. The course’s, not any student’s; if you added one as an instructor, your name is cleared and the item stays.',
   },
   {
     table: 'dining_menu_items',

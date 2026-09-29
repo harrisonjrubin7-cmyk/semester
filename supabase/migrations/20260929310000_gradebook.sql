@@ -168,7 +168,7 @@ create table if not exists public.regrade_requests (
 
 -- A request's answer: at most one, never changed.
 create table if not exists public.regrade_resolutions (
-  request_id  uuid        primary key references public.regrade_requests(id) on delete cascade,
+  request_id  uuid        primary key references public.regrade_requests on delete cascade,
   tenant_id   text        not null references public.schools(id) on delete cascade,
   outcome     text        not null check (outcome in ('upheld', 'changed')),
   note        text        not null check (length(btrim(note)) between 1 and 2000),

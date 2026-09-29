@@ -401,40 +401,32 @@ describe('"delete my account" really means every row', () => {
       'community_signals',
       'community_venues',
       'community_volunteer_events',
-      // The operations console's duty matrix (lib/console/client.ts): policy
-      // seeded by a migration, read-only from the browser, naming no person.
       'console_duty',
-      // What an instructor published in Course Studio (D-101). Students only
-      // read these; they are course policy, kept for the class.
       'course_ai_rules',
       'course_guidance',
-      // A school's dining locations, hours and menus (lib/dining/client.ts),
-      // as its card office lists them; no student account writes a row.
       'dining_hours',
       'dining_locations',
       'dining_menu_items',
       'feature_kill_switch',
+      'gradebook_items',
+      'gradebook_schemes',
       'group_tasks',
       'groups',
       'gtm_campaign_reviews',
       'gtm_campaigns',
       'help_destinations',
-      // A university's integration configuration and sync logs, read by the
-      // Integration Dashboard (lib/integration/dashboard.ts). No student
-      // account writes a row in any of them.
       'integration_connections',
       'integration_dead_letter_events',
       'integration_mappings',
       'integration_scopes',
       'integration_sync_errors',
       'integration_sync_runs',
-      // Verified listings (lib/listings.ts, components/ListingDesk.tsx): an
-      // office's or employer's publication. publisher_id is `on delete set null`.
       'opportunities',
       'organizations',
+      'registration_sections',
+      'registration_terms',
       'reports',
       'schools',
-      // How a school runs student accounts (lib/studentaccount/client.ts).
       'student_account_settings',
       'study_packs',
       'subscriptions',
