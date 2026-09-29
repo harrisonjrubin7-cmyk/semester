@@ -494,9 +494,11 @@ by hand. Read off `cron.job` at 02:51 UTC on 29 September 2026:
 `public.run_dunning()` was called once by hand at the same moment, exactly
 as the job calls it, and answered `{"reminders": 0, "restricted": 0,
 "final_notices": 0}`: correct on a project with no failed payment, not a
-failure. The first `account-health` snapshot lands at 05:41 UTC. The catalog
-seeded as the migration wrote it: nine plans, nine prices, thirteen
-`cta_routes`.
+failure. `account-health` first runs at 05:41 UTC, and writes one snapshot
+per institutional billing account — of which the project has none yet, so
+the expected result of that run is no row, not a failed job; the first
+snapshot follows the first signed order form. The catalog seeded as the
+migration wrote it: nine plans, nine prices, thirteen `cta_routes`.
 
 ## Live on merge, off until configured: `lead-intake`
 
