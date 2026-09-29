@@ -135,12 +135,12 @@ describe('the launch-completeness crosswalk', () => {
       for (const x of [...MIGRATION_ARTIFACTS, ...EXCLUSIONS, ...ATTACHMENTS, ...PUBLIC_LEGAL, ...INSTITUTIONAL_DOCS]) expect(x.note.trim().length).toBeGreaterThan(3);
     });
 
-    it('holds the pilot’s 12–26 weeks to the code’s 60–120 days', () => {
-      expect(PILOT_TERM.standing).toBe('held');
+    it('holds the pilot’s 12–26 weeks to the code’s exactly 26', () => {
+      expect(PILOT_TERM.standing).toBe('tested');
       const pilot = read('app/src/lib/gtm/pilot.ts');
-      expect(pilot).toMatch(/days >= 60 && days <= 120/);
-      expect(read('docs/PAID-PILOT-FRAMEWORK.md')).toMatch(/60–120 days/);
-      expect(PILOT_TERM.gap).toMatch(/60–120/);
+      expect(pilot).toMatch(/export const PILOT_WEEKS = 26;/);
+      expect(read('docs/PAID-PILOT-FRAMEWORK.md')).toMatch(/exactly 26 weeks/);
+      expect(PILOT_TERM.gap).toMatch(/D-134/);
       // Twelve weeks is 84 days and seventeen is 119: the overlap the gap names is real.
       expect(12 * 7).toBeGreaterThanOrEqual(60);
       expect(17 * 7).toBeLessThanOrEqual(120);
@@ -367,7 +367,7 @@ function render(): string {
     '',
     ...table(['Term', 'The brief', 'The tree'], PILOT_SCOPE.map((p) => [p.term, cell(p.brief), cell(p.tree)])),
     '',
-    `**${PILOT_TERM.id} · held.** ${PILOT_TERM.item}. ${PILOT_TERM.gap}`,
+    `**${PILOT_TERM.id} · ${PILOT_TERM.standing}.** ${PILOT_TERM.item}. ${PILOT_TERM.gap}`,
     '',
     ...table(['Evidence', 'Shows'], PILOT_TERM.evidence.map((e) => [ref(e.path), cell(e.shows)])),
     '',

@@ -34,7 +34,7 @@
  *   path of the deployed company site (`company-site/sitemap.xml`), or none.
  * - Every package names a plan in `plans.ts` or a tier of the deal desk.
  * - Every command-center field names a `PilotPlan` field, or none.
- * - The pilot's 12–26 weeks is held to the code's 60–120 days.
+ * - The pilot's 12–26 weeks is held to the code's exactly 26 (D-134).
  *
  * ## Due dates
  *
@@ -148,7 +148,7 @@ export const GO_LIVE: readonly Item[] = rows('LC-GO', [
     'No institution, so no contacts; the command center below names where they would go.'],
   ['The pilot has success measures, a review date and a documented expansion or exit decision', 'tested',
     [['app/src/lib/gtm/pilot.ts', 'pilotReadiness refuses a kickoff without metrics, baselines, a midpoint review and a conversion date'], ['app/src/lib/gtm/pilot.test.ts', 'held']],
-    'The brief’s 12–26 weeks is outside the code’s 60–120 days; see the pilot section.'],
+    'None beyond the pilot term below.'],
 ]);
 
 // ── 2. The HECVAT tracker ────────────────────────────────────────────────────
@@ -435,16 +435,16 @@ export const GUARDRAILS: readonly Item[] = rows('LC-MIG', [
 export const PILOT_TERM: Item = {
   id: 'LC-PILOT-TERM',
   item: 'Pilot duration: the brief says 12–26 weeks (84–182 days)',
-  standing: 'held',
-  evidence: ev([['docs/PAID-PILOT-FRAMEWORK.md', 'the length rule: 60–120 days'], ['app/src/lib/gtm/pilot.ts', 'pilotReadiness refuses anything outside 60–120 days']]),
-  gap: 'The code’s 60–120 days holds until the owner reopens it; 12–17 weeks fits both.',
-};
+  standing: 'tested',
+  evidence: ev([['app/src/lib/gtm/pilot.ts', 'pilotReadiness refuses anything but exactly 26 weeks (PILOT_WEEKS)'], ['app/src/lib/gtm/pilot.test.ts', 'held'], ['docs/PAID-PILOT-FRAMEWORK.md', 'the length rule: exactly 26 weeks (D-134)']]),
+  gap: 'None: the owner chose exactly 26 weeks (D-134), the top of the brief’s range. It was 60–120 days when these briefs arrived.',
+}
 
 export const PILOT_SCOPE: readonly { term: string; brief: string; tree: string }[] = [
   { term: 'Parties', brief: 'Semester [legal entity]; Institution [full legal entity]', tree: 'The entity is a single-member LLC (HECVAT COMP-01).' },
   { term: 'Purpose', brief: 'A limited, time-bound pilot of planning, registration-readiness, advisor-agenda and related workflows', tree: 'PilotPlan.workflow.' },
   { term: 'Cohort', brief: '25–100 students', tree: 'PilotPlan.cohort is free text; no bound is enforced.' },
-  { term: 'Duration', brief: '12–26 weeks', tree: 'Held at 60–120 days (LC-PILOT-TERM).' },
+  { term: 'Duration', brief: '12–26 weeks', tree: 'Exactly 26 weeks, which the code enforces (LC-PILOT-TERM, D-134).' },
   { term: 'Use case', brief: 'Registration readiness and academic pathway planning', tree: 'The outline’s sample is an LMS/course pilot; this is the second shape.' },
   { term: 'Authorized modules', brief: 'Today, My Path, Plan, Action Center, advisor agenda, feedback/support', tree: 'Today, My Path and Plan are three of the five destinations; the Action Center is behind today_action_center.' },
   { term: 'Optional scope', brief: 'SSO; approved catalog/program data; selected calendar connection', tree: 'SAML; the catalog import; calendar feeds.' },

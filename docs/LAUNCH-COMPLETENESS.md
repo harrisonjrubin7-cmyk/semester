@@ -38,7 +38,7 @@ specialists and procurement come before any agreement or representation.
 | not-started | Nothing in the tree beyond a document naming the gap |
 | held | A decision already on main answers it differently, and holds until the owner reopens it |
 
-Across the 210 items with a standing: tested 117 · building 40 · designed 41 · not-started 10 · held 2.
+Across the 210 items with a standing: tested 118 · building 40 · designed 41 · not-started 10 · held 1.
 
 ## The finding
 
@@ -62,7 +62,7 @@ A university launch is approved only when all eight are true. Today the weakest 
 | LC-GO-05 | The product works with keyboard, screen readers, mobile reflow and error states | building | [`app/src/a11y/axe.test.tsx`](../app/src/a11y/axe.test.tsx) — an automated WCAG probe over the screens<br>[`app/src/a11y/focus.test.ts`](../app/src/a11y/focus.test.ts) — the focus ring<br>[`app/src/widthgate.test.ts`](../app/src/widthgate.test.ts) — the narrow-width gate<br>[`docs/accessibility/AT-PASS-PROTOCOL.md`](accessibility/AT-PASS-PROTOCOL.md) — the assistive-technology pass nobody has run | No human screen-reader or 400% zoom pass is recorded. |
 | LC-GO-06 | Monitoring, support, incident response, backups and rollback are operational | building | [`app/src/lib/statuspage.test.ts`](../app/src/lib/statuspage.test.ts) — the status page probes the project the app is built against<br>[`supabase/support-tickets.check.sql`](../supabase/support-tickets.check.sql) — the ticket queue<br>[`RESTORE.md`](../RESTORE.md) — the restore procedure<br>[`ROLLBACK.md`](../ROLLBACK.md) — the rollback procedure | No production restore has been timed, no alert reaches a person and nobody is on call. |
 | LC-GO-07 | The institution has training, communication and escalation contacts | designed | [`docs/LAUNCH-CONTENT-AND-TRAINING.md`](LAUNCH-CONTENT-AND-TRAINING.md) — the training content<br>[`docs/launch/ANNOUNCEMENT-TEMPLATES.md`](launch/ANNOUNCEMENT-TEMPLATES.md) — the communications | No institution, so no contacts; the command center below names where they would go. |
-| LC-GO-08 | The pilot has success measures, a review date and a documented expansion or exit decision | tested | [`app/src/lib/gtm/pilot.ts`](../app/src/lib/gtm/pilot.ts) — pilotReadiness refuses a kickoff without metrics, baselines, a midpoint review and a conversion date<br>[`app/src/lib/gtm/pilot.test.ts`](../app/src/lib/gtm/pilot.test.ts) — held | The brief’s 12–26 weeks is outside the code’s 60–120 days; see the pilot section. |
+| LC-GO-08 | The pilot has success measures, a review date and a documented expansion or exit decision | tested | [`app/src/lib/gtm/pilot.ts`](../app/src/lib/gtm/pilot.ts) — pilotReadiness refuses a kickoff without metrics, baselines, a midpoint review and a conversion date<br>[`app/src/lib/gtm/pilot.test.ts`](../app/src/lib/gtm/pilot.test.ts) — held | None beyond the pilot term below. |
 
 ## 2. The HECVAT tracker
 
@@ -396,17 +396,18 @@ The brief’s first pilot is a **Registration and Path Pilot**. [`docs/trust/PIL
 | Parties | Semester [legal entity]; Institution [full legal entity] | The entity is a single-member LLC (HECVAT COMP-01). |
 | Purpose | A limited, time-bound pilot of planning, registration-readiness, advisor-agenda and related workflows | PilotPlan.workflow. |
 | Cohort | 25–100 students | PilotPlan.cohort is free text; no bound is enforced. |
-| Duration | 12–26 weeks | Held at 60–120 days (LC-PILOT-TERM). |
+| Duration | 12–26 weeks | Exactly 26 weeks, which the code enforces (LC-PILOT-TERM, D-134). |
 | Use case | Registration readiness and academic pathway planning | The outline’s sample is an LMS/course pilot; this is the second shape. |
 | Authorized modules | Today, My Path, Plan, Action Center, advisor agenda, feedback/support | Today, My Path and Plan are three of the five destinations; the Action Center is behind today_action_center. |
 | Optional scope | SSO; approved catalog/program data; selected calendar connection | SAML; the catalog import; calendar feeds. |
 
-**LC-PILOT-TERM · held.** Pilot duration: the brief says 12–26 weeks (84–182 days). The code’s 60–120 days holds until the owner reopens it; 12–17 weeks fits both.
+**LC-PILOT-TERM · tested.** Pilot duration: the brief says 12–26 weeks (84–182 days). None: the owner chose exactly 26 weeks (D-134), the top of the brief’s range. It was 60–120 days when these briefs arrived.
 
 | Evidence | Shows |
 | --- | --- |
-| [`docs/PAID-PILOT-FRAMEWORK.md`](PAID-PILOT-FRAMEWORK.md) | the length rule: 60–120 days |
-| [`app/src/lib/gtm/pilot.ts`](../app/src/lib/gtm/pilot.ts) | pilotReadiness refuses anything outside 60–120 days |
+| [`app/src/lib/gtm/pilot.ts`](../app/src/lib/gtm/pilot.ts) | pilotReadiness refuses anything but exactly 26 weeks (PILOT_WEEKS) |
+| [`app/src/lib/gtm/pilot.test.ts`](../app/src/lib/gtm/pilot.test.ts) | held |
+| [`docs/PAID-PILOT-FRAMEWORK.md`](PAID-PILOT-FRAMEWORK.md) | the length rule: exactly 26 weeks (D-134) |
 
 ### Explicit exclusions
 
