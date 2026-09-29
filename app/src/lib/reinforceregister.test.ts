@@ -193,7 +193,7 @@ function render(): string {
           '| --- | --- | --- | --- |',
           ...CONFLICTS.map((c) => `| ${cell(c.asks)} | ${cell(c.tree)} | ${seat(c.decides)} | ${ref(c.cites)} |`),
         ]
-      : ['None is open. The four this register found — the Plus price, the pilot length, the statement’s “payments” and the first-year document’s name — the owner settled (D-132).']),
+      : ['None is open. The four this register found — the Plus price, the pilot length, the statement’s “payments” and the first-year document’s name — the owner settled (D-133).']),
     '',
   );
 

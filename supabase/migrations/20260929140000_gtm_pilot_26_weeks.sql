@@ -1,4 +1,4 @@
--- Semester — the database runs every pilot for exactly 26 weeks, as the app does (D-132).
+-- Semester — the database runs every pilot for exactly 26 weeks, as the app does (D-133).
 --
 -- Safe to run again; it replaces one function body and restates its grant.
 --

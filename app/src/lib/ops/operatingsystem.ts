@@ -767,7 +767,7 @@ export const SOURCES: readonly Source[] = [
     lastReviewed: '2026-09-29',
     nextReview: MONTHLY,
     supersedes: [],
-    decisions: ['D-131'],
+    decisions: ['D-132'],
     alsoRead: ['docs/MARKET-LEADERSHIP.md', 'docs/ONE-OPERATING-SYSTEM.md', 'docs/trust/COMPLIANCE-CROSSWALK.md'],
     note: 'Rendered from app/src/lib/reinforceregister.ts and app/src/lib/ops/operatingmodel.ts: seven briefs of 29 September on what else would make Semester the leader and the benchmark, read against the tree as one register — each row citing every brief item that asks for it and the oneos, leadership or Connect item it is the same as — with the operating model’s ten product areas owned by seats, the compliance playbook’s P0 blockers, the module scorecard and its fully-built gate, the final checklists pointed at the sets that answer them, and where a brief and the tree disagree.',
   },
@@ -783,7 +783,7 @@ export const SOURCES: readonly Source[] = [
     supersedes: [],
     decisions: ['D-113', 'D-009'],
     alsoRead: ['docs/operating-model/COMMERCIAL-GOVERNANCE.md', 'docs/trust/PILOT-AGREEMENT-OUTLINE.md', 'docs/LAUNCH-DECISIONS.md'],
-    note: 'Rendered from app/src/lib/launchkit.ts: the company around the product — entity and formation, nine insurance coverages, the pilot agreement package and term sheet held to the pilot and deal-desk rules, twelve modules and the price bands beside the deal desk’s proposed minimums, the go-to-market plan on the sales stages, the governance council charter on the seats that already exist, and the first thirty days. A crosswalk, not a price book or a contract: nothing in it may be signed. The entity is held to the owner’s attestation of an LLC; the pilot term is held to the code’s 26 weeks (D-132).',
+    note: 'Rendered from app/src/lib/launchkit.ts: the company around the product — entity and formation, nine insurance coverages, the pilot agreement package and term sheet held to the pilot and deal-desk rules, twelve modules and the price bands beside the deal desk’s proposed minimums, the go-to-market plan on the sales stages, the governance council charter on the seats that already exist, and the first thirty days. A crosswalk, not a price book or a contract: nothing in it may be signed. The entity is held to the owner’s attestation of an LLC; the pilot term is held to the code’s 26 weeks (D-133).',
   },
   {
     id: 'operational-reality',
