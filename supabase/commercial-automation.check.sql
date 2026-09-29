@@ -1,4 +1,4 @@
--- The commercial core's moving parts (20260929010000_commercial_automation):
+-- The commercial core's moving parts (20260929080000_commercial_automation):
 -- checkout, the webhook's writes, the dunning worker, contract → tenant, site
 -- lead intake and the nightly account-health job.
 -- LOCAL/DISPOSABLE DATABASES ONLY; the transaction is always rolled back.

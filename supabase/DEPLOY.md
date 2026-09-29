@@ -447,7 +447,7 @@ rolls back, and the student-facing answer is that nothing was deleted.
 The commercial core's two payment functions (`docs/COMMERCIAL-CORE.md`). The
 rules are in `_shared/billingcheckout.ts` and `_shared/billingwebhook.ts`,
 driven by `app/src/lib/billing/`; the database side is
-`migrations/20260929010000_commercial_automation.sql` and
+`migrations/20260929080000_commercial_automation.sql` and
 `commercial-automation.check.sql`.
 
 **Both answer 503 until their secret is set**, so merging deploys two
@@ -472,6 +472,14 @@ The webhook endpoint to register in Stripe (Developers → Webhooks) is
 
 **Their snapshot rows are `pending`**, like trust-room's were: replace each with
 a real reading after the merge that deploys it.
+
+**Two cron jobs come with them**, both in `scheduler.sql` and both active
+because neither needs a secret or an endpoint: `commercial-dunning` hourly at
+minute 23 (`public.run_dunning()`, which writes nothing until a payment has
+failed) and `account-health` nightly at 05:41 UTC
+(`public.compute_account_health()`). Neither is on the project until
+`20260929080000_commercial_automation.sql` is applied and the two
+`cron.schedule` statements are run; `health.sql` expects both.
 
 ## Live on merge, off until configured: `lead-intake`
 

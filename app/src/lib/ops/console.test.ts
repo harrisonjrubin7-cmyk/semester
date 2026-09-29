@@ -71,7 +71,7 @@ describe('segregation of duties', () => {
   it('knows every party as a seat, a role of public.app_roles, or the student', () => {
     for (const d of DUTIES) for (const p of [d.requester, ...d.approvers]) expect(isParty(p), `${d.id}: ${p}`).toBe(true);
     // The check would catch a role that is not in the table.
-    expect(isParty('role:finance_operator')).toBe(false);
+    expect(isParty('role:no_such_role')).toBe(false);
     expect(isParty('role:support_agent')).toBe(true);
   });
 

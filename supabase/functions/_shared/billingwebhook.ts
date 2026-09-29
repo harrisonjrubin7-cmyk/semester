@@ -4,7 +4,7 @@
  * Stripe posts every billing event here, server to server. This verifies the
  * `Stripe-Signature` on the **raw** body before reading a byte of it, hashes
  * the body, and applies the event through the service-only functions in
- * `20260929010000_commercial_automation.sql`:
+ * `20260929080000_commercial_automation.sql`:
  *
  *   checkout.session.completed      complete_checkout → an active subscription
  *   customer.subscription.*         sync_provider_subscription (newer events only)

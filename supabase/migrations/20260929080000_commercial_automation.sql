@@ -5,7 +5,7 @@
 -- Run this once, in the Supabase dashboard: SQL Editor → New query → paste →
 -- Run. It is safe to run again; every statement is guarded.
 --
--- `20260929000000_commercial_core.sql` is the schema and its rules. This file
+-- `20260929070000_commercial_core.sql` is the schema and its rules. This file
 -- is what writes to it, and every function here is the service role's alone:
 -- the three Edge Functions (`billing-checkout`, `billing-webhook`,
 -- `lead-intake`) call them with the service key after doing their own checks,
@@ -259,7 +259,7 @@ end $$;
 
 -- `apply_payment_event`, once more, with one addition: a payment that clears a
 -- subscription whose paid features the dunning worker restricted gives them
--- back. Everything else is as 20260929000000 wrote it.
+-- back. Everything else is as 20260929070000 wrote it.
 create or replace function public.apply_payment_event(
   want_provider text, want_event_id text, want_kind text, want_invoice uuid,
   want_amount_cents bigint, want_payload_sha256 text, grace interval default interval '14 days'

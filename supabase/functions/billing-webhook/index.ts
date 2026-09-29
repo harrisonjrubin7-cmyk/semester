@@ -4,7 +4,7 @@
  * Everything this function decides is in `../_shared/billingwebhook.ts`, which
  * `app/src/lib/billing/webhook.test.ts` drives branch by branch. This file only
  * wires in the service-key client that calls the service-only SQL functions in
- * `20260929010000_commercial_automation.sql`.
+ * `20260929080000_commercial_automation.sql`.
  *
  * `verify_jwt` is off (supabase/config.toml) because Stripe has no Supabase
  * token; the `Stripe-Signature` over the raw body is the credential. Off

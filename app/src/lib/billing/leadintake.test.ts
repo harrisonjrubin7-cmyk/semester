@@ -205,7 +205,7 @@ describe('lead intake: what the repository says about it', () => {
   });
 
   it('has every route the site posts to in the migrations', () => {
-    const sql = read('supabase/migrations/20260929000000_commercial_core.sql') + read('supabase/migrations/20260929010000_commercial_automation.sql');
+    const sql = read('supabase/migrations/20260929070000_commercial_core.sql') + read('supabase/migrations/20260929080000_commercial_automation.sql');
     for (const key of [
       'start_planning_free', 'build_my_semester', 'plan_department_launch', 'plan_institution_launch', 'request_procurement',
       'request_enterprise', 'apply_role', 'explore_partnership', 'customer_help',

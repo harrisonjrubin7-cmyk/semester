@@ -16,7 +16,7 @@ through informal messaging and memory.**
 | Launch status | **NO-GO** as of 2026-09-27, for 29 reasons listed in [`docs/GO-NO-GO-CHECKLIST.md`](GO-NO-GO-CHECKLIST.md) |
 | P0/P1 blockers | none recorded (0 open blockers of any severity) |
 | Readiness register | 142 rows: 3 not-started, 31 designed, 65 building, 43 tested |
-| Role launch register | 63 roles; every rung is in [`docs/ROLE-LAUNCH-REGISTER.md`](ROLE-LAUNCH-REGISTER.md) |
+| Role launch register | 68 roles; every rung is in [`docs/ROLE-LAUNCH-REGISTER.md`](ROLE-LAUNCH-REGISTER.md) |
 | Billing/contract status | no customer commitments recorded |
 | Go-live approvals | 0 of 10 seats signed; 4 of 10 seats held |
 | Board ownership | 9 of 13 items owned |

@@ -425,7 +425,7 @@ select cron.schedule(
 
 -- ── Commercial: the dunning worker ────────────────────────────────────────
 --
--- `public.run_dunning()` (20260929010000_commercial_automation.sql) works every
+-- `public.run_dunning()` (20260929080000_commercial_automation.sql) works every
 -- open dunning case: a reminder after three quiet days, one final notice with
 -- the exact restriction date three days before grace ends, and at grace end
 -- the case is restricted and the subscription's paid entitlements removed. It

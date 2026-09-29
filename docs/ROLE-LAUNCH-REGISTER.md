@@ -16,17 +16,17 @@ evidence. A role is enabled for a customer only at **launch approved**.
 
 | State | Meaning | Roles at this state | Roles holding this rung |
 | --- | --- | ---: | ---: |
-| defined | Role, purpose, scope, and boundaries documented | 0 | 63 |
-| modeled | Role/capability/scope exists in authorization model | 0 | 63 |
-| provisionable | Admin/SCIM/SSO/manual workflow can assign and revoke it | 40 | 63 |
+| defined | Role, purpose, scope, and boundaries documented | 0 | 68 |
+| modeled | Role/capability/scope exists in authorization model | 0 | 68 |
+| provisionable | Admin/SCIM/SSO/manual workflow can assign and revoke it | 45 | 68 |
 | usable | Role-specific screens and workflow are implemented | 4 | 23 |
-| secure | Positive and negative authorization tests pass | 17 | 41 |
+| secure | Positive and negative authorization tests pass | 17 | 43 |
 | supportable | Training, runbook, audit trail, support routing, and recovery exist | 2 | 2 |
 | launch-approved | All required role acceptance criteria and sign-offs pass | 0 | 0 |
 
 ## The finding
 
-All 63 roles are at least **provisionable**, through one path: the
+All 68 roles are at least **provisionable**, through one path: the
 operations console’s `role-grant` duty (`supabase/migrations/20260929110000_console_approvals_and_break_glass.sql`).
 A request names the person, the role, the scope and the expiry; the security
 seat approves it, never the requester; `console_act()` writes the audit event
@@ -51,7 +51,7 @@ Two further limits on what the columns below prove:
 | Role | State | Def · Mod · Prov · Use · Sec · Sup · Appr | Capabilities | Interface | Authorization checks | Runbook | Training | Must be able to | Must never |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `prospective_student` | provisionable | ✓ ✓ ✓ · · · · | — | — | — | — | — | Explore public programs, career paths, readiness tools, estimated cost/plan tools | Institutional records, other users’ data |
-| `student` | secure | ✓ ✓ ✓ ✓ ✓ · · | `lti:launch` | `app/src/screens/Today.tsx` | `admins.check.sql`<br>`console-control-plane.check.sql`<br>`deletion.check.sql`<br>`expansion.check.sql`<br>`gtm.check.sql`<br>`help-requests.check.sql`<br>`integration-hardening.check.sql`<br>`intelligence-policy.check.sql`<br>`lti-capability.check.sql`<br>`lti-membership.check.sql`<br>`mentor-rosters.check.sql`<br>`officeactions.check.sql`<br>`retention-sweeps.check.sql`<br>`role-grant-audit.check.sql`<br>`support-access.check.sql`<br>`trust-room.check.sql` | — | `docs/launch/STUDENT-QUICK-START.md`<br>`docs/launch/FIRST-DAY-CHECKLISTS.md` | Plan, study, search, create work, connect accounts, manage privacy, selectively share | Other students’ private records, unauthorized institutional data |
+| `student` | secure | ✓ ✓ ✓ ✓ ✓ · · | `lti:launch` | `app/src/screens/Today.tsx` | `admins.check.sql`<br>`commercial-automation.check.sql`<br>`console-control-plane.check.sql`<br>`deletion.check.sql`<br>`expansion.check.sql`<br>`gtm.check.sql`<br>`help-requests.check.sql`<br>`integration-hardening.check.sql`<br>`intelligence-policy.check.sql`<br>`lti-capability.check.sql`<br>`lti-membership.check.sql`<br>`mentor-rosters.check.sql`<br>`officeactions.check.sql`<br>`retention-sweeps.check.sql`<br>`role-grant-audit.check.sql`<br>`support-access.check.sql`<br>`trust-room.check.sql` | — | `docs/launch/STUDENT-QUICK-START.md`<br>`docs/launch/FIRST-DAY-CHECKLISTS.md` | Plan, study, search, create work, connect accounts, manage privacy, selectively share | Other students’ private records, unauthorized institutional data |
 | `undergraduate_student` | secure | ✓ ✓ ✓ ✓ ✓ · · | `lti:launch` | `app/src/screens/Today.tsx` | `lti-capability.check.sql` | — | `docs/launch/STUDENT-QUICK-START.md` | Everything a student may, scoped to an undergraduate program | Other students’ private records, unauthorized institutional data |
 | `graduate_student` | usable | ✓ ✓ ✓ ✓ · · · | `lti:launch` | `app/src/screens/Today.tsx` | — | — | `docs/launch/STUDENT-QUICK-START.md` | Manage graduate milestones, funding and work planning, course/research workflows | Other students’ records |
 | `admitted_student` | provisionable | ✓ ✓ ✓ · · · · | — | — | — | — | — | Complete pre-arrival actions, first-term planning, orientation actions, accepted mentor workflow | Current-student restricted data unless enrolled/authorized |
@@ -99,13 +99,14 @@ Two further limits on what the columns below prove:
 
 | Role | State | Def · Mod · Prov · Use · Sec · Sup · Appr | Capabilities | Interface | Authorization checks | Runbook | Training | Must be able to | Must never |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `university_admin` | secure | ✓ ✓ ✓ ✓ ✓ · · | `tenant:configure`<br>`ai:configure`<br>`source:approve`<br>`audit:read`<br>`integration:view`<br>`integration:approve`<br>`killswitch:engage`<br>`sponsor:review` | `app/src/components/institutional/ControlPlane.tsx`<br>`app/src/components/institutional/IntegrationDashboard.tsx` | `canonical-display.check.sql`<br>`console-approvals.check.sql`<br>`console-control-plane.check.sql`<br>`evidence-graphs.check.sql`<br>`governance.check.sql`<br>`gtm.check.sql`<br>`institutional-foundation.check.sql`<br>`integration-control-plane.check.sql`<br>`integration-quality.check.sql`<br>`intelligence-policy.check.sql`<br>`lti-capability.check.sql`<br>`role-grant-audit.check.sql`<br>`tenant-plan.check.sql`<br>`tenant-rollout.check.sql`<br>`tenant-sso-policy.check.sql`<br>`trust-room.check.sql` | — | `docs/launch/FIRST-DAY-CHECKLISTS.md`<br>`docs/SSO-TENANT-ONBOARDING.md` | Configure tenant, modules, branding, approved sources, policy, aggregate dashboards | Unrestricted education-record browsing |
+| `university_admin` | secure | ✓ ✓ ✓ ✓ ✓ · · | `tenant:configure`<br>`ai:configure`<br>`source:approve`<br>`audit:read`<br>`integration:view`<br>`integration:approve`<br>`killswitch:engage`<br>`sponsor:review` | `app/src/components/institutional/ControlPlane.tsx`<br>`app/src/components/institutional/IntegrationDashboard.tsx` | `canonical-display.check.sql`<br>`commercial.check.sql`<br>`console-approvals.check.sql`<br>`console-control-plane.check.sql`<br>`evidence-graphs.check.sql`<br>`governance.check.sql`<br>`gtm.check.sql`<br>`institutional-foundation.check.sql`<br>`integration-control-plane.check.sql`<br>`integration-quality.check.sql`<br>`intelligence-policy.check.sql`<br>`lti-capability.check.sql`<br>`role-grant-audit.check.sql`<br>`tenant-plan.check.sql`<br>`tenant-rollout.check.sql`<br>`tenant-sso-policy.check.sql`<br>`trust-room.check.sql` | — | `docs/launch/FIRST-DAY-CHECKLISTS.md`<br>`docs/SSO-TENANT-ONBOARDING.md` | Configure tenant, modules, branding, approved sources, policy, aggregate dashboards | Unrestricted education-record browsing |
 | `department_admin` | provisionable | ✓ ✓ ✓ · · · · | — | — | — | — | — | Manage approved department content and scoped configuration | Other department/tenant records |
 | `university_staff` | secure | ✓ ✓ ✓ ✓ ✓ · · | `support:read`<br>`help_request:respond` | `app/src/components/HelpInbox.tsx` | `console-approvals.check.sql`<br>`console-control-plane.check.sql`<br>`support-access.check.sql` | — | — | Perform only an explicitly granted, scoped duty | Implicit global authority |
 | `integration_admin` | secure | ✓ ✓ ✓ ✓ ✓ · · | `integration:view`<br>`integration:configure`<br>`integration:sync`<br>`integration:replay`<br>`integration:reconcile` | `app/src/components/institutional/IntegrationDashboard.tsx` | `canonical-display.check.sql`<br>`integration-control-plane.check.sql`<br>`integration-hardening.check.sql`<br>`integration-quality.check.sql`<br>`integration-rls-matrix.check.sql` | `docs/INTEGRATION-OPERATOR-RUNBOOK.md` | — | Configure integrations, security policy, audit/access processes | Student content unless separately authorized and audited |
 | `implementation_manager` | provisionable | ✓ ✓ ✓ · ✓ · · | `tenant:implement`<br>`console:operate` | — | `console-control-plane.check.sql`<br>`governance.check.sql`<br>`help-requests.check.sql` | — | `docs/SSO-TENANT-ONBOARDING.md` | Configure sandbox tenant and launch setup | Broad production student-data access |
 | `data_steward` | provisionable | ✓ ✓ ✓ · ✓ · · | `data_request:handle`<br>`console:operate` | — | `console-control-plane.check.sql`<br>`expansion.check.sql`<br>`governance.check.sql` | — | — | Process data requests under strict workflow | AI memories and student plans absent required authority |
 | `portfolio_council` | provisionable | ✓ ✓ ✓ · ✓ · · | `governance:decide` | — | `governance.check.sql` | — | — | Decide governance items put to the council | Any individual student record |
+| `billing_contact` | provisionable | ✓ ✓ ✓ · ✓ · · | `billing:read` | — | `commercial.check.sql` | — | — | Read one school’s contracts, invoices, subscriptions and renewal dates | The school’s configuration, implementation records or any student data |
 
 ## Semester platform operations
 
@@ -143,11 +144,15 @@ Two further limits on what the columns below prove:
 
 | Role | State | Def · Mod · Prov · Use · Sec · Sup · Appr | Capabilities | Interface | Authorization checks | Runbook | Training | Must be able to | Must never |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `account_executive` | provisionable | ✓ ✓ ✓ · ✓ · · | `account:manage` | — | `gtm.check.sql`<br>`trust-room.check.sql` | — | `docs/gtm/EXECUTION-PLAN.md` | Manage a prospect account and send its procurement room | Any student data |
+| `account_executive` | provisionable | ✓ ✓ ✓ · ✓ · · | `account:manage`<br>`success:manage` | — | `gtm.check.sql`<br>`trust-room.check.sql` | — | `docs/gtm/EXECUTION-PLAN.md` | Manage a prospect account and send its procurement room | Any student data |
 | `trust_officer` | provisionable | ✓ ✓ ✓ · ✓ · · | `trust:publish`<br>`console:operate` | — | `console-control-plane.check.sql`<br>`trust-room.check.sql` | `docs/trust/README.md` | — | Publish documents to the trust room | Any student data |
 | `marketing_admin` | secure | ✓ ✓ ✓ ✓ ✓ · · | `campaign:manage`<br>`campaign:report` | `app/src/components/institutional/CampaignManager.tsx` | `gtm.check.sql` | — | — | Manage and report on campaigns | Any student data; sending a campaign nobody reviewed |
 | `marketing_analyst` | secure | ✓ ✓ ✓ ✓ ✓ · · | `campaign:report` | `app/src/components/institutional/CampaignManager.tsx` | `gtm.check.sql` | — | — | Read campaign reports | Editing or sending campaigns; any student data |
 | `campaign_reviewer` | secure | ✓ ✓ ✓ ✓ ✓ · · | `campaign:review` | `app/src/components/institutional/CampaignManager.tsx` | `gtm.check.sql` | — | — | Review a campaign before it is sent | Authoring the campaign they review |
+| `finance_operator` | provisionable | ✓ ✓ ✓ · ✓ · · | `billing:operate` | — | `commercial.check.sql` | `docs/COMMERCIAL-CORE.md` | — | Read every billing account, subscription, invoice, contract and dunning case | Account health; writing a price, invoice or payment through the API; any student data |
+| `customer_success` | provisionable | ✓ ✓ ✓ · · · · | `success:manage` | — | — | `docs/COMMERCIAL-CORE.md` | — | Read implementation projects, success plans, QBRs, renewals and account health | Any student data; outreach from a health snapshot nobody reviewed |
+| `compliance_owner` | provisionable | ✓ ✓ ✓ · · · · | `compliance:manage` | — | — | — | — | Read and maintain the control register, evidence index and public claims register | Activating a claim with no control, owner and review date; any student data |
+| `content_owner` | provisionable | ✓ ✓ ✓ · · · · | `content:manage` | — | — | — | — | Read and maintain the content register and CTA routing table | Publishing content with no owner, review date or source; any student data |
 
 ## The internal boundary
 
@@ -159,7 +164,7 @@ own records. A grant outside either list fails the build until somebody judges i
 
 | Internal roles may hold | Internal roles never hold |
 | --- | --- |
-| `console:operate`<br>`approval:decide`<br>`breakglass:request`<br>`beta:manage`<br>`beta:triage`<br>`platform:configure`<br>`support:ticket`<br>`incident:communicate`<br>`killswitch:engage`<br>`moderation:action`<br>`report:read`<br>`review:moderate`<br>`opportunity:moderate`<br>`community:review`<br>`community:review_senior`<br>`community:escalation_agreements`<br>`community:manage`<br>`account:manage`<br>`campaign:manage`<br>`campaign:report`<br>`campaign:review`<br>`trust:publish` | `mentee:read`<br>`help_request:respond`<br>`accommodation:verify`<br>`skill:verify`<br>`support:read`<br>`data_request:handle`<br>`talent:search`<br>`lti:launch`<br>`audit:read`<br>`outcomes:read`<br>`demand:read` |
+| `console:operate`<br>`approval:decide`<br>`breakglass:request`<br>`beta:manage`<br>`beta:triage`<br>`platform:configure`<br>`support:ticket`<br>`incident:communicate`<br>`killswitch:engage`<br>`moderation:action`<br>`report:read`<br>`review:moderate`<br>`opportunity:moderate`<br>`community:review`<br>`community:review_senior`<br>`community:escalation_agreements`<br>`community:manage`<br>`account:manage`<br>`success:manage`<br>`billing:operate`<br>`compliance:manage`<br>`content:manage`<br>`campaign:manage`<br>`campaign:report`<br>`campaign:review`<br>`trust:publish` | `mentee:read`<br>`help_request:respond`<br>`accommodation:verify`<br>`skill:verify`<br>`support:read`<br>`data_request:handle`<br>`talent:search`<br>`lti:launch`<br>`audit:read`<br>`outcomes:read`<br>`demand:read` |
 
 ## Role × capability
 
@@ -273,12 +278,18 @@ One row per row of `public.role_capabilities`. A capability's checks are the SQL
 | `organization_admin` | `event:create` | — | `capabilities.check.sql` |
 | `organization_admin` | `event:update` | — | — |
 | `account_executive` | `account:manage` | — | — |
+| `account_executive` | `success:manage` | — | — |
 | `trust_officer` | `trust:publish` | — | — |
 | `trust_officer` | `console:operate` | — | `capabilities.check.sql`<br>`console-control-plane.check.sql` |
 | `marketing_admin` | `campaign:manage` | `app/src/components/institutional/CampaignManager.tsx` | — |
 | `marketing_admin` | `campaign:report` | `app/src/components/institutional/CampaignManager.tsx` | — |
 | `marketing_analyst` | `campaign:report` | `app/src/components/institutional/CampaignManager.tsx` | — |
 | `campaign_reviewer` | `campaign:review` | `app/src/components/institutional/CampaignManager.tsx` | — |
+| `finance_operator` | `billing:operate` | — | — |
+| `customer_success` | `success:manage` | — | — |
+| `compliance_owner` | `compliance:manage` | — | — |
+| `content_owner` | `content:manage` | — | — |
+| `billing_contact` | `billing:read` | — | — |
 
 ## Roles the brief names that are not app roles
 

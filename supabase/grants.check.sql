@@ -346,11 +346,11 @@ declare
     -- 20260928010000: the caller's own live capabilities, same predicate as
     -- private.has_capability, so staff screens can open for staff.
     'my_capabilities()',
-    -- 20260929000000: click-to-cancel. The owner of an individual
+    -- 20260929070000: click-to-cancel. The owner of an individual
     -- subscription ends it at the period end in one call, reason optional;
     -- cancelling must be as easy as signing up. Refuses anyone else's.
     'request_cancellation(want_subscription uuid, want_reason text)',
-    -- 20260929000000: the caller's own entitlements, to show paid features.
+    -- 20260929070000: the caller's own entitlements, to show paid features.
     -- Presentation only; never consulted by a policy on student data.
     'my_entitlements()',
     -- 20260928021700: the only doors to `mentor_requests` — no API role holds

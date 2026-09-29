@@ -1,7 +1,7 @@
 # Commercial core
 
 The tables, rules and flows that let Semester sell, bill, contract, deliver and
-renew. Schema: `supabase/migrations/20260929000000_commercial_core.sql`.
+renew. Schema: `supabase/migrations/20260929070000_commercial_core.sql`.
 Proof: `supabase/commercial.check.sql` (29 checks), plus the updated allowlists
 in `grants`, `capabilities` and `rls-coverage`. What runs it is below.
 
@@ -67,7 +67,7 @@ replayed webhook returns `duplicate` and changes nothing.
 
 ## What runs it
 
-Schema: `supabase/migrations/20260929010000_commercial_automation.sql`.
+Schema: `supabase/migrations/20260929080000_commercial_automation.sql`.
 Proof: `supabase/commercial-automation.check.sql` (68 checks) and
 `app/src/lib/billing/` (50 tests). Every SQL function below is the service
 role's alone; nothing is callable by a visitor or a signed-in account.

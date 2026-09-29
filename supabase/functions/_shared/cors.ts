@@ -170,7 +170,7 @@ export function corsHeaders(
  * browser refuses the response.
  */
 export function strictOrigin(raw: string | undefined | null, origin: string | null | undefined): string | null {
-  const list = (raw ?? '').split(',').map(tidy).filter((s) => s && s !== ANY);
+  const list = (raw ?? '').split(',').map(tidy).filter((s) => s && s !== '*');
   const asked = tidy(origin ?? '');
   return asked && list.includes(asked) ? asked : null;
 }
