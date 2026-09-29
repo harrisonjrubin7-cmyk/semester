@@ -53,6 +53,7 @@ Every flag: default **off**, created 2026-09-27, review 2026-12-15, runbook belo
 | `module.campaign_manager` | module | Growth | **yes** | tenant, role | — | Set off; sends stop at the next decision. `kill.sharing`. See [docs/gtm](gtm/EXECUTION-PLAN.md). |
 | `module.sponsorship` | module | Trust & Safety | **yes** | tenant | — | Set off; placements disappear. `kill.sharing`. |
 | `module.student_accounts` | module | Student accounts | **yes** | tenant | — | Set off; people stop posting at once, provider events for payments already made still post. Also off while the school names no finance owner (`private.student_accounts_on`) and while the council finance seat is vacant (`lib/studentaccount/gate.ts`). |
+| `module.dining` | module | Campus services | **yes** | tenant, role | — | Engage `kill.writeback` (new orders and gifts stop; refunds still run), then set off. Charges need a live card-office connection. See `app/src/lib/dining/`. |
 | `release.integration_dashboard_v1` | release | Integrations | no | environment, tenant | 2027-03-01 | Set off. |
 | `integration.lms_lti` | connector | Integrations | **yes** | tenant | — | Connection kill switch, flag off, disconnect. |
 | `integration.sis_read` | connector | Integrations | **yes** | tenant | — | Same. |

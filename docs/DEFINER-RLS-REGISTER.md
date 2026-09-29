@@ -26,7 +26,7 @@ Production (`lzrqvlugnawcgywkhqlz`), 2026-09-29, read-only, through the advisor 
 - all 151 functions: not executable by `anon` or PUBLIC, `search_path` pinned, no dynamic `execute`;
 - two bodies named neither `auth.uid()` nor a `private.` gate. `gtm_pilot_problems` answered any signed-in caller about any pilot — a student could read whether a pilot's price was agreed, who sponsored it and whether its dates fit. It is fixed in `supabase/migrations/20260929120000_gtm_pilot_problems_visibility.sql` and held by `supabase/gtm.check.sql`. `kill_switch_engaged` is a deliberate one-boolean read, kept open as DR-01.
 
-Since the reading, 29 more, from migrations not applied to production, each with a row below: `20260929320000_student_accounts.sql` (`configure_student_accounts`, `create_student_payment_plan`, `place_student_hold`, `post_student_ledger_entry`, `record_aid_disbursement`, `refund_student_credit`, `release_student_hold`, `respond_to_aid_award`, `reverse_student_ledger_entry`, `start_student_payment`, `student_hold_status`); `20260929310000_gradebook.sql` (`gradebook_add_item`, `gradebook_enter`, `gradebook_export`, `gradebook_file_regrade`, `gradebook_moderate`, `gradebook_queue_passback`, `gradebook_release`, `gradebook_resolve_regrade`, `gradebook_set_scheme`); `20260929300000_registration_transaction.sql` (`my_registration`, `my_registration_hold`, `registrar_decide`, `registrar_grant_override`, `registrar_put_section`, `registrar_put_term`, `registration_drop`, `registration_enroll`, `registration_withdraw`).
+Since the reading, 38 more, from migrations not applied to production, each with a row below: `20260929330000_dining.sql` (`dining_advance_order`, `dining_cancel_order`, `dining_disconnect_partner`, `dining_donate_swipes`, `dining_order_queue`, `dining_place_order`, `dining_pool_summary`, `dining_set_ordering`, `my_dining_balances`); `20260929320000_student_accounts.sql` (`configure_student_accounts`, `create_student_payment_plan`, `place_student_hold`, `post_student_ledger_entry`, `record_aid_disbursement`, `refund_student_credit`, `release_student_hold`, `respond_to_aid_award`, `reverse_student_ledger_entry`, `start_student_payment`, `student_hold_status`); `20260929310000_gradebook.sql` (`gradebook_add_item`, `gradebook_enter`, `gradebook_export`, `gradebook_file_regrade`, `gradebook_moderate`, `gradebook_queue_passback`, `gradebook_release`, `gradebook_resolve_regrade`, `gradebook_set_scheme`); `20260929300000_registration_transaction.sql` (`my_registration`, `my_registration_hold`, `registrar_decide`, `registrar_grant_override`, `registrar_put_section`, `registrar_put_term`, `registration_drop`, `registration_enroll`, `registration_withdraw`).
 
 ## How this page is held
 
@@ -40,13 +40,13 @@ Since the reading, 29 more, from migrations not applied to production, each with
 | Category | Functions | Controls the audit requires |
 | --- | --- | --- |
 | self-service | 55 | Verify auth.uid(), tenant scope, object ownership, input validation, rate limits, audit event. |
-| sharing | 18 | Explicit consent, narrow scope, short expiry, revocation, view audit. |
-| admin | 51 | Capability check, MFA or fresh auth for high risk, dual control where needed, immutable audit. |
+| sharing | 19 | Explicit consent, narrow scope, short expiry, revocation, view audit. |
+| admin | 56 | Capability check, MFA or fresh auth for high risk, dual control where needed, immutable audit. |
 | integration | 6 | Server-only preferred; signed workflow; replay protection; no browser service-role access. |
-| financial | 9 | Provider webhook verification, idempotency, no client-controlled final state. |
+| financial | 11 | Provider webhook verification, idempotency, no client-controlled final state. |
 | moderation | 15 | Capability check, reason required, appeals, audit trail. |
-| read-helper | 26 | Minimal fields, no hidden cross-tenant aggregation, pagination limit. |
-| **total** | 180 | |
+| read-helper | 27 | Minimal fields, no hidden cross-tenant aggregation, pagination limit. |
+| **total** | 189 | |
 
 ### self-service (55)
 
@@ -108,13 +108,14 @@ Since the reading, 29 more, from migrations not applied to production, each with
 | `volunteer_attest` | `auth.uid()` | `20260928032000_community.sql` |
 | `withdraw_help_request` | `auth.uid()` | `20260927233000_help_request_review_fixes.sql` |
 
-### sharing (18)
+### sharing (19)
 
 | Function | Gates in its body | Defined in |
 | --- | --- | --- |
 | `accept_family_grant` | `auth.uid()` | `20260921161500_roles.sql` |
 | `claim_family_invite` | `auth.uid()` | `20260928306000_family_invites.sql` |
 | `create_support_access` | `auth.uid()`, `private.subject_has_capability` | `20260925160000_support_access_ui.sql` |
+| `dining_donate_swipes` | `auth.uid()`, `private.dining_caller_school`, `private.dining_charge_gate` | `20260929330000_dining.sql` |
 | `list_advisor_shares` | `auth.uid()` | `20260928301000_advisor_shares.sql` |
 | `list_support_shares` | `auth.uid()`, `private.may_receive_support_share` | `20260928308000_support_shares.sql` |
 | `make_family_invite` | `auth.uid()`, `private.verified_student` | `20260928306000_family_invites.sql` |
@@ -131,7 +132,7 @@ Since the reading, 29 more, from migrations not applied to production, each with
 | `trust_room_grant` | `auth.uid()`, `private.has_capability` | `20260928100000_trust_room.sql` |
 | `trust_room_revoke` | `auth.uid()`, `private.has_capability` | `20260928100000_trust_room.sql` |
 
-### admin (51)
+### admin (56)
 
 | Function | Gates in its body | Defined in |
 | --- | --- | --- |
@@ -155,6 +156,11 @@ Since the reading, 29 more, from migrations not applied to production, each with
 | `console_audit_status` | `auth.uid()`, `private.has_capability` | `20260929100000_console_control_plane.sql` |
 | `console_figures` | `auth.uid()`, `private.has_capability` | `20260929110000_console_approvals_and_break_glass.sql` |
 | `decide_approval` | `auth.uid()`, `private.approver_party`, `private.assert_fresh_mfa` | `20260929110000_console_approvals_and_break_glass.sql` |
+| `dining_advance_order` | `auth.uid()`, `private.dining_caller_school`, `private.has_capability` | `20260929330000_dining.sql` |
+| `dining_disconnect_partner` | `auth.uid()`, `private.dining_caller_school`, `private.has_capability` | `20260929330000_dining.sql` |
+| `dining_order_queue` | `private.dining_caller_school`, `private.has_capability` | `20260929330000_dining.sql` |
+| `dining_pool_summary` | `private.dining_caller_school`, `private.has_capability` | `20260929330000_dining.sql` |
+| `dining_set_ordering` | `private.dining_caller_school`, `private.has_capability` | `20260929330000_dining.sql` |
 | `draft_office_action` | `auth.uid()`, `private.may_publish` | `20260928302000_office_action_feed.sql` |
 | `gradebook_add_item` | `auth.uid()`, `private.gradebook_require`, `private.gradebook_replay` | `20260929310000_gradebook.sql` |
 | `gradebook_enter` | `auth.uid()`, `private.gradebook_require`, `private.subject_has_capability`, `want_student = me` | `20260929310000_gradebook.sql` |
@@ -198,11 +204,13 @@ Since the reading, 29 more, from migrations not applied to production, each with
 | `integration_request_replay` | `auth.uid()`, `private.has_capability` | `20260927170000_integration_control_plane.sql` |
 | `integration_set_paused` | `private.has_capability` | `20260927170000_integration_control_plane.sql` |
 
-### financial (9)
+### financial (11)
 
 | Function | Gates in its body | Defined in |
 | --- | --- | --- |
 | `create_student_payment_plan` | `auth.uid()`, `private.student_accounts_staff`, `private.student_at_school` | `20260929320000_student_accounts.sql` |
+| `dining_cancel_order` | `auth.uid()`, `private.dining_caller_school`, `private.has_capability` | `20260929330000_dining.sql` |
+| `dining_place_order` | `auth.uid()`, `private.dining_caller_school`, `private.dining_charge_gate` | `20260929330000_dining.sql` |
 | `place_student_hold` | `auth.uid()`, `private.student_accounts_staff`, `private.student_at_school` | `20260929320000_student_accounts.sql` |
 | `post_student_ledger_entry` | `auth.uid()`, `private.student_accounts_staff`, `private.student_at_school` | `20260929320000_student_accounts.sql` |
 | `record_aid_disbursement` | `auth.uid()`, `private.student_accounts_staff`, `private.disburse_aid` | `20260929320000_student_accounts.sql` |
@@ -232,7 +240,7 @@ Since the reading, 29 more, from migrations not applied to production, each with
 | `volunteer_next_tasks` | `auth.uid()`, `private.volunteer_ready` | `20260928032000_community.sql` |
 | `volunteer_roster` | `private.has_capability` | `20260928032000_community.sql` |
 
-### read-helper (26)
+### read-helper (27)
 
 | Function | Gates in its body | Defined in |
 | --- | --- | --- |
@@ -251,6 +259,7 @@ Since the reading, 29 more, from migrations not applied to production, each with
 | `my_community_standing` | `auth.uid()` | `20260928032000_community.sql` |
 | `my_course_studio_courses` | `auth.uid()` | `20260928309000_course_studio.sql` |
 | `my_demand_scopes` | `auth.uid()` | `20260928305000_course_demand_forecasting.sql` |
+| `my_dining_balances` | `auth.uid()`, `private.dining_caller_school` | `20260929330000_dining.sql` |
 | `my_entitlements` | `auth.uid()` | `20260929070000_commercial_core.sql` |
 | `my_help_destinations` | `private.has_capability` | `20260928030000_help_inbox_closed_history.sql` |
 | `my_moderation_access` | `private.has_capability` | `20260928000000_moderation_queue_access.sql` |

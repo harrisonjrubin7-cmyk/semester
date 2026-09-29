@@ -152,6 +152,19 @@ export const FLAGS: readonly FlagDefinition[] = [
     // their own capability, which the database functions check per action.
     killSwitches: [],
   }),
+  flag({
+    key: 'module.dining',
+    description: 'Dining and the campus card: locations, hours and menus, meal plans, an append-only card ledger, mobile ordering and swipe sharing into the basic-needs pool (lib/dining).',
+    type: 'module', owner: 'Campus services', scopes: ['tenant', 'role'], highRisk: true, reviewAt: REVIEW,
+    rollout: 'Not before a school’s card-office vendor is connected in its sandbox tenant and a signed agreement names that system as the record; then one location, in preview for dining staff, before students.',
+    successCriteria: 'Every balance, plan and menu figure shows its source and age; no charge without a live partner connection; no duplicate charge on a retried order; no donor ever identifiable to a recipient.',
+    rollback: 'Engage kill.writeback for the school (new orders and gifts stop at once; cancellations and refunds still run), then set the tenant policy row off. Nothing already charged is reversed by the flag; staff cancel open orders, which refunds them.',
+    // No connection gate here: that gate reads integration connections, which
+    // a student cannot. The dining functions check the card-office partner
+    // connection themselves (public.dining_partner_connections, which every
+    // member of the school may read), and refuse to charge unless it is live.
+    killSwitches: ['kill.writeback', 'kill.integration_sync'],
+  }),
 
   // ── Release (temporary) ─────────────────────────────────────────────────
   flag({

@@ -245,6 +245,7 @@ export const ROLES: readonly RoleRow[] = [
   row({ role: 'student_accounts_officer', category: 'campus-office', mayDo: 'Publish limited billing/action prompts', mustNever: 'Student cost plans or payment details' }),
   row({ role: 'international_student_advisor', category: 'campus-office', mayDo: 'Publish compliance actions under approved scope', mustNever: 'Private student segments beyond approved source/need' }),
   row({ role: 'veterans_certifying_official', category: 'campus-office', mayDo: 'Publish certification actions under approved scope', mustNever: 'Private plans or unrelated data' }),
+  row({ role: 'dining_staff', category: 'campus-office', mayDo: 'Work one school’s mobile-order queue, pause a location, read the shared-swipe pool as totals (dining:operate)', mustNever: 'A student’s balance or plan, or who gave or used a shared swipe' }),
   row({ role: 'residence_life_staff', category: 'campus-office', mayDo: 'Publish residence/action information under scope', mustNever: 'Roommate detail, precise location, academic records' }),
   row({ role: 'resident_assistant', category: 'campus-office', mayDo: 'Publish approved resource/event information', mustNever: 'Resident academic or private data' }),
   row({ role: 'counseling_liaison', category: 'campus-office', mayDo: 'Publish resource-only actions', mustNever: 'Student records or private wellbeing data' }),

@@ -71,6 +71,7 @@ begin
     when 'uuid' then quote_literal(gen_random_uuid()::text) || '::uuid'
     when 'text' then quote_literal('x')
     when 'text[]' then '''{}''::text[]'
+    when 'uuid[]' then '''{}''::uuid[]'
     when 'jsonb' then '''{}''::jsonb'
     when 'boolean' then 'false'
     when 'integer' then '1'

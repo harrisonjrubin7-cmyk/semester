@@ -148,6 +148,14 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['decide_community_case', 'moderation', ['auth.uid()', 'private.has_capability']],
   ['decide_community_escalation', 'moderation', ['auth.uid()', 'private.has_capability']],
   ['delete_community_post', 'self-service', ['auth.uid()']],
+  ['dining_advance_order', 'admin', ['auth.uid()', 'private.dining_caller_school', 'private.has_capability']],
+  ['dining_cancel_order', 'financial', ['auth.uid()', 'private.dining_caller_school', 'private.has_capability']],
+  ['dining_disconnect_partner', 'admin', ['auth.uid()', 'private.dining_caller_school', 'private.has_capability']],
+  ['dining_donate_swipes', 'sharing', ['auth.uid()', 'private.dining_caller_school', 'private.dining_charge_gate']],
+  ['dining_order_queue', 'admin', ['private.dining_caller_school', 'private.has_capability']],
+  ['dining_place_order', 'financial', ['auth.uid()', 'private.dining_caller_school', 'private.dining_charge_gate']],
+  ['dining_pool_summary', 'admin', ['private.dining_caller_school', 'private.has_capability']],
+  ['dining_set_ordering', 'admin', ['private.dining_caller_school', 'private.has_capability']],
   ['draft_office_action', 'admin', ['auth.uid()', 'private.may_publish']],
   ['edit_community_post', 'self-service', ['auth.uid()']],
   ['export_my_data', 'self-service', ['auth.uid()']],
@@ -203,6 +211,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['my_community_standing', 'read-helper', ['auth.uid()']],
   ['my_course_studio_courses', 'read-helper', ['auth.uid()']],
   ['my_demand_scopes', 'read-helper', ['auth.uid()']],
+  ['my_dining_balances', 'read-helper', ['auth.uid()', 'private.dining_caller_school']],
   ['my_entitlements', 'read-helper', ['auth.uid()']],
   ['my_help_destinations', 'read-helper', ['private.has_capability']],
   ['my_moderation_access', 'read-helper', ['private.has_capability']],
@@ -284,6 +293,20 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
  * a file here that is applied moves its functions into the count.
  */
 export const SINCE_READING: readonly { file: string; functions: readonly string[] }[] = [
+  {
+    file: '20260929330000_dining.sql',
+    functions: [
+      'dining_advance_order',
+      'dining_cancel_order',
+      'dining_disconnect_partner',
+      'dining_donate_swipes',
+      'dining_order_queue',
+      'dining_place_order',
+      'dining_pool_summary',
+      'dining_set_ordering',
+      'my_dining_balances',
+    ],
+  },
   {
     file: '20260929320000_student_accounts.sql',
     functions: [

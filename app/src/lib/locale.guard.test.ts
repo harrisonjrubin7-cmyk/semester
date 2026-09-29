@@ -45,6 +45,10 @@ const DELIBERATE: Record<string, { count: number; why: string }> = {
     count: 1,
     why: "'en-CA' is the one locale whose short date is YYYY-MM-DD in local time; it is a comparison key, not display",
   },
+  'lib/dining/time.ts': {
+    count: 1,
+    why: "reads the calendar date and minute in a dining location's own time zone, to decide its plan week and whether it is open; it is arithmetic, never display",
+  },
   'lib/lookup.ts': {
     count: 2,
     why: "writes a sentence for the assistant's tool result, in the English the rest of that sentence is in",

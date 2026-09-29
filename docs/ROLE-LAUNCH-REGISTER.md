@@ -16,17 +16,17 @@ evidence. A role is enabled for a customer only at **launch approved**.
 
 | State | Meaning | Roles at this state | Roles holding this rung |
 | --- | --- | ---: | ---: |
-| defined | Role, purpose, scope, and boundaries documented | 0 | 68 |
-| modeled | Role/capability/scope exists in authorization model | 0 | 68 |
-| provisionable | Admin/SCIM/SSO/manual workflow can assign and revoke it | 45 | 68 |
+| defined | Role, purpose, scope, and boundaries documented | 0 | 69 |
+| modeled | Role/capability/scope exists in authorization model | 0 | 69 |
+| provisionable | Admin/SCIM/SSO/manual workflow can assign and revoke it | 46 | 69 |
 | usable | Role-specific screens and workflow are implemented | 3 | 23 |
-| secure | Positive and negative authorization tests pass | 18 | 45 |
+| secure | Positive and negative authorization tests pass | 18 | 46 |
 | supportable | Training, runbook, audit trail, support routing, and recovery exist | 2 | 2 |
 | launch-approved | All required role acceptance criteria and sign-offs pass | 0 | 0 |
 
 ## The finding
 
-All 68 roles are at least **provisionable**, through one path: the
+All 69 roles are at least **provisionable**, through one path: the
 operations console’s `role-grant` duty (`supabase/migrations/20260929110000_console_approvals_and_break_glass.sql`).
 A request names the person, the role, the scope and the expiry; the security
 seat approves it, never the requester; `console_act()` writes the audit event
@@ -85,6 +85,7 @@ Two further limits on what the columns below prove:
 | `student_accounts_officer` | provisionable | ✓ ✓ ✓ · ✓ · · | `institution_action:publish`<br>`bursar:post` | — | `student_accounts.check.sql` | — | — | Publish limited billing/action prompts | Student cost plans or payment details |
 | `international_student_advisor` | provisionable | ✓ ✓ ✓ · · · · | `institution_action:publish` | — | — | — | — | Publish compliance actions under approved scope | Private student segments beyond approved source/need |
 | `veterans_certifying_official` | provisionable | ✓ ✓ ✓ · · · · | `institution_action:publish` | — | — | — | — | Publish certification actions under approved scope | Private plans or unrelated data |
+| `dining_staff` | provisionable | ✓ ✓ ✓ · ✓ · · | `dining:operate` | — | `dining.check.sql` | — | — | Work one school’s mobile-order queue, pause a location, read the shared-swipe pool as totals (dining:operate) | A student’s balance or plan, or who gave or used a shared swipe |
 | `residence_life_staff` | provisionable | ✓ ✓ ✓ · · · · | `institution_action:publish` | — | — | — | — | Publish residence/action information under scope | Roommate detail, precise location, academic records |
 | `resident_assistant` | provisionable | ✓ ✓ ✓ · ✓ · · | `resource:publish` | — | `officeactions.check.sql` | — | — | Publish approved resource/event information | Resident academic or private data |
 | `counseling_liaison` | provisionable | ✓ ✓ ✓ · · · · | `resource:publish` | — | — | — | — | Publish resource-only actions | Student records or private wellbeing data |
@@ -101,8 +102,8 @@ Two further limits on what the columns below prove:
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `university_admin` | secure | ✓ ✓ ✓ ✓ ✓ · · | `tenant:configure`<br>`ai:configure`<br>`source:approve`<br>`audit:read`<br>`integration:view`<br>`integration:approve`<br>`killswitch:engage`<br>`sponsor:review` | `app/src/components/institutional/ControlPlane.tsx`<br>`app/src/components/institutional/IntegrationDashboard.tsx` | `canonical-display.check.sql`<br>`commercial.check.sql`<br>`console-approvals.check.sql`<br>`console-control-plane.check.sql`<br>`evidence-graphs.check.sql`<br>`feature_cohorts.check.sql`<br>`governance.check.sql`<br>`gtm.check.sql`<br>`institutional-foundation.check.sql`<br>`integration-control-plane.check.sql`<br>`integration-quality.check.sql`<br>`intelligence-policy.check.sql`<br>`lti-capability.check.sql`<br>`role-grant-audit.check.sql`<br>`student_accounts.check.sql`<br>`tenant-plan.check.sql`<br>`tenant-rollout.check.sql`<br>`tenant-sso-policy.check.sql`<br>`trust-room.check.sql` | — | `docs/launch/FIRST-DAY-CHECKLISTS.md`<br>`docs/SSO-TENANT-ONBOARDING.md` | Configure tenant, modules, branding, approved sources, policy, aggregate dashboards | Unrestricted education-record browsing |
 | `department_admin` | provisionable | ✓ ✓ ✓ · · · · | — | — | — | — | — | Manage approved department content and scoped configuration | Other department/tenant records |
-| `university_staff` | secure | ✓ ✓ ✓ ✓ ✓ · · | `support:read`<br>`help_request:respond` | `app/src/components/HelpInbox.tsx` | `console-approvals.check.sql`<br>`console-control-plane.check.sql`<br>`support-access.check.sql` | — | — | Perform only an explicitly granted, scoped duty | Implicit global authority |
-| `integration_admin` | secure | ✓ ✓ ✓ ✓ ✓ · · | `integration:view`<br>`integration:configure`<br>`integration:sync`<br>`integration:replay`<br>`integration:reconcile` | `app/src/components/institutional/IntegrationDashboard.tsx` | `canonical-display.check.sql`<br>`integration-control-plane.check.sql`<br>`integration-hardening.check.sql`<br>`integration-quality.check.sql`<br>`integration-rls-matrix.check.sql` | `docs/INTEGRATION-OPERATOR-RUNBOOK.md` | — | Configure integrations, security policy, audit/access processes | Student content unless separately authorized and audited |
+| `university_staff` | secure | ✓ ✓ ✓ ✓ ✓ · · | `support:read`<br>`help_request:respond` | `app/src/components/HelpInbox.tsx` | `console-approvals.check.sql`<br>`console-control-plane.check.sql`<br>`dining.check.sql`<br>`support-access.check.sql` | — | — | Perform only an explicitly granted, scoped duty | Implicit global authority |
+| `integration_admin` | secure | ✓ ✓ ✓ ✓ ✓ · · | `integration:view`<br>`integration:configure`<br>`integration:sync`<br>`integration:replay`<br>`integration:reconcile` | `app/src/components/institutional/IntegrationDashboard.tsx` | `canonical-display.check.sql`<br>`dining.check.sql`<br>`integration-control-plane.check.sql`<br>`integration-hardening.check.sql`<br>`integration-quality.check.sql`<br>`integration-rls-matrix.check.sql` | `docs/INTEGRATION-OPERATOR-RUNBOOK.md` | — | Configure integrations, security policy, audit/access processes | Student content unless separately authorized and audited |
 | `implementation_manager` | provisionable | ✓ ✓ ✓ · ✓ · · | `tenant:implement`<br>`console:operate` | — | `console-control-plane.check.sql`<br>`governance.check.sql`<br>`help-requests.check.sql` | — | `docs/SSO-TENANT-ONBOARDING.md` | Configure sandbox tenant and launch setup | Broad production student-data access |
 | `data_steward` | provisionable | ✓ ✓ ✓ · ✓ · · | `data_request:handle`<br>`console:operate` | — | `console-control-plane.check.sql`<br>`expansion.check.sql`<br>`governance.check.sql` | — | — | Process data requests under strict workflow | AI memories and student plans absent required authority |
 | `portfolio_council` | provisionable | ✓ ✓ ✓ · ✓ · · | `governance:decide` | — | `governance.check.sql` | — | — | Decide governance items put to the council | Any individual student record |
@@ -223,6 +224,7 @@ One row per row of `public.role_capabilities`. A capability's checks are the SQL
 | `student_accounts_officer` | `bursar:post` | — | — |
 | `international_student_advisor` | `institution_action:publish` | — | — |
 | `veterans_certifying_official` | `institution_action:publish` | — | — |
+| `dining_staff` | `dining:operate` | — | — |
 | `residence_life_staff` | `institution_action:publish` | — | — |
 | `resident_assistant` | `resource:publish` | — | — |
 | `counseling_liaison` | `resource:publish` | — | — |

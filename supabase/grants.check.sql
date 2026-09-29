@@ -584,7 +584,23 @@ declare
     'student_hold_status(want_student uuid)',
     'respond_to_aid_award(want_award uuid, want_accept boolean)',
     'record_aid_disbursement(want_award uuid, want_cents bigint, want_key text)',
-    'start_student_payment(want_term text, want_cents bigint, want_key text)'
+    'start_student_payment(want_term text, want_cents bigint, want_key text)',
+    -- The nine in 20260929330000_dining.sql. Each takes the caller from
+    -- auth.uid() and their school from profiles.school_id, never a
+    -- parameter. The three that charge (placing, giving) also check the flag,
+    -- both money kill switches and a live card-office connection; the order
+    -- queue and pool functions staff use check `dining:operate` over the school;
+    -- disconnecting checks `integration:configure`; the balance read returns
+    -- the caller's own rows. `dining.check.sql` attempts each refusal.
+    'dining_place_order(want_location uuid, want_items uuid[], want_pay text, want_key text)',
+    'dining_cancel_order(want_order uuid, want_reason text)',
+    'dining_advance_order(want_order uuid, want_status text)',
+    'dining_set_ordering(want_location uuid, want_enabled boolean)',
+    'dining_donate_swipes(want_swipes integer, want_consent text, want_key text)',
+    'dining_pool_summary()',
+    'dining_order_queue()',
+    'dining_disconnect_partner()',
+    'my_dining_balances()'
   ];
   extra text;
   missing text;

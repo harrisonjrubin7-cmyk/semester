@@ -93,8 +93,8 @@ charter reviews later than its flag, or when a `build` decision rests on a `part
 [DATA-STEWARDSHIP.md](DATA-STEWARDSHIP.md)).
 
 Chartered today: `module.integration_dashboard`, `module.source_freshness_cards`, `module.institutional_operations`,
-`module.campaign_manager`, `module.sponsorship`, `module.student_accounts`, `ops.external_ai_generation`,
-`ops.data_upload`, `ops.code_sandbox_enabled`.
+`module.campaign_manager`, `module.sponsorship`, `module.student_accounts`, `module.dining`,
+`ops.external_ai_generation`, `ops.data_upload`, `ops.code_sandbox_enabled`.
 
 ## Product charter template
 

@@ -247,7 +247,8 @@ begin
   -- 20260928308000_support_shares.sql (D1).
   -- 63 before 20260929000000_commercial_core added five: finance_operator,
   -- customer_success, compliance_owner, content_owner, billing_contact.
-  perform pg_temp.counted('a signed-in account reads the sixty-eight roles', n, 68);
+  -- 68 before 20260929330000_dining.sql added `dining_staff`.
+  perform pg_temp.counted('a signed-in account reads the sixty-nine roles', n, 69);
   select count(*) into n from public.role_capabilities;
   -- Twenty original rows, thirty-seven expansion rows, eight from the
   -- integration control plane (four for integration_admin, three for
@@ -278,7 +279,8 @@ begin
   -- `registration:administer`.
   -- 129 before 20260929320000_student_accounts.sql added three:
   -- bursar:post, aid:manage and hold:read, one office each.
-  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 132);
+  -- 132 before 20260929330000_dining.sql added dining_staff → dining:operate.
+  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 133);
 
   perform pg_temp.become_anon();
   perform pg_temp.refused('a signed-out visitor cannot read the matrix',
