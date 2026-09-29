@@ -77,9 +77,12 @@ const STAFF = ['moderation', 'agreements', 'volunteers', 'console'] as const;
  * when both its build flag and the school's own switch are on. The student
  * account and dining are the same case with a school's module flag for the
  * switch: off at every school today, each opened from its student-kept
- * counterpart (Money, Meal plan) rather than offered as a tile.
+ * counterpart (Money, Meal plan) rather than offered as a tile. The
+ * registration transaction and the gradebook of record are the same again,
+ * with a writeback flag for the switch, reached from the Registration planner
+ * and the Grades tab.
  */
-const SWITCHED = ['community', 'volunteer', 'studentAccount', 'dining'] as const;
+const SWITCHED = ['community', 'volunteer', 'studentAccount', 'dining', 'registration', 'gradebook'] as const;
 
 /**
  * Pages inside the Me control surface, which lists them itself
@@ -89,16 +92,7 @@ const SWITCHED = ['community', 'volunteer', 'studentAccount', 'dining'] as const
  */
 const ME_CONTROLS = ['activity', 'whatsnew', 'recovery'] as const;
 
-/**
- * School modules behind a writeback flag that is off at every school today:
- * the registration transaction and the gradebook of record. Nested in
- * `lib/nav.ts` (see the note on `registration` in `NESTED`), reached from the
- * Registration planner and the Grades tab, never a shelf tile that opens onto
- * "your school has not turned this on".
- */
-const SCHOOL_MODULES = ['registration', 'gradebook'] as const;
-
-const NOT_DESTINATIONS = new Set<string>([...SHELL, ...FIRST_RUN, ...DETAIL, ...SETTINGS, ...STAFF, ...SWITCHED, ...ME_CONTROLS, ...SCHOOL_MODULES]);
+const NOT_DESTINATIONS = new Set<string>([...SHELL, ...FIRST_RUN, ...DETAIL, ...SETTINGS, ...STAFF, ...SWITCHED, ...ME_CONTROLS]);
 
 /**
  * The union, read out of the file rather than imported.

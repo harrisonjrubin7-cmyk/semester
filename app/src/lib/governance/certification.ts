@@ -217,7 +217,7 @@ export const DOMAINS: readonly Domain[] = [
     checks: shared(tested('supabase/registration_transaction.check.sql', 'Enroll, waitlist, drop, withdraw, holds and overrides, allowed and denied; the last seat cannot be taken twice.')),
     flags: ['writeback.registration_submit', 'integration.sis_read'], highRisk: true,
     activation: 'conditional', activationCondition: 'For selected students and the registrar role, after registrar approval.', pilotEvidence: null,
-    toComplete: `An SIS adapter to send committed changes; holds and completions synced from the SIS; per-student time tickets; no screen yet. ${VERIFY}`,
+    toComplete: `An SIS adapter to send committed changes; holds and completions synced from the SIS; per-student time tickets; ${VERIFY}`,
   },
   {
     key: 'gradebook', name: 'Official gradebook and grade passback', status: 'built', owner: 'data',
@@ -226,7 +226,7 @@ export const DOMAINS: readonly Domain[] = [
     checks: shared(tested('supabase/gradebook.check.sql', 'Drafts visible only to the course’s authors, released grades to their student, append-only history, passback of released versions only.')),
     flags: ['writeback.lms_grade_passback'], highRisk: true,
     activation: 'conditional', activationCondition: 'Only after faculty and registrar approval.', pilotEvidence: null,
-    toComplete: `A live LTI grade-passback sender; no screen yet. \`Grades.tsx\` stays the student’s own arithmetic. ${VERIFY}`,
+    toComplete: `A live LTI grade-passback sender. \`Grades.tsx\` stays the student’s own arithmetic. ${VERIFY}`,
   },
   {
     key: 'student_accounts', name: 'Student accounts, payments and financial aid', status: 'built', owner: 'finance',
@@ -235,7 +235,7 @@ export const DOMAINS: readonly Domain[] = [
     checks: shared(tested('supabase/student_accounts.check.sql', 'Ledger, holds, plans, refunds and aid, allowed and denied; work-study never reduces the balance.')),
     flags: ['module.student_accounts', 'integration.erp_bursar_actions'], highRisk: true,
     activation: 'off', activationCondition: 'Off unless the payment provider, controls and a finance owner are active, and the institution configures a compliant aid workflow.', pilotEvidence: null,
-    toComplete: `A real payment provider and its signed webhook, an aid-system adapter, and a held finance seat; no screen yet. ${VERIFY}`,
+    toComplete: `A real payment provider and its signed webhook, an aid-system adapter, and a held finance seat; ${VERIFY}`,
   },
   {
     key: 'dining', name: 'Dining and campus card', status: 'built', owner: 'product',
@@ -244,7 +244,7 @@ export const DOMAINS: readonly Domain[] = [
     checks: shared(tested('supabase/dining.check.sql', 'Plans, ledger, orders held to capacity and the shared-swipe pool, allowed and denied; staff cannot tell a shared swipe.')),
     flags: ['module.dining'], highRisk: true,
     activation: 'conditional', activationCondition: 'When a campus-card or dining partner configuration is ready.', pilotEvidence: null,
-    toComplete: `A real card-office vendor adapter and a sync schedule; no screen yet. ${VERIFY}`,
+    toComplete: `A real card-office vendor adapter and a sync schedule; ${VERIFY}`,
   },
 ];
 
@@ -275,7 +275,7 @@ export interface GateItem {
 const g = (id: string, section: GateSection, item: string, state: State, evidence: string | null, note: string, p0 = false): GateItem => ({ id, section, item, state, evidence, note, p0 });
 
 export const GO_GATE: readonly GateItem[] = [
-  g('P-1', 'product', 'Every planned module has UI, service layer, schema, API and permissions.', 'partial', 'app/src/lib/governance/certification.ts', 'Every domain has a service layer, schema and permissions; registration, gradebook, student accounts and dining have no screen yet, and none has a live vendor or SIS adapter.', true),
+  g('P-1', 'product', 'Every planned module has UI, service layer, schema, API and permissions.', 'partial', 'app/src/lib/governance/certification.ts', 'Every domain has a service layer, schema, permissions and a screen (registration, gradebook, student account and dining screens arrived last, each saying in one sentence when its school has it off); none has a live vendor, payment or SIS adapter behind it.', true),
   g('P-2', 'product', 'Every module has loading, empty, error, stale and degraded states.', 'partial', 'docs/EMPTY-LOADING-ERROR-SUCCESS-STATES.md', 'Specified; not audited module by module.'),
   g('P-3', 'product', 'Every module has tenant, role, cohort and feature configuration.', 'partial', 'app/src/lib/flags.ts', 'Tenant, cohort, role and feature scopes exist in the evaluator and the database; not every module is yet behind a flag.'),
   g('T-1', 'technical', 'Unit tests for all domain logic.', 'partial', 'REGRESSION-CHECKLIST.md', 'A large suite runs in order and shuffled; unbuilt domains have none.'),
