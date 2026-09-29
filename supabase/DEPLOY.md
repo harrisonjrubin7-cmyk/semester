@@ -481,6 +481,23 @@ failed) and `account-health` nightly at 05:41 UTC
 `20260929080000_commercial_automation.sql` is applied and the two
 `cron.schedule` statements are run; `health.sql` expects both.
 
+**Applied.** Both migrations were on the project when #942 merged — the
+GitHub integration applies main's migrations on merge, and the applied
+functions were checked against the merged text (the one-open-checkout index,
+the reuse in `begin_checkout`, the paid-invoice and restricted-case branches
+of `apply_payment_event`). The two `cron.schedule` statements were then run
+by hand. Read off `cron.job` at 02:51 UTC on 29 September 2026:
+
+    account-health       41 5 * * *    active = true
+    commercial-dunning   23 * * * *    active = true
+
+`public.run_dunning()` was called once by hand at the same moment, exactly
+as the job calls it, and answered `{"reminders": 0, "restricted": 0,
+"final_notices": 0}`: correct on a project with no failed payment, not a
+failure. The first `account-health` snapshot lands at 05:41 UTC. The catalog
+seeded as the migration wrote it: nine plans, nine prices, thirteen
+`cta_routes`.
+
 ## Live on merge, off until configured: `lead-intake`
 
 The company site's forms post here:
