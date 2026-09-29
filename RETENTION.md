@@ -417,29 +417,36 @@ now — which [`docs/trust/DPA-CHECKLIST.md`](docs/trust/DPA-CHECKLIST.md)
 recorded as "backup retention not recorded" and the evidence register counted
 as the gap in its *Backups* class. This section is the lifecycle.
 
-**What they are.** Daily logical backups taken by the provider on its
-schedule, encrypted at rest, in the project's own region (us-west-2; `DR-03`
-in the maturity register says the same), and readable by nobody in the
-ordinary running of the service: no code in this repository, no Edge Function
-and no browser role can open one. A backup is used for exactly one thing,
-restoring the database after the day the data is wrong, and
-[`RESTORE.md`](RESTORE.md) is the procedure.
+**What they are.** The provider's own backups of the database — the
+physical, dashboard-side copies that [`RESTORE.md`](RESTORE.md) distinguishes
+from the logical dump the CI rehearsal restores; this section is about the
+provider's copies and not the rehearsal's — taken daily on its schedule,
+encrypted at rest, in the project's own region (us-west-2; `DR-03` in the
+maturity register says the same), and readable by nobody in the ordinary
+running of the service: no code in this repository, no Edge Function and no
+browser role can open one. A backup is used for exactly one thing, restoring
+the database after the day the data is wrong, and `RESTORE.md` is the
+procedure.
 
 **How long they live.** Each daily backup expires **7 days** after it is
-taken, on a rolling schedule the provider runs. The number is the plan tier's,
-as recorded for BCDR-01 in
-[`docs/market-readiness/HECVAT_DRAFT_RESPONSE.md`](docs/market-readiness/HECVAT_DRAFT_RESPONSE.md),
-and `app/src/lib/retention.test.ts` holds the two files to the same number.
-Point-in-time recovery, which would keep a continuous log for 7, 14 or 28
-days, is not confirmed to be on: the table in `RESTORE.md` is where that gets
-written once somebody reads it off the dashboard, and if it is switched on,
-its retention becomes the number here.
+taken, on a rolling schedule the provider runs. **That number is the plan
+tier's documentation, not yet read off the dashboard on any date.**
+`RESTORE.md` says the tier, the schedule and the enabled features are
+dashboard settings nothing in this repository can read, and its table is where
+the verified figure goes with a date and an owner; BCDR-01 in
+[`docs/market-readiness/HECVAT_DRAFT_RESPONSE.md`](docs/market-readiness/HECVAT_DRAFT_RESPONSE.md)
+repeats the same unverified figure and says so. `app/src/lib/retention.test.ts`
+holds the two files to one number; it cannot verify the provider, and a
+reader should not take the test for that. Point-in-time recovery, which would
+keep a continuous log for 7, 14 or 28 days, is not confirmed to be on; if it
+is switched on, its retention becomes the number here.
 
 **What that means for a deletion.** When a student deletes a note or their
 account, the live rows go at once, as the sections above say. The copy of
 those rows in a backup taken before the deletion stays until that backup
 expires, so **a deleted row outlives its deletion by at most the backup
-retention — 7 days — and then by nothing.** No process reads it in that
+retention — 7 days — and then by nothing, with one exception: a restore from a
+backup taken before the deletion, below.** No process reads it in that
 window, and nothing restores it on its own. This is the period
 [`docs/legal/TERMS-OF-SERVICE-DRAFT.md`](docs/legal/TERMS-OF-SERVICE-DRAFT.md)
 refers to as "backups kept for the period our Privacy Policy states", and the
@@ -452,10 +459,18 @@ expires by itself is what keeps that sentence true.
 brings the deleted rows back, because the backup predates the delete. A
 restore is therefore not finished when the fingerprints match: the deletions
 and the sweeps that ran between the backup time and the restore have to be run
-again. Today nothing lists them — the deletion record that `privacy.ts`
-describes keeps the date and the row counts and deliberately no account — so
-that step is owed in `RESTORE.md`'s procedure, and this file records the
-obligation rather than pretending the drill covers it.
+again, and a row that a restore brought back can outlive its deletion by more
+than the backup retention until they are. `RESTORE.md` now carries that as
+its own step, *Re-apply the deletions made after the backup point*, with what
+it can use today — the sweeps, which re-run on their schedule, and whatever
+was kept outside the database — and what it cannot: a student's own deletion of a note
+or an account leaves a record with the date and the row counts and
+deliberately no account, so a self-deletion inside that window cannot be
+replayed from anything the tree holds, and the step says to tell the students
+concerned rather than pretend. A durable deletion record that a restore
+cannot undo — it has to live outside the database being restored — is owed
+(`RM-02`'s neighbour, not its twin); until it exists the promise above carries
+this exception, and the privacy-policy draft says so in the same words.
 
 **Not yet true.** No drill has restored production data, so the recovery point
 and time in `RESTORE.md` are unmeasured; the 7 days is the tier's number, not

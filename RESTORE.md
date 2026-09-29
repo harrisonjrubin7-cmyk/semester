@@ -210,6 +210,52 @@ Repeat after any plan change, and at least once a term.
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | | | | | | | | | not yet verified |
 
+## Re-apply the deletions made after the backup point
+
+This step is for a restore that is real, not the drill: the day production
+is put back from a backup. It exists because of what `RETENTION.md` promises
+under *Backups* — that a deleted row outlives its deletion by at most the
+backup retention — and a restore is the one way to break that promise: a
+backup taken before a deletion holds the rows, and restoring it brings them
+back, live, as though nothing had been deleted. A restore is therefore not
+finished when the fingerprints match and row-level security is on. It is
+finished when the deletions and sweeps that ran between the backup time and
+the restore have been run again.
+
+1. **Fix the window.** The backup's own time is the start; the moment the
+   restored database went live is the end. Everything below is about what
+   happened in between.
+2. **Let the sweeps catch up.** The `pg_cron` jobs in
+   [`supabase/scheduler.sql`](supabase/scheduler.sql) — tombstones, invite
+   retention, abandoned sign-ups, audit retention, LTI nonces, capture
+   expiry — re-run on their schedule and re-apply every clock `RETENTION.md`
+   lists. Check `cron.job` is populated on the restored project (a restore
+   does not always bring it back; block 6 of `supabase/health.sql`) and let
+   one cycle of each run before calling this done.
+3. **Replay the deletions that can be identified from outside the
+   database.** Every row written after the backup point went with the restore
+   — the audit events, the console's archive and its manifests included, since
+   they live in the same database — so nothing inside the restored project can
+   list the window's deletions. What can is whatever was kept outside it: the
+   operator's own notes, the support mailbox, GitHub for provisioning changes
+   made through the repository, and a manifest only if one had been exported
+   off the project before the restore. Re-apply each deletion those name.
+4. **Say what cannot be replayed.** A student's own deletion of a note, a
+   task or an account leaves a record with the date and the row counts and
+   deliberately no account id — that is the privacy design, and it is the
+   reason this step cannot find them. Those rows are back and nothing in the
+   tree can name them. Tell the students concerned, in the notice the incident
+   process prescribes, that a deletion they made in the window may need to be
+   made again; do not describe it as anything less than that.
+5. **Write it down.** The window, which sweeps ran, which deletions were
+   re-applied from what record, and how many could not be identified, filed
+   with the restore record below.
+
+A durable deletion record that survives a restore — it has to live outside
+the database being restored, which nothing in the tree does today — would
+turn step 4 into step 3. It is owed, and `RETENTION.md` says so; until it exists,
+the promise carries this exception and the privacy-policy draft states it.
+
 ## After the drill, fill this in
 
 Nothing below is known yet, and saying so is the point of the table. A row

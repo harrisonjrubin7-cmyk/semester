@@ -1924,3 +1924,36 @@ nothing open. That is the wrong shape: the waivers are the decision.
   next-review date; the decision record it is attached to does. The
   disclosure is not yet held to `docs/pilot/KNOWN-LIMITATIONS.md`, which is
   where it would be published.
+
+## D-118 · The backup retention is the tier's documentation until the dashboard is read, and a restore re-applies the deletions
+
+**Decided 29 Sep 2026.** Codex's review of #940 arrived after the merge with
+three findings, all right, all about D-116's *Backups* section saying more
+than the tree can show.
+
+- **Seven days is not a verified number.** `RESTORE.md` had already said the
+  plan tier, the schedule and the enabled features are dashboard settings
+  nothing in the repository can read; BCDR-01 in the HECVAT draft repeated the
+  same figure with no date; and the retention test that held the two files to
+  one number proved consistency, not the provider. The section now says the
+  figure is the tier's documentation, not yet read off the dashboard on any
+  date, and that the test cannot verify the provider; BCDR-01 says the same;
+  and the privacy-policy draft brackets the number as *verify on the provider
+  dashboard before publishing*. The number is unchanged. What changed is
+  whose number it is said to be.
+- **A restore can break "at most seven days".** A backup taken before a
+  deletion holds the rows, and restoring it brings them back until the
+  deletions are re-applied — a step `RESTORE.md` did not carry and the
+  section itself said nothing recorded. The promise now carries that one
+  exception in `RETENTION.md` and in the privacy-policy draft, and
+  `RESTORE.md` carries the step: let the sweeps re-run, replay what the
+  console's manifests and the operator's notes can identify, and tell the
+  students whose own deletions cannot be found — because their deletion
+  record deliberately holds no account, and that is not changed here. A
+  durable deletion record that survives a restore is owed, named as such.
+- **"Logical" was the wrong word.** `RESTORE.md` reserves it for the CI
+  rehearsal's dump and calls the provider's copies physical; the section now
+  says which it means.
+- **Held by test:** `retention.test.ts` reads the unverified-figure sentence
+  in both files, the exception in the promise, the re-apply step in
+  `RESTORE.md`, and the verify marker and the exception in the draft policy.
