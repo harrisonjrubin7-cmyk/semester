@@ -22,10 +22,10 @@ never a person, and a seat is held only once somebody accepted it in writing.
 
 | Status | Meaning | Entries |
 | --- | --- | ---: |
-| current | Read on the review date, and stands | 51 |
+| current | Read on the review date, and stands | 52 |
 | draft | The authoritative version, but not yet fit to act on | 2 |
 | missing | No authoritative version exists; the gap says what would close it | 1 |
-| **total** |  | **54** |
+| **total** |  | **55** |
 
 `version` counts reviews of the entry — the decision that this path is the
 authoritative one and its content was read and stands — not the document’s
@@ -100,6 +100,7 @@ What the repository also runs on, and the brief’s list did not name.
 | Market leadership register | [`docs/MARKET-LEADERSHIP.md`](docs/MARKET-LEADERSHIP.md) | current | `founder` | 1 | 2026-09-28 | 2026-12-28 | — | `D-115` |
 | Operational readiness pack | [`docs/OPERATIONAL-READINESS-PACK.md`](docs/OPERATIONAL-READINESS-PACK.md) | current | `engineering` | 1 | 2026-09-28 | 2026-10-28 | — | `D-115` |
 | Privacy impact assessment | [`docs/operating-model/PRIVACY-IMPACT-ASSESSMENT.md`](docs/operating-model/PRIVACY-IMPACT-ASSESSMENT.md) | current | `privacy` | 1 | 2026-09-29 | 2026-10-29 | — | `D-123` |
+| AI integration playbook | [`docs/operating-model/AI-INTEGRATION-PLAYBOOK.md`](docs/operating-model/AI-INTEGRATION-PLAYBOOK.md) | current | `trust` | 1 | 2026-09-29 | 2026-12-29 | — | `D-128` |
 
 ## Notes and gaps
 
@@ -157,6 +158,7 @@ What the repository also runs on, and the brief’s list did not name.
 - **Market leadership register** — Rendered from app/src/lib/ops/leadership.ts: the fourteen plays, the thirteen one-X promises and the shared-services rule, the revenue lines and the lines not crossed, the friction index against the first-year measures, No Wrong Door against the help routes, the Launch System against the ninety-day programme, the benchmark test, and the faculty playbook — each pointed at what the tree holds, with a standing. Nothing on it says Semester is a whole platform; the count of promises kept is the finding. Read next: [`ops/strategic-boundaries/README.md`](ops/strategic-boundaries/README.md), [`docs/DO-NOT-BUILD.md`](docs/DO-NOT-BUILD.md), [`docs/FIRST-YEAR-SUCCESS.md`](docs/FIRST-YEAR-SUCCESS.md), [`docs/90-DAY-LAUNCH-PROGRAM.md`](docs/90-DAY-LAUNCH-PROGRAM.md).
 - **Operational readiness pack** — Rendered from app/src/lib/ops/readiness-pack.ts: the five workstreams and nine decision domains as council seats, the seven pillars of production safety with every checklist item resting on register rows and launch gates and scored by the test, the dependency register (nothing tested), the eighteen minimum runbooks and what stands in for each, the launch gate whose verdict is computed — NO-GO today — the review packet, the sign-off record (nothing signed), the cadences and the first twelve initiatives. It adds no gate to the twelve of launchreadiness.ts; it reads them. Read next: [`docs/LAUNCH-READINESS-COUNCIL.md`](docs/LAUNCH-READINESS-COUNCIL.md), [`docs/RUNBOOKS.md`](docs/RUNBOOKS.md), [`docs/operating-model/OPERATING-RHYTHM.md`](docs/operating-model/OPERATING-RHYTHM.md), [`docs/PROOF-CALENDAR.md`](docs/PROOF-CALENDAR.md).
 - **Privacy impact assessment** — Rendered from app/src/lib/governance/pia.ts: the eleven questions a surface that touches student data answers before it ships, five surfaces answered against the tree (support tickets, beta feedback, the pilot figures, AI conversations, billing) with the answers a test holds told apart from the ones only written, six surfaces owed, and the gate line the pull-request template asks of every new module, held there by the test. The privacy seat is vacant; the answers are the founder’s reading until it reads them. Read next: [`docs/operating-model/RISK-GOVERNANCE.md`](docs/operating-model/RISK-GOVERNANCE.md), [`docs/PRODUCT-ANALYTICS-DATA-ETHICS.md`](docs/PRODUCT-ANALYTICS-DATA-ETHICS.md), [`docs/MODULE-PRIVACY-MODEL.md`](docs/MODULE-PRIVACY-MODEL.md), [`RETENTION.md`](RETENTION.md).
+- **AI integration playbook** — Rendered from app/src/lib/governance/ai-playbook.ts: the ten agentic workflows with their action tier, prohibitions held to the intake refusals and ROI scorecards; the human-confirmation matrix held to its own tiers; the four data classes checked against what the classification gate does to each tier; the vendor scorecard as code (scoreVendor), with every AI subprocessor on it and none scored; onboarding held to FirstGoal; and the definition of done held to AI_RELEASE_GATE. Most workflows are tested as non-AI workflows and have no agent yet; the page says so. Read next: [`docs/operating-model/AI-ASSURANCE.md`](docs/operating-model/AI-ASSURANCE.md), [`docs/operating-model/AI-LIFECYCLE-GATES.md`](docs/operating-model/AI-LIFECYCLE-GATES.md), [`docs/trust/DPA-CHECKLIST.md`](docs/trust/DPA-CHECKLIST.md), [`docs/ONBOARDING-AND-CONTEXTUAL-HELP.md`](docs/ONBOARDING-AND-CONTEXTUAL-HELP.md).
 
 ## What every controlled document displays
 

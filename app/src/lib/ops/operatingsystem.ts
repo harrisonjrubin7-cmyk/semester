@@ -841,6 +841,20 @@ export const SOURCES: readonly Source[] = [
     alsoRead: ['docs/operating-model/RISK-GOVERNANCE.md', 'docs/PRODUCT-ANALYTICS-DATA-ETHICS.md', 'docs/MODULE-PRIVACY-MODEL.md', 'RETENTION.md'],
     note: 'Rendered from app/src/lib/governance/pia.ts: the eleven questions a surface that touches student data answers before it ships, five surfaces answered against the tree (support tickets, beta feedback, the pilot figures, AI conversations, billing) with the answers a test holds told apart from the ones only written, six surfaces owed, and the gate line the pull-request template asks of every new module, held there by the test. The privacy seat is vacant; the answers are the founder’s reading until it reads them.',
   },
+  {
+    id: 'ai-playbook',
+    category: 'AI integration playbook',
+    path: 'docs/operating-model/AI-INTEGRATION-PLAYBOOK.md',
+    status: 'current',
+    owner: 'trust',
+    version: 1,
+    lastReviewed: '2026-09-29',
+    nextReview: '2026-12-29',
+    supersedes: [],
+    decisions: ['D-128'],
+    alsoRead: ['docs/operating-model/AI-ASSURANCE.md', 'docs/operating-model/AI-LIFECYCLE-GATES.md', 'docs/trust/DPA-CHECKLIST.md', 'docs/ONBOARDING-AND-CONTEXTUAL-HELP.md'],
+    note: 'Rendered from app/src/lib/governance/ai-playbook.ts: the ten agentic workflows with their action tier, prohibitions held to the intake refusals and ROI scorecards; the human-confirmation matrix held to its own tiers; the four data classes checked against what the classification gate does to each tier; the vendor scorecard as code (scoreVendor), with every AI subprocessor on it and none scored; onboarding held to FirstGoal; and the definition of done held to AI_RELEASE_GATE. Most workflows are tested as non-AI workflows and have no agent yet; the page says so.',
+  },
 ];
 
 /**

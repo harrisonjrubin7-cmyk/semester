@@ -2327,3 +2327,43 @@ and named a remediation register for them as the audit's first artifact.
   (low).
 - **Not changed:** the allowlist, every grant, every policy; the migration is
   not yet applied to production.
+
+## D-128 · The 2026 AI integration playbook is held to the tree, and its vendor scorecard is code
+
+**Decided 29 Sep 2026.** Three documents arrived on 29 September — the 2026 AI
+integration playbook, its ten-workflow summary, and a brief on integrating
+Semester Intelligence further — and are kept under `docs/expansion/` as
+supplied. They are held to the tree the way D-111 held the AI assurance
+matrix: data in `app/src/lib/governance/ai-playbook.ts`, rendered to
+`docs/operating-model/AI-INTEGRATION-PLAYBOOK.md` by its test, every cited
+file existing, every status held to the kind of file it cites, and the PDFs
+never their own evidence.
+
+- **Crosswalk, not a second register.** A workflow's prohibited decision
+  names the `PROHIBITED_STARTING_SCOPE` entry that already refuses it; four
+  prohibitions the playbook names (automated hiring decisions, ranking
+  students for employers, auto-publishing policy, deploying code) are refused
+  by no intake rule, and the page says so. The definition of done names the
+  `AI_RELEASE_GATE` item carrying each line; five lines have none.
+- **Data classes are checked against the gate, not asserted.** Each of the
+  four classes names the `classification.ts` tiers it covers, and the test
+  asks `gate(tier, 'ai', true)` for each: a class whose rule says "exclude" is
+  true only if the gate refuses it. "Internal" has no tier and must fail
+  closed; T1 has no class.
+- **The vendor scorecard is code.** `scoreVendor()` approves only when every
+  dimension is scored, the weighted mean reaches 4.0, and no floor is missed
+  (data use, privacy, security; tool-use safety for agentic workflows); a
+  critical blocker refuses outright. Every AI party in `trust/subprocessors.ts`
+  is on it, held there by the test, and none is scored, because no
+  provider's terms are on file. **The supplied weights sum to 95%, not 100%**;
+  they are kept as supplied and normalised, and which dimension carries the
+  missing five points is the owner's decision.
+- **Onboarding is held to `FirstGoal`.** Five of the six starting choices map
+  to a goal in `lib/goals.ts`; "Organize this week" has none.
+- **Most workflows are `tested` as non-AI workflows.** Registration that
+  registers nobody, advisor shares that expire, skills the student confirms:
+  the boundary exists and is held, and in nearly every row the gap is the
+  agent itself. The talent and hiring workflow is not started.
+- **Not changed:** `ai-lifecycle.ts`, `classification.ts`, `subprocessors.ts`,
+  `goals.ts`. Adding the four missing intake refusals, fixing the weights, and
+  scoring a provider are proposals for the owner; none is made here.
