@@ -62,8 +62,8 @@ describe('the edge-case catalog', () => {
     expect(c.guarded + c.owed).toBe(EDGE_CASES.length);
     // Said directly, so a change in either direction has to be explained here.
     expect(c).toEqual({
-      guarded: 31,
-      owed: 50,
+      guarded: 32,
+      owed: 49,
       owedCritical: ['EC-DQ-01', 'EC-LMS-02', 'EC-LMS-04', 'EC-LMS-07', 'EC-AI-01', 'EC-GOV-02'],
     });
     expect(coverage([{ id: 'x', domain: 'ai', case: 'a case', guard: null, note: 'a note long enough to pass' }])).toEqual({ guarded: 0, owed: 1, owedCritical: [] });

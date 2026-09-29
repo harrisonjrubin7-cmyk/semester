@@ -26,7 +26,7 @@ export interface OpenAIProviderOptions {
 
 const DEFAULT_OUTPUT_TOKENS = 1_200;
 
-function inputFor(request: ProviderGenerationRequest) {
+export function inputFor(request: ProviderGenerationRequest) {
   const evidence = request.sources.map((source) => ({
     id: source.id,
     body: source.body,

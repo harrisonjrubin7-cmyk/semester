@@ -1,3 +1,4 @@
+import { DATA_RULE, fence } from '../ai/untrusted';
 import { realMonthDay } from './date';
 /**
  * A syllabus in, a course out.
@@ -141,6 +142,54 @@ Rules, in order of importance:
    common policy, because a student who is told they have three absences and
    has none will use them.`;
 
+/**
+ * The prompt `generateCourse` sends, as a pure function, so `ai/injection.test.ts`
+ * can hold its shape without a model.
+ *
+ * A PDF goes whole where the app kept it, so the model reads the page rather
+ * than a flattening of it, and so the API can cite what it used; only the
+ * documents that could not be sent whole are pasted as text, fenced. The
+ * attachments are not fenced — they are document blocks, not text — which is
+ * why `DATA_RULE` names attachments as material in so many words.
+ *
+ * Empty controls leave the numbered rules as they were, so on the defaults
+ * this is the system prompt that built the four shipped courses plus the one
+ * rule about material; see the note on `shapeSays` in `lib/controls.ts`.
+ */
+export function generatePrompt(input: GenerationInput) {
+  const docs: Doc[] = input.documents
+    .filter((d) => d.pdf)
+    .map((d) => ({ mediaType: 'application/pdf', data: d.pdf as string, title: d.name }));
+  const pasted = input.documents
+    .filter((d) => !d.pdf)
+    .map((d) => `--- ${d.name} ---\n${d.text.slice(0, 60_000)}`)
+    .join('\n\n');
+  const caps = capsFor(input.controls);
+  const says = shapeSays(input.controls);
+  // Each is added only when it says something the default prompt does not.
+  // The counts are their own rule rather than a tail on the register one:
+  // written as `says ? … : SYSTEM`, a student who asked for twelve cards and
+  // changed nothing else had the number computed, clamped, and never sent.
+  const rules = [
+    says,
+    caps.cards !== MOST.cards || caps.terms !== MOST.terms ? countsSay(caps) : '',
+  ].filter(Boolean);
+  return {
+    system: `${rules.length > 0 ? `${SYSTEM}\n${rules.map((r, i) => `${8 + i}. ${r}`).join('\n')}` : SYSTEM}\n\n${DATA_RULE}`,
+    docs,
+    cite: worthCiting(docs),
+    messages: [
+      {
+        role: 'user' as const,
+        content:
+          `The semester falls in ${input.year}.` +
+          (input.hint ? `\nThe student says:\n${fence('note from the student', input.hint)}` : '') +
+          (pasted ? `\n\n${fence('pasted material', pasted)}` : ''),
+      },
+    ],
+  };
+}
+
 /** Ask for the course, then check what comes back before believing it. */
 export async function generateCourse(
   input: GenerationInput,
@@ -155,29 +204,9 @@ export async function generateCourse(
    * has not arrived yet. `claimFrom` below picks the rows up once it has.
    */
   const began = Date.now();
-
-  // A PDF goes whole where the app kept it, so the model reads the page
-  // rather than a flattening of it, and so the API can cite what it used.
-  const docs: Doc[] = input.documents
-    .filter((d) => d.pdf)
-    .map((d) => ({ mediaType: 'application/pdf', data: d.pdf as string, title: d.name }));
-
-  // Only the documents that could not be sent whole need pasting as text.
-  const pasted = input.documents
-    .filter((d) => !d.pdf)
-    .map((d) => `--- ${d.name} ---\n${d.text.slice(0, 60_000)}`)
-    .join('\n\n');
-
   const citations: Citation[] = [];
-
   const caps = capsFor(input.controls);
-  const says = shapeSays(input.controls);
-
-  // Each is added only when it says something the default prompt does not.
-  const rules = [
-    says,
-    caps.cards !== MOST.cards || caps.terms !== MOST.terms ? countsSay(caps) : '',
-  ].filter(Boolean);
+  const { docs, ...prompt } = generatePrompt(input);
 
   const reply = await ask({
     about: 'course',
@@ -186,31 +215,9 @@ export async function generateCourse(
     // budget rises with a ceiling the student raised rather than leaving them
     // to see "could not read it" for a syllabus that read fine.
     maxTokens: Math.min(16_000, 8_000 + Math.max(0, caps.cards - MOST.cards) * 160),
-    /*
-     * Empty on the defaults, so this is byte-for-byte the system prompt that
-     * built the four shipped courses for anybody who has not chosen anything.
-     *
-     * The counts are their own rule rather than a tail on the register one.
-     * They were written as `says ? … countsSay(caps) : SYSTEM`, and `says` is
-     * empty whenever depth and level are both untouched — so a student who
-     * asked for twelve cards and changed nothing else had the number computed,
-     * clamped, and then never sent. It read as the control doing nothing,
-     * which is the worst kind of broken setting: no error, no clue, and the
-     * app quietly behaving as though you had not asked.
-     */
-    system: rules.length > 0 ? `${SYSTEM}\n${rules.map((r, i) => `${8 + i}. ${r}`).join('\n')}` : SYSTEM,
-    docs,
-    cite: worthCiting(docs),
     onCitation: (c) => citations.push(c),
-    messages: [
-      {
-        role: 'user',
-        content:
-          `The semester falls in ${input.year}.` +
-          (input.hint ? `\nThe student says: ${input.hint}` : '') +
-          (pasted ? `\n\n${pasted}` : ''),
-      },
-    ],
+    docs,
+    ...prompt,
   });
 
   return validate(reply, input, citations, began);

@@ -8,7 +8,7 @@ runs on every change; a runbook or a design does not count, and every guard
 cited must exist. Most guards were written for a narrower question than the
 case asks, and the note says what each proves and what it does not.
 
-**31 of 81 cases have a guard; 50 are owed.** Of the plan's fourteen
+**32 of 81 cases have a guard; 49 are owed.** Of the plan's fourteen
 especially important cases, 6 have nothing: EC-DQ-01, EC-LMS-02, EC-LMS-04, EC-LMS-07, EC-AI-01, EC-GOV-02.
 Most owed cases wait on something that does not exist yet (an assessment
 engine, billing, a live SIS), and the note says which.
@@ -67,12 +67,12 @@ engine, billing, a live SIS), and the note says which.
 
 ## AI
 
-2 of 10 guarded.
+3 of 10 guarded.
 
 | ID | Case | Guard | What it proves, and what it does not |
 | --- | --- | --- | --- |
 | EC-AI-01 | AI source permission is revoked during generation. **(important)** | owed | Source access is checked before retrieval at the gateway, not during a stream. |
-| EC-AI-02 | Prompt injection embedded in an uploaded document. | owed | No injection suite exists: AI-010, R-07. |
+| EC-AI-02 | Prompt injection embedded in an uploaded document. | `app/src/ai/injection.test.ts` | Structural: twelve injection-shaped texts through every prompt builder stay inside a fence and leave the instructions byte-for-byte unchanged. It does not test what a live model does with the fence; that red-team is AI-010’s remaining gap. |
 | EC-AI-03 | AI cites a stale or retracted source. | owed | Citations point at the student's own sources; nothing marks one retracted. |
 | EC-AI-04 | Provider outage or a safety-filter false positive. | `app/src/ai/helpstate.test.tsx` | An unreachable gateway is named to the student with a retry, and the local assistant answers when no gateway is configured. A safety-filter refusal is not distinguished from an outage. |
 | EC-AI-05 | Course policy changes while a conversation remains open. | owed | Policy is read when a conversation is assembled, not on every turn. |

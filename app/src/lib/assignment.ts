@@ -28,6 +28,7 @@
  */
 
 import { ask } from './claude';
+import { DATA_RULE, fence } from '../ai/untrusted';
 import { dateToIso, realDate } from './date';
 
 export interface Deliverable {
@@ -170,6 +171,18 @@ export function clean(raw: Partial<Breakdown>, unitNames: string[]): Breakdown {
   };
 }
 
+/**
+ * The prompt `breakDown` sends, as a pure function, so `ai/injection.test.ts`
+ * can hold the shape without a model: the course and the instructions are
+ * fenced as material, and the rules say what a fence is.
+ */
+export function breakDownPrompt(instructions: string, context: string, today: string) {
+  return {
+    system: `${SYSTEM}\n\n${DATA_RULE}\n\nToday is ${today}.\n\nThe course:\n${fence('course', context)}`,
+    messages: [{ role: 'user' as const, content: `Assignment instructions:\n\n${fence('assignment instructions', instructions)}` }],
+  };
+}
+
 export async function breakDown(
   instructions: string,
   context: string,
@@ -185,8 +198,7 @@ export async function breakDown(
     about: 'assignment plan',
     signal,
     maxTokens: 2600,
-    system: `${SYSTEM}\n\nToday is ${today}.\n\nThe course:\n${context}`,
-    messages: [{ role: 'user', content: `Assignment instructions:\n\n${instructions}` }],
+    ...breakDownPrompt(instructions, context, today),
   });
   const raw = parseJson<Partial<Breakdown>>(reply);
   return raw ? clean(raw, unitNames) : EMPTY;
@@ -212,6 +224,13 @@ export function critique(
     signal,
     onText,
     maxTokens: 2000,
+    ...critiquePrompt(draft, instructions, context),
+  });
+}
+
+/** The prompt `critique` sends, pure, for the same reason as `breakDownPrompt`. */
+export function critiquePrompt(draft: string, instructions: string, context: string) {
+  return {
     system:
       'You are giving a university student feedback on their own draft, like a good TA in ' +
       'office hours. Rules you do not break:\n' +
@@ -223,12 +242,13 @@ export function critique(
       '- Say what is already working, briefly and specifically, so they keep it.\n' +
       '- Flag any claim the course material does not support.\n' +
       'Plain prose, short paragraphs, no preamble.\n\n' +
-      `The course:\n${context}`,
+      `${DATA_RULE}\n\n` +
+      `The course:\n${fence('course', context)}`,
     messages: [
       {
-        role: 'user',
-        content: `Assignment instructions:\n${instructions || '(not given)'}\n\nMy draft:\n${draft}`,
+        role: 'user' as const,
+        content: `Assignment instructions:\n${fence('assignment instructions', instructions || '(not given)')}\n\nMy draft:\n${fence('draft', draft)}`,
       },
     ],
-  });
+  };
 }
