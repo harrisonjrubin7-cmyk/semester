@@ -336,8 +336,8 @@ const AREA_LIST: readonly (Area & { rows: readonly Row[] })[] = [
     title: 'K–12, as a configured edition later',
     why: 'K–12 is a deliberate extension of the same operating system, entered only once a district agreement, age-aware controls and guardian consent exist.',
     rows: [
-      ['A stated minimum age and a posture on children', D, [['docs/FERPA-COPPA-1EDTECH-READINESS.md', 'COPPA-1 not started; not directed at children']], 'The terms draft leaves the minimum age for counsel.', ['F', 'P']],
-      ['Guardian consent, age-aware design and strict guardian boundaries', N, [], 'Nothing in the tree knows a student’s age (Connect register CTL-006).', ['F', 'P'], ['connect:CTL-006']],
+      ['A stated minimum age and a posture on children', T, [['supabase/minimum-age.check.sql', 'under 13 refused at sign-up by the database'], ['docs/legal/TERMS-OF-SERVICE-DRAFT.md', 'at least 13']], 'Set by the owner (D-135); counsel has not reviewed it, and an age is stated, not verified.', ['F', 'P']],
+      ['Guardian consent, age-aware design and strict guardian boundaries', T, [['supabase/minimum-age.check.sql', 'a minor is out of discovery, matching, messaging and employer visibility until 18']], 'Age-aware design is held; guardian consent is not built, and nothing verifies a guardian.', ['F', 'P'], ['connect:CTL-006']],
       ['K–12 positioning, segments, module configuration, pilot and PRD', N, [], 'Absent, neither planned nor refused; the sixteen-item district baseline is the brief’s own gate.', ['F', 'P']],
     ],
   },
@@ -383,7 +383,7 @@ export interface Blocker {
  */
 export const P0: readonly Blocker[] = [
   { id: 'DP-01', control: 'Public privacy notice', owner: 'privacy', status: D, evidence: 'docs/legal/PRIVACY-POLICY-DRAFT.md', next: 'Counsel review, then in force with a version and date.' },
-  { id: 'DP-02', control: 'Terms of Service', owner: 'privacy', status: D, evidence: 'docs/legal/TERMS-OF-SERVICE-DRAFT.md', next: 'Decide the minimum age; counsel review.' },
+  { id: 'DP-02', control: 'Terms of Service', owner: 'privacy', status: D, evidence: 'docs/legal/TERMS-OF-SERVICE-DRAFT.md', next: 'Counsel review, the minimum age of 13 (D-135) included.' },
   { id: 'DP-03', control: 'Data inventory', owner: 'data', status: T, evidence: 'app/src/lib/retention.test.ts', next: 'A field-level data dictionary beyond the per-table inventory.' },
   { id: 'DP-04', control: 'Data minimisation', owner: 'data', status: T, evidence: 'app/src/lib/governance/module-privacy.test.ts', next: 'A minimum-field review per connector scope.' },
   { id: 'DP-05', control: 'Student data ownership', owner: 'privacy', status: T, evidence: 'app/src/lib/transparency.test.ts', next: 'The promise in force as policy.' },

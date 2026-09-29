@@ -21,9 +21,11 @@ with these Terms about your school's data, your school's agreement controls.
 
 ## 2. Who can use Semester
 
-You must be at least [DECIDE with counsel: 13, or 18 with a path for minors
-in dual enrollment] years old. If you are under 18, you confirm that a parent
-or guardian has agreed to these Terms for you. [DECIDE with counsel.]
+You must be at least 13 years old; Semester refuses an account for anyone
+younger. If you are 13 to 17, you confirm that a parent or guardian has agreed
+to these Terms for you, and the features where other people can find, match
+with or message you stay off until you turn 18. [Counsel to confirm the
+guardian-agreement wording and whether dual enrollment needs more.]
 
 ## 3. Your account
 

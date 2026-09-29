@@ -2586,3 +2586,33 @@ between the briefs and the tree; the owner settled each.
   measures", moved with its history; the operating-system register, its
   rendered page and every link follow. Decisions before this one keep the old
   path as they wrote it.
+
+## D-135 · Nobody under 13 holds an account, and a minor is kept out of the features where strangers reach them
+
+**Decided 29 Sep 2026, by the owner.** K–12 was the one area the register
+(D-133) could not score: COPPA-1 had no stated minimum age and no posture on
+children, and every social feature was open to any confirmed account. The
+owner set the minimum age at 13, with no one younger, and asked for the full
+K–12 edition behind it. This is its first prerequisite.
+
+- **Stated, once.** Sign-up asks for a date of birth. The app refuses a date
+  under 13 before anything is sent; `20260929150000_minimum_age.sql`'s trigger
+  on `auth.users` refuses it again (`semester: under the minimum age`), records
+  when a minor turns 18 in `private.account_ages`, and strips the birth date
+  from the account's metadata, so the date itself is never kept. An account
+  made before this states its age once on the Account screen
+  (`state_my_age`); a second statement is `already_stated`.
+- **A minor is kept out, by the database.** `private.verified_student()` now
+  also requires `not private.is_minor(auth.uid())`, so every policy that gates
+  on it closes to a minor. Mentor requests, connections (either side), study
+  matching and opting into the talent profile are refused by a trigger as
+  well, so a policy added later cannot open them by accident. Reports and
+  family sharing move to `private.verified_account()`: a minor can still report
+  and share with a parent or guardian.
+- **Proved.** `supabase/minimum-age.check.sql` runs 40 checks; removing the
+  minor test from `verified_student`, or the connections trigger, turned it
+  red. COPPA-1 is `TESTING`; MN-01, MN-03 and MN-06 are in place; CTL-006,
+  K12-001 and K12-002 are tested.
+- **Not settled here.** Counsel has not reviewed the terms' minimum age, and a
+  district's own data rules are the next decision's.
+

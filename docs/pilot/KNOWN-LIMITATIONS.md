@@ -63,7 +63,7 @@ either direction, that is a bug: report it the same way.
 
 ### The terms of service and privacy policy are drafts, not in force.
 
-**What does not work yet.** Both exist as drafts for a lawyer and carry open decisions: the legal entity, the minimum age, liability, governing law. Neither has been reviewed or put in force.
+**What does not work yet.** Both exist as drafts for a lawyer and carry open decisions: the legal entity, liability, governing law. The minimum age is 13, set by the owner and not yet reviewed by counsel. Neither has been reviewed or put in force.
 
 **What to do instead.** Read Privacy and your rights in the app (#/privacy) for what leaves your device and what deleting removes; that page is held to the code by a test. You can export or delete everything at any time.
 
