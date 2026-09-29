@@ -43,7 +43,7 @@ const button = (name: RegExp) => [...host.querySelectorAll('button')].find((b) =
 it('says you are on Free and that nothing is for sale', () => {
   render();
   expect(host.textContent).toContain('You are on Semester Free');
-  expect(host.textContent).toContain('not on sale yet');
+  expect(host.textContent).toContain('not on sale in this build');
 });
 
 it('explains upgrade and cancel rather than doing either', () => {
