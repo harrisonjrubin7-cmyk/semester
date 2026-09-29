@@ -223,7 +223,7 @@ begin
   perform pg_temp.counted('Ben sees none of his', pg_temp.seen(ben, 'select * from public.grade_entries'), 0);
   perform pg_temp.counted('the instructor sees both drafts', pg_temp.seen(prof, 'select * from public.grade_entries'), 2);
   perform pg_temp.counted('the second instructor sees them', pg_temp.seen(coprof, 'select * from public.grade_entries'), 2);
-  perform pg_temp.counted('the registrar, over the school, sees them', pg_temp.seen(registrar, 'select * from public.grade_entries'), 2);
+  perform pg_temp.counted('the registrar sees no draft: export is of released grades', pg_temp.seen(registrar, 'select * from public.grade_entries'), 0);
   perform pg_temp.counted('the department chair sees none: aggregates only', pg_temp.seen(chair, 'select * from public.grade_entries'), 0);
   perform pg_temp.counted('faculty on another course see none', pg_temp.seen(other_prof, 'select * from public.grade_entries'), 0);
   perform pg_temp.counted('faculty at another school see none', pg_temp.seen(elsewhere, 'select * from public.grade_entries'), 0);
@@ -307,6 +307,12 @@ begin
     (select count(*) from public.gradebook_operations where tenant_id = 'gb-u'), 12);
 
   -- ── The registrar ───────────────────────────────────────────────────────
+  perform pg_temp.counted('the registrar reads released rows, and only those',
+    pg_temp.seen(registrar, $q$select * from public.grade_entries where status <> 'released'$q$), 0);
+  if pg_temp.seen(registrar, $q$select * from public.grade_entries where status = 'released'$q$) = 0 then
+    raise exception 'FAILED: the registrar reads no released row';
+  end if;
+  raise notice 'ok  the registrar reads the released rows';
   perform pg_temp.said('the registrar''s export holds Ana''s released 9 and nothing unreleased',
     pg_temp.ask(registrar, $q$select string_agg(title || '=' || score::text, ',') from public.gradebook_export('ECON 1020', '2026FA')$q$),
     'Problem set 1=9.000');

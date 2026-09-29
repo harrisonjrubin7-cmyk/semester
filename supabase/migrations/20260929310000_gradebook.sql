@@ -264,6 +264,26 @@ $$;
 revoke all on function private.gradebook_staff(text, text) from public, anon, authenticated;
 grant execute on function private.gradebook_staff(text, text) to authenticated;
 
+-- Who may see a grade before it is released: the people who enter, moderate
+-- or release it for this course. Export is deliberately not among them — the
+-- registrar exports released grades, and an instructor's working draft is
+-- not the registrar's to read.
+create or replace function private.gradebook_author(want_tenant text, want_code text)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (select 1 from public.profiles p where p.user_id = (select auth.uid()) and p.school_id = want_tenant)
+     and (private.has_capability('grades:enter',    'course', want_tenant || '/' || want_code)
+       or private.has_capability('grades:moderate', 'course', want_tenant || '/' || want_code)
+       or private.has_capability('grades:release',  'course', want_tenant || '/' || want_code));
+$$;
+
+revoke all on function private.gradebook_author(text, text) from public, anon, authenticated;
+grant execute on function private.gradebook_author(text, text) to authenticated;
+
 alter table public.gradebook_operations enable row level security;
 alter table public.gradebook_schemes enable row level security;
 alter table public.gradebook_items enable row level security;
@@ -305,11 +325,14 @@ create policy "staff and the roster read the items" on public.gradebook_items
   using (private.gradebook_staff(tenant_id, course_code)
          or private.has_capability('grades:receive', 'course', tenant_id || '/' || course_code));
 
--- The rule a student relies on: their own released rows, and no others.
+-- The rule a student relies on: their own released rows, and no others. The
+-- course's authors read drafts; other staff (the registrar, through export)
+-- read released rows only.
 drop policy if exists "staff read grades, students their own released ones" on public.grade_entries;
 create policy "staff read grades, students their own released ones" on public.grade_entries
   for select to authenticated
-  using (private.gradebook_staff(tenant_id, course_code)
+  using (private.gradebook_author(tenant_id, course_code)
+         or (status = 'released' and private.gradebook_staff(tenant_id, course_code))
          or (student_id = (select auth.uid()) and status = 'released'));
 
 drop policy if exists "staff and the student read a regrade request" on public.regrade_requests;
