@@ -2690,3 +2690,33 @@ never deletes.
 - **Not done here:** moving "Direct registration writes" off the deferred list
   in `expansiongovernance.ts` (its test counts sixteen). That edit relaxes a
   Tier 4 refusal and waits for the owner to confirm it.
+
+## D-138 · A module's mode is a row two other administrators approve, it fails to Connect, and going back deletes nothing
+
+**Decided 29 Sep 2026, by the owner (Prompt 2 of the Core briefs).** D-137 made
+Connect and Core the two ways a school can run a module. This is the switch.
+
+- **The row.** `tenant_module_mode` holds one row per school and module; no row
+  is Connect. There is no write policy: the only door is
+  `module_mode_request` plus `module_mode_approval`, and the trigger that
+  applies them runs as the table's owner. Fourteen modules, one list
+  (`public.core_modules()` = `CORE_MODULES` in `@semester/contract` = the
+  takeover map), held equal by `modulemode.test.ts`.
+- **Two approvers.** Connect to Core is applied on the second distinct
+  approver holding `tenant:configure`; the requester never counts, nor does one
+  person twice. A request expires in seven days.
+- **The way back is immediate and deletes nothing.** Core to Connect applies
+  at once and marks the row `frozen`: the module's Core data is kept,
+  read-only.
+- **Kill switch.** `kill.core_modules` (school or global) makes every module
+  read Connect and Core data read frozen, and refuses new Core requests. It
+  is in `FLAGS` as `module.core_mode` and in the flag registry.
+- **The client fails to Connect.** `resolveModuleMode` answers Connect for
+  anything it cannot read. `useModuleMode(module, school)` is the one hook.
+- **Where it shows.** A Modules tab on the institution screen, for someone
+  holding `tenant:configure` over the school. It says no Core module is built.
+- **Proof.** `supabase/module_mode.check.sql` (49 checks). Red when the second
+  approval is reduced to one, and red when the requester may approve; each
+  restored.
+- **Not done here, on purpose:** MFA on the approving act (Prompt 6 adds
+  step-up), a withdraw action for a pending request, and any Core module.

@@ -20,11 +20,12 @@
  * Nothing here is built. Every module reads `planned`.
  */
 
+import type { CoreModuleId } from '@semester/contract';
 import type { ClaimStatus } from '../lib/ops/claims';
 
 export interface CoreModule {
-  /** The module id later prompts use in the per-tenant mode switch. */
-  id: string;
+  /** The module id the per-tenant mode switch uses (`CORE_MODULES` in the contract). */
+  id: CoreModuleId;
   name: string;
   /** The kinds of system it would replace, named as products a buyer runs today. */
   replaces: string;

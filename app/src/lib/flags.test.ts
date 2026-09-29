@@ -64,7 +64,7 @@ describe('the registry', () => {
   });
 
   it('names only kill switches the database accepts', () => {
-    const sql = readFileSync(resolve(__dirname, '../../../supabase/migrations/20260927170000_integration_control_plane.sql'), 'utf8');
+    const sql = readFileSync(resolve(__dirname, '../../../supabase/migrations/20260929150000_module_mode.sql'), 'utf8');
     for (const k of KILL_SWITCHES) expect(sql, k).toContain(`'${k}'`);
     for (const f of FLAGS) for (const k of f.killSwitches) expect(KILL_SWITCHES, f.key).toContain(k);
   });
