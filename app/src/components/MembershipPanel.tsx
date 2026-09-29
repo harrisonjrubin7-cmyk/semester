@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ALWAYS_INCLUDED, PILOT_NOTE, PLANS, plan, priceLine, type PlanId } from '../lib/plans';
+import { ALWAYS_INCLUDED, NOT_ON_SALE_HERE, PLANS, plan, priceLine, type PlanId } from '../lib/plans';
 import { cloud, cloudConfigured, currentSession } from '../lib/cloud';
 import { formatDate } from '../lib/locale';
 import {
@@ -30,7 +30,7 @@ import { SectionLabel } from './ui';
  * interval, renewal and the way to cancel, and it is recorded server-side by
  * `billing-checkout` before Stripe is ever asked. The card is typed into
  * Stripe's page. Without a catalog — a device-only build, or a network that
- * has gone — the panel says what it always said: nothing is for sale here.
+ * has gone — the panel says what it always said: nothing is for sale in this build.
  *
  * "Upgrade" and "Cancel" are real buttons that explain rather than disabled
  * ones that do not: a disabled control says "not now" without saying why, and
@@ -179,7 +179,7 @@ export function MembershipPanel() {
         : `Renews on ${when(sub.periodEnd)}.`
     : onSale
       ? `Plus is ${prices.map(priceWords).join(' or ')}. Free stays free.`
-      : PILOT_NOTE;
+      : NOT_ON_SALE_HERE;
 
   return (
     <section aria-labelledby="membership-title" style={{ marginTop: 'var(--sp-7)' }}>
@@ -290,7 +290,7 @@ export function MembershipPanel() {
                 {p.id === currentId ? ' · your plan' : ''}
               </div>
               <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}>
-                {p.id === 'plus' && onSale ? prices.map(priceWords).join(' or ') : priceLine(p)}
+                {p.id === 'plus' && onSale ? prices.map(priceWords).join(' or ') : p.id === 'plus' ? `${priceLine(p)} (planned)` : priceLine(p)}
               </div>
               <ul style={{ fontSize: 'var(--type-sm)', margin: 'var(--sp-2) 0 0', paddingInlineStart: '1.2em' }}>
                 {p.includes.map((i) => <li key={i}>{i}</li>)}

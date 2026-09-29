@@ -103,7 +103,7 @@ self-assessment and never a ranking.
   Semester is built at Vanderbilt first.
 - No live-integration claim. The institutions page says no institutional
   connection is live today.
-- No checkout. Every paid price is marked *(planned)*, and export, deletion
+- No checkout on the site: Plus is bought from the Account screen in the app (D-128). Pro is marked *(planned)*, and export, deletion
   and saved plans are listed as on every plan.
 - The product preview is labelled demo data.
 - Every capability a page names carries one of six status words from the
@@ -165,7 +165,7 @@ student can change; rebuild each term.
    changes.
 2. **The planned prices.** The blueprint's suggested $7.99 / $59 (Plus) and
    $14.99 / $99 (Pro) are shown as *planned*. Confirm or change them in
-   `lib/plans.ts` before the page is public. No billing exists, per D-009.
+   `lib/plans.ts` before the page is public. Plus checkout is in the app (D-128); Pro is not on sale.
 3. **An origin.** Set `SITE_ORIGIN` to emit canonical links, social-preview
    URLs and `sitemap.xml`. Without it they are left out rather than guessed.
 
