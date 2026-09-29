@@ -502,7 +502,7 @@ by hand. Read off `cron.job` at 02:51 UTC on 29 September 2026:
     account-health       41 5 * * *    active = true
     commercial-dunning   23 * * * *    active = true
 
-**A third job came with `billing-cancel`** (D-131):
+**A third job came with `billing-cancel`** (D-132):
 `commercial-financial-retention`, monthly on the 2nd at 04:37 UTC
 (`public.purge_financial_records()`, from
 `20260929130000_financial_retention.sql`). It removes an individual

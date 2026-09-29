@@ -2410,7 +2410,54 @@ business calling it.
   fault. That stays with the feature suites. `beta_triage_feedback` was the
   one function no suite called at all; the sweep now does, as a stranger.
 
-## D-131 · Cancelling Plus reaches Stripe, and financial records are kept seven years
+## D-131 · The 2026 AI integration playbook is held to the tree, and its vendor scorecard is code
+
+**Decided 29 Sep 2026.** Three documents arrived on 29 September — the 2026 AI
+integration playbook, its ten-workflow summary, and a brief on integrating
+Semester Intelligence further — and are kept under `docs/expansion/` as
+supplied. They are held to the tree the way D-111 held the AI assurance
+matrix: data in `app/src/lib/governance/ai-playbook.ts`, rendered to
+`docs/operating-model/AI-INTEGRATION-PLAYBOOK.md` by its test, every cited
+file existing, every status held to the kind of file it cites, and the PDFs
+never their own evidence.
+
+- **Crosswalk, not a second register.** A workflow's prohibited decision
+  names the `PROHIBITED_STARTING_SCOPE` entry that refuses it. The definition
+  of done names the `AI_RELEASE_GATE` item carrying each line; five lines have
+  none.
+- **Four intake refusals added.** The playbook prohibits four things no intake
+  rule refused, and the owner asked for them: *automated hiring decisions*,
+  *ranking students for employers*, *auto-publishing institutional policy* and
+  *unapproved production changes* join `PROHIBITED_STARTING_SCOPE` (six → ten).
+  Each is carried by the workflow it came from (WF-10, WF-06, WF-07, WF-08),
+  held there by the test, and listed in `AI-LIFECYCLE-GATES.md`, which
+  `docs.test.ts` holds to the list.
+- **Data classes are checked against the gate, not asserted.** Each of the
+  four classes names the `classification.ts` tiers it covers, and the test
+  asks `gate(tier, 'ai', true)` for each: a class whose rule says "exclude" is
+  true only if the gate refuses it. "Internal" has no tier and must fail
+  closed; T1 has no class.
+- **The vendor scorecard is code.** `scoreVendor()` approves only when every
+  dimension is scored, the weighted mean reaches 4.0, and no floor is missed
+  (data use, privacy, security; tool-use safety for agentic workflows); a
+  critical blocker refuses outright. Every AI party in `trust/subprocessors.ts`
+  is on it, held there by the test, and none is scored, because no
+  provider's terms are on file. **The supplied weights summed to 95%, not
+  100%.** At the owner's request they now sum to 100: the missing five points
+  go to security posture (10% → 15%), one of the three floors, since the
+  playbook's headline risks (prompt injection, excessive agency) are security
+  risks. The test holds the sum to 100.
+- **Onboarding is held to `FirstGoal`.** Five of the six starting choices map
+  to a goal in `lib/goals.ts`; "Organize this week" has none.
+- **Most workflows are `tested` as non-AI workflows.** Registration that
+  registers nobody, advisor shares that expire, skills the student confirms:
+  the boundary exists and is held, and in nearly every row the gap is the
+  agent itself. The talent and hiring workflow is not started.
+- **Not changed:** `classification.ts`, `subprocessors.ts`, `goals.ts`.
+  Fixing the weights and scoring a provider are the owner's; neither is made
+  here.
+
+## D-132 · Cancelling Plus reaches Stripe, and financial records are kept seven years
 
 **Decided by owner 29 Sep 2026.** D-128 left two things open before a live
 key: a cancellation that stopped at Semester's own record, and no retention
