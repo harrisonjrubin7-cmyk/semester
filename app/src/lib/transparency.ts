@@ -71,6 +71,8 @@ export const NEVER: readonly Never[] = [
   { line: 'The product is not designed to manipulate attention, hide important choices, or pressure anyone into sharing more than a feature needs.', path: 'docs/ETHICAL-ENGAGEMENT-AND-NOTIFICATIONS.md', shows: 'The engagement and notification rules' },
   { line: 'Access by support staff is limited, authorised, logged and time-bound.', path: 'supabase/support-access.check.sql', shows: 'A support read needs a live grant, and the grant expires' },
   { line: 'Personal information is not sold. Student content and institution data are not used to train general-purpose AI models.', path: 'RETENTION.md', shows: '“Nothing is used to train anything”, the promise every retention clock is held under' },
+  { line: 'Education records, personal plans and study activity are not used for behavioural advertising. A campaign cannot select a student by any of them.', path: 'app/src/lib/gtm/campaign.test.ts', shows: 'Every education-record and sensitive field is refused as a targeting criterion, by name, and a field nobody has classified is refused too' },
+  { line: 'Study activity is not used to label a student as capable or incapable, motivated or unmotivated.', path: 'app/src/lib/institution-ops.test.ts', shows: 'Individual risk scores, reading time and attention or engagement inference are refused as measures, not hidden' },
 ];
 
 export type ArtifactStatus = PolicyStatus | 'exists';

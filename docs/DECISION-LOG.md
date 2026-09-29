@@ -2495,7 +2495,99 @@ period for payment records. The owner asked for both.
   removed before their invoices so none is ever updated.
 - **Not changed:** who may read or write any billing table; the webhook.
 
-## D-133 · The AI providers are scored from their own documentation, and model quality has an evaluation set that has not yet been run
+## D-133 · Seven briefs on leading the market are held to the tree as one register, and the site refuses the five overclaims they name
+
+**Decided 29 Sep 2026.** Seven briefs of 29 September ask what else would
+make Semester the leader and the benchmark: the operating disciplines, the
+final moats, the executive benchmark answer, the feature benchmark with
+TrustEd Apps, pricing and K–12, the 1EdTech compliance and go-to-market
+playbook with its summary, and the leader-and-pioneer brief. They are kept
+under `docs/expansion/` as supplied.
+
+- **One register, not seven.** The briefs repeat each other — the graph four
+  times, the procurement package five. `docs/REINFORCEMENT-REGISTER.md`,
+  rendered from `app/src/lib/reinforceregister.ts`, has 116 rows in twenty
+  areas; each cites every brief item that asks for it and names the oneos,
+  leadership or Connect item it is the same as, and the test holds each to
+  exist. Read against `beaa839`: 61 tested, 16 building, 21 designed, 18 not
+  started.
+- **The operating model is data.** `app/src/lib/ops/operatingmodel.ts` gives
+  the ten product areas the first brief names their fourteen fields, every
+  owner a council seat. 33 of 50 ownerships rest on a vacant seat; the table
+  says which.
+- **The playbook's P0 blockers are owned.** Its 36 P0 rows, each with a seat
+  and the tree's reading in place of the playbook's (it marks the definer
+  review not started; D-127 landed it). 26 are owned by a vacant seat.
+- **"Fully built" has a gate.** The feature benchmark's 0–5 scorecard on ten
+  criteria, and `mayClaimFullyBuilt`: at least 4 on depth, privacy,
+  accessibility, reliability and source integrity, an unscored criterion
+  failing. No module has been scored, so none may be called fully built.
+- **Two promises added where the site already makes them.** The briefs ask
+  for a Student Data Promise. `/trust/data-and-ai-transparency/` and the
+  Semester Standard already publish it, line by line, each held to the tree;
+  two lines were missing and are added to `NEVER`: no behavioural advertising
+  on education records, plans or study activity (held by `campaign.test.ts`),
+  and study activity never used to label ability or motivation (held by
+  `institution-ops.test.ts`). No separate page, which would drift from these.
+- **The site refuses five overclaims.** `site.test.tsx` now refuses, on every
+  page, a claim to replace an official system, to guarantee an outcome, to
+  improve retention, persistence, graduation or grades, to be fully
+  compliant, or to be AI-safe — with a control showing each pattern catches
+  its own example and passes the sentence the site actually uses.
+- **Not changed.** K–12: absent, neither planned nor refused, behind COPPA-1.
+  The Plus price, the pilot length, the statement's "payments" and the name of
+  the first-year measures document were open here too, and the owner settled
+  all four (D-134).
+
+## D-134 · Plus is $7.99 a month or $59 a year everywhere, every pilot runs 26 weeks, the statement no longer lists payments, and the company's first-year measures are named for what they are
+
+**Decided 29 Sep 2026, by the owner.** D-133 found four things left open
+between the briefs and the tree; the owner settled each.
+
+- **Plus.** `plans.ts` printed $7.99 and $59 on the pricing page, while the
+  catalog the commercial core seeded — and, since D-128, what `begin_checkout`
+  charges — said 399 and 2999 cents, so the Account screen sold Plus at $3.99.
+  `20260929131000_plus_price.sql` retires the seed's two rows (inactive, window
+  closed, never deleted, so what was sold on them still names them) and opens
+  799 and 5900. Nothing reaches Stripe: checkout sends the catalog's amount, so
+  the next checkout charges the new price, and a subscription Stripe already
+  holds keeps its own until it is changed there. The company site's four
+  prices, `docs/COMMERCIAL-CORE.md` and `PILOT.md` say the same.
+- **The guard nobody wrote.** The two prices drifted because nothing held the
+  pricing page to the catalog. `plans.test.ts` now reads the migrations as
+  they leave the catalog and requires the same figures as `plans.ts`; a
+  migration pricing Plus at 699 turned it red.
+  `commercial-automation.check.sql` holds the catalog to 799 and 5900, the
+  retired rows to existing, and a checkout on a retired price to
+  `no_such_price`.
+- **Pilots.** `pilotReadiness` refused anything outside 60–120 days (#817);
+  it now refuses anything but exactly 26 weeks (`PILOT_WEEKS`, 182 days),
+  within the deal desk's six months. The launch kit's term row, the RFP
+  library's implementation answer, the paid-pilot framework, the GTM
+  execution plan and the pilot agreement outline say 26 weeks. That is two
+  days past the kit's own "90–180 days"; its row stays held, with the reason.
+  The database says the same: `gtm_pilot_problems`, which `gtm_pilot_guard`
+  calls when a pilot is started, still refused anything outside 60–120 days,
+  so every pilot the app accepted the database would have refused (found by
+  Codex's review of #967). `20260929140000_gtm_pilot_26_weeks.sql` changes
+  that one line and keeps the visibility gate; `gtm.check.sql` refuses a
+  109-day pilot for `duration` and starts a 182-day one, and went red on the
+  26-week pilot with the migration taken away.
+- **The statement.** The one-operating-system statement listed payments among
+  the parts of university life Semester is one platform for; Semester runs no
+  payment workflow for students, and the briefs say never to imply replacing a
+  payment system. The owner removed the word. `oneos.test.ts` now refuses a
+  statement naming payments, billing, financial aid, housing, health records
+  or registration execution; putting "payments" back turned it red.
+- **The first-year measures.** `docs/FIRST-YEAR-SUCCESS.md` held the
+  company's measures for its first twelve months, and a reader of the briefs —
+  which ask for a first-year *student* stage — would take it for that. It is
+  now `docs/COMPANY-FIRST-YEAR-MEASURES.md`, titled "Company first-year
+  measures", moved with its history; the operating-system register, its
+  rendered page and every link follow. Decisions before this one keep the old
+  path as they wrote it.
+
+## D-135 · The AI providers are scored from their own documentation, and model quality has an evaluation set that has not yet been run
 
 **Decided 29 Sep 2026.** D-131 put every AI party on the vendor scorecard and
 scored none, because no provider terms were on file. The owner asked for the

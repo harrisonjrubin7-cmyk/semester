@@ -3,7 +3,7 @@
 > Owner, version, last and next review, status, supersedes and related decisions: [`SEMESTER-OPERATING-SYSTEM.md`](../../SEMESTER-OPERATING-SYSTEM.md).
 
 **A business outline for counsel. It is not legal advice and not agreement
-language.** It sets out what a 90-day institutional pilot agreement has to
+language.** It sets out what a 26-week institutional pilot agreement has to
 cover, and a sample scope that matches what Semester can actually support.
 `docs/market-readiness/PILOT_PLAYBOOK.md` is the operational side: how a pilot
 is run once it is signed.
@@ -49,7 +49,7 @@ only what the contract has to say.
 | --- | --- |
 | Institution | [Institution legal name] |
 | Term | [Term, e.g. Spring 2027] |
-| Duration | 90 days |
+| Duration | 26 weeks |
 | Cohort | Two introductory courses; up to 500 students; up to 12 faculty and TAs; selected tutoring and library staff |
 | Decision | A written convert, expand, pause or stop decision within 15 business days of the final review |
 

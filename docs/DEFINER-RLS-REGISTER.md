@@ -151,7 +151,7 @@ Production (`lzrqvlugnawcgywkhqlz`), 2026-09-29, read-only, through the advisor 
 | `gtm_activation_failures` | `auth.uid()`, `private.has_capability` | `20260928090000_gtm_foundation.sql` |
 | `gtm_audience_count` | `private.has_capability` | `20260928090000_gtm_foundation.sql` |
 | `gtm_campaign_report` | `auth.uid()`, `private.has_capability` | `20260928090000_gtm_foundation.sql` |
-| `gtm_pilot_problems` | `private.gtm_account_visible` | `20260929120000_gtm_pilot_problems_visibility.sql` |
+| `gtm_pilot_problems` | `private.gtm_account_visible` | `20260929140000_gtm_pilot_26_weeks.sql` |
 | `help_inbox` | `private.answers_for` | `20260927230000_help_requests.sql` |
 | `move_office_action` | `auth.uid()`, `private.may_publish` | `20260928302000_office_action_feed.sql` |
 | `office_desk_actions` | `auth.uid()`, `private.may_publish` | `20260928302000_office_action_feed.sql` |

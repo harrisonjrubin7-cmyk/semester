@@ -98,6 +98,26 @@ describe('what the site says', () => {
     expect(all).toContain('No institutional connection is live today');
   });
 
+  // The five claims the reinforcement briefs of 29 September say never to
+  // make without an agreement, evidence or an auditable scope behind them.
+  const OVERCLAIMS: readonly [string, RegExp][] = [
+    ['replaces an official system', /replac(es|ing) (your |the )?(SIS|LMS|registrar|student information system|learning management system|financial[- ]aid system)/i],
+    ['guarantees an outcome', /guarantee(s|d)? (your |a |that you )?(graduat|transfer credit|course availability|financial aid|a job|job placement|admission|outcomes?)/i],
+    ['improves retention without evidence', /(improves|increases|boosts|raises|drives) (student )?(retention|persistence|graduation rates?|completion rates?|grades)/i],
+    ['fully compliant', /fully (FERPA[- ])?compliant|100% compliant/i],
+    ['AI-safe', /\bAI[- ]safe\b|safe AI guaranteed/i],
+  ];
+
+  it('can tell an overclaim from ordinary copy', () => {
+    const bad = ['Semester replaces your SIS.', 'We guarantee graduation.', 'Semester improves retention.', 'Fully compliant with FERPA.', 'The first AI-safe planner.'];
+    for (const [i, [what, re]] of OVERCLAIMS.entries()) expect(bad[i], what).toMatch(re);
+    expect('Semester does not replace your institution’s official systems.').not.toMatch(OVERCLAIMS[0][1]);
+  });
+
+  it('makes none of the five overclaims on any page', () => {
+    for (const p of pages) for (const [what, re] of OVERCLAIMS) expect(p.html, `${p.route.path}: ${what}`).not.toMatch(re);
+  });
+
   it('sells nothing: no checkout, and every price is planned', () => {
     const pricing = pages.find((p) => p.route.path === '/pricing/')!.html;
     expect(pricing).not.toMatch(/buy now|subscribe now|start (your )?subscription|add (a |your )?card|enter your card/i);

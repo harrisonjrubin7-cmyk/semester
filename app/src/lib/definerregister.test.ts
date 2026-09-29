@@ -112,7 +112,7 @@ describe('the Security Definer and RLS remediation register', () => {
 
   it('keeps gtm_pilot_problems behind the read policy of the table it reads', () => {
     const d = defs.get('gtm_pilot_problems');
-    expect(d?.file).toBe('20260929120000_gtm_pilot_problems_visibility.sql');
+    expect(d?.file).toBe('20260929140000_gtm_pilot_26_weeks.sql');
     expect(d?.body).toMatch(/if not found or not private\.gtm_account_visible\(p\.account_id\) then\s+return array\['not_found'\]/);
   });
 

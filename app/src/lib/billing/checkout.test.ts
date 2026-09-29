@@ -9,7 +9,7 @@ const CHECKOUT = '9a8b7c6d-5e4f-4a3b-9c2d-1e0f2a3b4c5d';
 
 const OK: BeginRow = {
   outcome: 'ok', checkout_id: CHECKOUT, billing_account_id: 'acct', customer_ref: null, email: 'ana@example.edu',
-  plan_name: 'Plus', amount_cents: 399, currency: 'usd', billing_interval: 'month',
+  plan_name: 'Plus', amount_cents: 799, currency: 'usd', billing_interval: 'month',
 };
 
 function deps(over: Partial<CheckoutDeps> = {}) {
@@ -99,7 +99,7 @@ describe('billing checkout', () => {
     const form = new URLSearchParams(init.body as string);
     expect(form.get('mode')).toBe('subscription');
     expect(form.get('client_reference_id')).toBe(CHECKOUT);
-    expect(form.get('line_items[0][price_data][unit_amount]')).toBe('399');
+    expect(form.get('line_items[0][price_data][unit_amount]')).toBe('799');
     expect(form.get('line_items[0][price_data][recurring][interval]')).toBe('month');
     expect(form.get('customer_email')).toBe('ana@example.edu');
     expect(form.get('success_url')).toBe(`${APP}/?checkout=success`);
