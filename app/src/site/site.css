@@ -810,3 +810,57 @@ fieldset.tool-field legend {
   margin-bottom: 8px;
   font-weight: 600;
 }
+
+/* The one-operating-system pages' four words (oneos.tsx). The word is printed; colour is never the only carrier. */
+.site-oneos {
+  white-space: nowrap;
+}
+
+.site-oneos-tested {
+  border-color: var(--site-accent);
+}
+
+.site-oneos-building {
+  border-color: var(--site-warn-line);
+}
+
+.site-oneos-designed,
+.site-oneos-not-started {
+  color: var(--site-dim);
+}
+
+.site-areas {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.site-areas > li + li {
+  margin-top: 8px;
+}
+
+.site-areas summary {
+  cursor: pointer;
+  padding: 8px 0;
+}
+
+.site-area-name {
+  font-weight: 600;
+  margin-right: 8px;
+}
+
+.site-area {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 8px;
+  padding-left: 16px;
+}
+
+.site-area dt {
+  color: var(--site-dim);
+  font-size: 0.875rem;
+}
+
+.site-area dd {
+  margin: 0;
+}
