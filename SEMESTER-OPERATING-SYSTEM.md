@@ -91,7 +91,7 @@ What the repository also runs on, and the brief’s list did not name.
 | QTI 3 assessment content and migration | [`docs/QTI-3-ASSESSMENT-AND-MIGRATION.md`](docs/QTI-3-ASSESSMENT-AND-MIGRATION.md) | current | `product` | 1 | 2026-09-28 | 2026-12-28 | — | `D-112` |
 | AI in grading and integrity | [`docs/operating-model/AI-GRADING-AND-INTEGRITY.md`](docs/operating-model/AI-GRADING-AND-INTEGRITY.md) | current | `trust` | 1 | 2026-09-28 | 2026-12-28 | — | `D-112` |
 | One-system platform grammar | [`docs/ONE-SYSTEM-PLATFORM-GRAMMAR.md`](docs/ONE-SYSTEM-PLATFORM-GRAMMAR.md) | current | `product` | 1 | 2026-09-28 | 2026-12-28 | — | `D-112` |
-| One operating system | [`docs/ONE-OPERATING-SYSTEM.md`](docs/ONE-OPERATING-SYSTEM.md) | current | `product` | 1 | 2026-09-29 | 2026-12-28 | — | `D-124`, `D-003` |
+| One operating system | [`docs/ONE-OPERATING-SYSTEM.md`](docs/ONE-OPERATING-SYSTEM.md) | current | `product` | 1 | 2026-09-29 | 2026-12-28 | — | `D-125`, `D-003` |
 | SaaS launch kit | [`docs/SAAS-LAUNCH-KIT.md`](docs/SAAS-LAUNCH-KIT.md) | current | `founder` | 1 | 2026-09-28 | 2026-10-28 | — | `D-113`, `D-009` |
 | Operational reality register | [`docs/OPERATIONAL-REALITY-REGISTER.md`](docs/OPERATIONAL-REALITY-REGISTER.md) | current | `founder` | 1 | 2026-09-28 | 2026-10-28 | — | `D-113` |
 | Compliance crosswalk | [`docs/trust/COMPLIANCE-CROSSWALK.md`](docs/trust/COMPLIANCE-CROSSWALK.md) | current | `security` | 1 | 2026-09-28 | 2026-10-28 | — | `D-115` |

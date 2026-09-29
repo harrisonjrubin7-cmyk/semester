@@ -63,7 +63,7 @@ whose test holds every cited path to the tree:
 
 Two pages the second brief of 29 September asked for, both printed from
 `lib/oneos.ts`, whose test holds every area and row to rows that exist and
-rates each at the weakest of them (D-124):
+rates each at the weakest of them (D-125):
 
 | Route | Says |
 |---|---|

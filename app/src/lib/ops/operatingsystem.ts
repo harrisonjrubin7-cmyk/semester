@@ -725,7 +725,7 @@ export const SOURCES: readonly Source[] = [
     lastReviewed: '2026-09-29',
     nextReview: QUARTERLY,
     supersedes: [],
-    decisions: ['D-124', 'D-003'],
+    decisions: ['D-125', 'D-003'],
     alsoRead: ['docs/ONE-SYSTEM-PLATFORM-GRAMMAR.md', 'docs/PUBLIC-SITE.md', 'docs/expansion/ROUTE-AND-FEATURE-CROSSWALK.md'],
     note: 'Rendered from app/src/lib/oneos.ts: the two briefs that say what makes Semester different — everything from the start, one central operating system — held to the tree: the positioning printed as written, the five destinations held to the tab bar’s labels, the shared objects and the vocabulary each at the module that carries it, the palette commands at the destinations that carry them (verb commands refused by the overlay’s own decision), the journeys, the event layer, the role homes, the console, the final test, the app, site and console additions, the company behind them and the ten that matter most. Two public pages print from it, each area at the weakest of the rows it rests on.',
   },
