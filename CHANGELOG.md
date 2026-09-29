@@ -24,6 +24,35 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### On the public site: the platform statement no longer lists payments
+
+The statement at the top of **One Operating System**, under Platform, named
+payments among the parts of university life Semester brings together.
+Semester does not handle payments, so the word is gone; the rest of the
+sentence is unchanged.
+
+Nothing to do.
+
+### Plus is $7.99 a month or $59 a year
+
+The Membership panel on your Account screen now offers Plus at $7.99 a month
+or $59 a year, the same price the pricing page and the company site show.
+Until now the panel offered $3.99 or $29.99. If you already started a Plus
+checkout at the old price in testing, it keeps that price; a new checkout
+uses the new one.
+
+Nothing to do.
+
+### On the public site: two more things Semester will never do
+
+**Data & AI Transparency**, under Trust, lists what Semester never does with
+student data. It now says two more things: education records, personal plans
+and study activity are never used for behavioural advertising, and study
+activity is never used to label a student capable or incapable, motivated or
+unmotivated. Each line links to the check that holds it, like the others.
+
+Nothing to do.
+
 ### Find people, groups and opportunities, from Community
 
 Community now ends with one list — **Find people, groups and opportunities** —

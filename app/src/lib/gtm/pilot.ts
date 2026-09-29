@@ -29,6 +29,10 @@ export type PilotProblem =
 
 const DAY = 86_400_000;
 
+/** Every pilot runs 26 weeks: long enough for a registration cycle and an outcomes report, short enough to decide on. */
+export const PILOT_WEEKS = 26;
+export const PILOT_DAYS = PILOT_WEEKS * 7;
+
 export function pilotDays(p: Pick<PilotPlan, 'startDate' | 'endDate'>): number {
   return Math.round((Date.parse(p.endDate) - Date.parse(p.startDate)) / DAY);
 }
@@ -37,7 +41,7 @@ export function pilotDays(p: Pick<PilotPlan, 'startDate' | 'endDate'>): number {
 export function pilotReadiness(p: PilotPlan): PilotProblem[] {
   const out: PilotProblem[] = [];
   const days = pilotDays(p);
-  if (!(days >= 60 && days <= 120)) out.push('duration');
+  if (days !== PILOT_DAYS) out.push('duration');
   if (!p.workflow.trim()) out.push('no_workflow');
   if (!p.cohort.trim()) out.push('no_cohort');
   if (!p.baseline) out.push('no_baseline');

@@ -15,8 +15,8 @@ import {
 } from './membership';
 import { CONSENT_VERSION as SERVER_SHAPE } from '../../../supabase/functions/_shared/billingcheckout';
 
-const MONTH = { id: '6d5749ba-47da-4545-86d6-bb89461adac6', plan_code: 'plus', amount_cents: 399, currency: 'usd', billing_interval: 'month' };
-const YEAR = { id: '64c5f28d-84dd-452d-b87a-257d6dc9b080', plan_code: 'plus', amount_cents: 2999, currency: 'usd', billing_interval: 'year' };
+const MONTH = { id: '6d5749ba-47da-4545-86d6-bb89461adac6', plan_code: 'plus', amount_cents: 799, currency: 'usd', billing_interval: 'month' };
+const YEAR = { id: '64c5f28d-84dd-452d-b87a-257d6dc9b080', plan_code: 'plus', amount_cents: 5900, currency: 'usd', billing_interval: 'year' };
 
 describe('the catalog', () => {
   it('keeps only Plus prices that can be bought online, monthly first', () => {
@@ -27,8 +27,8 @@ describe('the catalog', () => {
 
   it('says the price the catalog charges, not the planned one', () => {
     const [m, y] = plusPrices([MONTH, YEAR]);
-    expect(priceWords(m)).toBe('$3.99 a month');
-    expect(priceWords(y)).toBe('$29.99 a year');
+    expect(priceWords(m)).toBe('$7.99 a month');
+    expect(priceWords(y)).toBe('$59 a year');
     expect(money(3000)).toBe('$30');
   });
 });
@@ -36,7 +36,7 @@ describe('the catalog', () => {
 describe('consent', () => {
   it('names amount, interval, renewal and the way to cancel', () => {
     const t = consentText(plusPrices([MONTH])[0]);
-    expect(t).toContain('$3.99 a month');
+    expect(t).toContain('$7.99 a month');
     expect(t).toMatch(/renewing every month until I cancel/);
     expect(t).toMatch(/cancel any time from my Account screen/);
   });

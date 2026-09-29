@@ -33,7 +33,7 @@ most a document naming the gap. The supplied PDFs are never evidence.
 
 **One Operating System for University Life.**
 
-Semester is the unified operating system for higher education. One connected platform for every part of university life: academics, learning, planning, campus services, career development, student support, payments, communication, and institutional operations. Semester replaces the disconnected university experience with one intelligent, connected system.
+Semester is the unified operating system for higher education. One connected platform for every part of university life: academics, learning, planning, campus services, career development, student support, communication, and institutional operations. Semester replaces the disconnected university experience with one intelligent, connected system.
 
 *Supporting paragraph.* Semester is not another point solution. It is designed as one connected university platform — academic planning, native learning tools, course workspaces, AI, advising, campus services, career development, communications, payments and institutional operations in one secure ecosystem — where every experience is connected through one identity, one action layer, one data model and one shared understanding of the student journey.
 

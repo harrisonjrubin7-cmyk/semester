@@ -5,21 +5,21 @@ import { GROUPS, GROUP_TITLE, MEASURES, type Measure } from './firstyear';
 import { cell, controlLine, link, renderedFrom, table } from './render';
 
 /**
- * The first-year success measures, held to what can actually be read.
+ * The company’s first-year measures, held to what can actually be read.
  *
  * A measure that says it is `measured` cites a query or document that
  * returns the number; one that says `instrumented` cites code; one that is
  * only `defined` may cite the place its reading would come from, or nothing.
  * No target may be set without a decision in the log, and today none is.
  *
- * `docs/FIRST-YEAR-SUCCESS.md` is rendered from the data; `npm run registers`
+ * `docs/COMPANY-FIRST-YEAR-MEASURES.md` is rendered from the data; `npm run registers`
  * from app/ rewrites it, and the last test fails while it is stale.
  */
 
 const root = join(import.meta.dirname, '../../../..');
 const at = (p: string) => join(root, p);
 const read = (p: string) => readFileSync(at(p), 'utf8');
-const DOC = 'docs/FIRST-YEAR-SUCCESS.md';
+const DOC = 'docs/COMPANY-FIRST-YEAR-MEASURES.md';
 
 /** The brief's list, in its order. */
 const BRIEF: Record<(typeof GROUPS)[number], string[]> = {
@@ -31,7 +31,7 @@ const BRIEF: Record<(typeof GROUPS)[number], string[]> = {
 
 const isCode = (p: string) => /\.(ts|tsx|mjs|sql)$/.test(p);
 
-describe('the first-year success measures', () => {
+describe('the company’s first-year measures', () => {
   it('are the brief’s measures, in its groups and order', () => {
     for (const g of GROUPS) expect(MEASURES.filter((m) => m.group === g).map((m) => m.name), g).toEqual(BRIEF[g]);
     expect(MEASURES.map((m) => m.group)).toEqual(GROUPS.flatMap((g) => BRIEF[g].map(() => g)));
@@ -78,7 +78,7 @@ function render(): string {
   const ref = (p: string) => `[\`${p}\`](${link(DOC, p)})`;
   const count = (s: Measure['state']) => MEASURES.filter((m) => m.state === s).length;
   const out: string[] = [
-    '# First-year success',
+    '# Company first-year measures',
     '',
     renderedFrom('app/src/lib/ops/firstyear.ts', 'firstyear.test.ts'),
     '',
