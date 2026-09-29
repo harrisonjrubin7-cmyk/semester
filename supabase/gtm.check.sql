@@ -581,6 +581,7 @@ declare
   admin uuid := (select id from ids where name = 'admin');
   mgr uuid := (select id from ids where name = 'mgr');
   other_mgr uuid := (select id from ids where name = 'other_mgr');
+  student uuid := (select id from ids where name = 'student');
   acct uuid; pilot uuid;
 begin
   perform pg_temp.refused_with('a school admin creating a pipeline account', admin,
@@ -613,6 +614,25 @@ begin
   perform pg_temp.run(sales, format($q$insert into public.gtm_pilots (account_id, workflow, start_date, end_date)
     values (%L, 'Orientation checklist', '2027-01-11', '2027-12-31')$q$, acct));
   select id into pilot from public.gtm_pilots where account_id = acct;
+
+  -- `gtm_pilot_problems` is security definer, so the read policy on
+  -- `gtm_pilots` does not stand in front of it: the function has to ask the
+  -- same question itself. Somebody the policy would not show the pilot to is
+  -- told what a pilot that does not exist would tell them, and nothing about
+  -- its price, sponsor or dates. Sales and the school's own admin — the two
+  -- the policy admits — still get the whole list, so the answer is the
+  -- policy's and not a stricter one.
+  perform pg_temp.counted('sales reads a pilot''s readiness problems',
+    pg_temp.seen(sales, format('select 1 from unnest(public.gtm_pilot_problems(%L)) x where x <> ''not_found''', pilot)), 10);
+  perform pg_temp.counted('so does that school''s admin',
+    pg_temp.seen(admin, format('select 1 from unnest(public.gtm_pilot_problems(%L)) x where x <> ''not_found''', pilot)), 10);
+  perform pg_temp.counted('a student at the school is told only that there is no such pilot',
+    pg_temp.seen(student, format('select 1 from unnest(public.gtm_pilot_problems(%L)) x where x <> ''not_found''', pilot)), 0);
+  perform pg_temp.counted('and is told that',
+    pg_temp.seen(student, format('select 1 from unnest(public.gtm_pilot_problems(%L)) x where x = ''not_found''', pilot)), 1);
+  perform pg_temp.counted('another school''s staff learn nothing either',
+    pg_temp.seen(other_mgr, format('select 1 from unnest(public.gtm_pilot_problems(%L)) x where x <> ''not_found''', pilot)), 0);
+
   perform pg_temp.refused_with('starting a pilot with nothing agreed', sales,
     format($q$update public.gtm_pilots set status = 'active' where id = %L$q$, pilot),
     'not ready: duration, no_cohort, no_baseline, no_sponsor, no_champion, data_plan, metric_count, no_conversion_date, no_price, no_midpoint');

@@ -1,0 +1,374 @@
+/**
+ * The Security Definer and RLS remediation register: the first artifact the
+ * architecture audit of 29 September 2026 asks for, "because it tells you
+ * exactly where application authority currently crosses database trust
+ * boundaries".
+ *
+ * The audit read production's Supabase advisor and found two things it would
+ * not wave through at that volume: **45 tables with row-level security on and
+ * no policy**, and **151 `security definer` functions a signed-in account can
+ * call**. Neither is a vulnerability by itself. A table no client role can
+ * reach needs no policy; a definer function that checks its own caller is how
+ * a write with no policy is made safely. What the audit asked for is a
+ * disposition for every one, written down, and a guard so the next one cannot
+ * arrive without one. This is both.
+ *
+ * `docs/DEFINER-RLS-REGISTER.md` is rendered from this file by
+ * `definerregister.test.ts`; edit the data, then `npm run registers` from app/.
+ *
+ * ## What is held to what
+ *
+ * - **The function set is derived, not typed.** The test reads every
+ *   migration, takes the last definition of each `public` function, keeps the
+ *   `security definer` ones, and intersects them with the allowlist in
+ *   `supabase/grants.check.sql` — the array that decides what a signed-in
+ *   account may call. That set must equal `FUNCTIONS` exactly. It came to 151
+ *   on this tree, the same 151 names the advisor listed on production. A new
+ *   definer function granted to clients is red here until it has a row.
+ * - **Every row's gate is in its body.** Each row names the literal checks the
+ *   function makes — `auth.uid()`, a `private.` capability helper, or an
+ *   ownership test — and the test requires each to appear in the body of the
+ *   definition that wins. Removing a check turns its row red.
+ * - **Admin and moderation rows need more than identity.** A row in either
+ *   category must name at least one gate that is not `auth.uid()`: knowing who
+ *   is calling is not the same as knowing they may.
+ * - **The tables are the reading, pinned.** Some tables here get their
+ *   policies from `format()` loops a static parser cannot read, so the set of
+ *   policy-less tables is not re-derived from SQL. `TABLES` is the advisor's
+ *   list of 29 September; the test holds each to being created with row-level
+ *   security in `migrations/`, having no `create policy` naming it, and never
+ *   being granted to `anon` or `authenticated`.
+ *
+ * ## The reading
+ *
+ * Production (`lzrqvlugnawcgywkhqlz`), 29 September 2026, read-only, through
+ * the advisor and `pg_catalog`:
+ *
+ * - all 45 policy-less tables: no SELECT, INSERT, UPDATE or DELETE for `anon`
+ *   or `authenticated`. Each is deny-by-default, not open;
+ * - all 151 functions: not executable by `anon` or PUBLIC, `search_path`
+ *   pinned, no dynamic `execute`;
+ * - two bodies named neither `auth.uid()` nor a `private.` gate:
+ *   `gtm_pilot_problems`, which answered any signed-in caller about any
+ *   pilot, fixed in `20260929120000_gtm_pilot_problems_visibility.sql`; and
+ *   `kill_switch_engaged`, a deliberate one-boolean read recorded in
+ *   `OPEN` below.
+ */
+
+/** The briefs this answers. A supplied PDF is never evidence. */
+export const SOURCES: readonly { path: string; title: string; what: string }[] = [
+  {
+    path: 'docs/expansion/Architecture-Audit-Summary-and-Hardening-Scorecard.pdf',
+    title: 'Audit summary',
+    what: 'A twenty-dimension hardening scorecard (57/100), the two advisor findings, a function-category control table, a release gate, a four-layer architecture map, the connector and trust layers, flags against tenant configuration, a 90-day remediation plan and a definition of done.',
+  },
+  {
+    path: 'docs/expansion/Strengthen-the-Architecture-Twenty-Priorities.pdf',
+    title: 'What else can I do to further strengthen, improve and reinforce the existing application and architecture',
+    what: 'Twenty architecture priorities — map, domains, canonical model, lineage, reconciliation, connectors, degradation, policy-as-code, privacy operations, security, observability, SLOs, resilience, design system, event bus, flags, risk-based tests, performance, the console and a sandbox — a recommended sequence and the rule every feature must answer.',
+  },
+];
+
+export const READ_ON = '2026-09-29';
+export const PROJECT = 'lzrqvlugnawcgywkhqlz';
+
+/**
+ * The audit's function categories, each with the controls it requires. The
+ * wording is the audit's; `self-service` is its "student self-service".
+ */
+export const CATEGORIES = {
+  'self-service': 'Verify auth.uid(), tenant scope, object ownership, input validation, rate limits, audit event.',
+  sharing: 'Explicit consent, narrow scope, short expiry, revocation, view audit.',
+  admin: 'Capability check, MFA or fresh auth for high risk, dual control where needed, immutable audit.',
+  integration: 'Server-only preferred; signed workflow; replay protection; no browser service-role access.',
+  financial: 'Provider webhook verification, idempotency, no client-controlled final state.',
+  moderation: 'Capability check, reason required, appeals, audit trail.',
+  'read-helper': 'Minimal fields, no hidden cross-tenant aggregation, pagination limit.',
+} as const;
+
+export type Category = keyof typeof CATEGORIES;
+
+/**
+ * Every `security definer` function in `public` a signed-in account can call:
+ * name, category, and the literal checks its body makes. Sorted by name.
+ */
+export const FUNCTIONS: readonly (readonly [name: string, category: Category, gates: readonly string[]])[] = [
+  ['accept_connection', 'self-service', ['auth.uid()']],
+  ['accept_family_grant', 'sharing', ['auth.uid()']],
+  ['activate_escalation_agreement', 'admin', ['auth.uid()', 'private.has_capability']],
+  ['adopt_lti_identity', 'integration', ['auth.uid()']],
+  ['answer_help_request', 'admin', ['auth.uid()', 'private.answers_for']],
+  ['answer_mentor_request', 'admin', ['auth.uid()', 'private.subject_has_capability']],
+  ['appeal_community_decision', 'self-service', ['auth.uid()']],
+  ['apply_to_organization', 'self-service', ['auth.uid()', 'private.verified_student']],
+  ['apply_to_volunteer', 'self-service', ['auth.uid()', 'private.verified_student', 'private.school_of']],
+  ['approve_community_pseudonymity', 'moderation', ['private.has_capability']],
+  ['available_supporters', 'read-helper', ['auth.uid()']],
+  ['begin_community_image', 'self-service', ['auth.uid()', 'private.community_role']],
+  ['beta_add_cohort', 'admin', ['private.beta_manager']],
+  ['beta_create_program', 'admin', ['auth.uid()', 'private.beta_manager']],
+  ['beta_declare_flag', 'admin', ['private.beta_manager']],
+  ['beta_feedback_queue', 'admin', ['private.beta_triager']],
+  ['beta_invitation_for_me', 'read-helper', ['auth.uid()', 'private.beta_confirmed_email']],
+  ['beta_invite', 'admin', ['auth.uid()', 'private.beta_manager']],
+  ['beta_known_issues_for_me', 'read-helper', ['private.beta_my_membership']],
+  ['beta_post_issue', 'admin', ['auth.uid()', 'private.beta_triager']],
+  ['beta_revoke_invitation', 'admin', ['private.beta_manager']],
+  ['beta_send_feedback', 'self-service', ['private.beta_my_membership']],
+  ['beta_set_status', 'admin', ['private.beta_manager']],
+  ['beta_triage_feedback', 'admin', ['private.beta_triager']],
+  ['block_community_author', 'self-service', ['auth.uid()', 'private.community_role']],
+  ['can_manage_escalation_agreements', 'admin', ['private.has_capability']],
+  ['case_author_safety', 'moderation', ['private.has_capability']],
+  ['claim_abandoned_organization', 'self-service', ['auth.uid()', "mine is distinct from 'MEMBER'"]],
+  ['claim_community_alias', 'self-service', ['auth.uid()', 'private.community_role']],
+  ['claim_family_invite', 'sharing', ['auth.uid()']],
+  ['claim_referral', 'self-service', ['auth.uid()']],
+  ['claim_school', 'self-service', ['auth.uid()']],
+  ['close_break_glass', 'admin', ['auth.uid()', 'g.subject is distinct from me']],
+  ['close_my_ticket', 'self-service', ['auth.uid()']],
+  ['community_reviewer_standing', 'moderation', ['private.has_capability']],
+  ['community_session_counts', 'read-helper', ['private.community_role']],
+  ['connected_with', 'read-helper', ['auth.uid()']],
+  ['console_act', 'admin', ['auth.uid()', 'private.has_capability', 'private.assert_fresh_mfa']],
+  ['console_audit_read', 'admin', ['auth.uid()', 'private.has_capability']],
+  ['console_audit_status', 'admin', ['auth.uid()', 'private.has_capability']],
+  ['console_figures', 'admin', ['auth.uid()', 'private.has_capability']],
+  ['contribute_course_plan', 'self-service', ['auth.uid()', 'private.school_of']],
+  ['create_community', 'self-service', ['auth.uid()', 'private.has_capability', 'private.verified_student', 'private.school_of']],
+  ['create_community_post', 'self-service', ['auth.uid()', 'private.community_role']],
+  ['create_study_session', 'self-service', ['auth.uid()', 'private.community_role']],
+  ['create_support_access', 'sharing', ['auth.uid()', 'private.subject_has_capability']],
+  ['decide_alias_identity', 'moderation', ['auth.uid()', 'private.has_capability']],
+  ['decide_approval', 'admin', ['auth.uid()', 'private.approver_party', 'private.assert_fresh_mfa']],
+  ['decide_community_appeal', 'moderation', ['auth.uid()', 'private.has_capability']],
+  ['decide_community_case', 'moderation', ['auth.uid()', 'private.has_capability']],
+  ['decide_community_escalation', 'moderation', ['auth.uid()', 'private.has_capability']],
+  ['delete_community_post', 'self-service', ['auth.uid()']],
+  ['draft_office_action', 'admin', ['auth.uid()', 'private.may_publish']],
+  ['edit_community_post', 'self-service', ['auth.uid()']],
+  ['export_my_data', 'self-service', ['auth.uid()']],
+  ['follow_organization', 'self-service', ['auth.uid()']],
+  ['forget_my_advisor_shares', 'self-service', ['auth.uid()']],
+  ['forget_my_beta', 'self-service', ['auth.uid()', 'private.beta_confirmed_email']],
+  ['forget_my_community', 'self-service', ['auth.uid()']],
+  ['forget_my_course_demand', 'self-service', ['auth.uid()']],
+  ['forget_my_help_requests', 'self-service', ['auth.uid()']],
+  ['forget_my_mentor_requests', 'self-service', ['auth.uid()']],
+  ['forget_my_organizations', 'self-service', ['auth.uid()']],
+  ['forget_my_support_access', 'self-service', ['auth.uid()']],
+  ['forget_my_support_shares', 'self-service', ['auth.uid()']],
+  ['forget_my_support_tickets', 'self-service', ['auth.uid()']],
+  ['gtm_activation_failures', 'admin', ['auth.uid()', 'private.has_capability']],
+  ['gtm_audience_count', 'admin', ['private.has_capability']],
+  ['gtm_campaign_report', 'admin', ['auth.uid()', 'private.has_capability']],
+  ['gtm_pilot_problems', 'admin', ['private.gtm_account_visible']],
+  ['help_inbox', 'admin', ['private.answers_for']],
+  ['integration_approve_connection', 'integration', ['auth.uid()', 'private.has_capability']],
+  ['integration_approve_scope', 'integration', ['auth.uid()', 'private.has_capability']],
+  ['integration_request_replay', 'integration', ['auth.uid()', 'private.has_capability']],
+  ['integration_set_paused', 'integration', ['private.has_capability']],
+  ['join_beta', 'self-service', ['auth.uid()', 'private.beta_my_membership', 'private.beta_confirmed_email']],
+  ['join_community', 'self-service', ['auth.uid()', 'private.verified_student', 'private.school_of']],
+  ['join_study_session', 'self-service', ['auth.uid()', 'private.community_role']],
+  ['kill_switch_engaged', 'read-helper', ['k.tenant_id is null or k.tenant_id = want_tenant']],
+  ['leave_beta', 'self-service', ['private.beta_my_membership']],
+  ['leave_organization', 'self-service', ['auth.uid()']],
+  ['list_advisor_shares', 'sharing', ['auth.uid()']],
+  ['list_support_shares', 'sharing', ['auth.uid()', 'private.may_receive_support_share']],
+  ['make_family_invite', 'sharing', ['auth.uid()', 'private.verified_student']],
+  ['make_family_share', 'sharing', ['auth.uid()']],
+  ['make_referral_code', 'self-service', ['auth.uid()']],
+  ['manage_volunteer', 'moderation', ['private.has_capability']],
+  ['moderate_opportunity', 'moderation', ['private.has_capability']],
+  ['move_office_action', 'admin', ['auth.uid()', 'private.may_publish']],
+  ['mutual_connections', 'read-helper', ['auth.uid()']],
+  ['my_action_publish_scopes', 'read-helper', ['auth.uid()']],
+  ['my_beta', 'read-helper', ['private.beta_my_membership']],
+  ['my_capabilities', 'read-helper', ['auth.uid()']],
+  ['my_community_notices', 'read-helper', ['auth.uid()']],
+  ['my_community_refs', 'read-helper', ['auth.uid()']],
+  ['my_community_standing', 'read-helper', ['auth.uid()']],
+  ['my_course_studio_courses', 'read-helper', ['auth.uid()']],
+  ['my_demand_scopes', 'read-helper', ['auth.uid()']],
+  ['my_entitlements', 'read-helper', ['auth.uid()']],
+  ['my_help_destinations', 'read-helper', ['private.has_capability']],
+  ['my_moderation_access', 'read-helper', ['private.has_capability']],
+  ['my_support_thread', 'read-helper', ['auth.uid()']],
+  ['my_support_tickets', 'read-helper', ['auth.uid()']],
+  ['my_volunteer_standing', 'read-helper', ['auth.uid()']],
+  ['note_activity', 'self-service', ['auth.uid()']],
+  ['office_action_programs', 'read-helper', ['auth.uid()']],
+  ['office_desk_actions', 'admin', ['auth.uid()', 'private.may_publish']],
+  ['open_help_request', 'self-service', ['auth.uid()', 'private.answers_for']],
+  ['open_support_ticket', 'self-service', ['auth.uid()']],
+  ['publish_course_guidance', 'admin', ['auth.uid()', 'private.course_publisher']],
+  ['publish_course_rules', 'admin', ['auth.uid()', 'private.course_publisher']],
+  ['publish_study_pack', 'admin', ['auth.uid()', 'private.course_publisher']],
+  ['read_advisor_share', 'sharing', ['auth.uid()']],
+  ['read_family_share', 'sharing', ['auth.uid()']],
+  ['read_shared_accommodation', 'sharing', ['auth.uid()']],
+  ['read_support_share', 'sharing', ['auth.uid()', 'private.may_receive_support_share']],
+  ['read_support_signals', 'sharing', ['auth.uid()', 'private.subject_has_capability', 'private.support_consent_active']],
+  ['referral_standing', 'read-helper', ['auth.uid()']],
+  ['remove_connection', 'self-service', ['auth.uid()']],
+  ['reply_to_my_ticket', 'self-service', ['auth.uid()']],
+  ['report_community_post', 'self-service', ['auth.uid()', 'private.community_role']],
+  ['request_alias_identity', 'moderation', ['auth.uid()', 'private.has_capability']],
+  ['request_approval', 'admin', ['auth.uid()', 'private.has_capability']],
+  ['request_cancellation', 'financial', ['auth.uid()']],
+  ['request_community_escalation', 'moderation', ['auth.uid()', 'private.has_capability']],
+  ['request_connection', 'self-service', ['auth.uid()']],
+  ['request_mentor', 'self-service', ['auth.uid()', 'private.school_of', 'private.in_cohort']],
+  ['retire_escalation_agreement', 'admin', ['auth.uid()', 'private.has_capability']],
+  ['reveal_alias_identity', 'moderation', ['auth.uid()', 'private.has_capability']],
+  ['review_break_glass', 'admin', ['auth.uid()', 'private.holds_seat']],
+  ['revoke_support_access', 'sharing', ['auth.uid()']],
+  ['save_escalation_agreement', 'admin', ['auth.uid()', 'private.has_capability']],
+  ['send_help_request', 'self-service', ['auth.uid()', 'private.school_of']],
+  ['set_member_capabilities', 'admin', ['private.org_can']],
+  ['set_member_standing', 'admin', ['auth.uid()', 'private.org_can']],
+  ['share_with_advisor', 'sharing', ['auth.uid()']],
+  ['share_with_support', 'sharing', ['auth.uid()', 'private.may_receive_support_share']],
+  ['start_organization', 'self-service', ['auth.uid()', 'private.verified_student', 'private.school_of']],
+  ['stop_contributing', 'self-service', ['auth.uid()']],
+  ['submit_course_review', 'self-service', ['auth.uid()', 'private.verified_student', 'private.school_of']],
+  ['support_access_windows', 'sharing', ['auth.uid()', 'private.subject_has_capability', 'private.support_consent_active']],
+  ['support_reply', 'admin', ['private.support_agent']],
+  ['support_ticket_queue', 'admin', ['private.support_agent']],
+  ['support_ticket_thread', 'admin', ['private.support_agent']],
+  ['trust_room_grant', 'sharing', ['auth.uid()', 'private.has_capability']],
+  ['trust_room_revoke', 'sharing', ['auth.uid()', 'private.has_capability']],
+  ['volunteer_attest', 'self-service', ['auth.uid()']],
+  ['volunteer_decide', 'moderation', ['auth.uid()', 'private.volunteer_ready']],
+  ['volunteer_next_tasks', 'moderation', ['auth.uid()', 'private.volunteer_ready']],
+  ['volunteer_roster', 'moderation', ['private.has_capability']],
+  ['withdraw_help_request', 'self-service', ['auth.uid()']],
+];
+
+/**
+ * The advisor's 45 `rls_enabled_no_policy` tables. `private-internal` is a
+ * table in `private`, which PostgREST does not expose; `server-only` is a
+ * `public` table with every client privilege revoked, reached only through a
+ * definer function in `FUNCTIONS` or an Edge Function holding the service key.
+ * `writer` is what writes it.
+ */
+export type Disposition = 'private-internal' | 'server-only';
+
+export const TABLES: readonly (readonly [table: string, disposition: Disposition, writer: string])[] = [
+  ['private.ai_usage_month', 'private-internal', 'the AI gateway meter'],
+  ['private.ai_usage_reservation', 'private-internal', 'the AI gateway meter'],
+  ['private.approved_source_content', 'private-internal', 'the intelligence gateway'],
+  ['private.console_audit_key', 'private-internal', 'the console audit chain'],
+  ['private.console_audit_manifest', 'private-internal', 'the console audit chain'],
+  ['private.console_audit_verification', 'private-internal', 'the console audit integrity job'],
+  ['private.direct_rate_limit', 'private-internal', 'the direct rate-limit trigger'],
+  ['private.domain_event_receipts', 'private-internal', 'the domain outbox consumer'],
+  ['private.domain_outbox_events', 'private-internal', 'the domain outbox'],
+  ['private.gateway_audit', 'private-internal', 'the university gateway'],
+  ['private.gateway_health_probe', 'private-internal', 'the university gateway'],
+  ['private.gateway_intelligence_action', 'private-internal', 'the intelligence gateway'],
+  ['private.gateway_intelligence_audit', 'private-internal', 'the intelligence gateway'],
+  ['private.gateway_rate_limit', 'private-internal', 'the university gateway'],
+  ['private.gateway_review', 'private-internal', 'the university gateway'],
+  ['private.integration_simulation_runs', 'private-internal', 'the sync simulation sandbox'],
+  ['private.site_lead_hits', 'private-internal', 'submit_site_lead rate limiting'],
+  ['public.access_gate', 'server-only', 'the invite-gate definer functions (20260921002428_invites.sql)'],
+  ['public.app_admins', 'server-only', 'the service key; read by private admin helpers'],
+  ['public.beta_cohorts', 'server-only', 'the beta_* definer functions'],
+  ['public.beta_exit_requests', 'server-only', 'the beta_* definer functions'],
+  ['public.beta_feature_flags', 'server-only', 'the beta_* definer functions'],
+  ['public.beta_feedback', 'server-only', 'the beta_* definer functions'],
+  ['public.beta_invitations', 'server-only', 'the beta_* definer functions'],
+  ['public.beta_known_issues', 'server-only', 'the beta_* definer functions'],
+  ['public.beta_memberships', 'server-only', 'the beta_* definer functions'],
+  ['public.beta_programs', 'server-only', 'the beta_* definer functions'],
+  ['public.community_media_deletions', 'server-only', 'the private.queue_media_deletion trigger'],
+  ['public.community_safety_entries', 'server-only', 'the community moderation functions'],
+  ['public.gtm_communication_events', 'server-only', 'the GTM Edge Functions, holding consent-bearing contact data'],
+  ['public.gtm_consent', 'server-only', 'the GTM Edge Functions, holding consent-bearing contact data'],
+  ['public.gtm_conversion_events', 'server-only', 'the GTM Edge Functions, holding consent-bearing contact data'],
+  ['public.gtm_prospects', 'server-only', 'the GTM Edge Functions, holding consent-bearing contact data'],
+  ['public.gtm_suppression', 'server-only', 'the GTM Edge Functions, holding consent-bearing contact data'],
+  ['public.invites', 'server-only', 'the invite functions'],
+  ['public.lti_identity', 'server-only', 'the LTI launch function and adopt_lti_identity'],
+  ['public.lti_line_item', 'server-only', 'the LTI AGS function'],
+  ['public.lti_link_ticket', 'server-only', 'the LTI launch function'],
+  ['public.lti_nonce', 'server-only', 'the LTI launch function'],
+  ['public.lti_platform', 'server-only', 'the LTI launch function'],
+  ['public.payment_events', 'server-only', 'the verified Stripe webhook'],
+  ['public.scim_credential', 'server-only', 'the SCIM gateway'],
+  ['public.site_leads', 'server-only', 'submit_site_lead, called by the lead-intake Edge Function with the service key'],
+  ['public.support_ticket_messages', 'server-only', 'the support ticket functions'],
+  ['public.support_tickets', 'server-only', 'the support ticket functions'],
+];
+
+/**
+ * What the register leaves open, each with its severity on the scale
+ * SECURITY.md defines and what would close it.
+ */
+export const OPEN: readonly { id: string; severity: 'low' | 'medium' | 'high'; what: string; closes: string }[] = [
+  {
+    id: 'DR-01',
+    severity: 'low',
+    what: '`kill_switch_engaged(switch, tenant)` answers for any tenant, where the read policy on `feature_kill_switch` shows a signed-in account only the platform-wide rows, its own school\'s and those it holds `integration:view` over. The one bit it discloses is whether another school has a named switch engaged. `grants.check.sql` records it as deliberate: one boolean, no row.',
+    closes: 'Scope the answer to the policy\'s tenants for a client caller, or accept the disclosure in SECURITY.md. The definer callers (`tenant_plan`, `tenant_sso_policy`, the LTI entitlement facts, the trust room) run as the owner and are unaffected either way.',
+  },
+  {
+    id: 'DR-02',
+    severity: 'medium',
+    what: 'The gates here are structural: this register proves each check is present in the body, not that it is correct. Behaviour is proved per function by the `supabase/*.check.sql` suites, and not every one of the 151 has a suite that calls it as a second account.',
+    closes: 'A sweep in `grants.check.sql` that calls every allowlisted definer function as an account with no grants and requires a refusal or an empty answer, with the self-service reads listed as expected exceptions.',
+  },
+  {
+    id: 'DR-03',
+    severity: 'low',
+    what: 'The 45 tables are pinned to the reading of 29 September. A table that gains or loses its last policy through a `format()` loop is not noticed here.',
+    closes: 'Re-read the advisor at each quarterly architecture review and compare; or move the loops\' table lists into data the test can read.',
+  },
+];
+
+/**
+ * Both briefs, item by item, held to what the tree has. `held` cites a test
+ * or check that guards it; `partial` cites what exists and says what does
+ * not; `owed` cites only prose. Read on 29 September against main at 9bd492d.
+ */
+export type BriefStatus = 'held' | 'partial' | 'owed';
+
+export const BRIEF: readonly { id: string; item: string; status: BriefStatus; paths: readonly string[]; gap: string }[] = [
+  { id: 'A01', item: 'A formal architecture map: layers, and per module an owner, source of truth, classification, APIs and events, flags, dashboards and failure behaviour', status: 'partial', paths: ['docs/ARCHITECTURE.md', 'docs/UNIVERSITY-OS-ARCHITECTURE.md', 'app/src/lib/governance/charters.ts', 'app/src/lib/governance/charters.test.ts'], gap: 'Layer maps and per-module charters exist; no single map gives each module all of those fields together.' },
+  { id: 'A02', item: 'Domain boundaries with explicit APIs and prohibited cross-domain access', status: 'partial', paths: ['docs/architecture/0003-no-application-server.md', 'app/server/institution/gateway.ts', 'packages/institution/src/index.ts'], gap: 'No document names the bounded contexts and their owners, and no lint rule or test forbids a cross-domain import or table read.' },
+  { id: 'A03', item: 'A canonical data model with standard metadata on every object', status: 'partial', paths: ['supabase/migrations/20260927170000_integration_control_plane.sql', 'supabase/integration-control-plane.check.sql', 'app/src/lib/integration/catalog.ts', 'packages/contract/src/index.ts'], gap: 'canonical_entity_references carries tenant, source, classification and freshness, but not version or retention policy, and the domain tables carry none of it.' },
+  { id: 'A04', item: 'Source lineage everywhere: a Source Card and one set of source states', status: 'partial', paths: ['app/src/components/SourceBadge.tsx', 'app/src/components/SourceBadge.test.tsx', 'app/src/lib/source.test.ts'], gap: 'A source badge exists; no Source Card shows the record and its sync time, and two trust vocabularies are still in use.' },
+  { id: 'A05', item: 'Reconciliation and drift detection', status: 'partial', paths: ['app/src/lib/integration/drift.ts', 'app/src/lib/integration/reconcile.ts', 'app/src/lib/integration/quality.test.ts', 'supabase/migrations/20260928040000_integration_quality.sql'], gap: 'Drift detection, reconciliation reports and mapping versions are tested; there is no quarantine queue or review workflow for held records.' },
+  { id: 'A06', item: 'A connector framework with one contract and lifecycle', status: 'partial', paths: ['app/src/lib/integration/adapter.ts', 'app/server/integration/registry.ts', 'app/server/integration/registry.test.ts'], gap: 'The contract and registry exist but the registry holds mocks only, and connection status is an enum with no enforced state machine.' },
+  { id: 'A07', item: 'Graceful degradation when a source is stale, unavailable or revoked', status: 'partial', paths: ['app/src/lib/integration/freshness.ts', 'app/src/lib/integration/pipeline.test.ts'], gap: 'Freshness classes exist; no screen defines its fallback for each state.' },
+  { id: 'A08', item: 'Policy as code: RBAC, ABAC, object-level authorization, a permission simulator, default deny', status: 'partial', paths: ['packages/institution/src/policy.ts', 'packages/institution/src/policy.test.ts', 'app/src/lib/governance/policysim.ts', 'supabase/rls-coverage.check.sql', 'supabase/grants.check.sql'], gap: 'A default-deny decision point, a simulator and RLS exist; routes adopt the decision point gradually (ADR 0007) and flags are evaluated on the client.' },
+  { id: 'A09', item: 'Privacy operations: export, deletion, consent revocation, a request workflow', status: 'partial', paths: ['supabase/migrations/20260929010000_account_erasure_and_export.sql', 'supabase/deletion.check.sql', 'app/src/lib/erasure.test.ts'], gap: 'Self-service export and erasure are tested; there is no data-subject-request queue with verification and a deadline.' },
+  { id: 'A10', item: 'A security programme: threat modelling, secret and dependency scanning, SBOM, branch protection, incident response, disclosure', status: 'partial', paths: ['.github/workflows/ci.yml', 'SECURITY.md', 'app/src/lib/supplychain.test.ts', 'app/src/lib/branchprotection.test.ts'], gap: 'All present except a platform-wide threat model; the dependency audit is non-blocking by a decision recorded in ci.yml.' },
+  { id: 'A11', item: 'Observability across frontend, backend, queues, auth and sync', status: 'partial', paths: ['MONITORING.md', 'supabase/health.sql', '.github/workflows/production-smoke.yml'], gap: 'Database health queries and synthetic probes only; no frontend error capture, latency, queue or sync telemetry in the tree.' },
+  { id: 'A12', item: 'Service objectives', status: 'partial', paths: ['app/src/lib/governance/error-budgets.ts', 'app/src/lib/governance/error-budgets.test.ts', 'docs/operating-model/SLOS-AND-ERROR-BUDGETS.md'], gap: 'Journey SLOs and error budgets are defined and held; no indicator is measured against them.' },
+  { id: 'A13', item: 'Resilience: queues, idempotency, dead letters, circuit breakers, rate limits, kill switches, offline', status: 'partial', paths: ['app/src/lib/integration/retry.ts', 'supabase/functions/_shared/killswitch.ts', 'app/src/lib/aikillswitch.test.ts', 'app/src/lib/offline-mode.test.ts'], gap: 'No circuit breaker, no general job queue or retry console.' },
+  { id: 'A14', item: 'A design-system package with accessibility and visual regression tests', status: 'partial', paths: ['app/src/styles/tokens.css', 'app/src/styles/tokens.test.ts', 'app/src/a11y/axe.test.tsx'], gap: 'Tokens and axe tests exist; no separate package, component catalogue or visual regression.' },
+  { id: 'A15', item: 'A platform event bus with a standard envelope', status: 'partial', paths: ['packages/institution/src/events.ts', 'packages/institution/src/events.test.ts', 'supabase/outbox.check.sql', 'docs/architecture/0008-event-envelope-and-outbox.md'], gap: 'The envelope and outbox are tested; no producer writes to the outbox and no publisher runs.' },
+  { id: 'A16', item: 'First-class feature flags', status: 'partial', paths: ['app/src/lib/flags.ts', 'app/src/lib/flags.test.ts', 'docs/FEATURE-FLAG-REGISTRY.md'], gap: 'Owner, review date, expiry, kill switch, tenant and role scope exist; no cohort scope, and evaluation is client-side.' },
+  { id: 'A17', item: 'Tests by risk: tenant isolation, contracts, critical journeys, accessibility, visual, load', status: 'partial', paths: ['supabase/integration-rls-matrix.check.sql', 'supabase/tenancy.check.sql', 'app/scripts/golden-path.mjs', 'app/src/a11y/axe.test.tsx'], gap: 'No visual regression or load tests.' },
+  { id: 'A18', item: 'Performance budgets', status: 'owed', paths: ['docs/PERFORMANCE-AND-LOW-END-DEVICE-PLAN.md'], gap: 'No bundle budget, no web-vitals measurement, no CI gate; the plan says so itself.' },
+  { id: 'A19', item: 'The console as an operations command centre', status: 'partial', paths: ['app/src/screens/Console.tsx', 'app/src/screens/console.test.tsx', 'app/src/lib/ops/console.ts'], gap: 'Approvals, break-glass, audit and figures exist; no integration-health, flag-status, permission-simulator or data-request tabs.' },
+  { id: 'A20', item: 'A safe sandbox tenant', status: 'partial', paths: ['app/server/institution/sandbox.ts', 'app/server/institution/sandbox.test.ts', 'docs/SYNC-SIMULATION-SANDBOX.md'], gap: 'A fictional-institution sandbox exists; no sandbox tenant with role switching and no promotion path.' },
+  { id: 'B01', item: 'THREAT-MODEL', status: 'partial', paths: ['docs/INTEGRATION-THREAT-MODEL.md', 'docs/ai-toolkit/AI-TOOLKIT-THREAT-MODEL.md'], gap: 'Integration and AI-toolkit threat models only; no platform-wide one.' },
+  { id: 'B02', item: 'DATA-INVENTORY', status: 'partial', paths: ['supabase/migrations/20260929010000_account_erasure_and_export.sql', 'app/src/lib/governance/pia.ts', 'app/src/lib/governance/pia.test.ts', 'RETENTION.md'], gap: 'account_data_map, the PIA register and the retention schedule exist; no inventory of every table and field with its classification.' },
+  { id: 'B03', item: 'INTEGRATION-CATALOG', status: 'partial', paths: ['app/src/lib/integration/catalog.ts', 'app/src/lib/integration/pipeline.test.ts'], gap: 'catalog.ts is the catalogue, but the catalog.test.ts it and SEMESTER-OPERATING-SYSTEM.md say holds it to the SQL does not exist.' },
+  { id: 'B04', item: 'RISK-REGISTER', status: 'held', paths: ['app/src/lib/governance/risk.ts', 'app/src/lib/governance/risk.test.ts', 'docs/operating-model/RISK-GOVERNANCE.md'], gap: '-' },
+  { id: 'B05', item: 'CI checks: secrets, dependencies, migrations, types, tests, RLS regression', status: 'held', paths: ['.github/workflows/ci.yml', '.gitleaks.toml', 'supabase/check.sh', 'supabase/rls-coverage.check.sql', 'app/src/lib/definerregister.test.ts'], gap: 'The dependency audit annotates rather than fails, by the decision in ci.yml.' },
+  { id: 'B06', item: 'Severity levels and incident response', status: 'held', paths: ['SECURITY.md', 'app/src/lib/security.test.ts'], gap: '-' },
+  { id: 'B07', item: 'Production and staging separation', status: 'partial', paths: ['STAGING.md', 'app/src/lib/environment.ts', 'app/src/lib/environment.test.ts'], gap: 'Environments are told apart at build time and previews exist; no standing staging environment shown to match production.' },
+  { id: 'B08', item: 'A release gate in the pull-request template', status: 'held', paths: ['.github/pull_request_template.md', 'app/src/lib/ops/operatingsystem.test.ts'], gap: '-' },
+  { id: 'B09', item: 'Rate limits on forms, sign-in, AI and invites', status: 'partial', paths: ['supabase/migrations/20260928230000_direct_rate_limits.sql', 'supabase/rate-limits.check.sql', 'app/server/institution/rate-limit.test.ts'], gap: 'Sign-in limits are Supabase Auth defaults outside the tree; invite creation has no explicit limit.' },
+  { id: 'B10', item: 'Consent and sharing-expiry enforcement', status: 'held', paths: ['supabase/supportshares.check.sql', 'supabase/support-access.check.sql', 'supabase/familyshare.check.sql'], gap: '-' },
+  { id: 'B11', item: 'Standard audit events for login, privilege, share, export, delete, integration, AI', status: 'partial', paths: ['supabase/migrations/20260928320000_audit_correlation_and_outbox.sql', 'supabase/role-grant-audit.check.sql', 'supabase/gateway-journal.check.sql'], gap: 'Separate audit tables with no single schema; sign-ins and shares are not in a common trail.' },
+  { id: 'B12', item: 'Webhook intake: signatures, idempotency, replay protection, dead letters', status: 'partial', paths: ['supabase/functions/_shared/billingwebhook.ts', 'app/src/lib/billing/webhook.test.ts', 'supabase/integration-hardening.check.sql'], gap: 'Billing verifies signature, age and idempotency; no inbound integration endpoint exists yet, and billing has no dead letter.' },
+  { id: 'B13', item: 'Restore drills and rollback', status: 'held', paths: ['supabase/restore.sh', 'RESTORE.md', 'ROLLBACK.md', 'app/src/lib/rehearsal.test.ts'], gap: 'The production restore drill has not run (D-126).' },
+  { id: 'B14', item: 'Load and capacity tests', status: 'owed', paths: ['docs/PERFORMANCE-AND-LOW-END-DEVICE-PLAN.md'], gap: 'None; operationalreality.ts records it as SRE-007.' },
+  { id: 'B15', item: 'A quarterly architecture review', status: 'partial', paths: ['docs/operating-model/RISK-GOVERNANCE.md', 'docs/operating-model/OPERATING-RHYTHM.md'], gap: 'A monthly review board is defined without named members; no review is recorded. This register\'s next review is quarterly.' },
+];
