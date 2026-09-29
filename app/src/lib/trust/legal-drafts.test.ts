@@ -31,6 +31,8 @@ const NAMED_AS: Record<string, string> = {
   'GitHub Pages': 'GitHub Pages',
   'Vercel': 'Vercel',
   'Anthropic (Semester’s key)': 'Anthropic',
+  'Stripe': 'Stripe',
+  'Resend': 'Resend',
   'OpenAI (institution-approved)': 'OpenAI, when your school approves it',
   'The institution’s LMS (LTI 1.3 platform)': 'learning management system** (LTI 1.3)',
   'Anthropic (student’s own key)': 'Your own AI key',

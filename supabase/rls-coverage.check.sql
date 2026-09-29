@@ -130,8 +130,11 @@ returns text language sql stable as $$
                             -- naming no person, signed in only (anon has no grant)
        'role_capabilities', -- which role carries which capability; the matrix
                             -- itself, not who holds what (that is role_grants)
-       'schools'            -- the school directory, readable signed out so the
+       'schools',           -- the school directory, readable signed out so the
                             -- claim screen can list them
+       'entitlement_definitions', -- the entitlement vocabulary; no rows about anyone
+       'plan_entitlements'  -- which public plan carries which entitlement: the
+                            -- pricing page's comparison table
      );
 $$;
 
@@ -283,7 +286,7 @@ begin
     raise exception 'FAILED: tables any client may read in full, not on the allowlist: % — '
                     'narrow the policy, or add the table to open_read_tables() with the reason', got;
   end if;
-  raise notice 'ok  only the five vocabulary and directory tables are readable in full';
+  raise notice 'ok  only the seven vocabulary, catalog and directory tables are readable in full';
 end $$;
 
 -- ── Nothing in private is a client's to touch ─────────────────────────────

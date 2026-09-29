@@ -110,6 +110,10 @@ export const OPERATIONS_ONLY: readonly string[] = [
   'community:escalation_agreements',
   'community:manage',
   'account:manage',
+  'success:manage',
+  'billing:operate',
+  'compliance:manage',
+  'content:manage',
   'campaign:manage',
   'campaign:report',
   'campaign:review',
@@ -286,6 +290,11 @@ export const ROLES: readonly RoleRow[] = [
   row({ role: 'marketing_admin', category: 'commercial', mayDo: 'Manage and report on campaigns', mustNever: 'Any student data; sending a campaign nobody reviewed' }),
   row({ role: 'marketing_analyst', category: 'commercial', mayDo: 'Read campaign reports', mustNever: 'Editing or sending campaigns; any student data' }),
   row({ role: 'campaign_reviewer', category: 'commercial', mayDo: 'Review a campaign before it is sent', mustNever: 'Authoring the campaign they review' }),
+  row({ role: 'finance_operator', category: 'commercial', mayDo: 'Read every billing account, subscription, invoice, contract and dunning case', mustNever: 'Account health; writing a price, invoice or payment through the API; any student data', runbook: [{ path: 'docs/COMMERCIAL-CORE.md', shows: 'the commercial core, billing flow and dunning' }] }),
+  row({ role: 'customer_success', category: 'commercial', mayDo: 'Read implementation projects, success plans, QBRs, renewals and account health', mustNever: 'Any student data; outreach from a health snapshot nobody reviewed', runbook: [{ path: 'docs/COMMERCIAL-CORE.md', shows: 'the commercial core, delivery records and account health' }] }),
+  row({ role: 'compliance_owner', category: 'commercial', mayDo: 'Read and maintain the control register, evidence index and public claims register', mustNever: 'Activating a claim with no control, owner and review date; any student data' }),
+  row({ role: 'content_owner', category: 'commercial', mayDo: 'Read and maintain the content register and CTA routing table', mustNever: 'Publishing content with no owner, review date or source; any student data' }),
+  row({ role: 'billing_contact', category: 'institution-admin', mayDo: 'Read one school’s contracts, invoices, subscriptions and renewal dates', mustNever: 'The school’s configuration, implementation records or any student data' }),
 ];
 
 /**

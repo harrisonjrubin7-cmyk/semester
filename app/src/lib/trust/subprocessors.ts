@@ -29,7 +29,7 @@
  */
 
 export type Kind = 'subprocessor' | 'institution-directed' | 'student-directed';
-export type When = 'always' | 'signed-in' | 'institution-enabled' | 'student-opt-in';
+export type When = 'always' | 'signed-in' | 'institution-enabled' | 'student-opt-in' | 'form-sent';
 
 export interface Party {
   name: string;
@@ -76,6 +76,20 @@ export const PARTIES: readonly Party[] = [
     receives: 'The text of the AI request the student made (for example a syllabus to turn into a course).',
     when: 'signed-in', hosts: [], functions: ['claude'],
     evidence: ['supabase/functions/claude/index.ts', 'app/src/lib/privacy.ts'],
+  },
+  {
+    name: 'Stripe', kind: 'subprocessor',
+    purpose: 'Payments for a paid plan: the hosted checkout page, recurring billing, and the webhook that tells Semester a payment succeeded or failed. Not active until its keys are set; nothing is charged before then.',
+    receives: 'The student’s email address, the plan and price chosen, and the payment details they type into Stripe’s own page, which never pass through Semester. Semester keeps Stripe’s customer and subscription references, never card or bank data.',
+    when: 'student-opt-in', hosts: [], functions: ['billing-checkout', 'billing-webhook'],
+    evidence: ['supabase/functions/billing-checkout/index.ts', 'supabase/functions/billing-webhook/index.ts', 'docs/COMMERCIAL-CORE.md'],
+  },
+  {
+    name: 'Resend', kind: 'subprocessor',
+    purpose: 'Emails each company-site form submission to the Semester owner. Not active until its key and the owner’s address are set.',
+    receives: 'What a visitor typed into a company-site form (name, work email, organization, role, message) and the form’s reference. No student data, and no IP address.',
+    when: 'form-sent', hosts: [], functions: ['lead-intake'],
+    evidence: ['supabase/functions/lead-intake/index.ts', 'docs/COMMERCIAL-CORE.md'],
   },
   // ── Institution-directed ─────────────────────────────────────────────────
   {
@@ -176,6 +190,7 @@ const WHEN_LABEL: Record<When, string> = {
   'signed-in': 'When signed in',
   'institution-enabled': 'Only once an institution enables it',
   'student-opt-in': 'Only when the student turns it on',
+  'form-sent': 'Only when someone sends a company-site form',
 };
 
 /** The register as a Markdown table, which the document must contain verbatim. */

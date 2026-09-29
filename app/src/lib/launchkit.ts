@@ -692,7 +692,7 @@ export const COUNCIL_ROLES: readonly { role: string; decides: string; seat: Seat
   { role: 'Design / research lead', decides: 'User experience, usability, student, faculty and staff evidence', seat: 'product', note: 'Folded into the product seat.' },
   { role: 'Institutional advisory representative', decides: 'Higher-ed workflow and authority perspective', seat: 'champion', note: 'The champion seat must be held at the institution, not at Semester.' },
   { role: 'Student advisory representative', decides: 'Student clarity, agency, accessibility and lived experience', seat: null, note: 'No seat. The nearest is the customer advisory board in RISK-GOVERNANCE.md, with no members.' },
-  { role: 'Finance / commercial representative', decides: 'Pricing, entitlement, margin, contract impact', seat: null, note: 'No seat; the deal desk names a finance approver with no holder.' },
+  { role: 'Finance / commercial representative', decides: 'Pricing, entitlement, margin, contract impact', seat: 'finance', note: 'The eleventh seat, added on 29 September (D-118); vacant. The deal desk’s finance approver is this seat.' },
   { role: 'Operations / SRE representative', decides: 'Monitoring, supportability, incident readiness, release readiness', seat: null, note: 'No seat; the master register’s SRE sign-off is unsigned.' },
 ];
 

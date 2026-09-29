@@ -20,6 +20,9 @@ reading:
     integration-tick  ACTIVE, v2, verify_jwt off     platform
     trust-room        ACTIVE, v7, verify_jwt off     platform
     delete-account    PENDING, live on merge, verify_jwt off  (see below)
+    billing-checkout  PENDING, live on merge, verify_jwt off  (see below)
+    billing-webhook   PENDING, live on merge, verify_jwt off  (see below)
+    lead-intake       PENDING, live on merge, verify_jwt off  (see below)
 
 **This file once said two, at v1, and filed three of the other four under "Not
 deployed yet".** `fetchcal` had been live since 9 September when that was
@@ -438,6 +441,65 @@ The migration has to be applied before or with it: without
 immutable tenant history tables cannot be erased this way yet — the history
 triggers refuse the clear its `on delete set null` asks for, the transaction
 rolls back, and the student-facing answer is that nothing was deleted.
+
+## Live on merge, off until configured: `billing-checkout`, `billing-webhook`
+
+The commercial core's two payment functions (`docs/COMMERCIAL-CORE.md`). The
+rules are in `_shared/billingcheckout.ts` and `_shared/billingwebhook.ts`,
+driven by `app/src/lib/billing/`; the database side is
+`migrations/20260929080000_commercial_automation.sql` and
+`commercial-automation.check.sql`.
+
+**Both answer 503 until their secret is set**, so merging deploys two
+functions that charge nobody:
+
+    STRIPE_SECRET_KEY       billing-checkout   the secret API key (sk_live_… or sk_test_…)
+    STRIPE_WEBHOOK_SECRET   billing-webhook    the endpoint's signing secret (whsec_…)
+    ALLOWED_ORIGIN          billing-checkout   the app's origin(s), read strictly: unset or * allows nobody
+    CHECKOUT_RETURN_URL     billing-checkout   optional; where Stripe returns the student (default: the calling origin)
+
+**`verify_jwt` is off on both.** Stripe has no Supabase token: the webhook's
+credential is the `Stripe-Signature` HMAC over the raw body, checked before the
+body is parsed, with a five-minute tolerance. The checkout checks the caller's
+access token itself after answering the CORS preflight, which carries none.
+The webhook sends no CORS header at all and refuses anything with an `Origin`.
+
+The webhook endpoint to register in Stripe (Developers → Webhooks) is
+`https://<project-ref>.supabase.co/functions/v1/billing-webhook`, with
+`checkout.session.completed`, `customer.subscription.updated`,
+`customer.subscription.deleted`, `invoice.paid`, `invoice.payment_failed`,
+`charge.refunded` and `charge.dispute.created`.
+
+**Their snapshot rows are `pending`**, like trust-room's were: replace each with
+a real reading after the merge that deploys it.
+
+**Two cron jobs come with them**, both in `scheduler.sql` and both active
+because neither needs a secret or an endpoint: `commercial-dunning` hourly at
+minute 23 (`public.run_dunning()`, which writes nothing until a payment has
+failed) and `account-health` nightly at 05:41 UTC
+(`public.compute_account_health()`). Neither is on the project until
+`20260929080000_commercial_automation.sql` is applied and the two
+`cron.schedule` statements are run; `health.sql` expects both.
+
+## Live on merge, off until configured: `lead-intake`
+
+The company site's forms post here:
+`POST https://<project-ref>.supabase.co/functions/v1/lead-intake`. The contract
+is written out at the top of `_shared/leadintake.ts`; the database side is
+`submit_site_lead`.
+
+    SITE_ORIGINS        required; the site's origin(s), comma-separated. Unset answers 503
+    RESEND_API_KEY      optional; with LEAD_NOTIFY_EMAIL, each lead is emailed to the owner
+    LEAD_NOTIFY_EMAIL   optional; the owner's inbox. Configuration, never code
+    LEAD_NOTIFY_FROM    optional; a verified Resend sender (default: Resend's onboarding sender)
+    LEAD_IP_SALT        optional; the key the caller's IP is hashed with (default: the service key)
+
+**`verify_jwt` is off**: a visitor has no Semester account. What protects it is
+the strict origin list, a honeypot field, and a five-an-hour limit per salted
+IP hash in the database. No IP address is stored, and nothing a visitor typed
+is logged.
+
+**Its snapshot row is `pending`.**
 
 ## Tables
 
