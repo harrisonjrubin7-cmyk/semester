@@ -1,6 +1,6 @@
 # Which pipeline last deployed each Edge Function, read off the project at
-# 19:55 UTC on 29 September 2026. Every function, the four that were pending
-# included, last deployed by the platform at 19:46:49Z.
+# 21:27 UTC on 29 September 2026. Every function, billing-cancel included,
+# last deployed by the platform at 21:10:28Z.
 #
 # Four columns: slug, version, the pipeline that deployed that version, and when.
 # `app/src/lib/functionsdeployed.test.ts` holds `supabase/functions/` to this
@@ -75,16 +75,16 @@
 # Management API's function list (the dashboard's Edge Functions page shows the
 # same versions), and the columns below are transcribed from it.
 
-claude            234  platform  2026-09-29T19:46:49Z
-push              189  platform  2026-09-29T19:46:49Z
-calendar          186  platform  2026-09-29T19:46:49Z
-fetchcal          229  platform  2026-09-29T19:46:49Z
-canvas            220  platform  2026-09-29T19:46:49Z
-lti               222  platform  2026-09-29T19:46:49Z
-integration-tick   78  platform  2026-09-29T19:46:49Z
-trust-room         85  platform  2026-09-29T19:46:49Z
-delete-account     62  platform  2026-09-29T19:46:49Z
-billing-cancel      -  pending  2026-09-29T19:30:00Z
-billing-checkout   22  platform  2026-09-29T19:46:49Z
-billing-webhook    22  platform  2026-09-29T19:46:49Z
-lead-intake        22  platform  2026-09-29T19:46:49Z
+claude            244  platform  2026-09-29T21:10:28Z
+push              198  platform  2026-09-29T21:10:28Z
+calendar          195  platform  2026-09-29T21:10:28Z
+fetchcal          239  platform  2026-09-29T21:10:28Z
+canvas            230  platform  2026-09-29T21:10:28Z
+lti               232  platform  2026-09-29T21:10:28Z
+integration-tick   88  platform  2026-09-29T21:10:28Z
+trust-room         95  platform  2026-09-29T21:10:28Z
+delete-account     72  platform  2026-09-29T21:10:28Z
+billing-cancel      2  platform  2026-09-29T21:10:28Z
+billing-checkout   32  platform  2026-09-29T21:10:28Z
+billing-webhook    32  platform  2026-09-29T21:10:28Z
+lead-intake        32  platform  2026-09-29T21:10:28Z
