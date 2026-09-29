@@ -2765,3 +2765,31 @@ standing is held to the kind of file it cites.
   counsel's review of every policy, a VPAT, customer data migration, and
   anything with an institution's name on it. Each is a row that says so.
 - **Not changed:** every other register, every status, the go/no-go verdict.
+
+## D-138 · Performance budgets are a CI gate, set from the first measurement
+
+**Decided 29 Sep 2026.** The architecture brief's priority 18 and the audit's
+performance dimension (2/5) both asked for measurable limits before pages
+become heavy; `docs/PERFORMANCE-AND-LOW-END-DEVICE-PLAN.md` had already said
+how: a file CI checks against the build output, set from a measurement.
+
+- **What is held**, in gzip bytes: the first load (the entry and everything
+  it imports statically), each of the 90 lazily loaded screens' cost to open
+  (its chunk and the static imports the first load did not bring), and the
+  largest single file. Each budget is the measurement plus ten per cent, and
+  never less than the measurement plus 8 KB; a new screen with no budget of
+  its own may cost 48 KB. `app/perf-budgets.json` records the measurement
+  beside the budgets, and a test holds each budget to it.
+- **How:** a `bundle-graph` plugin records which source module each chunk
+  came from, written under `node_modules/.cache/` rather than `dist/`,
+  because Vite's own manifest would publish every source path on the live
+  site. `npm run budgets` gzips `dist/` itself and runs after the CI build.
+- **Shown red on real builds:** Search given a static import of KaTeX went
+  from 1 KB to 75.6 KB against a 10 KB budget; the entry given the same went
+  from 395 KB to 470 KB against 435 KB. Both named the budget they broke.
+- **What the measurement says, not changed here:** the first load is 395 KB
+  gzip, roughly twice common mobile guidance. The budget holds that line; it
+  does not bless it. Bringing it down is its own work, measured against this.
+- **Not done:** Core Web Vitals from real devices, which needs the aggregate
+  table the plan describes and a privacy decision on what it records.
+  Register row A18 moves from owed to partial.
