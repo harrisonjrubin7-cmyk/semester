@@ -25,7 +25,8 @@
  *
  * Each step is timed from the Enter to the answer, and with `DRILL=write` the
  * record goes to `docs/evidence/ai/killswitch-drill-<moment>.json`, never over
- * an earlier one. What it does not observe: the institution gateway, which is
+ * an earlier one — a failed drill is filed too, as FAILED. Once the switch is
+ * engaged, every way out of the script asks for it to be released first. What it does not observe: the institution gateway, which is
  * not deployed; `app/src/lib/aikillswitch.test.ts` holds that runtime to the
  * same switch. The record says so.
  *
@@ -68,15 +69,21 @@ select public.kill_switch_engaged('${SWITCH}', null);  -- must answer false`;
 
 async function call() {
   const started = Date.now();
-  const res = await fetch(`${URL_BASE}${FUNCTION_PATH}`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json', apikey: APIKEY, authorization: `Bearer ${SESSION}` },
-    body: JSON.stringify({ model: 'claude-haiku-4-5', max_tokens: 16, messages: [{ role: 'user', content: 'Reply with the word ok.' }] }),
-  });
-  const text = await res.text();
-  let message = null;
-  try { message = JSON.parse(text)?.error?.message ?? null; } catch { /* not JSON: an answer, not a refusal */ }
-  return { status: res.status, message, ms: Date.now() - started, at: new Date().toISOString() };
+  try {
+    const res = await fetch(`${URL_BASE}${FUNCTION_PATH}`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', apikey: APIKEY, authorization: `Bearer ${SESSION}` },
+      body: JSON.stringify({ model: 'claude-haiku-4-5', max_tokens: 16, messages: [{ role: 'user', content: 'Reply with the word ok.' }] }),
+    });
+    const text = await res.text();
+    let message = null;
+    try { message = JSON.parse(text)?.error?.message ?? null; } catch { /* not JSON: an answer, not a refusal */ }
+    return { status: res.status, message, ms: Date.now() - started, at: new Date().toISOString() };
+  } catch (e) {
+    // A dropped connection is a step that did not go as expected, not a
+    // crash: the drill records it and still reaches the release prompt below.
+    return { status: 0, message: `fetch failed: ${e instanceof Error ? e.message : String(e)}`, ms: Date.now() - started, at: new Date().toISOString() };
+  }
 }
 
 const rl = createInterface({ input: stdin, output: stdout });
@@ -88,21 +95,46 @@ const step = (name, r, expected) => {
   return ok;
 };
 
+/*
+ * Once the operator has engaged the switch, the one thing this script must
+ * not do is exit without asking for it to be released — a thrown probe, a
+ * refused step or a Ctrl-C in the wrong place would otherwise leave AI
+ * generation off for everyone. So `engaged` and `released` are tracked and
+ * the release prompt sits in the `finally`, on every path out.
+ */
+let engaged = false;
+let released = false;
+const release = async (why) => {
+  await rl.question(`\n${why}Release the switch. Run:\n\n${RELEASE}\n\nThen press Enter here. `);
+  released = true;
+  record.releasedAt = new Date().toISOString();
+};
+
 try {
   if (!step('before: answered', await call(), { status: 200 })) throw new Error('the function did not answer before the drill; nothing to show');
   await rl.question(`\nEngage the switch. In the dashboard's SQL editor run:\n\n${ENGAGE}\n\nThen press Enter here. `);
-  const engagedAt = new Date().toISOString();
-  const during = await call();
-  record.engagedAt = engagedAt;
-  step('during: refused with the runtime\'s own sentence', during, { status: 503, message: KILLED });
-  await rl.question(`\nRelease the switch. Run:\n\n${RELEASE}\n\nThen press Enter here. `);
-  record.releasedAt = new Date().toISOString();
+  engaged = true;
+  record.engagedAt = new Date().toISOString();
+  step("during: refused with the runtime's own sentence", await call(), { status: 503, message: KILLED });
+  await release('');
   step('after: answered again', await call(), { status: 200 });
+} catch (e) {
+  record.error = e instanceof Error ? e.message : String(e);
+  console.error(`\nstopped: ${record.error}`);
 } finally {
+  if (engaged && !released) {
+    try {
+      await release('The drill stopped with the switch ENGAGED. ');
+    } catch (e) {
+      // Even the prompt failing must not swallow the instruction.
+      console.error(`\nTHE SWITCH IS STILL ENGAGED. Run this now:\n\n${RELEASE}\n`);
+      record.error = `${record.error ? `${record.error}; ` : ''}release prompt failed: ${e instanceof Error ? e.message : String(e)}`;
+    }
+  }
   rl.close();
 }
 
-record.verdict = record.steps.every((s) => s.ok) ? 'held' : 'FAILED';
+record.verdict = !record.error && record.steps.length === 3 && record.steps.every((s) => s.ok) ? 'held' : 'FAILED';
 console.log(`\n${record.verdict}: ${record.steps.filter((s) => s.ok).length} of ${record.steps.length} steps as expected.`);
 if (process.env.DRILL === 'write') {
   const dir = new URL('../../docs/evidence/ai/', import.meta.url);

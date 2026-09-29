@@ -37,6 +37,15 @@ describe('the kill-switch drill', () => {
     expect(script).not.toMatch(/execute_sql|createClient|service_role/i);
   });
 
+  it('asks for the switch to be released on every way out once it is engaged, and a thrown probe is a step, not a crash', () => {
+    // The release prompt is the `finally`'s job after engagement, so a dropped
+    // connection or a refused step cannot leave production switched off.
+    expect(script).toMatch(/finally \{\s*if \(engaged && !released\)/);
+    expect(script.match(/await release\(/g)?.length).toBe(2); // the normal path, and the finally
+    expect(script).toMatch(/catch \(e\) \{[\s\S]*status: 0, message: `fetch failed/); // call() never throws
+    expect(script).toMatch(/record\.verdict = !record\.error && record\.steps\.length === 3/); // a stopped drill is FAILED, and filed
+  });
+
   it('is wired as npm run drill:killswitch', () => {
     const pkg = JSON.parse(readFileSync(join(root, 'app/package.json'), 'utf8')) as { scripts: Record<string, string> };
     expect(pkg.scripts['drill:killswitch']).toBe('node scripts/killswitch-drill.mjs');
