@@ -30,16 +30,19 @@ function openingTag(src: string, at: number): string {
   return src.slice(start, end + 1);
 }
 
-/** Every `<div …>` opening tag that starts before `at`, nearest first. */
+/**
+ * The `<div …>` tags still open at `at`, nearest first: a balanced walk that
+ * pops on `</div>`, so a container closed before the streaming block is not
+ * counted as its ancestor. The first draft collected every earlier opening
+ * tag, which Codex found would stay green with the stream moved out of both.
+ */
 function enclosingDivs(src: string, at: number): string[] {
-  const out: string[] = [];
-  let i = src.lastIndexOf('<div', at);
-  while (i >= 0) {
-    out.push(src.slice(i, src.indexOf('>', i) + 1));
-    // `lastIndexOf(x, -1)` searches from the end again, so stop at the first div.
-    i = i === 0 ? -1 : src.lastIndexOf('<div', i - 1);
+  const stack: string[] = [];
+  for (const m of src.slice(0, at).matchAll(/<div\b[^>]*>|<\/div>/g)) {
+    if (m[0] === '</div>') stack.pop();
+    else if (!m[0].endsWith('/>')) stack.push(m[0]);
   }
-  return out;
+  return stack.reverse();
 }
 
 const shape = (src: string) => {
@@ -73,5 +76,14 @@ describe('the shape reader', () => {
     const { logs, streams } = shape(leaky);
     expect(logs[0]).toContain('assertive');
     expect(streams[0][0]).not.toMatch(/aria-hidden/);
+  });
+
+  it('does not count a container closed before the stream as its ancestor', () => {
+    const closedHidden = '<div role="log" aria-live="polite"><div aria-hidden>x</div>{talk.streaming && <Reply />}</div>';
+    expect(shape(closedHidden).streams[0][0]).toMatch(/^<div role="log"/);
+    const outsideLog = '<div role="log" aria-live="polite">y</div><div aria-hidden>{talk.streaming && <Reply />}</div>';
+    expect(shape(outsideLog).streams[0].some((d) => d.includes('role="log"'))).toBe(false);
+    const selfClosing = '<div role="log" aria-live="polite"><div aria-hidden><div className="rule" />{talk.streaming && <Reply />}</div></div>';
+    expect(shape(selfClosing).streams[0]).toHaveLength(2);
   });
 });

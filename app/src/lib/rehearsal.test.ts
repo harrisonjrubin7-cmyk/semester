@@ -1,5 +1,5 @@
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { join, relative } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 /**
@@ -25,19 +25,30 @@ const read = (p: string) => readFileSync(join(root, p), 'utf8');
 const SCRIPT = 'supabase/restore.sh';
 const STEP = 'Rehearse a backup and restore';
 
-/** The data modules that cite the script. A new one that does is added here. */
-const MODULES = [
-  'app/src/lib/masterregister.ts',
-  'app/src/lib/launchreadiness.ts',
-  'app/src/lib/governance/risk.ts',
-  'app/src/lib/governance/edgecases.ts',
-  'app/src/lib/ops/claims.ts',
-];
+/**
+ * Every source file under app/src that cites the script or the rehearsal, found by reading
+ * the tree rather than kept as a list: a list is one more copy to go stale,
+ * and Codex found three citing modules the first draft's list had missed.
+ * Tests are left out, since this one cites the sentence on purpose.
+ */
+function citingFiles(dir = join(root, 'app/src')): string[] {
+  const out: string[] = [];
+  for (const name of readdirSync(dir)) {
+    const full = join(dir, name);
+    if (statSync(full).isDirectory()) out.push(...citingFiles(full));
+    else if (/\.tsx?$/.test(name) && !/\.test\.tsx?$/.test(name) && CITES.test(readFileSync(full, 'utf8'))) {
+      out.push(relative(root, full));
+    }
+  }
+  return out.sort();
+}
 
 /** The sentence that was true once. */
 const STALE = /not (yet )?in CI|passes locally|local (dump|rehearsal)|only locally/i;
 
-const citing = (src: string): string[] => src.split('\n').filter((l) => l.includes('restore.sh'));
+/** A line about the script or the rehearsal, by either name. */
+const CITES = /restore\.sh|rehears/i;
+const citing = (src: string): string[] => src.split('\n').filter((l) => CITES.test(l));
 
 describe('the restore rehearsal', () => {
   it('runs on every change, by the name the registers use', () => {
@@ -47,15 +58,15 @@ describe('the restore rehearsal', () => {
     expect(ci.slice(step, step + 200)).toMatch(new RegExp(`run: ${SCRIPT}`));
   });
 
-  it('is cited by every module as in CI, never as local', () => {
-    let cited = 0;
-    for (const m of MODULES) {
-      for (const line of citing(read(m))) {
-        cited += 1;
-        expect(line, `${m}: ${line.trim().slice(0, 120)}`).not.toMatch(STALE);
-      }
+  it('is cited by every source file as in CI, never as local', () => {
+    const files = citingFiles();
+    // The five modules the first draft listed by hand, and the three Codex found.
+    for (const known of ['masterregister.ts', 'launchreadiness.ts', 'governance/risk.ts', 'governance/edgecases.ts', 'ops/claims.ts', 'launchkit.ts', 'operationalreality.ts', 'ops/evidence.ts']) {
+      expect(files, `the walk finds app/src/lib/${known}`).toContain(`app/src/lib/${known}`);
     }
-    expect(cited, 'the modules still cite the script').toBeGreaterThanOrEqual(5);
+    for (const f of files) {
+      for (const line of citing(read(f))) expect(line, `${f}: ${line.trim().slice(0, 120)}`).not.toMatch(STALE);
+    }
   });
 
   it('would read the older sentence as stale', () => {

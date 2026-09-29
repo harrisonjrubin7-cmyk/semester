@@ -2129,8 +2129,12 @@ key and costs money, and only the owner holds the key.
   R-03's mitigation, R-10's evidence, the DR plan's row and the claims register
   still said `supabase/restore.sh` was local and not in CI, which #935 found
   false and #939 and D-115 corrected elsewhere. Re-read to what CI does, and
-  `app/src/lib/rehearsal.test.ts` now holds every data module that cites the
-  script to the workflow step, so a sixth copy cannot be written. It does not
+  `app/src/lib/rehearsal.test.ts` now holds every source file under
+  `app/src` that names the script or the rehearsal to the workflow step. Codex
+  asked for the files to be found by reading the tree rather than listed, and
+  the wider net found a sixth copy on the page pilot students read:
+  `knownlimitations.ts` said the restore "has passed as a local rehearsal".
+  Re-read too; a seventh cannot be written. It does not
   say the rehearsal proves a production restore: it runs against an empty
   database, and production has never been restored (R-10).
 - **The billing lines** in COM-001, R-17, EC-COM-01 and EC-COM-03 said no
@@ -2144,7 +2148,9 @@ key and costs money, and only the owner holds the key.
   focused control carries the clearance scroll-margins) each cite the test
   that was there; EC-A11Y-02 gains `app/src/ai/streamlive.shape.test.ts`,
   which reads both conversation surfaces for a polite log and an
-  `aria-hidden` streaming block. 37 of 81 cases guarded, 44 owed. Each note
+  `aria-hidden` streaming block, walking balanced `<div>` ancestry so a
+  container closed before the stream is not counted (Codex's finding on
+  the first draft). 37 of 81 cases guarded, 44 owed. Each note
   says what the guard does not prove.
 - **Not changed:** nothing on `docs/LAUNCH-DECISIONS.md`; every remaining
   item there is the owner's.
