@@ -126,8 +126,12 @@ export const GATES: readonly Gate[] = [
         path: 'app/scripts/golden-path.mjs',
         shows: 'one student journey in CI at two viewports: first run and the account step, an action made and seen on Today, the Guide and Support, completion, resume after reload and in a second tab, and restore from the backup file into a fresh browser context',
       },
+      {
+        path: 'app/scripts/account-sync.mjs',
+        shows: 'resume on a second device through an account, in CI at two viewports against a local Supabase built from this repository: sign-up in the first run, an action made and finished, the server shown to hold it, a fresh second context signed in and showing it done, and a change from the second device carried back to the first',
+      },
     ],
-    gap: 'The scripted journey never signs in, so resuming on a second device through an account is unproved: nothing drives sign-in and sync against a live or local Supabase with auth. It also skips Path/Plan and adding a course from a syllabus. Phase 1.',
+    gap: 'The scripted journeys skip Path/Plan and adding a course from a syllabus. Account sync is proved against a local Supabase, not the production project. Phase 1.',
   },
   {
     id: 'no-blockers',

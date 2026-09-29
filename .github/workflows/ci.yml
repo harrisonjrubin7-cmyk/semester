@@ -380,7 +380,7 @@ jobs:
       # the action ticked, resumed after a reload and in a second tab, and
       # carried to a fresh browser context through the backup file. It does
       # not sign in, so account-synced resume is not what it proves — the
-      # script's header says exactly what is. About fifteen seconds.
+      # `account-sync` job below proves that. About fifteen seconds.
       - name: Walk the golden student path
         working-directory: app
         env:
@@ -477,6 +477,82 @@ jobs:
       # nobody knew. A restore procedure is only a capability while it passes.
       - name: Rehearse a backup and restore
         run: supabase/restore.sh
+
+  # ── One account, two devices ────────────────────────────────────────────
+  #
+  # The golden path above declines the account step, because the only
+  # account service a build had ever been pointed at was the live project, and
+  # making throwaway accounts there from CI is pollution rather than a test.
+  # So resuming on a second device *through an account* — the thing an account
+  # is for — was the one part of the golden journey nothing proved.
+  #
+  # This stands up a local Supabase from this repository's `supabase/`
+  # directory (every migration from zero, real GoTrue, PostgREST and RLS),
+  # builds the app against it, and has `scripts/account-sync.mjs` sign up on
+  # one browser context, make and finish an action, confirm the server holds
+  # it, sign in on a second fresh context and see it there done, and then the
+  # same in reverse. Nothing is mocked.
+  #
+  # Shown to be a guard rather than assumed one: with `push()` in
+  # `lib/cloud.ts` made to return before writing, both viewports go red at
+  # "the server holds it"; with `pull()` made to read another account's row,
+  # both go red at "sign in on the second device and see it done".
+  #
+  # A job of its own because `supabase start` pulls a stack of images and
+  # wants a runner that is not also doing everything `build` does. The
+  # services the journey never touches are left out (`-x`) to keep the pull
+  # small: sign-in and sync are Kong, GoTrue, PostgREST and Postgres.
+  account-sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - name: Install
+        working-directory: app
+        run: npm ci
+
+      - uses: supabase/setup-cli@v3
+        with:
+          version: latest
+
+      - name: Start a local Supabase from this repository
+        run: supabase start -x studio,imgproxy,edge-runtime,logflare,vector,supavisor,postgres-meta,storage-api
+
+      # The public key of the *local* stack — the same fixed development value
+      # every `supabase start` prints, not a secret of any project. `--outDir`
+      # keeps this build apart from anything a later step might serve.
+      - name: Build against it
+        working-directory: app
+        run: |
+          export VITE_SUPABASE_URL=http://127.0.0.1:54321
+          export VITE_SUPABASE_KEY="$(supabase status -o json --workdir .. | jq -r .PUBLISHABLE_KEY)"
+          npx vite build --outDir /tmp/sync-dist
+          npx vite preview --outDir /tmp/sync-dist --port 4174 > /tmp/preview.log 2>&1 &
+          timeout 120 bash -c "until curl -sf http://localhost:4174/ >/dev/null; do sleep 1; done"
+
+      - name: Install playwright and a browser
+        run: |
+          mkdir -p /tmp/smoke && cd /tmp/smoke
+          echo '{"name":"smoke","private":true,"type":"module"}' > package.json
+          npm install --no-save playwright
+          npx --yes playwright install --with-deps chromium
+
+      # Exits 1 on a finding and 2 if it could not run — including when the
+      # build turns out to be talking to anything but a loopback address, in
+      # which case it refuses to make an account at all.
+      - name: Sign in on two devices and sync between them
+        working-directory: app
+        env:
+          SMOKE_PLAYWRIGHT: /tmp/smoke/node_modules/playwright
+          SMOKE_URL: http://localhost:4174/
+        run: npm run smoke:sync
 
   # ── A key that got committed ────────────────────────────────────────────
   #
@@ -643,7 +719,7 @@ jobs:
     # job before this failed. Push only — see the trigger at the top, which
     # makes that main.
     if: always() && github.event_name == 'push'
-    needs: [build, secrets]
+    needs: [build, secrets, account-sync]
     runs-on: ubuntu-latest
     permissions:
       issues: write
@@ -659,13 +735,15 @@ jobs:
         env:
           BUILD: ${{ needs.build.result }}
           # A committed key is the failure on main that most needs somebody
-          # told, so the notice covers both jobs rather than only the one it
-          # was written for. Either failing is red.
+          # told, so the notice covers every job rather than only the one it
+          # was written for. Any of them failing is red.
           SECRETS: ${{ needs.secrets.result }}
+          SYNC: ${{ needs.account-sync.result }}
         with:
           script: |
             const red =
-              process.env.BUILD === 'failure' || process.env.SECRETS === 'failure';
+              process.env.BUILD === 'failure' || process.env.SECRETS === 'failure' ||
+              process.env.SYNC === 'failure';
             const TITLE = 'main is red';
             const { owner, repo } = context.repo;
             const run = `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`;

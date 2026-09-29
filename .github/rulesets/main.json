@@ -31,6 +31,7 @@
         "strict_required_status_checks_policy": true,
         "do_not_enforce_on_create": false,
         "required_status_checks": [
+          { "context": "account-sync", "integration_id": 15368 },
           { "context": "build", "integration_id": 15368 },
           { "context": "secrets", "integration_id": 15368 }
         ]
