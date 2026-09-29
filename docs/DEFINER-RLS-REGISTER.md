@@ -286,7 +286,7 @@ Production (`lzrqvlugnawcgywkhqlz`), 2026-09-29, read-only, through the advisor 
 
 ## Both briefs, item by item
 
-Read against main on 2026-09-29. `held` cites a test or check that guards it; `partial` cites what exists and names what does not; `owed` cites only prose. A01–A20 are the architecture brief's twenty priorities; B01–B15 are the audit's named artifacts and remediation items. held 6, partial 27, owed 2.
+Read against main on 2026-09-29. `held` cites a test or check that guards it; `partial` cites what exists and names what does not; `owed` cites only prose. A01–A20 are the architecture brief's twenty priorities; B01–B15 are the audit's named artifacts and remediation items. held 7, partial 26, owed 2.
 
 | ID | Item | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- |
@@ -312,7 +312,7 @@ Read against main on 2026-09-29. `held` cites a test or check that guards it; `p
 | A20 | A safe sandbox tenant | partial | `app/server/institution/sandbox.ts`<br>`app/server/institution/sandbox.test.ts`<br>`docs/SYNC-SIMULATION-SANDBOX.md` | A fictional-institution sandbox exists; no sandbox tenant with role switching and no promotion path. |
 | B01 | THREAT-MODEL | partial | `docs/INTEGRATION-THREAT-MODEL.md`<br>`docs/ai-toolkit/AI-TOOLKIT-THREAT-MODEL.md` | Integration and AI-toolkit threat models only; no platform-wide one. |
 | B02 | DATA-INVENTORY | partial | `supabase/migrations/20260929010000_account_erasure_and_export.sql`<br>`app/src/lib/governance/pia.ts`<br>`app/src/lib/governance/pia.test.ts`<br>`RETENTION.md` | account_data_map, the PIA register and the retention schedule exist; no inventory of every table and field with its classification. |
-| B03 | INTEGRATION-CATALOG | partial | `app/src/lib/integration/catalog.ts`<br>`app/src/lib/integration/pipeline.test.ts` | catalog.ts is the catalogue, but the catalog.test.ts it and SEMESTER-OPERATING-SYSTEM.md say holds it to the SQL does not exist. |
+| B03 | INTEGRATION-CATALOG | held | `app/src/lib/integration/catalog.ts`<br>`app/src/lib/integration/catalog.test.ts` | catalog.ts is the catalogue and catalog.test.ts holds its four constrained lists to the database, value for value; there is no separate prose document, and freshness and the sync classes have no constraint to hold them to. |
 | B04 | RISK-REGISTER | held | `app/src/lib/governance/risk.ts`<br>`app/src/lib/governance/risk.test.ts`<br>`docs/operating-model/RISK-GOVERNANCE.md` | - |
 | B05 | CI checks: secrets, dependencies, migrations, types, tests, RLS regression | held | `.github/workflows/ci.yml`<br>`.gitleaks.toml`<br>`supabase/check.sh`<br>`supabase/rls-coverage.check.sql`<br>`app/src/lib/definerregister.test.ts` | The dependency audit annotates rather than fails, by the decision in ci.yml. |
 | B06 | Severity levels and incident response | held | `SECURITY.md`<br>`app/src/lib/security.test.ts` | - |
