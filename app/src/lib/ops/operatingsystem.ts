@@ -767,7 +767,7 @@ export const SOURCES: readonly Source[] = [
     lastReviewed: '2026-09-29',
     nextReview: MONTHLY,
     supersedes: [],
-    decisions: ['D-129'],
+    decisions: ['D-130'],
     alsoRead: ['docs/MARKET-LEADERSHIP.md', 'docs/ONE-OPERATING-SYSTEM.md', 'docs/trust/COMPLIANCE-CROSSWALK.md'],
     note: 'Rendered from app/src/lib/reinforceregister.ts and app/src/lib/ops/operatingmodel.ts: seven briefs of 29 September on what else would make Semester the leader and the benchmark, read against the tree as one register — each row citing every brief item that asks for it and the oneos, leadership or Connect item it is the same as — with the operating model’s ten product areas owned by seats, the compliance playbook’s P0 blockers, the module scorecard and its fully-built gate, the final checklists pointed at the sets that answer them, and where a brief and the tree disagree.',
   },

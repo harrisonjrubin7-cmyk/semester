@@ -321,7 +321,7 @@ export const TERM_SHEET: readonly Item[] = rows('LK-TERM', [
     [['docs/market-readiness/HECVAT_DRAFT_RESPONSE.md', 'COMP-01: the LLC, name to add']], 'The party exists by attestation; its legal name is not yet on file, so no paper names it.'],
   ['Term', 'One academic term or 90–180 days, with explicit dates.', 'held',
     [['app/src/lib/gtm/pilot.ts', 'pilotReadiness: exactly 26 weeks, or the plan is refused'], ['app/src/lib/gtm/pilot.test.ts', 'held'], ['docs/PAID-PILOT-FRAMEWORK.md', '“The two length rules agree”: 26 weeks inside the deal desk’s six months']],
-    'The owner set every pilot to 26 weeks (D-130); pilotReadiness refuses any other length. That is 182 days, two past the kit’s 90–180; the code’s rule holds.'],
+    'The owner set every pilot to 26 weeks (D-131); pilotReadiness refuses any other length. That is 182 days, two past the kit’s 90–180; the code’s rule holds.'],
   ['Scope', 'Named cohort, modules, environments, integrations and roles only.', 'tested',
     [['app/src/lib/gtm/pilot.ts', 'no_cohort, no data plan → refused'], ['supabase/gtm.check.sql', 'the database refuses a pilot without the §6.2 elements'], ['docs/trust/PILOT-AGREEMENT-OUTLINE.md', 'included and excluded lists']],
     'Modules are not enumerable per tenant; the scope names features, not entitlements.'],
