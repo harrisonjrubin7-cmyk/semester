@@ -84,6 +84,7 @@ lti               222  platform  2026-09-29T19:46:49Z
 integration-tick   78  platform  2026-09-29T19:46:49Z
 trust-room         85  platform  2026-09-29T19:46:49Z
 delete-account     62  platform  2026-09-29T19:46:49Z
+billing-cancel      -  pending  2026-09-29T19:30:00Z
 billing-checkout   22  platform  2026-09-29T19:46:49Z
 billing-webhook    22  platform  2026-09-29T19:46:49Z
 lead-intake        22  platform  2026-09-29T19:46:49Z

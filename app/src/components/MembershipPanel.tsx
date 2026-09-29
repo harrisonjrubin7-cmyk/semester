@@ -3,6 +3,7 @@ import { ALWAYS_INCLUDED, PILOT_NOTE, PLANS, plan, priceLine, type PlanId } from
 import { cloud, cloudConfigured, currentSession } from '../lib/cloud';
 import { formatDate } from '../lib/locale';
 import {
+  cancelMembership,
   checkoutReturn,
   consentText,
   currentSubscription,
@@ -153,17 +154,18 @@ export function MembershipPanel() {
     setBusy(true);
     setError('');
     try {
-      const db = await cloud();
-      const { data, error: failed } = await db.rpc('request_cancellation', { want_subscription: sub.id });
-      if (failed) {
-        setError('The cancellation did not go through. Try again, or email harrisonjrubin7@gmail.com.');
+      const token = (await currentSession())?.access_token;
+      if (!token) {
+        setError('Sign in again to cancel. Nothing has changed yet.');
         return;
       }
-      const ends = typeof data === 'string' ? data : sub.periodEnd;
-      setSub({ ...sub, cancelAtPeriodEnd: true, periodEnd: ends });
-      setNote(`Cancelled. You keep Plus until ${when(ends)}.`);
-    } catch {
-      setError('The cancellation did not go through. Try again, or email harrisonjrubin7@gmail.com.');
+      const r = await cancelMembership(token, sub.id);
+      if (r.kind === 'refused') {
+        setError(r.said);
+        return;
+      }
+      setSub({ ...sub, cancelAtPeriodEnd: true, periodEnd: r.endsAt || sub.periodEnd });
+      setNote(`Cancelled. You keep Plus until ${when(r.endsAt || sub.periodEnd)}, and you will not be charged again.`);
     } finally {
       setBusy(false);
     }

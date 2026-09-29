@@ -45,6 +45,11 @@ export function checkoutEndpoint(base = env.VITE_SUPABASE_URL ?? ''): string {
   return base ? `${base.replace(/\/$/, '')}/functions/v1/billing-checkout` : '';
 }
 
+/** The cancel function's address, or ''. */
+export function cancelEndpoint(base = env.VITE_SUPABASE_URL ?? ''): string {
+  return base ? `${base.replace(/\/$/, '')}/functions/v1/billing-cancel` : '';
+}
+
 /** "$3.99", "$29.99", "$30" — in the catalog's currency, US dollars as written today. */
 export function money(cents: number, currency = 'usd'): string {
   const n = cents / 100;
@@ -151,4 +156,43 @@ export async function startCheckout(
   }
   const said = body && typeof body.error === 'string' && body.error ? body.error : 'Checkout could not start. Nothing was charged.';
   return { kind: 'refused', said };
+}
+
+export type Cancelled = { kind: 'cancelled'; endsAt: string } | { kind: 'refused'; said: string };
+
+/**
+ * Ask `billing-cancel` to end Plus at the close of the paid period. It tells
+ * Stripe first and records it second, so a "cancelled" here means Stripe will
+ * not charge again. Refusals come back in the function's own words.
+ */
+export async function cancelMembership(
+  token: string,
+  subscriptionId: string,
+  fetcher: Fetch = fetch,
+  endpoint = cancelEndpoint(),
+  key = env.VITE_SUPABASE_KEY ?? '',
+): Promise<Cancelled> {
+  const fallback = 'The cancellation did not go through. Try again, or email harrisonjrubin7@gmail.com.';
+  if (!endpoint) return { kind: 'refused', said: fallback };
+  let res: Response;
+  try {
+    res = await fetcher(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, ...(key ? { apikey: key } : {}) },
+      body: JSON.stringify({ subscription_id: subscriptionId }),
+      cache: 'no-store',
+      credentials: 'omit',
+    });
+  } catch {
+    return { kind: 'refused', said: fallback };
+  }
+  let body: Record<string, unknown> | null = null;
+  try {
+    const v: unknown = await res.json();
+    body = v && typeof v === 'object' && !Array.isArray(v) ? (v as Record<string, unknown>) : null;
+  } catch {
+    body = null;
+  }
+  if (res.ok && body && typeof body.ends_at === 'string') return { kind: 'cancelled', endsAt: body.ends_at };
+  return { kind: 'refused', said: body && typeof body.error === 'string' && body.error ? body.error : fallback };
 }
