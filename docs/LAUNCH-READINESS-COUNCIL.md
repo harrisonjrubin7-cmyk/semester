@@ -47,12 +47,13 @@ launch proceeds under (D-117).
 | `trust` — Trust & Safety | Reporting, escalation, moderation scope | Vacant |
 | `data` — Data / integration owner | Source quality, freshness, connector health | Vacant |
 | `finance` — Finance / commercial | Price floors, discount and pilot-credit approvals at the deal desk, margin, contract terms | Vacant |
+| `operations` — Operations / SRE | Monitoring, on-call, incident readiness, support operations, release readiness | Vacant |
 | `champion` — Pilot institution champion | Institutional workflow and communications | Vacant; must be someone at the institution |
 
 **Why six seats read "Vacant", when `ROLLBACK.md` and `RESTORE.md` both name
 an owner.** Those documents name the person who can *run the workflows*. They
 also call that single person the project's standing problem. A council seat
-is an accountability that someone has accepted in writing. Filling all eleven
+is an accountability that someone has accepted in writing. Filling all twelve
 seats with one repository username would make the council look complete when
 it is not — which is why the four that are held say "Founder" and "Founder,
 acting", not a username, and why security, privacy, accessibility, trust,
@@ -83,7 +84,7 @@ one person to hold several seats at pilot scale. The four holders were written
 into `launchreadiness.ts` and this table in the same change. Nothing was added
 to `signoffs`: there is no decision before the council yet, and a signature is
 given for a decision, not for a seat. `decide()` therefore now reads "has not
-signed" for these four and "is vacant" for the other seven, and the verdict is
+signed" for these four and "is vacant" for the other eight, and the verdict is
 unchanged.
 
 ## The rules `decide()` enforces

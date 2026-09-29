@@ -143,7 +143,7 @@ describe('the SaaS launch kit crosswalk', () => {
         if (r.seat) expect(SEATS, `${r.role} → ${r.seat}`).toContain(r.seat);
         else expect(r.note, r.role).toMatch(/No seat/);
       }
-      expect(COUNCIL_ROLES.filter((r) => r.seat === null)).toHaveLength(2);
+      expect(COUNCIL_ROLES.filter((r) => r.seat === null)).toHaveLength(1);
     });
 
     it('names only sales stages that exist', () => {

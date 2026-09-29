@@ -17,7 +17,7 @@
  * be attached to a decision record and re-derived later from what it cites.
  */
 
-/** A council seat. The ten from the launch command, in its order, and the finance seat added on 2026-09-29 (D-118). */
+/** A council seat. The ten from the launch command, in its order, and the finance and operations seats added on 2026-09-29 (D-118, D-120). */
 export const SEATS = [
   'founder',
   'product',
@@ -29,6 +29,7 @@ export const SEATS = [
   'trust',
   'data',
   'finance',
+  'operations',
   'champion',
 ] as const;
 
@@ -68,6 +69,7 @@ export const COUNCIL: readonly SeatDefinition[] = [
   { seat: 'trust', title: 'Trust & Safety', decides: 'Reporting, escalation, moderation scope', holder: null },
   { seat: 'data', title: 'Data / integration owner', decides: 'Source quality, freshness, connector health', holder: null },
   { seat: 'finance', title: 'Finance / commercial', decides: 'Price floors, discount and pilot-credit approvals at the deal desk, margin, contract terms', holder: null },
+  { seat: 'operations', title: 'Operations / SRE', decides: 'Monitoring, on-call, incident readiness, support operations, release readiness', holder: null },
   { seat: 'champion', title: 'Pilot institution champion', decides: 'Institutional workflow and communications', holder: null, institutional: true },
 ];
 

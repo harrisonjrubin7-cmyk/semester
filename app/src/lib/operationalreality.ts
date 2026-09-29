@@ -84,7 +84,7 @@ const rows = (prefix: string, list: readonly Row[]): Item[] =>
 export const WORKSTREAMS: readonly { workstream: string; goal: string; seats: readonly Seat[]; note: string }[] = [
   { workstream: 'Product & Engineering', goal: 'Build a coherent, accessible, reliable platform', seats: ['product', 'engineering', 'accessibility'], note: 'The master register’s PRG, STU, LMS, UX and A11Y rows.' },
   { workstream: 'Trust & Compliance', goal: 'Prove privacy, security, AI, accessibility and interoperability controls', seats: ['security', 'privacy', 'trust', 'data'], note: 'SEC, TRUST, AI and INT rows; docs/trust/; the proof calendar.' },
-  { workstream: 'Customer Delivery', goal: 'Implement, train, support, measure and renew institutions', seats: ['success', 'champion'], note: 'IMP and SUP rows; the ninety-day programme; pilot-to-production.' },
+  { workstream: 'Customer Delivery', goal: 'Implement, train, support, measure and renew institutions', seats: ['success', 'operations', 'champion'], note: 'IMP and SUP rows; the ninety-day programme; pilot-to-production.' },
   { workstream: 'Commercial', goal: 'Generate qualified pipeline, sell pilots, manage contracts, collect revenue', seats: ['founder', 'finance'], note: 'COM and LEG rows; the deal desk; the GTM plan. No sales seat exists; the finance seat (D-118) is vacant.' },
   { workstream: 'Corporate Operations', goal: 'Entity, finance, people, insurance, legal, vendor and board operations', seats: ['founder', 'finance'], note: 'LEG-001 and nothing else; the finance seat (D-118) is vacant, and no people or legal seat exists.' },
 ];
@@ -116,7 +116,7 @@ export const OPERATING_SYSTEM: readonly Item[] = rows('OR-OS', [
     [['app/src/lib/governance/deal-desk.test.ts', 'the discount ladder and the refusals'], ['app/src/lib/gtm/rfp.test.ts', 'the procurement response library refuses unsupported claims'], ['docs/trust/PILOT-AGREEMENT-OUTLINE.md', 'the agreement outline'], ['docs/trust/DPA-CHECKLIST.md', 'the DPA checklist'], ['docs/trust/SLA.md', 'the SLA once it can be offered']],
     'Rules and outlines; no price book, no MSA, no order form, no signed anything (LEG-002, COM-002).'],
   ['People', 'An org chart for now and twelve months out, role scorecards, a hiring plan, a contractor policy, security, accessibility and AI training, onboarding and offboarding.', 'designed',
-    [['docs/LAUNCH-READINESS-COUNCIL.md', 'eleven seats; four held by the founder, acting, seven vacant'], ['docs/trust/SOC2-READINESS.md', 'CC1-01 org chart and RACI; CC1-07 training before access; CC6-06 joiner-mover-leaver'], ['docs/operating-model/OPERATING-RHYTHM.md', 'monthly: hiring and capacity']],
+    [['docs/LAUNCH-READINESS-COUNCIL.md', 'twelve seats; four held by the founder, acting, eight vacant'], ['docs/trust/SOC2-READINESS.md', 'CC1-01 org chart and RACI; CC1-07 training before access; CC6-06 joiner-mover-leaver'], ['docs/operating-model/OPERATING-RHYTHM.md', 'monthly: hiring and capacity']],
     'One person; no org chart, scorecard, hiring plan, contractor policy or training record.'],
   ['Decision-making', 'Annual strategy, quarterly priorities, a product council, a security, privacy, accessibility and AI governance council, a customer escalation process, risk-acceptance authority, an ADR process.', 'tested',
     [['app/src/lib/governance/risk.test.ts', 'exceptions expire within 90 days; no P0 exception without executive, security and legal'], ['app/src/lib/launchreadiness.test.ts', 'risk acceptance is the founder seat’s, with an expiry'], ['docs/architecture/README.md', 'the ADR process, ten records'], ['docs/operating-model/OPERATING-RHYTHM.md', 'weekly, monthly, quarterly, annually'], ['SEMESTER-OPERATING-SYSTEM.md', 'company strategy: missing']],
@@ -136,7 +136,7 @@ export const FUNCTIONS: readonly { fn: string; initialOwner: string; responsibil
   { fn: 'Accessibility', initialOwner: 'A named owner plus disabled-user testing partners', responsibility: 'WCAG delivery, ACR/VPAT, remediation, support', seat: 'accessibility', note: 'No testing partner.' },
   { fn: 'AI governance', initialOwner: 'A named owner', responsibility: 'Model and provider approval, evaluations, policy, incident response', seat: 'trust', note: '' },
   { fn: 'Customer implementation', initialOwner: 'Customer-success lead', responsibility: 'Launch plan, configuration, training, adoption, value review', seat: 'success', note: '' },
-  { fn: 'Support and operations', initialOwner: 'Operations / support lead', responsibility: 'Service desk, escalation, incident communications, runbooks', seat: null, note: 'No seat; the master register’s Support and SRE sign-offs are unsigned.' },
+  { fn: 'Support and operations', initialOwner: 'Operations / support lead', responsibility: 'Service desk, escalation, incident communications, runbooks', seat: 'operations', note: 'The operations seat (D-120), vacant; the master register’s Support and SRE sign-offs are its to give.' },
   { fn: 'Sales, partnerships, finance, legal', initialOwner: 'Founder, then outsourced until justified in-house', responsibility: 'Pipeline, proposals, contracts, references, tax, insurance, cash controls', seat: 'founder', note: 'Sales stays the founder’s; finance and legal have the finance seat (D-118), vacant.' },
 ];
 

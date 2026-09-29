@@ -1999,3 +1999,27 @@ than the tree can show.
   in both files, the exception in the promise, the re-apply step in
   `RESTORE.md` with its cutover rule and its broad notice, and the verify
   marker, the exception and the broad notice in the draft policy.
+
+## D-120 · The council has an operations seat, vacant until someone qualified accepts it
+
+**Decided 29 Sep 2026.** The last of the launch kit's twelve council roles
+with no seat that the tree already asked for. The master register has
+carried an SRE sign-off ("SLOs, monitoring, restore, DR, load, on-call
+complete") and a Support sign-off ("support center, KB, escalation, 24/7
+P0/P1 process complete") since it was written, both unsigned, and no council
+seat owned either; the war room's on-call and incident lines and the proof
+calendar's restore rehearsals were the engineering seat's by default.
+
+- **`operations` is the twelfth seat** in `launchreadiness.ts`, after
+  `finance`: Operations / SRE, deciding monitoring, on-call, incident
+  readiness, support operations and release readiness. Vacant.
+- **`decide()` needs it held and signed**, so the verdict is still `NO-GO`,
+  for 31 reasons. Every seat-keyed register accepts it; nothing is
+  reassigned to it here. Moving the SRE-owned gates (`operations-live`,
+  `backup-restore`, `flags-rollback`) and the war-room lines from
+  `engineering` to `operations` is a proposal for the owner, not made here:
+  at one person, the split is on paper only.
+- **The student-advisor role** is now the only charter role with no seat,
+  and it is deliberately not one: the council decides launch; a student
+  advisory voice belongs to the customer advisory board in
+  RISK-GOVERNANCE.md, which has no members either.

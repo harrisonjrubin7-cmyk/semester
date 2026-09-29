@@ -499,7 +499,7 @@ means filling seats that already exist rather than drafting a fourth charter.
 | Institutional advisory representative | Higher-ed workflow and authority perspective | `champion` | The champion seat must be held at the institution, not at Semester. |
 | Student advisory representative | Student clarity, agency, accessibility and lived experience | **none** | No seat. The nearest is the customer advisory board in RISK-GOVERNANCE.md, with no members. |
 | Finance / commercial representative | Pricing, entitlement, margin, contract impact | `finance` | The eleventh seat, added on 29 September (D-118); vacant. The deal desk’s finance approver is this seat. |
-| Operations / SRE representative | Monitoring, supportability, incident readiness, release readiness | **none** | No seat; the master register’s SRE sign-off is unsigned. |
+| Operations / SRE representative | Monitoring, supportability, incident readiness, release readiness | `operations` | The twelfth seat, added on 29 September (D-120); vacant. The master register’s SRE and Support sign-offs are this seat’s. |
 
 ### Decision rights
 
