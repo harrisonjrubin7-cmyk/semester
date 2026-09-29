@@ -300,7 +300,7 @@ Items marked **P0** are conditions of a full GO: while one is open the answer is
 | R-1 | Student data export and deletion work. | partial | P0 | [`docs/DATA-PORTABILITY-AND-OFFBOARDING.md`](../DATA-PORTABILITY-AND-OFFBOARDING.md) | Designed and partly tested; not exercised in production. |
 | R-2 | Backup restore drill succeeds in an isolated environment. | partial | P0 | [`supabase/restore-drill.sh`](../../supabase/restore-drill.sh) | The rehearsal runs in CI against a fresh database; a production restore has not been performed. |
 | R-3 | Incident-response drill completed. | partial | P0 | [`docs/operating-model/INCIDENT-COMMUNICATIONS.md`](INCIDENT-COMMUNICATIONS.md) | Runbooks exist; no tabletop is recorded. |
-| R-4 | AI prompt-injection and kill-switch drills completed. | partial | P0 | [`app/src/lib/aikillswitch.test.ts`](../../app/src/lib/aikillswitch.test.ts) | The harness is one command; the live drill needs a key and has not run. |
+| R-4 | AI prompt-injection and kill-switch drills completed. | partial | P0 | [`app/src/lib/aikillswitch.test.ts`](../../app/src/lib/aikillswitch.test.ts) | Attempted against production on 29 September: it stopped at a 501 before reaching the switch, because ANTHROPIC_API_KEY is not set on the project. |
 | R-5 | Vendor and subprocessor register complete. | partial |  | [`docs/SUBPROCESSORS.md`](../SUBPROCESSORS.md) | Listed; the vendor-risk reviews are not all done. |
 | R-6 | Consent and sharing flows expire, revoke and audit correctly. | partial |  | [`docs/CONSENT-SHARING-DESIGN.md`](../CONSENT-SHARING-DESIGN.md) | Designed and held in tests; not verified in production. |
 

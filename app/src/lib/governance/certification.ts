@@ -282,7 +282,7 @@ export const GO_GATE: readonly GateItem[] = [
   g('R-1', 'trust', 'Student data export and deletion work.', 'partial', 'docs/DATA-PORTABILITY-AND-OFFBOARDING.md', 'Designed and partly tested; not exercised in production.', true),
   g('R-2', 'trust', 'Backup restore drill succeeds in an isolated environment.', 'partial', 'supabase/restore-drill.sh', 'The rehearsal runs in CI against a fresh database; a production restore has not been performed.', true),
   g('R-3', 'trust', 'Incident-response drill completed.', 'partial', 'docs/operating-model/INCIDENT-COMMUNICATIONS.md', 'Runbooks exist; no tabletop is recorded.', true),
-  g('R-4', 'trust', 'AI prompt-injection and kill-switch drills completed.', 'partial', 'app/src/lib/aikillswitch.test.ts', 'The harness is one command; the live drill needs a key and has not run.', true),
+  g('R-4', 'trust', 'AI prompt-injection and kill-switch drills completed.', 'partial', 'app/src/lib/aikillswitch.test.ts', 'Attempted against production on 29 September: it stopped at a 501 before reaching the switch, because ANTHROPIC_API_KEY is not set on the project.', true),
   g('R-5', 'trust', 'Vendor and subprocessor register complete.', 'partial', 'docs/SUBPROCESSORS.md', 'Listed; the vendor-risk reviews are not all done.'),
   g('R-6', 'trust', 'Consent and sharing flows expire, revoke and audit correctly.', 'partial', 'docs/CONSENT-SHARING-DESIGN.md', 'Designed and held in tests; not verified in production.'),
   g('A-1', 'accessibility', 'Automated accessibility testing.', 'passed', 'app/src/a11y/axe.test.tsx', 'axe runs over rendered screens in the suite.'),
