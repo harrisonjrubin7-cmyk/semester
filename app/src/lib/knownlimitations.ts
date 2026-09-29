@@ -87,11 +87,11 @@ export const KNOWN_LIMITATIONS: readonly Limitation[] = [
     sources: ['docs/legal/TERMS-OF-SERVICE-DRAFT.md', 'docs/legal/PRIVACY-POLICY-DRAFT.md', 'app/src/lib/privacy.ts'],
   },
   {
-    id: 'no-sale',
-    title: 'Nothing is for sale, and nothing can be bought.',
-    what: 'Plus and Pro show planned prices so you know what to expect. There is no checkout and no billing in the app, and during the pilot every student feature is free.',
-    instead: 'Nothing to do. If a page asks you to pay for Semester, it is not Semester.',
-    sources: ['app/src/lib/plans.ts', 'ops/claims/README.md'],
+    id: 'plus-checkout-new',
+    title: 'Plus can be bought in the app, but checkout is new and has taken no live payment.',
+    what: 'Plus can be bought and cancelled from the Account screen, at the price the screen shows. The card is typed into Stripe’s page and never reaches Semester. Checkout runs on Stripe test keys, and its first end-to-end check has not been recorded. Pro is not on sale, nothing can be bought on the public site, and during the pilot every student feature is free.',
+    instead: 'Nothing to do. Buy only from the Account screen: if another page asks you to pay for Semester, it is not Semester. Write to support about any charge you do not recognise.',
+    sources: ['app/src/lib/membership.ts', 'app/src/lib/plans.ts', 'docs/DECISION-LOG.md'],
   },
   {
     id: 'support-one-address',

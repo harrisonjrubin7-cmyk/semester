@@ -262,7 +262,7 @@ grant select, insert on auth.users to anon, authenticated;
 SQL
 
 # A fixture, and only a fixture: an account the check suites make without a
-# birth date is recorded as an adult who said so. Since D-136 an account that
+# birth date is recorded as an adult who said so. Since D-137 an account that
 # never stated its age is kept out of every social feature, and the suites
 # that test those features make their accounts by inserting into auth.users
 # with no birth date — they are about the features, not the age. The trigger

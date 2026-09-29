@@ -8,12 +8,14 @@ describe('the plans', () => {
     expect(PLANS.map((p) => p.id)).toEqual(['free', 'plus', 'pro', 'institution']);
   });
 
-  it('sell nothing yet: every paid price is marked planned', () => {
+  it('sell only Plus, and only in the app: every other paid price is marked planned', () => {
     for (const p of PLANS) {
-      if (p.price) expect(p.priceStatus, p.id).toBe('planned');
+      if (p.price) expect(p.priceStatus, p.id).toBe(p.id === 'plus' ? 'in-app' : 'planned');
       if (p.priceStatus === 'planned') expect(priceLine(p), p.id).toMatch(/\(planned\)$/);
+      if (p.priceStatus === 'in-app') expect(priceLine(p), p.id).not.toMatch(/planned/);
     }
-    expect(PILOT_NOTE).toMatch(/not on sale yet/);
+    expect(PILOT_NOTE).toMatch(/Plus can be bought from the Account screen/);
+    expect(PILOT_NOTE).toMatch(/Pro is not on sale yet/);
   });
 
   it('never put export, deletion or saved plans behind a paywall', () => {
@@ -29,7 +31,7 @@ describe('the plans', () => {
 
   it('writes prices the way people read them', () => {
     expect(priceLine(plan('free'))).toBe('Free');
-    expect(priceLine(plan('plus'))).toBe('$7.99 a month or $59 a year (planned)');
+    expect(priceLine(plan('plus'))).toBe('$7.99 a month or $59 a year');
     expect(priceLine(plan('institution'))).toBe('Through your university');
   });
 });

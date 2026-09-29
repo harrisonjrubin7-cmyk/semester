@@ -253,7 +253,7 @@ async function journey(label, viewport) {
     await page.getByRole('textbox', { name: /email/i }).fill(email);
     await local(first.service);
     await page.getByLabel(/password/i).fill(password);
-    // An adult: the form asks for a date of birth and refuses under 13 (D-136).
+    // An adult: the form asks for a date of birth and refuses under 13 (D-137).
     await page.getByLabel(/date of birth/i).fill('2000-01-01');
     await page.getByRole('button', { name: /^create the account$/i }).click();
     const made = await visible(page.getByText(/^step 5 of 5$/i));

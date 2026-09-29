@@ -190,7 +190,7 @@ Exposure `staff` · owner `privacy` · 3 of 10 in place.
 
 | ID | Control | Status | Evidence | What it shows, or what would close it |
 | --- | --- | --- | --- | --- |
-| MN-01 | Source for minor age or status. | in place | [`supabase/minimum-age.check.sql`](../../supabase/minimum-age.check.sql) | Stated at sign-up or once afterwards, never changed; only the day a minor turns 18 is kept (D-136). Self-reported, so it is a stated age, not a verified one. |
+| MN-01 | Source for minor age or status. | in place | [`supabase/minimum-age.check.sql`](../../supabase/minimum-age.check.sql) | Stated at sign-up or once afterwards, never changed; only the day a minor turns 18 is kept (D-137). Self-reported, so it is a stated age, not a verified one. |
 | MN-02 | Guardian consent where required. | owed | — | No guardian model. The supporter and family privacy model says it needs the minors decision before building. |
 | MN-03 | Age-of-majority transition. | in place | [`supabase/minimum-age.check.sql`](../../supabase/minimum-age.check.sql) | The restriction lifts on the 18th birthday with nothing to run. Nobody is told; the Account screen stops saying it. |
 | MN-04 | Dual-enrollment sharing rules. | owed | — | A high-school student in a university course would be a minor in an institutional tenant; no rule exists. |
@@ -343,10 +343,10 @@ Exposure `public` · owner `founder` · 4 of 10 in place.
 | GR-01 | No dark patterns. | in place | [`docs/ETHICAL-ENGAGEMENT-AND-NOTIFICATIONS.md`](../ETHICAL-ENGAGEMENT-AND-NOTIFICATIONS.md) | The engagement policy names them and the test suite forbids streaks, guilt and time-in-app as an achievement. |
 | GR-02 | No hidden paywall around a student’s own data. | in place | [`app/src/lib/plans.ts`](../../app/src/lib/plans.ts) | Export, deletion and saved plans are on every plan, written into the data and tested. |
 | GR-03 | No manipulative student nudges. | in place | [`app/src/donotbuild.test.ts`](../../app/src/donotbuild.test.ts) | Notifications only from allow-listed files, no ad or tracking hosts, no streaks. |
-| GR-04 | Fair student pricing. | partial | [`app/src/lib/plans.ts`](../../app/src/lib/plans.ts) | Free covers everything a student needs to plan; paid plans add capacity and comparison. Nothing is on sale, so fairness is a design, not a record. |
+| GR-04 | Fair student pricing. | partial | [`app/src/lib/plans.ts`](../../app/src/lib/plans.ts) | Free covers everything a student needs to plan; paid plans add capacity and comparison. Only Plus is on sale, in the app and on test keys, so fairness is still a design more than a record. |
 | GR-05 | Transparent institutional implementation pricing. | partial | [`app/src/site/more.tsx`](../../app/src/site/more.tsx) | The public “how pricing works” page names the four drivers and what implementation includes. No price list exists. |
 | GR-06 | Clear AI and usage costs. | partial | [`app/src/screens/settings/Assistant.tsx`](../../app/src/screens/settings/Assistant.tsx) | The assistant settings say what a question costs the student (nothing) and what the gateway meters. Institutional allowance terms are unwritten. |
-| GR-07 | Accessible refund and cancellation. | owed | — | No billing, so no refund path; the rule belongs in the commercial catalog before billing exists. |
+| GR-07 | Accessible refund and cancellation. | owed | — | Cancellation reaches Stripe (D-132); the refund policy is still a proposal and is owed before a live payment. |
 | GR-08 | Ambassador disclosure. | owed | — | No ambassador programme; if one starts, every ambassador discloses. |
 | GR-09 | Responsible advertising and sponsorship policy. | in place | [`docs/operating-model/TRUST-BRAND-AND-LEGAL.md`](TRUST-BRAND-AND-LEGAL.md) | No advertising and no selling of student data, stated publicly and held by the no-tracking-hosts test. |
 | GR-10 | Equity, access and accessibility discount policy. | owed | — | Not decided. Belongs with the first price list. |

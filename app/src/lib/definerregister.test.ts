@@ -91,7 +91,7 @@ describe('the Security Definer and RLS remediation register', () => {
   it('finds the 151 the advisor listed, plus the two added since, so the parser is reading what production runs', () => {
     // A control on the instrument: a parser that silently lost half the
     // functions would also agree with a register that lost the same half.
-    // 151 on the advisor's reading; state_my_age and my_age_status came after (D-136).
+    // 151 on the advisor's reading; state_my_age and my_age_status came after (D-137).
     expect(exposedDefiners().length).toBe(153);
     expect(FUNCTIONS.length).toBe(153);
   });

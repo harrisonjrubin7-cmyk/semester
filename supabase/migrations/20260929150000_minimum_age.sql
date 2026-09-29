@@ -1,5 +1,5 @@
 -- Semester — minimum age 13, and minors (13–17) kept out of discovery,
--- matching, messaging and employer visibility until they turn 18 (D-136).
+-- matching, messaging and employer visibility until they turn 18 (D-137).
 --
 -- Safe to run again.
 --
@@ -66,7 +66,7 @@ revoke all on function private.is_minor(uuid) from public;
 
 -- Has this account said it is 13 or over and 18 or over today? An account
 -- that never said — made through Google, Microsoft or Apple, or before the age
--- was asked — is not cleared: the owner chose to ask, then gate (D-136), so
+-- was asked — is not cleared: the owner chose to ask, then gate (D-137), so
 -- it is kept out of everything a minor is kept out of until it answers.
 create or replace function private.age_cleared(who uuid)
 returns boolean

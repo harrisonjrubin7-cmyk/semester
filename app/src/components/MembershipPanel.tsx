@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { ALWAYS_INCLUDED, PILOT_NOTE, PLANS, plan, priceLine, type PlanId } from '../lib/plans';
+import { useEffect, useRef, useState } from 'react';
+import { ALWAYS_INCLUDED, NOT_ON_SALE_HERE, PLANS, plan, priceLine, type PlanId } from '../lib/plans';
 import { cloud, cloudConfigured, currentSession } from '../lib/cloud';
 import { formatDate } from '../lib/locale';
 import {
@@ -7,9 +7,11 @@ import {
   checkoutReturn,
   consentText,
   currentSubscription,
+  fetchOwnSubscriptions,
+  fetchPlusPrices,
   hasPaidBefore,
-  plusPrices,
   priceWords,
+  takeOpenUpgrade,
   startCheckout,
   type PlusPrice,
   type Subscription,
@@ -30,7 +32,7 @@ import { SectionLabel } from './ui';
  * interval, renewal and the way to cancel, and it is recorded server-side by
  * `billing-checkout` before Stripe is ever asked. The card is typed into
  * Stripe's page. Without a catalog — a device-only build, or a network that
- * has gone — the panel says what it always said: nothing is for sale here.
+ * has gone — the panel says what it always said: nothing is for sale in this build.
  *
  * "Upgrade" and "Cancel" are real buttons that explain rather than disabled
  * ones that do not: a disabled control says "not now" without saying why, and
@@ -55,7 +57,17 @@ const when = (iso: string) => (iso ? formatDate(iso, { month: 'long', day: 'nume
 
 export function MembershipPanel() {
   const { dispatch, account } = useStore();
-  const [said, setSaid] = useState<'upgrade' | 'cancel' | null>(null);
+  // Opened already when Today's "See Plus" brought the person here.
+  const [handedOver] = useState(() => takeOpenUpgrade());
+  const [said, setSaid] = useState<'upgrade' | 'cancel' | null>(handedOver ? 'upgrade' : null);
+  // Membership is the last thing on a long Account page: arriving from
+  // Today's "See Plus" at the top of it would look like nothing happened.
+  const section = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (!handedOver || !section.current) return;
+    section.current.scrollIntoView?.({ block: 'start' });
+    section.current.focus({ preventScroll: true });
+  }, [handedOver]);
   const [prices, setPrices] = useState<PlusPrice[]>([]);
   const [sub, setSub] = useState<Subscription | null>(null);
   const [choice, setChoice] = useState<string>('');
@@ -75,21 +87,11 @@ export function MembershipPanel() {
     void (async () => {
       try {
         const db = await cloud();
-        const { data } = await db
-          .from('commercial_prices')
-          .select('id, plan_code, amount_cents, currency, billing_interval')
-          .eq('plan_code', 'plus');
-        if (live) setPrices(plusPrices(data));
+        const found = await fetchPlusPrices(db);
+        if (live) setPrices(found);
         if (!accountId) return;
-        // Only this person's own, individual billing account. A billing
-        // contact or operator can read other accounts' rows under RLS, and
-        // none of those is their plan.
-        const read = () =>
-          db
-            .from('subscriptions')
-            .select('id, plan_code, status, current_period_end, cancel_at_period_end, billing_accounts!inner(kind, user_id)')
-            .eq('billing_accounts.kind', 'individual')
-            .eq('billing_accounts.user_id', accountId);
+        // Only this person's own, individual billing account.
+        const read = async () => ({ data: await fetchOwnSubscriptions(db, accountId) });
         // Stripe can send the buyer back before its webhook has written the
         // subscription, so after a successful return keep looking for a
         // minute rather than showing Free until the next reload.
@@ -179,10 +181,10 @@ export function MembershipPanel() {
         : `Renews on ${when(sub.periodEnd)}.`
     : onSale
       ? `Plus is ${prices.map(priceWords).join(' or ')}. Free stays free.`
-      : PILOT_NOTE;
+      : NOT_ON_SALE_HERE;
 
   return (
-    <section aria-labelledby="membership-title" style={{ marginTop: 'var(--sp-7)' }}>
+    <section ref={section} tabIndex={-1} aria-labelledby="membership-title" style={{ marginTop: 'var(--sp-7)' }}>
       <SectionLabel>
         <span id="membership-title">Membership</span>
       </SectionLabel>
@@ -290,7 +292,7 @@ export function MembershipPanel() {
                 {p.id === currentId ? ' · your plan' : ''}
               </div>
               <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}>
-                {p.id === 'plus' && onSale ? prices.map(priceWords).join(' or ') : priceLine(p)}
+                {p.id === 'plus' && onSale ? prices.map(priceWords).join(' or ') : p.id === 'plus' ? `${priceLine(p)} (planned)` : priceLine(p)}
               </div>
               <ul style={{ fontSize: 'var(--type-sm)', margin: 'var(--sp-2) 0 0', paddingInlineStart: '1.2em' }}>
                 {p.includes.map((i) => <li key={i}>{i}</li>)}
