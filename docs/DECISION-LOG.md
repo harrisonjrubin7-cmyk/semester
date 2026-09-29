@@ -2741,6 +2741,18 @@ standing is held to the kind of file it cites.
   asking why you are leaving, which the app does not ask, and stops
   promising a confirmation email. The refund and retention drafts take D-132's
   cancellation and seven-year record period.
+- **Service commitments and institution exit say what exists.** The
+  service-commitments page listed first-response times from 30 minutes (a
+  24/7 tier) to two business days, hourly updates, extended and critical-
+  period tiers, and credits against a monthly uptime nobody measures; the
+  incident section promised acknowledgement in 30 minutes. They now say one
+  person answers with no time promised, nobody is on call, and the status
+  page keeps no history. The portability page and the trust FAQ promised
+  institutions an export "within 10 business days" and a written deletion
+  certificate; neither a tenant-wide export nor a certificate exists
+  (`docs/trust/DPA-CHECKLIST.md`), and the page now says students can leave
+  with their device copy today and an institution's exit is still being
+  built.
 - **Not written here, because the repository cannot write them:** the MSA,
   counsel's review of every policy, a VPAT, customer data migration, and
   anything with an institution's name on it. Each is a row that says so.
