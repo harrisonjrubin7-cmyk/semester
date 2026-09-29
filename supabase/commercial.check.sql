@@ -120,7 +120,7 @@ begin
   insert into public.subscription_entitlements (subscription_id, entitlement_key, value)
   select ana_sub, entitlement_key, value from public.plan_entitlements where plan_code = 'plus';
   insert into public.invoices (billing_account_id, subscription_id, status, subtotal_cents, issued_at, due_at)
-  values (ana_acct, ana_sub, 'open', 399, now(), now() + interval '7 days') returning id into inv;
+  values (ana_acct, ana_sub, 'open', 799, now(), now() + interval '7 days') returning id into inv;
   reset role;
 
   set local role service_role;
@@ -177,16 +177,16 @@ begin
 
   -- ── Payments and dunning ────────────────────────────────────────────────
   set local role service_role;
-  select public.apply_payment_event('stripe', 'evt_fail_1', 'payment_failed', inv, 399, repeat('a', 64)) into t;
+  select public.apply_payment_event('stripe', 'evt_fail_1', 'payment_failed', inv, 799, repeat('a', 64)) into t;
   perform pg_temp.answered('a failed payment opens dunning', t, 'dunning');
-  select public.apply_payment_event('stripe', 'evt_fail_1', 'payment_failed', inv, 399, repeat('a', 64)) into t;
+  select public.apply_payment_event('stripe', 'evt_fail_1', 'payment_failed', inv, 799, repeat('a', 64)) into t;
   perform pg_temp.answered('the same webhook again is a no-op', t, 'duplicate');
-  select public.apply_payment_event('stripe', 'evt_fail_2', 'payment_failed', inv, 399, repeat('b', 64)) into t;
+  select public.apply_payment_event('stripe', 'evt_fail_2', 'payment_failed', inv, 799, repeat('b', 64)) into t;
   select count(*) into n from public.dunning_cases where subscription_id = ana_sub;
   perform pg_temp.counted('a second failure keeps one dunning case', n, 1);
   select count(*) into n from public.dunning_actions a join public.dunning_cases c on c.id = a.case_id where c.subscription_id = ana_sub;
   perform pg_temp.counted('and records two actions on it', n, 2);
-  select public.apply_payment_event('stripe', 'evt_ok_1', 'payment_succeeded', inv, 399, repeat('c', 64)) into t;
+  select public.apply_payment_event('stripe', 'evt_ok_1', 'payment_succeeded', inv, 799, repeat('c', 64)) into t;
   perform pg_temp.answered('a payment marks the invoice paid', (select status from public.invoices where id = inv), 'paid');
   perform pg_temp.answered('and recovers the dunning case',
     (select status from public.dunning_cases where subscription_id = ana_sub), 'recovered');

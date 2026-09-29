@@ -64,7 +64,7 @@ export const SOURCES: readonly { path: string; title: string; what: string }[] =
 export const HEADLINE = 'One Operating System for University Life.';
 
 export const STATEMENT =
-  'Semester is the unified operating system for higher education. One connected platform for every part of university life: academics, learning, planning, campus services, career development, student support, payments, communication, and institutional operations. Semester replaces the disconnected university experience with one intelligent, connected system.';
+  'Semester is the unified operating system for higher education. One connected platform for every part of university life: academics, learning, planning, campus services, career development, student support, communication, and institutional operations. Semester replaces the disconnected university experience with one intelligent, connected system.';
 
 export const MESSAGES: readonly { audience: string; text: string }[] = [
   {

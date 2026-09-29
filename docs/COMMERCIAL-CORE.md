@@ -7,8 +7,9 @@ in `grants`, `capabilities` and `rls-coverage`. What runs it is below.
 
 Nothing here charges anyone yet. Stripe is wired but not connected: nothing
 happens until the secrets under "Off until the owner sets these" are set. The
-prices seeded for Plus ($3.99/month, $29.99/year) are the financial model's
-planning figures.
+seed priced Plus at $3.99/month and $29.99/year; `20260929131000_plus_price.sql`
+retired those rows and set Plus at $7.99/month and $59/year (D-134), the
+figures the pricing page prints. `plans.test.ts` holds the two to each other.
 
 ## Four ideas kept apart
 

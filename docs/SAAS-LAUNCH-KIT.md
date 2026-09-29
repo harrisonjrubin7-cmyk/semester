@@ -154,13 +154,13 @@ The recommended package is seven documents: tested 1 · building 2 · designed 3
 ### The term sheet
 
 Fourteen positions, each held to where the tree already takes it: tested 9 · building 2 · designed 1 · not-started 0 · held 2.
-The one conflict is the term: the kit says 90–180 days and `gtm/pilot.ts` refuses
-anything outside 60–120. The code’s rule holds until the owner reopens it.
+The one conflict is the term: the kit says 90–180 days and `gtm/pilot.ts` runs
+every pilot for exactly 26 weeks, 182 days, as the owner set it (D-134).
 
 | ID | Item | The kit asks | Standing | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
 | LK-TERM-01 | Parties | Semester’s legal entity and the institution’s. | held | [`docs/market-readiness/HECVAT_DRAFT_RESPONSE.md`](market-readiness/HECVAT_DRAFT_RESPONSE.md) — COMP-01: the LLC, name to add | The party exists by attestation; its legal name is not yet on file, so no paper names it. |
-| LK-TERM-02 | Term | One academic term or 90–180 days, with explicit dates. | held | [`app/src/lib/gtm/pilot.ts`](../app/src/lib/gtm/pilot.ts) — pilotReadiness: 60–120 days, or the plan is refused<br>[`app/src/lib/gtm/pilot.test.ts`](../app/src/lib/gtm/pilot.test.ts) — held<br>[`docs/PAID-PILOT-FRAMEWORK.md`](PAID-PILOT-FRAMEWORK.md) — “The two length rules agree”: 60–120 days inside the deal desk’s six months | The tree’s rule is 60–120 days; a 150-day pilot fails pilotReadiness. The kit’s 90–180 conflicts at the top; the code’s rule holds until the owner reopens it. |
+| LK-TERM-02 | Term | One academic term or 90–180 days, with explicit dates. | held | [`app/src/lib/gtm/pilot.ts`](../app/src/lib/gtm/pilot.ts) — pilotReadiness: exactly 26 weeks, or the plan is refused<br>[`app/src/lib/gtm/pilot.test.ts`](../app/src/lib/gtm/pilot.test.ts) — held<br>[`docs/PAID-PILOT-FRAMEWORK.md`](PAID-PILOT-FRAMEWORK.md) — “The two length rules agree”: 26 weeks inside the deal desk’s six months | The owner set every pilot to 26 weeks (D-134); pilotReadiness refuses any other length. That is 182 days, two past the kit’s 90–180; the code’s rule holds. |
 | LK-TERM-03 | Scope | Named cohort, modules, environments, integrations and roles only. | tested | [`app/src/lib/gtm/pilot.ts`](../app/src/lib/gtm/pilot.ts) — no_cohort, no data plan → refused<br>[`supabase/gtm.check.sql`](../supabase/gtm.check.sql) — the database refuses a pilot without the §6.2 elements<br>[`docs/trust/PILOT-AGREEMENT-OUTLINE.md`](trust/PILOT-AGREEMENT-OUTLINE.md) — included and excluded lists | Modules are not enumerable per tenant; the scope names features, not entitlements. |
 | LK-TERM-04 | Purpose | Validate a defined outcome, not general unlimited use. | tested | [`app/src/lib/gtm/pilot.ts`](../app/src/lib/gtm/pilot.ts) — a workflow, a baseline and 3–5 metrics each with a baseline<br>[`app/src/lib/gtm/pilot.test.ts`](../app/src/lib/gtm/pilot.test.ts) — held | Held in code. |
 | LK-TERM-05 | Fees | A paid pilot; invoice schedule and taxes stated; credit toward an annual licence only if specified. | tested | [`app/src/lib/governance/deal-desk.ts`](../app/src/lib/governance/deal-desk.ts) — minimum pilot ACV $15k (proposed); pilot credit capped at 50%; implementation fee waived only as capped credit<br>[`app/src/lib/governance/deal-desk.test.ts`](../app/src/lib/governance/deal-desk.test.ts) — held | Proposed defaults, not a price book; no invoice can be issued (COM-001). |
@@ -209,7 +209,7 @@ The kit’s SOW template, field by field, and the `PilotPlan` field in
 | --- | --- | --- |
 | Pilot name | **none** | A `gtm_pilots` row has an id, not a name. |
 | Institution | **none** | The pilot belongs to a `gtm_accounts` row; the plan itself does not name the institution. |
-| Pilot period | `startDate, endDate` | 60–120 days. |
+| Pilot period | `startDate, endDate` | Exactly 26 weeks. |
 | Population | `cohort` | Free text; no enrollment cap field. |
 | Enabled modules | **none** | Modules are flags on the tenant, not a list in the plan. |
 | Enabled integrations | `dataPlan` | A minimum-necessary read-only data plan; integrations are not enumerated. |

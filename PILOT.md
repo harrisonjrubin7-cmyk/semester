@@ -218,7 +218,7 @@ The interview is twenty minutes and the only rule is to stop asking what they
    number people are polite about.)*
 5. Who else should have this? *(An ambassador, if they name somebody.)*
 
-Anchor at the plan's own price — $3.99 a month or $29.99 a year — and vary it
+Anchor at the plan's own price — $7.99 a month or $59 a year — and vary it
 between people rather than asking each of them about three prices, which
 teaches them the game.
 

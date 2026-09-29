@@ -1,4 +1,4 @@
-# First-year success
+# Company first-year measures
 
 <!-- Rendered from app/src/lib/ops/firstyear.ts by firstyear.test.ts. Edit the data, then run `npm run registers` from app/. -->
 

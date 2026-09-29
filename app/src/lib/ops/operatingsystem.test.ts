@@ -271,7 +271,7 @@ function render(): string {
     'what has been promised, [`docs/PROOF-CALENDAR.md`](docs/PROOF-CALENDAR.md)',
     'when the evidence is produced, [`docs/LAUNCH-WAR-ROOM.md`](docs/LAUNCH-WAR-ROOM.md)',
     'who reports what each day before launch, and',
-    '[`docs/FIRST-YEAR-SUCCESS.md`](docs/FIRST-YEAR-SUCCESS.md) what success means.',
+    '[`docs/COMPANY-FIRST-YEAR-MEASURES.md`](docs/COMPANY-FIRST-YEAR-MEASURES.md) what success means.',
     '',
     '## How this page is held',
     '',

@@ -34,7 +34,7 @@ describe('the Data & AI Transparency page', () => {
   });
 
   it('holds every “never” to a path in the tree', () => {
-    expect(NEVER).toHaveLength(4);
+    expect(NEVER).toHaveLength(6);
     for (const n of NEVER) expect(exists(n.path), n.path).toBe(true);
   });
 

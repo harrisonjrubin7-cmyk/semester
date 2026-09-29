@@ -47,7 +47,7 @@ The documents here fill items those indexes list. The NDA-gated room in
 | [`DPA-CHECKLIST.md`](DPA-CHECKLIST.md) | FERPA school-official checklist, DPA clause requirements, and starting language for counsel |
 | [`SLA.md`](SLA.md) | Availability formula, downtime tables, recommended SLA, credit schedule, exclusions |
 | [`APM-RUNBOOK.md`](APM-RUNBOOK.md) | Target telemetry and alert thresholds, marked with what exists; the incident runbook |
-| [`PILOT-AGREEMENT-OUTLINE.md`](PILOT-AGREEMENT-OUTLINE.md) | Sections for a 90-day pilot agreement, sample scope, scorecard |
+| [`PILOT-AGREEMENT-OUTLINE.md`](PILOT-AGREEMENT-OUTLINE.md) | Sections for a 26-week pilot agreement, sample scope, scorecard |
 | [`HECVAT-VPAT-PLAN.md`](HECVAT-VPAT-PLAN.md) | HECVAT workstreams, a 90-day plan, and the VPAT/ACR checklist |
 | [`BRIDGE-LETTER.md`](BRIDGE-LETTER.md) | The SOC 2 bridge-letter process, for when a report exists |
 | [`VENDOR-RISK-REGISTER.md`](VENDOR-RISK-REGISTER.md) | One row per subprocessor: data shared, attestation (to confirm), DPA status, tier, and the review procedure. No vendor has been assessed yet |
