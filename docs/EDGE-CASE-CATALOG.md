@@ -8,7 +8,7 @@ runs on every change; a runbook or a design does not count, and every guard
 cited must exist. Most guards were written for a narrower question than the
 case asks, and the note says what each proves and what it does not.
 
-**32 of 81 cases have a guard; 49 are owed.** Of the plan's fourteen
+**37 of 81 cases have a guard; 44 are owed.** Of the plan's fourteen
 especially important cases, 6 have nothing: EC-DQ-01, EC-LMS-02, EC-LMS-04, EC-LMS-07, EC-AI-01, EC-GOV-02.
 Most owed cases wait on something that does not exist yet (an assessment
 engine, billing, a live SIS), and the note says which.
@@ -32,14 +32,14 @@ engine, billing, a live SIS), and the note says which.
 
 ## Data and source quality
 
-4 of 10 guarded.
+5 of 10 guarded.
 
 | ID | Case | Guard | What it proves, and what it does not |
 | --- | --- | --- | --- |
 | EC-DQ-01 | SIS says one course section; the LMS says another. **(important)** | owed | No live SIS or LMS connection exists; precedence rules are designed in docs/FIELD-LINEAGE-AND-SOURCE-FRESHNESS.md, not tested. |
 | EC-DQ-02 | Student-entered plan conflicts with the institution source. | owed | Requirements are student-typed; there is no institutional source to conflict with. |
 | EC-DQ-03 | Source record is deleted, renamed or reused. | `app/src/lib/integration/quality.test.ts` | Schema drift reports a removed or renamed field before records fail one by one. Record-level reuse of an identifier is not covered. |
-| EC-DQ-04 | Integration sends an out-of-order update. | owed | The webhook inbox keys on idempotency, not ordering; an older event can still overwrite. |
+| EC-DQ-04 | Integration sends an out-of-order update. | `app/src/lib/integration/pipeline.test.ts` | A record whose source timestamp is older than the one stored is refused as a timestamp regression, and the same one is skipped. A provider that sends no timestamp is not ordered, and the deployed integration-tick function is not exercised. |
 | EC-DQ-05 | Webhook is replayed. **(important)** | `app/src/lib/integration/pipeline.test.ts` | A delivery seen twice is counted once by its idempotency key. There is no inbound endpoint yet, so no signature or timestamp window: INT-013. |
 | EC-DQ-06 | Source is stale during registration. | `app/src/components/schoolrecords.test.tsx` | Stale records are labelled, never shown as current. The freshness cards are behind a flag that is off until a connection is live. |
 | EC-DQ-07 | Catalog prerequisite changes after the student builds a plan. | owed | The catalog is a student-imported file; nothing re-checks a plan against a later import. |
@@ -67,7 +67,7 @@ engine, billing, a live SIS), and the note says which.
 
 ## AI
 
-3 of 10 guarded.
+4 of 10 guarded.
 
 | ID | Case | Guard | What it proves, and what it does not |
 | --- | --- | --- | --- |
@@ -79,7 +79,7 @@ engine, billing, a live SIS), and the note says which.
 | EC-AI-06 | Student asks the AI to do prohibited active assessment work. | `app/src/lib/governance/ai-lifecycle.test.ts` | Prohibited scopes are refused at intake (G0). The runtime policy check for a specific request is prompt text, not a test: AI-007. |
 | EC-AI-07 | AI produces a harmful, confident but unsupported recommendation. | owed | DO-NOT-BUILD rules 3 and 7 are held by review; no evaluation corpus scores unsupported claims: AI-011. |
 | EC-AI-08 | Model version change alters answer behaviour. | owed | No pinned model versions or evaluation baseline: AI-002, AI-011. |
-| EC-AI-09 | AI cost spike or rate-limit attack. | owed | The shared key is clamped per account (supabase/functions/_shared/clamp.ts) and the provider spend cap fires at half; neither is exercised by a test. |
+| EC-AI-09 | AI cost spike or rate-limit attack. | `app/src/lib/claudeclamp.test.ts` | The shared key pays only for what the app itself sends: model, max_tokens, tools and effort are clamped or refused (supabase/functions/_shared/clamp.ts), and the test holds the clamp to the app's own requests. The sixty-call monthly count and the provider's spend cap at half (MONITORING.md) are not exercised by a test. |
 | EC-AI-10 | Student deletes AI history but a linked study artifact remains. | owed | No link from a conversation to a saved study artifact is recorded, so nothing can be reconciled. |
 
 ## Integrations and infrastructure
@@ -103,13 +103,13 @@ engine, billing, a live SIS), and the note says which.
 
 ## Commercial and customer operations
 
-6 of 10 guarded.
+7 of 10 guarded.
 
 | ID | Case | Guard | What it proves, and what it does not |
 | --- | --- | --- | --- |
-| EC-COM-01 | Payment webhook is delayed or out of order. | owed | No billing exists to receive a webhook: COM-001. |
+| EC-COM-01 | Payment webhook is delayed or out of order. | `app/src/lib/billing/webhook.test.ts` | An invoice that arrives before its subscription is answered with a retry and records nothing, and a subscription change is synced with the event's own time; the same event again is a no-op by its provider event id (supabase/commercial.check.sql). Stripe is off until keyed (COM-001), so no real delivery has been seen. |
 | EC-COM-02 | Student cancels during a paid term but needs an export. | `app/src/components/betapanel.test.tsx` | Leaving the beta offers Export first and keeps the account. No paid term exists. |
-| EC-COM-03 | Institution changes billing contact or purchase order late. | owed | No institutional billing. |
+| EC-COM-03 | Institution changes billing contact or purchase order late. | owed | Contracts, invoices and a billing_contact role exist since the commercial core (supabase/migrations/20260929070000_commercial_core.sql); nothing tests a contact or purchase order changed after an invoice is issued. |
 | EC-COM-04 | Contract expires during finals. **(important)** | `supabase/tenant-plan.check.sql` | An ended plan is refused by entitlement at once. There is no grace period or read-only wind-down, which is the harm the case describes. |
 | EC-COM-05 | Customer requests data deletion under a legal hold. **(important)** | `supabase/integration-hardening.check.sql` | A legal hold can be set on integration tables. Account deletion against a held row is not tested. |
 | EC-COM-06 | Customer wants a feature enabled that the contract or entitlement does not allow. | `app/src/lib/entitlement.test.ts` | Entitlement order refuses what the plan does not carry. |
@@ -120,12 +120,12 @@ engine, billing, a live SIS), and the note says which.
 
 ## Accessibility and inclusion
 
-3 of 9 guarded.
+5 of 9 guarded.
 
 | ID | Case | Guard | What it proves, and what it does not |
 | --- | --- | --- | --- |
-| EC-A11Y-01 | Focus is hidden under a sticky composer or banner. | owed | app/scripts/keyboard-pass.mjs records whether each Tab stop's centre is covered, but it is a manual pass, not in CI; focusbar.test.tsx keeps two fixed bars off each other, not off the focused element. |
-| EC-A11Y-02 | Screen reader announces streamed AI text too aggressively. | owed | No live-region test over a streamed answer. |
+| EC-A11Y-01 | Focus is hidden under a sticky composer or banner. | `app/src/styles/tokens.test.ts` | Every focused control carries scroll-margin equal to the header and bottom clearances, and app/src/ai/focusbar.test.tsx holds the scroller's scroll-padding to the Focus bar's inset. The clearances are constants; whether they match a bar's real height is measured only by app/scripts/keyboard-pass.mjs, a manual pass. |
+| EC-A11Y-02 | Screen reader announces streamed AI text too aggressively. | `app/src/ai/streamlive.shape.test.ts` | The conversation is a polite log and the streaming text is rendered aria-hidden until the turn lands, so an answer is announced once, whole; the test reads the shape of both surfaces (the full chat and the panel). No screen reader has been run over a stream (EC-A11Y-09). |
 | EC-A11Y-03 | Chart or table becomes unreadable at 200% zoom. | `app/src/styles/textscale.test.ts` | Text scaling is held; charts and wide tables are not screenshot-tested at zoom. |
 | EC-A11Y-04 | Timer or accommodation is not announced. | owed | No timed assessment exists. |
 | EC-A11Y-05 | Keyboard user cannot reach a schedule action. | `app/src/screens/Calendar.keyboard.test.tsx` | Every calendar action has a non-drag route. |

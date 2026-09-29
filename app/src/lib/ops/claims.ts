@@ -228,7 +228,7 @@ export const CLAIMS: readonly Claim[] = [
   {
     id: 'restore-drill',
     claim: 'A rehearsed restore from backup',
-    scope: 'A restore passes locally. Production has never been restored, and the recovery time is unmeasured.',
+    scope: 'A restore rehearsal passes on every change in CI. Production has never been restored, and the recovery time is unmeasured.',
     status: 'in-preparation',
     owner: 'engineering',
     pages: ['/security/'],
