@@ -19,9 +19,10 @@
  * - every definition-of-done line names the `AI_RELEASE_GATE` item that
  *   carries it, or says none does;
  * - the vendor scorecard is executable (`scoreVendor`), and every AI party in
- *   `trust/subprocessors.ts` is on it — unscored, because no provider's terms
- *   are on file (the DPA checklist says so), and an unscored provider is not
- *   approvable.
+ *   `trust/subprocessors.ts` is on it, scored from the provider's own public
+ *   documentation with a citation per score. Model quality stays unscored
+ *   until the model-quality set is run and filed, so no provider is
+ *   approvable yet.
  *
  * ## What a status may claim
  *
@@ -349,16 +350,92 @@ export function scoreVendor(scores: Scores, opts: { agentic: boolean; blocker?: 
   return { verdict: reasons.length ? 'refuse' : 'approve', weighted, reasons };
 }
 
+// ── 7a. The providers, scored from their own public documentation ───────────
+
 /**
- * Every AI party `trust/subprocessors.ts` names, on the scorecard. None has a
- * score: no provider's training, retention or incident terms are on file
- * (`docs/trust/DPA-CHECKLIST.md`), and a score without them would be invented.
+ * A score rests on one page the provider publishes, and says what that page
+ * says. A dimension public documentation cannot answer stays unscored with its
+ * reason — model quality above all, which the scorecard defines as performance
+ * on Semester's own evaluation set: the set exists (`model-quality.ts`) and
+ * has not been run, and no run is filed.
+ *
+ * These are desk scores from public documentation read on `CHECKED`, not
+ * contract review: nothing here is a signed DPA, and a provider cannot be
+ * approved until every dimension is scored.
  */
-export const VENDORS: readonly { party: string; agentic: boolean; scores: Scores; note: string }[] = [
-  { party: 'Anthropic (Semester’s key)', agentic: false, scores: {}, note: 'Retention settings and attestations are marked “to confirm” in the vendor risk register; the shared key drops code execution, web fetch and MCP tools (claudeclamp.test.ts), so it is scored as non-agentic.' },
-  { party: 'OpenAI (institution-approved)', agentic: true, scores: {}, note: 'Called with store: false; training terms are not recorded. The gateway issues server-side, single-use actions, so it is scored as agentic and the tool-use floor binds.' },
-  { party: 'Anthropic (student’s own key)', agentic: false, scores: {}, note: 'The student’s own contract with the provider; Semester can score it only to decide whether to offer the option.' },
-  { party: 'OpenAI (student’s own key)', agentic: false, scores: {}, note: 'The student’s own contract with the provider; as above.' },
+export const CHECKED = '2026-09-29';
+
+export type Provider = 'Anthropic' | 'OpenAI';
+
+export type Basis = { score: number; url: string; says: string } | { unscored: string };
+
+/** Hosts a basis may cite: the provider's own. */
+export const OFFICIAL_HOSTS: Record<Provider, readonly string[]> = {
+  Anthropic: ['anthropic.com', 'claude.com'],
+  OpenAI: ['openai.com'],
+};
+
+/** The file the model-quality set lives in; the test holds it to existing. */
+export const EVAL_SET = 'app/src/lib/governance/model-quality.ts';
+
+const NO_EVAL = `Scored against Semester’s own evaluation set (${EVAL_SET}, run by app/src/ai/modelquality.live.test.ts), which has not been run against this provider. A run filed under docs/evidence/ai/ is the only thing this score may cite.`;
+
+export const PROVIDER_BASIS: Record<Provider, Record<Dimension, Basis>> = {
+  Anthropic: {
+    'data-use': { score: 5, url: 'https://www.anthropic.com/legal/commercial-terms', says: 'Contractual: “Anthropic may not train models on Customer Content from Services”; the only use is feedback a user explicitly sends.' },
+    'privacy-retention': { score: 4, url: 'https://privacy.claude.com/en/articles/7996866-how-long-do-you-store-my-organization-s-data', says: 'Inputs and outputs deleted within 30 days; flagged content kept up to 2 years; zero retention only by arrangement with sales, and not for every model; subprocessors published.' },
+    security: { score: 5, url: 'https://www.anthropic.com/legal/data-processing-addendum', says: 'Breach notice “in any event within 48 hours”; AES-256 at rest, TLS 1.2+; SOC 2 Type II, ISO 27001 and ISO 42001 cover the API.' },
+    'education-fit': { score: 3, url: 'https://support.claude.com/en/articles/9307344-responsible-use-of-anthropic-s-models-guidelines-for-organizations-serving-minors', says: 'Safeguards required for minors (age checks, AI disclosure, COPPA); no FERPA terms for the API — the K-12 DPA covers only Claude for Teachers.' },
+    citations: { score: 5, url: 'https://platform.claude.com/docs/en/build-with-claude/citations', says: 'Citations “return the exact passages that support each claim”; generally available on all active models.' },
+    'tool-safety': { score: 4, url: 'https://platform.claude.com/docs/en/agents-and-tools/tool-use/overview', says: 'Client tools run in the application; strict schemas make tool calls match exactly; server tools exist and must be left off.' },
+    injection: { score: 3, url: 'https://platform.claude.com/docs/en/test-and-evaluate/strengthen-guardrails/mitigate-jailbreaks', says: 'Documented guidance (screens, layered defences, monitoring); no tested mitigation evidence Semester can inspect.' },
+    'model-quality': { unscored: NO_EVAL },
+    accessibility: { score: 3, url: 'https://platform.claude.com/docs/en/build-with-claude/multilingual-support', says: 'Strong multilingual performance and strict structured output; no speech-to-text in the API.' },
+    reliability: { score: 2, url: 'https://platform.claude.com/docs/en/api/service-tiers', says: 'Standard tier is “best-effort availability”; no SLA in the terms; 60 days’ notice before a model is retired.' },
+    cost: { score: 5, url: 'https://platform.claude.com/docs/en/api/rate-limits', says: 'Published per-tier rate limits, customer-set spend limits per organisation or workspace, and a usage and cost API.' },
+    portability: { score: 2, url: 'https://platform.claude.com/docs/en/cli-sdks-libraries/libraries/openai-sdk', says: 'An OpenAI-compatible endpoint exists but is “not considered a long-term or production-ready solution”.' },
+  },
+  OpenAI: {
+    'data-use': { score: 5, url: 'https://cdn.openai.com/osa/openai-services-agreement.pdf', says: 'Contractual: “OpenAI will not use Customer Content to develop or improve the Services, unless Customer explicitly agrees”.' },
+    'privacy-retention': { score: 4, url: 'https://developers.openai.com/api/docs/guides/your-data', says: 'Abuse logs up to 30 days; zero retention by approval for eligible customers; some endpoints keep data until deleted; twelve storage regions.' },
+    security: { score: 4, url: 'https://cdn.openai.com/pdf/openai-data-processing-addendum.pdf', says: 'Breach notice “without undue delay”, with no fixed hours; the trust portal lists SOC 2, ISO 27001 and 42001 but describes itself as for ChatGPT, so API coverage is not confirmed on an official page.' },
+    'education-fit': { score: 4, url: 'https://cdn.openai.com/osa/openai-sdpa.pdf', says: 'A Student Data Privacy Agreement names OpenAI a FERPA school official, but its text names ChatGPT Edu, so API coverage needs confirming; under-13 data requires zero retention.' },
+    citations: { score: 4, url: 'https://developers.openai.com/api/docs/guides/tools-file-search', says: 'File search returns “file citations”; citations come through the hosted file tool, not arbitrary passages.' },
+    'tool-safety': { score: 4, url: 'https://developers.openai.com/api/docs/guides/function-calling', says: 'Function calls run in the application; strict mode enforces the schema; hosted tools (web search, code execution, MCP) exist and must be left off.' },
+    injection: { score: 3, url: 'https://developers.openai.com/api/docs/guides/safety-best-practices', says: 'Documented guidance and a free moderation endpoint; no tested mitigation evidence Semester can inspect.' },
+    'model-quality': { unscored: NO_EVAL },
+    accessibility: { score: 4, url: 'https://developers.openai.com/api/docs/guides/speech-to-text', says: 'Native transcription with timestamps and speaker labels, strict structured output; translation only into English.' },
+    reliability: { score: 3, url: 'https://developers.openai.com/api/docs/deprecations', says: 'At least six months’ notice before a GA model is retired; no SLA in the services agreement.' },
+    cost: { score: 5, url: 'https://developers.openai.com/api/docs/guides/spend-limits', says: 'Hard spend limits per organisation or project that return 429 when reached, and a usage and costs API.' },
+    portability: { unscored: 'No official page speaks to portability or lock-in.' },
+  },
+};
+
+export const scoresOf = (p: Provider): Scores =>
+  Object.fromEntries(Object.entries(PROVIDER_BASIS[p]).flatMap(([d, b]) => ('score' in b ? [[d, b.score]] : []))) as Scores;
+
+/**
+ * What the scored dimensions already say, before the rest are scored: the
+ * weighted mean over them, and any floor already missed. Never a verdict.
+ */
+export function provisional(scores: Scores, agentic: boolean): { weighted: number | null; scoredWeight: number; floorsMissed: readonly Dimension[] } {
+  const scored = DIMENSION_ROWS.filter((d) => scores[d.id] !== undefined);
+  const w = scored.reduce((s, d) => s + d.weight, 0);
+  const weighted = w ? Math.round((scored.reduce((s, d) => s + d.weight * scores[d.id]!, 0) / w) * 100) / 100 : null;
+  const floorsMissed = FLOORS.filter((f) => (!f.agenticOnly || agentic) && scores[f.id] !== undefined && scores[f.id]! < f.min).map((f) => f.id);
+  return { weighted, scoredWeight: w, floorsMissed };
+}
+
+/**
+ * Every AI party `trust/subprocessors.ts` names, on the scorecard, scored as
+ * the provider it reaches. A student’s own key reaches the same provider under
+ * the same API terms, so it carries the same scores.
+ */
+export const VENDORS: readonly { party: string; provider: Provider; agentic: boolean; scores: Scores; note: string }[] = [
+  { party: 'Anthropic (Semester’s key)', provider: 'Anthropic', agentic: false, scores: scoresOf('Anthropic'), note: 'The shared key drops code execution, web fetch and MCP tools (claudeclamp.test.ts), so it is scored as non-agentic. Some newer models cannot run with zero retention.' },
+  { party: 'OpenAI (institution-approved)', provider: 'OpenAI', agentic: true, scores: scoresOf('OpenAI'), note: 'Called with store: false. The gateway issues server-side, single-use actions, so it is scored as agentic and the tool-use floor binds. Security and education scores rest on coverage OpenAI should confirm in writing.' },
+  { party: 'Anthropic (student’s own key)', provider: 'Anthropic', agentic: false, scores: scoresOf('Anthropic'), note: 'The student’s own contract with the provider; scored only to decide whether to offer the option.' },
+  { party: 'OpenAI (student’s own key)', provider: 'OpenAI', agentic: false, scores: scoresOf('OpenAI'), note: 'As above.' },
 ];
 
 export const PROVIDER_REQUIREMENTS: readonly { requirement: string; verification: string }[] = [

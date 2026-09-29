@@ -2456,3 +2456,40 @@ never their own evidence.
 - **Not changed:** `classification.ts`, `subprocessors.ts`, `goals.ts`.
   Fixing the weights and scoring a provider are the owner's; neither is made
   here.
+
+## D-132 · The AI providers are scored from their own documentation, and model quality has an evaluation set that has not yet been run
+
+**Decided 29 Sep 2026.** D-131 put every AI party on the vendor scorecard and
+scored none, because no provider terms were on file. The owner asked for the
+four to be scored, and for the evaluation set model quality needs.
+
+- **Desk scores, each on the provider's own page.** `PROVIDER_BASIS` in
+  `ai-playbook.ts` scores Anthropic and OpenAI dimension by dimension, and
+  each score names the page it rests on and what that page says. A test
+  refuses a citation to any host but the provider's own. A dimension public
+  documentation cannot answer stays unscored with its reason. These are not
+  contract review: no DPA is signed.
+- **Where they differ.** Anthropic commits to breach notice within 48 hours
+  and offers native citations; its standard tier is best-effort, its API has
+  no FERPA terms and it gives 60 days before retiring a model. OpenAI stores
+  data in twelve regions, gives six months, transcribes speech and publishes
+  a Student Data Privacy Agreement, but that agreement names ChatGPT Edu and
+  its trust portal describes itself as for ChatGPT, so API coverage needs
+  written confirmation. Neither has an uptime SLA in its terms.
+- **A provisional reading, never a verdict.** Over the dimensions scored,
+  Anthropic reads 4.02 (92% of weight scored) and OpenAI 4.08 (87%), with no
+  floor missed. Both verdicts stay *unscored*: `scoreVendor` approves nothing
+  with a dimension missing.
+- **The model-quality set.** `model-quality.ts` holds fifteen synthetic cases
+  across WF-01 to WF-06, each run through a prompt Semester sends and graded
+  by fixed checks, never by a model. Nine are critical; failing one caps the
+  score at 2. A partial run is refused. Every check carries a reply it alone
+  must refuse, because the first draft held a case to one bad reply, and
+  disabling its answer-withholding check left the case green while another
+  check refused the same reply. `npm run eval:model-quality` runs it against
+  a model, skipped without a key, and `EVAL=write` files the run under
+  `docs/evidence/ai/`. That filed run is the only thing the model-quality
+  score may cite.
+- **Not changed:** the weights, the floors, the thresholds, the subprocessor
+  register. The pass-rate bands and the critical cap are the owner's to
+  change; the set has not been run, because this session had no key.
