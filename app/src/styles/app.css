@@ -402,8 +402,9 @@ body {
   display: grid;
   place-content: center;
   justify-items: center;
-  gap: 18px;
-  padding: 24px;
+  /* Off the --sp- ladder, and scaled by hand so Density still reaches it. */
+  gap: calc(18px * var(--density, 1));
+  padding: calc(24px * var(--density, 1));
   box-sizing: border-box;
   background:
     radial-gradient(ellipse at 50% 35%, rgba(212, 217, 226, 0.08), transparent 42%),
@@ -415,7 +416,7 @@ body {
   height: 58px;
   display: flex;
   align-items: end;
-  gap: 7px;
+  gap: calc(7px * var(--density, 1));
   color: var(--app-accent);
 }
 .boot-mark i {
