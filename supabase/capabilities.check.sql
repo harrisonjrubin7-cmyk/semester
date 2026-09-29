@@ -269,7 +269,12 @@ begin
   -- operator roles, approval:decide for platform_admin, breakglass:request
   -- for platform_admin and incident_responder).
   -- 112 before the commercial core migration added six role-capability pairs.
-  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 118);
+  -- 118 before the gradebook (20260929310000_gradebook.sql) added ten:
+  -- faculty → grades:enter, grades:moderate, grades:release, grades:export;
+  -- teaching_assistant → grades:enter; registrar → grades:export; and
+  -- grades:receive for student,
+  -- undergraduate_student, graduate_student and transfer_student.
+  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 128);
 
   perform pg_temp.become_anon();
   perform pg_temp.refused('a signed-out visitor cannot read the matrix',

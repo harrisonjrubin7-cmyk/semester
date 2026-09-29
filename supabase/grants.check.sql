@@ -482,6 +482,21 @@ declare
     'publish_study_pack(want_course text, want_term text, want_pack uuid, want_title text, want_note text, want_items jsonb, want_retired boolean)',
     'my_course_studio_courses()',
 
+    -- 20260929310000_gradebook.sql: the gradebook of record. Each checks
+    -- auth.uid(), the caller's own school and a course-scoped grades:*
+    -- capability (or, filing a regrade, that the grade is the caller's own
+    -- and released). `gradebook_record_passback` is the sender's, service
+    -- role only, and is deliberately not here.
+    'gradebook_set_scheme(want_course text, want_term text, want_categories jsonb, want_letters jsonb, want_moderation boolean, want_key text)',
+    'gradebook_add_item(want_course text, want_term text, want_category text, want_title text, want_points numeric, want_line_item text, want_key text)',
+    'gradebook_enter(want_item uuid, want_student uuid, want_score numeric, want_mark text, want_comment text, want_reason text, want_key text)',
+    'gradebook_moderate(want_item uuid, want_student uuid, want_key text)',
+    'gradebook_release(want_item uuid, want_key text)',
+    'gradebook_file_regrade(want_item uuid, want_reason text, want_key text)',
+    'gradebook_resolve_regrade(want_request uuid, want_outcome text, want_score numeric, want_mark text, want_note text, want_key text)',
+    'gradebook_export(want_course text, want_term text)',
+    'gradebook_queue_passback(want_item uuid, want_key text)',
+
     -- The two in 20260928310000_expansion_review_fixes.sql. Each deletes only
     -- rows naming the caller, for "Delete my account": demand contributions
     -- and consents, and advisor shares at either end. `demand.check.sql` and

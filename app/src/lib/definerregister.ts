@@ -73,6 +73,17 @@ export const READ_ON = '2026-09-29';
 export const PROJECT = 'lzrqvlugnawcgywkhqlz';
 
 /**
+ * Callable definer functions from migrations that are in the tree and not yet
+ * applied to production, so not among the advisor's 151. Each has its row in
+ * `FUNCTIONS` like any other; it leaves this list when its migration is
+ * applied and the advisor is read again.
+ */
+export const UNAPPLIED: readonly { name: string; migration: string }[] = [
+  'gradebook_add_item', 'gradebook_enter', 'gradebook_export', 'gradebook_file_regrade', 'gradebook_moderate',
+  'gradebook_queue_passback', 'gradebook_release', 'gradebook_resolve_regrade', 'gradebook_set_scheme',
+].map((name) => ({ name, migration: '20260929310000_gradebook.sql' }));
+
+/**
  * The audit's function categories, each with the controls it requires. The
  * wording is the audit's; `self-service` is its "student self-service".
  */
@@ -159,6 +170,15 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['forget_my_support_access', 'self-service', ['auth.uid()']],
   ['forget_my_support_shares', 'self-service', ['auth.uid()']],
   ['forget_my_support_tickets', 'self-service', ['auth.uid()']],
+  ['gradebook_add_item', 'admin', ['auth.uid()', 'private.gradebook_require', 'private.gradebook_replay']],
+  ['gradebook_enter', 'admin', ['auth.uid()', 'private.gradebook_require', 'private.subject_has_capability', 'want_student = me']],
+  ['gradebook_export', 'admin', ['private.gradebook_school', 'private.gradebook_require', "g.status = 'released'"]],
+  ['gradebook_file_regrade', 'self-service', ['auth.uid()', 'private.gradebook_school', "g.student_id = me and g.status = 'released'"]],
+  ['gradebook_moderate', 'admin', ['auth.uid()', 'private.gradebook_require', 'cur.graded_by is not distinct from me']],
+  ['gradebook_queue_passback', 'integration', ['auth.uid()', 'private.gradebook_require', "public.kill_switch_engaged('kill.writeback', school)", "e.status = 'released'"]],
+  ['gradebook_release', 'admin', ['auth.uid()', 'private.gradebook_require', 'private.gradebook_replay']],
+  ['gradebook_resolve_regrade', 'admin', ['auth.uid()', 'private.gradebook_require', 'r.student_id = me']],
+  ['gradebook_set_scheme', 'admin', ['auth.uid()', 'private.gradebook_require', 'private.gradebook_replay']],
   ['gtm_activation_failures', 'admin', ['auth.uid()', 'private.has_capability']],
   ['gtm_audience_count', 'admin', ['private.has_capability']],
   ['gtm_campaign_report', 'admin', ['auth.uid()', 'private.has_capability']],

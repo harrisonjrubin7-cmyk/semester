@@ -31,22 +31,23 @@ Production (`lzrqvlugnawcgywkhqlz`), 2026-09-29, read-only, through the advisor 
 - The function set is derived: `definerregister.test.ts` reads every migration, takes the winning definition of each `public` function, keeps the `security definer` ones and intersects them with the allowlist in `supabase/grants.check.sql`. That set must equal the register exactly. A new definer function granted to clients is red until it has a row — the audit's release-gate line "new SECURITY DEFINER functions have an approved inventory entry", as a test.
 - Every row's gates are literal checks that must appear in the winning body. Removing one turns its row red.
 - An admin or moderation row must name a gate other than `auth.uid()`.
+- 9 of the functions below come from migrations not yet applied to production, so the advisor has not read them: `gradebook_add_item`, `gradebook_enter`, `gradebook_export`, `gradebook_file_regrade`, `gradebook_moderate`, `gradebook_queue_passback`, `gradebook_release`, `gradebook_resolve_regrade`, `gradebook_set_scheme`. Each leaves that list when its migration is applied and the reading is taken again.
 - The tables are the advisor's list, pinned: some tables get their policies from `format()` loops a static parser cannot read. Each is held to being created with row-level security, having no `create policy` naming it, and never being granted to `anon`, `authenticated` or PUBLIC.
 
 ## Functions by category
 
 | Category | Functions | Controls the audit requires |
 | --- | --- | --- |
-| self-service | 50 | Verify auth.uid(), tenant scope, object ownership, input validation, rate limits, audit event. |
+| self-service | 51 | Verify auth.uid(), tenant scope, object ownership, input validation, rate limits, audit event. |
 | sharing | 18 | Explicit consent, narrow scope, short expiry, revocation, view audit. |
-| admin | 39 | Capability check, MFA or fresh auth for high risk, dual control where needed, immutable audit. |
-| integration | 5 | Server-only preferred; signed workflow; replay protection; no browser service-role access. |
+| admin | 46 | Capability check, MFA or fresh auth for high risk, dual control where needed, immutable audit. |
+| integration | 6 | Server-only preferred; signed workflow; replay protection; no browser service-role access. |
 | financial | 1 | Provider webhook verification, idempotency, no client-controlled final state. |
 | moderation | 15 | Capability check, reason required, appeals, audit trail. |
 | read-helper | 23 | Minimal fields, no hidden cross-tenant aggregation, pagination limit. |
-| **total** | 151 | |
+| **total** | 160 | |
 
-### self-service (50)
+### self-service (51)
 
 | Function | Gates in its body | Defined in |
 | --- | --- | --- |
@@ -80,6 +81,7 @@ Production (`lzrqvlugnawcgywkhqlz`), 2026-09-29, read-only, through the advisor 
 | `forget_my_support_access` | `auth.uid()` | `20260925103000_support_access.sql` |
 | `forget_my_support_shares` | `auth.uid()` | `20260928308000_support_shares.sql` |
 | `forget_my_support_tickets` | `auth.uid()` | `20260928210000_support_tickets.sql` |
+| `gradebook_file_regrade` | `auth.uid()`, `private.gradebook_school`, `g.student_id = me and g.status = 'released'` | `20260929310000_gradebook.sql` |
 | `join_beta` | `auth.uid()`, `private.beta_my_membership`, `private.beta_confirmed_email` | `20260928220000_private_beta.sql` |
 | `join_community` | `auth.uid()`, `private.verified_student`, `private.school_of` | `20260928032000_community.sql` |
 | `join_study_session` | `auth.uid()`, `private.community_role` | `20260928032000_community.sql` |
@@ -124,7 +126,7 @@ Production (`lzrqvlugnawcgywkhqlz`), 2026-09-29, read-only, through the advisor 
 | `trust_room_grant` | `auth.uid()`, `private.has_capability` | `20260928100000_trust_room.sql` |
 | `trust_room_revoke` | `auth.uid()`, `private.has_capability` | `20260928100000_trust_room.sql` |
 
-### admin (39)
+### admin (46)
 
 | Function | Gates in its body | Defined in |
 | --- | --- | --- |
@@ -148,6 +150,13 @@ Production (`lzrqvlugnawcgywkhqlz`), 2026-09-29, read-only, through the advisor 
 | `console_figures` | `auth.uid()`, `private.has_capability` | `20260929110000_console_approvals_and_break_glass.sql` |
 | `decide_approval` | `auth.uid()`, `private.approver_party`, `private.assert_fresh_mfa` | `20260929110000_console_approvals_and_break_glass.sql` |
 | `draft_office_action` | `auth.uid()`, `private.may_publish` | `20260928302000_office_action_feed.sql` |
+| `gradebook_add_item` | `auth.uid()`, `private.gradebook_require`, `private.gradebook_replay` | `20260929310000_gradebook.sql` |
+| `gradebook_enter` | `auth.uid()`, `private.gradebook_require`, `private.subject_has_capability`, `want_student = me` | `20260929310000_gradebook.sql` |
+| `gradebook_export` | `private.gradebook_school`, `private.gradebook_require`, `g.status = 'released'` | `20260929310000_gradebook.sql` |
+| `gradebook_moderate` | `auth.uid()`, `private.gradebook_require`, `cur.graded_by is not distinct from me` | `20260929310000_gradebook.sql` |
+| `gradebook_release` | `auth.uid()`, `private.gradebook_require`, `private.gradebook_replay` | `20260929310000_gradebook.sql` |
+| `gradebook_resolve_regrade` | `auth.uid()`, `private.gradebook_require`, `r.student_id = me` | `20260929310000_gradebook.sql` |
+| `gradebook_set_scheme` | `auth.uid()`, `private.gradebook_require`, `private.gradebook_replay` | `20260929310000_gradebook.sql` |
 | `gtm_activation_failures` | `auth.uid()`, `private.has_capability` | `20260928090000_gtm_foundation.sql` |
 | `gtm_audience_count` | `private.has_capability` | `20260928090000_gtm_foundation.sql` |
 | `gtm_campaign_report` | `auth.uid()`, `private.has_capability` | `20260928090000_gtm_foundation.sql` |
@@ -168,11 +177,12 @@ Production (`lzrqvlugnawcgywkhqlz`), 2026-09-29, read-only, through the advisor 
 | `support_ticket_queue` | `private.support_agent` | `20260928210000_support_tickets.sql` |
 | `support_ticket_thread` | `private.support_agent` | `20260928210000_support_tickets.sql` |
 
-### integration (5)
+### integration (6)
 
 | Function | Gates in its body | Defined in |
 | --- | --- | --- |
 | `adopt_lti_identity` | `auth.uid()` | `20260921160100_lti_identity.sql` |
+| `gradebook_queue_passback` | `auth.uid()`, `private.gradebook_require`, `public.kill_switch_engaged('kill.writeback', school)`, `e.status = 'released'` | `20260929310000_gradebook.sql` |
 | `integration_approve_connection` | `auth.uid()`, `private.has_capability` | `20260927170000_integration_control_plane.sql` |
 | `integration_approve_scope` | `auth.uid()`, `private.has_capability` | `20260927170000_integration_control_plane.sql` |
 | `integration_request_replay` | `auth.uid()`, `private.has_capability` | `20260927170000_integration_control_plane.sql` |
