@@ -173,9 +173,9 @@ async function go(page, hash, heading) {
   await page.locator('h1', { hasText: heading }).first().waitFor({ state: 'visible', timeout: WAIT });
 }
 
-async function visible(locator) {
+async function visible(locator, timeout = WAIT) {
   try {
-    await locator.first().waitFor({ state: 'visible', timeout: WAIT });
+    await locator.first().waitFor({ state: 'visible', timeout });
     return true;
   } catch {
     return false;
