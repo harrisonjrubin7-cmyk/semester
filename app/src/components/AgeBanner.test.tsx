@@ -34,6 +34,10 @@ beforeEach(() => {
 afterEach(() => {
   act(() => root.unmount());
   host.remove();
+  // Going to Account writes the screen into the URL, and jsdom keeps the URL
+  // between tests: the next test would open on Account, where the line is
+  // rightly not drawn. Put it back.
+  window.history.replaceState(null, '', '/');
 });
 
 const never = () => () => {};
@@ -43,12 +47,31 @@ async function show(signedIn: boolean, status: AgeStatus | Error) {
     if (status instanceof Error) throw status;
     return status;
   };
+  let reads = 0;
+  const counted = async () => {
+    try {
+      return await read();
+    } finally {
+      reads += 1;
+    }
+  };
   await act(async () => {
     root.render(
       <StoreProvider>
-        <AgeBanner signedIn={async () => signedIn} status={read} watch={never} />
+        <AgeBanner signedIn={async () => signedIn} status={counted} watch={never} />
       </StoreProvider>,
     );
+  });
+  // The banner's two reads resolve after render returns. Wait for the read
+  // itself rather than a fixed tick, then one more turn for the state it sets.
+  // A signed-out device never reads.
+  for (let i = 0; i < 50 && signedIn && reads === 0; i += 1) {
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 10));
+    });
+  }
+  await act(async () => {
+    await new Promise((r) => setTimeout(r, 0));
   });
 }
 
