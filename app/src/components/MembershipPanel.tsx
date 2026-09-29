@@ -1,55 +1,250 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ALWAYS_INCLUDED, PILOT_NOTE, PLANS, plan, priceLine, type PlanId } from '../lib/plans';
+import { cloud, cloudConfigured, currentSession } from '../lib/cloud';
+import { formatDate } from '../lib/locale';
+import {
+  checkoutReturn,
+  consentText,
+  currentSubscription,
+  plusPrices,
+  priceWords,
+  startCheckout,
+  type PlusPrice,
+  type Subscription,
+} from '../lib/membership';
 import { useStore } from '../state/store';
 import { SectionLabel } from './ui';
 
 /**
  * Membership, on the Account screen.
  *
- * What a membership page has to answer, answered honestly for a product that
- * sells nothing yet (DECISION-LOG D-009): which plan you are on (Free), what
- * each plan would include, what upgrading or cancelling would do (nothing can
- * be bought, so nothing can be cancelled), what you have paid (nothing), and
- * where your export and deletion are — which are on every plan, always.
+ * Which plan you are on, what each plan includes, how to upgrade and how to
+ * cancel, what you have paid, and where your export and deletion are — which
+ * are on every plan, always.
+ *
+ * Plus is bought here once the catalog answers with a Plus price and the
+ * build has an account service (D-127, superseding D-009 for this one plan).
+ * The price on the button is the catalog's, the consent names amount,
+ * interval, renewal and the way to cancel, and it is recorded server-side by
+ * `billing-checkout` before Stripe is ever asked. The card is typed into
+ * Stripe's page. Without a catalog — a device-only build, or a network that
+ * has gone — the panel says what it always said: nothing is for sale here.
  *
  * "Upgrade" and "Cancel" are real buttons that explain rather than disabled
  * ones that do not: a disabled control says "not now" without saying why, and
  * a screen reader skips it entirely.
  */
 
-const CURRENT: PlanId = 'free';
-
 const WHY: Record<'upgrade' | 'cancel', string> = {
   upgrade: 'Nothing has been charged, and nothing will be without a checkout you see and confirm.',
   cancel: 'You are on Semester Free, so there is nothing to cancel. Your data stays yours on every plan.',
 };
 
+const RETURNED: Record<'success' | 'cancel', string> = {
+  success: 'Payment sent to Stripe. Your plan changes to Plus as soon as Stripe confirms it, usually within a minute.',
+  cancel: 'Checkout was closed before paying. Nothing was charged.',
+};
+
+const when = (iso: string) => (iso ? formatDate(iso, { month: 'long', day: 'numeric', year: 'numeric' }) : 'the end of the period you paid for');
+
 export function MembershipPanel() {
-  const { dispatch } = useStore();
+  const { dispatch, account } = useStore();
   const [said, setSaid] = useState<'upgrade' | 'cancel' | null>(null);
-  const current = plan(CURRENT);
+  const [prices, setPrices] = useState<PlusPrice[]>([]);
+  const [sub, setSub] = useState<Subscription | null>(null);
+  const [choice, setChoice] = useState<string>('');
+  const [agreed, setAgreed] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const [note, setNote] = useState('');
+  const [returned] = useState(() => (typeof location === 'undefined' ? null : checkoutReturn(location.search)));
+  const signedIn = cloudConfigured && !!account;
+
+  useEffect(() => {
+    if (!cloudConfigured) return;
+    let live = true;
+    void (async () => {
+      try {
+        const db = await cloud();
+        const { data } = await db
+          .from('commercial_prices')
+          .select('id, plan_code, amount_cents, currency, billing_interval')
+          .eq('plan_code', 'plus');
+        if (live) setPrices(plusPrices(data));
+        if (!signedIn) return;
+        const own = await db
+          .from('subscriptions')
+          .select('id, plan_code, status, current_period_end, cancel_at_period_end');
+        if (live) setSub(currentSubscription(own.data));
+      } catch {
+        /* No catalog, no sale: the panel falls back to saying so. */
+      }
+    })();
+    return () => {
+      live = false;
+    };
+  }, [signedIn]);
+
+  const onSale = prices.length > 0;
+  const chosen = prices.find((p) => p.id === choice) ?? prices[0];
+  const current = sub ? { ...plan('plus'), name: 'Semester Plus' } : plan('free');
+  const currentId: PlanId = sub ? 'plus' : 'free';
+
+  const toggle = (which: 'upgrade' | 'cancel') => {
+    setError('');
+    setSaid(said === which ? null : which);
+  };
+
+  const checkout = async () => {
+    if (busy || !chosen) return;
+    if (!agreed) {
+      setError('Tick the box to agree to the recurring charge first.');
+      return;
+    }
+    setBusy(true);
+    setError('');
+    try {
+      const token = (await currentSession())?.access_token;
+      if (!token) {
+        setError('Sign in again to upgrade. Nothing was charged.');
+        return;
+      }
+      const r = await startCheckout(token, chosen.id);
+      if (r.kind === 'redirect') {
+        window.location.assign(r.url);
+        return;
+      }
+      setError(r.said);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const cancel = async () => {
+    if (busy || !sub) return;
+    setBusy(true);
+    setError('');
+    try {
+      const db = await cloud();
+      const { data, error: failed } = await db.rpc('request_cancellation', { want_subscription: sub.id });
+      if (failed) {
+        setError('The cancellation did not go through. Try again, or email harrisonjrubin7@gmail.com.');
+        return;
+      }
+      const ends = typeof data === 'string' ? data : sub.periodEnd;
+      setSub({ ...sub, cancelAtPeriodEnd: true, periodEnd: ends });
+      setNote(`Cancelled. You keep Plus until ${when(ends)}.`);
+    } catch {
+      setError('The cancellation did not go through. Try again, or email harrisonjrubin7@gmail.com.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const statusLine = sub
+    ? sub.cancelAtPeriodEnd
+      ? `Cancelled. Plus stays on until ${when(sub.periodEnd)}.`
+      : sub.status === 'past_due' || sub.status === 'grace'
+        ? 'Your last payment did not go through. Stripe will try again; update your card from the link in Stripe’s email.'
+        : `Renews on ${when(sub.periodEnd)}.`
+    : onSale
+      ? `Plus is ${prices.map(priceWords).join(' or ')}. Free stays free.`
+      : PILOT_NOTE;
 
   return (
     <section aria-labelledby="membership-title" style={{ marginTop: 'var(--sp-7)' }}>
       <SectionLabel>
         <span id="membership-title">Membership</span>
       </SectionLabel>
+      {returned && (
+        <p role="status" style={{ fontSize: 'var(--type-sm)', margin: '0 0 var(--sp-3)', textWrap: 'pretty' }}>
+          {RETURNED[returned]}
+        </p>
+      )}
       <p style={{ fontSize: 'var(--type-md)', margin: '0 0 var(--sp-2)' }}>
         You are on <strong>{current.name}</strong>.
       </p>
-      <p style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', margin: '0 0 var(--sp-4)' }}>{PILOT_NOTE}</p>
+      <p style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', margin: '0 0 var(--sp-4)' }}>{statusLine}</p>
 
       <div style={{ display: 'flex', gap: 'var(--sp-4)', flexWrap: 'wrap', marginBottom: 'var(--sp-3)' }}>
-        <button type="button" className="btn btn-secondary" aria-expanded={said === 'upgrade'} onClick={() => setSaid(said === 'upgrade' ? null : 'upgrade')}>
-          Upgrade
-        </button>
-        <button type="button" className="btn btn-ghost" aria-expanded={said === 'cancel'} onClick={() => setSaid(said === 'cancel' ? null : 'cancel')}>
-          Cancel membership
-        </button>
+        {!sub && (
+          <button type="button" className="btn btn-secondary" aria-expanded={said === 'upgrade'} onClick={() => toggle('upgrade')}>
+            Upgrade
+          </button>
+        )}
+        {!(sub && sub.cancelAtPeriodEnd) && (
+          <button type="button" className="btn btn-ghost" aria-expanded={said === 'cancel'} onClick={() => toggle('cancel')}>
+            Cancel membership
+          </button>
+        )}
       </div>
-      {said && (
+
+      {said === 'upgrade' && !sub && (!onSale ? (
         <p role="status" style={{ fontSize: 'var(--type-sm)', margin: '0 0 var(--sp-4)', textWrap: 'pretty' }}>
-          {WHY[said]}
+          {WHY.upgrade}
+        </p>
+      ) : !signedIn ? (
+        <p role="status" style={{ fontSize: 'var(--type-sm)', margin: '0 0 var(--sp-4)', textWrap: 'pretty' }}>
+          Sign in above to upgrade. Plus belongs to your account, so it follows you to every device.
+        </p>
+      ) : (
+        <div style={{ border: '1px solid var(--app-line)', borderRadius: 'var(--r-md)', padding: 'var(--sp-4)', marginBottom: 'var(--sp-4)' }}>
+          <fieldset style={{ border: 0, padding: 0, margin: '0 0 var(--sp-3)' }}>
+            <legend style={{ fontSize: 'var(--type-sm-plus)', marginBottom: 'var(--sp-2)' }}>Semester Plus</legend>
+            {prices.map((p) => (
+              <label key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', minHeight: 44, fontSize: 'var(--type-base)' }}>
+                <input
+                  type="radio"
+                  name="plus-price"
+                  value={p.id}
+                  checked={chosen?.id === p.id}
+                  onChange={() => {
+                    setChoice(p.id);
+                    setAgreed(false);
+                  }}
+                />
+                {priceWords(p)}
+              </label>
+            ))}
+          </fieldset>
+          {chosen && (
+            <label style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--sp-2)', fontSize: 'var(--type-sm)', lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-3)', textWrap: 'pretty' }}>
+              <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} style={{ marginTop: 'var(--sp-2)' }} />
+              <span>{consentText(chosen)}</span>
+            </label>
+          )}
+          <button type="button" className="btn btn-block" aria-busy={busy} onClick={() => void checkout()}>
+            {busy ? 'Opening checkout…' : 'Continue to secure checkout'}
+          </button>
+          <p style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', margin: 'var(--sp-2) 0 0', textWrap: 'pretty' }}>
+            You pay on Stripe’s page. Semester never sees or stores your card.
+          </p>
+        </div>
+      ))}
+
+      {said === 'cancel' && (!sub ? (
+        <p role="status" style={{ fontSize: 'var(--type-sm)', margin: '0 0 var(--sp-4)', textWrap: 'pretty' }}>
+          {WHY.cancel}
+        </p>
+      ) : !sub.cancelAtPeriodEnd && (
+        <div style={{ marginBottom: 'var(--sp-4)' }}>
+          <p style={{ fontSize: 'var(--type-sm)', margin: '0 0 var(--sp-3)', textWrap: 'pretty' }}>
+            Plus stops at the end of the period you have paid for, {when(sub.periodEnd)}. Nothing you made is taken away.
+          </p>
+          <button type="button" className="btn btn-secondary" aria-busy={busy} onClick={() => void cancel()}>
+            {busy ? 'Cancelling…' : 'Cancel Plus'}
+          </button>
+        </div>
+      ))}
+
+      {note && (
+        <p role="status" style={{ fontSize: 'var(--type-sm)', margin: '0 0 var(--sp-4)', textWrap: 'pretty' }}>
+          {note}
+        </p>
+      )}
+      {error && (
+        <p role="alert" style={{ fontSize: 'var(--type-sm)', color: 'var(--app-accent)', margin: '0 0 var(--sp-4)', textWrap: 'pretty' }}>
+          {error}
         </p>
       )}
 
@@ -62,9 +257,11 @@ export function MembershipPanel() {
             <li key={p.id} style={{ border: '1px solid var(--app-line)', borderRadius: 'var(--r-md)', padding: 'var(--sp-4)' }}>
               <div style={{ fontSize: 'var(--type-base)' }}>
                 <strong>{p.name}</strong>
-                {p.id === CURRENT ? ' · your plan' : ''}
+                {p.id === currentId ? ' · your plan' : ''}
               </div>
-              <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}>{priceLine(p)}</div>
+              <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}>
+                {p.id === 'plus' && onSale ? prices.map(priceWords).join(' or ') : priceLine(p)}
+              </div>
               <ul style={{ fontSize: 'var(--type-sm)', margin: 'var(--sp-2) 0 0', paddingInlineStart: '1.2em' }}>
                 {p.includes.map((i) => <li key={i}>{i}</li>)}
               </ul>
@@ -88,7 +285,9 @@ export function MembershipPanel() {
 
       <p style={{ fontSize: 'var(--type-sm)', margin: '0 0 var(--sp-1)' }}><strong>Payment history</strong></p>
       <p style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', margin: 0 }}>
-        No payments. Semester has never charged you and holds no card or bank details.
+        {sub
+          ? 'Stripe takes your payments and emails a receipt for each one. Semester holds no card or bank details.'
+          : 'No payments. Semester has never charged you and holds no card or bank details.'}
       </p>
     </section>
   );
