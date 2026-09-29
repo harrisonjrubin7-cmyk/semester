@@ -132,10 +132,14 @@ describe('the master launch readiness register', () => {
       // Who holds them, and how, is held too (Codex on #947): a seat that
       // passes to someone else, an acting holder confirmed, or a signature
       // given must each change the sentence.
-      const founderOnly = COUNCIL.every((c) => c.holder === null || c.holder.startsWith('Founder'));
+      // An empty council holds nothing, so nothing in it is "all by the
+      // founder" and nobody in it is acting (Codex on #951: `every` is true
+      // of an empty list).
+      const founderOnly = held > 0 && COUNCIL.every((c) => c.holder === null || c.holder.startsWith('Founder'));
       expect(lower.includes('all by the founder'), 'PRG-001 says every held seat is the founder\'s').toBe(founderOnly);
       const acting = COUNCIL.filter((c) => c.holder?.endsWith(', acting')).length;
-      expect(lower).toContain(`${WORDS[acting]} of them acting`);
+      if (held > 0) expect(lower).toContain(`${WORDS[acting]} of them acting`);
+      else expect(lower).not.toContain('of them acting');
       const signed = CURRENT.signoffs.length;
       expect(lower).toContain(signed === 0 ? 'none signed' : `${WORDS[signed]} signed`);
       if (signed > 0) expect(lower).not.toContain('none signed');
