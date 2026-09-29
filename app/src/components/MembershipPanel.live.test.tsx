@@ -123,7 +123,7 @@ it('shows Plus when paid, and cancels it from the same place', async () => {
   await act(async () => button(/Cancel membership/)!.click());
   await act(async () => button(/^Cancel Plus$/)!.click());
   // Through billing-cancel, which tells Stripe; never the bare RPC, which does not.
-  expect(mock.cancel).toHaveBeenCalledWith('tok');
+  expect(mock.cancel).toHaveBeenCalledWith('tok', 's1');
   expect(mock.rpc).not.toHaveBeenCalled();
   expect(host.textContent).toMatch(/Cancelled\. You keep Plus until .*you will not be charged again/);
   expect(button(/Cancel membership/)).toBeUndefined();

@@ -31,7 +31,7 @@ Deno.serve((req) =>
   handleBillingCancel(req, {
     stripeKey: Deno.env.get('STRIPE_SECRET_KEY'),
     allowedOrigin: Deno.env.get('ALLOWED_ORIGIN'),
-    async ownSubscription(token) {
+    async ownSubscription(token, subscriptionId) {
       const db = asCaller(token);
       const { data: who } = await db.auth.getUser(token);
       if (!who.user) return null;
@@ -40,6 +40,7 @@ Deno.serve((req) =>
         .select('id, provider_ref, status, cancel_at_period_end, current_period_end, plan_code, billing_accounts!inner(kind, user_id)')
         .eq('billing_accounts.kind', 'individual')
         .eq('billing_accounts.user_id', who.user.id)
+        .eq('id', subscriptionId)
         .in('status', LIVE)
         .neq('plan_code', 'free')
         .limit(1);

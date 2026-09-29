@@ -16,6 +16,8 @@
 --   * a payment event received after the cutoff (a late refund on an old
 --     invoice) keeps its invoice until it ages out too, and never aborts the
 --     run — an event is never updated, and its invoice's removal would;
+--   * a payment event with no invoice cannot be placed (it may be an
+--     institution's) and stays, however old;
 --   * running it twice at one moment removes nothing the second time.
 
 begin;
@@ -97,6 +99,11 @@ begin
   values ('stripe', 'evt_retention_paid', 'payment_succeeded', late_inv, 399, repeat('b', 64), '2026-06-01'),
          ('stripe', 'evt_retention_late', 'refund', late_inv, 399, repeat('c', 64), '2027-02-10');
 
+  -- An event with no invoice: a subscription update, say. Nobody can tell
+  -- whose, so it is never age-purged.
+  insert into public.payment_events (provider, provider_event_id, kind, amount_cents, payload_sha256, received_at)
+  values ('stripe', 'evt_retention_unplaced', 'other', null, repeat('d', 64), '2026-04-01');
+
   -- Ended in 2027: kept through 2034.
   insert into public.subscriptions (billing_account_id, plan_code, price_id, status, current_period_start, current_period_end,
                                     consent_at, consent_text_version, created_at)
@@ -141,6 +148,7 @@ begin
   perform pg_temp.counted('an invoice with a 2027 event stays', (select count(*) from public.invoices where id = late_inv), 1);
   perform pg_temp.counted('and so does that late event', (select count(*) from public.payment_events where provider_event_id = 'evt_retention_late'), 1);
   perform pg_temp.counted('while its 2026 event goes', (select count(*) from public.payment_events where provider_event_id = 'evt_retention_paid'), 0);
+  perform pg_temp.counted('an event with no invoice stays', (select count(*) from public.payment_events where provider_event_id = 'evt_retention_unplaced'), 1);
   perform pg_temp.counted('a subscription that ended in 2027 stays', (select count(*) from public.subscriptions where id = recent_sub), 1);
   perform pg_temp.counted('a live subscription stays however old', (select count(*) from public.subscriptions where id = live_sub), 1);
   perform pg_temp.counted('an account whose owner is here stays', (select count(*) from public.billing_accounts where id = here_acct), 1);

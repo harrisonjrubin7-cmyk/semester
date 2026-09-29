@@ -159,7 +159,7 @@ export function MembershipPanel() {
         setError('Sign in again to cancel. Nothing has changed yet.');
         return;
       }
-      const r = await cancelMembership(token);
+      const r = await cancelMembership(token, sub.id);
       if (r.kind === 'refused') {
         setError(r.said);
         return;

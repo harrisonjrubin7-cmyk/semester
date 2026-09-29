@@ -18,8 +18,9 @@
 --   2. subscriptions that are over (canceled or ended) and whose last period
 --      ended before the cutoff. Their entitlements, dunning cases, dunning
 --      actions and cancellation requests go with them (on delete cascade);
---   3. payment events received before the cutoff whose invoice is going too
---      (or is gone) — the provider's event id and a hash, never a payload;
+--   3. payment events received before the cutoff whose individual invoice
+--      is going too — the provider's event id and a hash, never a payload.
+--      An event with no invoice cannot be placed and stays;
 --   4. invoices dated before the cutoff that no longer point at a
 --      subscription and that no remaining event names, with their lines
 --      (cascade) — an invoice with a late event waits for it;
@@ -88,16 +89,18 @@ begin
   kind := 'subscriptions'; removed := n; return next;
 
   -- Payment events before their invoices: removing an invoice would try to
-  -- clear the event's link, and an event is never updated.
+  -- clear the event's link, and an event is never updated. Only an event
+  -- whose invoice shows it is an individual's is removed. One with no
+  -- invoice (a subscription update, a dispute) cannot be placed, and may be
+  -- an institution's, so it stays.
   delete from public.payment_events e
    where e.received_at < cutoff
-     and (e.invoice_id is null
-          or exists (select 1 from public.invoices i
-                       join public.billing_accounts a on a.id = i.billing_account_id
-                      where i.id = e.invoice_id
-                        and a.kind = 'individual'
-                        and i.subscription_id is null
-                        and coalesce(i.paid_at, i.issued_at, i.created_at) < cutoff));
+     and exists (select 1 from public.invoices i
+                   join public.billing_accounts a on a.id = i.billing_account_id
+                  where i.id = e.invoice_id
+                    and a.kind = 'individual'
+                    and i.subscription_id is null
+                    and coalesce(i.paid_at, i.issued_at, i.created_at) < cutoff);
   get diagnostics n = row_count;
   kind := 'payment_events'; removed := n; return next;
 

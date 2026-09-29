@@ -167,6 +167,7 @@ export type Cancelled = { kind: 'cancelled'; endsAt: string } | { kind: 'refused
  */
 export async function cancelMembership(
   token: string,
+  subscriptionId: string,
   fetcher: Fetch = fetch,
   endpoint = cancelEndpoint(),
   key = env.VITE_SUPABASE_KEY ?? '',
@@ -177,7 +178,8 @@ export async function cancelMembership(
   try {
     res = await fetcher(endpoint, {
       method: 'POST',
-      headers: { Authorization: `Bearer ${token}`, ...(key ? { apikey: key } : {}) },
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, ...(key ? { apikey: key } : {}) },
+      body: JSON.stringify({ subscription_id: subscriptionId }),
       cache: 'no-store',
       credentials: 'omit',
     });

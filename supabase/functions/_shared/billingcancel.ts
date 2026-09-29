@@ -9,8 +9,8 @@
  * the webhook applied would have put `cancel_at_period_end` back to false.
  * So:
  *
- *   1. the caller's own live subscription is read *as the caller* (RLS, and
- *      only their individual billing account);
+ *   1. the subscription the page names is read *as the caller* (RLS, and
+ *      only their individual billing account) — never taken on trust;
  *   2. Stripe is told `cancel_at_period_end=true` for its `provider_ref`,
  *      with an idempotency key per subscription;
  *   3. only if Stripe agreed, `request_cancellation` records it — also as the
@@ -41,12 +41,15 @@ export interface CancelDeps {
   stripeKey: string | undefined;
   /** `ALLOWED_ORIGIN`, read strictly. */
   allowedOrigin: string | undefined;
-  /** The caller's own live paid subscription, read with their token, or null. */
-  ownSubscription(token: string): Promise<OwnSubscription | null>;
+  /** That subscription if it is the caller's own, live and paid, read with their token; else null. */
+  ownSubscription(token: string, subscriptionId: string): Promise<OwnSubscription | null>;
   /** `request_cancellation`, called with their token; the period end it returns. */
   record(token: string, subscriptionId: string): Promise<string>;
   fetch: typeof fetch;
 }
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+export const MAX_CANCEL_BODY_BYTES = 512;
 
 /** Stripe's subscription ids: `sub_` and a short run of letters and digits. */
 const STRIPE_SUB = /^sub_[A-Za-z0-9]{6,120}$/;
@@ -69,8 +72,21 @@ export async function handleBillingCancel(req: Request, deps: CancelDeps): Promi
   const token = /^Bearer\s+(.+)$/i.exec(req.headers.get('Authorization') ?? '')?.[1]?.trim();
   if (!token) return reply(401, { error: 'Sign in to cancel.' });
 
+  // The subscription the person is looking at, named by the page: with two
+  // live ones (two checkouts finished at once), "whichever comes first" could
+  // cancel a different one from the one the page then calls cancelled.
+  const raw = await req.text();
+  if (new TextEncoder().encode(raw).length > MAX_CANCEL_BODY_BYTES) return reply(413, { error: 'Too large.' });
+  let wanted: unknown;
   try {
-    const sub = await deps.ownSubscription(token);
+    wanted = (JSON.parse(raw) as Record<string, unknown> | null)?.subscription_id;
+  } catch {
+    wanted = undefined;
+  }
+  if (typeof wanted !== 'string' || !UUID.test(wanted)) return reply(400, { error: 'Say which subscription to cancel.' });
+
+  try {
+    const sub = await deps.ownSubscription(token, wanted);
     if (!sub) return reply(404, { error: 'You have no subscription to cancel.' });
     if (sub.cancel_at_period_end) return reply(200, { ends_at: sub.current_period_end });
     if (!sub.provider_ref || !STRIPE_SUB.test(sub.provider_ref)) {

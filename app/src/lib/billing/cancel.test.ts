@@ -17,7 +17,7 @@ function deps(over: Partial<CancelDeps> = {}) {
   const d = {
     stripeKey: 'sk_test_x',
     allowedOrigin: APP,
-    ownSubscription: vi.fn(async (t: string) => (t === 'good-token' ? SUB : null)),
+    ownSubscription: vi.fn(async (t: string, id: string) => (t === 'good-token' && id === SUB.id ? SUB : null)),
     record: vi.fn(async () => SUB.current_period_end),
     fetch: stripe as unknown as typeof fetch,
     ...over,
@@ -25,10 +25,11 @@ function deps(over: Partial<CancelDeps> = {}) {
   return d as CancelDeps & typeof d & { fetch: typeof stripe };
 }
 
-const post = (headers: Record<string, string> = {}) =>
+const post = (headers: Record<string, string> = {}, body: unknown = { subscription_id: SUB.id }) =>
   new Request('https://project.supabase.co/functions/v1/billing-cancel', {
     method: 'POST',
-    headers: { Origin: APP, Authorization: 'Bearer good-token', ...headers },
+    headers: { 'Content-Type': 'application/json', Origin: APP, Authorization: 'Bearer good-token', ...headers },
+    body: typeof body === 'string' ? body : JSON.stringify(body),
   });
 
 afterEach(() => vi.restoreAllMocks());
@@ -44,6 +45,7 @@ describe('billing-cancel', () => {
     expect(url).toBe(`https://api.stripe.com/v1/subscriptions/${SUB.provider_ref}`);
     expect(init.body).toBe('cancel_at_period_end=true');
     expect((init.headers as Record<string, string>)['Idempotency-Key']).toBe(`cancel-${SUB.id}`);
+    expect(d.ownSubscription).toHaveBeenCalledWith('good-token', SUB.id);
     expect(d.record).toHaveBeenCalledWith('good-token', SUB.id);
     expect(d.fetch.mock.invocationCallOrder[0]).toBeLessThan(vi.mocked(d.record).mock.invocationCallOrder[0]);
   });
@@ -76,6 +78,18 @@ describe('billing-cancel', () => {
     expect((await handleBillingCancel(post({ Authorization: '' }), deps())).status).toBe(401);
     expect((await handleBillingCancel(post({ Origin: 'https://evil.example' }), deps())).status).toBe(403);
     expect((await handleBillingCancel(post({ Authorization: 'Bearer someone-else' }), deps())).status).toBe(404);
+  });
+
+  it('cancels only the subscription the page names, and only if it is the caller\'s', async () => {
+    for (const body of [{}, { subscription_id: 'sub_1' }, 'not json', { subscription_id: 42 }]) {
+      const d = deps();
+      expect((await handleBillingCancel(post({}, body), d)).status).toBe(400);
+      expect(d.fetch).not.toHaveBeenCalled();
+    }
+    const d = deps();
+    const other = await handleBillingCancel(post({}, { subscription_id: '00000000-0000-4000-8000-000000000000' }), d);
+    expect(other.status).toBe(404);
+    expect(d.fetch).not.toHaveBeenCalled();
   });
 
   it('never puts an unrecognised reference into Stripe’s path', async () => {

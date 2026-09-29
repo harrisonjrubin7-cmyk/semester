@@ -105,17 +105,18 @@ describe('cancelling', () => {
 
   it('posts to billing-cancel with the session token and reads when Plus ends', async () => {
     const fetcher = vi.fn(async () => new Response(JSON.stringify({ ends_at: '2026-10-29T12:00:00Z' }), { status: 200 }));
-    expect(await cancelMembership('tok', fetcher, END, 'anon')).toEqual({ kind: 'cancelled', endsAt: '2026-10-29T12:00:00Z' });
+    expect(await cancelMembership('tok', 's1', fetcher, END, 'anon')).toEqual({ kind: 'cancelled', endsAt: '2026-10-29T12:00:00Z' });
     const [url, init] = fetcher.mock.calls[0] as unknown as [string, RequestInit];
     expect(url).toBe('https://lzrqvlugnawcgywkhqlz.supabase.co/functions/v1/billing-cancel');
     expect((init.headers as Record<string, string>).Authorization).toBe('Bearer tok');
+    expect(JSON.parse(init.body as string)).toEqual({ subscription_id: 's1' });
   });
 
   it('passes a refusal through, and never calls a failure a cancellation', async () => {
     const refused = vi.fn(async () => new Response(JSON.stringify({ error: 'You are still subscribed; try again.' }), { status: 502 }));
-    expect(await cancelMembership('tok', refused, END)).toEqual({ kind: 'refused', said: 'You are still subscribed; try again.' });
+    expect(await cancelMembership('tok', 's1', refused, END)).toEqual({ kind: 'refused', said: 'You are still subscribed; try again.' });
     const down = vi.fn(async () => { throw new TypeError('network'); });
-    expect((await cancelMembership('tok', down, END)).kind).toBe('refused');
-    expect((await cancelMembership('tok', refused, '')).kind).toBe('refused');
+    expect((await cancelMembership('tok', 's1', down, END)).kind).toBe('refused');
+    expect((await cancelMembership('tok', 's1', refused, '')).kind).toBe('refused');
   });
 });
