@@ -156,3 +156,37 @@ export function corsHeaders(
     'Access-Control-Max-Age': '86400',
   };
 }
+
+/**
+ * The strict reading, for the functions that must fail closed.
+ *
+ * `allowOrigin` above answers `*` when nothing is configured, because the
+ * functions it serves predate the allowlist and an unset secret must not break
+ * them. The commercial functions (`billing-checkout`, `lead-intake`) start
+ * life with the list, so they take the opposite default: an origin is allowed
+ * only when it is named explicitly. Nothing configured, `*` in the list, a
+ * request from anywhere else, or no `Origin` header at all — each answers
+ * `null`, and the caller sends no `Access-Control-Allow-Origin` header, so a
+ * browser refuses the response.
+ */
+export function strictOrigin(raw: string | undefined | null, origin: string | null | undefined): string | null {
+  const list = (raw ?? '').split(',').map(tidy).filter((s) => s && s !== '*');
+  const asked = tidy(origin ?? '');
+  return asked && list.includes(asked) ? asked : null;
+}
+
+/** CORS headers for an origin `strictOrigin` allowed; none for one it did not. */
+export function strictCorsHeaders(
+  raw: string | undefined | null,
+  origin: string | null | undefined,
+): Record<string, string> {
+  const allowed = strictOrigin(raw, origin);
+  if (!allowed) return { Vary: 'Origin' };
+  return {
+    'Access-Control-Allow-Origin': allowed,
+    Vary: 'Origin',
+    'Access-Control-Allow-Headers': 'authorization, content-type, apikey, x-client-info',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Max-Age': '86400',
+  };
+}

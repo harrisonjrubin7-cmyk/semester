@@ -83,3 +83,6 @@ lti        144 platform  2026-09-28T00:49:07Z
 integration-tick  2  platform  2026-09-28T00:49:07Z
 trust-room  7  platform  2026-09-28T00:49:07Z
 delete-account  -  pending  2026-09-28T02:57:58Z
+billing-checkout  -  pending  2026-09-28T03:40:00Z
+billing-webhook   -  pending  2026-09-28T03:40:00Z
+lead-intake       -  pending  2026-09-28T03:40:00Z

@@ -245,7 +245,9 @@ begin
   -- plus the four office publishers from the office action feed migration
   -- (Phase J), and `athletic_academic_support` from
   -- 20260928308000_support_shares.sql (D1).
-  perform pg_temp.counted('a signed-in account reads the sixty-three roles', n, 63);
+  -- 63 before 20260929000000_commercial_core added five: finance_operator,
+  -- customer_success, compliance_owner, content_owner, billing_contact.
+  perform pg_temp.counted('a signed-in account reads the sixty-eight roles', n, 68);
   select count(*) into n from public.role_capabilities;
   -- Twenty original rows, thirty-seven expansion rows, eight from the
   -- integration control plane (four for integration_admin, three for
@@ -266,7 +268,8 @@ begin
   -- (20260929100000_console_control_plane.sql: console:operate for six
   -- operator roles, approval:decide for platform_admin, breakglass:request
   -- for platform_admin and incident_responder).
-  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 112);
+  -- 112 before the commercial core migration added six role-capability pairs.
+  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 118);
 
   perform pg_temp.become_anon();
   perform pg_temp.refused('a signed-out visitor cannot read the matrix',

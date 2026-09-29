@@ -70,6 +70,16 @@ major_version = 17
 # reaching a preview branch — which is the exact failure these blocks exist to
 # end, and would otherwise return one function at a time.
 
+# Stripe has no Supabase token; the Stripe-Signature over the raw body is the
+# credential, and the function answers 503 until STRIPE_WEBHOOK_SECRET is set.
+# The checkout checks the caller's own token after the CORS preflight, which
+# carries none. See DEPLOY.md → billing.
+[functions.billing-checkout]
+verify_jwt = false
+
+[functions.billing-webhook]
+verify_jwt = false
+
 [functions.calendar]
 verify_jwt = false
 
@@ -83,6 +93,11 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.integration-tick]
+verify_jwt = false
+
+# The company site's visitors have no Semester account. Answers 503 until
+# SITE_ORIGINS is set. See DEPLOY.md → lead-intake.
+[functions.lead-intake]
 verify_jwt = false
 
 [functions.lti]
