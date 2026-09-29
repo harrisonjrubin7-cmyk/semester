@@ -21,6 +21,7 @@ export const LEDGER: Ledger = {
   'lib/governance/charters.ts': { task: 1 },
   'lib/ltilanding.ts': { 'something went wrong': 1 },
   'lib/nav.ts': { deliverable: 1, homework: 1, task: 2, 'to-do': 1 },
+  'lib/oneos.ts': { task: 1 },
   'lib/ops/firstyear.ts': { task: 1 },
   'lib/rollout-capabilities.ts': { task: 1 },
   'lib/toolkit/catalog.ts': { deliverable: 1 },

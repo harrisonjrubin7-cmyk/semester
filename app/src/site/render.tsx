@@ -4,6 +4,7 @@ import { defaultNext } from '../lib/graduation';
 import { PROMISE, type SiteConfig } from './config';
 import { Layout, href } from './Layout';
 import * as B from './benchmark';
+import * as O from './oneos';
 import * as M from './more';
 import * as P from './pages';
 import { TOOL_LIST, Tool, type ToolId, type ToolProps } from './tools/Tools';
@@ -70,6 +71,10 @@ export const ROUTES: Route[] = [
   { path: '/platform/vocabulary/', title: 'The words we use — Semester', description: 'Nine terms, what each means and the page each lives on: Student Action Layer, Academic Navigation, No Wrong Door and six more.', Page: B.Vocabulary },
   { path: '/resources/ai-governance-canvas/', title: 'AI Governance Readiness Canvas — Semester', description: 'Ten boxes an institution fills in before it turns on an assistant: allowed, restricted and prohibited uses, sources, review, data, retention, escalation.', Page: B.AIGovernanceCanvas },
   { path: '/research/', title: 'Research and community — Semester', description: 'The Academic Friction Index, its method set before its data, and the design-partner council, clinics, advisory network and design challenge.', Page: B.Research },
+  // The one-operating-system pages (`oneos.tsx`): the architecture the second
+  // brief asked for and the comparison, each area and row at the register's word.
+  { path: '/platform/one-operating-system/', title: 'One Operating System. Every Student Moment. — Semester', description: 'The student at the centre and nine areas around them, each with what connects, what stays official, and the register’s word for where it stands today.', Page: O.OneOperatingSystem },
+  { path: '/platform/why-not-another-tool/', title: 'Why not another tool? — Semester', description: 'The traditional approach beside the Semester approach, eight rows, each with the register’s word for where Semester stands today.', Page: O.WhyNotAnotherTool },
   ...TOOL_LIST.map(
     (t): Route => ({
       path: `/tools/${t.id}/`,

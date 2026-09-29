@@ -2204,7 +2204,53 @@ each stands.
 - **Not changed:** the verdict, still `NO-GO`; the HECVAT VULN-1 status,
   still in progress; every number in the patch policy.
 
-## D-125 · The plan tier is read, and the two AI drills are one command each, still waiting on one HTTP call this session could not make
+## D-125 · Two briefs on what makes Semester one operating system are held to the tree, and the site prints the register's word beside the positioning
+
+**Decided 29 Sep 2026.** Two briefs of the same day say the core of what
+makes Semester different is that it has everything from the start, is fully
+built, and is one central school operating system rather than a collection of
+screens; the second lists what else to add to the app, the company site and
+the institution console, and the company infrastructure behind them.
+
+- **Both are kept under `docs/expansion/` as supplied and held to the tree
+  the way D-112 held the one-system grammar:** `app/src/lib/oneos.ts` is the
+  data, `oneos.test.ts` renders `docs/ONE-OPERATING-SYSTEM.md` and refuses a
+  status above the kind of file it cites, a path that does not exist, and a
+  supplied PDF as evidence. The five destinations are held to `FIVE_LABELS`
+  in `lib/tabbar.ts`; each shared object and each vocabulary word to the
+  module that carries it, or to none; each avoided word the retired-word rule
+  already refuses to its entry in `content/terms.ts`; each palette command to
+  a destination the app registers; each site page to a route; each area and
+  comparison row to rows that exist. 157 rows: the page says how many are
+  held by a test, being built, designed and not started.
+- **The brief's "fully built" is not repeated for the tree.** Most of what
+  the briefs name exists as a part — a component, a module, a table — and
+  the join is what is missing. The page says that in its first paragraph, and
+  the earlier one-system grammar (D-112) already lists what to converge.
+- **Two public pages print from the register**, `/platform/one-operating-system/`
+  and `/platform/why-not-another-tool/`, the two the second brief asked for.
+  Each prints the positioning as the brief wrote it (the supporting paragraph
+  says *designed as* one connected platform, not *is*) and beside every area
+  and every comparison row the register's word — held by a test, being built,
+  designed, not started — computed as the weakest of the rows it rests on.
+  The test holds both pages to printing every word and never printing
+  "fully built". Script-free, like every content page: an area opens as a
+  disclosure, not as a map.
+- **The command palette keeps the overlay's own decision.** The brief asks for
+  thirteen verb commands; `components/Command.tsx` refuses verb commands
+  because an action that changes data says what it will do first, on a screen
+  with a preview. The register maps each command to the destination the
+  overlay already finds by name (eleven of thirteen), names the two it cannot,
+  and prints the overlay's reason rather than re-arguing it.
+- **Not built here, and said so on the page:** a goal object, a cross-life
+  timeline, a passport as one record, a named official-handoff pattern with a
+  return prompt, needs-reply and needs-action in one inbox, a campus
+  configuration graph, a content-governance workflow, a student-experience
+  health dashboard, a trust center hub, and role pages beyond students and
+  institutions. Each is a row with its gap, and the ten the brief ranks
+  highest are named against those rows.
+
+## D-126 · The plan tier is read, and the two AI drills are one command each, still waiting on one HTTP call this session could not make
 
 **Decided 29 Sep 2026.** The owner asked for items 10 and 15 of
 `docs/LAUNCH-DECISIONS.md` to be done. What a connector reaches is done and

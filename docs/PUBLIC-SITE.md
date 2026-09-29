@@ -12,7 +12,7 @@ an injected script inert. The four tool pages are the only exception (below).
 
 | | |
 |---|---|
-| Pages | `app/src/site/pages.tsx` (21 content routes), `app/src/site/more.tsx` (9 platform, trust and buying routes, with their tables as data in `app/src/site/platform.ts`) and `app/src/site/benchmark.tsx` (6 benchmark routes, with their data in `lib/standard.ts`, `lib/transparency.ts`, `lib/interop.ts` and `lib/vocabulary.ts`), plus 5 tool routes, all listed in `app/src/site/render.tsx` `ROUTES` |
+| Pages | `app/src/site/pages.tsx` (21 content routes), `app/src/site/more.tsx` (9 platform, trust and buying routes, with their tables as data in `app/src/site/platform.ts`) `app/src/site/benchmark.tsx` (6 benchmark routes, with their data in `lib/standard.ts`, `lib/transparency.ts`, `lib/interop.ts` and `lib/vocabulary.ts`) and `app/src/site/oneos.tsx` (2 one-operating-system routes, with their data in `lib/oneos.ts`), plus 5 tool routes, all listed in `app/src/site/render.tsx` `ROUTES` |
 | Claims | `app/src/lib/ops/claims.ts`: every capability a page names, its status word, its rows and evidence; `app/src/site/claims.tsx` prints them (D-110). The availability matrix prints its status column from here |
 | Tools | `app/src/site/tools/Tools.tsx` (the five tools), `tools/client.tsx` (hydration, bundled as `tools/tools.js`) |
 | Frame | `app/src/site/Layout.tsx`: skip link, header, a script-free `<details>` phone menu, footer |
@@ -58,6 +58,20 @@ whose test holds every cited path to the tree:
 | `/platform/vocabulary/` | The nine owned terms, what each means and where it lives; the home page of each is held to print it (`lib/vocabulary.ts`) |
 | `/resources/ai-governance-canvas/` | Ten boxes an institution fills in before turning on an assistant, and how Semester answers the same ten |
 | `/research/` | The Academic Friction Index as a method set before its data, and the design-partners council, clinics, student advisory network and design challenge, each marked not yet running |
+
+## The one-operating-system pages
+
+Two pages the second brief of 29 September asked for, both printed from
+`lib/oneos.ts`, whose test holds every area and row to rows that exist and
+rates each at the weakest of them (D-125):
+
+| Route | Says |
+|---|---|
+| `/platform/one-operating-system/` | *One Operating System. Every Student Moment.* The positioning as the brief wrote it (the supporting paragraph says *designed as*, not *is*); the student at the centre and nine areas around them, each a script-free disclosure with the student problem, the Semester workflow, who benefits, what connects, what stays official and how it connects back; the five principles; the five destinations; the final eight-question test. Beside every area, one of four words — held by a test, being built, designed, not started — computed as the weakest of the register rows it rests on |
+| `/platform/why-not-another-tool/` | The traditional approach beside the Semester approach, eight rows, each with the same computed word, and what the words mean: one piece still being built makes the whole row *being built* |
+
+The test holds both pages to printing every word, and to never printing
+“fully built”.
 
 And a fifth tool, `/tools/navigation/`: the academic navigation diagnostic, a
 guided self-assessment for institutions from `lib/navdiagnostic.ts` — seven
