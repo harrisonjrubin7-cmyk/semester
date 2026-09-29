@@ -437,7 +437,10 @@ procedure.
 
 **How long they live.** Each daily backup expires **7 days** after it is
 taken, on a rolling schedule the provider runs. **That number is the plan
-tier's documentation, not yet read off the dashboard on any date.**
+tier's documentation, not yet read off the dashboard on any date.** The
+tier itself was read on 29 September 2026 through the organization record:
+Pro, for which Supabase's backups page gives seven days of daily backups; the
+Backups page of the project has still not been read.
 `RESTORE.md` says the tier, the schedule and the enabled features are
 dashboard settings nothing in this repository can read, and its table is where
 the verified figure goes with a date and an owner; BCDR-01 in

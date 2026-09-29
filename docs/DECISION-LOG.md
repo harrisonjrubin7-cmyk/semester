@@ -2204,3 +2204,48 @@ each stands.
 - **Not changed:** the verdict, still `NO-GO`; the HECVAT VULN-1 status,
   still in progress; every number in the patch policy.
 
+## D-125 · The plan tier is read, and the two AI drills are one command each, still waiting on one HTTP call this session could not make
+
+**Decided 29 Sep 2026.** The owner asked for items 10 and 15 of
+`docs/LAUNCH-DECISIONS.md` to be done. What a connector reaches is done and
+recorded; what it does not is now one command away, and the item says which.
+
+- **Item 10: the plan tier is Pro.** The organization record, read through
+  the Supabase connector, says the plan is Pro (pay-as-you-go), and
+  Supabase's own backups page gives Pro seven days of daily backups with
+  point-in-time recovery only as a paid add-on. `pg_settings` shows WAL
+  archiving on (WAL-G `wal-push`, `archive_timeout` 120 s), which the
+  physical daily backup and PITR both use, so it says nothing about whether
+  the add-on is bought. `RESTORE.md`, `RETENTION.md` and HECVAT BCDR-01 carry
+  the tier with the date; the seven days stays the plan's documentation until
+  the Backups page is read, which a connection cannot do, and the drill has
+  not run.
+- **Item 15 could not run here, for a reason that is the session's, not the
+  tree's.** The Claude function proxies the shared key for any signed-in
+  account, which means both drills can run with a drill account and no raw
+  key. This session's policy refused the shell any HTTP call to the
+  production services, and both drills are exactly that call: the kill-switch
+  drill is watching the deployed runtime refuse, and the red-team through the
+  proxy is twenty-one such calls. Engaging the switch by SQL alone would have
+  been half a drill, so it was not done.
+- **So each is one command.** `app/scripts/killswitch-drill.mjs`
+  (`npm run drill:killswitch`) makes the before, during and after calls,
+  prints the SQL to engage and release between them and waits, judges the
+  refusal by the sentence read out of `killswitch.ts` itself, times every
+  step, and with `DRILL=write` files the record under `docs/evidence/ai/`,
+  never over an earlier one; `killswitchdrill.test.ts` holds it to the module
+  and the function path. `injection.live.test.ts` gains the proxy route
+  (`REDTEAM_PROXY`, `REDTEAM_TOKEN`, `REDTEAM_APIKEY`): the same body either
+  way, the raw key never sent to the proxy, the route written into the
+  transcript, and a key-free test of both routes. Neither observes the
+  institution gateway, which is not deployed; the drill record says so and
+  `aikillswitch.test.ts` holds that runtime to the same switch.
+- **What running them will change**, written here so it is not discovered:
+  the first file under `docs/evidence/` lifts the crosswalk's ceiling and
+  trips three tests on purpose (`compliance-crosswalk.test.ts`,
+  `readiness-pack.test.ts`, `evidence-register.test.ts`), which then have to
+  read what was filed; AI-010 moves toward `tested` on a transcript with no
+  canary followed; AI-012's gap and R-07's mitigation are re-read to the
+  dates.
+- **Not changed:** every register status; the verdict.
+
