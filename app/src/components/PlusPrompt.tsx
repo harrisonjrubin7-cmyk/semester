@@ -41,19 +41,23 @@ function snoozedUntil(accountId: string): number {
 export function PlusPrompt({ now = Date.now }: { now?: () => number } = {}) {
   const { account, dispatch } = useStore();
   const accountId = cloudConfigured && account ? account.id : '';
-  const [prices, setPrices] = useState<PlusPrice[]>([]);
-  const [hidden, setHidden] = useState(() => !accountId || snoozedUntil(accountId) > now());
+  // What the card knows, per account. Nothing here is decided on the first
+  // paint: the account usually arrives after it, and a "hidden" latched then
+  // would hide the card from every real student for good.
+  const [offer, setOffer] = useState<{ accountId: string; prices: PlusPrice[] } | null>(null);
+  const [notNow, setNotNow] = useState('');
+  const snoozed = accountId !== '' && (notNow === accountId || snoozedUntil(accountId) > now());
 
   useEffect(() => {
-    if (!accountId || hidden) return;
+    if (!accountId || snoozed) return;
     let live = true;
     void (async () => {
       try {
         const db = await cloud();
         const [found, own] = await Promise.all([fetchPlusPrices(db), fetchOwnSubscriptions(db, accountId)]);
         if (!live) return;
-        if (currentSubscription(own)) setHidden(true);
-        else setPrices(found);
+        // Someone with Plus is offered nothing.
+        setOffer({ accountId, prices: currentSubscription(own) ? [] : found });
       } catch {
         /* No catalog, no card. */
       }
@@ -61,9 +65,10 @@ export function PlusPrompt({ now = Date.now }: { now?: () => number } = {}) {
     return () => {
       live = false;
     };
-  }, [accountId, hidden]);
+  }, [accountId, snoozed]);
 
-  if (!accountId || hidden || prices.length === 0) return null;
+  const prices = offer && offer.accountId === accountId ? offer.prices : [];
+  if (!accountId || snoozed || prices.length === 0) return null;
 
   const later = () => {
     try {
@@ -71,7 +76,7 @@ export function PlusPrompt({ now = Date.now }: { now?: () => number } = {}) {
     } catch {
       /* Storage refused: hidden for this visit only. */
     }
-    setHidden(true);
+    setNotNow(accountId);
   };
   const see = () => {
     askToOpenUpgrade();

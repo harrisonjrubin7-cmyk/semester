@@ -83,6 +83,15 @@ it('goes for thirty days on “Not now”, and comes back after', async () => {
   expect(host.textContent).toContain('Semester Plus');
 });
 
+it('appears once the account arrives, when the first paint came before it', async () => {
+  mock.account = null;
+  await render();
+  expect(host.textContent).toBe('');
+  mock.account = { id: 'u1' };
+  await render();
+  expect(host.textContent).toContain('Semester Plus · $7.99 a month');
+});
+
 it('is never shown to someone who has Plus', async () => {
   mock.tables.subscriptions = [{ id: 's1', plan_code: 'plus', status: 'active', current_period_end: '2026-10-29T12:00:00Z' }];
   await render();
