@@ -120,8 +120,6 @@ const PRIVACY_PARTIAL: Check = {
   evidence: 'docs/MODULE-PRIVACY-MODEL.md',
   note: 'Defaults and roles are modelled; export, deletion and revocation have not been exercised against production.',
 };
-const NOTHING: Check = { state: 'owed', evidence: null, note: 'Nothing is built to check.' };
-const UNBUILT = { automated: NOTHING, security: NOTHING, accessibility: NOTHING, privacy: NOTHING };
 const tested = (evidence: string, note: string): Check => ({ state: 'passed', evidence, note });
 const shared = (automated: Check): Record<CheckKey, Check> => ({ automated, security: SECURITY_PARTIAL, accessibility: A11Y_PARTIAL, privacy: PRIVACY_PARTIAL });
 const VERIFY = 'Pass the security, manual accessibility and privacy checks.';
@@ -213,32 +211,40 @@ export const DOMAINS: readonly Domain[] = [
     toComplete: `Room selection, contracts and maintenance: today it is a student-side calculator. ${VERIFY}`,
   },
   {
-    key: 'registration_transaction', name: 'Official registration transaction', status: 'designed', owner: 'data',
-    spec: 'docs/FEATURE-FLAG-REGISTRY.md', code: [], checks: UNBUILT,
+    key: 'registration_transaction', name: 'Official registration transaction', status: 'built', owner: 'data',
+    spec: 'docs/FEATURE-FLAG-REGISTRY.md',
+    code: ['app/src/lib/enrollment/service.ts', 'supabase/migrations/20260929300000_registration_transaction.sql'],
+    checks: shared(tested('supabase/registration_transaction.check.sql', 'Enroll, waitlist, drop, withdraw, holds and overrides, allowed and denied; the last seat cannot be taken twice.')),
     flags: ['writeback.registration_submit', 'integration.sis_read'], highRisk: true,
     activation: 'conditional', activationCondition: 'For selected students and the registrar role, after registrar approval.', pilotEvidence: null,
-    toComplete: 'Build the enrollment, waitlist, add/drop and withdrawal service behind the writeback flag.',
+    toComplete: `An SIS adapter to send committed changes; holds and completions synced from the SIS; per-student time tickets; no screen yet. ${VERIFY}`,
   },
   {
-    key: 'gradebook', name: 'Official gradebook and grade passback', status: 'designed', owner: 'data',
-    spec: 'docs/FEATURE-FLAG-REGISTRY.md', code: [], checks: UNBUILT,
+    key: 'gradebook', name: 'Official gradebook and grade passback', status: 'built', owner: 'data',
+    spec: 'docs/FEATURE-FLAG-REGISTRY.md',
+    code: ['app/src/lib/gradebook/ledger.ts', 'app/src/lib/gradebook/passback.ts', 'supabase/migrations/20260929310000_gradebook.sql'],
+    checks: shared(tested('supabase/gradebook.check.sql', 'Drafts visible only to the course’s authors, released grades to their student, append-only history, passback of released versions only.')),
     flags: ['writeback.lms_grade_passback'], highRisk: true,
     activation: 'conditional', activationCondition: 'Only after faculty and registrar approval.', pilotEvidence: null,
-    toComplete: 'Build grade release, moderation, regrade and export. `Grades.tsx` is the student’s own arithmetic, not a record.',
+    toComplete: `A live LTI grade-passback sender; no screen yet. \`Grades.tsx\` stays the student’s own arithmetic. ${VERIFY}`,
   },
   {
-    key: 'student_accounts', name: 'Student accounts, payments and financial aid', status: 'designed', owner: 'finance',
-    spec: 'docs/FINANCIAL-READINESS-WORKSPACE.md', code: [], checks: UNBUILT,
-    flags: ['integration.erp_bursar_actions'], highRisk: true,
+    key: 'student_accounts', name: 'Student accounts, payments and financial aid', status: 'built', owner: 'finance',
+    spec: 'docs/FINANCIAL-READINESS-WORKSPACE.md',
+    code: ['app/src/lib/studentaccount/ledger.ts', 'app/src/lib/studentaccount/payments.ts', 'supabase/migrations/20260929320000_student_accounts.sql'],
+    checks: shared(tested('supabase/student_accounts.check.sql', 'Ledger, holds, plans, refunds and aid, allowed and denied; work-study never reduces the balance.')),
+    flags: ['module.student_accounts', 'integration.erp_bursar_actions'], highRisk: true,
     activation: 'off', activationCondition: 'Off unless the payment provider, controls and a finance owner are active, and the institution configures a compliant aid workflow.', pilotEvidence: null,
-    toComplete: 'Build invoices, payments, refunds and holds, and the aid workflow. `bill.ts` reads a statement the student supplies; the Plus checkout is Semester’s own commercial core.',
+    toComplete: `A real payment provider and its signed webhook, an aid-system adapter, and a held finance seat; no screen yet. ${VERIFY}`,
   },
   {
-    key: 'dining', name: 'Dining and campus card', status: 'designed', owner: 'product',
-    spec: 'docs/BASIC-NEEDS-NAVIGATOR.md', code: [], checks: UNBUILT,
-    flags: [], highRisk: true,
+    key: 'dining', name: 'Dining and campus card', status: 'built', owner: 'product',
+    spec: 'docs/BASIC-NEEDS-NAVIGATOR.md',
+    code: ['app/src/lib/dining/service.ts', 'app/src/lib/dining/orders.ts', 'supabase/migrations/20260929330000_dining.sql'],
+    checks: shared(tested('supabase/dining.check.sql', 'Plans, ledger, orders held to capacity and the shared-swipe pool, allowed and denied; staff cannot tell a shared swipe.')),
+    flags: ['module.dining'], highRisk: true,
     activation: 'conditional', activationCondition: 'When a campus-card or dining partner configuration is ready.', pilotEvidence: null,
-    toComplete: 'Build meal-plan, location and ordering against a partner adapter.',
+    toComplete: `A real card-office vendor adapter and a sync schedule; no screen yet. ${VERIFY}`,
   },
 ];
 
@@ -269,7 +275,7 @@ export interface GateItem {
 const g = (id: string, section: GateSection, item: string, state: State, evidence: string | null, note: string, p0 = false): GateItem => ({ id, section, item, state, evidence, note, p0 });
 
 export const GO_GATE: readonly GateItem[] = [
-  g('P-1', 'product', 'Every planned module has UI, service layer, schema, API and permissions.', 'partial', 'app/src/lib/governance/certification.ts', 'Four domains are designed, not built: registration transaction, gradebook, student accounts and dining.', true),
+  g('P-1', 'product', 'Every planned module has UI, service layer, schema, API and permissions.', 'partial', 'app/src/lib/governance/certification.ts', 'Every domain has a service layer, schema and permissions; registration, gradebook, student accounts and dining have no screen yet, and none has a live vendor or SIS adapter.', true),
   g('P-2', 'product', 'Every module has loading, empty, error, stale and degraded states.', 'partial', 'docs/EMPTY-LOADING-ERROR-SUCCESS-STATES.md', 'Specified; not audited module by module.'),
   g('P-3', 'product', 'Every module has tenant, role, cohort and feature configuration.', 'partial', 'app/src/lib/flags.ts', 'Tenant, cohort, role and feature scopes exist in the evaluator and the database; not every module is yet behind a flag.'),
   g('T-1', 'technical', 'Unit tests for all domain logic.', 'partial', 'REGRESSION-CHECKLIST.md', 'A large suite runs in order and shuffled; unbuilt domains have none.'),

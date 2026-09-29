@@ -62,8 +62,8 @@ Designed → Built → Internally verified → Production-certified GO → Pilot
 
 | Rung | Means | Domains here |
 | --- | --- | ---: |
-| Designed | Product, data, permission and UX specification exists | 4 |
-| Built | Code, data model, UI, tests and configuration exist | 10 |
+| Designed | Product, data, permission and UX specification exists | 0 |
+| Built | Code, data model, UI, tests and configuration exist | 14 |
 | Internally verified | Automated, security, accessibility and privacy checks all pass | 0 |
 | Production-certified GO | The platform passed the GO gate and every council seat signed | 0 |
 | Pilot deployed | Activated for a named institution’s cohort under a signed pilot | 0 |
@@ -90,10 +90,10 @@ verified*, the platform’s GO for *production-certified*, a named pilot for
 | Native LMS and Course Studio | Built | passed | partial | partial | partial | conditional: For one department or course group. | Submissions, rubrics and assessments end to end. Pass the security, manual accessibility and privacy checks. |
 | Career and community | Built | passed | partial | partial | partial | conditional: After student opt-in, employer review, and staffed moderation. | Employer review and a staffed moderation rota. Pass the security, manual accessibility and privacy checks. |
 | Housing | Built | passed | partial | partial | partial | conditional: Only for an institution with housing configuration. | Room selection, contracts and maintenance: today it is a student-side calculator. Pass the security, manual accessibility and privacy checks. |
-| Official registration transaction | Designed | owed | owed | owed | owed | conditional: For selected students and the registrar role, after registrar approval. | Build the enrollment, waitlist, add/drop and withdrawal service behind the writeback flag. |
-| Official gradebook and grade passback | Designed | owed | owed | owed | owed | conditional: Only after faculty and registrar approval. | Build grade release, moderation, regrade and export. `Grades.tsx` is the student’s own arithmetic, not a record. |
-| Student accounts, payments and financial aid | Designed | owed | owed | owed | owed | off: Off unless the payment provider, controls and a finance owner are active, and the institution configures a compliant aid workflow. | Build invoices, payments, refunds and holds, and the aid workflow. `bill.ts` reads a statement the student supplies; the Plus checkout is Semester’s own commercial core. |
-| Dining and campus card | Designed | owed | owed | owed | owed | conditional: When a campus-card or dining partner configuration is ready. | Build meal-plan, location and ordering against a partner adapter. |
+| Official registration transaction | Built | passed | partial | partial | partial | conditional: For selected students and the registrar role, after registrar approval. | An SIS adapter to send committed changes; holds and completions synced from the SIS; per-student time tickets; no screen yet. Pass the security, manual accessibility and privacy checks. |
+| Official gradebook and grade passback | Built | passed | partial | partial | partial | conditional: Only after faculty and registrar approval. | A live LTI grade-passback sender; no screen yet. `Grades.tsx` stays the student’s own arithmetic. Pass the security, manual accessibility and privacy checks. |
+| Student accounts, payments and financial aid | Built | passed | partial | partial | partial | off: Off unless the payment provider, controls and a finance owner are active, and the institution configures a compliant aid workflow. | A real payment provider and its signed webhook, an aid-system adapter, and a held finance seat; no screen yet. Pass the security, manual accessibility and privacy checks. |
+| Dining and campus card | Built | passed | partial | partial | partial | conditional: When a campus-card or dining partner configuration is ready. | A real card-office vendor adapter and a sync schedule; no screen yet. Pass the security, manual accessibility and privacy checks. |
 
 ### Identity and accounts
 
@@ -227,47 +227,55 @@ Code: [`app/src/lib/housing.ts`](../../app/src/lib/housing.ts), [`app/src/screen
 
 ### Official registration transaction
 
-Status **Designed** · owner `data` · spec [`docs/FEATURE-FLAG-REGISTRY.md`](../FEATURE-FLAG-REGISTRY.md) · flags `writeback.registration_submit`, `integration.sis_read`
+Status **Built** · owner `data` · spec [`docs/FEATURE-FLAG-REGISTRY.md`](../FEATURE-FLAG-REGISTRY.md) · flags `writeback.registration_submit`, `integration.sis_read`
+
+Code: [`app/src/lib/enrollment/service.ts`](../../app/src/lib/enrollment/service.ts), [`supabase/migrations/20260929300000_registration_transaction.sql`](../../supabase/migrations/20260929300000_registration_transaction.sql)
 
 | Check | State | Evidence | Note |
 | --- | --- | --- | --- |
-| Automated tests | owed | — | Nothing is built to check. |
-| Security | owed | — | Nothing is built to check. |
-| Accessibility | owed | — | Nothing is built to check. |
-| Privacy | owed | — | Nothing is built to check. |
+| Automated tests | passed | [`supabase/registration_transaction.check.sql`](../../supabase/registration_transaction.check.sql) | Enroll, waitlist, drop, withdraw, holds and overrides, allowed and denied; the last seat cannot be taken twice. |
+| Security | partial | [`docs/DEFINER-RLS-REGISTER.md`](../DEFINER-RLS-REGISTER.md) | Every definer function has a disposition in source; the reviewed migration is not yet confirmed applied and advisor-clean in production. |
+| Accessibility | partial | [`app/src/a11y/axe.test.tsx`](../../app/src/a11y/axe.test.tsx) | Automated axe checks run in the suite; manual keyboard, screen-reader, zoom and mobile QA is owed. |
+| Privacy | partial | [`docs/MODULE-PRIVACY-MODEL.md`](../MODULE-PRIVACY-MODEL.md) | Defaults and roles are modelled; export, deletion and revocation have not been exercised against production. |
 
 ### Official gradebook and grade passback
 
-Status **Designed** · owner `data` · spec [`docs/FEATURE-FLAG-REGISTRY.md`](../FEATURE-FLAG-REGISTRY.md) · flags `writeback.lms_grade_passback`
+Status **Built** · owner `data` · spec [`docs/FEATURE-FLAG-REGISTRY.md`](../FEATURE-FLAG-REGISTRY.md) · flags `writeback.lms_grade_passback`
+
+Code: [`app/src/lib/gradebook/ledger.ts`](../../app/src/lib/gradebook/ledger.ts), [`app/src/lib/gradebook/passback.ts`](../../app/src/lib/gradebook/passback.ts), [`supabase/migrations/20260929310000_gradebook.sql`](../../supabase/migrations/20260929310000_gradebook.sql)
 
 | Check | State | Evidence | Note |
 | --- | --- | --- | --- |
-| Automated tests | owed | — | Nothing is built to check. |
-| Security | owed | — | Nothing is built to check. |
-| Accessibility | owed | — | Nothing is built to check. |
-| Privacy | owed | — | Nothing is built to check. |
+| Automated tests | passed | [`supabase/gradebook.check.sql`](../../supabase/gradebook.check.sql) | Drafts visible only to the course’s authors, released grades to their student, append-only history, passback of released versions only. |
+| Security | partial | [`docs/DEFINER-RLS-REGISTER.md`](../DEFINER-RLS-REGISTER.md) | Every definer function has a disposition in source; the reviewed migration is not yet confirmed applied and advisor-clean in production. |
+| Accessibility | partial | [`app/src/a11y/axe.test.tsx`](../../app/src/a11y/axe.test.tsx) | Automated axe checks run in the suite; manual keyboard, screen-reader, zoom and mobile QA is owed. |
+| Privacy | partial | [`docs/MODULE-PRIVACY-MODEL.md`](../MODULE-PRIVACY-MODEL.md) | Defaults and roles are modelled; export, deletion and revocation have not been exercised against production. |
 
 ### Student accounts, payments and financial aid
 
-Status **Designed** · owner `finance` · spec [`docs/FINANCIAL-READINESS-WORKSPACE.md`](../FINANCIAL-READINESS-WORKSPACE.md) · flags `integration.erp_bursar_actions`
+Status **Built** · owner `finance` · spec [`docs/FINANCIAL-READINESS-WORKSPACE.md`](../FINANCIAL-READINESS-WORKSPACE.md) · flags `module.student_accounts`, `integration.erp_bursar_actions`
+
+Code: [`app/src/lib/studentaccount/ledger.ts`](../../app/src/lib/studentaccount/ledger.ts), [`app/src/lib/studentaccount/payments.ts`](../../app/src/lib/studentaccount/payments.ts), [`supabase/migrations/20260929320000_student_accounts.sql`](../../supabase/migrations/20260929320000_student_accounts.sql)
 
 | Check | State | Evidence | Note |
 | --- | --- | --- | --- |
-| Automated tests | owed | — | Nothing is built to check. |
-| Security | owed | — | Nothing is built to check. |
-| Accessibility | owed | — | Nothing is built to check. |
-| Privacy | owed | — | Nothing is built to check. |
+| Automated tests | passed | [`supabase/student_accounts.check.sql`](../../supabase/student_accounts.check.sql) | Ledger, holds, plans, refunds and aid, allowed and denied; work-study never reduces the balance. |
+| Security | partial | [`docs/DEFINER-RLS-REGISTER.md`](../DEFINER-RLS-REGISTER.md) | Every definer function has a disposition in source; the reviewed migration is not yet confirmed applied and advisor-clean in production. |
+| Accessibility | partial | [`app/src/a11y/axe.test.tsx`](../../app/src/a11y/axe.test.tsx) | Automated axe checks run in the suite; manual keyboard, screen-reader, zoom and mobile QA is owed. |
+| Privacy | partial | [`docs/MODULE-PRIVACY-MODEL.md`](../MODULE-PRIVACY-MODEL.md) | Defaults and roles are modelled; export, deletion and revocation have not been exercised against production. |
 
 ### Dining and campus card
 
-Status **Designed** · owner `product` · spec [`docs/BASIC-NEEDS-NAVIGATOR.md`](../BASIC-NEEDS-NAVIGATOR.md)
+Status **Built** · owner `product` · spec [`docs/BASIC-NEEDS-NAVIGATOR.md`](../BASIC-NEEDS-NAVIGATOR.md) · flags `module.dining`
+
+Code: [`app/src/lib/dining/service.ts`](../../app/src/lib/dining/service.ts), [`app/src/lib/dining/orders.ts`](../../app/src/lib/dining/orders.ts), [`supabase/migrations/20260929330000_dining.sql`](../../supabase/migrations/20260929330000_dining.sql)
 
 | Check | State | Evidence | Note |
 | --- | --- | --- | --- |
-| Automated tests | owed | — | Nothing is built to check. |
-| Security | owed | — | Nothing is built to check. |
-| Accessibility | owed | — | Nothing is built to check. |
-| Privacy | owed | — | Nothing is built to check. |
+| Automated tests | passed | [`supabase/dining.check.sql`](../../supabase/dining.check.sql) | Plans, ledger, orders held to capacity and the shared-swipe pool, allowed and denied; staff cannot tell a shared swipe. |
+| Security | partial | [`docs/DEFINER-RLS-REGISTER.md`](../DEFINER-RLS-REGISTER.md) | Every definer function has a disposition in source; the reviewed migration is not yet confirmed applied and advisor-clean in production. |
+| Accessibility | partial | [`app/src/a11y/axe.test.tsx`](../../app/src/a11y/axe.test.tsx) | Automated axe checks run in the suite; manual keyboard, screen-reader, zoom and mobile QA is owed. |
+| Privacy | partial | [`docs/MODULE-PRIVACY-MODEL.md`](../MODULE-PRIVACY-MODEL.md) | Defaults and roles are modelled; export, deletion and revocation have not been exercised against production. |
 
 ## The GO gate
 
@@ -277,7 +285,7 @@ Items marked **P0** are conditions of a full GO: while one is open the answer is
 
 | ID | Item | State | P0 | Evidence | Note |
 | --- | --- | --- | --- | --- | --- |
-| P-1 | Every planned module has UI, service layer, schema, API and permissions. | partial | P0 | [`app/src/lib/governance/certification.ts`](../../app/src/lib/governance/certification.ts) | Four domains are designed, not built: registration transaction, gradebook, student accounts and dining. |
+| P-1 | Every planned module has UI, service layer, schema, API and permissions. | partial | P0 | [`app/src/lib/governance/certification.ts`](../../app/src/lib/governance/certification.ts) | Every domain has a service layer, schema and permissions; registration, gradebook, student accounts and dining have no screen yet, and none has a live vendor or SIS adapter. |
 | P-2 | Every module has loading, empty, error, stale and degraded states. | partial |  | [`docs/EMPTY-LOADING-ERROR-SUCCESS-STATES.md`](../EMPTY-LOADING-ERROR-SUCCESS-STATES.md) | Specified; not audited module by module. |
 | P-3 | Every module has tenant, role, cohort and feature configuration. | partial |  | [`app/src/lib/flags.ts`](../../app/src/lib/flags.ts) | Tenant, cohort, role and feature scopes exist in the evaluator and the database; not every module is yet behind a flag. |
 
