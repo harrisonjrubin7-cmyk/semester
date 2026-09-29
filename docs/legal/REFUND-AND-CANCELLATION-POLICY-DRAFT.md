@@ -33,11 +33,12 @@ states require.]
 
 ## 3. Cancelling
 
-Cancel from the same Membership panel. Plus stays on until the end of the
-period you have paid for, then ends; you are not charged again. **Until the
-cancellation reaches Stripe automatically, we cancel it in Stripe for you by
-hand** — if you are charged after cancelling, email us and we will refund
-that charge in full. [DECIDE: build the Stripe cancellation before a live key.]
+Cancel from the same Membership panel. The cancellation is sent to Stripe
+first and recorded only once Stripe accepts it (D-132), so Plus stays on until
+the end of the period you have paid for, then ends, and you are not charged
+again. If Stripe refuses, nothing changes and the panel tells you that you are
+still subscribed. If you are ever charged after cancelling, email us and we
+will refund that charge in full.
 
 ## 4. Refunds
 
@@ -55,8 +56,11 @@ method through Stripe.
 
 ## 5. Failed payments
 
-If a renewal payment fails, Stripe retries it; if it keeps failing, Plus ends
-and your account returns to Free. Nothing you created is deleted.
+If a renewal payment fails, Stripe emails you and retries it, and Plus keeps
+working for a 14-day grace period. If it is still unpaid after that, Plus
+features pause and your account works as Free; paying later brings them back.
+Nothing you created is deleted. Semester records its own reminders but does
+not yet send them; the emails you receive come from Stripe.
 
 ## 6. Price changes
 
@@ -65,6 +69,7 @@ and you can cancel before it does.
 
 ## 7. Receipts and records
 
-Stripe emails a receipt for every charge. We keep payment records for [DECIDE
-with counsel: typically seven years], including after you delete your
-account.
+Stripe emails a receipt for every charge. We keep payment records for seven
+years after the end of the year each was made, including after you delete
+your account, then remove them (D-132); a live subscription's records are
+never removed.

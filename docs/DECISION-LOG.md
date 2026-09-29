@@ -2731,6 +2731,16 @@ standing is held to the kind of file it cites.
   (D-128). Both refund lines now say the policy is drafted for counsel and
   not in force, name the 14 days as one option it weighs, and promise the
   final terms before any real charge.
+- **The rest of the membership page says what billing does after D-132.**
+  Cancelling reaches Stripe and is not charged again; a failed payment is
+  Stripe's email and retries with Plus working through a 14-day grace, then
+  paused, with the data untouched — Semester's own reminders are recorded,
+  not sent, and the page no longer says "email and in-app message". The
+  renewal reminder, the 30-day price-change notice and "we stop charging you"
+  when a school sponsors are not built and now say so; the preview stops
+  asking why you are leaving, which the app does not ask, and stops
+  promising a confirmation email. The refund and retention drafts take D-132's
+  cancellation and seven-year record period.
 - **Not written here, because the repository cannot write them:** the MSA,
   counsel's review of every policy, a VPAT, customer data migration, and
   anything with an institution's name on it. Each is a row that says so.

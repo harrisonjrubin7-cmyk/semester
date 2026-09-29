@@ -590,7 +590,7 @@ export const FINAL_GATE: readonly GroupedItem[] = [
   ]),
   ...grouped('Company', 'LC-GATE3', [
     ['Entity, domain, banking, accounting, contracts, IP and insurance ready', 'designed', [['docs/SAAS-LAUNCH-KIT.md', 'the formation checklist and nine coverages']], 'An LLC exists; the rest is tracked there, mostly not started.'],
-    ['Support, billing, refund and cancellation processes ready', 'building', [['app/src/lib/billing/checkout.test.ts', 'checkout'], ['app/src/lib/membership.test.ts', 'Plus in the app, and its cancel (D-128)']], 'No refund policy; cancel does not yet reach Stripe.'],
+    ['Support, billing, refund and cancellation processes ready', 'building', [['app/src/lib/billing/checkout.test.ts', 'checkout'], ['app/src/lib/billing/cancel.test.ts', 'cancel reaches Stripe before it is recorded (D-132)']], 'The refund policy is a draft; failed-payment reminders are recorded, not sent.'],
     ['Company email, contact, careers, security, privacy and accessibility channels active', 'building', [['app/src/site/render.tsx', 'the contact, careers, security, privacy and accessibility routes']], 'No support address (DEP-09).'],
     ['Sales materials, pricing, SOW, DPA, MSA and SLA ready', 'designed', [['docs/trust/PILOT-AGREEMENT-OUTLINE.md', 'the outline'], ['docs/trust/SLA.md', 'the SLA outline']], 'No MSA.'],
     ['Trust Room and RFP response library ready', 'tested', [['supabase/trust-room.check.sql', 'the NDA-gated procurement room'], ['docs/HIGHER-ED-RFP-RESPONSE-LIBRARY.md', 'the library']], 'Not every Trust Room artifact exists; see the list.'],
@@ -768,7 +768,7 @@ export const JOURNEYS: readonly Journey[] = ([
   ['Institution admin', 'Configure tenant → roles → content → integrations → features → audit and support workflow', 'building', [['app/src/screens/console.test.tsx', 'the console']], 'Configuration is split between the console and the service role.'],
   ['Support team', 'Receive student-created support grant → diagnose → respond → close → audit access', 'tested', [['supabase/support-access.check.sql', 'the grant'], ['supabase/support-tickets.check.sql', 'the ticket']], 'None.'],
   ['Privacy user', 'Export personal data → revoke sharing → disconnect account → request deletion', 'tested', [['app/src/lib/export.test.ts', 'export'], ['app/src/lib/deleteaccount.test.ts', 'deletion']], 'None.'],
-  ['Finance customer', 'Upgrade or cancel membership → view invoice → manage payment method → retain data export rights', 'building', [['app/src/lib/membership.test.ts', 'Plus bought from the Account screen after a ticked consent (D-128)'], ['app/src/lib/billing/webhook.test.ts', 'the webhook']], 'Not tested end to end; cancel does not yet reach Stripe; no invoice view.'],
+  ['Finance customer', 'Upgrade or cancel membership → view invoice → manage payment method → retain data export rights', 'building', [['app/src/lib/membership.test.ts', 'Plus bought from the Account screen after a ticked consent (D-128)'], ['app/src/lib/billing/cancel.test.ts', 'cancel reaches Stripe (D-132)']], 'Not tested end to end with a real card; no invoice view.'],
 ] as readonly JRow[]).map(([user, steps, standing, evidence, gap], i) => ({ id: id('LC-JRN', i), item: user, user, steps, standing, evidence: ev(evidence), gap }));
 
 export const DOD_RULE = 'If the answer is “no” to any of those questions, the work is not complete yet.';

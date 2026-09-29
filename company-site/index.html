@@ -1889,7 +1889,7 @@ SPAN 1102 Spanish II, MW, 14:30-15:45, 3</textarea></label>
     <p class="crumb"><a href="#home">Home</a> / <a href="#pricing">Pricing</a> / Membership</p>
     <p class="eyebrow brass">Membership, renewal &amp; cancellation</p>
     <h1>Cancelling is as easy as signing up.</h1>
-    <p class="lede">Here's how plan management works in Semester, what happens when you cancel, and our refund terms, before you ever pay.</p>
+    <p class="lede">How Plus works in the app today, what happens when you cancel or a payment fails, and which terms are still being decided.</p>
   </div></section>
   <section class="blk rule" style="padding-top:40px"><div class="wrap grid-2" style="align-items:start">
     <div class="mock">
@@ -1905,8 +1905,8 @@ SPAN 1102 Spanish II, MW, 14:30-15:45, 3</textarea></label>
     <div>
       <p class="eyebrow">How cancellation works</p>
       <div class="steps" style="margin-top:14px;grid-template-columns:1fr">
-        <div class="step" style="border-right:0;border-bottom:1px solid var(--line-soft)"><span class="k">Click 1</span><h3 class="h4">Cancel membership</h3><p>In Settings → Membership. No phone call, no chat, no retention maze.</p></div>
-        <div class="step" style="border-right:0;border-bottom:1px solid var(--line-soft)"><span class="k">Click 2</span><h3 class="h4">Confirm</h3><p>We tell you the date Plus ends. Telling us why is optional.</p></div>
+        <div class="step" style="border-right:0;border-bottom:1px solid var(--line-soft)"><span class="k">Click 1</span><h3 class="h4">Cancel membership</h3><p>In the app, under Account → Membership. No phone call, no chat, no retention maze.</p></div>
+        <div class="step" style="border-right:0;border-bottom:1px solid var(--line-soft)"><span class="k">Click 2</span><h3 class="h4">Confirm</h3><p>We tell you the date Plus ends, and the cancellation reaches Stripe, so you are not charged again.</p></div>
         <div class="step" style="border-right:0"><span class="k">After</span><h3 class="h4">Your work stays</h3><p>You move to Free. Nothing is deleted. Export is offered, never required.</p></div>
       </div>
       <p class="fine" style="margin-top:12px">Try it: the illustration on the left walks through the flow in the app. It is an example; nothing here is charged or cancelled.</p>
@@ -1914,17 +1914,18 @@ SPAN 1102 Spanish II, MW, 14:30-15:45, 3</textarea></label>
   </div></section>
   <section class="blk rule" id="dunning"><div class="wrap">
     <div class="sec-head"><h2 style="font-size:32px">If a payment fails</h2><p class="muted">No surprises, and your data is never held hostage.</p></div>
-    <div class="steps"><div class="step"><span class="k">Day 0</span><h3 class="h4">Clear notice</h3><p>Email and in-app message saying what failed.</p></div><div class="step"><span class="k">Days 1–7</span><h3 class="h4">Retry &amp; reminder</h3><p>Automatic retries; update your card any time.</p></div><div class="step"><span class="k">Days 7–14</span><h3 class="h4">Grace period</h3><p>Plus keeps working.</p></div><div class="step"><span class="k">Day 14</span><h3 class="h4">Final notice</h3><p>The exact date Plus features pause.</p></div><div class="step"><span class="k">After</span><h3 class="h4">Back to Free</h3><p>Paid features pause. Your data, export and deletion stay available.</p></div></div>
+    <div class="steps"><div class="step"><span class="k">Day 0</span><h3 class="h4">Stripe tells you</h3><p>Stripe emails you that the payment failed. Update your card any time.</p></div><div class="step"><span class="k">Days 0–14</span><h3 class="h4">Retries &amp; grace</h3><p>Stripe retries the payment, and Plus keeps working for 14 days.</p></div><div class="step"><span class="k">Day 14</span><h3 class="h4">Plus pauses</h3><p>If it still has not been paid, Plus features pause.</p></div><div class="step"><span class="k">After</span><h3 class="h4">Back to Free</h3><p>Your data, export and deletion stay available. Paying later brings Plus back.</p></div></div>
+    <p class="fine" style="margin-top:12px">Semester's own reminders are recorded but not yet sent to you; the emails you receive come from Stripe.</p>
   </div></section>
   <section class="blk rule"><div class="wrap">
     <div class="sec-head"><h2 style="font-size:32px">Refund &amp; renewal terms</h2><p class="muted">Proposed terms, not in force. Final terms are published here before a live payment is taken.</p></div>
     <div class="rules">
-      <div><b>Renewal reminder</b>Annual plans get an email 7 days before renewal with the price and a cancel link.</div>
+      <div><b>Renewal reminder</b>Not built yet. A reminder before an annual plan renews is planned; until then, the renewal date is shown in the app.</div>
       <div><b>Annual refunds</b>Not decided yet. A full refund within 14 days of an annual purchase is one option in the draft refund policy, which counsel has not reviewed.</div>
-      <div><b>Monthly plans</b>Cancel any time; Plus lasts until the end of the month you paid for.</div>
+      <div><b>Cancelling</b>Cancel any time in the app. Plus lasts to the end of the period you paid for, and you are not charged again.</div>
       <div><b>Reactivation</b>Come back any time. Your plans and settings are where you left them.</div>
-      <div><b>Price changes</b>At least 30 days' notice, and never mid-term.</div>
-      <div><b>Institution access</b>If your school sponsors Semester, we tell you and stop charging you.</div>
+      <div><b>Price changes</b>Not decided yet. You tick a consent naming the price before you buy; how much notice a later price change gets is part of the draft policy.</div>
+      <div><b>Institution access</b>Not built yet. No school sponsors Semester, and how a paid Plus plan ends when one does is not decided.</div>
     </div>
   </div></section>
 </div>
@@ -4256,10 +4257,9 @@ SPAN 1102 Spanish II, MW, 14:30-15:45, 3</textarea></label>
 
   // ---------- membership cancel flow ----------
   const cx=document.getElementById("cx-flow");
-  document.getElementById("cx-start").addEventListener("click",()=>{cx.hidden=false;cx.innerHTML=`<div class="box" style="padding:18px"><p><b>Cancel Semester Plus?</b></p><p class="muted" style="font-size:14px;margin-top:6px">In the planned flow, Plus stays active until the end of the period you paid for. Then you move to Free. Nothing is deleted.</p>
-    <label for="cx-why" style="margin-top:12px">Why are you leaving? <span class="opt">optional</span><select id="cx-why"><option value="">Prefer not to say</option><option>Too expensive</option><option>Not using it enough</option><option>Missing a feature</option><option>My school provides it</option><option>Graduating</option></select></label>
+  document.getElementById("cx-start").addEventListener("click",()=>{cx.hidden=false;cx.innerHTML=`<div class="box" style="padding:18px"><p><b>Cancel Semester Plus?</b></p><p class="muted" style="font-size:14px;margin-top:6px">Plus stays active until the end of the period you paid for, and you are not charged again. Then you move to Free. Nothing is deleted.</p>
     <div class="ctas" style="margin-top:14px"><button class="btn btn-primary btn-sm" type="button" id="cx-confirm">Confirm cancellation</button><button class="btn btn-ghost btn-sm" type="button" id="cx-keep">Keep Plus</button></div></div>`;
-    document.getElementById("cx-confirm").onclick=()=>{cx.innerHTML=`<div class="ok">Preview only: nothing was cancelled, because paid plans aren't on sale yet. In the planned flow you'd see the date Plus ends, get a confirmation email, and could <a class="link" href="#preferences">export your data</a> or reactivate any time.</div>`};
+    document.getElementById("cx-confirm").onclick=()=>{cx.innerHTML=`<div class="ok">Preview only: nothing was cancelled here. In the app you'd see the date Plus ends, the cancellation would reach Stripe so you are not charged again, and you could export your data or buy Plus again any time.</div>`};
     document.getElementById("cx-keep").onclick=()=>{cx.hidden=true};document.getElementById("cx-confirm").focus()});
 
   // ---------- customer portal stages ----------

@@ -34,7 +34,7 @@ how you use Semester, and information whose job is done.
 | Reports you made, after you delete your account | Kept, with your name removed |
 | Unfinished sign-ups | 30 days |
 | Messages sent through the company site's forms | [DECIDE: no period is set yet] |
-| Payment records | [DECIDE with counsel: typically seven years; must be set before the first live charge] |
+| Payment records (individual plans) | Seven years after the end of the year each was made; never while the subscription is live. School billing follows the school's contract |
 | Database backups | 7 days after each daily backup [VERIFY on the provider dashboard] |
 
 For school deployments, your school's agreement sets retention for records it
