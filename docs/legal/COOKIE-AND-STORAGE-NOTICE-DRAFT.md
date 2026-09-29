@@ -35,8 +35,9 @@ On the company site, your choices on its preferences panel and your progress
 on its checklists are kept in local storage on your device. For each visit it
 also keeps, in session storage, the campaign tags in the page address (if
 any), the page you landed on, and the address of the site that linked you
-there; these are sent only with a form you choose to send, and are gone when
-the tab closes.
+there. They are sent only with a form you choose to send, and are then kept
+with your message (see the retention draft); your browser's copy is gone
+when the tab closes.
 
 ## 3. Analytics
 

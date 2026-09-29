@@ -2754,6 +2754,13 @@ standing is held to the kind of file it cites.
   (`docs/trust/DPA-CHECKLIST.md`), and the page now says students can leave
   with their device copy today and an institution's exit is still being
   built.
+- **Codex's review of this change found two more, both right.** The site's
+  cookie copy said form attribution stayed in the browser; the form sends it
+  and it is kept with the message. And the procurement questionnaire still
+  answered "blocking issues acknowledged within 1 business day". Both are
+  corrected, and so is a third found while checking: every form footer said a
+  message is kept "up to 24 months", but `site_leads` has no purge
+  (`RETENTION.md`); it now says no deletion period is set.
 - **Not written here, because the repository cannot write them:** the MSA,
   counsel's review of every policy, a VPAT, customer data migration, and
   anything with an institution's name on it. Each is a row that says so.
