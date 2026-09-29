@@ -646,7 +646,7 @@ begin
   perform pg_temp.refused_with('starting with a metric that has no baseline', sales,
     format($q$update public.gtm_pilots set status = 'active' where id = %L$q$, pilot), 'not ready: metric_baseline');
   perform pg_temp.run(sales, format($q$update public.gtm_pilot_metrics set baseline = 'kickoff survey' where pilot_id = %L and baseline is null$q$, pilot));
-  -- Every pilot runs exactly 26 weeks (D-131): 109 days, inside the old 60–120, is refused.
+  -- Every pilot runs exactly 26 weeks (D-132): 109 days, inside the old 60–120, is refused.
   perform pg_temp.run(sales, format($q$update public.gtm_pilots set end_date = '2027-04-30', conversion_date = '2027-05-15' where id = %L$q$, pilot));
   perform pg_temp.refused_with('a pilot that is not 26 weeks', sales,
     format($q$update public.gtm_pilots set status = 'active' where id = %L$q$, pilot), 'not ready: duration');

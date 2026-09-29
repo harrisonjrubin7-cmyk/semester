@@ -55,7 +55,7 @@ an artifact under `docs/evidence/`.
 
 Nothing here changes a recorded decision. Each is put to the seat that owns it.
 
-None is open. The four this register found — the Plus price, the pilot length, the statement’s “payments” and the first-year document’s name — the owner settled (D-131).
+None is open. The four this register found — the Plus price, the pilot length, the statement’s “payments” and the first-year document’s name — the owner settled (D-132).
 
 ## The register
 
@@ -128,7 +128,7 @@ None is open. The four this register found — the Plus price, the pilot length,
 | IMP-003 | Integration sandbox and mapping versions with rollback | tested | `app/src/lib/integration/quality.test.ts` — propose, simulate, approve, roll back | docs/SYNC-SIMULATION-SANDBOX.md still says nothing is built. | R22, M8, L9 | — |
 | IMP-004 | Content, onboarding and launch templates | tested | `app/src/lib/launch/content.test.ts` — the launch package<br>`docs/launch/STUDENT-QUICK-START.md` — ready | Faculty and advisor quick starts and the ambassador kit are not started. | M8, L9 | — |
 | IMP-005 | Guided tenant setup and an SSO wizard | designed | `docs/SSO-TENANT-ONBOARDING.md` — a checklist<br>`supabase/tenant-sso-policy.check.sql` — the policy the wizard would write | No wizard; the SSO tables have no screen. | M8, L9, E | `oneos:ic-tenant` |
-| IMP-006 | Every pilot runs 26 weeks: the Registration and Path Pilot length | tested | `app/src/lib/gtm/pilot.ts` — PILOT_WEEKS<br>`app/src/lib/gtm/pilot.test.ts` — exactly 182 days, or refused | The owner set it (D-131). The offer itself — 25–100 students, the explicit exclusions, the price sheet — is not packaged as one document. | E, P, V | — |
+| IMP-006 | Every pilot runs 26 weeks: the Registration and Path Pilot length | tested | `app/src/lib/gtm/pilot.ts` — PILOT_WEEKS<br>`app/src/lib/gtm/pilot.test.ts` — exactly 182 days, or refused | The owner set it (D-132). The offer itself — 25–100 students, the explicit exclusions, the price sheet — is not packaged as one document. | E, P, V | — |
 | IMP-007 | Pilot dashboard | building | `app/src/lib/gtm/pilot.ts` — readiness and verdict | No screen reads the pilot tables. | M8, L9 | — |
 | IMP-008 | Institution data migration: plans, catalog, directories, events | not-started | `docs/market-readiness/MIGRATION_PLAYBOOK.md` — customer data migration does not exist | Student-side import only; no SIS, ERP, Google or Microsoft mapping template. | R22 | — |
 | IMP-009 | Parallel-run mode | not-started | — | Named once in docs/INSTITUTIONAL_REQUIREMENTS.md; nothing designs it. | R22 | — |

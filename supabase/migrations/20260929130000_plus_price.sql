@@ -1,4 +1,4 @@
--- Semester — Plus costs $7.99 a month or $59 a year (D-131).
+-- Semester — Plus costs $7.99 a month or $59 a year (D-132).
 --
 -- Safe to run again; each statement changes nothing once it has run.
 --

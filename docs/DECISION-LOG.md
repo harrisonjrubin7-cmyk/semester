@@ -2379,7 +2379,7 @@ for the upgrade screen to be built and deployed.
   classes are constrained; they are not. B03 in the definer register moves
   to held.
 
-## D-130 · Seven briefs on leading the market are held to the tree as one register, and the site refuses the five overclaims they name
+## D-131 · Seven briefs on leading the market are held to the tree as one register, and the site refuses the five overclaims they name
 
 **Decided 29 Sep 2026.** Seven briefs of 29 September ask what else would
 make Semester the leader and the benchmark: the operating disciplines, the
@@ -2421,11 +2421,11 @@ under `docs/expansion/` as supplied.
 - **Not changed.** K–12: absent, neither planned nor refused, behind COPPA-1.
   The Plus price, the pilot length, the statement's "payments" and the name of
   the first-year measures document were open here too, and the owner settled
-  all four (D-131).
+  all four (D-132).
 
-## D-131 · Plus is $7.99 a month or $59 a year everywhere, every pilot runs 26 weeks, the statement no longer lists payments, and the company's first-year measures are named for what they are
+## D-132 · Plus is $7.99 a month or $59 a year everywhere, every pilot runs 26 weeks, the statement no longer lists payments, and the company's first-year measures are named for what they are
 
-**Decided 29 Sep 2026, by the owner.** D-130 found four things left open
+**Decided 29 Sep 2026, by the owner.** D-131 found four things left open
 between the briefs and the tree; the owner settled each.
 
 - **Plus.** `plans.ts` printed $7.99 and $59 on the pricing page, while the

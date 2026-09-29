@@ -50,7 +50,7 @@ describe('one operating system', () => {
     for (const h of ALL) for (const e of h.evidence) expect(supplied.has(e.path), `${h.id} cites a supplied PDF`).toBe(false);
     expect(HEADLINE).toBe('One Operating System for University Life.');
     expect(STATEMENT).toMatch(/^Semester is the unified operating system/);
-    // Semester runs none of these; naming one as a part of the platform claims to replace it (D-131).
+    // Semester runs none of these; naming one as a part of the platform claims to replace it (D-132).
     expect(STATEMENT, 'the statement names a system of record Semester does not run').not.toMatch(/\b(payments?|billing|financial aid|housing|health records|registration execution)\b/i);
     expect(MESSAGES.map((m) => m.audience)).toEqual(['Supporting paragraph', 'Student-facing', 'Institution-facing']);
     expect(MESSAGES[0].text, 'the supporting paragraph says designed as, not is').toMatch(/designed as one connected/);

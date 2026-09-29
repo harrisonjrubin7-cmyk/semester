@@ -94,7 +94,7 @@ What the repository also runs on, and the brief’s list did not name.
 | One-system platform grammar | [`docs/ONE-SYSTEM-PLATFORM-GRAMMAR.md`](docs/ONE-SYSTEM-PLATFORM-GRAMMAR.md) | current | `product` | 1 | 2026-09-28 | 2026-12-28 | — | `D-112` |
 | One operating system | [`docs/ONE-OPERATING-SYSTEM.md`](docs/ONE-OPERATING-SYSTEM.md) | current | `product` | 1 | 2026-09-29 | 2026-12-28 | — | `D-125`, `D-003` |
 | Security Definer and RLS register | [`docs/DEFINER-RLS-REGISTER.md`](docs/DEFINER-RLS-REGISTER.md) | current | `security` | 1 | 2026-09-29 | 2026-12-28 | — | `D-127` |
-| Reinforcement register | [`docs/REINFORCEMENT-REGISTER.md`](docs/REINFORCEMENT-REGISTER.md) | current | `founder` | 1 | 2026-09-29 | 2026-10-28 | — | `D-130` |
+| Reinforcement register | [`docs/REINFORCEMENT-REGISTER.md`](docs/REINFORCEMENT-REGISTER.md) | current | `founder` | 1 | 2026-09-29 | 2026-10-28 | — | `D-131` |
 | SaaS launch kit | [`docs/SAAS-LAUNCH-KIT.md`](docs/SAAS-LAUNCH-KIT.md) | current | `founder` | 1 | 2026-09-28 | 2026-10-28 | — | `D-113`, `D-009` |
 | Operational reality register | [`docs/OPERATIONAL-REALITY-REGISTER.md`](docs/OPERATIONAL-REALITY-REGISTER.md) | current | `founder` | 1 | 2026-09-28 | 2026-10-28 | — | `D-113` |
 | Compliance crosswalk | [`docs/trust/COMPLIANCE-CROSSWALK.md`](docs/trust/COMPLIANCE-CROSSWALK.md) | current | `security` | 1 | 2026-09-28 | 2026-10-28 | — | `D-115` |
