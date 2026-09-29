@@ -783,7 +783,7 @@ export const SOURCES: readonly Source[] = [
     supersedes: [],
     decisions: ['D-113', 'D-009'],
     alsoRead: ['docs/operating-model/COMMERCIAL-GOVERNANCE.md', 'docs/trust/PILOT-AGREEMENT-OUTLINE.md', 'docs/LAUNCH-DECISIONS.md'],
-    note: 'Rendered from app/src/lib/launchkit.ts: the company around the product — entity and formation, nine insurance coverages, the pilot agreement package and term sheet held to the pilot and deal-desk rules, twelve modules and the price bands beside the deal desk’s proposed minimums, the go-to-market plan on the sales stages, the governance council charter on the seats that already exist, and the first thirty days. A crosswalk, not a price book or a contract: nothing in it may be signed. The entity is held to the owner’s attestation of an LLC; the pilot term is held to the code’s 60–120 days.',
+    note: 'Rendered from app/src/lib/launchkit.ts: the company around the product — entity and formation, nine insurance coverages, the pilot agreement package and term sheet held to the pilot and deal-desk rules, twelve modules and the price bands beside the deal desk’s proposed minimums, the go-to-market plan on the sales stages, the governance council charter on the seats that already exist, and the first thirty days. A crosswalk, not a price book or a contract: nothing in it may be signed. The entity is held to the owner’s attestation of an LLC; the pilot term is held to the code’s 26 weeks (D-132).',
   },
   {
     id: 'operational-reality',
