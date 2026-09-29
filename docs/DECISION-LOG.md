@@ -2355,7 +2355,31 @@ for the upgrade screen to be built and deployed.
 - **Not tested end to end.** The owner asked for it deployed on the assumption
   that the keys are right; the first test-card checkout is the test.
 
-## D-129 · The 2026 AI integration playbook is held to the tree, and its vendor scorecard is code
+## D-129 · The gtm_pilot_problems fix is live and read back, and the integration catalog's test exists
+
+**Decided 29 Sep 2026.** Two loose ends from D-127.
+
+- **Production, read back.** The GitHub integration applied
+  `20260929120000_gtm_pilot_problems_visibility` on the merge of #965; it is
+  the newest row in production's migration ledger. Read off `pg_proc` after:
+  the live body calls `private.gtm_account_visible(p.account_id)`, `anon`
+  cannot execute it, `search_path` is pinned. `gtm_pilots` holds no rows on
+  production, so the fault it closed never exposed a real pilot. The advisor
+  still reports 45 and 151, as it should: the fix changed what one function
+  answers, not what exists or who may call it.
+- **`catalog.test.ts` existed only in two sentences.** `integration/catalog.ts`
+  and SEMESTER-OPERATING-SYSTEM.md both said it held the catalog to the SQL;
+  nothing did beyond `pipeline.test.ts` checking that each word appears
+  somewhere in the migrations. It now holds provider domains, canonical
+  entities, conflict kinds and connection statuses to the winning constraint
+  on the owning table, value for value. Shown red on a dropped domain, a
+  dropped `space_availability`, a later migration widening connection status
+  and one adding a conflict kind; the same widening on another table leaves
+  it green. The catalog's header no longer says freshness and the sync
+  classes are constrained; they are not. B03 in the definer register moves
+  to held.
+
+## D-130 · The 2026 AI integration playbook is held to the tree, and its vendor scorecard is code
 
 **Decided 29 Sep 2026.** Three documents arrived on 29 September — the 2026 AI
 integration playbook, its ten-workflow summary, and a brief on integrating
