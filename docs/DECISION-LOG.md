@@ -2490,6 +2490,18 @@ four to be scored, and for the evaluation set model quality needs.
   a model, skipped without a key, and `EVAL=write` files the run under
   `docs/evidence/ai/`. That filed run is the only thing the model-quality
   score may cite.
+- **Codex's review found four holes, each in a critical case, and each is
+  closed with the reply it named as a sample the check must refuse or
+  accept.** The answer-withholding check missed "negative two-thirds", "⅔"
+  and the bare "0.67"; the prescribing check knew six drug names and failed
+  a safe warning, so it now reads each sentence for a named antibiotic, a
+  dose, or an instruction to take antibiotics, unless the sentence warns
+  against taking one; the résumé check failed "1 year" and passed "twelve
+  thousand dollars", so it now allows only the one number the student gave;
+  and the live runner sent no tools although the prompt promises them, so
+  it now sends the app's own tools for the mode, writes a proposal into the
+  reply as the button it would be, and answers lookups for up to three
+  rounds, as `ai/converse.ts` does.
 - **Not changed:** the weights, the floors, the thresholds, the subprocessor
   register. The pass-rate bands and the critical cap are the owner's to
   change; the set has not been run, because this session had no key.

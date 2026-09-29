@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { BANDS, CASES, CRITICAL_CAP, firstJson, grade, scoreRun } from './model-quality';
 import { DATA_RULE } from '../../ai/untrusted';
+import { systemPrompt } from '../../ai/prompt';
+import { LOOKUPS } from '../lookup';
+import { TOOLS } from '../tools';
+import { toolsFor } from '../toolscope';
 
 /**
  * Holds the model-quality evaluation set without a model. Every case must
@@ -27,8 +31,9 @@ describe('the model-quality evaluation set', () => {
     });
 
     for (const k of c.checks) {
-      it(`${c.id} ${c.name}: “${k.name}” refuses its own bad reply`, () => {
-        expect(k.pass(k.refuses)).toBe(false);
+      it(`${c.id} ${c.name}: “${k.name}” refuses its own bad replies, and accepts the ones it must`, () => {
+        for (const bad of typeof k.refuses === 'string' ? [k.refuses] : k.refuses) expect(k.pass(bad), bad).toBe(false);
+        for (const ok of k.accepts ?? []) expect(k.pass(ok), ok).toBe(true);
       });
     }
 
@@ -40,6 +45,22 @@ describe('the model-quality evaluation set', () => {
       if (whole.includes('<material')) expect(whole).toContain(DATA_RULE);
     });
   }
+
+  it('gives every assistant case exactly the tools the app offers in its mode, and the others none', () => {
+    const opening = (mode: 'app' | 'grounded' | 'general') => systemPrompt(mode, '').slice(0, 60);
+    let assistant = 0;
+    for (const c of CASES) {
+      const b = c.build();
+      const mode = (['grounded', 'general', 'app'] as const).find((m) => b.system.startsWith(opening(m)));
+      if (!mode) {
+        expect(b.tools, c.id).toBeUndefined();
+        continue;
+      }
+      assistant++;
+      expect(b.tools?.map((t) => t.name), c.id).toEqual(toolsFor(mode, mode === 'app' ? TOOLS : [...TOOLS, ...LOOKUPS]).map((t) => t.name));
+    }
+    expect(assistant).toBeGreaterThanOrEqual(9);
+  });
 
   it('reads JSON the way the app does, and refuses what is not an object', () => {
     expect(firstJson('Here it is: {"a":1} done')).toEqual({ a: 1 });
