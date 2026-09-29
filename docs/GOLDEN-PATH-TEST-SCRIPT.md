@@ -45,7 +45,16 @@ test.
 - Plan (step 4): the course's deadline marked on its day on the calendar,
   and something added to that day;
 - My Path (step 4): path details saved and shown on the Path Snapshot;
-- the Guide and Support;
+- a deadline's own page (step 6, `#/item/<id>`): the syllabus sentence it was
+  read from, its Source & details, and "Work for this". This is the
+  source-linked workspace every build has; the AI Toolkit's workspace is
+  behind build flags a production build leaves off, and is tied to no
+  deadline;
+- the Guide, and "Describe the problem" naming whose question it is (step 7).
+  A second CI run builds with `VITE_HUMAN_HELP` on and goes on to the request
+  to a person: exactly what would be sent is shown, carrying the question;
+  signed out, nothing on the screen sends, and nothing is pressed;
+- Support;
 - completion;
 - resume after a reload and in a second tab;
 - a restore from the backup file into a fresh browser context.
@@ -55,12 +64,11 @@ in, and resume on a second device through the account — are
 `npm run smoke:sync` (`app/scripts/account-sync.mjs`, #972), in `ci.yml` as
 the `account-sync` job against a local Supabase.
 
-To finish the journey, that smoke needs:
-
-| Step | Addition | Needs |
-| --- | --- | --- |
-| 6 | Open one assignment workspace and assert its Provenance section | The AI Toolkit flags set in the smoke's build |
-| 7 | Reach Get help and see the preview of what will be sent, **without sending** | harrisonjrubin7-cmyk/semester#791 merged, `VITE_HUMAN_HELP` set |
+Every step in the table above is now walked by one of the two. What is
+proved against a stand-in rather than production: the model's reply to a
+syllabus (stubbed), the account service (a local Supabase), and human help
+(a build with `VITE_HUMAN_HELP` on — whether the deployed build has it on is
+a repository variable, not something this repository can read).
 
 ## At each step, the smoke also asserts
 
