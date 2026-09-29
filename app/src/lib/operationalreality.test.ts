@@ -125,7 +125,7 @@ describe('the operational reality register', () => {
         for (const id of f.ids) expect.soft(REGISTER_IDS.has(id), `${f.scenario} → ${id}`).toBe(true);
         if (f.runbook) expect.soft(existsSync(at(f.runbook)), `${f.scenario} → ${f.runbook}`).toBe(true);
       }
-      expect(FAILURES.filter((f) => f.ids.length === 0).map((f) => f.scenario)).toEqual(['Storage or upload outage']);
+      expect(FAILURES.filter((f) => f.ids.length === 0).map((f) => f.scenario)).toEqual([]);
       expect(GAME_DAYS.every((g) => g.held === null), 'a game day has been held; re-read the recovery rule').toBe(true);
     });
   });

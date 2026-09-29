@@ -8,7 +8,7 @@ runs on every change; a runbook or a design does not count, and every guard
 cited must exist. Most guards were written for a narrower question than the
 case asks, and the note says what each proves and what it does not.
 
-**31 of 80 cases have a guard; 49 are owed.** Of the plan's fourteen
+**31 of 81 cases have a guard; 50 are owed.** Of the plan's fourteen
 especially important cases, 6 have nothing: EC-DQ-01, EC-LMS-02, EC-LMS-04, EC-LMS-07, EC-AI-01, EC-GOV-02.
 Most owed cases wait on something that does not exist yet (an assessment
 engine, billing, a live SIS), and the note says which.
@@ -84,7 +84,7 @@ engine, billing, a live SIS), and the note says which.
 
 ## Integrations and infrastructure
 
-4 of 11 guarded.
+4 of 12 guarded.
 
 | ID | Case | Guard | What it proves, and what it does not |
 | --- | --- | --- | --- |
@@ -94,11 +94,12 @@ engine, billing, a live SIS), and the note says which.
 | EC-INF-04 | API provider returns partial success. | owed | No connector writes to an external system yet. |
 | EC-INF-05 | Queue consumer processes an event twice. | `app/src/lib/integration/pipeline.test.ts` | Idempotency keys make the second processing a no-op in the pipeline model. The deployed integration-tick function is not exercised. |
 | EC-INF-06 | Database migration locks a critical table. | owed | Migration order against production's ledger is enforced (app/src/lib/migrationorder.test.ts); lock risk is not modelled: maturity system 5. |
-| EC-INF-07 | Backup completes but restore validation fails. **(important)** | `supabase/restore.sh` | The rehearsal compares schema and row counts after a local restore. It is not in CI and has never run against production: R-10. |
+| EC-INF-07 | Backup completes but restore validation fails. **(important)** | `supabase/restore.sh` | The rehearsal dumps, restores into an empty database and compares six ways, on every change in CI (“Rehearse a backup and restore”). It has never run against production: R-10. |
 | EC-INF-08 | Region or provider outage. | owed | Single region, single provider; DR is an outline: SRE-006. |
 | EC-INF-09 | DNS or domain issue. | owed | The status page is served from the same host, so it would go with it. |
 | EC-INF-10 | Email provider delay sends deadline reminders late. | owed | Reminders are on-device notifications; no email reminders exist to be late. |
 | EC-INF-11 | Feature flag is misconfigured in production. **(important)** | `app/src/lib/pagesdemo.test.ts` | The one that happened: a repository variable left set turned the live site into the demo. The deploy now ignores that switch and a test runs the workflow's own script to prove it. Tenant flags in tenant_feature_policy have kill switches (flags.test.ts) and no baseline to drift from. |
+| EC-INF-12 | Object storage or upload outage. | owed | Only community media touches storage: uploadImage (app/src/community/client.ts) reserves a row, uploads, and fails with a named reason if the bucket refuses; the reservation is swept after a day (community.sql), and that sweep has no check. A signed-URL failure is dropped and the image renders without an address. Everything else — the source locker, exports, backups — lives on the device or in Postgres, so a storage outage cannot lose a student’s work. No test exercises the outage: found by the operational reality register. |
 
 ## Commercial and customer operations
 
