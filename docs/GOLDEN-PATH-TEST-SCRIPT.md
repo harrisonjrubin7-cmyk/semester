@@ -37,23 +37,30 @@ test.
 `ci.yml`. It walks the signed-out app at 390 px and 1280 px through:
 - first run;
 - the account step, declined;
+- a course added from a pasted syllabus: built, its dates reviewed and
+  approved, saved, and listed on the course. The one model request is
+  answered by a stub that refuses unless it is sent the syllabus, and whose
+  reply quotes it verbatim, so the app's quote check keeps the dates;
 - an action made and seen on Today;
+- Plan (step 4): the course's deadline marked on its day on the calendar,
+  and something added to that day;
+- My Path (step 4): path details saved and shown on the Path Snapshot;
 - the Guide and Support;
 - completion;
 - resume after a reload and in a second tab;
 - a restore from the backup file into a fresh browser context.
 
-It is the regression test for the signed-out journey. Steps 1 and 9 still
-need an account, as below.
+It is the regression test for the signed-out journey. Steps 1 and 9 — sign
+in, and resume on a second device through the account — are
+`npm run smoke:sync` (`app/scripts/account-sync.mjs`, #972), in `ci.yml` as
+the `account-sync` job against a local Supabase.
 
 To finish the journey, that smoke needs:
 
 | Step | Addition | Needs |
 | --- | --- | --- |
-| 1 | Sign in with a seeded test account, not the signed-out app | A disposable Supabase project or local stack; `.claude/skills/run` covers the signed-out case only |
 | 6 | Open one assignment workspace and assert its Provenance section | The AI Toolkit flags set in the smoke's build |
 | 7 | Reach Get help and see the preview of what will be sent, **without sending** | harrisonjrubin7-cmyk/semester#791 merged, `VITE_HUMAN_HELP` set |
-| 9 | Reload in a second browser context on the same account and find step 5's state | The step 1 account. The existing reload check proves one device only |
 
 ## At each step, the smoke also asserts
 

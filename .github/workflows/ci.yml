@@ -375,8 +375,11 @@ jobs:
 
       # The two smokes above open screens; this one uses them, in order. One
       # student's first session against the same served build: the first run
-      # walked (the account step asserted and declined, never submitted), an
-      # action made on Personal and seen on Today, the Guide and Support,
+      # walked (the account step asserted and declined, never submitted), a
+      # course added from a pasted syllabus (its one model reply stubbed — the
+      # script says what that does and does not prove), an action made on
+      # Personal and seen on Today, the deadline on Plan and something added
+      # to its day, path details saved on My Path, the Guide and Support,
       # the action ticked, resumed after a reload and in a second tab, and
       # carried to a fresh browser context through the backup file. It does
       # not sign in, so account-synced resume is not what it proves — the
