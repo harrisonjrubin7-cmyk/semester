@@ -62,7 +62,7 @@ Production (`lzrqvlugnawcgywkhqlz`), 2026-09-29, read-only, through the advisor 
 | `claim_referral` | `auth.uid()` | `20260921002623_referrals.sql` |
 | `claim_school` | `auth.uid()` | `20260921170000_schools.sql` |
 | `close_my_ticket` | `auth.uid()` | `20260928210000_support_tickets.sql` |
-| `contribute_course_plan` | `auth.uid()`, `private.school_of` | `20260928305000_course_demand_forecasting.sql` |
+| `contribute_course_plan` | `auth.uid()`, `private.school_of` | `20260929350000_plan_save_serialized.sql` |
 | `create_community` | `auth.uid()`, `private.has_capability`, `private.verified_student`, `private.school_of` | `20260928032000_community.sql` |
 | `create_community_post` | `auth.uid()`, `private.community_role` | `20260928032000_community.sql` |
 | `create_study_session` | `auth.uid()`, `private.community_role` | `20260928032000_community.sql` |
@@ -96,7 +96,7 @@ Production (`lzrqvlugnawcgywkhqlz`), 2026-09-29, read-only, through the advisor 
 | `request_mentor` | `auth.uid()`, `private.school_of`, `private.in_cohort` | `20260928021700_mentor_rosters.sql` |
 | `send_help_request` | `auth.uid()`, `private.school_of` | `20260927233000_help_request_review_fixes.sql` |
 | `start_organization` | `auth.uid()`, `private.verified_student`, `private.school_of` | `20260921230000_organizations.sql` |
-| `stop_contributing` | `auth.uid()` | `20260928305000_course_demand_forecasting.sql` |
+| `stop_contributing` | `auth.uid()` | `20260929350000_plan_save_serialized.sql` |
 | `submit_course_review` | `auth.uid()`, `private.verified_student`, `private.school_of` | `20260926150000_expansion_roles_and_features.sql` |
 | `volunteer_attest` | `auth.uid()` | `20260928032000_community.sql` |
 | `withdraw_help_request` | `auth.uid()` | `20260927233000_help_request_review_fixes.sql` |

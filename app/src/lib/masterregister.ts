@@ -216,8 +216,8 @@ export const REGISTER: readonly Requirement[] = [
     validation: 'Flag test report, rollback drill',
     severity: 'P0',
     status: 'tested',
-    evidence: [{ path: 'app/src/lib/flags.ts', shows: 'Evaluator: kill switch, environment, tenant, scope, capability, role, course, user; release type' }, { path: 'app/src/lib/flags.test.ts', shows: 'Tests evaluation order and registry parity' }, { path: 'supabase/integration-control-plane.check.sql', shows: 'SQL tests over tenant_feature_policy/kill switch and audit' }, { path: 'docs/FEATURE-FLAG-REGISTRY.md', shows: 'Human registry; audit via tenant_policy_audit_event' }],
-    gap: 'No cohort scope exists. Kill switches never engaged against production; no rollback drill performed. Needs cohort targeting, a flag test report and a recorded rollback drill.',
+    evidence: [{ path: 'app/src/lib/flags.ts', shows: 'Evaluator: kill switch, environment, tenant, scope, capability, role, cohort, course, user; release type' }, { path: 'supabase/feature_cohorts.check.sql', shows: 'Cohort membership written only by tenant:configure, never deleted; feature_cohort_allows admits live members only' }, { path: 'app/src/lib/flags.test.ts', shows: 'Tests evaluation order and registry parity' }, { path: 'supabase/integration-control-plane.check.sql', shows: 'SQL tests over tenant_feature_policy/kill switch and audit' }, { path: 'docs/FEATURE-FLAG-REGISTRY.md', shows: 'Human registry; audit via tenant_policy_audit_event' }],
+    gap: 'Kill switches never engaged against production; no rollback drill performed. Needs a flag test report and a recorded rollback drill.',
   },
   {
     id: 'PRG-008',

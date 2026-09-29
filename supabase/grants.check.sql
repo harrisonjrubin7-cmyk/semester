@@ -177,6 +177,9 @@ declare
     -- a caller can resolve only policy rows from their verified school.
     'effective_ai_policy(want_tenant text, want_user uuid)',
     'feature_state(want_capability text, want_tenant text)',
+    -- 20260929340000_feature_cohorts.sql: security invoker, no user parameter;
+    -- it answers for the caller from rows their own RLS already shows them.
+    'feature_cohort_allows(want_capability text, want_tenant text)',
     -- A student-created, seven-day maximum grant is checked again on every
     -- aggregate support read. The deletion helper removes grants where the
     -- caller was either side; immutable pseudonymous events remain.

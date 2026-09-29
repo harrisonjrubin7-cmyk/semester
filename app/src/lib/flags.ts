@@ -11,7 +11,8 @@
  * command sets out, and the first step that says no is the answer:
  *
  *   kill switch → environment → tenant entitlement → connection approval
- *   → scope approval → capability → role policy → data classification
+ *   → scope approval → capability → role policy → cohort policy
+ *   → data classification
  *   → course/assignment rule → user eligibility → allowed
  *
  * It never throws and never answers "allowed" for a key it does not know.
@@ -29,7 +30,7 @@ export type FlagType =
   | 'safety'
   | 'writeback';
 
-export type FlagScope = 'global' | 'environment' | 'tenant' | 'role' | 'course' | 'assignment' | 'user';
+export type FlagScope = 'global' | 'environment' | 'tenant' | 'cohort' | 'role' | 'course' | 'assignment' | 'user';
 
 export type KillSwitchKey =
   | 'kill.integration_sync'
@@ -326,12 +327,17 @@ export interface FlagContext {
   now: Date;
   killSwitches: readonly KillSwitchRow[];
   /** `tenant_feature_policy` rows for this tenant, by key. Absent means off. */
-  tenantPolicy: Readonly<Record<string, { state: FeatureState; permittedRoles?: readonly string[] }>>;
+  tenantPolicy: Readonly<Record<string, { state: FeatureState; permittedRoles?: readonly string[]; permittedCohorts?: readonly string[] }>>;
   connection?: { publicId: string; approved: boolean; status: string } | null;
   scopes?: readonly ScopeGrant[];
   /** Capabilities *verified* over this tenant — never a role picker. */
   capabilities: readonly string[];
   role?: string;
+  /**
+   * The release cohorts the caller is a live member of at this school
+   * (`feature_cohort_members`, removed rows excluded). Absent is none.
+   */
+  cohorts?: readonly string[];
   classification?: DataClass;
   /** A course or assignment rule that applies, when there is one. */
   courseRule?: { allowed: boolean } | null;
@@ -348,6 +354,7 @@ export type FlagStep =
   | 'scope'
   | 'capability'
   | 'role_policy'
+  | 'cohort_policy'
   | 'classification'
   | 'course_rule'
   | 'user_eligibility'
@@ -426,6 +433,13 @@ export function evaluateFlag(key: string, ctx: FlagContext): FlagDecision {
   const permitted = ctx.tenantPolicy[key]?.permittedRoles ?? [];
   if (permitted.length > 0 && (!ctx.role || !permitted.includes(ctx.role))) {
     return deny('role_policy', 'This school has limited this feature to other roles.');
+  }
+
+  // 7b. Cohort policy: a release scope, never an authority. It narrows who
+  // sees what the steps above allowed; it cannot widen anything.
+  const cohorts = ctx.tenantPolicy[key]?.permittedCohorts ?? [];
+  if (cohorts.length > 0 && !cohorts.some((c) => ctx.cohorts?.includes(c))) {
+    return deny('cohort_policy', 'This school has limited this feature to a release cohort.');
   }
 
   // 8. Data classification.

@@ -108,7 +108,7 @@ describe('the release-certification register', () => {
     const d = goDecision();
     expect(d.go).toBe(false);
     expect(counts()).toMatchObject({ designed: 4, built: 10, internally_verified: 0, go_certified: 0 });
-    expect(gateCounts()).toEqual({ passed: 3, partial: 20, owed: 5 });
+    expect(gateCounts()).toEqual({ passed: 3, partial: 21, owed: 4 });
     // Thirteen P0 gate items open, fourteen domains unverified, twelve seats unsigned.
     expect(d.blockers.filter((b) => /^[A-Z]-\d/.test(b))).toHaveLength(13);
     expect(d.blockers.filter((b) => b.endsWith('not internally verified.'))).toHaveLength(DOMAINS.length);

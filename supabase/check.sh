@@ -261,6 +261,17 @@ grant usage on schema auth, public to anon, authenticated;
 grant select, insert on auth.users to anon, authenticated;
 SQL
 
+# Another script's turn at the same database, instead of the suites. `load.sh`
+# uses it so the load scenarios run against exactly what the checks see — the
+# same major, the same stub, every migration — without a second copy of the
+# setup above to drift from this one. The sourced script has `psql`, `$bindir`,
+# `$work` and `$port`, and its exit status is this script's.
+if [ -n "${SEMESTER_CHECK_THEN:-}" ]; then
+  # shellcheck source=/dev/null
+  . "$SEMESTER_CHECK_THEN"
+  exit $?
+fi
+
 echo "· checks"
 failed=0
 for c in "${suites[@]}"; do

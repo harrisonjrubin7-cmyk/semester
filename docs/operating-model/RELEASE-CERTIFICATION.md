@@ -16,7 +16,7 @@ Designed → Built → Internally verified → Production-certified GO → Pilot
 
 ## The decision: NOT GO
 
-**39 blockers.** GO is computed from the gate, the domains and the council below, never declared. Of the 28 gate items, 3 have passed, 20 are partial and 5 are owed.
+**39 blockers.** GO is computed from the gate, the domains and the council below, never declared. Of the 28 gate items, 3 have passed, 21 are partial and 4 are owed.
 
 - P-1 is partial: Every planned module has UI, service layer, schema, API and permissions.
 - T-2 is partial: Tenant-isolation, RLS and SECURITY DEFINER tests.
@@ -279,7 +279,7 @@ Items marked **P0** are conditions of a full GO: while one is open the answer is
 | --- | --- | --- | --- | --- | --- |
 | P-1 | Every planned module has UI, service layer, schema, API and permissions. | partial | P0 | [`app/src/lib/governance/certification.ts`](../../app/src/lib/governance/certification.ts) | Four domains are designed, not built: registration transaction, gradebook, student accounts and dining. |
 | P-2 | Every module has loading, empty, error, stale and degraded states. | partial |  | [`docs/EMPTY-LOADING-ERROR-SUCCESS-STATES.md`](../EMPTY-LOADING-ERROR-SUCCESS-STATES.md) | Specified; not audited module by module. |
-| P-3 | Every module has tenant, role, cohort and feature configuration. | partial |  | [`app/src/lib/flags.ts`](../../app/src/lib/flags.ts) | The evaluator walks kill switch to user; a cohort scope is not one of its steps. |
+| P-3 | Every module has tenant, role, cohort and feature configuration. | partial |  | [`app/src/lib/flags.ts`](../../app/src/lib/flags.ts) | Tenant, cohort, role and feature scopes exist in the evaluator and the database; not every module is yet behind a flag. |
 
 ### Full technical verification
 
@@ -289,7 +289,7 @@ Items marked **P0** are conditions of a full GO: while one is open the answer is
 | T-2 | Tenant-isolation, RLS and SECURITY DEFINER tests. | partial | P0 | [`supabase/check.sh`](../../supabase/check.sh) | The check suite exists; it has not been run against production. |
 | T-3 | Production RLS, grants and function remediation applied and verified. | owed | P0 | — | The reviewed migration is not confirmed applied; advisors not re-run. |
 | T-4 | Webhook replay, idempotency, ordering and signature tests. | passed |  | [`app/src/lib/billing/webhook.test.ts`](../../app/src/lib/billing/webhook.test.ts) | The Stripe webhook’s signature and replay are held. |
-| T-5 | Load tests for registration, learning, search, gradebook and notifications. | owed |  | — | No load test exists. |
+| T-5 | Load tests for registration, learning, search, gradebook and notifications. | partial |  | [`supabase/load.sh`](../../supabase/load.sh) | Concurrency scenarios for flag reads, plan saves and demand reads run against the full schema, and found and fixed a plan-save deadlock; registration, gradebook and notification scenarios are owed, and no run is against production-like infrastructure. |
 | T-6 | Visual regression and cross-device testing for core surfaces. | partial |  | [`docs/DESIGN-REGRESSION-TEST-PLAN.md`](../DESIGN-REGRESSION-TEST-PLAN.md) | Planned; the contrast workflow runs, cross-browser does not. |
 | T-7 | Penetration test or equivalent assessment. | partial | P0 | [`docs/trust/PENETRATION-TEST-PLAN.md`](../trust/PENETRATION-TEST-PLAN.md) | A plan, not a report. |
 
@@ -316,7 +316,7 @@ Items marked **P0** are conditions of a full GO: while one is open the answer is
 
 | ID | Item | State | P0 | Evidence | Note |
 | --- | --- | --- | --- | --- | --- |
-| O-1 | Feature flags and kill switches work at every scope. | partial |  | [`docs/FEATURE-FLAG-REGISTRY.md`](../FEATURE-FLAG-REGISTRY.md) | Global, tenant, role and user; cohort is not a scope yet. |
+| O-1 | Feature flags and kill switches work at every scope. | partial |  | [`supabase/feature_cohorts.check.sql`](../../supabase/feature_cohorts.check.sql) | Every scope, cohort included, is enforced and checked; no kill switch has been engaged against production and no rollback drill is recorded. |
 | O-2 | Monitoring, alerting, audit logs and status page work. | partial |  | [`docs/trust/APM-RUNBOOK.md`](../trust/APM-RUNBOOK.md) | Status page and smoke tests exist; on-call routing does not. |
 | O-3 | Every production service has a named operator. | owed | P0 | — | The operations seat is vacant. |
 | O-4 | Support staffing and response model ready. | owed | P0 | — | No staffed queue. |

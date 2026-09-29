@@ -119,6 +119,20 @@ describe('evaluation', () => {
     expect(evaluateFlag('release.integration_dashboard_v1', ctx({ ...base, role: 'integration_admin' })).allowed).toBe(true);
   });
 
+  it('honours a tenant’s release cohorts, after its roles', () => {
+    const policy = { ...DASHBOARD_ON, 'release.integration_dashboard_v1': { state: 'production' as const, permittedCohorts: ['first-year-2027'] } };
+    const base = { tenantPolicy: policy, capabilities: ['integration:view'] };
+    expect(evaluateFlag('release.integration_dashboard_v1', ctx(base))).toMatchObject({ allowed: false, step: 'cohort_policy' });
+    expect(evaluateFlag('release.integration_dashboard_v1', ctx({ ...base, cohorts: ['honors'] })).step).toBe('cohort_policy');
+    expect(evaluateFlag('release.integration_dashboard_v1', ctx({ ...base, cohorts: ['honors', 'first-year-2027'] })).allowed).toBe(true);
+    // A cohort narrows; it never widens past a step that already said no.
+    expect(evaluateFlag('release.integration_dashboard_v1', ctx({ ...base, capabilities: [], cohorts: ['first-year-2027'] })).step).toBe('capability');
+    const both = { ...DASHBOARD_ON, 'release.integration_dashboard_v1': { state: 'production' as const, permittedRoles: ['integration_admin'], permittedCohorts: ['first-year-2027'] } };
+    expect(evaluateFlag('release.integration_dashboard_v1', ctx({ tenantPolicy: both, capabilities: ['integration:view'], role: 'university_admin', cohorts: ['first-year-2027'] })).step).toBe('role_policy');
+    // No cohort named: the step does not apply.
+    expect(evaluateFlag('release.integration_dashboard_v1', ctx({ tenantPolicy: DASHBOARD_ON, capabilities: ['integration:view'] })).allowed).toBe(true);
+  });
+
   it('lets a global kill switch win over everything a school set', () => {
     const d = evaluateFlag('scope.lms.assignment_dates_read', ctx({
       ...LTI_LIVE, killSwitches: [{ key: 'kill.integration_sync', tenantId: null, engaged: true }] }));
