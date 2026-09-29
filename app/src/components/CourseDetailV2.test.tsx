@@ -20,6 +20,9 @@ import { RegistrationPortal } from './RegistrationPortal';
 let host: HTMLDivElement;
 let root: Root;
 let width = 390;
+// jsdom has no `matchMedia`; whatever was there before this file is put back
+// after it, because the worker keeps the window between files.
+const hadMatchMedia = Object.getOwnPropertyDescriptor(window, 'matchMedia');
 
 const REG_KEY = 'semester.registration.v1';
 const section = (over: Record<string, unknown>) => ({
@@ -45,8 +48,11 @@ beforeAll(async () => {
 beforeEach(() => {
   window.location.hash = '';
   window.matchMedia = ((q: string) => {
-    const min = Number(/min-width:\s*(\d+)px/.exec(q)?.[1] ?? 0);
-    return { matches: width >= min, addEventListener: () => {}, removeEventListener: () => {} };
+    // Only a min-width query is answered from `width`. Anything else is
+    // false: `?? 0` here once said yes to `(display-mode: standalone)`, and
+    // a later file in the same worker was told the page was installed.
+    const min = /min-width:\s*(\d+)px/.exec(q);
+    return { matches: min ? width >= Number(min[1]) : false, addEventListener: () => {}, removeEventListener: () => {} };
   }) as unknown as typeof window.matchMedia;
   localStorage.clear();
   localStorage.setItem(
@@ -87,6 +93,8 @@ afterEach(async () => {
   host.remove();
   localStorage.clear();
   width = 390;
+  if (hadMatchMedia) Object.defineProperty(window, 'matchMedia', hadMatchMedia);
+  else delete (window as { matchMedia?: unknown }).matchMedia;
   vi.restoreAllMocks();
 });
 
