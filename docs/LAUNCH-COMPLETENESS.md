@@ -15,7 +15,7 @@ ask for to what the tree already has, under the rule of
 [D-108](DECISION-LOG.md#d-108--the-modernization-blueprint-is-a-crosswalk-onto-the-master-register-not-a-second-register)
 and [D-111](DECISION-LOG.md#d-111--five-research-documents-are-held-to-the-tree-as-crosswalks-and-the-pdfs-are-never-their-own-evidence):
 a supplied PDF is never its own evidence, every cited file exists, and every
-standing is held to the kind of file it cites. Standings were read at `origin/main` `50fd299` on 2026-09-29.
+standing is held to the kind of file it cites. Standings were read at `origin/main` `ae4837c` on 2026-09-29.
 
 **This is an operational planning crosswalk, not legal advice, a HECVAT completion,
 a WCAG conformance claim, a FERPA determination or a contract.** Nothing here may be
@@ -141,7 +141,7 @@ All 81: tested 41 · building 8 · designed 27 · not-started 4 · held 1.
 | LC-HV4-05 | SAST/DAST approach documented | `security` | `VULN-2` | owner sets | designed | [`docs/trust/PENETRATION-TEST-PLAN.md`](trust/PENETRATION-TEST-PLAN.md) — the test plan | No DAST run and no independent test. |
 | LC-HV4-06 | Threat modeling for high-risk features | `security` | **none** | owner sets | designed | [`docs/INTEGRATION-THREAT-MODEL.md`](INTEGRATION-THREAT-MODEL.md) — integrations | Integrations only; no template for other features. |
 | LC-HV4-07 | RLS and database grants reviewed | `security` | `TEN-1` | owner sets | tested | [`supabase/grants.check.sql`](../supabase/grants.check.sql) — the grant allowlist<br>[`supabase/rls-coverage.check.sql`](../supabase/rls-coverage.check.sql) — coverage | None. |
-| LC-HV4-08 | SECURITY DEFINER functions inventoried and approved | `security` | **none** | owner sets | tested | [`app/src/lib/definerregister.test.ts`](../app/src/lib/definerregister.test.ts) — all 151 callable functions classified<br>[`docs/DEFINER-RLS-REGISTER.md`](DEFINER-RLS-REGISTER.md) — the register | DR-01..03 open; the fix is not applied to production. |
+| LC-HV4-08 | SECURITY DEFINER functions inventoried and approved | `security` | **none** | owner sets | tested | [`app/src/lib/definerregister.test.ts`](../app/src/lib/definerregister.test.ts) — all 151 callable functions classified<br>[`supabase/definer-sweep.check.sql`](../supabase/definer-sweep.check.sql) — every one called by a stranger (DR-02, D-130)<br>[`docs/DEFINER-RLS-REGISTER.md`](DEFINER-RLS-REGISTER.md) — the register | DR-01 and DR-03 open, both low; the gtm_pilot_problems fix is live (D-129). |
 | LC-HV4-09 | API input validation and rate limits exist | `engineering` | **none** | owner sets | tested | [`supabase/rate-limits.check.sql`](../supabase/rate-limits.check.sql) — the database rate limit<br>[`app/server/institution/rate-limit.test.ts`](../app/server/institution/rate-limit.test.ts) — the gateway’s | None. |
 | LC-HV4-10 | Audit logs capture sensitive activity | `security` | `LOG-1` | owner sets | tested | [`supabase/role-grant-audit.check.sql`](../supabase/role-grant-audit.check.sql) — role grants<br>[`supabase/moderation-audit.check.sql`](../supabase/moderation-audit.check.sql) — moderation | None. |
 | LC-HV4-11 | Security headers and transport encryption configured | `engineering` | `WEB-1` | owner sets | tested | [`app/src/lib/csp.test.ts`](../app/src/lib/csp.test.ts) — the content security policy<br>[`app/src/lib/hostheaders.test.ts`](../app/src/lib/hostheaders.test.ts) — the host’s headers | None. |
@@ -575,7 +575,7 @@ The brief’s thirty-one lines. A launch is go only when all are; today the weak
 | LC-GATE2-01 | Privacy and terms published | designed | [`docs/legal/PRIVACY-POLICY-DRAFT.md`](legal/PRIVACY-POLICY-DRAFT.md) — draft<br>[`docs/legal/TERMS-OF-SERVICE-DRAFT.md`](legal/TERMS-OF-SERVICE-DRAFT.md) — draft | Drafts awaiting counsel. |
 | LC-GATE2-02 | Security controls reviewed | designed | [`docs/trust/SECURITY-WHITEPAPER.md`](trust/SECURITY-WHITEPAPER.md) — the controls | No independent review. |
 | LC-GATE2-03 | RLS and authorization review complete | tested | [`supabase/rls-coverage.check.sql`](../supabase/rls-coverage.check.sql) — coverage<br>[`supabase/grants.check.sql`](../supabase/grants.check.sql) — grants | None. |
-| LC-GATE2-04 | SECURITY DEFINER function review complete | tested | [`app/src/lib/definerregister.test.ts`](../app/src/lib/definerregister.test.ts) — all 151 | The fix is not applied to production. |
+| LC-GATE2-04 | SECURITY DEFINER function review complete | tested | [`app/src/lib/definerregister.test.ts`](../app/src/lib/definerregister.test.ts) — all 151<br>[`supabase/definer-sweep.check.sql`](../supabase/definer-sweep.check.sql) — each called by a stranger | DR-01 and DR-03 open, both low. |
 | LC-GATE2-05 | Data inventory and retention schedule complete | tested | [`app/src/lib/retention.test.ts`](../app/src/lib/retention.test.ts) — the schedule | Table level. |
 | LC-GATE2-06 | Export/deletion works | tested | [`app/src/lib/deleteaccount.test.ts`](../app/src/lib/deleteaccount.test.ts) — deletion<br>[`app/src/lib/export.test.ts`](../app/src/lib/export.test.ts) — export | Per student. |
 | LC-GATE2-07 | AI policy and controls are live | building | [`app/src/lib/aikillswitch.test.ts`](../app/src/lib/aikillswitch.test.ts) — the switch | No AI Use Policy. |
@@ -754,7 +754,7 @@ The complete-company brief also covers these; each already has a register, and i
 | From | Action | Where it stands |
 | --- | --- | --- |
 | playbook | Convert the HECVAT checklist into an owner-based tracker with evidence links and due dates | Section 2: every row has a seat, a standing and evidence; due dates are the seats’ to set. |
-| playbook | Complete the RLS and SECURITY DEFINER remediation register | docs/DEFINER-RLS-REGISTER.md (D-127); its migration is not applied to production. |
+| playbook | Complete the RLS and SECURITY DEFINER remediation register | docs/DEFINER-RLS-REGISTER.md (D-127, D-130); its fix is live (D-129); DR-01 and DR-03 open, both low. |
 | playbook | Build the Migration Center artifacts for the first pilot | Section 5 lists the seventeen and the template; most carry nothing. |
 | playbook | Have counsel convert the outline into an MSA, Pilot SOW and DPA | Owed to counsel; the repository cannot do it. |
 | playbook | Complete the Registration and LMS checklists with actual test evidence | Sections 3 and 4: every row cites a test or says what is missing. |

@@ -45,12 +45,12 @@
  * register exists to refuse. The test holds any date that is set to an ISO
  * date after the reading.
  *
- * Standings were read at `origin/main` `50fd299` on 29 September 2026.
+ * Standings were read at `origin/main` `ae4837c` on 29 September 2026.
  */
 
 import type { Seat } from './launchreadiness';
 
-export const READ_AT = { commit: '50fd299', date: '2026-09-29' } as const;
+export const READ_AT = { commit: 'ae4837c', date: '2026-09-29' } as const;
 
 export const SOURCES: readonly { path: string; title: string; what: string }[] = [
   {
@@ -226,7 +226,7 @@ export const HECVAT: readonly HecvatRow[] = [
     ['SAST/DAST approach documented', 'security', 'VULN-2', 'designed', [['docs/trust/PENETRATION-TEST-PLAN.md', 'the test plan']], 'No DAST run and no independent test.'],
     ['Threat modeling for high-risk features', 'security', null, 'designed', [['docs/INTEGRATION-THREAT-MODEL.md', 'integrations']], 'Integrations only; no template for other features.'],
     ['RLS and database grants reviewed', 'security', 'TEN-1', 'tested', [['supabase/grants.check.sql', 'the grant allowlist'], ['supabase/rls-coverage.check.sql', 'coverage']], 'None.'],
-    ['SECURITY DEFINER functions inventoried and approved', 'security', null, 'tested', [['app/src/lib/definerregister.test.ts', 'all 151 callable functions classified'], ['docs/DEFINER-RLS-REGISTER.md', 'the register']], 'DR-01..03 open; the fix is not applied to production.'],
+    ['SECURITY DEFINER functions inventoried and approved', 'security', null, 'tested', [['app/src/lib/definerregister.test.ts', 'all 151 callable functions classified'], ['supabase/definer-sweep.check.sql', 'every one called by a stranger (DR-02, D-130)'], ['docs/DEFINER-RLS-REGISTER.md', 'the register']], 'DR-01 and DR-03 open, both low; the gtm_pilot_problems fix is live (D-129).'],
     ['API input validation and rate limits exist', 'engineering', null, 'tested', [['supabase/rate-limits.check.sql', 'the database rate limit'], ['app/server/institution/rate-limit.test.ts', 'the gateway’s']], 'None.'],
     ['Audit logs capture sensitive activity', 'security', 'LOG-1', 'tested', [['supabase/role-grant-audit.check.sql', 'role grants'], ['supabase/moderation-audit.check.sql', 'moderation']], 'None.'],
     ['Security headers and transport encryption configured', 'engineering', 'WEB-1', 'tested', [['app/src/lib/csp.test.ts', 'the content security policy'], ['app/src/lib/hostheaders.test.ts', 'the host’s headers']], 'None.'],
@@ -580,7 +580,7 @@ export const FINAL_GATE: readonly GroupedItem[] = [
     ['Privacy and terms published', 'designed', [['docs/legal/PRIVACY-POLICY-DRAFT.md', 'draft'], ['docs/legal/TERMS-OF-SERVICE-DRAFT.md', 'draft']], 'Drafts awaiting counsel.'],
     ['Security controls reviewed', 'designed', [['docs/trust/SECURITY-WHITEPAPER.md', 'the controls']], 'No independent review.'],
     ['RLS and authorization review complete', 'tested', [['supabase/rls-coverage.check.sql', 'coverage'], ['supabase/grants.check.sql', 'grants']], 'None.'],
-    ['SECURITY DEFINER function review complete', 'tested', [['app/src/lib/definerregister.test.ts', 'all 151']], 'The fix is not applied to production.'],
+    ['SECURITY DEFINER function review complete', 'tested', [['app/src/lib/definerregister.test.ts', 'all 151'], ['supabase/definer-sweep.check.sql', 'each called by a stranger']], 'DR-01 and DR-03 open, both low.'],
     ['Data inventory and retention schedule complete', 'tested', [['app/src/lib/retention.test.ts', 'the schedule']], 'Table level.'],
     ['Export/deletion works', 'tested', [['app/src/lib/deleteaccount.test.ts', 'deletion'], ['app/src/lib/export.test.ts', 'export']], 'Per student.'],
     ['AI policy and controls are live', 'building', [['app/src/lib/aikillswitch.test.ts', 'the switch']], 'No AI Use Policy.'],
@@ -778,7 +778,7 @@ export const DOD_RULE = 'If the answer is “no” to any of those questions, th
 /** The playbook's ten next actions and the summary's five, each with where it now stands. */
 export const NEXT_ACTIONS: readonly { action: string; from: 'playbook' | 'summary'; answeredBy: string }[] = [
   { action: 'Convert the HECVAT checklist into an owner-based tracker with evidence links and due dates', from: 'playbook', answeredBy: 'Section 2: every row has a seat, a standing and evidence; due dates are the seats’ to set.' },
-  { action: 'Complete the RLS and SECURITY DEFINER remediation register', from: 'playbook', answeredBy: 'docs/DEFINER-RLS-REGISTER.md (D-127); its migration is not applied to production.' },
+  { action: 'Complete the RLS and SECURITY DEFINER remediation register', from: 'playbook', answeredBy: 'docs/DEFINER-RLS-REGISTER.md (D-127, D-130); its fix is live (D-129); DR-01 and DR-03 open, both low.' },
   { action: 'Build the Migration Center artifacts for the first pilot', from: 'playbook', answeredBy: 'Section 5 lists the seventeen and the template; most carry nothing.' },
   { action: 'Have counsel convert the outline into an MSA, Pilot SOW and DPA', from: 'playbook', answeredBy: 'Owed to counsel; the repository cannot do it.' },
   { action: 'Complete the Registration and LMS checklists with actual test evidence', from: 'playbook', answeredBy: 'Sections 3 and 4: every row cites a test or says what is missing.' },
