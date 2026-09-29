@@ -118,9 +118,10 @@ describe('the AI integration playbook', () => {
     expect(gate('T3', 'ai', true).allowed).toBe(false);
   });
 
-  it('keeps the supplied weights as supplied, and scores a perfect provider 5.0 anyway', () => {
+  it('weights sum to 100, and a perfect provider scores 5.0', () => {
     expect(DIMENSION_ROWS.map((d) => d.id)).toEqual([...DIMENSIONS]);
-    expect(WEIGHT_SUM).toBe(95);
+    expect(WEIGHT_SUM).toBe(100);
+    expect(DIMENSION_ROWS.find((d) => d.id === 'security')!.weight).toBe(15);
     expect(scoreVendor(all5, { agentic: true })).toEqual({ verdict: 'approve', weighted: 5, reasons: [] });
   });
 
@@ -308,7 +309,7 @@ function render(): string {
     '',
     `**Approval:** every dimension scored, a weighted score of at least ${OVERALL_MINIMUM.toFixed(1)}, every floor met, and no critical legal, security or privacy blocker — which no model quality can offset.`,
     '',
-    `**The weights sum to ${WEIGHT_SUM}%, not 100%.** They are kept as supplied, and \`scoreVendor\` divides by their sum, so a provider scoring 5 everywhere scores 5.0. Which dimension should carry the missing five points is the owner’s decision.`,
+    `**The weights sum to ${WEIGHT_SUM}%.** As supplied they summed to 95%; the missing five points went to security posture (10% → 15%), one of the three floors no weighted total can offset.`,
     '',
     '### The providers Semester can call',
     '',

@@ -30,12 +30,13 @@
  * change, `not-started` cites at most a document. The supplied PDFs are never
  * evidence. Statuses were read at `origin/main` `beaa839` on 29 September 2026.
  *
- * ## One arithmetic finding
+ * ## One arithmetic correction
  *
- * The supplied scorecard's twelve weights sum to 95%, not 100%. The page keeps
- * them as supplied and `scoreVendor` divides by the sum of the weights, so a
- * provider scoring 5 on every dimension scores 5.0 — the correction is the
- * owner's, not this file's.
+ * The supplied scorecard's twelve weights summed to 95%, not 100%. The owner
+ * asked for them to sum to 100, and the missing five points go to security
+ * posture (10% → 15%): it is one of the three floors no weighted total can
+ * offset, and the playbook's headline risks — prompt injection and excessive
+ * agency — are security risks. The test holds the sum to 100.
  *
  * `docs/operating-model/AI-INTEGRATION-PLAYBOOK.md` is rendered from this file
  * by `ai-playbook.test.ts`; edit the data, then `npm run registers` from app/.
@@ -286,7 +287,7 @@ export type Dimension = (typeof DIMENSIONS)[number];
 export const DIMENSION_ROWS: readonly { id: Dimension; name: string; weight: number; five: string }[] = [
   { id: 'data-use', name: 'Data-use restrictions', weight: 15, five: 'Contractually no training or secondary use without explicit authorization' },
   { id: 'privacy-retention', name: 'Privacy and retention controls', weight: 10, five: 'Configurable retention, deletion, access controls, clear subprocessors' },
-  { id: 'security', name: 'Security posture', weight: 10, five: 'Strong documented security, encryption, auditability, incident process' },
+  { id: 'security', name: 'Security posture', weight: 15, five: 'Strong documented security, encryption, auditability, incident process' },
   { id: 'education-fit', name: 'Education-policy fit', weight: 8, five: 'Supports source grounding, academic-integrity controls, policy routing' },
   { id: 'citations', name: 'Source and citation support', weight: 8, five: 'Structured retrieval, stable citations, provenance support' },
   { id: 'tool-safety', name: 'Tool-use safety', weight: 8, five: 'Narrow tools, confirmation controls, guardrails against excessive agency' },
@@ -298,7 +299,7 @@ export const DIMENSION_ROWS: readonly { id: Dimension; name: string; weight: num
   { id: 'portability', name: 'Portability', weight: 5, five: 'Provider-agnostic architecture, exportable prompts and evaluations, low lock-in' },
 ];
 
-/** The supplied weights as supplied. They sum to 95; see the file comment. */
+/** 100: the supplied weights, with security posture raised from 10 to 15. See the file comment. */
 export const WEIGHT_SUM = DIMENSION_ROWS.reduce((s, d) => s + d.weight, 0);
 
 export const OVERALL_MINIMUM = 4.0;

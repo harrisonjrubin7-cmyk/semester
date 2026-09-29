@@ -2387,9 +2387,11 @@ never their own evidence.
   (data use, privacy, security; tool-use safety for agentic workflows); a
   critical blocker refuses outright. Every AI party in `trust/subprocessors.ts`
   is on it, held there by the test, and none is scored, because no
-  provider's terms are on file. **The supplied weights sum to 95%, not 100%**;
-  they are kept as supplied and normalised, and which dimension carries the
-  missing five points is the owner's decision.
+  provider's terms are on file. **The supplied weights summed to 95%, not
+  100%.** At the owner's request they now sum to 100: the missing five points
+  go to security posture (10% → 15%), one of the three floors, since the
+  playbook's headline risks (prompt injection, excessive agency) are security
+  risks. The test holds the sum to 100.
 - **Onboarding is held to `FirstGoal`.** Five of the six starting choices map
   to a goal in `lib/goals.ts`; "Organize this week" has none.
 - **Most workflows are `tested` as non-AI workflows.** Registration that

@@ -167,7 +167,7 @@ its rules.
 | --- | ---: | --- | --- |
 | Data-use restrictions | 15% | Contractually no training or secondary use without explicit authorization | 4.0 |
 | Privacy and retention controls | 10% | Configurable retention, deletion, access controls, clear subprocessors | 4.0 |
-| Security posture | 10% | Strong documented security, encryption, auditability, incident process | 4.0 |
+| Security posture | 15% | Strong documented security, encryption, auditability, incident process | 4.0 |
 | Education-policy fit | 8% | Supports source grounding, academic-integrity controls, policy routing | — |
 | Source and citation support | 8% | Structured retrieval, stable citations, provenance support | — |
 | Tool-use safety | 8% | Narrow tools, confirmation controls, guardrails against excessive agency | 4.0, agentic workflows only |
@@ -180,7 +180,7 @@ its rules.
 
 **Approval:** every dimension scored, a weighted score of at least 4.0, every floor met, and no critical legal, security or privacy blocker — which no model quality can offset.
 
-**The weights sum to 95%, not 100%.** They are kept as supplied, and `scoreVendor` divides by their sum, so a provider scoring 5 everywhere scores 5.0. Which dimension should carry the missing five points is the owner’s decision.
+**The weights sum to 100%.** As supplied they summed to 95%; the missing five points went to security posture (10% → 15%), one of the three floors no weighted total can offset.
 
 ### The providers Semester can call
 
