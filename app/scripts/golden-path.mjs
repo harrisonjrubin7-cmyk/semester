@@ -193,7 +193,8 @@ async function visible(locator, timeout = WAIT) {
 // review with its approval box, and the save.
 //
 // The answer is not free to be anything. The stub refuses (500) unless the
-// request carries the syllabus the student pasted, and its reply quotes that
+// request carries the syllabus the student pasted — its title and every
+// sentence the reply will quote as a deadline — and its reply quotes that
 // syllabus verbatim — so `validate` keeps the quotes rather than stripping
 // them as invented. What this does not prove is that a real model reads a
 // real syllabus well; that is a question for an evaluation, not a journey.
@@ -252,7 +253,10 @@ function syllabus() {
       selfTest: [{ q: 'When is the project proposal due?', a: due[1].quote }],
     },
   };
-  return { text, reply, month, first, due };
+  // What the request must carry before the stub answers it: the title, and
+  // every sentence the reply quotes as a deadline.
+  const needed = [`${CODE}: Walking the Golden Path`, ...due.map((d) => d.quote)];
+  return { text, reply, month, first, due, needed };
 }
 
 /** Anthropic's streamed Messages reply, carrying `text` as one delta. */
@@ -276,7 +280,7 @@ function streamed(text) {
  * own, or the shared Edge Function) — and count what was asked.
  */
 async function stubModel(context, course) {
-  const asked = { calls: 0, withSyllabus: 0 };
+  const asked = { calls: 0, withSyllabus: 0, missing: [] };
   const cors = {
     'access-control-allow-origin': '*',
     'access-control-allow-headers': '*',
@@ -288,9 +292,16 @@ async function stubModel(context, course) {
       const request = route.request();
       if (request.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: cors });
       asked.calls += 1;
-      if (!(request.postData() ?? '').includes('Walking the Golden Path')) {
+      // Every sentence the reply will quote, not only the title: a request
+      // that carried the heading and lost the schedule must not be answered
+      // with the deadlines it never sent (found by review on #978, and shown:
+      // with the pasted text cut to 60 characters, a title-only check passed).
+      const body = request.postData() ?? '';
+      const missing = course.needed.filter((line) => !body.includes(line));
+      if (missing.length) {
+        asked.missing = missing;
         return route.fulfill({ status: 500, headers: cors, contentType: 'application/json',
-          body: JSON.stringify({ error: { message: 'the golden-path stub was sent a request without the syllabus' } }) });
+          body: JSON.stringify({ error: { message: `the golden-path stub was sent a request without: ${missing.join(' | ')}` } }) });
       }
       asked.withSyllabus += 1;
       return route.fulfill({ status: 200, headers: cors, contentType: 'text/event-stream',
@@ -376,7 +387,12 @@ async function journey(label, viewport) {
     expect(await visible(buildIt), 'the pasted syllabus did not offer to build the course');
     await buildIt.click();
     const approve = page.getByRole('checkbox', { name: /i checked the course information/i });
-    expect(await visible(approve, 30_000), 'building the course did not reach the review');
+    expect(
+      await visible(approve, 30_000),
+      asked.missing.length
+        ? `the model request did not carry the syllabus it is answered from — missing: ${asked.missing.join(' | ')}`
+        : 'building the course did not reach the review',
+    );
     expect(asked.withSyllabus === 1, `the model was asked ${asked.calls} time(s), ${asked.withSyllabus} with the pasted syllabus`);
     const fields = await page.locator('input, textarea').evaluateAll((els) => els.map((e) => e.value));
     const shown = await page.locator('body').innerText();
