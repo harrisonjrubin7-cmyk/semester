@@ -2635,3 +2635,33 @@ four to be scored, and for the evaluation set model quality needs.
 - **Not changed:** the weights, the floors, the thresholds, the subprocessor
   register. The pass-rate bands and the critical cap are the owner's to
   change; the set has not been run, because this session had no key.
+
+## D-136 · The AI providers' published terms are on file, verbatim, and nothing is signed
+
+**Decided 29 Sep 2026.** The DPA checklist, the vendor risk register and the
+AI training policy each said the providers' training and retention terms were
+"not yet recorded". The owner asked for the contract terms to be put on file.
+
+- **What is on file.** `app/src/lib/trust/provider-terms.ts`, rendered to
+  `docs/trust/PROVIDER-TERMS.md`, records seven documents: Anthropic's
+  Commercial Terms, DPA and retention article; OpenAI's Services Agreement,
+  DPA, Student Data Privacy Agreement and data-controls guide. Each has its
+  stated version, and each PDF has the SHA-256 of the copy read. For every
+  question the DPA checklist asks (training, retention, breach notice,
+  deletion on termination, subprocessors, security, student data), the
+  clause is quoted word for word, checked against the document's text on
+  29 September.
+- **What they say.** Neither provider trains on API content without an
+  opt-in, and both write it into the contract. Both keep data 30 days by
+  default and delete it within 30 days of termination. Anthropic commits to
+  breach notice within 48 hours; OpenAI to "without undue delay". Anthropic
+  publishes no FERPA terms for the API. OpenAI's Student DPA names it a
+  school official, but it takes effect only on a signed Order Form.
+- **Nothing is signed, and the test holds it.** Every party stands at
+  *published* while `docs/evidence/vendors/` does not exist. Anthropic's
+  terms are not in force for Semester: production has no shared key, and
+  there is no legal entity to be the Customer. OpenAI's are the institution's
+  to accept. The page lists what only the owner can do.
+- **Not changed:** `docs/evidence/` is not created. An executed agreement is
+  what the vendor register and the compliance crosswalk wait for there, and
+  a published web page is not one.

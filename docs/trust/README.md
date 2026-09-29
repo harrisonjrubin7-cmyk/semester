@@ -50,6 +50,7 @@ The documents here fill items those indexes list. The NDA-gated room in
 | [`PILOT-AGREEMENT-OUTLINE.md`](PILOT-AGREEMENT-OUTLINE.md) | Sections for a 26-week pilot agreement, sample scope, scorecard |
 | [`HECVAT-VPAT-PLAN.md`](HECVAT-VPAT-PLAN.md) | HECVAT workstreams, a 90-day plan, and the VPAT/ACR checklist |
 | [`BRIDGE-LETTER.md`](BRIDGE-LETTER.md) | The SOC 2 bridge-letter process, for when a report exists |
+| [`PROVIDER-TERMS.md`](PROVIDER-TERMS.md) | The AI providers' published terms, quoted verbatim per DPA-checklist question, with what would make each apply. Nothing is signed. Rendered from `app/src/lib/trust/provider-terms.ts` |
 | [`VENDOR-RISK-REGISTER.md`](VENDOR-RISK-REGISTER.md) | One row per subprocessor: data shared, attestation (to confirm), DPA status, tier, and the review procedure. No vendor has been assessed yet |
 | [`PENETRATION-TEST-PLAN.md`](PENETRATION-TEST-PLAN.md) | Scope, rules of engagement, test accounts, success criteria and remediation commitments for the first external test. No test has been performed |
 | [`FERPA-CONSENT-WORKFLOW.md`](FERPA-CONSENT-WORKFLOW.md) | When consent is needed, the decision gate, the consent screen, the data model field by field against the share tables, and the fifteen workflow controls. Rendered from `app/src/lib/trust/ferpa-consent.ts` |
