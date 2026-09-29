@@ -2450,6 +2450,13 @@ between the briefs and the tree; the owner settled each.
   library's implementation answer, the paid-pilot framework, the GTM
   execution plan and the pilot agreement outline say 26 weeks. That is two
   days past the kit's own "90–180 days"; its row stays held, with the reason.
+  The database says the same: `gtm_pilot_problems`, which `gtm_pilot_guard`
+  calls when a pilot is started, still refused anything outside 60–120 days,
+  so every pilot the app accepted the database would have refused (found by
+  Codex's review of #967). `20260929140000_gtm_pilot_26_weeks.sql` changes
+  that one line and keeps the visibility gate; `gtm.check.sql` refuses a
+  109-day pilot for `duration` and starts a 182-day one, and went red on the
+  26-week pilot with the migration taken away.
 - **The statement.** The one-operating-system statement listed payments among
   the parts of university life Semester is one platform for; Semester runs no
   payment workflow for students, and the briefs say never to imply replacing a

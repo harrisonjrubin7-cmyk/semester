@@ -637,15 +637,20 @@ begin
     format($q$update public.gtm_pilots set status = 'active' where id = %L$q$, pilot),
     'not ready: duration, no_cohort, no_baseline, no_sponsor, no_champion, data_plan, metric_count, no_conversion_date, no_price, no_midpoint');
 
-  perform pg_temp.run(sales, format($q$update public.gtm_pilots set end_date = '2027-04-30', cohort = 'Fall 2027 transfers',
+  perform pg_temp.run(sales, format($q$update public.gtm_pilots set end_date = '2027-07-12', cohort = 'Fall 2027 transfers',
     baseline = '54%% by week 2', executive_sponsor = 'VP Student Affairs', operational_champion = 'Transfer Center',
-    minimum_necessary_data = true, read_only_first = true, source_labelled = true, conversion_date = '2027-05-15',
-    annual_price_agreed = true, midpoint_review_date = '2027-03-01' where id = %L$q$, pilot));
+    minimum_necessary_data = true, read_only_first = true, source_labelled = true, conversion_date = '2027-07-20',
+    annual_price_agreed = true, midpoint_review_date = '2027-04-12' where id = %L$q$, pilot));
   perform pg_temp.run(sales, format($q$insert into public.gtm_pilot_metrics (pilot_id, name, target, baseline) values
     (%L, 'Activation', '60%%', 'new'), (%L, 'Checklist by week 2', '70%%', '54%%'), (%L, 'Usefulness', '4/5', null)$q$, pilot, pilot, pilot));
   perform pg_temp.refused_with('starting with a metric that has no baseline', sales,
     format($q$update public.gtm_pilots set status = 'active' where id = %L$q$, pilot), 'not ready: metric_baseline');
   perform pg_temp.run(sales, format($q$update public.gtm_pilot_metrics set baseline = 'kickoff survey' where pilot_id = %L and baseline is null$q$, pilot));
+  -- Every pilot runs exactly 26 weeks (D-131): 109 days, inside the old 60–120, is refused.
+  perform pg_temp.run(sales, format($q$update public.gtm_pilots set end_date = '2027-04-30', conversion_date = '2027-05-15' where id = %L$q$, pilot));
+  perform pg_temp.refused_with('a pilot that is not 26 weeks', sales,
+    format($q$update public.gtm_pilots set status = 'active' where id = %L$q$, pilot), 'not ready: duration');
+  perform pg_temp.run(sales, format($q$update public.gtm_pilots set end_date = '2027-07-12', conversion_date = '2027-07-20' where id = %L$q$, pilot));
   perform pg_temp.counted('a ready pilot starts',
     pg_temp.run(sales, format($q$update public.gtm_pilots set status = 'active' where id = %L$q$, pilot)), 1);
 
