@@ -24,6 +24,15 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### On the public site: the platform statement no longer lists payments
+
+The statement at the top of **One Operating System**, under Platform, named
+payments among the parts of university life Semester brings together.
+Semester does not handle payments, so the word is gone; the rest of the
+sentence is unchanged.
+
+Nothing to do.
+
 ### Plus is $7.99 a month or $59 a year
 
 The Membership panel on your Account screen now offers Plus at $7.99 a month

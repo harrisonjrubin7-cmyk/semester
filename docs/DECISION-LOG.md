@@ -2394,17 +2394,16 @@ under `docs/expansion/` as supplied.
   improve retention, persistence, graduation or grades, to be fully
   compliant, or to be AI-safe — with a control showing each pattern catches
   its own example and passes the sentence the site actually uses.
-- **Not changed, put to the seat that owns it.** The one-operating-system
-  statement listing payments against the briefs' rule on replacement claims
-  (founder); `docs/FIRST-YEAR-SUCCESS.md` naming the company's first year
-  where a reader of the briefs expects first-year students (product). K–12:
-  absent, neither planned nor refused, behind COPPA-1. The Plus price and the
-  pilot length were open here too, and the owner settled both (D-130).
+- **Not changed, put to the seat that owns it.** `docs/FIRST-YEAR-SUCCESS.md`
+  naming the company's first year where a reader of the briefs expects
+  first-year students (product). K–12: absent, neither planned nor refused,
+  behind COPPA-1. The Plus price, the pilot length and the statement's
+  "payments" were open here too, and the owner settled all three (D-130).
 
-## D-130 · Plus is $7.99 a month or $59 a year everywhere, and every pilot runs 26 weeks
+## D-130 · Plus is $7.99 a month or $59 a year everywhere, every pilot runs 26 weeks, and the statement no longer lists payments
 
-**Decided 29 Sep 2026, by the owner.** D-129 found both left open between the
-briefs and the tree; the owner chose the briefs' figures for each.
+**Decided 29 Sep 2026, by the owner.** D-129 found three things left open
+between the briefs and the tree; the owner settled each.
 
 - **Plus.** `plans.ts` printed $7.99 and $59 on the pricing page, while the
   catalog the commercial core seeded — and, since D-128, what `begin_checkout`
@@ -2428,3 +2427,9 @@ briefs and the tree; the owner chose the briefs' figures for each.
   library's implementation answer, the paid-pilot framework, the GTM
   execution plan and the pilot agreement outline say 26 weeks. That is two
   days past the kit's own "90–180 days"; its row stays held, with the reason.
+- **The statement.** The one-operating-system statement listed payments among
+  the parts of university life Semester is one platform for; Semester runs no
+  payment workflow for students, and the briefs say never to imply replacing a
+  payment system. The owner removed the word. `oneos.test.ts` now refuses a
+  statement naming payments, billing, financial aid, housing, health records
+  or registration execution; putting "payments" back turned it red.

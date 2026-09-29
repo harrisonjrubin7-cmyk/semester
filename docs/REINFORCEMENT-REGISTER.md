@@ -57,7 +57,6 @@ Nothing here changes a recorded decision. Each is put to the seat that owns it.
 
 | The brief asks | The tree holds | Decides | Cites |
 | --- | --- | --- | --- |
-| Never claim to replace payment, housing, health or financial-aid systems (M17). | The one-operating-system statement lists payments among the parts of university life Semester is one platform for; Semester holds no payment workflow for students. | `founder` | [`app/src/lib/oneos.ts`](../app/src/lib/oneos.ts) |
 | A first-year student lifecycle stage (R2). | docs/FIRST-YEAR-SUCCESS.md is the company’s first year of measures, not first-year students; the name will mislead a reader of either brief. | `product` | [`docs/FIRST-YEAR-SUCCESS.md`](../docs/FIRST-YEAR-SUCCESS.md) |
 
 ## The register
@@ -292,7 +291,7 @@ Nothing here changes a recorded decision. Each is put to the seat that owns it.
 
 | ID | Item | Status | Evidence | Gap | Asked by | Overlaps |
 | --- | --- | --- | --- | --- | --- | --- |
-| NAR-001 | A headline and a statement, held to the register beside them | tested | `app/src/lib/oneos.ts` — HEADLINE and STATEMENT<br>`app/src/lib/oneos.test.ts` — held | The briefs’ “connection problem” and “connected education operating system” sentences are not used; the statement lists payments (see conflicts). | M10, L1, P | `oneos:why-not` |
+| NAR-001 | A headline and a statement, held to the register beside them | tested | `app/src/lib/oneos.ts` — HEADLINE and STATEMENT<br>`app/src/lib/oneos.test.ts` — held | The briefs’ “connection problem” and “connected education operating system” sentences are not used. | M10, L1, P | `oneos:why-not` |
 | NAR-002 | One promise per stakeholder | building | `app/src/lib/oneos.ts` — MESSAGES | Four audiences; the brief names ten. | L1 | — |
 | NAR-003 | No page claims to replace an official system, guarantee an outcome, improve retention, be fully compliant or be AI-safe | tested | `app/src/site/site.test.tsx` — the five refused on every page, with a control | Held over the site only; the app and the RFP library have their own lists. | M17 | — |
 | NAR-004 | Compliance words refused in the RFP library and launch guides | tested | `app/src/lib/gtm/rfp.test.ts` — CLAIM_WORDS | Held in code; nothing under docs/evidence/ shows it operating. | M17, M15 | — |

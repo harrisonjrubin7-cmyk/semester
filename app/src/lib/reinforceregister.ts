@@ -313,7 +313,7 @@ const AREA_LIST: readonly (Area & { rows: readonly Row[] })[] = [
     title: 'The category narrative and precise claims',
     why: 'One sentence every stakeholder repeats, and nothing on any page that the operation cannot back.',
     rows: [
-      ['A headline and a statement, held to the register beside them', T, [['app/src/lib/oneos.ts', 'HEADLINE and STATEMENT'], ['app/src/lib/oneos.test.ts', 'held']], 'The briefs’ “connection problem” and “connected education operating system” sentences are not used; the statement lists payments (see conflicts).', ['M10', 'L1', 'P'], ['oneos:why-not']],
+      ['A headline and a statement, held to the register beside them', T, [['app/src/lib/oneos.ts', 'HEADLINE and STATEMENT'], ['app/src/lib/oneos.test.ts', 'held']], 'The briefs’ “connection problem” and “connected education operating system” sentences are not used.', ['M10', 'L1', 'P'], ['oneos:why-not']],
       ['One promise per stakeholder', B, [['app/src/lib/oneos.ts', 'MESSAGES']], 'Four audiences; the brief names ten.', ['L1']],
       ['No page claims to replace an official system, guarantee an outcome, improve retention, be fully compliant or be AI-safe', T, [['app/src/site/site.test.tsx', 'the five refused on every page, with a control']], 'Held over the site only; the app and the RFP library have their own lists.', ['M17']],
       ['Compliance words refused in the RFP library and launch guides', T, [['app/src/lib/gtm/rfp.test.ts', 'CLAIM_WORDS']], '', ['M17', 'M15']],
@@ -362,12 +362,6 @@ export const areaOf = (id: string) => AREAS.find((a) => a.id === id.split('-')[0
 // ── where a brief and the tree disagree ─────────────────────────────────────
 
 export const CONFLICTS: readonly { asks: string; tree: string; decides: Seat; cites: string }[] = [
-  {
-    asks: 'Never claim to replace payment, housing, health or financial-aid systems (M17).',
-    tree: 'The one-operating-system statement lists payments among the parts of university life Semester is one platform for; Semester holds no payment workflow for students.',
-    decides: 'founder',
-    cites: 'app/src/lib/oneos.ts',
-  },
   {
     asks: 'A first-year student lifecycle stage (R2).',
     tree: 'docs/FIRST-YEAR-SUCCESS.md is the company’s first year of measures, not first-year students; the name will mislead a reader of either brief.',
