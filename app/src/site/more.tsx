@@ -302,7 +302,7 @@ export const Launch: Page = ({ config }) => (
 
 export const HowWePrice: Page = ({ config }) => (
   <>
-    <Hero title="How pricing works" lead="Nothing is on sale yet. This is how the numbers will be built, so a budget can be drafted before anyone books a call." />
+    <Hero title="How pricing works" lead="Institutions are not sold yet, and Pro is not on sale; Plus is bought in the app. This is how the numbers will be built, so a budget can be drafted before anyone books a call." />
     <Section title="Individual students" id="hp-individual">
       <p>
         A student pays for features, never for their own data. Free, Plus and Pro differ in how many plans and scenarios

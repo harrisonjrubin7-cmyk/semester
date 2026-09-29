@@ -16,6 +16,8 @@
  * `docs/COMMERCIAL-CORE.md`.
  */
 
+import type { SupabaseClient } from '@supabase/supabase-js';
+
 const env = import.meta.env as unknown as Record<string, string | undefined>;
 
 /** The wording a person agrees to, and the version recorded with it. Change one, change both. */
@@ -195,4 +197,65 @@ export async function cancelMembership(
   }
   if (res.ok && body && typeof body.ends_at === 'string') return { kind: 'cancelled', endsAt: body.ends_at };
   return { kind: 'refused', said: body && typeof body.error === 'string' && body.error ? body.error : fallback };
+}
+
+/**
+ * The two reads the Membership panel and Today's Plus card both make, so the
+ * price one names and the other charges cannot drift apart. `db` is the
+ * Supabase client from `cloud()`; the import is type-only, so this module
+ * still loads without the SDK.
+ */
+type Db = SupabaseClient;
+
+/** Plus's current catalog prices, monthly first; [] when there are none. */
+export async function fetchPlusPrices(db: Db): Promise<PlusPrice[]> {
+  const { data } = await db
+    .from('commercial_prices')
+    .select('id, plan_code, amount_cents, currency, billing_interval')
+    .eq('plan_code', 'plus');
+  return plusPrices(data);
+}
+
+/**
+ * The signed-in person's own subscription rows: their *individual* billing
+ * account only. A billing contact or operator can read other accounts' rows
+ * under RLS, and none of those is their plan.
+ *
+ * A failed read throws rather than returning nothing: PostgREST reports an
+ * error in the result instead of rejecting, and "no rows" would read as "not
+ * a subscriber" — which would offer Plus to someone already paying for it.
+ */
+export async function fetchOwnSubscriptions(db: Db, accountId: string): Promise<unknown> {
+  const { data, error } = await db
+    .from('subscriptions')
+    .select('id, plan_code, status, current_period_end, cancel_at_period_end, billing_accounts!inner(kind, user_id)')
+    .eq('billing_accounts.kind', 'individual')
+    .eq('billing_accounts.user_id', accountId);
+  if (error) throw new Error('subscription read failed');
+  return data;
+}
+
+/**
+ * "See Plus" on Today hands over to the Membership panel through this one
+ * key: set, the panel opens its upgrade section once and clears it.
+ */
+export const OPEN_UPGRADE_KEY = 'semester.open-upgrade';
+
+export function askToOpenUpgrade(): void {
+  try {
+    sessionStorage.setItem(OPEN_UPGRADE_KEY, '1');
+  } catch {
+    /* Storage refused: the panel opens closed, one tap from the same place. */
+  }
+}
+
+/** True once if Today asked for the upgrade to be open; the ask is used up. */
+export function takeOpenUpgrade(): boolean {
+  try {
+    const asked = sessionStorage.getItem(OPEN_UPGRADE_KEY) === '1';
+    if (asked) sessionStorage.removeItem(OPEN_UPGRADE_KEY);
+    return asked;
+  } catch {
+    return false;
+  }
 }
