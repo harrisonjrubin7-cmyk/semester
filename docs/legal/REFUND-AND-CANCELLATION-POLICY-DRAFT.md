@@ -16,7 +16,7 @@
 ## 1. What you pay for
 
 **Semester Plus**, bought in the app from the Membership panel on the Account
-screen, at the price shown there — currently $3.99 a month or $29.99 a year.
+screen, at the price shown there — currently $7.99 a month or $59 a year (D-134).
 Before anything is charged you tick a box that names the amount, how often it
 renews, and where to cancel. Payment is taken by Stripe; Semester never sees
 your card. Semester Free stays free, and nothing you created is locked behind

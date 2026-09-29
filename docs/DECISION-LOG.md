@@ -2678,17 +2678,18 @@ hold every brief: `docs/LAUNCH-COMPLETENESS.md`, rendered from
 `app/src/lib/launchcompleteness.ts`, cites a file for every row, and every
 standing is held to the kind of file it cites.
 
-- **Most of it exists as parts.** 210 items: 117 held by a test, 40 building,
-  41 designed, 10 not started, 2 held by a decision already on main.
+- **Most of it exists as parts.** 210 items: 118 held by a test, 40 building,
+  41 designed, 10 not started, 1 held by a decision already on main.
 - **The HECVAT tracker the briefs ask for first** is the 81 rows of their
   seven domains, each with a council seat as owner and the
   `HECVAT_READINESS.md` control it moves; 40 rows have none, which is what the
   brief adds to the thirty. **Due dates are the seats' to set**, not typed
   here on their behalf; the test holds any that is set to an ISO date after
   the reading.
-- **The pilot term conflict is held, not reopened.** The brief's Registration
-  and Path pilot runs 12–26 weeks; `gtm/pilot.ts` refuses anything outside
-  60–120 days (D-113's reading). Twelve to seventeen weeks satisfies both.
+- **The pilot term conflict is settled.** The brief's Registration and Path
+  pilot runs 12–26 weeks; when it arrived `gtm/pilot.ts` refused anything
+  outside 60–120 days. The owner has since chosen exactly 26 weeks (D-134),
+  the top of the brief's range, so the row is tested, not held.
 - **Four claim words may not be said**: "Replaces", "Improves student
   success", "Trusted by" and "Compliant" rest on no row of the claims
   register. The five that can be said name the rows they rest on.

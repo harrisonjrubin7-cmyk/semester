@@ -47,7 +47,7 @@ held by a test. What does not exist is concentrated: customer data migration,
 the MSA, counsel’s review of every public policy, a human accessibility pass, a
 production restore, error tracking, and anything with an institution’s name on it.
 Those are not code the repository can write; they are the owner’s, counsel’s and a
-first customer’s. The one conflict with the code is the pilot’s length.
+first customer’s. The one conflict with the code, the pilot’s length, the owner settled (D-134).
 
 ## 1. The go-live decision standard
 

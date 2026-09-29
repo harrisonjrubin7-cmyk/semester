@@ -141,10 +141,10 @@ describe('the launch-completeness crosswalk', () => {
       expect(pilot).toMatch(/export const PILOT_WEEKS = 26;/);
       expect(read('docs/PAID-PILOT-FRAMEWORK.md')).toMatch(/exactly 26 weeks/);
       expect(PILOT_TERM.gap).toMatch(/D-134/);
-      // Twelve weeks is 84 days and seventeen is 119: the overlap the gap names is real.
-      expect(12 * 7).toBeGreaterThanOrEqual(60);
-      expect(17 * 7).toBeLessThanOrEqual(120);
-      expect(18 * 7).toBeGreaterThan(120);
+      // Twenty-six weeks is the top of the brief's 12–26, and inside the deal desk's six months.
+      expect(26).toBeGreaterThanOrEqual(12);
+      expect(26).toBeLessThanOrEqual(26);
+      expect(26 * 7).toBeLessThanOrEqual(DEAL_POLICY.maxPilotMonths * 31);
       expect(DEAL_POLICY.maxPilotMonths).toBe(6);
     });
   });
@@ -303,7 +303,7 @@ function render(): string {
     'the MSA, counsel’s review of every public policy, a human accessibility pass, a',
     'production restore, error tracking, and anything with an institution’s name on it.',
     'Those are not code the repository can write; they are the owner’s, counsel’s and a',
-    'first customer’s. The one conflict with the code is the pilot’s length.',
+    'first customer’s. The one conflict with the code, the pilot’s length, the owner settled (D-134).',
     '',
     `## ${SECTIONS[0]}`,
     '',
