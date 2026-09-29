@@ -362,12 +362,6 @@ export const areaOf = (id: string) => AREAS.find((a) => a.id === id.split('-')[0
 // ── where a brief and the tree disagree ─────────────────────────────────────
 
 export const CONFLICTS: readonly { asks: string; tree: string; decides: Seat; cites: string }[] = [
-  {
-    asks: 'A first-year student lifecycle stage (R2).',
-    tree: 'docs/FIRST-YEAR-SUCCESS.md is the company’s first year of measures, not first-year students; the name will mislead a reader of either brief.',
-    decides: 'product',
-    cites: 'docs/FIRST-YEAR-SUCCESS.md',
-  },
 ];
 
 // ── the playbook's P0 blockers ──────────────────────────────────────────────

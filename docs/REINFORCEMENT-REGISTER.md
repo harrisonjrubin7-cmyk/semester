@@ -55,9 +55,7 @@ an artifact under `docs/evidence/`.
 
 Nothing here changes a recorded decision. Each is put to the seat that owns it.
 
-| The brief asks | The tree holds | Decides | Cites |
-| --- | --- | --- | --- |
-| A first-year student lifecycle stage (R2). | docs/FIRST-YEAR-SUCCESS.md is the company’s first year of measures, not first-year students; the name will mislead a reader of either brief. | `product` | [`docs/FIRST-YEAR-SUCCESS.md`](../docs/FIRST-YEAR-SUCCESS.md) |
+None is open. The four this register found — the Plus price, the pilot length, the statement’s “payments” and the first-year document’s name — the owner settled (D-130).
 
 ## The register
 

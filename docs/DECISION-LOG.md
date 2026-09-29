@@ -2394,15 +2394,14 @@ under `docs/expansion/` as supplied.
   improve retention, persistence, graduation or grades, to be fully
   compliant, or to be AI-safe — with a control showing each pattern catches
   its own example and passes the sentence the site actually uses.
-- **Not changed, put to the seat that owns it.** `docs/FIRST-YEAR-SUCCESS.md`
-  naming the company's first year where a reader of the briefs expects
-  first-year students (product). K–12: absent, neither planned nor refused,
-  behind COPPA-1. The Plus price, the pilot length and the statement's
-  "payments" were open here too, and the owner settled all three (D-130).
+- **Not changed.** K–12: absent, neither planned nor refused, behind COPPA-1.
+  The Plus price, the pilot length, the statement's "payments" and the name of
+  the first-year measures document were open here too, and the owner settled
+  all four (D-130).
 
-## D-130 · Plus is $7.99 a month or $59 a year everywhere, every pilot runs 26 weeks, and the statement no longer lists payments
+## D-130 · Plus is $7.99 a month or $59 a year everywhere, every pilot runs 26 weeks, the statement no longer lists payments, and the company's first-year measures are named for what they are
 
-**Decided 29 Sep 2026, by the owner.** D-129 found three things left open
+**Decided 29 Sep 2026, by the owner.** D-129 found four things left open
 between the briefs and the tree; the owner settled each.
 
 - **Plus.** `plans.ts` printed $7.99 and $59 on the pricing page, while the
@@ -2433,3 +2432,10 @@ between the briefs and the tree; the owner settled each.
   payment system. The owner removed the word. `oneos.test.ts` now refuses a
   statement naming payments, billing, financial aid, housing, health records
   or registration execution; putting "payments" back turned it red.
+- **The first-year measures.** `docs/FIRST-YEAR-SUCCESS.md` held the
+  company's measures for its first twelve months, and a reader of the briefs —
+  which ask for a first-year *student* stage — would take it for that. It is
+  now `docs/COMPANY-FIRST-YEAR-MEASURES.md`, titled "Company first-year
+  measures", moved with its history; the operating-system register, its
+  rendered page and every link follow. Decisions before this one keep the old
+  path as they wrote it.

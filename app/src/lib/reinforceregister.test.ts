@@ -94,7 +94,6 @@ describe('the reinforcement register', () => {
   });
 
   it('names a seat to decide every conflict, and cites what the tree holds', () => {
-    expect(CONFLICTS.length).toBeGreaterThan(0);
     for (const c of CONFLICTS) {
       expect(SEATS).toContain(c.decides);
       expect(exists(c.cites), c.cites).toBe(true);
@@ -188,9 +187,13 @@ function render(): string {
     '',
     'Nothing here changes a recorded decision. Each is put to the seat that owns it.',
     '',
-    '| The brief asks | The tree holds | Decides | Cites |',
-    '| --- | --- | --- | --- |',
-    ...CONFLICTS.map((c) => `| ${cell(c.asks)} | ${cell(c.tree)} | ${seat(c.decides)} | ${ref(c.cites)} |`),
+    ...(CONFLICTS.length
+      ? [
+          '| The brief asks | The tree holds | Decides | Cites |',
+          '| --- | --- | --- | --- |',
+          ...CONFLICTS.map((c) => `| ${cell(c.asks)} | ${cell(c.tree)} | ${seat(c.decides)} | ${ref(c.cites)} |`),
+        ]
+      : ['None is open. The four this register found — the Plus price, the pilot length, the statement’s “payments” and the first-year document’s name — the owner settled (D-130).']),
     '',
   );
 

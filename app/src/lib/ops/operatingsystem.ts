@@ -467,8 +467,8 @@ export const SOURCES: readonly Source[] = [
   },
   {
     id: 'first-year',
-    category: 'First-year success measures',
-    path: 'docs/FIRST-YEAR-SUCCESS.md',
+    category: 'Company first-year measures',
+    path: 'docs/COMPANY-FIRST-YEAR-MEASURES.md',
     status: 'current',
     owner: 'founder',
     version: 1,
@@ -824,7 +824,7 @@ export const SOURCES: readonly Source[] = [
     nextReview: QUARTERLY,
     supersedes: [],
     decisions: ['D-115'],
-    alsoRead: ['ops/strategic-boundaries/README.md', 'docs/DO-NOT-BUILD.md', 'docs/FIRST-YEAR-SUCCESS.md', 'docs/90-DAY-LAUNCH-PROGRAM.md'],
+    alsoRead: ['ops/strategic-boundaries/README.md', 'docs/DO-NOT-BUILD.md', 'docs/COMPANY-FIRST-YEAR-MEASURES.md', 'docs/90-DAY-LAUNCH-PROGRAM.md'],
     note: 'Rendered from app/src/lib/ops/leadership.ts: the fourteen plays, the thirteen one-X promises and the shared-services rule, the revenue lines and the lines not crossed, the friction index against the first-year measures, No Wrong Door against the help routes, the Launch System against the ninety-day programme, the benchmark test, and the faculty playbook — each pointed at what the tree holds, with a standing. Nothing on it says Semester is a whole platform; the count of promises kept is the finding.',
   },
   {
