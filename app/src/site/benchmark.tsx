@@ -88,7 +88,7 @@ export const DataAndAITransparency: Page = ({ config }) => (
         Semester helps people organise academic work, understand authorised information, and prepare for the next right action. You should be able to understand what information Semester uses, where it came from, who can access it, how long it is kept, and when AI is involved.
       </p>
       <p>
-        Semester does not replace your institution’s official systems, and it does not make official academic, financial-aid, registration, disciplinary, medical, legal or admissions decisions.
+        Semester works beside your institution’s official systems today; the plan to replace them, module by module, is on the <a href={href(config, '/platform/system-boundaries/')}>replacement map</a>, and none of it is built. Semester does not make official academic, financial-aid, registration, disciplinary, medical, legal or admissions decisions, in either mode.
       </p>
       <p>
         When Semester shows information, provides an estimate, recommends an action or uses AI, three things are made clear:

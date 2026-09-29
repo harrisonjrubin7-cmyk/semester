@@ -157,7 +157,7 @@ export const WhyNotAnotherTool: Page = ({ config }) => (
         A row says <strong>Held by a test</strong> only when every piece it rests on has a test that runs on every change. One piece still being built makes the whole row <strong>Being built</strong>: a connected platform is only as connected as its weakest join, and this page is where a buyer should find that out, not in a pilot.
       </p>
       <p>
-        What stays official — registration, the degree audit, grades, financial aid, housing — is on the <a href={href(config, '/platform/system-boundaries/')}>system boundaries</a> page. What each capability is called, with the six status words the site uses, is on <a href={href(config, '/platform/availability/')}>what is available</a>.
+        What stays official today, and the plan to take each system over one module at a time, is on the <a href={href(config, '/platform/system-boundaries/')}>replacement map</a>. What each capability is called, with the six status words the site uses, is on <a href={href(config, '/platform/availability/')}>what is available</a>.
       </p>
       <p className="site-small">
         <a href={href(config, '/platform/one-operating-system/')}>One Operating System. Every Student Moment.</a> · <a href={href(config, '/institutions/')}>For institutions</a>

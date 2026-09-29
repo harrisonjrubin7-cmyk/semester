@@ -84,10 +84,10 @@ export const SERVICES: [string, string][] = [
 
 /** Who decides what. Semester coordinates; each of these is the authority. */
 export const AUTHORITIES: [string, string][] = [
-  ['Semester', 'Coordinates: shows where you stand, what is next and where each fact came from.'],
+  ['Semester', 'Today it coordinates: shows where you stand, what is next and where each fact came from. In a module a school switches to Core, it becomes the record for that module only.'],
   ['The student information system', 'Certifies the record: enrolment, credits, grades of record.'],
   ['The learning system', 'Stays authoritative for course content and grades unless Semester’s own course tools are contracted to replace it.'],
-  ['The registrar', 'Owns official registration. Semester prepares and hands off; it never registers anyone.'],
+  ['The registrar', 'Owns official registration. Semester prepares and hands off today and registers no one; Core registration is planned, and the registrar stays in charge of it.'],
   ['Faculty', 'Own course policy, including how AI may be used in the course.'],
   ['Students', 'Control their personal plans and what they share, for how long, with whom.'],
 ];

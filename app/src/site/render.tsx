@@ -56,7 +56,7 @@ export const ROUTES: Route[] = [
   // whom, what stays official elsewhere, and what happens after a signature.
   { path: '/platform/availability/', title: 'What is available, to whom — Semester', description: 'Every capability by plan, each marked Available, Pilot, Planned or Services-led, so a plan is never mistaken for a product.', Page: M.Availability },
   { path: '/platform/service-map/', title: 'The Semester service map', description: 'Identity, planning, course learning, AI, integrations, support, status and export — and who decides what.', Page: M.ServiceMap },
-  { path: '/platform/system-boundaries/', title: 'System boundaries — Semester', description: 'Area by area: what Semester does, and what remains authoritative with the registrar, the record system, faculty and students.', Page: M.SystemBoundaries },
+  { path: '/platform/system-boundaries/', title: 'Replacing the stack, module by module — Semester', description: 'Each system Semester Core is planned to take over, with the register’s word for it, and what stays official until a school switches a module.', Page: M.SystemBoundaries },
   { path: '/start/', title: 'What happens after you get started — Semester', description: 'A student’s first session, step by step, and the nine steps of an institution’s pilot.', Page: M.StartPage },
   { path: '/demo/', title: 'The Semester demo', description: 'A sample institution with sample students, and a next step that matches why you came: student, advisor, faculty, registrar, IT or enterprise.', Page: M.Demo },
   { path: '/trust/product-quality/', title: 'Product quality — Semester', description: 'What is checked on every build, what is known, and which measures are deliberately not published yet.', Page: M.ProductQuality },
