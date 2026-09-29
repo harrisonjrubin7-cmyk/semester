@@ -55,8 +55,10 @@
  * have the action, so the restore is what put it there and not a leak between
  * contexts. After it, the action is present and still done.
  *
- * So: same-device resume and file-carried resume are proved; account-synced
- * resume against a live backend is not, and the gate stays PARTIAL for it.
+ * So: same-device resume and file-carried resume are proved here. Account-
+ * synced resume is proved by `account-sync.mjs`, which does sign in — against
+ * a local Supabase stood up from this repository in CI, so the objection above
+ * to the live project does not apply to it.
  *
  * ## What sign-in means here
  *
