@@ -73,17 +73,6 @@ export const READ_ON = '2026-09-29';
 export const PROJECT = 'lzrqvlugnawcgywkhqlz';
 
 /**
- * Callable definer functions from migrations that are in the tree and not yet
- * applied to production, so not among the advisor's 151. Each has its row in
- * `FUNCTIONS` like any other; it leaves this list when its migration is
- * applied and the advisor is read again.
- */
-export const UNAPPLIED: readonly { name: string; migration: string }[] = [
-  'gradebook_add_item', 'gradebook_enter', 'gradebook_export', 'gradebook_file_regrade', 'gradebook_moderate',
-  'gradebook_queue_passback', 'gradebook_release', 'gradebook_resolve_regrade', 'gradebook_set_scheme',
-].map((name) => ({ name, migration: '20260929310000_gradebook.sql' }));
-
-/**
  * The audit's function categories, each with the controls it requires. The
  * wording is the audit's; `self-service` is its "student self-service".
  */
@@ -214,6 +203,8 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['my_entitlements', 'read-helper', ['auth.uid()']],
   ['my_help_destinations', 'read-helper', ['private.has_capability']],
   ['my_moderation_access', 'read-helper', ['private.has_capability']],
+  ['my_registration', 'read-helper', ['auth.uid()', 'private.school_of']],
+  ['my_registration_hold', 'read-helper', ['auth.uid()', 'private.school_of']],
   ['my_support_thread', 'read-helper', ['auth.uid()']],
   ['my_support_tickets', 'read-helper', ['auth.uid()']],
   ['my_volunteer_standing', 'read-helper', ['auth.uid()']],
@@ -231,6 +222,13 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['read_support_share', 'sharing', ['auth.uid()', 'private.may_receive_support_share']],
   ['read_support_signals', 'sharing', ['auth.uid()', 'private.subject_has_capability', 'private.support_consent_active']],
   ['referral_standing', 'read-helper', ['auth.uid()']],
+  ['registrar_decide', 'admin', ['auth.uid()', 'private.registration_registrar', 'private.registration_gate', 'private.registration_key']],
+  ['registrar_grant_override', 'admin', ['auth.uid()', 'private.registration_registrar', 'private.registration_gate', 'private.registration_key']],
+  ['registrar_put_section', 'admin', ['auth.uid()', 'private.registration_registrar']],
+  ['registrar_put_term', 'admin', ['auth.uid()', 'private.registration_registrar']],
+  ['registration_drop', 'self-service', ['auth.uid()', 'private.registration_school', 'private.registration_gate', 'private.registration_key']],
+  ['registration_enroll', 'self-service', ['auth.uid()', 'private.registration_school', 'private.registration_gate', 'private.registration_key']],
+  ['registration_withdraw', 'self-service', ['auth.uid()', 'private.registration_school', 'private.registration_gate', 'private.registration_key']],
   ['remove_connection', 'self-service', ['auth.uid()']],
   ['reply_to_my_ticket', 'self-service', ['auth.uid()']],
   ['report_community_post', 'self-service', ['auth.uid()', 'private.community_role']],
@@ -265,6 +263,47 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['volunteer_roster', 'moderation', ['private.has_capability']],
   ['withdraw_help_request', 'self-service', ['auth.uid()']],
 ];
+
+/**
+ * Callable definer functions added by migrations that are **not** applied to
+ * production, so were not in the advisor's reading. They have rows in
+ * `FUNCTIONS` like any other; they are named here so the reading stays the
+ * reading — the page says 151 on production and lists these beside it — and
+ * a file here that is applied moves its functions into the count.
+ */
+export const SINCE_READING: readonly { file: string; functions: readonly string[] }[] = [
+  {
+    file: '20260929310000_gradebook.sql',
+    functions: [
+      'gradebook_add_item',
+      'gradebook_enter',
+      'gradebook_export',
+      'gradebook_file_regrade',
+      'gradebook_moderate',
+      'gradebook_queue_passback',
+      'gradebook_release',
+      'gradebook_resolve_regrade',
+      'gradebook_set_scheme',
+    ],
+  },
+  {
+    file: '20260929300000_registration_transaction.sql',
+    functions: [
+      'my_registration',
+      'my_registration_hold',
+      'registrar_decide',
+      'registrar_grant_override',
+      'registrar_put_section',
+      'registrar_put_term',
+      'registration_drop',
+      'registration_enroll',
+      'registration_withdraw',
+    ],
+  },
+];
+
+/** How many functions the advisor listed on production on `READ_ON`. */
+export const READ_COUNT = 151;
 
 /**
  * The advisor's 45 `rls_enabled_no_policy` tables. `private-internal` is a

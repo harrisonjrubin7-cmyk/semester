@@ -274,7 +274,9 @@ begin
   -- teaching_assistant → grades:enter; registrar → grades:export; and
   -- grades:receive for student,
   -- undergraduate_student, graduate_student and transfer_student.
-  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 128);
+  -- 128 before 20260929300000_registration_transaction.sql gave `registrar`
+  -- `registration:administer`.
+  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 129);
 
   perform pg_temp.become_anon();
   perform pg_temp.refused('a signed-out visitor cannot read the matrix',

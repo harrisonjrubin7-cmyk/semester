@@ -26,28 +26,29 @@ Production (`lzrqvlugnawcgywkhqlz`), 2026-09-29, read-only, through the advisor 
 - all 151 functions: not executable by `anon` or PUBLIC, `search_path` pinned, no dynamic `execute`;
 - two bodies named neither `auth.uid()` nor a `private.` gate. `gtm_pilot_problems` answered any signed-in caller about any pilot — a student could read whether a pilot's price was agreed, who sponsored it and whether its dates fit. It is fixed in `supabase/migrations/20260929120000_gtm_pilot_problems_visibility.sql` and held by `supabase/gtm.check.sql`. `kill_switch_engaged` is a deliberate one-boolean read, kept open as DR-01.
 
+Since the reading, 18 more, from migrations not applied to production, each with a row below: `20260929310000_gradebook.sql` (`gradebook_add_item`, `gradebook_enter`, `gradebook_export`, `gradebook_file_regrade`, `gradebook_moderate`, `gradebook_queue_passback`, `gradebook_release`, `gradebook_resolve_regrade`, `gradebook_set_scheme`); `20260929300000_registration_transaction.sql` (`my_registration`, `my_registration_hold`, `registrar_decide`, `registrar_grant_override`, `registrar_put_section`, `registrar_put_term`, `registration_drop`, `registration_enroll`, `registration_withdraw`).
+
 ## How this page is held
 
 - The function set is derived: `definerregister.test.ts` reads every migration, takes the winning definition of each `public` function, keeps the `security definer` ones and intersects them with the allowlist in `supabase/grants.check.sql`. That set must equal the register exactly. A new definer function granted to clients is red until it has a row — the audit's release-gate line "new SECURITY DEFINER functions have an approved inventory entry", as a test.
 - Every row's gates are literal checks that must appear in the winning body. Removing one turns its row red.
 - An admin or moderation row must name a gate other than `auth.uid()`.
-- 9 of the functions below come from migrations not yet applied to production, so the advisor has not read them: `gradebook_add_item`, `gradebook_enter`, `gradebook_export`, `gradebook_file_regrade`, `gradebook_moderate`, `gradebook_queue_passback`, `gradebook_release`, `gradebook_resolve_regrade`, `gradebook_set_scheme`. Each leaves that list when its migration is applied and the reading is taken again.
 - The tables are the advisor's list, pinned: some tables get their policies from `format()` loops a static parser cannot read. Each is held to being created with row-level security, having no `create policy` naming it, and never being granted to `anon`, `authenticated` or PUBLIC.
 
 ## Functions by category
 
 | Category | Functions | Controls the audit requires |
 | --- | --- | --- |
-| self-service | 51 | Verify auth.uid(), tenant scope, object ownership, input validation, rate limits, audit event. |
+| self-service | 54 | Verify auth.uid(), tenant scope, object ownership, input validation, rate limits, audit event. |
 | sharing | 18 | Explicit consent, narrow scope, short expiry, revocation, view audit. |
-| admin | 46 | Capability check, MFA or fresh auth for high risk, dual control where needed, immutable audit. |
+| admin | 50 | Capability check, MFA or fresh auth for high risk, dual control where needed, immutable audit. |
 | integration | 6 | Server-only preferred; signed workflow; replay protection; no browser service-role access. |
 | financial | 1 | Provider webhook verification, idempotency, no client-controlled final state. |
 | moderation | 15 | Capability check, reason required, appeals, audit trail. |
-| read-helper | 23 | Minimal fields, no hidden cross-tenant aggregation, pagination limit. |
-| **total** | 160 | |
+| read-helper | 25 | Minimal fields, no hidden cross-tenant aggregation, pagination limit. |
+| **total** | 169 | |
 
-### self-service (51)
+### self-service (54)
 
 | Function | Gates in its body | Defined in |
 | --- | --- | --- |
@@ -91,6 +92,9 @@ Production (`lzrqvlugnawcgywkhqlz`), 2026-09-29, read-only, through the advisor 
 | `note_activity` | `auth.uid()` | `20260921151000_activity.sql` |
 | `open_help_request` | `auth.uid()`, `private.answers_for` | `20260927234000_help_request_reply_on_open.sql` |
 | `open_support_ticket` | `auth.uid()` | `20260928210000_support_tickets.sql` |
+| `registration_drop` | `auth.uid()`, `private.registration_school`, `private.registration_gate`, `private.registration_key` | `20260929300000_registration_transaction.sql` |
+| `registration_enroll` | `auth.uid()`, `private.registration_school`, `private.registration_gate`, `private.registration_key` | `20260929300000_registration_transaction.sql` |
+| `registration_withdraw` | `auth.uid()`, `private.registration_school`, `private.registration_gate`, `private.registration_key` | `20260929300000_registration_transaction.sql` |
 | `remove_connection` | `auth.uid()` | `20260922003000_connections.sql` |
 | `reply_to_my_ticket` | `auth.uid()` | `20260928210000_support_tickets.sql` |
 | `report_community_post` | `auth.uid()`, `private.community_role` | `20260928032000_community.sql` |
@@ -126,7 +130,7 @@ Production (`lzrqvlugnawcgywkhqlz`), 2026-09-29, read-only, through the advisor 
 | `trust_room_grant` | `auth.uid()`, `private.has_capability` | `20260928100000_trust_room.sql` |
 | `trust_room_revoke` | `auth.uid()`, `private.has_capability` | `20260928100000_trust_room.sql` |
 
-### admin (46)
+### admin (50)
 
 | Function | Gates in its body | Defined in |
 | --- | --- | --- |
@@ -167,6 +171,10 @@ Production (`lzrqvlugnawcgywkhqlz`), 2026-09-29, read-only, through the advisor 
 | `publish_course_guidance` | `auth.uid()`, `private.course_publisher` | `20260928309000_course_studio.sql` |
 | `publish_course_rules` | `auth.uid()`, `private.course_publisher` | `20260928309000_course_studio.sql` |
 | `publish_study_pack` | `auth.uid()`, `private.course_publisher` | `20260928309000_course_studio.sql` |
+| `registrar_decide` | `auth.uid()`, `private.registration_registrar`, `private.registration_gate`, `private.registration_key` | `20260929300000_registration_transaction.sql` |
+| `registrar_grant_override` | `auth.uid()`, `private.registration_registrar`, `private.registration_gate`, `private.registration_key` | `20260929300000_registration_transaction.sql` |
+| `registrar_put_section` | `auth.uid()`, `private.registration_registrar` | `20260929300000_registration_transaction.sql` |
+| `registrar_put_term` | `auth.uid()`, `private.registration_registrar` | `20260929300000_registration_transaction.sql` |
 | `request_approval` | `auth.uid()`, `private.has_capability` | `20260929110000_console_approvals_and_break_glass.sql` |
 | `retire_escalation_agreement` | `auth.uid()`, `private.has_capability` | `20260928032000_community.sql` |
 | `review_break_glass` | `auth.uid()`, `private.holds_seat` | `20260929110000_console_approvals_and_break_glass.sql` |
@@ -214,7 +222,7 @@ Production (`lzrqvlugnawcgywkhqlz`), 2026-09-29, read-only, through the advisor 
 | `volunteer_next_tasks` | `auth.uid()`, `private.volunteer_ready` | `20260928032000_community.sql` |
 | `volunteer_roster` | `private.has_capability` | `20260928032000_community.sql` |
 
-### read-helper (23)
+### read-helper (25)
 
 | Function | Gates in its body | Defined in |
 | --- | --- | --- |
@@ -236,6 +244,8 @@ Production (`lzrqvlugnawcgywkhqlz`), 2026-09-29, read-only, through the advisor 
 | `my_entitlements` | `auth.uid()` | `20260929070000_commercial_core.sql` |
 | `my_help_destinations` | `private.has_capability` | `20260928030000_help_inbox_closed_history.sql` |
 | `my_moderation_access` | `private.has_capability` | `20260928000000_moderation_queue_access.sql` |
+| `my_registration` | `auth.uid()`, `private.school_of` | `20260929300000_registration_transaction.sql` |
+| `my_registration_hold` | `auth.uid()`, `private.school_of` | `20260929300000_registration_transaction.sql` |
 | `my_support_thread` | `auth.uid()` | `20260928210000_support_tickets.sql` |
 | `my_support_tickets` | `auth.uid()` | `20260928210000_support_tickets.sql` |
 | `my_volunteer_standing` | `auth.uid()` | `20260928032000_community.sql` |

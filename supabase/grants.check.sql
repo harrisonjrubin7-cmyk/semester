@@ -545,7 +545,25 @@ declare
     'review_break_glass(want_id uuid, want_note text)',
     'console_approvals(include_demo boolean)',
     'console_break_glass(include_demo boolean)',
-    'console_customers(include_demo boolean)'
+    'console_customers(include_demo boolean)',
+
+    -- The nine in 20260929300000_registration_transaction.sql. The three
+    -- student writers act only on the caller's own enrollment at the
+    -- caller's own school, behind writeback.registration_submit and
+    -- kill.writeback, each with an idempotency key. The two readers return
+    -- the caller's own rows, and a hold as whether, office and link — never
+    -- the reason. The four registrar writers each raise without
+    -- registration:administer over the caller's school.
+    -- `registration_transaction.check.sql` attempts each refusal.
+    'registration_enroll(want_section uuid, want_key text, want_expect text)',
+    'registration_drop(want_section uuid, want_key text)',
+    'registration_withdraw(want_section uuid, want_key text)',
+    'my_registration(want_term text)',
+    'my_registration_hold()',
+    'registrar_put_term(want_term text, want_opens timestamp with time zone, want_add_drop_ends timestamp with time zone, want_withdraw_ends timestamp with time zone, want_max_credits numeric)',
+    'registrar_put_section(want_term text, want_course text, want_section text, want_title text, want_credits numeric, want_capacity integer, want_waitlist integer, want_meetings jsonb, want_prerequisites text[], want_requires_approval boolean)',
+    'registrar_grant_override(want_student uuid, want_section uuid, want_waives text[], want_reason text, want_key text)',
+    'registrar_decide(want_enrollment uuid, want_approve boolean, want_reason text, want_key text)'
   ];
   extra text;
   missing text;

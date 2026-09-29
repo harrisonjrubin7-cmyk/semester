@@ -132,6 +132,9 @@ export const STUDENT_RECORD: readonly string[] = [
   'audit:read',
   'outcomes:read',
   'demand:read',
+  // Every enrollment at a school, and the registrar's overrides of one
+  // student's checks (20260929300000_registration_transaction.sql).
+  'registration:administer',
 ];
 
 /** The categories whose roles are Semester's own people rather than a school's. */

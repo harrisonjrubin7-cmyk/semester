@@ -204,10 +204,10 @@ export const FLAGS: readonly FlagDefinition[] = [
     needsScopes: ['scope.sis.registration_hold_summary_read'], destination: 'semester',
   }),
 
-  // ── Write-back (every one high-risk, none built) ────────────────────────
+  // ── Write-back (every one high-risk) ────────────────────────────────────
   flag({
     key: 'writeback.registration_submit',
-    description: 'Submit a registration change to the SIS. Not implemented; the flag exists so the gate does.',
+    description: 'Enroll, waitlist, drop and withdraw in Semester\'s registration ledger (lib/enrollment, 20260929300000_registration_transaction.sql), read as on only at production. The SIS adapter that would send a committed change on is not built.',
     type: 'writeback', owner: 'Integrations', scopes: ['tenant', 'user'], highRisk: true, reviewAt: REVIEW,
     rollout: 'Not before a separate design review, a registrar agreement and a two-step confirmation.',
     successCriteria: 'n/a until built.',

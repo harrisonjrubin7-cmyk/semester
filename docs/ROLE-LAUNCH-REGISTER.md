@@ -77,7 +77,7 @@ Two further limits on what the columns below prove:
 | Role | State | Def · Mod · Prov · Use · Sec · Sup · Appr | Capabilities | Interface | Authorization checks | Runbook | Training | Must be able to | Must never |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `disability_services_officer` | provisionable | ✓ ✓ ✓ · ✓ · · | `accommodation:verify` | — | `expansion.check.sql` | — | — | Issue/revoke functional accommodation passport | Diagnoses in Semester; unrestricted academic records |
-| `registrar` | secure | ✓ ✓ ✓ ✓ ✓ · · | `institution_action:publish`<br>`registration_window:publish`<br>`catalog:sync`<br>`articulation:approve`<br>`demand:read`<br>`help_request:respond`<br>`grades:export` | `app/src/components/HelpInbox.tsx` | `demand.check.sql`<br>`expansion.check.sql`<br>`gradebook.check.sql`<br>`officeactions.check.sql` | — | — | Publish catalog, requirements, windows, approved articulation decisions, institutional actions | Individual private plans, AI memory, unrestricted student browsing |
+| `registrar` | secure | ✓ ✓ ✓ ✓ ✓ · · | `institution_action:publish`<br>`registration_window:publish`<br>`catalog:sync`<br>`articulation:approve`<br>`demand:read`<br>`help_request:respond`<br>`registration:administer`<br>`grades:export` | `app/src/components/HelpInbox.tsx` | `demand.check.sql`<br>`expansion.check.sql`<br>`gradebook.check.sql`<br>`officeactions.check.sql`<br>`registration_transaction.check.sql` | — | — | Publish catalog, requirements, windows, approved articulation decisions, institutional actions | Individual private plans, AI memory, unrestricted student browsing |
 | `department_chair` | provisionable | ✓ ✓ ✓ · ✓ · · | `demand:read` | — | `demand.check.sql`<br>`gradebook.check.sql` | — | — | View allowed aggregate demand/outcomes for scope | Individual records |
 | `dean` | provisionable | ✓ ✓ ✓ · · · · | `demand:read`<br>`outcomes:read` | — | — | — | — | View allowed school-level aggregates and decisions | Individual records without explicit authorization |
 | `institutional_researcher` | provisionable | ✓ ✓ ✓ · ✓ · · | `demand:read`<br>`outcomes:read` | — | `expansion.check.sql` | — | — | View governed, aggregate, suppressed analytics | Individual student records |
@@ -164,7 +164,7 @@ own records. A grant outside either list fails the build until somebody judges i
 
 | Internal roles may hold | Internal roles never hold |
 | --- | --- |
-| `console:operate`<br>`approval:decide`<br>`breakglass:request`<br>`beta:manage`<br>`beta:triage`<br>`platform:configure`<br>`support:ticket`<br>`incident:communicate`<br>`killswitch:engage`<br>`moderation:action`<br>`report:read`<br>`review:moderate`<br>`opportunity:moderate`<br>`community:review`<br>`community:review_senior`<br>`community:escalation_agreements`<br>`community:manage`<br>`account:manage`<br>`success:manage`<br>`billing:operate`<br>`compliance:manage`<br>`content:manage`<br>`campaign:manage`<br>`campaign:report`<br>`campaign:review`<br>`trust:publish` | `mentee:read`<br>`help_request:respond`<br>`accommodation:verify`<br>`skill:verify`<br>`support:read`<br>`data_request:handle`<br>`talent:search`<br>`lti:launch`<br>`audit:read`<br>`outcomes:read`<br>`demand:read` |
+| `console:operate`<br>`approval:decide`<br>`breakglass:request`<br>`beta:manage`<br>`beta:triage`<br>`platform:configure`<br>`support:ticket`<br>`incident:communicate`<br>`killswitch:engage`<br>`moderation:action`<br>`report:read`<br>`review:moderate`<br>`opportunity:moderate`<br>`community:review`<br>`community:review_senior`<br>`community:escalation_agreements`<br>`community:manage`<br>`account:manage`<br>`success:manage`<br>`billing:operate`<br>`compliance:manage`<br>`content:manage`<br>`campaign:manage`<br>`campaign:report`<br>`campaign:review`<br>`trust:publish` | `mentee:read`<br>`help_request:respond`<br>`accommodation:verify`<br>`skill:verify`<br>`support:read`<br>`data_request:handle`<br>`talent:search`<br>`lti:launch`<br>`audit:read`<br>`outcomes:read`<br>`demand:read`<br>`registration:administer` |
 
 ## Role × capability
 
@@ -209,6 +209,7 @@ One row per row of `public.role_capabilities`. A capability's checks are the SQL
 | `registrar` | `articulation:approve` | — | — |
 | `registrar` | `demand:read` | — | — |
 | `registrar` | `help_request:respond` | `app/src/components/HelpInbox.tsx` | — |
+| `registrar` | `registration:administer` | — | — |
 | `registrar` | `grades:export` | — | — |
 | `department_chair` | `demand:read` | — | — |
 | `dean` | `demand:read` | — | — |

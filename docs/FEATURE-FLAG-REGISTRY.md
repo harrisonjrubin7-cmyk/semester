@@ -63,7 +63,7 @@ Every flag: default **off**, created 2026-09-27, review 2026-12-15, runbook belo
 | `scope.sis.enrollment_read` | scope | Integrations | **yes** | tenant, user | — | Off and withdraw the scope. |
 | `scope.lms.assignment_dates_read` | scope | Integrations | **yes** | tenant, course | — | Off and withdraw the scope. |
 | `scope.sis.registration_hold_summary_read` | scope | Integrations | **yes** | tenant, user | — | Off and withdraw the scope. |
-| `writeback.registration_submit` | writeback | Integrations | **yes** | tenant, user | — | `kill.writeback`. Not built. |
+| `writeback.registration_submit` | writeback | Integrations | **yes** | tenant, user | — | `kill.writeback`. Gates the registration ledger (`lib/enrollment`, `20260929300000_registration_transaction.sql`): on only at `production`, stopped by `kill.writeback` or `kill.integration_sync`. The SIS adapter is not built. |
 | `writeback.space_booking` | writeback | Integrations | **yes** | tenant, user | — | Engage `kill.writeback`. Not built: "Book" opens the school's own page. |
 | `writeback.lms_grade_passback` | writeback | Integrations | **yes** | tenant, course, assignment | — | `kill.writeback`. See the note below. |
 | `ops.external_ai_generation` | ops | AI platform | **yes** | tenant, course | — | `kill.ai_generation`. |
