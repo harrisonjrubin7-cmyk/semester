@@ -19,26 +19,35 @@ const MIGRATIONS = resolve(__dirname, '../../../../supabase/migrations');
 const uncommented = (sql: string) => sql.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/--[^\n]*/g, ' ');
 
 /**
- * The values of the last `check (<column> in (…))` on `table.column` across
- * the migrations in filename order — `check (<column> is null or <column> in
- * (…))` included. A check belongs to the `create table` or `alter table`
- * statement it sits in, so the same column name on another table is never
- * read. The last one is what production enforces.
+ * The values of the check on `table.column` that production enforces: the
+ * last `check (<column> in (…))` across the migrations in filename order —
+ * `check (<column> is null or <column> in (…))` included — unless a later
+ * `drop constraint` removed it with nothing put back, in which case there is
+ * none and this throws, because the database then accepts anything.
+ *
+ * A check belongs to the `create table` or `alter table` statement it sits
+ * in, so the same column name on another table is never read. A drop is
+ * matched by Postgres's name for the check, `<table>_<column>_check`, which
+ * is the name an inline check gets and the name every replacement here uses.
  */
 function enforced(table: string, column: string): string[] {
   let last: string[] | null = null;
+  const name = `${table}_${column}_check`;
   const files = readdirSync(MIGRATIONS).filter((f) => f.endsWith('.sql')).sort();
   for (const f of files) {
     const sql = uncommented(readFileSync(resolve(MIGRATIONS, f), 'utf8'));
-    const re = new RegExp(`check\\s*\\(\\s*(?:${column}\\s+is\\s+null\\s+or\\s+)?${column}\\s+in\\s*\\(([^)]*)\\)`, 'gi');
-    for (const m of sql.matchAll(re)) {
-      const before = sql.slice(0, m.index);
-      const owner = [...before.matchAll(/\b(?:create|alter)\s+table\s+(?:if\s+(?:not\s+)?exists\s+)?(?:only\s+)?(?:public\s*\.\s*)?([a-z_][a-z0-9_]*)/gi)].pop();
+    const events: { at: number; values: string[] | null }[] = [];
+    const check = new RegExp(`check\\s*\\(\\s*(?:${column}\\s+is\\s+null\\s+or\\s+)?${column}\\s+in\\s*\\(([^)]*)\\)`, 'gi');
+    for (const m of sql.matchAll(check)) {
+      const owner = [...sql.slice(0, m.index).matchAll(/\b(?:create|alter)\s+table\s+(?:if\s+(?:not\s+)?exists\s+)?(?:only\s+)?(?:public\s*\.\s*)?([a-z_][a-z0-9_]*)/gi)].pop();
       if (owner?.[1].toLowerCase() !== table) continue;
-      last = [...m[1].matchAll(/'([^']+)'/g)].map((v) => v[1]);
+      events.push({ at: m.index, values: [...m[1].matchAll(/'([^']+)'/g)].map((v) => v[1]) });
     }
+    const drop = new RegExp(`\\bdrop\\s+constraint\\s+(?:if\\s+exists\\s+)?"?${name}"?\\b`, 'gi');
+    for (const m of sql.matchAll(drop)) events.push({ at: m.index, values: null });
+    for (const e of events.sort((a, b) => a.at - b.at)) last = e.values;
   }
-  if (!last) throw new Error(`no check constraint on ${table}.${column} found`);
+  if (!last) throw new Error(`no check constraint on ${table}.${column} is in force`);
   return last;
 }
 
