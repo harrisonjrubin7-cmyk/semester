@@ -6,6 +6,7 @@ import {
   checkoutReturn,
   consentText,
   currentSubscription,
+  hasPaidBefore,
   plusPrices,
   priceWords,
   startCheckout,
@@ -45,6 +46,10 @@ const RETURNED: Record<'success' | 'cancel', string> = {
   cancel: 'Checkout was closed before paying. Nothing was charged.',
 };
 
+/** After `?checkout=success`: look every 3 s for a minute for the webhook's row. */
+const SUCCESS_POLLS = 20;
+const SUCCESS_POLL_MS = 3000;
+
 const when = (iso: string) => (iso ? formatDate(iso, { month: 'long', day: 'numeric', year: 'numeric' }) : 'the end of the period you paid for');
 
 export function MembershipPanel() {
@@ -59,10 +64,13 @@ export function MembershipPanel() {
   const [note, setNote] = useState('');
   const [returned] = useState(() => (typeof location === 'undefined' ? null : checkoutReturn(location.search)));
   const signedIn = cloudConfigured && !!account;
+  const accountId = signedIn ? account.id : '';
+  const [paidBefore, setPaidBefore] = useState(false);
 
   useEffect(() => {
     if (!cloudConfigured) return;
     let live = true;
+    let timer: ReturnType<typeof setTimeout> | undefined;
     void (async () => {
       try {
         const db = await cloud();
@@ -71,19 +79,39 @@ export function MembershipPanel() {
           .select('id, plan_code, amount_cents, currency, billing_interval')
           .eq('plan_code', 'plus');
         if (live) setPrices(plusPrices(data));
-        if (!signedIn) return;
-        const own = await db
-          .from('subscriptions')
-          .select('id, plan_code, status, current_period_end, cancel_at_period_end');
-        if (live) setSub(currentSubscription(own.data));
+        if (!accountId) return;
+        // Only this person's own, individual billing account. A billing
+        // contact or operator can read other accounts' rows under RLS, and
+        // none of those is their plan.
+        const read = () =>
+          db
+            .from('subscriptions')
+            .select('id, plan_code, status, current_period_end, cancel_at_period_end, billing_accounts!inner(kind, user_id)')
+            .eq('billing_accounts.kind', 'individual')
+            .eq('billing_accounts.user_id', accountId);
+        // Stripe can send the buyer back before its webhook has written the
+        // subscription, so after a successful return keep looking for a
+        // minute rather than showing Free until the next reload.
+        let tries = returned === 'success' ? SUCCESS_POLLS : 1;
+        const look = async () => {
+          const own = await read();
+          if (!live) return;
+          const found = currentSubscription(own.data);
+          setSub(found);
+          setPaidBefore(hasPaidBefore(own.data));
+          tries -= 1;
+          if (!found && tries > 0) timer = setTimeout(() => void look().catch(() => {}), SUCCESS_POLL_MS);
+        };
+        await look();
       } catch {
         /* No catalog, no sale: the panel falls back to saying so. */
       }
     })();
     return () => {
       live = false;
+      if (timer) clearTimeout(timer);
     };
-  }, [signedIn]);
+  }, [accountId, returned]);
 
   const onSale = prices.length > 0;
   const chosen = prices.find((p) => p.id === choice) ?? prices[0];
@@ -285,7 +313,7 @@ export function MembershipPanel() {
 
       <p style={{ fontSize: 'var(--type-sm)', margin: '0 0 var(--sp-1)' }}><strong>Payment history</strong></p>
       <p style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', margin: 0 }}>
-        {sub
+        {sub || paidBefore
           ? 'Stripe takes your payments and emails a receipt for each one. Semester holds no card or bank details.'
           : 'No payments. Semester has never charged you and holds no card or bank details.'}
       </p>

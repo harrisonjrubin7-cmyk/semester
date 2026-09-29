@@ -11,11 +11,12 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 
 const mock = vi.hoisted(() => {
   const tables: Record<string, unknown[]> = { commercial_prices: [], subscriptions: [] };
+  const eqs: [string, string, unknown][] = [];
   const from = (t: string) => {
-    const q = { select: () => q, eq: () => q, then: (ok: (r: unknown) => unknown) => Promise.resolve({ data: tables[t] ?? [], error: null }).then(ok) };
+    const q = { select: () => q, eq: (k: string, v: unknown) => (eqs.push([t, k, v]), q), then: (ok: (r: unknown) => unknown) => Promise.resolve({ data: tables[t] ?? [], error: null }).then(ok) };
     return q;
   };
-  return { tables, rpc: vi.fn(), from: vi.fn(from), start: vi.fn(), account: { id: 'u1' } as { id: string } | null };
+  return { tables, eqs, rpc: vi.fn(), from: vi.fn(from), start: vi.fn(), account: { id: 'u1' } as { id: string } | null };
 });
 vi.mock('../lib/cloud', () => ({
   cloudConfigured: true,
@@ -36,6 +37,7 @@ const YEAR = { id: '64c5f28d-84dd-452d-b87a-257d6dc9b080', plan_code: 'plus', am
 beforeEach(() => {
   mock.tables.commercial_prices = [MONTH, YEAR];
   mock.tables.subscriptions = [];
+  mock.eqs.length = 0;
   mock.account = { id: 'u1' };
   mock.rpc.mockReset();
   mock.start.mockReset();
@@ -131,4 +133,36 @@ it('uses only real, named buttons, none disabled', async () => {
     expect(b.hasAttribute('disabled'), b.textContent ?? '').toBe(false);
     expect((b.textContent ?? '').trim().length).toBeGreaterThan(0);
   }
+});
+
+it('reads only the person’s own individual billing account, never one they can see as a billing contact', async () => {
+  await render();
+  const subs = mock.eqs.filter(([t]) => t === 'subscriptions').map(([, k, v]) => [k, v]);
+  expect(subs).toContainEqual(['billing_accounts.user_id', 'u1']);
+  expect(subs).toContainEqual(['billing_accounts.kind', 'individual']);
+});
+
+it('keeps looking after Stripe’s return until the webhook has written the plan', async () => {
+  vi.useFakeTimers();
+  vi.stubGlobal('location', { ...window.location, search: '?checkout=success' });
+  try {
+    await render();
+    expect(host.textContent).toContain('You are on Semester Free');
+    mock.tables.subscriptions = [{ id: 's1', plan_code: 'plus', status: 'active', current_period_end: '2026-10-29T12:00:00Z', cancel_at_period_end: false }];
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(3000);
+    });
+    expect(host.textContent).toContain('You are on Semester Plus');
+  } finally {
+    vi.unstubAllGlobals();
+    vi.useRealTimers();
+  }
+});
+
+it('does not tell a former subscriber they were never charged', async () => {
+  mock.tables.subscriptions = [{ id: 's0', plan_code: 'plus', status: 'ended', current_period_end: '2026-08-29T12:00:00Z' }];
+  await render();
+  expect(host.textContent).toContain('You are on Semester Free');
+  expect(host.textContent).not.toContain('Semester has never charged you');
+  expect(host.textContent).toContain('emails a receipt');
 });

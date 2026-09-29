@@ -5,6 +5,7 @@ import {
   checkoutReturn,
   consentText,
   currentSubscription,
+  hasPaidBefore,
   money,
   plusPrices,
   priceWords,
@@ -52,6 +53,12 @@ describe('the subscription', () => {
     expect(currentSubscription(rows)).toEqual({ id: 'b', plan: 'plus', status: 'active', periodEnd: '2026-10-29T00:00:00Z', cancelAtPeriodEnd: false });
     expect(currentSubscription([rows[0]])).toBeNull();
     expect(currentSubscription(undefined)).toBeNull();
+  });
+
+  it('remembers a paid plan that has ended', () => {
+    expect(hasPaidBefore([{ plan_code: 'plus', status: 'ended' }])).toBe(true);
+    expect(hasPaidBefore([{ plan_code: 'free' }])).toBe(false);
+    expect(hasPaidBefore(null)).toBe(false);
   });
 
   it('hears what Stripe’s return added to the address', () => {

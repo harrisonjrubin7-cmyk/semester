@@ -100,6 +100,11 @@ export function currentSubscription(rows: unknown): Subscription | null {
   return null;
 }
 
+/** Whether any of the person's own rows is a paid plan, current or long over. */
+export function hasPaidBefore(rows: unknown): boolean {
+  return Array.isArray(rows) && (rows as Record<string, unknown>[]).some((r) => r && typeof r.plan_code === 'string' && r.plan_code !== 'free');
+}
+
 /** What Stripe's return added to the address: `?checkout=success|cancel`, or null. */
 export function checkoutReturn(search: string): 'success' | 'cancel' | null {
   const v = new URLSearchParams(search).get('checkout');
