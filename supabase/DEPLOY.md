@@ -500,14 +500,22 @@ the expected result of that run is no row, not a failed job; the first
 snapshot follows the first signed order form. The catalog seeded as the
 migration wrote it: nine plans, nine prices, thirteen `cta_routes`.
 
-## Live on merge, off until configured: `lead-intake`
+## Live on merge, and on from the first deploy: `lead-intake`
+
+It no longer waits for a secret. The site's origins are built in and the
+salt defaults to the service key, so forms from www.semester.website are
+stored as soon as this is deployed. Only the owner's email is off until
+`RESEND_API_KEY` and `LEAD_NOTIFY_EMAIL` are set: until then leads collect
+in the database with nobody told.
 
 The company site's forms post here:
 `POST https://<project-ref>.supabase.co/functions/v1/lead-intake`. The contract
 is written out at the top of `_shared/leadintake.ts`; the database side is
 `submit_site_lead`.
 
-    SITE_ORIGINS        required; the site's origin(s), comma-separated. Unset answers 503
+    SITE_ORIGINS        optional; origins to add, comma-separated. The site's own three
+                        (www.semester.website, semester.website, the vercel.app address)
+                        are built in as SITE_PRODUCTION_ORIGINS, so unset no longer means off
     RESEND_API_KEY      optional; with LEAD_NOTIFY_EMAIL, each lead is emailed to the owner
     LEAD_NOTIFY_EMAIL   optional; the owner's inbox. Configuration, never code
     LEAD_NOTIFY_FROM    optional; a verified Resend sender (default: Resend's onboarding sender)
