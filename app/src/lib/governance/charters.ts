@@ -193,6 +193,26 @@ export const CHARTERS: readonly ProductCharter[] = [
     killSwitch: 'kill.sharing; or set the tenant policy row off — placements disappear on the next render.',
     decision: 'defer', route: 'pilot', reviewAt: '2026-12-15',
   },
+  {
+    flag: 'module.student_accounts', name: 'Student accounts, payments and financial aid',
+    problem: 'A student cannot see in one place what they owe the school, which aid has actually landed, and when the next instalment is due; the bursar and aid office keep those facts in systems that do not talk to each other.',
+    primaryUser: 'A school’s bursar and financial aid office, and the students whose accounts they keep',
+    jobToBeDone: 'When a term’s bill posts, I want the charges, the aid that has landed, the aid still anticipated and the plan instalments side by side, so nobody pays late for money they thought was coming.',
+    buyerAndAdoptionHypothesis: 'The bursar and the director of financial aid; adopted if one term’s balances reconcile to the school’s own system to the cent with no hand-kept spreadsheet.',
+    successMetrics: {
+      behavior: 'Students accept or decline each award in Semester before the aid deadline.',
+      workflow: 'A provider payment posts once, whatever order or number of times its webhooks arrive.',
+      institutional: 'Fewer balance-driven registration holds that turn out to be undisbursed aid.',
+    },
+    nonGoals: ['Deciding aid eligibility or an award amount', 'Holding card or bank details', 'Being the school’s book of record for finance', 'Telling another office why a student is held'],
+    sourceDependency: 'The school’s aid system through an adapter (sync_aid_award), and a payment provider through its webhook (lib/studentaccount/payments.ts).',
+    fallback: 'The school’s own student account portal, and bill.ts for the statement a student types in.',
+    classification: 'T4', accessibilityAcceptance: 'Every figure is text with its label; a credit balance is written out as money coming back, never as a minus sign alone.',
+    costModel: 'The payment provider’s per-transaction fee, borne by the school; no AI cost.',
+    owners: { product: 'Student accounts product lead', engineering: 'Institutional engineering', support: 'The school’s named finance owner' },
+    killSwitch: 'Set the tenant policy row off, or clear the finance owner: every person’s write refuses at once (private.student_accounts_on). Payments already made still post.',
+    decision: 'build', route: 'pilot', reviewAt: '2026-12-15',
+  },
 ];
 
 /** Structural faults in a charter; empty means it may be admitted. `today` is an ISO date. */

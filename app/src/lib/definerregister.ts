@@ -70,6 +70,7 @@ export const SOURCES: readonly { path: string; title: string; what: string }[] =
 ];
 
 export const READ_ON = '2026-09-29';
+
 export const PROJECT = 'lzrqvlugnawcgywkhqlz';
 
 /**
@@ -129,6 +130,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['close_my_ticket', 'self-service', ['auth.uid()']],
   ['community_reviewer_standing', 'moderation', ['private.has_capability']],
   ['community_session_counts', 'read-helper', ['private.community_role']],
+  ['configure_student_accounts', 'admin', ['auth.uid()', 'private.has_capability', 'private.subject_has_capability']],
   ['connected_with', 'read-helper', ['auth.uid()']],
   ['console_act', 'admin', ['auth.uid()', 'private.has_capability', 'private.assert_fresh_mfa']],
   ['console_audit_read', 'admin', ['auth.uid()', 'private.has_capability']],
@@ -137,6 +139,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['contribute_course_plan', 'self-service', ['auth.uid()', 'private.school_of']],
   ['create_community', 'self-service', ['auth.uid()', 'private.has_capability', 'private.verified_student', 'private.school_of']],
   ['create_community_post', 'self-service', ['auth.uid()', 'private.community_role']],
+  ['create_student_payment_plan', 'financial', ['auth.uid()', 'private.student_accounts_staff', 'private.student_at_school']],
   ['create_study_session', 'self-service', ['auth.uid()', 'private.community_role']],
   ['create_support_access', 'sharing', ['auth.uid()', 'private.subject_has_capability']],
   ['decide_alias_identity', 'moderation', ['auth.uid()', 'private.has_capability']],
@@ -213,6 +216,8 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['office_desk_actions', 'admin', ['auth.uid()', 'private.may_publish']],
   ['open_help_request', 'self-service', ['auth.uid()', 'private.answers_for']],
   ['open_support_ticket', 'self-service', ['auth.uid()']],
+  ['place_student_hold', 'financial', ['auth.uid()', 'private.student_accounts_staff', 'private.student_at_school']],
+  ['post_student_ledger_entry', 'financial', ['auth.uid()', 'private.student_accounts_staff', 'private.student_at_school']],
   ['publish_course_guidance', 'admin', ['auth.uid()', 'private.course_publisher']],
   ['publish_course_rules', 'admin', ['auth.uid()', 'private.course_publisher']],
   ['publish_study_pack', 'admin', ['auth.uid()', 'private.course_publisher']],
@@ -221,7 +226,9 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['read_shared_accommodation', 'sharing', ['auth.uid()']],
   ['read_support_share', 'sharing', ['auth.uid()', 'private.may_receive_support_share']],
   ['read_support_signals', 'sharing', ['auth.uid()', 'private.subject_has_capability', 'private.support_consent_active']],
+  ['record_aid_disbursement', 'financial', ['auth.uid()', 'private.student_accounts_staff', 'private.disburse_aid']],
   ['referral_standing', 'read-helper', ['auth.uid()']],
+  ['refund_student_credit', 'financial', ['auth.uid()', 'private.student_accounts_staff', 'private.student_at_school']],
   ['registrar_decide', 'admin', ['auth.uid()', 'private.registration_registrar', 'private.registration_gate', 'private.registration_key']],
   ['registrar_grant_override', 'admin', ['auth.uid()', 'private.registration_registrar', 'private.registration_gate', 'private.registration_key']],
   ['registrar_put_section', 'admin', ['auth.uid()', 'private.registration_registrar']],
@@ -229,6 +236,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['registration_drop', 'self-service', ['auth.uid()', 'private.registration_school', 'private.registration_gate', 'private.registration_key']],
   ['registration_enroll', 'self-service', ['auth.uid()', 'private.registration_school', 'private.registration_gate', 'private.registration_key']],
   ['registration_withdraw', 'self-service', ['auth.uid()', 'private.registration_school', 'private.registration_gate', 'private.registration_key']],
+  ['release_student_hold', 'financial', ['auth.uid()', 'private.student_accounts_staff']],
   ['remove_connection', 'self-service', ['auth.uid()']],
   ['reply_to_my_ticket', 'self-service', ['auth.uid()']],
   ['report_community_post', 'self-service', ['auth.uid()', 'private.community_role']],
@@ -238,8 +246,10 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['request_community_escalation', 'moderation', ['auth.uid()', 'private.has_capability']],
   ['request_connection', 'self-service', ['auth.uid()']],
   ['request_mentor', 'self-service', ['auth.uid()', 'private.school_of', 'private.in_cohort']],
+  ['respond_to_aid_award', 'self-service', ['auth.uid()', 'private.student_accounts_on']],
   ['retire_escalation_agreement', 'admin', ['auth.uid()', 'private.has_capability']],
   ['reveal_alias_identity', 'moderation', ['auth.uid()', 'private.has_capability']],
+  ['reverse_student_ledger_entry', 'financial', ['auth.uid()', 'private.student_accounts_staff']],
   ['review_break_glass', 'admin', ['auth.uid()', 'private.holds_seat']],
   ['revoke_support_access', 'sharing', ['auth.uid()']],
   ['save_escalation_agreement', 'admin', ['auth.uid()', 'private.has_capability']],
@@ -249,7 +259,9 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['share_with_advisor', 'sharing', ['auth.uid()']],
   ['share_with_support', 'sharing', ['auth.uid()', 'private.may_receive_support_share']],
   ['start_organization', 'self-service', ['auth.uid()', 'private.verified_student', 'private.school_of']],
+  ['start_student_payment', 'financial', ['auth.uid()', 'private.student_accounts_on']],
   ['stop_contributing', 'self-service', ['auth.uid()']],
+  ['student_hold_status', 'read-helper', ['auth.uid()', 'private.has_capability', 'private.student_at_school']],
   ['submit_course_review', 'self-service', ['auth.uid()', 'private.verified_student', 'private.school_of']],
   ['support_access_windows', 'sharing', ['auth.uid()', 'private.subject_has_capability', 'private.support_consent_active']],
   ['support_reply', 'admin', ['private.support_agent']],
@@ -272,6 +284,22 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
  * a file here that is applied moves its functions into the count.
  */
 export const SINCE_READING: readonly { file: string; functions: readonly string[] }[] = [
+  {
+    file: '20260929320000_student_accounts.sql',
+    functions: [
+      'configure_student_accounts',
+      'create_student_payment_plan',
+      'place_student_hold',
+      'post_student_ledger_entry',
+      'record_aid_disbursement',
+      'refund_student_credit',
+      'release_student_hold',
+      'respond_to_aid_award',
+      'reverse_student_ledger_entry',
+      'start_student_payment',
+      'student_hold_status',
+    ],
+  },
   {
     file: '20260929310000_gradebook.sql',
     functions: [

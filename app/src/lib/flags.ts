@@ -141,6 +141,18 @@ export const FLAGS: readonly FlagDefinition[] = [
     killSwitches: ['kill.sharing'], capability: 'tenant:configure',
   }),
 
+  flag({
+    key: 'module.student_accounts',
+    description: 'The institution’s student account: a ledger per student per term, aid offered by the school’s aid system and accepted by the student, holds, payment plans, credit refunds and provider payments (lib/studentaccount). Holds amounts; `integration.erp_bursar_actions` stays action items only.',
+    type: 'module', owner: 'Student accounts', scopes: ['tenant'], highRisk: true, reviewAt: REVIEW,
+    rollout: 'Not before the council finance seat is held and the school names a finance owner holding bursar:post; then a sandbox tenant with a test provider, then one pilot school’s bursar and aid office.',
+    successCriteria: 'Every balance reconciles to the school’s own system to the cent; no duplicate or out-of-order provider event moves money twice; no office other than the bursar sees a hold reason.',
+    rollback: 'Set off. People stop posting at once (private.student_accounts_on); provider events for payments already made still post, and every entry stays readable.',
+    // No capability gate here: students and three offices each use it under
+    // their own capability, which the database functions check per action.
+    killSwitches: [],
+  }),
+
   // ── Release (temporary) ─────────────────────────────────────────────────
   flag({
     key: 'release.integration_dashboard_v1',

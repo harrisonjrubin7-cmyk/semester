@@ -26,7 +26,7 @@ Production (`lzrqvlugnawcgywkhqlz`), 2026-09-29, read-only, through the advisor 
 - all 151 functions: not executable by `anon` or PUBLIC, `search_path` pinned, no dynamic `execute`;
 - two bodies named neither `auth.uid()` nor a `private.` gate. `gtm_pilot_problems` answered any signed-in caller about any pilot — a student could read whether a pilot's price was agreed, who sponsored it and whether its dates fit. It is fixed in `supabase/migrations/20260929120000_gtm_pilot_problems_visibility.sql` and held by `supabase/gtm.check.sql`. `kill_switch_engaged` is a deliberate one-boolean read, kept open as DR-01.
 
-Since the reading, 18 more, from migrations not applied to production, each with a row below: `20260929310000_gradebook.sql` (`gradebook_add_item`, `gradebook_enter`, `gradebook_export`, `gradebook_file_regrade`, `gradebook_moderate`, `gradebook_queue_passback`, `gradebook_release`, `gradebook_resolve_regrade`, `gradebook_set_scheme`); `20260929300000_registration_transaction.sql` (`my_registration`, `my_registration_hold`, `registrar_decide`, `registrar_grant_override`, `registrar_put_section`, `registrar_put_term`, `registration_drop`, `registration_enroll`, `registration_withdraw`).
+Since the reading, 29 more, from migrations not applied to production, each with a row below: `20260929320000_student_accounts.sql` (`configure_student_accounts`, `create_student_payment_plan`, `place_student_hold`, `post_student_ledger_entry`, `record_aid_disbursement`, `refund_student_credit`, `release_student_hold`, `respond_to_aid_award`, `reverse_student_ledger_entry`, `start_student_payment`, `student_hold_status`); `20260929310000_gradebook.sql` (`gradebook_add_item`, `gradebook_enter`, `gradebook_export`, `gradebook_file_regrade`, `gradebook_moderate`, `gradebook_queue_passback`, `gradebook_release`, `gradebook_resolve_regrade`, `gradebook_set_scheme`); `20260929300000_registration_transaction.sql` (`my_registration`, `my_registration_hold`, `registrar_decide`, `registrar_grant_override`, `registrar_put_section`, `registrar_put_term`, `registration_drop`, `registration_enroll`, `registration_withdraw`).
 
 ## How this page is held
 
@@ -39,16 +39,16 @@ Since the reading, 18 more, from migrations not applied to production, each with
 
 | Category | Functions | Controls the audit requires |
 | --- | --- | --- |
-| self-service | 54 | Verify auth.uid(), tenant scope, object ownership, input validation, rate limits, audit event. |
+| self-service | 55 | Verify auth.uid(), tenant scope, object ownership, input validation, rate limits, audit event. |
 | sharing | 18 | Explicit consent, narrow scope, short expiry, revocation, view audit. |
-| admin | 50 | Capability check, MFA or fresh auth for high risk, dual control where needed, immutable audit. |
+| admin | 51 | Capability check, MFA or fresh auth for high risk, dual control where needed, immutable audit. |
 | integration | 6 | Server-only preferred; signed workflow; replay protection; no browser service-role access. |
-| financial | 1 | Provider webhook verification, idempotency, no client-controlled final state. |
+| financial | 9 | Provider webhook verification, idempotency, no client-controlled final state. |
 | moderation | 15 | Capability check, reason required, appeals, audit trail. |
-| read-helper | 25 | Minimal fields, no hidden cross-tenant aggregation, pagination limit. |
-| **total** | 169 | |
+| read-helper | 26 | Minimal fields, no hidden cross-tenant aggregation, pagination limit. |
+| **total** | 180 | |
 
-### self-service (54)
+### self-service (55)
 
 | Function | Gates in its body | Defined in |
 | --- | --- | --- |
@@ -100,6 +100,7 @@ Since the reading, 18 more, from migrations not applied to production, each with
 | `report_community_post` | `auth.uid()`, `private.community_role` | `20260928032000_community.sql` |
 | `request_connection` | `auth.uid()` | `20260922003000_connections.sql` |
 | `request_mentor` | `auth.uid()`, `private.school_of`, `private.in_cohort` | `20260928021700_mentor_rosters.sql` |
+| `respond_to_aid_award` | `auth.uid()`, `private.student_accounts_on` | `20260929320000_student_accounts.sql` |
 | `send_help_request` | `auth.uid()`, `private.school_of` | `20260927233000_help_request_review_fixes.sql` |
 | `start_organization` | `auth.uid()`, `private.verified_student`, `private.school_of` | `20260921230000_organizations.sql` |
 | `stop_contributing` | `auth.uid()` | `20260929350000_plan_save_serialized.sql` |
@@ -130,7 +131,7 @@ Since the reading, 18 more, from migrations not applied to production, each with
 | `trust_room_grant` | `auth.uid()`, `private.has_capability` | `20260928100000_trust_room.sql` |
 | `trust_room_revoke` | `auth.uid()`, `private.has_capability` | `20260928100000_trust_room.sql` |
 
-### admin (50)
+### admin (51)
 
 | Function | Gates in its body | Defined in |
 | --- | --- | --- |
@@ -148,6 +149,7 @@ Since the reading, 18 more, from migrations not applied to production, each with
 | `beta_triage_feedback` | `private.beta_triager` | `20260928220000_private_beta.sql` |
 | `can_manage_escalation_agreements` | `private.has_capability` | `20260928032000_community.sql` |
 | `close_break_glass` | `auth.uid()`, `g.subject is distinct from me` | `20260929110000_console_approvals_and_break_glass.sql` |
+| `configure_student_accounts` | `auth.uid()`, `private.has_capability`, `private.subject_has_capability` | `20260929320000_student_accounts.sql` |
 | `console_act` | `auth.uid()`, `private.has_capability`, `private.assert_fresh_mfa` | `20260929110000_console_approvals_and_break_glass.sql` |
 | `console_audit_read` | `auth.uid()`, `private.has_capability` | `20260929100000_console_control_plane.sql` |
 | `console_audit_status` | `auth.uid()`, `private.has_capability` | `20260929100000_console_control_plane.sql` |
@@ -196,11 +198,19 @@ Since the reading, 18 more, from migrations not applied to production, each with
 | `integration_request_replay` | `auth.uid()`, `private.has_capability` | `20260927170000_integration_control_plane.sql` |
 | `integration_set_paused` | `private.has_capability` | `20260927170000_integration_control_plane.sql` |
 
-### financial (1)
+### financial (9)
 
 | Function | Gates in its body | Defined in |
 | --- | --- | --- |
+| `create_student_payment_plan` | `auth.uid()`, `private.student_accounts_staff`, `private.student_at_school` | `20260929320000_student_accounts.sql` |
+| `place_student_hold` | `auth.uid()`, `private.student_accounts_staff`, `private.student_at_school` | `20260929320000_student_accounts.sql` |
+| `post_student_ledger_entry` | `auth.uid()`, `private.student_accounts_staff`, `private.student_at_school` | `20260929320000_student_accounts.sql` |
+| `record_aid_disbursement` | `auth.uid()`, `private.student_accounts_staff`, `private.disburse_aid` | `20260929320000_student_accounts.sql` |
+| `refund_student_credit` | `auth.uid()`, `private.student_accounts_staff`, `private.student_at_school` | `20260929320000_student_accounts.sql` |
+| `release_student_hold` | `auth.uid()`, `private.student_accounts_staff` | `20260929320000_student_accounts.sql` |
 | `request_cancellation` | `auth.uid()` | `20260929070000_commercial_core.sql` |
+| `reverse_student_ledger_entry` | `auth.uid()`, `private.student_accounts_staff` | `20260929320000_student_accounts.sql` |
+| `start_student_payment` | `auth.uid()`, `private.student_accounts_on` | `20260929320000_student_accounts.sql` |
 
 ### moderation (15)
 
@@ -222,7 +232,7 @@ Since the reading, 18 more, from migrations not applied to production, each with
 | `volunteer_next_tasks` | `auth.uid()`, `private.volunteer_ready` | `20260928032000_community.sql` |
 | `volunteer_roster` | `private.has_capability` | `20260928032000_community.sql` |
 
-### read-helper (25)
+### read-helper (26)
 
 | Function | Gates in its body | Defined in |
 | --- | --- | --- |
@@ -251,6 +261,7 @@ Since the reading, 18 more, from migrations not applied to production, each with
 | `my_volunteer_standing` | `auth.uid()` | `20260928032000_community.sql` |
 | `office_action_programs` | `auth.uid()` | `20260928302000_office_action_feed.sql` |
 | `referral_standing` | `auth.uid()` | `20260921002623_referrals.sql` |
+| `student_hold_status` | `auth.uid()`, `private.has_capability`, `private.student_at_school` | `20260929320000_student_accounts.sql` |
 
 ## Policy-less tables
 

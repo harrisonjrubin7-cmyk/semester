@@ -75,6 +75,7 @@ begin
     when 'boolean' then 'false'
     when 'integer' then '1'
     when 'numeric' then '1::numeric'
+    when 'bigint' then '1::bigint'
     when 'timestamp with time zone' then 'now()'
     when 'date' then 'current_date'
     else null
