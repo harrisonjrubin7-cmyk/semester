@@ -39,6 +39,7 @@
     "smoke:golden": "node scripts/golden-path.mjs",
     "smoke:sync": "node scripts/account-sync.mjs",
     "drill:killswitch": "node scripts/killswitch-drill.mjs",
+    "eval:model-quality": "vitest run src/ai/modelquality.live.test.ts",
     "preview:institutional": "node scripts/institutional-preview.mjs",
     "smoke:institutional": "node scripts/institutional-preview-smoke.mjs",
     "smoke:production": "node scripts/production-smoke.mjs",

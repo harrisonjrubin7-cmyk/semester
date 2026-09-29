@@ -5,6 +5,7 @@ import {
   ACTION_TIERS, ACTION_TIER_ROWS, ASSESSED, CONFIRMATIONS, COST_COMPONENTS, DATA_CLASSES, DEFINITION_OF_DONE, DIMENSIONS, DIMENSION_ROWS,
   FIRST_GOAL, FIRST_WEEK, FLOORS, INPUTS, LAYER, MEMORY_RULES, NEVER_SEND, ONBOARDING, OVERALL_MINIMUM, PROVIDER_REQUIREMENTS, ROADMAP,
   RULES, SOURCES, STARTING_CHOICES, STATUSES, TIERS_WITHOUT_A_CLASS, VENDORS, WEIGHT_SUM, WORKFLOWS,
+  CHECKED, EVAL_SET, OFFICIAL_HOSTS, PROVIDER_BASIS, provisional, scoresOf, type Provider,
   scoreVendor, type Scores,
 } from './ai-playbook';
 import { AI_RELEASE_GATE, PROHIBITED_STARTING_SCOPE } from './ai-lifecycle';
@@ -160,11 +161,51 @@ describe('the AI integration playbook', () => {
     expect(() => scoreVendor({ speed: 5 } as Scores, { agentic: false })).toThrow();
   });
 
-  it('puts every AI party the subprocessor register names on the scorecard, and approves none unscored', () => {
+  it('puts every AI party the subprocessor register names on the scorecard, scored as its provider', () => {
     const ai = PARTIES.filter((p) => /\bAI\b/.test(p.purpose)).map((p) => p.name);
     expect(ai.length).toBeGreaterThan(0);
     expect(VENDORS.map((v) => v.party).sort()).toEqual([...ai].sort());
-    for (const v of VENDORS) expect(scoreVendor(v.scores, { agentic: v.agentic }).verdict, v.party).toBe('unscored');
+    for (const v of VENDORS) {
+      expect(v.party.startsWith(v.provider), v.party).toBe(true);
+      expect(v.scores).toEqual(scoresOf(v.provider));
+    }
+  });
+
+  it('rests every score on a page the provider itself publishes, and says why each gap is a gap', () => {
+    for (const p of Object.keys(PROVIDER_BASIS) as Provider[]) {
+      expect(Object.keys(PROVIDER_BASIS[p]).sort(), p).toEqual([...DIMENSIONS].sort());
+      for (const [d, b] of Object.entries(PROVIDER_BASIS[p])) {
+        if ('unscored' in b) { expect(b.unscored.trim().length, `${p} ${d}`).toBeGreaterThan(10); continue; }
+        const host = new URL(b.url).hostname;
+        expect(b.url.startsWith('https://'), `${p} ${d}`).toBe(true);
+        expect(OFFICIAL_HOSTS[p].some((h) => host === h || host.endsWith(`.${h}`)), `${p} ${d} cites ${host}`).toBe(true);
+        expect(Number.isInteger(b.score) && b.score >= 0 && b.score <= 5, `${p} ${d}`).toBe(true);
+        expect(b.says.trim().length, `${p} ${d}`).toBeGreaterThan(20);
+      }
+    }
+    expect(CHECKED).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+
+  it('leaves model quality unscored until a run of the set is filed, and names the set', () => {
+    expect(existsSync(join(root, EVAL_SET)), EVAL_SET).toBe(true);
+    for (const p of Object.keys(PROVIDER_BASIS) as Provider[]) {
+      const b = PROVIDER_BASIS[p]['model-quality'];
+      expect('unscored' in b && b.unscored.includes(EVAL_SET), p).toBe(true);
+    }
+  });
+
+  it('approves no provider while model quality is unscored, and says what the scored part reads', () => {
+    for (const v of VENDORS) {
+      const r = scoreVendor(v.scores, { agentic: v.agentic });
+      expect(r.verdict, v.party).toBe('unscored');
+      expect(r.reasons.join(' ')).toContain('Model quality');
+    }
+    expect(provisional(scoresOf('Anthropic'), false)).toEqual({ weighted: 4.02, scoredWeight: 92, floorsMissed: [] });
+    expect(provisional(scoresOf('OpenAI'), true)).toEqual({ weighted: 4.08, scoredWeight: 87, floorsMissed: [] });
+    // The control: a missed floor is reported, and one that binds only agentic workflows is not reported for others.
+    expect(provisional({ 'tool-safety': 3 }, true).floorsMissed).toEqual(['tool-safety']);
+    expect(provisional({ 'tool-safety': 3 }, false).floorsMissed).toEqual([]);
+    expect(provisional({}, false).weighted).toBeNull();
   });
 
   it('holds each starting choice to the FirstGoal goal that carries it', () => {
@@ -322,14 +363,29 @@ function render(): string {
     '',
     '### The providers Semester can call',
     '',
-    'Every AI party in `trust/subprocessors.ts`, held there by the test. None is',
-    'scored: no provider’s training, retention or incident-notice terms are on',
-    'file ([`DPA-CHECKLIST.md`](../trust/DPA-CHECKLIST.md)), and a score without',
-    'them would be invented. An unscored provider is not approvable.',
+    `Every AI party in \`trust/subprocessors.ts\`, held there by the test, scored from the provider’s own public documentation read on ${CHECKED}. Each score cites the page it rests on, and the test refuses a citation to any other host. These are desk scores, not contract review: no DPA is signed (see [\`DPA-CHECKLIST.md\`](../trust/DPA-CHECKLIST.md)).`,
     '',
-    '| Provider | Agentic? | Verdict | Note |',
-    '| --- | --- | --- | --- |',
-    ...VENDORS.map((v) => `| ${v.party} | ${v.agentic ? 'Yes' : 'No'} | ${scoreVendor(v.scores, { agentic: v.agentic }).verdict} | ${cell(v.note)} |`),
+    `**No provider is approvable yet.** Model quality is performance on Semester’s own evaluation set, \`${EVAL_SET}\`: fifteen synthetic cases through the prompts Semester sends, graded by fixed checks. It has not been run against either provider, so every verdict is *unscored*. The provisional reading is the weighted score over the dimensions that are scored, and any floor already missed.`,
+    '',
+    '| Provider | Agentic? | Verdict | Provisional | Scored weight | Floors missed | Note |',
+    '| --- | --- | --- | ---: | ---: | --- | --- |',
+    ...VENDORS.map((v) => {
+      const p = provisional(v.scores, v.agentic);
+      return `| ${v.party} | ${v.agentic ? 'Yes' : 'No'} | ${scoreVendor(v.scores, { agentic: v.agentic }).verdict} | ${p.weighted?.toFixed(2) ?? '—'} | ${p.scoredWeight}% | ${p.floorsMissed.length ? p.floorsMissed.join(', ') : 'none'} | ${cell(v.note)} |`;
+    }),
+    '',
+    ...(Object.keys(PROVIDER_BASIS) as Provider[]).flatMap((p) => [
+      `#### ${p}`,
+      '',
+      '| Dimension | Weight | Score | What the provider’s own page says |',
+      '| --- | ---: | ---: | --- |',
+      ...DIMENSION_ROWS.map((d) => {
+        const b = PROVIDER_BASIS[p][d.id];
+        return 'score' in b ? `| ${d.name} | ${d.weight}% | ${b.score} | ${cell(b.says)} [source](${b.url}) |` : `| ${d.name} | ${d.weight}% | — | Unscored: ${cell(b.unscored)} |`;
+      }),
+      '',
+    ]),
+    'What would change a score: a signed DPA with a FERPA school-official clause (education fit, both providers); written confirmation that OpenAI’s certifications cover the API (security, OpenAI); an uptime SLA (reliability, both); a filed run of the model-quality set (model quality, both).',
     '',
     '### What a provider must show before approval',
     '',
