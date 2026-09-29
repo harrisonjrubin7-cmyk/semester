@@ -258,7 +258,7 @@ The launch readiness review ends in one of three decisions. The code in [`app/sr
 | Decision | When | The tree |
 | --- | --- | --- |
 | **GO** | All mandatory gates pass; known low-risk limitations are disclosed | `launchreadiness.decide()` go; docs/launch/KNOWN-LIMITATIONS.md is the disclosure |
-| **GO WITH CONDITIONS** | Only time-bound, documented, non-critical conditions remain, with owners and customer disclosures assigned | No such verdict. A founder-signed `RiskAcceptance` with an expiry, for P2/P3 only, is the nearest |
+| **GO WITH CONDITIONS** | Only time-bound, documented, non-critical conditions remain, with owners and customer disclosures assigned | `launchreadiness.decide()` go-with-conditions (D-117): nothing open except P2/P3 blockers the founder accepted with a reason, an expiry and what pilot users are told; the verdict lists each condition |
 | **NO-GO** | Any P0 security, privacy, accessibility, grade-integrity, data-loss, operational-readiness, legal or unsupported-claim risk remains | `launchreadiness.decide()` no-go; the current verdict |
 
 ## 9. Real production verification
@@ -570,7 +570,7 @@ carries it:
 | Commercial | Entitlements, pricing, invoicing, implementation scope, renewal path | `tenant_plan`; `deal-desk.ts`; no price, no invoice |
 | Change | Training, communications, documentation, schedule, hypercare | `launch/content.ts`; `launch/checklists.ts`; ninety-day steps |
 | Evidence | Links to every approval, test, policy, audit artifact and accepted exception | `LaunchState` acceptances; docs/evidence/ does not exist |
-| Decision | Go / go with conditions / no-go; named approver; date; next review | `launchreadiness.decide()`: go or no-go; no conditions verdict |
+| Decision | Go / go with conditions / no-go; named approver; date; next review | `launchreadiness.decide()`: go, go-with-conditions or no-go, with the conditions listed; no approver name or next-review date on the verdict |
 
 ## 18. The final checklist
 

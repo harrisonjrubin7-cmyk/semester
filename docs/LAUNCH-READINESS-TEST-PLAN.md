@@ -23,7 +23,7 @@ npm run smoke:cold            # the build boots cold
 | Every gate cites files that exist, with a control that a missing file is seen as missing | `app/src/lib/launchreadiness.test.ts` |
 | No gate is met while a go-live line it depends on is unticked | same |
 | The council document, this checklist and the data agree on seats, holders, statuses and verdict | same |
-| `decide()` refuses each of: an unmet gate, no evidence, a vacant or unsigned seat, an open blocker, a P0/P1 waiver, a non-founder waiver, a waiver with no reason or expiry, an expired waiver, and a waiver for a blocker that does not exist. The control is a state that returns `go` | same |
+| `decide()` refuses each of: an unmet gate, no evidence, a vacant or unsigned seat, an open blocker, a P0/P1 waiver, a non-founder waiver, a waiver with no reason, disclosure or expiry, an expired waiver, and a waiver for a blocker that does not exist; a state whose only open items are valid waivers returns `go-with-conditions` and lists them. The control is a state that returns `go` | same |
 
 Each guard in that file was checked by breaking the rule it protects: marking
 a gate met, allowing P1 waivers, skipping the signature check, citing a missing

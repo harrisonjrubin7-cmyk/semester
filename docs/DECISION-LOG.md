@@ -1893,3 +1893,34 @@ than left as a sentence at the end of a log entry.
   log, and `security.test.ts` expects the acceptance line instead.
 - **Not changed:** the app's privacy text (its "no archive" sentence stays
   true, and the section says why), `RESTORE.md`'s drill, the HECVAT register.
+
+## D-117 · A launch that rests on risk acceptances is `go-with-conditions`, never `go`, and every acceptance says what pilot users are told
+
+**Decided 29 Sep 2026.** The operational-reality register (D-113) found that
+the launch readiness review the documents ask for ends in one of three
+decisions — GO, GO WITH CONDITIONS, NO-GO — and that `decide()` had two. A
+valid risk acceptance made an open P2/P3 blocker vanish from the reasons, so
+a launch proceeding under three waivers returned the same `go` as one with
+nothing open. That is the wrong shape: the waivers are the decision.
+
+- **`decide()` returns `go-with-conditions`** when nothing is open except
+  P2/P3 blockers under a valid acceptance, and `conditions` lists each one —
+  blocker, severity, the accepting seat, the reason, the disclosure and the
+  expiry — in the blockers' order. `go` now means nothing open at all. Any
+  reason at all is still `no-go`, and a `no-go` carries no conditions.
+- **A `RiskAcceptance` carries a `disclosure`**: what pilot users are told, in
+  their words. An acceptance that says nothing to the affected people is a
+  surprise, not a condition, so a blank one is a reason for `no-go` like a
+  blank reason or a missing expiry. The document's definition — time-bound,
+  documented, non-critical, with owners and customer disclosures assigned —
+  is now the type.
+- **Unchanged:** what may be accepted (P2/P3 only), who accepts (the founder
+  seat), and that an expired acceptance reopens the blocker. The current
+  verdict is still `NO-GO`, for the same 29 reasons.
+- **Re-read on the way:** the `backup-restore` gate's gap and its checklist
+  row still said the rehearsal was not in CI (the fourth copy of the line
+  #935 and #939 corrected).
+- **Not done:** the verdict does not yet carry an approver's name or a
+  next-review date; the decision record it is attached to does. The
+  disclosure is not yet held to `docs/pilot/KNOWN-LIMITATIONS.md`, which is
+  where it would be published.

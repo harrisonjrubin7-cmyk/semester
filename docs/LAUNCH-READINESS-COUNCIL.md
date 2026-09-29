@@ -24,10 +24,14 @@ things that were built. A go/no-go written only as a checklist can fail the
 opposite way: someone ticks a box because the work *looks* done.
 
 So the verdict is a function, `decide()`, and it has only one way to return `go`:
-every gate met with cited evidence, every seat held and signed, no open P0/P1,
+every gate met with cited evidence, every seat held and signed, nothing open,
 and each of the eight parts of the launch condition satisfied. It has no
-override. A risk acceptance can waive a P2 or P3 gap. It cannot waive a P0 or
-P1, it must come from the founder seat, and it must carry an expiry date.
+override. A risk acceptance can waive a P2 or P3 blocker. It cannot waive a P0
+or P1, it must come from the founder seat, it must carry an expiry date, and it
+must say what pilot users are told. A launch that rests on such acceptances is
+`GO WITH CONDITIONS`, never `GO`: the verdict lists each accepted blocker with
+its owner, reason, disclosure and expiry, so the decision record says what the
+launch proceeds under (D-117).
 
 ## The seats
 
@@ -88,7 +92,8 @@ unchanged.
 | A gate is `met` only with at least one cited file, and every cited file must exist | A tick needs a link. This is the rule from `GO_LIVE_CHECKLIST.md`, now checked by a test |
 | A gate cannot be `met` while the matching `GO_LIVE_CHECKLIST.md` line is unticked | Two documents must not give two different answers |
 | An open P0 or P1 blocker is a `NO-GO`, and no acceptance can waive it | Stated by the command, and the only safe reading of it |
-| A risk acceptance must name the founder seat, the blocker, a reason and an expiry | An acceptance with no end date is a decision nobody reviews again |
+| A risk acceptance must name the founder seat, the blocker, a reason, what pilot users are told, and an expiry | An acceptance with no end date is a decision nobody reviews again; one the affected people are not told about is a surprise, not a condition |
+| A verdict with any acceptance in force is `GO WITH CONDITIONS`, and lists them | A go that rests on waivers must not read as a clean one |
 | Every seat must be held and must have signed | A vacant seat is an unowned risk |
 | All eight parts of the launch condition must be satisfied | See below |
 
@@ -117,6 +122,9 @@ A part is satisfied only when every gate it maps to is `met`.
   decision record. A verdict from last week is no longer valid.
 - **On any P0/P1**: the verdict becomes `NO-GO` automatically. No meeting is
   needed to reach it.
+- **On `GO WITH CONDITIONS`**: each condition's disclosure goes to pilot users
+  before the cohort goes live, and each expiry is on the weekly agenda. When
+  one expires unfixed, the verdict is `NO-GO` again on its own.
 
 ## What this document is not
 

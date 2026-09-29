@@ -301,7 +301,7 @@ export const PRIORITIES: readonly Item[] = rows('OR-PRI', [
 
 export const REVIEW_DECISIONS: readonly { decision: string; when: string; tree: string }[] = [
   { decision: 'GO', when: 'All mandatory gates pass; known low-risk limitations are disclosed', tree: '`launchreadiness.decide()` go; docs/launch/KNOWN-LIMITATIONS.md is the disclosure' },
-  { decision: 'GO WITH CONDITIONS', when: 'Only time-bound, documented, non-critical conditions remain, with owners and customer disclosures assigned', tree: 'No such verdict. A founder-signed `RiskAcceptance` with an expiry, for P2/P3 only, is the nearest' },
+  { decision: 'GO WITH CONDITIONS', when: 'Only time-bound, documented, non-critical conditions remain, with owners and customer disclosures assigned', tree: '`launchreadiness.decide()` go-with-conditions (D-117): nothing open except P2/P3 blockers the founder accepted with a reason, an expiry and what pilot users are told; the verdict lists each condition' },
   { decision: 'NO-GO', when: 'Any P0 security, privacy, accessibility, grade-integrity, data-loss, operational-readiness, legal or unsupported-claim risk remains', tree: '`launchreadiness.decide()` no-go; the current verdict' },
 ];
 
@@ -618,7 +618,7 @@ export const DOSSIER: readonly { section: string; holds: string; carriedBy: stri
   { section: 'Commercial', holds: 'Entitlements, pricing, invoicing, implementation scope, renewal path', carriedBy: '`tenant_plan`; `deal-desk.ts`; no price, no invoice' },
   { section: 'Change', holds: 'Training, communications, documentation, schedule, hypercare', carriedBy: '`launch/content.ts`; `launch/checklists.ts`; ninety-day steps' },
   { section: 'Evidence', holds: 'Links to every approval, test, policy, audit artifact and accepted exception', carriedBy: '`LaunchState` acceptances; docs/evidence/ does not exist' },
-  { section: 'Decision', holds: 'Go / go with conditions / no-go; named approver; date; next review', carriedBy: '`launchreadiness.decide()`: go or no-go; no conditions verdict' },
+  { section: 'Decision', holds: 'Go / go with conditions / no-go; named approver; date; next review', carriedBy: '`launchreadiness.decide()`: go, go-with-conditions or no-go, with the conditions listed; no approver name or next-review date on the verdict' },
 ];
 
 // ── 18. The final checklist ─────────────────────────────────────────────────
