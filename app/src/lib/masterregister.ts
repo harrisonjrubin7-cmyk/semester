@@ -9,7 +9,7 @@
  * ## How this relates to what is already here
  *
  * `launchreadiness.ts` is the go/no-go for a first pilot school: twelve gates,
- * ten council seats. This is the wider register the day-one plan asks for — the
+ * twelve council seats. This is the wider register the day-one plan asks for — the
  * native LMS, interoperability, the whole AI, trust, reliability and commercial
  * surface — and it reuses that file's rule rather than inventing a softer one:
  * nothing is complete because it is designed, coded or documented, only when it
@@ -156,8 +156,8 @@ export const REGISTER: readonly Requirement[] = [
     validation: 'RACI, operating cadence, escalation tree',
     severity: 'P0',
     status: 'designed',
-    evidence: [{ path: 'docs/LAUNCH-DECISIONS.md', shows: 'Step 1 names the seats the owner can hold this week and the three that need someone qualified; four of them are written into the council as of 2026-09-28 (founder, and product, engineering and success as acting) and none has signed; the three that need someone qualified stay vacant' }, { path: 'docs/LAUNCH-READINESS-COUNCIL.md', shows: 'Council seats and decision rights described; no people named' }, { path: 'app/src/lib/launchreadiness.ts', shows: 'Seats (product, eng, security, privacy, a11y, success...) all holder: null; no AI/SRE/GTM seat' }, { path: 'docs/operating-model/PILOT-TO-PRODUCTION.md', shows: 'Pilot RACI section for institution/vendor roles' }],
-    gap: 'Every seat is vacant (holder null). No named people, no AI/SRE/legal/GTM owner, no operating cadence or escalation tree approved. Needs named owners recorded and signed, cadence calendar and escalation tree.',
+    evidence: [{ path: 'docs/LAUNCH-DECISIONS.md', shows: 'Step 1 names the seats the owner can hold this week and the three that need someone qualified; four of them are written into the council as of 2026-09-28 (founder, and product, engineering and success as acting) and none has signed; the three that need someone qualified stay vacant' }, { path: 'docs/LAUNCH-READINESS-COUNCIL.md', shows: 'Council seats and decision rights described; no people named' }, { path: 'app/src/lib/launchreadiness.ts', shows: 'Twelve seats (founder, product, engineering, security, privacy, accessibility, success, trust, data, finance, operations, champion); four held, all by the founder, three of them acting; eight vacant; none signed. SRE is the operations seat (D-120) and legal sits with privacy; no AI or GTM seat exists' }, { path: 'docs/operating-model/PILOT-TO-PRODUCTION.md', shows: 'Pilot RACI section for institution/vendor roles' }],
+    gap: 'Eight of twelve seats are vacant, the four held are one person, and no one has signed. No AI or GTM owner, no operating cadence or escalation tree approved. Needs named owners recorded and signed, cadence calendar and escalation tree.',
   },
   {
     id: 'PRG-002',
