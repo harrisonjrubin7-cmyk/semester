@@ -5,11 +5,12 @@ import { RETIRED } from '../content/terms';
 import { DEFAULT_SITE } from '../site/config';
 import { ROUTES, renderPage } from '../site/render';
 import { DESTINATIONS } from './nav';
+import { STATUS_LABEL } from './ops/claims';
 import {
   ACTION_CENTER, ALL, APP_ADDITIONS, AREAS, COMPANY, COMPARISON, CONSOLE_ADDITIONS, CONTEXT, CONTEXT_EXAMPLE, CONTEXT_FOLLOWS, DESIGN_SURFACES, DESTINATIONS_FLAG, DESTINATIONS_MAP,
   DETAIL, EVENTS, EVENT_RULE, EXPAND, FINAL_STANDARD, FINAL_TEST, HEADLINE, HOME_ROLES, INSTITUTION_CONSOLE, INTELLIGENCE, JOURNEYS, JOURNEY_RULE, MESSAGES, OBJECT_EXAMPLE,
   PALETTE_COMMANDS, PALETTE_RULE, POINT_SOLUTIONS, PRINCIPLES, SEARCH_ASKS, SEARCH_UNIFIES, SECONDARY, SHARED_OBJECTS, SHELL, SITE_ADDITIONS, SOURCES, STATEMENT, STATUSES,
-  STATUS_MEANING, STATUS_WORD, TOP_TEN, VOCABULARY, counts, weakest, type Status,
+  STATUS_MEANING, STATUS_WORD, TOP_TEN, VOCABULARY, counts, row, weakest, weakestRow, type Status,
 } from './oneos';
 import { FIVE_DESTINATIONS, FIVE_LABELS } from './tabbar';
 
@@ -103,19 +104,40 @@ describe('one operating system', () => {
     // The word beside each area and each row is the computed one, in that
     // area's own summary and that row's own cell — not merely somewhere on the
     // page, which a hand-written word would also satisfy.
-    const badge = (s: Status) => `<span class="site-badge site-oneos site-oneos-${s}">${escape(STATUS_WORD[s])}</span>`;
+    const badge = (s: Status) => `<span data-oneos="${s}" class="site-badge site-oneos site-oneos-${s}">${escape(STATUS_WORD[s])}</span>`;
     const arch = page('/platform/one-operating-system/');
     expect(arch).toContain(HEADLINE);
     for (const a of AREAS) {
       const s = weakest(a.rests);
       expect(arch, a.name).toContain(`<span class="site-area-name">${escape(a.name)}</span> ${badge(s)}</summary>`);
       expect(arch, a.name).toContain(`<dd>${badge(s)} — the weakest of ${a.rests.length} rows`);
+      // The gap of every row it rests on is on the page, beside that row's own word.
+      for (const id of a.rests) expect(arch, `${a.name} rests on ${id}`).toContain(`<li>${badge(row(id).status)} ${escape(row(id).what)}. <span class="site-small">${escape(row(id).gap)}</span></li>`);
     }
-    for (const s of STATUSES) expect(arch.split(badge(s)).length - 1, s).toBe(AREAS.filter((a) => weakest(a.rests) === s).length * 2 + PRINCIPLES.filter((p) => p.status === s).length + FINAL_TEST.filter((t) => t.status === s).length + 1);
+    const rests = AREAS.flatMap((a) => a.rests.map(row));
+    for (const s of STATUSES) expect(arch.split(badge(s)).length - 1, s).toBe(AREAS.filter((a) => weakest(a.rests) === s).length * 2 + rests.filter((r) => r.status === s).length + PRINCIPLES.filter((p) => p.status === s).length + FINAL_TEST.filter((t) => t.status === s).length + 1);
     expect(arch).not.toMatch(/fully built/i);
     const why = page('/platform/why-not-another-tool/');
     for (const c of COMPARISON) {
-      expect(why, c.id).toContain(`<th scope="row">${escape(c.traditional)}</th><td>${escape(c.semester)}</td><td>${badge(weakest(c.rests))}</td>`);
+      const w = weakestRow(c.rests);
+      expect(why, c.id).toContain(`<th scope="row">${escape(c.traditional)}</th><td>${escape(c.semester)}</td><td>${badge(w.status)}</td><td>${escape(w.gap)}</td>`);
+    }
+    // These four words are this register's. Neither page prints one of the
+    // claims register's six, so a buyer cannot read one vocabulary as the other,
+    // and every badge on the site carries data-oneos so nothing hand-written hides among them.
+    for (const label of Object.values(STATUS_LABEL)) {
+      expect(arch, label).not.toContain(label);
+      expect(why, label).not.toContain(label);
+    }
+    for (const r of ROUTES) {
+      const html = renderPage(r, DEFAULT_SITE);
+      const badges = html.match(/<span data-oneos="([a-z-]+)" class="site-badge site-oneos site-oneos-\1">([^<]*)<\/span>/g) ?? [];
+      expect(html.split('site-oneos-').length - 1, `${r.path}: every oneos badge is the component's`).toBe(badges.length);
+      if (!['/platform/one-operating-system/', '/platform/why-not-another-tool/'].includes(r.path)) expect(badges, r.path).toEqual([]);
+      for (const b of badges) {
+        const [, s, word] = b.match(/data-oneos="([a-z-]+)"[^>]*>([^<]*)</)!;
+        expect(STATUS_WORD[s as Status], `${r.path}: ${b}`).toBe(word);
+      }
     }
     for (const w of Object.values(STATUS_WORD)) expect(why).toContain(w);
     expect(why).not.toMatch(/fully built/i);
@@ -135,7 +157,10 @@ describe('one operating system', () => {
     expect(weakest(['test-what', 'test-changes'])).toBe('not-started');
     expect(weakest(['test-what', 'test-connects'])).toBe('building');
     expect(weakest(['test-what', 'test-source'])).toBe('tested');
+    expect(weakestRow(['test-what', 'test-changes']).id).toBe('test-changes');
     expect(() => weakest(['no-such-row'])).toThrow(/No row/);
+    expect(() => weakestRow([])).toThrow(/No rows/);
+    expect(row('home').id).toBe('home');
     expect(TOP_TEN).toHaveLength(10);
     for (const id of TOP_TEN) expect(ids.has(id), `top ten names ${id}`).toBe(true);
   });

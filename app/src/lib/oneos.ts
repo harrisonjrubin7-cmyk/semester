@@ -124,17 +124,25 @@ export interface Held {
 type Row = Omit<Held, 'evidence'> & { evidence: readonly [path: string, shows: string][] };
 const held = (rows: readonly Row[]): readonly Held[] => rows.map((r) => ({ ...r, evidence: r.evidence.map(([path, shows]) => ({ path, shows })) }));
 
-/** The weakest status among the rows named, which is the only honest word for a group. */
+/** One row by id; a page that names a row that does not exist fails to render. */
+export function row(id: string): Held {
+  const found = ALL.find((h) => h.id === id);
+  if (!found) throw new Error(`No row ${id}`);
+  return found;
+}
+
+/** The weakest row among those named, which is the only honest word for a group — and its gap is what the page prints. */
 const RANK: Record<Status, number> = { 'not-started': 0, designed: 1, building: 2, tested: 3 };
-export function weakest(ids: readonly string[]): Status {
-  let out: Status = 'tested';
+export function weakestRow(ids: readonly string[]): Held {
+  if (ids.length === 0) throw new Error('No rows');
+  let out = row(ids[0]);
   for (const id of ids) {
-    const row = ALL.find((h) => h.id === id);
-    if (!row) throw new Error(`No row ${id}`);
-    if (RANK[row.status] < RANK[out]) out = row.status;
+    const r = row(id);
+    if (RANK[r.status] < RANK[out.status]) out = r;
   }
   return out;
 }
+export const weakest = (ids: readonly string[]): Status => weakestRow(ids).status;
 
 // ── The five destinations ────────────────────────────────────────────────────
 

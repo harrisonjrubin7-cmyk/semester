@@ -3,7 +3,7 @@ import type { SiteConfig } from './config';
 import { href } from './Layout';
 import { Hero, Section } from './pages';
 import {
-  AREAS, COMPARISON, DESTINATIONS_MAP, FINAL_TEST, HEADLINE, MESSAGES, POINT_SOLUTIONS, PRINCIPLES, STATEMENT, STATUSES, STATUS_MEANING, STATUS_WORD, weakest, type Status,
+  AREAS, COMPARISON, DESTINATIONS_MAP, FINAL_TEST, HEADLINE, MESSAGES, POINT_SOLUTIONS, PRINCIPLES, STATEMENT, STATUSES, STATUS_MEANING, STATUS_WORD, row, weakest, weakestRow, type Status,
 } from '../lib/oneos';
 
 /*
@@ -18,13 +18,22 @@ import {
  * the tree says "building". The words come from `lib/oneos.ts`, whose test
  * holds every area to rows that exist and rates it at the weakest of them.
  *
+ * These four words are this register's, not the claims register's six: a
+ * capability a buyer might buy on still carries a `data-claim` word from
+ * `lib/ops/claims.ts`, and neither page prints one of those six words, so the
+ * two vocabularies cannot be confused (the test holds that). What keeps a word
+ * here honest is the same thing that keeps the Semester Standard honest: the
+ * gap is on the page. Every area lists the rows it rests on with each row's
+ * word and gap, and every comparison row prints the gap of its weakest row.
+ * Each badge carries `data-oneos`, so a test can find every one on the site.
+ *
  * Script-free, like every content page: an area opens as a disclosure.
  */
 
 type Page = (props: { config: SiteConfig }) => ReactNode;
 
 function Word({ status }: { status: Status }) {
-  return <span className={`site-badge site-oneos site-oneos-${status}`}>{STATUS_WORD[status]}</span>;
+  return <span data-oneos={status} className={`site-badge site-oneos site-oneos-${status}`}>{STATUS_WORD[status]}</span>;
 }
 
 function Legend() {
@@ -76,8 +85,14 @@ export const OneOperatingSystem: Page = ({ config }) => (
                   <div><dt>What connects</dt><dd>{a.connects}</dd></div>
                   <div><dt>What stays official</dt><dd>{a.official}</dd></div>
                   <div><dt>Connects back to</dt><dd>{a.backTo.join(', ')}</dd></div>
-                  <div><dt>Where it stands</dt><dd><Word status={status} /> — the weakest of {a.rests.length} rows in the <a href={href(config, '/launch-readiness/')}>register</a>.</dd></div>
+                  <div><dt>Where it stands</dt><dd><Word status={status} /> — the weakest of {a.rests.length} rows in the register, each with its gap:</dd></div>
                 </dl>
+                <ul className="site-plain site-rests">
+                  {a.rests.map((id) => {
+                    const r = row(id);
+                    return <li key={id}><Word status={r.status} /> {r.what}. <span className="site-small">{r.gap}</span></li>;
+                  })}
+                </ul>
               </details>
             </li>
           );
@@ -119,16 +134,17 @@ export const WhyNotAnotherTool: Page = ({ config }) => (
     <Section title="The comparison" id="why-table">
       <div className="site-scroll">
         <table className="site-table">
-          <caption>Traditional approach, Semester approach, and where Semester stands</caption>
+          <caption>Traditional approach, Semester approach, where Semester stands, and the gap of the weakest row</caption>
           <thead>
-            <tr><th scope="col">Traditional approach</th><th scope="col">Semester approach</th><th scope="col">Where it stands</th></tr>
+            <tr><th scope="col">Traditional approach</th><th scope="col">Semester approach</th><th scope="col">Where it stands</th><th scope="col">The gap</th></tr>
           </thead>
           <tbody>
             {COMPARISON.map((c) => (
               <tr key={c.id}>
                 <th scope="row">{c.traditional}</th>
                 <td>{c.semester}</td>
-                <td><Word status={weakest(c.rests)} /></td>
+                <td><Word status={weakestRow(c.rests).status} /></td>
+                <td>{weakestRow(c.rests).gap}</td>
               </tr>
             ))}
           </tbody>

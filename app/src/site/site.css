@@ -864,3 +864,12 @@ fieldset.tool-field legend {
 .site-area dd {
   margin: 0;
 }
+
+.site-rests {
+  margin: 0 0 8px;
+  padding-left: 16px;
+}
+
+.site-rests li + li {
+  margin-top: 4px;
+}
