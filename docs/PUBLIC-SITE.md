@@ -38,6 +38,7 @@ availability matrix prints its status words from the claims register (D-110):
 | `/platform/availability/` | Every capability by plan — Individual students, Department, Institution, Enterprise — each row a claim of the register with its word, and the sentence behind it |
 | `/platform/service-map/` | The eight services in the order a student meets them, and who decides what: Semester coordinates, the record system certifies, the registrar registers, faculty own course policy, students control their plans |
 | `/platform/system-boundaries/` | Area by area, what Semester does and what stays authoritative elsewhere |
+| `/platform/replacement-map/` | Each system Semester Core is built to take over, what Semester does beside it today, and a Core word computed from the master register (`lib/ops/replacementmap.ts`, D-137) |
 | `/start/` | A student's first session, step by step, and the nine steps of an institution's pilot |
 | `/demo/` | The demo (built to `/demo/` beside the app), ending in a next step per audience rather than "Contact us" |
 | `/trust/product-quality/` | What is checked on every build, what is known, and what is deliberately not published; a build stamp when `SITE_COMMIT` or `GITHUB_SHA` is set |

@@ -18,7 +18,7 @@ describe('every page', () => {
     const want = ['/', '/product/', '/students/', '/institutions/', '/pricing/', '/tools/', '/resources/', '/about/', '/careers/', '/contact/', '/security/', '/privacy/', '/accessibility/', '/help/', '/login/', '/signup/', '/account/', '/membership/',
       '/launch-readiness/', '/proof/', '/legal/', '/known-limitations/',
       '/tools/graduation/', '/tools/schedule/', '/tools/checklist/', '/tools/advisor/',
-      '/platform/availability/', '/platform/service-map/', '/platform/system-boundaries/', '/start/', '/demo/', '/trust/product-quality/', '/launch/', '/pricing/how-it-works/', '/resources/campus-launch-kit/',
+      '/platform/availability/', '/platform/service-map/', '/platform/system-boundaries/', '/platform/replacement-map/', '/start/', '/demo/', '/trust/product-quality/', '/launch/', '/pricing/how-it-works/', '/resources/campus-launch-kit/',
       '/semester-standard/', '/trust/data-and-ai-transparency/', '/platform/integrations/', '/platform/vocabulary/', '/resources/ai-governance-canvas/', '/research/', '/tools/navigation/',
       '/platform/one-operating-system/', '/platform/why-not-another-tool/',
       '/community/', '/community/ambassadors/', '/community/stories/', '/community/partners/', '/community/events/'];

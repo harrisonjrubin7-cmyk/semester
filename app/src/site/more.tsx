@@ -2,7 +2,8 @@ import type { ReactNode } from 'react';
 import { CONTACT_EMAIL, type SiteConfig } from './config';
 import { appHref, href } from './Layout';
 import { Cards, Hero, Section, Start } from './pages';
-import { claim } from '../lib/ops/claims';
+import { claim, STATUS_LABEL } from '../lib/ops/claims';
+import { CORE_MODULES, CUTOVER_STEPS, IN_BOTH_MODES, coreStatus } from '../lib/ops/replacementmap';
 import { StatusBadge, StatusLegend } from './claims';
 import { AUTHORITIES, AVAILABILITY, BOUNDARIES, DEMO_PATHS, SERVICES, TIERS } from './platform';
 
@@ -120,7 +121,7 @@ export const ServiceMap: Page = ({ config }) => (
 
 export const SystemBoundaries: Page = ({ config }) => (
   <>
-    <Hero title="System boundaries" lead="Exactly what Semester does in each area, and what remains authoritative somewhere else." />
+    <Hero title="System boundaries" lead="Today, in Connect mode: exactly what Semester does in each area, and what remains authoritative somewhere else. Semester Core, being built module by module, moves each area to Semester when a school is ready." />
     <div className="site-table-wrap">
       <table className="site-table">
         <caption>What Semester does, and who is official</caption>
@@ -149,7 +150,55 @@ export const SystemBoundaries: Page = ({ config }) => (
         <em>Institution verified</em>, <em>Imported</em>, <em>Student entered</em>, <em>Estimated</em> or{' '}
         <em>Needs review</em> — and a planning estimate is labelled as one wherever it appears.
       </p>
-      <p><a href={href(config, '/platform/service-map/')}>The service map</a> shows how the pieces fit.</p>
+      <p><a href={href(config, '/platform/service-map/')}>The service map</a> shows how the pieces fit. <a href={href(config, '/platform/replacement-map/')}>The replacement map</a> shows each system Semester Core is being built to take over, and how far that build has come.</p>
+    </Section>
+  </>
+);
+
+// ── /platform/replacement-map/ ──────────────────────────────────────────────
+
+export const ReplacementMap: Page = ({ config }) => (
+  <>
+    <Hero
+      title="One system, one module at a time"
+      lead="Semester runs beside a school’s systems today, in Connect mode, and is being built to become each one’s system of record, in Semester Core. Each row names the systems a module is built to take over and how far that build has come, read from the same register that holds this site to its word."
+    />
+    <div className="site-table-wrap">
+      <table className="site-table">
+        <caption>What Semester Core is built to take over, and how far each module has come</caption>
+        <thead>
+          <tr>
+            <th scope="col">Area</th>
+            <th scope="col">Built to take over from</th>
+            <th scope="col">Today, in Connect</th>
+            <th scope="col">Semester Core</th>
+          </tr>
+        </thead>
+        <tbody>
+          {CORE_MODULES.map((m) => {
+            const s = coreStatus(m);
+            return (
+              <tr key={m.id} data-core-module={m.id}>
+                <th scope="row">{m.area}</th>
+                <td>{m.takesOver}</td>
+                <td>{m.connect}</td>
+                <td><span className={`site-badge site-status site-status-${s}`}>{STATUS_LABEL[s]}</span></td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+    <p className="site-small">
+      No module is in Semester Core for any school yet. Until a school moves a module, its own system stays authoritative, as the <a href={href(config, '/platform/system-boundaries/')}>system boundaries</a> say. The word beside each module is the weakest of the register rows its build rests on; a module with no row yet is Planned.
+    </p>
+    <Section title="How a module moves to Semester Core" id="rm-steps">
+      <Flow steps={[...CUTOVER_STEPS]} label="From Connect to Core" />
+    </Section>
+    <Section title="True in both modes" id="rm-both">
+      <ul>
+        {IN_BOTH_MODES.map((l) => <li key={l}>{l}</li>)}
+      </ul>
     </Section>
   </>
 );

@@ -2635,3 +2635,35 @@ four to be scored, and for the evaluation set model quality needs.
 - **Not changed:** the weights, the floors, the thresholds, the subprocessor
   register. The pass-rate bands and the critical cap are the owner's to
   change; the set has not been run, because this session had no key.
+
+## D-137 · The site names what Semester Core is built to take over, module by module, with a word no page can raise by hand
+
+**Decided by owner 29 Sep 2026.** Semester's end state is to become the
+system of record for each part of a university and a school — the learning
+system, registration, the degree audit, records, admissions, student
+accounts, financial-aid records, scheduling, the portal, advising, career,
+campus life, a K-12 edition with a parent portal, and alumni relations and
+fundraising — one module at a time. Today every tenant is in Connect mode and
+the school's own system stays authoritative; that does not change here.
+
+- **Where:** `/platform/replacement-map/` (`site/more.tsx`), linked from
+  system boundaries, the transparency page and the one-operating-system
+  page; and the company site's home page, where the "What Semester does not
+  do" list stood. Its true lines — no data sold, no advertising, no official
+  decision made by AI, no promised outcome — are kept as "True in both modes".
+- **One source:** `lib/ops/replacementmap.ts`. The Core word beside each
+  module is computed from the master-register rows its build rests on, the
+  weakest row deciding, through the claims register's floors. No row means
+  Planned. Rows alone reach at most "Built and tested, not yet deployed";
+  "Available now" needs an available claim. At this commit four modules are
+  In preparation and fourteen are Planned.
+- **Held by** `replacementmap.test.ts`: every row exists, no module says more
+  than its weakest row, available only through a claim, and the company-site
+  block between its `core-map` markers is exactly what the data renders
+  (`npm run registers` writes it and `SHA256SUMS`). Raising Registration to
+  "Available now" in the HTML, and letting a building row read as tested,
+  each turned it red.
+- **Unchanged:** the overclaim guard in `site.test.tsx` still refuses a page
+  saying Semester replaces a named system in the present tense, and the
+  one-operating-system statement (D-134) still names no system of record
+  Semester does not run. Both become true sentences only when a module is.
