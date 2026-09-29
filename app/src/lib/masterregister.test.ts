@@ -17,7 +17,7 @@ import {
   type Domain,
   type Requirement,
 } from './masterregister';
-import { COUNCIL, SEATS } from './launchreadiness';
+import { COUNCIL, CURRENT, SEATS } from './launchreadiness';
 
 /**
  * The master register is only worth having if a row cannot claim more than the
@@ -124,10 +124,21 @@ describe('the master launch readiness register', () => {
       const row = REGISTER.find((r) => r.id === 'PRG-001')!;
       const shows = row.evidence.find((e) => e.path === 'app/src/lib/launchreadiness.ts')!.shows;
       const WORDS = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve'];
+      const lower = shows.toLowerCase();
       const held = COUNCIL.filter((c) => c.holder !== null).length;
-      expect(shows.toLowerCase()).toContain(`${WORDS[SEATS.length]} seats`);
-      expect(shows.toLowerCase()).toContain(`${WORDS[held]} held`);
-      expect(shows.toLowerCase()).toContain(`${WORDS[SEATS.length - held]} vacant`);
+      expect(lower).toContain(`${WORDS[SEATS.length]} seats`);
+      expect(lower).toContain(`${WORDS[held]} held`);
+      expect(lower).toContain(`${WORDS[SEATS.length - held]} vacant`);
+      // Who holds them, and how, is held too (Codex on #947): a seat that
+      // passes to someone else, an acting holder confirmed, or a signature
+      // given must each change the sentence.
+      const founderOnly = COUNCIL.every((c) => c.holder === null || c.holder.startsWith('Founder'));
+      expect(lower.includes('all by the founder'), 'PRG-001 says every held seat is the founder\'s').toBe(founderOnly);
+      const acting = COUNCIL.filter((c) => c.holder?.endsWith(', acting')).length;
+      expect(lower).toContain(`${WORDS[acting]} of them acting`);
+      const signed = CURRENT.signoffs.length;
+      expect(lower).toContain(signed === 0 ? 'none signed' : `${WORDS[signed]} signed`);
+      if (signed > 0) expect(lower).not.toContain('none signed');
       for (const seat of SEATS) expect(shows, `PRG-001 names the ${seat} seat`).toContain(seat);
       // A seat the council has is never reported missing, by either name.
       for (const name of [...SEATS, 'SRE']) expect(shows, `PRG-001 says there is no ${name} seat`).not.toMatch(new RegExp(`\\bno\\b[^.;]*\\b${name}\\b`, 'i'));
