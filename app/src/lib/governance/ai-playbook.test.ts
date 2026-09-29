@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import {
   ACTION_TIERS, ACTION_TIER_ROWS, ASSESSED, CONFIRMATIONS, COST_COMPONENTS, DATA_CLASSES, DEFINITION_OF_DONE, DIMENSIONS, DIMENSION_ROWS,
   FIRST_GOAL, FIRST_WEEK, FLOORS, INPUTS, LAYER, MEMORY_RULES, NEVER_SEND, ONBOARDING, OVERALL_MINIMUM, PROVIDER_REQUIREMENTS, ROADMAP,
-  RULES, SOURCES, STARTING_CHOICES, STATUSES, TIERS_WITHOUT_A_CLASS, VENDORS, WEIGHT_SUM, WORKFLOWS, WORKFLOW_PROHIBITIONS_NOT_REFUSED,
+  RULES, SOURCES, STARTING_CHOICES, STATUSES, TIERS_WITHOUT_A_CLASS, VENDORS, WEIGHT_SUM, WORKFLOWS,
   scoreVendor, type Scores,
 } from './ai-playbook';
 import { AI_RELEASE_GATE, PROHIBITED_STARTING_SCOPE } from './ai-lifecycle';
@@ -86,13 +86,14 @@ describe('the AI integration playbook', () => {
     }
   });
 
-  it('names only intake refusals that exist, and says which prohibitions none refuses', () => {
+  it('names only intake refusals that exist, and the four it added are each carried by the workflow they came from', () => {
     const refusals = new Set<string>(PROHIBITED_STARTING_SCOPE);
     for (const w of WORKFLOWS) for (const r of w.refusedBy) expect(refusals.has(r), `${w.id} → ${r}`).toBe(true);
-    for (const p of WORKFLOW_PROHIBITIONS_NOT_REFUSED) {
-      const word = p.split(' ')[0].toLowerCase();
-      expect(PROHIBITED_STARTING_SCOPE.some((r) => r.toLowerCase().includes(word)), p).toBe(false);
-    }
+    const carries = (id: string, r: string) => expect(WORKFLOWS.find((w) => w.id === id)!.refusedBy, `${id} → ${r}`).toContain(r);
+    carries('WF-06', 'Ranking students for employers');
+    carries('WF-07', 'Auto-publishing institutional policy');
+    carries('WF-08', 'Unapproved production changes');
+    carries('WF-10', 'Automated hiring decisions');
   });
 
   it('never lets an automatic action reach past internal state, nor an external one run unconfirmed', () => {
@@ -251,7 +252,7 @@ function render(): string {
     '| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |',
     ...WORKFLOWS.map((w) => `| ${w.id} | ${w.first ? '★ ' : ''}${cell(w.name)} | ${w.audience} | ${cell(w.job)} | ${w.reaches} | ${cell(w.prohibited)} | ${w.refusedBy.length ? w.refusedBy.map((r) => `*${r}*`).join(', ') : '—'} | ${w.status} | ${ev(w.evidence)} | ${cell(w.gap)} |`),
     '',
-    `Prohibited by the playbook and refused by no intake rule yet: ${WORKFLOW_PROHIBITIONS_NOT_REFUSED.map((p) => `*${p.toLowerCase()}*`).join('; ')}. Adding them to \`PROHIBITED_STARTING_SCOPE\` is a proposal for the owner; this page does not make it.`,
+    'Four of these refusals were added to `PROHIBITED_STARTING_SCOPE` for this playbook (D-128): automated hiring decisions, ranking students for employers, auto-publishing institutional policy, and unapproved production changes. A use case that touches any of them is refused at intake, whatever evidence it brings.',
     '',
     '### ROI scorecards',
     '',

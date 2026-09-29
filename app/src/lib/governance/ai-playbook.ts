@@ -6,13 +6,13 @@
  *
  * Three documents of 29 September 2026 ask for it. They overlap heavily with
  * what is already in code: `ai-lifecycle.ts` owns the six gates, the release
- * gate and the six intake refusals; `ai-assurance.ts` owns the NIST matrix,
+ * gate and the ten intake refusals; `ai-assurance.ts` owns the NIST matrix,
  * the evaluation tiers and the 800-1 checklist; `toolkit/classification.ts`
  * owns the seven data tiers and the gate that says what may reach an AI path.
  * Nothing here replaces any of them. So:
  *
- * - every workflow's prohibited decision names the intake refusal that already
- *   refuses it, or says none does;
+ * - every workflow's prohibited decision names the intake refusal that
+ *   refuses it;
  * - every playbook data class names the `classification.ts` tiers it covers,
  *   and the test asks `gate()` whether each tier may reach AI — a class whose
  *   rule says "exclude" is only true if the gate really excludes it;
@@ -149,17 +149,17 @@ const WF_ROWS: readonly WfRow[] = [
     'tested', [['app/src/components/GetHelp.test.tsx', 'wellbeing offers a crisis line and no way to send anything; a request sends only the ticked lines, after confirming'], ['app/src/lib/help-routes.test.ts', 'nothing ticked by default'], ['app/src/lib/basicneeds.test.ts', 'seventeen categories, each routing only to offices that exist'], ['docs/CRISIS-RESPONSE-RUNBOOK.md', 'escalation for student harm']],
     'Routing is a directory lookup; no AI reads a described problem and names the office, and no source-freshness alert exists for the directory.'],
   ['Career Evidence and Opportunity Agent', 'student', 'Turn confirmed work into portfolio evidence and prepare career actions',
-    'D', 'Invent achievements, apply automatically, rank students for employers, infer protected traits', ['Opaque risk scoring'],
+    'D', 'Invent achievements, apply automatically, rank students for employers, infer protected traits', ['Opaque risk scoring', 'Ranking students for employers'],
     ['Skills confirmed', 'Portfolio or application milestone', 'Invented-claim corrections'], false,
     'tested', [['app/src/lib/career-evidence.test.ts', 'confirmed, renamed, rejected and undone; no word or number the student did not supply'], ['app/src/components/CareerEvidence.test.tsx', 'every suggested skill unconfirmed until the student decides; a résumé opens in Write only after its preview'], ['docs/CAREER-EVIDENCE.md', 'the design']],
-    'No opportunity ranking, no job-description comparison and no match reasons; ranking students for employers is prohibited by the playbook and refused by nothing in code.'],
+    'No opportunity ranking, no job-description comparison and no match reasons.'],
   ['Institutional Content Governance Agent', 'institution', 'Keep campus resources, policies, events and opportunities accurate and accessible',
-    'D', 'Auto-publish policy changes, override a content owner, alter an official record without approval', [],
+    'D', 'Auto-publish policy changes, override a content owner, alter an official record without approval', ['Auto-publishing institutional policy'],
     ['Stale items identified', 'Freshness improvement', 'Incorrect auto-draft rate'], false,
     'building', [['app/src/lib/launch/content.test.ts', 'each content row has a source, owner, review, visibility, expiry and correction; a stale review is refused'], ['app/src/components/institutional/CampaignManager.test.tsx', 'Approve shown only to the named approver; locked once out of draft'], ['app/src/lib/official-notices.ts', 'a stale emergency never says Required']],
     'There is no AI agent here: owner approval and staleness rules exist for content, and nothing drafts summaries, finds broken links or builds accessibility checklists.'],
   ['Engineering Reliability Triage Agent', 'internal', 'Summarize incidents, correlate errors, propose runbook steps and regression tests',
-    'B', 'Deploy code, alter production data, rotate credentials, change the firewall, close incidents without approval', [],
+    'B', 'Deploy code, alter production data, rotate credentials, change the firewall, close incidents without approval', ['Unapproved production changes'],
     ['Incidents summarized', 'MTTR reduction; recurrence reduction', 'Secret or PII exposure incidents'], false,
     'building', [['app/src/lib/integration/redact.ts', 'tokens, keys and emails redacted from integration errors and logs'], ['app/server/institution/intelligence.test.ts', 'provider failure mapped without logging questions or protected source bodies'], ['app/src/lib/governance/incident-comms.ts', 'incident notices refuse placeholders and speculation']],
     'Log redaction exists; no AI triage agent, and no read-only connector to logs or the issue tracker.'],
@@ -169,24 +169,16 @@ const WF_ROWS: readonly WfRow[] = [
     'tested', [['app/src/lib/ops/claims.test.ts', 'catches a word above what the claims register supports, and a claim on expired evidence'], ['app/src/lib/gtm/rfp.test.ts', 'never claims something exists without citing it; “available now” only where every control is READY'], ['docs/HIGHER-ED-RFP-RESPONSE-LIBRARY.md', 'the approved answer library']],
     'The approved claims library and its guard exist; nothing drafts an answer with AI, so the guard has never checked a generated one.'],
   ['Talent and Hiring Operations Copilot', 'internal', 'Organize role requirements, interview logistics, onboarding material and candidate communications',
-    'B', 'Automated hiring decisions, ranking on protected characteristics, inferring sensitive traits, sending offers without approval', [],
+    'B', 'Automated hiring decisions, ranking on protected characteristics, inferring sensitive traits, sending offers without approval', ['Automated hiring decisions'],
     ['Interview kits generated', 'Prep-time reduction', 'Bias or quality issue reports'], false,
     'not-started', [],
-    'Nothing in the tree. Semester has no hires, no ATS and no HRIS; this workflow waits on a team, and an automated hiring decision is refused by no intake rule.'],
+    'Nothing in the tree. Semester has no hires, no ATS and no HRIS; this workflow waits on a team. An automated hiring decision is refused at intake.'],
 ];
 
 export const WORKFLOWS: readonly Workflow[] = WF_ROWS.map(([name, audience, job, reaches, prohibited, refusedBy, [leading, outcome, guardrail], first, status, evidence, gap], i) => ({
   id: `WF-${String(i + 1).padStart(2, '0')}`,
   name, audience, job, reaches, prohibited, refusedBy, roi: { leading, outcome, guardrail }, first, status, evidence: ev(evidence), gap,
 }));
-
-/** Prohibitions no intake refusal names yet, so the page can say so rather than imply they are refused. */
-export const WORKFLOW_PROHIBITIONS_NOT_REFUSED: readonly string[] = [
-  'Automated hiring decisions',
-  'Ranking students for employers',
-  'Auto-publishing an institution policy change',
-  'Deploying code or altering production data',
-];
 
 // ── 4. The human-confirmation matrix ─────────────────────────────────────────
 

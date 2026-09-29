@@ -2340,11 +2340,16 @@ file existing, every status held to the kind of file it cites, and the PDFs
 never their own evidence.
 
 - **Crosswalk, not a second register.** A workflow's prohibited decision
-  names the `PROHIBITED_STARTING_SCOPE` entry that already refuses it; four
-  prohibitions the playbook names (automated hiring decisions, ranking
-  students for employers, auto-publishing policy, deploying code) are refused
-  by no intake rule, and the page says so. The definition of done names the
-  `AI_RELEASE_GATE` item carrying each line; five lines have none.
+  names the `PROHIBITED_STARTING_SCOPE` entry that refuses it. The definition
+  of done names the `AI_RELEASE_GATE` item carrying each line; five lines have
+  none.
+- **Four intake refusals added.** The playbook prohibits four things no intake
+  rule refused, and the owner asked for them: *automated hiring decisions*,
+  *ranking students for employers*, *auto-publishing institutional policy* and
+  *unapproved production changes* join `PROHIBITED_STARTING_SCOPE` (six → ten).
+  Each is carried by the workflow it came from (WF-10, WF-06, WF-07, WF-08),
+  held there by the test, and listed in `AI-LIFECYCLE-GATES.md`, which
+  `docs.test.ts` holds to the list.
 - **Data classes are checked against the gate, not asserted.** Each of the
   four classes names the `classification.ts` tiers it covers, and the test
   asks `gate(tier, 'ai', true)` for each: a class whose rule says "exclude" is
@@ -2364,6 +2369,6 @@ never their own evidence.
   registers nobody, advisor shares that expire, skills the student confirms:
   the boundary exists and is held, and in nearly every row the gap is the
   agent itself. The talent and hiring workflow is not started.
-- **Not changed:** `ai-lifecycle.ts`, `classification.ts`, `subprocessors.ts`,
-  `goals.ts`. Adding the four missing intake refusals, fixing the weights, and
-  scoring a provider are proposals for the owner; none is made here.
+- **Not changed:** `classification.ts`, `subprocessors.ts`, `goals.ts`.
+  Fixing the weights and scoring a provider are the owner's; neither is made
+  here.
