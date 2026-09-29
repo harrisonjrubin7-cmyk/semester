@@ -1,5 +1,5 @@
 -- Financial records are kept seven years after the end of the year they were
--- made, then removed (DECISION-LOG D-129, RETENTION.md).
+-- made, then removed (DECISION-LOG D-130, RETENTION.md).
 --
 -- Until this, RETENTION.md said "no time-based purge yet — the period
 -- (typically seven years) must be set before the first charge". The owner set

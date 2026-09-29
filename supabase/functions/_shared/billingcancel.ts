@@ -5,7 +5,7 @@
  *
  * Stripe first, because Stripe is the party that charges. Recording the
  * cancellation here alone (what `request_cancellation` did on its own until
- * D-129) left Stripe renewing — and the next `customer.subscription.updated`
+ * D-130) left Stripe renewing — and the next `customer.subscription.updated`
  * the webhook applied would have put `cancel_at_period_end` back to false.
  * So:
  *

@@ -444,7 +444,7 @@ select cron.schedule(
 --
 -- `public.purge_financial_records()` (20260929130000_financial_retention.sql)
 -- removes an individual subscriber's finished payment records seven years
--- after the end of the year they were made (D-129). Nothing is eligible before
+-- after the end of the year they were made (D-130). Nothing is eligible before
 -- 1 January 2034, so for years it removes nothing; it runs anyway, so the
 -- promise is kept by a job that has been running rather than one written the
 -- week it first matters. **Active**: no secret, no endpoint. Monthly, on the
