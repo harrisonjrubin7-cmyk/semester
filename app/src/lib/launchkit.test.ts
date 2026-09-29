@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { DEAL_POLICY } from './governance/deal-desk';
 import { SALES_STAGES } from './gtm/stages';
+import { PILOT_DAYS } from './gtm/pilot';
 import { SEATS } from './launchreadiness';
 import {
   AGREEMENT_SECTIONS, BANDS, BUYERS, CADENCE, CALCULATOR_INPUTS, CHANNELS, COMMERCIAL_RULES, CORPORATE_FILES, COUNCIL_PRINCIPLES, COUNCIL_PURPOSE,
@@ -114,13 +115,11 @@ describe('the SaaS launch kit crosswalk', () => {
       expect(FORMATION.find((f) => f.item === 'Structure chosen')?.standing).toBe('held');
     });
 
-    it('holds the pilot term to the code’s 60–120 days, which the kit’s 90–180 conflicts with', () => {
+    it('holds the pilot term to the code’s 26 weeks, two days past the kit’s 90–180', () => {
       const term = TERM_SHEET.find((t) => t.item === 'Term');
       expect(term?.standing).toBe('held');
-      const pilot = read('app/src/lib/gtm/pilot.ts');
-      expect(pilot).toMatch(/60/);
-      expect(pilot).toMatch(/120/);
-      expect(term?.gap).toMatch(/60–120/);
+      expect(PILOT_DAYS).toBe(182);
+      expect(term?.gap).toMatch(/26 weeks/);
       expect(DEAL_POLICY.maxPilotMonths).toBe(6);
     });
 
@@ -285,8 +284,8 @@ function render(): string {
     '### The term sheet',
     '',
     `Fourteen positions, each held to where the tree already takes it: ${counts(TERM_SHEET)}.`,
-    'The one conflict is the term: the kit says 90–180 days and `gtm/pilot.ts` refuses',
-    'anything outside 60–120. The code’s rule holds until the owner reopens it.',
+    'The one conflict is the term: the kit says 90–180 days and `gtm/pilot.ts` runs',
+    'every pilot for exactly 26 weeks, 182 days, as the owner set it (D-130).',
     '',
     ...itemTable(TERM_SHEET),
     '',

@@ -34,7 +34,7 @@ an artifact under `docs/evidence/`.
 | [GRA](#gra) The Semester Graph and the university knowledge graph | 5 | 0 | 0 | 3 | 2 |
 | [ACT](#act) The next right action | 4 | 0 | 0 | 0 | 4 |
 | [OUT](#out) Outcomes and measurement | 6 | 1 | 2 | 0 | 3 |
-| [IMP](#imp) Implementation as a product | 8 | 2 | 2 | 1 | 3 |
+| [IMP](#imp) Implementation as a product | 9 | 2 | 2 | 1 | 4 |
 | [PKG](#pkg) Editions, pricing and margins | 10 | 2 | 0 | 2 | 6 |
 | [PRC](#prc) Procurement before the sales call | 12 | 5 | 3 | 0 | 4 |
 | [TRU](#tru) 1EdTech TrustEd Apps | 4 | 0 | 1 | 0 | 3 |
@@ -49,7 +49,7 @@ an artifact under `docs/evidence/`.
 | [NAR](#nar) The category narrative and precise claims | 4 | 0 | 0 | 1 | 3 |
 | [BEN](#ben) The benchmark itself | 5 | 0 | 1 | 2 | 2 |
 | [K12](#k12) K–12, as a configured edition later | 3 | 2 | 1 | 0 | 0 |
-| **total** | **116** | **18** | **21** | **16** | **61** |
+| **total** | **117** | **18** | **21** | **16** | **62** |
 
 ## Where a brief and the tree disagree
 
@@ -57,8 +57,6 @@ Nothing here changes a recorded decision. Each is put to the seat that owns it.
 
 | The brief asks | The tree holds | Decides | Cites |
 | --- | --- | --- | --- |
-| Plus at $7.99 a month or $59 a year (E, F, P). | plans.ts says the same; the billing seed charges 399 and 2999 cents. Two prices for one plan are in the tree, and checkout would charge the seed’s. | `finance` (vacant) | [`supabase/migrations/20260929070000_commercial_core.sql`](../supabase/migrations/20260929070000_commercial_core.sql) |
-| A Registration and Path Pilot of 26 weeks (E) or 12–26 weeks (P). | pilotReadiness refuses a pilot outside 60–120 days, and the paid-pilot framework says the same. | `founder` | [`app/src/lib/gtm/pilot.test.ts`](../app/src/lib/gtm/pilot.test.ts) |
 | Never claim to replace payment, housing, health or financial-aid systems (M17). | The one-operating-system statement lists payments among the parts of university life Semester is one platform for; Semester holds no payment workflow for students. | `founder` | [`app/src/lib/oneos.ts`](../app/src/lib/oneos.ts) |
 | A first-year student lifecycle stage (R2). | docs/FIRST-YEAR-SUCCESS.md is the company’s first year of measures, not first-year students; the name will mislead a reader of either brief. | `product` | [`docs/FIRST-YEAR-SUCCESS.md`](../docs/FIRST-YEAR-SUCCESS.md) |
 
@@ -133,9 +131,10 @@ Nothing here changes a recorded decision. Each is put to the seat that owns it.
 | IMP-003 | Integration sandbox and mapping versions with rollback | tested | `app/src/lib/integration/quality.test.ts` — propose, simulate, approve, roll back | docs/SYNC-SIMULATION-SANDBOX.md still says nothing is built. | R22, M8, L9 | — |
 | IMP-004 | Content, onboarding and launch templates | tested | `app/src/lib/launch/content.test.ts` — the launch package<br>`docs/launch/STUDENT-QUICK-START.md` — ready | Faculty and advisor quick starts and the ambassador kit are not started. | M8, L9 | — |
 | IMP-005 | Guided tenant setup and an SSO wizard | designed | `docs/SSO-TENANT-ONBOARDING.md` — a checklist<br>`supabase/tenant-sso-policy.check.sql` — the policy the wizard would write | No wizard; the SSO tables have no screen. | M8, L9, E | `oneos:ic-tenant` |
-| IMP-006 | Pilot dashboard | building | `app/src/lib/gtm/pilot.ts` — readiness and verdict | No screen reads the pilot tables. | M8, L9 | — |
-| IMP-007 | Institution data migration: plans, catalog, directories, events | not-started | `docs/market-readiness/MIGRATION_PLAYBOOK.md` — customer data migration does not exist | Student-side import only; no SIS, ERP, Google or Microsoft mapping template. | R22 | — |
-| IMP-008 | Parallel-run mode | not-started | — | Named once in docs/INSTITUTIONAL_REQUIREMENTS.md; nothing designs it. | R22 | — |
+| IMP-006 | Every pilot runs 26 weeks: the Registration and Path Pilot length | tested | `app/src/lib/gtm/pilot.ts` — PILOT_WEEKS<br>`app/src/lib/gtm/pilot.test.ts` — exactly 182 days, or refused | The owner set it (D-130). The offer itself — 25–100 students, the explicit exclusions, the price sheet — is not packaged as one document. | E, P, V | — |
+| IMP-007 | Pilot dashboard | building | `app/src/lib/gtm/pilot.ts` — readiness and verdict | No screen reads the pilot tables. | M8, L9 | — |
+| IMP-008 | Institution data migration: plans, catalog, directories, events | not-started | `docs/market-readiness/MIGRATION_PLAYBOOK.md` — customer data migration does not exist | Student-side import only; no SIS, ERP, Google or Microsoft mapping template. | R22 | — |
+| IMP-009 | Parallel-run mode | not-started | — | Named once in docs/INSTITUTIONAL_REQUIREMENTS.md; nothing designs it. | R22 | — |
 
 ### PKG
 
@@ -144,7 +143,7 @@ Nothing here changes a recorded decision. Each is put to the seat that owns it.
 | ID | Item | Status | Evidence | Gap | Asked by | Overlaps |
 | --- | --- | --- | --- | --- | --- | --- |
 | PKG-001 | Editions on one identity, one data model and one console | building | `app/src/lib/launchkit.ts` — twelve modules with buyer, metric and guardrail<br>`app/src/lib/entitlement.test.ts` — resolution order, in shadow | The packages are not the briefs’ editions, and no entitlement is tied to a package. | R6, E, P | — |
-| PKG-002 | Student plans: Free, Plus, Pro | tested | `app/src/lib/plans.ts` — Plus $7.99 or $59, Pro planned at $14.99 or $99<br>`app/src/lib/plans.test.ts` — held | The billing seed prices Plus differently (see conflicts). | E, F, P | — |
+| PKG-002 | Student plans: Free, Plus, Pro | tested | `app/src/lib/plans.ts` — Plus $7.99 or $59, Pro planned at $14.99 or $99<br>`app/src/lib/plans.test.ts` — the pricing page and the catalog checkout charges, held to one price | Pro has no catalog price and cannot be bought. | E, F, P | — |
 | PKG-003 | Institution price floors and implementation fees | tested | `app/src/lib/governance/deal-desk.ts` — minimum ACV per segment<br>`app/src/lib/governance/deal-desk.test.ts` — held | Held in code; nothing under docs/evidence/ shows it operating. | R19, F, P | — |
 | PKG-004 | An institution value and pricing calculator | not-started | `docs/SAAS-LAUNCH-KIT.md` — the calculator’s inputs, and “none exists” | No function computes an estimate from pilot size, registration volume, advising capacity or integration scope. | R7, F | — |
 | PKG-005 | A gross-margin model by package: cloud, AI, storage, notifications, payments, support, implementation, moderation | not-started | `docs/operating-model/COMMERCIAL-GOVERNANCE.md` — the AI unit-economics dashboard, designed | Costs are recorded (the AI journal) and formulas tested (kpi.ts); nothing joins them per package. | R19, F, P | — |

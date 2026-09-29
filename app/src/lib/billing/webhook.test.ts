@@ -47,7 +47,7 @@ describe('the billing webhook', () => {
   });
 
   it('refuses a forged, stale or unsigned event before reading it', async () => {
-    const body = event('invoice.paid', { id: 'in_1', subscription: 'sub_1', amount_paid: 399 });
+    const body = event('invoice.paid', { id: 'in_1', subscription: 'sub_1', amount_paid: 799 });
     for (const sig of [sign(body, NOW, 'whsec_wrong'), sign(body, NOW - 301), '']) {
       const { d } = deps();
       const res = await handleBillingWebhook(post(body, { 'Stripe-Signature': sig }), d);
@@ -73,13 +73,13 @@ describe('the billing webhook', () => {
 
   it('hashes the raw body it verified, and records the event last', async () => {
     const { d, calls } = deps();
-    const body = event('invoice.payment_failed', { id: 'in_1', subscription: 'sub_1', amount_due: 399, currency: 'usd', created: NOW - 60 });
+    const body = event('invoice.payment_failed', { id: 'in_1', subscription: 'sub_1', amount_due: 799, currency: 'usd', created: NOW - 60 });
     const res = await handleBillingWebhook(post(body), d);
     expect(res.status).toBe(200);
     expect(calls).toEqual(['invoice', 'apply']);
-    expect(d.upsertInvoice).toHaveBeenCalledWith('sub_1', 'in_1', 399, 'usd', expect.any(String), expect.any(String));
+    expect(d.upsertInvoice).toHaveBeenCalledWith('sub_1', 'in_1', 799, 'usd', expect.any(String), expect.any(String));
     expect(d.applyEvent).toHaveBeenCalledWith(
-      'evt_1', 'payment_failed', 'inv-uuid', 399, createHash('sha256').update(body).digest('hex'));
+      'evt_1', 'payment_failed', 'inv-uuid', 799, createHash('sha256').update(body).digest('hex'));
   });
 
   it('turns a completed checkout into a subscription, by the checkout id it carries', async () => {
@@ -115,10 +115,10 @@ describe('the billing webhook', () => {
 
   it('records refunds and disputes by kind, and anything else as other', async () => {
     const { d } = deps();
-    await handleBillingWebhook(post(event('charge.refunded', { amount_refunded: 399 })), d);
-    await handleBillingWebhook(post(event('charge.dispute.created', { amount: 399 }, 'evt_3')), d);
+    await handleBillingWebhook(post(event('charge.refunded', { amount_refunded: 799 })), d);
+    await handleBillingWebhook(post(event('charge.dispute.created', { amount: 799 }, 'evt_3')), d);
     await handleBillingWebhook(post(event('customer.created', {}, 'evt_4')), d);
-    expect(vi.mocked(d.applyEvent!).mock.calls.map((c) => [c[1], c[3]])).toEqual([['refund', 399], ['chargeback', 399], ['other', null]]);
+    expect(vi.mocked(d.applyEvent!).mock.calls.map((c) => [c[1], c[3]])).toEqual([['refund', 799], ['chargeback', 799], ['other', null]]);
   });
 
   it('answers 500 and logs nothing about the event when applying fails, so the provider retries', async () => {
@@ -135,7 +135,7 @@ describe('the billing webhook', () => {
   it('asks for a retry, recording nothing, when an invoice arrives before its subscription', async () => {
     const log = vi.spyOn(console, 'error').mockImplementation(() => {});
     const { d } = deps({ upsertInvoice: vi.fn(async () => null) });
-    const body = event('invoice.paid', { id: 'in_secret_2', subscription: 'sub_not_yet', amount_paid: 399 });
+    const body = event('invoice.paid', { id: 'in_secret_2', subscription: 'sub_not_yet', amount_paid: 799 });
     const res = await handleBillingWebhook(post(body), d);
     expect(res.status).toBe(500);
     expect(d.upsertInvoice).toHaveBeenCalledTimes(1);

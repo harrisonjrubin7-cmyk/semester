@@ -1241,7 +1241,7 @@ details.svc summary .sum-l{min-width:0}
       <div class="toggle" role="group" aria-label="Billing period"><button type="button" aria-pressed="false" data-bill="m">Monthly</button><button type="button" aria-pressed="true" data-bill="y">Annual · save 37%</button></div></div>
     <div class="plans">
       <div class="plan"><span class="nm">Free</span><span class="pr">$0</span><ul><li>Unlimited courses and syllabi</li><li>One term plan and basic schedule</li><li>Source labels and privacy controls</li><li>Data export and deletion</li></ul><a class="btn btn-ghost" href="https://harrisonjrubin7-cmyk.github.io/semester/#/signup" target="_blank" rel="noopener">Start planning free</a></div>
-      <div class="plan feat"><span class="nm">Plus</span><span class="pr" id="plus-price">$29.99<small> / year</small></span><ul><li>Everything in Free</li><li>Multiple plans and comparisons</li><li>Calendar sync and exports</li><li>Expanded reminders and sharing</li></ul><a class="btn btn-ghost" href="#commercial-terms">Not on sale yet · see terms</a></div>
+      <div class="plan feat"><span class="nm">Plus</span><span class="pr" id="plus-price">$59<small> / year</small></span><ul><li>Everything in Free</li><li>Multiple plans and comparisons</li><li>Calendar sync and exports</li><li>Expanded reminders and sharing</li></ul><a class="btn btn-ghost" href="#commercial-terms">Not on sale yet · see terms</a></div>
       <div class="plan"><span class="nm">Pro</span><span class="pr" style="font-size:26px">At launch</span><ul><li>Everything in Plus</li><li>Advanced planning scenarios</li><li>Study Studio and Workspace expansion</li><li>Career portfolio tools</li></ul><a class="btn btn-ghost" href="#contact">Join the waitlist</a></div>
       <div class="plan"><span class="nm">Access</span><span class="pr" style="font-size:26px">Paid by your school</span><ul><li>School SSO</li><li>Verified institutional data</li><li>Premium modules your school enables</li><li>Institution support</li></ul><a class="btn btn-ghost" href="#institutions">For institutions</a></div>
     </div>
@@ -1254,7 +1254,7 @@ details.svc summary .sum-l{min-width:0}
       <caption>Planned commercial terms for student plans</caption>
       <thead><tr><th scope="col">Term</th><th scope="col">What it is</th><th scope="col">Status</th></tr></thead>
       <tbody>
-        <tr><th scope="row">Current price</th><td>Free: $0. Plus: $3.99 a month or $29.99 a year (planned). Pro: priced at launch. Access: paid by your school.</td><td><span class="cs cs-pl">Planned</span></td></tr>
+        <tr><th scope="row">Current price</th><td>Free: $0. Plus: $7.99 a month or $59 a year (planned). Pro: priced at launch. Access: paid by your school.</td><td><span class="cs cs-pl">Planned</span></td></tr>
         <tr><th scope="row">Currency</th><td>US dollars (USD).</td><td><span class="cs cs-pl">Planned</span></td></tr>
         <tr><th scope="row">Billing period</th><td>Monthly or annual, charged at the start of each period.</td><td><span class="cs cs-pl">Planned</span></td></tr>
         <tr><th scope="row">Tax</th><td>Sales tax added at checkout where it applies, shown before you pay. Final approach set with counsel.</td><td><span class="cs cs-pl">Planned</span></td></tr>
@@ -3961,7 +3961,7 @@ SPAN 1102 Spanish II, MW, 14:30-15:45, 3</textarea></label>
   // ---------- pricing toggle ----------
   document.querySelectorAll("[data-bill]").forEach(b=>b.addEventListener("click",()=>{
     document.querySelectorAll("[data-bill]").forEach(x=>x.setAttribute("aria-pressed",x===b));
-    document.getElementById("plus-price").innerHTML=b.dataset.bill==="m"?'$3.99<small> / month</small>':'$29.99<small> / year</small>';
+    document.getElementById("plus-price").innerHTML=b.dataset.bill==="m"?'$7.99<small> / month</small>':'$59<small> / year</small>';
   }));
 
   // ---------- checklist ----------
@@ -4214,7 +4214,7 @@ SPAN 1102 Spanish II, MW, 14:30-15:45, 3</textarea></label>
 
   // ---------- buying guide ----------
   const BG={
-   student:["I'm a student",[["Free","$0","Core planning, unlimited courses, data export"],["Plus","$3.99/mo or $29.99/yr (planned)","Multiple plans, calendar sync, exports"],["Pro","Priced at launch","Advanced scenarios, study and career tools"],["Access","Paid by your school","Everything your school enables, with SSO"]],"Just you.","Sign up and add a syllabus. Five minutes.","Only what you add. School data only if your school connects it.","Help center and email","Card checkout; cancel in two clicks","Monthly or annual"],
+   student:["I'm a student",[["Free","$0","Core planning, unlimited courses, data export"],["Plus","$7.99/mo or $59/yr (planned)","Multiple plans, calendar sync, exports"],["Pro","Priced at launch","Advanced scenarios, study and career tools"],["Access","Paid by your school","Everything your school enables, with SSO"]],"Just you.","Sign up and add a syllabus. Five minutes.","Only what you add. School data only if your school connects it.","Help center and email","Card checkout; cancel in two clicks","Monthly or annual"],
    dept:["I lead a department",[["Department Launch","Setup + annual or per-cohort","Cohort workspace, resources, training"],["Advising Center","Setup + annual","Agendas, routing, outcome report"],["Learning Center","Setup + annual","Resource publishing, tutoring workflow"],["Career Office","Setup + annual","Career workspace, portfolio, opportunities"]],"A sponsor, an operational champion, and whoever owns the resources you'll publish.","4–6 weeks from discovery to cohort launch.","Student-entered data to start. No SIS connection needed.","Named contact during launch, then business hours","Order form; purchase order or card","Fixed setup plus annual or per-cohort subscription"],
    inst:["I lead an institution",[["Registration & Path Pilot","Implementation + pilot fee","One cohort, one cycle, outcome report"],["Semester Access","From $15K/yr by enrollment band","Tenant, SSO, approved data, student platform"],["Native LMS","Volume + migration + support tier","Courses, assessment, gradebook"],["University OS","Custom multi-year","Everything, governed across offices"]],"Executive sponsor, IT, privacy, accessibility, procurement, and the offices in scope.","Pilot in 6–8 weeks; institution launch in 8–12.","Approved read-only fields, mapped field by field in discovery.","Implementation manager, hypercare, then tiered support","Security review → DPA → order form","Enrollment band plus modules and implementation"],
    sys:["I lead a multi-campus system",[["University OS","Custom multi-year","Multi-campus governance, all modules"],["Native LMS transformation","Program pricing","Migration with parallel run and rollback"]],"System office, campus leads, CIO/CISO, procurement, faculty governance.","Staged by campus over multiple terms.","Per-campus data agreements under one governance model.","Dedicated team; 24/7 critical support once staffed","RFP or cooperative contract, DPA, SLA","Custom enterprise agreement"]};

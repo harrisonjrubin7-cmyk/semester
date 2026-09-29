@@ -18,7 +18,7 @@ launch command asks for that #817 doesn't cover yet.
 | **This document** | The lifecycle, the launch gate, and what the launch command adds |
 | [`PILOT-TO-ANNUAL-CONVERSION.md`](PILOT-TO-ANNUAL-CONVERSION.md) | How a pilot becomes, or doesn't become, an annual agreement |
 
-The two length rules agree. #817 requires 60–120 days; the deal desk allows
+The two length rules agree. Every pilot runs exactly 26 weeks (D-130); the deal desk allows
 up to 6 months. Every pilot #817 accepts is within the deal desk's limit.
 
 ## What the launch command adds to #817's readiness check

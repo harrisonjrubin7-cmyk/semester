@@ -24,6 +24,16 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### Plus is $7.99 a month or $59 a year
+
+The Membership panel on your Account screen now offers Plus at $7.99 a month
+or $59 a year, the same price the pricing page and the company site show.
+Until now the panel offered $3.99 or $29.99. If you already started a Plus
+checkout at the old price in testing, it keeps that price; a new checkout
+uses the new one.
+
+Nothing to do.
+
 ### On the public site: two more things Semester will never do
 
 **Data & AI Transparency**, under Trust, lists what Semester never does with

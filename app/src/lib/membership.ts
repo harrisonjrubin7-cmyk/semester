@@ -45,14 +45,14 @@ export function checkoutEndpoint(base = env.VITE_SUPABASE_URL ?? ''): string {
   return base ? `${base.replace(/\/$/, '')}/functions/v1/billing-checkout` : '';
 }
 
-/** "$3.99", "$29.99", "$30" — in the catalog's currency, US dollars as written today. */
+/** "$7.99", "$59", "$30.50" — in the catalog's currency, US dollars as written today. */
 export function money(cents: number, currency = 'usd'): string {
   const n = cents / 100;
   const s = Number.isInteger(n) ? String(n) : n.toFixed(2);
   return currency.toLowerCase() === 'usd' ? `$${s}` : `${s} ${currency.toUpperCase()}`;
 }
 
-/** "$3.99 a month", "$29.99 a year". */
+/** "$7.99 a month", "$59 a year". */
 export function priceWords(p: PlusPrice): string {
   return `${money(p.cents, p.currency)} a ${p.interval}`;
 }

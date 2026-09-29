@@ -152,6 +152,7 @@ const AREA_LIST: readonly (Area & { rows: readonly Row[] })[] = [
       ['Integration sandbox and mapping versions with rollback', T, [['app/src/lib/integration/quality.test.ts', 'propose, simulate, approve, roll back']], 'docs/SYNC-SIMULATION-SANDBOX.md still says nothing is built.', ['R22', 'M8', 'L9']],
       ['Content, onboarding and launch templates', T, [['app/src/lib/launch/content.test.ts', 'the launch package'], ['docs/launch/STUDENT-QUICK-START.md', 'ready']], 'Faculty and advisor quick starts and the ambassador kit are not started.', ['M8', 'L9']],
       ['Guided tenant setup and an SSO wizard', D, [['docs/SSO-TENANT-ONBOARDING.md', 'a checklist'], ['supabase/tenant-sso-policy.check.sql', 'the policy the wizard would write']], 'No wizard; the SSO tables have no screen.', ['M8', 'L9', 'E'], ['oneos:ic-tenant']],
+      ['Every pilot runs 26 weeks: the Registration and Path Pilot length', T, [['app/src/lib/gtm/pilot.ts', 'PILOT_WEEKS'], ['app/src/lib/gtm/pilot.test.ts', 'exactly 182 days, or refused']], 'The owner set it (D-130). The offer itself — 25–100 students, the explicit exclusions, the price sheet — is not packaged as one document.', ['E', 'P', 'V']],
       ['Pilot dashboard', B, [['app/src/lib/gtm/pilot.ts', 'readiness and verdict']], 'No screen reads the pilot tables.', ['M8', 'L9']],
       ['Institution data migration: plans, catalog, directories, events', N, [['docs/market-readiness/MIGRATION_PLAYBOOK.md', 'customer data migration does not exist']], 'Student-side import only; no SIS, ERP, Google or Microsoft mapping template.', ['R22']],
       ['Parallel-run mode', N, [], 'Named once in docs/INSTITUTIONAL_REQUIREMENTS.md; nothing designs it.', ['R22']],
@@ -163,7 +164,7 @@ const AREA_LIST: readonly (Area & { rows: readonly Row[] })[] = [
     why: 'One platform sold as purpose-built editions, priced so the operating cost of every package can be explained, and never in a way that makes a student doubt a recommendation.',
     rows: [
       ['Editions on one identity, one data model and one console', B, [['app/src/lib/launchkit.ts', 'twelve modules with buyer, metric and guardrail'], ['app/src/lib/entitlement.test.ts', 'resolution order, in shadow']], 'The packages are not the briefs’ editions, and no entitlement is tied to a package.', ['R6', 'E', 'P']],
-      ['Student plans: Free, Plus, Pro', T, [['app/src/lib/plans.ts', 'Plus $7.99 or $59, Pro planned at $14.99 or $99'], ['app/src/lib/plans.test.ts', 'held']], 'The billing seed prices Plus differently (see conflicts).', ['E', 'F', 'P']],
+      ['Student plans: Free, Plus, Pro', T, [['app/src/lib/plans.ts', 'Plus $7.99 or $59, Pro planned at $14.99 or $99'], ['app/src/lib/plans.test.ts', 'the pricing page and the catalog checkout charges, held to one price']], 'Pro has no catalog price and cannot be bought.', ['E', 'F', 'P']],
       ['Institution price floors and implementation fees', T, [['app/src/lib/governance/deal-desk.ts', 'minimum ACV per segment'], ['app/src/lib/governance/deal-desk.test.ts', 'held']], '', ['R19', 'F', 'P']],
       ['An institution value and pricing calculator', N, [['docs/SAAS-LAUNCH-KIT.md', 'the calculator’s inputs, and “none exists”']], 'No function computes an estimate from pilot size, registration volume, advising capacity or integration scope.', ['R7', 'F']],
       ['A gross-margin model by package: cloud, AI, storage, notifications, payments, support, implementation, moderation', N, [['docs/operating-model/COMMERCIAL-GOVERNANCE.md', 'the AI unit-economics dashboard, designed']], 'Costs are recorded (the AI journal) and formulas tested (kpi.ts); nothing joins them per package.', ['R19', 'F', 'P']],
@@ -361,18 +362,6 @@ export const areaOf = (id: string) => AREAS.find((a) => a.id === id.split('-')[0
 // ── where a brief and the tree disagree ─────────────────────────────────────
 
 export const CONFLICTS: readonly { asks: string; tree: string; decides: Seat; cites: string }[] = [
-  {
-    asks: 'Plus at $7.99 a month or $59 a year (E, F, P).',
-    tree: 'plans.ts says the same; the billing seed charges 399 and 2999 cents. Two prices for one plan are in the tree, and checkout would charge the seed’s.',
-    decides: 'finance',
-    cites: 'supabase/migrations/20260929070000_commercial_core.sql',
-  },
-  {
-    asks: 'A Registration and Path Pilot of 26 weeks (E) or 12–26 weeks (P).',
-    tree: 'pilotReadiness refuses a pilot outside 60–120 days, and the paid-pilot framework says the same.',
-    decides: 'founder',
-    cites: 'app/src/lib/gtm/pilot.test.ts',
-  },
   {
     asks: 'Never claim to replace payment, housing, health or financial-aid systems (M17).',
     tree: 'The one-operating-system statement lists payments among the parts of university life Semester is one platform for; Semester holds no payment workflow for students.',

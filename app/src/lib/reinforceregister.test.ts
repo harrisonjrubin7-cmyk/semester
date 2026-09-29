@@ -101,14 +101,6 @@ describe('the reinforcement register', () => {
     }
   });
 
-  it('holds the price conflict to the two files that disagree, so it is removed the day they agree', () => {
-    const plans = read('app/src/lib/plans.ts');
-    const seed = read('supabase/migrations/20260929070000_commercial_core.sql');
-    const planSays = /7\.99/.test(plans) && /\b59\b/.test(plans);
-    const seedSays = /\b399\b/.test(seed) && /\b2999\b/.test(seed);
-    expect(planSays && seedSays, 'the price conflict is resolved; delete it from CONFLICTS').toBe(true);
-  });
-
   it('owns every P0 blocker by a seat, and cites what holds it', () => {
     expect(P0.length).toBeGreaterThan(30);
     expect(new Set(P0.map((p) => p.id)).size).toBe(P0.length);

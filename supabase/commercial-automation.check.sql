@@ -187,14 +187,27 @@ begin
   perform pg_temp.counted('the rate limit keeps hashes, never an address', n, 0);
 
   -- ── Checkout ────────────────────────────────────────────────────────────
-  select id into plus_price from public.commercial_prices where plan_code = 'plus' and billing_interval = 'month';
+  -- Plus is $7.99 a month or $59 a year (20260929130000_plus_price): one current
+  -- row each, and the seed's 399 and 2999 retired, never deleted.
+  select string_agg(amount_cents::text || ' ' || billing_interval, ', ' order by billing_interval) into o
+    from public.commercial_prices
+   where plan_code = 'plus' and active and effective_from <= now() and (effective_to is null or effective_to > now());
+  perform pg_temp.answered('the catalog sells Plus at $7.99 a month or $59 a year', o, '799 month, 5900 year');
+  select count(*) into n from public.commercial_prices where plan_code = 'plus' and amount_cents in (399, 2999) and not active;
+  perform pg_temp.counted('the old Plus prices are retired, not deleted', n, 2);
+  select id into plus_price from public.commercial_prices where plan_code = 'plus' and billing_interval = 'month' and amount_cents = 399;
+  set local role service_role;
+  select * into co from public.begin_checkout(ana, plus_price, 'plus-v1');
+  perform pg_temp.answered('a retired price cannot be checked out', co.outcome, 'no_such_price');
+  reset role;
+  select id into plus_price from public.commercial_prices where plan_code = 'plus' and billing_interval = 'month' and active;
   select id into quote_price from public.commercial_prices where plan_code = 'department_launch';
   set local role service_role;
   select * into co from public.begin_checkout(ana, quote_price, 'plus-v1');
   perform pg_temp.answered('a price sold by quote cannot be checked out', co.outcome, 'no_such_price');
   select * into co from public.begin_checkout(ana, plus_price, 'plus-v1');
   perform pg_temp.answered('a student begins a Plus checkout', co.outcome, 'ok');
-  perform pg_temp.answered('priced from the catalog', co.amount_cents::text || ' ' || co.billing_interval, '399 month');
+  perform pg_temp.answered('priced from the catalog', co.amount_cents::text || ' ' || co.billing_interval, '799 month');
   select count(*) into n from public.checkout_sessions where id = co.checkout_id and consent_at is not null and consent_text_version = 'plus-v1';
   perform pg_temp.counted('consent is recorded before any subscription exists', n, 1);
   select count(*) into n from public.subscriptions s join public.billing_accounts a on a.id = s.billing_account_id where a.user_id = ana;
@@ -239,14 +252,14 @@ begin
   select public.sync_provider_subscription('sub_nobody', 'active', null, null, false, base) into t;
   perform pg_temp.answered('an unknown subscription is reported, not invented', t, 'unknown');
 
-  select public.upsert_provider_invoice('sub_test_1', 'in_test_1', 399, 'USD', base, base) into inv;
-  select public.upsert_provider_invoice('sub_test_1', 'in_test_1', 399, 'USD', base, base) into inv2;
+  select public.upsert_provider_invoice('sub_test_1', 'in_test_1', 799, 'USD', base, base) into inv;
+  select public.upsert_provider_invoice('sub_test_1', 'in_test_1', 799, 'USD', base, base) into inv2;
   perform pg_temp.answered('a provider invoice is recorded once', (inv = inv2)::text, 'true');
-  select public.upsert_provider_invoice('sub_nobody', 'in_test_2', 399, 'usd', base, base) into inv2;
+  select public.upsert_provider_invoice('sub_nobody', 'in_test_2', 799, 'usd', base, base) into inv2;
   perform pg_temp.answered('and one for an unknown subscription is not recorded', inv2::text, null);
 
   -- ── Dunning ─────────────────────────────────────────────────────────────
-  select public.apply_payment_event('stripe', 'evt_auto_fail', 'payment_failed', inv, 399, repeat('e', 64)) into t;
+  select public.apply_payment_event('stripe', 'evt_auto_fail', 'payment_failed', inv, 799, repeat('e', 64)) into t;
   perform pg_temp.answered('a failed renewal opens dunning', t, 'dunning');
   select public.run_dunning(base + interval '1 day') into j;
   perform pg_temp.answered('a day later, nothing is due', j::text, '{"reminders": 0, "restricted": 0, "final_notices": 0}');
@@ -277,7 +290,7 @@ begin
   select public.run_dunning(base + interval '16 days') into j;
   perform pg_temp.answered('and a restricted case is not worked again', j::text, '{"reminders": 0, "restricted": 0, "final_notices": 0}');
 
-  select public.apply_payment_event('stripe', 'evt_auto_ok', 'payment_succeeded', inv, 399, repeat('f', 64)) into t;
+  select public.apply_payment_event('stripe', 'evt_auto_ok', 'payment_succeeded', inv, 799, repeat('f', 64)) into t;
   select count(*) into n from public.subscription_entitlements where subscription_id = ana_sub;
   perform pg_temp.counted('a payment afterwards gives the paid features back', n, 4);
   select count(*) into n from public.dunning_cases where subscription_id = ana_sub and status = 'restricted';
@@ -288,7 +301,7 @@ begin
   perform pg_temp.answered('and the subscription is active again',
     (select status from public.subscriptions where id = ana_sub), 'active');
 
-  select public.apply_payment_event('stripe', 'evt_auto_late_fail', 'payment_failed', inv, 399, repeat('9', 64)) into t;
+  select public.apply_payment_event('stripe', 'evt_auto_late_fail', 'payment_failed', inv, 799, repeat('9', 64)) into t;
   perform pg_temp.answered('a failure reported for an invoice already paid is only recorded', t, 'recorded');
   perform pg_temp.answered('the subscription stays active',
     (select status from public.subscriptions where id = ana_sub), 'active');

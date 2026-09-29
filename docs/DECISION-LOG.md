@@ -2394,9 +2394,37 @@ under `docs/expansion/` as supplied.
   improve retention, persistence, graduation or grades, to be fully
   compliant, or to be AI-safe — with a control showing each pattern catches
   its own example and passes the sentence the site actually uses.
-- **Not changed, put to the seat that owns it.** Plus is $7.99 or $59 in
-  `plans.ts` and 399 or 2999 cents in the billing seed; checkout would charge
-  the seed's (finance). The briefs' 26-week pilot against the enforced 60–120
-  days (founder). The one-operating-system statement listing payments against
-  the briefs' rule on replacement claims (founder). K–12: absent, neither
-  planned nor refused, behind COPPA-1.
+- **Not changed, put to the seat that owns it.** The one-operating-system
+  statement listing payments against the briefs' rule on replacement claims
+  (founder); `docs/FIRST-YEAR-SUCCESS.md` naming the company's first year
+  where a reader of the briefs expects first-year students (product). K–12:
+  absent, neither planned nor refused, behind COPPA-1. The Plus price and the
+  pilot length were open here too, and the owner settled both (D-130).
+
+## D-130 · Plus is $7.99 a month or $59 a year everywhere, and every pilot runs 26 weeks
+
+**Decided 29 Sep 2026, by the owner.** D-129 found both left open between the
+briefs and the tree; the owner chose the briefs' figures for each.
+
+- **Plus.** `plans.ts` printed $7.99 and $59 on the pricing page, while the
+  catalog the commercial core seeded — and, since D-128, what `begin_checkout`
+  charges — said 399 and 2999 cents, so the Account screen sold Plus at $3.99.
+  `20260929130000_plus_price.sql` retires the seed's two rows (inactive, window
+  closed, never deleted, so what was sold on them still names them) and opens
+  799 and 5900. Nothing reaches Stripe: checkout sends the catalog's amount, so
+  the next checkout charges the new price, and a subscription Stripe already
+  holds keeps its own until it is changed there. The company site's four
+  prices, `docs/COMMERCIAL-CORE.md` and `PILOT.md` say the same.
+- **The guard nobody wrote.** The two prices drifted because nothing held the
+  pricing page to the catalog. `plans.test.ts` now reads the migrations as
+  they leave the catalog and requires the same figures as `plans.ts`; a
+  migration pricing Plus at 699 turned it red.
+  `commercial-automation.check.sql` holds the catalog to 799 and 5900, the
+  retired rows to existing, and a checkout on a retired price to
+  `no_such_price`.
+- **Pilots.** `pilotReadiness` refused anything outside 60–120 days (#817);
+  it now refuses anything but exactly 26 weeks (`PILOT_WEEKS`, 182 days),
+  within the deal desk's six months. The launch kit's term row, the RFP
+  library's implementation answer, the paid-pilot framework, the GTM
+  execution plan and the pilot agreement outline say 26 weeks. That is two
+  days past the kit's own "90–180 days"; its row stays held, with the reason.

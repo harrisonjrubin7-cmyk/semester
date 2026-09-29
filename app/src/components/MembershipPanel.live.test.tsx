@@ -31,8 +31,8 @@ const { MembershipPanel } = await import('./MembershipPanel');
 let root: Root;
 let host: HTMLDivElement;
 
-const MONTH = { id: '6d5749ba-47da-4545-86d6-bb89461adac6', plan_code: 'plus', amount_cents: 399, currency: 'usd', billing_interval: 'month' };
-const YEAR = { id: '64c5f28d-84dd-452d-b87a-257d6dc9b080', plan_code: 'plus', amount_cents: 2999, currency: 'usd', billing_interval: 'year' };
+const MONTH = { id: '6d5749ba-47da-4545-86d6-bb89461adac6', plan_code: 'plus', amount_cents: 799, currency: 'usd', billing_interval: 'month' };
+const YEAR = { id: '64c5f28d-84dd-452d-b87a-257d6dc9b080', plan_code: 'plus', amount_cents: 5900, currency: 'usd', billing_interval: 'year' };
 
 beforeEach(() => {
   mock.tables.commercial_prices = [MONTH, YEAR];
@@ -59,7 +59,7 @@ const render = async () => {
 
 it('names the catalog’s price, not the planned one', async () => {
   await render();
-  expect(host.textContent).toContain('Plus is $3.99 a month or $29.99 a year.');
+  expect(host.textContent).toContain('Plus is $7.99 a month or $59 a year.');
   expect(host.textContent).not.toContain('not on sale yet');
 });
 
@@ -75,7 +75,7 @@ it('asks for consent before anything is sent, then follows Stripe’s page', asy
     expect(mock.start).not.toHaveBeenCalled();
 
     const box = host.querySelector('input[type="checkbox"]') as HTMLInputElement;
-    expect(box.parentElement?.textContent).toContain('$3.99 a month');
+    expect(box.parentElement?.textContent).toContain('$7.99 a month');
     await act(async () => box.click());
     await act(async () => button(/Continue to secure checkout/)!.click());
     expect(mock.start).toHaveBeenCalledWith('tok', MONTH.id);
@@ -93,7 +93,7 @@ it('re-asks for consent when the price changes', async () => {
   const yearly = [...host.querySelectorAll('input[type="radio"]')][1] as HTMLInputElement;
   await act(async () => yearly.click());
   expect((host.querySelector('input[type="checkbox"]') as HTMLInputElement).checked).toBe(false);
-  expect(host.textContent).toContain('$29.99 a year for Semester Plus');
+  expect(host.textContent).toContain('$59 a year for Semester Plus');
 });
 
 it('says the function’s refusal in its own words', async () => {
