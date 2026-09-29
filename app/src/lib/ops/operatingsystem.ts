@@ -851,7 +851,7 @@ export const SOURCES: readonly Source[] = [
     lastReviewed: '2026-09-29',
     nextReview: '2026-12-29',
     supersedes: [],
-    decisions: ['D-130'],
+    decisions: ['D-131'],
     alsoRead: ['docs/operating-model/AI-ASSURANCE.md', 'docs/operating-model/AI-LIFECYCLE-GATES.md', 'docs/trust/DPA-CHECKLIST.md', 'docs/ONBOARDING-AND-CONTEXTUAL-HELP.md'],
     note: 'Rendered from app/src/lib/governance/ai-playbook.ts: the ten agentic workflows with their action tier, prohibitions held to the intake refusals and ROI scorecards; the human-confirmation matrix held to its own tiers; the four data classes checked against what the classification gate does to each tier; the vendor scorecard as code (scoreVendor), with every AI subprocessor on it and none scored; onboarding held to FirstGoal; and the definition of done held to AI_RELEASE_GATE. Most workflows are tested as non-AI workflows and have no agent yet; the page says so.',
   },

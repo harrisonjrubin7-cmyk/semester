@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://semester-company-site.vercel.app/sitemap.xml
+Sitemap: https://www.semester.website/sitemap.xml
