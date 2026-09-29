@@ -6,7 +6,7 @@
  * the blueprint's *suggested* ones and are shown as "planned". Plus is the one
  * plan that can be bought, from the Membership panel, and it is bought at the
  * price in the server's catalog (`commercial_prices`), which the panel reads —
- * never at a figure here (DECISION-LOG D-127).
+ * never at a figure here (DECISION-LOG D-128).
  *
  * Two promises are written into the data rather than the copy, so no plan can
  * drop them by accident (blueprint §12, `plans.test.ts`):

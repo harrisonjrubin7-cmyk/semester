@@ -24,7 +24,7 @@ import { SectionLabel } from './ui';
  * are on every plan, always.
  *
  * Plus is bought here once the catalog answers with a Plus price and the
- * build has an account service (D-127, superseding D-009 for this one plan).
+ * build has an account service (D-128, superseding D-009 for this one plan).
  * The price on the button is the catalog's, the consent names amount,
  * interval, renewal and the way to cancel, and it is recorded server-side by
  * `billing-checkout` before Stripe is ever asked. The card is typed into

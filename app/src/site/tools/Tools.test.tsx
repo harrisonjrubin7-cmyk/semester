@@ -93,11 +93,11 @@ it('builds an agenda the student copies themselves, and says nothing is sent', a
   type(field(/My questions/), 'Can I add a minor?\n\nIs ECON 3000 offered in spring?');
   expect(host.querySelector('pre')?.textContent).toContain('1. Can I add a minor?\n2. Is ECON 3000 offered in spring?');
   const writeText = vi.fn(() => Promise.resolve());
-  Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+  Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true, writable: true });
   await act(async () => button(/Copy agenda/).click());
   expect(writeText).toHaveBeenCalledWith(expect.stringContaining('Advisor meeting agenda'));
   expect(host.textContent).toContain('Semester sends nothing');
-  Object.defineProperty(navigator, 'clipboard', { value: undefined, configurable: true });
+  Object.defineProperty(navigator, 'clipboard', { value: undefined, configurable: true, writable: true });
   await act(async () => button(/Copy agenda/).click());
   expect(host.textContent).toContain('Could not copy');
 });

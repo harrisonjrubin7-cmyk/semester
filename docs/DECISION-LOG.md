@@ -2296,7 +2296,39 @@ recorded; what it does not is now one command away, and the item says which.
 - **Not changed:** every register status; the verdict.
 
 
-## D-127 · Plus can be bought in the app, and D-009 steps aside for that one plan
+## D-127 · Every definer function a signed-in account can call has a disposition, and the one that answered anybody about any pilot no longer does
+
+**Decided 29 Sep 2026.** The architecture audit of 29 September scored the
+database 2/5 on two advisor findings — 45 tables with row-level security and
+no policy, 151 `security definer` functions a signed-in account can call —
+and named a remediation register for them as the audit's first artifact.
+`docs/DEFINER-RLS-REGISTER.md` is that register, rendered from
+`app/src/lib/definerregister.ts`.
+
+- **Read first, read-only, on production.** All 45 tables carry no client
+  privilege at all: deny-by-default, not open. All 151 functions are closed
+  to `anon` and PUBLIC, pin `search_path` and run no dynamic SQL.
+- **The function set is derived, not typed.** The test reads the migrations'
+  winning definitions and the allowlist in `grants.check.sql`; the set is the
+  same 151 names the advisor listed. A new callable definer function is red
+  until it has a row, which is the audit's release-gate line as a test. Each
+  row's gates must appear in its body; admin and moderation rows need a gate
+  beyond `auth.uid()`.
+- **One fault, fixed.** `gtm_pilot_problems` returned any pilot's readiness
+  list — price agreed, sponsor, dates — to any signed-in caller, bypassing
+  the read policy on `gtm_pilots`. It now asks the policy's own helper and
+  answers `{not_found}` otherwise
+  (`20260929120000_gtm_pilot_problems_visibility.sql`); `gtm.check.sql` shows a
+  student and another school's staff refused and sales and the school's admin
+  still answered. Red on the old body, green on the new.
+- **Left open, with severity:** `kill_switch_engaged` answering for any
+  tenant (low, recorded as deliberate in `grants.check.sql`); gates proved
+  present rather than correct (medium); the table list pinned to the reading
+  (low).
+- **Not changed:** the allowlist, every grant, every policy; the migration is
+  not yet applied to production.
+
+## D-128 · Plus can be bought in the app, and D-009 steps aside for that one plan
 
 **Decided by owner 29 Sep 2026.** D-009 kept checkout out until a
 server-side environment existed and the owner approved. Both now hold: the
