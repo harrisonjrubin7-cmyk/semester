@@ -213,6 +213,15 @@ function EnrolledSchedule() {
       >
         Add a course from its syllabus
       </button>
+      {/* The school's own registration ledger, when the school has it on: Enrollment says which in one sentence. */}
+      <button
+        type="button"
+        className="btn btn-secondary btn-block"
+        onClick={() => dispatch({ type: 'go', screen: 'registration' })}
+        style={{ marginTop: 'var(--sp-4)' }}
+      >
+        Enroll through your school in Semester
+      </button>
       {catalog.courses.length > 0 && (
         <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
           {catalog.courses.length} course{catalog.courses.length === 1 ? '' : 's'} loaded.

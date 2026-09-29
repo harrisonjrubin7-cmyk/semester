@@ -778,6 +778,11 @@ export type Screen =
   | 'runway'
   | 'privacy'
   | 'registrar'
+  // The official registration transaction and the gradebook of record, each
+  // behind its school's writeback flag. See `screens/Registration.tsx` and
+  // `screens/Gradebook.tsx`.
+  | 'registration'
+  | 'gradebook'
   | 'sources'
   | 'slides'
   | 'account'

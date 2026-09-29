@@ -89,7 +89,16 @@ const SWITCHED = ['community', 'volunteer', 'studentAccount', 'dining'] as const
  */
 const ME_CONTROLS = ['activity', 'whatsnew', 'recovery'] as const;
 
-const NOT_DESTINATIONS = new Set<string>([...SHELL, ...FIRST_RUN, ...DETAIL, ...SETTINGS, ...STAFF, ...SWITCHED, ...ME_CONTROLS]);
+/**
+ * School modules behind a writeback flag that is off at every school today:
+ * the registration transaction and the gradebook of record. Nested in
+ * `lib/nav.ts` (see the note on `registration` in `NESTED`), reached from the
+ * Registration planner and the Grades tab, never a shelf tile that opens onto
+ * "your school has not turned this on".
+ */
+const SCHOOL_MODULES = ['registration', 'gradebook'] as const;
+
+const NOT_DESTINATIONS = new Set<string>([...SHELL, ...FIRST_RUN, ...DETAIL, ...SETTINGS, ...STAFF, ...SWITCHED, ...ME_CONTROLS, ...SCHOOL_MODULES]);
 
 /**
  * The union, read out of the file rather than imported.

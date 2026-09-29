@@ -70,6 +70,12 @@ const OPENED_FROM_SOMEWHERE_ELSE: Record<string, string> = {
   dining:
     'Dining from the school’s card office, behind module.dining, which no school has on. Opened from Meal plan and at #/dining; ' +
     'with the module off it says so in one sentence rather than offering a tile that opens onto nothing.',
+  registration:
+    'Enrollment in the school’s own registration ledger, behind writeback.registration_submit and off at every school today. ' +
+    'Opened at #/registration and from the Registration planner, and it says in one sentence whether the school has it on.',
+  gradebook:
+    'The gradebook of record, behind writeback.lms_grade_passback and off at every school today. ' +
+    'Opened at #/gradebook and from the Grades tab, and it says in one sentence whether the school has it on.',
   directory:
     'Every app this student has, as a list or a grid. Opened from All apps in the ' +
     'sidebar, from the launcher, and from Explore all apps on the search home. It is ' +
