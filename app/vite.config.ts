@@ -643,6 +643,7 @@ const MOCKS_MODULES = [
   'src/components/StudyStudio.packs.test.tsx',
   'src/lib/coursestudio.test.ts',
   'src/components/CourseStudio.test.tsx',
+  'src/components/MembershipPanel.live.test.tsx',
   'src/components/unity/rollout-b.test.tsx',
   'src/components/PushTop.regday.test.tsx',
   'src/components/OfflineBanner.reconnect.test.tsx',
