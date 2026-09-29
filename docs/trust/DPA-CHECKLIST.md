@@ -66,7 +66,7 @@ support for each is in the next table.
 | Incident notification | Scope, initial deadline, update cadence, cooperation, remediation | Process in `docs/market-readiness/INCIDENT_RESPONSE.md`; never exercised. **No notification deadline should be signed until a tabletop has been run** |
 | Data location | Approved hosting and processing locations | Not recorded; the Supabase region must be written down first |
 | Data-subject requests | Access, correction, deletion cooperation | Student export and deletion exist and are tested: `app/src/lib/export.ts`, `app/src/lib/erase.ts`, `supabase/deletion.check.sql` |
-| Retention | Active-term, backup, archive and legal-hold timelines | Every table has a retention answer: `RETENTION.md`; backup retention not recorded |
+| Retention | Active-term, backup, archive and legal-hold timelines | Every table has a retention answer, and the backups' lifecycle is stated (daily, 7-day rolling expiry, PITR unconfirmed): `RETENTION.md`, *Backups*. Archive and legal-hold timelines are not: no legal hold exists (RM-02) |
 | Export and return | Portable export on termination, documented format | Per-student export exists; a whole-tenant export does not: `docs/DATA-PORTABILITY-AND-OFFBOARDING.md` |
 | Deletion certification | Delete after contract end; certify on request | Per-account deletion exists; tenant-wide deletion and a certificate do not |
 | Audit and assurance | Questionnaire, HECVAT, SOC 2, evidence-sharing process | HECVAT register exists; no SOC 2 report ([`SOC2-READINESS.md`](SOC2-READINESS.md)) |

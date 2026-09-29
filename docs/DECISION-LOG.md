@@ -1857,3 +1857,39 @@ Four pages, and the rules that were decided rather than inherited:
   (D-114), so the crosswalk's security-contact artifact is `have` and VULN-1
   is read as in progress; the remediation targets are still proposed, not
   accepted, and no finding has been answered against them.
+
+## D-116 · R-07 is re-read to what D-109 built, the provider's backups have a lifecycle, and the remediation targets wait on a named acceptance
+
+**Decided 29 Sep 2026.** D-115 left three things found and not fixed. Two are
+closed here, and the third is put where the owner's decisions live rather
+than left as a sentence at the end of a log entry.
+
+- **R-07 said the AI runtimes do not consult the kill switch.** They have
+  since D-109, and `app/src/lib/aikillswitch.test.ts` and
+  `app/server/institution/intelligence.test.ts` hold them to it; D-111 found
+  the row out of date and nobody re-read it. The row now says what is still
+  true — no prompt-injection suite, and a switch nobody has engaged against
+  production — cites those two tests and the one injection-shaped case in
+  `studystudio.test.ts` as controls, and falls from residual 4 to 3, so it no
+  longer escalates on its own (inherent 8, medium, was 12). `risk.test.ts`
+  holds the row to the two tests and refuses a description that says the
+  switch is not read, so the gap cannot be written back. EC-AI-02 still says
+  no suite exists, because none does.
+- **`RETENTION.md` states the backups' lifecycle**: daily, each expiring 7
+  days after it is taken, point-in-time recovery unconfirmed, readable by no
+  process, a deleted row outliving its deletion by at most that period, and a
+  restore owing the deletions made after the backup point — a step
+  `RESTORE.md`'s procedure does not carry yet, named as owed rather than
+  assumed. `retention.test.ts` holds the number to BCDR-01's in the HECVAT
+  draft, so the two answers cannot diverge. The privacy-policy draft states
+  the period the terms draft already referred to, marked for counsel. The DPA
+  checklist's "backup retention not recorded" closes; the archive and
+  legal-hold timelines stay open (RM-02).
+- **The remediation targets are still proposed, and this change does not
+  accept them.** Acceptance is a person's — the security seat's, or the
+  owner's acting in it — and the tree cannot supply a person. It is item 13
+  of `docs/LAUNCH-DECISIONS.md`, with what accepting changes: the word
+  *proposed* leaves `SECURITY.md` and `supplychain.ts`, the date goes in this
+  log, and `security.test.ts` expects the acceptance line instead.
+- **Not changed:** the app's privacy text (its "no archive" sentence stays
+  true, and the section says why), `RESTORE.md`'s drill, the HECVAT register.

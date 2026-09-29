@@ -66,6 +66,19 @@ describe('the risk register', () => {
     }
   });
 
+  it('holds R-07 to what D-109 built: the kill switch is a control the runtimes are tested on, not a gap', () => {
+    // D-111 found this row still describing the gap D-109 had closed. The row
+    // may say what is still open (no injection suite, no drill); it may not say
+    // the runtimes do not read the switch, and it must cite the tests that
+    // hold them to reading it.
+    const r = RISKS.find((x) => x.id === 'R-07')!;
+    expect(r.description).not.toMatch(/do not consult|does not stop generation/);
+    const paths = r.controls.map((c) => c.path);
+    expect(paths).toContain('app/src/lib/aikillswitch.test.ts');
+    expect(paths).toContain('app/server/institution/intelligence.test.ts');
+    expect(r.residual, 'with both runtimes held to the switch, R-07 does not escalate on residual alone').toBeLessThan(4);
+  });
+
   it('closes nothing: a closed risk needs evidence under docs/evidence/, which does not exist', () => {
     expect(RISKS.filter((r) => r.status === 'closed')).toEqual([]);
   });
