@@ -120,6 +120,10 @@ export const PROHIBITED_STARTING_SCOPE = [
   'Disciplinary judgments',
   'Health decisions',
   'Opaque risk scoring',
+  'Automated hiring decisions',
+  'Ranking students for employers',
+  'Auto-publishing institutional policy',
+  'Unapproved production changes',
 ] as const;
 export type ProhibitedScope = (typeof PROHIBITED_STARTING_SCOPE)[number];
 

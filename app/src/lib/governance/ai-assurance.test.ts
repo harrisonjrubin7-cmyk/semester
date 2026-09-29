@@ -136,7 +136,7 @@ function render(): string {
     'Three documents arrived on 28 September 2026 and are kept under `docs/expansion/`',
     'as supplied. [`AI-LIFECYCLE-GATES.md`](AI-LIFECYCLE-GATES.md) already runs each',
     'AI capability through six gates owned by the four functions of the NIST AI Risk',
-    'Management Framework, and refuses six starting scopes at intake. The documents',
+    'Management Framework, and refuses ten starting scopes at intake. The documents',
     'do not replace that; they ask what an auditor would want to see at each',
     'function, and add the misuse lens of NIST AI 800-1. So every matrix row names',
     'the gate it is evidenced at, every line of the release gate names the',

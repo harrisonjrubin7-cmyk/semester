@@ -52,6 +52,10 @@ A use case that would do any of these does not enter the lifecycle, whatever evi
 - Disciplinary judgments
 - Health decisions
 - Opaque risk scoring
+- Automated hiring decisions
+- Ranking students for employers
+- Auto-publishing institutional policy
+- Unapproved production changes
 
 ## Where to start
 
