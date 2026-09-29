@@ -17,6 +17,7 @@ import {
   type Domain,
   type Requirement,
 } from './masterregister';
+import { COUNCIL, SEATS } from './launchreadiness';
 
 /**
  * The master register is only worth having if a row cannot claim more than the
@@ -114,6 +115,22 @@ describe('the master launch readiness register', () => {
       // Today there is no such directory, so the rule above means: nothing is
       // above `tested`. Said directly, so the day it changes is noticed.
       expect(REGISTER.filter((r) => NEEDS_EVIDENCE_DIR.includes(r.status))).toEqual([]);
+    });
+
+    it('describes the council as launchreadiness.ts has it, seat for seat', () => {
+      // PRG-001 said "no AI/SRE/GTM seat" for a day after the operations seat
+      // existed (D-120), found by Codex on #945. The row now quotes the counts,
+      // and this holds them to the council data.
+      const row = REGISTER.find((r) => r.id === 'PRG-001')!;
+      const shows = row.evidence.find((e) => e.path === 'app/src/lib/launchreadiness.ts')!.shows;
+      const WORDS = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve'];
+      const held = COUNCIL.filter((c) => c.holder !== null).length;
+      expect(shows.toLowerCase()).toContain(`${WORDS[SEATS.length]} seats`);
+      expect(shows.toLowerCase()).toContain(`${WORDS[held]} held`);
+      expect(shows.toLowerCase()).toContain(`${WORDS[SEATS.length - held]} vacant`);
+      for (const seat of SEATS) expect(shows, `PRG-001 names the ${seat} seat`).toContain(seat);
+      // A seat the council has is never reported missing, by either name.
+      for (const name of [...SEATS, 'SRE']) expect(shows, `PRG-001 says there is no ${name} seat`).not.toMatch(new RegExp(`\\bno\\b[^.;]*\\b${name}\\b`, 'i'));
     });
 
     it('approves no row while any sign-off is vacant', () => {
