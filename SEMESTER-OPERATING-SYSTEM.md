@@ -16,7 +16,7 @@ delete or renumber anything (D-002). It says which page wins.
 
 Owner is a seat of the [launch readiness council](docs/LAUNCH-READINESS-COUNCIL.md),
 never a person, and a seat is held only once somebody accepted it in writing.
-**4 of 10 seats are held:** `founder` (Founder), `product` (Founder, acting), `engineering` (Founder, acting), `success` (Founder, acting).
+**4 of 11 seats are held:** `founder` (Founder), `product` (Founder, acting), `engineering` (Founder, acting), `success` (Founder, acting).
 
 ## Where it stands
 
