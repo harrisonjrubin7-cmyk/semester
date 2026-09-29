@@ -180,6 +180,24 @@ const NOT_CONTENT = new Set([
   'canonical_entity_references',
   'consent_record',
   /*
+   * A school's student account and dining (`20260929320000_student_accounts.sql`,
+   * `20260929330000_dining.sql`). The ledger, awards, holds, plans and meal
+   * plan are what the school's offices and card office sent, the same
+   * category as the integration rows above. A payment start and a mobile order
+   * are the person's, but they are money records whose system of record is the
+   * school's payment provider and card office, not anything that exists only
+   * here. Both modules are behind flags that are off at every school, so no
+   * account holds a row today; teaching `lti_account_untouched` to see the
+   * last two is a migration of its own, not a screen's.
+   */
+  'student_ledger_entries',
+  'student_aid_awards',
+  'student_account_holds',
+  'student_payment_plans',
+  'student_payment_intents',
+  'dining_plans',
+  'dining_orders',
+  /*
    * Phase J (`20260928302000_office_action_feed.sql`). Which programs and
    * eligibilities a student said apply to them, and which office actions they
    * marked done. Settings and ticks about someone else's content — an office's

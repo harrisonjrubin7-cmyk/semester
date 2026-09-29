@@ -1172,6 +1172,21 @@ export const OWNED_TABLES: OwnedTable[] = [
   // cascade` (`20260929100000_console_control_plane.sql`), and owner-only by
   // row-level security, so the rows go with the account.
   { table: 'operator_preference', column: 'subject' },
+
+  // ── A school's student account and dining ───────────────────────────────
+  // Your ledger, aid awards, holds, payment plans and payment starts
+  // (`lib/studentaccount/client.ts`), and your meal plan and mobile orders
+  // (`lib/dining/client.ts`). Each row names you by a column that references
+  // `auth.users` with `on delete cascade` (`20260929320000_student_accounts.sql`,
+  // `20260929330000_dining.sql`), so they go with the account; the school's
+  // own system of record keeps its copy.
+  { table: 'student_ledger_entries', column: 'student_id' },
+  { table: 'student_aid_awards', column: 'student_id' },
+  { table: 'student_account_holds', column: 'student_id' },
+  { table: 'student_payment_plans', column: 'student_id' },
+  { table: 'student_payment_intents', column: 'student_id' },
+  { table: 'dining_plans', column: 'student' },
+  { table: 'dining_orders', column: 'student' },
 ];
 
 /**
@@ -1340,6 +1355,22 @@ export const KEPT_TABLES: KeptTable[] = [
   {
     table: 'console_duty',
     why: 'The segregation-of-duties matrix the operations console reads: which party asks for each high-risk action and which approves. It is policy seeded by a migration from lib/ops/console.ts, names no person, and the browser only reads it.',
+  },
+  {
+    table: 'student_account_settings',
+    why: 'How your school runs student accounts: the finance owner it named, its hold threshold and its grace period. A setting of the school, not a record about you; if you were its finance owner, your name is cleared and the setting stays.',
+  },
+  {
+    table: 'dining_locations',
+    why: 'Your school’s dining locations, as its card office lists them. Not a record about you, and no student account writes a row.',
+  },
+  {
+    table: 'dining_hours',
+    why: 'When your school’s dining locations open. Not a record about you, and no student account writes a row.',
+  },
+  {
+    table: 'dining_menu_items',
+    why: 'What your school’s dining locations serve and what it costs. Not a record about you, and no student account writes a row.',
   },
 ];
 

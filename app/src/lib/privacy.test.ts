@@ -408,6 +408,11 @@ describe('"delete my account" really means every row', () => {
       // read these; they are course policy, kept for the class.
       'course_ai_rules',
       'course_guidance',
+      // A school's dining locations, hours and menus (lib/dining/client.ts),
+      // as its card office lists them; no student account writes a row.
+      'dining_hours',
+      'dining_locations',
+      'dining_menu_items',
       'feature_kill_switch',
       'group_tasks',
       'groups',
@@ -429,6 +434,8 @@ describe('"delete my account" really means every row', () => {
       'organizations',
       'reports',
       'schools',
+      // How a school runs student accounts (lib/studentaccount/client.ts).
+      'student_account_settings',
       'study_packs',
       'subscriptions',
       'support_access_event',

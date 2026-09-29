@@ -547,6 +547,18 @@ export function Bill() {
         </a>
       ) : null}
 
+      {/* The school's own ledger, when a school turns it on: a screen of its
+          own (`StudentAccount.tsx`), linked rather than merged, because this
+          one is the copy you keep and that one is the school's. */}
+      <button
+        type="button"
+        className="btn btn-block"
+        onClick={() => dispatch({ type: 'go', screen: 'studentAccount' })}
+        style={{ height: 42, marginTop: 'var(--sp-4)' }}
+      >
+        Your school’s student account
+      </button>
+
       <div
         style={{
           fontSize: 'var(--type-xs)',

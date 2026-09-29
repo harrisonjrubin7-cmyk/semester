@@ -141,6 +141,18 @@ function MealsDetails() {
         </a>
       ) : null}
 
+      {/* What the card office says, once a school connects it: its own screen
+          (`Dining.tsx`), linked rather than merged — these are your readings,
+          that is the school's figure. */}
+      <button
+        type="button"
+        className="btn btn-block"
+        onClick={() => dispatch({ type: 'go', screen: 'dining' })}
+        style={{ height: 42, marginTop: 'var(--sp-4)' }}
+      >
+        Dining from your school’s card office
+      </button>
+
       {/*
         What the school says a plan holds, against what you have left.
         `SchoolData.mealPlanTiers` was in the profile and read by nothing;
