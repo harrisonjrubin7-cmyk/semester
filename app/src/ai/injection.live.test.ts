@@ -44,11 +44,11 @@ import { DATA_RULE } from './untrusted';
  * It costs money and needs a key, so without `ANTHROPIC_API_KEY` every live
  * case is skipped and reported as skipped, never as passed — the same reason
  * `voice.live.test.ts` gives. With `REDTEAM=write` a run files its transcript
- * under `docs/evidence/ai/`, and that is deliberate: `docs/evidence/` does not
- * exist today, the compliance crosswalk holds its ceiling to the directory
- * being absent, and the first transcript filed there is the day that tripwire
- * fires and the ceiling lifts. Until somebody runs it, AI-010 stays
- * `building` and R-07 keeps the red-team as its mitigation.
+ * under `docs/evidence/ai/`, and that is deliberate: the first transcript,
+ * filed on 29 September 2026 (claude-opus-5, through the proxy, 21 of 21
+ * held), is what lifted the compliance crosswalk's ceiling and moved AI-010 to
+ * `tested`. A model change or a prompt-builder change is a reason to run it
+ * again; each run files a new transcript beside the last.
  *
  * The prompt-assembly cases at the end run without a key: they hold that each
  * canary sits inside a fence in the prompt this file would send.

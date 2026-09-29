@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { SEATS } from '../launchreadiness';
@@ -130,9 +130,15 @@ describe('the register', () => {
     }
   });
 
-  it('does not pretend docs/evidence/ exists', () => {
-    expect(existsSync(at('docs/evidence'))).toBe(false);
-    for (const r of EVIDENCE) expect(r.path.startsWith('docs/evidence/'), r.id).toBe(false);
+  it('registers every file under docs/evidence/, and cites nothing there that is not', () => {
+    // The directory's first files were the two AI drills of 29 September. A
+    // file filed there without a record here would be evidence nobody dates.
+    const filedHere = (dir: string): string[] =>
+      readdirSync(at(dir), { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? filedHere(`${dir}/${e.name}`) : [`${dir}/${e.name}`]));
+    const cited = new Set(EVIDENCE.map((r) => r.path).filter((p) => p.startsWith('docs/evidence/')));
+    const filed = existsSync(at('docs/evidence')) ? filedHere('docs/evidence') : [];
+    expect(filed.sort()).toEqual([...cited].sort());
+    expect(filed.length).toBeGreaterThan(0);
   });
 
   it('rests every record under registered claims and rows, and under at least one of them', () => {
@@ -190,11 +196,12 @@ function render(): string {
     `${ref('app/src/lib/ops/claims.test.ts')}, which refuses an “available” claim`,
     'resting on a record that has expired.',
     '',
-    '`docs/evidence/` does not exist, and nothing here says it does. The',
-    `[master register](MASTER-LAUNCH-READINESS-REGISTER.md) still lets no row above`,
-    '`tested`, and the [proof calendar](PROOF-CALENDAR.md) still schedules the',
-    'artifacts that would move one. This page is what does exist, with when it',
-    'runs out.',
+    '`docs/evidence/` holds the two AI drills of 29 September, the kill-switch',
+    'drill and the prompt-injection red-team, and every file there is a record',
+    'below. The [master register](MASTER-LAUNCH-READINESS-REGISTER.md) lets a',
+    'row past `tested` only by citing one, and the [proof calendar](PROOF-CALENDAR.md)',
+    'still schedules the artifacts that would move the rest. This page is what',
+    'does exist, with when it runs out.',
     '',
     '## The records',
     '',

@@ -964,6 +964,12 @@ logged without a character of it; a send that still throws is logged by its
 kind, `header`, `network` or `other` (`functions/_shared/sharedkey.ts`). Look
 for `claude:` in the function's logs.
 
+That check answered at 22:43 UTC: 503, with the value's shape logged as 82
+characters, not starting `sk-ant-`, five spaces or breaks and one character
+outside ASCII — not a key. It was saved again, and at 22:51 UTC a signed-in call
+answered 200. Both AI drills ran minutes later and held
+(`docs/LAUNCH-DECISIONS.md` item 15, `docs/evidence/ai/`).
+
 Optional: `MONTHLY_CALL_LIMIT` (default 60 calls per account per month),
 `ALLOWED_ORIGIN` (extra https origins; the Pages origin is built in) and
 `CORS_ALLOW_DEV` (unset on the live project).
