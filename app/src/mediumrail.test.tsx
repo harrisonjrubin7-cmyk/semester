@@ -25,6 +25,7 @@ let host: HTMLDivElement;
 let root: Root;
 let hadObserver = false;
 let hadHitTest = false;
+let rootStyle: string | null = null;
 
 /** A 700px desktop window: medium, not wide, not a phone on its side. */
 function window700() {
@@ -53,6 +54,7 @@ describe('at medium', () => {
     // `afterEach`.
     hadObserver = 'ResizeObserver' in globalThis;
     hadHitTest = typeof document.elementsFromPoint === 'function';
+    rootStyle = document.documentElement.getAttribute('style');
     if (!hadObserver) {
       globalThis.ResizeObserver = class {
         observe() {}
@@ -87,7 +89,12 @@ describe('at medium', () => {
     localStorage.clear();
     history.replaceState(null, '', '/');
     // Put the environment back: this suite shares workers with others, and a
-    // stub left behind would change what the next file finds.
+    // stub left behind would change what the next file finds. The app's theme
+    // effect writes every look token onto <html> as inline style, and
+    // unmounting does not take them off; `svgout.test.ts` proves a fallback
+    // by `--app-line` being unset, and read the leak as its own failure.
+    if (rootStyle === null) document.documentElement.removeAttribute('style');
+    else document.documentElement.setAttribute('style', rootStyle);
     if (!hadObserver) delete (globalThis as { ResizeObserver?: unknown }).ResizeObserver;
     if (!hadHitTest) delete (document as { elementsFromPoint?: unknown }).elementsFromPoint;
   });
