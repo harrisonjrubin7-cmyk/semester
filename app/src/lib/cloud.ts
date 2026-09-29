@@ -1194,6 +1194,14 @@ export const OWNED_TABLES: OwnedTable[] = [
  */
 export const KEPT_TABLES: KeptTable[] = [
   {
+    table: 'commercial_prices',
+    why: 'The price list is not a record about you. Anyone can read it, no account writes a row in it, and the Membership panel only reads it to name what Plus costs.',
+  },
+  {
+    table: 'subscriptions',
+    why: 'A paid subscription is a financial record of what was charged and when. The app only reads your own; deleting your account unlinks you from the billing account it belongs to, and the record stays, no longer tied to your account.',
+  },
+  {
     table: 'gtm_campaigns',
     why: 'A campaign you ran for your school belongs to the school, and its record is how the school shows what it sent and why. Deleting your account removes you as its owner or approver; the campaign stays, and one with no owner cannot be switched on again.',
   },
