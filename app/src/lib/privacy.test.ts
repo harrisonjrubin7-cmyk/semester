@@ -386,6 +386,7 @@ describe('"delete my account" really means every row', () => {
      */
     const { KEPT_TABLES } = await import('./cloud');
     expect(KEPT_TABLES.map((t) => t.table).sort()).toEqual([
+      'articulation_rules',
       'commercial_prices',
       'communities',
       'community_calibration_items',

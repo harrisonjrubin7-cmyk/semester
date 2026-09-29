@@ -8,6 +8,7 @@ import { GRADUATION_KEY, readGraduation } from './graduation';
 import { LIFE_BALANCE_KEY, readSettings as readLifeBalance } from './life-balance';
 import { readRegistration } from './portal-storage';
 import { REGISTRATION_DAY_KEY, readRegistrationDay } from './registration-day';
+import { TRANSFER_CREDIT_KEY, readTransferCredit } from './transfer-credit';
 import { REGISTRATION_KEY } from './registration-plan';
 import { LOCKER_KEY, readLocker } from './source-locker';
 import { READINESS_KEY, readReadiness } from './study-readiness';
@@ -148,6 +149,7 @@ const DEFINITIONS: Record<string, Definition> = {
   registration: { label: 'Registration cart and saved schedules', prefix: REGISTRATION_KEY, scope: 'device', read: readRegistration },
   registrationDay: { label: 'Registration day plan', prefix: REGISTRATION_DAY_KEY, scope: 'device', read: readRegistrationDay },
   graduation: { label: 'Graduation scenarios', prefix: GRADUATION_KEY, scope: 'device', read: readGraduation },
+  transferCredit: { label: 'Transfer credit workspace', prefix: TRANSFER_CREDIT_KEY, scope: 'device', read: readTransferCredit },
   lifeBalance: { label: 'Life balance settings', prefix: LIFE_BALANCE_KEY, scope: 'device', read: readLifeBalance },
   shortlist: { label: 'Course shortlist', prefix: SHORTLIST_KEY, scope: 'device', read: readShortlist },
   // Per account, and without private notes: the meeting screen promises
