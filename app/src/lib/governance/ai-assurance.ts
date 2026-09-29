@@ -6,7 +6,7 @@
  *
  * `ai-lifecycle.ts` already runs each AI capability through six gates owned by
  * the four functions of the framework — Govern, Map, Measure, Manage — and
- * refuses six starting scopes at intake. The three documents do not replace
+ * refuses ten starting scopes at intake. The three documents do not replace
  * that; they ask what an *auditor* would want to see at each function, and
  * add the misuse lens of NIST AI 800-1 (Managing the Risk of Misuse for
  * Dual-Use Foundation Models, second public draft, 2025). So every matrix row
@@ -122,7 +122,7 @@ const MATRIX_ROWS: readonly Row[] = [
   ['govern', 'Supplier risk', 'Assess provider retention, training, safety, security, residency, incident notice and model-change terms', 'AI vendor assessment', 'No production use without approval', 'G0',
     'tested', [['app/src/lib/trust/vendorrisk.test.ts', 'the vendor risk register held to the subprocessor list'], ['docs/trust/VENDOR-RISK-REGISTER.md', 'Anthropic retention settings and attestations marked “to confirm”']], 'Provider training and retention terms are not recorded per provider; the register and the DPA checklist both say so.'],
   ['govern', 'Misuse policy', 'Define prohibited uses, tool permissions, user restrictions and enforcement', 'Acceptable-use policy; tenant policy configuration', 'Policy is visible and enforceable', 'G0',
-    'tested', [['app/src/lib/governance/ai-lifecycle.ts', 'six scopes refused at intake'], ['app/src/lib/governance/ai-lifecycle.test.ts', 'a prohibited scope is refused whatever evidence it carries'], ['supabase/migrations/20260923210000_intelligence_policy.sql', 'ai_policy and approved_source per tenant']], 'No student-facing acceptable-use page; the refusals are in code and a governance document, not where a student acts.'],
+    'tested', [['app/src/lib/governance/ai-lifecycle.ts', 'ten scopes refused at intake'], ['app/src/lib/governance/ai-lifecycle.test.ts', 'a prohibited scope is refused whatever evidence it carries'], ['supabase/migrations/20260923210000_intelligence_policy.sql', 'ai_policy and approved_source per tenant']], 'No student-facing acceptable-use page; the refusals are in code and a governance document, not where a student acts.'],
   ['govern', 'Evaluation accountability', 'Approve evaluation standards, launch thresholds, re-test triggers and independent review', 'Evaluation policy; evaluation plan', 'A feature cannot launch without evidence', 'G0',
     'designed', [['docs/AI-RECOMMENDATION-EVALUATION-HARNESS.md', 'the suites and hard boundaries of the recommendation harness'], ['docs/operating-model/AI-LIFECYCLE-GATES.md', 'G3 needs an evaluation and a red-team']], 'No evaluation policy sets thresholds by risk tier, and no independent reviewer is named.'],
   ['map', 'Threat context', 'Identify users, affected parties, use context, high-risk groups and institutional authority boundaries', 'Use-case dossier', 'Context reviewed before build', 'G1',
@@ -250,7 +250,7 @@ const CHECKLIST_SECTIONS: readonly { section: string; rows: readonly CheckRow[] 
       ['Assign an executive AI-risk owner', 'designed', [['docs/operating-model/AI-GOVERNANCE-BOARD.md', 'a chair the board has not yet seated']], 'No seat holds it.'],
       ['Assign a named technical owner for each deployed model and provider', 'not-started', [], 'None named.'],
       ['Create an AI risk committee with security, privacy, legal, accessibility, product, trust-and-safety and institutional representatives', 'designed', [['docs/operating-model/AI-GOVERNANCE-BOARD.md', 'membership by seat']], 'No members.'],
-      ['Define AI risk appetite and unacceptable-use categories', 'tested', [['app/src/lib/governance/risk.ts', 'appetite tiers'], ['app/src/lib/governance/ai-lifecycle.test.ts', 'the six unacceptable starting scopes are refused']], 'Appetite is stated for the company, not per AI use case.'],
+      ['Define AI risk appetite and unacceptable-use categories', 'tested', [['app/src/lib/governance/risk.ts', 'appetite tiers'], ['app/src/lib/governance/ai-lifecycle.test.ts', 'the ten unacceptable starting scopes are refused']], 'Appetite is stated for the company, not per AI use case.'],
       ['Establish an escalation path for dual-use, abuse, security, safety, copyright, privacy and student-harm incidents', 'designed', [['docs/CRISIS-RESPONSE-RUNBOOK.md', 'escalation for student harm'], ['SECURITY.md', 'how a security report is handled']], 'No path names AI misuse or copyright.'],
       ['Require approval before enabling model tool use, code execution, external actions or elevated automation', 'tested', [['app/src/lib/flags.ts', 'kill.code_execution'], ['app/src/lib/governance/charters.test.ts', 'every flag has a charter with an owner']], 'A flag is not an approval record; nothing says who approved turning one on.'],
       ['Maintain evidence of training for operators, developers, moderators, support teams and customer administrators', 'not-started', [], 'No training record for anyone.'],
@@ -280,7 +280,7 @@ const CHECKLIST_SECTIONS: readonly { section: string; rows: readonly CheckRow[] 
       ['Limit model contexts, file types, tokens, attachments, output formats, retrieval sources and available tools by role and tenant', 'building', [['supabase/migrations/20260923210000_intelligence_policy.sql', 'approved_source per tenant']], 'Sources are limited per tenant; tokens, file types and tools are not limited by role.'],
       ['Use least privilege for every connected tool and API', 'tested', [['app/src/ai/prompt.test.ts', 'no tool that could act on the student’s behalf exists']], 'True because there are no acting tools; nothing enforces it if one is added.'],
       ['Require user confirmation for external writes, scheduling, messages, data sharing, financial actions, SIS or LMS writes and other consequential actions', 'tested', [['app/server/institution/intelligence.test.ts', 'no consequential action without fresh explicit confirmation; a receipt only after readback'], ['app/src/ai/prompt.test.ts', 'a tool call is a proposal the student confirms']], 'Holds for the gateway and the assistant; nothing yet writes to a SIS or LMS, so the rule has not met a real write.'],
-      ['Remove, gate or sandbox capabilities whose residual misuse risk is unacceptable', 'tested', [['app/src/lib/governance/ai-lifecycle.test.ts', 'six scopes refused at intake']], 'Refusal at intake, not a residual-risk decision per capability.'],
+      ['Remove, gate or sandbox capabilities whose residual misuse risk is unacceptable', 'tested', [['app/src/lib/governance/ai-lifecycle.test.ts', 'ten scopes refused at intake']], 'Refusal at intake, not a residual-risk decision per capability.'],
     ],
   },
   {
