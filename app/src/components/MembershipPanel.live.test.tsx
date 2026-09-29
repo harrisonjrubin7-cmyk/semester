@@ -16,7 +16,7 @@ const mock = vi.hoisted(() => {
     const q = { select: () => q, eq: (k: string, v: unknown) => (eqs.push([t, k, v]), q), then: (ok: (r: unknown) => unknown) => Promise.resolve({ data: tables[t] ?? [], error: null }).then(ok) };
     return q;
   };
-  return { tables, eqs, rpc: vi.fn(), from: vi.fn(from), start: vi.fn(), account: { id: 'u1' } as { id: string } | null };
+  return { tables, eqs, rpc: vi.fn(), from: vi.fn(from), start: vi.fn(), cancel: vi.fn(), account: { id: 'u1' } as { id: string } | null };
 });
 vi.mock('../lib/cloud', () => ({
   cloudConfigured: true,
@@ -24,7 +24,7 @@ vi.mock('../lib/cloud', () => ({
   currentSession: () => Promise.resolve({ access_token: 'tok' }),
 }));
 vi.mock('../state/store', () => ({ useStore: () => ({ account: mock.account, dispatch: () => {} }) }));
-vi.mock('../lib/membership', async (real) => ({ ...(await real<typeof import('../lib/membership')>()), startCheckout: mock.start }));
+vi.mock('../lib/membership', async (real) => ({ ...(await real<typeof import('../lib/membership')>()), startCheckout: mock.start, cancelMembership: mock.cancel }));
 const { MembershipPanel } = await import('./MembershipPanel');
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -41,6 +41,7 @@ beforeEach(() => {
   mock.account = { id: 'u1' };
   mock.rpc.mockReset();
   mock.start.mockReset();
+  mock.cancel.mockReset();
   host = document.createElement('div');
   document.body.append(host);
   root = createRoot(host);
@@ -115,14 +116,16 @@ it('asks a signed-out visitor to sign in rather than showing a checkout', async 
 
 it('shows Plus when paid, and cancels it from the same place', async () => {
   mock.tables.subscriptions = [{ id: 's1', plan_code: 'plus', status: 'active', current_period_end: '2026-10-29T12:00:00Z', cancel_at_period_end: false }];
-  mock.rpc.mockResolvedValue({ data: '2026-10-29T12:00:00Z', error: null });
+  mock.cancel.mockResolvedValue({ kind: 'cancelled', endsAt: '2026-10-29T12:00:00Z' });
   await render();
   expect(host.textContent).toContain('You are on Semester Plus');
   expect(button(/^Upgrade$/)).toBeUndefined();
   await act(async () => button(/Cancel membership/)!.click());
   await act(async () => button(/^Cancel Plus$/)!.click());
-  expect(mock.rpc).toHaveBeenCalledWith('request_cancellation', { want_subscription: 's1' });
-  expect(host.textContent).toMatch(/Cancelled\. You keep Plus until/);
+  // Through billing-cancel, which tells Stripe; never the bare RPC, which does not.
+  expect(mock.cancel).toHaveBeenCalledWith('tok');
+  expect(mock.rpc).not.toHaveBeenCalled();
+  expect(host.textContent).toMatch(/Cancelled\. You keep Plus until .*you will not be charged again/);
   expect(button(/Cancel membership/)).toBeUndefined();
 });
 
@@ -165,4 +168,14 @@ it('does not tell a former subscriber they were never charged', async () => {
   expect(host.textContent).toContain('You are on Semester Free');
   expect(host.textContent).not.toContain('Semester has never charged you');
   expect(host.textContent).toContain('emails a receipt');
+});
+
+it('keeps Plus on screen, and says why, when the cancellation is refused', async () => {
+  mock.tables.subscriptions = [{ id: 's1', plan_code: 'plus', status: 'active', current_period_end: '2026-10-29T12:00:00Z', cancel_at_period_end: false }];
+  mock.cancel.mockResolvedValue({ kind: 'refused', said: 'The payment provider did not answer, so nothing changed. You are still subscribed; try again.' });
+  await render();
+  await act(async () => button(/Cancel membership/)!.click());
+  await act(async () => button(/^Cancel Plus$/)!.click());
+  expect(host.querySelector('[role="alert"]')?.textContent).toMatch(/still subscribed/);
+  expect(button(/^Cancel Plus$/)).toBeDefined();
 });

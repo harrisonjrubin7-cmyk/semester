@@ -73,7 +73,10 @@ major_version = 17
 # Stripe has no Supabase token; the Stripe-Signature over the raw body is the
 # credential, and the function answers 503 until STRIPE_WEBHOOK_SECRET is set.
 # The checkout checks the caller's own token after the CORS preflight, which
-# carries none. See DEPLOY.md → billing.
+# carries none. The cancel does the same. See DEPLOY.md → billing.
+[functions.billing-cancel]
+verify_jwt = false
+
 [functions.billing-checkout]
 verify_jwt = false
 

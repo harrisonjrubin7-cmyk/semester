@@ -156,6 +156,7 @@ with expected(jobname, parked) as (values
   ('audit-retention',               false),
   ('capture-expiry',                false),
   ('commercial-dunning',            false),
+  ('commercial-financial-retention', false),
   ('community-retention',           false),
   ('console-audit-integrity',       false),
   ('escalation-delivery',           true),
