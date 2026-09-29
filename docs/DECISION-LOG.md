@@ -2725,6 +2725,12 @@ standing is held to the kind of file it cites.
   refuses an acknowledgement number while one person reads the mailbox; the
   site now says the same everywhere, keeps the same-day action on a critical
   security issue, and says no independent advisor is appointed.
+- **The refund terms are undecided, and the site says so.** The membership
+  page stated "Full refund if you cancel within 14 days" and promised final
+  terms "before checkout goes live" — checkout is live with test keys
+  (D-128). Both refund lines now say the policy is drafted for counsel and
+  not in force, name the 14 days as one option it weighs, and promise the
+  final terms before any real charge.
 - **Not written here, because the repository cannot write them:** the MSA,
   counsel's review of every policy, a VPAT, customer data migration, and
   anything with an institution's name on it. Each is a row that says so.
