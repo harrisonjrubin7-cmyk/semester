@@ -1924,3 +1924,33 @@ nothing open. That is the wrong shape: the waivers are the decision.
   next-review date; the decision record it is attached to does. The
   disclosure is not yet held to `docs/pilot/KNOWN-LIMITATIONS.md`, which is
   where it would be published.
+
+## D-118 · The council has a finance seat, vacant until someone qualified accepts it
+
+**Decided 29 Sep 2026.** The launch kit's governance council charter names
+twelve roles; mapped onto the launch readiness council's ten seats (D-113),
+three had no seat — a student advisor, finance, and operations. Finance was
+the one already asked for elsewhere: `deal-desk.ts` has named a `finance`
+approver since the deal desk was written, above a 10% discount and on every
+access programme, and nobody held it. A seat that the code already requires
+approval from and that the council does not list is an approval nobody can
+give.
+
+- **`finance` is the eleventh seat** in `launchreadiness.ts`, after `data`:
+  Finance / commercial, deciding price floors, discount and pilot-credit
+  approvals at the deal desk, margin and contract terms. Vacant. The launch
+  command's ten are unchanged in order and meaning.
+- **`decide()` now needs it held and signed** like any other seat, so the
+  current verdict is still `NO-GO`, for 30 reasons rather than 29. Every
+  register that keys on a seat — sources, war room, proof calendar, claims,
+  commitments, leadership, evidence — accepts it and none is reassigned to it
+  here: the deal desk is the one place that already asks, and it is data, not
+  a seat-owned register.
+- **The holder:** at pilot scale the founder may hold it acting, as with
+  product, engineering and success; the launch kit's own register says
+  qualified outsourced support (a CPA) until in-house is justified. Neither
+  is written in until someone accepts in writing, which is the rule for every
+  seat.
+- **Not done:** the deal desk's `Approver` type still says `'finance'` as its
+  own string rather than the seat; the student-advisor and operations roles
+  still have no seat.

@@ -13,7 +13,8 @@ depends on is unticked.
 2026-09-27, and moved on 2026-09-28. One gate is met (`known-limitations`),
 nine are partial and two are unmet. Four council seats are held (founder, and
 product, engineering and customer success held by the founder, acting) and
-none has signed; six are vacant. `decide()` gives 29 reasons, down from 30: the
+none has signed; seven are vacant, the `finance` seat among them since 29 September
+(D-118). `decide()` gives 30 reasons: the
 met gate and four "is vacant" lines became four "has not signed" lines.
 
 ## How this relates to the go-live checklist
