@@ -218,7 +218,7 @@ export function AccountScreen() {
         {/* Between what the account does and leaving it: the one thing on
             this screen that is about somebody other than the account holder.
             See `components/ReferralLink.tsx`. */}
-        {/* Asked once, for an account made without a birth date (D-138). */}
+        {/* Asked once, for an account made without a birth date (D-139). */}
         <AgeStatement />
 
         <ReferralLink />

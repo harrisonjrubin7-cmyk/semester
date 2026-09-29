@@ -556,7 +556,7 @@ export const NOT_TRIGGERED: readonly { trigger: string; why: string; rows: reado
   { trigger: 'Payments', why: 'Billing stays out (D-009); the bill screen reads a statement and holds no card data.', rows: ['COM-001'] },
   { trigger: 'Proctoring', why: 'No proctoring or surveillance, held mechanically by the boundaries register.', rows: ['TRUST-003'] },
   { trigger: 'Basic-needs intake', why: 'The navigator is a directory that routes to an office; nothing is taken in, and nobody is notified.', rows: ['STU-012'] },
-  { trigger: 'Minors', why: 'The service is not directed at children: the minimum age is 13, refused at sign-up by the database (D-138), and a minor aged 13 to 17 is kept out of every feature where others can find or message them. Dual enrollment is identified by the institution, not guessed.', rows: ['COPPA-1', 'COPPA-3'] },
+  { trigger: 'Minors', why: 'The service is not directed at children: the minimum age is 13, refused at sign-up by the database (D-139), and a minor aged 13 to 17 is kept out of every feature where others can find or message them. Dual enrollment is identified by the institution, not guessed.', rows: ['COPPA-1', 'COPPA-3'] },
   { trigger: 'Agentic writes', why: 'No consequential write without exact review and confirmation; the two-phase journal never retries an uncertain action.', rows: ['AI-009'] },
 ];
 

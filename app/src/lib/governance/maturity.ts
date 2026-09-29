@@ -195,7 +195,7 @@ export const CONTROLS: readonly Control[] = [
   c('AP-11', 'accommodations', 'No unauthorised staff visibility.', 'in-place', 'supabase/expansion.check.sql', 'Row-level policy: only the named recipient, within the window.'),
 
   // ── Minors, guardians and dual enrollment ──────────────────────────────
-  c('MN-01', 'minors', 'Source for minor age or status.', 'in-place', 'supabase/minimum-age.check.sql', 'Stated at sign-up or once afterwards, never changed; only the day a minor turns 18 is kept (D-138). Self-reported, so it is a stated age, not a verified one.'),
+  c('MN-01', 'minors', 'Source for minor age or status.', 'in-place', 'supabase/minimum-age.check.sql', 'Stated at sign-up or once afterwards, never changed; only the day a minor turns 18 is kept (D-139). Self-reported, so it is a stated age, not a verified one.'),
   c('MN-02', 'minors', 'Guardian consent where required.', 'owed', null, 'No guardian model. The supporter and family privacy model says it needs the minors decision before building.'),
   c('MN-03', 'minors', 'Age-of-majority transition.', 'in-place', 'supabase/minimum-age.check.sql', 'The restriction lifts on the 18th birthday with nothing to run. Nobody is told; the Account screen stops saying it.'),
   c('MN-04', 'minors', 'Dual-enrollment sharing rules.', 'owed', null, 'A high-school student in a university course would be a minor in an institutional tenant; no rule exists.'),
