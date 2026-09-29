@@ -7,22 +7,22 @@ are missing.
 
 ## What is live
 
-Read off the project at 00:49 UTC on 28 September 2026, not remembered. The
+Read off the project at 19:55 UTC on 29 September 2026, not remembered. The
 last column is which pipeline deployed that version, and it is the one worth
 reading:
 
-    claude            ACTIVE, v159, verify_jwt off   platform
-    push              ACTIVE, v120, verify_jwt off   platform
-    calendar          ACTIVE, v115, verify_jwt off   platform
-    fetchcal          ACTIVE, v151, verify_jwt off   platform
-    canvas            ACTIVE, v144, verify_jwt off   platform
-    lti               ACTIVE, v144, verify_jwt off   platform
-    integration-tick  ACTIVE, v2, verify_jwt off     platform
-    trust-room        ACTIVE, v7, verify_jwt off     platform
-    delete-account    PENDING, live on merge, verify_jwt off  (see below)
-    billing-checkout  PENDING, live on merge, verify_jwt off  (see below)
-    billing-webhook   PENDING, live on merge, verify_jwt off  (see below)
-    lead-intake       PENDING, live on merge, verify_jwt off  (see below)
+    claude            ACTIVE, v234, verify_jwt off  platform
+    push              ACTIVE, v189, verify_jwt off  platform
+    calendar          ACTIVE, v186, verify_jwt off  platform
+    fetchcal          ACTIVE, v229, verify_jwt off  platform
+    canvas            ACTIVE, v220, verify_jwt off  platform
+    lti               ACTIVE, v222, verify_jwt off  platform
+    integration-tick  ACTIVE, v78, verify_jwt off  platform
+    trust-room        ACTIVE, v85, verify_jwt off  platform
+    delete-account    ACTIVE, v62, verify_jwt off  platform
+    billing-checkout  ACTIVE, v22, verify_jwt off  platform
+    billing-webhook   ACTIVE, v22, verify_jwt off  platform
+    lead-intake       ACTIVE, v22, verify_jwt off  platform
 
 **This file once said two, at v1, and filed three of the other four under "Not
 deployed yet".** `fetchcal` had been live since 9 September when that was
@@ -432,9 +432,11 @@ needs no secret of its own; the service credentials are injected.
 The one partial state — rows erased, the Admin API refusing the sign-in — says
 so, and pressing the button again finishes it.
 
-**Pending.** It goes up with the merge that adds it, like `trust-room` did;
-`functions.snapshot` carries a `pending` row until the project is read again.
-The migration has to be applied before or with it: without
+**Live since #906's merge.** It went up with a `pending` row in
+`functions.snapshot`. Read off the project at 19:55 UTC on 29 September, it was
+v62 on a platform path, and `public.erase_account(uuid)` was on the project;
+that reading replaced the pending row. The migration has to be applied before
+or with it: without
 `erase_account`, the function answers that nothing was deleted, which is true.
 
 **Known refusal:** a staff account that ever wrote a row in one of the four
@@ -470,8 +472,10 @@ The webhook endpoint to register in Stripe (Developers → Webhooks) is
 `customer.subscription.deleted`, `invoice.paid`, `invoice.payment_failed`,
 `charge.refunded` and `charge.dispute.created`.
 
-**Their snapshot rows are `pending`**, like trust-room's were: replace each with
-a real reading after the merge that deploys it.
+**Live since #942's merge.** Both went up with `pending` rows in
+`functions.snapshot`, like trust-room did. Read off the project at 19:55 UTC on
+29 September, each was v22 on a platform path, and that reading replaced the
+pending rows.
 
 **Two cron jobs come with them**, both in `scheduler.sql` and both active
 because neither needs a secret or an endpoint: `commercial-dunning` hourly at
@@ -526,7 +530,8 @@ the strict origin list, a honeypot field, and a five-an-hour limit per salted
 IP hash in the database. No IP address is stored, and nothing a visitor typed
 is logged.
 
-**Its snapshot row is `pending`.**
+**Live since #942's merge.** Read off the project at 19:55 UTC on 29 September,
+it was v22 on a platform path, and that reading replaced its pending row.
 
 ## Tables
 
