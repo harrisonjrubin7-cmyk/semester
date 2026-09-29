@@ -90,14 +90,20 @@ summary of what changed, and this table says so.
 | --- | --- | --- | --- | --- | --- |
 | Terms of Service | `draft` | [`docs/legal/TERMS-OF-SERVICE-DRAFT.md`](../../docs/legal/TERMS-OF-SERVICE-DRAFT.md) | `privacy` | `LEG-003` | — |
 | Privacy Policy | `draft` | [`docs/legal/PRIVACY-POLICY-DRAFT.md`](../../docs/legal/PRIVACY-POLICY-DRAFT.md) | `privacy` | `LEG-003` | — |
-| Acceptable Use Policy | `draft` | [`docs/legal/TERMS-OF-SERVICE-DRAFT.md`](../../docs/legal/TERMS-OF-SERVICE-DRAFT.md) | `privacy` | `LEG-003` | A section of the terms draft until it is its own document. |
-| AI Use Policy | `not-started` | — | `product` | `AI-001` | The internal lifecycle gates exist; the policy a student or institution reads does not. |
-| Cookie notice | `not-started` | — | `privacy` | `LEG-003` | The site sets no cookie and loads nothing from another origin; the notice is owed when that changes, or when counsel says so. |
+| Acceptable Use Policy | `draft` | [`docs/legal/ACCEPTABLE-USE-POLICY-DRAFT.md`](../../docs/legal/ACCEPTABLE-USE-POLICY-DRAFT.md) | `privacy` | `LEG-003` | Its own document, expanding section 5 of the terms draft. |
+| Community Guidelines | `draft` | [`docs/legal/COMMUNITY-GUIDELINES-DRAFT.md`](../../docs/legal/COMMUNITY-GUIDELINES-DRAFT.md) | `trust` | `LEG-003` | The student-facing side of the moderation SOP; published only when a school turns Community on. |
+| Copyright and takedown policy | `draft` | [`docs/legal/COPYRIGHT-AND-TAKEDOWN-POLICY-DRAFT.md`](../../docs/legal/COPYRIGHT-AND-TAKEDOWN-POLICY-DRAFT.md) | `founder` | `LEG-003` | No designated agent is registered, so no DMCA safe harbour may be claimed yet. |
+| Data retention and deletion policy | `draft` | [`docs/legal/DATA-RETENTION-AND-DELETION-POLICY-DRAFT.md`](../../docs/legal/DATA-RETENTION-AND-DELETION-POLICY-DRAFT.md) | `privacy` | `LEG-003` | The public summary of RETENTION.md, which prevails. |
+| Support policy | `draft` | [`docs/legal/SUPPORT-POLICY-DRAFT.md`](../../docs/legal/SUPPORT-POLICY-DRAFT.md) | `success` | `LEG-003` | No response time is promised until support is staffed. |
+| Incident response summary | `draft` | [`docs/legal/INCIDENT-RESPONSE-SUMMARY-DRAFT.md`](../../docs/legal/INCIDENT-RESPONSE-SUMMARY-DRAFT.md) | `security` | `LEG-003` | The procedure is written and has not been exercised. |
+| Advertising and sponsorship policy | `draft` | [`docs/legal/ADVERTISING-AND-SPONSORSHIP-POLICY-DRAFT.md`](../../docs/legal/ADVERTISING-AND-SPONSORSHIP-POLICY-DRAFT.md) | `founder` | `LEG-003` | No advertising; the sponsorship rules apply only if a school turns the module on. |
+| AI Use Policy | `draft` | [`docs/legal/AI-USE-POLICY-DRAFT.md`](../../docs/legal/AI-USE-POLICY-DRAFT.md) | `product` | `AI-001` | The plain-language companion to the AI model-training and data-use policy, which prevails. |
+| Cookie notice | `draft` | [`docs/legal/COOKIE-AND-STORAGE-NOTICE-DRAFT.md`](../../docs/legal/COOKIE-AND-STORAGE-NOTICE-DRAFT.md) | `privacy` | `LEG-003` | No cookie is set anywhere; the notice says what browser storage holds instead, and the company site now says the same. |
 | Data Processing Agreement | `outline` | [`docs/trust/DPA-CHECKLIST.md`](../../docs/trust/DPA-CHECKLIST.md) | `privacy` | `LEG-002` | — |
 | Student data addendum | `not-started` | — | `privacy` | `LEG-002`, `SEC-009` | — |
 | Service Level Agreement | `outline` | [`docs/trust/SLA.md`](../../docs/trust/SLA.md) | `engineering` | `SRE-001` | — |
-| Refund and cancellation policy | `not-started` | — | `founder` | `LEG-003` | Owed before a live payment: checkout exists since D-128, and the terms on the pricing page are still proposed. |
-| Accessibility statement | `not-started` | — | `accessibility` | `A11Y-007` | — |
+| Refund and cancellation policy | `draft` | [`docs/legal/REFUND-AND-CANCELLATION-POLICY-DRAFT.md`](../../docs/legal/REFUND-AND-CANCELLATION-POLICY-DRAFT.md) | `founder` | `LEG-003` | Owed before a live payment: checkout exists since D-128, and the terms on the pricing page are still proposed; the policy is drafted, not in force. |
+| Accessibility statement | `draft` | [`docs/legal/ACCESSIBILITY-STATEMENT-DRAFT.md`](../../docs/legal/ACCESSIBILITY-STATEMENT-DRAFT.md) | `accessibility` | `A11Y-007` | Claims no conformance: no manual assistive-technology review has been done. |
 | Subprocessor list | `draft` | [`docs/SUBPROCESSORS.md`](../../docs/SUBPROCESSORS.md) | `privacy` | `SEC-010` | Held to the code by a test; public once counsel has read it. |
 
 - `not-started`: Nothing is written.
