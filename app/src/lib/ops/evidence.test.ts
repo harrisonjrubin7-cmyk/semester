@@ -2,10 +2,10 @@ import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { SEATS } from '../launchreadiness';
-import { REGISTER } from '../masterregister';
+import { NEEDS_EVIDENCE_DIR, REGISTER } from '../masterregister';
 import { CLAIMS, STATUS_LABEL, claim, problems, type Facts } from './claims';
 import { ESCALATION } from './console';
-import { EVIDENCE, EVIDENCE_WORD_MEANING, addDays, daysBetween, evidence, evidenceState, expiredUnder, type EvidenceRecord } from './evidence';
+import { EVIDENCE, EVIDENCE_WORD_MEANING, addDays, daysBetween, evidence, evidenceState, expiredUnder, staleRows, type EvidenceRecord } from './evidence';
 import { CALENDAR } from './proofcalendar';
 import { cell, controlLine, isIsoDate, link, renderedFrom, table } from './render';
 
@@ -109,6 +109,9 @@ describe('evidenceState', () => {
   });
 });
 
+/** The one clock read in this file. */
+const TODAY = new Date().toISOString().slice(0, 10);
+
 describe('the register', () => {
   it('names each record once, as a slug, with a positive validity and an ISO date', () => {
     expect(new Set(EVIDENCE.map((r) => r.id)).size).toBe(EVIDENCE.length);
@@ -162,10 +165,22 @@ describe('the register', () => {
   });
 
   it('has, today, no expired record under an available claim — or problems() names it', () => {
-    const today = new Date().toISOString().slice(0, 10); // the one clock read in this file
+    const today = TODAY;
     const expired = CLAIMS.filter((c) => c.status === 'available').flatMap((c) => expiredUnder(EVIDENCE, today)(c.id).map((id) => `${c.id} is available and rests on ${id}, which has expired.`));
     const found = problems(CLAIMS, facts(today)).filter((p) => p.includes('which has expired'));
     expect(found).toEqual(expired);
+  });
+
+  it('lets a register row stay past `tested` only while an artifact it cites is current', () => {
+    const drill = evidence('ai-killswitch-drill');
+    const row = { id: 'AI-012', evidence: [{ path: drill.path }, { path: 'app/src/lib/aikillswitch.test.ts' }] };
+    const expires = addDays(drill.produced, drill.validFor);
+    expect(staleRows([row], [drill], addDays(expires, -1))).toEqual([]);
+    expect(staleRows([row], [drill], expires)).toEqual(['AI-012']);
+    // A filed path with no record here is no evidence of freshness at all.
+    expect(staleRows([{ id: 'AI-012', evidence: [{ path: 'docs/evidence/ai/unregistered.json' }] }], [drill], addDays(expires, -1))).toEqual(['AI-012']);
+    // Today: every row past `tested` is still current, or this names it.
+    expect(staleRows(REGISTER.filter((r) => NEEDS_EVIDENCE_DIR.includes(r.status)), EVIDENCE, TODAY)).toEqual([]);
   });
 
   it(`is what ${DOC} says`, () => {

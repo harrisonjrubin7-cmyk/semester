@@ -213,6 +213,28 @@ export function evidenceState(record: Pick<EvidenceRecord, 'produced' | 'validFo
   return { expires, daysLeft, step, state: daysLeft <= 0 ? 'expired' : step ? 'expiring' : 'current' };
 }
 
+/**
+ * The register rows, of those given, that no longer have a current artifact
+ * under `docs/evidence/`: every filed path they cite is either unregistered
+ * here or registered and expired on `today`. A row past `tested` is only as
+ * current as its drill, so each one named must be re-drilled or come back
+ * down to `tested` (Codex on #994: AI-012 would otherwise stay `evidenced`
+ * after its quarterly drill ran out).
+ */
+export function staleRows(
+  rows: readonly { id: string; evidence: readonly { path: string }[] }[],
+  records: readonly EvidenceRecord[],
+  today: string,
+): string[] {
+  return rows
+    .filter((row) => {
+      const filed = row.evidence.map((e) => e.path).filter((p) => p.startsWith('docs/evidence/'));
+      const backing = records.filter((r) => r.rows.includes(row.id) && filed.includes(r.path));
+      return backing.length === 0 || backing.every((r) => evidenceState(r, today).state === 'expired');
+    })
+    .map((row) => row.id);
+}
+
 /** The ids of the records under `claimId` that have expired on `today`; the shape `claims.ts` `Facts.expiredEvidence` takes. */
 export function expiredUnder(records: readonly EvidenceRecord[], today: string): (claimId: string) => string[] {
   return (claimId) => records.filter((r) => r.claims.includes(claimId) && evidenceState(r, today).state === 'expired').map((r) => r.id);

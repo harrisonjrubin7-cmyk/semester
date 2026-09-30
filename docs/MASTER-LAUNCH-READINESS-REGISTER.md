@@ -39,8 +39,8 @@ state is in [`ROLE-LAUNCH-REGISTER.md`](ROLE-LAUNCH-REGISTER.md).
 `tested` means code exists and an automated test exercises it — never that
 the row is ready. Every `tested` row still needs something the repository
 cannot supply by itself (a UAT, a drill, a certification, a contract, a named
-owner), and its gap says which. Nothing can be above `tested` until an
-artifact exists under `docs/evidence/`, and none does.
+owner), and its gap says which. Nothing can be above `tested` without an
+artifact under `docs/evidence/` that is still current: AI-012, on the AI drills of 29 September.
 
 ## The gates
 
