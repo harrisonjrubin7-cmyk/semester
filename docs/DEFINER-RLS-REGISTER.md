@@ -70,7 +70,7 @@ Since the reading, 29 more, from migrations not applied to production, each with
 | `create_study_session` | `auth.uid()`, `private.community_role` | `20260928032000_community.sql` |
 | `delete_community_post` | `auth.uid()` | `20260928032000_community.sql` |
 | `edit_community_post` | `auth.uid()` | `20260928032000_community.sql` |
-| `export_my_data` | `auth.uid()` | `20260929010000_account_erasure_and_export.sql` |
+| `export_my_data` | `auth.uid()` | `20260930000000_audit_and_subject_requests.sql` |
 | `follow_organization` | `auth.uid()` | `20260921230000_organizations.sql` |
 | `forget_my_advisor_shares` | `auth.uid()` | `20260928310000_expansion_review_fixes.sql` |
 | `forget_my_beta` | `auth.uid()`, `private.beta_confirmed_email` | `20260928220000_private_beta.sql` |

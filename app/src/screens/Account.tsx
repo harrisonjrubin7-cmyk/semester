@@ -9,6 +9,7 @@ import { StorageRoom } from '../components/StorageRoom';
 import { syncLine } from '../lib/merge';
 import { ActionButton, SectionLabel } from '../components/ui';
 import { Credentials } from '../components/Credentials';
+import { AccountSecurity } from '../components/AccountSecurity';
 import { SchoolClaim } from '../components/SchoolClaim';
 import { ReferralLink } from '../components/ReferralLink';
 import { AgeStatement } from '../components/AgeStatement';
@@ -222,6 +223,8 @@ export function AccountScreen() {
         <AgeStatement />
 
         <ReferralLink />
+
+        <AccountSecurity />
 
         <ActionButton
           disabled={busy}

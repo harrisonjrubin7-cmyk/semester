@@ -31,6 +31,7 @@
  * app should make for you. The screen says so.
  */
 
+import { passwordProblem } from './password';
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import { requireOnline } from './offline-mode';
 import { classify, reference, say, type Code } from './failure';
@@ -444,6 +445,58 @@ export async function sendReset(email: string): Promise<string> {
 
 export async function signOut(): Promise<void> {
   await (await cloud()).auth.signOut();
+}
+
+/**
+ * Watch for the moment an emailed reset link has been opened.
+ *
+ * Supabase raises `PASSWORD_RECOVERY` once the link's code has been exchanged
+ * for a short session. That session is enough to set a password and nothing
+ * else the app asks for, so the recovery screen listens here and asks for the
+ * new password straight away.
+ */
+export function onPasswordRecovery(fn: () => void): () => void {
+  if (!cloudConfigured) return () => {};
+  let stop: (() => void) | null = null;
+  let cancelled = false;
+  void cloud().then((db) => {
+    if (cancelled) return;
+    const { data } = db.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') fn();
+    });
+    stop = () => data.subscription.unsubscribe();
+  });
+  return () => {
+    cancelled = true;
+    stop?.();
+  };
+}
+
+/** Set the password of the signed-in (or just-recovered) account. */
+export async function setNewPassword(password: string): Promise<string> {
+  const problem = passwordProblem(password);
+  if (problem) throw new Error(problem);
+  const { error } = await (await cloud()).auth.updateUser({ password });
+  if (error) throw new Error(error.message);
+  return 'Your password is changed.';
+}
+
+/**
+ * Ask for a new sign-in address. Supabase emails a confirmation and the
+ * address does not change until it is followed, so the sentence says that
+ * rather than claiming a change that has not happened.
+ */
+export async function changeEmail(email: string): Promise<string> {
+  const { error } = await (await cloud()).auth.updateUser({ email }, { emailRedirectTo: appUrl() });
+  if (error) throw new Error(error.message);
+  return `A confirmation link is on its way to ${email}. Your address changes when you follow it.`;
+}
+
+/** Sign out every device but this one. */
+export async function signOutOtherDevices(): Promise<string> {
+  const { error } = await (await cloud()).auth.signOut({ scope: 'others' });
+  if (error) throw new Error(error.message);
+  return 'Every other device has been signed out.';
 }
 
 /**
