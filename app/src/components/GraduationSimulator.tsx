@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { ConfirmDialog } from './ConfirmDialog';
 import { CostPlanner } from './CostPlanner';
+import { RecordLabel } from './RecordLabel';
 import { ScenarioComparison } from './ScenarioComparison';
 import { startItemising, totals, type CostLine } from '../lib/cost-plan';
 import { MODULE_FLAGS, moduleOn } from '../lib/experience-flags';
@@ -153,6 +154,7 @@ export function GraduationSimulator({
           registrar. {done} hours finished, counted from your Taken tab. Every figure here is an estimate from numbers
           you enter — it does not know course sequencing, when classes are offered, or your financial aid.
         </p>
+        <RecordLabel kind="degree_audit" />
         <div className="portal-filter-row">
           <label className="portal-check">
             Hours your degree needs

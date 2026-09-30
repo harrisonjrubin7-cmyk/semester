@@ -67,7 +67,7 @@ Statuses were read at main commit 7476aca on 28 September 2026. 26 domains:
 | **Business continuity** | 1 | Medium | Security Practices Rubric | Resilient digital services | BCP-1 (0), SRE-004 (1), SRE-005 (1), SRE-006 (1), EX-05 (1) |
 | **Data inventory and classification** | 1 | High | Data Privacy Rubric | Data foundations and governance | PRIV-1 (2), SEC-008 (1), TRUST-003 (1), RM-01 (1) |
 | **Data ownership and control** | 2 | High | Data Privacy Rubric | Student trust and data agency | PRIV-2 (2), PRIV-3 (2), PRIV-6 (2), FERPA-5 (2), FERPA-6 (2), UOS-007 (2), STU-011 (2) |
-| **Retention, deletion and legal hold** | 1 | High | Data Privacy Rubric | Data foundations and governance | PRIV-1 (2), PRIV-2 (2), FERPA-7 (1), LEG-004 (1), RM-01 (1), RM-02 (0), RM-04 (0), RM-05 (0) |
+| **Retention, deletion and legal hold** | 1 | High | Data Privacy Rubric | Data foundations and governance | PRIV-1 (2), PRIV-2 (2), FERPA-7 (1), LEG-004 (1), RM-01 (1), RM-02 (1), RM-04 (1), RM-05 (1) |
 | **Data sharing and subprocessors** | 1 | High | Data Privacy Rubric | Collaborative cybersecurity | PRIV-5 (1), FERPA-11 (2), SEC-010 (1), DR-05 (1), EX-10 (0) |
 | **FERPA and education records** | 1 | Medium-high | Data Privacy Rubric | Student trust and data agency | PRIV-4 (0), FERPA-1 (0), FERPA-2 (1), FERPA-3 (2), FERPA-9 (2), SEC-009 (1) |
 | **Accessibility** | 1 | High | Accessibility Rubric | Equitable digital access | A11Y-1 (2), A11Y-2 (0), A11Y-3 (0), A11Y-4 (0), A11Y-001 (2), A11Y-002 (2), A11Y-003 (2), A11Y-004 (2), A11Y-005 (2), A11Y-006 (1), A11Y-007 (1), IT-01 (1) |
@@ -126,8 +126,8 @@ master rows at P0 not yet tested. Per register, over every row this page names:
 | [`docs/market-readiness/HECVAT_READINESS.md`](../market-readiness/HECVAT_READINESS.md) | 33 | 11 of 33 | 0 of 33 | 11 of 33 | 0 |
 | [`docs/FERPA-COPPA-1EDTECH-READINESS.md`](../FERPA-COPPA-1EDTECH-READINESS.md) | 21 | 12 of 21 | 0 of 21 | 10 of 21 | 0 |
 | [`docs/MASTER-LAUNCH-READINESS-REGISTER.md`](../MASTER-LAUNCH-READINESS-REGISTER.md) | 80 | 24 of 80 | 1 of 80 | 24 of 80 | 52 |
-| [`docs/operating-model/OPERATIONAL-MATURITY.md`](../operating-model/OPERATIONAL-MATURITY.md) | 28 | 2 of 28 | 0 of 28 | 0 of 28 | 0 |
-| **All** | 162 | 49 of 162 | 1 of 162 | 45 of 162 | 52 |
+| [`docs/operating-model/OPERATIONAL-MATURITY.md`](../operating-model/OPERATIONAL-MATURITY.md) | 28 | 2 of 28 | 0 of 28 | 3 of 28 | 0 |
+| **All** | 162 | 49 of 162 | 1 of 162 | 48 of 162 | 52 |
 
 ## The TrustEd Apps rubrics, item by item
 
@@ -149,7 +149,7 @@ master rows at P0 not yet tested. Per register, over every row this page names:
 | Ownership and control | No sale of student data and no undisclosed secondary use. | FERPA-2 (1), COPPA-2 (2) | carried |
 | Deletion and retention | Retention rules are specific by data class. | PRIV-1 (2), RM-01 (1) | carried |
 | Deletion and retention | Deletion, export and correction work in the product. | PRIV-2 (2), FERPA-6 (2) | carried |
-| Deletion and retention | Backup lifecycle and legal-hold override are documented. | RM-02 (0), RM-04 (0), SRE-004 (1) | partly |
+| Deletion and retention | Backup lifecycle and legal-hold override are documented. | RM-02 (1), RM-04 (1), SRE-004 (1) | partly |
 | Policy transparency | Public privacy policy and terms are current, plain-language, versioned and operationally accurate. | LEG-003 (1), PRIV-3 (2) | carried |
 | Policy transparency | Cookies, analytics, advertising and third parties are disclosed. | COPPA-2 (2), PRIV-5 (1) | carried |
 | Policy transparency | A privacy contact and an escalation process are published. | VULN-1 (1) | partly |

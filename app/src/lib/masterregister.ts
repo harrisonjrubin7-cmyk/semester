@@ -436,8 +436,8 @@ export const REGISTER: readonly Requirement[] = [
     validation: 'Calendar E2E/offline tests',
     severity: 'P1',
     status: 'tested',
-    evidence: [{ path: 'app/src/lib/offline-mode.ts', shows: 'Offline Mode behind offline_mode: writes that need the network are refused with a reason (Phase M)' }, { path: 'app/src/components/OfflineBanner.test.tsx', shows: 'Tests the offline banner' }, { path: 'app/src/screens/Calendar.tsx', shows: 'Calendar views and actions' }, { path: 'app/src/screens/Calendar.keyboard.test.tsx', shows: 'Calendar keyboard tests' }, { path: 'supabase/calendar.check.sql', shows: 'SQL tests for calendar persistence' }, { path: 'app/src/lib/offline.test.ts', shows: 'Offline behaviour tests' }],
-    gap: 'No E2E calendar journey; connection status depends on unconnected providers. Needs E2E/offline run on target devices.',
+    evidence: [{ path: 'app/src/lib/offline-mode.ts', shows: 'Offline Mode behind offline_mode: writes that need the network are refused with a reason (Phase M)' }, { path: 'app/src/components/OfflineBanner.test.tsx', shows: 'Tests the offline banner' }, { path: 'app/src/screens/Calendar.tsx', shows: 'Calendar views and actions' }, { path: 'app/src/screens/Calendar.keyboard.test.tsx', shows: 'Calendar keyboard tests' }, { path: 'supabase/calendar.check.sql', shows: 'SQL tests for calendar persistence' }, { path: 'app/src/lib/offline.test.ts', shows: 'Offline behaviour tests' }, { path: 'app/src/state/deletions.test.tsx', shows: 'Airplane mode, a restart and a connection that comes and goes, against the real store: a deletion stays a deletion, and a deletion against an edit keeps the edit and asks' }, { path: 'app/src/lib/sync/outbox.test.ts', shows: 'A share and a course plan kept offline are sent by the student and never by themselves; one cut off mid-flight is read as possibly delivered' }, { path: 'app/src/components/WaitingSends.test.tsx', shows: 'The panel: not sent when the connection returns, sent once on a tap, keyboard and screen-reader names, focus after an action' }],
+    gap: 'No E2E calendar journey; connection status depends on unconnected providers. Needs E2E/offline run on target devices. Offline and airplane-mode behaviour is proved against the real store with the account mocked, not a real browser going offline against a real project, and server calls take no idempotency key, so a cut-off share is checked by the student rather than deduplicated.',
   },
   {
     id: 'STU-011',
@@ -1455,9 +1455,9 @@ export const REGISTER: readonly Requirement[] = [
     requirement: 'Registration, assessment, gradebook, search, AI, and integration load tests pass targets',
     validation: 'Load reports',
     severity: 'P0',
-    status: 'not-started',
-    evidence: [{ path: 'docs/LAUNCH-READINESS-TEST-PLAN.md', shows: 'records that no load test exists' }],
-    gap: 'No load or capacity tests for any journey, no targets, no load reports.',
+    status: 'building',
+    evidence: [{ path: 'supabase/load.sh', shows: 'pgbench scenarios in CI against every migration: registration-week flags, plan saves and demand reads, and the open and sync every student makes, each against a latency budget, then invariants (D-154)' }, { path: 'docs/PERFORMANCE-AND-LOW-END-DEVICE-PLAN.md', shows: 'the scenarios, the readings, and a capacity reading at 10× the largest pilot on production-sized settings' }],
+    gap: 'Only the database, and only the journeys that exist: no load through PostgREST, Supavisor, GoTrue or the edge functions (the preview-branch run), and none for assessment, gradebook, search, AI or integrations.',
   },
   {
     id: 'SRE-008',

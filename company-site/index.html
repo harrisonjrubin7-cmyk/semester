@@ -702,6 +702,87 @@ details.svc summary .sum-l{min-width:0}
 .cform{display:grid;gap:12px}
 .cform .seg{flex-wrap:wrap}
 #cm-rules{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+
+/* v8 · campaign-aligned brand system */
+:root{
+  --signal:#86b8e6; --signal-hi:#b8d9f6; --signal-deep:#355d89;
+  --night:#07090d; --night-blue:#0b1119;
+}
+body{
+  background:
+    radial-gradient(900px 620px at 82% 4%,rgba(53,93,137,.13),transparent 64%),
+    radial-gradient(720px 500px at 4% 34%,rgba(212,175,55,.055),transparent 68%),
+    var(--bg);
+}
+.wrap{max-width:1240px}
+.banner{position:relative;z-index:45;color:#c7cbd2;letter-spacing:.01em}
+.banner a{color:var(--brass-hi);text-underline-offset:3px}
+header.nav{box-shadow:0 1px 0 rgba(134,184,230,.12),0 18px 50px rgba(0,0,0,.2)}
+.brand-word{letter-spacing:.19em}
+
+/* The home hero borrows the campaign's cinematic dark room and the app's blue
+   focus treatment while keeping the live product screen as the proof point. */
+.hero{position:relative;isolation:isolate;overflow:hidden;padding-block:92px 82px;background:none}
+.hero::before{content:"";position:absolute;z-index:-2;inset:0;background:
+  linear-gradient(90deg,rgba(6,6,7,.99) 0%,rgba(6,7,10,.92) 43%,rgba(8,13,20,.54) 72%,rgba(6,6,7,.88) 100%),
+  radial-gradient(620px 440px at 78% 28%,rgba(134,184,230,.2),transparent 70%),
+  linear-gradient(135deg,#060607 0%,#0c141e 52%,#07080b 100%)}
+.hero::after{content:"";position:absolute;z-index:-1;width:720px;height:720px;right:-180px;top:-330px;border:1px solid rgba(134,184,230,.16);border-radius:50%;box-shadow:0 0 0 90px rgba(134,184,230,.018),0 0 0 180px rgba(134,184,230,.014);pointer-events:none}
+.hero-grid{grid-template-columns:minmax(0,1.12fr) minmax(320px,.72fr);gap:clamp(42px,7vw,96px)}
+.hero h1{font-size:clamp(48px,6.7vw,86px);max-width:11.5ch;line-height:.98;letter-spacing:-.035em}
+.hero .lede{font-size:clamp(17px,1.55vw,20px);max-width:61ch}
+.hero .eyebrow{display:flex;align-items:center;gap:10px}
+.hero .eyebrow::before{content:"";width:34px;height:2px;background:var(--signal);box-shadow:0 0 18px rgba(134,184,230,.7)}
+.hero .phone{width:min(100%,310px);max-width:none;transform:perspective(1100px) rotateY(-6deg) rotateX(1deg);border-color:rgba(134,184,230,.28);box-shadow:0 48px 120px -28px rgba(0,0,0,.95),0 0 70px rgba(53,93,137,.15)}
+.hero .phone::before,.hero .phone::after{position:absolute;z-index:2;display:block;width:190px;padding:12px 14px;border:1px solid rgba(134,184,230,.28);background:rgba(12,18,27,.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 20px 55px rgba(0,0,0,.5);font:600 11px/1.45 var(--mono);letter-spacing:.035em;color:var(--signal-hi)}
+.hero .phone::before{content:"TODAY  /  ONE CLEAR NEXT STEP";left:-116px;right:auto;top:19%;text-align:left}
+.hero .phone::after{content:"SOURCE  ·  SCOPE  ·  STATUS";left:auto;right:-105px;top:auto;bottom:17%;text-align:left;color:var(--brass-hi)}
+.hero .phone .src{z-index:3;border-color:rgba(217,163,143,.45);box-shadow:0 10px 30px rgba(0,0,0,.55)}
+.hero .ctas{align-items:center}
+.app-bridge{display:grid;grid-template-columns:auto 1fr auto;gap:4px 12px;align-items:center;margin-top:22px;padding:13px 15px;max-width:610px;border:1px solid rgba(134,184,230,.24);border-left:3px solid var(--signal);background:linear-gradient(90deg,rgba(53,93,137,.15),rgba(12,13,17,.72));box-shadow:inset 0 1px rgba(255,255,255,.035)}
+.app-bridge .pulse{grid-row:1/3;width:9px;height:9px;border-radius:50%;background:var(--sage);box-shadow:0 0 0 5px rgba(169,199,176,.09),0 0 18px rgba(169,199,176,.35)}
+.app-bridge strong{font-size:13px;color:var(--ink);line-height:1.35}
+.app-bridge span:not(.pulse){font-size:12px;color:var(--ink-faint);line-height:1.45}
+.app-bridge a{grid-row:1/3;grid-column:3;color:var(--signal-hi);font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap}
+.app-bridge a:hover{text-decoration:underline;text-underline-offset:3px}
+
+/* Match the campaign deck's structured blue/gold rhythm across marketing pages. */
+section.blk{padding-block:88px}
+.rule{position:relative}
+.rule::before{content:"";position:absolute;left:50%;top:-1px;width:min(1240px,calc(100% - 48px));height:1px;transform:translateX(-50%);background:linear-gradient(90deg,transparent,rgba(134,184,230,.3) 20%,rgba(212,175,55,.22) 78%,transparent)}
+.sec-head{gap:16px;margin-bottom:42px}
+.sec-head h2{font-size:clamp(34px,4vw,52px);letter-spacing:-.025em}
+.eyebrow{color:var(--signal-hi);font-family:var(--mono);font-size:11px;letter-spacing:.16em}
+.eyebrow.brass{color:var(--brass-hi)}
+.box,.mock,.onecard,.tile,.aud,.stat{border-radius:8px}
+.box,.mock,.onecard{background-color:rgba(18,19,22,.84)}
+.tile,.aud,.stat{transition:transform .2s ease,border-color .2s ease,background-color .2s ease}
+@media (hover:hover){.tile:hover,.aud:hover,.stat:hover{transform:translateY(-3px);background-color:#0d1118;box-shadow:inset 0 2px 0 var(--signal),0 22px 44px -34px rgba(134,184,230,.5)}}
+.persona button{border-radius:999px;background:rgba(12,17,24,.72)}
+.persona button:hover,.persona button[aria-pressed="true"]{border-color:var(--signal);color:var(--ink);background:rgba(53,93,137,.16)}
+.strip{background:rgba(9,13,19,.72);border-color:rgba(134,184,230,.16)}
+.strip span{position:relative;border-color:rgba(134,184,230,.13);font-family:var(--mono);font-size:12px;letter-spacing:.02em}
+.strip span::before{content:"";display:inline-block;width:6px;height:6px;margin-right:9px;border-radius:50%;background:var(--signal)}
+.strip span:nth-child(2)::before,.strip span:nth-child(5)::before{background:var(--brass)}
+.tabs button[aria-selected="true"]{color:var(--signal-hi);border-bottom-color:var(--signal)}
+.panel li::before{background:var(--signal)}
+.mock{box-shadow:inset 3px 0 0 rgba(134,184,230,.72),inset 0 1px 0 rgba(255,255,255,.06),0 26px 70px -54px rgba(134,184,230,.7)}
+.aud .who{color:var(--signal-hi)}
+.final{background:radial-gradient(600px 240px at 50% 110%,rgba(53,93,137,.22),transparent),linear-gradient(180deg,transparent,rgba(11,17,25,.58))}
+footer{background:linear-gradient(180deg,#080a0e,#050506)}
+
+@media (max-width:1020px){.hero{padding-block:72px 62px}.hero-grid{grid-template-columns:1fr}.hero h1{max-width:13ch}.hero .phone{margin-top:12px}.hero .phone::before{left:-82px}.hero .phone::after{right:-72px}}
+@media (max-width:620px){
+  .hero{padding-block:54px 46px}
+  .hero::after{right:-470px;top:-390px}
+  .hero h1{font-size:clamp(43px,13vw,64px)}
+  .hero .phone{width:250px;transform:none;margin-top:16px}
+  .hero .phone::before{left:-38px;top:18%;width:152px;font-size:9px;padding:9px 10px}
+  .hero .phone::after{right:-32px;bottom:16%;width:150px;font-size:9px;padding:9px 10px}
+  .app-bridge{grid-template-columns:auto 1fr}.app-bridge a{grid-column:2;grid-row:3;margin-top:3px}.app-bridge .pulse{grid-row:1/4}
+  section.blk{padding-block:64px}.rule::before{width:calc(100% - 32px)}
+}
+@media (max-width:520px){#search-btn{display:none}.nav-right{gap:4px}.nav-row{gap:8px}}
 </style>
 
 <a class="skip" href="#main">Skip to content</a>
@@ -852,7 +933,7 @@ details.svc summary .sum-l{min-width:0}
     <div class="nav-right">
       <button class="btn btn-ghost btn-sm" type="button" id="search-btn" aria-label="Search the site" aria-haspopup="dialog"><svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M11 11l3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><span class="hide-m">Search</span></button>
       <a class="txt hide-m" href="https://harrisonjrubin7-cmyk.github.io/semester/#/login" target="_blank" rel="noopener" aria-label="Log in to the Semester app">Log in</a>
-      <a class="btn btn-primary btn-sm" href="https://harrisonjrubin7-cmyk.github.io/semester/#/signup" target="_blank" rel="noopener"><span>Start<span class="hide-xs"> planning</span> free</span></a>
+      <a class="btn btn-primary btn-sm" href="https://harrisonjrubin7-cmyk.github.io/semester/#/signup" target="_blank" rel="noopener"><span>Create<span class="hide-xs"> account</span></span></a>
       <button class="btn btn-ghost btn-sm menu-btn" type="button" id="menu-btn" aria-expanded="false" aria-controls="drawer">Menu</button>
     </div>
   </div>
@@ -873,7 +954,7 @@ details.svc summary .sum-l{min-width:0}
     <a href="#build-my-semester">Build my semester</a><a href="#tools">Registration checklist</a><a href="#academy">Academy</a><a href="#events">Events</a><a href="#help">Help</a><a href="#customer-portal">Customer portal</a><a href="#get-started">Get started</a><a href="#ai-literacy">AI literacy</a><a href="#kits">Procurement kits</a><a href="#feedback">Feedback</a><a href="#support-policy">Support policy</a><a href="#request-invite">Request an invite</a><a href="#start">After you sign up</a><a href="#launch-kit">Campus launch kit</a><a href="#ai-governance-canvas">AI Governance Canvas</a><a href="#navigation-diagnostic">Navigation Diagnostic</a><a href="#glossary">Glossary</a><a href="#credential-wallet">Credential Wallet (planned)</a>
     <p class="grp">Company</p>
     <a href="#company">About</a><a href="#community">Community</a><a href="#watch">Watch on YouTube</a><a href="#leadership">Leadership</a><a href="#careers">Careers</a><a href="#design-partners">Design partners</a><a href="#refer">Refer a friend</a><a href="#founders-letter">Founder's letter</a><a href="#fellows">Fellows</a><a href="#partner-portal">Partners</a><a href="#report">Report a concern</a><a href="#responsible-technology">Responsible technology</a><a href="#how-we-operate">How we operate</a><a href="#proof-policy">How we present proof</a><a href="#semester-standard">Semester Standard</a><a href="#community">Community programs</a><a href="#contact">Contact</a>
-    <a class="btn btn-primary" style="margin-top:18px;justify-content:center;border:0" href="https://harrisonjrubin7-cmyk.github.io/semester/#/signup" target="_blank" rel="noopener">Start planning free</a>
+    <a class="btn btn-primary" style="margin-top:18px;justify-content:center;border:0" href="https://harrisonjrubin7-cmyk.github.io/semester/#/signup" target="_blank" rel="noopener">Create your Semester account</a>
   </div>
 </div>
 
@@ -901,10 +982,16 @@ details.svc summary .sum-l{min-width:0}
         <h1>College is complicated. <em>Your path</em> should not be.</h1>
         <p class="lede">Semester brings your plan, courses, schedule, goals and next steps into one clear workspace, so you can see what matters, act with confidence, and stay in control of your information.</p>
         <div class="ctas">
-          <a class="btn btn-primary" href="https://harrisonjrubin7-cmyk.github.io/semester/#/signup" target="_blank" rel="noopener">Start planning free →</a>
+          <a class="btn btn-primary" href="https://harrisonjrubin7-cmyk.github.io/semester/#/signup" target="_blank" rel="noopener">Create your account →</a>
           <a class="btn btn-ghost" href="#request-invite">Request an invite</a>
         </div>
-        <p class="fine" style="margin-top:12px">Private beta: sign-up may ask for an invite. <a href="https://harrisonjrubin7-cmyk.github.io/semester/#/login" target="_blank" rel="noopener">Already have an account? Log in</a></p>
+        <div class="app-bridge" aria-label="Continue to the Semester application">
+          <span class="pulse" aria-hidden="true"></span>
+          <strong>Company site → Semester application</strong>
+          <span>Create an account, bring in a syllabus, and turn your real semester into one clear next step.</span>
+          <a href="https://harrisonjrubin7-cmyk.github.io/semester/#/login" target="_blank" rel="noopener">Already a member? Log in ↗</a>
+        </div>
+        <p class="fine" style="margin-top:12px">Private beta: account creation is available now; some connected services may still require an invite.</p>
         <p style="margin-top:12px"><a class="link" href="#experience">Demo — fictional data, no sign-in →</a> &nbsp; <a class="link" href="https://harrisonjrubin7-cmyk.github.io/semester/demo/" target="_blank" rel="noopener">Explore a sample university (fictional data) ↗</a> &nbsp; <a class="link" href="#institutions">Semester for institutions →</a></p>
         <p class="trustline">Private by design · Source-aware · Built for accessibility</p>
       </div>
@@ -930,8 +1017,8 @@ details.svc summary .sum-l{min-width:0}
       </div>
     </div>
   </section>
-  <div class="wrap"><div class="strip">
-    <span><b>Plan</b> your path</span><span><b>Prepare</b> for registration</span><span><b>Learn</b> from approved sources</span><span><b>Build</b> momentum</span><span><b>Keep control</b> of your data</span>
+  <div class="wrap"><div class="strip" aria-label="The Semester academic loop">
+    <span><b>Import</b> your courses</span><span><b>Verify</b> every deadline</span><span><b>Plan</b> your time</span><span><b>Study</b> with context</span><span><b>Review</b> your progress</span>
   </div></div>
 
 

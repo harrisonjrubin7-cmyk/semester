@@ -27,7 +27,7 @@ on anything below.
       before you need one.
 - [ ] Read [`KNOWN-LIMITATIONS.md`](KNOWN-LIMITATIONS.md): Semester is not
       connected to your school's systems, rooms are not separated by school,
-      and the same note edited on two devices keeps the later edit.
+      and attachments do not sync between devices.
 
 ## Staff — before students arrive
 

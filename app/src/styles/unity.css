@@ -31,11 +31,17 @@
 }
 
 .status-chip[data-tone='attention'],
-.status-chip[data-tone='danger'],
-.save-state[data-tone='attention'],
-.save-state[data-tone='danger'] {
+.save-state[data-tone='attention'] {
   color: var(--status-attention);
   border-color: var(--status-attention-line);
+}
+
+/* One rung above attention: `--status-danger` is the error ink (DD-006). It
+   shared the rule above until a review found the new token never drew. */
+.status-chip[data-tone='danger'],
+.save-state[data-tone='danger'] {
+  color: var(--status-danger);
+  border-color: var(--status-danger-line);
 }
 
 .status-chip[data-tone='success'],
@@ -427,10 +433,14 @@
   margin-inline: var(--page-pad);
 }
 
-.state-error,
 .state-offline {
   border-color: var(--status-attention-line);
   background: var(--status-attention-wash);
+}
+
+.state-error {
+  border-color: var(--status-danger-line);
+  background: var(--status-danger-wash);
 }
 
 .state-title {
@@ -491,7 +501,7 @@
 }
 
 .state-steps [data-state='failed'] {
-  color: var(--status-attention);
+  color: var(--status-danger);
 }
 
 /* ── About this screen ──────────────────────────────────────────────────── */

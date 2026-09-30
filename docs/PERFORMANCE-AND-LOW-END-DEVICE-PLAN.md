@@ -26,8 +26,74 @@ Part 17 of the expansion command. Phase 7. Some of it exists.
   drawn. The budgets hold the line; bringing the first load down is its own
   piece of work, measured against them.
 
+- **Load and concurrency, as a CI gate** (30 September 2026, D-154):
+  `supabase/load.sh`. See [Load and capacity](#load-and-capacity) below.
+
 Absent: web-vitals (LCP, INP, CLS), list virtualization, search debounce or
 `useDeferredValue`, `manualChunks`.
+
+## Load and capacity
+
+`supabase/load.sh` runs pgbench scenarios against the database `check.sh`
+builds: every migration, synthetic students, and each request made as the
+student it belongs to, with the claims and role PostgREST sets. It runs in CI
+as "Load and concurrency scenarios". A scenario fails over its latency
+budget, which is set about ten times a quiet machine's reading to catch a
+path that became an order of magnitude slower. The invariants afterwards fail
+it at any speed.
+
+| Scenario | What it is | p95 on a quiet machine | Budget |
+| --- | --- | ---: | ---: |
+| `flags` | cohort and flag reads on every screen | 9 ms | 25 ms |
+| `plans` | registration week: term plan saves | 22 ms | 60 ms |
+| `plans-same-student` | one student saving from several devices | 18 ms | 200 ms |
+| `demand` | the demand read those plans feed | 20 ms | 40 ms |
+| `sync-open` | every visit: the pull, the activity mark, the classmates and Plus cards (nine requests) | 36 ms | 400 ms |
+| `sync-push` | after every edit: the state row and four courses by compare-and-swap, changed or not | 306 ms | 2,000 ms |
+| `sync-same-student` | two devices of one student pushing at once | 46 ms | 200 ms |
+
+Readings: 16 clients flat out, 2,000 students, and production-sized rows for
+the sync scenarios (27 KB of state and four 42 KB courses a student, the size
+of production's largest on 29 September).
+
+**What else it checks:**
+
+- **Pushes actually wrote.** A compare-and-swap that matches nothing still
+  succeeds, so `run.sh` counts the rows each table wrote: about one state row
+  and four courses a push. With a course compare-and-swap planted to match
+  nothing, 3,145 pushes wrote 0 courses and the run failed. The push p95 fell
+  to 44 ms in that run: the fault looked like an improvement.
+- **Two devices lose no update.** Every push that wins its race must build on
+  the one before. The control, the same race without the compare-and-swap,
+  lost 1,165 of 1,526 writes, so the check can see a lost update.
+- **No plan is counted twice, and cohorts are what was written.** These are
+  #974's invariants. Its first run found `contribute_course_plan`
+  deadlocking.
+- **The database is settled first.** `VACUUM` and `CHECKPOINT` run before
+  anything is timed. Without them, CI once read a median of 8 ms under a
+  p95 of 457 ms.
+
+**Capacity** is a one-off reading, not re-run by the harness. It was taken on
+30 September with the rate-limited runner of #996, which was folded into this
+harness. The runner used production's own settings: 60 connections, 256 MB
+shared buffers, 3.5 MB work_mem, and two CPUs.
+
+It replayed the first morning of term at ten times the largest pilot:
+- 5,000 students, all opening within ten minutes and pushing three times
+  each, which is 34 journeys a second;
+- open p95 16 ms and push p95 28 ms, with nothing failed;
+- doubling the rate held at 68 journeys a second and broke at 136.
+
+That is two to four times the target. The push gives first because every
+push rewrites every course, changed or not (`lib/cloud.ts`). Sending only
+the courses that changed is the largest capacity lever there is, and it is
+not taken here.
+
+**What this does not measure:** PostgREST, Supavisor, GoTrue, the edge
+functions and the network. Whether they hold is the scripted run against a
+Supabase preview branch that LAUNCH-HARDENING-REPORT asks for, which needs an
+owner and a budget. Nor does it load journeys that do not exist yet
+(assessment, gradebook).
 
 ## In flight
 

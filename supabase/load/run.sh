@@ -24,6 +24,14 @@ if ! psql -v ON_ERROR_STOP=1 -v students="$students" -f "$here_load/seed.sql" >/
   return 1
 fi
 
+# Settle what the seed left owing before anything is timed, as pgbench does
+# before its own runs. Without it the first scenario pays for the load: a
+# checkpoint flushing the rows just written, hint bits set on each row's first
+# read, autovacuum's first pass over the new tables. On a CI runner that came
+# out as a median of 8 ms under a p95 of 457 (#996, 30 September).
+psql -c "vacuum (freeze, analyze)" >/dev/null
+psql -c "checkpoint" >/dev/null
+
 bench() { "$bindir/pgbench" -h "$work" -p "$port" -U postgres -n "$@" postgres; }
 
 failed=0
@@ -47,7 +55,7 @@ scenario() {
   lat=$(cat "$logs"/"$name".* | awk '{print $3}' | sort -n)
   n=$(echo "$lat" | wc -l)
   pct() { echo "$lat" | awk -v n="$n" -v p="$1" 'NR == int((n - 1) * p / 100) + 1 {printf "%.1f", $1 / 1000; exit}'; }
-  p50=$(pct 50); p95=$(pct 95); p99=$(pct 99)
+  p50=$(pct 50); p95=$(pct 95); p99=$(pct 99); last_n=$n
   line="$name: $n transactions, ${tps%.*} tps, p50 ${p50}ms p95 ${p95}ms p99 ${p99}ms (budget p95 ${budget}ms)"
   if [ "${errs:-0}" != 0 ]; then
     echo "  ✗ $line, $errs failed:"
@@ -68,6 +76,26 @@ scenario plans-same-student
 psql -v ON_ERROR_STOP=1 -c "select public.refresh_course_demand_snapshots('load-u', '2027SP')" >/dev/null
 scenario demand
 
+# The sync path every student hits: an open, then pushes. A push's
+# compare-and-swaps succeed even when they match nothing, so the rows each
+# table wrote are counted from Postgres: about one state row and four courses
+# a push, or the push silently stopped writing.
+scenario sync-open
+written() { psql -At -F ' ' -c "select (select n_tup_upd from pg_stat_user_tables where relid = 'public.state'::regclass), (select n_tup_upd from pg_stat_user_tables where relid = 'public.courses'::regclass)"; }
+read -r s0 c0 <<<"$(written)"
+last_n=0
+scenario sync-push
+psql -c "select pg_stat_force_next_flush()" >/dev/null 2>&1; sleep 1
+read -r s1 c1 <<<"$(written)"
+if [ "$last_n" -gt 0 ] && { [ $((s1 - s0)) -lt $((last_n * 8 / 10)) ] || [ $((c1 - c0)) -lt $((last_n * 4 * 8 / 10)) ]; }; then
+  echo "  ✗ sync-push: $last_n pushes wrote $((s1 - s0)) state rows and $((c1 - c0)) courses; a compare-and-swap matched nothing"
+  failed=1
+else
+  echo "  ✓ sync-push wrote $((s1 - s0)) state rows and $((c1 - c0)) courses for $last_n pushes"
+fi
+psql -c "truncate public.load_won; update public.state set data = data - 'n' where user_id in (select id from public.load_users where i <= 3)" >/dev/null
+scenario sync-same-student
+
 echo "· invariants"
 inv=$(psql -f "$here_load/invariants.sql" 2>&1 || true)
 if echo "$inv" | grep -qE "ERROR"; then
@@ -75,6 +103,20 @@ if echo "$inv" | grep -qE "ERROR"; then
   failed=1
 else
   echo "$inv" | sed -nE 's/^.*NOTICE: +invariant ok: /  ✓ /p'
+fi
+
+# The control for the two-devices invariant: the same race with the
+# compare-and-swap removed is last-writer-wins, and must lose updates here, or
+# the invariant could not have seen one.
+psql -c "truncate public.load_won; update public.state set data = data - 'n' where user_id in (select id from public.load_users where i <= 3)" >/dev/null
+sed "s/ AND updated_at = to_timestamp(0) + :seen \* interval '1 microsecond'//" "$here_load/sync-same-student.pgbench.sql" > "$logs/nocas.sql"
+(cd "$logs" && bench -f "$logs/nocas.sql" -c "$clients" -j "$clients" -T 5 -D students="$students") >/dev/null 2>&1
+read -r cw cd <<<"$(psql -At -F ' ' -c "select count(*), count(distinct (user_id, counter)) from public.load_won")"
+if [ "${cw:-0}" -gt "${cd:-0}" ]; then
+  echo "  ✓ control: without the compare-and-swap, $((cw - cd)) of $cw writes were lost"
+else
+  echo "  ✗ control: without the compare-and-swap nothing was lost, so the two-devices invariant cannot see a lost update"
+  failed=1
 fi
 
 rm -rf "$logs"

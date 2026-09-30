@@ -41,6 +41,18 @@ export interface DeleteAccountAnswer {
   removed?: unknown;
 }
 
+/**
+ * Thrown by `deps.erase` when the database refused because the account is under
+ * a legal hold (`erase_account` raises SQLSTATE 55006 before it touches a row).
+ * It is its own type so a hold is never reported as the fault it is not.
+ */
+export class AccountHeldError extends Error {
+  constructor() {
+    super('account under a legal hold');
+    this.name = 'AccountHeldError';
+  }
+}
+
 /** What the student is told, spelled once so the tests and the page agree. */
 export const SAID = {
   unconfigured: 'Account deletion is not set up on this server yet. Nothing was deleted.',
@@ -49,6 +61,10 @@ export const SAID = {
   unconfirmed: 'Deleting an account needs the word DELETE. Nothing was deleted.',
   eraseFailed:
     'Your account could not be deleted, and nothing was: every row is exactly where it was. Try again in a minute; if it keeps failing, email support.',
+  // No reason is given, on purpose: why a hold exists is not the student's to be
+  // told by an error message, and it is not a fault, so there is nothing to retry.
+  held:
+    'Your account cannot be deleted right now, and nothing was deleted. This is not a fault. Ask your school, or email support, if you want to know more.',
   signInKept:
     'Your data is deleted, but the sign-in itself could not be removed yet. Press Delete my account again to finish — it is safe to repeat.',
   done: 'Your account is deleted: every row the server held about you, and the sign-in itself.',
@@ -96,7 +112,8 @@ export async function serveDeleteAccount(
   let removed: unknown;
   try {
     removed = await deps.erase(userId);
-  } catch {
+  } catch (error) {
+    if (error instanceof AccountHeldError) return nothing(409, SAID.held);
     return nothing(500, SAID.eraseFailed);
   }
 

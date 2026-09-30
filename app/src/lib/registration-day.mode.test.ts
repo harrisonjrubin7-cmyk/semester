@@ -59,7 +59,7 @@ describe('reading a plan saved before the mode existed', () => {
   it('fills the new fields with their defaults, and keeps what was there', () => {
     const old = { opensAt: '2027-04-03T08:00', source: 'student_entered', backups: { psy: ['econ'] }, checks: ['holds'] };
     expect(readRegistrationDay(old)).toEqual({
-      ...old, creditTarget: null, portalUrl: null, remind: true, manual: false,
+      ...old, creditTarget: null, portalUrl: null, remind: true, manual: false, handoff: null,
     });
   });
 
