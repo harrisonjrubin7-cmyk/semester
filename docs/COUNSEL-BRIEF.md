@@ -42,7 +42,7 @@ Thirteen drafts carry **77 `[DECIDE …]` lines**. The ones only counsel can clo
 
 ## E. Money: student accounts and dining (owner decision X1)
 
-These two modules are on `main`, off behind flags, with no money moving through Semester (D-146). Before either is switched on for any school:
+These two modules are on `main`, off behind flags, with no money moving through Semester (D-146). Before either is switched on for any school (the full list is `docs/MONEY-MODULES-SWITCH-ON.md`):
 
 | # | Question |
 | --- | --- |
