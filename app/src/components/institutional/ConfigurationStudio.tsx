@@ -1,7 +1,7 @@
 /**
  * The Configuration Studio: a school's own settings, eleven domains, each a
  * draft that a second person publishes as a numbered version (D-158), on the
- * table in `20260930100000_configuration_studio.sql`.
+ * table in `20260930230000_configuration_studio.sql`.
  *
  * What it shows is what the database will do. The check on a value is
  * `problems` from `lib/config/studio.ts`, which mirrors `private.config_spec()`;

@@ -17,7 +17,7 @@
  */
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { corsHeaders } from '../_shared/cors.ts';
-import { serveDeleteAccount } from '../_shared/deleteaccount.ts';
+import { AccountHeldError, serveDeleteAccount } from '../_shared/deleteaccount.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
@@ -37,6 +37,9 @@ Deno.serve((req: Request) => {
       },
       async erase(userId) {
         const { data, error } = await admin.rpc('erase_account', { target: userId });
+        // 55006 is erase_account refusing an account under a legal hold, before
+        // it has touched a row. A hold is not a fault and is not reported as one.
+        if (error?.code === '55006') throw new AccountHeldError();
         if (error) throw new Error(error.message);
         return data;
       },

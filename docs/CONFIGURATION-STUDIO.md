@@ -7,7 +7,7 @@ rather than hundreds of custom deployments."* Decision: [D-158](DECISION-LOG.md)
 
 ## What is built
 
-`school_config_versions` (`supabase/migrations/20260930100000_configuration_studio.sql`),
+`school_config_versions` (`supabase/migrations/20260930230000_configuration_studio.sql`),
 `lib/config/`, and a **Configuration** tab on University behind
 `VITE_CONFIGURATION_STUDIO` (off by default).
 

@@ -98,14 +98,18 @@ describe('the learning, assessment and gradebook register', () => {
       if (a.status === 'not-started') expect(present(a), a.id).toBe(0);
     }
     const faculty = ['L09', 'L10', 'L11'].map(areaOf);
-    for (const a of faculty) expect(a.gap, `${a.id} rests on the sandbox and does not say so`).toMatch(/sandbox/i);
+    for (const a of faculty) {
+      if (a.evidence.some((e) => e.path === 'app/server/institution/sandbox.ts')) {
+        expect(a.gap, `${a.id} cites the sandbox and does not say so`).toMatch(/sandbox/i);
+      }
+    }
   });
 
   it('keeps the tools, the features, the standards, the model and the phases whole', () => {
     expect(TOOLS).toHaveLength(18);
-    expect(TOOLS.filter((t) => t.have).length).toBe(12);
+    expect(TOOLS.filter((t) => t.have).length).toBe(13);
     expect(ADVANCED).toHaveLength(8);
-    expect(ADVANCED.filter((f) => f.have).length).toBe(3);
+    expect(ADVANCED.filter((f) => f.have).length).toBe(4);
     expect(STANDARDS).toHaveLength(10);
     expect(GRADE_WRITE_RULE).toMatch(/never a silent background sync/);
     expect(SERVICES).toHaveLength(17);

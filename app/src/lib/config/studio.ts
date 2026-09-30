@@ -22,7 +22,7 @@
  * ## Held in two places
  *
  * The spec is enforced by the database (`private.config_spec()` in
- * `20260930100000_configuration_studio.sql`), which refuses any write with an
+ * `20260930230000_configuration_studio.sql`), which refuses any write with an
  * unknown key or an out-of-range value, and mirrored here so the screen can
  * say what is wrong before anyone presses Save. `studio.test.ts` holds this
  * spec equal to that one, key for key and bound for bound.

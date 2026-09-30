@@ -1,6 +1,6 @@
 /**
  * The Configuration Studio's client: `school_config_versions` in
- * `20260930100000_configuration_studio.sql`, under the signed-in account's RLS.
+ * `20260930230000_configuration_studio.sql`, under the signed-in account's RLS.
  *
  * Nothing here decides who may draft or publish. The database does, and its
  * refusals are turned into sentences by `refusal`. `saveDraft` sends settings

@@ -68,7 +68,7 @@ jobs:
       # `workflow_dispatch` there is no triggering run and this is empty,
       # which checks out the default branch — the intended behaviour for a
       # hand-started deploy.
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
 
@@ -76,10 +76,10 @@ jobs:
       # Build and deployment → Source: GitHub Actions. A workflow token is not
       # allowed to create the site ("Resource not accessible by integration"),
       # so asking it to would only fail on every run.
-      - uses: actions/configure-pages@v6
+      - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6
         id: pages
 
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: 22
           cache: npm
@@ -435,7 +435,7 @@ jobs:
         working-directory: app
         run: npm run --silent sbom > sbom.cdx.json
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: sbom-${{ github.sha }}
           path: app/sbom.cdx.json
@@ -447,9 +447,9 @@ jobs:
       - name: Fall back to the app on unknown paths
         run: cp app/dist/index.html app/dist/404.html
 
-      - uses: actions/upload-pages-artifact@v5
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
         with:
           path: app/dist
 
-      - uses: actions/deploy-pages@v5
+      - uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5
         id: deployment

@@ -2789,6 +2789,9 @@ export type Action =
   | { type: 'restoreTick'; field: string; key: string; value: unknown }
   /** Keys another device removed from per-key maps, removed here too. See `removedThere`. */
   | { type: 'dropTicks'; removals: Record<string, string[]> }
+  // Records another device deleted and this one holds unchanged, by list. Only
+  // the lists in `lib/deletions.ts`, and only the ids named.
+  | { type: 'dropRecords'; removals: Record<string, string[]> }
   | { type: 'restore'; persisted: Partial<Persisted> }
   /**
    * The browser moved, so the app follows.

@@ -17,7 +17,7 @@ import {
  */
 
 const root = join(import.meta.dirname, '../../../..');
-const SQL = readFileSync(join(root, 'supabase/migrations/20260930100000_configuration_studio.sql'), 'utf8');
+const SQL = readFileSync(join(root, 'supabase/migrations/20260930230000_configuration_studio.sql'), 'utf8');
 
 /** `private.config_spec()`'s JSON, read straight off the migration. */
 const DB_SPEC = JSON.parse(SQL.slice(SQL.indexOf('$j$') + 3, SQL.indexOf('$j$', SQL.indexOf('$j$') + 3))) as Record<string, Record<string, Record<string, unknown>>>;
