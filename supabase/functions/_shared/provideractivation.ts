@@ -96,7 +96,13 @@ export const SHARED_PROVIDER: SharedProviderActivation = {
 /** The deployment switch, the second half of the gate. Exactly `on`, nothing else. */
 export const SWITCH = 'SHARED_AI_PROVIDER';
 
-const EVIDENCE = /^docs\/evidence\/vendors\/[^/][^\s]*$/;
+/**
+ * A file under `docs/evidence/vendors/`, named plainly: every segment starts
+ * with a letter, digit, `_` or `-` (so `.` and `..` cannot walk out of the
+ * folder), and the last one has an extension (so a folder is not evidence).
+ * The test also checks the path is a file in the tree.
+ */
+const EVIDENCE = /^docs\/evidence\/vendors\/(?:[A-Za-z0-9_-][A-Za-z0-9._-]*\/)*[A-Za-z0-9_-][A-Za-z0-9._-]*\.[A-Za-z0-9]+$/;
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
 
 /** Each requirement still owed, in words, in a fixed order. Empty means the record is complete. */

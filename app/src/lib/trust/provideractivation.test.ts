@@ -84,7 +84,14 @@ describe('the shared-provider gate', () => {
     const outside = { ...complete, termsAccepted: { ...complete.termsAccepted, evidence: 'docs/trust/PROVIDER-TERMS.md' } } as SharedProviderActivation;
     expect(activation(outside, 'on').blockers).toEqual([`${NAMED.termsAccepted}: recorded without evidence under docs/evidence/vendors/`]);
     // The supplied playbooks are never evidence, and neither is an empty path.
-    for (const evidence of ['', 'docs/evidence/vendors/', 'docs/evidence/ai/killswitch.json', 'Semester 2026 playbook.pdf']) {
+    // Nor is a path that walks out of the folder, or a folder: Codex's review of
+    // #1031 found `.` and `..` segments passing the first pattern.
+    for (const evidence of [
+      '', 'docs/evidence/vendors/', 'docs/evidence/ai/killswitch.json', 'Semester 2026 playbook.pdf',
+      'docs/evidence/vendors/.', 'docs/evidence/vendors/..', 'docs/evidence/vendors/../ai',
+      'docs/evidence/vendors/../ai/killswitch.json', 'docs/evidence/vendors/x/../../ai/k.json',
+      'docs/evidence/vendors/.hidden.pdf', 'docs/evidence/vendors/terms', 'docs/evidence/vendors//terms.pdf',
+    ]) {
       const bad = { ...complete, retention: { ...complete.retention, evidence } } as SharedProviderActivation;
       expect(activation(bad, 'on').active, evidence).toBe(false);
     }
@@ -111,7 +118,8 @@ describe('the committed activation record', () => {
     for (const r of REQUIREMENTS) {
       const field = SHARED_PROVIDER[r];
       if (field.status === 'recorded') {
-        expect(existsSync(join(root, field.evidence)), `${r} cites ${field.evidence}, which is not in the tree`).toBe(true);
+        const at = join(root, field.evidence);
+        expect(existsSync(at) && statSync(at).isFile(), `${r} cites ${field.evidence}, which is not a file in the tree`).toBe(true);
       } else {
         expect(field.next.trim().length, r).toBeGreaterThan(20);
       }
@@ -195,6 +203,21 @@ describe('the claude function', () => {
 });
 
 describe('the activation checklist', () => {
+  it('says what the record says, whatever it says', () => {
+    // Codex's review of #1031: the opening paragraph was fixed text, so it
+    // would have kept saying "nothing is recorded" beside a recorded row.
+    const none = render({ ...complete, ...Object.fromEntries(REQUIREMENTS.map((r) => [r, { status: 'pending-owner', next: 'fixture' }])) } as SharedProviderActivation);
+    expect(none).toMatch(/Nothing below is recorded/);
+    const owed = { status: 'pending-owner', next: 'fixture' } as const;
+    const one = render({ ...complete, termsAccepted: owed, studentData: owed, retention: owed, approval: owed });
+    expect(one).toMatch(/1 of 5 decisions are recorded/);
+    expect(one).not.toMatch(/Nothing below is recorded|no company is formed/);
+    const all = render(complete);
+    expect(all).toMatch(/Every decision is recorded/);
+    expect(all).not.toMatch(/Nothing below is recorded|refuses every caller with the sentence below until|no company is formed/);
+    expect(all).toContain('docs/evidence/vendors/fixture-entity.pdf');
+  });
+
   it(`is what ${DOC} says`, () => {
     const rendered = render();
     if (process.env.REGISTERS === 'write') writeFileSync(join(root, DOC), rendered);
@@ -214,16 +237,34 @@ const EVIDENCE_FOR: Record<Requirement, string> = {
   approval: 'The owner’s dated approval naming who may be served; for a school, that school’s written approval.',
 };
 
-function render(): string {
-  const now = activation(SHARED_PROVIDER, undefined);
+/** What the record amounts to, in the page's opening words. Every sentence follows the record, never a constant. */
+function standing(record: SharedProviderActivation): string[] {
+  const done = REQUIREMENTS.filter((r) => record[r].status === 'recorded').length;
+  const gate = `The \`claude\` function serves nobody until every row below is *recorded* with evidence under \`docs/evidence/vendors/\` **and** the deployment sets \`${SWITCH}=on\`. Either alone serves nobody.`;
+  if (done === 0) {
+    return [
+      `**The shared key is off.** ${gate} Nothing below is recorded, because none of it has happened: no company is formed, no terms are accepted in Semester's name, and nothing is decided or approved. These are the owner's acts; no pull request may record one without its evidence, and the test refuses one that tries.`,
+      '',
+      'The key answered production on 29 September 2026 (the kill-switch drill in `docs/evidence/ai/`). From the first deploy of the function carrying this gate it refuses every caller with the sentence below, and the app says so in place of a missing-key message.',
+    ];
+  }
+  if (blockers(record).length > 0) {
+    return [
+      `**The shared key is off.** ${gate} ${done} of ${REQUIREMENTS.length} decisions are recorded; the rest are owed, and the function refuses every caller with the sentence below until they are not.`,
+    ];
+  }
+  return [
+    `**Every decision is recorded.** The key serves callers only while the deployment sets \`${SWITCH}=on\`; without it the function still refuses every caller with the sentence below. Unsetting the switch, or engaging \`kill.ai_generation\`, turns it off again.`,
+  ];
+}
+
+function render(record: SharedProviderActivation = SHARED_PROVIDER): string {
   const out: string[] = [
     '# Shared AI provider activation',
     '',
     '<!-- Rendered from supabase/functions/_shared/provideractivation.ts by app/src/lib/trust/provideractivation.test.ts. Edit the record, then run `npm run registers` from app/. -->',
     '',
-    `**The shared key is ${now.active ? 'on' : 'off'}.** The \`claude\` function serves nobody until every row below is *recorded* with evidence under \`docs/evidence/vendors/\` **and** the deployment sets \`${SWITCH}=on\`. Either alone serves nobody. Nothing below is recorded, because none of it has happened: no company is formed, no terms are accepted in Semester's name, and nothing is decided or approved. These are the owner's acts; no pull request may record one without its evidence, and the test refuses one that tries.`,
-    '',
-    'The key answered production on 29 September 2026 (the kill-switch drill in `docs/evidence/ai/`). From the first deploy of the function carrying this gate it refuses every caller with the sentence below, and the app says so in place of a missing-key message.',
+    ...standing(record),
     '',
     `> ${NOT_ACTIVATED_MESSAGE}`,
     '',
@@ -232,7 +273,7 @@ function render(): string {
     '| Requirement | Status | Next step | Evidence that records it |',
     '| --- | --- | --- | --- |',
     ...REQUIREMENTS.map((r) => {
-      const f = SHARED_PROVIDER[r];
+      const f = record[r];
       return f.status === 'recorded'
         ? `| ${cell(NAMED[r])} | recorded ${f.recordedOn} | — | \`${f.evidence}\` |`
         : `| ${cell(NAMED[r])} | pending the owner | ${cell(f.next)} | ${cell(EVIDENCE_FOR[r])} |`;
