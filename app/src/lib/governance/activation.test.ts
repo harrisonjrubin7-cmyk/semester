@@ -1,15 +1,22 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { ConfigVersion } from '../config/studio';
+import { evaluateFlag, type FlagContext } from '../flags';
 import { evidenceState } from '../ops/evidence';
 import { CAPABILITY_DEFINITIONS, CAPABILITY_PROFILES, capabilityDefinition, type CapabilityDefinition } from './capability-governance';
 import { evaluateActivation, type ActivationContext, type ActivationRequest, type ActivationRequirementKey, type RequirementState } from './activation';
+import { operationPolicy, type OperationPolicy } from './operation-policy';
 
 // Only this test module resolves these synthetic identities. Production records
 // and their security metadata pass through unchanged to the actual registry.
 const isolatedRegistry = vi.hoisted(() => new Map<string, CapabilityDefinition>());
+const isolatedOperations = vi.hoisted(() => new Map<string, OperationPolicy | undefined>());
 vi.mock('./capability-governance', async (importOriginal) => {
   const original = await importOriginal<typeof import('./capability-governance')>();
   return { ...original, capabilityDefinition: (id: string) => isolatedRegistry.get(id) ?? original.capabilityDefinition(id) };
+});
+vi.mock('./operation-policy', async (importOriginal) => {
+  const original = await importOriginal<typeof import('./operation-policy')>();
+  return { ...original, operationPolicy: (operation: string) => isolatedOperations.has(operation) ? isolatedOperations.get(operation) : original.operationPolicy(operation) };
 });
 
 const keys: readonly ActivationRequirementKey[] = [
@@ -33,6 +40,17 @@ const controlled = fixture('CAP-TEST-controlled', 'controlled', 'L3');
 const highRisk = fixture('CAP-TEST-high-risk', 'high-risk', 'L4');
 const configuredStandard = fixture('CAP-TEST-configured-standard', 'standard', 'L2', false);
 const otherHighRisk = fixture('CAP-TEST-other-high-risk', 'high-risk', 'L4');
+const matureStandard = fixture('CAP-TEST-mature-standard', 'standard', 'L4');
+const matureControlled = fixture('CAP-TEST-mature-controlled', 'controlled', 'L4');
+const highRiskOperation = 'writeback.test_official_write';
+isolatedOperations.set(highRiskOperation, {
+  operation: highRiskOperation, activationClass: 'high-risk',
+  capabilityIds: [standard.id, controlled.id, matureStandard.id, matureControlled.id],
+});
+const standardOperation = 'module.test_standard';
+isolatedOperations.set(standardOperation, {
+  operation: standardOperation, activationClass: 'standard', capabilityIds: [highRisk.id, controlled.id],
+});
 const belowFloor = [
   fixture('CAP-TEST-standard-below-floor', 'standard', 'L1'),
   fixture('CAP-TEST-controlled-below-floor', 'controlled', 'L2'),
@@ -261,5 +279,84 @@ describe('fail-closed activation', () => {
 
   it('requires a nonempty policy version', () => {
     expect(decision(highRisk, { ...ready(), policyVersion: ' ' })).toMatchObject({ outcome: 'deny', receipt: null });
+  });
+});
+
+describe('operation activation floors', () => {
+  it.each(['read', 'module.source_freshness_cards'])('keeps ordinary CAP-020 operation %s standard, with or without tenant configuration', (operation) => {
+    const capability = capabilityDefinition('CAP-020')!;
+    for (const config of [configuration(), null]) {
+      expect(decision(capability, {
+        ...ready(), configuration: config,
+        requirements: ready().requirements.filter((state) => ['authorization', 'entitlement'].includes(state.key)),
+      }, { ...requestFor(capability), operation })).toMatchObject({
+        outcome: 'allow', receipt: { capabilityId: 'CAP-020', operation, configurationVersion: config?.version ?? null },
+      });
+    }
+  });
+
+  it.each(['CAP-020', 'CAP-021', 'CAP-030'])('requires high-risk maturity for grade passback through %s even with a complete contract', (id) => {
+    const capability = capabilityDefinition(id)!;
+    expect(decision(capability, ready(), { ...requestFor(capability), operation: 'writeback.lms_grade_passback' }))
+      .toMatchObject({ outcome: 'deny', reason: 'product_maturity_insufficient', receipt: null });
+  });
+
+  it.each([standard, controlled])('raises a $activationClass capability to the high-risk maturity floor', (capability) => {
+    const request = { ...requestFor(capability), operation: highRiskOperation };
+    expect(decision(capability, ready(), request)).toMatchObject({ outcome: 'deny', reason: 'product_maturity_insufficient', receipt: null });
+    expect(decision(capability, { ...ready(), existingWorkflow: true }, request)).toMatchObject({ outcome: 'deny', reason: 'continuity_required', receipt: null });
+  });
+
+  it.each([matureStandard, matureControlled])('requires the complete high-risk contract for an eligible $activationClass capability', (capability) => {
+    const request = { ...requestFor(capability), operation: highRiskOperation };
+    expect(decision(capability, ready(), request)).toMatchObject({ outcome: 'allow', receipt: { capabilityId: capability.id, operation: highRiskOperation, configurationVersion: 1 } });
+    for (const key of keys) {
+      const context = without(key);
+      if (key === 'tenant_configuration') context.configuration = null;
+      expect(decision(capability, context, request), key).toMatchObject({ receipt: null, missing: [key] });
+    }
+    expect(decision(capability, { ...ready(), killSwitchEngaged: true }, request)).toMatchObject({ outcome: 'deny', reason: 'kill_switch_engaged', receipt: null });
+  });
+
+  it.each([controlled, highRisk])('never lowers the canonical $activationClass capability class for a standard operation', (capability) => {
+    expect(decision(capability, without('current_evidence'), { ...requestFor(capability), operation: standardOperation }))
+      .toMatchObject({ receipt: null, missing: ['current_evidence'] });
+  });
+
+  it('rejects capabilities outside the operation policy even if their contract is complete', () => {
+    expect(decision(highRisk, ready(), { ...requestFor(highRisk), operation: 'writeback.lms_grade_passback' }))
+      .toMatchObject({ outcome: 'deny', reason: 'operation_capability_mismatch', receipt: null });
+  });
+
+  it.each(['module', 'integration', 'scope', 'release', 'experiment', 'ops', 'safety', 'writeback'])('denies an unknown %s operation instead of falling back to the capability class', (prefix) => {
+    expect(decision(standard, ready(), { ...requestFor(standard), operation: `${prefix}.unregistered` }))
+      .toMatchObject({ outcome: 'deny', reason: 'unknown_operation', receipt: null });
+  });
+
+  it('fails closed when an existing high-risk operation policy is unavailable', () => {
+    const operation = 'writeback.lms_grade_passback';
+    // Synthetic correlation fixture exercises the consumer's defense against
+    // missing policy; it is not evidence of real capability maturity.
+    const flagContext: FlagContext = {
+      environment: 'production', tenantId: 'tenant-1', now: new Date(ready().now), killSwitches: [], capabilities: [],
+      tenantPolicy: {
+        'integration.lms_lti': { state: 'production', permittedRoles: [], permittedCohorts: [] },
+        [operation]: { state: 'production', permittedRoles: [], permittedCohorts: [] },
+      },
+      connection: { publicId: 'conn_test', approved: true, status: 'healthy' },
+      scopes: [{ key: 'scope.lms.score_publish', approved: true }],
+      activationReceipt: { ...decision(highRisk).receipt!, capabilityId: 'CAP-020', operation },
+    };
+    expect(evaluateFlag(operation, flagContext)).toMatchObject({ allowed: true, step: 'allowed' });
+    isolatedOperations.set(operation, undefined);
+    try {
+      const capability = capabilityDefinition('CAP-020')!;
+      expect(operationPolicy(operation)).toBeUndefined();
+      expect(decision(capability, ready(), { ...requestFor(capability), operation }))
+        .toMatchObject({ outcome: 'deny', reason: 'unknown_operation', receipt: null });
+      expect(evaluateFlag(operation, flagContext)).toMatchObject({ allowed: false, step: 'activation_contract' });
+    } finally {
+      isolatedOperations.delete(operation);
+    }
   });
 });

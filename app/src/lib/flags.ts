@@ -21,6 +21,7 @@ import type { FeatureState } from '../intelligence/contracts';
 import { routeAllowed, type DataClass, type Destination } from './integration/classification';
 import type { ActivationReceipt } from './governance/activation';
 import { instant } from './governance/activation-instant';
+import { operationPolicy } from './governance/operation-policy';
 
 export type FlagType =
   | 'module'
@@ -513,14 +514,18 @@ export function evaluateFlag(key: string, ctx: FlagContext): FlagDecision {
   // 11. Product-exposure/workflow-entry gate only. A receipt is correlation
   // material, not a bearer credential; domain APIs must still enforce their
   // own tenant, actor, scope, policy and transaction authorization.
-  if (def.highRisk) {
+  const operation = operationPolicy(key);
+  if (def.highRisk || operation?.activationClass === 'high-risk') {
     const receipt = ctx.activationReceipt;
     const now = ctx.now.getTime();
     const issued = receipt ? instant(receipt.issuedAt) : null;
     const expires = receipt ? instant(receipt.expiresAt) : null;
-    if (!receipt || !Number.isFinite(now) || issued === null || expires === null
+    // Registry disagreement cannot silently remove a high-risk exposure gate.
+    if (!operation || operation.activationClass !== 'high-risk'
+      || !receipt || !Number.isFinite(now) || issued === null || expires === null
       || issued > now || expires <= now || expires <= issued
       || receipt.tenantId !== ctx.tenantId || !def.capabilityIds.includes(receipt.capabilityId)
+      || !operation.capabilityIds.includes(receipt.capabilityId)
       || receipt.operation !== key || !receipt.policyVersion?.trim()
       || typeof receipt.configurationVersion !== 'number'
       || !Number.isSafeInteger(receipt.configurationVersion) || receipt.configurationVersion <= 0) {

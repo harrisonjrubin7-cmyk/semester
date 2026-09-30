@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { FLAGS, KILL_SWITCHES, evaluateFlag, type FlagContext } from './flags';
 import { capabilityDefinition } from './governance/capability-governance';
-import type { ActivationReceipt } from './governance/activation';
+import { evaluateActivation, type ActivationReceipt } from './governance/activation';
 
 const NOW = new Date('2026-10-01T12:00:00Z');
 
@@ -242,6 +242,49 @@ describe('evaluation', () => {
     expect(d.allowed).toBe(false);
     expect(evaluateFlag('writeback.lms_grade_passback', ctx(GRADE_READY)))
       .toMatchObject({ allowed: false, step: 'activation_contract' });
+    expect(evaluateFlag('release.integration_dashboard_v1', ctx({ tenantPolicy: DASHBOARD_ON, capabilities: ['integration:view'] })))
+      .toMatchObject({ allowed: true, step: 'allowed' });
+  });
+
+  it('cannot open grade passback with a real standard-capability activation', () => {
+    const capability = capabilityDefinition('CAP-020')!;
+    expect(capability).toMatchObject({ activationClass: 'standard', maturity: 'L3' });
+    const activation = evaluateActivation({
+      requestId: 'grade-request', tenantId: 'vu', actorId: 'instructor-1',
+      purpose: 'publish approved grades', capabilityId: capability.id,
+      operation: 'writeback.lms_grade_passback',
+    }, capability, {
+      now: NOW.toISOString(), policyVersion: 'policy-1',
+      configuration: {
+        id: 'config-1', tenant_id: 'vu', domain: 'features', state: 'published', version: 1,
+        settings: { default_release_stage: 'on' }, note: '', based_on: null,
+        created_by: 'author-1', published_by: 'approver-1',
+        created_at: NOW.toISOString(), updated_at: NOW.toISOString(), published_at: NOW.toISOString(),
+      },
+      requirements: (['authorization', 'entitlement'] as const).map((key) => ({
+        key, status: 'satisfied', tenantId: 'vu', references: [`ref:${key}`],
+      })),
+      killSwitchEngaged: false, existingWorkflow: false,
+    });
+    // Use the actual evaluator output, never a hand-authored receipt.
+    expect(evaluateFlag('writeback.lms_grade_passback', ctx({ ...GRADE_READY, activationReceipt: activation.receipt })))
+      .toMatchObject({ allowed: false, step: 'activation_contract' });
+    expect(activation).toMatchObject({ outcome: 'deny', reason: 'product_maturity_insufficient', receipt: null });
+  });
+
+  it('denies fully enabled registration submit without an activation receipt', () => {
+    const key = 'writeback.registration_submit';
+    const enabled = ctx({
+      tenantPolicy: { [key]: { state: 'production', permittedRoles: ['registrar'], permittedCohorts: ['pilot'] } },
+      connection: { publicId: 'conn_0123456789abcdef0123', approved: true, status: 'healthy' },
+      scopes: [{ key: 'scope.sis.registration_write', approved: true }],
+      capabilities: ['integration:approve'], role: 'registrar', cohorts: ['pilot'],
+      classification: 'T2', courseRule: { allowed: true }, userEligible: true,
+    });
+    expect(evaluateFlag(key, enabled)).toMatchObject({ allowed: false, step: 'activation_contract' });
+    // A synthetic scoped receipt proves every pre-existing gate was satisfied.
+    expect(evaluateFlag(key, { ...enabled, activationReceipt: receipt({ capabilityId: 'CAP-050', operation: key }) }))
+      .toMatchObject({ allowed: true, step: 'allowed' });
     expect(evaluateFlag('release.integration_dashboard_v1', ctx({ tenantPolicy: DASHBOARD_ON, capabilities: ['integration:view'] })))
       .toMatchObject({ allowed: true, step: 'allowed' });
   });

@@ -4,8 +4,9 @@
  * no domain action or I/O; server/database authorization remains authoritative.
  */
 import type { ConfigVersion } from '../config/studio';
-import { MATURITY_LEVELS, capabilityDefinition, type ActivationClass, type CapabilityDefinition, type MaturityLevel } from './capability-governance';
+import { ACTIVATION_CLASSES, MATURITY_LEVELS, capabilityDefinition, type ActivationClass, type CapabilityDefinition, type MaturityLevel } from './capability-governance';
 import { instant } from './activation-instant';
+import { isFlagOperation, operationPolicy } from './operation-policy';
 
 export type ActivationRequirementKey =
   | 'tenant_configuration' | 'authorization' | 'entitlement' | 'consent'
@@ -48,7 +49,7 @@ export interface ActivationReceipt {
   capabilityId: string;
   operation: string;
   policyVersion: string;
-  /** Null only for a standard capability with an explicitly declared safe default. */
+  /** Null only when both capability and operation permit a declared standard safe default. */
   configurationVersion: number | null;
   issuedAt: string;
   expiresAt: string;
@@ -98,18 +99,25 @@ export function evaluateActivation(
   const now = instant(context.now);
   if (now === null || !nonempty(context.policyVersion)) return deny('invalid_context');
 
+  const operation = operationPolicy(request.operation);
+  if (!operation && isFlagOperation(request.operation)) return deny('unknown_operation');
+  if (operation && !operation.capabilityIds.includes(canonical.id)) return deny('operation_capability_mismatch');
+  // Operations can raise the capability's policy floor, never lower it. An
+  // ordinary personal operation outside flag namespaces retains capability policy.
+  const activationClass = operation && ACTIVATION_CLASSES.indexOf(operation.activationClass) > ACTIVATION_CLASSES.indexOf(canonical.activationClass)
+    ? operation.activationClass : canonical.activationClass;
   const maturity = MATURITY_LEVELS.indexOf(canonical.maturity);
-  if (maturity < MATURITY_LEVELS.indexOf(MINIMUM_MATURITY[canonical.activationClass])) {
+  if (maturity < MATURITY_LEVELS.indexOf(MINIMUM_MATURITY[activationClass])) {
     return deny(context.existingWorkflow ? 'continuity_required' : 'product_maturity_insufficient');
   }
 
   const config = context.configuration;
   const validConfiguration = config !== null && config.state === 'published' && config.tenant_id === request.tenantId
     && typeof config.version === 'number' && Number.isSafeInteger(config.version) && config.version > 0;
-  const requiresConfiguration = canonical.activationClass !== 'standard' || canonical.safeDefaultEligible !== true || config !== null;
-  const required = canonical.activationClass === 'standard' && requiresConfiguration
+  const requiresConfiguration = activationClass !== 'standard' || canonical.safeDefaultEligible !== true || config !== null;
+  const required = activationClass === 'standard' && requiresConfiguration
     ? ['tenant_configuration' as const, ...REQUIREMENTS.standard]
-    : REQUIREMENTS[canonical.activationClass];
+    : REQUIREMENTS[activationClass];
   const missing = required.filter((key) => {
     const states = context.requirements.filter((state) => state.key === key);
     // A denial, wrong tenant or unknown status always wins over a duplicate
