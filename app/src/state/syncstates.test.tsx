@@ -53,6 +53,7 @@ vi.mock('./persist', () => ({
   available: () => db,
   persist: () => {},
   flushNow: async () => {},
+  flushOnLeave: () => {},
   whileWriting: () => {},
   load: async () => null,
 }));
