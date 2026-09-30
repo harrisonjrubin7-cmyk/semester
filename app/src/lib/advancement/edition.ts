@@ -1,5 +1,5 @@
 /**
- * Advancement: alumni relations and fundraising, described and not built (D-152).
+ * Advancement: alumni relations and fundraising, described and not built (D-155).
  *
  * The brief (S7 of the 30 September site to-do) asks for an advancement module
  * so a school could run alumni relations and fundraising in Semester. Nothing

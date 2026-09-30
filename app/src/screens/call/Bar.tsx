@@ -64,7 +64,7 @@ export function Control({
   disabled?: boolean;
   pressed?: boolean;
 }) {
-  const ink = danger ? '#fff' : warn ? 'var(--app-warn)' : live ? 'var(--app-accent)' : undefined;
+  const ink = danger ? 'var(--app-bg)' : warn ? 'var(--app-warn)' : live ? 'var(--app-accent)' : undefined;
   return (
     <button
       type="button"

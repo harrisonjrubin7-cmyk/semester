@@ -435,7 +435,7 @@ export function FoldHead({
           flex: 'none',
           color: 'var(--app-dim)',
           transform: shut ? 'none' : 'rotate(90deg)',
-          transition: 'transform 160ms ease',
+          transition: 'transform var(--duration-standard) ease',
         }}
       />
       {/* Wide, so a heading sharing its line with a count keeps its words

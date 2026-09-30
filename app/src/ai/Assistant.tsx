@@ -854,7 +854,7 @@ export function Assistant() {
              * somebody had already committed to.
              */
             opacity: scrolling ? PASSING : 1,
-            transition: 'opacity 160ms ease-out',
+            transition: 'opacity var(--duration-standard) ease-out',
           }}
         >
           {/* A glyph rather than an icon import: the tab bar's icon set has

@@ -3277,7 +3277,94 @@ detail below is how the tree reads it, and the owner can correct any of it.
   enter any school's course room by design, and closing that would empty
   rooms for students who have not claimed a school. It waits for the owner.
 
-## D-152 · Alumni relations and fundraising are described on the site and built by no one yet
+## D-151 · Semester replaces the university stack, one module at a time, and the site stops saying it does not
+
+**Decided by owner 29 Sep 2026.** The site said "it does not replace your SIS"
+and the register deferred registration writes, while the owner's goal is one
+system that replaces the SIS, the LMS, the registrar, student accounts and the
+rest. Two modes on one codebase: **Connect** (today, the default) reads from a
+school's systems and prepares actions; **Core** makes Semester the record for
+one module, switched per tenant, in writing, with a rollback that freezes and
+never deletes.
+
+- **Site.** `site/modules.ts` is the takeover map: fourteen modules, the kinds
+  of system each would replace, what it does in Connect, what changes in Core,
+  and the claims register's status word. Ten modules read *planned*. Four
+  (registration, the gradebook, records, student accounts) read *in
+  preparation*: their tables and check suites landed on 30 Sep 2026 behind
+  switches that are off for every school, and none is certified.
+  `/platform/system-boundaries/` and the company site's boundaries block
+  print it, and `modules.test.ts` refuses a module above *planned* whose
+  tables or `<module>.check.sql` suite are missing, and one still *planned*
+  whose tables have landed.
+- **Rule 13** in `DO-NOT-BUILD.md`: no Core module without row-level-security
+  tests, an immutable history and a kill switch.
+- **Kept:** AI never decides grades, admissions, aid or discipline (rules 3
+  and 7); no card numbers are stored; the Known Limitations already say what
+  checkout does (#986).
+- **Not done here:** moving "Direct registration writes" off the deferred list
+  in `expansiongovernance.ts` (its test counts sixteen). That edit relaxes a
+  Tier 4 refusal and waits for the owner to confirm it.
+
+## D-152 · A module's mode is a row two other administrators approve, it fails to Connect, and going back deletes nothing
+
+**Decided 29 Sep 2026, by the owner (Prompt 2 of the Core briefs).** D-151 made
+Connect and Core the two ways a school can run a module. This is the switch.
+
+- **The row.** `tenant_module_mode` holds one row per school and module; no row
+  is Connect. There is no write policy: the only door is
+  `module_mode_request` plus `module_mode_approval`, and the trigger that
+  applies them runs as the table's owner. Fourteen modules, one list
+  (`public.core_modules()` = `CORE_MODULES` in `@semester/contract` = the
+  takeover map), held equal by `modulemode.test.ts`.
+- **Two approvers.** Connect to Core is applied on the second distinct
+  approver holding `tenant:configure`; the requester never counts, nor does one
+  person twice. A request expires in seven days.
+- **The way back is immediate and deletes nothing.** Core to Connect applies
+  at once and marks the row `frozen`: the module's Core data is kept,
+  read-only.
+- **Kill switch.** `kill.core_modules` (school or global) makes every module
+  read Connect and Core data read frozen, and refuses new Core requests. It
+  is in `FLAGS` as `module.core_mode` and in the flag registry.
+- **The client fails to Connect.** `resolveModuleMode` answers Connect for
+  anything it cannot read. `useModuleMode(module, school)` is the one hook.
+- **Where it shows.** A Modules tab on the institution screen, for someone
+  holding `tenant:configure` over the school. It says no Core module is built.
+- **Proof.** `supabase/module_mode.check.sql` (49 checks). Red when the second
+  approval is reduced to one, and red when the requester may approve; each
+  restored.
+- **Not done here, on purpose:** MFA on the approving act (Prompt 6 adds
+  step-up), a withdraw action for a pending request, and any Core module.
+
+## D-153 · Chart colours, an error colour and motion tokens are tokens; recovery and access review are designed, not built
+
+**Proposed — needs owner** for the two designs. The token work below is
+already in the tree under the design-debt register and needs no decision.
+
+- **Chart colours** (`chartFor`, `--chart-1` … `--chart-5`, four source
+  roles). Derived per ground, held to 3:1 on every surface of all 13 grounds
+  (measured floor 3.20:1), apart from each other, apart in luminance for
+  neighbours, and never red. No existing chart is migrated: `SheetChart` and
+  `Plot` keep the reader's own hues, a different job. Rules:
+  [DATA-VISUALIZATION-SYSTEM.md](DATA-VISUALIZATION-SYSTEM.md).
+- **An error colour** (`errorFor`, `--app-error`, DD-006). `--status-danger`
+  no longer shares the warning ink: hue 350, held to 6:1 where the warning
+  holds 4.5:1. 7:1 was tried and turned every dark ground's error into a pastel.
+- **Motion** (DD-007) and **hex colours** (DD-009) now have ledgers that fail on
+  a new literal and on a stale entry, in the shape of `styles/budget.ts`. Eight
+  durations moved onto tokens; nine stay with reasons. The leave button on a
+  call had white ink on the warning colour (2.14:1 on Industry Dark) and now uses
+  `--app-bg`.
+- **Proposed, not built:** [RECOVERY-CENTER.md](RECOVERY-CENTER.md) extends the
+  existing Recovery screen (three phases, the first needing no schema);
+  [ACCESS-SIMULATOR.md](ACCESS-SIMULATOR.md) is a University tab, read-only,
+  proved against the real policies. Neither adds navigation. Open questions are
+  at the foot of each.
+- **The design brief's five destinations** (Today, My Path, Search, Plan, Me)
+  **conflict with the seven roots on main** and with `DO-NOT-BUILD.md` #1.
+  Existing decision holds; not reopened here.
+
+## D-155 · Alumni relations and fundraising are described on the site and built by no one yet
 
 **Decided 30 Sep 2026.** The site to-do (S7) asks for an advancement module
 and its two pages. Following D-141's pattern for the K–12 edition, this puts

@@ -59,13 +59,38 @@ and were not re-expressed as tokens.
 | `--status-attention` | `var(--app-warn)` | The one colour the app spends |
 | `--status-attention-line` | `var(--app-warn-line)` | |
 | `--status-attention-wash` | `var(--app-warn-wash)` | |
-| `--status-danger` | `var(--app-warn)` | Same ink as attention, on purpose |
+| `--status-danger` | `var(--app-error)` | One rung above attention: hue 350 against 14, held to 6:1 where attention holds 4.5:1 (DD-006) |
+| `--status-danger-line` | `var(--app-error-line)` | |
+| `--status-danger-wash` | `var(--app-error-wash)` | |
 | `--status-success` | `var(--app-accent)` | Calm states share the accent |
 | `--status-info` | `var(--app-accent)` | |
 | `--status-neutral` | `var(--app-dim)` | |
 
 Tone is the least of three carriers: every status in `lib/status.ts` also has
 a word and a glyph.
+
+### Chart
+
+Series colours are derived per ground by `chartFor` in `lib/look.ts` and written
+by `tokensFor`; the roles below name them. Held by `lib/contrast.test.ts` › "the
+chart series, on every ground". Rules for using them:
+[DATA-VISUALIZATION-SYSTEM.md](DATA-VISUALIZATION-SYSTEM.md).
+
+| Token | Value | Note |
+| --- | --- | --- |
+| `--chart-1` … `--chart-5` | derived per ground | Blue, green, amber, violet, slate. Each 3:1 or better on every surface of every ground (measured floor 3.20:1) |
+| `--chart-verified` | `var(--chart-2)` | Institution-verified values |
+| `--chart-estimated` | `var(--chart-3)` | Estimated or modelled |
+| `--chart-stale` | `var(--app-error)` | Out of date or unavailable |
+| `--chart-student-entered` | `var(--chart-4)` | Added by the student |
+| `--chart-grid` | `var(--app-line)` | Decoration; not held to a ratio |
+| `--chart-axis` | `var(--app-dim)` | Text, held to 4.5:1 |
+| `--chart-label` | `var(--app-fg)` | Text |
+| `--chart-muted` | `var(--app-faint)` | Metadata only |
+
+`--app-error`, `--app-error-line` and `--app-error-wash` are the primitives
+under `--status-danger`; `--chart-1` … `--chart-5` are primitives too, written
+per ground.
 
 ### Focus
 
