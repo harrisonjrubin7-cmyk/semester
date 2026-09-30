@@ -112,9 +112,9 @@ describe('the master launch readiness register', () => {
           expect(r.evidence.some((e) => e.path.startsWith('docs/evidence/')), `${r.id} is ${r.status}`).toBe(true);
         }
       }
-      // Today there is no such directory, so the rule above means: nothing is
-      // above `tested`. Said directly, so the day it changes is noticed.
-      expect(REGISTER.filter((r) => NEEDS_EVIDENCE_DIR.includes(r.status))).toEqual([]);
+      // The directory's first files were the AI drills of 29 September, and
+      // one row rests on them. Said directly, so the next one is noticed.
+      expect(REGISTER.filter((r) => NEEDS_EVIDENCE_DIR.includes(r.status)).map((r) => r.id)).toEqual(['AI-012']);
     });
 
     it('describes the council as launchreadiness.ts has it, seat for seat', () => {
@@ -261,8 +261,8 @@ function render(): string {
     '`tested` means code exists and an automated test exercises it — never that',
     'the row is ready. Every `tested` row still needs something the repository',
     'cannot supply by itself (a UAT, a drill, a certification, a contract, a named',
-    'owner), and its gap says which. Nothing can be above `tested` until an',
-    'artifact exists under `docs/evidence/`, and none does.',
+    'owner), and its gap says which. Nothing can be above `tested` without an',
+    `artifact under \`docs/evidence/\` that is still current: ${REGISTER.filter((r) => NEEDS_EVIDENCE_DIR.includes(r.status)).map((r) => r.id).join(', ') || 'none is'}${REGISTER.some((r) => NEEDS_EVIDENCE_DIR.includes(r.status)) ? ', on the AI drills of 29 September' : ''}.`,
     '',
     '## The gates',
     '',

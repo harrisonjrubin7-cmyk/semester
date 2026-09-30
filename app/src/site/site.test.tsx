@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { CONTACT_EMAIL, DEFAULT_SITE, PROMISE, type SiteConfig } from './config';
 import { ROUTES, renderPage, renderSite } from './render';
 import { NOT_ON_YET } from './community';
+import { BASELINE, districtReady } from '../lib/k12/requirements';
 
 /**
  * The public site, as it ships: the same `renderSite` the build script
@@ -21,7 +22,8 @@ describe('every page', () => {
       '/platform/availability/', '/platform/service-map/', '/platform/system-boundaries/', '/start/', '/demo/', '/trust/product-quality/', '/launch/', '/pricing/how-it-works/', '/resources/campus-launch-kit/',
       '/semester-standard/', '/trust/data-and-ai-transparency/', '/platform/integrations/', '/platform/vocabulary/', '/resources/ai-governance-canvas/', '/research/', '/tools/navigation/',
       '/platform/one-operating-system/', '/platform/why-not-another-tool/',
-      '/community/', '/community/ambassadors/', '/community/stories/', '/community/partners/', '/community/events/'];
+      '/community/', '/community/ambassadors/', '/community/stories/', '/community/partners/', '/community/events/',
+      '/k-12/'];
     expect(ROUTES.map((r) => r.path).sort()).toEqual([...want].sort());
   });
 
@@ -89,6 +91,25 @@ describe('what the site says', () => {
 
   it('leads with the promise', () => {
     expect(pages[0].html).toContain(PROMISE.replace('’', '’'));
+  });
+
+  it('says on the K–12 page that no district uses Semester, and never that one does', () => {
+    const k12 = pages.find((p) => p.route.path === '/k-12/')!.html;
+    expect(k12).toContain('No district or school uses Semester today.');
+    expect(k12).toMatch(/Nobody under 13 may hold an account/);
+    expect(k12).not.toMatch(/districts? (use|trust|rely on) Semester|schools (use|trust|rely on) Semester|now serving/i);
+  });
+
+  it('links to the K–12 page from every page, so it can be found without its address', () => {
+    for (const p of pages) expect(p.html, `${p.route.path} has no link to /k-12/`).toMatch(/href="[^"]*\/k-12\/"/);
+  });
+
+  it('marks as held on the K–12 page only what the baseline counts as met', () => {
+    const k12 = pages.find((p) => p.route.path === '/k-12/')!.html;
+    // "held by a test" followed by the end of the item, not "…, not yet done".
+    const held = (k12.match(/held by a test<\/li>/g) ?? []).length;
+    expect(held).toBe(BASELINE.length - districtReady().short.length);
+    expect(k12).toContain(`${districtReady().short.length} of the ${BASELINE.length} things it waits on are not done`);
   });
 
   it('never claims to work at any university, or to be live with one', () => {

@@ -138,7 +138,7 @@ A question answered, a study guide generated from a syllabus, or a draft critiqu
 
 **Open:**
 
-- AI: the live red-team has never been run, so nothing here says what a model does with a fenced instruction (docs/LAUNCH-DECISIONS.md item 15).
+- AI: the live red-team has run once, on one model (29 September 2026, claude-opus-5, 21 of 21 held; docs/evidence/ai/); nothing screens material before it is sent.
 - Deletion: no link from a conversation to the study artifact it produced (EC-AI-10).
 - Sharing: no signed provider terms are recorded (AI-002).
 

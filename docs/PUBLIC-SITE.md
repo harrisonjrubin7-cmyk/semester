@@ -94,6 +94,18 @@ guided self-assessment for institutions from `lib/navdiagnostic.ts` — seven
 questions, a score, the top friction patterns and an action brief, labelled a
 self-assessment and never a ranking.
 
+## The K–12 page
+
+One page for the K–12 edition (D-141), printed from `lib/k12/edition.ts` and
+`lib/k12/requirements.ts`:
+
+| Route | Says |
+|---|---|
+| `/k-12/` | *Semester for high school.* The positioning; that no district or school uses Semester today; whether a district's student data can be accepted, printed from `mayTakeDistrictData()` with the count of baseline items still short; that nobody under 13 may hold an account; what it leads with and what it does not replace; the five places it would start; each module configured for a school and what it still needs; the 26-week readiness pilot it would offer, with what it includes, leaves out and measures; and the district baseline |
+
+The site test holds the page to saying no district uses Semester, and to
+printing the baseline's answer rather than prose.
+
 ## Rules the tests hold
 
 - One `<h1>`, one `<main>`, a skip link, and a unique title and description on
