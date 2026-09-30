@@ -15,7 +15,7 @@ Everything is a function called with a signed-in account (`supabase/migrations/2
 | 3 | `approve_offboarding(case)` | **the other side, and a different person** | the inventory exists. A school-side proposal is approved by an operator; an operator-side proposal by the school's own administrator |
 | 4 | `record_offboarding_notice(case, date)` | either side | the date is not in the future. Records that students were told to take their own export; **sends nothing** |
 | 5 | `disable_school_access(case)` | operator | the notice is recorded. See below |
-| 6 | `record_offboarding_export(case, sha256, counts, delivered_to)` then `verify_offboarding_export(case)` | two different operators | the counts still match the school as it stands and cover every table the inventory found; otherwise the case stays put and the rejection is audited |
+| 6 | `record_offboarding_export(case, sha256, counts, delivered_to)` then `verify_offboarding_export(case)` | two different operators | the counts still match the school as it stands and cover every table the inventory found **and every table that holds rows for the school now** (a table empty at preflight that gained a row since cannot be left out); otherwise the case stays put and the rejection is audited |
 | 7 | `archive_school(case, retain_days)` | operator | the export is verified; at least 30 days (default 90) |
 | 8 | `authorize_school_purge(case, reason)` | an operator who neither proposed nor approved | archived, the window has run, **no live legal hold**. It records the authorization and **deletes nothing** |
 

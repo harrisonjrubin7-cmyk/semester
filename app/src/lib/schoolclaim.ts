@@ -142,6 +142,21 @@ export async function claimedSchool(): Promise<string> {
   }
 }
 
+/**
+ * The same, with the third answer kept: `null` when the read failed, so a
+ * screen can say it could not check instead of treating "could not read" as "at
+ * no university". Anything that acts on an empty answer (the automatic claim)
+ * must use this one, because moving a person who is already somewhere is worse
+ * than not claiming.
+ */
+export async function claimedSchoolOrUnknown(): Promise<string | null> {
+  try {
+    return await claimedSchoolOrThrow();
+  } catch {
+    return null;
+  }
+}
+
 // ── Membership: asking, leaving, deciding ──────────────────────────────────
 //
 // The server is the authority on all of it (`20260930100000_school_membership_
@@ -229,11 +244,16 @@ export const leaveSchool = () => call('leave_school', {});
 export const decideRequest = (id: string, approve: boolean) =>
   call('decide_school_request', { req: id, approve, why: '' });
 
-/** Whether this school's rooms are limited to its members. False on any failure to read. */
-export async function schoolEnforced(schoolId: string): Promise<boolean> {
+/**
+ * Whether this school's rooms are limited to its members. `null` when that
+ * could not be read (a failed query or no such row): a setting that could not
+ * be checked is not the same as one that is off, and the screen says which.
+ */
+export async function schoolEnforced(schoolId: string): Promise<boolean | null> {
   if (!cloudConfigured || !schoolId) return false;
-  const { data } = await (await cloud()).from('schools').select('enforce_membership').eq('id', schoolId).maybeSingle();
-  return data?.enforce_membership === true;
+  const { data, error } = await (await cloud()).from('schools').select('enforce_membership').eq('id', schoolId).maybeSingle();
+  if (error || !data) return null;
+  return data.enforce_membership === true;
 }
 
 /** The requests this account made. Own rows only: an administrator's list is `waitingFor`. */

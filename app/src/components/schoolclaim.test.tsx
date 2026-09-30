@@ -52,6 +52,7 @@ vi.mock('../lib/schoolclaim', async () => {
     domainOf: real.domainOf,
     knownSchools: () => listing(),
     claimedSchool: async () => stored,
+    claimedSchoolOrUnknown: async () => stored,
     claimSchool: (id: string) => claimSchool(id),
     // Membership, added with G-03. The pure decision is the real one; the
     // network calls answer "nothing" so these older cases see what they saw.

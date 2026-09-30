@@ -309,6 +309,23 @@ begin
   perform set_config('semester.offboarding_restore', 'off', true);
   reset role;
 
+  -- A table that was EMPTY at preflight gains its first row afterwards, and the
+  -- export (built from the preflight's tables) leaves it out: not verified.
+  set local role postgres;
+  insert into public.school_membership_requests (user_id, school_id, status, note)
+  values (newcomer, 'north-off', 'pending', 'asked after the inventory was taken');
+  reset role;
+  perform pg_temp.become(op2);
+  res := public.verify_offboarding_export(n_case);
+  reset role;
+  perform pg_temp.counted('an export that omits a table which gained rows since preflight is not verified', (res->>'verified')::boolean::int, 0);
+  perform pg_temp.counted('and the rejection names that table',
+    (select count(*) from jsonb_array_elements(res->'differences') d
+      where d->>'table' = 'school_membership_requests' and d->>'why' like 'has rows now%'), 1);
+  set local role postgres;
+  delete from public.school_membership_requests where school_id = 'north-off';
+  reset role;
+
   -- An export that leaves out a table the inventory found is refused too.
   perform pg_temp.become(op3);
   perform pg_temp.must_refuse('recording an export as a third operator over the top of the first',

@@ -6,7 +6,7 @@ import { useStore } from '../state/store';
 import {
   autoClaimDeclined,
   claimSchool,
-  claimedSchool,
+  claimedSchoolOrUnknown,
   decideRequest,
   knownSchools,
   leaveSchool,
@@ -60,20 +60,22 @@ import {
  */
 export interface SchoolApi {
   knownSchools: () => Promise<KnownSchool[]>;
-  claimedSchool: () => Promise<string>;
+  /** `null` when the read failed: never treated as "at no university". */
+  claimedSchool: () => Promise<string | null>;
   claimSchool: (id: string) => Promise<Claim>;
   requestMembership: (id: string, why: string) => Promise<{ ok: true } | { ok: false; because: string }>;
   withdrawRequest: (id: string) => Promise<{ ok: true } | { ok: false; because: string }>;
   leaveSchool: () => Promise<{ ok: true } | { ok: false; because: string }>;
   decideRequest: (id: string, approve: boolean) => Promise<{ ok: true } | { ok: false; because: string }>;
-  schoolEnforced: (id: string) => Promise<boolean>;
+  /** `null` when it could not be checked. */
+  schoolEnforced: (id: string) => Promise<boolean | null>;
   myRequests: (userId: string) => Promise<MyRequest[]>;
   waitingFor: (id: string) => Promise<WaitingRequest[]>;
   readinessOf: (id: string) => Promise<Readiness | null>;
 }
 
 const REAL: SchoolApi = {
-  knownSchools, claimedSchool, claimSchool, requestMembership, withdrawRequest,
+  knownSchools, claimedSchool: claimedSchoolOrUnknown, claimSchool, requestMembership, withdrawRequest,
   leaveSchool, decideRequest, schoolEnforced, myRequests, waitingFor, readinessOf,
 };
 
@@ -94,7 +96,8 @@ export function SchoolClaim({
   /** `null` while the first read is in flight, so "none" is never shown early. */
   const [schools, setSchools] = useState<KnownSchool[] | null>(null);
   const [claimed, setClaimed] = useState('');
-  const [enforced, setEnforced] = useState(false);
+  const [enforced, setEnforced] = useState<boolean | null>(false);
+  const [unknownMembership, setUnknownMembership] = useState(false);
   const [mine, setMine] = useState<MyRequest[]>([]);
   const [waiting, setWaiting] = useState<WaitingRequest[]>([]);
   const [ready, setReady] = useState<Readiness | null>(null);
@@ -108,7 +111,12 @@ export function SchoolClaim({
   const address = account?.email ?? '';
 
   const refresh = async () => {
-    const [known, already] = await Promise.all([api.knownSchools(), api.claimedSchool()]);
+    const [known, read] = await Promise.all([api.knownSchools(), api.claimedSchool()]);
+    // null: the server could not be asked. Nothing below may treat that as
+    // "at no university", or a failed read would let the automatic claim move
+    // someone who is already somewhere.
+    const already = read ?? '';
+    setUnknownMembership(read === null);
     setSchools(known);
     setClaimed(already);
     const [flag, requests, list, counts] = await Promise.all([
@@ -121,14 +129,15 @@ export function SchoolClaim({
     setMine(requests);
     setWaiting(list);
     setReady(counts);
-    return { known, already };
+    return { known, already, unknown: read === null };
   };
 
   useEffect(() => {
     let alive = true;
     void (async () => {
-      const { known, already } = await refresh();
+      const { known, already, unknown } = await refresh();
       if (!alive || triedAuto.current) return;
+      if (unknown) return; // could not read the claim: change nothing, offer a retry below
       triedAuto.current = true;
       const auto = shouldAutoClaim(address, known, already, accountId ? autoClaimDeclined(accountId) : true);
       if (!auto) return;
@@ -217,13 +226,24 @@ export function SchoolClaim({
       {said && <Notice>{said}</Notice>}
       {refused && <Notice alert>{refused}</Notice>}
 
-      {claimed ? (
+      {unknownMembership ? (
+        <>
+          <Notice alert>
+            We could not check which university you are at just now, so nothing has been changed. Try again in a moment.
+          </Notice>
+          <ActionButton onClick={() => void refresh()} disabled={busy !== ''}>
+            Try again
+          </ActionButton>
+        </>
+      ) : claimed ? (
         <>
           <Notice>
             The server has you at <strong>{school ? school.name : claimed}</strong>.{' '}
-            {enforced
-              ? 'Its course rooms are open only to people who have proved they are here, and you have.'
-              : 'Its course rooms are not limited to members yet, so this changes nothing you can see today. It is what will keep you in, and others out, when they are.'}
+            {enforced === null
+              ? 'We could not check just now whether its course rooms are limited to members, so this page does not say either way.'
+              : enforced
+                ? 'Its course rooms are open only to people who have proved they are here, and you have.'
+                : 'Its course rooms are not limited to members yet, so this changes nothing you can see today. It is what will keep you in, and others out, when they are.'}
           </Notice>
           <ActionButton onClick={() => setConfirming({ kind: 'leave' })} disabled={busy !== ''}>
             Leave this university

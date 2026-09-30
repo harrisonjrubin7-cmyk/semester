@@ -167,6 +167,27 @@ describe('asking to join', () => {
   });
 });
 
+describe('a membership that could not be read', () => {
+  it('does not auto-claim, says it could not check, and retries on request', async () => {
+    let failing = true;
+    const api = fake({ claimedSchool: async () => (failing ? null : '') });
+    await show(api, 'ana@north.example');
+    expect(api.claimSchool).not.toHaveBeenCalled();
+    expect(text()).toContain('could not check which university you are at');
+    failing = false;
+    await click(button(/^Try again$/));
+    // The retry reads an empty claim, which is now a true empty, so the
+    // explicit list is back (the automatic claim runs once, on first load).
+    expect(text()).not.toContain('could not check which university you are at');
+  });
+
+  it('says it could not check the members-only setting rather than that it is off', async () => {
+    await show(fake({ schoolEnforced: async () => null }, { claimed: 'north' }), 'ana@north.example');
+    expect(text()).toContain('could not check just now whether its course rooms are limited');
+    expect(text()).not.toContain('not limited to members yet');
+  });
+});
+
 describe('being at a university', () => {
   it('says whether its rooms are members-only, without claiming a protection that is off', async () => {
     await show(fake({}, { claimed: 'north' }), 'ana@north.example');

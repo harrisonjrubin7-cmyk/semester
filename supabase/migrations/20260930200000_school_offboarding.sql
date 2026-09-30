@@ -343,6 +343,46 @@ revoke all on function private.school_live_holds(text) from public, anon, authen
 
 -- ── 6. The steps ───────────────────────────────────────────────────────────
 
+-- Every public table that holds rows for a school, as it stands *now*: one
+-- column per table (school_id sorts before tenant_id), zero-row tables left
+-- out. The audit record is Semester's own evidence, grows with every step of
+-- this very procedure, and is kept (3-year sweep); it is not the school's to be
+-- handed back, so it is not counted or exported. Preflight reads it to size the
+-- departure and verification reads it again to be sure the export still covers
+-- everything, including a table that was empty at preflight and is not now.
+create or replace function private.school_tenant_tables(school text)
+returns table (tbl text, col text, n bigint)
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  rec record;
+  cnt bigint;
+begin
+  for rec in
+    select t.table_name, min(c.column_name) as column_name
+      from information_schema.tables t
+      join information_schema.columns c
+        on c.table_schema = t.table_schema and c.table_name = t.table_name
+     where t.table_schema = 'public' and t.table_type = 'BASE TABLE'
+       and c.column_name in ('tenant_id', 'school_id')
+       and t.table_name not in ('school_offboarding', 'school_offboarding_undo', 'audit_event')
+     group by t.table_name
+     order by t.table_name
+  loop
+    execute format('select count(*) from public.%I where %I::text = $1', rec.table_name, rec.column_name)
+      into cnt using school;
+    if cnt > 0 then
+      tbl := rec.table_name; col := rec.column_name; n := cnt;
+      return next;
+    end if;
+  end loop;
+end $$;
+
+revoke all on function private.school_tenant_tables(text) from public, anon, authenticated;
+
 create or replace function private.offboarding_operator()
 returns uuid
 language plpgsql
@@ -437,27 +477,8 @@ begin
     raise exception 'Not yours to read.' using errcode = '42501';
   end if;
   c := private.offboarding_case(want, array['proposed', 'approved']);
-  for rec in
-    -- One column per table (school_id sorts before tenant_id), the same rule
-    -- the export verification uses.
-    select t.table_name, min(col.column_name) as column_name
-      from information_schema.tables t
-      join information_schema.columns col
-        on col.table_schema = t.table_schema and col.table_name = t.table_name
-     where t.table_schema = 'public' and t.table_type = 'BASE TABLE'
-       and col.column_name in ('tenant_id', 'school_id')
-       -- The audit record is Semester's own evidence, grows with every step of
-       -- this very procedure, and is kept (3-year sweep); it is not the school's
-       -- to be handed back, so it is not counted or exported.
-       and t.table_name not in ('school_offboarding', 'school_offboarding_undo', 'audit_event')
-     group by t.table_name
-     order by t.table_name
-  loop
-    execute format('select count(*) from public.%I where %I::text = $1', rec.table_name, rec.column_name)
-      into n using c.tenant_id;
-    if n > 0 then
-      tables := tables || jsonb_build_array(jsonb_build_object('table', rec.table_name, 'column', rec.column_name, 'rows', n));
-    end if;
+  for rec in select * from private.school_tenant_tables(c.tenant_id) loop
+    tables := tables || jsonb_build_array(jsonb_build_object('table', rec.tbl, 'column', rec.col, 'rows', rec.n));
   end loop;
   inv := jsonb_build_object(
     'tables', tables,
@@ -675,10 +696,18 @@ begin
       differs := differs || jsonb_build_array(jsonb_build_object('table', rec.tbl, 'exported', rec.claimed::bigint, 'now', n));
     end if;
   end loop;
-  -- The export must also cover every table the preflight found.
+  -- The export must also cover every table the preflight found ...
   for rec in select (t ->> 'table') as tbl from jsonb_array_elements(c.inventory -> 'tables') t loop
     if not (c.export_counts ? rec.tbl) then
       differs := differs || jsonb_build_array(jsonb_build_object('table', rec.tbl, 'why', 'not in the export'));
+    end if;
+  end loop;
+  -- ... and every table that holds rows for the school *now*, so a table that
+  -- was empty at preflight and gained its first row since cannot be left out.
+  for rec in select * from private.school_tenant_tables(c.tenant_id) loop
+    if not (c.export_counts ? rec.tbl)
+       and not exists (select 1 from jsonb_array_elements(c.inventory -> 'tables') t where t ->> 'table' = rec.tbl) then
+      differs := differs || jsonb_build_array(jsonb_build_object('table', rec.tbl, 'why', 'has rows now and is not in the export'));
     end if;
   end loop;
   if jsonb_array_length(differs) > 0 then
