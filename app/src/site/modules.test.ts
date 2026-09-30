@@ -35,8 +35,26 @@ describe('the takeover map', () => {
       const built = m.tables.every(created);
       if (RANK.indexOf(m.status) > 0) {
         expect(built, `${m.id} is "${m.status}" but a table is missing`).toBe(true);
-        expect(existsSync(join(ROOT, 'supabase', `${m.id}.check.sql`)), `${m.id} needs supabase/${m.id}.check.sql`).toBe(true);
+        expect(existsSync(join(ROOT, 'supabase', `${m.suite ?? m.id}.check.sql`)), `${m.id} needs supabase/${m.suite ?? m.id}.check.sql`).toBe(true);
       }
+    }
+  });
+
+  // A module can be built under table names the map never listed, and the
+  // check below then reads it as untouched. This ties each built module to the
+  // prefix its migrations actually use, so a rename cannot hide it again.
+  const BUILT_PREFIXES: Record<string, RegExp> = {
+    registration: /^registration_/, lms_gradebook: /^gradebook_/,
+    records: /^academic_record_/, student_accounts: /^student_account_/,
+  };
+  it('reads a module as built when its migrations create tables under the prefix it uses', () => {
+    const tables = [...SQL.matchAll(/create table (?:if not exists )?public\.([a-z_0-9]+)/gi)].map((x) => x[1]);
+    // The control: the probe finds tables at all, and finds these four.
+    expect(tables.length).toBeGreaterThan(50);
+    for (const [id, prefix] of Object.entries(BUILT_PREFIXES)) {
+      expect(tables.some((t) => prefix.test(t)), `${id}: probe found no table`).toBe(true);
+      const m = MODULES.find((x) => x.id === id)!;
+      expect(m.status, `${id} has tables under ${prefix} but still says planned`).not.toBe('planned');
     }
   });
 

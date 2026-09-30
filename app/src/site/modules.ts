@@ -17,7 +17,11 @@
  *  - a module still `planned` whose tables have landed, so the page cannot
  *    understate a shipped module either.
  *
- * Nothing here is built. Every module reads `planned`.
+ * A module's status is what the tree holds, not what the design says. On
+ * 30 Sep 2026 four modules (registration, the gradebook, records, student
+ * accounts) had tables, a check suite and a switch that is off for every
+ * school, so they read `in-preparation`. None is certified, none is on for a
+ * school, and the other ten are still `planned`.
  */
 
 import type { CoreModuleId } from '@semester/contract';
@@ -36,6 +40,8 @@ export interface CoreModule {
   status: ClaimStatus;
   /** Tables the module needs; the test reads the migrations for them. */
   tables: readonly string[];
+  /** The `supabase/<suite>.check.sql` file that holds the module; defaults to `id`. */
+  suite?: string;
 }
 
 export const MODULES: readonly CoreModule[] = [
@@ -44,9 +50,9 @@ export const MODULES: readonly CoreModule[] = [
     core: 'Faculty publish assignments; students submit with a receipt and no double submissions.',
     status: 'planned', tables: ['assignments', 'submissions'] },
   { id: 'lms_gradebook', name: 'Gradebook and rubrics', replaces: 'The gradebook in Canvas, Blackboard or Brightspace',
-    today: 'What you record yourself, with what-if grades.',
+    today: 'What you record yourself, with what-if grades. A gradebook of record is built behind a school-level switch that is off for every school.',
     core: 'Weighted categories, rubrics, posting rules and a grade history nobody can edit.',
-    status: 'planned', tables: ['grade_items', 'grade_history'] },
+    status: 'in-preparation', tables: ['gradebook_items', 'grade_entries'], suite: 'gradebook' },
   { id: 'lms_assessments', name: 'Tests and question banks', replaces: 'Canvas and Blackboard quizzes and tests',
     today: 'Self-practice exams you build from your own material.',
     core: 'Question banks, timed attempts held on the server, accommodations and QTI import.',
@@ -56,25 +62,25 @@ export const MODULES: readonly CoreModule[] = [
     core: 'Instructor check-in by code, marks with a history, and reports to guardians in the K-12 edition.',
     status: 'planned', tables: ['attendance_sessions', 'attendance_marks'] },
   { id: 'registration', name: 'Registration', replaces: 'Banner, Colleague, PeopleSoft Campus Solutions, Workday Student',
-    today: 'Prepares a cart, checks conflicts and hands off; it registers no one.',
+    today: 'Prepares a cart, checks conflicts and hands off. A seat-locked registration ledger is built behind a school-level switch that is off for every school.',
     core: 'Seat-locked enrolment, waitlist promotion, add, drop and swap, proved not to over-fill a class.',
-    status: 'planned', tables: ['registration_transactions', 'waitlist_claims'] },
+    status: 'in-preparation', tables: ['registration_requests', 'registration_enrollments'], suite: 'registration_transaction' },
   { id: 'degree_audit', name: 'Degree audit', replaces: 'Degree Works, uAchieve, Stellic',
     today: 'A planning estimate, labelled as one.',
     core: 'The official audit, run on the server against the catalog year, with approved exceptions.',
     status: 'planned', tables: ['programs', 'requirement_rules'] },
   { id: 'records', name: 'Records and transcripts', replaces: 'The records module of your SIS; transcript ordering services',
-    today: 'Nothing official.',
+    today: 'An academic-record ledger is built behind a school-level switch that is off for every school; no transcript is issued.',
     core: 'Final grades, signed transcripts, enrolment verification and a log of every release of a record.',
-    status: 'planned', tables: ['term_records', 'ferpa_disclosures'] },
+    status: 'in-preparation', tables: ['academic_record_entries', 'academic_record_changes'], suite: 'academic-record' },
   { id: 'admissions', name: 'Admissions', replaces: 'Slate, Element451, Ellucian CRM Recruit',
     today: 'Nothing.',
     core: 'An applicant portal, document checklist and decision workflow; a person decides every admission.',
     status: 'planned', tables: ['applications', 'application_decisions'] },
   { id: 'student_accounts', name: 'Student accounts', replaces: 'TouchNet, Nelnet Campus Commerce, Banner Student Accounts',
-    today: 'Deadlines and the cost of a plan. Semester’s own billing is separate.',
+    today: 'Deadlines and the cost of a plan. A student-account ledger is built behind a school-level switch that is off for every school; no money moves through Semester.',
     core: 'A tuition ledger, payment plans and refunds; card numbers stay with the processor.',
-    status: 'planned', tables: ['tuition_ledger_entries', 'payment_plans'] },
+    status: 'in-preparation', tables: ['student_account_entries', 'student_account_requests'], suite: 'student-accounts' },
   { id: 'financial_aid', name: 'Financial-aid records', replaces: 'PowerFAIDS, Banner Financial Aid, Ellucian Colleague Financial Aid',
     today: 'The checklist and the next action.',
     core: 'Offer and disbursement records and satisfactory-progress tracking; every determination stays with a person.',

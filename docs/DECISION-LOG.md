@@ -3217,8 +3217,11 @@ never deletes.
 
 - **Site.** `site/modules.ts` is the takeover map: fourteen modules, the kinds
   of system each would replace, what it does in Connect, what changes in Core,
-  and the claims register's status word. Every module reads *planned*; none is
-  built. `/platform/system-boundaries/` and the company site's boundaries block
+  and the claims register's status word. Ten modules read *planned*. Four
+  (registration, the gradebook, records, student accounts) read *in
+  preparation*: their tables and check suites landed on 30 Sep 2026 behind
+  switches that are off for every school, and none is certified.
+  `/platform/system-boundaries/` and the company site's boundaries block
   print it, and `modules.test.ts` refuses a module above *planned* whose
   tables or `<module>.check.sql` suite are missing, and one still *planned*
   whose tables have landed.
