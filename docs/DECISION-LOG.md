@@ -3577,9 +3577,9 @@ not a penetration test and claims nothing about FERPA.
 - **Off everywhere.** No school is enforced by this change. Switching one on is a separate operator act with its own evidence list in `docs/SCHOOL-MEMBERSHIP-ENFORCEMENT.md`; that list is not yet met.
 - **Not done:** any real school switched on; proof on a Supabase preview branch beyond the migrations applying; staff briefing.
 
-## D-156 · Milestone 2 runs snooze and dismiss, then term load, then sharing and audit; the readiness analysis becomes ten release gates
+## D-160 · Milestone 2 runs snooze and dismiss, then term load, then sharing and audit; the readiness analysis becomes ten release gates
 
-**Decided 30 Sep 2026, by the owner**, in the same message that approved the staged room restriction (D-155).
+**Decided 30 Sep 2026, by the owner**, in the same message that approved the staged room restriction (D-159).
 
 - **Order:** snooze presets and dismiss reasons; the term credit and workload check; the sharing and audit lifecycle. Built in that order.
 - **The term-load check is an estimate and says so.** Limits and study hours are the student's own entries; the two-hours-per-credit assumption is printed beside the number; no sentence says a load is allowed or refused. Registration Day Mode is unchanged (off by default).
@@ -3587,9 +3587,9 @@ not a penetration test and claims nothing about FERPA.
 - **The owner's readiness analysis is kept as ten release gates and the do-not-claim boundaries** in `docs/RELEASE-GATES.md`. Nothing on that page is a claim that a gate is met.
 - **Left open for the owner:** what happens when a school leaves (125 tenant foreign keys cascade from `schools`; the recommended offboarding procedure is on that page and nothing was changed); whether to switch any school to members-only; the Action Center's default for students.
 
-## D-157 · A school is never deleted: it leaves through an audited, two-sided, reversible case
+## D-161 · A school is never deleted: it leaves through an audited, two-sided, reversible case
 
-**Decided 30 Sep 2026, by the owner**, closing the G3 question raised in D-156's gate list: adopt the audited offboarding procedure instead of hard-deleting school rows; reversible and tenant-scoped; preflight inventory; dual approval; disable access and revoke sessions and integrations; preserve retention and legal holds; export and verification checkpoint; soft-archive with immutable audit events; documented restoration; final purge eligibility only after the policy window and a separate authorization.
+**Decided 30 Sep 2026, by the owner**, closing the G3 question raised in D-160's gate list: adopt the audited offboarding procedure instead of hard-deleting school rows; reversible and tenant-scoped; preflight inventory; dual approval; disable access and revoke sessions and integrations; preserve retention and legal holds; export and verification checkpoint; soft-archive with immutable audit events; documented restoration; final purge eligibility only after the policy window and a separate authorization.
 
 - **Built** (`20260930200000_school_offboarding.sql`, `docs/SCHOOL-OFFBOARDING.md`): a case table with eight steps, a second table remembering exactly what was revoked, a trigger that refuses every `delete from schools`, and guards so a leaving school takes no new grant, member or connection. Approval needs a different person from the other side; the export is verified by a second operator against the school as it now stands; restore is by a different operator from the one who disabled access.
 - **Not built, on purpose:** the purge itself. `authorize_school_purge` records a decision and deletes nothing; the school-row trigger stays closed until a category-by-category purge exists and is separately authorized.
@@ -3597,7 +3597,7 @@ not a penetration test and claims nothing about FERPA.
 - **Placeholders for counsel:** the retention window (90 days, 30 minimum) and what happens to a former school's student work.
 - **Existing tests changed:** `schools.check.sql` and `organizations.check.sql` deleted schools to prove their foreign keys; they now switch the guard off inside their rolled-back transaction for that one proof, and `schools.check.sql` gains the assertion that even an administrator cannot delete one.
 
-## D-158 · The six readiness PDFs are requirements evidence, reconciled in a matrix; only non-duplicate, unambiguous gaps are built
+## D-162 · The six readiness PDFs are requirements evidence, reconciled in a matrix; only non-duplicate, unambiguous gaps are built
 
 **Decided 30 Sep 2026, by the owner**: treat the extracted PDFs (via the owner's source-grounded synthesis, 14 common P0s and 5 operating artifacts) as sources, not authority; reconcile against `main` and open PRs; build only non-duplicate gaps; keep high-risk replacement and real institutional data blocked; hand LTI / JWT / OneRoster / IAM to the security workstream.
 

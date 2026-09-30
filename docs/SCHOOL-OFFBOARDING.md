@@ -1,6 +1,6 @@
 # When a school leaves
 
-Full-beta gate G3, decision D-157. Written 30 Sep 2026. **Built, not used:** no school has been offboarded, and nothing here has run against production.
+Full-beta gate G3, decision D-161. Written 30 Sep 2026. **Built, not used:** no school has been offboarded, and nothing here has run against production.
 
 A school row is never deleted. `delete from schools` now fails with a message pointing here, for every role including the platform operator's own, because 125 tenant tables reference `schools` with `on delete cascade` and one statement would have silently taken all of them. A school leaves through a **case**, in steps, and every step but the last is undone by one call.
 
