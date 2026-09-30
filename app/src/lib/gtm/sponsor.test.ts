@@ -5,6 +5,12 @@ import { SPONSOR_FLAG, placementProblems, sponsorReport, type SponsorPlacement, 
 const ON: FlagContext = {
   environment: 'production', tenantId: 'vu', now: new Date('2026-10-01T12:00:00Z'), killSwitches: [],
   tenantPolicy: { [SPONSOR_FLAG]: { state: 'production', permittedRoles: [], permittedCohorts: [] } }, capabilities: ['tenant:configure'],
+  // Synthetic gate fixture only; no sponsor placement is activated.
+  activationReceipt: {
+    decisionKey: 'activation:v1:test-sponsor', requestId: 'test-sponsor', tenantId: 'vu',
+    capabilityId: 'CAP-043', operation: SPONSOR_FLAG, policyVersion: 'test-policy', configurationVersion: 1,
+    issuedAt: '2026-10-01T12:00:00Z', expiresAt: '2026-10-01T12:15:00Z',
+  },
 };
 const POLICY: TenantSponsorPolicy = { enabled: true, categories: ['education_career'], surfaces: ['career_events'], segments: ['all_students'] };
 const OK: SponsorPlacement = {
@@ -16,6 +22,7 @@ const OK: SponsorPlacement = {
 describe('sponsor placements', () => {
   it('allows a labelled, approved, contextual placement', () => {
     expect(placementProblems(OK, POLICY, ON)).toEqual([]);
+    expect(placementProblems(OK, POLICY, { ...ON, activationReceipt: null })).toContain('flag_off');
   });
 
   it('is off without the flag, and when the school has disabled sponsorship', () => {
