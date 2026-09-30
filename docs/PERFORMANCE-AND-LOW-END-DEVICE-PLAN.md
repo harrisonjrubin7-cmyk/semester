@@ -49,7 +49,7 @@ it at any speed.
 | `plans-same-student` | one student saving from several devices | 18 ms | 200 ms |
 | `demand` | the demand read those plans feed | 20 ms | 40 ms |
 | `sync-open` | every visit: the pull, the activity mark, the classmates and Plus cards (nine requests) | 36 ms | 400 ms |
-| `sync-push` | after every edit: the state row and four courses by compare-and-swap, changed or not | 306 ms | 2,000 ms |
+| `sync-push` | after every edit: the state row and the one course edited, by compare-and-swap | 57 ms | 1,000 ms |
 | `sync-same-student` | two devices of one student pushing at once | 46 ms | 200 ms |
 
 Readings: 16 clients flat out, 2,000 students, and production-sized rows for
@@ -60,7 +60,7 @@ of production's largest on 29 September).
 
 - **Pushes actually wrote.** A compare-and-swap that matches nothing still
   succeeds, so `run.sh` counts the rows each table wrote: about one state row
-  and four courses a push. With a course compare-and-swap planted to match
+  and one course a push (four before D-1027). With a course compare-and-swap planted to match
   nothing, 3,145 pushes wrote 0 courses and the run failed. The push p95 fell
   to 44 ms in that run: the fault looked like an improvement.
 - **Two devices lose no update.** Every push that wins its race must build on
@@ -84,10 +84,25 @@ It replayed the first morning of term at ten times the largest pilot:
 - open p95 16 ms and push p95 28 ms, with nothing failed;
 - doubling the rate held at 68 journeys a second and broke at 136.
 
-That is two to four times the target. The push gives first because every
-push rewrites every course, changed or not (`lib/cloud.ts`). Sending only
-the courses that changed is the largest capacity lever there is, and it is
-not taken here.
+That is two to four times the target. The push gave first, because every
+push rewrote every course, changed or not.
+
+**Only the changed courses are sent** (30 September 2026, D-1027). `push` in
+`lib/cloud.ts` skips a course the database already holds unchanged, at the
+stamp the push names, and carries that stamp forward. A student edits one
+course at a time, so a push is the state row and one course, not four. On
+one machine, same run, Postgres 16, 16 clients flat out:
+
+| Push | Pushes a second | p50 | p95 | p99 |
+| --- | ---: | ---: | ---: | ---: |
+| every course (before) | 217 | 61 ms | 167 ms | 261 ms |
+| the course edited (now) | 530 | 24 ms | 57 ms | 163 ms |
+
+That is 2.4 times the pushes for the same database. The capacity figures
+above were read before it and have not been re-read; the push is no longer
+the first thing to give, and what is has not been measured. The first push
+after a reload still sends everything, because what the database last
+confirmed is kept in memory, and the pull on open refills it.
 
 **What this does not measure:** PostgREST, Supavisor, GoTrue, the edge
 functions and the network. Whether they hold is the scripted run against a

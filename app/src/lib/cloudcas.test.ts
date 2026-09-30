@@ -239,3 +239,75 @@ describe('a write the database refuses outright', () => {
     expect(retriesOnItsOwn(code)).toBe(false);
   });
 });
+
+describe('a push sends only the courses that changed', () => {
+  /*
+   * Every push used to rewrite every course, and on the load harness that
+   * was where capacity gave first. A course the database already holds, at
+   * the stamp this device names, is not sent. The stamp it had is the one it
+   * keeps, in the table and in what the push returns.
+   */
+  const hist = (note: string) => ({ id: 'hist', data: { code: 'HIST', note } });
+  const stampOf = (id: string) => harness.tables.courses.find((r) => r.id === id)?.updated_at;
+
+  it('leaves an unchanged course unwritten and carries its stamp', async () => {
+    const { push } = await load();
+    const first = await push('u', { v: 1 }, [econ('a'), hist('a')]);
+    const histAt = stampOf('hist');
+    const second = await push('u', { v: 2 }, [econ('b'), hist('a')], [], first);
+    expect(stampOf('hist')).toBe(histAt);
+    expect(second.courses.hist).toBe(histAt);
+    expect(courseData('econ')).toEqual({ code: 'ECON', note: 'b' });
+    expect(second.courses.econ).not.toBe(first.courses.econ);
+    // And the carried stamp is good for the push after: no insert, no Stale.
+    await push('u', { v: 3 }, [econ('b'), hist('c')], [], second);
+    expect(courseData('hist')).toEqual({ code: 'HIST', note: 'c' });
+  });
+
+  it('knows a pulled course as unchanged, whatever order jsonb kept its keys in', async () => {
+    const { push, pull } = await load();
+    await push('u', {}, [hist('a')]);
+    // jsonb does not keep key order.
+    harness.tables.courses[0].data = { note: 'a', code: 'HIST' };
+    const read = (await pull('u')).seen;
+    const at = stampOf('hist');
+    await push('u', { v: 1 }, [hist('a')], [], read);
+    expect(stampOf('hist')).toBe(at);
+  });
+
+  it('still writes a course that changed back to what it was', async () => {
+    const { push } = await load();
+    const one = await push('u', {}, [hist('a')]);
+    const two = await push('u', {}, [hist('b')], [], one);
+    await push('u', {}, [hist('a')], [], two);
+    expect(courseData('hist')).toEqual({ code: 'HIST', note: 'a' });
+  });
+
+  it('writes an unchanged course again when the stamp it names is not the one it last confirmed', async () => {
+    // A device holding stamps it did not get from this module (restored from
+    // disk after a reload, say) cannot vouch that the row is unchanged, so the
+    // compare-and-swap runs and says Stale if the row moved.
+    const { push, isStale } = await load();
+    const one = await push('u', {}, [hist('a')]);
+    harness.tables.courses[0].data = { code: 'HIST', note: 'elsewhere' };
+    harness.tables.courses[0].updated_at = '2026-09-27T13:00:00.000000+00:00';
+    const fromDisk = { ...one, courses: { hist: '2026-09-27T12:59:00.000000+00:00' } };
+    await expect(push('u', {}, [hist('a')], [], fromDisk)).rejects.toSatisfy(isStale);
+    expect(courseData('hist')).toEqual({ code: 'HIST', note: 'elsewhere' });
+  });
+
+  it('loses nothing when another device changed the course it skips', async () => {
+    // The skipped row is not written, and the state row, which every push
+    // moves, refuses the push.
+    const { push, isStale } = await load();
+    const both = await push('u', { v: 'start' }, [hist('start')]);
+    // The phone, a module this one never hears from, pushes both rows.
+    harness.tables.state[0].data = { v: 'phone' };
+    harness.tables.state[0].updated_at = '2026-09-27T13:00:00.000000+00:00';
+    harness.tables.courses[0].data = { code: 'HIST', note: 'phone' };
+    harness.tables.courses[0].updated_at = '2026-09-27T13:00:01.000000+00:00';
+    await expect(push('u', { v: 'laptop' }, [hist('start')], [], both)).rejects.toSatisfy(isStale);
+    expect(stateData()).toEqual({ v: 'phone' });
+    expect(courseData('hist')).toEqual({ code: 'HIST', note: 'phone' });
+  });
+});
