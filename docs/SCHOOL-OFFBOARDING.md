@@ -4,7 +4,7 @@ Full-beta gate G3, decision D-1021. Written 30 Sep 2026. **Built, not used:** no
 
 A school row is never deleted. `delete from schools` now fails with a message pointing here, for every role including the platform operator's own, because 125 tenant tables reference `schools` with `on delete cascade` and one statement would have silently taken all of them. A school leaves through a **case**, in steps, and every step but the last is undone by one call.
 
-Everything is a function called with a signed-in account (`supabase/migrations/20260930200000_school_offboarding.sql`). There is no screen: an offboarding is a rare, contractual event with two named people, and a screen would be a way to do it by accident. The suite that walks every refusal is `supabase/school-offboarding.check.sql` (96 checks; twelve guards were removed one at a time and each removal turned it red).
+Everything is a function called with a signed-in account (`supabase/migrations/20260930200000_school_offboarding.sql`). There is no screen: an offboarding is a rare, contractual event with two named people, and a screen would be a way to do it by accident. The suite that walks every refusal is `supabase/school-offboarding.check.sql` (98 checks; twelve guards were removed one at a time and each removal turned it red).
 
 ## The steps
 
