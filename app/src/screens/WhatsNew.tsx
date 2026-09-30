@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { FeedbackPanelSlot } from '../components/FeedbackPanel';
 import { Page } from '../components/Page';
 import { Group as Panel, NavRow } from '../components/shell/Rows';
 import { MODULE_FLAGS } from '../lib/experience-flags';
@@ -42,6 +43,9 @@ export function WhatsNew() {
           ))}
         </ol>
       </section>
+
+      {/* Off unless VITE_ME_MOMENT_FEEDBACK is set; see lib/momentfeedback.ts. */}
+      <FeedbackPanelSlot />
 
       <Panel>
         <NavRow label="Say something" sub="Report a problem, or ask for what is missing" onClick={() => dispatch({ type: 'go', screen: 'setAbout' })} />
