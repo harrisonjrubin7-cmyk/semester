@@ -298,9 +298,14 @@ begin
   -- added ten: config:manage and :view for implementation_manager and
   -- integration_admin, config:manage, :publish and :view for university_admin,
   -- config:publish and :view for registrar, and config:view for
+  -- institutional_researcher.
+  -- 173 before the Workflow Builder (20260930231000_workflow_builder.sql) added
+  -- ten more: workflow:manage and :view for implementation_manager and
+  -- integration_admin, workflow:manage, :publish and :view for university_admin,
+  -- workflow:publish and :view for registrar, and workflow:view for
   -- institutional_researcher; then guardians:manage for university_admin and
   -- university_staff (20260930233000_k12_guardians.sql) added two more.
-  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 175);
+  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 185);
 
   perform pg_temp.become_anon();
   perform pg_temp.refused('a signed-out visitor cannot read the matrix',
