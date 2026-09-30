@@ -5,7 +5,7 @@ import {HEADINGS,RESPONSIBILITY,agreementLines,summary,type Bucket} from '../lib
 const ORDER:Bucket[]=['may','disclose','not','unknown'];
 /** One course's agreement: what Semester may be used for, on whose word. Reads policy; holds none. */
 export function CourseAgreement(){
- const {state,account,dispatch,catalog}=useStore();const [courseId,setCourseId]=useState(catalog.courses[0]?.id||'');
+ const {state,account,dispatch,catalog}=useStore();const [chosenCourse,setCourseId]=useState('');const courseId=chosenCourse||catalog.courses[0]?.id||'';
  const course=catalog.courses.find(c=>c.id===courseId);
  const published=useCoursePublications(catalog.courses.map(c=>c.code),state.term,!!account);
  const pub=published[courseCode(course?.code??'')];

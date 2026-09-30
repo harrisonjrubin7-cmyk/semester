@@ -6,7 +6,7 @@ import {coverage,coverageWords,eveningPattern,forReview} from '../lib/learningin
 import {useLearningPrefs} from './LearningPreferences';
 /** What the student can see about their own studying — counted from answers, private, never scored. */
 export function LearningInsights(){
- const {state,catalog}=useStore();const now=useNow();const prefs=useLearningPrefs().value;const [courseId,setCourseId]=useState(catalog.courses[0]?.id||'');
+ const {state,catalog}=useStore();const now=useNow();const prefs=useLearningPrefs().value;const [chosenCourse,setCourseId]=useState('');const courseId=chosenCourse||catalog.courses[0]?.id||'';
  const guide=catalog.guides[courseId];
  const cov=guide?coverage(courseId,guide,state.reviews):[];
  const due=guide?guide.units.flatMap(u=>u.cards).filter(c=>{const r=state.reviews[cardIdentity(courseId,c)];return !!r&&r.due<=now.getTime();}).length:0;

@@ -4,9 +4,11 @@ import {useDeviceLibrary} from '../lib/device-library';
 import {download} from '../lib/deliver';
 import {dateToIso} from '../lib/date';
 import {CATEGORIES,EMPTY_INBOX,FEEDBACK_PREFIX,actionsFor,nothingYet,readInbox,says,taskFrom,themes,type Category,type FeedbackItem} from '../lib/feedbackloop';
-export function FeedbackInbox(){const {state,account}=useStore();return <InboxBody key={`${account?.id||'device'}:${state.term}`} storageKey={`${FEEDBACK_PREFIX}:${account?.id||'device'}:${state.term}`}/>;}
-function InboxBody({storageKey}:{storageKey:string}){
- const {dispatch,state,catalog}=useStore();const now=useNow();const lib=useDeviceLibrary(storageKey,readInbox,EMPTY_INBOX);
+/** The feedback inbox's private store for this account and term. Read by the office-hours agenda too; written only here. */
+export function useInboxLibrary(){const {state,account}=useStore();return useDeviceLibrary(`${FEEDBACK_PREFIX}:${account?.id||'device'}:${state.term}`,readInbox,EMPTY_INBOX);}
+export function FeedbackInbox(){const {state,account}=useStore();return <InboxBody key={`${account?.id||'device'}:${state.term}`}/>;}
+function InboxBody(){
+ const {dispatch,state,catalog}=useStore();const now=useNow();const lib=useInboxLibrary();
  const [courseId,setCourseId]=useState(catalog.courses[0]?.id||'');const [work,setWork]=useState('');const [origin,setOrigin]=useState('Pasted instructor comment');const [comment,setComment]=useState('');const [category,setCategory]=useState<Category>(CATEGORIES[0]);const [next,setNext]=useState('');const [notice,setNotice]=useState('');
  const found=themes(lib.value.items);
  /* `portal-workspace` for the same reason the journal has it: classless buttons are styled by that scope. */
