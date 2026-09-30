@@ -62,7 +62,7 @@
   /* ── Status ──────────────────────────────────────────────────────────────
      The app spends colour on one thing only: something that needs attention.
      `attention` is the oxidised warn ink, `danger` is the error ink one rung
-     above it (`errorFor`: a redder hue, held to 7:1 where warn holds 4.5:1),
+     above it (`errorFor`: a redder hue, held to 6:1 where warn holds 4.5:1),
      and the three calm states share the accent. Every
      status is also carried by a word and a glyph (`lib/status.ts`), so no
      state here is ever colour-only. */
