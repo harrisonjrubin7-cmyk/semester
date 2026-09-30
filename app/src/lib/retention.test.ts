@@ -401,8 +401,13 @@ describe('the clocks that run are still the clocks the document describes', () =
   it('agrees with the migration and the scheduler about the Community sweep', () => {
     const scheduler = readFileSync(join(ROOT, 'supabase', 'scheduler.sql'), 'utf8');
     expect(scheduler).toMatch(
-      /cron\.schedule\(\s*'community-retention',\s*'29 4 \* \* \*',\s*\$job\$select private\.sweep_community_retention\(\)\$job\$/,
+      /cron\.schedule\(\s*'community-retention',\s*'29 4 \* \* \*',\s*\$job\$select private\.run_sweep\('community_retention'\)\$job\$/,
     );
+    // The job goes through the hold check, and the hold check runs this sweep:
+    // read both, so the scheduler cannot name a sweep the dispatcher does not run.
+    const gate = readFileSync(join(MIGRATIONS, '20260930030000_hold_gated_sweeps.sql'), 'utf8');
+    expect(gate).toMatch(/return private\.sweep_community_retention\(\);/);
+    expect(gate).toMatch(/if private\.platform_is_held\(\) then/);
 
     const sql = readFileSync(join(MIGRATIONS, '20260928032000_community.sql'), 'utf8');
     const sweep = sql.split('create or replace function private.sweep_community_retention()')[1]?.split('$$')[1] ?? '';

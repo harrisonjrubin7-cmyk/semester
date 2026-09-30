@@ -136,7 +136,7 @@ select cron.schedule(
 select cron.schedule(
   'ai-runtime-metadata',
   '43 4 * * *',
-  $job$select private.sweep_ai_runtime_metadata()$job$
+  $job$select private.run_sweep('ai_runtime_metadata')$job$
 );
 
 -- Durable institutional action and AI-confirmation state has conservative
@@ -159,7 +159,7 @@ select cron.schedule(
 select cron.schedule(
   'community-retention',
   '29 4 * * *',
-  $job$select private.sweep_community_retention()$job$
+  $job$select private.run_sweep('community_retention')$job$
 );
 
 

@@ -93,6 +93,15 @@ const CALLED_BY: Record<string, { caller: string; file: string }> = {
     caller: 'public.gateway_purge_journal',
     file: '20260924184500_gateway_action_journal.sql',
   },
+  // Both run through the legal-hold check, which is what the jobs call.
+  'private.sweep_ai_runtime_metadata': {
+    caller: 'private.run_sweep',
+    file: '20260930030000_hold_gated_sweeps.sql',
+  },
+  'private.sweep_community_retention': {
+    caller: 'private.run_sweep',
+    file: '20260930030000_hold_gated_sweeps.sql',
+  },
 };
 
 /** The `schema.fn` names a job body calls. */

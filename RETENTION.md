@@ -463,9 +463,14 @@ on both sides of its line.
   events); the abandoned-sign-up sweep skips held accounts; and a `before delete`
   trigger on `auth.users` refuses to delete a held account, which is the door a
   student's own erasure goes through. The refusal says why.
-- **What it does not stop yet.** The community, AI-runtime and financial sweeps
-  are not hold-aware, and neither is on-device deletion. Maturity rows RM-02,
-  RM-04, RM-05 and RM-08 are partly answered, not closed, for that reason.
+- **What a platform hold also stops.** The AI-runtime and Community sweeps run
+  through `private.run_sweep` (20260930030000_hold_gated_sweeps.sql), which
+  skips them while a platform hold is live and says so in its result.
+- **What it does not stop yet.** A school or account hold does not reach those
+  two sweeps (their data is not mapped to a hold's subject), there is no
+  financial sweep to gate, and on-device deletion is not hold-aware. Maturity
+  rows RM-02, RM-04, RM-05 and RM-08 are partly answered, not closed, for that
+  reason.
 
 ## Backups: the provider's copies, and how long a deleted row outlives its deletion
 
