@@ -59,10 +59,17 @@ create index if not exists gateway_review_by_tenant
 -- Found when `indexes.check.sql` began to look at `private`: two more tenant
 -- keys, added by the ledger hash chains (#1012) after the advisor was read.
 -- Their primary keys lead with `ledger`, so `tenant_id` is not a prefix.
-create index if not exists ledger_chain_by_tenant
-  on private.ledger_chain (tenant_id);
-create index if not exists ledger_chain_manifest_by_tenant
-  on private.ledger_chain_manifest (tenant_id);
+-- Conditional, because those tables come from another migration and a branch
+-- built without it (a preview that applies only new files) must not fail here.
+do $$
+begin
+  if to_regclass('private.ledger_chain') is not null then
+    create index if not exists ledger_chain_by_tenant on private.ledger_chain (tenant_id);
+  end if;
+  if to_regclass('private.ledger_chain_manifest') is not null then
+    create index if not exists ledger_chain_manifest_by_tenant on private.ledger_chain_manifest (tenant_id);
+  end if;
+end $$;
 
 -- ── 2. Primary keys ───────────────────────────────────────────────────────
 
@@ -72,7 +79,8 @@ declare
   seq text;
 begin
   foreach t in array array['private.site_lead_hits'::regclass, 'private.console_audit_verification'::regclass,
-                         'private.ledger_chain_verification'::regclass] loop
+                         to_regclass('private.ledger_chain_verification')] loop
+    continue when t is null;
     if not exists (select 1 from pg_index i where i.indrelid = t and i.indisprimary) then
       execute format('alter table %s add column if not exists id bigint generated always as identity', t);
       execute format('alter table %s add constraint %I primary key (id)',
