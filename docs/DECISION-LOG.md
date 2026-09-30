@@ -3399,7 +3399,7 @@ into this one rather than kept beside it.
   load, which is the preview-branch run; and journeys that do not exist yet.
   B14 moves from owed to partial and SRE-007 from not-started to building.
 
-## D-155 · The advisor's policy-less tables and definer functions are classified, not silenced; the four missing indexes and two missing keys are fixed
+## D-157 · The advisor's policy-less tables and definer functions are classified, not silenced; the four missing indexes and two missing keys are fixed
 
 **Decided 30 Sep 2026.** Production's advisor was read, read-only, at 13:46 UTC:
 49 tables with row-level security and no policy, 180 signed-in-callable

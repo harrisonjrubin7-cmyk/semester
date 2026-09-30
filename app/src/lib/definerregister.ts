@@ -73,7 +73,7 @@ export const READ_ON = '2026-09-29';
 
 /**
  * The second reading of the same project, 30 September 2026, 13:46 UTC,
- * read-only through the advisor and `pg_catalog` (D-155). The register was
+ * read-only through the advisor and `pg_catalog` (D-157). The register was
  * asked to hold, and it did: the 180 functions the advisor listed are exactly
  * the 180 rows below — the first reading's 151 and the 29 whose migrations had
  * not then been applied. The tables did not: four (`private.account_ages` and
