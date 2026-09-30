@@ -4099,6 +4099,7 @@ SPAN 1102 Spanish II, MW, 14:30-15:45, 3</textarea></label>
     setMeta(target,pg);
     if(target==="status"&&window.__semStatus)window.__semStatus();
     document.querySelectorAll("button.dd").forEach(b=>{const p=document.getElementById(b.getAttribute("aria-controls"));b.toggleAttribute("data-current",!!p.querySelector(`a[href="#${target}"]`))});
+    document.querySelectorAll(".nav-main>a").forEach(a=>{if(a.getAttribute("href")===`#${target}`)a.setAttribute("aria-current","page");else a.removeAttribute("aria-current")});
     sClose(false);
     closeDD();closeDrawer(false);
     if(scrollTo){const t=document.getElementById(scrollTo);t&&t.scrollIntoView()}else{window.scrollTo(0,0)}

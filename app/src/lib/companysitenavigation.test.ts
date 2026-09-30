@@ -32,6 +32,17 @@ describe('the company site global navigation', () => {
       ['Trust', '#trust'],
     ]);
     expect(header).not.toContain('button class="dd"');
+    expect(site).toContain('document.querySelectorAll(".nav-main>a").forEach');
+    expect(site).toContain('a.setAttribute("aria-current","page")');
+  });
+
+  it('keeps the mobile menu focused and moves the full sitemap behind search', () => {
+    const drawer = between('<div class="drawer"', '</div>\n</div>');
+
+    expect(drawer).toContain('<p class="grp">Explore Semester</p>');
+    expect(drawer).toContain('<a href="#tools">Resources</a>');
+    expect(drawer).toContain('Search the complete site');
+    expect(drawer).toContain('<template id="legacy-mobile-navigation">');
   });
 
   it('keeps the footer useful without reproducing the entire sitemap', () => {
