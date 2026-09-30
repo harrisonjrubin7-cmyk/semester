@@ -215,6 +215,20 @@ declare
     'school_enforcement_readiness(want text)',
     'school_requests_for_admin(want text)',
     'set_school_enforcement(want text, on_ boolean, acknowledge_locked_out integer)',
+    -- A school leaves in steps (20260930200000). Each is gated inside its body;
+    -- `school-offboarding.check.sql` walks the refusals.
+    'propose_offboarding(want_school text, why text, as_side text)',
+    'offboarding_preflight(want uuid)',
+    'approve_offboarding(want uuid)',
+    'cancel_offboarding(want uuid, why text)',
+    'record_offboarding_notice(want uuid, given_on date)',
+    'disable_school_access(want uuid)',
+    'record_offboarding_export(want uuid, manifest_sha256 text, counts jsonb, delivered_to text)',
+    'verify_offboarding_export(want uuid)',
+    'archive_school(want uuid, retain_days integer)',
+    'restore_school(want uuid, why text)',
+    'school_purge_eligibility(want uuid)',
+    'authorize_school_purge(want uuid, why text)',
 
     /*
      * Community (20260928032000_community.sql). Seventeen, because every write

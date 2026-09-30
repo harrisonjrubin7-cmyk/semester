@@ -33,11 +33,10 @@ Evidence goes in `docs/evidence/` (today it holds only the AI runs of 29 Sep). S
 | | |
 | --- | --- |
 | **Pass when** | The owner records what happens when a school leaves, and a test proves it. |
-| **Today** | `docs/DATA-PORTABILITY-AND-OFFBOARDING.md` says offboarding exports the school's institutional data to the school, gives each student their own export first, and ends with a deletion confirmation per category. **No mechanism exists.** |
-| **The finding** | **125 tenant foreign keys to `schools` are `on delete cascade`.** Deleting a school row would silently delete every tenant record hanging from it (shares, requests, grants, roll-outs…) with no export, no approval and no per-category confirmation. `profiles.school_id` is `set null`, so students keep their accounts. |
-| **Recommended decision (needs the owner)** | Never `delete from schools`. Offboarding is a named, two-person, audited procedure: (1) each student gets their export; (2) the school's institutional data is exported to the school; (3) a purge job removes tenant-scoped institutional records by category with a confirmation per category; (4) the school row is kept, marked offboarded, so audit evidence and history stay attributable (audit tables deliberately have no school foreign key). A trigger then refuses a direct delete of a school row except through that procedure. |
-| **Not decided here** | Counsel's view on retaining student work after an institution leaves (D-124, "no deletion ledger", may be reopened); retention of audit evidence after offboarding. |
-| **Status** | OWNER decision required; no code changed |
+| **Decision** | D-157 (30 Sep 2026, owner): a school row is never deleted. It leaves through an audited case — preflight inventory, approval by both sides, access disabled, export recorded and verified by a second operator, soft-archive with a retention window, restoration by a different operator, purge eligibility only after the window with no live legal hold and a third person's separate authorization. |
+| **Today** | Built and proved in `supabase/school-offboarding.check.sql` (96 checks, cross-school and recovery cases included, twelve guards shown red). Runbook: `docs/SCHOOL-OFFBOARDING.md`. `delete from schools` is refused for every role. |
+| **Missing** | Never rehearsed on a preview branch or used. **The purge itself is not built** (the school-row trigger refuses every delete until it is). The export file is generated elsewhere. Legal holds are read from a table that is not on `main` yet. Counsel has not set the retention window or the fate of a former school's student work. |
+| **Status** | PARTIAL — procedure built and tested locally; not rehearsed; purge not built |
 
 ### G4 — Source and freshness labels everywhere they are claimed
 
@@ -54,7 +53,7 @@ Evidence goes in `docs/evidence/` (today it holds only the AI runs of 29 Sep). S
 | --- | --- |
 | **Pass when** | A timed restore of a real backup is performed, recorded in `docs/evidence/`, and the rollback procedure is rehearsed by someone other than its author. |
 | **Today** | `ROLLBACK.md` (measured timings). CI rehearses a logical dump and restore on every change (`restore.sh`, `rehearse.sh`). |
-| **Missing** | `RESTORE.md` is explicit that the production restore has **never been done**; there is one operator; the institution gateway's journal has no backup. |
+| **Missing** | A logical rehearsal is filed (`docs/evidence/restore/2026-09-30-logical-rehearsal.md`). `RESTORE.md` is explicit that the production restore has **never been done**; there is one operator; the institution gateway's journal has no backup. |
 | **Status** | UNMET |
 
 ### G6 — Accessibility testing evidence

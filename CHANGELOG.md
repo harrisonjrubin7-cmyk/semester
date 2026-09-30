@@ -63,6 +63,17 @@ for nothing.
 
 Nothing to do.
 
+### A school can no longer be deleted; leaving is a step-by-step case
+
+Nothing you can see changes in the app. Behind it, a university's record can
+no longer be deleted by anyone, because doing so would have silently removed
+everything the school had (shares, requests, grants, roll-outs). A school
+leaves through a recorded case: sized first, approved by a person at the school
+and a person at Semester, access switched off (nothing deleted), the school's
+data exported and checked, then archived for at least thirty days. Every step
+until the last can be undone. Nothing has been offboarded, and there is still
+no way to purge a school's data. Nothing to do.
+
 ### Advisor shares and planning screens say where things came from
 
 When you preview or send an advisor meeting, it now ends with "Where this comes

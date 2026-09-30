@@ -3586,3 +3586,14 @@ not a penetration test and claims nothing about FERPA.
 - **The advisor-share lifecycle is on the audit record** (create, read, revoke, delete). A refused attempt is not recorded, because a refused call rolls its own write back; that is stated, not fixed.
 - **The owner's readiness analysis is kept as ten release gates and the do-not-claim boundaries** in `docs/RELEASE-GATES.md`. Nothing on that page is a claim that a gate is met.
 - **Left open for the owner:** what happens when a school leaves (125 tenant foreign keys cascade from `schools`; the recommended offboarding procedure is on that page and nothing was changed); whether to switch any school to members-only; the Action Center's default for students.
+
+## D-157 · A school is never deleted: it leaves through an audited, two-sided, reversible case
+
+**Decided 30 Sep 2026, by the owner**, closing the G3 question raised in D-156's gate list: adopt the audited offboarding procedure instead of hard-deleting school rows; reversible and tenant-scoped; preflight inventory; dual approval; disable access and revoke sessions and integrations; preserve retention and legal holds; export and verification checkpoint; soft-archive with immutable audit events; documented restoration; final purge eligibility only after the policy window and a separate authorization.
+
+- **Built** (`20260930200000_school_offboarding.sql`, `docs/SCHOOL-OFFBOARDING.md`): a case table with eight steps, a second table remembering exactly what was revoked, a trigger that refuses every `delete from schools`, and guards so a leaving school takes no new grant, member or connection. Approval needs a different person from the other side; the export is verified by a second operator against the school as it now stands; restore is by a different operator from the one who disabled access.
+- **Not built, on purpose:** the purge itself. `authorize_school_purge` records a decision and deletes nothing; the school-row trigger stays closed until a category-by-category purge exists and is separately authorized.
+- **Builds on, does not replace,** `tenant_rollout` (suspended on disable, resumed on restore) and the audit envelope. Legal holds are read from `public.legal_holds` if it exists (open hardening work, not on `main`); until then the count is zero and counsel must confirm by hand.
+- **Placeholders for counsel:** the retention window (90 days, 30 minimum) and what happens to a former school's student work.
+- **Existing tests changed:** `schools.check.sql` and `organizations.check.sql` deleted schools to prove their foreign keys; they now switch the guard off inside their rolled-back transaction for that one proof, and `schools.check.sql` gains the assertion that even an administrator cannot delete one.
+

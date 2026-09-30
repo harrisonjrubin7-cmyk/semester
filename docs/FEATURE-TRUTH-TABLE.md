@@ -75,6 +75,7 @@ therefore **violated by design in most student modules**; see the gap register i
 | Capability | Status | Evidence | Gap |
 |---|---|---|---|
 | Tenants, memberships, roles, scopes | IMPLEMENTED_NOT_RELEASED | `schools`, `role_grants`, `private.has_capability`, ~250 tables with RLS | tenant scoping is uneven (G-03) |
+| School offboarding (audited case, reversible until purge) | IMPLEMENTED_NOT_RELEASED | `supabase/migrations/20260930200000_school_offboarding.sql`, `supabase/school-offboarding.check.sql`, `docs/SCHOOL-OFFBOARDING.md` | no purge, no export generator, never rehearsed on a preview branch |
 | RLS and negative tests | LIVE (CI gate) | 78 `*.check.sql`, `rls-coverage`, `definer-sweep`, `integration-rls-matrix` | plain SQL, not pgTAP; BOLA on definer functions left to feature suites (DR-02 note) |
 | Feature flags (tenant/role/cohort/kill switch) | IMPLEMENTED_NOT_RELEASED | `lib/flags.ts`, `tenant_feature_policy` (roles and release cohorts, main `20260929340000`), `feature_kill_switch`, `FEATURE-FLAG-REGISTRY.md` | no plan dimension (entitlements are resolved separately, `ENTITLEMENT-RESOLUTION.md`); flags evaluated client-side (register A16) |
 | SAML SSO | IMPLEMENTED_NOT_RELEASED — **BLOCKED** | `institution_identity_provider`, `INSTITUTIONAL-SSO-LAUNCH-READINESS.md` | needs a university IdP; no cert-expiry alert; IdP registered by hand |

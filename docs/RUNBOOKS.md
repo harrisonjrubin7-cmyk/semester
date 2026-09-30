@@ -37,6 +37,8 @@ gap is visible where the runbook would be.
 | Reading a preview branch | [`STAGING.md`](../STAGING.md) | What a preview is and is not telling you about production |
 | Going live for a cohort | [`docs/market-readiness/GO_LIVE_CHECKLIST.md`](market-readiness/GO_LIVE_CHECKLIST.md) | The technical checklist; the decision itself is the council’s |
 | Activating the first tenant | [`docs/vanderbilt/production-activation-runbook.md`](vanderbilt/production-activation-runbook.md) | An activation gate, not evidence that production exists |
+| Limiting a university’s course rooms to its members | [`docs/SCHOOL-MEMBERSHIP-ENFORCEMENT.md`](SCHOOL-MEMBERSHIP-ENFORCEMENT.md) | Off for every school; the readiness count, the switch, and the evidence still owed |
+| A school leaves | [`docs/SCHOOL-OFFBOARDING.md`](SCHOOL-OFFBOARDING.md) | Eight steps, two sides, reversible until a purge is authorized; the purge itself is not built |
 | Onboarding a school’s SSO | [`docs/SSO-TENANT-ONBOARDING.md`](SSO-TENANT-ONBOARDING.md) | The order a new institution goes through |
 | SAML | [`docs/SAML-IMPLEMENTATION-RUNBOOK.md`](SAML-IMPLEMENTATION-RUNBOOK.md) | Built; the tenant-specific acceptance gate |
 | OIDC | [`docs/OIDC-IMPLEMENTATION-RUNBOOK.md`](OIDC-IMPLEMENTATION-RUNBOOK.md) | **NOT BUILT**; what it would take |
