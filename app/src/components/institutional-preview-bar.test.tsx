@@ -98,6 +98,16 @@ describe('institutional preview bar', () => {
       const reset = [...host.querySelectorAll('button')].find((b) => b.textContent === 'Reset the sample');
       expect(reset).toBeDefined();
       await act(async () => reset?.click());
+      // Nothing is erased on the first click: the demo shares its origin with the real app.
+      expect(eraseDevice).not.toHaveBeenCalled();
+      expect(host.textContent).toContain('if you also use the real app here');
+      const keep = [...host.querySelectorAll('button')].find((b) => b.textContent === 'Keep what is here');
+      await act(async () => keep?.click());
+      expect(eraseDevice).not.toHaveBeenCalled();
+      expect(host.textContent).not.toContain('if you also use the real app here');
+      await act(async () => [...host.querySelectorAll('button')].find((b) => b.textContent === 'Reset the sample')?.click());
+      const confirm = [...host.querySelectorAll('button')].find((b) => b.textContent === 'Yes, erase and start the sample again');
+      await act(async () => confirm?.click());
       expect(eraseDevice).toHaveBeenCalledTimes(1);
       expect(reload).toHaveBeenCalledTimes(1);
     } finally {
@@ -114,6 +124,8 @@ describe('institutional preview bar', () => {
       await renderBar();
       const reset = [...host.querySelectorAll('button')].find((b) => b.textContent === 'Reset the sample');
       await act(async () => reset?.click());
+      const confirm = [...host.querySelectorAll('button')].find((b) => b.textContent === 'Yes, erase and start the sample again');
+      await act(async () => confirm?.click());
       expect(reload).toHaveBeenCalledTimes(1);
     } finally {
       Object.defineProperty(window, 'location', { value: original, configurable: true, writable: true });

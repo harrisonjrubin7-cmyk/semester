@@ -20,6 +20,12 @@ import { useInstitutionalPreview } from './institutional/PreviewContext';
  * service), and the reset takes it back to how the sample started: it erases
  * the device the way the app's own Erase does, then reloads. This file holds
  * no storage of its own (the test forbids it).
+ *
+ * The demo is deployed at /demo/ on the same origin as the real app, so the two
+ * share their browser storage, and a reset that erased without asking
+ * could take a real student's coursework with it. It asks first, in words that
+ * say so. Giving the demo its own storage namespace is the real fix, and is
+ * not done here.
  */
 const barStyle = {
   position: 'fixed',
@@ -55,6 +61,7 @@ const SOURCE_STATE: Record<SourceStatus, string> = {
 export function InstitutionalPreviewBar() {
   const { fixtures, institution, person, selectInstitution, selectPerson } = useInstitutionalPreview();
   const [resetting, setResetting] = useState(false);
+  const [asking, setAsking] = useState(false);
 
   const reset = async () => {
     setResetting(true);
@@ -108,9 +115,23 @@ export function InstitutionalPreviewBar() {
         <p style={{ marginBlockStart: '8px', marginBlockEnd: 0 }}>
           Changes you make stay in this browser. Reset starts the sample again from the beginning.
         </p>
-        <button type="button" className="bare" disabled={resetting} onClick={() => void reset()} style={{ marginBlockStart: '6px', textDecoration: 'underline', cursor: 'pointer' }}>
-          {resetting ? 'Resetting…' : 'Reset the sample'}
-        </button>
+        {asking ? (
+          <div role="alert" style={{ marginBlockStart: '6px' }}>
+            <p style={{ marginBlock: 0 }}>
+              This clears everything Semester has saved in this browser at this address, including your own courses and files if you also use the real app here, and disconnects any account you connected there.
+            </p>
+            <button type="button" className="bare" disabled={resetting} onClick={() => void reset()} style={{ marginBlockStart: '6px', textDecoration: 'underline', cursor: 'pointer' }}>
+              {resetting ? 'Resetting…' : 'Yes, erase and start the sample again'}
+            </button>{' '}
+            <button type="button" className="bare" disabled={resetting} onClick={() => setAsking(false)} style={{ textDecoration: 'underline', cursor: 'pointer' }}>
+              Keep what is here
+            </button>
+          </div>
+        ) : (
+          <button type="button" className="bare" onClick={() => setAsking(true)} style={{ marginBlockStart: '6px', textDecoration: 'underline', cursor: 'pointer' }}>
+            Reset the sample
+          </button>
+        )}
       </details>
       <p style={{ margin: 0, fontSize: '0.75rem', ...secondLine() }}>Nothing you do here is sent to Semester.</p>
     </aside>
