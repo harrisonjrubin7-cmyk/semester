@@ -106,7 +106,14 @@ begin
   insert into public.schools (id, name) values ('rice', 'Rice University');
   select count(*) into n from public.schools;
   perform pg_temp.counted('while an administrator can add one', n, 2);
-  delete from public.schools where id = 'rice';
+  -- A school is never deleted (20260930200000): even the administrator who can
+  -- add one cannot remove it. The row goes with the rollback.
+  begin
+    delete from public.schools where id = 'rice';
+    raise exception 'FAILED: an administrator deleted a school';
+  exception when insufficient_privilege then
+    perform pg_temp.counted('an administrator cannot delete a school', 1, 1);
+  end;
 
   -- ── Removing a school keeps its students ────────────────────────────────
   --
@@ -118,6 +125,9 @@ begin
 
   set local role postgres;
   update public.profiles set school_id = 'vanderbilt' where user_id = person;
+  -- The delete guard is switched off for this one proof of the foreign key's
+  -- own behaviour, in a transaction that is rolled back.
+  alter table public.schools disable trigger refuse_school_delete;
   select count(*) into n from public.profiles;
   perform pg_temp.counted('two profiles, one of them at this school', n, 2);
 
@@ -127,6 +137,7 @@ begin
   perform pg_temp.counted('removing the school keeps its students', n, 2);
   select school_id into got from public.profiles where user_id = person;
   perform pg_temp.said('and only clears the column', got, null);
+  alter table public.schools enable trigger refuse_school_delete;
 end $$;
 
 rollback;

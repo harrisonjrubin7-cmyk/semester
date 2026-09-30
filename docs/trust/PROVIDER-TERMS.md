@@ -8,7 +8,7 @@
 
 | Party | Terms apply when | Today |
 | --- | --- | --- |
-| Anthropic (Semester’s key) | Semester accepts the Commercial Terms by opening an API account under its legal entity; the DPA then applies with them, by reference. | Not in force. Production has no shared key (#977), and Semester has no legal entity to be the Customer yet. |
+| Anthropic (Semester’s key) | Semester accepts the Commercial Terms by opening an API account under its legal entity; the DPA then applies with them, by reference. | Not in force. The key answered production on 29 September (the kill-switch drill, docs/evidence/ai/) under an account no record names a Customer for, and Semester has no legal entity yet. From its next deploy the claude function serves nobody until docs/trust/SHARED-PROVIDER-ACTIVATION.md is complete. |
 | OpenAI (institution-approved) | The institution contracts with OpenAI under the Services Agreement, which carries the DPA; the Student DPA only with a signed Order Form. | Not in force. No institution has enabled the provider, and Semester’s flow-down terms are not written. |
 
 Student-directed parties (a student’s own key) run under the student’s own agreement with the provider and are not recorded here.
@@ -52,7 +52,7 @@ Student-directed parties (a student’s own key) run under the student’s own a
 ## What only the owner can do
 
 1. Form the legal entity that will be the Customer in each agreement.
-2. Before the shared key goes to production, accept Anthropic’s Commercial Terms under that entity, and file the acceptance (or a pointer to it) under docs/evidence/vendors/.
+2. Before the shared key serves anybody, accept Anthropic’s Commercial Terms under that entity, file the acceptance (or a pointer to it) under docs/evidence/vendors/, and record it in the shared-provider activation record (docs/trust/SHARED-PROVIDER-ACTIVATION.md).
 3. Ask Anthropic whether a FERPA or student-data addendum is available for the API, since none is published.
 4. Before an institution enables OpenAI, ask OpenAI in writing whether its certifications and the Student DPA cover the API, and what an Order Form requires.
 5. Decide whether to request zero data retention from either provider; both grant it by approval only.
