@@ -289,15 +289,25 @@ begin
     pg_temp.touched(researcher, $q$delete from public.workflow_versions where workflow = 'tutoring_referral'$q$), 0);
   perform pg_temp.counted('an editor can', pg_temp.touched(editor, $q$delete from public.workflow_versions where workflow = 'tutoring_referral'$q$), 1);
 
+  -- ── a client cannot pass itself off as an account deletion ─────────────
+  perform pg_temp.runs_clean('an admin drafts another workflow to try it on', pg_temp.draft(admin, 'tutoring_referral', pg_temp.valid_def()));
+  perform pg_temp.says('a drafter cannot clear their own name from a draft, to then publish it',
+    pg_temp.error_as(admin, $q$update public.workflow_versions set created_by = null where workflow = 'tutoring_referral'$q$),
+    'is not changed');
+  perform pg_temp.says('and so still cannot publish it', pg_temp.publish(admin, 'tutoring_referral'), 'does not publish it');
+  perform pg_temp.counted('their name is still on the draft',
+    (select count(*) from public.workflow_versions where workflow = 'tutoring_referral' and created_by = admin), 1);
+  perform pg_temp.counted('discarding it', pg_temp.touched(admin, $q$delete from public.workflow_versions where workflow = 'tutoring_referral'$q$), 1);
+
   -- ── the audit trail ────────────────────────────────────────────────────
   perform pg_temp.counted('a publish is recorded, draft to published, three times',
     (select count(*) from public.tenant_policy_audit_event e
       where e.tenant_id = 'wf-u' and e.entity_type = 'workflow_versions' and e.action = 'update'
         and e.old_data ->> 'state' = 'draft' and e.new_data ->> 'state' = 'published'
         and e.actor_grant_id is not null), 3);
-  perform pg_temp.counted('and a discard is recorded',
+  perform pg_temp.counted('and each discard is recorded, the editor’s and the admin’s',
     (select count(*) from public.tenant_policy_audit_event e
-      where e.tenant_id = 'wf-u' and e.entity_type = 'workflow_versions' and e.action = 'delete'), 1);
+      where e.tenant_id = 'wf-u' and e.entity_type = 'workflow_versions' and e.action = 'delete'), 2);
 
   -- ── the trigger is a lock of its own, behind row-level security ────────
   perform set_config('request.jwt.claims', '', true);

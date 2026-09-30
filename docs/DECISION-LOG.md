@@ -3314,7 +3314,7 @@ briefs to be executed and chose this as the second slice, on its own branch.
   pointer; nothing here writes into a system of record.
 - **A University tab, Workflows, behind `workflowBuilder`** (off by default;
   `VITE_WORKFLOW_BUILDER`). Capability matrix +10.
-- **Checked.** `workflow-builder.check.sql`, 69 checks, each guard shown red
+- **Checked.** `workflow-builder.check.sql`, 74 checks, each guard shown red
   when removed and green when restored (eleven mutations, one of which first
   survived because the test changed the wrong field of the draft at publish
   time). The UI and engine tests were broken the same way.
