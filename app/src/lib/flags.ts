@@ -20,6 +20,7 @@
 import type { FeatureState } from '../intelligence/contracts';
 import { routeAllowed, type DataClass, type Destination } from './integration/classification';
 import type { ActivationReceipt } from './governance/activation';
+import { instant } from './governance/activation-instant';
 
 export type FlagType =
   | 'module'
@@ -515,9 +516,9 @@ export function evaluateFlag(key: string, ctx: FlagContext): FlagDecision {
   if (def.highRisk) {
     const receipt = ctx.activationReceipt;
     const now = ctx.now.getTime();
-    const issued = receipt ? Date.parse(receipt.issuedAt) : Number.NaN;
-    const expires = receipt ? Date.parse(receipt.expiresAt) : Number.NaN;
-    if (!receipt || !Number.isFinite(now) || !Number.isFinite(issued) || !Number.isFinite(expires)
+    const issued = receipt ? instant(receipt.issuedAt) : null;
+    const expires = receipt ? instant(receipt.expiresAt) : null;
+    if (!receipt || !Number.isFinite(now) || issued === null || expires === null
       || issued > now || expires <= now || expires <= issued
       || receipt.tenantId !== ctx.tenantId || !def.capabilityIds.includes(receipt.capabilityId)
       || receipt.operation !== key || !receipt.policyVersion?.trim()

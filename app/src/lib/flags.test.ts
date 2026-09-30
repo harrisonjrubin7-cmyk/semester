@@ -268,6 +268,14 @@ describe('evaluation', () => {
     }
   });
 
+  it('rejects receipt timestamps with impossible calendar dates', () => {
+    const malformed = receipt({
+      issuedAt: '2026-09-31T11:45:00Z', expiresAt: '2026-09-31T12:15:00Z',
+    });
+    expect(evaluateFlag('writeback.lms_grade_passback', ctx({ ...GRADE_READY, activationReceipt: malformed })))
+      .toMatchObject({ allowed: false, step: 'activation_contract' });
+  });
+
   it('preserves every prior gate and gives the kill switch precedence', () => {
     const active = { ...GRADE_READY, activationReceipt: receipt() };
     expect(evaluateFlag('writeback.lms_grade_passback', ctx({ ...active, killSwitches: [{ key: 'kill.writeback', tenantId: 'vu', engaged: true }] })).step).toBe('kill_switch');
