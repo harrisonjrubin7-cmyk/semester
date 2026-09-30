@@ -79,8 +79,10 @@ describe('the compliance crosswalk', () => {
     expect(registerRows(HECVAT).get('SDLC-1')?.status).toBe('READY');
     expect(registerRows(FERPA).get('EDT-7')?.status).toBe('NOT_STARTED');
     expect(standing('IAM-008').register).toBe('master');
-    expect(standing('RM-02').register).toBe('maturity');
-    expect(standing('RM-02').level).toBe(0);
+    // RM-03 is the fixture for an owed maturity row; RM-02 was until legal holds landed.
+    expect(standing('RM-03').register).toBe('maturity');
+    expect(standing('RM-03').level).toBe(0);
+    expect(standing('RM-02').level).toBe(1);
     expect(all.size).toBeGreaterThan(300);
   });
 

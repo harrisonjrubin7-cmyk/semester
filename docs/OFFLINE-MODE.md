@@ -14,7 +14,7 @@ notice uses, in every layout. The refusals are in the shared
 
 **Server and service worker:** no change. **Decisions:** D-055 and D-056.
 
-> `Offline mode` Last synced 9:05 AM. Everything you change is saved on this device and syncs when you are back online. Shares, sends and official sites wait until you are connected — nothing is queued for them.
+> `Offline mode` Last synced 9:05 AM. Everything you change is saved on this device and syncs when you are back online. Sharing an advisor meeting and sending your course plan can be kept here and sent by you when you are back. Publishing, deleting your account and official sites wait until you are connected.
 
 ## What the command asks, and how
 
@@ -26,6 +26,7 @@ notice uses, in every layout. The refusals are in the shared
 | Sync on reconnect | The `online` event with changes waiting calls the store's `refresh()`: pull, merge, push. With nothing waiting, or no account, it doesn't |
 | Conflict resolution strategy | `lib/merge.ts`'s per-field policy: lists merged by id, ticks unioned, timestamped records newer-wins, settings later-wins, device settings kept. The existing merge notes say what happened. A test holds an offline edit meeting a remote one |
 | No offline execution of high-risk actions | `requireOnline` refuses sharing, sending to the school, publishing and deleting the account, and says nothing was sent or queued. An official hand-off cannot be confirmed offline. Revoking and stopping are not blocked (D-056) |
+| Keep two of them, without sending | Added after D-055, and its reasoning kept: a share with an advisor and a course plan can be **kept** on the device offline (`lib/sync/outbox.ts`, IndexedDB `semester-outbox`). Coming back online makes them ready; it never sends them. The student sends each with one tap, a request older than three days is never sent, and a request cut off mid-flight is read as possibly delivered, so a share is checked before it goes again. Publishing, deleting an account, official sites and any official or financial write stay refused and are never held (`lib/sync/classes.ts`). Erase device clears it |
 | Do not show stale imported data as current | The office feed and demand view keep no cached copy and say so offline. `asOf(at)` dates anything imported that is shown from the device |
 | Service worker only if compatible | No change. `public/sw.js` already serves same-origin files from its cache and refreshes them in the background, so every screen loaded once opens offline. Media (decks, handouts, audio) is cache-first |
 | Offline data model and sync queue | `lib/offline-mode.ts`: `Ledger`, `afterSync`, `syncOnReconnect`, `badge`, `requireOnline`, `asOf` |
@@ -55,6 +56,7 @@ silently.
 | New | Purpose |
 |---|---|
 | `lib/offline-mode.ts` | The ledger, badge wording, `requireOnline`, `asOf`, `useOnline`, `AVAILABLE_OFFLINE` |
+| `lib/sync/outbox.ts`, `lib/sync/senders.ts`, `lib/sync/useOutbox.ts`, `lib/sync/classes.ts`, `components/WaitingSends.tsx` | The held sends, their two senders, the hook, the class of every write that needs a connection, and the panel on Account |
 | `components/OfflineBanner.tsx` | The badge, the ledger's upkeep, and sync on reconnect |
 
 | Changed | Change |

@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
+  AccountHeldError,
   SAID,
   serveDeleteAccount,
   type DeleteAccountAnswer,
@@ -29,7 +30,7 @@ const post = (opts: { auth?: string; body?: unknown; method?: string } = {}) =>
       : {}),
   });
 
-function deps(over: Partial<Record<'whoIs' | 'erase' | 'deleteUser', 'throws' | 'null'>> = {}) {
+function deps(over: Partial<Record<'whoIs' | 'erase' | 'deleteUser', 'throws' | 'null' | 'held'>> = {}) {
   const calls: string[] = [];
   const d: DeleteAccountDeps = {
     whoIs: vi.fn(async (token: string) => {
@@ -41,6 +42,7 @@ function deps(over: Partial<Record<'whoIs' | 'erase' | 'deleteUser', 'throws' | 
     erase: vi.fn(async (id: string) => {
       calls.push(`erase:${id}`);
       if (over.erase === 'throws') throw new Error('restrict_violation');
+      if (over.erase === 'held') throw new AccountHeldError();
       return { removed: { courses: 3 } };
     }),
     deleteUser: vi.fn(async (id: string) => {
@@ -137,6 +139,29 @@ describe('the delete-account function', () => {
     expect(await read(res)).toEqual({ erased: false, signInRemoved: false, message: SAID.eraseFailed });
     expect(d.deleteUser).not.toHaveBeenCalled();
     expect(calls).toEqual(['whoIs', `erase:${ME}`]);
+  });
+
+  it('tells a student whose account is held that it cannot be deleted now, and deletes nothing', async () => {
+    const { d, calls } = deps({ erase: 'held' });
+    const res = await serveDeleteAccount(post({ auth: 'Bearer good-token' }), d);
+    expect(res.status).toBe(409);
+    expect(await read(res)).toEqual({ erased: false, signInRemoved: false, message: SAID.held });
+    // The sign-in is not touched when the erasure was refused.
+    expect(calls).toEqual(['whoIs', `erase:${ME}`]);
+  });
+
+  it('says it is not a fault, gives no reason, and does not call it an error to retry', () => {
+    expect(SAID.held).toMatch(/nothing was deleted/i);
+    expect(SAID.held).toMatch(/not a fault/i);
+    expect(SAID.held).not.toMatch(/legal|investigat|lawsuit|subpoena|why|because/i);
+    expect(SAID.held).not.toMatch(/try again/i);
+  });
+
+  it('still calls any other failure a failure, and a hold is not one', async () => {
+    const { d } = deps({ erase: 'throws' });
+    const res = await serveDeleteAccount(post({ auth: 'Bearer good-token' }), d);
+    expect(res.status).toBe(500);
+    expect((await read(res)).message).toBe(SAID.eraseFailed);
   });
 
   it('says so plainly when the rows went and the sign-in did not', async () => {

@@ -147,6 +147,7 @@ describe('every database the app opens is one the sweep clears', () => {
     const files = await import('./files');
     const snaps = await import('./snapshots');
     const share = await import('./shared');
+    const outbox = await import('./sync/outbox');
     const db = await import('../state/persist/db');
     const persist = await import('../state/persist');
 
@@ -163,6 +164,9 @@ describe('every database the app opens is one the sweep clears', () => {
     });
     vi.spyOn(drafts, 'clearVersions').mockImplementation(async () => {
       calls.push('semester-drafts');
+    });
+    vi.spyOn(outbox, 'clearOutbox').mockImplementation(async () => {
+      calls.push('semester-outbox');
     });
     vi.spyOn(share, 'clearShared').mockImplementation(async () => {
       calls.push('semester-shared');

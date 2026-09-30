@@ -276,7 +276,7 @@ behind and a client that believes it succeeded.
 | `course_reviews` | **kept after the author's deletion** — see the note | the review is anonymous by construction: authorship is in `course_review_authors`, which goes with the account. What stays is a workload figure and two ratings with nobody attached, so a department's picture of a course does not vanish when one student graduates. Removed by a moderator (status = 'removed') or with the school |
 | `course_review_authors` | account deletion | the only link between a review and a person |
 | `alumni_mentor_offers` | account deletion, or school removal | carries a display name the alum chose (`20260928021700`); never their email |
-| `guardian_links`, `guardian_link_restrictions`, `guardian_link_history` | account deletion of the student or the guardian (a link and its restriction go with either; the history goes with the student), or school removal | who a K–12 student's parent or guardian is, recorded and verified by school staff (D-153). A link is ended, never removed, while both accounts exist; its history refuses every rewrite except the student's own deletion. A restriction is staff's note and never shown to the guardian |
+| `guardian_links`, `guardian_link_restrictions`, `guardian_link_history` | account deletion of the student or the guardian (a link and its restriction go with either; the history goes with the student), or school removal | who a K–12 student's parent or guardian is, recorded and verified by school staff (D-156). A link is ended, never removed, while both accounts exist; its history refuses every rewrite except the student's own deletion. A restriction is staff's note and never shown to the guardian |
 | `grade_levels` | **kept until changed by the school, or the school is removed** | a K–12 school's grade codes and labels. Configuration, no person |
 | `peer_mentor_offers` | account deletion, or school removal | a peer mentor's opt-in to be found in one cohort: a chosen display name, topics and a capacity. Withdrawn by deleting it |
 | `mentor_requests` | account deletion of **either** end; or `forget_my_mentor_requests()` by either end | the requester's chosen display name, ticked topics, a short note and a status. Never contact details. Kept after a decision so both sides can see what was answered, until either forgets it |
@@ -344,6 +344,13 @@ behind and a client that believes it succeeded.
 | `academic_record_subjects` | **removed with the account** | the link that lets a student's account read their own record. The account's deletion removes it (`on delete cascade`); the school's record it pointed to stays |
 | `student_account_entries`, `student_account_requests`, `student_account_reconciliations`, `student_account_closes`, `student_account_settings` | **kept until the school is removed** | the school's financial record of its students' accounts (D-146): what was charged, paid, refunded and credited, and the reconciliations and closes it was checked by. The school's financial-records schedule governs it, and none is set yet; the ledger has no purge, and a school must set its schedule before real use. No card data is held. A staff member's account deletion clears them as requester, approver, recorder or closer and leaves the record |
 | `student_payment_plans`, `student_payment_plan_installments` | **kept until the school is removed** | payment plans on student accounts (D-146): what a student asked to spread and over how many payments, whether the school agreed, and the schedule the database wrote. Part of the school's financial record and governed by the same schedule, which no school has set yet. No payment or card data is held. A student's or staff member's account deletion clears them as asker, decider or canceller and leaves the plan with the school |
+| `legal_holds` | **kept until the school is removed; never deleted** | the record that an account, a school or the platform was placed under a legal hold, why, and who placed and released it. A hold is never edited except to record its release, once, so the row is the audit trail. It stops the invite, abandoned-sign-up and audit sweeps for what it covers, and refuses deletion of a held account. See *Legal holds*, below |
+| `human_overrides` | **kept until the school is removed**; the overriding person is cleared, not the override, when their account is deleted | every time a person overrode an automated decision, and why (20260930120000_human_overrides.sql): the rule, what the system had decided, what replaced it, the reason, and — where a student is meant to understand it — a plain-language explanation. Append-only. Two producers are wired, both by trigger: the academic record's registrar overrides, and break-glass access grants (permission). The moderation, credential, notification, integration, migration and AI-output domains have a path and no producer, because no row in the schema is yet an override in those domains. The override-patterns view over it is read by override reviewers only |
+| `ledger_chain` | **kept until the school is removed** | one hash link per entry appended to the academic-record and student-account ledgers, per school (20260930110000_ledger_chains.sql). Append-only; it goes with the school as the ledgers do, and holds no more about a person than the ledger's own row does, which it excludes the person columns of. Entries before the migration are not chained |
+| `ledger_chain_start` | **kept; never removed** | when each ledger's chain began, so the verifier can tell an entry that predates the chain from one appended without being chained. Two rows |
+| `ledger_chain_key` | **kept; never removed, never rotated by a redeploy** | the one signing key for the ledger chain manifests (20260930150000_ledger_chain_seals.sql): 32 random bytes, readable by no API role and not by the service role. Losing it makes every manifest unverifiable, so a rotation is a decision with a record. One row |
+| `ledger_chain_manifest` | **kept until the school is removed** | one HMAC-signed manifest per UTC day, ledger and school: the bounds, count and head hash of the chain links sealed that day. Insert-only; a day cannot be sealed twice over different rows. Holds no more about a person than the chain does, which is none |
+| `ledger_chain_verification` | **kept; no clock yet** | every run of the nightly seal-and-verify job, good or bad: when, whether it was fine, how many chains it walked, and the first break it found. Insert-only. It names a ledger and a school, never a person |
 | `gtm_report_access` | **kept until the school is removed** | who read which campaign's counts, and when. The reader's account deletion clears actor_id |
 | `gtm_sponsor_policy`, `gtm_sponsor_placements` | **kept until the school is removed** | a school's sponsorship choices and each placement's approval record. A removed placement stays as a record, with its status set to removed |
 | `gtm_accounts`, `gtm_stakeholders`, `gtm_decision_log`, `gtm_pilots`, `gtm_pilot_metrics`, `gtm_pilot_outcomes` | **kept until Semester removes the account**; unlinked, not removed, when the school is removed | Semester's own sales records about an institution: committee members by name and title, questions, evidence links, pilot terms and the signed outcome. No student data |
@@ -441,6 +448,45 @@ can apply this file's policy without reading the payload — but the sweep is
 not written, and a published row is kept until it is. It is owed before the
 first producer lands, and ADR 0008 says so; this entry is so that the producer
 cannot land without somebody reading this.
+
+## Legal holds
+
+A hold is the one instruction a clock has to obey. `supabase/migrations/20260930100000_legal_holds.sql`
+adds `legal_holds`, and `supabase/legal-holds.check.sql` checks each rule below
+on both sides of its line.
+
+- **Placed** by someone holding `hold:place` over the school (a university administrator),
+  with a reason and a matter reference, and only over an account whose profile
+  belongs to that school. A **platform** hold is not self-serve: it is placed
+  by an operator as the service role.
+- **Released** by a different person holding `hold:release`, with a reason,
+  once. The two-person rule is a CHECK on the row. A school with a single
+  administrator cannot release its own hold; the way out is break-glass.
+- **Never deleted, never edited** except to record the release.
+- **What it stops.** The invite sweep and the audit sweep skip what a live hold
+  covers (a platform hold pauses them; a school hold keeps that school's
+  events); the abandoned-sign-up sweep skips held accounts; the erase-account function
+  refuses a held account before it touches a single row, and says why
+  (20260930140000_erase_respects_holds.sql; the student is told it is not a
+  fault and given no reason); a `before delete` trigger on `auth.users` is the
+  backstop behind it. Erasure runs as normal once the hold is released. A hold on
+  a school covers every account in it.
+- **What a platform hold also stops.** The AI-runtime and Community sweeps run
+  through `private.run_sweep` (20260930130000_hold_gated_sweeps.sql), which
+  skips them while a platform hold is live and says so in its result.
+- **What a school or account hold also keeps.** Those two sweeps
+  (20260930170000_hold_aware_sweeps.sql) skip a school's AI usage metadata under
+  a school hold, and every Community row that belongs to a held account, or to
+  an account in a held school: restrictions, safety entries, posts, reports,
+  hosted sessions, volunteer tasks and uploaded images, and a case while its
+  post's author or a reporter is held.
+- **What it does not stop yet.** The escalation deliveries and the volunteer
+  programme's events carry no account and follow the platform gate only; there
+  is no financial sweep to gate; and on-device deletion is not hold-aware. The
+  AI, restriction and safety-entry deletes are exercised against real rows; the
+  rest carry the same clause and are held to it by a test, not exercised.
+  Maturity rows RM-02, RM-04, RM-05 and RM-08 are partly answered, not closed,
+  for that reason.
 
 ## Backups: the provider's copies, and how long a deleted row outlives its deletion
 

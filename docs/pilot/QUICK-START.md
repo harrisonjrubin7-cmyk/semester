@@ -60,8 +60,8 @@ You can do this any time from **Me → Account** (`#/account`).
   in on both. The Account screen says *Synced* when the two are in step.
 
 Read [`KNOWN-LIMITATIONS.md`](KNOWN-LIMITATIONS.md) before relying on sync
-across two devices: the same note edited on both before either syncs keeps
-the later edit, and attachments do not sync.
+across two devices: a record edited on both before either syncs is offered
+to you as a choice on Account, and attachments do not sync.
 
 ## 5. Find the guide and the doors (2 minutes)
 

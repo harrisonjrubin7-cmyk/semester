@@ -20,7 +20,8 @@
  * and failing when the two sets differ in either direction.
  */
 
-import { strategyFor } from '../lib/merge';
+import { idOf, strategyFor } from '../lib/merge';
+import { DELETABLE } from '../lib/deletions';
 import { SETTING_FIELDS, putRecord } from '../lib/conflicts';
 import type { Action, State } from './shape';
 import { changedSomething, snapshot, tookSomething, undoableFor } from '../lib/undo';
@@ -125,6 +126,27 @@ export function reducer(state: State, action: Action): State {
       next = { ...(next ?? state), [field]: kept } as State;
     }
     return next ?? state;
+  }
+
+  // Records another device deleted, deleted here — the one thing a union merge
+  // cannot do for a list. Only the lists `lib/deletions.ts` allows, only the
+  // ids named, and a course takes the updates filed against it, as removing
+  // one on purpose does. Not undoable and not queued for the account: the
+  // account already lacks them, which is how this device found out.
+  if (action.type === 'dropRecords') {
+    let next: State = state;
+    for (const [field, ids] of Object.entries(action.removals)) {
+      if (!(DELETABLE as readonly string[]).includes(field) || ids.length === 0) continue;
+      const drop = new Set(ids);
+      const rows = (next as unknown as Record<string, unknown>)[field];
+      if (!Array.isArray(rows)) continue;
+      next = {
+        ...next,
+        [field]: rows.filter((row) => !drop.has(idOf(row) ?? '')),
+        ...(field === 'courses' ? { updates: next.updates.filter((u) => !drop.has(u.courseId ?? '')) } : {}),
+      } as State;
+    }
+    return next;
   }
 
   const undoable = undoableFor(action.type);

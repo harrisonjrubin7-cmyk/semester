@@ -792,6 +792,25 @@ both console migrations; `private.console_audit_verify()` was run once by
 hand and recorded `ok` over an empty chain. Block 6 of `health.sql` expects
 the job.
 
+### The ledger chains' nightly job — not yet applied
+
+`migrations/20260930110000_ledger_chains.sql` chains the academic-record and
+student-account ledgers, and `migrations/20260930150000_ledger_chain_seals.sql`
+signs a manifest of each day's links and adds the one job that seals and checks
+them. **Active** in the file; nothing to park and no secret (the signing key is
+generated inside the database by the migration and read by no API role):
+
+    ledger-chain-integrity          27 3 * * *     private.ledger_chain_nightly()
+
+It seals yesterday's links into an HMAC-signed manifest per ledger and school,
+then walks every chain with the link check and the seal check, and records the
+run in `private.ledger_chain_verification`. With no chains it verifies nothing
+and says so. **Not applied to the project**: apply the migrations first, run
+`select private.ledger_chain_nightly();` once by hand and expect `ok` over an
+empty set, then schedule it. Block 6 of `health.sql` expects the job. The key is
+never rotated by a redeploy; a rotation makes every earlier manifest
+unverifiable and is a decision with a record.
+
 ## Security advisor
 
 Nine of the ten findings are closed (migration

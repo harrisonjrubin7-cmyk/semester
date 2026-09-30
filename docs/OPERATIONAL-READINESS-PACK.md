@@ -63,7 +63,7 @@ Ordinary ownership apart from high-risk decision rights. A reviewer is never the
 
 ## The seven pillars of production safety
 
-68 checklist items: 10 at 0, 44 at 1, 14 at 2, none above the ceiling. An item’s level is the
+68 checklist items: 7 at 0, 47 at 1, 14 at 2, none above the ceiling. An item’s level is the
 lower median of the rows it rests on; `gate:` rows are launch gates (unmet 0,
 partial 1, met 2).
 
@@ -85,7 +85,7 @@ partial 1, met 2).
 
 ### Data integrity and recovery
 
-*Can Semester prevent, detect, correct and recover from data loss, corruption, duplication or stale integration data?* Required evidence: Backup configuration, restore record, migration logs, reconciliation report, deletion and hold test, ledger tests. — 3 at 0, 7 at 1, 1 at 2.
+*Can Semester prevent, detect, correct and recover from data loss, corruption, duplication or stale integration data?* Required evidence: Backup configuration, restore record, migration logs, reconciliation report, deletion and hold test, ledger tests. — 2 at 0, 8 at 1, 1 at 2.
 
 | Item | Rests on (level) | Level |
 | --- | --- | ---: |
@@ -97,7 +97,7 @@ partial 1, met 2).
 | Migrations are versioned, reviewed, tested and have rollback or repair plans. | MIG-006 (1), SRE-008 (1) | 1 |
 | Critical writes are idempotent or protected by a write ledger. | AI-009 (2), INT-005 (1) | 1 |
 | Grade, payment, consent, share and integration writes are auditable and reconcilable. | LMS-013 (1), UOS-007 (2), INT-014 (1) | 1 |
-| Deletion, retention, legal hold, export and backup-expiry behaviour is tested. | PRIV-2 (2), RM-02 (0), RM-08 (0) | 0 |
+| Deletion, retention, legal hold, export and backup-expiry behaviour is tested. | PRIV-2 (2), RM-02 (1), RM-08 (1) | 1 |
 | A reconciliation dashboard exists for material integrations. | INT-014 (1) | 1 |
 | Dead-letter queues and manual repair workflows exist for failed syncs. | INT-013 (1), INT-014 (1) | 1 |
 
@@ -131,17 +131,17 @@ partial 1, met 2).
 | Encryption in transit and at rest is verified. | CRYPTO-1 (1) | 1 |
 | Vulnerability, dependency, secrets and infrastructure scanning are enabled and triaged. | SEC-004 (1), VULN-1 (1), SDLC-2 (2) | 1 |
 | Production-access grants are least privilege, time-bound, reason-coded and logged. | IAM-010 (2), IAM-2 (2) | 2 |
-| The data map, retention schedule, deletion and export workflow and legal hold are current. | PRIV-1 (2), PRIV-2 (2), RM-02 (0) | 2 |
+| The data map, retention schedule, deletion and export workflow and legal hold are current. | PRIV-1 (2), PRIV-2 (2), RM-02 (1) | 2 |
 | Subprocessors and AI providers are inventoried and approved. | PRIV-5 (1), AI-002 (1), SEC-010 (1) | 1 |
 
 ### Performance, capacity and cost resilience
 
-*Can Semester meet user needs at academic peak times without unacceptable cost, latency or failure?* Required evidence: Load-test report, performance dashboard, cost report, device and network test, capacity plan, budget alerts. — 5 at 0, 3 at 1, 2 at 2.
+*Can Semester meet user needs at academic peak times without unacceptable cost, latency or failure?* Required evidence: Load-test report, performance dashboard, cost report, device and network test, capacity plan, budget alerts. — 3 at 0, 5 at 1, 2 at 2.
 
 | Item | Rests on (level) | Level |
 | --- | --- | ---: |
-| Performance budgets exist by critical page, API, device class and network condition. | UX-003 (2), SRE-007 (0) | 0 |
-| Load tests cover start-of-term sign-in, deadlines, assessment autosave and grade release. | SRE-007 (0), SRE-009 (1) | 0 |
+| Performance budgets exist by critical page, API, device class and network condition. | UX-003 (2), SRE-007 (1) | 1 |
+| Load tests cover start-of-term sign-in, deadlines, assessment autosave and grade release. | SRE-007 (1), SRE-009 (1) | 1 |
 | Indexes, rate limits, queues, caching and storage lifecycle are in place. | SRE-008 (1), IAM-009 (2) | 1 |
 | Large lists and tables are virtualized or paginated. | UX-003 (2) | 2 |
 | Search is indexed, debounced, permission-aware and monitored. | STU-009 (1) | 1 |
@@ -149,7 +149,7 @@ partial 1, met 2).
 | Low-bandwidth and lower-end-device testing is completed. | UX-003 (2), A11Y-004 (2) | 2 |
 | Cost is allocated by tenant, module, environment, AI use, storage and integration. | FO-01 (0), FO-02 (1) | 0 |
 | Budget alerts and cost-anomaly detection exist. | FO-03 (0), AI-003 (1) | 0 |
-| Capacity and cost assumptions are reviewed before a major customer launch. | SRE-007 (0), FO-04 (0) | 0 |
+| Capacity and cost assumptions are reviewed before a major customer launch. | SRE-007 (1), FO-04 (0) | 0 |
 
 ### Release, change and dependency management
 
@@ -253,7 +253,7 @@ None has an owner, a last-tested date or an escalation path in the pack’s sens
 | **GO WITH CONDITIONS** | No P0 risk remains. Time-bound P1 and P2 conditions have owners, target dates, mitigation, customer communication and executive acceptance. |
 | **NO-GO** | A P0 or unresolved mandatory gate exists: security or privacy breach risk, a critical accessibility failure, data-loss or grade-integrity risk, an unsupported claim, an untested recovery path, or no accountable owner. |
 
-Thirteen areas, each resting on rows and launch gates. **An area’s level is its lowest row**, not a median: one unmet control fails the area, because the pack says an unresolved mandatory gate is NO-GO. A required area at 0 is a failed mandatory gate; at 1 it is a condition. **Today: NO-GO** — 6 areas at 0, 7 at 1, 0 passing.
+Thirteen areas, each resting on rows and launch gates. **An area’s level is its lowest row**, not a median: one unmet control fails the area, because the pack says an unresolved mandatory gate is NO-GO. A required area at 0 is a failed mandatory gate; at 1 it is a condition. **Today: NO-GO** — 5 areas at 0, 8 at 1, 0 passing.
 
 | Area | Gate | Required for GO | Rests on (level) | Lowest |
 | --- | --- | --- | --- | ---: |
@@ -264,7 +264,7 @@ Thirteen areas, each resting on rows and launch gates. **An area’s level is it
 | **Accessibility** | Critical workflows are tested; no unresolved critical barrier; alternatives documented. | Yes | A11Y-001 (2), A11Y-3 (0), gate:no-blockers (0) | 0 |
 | **Reliability** | SLOs, monitoring, alerting, status communications, dependency health and runbooks are ready. | Yes | SRE-001 (2), SRE-002 (1), SRE-010 (1), gate:operations-live (1) | 1 |
 | **Recovery** | Backup restore, rollback, reconciliation and failure behaviour are tested. | Yes | SRE-005 (1), BCP-1 (0), gate:backup-restore (1), gate:flags-rollback (1) | 0 |
-| **Performance** | Peak-load and capacity evidence meets the defined thresholds. | Yes | SRE-007 (0), SRE-009 (1) | 0 |
+| **Performance** | Peak-load and capacity evidence meets the defined thresholds. | Yes | SRE-007 (1), SRE-009 (1) | 1 |
 | **AI** | Provider, policy, data use, evaluation, monitoring and disable controls are approved. | If AI is enabled (it is) | AI-1 (2), AI-2 (0), AI-006 (1), AI-012 (3) | 0 |
 | **Integration** | Sandbox validation, scopes, reconciliation, failure fallback and a customer owner are approved. | If integrations are enabled (they are) | INT-001 (1), INT-014 (1), INT-1 (1) | 1 |
 | **Support** | Help, escalation, incident communication and the implementation and hypercare plan are ready. | Yes | SUP-001 (2), SUP-1 (1), IMP-001 (1), gate:onboarding-support (1) | 1 |
@@ -273,7 +273,7 @@ Thirteen areas, each resting on rows and launch gates. **An area’s level is it
 
 ### The review packet
 
-Twelve items, 9 with a document that would carry them today:
+Twelve items, 10 with a document that would carry them today:
 
 | Item | Carried by |
 | --- | --- |
@@ -283,7 +283,7 @@ Twelve items, 9 with a document that would carry them today:
 | Data flow, classification, source owner, retention and integration map | [`RETENTION.md`](../RETENTION.md) |
 | Security, privacy, accessibility and AI risk assessments | [`docs/operating-model/RISK-GOVERNANCE.md`](operating-model/RISK-GOVERNANCE.md) |
 | Service tier, SLOs, RTO/RPO, monitoring, alerts and on-call owners | [`docs/operating-model/SLOS-AND-ERROR-BUDGETS.md`](operating-model/SLOS-AND-ERROR-BUDGETS.md) |
-| Performance, capacity and load-test results | **nothing** |
+| Performance, capacity and load-test results | [`docs/PERFORMANCE-AND-LOW-END-DEVICE-PLAN.md`](PERFORMANCE-AND-LOW-END-DEVICE-PLAN.md) |
 | Backup restore, rollback, reconciliation and failure-test evidence | **nothing** |
 | Support, escalation, training, documentation and hypercare plan | [`docs/launch/FIRST-DAY-CHECKLISTS.md`](launch/FIRST-DAY-CHECKLISTS.md) |
 | Known limitations, customer communications and workaround plan | [`docs/launch/KNOWN-LIMITATIONS.md`](launch/KNOWN-LIMITATIONS.md) |
@@ -329,7 +329,7 @@ the lower median of those rows; none is above 2, because nothing is.
 | ID | Initiative | Workstream | Priority | Mandatory evidence | Rests on (level) | Level |
 | --- | --- | --- | --- | --- | --- | ---: |
 | **INIT-OPS-001** | Shared identity, tenant context, RBAC, audit events | Product & Engineering | P0 | Authorization test suite, access review, audit samples | IAM-006 (2), IAM-008 (2), IAM-011 (1), SEC-006 (1) | 1 |
-| **INIT-OPS-002** | Data inventory, retention, deletion, legal-hold engine | Trust & Compliance | P0 | Data map, deletion, hold and export tests | PRIV-1 (2), PRIV-2 (2), RM-02 (0) | 2 |
+| **INIT-OPS-002** | Data inventory, retention, deletion, legal-hold engine | Trust & Compliance | P0 | Data map, deletion, hold and export tests | PRIV-1 (2), PRIV-2 (2), RM-02 (1) | 2 |
 | **INIT-OPS-003** | Observability, alerts, incident response, status communications | Product & Engineering | P0 | Dashboards, alert test, incident tabletop | SRE-002 (1), SEC-007 (1), SRE-010 (1), IR-1 (1) | 1 |
 | **INIT-OPS-004** | Backup and restore, DR, rollback, migration repair | Product & Engineering | P0 | Restore exercise, rollback record, RTO/RPO | SRE-005 (1), SRE-006 (1), SRE-008 (1), BCP-1 (0) | 1 |
 | **INIT-OPS-005** | Accessibility design system and release gate | Trust & Compliance | P0 | Manual and automated evidence, issue register | PRG-004 (2), A11Y-001 (2), A11Y-3 (0), A11Y-4 (0) | 0 |
