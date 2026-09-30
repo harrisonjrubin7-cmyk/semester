@@ -144,9 +144,11 @@ grant execute on function private.account_is_in_school(text, text) to authentica
 
 alter table public.legal_holds enable row level security;
 
+drop policy if exists legal_holds_read on public.legal_holds;
 create policy legal_holds_read on public.legal_holds for select to authenticated
   using (tenant_id is not null and (select private.has_capability('hold:read', 'school', tenant_id)));
 
+drop policy if exists legal_holds_place on public.legal_holds;
 create policy legal_holds_place on public.legal_holds for insert to authenticated
   with check (
     placed_by = (select auth.uid())
@@ -158,6 +160,7 @@ create policy legal_holds_place on public.legal_holds for insert to authenticate
     )
   );
 
+drop policy if exists legal_holds_release on public.legal_holds;
 create policy legal_holds_release on public.legal_holds for update to authenticated
   using (
     released_at is null

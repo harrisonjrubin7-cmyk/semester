@@ -107,6 +107,7 @@ alter table public.human_overrides enable row level security;
 
 -- Reviewers read the school's overrides; a student reads only the ones that
 -- are theirs and were marked for them to understand.
+drop policy if exists human_overrides_read on public.human_overrides;
 create policy human_overrides_read on public.human_overrides for select to authenticated
   using (
     private.has_capability('override:review', 'school', tenant_id)
@@ -126,6 +127,7 @@ create policy human_overrides_read on public.human_overrides for select to authe
 -- The direct path, for the domains that have no producer yet. Never for the
 -- academic record, which logs its own by trigger and would otherwise be
 -- countable twice or, worse, countable when nothing was overridden.
+drop policy if exists human_overrides_record on public.human_overrides;
 create policy human_overrides_record on public.human_overrides for insert to authenticated
   with check (
     domain <> 'academic_record'
