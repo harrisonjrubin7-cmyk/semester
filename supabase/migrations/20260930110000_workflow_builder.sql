@@ -1,5 +1,5 @@
 -- The Workflow Builder: how a school defines a process, and the checks a
--- student must pass for it, without anyone writing code for it (D-151).
+-- student must pass for it, without anyone writing code for it (D-159).
 --
 -- The platform brief of 30 September asks for "a visual and API-backed system
 -- for approved workflows": trigger, eligibility check, a plain explanation for
@@ -463,6 +463,6 @@ create trigger audit_workflow_versions after insert or update or delete on publi
 -- ── 7. Descriptions ───────────────────────────────────────────────────────
 
 comment on table public.workflow_versions is
-  'A school''s definition of one workflow (D-151): at most one draft, and published versions 1, 2, 3 … that are never edited. Checked against private.workflow_spec() on every write; published by someone who did not draft it. Holds a definition, never a student or a request.';
+  'A school''s definition of one workflow (D-159): at most one draft, and published versions 1, 2, 3 … that are never edited. Checked against private.workflow_spec() on every write; published by someone who did not draft it. Holds a definition, never a student or a request.';
 comment on function private.workflow_spec() is
   'The closed lists a workflow definition is built from: templates, step kinds, owners, the facts a rule may read and their operators. lib/workflow/spec.ts carries the same and spec.test.ts holds them equal.';

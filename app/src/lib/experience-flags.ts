@@ -40,7 +40,7 @@ export interface ExperienceFlags {
    */
   migrationCenter: FeatureState;
   /**
-   * The staff Workflow Builder (lib/workflow, workflow_versions, D-151). RLS and
+   * The staff Workflow Builder (lib/workflow, workflow_versions, D-159). RLS and
    * the second-person publish rule decide what each account may do.
    */
   workflowBuilder: FeatureState;

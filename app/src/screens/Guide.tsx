@@ -511,7 +511,7 @@ export function Guide() {
                       flex: 'none',
                       color: 'var(--app-dim)',
                       transform: open ? 'rotate(90deg)' : 'rotate(0deg)',
-                      transition: 'transform 140ms ease',
+                      transition: 'transform var(--duration-standard) ease',
                     }}
                   />
                   <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-lg)', lineHeight: 'var(--leading-display-xs)' }}>

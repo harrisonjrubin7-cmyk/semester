@@ -63,6 +63,7 @@ import { formatDateTime, formatTime } from '../lib/locale';
 // The ledgers and the Migration Center are behind flags that are off by
 // default, so their code loads only when a tab of theirs opens.
 const WorkflowBuilder = lazy(() => import('../components/institutional/WorkflowBuilder').then((m) => ({ default: m.WorkflowBuilder })));
+const ModulesPanel = lazy(() => import('../components/institutional/ModulesPanel').then((m) => ({ default: m.ModulesPanel })));
 const MigrationCenter = lazy(() => import('../components/institutional/MigrationCenter').then((m) => ({ default: m.MigrationCenter })));
 const RecordLedger = lazy(() => import('../components/institutional/RecordLedger').then((m) => ({ default: m.RecordLedger })));
 const StudentAccounts = lazy(() => import('../components/institutional/StudentAccounts').then((m) => ({ default: m.StudentAccounts })));
@@ -152,6 +153,9 @@ const tabsFor = (verified: readonly string[]) => [
   ...(EXPERIENCE_FLAGS.universityControlPlane !== 'off'
     ? [{ id: 'control' as const, label: 'Control' }, { id: 'trust' as const, label: 'Trust' }]
     : []),
+  // Only for someone the database says may configure this school: the switch
+  // itself is refused to anyone else, and the tab would only be a dead end.
+  ...(verified.includes('tenant:configure') ? [{ id: 'modules' as const, label: 'Modules' }] : []),
   ...(EXPERIENCE_FLAGS.humanHelp !== 'off' ? [{ id: 'help' as const, label: 'Get help' }] : []),
   // Staff only in practice: RLS returns nothing to an account without
   // `integration:view`, and the dashboard says so rather than inventing data.
@@ -178,7 +182,7 @@ const tabsFor = (verified: readonly string[]) => [
     ? [{ id: 'migration' as const, label: 'Migration' }]
     : []),
   // Only for an account holding a verified workflow capability at this school
-  // (D-151); RLS and the second-person publish rule decide the rest.
+  // (D-159); RLS and the second-person publish rule decide the rest.
   ...(EXPERIENCE_FLAGS.workflowBuilder !== 'off' && workflowsAllowed(verified)
     ? [{ id: 'workflows' as const, label: 'Workflows' }]
     : []),
@@ -194,7 +198,7 @@ const tabsFor = (verified: readonly string[]) => [
     : []),
 ];
 
-type Tab = 'overview' | 'drafts' | 'records' | 'connections' | 'control' | 'trust' | 'help' | 'integrations' | 'operations' | 'demand' | 'campaigns' | 'migration' | 'workflows' | 'ledger' | 'accounts';
+type Tab = 'overview' | 'drafts' | 'records' | 'connections' | 'control' | 'trust' | 'modules' | 'help' | 'integrations' | 'operations' | 'demand' | 'campaigns' | 'migration' | 'workflows' | 'ledger' | 'accounts';
 
 /** What each role is called on screen. */
 const ROLE_LABELS: Record<UniversityRole, string> = {
@@ -831,6 +835,12 @@ function Workspace({ storageKey }: { storageKey: string }) {
       )}
 
       {tab === 'trust' && EXPERIENCE_FLAGS.universityControlPlane !== 'off' && <TrustDashboard />}
+
+      {tab === 'modules' && verified.includes('tenant:configure') && (
+        <Suspense fallback={<p role="status">Loading…</p>}>
+          <ModulesPanel school={school.id} me={account?.id ?? ''} canEdit={verified.includes('tenant:configure')} />
+        </Suspense>
+      )}
 
       {tab === 'integrations' && EXPERIENCE_FLAGS.integrationDashboard !== 'off' && <IntegrationDashboard />}
 
