@@ -86,14 +86,14 @@ begin
 end $$;
 
 -- Propose a grade as faculty; approve it as a registrar. Returns the change id.
-create or replace function pg_temp.grade(prof uuid, approver uuid, subject text, val text, school text default 'ov-u', student text default 'S100')
+create or replace function pg_temp.grade(prof uuid, approver uuid, subject text, val text, school text default 'ov-u', student text default 'S100', act text default 'set')
 returns uuid language plpgsql as $$
 declare c uuid;
 begin
   c := pg_temp.value_as(prof, format(
     $q$insert into public.academic_record_changes (tenant_id, student_ref, kind, subject_key, action, value, effective_on, reason, source)
-       values (%L, %L, 'grade', %L, 'set', %L, '2026-12-18', 'Corrected after the grade appeal.', 'faculty') returning id$q$,
-    school, student, subject, val))::uuid;
+       values (%L, %L, 'grade', %L, %L, %L, '2026-12-18', 'Corrected after the grade appeal.', 'faculty') returning id$q$,
+    school, student, subject, act, val))::uuid;
   perform pg_temp.error_as(approver, format($q$update public.academic_record_changes set status = 'approved' where id = %L$q$, c));
   return c;
 end $$;
@@ -222,13 +222,23 @@ begin
   perform pg_temp.must('deleting the overriding account clears the person and keeps the override',
     (select overridden_by is null and final_outcome = 'A' from public.human_overrides where id = kept));
 
+  -- ── voiding a grade is an override too, and must not break the approval ──
+  perform pg_temp.grade(prof, reg, 'PSCI 2400 · Fall 2026', 'B');
+  perform pg_temp.grade(prof, reg, 'PSCI 2400 · Fall 2026', '', 'ov-u', 'S100', 'void');
+  perform pg_temp.must('voiding a grade on the record is approved and leaves an entry marked void',
+    (select count(*) from public.academic_record_entries where subject_key = 'PSCI 2400 · Fall 2026' and action = 'void' and override) = 1);
+  perform pg_temp.must('and it is logged as an override that says what was removed, not an empty outcome',
+    (select final_outcome = 'removed from the record' and automated_outcome = 'B'
+            and explanation like '%removed the grade for PSCI 2400 · Fall 2026 (it was B)%'
+       from public.human_overrides where rule_ref = 'grade' and automated_outcome = 'B' and final_outcome <> 'A' order by occurred_at desc limit 1));
+
   -- ── the pattern view ───────────────────────────────────────────────────
   perform pg_temp.grade(prof, reg, 'PSCI 2200 · Fall 2026', 'C');
   perform pg_temp.grade(prof, reg, 'PSCI 2200 · Fall 2026', 'B');
   perform pg_temp.grade(prof, reg, 'PSCI 2300 · Fall 2026', 'D');
   perform pg_temp.grade(prof, reg, 'PSCI 2300 · Fall 2026', 'C');
-  perform pg_temp.must('a reviewer sees the rule counted: three corrections in ninety days is recurring',
-    pg_temp.seen(admin, $q$select * from public.override_patterns where rule_ref = 'grade' and recurring and overrides = 3$q$) = 1);
+  perform pg_temp.must('a reviewer sees the rule counted: three corrections and a void in ninety days is recurring',
+    pg_temp.seen(admin, $q$select * from public.override_patterns where rule_ref = 'grade' and recurring and overrides = 4$q$) = 1);
   perform pg_temp.must('and a rule with fewer is listed, and not recurring',
     pg_temp.seen(admin, $q$select * from public.override_patterns where rule_ref = 'lab_access.default' and not recurring and overrides = 1$q$) = 1);
   perform pg_temp.must('the view is answered only to reviewers: a student sees no pattern at all',

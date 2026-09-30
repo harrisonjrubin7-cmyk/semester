@@ -152,11 +152,20 @@ begin
      student_visible, explanation, source_ref, overridden_by, occurred_at)
   values
     (new.tenant_id, 'academic_record', new.kind, new.student_ref,
-     coalesce(new.previous_value, ''), new.value, new.reason,
+     coalesce(new.previous_value, ''),
+     -- A void carries an empty value; what was decided is that it was removed.
+     case when new.action = 'void' then 'removed from the record' else new.value end,
+     new.reason,
      true,
-     format('A registrar corrected the %s for %s from %s to %s. The reason given: %s',
-            replace(new.kind, '_', ' '), new.subject_key,
-            coalesce(nullif(new.previous_value, ''), 'nothing on record'), new.value, new.reason),
+     case when new.action = 'void' then
+       format('A registrar removed the %s for %s (it was %s). The reason given: %s',
+              replace(new.kind, '_', ' '), new.subject_key,
+              coalesce(nullif(new.previous_value, ''), 'nothing on record'), new.reason)
+     else
+       format('A registrar corrected the %s for %s from %s to %s. The reason given: %s',
+              replace(new.kind, '_', ' '), new.subject_key,
+              coalesce(nullif(new.previous_value, ''), 'nothing on record'), new.value, new.reason)
+     end,
      new.id::text, new.approved_by, new.recorded_at);
   return null;
 end $$;
