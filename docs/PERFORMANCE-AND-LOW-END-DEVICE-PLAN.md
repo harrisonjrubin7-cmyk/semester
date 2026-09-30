@@ -107,7 +107,13 @@ confirmed is kept in memory, and the pull on open refills it.
 **What this does not measure:** PostgREST, Supavisor, GoTrue, the edge
 functions and the network. Whether they hold is the scripted run against a
 Supabase preview branch that LAUNCH-HARDENING-REPORT asks for, which needs an
-owner and a budget. Nor does it load journeys that do not exist yet
+owner and a budget. The script exists (D-1027): `supabase/load/edge/` seeds
+students with passwords, then measures sign-in, the pull, the push (state and
+one course, by compare-and-swap, rows counted) and the calendar feed through
+the real stack, and refuses production's URL. It has not been run: no branch
+could be made for it on 30 September. From one machine, sign-in reads GoTrue's
+per-IP limit rather than its capacity; a campus behind one NAT address shares
+that limit, which is its own question for the owner. Nor does it load journeys that do not exist yet
 (assessment, gradebook).
 
 ## In flight
