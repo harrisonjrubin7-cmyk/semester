@@ -99,24 +99,27 @@ export function evaluateActivation(
   if (context.killSwitchEngaged) return deny('kill_switch_engaged');
   if (!nonempty(request.tenantId)) return deny('missing_tenant');
   if (![request.requestId, request.actorId, request.purpose, request.capabilityId, request.operation].every(nonempty)) return deny('invalid_request');
-  if (!capability || capability.id !== request.capabilityId || !capabilityDefinition(capability.id)) return deny('unknown_capability');
-  // A caller must not downgrade a canonical capability to a less strict class.
-  if (capability.activationClass !== capabilityDefinition(capability.id)!.activationClass) return deny('invalid_capability');
+  const canonical = capabilityDefinition(request.capabilityId);
+  if (!capability || capability.id !== request.capabilityId || !canonical) return deny('unknown_capability');
+  // Caller metadata is not a policy override. Validate every field consumed by
+  // this evaluator, then use the registry's values for security decisions.
+  if (capability.activationClass !== canonical.activationClass || capability.maturity !== canonical.maturity
+    || capability.safeDefaultEligible !== canonical.safeDefaultEligible) return deny('invalid_capability');
   const now = instant(context.now);
   if (now === null || !nonempty(context.policyVersion)) return deny('invalid_context');
 
-  const maturity = MATURITY_LEVELS.indexOf(capability.maturity);
-  if (maturity < MATURITY_LEVELS.indexOf(MINIMUM_MATURITY[capability.activationClass])) {
+  const maturity = MATURITY_LEVELS.indexOf(canonical.maturity);
+  if (maturity < MATURITY_LEVELS.indexOf(MINIMUM_MATURITY[canonical.activationClass])) {
     return deny(context.existingWorkflow ? 'continuity_required' : 'product_maturity_insufficient');
   }
 
   const config = context.configuration;
   const validConfiguration = config !== null && config.state === 'published' && config.tenant_id === request.tenantId
     && typeof config.version === 'number' && Number.isSafeInteger(config.version) && config.version > 0;
-  const requiresConfiguration = capability.activationClass !== 'standard' || capability.safeDefaultEligible !== true || config !== null;
-  const required = capability.activationClass === 'standard' && requiresConfiguration
+  const requiresConfiguration = canonical.activationClass !== 'standard' || canonical.safeDefaultEligible !== true || config !== null;
+  const required = canonical.activationClass === 'standard' && requiresConfiguration
     ? ['tenant_configuration' as const, ...REQUIREMENTS.standard]
-    : REQUIREMENTS[capability.activationClass];
+    : REQUIREMENTS[canonical.activationClass];
   const missing = required.filter((key) => {
     const states = context.requirements.filter((state) => state.key === key);
     // A denial, wrong tenant or unknown status always wins over a duplicate

@@ -1,18 +1,43 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type { ConfigVersion } from '../config/studio';
 import { evidenceState } from '../ops/evidence';
 import { CAPABILITY_DEFINITIONS, CAPABILITY_PROFILES, capabilityDefinition, type CapabilityDefinition } from './capability-governance';
 import { evaluateActivation, type ActivationContext, type ActivationRequest, type ActivationRequirementKey, type RequirementState } from './activation';
+
+// Only this test module resolves these synthetic identities. Production records
+// and their security metadata pass through unchanged to the actual registry.
+const isolatedRegistry = vi.hoisted(() => new Map<string, CapabilityDefinition>());
+vi.mock('./capability-governance', async (importOriginal) => {
+  const original = await importOriginal<typeof import('./capability-governance')>();
+  return { ...original, capabilityDefinition: (id: string) => isolatedRegistry.get(id) ?? original.capabilityDefinition(id) };
+});
 
 const keys: readonly ActivationRequirementKey[] = [
   'tenant_configuration', 'authorization', 'entitlement', 'consent', 'current_evidence',
   'accountable_approval', 'integration_health', 'support_ready', 'monitoring_ready',
   'rollback_ready', 'parallel_run', 'uat', 'go_live_authorization', 'audit_available',
 ];
-// Product-floor fixtures are hypothetical; they do not promote the registry.
-const standard: CapabilityDefinition = { ...capabilityDefinition('CAP-001')!, maturity: 'L2' };
-const controlled: CapabilityDefinition = { ...capabilityDefinition('CAP-027')!, maturity: 'L3' };
-const highRisk: CapabilityDefinition = { ...capabilityDefinition('CAP-041')!, maturity: 'L4' };
+function fixture(id: CapabilityDefinition['id'], activationClass: CapabilityDefinition['activationClass'], maturity: CapabilityDefinition['maturity'], safeDefaultEligible = true): CapabilityDefinition {
+  const definition: CapabilityDefinition = Object.freeze({
+    ...(activationClass === 'high-risk' ? CAPABILITY_PROFILES.family : CAPABILITY_PROFILES.planning),
+    id, activationClass, maturity, safeDefaultEligible, name: 'Isolated policy fixture',
+    promise: 'Exercise policy only', destinations: [], phase: 0, disposition: 'build',
+    currentState: 'verified', owner: 'Test', dependencies: [], sources: [], acceptance: [],
+    masterRows: [], requiredClaims: 'Test-only policy coverage; no product readiness claim.',
+  });
+  isolatedRegistry.set(id, definition);
+  return definition;
+}
+const standard = fixture('CAP-TEST-standard', 'standard', 'L2');
+const controlled = fixture('CAP-TEST-controlled', 'controlled', 'L3');
+const highRisk = fixture('CAP-TEST-high-risk', 'high-risk', 'L4');
+const configuredStandard = fixture('CAP-TEST-configured-standard', 'standard', 'L2', false);
+const otherHighRisk = fixture('CAP-TEST-other-high-risk', 'high-risk', 'L4');
+const belowFloor = [
+  fixture('CAP-TEST-standard-below-floor', 'standard', 'L1'),
+  fixture('CAP-TEST-controlled-below-floor', 'controlled', 'L2'),
+  fixture('CAP-TEST-high-risk-below-floor', 'high-risk', 'L3'),
+];
 const requestFor = (capability = highRisk): ActivationRequest => ({
   requestId: 'request-1', tenantId: 'tenant-1', actorId: 'actor-1', purpose: 'approved purpose',
   capabilityId: capability.id, operation: 'activate',
@@ -58,17 +83,43 @@ describe('fail-closed activation', () => {
     expect(CAPABILITY_DEFINITIONS.every((c) => typeof c.safeDefaultEligible === 'boolean')).toBe(true);
     const context = { ...ready(), configuration: null, requirements: ready().requirements.filter((r) => r.key !== 'tenant_configuration') };
     expect(decision(standard, context)).toMatchObject({ outcome: 'allow', receipt: { configurationVersion: null } });
-    expect(decision({ ...standard, safeDefaultEligible: false }, context)).toMatchObject({ outcome: 'deny', missing: ['tenant_configuration'] });
-    for (const capability of [controlled, highRisk]) expect(decision({ ...capability, safeDefaultEligible: true }, context)).toMatchObject({ outcome: 'deny', receipt: null, missing: ['tenant_configuration'] });
+    expect(decision(configuredStandard, context)).toMatchObject({ outcome: 'deny', missing: ['tenant_configuration'] });
+    for (const capability of [controlled, highRisk]) expect(decision(capability, context)).toMatchObject({ outcome: 'deny', receipt: null, missing: ['tenant_configuration'] });
   });
 
   it.each(['authorization', 'entitlement'] as const)('requires %s even with standard safe defaults', (key) => {
     expect(decision(standard, { ...without(key), configuration: null })).toMatchObject({ receipt: null, missing: [key] });
   });
 
-  it.each([standard, controlled, highRisk])('rejects below-floor maturity for $activationClass despite satisfied prerequisites', (capability) => {
-    const maturity = capability.activationClass === 'standard' ? 'L1' : capability.activationClass === 'controlled' ? 'L2' : 'L3';
-    expect(decision({ ...capability, maturity })).toEqual({ outcome: 'deny', reason: 'product_maturity_insufficient', receipt: null, missing: [] });
+  it.each(belowFloor)('rejects below-floor maturity for $activationClass despite satisfied prerequisites', (capability) => {
+    expect(decision(capability)).toEqual({ outcome: 'deny', reason: 'product_maturity_insufficient', receipt: null, missing: [] });
+  });
+
+  it('keeps synthetic fixture identities out of the production inventory', () => {
+    for (const id of isolatedRegistry.keys()) {
+      expect(id).toMatch(/^CAP-TEST-/);
+      expect(CAPABILITY_DEFINITIONS.some((c) => c.id === id)).toBe(false);
+    }
+  });
+
+  it.each(CAPABILITY_DEFINITIONS.filter((c) => c.activationClass === 'high-risk'))('keeps production $id denied at its canonical maturity', (capability) => {
+    expect(capability.maturity).not.toBe('L4');
+    expect(decision(capability)).toEqual({ outcome: 'deny', reason: 'product_maturity_insufficient', receipt: null, missing: [] });
+  });
+
+  it.each([
+    { id: 'CAP-041', override: { maturity: 'L4' as const } },
+    { id: 'CAP-027', override: { maturity: 'L3' as const } },
+    { id: 'CAP-041', override: { activationClass: 'standard' as const } },
+    { id: 'CAP-041', override: { safeDefaultEligible: true } },
+    { id: 'CAP-001', override: { safeDefaultEligible: false } },
+  ])('rejects caller overrides of canonical security metadata: $id $override', ({ id, override }) => {
+    const canonical = capabilityDefinition(id)!;
+    expect(decision({ ...canonical, ...override })).toEqual({ outcome: 'deny', reason: 'invalid_capability', receipt: null, missing: [] });
+  });
+
+  it('rejects a caller safe-default override that would bypass required configuration', () => {
+    expect(decision({ ...configuredStandard, safeDefaultEligible: true }, { ...ready(), configuration: null })).toEqual({ outcome: 'deny', reason: 'invalid_capability', receipt: null, missing: [] });
   });
 
   it('fails closed for missing, unknown or mismatched capability definitions', () => {
@@ -83,12 +134,12 @@ describe('fail-closed activation', () => {
 
   it('does not infer a safe default when profile metadata is absent', () => {
     const capability = { ...standard, safeDefaultEligible: undefined } as unknown as CapabilityDefinition;
-    expect(decision(capability, { ...ready(), configuration: null })).toMatchObject({ outcome: 'deny', missing: ['tenant_configuration'], receipt: null });
+    expect(decision(capability, { ...ready(), configuration: null })).toMatchObject({ outcome: 'deny', reason: 'invalid_capability', receipt: null });
   });
 
   it('fails closed on an unknown maturity level', () => {
     const capability = { ...highRisk, maturity: 'L99' } as unknown as CapabilityDefinition;
-    expect(decision(capability)).toMatchObject({ outcome: 'deny', reason: 'product_maturity_insufficient', receipt: null });
+    expect(decision(capability)).toMatchObject({ outcome: 'deny', reason: 'invalid_capability', receipt: null });
   });
 
   it.each(['tenantId', 'requestId', 'actorId', 'purpose', 'operation'] as const)('rejects empty request %s', (field) => {
@@ -156,7 +207,7 @@ describe('fail-closed activation', () => {
     const decisions = [
       decision(highRisk, ready(), { ...requestFor(), requestId: 'request-2' }),
       decision(highRisk, otherTenant, { ...requestFor(), tenantId: 'tenant-2' }),
-      decision({ ...capabilityDefinition('CAP-046')!, maturity: 'L4' }),
+      decision(otherHighRisk),
       decision(highRisk, ready(), { ...requestFor(), operation: 'read' }),
       decision(highRisk, { ...ready(), configuration: { ...configuration(), version: 2 } }),
       decision(highRisk, { ...ready(), policyVersion: 'policy-2' }),
