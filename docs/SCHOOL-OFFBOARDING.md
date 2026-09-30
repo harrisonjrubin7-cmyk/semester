@@ -45,6 +45,8 @@ Does not: touch a student's own session or account, delete or edit any record, o
 - Any screen, and any offboarding from a school-set-up that predates a `tenant_rollout` row (the roll-out step is skipped when there is no row).
 - Department-, office- and course-scoped grants inside the school are not revoked; only `school`-scoped ones are. The grant that gives an administrator power over a whole school is school-scoped, so their authority ends; a course instructor's course-scoped grant does not, and reaches only that course's own records.
 
+**Done once, by the author:** a compact rehearsal on a hosted Supabase preview database with synthetic data (`docs/evidence/offboarding/2026-09-30-hosted-preview-rehearsal.md`). It does not replace the rehearsal below by a second person.
+
 ## Rehearsal before first use
 
 1. On a Supabase **preview branch**, never production, propose a case for a throwaway school with two administrators.
