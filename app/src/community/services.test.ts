@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { CONTENT_READINESS } from '../lib/launch/content';
-import { CATEGORIES, LABELS, REVIEW_EVERY_DAYS, freshness, needsAttention, nextSteps, problems, reportBroken, verify, type ServiceListing } from './services';
+import { CATEGORIES, LABELS, REVIEW_EVERY_DAYS, availabilityOf, freshness, guarantee, guaranteeProblems, needsAttention, nextSteps, problems, reportBroken, verify, type ServiceListing } from './services';
 
 const TODAY = '2026-09-28';
 const listing = (over: Partial<ServiceListing> = {}): ServiceListing => ({
@@ -56,5 +56,64 @@ describe('"I need help with"', () => {
   it('the institution sees what needs attention — stale, reported or incomplete — and never a student', () => {
     const l = [listing(), listing({ id: 's', verifiedOn: '2026-01-01' }), reportBroken(listing({ id: 'b' })), listing({ id: 'i', hours: '' })];
     expect(needsAttention(l, TODAY).map((x) => x.id)).toEqual(['s', 'b', 'i']);
+  });
+});
+
+describe('the resource guarantee', () => {
+  const writing = (over: Partial<ServiceListing> = {}) =>
+    listing({ id: 'wc', category: 'writing', name: 'Writing Center', availability: { status: 'closed', note: 'back Oct 3' }, ...over });
+  const guide = listing({ id: 'guide', category: 'writing', name: 'Approved writing guide' });
+
+  it('says a closed listing is closed, and offers its owner-chosen fallback first', () => {
+    const peer = listing({ id: 'peer', category: 'writing', name: 'Peer tutors', label: 'peer', owner: 'Student Government' });
+    const g = guarantee(writing({ fallbackId: 'peer' }), [writing({ fallbackId: 'peer' }), guide, peer], TODAY);
+    expect(g.headline).toBe('Writing Center is currently closed: back Oct 3.');
+    expect(g.alternatives.map((a) => [a.listing.id, a.why])).toEqual([['peer', 'owner-fallback'], ['guide', 'same-category']]);
+    expect(g.deadEnd).toBe(false);
+    expect(g.canReport).toBe(true);
+  });
+
+  it('never offers itself, a closed listing or an incomplete one', () => {
+    const closed = listing({ id: 'c', category: 'writing', availability: { status: 'closed', note: '' } });
+    const incomplete = listing({ id: 'i', category: 'writing', owner: '' });
+    const g = guarantee(writing(), [writing(), closed, incomplete], TODAY);
+    expect(g.alternatives).toEqual([]);
+    expect(g.deadEnd).toBe(true);
+  });
+
+  it('is not a dead end when the listing is open, even with nothing else to offer', () => {
+    const g = guarantee(writing({ availability: { status: 'open', note: '' } }), [writing()], TODAY);
+    expect(g.headline).toBe('');
+    expect(g.deadEnd).toBe(false);
+  });
+
+  it('reports a listing with no stated availability as unknown, not open', () => {
+    expect(availabilityOf(listing(), TODAY)).toBe('unknown');
+  });
+
+  it('lets a closure lapse once its end date has passed, rather than say it forever', () => {
+    expect(availabilityOf(writing({ availability: { status: 'closed', note: '', until: '2026-09-20' } }), TODAY)).toBe('unknown');
+    expect(availabilityOf(writing({ availability: { status: 'closed', note: '', until: '2026-10-03' } }), TODAY)).toBe('closed');
+  });
+
+  it('names a waitlist without calling it closed, and still offers alternatives', () => {
+    const g = guarantee(writing({ availability: { status: 'waitlist', note: '2 weeks' } }), [writing(), guide], TODAY);
+    expect(g.headline).toBe('Writing Center has a waitlist: 2 weeks.');
+    expect(g.alternatives.map((a) => a.listing.id)).toEqual(['guide']);
+  });
+
+  it('tells the owning office what is wrong with a fallback', () => {
+    const a = writing({ fallbackId: 'wc' });
+    expect(guaranteeProblems(a, [a, guide], TODAY)).toContain('its fallback is itself');
+    const b = writing({ fallbackId: 'nowhere' });
+    expect(guaranteeProblems(b, [b, guide], TODAY)).toContain('its fallback does not exist');
+    const c = writing({ fallbackId: 'bad' });
+    expect(guaranteeProblems(c, [c, listing({ id: 'bad', owner: '' })], TODAY)).toContain('its fallback is incomplete');
+    const d = writing({ fallbackId: 'guide' });
+    const loop = { ...guide, fallbackId: 'wc' };
+    expect(guaranteeProblems(d, [d, loop], TODAY)).toContain('its fallback leads back to it');
+    const dead = writing();
+    expect(guaranteeProblems(dead, [dead], TODAY)).toContain('it is closed and there is nothing to offer instead');
+    expect(guaranteeProblems(writing({ availability: { status: 'open', note: '' } }), [guide], TODAY)).toEqual([]);
   });
 });

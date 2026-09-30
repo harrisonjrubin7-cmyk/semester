@@ -358,6 +358,10 @@ export const STRATEGY: Record<string, Strategy> = {
   // two different pieces should end with both.
   returned: 'union',
   regradeWindows: 'ticks',
+  // One acknowledged reading per course. The copy that synced later wins: a
+  // union would splice two devices' readings of one course into a list neither
+  // acknowledged, and report the seam as a change.
+  deadlineSeen: 'theirs',
   // A consent, and consent given on one device is consent given. `theirs`
   // rather than `mine` so turning it off anywhere turns it off everywhere.
   geocode: 'theirs',
