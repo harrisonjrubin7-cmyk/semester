@@ -25,9 +25,9 @@ state is in [`ROLE-LAUNCH-REGISTER.md`](ROLE-LAUNCH-REGISTER.md).
 
 | Status | Meaning | Rows | P0 |
 | --- | --- | ---: | ---: |
-| not-started | No implemented control/capability exists | 3 | 2 |
+| not-started | No implemented control/capability exists | 2 | 1 |
 | designed | Requirements/architecture approved; not implemented | 28 | 26 |
-| building | Implementation in progress | 67 | 51 |
+| building | Implementation in progress | 68 | 52 |
 | implemented | Deployed in non-production or production but not fully validated | 0 | 0 |
 | tested | Functional/security/accessibility/reliability tests pass | 43 | 37 |
 | evidenced | Current artifacts are collected and reviewed | 1 | 1 |
@@ -55,8 +55,8 @@ and also needs every sign-off. **No gate passes.**
 | D | Integration and data readiness | 14 | 2 | 2 | 8 | 0 | 2 | 0 | 0 | 0 | no |
 | E | AI readiness | 14 | 0 | 0 | 11 | 0 | 2 | 1 | 0 | 0 | no |
 | F | Security, privacy, accessibility, procurement readiness | 22 | 0 | 8 | 14 | 0 | 0 | 0 | 0 | 0 | no |
-| G | Reliability, support, and operations readiness | 14 | 1 | 5 | 6 | 0 | 2 | 0 | 0 | 0 | no |
-| H | Full dress rehearsal and executive launch approval | 142 | 3 | 28 | 67 | 0 | 43 | 1 | 0 | 0 | no |
+| G | Reliability, support, and operations readiness | 14 | 0 | 5 | 7 | 0 | 2 | 0 | 0 | 0 | no |
+| H | Full dress rehearsal and executive launch approval | 142 | 2 | 28 | 68 | 0 | 43 | 1 | 0 | 0 | no |
 
 ### Gate A — Foundation readiness
 
@@ -363,7 +363,7 @@ Owns every row below.
 | SRE-004 | Backups | Automated protected backups monitored and retained | Backup evidence | P0 | designed | `RESTORE.md` — production backup questions (tier, retention, PITR) left to confirm; PITR enable-and-restore-to-timestamp procedure written, results table blank and marked not verified | Backup tier/retention/PITR not confirmed for production and no PITR restore performed; no backup monitoring or retained evidence of successful backups. |
 | SRE-005 | Restore | Restore drill meets RTO/RPO and validates data/workflow integrity | Restore report | P0 | building | `supabase/restore.sh` — dump/restore rehearsal comparing schema and rows six ways, on every change in CI (“Rehearse a backup and restore”); never against production<br>`RESTORE.md` — production restore procedure with every measurement blank | Production has never been restored; RTO/RPO unmeasured; no restore report with post-restore policy and workflow checks. The rehearsal runs in CI against an empty database, which proves the procedure, not the production restore (R-10). |
 | SRE-006 | DR/BCDR | Dependency map, DR plan, recovery roles, communications, annual/semester drill | DR exercise | P0 | designed | `docs/market-readiness/DISASTER_RECOVERY.md` — DR plan outline<br>`docs/market-readiness/INCIDENT_COMMUNICATION_TEMPLATES.md` — incident comms templates | No dependency map validated, no recovery roles assigned, no DR exercise ever run or recorded. |
-| SRE-007 | Load/capacity | Registration, assessment, gradebook, search, AI, and integration load tests pass targets | Load reports | P0 | not-started | `docs/LAUNCH-READINESS-TEST-PLAN.md` — records that no load test exists | No load or capacity tests for any journey, no targets, no load reports. |
+| SRE-007 | Load/capacity | Registration, assessment, gradebook, search, AI, and integration load tests pass targets | Load reports | P0 | building | `supabase/load.sh` — pgbench scenarios in CI against every migration: registration-week flags, plan saves and demand reads, and the open and sync every student makes, each against a latency budget, then invariants (D-154)<br>`docs/PERFORMANCE-AND-LOW-END-DEVICE-PLAN.md` — the scenarios, the readings, and a capacity reading at 10× the largest pilot on production-sized settings | Only the database, and only the journeys that exist: no load through PostgREST, Supavisor, GoTrue or the edge functions (the preview-branch run), and none for assessment, gradebook, search, AI or integrations. |
 | SRE-008 | Release safety | Canary/flag/rollback process and change calendar operate | Rollback drill | P0 | building | `app/scripts/golden-path.mjs` — The signed-out student journey at two viewports in CI, including restore into a fresh browser (#896)<br>`app/src/lib/governance/release-readiness.ts` — promote() refuses to skip a rung<br>`app/src/lib/flags.ts` — flag registry, evaluator and database-backed kill switches<br>`app/src/lib/flags.test.ts` — tests the flag evaluator<br>`ROLLBACK.md` — rollback runbook with measured timings<br>`docs/FEATURE-FLAG-REGISTRY.md` — flag owners and kill-switch runbook | No canary release, no change calendar, no kill switch engaged in production, no rollback drill on the production deployment path; the golden path is not yet account-synced. |
 | SRE-009 | Academic peak operations | Registration/finals/grade-window calendar, freeze, capacity review, on-call plan active | Peak-period runbook | P0 | designed | `docs/operating-model/PILOT-TO-PRODUCTION.md` — go-live rule to avoid registration and finals windows | No academic peak calendar, change freeze policy, capacity review or peak on-call plan. |
 | SRE-010 | Status page | Public status and subscriber/customer update process work | Status-page drill | P0 | building | `app/public/status.html` — public status page: live browser probes of the app, sign-in and the database API, and a hand-kept incident list<br>`app/src/lib/statuspage.test.ts` — holds the page to the production project, the smoke probes and the service worker<br>`app/scripts/status-history.mjs` — the hourly record, the 90-day bars, the structured incident file and its Atom feed<br>`app/src/lib/statushistory.test.ts` — an unchecked day is never up; uptime is checks passed over checks made; the pages, the feed and the workflow are held to the module<br>`MONITORING.md` — the refusal reversed on 28 September | No subscriber notification process and no drill yet; incidents are written by hand into status-incidents.json, and the history begins with the first hourly record on the status-data branch, which has not yet run in production. |

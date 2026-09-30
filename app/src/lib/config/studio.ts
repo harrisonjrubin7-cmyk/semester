@@ -1,7 +1,7 @@
 /**
  * The Configuration Studio: what a school may set about its own Semester, the
  * platform's default for each setting, and the arithmetic of drafts and
- * versions (D-152).
+ * versions (D-158).
  *
  * The brief of 30 September (`docs/CONFIGURATION-STUDIO.md` carries it) asks
  * for "one configurable codebase rather than hundreds of custom deployments":

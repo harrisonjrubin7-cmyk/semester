@@ -3,7 +3,7 @@
 The first item of the platform brief of 30 September
 ([`expansion/Platform-Operating-Model-Configuration-Workflow-Governance-and-Proof.pdf`](expansion/Platform-Operating-Model-Configuration-Workflow-Governance-and-Proof.pdf)):
 *"Build a no-code Institution Configuration Studio … one configurable codebase
-rather than hundreds of custom deployments."* Decision: [D-152](DECISION-LOG.md).
+rather than hundreds of custom deployments."* Decision: [D-158](DECISION-LOG.md).
 
 ## What is built
 

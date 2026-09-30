@@ -500,7 +500,9 @@ jobs:
       # The same database, many sessions at once. The suites above each walk
       # one or two accounts through a policy; a race needs two sessions at the
       # same instant, which none of them can make. `load.sh` runs pgbench
-      # scenarios against what `check.sh` builds and then asserts invariants.
+      # scenarios against what `check.sh` builds and then asserts invariants:
+      # registration week's flags, plans and demand, and the open and sync
+      # every student makes, with two devices pushing at once (D-154).
       # Its first run found `contribute_course_plan` deadlocking when one
       # student saved from two devices (13 failures in eight seconds), fixed in
       # 20260929350000_plan_save_serialized.sql. Latency on a shared runner is

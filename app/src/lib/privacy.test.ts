@@ -445,6 +445,10 @@ describe('"delete my account" really means every row', () => {
       'migration_runs',
       // Verified listings (lib/listings.ts, components/ListingDesk.tsx): an
       // office's or employer's publication. publisher_id is `on delete set null`.
+      // A school's Connect/Core switch and who approved it (D-158): governance
+      // records of the school, kept with their approvals.
+      'module_mode_approval',
+      'module_mode_request',
       'opportunities',
       'organizations',
       // A school's registration calendar and sections (lib/enrollment/client.ts,
@@ -452,7 +456,7 @@ describe('"delete my account" really means every row', () => {
       'registration_sections',
       'registration_terms',
       'reports',
-      // The Configuration Studio's table (lib/config/api.ts, D-152): a school's
+      // The Configuration Studio's table (lib/config/api.ts, D-158): a school's
       // versioned policy settings. No person, credential or student record.
       'school_config_versions',
       'schools',

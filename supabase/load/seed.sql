@@ -53,4 +53,31 @@ insert into public.catalog_sections (tenant_id, term_code, course_code, section,
 select 'load-u', '2027SP', format('LOAD %s', 1000 + c), s::text, 30, 0, 'load-seed', now()
   from generate_series(1, 40) c, generate_series(1, 2) s;
 
+-- Every student's own semester, for the sync scenarios: the two jsonb rows the
+-- app pulls on every open and pushes after every edit (lib/cloud.ts). Sized
+-- like production's largest, read on 29 September 2026: 27 KB of JSON in
+-- `state`, and four courses of about 42 KB (the largest was 84 KB; nobody had
+-- more than four). Built from md5 text so it TOASTs about as badly as prose,
+-- not to nothing as a repeated string would.
+create function pg_temp.blob(seed bigint, items int) returns jsonb language sql as $$
+  select jsonb_build_object('version', 3, 'items', jsonb_agg(jsonb_build_object(
+    'id', md5(seed::text || '/' || i),
+    'title', 'Reading ' || i || ' ' || md5(i::text || seed),
+    'due', (date '2026-09-01' + (i % 120))::text,
+    'done', i % 3 = 0,
+    'note', md5(seed || 'a' || i) || ' ' || md5(seed || 'b' || i) || ' ' || md5(seed || 'c' || i))))
+  from generate_series(1, items) i $$;
+
+insert into public.state (user_id, data)
+select id, pg_temp.blob(i, 112) from public.load_users;
+insert into public.courses (user_id, id, data)
+select u.id, 'course-' || c, pg_temp.blob(u.i * 10 + c, 172)
+  from public.load_users u, generate_series(1, 4) c;
+
+-- The two-devices scenario's tally: each push that wins its race records the
+-- counter it wrote. Written after the student's role is dropped again, so no
+-- client grant is needed or given.
+create table public.load_won (user_id uuid not null, counter integer not null);
+revoke all on table public.load_won from anon, authenticated;
+
 analyze;

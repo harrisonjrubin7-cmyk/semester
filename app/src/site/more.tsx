@@ -4,6 +4,8 @@ import { appHref, href } from './Layout';
 import { Cards, Hero, Section, Start } from './pages';
 import { claim } from '../lib/ops/claims';
 import { StatusBadge, StatusLegend } from './claims';
+import { MODULES } from './modules';
+import { STATUS_LABEL } from '../lib/ops/claims';
 import { ROLE_WORKSPACE_FUNCTIONS, ROLE_WORKSPACE_TITLES } from '../components/institutional/role-workspace';
 import { AUTHORITIES, AVAILABILITY, BOUNDARIES, DEMO_PATHS, SERVICES, TIERS } from './platform';
 
@@ -105,7 +107,7 @@ export const ServiceMap: Page = ({ config }) => (
       <Flow steps={SERVICES} label="Semester’s services, in order" />
     </Section>
     <Section title="Who decides what" id="sm-authority">
-      <p>Semester coordinates. It does not become the record, the registrar or the instructor.</p>
+      <p>Today Semester coordinates. It becomes the record for a module only when the institution switches that module to Core, in writing.</p>
       <Cards items={AUTHORITIES} />
     </Section>
     <Section title="Read next" id="sm-next">
@@ -121,7 +123,41 @@ export const ServiceMap: Page = ({ config }) => (
 
 export const SystemBoundaries: Page = ({ config }) => (
   <>
-    <Hero title="System boundaries" lead="Exactly what Semester does in each area, and what remains authoritative somewhere else." />
+    <Hero title="System boundaries" lead="Semester runs beside your systems today and takes each one over, a module at a time, when you are ready. Here is every module, what it would replace, and how far it has got." />
+    <Section title="The takeover map" id="sb-map">
+      <p>
+        Each module has two modes. In <strong>Connect</strong>, which is how Semester works today, it reads from your system and prepares actions. In <strong>Core</strong>, your school switches that one module to Semester in writing and Semester becomes the record for it. Switching back never deletes anything. <strong>Nothing below is built yet</strong>; the status word is the claims register’s, and a test refuses a module that claims more than the code holds.
+      </p>
+      <div className="site-table-wrap">
+        <table className="site-table">
+          <caption>Modules, the systems they would replace, and their status</caption>
+          <thead>
+            <tr>
+              <th scope="col">Module</th>
+              <th scope="col">Would replace</th>
+              <th scope="col">Today (Connect)</th>
+              <th scope="col">When switched to Core</th>
+              <th scope="col">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {MODULES.map((m) => (
+              <tr key={m.id}>
+                <th scope="row">{m.name}</th>
+                <td>{m.replaces}</td>
+                <td>{m.today}</td>
+                <td>{m.core}</td>
+                <td><span className={`site-badge site-status site-status-${m.status}`}>{STATUS_LABEL[m.status]}</span></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="site-small">Product names belong to their owners and are listed only to say which system a module is meant to take over. Semester replaces none of them today.</p>
+    </Section>
+    <Section title="Who is official today" id="sb-today">
+      <p>Until a module is switched to Core, the system named below stays the official record.</p>
+    </Section>
     <div className="site-table-wrap">
       <table className="site-table">
         <caption>What Semester does, and who is official</caption>
@@ -146,7 +182,7 @@ export const SystemBoundaries: Page = ({ config }) => (
     <Section title="Why it is written down" id="sb-why">
       <p>
         A student should never wonder whether a Path Snapshot is a degree audit, and a registrar should never wonder
-        whether Semester registered anyone. It did not. Every fact in the app carries where it came from —{' '}
+        whether Semester registered anyone. While the module is in Connect, it did not. Every fact in the app carries where it came from —{' '}
         <em>Institution verified</em>, <em>Imported</em>, <em>Student entered</em>, <em>Estimated</em> or{' '}
         <em>Needs review</em> — and a planning estimate is labelled as one wherever it appears.
       </p>
