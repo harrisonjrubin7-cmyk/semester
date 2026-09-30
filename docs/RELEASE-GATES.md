@@ -36,7 +36,7 @@ Evidence goes in `docs/evidence/` (today it holds only the AI runs of 29 Sep). S
 | **Decision** | D-1021 (30 Sep 2026, owner): a school row is never deleted. It leaves through an audited case — preflight inventory, approval by both sides, access disabled, export recorded and verified by a second operator, soft-archive with a retention window, restoration by a different operator, purge eligibility only after the window with no live legal hold and a third person's separate authorization. |
 | **Today** | Built and proved in `supabase/school-offboarding.check.sql` (98 checks, cross-school and recovery cases included, twelve guards shown red). Runbook: `docs/SCHOOL-OFFBOARDING.md`. `delete from schools` is refused for every role. |
 | **Missing** | Rehearsed once on a hosted Supabase preview database with synthetic data, by the author (`docs/evidence/offboarding/2026-09-30-hosted-preview-rehearsal.md`); not yet by a second person, and never used. The migration is now recorded in production, but the post-deploy procedure has not been rehearsed there. **The purge itself is not built** (the school-row trigger refuses every delete until it is). The export file is generated elsewhere. Legal holds are read from `public.legal_holds` (#1012), and nobody has yet placed one. Counsel has not set the retention window or the fate of a former school's student work. |
-| **Status** | PARTIAL — procedure built and tested locally; not rehearsed; purge not built |
+| **Status** | PARTIAL — procedure built and tested locally; rehearsed once on a hosted preview by the author; second-person and production rehearsals remain outstanding; purge not built |
 
 ### G4 — Source and freshness labels everywhere they are claimed
 
