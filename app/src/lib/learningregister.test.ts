@@ -107,7 +107,7 @@ describe('the learning, assessment and gradebook register', () => {
 
   it('keeps the tools, the features, the standards, the model and the phases whole', () => {
     expect(TOOLS).toHaveLength(18);
-    expect(TOOLS.filter((t) => t.have).length).toBe(13);
+    expect(TOOLS.filter((t) => t.have).length).toBe(14);
     expect(ADVANCED).toHaveLength(8);
     expect(ADVANCED.filter((f) => f.have).length).toBe(4);
     expect(STANDARDS).toHaveLength(10);
