@@ -53,6 +53,20 @@ export async function loadMyCapabilities(): Promise<Grant[]> {
   return readGrants(data);
 }
 
+/**
+ * The same read, for a caller that must tell "holds nothing" from "could not
+ * ask": a refused or failed request throws instead of reading as no grants.
+ */
+export async function loadMyCapabilitiesOrThrow(): Promise<Grant[]> {
+  if (!cloudConfigured) return [];
+  const db = await cloud();
+  const { data: user } = await db.auth.getUser();
+  if (!user.user?.id) return [];
+  const { data, error } = await db.rpc('my_capabilities');
+  if (error) throw new Error('Could not check your staff permissions.');
+  return readGrants(data);
+}
+
 /** The caller's grants, loaded once per mount. Empty until loaded, and on any failure. */
 export function useMyCapabilities(): Grant[] {
   const [grants, setGrants] = useState<Grant[]>([]);

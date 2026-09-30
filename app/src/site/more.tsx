@@ -6,6 +6,7 @@ import { claim } from '../lib/ops/claims';
 import { StatusBadge, StatusLegend } from './claims';
 import { MODULES } from './modules';
 import { STATUS_LABEL } from '../lib/ops/claims';
+import { ROLE_WORKSPACE_FUNCTIONS, ROLE_WORKSPACE_TITLES } from '../components/institutional/role-workspace';
 import { AUTHORITIES, AVAILABILITY, BOUNDARIES, DEMO_PATHS, SERVICES, TIERS } from './platform';
 
 /*
@@ -238,13 +239,31 @@ export const StartPage: Page = ({ config }) => (
 
 export const Demo: Page = ({ config }) => (
   <>
-    <Hero title="See it, then take the step that fits" lead="The demo is a sample institution with sample students. It ends differently depending on why you came.">
+    <Hero title="Explore a sample university" lead="A fictional institution with fictional students, staff and courses. Pick a role, click around, change things, and reset it when you are done. You do not need an account.">
       <p className="site-actions">
-        <a className="site-button" href={appHref(config, 'demo/')}>Open the demo</a>
+        <a className="site-button" href={appHref(config, 'demo/')}>Open the sample university</a>
         <a href={href(config, '/product/')}>How Semester works</a>
       </p>
-      <p className="site-small">Demo data, labelled as such throughout. It is not connected to any account or any university system.</p>
+      <p className="site-small">
+        Every record in it is made up, and it says so on every screen. Nothing you do there is sent to Semester: it is not connected to any
+        account or any university system, what you change stays in your browser, and a reset button starts it again.
+      </p>
     </Hero>
+    <Section title="Who you can be" id="dm-roles">
+      <p>Switch role from the label at the corner of the demo. Each role opens its own workspace, and each shows only what that role is allowed to see.</p>
+      <ul className="site-cards">
+        {Object.entries(ROLE_WORKSPACE_TITLES).map(([role, title]) => (
+          <li key={role}>
+            <h3>{title.replace(/ workspace$/i, '')}</h3>
+            <p>{[...new Set(ROLE_WORKSPACE_FUNCTIONS[role as keyof typeof ROLE_WORKSPACE_TITLES].map((f) => f.label))].join('; ')}.</p>
+          </li>
+        ))}
+      </ul>
+      <p className="site-small">
+        Not in the sample yet: a registrar view, a gift-officer view, and a K-12 parent view. Those belong to modules that are planned and not built, and the
+        demo does not pretend otherwise. The <a href={href(config, '/platform/system-boundaries/')}>replacement map</a> says where each stands.
+      </p>
+    </Section>
     <Section title="After the demo" id="dm-after">
       <p>Not everyone came with the same problem, so not everyone should leave with the same next step.</p>
       <ul className="site-cards">

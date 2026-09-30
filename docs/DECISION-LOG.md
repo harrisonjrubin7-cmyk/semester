@@ -2889,6 +2889,46 @@ writes down what the edition is, and puts it on the site without offering it.
 - **`/k-12/`** says no district or school uses Semester today, and the site
   test holds it there.
 
+## D-148 · The sample university says what it is, cannot be dismissed, resets in one click, and does not show a role that does not exist
+
+**Decided 30 Sep 2026** (S4 of the site brief). The demo at `/demo/` already had a
+fictional institution, twelve roles and a persona switcher. What it did not do
+was say plainly what a visitor could rely on, and the company site's customer
+portal preview showed made-up figures as if they were readings.
+
+- **The notice is permanent.** The demo bar had a *Hide* button; a visitor handed
+  the link could lose the one line that says none of it is real. It is gone.
+  The bar says *Demo environment · Sample university · Fictional data* and, always
+  visible beneath it, *Nothing you do here is sent to Semester*. That is true
+  because the demo is built with the account service blanked (`pages.yml`,
+  held by `demosplit.test.ts`); what a visitor changes stays in the browser.
+- **A reset.** *Reset the sample* erases the device the way the app's own Erase
+  does (`eraseDevice`), then reloads, even when part of the erase is refused.
+  Driven in a real browser: a key planted in local storage was gone afterwards
+  and the demo came back.
+- **Only roles that exist.** The bar and `/demo/` list the twelve roles the demo
+  has, read from the app's own workspace definitions so the page cannot drift.
+  Both say that a registrar view, a gift-officer view and a K-12 parent view are
+  planned and not in the sample. None is faked: they belong to modules that are
+  not built.
+- **The customer portal preview** on the company site is labelled *Sample data ·
+  not measured* on every section, and its health panel says in words that there
+  is no customer, no uptime figure and no production restore test, and points to
+  the real status history, once the status page keeps one. `samplecopy.test.ts` refuses an uptime figure
+  that is not captioned as a sample in its own caption; it went red on one that
+  was not.
+- **The way in.** *Explore a sample university* is the wording on the company
+  site's home and institutions pages and on the site's own institutions page.
+- **Not built, and why.** The brief asked for about forty students, eight faculty
+  and three advisors, and a guided tour. No screen in the demo reads a roster,
+  so a seed would be data nothing shows; a tour of screens that are still moving
+  would go stale in a week. Both wait for the modules that would use them. The
+  sample keeps its name, *Northstar University* (an `.example` domain), rather
+  than *Northfield*: whether *Northfield* is a real institution's name is the
+  owner's to confirm, and nothing here changes it.
+- **Found, not fixed.** `npm run smoke:institutional` fails after the routes pass,
+  waiting for text that sits inside the closed persona disclosure. It fails the
+  same way on `main` before this change, and CI does not run it.
 ## D-142 · The two AI drills ran against production, and both held
 
 **Decided 29 Sep 2026.** `docs/LAUNCH-DECISIONS.md` item 15 asked for the
@@ -3165,7 +3205,7 @@ AI training policy each said the providers' training and retention terms were
   what the vendor register and the compliance crosswalk wait for there, and
   a published web page is not one.
 
-## D-148 · Semester replaces the university stack, one module at a time, and the site stops saying it does not
+## D-149 · Semester replaces the university stack, one module at a time, and the site stops saying it does not
 
 **Decided by owner 29 Sep 2026.** The site said "it does not replace your SIS"
 and the register deferred registration writes, while the owner's goal is one
@@ -3191,9 +3231,9 @@ never deletes.
   in `expansiongovernance.ts` (its test counts sixteen). That edit relaxes a
   Tier 4 refusal and waits for the owner to confirm it.
 
-## D-149 · A module's mode is a row two other administrators approve, it fails to Connect, and going back deletes nothing
+## D-150 · A module's mode is a row two other administrators approve, it fails to Connect, and going back deletes nothing
 
-**Decided 29 Sep 2026, by the owner (Prompt 2 of the Core briefs).** D-148 made
+**Decided 29 Sep 2026, by the owner (Prompt 2 of the Core briefs).** D-149 made
 Connect and Core the two ways a school can run a module. This is the switch.
 
 - **The row.** `tenant_module_mode` holds one row per school and module; no row

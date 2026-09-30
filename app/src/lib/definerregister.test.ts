@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { BRIEF, CATEGORIES, FUNCTIONS, OPEN, PROJECT, READ_ON, SOURCES, TABLES, type Category } from './definerregister';
+import { BRIEF, CATEGORIES, FUNCTIONS, OPEN, PROJECT, READ_COUNT, READ_ON, SINCE_READING, SOURCES, TABLES, type Category } from './definerregister';
 
 /**
  * Holds the Security Definer and RLS remediation register to the migrations:
@@ -91,9 +91,15 @@ describe('the Security Definer and RLS remediation register', () => {
   it('finds the 151 the advisor listed, plus the two added since, so the parser is reading what production runs', () => {
     // A control on the instrument: a parser that silently lost half the
     // functions would also agree with a register that lost the same half.
-    // 151 on the advisor's reading; state_my_age and my_age_status came after (D-139).
-    expect(exposedDefiners().length).toBe(153);
-    expect(FUNCTIONS.length).toBe(153);
+    // Functions from files not yet applied to production are counted
+    // separately, each held to the file it is said to come from.
+    const since = SINCE_READING.flatMap((s) => s.functions);
+    expect(READ_COUNT).toBe(151);
+    expect(exposedDefiners().length).toBe(READ_COUNT + since.length);
+    expect(FUNCTIONS.length).toBe(READ_COUNT + since.length);
+    for (const s of SINCE_READING) {
+      for (const name of s.functions) expect(defs.get(name)?.file, name).toBe(s.file);
+    }
   });
 
   it('holds every row to a gate its winning body actually makes', () => {
@@ -189,7 +195,7 @@ function render(): string {
     'first artifact of the audit, "because it tells you exactly where',
     'application authority currently crosses database trust boundaries". It',
     `read production's Supabase advisor and found **${TABLES.length} tables with row-level`,
-    `security on and no policy** and **${FUNCTIONS.length} \`security definer\` functions a`,
+    `security on and no policy** and **${READ_COUNT} \`security definer\` functions a`,
     'signed-in account can call**. Neither is a vulnerability by itself; the',
     'audit asked for a disposition for every one, and a guard so the next one',
     'cannot arrive without one. This page is both.',
@@ -203,9 +209,15 @@ function render(): string {
     `Production (\`${PROJECT}\`), ${READ_ON}, read-only, through the advisor and \`pg_catalog\`:`,
     '',
     `- all ${TABLES.length} policy-less tables: no SELECT, INSERT, UPDATE or DELETE for \`anon\` or \`authenticated\`. Each is deny-by-default, not open;`,
-    `- all ${FUNCTIONS.length} functions: not executable by \`anon\` or PUBLIC, \`search_path\` pinned, no dynamic \`execute\`;`,
+    `- all ${READ_COUNT} functions: not executable by \`anon\` or PUBLIC, \`search_path\` pinned, no dynamic \`execute\`;`,
     '- two bodies named neither `auth.uid()` nor a `private.` gate. `gtm_pilot_problems` answered any signed-in caller about any pilot — a student could read whether a pilot\'s price was agreed, who sponsored it and whether its dates fit. It is fixed in `supabase/migrations/20260929120000_gtm_pilot_problems_visibility.sql` and held by `supabase/gtm.check.sql`. `kill_switch_engaged` is a deliberate one-boolean read, kept open as DR-01.',
     '',
+    ...(SINCE_READING.length
+      ? [
+          `Since the reading, ${SINCE_READING.reduce((n, s) => n + s.functions.length, 0)} more, from migrations not applied to production, each with a row below: ${SINCE_READING.map((s) => `\`${s.file}\` (${s.functions.map((f) => `\`${f}\``).join(', ')})`).join('; ')}.`,
+          '',
+        ]
+      : []),
     '## How this page is held',
     '',
     '- The function set is derived: `definerregister.test.ts` reads every migration, takes the winning definition of each `public` function, keeps the `security definer` ones and intersects them with the allowlist in `supabase/grants.check.sql`. That set must equal the register exactly. A new definer function granted to clients is red until it has a row — the audit\'s release-gate line "new SECURITY DEFINER functions have an approved inventory entry", as a test.',

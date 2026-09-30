@@ -413,7 +413,16 @@ describe('"delete my account" really means every row', () => {
       // read these; they are course policy, kept for the class.
       'course_ai_rules',
       'course_guidance',
+      // A school's dining locations, hours and menus (lib/dining/client.ts,
+      // 20260929330000_dining.sql): what its card office lists.
+      'dining_hours',
+      'dining_locations',
+      'dining_menu_items',
       'feature_kill_switch',
+      // A course's grading scheme and items (lib/gradebook/client.ts,
+      // 20260929310000_gradebook.sql): the course's, not a student's.
+      'gradebook_items',
+      'gradebook_schemes',
       'group_tasks',
       'groups',
       'gtm_campaign_reviews',
@@ -436,12 +445,16 @@ describe('"delete my account" really means every row', () => {
       'migration_runs',
       // Verified listings (lib/listings.ts, components/ListingDesk.tsx): an
       // office's or employer's publication. publisher_id is `on delete set null`.
-      // A school's Connect/Core switch and who approved it (D-149): governance
+      // A school's Connect/Core switch and who approved it (D-150): governance
       // records of the school, kept with their approvals.
       'module_mode_approval',
       'module_mode_request',
       'opportunities',
       'organizations',
+      // A school's registration calendar and sections (lib/enrollment/client.ts,
+      // 20260929300000_registration_transaction.sql).
+      'registration_sections',
+      'registration_terms',
       'reports',
       'schools',
       // Student accounts (lib/finance/api.ts, D-146): the school's financial

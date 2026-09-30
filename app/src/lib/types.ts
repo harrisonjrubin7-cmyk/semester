@@ -755,6 +755,9 @@ export type Screen =
   // The operations console: a staff tool behind a platform-scope capability,
   // nested like the review queue rather than registered. See `lib/nav.ts`.
   | 'console'
+  // The school's dining, behind its module flag and nested rather than
+  // registered while no school has it on. See `lib/nav.ts`.
+  | 'dining'
   | 'agreements'
   | 'volunteers'
   | 'volunteer'
@@ -774,6 +777,11 @@ export type Screen =
   | 'runway'
   | 'privacy'
   | 'registrar'
+  // The official registration transaction and the gradebook of record, each
+  // behind its school's writeback flag. See `screens/Registration.tsx` and
+  // `screens/Gradebook.tsx`.
+  | 'registration'
+  | 'gradebook'
   | 'sources'
   | 'slides'
   | 'account'

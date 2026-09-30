@@ -19,21 +19,21 @@ Before any district’s student data is accepted, every item here is tested.
 
 | ID | Item | Status | Evidence | Gap | Owner |
 | --- | --- | --- | --- | --- | --- |
-| KB-01 | A district data privacy agreement or DPSA | designed | `docs/trust/DPA-CHECKLIST.md` — what the agreement must settle, for counsel | No signable agreement; the 1EdTech DPSA template has not been adapted. | `privacy` (vacant) |
-| KB-02 | FERPA-aligned school-official and use-limitation terms | tested | `docs/trust/FERPA-CONSENT-WORKFLOW.md` — the school-official basis and its limits<br>`app/src/lib/trust/ferpa-consent.test.ts` — held | The terms are a workflow in the tree, not yet a signed clause. | `privacy` (vacant) |
-| KB-03 | A COPPA assessment for users under 13 | tested | `supabase/minimum-age.check.sql` — nobody under 13 may hold an account | Nobody under 13 is served, so there is nothing to assess until a district asks for elementary grades; counsel confirms that reading. | `privacy` (vacant) |
-| KB-04 | A parent or guardian consent approach where required | designed | `docs/SUPPORTER-FAMILY-PRIVACY-MODEL.md` — the limited-grant model a guardian would use | Guardian consent is not built; the model is for adults’ supporters, and nothing verifies a guardian. | `privacy` (vacant) |
+| KB-01 | A district data privacy agreement or DPSA | designed | `docs/trust/DPA-CHECKLIST.md` — what the agreement must settle, for counsel | No signable agreement; the 1EdTech DPSA template has not been adapted. | `privacy` |
+| KB-02 | FERPA-aligned school-official and use-limitation terms | tested | `docs/trust/FERPA-CONSENT-WORKFLOW.md` — the school-official basis and its limits<br>`app/src/lib/trust/ferpa-consent.test.ts` — held | The terms are a workflow in the tree, not yet a signed clause. | `privacy` |
+| KB-03 | A COPPA assessment for users under 13 | tested | `supabase/minimum-age.check.sql` — nobody under 13 may hold an account | Nobody under 13 is served, so there is nothing to assess until a district asks for elementary grades; counsel confirms that reading. | `privacy` |
+| KB-04 | A parent or guardian consent approach where required | designed | `docs/SUPPORTER-FAMILY-PRIVACY-MODEL.md` — the limited-grant model a guardian would use | Guardian consent is not built; the model is for adults’ supporters, and nothing verifies a guardian. | `privacy` |
 | KB-05 | Age-aware product design | tested | `supabase/minimum-age.check.sql` — a minor is out of discovery, matching, messaging and employer visibility | — | `product` |
 | KB-06 | Strict role, school, class and guardian boundaries | building | `supabase/rolegrants.check.sql` — roles held per school<br>`supabase/family.check.sql` — a guardian sees only what was granted | No grade or class-section boundary exists; a district tenant is one school. | `security` (vacant) |
-| KB-07 | No behavioural advertising | tested | `app/src/lib/gtm/campaign.test.ts` — no targeting on education records | — | `privacy` (vacant) |
-| KB-08 | No sale of student data | tested | `app/src/lib/trust/ai-training-policy.test.ts` — never sold, never used to train | — | `privacy` (vacant) |
+| KB-07 | No behavioural advertising | tested | `app/src/lib/gtm/campaign.test.ts` — no targeting on education records | — | `privacy` |
+| KB-08 | No sale of student data | tested | `app/src/lib/trust/ai-training-policy.test.ts` — never sold, never used to train | — | `privacy` |
 | KB-09 | No public student discovery by default | tested | `supabase/minimum-age.check.sql` — a minor cannot be found, matched or opted into employer view<br>`supabase/expansion.check.sql` — employer visibility is opt-in for everyone | — | `trust` (vacant) |
 | KB-10 | Human moderation and an escalation plan | tested | `app/src/community/moderation.test.ts` — the queue and its actions<br>`docs/CRISIS-RESPONSE-RUNBOOK.md` — escalation | No moderator has been trained for minors. | `trust` (vacant) |
 | KB-11 | Safe messaging restrictions | tested | `supabase/minimum-age.check.sql` — a minor cannot connect, request a mentor or post in class rooms | — | `trust` (vacant) |
 | KB-12 | A data retention and deletion schedule | tested | `app/src/lib/retention.test.ts` — the schedule, held to the tables | No district-specific retention period; the schedule is one for every tenant. | `data` (vacant) |
 | KB-13 | A district-controlled AI policy | building | `app/src/lib/coursestudio.ts` — a course sets its own AI policy | A course sets its AI policy; no district-level policy overrides it. | `product` |
-| KB-14 | Accessibility documentation | designed | `docs/operating-model/ACCESSIBILITY-GOVERNANCE.md` — the governance, not a statement | No accessibility statement and no VPAT. | `accessibility` (vacant) |
-| KB-15 | An incident-response process | tested | `app/src/lib/governance/incident-comms.test.ts` — who is told, how fast | Never exercised with a district. | `operations` (vacant) |
+| KB-14 | Accessibility documentation | designed | `docs/operating-model/ACCESSIBILITY-GOVERNANCE.md` — the governance, not a statement | No accessibility statement and no VPAT. | `accessibility` |
+| KB-15 | An incident-response process | tested | `app/src/lib/governance/incident-comms.test.ts` — who is told, how fast | Never exercised with a district. | `operations` |
 | KB-16 | A district security questionnaire package | designed | `docs/market-readiness/HECVAT_DRAFT_RESPONSE.md` — the higher-ed questionnaire, drafted | Drafted for higher education; no K–12 questionnaire answered. | `security` (vacant) |
 
 ## What the edition must do
@@ -42,17 +42,17 @@ Before any district’s student data is accepted, every item here is tested.
 
 | ID | Item | Status | Evidence | Gap | Owner |
 | --- | --- | --- | --- | --- | --- |
-| KI-01 | Nobody under 13; a date of birth at sign-up, refused in the database | tested | `supabase/minimum-age.check.sql` — held | — | `privacy` (vacant) |
-| KI-02 | An age stated once and never changed; only the day a minor turns 18 kept | tested | `supabase/minimum-age.check.sql` — held<br>`app/src/lib/age.test.ts` — the rules as the app explains them | Self-reported; a district roster would be the better source and is not connected. | `privacy` (vacant) |
+| KI-01 | Nobody under 13; a date of birth at sign-up, refused in the database | tested | `supabase/minimum-age.check.sql` — held | — | `privacy` |
+| KI-02 | An age stated once and never changed; only the day a minor turns 18 kept | tested | `supabase/minimum-age.check.sql` — held<br>`app/src/lib/age.test.ts` — the rules as the app explains them | Self-reported; a district roster would be the better source and is not connected. | `privacy` |
 | KI-03 | A district-asserted grade or age, where a district provides one | not-started | — | Rostering from a district SIS is not built; an institution-asserted age would override a stated one. | `data` (vacant) |
 
 ### Guardian consent
 
 | ID | Item | Status | Evidence | Gap | Owner |
 | --- | --- | --- | --- | --- | --- |
-| KG-01 | A student grants a guardian a limited, expiring view of chosen items | tested | `supabase/familyinvites.check.sql` — invites<br>`supabase/familyshare.check.sql` — shared items, re-checked on read | Built for adults’ supporters; open to a minor. | `privacy` (vacant) |
-| KG-02 | Verifiable guardian consent where the law requires it | not-started | — | Not needed while nobody under 13 is served; counsel decides whether 13–17 needs it in any state. | `privacy` (vacant) |
-| KG-03 | No default guardian access to a student’s private work | tested | `supabase/family.check.sql` — a grant names items; nothing is visible by default | — | `privacy` (vacant) |
+| KG-01 | A student grants a guardian a limited, expiring view of chosen items | tested | `supabase/familyinvites.check.sql` — invites<br>`supabase/familyshare.check.sql` — shared items, re-checked on read | Built for adults’ supporters; open to a minor. | `privacy` |
+| KG-02 | Verifiable guardian consent where the law requires it | not-started | — | Not needed while nobody under 13 is served; counsel decides whether 13–17 needs it in any state. | `privacy` |
+| KG-03 | No default guardian access to a student’s private work | tested | `supabase/family.check.sql` — a grant names items; nothing is visible by default | — | `privacy` |
 
 ### Safety and moderation
 
@@ -82,7 +82,7 @@ Before any district’s student data is accepted, every item here is tested.
 | ID | Item | Status | Evidence | Gap | Owner |
 | --- | --- | --- | --- | --- | --- |
 | KX-01 | Only the fields a workflow needs; no grades, discipline, special education or health records | tested | `app/src/lib/institution-ops.test.ts` — forbidden measures refused | The field list for a district connector is not written. | `data` (vacant) |
-| KX-02 | Sponsored content kept out of a student’s view | tested | `app/src/lib/gtm/sponsor.test.ts` — protected surfaces | — | `privacy` (vacant) |
+| KX-02 | Sponsored content kept out of a student’s view | tested | `app/src/lib/gtm/sponsor.test.ts` — protected surfaces | — | `privacy` |
 
 ## For counsel
 

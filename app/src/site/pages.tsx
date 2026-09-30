@@ -194,7 +194,12 @@ export const Students: Page = ({ config }) => (
 
 export const Institutions: Page = ({ config }) => (
   <>
-    <Hero title="For institutions" lead="Turn fragmented systems into clearer student action — starting with a small, measured pilot." />
+    <Hero title="For institutions" lead="Turn fragmented systems into clearer student action — starting with a small, measured pilot.">
+      <p className="site-actions">
+        <a className="site-button" href={href(config, '/demo/')}>Explore a sample university</a>
+        <a href={href(config, '/contact/')}>Talk to us</a>
+      </p>
+    </Hero>
     <Section title="What a pilot looks like" id="i-pilot">
       <ul>
         <li>One cohort of 25 to 100 students around a registration or advising moment.</li>

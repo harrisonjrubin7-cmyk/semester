@@ -16,17 +16,17 @@ evidence. A role is enabled for a customer only at **launch approved**.
 
 | State | Meaning | Roles at this state | Roles holding this rung |
 | --- | --- | ---: | ---: |
-| defined | Role, purpose, scope, and boundaries documented | 0 | 68 |
-| modeled | Role/capability/scope exists in authorization model | 0 | 68 |
-| provisionable | Admin/SCIM/SSO/manual workflow can assign and revoke it | 45 | 68 |
-| usable | Role-specific screens and workflow are implemented | 4 | 23 |
-| secure | Positive and negative authorization tests pass | 17 | 45 |
+| defined | Role, purpose, scope, and boundaries documented | 0 | 69 |
+| modeled | Role/capability/scope exists in authorization model | 0 | 69 |
+| provisionable | Admin/SCIM/SSO/manual workflow can assign and revoke it | 46 | 69 |
+| usable | Role-specific screens and workflow are implemented | 3 | 23 |
+| secure | Positive and negative authorization tests pass | 18 | 47 |
 | supportable | Training, runbook, audit trail, support routing, and recovery exist | 2 | 2 |
 | launch-approved | All required role acceptance criteria and sign-offs pass | 0 | 0 |
 
 ## The finding
 
-All 68 roles are at least **provisionable**, through one path: the
+All 69 roles are at least **provisionable**, through one path: the
 operations console’s `role-grant` duty (`supabase/migrations/20260929110000_console_approvals_and_break_glass.sql`).
 A request names the person, the role, the scope and the expiry; the security
 seat approves it, never the requester; `console_act()` writes the audit event
@@ -51,11 +51,11 @@ Two further limits on what the columns below prove:
 | Role | State | Def · Mod · Prov · Use · Sec · Sup · Appr | Capabilities | Interface | Authorization checks | Runbook | Training | Must be able to | Must never |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `prospective_student` | provisionable | ✓ ✓ ✓ · · · · | — | — | — | — | — | Explore public programs, career paths, readiness tools, estimated cost/plan tools | Institutional records, other users’ data |
-| `student` | secure | ✓ ✓ ✓ ✓ ✓ · · | `lti:launch` | `app/src/screens/Today.tsx` | `academic-record.check.sql`<br>`admins.check.sql`<br>`commercial-automation.check.sql`<br>`console-control-plane.check.sql`<br>`deletion.check.sql`<br>`expansion.check.sql`<br>`gtm.check.sql`<br>`help-requests.check.sql`<br>`integration-hardening.check.sql`<br>`intelligence-policy.check.sql`<br>`lti-capability.check.sql`<br>`lti-membership.check.sql`<br>`mentor-rosters.check.sql`<br>`migration-center.check.sql`<br>`officeactions.check.sql`<br>`retention-sweeps.check.sql`<br>`role-grant-audit.check.sql`<br>`student-accounts.check.sql`<br>`student-payment-plans.check.sql`<br>`support-access.check.sql`<br>`trust-room.check.sql` | — | `docs/launch/STUDENT-QUICK-START.md`<br>`docs/launch/FIRST-DAY-CHECKLISTS.md` | Plan, study, search, create work, connect accounts, manage privacy, selectively share | Other students’ private records, unauthorized institutional data |
-| `undergraduate_student` | secure | ✓ ✓ ✓ ✓ ✓ · · | `lti:launch` | `app/src/screens/Today.tsx` | `lti-capability.check.sql` | — | `docs/launch/STUDENT-QUICK-START.md` | Everything a student may, scoped to an undergraduate program | Other students’ private records, unauthorized institutional data |
-| `graduate_student` | usable | ✓ ✓ ✓ ✓ · · · | `lti:launch` | `app/src/screens/Today.tsx` | — | — | `docs/launch/STUDENT-QUICK-START.md` | Manage graduate milestones, funding and work planning, course/research workflows | Other students’ records |
+| `student` | secure | ✓ ✓ ✓ ✓ ✓ · · | `lti:launch`<br>`grades:receive` | `app/src/screens/Today.tsx` | `academic-record.check.sql`<br>`admins.check.sql`<br>`commercial-automation.check.sql`<br>`console-control-plane.check.sql`<br>`deletion.check.sql`<br>`expansion.check.sql`<br>`gradebook.check.sql`<br>`gtm.check.sql`<br>`help-requests.check.sql`<br>`integration-hardening.check.sql`<br>`intelligence-policy.check.sql`<br>`lti-capability.check.sql`<br>`lti-membership.check.sql`<br>`mentor-rosters.check.sql`<br>`migration-center.check.sql`<br>`officeactions.check.sql`<br>`retention-sweeps.check.sql`<br>`role-grant-audit.check.sql`<br>`student-accounts.check.sql`<br>`student-payment-plans.check.sql`<br>`support-access.check.sql`<br>`trust-room.check.sql` | — | `docs/launch/STUDENT-QUICK-START.md`<br>`docs/launch/FIRST-DAY-CHECKLISTS.md` | Plan, study, search, create work, connect accounts, manage privacy, selectively share | Other students’ private records, unauthorized institutional data |
+| `undergraduate_student` | secure | ✓ ✓ ✓ ✓ ✓ · · | `lti:launch`<br>`grades:receive` | `app/src/screens/Today.tsx` | `dining.check.sql`<br>`gradebook.check.sql`<br>`lti-capability.check.sql`<br>`registration_transaction.check.sql` | — | `docs/launch/STUDENT-QUICK-START.md` | Everything a student may, scoped to an undergraduate program | Other students’ private records, unauthorized institutional data |
+| `graduate_student` | secure | ✓ ✓ ✓ ✓ ✓ · · | `lti:launch`<br>`grades:receive` | `app/src/screens/Today.tsx` | `gradebook.check.sql` | — | `docs/launch/STUDENT-QUICK-START.md` | Manage graduate milestones, funding and work planning, course/research workflows | Other students’ records |
 | `admitted_student` | provisionable | ✓ ✓ ✓ · · · · | — | — | — | — | — | Complete pre-arrival actions, first-term planning, orientation actions, accepted mentor workflow | Current-student restricted data unless enrolled/authorized |
-| `transfer_student` | provisionable | ✓ ✓ ✓ · · · · | `lti:launch` | — | — | — | — | Prepare transfer evaluation request, view approved articulation rules, use estimates | Self-verify transfer credit or approve equivalencies |
+| `transfer_student` | provisionable | ✓ ✓ ✓ · · · · | `lti:launch`<br>`grades:receive` | — | — | — | — | Prepare transfer evaluation request, view approved articulation rules, use estimates | Self-verify transfer credit or approve equivalencies |
 | `dual_enrollment_student` | provisionable | ✓ ✓ ✓ · · · · | — | — | — | — | — | Use authorized planning and shared workflows with required guardian protections | Unconsented sharing or general student network features |
 | `alumni` | provisionable | ✓ ✓ ✓ · ✓ · · | — | — | `expansion.check.sql`<br>`mentor-rosters.check.sql`<br>`minimum-age.check.sql` | — | — | Maintain selected profile, mentoring offer, alumni tools | Current student data absent explicit contact/consent |
 
@@ -63,8 +63,8 @@ Two further limits on what the columns below prove:
 
 | Role | State | Def · Mod · Prov · Use · Sec · Sup · Appr | Capabilities | Interface | Authorization checks | Runbook | Training | Must be able to | Must never |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `faculty` | secure | ✓ ✓ ✓ ✓ ✓ · · | `skill:verify`<br>`help_request:respond`<br>`lti:launch`<br>`course:publish`<br>`record:propose` | `app/src/components/HelpInbox.tsx` | `academic-record.check.sql`<br>`advisor.check.sql`<br>`coursestudio.check.sql`<br>`demand.check.sql`<br>`expansion.check.sql`<br>`lti-capability.check.sql`<br>`role-grant-audit.check.sql`<br>`rolegrants.check.sql` | — | `docs/FACULTY-ENABLEMENT.md`<br>`docs/launch/FIRST-DAY-CHECKLISTS.md` | Build/manage course content, define course AI policy, teach, assess, grade, give feedback | Private student plans, diagnoses, unrelated records |
-| `teaching_assistant` | secure | ✓ ✓ ✓ ✓ ✓ · · | `help_request:respond`<br>`lti:launch` | `app/src/components/HelpInbox.tsx` | `lti-membership.check.sql`<br>`rolegrants.check.sql` | — | `docs/FACULTY-ENABLEMENT.md` | Perform delegated, course-scoped grading/support duties | Unapproved grade controls or unrelated course/student data |
+| `faculty` | secure | ✓ ✓ ✓ ✓ ✓ · · | `skill:verify`<br>`help_request:respond`<br>`lti:launch`<br>`course:publish`<br>`record:propose`<br>`grades:enter`<br>`grades:moderate`<br>`grades:release`<br>`grades:export` | `app/src/components/HelpInbox.tsx` | `academic-record.check.sql`<br>`advisor.check.sql`<br>`coursestudio.check.sql`<br>`demand.check.sql`<br>`expansion.check.sql`<br>`gradebook.check.sql`<br>`lti-capability.check.sql`<br>`role-grant-audit.check.sql`<br>`rolegrants.check.sql` | — | `docs/FACULTY-ENABLEMENT.md`<br>`docs/launch/FIRST-DAY-CHECKLISTS.md` | Build/manage course content, define course AI policy, teach, assess, grade, give feedback | Private student plans, diagnoses, unrelated records |
+| `teaching_assistant` | secure | ✓ ✓ ✓ ✓ ✓ · · | `help_request:respond`<br>`lti:launch`<br>`grades:enter` | `app/src/components/HelpInbox.tsx` | `gradebook.check.sql`<br>`lti-membership.check.sql`<br>`rolegrants.check.sql` | — | `docs/FACULTY-ENABLEMENT.md` | Perform delegated, course-scoped grading/support duties | Unapproved grade controls or unrelated course/student data |
 | `academic_advisor` | secure | ✓ ✓ ✓ ✓ ✓ · · | `help_request:respond` | `app/src/components/HelpInbox.tsx` | `advisor.check.sql`<br>`help-requests.check.sql` | — | `docs/launch/FIRST-DAY-CHECKLISTS.md` | View only student-shared plans/agendas and authorized follow-up | Private study activity, health, billing, or unrestricted browsing |
 | `tutor` | secure | ✓ ✓ ✓ ✓ ✓ · · | `help_request:respond`<br>`lti:launch` | `app/src/components/HelpInbox.tsx` | `help-requests.check.sql`<br>`rolegrants.check.sql` | — | — | Manage assigned tutoring/session workflow and student-consented context | Grades, private plans, unrelated student records |
 | `learning_center_staff` | secure | ✓ ✓ ✓ ✓ ✓ · · | `resource:publish`<br>`tutoring:manage`<br>`help_request:respond` | `app/src/components/HelpInbox.tsx` | `coursestudio.check.sql`<br>`supportshares.check.sql` | — | — | Publish resources, manage tutoring availability/sessions where authorized | Grades or broad private student data |
@@ -77,14 +77,15 @@ Two further limits on what the columns below prove:
 | Role | State | Def · Mod · Prov · Use · Sec · Sup · Appr | Capabilities | Interface | Authorization checks | Runbook | Training | Must be able to | Must never |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `disability_services_officer` | provisionable | ✓ ✓ ✓ · ✓ · · | `accommodation:verify` | — | `expansion.check.sql` | — | — | Issue/revoke functional accommodation passport | Diagnoses in Semester; unrestricted academic records |
-| `registrar` | secure | ✓ ✓ ✓ ✓ ✓ · · | `institution_action:publish`<br>`registration_window:publish`<br>`catalog:sync`<br>`articulation:approve`<br>`demand:read`<br>`help_request:respond`<br>`migration:approve`<br>`migration:view`<br>`record:propose`<br>`record:approve`<br>`record:override`<br>`record:read` | `app/src/components/HelpInbox.tsx` | `academic-record.check.sql`<br>`demand.check.sql`<br>`expansion.check.sql`<br>`migration-center.check.sql`<br>`officeactions.check.sql` | — | — | Publish catalog, requirements, windows, approved articulation decisions, institutional actions | Individual private plans, AI memory, unrestricted student browsing |
-| `department_chair` | provisionable | ✓ ✓ ✓ · ✓ · · | `demand:read` | — | `demand.check.sql` | — | — | View allowed aggregate demand/outcomes for scope | Individual records |
+| `registrar` | secure | ✓ ✓ ✓ ✓ ✓ · · | `institution_action:publish`<br>`registration_window:publish`<br>`catalog:sync`<br>`articulation:approve`<br>`demand:read`<br>`help_request:respond`<br>`migration:approve`<br>`migration:view`<br>`record:propose`<br>`record:approve`<br>`record:override`<br>`record:read`<br>`registration:administer`<br>`grades:export` | `app/src/components/HelpInbox.tsx` | `academic-record.check.sql`<br>`demand.check.sql`<br>`expansion.check.sql`<br>`gradebook.check.sql`<br>`migration-center.check.sql`<br>`officeactions.check.sql`<br>`registration_transaction.check.sql` | — | — | Publish catalog, requirements, windows, approved articulation decisions, institutional actions | Individual private plans, AI memory, unrestricted student browsing |
+| `department_chair` | provisionable | ✓ ✓ ✓ · ✓ · · | `demand:read` | — | `demand.check.sql`<br>`gradebook.check.sql` | — | — | View allowed aggregate demand/outcomes for scope | Individual records |
 | `dean` | provisionable | ✓ ✓ ✓ · ✓ · · | `demand:read`<br>`outcomes:read`<br>`migration:approve`<br>`migration:view`<br>`record:approve`<br>`record:read` | — | `academic-record.check.sql` | — | — | View allowed school-level aggregates and decisions | Individual records without explicit authorization |
 | `institutional_researcher` | provisionable | ✓ ✓ ✓ · ✓ · · | `demand:read`<br>`outcomes:read`<br>`migration:view` | — | `academic-record.check.sql`<br>`expansion.check.sql`<br>`migration-center.check.sql` | — | — | View governed, aggregate, suppressed analytics | Individual student records |
 | `financial_aid_officer` | provisionable | ✓ ✓ ✓ · ✓ · · | `institution_action:publish`<br>`finance:request`<br>`finance:read` | — | `officeactions.check.sql`<br>`student-accounts.check.sql`<br>`student-payment-plans.check.sql` | — | — | Publish limited official actions/checklists | Student plans/cost scenarios unless specifically authorized |
 | `student_accounts_officer` | provisionable | ✓ ✓ ✓ · ✓ · · | `institution_action:publish`<br>`finance:request`<br>`finance:approve`<br>`finance:read` | — | `student-accounts.check.sql`<br>`student-payment-plans.check.sql` | — | — | Publish limited billing/action prompts | Student cost plans or payment details |
 | `international_student_advisor` | provisionable | ✓ ✓ ✓ · · · · | `institution_action:publish` | — | — | — | — | Publish compliance actions under approved scope | Private student segments beyond approved source/need |
 | `veterans_certifying_official` | provisionable | ✓ ✓ ✓ · · · · | `institution_action:publish` | — | — | — | — | Publish certification actions under approved scope | Private plans or unrelated data |
+| `dining_staff` | provisionable | ✓ ✓ ✓ · ✓ · · | `dining:operate` | — | `dining.check.sql` | — | — | Work one school’s mobile-order queue, pause a location, read the shared-swipe pool as totals (dining:operate) | A student’s balance or plan, or who gave or used a shared swipe |
 | `residence_life_staff` | provisionable | ✓ ✓ ✓ · · · · | `institution_action:publish` | — | — | — | — | Publish residence/action information under scope | Roommate detail, precise location, academic records |
 | `resident_assistant` | provisionable | ✓ ✓ ✓ · ✓ · · | `resource:publish` | — | `officeactions.check.sql` | — | — | Publish approved resource/event information | Resident academic or private data |
 | `counseling_liaison` | provisionable | ✓ ✓ ✓ · · · · | `resource:publish` | — | — | — | — | Publish resource-only actions | Student records or private wellbeing data |
@@ -99,10 +100,10 @@ Two further limits on what the columns below prove:
 
 | Role | State | Def · Mod · Prov · Use · Sec · Sup · Appr | Capabilities | Interface | Authorization checks | Runbook | Training | Must be able to | Must never |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `university_admin` | secure | ✓ ✓ ✓ ✓ ✓ · · | `tenant:configure`<br>`ai:configure`<br>`source:approve`<br>`audit:read`<br>`integration:view`<br>`integration:approve`<br>`killswitch:engage`<br>`sponsor:review`<br>`migration:approve`<br>`migration:view` | `app/src/components/institutional/ControlPlane.tsx`<br>`app/src/components/institutional/IntegrationDashboard.tsx` | `canonical-display.check.sql`<br>`commercial.check.sql`<br>`console-approvals.check.sql`<br>`console-control-plane.check.sql`<br>`evidence-graphs.check.sql`<br>`governance.check.sql`<br>`gtm.check.sql`<br>`institutional-foundation.check.sql`<br>`integration-control-plane.check.sql`<br>`integration-quality.check.sql`<br>`intelligence-policy.check.sql`<br>`lti-capability.check.sql`<br>`migration-center.check.sql`<br>`module_mode.check.sql`<br>`role-grant-audit.check.sql`<br>`tenant-plan.check.sql`<br>`tenant-rollout.check.sql`<br>`tenant-sso-policy.check.sql`<br>`trust-room.check.sql` | — | `docs/launch/FIRST-DAY-CHECKLISTS.md`<br>`docs/SSO-TENANT-ONBOARDING.md` | Configure tenant, modules, branding, approved sources, policy, aggregate dashboards | Unrestricted education-record browsing |
+| `university_admin` | secure | ✓ ✓ ✓ ✓ ✓ · · | `tenant:configure`<br>`ai:configure`<br>`source:approve`<br>`audit:read`<br>`integration:view`<br>`integration:approve`<br>`killswitch:engage`<br>`sponsor:review`<br>`migration:approve`<br>`migration:view` | `app/src/components/institutional/ControlPlane.tsx`<br>`app/src/components/institutional/IntegrationDashboard.tsx` | `canonical-display.check.sql`<br>`commercial.check.sql`<br>`console-approvals.check.sql`<br>`console-control-plane.check.sql`<br>`evidence-graphs.check.sql`<br>`feature_cohorts.check.sql`<br>`governance.check.sql`<br>`gtm.check.sql`<br>`institutional-foundation.check.sql`<br>`integration-control-plane.check.sql`<br>`integration-quality.check.sql`<br>`intelligence-policy.check.sql`<br>`lti-capability.check.sql`<br>`migration-center.check.sql`<br>`module_mode.check.sql`<br>`role-grant-audit.check.sql`<br>`tenant-plan.check.sql`<br>`tenant-rollout.check.sql`<br>`tenant-sso-policy.check.sql`<br>`trust-room.check.sql` | — | `docs/launch/FIRST-DAY-CHECKLISTS.md`<br>`docs/SSO-TENANT-ONBOARDING.md` | Configure tenant, modules, branding, approved sources, policy, aggregate dashboards | Unrestricted education-record browsing |
 | `department_admin` | provisionable | ✓ ✓ ✓ · · · · | — | — | — | — | — | Manage approved department content and scoped configuration | Other department/tenant records |
-| `university_staff` | secure | ✓ ✓ ✓ ✓ ✓ · · | `support:read`<br>`help_request:respond` | `app/src/components/HelpInbox.tsx` | `console-approvals.check.sql`<br>`console-control-plane.check.sql`<br>`support-access.check.sql` | — | — | Perform only an explicitly granted, scoped duty | Implicit global authority |
-| `integration_admin` | secure | ✓ ✓ ✓ ✓ ✓ · · | `integration:view`<br>`integration:configure`<br>`integration:sync`<br>`integration:replay`<br>`integration:reconcile`<br>`migration:manage`<br>`migration:view` | `app/src/components/institutional/IntegrationDashboard.tsx` | `canonical-display.check.sql`<br>`integration-control-plane.check.sql`<br>`integration-hardening.check.sql`<br>`integration-quality.check.sql`<br>`integration-rls-matrix.check.sql`<br>`migration-center.check.sql` | `docs/INTEGRATION-OPERATOR-RUNBOOK.md` | — | Configure integrations, security policy, audit/access processes | Student content unless separately authorized and audited |
+| `university_staff` | secure | ✓ ✓ ✓ ✓ ✓ · · | `support:read`<br>`help_request:respond` | `app/src/components/HelpInbox.tsx` | `console-approvals.check.sql`<br>`console-control-plane.check.sql`<br>`dining.check.sql`<br>`support-access.check.sql` | — | — | Perform only an explicitly granted, scoped duty | Implicit global authority |
+| `integration_admin` | secure | ✓ ✓ ✓ ✓ ✓ · · | `integration:view`<br>`integration:configure`<br>`integration:sync`<br>`integration:replay`<br>`integration:reconcile`<br>`migration:manage`<br>`migration:view` | `app/src/components/institutional/IntegrationDashboard.tsx` | `canonical-display.check.sql`<br>`dining.check.sql`<br>`integration-control-plane.check.sql`<br>`integration-hardening.check.sql`<br>`integration-quality.check.sql`<br>`integration-rls-matrix.check.sql`<br>`migration-center.check.sql` | `docs/INTEGRATION-OPERATOR-RUNBOOK.md` | — | Configure integrations, security policy, audit/access processes | Student content unless separately authorized and audited |
 | `implementation_manager` | provisionable | ✓ ✓ ✓ · ✓ · · | `tenant:implement`<br>`console:operate`<br>`migration:manage`<br>`migration:view` | — | `console-control-plane.check.sql`<br>`governance.check.sql`<br>`help-requests.check.sql`<br>`migration-center.check.sql` | — | `docs/SSO-TENANT-ONBOARDING.md` | Configure sandbox tenant and launch setup | Broad production student-data access |
 | `data_steward` | provisionable | ✓ ✓ ✓ · ✓ · · | `data_request:handle`<br>`console:operate` | — | `console-control-plane.check.sql`<br>`expansion.check.sql`<br>`governance.check.sql` | — | — | Process data requests under strict workflow | AI memories and student plans absent required authority |
 | `portfolio_council` | provisionable | ✓ ✓ ✓ · ✓ · · | `governance:decide` | — | `governance.check.sql` | — | — | Decide governance items put to the council | Any individual student record |
@@ -164,7 +165,7 @@ own records. A grant outside either list fails the build until somebody judges i
 
 | Internal roles may hold | Internal roles never hold |
 | --- | --- |
-| `console:operate`<br>`approval:decide`<br>`breakglass:request`<br>`beta:manage`<br>`beta:triage`<br>`platform:configure`<br>`support:ticket`<br>`incident:communicate`<br>`killswitch:engage`<br>`moderation:action`<br>`report:read`<br>`review:moderate`<br>`opportunity:moderate`<br>`community:review`<br>`community:review_senior`<br>`community:escalation_agreements`<br>`community:manage`<br>`account:manage`<br>`success:manage`<br>`billing:operate`<br>`compliance:manage`<br>`content:manage`<br>`campaign:manage`<br>`campaign:report`<br>`campaign:review`<br>`trust:publish` | `mentee:read`<br>`help_request:respond`<br>`accommodation:verify`<br>`skill:verify`<br>`support:read`<br>`data_request:handle`<br>`talent:search`<br>`lti:launch`<br>`audit:read`<br>`outcomes:read`<br>`demand:read` |
+| `console:operate`<br>`approval:decide`<br>`breakglass:request`<br>`beta:manage`<br>`beta:triage`<br>`platform:configure`<br>`support:ticket`<br>`incident:communicate`<br>`killswitch:engage`<br>`moderation:action`<br>`report:read`<br>`review:moderate`<br>`opportunity:moderate`<br>`community:review`<br>`community:review_senior`<br>`community:escalation_agreements`<br>`community:manage`<br>`account:manage`<br>`success:manage`<br>`billing:operate`<br>`compliance:manage`<br>`content:manage`<br>`campaign:manage`<br>`campaign:report`<br>`campaign:review`<br>`trust:publish` | `mentee:read`<br>`help_request:respond`<br>`accommodation:verify`<br>`skill:verify`<br>`support:read`<br>`data_request:handle`<br>`talent:search`<br>`lti:launch`<br>`audit:read`<br>`outcomes:read`<br>`demand:read`<br>`registration:administer` |
 
 ## Role × capability
 
@@ -173,16 +174,25 @@ One row per row of `public.role_capabilities`. A capability's checks are the SQL
 | Role | Capability | Interface | Checks naming the capability |
 | --- | --- | --- | --- |
 | `student` | `lti:launch` | — | `lti-capability.check.sql` |
+| `student` | `grades:receive` | — | — |
 | `undergraduate_student` | `lti:launch` | — | `lti-capability.check.sql` |
+| `undergraduate_student` | `grades:receive` | — | — |
 | `graduate_student` | `lti:launch` | — | `lti-capability.check.sql` |
+| `graduate_student` | `grades:receive` | — | — |
 | `transfer_student` | `lti:launch` | — | `lti-capability.check.sql` |
+| `transfer_student` | `grades:receive` | — | — |
 | `faculty` | `skill:verify` | — | — |
 | `faculty` | `help_request:respond` | `app/src/components/HelpInbox.tsx` | — |
 | `faculty` | `lti:launch` | — | `lti-capability.check.sql` |
 | `faculty` | `course:publish` | — | — |
 | `faculty` | `record:propose` | — | — |
+| `faculty` | `grades:enter` | — | — |
+| `faculty` | `grades:moderate` | — | — |
+| `faculty` | `grades:release` | — | — |
+| `faculty` | `grades:export` | — | — |
 | `teaching_assistant` | `help_request:respond` | `app/src/components/HelpInbox.tsx` | — |
 | `teaching_assistant` | `lti:launch` | — | `lti-capability.check.sql` |
+| `teaching_assistant` | `grades:enter` | — | — |
 | `academic_advisor` | `help_request:respond` | `app/src/components/HelpInbox.tsx` | — |
 | `tutor` | `help_request:respond` | `app/src/components/HelpInbox.tsx` | — |
 | `tutor` | `lti:launch` | — | `lti-capability.check.sql` |
@@ -207,6 +217,8 @@ One row per row of `public.role_capabilities`. A capability's checks are the SQL
 | `registrar` | `record:approve` | — | — |
 | `registrar` | `record:override` | — | — |
 | `registrar` | `record:read` | — | — |
+| `registrar` | `registration:administer` | — | — |
+| `registrar` | `grades:export` | — | — |
 | `department_chair` | `demand:read` | — | — |
 | `dean` | `demand:read` | — | — |
 | `dean` | `outcomes:read` | — | — |
@@ -226,6 +238,7 @@ One row per row of `public.role_capabilities`. A capability's checks are the SQL
 | `student_accounts_officer` | `finance:read` | — | — |
 | `international_student_advisor` | `institution_action:publish` | — | — |
 | `veterans_certifying_official` | `institution_action:publish` | — | — |
+| `dining_staff` | `dining:operate` | — | — |
 | `residence_life_staff` | `institution_action:publish` | — | — |
 | `resident_assistant` | `resource:publish` | — | — |
 | `counseling_liaison` | `resource:publish` | — | — |

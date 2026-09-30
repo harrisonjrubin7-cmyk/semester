@@ -181,6 +181,13 @@ declare
     -- a caller can resolve only policy rows from their verified school.
     'effective_ai_policy(want_tenant text, want_user uuid)',
     'feature_state(want_capability text, want_tenant text)',
+    -- 20260929340000_feature_cohorts.sql: security invoker, no user parameter;
+    -- it answers for the caller from rows their own RLS already shows them.
+    'feature_cohort_allows(want_capability text, want_tenant text)',
+    -- 20260929370000_feature_policy_narrowing.sql: security invoker, no user
+    -- parameter; a flag's role and cohort lists and which of them the caller
+    -- holds, from the rows the caller's own RLS shows it.
+    'feature_narrowing(want_capability text, want_tenant text)',
     -- A student-created, seven-day maximum grant is checked again on every
     -- aggregate support read. The deletion helper removes grants where the
     -- caller was either side; immutable pseudonymous events remain.
@@ -385,7 +392,7 @@ declare
     'integration_set_paused(want_connection text, want_paused boolean, want_reason text)',
     'kill_switch_engaged(want_switch text, want_tenant text)',
 
-    -- The two in 20260930010000_module_mode.sql (D-149). Both are security
+    -- The two in 20260930010000_module_mode.sql (D-150). Both are security
     -- invoker, so a caller reads only their own school's rows: a school they
     -- are not in reads all-Connect. `core_modules()` is the constant list of
     -- fourteen; `effective_module_modes` is what the app asks for a school's
@@ -492,6 +499,21 @@ declare
     'publish_study_pack(want_course text, want_term text, want_pack uuid, want_title text, want_note text, want_items jsonb, want_retired boolean)',
     'my_course_studio_courses()',
 
+    -- 20260929310000_gradebook.sql: the gradebook of record. Each checks
+    -- auth.uid(), the caller's own school and a course-scoped grades:*
+    -- capability (or, filing a regrade, that the grade is the caller's own
+    -- and released). `gradebook_record_passback` is the sender's, service
+    -- role only, and is deliberately not here.
+    'gradebook_set_scheme(want_course text, want_term text, want_categories jsonb, want_letters jsonb, want_moderation boolean, want_key text)',
+    'gradebook_add_item(want_course text, want_term text, want_category text, want_title text, want_points numeric, want_line_item text, want_key text)',
+    'gradebook_enter(want_item uuid, want_student uuid, want_score numeric, want_mark text, want_comment text, want_reason text, want_key text)',
+    'gradebook_moderate(want_item uuid, want_student uuid, want_key text)',
+    'gradebook_release(want_item uuid, want_key text)',
+    'gradebook_file_regrade(want_item uuid, want_reason text, want_key text)',
+    'gradebook_resolve_regrade(want_request uuid, want_outcome text, want_score numeric, want_mark text, want_note text, want_key text)',
+    'gradebook_export(want_course text, want_term text)',
+    'gradebook_queue_passback(want_item uuid, want_key text)',
+
     -- The two in 20260928310000_expansion_review_fixes.sql. Each deletes only
     -- rows naming the caller, for "Delete my account": demand contributions
     -- and consents, and advisor shares at either end. `demand.check.sql` and
@@ -540,7 +562,41 @@ declare
     'review_break_glass(want_id uuid, want_note text)',
     'console_approvals(include_demo boolean)',
     'console_break_glass(include_demo boolean)',
-    'console_customers(include_demo boolean)'
+    'console_customers(include_demo boolean)',
+
+    -- The nine in 20260929300000_registration_transaction.sql. The three
+    -- student writers act only on the caller's own enrollment at the
+    -- caller's own school, behind writeback.registration_submit and
+    -- kill.writeback, each with an idempotency key. The two readers return
+    -- the caller's own rows, and a hold as whether, office and link — never
+    -- the reason. The four registrar writers each raise without
+    -- registration:administer over the caller's school.
+    -- `registration_transaction.check.sql` attempts each refusal.
+    'registration_enroll(want_section uuid, want_key text, want_expect text)',
+    'registration_drop(want_section uuid, want_key text)',
+    'registration_withdraw(want_section uuid, want_key text)',
+    'my_registration(want_term text)',
+    'my_registration_hold()',
+    'registrar_put_term(want_term text, want_opens timestamp with time zone, want_add_drop_ends timestamp with time zone, want_withdraw_ends timestamp with time zone, want_max_credits numeric)',
+    'registrar_put_section(want_term text, want_course text, want_section text, want_title text, want_credits numeric, want_capacity integer, want_waitlist integer, want_meetings jsonb, want_prerequisites text[], want_requires_approval boolean)',
+    'registrar_grant_override(want_student uuid, want_section uuid, want_waives text[], want_reason text, want_key text)',
+    'registrar_decide(want_enrollment uuid, want_approve boolean, want_reason text, want_key text)',
+    -- The nine in 20260929330000_dining.sql. Each takes the caller from
+    -- auth.uid() and their school from profiles.school_id, never a
+    -- parameter. The three that charge (placing, giving) also check the flag,
+    -- both money kill switches and a live card-office connection; the order
+    -- queue and pool functions staff use check `dining:operate` over the school;
+    -- disconnecting checks `integration:configure`; the balance read returns
+    -- the caller's own rows. `dining.check.sql` attempts each refusal.
+    'dining_place_order(want_location uuid, want_items uuid[], want_pay text, want_key text)',
+    'dining_cancel_order(want_order uuid, want_reason text)',
+    'dining_advance_order(want_order uuid, want_status text)',
+    'dining_set_ordering(want_location uuid, want_enabled boolean)',
+    'dining_donate_swipes(want_swipes integer, want_consent text, want_key text)',
+    'dining_pool_summary()',
+    'dining_order_queue()',
+    'dining_disconnect_partner()',
+    'my_dining_balances()'
   ];
   extra text;
   missing text;
