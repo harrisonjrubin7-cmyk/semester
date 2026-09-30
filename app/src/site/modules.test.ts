@@ -47,6 +47,7 @@ describe('the takeover map', () => {
     registration: /^registration_/, lms_gradebook: /^gradebook_/,
     records: /^academic_record_/, student_accounts: /^student_account_/,
     advancement: /^alumni_profiles$/,
+    k12: /^guardian_links$/,
   };
   it('reads a module as built when its migrations create tables under the prefix it uses', () => {
     const tables = [...SQL.matchAll(/create table (?:if not exists )?public\.([a-z_0-9]+)/gi)].map((x) => x[1]);

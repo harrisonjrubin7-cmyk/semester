@@ -35,6 +35,7 @@ import { eraseDevice } from '../lib/erase';
 import { record, yours } from '../lib/journal';
 import { Toggle } from '../components/ui';
 import { SupportAccess } from '../components/SupportAccess';
+import { DataRightsRequests } from '../components/DataRightsRequests';
 import { SchoolDataPanel } from '../components/SchoolRecords';
 import { DESTINATIONS, offered } from '../lib/nav';
 import {
@@ -227,10 +228,12 @@ export function Privacy({ trustCenter = moduleOn(MODULE_FLAGS.trust_center) }: {
 
       <SharingList />
 
+      <DataRightsRequests account={account} />
+
       <SectionLabel style={{ marginTop: 'calc(22px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(5px * var(--density, 1))' }}>If something is wrong</SectionLabel>
       <div style={{ fontSize: 'var(--type-base-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-loose)', textWrap: 'pretty' }}>
-        There is no form. Email <strong>{SUPPORT}</strong> and a person will answer — including if
-        you want your account removed by hand rather than by the button below.
+        The tracked form above is for your data rights. Email <strong>{SUPPORT}</strong> for a privacy
+        question you do not want to put in the request detail, or if you cannot sign in.
       </div>
 
       <SectionLabel style={{ marginTop: 'calc(22px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(5px * var(--density, 1))' }}>Export diagnostics</SectionLabel>

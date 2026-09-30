@@ -1131,6 +1131,10 @@ export const OWNED_TABLES: OwnedTable[] = [
   // a decision is a record other people made — so the filtered DELETE takes
   // nothing and the cascade from auth.users does. It holds no address.
   { table: 'school_membership_requests', column: 'user_id' },
+  // A formal export, correction, restriction or assisted-erasure request.
+  // It is keyed by `subject` and cascades with auth.users; the completed fact
+  // may remain without an identity in the older `data_requests` ledger.
+  { table: 'data_subject_request', column: 'subject' },
   // A support grant names this account in either of two columns. The RPC
   // removes both sides, which one filtered DELETE cannot express, while its
   // audit trigger leaves only pseudonyms behind.
@@ -1426,6 +1430,10 @@ export const KEPT_TABLES: KeptTable[] = [
   {
     table: 'migration_approvals',
     why: 'An approval or rejection you recorded for a migration’s cutover is part of the record of why your school retired a system. It stays with the migration, no longer attributed to you.',
+  },
+  {
+    table: 'workflow_versions',
+    why: 'A workflow you drafted or published for your school — the steps of a process and the checks a student must meet — is the school’s process, not a record about you, and it holds no student. Deleting your account removes you as the person who drafted or published it; every version stays.',
   },
   {
     table: 'school_config_versions',

@@ -40,6 +40,11 @@ export interface ExperienceFlags {
    */
   migrationCenter: FeatureState;
   /**
+   * The staff Workflow Builder (lib/workflow, workflow_versions, D-1018). RLS and
+   * the second-person publish rule decide what each account may do.
+   */
+  workflowBuilder: FeatureState;
+  /**
    * The staff Configuration Studio (lib/config, school_config_versions, D-1011).
    * RLS and the second-person publish rule decide what each account may do.
    */
@@ -80,6 +85,7 @@ export function experienceFlags(env: PreviewEnv): ExperienceFlags {
     supportTickets: featureState(env, 'VITE_SUPPORT_TICKETS', false),
     campaignManager: featureState(env, 'VITE_CAMPAIGN_MANAGER', preview),
     migrationCenter: featureState(env, 'VITE_MIGRATION_CENTER', preview),
+    workflowBuilder: featureState(env, 'VITE_WORKFLOW_BUILDER', preview),
     configurationStudio: featureState(env, 'VITE_CONFIGURATION_STUDIO', preview),
     recordLedger: featureState(env, 'VITE_RECORD_LEDGER', preview),
     studentAccounts: featureState(env, 'VITE_STUDENT_ACCOUNTS', preview),

@@ -472,6 +472,9 @@ describe('"delete my account" really means every row', () => {
       'study_packs',
       'subscriptions',
       'support_access_event',
+      // The Workflow Builder's table (lib/workflow/api.ts, D-1018): a school's
+      // versioned workflow definitions. No person, credential or student record.
+      'workflow_versions',
     ]);
     const said = deletionClaims().map((c) => c.body).join(' ');
     for (const { table, why } of KEPT_TABLES) {

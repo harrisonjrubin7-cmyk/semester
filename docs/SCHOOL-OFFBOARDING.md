@@ -1,10 +1,10 @@
 # When a school leaves
 
-Full-beta gate G3, decision D-1021. Written 30 Sep 2026. **Built, not used:** no school has been offboarded, and nothing here has run against production.
+Full-beta gate G3, decision D-1021. Written 30 Sep 2026. **Built, not used:** the schema migration is present in production, but no school has been offboarded and no offboarding case has been run there.
 
 A school row is never deleted. `delete from schools` now fails with a message pointing here, for every role including the platform operator's own, because 125 tenant tables reference `schools` with `on delete cascade` and one statement would have silently taken all of them. A school leaves through a **case**, in steps, and every step but the last is undone by one call.
 
-Everything is a function called with a signed-in account (`supabase/migrations/20260930200000_school_offboarding.sql`). There is no screen: an offboarding is a rare, contractual event with two named people, and a screen would be a way to do it by accident. The suite that walks every refusal is `supabase/school-offboarding.check.sql` (96 checks; twelve guards were removed one at a time and each removal turned it red).
+Everything is a function called with a signed-in account (`supabase/migrations/20260930200000_school_offboarding.sql`). There is no screen: an offboarding is a rare, contractual event with two named people, and a screen would be a way to do it by accident. The suite that walks every refusal is `supabase/school-offboarding.check.sql` (98 checks; twelve guards were removed one at a time and each removal turned it red).
 
 ## The steps
 
@@ -44,6 +44,8 @@ Does not: touch a student's own session or account, delete or edit any record, o
 - Notifying anyone. Step 4 records that it happened.
 - Any screen, and any offboarding from a school-set-up that predates a `tenant_rollout` row (the roll-out step is skipped when there is no row).
 - Department-, office- and course-scoped grants inside the school are not revoked; only `school`-scoped ones are. The grant that gives an administrator power over a whole school is school-scoped, so their authority ends; a course instructor's course-scoped grant does not, and reaches only that course's own records.
+
+**Done once, by the author:** a compact rehearsal on a hosted Supabase preview database with synthetic data (`docs/evidence/offboarding/2026-09-30-hosted-preview-rehearsal.md`). It does not replace the rehearsal below by a second person.
 
 ## Rehearsal before first use
 
