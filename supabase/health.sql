@@ -164,6 +164,7 @@ with expected(jobname, parked) as (values
   ('integration-retention',         false),
   ('integration-sync',              false),
   ('invite-retention',              false),
+  ('ledger-chain-integrity',        false),
   ('lti-link-ticket',               false),
   ('lti-nonce',                     false),
   ('media-scan',                    true),

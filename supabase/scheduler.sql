@@ -423,6 +423,22 @@ select cron.schedule(
   $job$select private.console_audit_seal(); select private.console_audit_verify();$job$
 );
 
+-- ── The academic-record and student-account ledger chains ─────────────────
+--
+-- The same two nightly things for the two ledgers that hold the most
+-- (20260930150000_ledger_chain_seals.sql): `private.ledger_chain_nightly()`
+-- seals yesterday's links into an HMAC-signed manifest per ledger and school,
+-- then walks every chain with the link check and the seal check and records
+-- the run in `private.ledger_chain_verification`. Nothing is ever removed, so
+-- `audit-retention` does not name these tables and must not. 03:27 UTC, four
+-- minutes after the console's. **Active**: no secret and no endpoint, and with
+-- no chains it verifies nothing and says so.
+select cron.schedule(
+  'ledger-chain-integrity',
+  '27 3 * * *',
+  $job$select private.ledger_chain_nightly()$job$
+);
+
 -- ── Commercial: the dunning worker ────────────────────────────────────────
 --
 -- `public.run_dunning()` (20260929080000_commercial_automation.sql) works every
