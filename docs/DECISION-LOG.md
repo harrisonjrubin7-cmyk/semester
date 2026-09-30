@@ -3364,7 +3364,42 @@ already in the tree under the design-debt register and needs no decision.
   **conflict with the seven roots on main** and with `DO-NOT-BUILD.md` #1.
   Existing decision holds; not reopened here.
 
-## D-155 · Alumni relations and fundraising are described on the site and built by no one yet
+## D-154 · The load harness covers the open and sync every student makes, and a push that loses an update fails it
+
+**Decided 30 Sep 2026.** #974's `supabase/load.sh` loads the registration-week
+paths. Every visit and every edit take a different path: the pull, and then
+compare-and-swap pushes of the state row and four courses. That path had no
+load at all. B14 and SRE-007 still recorded that no load test existed. #996
+had built a second harness for it, at the same path; that harness is folded
+into this one rather than kept beside it.
+
+- **Three scenarios:**
+  - `sync-open`: the nine requests of an open;
+  - `sync-push`: state and four courses, by compare-and-swap;
+  - `sync-same-student`: two devices pushing at once.
+
+  Each runs as the student, on production-sized rows, against a budget about
+  ten times a quiet machine's reading, like the others.
+- **A push that writes nothing fails the run.** A compare-and-swap that
+  matches nothing still succeeds, so the rows written are counted: about one
+  state row and four courses a push. Shown red with a course
+  compare-and-swap planted to miss: 0 courses written, and a push p95 that
+  looked seven times faster.
+- **A lost update fails the run.** Each winning push must build on the one
+  before. The control, the same race without the compare-and-swap, must lose
+  some writes, and did (1,165 of 1,526).
+- **The database is settled before timing:** `VACUUM (FREEZE, ANALYZE)` and
+  `CHECKPOINT` after the seed. The #996 gate went red on a runner without
+  them, with a median of 8 ms under a p95 of 457 ms.
+- **Capacity**, from #996's rate-limited run on production's own settings:
+  the first morning of term at ten times the largest pilot held at 2–4× the
+  target. The push gives first, because every push rewrites every course.
+  This is recorded as a reading, not re-run.
+- **Not done:** PostgREST, Supavisor, GoTrue and the edge functions under
+  load, which is the preview-branch run; and journeys that do not exist yet.
+  B14 moves from owed to partial and SRE-007 from not-started to building.
+
+## D-156 · Alumni relations and fundraising are described on the site and built by no one yet
 
 **Decided 30 Sep 2026.** The site to-do (S7) asks for an advancement module
 and its two pages. Following D-141's pattern for the K–12 edition, this puts
