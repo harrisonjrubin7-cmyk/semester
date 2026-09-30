@@ -507,10 +507,15 @@ procedure.
 
 **How long they live.** Each daily backup expires **7 days** after it is
 taken, on a rolling schedule the provider runs. **That number is the plan
-tier's documentation, not yet read off the dashboard on any date.** The
-tier itself was read on 29 September 2026 through the organization record:
-Pro, for which Supabase's backups page gives seven days of daily backups; the
-Backups page of the project has still not been read.
+tier's documentation, and it was read off the dashboard on 30 September
+2026.** The tier was read on 29 September 2026 through the organization
+record: Pro, for which Supabase's backups page gives seven days of daily
+backups. The next day the owner read the project's own Backups page: nine
+physical backups listed, the earliest 23 Sep 2026 12:06:40 UTC and the latest
+30 Sep 2026 12:08:31 UTC, seven days apart. The reading is filed as
+[`docs/evidence/backups/backups-dashboard-reading-2026-09-30.md`](docs/evidence/backups/backups-dashboard-reading-2026-09-30.md).
+It shows how far back the list reaches, not when a backup expires, and no
+backup from it has been restored.
 `RESTORE.md` says the tier, the schedule and the enabled features are
 dashboard settings nothing in this repository can read, and its table is where
 the verified figure goes with a date and an owner; BCDR-01 in
@@ -518,8 +523,9 @@ the verified figure goes with a date and an owner; BCDR-01 in
 repeats the same unverified figure and says so. `app/src/lib/retention.test.ts`
 holds the two files to one number; it cannot verify the provider, and a
 reader should not take the test for that. Point-in-time recovery, which would
-keep a continuous log for 7, 14 or 28 days, is not confirmed to be on; if it
-is switched on, its retention becomes the number here.
+keep a continuous log for 7, 14 or 28 days, is off: the Backups page read on
+30 September 2026 offers it only as an add-on, and it has not been bought. If
+it is switched on, its retention becomes the number here.
 
 **What that means for a deletion.** When a student deletes a note or their
 account, the live rows go at once, as the sections above say. The copy of

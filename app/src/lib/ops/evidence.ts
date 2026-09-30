@@ -18,10 +18,10 @@
  *
  * ## What is in it
  *
- * Only artifacts that exist, with the dates their files state. `docs/evidence/`
- * does not exist and nothing here pretends it does: the master register still
- * lets no row above `tested`, and `docs/PROOF-CALENDAR.md` still schedules the
- * artifacts that would. What the tree does hold is a handful of dated things —
+ * Only artifacts that exist, with the dates their files state. Every file
+ * under `docs/evidence/` has a record here, and `evidence.test.ts` refuses one
+ * that does not; `docs/PROOF-CALENDAR.md` still schedules the artifacts the
+ * directory does not hold yet. Beside those, the tree holds a handful of dated things —
  * a restore rehearsal, a HECVAT draft with owner attestations, a security
  * whitepaper, a re-read register, a reviewed operating system, a measured test
  * run — and each is here with what rests on it. `evidence.test.ts` refuses a
@@ -96,6 +96,17 @@ export const EVIDENCE: readonly EvidenceRecord[] = [
     claims: ['restore-drill'],
     rows: ['SRE-004', 'SRE-005'],
     note: 'The go/no-go checklist records the pass date; RESTORE.md and supabase/restore.sh hold the procedure and state no date. Production has never been restored, which is why the claim stays in preparation. Renewed by the quarterly disaster-recovery exercise.',
+  },
+  {
+    id: 'backups-dashboard-reading',
+    artifact: 'Production backups read off the dashboard (Database → Backups): point-in-time recovery off, nine physical daily backups listed, 23 to 30 September 2026',
+    path: 'docs/evidence/backups/backups-dashboard-reading-2026-09-30.md',
+    produced: '2026-09-30',
+    validFor: QUARTERLY,
+    owner: 'engineering',
+    claims: [],
+    rows: ['SRE-004'],
+    note: 'The owner’s reading, transcribed: it confirms the seven-day retention and that point-in-time recovery is off, so a restore reaches back at most to the last daily backup. It is a reading, not a restore: engineering access to production and the restore drill are both still pending. Read again after any plan change and at the quarterly disaster-recovery exercise.',
   },
   {
     id: 'hecvat-draft',

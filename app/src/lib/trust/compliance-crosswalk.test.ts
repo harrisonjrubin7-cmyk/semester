@@ -257,7 +257,7 @@ function render(all: Map<string, Standing>): string {
     ...table(['Score', 'Meaning'], (Object.keys(SCALE) as unknown as Level[]).map((l) => [String(l), SCALE[l]])),
     '',
     `A 3 needs an artifact somebody produced by operating the control. The master`,
-    `register keeps those under \`${EVIDENCE_DIR}/\`, ${cap === 4 ? 'which holds the AI drills of 29 September,' : 'and the directory does not exist,'}`,
+    `register keeps those under \`${EVIDENCE_DIR}/\`, ${cap === 4 ? 'which holds the AI drills of 29 September and the backups reading of 30 September,' : 'and the directory does not exist,'}`,
     `so **the ceiling today is ${cap}** for every domain, held by the test to the`,
     `directory rather than to this sentence. A domain's score is the lower median of`,
     `its rows' levels: the level the middle row reaches, so one tested row cannot`,

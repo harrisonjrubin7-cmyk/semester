@@ -20,7 +20,7 @@ with day 1 of the 90-day program; no date is invented here.
 
 ## Where it stands
 
-**0 of 19 artifacts filed.** `docs/evidence/` holds only the AI drills of 29 September, which this calendar does not schedule. The test reads the directory, so this line changes when the first artifact here lands.
+**0 of 19 artifacts filed.** `docs/evidence/` holds only the AI drills of 29 September and the backups reading of 30 September, which this calendar does not schedule. The test reads the directory, so this line changes when the first artifact here lands.
 
 ## Month 1
 

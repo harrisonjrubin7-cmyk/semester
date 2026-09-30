@@ -156,15 +156,21 @@ stayed green, as they should. Its first run found that `restore.sh` itself
 had been red since 27 September — see
 `migrations/20260929040000_round_trip_stable_checks.sql`.
 
-## Point-in-time recovery — **not verified**
+## Point-in-time recovery — **off** (read 30 September 2026)
 
-**Nobody has confirmed that point-in-time recovery (PITR) is enabled on the
-production project, and nobody has restored from it.** Until the table at the
-end of this section has a row with a date, an owner and a measured recovery
-point, the honest answer to "can you restore to a moment before the bad
-`delete`?" is *we do not know*. A daily backup, if the tier has one, is up to a
-day of every student's work; PITR is what shrinks that to minutes, and it is a
-paid add-on that has to be switched on.
+**Point-in-time recovery (PITR) is off on the production project, and nobody
+has restored from any backup of it.** The owner read Database → Backups on
+30 September 2026: PITR is off, and the page offers it only as an add-on.
+Scheduled backups lists **nine physical backups**, the earliest from
+**23 Sep 2026 12:06:40 UTC** and the latest from **30 Sep 2026 12:08:31 UTC**.
+The reading is filed as
+[`docs/evidence/backups/backups-dashboard-reading-2026-09-30.md`](docs/evidence/backups/backups-dashboard-reading-2026-09-30.md).
+
+So the honest answer to "can you restore to a moment before the bad
+`delete`?" is: *only to the daily backup before it*, and that has never been
+tried. A daily backup is up to a day of every student's work. PITR is what
+shrinks that to minutes; it is a paid add-on, and whether to buy it is the
+owner's decision. It has not been switched on.
 
 What could be read from here on 28 September 2026, and what could not: the
 project (`lzrqvlugnawcgywkhqlz`, us-west-2, Postgres 17) is healthy. Its plan
@@ -189,6 +195,9 @@ readable that way: a database connection cannot see the dashboard. They stay
 the owner's reading, for the table below.
 
 ### The procedure, for the owner
+
+Not started: PITR was off when the Backups page was read on 30 September
+2026, and switching it on is a purchase that waits on the owner's decision.
 
 1. **Turn it on.** Dashboard → Project Settings → Add-ons → Point in Time
    Recovery. It needs a paid plan and, on the smaller compute sizes, a compute
@@ -225,7 +234,7 @@ Repeat after any plan change, and at least once a term.
 
 | Date | Owner | PITR enabled? retention | Earliest restorable time | Target `T` | Recovery point (marker before `T` present, after `T` absent?) | Recovery time (restore clicked → queries answered) | Secrets / cron / storage needing manual repair | Verdict |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| | | | | | | | | not yet verified |
+| 30 Sep 2026 | Harrison Rubin (dashboard reading, no restore) | **No** — off, offered as an add-on | No PITR. Earliest daily backup listed: 23 Sep 2026 12:06:40 UTC (latest 30 Sep 2026 12:08:31 UTC; nine listed) | — | not run | not run | not checked | **not verified**: PITR off, and no restore performed |
 
 ## Re-apply the deletions made after the backup point
 
@@ -294,13 +303,16 @@ and the privacy-policy draft carry the exception in the same words.
 
 ## After the drill, fill this in
 
-Nothing below is known yet, and saying so is the point of the table. A row
-with a number in it is a fact about this project; a row without one is work.
+Two rows are read off the dashboard, and nothing below has been restored:
+that is still the point of the table. A row with a number in it is a fact
+about this project; a row without one is work. **Still pending:** the owner
+granting engineering access to production Supabase, and the restore drill
+itself.
 
 | Question | Answer | Measured on |
 | --- | --- | --- |
-| How far back can the project be restored? | not yet measured | — |
-| Worst-case work lost (recovery point) | not yet measured | — |
+| How far back can the project be restored? | To **23 Sep 2026 12:06:40 UTC**, the earliest of nine physical daily backups listed (the latest 30 Sep 2026 12:08:31 UTC): seven days. Read off Database → Backups, not restored | 30 Sep 2026, dashboard reading by the owner |
+| Worst-case work lost (recovery point) | **Up to a day.** PITR is off, so a restore reaches back only to the last daily backup. That follows from the schedule; no restore has measured it | 30 Sep 2026, dashboard reading by the owner |
 | Time to restore, start to finish (recovery time) | not yet measured | — |
 | Did the six fingerprints match? | not yet run | — |
 | Did `ensure_rls` survive? | not yet run | — |

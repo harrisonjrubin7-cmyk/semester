@@ -218,8 +218,9 @@ export const EVIDENCE: readonly EvidenceRow[] = [
       { path: 'supabase/restore-drill.sh', shows: 'the drill, against a disposable project' },
       { path: 'RESTORE.md', shows: 'the procedure and what to record' },
       { path: 'app/src/lib/ops/proofcalendar.test.ts', shows: 'the drill is a scheduled proof, held to the rows it moves and the 90-day item it closes' },
+      { path: 'docs/evidence/backups/backups-dashboard-reading-2026-09-30.md', shows: 'what a restore would start from, read off the dashboard on 30 September 2026: nine daily physical backups back to 23 September, point-in-time recovery off. A reading, not a restore' },
     ],
-    produce: 'Run the drill, time it, record row counts before and after; file it as the proof calendar’s month-one restore drill. Nothing has restored production data yet.',
+    produce: 'Grant engineering access to production, then run the drill, time it, record row counts before and after; file it as the proof calendar’s month-one restore drill. Nothing has restored production data yet.',
   },
   {
     id: 'SEC-IR-001', control: 'Incident response — a plan nobody has walked through', rubric: 'security',
@@ -395,7 +396,7 @@ export const CLOUD: readonly CloudArea[] = [
   { area: 'Infrastructure as code', objective: 'Make configuration reviewable and reproducible', implementation: 'Migrations, Edge Function config, host headers and workflows are in the tree; the hosts’ dashboards are not', where: 'tree', path: 'supabase/DEPLOY.md', cadence: 'Every change' },
   { area: 'Database security', objective: 'Restrict and monitor access to student data', implementation: 'RLS on every table by event trigger; policy checks in CI; access log on reads around RLS', where: 'tree', path: 'supabase/tenancy.check.sql', cadence: 'Quarterly' },
   { area: 'Object and file storage', objective: 'Secure submissions, content and exports', implementation: 'Private buckets under storage RLS; signed time-limited URLs; no malware scanning', where: 'tree', path: 'supabase/community.check.sql', cadence: 'Quarterly' },
-  { area: 'Backups', objective: 'Recover from deletion, corruption or outage', implementation: 'Provider daily backups; a scripted restore drill; never yet run against production data', where: 'tree', path: 'supabase/restore-drill.sh', cadence: 'Quarterly' },
+  { area: 'Backups', objective: 'Recover from deletion, corruption or outage', implementation: 'Provider daily backups, nine listed back to 23 September when read on 30 September 2026, point-in-time recovery off; a scripted restore drill; never yet run against production data', where: 'tree', path: 'supabase/restore-drill.sh', cadence: 'Quarterly' },
   { area: 'Monitoring', objective: 'Detect infrastructure and application threats', implementation: 'Scheduled production smoke tests and a status page; no alert reaches a person, no detection rules', where: 'tree', path: 'MONITORING.md', cadence: 'Continuous' },
   { area: 'Vulnerability management', objective: 'Find and remediate weaknesses', implementation: 'Dependabot and gitleaks; no image, container or external scan; no severity SLA', where: 'tree', path: '.github/dependabot.yml', cadence: 'Continuous; monthly' },
   { area: 'Audit trails', objective: 'Support investigations and accountability', implementation: 'Immutable audit rows for grants, moderation, provisioning and support access; gateway audit with correlation ids', where: 'tree', path: 'supabase/role-grant-audit.check.sql', cadence: 'Quarterly' },
@@ -451,7 +452,7 @@ export const RETENTION_CLASSES: readonly RetentionClass[] = [
   { cls: 'Security and audit logs', examples: 'Authentication, access, administrative actions, security events', approach: 'Per security and contractual requirements; access restricted', today: 'Access log 90 days; activity 400 days; grant, moderation and provisioning audit 3 years', names: ['access_log', 'activity', 'role_grant_audit_event'], configurable: false },
   { cls: 'Integration data', examples: 'Sync state, external ids, error records, reconciliation logs', approach: 'Active connection plus a troubleshooting period; credentials removed on disconnect', today: 'Gateway audit 180 days; rate-limit counters one day; LTI nonces an hour past expiry', names: ['gateway_audit', 'lti_nonce'], configurable: false },
   { cls: 'Billing and contract records', examples: 'Invoices, contracts, tax and payment records', approach: 'As law, accounting and contract require', today: 'None exist; billing stays out (D-009), and RETENTION.md names no such class', names: [], configurable: false },
-  { cls: 'Backups', examples: 'Encrypted point-in-time copies', approach: 'A short documented lifecycle; rolling expiry; never the primary store', today: 'The provider’s daily backups, each expiring 7 days after it is taken per the plan tier’s documentation — not yet read off the dashboard on a date; PITR unconfirmed; no process reads one, and a deleted row outlives its deletion by at most that period except after a restore, which must re-apply the deletions (RETENTION.md, *Backups*; RESTORE.md)', names: [], configurable: false },
+  { cls: 'Backups', examples: 'Encrypted point-in-time copies', approach: 'A short documented lifecycle; rolling expiry; never the primary store', today: 'The provider’s daily backups, each expiring 7 days after it is taken: the plan tier’s documentation, and on 30 September 2026 the dashboard listed nine reaching back seven days; PITR off; no process reads one, and a deleted row outlives its deletion by at most that period except after a restore, which must re-apply the deletions (RETENTION.md, *Backups*; RESTORE.md)', names: [], configurable: false },
 ];
 
 export const RETENTION_PRINCIPLES: readonly string[] = [

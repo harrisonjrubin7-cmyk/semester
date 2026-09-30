@@ -12,7 +12,7 @@ with each item pointed at what the repository holds. Every checklist item
 rests on rows of the registers that already exist — the master, HECVAT,
 FERPA/1EdTech and maturity registers, and the twelve launch gates of
 [`docs/LAUNCH-READINESS-COUNCIL.md`](LAUNCH-READINESS-COUNCIL.md) — and its level on the crosswalk’s 0–4 scale is
-computed by the test, capped at 4 now that `docs/evidence/` holds the AI drills of 29 September. The launch
+computed by the test, capped at 4 now that `docs/evidence/` holds the AI drills of 29 September and the backups reading of 30 September. The launch
 verdict is computed the same way. **Today it is NO-GO**, and the test
 asserts that rather than letting the page decide.
 
