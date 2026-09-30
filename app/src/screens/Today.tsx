@@ -9,6 +9,7 @@ import { ReadingsOnTheGo } from '../components/ReadingProgress';
 import { Waiting } from '../components/Waiting';
 import { ClosingWindows } from '../components/Windows';
 import { WhatChanged } from '../components/WhatChanged';
+import { DayPlanNote } from '../components/DayPlanNote';
 import { SchoolRecords } from '../components/SchoolRecords';
 import { FirstRun } from './FirstRun';
 import { Blueprint } from '../components/Blueprint';
@@ -780,6 +781,7 @@ function Feed_next() {
       <OverdueBanner />
       {/* Your own deadlines moving is about your work, so it sits with the overdue banner, ahead of anybody else's message. */}
       <WhatChanged />
+      <DayPlanNote />
       {/*
        * After the overdue banner, deliberately. That one is about work of
        * yours that has already slipped; this is about somebody else waiting on
