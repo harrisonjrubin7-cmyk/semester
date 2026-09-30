@@ -1,3 +1,4 @@
+import { WhatChanged } from '../components/WhatChanged';
 import { CourseHub } from '../components/CourseHub';
 import { WhereItStands } from '../components/WhereItStands';
 import { useState } from 'react';
@@ -538,6 +539,7 @@ function CourseInformation() {
         ) : null}
         <span className="tag tag-neutral">{course.credits}</span>
       </div>
+      <WhatChanged courseId={course.id} />
 
       <ActionButton
         onClick={() => dispatch({ type: 'openGuide', id: course.id })}

@@ -23,6 +23,8 @@
  * to, nor `lib/returned.ts`, which counts the days left to question a grade.
  */
 
+import { isoDay, obj, textValue } from './device-library';
+
 export const CATEGORIES = [
   'Conceptual understanding',
   'Evidence and citation',
@@ -142,4 +144,34 @@ export function taskFrom(item: FeedbackItem, action: Action) {
     courseId: item.courseId,
     from: `feedback:${item.id}:${action.title}`,
   };
+}
+
+/** The private, per-device inbox, and its reader — also what a workspace backup restores through. */
+export const FEEDBACK_PREFIX = 'semester.feedback-inbox.v1';
+
+export interface Inbox {
+  version: 1;
+  items: FeedbackItem[];
+}
+
+export const EMPTY_INBOX: Inbox = { version: 1, items: [] };
+
+export function readInbox(v: unknown): Inbox {
+  if (
+    !obj(v) ||
+    v.version !== 1 ||
+    !Array.isArray(v.items) ||
+    v.items.length > 200 ||
+    v.items.some(
+      (e) =>
+        !obj(e) ||
+        !['id', 'courseId', 'work', 'origin'].every((k) => textValue(e[k], 500)) ||
+        !textValue(e.comment, 8000) ||
+        !textValue(e.next, 8000) ||
+        !(CATEGORIES as readonly unknown[]).includes(e.category) ||
+        !isoDay(e.filed),
+    )
+  )
+    throw new Error('Invalid feedback inbox.');
+  return v as unknown as Inbox;
 }

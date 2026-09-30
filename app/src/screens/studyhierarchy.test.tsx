@@ -71,7 +71,8 @@ async function show(node: ReactNode) {
  *
  * The feedback inbox's "File this feedback" is the same kind of thing — it
  * files the comment typed above it — and is exempt for the same reason, by its
- * own class rather than by widening this one.
+ * own class rather than by widening this one. So is the learning map's "Add
+ * to my map", which adds the concept typed above it.
  */
 function filled(): string[] {
   /*
@@ -92,7 +93,7 @@ function filled(): string[] {
    */
   return [...host.querySelectorAll('button')]
     .filter((b) => /\b(portal-primary|btn-primary)\b/.test(b.className.toString()))
-    .filter((b) => !b.closest('.study-journal, .feedback-inbox'))
+    .filter((b) => !b.closest('.study-journal, .feedback-inbox, .learning-map'))
     .map((b) => (b.textContent ?? '').trim());
 }
 

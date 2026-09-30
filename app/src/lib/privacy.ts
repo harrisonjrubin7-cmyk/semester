@@ -133,7 +133,7 @@ export const SYNC_GROUPS: { says: string; keys: string[] }[] = [
   {
     says: 'your grades, the work that came back, your degree plan and the applications you are tracking',
     keys: [
-      'grades', 'returned', 'regradeWindows', 'requirements', 'taken',
+      'grades', 'returned', 'regradeWindows', 'deadlineSeen', 'requirements', 'taken',
       'applications', 'wanted',
     ],
   },
