@@ -55,7 +55,7 @@ begin
   select count(*) into runs_before from public.community_retention_runs;
   said := private.run_sweep('community_retention');
   select count(*) into runs_after from public.community_retention_runs;
-  perform pg_temp.must('a school hold does not reach the Community sweep, and the register says so',
+  perform pg_temp.must('a school hold does not pause the Community sweep as a whole: it still runs and records that it ran (it skips only that school''s rows, proved in hold-aware-sweeps.check.sql)',
     runs_after = runs_before + 1 and not said ? 'skipped');
 
   -- ── a platform hold pauses both, visibly ───────────────────────────────

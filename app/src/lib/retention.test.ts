@@ -540,3 +540,55 @@ describe('the audit sweep is one function defined many times, and the last one r
     expect(forgetful.split(';')[0]).not.toMatch(/platform_is_held\(\)/);
   });
 });
+
+/**
+ * The same silent-overwrite hazard as the audit sweep, for the two sweeps a
+ * legal hold reaches by row: a Postgres function is replaced whole, so the last
+ * migration to define one is the one that runs. Each is read here at its last
+ * definition and held to its hold clauses, with the deletes that carry no
+ * account named as exceptions on purpose, so leaving one off is a decision
+ * somebody wrote down and not a line nobody noticed was missing.
+ */
+describe('the AI-runtime and Community sweeps obey a hold at their last definition', () => {
+  const files = readdirSync(MIGRATIONS).filter((f) => f.endsWith('.sql')).sort();
+  const lastBody = (name: string): string => {
+    const definer = files.filter((f) =>
+      readFileSync(join(MIGRATIONS, f), 'utf8').includes(`create or replace function private.${name}()`),
+    );
+    const sql = readFileSync(join(MIGRATIONS, definer[definer.length - 1]), 'utf8');
+    return (sql.split(`create or replace function private.${name}()`)[1] ?? '').split('end $$;')[0];
+  };
+  // Comments come out before the split: a semicolon in one would cut a statement in two.
+  const statements = (body: string) =>
+    body
+      .replace(/--[^\n]*/g, '')
+      .split(';')
+      .map((s) => s.replace(/\s+/g, ' ').trim())
+      // The first statement of a body shares its text with `begin`; nothing else may precede a delete.
+      .map((s) => (['', 'begin'].includes(s.slice(0, Math.max(s.indexOf('delete from '), 0)).trim()) && s.includes('delete from ') ? s.slice(s.indexOf('delete from ')) : ''))
+      .filter(Boolean);
+
+  /** Deletes that name no account, and so obey the platform gate only. Adding to this list is a decision. */
+  const ACCOUNTLESS = ['community_volunteer_events', 'community_escalation_deliveries', 'community_retention_runs'];
+
+  it('purges AI metadata under a school hold: both deletes ask about the school', () => {
+    const del = statements(lastBody('sweep_ai_runtime_metadata'));
+    expect(del.length).toBe(2);
+    for (const d of del) expect(d, d.slice(0, 60)).toMatch(/tenant_is_held\(/);
+  });
+
+  it('purges Community rows under an account or school hold: every delete that has an account asks', () => {
+    const del = statements(lastBody('sweep_community_retention'));
+    const checked = del.filter((d) => !ACCOUNTLESS.some((t) => d.startsWith(`delete from public.${t}`)));
+    expect(del.length, 'the read found the sweep').toBeGreaterThanOrEqual(12);
+    expect(checked.length).toBe(del.length - ACCOUNTLESS.length);
+    for (const d of checked) expect(d, d.slice(0, 70)).toMatch(/account_is_held\(/);
+  });
+
+  it('is not fooled: a delete that forgets the hold, or is not on the list, is caught by the same checks', () => {
+    const forgetful = statements('delete from public.community_restrictions x where x.until < now();');
+    expect(forgetful).toHaveLength(1);
+    expect(forgetful[0]).not.toMatch(/account_is_held\(/);
+    expect(ACCOUNTLESS).not.toContain('community_restrictions');
+  });
+});

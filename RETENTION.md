@@ -472,11 +472,19 @@ on both sides of its line.
 - **What a platform hold also stops.** The AI-runtime and Community sweeps run
   through `private.run_sweep` (20260930130000_hold_gated_sweeps.sql), which
   skips them while a platform hold is live and says so in its result.
-- **What it does not stop yet.** A school or account hold does not reach those
-  two sweeps (their data is not mapped to a hold's subject), there is no
-  financial sweep to gate, and on-device deletion is not hold-aware. Maturity
-  rows RM-02, RM-04, RM-05 and RM-08 are partly answered, not closed, for that
-  reason.
+- **What a school or account hold also keeps.** Those two sweeps
+  (20260930170000_hold_aware_sweeps.sql) skip a school's AI usage metadata under
+  a school hold, and every Community row that belongs to a held account, or to
+  an account in a held school: restrictions, safety entries, posts, reports,
+  hosted sessions, volunteer tasks and uploaded images, and a case while its
+  post's author or a reporter is held.
+- **What it does not stop yet.** The escalation deliveries and the volunteer
+  programme's events carry no account and follow the platform gate only; there
+  is no financial sweep to gate; and on-device deletion is not hold-aware. The
+  AI, restriction and safety-entry deletes are exercised against real rows; the
+  rest carry the same clause and are held to it by a test, not exercised.
+  Maturity rows RM-02, RM-04, RM-05 and RM-08 are partly answered, not closed,
+  for that reason.
 
 ## Backups: the provider's copies, and how long a deleted row outlives its deletion
 

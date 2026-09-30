@@ -14,10 +14,10 @@
 --     The result says so — {"skipped": "legal_hold"} — so a paused sweep is
 --     visible in the job's history and never looks like a sweep that found
 --     nothing to remove.
---   * **School and account holds do not reach these two.** The AI metadata is
---     keyed by school and the Community tables by account or post, and neither
---     is mapped to a hold's subject yet. That is the honest limit, and
---     maturity row RM-04 says so.
+--   * **School and account holds are handled row by row**, not here: see
+--     20260930170000_hold_aware_sweeps.sql, which restates both sweeps with a
+--     clause per delete. This dispatcher is the coarse gate — a platform hold
+--     stops the sweep as a whole — and that migration is the fine one.
 --   * It takes a name from a closed list and never builds SQL from it.
 --
 -- Same door as the sweeps it wraps: private, service_role only, revoked from
@@ -48,4 +48,4 @@ revoke all on function private.run_sweep(text) from anon, authenticated;
 grant execute on function private.run_sweep(text) to service_role;
 
 comment on function private.run_sweep(text) is
-  'Run the AI-runtime or Community retention sweep unless a platform-wide legal hold is live, in which case say it was skipped. School and account holds do not reach these two sweeps yet.';
+  'Run the AI-runtime or Community retention sweep unless a platform-wide legal hold is live, in which case say it was skipped. School and account holds are honoured row by row inside the sweeps (20260930170000).';
