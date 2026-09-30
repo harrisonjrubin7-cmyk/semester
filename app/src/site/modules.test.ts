@@ -46,6 +46,7 @@ describe('the takeover map', () => {
   const BUILT_PREFIXES: Record<string, RegExp> = {
     registration: /^registration_/, lms_gradebook: /^gradebook_/, lms_assignments: /^(assignments|submission)/,
     records: /^academic_record_/, student_accounts: /^student_account_/,
+    k12: /^guardian_links$/,
   };
   it('reads a module as built when its migrations create tables under the prefix it uses', () => {
     const tables = [...SQL.matchAll(/create table (?:if not exists )?public\.([a-z_0-9]+)/gi)].map((x) => x[1]);

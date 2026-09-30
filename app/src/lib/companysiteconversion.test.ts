@@ -32,4 +32,10 @@ describe('the company-site conversion path', () => {
   it('routes the walkthrough CTA to the existing interactive demo', () => {
     expect(home).toContain('href="#experience">See the 90-second walkthrough</a>');
   });
+
+  it('keeps generated signup guidance inside cards instead of creating grid items', () => {
+    expect(site).toContain('const card=a.closest(".aud,.box,article,.card")');
+    expect(site).toContain('if(card&&!ctas)card.appendChild(helper)');
+    expect(site).not.toContain('const host=a.closest(".ctas")||a.parentElement');
+  });
 });

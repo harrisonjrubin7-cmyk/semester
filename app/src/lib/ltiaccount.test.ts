@@ -235,6 +235,14 @@ const NOT_CONTENT = new Set([
   'support_tickets',
   'support_ticket_messages',
   /*
+   * A privacy-rights case records a request about the account and the
+   * institution's handling of it. It is governance metadata rather than
+   * coursework or a student-created artifact, and it must remain attached to
+   * the subject for audit even when no academic work exists. Account deletion
+   * still includes it through `OWNED_TABLES`.
+   */
+  'data_subject_request',
+  /*
    * An operator's saved console views and last-open tab
    * (`lib/console/client.ts`, `20260929100000_console_control_plane.sql`).
    * A preference about how a staff screen is arranged, not work that exists
