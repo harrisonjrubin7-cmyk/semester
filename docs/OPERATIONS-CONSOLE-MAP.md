@@ -48,7 +48,7 @@ The capability behind each view, and its holders, from the same file.
 
 **Live operational command center** (done) — public.console_command_center: a fail-closed exception queue over current release evidence, approvals, break-glass, integrations, support and tenant rollout; an empty scoped queue is the only green state.
 
-- [`supabase/migrations/20260930180000_console_command_center.sql`](../supabase/migrations/20260930180000_console_command_center.sql) — The evidence-backed release gates, demo-aware operational unions and server-side console:operate refusal.
+- [`supabase/migrations/20260930173030_console_command_center.sql`](../supabase/migrations/20260930173030_console_command_center.sql) — The evidence-backed release gates, demo-aware operational unions and server-side console:operate refusal.
 - [`supabase/console-command-center.check.sql`](../supabase/console-command-center.check.sql) — A non-operator is refused, missing proof stays red, live exceptions appear, and demo tenants stay out by default.
 - [`app/src/lib/console/client.ts`](../app/src/lib/console/client.ts) — loadCommandCenter maps the RPC without caching or browser storage.
 - [`app/src/lib/console/client.test.ts`](../app/src/lib/console/client.test.ts) — The RPC name, demo switch and evidence boundary round-trip.
