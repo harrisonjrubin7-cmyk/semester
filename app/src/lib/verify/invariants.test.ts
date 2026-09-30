@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { shareState as realShareState } from '../advisor-shares';
 import { evaluateFlag, flagDefinition, type FlagContext } from '../flags';
@@ -242,5 +244,19 @@ describe('each property finds the defect it exists to catch', () => {
     found(runProperty(cells, suppressProperties(lowFloor).floor, { runs: 1500 }));
     const primaryOnly: Suppress = (cs, min = MIN_COHORT) => cs.map((c) => (c.n < min ? { ...c, shown: null, why: 'small' as const } : { ...c, shown: c.n }));
     found(runProperty(cells, suppressProperties(primaryOnly).noComplementLeak, { runs: 1500 }));
+  });
+});
+
+describe('the document', () => {
+  const doc = readFileSync(join(import.meta.dirname, '../../../../docs/VERIFICATION.md'), 'utf8');
+
+  it('says it is not a proof, and does not call anything formally verified', () => {
+    expect(doc).toMatch(/\*\*not a proof\.\*\*/);
+    expect(doc).toMatch(/Nothing in this repository is "formally verified"/);
+  });
+
+  it('names the environment variables that search deeper and replay a failure', () => {
+    expect(doc).toContain('VERIFY_RUNS');
+    expect(doc).toContain('VERIFY_SEED');
   });
 });

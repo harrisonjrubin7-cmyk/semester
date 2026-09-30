@@ -3614,3 +3614,102 @@ before it is an engineering one.
 
 **What would change it:** a budget that has to rise every month is measuring a
 surface that is growing on purpose, and wants a different unit.
+
+---
+
+## D-156 · The five larger proposals of the hardening memos, built as far as they can be without a decision that is not ours
+
+**Decided 30 Sep 2026.** D-153 built the three controls from the four hardening
+memos that were a test and left five as "not started". This builds them, in five
+reviewable commits, each held to a planted-defect check. Where a proposal cannot
+be finished without a governance decision, it is built as far as it safely goes
+and the decision is written down and left open; nothing here claims an approval
+that nobody gave.
+
+- **Verification harness** (`lib/verify/`, `docs/VERIFICATION.md`). A seeded,
+  shrinking property checker and a model-based command-sequence runner, about two
+  hundred lines, no dependency, deterministic by default so the shuffled suite
+  cannot flake on it. It holds the real flag evaluator, share state and small-cell
+  suppression to the rules the privacy model leans on. It is **not a proof** and
+  the document says nothing is "formally verified". Ten defects planted in the
+  source went red. Two holes were found in the harness's own first draft: scope
+  expiry stayed green because the generator almost never reached that step, and a
+  missing eligibility check stayed green because a property about denial cannot
+  see a check that is absent. Both are fixed, with a control that fails if the
+  step is never reached and a second property that an allowed answer meant every
+  stated gate was met.
+- **Equity review gate** (`lib/equity/`, `docs/EQUITY-REVIEW.md`). Twenty
+  exported ranking, recommending, matching and routing functions: fifteen reviewed,
+  five exempt with a reason. The gate fails for one that is neither, a review of a
+  function that is gone, a review that reads anything on the forbidden list (the
+  community feed's own list plus the brief's), and a review past its date. Eight
+  findings are open, none changing behaviour; two a student could be hurt by (the
+  moderators' queue is newest first within a status; camera-off participants sink
+  in the call gallery). The reviews are the author's, say `independent: false`, and
+  measure no outcome because no demographic data is collected. `disparity.ts` is
+  the suppression-safe computation behind the `equity_gap` metric, which was defined
+  and computed nowhere; nothing feeds it. Decided in the log, not built: a review
+  panel, because the council has no equity seat.
+- **Tenant contract** (`lib/contract/`, `docs/TENANT-CONTRACT.md`). A school's
+  contract as data, with a decision function, a drift report against live
+  configuration, and a validator that refuses a row that is not exactly a contract.
+  It only narrows, reuses the platform's own `routeAllowed`, and leaves a school
+  with no contract untouched, saying so in words. Pure logic: no screen, no table,
+  no contract recorded. Fourteen defects planted in the source went red; one
+  (administrator MFA) went green first for the same reason as the eligibility check.
+- **Evaluation history** (`lib/history/`, `docs/TIME-TRAVEL-HISTORY.md`).
+  Metadata, not a copy of the record: thirty days by default, ninety at most, off at
+  zero and then nothing is written, two hundred records, no snapshot of the inputs
+  unless a policy turns it on and then 4 KB. On the device only, never synced, no
+  student identifier, no path to the network. Erase from this device clears it, a
+  school's records can be forgotten together, and `exportAll()` is the export hook.
+  A model-based state machine holds the lifecycle; sixteen defects planted in the
+  source went red, including one the first draft really had (the sweep ran on an
+  already pruned state, so expired rows looked gone and stayed on disk). **This is
+  an engineering default and claims no retention approval.**
+- **Load and soak** (`supabase/load/`, `docs/LOAD-AND-SOAK.md`). The existing
+  pgbench harness can run in windows and fails a scenario whose best window at the
+  end is more than twice, and five milliseconds, slower than its best at the start,
+  or a run that leaks connections; CI now runs four windows of six seconds. A planted
+  leak passed every window's budget (63.6 to 144.1 ms) and was failed by the drift
+  check; a planted connection leak was failed at window three; the clean schema did
+  not drift. The drift script is tested as the script it is (nine planted defects;
+  the first version let one noisy final window decide, which became best-against-best).
+  An in-process soak holds the history, flag evaluator and contract decision bounded
+  and stable through a simulated two years and tens of thousands of calls, with no
+  clock or heap reading so it cannot flake.
+
+**Decisions this leaves open, and whose they are.**
+
+1. *Retention period and owner for the evaluation history* (counsel, with the
+   founder), whether snapshots may exist at all, whether there is an institutional
+   history and how it meets a legal hold, and whether the fingerprint may be kept.
+2. *Who reviews the equity findings*, whether students from the groups the brief
+   names are asked to read them, and whether any demographic data is collected to
+   measure a gap (privacy, with counsel). Q-1 and CA-1 are one-line changes and a
+   policy choice each.
+3. *Where contracts are stored and who may write them* (Semester's commercial owner,
+   a second person approving; never the school's own administrator), and whether the
+   contract or the administrators' settings govern where they disagree (owner and
+   counsel).
+4. *Whether the complexity budgets may rise for these*: none did. The one rise in this
+   branch, flags 27 to 28 and kill switches 6 to 7, is D-152's core-mode switch from main.
+
+**Not built, and said so in each document.** A screen for any of these (the
+complexity budget would refuse a new destination); anything recording into the
+evaluation history; the export screen's use of `exportAll()`; a server-side twin of
+the flag evaluator or the contract; disk, bloat and database memory readings in the
+soak; a browser soak; large-tenant, many-small-tenant, file-processing and AI-cost
+load scenarios.
+
+**Open pull requests this sits beside.** #996 extends the same load harness with the
+open-and-sync scenarios and edits `run.sh`, `ci.yml` and this log, so whichever merges
+second resolves a textual conflict; the resolution is to keep both, with its scenarios
+inside `run_pass`. #1011 (the Configuration Studio) is where contract storage would
+naturally live, and this does not depend on it. #1012 adds a legal hold and #1021 a
+retention page; the history is never held and honours the student's deletion, which is
+item 1 above.
+
+**What would change it:** a retention decision that lengthens the history, an equity
+finding that is fixed or accepted, a contract stored in the database, or a soak run on
+CI that shows the two thresholds are wrong.
