@@ -427,7 +427,7 @@ export function alive<T extends Envelope>(records: T[]): T[] {
 /* ── Modules and their mode ────────────────────────────────────────────── */
 
 /**
- * The modules a school can switch from Connect to Core (D-149). One list:
+ * The modules a school can switch from Connect to Core (D-150). One list:
  * `public.core_modules()` in the database holds the same fourteen, and
  * `app/src/lib/modulemode.test.ts` reads the migration and holds them equal.
  */

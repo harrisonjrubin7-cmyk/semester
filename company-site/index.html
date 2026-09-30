@@ -585,6 +585,11 @@ table.wide{min-width:1040px}
 .cs{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;letter-spacing:.01em;padding:3px 9px;border:1px solid;border-radius:999px;line-height:1.35;white-space:normal;max-width:100%;vertical-align:middle}
 .cs::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;flex:none}
 .cs-av{color:var(--sage)} .cs-lb{color:#b9cbe3} .cs-ic{color:var(--silver)} .cs-bt{color:var(--slate)} .cs-ip{color:var(--brass)} .cs-pl{color:var(--ink-dim)} .cs-ns{color:var(--rose)}
+.st-hrow{margin-top:12px}.st-hhead{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:5px}
+.st-bars{display:flex;gap:2px;height:26px;align-items:stretch}.st-bar{flex:1 1 0;min-width:2px;border-radius:2px;background:var(--sage)}
+.st-bar[data-state=partial]{background:var(--brass)}.st-bar[data-state=down]{background:var(--rose)}.st-bar[data-state=nodata]{background:transparent;border:1px solid var(--line-soft)}
+.st-key{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;font-size:13px;color:var(--ink-dim)}.st-key span::before{content:"";display:inline-block;width:11px;height:11px;margin-right:6px;border-radius:2px;vertical-align:-1px;background:var(--sage)}
+.st-key .k-partial::before{background:var(--brass)}.st-key .k-down::before{background:var(--rose)}.st-key .k-nodata::before{background:transparent;border:1px solid var(--line-soft)}
 .cs-pl::before{background:none;border:1px solid currentColor} .cs-ns::before{border-radius:1px}
 .cs-legend{display:flex;flex-wrap:wrap;gap:8px}
 .formmeta{font-size:12px;color:var(--ink-faint);border-top:1px solid var(--line-soft);padding-top:10px;line-height:1.55}
@@ -2268,7 +2273,7 @@ SPAN 1102 Spanish II, MW, 14:30-15:45, 3</textarea></label>
     <p class="crumb"><a href="#home">Home</a> / <a href="#trust">Trust</a> / Status</p>
     <p class="eyebrow brass">System status</p>
     <h1>Is Semester up right now?</h1>
-    <p class="lede">Checked live from your own browser when you open this page. Nothing here is a cached report or an uptime figure.</p>
+    <p class="lede">The live checks run in your own browser when you open this page and are never cached. The 90-day history below is recorded hourly from GitHub’s servers, starts the day recording began, and shows “no data yet” for any day before it.</p>
     <div class="overall" id="st-overall" data-state="checking" role="status" aria-live="polite"><span class="dot" aria-hidden="true"></span><div><b id="st-sum">Checking…</b><p class="fine" id="st-when">Contacting each service from this browser.</p></div></div>
   </div></section>
   <section class="blk rule" style="padding-top:40px"><div class="wrap grid-2" style="align-items:start">
@@ -2276,7 +2281,10 @@ SPAN 1102 Spanish II, MW, 14:30-15:45, 3</textarea></label>
       <div id="st-comp" style="margin-top:6px"></div>
       <button class="btn btn-ghost btn-sm" type="button" id="st-again" style="margin-top:14px">Check again</button>
       <p class="fine" style="margin-top:14px">“Up” means this browser reached the service just now. It is not an uptime percentage, and a failure here can also mean your network, a firewall or an extension blocked the request.</p>
-      <p class="fine" style="margin-top:8px">Not listed: LMS and SIS integrations, notifications and billing. They aren't generally available yet, so there is nothing live to check.</p>
+      <p class="fine" style="margin-top:8px">Not listed: LMS and SIS integrations and notifications. They aren't generally available yet, so there is nothing live to check.</p>
+      <p class="eyebrow" style="margin-top:22px">Last 90 days</p><p class="fine" id="st-hnote" style="margin-top:6px">Loading the recorded checks…</p><div id="st-hist" style="margin-top:8px"></div>
+      <div class="st-key" aria-hidden="true"><span>Every check passed</span><span class="k-partial">Some failed</span><span class="k-down">All failed</span><span class="k-nodata">No data yet</span></div>
+      <p class="fine" style="margin-top:10px">Recorded hourly from GitHub’s servers, not from your browser. The AI and checkout rows only show that the service answered; no model is called and no payment is attempted. Checkout runs on test keys until a live payment has been checked. An hour the scheduler skips records nothing and is never counted as up.</p>
     </div>
     <div style="display:grid;gap:16px">
       <div class="box"><p class="eyebrow">Incidents</p><div id="st-inc" style="margin-top:8px"><p class="muted" style="font-size:14px">Loading the incident list from the product's status page…</p></div>
@@ -2285,7 +2293,7 @@ SPAN 1102 Spanish II, MW, 14:30-15:45, 3</textarea></label>
       <form class="f box" id="st-sub" novalidate><p class="eyebrow">Get incident updates by email</p>
         <div class="fr"><label for="st-name">Name<input id="st-name" autocomplete="name"></label><label for="st-addr">Email<input id="st-addr" type="email" autocomplete="email"></label></div>
         <p class="err" id="st-err" hidden></p><button class="btn btn-primary btn-sm" type="submit" style="justify-self:start">Subscribe</button><div class="ok" id="st-ok" hidden></div>
-        <p class="fine">RSS and webhook feeds are planned.</p></form>
+        <p class="fine"><a class="link" href="https://harrisonjrubin7-cmyk.github.io/semester/status-feed.xml" target="_blank" rel="noopener">Incident feed (Atom)</a>. A webhook feed is planned.</p></form>
     </div>
   </div></section>
   <section class="blk rule"><div class="wrap">
@@ -2297,7 +2305,8 @@ SPAN 1102 Spanish II, MW, 14:30-15:45, 3</textarea></label>
         <tr><th scope="row">The app</th><td>The web page students open; planning, courses and study on the device</td><td><span class="cs cs-av">Available now</span></td></tr>
         <tr><th scope="row">Sign-in and saved work</th><td>Accounts, sign-in and sync of saved work</td><td><span class="cs cs-av">Available now</span></td></tr>
         <tr><th scope="row">Product status page</th><td>The app's own status and incident list</td><td><span class="cs cs-av">Available now</span></td></tr>
-        <tr><th scope="row">AI assistant, integrations, notifications, billing</th><td>Separate components once they're generally available</td><td><span class="cs cs-pl">Planned</span></td></tr>
+        <tr><th scope="row">AI assistant and Plus checkout</th><td>Whether each function answers a browser preflight, recorded hourly. No model is called and no payment is attempted; checkout runs on test keys.</td><td><span class="cs cs-av">Available now</span></td></tr>
+        <tr><th scope="row">Integrations and notifications</th><td>Separate components once they're generally available</td><td><span class="cs cs-pl">Planned</span></td></tr>
       </tbody></table></div>
     <div class="grid-3" style="margin-top:20px">
       <div class="tile"><h3 class="h4">Incidents</h3><p>Written templates for the first notice, updates, the resolution notice and an internal handoff record. Incidents are posted to the product status page. <span class="cs cs-av">Available now</span></p></div>
@@ -2319,7 +2328,7 @@ SPAN 1102 Spanish II, MW, 14:30-15:45, 3</textarea></label>
       <div><b>Forensic detail</b><p>Withheld while an incident is active</p></div>
       <div><b>Post-incident summary</b><p>Target: within 5 business days for material incidents</p></div>
       <div><b>Who's on call</b><p>The founder, during the private beta. There is no 24/7 rota yet.</p></div>
-      <div><b>Record keeping</b><p>Incident history is kept in the product repository's status file</p></div>
+      <div><b>Record keeping</b><p>Incident history is kept in the product repository's status file, and the hourly check history on its status-data branch</p></div>
     </div>
   </div></section>
 </div>
@@ -4436,7 +4445,7 @@ SPAN 1102 Spanish II, MW, 14:30-15:45, 3</textarea></label>
      <tr><td>P2 · Medium</td><td>A feature misbehaves for some users</td><td>Read by the founder; no time promised</td></tr>
      <tr><td>P3 · Low</td><td>Question or cosmetic issue</td><td>Read by the founder; no time promised</td></tr></tbody></table></div>`,secs:[
      ["Service tiers","Not offered yet. Extended and 24/7 cover need an on-call rotation, which does not exist."],
-     ["Availability","Not measured yet. The status page checks the service live from your browser and keeps no history; an uptime figure is published only once it is measured."],
+     ["Availability","The status page checks the service live from your browser and shows the last 90 days as recorded hourly, from the day recording began. A percentage there states the checks and days behind it; no availability figure is promised."],
      ["Service credits","None, until an availability commitment is in a signed agreement."],
      ["Critical periods","Not offered yet: one person answers everything, including during registration and finals."],
      ["Customer responsibilities","Named contacts, timely access for integrations, and keeping SSO configuration current."]]},
@@ -4863,12 +4872,28 @@ SPAN 1102 Spanish II, MW, 14:30-15:45, 3</textarea></label>
     Promise.all(PROBES.map(probe)).then(done,()=>done(PROBES.map(()=>false)))}
   function stIncidents(){const box=document.getElementById("st-inc");if(!box)return;
     let p;try{p=fetch(APP_BASE+"status-incidents.json",{cache:"no-store"})}catch(e){p=Promise.reject(e)}
-    p.then(r=>{if(!r.ok)throw new Error("status");return r.json()}).then(d=>{const items=(d&&d.incidents)||[];
-      box.innerHTML=items.length?items.slice(0,5).map(x=>`<div class="item"><span class="mono-s">${esc(String(x.date||""))} · ${esc(String(x.status||""))}</span><b>${esc(String(x.title||""))}</b><p>${esc(String(x.detail||""))}</p></div>`).join(""):`<p class="muted" style="font-size:14px">No incidents reported on the product's status page.</p>`})
+    p.then(r=>{if(!r.ok)throw new Error("status");return r.json()}).then(d=>{const items=((d&&d.incidents)||[]).slice().sort((a,b)=>a.started<b.started?1:-1);
+      box.innerHTML=items.length?items.slice(0,5).map(x=>{const last=x.updates[x.updates.length-1];return `<div class="item"><span class="mono-s">${esc(String(x.started||"").slice(0,10))} · ${esc(x.resolved?"Resolved":String(last.status||""))}</span><b>${esc(String(x.title||""))}</b>${x.updates.map(u=>`<p>${esc(String(u.at||"").slice(0,16).replace("T"," "))} UTC · ${esc(String(u.status||""))}: ${esc(String(u.body||""))}</p>`).join("")}</div>`}).join(""):`<p class="muted" style="font-size:14px">No incidents reported on the product's status page.</p>`})
     .catch(()=>{box.innerHTML=`<p class="muted" style="font-size:14px">The incident list couldn't be loaded from here. <a class="link" href="${APP_BASE}status.html" target="_blank" rel="noopener">Check the app's status page</a>.</p>`})}
+  // Same rule as app/scripts/status-history.mjs barState; statushistory.test.ts runs both.
+  function barState(ok,total){if(!total||total<=0)return"nodata";if(ok===total)return"up";if(!ok)return"down";return"partial"}
+  const HISTORY_URL="https://raw.githubusercontent.com/harrisonjrubin7-cmyk/semester/status-data/status-history.json",HIST_DAYS=90;
+  const HIST_ROWS=[["app","The app"],["signin","Sign-in"],["sync","Your saved work"],["ai","The AI assistant"],["checkout","Plus checkout"]];
+  const dayKey=t=>new Date(t).toISOString().slice(0,10);
+  const HIST_WORDS={up:"every check passed",partial:"some checks failed",down:"every check failed",nodata:"no data yet"};
+  function stHistory(){const box=document.getElementById("st-hist"),note=document.getElementById("st-hnote");if(!box)return;
+    let p;try{p=fetch(HISTORY_URL,{cache:"no-store"})}catch(e){p=Promise.reject(e)}
+    p.then(r=>{if(!r.ok)throw new Error("history");return r.json()}).then(d=>{const days=(d&&d.days)||{},end=new Date(dayKey(Date.now())+"T00:00:00Z").getTime();
+      note.textContent=d&&d.since?"Recording began "+dayKey(d.since)+". Days before that, and any hour that was not checked, show no data.":"Recording has not begun, so every day shows no data.";
+      box.innerHTML=HIST_ROWS.map(([id,name])=>{let ok=0,total=0,withData=0,bars="";
+        for(let i=HIST_DAYS-1;i>=0;i--){const day=dayKey(end-i*864e5),c=days[day]&&days[day][id],st=barState(c&&c.ok,c&&c.total);if(c&&c.total>0){ok+=c.ok;total+=c.total;withData++}
+          bars+=`<span class="st-bar" data-state="${st}" title="${esc(day+": "+HIST_WORDS[st]+(c&&c.total?" ("+c.ok+" of "+c.total+" checks)":""))}"></span>`}
+        const sum=total>0?(Math.round(ok/total*1e4)/100)+"% of "+total+" checks, over "+withData+" day"+(withData===1?"":"s")+" with data":"No data yet";
+        return `<div class="st-hrow"><div class="st-hhead"><span class="nm">${esc(name)}</span><span class="dt">${esc(sum)}</span></div><div class="st-bars" role="img" aria-label="${esc(name+", last "+HIST_DAYS+" days: "+sum)}">${bars}</div></div>`}).join("")})
+    .catch(()=>{box.innerHTML="";note.textContent="The recorded history could not be loaded, so nothing is shown for it. That is not the same as everything being up."})}
   document.getElementById("st-again").addEventListener("click",stRun);
   let stLoaded=false;
-  window.__semStatus=()=>{stRun();if(!stLoaded){stLoaded=true;stIncidents()}};
+  window.__semStatus=()=>{stRun();if(!stLoaded){stLoaded=true;stIncidents();stHistory()}};
 
   // ---------- trust: supply chain + company continuity ----------
   TS["trust-supply-chain"]={t:"Software supply-chain security",h:"What goes into Semester, and how we keep it honest.",lede:"The controls on our code, dependencies and build pipeline today, what's planned next, and the evidence you can ask for. Every “in place” line below is checked against the product repository.",access:"Public",

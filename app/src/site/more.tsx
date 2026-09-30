@@ -291,7 +291,7 @@ export const ProductQuality: Page = ({ config }) => {
     ['Known critical issues', <>None open. Incidents are listed, as they happen, on the <a href={appHref(config, 'status.html')}>status page</a>, which checks the service from your own browser.</>],
     ['Latest accessibility review', 'Automated on every build: every control has a name, every page has one main region and a skip link, and an axe-core run starts each case from the page’s own title. No human evaluation yet, so no conformance report (VPAT).'],
     ['Latest security evidence review', 'Every change is scanned for leaked credentials; database access is enforced by row-level policy and tested as a second account in every build; a software bill of materials is produced for every deploy. No independent penetration test and no SOC 2 report.'],
-    ['Service health', <>Live, from your browser, on the <a href={appHref(config, 'status.html')}>status page</a>. No uptime percentage is published, because no synthetic monitoring has run long enough to make one honest.</>],
+    ['Service health', <>Live, from your browser, on the <a href={appHref(config, 'status.html')}>status page</a>. It also shows the last 90 days, recorded hourly from the day recording began; a percentage there states how many checks and days it rests on, and none is a promise.</>],
     ['Integration status', 'No institutional connection is live today. Calendar subscriptions a student adds are the only connections, and they are read-only.'],
     ['Planned maintenance', 'None scheduled. When there is, it will be on the status page and, in the app, only on the screens it affects.'],
     ['Major changes', 'Every change a tester can notice is written down, dated by when it reached the live page, including things taken away again.'],
@@ -311,7 +311,7 @@ export const ProductQuality: Page = ({ config }) => {
       </Section>
       <Section title="What is not published, and why" id="pq-not">
         <ul>
-          <li>No uptime percentage, response time or satisfaction score: none has been measured for long enough to be real, current and interpretable, and a number that is not all three is worse than none.</li>
+          <li>No uptime commitment, response time or satisfaction score. The status page shows measured uptime with the checks behind it, but a measurement is not a commitment; a response time and a satisfaction score have not been measured for long enough to be real, current and interpretable, and a number that is not all three is worse than none.</li>
           <li>No customer names, logos or outcomes: there is no customer yet. <a href={href(config, '/proof/')}>How we show proof</a> when there is.</li>
         </ul>
         <p className="site-small">

@@ -6,6 +6,7 @@
 <title>Semester status</title>
 <meta name="description" content="Whether Semester is up right now, checked from your own browser.">
 <link rel="icon" href="./icon.svg" type="image/svg+xml">
+<link rel="alternate" type="application/atom+xml" title="Semester status: incidents" href="./status-feed.xml">
 <!--
   The status page. Deliberately not part of the app bundle: if the app fails to
   build or load, this still has to render and say so.
@@ -20,7 +21,21 @@
 
   Incidents come from status-incidents.json beside this file. Posting one is an
   edit to that file and a merge; SECURITY.md's 72-hour notice still goes by
-  email, this is where the public sees the same thing.
+  email, this is where the public sees the same thing. status-feed.xml is the
+  same file as an Atom feed, rendered by scripts/status-history.mjs.
+
+  The 90-day bars are the one thing here that is not measured in your browser:
+  production-smoke.yml checks every hour from GitHub's runners and commits the
+  counts to the status-data branch, and this page reads them back. History
+  starts the day the first check was recorded. A day with no check on it is
+  drawn empty and says "No data yet"; it is never drawn as up, and an hour the
+  scheduler skipped records nothing. The bar-state rule below (barState) is
+  held to scripts/status-history.mjs by src/lib/statushistory.test.ts.
+
+  This page is served from GitHub Pages, which sends no Content-Security-Policy.
+  A host that enforces public/_headers would block the fetch of the history from
+  raw.githubusercontent.com; the page then says the history could not be loaded
+  rather than drawing bars, and the app's CSP is deliberately not widened for it.
 -->
 <style>
 :root{--bg:#faf9f5;--panel:#ffffff;--ink:#141413;--dim:#55544f;--line:#dedcd3;--ok:#2f6b3a;--bad:#9b2c2c;--warn:#7a5500}
@@ -46,6 +61,19 @@ li:last-child{border-bottom:0}
 .incident{padding:12px 16px;border-bottom:1px solid var(--line)}
 .incident:last-child{border-bottom:0}
 .incident time{color:var(--dim);font-size:14px}
+.hist{padding:12px 16px;border-bottom:1px solid var(--line)}
+.hist:last-child{border-bottom:0}
+.hist-head{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+.bars{display:flex;gap:2px;height:28px;align-items:stretch}
+.bar{flex:1 1 0;min-width:2px;border-radius:2px;background:var(--ok)}
+.bar[data-state=partial]{background:var(--warn)}
+.bar[data-state=down]{background:var(--bad)}
+.bar[data-state=nodata]{background:transparent;border:1px solid var(--line)}
+.key{display:flex;gap:16px;flex-wrap:wrap;margin-top:8px;font-size:14px;color:var(--dim)}
+.key span::before{content:"";display:inline-block;width:12px;height:12px;margin-right:6px;border-radius:2px;vertical-align:-1px;background:var(--ok)}
+.key .k-partial::before{background:var(--warn)}
+.key .k-down::before{background:var(--bad)}
+.key .k-nodata::before{background:transparent;border:1px solid var(--line)}
 button{font:inherit;font-size:15px;min-height:44px;padding:8px 16px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--ink);cursor:pointer;margin-top:16px}
 button:focus-visible,a:focus-visible{outline:2px solid currentColor;outline-offset:2px}
 a{color:inherit}
@@ -62,8 +90,15 @@ a{color:inherit}
   <p class="dim" id="when"></p>
   <button type="button" id="again">Check again</button>
 
+  <h2>Last 90 days</h2>
+  <p class="dim" id="history-note">Loading the recorded checks…</p>
+  <div id="history"></div>
+  <div class="key" aria-hidden="true"><span>Every check passed</span><span class="k-partial">Some failed</span><span class="k-down">All failed</span><span class="k-nodata">No data yet</span></div>
+  <p class="dim" style="margin-top:8px">Recorded hourly from GitHub’s servers, not from your browser. The AI and checkout rows only show that the service answered; no model is called and no payment is attempted. Checkout runs on test keys until a live payment has been checked.</p>
+
   <h2>Incidents</h2>
   <div id="incidents"><p class="dim">Loading…</p></div>
+  <p class="dim" style="margin-top:8px"><a href="./status-feed.xml">Incident feed (Atom)</a></p>
 
   <p class="dim" style="margin-top:32px"><a href="./">Open Semester</a></p>
 </main>
@@ -127,23 +162,95 @@ a{color:inherit}
     });
   }
 
+  // Same rule as scripts/status-history.mjs `barState`; statushistory.test.ts runs both.
+  function barState(ok, total) {
+    if (!total || total <= 0) return 'nodata';
+    if (ok === total) return 'up';
+    if (!ok) return 'down';
+    return 'partial';
+  }
+
+  var HISTORY_URL = 'https://raw.githubusercontent.com/harrisonjrubin7-cmyk/semester/status-data/status-history.json';
+  var DAYS = 90;
+  var ROWS = [
+    { id: 'app', name: 'The app' },
+    { id: 'signin', name: 'Sign-in' },
+    { id: 'sync', name: 'Your saved work' },
+    { id: 'ai', name: 'The AI assistant' },
+    { id: 'checkout', name: 'Plus checkout' },
+  ];
+
+  function dayKey(t) { return new Date(t).toISOString().slice(0, 10); }
+  var STATE_WORDS = { up: 'every check passed', partial: 'some checks failed', down: 'every check failed', nodata: 'no data yet' };
+
+  function showHistory() {
+    var box = el('history');
+    var note = el('history-note');
+    fetch(HISTORY_URL, { cache: 'no-store' })
+      .then(function (r) { if (!r.ok) throw new Error(); return r.json(); })
+      .then(function (data) {
+        box.textContent = '';
+        var days = (data && data.days) || {};
+        var end = new Date(dayKey(Date.now()) + 'T00:00:00Z').getTime();
+        note.textContent = data && data.since
+          ? 'Recording began ' + dayKey(data.since) + '. Days before that, and any hour that was not checked, show no data.'
+          : 'Recording has not begun, so every day shows no data.';
+        ROWS.forEach(function (row) {
+          var ok = 0, total = 0, withData = 0, bars = document.createElement('div');
+          bars.className = 'bars';
+          for (var i = DAYS - 1; i >= 0; i--) {
+            var day = dayKey(end - i * 86400000);
+            var cell = days[day] && days[day][row.id];
+            var st = barState(cell && cell.ok, cell && cell.total);
+            if (cell && cell.total > 0) { ok += cell.ok; total += cell.total; withData++; }
+            var b = document.createElement('span');
+            b.className = 'bar'; b.dataset.state = st;
+            b.title = day + ': ' + STATE_WORDS[st] + (cell && cell.total ? ' (' + cell.ok + ' of ' + cell.total + ' checks)' : '');
+            bars.appendChild(b);
+          }
+          var summary = total > 0
+            ? (Math.round(ok / total * 10000) / 100) + '% of ' + total + ' checks, over ' + withData + ' day' + (withData === 1 ? '' : 's') + ' with data'
+            : 'No data yet';
+          var wrap = document.createElement('div');
+          wrap.className = 'hist';
+          var head = document.createElement('div');
+          head.className = 'hist-head';
+          head.appendChild(text('span', row.name, 'state'));
+          head.appendChild(text('span', summary, 'dim'));
+          wrap.appendChild(head);
+          bars.setAttribute('role', 'img');
+          bars.setAttribute('aria-label', row.name + ', last ' + DAYS + ' days: ' + summary);
+          wrap.appendChild(bars);
+          box.appendChild(wrap);
+        });
+      })
+      .catch(function () {
+        box.textContent = '';
+        note.textContent = 'The recorded history could not be loaded, so nothing is shown for it. That is not the same as everything being up.';
+      });
+  }
+
   function incidents() {
     var box = el('incidents');
     fetch('./status-incidents.json', { cache: 'no-store' })
       .then(function (r) { if (!r.ok) throw new Error(); return r.json(); })
       .then(function (data) {
         box.textContent = '';
-        var items = (data && data.incidents) || [];
+        var items = ((data && data.incidents) || []).slice().sort(function (a, b) { return a.started < b.started ? 1 : -1; });
         if (!items.length) { box.appendChild(text('p', 'No incidents reported.', 'dim')); return; }
         var ul = document.createElement('ul');
         items.forEach(function (x) {
           var li = document.createElement('li');
           li.className = 'incident';
           li.style.display = 'block';
-          var t = document.createElement('time'); t.dateTime = x.date; t.textContent = x.date + ' · ' + x.status;
+          var last = x.updates[x.updates.length - 1];
+          var t = document.createElement('time'); t.dateTime = x.started;
+          t.textContent = x.started.slice(0, 10) + ' · ' + (x.resolved ? 'Resolved' : last.status);
           li.appendChild(t);
           li.appendChild(text('p', x.title, 'state'));
-          li.appendChild(text('p', x.detail));
+          x.updates.forEach(function (u) {
+            li.appendChild(text('p', u.at.slice(0, 16).replace('T', ' ') + ' UTC · ' + u.status + ': ' + u.body));
+          });
           ul.appendChild(li);
         });
         box.appendChild(ul);
@@ -153,6 +260,7 @@ a{color:inherit}
 
   el('again').addEventListener('click', run);
   run();
+  showHistory();
   incidents();
   setInterval(function () { if (document.visibilityState === 'visible') run(); }, 60000);
 })();

@@ -41,8 +41,8 @@ on anything below.
       review by a person with a screen reader has been recorded yet, so
       expect to use it.
 - [ ] Know the status page: from Help, *status page* — it checks the service
-      from the browser that opens it, keeps no history and sends no
-      notifications.
+      from the browser that opens it, shows the last 90 days as recorded
+      hourly since recording began, and sends no notifications.
 - [ ] Told students what Semester will not do: register, pay, submit, or read
       the school's systems. The official system stays authoritative.
 - [ ] Told students that the terms and privacy policy are drafts and not in

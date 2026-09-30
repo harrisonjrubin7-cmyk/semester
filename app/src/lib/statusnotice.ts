@@ -48,6 +48,29 @@ const time = (v: unknown): number | null => {
   return Number.isFinite(t) ? t : null;
 };
 
+/**
+ * The status page's own record of an incident (`scripts/status-history.mjs`)
+ * carries `started`, `resolved` and dated `updates` rather than `date`,
+ * `status` and `until`. Read that shape here too, so an incident posted once
+ * shows in the app as well as on the page. A notice from it is about the
+ * whole service unless it names `screens`, which is optional there too; the
+ * newest update's text is the line the student reads.
+ */
+function fromRecorded(o: Record<string, unknown>): Record<string, unknown> {
+  if (typeof o.date === 'string' || typeof o.started !== 'string') return o;
+  const updates = Array.isArray(o.updates) ? (o.updates as Record<string, unknown>[]) : [];
+  const last = updates[updates.length - 1];
+  return {
+    ...o,
+    date: o.started.slice(0, 10),
+    status: typeof o.resolved === 'string' ? 'resolved' : typeof last?.status === 'string' ? last.status : 'investigating',
+    kind: o.impact === 'maintenance' ? 'maintenance' : 'incident',
+    from: o.started,
+    until: typeof o.resolved === 'string' ? o.resolved : null,
+    affects: typeof o.affects === 'string' ? o.affects : typeof last?.body === 'string' ? last.body : '',
+  };
+}
+
 /** The incidents in a parsed `status-incidents.json`, made safe. */
 export function readIncidents(value: unknown): Incident[] {
   if (typeof value !== 'object' || value === null) return [];
@@ -56,7 +79,7 @@ export function readIncidents(value: unknown): Incident[] {
   const out: Incident[] = [];
   for (const v of items) {
     if (typeof v !== 'object' || v === null) continue;
-    const o = v as Record<string, unknown>;
+    const o = fromRecorded(v as Record<string, unknown>);
     if (typeof o.title !== 'string' || typeof o.date !== 'string') continue;
     out.push({
       id: typeof o.id === 'string' ? o.id : `${o.date}-${o.title}`.slice(0, 80),
