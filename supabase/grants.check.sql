@@ -392,6 +392,15 @@ declare
     'integration_set_paused(want_connection text, want_paused boolean, want_reason text)',
     'kill_switch_engaged(want_switch text, want_tenant text)',
 
+    -- The two in 20260930010000_module_mode.sql (D-152). Both are security
+    -- invoker, so a caller reads only their own school's rows: a school they
+    -- are not in reads all-Connect. `core_modules()` is the constant list of
+    -- fourteen; `effective_module_modes` is what the app asks for a school's
+    -- modes, with `kill.core_modules` applied. `module_mode.check.sql` walks
+    -- both, including the outsider.
+    'core_modules()',
+    'effective_module_modes(want_tenant text)',
+
     -- The sixteen in 20260928220000_private_beta.sql. Every beta table has
     -- RLS on, no policy and no grant, so these are the only way in. The first
     -- nine check `beta:manage` or `beta:triage` themselves; the queue returns

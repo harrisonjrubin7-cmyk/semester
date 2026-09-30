@@ -38,7 +38,8 @@ export type KillSwitchKey =
   | 'kill.data_upload'
   | 'kill.code_execution'
   | 'kill.sharing'
-  | 'kill.writeback';
+  | 'kill.writeback'
+  | 'kill.core_modules';
 
 export const KILL_SWITCHES: readonly KillSwitchKey[] = [
   'kill.integration_sync',
@@ -47,6 +48,7 @@ export const KILL_SWITCHES: readonly KillSwitchKey[] = [
   'kill.code_execution',
   'kill.sharing',
   'kill.writeback',
+  'kill.core_modules',
 ];
 
 export interface FlagDefinition {
@@ -91,6 +93,15 @@ function flag(d: Omit<FlagDefinition, 'defaultEnabled' | 'created' | 'runbook'> 
 
 export const FLAGS: readonly FlagDefinition[] = [
   // ── Modules ─────────────────────────────────────────────────────────────
+  flag({
+    key: 'module.core_mode',
+    description: 'A school running a module in Core: Semester as the record for it, instead of reading the school’s own system (D-151). The per-module setting is `tenant_module_mode`; this flag and its kill switch are the school-wide stop.',
+    type: 'module', owner: 'Platform', scopes: ['tenant'], highRisk: true, reviewAt: REVIEW,
+    rollout: 'One module at a time, for one pilot school, after DO-NOT-BUILD rule 13 is met for that module and two of the school’s administrators have approved the request.',
+    successCriteria: 'No module reads Core without an applied, twice-approved request; every change is in the history; going back deletes nothing.',
+    rollback: 'Engage kill.core_modules for the school: every module reads Connect at once and any Core data is frozen, read-only, not deleted. Or request Connect for one module.',
+    killSwitches: ['kill.core_modules'], capability: 'tenant:configure',
+  }),
   flag({
     key: 'module.integration_dashboard',
     description: 'The staff Integration Dashboard: architecture map, connections, mappings, sync history and conflicts.',

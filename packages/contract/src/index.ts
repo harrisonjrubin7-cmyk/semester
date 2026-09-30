@@ -423,3 +423,22 @@ export function sweep<T extends Envelope>(records: T[], now: number = Date.now()
 export function alive<T extends Envelope>(records: T[]): T[] {
   return records.filter((r) => !r.deletedAt);
 }
+
+/* ── Modules and their mode ────────────────────────────────────────────── */
+
+/**
+ * The modules a school can switch from Connect to Core (D-151). One list:
+ * `public.core_modules()` in the database holds the same fourteen, and
+ * `app/src/lib/modulemode.test.ts` reads the migration and holds them equal.
+ */
+export const CORE_MODULES = [
+  'lms_assignments', 'lms_gradebook', 'lms_assessments', 'attendance',
+  'registration', 'degree_audit', 'records', 'admissions',
+  'student_accounts', 'financial_aid', 'scheduling', 'events',
+  'k12', 'advancement',
+] as const;
+export type CoreModuleId = (typeof CORE_MODULES)[number];
+
+/** Connect reads the school's system; Core makes Semester the record for the module. */
+export const MODULE_MODES = ['connect', 'core'] as const;
+export type ModuleMode = (typeof MODULE_MODES)[number];

@@ -3276,3 +3276,62 @@ detail below is how the tree reads it, and the owner can correct any of it.
   groups (G-03). `tenancy.check.sql` records that any confirmed account can
   enter any school's course room by design, and closing that would empty
   rooms for students who have not claimed a school. It waits for the owner.
+
+## D-151 · Semester replaces the university stack, one module at a time, and the site stops saying it does not
+
+**Decided by owner 29 Sep 2026.** The site said "it does not replace your SIS"
+and the register deferred registration writes, while the owner's goal is one
+system that replaces the SIS, the LMS, the registrar, student accounts and the
+rest. Two modes on one codebase: **Connect** (today, the default) reads from a
+school's systems and prepares actions; **Core** makes Semester the record for
+one module, switched per tenant, in writing, with a rollback that freezes and
+never deletes.
+
+- **Site.** `site/modules.ts` is the takeover map: fourteen modules, the kinds
+  of system each would replace, what it does in Connect, what changes in Core,
+  and the claims register's status word. Ten modules read *planned*. Four
+  (registration, the gradebook, records, student accounts) read *in
+  preparation*: their tables and check suites landed on 30 Sep 2026 behind
+  switches that are off for every school, and none is certified.
+  `/platform/system-boundaries/` and the company site's boundaries block
+  print it, and `modules.test.ts` refuses a module above *planned* whose
+  tables or `<module>.check.sql` suite are missing, and one still *planned*
+  whose tables have landed.
+- **Rule 13** in `DO-NOT-BUILD.md`: no Core module without row-level-security
+  tests, an immutable history and a kill switch.
+- **Kept:** AI never decides grades, admissions, aid or discipline (rules 3
+  and 7); no card numbers are stored; the Known Limitations already say what
+  checkout does (#986).
+- **Not done here:** moving "Direct registration writes" off the deferred list
+  in `expansiongovernance.ts` (its test counts sixteen). That edit relaxes a
+  Tier 4 refusal and waits for the owner to confirm it.
+
+## D-152 · A module's mode is a row two other administrators approve, it fails to Connect, and going back deletes nothing
+
+**Decided 29 Sep 2026, by the owner (Prompt 2 of the Core briefs).** D-151 made
+Connect and Core the two ways a school can run a module. This is the switch.
+
+- **The row.** `tenant_module_mode` holds one row per school and module; no row
+  is Connect. There is no write policy: the only door is
+  `module_mode_request` plus `module_mode_approval`, and the trigger that
+  applies them runs as the table's owner. Fourteen modules, one list
+  (`public.core_modules()` = `CORE_MODULES` in `@semester/contract` = the
+  takeover map), held equal by `modulemode.test.ts`.
+- **Two approvers.** Connect to Core is applied on the second distinct
+  approver holding `tenant:configure`; the requester never counts, nor does one
+  person twice. A request expires in seven days.
+- **The way back is immediate and deletes nothing.** Core to Connect applies
+  at once and marks the row `frozen`: the module's Core data is kept,
+  read-only.
+- **Kill switch.** `kill.core_modules` (school or global) makes every module
+  read Connect and Core data read frozen, and refuses new Core requests. It
+  is in `FLAGS` as `module.core_mode` and in the flag registry.
+- **The client fails to Connect.** `resolveModuleMode` answers Connect for
+  anything it cannot read. `useModuleMode(module, school)` is the one hook.
+- **Where it shows.** A Modules tab on the institution screen, for someone
+  holding `tenant:configure` over the school. It says no Core module is built.
+- **Proof.** `supabase/module_mode.check.sql` (49 checks). Red when the second
+  approval is reduced to one, and red when the requester may approve; each
+  restored.
+- **Not done here, on purpose:** MFA on the approving act (Prompt 6 adds
+  step-up), a withdraw action for a pending request, and any Core module.
