@@ -291,7 +291,10 @@ begin
   -- 156 before 20260929330000_dining.sql added dining_staff → dining:operate.
   -- 157 before legal holds (20260930000000_legal_holds.sql) added three:
   -- hold:read, :place and :release for university_admin.
-  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 160);
+  -- 160 before human overrides (20260930020000_human_overrides.sql) added three:
+  -- override:record and override:review for registrar, override:review for
+  -- university_admin.
+  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 163);
 
   perform pg_temp.become_anon();
   perform pg_temp.refused('a signed-out visitor cannot read the matrix',
