@@ -43,12 +43,12 @@ therefore **violated by design in most student modules**; see the gap register i
 | Study Studio: AI (citations, injection defence) | PARTIAL | model via proxy/own key/shared-key edge fn | `lib/cite.ts`, `ai/untrusted.ts` | structural injection tests only; **live red-team "still owed"**; no evaluation harness results; no course/institution AI-rule enforcement |
 | Ask Claude | LIVE if a key or proxy is configured | threads on device | `ai/*`, edge `claude` | production shared key unset/502 as of 2026-09-29 (`LAUNCH-DECISIONS` 15); history delete controls to verify |
 | Math/Data Lab, Writing Studio, Lab Companion | PARTIAL | device | `Analyse`, `Essay`, `Sheet` screens | dedicated Lab Companion and coding support not found; accessible charts unverified |
-| Workspace (Write/Sheet/Deck/Draw/Files) | LIVE (device only) | IndexedDB; **files never synced** | `screens/Write.tsx`, `Sheet.tsx`, `Deck.tsx` | no server persistence for files, no consented sharing, version history is local |
-| Personal (tasks, notes, files, mail) | LIVE (device) | device; mail drafts only, never sends | `screens/Mine.tsx`, `Mail.tsx` | — (mail never sends: correct for beta) |
+| Workspace (Write/Sheet/Deck/Draw/Files) | LIVE (device only) | IndexedDB; **files never synced** | `screens/Write.tsx`, `screens/Sheet.tsx`, `screens/Deck.tsx` | no server persistence for files, no consented sharing, version history is local |
+| Personal (tasks, notes, files, mail) | LIVE (device) | device; mail drafts only, never sends | `screens/Mine.tsx`, `screens/Mail.tsx` | — (mail never sends: correct for beta) |
 | Career | PARTIAL | device; student-entered | `screens/Career.tsx`, `lib/career.ts` | skills graph behind `VITE_CAREER_SKILLS_GRAPH`; application tracker/interview practice/mentor workflow depth unverified |
 | Opportunities / scholarships | PARTIAL | device tracker; never computes eligibility | `screens/Opportunities.tsx` | no listings backend wired to the student screen |
 | Campus Hub | MOCK_DEMO without a tenant | seed `data/campus.ts`, self-described "starting points, not facts" | `screens/Hub.tsx`, `data/campus.ts` | publisher/owner/review-expiry workflow; institution-verified content feed |
-| Athlete / NIL | PARTIAL | device | `screens/Athletics.tsx`, `Nil.tsx` | no server; no component tests |
+| Athlete / NIL | PARTIAL | device | `screens/Athletics.tsx`, `screens/Nil.tsx` | no server; no component tests |
 | Study groups / classmates / rooms | LIVE (signed in) | Supabase RLS | `screens/Classmates.tsx`, `rooms.check.sql` | tenancy header says classmates/rooms are **not tenant-scoped** (verify; G-03); minors excluded from matching (D-139) |
 | Community | IMPLEMENTED_NOT_RELEASED | Supabase RPCs | migration `20260928032000_community.sql`, `community.check.sql` | volunteer moderation flag default-off |
 | Call (video) | PARTIAL | P2P WebRTC; no stored state | `screens/call/*` | completeness matrix row is stale; TURN config env-dependent |
@@ -76,7 +76,7 @@ therefore **violated by design in most student modules**; see the gap register i
 |---|---|---|---|
 | Tenants, memberships, roles, scopes | IMPLEMENTED_NOT_RELEASED | `schools`, `role_grants`, `private.has_capability`, ~250 tables with RLS | tenant scoping is uneven (G-03) |
 | RLS and negative tests | LIVE (CI gate) | 78 `*.check.sql`, `rls-coverage`, `definer-sweep`, `integration-rls-matrix` | plain SQL, not pgTAP; BOLA on definer functions left to feature suites (DR-02 note) |
-| Feature flags (tenant/role/kill switch) | IMPLEMENTED_NOT_RELEASED | `lib/flags.ts`, `tenant_feature_policy`, `feature_kill_switch`, `FEATURE-FLAG-REGISTRY.md` | no per-plan or per-cohort flag dimension in the client; flags evaluated client-side (register A16) |
+| Feature flags (tenant/role/cohort/kill switch) | IMPLEMENTED_NOT_RELEASED | `lib/flags.ts`, `tenant_feature_policy` (roles and release cohorts, main `20260929340000`), `feature_kill_switch`, `FEATURE-FLAG-REGISTRY.md` | no plan dimension (entitlements are resolved separately, `ENTITLEMENT-RESOLUTION.md`); flags evaluated client-side (register A16) |
 | SAML SSO | IMPLEMENTED_NOT_RELEASED — **BLOCKED** | `institution_identity_provider`, `INSTITUTIONAL-SSO-LAUNCH-READINESS.md` | needs a university IdP; no cert-expiry alert; IdP registered by hand |
 | OIDC SSO | PLANNED | `provider_type` accepts only `saml` | build |
 | SCIM 2.0 | IMPLEMENTED_NOT_RELEASED | `app/server/institution/scim.ts`, off unless `SEMESTER_SCIM=on` | never run against a real IdP; separate gateway service vs ADR 0003 |

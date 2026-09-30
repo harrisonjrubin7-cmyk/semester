@@ -209,9 +209,12 @@ gates for this report. Before Milestone 1 I will re-run the gates to refresh the
 | G-03 tenant scoping | **not changed** — awaiting owner | Verified still true in `tenancy.check.sql`; tightening empties rooms for unclaimed students (D-150 note) |
 | G-04 common audit envelope | **schema + 2 producers** | `20260930000000_audit_and_subject_requests.sql`, 22 checks; guards shown red by removing the trigger, the insert clause and the immutability trigger |
 | G-05 data-subject requests | **schema only** | same migration; no screen or answering workflow yet |
-| G-06 plan/cohort flag dimensions, cohorts | **not started** | needs a cohort membership design that does not expose rosters |
-| G-32 sensitive features default OFF test | not started | |
-| Data inventory, role matrix, threat model, retention/export doc | not started | |
+| G-06 plan/cohort flag dimensions, cohorts | **cohort and role limits landed on main** (`20260929340000_feature_cohorts.sql`, another PR); a *plan* dimension was not added — entitlements resolve plans separately | not duplicated here |
+| G-32 sensitive features default OFF test | already held: every flag is defined with `defaultEnabled: false` and `flags.test.ts` covers the registry | no change |
+| Data inventory, role matrix | **done, generated** from a database built by all migrations | `docs/DATA-INVENTORY-AND-LINEAGE.md`, `docs/ROLE-PERMISSION-MATRIX.md`, `supabase/tools/` |
+| Threat model | **done** (a reading, not a penetration test) | `docs/SECURITY-THREAT-MODEL.md` |
+| Retention/export/deletion doc | **done** (synthesis) | `docs/DATA-RETENTION-EXPORT-DELETION.md` |
+| G-05 request screen + answering workflow | **deliberately not built**: nobody is named to answer, so a screen would promise a 30-day reply nobody agreed to keep | owner decision |
+| Truth table guard | **done**: `app/src/lib/truthtable.test.ts` holds status words to the agreed six and every named file to existence (it cannot check that a status is *true*) | mutation shown red |
 
-Migrations have been run only on a disposable local Postgres 17 (`supabase/check.sh`,
-`rehearse.sh`, `restore.sh`); none has been applied to a Supabase project or preview branch.
+The Milestone 1 migration was merged to main in #1000. It was run on a disposable local Postgres 17 and in CI's disposable database. **Whether the schema deploy applied it to the production project has not been confirmed by me.**
