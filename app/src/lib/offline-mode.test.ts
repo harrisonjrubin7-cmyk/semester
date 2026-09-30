@@ -66,12 +66,13 @@ describe('the ledger', () => {
 describe('the badge', () => {
   const synced: Ledger = { version: 1, lastSyncedAt: EARLIER, unsyncedSince: null };
 
-  it('says offline, when it last synced, that changes are safe, and that nothing high-risk is queued', () => {
+  it('says offline, when it last synced, that changes are safe, and what can be kept to send and what must wait', () => {
     const b = badge({ online: false, signedIn: true, ledger: synced, sync: { status: 'error', at: 0 }, now: NOW })!;
     expect(b.label).toBe('Offline mode');
     expect(b.text).toContain('Last synced 9:05 AM.');
     expect(b.text).toContain('saved on this device and syncs when you are back online');
-    expect(b.text).toContain('nothing is queued for them');
+    expect(b.text).toContain('can be kept here and sent by you when you are back');
+    expect(b.text).toContain('Publishing, deleting your account and official sites wait until you are connected');
   });
 
   it('does not promise a sync to a device with no account', () => {
