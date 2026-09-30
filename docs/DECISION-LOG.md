@@ -3619,7 +3619,7 @@ surface that is growing on purpose, and wants a different unit.
 
 ## D-156 · The five larger proposals of the hardening memos, built as far as they can be without a decision that is not ours
 
-**Decided 30 Sep 2026.** D-153 built the three controls from the four hardening
+**Decided 30 Sep 2026.** D-155 built the three controls from the four hardening
 memos that were a test and left five as "not started". This builds them, in five
 reviewable commits, each held to a planted-defect check. Where a proposal cannot
 be finished without a governance decision, it is built as far as it safely goes
