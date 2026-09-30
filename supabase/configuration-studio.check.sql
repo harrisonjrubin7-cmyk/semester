@@ -262,15 +262,25 @@ begin
     pg_temp.touched(researcher, $q$delete from public.school_config_versions where domain = 'reporting'$q$), 0);
   perform pg_temp.counted('an editor can', pg_temp.touched(editor, $q$delete from public.school_config_versions where domain = 'reporting'$q$), 1);
 
+  -- ── a client cannot pass itself off as an account deletion ─────────────
+  perform pg_temp.runs_clean('an editor drafts another domain to try it on', pg_temp.draft(admin, 'ai', '{"ai_enabled": true}'));
+  perform pg_temp.says('a drafter cannot clear their own name from a draft, to then publish it',
+    pg_temp.error_as(admin, $q$update public.school_config_versions set created_by = null where domain = 'ai'$q$),
+    'is not changed');
+  perform pg_temp.says('and so still cannot publish it', pg_temp.publish(admin, 'ai'), 'does not publish it');
+  perform pg_temp.counted('their name is still on the draft',
+    (select count(*) from public.school_config_versions where domain = 'ai' and created_by = admin), 1);
+  perform pg_temp.counted('discarding it', pg_temp.touched(admin, $q$delete from public.school_config_versions where domain = 'ai'$q$), 1);
+
   -- ── the audit trail ────────────────────────────────────────────────────
   perform pg_temp.counted('a publish is recorded, draft to published, three times',
     (select count(*) from public.tenant_policy_audit_event e
       where e.tenant_id = 'cs-u' and e.entity_type = 'school_config_versions' and e.action = 'update'
         and e.old_data ->> 'state' = 'draft' and e.new_data ->> 'state' = 'published'
         and e.actor_grant_id is not null), 3);
-  perform pg_temp.counted('and a discard is recorded',
+  perform pg_temp.counted('and each discard is recorded, the editor’s and the admin’s',
     (select count(*) from public.tenant_policy_audit_event e
-      where e.tenant_id = 'cs-u' and e.entity_type = 'school_config_versions' and e.action = 'delete'), 1);
+      where e.tenant_id = 'cs-u' and e.entity_type = 'school_config_versions' and e.action = 'delete'), 2);
 
   -- ── the trigger is a lock of its own, behind row-level security ────────
   -- The table's owner is not subject to the policies; the trigger still holds.

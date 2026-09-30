@@ -233,8 +233,12 @@ begin
     new.updated_at := now();
   else
     -- Account deletion clearing a person is not a change to the configuration.
-    if (new.created_by is null and old.created_by is not null)
-       or (new.published_by is null and old.published_by is not null) then
+    -- Only the deletion itself is exempt: it runs with no signed-in caller. A
+    -- signed-in client nulling `created_by` is a change like any other, or a
+    -- drafter could clear their own name and then publish their own draft.
+    if auth.uid() is null
+       and ((new.created_by is null and old.created_by is not null)
+            or (new.published_by is null and old.published_by is not null)) then
       if (to_jsonb(new) - array['created_by', 'published_by']) = (to_jsonb(old) - array['created_by', 'published_by']) then
         return new;
       end if;
