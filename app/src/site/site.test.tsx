@@ -100,6 +100,10 @@ describe('what the site says', () => {
     expect(k12).not.toMatch(/districts? (use|trust|rely on) Semester|schools (use|trust|rely on) Semester|now serving/i);
   });
 
+  it('links to the K–12 page from every page, so it can be found without its address', () => {
+    for (const p of pages) expect(p.html, `${p.route.path} has no link to /k-12/`).toMatch(/href="[^"]*\/k-12\/"/);
+  });
+
   it('marks as held on the K–12 page only what the baseline counts as met', () => {
     const k12 = pages.find((p) => p.route.path === '/k-12/')!.html;
     // "held by a test" followed by the end of the item, not "…, not yet done".

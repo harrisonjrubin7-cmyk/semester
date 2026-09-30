@@ -22,7 +22,7 @@ const PRIMARY: [string, string][] = [
 ];
 
 const FOOTER: [string, [string, string][]][] = [
-  ['Product', [['Product', '/product/'], ['Demo', '/demo/'], ['Pricing', '/pricing/'], ['How pricing works', '/pricing/how-it-works/'], ['Tools', '/tools/'], ['Help', '/help/']]],
+  ['Product', [['Product', '/product/'], ['Demo', '/demo/'], ['Pricing', '/pricing/'], ['How pricing works', '/pricing/how-it-works/'], ['K–12 edition', '/k-12/'], ['Tools', '/tools/'], ['Help', '/help/']]],
   ['Platform', [['What is available', '/platform/availability/'], ['Service map', '/platform/service-map/'], ['System boundaries', '/platform/system-boundaries/'], ['Integrations and standards', '/platform/integrations/'], ['The words we use', '/platform/vocabulary/'], ['One operating system', '/platform/one-operating-system/'], ['Why not another tool?', '/platform/why-not-another-tool/'], ['After you start', '/start/'], ['Launch sites', '/launch/']]],
   ['Company', [['About', '/about/'], ['Careers', '/careers/'], ['Contact', '/contact/'], ['Resources', '/resources/'], ['Campus launch kit', '/resources/campus-launch-kit/'], ['AI governance canvas', '/resources/ai-governance-canvas/'], ['Research and community', '/research/']]],
   ['Community', [['The Semester Community', '/community/'], ['Campus ambassadors', '/community/ambassadors/'], ['Student stories', '/community/stories/'], ['Partner directory', '/community/partners/'], ['Events and sessions', '/community/events/']]],
