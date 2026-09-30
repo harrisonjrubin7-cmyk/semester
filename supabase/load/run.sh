@@ -35,6 +35,16 @@ psql -c "checkpoint" >/dev/null
 bench() { "$bindir/pgbench" -h "$work" -p "$port" -U postgres -n "$@" postgres; }
 
 failed=0
+
+# Soak: with LOAD_SOAK_WINDOWS=N the scenarios run N times over, each a window
+# of LOAD_SECONDS, with the invariants and the connection count checked after
+# every window, and drift.sh compares each scenario's start with its end. Off
+# (0) by default, and then this runs exactly once as it always did.
+soak=${LOAD_SOAK_WINDOWS:-0}
+windows="$logs/windows.tsv"
+: > "$windows"
+window=1
+
 scenario() {
   local name=$1 file="$here_load/$1.pgbench.sql"
   local budget out lat p50 p95 p99 tps errs
@@ -56,6 +66,7 @@ scenario() {
   n=$(echo "$lat" | wc -l)
   pct() { echo "$lat" | awk -v n="$n" -v p="$1" 'NR == int((n - 1) * p / 100) + 1 {printf "%.1f", $1 / 1000; exit}'; }
   p50=$(pct 50); p95=$(pct 95); p99=$(pct 99); last_n=$n
+  printf '%s %s %s\n' "$name" "$window" "$p95" >> "$windows"
   line="$name: $n transactions, ${tps%.*} tps, p50 ${p50}ms p95 ${p95}ms p99 ${p99}ms (budget p95 ${budget}ms)"
   if [ "${errs:-0}" != 0 ]; then
     echo "  ✗ $line, $errs failed:"
@@ -69,40 +80,70 @@ scenario() {
   fi
 }
 
-scenario flags
-scenario plans
-scenario plans-same-student
-# The demand read is of snapshots, so take one of what the plans wrote.
-psql -v ON_ERROR_STOP=1 -c "select public.refresh_course_demand_snapshots('load-u', '2027SP')" >/dev/null
-scenario demand
-
-# The sync path every student hits: an open, then pushes. A push's
-# compare-and-swaps succeed even when they match nothing, so the rows each
-# table wrote are counted from Postgres: about one state row and one course
-# a push, or the push silently stopped writing.
-scenario sync-open
 written() { psql -At -F ' ' -c "select (select n_tup_upd from pg_stat_user_tables where relid = 'public.state'::regclass), (select n_tup_upd from pg_stat_user_tables where relid = 'public.courses'::regclass)"; }
-read -r s0 c0 <<<"$(written)"
-last_n=0
-scenario sync-push
-psql -c "select pg_stat_force_next_flush()" >/dev/null 2>&1; sleep 1
-read -r s1 c1 <<<"$(written)"
-if [ "$last_n" -gt 0 ] && { [ $((s1 - s0)) -lt $((last_n * 8 / 10)) ] || [ $((c1 - c0)) -lt $((last_n * 8 / 10)) ]; }; then
-  echo "  ✗ sync-push: $last_n pushes wrote $((s1 - s0)) state rows and $((c1 - c0)) courses; a compare-and-swap matched nothing"
-  failed=1
-else
-  echo "  ✓ sync-push wrote $((s1 - s0)) state rows and $((c1 - c0)) courses for $last_n pushes"
-fi
-psql -c "truncate public.load_won; update public.state set data = data - 'n' where user_id in (select id from public.load_users where i <= 3)" >/dev/null
-scenario sync-same-student
 
-echo "· invariants"
-inv=$(psql -f "$here_load/invariants.sql" 2>&1 || true)
-if echo "$inv" | grep -qE "ERROR"; then
-  echo "$inv" | grep -E "ERROR" | sed 's/^.*ERROR: */  ✗ /'
-  failed=1
+run_pass() {
+  scenario flags
+  scenario plans
+  scenario plans-same-student
+  # The demand read is of snapshots, so take one of what the plans wrote.
+  psql -v ON_ERROR_STOP=1 -c "select public.refresh_course_demand_snapshots('load-u', '2027SP')" >/dev/null
+  scenario demand
+
+  # The sync path every student hits: an open, then pushes. A push's
+  # compare-and-swaps succeed even when they match nothing, so the rows each
+  # table wrote are counted from Postgres: about one state row and one course
+  # a push, or the push silently stopped writing.
+  scenario sync-open
+  read -r s0 c0 <<<"$(written)"
+  last_n=0
+  scenario sync-push
+  psql -c "select pg_stat_force_next_flush()" >/dev/null 2>&1; sleep 1
+  read -r s1 c1 <<<"$(written)"
+  if [ "$last_n" -gt 0 ] && { [ $((s1 - s0)) -lt $((last_n * 8 / 10)) ] || [ $((c1 - c0)) -lt $((last_n * 8 / 10)) ]; }; then
+    echo "  ✗ sync-push: $last_n pushes wrote $((s1 - s0)) state rows and $((c1 - c0)) courses; a compare-and-swap matched nothing"
+    failed=1
+  else
+    echo "  ✓ sync-push wrote $((s1 - s0)) state rows and $((c1 - c0)) courses for $last_n pushes"
+  fi
+  psql -c "truncate public.load_won; update public.state set data = data - 'n' where user_id in (select id from public.load_users where i <= 3)" >/dev/null
+  scenario sync-same-student
+}
+
+run_invariants() {
+  local inv
+  echo "· invariants"
+  inv=$(psql -f "$here_load/invariants.sql" 2>&1 || true)
+  if echo "$inv" | grep -qE "ERROR"; then
+    echo "$inv" | grep -E "ERROR" | sed 's/^.*ERROR: */  ✗ /'
+    failed=1
+  else
+    echo "$inv" | sed -nE 's/^.*NOTICE: +invariant ok: /  ✓ /p'
+  fi
+}
+
+# Sessions other than this one, in this database. pgbench closes its own when a
+# window ends, so a count that keeps rising is a connection somebody leaked.
+clients() { psql -Atc "select count(*) from pg_stat_activity where datname = current_database() and pid <> pg_backend_pid() and backend_type = 'client backend'"; }
+
+if [ "$soak" -gt 0 ]; then
+  echo "· soak: $soak windows of ${seconds}s"
+  baseline=$(clients)
+  for window in $(seq 1 "$soak"); do
+    echo "· soak window $window of $soak"
+    run_pass
+    run_invariants
+    now=$(clients)
+    if [ "${now:-0}" -gt $((baseline + 2)) ]; then
+      echo "  ✗ connections: $now open after window $window against $baseline before the first"
+      failed=1
+    fi
+  done
+  echo "· soak: did anything get slower the longer it ran"
+  "$here_load/drift.sh" < "$windows" || failed=1
 else
-  echo "$inv" | sed -nE 's/^.*NOTICE: +invariant ok: /  ✓ /p'
+  run_pass
+  run_invariants
 fi
 
 # The control for the two-devices invariant: the same race with the
@@ -120,5 +161,7 @@ else
 fi
 
 rm -rf "$logs"
-[ "$failed" = 0 ] && echo "· every scenario held its budget and every invariant held"
+summary="· every scenario held its budget and every invariant held"
+[ "$soak" -gt 0 ] && summary="$summary, and nothing drifted across $soak windows"
+[ "$failed" = 0 ] && echo "$summary"
 return "$failed"
