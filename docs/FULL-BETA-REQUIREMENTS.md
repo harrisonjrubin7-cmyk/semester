@@ -2,7 +2,7 @@
 
 Baseline `origin/main` `9ffe292`, 2026-09-30. Static audit; see [FEATURE-TRUTH-TABLE.md](FEATURE-TRUTH-TABLE.md)
 for the per-feature status and its caveats. **No behavior was changed to produce this report.**
-Awaiting approval before Milestone 1.
+Approved to proceed 30 Sep 2026; decisions in D-150. Milestone 1 progress is in §13.
 
 ## 1. Headline
 
@@ -184,7 +184,7 @@ listed above as gaps, not fixed.
 
 `git revert` of the single documentation commit. No migrations, no config, no deploy.
 
-## 11. Decisions requested to start Milestone 1
+## 11. Decisions requested to start Milestone 1 — answered 30 Sep 2026 (D-150)
 
 1. C-1: adopt the narrowed definition of "beta-critical" (server persistence for shared/institutional/billing/consent/file data)?
 2. C-5: choose the preview/production host (Vercel vs staying on Pages)?
@@ -200,3 +200,18 @@ inferences and are marked as such (Community, Membership, institutional features
 environment state that static reading cannot confirm). I did not run the test suite or the CI
 gates for this report. Before Milestone 1 I will re-run the gates to refresh the baseline, since
 `REGRESSION-CHECKLIST.md` is nine days behind the tree.
+
+## 13. Milestone 1 progress (in flight)
+
+| Gap | State | Evidence |
+|---|---|---|
+| G-02 recovery screen, change password/email, sign out other devices | **done** (client) | `components/AccountSecurity.tsx`, 6 tests, guard shown red by disabling the floor. A session *list* is not built: I found no client-side listing call in supabase-js, so it needs a server function. |
+| G-03 tenant scoping | **not changed** — awaiting owner | Verified still true in `tenancy.check.sql`; tightening empties rooms for unclaimed students (D-150 note) |
+| G-04 common audit envelope | **schema + 2 producers** | `20260930000000_audit_and_subject_requests.sql`, 22 checks; guards shown red by removing the trigger, the insert clause and the immutability trigger |
+| G-05 data-subject requests | **schema only** | same migration; no screen or answering workflow yet |
+| G-06 plan/cohort flag dimensions, cohorts | **not started** | needs a cohort membership design that does not expose rosters |
+| G-32 sensitive features default OFF test | not started | |
+| Data inventory, role matrix, threat model, retention/export doc | not started | |
+
+Migrations have been run only on a disposable local Postgres 17 (`supabase/check.sh`,
+`rehearse.sh`, `restore.sh`); none has been applied to a Supabase project or preview branch.

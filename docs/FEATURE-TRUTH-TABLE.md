@@ -53,7 +53,7 @@ therefore **violated by design in most student modules**; see the gap register i
 | Community | IMPLEMENTED_NOT_RELEASED | Supabase RPCs | migration `20260928032000_community.sql`, `community.check.sql` | volunteer moderation flag default-off |
 | Call (video) | PARTIAL | P2P WebRTC; no stored state | `screens/call/*` | completeness matrix row is stale; TURN config env-dependent |
 | Supporter / Family view | PARTIAL | device plans; server `family_grants` exist but client does not read them | `screens/Family.tsx`, `family*.check.sql` | recipient view; time-limited revocable grant wired end to end |
-| Account (sign-up, verify, sync, export, delete) | LIVE when Supabase configured | Supabase Auth | `screens/Account.tsx`, `deletion.check.sql` | **no in-app new-password screen after recovery; no change-email/password UI; no session list/revoke** |
+| Account (sign-up, verify, sync, export, delete) | LIVE when Supabase configured | Supabase Auth | `screens/Account.tsx`, `components/AccountSecurity.tsx`, `deletion.check.sql` | recovery dialog, change password/email and sign-out-other-devices built in M1 (tested with fakes; not exercised against a live Supabase project); a session *list* still absent |
 | Privacy / Data / Export | LIVE | Supabase | `export_my_data`, `erase_account` | erasure fails closed for staff who wrote to four immutable history tables; no full-account file export incl. IndexedDB files |
 | Help / Support | LIVE (help), gated (tickets) | static guidebook; tickets behind `VITE_SUPPORT_TICKETS` | `screens/Help.tsx` | support-access UX; named responders unassigned |
 
@@ -89,8 +89,9 @@ therefore **violated by design in most student modules**; see the gap register i
 | Content governance / publishing | PARTIAL | `trust_artifacts`, `ListingDesk`, seed campus data | no approval workflow with expiry alerts for tenant content |
 | Support access grants / break-glass | LIVE in schema, tested | `support_access_grant`, `break_glass_grant`, `console-approvals.check.sql` | UI path for student approval; drills |
 | Aggregate reporting n ≥ 10 | PARTIAL | CHECKs on `course_demand_snapshots`, `outcome_aggregates`; `gtm_campaign_report` | count floor only: no complementary suppression or differencing protection |
-| Audit events | PARTIAL | ~12 separate audit tables | no common schema or trail; outbox has no producer (B11) |
+| Audit events | PARTIAL | `audit_event` envelope + `audit-and-subject-requests.check.sql` (M1, unapplied to any project) | two producers only (request raised, account export); the other ~12 audit tables are not migrated to it; outbox still has no producer (B11) |
 | Consent records | LIVE | `consent_record` | — |
+| Data-subject requests | PARTIAL | `data_subject_request` table with 30-day clock, RLS and a check suite (M1, unapplied) | **no screen, no answering workflow, no verification step for guardian/institution requests** |
 | Retention | LIVE (schedule) | `RETENTION.md`, `retention_sweeps` | production cron state unverified |
 | Minimum age 13 / minors kept off social | LIVE in schema (D-139) | `minimum-age.check.sql` | — |
 | Faculty Course Studio, advisor meeting mode | PARTIAL | `VITE_COURSE_STUDIO`, `ADVISOR-MEETING-MODE.md` | verify UI depth in M7 |

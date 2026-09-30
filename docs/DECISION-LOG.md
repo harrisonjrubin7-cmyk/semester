@@ -3250,3 +3250,29 @@ history, and there was none to show.
 - **Not changed.** The live in-browser checks, the incident email address, and
   the launch gate `operations-live`, which stays partial: no alert reaches a
   named person.
+
+## D-150 · Full beta: server storage where data is shared, SCIM and SSO on edge functions, Vercel for previews, preview branches for migrations
+
+**Decided 30 Sep 2026, by the owner**, in answer to the five questions at the
+end of `docs/FULL-BETA-REQUIREMENTS.md` (Milestone 0). Recorded as given; the
+detail below is how the tree reads it, and the owner can correct any of it.
+
+- **Server storage** is provided for the data a full beta cannot leave on one
+  device: anything shared with another person, held by an institution, billed,
+  consented to, or a file. Personal working data stays device-first with sync
+  (ADR 0001 stands); the app is still usable signed out.
+- **Hosting.** Vercel hosts previews and the institution gateway. GitHub Pages
+  keeps serving production until a cutover is separately approved. This
+  amends nothing about the deploy path today.
+- **SCIM and single sign-on run on Supabase edge functions** rather than the
+  standalone gateway. This departs from how `app/server/institution/scim.ts`
+  is built and from the letter of the gateway as a separate service; the move
+  is a Milestone 7 piece of work and needs an ADR amendment when it starts.
+  Until then the gateway's SCIM stays off (`SEMESTER_SCIM`).
+- **Migrations are tried on Supabase preview branches only, never on
+  production.** Applying anything to production still needs separate
+  approval.
+- **Not decided here:** tightening tenant scoping of classmates, rooms and
+  groups (G-03). `tenancy.check.sql` records that any confirmed account can
+  enter any school's course room by design, and closing that would empty
+  rooms for students who have not claimed a school. It waits for the owner.
