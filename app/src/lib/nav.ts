@@ -1028,6 +1028,28 @@ const NESTED: Partial<Record<Screen, Screen>> = {
    * offered from nothing a student sees.
    */
   console: 'me',
+  /*
+   * The school's dining. It is behind a module flag that is off at every
+   * school today, so a shelf tile would open onto "your school has not turned
+   * this on" for everybody — the reason Community is not registered while its
+   * switches are off. It is opened from its student-kept counterpart (Meal
+   * plan) and at its own address, and sits under that screen's root.
+   */
+  dining: 'me',
+  /**
+   * The official registration transaction and the gradebook of record, each
+   * behind a school's writeback flag and off at every school today. Nested
+   * rather than registered for two reasons. Every shelf is at its eight, and
+   * a directory tile that opens onto "your school has not turned this on" for
+   * every student at every school is the door the registry exists not to
+   * draw — the same rule Community follows. They are reached at
+   * `#/registration` and `#/gradebook`, from the Registration planner and the
+   * Grades tab, and each says in one sentence whether the school has it on.
+   * Enrollment sits under Calendar beside Term deadlines, where the planner
+   * is; the gradebook under Courses, where Grades is.
+   */
+  registration: 'calendar',
+  gradebook: 'courses',
   agreements: 'moderation',
   volunteers: 'moderation',
   volunteer: 'mine',
@@ -1108,6 +1130,11 @@ const NESTED_NAMES: Partial<Record<Screen, string>> = {
   community: 'Community',
   moderation: 'the review queue',
   console: 'the operations console',
+  dining: 'dining at your school',
+  // What each does: enroll, wait, drop and withdraw in the school's own
+  // registration; and a course's official grades, entered, released and read.
+  registration: 'Enrollment',
+  gradebook: 'the gradebook',
   agreements: 'escalation agreements',
   volunteers: 'the volunteer programme',
   volunteer: 'volunteer moderation',

@@ -151,9 +151,10 @@ describe('the launch go/no-go', () => {
     it('is no-go today, and says why at length', () => {
       const { verdict, reasons } = decide(CURRENT);
       expect(verdict).toBe('no-go');
-      // Four seats held since 2026-09-28 and none signed: holding is not signing.
+      // Four seats held since 2026-09-28, three more since 2026-09-30, and none
+      // signed: holding is not signing.
       const held = COUNCIL.filter((s) => s.holder !== null).map((s) => s.seat);
-      expect(held).toEqual(['founder', 'product', 'engineering', 'success']);
+      expect(held).toEqual(['founder', 'product', 'engineering', 'privacy', 'accessibility', 'success', 'operations']);
       expect(reasons.filter((r) => r.endsWith('is vacant.'))).toHaveLength(SEATS.length - held.length);
       for (const seat of held) expect(reasons).toContain(`Seat ${seat} has not signed.`);
       expect(CURRENT.signoffs).toEqual([]);

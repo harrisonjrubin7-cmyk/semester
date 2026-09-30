@@ -59,7 +59,8 @@ vi.mock('../lib/cloud', () => ({
   cloudConfigured: true,
   cloud: async () => ({
     auth: { getUser: async () => ({ data: { user: { id: 'me' } } }) },
-    rpc: async (name: string) => (name === 'feature_state' ? { data: world.featureState, error: null } : { data: null, error: null }),
+    rpc: async (name: string) => (name === 'feature_state' ? { data: world.featureState, error: null }
+      : name === 'feature_narrowing' ? { data: [], error: null } : { data: null, error: null }),
     from: (table: string) => query(table),
   }),
 }));

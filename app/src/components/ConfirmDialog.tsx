@@ -1,4 +1,4 @@
-import { useId, useRef, type ReactNode } from 'react';
+import { useId, useRef, useState, type ReactNode } from 'react';
 import { offlineModeOn, useOnline } from '../lib/offline-mode';
 import { createPortal } from 'react-dom';
 import { useModal } from '../a11y/modal';
@@ -75,4 +75,34 @@ export function ConfirmDialog({
   );
   const host = typeof document === 'undefined' ? null : document.querySelector('.device');
   return host ? createPortal(dialog, host) : dialog;
+}
+
+/** A pending confirmation: the constitution's preview-then-choice, before anything moves. */
+export interface Asking {
+  title: string;
+  preview: ReactNode;
+  confirmLabel: string;
+  run: () => Promise<void>;
+}
+
+/**
+ * `confirmFirst` opens the dialog; confirming runs the write. The dialog closes first,
+ * so a slow answer never leaves a confirm button to be pressed twice.
+ */
+export function useConfirm(): { confirmFirst: (a: Asking) => void; dialog: ReactNode } {
+  const [asking, setAsking] = useState<Asking | null>(null);
+  const dialog = asking ? (
+    <ConfirmDialog
+      title={asking.title}
+      preview={asking.preview}
+      confirmLabel={asking.confirmLabel}
+      onCancel={() => setAsking(null)}
+      onConfirm={() => {
+        const run = asking.run;
+        setAsking(null);
+        void run();
+      }}
+    />
+  ) : null;
+  return { confirmFirst: setAsking, dialog };
 }

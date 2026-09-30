@@ -187,6 +187,16 @@ const NOT_CONTENT = new Set([
   'academic_record_subjects',
   'consent_record',
   /*
+   * A school's dining (`20260929330000_dining.sql`) and the gradebook of
+   * record (`20260929310000_gradebook.sql`). The meal plan is what the card
+   * office sent, and a grade entry is what an instructor wrote; the same
+   * category as the integration rows above: about the person, not by them. A
+   * mobile order, an enrollment and a regrade request are the person's own
+   * acts, and `lti_account_untouched` reads them (20260929360000).
+   */
+  'dining_plans',
+  'grade_entries',
+  /*
    * Phase J (`20260928302000_office_action_feed.sql`). Which programs and
    * eligibilities a student said apply to them, and which office actions they
    * marked done. Settings and ticks about someone else's content — an office's

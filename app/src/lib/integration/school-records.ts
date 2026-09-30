@@ -13,6 +13,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Freshness } from './catalog';
 import { freshnessFromAge, isOfficialCurrent } from './freshness';
 import { evaluateFlag, type Environment, type KillSwitchRow } from '../flags';
+import { readNarrowing } from '../featurepolicy';
 import type { FeatureState } from '../../intelligence/contracts';
 
 export interface RecordRow {
@@ -240,10 +241,13 @@ export function buildEnvironment(mode: string | undefined): Environment {
   return mode === 'production' ? 'production' : 'development';
 }
 
+const CARDS_FLAG = 'module.source_freshness_cards';
+
 /**
  * Whether this school has the cards on. The tenant row is read through the
- * existing `public.feature_state`; the kill switches the student can see are
- * their school's and the global ones.
+ * existing `public.feature_state`, its role and cohort limits through
+ * `readNarrowing`; the kill switches the student can see are their school's
+ * and the global ones.
  */
 /**
  * Whether the school-records module is on for this school — or whether we could
@@ -252,16 +256,23 @@ export function buildEnvironment(mode: string | undefined): Environment {
  */
 export async function cardsState(db: SupabaseClient, school: string, environment: Environment, now: Date): Promise<'on' | 'off' | 'error'> {
   if (!school) return 'off';
-  const [{ data: state, error: stateError }, { data: switches, error: switchError }] = await Promise.all([
-    db.rpc('feature_state', { want_capability: 'module.source_freshness_cards', want_tenant: school }),
+  const [{ data: state, error: stateError }, { data: switches, error: switchError }, narrowing] = await Promise.all([
+    db.rpc('feature_state', { want_capability: CARDS_FLAG, want_tenant: school }),
     db.from('feature_kill_switch').select('switch_key,tenant_id,engaged'),
+    // The school's role and cohort limits, and the caller's own roles and
+    // cohorts. Unread is `error`, never "no limit".
+    readNarrowing(db, CARDS_FLAG, school).catch(() => null),
   ]);
-  if (stateError || switchError) return 'error';
+  if (stateError || switchError || !narrowing) return 'error';
   const killSwitches: KillSwitchRow[] = (switches ?? []).map((k: { switch_key: string; tenant_id: string | null; engaged: boolean }) =>
     ({ key: k.switch_key, tenantId: k.tenant_id, engaged: k.engaged }));
-  return evaluateFlag('module.source_freshness_cards', {
+  return evaluateFlag(CARDS_FLAG, {
     environment, tenantId: school, now, killSwitches,
-    tenantPolicy: { 'module.source_freshness_cards': { state: (state ?? 'off') as FeatureState } },
+    tenantPolicy: {
+      [CARDS_FLAG]: { state: (state ?? 'off') as FeatureState, permittedRoles: narrowing.permittedRoles, permittedCohorts: narrowing.permittedCohorts },
+    },
+    roles: narrowing.roles,
+    cohorts: narrowing.cohorts,
     capabilities: [],
   }).allowed ? 'on' : 'off';
 }

@@ -11,7 +11,7 @@ const LINK = campaignUrl('https://semester.app/start', {
 
 const FLAG_ON: FlagContext = {
   environment: 'production', tenantId: 'vu', now: new Date('2026-10-01T12:00:00Z'), killSwitches: [],
-  tenantPolicy: { [CAMPAIGN_FLAG]: { state: 'production' } }, capabilities: ['tenant:configure'],
+  tenantPolicy: { [CAMPAIGN_FLAG]: { state: 'production', permittedRoles: [], permittedCohorts: [] } }, capabilities: ['tenant:configure'],
 };
 
 const READY: Campaign = {
