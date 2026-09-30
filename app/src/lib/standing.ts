@@ -23,6 +23,24 @@ export type Standing = 'ahead' | 'overdue' | 'done';
 
 export type DoneMap = Record<string, boolean>;
 
+/** The course page's assignment filter. */
+export type CourseView = 'upcoming' | 'past' | 'completed' | 'all';
+
+/**
+ * Whether an item belongs under a course page's filter, by the same day rule
+ * as `standingOf`. The page used to compare the item's date, which is
+ * midnight of its day, against the clock: from 12:00 AM on the due day an
+ * assignment due that night left Upcoming and was listed as Past. The golden
+ * path caught it at midnight on 30 September, when its deadlines fell on the
+ * day it ran.
+ */
+export function inView(item: DatedItem, view: CourseView, done: DoneMap): boolean {
+  if (view === 'all') return true;
+  if (view === 'completed') return Boolean(done[item.id]);
+  if (view === 'past') return item.isPast;
+  return !done[item.id] && !item.isPast;
+}
+
 export function standingOf(item: DatedItem, done: DoneMap): Standing {
   if (done[item.id]) return 'done';
   return item.isPast ? 'overdue' : 'ahead';

@@ -1,5 +1,6 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { badge, claimed, lateBy, overdueCount, overdueLine, split, standingOf } from './standing';
+import { badge, claimed, inView, lateBy, overdueCount, overdueLine, split, standingOf } from './standing';
 import type { DatedItem } from './types';
 
 function item(id: string, daysAway: number, title = id): DatedItem {
@@ -178,5 +179,33 @@ describe('claimed', () => {
     expect(overdueCount(claimed(overdueItems, [], true), done)).toBe(0);
     expect(overdueCount(claimed(overdueItems, ['hist-3010'], true), done)).toBe(1);
     expect(overdueCount(claimed(overdueItems, [], false), done)).toBe(3);
+  });
+});
+
+describe('inView', () => {
+  it('keeps a deadline due today under Upcoming, not Past, however early in the day', () => {
+    // Its date is midnight of the day; the course page compared that with the clock.
+    const tonight = item('a', 0);
+    expect(inView(tonight, 'upcoming', {})).toBe(true);
+    expect(inView(tonight, 'past', {})).toBe(false);
+  });
+
+  it('moves a deadline to Past only once its day has gone', () => {
+    expect(inView(item('a', -1), 'past', {})).toBe(true);
+    expect(inView(item('a', -1), 'upcoming', {})).toBe(false);
+    expect(inView(item('a', 2), 'upcoming', {})).toBe(true);
+  });
+
+  it('takes a finished deadline out of Upcoming and into Completed', () => {
+    expect(inView(item('a', 2), 'upcoming', { a: true })).toBe(false);
+    expect(inView(item('a', 2), 'completed', { a: true })).toBe(true);
+    expect(inView(item('a', 2), 'completed', {})).toBe(false);
+    expect(inView(item('a', -3), 'all', {})).toBe(true);
+  });
+
+  it('is what the course page filters by, not the clock against midnight', () => {
+    const page = readFileSync(new URL('../components/CourseHub.tsx', import.meta.url), 'utf8');
+    expect(page).toMatch(/inView\(i,filter as CourseView,state\.done\)/);
+    expect(page).not.toMatch(/i\.date\s*(<|>=)\s*now/);
   });
 });
