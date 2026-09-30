@@ -1428,6 +1428,10 @@ export const KEPT_TABLES: KeptTable[] = [
     why: 'An approval or rejection you recorded for a migration’s cutover is part of the record of why your school retired a system. It stays with the migration, no longer attributed to you.',
   },
   {
+    table: 'workflow_versions',
+    why: 'A workflow you drafted or published for your school — the steps of a process and the checks a student must meet — is the school’s process, not a record about you, and it holds no student. Deleting your account removes you as the person who drafted or published it; every version stays.',
+  },
+  {
     table: 'school_config_versions',
     why: 'A configuration you drafted or published for your school — its terms, workflow thresholds, AI defaults or reporting floor — is the school’s policy, not a record about you. Deleting your account removes you as the person who drafted or published it; every version stays.',
   },

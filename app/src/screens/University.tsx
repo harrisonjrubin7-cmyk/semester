@@ -54,6 +54,7 @@ import { IntegrationDashboard } from '../components/institutional/IntegrationDas
 import { CampaignManager } from '../components/institutional/CampaignManager';
 import { campaignsAllowed } from '../lib/gtm/manager';
 import { canApprove, canManage, migrationAllowed } from '../lib/migration/api';
+import { workflowsAllowed } from '../lib/workflow/allowed';
 import { studioAllowed } from '../lib/config/allowed';
 import { canDecide, canOverride, canPropose, canRead, recordAllowed } from '../lib/record/api';
 import { canApprove as canApproveFinance, canApproveHigh, canClose, canReadAccounts, canRequest, financeAllowed } from '../lib/finance/api';
@@ -62,6 +63,7 @@ import { formatDateTime, formatTime } from '../lib/locale';
 
 // The ledgers and the Migration Center are behind flags that are off by
 // default, so their code loads only when a tab of theirs opens.
+const WorkflowBuilder = lazy(() => import('../components/institutional/WorkflowBuilder').then((m) => ({ default: m.WorkflowBuilder })));
 const ConfigurationStudio = lazy(() => import('../components/institutional/ConfigurationStudio').then((m) => ({ default: m.ConfigurationStudio })));
 const ModulesPanel = lazy(() => import('../components/institutional/ModulesPanel').then((m) => ({ default: m.ModulesPanel })));
 const MigrationCenter = lazy(() => import('../components/institutional/MigrationCenter').then((m) => ({ default: m.MigrationCenter })));
@@ -186,6 +188,11 @@ const tabsFor = (verified: readonly string[]) => [
   ...(EXPERIENCE_FLAGS.configurationStudio !== 'off' && studioAllowed(verified)
     ? [{ id: 'configuration' as const, label: 'Configuration' }]
     : []),
+  // Only for an account holding a verified workflow capability at this school
+  // (D-1018); RLS and the second-person publish rule decide the rest.
+  ...(EXPERIENCE_FLAGS.workflowBuilder !== 'off' && workflowsAllowed(verified)
+    ? [{ id: 'workflows' as const, label: 'Workflows' }]
+    : []),
   // Only for an account holding a verified record capability at this school
   // (D-145); the approval trigger decides what enters the ledger.
   ...(EXPERIENCE_FLAGS.recordLedger !== 'off' && recordAllowed(verified)
@@ -198,7 +205,7 @@ const tabsFor = (verified: readonly string[]) => [
     : []),
 ];
 
-type Tab = 'overview' | 'drafts' | 'records' | 'connections' | 'control' | 'trust' | 'modules' | 'help' | 'integrations' | 'operations' | 'demand' | 'campaigns' | 'migration' | 'configuration' | 'ledger' | 'accounts';
+type Tab = 'overview' | 'drafts' | 'records' | 'connections' | 'control' | 'trust' | 'modules' | 'help' | 'integrations' | 'operations' | 'demand' | 'campaigns' | 'migration' | 'configuration' | 'workflows' | 'ledger' | 'accounts';
 
 /** What each role is called on screen. */
 const ROLE_LABELS: Record<UniversityRole, string> = {
@@ -862,6 +869,16 @@ function Workspace({ storageKey }: { storageKey: string }) {
       {tab === 'configuration' && EXPERIENCE_FLAGS.configurationStudio !== 'off' && studioAllowed(verified) && (
         <Suspense fallback={<p role="status">Loading…</p>}>
           <ConfigurationStudio
+            tenantId={school.id}
+            viewerId={account?.id ?? null}
+            holds={verified}
+          />
+        </Suspense>
+      )}
+
+      {tab === 'workflows' && EXPERIENCE_FLAGS.workflowBuilder !== 'off' && workflowsAllowed(verified) && (
+        <Suspense fallback={<p role="status">Loading…</p>}>
+          <WorkflowBuilder
             tenantId={school.id}
             viewerId={account?.id ?? null}
             holds={verified}

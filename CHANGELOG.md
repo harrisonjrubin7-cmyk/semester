@@ -36,6 +36,20 @@ Offline, you can now keep an advisor share or your course plan to send yourself
 later. They wait on Account under "Waiting for you to send", and they do not go
 by themselves, even when you are back online. One that waits three days is not
 sent and has to be made again. Files you attach still do not sync between devices.
+### For school staff: a Workflows tab on University (off for now)
+
+Staff with workflow rights at a school get a **Workflows** tab for the ten
+processes a school runs: registration clearance, advisor approval, transfer-
+credit review, study-abroad approval, tutoring referral, scholarship
+deadlines, organization events, internship approval, course substitution and
+graduation application. Each starts from a template you change: its steps, who
+owns each, the checks a student must meet, and the office it hands off to. A
+preview shows what a student would be told. A change is a draft; a colleague
+who holds the publish role publishes it as a numbered version, and you cannot
+publish your own.
+
+It is switched off, and nothing in the app runs these definitions yet: the tab
+says so. It holds no student and no request. Students see no difference.
 ### For school staff: a Configuration tab on University (off for now)
 
 Staff with configuration rights at a school get a **Configuration** tab in
