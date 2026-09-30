@@ -74,15 +74,15 @@ const STAFF = ['moderation', 'agreements', 'volunteers', 'console'] as const;
  * registry until its flags are set, rather than present as a tile that opens
  * onto "not available" — see `COMMUNITY_DESTINATION` in lib/nav.ts. Volunteer
  * moderation is never a shelf item: it is opened from Community, and only
- * when both its build flag and the school's own switch are on. The student
- * account and dining are the same case with a school's module flag for the
- * switch: off at every school today, each opened from its student-kept
- * counterpart (Money, Meal plan) rather than offered as a tile. The
+ * when both its build flag and the school's own switch are on. Dining is the
+ * same case with a school's module flag for the switch: off at every school
+ * today, opened from its student-kept counterpart (Meal plan) rather than
+ * offered as a tile. The
  * registration transaction and the gradebook of record are the same again,
  * with a writeback flag for the switch, reached from the Registration planner
  * and the Grades tab.
  */
-const SWITCHED = ['community', 'volunteer', 'studentAccount', 'dining', 'registration', 'gradebook'] as const;
+const SWITCHED = ['community', 'volunteer', 'dining', 'registration', 'gradebook'] as const;
 
 /**
  * Pages inside the Me control surface, which lists them itself

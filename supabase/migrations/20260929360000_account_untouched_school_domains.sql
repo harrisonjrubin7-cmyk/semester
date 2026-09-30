@@ -1,21 +1,26 @@
--- Semester — an account is not empty if it enrolled, asked for a regrade,
--- started a payment or placed a dining order.
+-- Semester — an account is not empty if it enrolled, asked for a regrade or
+-- placed a dining order.
 --
 -- `lti_account_untouched` decides whether a provisioned account holds nothing
 -- a person did, so an LTI launch may retire it and attach the identity to an
 -- existing account. Retiring deletes the account, and every row that
--- cascades from it. The four school domains added tables whose rows are a
--- person's own acts — an enrollment, a regrade request, a payment start, a
--- mobile order — and the check could not see any of them, so an account
+-- cascades from it. Three school domains added tables whose rows are a
+-- person's own acts — an enrollment, a regrade request, a mobile order — and
+-- the check could not see any of them, so an account
 -- holding one could have been retired as empty and the row lost with it. The
 -- screens' builder found it; `ltiaccount.test.ts` now fails on any owned
 -- table the check does not read unless it is named as not content, with a
 -- reason.
 --
--- The body is exactly 20260928308000_support_shares.sql's, with four rows
--- added. Grade entries, the ledger, aid awards, holds, plans and the meal
--- plan are what a school or an instructor wrote about the person, not what
--- the person did, and stay out, as `ltiaccount.test.ts` says.
+-- The body is exactly 20260928308000_support_shares.sql's, with three rows
+-- added. Grade entries and the meal plan are what a school or an instructor
+-- wrote about the person, not what the person did, and stay out, as
+-- `ltiaccount.test.ts` says. The student-account tables of
+-- 20260929220000_student_accounts.sql and 20260929230000_student_payment_plans.sql
+-- are not here either: their rows are keyed on the school's student reference,
+-- every column naming an account is `on delete set null`, and they are kept
+-- with the school (`KEPT_TABLES`), so retiring an account loses none of them —
+-- and this function reads only tables an account owns.
 --
 -- Additive. NOT APPLIED to production; applying it needs owner approval.
 
@@ -73,10 +78,9 @@ begin
       ('public.family_access_events', 'student_id'),
       ('public.support_shares',       'student_id'),
       ('public.support_shares',       'staff_id'),
-      -- 20260929360000: what a person did in the four school domains.
+      -- 20260929360000: what a person did in three school domains.
       ('public.registration_enrollments', 'student'),
       ('public.regrade_requests',     'student_id'),
-      ('public.student_payment_intents', 'student_id'),
       ('public.dining_orders',        'student')
     ) as x(rel, col)
   loop

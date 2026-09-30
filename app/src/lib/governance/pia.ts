@@ -216,33 +216,6 @@ export const ASSESSMENTS: readonly Assessment[] = [
       'Everything: nothing has been charged; the first real delivery from Stripe has not been seen (COM-001).',
     ],
   },
-  {
-    id: 'student-accounts',
-    surface: 'Student accounts, payments and financial aid',
-    what: 'A school’s student account — ledger per term, aid from the school’s aid system accepted by the student, holds, payment plans, credit refunds and provider payments: built, and off until the module, a named finance owner and the council finance seat are all in place.',
-    owner: 'finance',
-    assessed: '2026-09-29',
-    answers: {
-      purpose: { answer: 'To show a student what they owe the school and why, and to let the school’s bursar and aid office keep that account. Each table answers one question: what was posted (entries), what aid the school offered and whether the student took it (awards), whether the account is held (holds), how the balance is divided (plans), and what the student started paying (intents).', evidence: [{ path: 'supabase/migrations/20260929320000_student_accounts.sql', shows: 'The seven tables and the functions that are the only way in' }, { path: 'app/src/lib/studentaccount/ledger.ts', shows: 'The four bill.ts rules, restated for the ledger' }] },
-      fields: { answer: 'Amounts in integer cents, the term, a short description, aid kind, the school’s own award id, verification and academic-progress status as the school reports them, and a hold reason the bursar writes. Aid and academic progress are sensitive (T4). No card, bank or tax data: the provider’s page takes payment details and a payment event keeps an id, an amount and a hash.', evidence: [{ path: 'supabase/student_accounts.check.sql', shows: 'The check constraints are walked: whole cents, closed vocabularies, no raw payload' }, { path: 'app/src/lib/studentaccount/studentaccount.schema.test.ts', shows: 'The TS vocabulary is the SQL one, both ways' }] },
-      default: { answer: 'Private to the student and the school’s finance offices. A student reads only their own rows; nobody writes a table directly; every write is a function that checks the caller.', evidence: [{ path: 'supabase/student_accounts.check.sql', shows: 'A second student reads none of the first’s ledger, awards, plans or holds' }] },
-      readers: { answer: 'bursar:post (student_accounts_officer) reads the school’s ledger, awards, holds, plans and payment starts; aid:manage (financial_aid_officer) reads awards and aid entries; hold:read (registrar) reads nothing in any table and asks student_hold_status, whose return type is whether, which office and since when — never the reason or an amount. Payment events are read by nobody.', evidence: [{ path: 'supabase/student_accounts.check.sql', shows: 'The registrar learns the student is held and reads nothing of the hold' }, { path: 'app/src/lib/studentaccount/studentaccount.test.ts', shows: 'holdStatus returns no reason and no amount' }] },
-      identity: { answer: 'Not applicable in the anonymous sense: every row is about a named student and read by that student or a named finance office at their school. A payment event carries no student id, only the intent, and loses that when the account is deleted.', evidence: [{ path: 'supabase/migrations/20260929320000_student_accounts.sql', shows: 'student_payment_events has no student column; intent_id is set null on deletion' }] },
-      ai: { answer: 'Nothing. No prompt builder reads a student account table, and financial fields are T4, which routeAllowed refuses for every AI destination.', evidence: [{ path: 'app/src/lib/integration/classification.test.ts', shows: 'T4 goes nowhere outside Semester' }] },
-      retention: { answer: 'Account deletion of the student, or the school’s removal; no time-based purge, because Semester’s copy is not the school’s book of record. The period a school wants must be set before it turns the module on.', evidence: [RETENTION, RETENTION_TEST] },
-      deletion: { answer: 'Deleting the student’s account removes every row by cascade — the append-only trigger lets a foreign-key action through and nothing else. Export covers every column that names the account, through private.account_data_map.', evidence: [{ path: 'supabase/student_accounts.check.sql', shows: 'Deleting an account empties its ledger; deleting a bursar keeps what they posted' }, DELETION_TEST] },
-      sharing: { answer: 'None beyond the school’s own finance offices, which is the institution’s duty rather than a consent. The only thing another office learns is whether a hold exists.', evidence: [{ path: 'supabase/student_accounts.check.sql', shows: 'Another school’s bursar reads and posts nothing; the registrar reads no reason' }] },
-      inference: { answer: 'A hold is a flag about an individual, placed by a person at the bursar’s office on a posted balance over the school’s threshold, never computed by Semester. Semester decides no eligibility and no amount: awards, verification and academic progress arrive from the school’s system.', evidence: [{ path: 'app/src/lib/studentaccount/studentaccount.test.ts', shows: 'Awards only from the adapter; a hold only over the threshold' }, { path: 'supabase/student_accounts.check.sql', shows: 'A signed-in account cannot sync an award; a hold at the threshold is refused' }] },
-      guard: { answer: 'student_accounts.check.sql walks every rule with two students, a bursar, the aid office, the registrar and another school’s bursar; studentaccount.test.ts holds the pure rules, including the duplicate and out-of-order webhook cases.', evidence: [{ path: 'supabase/student_accounts.check.sql', shows: 'The rules, walked' }, { path: 'app/src/lib/studentaccount/studentaccount.test.ts', shows: 'The ledger, aid, refund, hold, plan and payment rules' }] },
-    },
-    rating: 'high',
-    open: [
-      'Retention: no period is set; a school’s own must be recorded before it turns the module on (RETENTION.md).',
-      'Readers: the council finance seat is vacant and no school has named a finance owner, so nobody is accountable yet.',
-      'Sharing: no payment provider is chosen, so its terms and data-processing agreement are not on the vendor register.',
-      'Inference: a hold feeds registration, a consequential flag; the wording a student is shown has not been reviewed by a school.',
-    ],
-  },
 ];
 
 export interface Owed {

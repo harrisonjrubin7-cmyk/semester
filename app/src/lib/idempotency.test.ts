@@ -26,9 +26,8 @@ describe('one key per intent', () => {
     expect(keys.keyFor('give:1')).toBe('key-2');
   });
 
-  it('makes keys both databases accept: the dining pattern, and no system prefix', () => {
+  it('makes keys the dining functions accept', () => {
     const key = new IntentKeys().keyFor('x');
     expect(key).toMatch(/^[A-Za-z0-9_.:-]{8,64}$/);
-    expect(key.startsWith('provider:') || key.startsWith('aid:')).toBe(false);
   });
 });

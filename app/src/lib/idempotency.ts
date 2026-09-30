@@ -1,7 +1,7 @@
 /**
  * One key per intent, sent again on every retry of that intent.
  *
- * The student-account and dining functions take a client key on every write
+ * The dining functions take a client key on every write
  * that moves money, and treat the same key with the same request as a replay:
  * they answer with what the first call made and change nothing. That only
  * protects anybody if the screen really does send the same key again — a
@@ -15,9 +15,8 @@
  * reused for a different request, and that refusal would be a bug here, not
  * news for the student.
  *
- * The key is `[A-Za-z0-9-]`, 36 characters: inside both the dining pattern
- * (`^[A-Za-z0-9_.:-]{8,64}$`) and the student-account rule (1–200 characters,
- * never a `provider:` or `aid:` system key).
+ * The key is `[A-Za-z0-9-]`, 36 characters: inside the dining pattern
+ * (`^[A-Za-z0-9_.:-]{8,64}$`).
  */
 
 export type MakeKey = () => string;

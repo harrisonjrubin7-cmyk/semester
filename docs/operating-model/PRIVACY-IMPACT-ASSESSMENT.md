@@ -10,8 +10,8 @@ surfaces that have answered them, and the ones that owe an answer. R-15 in
 surface is asked the question before it ships; the eighth maturity system on the
 same page said no template, register or gate existed. This is the three.
 
-**6 surfaces have answered; 6 owe an answer.** Of the 66 answers written,
-42 cite a test that runs on every change and 24 cite code or a document only,
+**5 surfaces have answered; 6 owe an answer.** Of the 55 answers written,
+33 cite a test that runs on every change and 22 cite code or a document only,
 which is a weaker thing and is marked *written* below. No assessment has been
 reviewed by the privacy seat, which is vacant: these are the founder’s reading of
 the tree, and the seat’s first job is to read them again.
@@ -165,31 +165,6 @@ Selling a plan to a student or an institution, invoicing it, collecting payment 
 - Retention: the period for financial records is unset; it must be set before the first charge (RETENTION.md).
 - Sharing: Stripe’s terms and data-processing agreement are not recorded on the vendor register (SEC-010).
 - Everything: nothing has been charged; the first real delivery from Stripe has not been seen (COM-001).
-
-### Student accounts, payments and financial aid
-
-A school’s student account — ledger per term, aid from the school’s aid system accepted by the student, holds, payment plans, credit refunds and provider payments: built, and off until the module, a named finance owner and the council finance seat are all in place. Owner: **finance** seat. Assessed 2026-09-29. Residual rating: **high**.
-
-| Question | Answer | Shown by |
-| --- | --- | --- |
-| What does this surface do for the student, and what question does each piece of data answer? | To show a student what they owe the school and why, and to let the school’s bursar and aid office keep that account. Each table answers one question: what was posted (entries), what aid the school offered and whether the student took it (awards), whether the account is held (holds), how the balance is divided (plans), and what the student started paying (intents). *(written)* | `supabase/migrations/20260929320000_student_accounts.sql` — The seven tables and the functions that are the only way in<br>`app/src/lib/studentaccount/ledger.ts` — The four bill.ts rules, restated for the ledger |
-| Which fields does it hold, and which of them are sensitive: grades, health, aid, disability, identity, location? | Amounts in integer cents, the term, a short description, aid kind, the school’s own award id, verification and academic-progress status as the school reports them, and a hold reason the bursar writes. Aid and academic progress are sensitive (T4). No card, bank or tax data: the provider’s page takes payment details and a payment event keeps an id, an amount and a hash. | `supabase/student_accounts.check.sql` — The check constraints are walked: whole cents, closed vocabularies, no raw payload<br>`app/src/lib/studentaccount/studentaccount.schema.test.ts` — The TS vocabulary is the SQL one, both ways |
-| What is its default visibility? | Private to the student and the school’s finance offices. A student reads only their own rows; nobody writes a table directly; every write is a function that checks the caller. | `supabase/student_accounts.check.sql` — A second student reads none of the first’s ledger, awards, plans or holds |
-| Who at Semester or the institution can read any of it, through which function, and what do they never receive? | bursar:post (student_accounts_officer) reads the school’s ledger, awards, holds, plans and payment starts; aid:manage (financial_aid_officer) reads awards and aid entries; hold:read (registrar) reads nothing in any table and asks student_hold_status, whose return type is whether, which office and since when — never the reason or an amount. Payment events are read by nobody. | `supabase/student_accounts.check.sql` — The registrar learns the student is held and reads nothing of the hold<br>`app/src/lib/studentaccount/studentaccount.test.ts` — holdStatus returns no reason and no amount |
-| Can a reader learn who the student is from a row that was meant to be anonymous? | Not applicable in the anonymous sense: every row is about a named student and read by that student or a named finance office at their school. A payment event carries no student id, only the intent, and loses that when the account is deleted. *(written)* | `supabase/migrations/20260929320000_student_accounts.sql` — student_payment_events has no student column; intent_id is set null on deletion |
-| Does any of it reach a model, and if so, is it fenced as material and journaled without its body? | Nothing. No prompt builder reads a student account table, and financial fields are T4, which routeAllowed refuses for every AI destination. | `app/src/lib/integration/classification.test.ts` — T4 goes nowhere outside Semester |
-| Which clock deletes it, and where is that clock written? | Account deletion of the student, or the school’s removal; no time-based purge, because Semester’s copy is not the school’s book of record. The period a school wants must be set before it turns the module on. | `RETENTION.md` — The retention answer per table<br>`app/src/lib/retention.test.ts` — RETENTION.md is held to the schema in both directions |
-| Does account deletion empty it, and can the student take it with them? | Deleting the student’s account removes every row by cascade — the append-only trigger lets a foreign-key action through and nothing else. Export covers every column that names the account, through private.account_data_map. | `supabase/student_accounts.check.sql` — Deleting an account empties its ledger; deleting a bursar keeps what they posted<br>`supabase/deletion.check.sql` — Account deletion empties what it claims to |
-| Is any sharing consented, revocable, and never a substitute for an institutional obligation? | None beyond the school’s own finance offices, which is the institution’s duty rather than a consent. The only thing another office learns is whether a hold exists. | `supabase/student_accounts.check.sql` — Another school’s bursar reads and posts nothing; the registrar reads no reason |
-| Does it produce or feed a score, flag or ranking about an individual? | A hold is a flag about an individual, placed by a person at the bursar’s office on a posted balance over the school’s threshold, never computed by Semester. Semester decides no eligibility and no amount: awards, verification and academic progress arrive from the school’s system. | `app/src/lib/studentaccount/studentaccount.test.ts` — Awards only from the adapter; a hold only over the threshold<br>`supabase/student_accounts.check.sql` — A signed-in account cannot sync an award; a hold at the threshold is refused |
-| Which test runs on every change to hold the answers above? | student_accounts.check.sql walks every rule with two students, a bursar, the aid office, the registrar and another school’s bursar; studentaccount.test.ts holds the pure rules, including the duplicate and out-of-order webhook cases. | `supabase/student_accounts.check.sql` — The rules, walked<br>`app/src/lib/studentaccount/studentaccount.test.ts` — The ledger, aid, refund, hold, plan and payment rules |
-
-**Open:**
-
-- Retention: no period is set; a school’s own must be recorded before it turns the module on (RETENTION.md).
-- Readers: the council finance seat is vacant and no school has named a finance owner, so nobody is accountable yet.
-- Sharing: no payment provider is chosen, so its terms and data-processing agreement are not on the vendor register.
-- Inference: a hold feeds registration, a consequential flag; the wording a student is shown has not been reviewed by a school.
 
 ## Owed
 

@@ -64,9 +64,6 @@ const OPENED_FROM_SOMEWHERE_ELSE: Record<string, string> = {
   console:
     'The operations console. A staff tool at #/console for an account the server says holds console:operate at platform scope; ' +
     'anyone else sees one sentence, and no student surface offers it.',
-  studentAccount:
-    'The school’s student account, behind module.student_accounts, which no school has on. Opened from Money’s statement and at ' +
-    '#/studentAccount; with the module off it says so in one sentence rather than offering a tile that opens onto nothing.',
   dining:
     'Dining from the school’s card office, behind module.dining, which no school has on. Opened from Meal plan and at #/dining; ' +
     'with the module off it says so in one sentence rather than offering a tile that opens onto nothing.',

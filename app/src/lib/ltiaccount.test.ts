@@ -180,19 +180,13 @@ const NOT_CONTENT = new Set([
   'canonical_entity_references',
   'consent_record',
   /*
-   * A school's student account and dining (`20260929320000_student_accounts.sql`,
-   * `20260929330000_dining.sql`), and the gradebook of record
-   * (`20260929310000_gradebook.sql`). The ledger, awards, holds, plans and meal
-   * plan are what the school's offices and card office sent, and a grade entry
-   * is what an instructor wrote; the same category as the integration rows
-   * above: about the person, not by them. A payment start, a mobile order, an
-   * enrollment and a regrade request are the person's own acts, and
-   * `lti_account_untouched` reads them (20260929360000).
+   * A school's dining (`20260929330000_dining.sql`) and the gradebook of
+   * record (`20260929310000_gradebook.sql`). The meal plan is what the card
+   * office sent, and a grade entry is what an instructor wrote; the same
+   * category as the integration rows above: about the person, not by them. A
+   * mobile order, an enrollment and a regrade request are the person's own
+   * acts, and `lti_account_untouched` reads them (20260929360000).
    */
-  'student_ledger_entries',
-  'student_aid_awards',
-  'student_account_holds',
-  'student_payment_plans',
   'dining_plans',
   'grade_entries',
   /*

@@ -572,28 +572,6 @@ declare
     'registrar_put_section(want_term text, want_course text, want_section text, want_title text, want_credits numeric, want_capacity integer, want_waitlist integer, want_meetings jsonb, want_prerequisites text[], want_requires_approval boolean)',
     'registrar_grant_override(want_student uuid, want_section uuid, want_waives text[], want_reason text, want_key text)',
     'registrar_decide(want_enrollment uuid, want_approve boolean, want_reason text, want_key text)',
-    -- The eleven in 20260929320000_student_accounts.sql. Each asks
-    -- auth.uid(), the caller's own school from profiles, and a capability
-    -- there — tenant:configure to name the finance owner, bursar:post to post,
-    -- reverse, refund, hold and plan, aid:manage to record a disbursement,
-    -- hold:read for the whether-only hold status — or, for the student's two
-    -- (respond to an award, start a payment), that the row is the caller's
-    -- own. Every write also asks private.student_accounts_on: off until the
-    -- module is on and a finance owner is named who still has a profile and
-    -- a live bursar:post grant at the school. The adapter's sync and
-    -- disbursement and the provider webhook are service_role only and are
-    -- not here. `student_accounts.check.sql` attempts each refusal.
-    'configure_student_accounts(want_finance_owner uuid, want_threshold_cents bigint, want_grace_days integer)',
-    'post_student_ledger_entry(want_student uuid, want_term text, want_kind text, want_cents bigint, want_what text, want_key text)',
-    'reverse_student_ledger_entry(want_entry uuid, want_cents bigint, want_what text, want_key text)',
-    'refund_student_credit(want_student uuid, want_term text, want_cents bigint, want_key text)',
-    'place_student_hold(want_student uuid, want_reason text)',
-    'release_student_hold(want_hold uuid, want_reason text)',
-    'create_student_payment_plan(want_student uuid, want_term text, want_parts integer, want_first date, want_every_months integer, want_key text)',
-    'student_hold_status(want_student uuid)',
-    'respond_to_aid_award(want_award uuid, want_accept boolean)',
-    'record_aid_disbursement(want_award uuid, want_cents bigint, want_key text)',
-    'start_student_payment(want_term text, want_cents bigint, want_key text)',
     -- The nine in 20260929330000_dining.sql. Each takes the caller from
     -- auth.uid() and their school from profiles.school_id, never a
     -- parameter. The three that charge (placing, giving) also check the flag,

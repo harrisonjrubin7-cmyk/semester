@@ -123,7 +123,6 @@ const Groupwork = lazy(() => import('./screens/Groupwork').then((m) => ({ defaul
 const Call = lazy(() => import('./screens/call/Index').then((m) => ({ default: m.Call })));
 const Meals = lazy(() => import('./screens/Meals').then((m) => ({ default: m.Meals })));
 const Dining = lazy(() => import('./screens/Dining').then((m) => ({ default: m.Dining })));
-const StudentAccount = lazy(() => import('./screens/StudentAccount').then((m) => ({ default: m.StudentAccount })));
 const Housing = lazy(() => import('./screens/Housing').then((m) => ({ default: m.Housing })));
 const Runway = lazy(() => import('./screens/Runway').then((m) => ({ default: m.Runway })));
 const Registrar = lazy(() => import('./screens/Registrar').then((m) => ({ default: m.Registrar })));
@@ -234,7 +233,6 @@ export const SCREENS: Record<Exclude<Screen, 'home' | 'onboarding'>, ComponentTy
   call: Call,
   meals: Meals,
   dining: Dining,
-  studentAccount: StudentAccount,
   housing: Housing,
   runway: Runway,
   registrar: Registrar,

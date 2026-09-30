@@ -1029,14 +1029,12 @@ const NESTED: Partial<Record<Screen, Screen>> = {
    */
   console: 'me',
   /*
-   * The school's student account and its dining. Each is behind a module flag
-   * that is off at every school today, so a shelf tile would open onto "your
-   * school has not turned this on" for everybody — the reason Community is not
-   * registered while its switches are off. Each is opened from the screen that
-   * is its student-kept counterpart (Money's statement, Meal plan) and at its
-   * own address, and sits under that screen's root.
+   * The school's dining. It is behind a module flag that is off at every
+   * school today, so a shelf tile would open onto "your school has not turned
+   * this on" for everybody — the reason Community is not registered while its
+   * switches are off. It is opened from its student-kept counterpart (Meal
+   * plan) and at its own address, and sits under that screen's root.
    */
-  studentAccount: 'courses',
   dining: 'me',
   /**
    * The official registration transaction and the gradebook of record, each
@@ -1132,7 +1130,6 @@ const NESTED_NAMES: Partial<Record<Screen, string>> = {
   community: 'Community',
   moderation: 'the review queue',
   console: 'the operations console',
-  studentAccount: 'your student account',
   dining: 'dining at your school',
   // What each does: enroll, wait, drop and withdraw in the school's own
   // registration; and a course's official grades, entered, released and read.

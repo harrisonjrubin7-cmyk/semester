@@ -277,10 +277,8 @@ begin
   -- undergraduate_student, graduate_student and transfer_student.
   -- 128 before 20260929300000_registration_transaction.sql gave `registrar`
   -- `registration:administer`.
-  -- 129 before 20260929320000_student_accounts.sql added three:
-  -- bursar:post, aid:manage and hold:read, one office each.
-  -- 132 before 20260929330000_dining.sql added dining_staff → dining:operate.
-  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 133);
+  -- 129 before 20260929330000_dining.sql added dining_staff → dining:operate.
+  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 130);
 
   perform pg_temp.become_anon();
   perform pg_temp.refused('a signed-out visitor cannot read the matrix',

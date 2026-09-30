@@ -43,7 +43,7 @@ import {
  * readings a student types from the balance page, because without a card-
  * office connection there is nothing else to read; this is what the school's
  * card office says once it is connected. They link to each other and share no
- * state, the same arrangement as Money's statement and the student account.
+ * state.
  *
  * Nothing here is the institution's figure until the card-office connection is
  * live. Until then every balance says it is Semester's own arithmetic, and

@@ -1,9 +1,9 @@
 import type { CSSProperties } from 'react';
 
 /*
- * The one row shape the student account and dining screens share: what a
- * thing is, over its meta line, then its amount, then any control — wrapping
- * under each other at 320px rather than squeezing. Tokens only; no new
+ * The row shape of the dining screens: what a thing is, over its meta line,
+ * then its amount, then any control — wrapping under each other at 320px
+ * rather than squeezing. Tokens only; no new
  * colour, radius or spacing.
  */
 export const ROW: CSSProperties = { display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-4)', alignItems: 'baseline' };

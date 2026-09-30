@@ -85,9 +85,10 @@ revoke all on function private.feature_admits_caller(text, text) from public, an
 -- null`, and 20260929340000's trigger refused every update that touched
 -- `added_by` — including the one the foreign key makes when that account is
 -- deleted. So deleting the account of anybody who had ever added somebody to
--- a pilot failed ("A cohort membership is ended, never rewritten"). The
--- student-accounts suite found it when its bursar, who had been the session
--- adding a member, was deleted. As 20260929340000 wrote it, with one case
+-- a pilot failed ("A cohort membership is ended, never rewritten"). A
+-- suite found it when an office holder, who had been the session adding a
+-- member, was deleted; `feature_cohorts.check.sql` now deletes the
+-- configurer and holds it. As 20260929340000 wrote it, with one case
 -- first: an update that only clears `added_by` and/or `removed_by` to null,
 -- changing nothing else, and only for an account that no longer exists, is
 -- that cascade, and passes untouched. A configurer cannot use it to erase who

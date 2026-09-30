@@ -427,7 +427,6 @@ describe('"delete my account" really means every row', () => {
       'registration_terms',
       'reports',
       'schools',
-      'student_account_settings',
       'study_packs',
       'subscriptions',
       'support_access_event',
