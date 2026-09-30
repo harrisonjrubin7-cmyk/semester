@@ -102,7 +102,7 @@ describe('What changed', () => {
     const got = [...host.querySelectorAll('button')].find((b) => /got it/i.test(b.textContent ?? ''))!;
     await act(async () => got.click());
     expect(text()).toBe('');
-    expect((saved?.econ[0] as { day: number }).day).toBe(20);
+    expect(((saved as Record<string, unknown[]>).econ[0] as { day: number }).day).toBe(20);
   });
 
   it('on Course Home shows only that course', async () => {
