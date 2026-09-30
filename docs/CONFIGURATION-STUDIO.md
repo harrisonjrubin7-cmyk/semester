@@ -15,7 +15,8 @@ rather than hundreds of custom deployments."* Decision: [D-1011](DECISION-LOG.md
 |---|---|
 | Eleven domains, each a closed list of keys with a type and a range | `private.config_spec()`; `lib/config/studio.ts` `SPEC`; `studio.test.ts` holds them equal |
 | A domain has at most one draft; published versions are numbered 1, 2, 3 … and never edited or deleted | unique indexes, the guard trigger, RLS; `configuration-studio.check.sql` |
-| Whoever drafted a change does not publish it | `private.school_config_guard`; checked on an account holding both roles |
+| Whoever drafted a change does not publish it; editing a draft makes you its drafter | `private.school_config_guard`; checked on an account holding both roles, and on a rewrite of another person's draft |
+| A draft saved since it was opened is not published | `publish` filters on the draft's `updated_at`; `api.test.ts` |
 | Publishing changes nothing else in the row | the same trigger |
 | A rollback is a new draft copied from an old version and published like any other | `based_on`, checked to exist |
 | The reporting floor starts at the platform's n = 10 and can only be raised | spec `min: 10`; `studio.test.ts` ties it to `MIN_COHORT` |

@@ -255,6 +255,19 @@ begin
     end if;
     new.created_at := old.created_at;
     new.updated_at := now();
+    -- Whoever last changed what a draft says is the person who wrote it. The
+    -- name is otherwise pinned, which let an account holding both capabilities
+    -- rewrite somebody else's draft and then publish it: a second person who
+    -- had reviewed nothing of what they wrote. Now the rewrite makes them the
+    -- drafter, the original drafter becomes the one who may review it, and
+    -- saving the same content again changes nothing.
+    if old.state = 'draft' and new.state = 'draft' and auth.uid() is not null
+       and auth.uid() is distinct from old.created_by
+       and (new.settings is distinct from old.settings
+            or new.note is distinct from old.note
+            or new.based_on is distinct from old.based_on) then
+      new.created_by := auth.uid();
+    end if;
   end if;
 
   -- Saving a draft is drafting: publishing rights alone do not edit what they are to review.

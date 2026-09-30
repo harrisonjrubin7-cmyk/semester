@@ -62,10 +62,16 @@ export function configApi(db: SupabaseClient): ConfigApi {
       if (!data || data.length === 0) throw new Error('Your account cannot discard this draft.');
     },
     async publish(draft) {
+      // The draft *as reviewed*: the database compares the row with itself, so a
+      // draft saved since this one was opened would pass its publish-as-reviewed
+      // check and publish settings the publisher never saw. `updated_at` moves on
+      // every save, so a changed draft reaches no row here.
       const { data, error } = await db.from('school_config_versions')
-        .update({ state: 'published' }).eq('id', draft.id).select('id');
+        .update({ state: 'published' }).eq('id', draft.id).eq('updated_at', draft.updated_at).select('id');
       if (error) throw refusal(error, 'Could not publish.');
-      if (!data || data.length === 0) throw new Error('Your account cannot publish this draft.');
+      if (!data || data.length === 0) {
+        throw new Error('This draft changed after you opened it, or your account cannot publish it. Reload it and review what it says now.');
+      }
     },
   };
 }
