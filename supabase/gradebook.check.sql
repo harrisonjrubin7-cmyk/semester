@@ -357,6 +357,20 @@ begin
     pg_temp.ask(prof, format($q$select public.gradebook_queue_passback(%L, 'passback-1-key')->>'reason'$q$, ps1)), 'kill-switch');
   perform pg_temp.counted('and nothing was queued while it was closed', (select count(*) from public.grade_passbacks), 0);
   update public.feature_kill_switch set engaged = false where switch_key = 'kill.writeback';
+  -- The school's limits on the passback flag (20260929370000's
+  -- feature_admits_caller): outside them it is off for this instructor.
+  update public.tenant_feature_policy set permitted_roles = array['department_chair']
+   where tenant_id = 'gb-u' and capability = 'writeback.lms_grade_passback';
+  perform pg_temp.said('an instructor outside a role-limited passback pilot queues nothing',
+    pg_temp.ask(prof, format($q$select public.gradebook_queue_passback(%L, 'passback-1-key')->>'reason'$q$, ps1)), 'flag-off');
+  update public.tenant_feature_policy set permitted_roles = '{}', permitted_cohorts = array['passback-pilot']
+   where tenant_id = 'gb-u' and capability = 'writeback.lms_grade_passback';
+  perform pg_temp.said('or outside a cohort-limited one',
+    pg_temp.ask(prof, format($q$select public.gradebook_queue_passback(%L, 'passback-1-key')->>'reason'$q$, ps1)), 'flag-off');
+  perform pg_temp.counted('and the limits queued nothing', (select count(*) from public.grade_passbacks), 0);
+  -- The control below: with both lists empty again, the same call queues.
+  update public.tenant_feature_policy set permitted_cohorts = '{}'
+   where tenant_id = 'gb-u' and capability = 'writeback.lms_grade_passback';
   perform pg_temp.refused('the TA queueing passback', ta,
     format($q$select public.gradebook_queue_passback(%L, 'passback-ta-key')$q$, ps1));
   perform pg_temp.said('with every gate open one grade is queued — Ana''s released one',

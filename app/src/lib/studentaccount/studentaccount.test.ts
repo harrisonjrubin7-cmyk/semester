@@ -36,7 +36,7 @@ function ctx(actor: Ctx['actor'], over: Partial<Ctx> = {}): Ctx {
   let n = 0;
   return {
     now: NOW,
-    gate: { moduleState: 'production', financeOwner: 'owner-1', councilFinanceHolder: 'Finance lead' },
+    gate: { moduleState: 'production', financeOwner: 'owner-1', admitted: true, councilFinanceHolder: 'Finance lead' },
     settings: { thresholdCents: 50_000, graceDays: 10 },
     actor,
     newId: () => `id-${++n}-${Math.random().toString(36).slice(2, 8)}`,
@@ -66,18 +66,21 @@ const event = (over: Partial<ProviderEvent> = {}): ProviderEvent => ({
 
 describe('the gate: off until the flag, a finance owner and the council seat', () => {
   it('is off by default, and says which of the three is missing', () => {
-    expect(gate({ moduleState: 'off', financeOwner: 'x', councilFinanceHolder: 'y' })).toMatchObject({ on: false, code: 'module_off' });
-    expect(gate({ moduleState: 'production', financeOwner: null, councilFinanceHolder: 'y' })).toMatchObject({ on: false, code: 'no_finance_owner' });
-    expect(gate({ moduleState: 'production', financeOwner: 'x', councilFinanceHolder: null })).toMatchObject({ on: false, code: 'finance_seat_vacant' });
-    expect(gate({ moduleState: 'preview', financeOwner: 'x', councilFinanceHolder: 'y' }).on).toBe(true);
+    expect(gate({ moduleState: 'off', financeOwner: 'x', admitted: true, councilFinanceHolder: 'y' })).toMatchObject({ on: false, code: 'module_off' });
+    expect(gate({ moduleState: 'production', financeOwner: null, admitted: true, councilFinanceHolder: 'y' })).toMatchObject({ on: false, code: 'no_finance_owner' });
+    expect(gate({ moduleState: 'production', financeOwner: 'x', admitted: true, councilFinanceHolder: null })).toMatchObject({ on: false, code: 'finance_seat_vacant' });
+    expect(gate({ moduleState: 'preview', financeOwner: 'x', admitted: true, councilFinanceHolder: 'y' }).on).toBe(true);
+    // A school's role or cohort limit that leaves the caller out: after off, before the owner.
+    expect(gate({ moduleState: 'production', financeOwner: null, admitted: false, councilFinanceHolder: 'y' })).toMatchObject({ on: false, code: 'not_admitted' });
+    expect(gate({ moduleState: 'off', financeOwner: 'x', admitted: false, councilFinanceHolder: 'y' })).toMatchObject({ on: false, code: 'module_off' });
   });
 
   it('reads the real council, where the finance seat is vacant today, so nothing is on anywhere', () => {
-    expect(gate({ moduleState: 'production', financeOwner: 'owner-1' })).toMatchObject({ on: false, code: 'finance_seat_vacant' });
+    expect(gate({ moduleState: 'production', financeOwner: 'owner-1', admitted: true })).toMatchObject({ on: false, code: 'finance_seat_vacant' });
   });
 
   it('refuses every write while off, with the reason', () => {
-    const off = ctx(bursar, { gate: { moduleState: 'off', financeOwner: 'owner-1', councilFinanceHolder: 'y' } });
+    const off = ctx(bursar, { gate: { moduleState: 'off', financeOwner: 'owner-1', admitted: true, councilFinanceHolder: 'y' } });
     const r = postEntry(emptyAccount('u', STUDENT), { term: TERM, kind: 'charge', cents: 100, what: 'Fee', key: 'k' }, off);
     expect(r).toMatchObject({ ok: false, code: 'module_off' });
     expect(syncAward(emptyAccount('u', STUDENT), award(), { ...off, actor: 'aid_adapter' })).toMatchObject({ ok: false, code: 'module_off' });
@@ -369,7 +372,7 @@ describe('payments through the provider adapter', () => {
 
   it('records a payment even after the module is switched off, because the money already moved', () => {
     const s = started();
-    const off = ctx('provider', { gate: { moduleState: 'off', financeOwner: null, councilFinanceHolder: null } });
+    const off = ctx('provider', { gate: { moduleState: 'off', financeOwner: null, admitted: true, councilFinanceHolder: null } });
     const r = applyProviderEvent(s.account, event({ intentId: s.value.id }), off);
     expect(r).toMatchObject({ ok: true, value: { outcome: 'posted' } });
   });

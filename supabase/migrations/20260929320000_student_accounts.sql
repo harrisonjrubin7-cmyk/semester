@@ -282,6 +282,15 @@ revoke all on function private.student_accounts_on(text) from public, anon, auth
 
 -- The caller's school, if they hold the capability there and the module is on.
 -- Raises otherwise: one place decides, so the functions cannot disagree.
+--
+-- Deliberately *not* narrowed by the module's `permitted_roles` or
+-- `permitted_cohorts` (`private.feature_admits_caller`): a holder of
+-- `bursar:post` or `aid:manage` runs the school's accounts, and a pilot limited
+-- to fifty students must not lock the bursar and the aid office out of posting,
+-- holding or disbursing for them — the registrar has the same exemption in
+-- `private.registration_gate`. The student-facing writers
+-- (`start_student_payment`, `respond_to_aid_award`) are narrowed; the
+-- service-key webhooks have no caller to narrow and are not.
 create or replace function private.student_accounts_staff(want_capability text)
 returns text
 language plpgsql
@@ -670,6 +679,12 @@ begin
   if not private.student_accounts_on(a.tenant_id) then
     raise exception 'semester: student accounts are off at your school' using errcode = 'insufficient_privilege';
   end if;
+  -- The school's role and cohort limits on the module (a student pilot):
+  -- `private.feature_admits_caller`, defined in 20260929370000 and resolved
+  -- when this runs. A student it leaves out cannot answer an award here.
+  if not private.feature_admits_caller('module.student_accounts', a.tenant_id) then
+    raise exception 'semester: student accounts are not open to you at your school yet' using errcode = 'insufficient_privilege';
+  end if;
   if a.status = want then
     return want;
   end if;
@@ -817,6 +832,11 @@ begin
   select p.school_id into school from public.profiles p where p.user_id = me;
   if school is null or not private.student_accounts_on(school) then
     raise exception 'semester: student accounts are off at your school' using errcode = 'insufficient_privilege';
+  end if;
+  -- The school's role and cohort limits on the module, as in
+  -- respond_to_aid_award: a student outside a pilot starts no payment.
+  if not private.feature_admits_caller('module.student_accounts', school) then
+    raise exception 'semester: student accounts are not open to you at your school yet' using errcode = 'insufficient_privilege';
   end if;
   perform private.student_ledger_person_key(want_key);
   perform private.student_ledger_lock(school, me);

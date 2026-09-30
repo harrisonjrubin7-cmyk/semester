@@ -79,6 +79,63 @@ $$;
 
 revoke all on function private.feature_admits_caller(text, text) from public, anon, authenticated;
 
+-- ── Cohort memberships survive their configurer's account ────────────────
+--
+-- `feature_cohort_members.added_by` and `removed_by` are `on delete set
+-- null`, and 20260929340000's trigger refused every update that touched
+-- `added_by` — including the one the foreign key makes when that account is
+-- deleted. So deleting the account of anybody who had ever added somebody to
+-- a pilot failed ("A cohort membership is ended, never rewritten"). The
+-- student-accounts suite found it when its bursar, who had been the session
+-- adding a member, was deleted. As 20260929340000 wrote it, with one case
+-- first: an update that only clears `added_by` and/or `removed_by` to null,
+-- changing nothing else, and only for an account that no longer exists, is
+-- that cascade, and passes untouched. A configurer cannot use it to erase who
+-- added somebody while that account is still there. `security definer` only
+-- so the trigger can see `auth.users`; it reads nothing else.
+create or replace function private.stamp_cohort_membership()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if tg_op = 'UPDATE'
+     and new.tenant_id is not distinct from old.tenant_id and new.cohort is not distinct from old.cohort
+     and new.user_id is not distinct from old.user_id and new.added_at is not distinct from old.added_at
+     and new.removed_at is not distinct from old.removed_at
+     and (new.added_by is not distinct from old.added_by
+          or (new.added_by is null and not exists (select 1 from auth.users u where u.id = old.added_by)))
+     and (new.removed_by is not distinct from old.removed_by
+          or (new.removed_by is null and not exists (select 1 from auth.users u where u.id = old.removed_by)))
+     and (new.added_by is distinct from old.added_by or new.removed_by is distinct from old.removed_by) then
+    return new;
+  end if;
+  if tg_op = 'INSERT' then
+    new.added_by := (select auth.uid());
+    new.added_at := now();
+    new.removed_by := null;
+    new.removed_at := null;
+  else
+    if new.tenant_id is distinct from old.tenant_id or new.cohort is distinct from old.cohort
+       or new.user_id is distinct from old.user_id or new.added_by is distinct from old.added_by
+       or new.added_at is distinct from old.added_at then
+      raise exception 'A cohort membership is ended, never rewritten.';
+    end if;
+    if old.removed_at is not null then
+      raise exception 'This membership has already ended.';
+    end if;
+    if new.removed_at is null then
+      raise exception 'An update may only end the membership.';
+    end if;
+    new.removed_by := (select auth.uid());
+    new.removed_at := now();
+  end if;
+  return new;
+end $$;
+
+revoke all on function private.stamp_cohort_membership() from public, anon, authenticated;
+
 -- ── Dining: the charge gate, with the narrowing ───────────────────────────
 --
 -- As 20260929330000 wrote it, with step 2 added. A caller outside the

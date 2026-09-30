@@ -957,6 +957,12 @@ begin
   if public.feature_state('writeback.lms_grade_passback', school) <> 'production' then
     return jsonb_build_object('queued', 0, 'reason', 'flag-off');
   end if;
+  -- The school's role and cohort limits on passback (a pilot of named
+  -- instructors): `private.feature_admits_caller`, defined in 20260929370000
+  -- and resolved when this runs. Left out reads as the flag being off.
+  if not private.feature_admits_caller('writeback.lms_grade_passback', school) then
+    return jsonb_build_object('queued', 0, 'reason', 'flag-off');
+  end if;
   if it.line_item is null then
     return jsonb_build_object('queued', 0, 'reason', 'no-line-item');
   end if;

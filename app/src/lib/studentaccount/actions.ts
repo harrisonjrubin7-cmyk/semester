@@ -76,6 +76,7 @@ export interface Ctx {
 
 export type RefusalCode =
   | 'module_off'
+  | 'not_admitted'
   | 'no_finance_owner'
   | 'finance_seat_vacant'
   | 'forbidden'

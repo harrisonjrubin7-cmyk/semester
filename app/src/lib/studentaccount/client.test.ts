@@ -70,6 +70,8 @@ beforeEach(() => {
   who.user = 'stu-1';
   who.school = 'vu';
   who.grants = [];
+  // The school names no role and no cohort unless a test says otherwise.
+  replies.set('rpc:feature_narrowing', { data: [] });
 });
 
 describe('money', () => {
@@ -84,18 +86,18 @@ describe('money', () => {
 
 describe('the gate', () => {
   it('is off when the module is off, whoever asks', () => {
-    expect(screenGate('off', undefined, 'someone')).toMatchObject({ on: false, code: 'module_off' });
+    expect(screenGate('off', undefined, true, 'someone')).toMatchObject({ on: false, code: 'module_off' });
   });
 
   it('is off while Semester’s council finance seat is vacant, which it is on this tree', () => {
-    expect(screenGate('production', undefined)).toMatchObject({ on: false, code: 'finance_seat_vacant' });
+    expect(screenGate('production', undefined, true)).toMatchObject({ on: false, code: 'finance_seat_vacant' });
   });
 
   it('leaves the finance owner to the database for a student, and holds an office to it', () => {
-    expect(screenGate('production', undefined, 'A. Holder')).toMatchObject({ on: true });
+    expect(screenGate('production', undefined, true, 'A. Holder')).toMatchObject({ on: true });
     const settings = { financeOwner: null, thresholdCents: 0, graceDays: 10, updatedAt: 0 };
-    expect(screenGate('production', settings, 'A. Holder')).toMatchObject({ on: false, code: 'no_finance_owner' });
-    expect(screenGate('production', { ...settings, financeOwner: 'u-9' }, 'A. Holder')).toMatchObject({ on: true });
+    expect(screenGate('production', settings, true, 'A. Holder')).toMatchObject({ on: false, code: 'no_finance_owner' });
+    expect(screenGate('production', { ...settings, financeOwner: 'u-9' }, true, 'A. Holder')).toMatchObject({ on: true });
   });
 
   it('asks feature_state for module.student_accounts at the caller’s school, and reads grants over that school', async () => {
@@ -117,6 +119,43 @@ describe('the gate', () => {
     replies.set('rpc:feature_state', { data: 'production' });
     const opening = await openAccount();
     expect(opening.kind === 'ready' && opening.context.settings).toBeUndefined();
+  });
+
+  it('is off for a caller the school’s limits leave out, and after the module step', () => {
+    expect(screenGate('production', undefined, false, 'A. Holder')).toMatchObject({ on: false, code: 'not_admitted' });
+    expect(screenGate('off', undefined, false, 'A. Holder')).toMatchObject({ on: false, code: 'module_off' });
+  });
+
+  const narrowed = (row: Record<string, string[]>) =>
+    replies.set('rpc:feature_narrowing', { data: [{ permitted_roles: [], permitted_cohorts: [], roles: [], cohorts: [], ...row }] });
+
+  it('keeps a student outside the school’s pilot cohort out, through openAccount', async () => {
+    replies.set('rpc:feature_state', { data: 'production' });
+    narrowed({ permitted_cohorts: ['accounts-pilot'] });
+    const out = await openAccount();
+    expect(calls.find((c) => c.name === 'feature_narrowing')?.args).toEqual({ want_capability: 'module.student_accounts', want_tenant: 'vu' });
+    expect(out.kind === 'ready' && out.context.decision).toMatchObject({ on: false, code: 'not_admitted' });
+    // A member passes the limit and meets the next gate (the council seat, vacant on this tree).
+    narrowed({ permitted_cohorts: ['accounts-pilot'], cohorts: ['accounts-pilot'] });
+    const member = await openAccount();
+    expect(member.kind === 'ready' && member.context.decision).toMatchObject({ on: false, code: 'finance_seat_vacant' });
+  });
+
+  it('does not limit the bursar or the aid office by a student pilot', async () => {
+    replies.set('rpc:feature_state', { data: 'production' });
+    narrowed({ permitted_cohorts: ['accounts-pilot'] });
+    who.grants = [{ capability: 'bursar:post', scopeKind: 'school', scopeId: 'vu' }];
+    const bursar = await openAccount();
+    expect(bursar.kind === 'ready' && bursar.context.decision).not.toMatchObject({ code: 'not_admitted' });
+    who.grants = [{ capability: 'aid:manage', scopeKind: 'school', scopeId: 'vu' }];
+    const aid = await openAccount();
+    expect(aid.kind === 'ready' && aid.context.decision).not.toMatchObject({ code: 'not_admitted' });
+  });
+
+  it('throws, rather than opening, when the limits cannot be read', async () => {
+    replies.set('rpc:feature_state', { data: 'production' });
+    replies.set('rpc:feature_narrowing', { error: { message: 'Failed to fetch' } });
+    await expect(openAccount()).rejects.toThrow();
   });
 
   it('throws when the module state cannot be read: a dropped request is not "off"', async () => {

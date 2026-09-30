@@ -51,6 +51,8 @@ type Loaded = { status: 'loading' } | { status: 'error'; message: string } | { s
 const OFF_WORDS: Record<GateCode, string> = {
   module_off:
     'Your school has not turned on student accounts in Semester. Your balance, aid and payments stay with your school’s student accounts office, and nothing here changes them.',
+  not_admitted:
+    'Your school is trying student accounts in Semester with a smaller group first, and your account is not in it yet. Your balance, aid and payments stay with your school’s student accounts office.',
   no_finance_owner:
     'Your school has not yet named the person accountable for student accounts, so they are not on. Your balance, aid and payments stay with your school’s student accounts office.',
   finance_seat_vacant:

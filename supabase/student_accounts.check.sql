@@ -111,6 +111,19 @@ begin
   raise notice 'ok  % is refused as module off (%)', what, e;
 end $$;
 
+-- Refused *because the school's role or cohort limit leaves the caller out*
+-- (20260929370000's feature_admits_caller), and for no other reason.
+create or replace function pg_temp.narrowed(what text, who uuid, statement text)
+returns void language plpgsql as $$
+declare e text := pg_temp.err(who, statement);
+begin
+  if e is null then raise exception 'FAILED: % — was allowed', what; end if;
+  if e not like '%not open to you%' then
+    raise exception 'FAILED: % — refused, but not by the limit: %', what, e;
+  end if;
+  raise notice 'ok  % is refused by the limit (%)', what, e;
+end $$;
+
 -- A scalar a statement returns as `who`.
 create or replace function pg_temp.said(who uuid, q text)
 returns text language plpgsql as $$
@@ -267,6 +280,20 @@ begin
   perform pg_temp.refused('the aid office accepting it for the student', aid, format($q$select public.respond_to_aid_award(%L, true)$q$, award));
   perform pg_temp.refused('the aid office disbursing an award not yet accepted', aid,
     format($q$select public.record_aid_disbursement(%L, 300000, 'd-1')$q$, award));
+  -- ── A student pilot: the school limits the module to a cohort ──────────
+  -- Before it, every step above ran with both lists empty: the control.
+  update public.tenant_feature_policy set permitted_cohorts = array['accounts-pilot']
+   where tenant_id = 'sa-u' and capability = 'module.student_accounts';
+  perform pg_temp.narrowed('a student outside the pilot answering their award', s1,
+    format($q$select public.respond_to_aid_award(%L, true)$q$, award));
+  perform pg_temp.counted('and the award is still offered',
+    (select count(*) from public.student_aid_awards where id = award and status = 'offered'), 1);
+  n := (select count(*) from public.student_ledger_entries);
+  perform pg_temp.allowed('the bursar, in no cohort, is not locked out (a replayed posting)', bursar,
+    format($q$select public.post_student_ledger_entry(%L, '2026FA', 'charge', 900000, 'Tuition', 'tuition')$q$, s1));
+  perform pg_temp.counted('and the replay wrote nothing', (select count(*) from public.student_ledger_entries), n);
+  insert into public.feature_cohort_members (tenant_id, cohort, user_id) values ('sa-u', 'accounts-pilot', s1);
+  -- s1 is in the pilot from here, s2 is not; the list stays until payments.
   perform pg_temp.allowed('the student accepts their own award', s1, format($q$select public.respond_to_aid_award(%L, true)$q$, award));
   perform pg_temp.allowed('and the work-study', s1, format($q$select public.respond_to_aid_award(%L, true)$q$, ws));
   perform pg_temp.refused('declining after accepting', s1, format($q$select public.respond_to_aid_award(%L, false)$q$, award));
@@ -349,7 +376,7 @@ begin
 
   -- ── Paying through the provider ─────────────────────────────────────────
   perform pg_temp.refused('paying more than the term owes', s1, $q$select public.start_student_payment('2027SP', 50002, 'pay-1')$q$);
-  perform pg_temp.refused('paying a term that owes nothing', s2, $q$select public.start_student_payment('2027SP', 1, 'pay-1')$q$);
+  perform pg_temp.narrowed('a student outside the pilot starting a payment', s2, $q$select public.start_student_payment('2027SP', 1, 'pay-1')$q$);
   intent := pg_temp.said(s1, $q$select public.start_student_payment('2027SP', 50001, 'pay-1')$q$)::uuid;
   perform pg_temp.counted('the student started a payment', (select count(*) from public.student_payment_intents where id = intent), 1);
   perform pg_temp.refused('a signed-in account applying a webhook', s1,
@@ -373,6 +400,14 @@ begin
     pg_temp.service(format($q$select public.apply_student_payment_event('fakepay', 'evt-3', 'payment_failed', %L, 'pay-1', 50001, 'usd', %L, now())$q$, intent, repeat('e', 64))),
     'ignored_after_success');
   perform pg_temp.counted('the spring balance is the one cent refunded', private.student_ledger_balance('sa-u', s1, '2027SP'), 1);
+  -- Every webhook above ran with the pilot's cohort list in place: the
+  -- service key has no caller to narrow, and it is not narrowed. The list
+  -- comes off, and the student left out is back to the ordinary refusals.
+  update public.tenant_feature_policy set permitted_cohorts = '{}'
+   where tenant_id = 'sa-u' and capability = 'module.student_accounts';
+  e := pg_temp.err(s2, $q$select public.start_student_payment('2027SP', 1, 'pay-1')$q$);
+  perform pg_temp.answered('with the list empty, the same student is refused only for owing nothing',
+    (e like '%no more than that%')::text, 'true');
   e := pg_temp.err(s1, 'select count(*) from public.student_payment_events');
   perform pg_temp.answered('the student cannot read webhooks', (e is not null)::text, 'true');
   e := pg_temp.err(bursar, 'select count(*) from public.student_payment_events');

@@ -206,6 +206,15 @@ begin
               where tenant_id = 'fc-u' and user_id = %L$q$, pilot));
   perform pg_temp.counted('the membership row survives its ending',
     (select count(*) from public.feature_cohort_members where user_id = pilot), 1);
+
+  -- ── The configurer's account goes; the record of the pilot stays ───────
+  -- `added_by` and `removed_by` are `on delete set null`, and that update
+  -- must get past the trigger that refuses rewrites — or deleting the account
+  -- of anybody who ever ran a pilot fails (20260929370000).
+  delete from auth.users where id = admin;
+  perform pg_temp.counted('deleting the configurer keeps the membership, with who added and ended it cleared',
+    (select count(*) from public.feature_cohort_members
+      where user_id = pilot and added_by is null and removed_by is null and removed_at is not null), 1);
 end $$;
 
 -- ── A visitor cannot ask at all ───────────────────────────────────────────

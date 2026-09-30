@@ -18,6 +18,7 @@
 
 import { cloud, cloudConfigured } from '../cloud';
 import { forSchool, loadMyCapabilities } from '../capabilities';
+import { narrowingAdmits, readNarrowing } from '../featurepolicy';
 import { claimedSchoolOrThrow } from '../schoolclaim';
 import { formatNumber } from '../locale';
 import type { FeatureState } from '../../intelligence/contracts';
@@ -221,9 +222,14 @@ export const DEFAULT_GRACE_DAYS = 10;
  * and it does, on every write (`private.student_accounts_on`). The module
  * state and Semester's own council seat are checked here for everybody.
  */
-export function screenGate(moduleState: FeatureState, settings: Settings | null | undefined, councilHolder?: string | null): GateDecision {
+export function screenGate(
+  moduleState: FeatureState,
+  settings: Settings | null | undefined,
+  admitted: boolean,
+  councilHolder?: string | null,
+): GateDecision {
   const financeOwner = settings === undefined ? 'held by the school' : (settings?.financeOwner ?? null);
-  return gate({ moduleState, financeOwner, ...(councilHolder === undefined ? {} : { councilFinanceHolder: councilHolder }) });
+  return gate({ moduleState, financeOwner, admitted, ...(councilHolder === undefined ? {} : { councilFinanceHolder: councilHolder }) });
 }
 
 export interface AccountContext {
@@ -256,12 +262,16 @@ export async function openAccount(): Promise<Opening> {
   if (!userId) return { kind: 'signed_out' };
   const school = await claimedSchoolOrThrow();
   if (!school) return { kind: 'no_school' };
-  const [{ data: state, error }, grants, { data: settingsRows, error: settingsError }] = await Promise.all([
+  const [{ data: state, error }, grants, { data: settingsRows, error: settingsError }, narrowing] = await Promise.all([
     db.rpc('feature_state', { want_capability: MODULE_FLAG, want_tenant: school }),
     loadMyCapabilities(),
     db.from('student_account_settings').select('finance_owner,hold_threshold_cents,late_grace_days,updated_at').eq('tenant_id', school),
+    // The school's role and cohort limits on the module, and which the caller
+    // holds. Unread throws: a student pilot never reads as open to everyone.
+    readNarrowing(db, MODULE_FLAG, school).catch(() => null),
   ]);
   if (error) fail(error, 'Could not read whether your school has student accounts on.');
+  if (!narrowing) fail(null, 'Could not read who student accounts are open to at your school.');
   const capabilities = forSchool(grants, school);
   const office = capabilities.includes(CAPABILITIES.bursar) || capabilities.includes(CAPABILITIES.aid) || capabilities.includes('tenant:configure');
   // Row-level security answers a student with no rows, not an error; only an
@@ -274,9 +284,13 @@ export async function openAccount(): Promise<Opening> {
       : { financeOwner: null, thresholdCents: 0, graceDays: DEFAULT_GRACE_DAYS, updatedAt: 0 };
   }
   const moduleState = (typeof state === 'string' ? state : 'off') as FeatureState;
+  // The offices are not limited by a student pilot, as in the database
+  // (`private.student_accounts_staff` is not narrowed).
+  const staff = capabilities.includes(CAPABILITIES.bursar) || capabilities.includes(CAPABILITIES.aid);
+  const admitted = staff || narrowingAdmits(narrowing);
   return {
     kind: 'ready',
-    context: { userId, school, moduleState, settings, capabilities, decision: screenGate(moduleState, settings) },
+    context: { userId, school, moduleState, settings, capabilities, decision: screenGate(moduleState, settings, admitted) },
   };
 }
 
