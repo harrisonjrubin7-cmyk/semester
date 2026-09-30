@@ -442,6 +442,121 @@ begin
     (select count(*) from public.dining_ledger where student = bo), 0);
 end $$;
 
+-- ── The flag's narrowing holds at the database ─────────────────────────────
+--
+-- 20260929370000_feature_policy_narrowing.sql. A school that limits
+-- module.dining to a role or a release cohort has limited the charge, not
+-- only the screen: the RPCs refuse a caller the narrowing leaves out. The
+-- control comes first — with both lists empty, the same people order and
+-- give — so each refusal below is the list that changed, not the setup.
+do $$
+declare
+  sam uuid; tia uuid; mo uuid; hall uuid; meal uuid;
+  today date := (now() at time zone 'America/Chicago')::date;
+  place constant text := $q$select public.dining_place_order(%L, array[%L]::uuid[], %L, %L)$q$;
+  give constant text := $q$select public.dining_donate_swipes(%s, %L, %L)$q$;
+begin
+  insert into public.schools (id, name, email_domains) values ('dn-n', 'Narrow University', array['dn-n.example']);
+  sam := pg_temp.newuser('sam@dn-n.example', 'dn-n');   -- a student, in no cohort
+  tia := pg_temp.newuser('tia@dn-n.example', 'dn-n');   -- university_staff, with a meal plan
+  mo  := pg_temp.newuser('mo@dn-n.example', 'dn-n');    -- a student in the pilot cohort
+  insert into public.role_grants (subject, role, scope_kind, scope_id, provenance) values
+    (sam, 'undergraduate_student', 'school', 'dn-n', 'institution'),
+    (mo,  'undergraduate_student', 'school', 'dn-n', 'institution'),
+    (tia, 'university_staff',      'school', 'dn-n', 'institution'),
+    -- Staff somewhere else is not staff here.
+    (sam, 'university_staff',      'school', 'dn-u', 'institution');
+  insert into public.dining_partner_connections (tenant_id, vendor, status, last_success_at)
+    values ('dn-n', 'Mock card office', 'live', now());
+  insert into public.dining_locations (tenant_id, name, time_zone, capacity, source_label, source_updated_at)
+    values ('dn-n', 'Hall', 'America/Chicago', 100, 'imported', now()) returning id into hall;
+  insert into public.dining_hours (location_id, weekday, opens_min, closes_min)
+    select hall, d, 0, 1440 from generate_series(0, 6) d;
+  insert into public.dining_menu_items (location_id, served_on, meal, name, price_cents, swipe_eligible, available, source_label)
+    values (hall, today, 'all_day', 'Plate', 700, true, true, 'imported') returning id into meal;
+  insert into public.dining_plans (tenant_id, student, term, starts_on, ends_on, time_zone, week_starts, swipe_kind,
+                                   swipes_per_week, source_label, source_updated_at)
+  select 'dn-n', s, '2026FA', today - 30, today + 60, 'America/Chicago',
+         extract(dow from today)::int, 'weekly', 20, 'institution_verified', now()
+    from unnest(array[sam, tia, mo]) s;
+
+  -- The control: both lists empty admit everybody the state admits.
+  insert into public.tenant_feature_policy (tenant_id, capability, state) values ('dn-n', 'module.dining', 'production');
+  perform pg_temp.counted('with no narrowing, a student orders',
+    (pg_temp.err(sam, format(place, hall, meal, 'swipe', 'narrow-sam-0001')) is null)::int, 1);
+  perform pg_temp.counted('and gives a swipe',
+    (pg_temp.err(sam, format(give, 1, 'dining-share-v1', 'narrow-gift-sam-1')) is null)::int, 1);
+
+  -- A staff-only preview: the school names university_staff.
+  update public.tenant_feature_policy set permitted_roles = array['university_staff']
+   where tenant_id = 'dn-n' and capability = 'module.dining';
+  perform pg_temp.refused('a student''s order in a staff-only preview', sam,
+    format(place, hall, meal, 'swipe', 'narrow-sam-0002'), 'dining: flag_off');
+  perform pg_temp.refused('a student''s swipe gift in a staff-only preview', sam,
+    format(give, 1, 'dining-share-v1', 'narrow-gift-sam-2'), 'dining: flag_off');
+  perform pg_temp.counted('and nothing was charged or given for the refusals',
+    (select count(*) from public.dining_orders where student = sam)
+    + (select count(*) from public.dining_pool_donations where donor = sam), 2);
+  perform pg_temp.counted('staff at the school order in it',
+    (pg_temp.err(tia, format(place, hall, meal, 'swipe', 'narrow-tia-0001')) is null)::int, 1);
+  perform pg_temp.counted('and give in it',
+    (pg_temp.err(tia, format(give, 1, 'dining-share-v1', 'narrow-gift-tia-1')) is null)::int, 1);
+  update public.role_grants set revoked_at = now() where subject = tia and scope_id = 'dn-n';
+  perform pg_temp.refused('staff whose grant was revoked', tia,
+    format(place, hall, meal, 'swipe', 'narrow-tia-0002'), 'dining: flag_off');
+  update public.role_grants set revoked_at = null, expires_at = now() - interval '1 minute' where subject = tia and scope_id = 'dn-n';
+  perform pg_temp.refused('staff whose grant has expired', tia,
+    format(place, hall, meal, 'swipe', 'narrow-tia-0002'), 'dining: flag_off');
+  update public.role_grants set expires_at = null where subject = tia and scope_id = 'dn-n';
+
+  -- A pilot cohort, and no role list.
+  update public.tenant_feature_policy set permitted_roles = '{}', permitted_cohorts = array['dining-pilot']
+   where tenant_id = 'dn-n' and capability = 'module.dining';
+  insert into public.feature_cohort_members (tenant_id, cohort, user_id) values ('dn-n', 'dining-pilot', mo);
+  -- A membership in another cohort admits nothing.
+  insert into public.feature_cohort_members (tenant_id, cohort, user_id) values ('dn-n', 'other-pilot', sam);
+  perform pg_temp.refused('a student outside the cohort ordering', sam,
+    format(place, hall, meal, 'swipe', 'narrow-sam-0003'), 'dining: flag_off');
+  perform pg_temp.refused('a student outside the cohort giving', sam,
+    format(give, 1, 'dining-share-v1', 'narrow-gift-sam-3'), 'dining: flag_off');
+  perform pg_temp.refused('staff outside the cohort ordering', tia,
+    format(place, hall, meal, 'swipe', 'narrow-tia-0003'), 'dining: flag_off');
+  perform pg_temp.counted('a member of the cohort orders',
+    (pg_temp.err(mo, format(place, hall, meal, 'swipe', 'narrow-mo-00001')) is null)::int, 1);
+  perform pg_temp.counted('and gives',
+    (pg_temp.err(mo, format(give, 1, 'dining-share-v1', 'narrow-gift-mo-01')) is null)::int, 1);
+  -- What the client reads (`lib/featurepolicy.ts`) is the same answer, under
+  -- the caller's own row-level security.
+  perform pg_temp.counted('the client read: a non-member holds no named cohort',
+    pg_temp.seen(sam, $q$select * from public.feature_narrowing('module.dining', 'dn-n') where permitted_cohorts = array['dining-pilot'] and cohorts = '{}'$q$), 1);
+  perform pg_temp.counted('a member reads their own cohort back, and only the named one',
+    pg_temp.seen(mo, $q$select * from public.feature_narrowing('module.dining', 'dn-n') where cohorts = array['dining-pilot']$q$), 1);
+  perform pg_temp.counted('a member of another school reads no row for this one',
+    pg_temp.seen((select user_id from public.profiles where school_id = 'dn-u' limit 1),
+      $q$select * from public.feature_narrowing('module.dining', 'dn-n')$q$), 0);
+  update public.feature_cohort_members set removed_at = now() where user_id = mo and cohort = 'dining-pilot';
+  perform pg_temp.refused('a member removed from the cohort', mo,
+    format(place, hall, meal, 'swipe', 'narrow-mo-00002'), 'dining: flag_off');
+
+  -- Both lists: the caller needs both.
+  update public.tenant_feature_policy set permitted_roles = array['university_staff'], permitted_cohorts = array['dining-pilot']
+   where tenant_id = 'dn-n' and capability = 'module.dining';
+  insert into public.feature_cohort_members (tenant_id, cohort, user_id) values ('dn-n', 'dining-pilot', sam);
+  perform pg_temp.refused('a cohort member without the role', sam,
+    format(place, hall, meal, 'swipe', 'narrow-sam-0004'), 'dining: flag_off');
+  insert into public.feature_cohort_members (tenant_id, cohort, user_id) values ('dn-n', 'dining-pilot', tia);
+  perform pg_temp.counted('staff in the cohort order',
+    (pg_temp.err(tia, format(place, hall, meal, 'swipe', 'narrow-tia-0004')) is null)::int, 1);
+
+  -- Cancelling is not behind the narrowing, as it is not behind the flag:
+  -- narrowing a feature must never trap money already taken.
+  update public.tenant_feature_policy set permitted_roles = array['university_staff'], permitted_cohorts = '{}'
+   where tenant_id = 'dn-n' and capability = 'module.dining';
+  perform pg_temp.counted('a student left out still cancels their own order',
+    (pg_temp.err(sam, format($q$select public.dining_cancel_order(%L, '')$q$,
+      (select id from public.dining_orders where student = sam and idempotency_key = 'narrow-sam-0001'))) is null)::int, 1);
+end $$;
+
 set local role anon;
 do $$
 begin

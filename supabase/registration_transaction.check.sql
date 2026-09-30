@@ -396,4 +396,63 @@ begin
         and prosrc ~ 'from public\.registration_sections[^;]*for update'), 0);
 end $$;
 
+-- ── The flag's narrowing holds at the database ─────────────────────────────
+--
+-- 20260929370000_feature_policy_narrowing.sql. A pilot limited to a cohort,
+-- or to a role, is limited at `registration_enroll` — not only on the screen.
+-- The registrar is not narrowed: their writes act on the school's
+-- registration. The control comes first: with both lists empty, the same
+-- student enrolls.
+do $$
+declare
+  reg uuid; sam uuid; mo uuid; lee uuid; s1 uuid; s2 uuid; s3 uuid; r jsonb;
+begin
+  insert into public.schools (id, name, email_domains) values ('rn-u', 'Pilot University', array['rn-u.example']);
+  reg := pg_temp.newuser('registrar@rn-u.example', 'rn-u');
+  sam := pg_temp.newuser('sam@rn-u.example', 'rn-u');   -- in no cohort
+  mo  := pg_temp.newuser('mo@rn-u.example', 'rn-u');    -- in the pilot cohort
+  lee := pg_temp.newuser('lee@rn-u.example', 'rn-u');   -- holds undergraduate_student here
+  insert into public.role_grants (subject, role, scope_kind, scope_id, provenance) values
+    (reg, 'registrar',             'school', 'rn-u', 'institution'),
+    (lee, 'undergraduate_student', 'school', 'rn-u', 'institution'),
+    -- The role somewhere else is not the role here.
+    (sam, 'undergraduate_student', 'school', 'rt-u', 'institution');
+  perform pg_temp.become(reg);
+  perform public.registrar_put_term('2026FA', now() - interval '1 day', now() + interval '1 day', now() + interval '10 days', 18);
+  s1 := public.registrar_put_section('2026FA', 'PLT 101', '01', 'One', 3, 20, 0, '[]', '{}', false);
+  s2 := public.registrar_put_section('2026FA', 'PLT 102', '01', 'Two', 3, 20, 0, '[]', '{}', false);
+  s3 := public.registrar_put_section('2026FA', 'PLT 103', '01', 'Three', 3, 20, 0, '[]', '{}', false);
+  reset role;
+  insert into public.tenant_feature_policy (tenant_id, capability, state) values ('rn-u', 'writeback.registration_submit', 'production');
+
+  perform pg_temp.said('with no narrowing, a student enrolls',
+    pg_temp.call(sam, format($q$select public.registration_enroll(%L, 'rn-sam-00001')$q$, s1))->>'outcome', 'enrolled');
+
+  -- A cohort pilot.
+  update public.tenant_feature_policy set permitted_cohorts = array['reg-pilot-2027']
+   where tenant_id = 'rn-u' and capability = 'writeback.registration_submit';
+  insert into public.feature_cohort_members (tenant_id, cohort, user_id) values ('rn-u', 'reg-pilot-2027', mo);
+  perform pg_temp.said('a student outside the cohort enrolling',
+    pg_temp.reason(sam, format($q$select public.registration_enroll(%L, 'rn-sam-00002')$q$, s2)), 'flag_off');
+  perform pg_temp.said('or dropping',
+    pg_temp.reason(sam, format($q$select public.registration_drop(%L, 'rn-sam-drop-1')$q$, s1)), 'flag_off');
+  perform pg_temp.counted('and the refusals wrote nothing',
+    (select count(*) from public.registration_enrollments where student = sam and state = 'enrolled'), 1);
+  perform pg_temp.said('a member of the cohort enrolls',
+    pg_temp.call(mo, format($q$select public.registration_enroll(%L, 'rn-mo-000001')$q$, s1))->>'outcome', 'enrolled');
+  update public.feature_cohort_members set removed_at = now() where user_id = mo;
+  perform pg_temp.said('a member removed from the cohort is refused',
+    pg_temp.reason(mo, format($q$select public.registration_enroll(%L, 'rn-mo-000002')$q$, s2)), 'flag_off');
+  perform pg_temp.said('the registrar, in no cohort, is not narrowed: an override still lands',
+    pg_temp.call(reg, format($q$select public.registrar_grant_override(%L, %L, array['credit_limit'], 'Pilot load', 'rn-reg-ovr-01')$q$, sam, s3))->>'outcome', 'override_granted');
+
+  -- A role pilot.
+  update public.tenant_feature_policy set permitted_cohorts = '{}', permitted_roles = array['undergraduate_student']
+   where tenant_id = 'rn-u' and capability = 'writeback.registration_submit';
+  perform pg_temp.said('a student without the role here enrolling',
+    pg_temp.reason(sam, format($q$select public.registration_enroll(%L, 'rn-sam-00003')$q$, s2)), 'flag_off');
+  perform pg_temp.said('a student with the role here enrolls',
+    pg_temp.call(lee, format($q$select public.registration_enroll(%L, 'rn-lee-00001')$q$, s2))->>'outcome', 'enrolled');
+end $$;
+
 rollback;

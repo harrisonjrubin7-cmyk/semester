@@ -70,7 +70,7 @@ export function createSupabaseIntelligenceRepository(options: IntelligenceReposi
       const [feature, policy, usage] = await Promise.all([
         client
           .from('tenant_feature_policy')
-          .select('state, permitted_roles')
+          .select('state, permitted_roles, permitted_cohorts')
           .eq('tenant_id', identity.institutionId)
           .eq('capability', 'semester_intelligence')
           .maybeSingle(),
@@ -84,18 +84,36 @@ export function createSupabaseIntelligenceRepository(options: IntelligenceReposi
       if (feature.error || policy.error || usage.error) {
         throw new Error('The authoritative institution AI policy could not be loaded.');
       }
-      const featureRow = feature.data as { state?: string; permitted_roles?: unknown } | null;
+      const featureRow = feature.data as { state?: string; permitted_roles?: unknown; permitted_cohorts?: unknown } | null;
       const policyRow = policy.data as {
         allowed_modes?: unknown;
         allowed_providers?: unknown;
         monthly_budget_cents?: unknown;
         retention_days?: unknown;
       } | null;
-      if (!featureRow || !policyRow || !STATES.has(featureRow.state as IntelligenceFeatureState)) {
-        return {
-          state: 'off', permittedRoles: [], allowedModes: [], allowedModels: [],
-          maxRequestCents: 0, monthlyBudgetCents: 0, monthlySpentCents: 0, retentionDays: 0,
-        };
+      const off: TenantIntelligencePolicy = {
+        state: 'off', permittedRoles: [], allowedModes: [], allowedModels: [],
+        maxRequestCents: 0, monthlyBudgetCents: 0, monthlySpentCents: 0, retentionDays: 0,
+      };
+      if (!featureRow || !policyRow || !STATES.has(featureRow.state as IntelligenceFeatureState)) return off;
+      // The release cohort: a school that limited Semester Intelligence to a
+      // pilot has limited it here too. This client is the service key, so the
+      // membership is asked of this person by id — live rows only — and a
+      // read that fails throws, like every other read here, rather than
+      // admitting the whole school. Outside the cohort, the policy is off.
+      const permittedCohorts = Array.isArray(featureRow.permitted_cohorts)
+        ? featureRow.permitted_cohorts.filter((cohort): cohort is string => typeof cohort === 'string')
+        : [];
+      if (permittedCohorts.length > 0) {
+        const member = await client
+          .from('feature_cohort_members')
+          .select('cohort')
+          .eq('tenant_id', identity.institutionId)
+          .eq('user_id', identity.userId)
+          .is('removed_at', null)
+          .in('cohort', permittedCohorts);
+        if (member.error) throw new Error('The institution AI release cohort could not be loaded.');
+        if (!Array.isArray(member.data) || member.data.length === 0) return off;
       }
       const permittedRoles = Array.isArray(featureRow.permitted_roles)
         ? featureRow.permitted_roles.filter((role): role is string => typeof role === 'string')

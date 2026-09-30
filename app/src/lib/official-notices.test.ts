@@ -76,8 +76,8 @@ describe('official notices', () => {
 });
 
 /**
- * A client that answers the three reads the loader makes: who is signed in,
- * whether the module is on for the school, and the rows. Each can be made to
+ * A client that answers the reads the loader makes: who is signed in,
+ * whether the module is on for the school (and for whom), and the rows. Each can be made to
  * fail, which is the case the hub has to tell apart from "not connected".
  */
 function fakeDb(o: { user?: string | null; state?: string; stateFails?: boolean; switchesFail?: boolean; rowsFail?: boolean; userThrows?: boolean; authError?: string }) {
@@ -91,7 +91,10 @@ function fakeDb(o: { user?: string | null; state?: string; stateFails?: boolean;
         return { data: { user: o.user === null ? null : { id: o.user ?? 'u1' } }, error: null };
       },
     },
-    rpc: async () => (o.stateFails ? { data: null, error: fail } : { data: o.state ?? 'production', error: null }),
+    rpc: async (name: string) =>
+      // The narrowing read: the school names no role or cohort.
+      name === 'feature_narrowing' ? { data: [], error: null }
+        : o.stateFails ? { data: null, error: fail } : { data: o.state ?? 'production', error: null },
     from: (table: string) => {
       if (table === 'feature_kill_switch') {
         return { select: async () => (o.switchesFail ? { data: null, error: fail } : { data: [], error: null }) };

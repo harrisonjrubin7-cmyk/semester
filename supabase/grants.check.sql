@@ -184,6 +184,10 @@ declare
     -- 20260929340000_feature_cohorts.sql: security invoker, no user parameter;
     -- it answers for the caller from rows their own RLS already shows them.
     'feature_cohort_allows(want_capability text, want_tenant text)',
+    -- 20260929370000_feature_policy_narrowing.sql: security invoker, no user
+    -- parameter; a flag's role and cohort lists and which of them the caller
+    -- holds, from the rows the caller's own RLS shows it.
+    'feature_narrowing(want_capability text, want_tenant text)',
     -- A student-created, seven-day maximum grant is checked again on every
     -- aggregate support read. The deletion helper removes grants where the
     -- caller was either side; immutable pseudonymous events remain.
