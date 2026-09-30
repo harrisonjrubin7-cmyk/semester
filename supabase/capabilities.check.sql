@@ -295,7 +295,7 @@ begin
   -- override:record and override:review for registrar, override:review for
   -- university_admin.
   -- 163 before guardians:manage for university_admin and university_staff
-  -- (20260930180000_k12_guardians.sql) added two.
+  -- (20260930200000_k12_guardians.sql) added two.
   perform pg_temp.counted('and the whole matrix, including tenant controls', n, 165);
 
   perform pg_temp.become_anon();

@@ -276,7 +276,7 @@ behind and a client that believes it succeeded.
 | `course_reviews` | **kept after the author's deletion** — see the note | the review is anonymous by construction: authorship is in `course_review_authors`, which goes with the account. What stays is a workload figure and two ratings with nobody attached, so a department's picture of a course does not vanish when one student graduates. Removed by a moderator (status = 'removed') or with the school |
 | `course_review_authors` | account deletion | the only link between a review and a person |
 | `alumni_mentor_offers` | account deletion, or school removal | carries a display name the alum chose (`20260928021700`); never their email |
-| `guardian_links`, `guardian_link_restrictions`, `guardian_link_history` | account deletion of the student or the guardian (a link and its restriction go with either; the history goes with the student), or school removal | who a K–12 student's parent or guardian is, recorded and verified by school staff (D-157). A link is ended, never removed, while both accounts exist; its history refuses every rewrite except the student's own deletion. A restriction is staff's note and never shown to the guardian |
+| `guardian_links`, `guardian_link_restrictions`, `guardian_link_history` | account deletion of the student or the guardian (a link and its restriction go with either; the history goes with the student), or school removal | who a K–12 student's parent or guardian is, recorded and verified by school staff (D-158). A link is ended, never removed, while both accounts exist; its history refuses every rewrite except the student's own deletion. A restriction is staff's note and never shown to the guardian |
 | `grade_levels` | **kept until changed by the school, or the school is removed** | a K–12 school's grade codes and labels. Configuration, no person |
 | `peer_mentor_offers` | account deletion, or school removal | a peer mentor's opt-in to be found in one cohort: a chosen display name, topics and a capacity. Withdrawn by deleting it |
 | `mentor_requests` | account deletion of **either** end; or `forget_my_mentor_requests()` by either end | the requester's chosen display name, ticked topics, a short note and a status. Never contact details. Kept after a decision so both sides can see what was answered, until either forgets it |
@@ -439,6 +439,14 @@ record, scoped to the tenant, written by the service role and never by a
 browser; they follow the tenant, and a contract row is kept for the life of
 the school row it belongs to. None of these has a time-based sweep, and each
 is small: one row per request, decision, grant or contract, never per student.
+
+`platform_release_evidence` is the platform's dated proof for restore, legal,
+infrastructure, deployment, TLS and migration gates. It is kept until Semester
+removes it under an approved evidence-retention decision; there is no automatic
+sweep. It contains a named approver and a reference to evidence, never the
+evidence file or a secret, and clearing the recorder on account deletion leaves
+the institutional proof intact. The command center treats an expired row as a
+blocker rather than deleting it, so the history remains reviewable.
 
 **The outbox and its receipts: no sweep yet.** `domain_outbox_events` and
 `domain_event_receipts` (`20260928320000_audit_correlation_and_outbox.sql`)
