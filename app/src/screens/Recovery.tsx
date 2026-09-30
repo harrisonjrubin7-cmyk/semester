@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState, useSyncExternalStore } from 'react';
 import { Page } from '../components/Page';
 import { Group as Panel, NavRow } from '../components/shell/Rows';
 import { ActionButton } from '../components/ui';
@@ -126,21 +126,33 @@ export function Recovery() {
 const line = { fontSize: 'var(--type-base)', margin: 0, lineHeight: 'var(--leading-relaxed)' } as const;
 const dim = { fontSize: 'var(--type-sm)', color: 'var(--app-dim)', margin: 'var(--sp-2) 0 0', lineHeight: 'var(--leading-relaxed)' } as const;
 
+function readRaw(): string | null {
+  try {
+    return localStorage.getItem(DRAFTS_KEY);
+  } catch {
+    return null;
+  }
+}
+
+const never = () => () => {};
+
 /**
- * What this device is holding, read when the screen opens.
+ * What this device is holding.
+ *
+ * Read as a store snapshot rather than once in an initialiser: the screen a
+ * student just left writes its pending text when it unmounts, which is after
+ * this one has first rendered, and React checks the snapshot again once the
+ * commit is done. A read held in state would show the copy from before that
+ * write, or "nothing unfinished", until the screen was reopened.
  *
  * Storage that is off or full is a device with no drafts, not an error: this is
  * a list somebody opens in a hurry, and it must never be the thing that fails.
  */
 function useDraftRows(): DraftRow[] {
-  const [rows] = useState<DraftRow[]>(() => {
-    try {
-      return draftRows(readDrafts(localStorage.getItem(DRAFTS_KEY)), Date.now());
-    } catch {
-      return [];
-    }
-  });
-  return rows;
+  const raw = useSyncExternalStore(never, readRaw, () => null);
+  // Drafts are stamped with the real clock, not the store's.
+  const [at] = useState(() => Date.now());
+  return useMemo(() => draftRows(readDrafts(raw), at), [raw, at]);
 }
 
 function DraftItem({ row }: { row: DraftRow }) {
@@ -173,7 +185,7 @@ function DraftItem({ row }: { row: DraftRow }) {
             {draftLine(row, agoLine(row.at, now.getTime()))}
           </div>
         </div>
-        {row.home ? (
+        {row.home && row.opens ? (
           <ActionButton onClick={() => dispatch({ type: 'go', screen: row.home! })} style={{ width: 'auto', fontSize: 'var(--type-xs)', flex: 'none' }}>
             Open
           </ActionButton>

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { act } from 'react';
+import { act, useEffect } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -125,6 +125,32 @@ describe('the drafts on this device', () => {
     const names = [...section.querySelectorAll('button')].map((b) => (b.textContent ?? '').trim());
     expect(names, 'the list has buttons to check').toEqual(['Open', 'Copy this text']);
     expect(names.some((b) => /delete|discard|remove|clear/i.test(b))).toBe(false);
+  });
+
+  it('offers no Open for a study guide, whose field Study does not mount on arrival', () => {
+    keep({ 'study-studio:guide:2026F:econ101': { text: 'notes on elasticity', at: Date.now() } });
+    show();
+    expect(text()).toContain('notes on elasticity');
+    expect(buttons()).not.toContain('Open');
+    expect(buttons()).toContain('Copy this text');
+  });
+
+  it('shows a draft the previous screen only writes as it unmounts', () => {
+    // `useDraft` flushes its pending text in an unmount cleanup, which runs in
+    // the same commit that mounts Recovery: after Recovery's first render.
+    function Leaving() {
+      useEffect(
+        () => () => keep({ 'essay:out': { text: 'typed a moment before leaving', at: Date.now() } }),
+        [],
+      );
+      return <p>the screen being left</p>;
+    }
+    act(() => {
+      root.render(<Leaving />);
+    });
+    show();
+    expect(text()).toContain('typed a moment before leaving');
+    expect(text()).not.toContain('Nothing unfinished');
   });
 
   it('does not list one that has already expired', () => {

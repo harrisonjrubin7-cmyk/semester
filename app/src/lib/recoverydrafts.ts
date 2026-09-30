@@ -34,18 +34,23 @@ const DAY = 86_400_000;
  * the one place that lists them. `study-studio` is a component, not a screen: it
  * is reached from Study.
  */
-export const DRAFT_HOMES: Record<string, { screen: Screen; what: string }> = {
+export const DRAFT_HOMES: Record<string, { screen: Screen; what: string; opens?: false }> = {
   analyse: { screen: 'analyse', what: 'A reading or some data you were analysing' },
   essay: { screen: 'essay', what: 'An essay you were drafting' },
   solve: { screen: 'solve', what: 'A problem you were working through' },
   work: { screen: 'work', what: 'A piece of coursework' },
-  'study-studio': { screen: 'study', what: 'A study guide' },
+  // Study opens on its tabs, with the studio closed. The field is only mounted
+  // after "Create study guide" and a course are chosen, so going to Study does
+  // not put this draft back, and an Open that does not is worse than none.
+  'study-studio': { screen: 'study', what: 'A study guide', opens: false },
 };
 
 export interface DraftRow {
   key: string;
   /** The screen to open, or null when this list does not know the key. */
   home: Screen | null;
+  /** Whether going to `home` puts this draft back in its field. */
+  opens: boolean;
   /** What it is, in words that do not need the screen's own name. */
   what: string;
   /** The whole text, so it can be read and copied here whatever state its screen is in. */
@@ -70,6 +75,7 @@ export function draftRows(drafts: Drafts, now: number): DraftRow[] {
       return {
         key,
         home: DRAFT_HOMES[screen]?.screen ?? null,
+        opens: DRAFT_HOMES[screen] ? DRAFT_HOMES[screen].opens !== false : false,
         what: DRAFT_HOMES[screen]?.what ?? 'Text kept from a screen this list does not know',
         text: d.text,
         about: rest.join(':'),
