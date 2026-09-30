@@ -1264,7 +1264,11 @@ export function warnFor(g: Ground): string {
  */
 export function errorFor(g: Ground): string {
   const HUE = 350;
-  const SAT = 0.62;
+  // High, because at the lightness a dark ground needs for 6:1 a fixed saturation
+  // carries almost no colour: 0.62 made Industry Dark's error #f0c1c9, a pastel
+  // beside its peach warning. 0.95 keeps it a rose (#fdb9c5) and does not move
+  // the contrast, which the walk below still solves for.
+  const SAT = 0.95;
   const TARGET = 6.1;
   const worst = (hex: string) =>
     g.ramp.reduce((low, surface) => Math.min(low, wcagContrast(hex, surface) ?? 99), 99);
