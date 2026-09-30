@@ -229,13 +229,20 @@ export const DOMAINS: readonly Domain[] = [
     toComplete: `A live LTI grade-passback sender. \`Grades.tsx\` stays the student’s own arithmetic. ${VERIFY}`,
   },
   {
-    key: 'student_accounts', name: 'Student accounts, payments and financial aid', status: 'built', owner: 'finance',
+    key: 'student_accounts', name: 'Student accounts and payment plans', status: 'built', owner: 'finance',
     spec: 'docs/FINANCIAL-READINESS-WORKSPACE.md',
-    code: ['app/src/lib/studentaccount/ledger.ts', 'app/src/lib/studentaccount/payments.ts', 'supabase/migrations/20260929320000_student_accounts.sql'],
-    checks: shared(tested('supabase/student_accounts.check.sql', 'Ledger, holds, plans, refunds and aid, allowed and denied; work-study never reduces the balance.')),
-    flags: ['module.student_accounts', 'integration.erp_bursar_actions'], highRisk: true,
-    activation: 'off', activationCondition: 'Off unless the payment provider, controls and a finance owner are active, and the institution configures a compliant aid workflow.', pilotEvidence: null,
-    toComplete: `A real payment provider and its signed webhook, an aid-system adapter, and a held finance seat; ${VERIFY}`,
+    code: [
+      'supabase/migrations/20260929220000_student_accounts.sql', 'supabase/migrations/20260929230000_student_payment_plans.sql',
+      'app/src/components/MyStudentAccount.tsx', 'app/src/components/MyStudentAccount.test.tsx',
+      'app/src/components/institutional/StudentAccounts.tsx', 'app/src/components/institutional/StudentAccounts.test.tsx',
+      'supabase/student-payment-plans.check.sql',
+    ],
+    checks: shared(tested('supabase/student-accounts.check.sql', 'The ledger written only by a second person’s approval, high-value approval over the threshold, no card stored, reconciliation and close, and a linked student reading only their own account, allowed and denied; student-payment-plans.check.sql holds the plans the same way.')),
+    // Gated by the build's `studentAccounts` experience flag (D-146) and the
+    // finance:* capabilities, not by a key in flags.ts.
+    flags: [], highRisk: true,
+    activation: 'conditional', activationCondition: 'Only where the build sets studentAccounts, for a school’s offices holding finance:* capabilities and the students an approver has linked; payments stay on the school’s hosted provider.', pilotEvidence: null,
+    toComplete: `No money moves in Semester: no payment is taken, no refund paid out, no aid awarded or disbursed and no registration hold placed — each is an entry a second person approves. Charges and aid credits still arrive by a person’s request rather than from the school’s SIS or aid system, and the finance seat is vacant; ${VERIFY}`,
   },
   {
     key: 'dining', name: 'Dining and campus card', status: 'built', owner: 'product',
@@ -275,7 +282,7 @@ export interface GateItem {
 const g = (id: string, section: GateSection, item: string, state: State, evidence: string | null, note: string, p0 = false): GateItem => ({ id, section, item, state, evidence, note, p0 });
 
 export const GO_GATE: readonly GateItem[] = [
-  g('P-1', 'product', 'Every planned module has UI, service layer, schema, API and permissions.', 'partial', 'app/src/lib/governance/certification.ts', 'Every domain has a service layer, schema, permissions and a screen (registration, gradebook, student account and dining screens arrived last, each saying in one sentence when its school has it off); none has a live vendor, payment or SIS adapter behind it.', true),
+  g('P-1', 'product', 'Every planned module has UI, service layer, schema, API and permissions.', 'partial', 'app/src/lib/governance/certification.ts', 'Every domain has a service layer, schema, permissions and a screen (registration, gradebook and dining screens arrived last, each saying in one sentence when its school has it off; student accounts has the student’s view on Bill and the staff ledger on University); none has a live vendor or SIS adapter behind it, and none takes a payment.', true),
   g('P-2', 'product', 'Every module has loading, empty, error, stale and degraded states.', 'partial', 'docs/EMPTY-LOADING-ERROR-SUCCESS-STATES.md', 'Specified; not audited module by module.'),
   g('P-3', 'product', 'Every module has tenant, role, cohort and feature configuration.', 'partial', 'app/src/lib/flags.ts', 'Tenant, cohort, role and feature scopes exist in the evaluator and the database; not every module is yet behind a flag.'),
   g('T-1', 'technical', 'Unit tests for all domain logic.', 'partial', 'REGRESSION-CHECKLIST.md', 'A large suite runs in order and shuffled; unbuilt domains have none.'),

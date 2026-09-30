@@ -386,6 +386,11 @@ describe('"delete my account" really means every row', () => {
      */
     const { KEPT_TABLES } = await import('./cloud');
     expect(KEPT_TABLES.map((t) => t.table).sort()).toEqual([
+      // The academic-record ledger (lib/record/api.ts, D-145): the school's
+      // education record and the proposals behind it. academic_record_subjects,
+      // the link, goes with the account and is in OWNED_TABLES instead.
+      'academic_record_changes',
+      'academic_record_entries',
       'commercial_prices',
       'communities',
       'community_calibration_items',
@@ -401,13 +406,21 @@ describe('"delete my account" really means every row', () => {
       'community_signals',
       'community_venues',
       'community_volunteer_events',
+      // The operations console's duty matrix (lib/console/client.ts): policy
+      // seeded by a migration, read-only from the browser, naming no person.
       'console_duty',
+      // What an instructor published in Course Studio (D-101). Students only
+      // read these; they are course policy, kept for the class.
       'course_ai_rules',
       'course_guidance',
+      // A school's dining locations, hours and menus (lib/dining/client.ts,
+      // 20260929330000_dining.sql): what its card office lists.
       'dining_hours',
       'dining_locations',
       'dining_menu_items',
       'feature_kill_switch',
+      // A course's grading scheme and items (lib/gradebook/client.ts,
+      // 20260929310000_gradebook.sql): the course's, not a student's.
       'gradebook_items',
       'gradebook_schemes',
       'group_tasks',
@@ -415,18 +428,40 @@ describe('"delete my account" really means every row', () => {
       'gtm_campaign_reviews',
       'gtm_campaigns',
       'help_destinations',
+      // A university's integration configuration and sync logs, read by the
+      // Integration Dashboard (lib/integration/dashboard.ts). No student
+      // account writes a row in any of them.
       'integration_connections',
       'integration_dead_letter_events',
       'integration_mappings',
       'integration_scopes',
       'integration_sync_errors',
       'integration_sync_runs',
+      // The Migration Center's tables (lib/migration/api.ts, D-144): a school's
+      // migrations and their evidence. Counts and fingerprints, never a record.
+      'migration_approvals',
+      'migration_field_maps',
+      'migration_projects',
+      'migration_runs',
+      // Verified listings (lib/listings.ts, components/ListingDesk.tsx): an
+      // office's or employer's publication. publisher_id is `on delete set null`.
       'opportunities',
       'organizations',
+      // A school's registration calendar and sections (lib/enrollment/client.ts,
+      // 20260929300000_registration_transaction.sql).
       'registration_sections',
       'registration_terms',
       'reports',
       'schools',
+      // Student accounts (lib/finance/api.ts, D-146): the school's financial
+      // record of its students' accounts, and its reconciliations and closes.
+      'student_account_closes',
+      'student_account_entries',
+      'student_account_reconciliations',
+      'student_account_requests',
+      'student_account_settings',
+      'student_payment_plan_installments',
+      'student_payment_plans',
       'study_packs',
       'subscriptions',
       'support_access_event',

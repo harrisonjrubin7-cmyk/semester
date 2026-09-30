@@ -1014,6 +1014,12 @@ export const OWNED_TABLES: OwnedTable[] = [
   // J). Both are the student's alone; no office can read either.
   { table: 'institution_action_audiences', column: 'user_id' },
   { table: 'institution_action_progress', column: 'user_id' },
+  // The link a registrar made from the school's student record to this
+  // account (D-145), which the student reads their record and student account
+  // through (lib/finance/mine.ts, D-146). The student has no delete policy on
+  // it, so the filtered DELETE takes nothing; the cascade from auth.users
+  // does, and the school's record stays with the school.
+  { table: 'academic_record_subjects', column: 'user_id' },
   // A support grant names this account in either of two columns. The RPC
   // removes both sides, which one filtered DELETE cannot express, while its
   // audit trigger leaves only pseudonyms behind.
@@ -1249,6 +1255,58 @@ export const KEPT_TABLES: KeptTable[] = [
   {
     table: 'gtm_campaign_reviews',
     why: 'A privacy, accessibility or brand review you recorded is part of the record of why a campaign was allowed to go out. It stays with the campaign, no longer attributed to you.',
+  },
+  {
+    table: 'academic_record_entries',
+    why: 'Your school’s academic record of you — enrollment, grades, credits, standing, degrees — is an education record the school keeps, not data you gave Semester. Deleting your account removes your link to read it here; the school’s record stays with the school, and if you worked on it as staff, it stays no longer naming you.',
+  },
+  {
+    table: 'academic_record_changes',
+    why: 'A change you proposed or decided on your school’s academic record is part of the record of why an entry says what it says. It stays with the school, no longer attributed to you.',
+  },
+  {
+    table: 'student_payment_plans',
+    why: 'A payment plan you asked your school for, and whether it agreed, is part of the school’s financial record of your account. Deleting your account leaves the plan with the school, no longer naming you as the one who asked; if you decided on plans as staff, the same.',
+  },
+  {
+    table: 'student_payment_plan_installments',
+    why: 'A plan’s schedule of payments belongs to the plan: it stays with the school when the plan does, and names nobody.',
+  },
+  {
+    table: 'student_account_entries',
+    why: 'Your school’s record of your student account — what was charged, paid, refunded and credited — is a financial record the school keeps, not data you gave Semester. Deleting your account removes your link to read it here; the school’s record stays with the school, and if you worked on it as staff, it stays no longer naming you.',
+  },
+  {
+    table: 'student_account_requests',
+    why: 'A request you made or decided on a student account is part of the record of why the account says what it says. It stays with the school, no longer attributed to you.',
+  },
+  {
+    table: 'student_account_reconciliations',
+    why: 'A reconciliation you recorded with your school’s payment provider is how the school shows a month’s payments were checked. It holds totals and a file fingerprint, never a payment’s details, and stays with the school, no longer attributed to you.',
+  },
+  {
+    table: 'student_account_closes',
+    why: 'A month you closed on your school’s student accounts is part of its financial record. It stays with the school, no longer attributed to you.',
+  },
+  {
+    table: 'student_account_settings',
+    why: 'Your school’s thresholds for student accounts — when a hold applies, when a second approver is needed — are its configuration, not a record about you. They stay with the school.',
+  },
+  {
+    table: 'migration_projects',
+    why: 'A migration you ran for your school, moving a domain out of a system it is retiring, belongs to the school and is part of how it shows the cutover was safe. Deleting your account removes you as the person who opened it; the migration stays.',
+  },
+  {
+    table: 'migration_field_maps',
+    why: 'A field mapping you wrote for one of your school’s migrations says how its old system’s fields became Semester’s, and it names fields, never a person. It stays with the migration.',
+  },
+  {
+    table: 'migration_runs',
+    why: 'Counts you recorded while migrating your school’s data — rows read, mapped, missing — and the fingerprint of the file they came from are the evidence a cutover was approved on. They hold no record from the file, stay with the migration, and are no longer attributed to you.',
+  },
+  {
+    table: 'migration_approvals',
+    why: 'An approval or rejection you recorded for a migration’s cutover is part of the record of why your school retired a system. It stays with the migration, no longer attributed to you.',
   },
   {
     table: 'groups',

@@ -52,7 +52,7 @@ import { CHECK_EVERY_MS, WRITE_FAILED, room, roomLine } from '../lib/quota';
 import {
   available as dbAvailable,
   whileWriting,
-  flushNow,
+  flushOnLeave,
   load as loadFromDb,
   persist as persistToDb,
 } from './persist';
@@ -640,10 +640,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
    *
    * No dependencies: this is about the page, not about what is in it, and
    * `flushNow` writes whatever is owing at the moment it is called.
+   *
+   * `flushOnLeave` rather than `flushNow` itself: `flushNow` waits for a
+   * write already in flight before starting the owed one, and a reload does
+   * not wait for either. See `flushOnLeave` in `state/persist`.
    */
   useEffect(() => {
     const last = () => {
-      void flushNow();
+      flushOnLeave();
     };
     const hidden = () => {
       if (document.visibilityState === 'hidden') last();

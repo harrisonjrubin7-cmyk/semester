@@ -10,8 +10,8 @@ surfaces that have answered them, and the ones that owe an answer. R-15 in
 surface is asked the question before it ships; the eighth maturity system on the
 same page said no template, register or gate existed. This is the three.
 
-**5 surfaces have answered; 6 owe an answer.** Of the 55 answers written,
-33 cite a test that runs on every change and 22 cite code or a document only,
+**7 surfaces have answered; 6 owe an answer.** Of the 77 answers written,
+46 cite a test that runs on every change and 31 cite code or a document only,
 which is a weaker thing and is marked *written* below. No assessment has been
 reviewed by the privacy seat, which is vacant: these are the founder’s reading of
 the tree, and the seat’s first job is to read them again.
@@ -165,6 +165,57 @@ Selling a plan to a student or an institution, invoicing it, collecting payment 
 - Retention: the period for financial records is unset; it must be set before the first charge (RETENTION.md).
 - Sharing: Stripe’s terms and data-processing agreement are not recorded on the vendor register (SEC-010).
 - Everything: nothing has been charged; the first real delivery from Stripe has not been seen (COM-001).
+
+### Academic-record ledger
+
+A school’s registrar staff keep each student’s academic record in Semester as an append-only ledger, changed only by a proposal someone else approves. Owner: **privacy** seat. Assessed 2026-09-29. Residual rating: **high**.
+
+| Question | Answer | Shown by |
+| --- | --- | --- |
+| What does this surface do for the student, and what question does each piece of data answer? | To keep the school’s academic record with a history that answers who changed what, why, who approved it, when it took effect and what it replaced. Each column answers one of those eight questions and nothing else. *(written)* | `supabase/migrations/20260929210000_academic_record_ledger.sql` — Three tables whose columns are the eight questions<br>`app/src/lib/record/ledger.ts` — EIGHT and explain(): each question answered from an entry |
+| Which fields does it hold, and which of them are sensitive: grades, health, aid, disability, identity, location? | The school’s student identifier, a kind from a closed list of seven, what the entry is about, a value of at most 200 characters, dates, a reason and a source from a closed list of six. These are education records, and grades and standing are sensitive; there is no column for a name, a health fact, aid or a disability, and the kinds cannot grow without a migration. | `supabase/migrations/20260929210000_academic_record_ledger.sql` — Check constraints on kind, source, action and student_ref<br>`app/src/lib/record/ledger.test.ts` — Every vocabulary held to the migration word for word |
+| What is its default visibility? | Not the student’s to share: this is the school’s record. It is readable by the school’s record staff and, once an approver links their account, by the student themselves, and by no one else. A student cannot link themselves. | `supabase/academic-record.check.sql` — An unlinked student, another student and a researcher read nothing; a linked student reads their own |
+| Who at Semester or the institution can read any of it, through which function, and what do they never receive? | Accounts holding record:read or record:approve at the school (registrar and dean), directly under row-level security. A faculty member proposes and reads only their own proposals, never the ledger. An institutional researcher and a registrar at another school read nothing. | `supabase/academic-record.check.sql` — Each reader walked, and each refused one |
+| Can a reader learn who the student is from a row that was meant to be anonymous? | The record is identified on purpose: a registrar reads a named student’s record by the school’s identifier. Nothing anonymous is derived from it, and no aggregate is published from it. *(written)* | `supabase/migrations/20260929210000_academic_record_ledger.sql` — No view, function or export reads across students |
+| Does any of it reach a model, and if so, is it fenced as material and journaled without its body? | Nothing. No prompt builder reads these tables, and the screen sends nothing to a model. *(written)* | `app/src/lib/record/api.ts` — The client’s only calls: lookup, pending, propose, decide, withdraw |
+| Which clock deletes it, and where is that clock written? | Kept until the school is removed, because it is the school’s education record; the ledger has no purge. RETENTION.md says a shorter schedule must be set by the school before real use. The account link goes with the account. | `RETENTION.md` — The retention answer per table<br>`app/src/lib/retention.test.ts` — RETENTION.md is held to the schema in both directions |
+| Does account deletion empty it, and can the student take it with them? | Deleting a student’s account removes their link and leaves the school’s record, which is not theirs to erase; deleting a staff account clears them as proposer or approver and leaves every entry. The student export does not include the school’s record. | `supabase/deletion.check.sql` — Account deletion empties what it claims to<br>`supabase/academic-record.check.sql` — An account deleted: the link goes, the record stays, no longer naming staff |
+| Is any sharing consented, revocable, and never a substitute for an institutional obligation? | No sharing. The only widening of who reads a record is an approver linking the student’s own account, which is audited. *(written)* | `supabase/migrations/20260929210000_academic_record_ledger.sql` — Links are made by record:approve holders and audited |
+| Does it produce or feed a score, flag or ranking about an individual? | None. The ledger holds what the school recorded; it computes no score, flag or ranking, and nothing reads it to produce one. *(written)* | `app/src/lib/institution-ops.ts` — FORBIDDEN: the eight things never measured about an individual; defineMetric refuses any metric that sources one |
+| Which test runs on every change to hold the answers above? | academic-record.check.sql walks every rule as the account it concerns; ledger.test.ts holds the vocabularies and the fold; RecordLedger.test.tsx holds the screen to proposing, deciding and the eight answers. | `supabase/academic-record.check.sql` — The rules, walked<br>`app/src/components/institutional/RecordLedger.test.tsx` — The screen |
+
+**Open:**
+
+- Default: a student has no screen to read their own record yet, though the database lets a linked student read it; FERPA’s right to inspect wants that screen before real use.
+- Retention: the school sets the schedule; none is set, and the ledger keeps everything until then.
+- Readers: faculty propose only with a school-wide grant; course-scoped faculty grants do not reach this, which is safer and also means most faculty cannot use it yet.
+- Identity: accounts are linked by id, and there is no screen that links one; that step is manual until one exists.
+
+### Student accounts
+
+A school’s bursar and business office keep each student’s account in Semester as an append-only ledger of charges, payments, refunds, adjustments and aid credits, changed only by a request someone else approves. Owner: **finance** seat. Assessed 2026-09-29. Residual rating: **high**.
+
+| Question | Answer | Shown by |
+| --- | --- | --- |
+| What does this surface do for the student, and what question does each piece of data answer? | To keep the school’s record of what each student owes and has paid under financial controls: who asked, who approved, what it answered, and that a month was reconciled with the payment provider before it closed. *(written)* | `supabase/migrations/20260929220000_student_accounts.sql` — The ledger, the requests, the reconciliations and the closes |
+| Which fields does it hold, and which of them are sensitive: grades, health, aid, disability, identity, location? | The school’s student identifier, a kind and a category from closed lists, an amount in whole cents, a description, the payment provider’s reference and dates. Amounts owed are sensitive financial information. There is no column for a card, a bank account or a name, and a run of 13 to 19 digits is refused in every field a person types. | `supabase/migrations/20260929220000_student_accounts.sql` — student_account_request_no_pan and the closed vocabularies<br>`app/src/lib/finance/accounts.test.ts` — The card pattern and the vocabularies held to the migration |
+| What is its default visibility? | The school’s record, readable by its finance staff and, once an approver has linked their account on the academic record, by the student themselves; by no one else. | `supabase/student-accounts.check.sql` — An unlinked student, a student linked to another record, and another school read nothing |
+| Who at Semester or the institution can read any of it, through which function, and what do they never receive? | Accounts holding finance:read, finance:approve or finance:close at the school, under row-level security. An aid officer requests and reads; a requester reads their own requests. Reconciliations carry totals and a file fingerprint, never a payment’s details. | `supabase/student-accounts.check.sql` — Each reader walked, and each refused one |
+| Can a reader learn who the student is from a row that was meant to be anonymous? | The account is identified on purpose: staff read a named student’s account by the school’s identifier. Nothing anonymous is derived from it, and no aggregate is published from it. *(written)* | `supabase/migrations/20260929220000_student_accounts.sql` — No view, function or export reads across students |
+| Does any of it reach a model, and if so, is it fenced as material and journaled without its body? | Nothing. No prompt builder reads these tables. *(written)* | `app/src/lib/finance/api.ts` — The client’s only calls |
+| Which clock deletes it, and where is that clock written? | Kept until the school is removed; the school’s financial-records schedule governs it, and RETENTION.md says it must be set before real use. | `RETENTION.md` — The retention answer per table<br>`app/src/lib/retention.test.ts` — RETENTION.md is held to the schema in both directions |
+| Does account deletion empty it, and can the student take it with them? | Deleting a student’s account removes their link and leaves the school’s record; deleting a staff account clears them as requester, approver, recorder or closer and leaves every entry. | `supabase/deletion.check.sql` — Account deletion empties what it claims to<br>`supabase/student-accounts.check.sql` — An officer deleted: their entries stay, no longer naming them |
+| Is any sharing consented, revocable, and never a substitute for an institutional obligation? | None. The only widening of who reads an account is an approver linking the student’s own account. *(written)* | `supabase/migrations/20260929220000_student_accounts.sql` — The student reads through academic_record_subjects |
+| Does it produce or feed a score, flag or ranking about an individual? | A financial hold is computed — overdue past the school’s window and above its minimum — and shown as the hold card’s neutral sentence with no amount. It is the school’s rule applied to the school’s record, not a score. | `app/src/lib/finance/accounts.test.ts` — The hold rule and its sentence, which carries no amount |
+| Which test runs on every change to hold the answers above? | student-accounts.check.sql walks every control as the account it concerns; accounts.test.ts holds the vocabularies, signs, card pattern and arithmetic; StudentAccounts.test.tsx holds the staff screen and MyStudentAccount.test.tsx the student’s. | `supabase/student-accounts.check.sql` — The controls, walked<br>`app/src/components/institutional/StudentAccounts.test.tsx` — The staff screen<br>`app/src/components/MyStudentAccount.test.tsx` — The student’s screen, which never shows who approved an entry |
+
+**Open:**
+
+- Readers: a linked student reads each entry’s description as staff typed it, on Bill; nothing reviews that wording before a student reads it.
+- Inference: a payment plan being kept lifts the hold, and whether it is kept is worked out by the app from the ledger; the database does not hold it, so anything else that reads holds must work it out the same way.
+- Retention: the school sets the schedule; none is set, and the ledger keeps everything until then.
+- Readers: no one has reviewed this with a school’s bursar or auditor; the controls are the brief’s, read by the founder.
+- Sharing: nothing reaches the payment provider from here; its settlement file is read by hand, so a missed month is not noticed by the system.
 
 ## Owed
 

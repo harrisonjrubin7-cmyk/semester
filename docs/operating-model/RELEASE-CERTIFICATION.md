@@ -42,7 +42,7 @@ Designed → Built → Internally verified → Production-certified GO → Pilot
 - Housing is not internally verified.
 - Official registration transaction is not internally verified.
 - Official gradebook and grade passback is not internally verified.
-- Student accounts, payments and financial aid is not internally verified.
+- Student accounts and payment plans is not internally verified.
 - Dining and campus card is not internally verified.
 - The founder seat has not signed.
 - The product seat has not signed.
@@ -91,7 +91,7 @@ verified*, the platform’s GO for *production-certified*, a named pilot for
 | Housing | Built | passed | partial | partial | partial | conditional: Only for an institution with housing configuration. | Room selection, contracts and maintenance: today it is a student-side calculator. Pass the security, manual accessibility and privacy checks. |
 | Official registration transaction | Built | passed | partial | partial | partial | conditional: For selected students and the registrar role, after registrar approval. | An SIS adapter to send committed changes; holds and completions synced from the SIS; per-student time tickets; Pass the security, manual accessibility and privacy checks. |
 | Official gradebook and grade passback | Built | passed | partial | partial | partial | conditional: Only after faculty and registrar approval. | A live LTI grade-passback sender. `Grades.tsx` stays the student’s own arithmetic. Pass the security, manual accessibility and privacy checks. |
-| Student accounts, payments and financial aid | Built | passed | partial | partial | partial | off: Off unless the payment provider, controls and a finance owner are active, and the institution configures a compliant aid workflow. | A real payment provider and its signed webhook, an aid-system adapter, and a held finance seat; Pass the security, manual accessibility and privacy checks. |
+| Student accounts and payment plans | Built | passed | partial | partial | partial | conditional: Only where the build sets studentAccounts, for a school’s offices holding finance:* capabilities and the students an approver has linked; payments stay on the school’s hosted provider. | No money moves in Semester: no payment is taken, no refund paid out, no aid awarded or disbursed and no registration hold placed — each is an entry a second person approves. Charges and aid credits still arrive by a person’s request rather than from the school’s SIS or aid system, and the finance seat is vacant; Pass the security, manual accessibility and privacy checks. |
 | Dining and campus card | Built | passed | partial | partial | partial | conditional: When a campus-card or dining partner configuration is ready. | A real card-office vendor adapter and a sync schedule; Pass the security, manual accessibility and privacy checks. |
 
 ### Identity and accounts
@@ -250,15 +250,15 @@ Code: [`app/src/lib/gradebook/ledger.ts`](../../app/src/lib/gradebook/ledger.ts)
 | Accessibility | partial | [`app/src/a11y/axe.test.tsx`](../../app/src/a11y/axe.test.tsx) | Automated axe checks run in the suite; manual keyboard, screen-reader, zoom and mobile QA is owed. |
 | Privacy | partial | [`docs/MODULE-PRIVACY-MODEL.md`](../MODULE-PRIVACY-MODEL.md) | Defaults and roles are modelled; export, deletion and revocation have not been exercised against production. |
 
-### Student accounts, payments and financial aid
+### Student accounts and payment plans
 
-Status **Built** · owner `finance` · spec [`docs/FINANCIAL-READINESS-WORKSPACE.md`](../FINANCIAL-READINESS-WORKSPACE.md) · flags `module.student_accounts`, `integration.erp_bursar_actions`
+Status **Built** · owner `finance` · spec [`docs/FINANCIAL-READINESS-WORKSPACE.md`](../FINANCIAL-READINESS-WORKSPACE.md)
 
-Code: [`app/src/lib/studentaccount/ledger.ts`](../../app/src/lib/studentaccount/ledger.ts), [`app/src/lib/studentaccount/payments.ts`](../../app/src/lib/studentaccount/payments.ts), [`supabase/migrations/20260929320000_student_accounts.sql`](../../supabase/migrations/20260929320000_student_accounts.sql)
+Code: [`supabase/migrations/20260929220000_student_accounts.sql`](../../supabase/migrations/20260929220000_student_accounts.sql), [`supabase/migrations/20260929230000_student_payment_plans.sql`](../../supabase/migrations/20260929230000_student_payment_plans.sql), [`app/src/components/MyStudentAccount.tsx`](../../app/src/components/MyStudentAccount.tsx), [`app/src/components/MyStudentAccount.test.tsx`](../../app/src/components/MyStudentAccount.test.tsx), [`app/src/components/institutional/StudentAccounts.tsx`](../../app/src/components/institutional/StudentAccounts.tsx), [`app/src/components/institutional/StudentAccounts.test.tsx`](../../app/src/components/institutional/StudentAccounts.test.tsx), [`supabase/student-payment-plans.check.sql`](../../supabase/student-payment-plans.check.sql)
 
 | Check | State | Evidence | Note |
 | --- | --- | --- | --- |
-| Automated tests | passed | [`supabase/student_accounts.check.sql`](../../supabase/student_accounts.check.sql) | Ledger, holds, plans, refunds and aid, allowed and denied; work-study never reduces the balance. |
+| Automated tests | passed | [`supabase/student-accounts.check.sql`](../../supabase/student-accounts.check.sql) | The ledger written only by a second person’s approval, high-value approval over the threshold, no card stored, reconciliation and close, and a linked student reading only their own account, allowed and denied; student-payment-plans.check.sql holds the plans the same way. |
 | Security | partial | [`docs/DEFINER-RLS-REGISTER.md`](../DEFINER-RLS-REGISTER.md) | Production matches the approved advisor baseline one for one (T-3); no penetration test, and the negative checks have run on a copy of the schema, not against production. |
 | Accessibility | partial | [`app/src/a11y/axe.test.tsx`](../../app/src/a11y/axe.test.tsx) | Automated axe checks run in the suite; manual keyboard, screen-reader, zoom and mobile QA is owed. |
 | Privacy | partial | [`docs/MODULE-PRIVACY-MODEL.md`](../MODULE-PRIVACY-MODEL.md) | Defaults and roles are modelled; export, deletion and revocation have not been exercised against production. |
@@ -284,7 +284,7 @@ Items marked **P0** are conditions of a full GO: while one is open the answer is
 
 | ID | Item | State | P0 | Evidence | Note |
 | --- | --- | --- | --- | --- | --- |
-| P-1 | Every planned module has UI, service layer, schema, API and permissions. | partial | P0 | [`app/src/lib/governance/certification.ts`](../../app/src/lib/governance/certification.ts) | Every domain has a service layer, schema, permissions and a screen (registration, gradebook, student account and dining screens arrived last, each saying in one sentence when its school has it off); none has a live vendor, payment or SIS adapter behind it. |
+| P-1 | Every planned module has UI, service layer, schema, API and permissions. | partial | P0 | [`app/src/lib/governance/certification.ts`](../../app/src/lib/governance/certification.ts) | Every domain has a service layer, schema, permissions and a screen (registration, gradebook and dining screens arrived last, each saying in one sentence when its school has it off; student accounts has the student’s view on Bill and the staff ledger on University); none has a live vendor or SIS adapter behind it, and none takes a payment. |
 | P-2 | Every module has loading, empty, error, stale and degraded states. | partial |  | [`docs/EMPTY-LOADING-ERROR-SUCCESS-STATES.md`](../EMPTY-LOADING-ERROR-SUCCESS-STATES.md) | Specified; not audited module by module. |
 | P-3 | Every module has tenant, role, cohort and feature configuration. | partial |  | [`app/src/lib/flags.ts`](../../app/src/lib/flags.ts) | Tenant, cohort, role and feature scopes exist in the evaluator and the database; not every module is yet behind a flag. |
 

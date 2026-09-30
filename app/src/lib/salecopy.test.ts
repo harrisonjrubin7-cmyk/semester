@@ -12,6 +12,10 @@ import { checkoutEndpoint, startCheckout } from './membership';
  * claim, so fixing the copy turned them red. This holds every place that
  * speaks to a reader to what the code does: while `startCheckout` exists, the
  * stale sentences are refused, wherever they are.
+ *
+ * The Terms draft said "Semester for individuals is currently free … no
+ * billing exists in the app today" until 29 September, a week after Plus
+ * went on sale, because the legal drafts were not in the scan.
  */
 const root = join(import.meta.dirname, '../../..');
 
@@ -25,6 +29,8 @@ const STALE: readonly RegExp[] = [
   /plus and pro are not on sale yet/i,
   /nothing is on sale/i,
   /there is no checkout on this site/i,
+  /no billing exists in the app/i,
+  /semester for individuals is currently free/i,
 ];
 const stale = (text: string) => STALE.filter((re) => re.test(text)).map(String);
 
@@ -51,12 +57,13 @@ describe('the copy about buying Semester', () => {
     expect(stale('Nothing can be bought on this site.')).toEqual([]);
   });
 
-  it('is not contradicted by the app, the site, the company site or the pilot documents', () => {
+  it('is not contradicted by the app, the site, the company site, the pilot documents or the legal drafts', () => {
     const files = [
       ...walk(join(root, 'app/src')),
       join(root, 'company-site/index.html'),
       join(root, 'docs/pilot/KNOWN-LIMITATIONS.md'),
       join(root, 'ops/claims/README.md'),
+      ...readdirSync(join(root, 'docs/legal')).filter((n) => n.endsWith('.md')).map((n) => join(root, 'docs/legal', n)),
     ];
     const found = files.flatMap((f) => stale(readFileSync(f, 'utf8')).map((re) => `${f.replace(root, '')}: ${re}`));
     expect(found).toEqual([]);

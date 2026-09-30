@@ -270,15 +270,26 @@ begin
   -- operator roles, approval:decide for platform_admin, breakglass:request
   -- for platform_admin and incident_responder).
   -- 112 before the commercial core migration added six role-capability pairs.
-  -- 118 before the gradebook (20260929310000_gradebook.sql) added ten:
+  -- 118 before the Migration Center (20260929200000_migration_center.sql)
+  -- added eleven: migration:manage and :view for implementation_manager and
+  -- integration_admin, migration:approve and :view for registrar,
+  -- university_admin and dean, and migration:view for institutional_researcher.
+  -- 129 before the academic-record ledger (20260929210000_academic_record_ledger.sql)
+  -- added seven: record:propose, :approve, :override and :read for registrar,
+  -- record:propose for faculty, record:approve and :read for dean.
+  -- 136 before student accounts (20260929220000_student_accounts.sql) added
+  -- nine: finance:request, :approve and :read for student_accounts_officer,
+  -- finance:request and :read for financial_aid_officer, and finance:approve,
+  -- :approve_high, :close and :read for business_admin.
+  -- 145 before the gradebook (20260929310000_gradebook.sql) added ten:
   -- faculty → grades:enter, grades:moderate, grades:release, grades:export;
   -- teaching_assistant → grades:enter; registrar → grades:export; and
   -- grades:receive for student,
   -- undergraduate_student, graduate_student and transfer_student.
-  -- 128 before 20260929300000_registration_transaction.sql gave `registrar`
+  -- 155 before 20260929300000_registration_transaction.sql gave `registrar`
   -- `registration:administer`.
-  -- 129 before 20260929330000_dining.sql added dining_staff → dining:operate.
-  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 130);
+  -- 156 before 20260929330000_dining.sql added dining_staff → dining:operate.
+  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 157);
 
   perform pg_temp.become_anon();
   perform pg_temp.refused('a signed-out visitor cannot read the matrix',
