@@ -15,8 +15,8 @@ import {
 /**
  * Holds the evidence register to the tree: every owner is a council seat,
  * every register row it rests on exists, every cited path exists, each status
- * cites the kind of file it claims — and `produced` is refused outright while
- * `docs/evidence/` does not exist, because that is where produced evidence
+ * cites the kind of file it claims — and `produced` is refused unless the row
+ * cites a file under `docs/evidence/`, because that is where produced evidence
  * lives and nowhere else. Every retention class names things RETENTION.md
  * really says. The supplied PDFs are never evidence.
  *
@@ -93,8 +93,7 @@ describe('the evidence register', () => {
     expect(existsSync(join(root, 'docs/no-such-evidence.md'))).toBe(false);
   });
 
-  it('refuses `produced` while the evidence directory is absent, and holds each status to the kind of file it cites', () => {
-    expect(existsSync(join(root, EVIDENCE_DIR))).toBe(false);
+  it('refuses `produced` without an artifact under the evidence directory, and holds each status to the kind of file it cites', () => {
     expect(EVIDENCE.length).toBeGreaterThanOrEqual(18);
     expect(new Set(EVIDENCE.map((e) => e.id)).size).toBe(EVIDENCE.length);
     for (const e of EVIDENCE) {
@@ -190,8 +189,10 @@ function render(all: Map<string, Level>): string {
     'the artifact that would prove it operates, who owns producing it, how often,',
     'who may see it, and what the tree holds today — which is the control and its',
     'test, never yet the proof that anybody ran it. The index closes the category',
-    `by existing. Each artifact will live under \`${EVIDENCE_DIR}/\` when it exists, and`,
-    'the word *produced* is refused by the test until the directory does.',
+    `by existing. Each artifact lives under \`${EVIDENCE_DIR}/\` once it exists, and the`,
+    'word *produced* is refused by the test until a row cites one there. The',
+    'directory holds the AI drills of 29 September; neither is the artifact any',
+    'row here asks for, so none is produced.',
     '',
     ...table(['Supplied document', 'What it holds'], SOURCES.map((x) => [`[${cell(x.title)}](${link(DOC, x.path)})`, cell(x.what)])),
     '',

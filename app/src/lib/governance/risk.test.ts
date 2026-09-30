@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { controlLine } from '../ops/render';
@@ -79,7 +79,7 @@ describe('the risk register', () => {
     expect(r.residual, 'with both runtimes held to the switch, R-07 does not escalate on residual alone').toBeLessThan(4);
   });
 
-  it('closes nothing: a closed risk needs evidence under docs/evidence/, which does not exist', () => {
+  it('closes nothing: a closed risk needs evidence under docs/evidence/, and none is closed yet', () => {
     expect(RISKS.filter((r) => r.status === 'closed')).toEqual([]);
   });
 
@@ -211,7 +211,10 @@ describe('game days', () => {
       expect(g.held, `${g.id} claims a run; file it under docs/evidence/ and change this test`).toBeNull();
       if (g.runbook) expect(exists(g.runbook), `${g.id} → ${g.runbook}`).toBe(true);
     }
-    expect(exists('docs/evidence')).toBe(false);
+    // docs/evidence/ holds the AI drills of 29 September; none is a game day.
+    const filedHere = (dir: string): string[] =>
+      readdirSync(join(root, dir), { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? filedHere(`${dir}/${e.name}`) : [e.name]));
+    expect(filedHere('docs/evidence').filter((f) => /game-?day|GD-\d/i.test(f))).toEqual([]);
     expect(GAME_DAY_RECORD).toHaveLength(12);
   });
 });

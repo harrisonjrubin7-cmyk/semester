@@ -116,11 +116,20 @@ describe('the compliance crosswalk', () => {
     expect(score([4, 4, 4])).toBe(4);
   });
 
-  it('holds the ceiling to the evidence directory, and nothing scores above it', () => {
-    expect(existsSync(join(root, EVIDENCE_DIR))).toBe(false); // the day this fails, the ceiling lifts by itself
-    expect(ceiling()).toBe(CEILING_WITHOUT_EVIDENCE);
+  it('holds the ceiling to the evidence directory, and a 3 to an artifact filed there', () => {
+    // The AI drills of 29 September were the directory's first files, and the
+    // ceiling lifted by itself. It still binds: no domain above it, and no row
+    // above CEILING_WITHOUT_EVIDENCE unless it cites a file under the directory.
+    expect(existsSync(join(root, EVIDENCE_DIR))).toBe(true);
+    expect(ceiling()).toBe(4);
     for (const d of DOMAINS) expect(score(d.rests.map((id) => standing(id).level), ceiling()), d.id).toBeLessThanOrEqual(ceiling());
-    for (const s of all.values()) expect(s.level, `${s.id} claims audit evidence with no ${EVIDENCE_DIR}`).toBeLessThanOrEqual(CEILING_WITHOUT_EVIDENCE);
+    for (const s of all.values()) {
+      if (s.level <= CEILING_WITHOUT_EVIDENCE) continue;
+      const row = REGISTER.find((r) => r.id === s.id);
+      const filed = row?.evidence.filter((e) => e.path.startsWith(`${EVIDENCE_DIR}/`)) ?? [];
+      expect(filed.length, `${s.id} is at ${s.level} and cites nothing under ${EVIDENCE_DIR}`).toBeGreaterThan(0);
+      for (const e of filed) expect(existsSync(join(root, e.path)), `${s.id} cites ${e.path}`).toBe(true);
+    }
   });
 
   it('carries every rubric item on rows that exist, and the four rubrics each have items', () => {
@@ -179,7 +188,7 @@ describe('the compliance crosswalk', () => {
     const rows = allRests().map(standing);
     const d = dashboard(rows);
     expect(d.rows).toBe(rows.length);
-    expect(d.evidence).toBe(0); // no docs/evidence/, no evidence
+    expect(d.evidence).toBe(rows.filter((r) => r.level >= 3).length); // a row at 3 cites a filed artifact (above)
     expect(d.implementation).toBeGreaterThan(0);
     expect(d.effectiveness).toBeLessThanOrEqual(d.implementation);
     expect(d.risk).toBeGreaterThan(0);
@@ -246,7 +255,7 @@ function render(all: Map<string, Standing>): string {
     ...table(['Score', 'Meaning'], (Object.keys(SCALE) as unknown as Level[]).map((l) => [String(l), SCALE[l]])),
     '',
     `A 3 needs an artifact somebody produced by operating the control. The master`,
-    `register keeps those under \`${EVIDENCE_DIR}/\`, and the directory does not exist,`,
+    `register keeps those under \`${EVIDENCE_DIR}/\`, ${cap === 4 ? 'which holds the AI drills of 29 September,' : 'and the directory does not exist,'}`,
     `so **the ceiling today is ${cap}** for every domain, held by the test to the`,
     `directory rather than to this sentence. A domain's score is the lower median of`,
     `its rows' levels: the level the middle row reaches, so one tested row cannot`,
@@ -387,8 +396,9 @@ function render(all: Map<string, Standing>): string {
     '',
     '## What would move the scores',
     '',
-    `- **${EVIDENCE_DIR}/.** The first artifact filed there lifts the ceiling from ${cap} to 4 and`,
-    '  makes a 3 possible; the proof calendar names the first twelve.',
+    cap === 4
+      ? `- **${EVIDENCE_DIR}/.** The AI drills of 29 September lifted the ceiling to 4; a row reaches 3 by citing an artifact filed there, and the proof calendar names the next twelve.`
+      : `- **${EVIDENCE_DIR}/.** The first artifact filed there lifts the ceiling from ${cap} to 4 and makes a 3 possible; the proof calendar names the first twelve.`,
     `- **A domain at 0** has its middle row at *not started* or *owed*: ${DOMAINS.filter((d) => domainScore(d.rests) === 0).map((d) => d.title.toLowerCase()).join('; ') || 'none today'}.`,
     '- **A domain at 1** has a middle row *in progress* or *designed*: the rows',
     '  above name which, and the register that owns the row names what moves it.',

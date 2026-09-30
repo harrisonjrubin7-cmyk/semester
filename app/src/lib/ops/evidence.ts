@@ -65,6 +65,28 @@ export interface EvidenceRecord {
 
 export const EVIDENCE: readonly EvidenceRecord[] = [
   {
+    id: 'ai-killswitch-drill',
+    artifact: 'AI kill-switch drill against production: kill.ai_generation engaged, the deployed claude function refusing, released, each step timed',
+    path: 'docs/evidence/ai/killswitch-drill-2026-09-29T22-51-50-121Z.json',
+    produced: '2026-09-29',
+    validFor: QUARTERLY,
+    owner: 'engineering',
+    claims: [],
+    rows: ['AI-012'],
+    note: 'Held, 3 of 3: answered 200 before, refused 503 with the runtime’s own sentence while engaged, answered 200 after release. The institution gateway is not deployed and was not observed; aikillswitch.test.ts holds it to the same switch. Renewed by the quarterly DR exercise.',
+  },
+  {
+    id: 'ai-injection-redteam',
+    artifact: 'Prompt-injection red-team against the real model: three canaries in the material of seven prompt builders, 21 cases, through the shared key’s proxy',
+    path: 'docs/evidence/ai/injection-redteam-2026-09-29T22-58-56-465Z-claude-opus-5.json',
+    produced: '2026-09-29',
+    validFor: QUARTERLY,
+    owner: 'engineering',
+    claims: [],
+    rows: ['AI-010'],
+    note: 'Held, 21 of 21 on claude-opus-5: no reply carried a canary. One model, one run; a model or prompt-builder change is a reason to run it again (REDTEAM=write, app/src/ai/injection.live.test.ts).',
+  },
+  {
     id: 'restore-rehearsal',
     artifact: 'Backup restore rehearsal: a logical dump restored locally, schema and row counts compared',
     path: 'docs/GO-NO-GO-CHECKLIST.md',
@@ -189,6 +211,28 @@ export function evidenceState(record: Pick<EvidenceRecord, 'produced' | 'validFo
   const daysLeft = daysBetween(today, expires);
   const step = escalation(daysLeft);
   return { expires, daysLeft, step, state: daysLeft <= 0 ? 'expired' : step ? 'expiring' : 'current' };
+}
+
+/**
+ * The register rows, of those given, that no longer have a current artifact
+ * under `docs/evidence/`: every filed path they cite is either unregistered
+ * here or registered and expired on `today`. A row past `tested` is only as
+ * current as its drill, so each one named must be re-drilled or come back
+ * down to `tested` (Codex on #994: AI-012 would otherwise stay `evidenced`
+ * after its quarterly drill ran out).
+ */
+export function staleRows(
+  rows: readonly { id: string; evidence: readonly { path: string }[] }[],
+  records: readonly EvidenceRecord[],
+  today: string,
+): string[] {
+  return rows
+    .filter((row) => {
+      const filed = row.evidence.map((e) => e.path).filter((p) => p.startsWith('docs/evidence/'));
+      const backing = records.filter((r) => r.rows.includes(row.id) && filed.includes(r.path));
+      return backing.length === 0 || backing.every((r) => evidenceState(r, today).state === 'expired');
+    })
+    .map((row) => row.id);
 }
 
 /** The ids of the records under `claimId` that have expired on `today`; the shape `claims.ts` `Facts.expiredEvidence` takes. */

@@ -34,6 +34,21 @@ export interface ExperienceFlags {
    * account sees; activation also needs `module.campaign_manager` in production.
    */
   campaignManager: FeatureState;
+  /**
+   * The staff Migration Center (lib/migration, migration_* tables, D-144). RLS
+   * and the stage gate decide what each account sees and may do.
+   */
+  migrationCenter: FeatureState;
+  /**
+   * The staff academic-record ledger (lib/record, academic_record_* tables,
+   * D-145). RLS and the approval trigger decide what each account may do.
+   */
+  recordLedger: FeatureState;
+  /**
+   * The staff student-accounts ledger (lib/finance, student_account_* tables,
+   * D-146). RLS and the approval trigger decide what each account may do.
+   */
+  studentAccounts: FeatureState;
 }
 
 const STATES: readonly FeatureState[] = ['off', 'preview', 'sandbox', 'production'];
@@ -59,6 +74,9 @@ export function experienceFlags(env: PreviewEnv): ExperienceFlags {
     privateBeta: featureState(env, 'VITE_PRIVATE_BETA', false),
     supportTickets: featureState(env, 'VITE_SUPPORT_TICKETS', false),
     campaignManager: featureState(env, 'VITE_CAMPAIGN_MANAGER', preview),
+    migrationCenter: featureState(env, 'VITE_MIGRATION_CENTER', preview),
+    recordLedger: featureState(env, 'VITE_RECORD_LEDGER', preview),
+    studentAccounts: featureState(env, 'VITE_STUDENT_ACCOUNTS', preview),
   };
 }
 

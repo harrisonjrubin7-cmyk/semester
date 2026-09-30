@@ -111,10 +111,14 @@ describe('the proof calendar', () => {
       expect(filed(quarterly, dir)).toBe(false);
     });
 
-    it('says nothing is filed today, which is what the master register says too', () => {
-      expect(existsSync(at('docs/evidence'))).toBe(false);
+    it('says nothing on the calendar is filed today, though the directory now holds the AI drills', () => {
+      // docs/evidence/ai/ holds the kill-switch drill and the injection
+      // red-team (29 September). Neither is an artifact this calendar names,
+      // so every item is still due; the day one lands, this line fails.
+      expect(existsSync(at('docs/evidence/ai'))).toBe(true);
       for (const i of CALENDAR) expect(filed(i, real), i.id).toBe(false);
-      expect(REGISTER.filter((r) => NEEDS_EVIDENCE_DIR.includes(r.status))).toEqual([]);
+      // And the one register row past `tested` rests on those drills, not on the calendar.
+      expect(REGISTER.filter((r) => NEEDS_EVIDENCE_DIR.includes(r.status)).map((r) => r.id)).toEqual(['AI-012']);
     });
   });
 
@@ -148,8 +152,9 @@ function render(): string {
     '',
     'The schedule for producing the evidence needed to sell. The',
     `[master readiness register](MASTER-LAUNCH-READINESS-REGISTER.md) lets no row`,
-    'above `tested` until an artifact exists under `docs/evidence/`, and none',
-    'does. This is the order in which those artifacts get made: three months of',
+    'above `tested` until it cites an artifact under `docs/evidence/`, and one',
+    'does: the AI kill switch, on the drill of 29 September. This is the order in',
+    'which the rest get made: three months of',
     'them, then a quarterly cycle, so that enterprise readiness is a recurring',
     'discipline and not a push before each procurement.',
     '',
@@ -161,7 +166,7 @@ function render(): string {
     '',
     '## Where it stands',
     '',
-    `**${done} of ${CALENDAR.length} artifacts filed.**${done === 0 ? ' `docs/evidence/` does not exist yet. The test reads the directory, so this line changes when the first artifact lands.' : ''}`,
+    `**${done} of ${CALENDAR.length} artifacts filed.**${done === 0 ? ' `docs/evidence/` holds only the AI drills of 29 September, which this calendar does not schedule. The test reads the directory, so this line changes when the first artifact here lands.' : ''}`,
     '',
   ];
   for (const w of WINDOWS) {

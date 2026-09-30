@@ -514,3 +514,28 @@ export async function flushNow(): Promise<void> {
   inFlight = inFlight.then(flush);
   await inFlight;
 }
+
+/**
+ * Write whatever is owing now, for a page that is going away.
+ *
+ * `flushNow` queues behind a write still in flight, and on a reload that is
+ * too late: the owed write is only started once the earlier transaction
+ * completes, by which time the page is being torn down, and the change is
+ * lost. CI's golden path lost an action ticked just before a reload this way
+ * on 30 September, desktop only, once.
+ *
+ * So this starts the write at once rather than after the one in flight.
+ * `flush` builds its transaction synchronously, and IndexedDB runs read-write
+ * transactions over the same stores in the order they were created, so the
+ * new one still lands after the old. `last` has already moved on to what the
+ * write in flight carries, so the diff here is only what came after it.
+ */
+export function flushOnLeave(): void {
+  if (timer) {
+    clearTimeout(timer);
+    timer = null;
+  }
+  if (!pending) return;
+  const now = flush();
+  inFlight = Promise.all([inFlight, now]).then(() => undefined);
+}
