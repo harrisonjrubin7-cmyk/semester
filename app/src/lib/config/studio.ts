@@ -357,7 +357,7 @@ export function publishBlocker(draft: ConfigVersion, viewerId: string | null, ho
   return null;
 }
 
-/** Whether a role may see the Configuration Studio at all. */
-export function studioAllowed(holds: readonly string[]): boolean {
-  return holds.some((c) => c === 'config:manage' || c === 'config:publish' || c === 'config:view');
-}
+// `studioAllowed` lives in its own module so the University screen can ask it
+// without importing this whole file (the spec, defaults and diff) into the
+// route's opening cost. Re-exported here so this file stays the one import.
+export { studioAllowed } from './allowed';
