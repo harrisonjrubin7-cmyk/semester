@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { PARTIES } from './subprocessors';
 import { SUPPORT } from '../privacy';
@@ -48,7 +48,19 @@ const NAMED_AS: Record<string, string> = {
 };
 
 describe('legal drafts', () => {
-  it.each(['PRIVACY-POLICY-DRAFT.md', 'TERMS-OF-SERVICE-DRAFT.md'])(
+  // Every draft in the folder, not a list someone must remember to extend: a
+  // new policy without the banner is exactly the one that gets linked by
+  // mistake.
+  const DRAFTS = readdirSync(LEGAL).filter((f) => f.endsWith('.md'));
+
+  it('finds every draft, including the two it began with', () => {
+    expect(DRAFTS).toContain('PRIVACY-POLICY-DRAFT.md');
+    expect(DRAFTS).toContain('TERMS-OF-SERVICE-DRAFT.md');
+    expect(DRAFTS.length).toBeGreaterThanOrEqual(13);
+    for (const f of DRAFTS) expect(f, 'a policy here is a draft until it is in force').toMatch(/-DRAFT\.md$/);
+  });
+
+  it.each(DRAFTS)(
     '%s still says it is not in force',
     (name) => {
       const text = read(name);

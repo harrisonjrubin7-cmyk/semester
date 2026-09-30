@@ -5,7 +5,7 @@
  * ## Why it is data
  *
  * The site used to say "it does not replace your SIS". The owner reversed that
- * on 29 Sep 2026 (D-137): Semester runs beside a school's systems today
+ * on 29 Sep 2026 (D-139): Semester runs beside a school's systems today
  * (Connect) and takes each one over when the school switches that module to
  * Core. The temptation now runs the other way, and it is the one
  * `claims.ts` was written against: a page that says "replaces Canvas" the week

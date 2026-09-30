@@ -2,8 +2,8 @@ import react from '@vitejs/plugin-react'
 import { defineConfig, loadEnv } from 'vite'
 import { configDefaults } from 'vitest/config'
 import { fileURLToPath } from 'node:url'
-import { existsSync, readFileSync, writeFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { join, relative, sep } from 'node:path'
 import { EXTRA_CONNECT, parsePolicy, uncoveredOrigins } from './src/lib/cspheader.ts'
 import { privateHost, publicCalendarUrl } from './src/lib/publichost.ts'
 import { unregisteredHosts } from './src/lib/trust/subprocessors.ts'
@@ -597,6 +597,46 @@ const csp = (serving: boolean) => {
 }
 
 /**
+ * The chunk graph of a production build, for `scripts/budgets.ts`.
+ *
+ * Which source module each chunk came from, and which chunks it imports
+ * statically and dynamically. That is what a performance budget needs and a
+ * file listing cannot give: two screens called `Courses.tsx` make two
+ * `Courses-*.js` chunks, and only the graph says which is the route. Vite's
+ * own `build.manifest` would give the same, but it writes into `dist/`, and
+ * everything in `dist/` is published — every source path in the tree, on the
+ * live site. So this writes under `node_modules/.cache/`, which is never
+ * deployed, and records source paths relative to `app/`.
+ */
+const bundleGraph = () => {
+  let root = '.'
+  return {
+    name: 'bundle-graph',
+    apply: 'build' as const,
+    configResolved(config: { root: string }) {
+      root = config.root
+    },
+    writeBundle(
+      _options: unknown,
+      bundle: Record<string, { type: string; fileName: string; facadeModuleId?: string | null; isEntry?: boolean; imports?: string[]; dynamicImports?: string[] }>,
+    ) {
+      const chunks = Object.values(bundle)
+        .filter((c) => c.type === 'chunk')
+        .map((c) => ({
+          file: c.fileName,
+          source: c.facadeModuleId ? relative(root, c.facadeModuleId).split(sep).join('/') : null,
+          entry: Boolean(c.isEntry),
+          imports: c.imports ?? [],
+          dynamicImports: c.dynamicImports ?? [],
+        }))
+      const dir = join(root, 'node_modules', '.cache', 'semester')
+      mkdirSync(dir, { recursive: true })
+      writeFileSync(join(dir, 'bundle-graph.json'), JSON.stringify({ chunks }, null, 1))
+    },
+  }
+}
+
+/**
  * The origins a Vercel build would configure and its header would refuse.
  *
  * `vercel.json` is read before the build runs, so its policy cannot take the
@@ -849,6 +889,7 @@ export default defineConfig(({ command, mode }) => {
       canvasProxy(),
       appleToken(),
       claudeProxy(anthropicKey),
+      bundleGraph(),
     ],
     /*
      * The test suite, which had no configuration at all and was paying for it.
