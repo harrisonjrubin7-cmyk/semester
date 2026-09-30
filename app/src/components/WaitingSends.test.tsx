@@ -17,7 +17,7 @@ const share = vi.fn();
 const contribute = vi.fn();
 
 vi.mock('../lib/cloud', () => ({ cloudConfigured: true }));
-vi.mock('../state/store', () => ({ useStore: () => ({ account: me.account }) }));
+vi.mock('../state/store', () => ({ useStore: () => ({ account: me.account }), useNow: () => new Date() }));
 vi.mock('../lib/offline-mode', async (original) => {
   const react = await import('react');
   return {
@@ -62,6 +62,13 @@ async function mount(withOffer = false) {
     );
   });
   await flush();
+}
+
+/** A fresh mount: what closing the app and opening it again does. */
+async function remount(withOffer = false) {
+  await act(async () => root.unmount());
+  root = createRoot(host);
+  await mount(withOffer);
 }
 
 beforeEach(() => {
@@ -184,7 +191,7 @@ describe('what it will not do', () => {
     const later = Date.now() + 3 * 24 * 60 * 60 * 1000 + 1000;
     vi.useFakeTimers({ toFake: ['Date'], now: later });
     resetOutbox();
-    await mount();
+    await remount();
     expect(host.textContent).toMatch(/waited too long, so it will not go/);
     expect(button(/^Send: /)).toBeUndefined();
     expect(share).not.toHaveBeenCalled();
@@ -194,7 +201,7 @@ describe('what it will not do', () => {
     await keepOne();
     me.account = { id: 'u2' };
     resetOutbox();
-    await mount();
+    await remount();
     expect(host.textContent).toBe('');
     expect(share).not.toHaveBeenCalled();
   });
@@ -231,7 +238,7 @@ describe('when the browser will not save', () => {
     // openPort is called once per tab; hand the failing one to the hook by resetting to it.
     resetOutbox();
     vi.spyOn(await import('../lib/sync/outbox'), 'openPort').mockResolvedValue(port);
-    await mount(true);
+    await remount(true);
     await act(async () => button(/Keep it to send later/)!.click());
     await flush();
     expect(host.querySelector('[role="alert"]')!.textContent).toMatch(/could not be kept.*Nothing was saved and nothing was sent/);
@@ -250,7 +257,7 @@ describe('when the browser will not save', () => {
     });
     resetOutbox();
     vi.spyOn(await import('../lib/sync/outbox'), 'openPort').mockResolvedValue(port);
-    await mount();
+    await remount();
     await act(async () => button(/^Send: /)!.click());
     await flush();
     expect(share).not.toHaveBeenCalled(); // no place saved, no request made
