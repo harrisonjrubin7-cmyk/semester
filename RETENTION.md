@@ -342,6 +342,7 @@ behind and a client that believes it succeeded.
 | `academic_record_subjects` | **removed with the account** | the link that lets a student's account read their own record. The account's deletion removes it (`on delete cascade`); the school's record it pointed to stays |
 | `student_account_entries`, `student_account_requests`, `student_account_reconciliations`, `student_account_closes`, `student_account_settings` | **kept until the school is removed** | the school's financial record of its students' accounts (D-146): what was charged, paid, refunded and credited, and the reconciliations and closes it was checked by. The school's financial-records schedule governs it, and none is set yet; the ledger has no purge, and a school must set its schedule before real use. No card data is held. A staff member's account deletion clears them as requester, approver, recorder or closer and leaves the record |
 | `student_payment_plans`, `student_payment_plan_installments` | **kept until the school is removed** | payment plans on student accounts (D-146): what a student asked to spread and over how many payments, whether the school agreed, and the schedule the database wrote. Part of the school's financial record and governed by the same schedule, which no school has set yet. No payment or card data is held. A student's or staff member's account deletion clears them as asker, decider or canceller and leaves the plan with the school |
+| `legal_holds` | **kept until the school is removed; never deleted** | the record that an account, a school or the platform was placed under a legal hold, why, and who placed and released it. A hold is never edited except to record its release, once, so the row is the audit trail. It stops the invite, abandoned-sign-up and audit sweeps for what it covers, and refuses deletion of a held account. See *Legal holds*, below |
 | `gtm_report_access` | **kept until the school is removed** | who read which campaign's counts, and when. The reader's account deletion clears actor_id |
 | `gtm_sponsor_policy`, `gtm_sponsor_placements` | **kept until the school is removed** | a school's sponsorship choices and each placement's approval record. A removed placement stays as a record, with its status set to removed |
 | `gtm_accounts`, `gtm_stakeholders`, `gtm_decision_log`, `gtm_pilots`, `gtm_pilot_metrics`, `gtm_pilot_outcomes` | **kept until Semester removes the account**; unlinked, not removed, when the school is removed | Semester's own sales records about an institution: committee members by name and title, questions, evidence links, pilot terms and the signed outcome. No student data |
@@ -439,6 +440,29 @@ can apply this file's policy without reading the payload — but the sweep is
 not written, and a published row is kept until it is. It is owed before the
 first producer lands, and ADR 0008 says so; this entry is so that the producer
 cannot land without somebody reading this.
+
+## Legal holds
+
+A hold is the one instruction a clock has to obey. `supabase/migrations/20260930000000_legal_holds.sql`
+adds `legal_holds`, and `supabase/legal-holds.check.sql` checks each rule below
+on both sides of its line.
+
+- **Placed** by someone holding `hold:place` over the school (a university administrator),
+  with a reason and a matter reference, and only over an account whose profile
+  belongs to that school. A **platform** hold is not self-serve: it is placed
+  by an operator as the service role.
+- **Released** by a different person holding `hold:release`, with a reason,
+  once. The two-person rule is a CHECK on the row. A school with a single
+  administrator cannot release its own hold; the way out is break-glass.
+- **Never deleted, never edited** except to record the release.
+- **What it stops.** The invite sweep and the audit sweep skip what a live hold
+  covers (a platform hold pauses them; a school hold keeps that school's
+  events); the abandoned-sign-up sweep skips held accounts; and a `before delete`
+  trigger on `auth.users` refuses to delete a held account, which is the door a
+  student's own erasure goes through. The refusal says why.
+- **What it does not stop yet.** The community, AI-runtime and financial sweeps
+  are not hold-aware, and neither is on-device deletion. Maturity rows RM-02,
+  RM-04, RM-05 and RM-08 are partly answered, not closed, for that reason.
 
 ## Backups: the provider's copies, and how long a deleted row outlives its deletion
 
