@@ -18,13 +18,11 @@
  *
  * ## What is in it
  *
- * Only artifacts that exist, with the dates their files state. `docs/evidence/`
- * does not exist and nothing here pretends it does: the master register still
- * lets no row above `tested`, and `docs/PROOF-CALENDAR.md` still schedules the
- * artifacts that would. What the tree does hold is a handful of dated things —
- * a restore rehearsal, a HECVAT draft with owner attestations, a security
- * whitepaper, a re-read register, a reviewed operating system, a measured test
- * run — and each is here with what rests on it. `evidence.test.ts` refuses a
+ * Only artifacts that exist, with the dates their files state. The tree holds
+ * dated AI, advisor, restore, milestone-verification, procurement, security,
+ * governance, and regression records, and each is here with what rests on it.
+ * The master register and `docs/PROOF-CALENDAR.md` still govern which records
+ * can advance a row and which artifacts remain due. `evidence.test.ts` refuses a
  * record whose file does not state its date, and `claims.test.ts` refuses an
  * “available” claim that rests on an expired record.
  *
@@ -118,6 +116,17 @@ export const EVIDENCE: readonly EvidenceRecord[] = [
     claims: [],
     rows: ['SRE-004', 'SRE-005'],
     note: 'A rehearsal in a throwaway database with one account, not a restore of the live project. Production has never been restored; release gate G5 stays unmet until it is, on a non-production project, by someone other than the author.',
+  },
+  {
+    id: 'm1-m2-automated-verification',
+    artifact: 'M1/M2 automated verification: 21 focused workflow files, 355 tests, Master Plan controls, TypeScript, lint and a production build',
+    path: 'docs/evidence/m1-m2/2026-09-30-automated-verification.md',
+    produced: '2026-09-30',
+    validFor: MONTHLY,
+    owner: 'engineering',
+    claims: [],
+    rows: ['SRE-008'],
+    note: 'Repository-only evidence. It does not prove deployment, live tenant isolation, human accessibility, production restore, or a student pilot. Renew on a material M1/M2 change or monthly.',
   },
   {
     id: 'hecvat-draft',
