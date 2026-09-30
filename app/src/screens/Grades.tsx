@@ -429,6 +429,10 @@ export function Grades() {
         <SourceBadge label="estimated" />
       </div>
       {body(catalog.courses)}
+      {/* The instructor's released grades are the record; this tab is arithmetic. The gradebook is the other half. */}
+      <button type="button" className="btn" onClick={() => dispatch({ type: 'go', screen: 'gradebook' })}>
+        See your official released grades
+      </button>
       <div style={{ height: 22 }} />
     </div>
   );

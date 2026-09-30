@@ -497,6 +497,21 @@ jobs:
           SEMESTER_CHECK_REAPPLY: '1'
         run: supabase/check.sh
 
+      # The same database, many sessions at once. The suites above each walk
+      # one or two accounts through a policy; a race needs two sessions at the
+      # same instant, which none of them can make. `load.sh` runs pgbench
+      # scenarios against what `check.sh` builds and then asserts invariants.
+      # Its first run found `contribute_course_plan` deadlocking when one
+      # student saved from two devices (13 failures in eight seconds), fixed in
+      # 20260929350000_plan_save_serialized.sql. Latency on a shared runner is
+      # noisy, so the budgets are set an order of magnitude above a quiet
+      # machine's readings: they catch a path that became slow, not a jittery
+      # one. A deadlock or a broken invariant fails it at any speed.
+      - name: Load and concurrency scenarios
+        env:
+          LOAD_SECONDS: '10'
+        run: supabase/load.sh
+
       # `check.sh` builds from empty; this applies the pending migrations to
       # production's recorded shape with rows in it, which is the question a
       # deploy actually asks. Production's schema deploy failed silently from

@@ -122,9 +122,12 @@ const Gap = lazy(() => import('./screens/Gap').then((m) => ({ default: m.Gap }))
 const Groupwork = lazy(() => import('./screens/Groupwork').then((m) => ({ default: m.Groupwork })));
 const Call = lazy(() => import('./screens/call/Index').then((m) => ({ default: m.Call })));
 const Meals = lazy(() => import('./screens/Meals').then((m) => ({ default: m.Meals })));
+const Dining = lazy(() => import('./screens/Dining').then((m) => ({ default: m.Dining })));
 const Housing = lazy(() => import('./screens/Housing').then((m) => ({ default: m.Housing })));
 const Runway = lazy(() => import('./screens/Runway').then((m) => ({ default: m.Runway })));
 const Registrar = lazy(() => import('./screens/Registrar').then((m) => ({ default: m.Registrar })));
+const Registration = lazy(() => import('./screens/Registration').then((m) => ({ default: m.Registration })));
+const Gradebook = lazy(() => import('./screens/Gradebook').then((m) => ({ default: m.Gradebook })));
 const Sources = lazy(() => import('./screens/Sources').then((m) => ({ default: m.Sources })));
 const AccountScreen = lazy(() => import('./screens/Account').then((m) => ({ default: m.AccountScreen })));
 const SlideDeck = lazy(() => import('./screens/Slides').then((m) => ({ default: m.SlideDeck })));
@@ -229,9 +232,12 @@ export const SCREENS: Record<Exclude<Screen, 'home' | 'onboarding'>, ComponentTy
   groupwork: Groupwork,
   call: Call,
   meals: Meals,
+  dining: Dining,
   housing: Housing,
   runway: Runway,
   registrar: Registrar,
+  registration: Registration,
+  gradebook: Gradebook,
   sources: Sources,
   account: AccountScreen,
   slides: SlideDeck,

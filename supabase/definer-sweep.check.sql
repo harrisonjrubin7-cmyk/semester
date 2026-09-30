@@ -71,9 +71,11 @@ begin
     when 'uuid' then quote_literal(gen_random_uuid()::text) || '::uuid'
     when 'text' then quote_literal('x')
     when 'text[]' then '''{}''::text[]'
+    when 'uuid[]' then '''{}''::uuid[]'
     when 'jsonb' then '''{}''::jsonb'
     when 'boolean' then 'false'
     when 'integer' then '1'
+    when 'numeric' then '1::numeric'
     when 'timestamp with time zone' then 'now()'
     when 'date' then 'current_date'
     else null

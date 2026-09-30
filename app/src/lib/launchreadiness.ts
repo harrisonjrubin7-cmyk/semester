@@ -57,19 +57,22 @@ export interface SeatDefinition {
  * labels, as the document requires; never an address. Holding a seat is not
  * signing: `signoffs` stays empty until there is a decision to sign for, so
  * `decide()` now says "has not signed" for these four rather than "is vacant".
+ *
+ * Three more on 2026-09-30, on the founder's word: privacy / legal by outside
+ * counsel, and accessibility and operations by the founder, acting.
  */
 export const COUNCIL: readonly SeatDefinition[] = [
   { seat: 'founder', title: 'Founder / CEO', decides: 'Risk acceptance, customer commitment, commercial launch', holder: 'Founder' },
   { seat: 'product', title: 'Product lead', decides: 'Golden path and its acceptance criteria', holder: 'Founder, acting' },
   { seat: 'engineering', title: 'Engineering lead', decides: 'Reliability, release, rollback', holder: 'Founder, acting' },
   { seat: 'security', title: 'Security / vCISO', decides: 'Threat model, pen-test findings, access controls', holder: null },
-  { seat: 'privacy', title: 'Privacy / legal', decides: 'Terms, privacy, DPA/FERPA/COPPA posture, consent', holder: null },
-  { seat: 'accessibility', title: 'Accessibility lead', decides: 'WCAG/VPAT status, blockers, remediation', holder: null },
+  { seat: 'privacy', title: 'Privacy / legal', decides: 'Terms, privacy, DPA/FERPA/COPPA posture, consent', holder: 'Outside counsel' },
+  { seat: 'accessibility', title: 'Accessibility lead', decides: 'WCAG/VPAT status, blockers, remediation', holder: 'Founder, acting' },
   { seat: 'success', title: 'Customer success', decides: 'Onboarding, training, support, communication', holder: 'Founder, acting' },
   { seat: 'trust', title: 'Trust & Safety', decides: 'Reporting, escalation, moderation scope', holder: null },
   { seat: 'data', title: 'Data / integration owner', decides: 'Source quality, freshness, connector health', holder: null },
   { seat: 'finance', title: 'Finance / commercial', decides: 'Price floors, discount and pilot-credit approvals at the deal desk, margin, contract terms', holder: null },
-  { seat: 'operations', title: 'Operations / SRE', decides: 'Monitoring, on-call, incident readiness, support operations, release readiness', holder: null },
+  { seat: 'operations', title: 'Operations / SRE', decides: 'Monitoring, on-call, incident readiness, support operations, release readiness', holder: 'Founder, acting' },
   { seat: 'champion', title: 'Pilot institution champion', decides: 'Institutional workflow and communications', holder: null, institutional: true },
 ];
 

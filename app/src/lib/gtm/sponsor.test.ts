@@ -4,7 +4,7 @@ import { SPONSOR_FLAG, placementProblems, sponsorReport, type SponsorPlacement, 
 
 const ON: FlagContext = {
   environment: 'production', tenantId: 'vu', now: new Date('2026-10-01T12:00:00Z'), killSwitches: [],
-  tenantPolicy: { [SPONSOR_FLAG]: { state: 'production' } }, capabilities: ['tenant:configure'],
+  tenantPolicy: { [SPONSOR_FLAG]: { state: 'production', permittedRoles: [], permittedCohorts: [] } }, capabilities: ['tenant:configure'],
 };
 const POLICY: TenantSponsorPolicy = { enabled: true, categories: ['education_career'], surfaces: ['career_events'], segments: ['all_students'] };
 const OK: SponsorPlacement = {

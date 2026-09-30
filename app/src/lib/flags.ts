@@ -11,7 +11,8 @@
  * command sets out, and the first step that says no is the answer:
  *
  *   kill switch → environment → tenant entitlement → connection approval
- *   → scope approval → capability → role policy → data classification
+ *   → scope approval → capability → role policy → cohort policy
+ *   → data classification
  *   → course/assignment rule → user eligibility → allowed
  *
  * It never throws and never answers "allowed" for a key it does not know.
@@ -29,7 +30,7 @@ export type FlagType =
   | 'safety'
   | 'writeback';
 
-export type FlagScope = 'global' | 'environment' | 'tenant' | 'role' | 'course' | 'assignment' | 'user';
+export type FlagScope = 'global' | 'environment' | 'tenant' | 'cohort' | 'role' | 'course' | 'assignment' | 'user';
 
 export type KillSwitchKey =
   | 'kill.integration_sync'
@@ -140,6 +141,20 @@ export const FLAGS: readonly FlagDefinition[] = [
     killSwitches: ['kill.sharing'], capability: 'tenant:configure',
   }),
 
+  flag({
+    key: 'module.dining',
+    description: 'Dining and the campus card: locations, hours and menus, meal plans, an append-only card ledger, mobile ordering and swipe sharing into the basic-needs pool (lib/dining).',
+    type: 'module', owner: 'Campus services', scopes: ['tenant', 'role'], highRisk: true, reviewAt: REVIEW,
+    rollout: 'Not before a school’s card-office vendor is connected in its sandbox tenant and a signed agreement names that system as the record; then one location, in preview for dining staff, before students.',
+    successCriteria: 'Every balance, plan and menu figure shows its source and age; no charge without a live partner connection; no duplicate charge on a retried order; no donor ever identifiable to a recipient.',
+    rollback: 'Engage kill.writeback for the school (new orders and gifts stop at once; cancellations and refunds still run), then set the tenant policy row off. Nothing already charged is reversed by the flag; staff cancel open orders, which refunds them.',
+    // No connection gate here: that gate reads integration connections, which
+    // a student cannot. The dining functions check the card-office partner
+    // connection themselves (public.dining_partner_connections, which every
+    // member of the school may read), and refuse to charge unless it is live.
+    killSwitches: ['kill.writeback', 'kill.integration_sync'],
+  }),
+
   // ── Release (temporary) ─────────────────────────────────────────────────
   flag({
     key: 'release.integration_dashboard_v1',
@@ -203,10 +218,10 @@ export const FLAGS: readonly FlagDefinition[] = [
     needsScopes: ['scope.sis.registration_hold_summary_read'], destination: 'semester',
   }),
 
-  // ── Write-back (every one high-risk, none built) ────────────────────────
+  // ── Write-back (every one high-risk) ────────────────────────────────────
   flag({
     key: 'writeback.registration_submit',
-    description: 'Submit a registration change to the SIS. Not implemented; the flag exists so the gate does.',
+    description: 'Enroll, waitlist, drop and withdraw in Semester\'s registration ledger (lib/enrollment, 20260929300000_registration_transaction.sql), read as on only at production. The SIS adapter that would send a committed change on is not built.',
     type: 'writeback', owner: 'Integrations', scopes: ['tenant', 'user'], highRisk: true, reviewAt: REVIEW,
     rollout: 'Not before a separate design review, a registrar agreement and a two-step confirmation.',
     successCriteria: 'n/a until built.',
@@ -320,18 +335,45 @@ export interface ScopeGrant {
   expiresAt?: string | null;
 }
 
+/**
+ * One `tenant_feature_policy` row as the evaluator needs it. The two
+ * narrowings are required, not optional: a caller that read only `state` and
+ * left them out was a caller that read a staff-only preview or a fifty-student
+ * pilot as open to the whole school, and the type is what stops the next one.
+ * `lib/featurepolicy.ts` reads them for a client.
+ */
+export interface TenantPolicyRow {
+  state: FeatureState;
+  /** Empty admits every role the earlier steps admitted. */
+  permittedRoles: readonly string[];
+  /** Empty admits everybody; otherwise only live members of a named cohort. */
+  permittedCohorts: readonly string[];
+}
+
 export interface FlagContext {
   environment: Environment;
   tenantId: string | null;
   now: Date;
   killSwitches: readonly KillSwitchRow[];
   /** `tenant_feature_policy` rows for this tenant, by key. Absent means off. */
-  tenantPolicy: Readonly<Record<string, { state: FeatureState; permittedRoles?: readonly string[] }>>;
+  tenantPolicy: Readonly<Record<string, TenantPolicyRow>>;
   connection?: { publicId: string; approved: boolean; status: string } | null;
   scopes?: readonly ScopeGrant[];
   /** Capabilities *verified* over this tenant — never a role picker. */
   capabilities: readonly string[];
   role?: string;
+  /**
+   * Every role the caller holds *at this school* (live `role_grants`, scope
+   * `school`). The role step admits the caller when `role` or any of these is
+   * named. Absent is none, so a row that names roles refuses a caller whose
+   * roles were never read.
+   */
+  roles?: readonly string[];
+  /**
+   * The release cohorts the caller is a live member of at this school
+   * (`feature_cohort_members`, removed rows excluded). Absent is none.
+   */
+  cohorts?: readonly string[];
   classification?: DataClass;
   /** A course or assignment rule that applies, when there is one. */
   courseRule?: { allowed: boolean } | null;
@@ -348,6 +390,7 @@ export type FlagStep =
   | 'scope'
   | 'capability'
   | 'role_policy'
+  | 'cohort_policy'
   | 'classification'
   | 'course_rule'
   | 'user_eligibility'
@@ -424,8 +467,17 @@ export function evaluateFlag(key: string, ctx: FlagContext): FlagDecision {
 
   // 7. Role policy from the tenant row, when it names roles.
   const permitted = ctx.tenantPolicy[key]?.permittedRoles ?? [];
-  if (permitted.length > 0 && (!ctx.role || !permitted.includes(ctx.role))) {
+  const held = [...(ctx.role ? [ctx.role] : []), ...(ctx.roles ?? [])];
+  if (permitted.length > 0 && !held.some((r) => permitted.includes(r))) {
     return deny('role_policy', 'This school has limited this feature to other roles.');
+  }
+
+  // 7b. Cohort policy: a release scope, never an authority. It narrows who
+  // sees what the steps above allowed; it cannot widen anything. Membership
+  // that was not read (`cohorts` absent) is none, so a named cohort refuses.
+  const cohorts = ctx.tenantPolicy[key]?.permittedCohorts ?? [];
+  if (cohorts.length > 0 && !cohorts.some((c) => ctx.cohorts?.includes(c))) {
+    return deny('cohort_policy', 'This school has limited this feature to a release cohort.');
   }
 
   // 8. Data classification.

@@ -70,6 +70,7 @@ export const SOURCES: readonly { path: string; title: string; what: string }[] =
 ];
 
 export const READ_ON = '2026-09-29';
+
 export const PROJECT = 'lzrqvlugnawcgywkhqlz';
 
 /**
@@ -145,6 +146,14 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['decide_community_case', 'moderation', ['auth.uid()', 'private.has_capability']],
   ['decide_community_escalation', 'moderation', ['auth.uid()', 'private.has_capability']],
   ['delete_community_post', 'self-service', ['auth.uid()']],
+  ['dining_advance_order', 'admin', ['auth.uid()', 'private.dining_caller_school', 'private.has_capability']],
+  ['dining_cancel_order', 'financial', ['auth.uid()', 'private.dining_caller_school', 'private.has_capability']],
+  ['dining_disconnect_partner', 'admin', ['auth.uid()', 'private.dining_caller_school', 'private.has_capability']],
+  ['dining_donate_swipes', 'sharing', ['auth.uid()', 'private.dining_caller_school', 'private.dining_charge_gate']],
+  ['dining_order_queue', 'admin', ['private.dining_caller_school', 'private.has_capability']],
+  ['dining_place_order', 'financial', ['auth.uid()', 'private.dining_caller_school', 'private.dining_charge_gate']],
+  ['dining_pool_summary', 'admin', ['private.dining_caller_school', 'private.has_capability']],
+  ['dining_set_ordering', 'admin', ['private.dining_caller_school', 'private.has_capability']],
   ['draft_office_action', 'admin', ['auth.uid()', 'private.may_publish']],
   ['edit_community_post', 'self-service', ['auth.uid()']],
   ['export_my_data', 'self-service', ['auth.uid()']],
@@ -159,6 +168,15 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['forget_my_support_access', 'self-service', ['auth.uid()']],
   ['forget_my_support_shares', 'self-service', ['auth.uid()']],
   ['forget_my_support_tickets', 'self-service', ['auth.uid()']],
+  ['gradebook_add_item', 'admin', ['auth.uid()', 'private.gradebook_require', 'private.gradebook_replay']],
+  ['gradebook_enter', 'admin', ['auth.uid()', 'private.gradebook_require', 'private.subject_has_capability', 'want_student = me']],
+  ['gradebook_export', 'admin', ['private.gradebook_school', 'private.gradebook_require', "g.status = 'released'"]],
+  ['gradebook_file_regrade', 'self-service', ['auth.uid()', 'private.gradebook_school', "g.student_id = me and g.status = 'released'"]],
+  ['gradebook_moderate', 'admin', ['auth.uid()', 'private.gradebook_require', 'cur.graded_by is not distinct from me']],
+  ['gradebook_queue_passback', 'integration', ['auth.uid()', 'private.gradebook_require', "public.kill_switch_engaged('kill.writeback', school)", "e.status = 'released'"]],
+  ['gradebook_release', 'admin', ['auth.uid()', 'private.gradebook_require', 'private.gradebook_replay']],
+  ['gradebook_resolve_regrade', 'admin', ['auth.uid()', 'private.gradebook_require', 'r.student_id = me']],
+  ['gradebook_set_scheme', 'admin', ['auth.uid()', 'private.gradebook_require', 'private.gradebook_replay']],
   ['gtm_activation_failures', 'admin', ['auth.uid()', 'private.has_capability']],
   ['gtm_audience_count', 'admin', ['private.has_capability']],
   ['gtm_campaign_report', 'admin', ['auth.uid()', 'private.has_capability']],
@@ -192,9 +210,12 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['my_community_standing', 'read-helper', ['auth.uid()']],
   ['my_course_studio_courses', 'read-helper', ['auth.uid()']],
   ['my_demand_scopes', 'read-helper', ['auth.uid()']],
+  ['my_dining_balances', 'read-helper', ['auth.uid()', 'private.dining_caller_school']],
   ['my_entitlements', 'read-helper', ['auth.uid()']],
   ['my_help_destinations', 'read-helper', ['private.has_capability']],
   ['my_moderation_access', 'read-helper', ['private.has_capability']],
+  ['my_registration', 'read-helper', ['auth.uid()', 'private.school_of']],
+  ['my_registration_hold', 'read-helper', ['auth.uid()', 'private.school_of']],
   ['my_support_thread', 'read-helper', ['auth.uid()']],
   ['my_support_tickets', 'read-helper', ['auth.uid()']],
   ['my_volunteer_standing', 'read-helper', ['auth.uid()']],
@@ -212,6 +233,13 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['read_support_share', 'sharing', ['auth.uid()', 'private.may_receive_support_share']],
   ['read_support_signals', 'sharing', ['auth.uid()', 'private.subject_has_capability', 'private.support_consent_active']],
   ['referral_standing', 'read-helper', ['auth.uid()']],
+  ['registrar_decide', 'admin', ['auth.uid()', 'private.registration_registrar', 'private.registration_gate', 'private.registration_key']],
+  ['registrar_grant_override', 'admin', ['auth.uid()', 'private.registration_registrar', 'private.registration_gate', 'private.registration_key']],
+  ['registrar_put_section', 'admin', ['auth.uid()', 'private.registration_registrar']],
+  ['registrar_put_term', 'admin', ['auth.uid()', 'private.registration_registrar']],
+  ['registration_drop', 'self-service', ['auth.uid()', 'private.registration_school', 'private.registration_gate', 'private.registration_key']],
+  ['registration_enroll', 'self-service', ['auth.uid()', 'private.registration_school', 'private.registration_gate', 'private.registration_key']],
+  ['registration_withdraw', 'self-service', ['auth.uid()', 'private.registration_school', 'private.registration_gate', 'private.registration_key']],
   ['remove_connection', 'self-service', ['auth.uid()']],
   ['reply_to_my_ticket', 'self-service', ['auth.uid()']],
   ['report_community_post', 'self-service', ['auth.uid()', 'private.community_role']],
@@ -247,6 +275,65 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['volunteer_roster', 'moderation', ['private.has_capability']],
   ['withdraw_help_request', 'self-service', ['auth.uid()']],
 ];
+
+/**
+ * Callable definer functions added by migrations that are **not** applied to
+ * production, so were not in the advisor's reading. They have rows in
+ * `FUNCTIONS` like any other; they are named here so the reading stays the
+ * reading — the page says 151 on production and lists these beside it — and
+ * a file here that is applied moves its functions into the count.
+ */
+export const SINCE_READING: readonly { file: string; functions: readonly string[] }[] = [
+  {
+    file: '20260929150000_minimum_age.sql',
+    functions: ['my_age_status', 'state_my_age'],
+  },
+  {
+    file: '20260929330000_dining.sql',
+    functions: [
+      'dining_advance_order',
+      'dining_cancel_order',
+      'dining_disconnect_partner',
+      'dining_donate_swipes',
+      'dining_order_queue',
+      'dining_place_order',
+      'dining_pool_summary',
+      'dining_set_ordering',
+      'my_dining_balances',
+    ],
+  },
+  {
+    file: '20260929310000_gradebook.sql',
+    functions: [
+      'gradebook_add_item',
+      'gradebook_enter',
+      'gradebook_export',
+      'gradebook_file_regrade',
+      'gradebook_moderate',
+      'gradebook_queue_passback',
+      'gradebook_release',
+      'gradebook_resolve_regrade',
+      'gradebook_set_scheme',
+    ],
+  },
+  {
+    file: '20260929300000_registration_transaction.sql',
+    functions: [
+      'my_registration',
+      'my_registration_hold',
+      'registrar_decide',
+      'registrar_grant_override',
+      'registrar_put_section',
+      'registrar_put_term',
+      'registration_drop',
+      'registration_enroll',
+      'registration_withdraw',
+    ],
+  },
+];
+
+/** How many functions the advisor listed on production on `READ_ON`. */
+export const READ_COUNT = 151;
 
 /**
  * The advisor's 45 `rls_enabled_no_policy` tables. `private-internal` is a
