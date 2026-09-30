@@ -3363,6 +3363,17 @@ already in the tree under the design-debt register and needs no decision.
 - **The design brief's five destinations** (Today, My Path, Search, Plan, Me)
   **conflict with the seven roots on main** and with `DO-NOT-BUILD.md` #1.
   Existing decision holds; not reopened here.
+- **Owner's answer, 30 Sep 2026.** Build the Recovery Center's first phase only,
+  with the proposed answers to its open questions: no per-plan versions, no
+  account cooling-off. The Access Simulator and the five-destination navigation
+  stay parked; the navigation still conflicts with `DO-NOT-BUILD.md` #1.
+- **What R1 built, and a correction.** A list of the drafts a device holds, the
+  restore claim on `Recovery` corrected (it said nothing could be restored while
+  `Export` restores from copies the app takes by itself), and links to that
+  restore and to `Behind`. The first version of `RECOVERY-CENTER.md` said
+  "Restart my week" was absent; it was not (`screens/Behind.tsx`), and the page
+  is corrected. A per-deadline "set aside" needs new persisted state and is left
+  as an open question.
 
 ## D-154 · The load harness covers the open and sync every student makes, and a push that loses an update fails it
 
