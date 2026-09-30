@@ -8,7 +8,7 @@ import { InstructorBook } from '../components/gradebook/InstructorBook';
 import { StudentGrades } from '../components/gradebook/StudentGrades';
 import { useModuleGate } from '../lib/modulegate';
 import { loadMyCapabilities, type Grant } from '../lib/capabilities';
-import { TERM, authoredCourses, gradedCourses, termOf } from '../lib/gradebook/client';
+import { authoredCourses, gradedCourses, offeringKey, termOf, type Offering } from '../lib/gradebook/client';
 
 /**
  * The gradebook of record: an instructor's official grades for a course, and
@@ -27,6 +27,11 @@ import { TERM, authoredCourses, gradedCourses, termOf } from '../lib/gradebook/c
  * caller's own course-scope grants (`my_capabilities`): authors of a course's
  * grades get the instructor view, students holding `grades:receive` get
  * their own, and somebody holding both on different courses gets both.
+ *
+ * Grading authority is per term (`<school>/<CODE>/<TERM>`), so the course and
+ * the term are picked together, from the grants: a term is offered only where
+ * this person holds a grant for it. There is no free term field, because a
+ * term typed in with no grant behind it would only ever read nothing.
  */
 
 export const BLURB = 'Your course’s official grades: set the scheme, enter and release scores, and answer regrade requests — or read your own released grades.';
@@ -72,9 +77,7 @@ function Book({ school, me }: { school: string; me: string }) {
   const [grants, setGrants] = useState<Grant[] | null | 'error'>(null);
   const [reads, setReads] = useState(0);
   const [view, setView] = useState<View>('teaching');
-  const [course, setCourse] = useState('');
-  const [term, setTerm] = useState(() => termOf(new Date()));
-  const [termField, setTermField] = useState(term);
+  const [picked, setPicked] = useState('');
 
   useEffect(() => {
     let live = true;
@@ -119,9 +122,12 @@ function Book({ school, me }: { school: string; me: string }) {
 
   const both = teaching.length > 0 && taking.length > 0;
   const showing: View = both ? view : teaching.length > 0 ? 'teaching' : 'mine';
-  const courses = showing === 'teaching' ? teaching.map((c) => c.course) : taking;
-  const chosen = courses.includes(course) ? course : courses[0];
-  const caps = teaching.find((c) => c.course === chosen)?.capabilities ?? [];
+  const offerings: Offering[] = showing === 'teaching' ? teaching : taking;
+  const now = termOf(new Date());
+  const chosen =
+    offerings.find((o) => offeringKey(o) === picked) ?? offerings.find((o) => o.term === now) ?? offerings[0];
+  const key = offeringKey(chosen);
+  const caps = teaching.find((c) => offeringKey(c) === key)?.capabilities ?? [];
 
   return (
     <>
@@ -136,39 +142,23 @@ function Book({ school, me }: { school: string; me: string }) {
           ]}
         />
       )}
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          const next = termField.trim().toUpperCase();
-          if (TERM.test(next)) setTerm(next);
-        }}
-      >
-        <Row end>
-          <Field label="Course">
-            {(ids) => (
-              <select id={ids.id} aria-describedby={ids.hint} className="input" value={chosen} onChange={(e) => setCourse(e.target.value)}>
-                {courses.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
-            )}
-          </Field>
-          <Field label="Term" hint="As 2026FA.">
-            {(ids) => (
-              <input id={ids.id} aria-describedby={ids.hint} className="input" value={termField} onChange={(e) => setTermField(e.target.value)} pattern="[0-9]{4}(FA|SP|SU|fa|sp|su)" />
-            )}
-          </Field>
-          <button type="submit" className="btn" disabled={termField.trim().toUpperCase() === term}>
-            Show this term
-          </button>
-        </Row>
-      </form>
+      <Row end>
+        <Field label="Course and term" hint="Each course in each term your school has given you a role in.">
+          {(ids) => (
+            <select id={ids.id} aria-describedby={ids.hint} className="input" value={key} onChange={(e) => setPicked(e.target.value)}>
+              {offerings.map((o) => (
+                <option key={offeringKey(o)} value={offeringKey(o)}>
+                  {o.course} · {o.term}
+                </option>
+              ))}
+            </select>
+          )}
+        </Field>
+      </Row>
       {showing === 'teaching' ? (
-        <InstructorBook key={`${chosen}/${term}`} course={chosen} term={term} caps={caps} me={me} />
+        <InstructorBook key={key} course={chosen.course} term={chosen.term} caps={caps} me={me} />
       ) : (
-        <StudentGrades key={`${chosen}/${term}`} course={chosen} term={term} me={me} />
+        <StudentGrades key={key} course={chosen.course} term={chosen.term} me={me} />
       )}
     </>
   );

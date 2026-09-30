@@ -23,7 +23,14 @@
 --     change is a draft until released;
 --   * the registrar's export holds released grades only;
 --   * passback queues nothing while the flag is off or a kill switch is
---     engaged, never an unreleased grade, and each released version once.
+--     engaged, never an unreleased grade, and each released version once;
+--   * grading authority is per term: every course grant here is on
+--     `gb-u/ECON 1020/2026FA`, an instructor holding only 2027SP reads,
+--     enters, moderates, releases, resolves, exports and queues nothing of
+--     2026FA (and 2026FA's instructor nothing of 2027SP), a grant on the
+--     untermed `gb-u/ECON 1020` authorises nothing at all — staff or roster —
+--     and the registrar's school-wide export still reads released rows of
+--     every term, and still no draft.
 --
 -- The control: each refusal comes after the same call working for the right
 -- person, so a refusal is the rule's doing and not a broken fixture.
@@ -98,6 +105,19 @@ begin
   raise notice 'ok  % is refused (%)', what, e;
 end $$;
 
+-- Refused *for want of the capability on this course and term* — not for a
+-- missing draft, a used key or any other reason a broken fixture could give.
+create or replace function pg_temp.denied(what text, who uuid, statement text)
+returns void language plpgsql as $$
+declare e text := pg_temp.err(who, statement);
+begin
+  if e is null then raise exception 'FAILED: % — was allowed', what; end if;
+  if e not like '%that needs grades:%' then
+    raise exception 'FAILED: % — refused, but not for want of the grant: %', what, e;
+  end if;
+  raise notice 'ok  % is refused (%)', what, e;
+end $$;
+
 -- A value a statement returns as `who`, as text.
 create or replace function pg_temp.ask(who uuid, q text)
 returns text language plpgsql as $$
@@ -123,7 +143,8 @@ do $$
 declare
   prof uuid; coprof uuid; ta uuid; chair uuid; registrar uuid; other_prof uuid; elsewhere uuid;
   ana uuid; ben uuid; cal uuid; dual uuid;
-  ps1 uuid; mid uuid; req uuid; n bigint;
+  next_prof uuid; untermed uuid; dan uuid; eve uuid;
+  ps1 uuid; mid uuid; req uuid; req2 uuid; sp1 uuid; n bigint;
   scheme constant text := $q$select public.gradebook_set_scheme('econ 1020', '2026FA',
       '[{"key":"problem-sets","name":"Problem sets","weight":40,"drop_lowest":1},
         {"key":"exams","name":"Exams","weight":60}]'::jsonb,
@@ -147,19 +168,20 @@ begin
   -- A TA who is also taking the course: a grader, and on the roster.
   dual       := pg_temp.newuser('dual@gb-u.example', 'gb-u');
 
+  -- Every course grant names its term: `<school>/<CODE>/<TERM>`.
   insert into public.role_grants (subject, role, scope_kind, scope_id, provenance) values
-    (prof,       'faculty',               'course', 'gb-u/ECON 1020',     'institution'),
-    (coprof,     'faculty',               'course', 'gb-u/ECON 1020',     'institution'),
-    (ta,         'teaching_assistant',    'course', 'gb-u/ECON 1020',     'institution'),
-    (chair,      'department_chair',      'school', 'gb-u',               'institution'),
-    (registrar,  'registrar',             'school', 'gb-u',               'institution'),
-    (other_prof, 'faculty',               'course', 'gb-u/HIST 2100',     'institution'),
-    (elsewhere,  'faculty',               'course', 'gb-other/ECON 1020', 'institution'),
-    (ana,        'undergraduate_student', 'course', 'gb-u/ECON 1020',     'institution'),
-    (ben,        'student',               'course', 'gb-u/ECON 1020',     'institution'),
-    (cal,        'undergraduate_student', 'course', 'gb-u/HIST 2100',     'institution'),
-    (dual,       'teaching_assistant',    'course', 'gb-u/ECON 1020',     'institution'),
-    (dual,       'graduate_student',      'course', 'gb-u/ECON 1020',     'institution');
+    (prof,       'faculty',               'course', 'gb-u/ECON 1020/2026FA',     'institution'),
+    (coprof,     'faculty',               'course', 'gb-u/ECON 1020/2026FA',     'institution'),
+    (ta,         'teaching_assistant',    'course', 'gb-u/ECON 1020/2026FA',     'institution'),
+    (chair,      'department_chair',      'school', 'gb-u',                      'institution'),
+    (registrar,  'registrar',             'school', 'gb-u',                      'institution'),
+    (other_prof, 'faculty',               'course', 'gb-u/HIST 2100/2026FA',     'institution'),
+    (elsewhere,  'faculty',               'course', 'gb-other/ECON 1020/2026FA', 'institution'),
+    (ana,        'undergraduate_student', 'course', 'gb-u/ECON 1020/2026FA',     'institution'),
+    (ben,        'student',               'course', 'gb-u/ECON 1020/2026FA',     'institution'),
+    (cal,        'undergraduate_student', 'course', 'gb-u/HIST 2100/2026FA',     'institution'),
+    (dual,       'teaching_assistant',    'course', 'gb-u/ECON 1020/2026FA',     'institution'),
+    (dual,       'graduate_student',      'course', 'gb-u/ECON 1020/2026FA',     'institution');
 
   -- ── The scheme ──────────────────────────────────────────────────────────
   perform pg_temp.said('the instructor sets the scheme, the code normalised', pg_temp.ask(prof, scheme), '1');
@@ -356,6 +378,138 @@ begin
     public.gradebook_record_passback((select id from public.grade_passbacks limit 1), 'failed', 'timeout'), 'already-sent');
   execute 'reset role';
   perform pg_temp.said('it stays sent', (select status from public.grade_passbacks), 'sent');
+
+  -- ── Grading authority is per term ───────────────────────────────────────
+  -- The same course, the next term: an instructor who teaches 2027SP only, a
+  -- student enrolled in 2027SP only, and a faculty grant and a roster grant
+  -- on the course with no term at all.
+  next_prof := pg_temp.newuser('next@gb-u.example', 'gb-u');
+  untermed  := pg_temp.newuser('untermed@gb-u.example', 'gb-u');
+  dan       := pg_temp.newuser('dan@gb-u.example', 'gb-u');
+  eve       := pg_temp.newuser('eve@gb-u.example', 'gb-u');
+  insert into public.role_grants (subject, role, scope_kind, scope_id, provenance) values
+    (next_prof, 'faculty',               'course', 'gb-u/ECON 1020/2027SP', 'institution'),
+    (dan,       'undergraduate_student', 'course', 'gb-u/ECON 1020/2027SP', 'institution'),
+    (untermed,  'faculty',               'course', 'gb-u/ECON 1020',        'institution'),
+    (eve,       'undergraduate_student', 'course', 'gb-u/ECON 1020',        'institution');
+  -- Ana asks again, so there is an open 2026FA request to try to resolve.
+  perform pg_temp.become(ana);
+  req2 := public.gradebook_file_regrade(ps1, 'And question 5', 'ana-regrade-3-key');
+  execute 'reset role';
+
+  -- Reading 2026FA as 2027SP's instructor, and on an untermed grant: nothing.
+  perform pg_temp.counted('2027SP''s instructor reads no 2026FA grade',
+    pg_temp.seen(next_prof, $q$select * from public.grade_entries where term = '2026FA'$q$), 0);
+  perform pg_temp.counted('nor its scheme, items, requests, answers or passbacks',
+    pg_temp.seen(next_prof, $q$select * from public.gradebook_schemes where term = '2026FA'$q$)
+    + pg_temp.seen(next_prof, $q$select * from public.gradebook_items where term = '2026FA'$q$)
+    + pg_temp.seen(next_prof, $q$select * from public.regrade_requests where term = '2026FA'$q$)
+    + pg_temp.seen(next_prof, 'select * from public.regrade_resolutions')
+    + pg_temp.seen(next_prof, $q$select * from public.grade_passbacks where term = '2026FA'$q$), 0);
+  perform pg_temp.counted('an untermed faculty grant reads no grade, draft or released',
+    pg_temp.seen(untermed, 'select * from public.grade_entries'), 0);
+  perform pg_temp.counted('nor any scheme, item, request, answer or passback',
+    pg_temp.seen(untermed, 'select * from public.gradebook_schemes')
+    + pg_temp.seen(untermed, 'select * from public.gradebook_items')
+    + pg_temp.seen(untermed, 'select * from public.regrade_requests')
+    + pg_temp.seen(untermed, 'select * from public.regrade_resolutions')
+    + pg_temp.seen(untermed, 'select * from public.grade_passbacks'), 0);
+  perform pg_temp.counted('an untermed roster grant reads no scheme or item',
+    pg_temp.seen(eve, 'select * from public.gradebook_schemes') + pg_temp.seen(eve, 'select * from public.gradebook_items'), 0);
+  perform pg_temp.counted('a 2027SP student reads none of 2026FA''s items',
+    pg_temp.seen(dan, 'select * from public.gradebook_items'), 0);
+  -- The control: 2026FA's own instructor reads every version of it.
+  if pg_temp.seen(prof, $q$select * from public.grade_entries where term = '2026FA' and status = 'draft'$q$) = 0 then
+    raise exception 'FAILED: the control — 2026FA''s instructor reads no 2026FA draft';
+  end if;
+  raise notice 'ok  2026FA''s instructor still reads its drafts (the control)';
+
+  -- Writing 2026FA as either: refused for want of the grant.
+  perform pg_temp.denied('2027SP''s instructor setting 2026FA''s scheme', next_prof,
+    replace(scheme, 'scheme-v1-key', 'scheme-next-fa-key'));
+  perform pg_temp.denied('2027SP''s instructor adding a 2026FA item', next_prof,
+    $q$select public.gradebook_add_item('ECON 1020', '2026FA', 'exams', 'Final', 100, null, 'item-next-fa-key')$q$);
+  perform pg_temp.denied('2027SP''s instructor entering a 2026FA grade', next_prof,
+    format($q$select public.gradebook_enter(%L, %L, 7, null, '', 'Recount', 'next-enter-fa-key')$q$, ps1, ana));
+  perform pg_temp.denied('2027SP''s instructor moderating a 2026FA draft', next_prof,
+    format($q$select public.gradebook_moderate(%L, %L, 'next-mod-fa-key')$q$, ps1, ana));
+  perform pg_temp.denied('2027SP''s instructor releasing 2026FA grades', next_prof,
+    format($q$select public.gradebook_release(%L, 'next-release-fa-key')$q$, ps1));
+  perform pg_temp.denied('2027SP''s instructor resolving a 2026FA regrade', next_prof,
+    format($q$select public.gradebook_resolve_regrade(%L, 'upheld', null, null, 'No', 'next-resolve-fa-key')$q$, req2));
+  perform pg_temp.denied('2027SP''s instructor exporting 2026FA', next_prof,
+    $q$select * from public.gradebook_export('ECON 1020', '2026FA')$q$);
+  perform pg_temp.denied('2027SP''s instructor queueing 2026FA passback', next_prof,
+    format($q$select public.gradebook_queue_passback(%L, 'next-passback-fa-key')$q$, ps1));
+  perform pg_temp.denied('an untermed grant setting 2026FA''s scheme', untermed,
+    replace(scheme, 'scheme-v1-key', 'scheme-untermed-key'));
+  perform pg_temp.denied('an untermed grant setting 2027SP''s', untermed,
+    replace(replace(scheme, 'scheme-v1-key', 'scheme-untermed-sp-key'), '2026FA', '2027SP'));
+  perform pg_temp.denied('an untermed grant adding an item', untermed,
+    $q$select public.gradebook_add_item('ECON 1020', '2026FA', 'exams', 'Final', 100, null, 'item-untermed-key')$q$);
+  perform pg_temp.denied('an untermed grant entering a grade', untermed,
+    format($q$select public.gradebook_enter(%L, %L, 7, null, '', 'Recount', 'untermed-enter-key')$q$, ps1, ana));
+  perform pg_temp.denied('an untermed grant moderating', untermed,
+    format($q$select public.gradebook_moderate(%L, %L, 'untermed-mod-key')$q$, ps1, ana));
+  perform pg_temp.denied('an untermed grant releasing', untermed,
+    format($q$select public.gradebook_release(%L, 'untermed-release-key')$q$, ps1));
+  perform pg_temp.denied('an untermed grant resolving a regrade', untermed,
+    format($q$select public.gradebook_resolve_regrade(%L, 'upheld', null, null, 'No', 'untermed-resolve-key')$q$, req2));
+  perform pg_temp.denied('an untermed grant exporting', untermed,
+    $q$select * from public.gradebook_export('ECON 1020', '2026FA')$q$);
+  perform pg_temp.denied('an untermed grant queueing passback', untermed,
+    format($q$select public.gradebook_queue_passback(%L, 'untermed-passback-key')$q$, ps1));
+  perform pg_temp.refused('grading a student on an untermed roster grant', ta,
+    format($q$select public.gradebook_enter(%L, %L, 5, null, '', '', 'ta-eve-key')$q$, ps1, eve));
+  perform pg_temp.refused('grading a 2027SP student in 2026FA', ta,
+    format($q$select public.gradebook_enter(%L, %L, 5, null, '', '', 'ta-dan-fa-key')$q$, ps1, dan));
+  -- The control for each refusal: the same calls work for 2026FA's own staff.
+  perform pg_temp.works('2026FA''s second instructor moderates the draft the others could not', coprof,
+    format($q$select public.gradebook_moderate(%L, %L, 'coprof-mod-ana-2-key')$q$, ps1, ana));
+  perform pg_temp.works('2026FA''s TA resolves the request the others could not', ta,
+    format($q$select public.gradebook_resolve_regrade(%L, 'upheld', null, null, 'Q5 stands', 'ta-resolve-2-key')$q$, req2));
+  perform pg_temp.works('2026FA''s instructor releases what the others could not', prof,
+    format($q$select public.gradebook_release(%L, 'release-ps1-2-key')$q$, ps1));
+  perform pg_temp.counted('and none of the refusals wrote a key',
+    (select count(*) from public.gradebook_operations where idempotency_key like 'next-%' or idempotency_key like 'untermed-%'
+       or idempotency_key in ('scheme-next-fa-key', 'scheme-untermed-key', 'scheme-untermed-sp-key', 'item-next-fa-key', 'item-untermed-key', 'ta-eve-key', 'ta-dan-fa-key')), 0);
+
+  -- 2027SP, run by its own instructor, is as closed to 2026FA's.
+  perform pg_temp.works('2027SP''s instructor sets 2027SP''s scheme', next_prof,
+    replace(replace(scheme, 'scheme-v1-key', 'scheme-sp-key'), '2026FA', '2027SP'));
+  perform pg_temp.become(next_prof);
+  sp1 := public.gradebook_add_item('ECON 1020', '2027SP', 'exams', 'Spring midterm', 100, null, 'item-sp1-key');
+  execute 'reset role';
+  perform pg_temp.works('and grades a 2027SP student', next_prof,
+    format($q$select public.gradebook_enter(%L, %L, 81, null, '', '', 'next-dan-sp1-key')$q$, sp1, dan));
+  perform pg_temp.refused('but not a 2026FA student in 2027SP', next_prof,
+    format($q$select public.gradebook_enter(%L, %L, 81, null, '', '', 'next-ana-sp1-key')$q$, sp1, ana));
+  perform pg_temp.counted('2026FA''s instructor reads none of 2027SP''s draft',
+    pg_temp.seen(prof, $q$select * from public.grade_entries where term = '2027SP'$q$), 0);
+  perform pg_temp.denied('2026FA''s instructor entering a 2027SP grade', prof,
+    format($q$select public.gradebook_enter(%L, %L, 50, null, '', '', 'prof-dan-sp1-key')$q$, sp1, dan));
+  perform pg_temp.counted('Dan reads 2027SP''s item', pg_temp.seen(dan, 'select * from public.gradebook_items'), 1);
+  perform pg_temp.counted('Ana, enrolled in 2026FA, does not',
+    pg_temp.seen(ana, $q$select * from public.gradebook_items where term = '2027SP'$q$), 0);
+  perform pg_temp.counted('the registrar reads no 2027SP draft',
+    pg_temp.seen(registrar, $q$select * from public.grade_entries where term = '2027SP'$q$), 0);
+  perform pg_temp.works('2027SP''s instructor releases it', next_prof,
+    format($q$select public.gradebook_release(%L, 'next-release-sp1-key')$q$, sp1));
+
+  -- The registrar's grant is the school's, and spans terms: released rows of
+  -- both, and still no draft of either.
+  perform pg_temp.counted('the registrar reads released rows of both terms',
+    pg_temp.seen(registrar, $q$select distinct term from public.grade_entries where status = 'released'$q$), 2);
+  perform pg_temp.counted('and still no unreleased row of either',
+    pg_temp.seen(registrar, $q$select * from public.grade_entries where status <> 'released'$q$), 0);
+  perform pg_temp.said('the registrar exports 2027SP',
+    pg_temp.ask(registrar, $q$select string_agg(title || '=' || score::text, ',') from public.gradebook_export('ECON 1020', '2027SP')$q$),
+    'Spring midterm=81.000');
+  perform pg_temp.said('and 2026FA, with the same grant',
+    pg_temp.ask(registrar, $q$select string_agg(title || '=' || score::text, ',') from public.gradebook_export('ECON 1020', '2026FA')$q$),
+    'Problem set 1=10.000');
+  perform pg_temp.counted('Dan sees his released 81 and nothing of 2026FA',
+    pg_temp.seen(dan, 'select * from public.grade_entries'), 1);
 end $$;
 
 rollback;

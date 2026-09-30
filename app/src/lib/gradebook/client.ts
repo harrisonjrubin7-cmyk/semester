@@ -36,38 +36,76 @@ const rows = (data: unknown): Row[] => (Array.isArray(data) ? (data as Row[]) : 
 /** The three capabilities that make somebody an author of a course's grades — the ones that may read drafts. */
 export const AUTHOR_CAPABILITIES: readonly GradeCapability[] = ['grades:enter', 'grades:moderate', 'grades:release'];
 
-export interface CourseGrant {
+/** One course in one term: what a gradebook grant is held over. */
+export interface Offering {
   /** "ECON 1020", as the database keys it. */
   course: string;
+  /** "2026FA". */
+  term: string;
+}
+
+export interface CourseGrant extends Offering {
   capabilities: GradeCapability[];
 }
 
-/** Course-scope grants at this school: scope id `<school>/<CODE>`. */
-function courseScoped(grants: readonly Grant[], school: string): { course: string; capability: string }[] {
+export const TERM = /^[0-9]{4}(FA|SP|SU)$/;
+const CODE = /^[A-Z]{2,4} [0-9]{3,4}[A-Z]?$/;
+
+/**
+ * Course-and-term grants at this school: scope id `<school>/<CODE>/<TERM>`.
+ *
+ * Grading authority is per term in the migration — a grant on `vu/ECON 1020`
+ * with no term authorises nothing in the gradebook — so one without a term,
+ * or with anything else after the code, is not read as a course here either.
+ */
+function courseScoped(grants: readonly Grant[], school: string): (Offering & { capability: string })[] {
   const prefix = `${school}/`;
-  return grants
-    .filter((g) => school !== '' && g.scopeKind === 'course' && g.scopeId.startsWith(prefix))
-    .map((g) => ({ course: g.scopeId.slice(prefix.length), capability: g.capability }));
+  const out: (Offering & { capability: string })[] = [];
+  for (const g of grants) {
+    if (school === '' || g.scopeKind !== 'course' || !g.scopeId.startsWith(prefix)) continue;
+    const parts = g.scopeId.slice(prefix.length).split('/');
+    if (parts.length !== 2) continue;
+    const [course, term] = parts;
+    if (!CODE.test(course) || !TERM.test(term)) continue;
+    out.push({ course, term, capability: g.capability });
+  }
+  return out;
 }
 
-/** The courses this person authors grades for, each with what they may do there. */
+const SEASON: Record<string, number> = { SP: 1, SU: 2, FA: 3 };
+
+/** Latest term first, then by course: the order a person reaches for them in. */
+export function byOffering(a: Offering, b: Offering): number {
+  const rank = (t: string) => Number.parseInt(t.slice(0, 4), 10) * 10 + (SEASON[t.slice(4)] ?? 0);
+  return rank(b.term) - rank(a.term) || a.course.localeCompare(b.course);
+}
+
+/** "ECON 1020/2026FA": one key for one offering. */
+export const offeringKey = (o: Offering): string => `${o.course}/${o.term}`;
+
+/** The course-terms this person authors grades for, each with what they may do there. */
 export function authoredCourses(grants: readonly Grant[], school: string): CourseGrant[] {
-  const by = new Map<string, Set<GradeCapability>>();
+  const by = new Map<string, { offering: Offering; caps: Set<GradeCapability> }>();
   for (const g of courseScoped(grants, school)) {
     if (!(AUTHOR_CAPABILITIES as readonly string[]).includes(g.capability) && g.capability !== 'grades:export') continue;
-    const set = by.get(g.course) ?? new Set<GradeCapability>();
-    set.add(g.capability as GradeCapability);
-    by.set(g.course, set);
+    const key = offeringKey(g);
+    const held = by.get(key) ?? { offering: { course: g.course, term: g.term }, caps: new Set<GradeCapability>() };
+    held.caps.add(g.capability as GradeCapability);
+    by.set(key, held);
   }
-  return [...by]
-    .filter(([, caps]) => AUTHOR_CAPABILITIES.some((c) => caps.has(c)))
-    .map(([course, caps]) => ({ course, capabilities: [...caps].sort() }))
-    .sort((a, b) => a.course.localeCompare(b.course));
+  return [...by.values()]
+    .filter(({ caps }) => AUTHOR_CAPABILITIES.some((c) => caps.has(c)))
+    .map(({ offering, caps }) => ({ ...offering, capabilities: [...caps].sort() }))
+    .sort(byOffering);
 }
 
-/** The courses this person is graded in: a live `grades:receive` over the course. */
-export function gradedCourses(grants: readonly Grant[], school: string): string[] {
-  return [...new Set(courseScoped(grants, school).filter((g) => g.capability === 'grades:receive').map((g) => g.course))].sort();
+/** The course-terms this person is graded in: a live `grades:receive` over that course and term. */
+export function gradedCourses(grants: readonly Grant[], school: string): Offering[] {
+  const by = new Map<string, Offering>();
+  for (const g of courseScoped(grants, school)) {
+    if (g.capability === 'grades:receive') by.set(offeringKey(g), { course: g.course, term: g.term });
+  }
+  return [...by.values()].sort(byOffering);
 }
 
 /** "2026FA" for a date: August to December is fall, January to May spring, the rest summer. */
@@ -76,8 +114,6 @@ export function termOf(now: Date): string {
   const season = m >= 7 ? 'FA' : m <= 4 ? 'SP' : 'SU';
   return `${now.getFullYear()}${season}`;
 }
-
-export const TERM = /^[0-9]{4}(FA|SP|SU)$/;
 
 // ── Reading one course ─────────────────────────────────────────────────────
 

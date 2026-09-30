@@ -236,7 +236,7 @@ export const CHARTERS: readonly ProductCharter[] = [
     classification: 'T4', accessibilityAcceptance: 'Every figure is text with its label; a credit balance is written out as money coming back, never as a minus sign alone.',
     costModel: 'The payment provider’s per-transaction fee, borne by the school; no AI cost.',
     owners: { product: 'Student accounts product lead', engineering: 'Institutional engineering', support: 'The school’s named finance owner' },
-    killSwitch: 'Set the tenant policy row off, or clear the finance owner: every person’s write refuses at once (private.student_accounts_on). Payments already made still post.',
+    killSwitch: 'Set the tenant policy row off, or clear the finance owner or revoke their bursar:post: every person’s write refuses at once (private.student_accounts_on). Payments already made still post.',
     decision: 'build', route: 'pilot', reviewAt: '2026-12-15',
   },
 ];

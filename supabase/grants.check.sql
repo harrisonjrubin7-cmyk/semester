@@ -575,7 +575,8 @@ declare
     -- hold:read for the whether-only hold status — or, for the student's two
     -- (respond to an award, start a payment), that the row is the caller's
     -- own. Every write also asks private.student_accounts_on: off until the
-    -- module is on and a finance owner is named. The adapter's sync and
+    -- module is on and a finance owner is named who still has a profile and
+    -- a live bursar:post grant at the school. The adapter's sync and
     -- disbursement and the provider webhook are service_role only and are
     -- not here. `student_accounts.check.sql` attempts each refusal.
     'configure_student_accounts(want_finance_owner uuid, want_threshold_cents bigint, want_grace_days integer)',

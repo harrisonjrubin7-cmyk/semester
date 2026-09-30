@@ -23,7 +23,10 @@
 --
 -- `private.student_accounts_on(school)`: the school has `module.student_accounts`
 -- in `tenant_feature_policy` not `off`, **and** has named a finance owner — an
--- account at the school holding `bursar:post` — in `student_account_settings`.
+-- account at the school holding `bursar:post` — in `student_account_settings`,
+-- who still is one: a profile at the school and a live `bursar:post` grant
+-- there, asked at every call, so revoking or expiring the owner's grant turns
+-- the module off until a new owner is named or the grant is restored.
 -- Every person's write asks it. (The third condition, Semester's own council
 -- finance seat being held, is a launch condition with no row here; the TS gate
 -- holds it.) A provider's payment event is applied even when the module has
@@ -252,6 +255,15 @@ create trigger student_payment_events_append_only before update or delete on pub
 
 -- ── 4. Helpers ────────────────────────────────────────────────────────────
 
+-- On means the module is not off **and** the named finance owner is still a
+-- finance owner: an account with a profile at this school and a live grant
+-- carrying `bursar:post` over it. `configure_student_accounts` checks both when
+-- the owner is named, but a grant is revoked or expires afterwards without
+-- touching this table, and a module whose accountable owner has left the
+-- bursar's office is a module nobody is accountable for. So the question is
+-- asked again at every write rather than trusted from the day it was named —
+-- `subject_has_capability` is the same liveness test `has_capability` makes
+-- (not revoked, not expired), about the owner instead of the caller.
 create or replace function private.student_accounts_on(want_school text)
 returns boolean
 language sql
@@ -260,8 +272,11 @@ security definer
 set search_path = ''
 as $$
   select public.feature_state('module.student_accounts', want_school) <> 'off'
-     and exists (select 1 from public.student_account_settings s
-                  where s.tenant_id = want_school and s.finance_owner is not null);
+     and exists (select 1
+                   from public.student_account_settings s
+                   join public.profiles p on p.user_id = s.finance_owner and p.school_id = want_school
+                  where s.tenant_id = want_school
+                    and private.subject_has_capability(s.finance_owner, 'bursar:post', 'school', want_school));
 $$;
 revoke all on function private.student_accounts_on(text) from public, anon, authenticated;
 
@@ -286,7 +301,7 @@ begin
     raise exception 'semester: that needs % at your school', want_capability using errcode = 'insufficient_privilege';
   end if;
   if not private.student_accounts_on(school) then
-    raise exception 'semester: student accounts are off at your school (the module is off, or no finance owner is named)'
+    raise exception 'semester: student accounts are off at your school (the module is off, or no finance owner holding bursar:post is named)'
       using errcode = 'insufficient_privilege';
   end if;
   return school;
