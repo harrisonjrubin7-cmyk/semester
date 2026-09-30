@@ -858,7 +858,7 @@ a:hover {
   font-size: calc(12px * var(--text-scale, 1));
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  transition: color 120ms ease;
+  transition: color var(--duration-fast) ease;
 }
 .rail .rail-item:hover {
   color: var(--app-accent-bright);
@@ -8027,7 +8027,7 @@ section[data-drop] > .grip + * {
   border-top: 1px solid var(--app-line-top);
   border-radius: var(--r-lg) var(--r-lg) 0 0;
   background: var(--app-panel);
-  animation: explain-rise 200ms var(--ease);
+  animation: explain-rise var(--duration-standard) var(--ease);
 }
 
 @media (min-width: 840px) {
