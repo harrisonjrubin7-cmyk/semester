@@ -3520,3 +3520,44 @@ what the module would be on the site without offering it.
   "no gift has been taken", and forbids a solicitation on either. The company
   site (`company-site/index.html`) does not carry them yet.
 
+
+## D-160 · A security gap audit: what was closed, what was laid as a foundation, and what is left to people
+
+**Decided 30 Sep 2026.** The FERPA/LTI checklist, the runbook and the
+architecture-hardening briefs were read as evidence, not authority, against
+`main` and the open drafts. The record is
+[SECURITY-GAP-AUDIT-2026-09-30.md](SECURITY-GAP-AUDIT-2026-09-30.md). This is
+not a penetration test and claims nothing about FERPA.
+
+- **Closed, each shown red before or under a mutation:**
+  - LTI envelope: a token header that names a key (`jku`, `x5u`, `x5c`,
+    `jwk`) or an algorithm other than RS256 is refused before a key is fetched;
+    `jwtVerify` is pinned to that algorithm, the registration's issuer and
+    audience, a maximum token age and required claims; `nbf`, token age and a
+    foreign `azp` on a single audience are refused; `sub` and library errors
+    leave the logs; key-set refresh limits are pinned.
+  - Termination: SCIM deprovisioning did not revoke `role_grants`, which is
+    what `has_capability` reads, so a removed staff member kept school-scoped
+    authority. A trigger revokes that person's live school-scope grants for
+    that school; suspension revokes nothing; reactivation does not restore
+    authority; a backfill repairs people already deprovisioned.
+  - Endpoints: every edge function has `verify_jwt = false` by design, so one
+    without its own check would have been open. Each is now listed with the
+    credential it answers to, and its source must carry the evidence.
+- **A foundation for a control that did not exist:** staged roster imports
+  (per-school, server-only, closed row shape, manifest and digest validation,
+  a held-on-large-removal threshold with a second-person approver,
+  idempotent, reconcilable, reversible, refusing deletes under a legal hold).
+  There is **no OneRoster client and no live data path**; EDT-6 stays
+  NOT_STARTED and nothing may say Semester supports OneRoster.
+- **Left, and why:** the legitimate-purpose code list, `legal_basis`, the
+  meaning of a signature and retention of staged roster rows are counsel's; the
+  access-review cadence, staff export policy and JIT elevation are policy; an
+  unbound LTI registration launching with a warning is a recorded product
+  decision, not a bug; a person/alias identity table and a sweep of every RPC
+  for tenant context are larger than an unambiguous fix.
+- **Not applied to production.** The migrations are drafts. Applying
+  `20260930210000` revokes live grants of people already deprovisioned (the
+  backfill), which is the intent and is still a data change; it wants a look at
+  the affected rows first.
+- **Claims.** No claim moves. Not FERPA compliant, not certified, not pilot-ready.
