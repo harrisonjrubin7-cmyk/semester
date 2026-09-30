@@ -178,6 +178,7 @@ If the answer is none of the three, do not build it yet.
 - [Evidence Register](EVIDENCE-REGISTER.md)
 - [Trust Evidence Register](trust/EVIDENCE-REGISTER.md)
 - [Milestones 1 and 2 evidence](MILESTONE-1-2-EVIDENCE.md)
+- [M1/M2 automated verification — 30 September 2026](evidence/m1-m2/2026-09-30-automated-verification.md)
 - [Roadmap audit](ROADMAP-AUDIT.md)
 - [Product implementation status](IMPLEMENTATION_STATUS.md)
 - [Interactive dashboard](../ops/master-plan/index.html)
