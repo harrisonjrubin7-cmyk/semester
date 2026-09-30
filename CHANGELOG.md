@@ -63,6 +63,17 @@ for nothing.
 
 Nothing to do.
 
+### Advisor shares and planning screens say where things came from
+
+When you preview or send an advisor meeting, it now ends with "Where this comes
+from, and what it assumes": which parts you wrote, which are your own estimate,
+the day it was prepared, and that nothing in it comes from the school's records
+or is a degree audit. A share made before this still opens as it did. The
+graduation projection and the study-abroad credit picture now carry a source
+label and say plainly that they are not an official degree audit or credit
+evaluation. On the university settings page, the Modules tab no longer says its
+settings "could not be read" while they are still loading. Nothing to do.
+
 ### Action Center: more snooze times, and say why you hid something
 
 Where the Action Center is switched on: beside "Snooze until tomorrow" there is

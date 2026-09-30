@@ -44,8 +44,8 @@ Evidence goes in `docs/evidence/` (today it holds only the AI runs of 29 Sep). S
 | | |
 | --- | --- |
 | **Pass when** | Every fact shown from a source carries one of the five labels (Institution verified, Imported, Student entered, Estimated, Needs review) and either a real "updated" time or the words "Update time not recorded"; a test enforces it on the pilot-critical screens. |
-| **Today** | Labels exist and are DB-checked on four tables (`source.test.ts`). Today's commitments and actions carry them; unknown age now says so in words (M2). Degree, Grades and Registrar are held to the badge by `decisionlabels.test.ts`. |
-| **Missing** | Advisor share payload has no sources, assumptions or freshness. `GraduationSimulator`, `StudyAbroad`, the advisor views, and the registration cart/backups carry no badge. Core tables (`notes`, `courses`, `tasks`) have no per-record authority. Course dates have no stored last-checked time, so "Updated N days ago" cannot be honest yet. |
+| **Today** | Labels exist and are DB-checked on four tables (`source.test.ts`). Today's commitments and actions carry them; unknown age now says so in words (M2). Degree, Grades and Registrar are held to the badge by `decisionlabels.test.ts`. The graduation simulator and study abroad now carry a badge and "not an official degree audit / credit evaluation" wording, and an advisor share now lists where each part came from, what it assumes and the day it was prepared (older shares open without it). |
+| **Missing** | The registration cart and ranked backups, and the core student tables (`notes`, `courses`, `tasks`), carry no per-record authority label. Course dates have no stored last-checked time, so "Updated N days ago" cannot be honest yet; the badge says "Update time not recorded". |
 | **Status** | PARTIAL |
 
 ### G5 — Restore and rollback evidence
