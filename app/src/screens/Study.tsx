@@ -1,5 +1,6 @@
 import { useCoursePublications } from '../lib/courserules';
 import {StudyJournal} from '../components/StudyJournal';
+import {FeedbackInbox} from '../components/FeedbackInbox';
 import { StudyStudio } from '../components/StudyStudio';
 import { Toolkit } from '../components/toolkit/Toolkit';
 import { on, TOOLKIT_FLAGS } from '../lib/toolkit/flags';
@@ -357,6 +358,7 @@ export function Study({
         row is gone, and every destination it named is still reachable.
       */}
       <StudyJournal/>
+      <FeedbackInbox/>
       {exam && (
         <Blueprint
           style={{

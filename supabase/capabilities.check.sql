@@ -269,7 +269,18 @@ begin
   -- operator roles, approval:decide for platform_admin, breakglass:request
   -- for platform_admin and incident_responder).
   -- 112 before the commercial core migration added six role-capability pairs.
-  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 118);
+  -- 118 before the Migration Center (20260929200000_migration_center.sql)
+  -- added eleven: migration:manage and :view for implementation_manager and
+  -- integration_admin, migration:approve and :view for registrar,
+  -- university_admin and dean, and migration:view for institutional_researcher.
+  -- 129 before the academic-record ledger (20260929210000_academic_record_ledger.sql)
+  -- added seven: record:propose, :approve, :override and :read for registrar,
+  -- record:propose for faculty, record:approve and :read for dean.
+  -- 136 before student accounts (20260929220000_student_accounts.sql) added
+  -- nine: finance:request, :approve and :read for student_accounts_officer,
+  -- finance:request and :read for financial_aid_officer, and finance:approve,
+  -- :approve_high, :close and :read for business_admin.
+  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 145);
 
   perform pg_temp.become_anon();
   perform pg_temp.refused('a signed-out visitor cannot read the matrix',

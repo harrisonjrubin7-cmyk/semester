@@ -95,7 +95,7 @@ against it, and the lowest master row behind the standard.
 | The student must know which office owns a problem | No Wrong Door support routing | STU-012 (tested) | tested |
 | Course content is a file repository | A source-aware, accessible learning workspace | LMS-003 (building), AI-004 (building), AI-005 (building) | building |
 | AI is inconsistent and ungoverned | Course- and institution-controlled AI with visible limits | AI-006 (building), AI-008 (building), AI-012 (evidenced) | building |
-| Grades appear without explanatory context | Rubric-linked, source-aware, reviewable feedback and grade history | LMS-006 (designed), LMS-013 (designed), LMS-014 (building) | designed |
+| Grades appear without explanatory context | Rubric-linked, source-aware, reviewable feedback and grade history | LMS-006 (designed), LMS-013 (building), LMS-014 (building) | designed |
 | Clubs and events are separate from student goals | Participation becomes optional evidence and opportunity discovery | UOS-003 (building), UOS-004 (building) | building |
 | Career systems ignore academic projects | A student-controlled skills and evidence graph | UOS-004 (building), UOS-007 (tested) | building |
 | Accessibility is retrofitted | Accessibility preferences and alternatives are native | A11Y-004 (tested), A11Y-005 (tested), A11Y-006 (designed) | designed |

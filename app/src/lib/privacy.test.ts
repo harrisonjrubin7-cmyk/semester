@@ -386,6 +386,11 @@ describe('"delete my account" really means every row', () => {
      */
     const { KEPT_TABLES } = await import('./cloud');
     expect(KEPT_TABLES.map((t) => t.table).sort()).toEqual([
+      // The academic-record ledger (lib/record/api.ts, D-145): the school's
+      // education record and the proposals behind it. academic_record_subjects,
+      // the link, goes with the account and is in OWNED_TABLES instead.
+      'academic_record_changes',
+      'academic_record_entries',
       'commercial_prices',
       'communities',
       'community_calibration_items',
@@ -423,12 +428,27 @@ describe('"delete my account" really means every row', () => {
       'integration_scopes',
       'integration_sync_errors',
       'integration_sync_runs',
+      // The Migration Center's tables (lib/migration/api.ts, D-144): a school's
+      // migrations and their evidence. Counts and fingerprints, never a record.
+      'migration_approvals',
+      'migration_field_maps',
+      'migration_projects',
+      'migration_runs',
       // Verified listings (lib/listings.ts, components/ListingDesk.tsx): an
       // office's or employer's publication. publisher_id is `on delete set null`.
       'opportunities',
       'organizations',
       'reports',
       'schools',
+      // Student accounts (lib/finance/api.ts, D-146): the school's financial
+      // record of its students' accounts, and its reconciliations and closes.
+      'student_account_closes',
+      'student_account_entries',
+      'student_account_reconciliations',
+      'student_account_requests',
+      'student_account_settings',
+      'student_payment_plan_installments',
+      'student_payment_plans',
       'study_packs',
       'subscriptions',
       'support_access_event',

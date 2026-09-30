@@ -2929,7 +2929,204 @@ afterwards, with its invite and its usage row.
   per-tenant switch row. The red-team is a floor: it is re-run on every model
   change and each quarter, and each run files beside the last.
 
-## D-143 · The AI providers' published terms are on file, verbatim, and nothing is signed
+## D-143 · Replace by domain is the destination, and the bar a domain must clear before it moves is computed, not asserted
+
+**Decided 29 Sep 2026.** Four briefs of the same day say Semester is meant to
+replace the fragmented university stack rather than sit beside it: connect
+first, replace by domain, operate as one system. The owner's note on the
+first reads "those are also supposed to be replaced by Semester — that's the
+whole point". The second gives the architecture principle for today, the
+third seventeen registration, LMS and service expansions, the fourth what
+must exist before an institution can retire a system.
+
+- **The destination changes; today's boundary does not.**
+  `docs/UNIVERSITY-OS-ARCHITECTURE.md` said Semester "is never the system of
+  record". That absolute is replaced by the destination: the system of record
+  for each domain an institution chooses to migrate. The list of what Semester
+  does not replace stays, re-headed *today*, because nothing in the tree yet
+  meets the fourth brief's bar, and the product roadmap's refusals (no official
+  degree audit, no auto-registration, no payment processing) stay in force
+  until a domain clears it. Health, counseling and clinical records, and
+  emergency response stay bounded however far replacement goes.
+- **Held to the tree the way D-125 held its two:** the four PDFs are kept
+  under `docs/expansion/`; `app/src/lib/replaceregister.ts` is the data;
+  `replaceregister.test.ts` renders `docs/DOMAIN-REPLACEMENT-REGISTER.md`,
+  refuses a status above the kind of file it cites, a path that does not
+  exist, and a supplied PDF as evidence. The seven source states are held to
+  the five labels the database enforces and to the freshness vocabulary; the
+  best next modules and the twelve final areas to rows that exist.
+- **Replaceability is computed.** A domain is replaceable only when its native
+  row and all fifteen replaceability requirements are held by a test. Today
+  none is: data migration, parallel run and change management are designed
+  only, and lifecycle, contractual support and exit are being built. The page
+  prints, per domain, what stops it. The test also holds the architecture page
+  to carrying this decision, so the two cannot drift apart silently.
+- **Statuses read down, never up.** Where the evidence was a labelled sandbox
+  with no store and no institution (`app/server/institution/*`), the native
+  row is *building* even when a test passes, because the join to a real
+  domain is what replacement means.
+
+## D-144 · The Migration Center is built: twelve stages, each opened only by its evidence, and no student record ever leaves the browser
+
+**Decided 29 Sep 2026.** The fourth brief of D-143 ranks a Migration Center
+first among what an institution needs before it can retire a system, and the
+domain replacement register computed that data migration and parallel run
+stopped every domain. The owner asked for it to be built.
+
+- **Four tables and a trigger** (`20260929200000_migration_center.sql`):
+  `migration_projects` holds the record the brief lists — source platform and
+  version, data owner, classifications, retention, historical cutoff,
+  duplicate rule, cutover date, rollback plan, archive location, required
+  approval areas; `migration_field_maps` the mapping and cleaning rules;
+  `migration_runs` and `migration_approvals` the evidence. A migration is born
+  at inventory and moves forward one stage at a time only when
+  `private.migration_gate_failures` returns nothing; it may go back until
+  cutover, which restarts the evidence of every stage it re-enters. Cutover
+  needs a date, a rollback plan and the latest decision in every required
+  area (at least two) to be an approval, recorded at cutover by a
+  `migration:approve` holder who did not open the migration.
+- **Evidence is counts and a fingerprint, never a record.** A sample export is
+  read, mapped, validated and reconciled in the browser (`lib/migration/
+  center.ts`); what is recorded is six counts and the file's SHA-256. `passed`
+  is a generated column, so nobody records "passed", and runs and approvals
+  are append-only except for the person reference account deletion clears.
+  The counts are the recorder's attributed claim about a file they hold; the
+  database cannot re-run them, and the table comment and the register say so.
+- **No function a client can call.** Every rule is a policy or a trigger, so
+  the grants allowlist and the definer register are unchanged. Three
+  capabilities (`migration:manage`, `:approve`, `:view`) on eleven role pairs;
+  the capability matrix pin moves from 118 to 129. Every write is audited to
+  `tenant_policy_audit_event`, attributed to the grant that allowed it.
+- **A University tab, Migration, behind `migrationCenter`** (off by default,
+  on in an institutional preview), shown only to an account holding a
+  migration capability at the school. The screen shows what the current stage
+  still needs in the database's own codes as sentences, offers the move only
+  when nothing is owed, and says beside the file picker that the file goes no
+  further.
+- **Registers moved down to what is true:** the Migration Center, the
+  migration record, the parallel run and the parallel-run requirement are
+  held by tests; data migration is *building*, because nothing yet imports
+  records into a Semester domain of record — none exists — so no domain is
+  replaceable yet. MIG-005 and MIG-006 in the master register move to
+  building; MIG-001 to MIG-004, which are about importing LMS course content,
+  do not move.
+- **Checked on PostgreSQL 16 here, not 17.** This container cannot install the
+  live project's major, so `check.sh` ran under `SEMESTER_CHECK_PG_ANY`, with
+  the second pass; CI runs 17 and is the authority.
+
+## D-145 · The academic-record ledger is built: nobody writes it, a second person's approval does, and every entry answers the brief's eight questions
+
+**Decided 29 Sep 2026.** The replaceability brief's second final area is an
+authoritative academic-record ledger for official grades, credits,
+enrollment, transcripts and credentials, kept "as seriously as a financial
+ledger". The owner asked for it to be built.
+
+- **Three tables and a trigger** (`20260929210000_academic_record_ledger.sql`).
+  A change is proposed in `academic_record_changes` with a reason, an
+  effective date and its source. When someone *other than its proposer*
+  approves it, `private.academic_record_change_guard` writes one row to
+  `academic_record_entries`, naming the entry it replaced and that entry's
+  value. No client holds a grant to write the ledger; the one security
+  definer function is that trigger, in `private` and revoked from every
+  client role, so the grants allowlist and the definer register are
+  unchanged.
+- **Append-only, for the owner too.** A correction is a new entry and a
+  reversal a `void` entry; an update or delete of an entry is refused to
+  every role, except the clearing of a person reference by account deletion
+  and the removal of a school.
+- **The override is the database's decision.** Correcting or voiding a
+  grade, a standing or a conferral that already has an entry in effect needs
+  an approver holding `record:override`; the trigger reads that from the
+  ledger rather than from a flag the client sends. Four capabilities on seven
+  role pairs (registrar all four, faculty propose, dean approve and read); the
+  capability matrix pin moves from 129 to 136.
+- **The record is the school's.** It is keyed by the school's own student
+  identifier, not a Semester account. `academic_record_subjects` links an
+  account so the student can read their own entries; an approver makes the
+  link, the student cannot, and deleting the account removes only the link.
+- **Not an official transcript.** `lib/record/ledger.ts` folds the ledger into
+  the record as it stood on any date and exports it as CSV headed "Not an
+  official transcript". Issuing a transcript or a credential is not done.
+- **A University tab, Academic record, behind `recordLedger`** (off by
+  default): find a student by identifier, the record on any date, each
+  line's history with the eight answers, proposing with an override warning,
+  and a queue in which an approver's own proposals have no Approve button.
+- **Assessed, high risk.** The ledger holds education records, so it has a
+  privacy impact assessment in `governance/pia.ts`, rated high, with four open
+  items: no student screen for inspection yet, no retention schedule set by a
+  school, faculty reach only with a school-wide grant, and linking is manual.
+- **Checked on PostgreSQL 16 here**, under `SEMESTER_CHECK_PG_ANY`, with the
+  second pass; CI runs 17 and is the authority.
+
+## D-146 · Student accounts are kept under financial controls, and no money moves through Semester
+
+**Decided 29 Sep 2026.** The replaceability brief's third final area is a
+financial-control system for invoices, payments, refunds, holds,
+reconciliation and audit: "financial controls as first-class architecture —
+not only payment buttons". The owner asked for it to be built.
+
+- **Nobody writes the account ledger** (`20260929220000_student_accounts.sql`).
+  Every charge, payment, refund, adjustment, reversal, aid credit
+  (scholarship, waiver, discount, sponsorship) and chargeback is a request;
+  `private.student_account_request_guard` writes one signed entry when
+  someone other than the requester approves it. Entries, reconciliations and
+  closes are append-only for every role, and a person column may only be
+  cleared, never changed.
+- **The brief's controls, in the database.** Above the school's threshold
+  ($1,000 by default) a refund, adjustment, reversal or aid credit needs
+  `finance:approve_high`. Whoever requested or approved a payment does not
+  approve its refund, reversal or chargeback — the brief's own example of
+  role separation. A refund never returns more than is left of the payment,
+  and an entry is reversed once, in full.
+- **Reconciliation and the monthly close.** The payment provider's settlement
+  file is read in the browser and its totals recorded; the ledger's side is
+  computed by the database from the ledger. A month closes only on a passing
+  reconciliation recorded by someone else, with nothing waiting, and then
+  takes nothing new: a correction is an entry in an open month.
+- **No money moves here, and no card is stored.** Payments go through the
+  school's hosted payment provider and are recorded by its reference. A run of
+  13 to 19 digits is refused in every field a person types. This keeps within
+  the owner's decision, in an open pull request, that the positioning
+  statement does not list payments: Semester keeps the account and its
+  controls; it does not process payments and does not claim to.
+- **Derived, and reproducible from the ledger:** the balance, its aging, a
+  financial hold (overdue past the school's window and above its minimum,
+  shown as the hold card's neutral sentence with no amount), a period's
+  statement, a payment-plan schedule and a receipt (`lib/finance/accounts.ts`).
+- **A University tab, Student accounts, behind `studentAccounts`** (off by
+  default). A student reads their own account through the link an approver
+  makes on the academic record (`academic_record_subjects`), on **Bill**,
+  above the figures they type themselves (`components/MyStudentAccount.tsx`,
+  same flag): what is owed today, its age, the hold with the school's own rule
+  (which a linked student may now read), every posted entry with a receipt for
+  each payment, later-dated charges apart, and a month's statement to
+  download. It never asks for who requested or approved an entry, and links
+  out to the school's payment page only when something is owed.
+- **Payment plans** (`20260929230000_student_payment_plans.sql`). From Bill,
+  a student asks to spread what they owe today over monthly payments: how
+  many, and when the first falls, today to 30 days on. The database, not the
+  student, reads the balance from the ledger and writes the schedule by the
+  school's rules (at least 10% first, at most six payments, none under $50 by
+  default, in `student_account_settings`), the last payment absorbing the
+  rounding so it sums to the cent — the same arithmetic as `paymentPlan`,
+  and the check suite and `accounts.test.ts` hold both to one schedule.
+  Someone holding `finance:approve` who did not ask agrees to it or declines,
+  and only while the balance is still the one asked for and the first
+  payment is not past. One plan is live at a time; the asker may withdraw one
+  not yet decided, an approver may cancel an agreed one with a reason the
+  student reads, and nothing else about a plan or its schedule changes.
+  Whether a plan is kept is read from the ledger (`planStanding`): what was
+  credited since it was asked for pays the schedule in order. A plan being
+  kept lifts the financial hold; one behind does not. Staff see the plan on
+  the account and decide plans in their own queue.
+- **Assessed, high risk,** in `governance/pia.ts`, owned by the finance seat,
+  with five open items. Capability matrix 136 → 145.
+- **Not built:** double-entry against general-ledger accounts, a bank leg in
+  reconciliation, tax configuration, any connection to a payment provider,
+  a plan-standing the database holds (the app works it out), and anything
+  sent to a student.
+
+## D-147 · The AI providers' published terms are on file, verbatim, and nothing is signed
 
 **Decided 29 Sep 2026.** The DPA checklist, the vendor risk register and the
 AI training policy each said the providers' training and retention terms were
