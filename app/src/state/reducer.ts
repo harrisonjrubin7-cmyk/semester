@@ -33,6 +33,7 @@ import { navigate } from './slices/navigate';
 import { notes } from './slices/notes';
 import { papers } from './slices/papers';
 import { schedule } from './slices/schedule';
+import { seen } from './slices/seen';
 import { settings } from './slices/settings';
 import { study } from './slices/study';
 
@@ -41,7 +42,7 @@ import { study } from './slices/study';
  * each one covers. The order is not load-bearing — no two slices claim the
  * same action, and the test above says so.
  */
-const SLICES = [navigate, study, schedule, mine, notes, made, mailbox, papers, library, settings];
+const SLICES = [navigate, study, schedule, mine, notes, made, mailbox, papers, library, settings, seen];
 
 /**
  * The slices, plus one thing they do not do.

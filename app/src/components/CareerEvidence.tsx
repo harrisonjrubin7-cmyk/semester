@@ -4,7 +4,7 @@ import type { CareerLibrary, Opportunity } from '../lib/career';
 import {
   ARTIFACT_KINDS,
   EMPTY_EVIDENCE,
-  EVIDENCE_PREFIX,
+  evidenceKey,
   METRIC_PROMPTS,
   TEMPLATES,
   addOwnSkill,
@@ -43,7 +43,7 @@ const SECTIONS = [
 ] as const;
 type Section = (typeof SECTIONS)[number][0];
 
-export const evidenceKey = (accountId: string | undefined, term: string) => `${EVIDENCE_PREFIX}:${accountId || 'device'}:${term}`;
+export { evidenceKey };
 
 /**
  * Career Evidence (`career_evidence`, Phase I), the Evidence tab in Career.

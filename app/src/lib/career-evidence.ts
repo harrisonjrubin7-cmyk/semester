@@ -24,6 +24,9 @@ import type { SkillClaim, SkillEvidenceLink } from './skills-graph';
  */
 
 export const EVIDENCE_PREFIX = 'semester.career-evidence.v1';
+
+/** This account's evidence for this term. Shared by the Career screen and anything that saves into it. */
+export const evidenceKey = (accountId: string | undefined, term: string) => `${EVIDENCE_PREFIX}:${accountId || 'device'}:${term}`;
 export const LIMITS = { own: 40, artifacts: 60, bullets: 200, versions: 12, employers: 30, text: 300, long: 2000 } as const;
 
 export type SkillState = 'suggested' | 'confirmed' | 'rejected';

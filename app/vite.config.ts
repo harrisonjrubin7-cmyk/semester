@@ -769,6 +769,7 @@ const MOCKS_MODULES = [
   'src/screens/university.helpcount.test.tsx',
   'src/state/deeplink.test.tsx',
   'src/state/persist/firstrun.test.ts',
+  'src/state/persist/leaving.test.ts',
   'src/state/persist/tell.test.ts',
   'src/state/pushlater.test.tsx',
   'src/state/storetoken.test.tsx',

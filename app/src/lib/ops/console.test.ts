@@ -36,7 +36,7 @@ import { cell, controlLine, link, renderedFrom, table } from './render';
  * drawing of a control rather than one. Each is refused here. The escalation
  * ladder is shown a day count on each side of each step before it is trusted.
  *
- * The thirteen capabilities are held the same way the production rules are: a
+ * The fourteen capabilities are held the same way the production rules are: a
  * `done` row needs a test or a check among its holders, and every holder must
  * be in the tree, so a row cannot be done by assertion.
  *
@@ -168,13 +168,13 @@ describe('production rules and the conversion', () => {
   });
 });
 
-describe('the thirteen capabilities', () => {
-  it('names the thirteen the prototype faked, each once, with what replaced it', () => {
-    expect(CAPABILITIES).toHaveLength(13);
-    expect(new Set(CAPABILITIES.map((c) => c.id)).size).toBe(13);
+describe('the fourteen capabilities', () => {
+  it('names the fourteen the prototype faked, each once, with what replaced it', () => {
+    expect(CAPABILITIES).toHaveLength(14);
+    expect(new Set(CAPABILITIES.map((c) => c.id)).size).toBe(14);
     expect(CAPABILITIES.map((c) => c.id)).toEqual([
       'saved-views', 'operator-identity', 'roles', 'authorization', 'audit-log', 'fail-closed', 'two-person',
-      'commercial-core', 'figures', 'support-access', 'break-glass', 'evidence', 'environment',
+      'commercial-core', 'figures', 'support-access', 'break-glass', 'evidence', 'command-center', 'environment',
     ]);
     for (const c of CAPABILITIES) {
       expect(/^[a-z0-9-]+$/.test(c.id), c.id).toBe(true);
@@ -210,7 +210,7 @@ describe('the thirteen capabilities', () => {
 
   it('lists the views the screen offers, each once, and each in the map', () => {
     expect(new Set(VIEWS.map((v) => v.id)).size).toBe(VIEWS.length);
-    expect(VIEWS.map((v) => v.view)).toEqual(['Approvals', 'Break-glass', 'Audit', 'Customers', 'Figures', 'Evidence', 'Views']);
+    expect(VIEWS.map((v) => v.view)).toEqual(['Command center', 'Approvals', 'Break-glass', 'Audit', 'Customers', 'Figures', 'Evidence', 'Views']);
     for (const v of VIEWS) expect(v.shows.length, v.id).toBeGreaterThan(40);
   });
 
@@ -240,7 +240,7 @@ function render(): string {
     'as data first (D-110) so that a test holds it and a screen cannot quietly',
     're-decide it; the console (`app/src/screens/Console.tsx`) and the',
     'migrations behind it now read it, and the last two sections say which file',
-    `holds each of the thirteen things the prototype faked. ${ref(MAP)} is the`,
+    `holds each of the fourteen things the prototype faked. ${ref(MAP)} is the`,
     'map of the console’s views.',
     '',
     `Parties: ${Object.entries(PARTY_MEANING).map(([k, v]) => `**${k}** — ${v}`).join('; ')}.`,
@@ -345,7 +345,7 @@ function render(): string {
     '',
     '## From prototype to control plane',
     '',
-    'The thirteen things the prototype faked, what production needed instead, and',
+    'The fourteen things the prototype faked, what production needed instead, and',
     'the files that hold each. `done` needs a test or a check among the holders',
     'and every holder in the tree; the test refuses a row that is done by',
     'assertion.',
@@ -406,6 +406,7 @@ function renderMap(): string {
     '',
   ];
   const behind: Record<string, string[]> = {
+    command: ['command-center'],
     approvals: ['two-person', 'fail-closed'],
     'break-glass': ['break-glass'],
     audit: ['audit-log'],

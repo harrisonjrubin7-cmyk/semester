@@ -11,6 +11,12 @@ until the owner (Harrison Rubin) reopens it here.
 
 Status values: **Decided** · **Proposed — needs owner** · **Superseded**.
 
+**This log is closed at D-160.** Each later decision is its own file in
+[`decisions/`](decisions/README.md), named for the pull request that records
+it (`D-<pull request number>.md`), so two open pull requests can never take
+the same number or edit the same lines. The numbers here stand, and are cited
+as before.
+
 Owner approvals: D-003, D-005 and D-011 approved 27 Sep 2026 (in the
 session that opened #763). For D-005 the approval covers the recommendation
 as written: definitions and on-device counts now, and each server-collected
@@ -3363,6 +3369,17 @@ already in the tree under the design-debt register and needs no decision.
 - **The design brief's five destinations** (Today, My Path, Search, Plan, Me)
   **conflict with the seven roots on main** and with `DO-NOT-BUILD.md` #1.
   Existing decision holds; not reopened here.
+- **Owner's answer, 30 Sep 2026.** Build the Recovery Center's first phase only,
+  with the proposed answers to its open questions: no per-plan versions, no
+  account cooling-off. The Access Simulator and the five-destination navigation
+  stay parked; the navigation still conflicts with `DO-NOT-BUILD.md` #1.
+- **What R1 built, and a correction.** A list of the drafts a device holds, the
+  restore claim on `Recovery` corrected (it said nothing could be restored while
+  `Export` restores from copies the app takes by itself), and links to that
+  restore and to `Behind`. The first version of `RECOVERY-CENTER.md` said
+  "Restart my week" was absent; it was not (`screens/Behind.tsx`), and the page
+  is corrected. A per-deadline "set aside" needs new persisted state and is left
+  as an open question.
 
 ## D-154 · The load harness covers the open and sync every student makes, and a push that loses an update fails it
 
@@ -3453,45 +3470,100 @@ edit silently won. Both were corrected, and nothing was rebuilt.
   device identity exists, so the screen says "this device" and "the other".
 
 
-## D-158 · Schools configure their own Semester in a Configuration Studio, a second person publishes it, and nothing reads it yet
+## D-156 · The fifteen cross-platform features are built in slices, each reading what the student already holds, and none acts without their review
 
-**Decided 30 Sep 2026.** The platform brief's first "highest-leverage final
-addition" is a no-code Configuration Studio: "one configurable codebase rather
-than hundreds of custom deployments". The owner asked for the briefs to be
-executed and chose this as the first slice.
+**Proposed — needs owner.** The owner supplied a document of fifteen
+cross-platform features (My Commitments, the decision journal, What Changed,
+inbox-zero, templates, the resource guarantee, the workload contract and
+fairness engine, retrospectives, Prepare Me, handoff packs, skills transfer,
+the archive, focus modes, learning continuity) and asked for all of them. This
+records how they are being built, so the owner can correct it.
 
-- **One table, versioned** (`20260930230000_configuration_studio.sql`).
-  `school_config_versions`: at most one draft per school and domain, and
-  published versions 1, 2, 3 … that no client edits or deletes. The current
-  configuration is the highest version. A rollback is a new draft copied from
-  an older version and published like any other, so history is never
-  rewritten. Eleven domains, as the brief lists them.
-- **A closed spec, checked twice.** `private.config_spec()` is a list of keys
-  with a type and a range per domain; the database refuses an unknown key or
-  an out-of-range value on every write, drafts included. `lib/config/studio.ts`
-  carries the same spec for the screen and `studio.test.ts` holds the two
-  equal. There is no free-form key, typed text refuses a run of 13 to 19
-  digits, and a version is capped at 8 KB.
-- **Whoever drafted a change does not publish it.** `config:manage` drafts,
-  `config:publish` publishes, `university_admin` holds both and still cannot
-  publish their own draft. Publishing changes nothing else in the row, so what
-  was reviewed is what goes live. Every draft, save, publish and discard is
-  written to `tenant_policy_audit_event` with the actor's grant.
-- **Floors can rise and not fall.** The reporting threshold starts at the
-  platform's n = 10 (`MIN_COHORT`) and the spec's minimum is 10.
-- **It is honest that nothing reads it.** No feature consults these settings
-  yet. The screen says so first, `effectiveConfig` is the seam each domain
-  will be wired through one at a time, and `docs/CONFIGURATION-STUDIO.md`
-  lists which feature would read which domain. Calling the settings "live"
-  before then would be the overclaim this log keeps refusing.
-- **A University tab, Configuration, behind `configurationStudio`** (off by
-  default; `VITE_CONFIGURATION_STUDIO`). Capability matrix 145 → 155.
-- **Checked.** `configuration-studio.check.sql`, 63 checks, each guard shown
-  red when removed and green when restored (the second-person rule, the
-  publish capability, the spec, the floor, the `based_on` check, publish-as-
-  reviewed and the published-immutable trigger, the last by running as the
-  table's owner so row-level security does not answer for it).
-- **Not built:** the Workflow Builder and policy engine, the University
-  Digital Twin and Scenario Simulator, the Continuity Center, the Technology
-  Portfolio, the Service Design Studio and the Academic Operations Center;
-  see the table at the end of `docs/CONFIGURATION-STUDIO.md`.
+- **Slices, audited first.** Each slice is checked against `origin/main` and the
+  open pull requests before it starts (CLAUDE.md). Where a module already
+  holds most of a feature, it is extended rather than duplicated:
+  `community/services.ts` for the resource guarantee, `advisor-meeting.ts`'s
+  share-payload pattern for handoff packs.
+- **Nothing is created or sent on the student's behalf.** What Changed only
+  reports and the one write is "Got it"; Prepare Me gathers, and its handoff
+  pack needs a tick per field from a fixed list per destination; suggestions
+  never become deadlines or actions until confirmed.
+- **Derived, not asserted.** Conflicts, free windows and recovery options are
+  arithmetic on stated times; a missing commute is zero; a slot with nothing
+  behind it is reported as missing. No difficulty score.
+- **Aggregates only for institutions.** Anything cohort-level (the fairness
+  engine) is aggregate and suppresses small cells; none reads an individual.
+- **Not built here, on purpose:** Focus Modes, which open PR #725 already
+  covers, and the learning-map overlap with PR #1010 for the workload contract
+  and learning continuity, until those land. Status per feature is in
+  `docs/CROSS-PLATFORM-FEATURES-REGISTER.md`.
+- **Numbering.** Open pull requests may also claim D-156; whoever merges second
+  renumbers.
+
+## D-157 · Alumni relations and fundraising are described on the site and built by no one yet
+
+**Decided 30 Sep 2026.** The site to-do (S7) asks for an advancement module
+and its two pages. Following D-141's pattern for the K–12 edition, this puts
+what the module would be on the site without offering it.
+
+- **`app/src/lib/advancement/edition.ts`** holds three parts (alumni relations,
+  giving, the advancement office's console), each *planned*, each saying what
+  it would do and what it still needs. Its test holds that no gift, donor,
+  pledge, giving-campaign or advancement table exists, so a row cannot stay
+  "planned" once the money side lands. A record of who graduated and the
+  consents they give is not money, and may land on its own.
+- **Not planned, and said so:** wealth screening and predictive donor
+  scoring. DO-NOT-BUILD rule 3 refuses a ranking nobody can explain, and a
+  donor's capacity to give is inferred about them, not told to the school.
+- **Not decided here, and the pages say so:** how a gift would be paid, and a
+  price. The brief names a payment provider for recurring gifts; D-146 says no
+  money moves through Semester. Those two disagree, and it is the owner's
+  call, so neither page names a provider or a figure.
+- **Waits on counsel** for charitable-solicitation registration, state by
+  state, and for the wording of tax receipts, before the module is offered.
+- **Pages:** `/solutions/advancement/` and `/alumni/`. The site test holds
+  both to "no school uses Semester for alumni relations or fundraising" and
+  "no gift has been taken", and forbids a solicitation on either. The company
+  site (`company-site/index.html`) does not carry them yet.
+
+
+## D-160 · A security gap audit: what was closed, what was laid as a foundation, and what is left to people
+
+**Decided 30 Sep 2026.** The FERPA/LTI checklist, the runbook and the
+architecture-hardening briefs were read as evidence, not authority, against
+`main` and the open drafts. The record is
+[SECURITY-GAP-AUDIT-2026-09-30.md](SECURITY-GAP-AUDIT-2026-09-30.md). This is
+not a penetration test and claims nothing about FERPA.
+
+- **Closed, each shown red before or under a mutation:**
+  - LTI envelope: a token header that names a key (`jku`, `x5u`, `x5c`,
+    `jwk`) or an algorithm other than RS256 is refused before a key is fetched;
+    `jwtVerify` is pinned to that algorithm, the registration's issuer and
+    audience, a maximum token age and required claims; `nbf`, token age and a
+    foreign `azp` on a single audience are refused; `sub` and library errors
+    leave the logs; key-set refresh limits are pinned.
+  - Termination: SCIM deprovisioning did not revoke `role_grants`, which is
+    what `has_capability` reads, so a removed staff member kept school-scoped
+    authority. A trigger revokes that person's live school-scope grants for
+    that school; suspension revokes nothing; reactivation does not restore
+    authority; a backfill repairs people already deprovisioned.
+  - Endpoints: every edge function has `verify_jwt = false` by design, so one
+    without its own check would have been open. Each is now listed with the
+    credential it answers to, and its source must carry the evidence.
+- **A foundation for a control that did not exist:** staged roster imports
+  (per-school, server-only, closed row shape, manifest and digest validation,
+  a held-on-large-removal threshold with a second-person approver,
+  idempotent, reconcilable, reversible, refusing deletes under a legal hold).
+  There is **no OneRoster client and no live data path**; EDT-6 stays
+  NOT_STARTED and nothing may say Semester supports OneRoster.
+- **Left, and why:** the legitimate-purpose code list, `legal_basis`, the
+  meaning of a signature and retention of staged roster rows are counsel's; the
+  access-review cadence, staff export policy and JIT elevation are policy; an
+  unbound LTI registration launching with a warning is a recorded product
+  decision, not a bug; a person/alias identity table and a sweep of every RPC
+  for tenant context are larger than an unambiguous fix.
+- **Not applied to production.** The migrations are drafts. Applying
+  `20260930210000` revokes live grants of people already deprovisioned (the
+  backfill), which is the intent and is still a data change; it wants a look at
+  the affected rows first.
+- **Claims.** No claim moves. Not FERPA compliant, not certified, not pilot-ready.

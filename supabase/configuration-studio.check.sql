@@ -1,4 +1,4 @@
--- The Configuration Studio (D-158): who may draft and who may publish a
+-- The Configuration Studio (D-1011): who may draft and who may publish a
 -- school's configuration, that whoever drafted it does not publish it, that a
 -- published version is never edited or deleted, that every write is held to
 -- the closed spec (unknown keys, wrong types and out-of-range values are

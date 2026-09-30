@@ -21,6 +21,10 @@ import { readFamily } from './family';
 import { PATH_PROFILE_PREFIX, readPathProfile } from './path-profile';
 import { readPathway } from './pathway';
 import { readUniversityDrafts } from './university';
+import { FEEDBACK_PREFIX, readInbox } from './feedbackloop';
+import { MAP_PREFIX, readMap } from './learningmap';
+import { PREFS_PREFIX, readPrefs } from './learningprefs';
+import { STUDY_JOURNAL_PREFIX, readJournal } from './studyjournal';
 
 /**
  * A backup for the device workspaces the main one does not reach.
@@ -162,6 +166,10 @@ const DEFINITIONS: Record<string, Definition> = {
   sourceLocker: { label: 'Source Locker choices', prefix: LOCKER_KEY, scope: 'device', read: readLocker },
   studyReadiness: { label: 'Study readiness marks', prefix: READINESS_KEY, scope: 'device', read: readReadiness },
   careerEvidence: { label: 'Career evidence', prefix: EVIDENCE_PREFIX, scope: 'term', read: readEvidence },
+  feedbackInbox: { label: 'Feedback you filed', prefix: FEEDBACK_PREFIX, scope: 'term', read: readInbox },
+  learningMap: { label: 'Your learning map: concepts, questions and Start Here Check', prefix: MAP_PREFIX, scope: 'term', read: readMap },
+  studyJournal: { label: 'Your study journal: mistakes, what you learned and when to revisit', prefix: STUDY_JOURNAL_PREFIX, scope: 'term', read: readJournal },
+  learningPrefs: { label: 'Learning preferences', prefix: PREFS_PREFIX, scope: 'account', read: readPrefs },
 };
 
 /** Every prefix this backup covers, for the guard in `workspace-backup.coverage.test.ts`. */
