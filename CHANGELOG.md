@@ -24,6 +24,16 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### On the public site: a page for the K–12 edition
+
+A new page, `/k-12/`, describes Semester for high school: who it would start
+with, how each part of the app would be set up for a school, and the 26-week
+pilot it would offer. It says plainly that no district or school uses
+Semester today and that a district's student data is not accepted yet, with
+how many of the things that waits on are still undone.
+
+Nothing to do.
+
 ### Making an account now asks for your date of birth
 
 When you create an account, the form asks for your date of birth. You need to
