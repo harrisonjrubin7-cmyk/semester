@@ -60,6 +60,14 @@ export interface RegistrationDayData {
    */
   /** The credits the student means to register for. No default: Semester does not guess a load. */
   creditTarget: number | null;
+  /**
+   * Three more numbers the student may enter for the term-load check
+   * (`lib/termload.ts`). Optional in storage and absent from older saves; the
+   * limits are their school's, as they read them, never something Semester knows.
+   */
+  minCredits: number | null;
+  maxCredits: number | null;
+  studyHours: number | null;
   /** Their school's registration system, as they typed it. `https:` only (`safePortalUrl`). */
   portalUrl: string | null;
   /** Reminders the day before and an hour before, through the registrar-deadline rule. */
@@ -80,6 +88,9 @@ export const EMPTY_REGISTRATION_DAY: RegistrationDayData = {
   backups: {},
   checks: [],
   creditTarget: null,
+  minCredits: null,
+  maxCredits: null,
+  studyHours: null,
   portalUrl: null,
   remind: true,
   manual: false,
@@ -150,13 +161,17 @@ export function readRegistrationDay(value: unknown): RegistrationDayData {
   const checks = [...new Set(value.checks.filter((c): c is string => typeof c === 'string' && known.has(c)))];
   const target = value.creditTarget;
   const creditTarget = typeof target === 'number' && Number.isFinite(target) && target > 0 && target <= 40 ? target : null;
+  const within = (v: unknown, max: number) => (typeof v === 'number' && Number.isFinite(v) && v > 0 && v <= max ? v : null);
+  const minCredits = within(value.minCredits, 40);
+  const maxCredits = within(value.maxCredits, 40);
+  const studyHours = within(value.studyHours, 100);
   const portalUrl = typeof value.portalUrl === 'string' ? safePortalUrl(value.portalUrl) : null;
   const remind = value.remind !== false;
   const manual = value.manual === true;
   // Tolerant on purpose: a note the student can re-make is not worth refusing
   // the whole plan over, so anything that is not a handoff reads as none.
   const handoff = readHandoff(value.handoff);
-  return { opensAt, source, backups, checks, creditTarget, portalUrl, remind, manual, handoff };
+  return { opensAt, source, backups, checks, creditTarget, minCredits, maxCredits, studyHours, portalUrl, remind, manual, handoff };
 }
 
 export type Phase = 'unset' | 'later' | 'soon' | 'open';

@@ -39,12 +39,58 @@ describe('what a share carries', () => {
     const p = sharePayload(meeting({ attach: { scenario: 's1', courses: ['e3'], followUps: true } }), resolved);
     expect(p.scenario?.name).toBe('Study abroad');
     expect(p.followUps).toEqual(['Email the department']);
-    expect(payloadLines(p).map((s) => s.heading)).toEqual(['Agenda', 'Questions', 'Plan scenario: Study abroad', 'Courses being considered', 'Follow-up actions']);
+    expect(payloadLines(p).map((s) => s.heading)).toEqual(['Agenda', 'Questions', 'Plan scenario: Study abroad', 'Courses being considered', 'Follow-up actions', 'Where this comes from, and what it assumes']);
   });
 
   it('never has a field for notes, history, grades or anything else', () => {
     const p = sharePayload(meeting({ attach: { scenario: 's1', courses: ['e3'], followUps: true } }), resolved);
-    expect(Object.keys(p).sort()).toEqual(['agenda', 'courses', 'date', 'followUps', 'questions', 'scenario', 'sharedAs', 'title', 'version']);
+    expect(Object.keys(p).sort()).toEqual(['agenda', 'courses', 'date', 'followUps', 'provenance', 'questions', 'scenario', 'sharedAs', 'title', 'version']);
+  });
+});
+
+describe('where a share says it came from', () => {
+  const day = new Date(2026, 8, 30, 15, 0);
+
+  it('names each part attached, with the honest label, and the day it was prepared', () => {
+    const p = sharePayload(meeting({ attach: { scenario: 's1', courses: ['e3'], followUps: true } }), resolved, day);
+    expect(p.provenance?.preparedAt).toBe('2026-09-30');
+    expect(p.provenance?.sources.map((x) => x.label)).toEqual(['student_entered', 'estimated', 'student_entered', 'student_entered']);
+    expect(payloadLines(p).at(-1)).toMatchObject({ heading: 'Where this comes from, and what it assumes' });
+    const said = payloadLines(p).at(-1)!.items.join(' ');
+    expect(said).toContain('Estimated: Plan scenario');
+    expect(said).toContain('Prepared on 2026-09-30; it may have changed since.');
+    expect(said).toContain('not a degree audit or an official credit evaluation');
+    expect(said).toContain('does not know seat availability');
+  });
+
+  it('claims no source for what was not attached, and never a school record', () => {
+    const p = sharePayload(meeting(), { sharedAs: 'Sam', scenario: null, courses: [] }, day);
+    expect(p.provenance?.sources.map((x) => x.label)).toEqual(['student_entered']);
+    expect(JSON.stringify(p.provenance)).not.toMatch(/institution_verified|imported/);
+  });
+
+  it('is the same all day, so a preview does not change before it is sent', () => {
+    const a = sharePayload(meeting(), resolved, new Date(2026, 8, 30, 8, 0));
+    const b = sharePayload(meeting(), resolved, new Date(2026, 8, 30, 23, 59));
+    expect(a).toEqual(b);
+  });
+
+  it('still opens a share made before it existed, and says nothing about sources', () => {
+    const p = sharePayload(meeting(), resolved, day);
+    const { provenance: _drop, ...older } = p;
+    const read = readSharePayload(JSON.parse(JSON.stringify(older)));
+    expect(read.provenance).toBeUndefined();
+    expect(payloadLines(read).some((s) => s.heading.startsWith('Where this comes from'))).toBe(false);
+  });
+
+  it('refuses a provenance block that is not what it says it is', () => {
+    const p = sharePayload(meeting(), resolved, day);
+    const bad = (prov: unknown) => expect(() => readSharePayload({ ...p, provenance: prov })).toThrow('This share could not be read.');
+    bad({ ...p.provenance, preparedAt: 'yesterday' });
+    bad({ ...p.provenance, sources: [{ what: 'x', label: 'guaranteed' }] });
+    bad({ ...p.provenance, sources: new Array(9).fill({ what: 'x', label: 'estimated' }) });
+    bad({ ...p.provenance, assumptions: 'none' });
+    bad('yes');
   });
 });
 

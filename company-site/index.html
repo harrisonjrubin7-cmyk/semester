@@ -4,24 +4,21 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="semester-routing" content="path">
+<title>Semester · The student action platform</title>
 <meta name="description" content="Semester is a student action platform: plan your path, prepare for registration, learn from approved sources and stay in control of your data. Private beta.">
 <link rel="canonical" href="https://www.semester.website/">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 26'%3E%3Crect width='26' height='26' rx='5' fill='%23060607'/%3E%3Crect x='2' y='12' width='5' height='10' fill='%23b4b7bd'/%3E%3Crect x='10.5' y='6' width='5' height='16' fill='%23f5f5f7'/%3E%3Crect x='19' y='9' width='5' height='13' fill='%23d4af37'/%3E%3C/svg%3E">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Semester">
-<meta property="og:title" content="Semester — College is complicated. Your path should not be.">
+<meta property="og:title" content="Semester — Make your next academic decision with confidence.">
 <meta property="og:description" content="Semester is a student action platform: plan your path, prepare for registration, learn from approved sources and stay in control of your data. Private beta.">
 <meta property="og:url" content="https://www.semester.website/">
 <meta name="twitter:card" content="summary">
 <meta name="theme-color" content="#060607">
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Organization", "name": "Semester", "url": "https://www.semester.website", "email": "harrisonjrubin7@gmail.com", "founder": {"@type": "Person", "name": "Harrison Rubin"}, "sameAs": ["https://www.youtube.com/channel/UCtjKvFwHxfYxiy3-3WgdHwg", "https://www.instagram.com/semester_app/", "https://www.linkedin.com/company/semester-app/"], "description": "Semester is a student action platform: plan your path, prepare for registration, learn from approved sources and stay in control of your data. Private beta."}</script>
-</head>
-<body>
-
-<title>Semester Company Site</title>
-<meta name="description" content="Semester — the student action platform for students, departments, institutions and enterprise.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&amp;family=Archivo:wght@400;500;600;700;800&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Organization", "name": "Semester", "url": "https://www.semester.website", "email": "harrisonjrubin7@gmail.com", "founder": {"@type": "Person", "name": "Harrison Rubin"}, "sameAs": ["https://www.youtube.com/channel/UCtjKvFwHxfYxiy3-3WgdHwg", "https://www.instagram.com/semester_app/", "https://www.linkedin.com/company/semester-app/"], "description": "Semester is a student action platform: plan your path, prepare for registration, learn from approved sources and stay in control of your data. Private beta."}</script>
 <style>
 :root{
   color-scheme:dark;
@@ -273,6 +270,9 @@ footer{border-top:1px solid var(--line-soft);padding-block:56px 36px;margin-top:
 .foot .fh{font-family:var(--sans);font-weight:700;line-height:1.4;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);margin:0 0 12px}
 .foot a{display:block;font-size:13.5px;color:var(--ink-dim);text-decoration:none;padding-block:4px}
 .foot a:hover{color:var(--ink)}
+.foot-search{display:block;font:500 13.5px var(--sans);color:var(--ink-dim);background:none;border:0;padding:4px 0;cursor:pointer;text-align:left}
+.foot-search:hover{color:var(--ink)}
+.foot-search:focus-visible{outline:2px solid var(--focus);outline-offset:3px}
 .foot-b{margin-top:40px;padding-top:20px;border-top:1px solid var(--line-soft);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--ink-faint)}
 .final{text-align:center;padding-block:88px}
 .final h2{font-size:clamp(34px,5vw,60px);max-width:15ch;margin-inline:auto}
@@ -514,6 +514,8 @@ fieldset.gq legend .k{font-family:var(--mono);font-size:11px;color:var(--brass);
 .btn:disabled{opacity:.6;cursor:progress}
 .link{color:var(--brass-hi)}
 .nav-main a[aria-current="page"],.nav-main button.dd[data-current]{box-shadow:inset 0 -2px 0 var(--brass)}
+.nav-main>.dd-wrap{display:none}
+.nav-main>.primary-link{white-space:nowrap}
 header.nav{background:rgba(6,6,7,.86);border-bottom:0;box-shadow:0 1px 0 rgba(200,204,210,.14)}
 header.nav::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:1px;background:var(--chrome-line);pointer-events:none}
 .banner{background:linear-gradient(180deg,#101114,#0a0a0c)}
@@ -745,6 +747,24 @@ header.nav{box-shadow:0 1px 0 rgba(134,184,230,.12),0 18px 50px rgba(0,0,0,.2)}
 .app-bridge span:not(.pulse){font-size:12px;color:var(--ink-faint);line-height:1.45}
 .app-bridge a{grid-row:1/3;grid-column:3;color:var(--signal-hi);font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap}
 .app-bridge a:hover{text-decoration:underline;text-underline-offset:3px}
+.proof-rail{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:1px;background:rgba(134,184,230,.16);border:1px solid rgba(134,184,230,.2)}
+.proof-step{position:relative;min-height:154px;padding:22px 18px;background:linear-gradient(180deg,rgba(18,23,31,.97),rgba(10,12,17,.98))}
+.proof-step .k{display:block;margin-bottom:22px;color:var(--signal-hi);font-family:var(--mono);font-size:10px;letter-spacing:.12em}
+.proof-step h3{font-size:18px;line-height:1.2}
+.proof-step p{margin-top:8px;color:var(--ink-dim);font-size:13px;line-height:1.5}
+.proof-step:not(:last-child)::after{content:"\2192";position:absolute;z-index:2;right:-10px;top:24px;width:20px;text-align:center;color:var(--brass);background:var(--bg)}
+.status-map{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line-soft);border:1px solid var(--line-soft)}
+.status-col{padding:26px 24px;background:rgba(12,14,19,.94)}
+.status-col h3{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:21px}
+.status-col ul{margin:18px 0 0;padding:0;list-style:none;display:grid;gap:11px}
+.status-col li{position:relative;padding-left:17px;color:var(--ink-dim);font-size:14px;line-height:1.45}
+.status-col li::before{content:"";position:absolute;left:0;top:.55em;width:6px;height:6px;border-radius:50%;background:var(--signal)}
+.status-col.pilot li::before{background:var(--brass)}
+.status-col.future li::before{background:var(--slate)}
+.buyer-outcome{display:grid;grid-template-columns:1.05fr .95fr;gap:1px;background:var(--line-soft);border:1px solid var(--line-soft)}
+.buyer-outcome>div{padding:30px;background:rgba(12,14,19,.94)}
+.buyer-outcome .measure{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:20px}
+.buyer-outcome .measure span{padding:12px;border:1px solid rgba(134,184,230,.18);color:var(--ink-dim);font-size:13px}
 
 /* Match the campaign deck's structured blue/gold rhythm across marketing pages. */
 section.blk{padding-block:88px}
@@ -772,6 +792,7 @@ section.blk{padding-block:88px}
 footer{background:linear-gradient(180deg,#080a0e,#050506)}
 
 @media (max-width:1020px){.hero{padding-block:72px 62px}.hero-grid{grid-template-columns:1fr}.hero h1{max-width:13ch}.hero .phone{margin-top:12px}.hero .phone::before{left:-82px}.hero .phone::after{right:-72px}}
+@media (max-width:1020px){.proof-rail{grid-template-columns:repeat(2,1fr)}.proof-step:not(:last-child)::after{display:none}.status-map,.buyer-outcome{grid-template-columns:1fr}}
 @media (max-width:620px){
   .hero{padding-block:54px 46px}
   .hero::after{right:-470px;top:-390px}
@@ -784,6 +805,8 @@ footer{background:linear-gradient(180deg,#080a0e,#050506)}
 }
 @media (max-width:520px){#search-btn{display:none}.nav-right{gap:4px}.nav-row{gap:8px}}
 </style>
+</head>
+<body>
 
 <a class="skip" href="#main">Skip to content</a>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><linearGradient id="sm-chrome" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fafafa"/><stop offset=".3" stop-color="#d9dce1"/><stop offset=".5" stop-color="#9aa0a8"/><stop offset=".72" stop-color="#e3e6ea"/><stop offset="1" stop-color="#bfc3c9"/></linearGradient><linearGradient id="sm-silver" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c8ccd2"/><stop offset=".55" stop-color="#7d838b"/><stop offset="1" stop-color="#aeb3ba"/></linearGradient><linearGradient id="sm-gold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6e59a"/><stop offset=".5" stop-color="#d4af37"/><stop offset="1" stop-color="#b8932a"/></linearGradient></defs></svg>
@@ -796,6 +819,14 @@ footer{background:linear-gradient(180deg,#080a0e,#050506)}
       <span class="brand-word">SEMESTER</span>
     </a>
     <nav class="nav-main" aria-label="Main">
+      <a href="#product">Product</a>
+      <a href="#students">Students</a>
+      <a href="#institutions">Institutions</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#tools">Resources</a>
+      <a href="#trust">Trust</a>
+    </nav>
+    <template id="legacy-mega-navigation">
       <div class="dd-wrap">
         <button class="dd" type="button" aria-expanded="false" aria-controls="dd-prod" data-grp="product">Product ▾</button>
         <div class="dd-panel" id="dd-prod" hidden>
@@ -929,7 +960,7 @@ footer{background:linear-gradient(180deg,#080a0e,#050506)}
           <a href="#watch"><b>Watch on YouTube</b><span>Shorts, walkthroughs, podcast</span></a>
         </div>
       </div>
-    </nav>
+    </template>
     <div class="nav-right">
       <button class="btn btn-ghost btn-sm" type="button" id="search-btn" aria-label="Search the site" aria-haspopup="dialog"><svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M11 11l3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><span class="hide-m">Search</span></button>
       <a class="txt hide-m" href="https://harrisonjrubin7-cmyk.github.io/semester/#/login" target="_blank" rel="noopener" aria-label="Log in to the Semester app">Log in</a>
@@ -942,6 +973,10 @@ footer{background:linear-gradient(180deg,#080a0e,#050506)}
 <div class="drawer" id="drawer" hidden>
   <div class="drawer-in" role="dialog" aria-modal="true" aria-label="Menu">
     <div class="drawer-top"><span class="brand-word">SEMESTER</span><button class="btn btn-ghost btn-sm" type="button" id="drawer-close">Close</button></div>
+    <p class="grp">Explore Semester</p>
+    <a href="#product">Product</a><a href="#students">Students</a><a href="#institutions">Institutions</a><a href="#pricing">Pricing</a><a href="#tools">Resources</a><a href="#trust">Trust</a>
+    <button class="btn btn-ghost" style="margin-top:12px;justify-content:center" type="button" onclick="document.getElementById('drawer-close').click();document.getElementById('search-btn').click()">Search the complete site</button>
+    <template id="legacy-mobile-navigation">
     <p class="grp">Product</p>
     <a href="#product">Overview</a><a href="#experience">Demo (fictional data, no sign-in)</a><a href="#how-built">How Semester is built</a><a href="#integrations">Integrations</a><a href="#developers">Developers</a><a href="#compare">Compare approaches</a><a href="#roadmap">Roadmap</a><a href="#why-semester">Why Semester</a><a href="#data-governance">Data governance</a><a href="#system-boundaries">System boundaries</a><a href="#service-map">Service map</a><a href="#availability">Availability</a>
     <p class="grp">Solutions</p>
@@ -954,7 +989,8 @@ footer{background:linear-gradient(180deg,#080a0e,#050506)}
     <a href="#build-my-semester">Build my semester</a><a href="#tools">Registration checklist</a><a href="#academy">Academy</a><a href="#events">Events</a><a href="#help">Help</a><a href="#customer-portal">Customer portal</a><a href="#get-started">Get started</a><a href="#ai-literacy">AI literacy</a><a href="#kits">Procurement kits</a><a href="#feedback">Feedback</a><a href="#support-policy">Support policy</a><a href="#request-invite">Request an invite</a><a href="#start">After you sign up</a><a href="#launch-kit">Campus launch kit</a><a href="#ai-governance-canvas">AI Governance Canvas</a><a href="#navigation-diagnostic">Navigation Diagnostic</a><a href="#glossary">Glossary</a><a href="#credential-wallet">Credential Wallet (planned)</a>
     <p class="grp">Company</p>
     <a href="#company">About</a><a href="#community">Community</a><a href="#watch">Watch on YouTube</a><a href="#leadership">Leadership</a><a href="#careers">Careers</a><a href="#design-partners">Design partners</a><a href="#refer">Refer a friend</a><a href="#founders-letter">Founder's letter</a><a href="#fellows">Fellows</a><a href="#partner-portal">Partners</a><a href="#report">Report a concern</a><a href="#responsible-technology">Responsible technology</a><a href="#how-we-operate">How we operate</a><a href="#proof-policy">How we present proof</a><a href="#semester-standard">Semester Standard</a><a href="#community">Community programs</a><a href="#contact">Contact</a>
-    <a class="btn btn-primary" style="margin-top:18px;justify-content:center;border:0" href="https://harrisonjrubin7-cmyk.github.io/semester/#/signup" target="_blank" rel="noopener">Create your Semester account</a>
+    </template>
+    <a class="btn btn-primary" style="margin-top:18px;justify-content:center;border:0" href="https://harrisonjrubin7-cmyk.github.io/semester/#/signup" target="_blank" rel="noopener">Start planning free</a>
   </div>
 </div>
 
@@ -978,12 +1014,12 @@ footer{background:linear-gradient(180deg,#080a0e,#050506)}
   <section class="hero">
     <div class="wrap hero-grid">
       <div>
-        <p class="eyebrow brass">The student action platform</p>
-        <h1>College is complicated. <em>Your path</em> should not be.</h1>
-        <p class="lede">Semester brings your plan, courses, schedule, goals and next steps into one clear workspace, so you can see what matters, act with confidence, and stay in control of your information.</p>
+        <p class="eyebrow brass">Your next step, made clear</p>
+        <h1>Make your next academic decision <em>with confidence.</em></h1>
+        <p class="lede">Semester brings your plan, course options, deadlines, trusted learning materials and support pathways into one place—so you can understand what matters and take the next step.</p>
         <div class="ctas">
-          <a class="btn btn-primary" href="https://harrisonjrubin7-cmyk.github.io/semester/#/signup" target="_blank" rel="noopener">Create your account →</a>
-          <a class="btn btn-ghost" href="#request-invite">Request an invite</a>
+          <a class="btn btn-primary" href="https://harrisonjrubin7-cmyk.github.io/semester/#/signup" target="_blank" rel="noopener">Start planning free →</a>
+          <a class="btn btn-ghost" href="#experience">See the 90-second walkthrough</a>
         </div>
         <div class="app-bridge" aria-label="Continue to the Semester application">
           <span class="pulse" aria-hidden="true"></span>
@@ -1004,13 +1040,9 @@ footer{background:linear-gradient(180deg,#080a0e,#050506)}
       <div class="box">
         <p class="eyebrow brass" id="start-here-h">Start here · What brings you to Semester?</p>
         <div class="persona" role="group" aria-label="Choose what brings you here" id="persona">
-          <button type="button" data-p="student" aria-pressed="false">I am a student</button>
-          <button type="button" data-p="advising" aria-pressed="false">I work with students</button>
-          <button type="button" data-p="faculty" aria-pressed="false">I teach</button>
-          <button type="button" data-p="acadops" aria-pressed="false">I manage academic operations</button>
-          <button type="button" data-p="it" aria-pressed="false">I work in IT, security, or accessibility</button>
-          <button type="button" data-p="leader" aria-pressed="false">I lead a department or institution</button>
-          <button type="button" data-p="join" aria-pressed="false">I want to join or partner</button>
+          <button type="button" data-p="student" aria-pressed="false">Student · Start planning free</button>
+          <button type="button" data-p="leader" aria-pressed="false">Institution · Run a readiness pilot</button>
+          <button type="button" data-p="advising" aria-pressed="false">Faculty or advisor · See the workflow</button>
         </div>
         <div class="reco" id="reco" hidden><div><h3 id="reco-h" style="font-size:24px"></h3><p class="muted" id="reco-p" style="margin-top:6px"></p></div><div class="ctas"><a class="btn btn-primary btn-sm" id="reco-a" href="#"></a><button class="btn btn-ghost btn-sm" type="button" id="reco-reset">Reset</button></div></div>
         <p class="fine" style="margin-top:12px">Your choice only changes the suggestion here. It isn't stored or used for targeting.</p>
@@ -1020,6 +1052,22 @@ footer{background:linear-gradient(180deg,#080a0e,#050506)}
   <div class="wrap"><div class="strip" aria-label="The Semester academic loop">
     <span><b>Import</b> your courses</span><span><b>Verify</b> every deadline</span><span><b>Plan</b> your time</span><span><b>Study</b> with context</span><span><b>Review</b> your progress</span>
   </div></div>
+
+  <section class="blk rule" id="proof-walkthrough" aria-labelledby="proof-walkthrough-h">
+    <div class="wrap">
+      <div class="sec-head"><p class="eyebrow">Product proof · about 90 seconds</p><h2 id="proof-walkthrough-h">From an open requirement to a confident handoff.</h2><p class="lede">Follow one realistic student decision. Every source, estimate and boundary stays visible.</p></div>
+      <div class="proof-rail">
+        <article class="proof-step"><span class="k">01 · NOTICE</span><h3>See the open requirement</h3><p>A Path Snapshot shows what still needs attention.</p></article>
+        <article class="proof-step"><span class="k">02 · VERIFY</span><h3>Understand why</h3><p>The requirement includes its source and last update.</p></article>
+        <article class="proof-step"><span class="k">03 · COMPARE</span><h3>Find eligible courses</h3><p>Options stay separate from official decisions.</p></article>
+        <article class="proof-step"><span class="k">04 · EXPLAIN</span><h3>Catch a conflict</h3><p>Semester explains the collision in plain language.</p></article>
+        <article class="proof-step"><span class="k">05 · PREPARE</span><h3>Save a backup</h3><p>A ranked alternative keeps the plan resilient.</p></article>
+        <article class="proof-step"><span class="k">06 · ALIGN</span><h3>Build an advisor agenda</h3><p>The student chooses exactly what to share.</p></article>
+        <article class="proof-step"><span class="k">07 · ACT</span><h3>Use the official system</h3><p>Semester hands off safely; the registrar remains authoritative.</p></article>
+      </div>
+      <div class="ctas" style="margin-top:24px"><a class="btn btn-primary" href="#experience">Open the interactive demo</a><a class="btn btn-ghost" href="https://harrisonjrubin7-cmyk.github.io/semester/#/signup" target="_blank" rel="noopener">Try it with your semester ↗</a></div>
+    </div>
+  </section>
 
 
   <section class="blk">
@@ -1125,11 +1173,32 @@ footer{background:linear-gradient(180deg,#080a0e,#050506)}
   <section class="blk rule">
     <div class="wrap">
       <div class="sec-head"><p class="eyebrow">Choose your path</p><h2>Built for the student. Governed for the institution.</h2></div>
-      <div class="grid-4">
-        <div class="aud"><span class="who">Students</span><h3>Know what matters next.</h3><p>Plan your path, prepare for registration and study from your own materials. Free to start.</p><a class="btn btn-primary btn-sm" href="#students">Start planning free</a></div>
-        <div class="aud"><span class="who">Departments</span><h3>Launch with one cohort.</h3><p>Onboard a defined group of students with your resources, workflows and training.</p><a class="btn btn-ghost btn-sm" href="#departments">Plan a department launch</a></div>
-        <div class="aud"><span class="who">Institutions</span><h3>One governed layer.</h3><p>Connect approved systems into a source-aware experience your SIS and LMS still own.</p><a class="btn btn-ghost btn-sm" href="#institutions">Plan an institutional launch</a></div>
-        <div class="aud"><span class="who">Enterprise</span><h3>Governed scale.</h3><p>Multi-campus governance, native LMS, migration and 24/7 critical support.</p><a class="btn btn-ghost btn-sm" href="#enterprise">Request enterprise briefing</a></div>
+      <div class="grid-3">
+        <div class="aud"><span class="who">Students</span><h3>Know what matters next.</h3><p>Plan your path, prepare for registration and study from your own materials. Free to start.</p><a class="btn btn-primary btn-sm" href="https://harrisonjrubin7-cmyk.github.io/semester/#/signup" target="_blank" rel="noopener">Start planning free</a></div>
+        <div class="aud"><span class="who">Institutions</span><h3>Prove one workflow first.</h3><p>Run a 25–100 student Registration Readiness Pilot with a defined outcome and no official registration write.</p><a class="btn btn-ghost btn-sm" href="#design-partners">Plan a readiness pilot</a></div>
+        <div class="aud"><span class="who">Faculty &amp; advisors</span><h3>Make human support more useful.</h3><p>See the student-shared agenda, source-aware plan and governed course workflow.</p><a class="btn btn-ghost btn-sm" href="#experience">See the workflow</a></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="blk rule" id="product-status-map" aria-labelledby="product-status-h">
+    <div class="wrap">
+      <div class="sec-head"><p class="eyebrow">Product status map</p><h2 id="product-status-h">What you can use now. What requires a pilot. What comes later.</h2><p class="lede">Status is part of the product. We do not present a roadmap item as a live capability.</p></div>
+      <div class="status-map">
+        <article class="status-col"><h3>Available now <span class="cs cs-av">LIVE</span></h3><ul><li>Student account creation and planning workspace</li><li>Course and deadline organization</li><li>Source labels and student controls</li><li>Public planning tools and guides</li></ul></article>
+        <article class="status-col pilot"><h3>Controlled pilot <span class="cs cs-ip">PILOT</span></h3><ul><li>Path Snapshot and registration readiness</li><li>Advisor agenda with consented sharing</li><li>Institution-managed resources</li><li>Institutional SSO and LTI with design partners</li></ul></article>
+        <article class="status-col future"><h3>Planned <span class="cs cs-pl">FUTURE</span></h3><ul><li>OneRoster synchronization</li><li>Native LMS capabilities</li><li>Credential wallet and advanced analytics</li><li>Official-system write workflows where authorized</li></ul></article>
+      </div>
+      <p class="note">This concise map is a guide, not a substitute for deployment-specific review. <a class="link" href="#roadmap">See the dated roadmap</a> or <a class="link" href="#launch-readiness">review launch readiness</a>.</p>
+    </div>
+  </section>
+
+  <section class="blk rule" id="why-universities-pay" aria-labelledby="why-pay-h">
+    <div class="wrap">
+      <div class="sec-head"><p class="eyebrow brass">Why universities pay</p><h2 id="why-pay-h">A measurable workflow outcome—not another dashboard.</h2></div>
+      <div class="buyer-outcome">
+        <div><span class="who">Recommended first buyer</span><h3 style="font-size:28px;margin-top:10px">Advising, student success, first-year, transfer, or one academic school.</h3><p class="muted" style="margin-top:14px">Start with one cohort and one registration cycle. Semester helps students arrive prepared with a current plan, ranked backup and advisor agenda while official systems remain authoritative.</p><div class="ctas" style="margin-top:22px"><a class="btn btn-primary" href="#design-partners">Plan a 25–100 student pilot</a><a class="btn btn-ghost" href="#business-case">Build the business case</a></div></div>
+        <div><p class="eyebrow">Evidence to earn renewal</p><div class="measure"><span>Prepared-appointment rate</span><span>Plan completion</span><span>Backup-plan rate</span><span>Advisor-reported prep time</span><span>Official handoff success</span><span>Student clarity</span></div><p class="fine" style="margin-top:18px">Semester has no customer outcome claims yet. Pilot reporting includes the cohort, timeframe, method and limitations.</p></div>
       </div>
     </div>
   </section>
@@ -1139,8 +1208,8 @@ footer{background:linear-gradient(180deg,#080a0e,#050506)}
       <div class="sec-head" style="margin:0">
         <p class="eyebrow">The trust model</p>
         <h2>Sources are visible. Estimates are clear. Privacy is controllable.</h2>
-        <p class="lede">Every fact in Semester carries a label that says where it came from. That rule applies to this website too.</p>
-        <div class="ctas" style="margin-top:8px"><a class="link" href="#trust">Security</a><a class="link" href="#trust">Privacy</a><a class="link" href="#trust">Accessibility</a><a class="link" href="#trust">AI governance</a></div>
+        <p class="lede">Institutions keep data authority: they choose approved sources, active modules, roles and sharing boundaries. Students keep control of personal plans, drafts and consented sharing. Official systems remain authoritative unless an institution explicitly approves another workflow.</p>
+        <div class="ctas" style="margin-top:8px"><a class="btn btn-primary btn-sm" href="#procurement">Request the procurement pack</a><a class="btn btn-ghost btn-sm" href="#trust">Review the Trust Center</a></div>
       </div>
       <div class="legend">
         <div><span class="src off">Official source</span><p>From an approved university system, with its freshness shown.</p></div>
@@ -3927,11 +3996,11 @@ SPAN 1102 Spanish II, MW, 14:30-15:45, 3</textarea></label>
 <footer><div class="wrap">
   <div class="foot">
     <div><a class="brand" href="#home" style="padding:0"><svg width="22" height="22" viewBox="0 0 26 26" aria-hidden="true"><rect x="2" y="12" width="5" height="10" fill="url(#sm-silver)"/><rect x="10.5" y="6" width="5" height="16" fill="url(#sm-chrome)"/><rect x="19" y="9" width="5" height="13" fill="url(#sm-gold)"/></svg><span class="brand-word">SEMESTER</span></a><p class="fine" style="margin-top:12px;max-width:26ch">The student action platform. Built at Vanderbilt.</p><p class="fine" style="margin-top:10px;display:grid;gap:4px"><span class="sr">Follow Semester</span><a href="https://www.youtube.com/channel/UCtjKvFwHxfYxiy3-3WgdHwg" target="_blank" rel="noopener" style="display:inline-flex;gap:6px;align-items:center;padding:0;color:var(--ink-dim)"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M23 7.2a3 3 0 0 0-2.1-2.1C19 4.6 12 4.6 12 4.6s-7 0-8.9.5A3 3 0 0 0 1 7.2 31 31 0 0 0 .5 12a31 31 0 0 0 .5 4.8 3 3 0 0 0 2.1 2.1c1.9.5 8.9.5 8.9.5s7 0 8.9-.5a3 3 0 0 0 2.1-2.1c.4-1.6.5-4.8.5-4.8s0-3.2-.5-4.8zM9.7 15.1V8.9l5.8 3.1-5.8 3.1z"/></svg> YouTube · @Semester_app</a><a href="https://www.instagram.com/semester_app/" target="_blank" rel="noopener" style="display:inline-flex;gap:6px;align-items:center;padding:0;color:var(--ink-dim)"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2.2c3.2 0 3.6 0 4.8.1 3.3.1 4.8 1.7 4.9 4.9.1 1.3.1 1.6.1 4.8s0 3.6-.1 4.8c-.1 3.2-1.7 4.8-4.9 4.9-1.3.1-1.6.1-4.8.1s-3.6 0-4.8-.1c-3.3-.1-4.8-1.7-4.9-4.9C2.2 15.6 2.2 15.2 2.2 12s0-3.6.1-4.8C2.4 3.9 3.9 2.4 7.2 2.3 8.4 2.2 8.8 2.2 12 2.2zm0 4.7a5.1 5.1 0 1 0 0 10.2 5.1 5.1 0 0 0 0-10.2zm0 8.4a3.3 3.3 0 1 1 0-6.6 3.3 3.3 0 0 1 0 6.6zm5.3-9.8a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4z"/></svg> Instagram · @semester_app</a><a href="https://www.linkedin.com/company/semester-app/" target="_blank" rel="noopener" style="display:inline-flex;gap:6px;align-items:center;padding:0;color:var(--ink-dim)"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M20.4 20.5h-3.6v-5.6c0-1.3 0-3-1.8-3s-2.1 1.4-2.1 2.9v5.7H9.3V9h3.4v1.6h.1c.5-.9 1.6-1.8 3.4-1.8 3.6 0 4.3 2.4 4.3 5.5v6.2zM5.3 7.4a2.1 2.1 0 1 1 0-4.2 2.1 2.1 0 0 1 0 4.2zM7.1 20.5H3.5V9h3.6v11.5zM22.2 0H1.8C.8 0 0 .8 0 1.7v20.6c0 .9.8 1.7 1.8 1.7h20.4c1 0 1.8-.8 1.8-1.7V1.7C24 .8 23.2 0 22.2 0z"/></svg> LinkedIn · Semester</a></p><p class="fine" style="margin-top:10px">Email <a href="mailto:harrisonjrubin7@gmail.com" style="display:inline;padding:0;color:var(--brass-hi);font-size:12px">harrisonjrubin7@gmail.com</a></p></div>
-    <div><h2 class="fh">Product</h2><a href="#product">Overview</a><a href="#experience">Demo (fictional data)</a><a href="#how-built">How it's built</a><a href="#integrations">Integrations</a><a href="#developers">Developers</a><a href="#compare">Compare</a><a href="#why-semester">Why Semester</a><a href="#availability">Availability</a><a href="#personal-academic-os">Personal Academic OS</a><a href="#service-map">Service map</a><a href="#system-boundaries">System boundaries</a><a href="#roadmap">Roadmap</a></div>
-    <div><h2 class="fh">Solutions</h2><a href="#students">Students</a><a href="#departments">Departments</a><a href="#advising">Advising</a><a href="#registrars">Registrars</a><a href="#faculty">Faculty</a><a href="#it">IT &amp; security</a><a href="#institutions">Institutions</a><a href="#enterprise">Enterprise</a></div>
-    <div><h2 class="fh">Buying</h2><a href="#pricing">Pricing</a><a href="#buying-guide">Buying guide</a><a href="#business-case">Business case</a><a href="#services">Services</a><a href="#launch-estimator">Launch estimator</a><a href="#membership">Membership</a><a href="#launch">Launch</a><a href="#launch-kit">Launch kit</a><a href="#how-we-price">How we price</a><a href="#start">After you sign up</a><a href="#rfp">RFP library</a><a href="#customer-portal">Customer portal</a></div>
-    <div><h2 class="fh">Trust</h2><a href="#trust">Trust Center</a><a href="#trust-data-ai">Data &amp; AI transparency</a><a href="#proof-library">Proof library</a><a href="#evidence">Evidence library</a><a href="#hecvat">HECVAT simulator</a><a href="#accessibility">Accessibility</a><a href="#status">Status</a><a href="#student-data-rights">Student data rights</a><a href="#demo-lab">Demo Lab</a><a href="#preferences">Privacy choices</a><a href="#legal">Policies</a><a href="#trust-supply-chain">Supply chain</a><a href="#standards">Standards</a><a href="#launch-readiness">Are we ready?</a><a href="#product-quality">Product quality</a><a href="#policies-in-practice">Policies in practice</a><a href="#legal-versions">Policy versions</a></div>
-    <div><h2 class="fh">Learn &amp; company</h2><a href="#watch">Watch on YouTube</a><a href="#community">Community</a><a href="#build-my-semester">Build my semester</a><a href="#academy">Academy</a><a href="#events">Events</a><a href="#help">Help</a><a href="#company">About</a><a href="#leadership">Leadership</a><a href="#careers">Careers</a><a href="#founders-letter">Founder's letter</a><a href="#fellows">Fellows</a><a href="#partner-portal">Partners</a><a href="#brand">Brand</a><a href="#report">Report a concern</a><a href="#responsible-technology">Responsible tech</a><a href="#how-we-operate">How we operate</a><a href="#proof-policy">Proof policy</a><a href="#semester-standard">Semester Standard</a><a href="#community">Community</a><a href="#glossary">Glossary</a><a href="#request-invite">Request an invite</a><a href="#refer">Refer</a><a href="#contact">Contact</a></div>
+    <div><h2 class="fh">Product</h2><a href="#product">Overview</a><a href="#experience">Demo (fictional data)</a><a href="#availability">What is available</a><a href="#integrations">Integrations</a><a href="#roadmap">Roadmap</a></div>
+    <div><h2 class="fh">Students</h2><a href="#students">For students</a><a href="#build-my-semester">Build my semester</a><a href="#tools">Free tools</a><a href="#start">After you sign up</a><a href="#help">Help</a></div>
+    <div><h2 class="fh">Institutions</h2><a href="#institutions">Overview</a><a href="#advising">Advising</a><a href="#registrars">Registration readiness</a><a href="#it">IT &amp; security</a><a href="#design-partners">Design partners</a><a href="#launch">Launch</a></div>
+    <div><h2 class="fh">Resources</h2><button class="foot-search" type="button" onclick="document.getElementById('search-btn').click()">Search the complete site</button><a href="#tools">Resource library</a><a href="#pricing">Pricing</a><a href="#buying-guide">Buying guide</a><a href="#company">About</a><a href="#contact">Contact</a></div>
+    <div><h2 class="fh">Trust</h2><a href="#trust">Trust Center</a><a href="#accessibility">Accessibility</a><a href="#student-data-rights">Student data rights</a><a href="#status">Status</a><a href="#launch-readiness">Readiness</a><a href="#legal">Policies</a></div>
   </div>
   <div class="foot-b"><span>© 2026 Semester. Screens use illustrative demo data, not student records.</span><span><a href="#legal" style="color:inherit">Terms · Privacy · Accessibility · Cookies</a> · <a href="#legal-versions" style="color:inherit">Policy versions</a> · <a href="#preferences" style="color:inherit">Your privacy choices</a></span></div>
 </div></footer>

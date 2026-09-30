@@ -961,8 +961,15 @@ Set it in the dashboard or with the CLI — **never** in this repo, in a build
 variable, or in a chat window. `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`
 are injected by the platform and need no action.
 
-Until it is set the function returns 501 and the app says so plainly: *"This
-deployment has no shared key. Add your own under Ask Claude → Settings."* A
+Setting it is not enough. The function first asks
+[`_shared/provideractivation.ts`](functions/_shared/provideractivation.ts),
+and answers 501 with *"The shared key is switched off until Semester's
+agreements with its AI provider are in place"* until the owner's five
+decisions are recorded with evidence and `SHARED_AI_PROVIDER=on` is set
+([`docs/trust/SHARED-PROVIDER-ACTIVATION.md`](../docs/trust/SHARED-PROVIDER-ACTIVATION.md)).
+Once that clears, and until the key is set, the function returns 501 and the
+app says so plainly: *"This deployment has no shared key. Add your own under
+Ask Claude → Settings."* A
 student with their own key is unaffected either way — the app prefers a key set
 on the device and only falls back to this one.
 

@@ -485,7 +485,12 @@ begin
       raise notice 'ok  history cannot be deleted directly';
     end;
     update public.profiles set school_id = null where user_id = gone_student;
+    -- A school is never deleted in production (docs/SCHOOL-OFFBOARDING.md); the
+    -- purge that will one day remove one must leave no history behind, so this
+    -- takes the refusal off inside the rolled-back test only.
+    alter table public.schools disable trigger refuse_school_delete;
     delete from public.schools where id = 'gone-k12-check';
+    alter table public.schools enable trigger refuse_school_delete;
     perform pg_temp.counted('deleting the school removes its history too',
       (select count(*) from public.guardian_link_history where school_id = 'gone-k12-check'), 0);
   end;

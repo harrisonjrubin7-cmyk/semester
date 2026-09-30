@@ -23,6 +23,7 @@ import {
 } from '../lib/abroad';
 import { useDeviceLibrary } from '../lib/device-library';
 import { secondLine } from '../lib/dim';
+import { SourceBadge } from './SourceBadge';
 import { Notice, SectionLabel, Segmented } from './ui';
 
 /**
@@ -216,6 +217,10 @@ function Courses({
       </SectionLabel>
       <p style={{ ...body, marginTop: 0 }} role="status">
         {creditLine(picture)}
+      </p>
+      <p style={small}>
+        <SourceBadge label="student_entered" /> The approval statuses are the ones you recorded. This is not an official
+        credit evaluation: your home school&rsquo;s registrar or department decides what counts.
       </p>
       {picture.approved < picture.planned && (
         <p style={small}>

@@ -294,9 +294,13 @@ begin
   -- 160 before human overrides (20260930120000_human_overrides.sql) added three:
   -- override:record and override:review for registrar, override:review for
   -- university_admin.
-  -- 163 before guardians:manage for university_admin and university_staff
-  -- (20260930200000_k12_guardians.sql) added two.
-  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 165);
+  -- 163 before the Configuration Studio (20260930230000_configuration_studio.sql)
+  -- added ten: config:manage and :view for implementation_manager and
+  -- integration_admin, config:manage, :publish and :view for university_admin,
+  -- config:publish and :view for registrar, and config:view for
+  -- institutional_researcher; then guardians:manage for university_admin and
+  -- university_staff (20260930233000_k12_guardians.sql) added two more.
+  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 175);
 
   perform pg_temp.become_anon();
   perform pg_temp.refused('a signed-out visitor cannot read the matrix',

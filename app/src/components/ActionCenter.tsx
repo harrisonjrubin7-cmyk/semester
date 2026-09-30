@@ -10,6 +10,7 @@ import {
   type Choice,
   type Scored,
 } from '../lib/actions';
+import { DISMISS_REASONS, dismissNote, dismissReasonOf, snoozePresets, type SnoozePreset } from '../lib/actionchoices';
 import { useDeviceLibrary } from '../lib/device-library';
 import { useNow, useStore } from '../state/store';
 import { ClarityQuestion } from './ClarityQuestion';
@@ -55,7 +56,7 @@ export function tomorrowMorning(now: number): number {
 const DONE_SAYS: Partial<Record<ActionEvent, string>> = {
   start: 'Marked as started.',
   complete: 'Marked as done.',
-  snooze: 'Snoozed until tomorrow morning.',
+  snooze: 'Snoozed.',
   dismiss: 'Hidden — it will not come back unless you reopen it.',
   block: 'Marked as blocked.',
   correct: 'Noted on this device. Use Report on the source to fix the underlying date or detail.',
@@ -150,12 +151,20 @@ function Controls({
   compact,
 }: {
   s: Scored;
-  act: (id: string, event: ActionEvent, note?: string) => void;
+  act: (id: string, event: ActionEvent, note?: string, until?: number, says?: string) => void;
   compact?: boolean;
 }) {
   const [noting, setNoting] = useState<'correct' | 'help' | null>(null);
+  // Which of the two small choosers is open: more snooze times, or why it is being hidden.
+  const [choosing, setChoosing] = useState<'snooze' | 'why' | null>(null);
   const id = s.action.id;
   const { dispatch } = useStore();
+  const now = useNow().getTime();
+  const others: SnoozePreset[] = snoozePresets(now, s.action).filter((p) => p.id !== 'tomorrow');
+  const snoozeWith = (p: SnoozePreset) => {
+    setChoosing(null);
+    act(id, 'snooze', undefined, p.until, `Snoozed until ${p.says}.`);
+  };
   if (noting) {
     return (
       <NoteForm
@@ -174,10 +183,63 @@ function Controls({
         <button type="button" className="workspace-text-button" onClick={() => act(id, 'start')}>Start</button>
       )}
       <button type="button" className="workspace-text-button" onClick={() => act(id, 'complete')}>Done</button>
-      <button type="button" className="workspace-text-button" onClick={() => act(id, 'snooze')}>Snooze until tomorrow</button>
+      <button type="button" className="workspace-text-button" onClick={() => act(id, 'snooze', undefined, undefined, 'Snoozed until tomorrow morning.')}>Snooze until tomorrow</button>
+      {!compact && others.length > 0 && (
+        <button
+          type="button"
+          className="workspace-text-button"
+          aria-expanded={choosing === 'snooze'}
+          onClick={() => setChoosing(choosing === 'snooze' ? null : 'snooze')}
+        >
+          More snooze times
+        </button>
+      )}
+      {!compact && choosing === 'snooze' && (
+        <div role="group" aria-label={`Snooze ${s.action.title} until`} className="today-action-tools">
+          {others.map((p) => (
+            <button key={p.id} type="button" className="workspace-text-button" onClick={() => snoozeWith(p)}>
+              {p.label}
+            </button>
+          ))}
+        </div>
+      )}
       {!compact && (
         <>
-          <button type="button" className="workspace-text-button" onClick={() => act(id, 'dismiss')}>Not relevant</button>
+          <button
+            type="button"
+            className="workspace-text-button"
+            aria-expanded={choosing === 'why'}
+            onClick={() => setChoosing(choosing === 'why' ? null : 'why')}
+          >
+            Not relevant
+          </button>
+          {choosing === 'why' && (
+            <div role="group" aria-label={`Why hide ${s.action.title}`} className="today-action-tools">
+              {DISMISS_REASONS.map((r) => (
+                <button
+                  key={r.id}
+                  type="button"
+                  className="workspace-text-button"
+                  onClick={() => {
+                    setChoosing(null);
+                    act(id, 'dismiss', dismissNote(r.id));
+                  }}
+                >
+                  {r.label}
+                </button>
+              ))}
+              <button
+                type="button"
+                className="workspace-text-button"
+                onClick={() => {
+                  setChoosing(null);
+                  act(id, 'dismiss');
+                }}
+              >
+                Hide without saying why
+              </button>
+            </div>
+          )}
           <button type="button" className="workspace-text-button" onClick={() => setNoting('correct')}>Something is wrong</button>
           <button
             type="button"
@@ -231,7 +293,7 @@ function Row({
 }: {
   s: Scored;
   now: number;
-  act: (id: string, event: ActionEvent, note?: string) => void;
+  act: (id: string, event: ActionEvent, note?: string, until?: number, says?: string) => void;
   reporting: string | null;
   setReporting: (id: string | null) => void;
   explain: (s: Scored) => void;
@@ -247,7 +309,7 @@ function Row({
         </span>
         <span aria-hidden="true">→</span>
       </button>
-      <SourceBadge label={s.action.source.label} at={s.action.source.at} now={now} onReport={() => setReporting(s.action.id)} />
+      <SourceBadge label={s.action.source.label} at={s.action.source.at} now={now} unknownAge onReport={() => setReporting(s.action.id)} />
       {reporting === s.action.id && <Report s={s} onClose={() => setReporting(null)} />}
       <Controls s={s} act={act} compact />
       <Why s={s} explain={explain} />
@@ -273,15 +335,15 @@ export function ActionCenter({
   const [reporting, setReporting] = useState<string | null>(null);
   const [explaining, setExplaining] = useState<Scored | null>(null);
 
-  const act = (id: string, event: ActionEvent, note?: string) => {
+  const act = (id: string, event: ActionEvent, note?: string, until?: number, says?: string) => {
     const prev = choices[id];
-    const moved = transition(prev, event, now, { until: tomorrowMorning(now), note });
+    const moved = transition(prev, event, now, { until: until ?? tomorrowMorning(now), note });
     if (!moved.ok) {
       setSaid({ text: moved.why });
       return;
     }
     const saved = library.update((v) => ({ ...v, choices: { ...v.choices, [id]: moved.choice } }));
-    setSaid(saved ? { text: DONE_SAYS[event] ?? 'Saved.', undo: { id, prev } } : { text: 'That could not be saved on this device.' });
+    setSaid(saved ? { text: says ?? DONE_SAYS[event] ?? 'Saved.', undo: { id, prev } } : { text: 'That could not be saved on this device.' });
   };
 
   const undo = () => {
@@ -309,7 +371,7 @@ export function ActionCenter({
           {dueLine(top.action, now) && <p className="today-sync-status">{dueLine(top.action, now)}</p>}
           <h2 id="action-top-title">{top.action.title}</h2>
           <p>{top.action.whyItMatters}</p>
-          <SourceBadge label={top.action.source.label} at={top.action.source.at} now={now} onReport={() => setReporting(top.action.id)} />
+          <SourceBadge label={top.action.source.label} at={top.action.source.at} now={now} unknownAge onReport={() => setReporting(top.action.id)} />
           {reporting === top.action.id && <Report s={top} onClose={() => setReporting(null)} />}
           <ActionButton tone="primary" onClick={() => go(top.action)}>{top.action.primary.label}</ActionButton>
           <Controls s={top} act={act} />
@@ -317,7 +379,7 @@ export function ActionCenter({
           <ClarityQuestion />
         </article>
       ) : (
-        <p className="today-clear">Nothing needs you right now. Anything you snoozed comes back tomorrow morning.</p>
+        <p className="today-clear">Nothing needs you right now. Anything you snoozed comes back at the time you chose.</p>
       )}
 
       {said && (
@@ -349,7 +411,7 @@ export function ActionCenter({
 
       {ranked.hidden.some((h) => h.status === 'snoozed') && (
         <p className="today-sync-status">
-          {ranked.hidden.filter((h) => h.status === 'snoozed').length} snoozed until tomorrow morning.
+          {ranked.hidden.filter((h) => h.status === 'snoozed').length} snoozed until the time you chose.
         </p>
       )}
 
@@ -369,7 +431,11 @@ export function ActionCenter({
                   <button type="button" className="workspace-text-button" onClick={() => act(h.action.id, 'reopen')}>
                     Bring back: {h.action.title}
                   </button>
-                  <span className="today-sync-status"> · {h.status === 'dismissed' ? 'Not relevant' : 'Snoozed'}</span>
+                  <span className="today-sync-status">
+                    {' · '}
+                    {h.status === 'dismissed' ? 'Not relevant' : 'Snoozed'}
+                    {h.status === 'dismissed' && dismissReasonOf(choices[h.action.id]) ? ` · ${dismissReasonOf(choices[h.action.id])}` : ''}
+                  </span>
                 </li>
               ))}
           </ul>

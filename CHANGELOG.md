@@ -36,6 +36,19 @@ Offline, you can now keep an advisor share or your course plan to send yourself
 later. They wait on Account under "Waiting for you to send", and they do not go
 by themselves, even when you are back online. One that waits three days is not
 sent and has to be made again. Files you attach still do not sync between devices.
+### For school staff: a Configuration tab on University (off for now)
+
+Staff with configuration rights at a school get a **Configuration** tab in
+eleven domains — academic structure, workflows, roles, branding, content, AI,
+notifications, data, features, accessibility and reporting. A change is a
+draft; a colleague who holds the publish role publishes it as a numbered
+version, and you cannot publish your own. Old versions stay, and you can start
+a new draft from any of them.
+
+It is switched off, and nothing in the app reads these settings yet: the tab
+says so. Students see no difference.
+
+Nothing to do.
 
 ### On the public site: alumni relations and fundraising, described and not built
 
@@ -49,6 +62,51 @@ graduate can do today (offer to mentor, take their data with them) and asks
 for nothing.
 
 Nothing to do.
+
+### A school can no longer be deleted; leaving is a step-by-step case
+
+Nothing you can see changes in the app. Behind it, a university's record can
+no longer be deleted by anyone, because doing so would have silently removed
+everything the school had (shares, requests, grants, roll-outs). A school
+leaves through a recorded case: sized first, approved by a person at the school
+and a person at Semester, access switched off (nothing deleted), the school's
+data exported and checked, then archived for at least thirty days. Every step
+until the last can be undone. Nothing has been offboarded, and there is still
+no way to purge a school's data. Nothing to do.
+
+### Advisor shares and planning screens say where things came from
+
+When you preview or send an advisor meeting, it now ends with "Where this comes
+from, and what it assumes": which parts you wrote, which are your own estimate,
+the day it was prepared, and that nothing in it comes from the school's records
+or is a degree audit. A share made before this still opens as it did. The
+graduation projection and the study-abroad credit picture now carry a source
+label and say plainly that they are not an official degree audit or credit
+evaluation. On the university settings page, the Modules tab no longer says its
+settings "could not be read" while they are still loading. Nothing to do.
+
+### Action Center: more snooze times, and say why you hid something
+
+Where the Action Center is switched on: beside "Snooze until tomorrow" there is
+now "More snooze times" (later today, next week, and the day before it is due
+when that is a real later moment), and "Not relevant" asks why first, with four
+reasons or "Hide without saying why". The reason is kept on your device and shown
+in the Hidden list so you remember. Registration Day Mode, where it is on, adds
+"How heavy this term is": it compares your credits with the limits and study
+hours you type, and estimates weekly hours at two per credit. It is an estimate
+from numbers you gave, not a rule of your school, and it never stops you doing
+anything. Nothing to do.
+
+### Today no longer plans around the sample semester until you say it is yours
+
+While the question under the header ("These are mine" / "Not mine") is still open,
+Today's next step, its briefing and its list of commitments leave out the shipped
+semester's assignments and classes, instead of telling you to "Prepare" someone
+else's paper. With nothing of your own yet, Today suggests starting your semester.
+Answer "These are mine" and the same dates appear as yours. Where an item has no
+recorded update time, its label now says "Update time not recorded" instead of
+saying nothing. Commitments name where each date came from (for example "Needs
+review · date not checked"). Nothing to do.
 
 ### On the public site: a page for the K–12 edition
 

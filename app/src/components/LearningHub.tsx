@@ -1,4 +1,5 @@
-import {Suspense,lazy,useState} from 'react';
+import {Suspense,lazy,useEffect,useRef,useState} from 'react';
+import {peek} from '../lib/learningintent';
 const LearningPanels=lazy(()=>import('./LearningPanels').then(m=>({default:m.LearningPanels})));
 /**
  * One closed Learning row on Study, holding six panels.
@@ -15,6 +16,8 @@ const LearningPanels=lazy(()=>import('./LearningPanels').then(m=>({default:m.Lea
  * reason as the panels inside it: classless buttons are styled by that scope.
  */
 export function LearningHub(){
- const [opened,setOpened]=useState(false);
- return <details className="portal-workspace portal-panel learning-hub" onToggle={e=>{if(e.currentTarget.open)setOpened(true);}}><summary>Learning</summary><p>Your concepts and start-here check, feedback you received, what each course allows, what you have covered, a list to bring to office hours, and how you like to study. All of it stays on this device.</p>{opened&&<Suspense fallback={<p role="status">Opening your learning tools…</p>}><LearningPanels/></Suspense>}</details>;
+ const [wanted]=useState(()=>peek('feedback')!==null);
+ const [opened,setOpened]=useState(wanted);const ref=useRef<HTMLDetailsElement>(null);
+ useEffect(()=>{if(wanted)ref.current?.scrollIntoView?.({block:'start'});},[wanted]);
+ return <details ref={ref} open={wanted||undefined} className="portal-workspace portal-panel learning-hub" onToggle={e=>{if(e.currentTarget.open)setOpened(true);}}><summary>Learning</summary><p>Your concepts and start-here check, feedback you received, what each course allows, what you have covered, a list to bring to office hours, and how you like to study. All of it stays on this device.</p>{opened&&<Suspense fallback={<p role="status">Opening your learning tools…</p>}><LearningPanels/></Suspense>}</details>;
 }
