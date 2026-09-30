@@ -1,6 +1,6 @@
 /**
  * The Workflow Builder's client: `workflow_versions` in
- * `20260930110000_workflow_builder.sql`, under the signed-in account's RLS.
+ * `20260930231000_workflow_builder.sql`, under the signed-in account's RLS.
  *
  * Nothing here decides who may draft or publish. The database does, and its
  * refusals are turned into sentences by `refusal`. `saveDraft` sends a

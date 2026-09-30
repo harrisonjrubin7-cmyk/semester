@@ -37,6 +37,7 @@ export function Review() {
         {review.length === 1
           ? 'This was changed on two devices before either synced.'
           : `These ${review.length} were changed on two devices before either synced.`}{' '}
+        Where one device deleted it and the other changed it, the changed version is in use, so nothing is lost.{' '}
         Both versions are saved on this device until you choose.
       </p>
       <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
@@ -47,15 +48,23 @@ export function Review() {
               key={c.key}
               style={{ marginTop: 'var(--sp-5)', paddingTop: 'var(--sp-5)', borderTop: '1px solid var(--app-line)' }}
             >
-              <div style={{ fontSize: 'var(--type-xs)', color: 'var(--app-dim)' }}>{about.kind}</div>
+              <div style={{ fontSize: 'var(--type-xs)', color: 'var(--app-dim)' }}>
+                {about.kind}
+                {c.found > 1e11 ? ` · found ${formatDateTime(c.found)}` : ''}
+              </div>
               <div style={{ fontSize: 'var(--type-md)', marginTop: 'var(--sp-1)' }}>{named(c, about.title)}</div>
+              {c.mine === null || c.theirs === null ? (
+                <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-2)' }}>
+                  {c.mine === null ? 'Deleted on this device, changed on the other.' : 'Deleted on the other device, changed on this one.'}
+                </div>
+              ) : null}
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-4)', marginTop: 'var(--sp-4)' }}>
                 <Version
                   label="This device"
                   inUse={c.kept === 'mine'}
                   field={c.field}
                   id={c.id}
-                  name={named(c, '')}
+                  name={c.mine === null ? named(c, about.title) : named(c, '')}
                   record={c.mine}
                   onKeep={() => resolve(c.key, 'mine')}
                 />
@@ -64,7 +73,7 @@ export function Review() {
                   inUse={c.kept === 'theirs'}
                   field={c.field}
                   id={c.id}
-                  name={named(c, '')}
+                  name={c.theirs === null ? named(c, about.title) : named(c, '')}
                   record={c.theirs}
                   onKeep={() => resolve(c.key, 'theirs')}
                 />
@@ -95,9 +104,12 @@ function Version({
   record: unknown;
   onKeep: () => void;
 }) {
-  const described = describe(field, record, id);
+  // A side that deleted it has no record to show: it says so, and the choice
+  // is to keep it deleted. The title is the other version's, passed in.
+  const deleted = record === null;
+  const described = describe(field, deleted ? { title: name } : record, id);
   const about = name ? { ...described, title: name } : described;
-  const at = stamp(record);
+  const at = deleted ? 0 : stamp(record);
   return (
     <div
       role="group"
@@ -116,6 +128,11 @@ function Version({
         {at > 1e11 ? ` · edited ${formatDateTime(at)}` : ''}
       </div>
       <div style={{ fontSize: 'var(--type-sm-plus)', marginTop: 'var(--sp-2)', overflowWrap: 'anywhere' }}>{about.title}</div>
+      {deleted ? (
+        <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-2)' }}>
+          Deleted. Keeping this removes it from both devices.
+        </div>
+      ) : null}
       {about.preview ? (
         <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-2)', overflowWrap: 'anywhere' }}>
           {about.preview}
@@ -125,10 +142,10 @@ function Version({
         type="button"
         className={inUse ? 'btn btn-secondary btn-block' : 'btn btn-primary btn-block'}
         onClick={onKeep}
-        aria-label={`Keep the ${label.toLowerCase()} version of ${about.title}`}
+        aria-label={deleted ? `Keep ${about.title} deleted` : `Keep the ${label.toLowerCase()} version of ${about.title}`}
         style={{ marginTop: 'var(--sp-4)', minHeight: 44 }}
       >
-        Keep this one
+        {deleted ? 'Keep it deleted' : 'Keep this one'}
       </button>
     </div>
   );

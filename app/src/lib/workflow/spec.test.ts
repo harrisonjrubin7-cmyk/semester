@@ -18,7 +18,7 @@ import { TEMPLATES } from './templates';
  */
 
 const root = join(import.meta.dirname, '../../../..');
-const SQL = readFileSync(join(root, 'supabase/migrations/20260930110000_workflow_builder.sql'), 'utf8');
+const SQL = readFileSync(join(root, 'supabase/migrations/20260930231000_workflow_builder.sql'), 'utf8');
 const DB = JSON.parse(SQL.slice(SQL.indexOf('$j$') + 3, SQL.indexOf('$j$', SQL.indexOf('$j$') + 3))) as {
   workflows: string[]; step_kinds: string[]; owners: string[];
   facts: Record<string, { type: string; min?: number; max?: number }>;

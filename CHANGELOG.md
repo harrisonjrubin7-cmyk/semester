@@ -24,6 +24,18 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### Deleting something offline now sticks, and you can keep two sends for later
+
+A note, course, action, appointment, document, sheet or deck you delete on one
+device stays deleted on the others. It used to come back from the other device,
+and a course deleted offline came back if you closed the app first. If you
+deleted something on one device and changed it on another, the changed one stays
+and Account asks which you want.
+
+Offline, you can now keep an advisor share or your course plan to send yourself
+later. They wait on Account under "Waiting for you to send", and they do not go
+by themselves, even when you are back online. One that waits three days is not
+sent and has to be made again. Files you attach still do not sync between devices.
 ### For school staff: a Workflows tab on University (off for now)
 
 Staff with workflow rights at a school get a **Workflows** tab for the ten

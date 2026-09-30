@@ -17,14 +17,24 @@ import type { SyncStatus } from '../state/store';
  *   this device's copy, and since when it has not. A failed push while
  *   offline sets `unsyncedSince`; a successful one clears it.
  * - **The queue is the device.** Safe local changes are already saved there;
- *   nothing is copied into a second outbox that could disagree with it. On
+ *   nothing is copied into a second outbox that could disagree with it (the
+ *   held sends below are requests the student has not yet made, not copies
+ *   of changes already saved). On
  *   reconnect the store's own `refresh()` pulls, merges by `lib/merge.ts`'s
  *   per-field policy, and pushes the result.
- * - **High-risk actions are never queued.** Sharing, sending to the school,
- *   publishing, deleting an account, and opening an official site are
- *   refused offline with a sentence saying nothing was sent and nothing is
- *   waiting — `requireOnline`. A queued share that fires hours later, after
- *   the student has changed their mind, is exactly the surprise this avoids.
+ * - **High-risk actions are never sent later by themselves.** Sharing,
+ *   sending to the school, publishing, deleting an account, and opening an
+ *   official site are refused offline with a sentence saying nothing was sent
+ *   and nothing is waiting — `requireOnline`. A queued share that fires hours
+ *   later, after the student has changed their mind, is exactly the surprise
+ *   this avoids. That reasoning stands. What was added on top of it
+ *   (`lib/sync/outbox.ts`) is a way to *keep* two of them, a share with an
+ *   advisor and a course plan, without sending: the request is held on the
+ *   device, visible and dated, and coming back online makes it ready, not
+ *   sent. The student sends it, one tap; a held request older than three
+ *   days is never sent; and publishing, deleting an account, an official
+ *   site, and anything that writes an official or financial record are still
+ *   refused and never held (`lib/sync/classes.ts`).
  * - **Imported data is dated.** Offline, anything that came from outside is
  *   "as of" its time, never current (`asOf`).
  */
@@ -95,7 +105,7 @@ export function badge(input: { online: boolean; signedIn: boolean; ledger: Ledge
         signedIn
           ? 'Everything you change is saved on this device and syncs when you are back online.'
           : 'Everything you change is saved on this device.',
-        'Shares, sends and official sites wait until you are connected — nothing is queued for them.',
+        'Sharing an advisor meeting and sending your course plan can be kept here and sent by you when you are back. Publishing, deleting your account and official sites wait until you are connected.',
       ]
         .filter(Boolean)
         .join(' '),

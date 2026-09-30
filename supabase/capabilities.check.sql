@@ -289,12 +289,17 @@ begin
   -- 155 before 20260929300000_registration_transaction.sql gave `registrar`
   -- `registration:administer`.
   -- 156 before 20260929330000_dining.sql added dining_staff → dining:operate.
-  -- 157 before the Workflow Builder (20260930110000_workflow_builder.sql)
-  -- added ten: workflow:manage and :view for implementation_manager and
+  -- 157 before legal holds (20260930100000_legal_holds.sql) added three:
+  -- hold:read, :place and :release for university_admin.
+  -- 160 before human overrides (20260930120000_human_overrides.sql) added three:
+  -- override:record and override:review for registrar, override:review for
+  -- university_admin.
+  -- 163 before the Workflow Builder (20260930231000_workflow_builder.sql) added
+  -- ten: workflow:manage and :view for implementation_manager and
   -- integration_admin, workflow:manage, :publish and :view for university_admin,
   -- workflow:publish and :view for registrar, and workflow:view for
   -- institutional_researcher.
-  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 167);
+  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 173);
 
   perform pg_temp.become_anon();
   perform pg_temp.refused('a signed-out visitor cannot read the matrix',

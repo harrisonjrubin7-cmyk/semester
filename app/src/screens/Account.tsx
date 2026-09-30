@@ -2,6 +2,7 @@ import { CourseStudioEntry } from '../components/CourseStudio';
 import { useState } from 'react';
 import { SYNC_WORDS } from '../lib/syncstatus';
 import { Review } from '../components/Review';
+import { WaitingSends } from '../components/WaitingSends';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Blueprint } from '../components/Blueprint';
@@ -144,6 +145,9 @@ export function AccountScreen() {
 
           {/* Two devices' edits of one thing, and the choice. See `lib/conflicts.ts`. */}
           <Review />
+
+          {/* Sends the student kept for later, and the one tap that sends each. See `lib/sync/outbox.ts`. */}
+          <WaitingSends />
 
           {/* The same check the pull-down gesture makes, for a laptop, which
               has no pull-down. It answers in a sentence rather than leaving a

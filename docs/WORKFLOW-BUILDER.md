@@ -8,7 +8,7 @@ should evaluate deterministic rules, not vague AI judgments."* Decision:
 
 ## What is built
 
-`workflow_versions` (`supabase/migrations/20260930110000_workflow_builder.sql`),
+`workflow_versions` (`supabase/migrations/20260930231000_workflow_builder.sql`),
 `lib/workflow/` (spec, engine, templates, client), and a **Workflows** tab on
 University behind `VITE_WORKFLOW_BUILDER` (off by default).
 

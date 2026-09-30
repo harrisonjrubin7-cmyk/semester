@@ -13,7 +13,7 @@
  * ## Held in two places
  *
  * The spec is enforced by the database (`private.workflow_spec()` and
- * `private.workflow_problems()` in `20260930110000_workflow_builder.sql`) and
+ * `private.workflow_problems()` in `20260930231000_workflow_builder.sql`) and
  * mirrored here, code for code, so the screen can say what is wrong before
  * anyone presses Save. `spec.test.ts` holds this file equal to that one.
  *

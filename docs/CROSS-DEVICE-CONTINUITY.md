@@ -105,6 +105,22 @@ Keeping the version in use clears the question. Keeping the other puts it
 back, stamped now, and the ordinary push sends it up, so the other device
 receives it as an edit and is not asked again.
 
+**Deletions.** A union cannot express a deletion, so a note deleted on one
+device used to come back from the other, and a course deleted offline came
+back once the app was closed. The same base tells a deletion from a record
+that was never there: in the base, missing on one side, and unchanged on
+the other means it was deleted, and it stays deleted on both (`lib/deletions.ts`).
+Deleted on one side and *edited* on the other is not settled by a clock: the
+edit stays in use, so nothing is lost, and Account says "Deleted on this
+device, changed on the other" with **Keep it deleted** beside **Keep this
+one**. Only lists with one explicit delete are covered (courses, notes,
+actions, appointments, documents, sheets, decks), so a list the app also
+trims by itself cannot spread its own trimming. A removal of five or more,
+and nearly all of a list, is not believed and the rows come back, because an
+app that dropped rows by accident looks exactly like a person deleting
+everything. `state/deletions.test.tsx` runs airplane mode, a restart and a
+connection that comes and goes against the real store.
+
 **Settings too.** The settings a student chose — the look (accent with its
 hue, theme, corners, typefaces, icons, calm, course colours, badges, feed),
 the arrangements they made (home screen, groups, favourites, shortcuts row,

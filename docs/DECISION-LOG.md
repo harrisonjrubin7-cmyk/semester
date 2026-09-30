@@ -3399,6 +3399,59 @@ into this one rather than kept beside it.
   load, which is the preview-branch run; and journeys that do not exist yet.
   B14 moves from owed to partial and SRE-007 from not-started to building.
 
+## D-155 · A deletion is settled against the version both devices agreed on, and two sends can be kept for the student to send
+
+**Decided 30 Sep 2026** (Prompt 7 of the Core build prompts: sync conflicts, an
+offline outbox, tombstones). Read against main first, which found the prompt's
+premise partly stale: conflict detection and the choose-a-version screen were
+already built (`lib/conflicts.ts`, `components/Review.tsx`, the base kept on the
+device), and the known limitation and the `cloud.ts` header still said the later
+edit silently won. Both were corrected, and nothing was rebuilt.
+
+- **Deletions.** A union cannot express one, so a note deleted on a phone came
+  back from the laptop every time, and a course deleted offline came back once
+  the app closed, because the list that remembered it was in memory.
+  `lib/deletions.ts` reads the base instead: in the base, missing on one side and
+  unchanged on the other is a deletion, and it stays one on both. Deleted on one
+  side and *edited* on the other keeps the edit and asks, on the same list as two
+  edits. The push names a deleted course from the base, so it survives a restart.
+- **Which lists.** Courses, notes, actions, appointments, documents, sheets and
+  decks: each has exactly one removal, an explicit delete, and a test reads the
+  reducers to hold it there. A list the app also trims by itself would spread its
+  own trimming to every device as if somebody had chosen it, so the rest wait.
+- **Never a whole list at once.** Five or more, and 80% or more of what was
+  agreed, is not believed: an app that dropped rows on load looks identical to a
+  person deleting everything, and being wrong deletes from the account. The rows
+  come back, which is what happened before, and the known limitation says so.
+- **Two sends can be kept, and none sends itself.** D-055 refused to queue
+  sharing and sending because a share that fires hours later is a surprise. That
+  reasoning stands, so what was added is a way to *keep* one, not to send it. A
+  share with an advisor and a course plan are held on the device
+  (`lib/sync/outbox.ts`, IndexedDB `semester-outbox`), dated and cancellable.
+  Coming back online makes them ready and sends nothing; the student sends each,
+  one tap; one that waited three days is never sent. Erase device clears it.
+- **Once, or flagged.** The server calls take no idempotency key, so a request
+  cut off mid-flight may or may not have landed. The entry is written `sending`
+  before the call, so a closed tab is found as *unknown*, and an unknown share is
+  checked by the student before it goes again. A course plan replaces itself at
+  the school, so it may be sent again freely.
+- **What can never be held.** Publishing, deleting an account, opening an
+  official site, and any write to an official or financial record. Every write
+  that needs a connection is in a class with a reason (`lib/sync/classes.ts`), a
+  test reads the source so a new one cannot ship unclassified, and it reads the
+  two functions a held send calls for any official or financial name.
+- **Proved.** `state/deletions.test.tsx` runs the real store against a mocked
+  account through airplane mode, a restart and a connection that flaps. Reverting
+  the store change turned 8 of its 12 red; reverting the course push alone turned
+  its test red; auto-sending on reconnect turned 9 of the panel's 18 red.
+- **Not done, and why.** *File sync*: it needs a storage bucket with row-level
+  security and an owner decision on uploading tens of megabytes over a phone plan,
+  which `cloud.ts` chose not to do silently. *Other lists' deletions* (folders,
+  equations, places and the rest). *Server-side idempotency keys.* *A real
+  browser going offline against a real project*: the smoke has no Supabase, so
+  this is proved against the store, not the wire. *Naming the other device*: no
+  device identity exists, so the screen says "this device" and "the other".
+
 ## D-159 · Schools define their own workflows in a Workflow Builder, the rules are deterministic, and nothing runs them yet
 
 **Decided 30 Sep 2026.** The platform brief's third "highest-leverage final
@@ -3406,7 +3459,7 @@ addition" is a workflow builder and policy engine: "the policy engine should
 evaluate deterministic rules, not vague AI judgments". The owner asked for the
 briefs to be executed and chose this as the second slice, on its own branch.
 
-- **A definition, not a run** (`20260930110000_workflow_builder.sql`).
+- **A definition, not a run** (`20260930231000_workflow_builder.sql`).
   `workflow_versions` holds a school's definition of one of the brief's ten
   workflows: ordered steps, eligibility checks, and the office it hands off
   to. At most one draft per school and workflow; published versions 1, 2, 3 …

@@ -476,7 +476,7 @@ export const BEHAVIOURS: readonly { behaviour: string; path: string | null; note
   { behaviour: 'Shows source-labelled next actions', path: 'app/src/lib/source.ts', note: 'The labels exist; a help route’s answer is not yet labelled.' },
   { behaviour: 'Prepares a concise handoff packet', path: 'app/src/lib/nowrongdoor.ts', note: 'summary(): built from the sentence alone, nothing the app added about the student; preview() shows every line before it is sent.' },
   { behaviour: 'Lets the student choose whether to share', path: 'app/src/components/GetHelp.tsx', note: 'Nothing leaves until ticked and confirmed.' },
-  { behaviour: 'Tracks only operational referral status', path: null, note: 'No status after the request leaves; the office’s reply is not read back.' },
+  { behaviour: 'Tracks only operational referral status', path: null, note: 'Only the registration handoff has one (`app/src/lib/handoff-status.ts`), as the student’s own report on their device. A help request keeps its own statuses; aid and accessibility are directory-only and have none. The office’s reply is not read back.' },
   { behaviour: 'Provides recovery and escalation', path: 'docs/CAMPUS-ESCALATION-POLICY.md', note: 'The escalation policy is written; no screen offers it.' },
 ];
 

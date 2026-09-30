@@ -36,6 +36,16 @@ The rule, from `SEMESTER-OPERATING-SYSTEM.md`: No new module launches unless it 
 9. How is it removed if it does not work?
 10. What does it hold about a student? Its row in `app/src/lib/governance/pia.ts` with every question answered, or the sentence that says it touches no student data.
 
+## Change advisory (skip unless this PR changes a policy, a permission, a retention rule, a data flow, an AI behaviour or a migration)
+
+`docs/operating-model/CHANGE-MANAGEMENT.md` and `app/src/lib/governance/config-tiers.ts` say which tier a change is. A change above the lowest tier answers these before merge, in the PR, not after.
+
+- [ ] Design: what a student or staff member sees differently, or that nothing visible changes.
+- [ ] Privacy: what it holds about a person that it did not, or that it holds nothing new.
+- [ ] Accessibility: how it was checked with keyboard only, or that it renders nothing.
+- [ ] Data owner: who owns the data it touches, and that they know.
+- [ ] Rollback: the exact step that undoes it, and whether the schema can go back (`ROLLBACK.md` says it cannot).
+
 ## Screens (skip if this PR changes nothing a student sees)
 
 This is the quality contract from `docs/design/SEMESTER-UI-CONSTITUTION.md` §9.

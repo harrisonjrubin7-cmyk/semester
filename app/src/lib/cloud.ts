@@ -21,10 +21,13 @@
  * happened to pull first, and a laptop left open overnight pushed straight
  * over the phone's morning.
  *
- * What still does not merge is one record edited on both devices: the later
- * edit of the same note is the one that survives. Anything cleverer is a
- * distributed-systems project, and pretending otherwise in the UI would be
- * worse than saying it plainly.
+ * One record edited on both devices before either syncs keeps the later edit
+ * in use, and the other version is kept on this device and offered on Account
+ * (`lib/conflicts.ts`, against the version both devices last agreed on). A
+ * deletion is settled against the same version, so a note or course deleted
+ * on one device stays deleted, and a deletion against an edit is offered the
+ * same way (`lib/deletions.ts`). What still is not cleverer: text is not
+ * merged inside a record, and the choice is whole-version.
  *
  * What does not sync: files you attach. They live in IndexedDB and can be tens
  * of megabytes; uploading them silently on a phone plan is not a decision the

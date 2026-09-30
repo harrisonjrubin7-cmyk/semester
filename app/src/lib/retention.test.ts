@@ -401,8 +401,13 @@ describe('the clocks that run are still the clocks the document describes', () =
   it('agrees with the migration and the scheduler about the Community sweep', () => {
     const scheduler = readFileSync(join(ROOT, 'supabase', 'scheduler.sql'), 'utf8');
     expect(scheduler).toMatch(
-      /cron\.schedule\(\s*'community-retention',\s*'29 4 \* \* \*',\s*\$job\$select private\.sweep_community_retention\(\)\$job\$/,
+      /cron\.schedule\(\s*'community-retention',\s*'29 4 \* \* \*',\s*\$job\$select private\.run_sweep\('community_retention'\)\$job\$/,
     );
+    // The job goes through the hold check, and the hold check runs this sweep:
+    // read both, so the scheduler cannot name a sweep the dispatcher does not run.
+    const gate = readFileSync(join(MIGRATIONS, '20260930130000_hold_gated_sweeps.sql'), 'utf8');
+    expect(gate).toMatch(/return private\.sweep_community_retention\(\);/);
+    expect(gate).toMatch(/if private\.platform_is_held\(\) then/);
 
     const sql = readFileSync(join(MIGRATIONS, '20260928032000_community.sql'), 'utf8');
     const sweep = sql.split('create or replace function private.sweep_community_retention()')[1]?.split('$$')[1] ?? '';
@@ -478,5 +483,112 @@ describe('the clocks that run are still the clocks the document describes', () =
     expect(said).toContain('deliberately not on the 3-year clock');
     expect(said).not.toContain('**no answer yet**');
     expect(said).not.toContain('An invitation that is never taken up has no clock yet');
+  });
+});
+
+/**
+ * A `create or replace` of a whole function is a silent overwrite: the last
+ * migration to define `private.sweep_audit_retention` is the one that runs, and
+ * it is defined more than once. Main's common audit envelope added a table to it
+ * while the legal-hold migration was being written, and the legal-hold version,
+ * which sorted later, would have deleted that table's purge without a sound.
+ * So the last definition is read, not the first: it must purge every audit table
+ * the 3-year trigger lets go of, and every purge must obey a hold.
+ */
+describe('the audit sweep is one function defined many times, and the last one runs', () => {
+  const files = readdirSync(MIGRATIONS).filter((f) => f.endsWith('.sql')).sort();
+  const definers = files.filter((f) =>
+    /create or replace function private\.sweep_audit_retention\(\)/.test(readFileSync(join(MIGRATIONS, f), 'utf8')),
+  );
+  const last = readFileSync(join(MIGRATIONS, definers[definers.length - 1]), 'utf8');
+  const body = (last.split('create or replace function private.sweep_audit_retention()')[1] ?? '').split('$$;')[0];
+
+  /** The tables the three-year audit clock lets go of. A fifth one must be added here on purpose. */
+  const purgeable = ['role_grant_audit_event', 'moderation_audit_event', 'provisioning_audit_event', 'audit_event'];
+
+  it('finds the definitions, and the purgeable tables are exactly the ones a trigger lets the sweep delete', () => {
+    expect(definers.length).toBeGreaterThanOrEqual(3);
+    // Each purgeable table has one immutability function that calls audit_purge_allowed;
+    // count the distinct functions, so a fifth table added without updating the list above fails here.
+    const callers = new Set(
+      files.flatMap((f) =>
+        [...readFileSync(join(MIGRATIONS, f), 'utf8').matchAll(
+          /create or replace function private\.(refuse_\w+)\(\)[\s\S]*?(?=create or replace function|\n-- ──|$)/g,
+        )]
+          .filter((m) => m[0].includes('audit_purge_allowed'))
+          .map((m) => m[1]),
+      ),
+    );
+    expect(callers.size).toBe(purgeable.length);
+  });
+
+  it('the last definition purges every one of them', () => {
+    for (const table of purgeable) {
+      expect(body, `${definers[definers.length - 1]} no longer purges ${table}`).toMatch(new RegExp(`delete from public\\.${table}\\b`));
+    }
+  });
+
+  it('and every purge in it asks whether a legal hold applies', () => {
+    const deletes = body.split(/delete from public\./).slice(1);
+    expect(deletes.length).toBe(purgeable.length);
+    for (const d of deletes) expect(d.split(';')[0], d.slice(0, 40)).toMatch(/platform_is_held\(\)/);
+  });
+
+  it('is not fooled: a definition that forgets a table or a hold is caught by the same checks', () => {
+    const forgetful = 'delete from public.role_grant_audit_event e where e.occurred_at < now();';
+    expect(forgetful).not.toMatch(/delete from public\.audit_event\b/);
+    expect(forgetful.split(';')[0]).not.toMatch(/platform_is_held\(\)/);
+  });
+});
+
+/**
+ * The same silent-overwrite hazard as the audit sweep, for the two sweeps a
+ * legal hold reaches by row: a Postgres function is replaced whole, so the last
+ * migration to define one is the one that runs. Each is read here at its last
+ * definition and held to its hold clauses, with the deletes that carry no
+ * account named as exceptions on purpose, so leaving one off is a decision
+ * somebody wrote down and not a line nobody noticed was missing.
+ */
+describe('the AI-runtime and Community sweeps obey a hold at their last definition', () => {
+  const files = readdirSync(MIGRATIONS).filter((f) => f.endsWith('.sql')).sort();
+  const lastBody = (name: string): string => {
+    const definer = files.filter((f) =>
+      readFileSync(join(MIGRATIONS, f), 'utf8').includes(`create or replace function private.${name}()`),
+    );
+    const sql = readFileSync(join(MIGRATIONS, definer[definer.length - 1]), 'utf8');
+    return (sql.split(`create or replace function private.${name}()`)[1] ?? '').split('end $$;')[0];
+  };
+  // Comments come out before the split: a semicolon in one would cut a statement in two.
+  const statements = (body: string) =>
+    body
+      .replace(/--[^\n]*/g, '')
+      .split(';')
+      .map((s) => s.replace(/\s+/g, ' ').trim())
+      // The first statement of a body shares its text with `begin`; nothing else may precede a delete.
+      .map((s) => (['', 'begin'].includes(s.slice(0, Math.max(s.indexOf('delete from '), 0)).trim()) && s.includes('delete from ') ? s.slice(s.indexOf('delete from ')) : ''))
+      .filter(Boolean);
+
+  /** Deletes that name no account, and so obey the platform gate only. Adding to this list is a decision. */
+  const ACCOUNTLESS = ['community_volunteer_events', 'community_escalation_deliveries', 'community_retention_runs'];
+
+  it('purges AI metadata under a school hold: both deletes ask about the school', () => {
+    const del = statements(lastBody('sweep_ai_runtime_metadata'));
+    expect(del.length).toBe(2);
+    for (const d of del) expect(d, d.slice(0, 60)).toMatch(/tenant_is_held\(/);
+  });
+
+  it('purges Community rows under an account or school hold: every delete that has an account asks', () => {
+    const del = statements(lastBody('sweep_community_retention'));
+    const checked = del.filter((d) => !ACCOUNTLESS.some((t) => d.startsWith(`delete from public.${t}`)));
+    expect(del.length, 'the read found the sweep').toBeGreaterThanOrEqual(12);
+    expect(checked.length).toBe(del.length - ACCOUNTLESS.length);
+    for (const d of checked) expect(d, d.slice(0, 70)).toMatch(/account_is_held\(/);
+  });
+
+  it('is not fooled: a delete that forgets the hold, or is not on the list, is caught by the same checks', () => {
+    const forgetful = statements('delete from public.community_restrictions x where x.until < now();');
+    expect(forgetful).toHaveLength(1);
+    expect(forgetful[0]).not.toMatch(/account_is_held\(/);
+    expect(ACCOUNTLESS).not.toContain('community_restrictions');
   });
 });
