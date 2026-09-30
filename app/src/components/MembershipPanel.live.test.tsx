@@ -13,13 +13,15 @@ const mock = vi.hoisted(() => {
   const tables: Record<string, unknown[]> = { commercial_prices: [], subscriptions: [] };
   // A table named here answers with an error, as PostgREST does, not a rejection.
   const failing = new Set<string>();
+  // A table named here rejects outright: the network gone mid-request.
+  const throwing = new Set<string>();
   const eqs: [string, string, unknown][] = [];
   const from = (t: string) => {
-    const q = { select: () => q, eq: (k: string, v: unknown) => (eqs.push([t, k, v]), q), then: (ok: (r: unknown) => unknown) =>
-        Promise.resolve(failing.has(t) ? { data: null, error: { message: 'network' } } : { data: tables[t] ?? [], error: null }).then(ok) };
+    const q = { select: () => q, eq: (k: string, v: unknown) => (eqs.push([t, k, v]), q), then: (ok: (r: unknown) => unknown, no?: (e: unknown) => unknown) =>
+        (throwing.has(t) ? Promise.reject(new Error('fetch failed')) : Promise.resolve(failing.has(t) ? { data: null, error: { message: 'network' } } : { data: tables[t] ?? [], error: null })).then(ok, no) };
     return q;
   };
-  return { tables, failing, eqs, rpc: vi.fn(), from: vi.fn(from), start: vi.fn(), cancel: vi.fn(), account: { id: 'u1' } as { id: string } | null };
+  return { tables, failing, throwing, eqs, rpc: vi.fn(), from: vi.fn(from), start: vi.fn(), cancel: vi.fn(), account: { id: 'u1' } as { id: string } | null };
 });
 vi.mock('../lib/cloud', () => ({
   cloudConfigured: true,
@@ -41,6 +43,7 @@ beforeEach(() => {
   mock.tables.commercial_prices = [MONTH, YEAR];
   mock.tables.subscriptions = [];
   mock.failing.clear();
+  mock.throwing.clear();
   mock.eqs.length = 0;
   mock.account = { id: 'u1' };
   mock.rpc.mockReset();
@@ -240,4 +243,12 @@ it('shows no price to a signed-in person until their subscription has been read'
   } finally {
     mock.from.mockImplementation(from as never);
   }
+});
+
+it('does not leave a signed-in person on "Checking your plan" when the catalog read rejects', async () => {
+  mock.throwing.add('commercial_prices');
+  await render();
+  expect(host.textContent).not.toContain('Checking your plan');
+  expect(host.textContent).toContain('could not check your membership');
+  expect(button(/^Upgrade$/)).toBeUndefined();
 });

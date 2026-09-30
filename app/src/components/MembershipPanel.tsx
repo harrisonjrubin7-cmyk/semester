@@ -130,7 +130,9 @@ export function MembershipPanel() {
           setCheckedFor(accountId);
         }
       } catch {
-        /* No catalog, no sale: the panel falls back to saying so. */
+        // No catalog, no sale. Signed in, the subscription was not read either,
+        // so the plan is not known: say so, rather than "Checking" for ever.
+        if (live && accountId) setUncheckedFor(accountId);
       }
     })();
     return () => {
