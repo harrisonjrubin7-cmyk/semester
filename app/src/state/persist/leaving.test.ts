@@ -95,6 +95,34 @@ describe('a change owed as the page leaves', () => {
     expect(localStorage.getItem(mod.LEAVING_KEY)).toBeNull();
   });
 
+  it('is kept when an earlier write fails and a later one, carrying only what came after it, lands', async () => {
+    // A write in flight, then a second started as the page leaves: the second
+    // carries only the diff from the first. The first aborting and the second
+    // landing leaves the database without the first change, so the second
+    // landing must not count as everything confirmed.
+    const mod = await page();
+    mod.prime({ notes: [] });
+    const n1 = { id: 'n1', title: 'First' };
+    mod.persist({ notes: [n1] } as never);
+    let failFirst!: (ok: boolean) => void;
+    write.mockImplementationOnce(() => new Promise<boolean>((r) => (failFirst = r)));
+    const first = mod.flushNow();
+    await vi.waitFor(() => expect(write).toHaveBeenCalledTimes(1));
+
+    mod.persist({ notes: [n1, { id: 'n2', title: 'Second' }] } as never);
+    let landSecond!: (ok: boolean) => void;
+    write.mockImplementationOnce(() => new Promise<boolean>((r) => (landSecond = r)));
+    mod.flushOnLeave();
+    await vi.waitFor(() => expect(write).toHaveBeenCalledTimes(2));
+    expect(JSON.stringify(write.mock.calls[1][0])).not.toContain('"First"');
+
+    failFirst(false);
+    await first;
+    landSecond(true);
+    await mod.flushNow();
+    expect(localStorage.getItem(mod.LEAVING_KEY)).toContain('First');
+  });
+
   it('is kept when the replay itself does not land, so the next open tries again', async () => {
     localStorage.setItem('semester.leaving', JSON.stringify([{ store: 'notes', key: 'n1', value: { id: 'n1', title: 'Kept' } }]));
     write.mockResolvedValue(false);

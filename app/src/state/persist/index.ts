@@ -470,10 +470,20 @@ async function flush(): Promise<void> {
     return;
   }
 
-  confirmed = next;
-  // Everything the leaving journal held has now landed, or something newer
-  // has. Replaying it next load would put an older value over a newer one.
-  if (journalSeq !== null && nextSeq >= journalSeq) forgetLeaving();
+  /*
+   * Only a write built on what the database is known to hold makes the
+   * database hold `next`. One started while another was in flight carries
+   * only the diff from that one, and if that one was aborted (the browser may
+   * abort either as the page goes) this landing leaves the earlier change
+   * missing. Then nothing is confirmed and the journal stays; the failure
+   * already put `last` back, so the next write carries it again.
+   */
+  if (before === confirmed) {
+    confirmed = next;
+    // Everything the leaving journal held has now landed, or something newer
+    // has. Replaying it next load would put an older value over a newer one.
+    if (journalSeq !== null && nextSeq >= journalSeq) forgetLeaving();
+  }
   tell?.();
   // And the writer is working, which clears a warning left by a failure that
   // has since passed — a browser that made room, or a transaction that lost a
