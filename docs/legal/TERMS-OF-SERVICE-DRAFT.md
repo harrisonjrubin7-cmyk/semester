@@ -79,12 +79,39 @@ estimate, not an official one. Semester does not register you for classes,
 submit official forms, or change your records at your school unless a feature
 clearly says it does and asks you to confirm first.
 
-## 8. Price
+## 8. Price, Semester Plus and cancelling
 
-Semester for individuals is currently free. If we introduce paid features, we
-will show the price and terms before you pay, and you can cancel as those
-terms describe. [DECIDE: pricing, billing provider, refund policy before any
-charge — no billing exists in the app today.]
+**Semester Free** costs nothing and stays free. **Semester Plus** is on sale
+in the app, from the Membership panel on the Account screen, at the price
+shown there — currently $7.99 a month or $59 a year. Export, deletion and
+access to your own work are never paid features, and nothing you created is
+locked behind Plus. If your school provides Semester, you pay nothing and
+this section does not apply to you.
+
+- **Before you pay** you tick a box that names the amount, how often it
+  renews, and where to cancel. Payment is taken by Stripe, our payment
+  processor; Semester never sees your card. [DECIDE: checkout runs on
+  Stripe test keys today and has taken no real payment; these Terms must be
+  in force before a live key is set.]
+- **Renewal.** Plus renews automatically at the end of each month or year
+  until you cancel. [DECIDE with counsel: advance reminder before an annual
+  renewal, as some U.S. states require.]
+- **Cancelling.** Cancel any time from the same Membership panel. The
+  cancellation is sent to Stripe first and takes effect only once Stripe
+  accepts it, so Plus stays on until the end of the period you have paid
+  for, then ends, and you are not charged again. If it does not go through,
+  the panel tells you that you are still subscribed.
+- **Failed payments.** If a renewal fails, Stripe emails you and retries,
+  and Plus keeps working for 14 days. After that Plus features pause and
+  your account works as Free until you pay; nothing you created is deleted.
+- **Refunds** follow the [Refund and Cancellation Policy](REFUND-AND-CANCELLATION-POLICY-DRAFT.md).
+  A charge made after you cancelled is always refunded in full.
+- **Price changes.** We will tell you in the app before a new price applies
+  to your next renewal, and you can cancel before it does.
+- **Records.** Payment records are kept seven years after the end of the
+  year each was made, as the Privacy Policy and retention policy describe.
+
+[DECIDE with counsel: taxes, and whether prices are shown tax-inclusive.]
 
 ## 9. Changes and availability
 
