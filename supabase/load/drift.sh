@@ -29,6 +29,11 @@ ratio=${SOAK_RATIO:-2}
 delta=${SOAK_MIN_DELTA_MS:-5}
 
 awk -v ratio="$ratio" -v delta="$delta" '
+function median(a, n,    i, j, t, v) {
+  for (i = 1; i <= n; i++) v[i] = a[i]
+  for (i = 2; i <= n; i++) { t = v[i]; for (j = i - 1; j >= 1 && v[j] > t; j--) v[j + 1] = v[j]; v[j + 1] = t }
+  return (n % 2) ? v[(n + 1) / 2] : (v[n / 2] + v[n / 2 + 1]) / 2
+}
 function best(a, from, to,    i, m) {
   m = a[from]
   for (i = from + 1; i <= to; i++) if (a[i] < m) m = a[i]
@@ -37,6 +42,7 @@ function best(a, from, to,    i, m) {
 NF >= 3 && $2 ~ /^[0-9]+$/ && $3 ~ /^[0-9.]+$/ {
   if (!($1 in seen)) { seen[$1] = 1; order[++names] = $1 }
   at[$1, $2] = $3 + 0
+  if ($4 ~ /^[0-9.]+$/ && $4 + 0 > 0) budget[$1] = $4 + 0
   if ($2 + 0 > top[$1]) top[$1] = $2 + 0
 }
 END {
@@ -45,15 +51,31 @@ END {
   for (k = 1; k <= names; k++) {
     s = order[k]; n = 0
     for (w = 1; w <= top[s]; w++) if ((s, w) in at) samples[++n] = at[s, w]
-    if (n < 4) { printf "  · %s: %d window%s, too few to see a trend\n", s, n, (n == 1 ? "" : "s"); continue }
-    edge = int(n / 4); if (edge < 2) edge = 2
-    first = best(samples, 1, edge)
-    last = best(samples, n - edge + 1, n)
-    if (last > first * ratio && last - first > delta) {
-      printf "  ✗ %s: p95 drifted from %.1f ms to %.1f ms over %d windows (limit x%s and +%s ms)\n", s, first, last, n, ratio, delta
-      bad = 1
+    if (n < 4) {
+      printf "  · %s: %d window%s, too few to see a trend\n", s, n, (n == 1 ? "" : "s")
     } else {
-      printf "  ✓ %s: p95 %.1f ms to %.1f ms over %d windows, no drift\n", s, first, last, n
+      edge = int(n / 4); if (edge < 2) edge = 2
+      first = best(samples, 1, edge)
+      last = best(samples, n - edge + 1, n)
+      if (last > first * ratio && last - first > delta) {
+        printf "  ✗ %s: p95 drifted from %.1f ms to %.1f ms over %d windows (limit x%s and +%s ms)\n", s, first, last, n, ratio, delta
+        bad = 1
+      } else {
+        printf "  ✓ %s: p95 %.1f ms to %.1f ms over %d windows, no drift\n", s, first, last, n
+      }
+    }
+    # The budget, judged on the typical window: a stall on a shared runner lifts one
+    # window, and a path that has really become slow lifts them all. One pass is one
+    # window, so its median is itself and this is the old rule.
+    if (s in budget) {
+      typical = median(samples, n); over = 0; worst = 0
+      for (w = 1; w <= n; w++) { if (samples[w] > budget[s]) over++; if (samples[w] > worst) worst = samples[w] }
+      if (typical > budget[s]) {
+        printf "  ✗ %s: the typical p95 is %.1f ms, over its budget of %s ms (%d of %d windows over it)\n", s, typical, budget[s], over, n
+        bad = 1
+      } else if (over > 0) {
+        printf "  · %s: %d of %d windows over the %s ms budget (worst %.1f ms); the typical window, %.1f ms, is within it\n", s, over, n, budget[s], worst, typical
+      }
     }
     delete samples
   }

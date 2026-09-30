@@ -66,7 +66,7 @@ scenario() {
   n=$(echo "$lat" | wc -l)
   pct() { echo "$lat" | awk -v n="$n" -v p="$1" 'NR == int((n - 1) * p / 100) + 1 {printf "%.1f", $1 / 1000; exit}'; }
   p50=$(pct 50); p95=$(pct 95); p99=$(pct 99); last_n=$n
-  printf '%s %s %s\n' "$name" "$window" "$p95" >> "$windows"
+  printf '%s %s %s %s\n' "$name" "$window" "$p95" "$budget" >> "$windows"
   line="$name: $n transactions, ${tps%.*} tps, p50 ${p50}ms p95 ${p95}ms p99 ${p99}ms (budget p95 ${budget}ms)"
   if [ "${errs:-0}" != 0 ]; then
     echo "  ✗ $line, $errs failed:"
@@ -74,7 +74,14 @@ scenario() {
     echo "$out" | sed -nE 's/.*ERROR: +//p' | sort | uniq -c | sort -rn | head -4 | sed 's/^ */      ×/'
     failed=1
   elif awk -v a="$p95" -v b="$budget" 'BEGIN {exit !(a > b)}'; then
-    echo "  ✗ $line — over budget"; failed=1
+    if [ "$soak" -gt 0 ]; then
+      # One window over its budget is a stall on a shared runner until the rest
+      # of the run says otherwise: drift.sh judges the budget on the typical
+      # (median) window, so a single bad one is shown and does not fail the run.
+      echo "  ⚠ $line — over budget in this window, judged on the typical window at the end"
+    else
+      echo "  ✗ $line — over budget"; failed=1
+    fi
   else
     echo "  ✓ $line"
   fi

@@ -18,8 +18,8 @@ const script = join(import.meta.dirname, '../../supabase/load/drift.sh');
 
 type Series = Record<string, number[]>;
 
-function drift(series: Series, env: Record<string, string> = {}): { code: number; out: string } {
-  const lines = Object.entries(series).flatMap(([name, xs]) => xs.map((x, i) => `${name} ${i + 1} ${x}`)).join('\n');
+function drift(series: Series, env: Record<string, string> = {}, budget?: number): { code: number; out: string } {
+  const lines = Object.entries(series).flatMap(([name, xs]) => xs.map((x, i) => `${name} ${i + 1} ${x}${budget === undefined ? '' : ` ${budget}`}`)).join('\n');
   const r = spawnSync('bash', [script], { input: lines + '\n', encoding: 'utf8', env: { ...process.env, ...env } });
   return { code: r.status ?? -1, out: r.stdout };
 }
@@ -97,6 +97,46 @@ describe('drift.sh', () => {
   });
 });
 
+describe('drift.sh, the budget', () => {
+  // The numbers of the CI run that failed on one window: 19.8, 30.3, 99.4 and 50.4 ms against 60.
+  it('passes a scenario whose typical window is within budget, though one window was not, and says so', () => {
+    const r = drift({ plans: [19.8, 99.4, 30.3, 50.4] }, {}, 60);
+    expect(r.code).toBe(0);
+    expect(r.out).toMatch(/· plans: 1 of 4 windows over the 60 ms budget \(worst 99\.4 ms\); the typical window, 40\.4 ms, is within it/);
+  });
+
+  it('fails a scenario whose typical window is over budget', () => {
+    const r = drift({ plans: [70, 80, 90, 20] }, {}, 60);
+    expect(r.code).toBe(1);
+    expect(r.out).toMatch(/✗ plans: the typical p95 is 75\.0 ms, over its budget of 60 ms \(3 of 4 windows over it\)/);
+  });
+
+  it('fails when every window is over, and when the middle pair of an even run averages above it', () => {
+    expect(drift({ a: [70, 71, 72, 73] }, {}, 60).code).toBe(1);
+    expect(drift({ a: [55, 64, 66, 58] }, {}, 60).code).toBe(1);
+    expect(drift({ a: [55, 62, 64, 58] }, {}, 60).code).toBe(0); // a median of exactly the budget is within it
+  });
+
+  it('is the old rule for one pass: one window, judged on itself', () => {
+    expect(drift({ a: [70] }, {}, 60).code).toBe(1);
+    expect(drift({ a: [50] }, {}, 60).code).toBe(0);
+  });
+
+  it('says nothing about a budget when it is not given one, and the other verdicts are unchanged', () => {
+    const r = drift({ a: [200, 200, 200, 200] });
+    expect(r.code).toBe(0);
+    expect(r.out).not.toMatch(/budget/);
+  });
+
+  it('judges each scenario on its own budget', () => {
+    const lines = ['a 1 50 60', 'a 2 50 60', 'a 3 50 60', 'a 4 50 60', 'b 1 50 40', 'b 2 50 40', 'b 3 50 40', 'b 4 50 40'].join('\n');
+    const r = spawnSync('bash', [script], { input: lines + '\n', encoding: 'utf8' });
+    expect(r.status).toBe(1);
+    expect(r.stdout).toMatch(/✗ b: the typical p95/);
+    expect(r.stdout).not.toMatch(/✗ a:/);
+  });
+});
+
 describe('drift.sh, for every series', () => {
   const series = arrayOf(int(1, 500), 14);
   const DEEP = { runs: 120 };
@@ -147,9 +187,16 @@ describe('the runner', () => {
   });
 
   it('records one sample per scenario per window, checks the invariants and the connections after each, and hands the samples to drift.sh', () => {
-    expect(run).toContain(`printf '%s %s %s\\n' "$name" "$window" "$p95" >> "$windows"`);
+    expect(run).toContain(`printf '%s %s %s %s\\n' "$name" "$window" "$p95" "$budget" >> "$windows"`);
     expect(run).toMatch(/run_pass\n\s+run_invariants\n\s+now=\$\(clients\)/);
     expect(run).toContain('"$here_load/drift.sh" < "$windows"');
+  });
+
+  it('judges a budget on the typical window in a soak, and on the one window in a single pass', () => {
+    const over = run.slice(run.indexOf("elif awk -v a=\"$p95\""), run.indexOf('else\n    echo "  ✓ $line"'));
+    expect(over).toMatch(/if \[ "\$soak" -gt 0 \]; then[\s\S]*⚠[\s\S]*else\n\s+echo "  ✗ \$line — over budget"; failed=1/);
+    // Errors still fail in every window.
+    expect(run).toMatch(/if \[ "\$\{errs:-0\}" != 0 \]; then\n\s+echo "  ✗ \$line, \$errs failed:"[\s\S]*failed=1/);
   });
 
   it('has a drift script that is executable', () => {
@@ -170,6 +217,10 @@ describe('the document', () => {
 
   it('names the switch, the comparison and what it does not show', () => {
     for (const phrase of ['LOAD_SOAK_WINDOWS', 'best** p95', 'No disk, bloat or memory reading', 'No browser soak', 'Not built']) expect(doc, phrase).toContain(phrase);
+  });
+
+  it('says how a budget is judged in a soak', () => {
+    for (const phrase of ['Budgets in a soak', 'typical (median) window', 'LOAD-HARNESS-OPEN-ISSUE-PLANS-P95']) expect(doc, phrase).toContain(phrase);
   });
 
   it('is what CI runs', () => {

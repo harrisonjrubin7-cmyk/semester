@@ -30,6 +30,19 @@ more than **5 ms** higher (`SOAK_RATIO`, `SOAK_MIN_DELTA_MS`), so a 0.3 ms path 
 became 0.9 ms is not a finding. With fewer than four windows it says it cannot see a
 trend and passes.
 
+## Budgets in a soak
+
+Each scenario also has a p95 budget. In a single pass a window over it fails the run.
+In a soak, one window over it is printed as a warning and the run is judged on the
+**typical (median) window** across all windows: a stall on a shared runner lifts one
+window, and a path that has really become slow lifts them all. CI's first soak run
+failed on one window of `plans` at 99.4 ms against 60 (the others 19.8, 30.3 and
+50.4 ms); its median, 40.4 ms, is within budget. The trade is stated: a single bad
+window now passes and a sustained one (the median over) fails. Errors, aborted runs
+and the invariants still fail in every window, and a run that is not a soak is
+unchanged. This does not fix the runner stall behind the intermittent `plans` miss that
+`docs/LOAD-HARNESS-OPEN-ISSUE-PLANS-P95.md` records, and it does not close that issue.
+
 ## What was shown
 
 - **A planted leak.** A scenario that appended 3000 rows to a table and then scanned it
