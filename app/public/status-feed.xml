@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Semester status: incidents</title>
+  <id>https://harrisonjrubin7-cmyk.github.io/semester/status-feed.xml</id>
+  <link rel="self" href="https://harrisonjrubin7-cmyk.github.io/semester/status-feed.xml"/>
+  <link rel="alternate" href="https://harrisonjrubin7-cmyk.github.io/semester/status.html"/>
+  <updated>2026-09-30T00:00:00Z</updated>
+</feed>

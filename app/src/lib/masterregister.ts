@@ -1486,8 +1486,8 @@ export const REGISTER: readonly Requirement[] = [
     validation: 'Status-page drill',
     severity: 'P0',
     status: 'building',
-    evidence: [{ path: 'app/public/status.html', shows: 'public status page: live browser probes of the app, sign-in and the database API, and a hand-kept incident list' }, { path: 'app/src/lib/statuspage.test.ts', shows: 'holds the page to the production project, the smoke probes and the service worker' }, { path: 'MONITORING.md', shows: 'the refusal reversed on 28 September' }],
-    gap: 'No subscriber notification process and no drill yet; incidents are written by hand into status-incidents.json.',
+    evidence: [{ path: 'app/public/status.html', shows: 'public status page: live browser probes of the app, sign-in and the database API, and a hand-kept incident list' }, { path: 'app/src/lib/statuspage.test.ts', shows: 'holds the page to the production project, the smoke probes and the service worker' }, { path: 'app/scripts/status-history.mjs', shows: 'the hourly record, the 90-day bars, the structured incident file and its Atom feed' }, { path: 'app/src/lib/statushistory.test.ts', shows: 'an unchecked day is never up; uptime is checks passed over checks made; the pages, the feed and the workflow are held to the module' }, { path: 'MONITORING.md', shows: 'the refusal reversed on 28 September' }],
+    gap: 'No subscriber notification process and no drill yet; incidents are written by hand into status-incidents.json, and the history begins with the first hourly record on the status-data branch, which has not yet run in production.',
   },
   {
     id: 'SUP-001',

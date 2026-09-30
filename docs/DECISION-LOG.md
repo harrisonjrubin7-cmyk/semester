@@ -3204,3 +3204,49 @@ AI training policy each said the providers' training and retention terms were
 - **Not changed:** `docs/evidence/` is not created. An executed agreement is
   what the vendor register and the compliance crosswalk wait for there, and
   a published web page is not one.
+
+## D-149 · The status page keeps a 90-day history from the day recording began, and a day nobody checked is never drawn as up
+
+**Decided 30 Sep 2026** (S5 of the site brief). The status page said "Nothing
+here is a cached report or an uptime figure", and the hourly production check
+kept nothing it found. Both were true and both were a gap: a buyer asks for
+history, and there was none to show.
+
+- **Where the record lives.** `production-smoke.yml` gains a `record` job. It
+  probes five components (the app, sign-in, saved work, the AI assistant and
+  Plus checkout), adds the result to `status-history.json` on a `status-data`
+  branch, and pushes that branch only. It is the one job with write access
+  (`contents: write`); it never touches main, and a queued hour is never
+  dropped for a newer one. The pages read the file from
+  `raw.githubusercontent.com`; the repository is public.
+- **Nothing is filled in.** History starts with the first record
+  (`since`). A day with no check is *no data yet*, drawn empty and never green;
+  an hour the scheduler skips records nothing, so a gap shows as a gap. A
+  percentage is checks passed over checks made and is absent when there were
+  none. Each row says how many checks and days it rests on.
+- **What the AI and checkout rows mean.** Only that the function answered a
+  browser preflight (200, 204 or 403; a 404 or a server error is down). No
+  model is called and no payment is attempted, and checkout runs on test keys
+  (D-128). The pages say so beside the bars.
+- **Incidents are structured.** `status-incidents.json` now carries id, title,
+  components, impact, start and resolution, and dated updates;
+  `incidentProblems` refuses one that is out of order, resolved without a
+  resolved update, or naming a component that does not exist. `status-feed.xml`
+  is the same file as an Atom feed, rendered by `scripts/status-feed.mjs` and
+  held to it by a test.
+- **Held by `statushistory.test.ts`.** The uptime arithmetic (24/24, 23/24 and
+  0/24 is 47 of 72, 65.28%), the probes (a redirect is not up; a 404 function
+  is gone), the page's own copy of `barState` against the module's, the company
+  site's copy of the component list, the URL the pages read against the branch
+  the workflow writes, and that only the `record` job can write.
+- **Limits, stated.** A host that enforces `public/_headers` would block the
+  history fetch from `raw.githubusercontent.com` and the page would say the
+  history could not be loaded; the app's CSP is not widened for it, because
+  `status.html` is served from GitHub Pages, which sends none. The status page
+  is still not hosted apart from the app it reports on, there are no
+  subscriber notifications, and GitHub's scheduler can delay or skip a run.
+  No uptime figure is a commitment: `launchcompleteness` still says not to
+  promise one.
+- **Not changed.** The live in-browser checks, the incident email address, and
+  the launch gate `operations-live`, which stays partial: no alert reaches a
+  named person.

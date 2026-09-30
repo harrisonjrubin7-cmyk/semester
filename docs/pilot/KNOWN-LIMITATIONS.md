@@ -79,7 +79,7 @@ either direction, that is a bug: report it the same way.
 
 ### Support is one address, read by a person, with no promised response time.
 
-**What does not work yet.** There is no support desk, no ticket system you can watch, and no response time anybody has committed to. The status page checks the service from your own browser when you open it; it keeps no history and sends no notifications.
+**What does not work yet.** There is no support desk, no ticket system you can watch, and no response time anybody has committed to. The status page checks the service from your own browser when you open it and shows the last 90 days as recorded hourly, starting the day recording began, with days before that shown as no data. It sends no notifications, and its AI and checkout rows only show that the service answered.
 
 **What to do instead.** Write to the address below with the screen, what you were doing and what you saw. For “is it down?”, open the status page from Help; Up means your browser reached it just now.
 

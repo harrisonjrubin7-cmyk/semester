@@ -4,6 +4,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { incidentProblems } from '../../scripts/status-history.mjs';
 
 /**
  * `public/status.html` sits outside the bundle so it still renders when the
@@ -64,14 +65,9 @@ describe('the status page', () => {
     expect(page).toMatch(/fetch\(check\.url, \{ cache: 'no-store'/);
   });
 
-  it('has an incident list that parses', () => {
+  it('has an incident list that parses, in the structure the page and the feed read', () => {
     const data = JSON.parse(readFileSync(join(root, 'public', 'status-incidents.json'), 'utf8'));
     expect(Array.isArray(data.incidents)).toBe(true);
-    for (const x of data.incidents) {
-      expect(typeof x.date).toBe('string');
-      expect(typeof x.status).toBe('string');
-      expect(typeof x.title).toBe('string');
-      expect(typeof x.detail).toBe('string');
-    }
+    expect(incidentProblems(data)).toEqual([]);
   });
 });

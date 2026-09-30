@@ -4,6 +4,12 @@
 # PostgREST. The institutional check activates only when both production URLs
 # are configured; a half-configuration fails loudly instead of silently
 # claiming that a gateway nobody checked is healthy.
+#
+# The `record` job writes each hour's result down (app/scripts/status-record.mjs)
+# on the `status-data` branch, which the status pages read for their 90-day
+# bars. It is the only job with write access, and it can write only that
+# branch: it never touches main. History starts with the first run; an hour the
+# scheduler skips records nothing, and the pages show that as "no data yet".
 
 name: Production smoke
 
@@ -66,3 +72,44 @@ jobs:
           SEMESTER_PRODUCTION_APP_URL: ${{ vars.SEMESTER_PRODUCTION_APP_URL }}
           SEMESTER_PRODUCTION_GATEWAY_URL: ${{ vars.SEMESTER_PRODUCTION_GATEWAY_URL }}
         run: node scripts/production-smoke.mjs
+
+  record:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    # One writer at a time, and a queued run is never dropped for a newer one:
+    # each hour's line is the record.
+    concurrency:
+      group: status-history
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - name: Check out the history branch, or start it
+        run: |
+          if git ls-remote --exit-code --heads origin status-data >/dev/null 2>&1; then
+            git fetch origin status-data
+            git worktree add "$RUNNER_TEMP/history" FETCH_HEAD
+          else
+            git worktree add --detach "$RUNNER_TEMP/history"
+            (cd "$RUNNER_TEMP/history" && git checkout --orphan status-data && git rm -rf . >/dev/null)
+          fi
+      - name: Probe and record
+        working-directory: app
+        env:
+          SEMESTER_PUBLIC_APP_URL: ${{ vars.SEMESTER_PRODUCTION_APP_URL }}
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL || secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_KEY: ${{ vars.VITE_SUPABASE_KEY || secrets.VITE_SUPABASE_KEY }}
+        run: node scripts/status-record.mjs "$RUNNER_TEMP/history/status-history.json"
+      - name: Commit the record to status-data
+        working-directory: ${{ runner.temp }}/history
+        run: |
+          git config user.name "semester-status"
+          git config user.email "status@users.noreply.github.com"
+          git add status-history.json
+          git commit -m "Status check $(date -u +%Y-%m-%dT%H:%MZ)"
+          git push origin HEAD:refs/heads/status-data

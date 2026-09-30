@@ -30,6 +30,21 @@ describe('service notices', () => {
     expect(full.kind).toBe('maintenance');
     expect(full.screens).toEqual(['calendar']);
     expect(full.until).toBe(Date.UTC(2026, 9, 3, 7));
+    // The shape scripts/status-history.mjs validates, which is what an operator posts now.
+    const recorded = (over: Record<string, unknown> = {}) => ({
+      id: 'checkout-slow', title: 'Checkout is slow', components: ['checkout'], impact: 'partial',
+      started: '2026-10-05T10:00:00Z', resolved: null,
+      updates: [{ at: '2026-10-05T10:00:00Z', status: 'investigating', body: 'Plus checkout is answering slowly.' }, { at: '2026-10-05T10:30:00Z', status: 'identified', body: 'We have found the cause.' }],
+      ...over,
+    });
+    const [open] = readIncidents({ incidents: [recorded()] });
+    expect(open).toMatchObject({ id: 'checkout-slow', date: '2026-10-05', status: 'identified', kind: 'incident', screens: [], until: null, affects: 'We have found the cause.' });
+    expect(open.from).toBe(Date.UTC(2026, 9, 5, 10));
+    expect(live(open, Date.UTC(2026, 9, 5, 11))).toBe(true);
+    const [done] = readIncidents({ incidents: [recorded({ resolved: '2026-10-05T11:00:00Z', updates: [{ at: '2026-10-05T11:00:00Z', status: 'resolved', body: 'Fixed.' }] })] });
+    expect(done.status).toBe('resolved');
+    expect(live(done, Date.UTC(2026, 9, 5, 12))).toBe(false);
+    expect(readIncidents({ incidents: [recorded({ impact: 'maintenance' })] })[0].kind).toBe('maintenance');
     expect(readIncidents({ incidents: [{ title: 7 }, null, 'x'] })).toEqual([]);
     expect(readIncidents(null)).toEqual([]);
   });
