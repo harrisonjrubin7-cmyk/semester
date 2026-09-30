@@ -49,7 +49,7 @@ pushing rather than after CI tells you.
 The decision log numbered decisions in turn, and every pair of open pull
 requests collided on the next number and on the end of the same file. One pull
 request was renumbered nine times on 30 September, rerunning CI each time. The
-log is closed at D-155. A new decision is `docs/decisions/D-<pull request
+log is closed at D-156. A new decision is `docs/decisions/D-<pull request
 number>.md`: open the pull request first, then write it
 ([`docs/decisions/README.md`](docs/decisions/README.md)). The test refuses a
 new section in the log and any number written twice.

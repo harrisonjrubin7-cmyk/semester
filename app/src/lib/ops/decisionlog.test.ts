@@ -5,7 +5,7 @@ import { DIR, FILE, LAST_IN_LOG, LOG, duplicates, headings, sources, written } f
 
 /**
  * Decisions are numbered so that two open pull requests cannot collide: the
- * log keeps D-001 to D-155, and each later decision is its own file named for
+ * log keeps D-001 to D-156, and each later decision is its own file named for
  * the pull request that records it. See `decisionlog.ts` for why.
  */
 
@@ -18,7 +18,7 @@ describe('the decision record', () => {
     expect(duplicates(all)).toEqual([]);
   });
 
-  it('takes no new decision into the log: after D-155 each is a file in docs/decisions/', () => {
+  it('takes no new decision into the log: after D-156 each is a file in docs/decisions/', () => {
     const late = headings(readFileSync(join(root, LOG), 'utf8')).filter((n) => n > LAST_IN_LOG);
     expect(late, `write these as ${DIR}/D-<pull request number>.md instead`).toEqual([]);
   });
