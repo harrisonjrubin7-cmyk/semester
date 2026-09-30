@@ -7,7 +7,6 @@ import {
   DAYS,
   FUNCTION_ANSWERS,
   barState,
-  dayKey,
   emptyHistory,
   incidentDays,
   incidentFeed,
