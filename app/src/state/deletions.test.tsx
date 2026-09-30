@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, useEffect } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import type { Session } from '@supabase/supabase-js';
-import type { CourseModule } from './shape';
+import type { CourseModule } from '../lib/types';
 
 /**
  * Deleting something, going offline, and coming back — end to end.
