@@ -840,4 +840,39 @@ describe('read-only mode', () => {
     expect((await health.json()).readOnly).toBe(false);
     expect((await f.request('/actions/prepare', f.input)).status).toBe(200);
   });
+
+  it('asks the automation ladder before it claims or executes, with grounds read from what it already checked', async () => {
+    /*
+     * Structural, because every request that reaches this line has all four
+     * grounds — the point is that the line cannot be removed unnoticed. The
+     * behavioural half is the happy path just above: a confirmed, authorised,
+     * offered, audited commit still completes.
+     */
+    const src = readFileSync(join(import.meta.dirname, 'gateway.ts'), 'utf8');
+    const ask = src.indexOf("mayStep(");
+    const claim = src.indexOf('journal.claim(row.review.id');
+    expect(ask, 'the commit path asks the ladder').toBeGreaterThan(0);
+    expect(ask, 'and does so before the journal is claimed').toBeLessThan(claim);
+    expect(src).toMatch(/const step = mayStep\(\s*\{ from: 'confirm', to: 'execute' \},\s*groundsFor\(/);
+    expect(src).toMatch(/if \(!step\.ok\) \{[\s\S]*?fail\(403, `This action cannot run yet: \$\{step\.why\}`, 'not_ready_to_execute'\);/);
+    expect(src).toMatch(/groundsFor\(/);
+    // A prepare never reaches it: nothing is asked of the ladder until a write is about to happen.
+    expect(src.indexOf("path === '/actions/prepare'")).toBeLessThan(ask);
+
+    const f = fixture();
+    const review = await f.prepare();
+    const done = await f.request('/actions/commit', { reviewId: review.id, confirmed: true });
+    expect(done.status).toBe(200);
+    expect(f.calls()).toBe(1);
+  });
+
+  it('never treats anything but an explicit true as confirmation, before the ladder is asked', async () => {
+    const f = fixture();
+    const review = await f.prepare();
+    for (const confirmed of ['true', 1, 'yes', null, undefined]) {
+      const refused = await f.request('/actions/commit', { reviewId: review.id, confirmed });
+      expect(refused.status, String(confirmed)).toBe(400);
+    }
+    expect(f.calls()).toBe(0);
+  });
 });

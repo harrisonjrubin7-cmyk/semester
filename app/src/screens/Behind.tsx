@@ -23,7 +23,7 @@
  */
 
 import { lazy, Suspense } from 'react';
-import { useNow, useStore } from '../state/store';
+import { useAccountId, useNow, useStore } from '../state/store';
 import { DIMMED_ROW } from '../lib/dim';
 import { Page } from '../components/Page';
 import { FirstRun } from './FirstRun';
@@ -35,6 +35,9 @@ import { behindLine, howBehind, moves, movesLine, triage, type Step } from '../l
 import type { Screen } from '../lib/types';
 import { misses, missesLine } from '../lib/misses';
 import { INSTITUTIONAL_PREVIEW } from '../lib/institutional-preview';
+import { LifeEvents } from '../components/LifeEvents';
+import { LIFE_EVENTS_KEY, dayOf, lifeEventsOn } from '../lib/lifeevents';
+import { seedHelp } from '../lib/help-routes';
 
 const FlightPlanRecovery = lazy(() =>
   import('../components/institutional/FlightPlanRecovery').then((module) => ({
@@ -65,6 +68,7 @@ const GROUPS: { where: Step['where']; label: string; note: string }[] = [
 export function Behind() {
   const { state, dispatch, catalog, courseCode } = useStore();
   const now = useNow();
+  const accountId = useAccountId();
   if (catalog.empty) return <FirstRun where="to sort out a bad week" />;
 
   // The hours are the student's own, from their work windows. Where they have
@@ -103,6 +107,26 @@ export function Behind() {
       </Blueprint>
 
       <FlightPlanRecoverySlot />
+
+      {/*
+        Before the deadlines, because a bad week is often not about the
+        deadlines: an availability that changed, somebody to look after, a
+        place to live. It asks for no reason and sends nothing — see
+        `lib/lifeevents.ts`. Off unless `VITE_ME_LIFE_EVENTS` is set.
+      */}
+      {lifeEventsOn() && (
+        <LifeEvents
+          storageKey={`${LIFE_EVENTS_KEY}:${accountId || 'device'}`}
+          today={dayOf(now)}
+          onGo={(screen) => dispatch({ type: 'go', screen })}
+          onHelp={(need) =>
+            seedHelp(
+              { need, from: 'You said something has changed. Nothing else is filled in.', fields: {} },
+              () => dispatch({ type: 'go', screen: 'university' }),
+            )
+          }
+        />
+      )}
 
       {/*
         Before the deadlines, because a percentage already gone outranks a
