@@ -13,18 +13,20 @@
  * check: it reads nothing on the forbidden list.
  *
  * It is a gate on *registration and on what a surface reads*, not a test of
- * outcomes. Semester collects no demographic data, by design, so there is no
- * measured result here to report, and none of these reviews claims one.
- * `disparity.ts` is the computation an institution would use, over data it
- * chooses to collect with consent, and nothing feeds it today.
+ * outcomes. No demographic data reaches this code, so there is no measured
+ * result here to report, and none of these reviews claims one. The owner says
+ * some is collected elsewhere (D-1019); this repository holds no record of
+ * what, where or under what consent, and nothing feeds `disparity.ts` today.
+ * It is the computation to use over data collected with consent.
  *
  * ## Who reviewed them
  *
- * The author, as the founder acting. That is not independent review and the
- * records say `independent: false`. The council has no equity seat; the trust
- * and safety seat is vacant. Constituting one, and deciding whether a
- * disabled-student and first-generation-student panel reads these, is a
- * governance decision this file cannot make (D-1019).
+ * Harrison Rubin, the owner, who named himself reviewer of the findings
+ * (D-1019). He is also the founder and directs the work, so that is not
+ * independent review and the records say `independent: false`. The council has
+ * no equity seat; the trust and safety seat is vacant. Whether a
+ * disabled-student and first-generation-student panel also reads these is
+ * still his call.
  *
  * `equity.test.ts` scans the source for every exported function that matches
  * the ranking names below, fails if one is neither reviewed nor exempt, fails
@@ -82,10 +84,10 @@ export interface Exempt {
 
 export const REVIEWED_ON = '2026-09-30';
 export const REVIEW_BY = '2027-03-31';
-export const REVIEWER = 'the author, as the founder acting';
+export const REVIEWER = 'Harrison Rubin, the owner, named reviewer of the findings';
 export const INDEPENDENT = false;
 
-const NO_DEMOGRAPHICS = 'None yet: no demographic data is collected, so a difference between groups cannot be measured. An institution that collects it with consent would use equity/disparity.ts.';
+const NO_DEMOGRAPHICS = 'None yet: no demographic data reaches this code, so a difference between groups cannot be measured here. Data collected with consent would be read with equity/disparity.ts.';
 const OWN_SCREEN = 'Nothing on this surface is a separate control; the ordinary screen-reader and keyboard behaviour of the screen it appears on applies, and it is covered by the responsive and accessibility plans.';
 
 export const REVIEWS: readonly Review[] = [
@@ -185,7 +187,7 @@ export const REVIEWS: readonly Review[] = [
     control: 'Suggested, never added: nothing enters the pipeline without the student tapping Track.',
     explains: 'Each programme states when it is usually open.',
     monitoring: NO_DEMOGRAPHICS,
-    findings: [{ id: 'F-1', text: 'The programme list is shipped data with no stated selection criteria or review of whose opportunities it omits.', owner: 'Content (D-1019 to name a reviewer)' }],
+    findings: [{ id: 'F-1', text: 'The programme list is shipped data with no stated selection criteria or review of whose opportunities it omits.', owner: 'Content, reviewed by Harrison Rubin' }],
   },
   {
     id: 'lib/launchpad.ts#matchMentors',

@@ -5,10 +5,11 @@ import { MIN_COHORT } from '../institution-ops';
  *
  * This is the computation behind the `equity_gap` metric in `institution-ops`,
  * which is defined, marked sensitive and needs a named reviewer who is not its
- * author, and is computed nowhere. Semester collects no demographic data, so
- * nothing calls this today: it is here so that an institution that chooses to
- * collect it, with consent and under its own governance, is not writing the
- * suppression rules for the first time on a sensitive figure.
+ * author, and is computed nowhere. No demographic data reaches this code (the
+ * owner says some is collected elsewhere, and this repository cannot confirm
+ * what), so nothing calls this today: it is here so that data collected with
+ * consent and under governance is not met by suppression rules written for the
+ * first time on a sensitive figure.
  *
  * ## What it refuses to show
  *

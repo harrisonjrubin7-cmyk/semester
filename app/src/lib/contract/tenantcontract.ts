@@ -31,11 +31,9 @@ import {
  *
  * Not the school's own administrator. A contract a tenant admin could edit is a
  * contract the tenant could widen, which is the thing it exists to prevent. This
- * module is pure and stores nothing; putting contracts in the database needs an
- * owner decision about who may write them (Semester's commercial owner, with a
- * second person approving, as configuration changes are in the Configuration
- * Studio) and is recorded as open in D-1019. Until then a contract is data that
- * a person with the signed order form writes into a migration.
+ * module is pure and stores nothing. Contracts are files in `contracts/`, one
+ * per tenant, written by the owner alone (D-1019) and checked by
+ * `contractfiles.ts`; `.github/CODEOWNERS` routes that directory to him.
  */
 
 export type Tier = 'standard' | 'priority' | 'named';

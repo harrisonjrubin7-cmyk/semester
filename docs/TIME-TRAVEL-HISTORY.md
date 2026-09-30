@@ -69,18 +69,39 @@ returned, even if the purge that would delete it has failed.
 
 ## Decisions required before any of this is lengthened or widened
 
-1. **Who sets the retention, and to what.** Thirty and ninety days are
-   engineering defaults. The retention owner (counsel, with the founder) decides
-   whether a student's own device needs a rule at all, and what a school may
-   require.
+**Decided by the owner, Harrison Rubin, on 30 September 2026 (D-1019):** he is the
+retention owner for this history, and so decides its period, whether snapshots
+may exist, and how a legal hold could reach it. He gave no period, so nothing
+was lengthened and **no retention schedule is approved**: the defaults below
+stand until he states one. What this store does in the meantime, as the safest
+thing the repository supports:
+
+- **Period.** 30 days, at most 90, and 0 turns it off. Unchanged.
+- **Snapshots.** Off. A snapshot exists only where a policy turns it on, and none
+  does. Unchanged.
+- **Legal hold.** The history lives only on the student's own device, is never
+  synced and so is never in anything Semester or a school could hold. It is
+  therefore outside #1012's hold and is not meant to be reached by one. If a
+  hold is ever to cover it, that needs a server-side copy, which does not exist
+  and is not proposed here. Whether counsel is asked is his call.
+- **Deletion.** The student's own deletion always wins, and Erase from this
+  device clears it.
+
+The five questions below stay as the list of what a change must decide. Nothing
+in this directory claims counsel, institutional or legal approval.
+
+1. **What retention, and what a school may require.** Thirty and ninety days are
+   engineering defaults. The owner decides whether a student's own device needs a
+   rule at all, and what a school may require.
 2. **Whether snapshots may exist.** Recomputing an answer needs the inputs, and
    inputs about a student's degree progress may be an education record once a
-   school holds them. Counsel decides whether, what, and for how long.
+   school holds them. The owner decides whether, what, and for how long; off
+   until he does.
 3. **Whether there is an institutional history.** It would need its own
    retention, student access and deletion rights, and an answer to how it meets
-   a legal hold (#1012 has since merged one; whether and how it could apply to a history kept only on a student's device is exactly the open question) when a student asks for
-   deletion. The owner and counsel decide; this store honours the student's
-   deletion and is never held.
+   a legal hold (#1012 has merged one; it does not reach a history kept only on a
+   student's device) when a student asks for deletion. The owner decides; this
+   store honours the student's deletion and is never held.
 4. **How a school's ceiling is set and by whom.** Through the tenant contract or
    the Configuration Studio, never by the school's own administrator alone.
 5. **Whether the fingerprint may be kept at all.** It is treated as personal

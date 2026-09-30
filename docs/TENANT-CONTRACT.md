@@ -50,11 +50,17 @@ as a defect in the source and went red.
 
 ## What is not built, and the decisions that remain
 
-- **Storage.** Nothing persists a contract. Putting one in the database needs a
-  decision on who may write it. It cannot be the school's own administrator,
-  who could then widen it; the natural owner is Semester's commercial owner with
-  a second person approving, as in the Configuration Studio. That studio is an
-  open pull request and this does not depend on it.
+- **Storage, decided (D-1019).** A contract is a file in this repository,
+  `contracts/<tenant id>.json`, and Harrison Rubin, the owner, is the only person
+  who writes them: `.github/CODEOWNERS` routes `/contracts/` to him alone. It is
+  not in the database because a file needs no migration, is versioned and
+  reviewed, and cannot be reached by a school's own administrator, who could
+  otherwise widen it. `contracts/` is empty: no school has a contract recorded,
+  and one is written from a signed order form, never from a guess. The
+  directory is checked on every pull request by `contractfiles.test.ts`, which
+  reads each file with `readContract` and fails one that is not sound, is named
+  for another tenant, or is not JSON. The cost is that a change needs a deploy;
+  moving contracts to the database later is a migration and a new decision.
 - **Wiring.** No screen shows a drift report and nothing calls
   `contractViolations` on a schedule. Doing so would add a destination, against
   the complexity budget, and is better as a section of an existing console than

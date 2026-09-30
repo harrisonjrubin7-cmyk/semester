@@ -1,6 +1,6 @@
 # Equity review gate
 
-> Code: `app/src/lib/equity/` · Decision: D-1019 · Reviewed 2026-09-30 by the author, as the founder acting. **Not an independent review.**
+> Code: `app/src/lib/equity/` · Decision: D-1019 · Reviewed 2026-09-30 by the author; Harrison Rubin, the owner, is the named reviewer of the findings. **Not an independent review**: he is also the founder and directs the work.
 
 Semester ranks, recommends, matches and routes: what to do first, which study
 session, which mentor, which report is read next. Each of those is a decision
@@ -22,9 +22,10 @@ motivation, intelligence, wellness or risk, income proxies and paid placement.
 ## What it does not do
 
 It gates **registration and what a surface reads**. It does not measure
-outcomes, because Semester collects no demographic data. No result in this
-document is a measured one. `equity/disparity.ts` is the computation an
-institution would use over data it chooses to collect with consent: it shows a
+outcomes: no demographic data reaches this code. No result in this
+document is a measured one. The owner says some demographic data is collected
+(see below). `equity/disparity.ts` is the computation to use over data
+collected with consent: it shows a
 group's rate only when the group, those who acted and those who did not all
 clear the floor of ten, and computes a gap only when every group is shown. It
 says nothing of cause or significance, and nothing feeds it today.
@@ -68,15 +69,28 @@ Nothing here changes a surface's behaviour. Each is an item with an owner.
 | Q-1 | The moderators' queue is newest first within a status, so the oldest open reports are read last. |
 | CA-1 | Camera-off participants sink below camera-on ones in the call gallery. |
 
-## Governance decisions still required
+## Governance decisions
 
-- **Who reviews.** The council has no equity seat and the trust and safety seat
-  is vacant. Until somebody other than the author holds it, `INDEPENDENT` is
-  `false` and this says so. Whether students who are disabled, first in their
-  family, international or veterans are asked to read these is the owner's call.
-- **Whether to collect anything.** Measuring a gap needs consented demographic
-  data, which the privacy model currently avoids. Collecting it is a privacy
-  decision before an engineering one, and belongs with counsel.
+Decided by the owner, Harrison Rubin, on 30 September 2026:
+
+- **Who reviews.** Harrison Rubin reviews the findings. He is also the founder,
+  so `INDEPENDENT` stays `false` and this says so. The council has no equity seat
+  and the trust and safety seat is vacant. Whether students who are disabled,
+  first in their family, international or veterans are also asked to read these
+  is still his call.
+- **Demographic data.** The owner states that some demographic data is
+  collected. **This repository cannot confirm it.** It has no code, schema,
+  consent text or privacy-impact row for it, and `institution-ops.ts` defines
+  the `equity_gap` figure only over cohorts that consented to demographic
+  reporting. So no gap is measured here, and this review reads nothing. Before
+  any is: name what is collected and where, record the consent, add its
+  privacy-impact row, and feed only aggregates through `disparity.ts`, which
+  hides any group under ten. Anything that says Semester collects no
+  demographic data, here or in public text, needs his check against what is
+  actually collected.
+
+Still open:
+
 - **The findings above.** Q-1 and CA-1 are the two a student could be hurt by;
   each is a one-line change and a policy choice.
 - **Review cadence.** Reviews are dated 2026-09-30 and due by 2027-03-31; the

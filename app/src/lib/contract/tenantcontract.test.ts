@@ -424,6 +424,8 @@ describe('the document', () => {
 
   it('says it is not wired, stores nothing, and records no contract', () => {
     expect(doc).toMatch(/Not wired to any screen/);
-    expect(doc).toMatch(/Nothing persists a contract/);
+    // Where a contract lives, and that none is recorded, are decided (D-1019): a file per tenant, empty today.
+    expect(doc).toMatch(/contracts\/<tenant id>\.json/);
+    expect(doc).toMatch(/no\s+school\s+has\s+a\s+contract\s+recorded/);
   });
 });
