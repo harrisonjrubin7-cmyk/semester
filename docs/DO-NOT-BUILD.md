@@ -85,6 +85,6 @@ The list in the continuity brief this page came from had ten rules; 11 and 12
 were added because the same brief asks for them elsewhere (undo and receipts,
 "Continue" only for real work), and a rule stated in one document and missing
 from this one is a rule that is not held. 14 was added with the alumni
-foundation (D-159), when fundraising first had tables to reach from. See
+foundation (D-1023), when fundraising first had tables to reach from. See
 [EXPERIENCE-CONTINUITY.md](EXPERIENCE-CONTINUITY.md) for where each of the
 brief's sixteen items stands.

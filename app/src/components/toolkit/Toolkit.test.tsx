@@ -7,6 +7,7 @@ import type { Screen } from '../../lib/types';
 import { DATA_BUDGET, MAX_RAW } from '../../lib/toolkit/data';
 import { toolkitDataKey, toolkitKey } from './store';
 import { Toolkit, type ToolkitCourse } from './Toolkit';
+import { clear, peek } from '../../lib/learningintent';
 
 /**
  * The toolkit driven as a student would: pick a goal, read why, open a
@@ -17,6 +18,7 @@ import { Toolkit, type ToolkitCourse } from './Toolkit';
 let root: Root;
 let host: HTMLDivElement;
 let opened: Screen[];
+let closed = 0;
 
 const ALL_ON = toolkitFlags({
   VITE_AI_TOOLKIT: 'preview',
@@ -35,6 +37,7 @@ const COURSES: ToolkitCourse[] = [
 beforeEach(() => {
   localStorage.clear();
   opened = [];
+  closed = 0;
   host = document.createElement('div');
   document.body.append(host);
   root = createRoot(host);
@@ -47,7 +50,7 @@ afterEach(() => {
 });
 
 const mount = (flags = ALL_ON) =>
-  act(() => root.render(<Toolkit courses={COURSES} flags={flags} now={new Date('2026-09-27T12:00:00')} onOpen={(s) => opened.push(s)} onClose={() => {}} />));
+  act(() => root.render(<Toolkit courses={COURSES} flags={flags} now={new Date('2026-09-27T12:00:00')} onOpen={(s) => opened.push(s)} onClose={() => { closed += 1; }} />));
 
 const button = (text: string | RegExp) => {
   const b = [...host.querySelectorAll('button')].find((x) => (typeof text === 'string' ? x.textContent?.trim() === text : text.test(x.textContent ?? '')));
@@ -261,4 +264,20 @@ it('keeps each account’s toolkit apart on a shared device', () => {
   tab('Assignments');
   expect(host.textContent).not.toContain('stages done');
   expect(localStorage.getItem(toolkitKey('student-b'))).toBeNull();
+});
+
+it('carries the assignment to the feedback inbox: its title and course, and leaves the toolkit for Study', () => {
+  clear();
+  mount();
+  tab('Assignments');
+  click(/^Start a essay workspace/);
+  expect(peek('feedback')).toBeNull();
+  click('File the feedback I received');
+  // The toolkit is a mode of Study, so going there means closing it; navigating to 'study' would leave the student where they are.
+  expect(closed).toBe(1);
+  expect(opened).not.toContain('study');
+  const intent = peek('feedback');
+  expect(intent?.work).toBe('Essay');
+  expect(intent?.courseCode).toBe('PSCI 1104');
+  clear();
 });

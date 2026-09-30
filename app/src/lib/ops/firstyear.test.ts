@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { GROUPS, GROUP_TITLE, MEASURES, type Measure } from './firstyear';
 import { cell, controlLine, link, renderedFrom, table } from './render';
+import { written } from './decisionlog';
 
 /**
  * The company’s first-year measures, held to what can actually be read.
@@ -58,9 +59,8 @@ describe('the company’s first-year measures', () => {
   });
 
   it('set no target without a decision, and today set none', () => {
-    const log = read('docs/DECISION-LOG.md');
     for (const m of MEASURES) {
-      if (m.target) expect(log.includes(`## ${m.target.decision} ·`), `${m.id}: target ${m.target.value} cites ${m.target.decision}, which is not in the log`).toBe(true);
+      if (m.target) expect(written(root, m.target.decision), `${m.id}: target ${m.target.value} cites ${m.target.decision}, which is not in the log`).toBe(true);
     }
     expect(MEASURES.filter((m) => m.target)).toEqual([]);
   });
@@ -135,8 +135,9 @@ function render(): string {
   out.push(
     '## Setting a target',
     '',
-    '1. Record the decision in `docs/DECISION-LOG.md` as `D-nnn`, with the',
-    '   number, the date it is judged on, and what would change it.',
+    '1. Record the decision as `docs/decisions/D-<n>.md`, `n` being its pull',
+    '   request\'s number, with the number, the date it is judged on, and what',
+    '   would change it.',
     '2. Set `target: { value, decision }` on the measure in',
     '   `app/src/lib/ops/firstyear.ts`.',
     '3. Run `npm run registers` from `app/` to rewrite this page.',

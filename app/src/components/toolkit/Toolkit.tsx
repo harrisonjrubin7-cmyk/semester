@@ -293,6 +293,7 @@ export function Toolkit({
           layers={layers}
           initialTemplate={openTemplate}
           now={now}
+          onLeave={onClose}
         />
       )}
       {section === 'research' && on(flags.researchStudio) && <ResearchPanel library={library} />}

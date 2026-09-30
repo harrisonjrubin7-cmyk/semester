@@ -71,6 +71,26 @@ export const SOURCES: readonly { path: string; title: string; what: string }[] =
 
 export const READ_ON = '2026-09-29';
 
+/**
+ * The second reading of the same project, 30 September 2026, 13:46 UTC,
+ * read-only through the advisor and `pg_catalog` (D-1026). The register was
+ * asked to hold, and it did: the 180 functions the advisor listed are exactly
+ * the 180 rows below — the first reading's 151 and the 29 whose migrations had
+ * not then been applied. The tables did not: four (`private.account_ages` and
+ * `public.registration_completions`, `_holds`, `_requests`) arrived with those
+ * migrations and had no disposition until this reading. They have one now.
+ *
+ * The same reading's other advisor findings, and what became of each, are in
+ * `docs/ADVISOR-RECONCILIATION-2026-09-30.md`.
+ */
+export const SECOND_READING = {
+  on: '2026-09-30',
+  functions: 180,
+  tables: 49,
+  /** Executable by `anon` or PUBLIC: none. Without a pinned `search_path`: none. */
+  clientFunctionsOpenToAnon: 0,
+} as const;
+
 export const PROJECT = 'lzrqvlugnawcgywkhqlz';
 
 /**
@@ -278,11 +298,20 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
 ];
 
 /**
- * Callable definer functions added by migrations that are **not** applied to
- * production, so were not in the advisor's reading. They have rows in
- * `FUNCTIONS` like any other; they are named here so the reading stays the
- * reading — the page says 151 on production and lists these beside it — and
- * a file here that is applied moves its functions into the count.
+ * Migrations in `SINCE_READING` that production still lacked at
+ * `SECOND_READING.on`. Their functions have rows in `FUNCTIONS` but were not in
+ * the reading, so the reading's count is the register's rows minus these.
+ * Delete an entry when the file is applied, and the next reading's count moves.
+ */
+export const NOT_YET_APPLIED: readonly string[] = ['20260930180000_console_command_center.sql'];
+
+/**
+ * Callable definer functions added by migrations that were **not** applied to
+ * production on `READ_ON`, so were not in the advisor's first reading. They
+ * have rows in `FUNCTIONS` like any other; they are named here so the first
+ * reading stays the reading — the page says 151 and lists these beside it.
+ * The second reading (`SECOND_READING`) finds every one of them applied except
+ * the files in `NOT_YET_APPLIED`.
  */
 export const SINCE_READING: readonly { file: string; functions: readonly string[] }[] = [
   {
@@ -340,8 +369,12 @@ export const SINCE_READING: readonly { file: string; functions: readonly string[
 /** How many functions the advisor listed on production on `READ_ON`. */
 export const READ_COUNT = 151;
 
+/** How many policy-less tables it listed the same day. */
+export const READ_TABLES = 45;
+
 /**
- * The advisor's 45 `rls_enabled_no_policy` tables. `private-internal` is a
+ * The advisor's `rls_enabled_no_policy` tables: 45 on `READ_ON`, 49 on
+ * `SECOND_READING.on`. `private-internal` is a
  * table in `private`, which PostgREST does not expose; `server-only` is a
  * `public` table with every client privilege revoked, reached only through a
  * definer function in `FUNCTIONS` or an Edge Function holding the service key.
@@ -350,6 +383,7 @@ export const READ_COUNT = 151;
 export type Disposition = 'private-internal' | 'server-only';
 
 export const TABLES: readonly (readonly [table: string, disposition: Disposition, writer: string])[] = [
+  ['private.account_ages', 'private-internal', 'the sign-up age trigger and state_my_age (20260929150000_minimum_age.sql)'],
   ['private.ai_usage_month', 'private-internal', 'the AI gateway meter'],
   ['private.ai_usage_reservation', 'private-internal', 'the AI gateway meter'],
   ['private.approved_source_content', 'private-internal', 'the intelligence gateway'],
@@ -391,6 +425,9 @@ export const TABLES: readonly (readonly [table: string, disposition: Disposition
   ['public.lti_nonce', 'server-only', 'the LTI launch function'],
   ['public.lti_platform', 'server-only', 'the LTI launch function'],
   ['public.payment_events', 'server-only', 'the verified Stripe webhook'],
+  ['public.registration_completions', 'server-only', 'the registration definer functions (20260929300000_registration_transaction.sql)'],
+  ['public.registration_holds', 'server-only', 'the registration definer functions (20260929300000_registration_transaction.sql)'],
+  ['public.registration_requests', 'server-only', 'the registration idempotency ledger, private.registration_replay and registration_commit'],
   ['public.scim_credential', 'server-only', 'the SCIM gateway'],
   ['public.site_leads', 'server-only', 'submit_site_lead, called by the lead-intake Edge Function with the service key'],
   ['public.support_ticket_messages', 'server-only', 'the support ticket functions'],
@@ -405,8 +442,8 @@ export const OPEN: readonly { id: string; severity: 'low' | 'medium' | 'high'; w
   {
     id: 'DR-01',
     severity: 'low',
-    what: '`kill_switch_engaged(switch, tenant)` answers for any tenant, where the read policy on `feature_kill_switch` shows a signed-in account only the platform-wide rows, its own school\'s and those it holds `integration:view` over. The one bit it discloses is whether another school has a named switch engaged. `grants.check.sql` records it as deliberate: one boolean, no row.',
-    closes: 'Scope the answer to the policy\'s tenants for a client caller, or accept the disclosure in SECURITY.md. The definer callers (`tenant_plan`, `tenant_sso_policy`, the LTI entitlement facts, the trust room) run as the owner and are unaffected either way.',
+    what: '`kill_switch_engaged(switch, tenant)` answers for any tenant, where the read policy on `feature_kill_switch` shows a signed-in account only the platform-wide rows, its own school\'s and those it holds `integration:view` over. The one bit it discloses is whether another school has a named switch engaged. `grants.check.sql` records it as deliberate: one boolean, no row. It is the only one of the 180 whose body names neither `auth.uid()` nor a `private.` gate (checked on production, 30 September).',
+    closes: 'Not by revoking `EXECUTE` from `authenticated`, as the 30 September reconciliation first considered: production has three callers that run with the signed-in caller\'s rights, not the owner\'s — `public.effective_module_modes`, `private.gtm_placement_guard` and `private.gtm_send_guard` (SECURITY INVOKER) — and each would fail for every signed-in user. Scope the answer to the policy\'s tenants for a client caller, and give those three a definer wrapper first, or accept the disclosure in SECURITY.md. The definer callers (`tenant_plan`, `tenant_sso_policy`, the LTI entitlement facts, the trust room) run as the owner and are unaffected either way.',
   },
   {
     id: 'DR-02',
@@ -418,8 +455,14 @@ export const OPEN: readonly { id: string; severity: 'low' | 'medium' | 'high'; w
   {
     id: 'DR-03',
     severity: 'low',
-    what: 'The 45 tables are pinned to the reading of 29 September. A table that gains or loses its last policy through a `format()` loop is not noticed here.',
+    what: 'The 49 tables are pinned to the reading of 30 September (45 on 29 September, and the four that arrived between). A table that gains or loses its last policy through a `format()` loop is not noticed here. `supabase/advisor-reconciliation.check.sql` now asks the schema directly whether any table with row-level security and no policy is open to a client role, which is the fact that makes the notice benign; what it cannot see is a table whose policy count changes by a loop, or whether its intended writer exists.',
     closes: 'Re-read the advisor at each quarterly architecture review and compare; or move the loops\' table lists into data the test can read.',
+  },
+  {
+    id: 'DR-04',
+    severity: 'low',
+    what: '`anon` holds table privileges it cannot use on 26 `public` tables, found by the 30 September reading: INSERT, UPDATE, DELETE and TRUNCATE on the caller-owned tables (`appointments`, `blocks`, `calendar_feeds`, `courses`, `enrollments`, `family_grants`, `group_members`, `group_tasks`, `groups`, `message_reactions`, `messages`, `notes`, `push_devices`, `push_queue`, `referral_codes`, `referrals`, `schools`, `sittings`, `state`, `tasks`, `usage`, and a part of `form_responses`, `organizations`, `organization_members`, `profiles`, `reports`). Supabase\'s default privileges grant them. All 26 have row-level security on, and every policy that could let `anon` write requires `auth.uid()` or an admin/capability check except one: `answer an open form` on `form_responses`, which lets anyone answer a form its owner opened, and is deliberate (`20260921143455_forms.sql`). So nothing is exposed today. TRUNCATE is not subject to row-level security, but PostgREST has no verb for it.',
+    closes: 'Revoke INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES and TRIGGER from `anon` on those tables, keeping INSERT on `form_responses`, and extend `supabase/grants.check.sql`, which asks about function `EXECUTE` and not about table privileges, to hold the rule. Not done in the 30 September reconciliation: it is a grant change across twenty-six core-app tables that the advisor did not flag, and wants its own review.',
   },
 ];
 
