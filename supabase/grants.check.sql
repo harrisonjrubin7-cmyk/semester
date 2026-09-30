@@ -565,7 +565,7 @@ declare
     -- sibling `erase_account(uuid)` takes an account id and so is
     -- service_role only, and is not here.
     'export_my_data()',
-    -- 20260930233000_data_subject_request_intake.sql: derives both subject and
+    -- 20260930234000_data_subject_request_intake.sql: derives both subject and
     -- tenant from auth.uid(), accepts only the four bounded request kinds, and
     -- returns an existing open same-kind request instead of duplicating it.
     -- `audit-and-subject-requests.check.sql` proves the caller and tenant
