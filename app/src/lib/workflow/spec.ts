@@ -135,6 +135,10 @@ export function textOk(t: unknown, max: number): t is string {
   return typeof t === 'string' && t.trim().length >= 1 && t.trim().length <= max && !CONTROL.test(t) && !CARD.test(t);
 }
 
+/** The keys a step and a requirement may hold; the database lists the same. */
+const STEP_KEYS = ['id', 'kind', 'title', 'owner', 'sla_days'];
+const REQ_KEYS = ['id', 'fact', 'op', 'value', 'explain', 'next_step'];
+
 const isObject = (v: unknown): v is Record<string, unknown> => v !== null && typeof v === 'object' && !Array.isArray(v);
 
 /**
@@ -182,6 +186,7 @@ export function problems(d: unknown): string[] {
         if (seen.includes(sid)) out.push(`dup_step:${sid}`);
       }
       seen.push(sid);
+      if (Object.keys(st).some((k) => !STEP_KEYS.includes(k))) out.push(`step_unknown_key:${sid}`);
       if (typeof st.kind !== 'string' || !(STEP_KINDS as readonly string[]).includes(st.kind)) {
         out.push(`step_kind:${sid}`);
       } else {
@@ -224,6 +229,7 @@ export function problems(d: unknown): string[] {
           if (seen.includes(sid)) out.push(`dup_req:${sid}`);
         }
         seen.push(sid);
+        if (Object.keys(rq).some((k) => !REQ_KEYS.includes(k))) out.push(`req_unknown_key:${sid}`);
         const fact = typeof rq.fact === 'string' && (FACT_KEYS as string[]).includes(rq.fact) ? FACTS[rq.fact as FactKey] : null;
         if (!fact) {
           out.push(`req_fact:${sid}`);
@@ -258,6 +264,7 @@ export function problemText(code: string): string {
     case 'title': return 'The workflow needs a title.';
     case 'steps_count': return `A workflow has 1 to ${LIMITS.steps_max} steps.`;
     case 'step_shape': case 'step_id': return `Step ${ref} needs a short id made of lowercase letters, digits and underscores.`;
+    case 'step_unknown_key': return `Step “${ref}” holds something a step does not: remove it.`;
     case 'dup_step': return `Two steps share the id “${ref}”.`;
     case 'step_kind': return `Step “${ref}” needs a kind from the list.`;
     case 'step_title': return `Step “${ref}” needs a title.`;
@@ -269,6 +276,7 @@ export function problemText(code: string): string {
     case 'handoff': return 'Name the office the workflow hands off to.';
     case 'requires_count': return `A workflow has at most ${LIMITS.requires_max} eligibility checks.`;
     case 'req_shape': case 'req_id': return `Check ${ref} needs a short id made of lowercase letters, digits and underscores.`;
+    case 'req_unknown_key': return `Check “${ref}” holds something a check does not: remove it.`;
     case 'dup_req': return `Two checks share the id “${ref}”.`;
     case 'req_fact': return `Check “${ref}” needs a fact from the list.`;
     case 'req_op': return `Check “${ref}” uses a comparison that does not fit its fact.`;

@@ -96,6 +96,8 @@ describe('checking a definition', () => {
     expect(problems(VALID)).toEqual([]);
     expect(problems([1])).toEqual(['not_object']);
     expect(problems(vary((d) => { d.webhook_url = 'x'; }))).toEqual(['unknown_key:webhook_url']);
+    expect(problems(vary((d) => { stepsOf(d)[0].student_email = 'a@b.example'; }))).toEqual([`step_unknown_key:${(VALID as { steps: { id: string }[] }).steps[0].id}`]);
+    expect(problems(vary((d) => { reqsOf(d)[0].student_email = 'a@b.example'; }))).toEqual([`req_unknown_key:${(VALID as { requires: { id: string }[] }).requires[0].id}`]);
     expect(problems(vary((d) => { d.title = '  '; }))).toEqual(['title']);
     expect(problems(vary((d) => { d.title = 'Pay 4111 1111 1111 1111'; }))).toEqual(['title']);
     expect(problems(vary((d) => { stepsOf(d)[0].kind = 'run_script'; }))).toEqual(['step_kind:check']);

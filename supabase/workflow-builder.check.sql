@@ -182,6 +182,10 @@ begin
   perform pg_temp.counted('the valid definition has no problems', length(pg_temp.problems(pg_temp.valid_def())), 0);
   perform pg_temp.says('a definition must be an object', pg_temp.problems('[1]'), 'not_object');
   perform pg_temp.says('an unknown top-level key', pg_temp.variant('"handoff":', '"webhook_url": "x", "handoff":'), 'unknown_key:webhook_url');
+  perform pg_temp.says('a step holding a student''s email',
+    pg_temp.variant('"id": "check", "kind"', '"id": "check", "student_email": "a@b.example", "kind"'), 'step_unknown_key:check');
+  perform pg_temp.says('a check holding a student''s email',
+    pg_temp.variant('"id": "enrolled", "fact"', '"id": "enrolled", "student_email": "a@b.example", "fact"'), 'req_unknown_key:enrolled');
   perform pg_temp.says('a blank title', pg_temp.variant('"Registration clearance"', '"  "'), 'title');
   perform pg_temp.says('a card number in the title', pg_temp.variant('"Registration clearance"', '"Pay 4111 1111 1111 1111"'), 'title');
   perform pg_temp.says('an unknown step kind', pg_temp.variant('"rule_check"', '"run_script"'), 'step_kind:check');

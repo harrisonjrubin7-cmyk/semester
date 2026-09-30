@@ -158,6 +158,12 @@ begin
         out := array_append(out, 'dup_step:' || sid);
       end if;
       seen := array_append(seen, sid);
+      -- Closed, like the definition itself: a step holds these five keys and
+      -- nothing else, so a field such as a student's email has nowhere to sit.
+      if exists (select 1 from jsonb_object_keys(st) as key
+                  where key not in ('id', 'kind', 'title', 'owner', 'sla_days')) then
+        out := array_append(out, 'step_unknown_key:' || sid);
+      end if;
       if jsonb_typeof(st -> 'kind') is distinct from 'string'
          or not ((spec -> 'step_kinds') @> jsonb_build_array(st ->> 'kind')) then
         out := array_append(out, 'step_kind:' || sid);
@@ -209,6 +215,10 @@ begin
           out := array_append(out, 'dup_req:' || sid);
         end if;
         seen := array_append(seen, sid);
+        if exists (select 1 from jsonb_object_keys(rq) as key
+                    where key not in ('id', 'fact', 'op', 'value', 'explain', 'next_step')) then
+          out := array_append(out, 'req_unknown_key:' || sid);
+        end if;
         fact_spec := case when jsonb_typeof(rq -> 'fact') = 'string' then spec -> 'facts' -> (rq ->> 'fact') else null end;
         if fact_spec is null then
           out := array_append(out, 'req_fact:' || sid);
