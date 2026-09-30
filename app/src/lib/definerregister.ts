@@ -324,7 +324,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
  * Delete an entry when the file is applied, and the next reading's count moves.
  */
 export const NOT_YET_APPLIED: readonly string[] = [
-  '20260930180000_console_command_center.sql',
+  '20260930173030_console_command_center.sql',
   '20260930185000_school_membership_enforcement.sql',
   '20260930200000_school_offboarding.sql',
 ];
@@ -339,7 +339,7 @@ export const NOT_YET_APPLIED: readonly string[] = [
  */
 export const SINCE_READING: readonly { file: string; functions: readonly string[] }[] = [
   {
-    file: '20260930180000_console_command_center.sql',
+    file: '20260930173030_console_command_center.sql',
     functions: ['console_command_center'],
   },
   {
