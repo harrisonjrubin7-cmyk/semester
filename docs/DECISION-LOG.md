@@ -3567,3 +3567,50 @@ not a penetration test and claims nothing about FERPA.
   backfill), which is the intent and is still a data change; it wants a look at
   the affected rows first.
 - **Claims.** No claim moves. Not FERPA compliant, not certified, not pilot-ready.
+
+---
+
+## D-158 · Three of the hardening memo's proposals were the ones this tree did not already hold, and each is a test
+
+**Decided 30 Sep 2026.** Four strategy memos (deepen and harden; harden and
+strengthen; every area; frontrunner) proposed about sixty controls. Most were
+already in the tree, under other names: safe defaults, the evidence register,
+break-glass, the source and uncertainty labels, the status history, the trust
+centre, migration and rollback. Reading for the defect and not the title, three
+had no counterpart, and each is built as a gate and not as a document.
+
+- **Complexity budgets.** `app/complexity-budgets.json` caps what a person has
+  to learn — flags (27), kill switches (6), destinations (63), navigation
+  groups (8), plans (4), subprocessors (6) — set from the measurement on the
+  day. `complexitybudgets.test.ts` fails over budget, and fails again when a
+  budget sits more than ten percent (two at the smallest) above its count, so
+  a figure cannot drift up until it constrains nothing. Raising one is a diff
+  a reviewer sees.
+- **Policy drift.** `trust/policydrift.test.ts` holds the public site to the
+  plans and the draft refund policy: the Plus price, the billing toggle's
+  price, any refund window stated, and that none is stated as granted while
+  the policy is a draft. It found nothing wrong today; it exists because the
+  site, the app and the draft are three files that nobody is required to open
+  together.
+- **Exit plans.** `trust/exitplans.ts` gives each of the six subprocessors a
+  fallback, a replacement candidate, an exit path and a review date, and
+  `exitplans.test.ts` fails on a subprocessor with no plan, a plan for one that
+  is not, or a review date that has passed (first due 31 Mar 2027). The
+  replacements are candidates that have been thought about, not agreements.
+
+**Proved, not assumed.** Each test was run against the defect it guards and
+went red, then the fix was restored: a budget one below its count, a budget
+forty above, a site price changed, a refund window changed to 30, a refund
+stated as granted, a subprocessor's plan removed, and a review date in the
+past. Each parser has a control that fails if it finds nothing.
+
+**Not built, and why.** Formal methods, a time-travel store for rule
+evaluations, an equity review gate, contract-aware tenant configuration and
+load-and-soak testing are real and each is a project, not a test. They are not
+declined; they are not started, and nothing here claims they are. The
+time-travel store in particular needs a decision about what snapshot of a
+student's record may be kept and for how long, which is a privacy decision
+before it is an engineering one.
+
+**What would change it:** a budget that has to rise every month is measuring a
+surface that is growing on purpose, and wants a different unit.
