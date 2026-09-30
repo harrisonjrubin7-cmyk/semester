@@ -24,6 +24,23 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### For school staff: a Workflows tab on University (off for now)
+
+Staff with workflow rights at a school get a **Workflows** tab for the ten
+processes a school runs: registration clearance, advisor approval, transfer-
+credit review, study-abroad approval, tutoring referral, scholarship
+deadlines, organization events, internship approval, course substitution and
+graduation application. Each starts from a template you change: its steps, who
+owns each, the checks a student must meet, and the office it hands off to. A
+preview shows what a student would be told. A change is a draft; a colleague
+who holds the publish role publishes it as a numbered version, and you cannot
+publish your own.
+
+It is switched off, and nothing in the app runs these definitions yet: the tab
+says so. It holds no student and no request. Students see no difference.
+
+Nothing to do.
+
 ### On the public site: a page for the K–12 edition
 
 A new page, `/k-12/`, describes Semester for high school: who it would start

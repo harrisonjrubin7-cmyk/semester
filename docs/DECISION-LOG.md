@@ -3276,3 +3276,49 @@ detail below is how the tree reads it, and the owner can correct any of it.
   groups (G-03). `tenancy.check.sql` records that any confirmed account can
   enter any school's course room by design, and closing that would empty
   rooms for students who have not claimed a school. It waits for the owner.
+
+## D-151 · Schools define their own workflows in a Workflow Builder, the rules are deterministic, and nothing runs them yet
+
+**Decided 30 Sep 2026.** The platform brief's third "highest-leverage final
+addition" is a workflow builder and policy engine: "the policy engine should
+evaluate deterministic rules, not vague AI judgments". The owner asked for the
+briefs to be executed and chose this as the second slice, on its own branch.
+
+- **A definition, not a run** (`20260930110000_workflow_builder.sql`).
+  `workflow_versions` holds a school's definition of one of the brief's ten
+  workflows: ordered steps, eligibility checks, and the office it hands off
+  to. At most one draft per school and workflow; published versions 1, 2, 3 …
+  that no client edits or deletes; a rollback is a new draft. No student,
+  request or answer is stored.
+- **A closed spec, checked twice.** Step kinds, owners, eight facts and their
+  comparisons are lists; a school writes no expression. The database refuses
+  an unknown fact, a value out of range, a handoff the student has not
+  confirmed, a handoff with no named office, and a workflow that does not end
+  by completing. `lib/workflow/spec.ts` carries the same and `spec.test.ts`
+  holds them equal.
+- **A rule reads nothing the governance example prohibits.** The eight facts
+  are enrolment, an active term, a prerequisite, a hold's presence, an
+  advisor, an open deadline, credits earned and class year. No grade, balance,
+  diagnosis, disciplinary or immigration detail; a test holds the list to the
+  brief's own prohibited-fields example.
+- **Whoever drafted a definition does not publish it.** `workflow:manage`
+  drafts, `workflow:publish` publishes, `university_admin` holds both and
+  still cannot publish their own draft; a publisher alone cannot rewrite a
+  draft. Audited into `tenant_policy_audit_event` with the actor's grant.
+- **The engine has three answers.** A check passes, fails, or cannot be told
+  because the fact is unknown. Unknown is neither: the student is not offered
+  the action on a guess nor told they are ineligible on one, and is pointed to
+  the office that can check the official record. The builder's preview runs
+  this engine, so a school sees what a student would be told.
+- **Official systems keep authority.** A handoff step names an office and is a
+  pointer; nothing here writes into a system of record.
+- **A University tab, Workflows, behind `workflowBuilder`** (off by default;
+  `VITE_WORKFLOW_BUILDER`). Capability matrix +10.
+- **Checked.** `workflow-builder.check.sql`, 69 checks, each guard shown red
+  when removed and green when restored (eleven mutations, one of which first
+  survived because the test changed the wrong field of the draft at publish
+  time). The UI and engine tests were broken the same way.
+- **Not built:** workflow instances (a student going through one), staff
+  queues, SLA clocks and escalations, notifications, a visual canvas, a source
+  for the facts, and any write into an official system.
+
