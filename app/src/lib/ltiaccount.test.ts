@@ -151,6 +151,13 @@ const NOT_CONTENT = new Set([
   'access_log',
   'profiles',
   /*
+   * A request to be recognised as a member of a university (G-03). It records
+   * that somebody asked and what was decided, not anything they made, and it is
+   * listed in `OWNED_TABLES` only so Delete my account removes it. An account
+   * whose only history is a waiting request has lost nothing by being retired.
+   */
+  'school_membership_requests',
+  /*
    * `activity` is the strongest case in this list rather than the weakest, and
    * it is worth saying why in more than a word.
    *

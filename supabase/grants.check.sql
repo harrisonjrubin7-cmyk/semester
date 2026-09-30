@@ -205,6 +205,30 @@ declare
     -- function is the only way in and has to be callable by a signed-in
     -- account. See 20260921170000_schools.sql.
     'claim_school(want text)',
+    -- Course rooms limited to one university (20260930180000). Each is gated
+    -- inside its body; `school-membership.check.sql` walks the refusals.
+    'request_school_membership(want text, why text)',
+    'withdraw_school_request(req uuid)',
+    'decide_school_request(req uuid, approve boolean, why text)',
+    'leave_school()',
+    'revoke_school_membership(target uuid, why text)',
+    'school_enforcement_readiness(want text)',
+    'school_requests_for_admin(want text)',
+    'set_school_enforcement(want text, on_ boolean, acknowledge_locked_out integer)',
+    -- A school leaves in steps (20260930200000). Each is gated inside its body;
+    -- `school-offboarding.check.sql` walks the refusals.
+    'propose_offboarding(want_school text, why text, as_side text)',
+    'offboarding_preflight(want uuid)',
+    'approve_offboarding(want uuid)',
+    'cancel_offboarding(want uuid, why text)',
+    'record_offboarding_notice(want uuid, given_on date)',
+    'disable_school_access(want uuid)',
+    'record_offboarding_export(want uuid, manifest_sha256 text, counts jsonb, delivered_to text)',
+    'verify_offboarding_export(want uuid)',
+    'archive_school(want uuid, retain_days integer)',
+    'restore_school(want uuid, why text)',
+    'school_purge_eligibility(want uuid)',
+    'authorize_school_purge(want uuid, why text)',
 
     /*
      * Community (20260928032000_community.sql). Seventeen, because every write

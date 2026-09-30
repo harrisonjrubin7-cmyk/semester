@@ -18,6 +18,7 @@ export function SourceBadge({
   label,
   at,
   now,
+  unknownAge,
   onReport,
   style,
 }: {
@@ -30,6 +31,13 @@ export function SourceBadge({
   /** When the fact was last updated or synced, epoch ms. Omit when unknown. */
   at?: number | null;
   now?: number;
+  /**
+   * Say so when there is no time to show. Most course dates carry no
+   * per-item timestamp, and a badge with a label and no age looks as if the
+   * age was checked and is fine. Off by default so the badge elsewhere in the
+   * app reads as it always has.
+   */
+  unknownAge?: boolean;
   onReport?: () => void;
   style?: CSSProperties;
 }) {
@@ -61,7 +69,7 @@ export function SourceBadge({
         {TRUST_TEXT[label]}
       </span>
       <span className="sr-only">{TRUST_MEANING[label]}</span>
-      {fresh ? <span>{fresh}</span> : null}
+      {fresh ? <span>{fresh}</span> : unknownAge ? <span>Update time not recorded</span> : null}
       {onReport ? (
         <button
           type="button"

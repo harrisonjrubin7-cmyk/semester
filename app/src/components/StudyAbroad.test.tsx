@@ -52,6 +52,16 @@ it('keeps approvals apart: only what the student recorded as pre-approved is cou
   expect(stored().courses.map((c: { status: string }) => c.status)).toEqual(['pre-approved', 'estimated']);
 });
 
+it('says the approval statuses are the student\'s own record and not an official credit evaluation', () => {
+  act(() => button(/Add a program/).click());
+  act(() => button(/Add a course abroad/).click());
+  const line = [...host.querySelectorAll('p')].find((p) => /not an official credit evaluation/.test(p.textContent ?? ''));
+  expect(line, 'the credit section says what its statuses are').toBeTruthy();
+  expect(line!.querySelector('[data-source="student_entered"]')).not.toBeNull();
+  expect(line!.textContent).toContain('Student entered');
+  expect(line!.textContent).toContain('registrar or department decides');
+});
+
 it('shows the course plan in full before it is copied, and sends nothing', () => {
   act(() => button(/Add a program/).click());
   act(() => button(/Add a course abroad/).click());
