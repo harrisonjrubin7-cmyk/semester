@@ -107,7 +107,7 @@ function render(): string {
     '',
     '- Added (documents and one guard): `docs/DEGRADED-MODE-MAP.md`, `docs/DECISION-RIGHTS.md`, `docs/pilot/DISCOVERY-EVIDENCE-LOG.md`, this matrix and its test, and `authaccess.test.ts`.',
     '- Left alone on purpose: a purpose-coded FERPA decision (b) until counsel defines the purposes; a canonical identity model (c) until a real pilot school\'s identifiers exist; a policy engine (f) until #1011 and #1018 land; LTI and OneRoster (d, e) for the security workstream; and everything in X1.',
-    '- Coordinate: #1011, #1018 and #1012 are open drafts that touch (c), (f) and holds.',
+    '- Coordinate: #1011 and #1018 are open drafts that touch (c) and (f); #1012 (holds, overrides) has landed.',
     '',
   );
   return out.join('\n');

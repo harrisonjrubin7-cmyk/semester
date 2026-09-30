@@ -34,7 +34,7 @@ Does not: touch a student's own session or account, delete or edit any record, o
 ## Legal holds and retention
 
 - Archiving keeps everything, so the retention sweeps continue to run on their normal clocks (`RETENTION.md`); offboarding neither speeds nor stops them.
-- A live legal hold on the school (or a platform hold) blocks purge eligibility. Holds are read from `public.legal_holds` when that table exists — it is proposed in the open hardening work and is not on `main` — and until then the count is 0. **Before any purge is authorized, confirm by hand with counsel that no matter covers this school.** Whether a school's departure ends a hold is counsel's decision, not the database's.
+- A live legal hold on the school (or a platform hold) blocks purge eligibility. Holds are read from `public.legal_holds` (on `main` since #1012): any unreleased hold placed over this school or one of its accounts, and any platform hold, counts. The reader still tolerates the table being absent, and the suite runs against the real table. **Before any purge is authorized, still confirm with counsel that no matter covers this school** — a hold nobody placed protects nothing. Whether a school's departure ends a hold is counsel's decision, not the database's.
 - The retention window (90 days default, 30 minimum) is a placeholder. Counsel sets the real length, and whether a former school's student work is kept, returned or destroyed (D-124 "no deletion ledger" may be reopened).
 
 ## What is not built

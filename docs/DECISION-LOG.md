@@ -3569,11 +3569,11 @@ not a penetration test and claims nothing about FERPA.
 - **Claims.** No claim moves. Not FERPA compliant, not certified, not pilot-ready.
 
 
-## D-155 · A university's course rooms are limited to its members one school at a time, off until the operator switches it
+## D-159 · A university's course rooms are limited to its members one school at a time, off until the operator switches it
 
 **Decided 30 Sep 2026, by the owner**, answering the G-03 question from the full-beta programme with a staged plan: auto-claim only for a verified configured domain, an explicit one-tap request otherwise, per-school enforcement **default-off for every existing school** and enabled only after migration and readiness proof, negative cross-school tests, scoped admin and audit controls, recovery for misclaims, and **no global flip**.
 
-- **Built** (`20260930100000_school_membership_enforcement.sql`): a per-school switch, membership requests decided by a holder of `tenant:configure` at that school, leave / remove / withdraw, a readiness count, and an operator-only `set_school_enforcement` that refuses to switch on until the exact locked-out count is stated.
+- **Built** (`20260930180000_school_membership_enforcement.sql`): a per-school switch, membership requests decided by a holder of `tenant:configure` at that school, leave / remove / withdraw, a readiness count, and an operator-only `set_school_enforcement` that refuses to switch on until the exact locked-out count is stated.
 - **Off everywhere.** No school is enforced by this change. Switching one on is a separate operator act with its own evidence list in `docs/SCHOOL-MEMBERSHIP-ENFORCEMENT.md`; that list is not yet met.
 - **Not done:** any real school switched on; proof on a Supabase preview branch beyond the migrations applying; staff briefing.
 
@@ -3593,7 +3593,7 @@ not a penetration test and claims nothing about FERPA.
 
 - **Built** (`20260930200000_school_offboarding.sql`, `docs/SCHOOL-OFFBOARDING.md`): a case table with eight steps, a second table remembering exactly what was revoked, a trigger that refuses every `delete from schools`, and guards so a leaving school takes no new grant, member or connection. Approval needs a different person from the other side; the export is verified by a second operator against the school as it now stands; restore is by a different operator from the one who disabled access.
 - **Not built, on purpose:** the purge itself. `authorize_school_purge` records a decision and deletes nothing; the school-row trigger stays closed until a category-by-category purge exists and is separately authorized.
-- **Builds on, does not replace,** `tenant_rollout` (suspended on disable, resumed on restore) and the audit envelope. Legal holds are read from `public.legal_holds` if it exists (open hardening work, not on `main`); until then the count is zero and counsel must confirm by hand.
+- **Builds on, does not replace,** `tenant_rollout` (suspended on disable, resumed on restore) and the audit envelope. Legal holds are read from `public.legal_holds` (merged in #1012); a live hold over the school blocks purge eligibility. Counsel still confirms by hand that no matter covers a school.
 - **Placeholders for counsel:** the retention window (90 days, 30 minimum) and what happens to a former school's student work.
 - **Existing tests changed:** `schools.check.sql` and `organizations.check.sql` deleted schools to prove their foreign keys; they now switch the guard off inside their rolled-back transaction for that one proof, and `schools.check.sql` gains the assertion that even an administrator cannot delete one.
 

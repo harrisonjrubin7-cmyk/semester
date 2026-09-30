@@ -1,4 +1,4 @@
--- The advisor-share lifecycle on the common audit record (20260930110000).
+-- The advisor-share lifecycle on the common audit record (20260930190000).
 -- LOCAL/DISPOSABLE DATABASES ONLY; always rolled back.
 --
 -- What must hold:

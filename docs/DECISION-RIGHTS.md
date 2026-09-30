@@ -12,7 +12,7 @@ Requirement (i) of the readiness synthesis of 30 Sep 2026. **This page describes
 | Moving a migration to cutover | approver holds `migration:approve` and did not create it; at least two approval areas | Migration Center (D-144) | `migration-center.check.sql` |
 | Switching a school to members-only rooms | operator only, and only after stating the exact locked-out number | `set_school_enforcement` | `school-membership.check.sql` |
 | A school leaving | proposer and approver differ **and** come from opposite sides; export verified by a second operator; restore by an operator other than the one who disabled access; purge authorized by a third person | `school_offboarding` (D-157) | `school-offboarding.check.sql` |
-| Releasing a legal hold *(open PR #1012, not on `main`)* | releaser is not the placer | `legal_holds` | its own suite |
+| Releasing a legal hold | releaser is not the placer | `legal_holds` (#1012) | `legal-holds.check.sql` |
 
 ## Where it is not enforced (owner decisions, none made)
 

@@ -356,7 +356,7 @@ export const SINCE_READING: readonly { file: string; functions: readonly string[
     ],
   },
   {
-    file: '20260930100000_school_membership_enforcement.sql',
+    file: '20260930180000_school_membership_enforcement.sql',
     functions: [
       'decide_school_request',
       'leave_school',

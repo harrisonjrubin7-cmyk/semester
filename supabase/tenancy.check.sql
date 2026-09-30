@@ -33,7 +33,7 @@
 --
 -- ## The gap this suite does not close, and does not pretend to
 --
--- (Update, 30 Sep 2026: `20260930100000_school_membership_enforcement.sql` adds the
+-- (Update, 30 Sep 2026: `20260930180000_school_membership_enforcement.sql` adds the
 -- per-school switch that closes it, off for every school; `school-membership.check.sql`
 -- is its suite. Until a school is switched on, what follows is still true of it.)
 --

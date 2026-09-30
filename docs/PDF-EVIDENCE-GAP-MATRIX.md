@@ -74,11 +74,11 @@ Reconciled against `main` and the open pull requests on 30 September 2026. 20 ro
 
 ### f — Policy engine: human-readable and executable rule, version, explanation, override, audit and rollback
 
-**open-design** · blocked by: owner · coordinate with: #1011, #1018, #1012 (human overrides)
+**open-design** · blocked by: owner · coordinate with: #1011, #1018; human overrides and legal holds landed in #1012
 
 **Today.** Deterministic rules exist in code for schedule, credit, degree and entitlement; roll-out state, feature flags and their narrowing are versioned by history rows; the rollout table refuses moves without evidence; overrides are recorded (registration overrides). There is no single versioned rule object with both a plain-language and an executable form, an explanation on every decision, or one-step rollback across rules.
 
-**Remaining.** Open PRs #1011 (Configuration Studio: a school's settings drafted by one person and published by another) and #1018 (Workflow Builder) cover part of this. The gap that remains is decided after they land, not before.
+**Remaining.** Open PRs #1011 (Configuration Studio: a school's settings drafted by one person and published by another) and #1018 (Workflow Builder) cover part of this; a shared human-override log landed in #1012. The gap that remains is decided after they land, not before.
 
 **Evidence.** [`supabase/migrations/20260928050000_tenant_rollout.sql`](../supabase/migrations/20260928050000_tenant_rollout.sql), [`supabase/migrations/20260929370000_feature_policy_narrowing.sql`](../supabase/migrations/20260929370000_feature_policy_narrowing.sql), [`docs/SCHOOL-OFFBOARDING.md`](SCHOOL-OFFBOARDING.md)
 
@@ -226,4 +226,4 @@ Reconciled against `main` and the open pull requests on 30 September 2026. 20 ro
 
 - Added (documents and one guard): `docs/DEGRADED-MODE-MAP.md`, `docs/DECISION-RIGHTS.md`, `docs/pilot/DISCOVERY-EVIDENCE-LOG.md`, this matrix and its test, and `authaccess.test.ts`.
 - Left alone on purpose: a purpose-coded FERPA decision (b) until counsel defines the purposes; a canonical identity model (c) until a real pilot school's identifiers exist; a policy engine (f) until #1011 and #1018 land; LTI and OneRoster (d, e) for the security workstream; and everything in X1.
-- Coordinate: #1011, #1018 and #1012 are open drafts that touch (c), (f) and holds.
+- Coordinate: #1011 and #1018 are open drafts that touch (c) and (f); #1012 (holds, overrides) has landed.

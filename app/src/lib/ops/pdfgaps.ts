@@ -100,9 +100,9 @@ export const ROWS: readonly GapRow[] = [
     verdict: 'open-design',
     where: ['supabase/migrations/20260928050000_tenant_rollout.sql', 'supabase/migrations/20260929370000_feature_policy_narrowing.sql', 'docs/SCHOOL-OFFBOARDING.md'],
     today: 'Deterministic rules exist in code for schedule, credit, degree and entitlement; roll-out state, feature flags and their narrowing are versioned by history rows; the rollout table refuses moves without evidence; overrides are recorded (registration overrides). There is no single versioned rule object with both a plain-language and an executable form, an explanation on every decision, or one-step rollback across rules.',
-    remaining: 'Open PRs #1011 (Configuration Studio: a school\'s settings drafted by one person and published by another) and #1018 (Workflow Builder) cover part of this. The gap that remains is decided after they land, not before.',
+    remaining: 'Open PRs #1011 (Configuration Studio: a school\'s settings drafted by one person and published by another) and #1018 (Workflow Builder) cover part of this; a shared human-override log landed in #1012. The gap that remains is decided after they land, not before.',
     blocker: 'owner',
-    coordinate: '#1011, #1018, #1012 (human overrides)',
+    coordinate: '#1011, #1018; human overrides and legal holds landed in #1012',
   },
   {
     id: 'g',

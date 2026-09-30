@@ -301,7 +301,11 @@ begin
   perform pg_temp.grade(far_prof, far_reg, 'ECON 1010 · Fall 2026', 'A', 'ov-other', 'S900');
   perform pg_temp.must('the other school''s override is logged in its own school',
     (select count(*) from public.human_overrides where tenant_id = 'ov-other') = 1);
+  -- The delete guard of 20260930200000 is off for this one proof of the
+  -- cascade, inside a transaction that is rolled back.
+  alter table public.schools disable trigger refuse_school_delete;
   delete from public.schools where id = 'ov-other';
+  alter table public.schools enable trigger refuse_school_delete;
   perform pg_temp.must('removing a school removes its overrides, and only its own',
     not exists (select 1 from public.human_overrides where tenant_id = 'ov-other')
     and exists (select 1 from public.human_overrides where tenant_id = 'ov-u'));

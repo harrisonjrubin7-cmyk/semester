@@ -345,10 +345,12 @@ begin
 
   set local role postgres;
   update public.school_offboarding set retain_until = now() - interval '1 day' where id = n_case;
-  -- A stand-in for the legal_holds table of the retention work: the reader
-  -- must honour it whenever it exists.
-  create table public.legal_holds (id uuid primary key default gen_random_uuid(), subject_kind text, tenant_id text, released_at timestamptz);
-  insert into public.legal_holds (subject_kind, tenant_id) values ('tenant', 'north-off');
+  -- A real tenant hold, placed by the school's own (now former) administrator.
+  -- No signed-in identity here: the hold guard names the placer from the token
+  -- when there is one, and this insert is the operator's, as service role.
+  perform set_config('request.jwt.claims', '', true);
+  insert into public.legal_holds (subject_kind, subject_id, tenant_id, reason, matter_ref, placed_by)
+  values ('tenant', 'north-off', 'north-off', 'Litigation hold', 'MATTER-1', n_admin);
   reset role;
   perform pg_temp.become(op3);
   res := public.school_purge_eligibility(n_case);
@@ -360,7 +362,8 @@ begin
   perform pg_temp.counted('CROSS-TENANT: another school''s hold count is unaffected', (private.school_live_holds('south-off'))::bigint, 0);
 
   set local role postgres;
-  update public.legal_holds set released_at = now();
+  perform set_config('request.jwt.claims', '', true);
+  update public.legal_holds set released_by = op1, released_at = now(), release_reason = 'Matter closed';
   reset role;
   perform pg_temp.become(op1);
   perform pg_temp.must_refuse('the approver authorizing the purge',
