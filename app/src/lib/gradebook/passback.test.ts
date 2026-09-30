@@ -29,7 +29,7 @@ function ctx(over: Partial<FlagContext> = {}): FlagContext {
     tenantId: 'gb-u',
     now: new Date(AT),
     killSwitches: [],
-    tenantPolicy: { 'integration.lms_lti': { state: 'production' }, [FLAG]: { state: 'production' } },
+    tenantPolicy: { 'integration.lms_lti': { state: 'production', permittedRoles: [], permittedCohorts: [] }, [FLAG]: { state: 'production', permittedRoles: [], permittedCohorts: [] } },
     connection: { publicId: 'lms-1', approved: true, status: 'healthy' },
     scopes: [{ key: 'scope.lms.score_publish', approved: true }],
     capabilities: [],

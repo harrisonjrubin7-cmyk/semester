@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { effectiveFreshness, schoolRecordsView, type RecordRow } from './school-records';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import { cardsState, effectiveFreshness, schoolRecordsView, type RecordRow } from './school-records';
 
 const NOW = new Date('2026-10-01T12:00:00Z');
 const ME = 'u1';
@@ -162,5 +163,41 @@ describe('the campus facts', () => {
       row('appointment', { starts_at: '2026-10-02T15:00:00Z', office: 'X' }, { subject_user_id: 'someone-else' }),
     ], ME, NOW);
     expect(v.empty).toBe(true);
+  });
+});
+
+describe('whether the cards are on, with the school’s narrowing', () => {
+  type Answer = { data?: unknown; error?: { message: string } | null };
+  // A database with only what cardsState reads.
+  function db(narrowing: Answer) {
+    const from = () => {
+      const q: Record<string, unknown> = { select: () => q };
+      q.then = (ok: (v: unknown) => unknown) => Promise.resolve({ data: [], error: null }).then(ok);
+      return q;
+    };
+    return {
+      rpc: async (name: string) => (name === 'feature_narrowing' ? { data: narrowing.data ?? null, error: narrowing.error ?? null } : { data: 'production', error: null }),
+      from,
+    } as unknown as SupabaseClient;
+  }
+  const row = (over: Record<string, string[]>) => ({ data: [{ permitted_roles: [], permitted_cohorts: [], roles: [], cohorts: [], ...over }] });
+
+  it('is on with no narrowing — the control', async () => {
+    expect(await cardsState(db({ data: [] }), 'vu', 'production', NOW)).toBe('on');
+    expect(await cardsState(db(row({})), 'vu', 'production', NOW)).toBe('on');
+  });
+
+  it('is off for a student outside the pilot cohort, and on for a member', async () => {
+    expect(await cardsState(db(row({ permitted_cohorts: ['cards-pilot'] })), 'vu', 'production', NOW)).toBe('off');
+    expect(await cardsState(db(row({ permitted_cohorts: ['cards-pilot'], cohorts: ['cards-pilot'] })), 'vu', 'production', NOW)).toBe('on');
+  });
+
+  it('is off for a role the school did not name', async () => {
+    expect(await cardsState(db(row({ permitted_roles: ['university_staff'] })), 'vu', 'production', NOW)).toBe('off');
+    expect(await cardsState(db(row({ permitted_roles: ['university_staff'], roles: ['university_staff'] })), 'vu', 'production', NOW)).toBe('on');
+  });
+
+  it('is an error, never on, when the narrowing cannot be read', async () => {
+    expect(await cardsState(db({ error: { message: 'Failed to fetch' } }), 'vu', 'production', NOW)).toBe('error');
   });
 });

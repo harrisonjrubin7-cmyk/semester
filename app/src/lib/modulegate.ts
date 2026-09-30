@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { cloud, cloudConfigured } from './cloud';
+import { narrowingAdmits, readNarrowing, type Narrowing } from './featurepolicy';
 import { flagDefinition } from './flags';
 import { claimedSchoolOrThrow } from './schoolclaim';
 
@@ -11,10 +12,13 @@ import { claimedSchoolOrThrow } from './schoolclaim';
  * `20260929300000_registration_transaction.sql`) is two questions, in this
  * order: is a kill switch that stops the flag engaged, for every school or for
  * this one; and is the school's `feature_state` for the flag exactly
- * `production`. Stopped outranks off. The gradebook's passback gate asks the
- * same two about its own flag. This asks them through the same two reads —
- * `public.feature_state` and `public.feature_kill_switch` — so the screen and
- * the server cannot disagree about whether the school has it on.
+ * `production`. Stopped outranks off. Since 20260929370000 it asks a third:
+ * whether the flag's `permitted_roles` and `permitted_cohorts` admit the
+ * caller (`private.feature_admits_caller`). The gradebook's passback gate asks
+ * the first two about its own flag. This asks them through the same reads —
+ * `public.feature_state`, `public.feature_kill_switch`, and the narrowing
+ * through `lib/featurepolicy.ts` — so the screen and the server cannot
+ * disagree about whether the school has it on for this caller.
  *
  * It **authorizes nothing**. Every write is checked again by the database,
  * which refuses with `flag_off` or `kill_switch` whatever this said. A wrong
@@ -53,17 +57,22 @@ interface SwitchRow {
   engaged: boolean;
 }
 
-/** The whole decision, from what was read. Pure, so it can be held to the server's order. */
+/**
+ * The whole decision, from what was read. Pure, so it can be held to the
+ * server's order: stopped, then off, then narrowed. `narrowing` is required —
+ * a caller that did not read the school's role and cohort limits cannot ask.
+ */
 export function decideGate(
   flag: string,
-  read: { school: string; state: string | null; switches: readonly SwitchRow[] },
+  read: { school: string; state: string | null; switches: readonly SwitchRow[]; narrowing: Narrowing },
 ): 'on' | 'off' | { stopped: string } {
   const stoppers = flagDefinition(flag)?.killSwitches ?? ['kill.writeback'];
   const hit = read.switches.find(
     (s) => s.engaged && (s.tenant_id === null || s.tenant_id === read.school) && (stoppers as readonly string[]).includes(s.switch_key),
   );
   if (hit) return { stopped: hit.switch_key };
-  return read.state === 'production' ? 'on' : 'off';
+  if (read.state !== 'production') return 'off';
+  return narrowingAdmits(read.narrowing) ? 'on' : 'off';
 }
 
 export async function readModuleGate(flag: string): Promise<ModuleGate> {
@@ -82,17 +91,19 @@ export async function readModuleGate(flag: string): Promise<ModuleGate> {
     return { status: 'error', message: 'Could not read which school your account belongs to.' };
   }
   if (!school) return { status: 'no_school' };
-  const [state, switches] = await Promise.all([
+  const [state, switches, narrowing] = await Promise.all([
     db.rpc('feature_state', { want_capability: flag, want_tenant: school }),
     db.from('feature_kill_switch').select('switch_key,tenant_id,engaged'),
+    readNarrowing(db, flag, school).catch(() => null),
   ]);
-  if (state.error || switches.error) {
+  if (state.error || switches.error || !narrowing) {
     return { status: 'error', message: 'Could not read whether your school has this turned on.' };
   }
   const decided = decideGate(flag, {
     school,
     state: typeof state.data === 'string' ? state.data : null,
     switches: (switches.data ?? []) as SwitchRow[],
+    narrowing,
   });
   if (decided === 'on') return { status: 'on', school, userId };
   if (decided === 'off') return { status: 'off' };

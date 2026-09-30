@@ -18,14 +18,14 @@ function ctx(over: Partial<FlagContext> = {}): FlagContext {
 }
 
 const DASHBOARD_ON: FlagContext['tenantPolicy'] = {
-  'module.integration_dashboard': { state: 'production' },
-  'release.integration_dashboard_v1': { state: 'production' },
+  'module.integration_dashboard': { state: 'production', permittedRoles: [], permittedCohorts: [] },
+  'release.integration_dashboard_v1': { state: 'production', permittedRoles: [], permittedCohorts: [] },
 };
 
 const LTI_LIVE: Partial<FlagContext> = {
   tenantPolicy: {
-    'integration.lms_lti': { state: 'production' },
-    'scope.lms.assignment_dates_read': { state: 'production' },
+    'integration.lms_lti': { state: 'production', permittedRoles: [], permittedCohorts: [] },
+    'scope.lms.assignment_dates_read': { state: 'production', permittedRoles: [], permittedCohorts: [] },
   },
   connection: { publicId: 'conn_0123456789abcdef0123', approved: true, status: 'healthy' },
   scopes: [{ key: 'scope.lms.assignment_dates_read', approved: true }],
@@ -97,12 +97,12 @@ describe('evaluation', () => {
 
   it('needs the parent module as well as the flag', () => {
     const d = evaluateFlag('release.integration_dashboard_v1', ctx({
-      tenantPolicy: { 'release.integration_dashboard_v1': { state: 'production' } }, capabilities: ['integration:view'] }));
+      tenantPolicy: { 'release.integration_dashboard_v1': { state: 'production', permittedRoles: [], permittedCohorts: [] } }, capabilities: ['integration:view'] }));
     expect(d).toMatchObject({ allowed: false, step: 'tenant_entitlement' });
   });
 
   it('treats preview as off in production and on in a preview environment', () => {
-    const policy = { 'module.integration_dashboard': { state: 'preview' as const }, 'release.integration_dashboard_v1': { state: 'preview' as const } };
+    const policy = { 'module.integration_dashboard': { state: 'preview' as const, permittedRoles: [], permittedCohorts: [] }, 'release.integration_dashboard_v1': { state: 'preview' as const, permittedRoles: [], permittedCohorts: [] } };
     expect(evaluateFlag('release.integration_dashboard_v1', ctx({ tenantPolicy: policy, capabilities: ['integration:view'] })).allowed).toBe(false);
     expect(evaluateFlag('release.integration_dashboard_v1', ctx({ environment: 'preview', tenantPolicy: policy, capabilities: ['integration:view'] })).allowed).toBe(true);
   });
@@ -113,14 +113,28 @@ describe('evaluation', () => {
   });
 
   it('honours a tenant’s permitted roles', () => {
-    const policy = { ...DASHBOARD_ON, 'release.integration_dashboard_v1': { state: 'production' as const, permittedRoles: ['integration_admin'] } };
+    const policy = { ...DASHBOARD_ON, 'release.integration_dashboard_v1': { state: 'production' as const, permittedRoles: ['integration_admin'], permittedCohorts: [] } };
     const base = { tenantPolicy: policy, capabilities: ['integration:view'] };
     expect(evaluateFlag('release.integration_dashboard_v1', ctx({ ...base, role: 'university_admin' })).step).toBe('role_policy');
     expect(evaluateFlag('release.integration_dashboard_v1', ctx({ ...base, role: 'integration_admin' })).allowed).toBe(true);
+    // Every role held at the school counts, not only the one being worn.
+    expect(evaluateFlag('release.integration_dashboard_v1', ctx({ ...base, roles: ['university_admin', 'integration_admin'] })).allowed).toBe(true);
+    expect(evaluateFlag('release.integration_dashboard_v1', ctx({ ...base, roles: ['university_admin'] })).step).toBe('role_policy');
+    // Roles that were never read are none.
+    expect(evaluateFlag('release.integration_dashboard_v1', ctx(base)).step).toBe('role_policy');
+  });
+
+  it('will not take a policy row without its narrowing', () => {
+    // The P1 this closes: callers built `{ state }` alone and a staff-only
+    // preview read as open. The row type now requires both lists; this line
+    // is what that looks like, and it must not compile.
+    // @ts-expect-error — a tenant row without permittedRoles and permittedCohorts
+    const bare: FlagContext['tenantPolicy'] = { 'release.integration_dashboard_v1': { state: 'production' } };
+    expect(bare).toBeTruthy();
   });
 
   it('honours a tenant’s release cohorts, after its roles', () => {
-    const policy = { ...DASHBOARD_ON, 'release.integration_dashboard_v1': { state: 'production' as const, permittedCohorts: ['first-year-2027'] } };
+    const policy = { ...DASHBOARD_ON, 'release.integration_dashboard_v1': { state: 'production' as const, permittedRoles: [], permittedCohorts: ['first-year-2027'] } };
     const base = { tenantPolicy: policy, capabilities: ['integration:view'] };
     expect(evaluateFlag('release.integration_dashboard_v1', ctx(base))).toMatchObject({ allowed: false, step: 'cohort_policy' });
     expect(evaluateFlag('release.integration_dashboard_v1', ctx({ ...base, cohorts: ['honors'] })).step).toBe('cohort_policy');
@@ -166,7 +180,7 @@ describe('evaluation', () => {
   });
 
   it('refuses by data classification', () => {
-    const on = { tenantPolicy: { 'ops.external_ai_generation': { state: 'production' as const } } };
+    const on = { tenantPolicy: { 'ops.external_ai_generation': { state: 'production' as const, permittedRoles: [], permittedCohorts: [] } } };
     expect(evaluateFlag('ops.external_ai_generation', ctx({ ...on, classification: 'T3' })).allowed).toBe(true);
     expect(evaluateFlag('ops.external_ai_generation', ctx({ ...on, classification: 'T4' })).step).toBe('classification');
   });
@@ -183,7 +197,7 @@ describe('evaluation', () => {
 
   it('keeps write-back off even when a school enables the flag, until every gate is met', () => {
     const d = evaluateFlag('writeback.lms_grade_passback', ctx({
-      tenantPolicy: { 'writeback.lms_grade_passback': { state: 'production' } } }));
+      tenantPolicy: { 'writeback.lms_grade_passback': { state: 'production', permittedRoles: [], permittedCohorts: [] } } }));
     expect(d.allowed).toBe(false);
   });
 });

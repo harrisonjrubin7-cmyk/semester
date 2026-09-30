@@ -82,7 +82,7 @@ function world(over: Partial<DiningState> = {}): DiningState {
 function flagCtx(over: Partial<FlagContext> = {}): FlagContext {
   return {
     environment: 'production', tenantId: 'vu', now: new Date(NOON_MON), killSwitches: [],
-    tenantPolicy: { 'module.dining': { state: 'production' } }, capabilities: [], ...over,
+    tenantPolicy: { 'module.dining': { state: 'production', permittedRoles: [], permittedCohorts: [] } }, capabilities: [], ...over,
   };
 }
 
@@ -115,7 +115,7 @@ describe('module.dining', () => {
   });
 
   it('is off in production for a school only in preview', () => {
-    expect(diningGate(flagCtx({ tenantPolicy: { 'module.dining': { state: 'preview' } } })).allowed).toBe(false);
+    expect(diningGate(flagCtx({ tenantPolicy: { 'module.dining': { state: 'preview', permittedRoles: [], permittedCohorts: [] } } })).allowed).toBe(false);
   });
 
   it('is stopped by the school’s kill.writeback, and reports it as a kill switch', () => {

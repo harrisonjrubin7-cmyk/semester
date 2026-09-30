@@ -16,6 +16,7 @@
 
 import { cloud, cloudConfigured } from '../cloud';
 import { forSchool, loadMyCapabilities } from '../capabilities';
+import { readNarrowing } from '../featurepolicy';
 import { claimedSchoolOrThrow } from '../schoolclaim';
 import { buildEnvironment } from '../integration/school-records';
 import { formatNumber } from '../locale';
@@ -138,10 +139,16 @@ export async function openDining(now = new Date()): Promise<DiningOpening> {
   if (!userId) return { kind: 'signed_out' };
   const school = await claimedSchoolOrThrow();
   if (!school) return { kind: 'no_school' };
-  const [{ data: state, error }, { data: switches, error: switchError }, grants] = await Promise.all([
+  const [{ data: state, error }, { data: switches, error: switchError }, grants, narrowing] = await Promise.all([
     db.rpc('feature_state', { want_capability: DINING_FLAG, want_tenant: school }),
     db.from('feature_kill_switch').select('switch_key,tenant_id,engaged'),
     loadMyCapabilities(),
+    // The school's role and cohort limits on dining, and the caller's own
+    // roles and cohorts there. A read that fails throws, so a staff-only
+    // preview never reads as open to every student.
+    readNarrowing(db, DINING_FLAG, school).catch((e: unknown) => {
+      throw new DiningRefusal('network', e instanceof Error ? e.message : 'Could not read who dining is open to at your school.');
+    }),
   ]);
   if (error || switchError) fail(error ?? switchError, 'Could not read whether your school has dining on.');
   const moduleState = (typeof state === 'string' ? state : 'off') as FeatureState;
@@ -152,7 +159,11 @@ export async function openDining(now = new Date()): Promise<DiningOpening> {
       tenantId: school,
       now,
       killSwitches: rows(switches).map((k) => ({ key: text(k.switch_key), tenantId: k.tenant_id == null ? null : text(k.tenant_id), engaged: k.engaged === true })),
-      tenantPolicy: { [DINING_FLAG]: { state: moduleState } },
+      tenantPolicy: {
+        [DINING_FLAG]: { state: moduleState, permittedRoles: narrowing.permittedRoles, permittedCohorts: narrowing.permittedCohorts },
+      },
+      roles: narrowing.roles,
+      cohorts: narrowing.cohorts,
       capabilities,
     }),
   );

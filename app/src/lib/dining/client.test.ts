@@ -70,6 +70,8 @@ beforeEach(() => {
   who.user = 'stu-1';
   who.school = 'vu';
   who.grants = [];
+  // The school names no role and no cohort unless a test says otherwise.
+  replies.set('rpc:feature_narrowing', { data: [] });
 });
 
 describe('the gate', () => {
@@ -96,6 +98,53 @@ describe('the gate', () => {
     who.grants = [{ capability: 'dining:operate', scopeKind: 'school', scopeId: 'other' }];
     const o = await openDining(new Date(NOW));
     expect(o.kind === 'ready' && o.context.capabilities).toEqual([]);
+  });
+
+  const narrowed = (row: Record<string, string[]>) =>
+    replies.set('rpc:feature_narrowing', { data: [{ permitted_roles: [], permitted_cohorts: [], roles: [], cohorts: [], ...row }] });
+
+  it('asks feature_narrowing about dining at this school, and nothing about anybody else', async () => {
+    replies.set('rpc:feature_state', { data: 'production' });
+    await openDining(new Date(NOW));
+    expect(calls.find((c) => c.name === 'feature_narrowing')?.args).toEqual({ want_capability: 'module.dining', want_tenant: 'vu' });
+  });
+
+  it('keeps a student outside the school’s dining pilot cohort out, and lets a member in', async () => {
+    replies.set('rpc:feature_state', { data: 'production' });
+    narrowed({ permitted_cohorts: ['dining-pilot'] });
+    const out = await openDining(new Date(NOW));
+    expect(out.kind === 'ready' && out.context).toMatchObject({ on: false, moduleState: 'production' });
+    expect(out.kind === 'ready' && out.context.reason).toContain('release cohort');
+    narrowed({ permitted_cohorts: ['dining-pilot'], cohorts: ['dining-pilot'] });
+    const member = await openDining(new Date(NOW));
+    expect(member.kind === 'ready' && member.context.on).toBe(true);
+  });
+
+  it('keeps a staff-only preview to staff: a student is refused, staff at the school admitted', async () => {
+    replies.set('rpc:feature_state', { data: 'production' });
+    narrowed({ permitted_roles: ['university_staff'] });
+    const student = await openDining(new Date(NOW));
+    expect(student.kind === 'ready' && student.context.on).toBe(false);
+    expect(student.kind === 'ready' && student.context.reason).toContain('other roles');
+    narrowed({ permitted_roles: ['university_staff'], roles: ['university_staff'] });
+    const staff = await openDining(new Date(NOW));
+    expect(staff.kind === 'ready' && staff.context.on).toBe(true);
+  });
+
+  it('is open when the school names no role and no cohort — the control', async () => {
+    replies.set('rpc:feature_state', { data: 'production' });
+    narrowed({});
+    const o = await openDining(new Date(NOW));
+    expect(o.kind === 'ready' && o.context.on).toBe(true);
+  });
+
+  it('throws, rather than opening, when the narrowing cannot be read', async () => {
+    replies.set('rpc:feature_state', { data: 'production' });
+    replies.set('rpc:feature_narrowing', { error: { message: 'Failed to fetch' } });
+    await expect(openDining(new Date(NOW))).rejects.toMatchObject({ code: 'network' });
+    // An answer in the wrong shape is not an answer.
+    replies.set('rpc:feature_narrowing', { data: [{ permitted_roles: [], permitted_cohorts: ['dining-pilot'] }] });
+    await expect(openDining(new Date(NOW))).rejects.toMatchObject({ code: 'network' });
   });
 
   it('throws when the flag cannot be read, rather than reading as off', async () => {

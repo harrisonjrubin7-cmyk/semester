@@ -58,7 +58,7 @@ vi.mock('../lib/cloud', () => ({
   },
   cloud: async () => ({
     auth: { getUser: async () => ({ data: { user: mock.user ? { id: mock.user } : null }, error: null }) },
-    rpc: async (name: string) => ({ data: name === 'feature_state' ? mock.flag : null, error: null }),
+    rpc: async (name: string) => ({ data: name === 'feature_state' ? mock.flag : name === 'feature_narrowing' ? [] : null, error: null }),
     from: (name: string) => table(name),
   }),
 }));
