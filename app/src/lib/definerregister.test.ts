@@ -88,7 +88,7 @@ describe('the Security Definer and RLS remediation register', () => {
     expect(extra, 'register rows for functions that are not callable definers').toEqual([]);
   });
 
-  it('finds the 151 the advisor listed, so the parser is reading what production runs', () => {
+  it('finds the 151 the advisor listed, plus the two added since, so the parser is reading what production runs', () => {
     // A control on the instrument: a parser that silently lost half the
     // functions would also agree with a register that lost the same half.
     // Functions from files not yet applied to production are counted

@@ -196,7 +196,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['leave_organization', 'self-service', ['auth.uid()']],
   ['list_advisor_shares', 'sharing', ['auth.uid()']],
   ['list_support_shares', 'sharing', ['auth.uid()', 'private.may_receive_support_share']],
-  ['make_family_invite', 'sharing', ['auth.uid()', 'private.verified_student']],
+  ['make_family_invite', 'sharing', ['auth.uid()', 'private.verified_account']],
   ['make_family_share', 'sharing', ['auth.uid()']],
   ['make_referral_code', 'self-service', ['auth.uid()']],
   ['manage_volunteer', 'moderation', ['private.has_capability']],
@@ -204,6 +204,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['move_office_action', 'admin', ['auth.uid()', 'private.may_publish']],
   ['mutual_connections', 'read-helper', ['auth.uid()']],
   ['my_action_publish_scopes', 'read-helper', ['auth.uid()']],
+  ['my_age_status', 'read-helper', ['auth.uid()']],
   ['my_beta', 'read-helper', ['private.beta_my_membership']],
   ['my_capabilities', 'read-helper', ['auth.uid()']],
   ['my_community_notices', 'read-helper', ['auth.uid()']],
@@ -269,6 +270,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['share_with_support', 'sharing', ['auth.uid()', 'private.may_receive_support_share']],
   ['start_organization', 'self-service', ['auth.uid()', 'private.verified_student', 'private.school_of']],
   ['start_student_payment', 'financial', ['auth.uid()', 'private.student_accounts_on']],
+  ['state_my_age', 'self-service', ['auth.uid()']],
   ['stop_contributing', 'self-service', ['auth.uid()']],
   ['student_hold_status', 'read-helper', ['auth.uid()', 'private.has_capability', 'private.student_at_school']],
   ['submit_course_review', 'self-service', ['auth.uid()', 'private.verified_student', 'private.school_of']],
@@ -293,6 +295,10 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
  * a file here that is applied moves its functions into the count.
  */
 export const SINCE_READING: readonly { file: string; functions: readonly string[] }[] = [
+  {
+    file: '20260929150000_minimum_age.sql',
+    functions: ['my_age_status', 'state_my_age'],
+  },
   {
     file: '20260929330000_dining.sql',
     functions: [
@@ -428,7 +434,7 @@ export const OPEN: readonly { id: string; severity: 'low' | 'medium' | 'high'; w
     id: 'DR-02',
     severity: 'medium',
     what: 'The gates here are structural: this register proves each check is present in the body, not that it is correct. Behaviour is proved per function by the `supabase/*.check.sql` suites, and not every one of the 151 had a suite that calls it as a second account.',
-    closes: 'Closed by `supabase/definer-sweep.check.sql`: a signed-in account holding nothing calls every callable definer function with neutral arguments and must be refused or told nothing, except fifteen that act only on the caller\'s own account, each named with the answer it may give; a victim\'s id, email, referral code and ticket may appear in no answer. Shown red on a function stripped of its owner filter, a self-service function taken off the list and a stale list entry; two planted probes are named on every run. Left to the feature suites: a caller holding a real id of somebody else\'s object, which neutral arguments cannot name.',
+    closes: 'Closed by `supabase/definer-sweep.check.sql`: a signed-in account holding nothing calls every callable definer function with neutral arguments and must be refused or told nothing, except seventeen that act only on the caller\'s own account, each named with the answer it may give; a victim\'s id, email, referral code and ticket may appear in no answer. Shown red on a function stripped of its owner filter, a self-service function taken off the list and a stale list entry; two planted probes are named on every run. Left to the feature suites: a caller holding a real id of somebody else\'s object, which neutral arguments cannot name.',
     closedBy: 'supabase/definer-sweep.check.sql',
   },
   {

@@ -261,6 +261,31 @@ grant usage on schema auth, public to anon, authenticated;
 grant select, insert on auth.users to anon, authenticated;
 SQL
 
+# A fixture, and only a fixture: an account the check suites make without a
+# birth date is recorded as an adult who said so. Since D-139 an account that
+# never stated its age is kept out of every social feature, and the suites
+# that test those features make their accounts by inserting into auth.users
+# with no birth date — they are about the features, not the age. The trigger
+# is named to fire after the real one, adds a row only where the real one
+# added none, and is never part of a migration. `minimum-age.check.sql`, which
+# tests the age rules themselves, turns it off with
+# `set semester.fixture_age = 'off'`.
+psql -v ON_ERROR_STOP=1 >/dev/null <<'SQL'
+create or replace function private.zz_fixture_adult() returns trigger
+language plpgsql security definer set search_path = '' as $fx$
+begin
+  if coalesce(current_setting('semester.fixture_age', true), '') <> 'off' then
+    insert into private.account_ages (user_id, source) values (new.id, 'sign_up')
+    on conflict (user_id) do nothing;
+  end if;
+  return new;
+end $fx$;
+revoke all on function private.zz_fixture_adult() from public;
+drop trigger if exists zz_fixture_adult on auth.users;
+create trigger zz_fixture_adult after insert on auth.users
+  for each row execute function private.zz_fixture_adult();
+SQL
+
 # Another script's turn at the same database, instead of the suites. `load.sh`
 # uses it so the load scenarios run against exactly what the checks see — the
 # same major, the same stub, every migration — without a second copy of the

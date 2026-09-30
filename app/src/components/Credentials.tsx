@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { MINIMUM_AGE, SAID, standing, todayIso } from '../lib/age';
 import { useStore } from '../state/store';
 import { ActionButton } from './ui';
 import { rememberReturn, returnPoint } from '../lib/returnto';
@@ -63,6 +64,7 @@ export function Credentials({
   }, [door, dispatch]);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [bornOn, setBornOn] = useState('');
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState('');
   const [error, setError] = useState('');
@@ -148,7 +150,8 @@ export function Credentials({
    */
   const MADE_FLOOR = 8;
   const ready =
-    Boolean(email.trim()) && (mode === 'up' ? password.length >= MADE_FLOOR : password.length > 0);
+    Boolean(email.trim()) &&
+    (mode === 'up' ? password.length >= MADE_FLOOR && Boolean(bornOn) : password.length > 0);
 
   const run = async (fn: () => Promise<string | void>) => {
     setBusy(true);
@@ -181,8 +184,13 @@ export function Credentials({
         onDone?.();
         return;
       }
-      const made = await signUp(email.trim(), password);
+      // The minimum age is checked here only to say why in words; the database
+      // refuses an under-13 whether or not this form is used (lib/age.ts).
+      const age = standing(bornOn, todayIso());
+      if (age === 'invalid' || age === 'under_minimum') throw new Error(SAID[age]);
+      const made = await signUp(email.trim(), password, bornOn);
       dispatch({ type: 'registered' });
+      if (age === 'minor') return `${made.said} ${SAID.minor}`;
       if (made.signedIn) onDone?.();
       // Otherwise the next visit is a sign-in, so leave the form on it with
       // the sentence about the inbox still on screen.
@@ -240,6 +248,24 @@ export function Credentials({
           onChange={(e) => setPassword(e.target.value)}
           style={{ fontSize: 'var(--type-md)', marginTop: 'var(--sp-4)' }}
         />
+        {mode === 'up' && (
+          <>
+            <label htmlFor="account-born" style={{ display: 'block', marginTop: 'var(--sp-4)', fontSize: 'var(--type-sm)' }}>
+              Date of birth — you need to be at least {MINIMUM_AGE}
+            </label>
+            <input
+              className="input"
+              id="account-born"
+              name="bday"
+              type="date"
+              autoComplete="bday"
+              max={todayIso()}
+              value={bornOn}
+              onChange={(e) => setBornOn(e.target.value)}
+              style={{ fontSize: 'var(--type-md)', marginTop: 'var(--sp-2)' }}
+            />
+          </>
+        )}
 
         <button
           type="submit"

@@ -82,7 +82,7 @@ export const KNOWN_LIMITATIONS: readonly Limitation[] = [
   {
     id: 'policies-draft',
     title: 'The terms of service and privacy policy are drafts, not in force.',
-    what: 'Both exist as drafts for a lawyer and carry open decisions: the legal entity, the minimum age, liability, governing law. Neither has been reviewed or put in force.',
+    what: 'Both exist as drafts for a lawyer and carry open decisions: the legal entity, liability, governing law. The minimum age is 13, set by the owner and not yet reviewed by counsel. Neither has been reviewed or put in force.',
     instead: 'Read Privacy and your rights in the app (#/privacy) for what leaves your device and what deleting removes; that page is held to the code by a test. You can export or delete everything at any time.',
     sources: ['docs/legal/TERMS-OF-SERVICE-DRAFT.md', 'docs/legal/PRIVACY-POLICY-DRAFT.md', 'app/src/lib/privacy.ts'],
   },

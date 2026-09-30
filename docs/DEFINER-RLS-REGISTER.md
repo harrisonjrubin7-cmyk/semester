@@ -26,7 +26,7 @@ Production (`lzrqvlugnawcgywkhqlz`), 2026-09-29, read-only, through the advisor 
 - all 151 functions: not executable by `anon` or PUBLIC, `search_path` pinned, no dynamic `execute`;
 - two bodies named neither `auth.uid()` nor a `private.` gate. `gtm_pilot_problems` answered any signed-in caller about any pilot — a student could read whether a pilot's price was agreed, who sponsored it and whether its dates fit. It is fixed in `supabase/migrations/20260929120000_gtm_pilot_problems_visibility.sql` and held by `supabase/gtm.check.sql`. `kill_switch_engaged` is a deliberate one-boolean read, kept open as DR-01.
 
-Since the reading, 38 more, from migrations not applied to production, each with a row below: `20260929330000_dining.sql` (`dining_advance_order`, `dining_cancel_order`, `dining_disconnect_partner`, `dining_donate_swipes`, `dining_order_queue`, `dining_place_order`, `dining_pool_summary`, `dining_set_ordering`, `my_dining_balances`); `20260929320000_student_accounts.sql` (`configure_student_accounts`, `create_student_payment_plan`, `place_student_hold`, `post_student_ledger_entry`, `record_aid_disbursement`, `refund_student_credit`, `release_student_hold`, `respond_to_aid_award`, `reverse_student_ledger_entry`, `start_student_payment`, `student_hold_status`); `20260929310000_gradebook.sql` (`gradebook_add_item`, `gradebook_enter`, `gradebook_export`, `gradebook_file_regrade`, `gradebook_moderate`, `gradebook_queue_passback`, `gradebook_release`, `gradebook_resolve_regrade`, `gradebook_set_scheme`); `20260929300000_registration_transaction.sql` (`my_registration`, `my_registration_hold`, `registrar_decide`, `registrar_grant_override`, `registrar_put_section`, `registrar_put_term`, `registration_drop`, `registration_enroll`, `registration_withdraw`).
+Since the reading, 40 more, from migrations not applied to production, each with a row below: `20260929150000_minimum_age.sql` (`my_age_status`, `state_my_age`); `20260929330000_dining.sql` (`dining_advance_order`, `dining_cancel_order`, `dining_disconnect_partner`, `dining_donate_swipes`, `dining_order_queue`, `dining_place_order`, `dining_pool_summary`, `dining_set_ordering`, `my_dining_balances`); `20260929320000_student_accounts.sql` (`configure_student_accounts`, `create_student_payment_plan`, `place_student_hold`, `post_student_ledger_entry`, `record_aid_disbursement`, `refund_student_credit`, `release_student_hold`, `respond_to_aid_award`, `reverse_student_ledger_entry`, `start_student_payment`, `student_hold_status`); `20260929310000_gradebook.sql` (`gradebook_add_item`, `gradebook_enter`, `gradebook_export`, `gradebook_file_regrade`, `gradebook_moderate`, `gradebook_queue_passback`, `gradebook_release`, `gradebook_resolve_regrade`, `gradebook_set_scheme`); `20260929300000_registration_transaction.sql` (`my_registration`, `my_registration_hold`, `registrar_decide`, `registrar_grant_override`, `registrar_put_section`, `registrar_put_term`, `registration_drop`, `registration_enroll`, `registration_withdraw`).
 
 ## How this page is held
 
@@ -39,16 +39,16 @@ Since the reading, 38 more, from migrations not applied to production, each with
 
 | Category | Functions | Controls the audit requires |
 | --- | --- | --- |
-| self-service | 55 | Verify auth.uid(), tenant scope, object ownership, input validation, rate limits, audit event. |
+| self-service | 56 | Verify auth.uid(), tenant scope, object ownership, input validation, rate limits, audit event. |
 | sharing | 19 | Explicit consent, narrow scope, short expiry, revocation, view audit. |
 | admin | 56 | Capability check, MFA or fresh auth for high risk, dual control where needed, immutable audit. |
 | integration | 6 | Server-only preferred; signed workflow; replay protection; no browser service-role access. |
 | financial | 11 | Provider webhook verification, idempotency, no client-controlled final state. |
 | moderation | 15 | Capability check, reason required, appeals, audit trail. |
-| read-helper | 27 | Minimal fields, no hidden cross-tenant aggregation, pagination limit. |
-| **total** | 189 | |
+| read-helper | 28 | Minimal fields, no hidden cross-tenant aggregation, pagination limit. |
+| **total** | 191 | |
 
-### self-service (55)
+### self-service (56)
 
 | Function | Gates in its body | Defined in |
 | --- | --- | --- |
@@ -103,6 +103,7 @@ Since the reading, 38 more, from migrations not applied to production, each with
 | `respond_to_aid_award` | `auth.uid()`, `private.student_accounts_on` | `20260929320000_student_accounts.sql` |
 | `send_help_request` | `auth.uid()`, `private.school_of` | `20260927233000_help_request_review_fixes.sql` |
 | `start_organization` | `auth.uid()`, `private.verified_student`, `private.school_of` | `20260921230000_organizations.sql` |
+| `state_my_age` | `auth.uid()` | `20260929150000_minimum_age.sql` |
 | `stop_contributing` | `auth.uid()` | `20260929350000_plan_save_serialized.sql` |
 | `submit_course_review` | `auth.uid()`, `private.verified_student`, `private.school_of` | `20260926150000_expansion_roles_and_features.sql` |
 | `volunteer_attest` | `auth.uid()` | `20260928032000_community.sql` |
@@ -118,7 +119,7 @@ Since the reading, 38 more, from migrations not applied to production, each with
 | `dining_donate_swipes` | `auth.uid()`, `private.dining_caller_school`, `private.dining_charge_gate` | `20260929330000_dining.sql` |
 | `list_advisor_shares` | `auth.uid()` | `20260928301000_advisor_shares.sql` |
 | `list_support_shares` | `auth.uid()`, `private.may_receive_support_share` | `20260928308000_support_shares.sql` |
-| `make_family_invite` | `auth.uid()`, `private.verified_student` | `20260928306000_family_invites.sql` |
+| `make_family_invite` | `auth.uid()`, `private.verified_account` | `20260929150000_minimum_age.sql` |
 | `make_family_share` | `auth.uid()` | `20260928307000_family_shared_items.sql` |
 | `read_advisor_share` | `auth.uid()` | `20260928301000_advisor_shares.sql` |
 | `read_family_share` | `auth.uid()` | `20260928307000_family_shared_items.sql` |
@@ -240,7 +241,7 @@ Since the reading, 38 more, from migrations not applied to production, each with
 | `volunteer_next_tasks` | `auth.uid()`, `private.volunteer_ready` | `20260928032000_community.sql` |
 | `volunteer_roster` | `private.has_capability` | `20260928032000_community.sql` |
 
-### read-helper (27)
+### read-helper (28)
 
 | Function | Gates in its body | Defined in |
 | --- | --- | --- |
@@ -252,6 +253,7 @@ Since the reading, 38 more, from migrations not applied to production, each with
 | `kill_switch_engaged` | `k.tenant_id is null or k.tenant_id = want_tenant` | `20260927170000_integration_control_plane.sql` |
 | `mutual_connections` | `auth.uid()` | `20260922003000_connections.sql` |
 | `my_action_publish_scopes` | `auth.uid()` | `20260928302000_office_action_feed.sql` |
+| `my_age_status` | `auth.uid()` | `20260929150000_minimum_age.sql` |
 | `my_beta` | `private.beta_my_membership` | `20260928220000_private_beta.sql` |
 | `my_capabilities` | `auth.uid()` | `20260928010000_my_capabilities.sql` |
 | `my_community_notices` | `auth.uid()` | `20260928032000_community.sql` |
@@ -371,5 +373,5 @@ Read against main on 2026-09-29. `held` cites a test or check that guards it; `p
 | ID | Severity | State | What | What closes it |
 | --- | --- | --- | --- | --- |
 | DR-01 | low | open | `kill_switch_engaged(switch, tenant)` answers for any tenant, where the read policy on `feature_kill_switch` shows a signed-in account only the platform-wide rows, its own school's and those it holds `integration:view` over. The one bit it discloses is whether another school has a named switch engaged. `grants.check.sql` records it as deliberate: one boolean, no row. | Scope the answer to the policy's tenants for a client caller, or accept the disclosure in SECURITY.md. The definer callers (`tenant_plan`, `tenant_sso_policy`, the LTI entitlement facts, the trust room) run as the owner and are unaffected either way. |
-| DR-02 | medium | closed by `supabase/definer-sweep.check.sql` | The gates here are structural: this register proves each check is present in the body, not that it is correct. Behaviour is proved per function by the `supabase/*.check.sql` suites, and not every one of the 151 had a suite that calls it as a second account. | Closed by `supabase/definer-sweep.check.sql`: a signed-in account holding nothing calls every callable definer function with neutral arguments and must be refused or told nothing, except fifteen that act only on the caller's own account, each named with the answer it may give; a victim's id, email, referral code and ticket may appear in no answer. Shown red on a function stripped of its owner filter, a self-service function taken off the list and a stale list entry; two planted probes are named on every run. Left to the feature suites: a caller holding a real id of somebody else's object, which neutral arguments cannot name. |
+| DR-02 | medium | closed by `supabase/definer-sweep.check.sql` | The gates here are structural: this register proves each check is present in the body, not that it is correct. Behaviour is proved per function by the `supabase/*.check.sql` suites, and not every one of the 151 had a suite that calls it as a second account. | Closed by `supabase/definer-sweep.check.sql`: a signed-in account holding nothing calls every callable definer function with neutral arguments and must be refused or told nothing, except seventeen that act only on the caller's own account, each named with the answer it may give; a victim's id, email, referral code and ticket may appear in no answer. Shown red on a function stripped of its owner filter, a self-service function taken off the list and a stale list entry; two planted probes are named on every run. Left to the feature suites: a caller holding a real id of somebody else's object, which neutral arguments cannot name. |
 | DR-03 | low | open | The 45 tables are pinned to the reading of 29 September. A table that gains or loses its last policy through a `format()` loop is not noticed here. | Re-read the advisor at each quarterly architecture review and compare; or move the loops' table lists into data the test can read. |

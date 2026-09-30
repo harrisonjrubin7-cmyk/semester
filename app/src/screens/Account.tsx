@@ -11,6 +11,7 @@ import { ActionButton, SectionLabel } from '../components/ui';
 import { Credentials } from '../components/Credentials';
 import { SchoolClaim } from '../components/SchoolClaim';
 import { ReferralLink } from '../components/ReferralLink';
+import { AgeStatement } from '../components/AgeStatement';
 import { MembershipPanel } from '../components/MembershipPanel';
 import { cloudConfigured, signOut } from '../lib/cloud';
 import { formatTime } from '../lib/locale';
@@ -217,6 +218,9 @@ export function AccountScreen() {
         {/* Between what the account does and leaving it: the one thing on
             this screen that is about somebody other than the account holder.
             See `components/ReferralLink.tsx`. */}
+        {/* Asked once, for an account made without a birth date (D-139). */}
+        <AgeStatement />
+
         <ReferralLink />
 
         <ActionButton

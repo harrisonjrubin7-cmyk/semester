@@ -236,11 +236,16 @@ export interface SignedUp {
   signedIn: boolean;
 }
 
-export async function signUp(email: string, password: string): Promise<SignedUp> {
+/**
+ * `bornOn` is YYYY-MM-DD. It travels in the account's metadata, where
+ * `private.record_stated_age` reads it, refuses an under-13, keeps only the
+ * day a minor turns 18, and deletes it (`lib/age.ts`).
+ */
+export async function signUp(email: string, password: string, bornOn?: string): Promise<SignedUp> {
   const { data, error } = await (await cloud()).auth.signUp({
     email,
     password,
-    options: { emailRedirectTo: appUrl() },
+    options: { emailRedirectTo: appUrl(), ...(bornOn ? { data: { birth_date: bornOn } } : {}) },
   });
   // The invite gate is a database trigger, so its refusal arrives here as an
   // unreadable server error. `explainSignUp` turns that one shape into a
@@ -257,6 +262,22 @@ export async function signUp(email: string, password: string): Promise<SignedUp>
           'it is verified before the redirect — so come back here and sign in anyway.',
         signedIn: false,
       };
+}
+
+/** Where this account stands: never the date, only the standing. */
+export type AgeStatus = 'unknown' | 'adult' | 'minor' | 'under_minimum';
+
+export async function myAgeStatus(): Promise<AgeStatus> {
+  const { data, error } = await (await cloud()).rpc('my_age_status');
+  if (error) throw new Error(error.message);
+  return (data as AgeStatus) ?? 'unknown';
+}
+
+/** Once, for an account made without a birth date. A second answer is refused. */
+export async function stateMyAge(bornOn: string): Promise<'adult' | 'minor' | 'under_minimum_age' | 'already_stated'> {
+  const { data, error } = await (await cloud()).rpc('state_my_age', { want_birth_date: bornOn });
+  if (error) throw new Error(error.message);
+  return data as 'adult' | 'minor' | 'under_minimum_age' | 'already_stated';
 }
 
 export async function signIn(email: string, password: string): Promise<void> {

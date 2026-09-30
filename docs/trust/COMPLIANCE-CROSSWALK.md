@@ -124,10 +124,10 @@ master rows at P0 not yet tested. Per register, over every row this page names:
 | View | Rows | Implementation | Evidence | Effectiveness | Risk (open P0) |
 | --- | ---: | ---: | ---: | ---: | ---: |
 | [`docs/market-readiness/HECVAT_READINESS.md`](../market-readiness/HECVAT_READINESS.md) | 33 | 11 of 33 | 0 of 33 | 11 of 33 | 0 |
-| [`docs/FERPA-COPPA-1EDTECH-READINESS.md`](../FERPA-COPPA-1EDTECH-READINESS.md) | 21 | 11 of 21 | 0 of 21 | 9 of 21 | 0 |
+| [`docs/FERPA-COPPA-1EDTECH-READINESS.md`](../FERPA-COPPA-1EDTECH-READINESS.md) | 21 | 12 of 21 | 0 of 21 | 10 of 21 | 0 |
 | [`docs/MASTER-LAUNCH-READINESS-REGISTER.md`](../MASTER-LAUNCH-READINESS-REGISTER.md) | 80 | 23 of 80 | 0 of 80 | 23 of 80 | 53 |
 | [`docs/operating-model/OPERATIONAL-MATURITY.md`](../operating-model/OPERATIONAL-MATURITY.md) | 28 | 2 of 28 | 0 of 28 | 0 of 28 | 0 |
-| **All** | 162 | 47 of 162 | 0 of 162 | 43 of 162 | 53 |
+| **All** | 162 | 48 of 162 | 0 of 162 | 44 of 162 | 53 |
 
 ## The TrustEd Apps rubrics, item by item
 
@@ -248,7 +248,7 @@ The other critical triggers are absent, for reasons that are each a row and are 
 - **Payments.** Billing stays out (D-009); the bill screen reads a statement and holds no card data. (COM-001 (1))
 - **Proctoring.** No proctoring or surveillance, held mechanically by the boundaries register. (TRUST-003 (1))
 - **Basic-needs intake.** The navigator is a directory that routes to an office; nothing is taken in, and nobody is notified. (STU-012 (2))
-- **Minors.** The service is not directed at children; dual enrollment is identified by the institution, not guessed. The stated minimum age is still owed. (COPPA-1 (0), COPPA-3 (1))
+- **Minors.** The service is not directed at children: the minimum age is 13, refused at sign-up by the database (D-139), and a minor aged 13 to 17 is kept out of every feature where others can find or message them. Dual enrollment is identified by the institution, not guessed. (COPPA-1 (2), COPPA-3 (1))
 - **Agentic writes.** No consequential write without exact review and confirmation; the two-phase journal never retries an uncertain action. (AI-009 (2))
 
 ### The evidence package a critical-tier vendor owes
