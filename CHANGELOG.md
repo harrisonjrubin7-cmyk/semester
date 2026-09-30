@@ -37,6 +37,19 @@ later. They wait on Account under "Waiting for you to send", and they do not go
 by themselves, even when you are back online. One that waits three days is not
 sent and has to be made again. Files you attach still do not sync between devices.
 
+### On the public site: alumni relations and fundraising, described and not built
+
+Two new pages, `/solutions/advancement/` and `/alumni/`, describe what an
+alumni and advancement office could one day run in Semester: alumni relations,
+giving, and the office's own console. They say plainly that none of it is
+built, that no school uses it, that no gift has been taken and no receipt
+issued, and that no price has been set. They also say what is not planned:
+wealth screening and predictive donor scoring. The graduate page lists what a
+graduate can do today (offer to mentor, take their data with them) and asks
+for nothing.
+
+Nothing to do.
+
 ### On the public site: a page for the K–12 edition
 
 A new page, `/k-12/`, describes Semester for high school: who it would start
