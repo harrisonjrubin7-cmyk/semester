@@ -30,5 +30,5 @@ Every assertion passed on the hosted database. The script ended with a deliberat
 
 - It was run by the author, from this session, through the connector's SQL call. The restoration and approval rules are about *different people*; here they were different synthetic accounts, not different humans.
 - The compact script omits some of the 98 local checks (for example the direct-API write refusals and the read-policy checks for students), which passed locally.
-- **Production has not had these migrations applied.** Its `supabase_migrations.schema_migrations` ends at `20260930173030` and the new tables do not exist there (read-only query, 30 September 2026).
+- At the time of this rehearsal, a read-only production query ended at `20260930173030` and the new tables did not exist. A later read on 30 September 2026 found the production migration ledger through `20260930232000`, including school offboarding. That proves the migration was recorded; it does **not** prove that an offboarding case was run, that the procedure works with production data, or that the second-person rehearsal happened.
 - Release gate G3 stays PARTIAL: the purge is not built, the export file is generated elsewhere, and counsel has not set the retention window.
