@@ -167,14 +167,14 @@ begin
   raise notice 'ok  the check sees a client privilege on a policy-less table';
 end $$;
 
--- ── 2. The four tenant foreign keys are covered ───────────────────────────
+-- ── 2. The six tenant foreign keys are covered ───────────────────────────
 
 do $$
 declare
   t text;
   covered boolean;
 begin
-  foreach t in array array['domain_outbox_events', 'gateway_intelligence_action', 'gateway_intelligence_audit', 'gateway_review'] loop
+  foreach t in array array['domain_outbox_events', 'gateway_intelligence_action', 'gateway_intelligence_audit', 'gateway_review', 'ledger_chain', 'ledger_chain_manifest'] loop
     select exists (
       select 1 from pg_index x
        where x.indrelid = ('private.' || t)::regclass
@@ -186,7 +186,7 @@ begin
       raise exception 'FAILED: private.% has no index led by tenant_id', t;
     end if;
   end loop;
-  raise notice 'ok  the four private tenant foreign keys each have a covering index';
+  raise notice 'ok  the six private tenant foreign keys each have a covering index';
 end $$;
 
 -- ── 3. The two tables have a primary key, and their writers still work ────
@@ -196,6 +196,9 @@ begin
   perform pg_temp.counted('site_lead_hits has a primary key on id',
     (select count(*) from pg_index i join pg_attribute a on a.attrelid = i.indrelid and a.attnum = any (i.indkey)
       where i.indrelid = 'private.site_lead_hits'::regclass and i.indisprimary and a.attname = 'id'), 1);
+  perform pg_temp.counted('ledger_chain_verification has a primary key on id (added by #1012 after the advisor was read)',
+    (select count(*) from pg_index i join pg_attribute a on a.attrelid = i.indrelid and a.attnum = any (i.indkey)
+      where i.indrelid = 'private.ledger_chain_verification'::regclass and i.indisprimary and a.attname = 'id'), 1);
   perform pg_temp.counted('console_audit_verification has a primary key on id',
     (select count(*) from pg_index i join pg_attribute a on a.attrelid = i.indrelid and a.attnum = any (i.indkey)
       where i.indrelid = 'private.console_audit_verification'::regclass and i.indisprimary and a.attname = 'id'), 1);

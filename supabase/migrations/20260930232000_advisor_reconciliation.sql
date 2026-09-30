@@ -24,14 +24,16 @@
 -- school row. `supabase/indexes.check.sql` should have caught it and did not,
 -- because it asked only about `public`; it asks about `private` now.
 --
--- ## The two primary keys
+-- ## The primary keys
 --
 -- `private.site_lead_hits` (a rate-limit hit: a hashed address and a time) and
 -- `private.console_audit_verification` (one row per audit-chain check) have no
 -- natural key: two hits can share a hash and an instant, and two checks can
 -- share a transaction's `now()`. Each gets a surrogate `id bigint generated
 -- always as identity`. Both tables are tiny (0 and 2 rows on production), so
--- the rewrite this takes is instant.
+-- the rewrite this takes is instant. `private.ledger_chain_verification`
+-- (#1012, merged after the advisor was read) is the same shape and gets the
+-- same key; the stricter `indexes.check.sql` found it.
 --
 -- The audit-verification table is append-only through a trigger that refuses
 -- UPDATE and DELETE. Adding a column is DDL and does not fire it; a check in
@@ -54,6 +56,14 @@ create index if not exists gateway_intelligence_audit_by_tenant
 create index if not exists gateway_review_by_tenant
   on private.gateway_review (tenant_id);
 
+-- Found when `indexes.check.sql` began to look at `private`: two more tenant
+-- keys, added by the ledger hash chains (#1012) after the advisor was read.
+-- Their primary keys lead with `ledger`, so `tenant_id` is not a prefix.
+create index if not exists ledger_chain_by_tenant
+  on private.ledger_chain (tenant_id);
+create index if not exists ledger_chain_manifest_by_tenant
+  on private.ledger_chain_manifest (tenant_id);
+
 -- ── 2. Primary keys ───────────────────────────────────────────────────────
 
 do $$
@@ -61,7 +71,8 @@ declare
   t regclass;
   seq text;
 begin
-  foreach t in array array['private.site_lead_hits'::regclass, 'private.console_audit_verification'::regclass] loop
+  foreach t in array array['private.site_lead_hits'::regclass, 'private.console_audit_verification'::regclass,
+                         'private.ledger_chain_verification'::regclass] loop
     if not exists (select 1 from pg_index i where i.indrelid = t and i.indisprimary) then
       execute format('alter table %s add column if not exists id bigint generated always as identity', t);
       execute format('alter table %s add constraint %I primary key (id)',

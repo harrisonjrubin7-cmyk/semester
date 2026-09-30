@@ -28,7 +28,7 @@ yet observed.** Apply `20260930232000_advisor_reconciliation.sql`, re-run
 | 49 tables, RLS on, no policy | Intentional private/service-only denial. No `anon`/`authenticated` privilege of any kind. | None. Four (`private.account_ages`, `public.registration_completions`, `public.registration_holds`, `public.registration_requests`) added to the register. |
 | 180 definer functions | Signed-in callable by design; each has a register row; none open to `anon`/PUBLIC; `search_path` pinned. | None. `kill_switch_engaged` stays (DR-01). |
 | anon table privileges on 26 tables | Hygiene, not exposure (RLS gates every row). | Recorded as DR-04. |
-| 4 unindexed tenant FKs | Real: a school delete scans each table per school row. | Indexes. |
+| 4 unindexed tenant FKs | Real: a school delete scans each table per school row. | Indexes. Two more found by the stricter `indexes.check.sql` on `main` after the advisor was read (`private.ledger_chain`, `private.ledger_chain_manifest`, added by #1012); indexed here too. |
 | 2 tables without a key | Real, low risk. | Surrogate identity key; sequence revoked from client roles. |
 
 No permissive policy was added. No function grant changed.
