@@ -6,10 +6,10 @@ Written 30 Sep 2026 on branch `claude/festive-feynman-he763k` (draft PR #1021). 
 
 | Kind | Items |
 | --- | --- |
-| **Migrations (2, both additive)** | `20260930180000_school_membership_enforcement.sql` (members-only rooms per school, off; requests; readiness) · `20260930190000_advisor_share_audit.sql` (audit triggers on advisor shares) |
+| **Migrations (2, both additive)** | `20260930185000_school_membership_enforcement.sql` (members-only rooms per school, off; requests; readiness) · `20260930190000_advisor_share_audit.sql` (audit triggers on advisor shares) |
 | **SQL suites** | `school-membership.check.sql` (32 checks) · `share-audit.check.sql` (14) · edits to `grants.check.sql`, `tenancy.check.sql` |
 | **App** | `components/SchoolClaim.tsx`, `lib/schoolclaim.ts` (auto-claim, ask to join, leave, staff approvals) · `lib/actions.ts` + `ActionCenter.tsx` (snooze presets, dismiss reasons) · `lib/termload.ts` + `RegistrationDay.tsx` (term-load estimate) · `lib/advisor-meeting.ts` (provenance), `GraduationSimulator.tsx`, `StudyAbroad.tsx`, `TodayActionCenter.tsx`, `SourceBadge.tsx` (source words) · `ModulesPanel.tsx` (loading-state fix) · `AccountSecurity.tsx` (earlier) |
-| **Docs** | `SCHOOL-MEMBERSHIP-ENFORCEMENT.md`, `RELEASE-GATES.md`, `ROLE-PERMISSION-MATRIX.md`, `DATA-INVENTORY-AND-LINEAGE.md`, `SECURITY-THREAT-MODEL.md`, `DATA-RETENTION-EXPORT-DELETION.md`, this page; `FEATURE-TRUTH-TABLE.md`, `FULL-BETA-REQUIREMENTS.md`, `RETENTION.md`, `DECISION-LOG.md` (D-150, D-159, D-160), registers regenerated |
+| **Docs** | `SCHOOL-MEMBERSHIP-ENFORCEMENT.md`, `RELEASE-GATES.md`, `ROLE-PERMISSION-MATRIX.md`, `DATA-INVENTORY-AND-LINEAGE.md`, `SECURITY-THREAT-MODEL.md`, `DATA-RETENTION-EXPORT-DELETION.md`, this page; `FEATURE-TRUTH-TABLE.md`, `FULL-BETA-REQUIREMENTS.md`, `RETENTION.md`, `DECISION-LOG.md` (D-150, D-1021, D-1021), registers regenerated |
 
 ## Test output (last full run, rebased on main, 30 Sep 2026)
 

@@ -323,7 +323,11 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
  * the reading, so the reading's count is the register's rows minus these.
  * Delete an entry when the file is applied, and the next reading's count moves.
  */
-export const NOT_YET_APPLIED: readonly string[] = ['20260930180000_console_command_center.sql'];
+export const NOT_YET_APPLIED: readonly string[] = [
+  '20260930180000_console_command_center.sql',
+  '20260930185000_school_membership_enforcement.sql',
+  '20260930200000_school_offboarding.sql',
+];
 
 /**
  * Callable definer functions added by migrations that were **not** applied to
@@ -337,8 +341,8 @@ export const SINCE_READING: readonly { file: string; functions: readonly string[
   {
     file: '20260930180000_console_command_center.sql',
     functions: ['console_command_center'],
-
-
+  },
+  {
     file: '20260930200000_school_offboarding.sql',
     functions: [
       'approve_offboarding',
@@ -356,7 +360,7 @@ export const SINCE_READING: readonly { file: string; functions: readonly string[
     ],
   },
   {
-    file: '20260930180000_school_membership_enforcement.sql',
+    file: '20260930185000_school_membership_enforcement.sql',
     functions: [
       'decide_school_request',
       'leave_school',

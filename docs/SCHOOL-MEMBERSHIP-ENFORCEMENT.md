@@ -1,6 +1,6 @@
 # Limiting a university's course rooms to its members
 
-Full-beta G-03. Built 30 Sep 2026 on the owner's approval of the staged plan. **Off for every school that exists**; nothing changes for anyone until Semester staff switch a school on. Migration `20260930180000_school_membership_enforcement.sql`; proved by `supabase/school-membership.check.sql` (32 checks, six guards shown red by mutation).
+Full-beta G-03. Built 30 Sep 2026 on the owner's approval of the staged plan. **Off for every school that exists**; nothing changes for anyone until Semester staff switch a school on. Migration `20260930185000_school_membership_enforcement.sql`; proved by `supabase/school-membership.check.sql` (32 checks, six guards shown red by mutation).
 
 ## What it is
 

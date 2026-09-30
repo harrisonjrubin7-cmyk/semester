@@ -33,7 +33,7 @@ Evidence goes in `docs/evidence/` (today it holds only the AI runs of 29 Sep). S
 | | |
 | --- | --- |
 | **Pass when** | The owner records what happens when a school leaves, and a test proves it. |
-| **Decision** | D-161 (30 Sep 2026, owner): a school row is never deleted. It leaves through an audited case — preflight inventory, approval by both sides, access disabled, export recorded and verified by a second operator, soft-archive with a retention window, restoration by a different operator, purge eligibility only after the window with no live legal hold and a third person's separate authorization. |
+| **Decision** | D-1021 (30 Sep 2026, owner): a school row is never deleted. It leaves through an audited case — preflight inventory, approval by both sides, access disabled, export recorded and verified by a second operator, soft-archive with a retention window, restoration by a different operator, purge eligibility only after the window with no live legal hold and a third person's separate authorization. |
 | **Today** | Built and proved in `supabase/school-offboarding.check.sql` (96 checks, cross-school and recovery cases included, twelve guards shown red). Runbook: `docs/SCHOOL-OFFBOARDING.md`. `delete from schools` is refused for every role. |
 | **Missing** | Never rehearsed on a preview branch or used. **The purge itself is not built** (the school-row trigger refuses every delete until it is). The export file is generated elsewhere. Legal holds are read from `public.legal_holds` (#1012), and nobody has yet placed one. Counsel has not set the retention window or the fate of a former school's student work. |
 | **Status** | PARTIAL — procedure built and tested locally; not rehearsed; purge not built |
