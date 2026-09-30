@@ -187,7 +187,7 @@ describe('small-cell suppression, for every table', () => {
  * exists to catch. If any of these passed, the property would be decoration.
  * The mutants wrap the real function, so they stay current with it; the same
  * defects were also planted in the source itself once, by hand, and each of
- * the properties above went red (see D-158).
+ * the properties above went red (see D-159).
  */
 describe('each property finds the defect it exists to catch', () => {
   const found = (out: { ok: boolean }) => expect(out.ok, 'the property did not notice the planted defect').toBe(false);

@@ -3617,9 +3617,9 @@ surface that is growing on purpose, and wants a different unit.
 
 ---
 
-## D-158 · The five larger proposals of the hardening memos, built as far as they can be without a decision that is not ours
+## D-159 · The five larger proposals of the hardening memos, built as far as they can be without a decision that is not ours
 
-**Decided 30 Sep 2026.** D-157 built the three controls from the four hardening
+**Decided 30 Sep 2026.** D-158 built the three controls from the four hardening
 memos that were a test and left five as "not started". This builds them, in five
 reviewable commits, each held to a planted-defect check. Where a proposal cannot
 be finished without a governance decision, it is built as far as it safely goes
@@ -3713,7 +3713,7 @@ load scenarios.
 **Neighbouring work.** #996 merged while this was open: its open-and-sync scenarios
 (D-154) now run inside `run_pass`, so every soak window includes them and its invariants
 are checked after each; its lost-update control runs once, after the last window. It took
-D-154, and #1025 then took D-155, so this decision is D-158 and the earlier three-guards decision D-157. #1011 (the
+D-154, and #1025 then took D-155, so this decision is D-159 and the earlier three-guards decision D-158. #1011 (the
 Configuration Studio) is where contract storage would naturally live, and this does not
 depend on it. #1012 has since merged with a legal hold and #1021, a retention page, is still open; the history is never
 held and honours the student's deletion, which is item 1 above.
