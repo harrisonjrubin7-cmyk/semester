@@ -8,7 +8,11 @@
  *    `bursar:post`, recorded in `public.student_account_settings`. Money with
  *    nobody accountable for it is not a feature a school can switch on by
  *    ticking a box, so the database refuses every posting while the seat is
- *    empty (`private.student_accounts_on`), and this refuses the same.
+ *    empty (`private.student_accounts_on`), and this refuses the same. The
+ *    database also asks, at every write, whether the named owner still has a
+ *    profile at the school and a live `bursar:post` grant there — revoked or
+ *    expired, the module is off. A client cannot read another person's
+ *    grants, so that half is the database's alone.
  * 3. Semester's own council has somebody in its finance seat
  *    (`COUNCIL` in `lib/launchreadiness.ts`, D-118). The seat is vacant on
  *    this tree, which is why this module is off everywhere today and why the

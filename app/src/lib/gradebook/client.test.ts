@@ -68,19 +68,43 @@ beforeEach(() => {
 describe('who is looking', () => {
   const grant = (capability: string, scopeId: string, scopeKind = 'course') => ({ capability, scopeKind, scopeId });
 
-  it('finds the courses a person authors, with what they may do, at this school only', () => {
+  it('finds the course-terms a person authors, with what they may do, at this school only', () => {
     const grants = [
-      grant('grades:enter', 'vu/ECON 1020'),
-      grant('grades:release', 'vu/ECON 1020'),
-      grant('grades:export', 'vu/ECON 1020'),
-      grant('grades:enter', 'other/ECON 1020'),
-      grant('grades:export', 'vu/HIST 1100'),
-      grant('grades:receive', 'vu/MATH 1300'),
+      grant('grades:enter', 'vu/ECON 1020/2026FA'),
+      grant('grades:release', 'vu/ECON 1020/2026FA'),
+      grant('grades:export', 'vu/ECON 1020/2026FA'),
+      grant('grades:enter', 'vu/ECON 1020/2027SP'),
+      grant('grades:enter', 'other/ECON 1020/2026FA'),
+      grant('grades:export', 'vu/HIST 1100/2026FA'),
+      grant('grades:receive', 'vu/MATH 1300/2026FA'),
       grant('grades:export', 'vu', 'school'),
     ];
-    expect(authoredCourses(grants, 'vu')).toEqual([{ course: 'ECON 1020', capabilities: ['grades:enter', 'grades:export', 'grades:release'] }]);
-    expect(gradedCourses(grants, 'vu')).toEqual(['MATH 1300']);
+    // The latest term first; each term its own entry with its own capabilities.
+    expect(authoredCourses(grants, 'vu')).toEqual([
+      { course: 'ECON 1020', term: '2027SP', capabilities: ['grades:enter'] },
+      { course: 'ECON 1020', term: '2026FA', capabilities: ['grades:enter', 'grades:export', 'grades:release'] },
+    ]);
+    expect(gradedCourses(grants, 'vu')).toEqual([{ course: 'MATH 1300', term: '2026FA' }]);
     expect(authoredCourses(grants, '')).toEqual([]);
+  });
+
+  it('reads nothing from a grant with no term, or a scope that is not a course and a term', () => {
+    // The migration authorises nothing on these, so neither does the screen.
+    const grants = [
+      grant('grades:enter', 'vu/ECON 1020'),
+      grant('grades:receive', 'vu/ECON 1020'),
+      grant('grades:enter', 'vu/ECON 1020/2026'),
+      grant('grades:enter', 'vu/ECON 1020/2026FA/extra'),
+      grant('grades:enter', 'vu/econ 1020/2026FA'),
+      grant('grades:receive', 'vu/MATH 1300/26FA'),
+    ];
+    expect(authoredCourses(grants, 'vu')).toEqual([]);
+    expect(gradedCourses(grants, 'vu')).toEqual([]);
+  });
+
+  it('orders terms by year and season, not alphabetically', () => {
+    const grants = ['2026FA', '2027SP', '2026SU', '2026SP', '2027SU'].map((t) => grant('grades:receive', `vu/ECON 1020/${t}`));
+    expect(gradedCourses(grants, 'vu').map((o) => o.term)).toEqual(['2027SU', '2027SP', '2026FA', '2026SU', '2026SP']);
   });
 
   it('names the term a date falls in', () => {

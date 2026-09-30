@@ -14,8 +14,20 @@
 --   * **Scope.** A course is `<school>/<CODE>` plus a term, exactly as
 --     `20260928309000_course_studio.sql` keys one. The school is the caller's
 --     own (`profiles.school_id`), never a parameter.
+--   * **Grading authority is per term.** Every course-scope gradebook grant
+--     is held on scope id `<school>/<CODE>/<TERM>` — `vu/ECON 1020/2027SP` —
+--     and every check here passes the row's own term. Grades are the most
+--     private thing an instructor holds about a student, and teaching a
+--     course this term is not a reason to read last year's section: a grant
+--     keyed on `<school>/<CODE>` alone would let this spring's TA read every
+--     earlier cohort's drafts, comments and regrade history. So a grant with
+--     no term authorises nothing in the gradebook. (Course Studio's
+--     `course:publish` stays on `<school>/<CODE>`; an instructor who does
+--     both holds a grant at each scope.) The registrar's `grades:export` at
+--     school scope is the one grant that spans terms, and it reads released
+--     rows only.
 --   * **Who.** Four new capabilities, checked with `private.has_capability`
---     at course scope — `grades:enter` (faculty, teaching assistants),
+--     at course-and-term scope — `grades:enter` (faculty, teaching assistants),
 --     `grades:moderate` (faculty: a second instructor on the course),
 --     `grades:release` (faculty), `grades:export` (faculty, the registrar).
 --     Export is also honoured at school scope, where a registrar's grant
@@ -244,9 +256,24 @@ comment on table public.grade_passbacks is 'Released grade versions queued for L
 
 -- ── Who reads ─────────────────────────────────────────────────────────────
 
--- Course staff: anybody holding a gradebook capability over this course, or
--- export over the school, at their own school.
-create or replace function private.gradebook_staff(want_tenant text, want_code text)
+-- The scope id a course's gradebook grants are held on: `<school>/<CODE>/<TERM>`.
+-- Null when any part is null, and `has_capability` answers false for null, so
+-- a missing term authorises nothing rather than falling back to the course.
+create or replace function private.gradebook_scope(want_tenant text, want_code text, want_term text)
+returns text
+language sql
+immutable
+set search_path = ''
+as $$
+  select want_tenant || '/' || want_code || '/' || want_term;
+$$;
+
+revoke all on function private.gradebook_scope(text, text, text) from public, anon, authenticated;
+grant execute on function private.gradebook_scope(text, text, text) to authenticated;
+
+-- Course staff: anybody holding a gradebook capability over this course in
+-- this term, or export over the school, at their own school.
+create or replace function private.gradebook_staff(want_tenant text, want_code text, want_term text)
 returns boolean
 language sql
 stable
@@ -254,21 +281,21 @@ security definer
 set search_path = ''
 as $$
   select exists (select 1 from public.profiles p where p.user_id = (select auth.uid()) and p.school_id = want_tenant)
-     and (private.has_capability('grades:enter',    'course', want_tenant || '/' || want_code)
-       or private.has_capability('grades:moderate', 'course', want_tenant || '/' || want_code)
-       or private.has_capability('grades:release',  'course', want_tenant || '/' || want_code)
-       or private.has_capability('grades:export',   'course', want_tenant || '/' || want_code)
+     and (private.has_capability('grades:enter',    'course', private.gradebook_scope(want_tenant, want_code, want_term))
+       or private.has_capability('grades:moderate', 'course', private.gradebook_scope(want_tenant, want_code, want_term))
+       or private.has_capability('grades:release',  'course', private.gradebook_scope(want_tenant, want_code, want_term))
+       or private.has_capability('grades:export',   'course', private.gradebook_scope(want_tenant, want_code, want_term))
        or private.has_capability('grades:export',   'school', want_tenant));
 $$;
 
-revoke all on function private.gradebook_staff(text, text) from public, anon, authenticated;
-grant execute on function private.gradebook_staff(text, text) to authenticated;
+revoke all on function private.gradebook_staff(text, text, text) from public, anon, authenticated;
+grant execute on function private.gradebook_staff(text, text, text) to authenticated;
 
 -- Who may see a grade before it is released: the people who enter, moderate
 -- or release it for this course. Export is deliberately not among them — the
 -- registrar exports released grades, and an instructor's working draft is
--- not the registrar's to read.
-create or replace function private.gradebook_author(want_tenant text, want_code text)
+-- not the registrar's to read. Per term, like every course grant here.
+create or replace function private.gradebook_author(want_tenant text, want_code text, want_term text)
 returns boolean
 language sql
 stable
@@ -276,13 +303,13 @@ security definer
 set search_path = ''
 as $$
   select exists (select 1 from public.profiles p where p.user_id = (select auth.uid()) and p.school_id = want_tenant)
-     and (private.has_capability('grades:enter',    'course', want_tenant || '/' || want_code)
-       or private.has_capability('grades:moderate', 'course', want_tenant || '/' || want_code)
-       or private.has_capability('grades:release',  'course', want_tenant || '/' || want_code));
+     and (private.has_capability('grades:enter',    'course', private.gradebook_scope(want_tenant, want_code, want_term))
+       or private.has_capability('grades:moderate', 'course', private.gradebook_scope(want_tenant, want_code, want_term))
+       or private.has_capability('grades:release',  'course', private.gradebook_scope(want_tenant, want_code, want_term)));
 $$;
 
-revoke all on function private.gradebook_author(text, text) from public, anon, authenticated;
-grant execute on function private.gradebook_author(text, text) to authenticated;
+revoke all on function private.gradebook_author(text, text, text) from public, anon, authenticated;
+grant execute on function private.gradebook_author(text, text, text) to authenticated;
 
 alter table public.gradebook_operations enable row level security;
 alter table public.gradebook_schemes enable row level security;
@@ -313,17 +340,27 @@ create policy "callers read their own operations" on public.gradebook_operations
   using (actor = (select auth.uid()));
 
 -- The scheme and the items are the course's, not any student's: its staff and
--- its enrolled students read them.
+-- its enrolled students read them, for the term they hold.
+--
+-- `grades:receive`, the roster, is per term too. It is not only a read: it is
+-- what `gradebook_enter` checks before accepting a score, so it answers "may
+-- this person be graded in this section". Enrollment is per term — a student
+-- who took ECON 1020 in 2026FA is not in 2027SP's section — and an untermed
+-- roster grant would let any later term's grader enter a grade for every
+-- student who ever took the course. A scheme and an item list are not
+-- secret, but reading them under the same key the grade is written under
+-- keeps one scope for one offering, and a student reading an old section
+-- still holds that section's term grant.
 drop policy if exists "staff and the roster read the scheme" on public.gradebook_schemes;
 create policy "staff and the roster read the scheme" on public.gradebook_schemes
   for select to authenticated
-  using (private.gradebook_staff(tenant_id, course_code)
-         or private.has_capability('grades:receive', 'course', tenant_id || '/' || course_code));
+  using (private.gradebook_staff(tenant_id, course_code, term)
+         or private.has_capability('grades:receive', 'course', private.gradebook_scope(tenant_id, course_code, term)));
 drop policy if exists "staff and the roster read the items" on public.gradebook_items;
 create policy "staff and the roster read the items" on public.gradebook_items
   for select to authenticated
-  using (private.gradebook_staff(tenant_id, course_code)
-         or private.has_capability('grades:receive', 'course', tenant_id || '/' || course_code));
+  using (private.gradebook_staff(tenant_id, course_code, term)
+         or private.has_capability('grades:receive', 'course', private.gradebook_scope(tenant_id, course_code, term)));
 
 -- The rule a student relies on: their own released rows, and no others. The
 -- course's authors read drafts; other staff (the registrar, through export)
@@ -331,14 +368,14 @@ create policy "staff and the roster read the items" on public.gradebook_items
 drop policy if exists "staff read grades, students their own released ones" on public.grade_entries;
 create policy "staff read grades, students their own released ones" on public.grade_entries
   for select to authenticated
-  using (private.gradebook_author(tenant_id, course_code)
-         or (status = 'released' and private.gradebook_staff(tenant_id, course_code))
+  using (private.gradebook_author(tenant_id, course_code, term)
+         or (status = 'released' and private.gradebook_staff(tenant_id, course_code, term))
          or (student_id = (select auth.uid()) and status = 'released'));
 
 drop policy if exists "staff and the student read a regrade request" on public.regrade_requests;
 create policy "staff and the student read a regrade request" on public.regrade_requests
   for select to authenticated
-  using (private.gradebook_staff(tenant_id, course_code) or student_id = (select auth.uid()));
+  using (private.gradebook_staff(tenant_id, course_code, term) or student_id = (select auth.uid()));
 
 drop policy if exists "whoever reads the request reads its answer" on public.regrade_resolutions;
 create policy "whoever reads the request reads its answer" on public.regrade_resolutions
@@ -348,7 +385,7 @@ create policy "whoever reads the request reads its answer" on public.regrade_res
 drop policy if exists "staff read the passback queue" on public.grade_passbacks;
 create policy "staff read the passback queue" on public.grade_passbacks
   for select to authenticated
-  using (private.gradebook_staff(tenant_id, course_code));
+  using (private.gradebook_staff(tenant_id, course_code, term));
 
 -- ── Helpers the writers share ─────────────────────────────────────────────
 
@@ -374,9 +411,9 @@ begin
   return school;
 end $$;
 
--- Raises unless the caller holds `want_cap` over this course, or — when
--- `school_ok` — over the whole school.
-create or replace function private.gradebook_require(school text, code text, want_cap text, school_ok boolean)
+-- Raises unless the caller holds `want_cap` over this course in this term,
+-- or — when `school_ok` — over the whole school.
+create or replace function private.gradebook_require(school text, code text, want_term text, want_cap text, school_ok boolean)
 returns void
 language plpgsql
 stable
@@ -384,9 +421,10 @@ security definer
 set search_path = ''
 as $$
 begin
-  if not (private.has_capability(want_cap, 'course', school || '/' || code)
+  if not (private.has_capability(want_cap, 'course', private.gradebook_scope(school, code, want_term))
           or (school_ok and private.has_capability(want_cap, 'school', school))) then
-    raise exception 'semester: that needs % on this course', want_cap using errcode = 'insufficient_privilege';
+    raise exception 'semester: that needs % on this course in %', want_cap, coalesce(want_term, 'this term')
+      using errcode = 'insufficient_privilege';
   end if;
 end $$;
 
@@ -461,7 +499,7 @@ begin
 end $$;
 
 revoke all on function private.gradebook_school() from public, anon, authenticated;
-revoke all on function private.gradebook_require(text, text, text, boolean) from public, anon, authenticated;
+revoke all on function private.gradebook_require(text, text, text, text, boolean) from public, anon, authenticated;
 revoke all on function private.gradebook_replay(text, text, text, jsonb) from public, anon, authenticated;
 revoke all on function private.gradebook_spend(text, text, text, jsonb, jsonb) from public, anon, authenticated;
 revoke all on function private.gradebook_score_problem(numeric, numeric, text) from public, anon, authenticated;
@@ -495,7 +533,7 @@ begin
   if want_term is null or want_term !~ '^[0-9]{4}(FA|SP|SU)$' then
     raise exception 'semester: that is not a term' using errcode = 'check_violation';
   end if;
-  perform private.gradebook_require(school, code, 'grades:release', false);
+  perform private.gradebook_require(school, code, want_term, 'grades:release', false);
   prior := private.gradebook_replay(school, want_key, 'scheme', req);
   if prior is not null then return (prior->>'version')::integer; end if;
 
@@ -581,7 +619,10 @@ declare
   made   uuid;
 begin
   if code = '' then raise exception 'semester: that is not a course code' using errcode = 'check_violation'; end if;
-  perform private.gradebook_require(school, code, 'grades:release', false);
+  if want_term is null or want_term !~ '^[0-9]{4}(FA|SP|SU)$' then
+    raise exception 'semester: that is not a term' using errcode = 'check_violation';
+  end if;
+  perform private.gradebook_require(school, code, want_term, 'grades:release', false);
   prior := private.gradebook_replay(school, want_key, 'item', req);
   if prior is not null then return (prior->>'id')::uuid; end if;
 
@@ -625,11 +666,11 @@ declare
 begin
   select * into it from public.gradebook_items i where i.id = want_item and i.tenant_id = school;
   if not found then raise exception 'semester: no such item here' using errcode = 'check_violation'; end if;
-  perform private.gradebook_require(school, it.course_code, 'grades:enter', false);
+  perform private.gradebook_require(school, it.course_code, it.term, 'grades:enter', false);
   prior := private.gradebook_replay(school, want_key, 'enter', req);
   if prior is not null then return (prior->>'version')::integer; end if;
 
-  if not private.subject_has_capability(want_student, 'grades:receive', 'course', school || '/' || it.course_code) then
+  if not private.subject_has_capability(want_student, 'grades:receive', 'course', private.gradebook_scope(school, it.course_code, it.term)) then
     raise exception 'semester: that student is not enrolled in this course' using errcode = 'check_violation';
   end if;
   if want_student = me then
@@ -680,7 +721,7 @@ declare
 begin
   select * into it from public.gradebook_items i where i.id = want_item and i.tenant_id = school;
   if not found then raise exception 'semester: no such item here' using errcode = 'check_violation'; end if;
-  perform private.gradebook_require(school, it.course_code, 'grades:moderate', false);
+  perform private.gradebook_require(school, it.course_code, it.term, 'grades:moderate', false);
   prior := private.gradebook_replay(school, want_key, 'moderate', req);
   if prior is not null then return (prior->>'version')::integer; end if;
 
@@ -725,7 +766,7 @@ declare
 begin
   select * into it from public.gradebook_items i where i.id = want_item and i.tenant_id = school;
   if not found then raise exception 'semester: no such item here' using errcode = 'check_violation'; end if;
-  perform private.gradebook_require(school, it.course_code, 'grades:release', false);
+  perform private.gradebook_require(school, it.course_code, it.term, 'grades:release', false);
   prior := private.gradebook_replay(school, want_key, 'release', req);
   if prior is not null then return prior; end if;
 
@@ -821,7 +862,7 @@ declare
 begin
   select * into r from public.regrade_requests x where x.id = want_request and x.tenant_id = school;
   if not found then raise exception 'semester: no such regrade request here' using errcode = 'check_violation'; end if;
-  perform private.gradebook_require(school, r.course_code, 'grades:enter', false);
+  perform private.gradebook_require(school, r.course_code, r.term, 'grades:enter', false);
   prior := private.gradebook_replay(school, want_key, 'resolve', req);
   if prior is not null then return (prior->>'id')::uuid; end if;
 
@@ -871,7 +912,7 @@ declare
   school text := private.gradebook_school();
   code   text := private.course_code(want_course);
 begin
-  perform private.gradebook_require(school, code, 'grades:export', true);
+  perform private.gradebook_require(school, code, want_term, 'grades:export', true);
   return query
     select distinct on (g.student_id, g.item_id)
            g.student_id, g.item_id, i.category_key, i.title, i.points_possible, g.score, g.mark, g.created_at
@@ -903,7 +944,7 @@ declare
 begin
   select * into it from public.gradebook_items i where i.id = want_item and i.tenant_id = school;
   if not found then raise exception 'semester: no such item here' using errcode = 'check_violation'; end if;
-  perform private.gradebook_require(school, it.course_code, 'grades:release', false);
+  perform private.gradebook_require(school, it.course_code, it.term, 'grades:release', false);
   prior := private.gradebook_replay(school, want_key, 'passback', req);
   if prior is not null then return prior; end if;
 
@@ -1003,9 +1044,11 @@ grant execute on function public.gradebook_record_passback(uuid, text, text) to 
 --   drop function if exists private.gradebook_score_problem(numeric, numeric, text);
 --   drop function if exists private.gradebook_spend(text, text, text, jsonb, jsonb);
 --   drop function if exists private.gradebook_replay(text, text, text, jsonb);
---   drop function if exists private.gradebook_require(text, text, text, boolean);
+--   drop function if exists private.gradebook_require(text, text, text, text, boolean);
 --   drop function if exists private.gradebook_school();
---   drop function if exists private.gradebook_staff(text, text);
+--   drop function if exists private.gradebook_author(text, text, text);
+--   drop function if exists private.gradebook_staff(text, text, text);
+--   drop function if exists private.gradebook_scope(text, text, text);
 --   delete from public.role_capabilities where capability like 'grades:%';
 --   delete from public.app_capabilities where capability like 'grades:%';
 --   commit;

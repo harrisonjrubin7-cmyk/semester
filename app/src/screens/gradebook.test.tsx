@@ -84,8 +84,10 @@ let host: HTMLDivElement;
 let root: Root;
 
 const grant = (capability: string, scopeId: string) => ({ capability, scopeKind: 'course', scopeId });
-const PROF = [grant('grades:enter', 'vu/ECON 1020'), grant('grades:moderate', 'vu/ECON 1020'), grant('grades:release', 'vu/ECON 1020'), grant('grades:export', 'vu/ECON 1020')];
-const STUDENT = [grant('grades:receive', 'vu/ECON 1020')];
+// Gradebook grants are held per course and term: `<school>/<CODE>/<TERM>`.
+const FA = 'vu/ECON 1020/2026FA';
+const PROF = [grant('grades:enter', FA), grant('grades:moderate', FA), grant('grades:release', FA), grant('grades:export', FA)];
+const STUDENT = [grant('grades:receive', FA)];
 
 const entry = (patch: Record<string, unknown>) => ({
   id: 'g',
@@ -209,13 +211,20 @@ describe('when the school has not turned it on', () => {
 
 describe('who may see it', () => {
   it('tells somebody with no course role why there is nothing, who assigns one, and where their own arithmetic is', async () => {
-    mock.caps.mockResolvedValue([grant('grades:enter', 'other/ECON 1020'), grant('grades:export', 'vu/HIST 1100')]);
+    mock.caps.mockResolvedValue([grant('grades:enter', 'other/ECON 1020/2026FA'), grant('grades:export', 'vu/HIST 1100/2026FA')]);
     await render();
     expect(text()).toContain('not an instructor or a student on any course in your school’s gradebook');
     expect(mock.book).not.toHaveBeenCalled();
     await press('Work out your own grades');
     expect(mock.dispatch).toHaveBeenCalledWith({ type: 'setCoursesTab', tab: 'grades' });
     expect(mock.dispatch).toHaveBeenCalledWith({ type: 'go', screen: 'courses' });
+  });
+
+  it('offers nothing on a grant with no term: it authorises nothing in the database either', async () => {
+    mock.caps.mockResolvedValue([grant('grades:enter', 'vu/ECON 1020'), grant('grades:release', 'vu/ECON 1020'), grant('grades:receive', 'vu/ECON 1020')]);
+    await render();
+    expect(text()).toContain('not an instructor or a student on any course in your school’s gradebook');
+    expect(mock.book).not.toHaveBeenCalled();
   });
 
   it('asks a signed-out person to sign in', async () => {
@@ -228,7 +237,7 @@ describe('who may see it', () => {
 describe('an instructor’s course', () => {
   it('shows the scheme, the item, and every version as the student would see it', async () => {
     await render();
-    expect(mock.book).toHaveBeenCalledWith('ECON 1020', expect.stringMatching(/^[0-9]{4}(FA|SP|SU)$/));
+    expect(mock.book).toHaveBeenCalledWith('ECON 1020', '2026FA');
     expect(text()).toContain('Problem sets 40% (lowest 1 dropped) · Exams 60%.');
     const table = host.querySelector('table');
     expect(table?.querySelector('caption')?.textContent).toContain('Scores for Midterm, out of 100');
@@ -319,6 +328,27 @@ describe('an instructor’s course', () => {
     expect(host.querySelector('[role="alert"]')?.textContent).toMatch(/^Could not load this gradebook\. Nothing has changed\./);
     await press('Load again');
     expect(text()).toContain('Scores for Midterm');
+  });
+});
+
+describe('choosing a course and term', () => {
+  it('offers exactly the course-terms the grants name, and reads the one chosen with only its own capabilities', async () => {
+    // Full authority in 2026FA; only grades:enter in 2027SP.
+    mock.caps.mockResolvedValue([...PROF, grant('grades:enter', 'vu/ECON 1020/2027SP')]);
+    await render();
+    const select = host.querySelector('select') as HTMLSelectElement;
+    expect([...select.options].map((o) => o.textContent)).toEqual(['ECON 1020 · 2027SP', 'ECON 1020 · 2026FA']);
+    expect(host.querySelector('input[pattern]')).toBeNull();
+    mock.book.mockClear();
+    type(select, 'ECON 1020/2027SP');
+    await flush();
+    expect(mock.book).toHaveBeenCalledWith('ECON 1020', '2027SP');
+    // 2027SP's grant carries no grades:release, so nothing is offered for release there.
+    expect(buttons().some((b) => b.textContent === 'Release grades for Midterm')).toBe(false);
+    type(host.querySelector('select'), 'ECON 1020/2026FA');
+    await flush();
+    expect(mock.book).toHaveBeenLastCalledWith('ECON 1020', '2026FA');
+    expect(buttons().some((b) => b.textContent === 'Release grades for Midterm')).toBe(true);
   });
 });
 

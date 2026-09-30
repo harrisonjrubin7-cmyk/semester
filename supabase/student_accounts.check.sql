@@ -5,6 +5,10 @@
 --
 --   * it is off until the module is on AND a finance owner is named, and the
 --     owner must be at the school and hold bursar:post;
+--   * and it stays on only while they do: revoking the owner's grant, letting
+--     it expire, or moving the owner to another school turns off every
+--     person's write — another bursar's, the aid office's, a student's award
+--     answer and payment — and the adapter's sync, until the grant is back;
 --   * only a bursar at the student's own school posts; a student, the aid
 --     office, the registrar and a bursar at another school do not;
 --   * an idempotency key replays to the same entry and refuses a different one;
@@ -94,6 +98,19 @@ begin
   raise notice 'ok  %', what;
 end $$;
 
+-- Refused *because the module is off* — not for some other reason a broken
+-- fixture could supply. Every "off" refusal in the migration says this.
+create or replace function pg_temp.off(what text, who uuid, statement text)
+returns void language plpgsql as $$
+declare e text := pg_temp.err(who, statement);
+begin
+  if e is null then raise exception 'FAILED: % — was allowed', what; end if;
+  if e not like '%student accounts are off%' then
+    raise exception 'FAILED: % — refused, but not as module off: %', what, e;
+  end if;
+  raise notice 'ok  % is refused as module off (%)', what, e;
+end $$;
+
 -- A scalar a statement returns as `who`.
 create or replace function pg_temp.said(who uuid, q text)
 returns text language plpgsql as $$
@@ -131,8 +148,8 @@ end $$;
 
 do $$
 declare
-  admin uuid; bursar uuid; aid uuid; registrar uuid; s1 uuid; s2 uuid; far_bursar uuid; clerk uuid;
-  charge uuid; award uuid; ws uuid; intent uuid; hold uuid; e text; n bigint;
+  admin uuid; bursar uuid; aid uuid; registrar uuid; s1 uuid; s2 uuid; far_bursar uuid; clerk uuid; bursar2 uuid;
+  charge uuid; award uuid; award2 uuid; ws uuid; intent uuid; hold uuid; e text; n bigint;
 begin
   insert into public.schools (id, name, email_domains) values
     ('sa-u', 'Student Accounts University', array['sa-u.example']),
@@ -373,6 +390,78 @@ begin
     format($q$select public.post_student_ledger_entry(%L, '2027SP', 'charge', 1, 'x', 'after-off')$q$, s1));
   perform pg_temp.refused('a student starting a payment after it is off', s1, $q$select public.start_student_payment('2027SP', 1, 'pay-2')$q$);
   update public.tenant_feature_policy set state = 'production' where tenant_id = 'sa-u' and capability = 'module.student_accounts';
+
+  -- ── The finance owner must still be one ─────────────────────────────────
+  -- A second bursar, who is not the owner and keeps their own grant
+  -- throughout: what stops them is the owner's grant, and nothing of theirs.
+  bursar2 := pg_temp.newuser('bursar2@sa-u.example', 'sa-u');
+  insert into public.role_grants (subject, role, scope_kind, scope_id, provenance) values
+    (bursar2, 'student_accounts_officer', 'school', 'sa-u', 'institution');
+  perform pg_temp.answered('the adapter offers a second award while the owner holds bursar:post',
+    pg_temp.service(format($q$select public.sync_aid_award('sa-u', %L, 'seog-1', '2027SP', 'grant', 'SEOG', 1000, 'complete', 'meeting', 1, false)$q$, s1)),
+    'offered');
+  select id into award2 from public.student_aid_awards where external_ref = 'seog-1';
+  -- The control: each of these works while the owner's grant is live.
+  perform pg_temp.allowed('another bursar posts while the owner holds bursar:post', bursar2,
+    format($q$select public.post_student_ledger_entry(%L, '2027SP', 'charge', 100, 'Lab fee', 'owner-live')$q$, s1));
+
+  -- Revoked.
+  update public.role_grants set revoked_at = now()
+   where subject = bursar and role = 'student_accounts_officer' and scope_id = 'sa-u';
+  perform pg_temp.off('another bursar posting after the owner''s grant is revoked', bursar2,
+    format($q$select public.post_student_ledger_entry(%L, '2027SP', 'charge', 100, 'Lab fee', 'owner-revoked')$q$, s1));
+  perform pg_temp.off('another bursar placing a hold after it is revoked', bursar2,
+    format($q$select public.place_student_hold(%L, 'x')$q$, s1));
+  perform pg_temp.off('the aid office disbursing after it is revoked', aid,
+    format($q$select public.record_aid_disbursement(%L, 1000, 'd-revoked')$q$, award2));
+  perform pg_temp.off('the student answering an award after it is revoked', s1,
+    format($q$select public.respond_to_aid_award(%L, true)$q$, award2));
+  perform pg_temp.off('the student starting a payment after it is revoked', s1,
+    $q$select public.start_student_payment('2027SP', 1, 'pay-revoked')$q$);
+  perform pg_temp.answered('the adapter''s sync is refused as off too',
+    (pg_temp.service(format($q$select public.sync_aid_award('sa-u', %L, 'seog-2', '2027SP', 'grant', 'SEOG', 1, 'complete', 'meeting', 1, false)$q$, s1))
+       like '%student accounts are off%')::text, 'true');
+  perform pg_temp.counted('and nothing was written while it was off',
+    (select count(*) from public.student_ledger_entries where idempotency_key in ('owner-revoked', 'd-revoked'))
+    + (select count(*) from public.student_payment_intents where idempotency_key = 'pay-revoked')
+    + (select count(*) from public.student_aid_awards where external_ref = 'seog-2' or (id = award2 and status <> 'offered')), 0);
+
+  -- Re-granted: the same row, revoked_at cleared, as role_grants says a
+  -- re-grant is.
+  update public.role_grants set revoked_at = null
+   where subject = bursar and role = 'student_accounts_officer' and scope_id = 'sa-u';
+  perform pg_temp.allowed('re-granting the owner restores the other bursar''s posting', bursar2,
+    format($q$select public.post_student_ledger_entry(%L, '2027SP', 'charge', 100, 'Lab fee', 'owner-revoked')$q$, s1));
+
+  -- Expired.
+  update public.role_grants set expires_at = now() - interval '1 minute'
+   where subject = bursar and role = 'student_accounts_officer' and scope_id = 'sa-u';
+  perform pg_temp.off('another bursar posting after the owner''s grant expires', bursar2,
+    format($q$select public.post_student_ledger_entry(%L, '2027SP', 'charge', 100, 'Lab fee', 'owner-expired')$q$, s1));
+  perform pg_temp.off('the aid office disbursing after it expires', aid,
+    format($q$select public.record_aid_disbursement(%L, 1000, 'd-expired')$q$, award2));
+  perform pg_temp.off('the student answering an award after it expires', s1,
+    format($q$select public.respond_to_aid_award(%L, true)$q$, award2));
+  perform pg_temp.off('the student starting a payment after it expires', s1,
+    $q$select public.start_student_payment('2027SP', 1, 'pay-expired')$q$);
+
+  -- A live grant, but the owner's profile is now at another school.
+  update public.role_grants set expires_at = null
+   where subject = bursar and role = 'student_accounts_officer' and scope_id = 'sa-u';
+  update public.profiles set school_id = 'sa-far' where user_id = bursar;
+  perform pg_temp.off('another bursar posting once the owner is at another school', bursar2,
+    format($q$select public.post_student_ledger_entry(%L, '2027SP', 'charge', 100, 'Lab fee', 'owner-moved')$q$, s1));
+  update public.profiles set school_id = 'sa-u' where user_id = bursar;
+
+  -- Re-granted after expiry: each write the expiry refused now works.
+  perform pg_temp.allowed('re-granting restores the other bursar''s posting', bursar2,
+    format($q$select public.post_student_ledger_entry(%L, '2027SP', 'charge', 100, 'Lab fee', 'owner-expired')$q$, s1));
+  perform pg_temp.allowed('and the student''s answer to the award', s1,
+    format($q$select public.respond_to_aid_award(%L, true)$q$, award2));
+  perform pg_temp.allowed('and the student''s payment', s1,
+    $q$select public.start_student_payment('2027SP', 1, 'pay-expired')$q$);
+  perform pg_temp.allowed('and the aid office''s disbursement', aid,
+    format($q$select public.record_aid_disbursement(%L, 1000, 'd-expired')$q$, award2));
 
   -- ── Deleting an account still removes its rows ──────────────────────────
   perform pg_temp.allowed('a charge for the second student', bursar,
