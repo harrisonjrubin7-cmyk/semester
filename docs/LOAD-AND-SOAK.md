@@ -43,6 +43,19 @@ and the invariants still fail in every window, and a run that is not a soak is
 unchanged. This does not fix the runner stall behind the intermittent `plans` miss that
 `docs/LOAD-HARNESS-OPEN-ISSUE-PLANS-P95.md` records, and it does not close that issue.
 
+## What else was happening
+
+Around every scenario the runner reads what else the machine was doing: checkpoints
+and autovacuum passes in the throwaway database, and **CPU steal**, the share of
+the runner's CPU time the hypervisor gave to someone else (Linux only). Anything it
+finds is printed under the scenario's verdict (`↳ while it ran: …`), and `drift.sh`
+says how many of the windows over a budget coincided with one. A stall with none of
+the three beside it is not a checkpoint, not autovacuum and not a stolen CPU, which
+narrows it; a stall with one beside it is a candidate, not a proof. This changes no
+budget and no verdict. It exists because
+`docs/LOAD-HARNESS-OPEN-ISSUE-PLANS-P95.md` could not say what a stall was, and its
+second step was to record that rather than to raise a cap.
+
 ## What was shown
 
 - **A planted leak.** A scenario that appended 3000 rows to a table and then scanned it

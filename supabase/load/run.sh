@@ -45,13 +45,40 @@ windows="$logs/windows.tsv"
 : > "$windows"
 window=1
 
+# What else was happening while a scenario ran, so a stalled window can be
+# attributed and not merely budgeted (docs/LOAD-HARNESS-OPEN-ISSUE-PLANS-P95.md):
+# checkpoints and autovacuum passes in this database, and the share of the
+# runner's CPU time that the hypervisor took for someone else ("steal", Linux
+# only; 0 where /proc/stat is absent). Read before and after each scenario.
+if [ "$(psql -At -c "select to_regclass('pg_catalog.pg_stat_checkpointer') is not null")" = t ]; then
+  ckpt_sql='select num_timed + num_requested from pg_stat_checkpointer'
+else
+  ckpt_sql='select checkpoints_timed + checkpoints_req from pg_stat_bgwriter'
+fi
+activity() {
+  local ck av st tot
+  psql -At -c "select pg_stat_force_next_flush()" >/dev/null 2>&1
+  ck=$(psql -At -c "$ckpt_sql" 2>/dev/null)
+  av=$(psql -At -c "select coalesce(sum(autovacuum_count + autoanalyze_count), 0) from pg_stat_user_tables" 2>/dev/null)
+  read -r st tot <<<"$(awk '/^cpu /{t = 0; for (i = 2; i <= 9; i++) t += $i; print $9 + 0, t; exit}' /proc/stat 2>/dev/null)"
+  echo "${ck:-0} ${av:-0} ${st:-0} ${tot:-0}"
+}
+
 scenario() {
   local name=$1 file="$here_load/$1.pgbench.sql"
   local budget out lat p50 p95 p99 tps errs
   budget=$(sed -nE 's/^-- budget: p95_ms=([0-9]+).*/\1/p' "$file")
   rm -f "$logs"/"$name".*
+  read -r ck0 av0 st0 tot0 <<<"$(activity)"
   out=$( (cd "$logs" && bench -f "$file" -c "$clients" -j "$clients" -T "$seconds" \
             -D students="$students" -l --log-prefix="$name" --verbose-errors) 2>&1 )
+  read -r ck1 av1 st1 tot1 <<<"$(activity)"
+  bg=0; bgnote=""
+  dck=$((ck1 - ck0)); dav=$((av1 - av0))
+  steal=$(awk -v s="$((st1 - st0))" -v t="$((tot1 - tot0))" 'BEGIN {printf "%.1f", (t > 0 ? 100 * s / t : 0)}')
+  [ "$dck" -gt 0 ] && { bg=1; bgnote="$dck checkpoint(s)"; }
+  [ "$dav" -gt 0 ] && { bg=1; bgnote="${bgnote:+$bgnote, }$dav autovacuum or analyze pass(es)"; }
+  awk -v a="$steal" 'BEGIN {exit !(a >= 5)}' && { bg=1; bgnote="${bgnote:+$bgnote, }CPU steal ${steal}%"; }
   tps=$(echo "$out" | sed -nE 's/^tps = ([0-9.]+).*/\1/p' | head -1)
   errs=$(echo "$out" | sed -nE 's/^number of failed transactions: ([0-9]+).*/\1/p' | head -1)
   # A client that stops, or a run with no summary, is a harness failure; a
@@ -66,7 +93,7 @@ scenario() {
   n=$(echo "$lat" | wc -l)
   pct() { echo "$lat" | awk -v n="$n" -v p="$1" 'NR == int((n - 1) * p / 100) + 1 {printf "%.1f", $1 / 1000; exit}'; }
   p50=$(pct 50); p95=$(pct 95); p99=$(pct 99); last_n=$n
-  printf '%s %s %s %s\n' "$name" "$window" "$p95" "$budget" >> "$windows"
+  printf '%s %s %s %s %s\n' "$name" "$window" "$p95" "$budget" "$bg" >> "$windows"
   line="$name: $n transactions, ${tps%.*} tps, p50 ${p50}ms p95 ${p95}ms p99 ${p99}ms (budget p95 ${budget}ms)"
   if [ "${errs:-0}" != 0 ]; then
     echo "  ✗ $line, $errs failed:"
@@ -85,6 +112,7 @@ scenario() {
   else
     echo "  ✓ $line"
   fi
+  [ -n "$bgnote" ] && echo "      ↳ while it ran: $bgnote"
 }
 
 written() { psql -At -F ' ' -c "select (select n_tup_upd from pg_stat_user_tables where relid = 'public.state'::regclass), (select n_tup_upd from pg_stat_user_tables where relid = 'public.courses'::regclass)"; }

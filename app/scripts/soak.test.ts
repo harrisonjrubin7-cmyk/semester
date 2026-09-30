@@ -18,8 +18,11 @@ const script = join(import.meta.dirname, '../../supabase/load/drift.sh');
 
 type Series = Record<string, number[]>;
 
-function drift(series: Series, env: Record<string, string> = {}, budget?: number): { code: number; out: string } {
-  const lines = Object.entries(series).flatMap(([name, xs]) => xs.map((x, i) => `${name} ${i + 1} ${x}${budget === undefined ? '' : ` ${budget}`}`)).join('\n');
+function drift(series: Series, env: Record<string, string> = {}, budget?: number, background: Record<string, number[]> = {}): { code: number; out: string } {
+  const lines = Object.entries(series).flatMap(([name, xs]) => xs.map((x, i) => {
+    const bg = background[name]?.[i];
+    return `${name} ${i + 1} ${x}${budget === undefined ? '' : ` ${budget}`}${bg === undefined ? '' : ` ${bg}`}`;
+  })).join('\n');
   const r = spawnSync('bash', [script], { input: lines + '\n', encoding: 'utf8', env: { ...process.env, ...env } });
   return { code: r.status ?? -1, out: r.stdout };
 }
@@ -137,6 +140,38 @@ describe('drift.sh, the budget', () => {
   });
 });
 
+describe('drift.sh, attributing a window over budget', () => {
+  const series = { plans: [19.8, 99.4, 30.3, 50.4] };
+
+  it('says when the window over budget had a checkpoint, an autovacuum pass or CPU steal', () => {
+    const r = drift(series, {}, 60, { plans: [0, 1, 0, 0] });
+    expect(r.code).toBe(0);
+    expect(r.out).toMatch(/\(worst 99\.4 ms, 1 of them with a checkpoint, an autovacuum pass or CPU steal\)/);
+  });
+
+  it('says when it had none, so a stall nobody can name stays unnamed', () => {
+    const r = drift(series, {}, 60, { plans: [1, 0, 1, 0] });
+    expect(r.out).toMatch(/\(worst 99\.4 ms, none with a checkpoint, an autovacuum pass or CPU steal\)/);
+  });
+
+  it('counts only the windows that were over budget', () => {
+    const r = drift({ plans: [70, 99, 30, 20, 25] }, {}, 60, { plans: [1, 0, 1, 1, 1] });
+    expect(r.out).toMatch(/2 of 5 windows over the 60 ms budget \(worst 99\.0 ms, 1 of them with/);
+  });
+
+  it('keeps its claim to windows it was told about, and to a run that has a budget', () => {
+    expect(drift(series, {}, 60).out).not.toMatch(/checkpoint/);
+    expect(drift({ plans: [19.8, 30.3, 35, 40] }, {}, 60, { plans: [1, 1, 1, 1] }).out).not.toMatch(/checkpoint/);
+  });
+
+  it('reads windows by their number, not their position, when one went missing', () => {
+    // Window 3 has no line (it was lost), so the third sample is window 4, and it is the one that had a checkpoint.
+    const lines = 'plans 4 99 60 1\nplans 1 20 60 0\nplans 2 25 60 0\n';
+    const r = spawnSync('bash', [script], { input: lines, encoding: 'utf8' });
+    expect(r.stdout).toMatch(/1 of 3 windows over the 60 ms budget \(worst 99\.0 ms, 1 of them with/);
+  });
+});
+
 describe('drift.sh, for every series', () => {
   const series = arrayOf(int(1, 500), 14);
   const DEEP = { runs: 120 };
@@ -187,7 +222,7 @@ describe('the runner', () => {
   });
 
   it('records one sample per scenario per window, checks the invariants and the connections after each, and hands the samples to drift.sh', () => {
-    expect(run).toContain(`printf '%s %s %s %s\\n' "$name" "$window" "$p95" "$budget" >> "$windows"`);
+    expect(run).toContain(`printf '%s %s %s %s %s\\n' "$name" "$window" "$p95" "$budget" "$bg" >> "$windows"`);
     expect(run).toMatch(/run_pass\n\s+run_invariants\n\s+now=\$\(clients\)/);
     expect(run).toContain('"$here_load/drift.sh" < "$windows"');
   });
@@ -197,6 +232,17 @@ describe('the runner', () => {
     expect(over).toMatch(/if \[ "\$soak" -gt 0 \]; then[\s\S]*⚠[\s\S]*else\n\s+echo "  ✗ \$line — over budget"; failed=1/);
     // Errors still fail in every window.
     expect(run).toMatch(/if \[ "\$\{errs:-0\}" != 0 \]; then\n\s+echo "  ✗ \$line, \$errs failed:"[\s\S]*failed=1/);
+  });
+
+  it('reads what else was happening around every scenario, and says it after the verdict', () => {
+    // Checkpoints from whichever view this Postgres has (16 and before, 17 and after), autovacuum passes, CPU steal.
+    expect(run).toContain('pg_stat_checkpointer');
+    expect(run).toContain('pg_stat_bgwriter');
+    expect(run).toContain('autovacuum_count + autoanalyze_count');
+    expect(run).toContain('/proc/stat');
+    expect(run).toMatch(/read -r ck0 av0 st0 tot0 <<<"\$\(activity\)"\n\s+out=\$\( \(cd "\$logs" && bench/);
+    expect(run).toMatch(/--verbose-errors\) 2>&1 \)\n\s+read -r ck1 av1 st1 tot1 <<<"\$\(activity\)"/);
+    expect(run).toContain('echo "      ↳ while it ran: $bgnote"');
   });
 
   it('has a drift script that is executable', () => {
@@ -220,7 +266,7 @@ describe('the document', () => {
   });
 
   it('says how a budget is judged in a soak', () => {
-    for (const phrase of ['Budgets in a soak', 'typical (median) window', 'LOAD-HARNESS-OPEN-ISSUE-PLANS-P95']) expect(doc, phrase).toContain(phrase);
+    for (const phrase of ['Budgets in a soak', 'typical (median) window', 'LOAD-HARNESS-OPEN-ISSUE-PLANS-P95', 'What else was happening', 'CPU steal']) expect(doc, phrase).toContain(phrase);
   });
 
   it('is what CI runs', () => {

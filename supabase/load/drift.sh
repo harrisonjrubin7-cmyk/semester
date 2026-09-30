@@ -43,6 +43,9 @@ NF >= 3 && $2 ~ /^[0-9]+$/ && $3 ~ /^[0-9.]+$/ {
   if (!($1 in seen)) { seen[$1] = 1; order[++names] = $1 }
   at[$1, $2] = $3 + 0
   if ($4 ~ /^[0-9.]+$/ && $4 + 0 > 0) budget[$1] = $4 + 0
+  # Column 5, when present, is 1 for a window in which a checkpoint, an
+  # autovacuum pass or runner CPU steal coincided with the scenario.
+  if ($5 ~ /^[01]$/) { hasbg[$1] = 1; bgat[$1, $2] = $5 + 0 }
   if ($2 + 0 > top[$1]) top[$1] = $2 + 0
 }
 END {
@@ -50,7 +53,7 @@ END {
   if (names == 0) { print "  ✗ soak: no samples were recorded, so nothing was compared"; exit 1 }
   for (k = 1; k <= names; k++) {
     s = order[k]; n = 0
-    for (w = 1; w <= top[s]; w++) if ((s, w) in at) samples[++n] = at[s, w]
+    for (w = 1; w <= top[s]; w++) if ((s, w) in at) { samples[++n] = at[s, w]; wno[n] = w }
     if (n < 4) {
       printf "  · %s: %d window%s, too few to see a trend\n", s, n, (n == 1 ? "" : "s")
     } else {
@@ -68,16 +71,18 @@ END {
     # window, and a path that has really become slow lifts them all. One pass is one
     # window, so its median is itself and this is the old rule.
     if (s in budget) {
-      typical = median(samples, n); over = 0; worst = 0
-      for (w = 1; w <= n; w++) { if (samples[w] > budget[s]) over++; if (samples[w] > worst) worst = samples[w] }
+      typical = median(samples, n); over = 0; worst = 0; overbg = 0
+      for (w = 1; w <= n; w++) { if (samples[w] > budget[s]) { over++; if (bgat[s, wno[w]]) overbg++ } if (samples[w] > worst) worst = samples[w] }
+      why = ""
+      if (over > 0 && (s in hasbg)) why = (overbg > 0) ? sprintf(", %d of them with a checkpoint, an autovacuum pass or CPU steal", overbg) : ", none with a checkpoint, an autovacuum pass or CPU steal"
       if (typical > budget[s]) {
-        printf "  ✗ %s: the typical p95 is %.1f ms, over its budget of %s ms (%d of %d windows over it)\n", s, typical, budget[s], over, n
+        printf "  ✗ %s: the typical p95 is %.1f ms, over its budget of %s ms (%d of %d windows over it%s)\n", s, typical, budget[s], over, n, why
         bad = 1
       } else if (over > 0) {
-        printf "  · %s: %d of %d windows over the %s ms budget (worst %.1f ms); the typical window, %.1f ms, is within it\n", s, over, n, budget[s], worst, typical
+        printf "  · %s: %d of %d windows over the %s ms budget (worst %.1f ms%s); the typical window, %.1f ms, is within it\n", s, over, n, budget[s], worst, why, typical
       }
     }
-    delete samples
+    delete samples; delete wno
   }
   exit bad
 }'
