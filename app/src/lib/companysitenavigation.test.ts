@@ -28,7 +28,7 @@ describe('the company site global navigation', () => {
       ['Students', '#students'],
       ['Institutions', '#institutions'],
       ['Pricing', '#pricing'],
-      ['Resources', '#resources'],
+      ['Resources', '#tools'],
       ['Trust', '#trust'],
     ]);
     expect(header).not.toContain('button class="dd"');
