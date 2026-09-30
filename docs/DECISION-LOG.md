@@ -3576,3 +3576,13 @@ not a penetration test and claims nothing about FERPA.
 - **Built** (`20260930100000_school_membership_enforcement.sql`): a per-school switch, membership requests decided by a holder of `tenant:configure` at that school, leave / remove / withdraw, a readiness count, and an operator-only `set_school_enforcement` that refuses to switch on until the exact locked-out count is stated.
 - **Off everywhere.** No school is enforced by this change. Switching one on is a separate operator act with its own evidence list in `docs/SCHOOL-MEMBERSHIP-ENFORCEMENT.md`; that list is not yet met.
 - **Not done:** any real school switched on; proof on a Supabase preview branch beyond the migrations applying; staff briefing.
+
+## D-155 · Milestone 2 runs snooze and dismiss, then term load, then sharing and audit; the readiness analysis becomes ten release gates
+
+**Decided 30 Sep 2026, by the owner**, in the same message that approved the staged room restriction (D-154).
+
+- **Order:** snooze presets and dismiss reasons; the term credit and workload check; the sharing and audit lifecycle. Built in that order.
+- **The term-load check is an estimate and says so.** Limits and study hours are the student's own entries; the two-hours-per-credit assumption is printed beside the number; no sentence says a load is allowed or refused. Registration Day Mode is unchanged (off by default).
+- **The advisor-share lifecycle is on the audit record** (create, read, revoke, delete). A refused attempt is not recorded, because a refused call rolls its own write back; that is stated, not fixed.
+- **The owner's readiness analysis is kept as ten release gates and the do-not-claim boundaries** in `docs/RELEASE-GATES.md`. Nothing on that page is a claim that a gate is met.
+- **Left open for the owner:** what happens when a school leaves (125 tenant foreign keys cascade from `schools`; the recommended offboarding procedure is on that page and nothing was changed); whether to switch any school to members-only; the Action Center's default for students.

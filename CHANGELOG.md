@@ -63,6 +63,18 @@ for nothing.
 
 Nothing to do.
 
+### Action Center: more snooze times, and say why you hid something
+
+Where the Action Center is switched on: beside "Snooze until tomorrow" there is
+now "More snooze times" (later today, next week, and the day before it is due
+when that is a real later moment), and "Not relevant" asks why first, with four
+reasons or "Hide without saying why". The reason is kept on your device and shown
+in the Hidden list so you remember. Registration Day Mode, where it is on, adds
+"How heavy this term is": it compares your credits with the limits and study
+hours you type, and estimates weekly hours at two per credit. It is an estimate
+from numbers you gave, not a rule of your school, and it never stops you doing
+anything. Nothing to do.
+
 ### Today no longer plans around the sample semester until you say it is yours
 
 While the question under the header ("These are mine" / "Not mine") is still open,

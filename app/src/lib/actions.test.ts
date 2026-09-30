@@ -1,14 +1,18 @@
 import { describe, expect, it } from 'vitest';
 import {
   ACTION_STATUSES,
+  DISMISS_REASONS,
   EMPTY_ACTION_CHOICES,
   HISTORY_LIMIT,
   NEXT_LIMIT,
   TRANSITIONS,
+  dismissNote,
+  dismissReasonOf,
   effectiveStatus,
   rank,
   readActionChoices,
   score,
+  snoozePresets,
   transition,
   type Action,
   type Choice,
@@ -206,5 +210,56 @@ describe('the stored choices', () => {
     });
     expect(Object.keys(read.choices).sort()).toEqual(['badEntry', 'good']);
     expect(read.choices.badEntry.history).toEqual([]);
+  });
+});
+
+describe('snooze presets', () => {
+  const at = (h: number, day = 30) => new Date(2026, 8, day, h, 0).getTime(); // Wed 30 Sep 2026
+  const ids = (now: number, a: { dueAt?: number; expiresAt?: number | null } = {}) => snoozePresets(now, a).map((p) => p.id);
+
+  it('offers later today only before nine in the evening', () => {
+    expect(ids(at(10))).toContain('later');
+    expect(ids(at(20))).toContain('later');
+    expect(ids(at(21))).not.toContain('later');
+  });
+
+  it('puts tomorrow at 8, and next week on the coming Monday at 8 — a full week from a Monday', () => {
+    const wed = snoozePresets(at(10), {});
+    expect(new Date(wed.find((p) => p.id === 'tomorrow')!.until).getDate()).toBe(1); // Thu 1 Oct
+    expect(new Date(wed.find((p) => p.id === 'tomorrow')!.until).getHours()).toBe(8);
+    const monday = new Date(wed.find((p) => p.id === 'next-week')!.until);
+    expect([monday.getDay(), monday.getDate(), monday.getMonth()]).toEqual([1, 5, 9]); // Mon 5 Oct
+    // From a Monday it is the Monday after, not later the same morning.
+    const fromMon = new Date(snoozePresets(new Date(2026, 9, 5, 10, 0).getTime(), {}).find((p) => p.id === 'next-week')!.until);
+    expect([fromMon.getDay(), fromMon.getDate()]).toEqual([1, 12]);
+    // From a Sunday it is the very next morning.
+    const fromSun = new Date(snoozePresets(new Date(2026, 9, 4, 10, 0).getTime(), {}).find((p) => p.id === 'next-week')!.until);
+    expect([fromSun.getDay(), fromSun.getDate()]).toEqual([1, 5]);
+  });
+
+  it('offers the day before it is due only when that is a real, later moment', () => {
+    expect(ids(at(10), { dueAt: at(10) + 5 * DAY })).toContain('before-due');
+    expect(ids(at(10), { dueAt: at(10) + 20 * 3_600_000 })).not.toContain('before-due');
+    expect(ids(at(10), {})).not.toContain('before-due');
+  });
+
+  it('never offers a time in the past or past the moment the action expires', () => {
+    const now = at(10);
+    for (const p of snoozePresets(now, {})) expect(p.until).toBeGreaterThan(now);
+    const short = ids(now, { expiresAt: now + 5 * 3_600_000 });
+    expect(short).toEqual(['later']);
+  });
+});
+
+describe('dismiss reasons', () => {
+  it('are a fixed list stored as a note, and read back only when they are on it', () => {
+    for (const r of DISMISS_REASONS) {
+      const choice = { status: 'dismissed' as const, history: [{ event: 'dismiss' as const, at: 1, from: 'open' as const, to: 'dismissed' as const, note: dismissNote(r.id) }] };
+      expect(dismissReasonOf(choice)).toBe(r.label);
+    }
+    const foreign = { status: 'dismissed' as const, history: [{ event: 'dismiss' as const, at: 1, from: 'open' as const, to: 'dismissed' as const, note: 'Hidden because: my landlord is Ana' }] };
+    expect(dismissReasonOf(foreign)).toBeNull();
+    expect(dismissReasonOf(undefined)).toBeNull();
+    expect(dismissReasonOf({ status: 'dismissed', history: [] })).toBeNull();
   });
 });
