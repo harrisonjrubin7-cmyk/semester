@@ -68,6 +68,10 @@ async function show(node: ReactNode) {
  * it, where "Create study guide" is an offer the screen makes on arrival.
  * Counting it would have made this assertion false about a screen that reads
  * correctly, which is how a test starts being edited to fit the code.
+ *
+ * The feedback inbox's "File this feedback" is the same kind of thing — it
+ * files the comment typed above it — and is exempt for the same reason, by its
+ * own class rather than by widening this one.
  */
 function filled(): string[] {
   /*
@@ -88,7 +92,7 @@ function filled(): string[] {
    */
   return [...host.querySelectorAll('button')]
     .filter((b) => /\b(portal-primary|btn-primary)\b/.test(b.className.toString()))
-    .filter((b) => !b.closest('.study-journal'))
+    .filter((b) => !b.closest('.study-journal, .feedback-inbox'))
     .map((b) => (b.textContent ?? '').trim());
 }
 

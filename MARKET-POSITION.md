@@ -130,7 +130,8 @@ Nothing to do.
 Whether the live Supabase project holds that secret was not knowable from this
 container when this was written. It has since been read: on 29 September 2026
 at 20:24:59 UTC a signed-in call to the deployed `claude` function answered
-501, *"This deployment has no shared key"* — the secret is not set (see
+501, *"This deployment has no shared key"* — the secret was not set. It was set
+that evening, and from 22:51 UTC a signed-in call answered 200 (see
 `docs/LAUNCH-DECISIONS.md` item 15). What is checkable is the
 claim underneath it — that a student would discover the absence by picking a
 syllabus and waiting — and that one no longer holds.

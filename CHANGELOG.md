@@ -24,6 +24,16 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### On the public site: a page for the K–12 edition
+
+A new page, `/k-12/`, describes Semester for high school: who it would start
+with, how each part of the app would be set up for a school, and the 26-week
+pilot it would offer. It says plainly that no district or school uses
+Semester today and that a district's student data is not accepted yet, with
+how many of the things that waits on are still undone.
+
+Nothing to do.
+
 ### Making an account now asks for your date of birth
 
 When you create an account, the form asks for your date of birth. You need to
@@ -70,6 +80,59 @@ activity is never used to label a student capable or incapable, motivated or
 unmotivated. Each line links to the check that holds it, like the others.
 
 Nothing to do.
+
+### A Student accounts tab for the bursar's office
+
+Student accounts officers, financial aid officers and business administrators
+see **Student accounts** on the University screen, in builds with it switched
+on. Find a student by your school's identifier to see their balance, how old
+it is, whether a financial hold applies, every charge and payment, a month's
+statement, receipts and a payment-plan schedule. Every change is a request
+someone else approves; large refunds, adjustments and scholarships need a
+senior approver; a month is reconciled against your payment provider and then
+closed. No money moves here and no card is ever asked for.
+
+### Your school's account, on Bill
+
+When your school keeps its student accounts in Semester and its registrar has
+linked your student record to your account, **Bill** opens with what the
+school's ledger says: what you owe today, how old it is, whether a financial
+hold applies, every charge, payment and credit, a receipt for each payment,
+and a month's statement to download. Charges for later dates are listed apart
+and not counted as owed yet. Nothing here can be changed or paid; the link
+goes to your school's own payment page. What you type below stays yours, as
+before.
+
+### Ask your school for a payment plan
+
+On the same section of **Bill**, you can ask to spread what you owe over
+monthly payments: choose how many and when the first is due, and you see the
+exact schedule before you ask. Student Accounts agrees or declines, and once
+agreed you see each payment as paid, due, late or coming. While you keep to
+the plan, no financial hold applies. Student Accounts staff decide plans in a
+queue of their own and can cancel an agreed plan, with a reason you see.
+
+### An Academic record tab for registrar staff
+
+Registrars, deans and faculty with a school-wide role see **Academic record**
+on the University screen, in builds with the ledger switched on. Find a
+student by your school's identifier and see their record as it stood on any
+date, with the full history behind each line. Nothing on it is edited: a
+change is proposed with a reason and enters the record only when someone else
+approves it, and correcting a posted grade needs a registrar. The export is
+labelled as not an official transcript. Students see nothing new yet.
+
+### A Migration tab for staff moving a system into Semester
+
+Staff who hold a migration role at their school (an implementation manager,
+an integration admin, the registrar, a dean, a university administrator or an
+institutional researcher) now see **Migration** on the University screen, in
+builds with the Migration Center switched on. It walks a migration out of a
+system being retired through twelve stages, from inventory to post-cutover
+monitoring, and each stage opens only once the one before has its evidence.
+Export files you check there are read in your browser and go no further;
+only counts and the file's fingerprint are saved. Students see nothing new,
+and nothing is switched on in an ordinary build.
 
 ### Find people, groups and opportunities, from Community
 

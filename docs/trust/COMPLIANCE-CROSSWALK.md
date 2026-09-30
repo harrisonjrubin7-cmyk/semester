@@ -31,8 +31,8 @@ cited as evidence of anything.
 | 4 | Independently tested, automated where appropriate, continuously improved and transparently reported |
 
 A 3 needs an artifact somebody produced by operating the control. The master
-register keeps those under `docs/evidence/`, and the directory does not exist,
-so **the ceiling today is 2** for every domain, held by the test to the
+register keeps those under `docs/evidence/`, which holds the AI drills of 29 September,
+so **the ceiling today is 4** for every domain, held by the test to the
 directory rather than to this sentence. A domain's score is the lower median of
 its rows' levels: the level the middle row reaches, so one tested row cannot
 carry a domain and one owed row cannot sink it. Rows read on the scale as:
@@ -75,7 +75,7 @@ Statuses were read at main commit 7476aca on 28 September 2026. 26 domains:
 | **Community and social safety** | 1 | Medium-high | Data Privacy Rubric | Connected campus experience | TS-1 (1), UOS-003 (1), COPPA-2 (2) |
 | **AI disclosure and transparency** | 1 | High | Generative AI Data Rubric | AI literacy and responsible adoption | AI-1 (2), AI-002 (1), AI-005 (1), AI-008 (1), AI-013 (1), TRUST-001 (2), TRUST-004 (1) |
 | **AI data use and training** | 1 | High | Generative AI Data Rubric | AI literacy and responsible adoption | AI-1 (2), FERPA-9 (2), AI-002 (1), AI-004 (1), AI-006 (1) |
-| **AI quality, safety and misuse** | 1 | Medium | Generative AI Data Rubric | AI literacy and responsible adoption | AI-2 (0), AI-3 (0), AI-009 (2), AI-010 (1), AI-011 (1), AI-012 (2), AI-014 (1) |
+| **AI quality, safety and misuse** | 1 | Medium | Generative AI Data Rubric | AI literacy and responsible adoption | AI-2 (0), AI-3 (0), AI-009 (2), AI-010 (2), AI-011 (1), AI-012 (3), AI-014 (1) |
 | **Assessment and grade integrity** | 1 | Medium | Generative AI Data Rubric | Student trust and data agency | LMS-006 (1), LMS-011 (1), LMS-012 (1), LMS-013 (1), AI-009 (2), INT-005 (1) |
 | **Physical and workforce security** | 0 | High | Security Practices Rubric | Collaborative cybersecurity | DV-01 (0), DV-02 (0), DV-03 (0), DV-04 (0), DV-05 (0), DV-07 (0) |
 | **Customer assurance** | 1 | Medium-high | Security Practices Rubric | Collaborative cybersecurity | SEC-011 (1), SEC-012 (1), SEC-013 (1), COM-003 (1), PRG-002 (2), EDT-7 (0), LEGAL-1 (0) |
@@ -125,9 +125,9 @@ master rows at P0 not yet tested. Per register, over every row this page names:
 | --- | ---: | ---: | ---: | ---: | ---: |
 | [`docs/market-readiness/HECVAT_READINESS.md`](../market-readiness/HECVAT_READINESS.md) | 33 | 11 of 33 | 0 of 33 | 11 of 33 | 0 |
 | [`docs/FERPA-COPPA-1EDTECH-READINESS.md`](../FERPA-COPPA-1EDTECH-READINESS.md) | 21 | 12 of 21 | 0 of 21 | 10 of 21 | 0 |
-| [`docs/MASTER-LAUNCH-READINESS-REGISTER.md`](../MASTER-LAUNCH-READINESS-REGISTER.md) | 80 | 23 of 80 | 0 of 80 | 23 of 80 | 53 |
+| [`docs/MASTER-LAUNCH-READINESS-REGISTER.md`](../MASTER-LAUNCH-READINESS-REGISTER.md) | 80 | 24 of 80 | 1 of 80 | 24 of 80 | 52 |
 | [`docs/operating-model/OPERATIONAL-MATURITY.md`](../operating-model/OPERATIONAL-MATURITY.md) | 28 | 2 of 28 | 0 of 28 | 0 of 28 | 0 |
-| **All** | 162 | 48 of 162 | 0 of 162 | 44 of 162 | 53 |
+| **All** | 162 | 49 of 162 | 1 of 162 | 45 of 162 | 52 |
 
 ## The TrustEd Apps rubrics, item by item
 
@@ -186,7 +186,7 @@ master rows at P0 not yet tested. Per register, over every row this page names:
 
 ### Generative AI Data Rubric
 
-11 items: 7 carried, 4 partly, 0 not carried.
+11 items: 8 carried, 3 partly, 0 not carried.
 
 | Section | Item | Rests on (level) | Standing |
 | --- | --- | --- | --- |
@@ -198,9 +198,9 @@ master rows at P0 not yet tested. Per register, over every row this page names:
 | User choice | Course and tenant-level policy controls exist. | AI-006 (1), AI-1 (2) | carried |
 | User choice | Eligible AI history, sharing and deletion controls are available. | AI-013 (1), PRIV-2 (2) | carried |
 | User choice | Opt-in and opt-out expectations are clear where applicable. | AI-013 (1) | partly |
-| Quality and risk | Bias, accuracy, accessibility, grounding, prompt-injection and misuse tests exist. | AI-2 (0), AI-010 (1), AI-011 (1) | partly |
+| Quality and risk | Bias, accuracy, accessibility, grounding, prompt-injection and misuse tests exist. | AI-2 (0), AI-010 (2), AI-011 (1) | carried |
 | Quality and risk | Human review is required for high-impact outputs and actions. | AI-009 (2) | carried |
-| Quality and risk | Report, correction, escalation and incident-response mechanisms exist. | AI-3 (0), AI-014 (1), AI-012 (2) | carried |
+| Quality and risk | Report, correction, escalation and incident-response mechanisms exist. | AI-3 (0), AI-014 (1), AI-012 (3) | carried |
 
 ## The AI governance overlay
 
@@ -217,8 +217,8 @@ and Semester’s own controls. The NIST AI RMF matrix behind it is
 | **User choice** | Configure policy, consent and data sharing | Opt-in, opt-out and preference options where applicable | Tenant, course and user controls; no forced AI use for core access | AI-006 (1), AI-013 (1) | partly |
 | **High-impact use** | Prohibit or limit automated decisions; require oversight | Transparency and responsible data handling | No AI-only admissions, aid, discipline, accommodation, grading or risk decisions | AI-009 (2), AI-007 (1) | carried |
 | **Quality and validity** | Test and monitor performance, bias, reliability | Data validity and bias considerations | Grounding, hallucination, fairness, accessibility and evaluation thresholds | AI-2 (0), AI-011 (1) | partly |
-| **Security and misuse** | Threat-model prompt injection, tool abuse, exfiltration, provider changes | Disclose provider and data behaviour | Input and output safeguards, least-privilege tools, a kill switch, red-team tests | AI-010 (1), AI-012 (2) | carried |
-| **Human escalation** | Incident response, support, appeals, change control | User transparency and options | Human review, correction, appeal, feature disablement | AI-3 (0), AI-014 (1), AI-012 (2) | carried |
+| **Security and misuse** | Threat-model prompt injection, tool abuse, exfiltration, provider changes | Disclose provider and data behaviour | Input and output safeguards, least-privilege tools, a kill switch, red-team tests | AI-010 (2), AI-012 (3) | carried |
+| **Human escalation** | Incident response, support, appeals, change control | User transparency and options | Human review, correction, appeal, feature disablement | AI-3 (0), AI-014 (1), AI-012 (3) | carried |
 | **Retention and deletion** | Define the prompt, output and log lifecycle | Disclose data handling | Separate retention for prompts, outputs, retrieval caches and evaluation samples | PRIV-1 (2), AI-013 (1) | carried |
 | **Accessibility** | Test AI output and AI controls for accessibility | Transparent, equitable access | Accessible AI interface, generated-content checks, an alternative non-AI workflow | GA-01 (0), GA-02 (0), GA-03 (0), A11Y-006 (1) | partly |
 | **Change management** | Reassess model, provider, prompt and tool changes | Update disclosures when practice changes | An approval and retest workflow and a customer change notice | AI-001 (1), AI-011 (1) | partly |
@@ -336,8 +336,7 @@ The quarterly proofs that would carry it are on [`docs/PROOF-CALENDAR.md`](../PR
 
 ## What would move the scores
 
-- **docs/evidence/.** The first artifact filed there lifts the ceiling from 2 to 4 and
-  makes a 3 possible; the proof calendar names the first twelve.
+- **docs/evidence/.** The AI drills of 29 September lifted the ceiling to 4; a row reaches 3 by citing an artifact filed there, and the proof calendar names the next twelve.
 - **A domain at 0** has its middle row at *not started* or *owed*: physical and workforce security.
 - **A domain at 1** has a middle row *in progress* or *designed*: the rows
   above name which, and the register that owns the row names what moves it.

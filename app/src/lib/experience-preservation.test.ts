@@ -45,6 +45,9 @@ describe('the intelligence expansion preserves the existing Semester product', (
       privateBeta: 'off',
       supportTickets: 'off',
       campaignManager: 'off',
+      migrationCenter: 'off',
+      recordLedger: 'off',
+      studentAccounts: 'off',
     });
   });
 
