@@ -45,7 +45,9 @@ Nothing flows in production (no production adapters). When one does, deletion at
 
 ## Owner decisions still open
 
-- Who answers a `data_subject_request`, and within what commitment.
+- Assign the named privacy owner and build the trusted handling surface described in
+  [`DATA-RIGHTS-REQUEST-RUNBOOK.md`](DATA-RIGHTS-REQUEST-RUNBOOK.md); the student intake and
+  thirty-day clock now exist, but no operated response-time evidence exists yet.
 - Whether the D-124 "no deletion ledger" decision is reopened by counsel.
 - A full-account export that includes device-held files.
 - The legal retention wording in `docs/legal/DATA-RETENTION-AND-DELETION-POLICY-DRAFT.md` is a draft with open `[DECIDE]` items and needs counsel.

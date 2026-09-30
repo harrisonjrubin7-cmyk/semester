@@ -709,6 +709,7 @@ const MOCKS_MODULES = [
   'src/components/SourceLocker.test.tsx',
   'src/components/AdvisorMeeting.test.tsx',
   'src/components/OfficeActionFeed.test.tsx',
+  'src/components/DataRightsRequests.test.tsx',
   'src/components/DemandContribution.test.tsx',
   'src/components/SemesterWrapped.test.tsx',
   'src/components/TrustCenter.test.tsx',

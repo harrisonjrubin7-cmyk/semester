@@ -1,6 +1,6 @@
 # Milestones 1 and 2 — evidence, manual QA and rollback
 
-Written 30 Sep 2026 on branch `claude/festive-feynman-he763k` (draft PR #1021). **Nothing here is merged or deployed by this branch.** Milestone 1's first slices (audit envelope, rights requests, account security, generated matrices, threat model) merged earlier in #1000 on the owner's instruction; the migration from that PR is in the production project's ledger. This page covers what is on the draft PR.
+Written 30 Sep 2026 and refreshed against `main` after the M1/M2 verification run. The audit envelope, rights-request queue, account security, generated matrices, school-membership enforcement, advisor-share audit, offboarding, configuration studio and workflow builder are in the repository. Deployment, tenant activation, production restore, human accessibility review and pilot completion remain separate evidence states.
 
 ## What is on the branch (files, by kind)
 
@@ -45,4 +45,4 @@ Revert the commits. Both migrations are additive and change nothing until acted 
 
 ## Open blockers and external approvals
 
-Owner: the school offboarding decision (`RELEASE-GATES.md` G3, 125 cascading foreign keys); whether to switch any school on and when; the Action Center's default for students; who answers rights requests; support inbox; incident owners. Counsel: the policy drafts. Provider: a working shared AI key. Third parties: penetration test, accessibility audit. Not started: read-only plan sharing beyond advisors, a study-block scheduler, catalog-tied requirements, per-tenant official deep links, a screen for rights requests.
+Owner: whether to switch any school on and when; the Action Center's default for students; the named privacy-request responder; support inbox; incident owners. Counsel: the policy drafts. Provider: a working shared AI key. Third parties: penetration test and accessibility audit. The student privacy-request intake and history are built; the trusted staff handling surface and a completed rehearsal are not. Other unstarted work: read-only plan sharing beyond advisors, a study-block scheduler, catalog-tied requirements, and per-tenant official deep links.

@@ -1296,8 +1296,8 @@ export const REGISTER: readonly Requirement[] = [
     validation: 'Privacy evidence',
     severity: 'P0',
     status: 'building',
-    evidence: [{ path: 'RETENTION.md', shows: 'data inventory with retention answer per table' }, { path: 'app/src/lib/retention.test.ts', shows: 'bidirectional tripwire holding RETENTION.md to the schema' }, { path: 'app/src/lib/privacy.test.ts', shows: 'holds in-app privacy disclosure true to code' }, { path: 'supabase/deletion.check.sql', shows: 'tests account deletion empties what it claims' }],
-    gap: 'No data classification scheme, no signed DPA, DSAR workflow is a data_requests table without an operated handling process/SLA, and privacy notice has no legal review.',
+    evidence: [{ path: 'RETENTION.md', shows: 'data inventory with retention answer per table' }, { path: 'app/src/lib/retention.test.ts', shows: 'bidirectional tripwire holding RETENTION.md to the schema' }, { path: 'app/src/lib/privacy.test.ts', shows: 'holds in-app privacy disclosure true to code' }, { path: 'supabase/deletion.check.sql', shows: 'tests account deletion empties what it claims' }, { path: 'app/src/components/DataRightsRequests.test.tsx', shows: 'student intake and status history for access, correction, restriction and assisted erasure' }, { path: 'supabase/audit-and-subject-requests.check.sql', shows: 'own-account and cross-tenant refusal, audit, deadline and idempotent intake checks' }, { path: 'docs/DATA-RIGHTS-REQUEST-RUNBOOK.md', shows: 'daily handling, escalation, evidence and rehearsal procedure' }],
+    gap: 'No data classification scheme, no signed DPA, no trusted handler UI/service or completed rehearsal/SLA evidence, and the privacy notice has no legal review.',
   },
   {
     id: 'SEC-009',
