@@ -13,9 +13,9 @@
  * as allowed.
  */
 
-import { USES, permits, resolve, type PolicySource, type Resolved, type Use } from './toolkit/policy';
+import { STATE_LABEL, USES, permits, resolve, type PolicySource, type Resolved, type Use } from './toolkit/policy';
 
-export type Bucket = 'may' | 'disclose' | 'not' | 'unknown';
+export type Bucket = 'may' | 'disclose' | 'required' | 'not' | 'unknown';
 
 export interface Line {
   use: Use;
@@ -29,7 +29,7 @@ const who = (p: PolicySource | undefined) =>
   !p ? '' : p.by === 'instructor' ? 'your instructor' : p.by === 'institution' ? 'your school' : 'your own record of the syllabus';
 
 const bucketOf = (r: Resolved): Bucket =>
-  r.state === 'unavailable' ? 'unknown' : r.state === 'prohibited' ? 'not' : r.state === 'limited' || r.state === 'required' ? 'disclose' : permits(r.state) ? 'may' : 'unknown';
+  r.state === 'unavailable' ? 'unknown' : r.state === 'prohibited' ? 'not' : r.state === 'required' ? 'required' : r.state === 'limited' ? 'disclose' : permits(r.state) ? 'may' : 'unknown';
 
 export function agreementLines(layers: readonly (PolicySource | undefined)[]): Line[] {
   return USES.map(([use, label]) => {
@@ -40,7 +40,9 @@ export function agreementLines(layers: readonly (PolicySource | undefined)[]): L
 
 export const HEADINGS: Record<Bucket, string> = {
   may: 'You may use Semester to',
-  disclose: 'You may, and you should say how you used it',
+  // The policy's own words for these two, so a requirement is never softened into a permission.
+  disclose: STATE_LABEL.limited,
+  required: STATE_LABEL.required,
   not: 'Not allowed in this course',
   unknown: 'Not on file — check with your instructor',
 };
@@ -55,5 +57,5 @@ export const RESPONSIBILITY = [
 export function summary(lines: Line[]): string {
   const n = (b: Bucket) => lines.filter((l) => l.bucket === b).length;
   if (n('unknown') === lines.length) return 'Nothing is on file for this course yet. Treat every AI use as unconfirmed until you have checked.';
-  return `${n('may')} allowed, ${n('disclose')} with disclosure, ${n('not')} not allowed, ${n('unknown')} not on file.`;
+  return `${n('may')} allowed, ${n('disclose')} with disclosure, ${n('required')} required, ${n('not')} not allowed, ${n('unknown')} not on file.`;
 }

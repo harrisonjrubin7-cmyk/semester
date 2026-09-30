@@ -2,7 +2,7 @@ import {useState} from 'react';
 import {useStore} from '../state/store';
 import {courseCode,courseLayers,useCoursePublications} from '../lib/courserules';
 import {HEADINGS,RESPONSIBILITY,agreementLines,summary,type Bucket} from '../lib/agreement';
-const ORDER:Bucket[]=['may','disclose','not','unknown'];
+const ORDER:Bucket[]=['may','disclose','required','not','unknown'];
 /** One course's agreement: what Semester may be used for, on whose word. Reads policy; holds none. */
 export function CourseAgreement(){
  const {state,account,dispatch,catalog}=useStore();const [chosenCourse,setCourseId]=useState('');const courseId=chosenCourse||catalog.courses[0]?.id||'';

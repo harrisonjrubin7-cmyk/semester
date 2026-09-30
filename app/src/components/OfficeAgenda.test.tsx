@@ -7,6 +7,7 @@ import { STORAGE_KEY } from '../state/shape';
 import { loadSeed } from '../data/seed';
 import { OfficeAgenda } from './OfficeAgenda';
 import { LearningMap } from './LearningMap';
+import { LearningPanels } from './LearningPanels';
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -141,5 +142,44 @@ describe('the map and the agenda together', () => {
     const got = offered();
     expect(got.some((t) => t.includes('A question I need help with'))).toBe(true);
     expect(got.some((t) => t.includes('Just a concept I am tracking'))).toBe(false);
+  });
+});
+
+describe('an agenda in progress does not outlive the person or the course it was written for', () => {
+  /** A button inside the provider that switches term, standing in for the store changing scope under a mounted panel. */
+  function Switch() {
+    const { dispatch } = useStore();
+    return <button id="switch" onClick={() => dispatch({ type: 'setTerm', term: '2099XX' })} />;
+  }
+  async function panels() {
+    await act(async () => {
+      root.render(
+        <StoreProvider>
+          <Switch />
+          <LearningPanels />
+        </StoreProvider>,
+      );
+    });
+    for (let i = 0; i < 30 && !host.querySelector('.office-agenda option'); i++) await act(async () => void (await new Promise((r) => setTimeout(r, 10))));
+  }
+  const goal = () => host.querySelector('.office-agenda input.input') as HTMLInputElement;
+
+  it('is cleared when the store switches term under the mounted panel', async () => {
+    await panels();
+    await type(goal(), 'a draft I have not saved');
+    expect(goal().value).toBe('a draft I have not saved');
+    await click(host.querySelector('#switch') as HTMLElement);
+    expect(goal().value, 'the last scope’s draft is still on screen').toBe('');
+  });
+
+  it('is cleared when the course is changed', async () => {
+    await panels();
+    await type(goal(), 'a draft for the first course');
+    const select = host.querySelector('.office-agenda select') as HTMLSelectElement;
+    await act(async () => {
+      select.value = select.options[1].value;
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    expect(goal().value).toBe('');
   });
 });

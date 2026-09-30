@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { HEADINGS, RESPONSIBILITY, agreementLines, summary } from './agreement';
-import { USES, type PolicySource } from './toolkit/policy';
+import { STATE_LABEL, USES, type PolicySource } from './toolkit/policy';
 
 const src = (patch: Partial<PolicySource>): PolicySource => ({ layer: 'course', link: '', text: '', effective: '', lastVerified: '', by: 'instructor', ...patch });
 
@@ -17,12 +17,12 @@ describe('the course agreement', () => {
     expect(lines.every((l) => l.bucket === 'not' && l.by === 'your instructor')).toBe(true);
   });
 
-  it('puts limited and required under disclosure and named uses over a blanket', () => {
+  it('keeps a required use apart from an optional disclosure, and named uses over a blanket', () => {
     const lines = agreementLines([src({ blanket: 'prohibited', uses: { practice: 'allowed', explanation: 'limited', revision: 'required' } })]);
     const b = (u: string) => lines.find((l) => l.use === u)!.bucket;
     expect(b('practice')).toBe('may');
     expect(b('explanation')).toBe('disclose');
-    expect(b('revision')).toBe('disclose');
+    expect(b('revision')).toBe('required');
     expect(b('brainstorming')).toBe('not');
   });
 
@@ -37,6 +37,19 @@ describe('the course agreement', () => {
   it('keeps the student’s responsibility and the refusal on every course, unchanged', () => {
     expect(RESPONSIBILITY.join(' ')).toMatch(/responsible for your final work/);
     expect(RESPONSIBILITY.join(' ')).toMatch(/will not complete a prohibited/);
-    expect(Object.keys(HEADINGS).sort()).toEqual(['disclose', 'may', 'not', 'unknown']);
+    expect(Object.keys(HEADINGS).sort()).toEqual(['disclose', 'may', 'not', 'required', 'unknown']);
+  });
+});
+
+describe('the headings use the policy\'s own words', () => {
+  it('never turns a requirement into a permission', () => {
+    expect(HEADINGS.required).toBe(STATE_LABEL.required);
+    expect(HEADINGS.disclose).toBe(STATE_LABEL.limited);
+    expect(HEADINGS.required).not.toMatch(/\bmay\b/i);
+  });
+
+  it('counts a required use in the summary', () => {
+    const lines = agreementLines([src({ uses: { revision: 'required' } })]);
+    expect(summary(lines)).toMatch(/1 required/);
   });
 });

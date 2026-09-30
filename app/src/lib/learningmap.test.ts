@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CHECK_LENGTHS, OWN_LABELS, STATE_WORDS, checkResult, checkWords, nextAction, pickCheck, type CheckAnswer } from './learningmap';
+import { CHECK_LENGTHS, OWN_LABELS, STATE_WORDS, checkResult, checkWords, dueByConcept, nextAction, pickCheck, statesByConcept, type CheckAnswer } from './learningmap';
 import type { Guide } from './types';
 
 const card = (q: string) => ({ q, a: 'a' }) as Guide['units'][number]['cards'][number];
@@ -79,6 +79,8 @@ describe('the start-here check', () => {
 });
 
 import { DEFAULT_PREFS, SESSIONS, checkLengthFor } from './learningprefs';
+import { courseLearningInput } from './learning-loop';
+import { cardIdentity, type Reviews } from './review';
 
 describe('learning preferences', () => {
   it('sizes the check to the sitting, from the lengths the check offers', () => {
@@ -88,5 +90,34 @@ describe('learning preferences', () => {
 
   it('starts with personal patterns off', () => {
     expect(DEFAULT_PREFS.patterns).toBe(false);
+  });
+});
+
+describe('overdue is counted per concept, not per course', () => {
+  const g = guide([['a1', 'a2'], ['b1', 'b2']]);
+  const rv = (over: boolean) => ({ right: 2, wrong: 0, streak: 2, ease: 2.5, interval: 3, seen: 1_000, due: over ? 500 : 9_000_000_000_000 });
+  const reviews: Reviews = {
+    [cardIdentity('c', g.units[0].cards[0])]: rv(true), // unit 0: answered, overdue
+    [cardIdentity('c', g.units[1].cards[0])]: rv(false), // unit 1: answered, not due
+  };
+  const NOW = 2_000;
+
+  it('counts overdue cards in the unit they belong to', () => {
+    expect(dueByConcept('c', g, reviews, NOW)).toEqual({ 'c:unit:0': 1, 'c:unit:1': 0 });
+  });
+
+  it('marks only the concept with an overdue card as review later', () => {
+    const input = courseLearningInput('c', g, reviews, { due: 1, now: NOW });
+    const states = statesByConcept(input, dueByConcept('c', g, reviews, NOW));
+    expect(states.map((x) => [x.id, x.state])).toEqual([
+      ['c:unit:0', 'needs-review'],
+      ['c:unit:1', 'practising'],
+    ]);
+  });
+
+  it('control: a course with nothing overdue marks nothing for review', () => {
+    const calm: Reviews = { [cardIdentity('c', g.units[0].cards[0])]: rv(false), [cardIdentity('c', g.units[1].cards[0])]: rv(false) };
+    const states = statesByConcept(courseLearningInput('c', g, calm, { due: 0, now: NOW }), dueByConcept('c', g, calm, NOW));
+    expect(states.some((x) => x.state === 'needs-review')).toBe(false);
   });
 });

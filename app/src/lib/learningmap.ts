@@ -19,7 +19,8 @@
  * choice each time.
  */
 
-import type { ConceptLearningState, ConceptState, LearningConcept } from './learning-loop';
+import { learningState, type ConceptLearningState, type ConceptState, type LearningConcept, type LearningLoopInput } from './learning-loop';
+import { cardIdentity, type Reviews } from './review';
 import { obj, textValue } from './device-library';
 import type { Guide, StudyCard } from './types';
 
@@ -187,4 +188,29 @@ export function readMap(v: unknown): MapStore {
     )
       throw new Error('Invalid learning map.');
   return v as unknown as MapStore;
+}
+
+/**
+ * Overdue cards per concept.
+ *
+ * `learningState` reads one `due` number for the whole input and marks every
+ * concept that has any attempt as "review later" when it is above zero — so one
+ * overdue card in one unit would label every unrelated unit the student had
+ * answered. The count is per unit here, and `statesByConcept` reads each
+ * concept against its own.
+ */
+export function dueByConcept(courseId: string, guide: Guide, reviews: Reviews, now: number): Record<string, number> {
+  const out: Record<string, number> = {};
+  guide.units.forEach((u, i) => {
+    out[`${courseId}:unit:${i}`] = u.cards.filter((c) => {
+      const r = reviews[cardIdentity(courseId, c)];
+      return !!r && r.due <= now;
+    }).length;
+  });
+  return out;
+}
+
+/** Each concept's state, read against the overdue cards of that concept alone. */
+export function statesByConcept(input: LearningLoopInput, due: Record<string, number>): ConceptState[] {
+  return input.concepts.flatMap((c) => learningState({ ...input, concepts: [c], due: due[c.id] ?? 0 }));
 }
