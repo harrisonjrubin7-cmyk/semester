@@ -63,7 +63,7 @@ Ordinary ownership apart from high-risk decision rights. A reviewer is never the
 
 ## The seven pillars of production safety
 
-68 checklist items: 8 at 0, 46 at 1, 14 at 2, none above the ceiling. An item’s level is the
+68 checklist items: 7 at 0, 47 at 1, 14 at 2, none above the ceiling. An item’s level is the
 lower median of the rows it rests on; `gate:` rows are launch gates (unmet 0,
 partial 1, met 2).
 
@@ -85,7 +85,7 @@ partial 1, met 2).
 
 ### Data integrity and recovery
 
-*Can Semester prevent, detect, correct and recover from data loss, corruption, duplication or stale integration data?* Required evidence: Backup configuration, restore record, migration logs, reconciliation report, deletion and hold test, ledger tests. — 3 at 0, 7 at 1, 1 at 2.
+*Can Semester prevent, detect, correct and recover from data loss, corruption, duplication or stale integration data?* Required evidence: Backup configuration, restore record, migration logs, reconciliation report, deletion and hold test, ledger tests. — 2 at 0, 8 at 1, 1 at 2.
 
 | Item | Rests on (level) | Level |
 | --- | --- | ---: |
@@ -97,7 +97,7 @@ partial 1, met 2).
 | Migrations are versioned, reviewed, tested and have rollback or repair plans. | MIG-006 (1), SRE-008 (1) | 1 |
 | Critical writes are idempotent or protected by a write ledger. | AI-009 (2), INT-005 (1) | 1 |
 | Grade, payment, consent, share and integration writes are auditable and reconcilable. | LMS-013 (1), UOS-007 (2), INT-014 (1) | 1 |
-| Deletion, retention, legal hold, export and backup-expiry behaviour is tested. | PRIV-2 (2), RM-02 (0), RM-08 (0) | 0 |
+| Deletion, retention, legal hold, export and backup-expiry behaviour is tested. | PRIV-2 (2), RM-02 (1), RM-08 (1) | 1 |
 | A reconciliation dashboard exists for material integrations. | INT-014 (1) | 1 |
 | Dead-letter queues and manual repair workflows exist for failed syncs. | INT-013 (1), INT-014 (1) | 1 |
 
@@ -131,7 +131,7 @@ partial 1, met 2).
 | Encryption in transit and at rest is verified. | CRYPTO-1 (1) | 1 |
 | Vulnerability, dependency, secrets and infrastructure scanning are enabled and triaged. | SEC-004 (1), VULN-1 (1), SDLC-2 (2) | 1 |
 | Production-access grants are least privilege, time-bound, reason-coded and logged. | IAM-010 (2), IAM-2 (2) | 2 |
-| The data map, retention schedule, deletion and export workflow and legal hold are current. | PRIV-1 (2), PRIV-2 (2), RM-02 (0) | 2 |
+| The data map, retention schedule, deletion and export workflow and legal hold are current. | PRIV-1 (2), PRIV-2 (2), RM-02 (1) | 2 |
 | Subprocessors and AI providers are inventoried and approved. | PRIV-5 (1), AI-002 (1), SEC-010 (1) | 1 |
 
 ### Performance, capacity and cost resilience
@@ -329,7 +329,7 @@ the lower median of those rows; none is above 2, because nothing is.
 | ID | Initiative | Workstream | Priority | Mandatory evidence | Rests on (level) | Level |
 | --- | --- | --- | --- | --- | --- | ---: |
 | **INIT-OPS-001** | Shared identity, tenant context, RBAC, audit events | Product & Engineering | P0 | Authorization test suite, access review, audit samples | IAM-006 (2), IAM-008 (2), IAM-011 (1), SEC-006 (1) | 1 |
-| **INIT-OPS-002** | Data inventory, retention, deletion, legal-hold engine | Trust & Compliance | P0 | Data map, deletion, hold and export tests | PRIV-1 (2), PRIV-2 (2), RM-02 (0) | 2 |
+| **INIT-OPS-002** | Data inventory, retention, deletion, legal-hold engine | Trust & Compliance | P0 | Data map, deletion, hold and export tests | PRIV-1 (2), PRIV-2 (2), RM-02 (1) | 2 |
 | **INIT-OPS-003** | Observability, alerts, incident response, status communications | Product & Engineering | P0 | Dashboards, alert test, incident tabletop | SRE-002 (1), SEC-007 (1), SRE-010 (1), IR-1 (1) | 1 |
 | **INIT-OPS-004** | Backup and restore, DR, rollback, migration repair | Product & Engineering | P0 | Restore exercise, rollback record, RTO/RPO | SRE-005 (1), SRE-006 (1), SRE-008 (1), BCP-1 (0) | 1 |
 | **INIT-OPS-005** | Accessibility design system and release gate | Trust & Compliance | P0 | Manual and automated evidence, issue register | PRG-004 (2), A11Y-001 (2), A11Y-3 (0), A11Y-4 (0) | 0 |

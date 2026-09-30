@@ -31,13 +31,19 @@
  * nearly every area is `tested` — the app has a great deal of the student
  * side. What the status cannot say, the capability marks do: each capability
  * the document asks for is marked present or absent, and the page counts them.
- * The whole faculty side — the builder, the rubric engine, the gradebook, the
- * grading workflow — is present only as the labelled sandbox in
- * `app/server/institution/sandbox.ts`, which loads only when asked for, and
- * every mark that rests on it says so.
+ * When this register was written the whole faculty side — the builder, the
+ * rubric engine, the gradebook, the grading workflow — was present only as the
+ * labelled sandbox in `app/server/institution/sandbox.ts`, which loads only
+ * when asked for. Since then a gradebook of record (`app/src/lib/gradebook/`)
+ * has landed, and the builder and rubric rules exist as pure libraries; every
+ * mark that still rests on the sandbox says so.
  *
  * The supplied PDFs are never cited as evidence. Assessed against
- * `origin/main` `ff52ba4` on 28 September 2026.
+ * `origin/main` `ff52ba4` on 28 September 2026; the assessment builder, rubric
+ * engine, gradebook and grading workflow (L07, L09, L10, L11) were assessed
+ * again on 30 September 2026 after the gradebook of record and the two rule
+ * libraries landed. The other areas have not been reassessed since the 28th and
+ * may be stale in the same way.
  *
  * ## The one benchmark
  *
@@ -140,7 +146,7 @@ const ROWS: readonly Row[] = [
       ['app/src/lib/help-routes.test.ts', 'tutoring, the writing centre and the library as routes, directory-only'],
       ['app/src/lib/source-locker.test.ts', 'per-material AI use'],
     ],
-    gap: 'No term plan, no outcome map (LMS-015), no course discussions (LMS-007), no submission state because no submission exists outside the sandbox (LMS-004), and no time zone on a due date.',
+    gap: 'No term plan, no outcome map (LMS-015), no course discussions (LMS-007), no native submission state (a Canvas-imported label, from `standing` in `lib/canvas.ts`, and released grades on the Gradebook screen exist, but neither sits on the assignment itself) (LMS-004), and no time zone on a due date.',
     master: ['STU-001', 'LMS-003', 'LMS-015'],
     phase: 1,
   },
@@ -195,7 +201,7 @@ const ROWS: readonly Row[] = [
       ['app/src/lib/toolkit/templates.test.ts', 'a stage cannot be marked done without the student’s own note'],
       ['app/src/lib/notify.test.ts', 'quiet hours and caps'],
     ],
-    gap: 'No submission, so no submission checklist, receipt or proof (LMS-004, LMS-005); no route from the plan to an instructor.',
+    gap: 'No native submission, so no receipt or proof of one (LMS-004, LMS-005): the assignment workspace has a submission checklist, and its last line sends the student to submit through the course’s own system. No route from the plan to an instructor.',
     master: ['STU-002', 'LMS-004', 'LMS-005'],
     phase: 1,
   },
@@ -229,7 +235,7 @@ const ROWS: readonly Row[] = [
       ['app/src/lib/pdf.test.ts', 'PDF export'],
       ['app/src/lib/socratic.test.ts', 'the modes, and the policy cap on the top rung'],
     ],
-    gap: 'No comments on a draft, no accessibility or format check, no submission checklist. Write deliberately does not format bibliographies.',
+    gap: 'No comments on a draft, and no accessibility or format check on the document itself; the assignment workspace’s submission checklist is a short list of prompts, some shown only when the assignment has sources or the course needs an AI-use declaration, and none of them a check on the document (“Headings in order, figures described, links named” is a reminder). Write deliberately does not format bibliographies.',
     master: ['LMS-004', 'AI-008'],
     phase: 1,
   },
@@ -306,12 +312,12 @@ const ROWS: readonly Row[] = [
     group: 'assessment',
     why: 'Faculty need to create assessments without a separate tool: banks, versions, tags, blueprints, pools, previews and QTI 3 in and out.',
     capabilities: [
-      no('Question banks and reusable item libraries'),
-      no('Question versioning'),
+      'Question banks and reusable item libraries, as rules: an item is validated, reviewed and drawn only when approved (nothing stores a bank)',
+      'Question versioning: an edit is the next version, back in draft with its review cleared',
       no('Tags: course, outcome, topic, difficulty, cognitive level, accessibility review'),
       no('Shared stimuli'),
       no('Rubrics attached to items'),
-      no('Assessment blueprints'),
+      'Assessment blueprints: slots by outcome, tag and kind, refused when the bank cannot fill one',
       'A seeded random draw of a practice paper, re-sittable from its code',
       no('Sections and rules'),
       'Practice is always labelled practice, never an official assessment',
@@ -324,8 +330,9 @@ const ROWS: readonly Row[] = [
       ['app/src/lib/exam.test.ts', 'the paper shape, marks, the seeded draw and the clock'],
       ['app/src/lib/studystudio.ts', 'STUDY_FORMATS: a paper is practice, never an official assessment'],
       ['docs/QTI-3-ASSESSMENT-AND-MIGRATION.md', 'the interaction library against the five kinds the app has'],
+      ['app/src/lib/itembank.test.ts', 'an item is approved only by someone other than its author; only an approved, unexpired, newest version is drawn; a test is rebuilt from its seed in any bank order; a written answer is never scored'],
     ],
-    gap: 'Student practice only. No faculty authoring, bank, version, tag, pool, preview or QTI (LMS-008, INT-007); the QTI page says what present would mean.',
+    gap: 'Rules only, in app/src/lib/itembank.ts: nothing stores an item or a bank, no screen authors one, there is no difficulty or cognitive-level tag, shared stimulus, preview or section, and no QTI (LMS-008, INT-007); the QTI page says what present would mean.',
     master: ['LMS-008', 'INT-007', 'INT-008'],
     phase: 2,
   },
@@ -368,9 +375,9 @@ const ROWS: readonly Row[] = [
     why: 'Rubrics are first-class structured data, not a PDF attachment: criteria, levels, points, outcome mapping, student-facing language, versions and calibration.',
     capabilities: [
       'Criterion with a name, marks out of, and what it means',
-      no('Performance levels'),
+      'Performance levels, each with its points and its descriptor',
       'Points',
-      no('Learning-outcome mapping'),
+      'Learning-outcome mapping: points and their maximum roll up to each outcome',
       no('Instructor annotations'),
       'Student-facing language, published before work starts',
       no('Exemplars'),
@@ -388,8 +395,9 @@ const ROWS: readonly Row[] = [
       [SANDBOX_TEST, 'the rubric: refuses a mark the rubric cannot carry; will not accept a rubric with a box left empty'],
       ['app/src/lib/toolkit/rubric.test.ts', 'the student checklist and its disclaimer'],
       ['app/src/lib/assignment.test.ts', 'the rubric extracted from an assignment brief, with weights'],
+      ['app/src/lib/rubricengine.test.ts', 'a rubric is scored by level per criterion; an unscored criterion, an unknown level or another version is refused; a rubric with an empty box is refused'],
     ],
-    gap: 'Sandbox only, and no rubric table in the database (LMS-006 designed): no levels, outcomes, versions, templates or calibration.',
+    gap: 'Rules only, in app/src/lib/rubricengine.ts: levels, outcome roll-up and a version a mark must match. The sandbox still holds the criteria the grading loop reads, and no rubric table exists in the database (LMS-006 designed): no stored version history, templates, exemplars or calibration.',
     master: ['LMS-006'],
     phase: 2,
   },
@@ -402,8 +410,8 @@ const ROWS: readonly Row[] = [
       'Points, percentages and letters',
       no('Competency or mastery scales'),
       'Drop-lowest rules',
-      no('Excused work'),
-      no('Manual overrides with a reason and an audit record'),
+      'Excused work: left out of the calculation, never counted as zero',
+      'Manual overrides with a reason and an audit record: a change after release is a new version with a kept reason',
       'Late-policy rules',
       'Missing and incomplete status',
       'Grade release controls',
@@ -413,7 +421,7 @@ const ROWS: readonly Row[] = [
       'Comment feedback',
       no('Audio or video feedback'),
       'Export',
-      no('Grade history'),
+      'Grade history: every version is kept and never edited',
       'Final-grade calculation preview: what-if, what is needed, the swing',
       no('Student-view preview for the instructor'),
       'LMS sync controls: an institution-gated passback',
@@ -429,8 +437,11 @@ const ROWS: readonly Row[] = [
       [SANDBOX, 'weight, missing and overdue status, release control; the student standing counts only released marks'],
       ['app/src/lib/ltigate.test.ts', 'the passback gate: kill switches, the writeback flag, an approved connection, the scope'],
       ['app/src/lib/source.test.ts', 'the estimated label'],
+      ['app/src/lib/gradebook/gradebook.test.ts', 'weights and drop-lowest, excused work left out and missing counted as zero, a change after release needs a reason, no version ever edited or removed, a student sees only their own released grade'],
+      ['app/src/lib/gradebook/passback.test.ts', 'passback sends the released version and never a newer draft, once, and stops when the gate closes'],
+      ['supabase/gradebook.check.sql', 'the gradebook tables allowed and denied at the database'],
     ],
-    gap: 'The student side is the student’s own records; the faculty side is the sandbox. No institutional gradebook, excused work, override with reason, anonymous mode, grade history or student-view preview (LMS-011, LMS-013, LMS-014).',
+    gap: 'An instructor gradebook of record now exists (app/src/lib/gradebook and supabase/migrations/20260929310000_gradebook.sql; this register does not assert the migration is applied), beside the student’s own grades.ts. The sandbox that stood in for it is still in the tree. Not present: anonymous grading, group grading with individual adjustments, mastery scales, audio or video feedback, and a student-view preview for the instructor (LMS-011, LMS-013, LMS-014).',
     master: ['LMS-011', 'LMS-013', 'LMS-014', 'TRUST-004'],
     phase: 2,
   },
@@ -459,8 +470,9 @@ const ROWS: readonly Row[] = [
       [SANDBOX_TEST, 'runs enrol → submit → receipt → mark → release → archive; keeps the order; shows a mark to nobody until it is released; an appeal'],
       ['app/src/lib/ltiags.test.ts', 'the AGS score post'],
       ['docs/LMS-INTEROPERABILITY-MATRIX.md', 'the grade write, preview to audit, at what the AGS post has today'],
+      ['app/src/lib/gradebook/gradebook.test.ts', 'a draft held for moderation by a second person and then released; a regrade request filed over a released grade and resolved once'],
     ],
-    gap: 'The whole loop is the labelled sandbox, never installed unless asked for, and not wired to AGS; the AGS post is quiz scores with no preview, idempotency or reconciliation (LMS-012, LMS-013, INT-005).',
+    gap: 'The grading loop now exists in the gradebook of record (draft, moderation by a second person, release, regrade request, a kept reason for every change, passback of released versions through an LmsAdapter): calibration, anonymous assignment, annotation feedback and automated checks on arrival are not present, no implementation of the LmsAdapter is in the tree, and the submission side is still the labelled sandbox (LMS-012, LMS-013, INT-005).',
     master: ['LMS-012', 'LMS-013', 'INT-005'],
     phase: 3,
   },
@@ -489,7 +501,7 @@ const ROWS: readonly Row[] = [
       ['app/src/components/spokenlesson.test.tsx', 'a lesson read aloud'],
       ['docs/operating-model/AI-GRADING-AND-INTEGRITY.md', 'the roles matrix at the lifecycle gates, and the two rules at the code'],
     ],
-    gap: 'Nothing faculty-facing: no feedback draft, evidence spotting or integrity signal for a grader; and no intake refusal names automated grading (AI-006, AI-007).',
+    gap: 'Nothing that helps a grader: no feedback draft, evidence spotting or integrity signal; and no intake refusal names automated grading (AI-006, AI-007). The one faculty-side review rule for AI-drafted material is `app/src/lib/itembank.ts` (a reviewer other than the author, an accessibility review, and the model, prompt version and editor named), which has no accuracy or bias review and is wired to no screen.',
     master: ['AI-006', 'AI-007', 'AI-009'],
     phase: 4,
   },
@@ -596,7 +608,7 @@ export const TOOLS: readonly Tool[] = [
   { tool: 'Problem-set planner', does: 'Breaks a problem set into effort estimates and support checkpoints', control: 'No solution delivery when course policy restricts it', have: 'app/src/lib/assignment.ts', note: 'Steps with minutes; the policy cap in `lib/socratic.ts`.' },
   { tool: 'Exam readiness planner', does: 'Builds a study schedule from scope, date and availability', control: 'Labels estimates; supports accessibility and quiet hours', have: 'app/src/lib/study-readiness.ts', note: 'With the readiness forecast in `lib/learning-loop.ts`.' },
   { tool: 'Office-hours agenda builder', does: 'Creates a concise question list from confusion points', control: 'The student chooses what to share', have: null, note: 'An agenda builder exists for advisor meetings only; `lib/officehours.ts` is a nudge with no advice.' },
-  { tool: 'Feedback-to-revision coach', does: 'Turns released feedback into a revision checklist', control: 'Uses only the student’s released feedback and selected sources', have: null, note: 'critique compares a draft to the rubric; no instructor feedback is ingested.' },
+  { tool: 'Feedback-to-revision coach', does: 'Turns released feedback into a revision checklist', control: 'Uses only the student’s released feedback and selected sources', have: 'app/src/lib/feedbackloop.ts', note: 'Works from comments the student files and the category they choose, and turns each into optional next steps they add to their plan by hand; nothing is read from released gradebook feedback, and no action is inferred from the comment text. `critique` in `lib/assignment.ts` compares a draft to the rubric.' },
   { tool: 'Citation coach', does: 'Explains attribution and source quality; builds a bibliography draft', control: 'The student verifies every citation before use', have: 'app/src/lib/toolkit/research.ts', note: 'verify and audit; Write does not format bibliographies by design.' },
   { tool: 'Accessibility transformation', does: 'Read aloud, captions, plain-language restatement, format checks', control: 'Identifies transformations; preserves original access', have: 'app/src/components/StudyStudio.tsx', note: 'Read-aloud; captions on the podcasts; no plain-language restatement or format check.' },
   { tool: 'Study-group kit', does: 'Shared agenda, roles, practice prompts and resources', control: 'Consent-based sharing; no grade or analytics exposure', have: 'app/src/lib/groupwork.ts', note: 'A group-project split; community sessions; no kit.' },
@@ -610,7 +622,7 @@ export const ADVANCED: readonly { feature: string; what: string; have: string | 
   { feature: 'Misconception library', what: 'Faculty-curated common misunderstandings with source-linked corrections', have: null, note: 'Repeated mistakes are tracked per student; no library.' },
   { feature: 'Adaptive practice with transparent rules', what: 'The next item chosen by coverage, confidence, prior response and exam scope — not opaque risk prediction', have: 'app/src/lib/interleave.ts', note: 'With `lib/pretest.ts` and recommendLearningActivity in `lib/learning-loop.ts`.' },
   { feature: 'Learning-outcome navigator', what: 'Which modules, assignments, practice items and feedback connect to each outcome', have: null, note: 'Student mastery only; no outcome authoring or mapping (LMS-015).' },
-  { feature: 'Feedback digest', what: 'Released feedback summarized into student-controlled patterns', have: null, note: 'None.' },
+  { feature: 'Feedback digest', what: 'Released feedback summarized into student-controlled patterns', have: 'app/src/lib/feedbackloop.ts', note: 'Themes across the student’s own filings, spoken only above a floor of three and never ranked (`themes` in `lib/feedbackloop.ts`), kept private on the device; the filings are not read from released gradebook feedback.' },
   { feature: 'Study workload balancer', what: 'A realistic plan across courses from deadlines and declared availability, assumptions visible', have: 'app/src/lib/ahead.ts', note: 'Week pressure, pace and work windows.' },
   { feature: 'Academic-integrity rehearsal', what: 'Practice citation, paraphrase, collaboration and disclosure decisions without punitive grading', have: null, note: 'None.' },
   { feature: 'Exam wrapper', what: 'Strategy before, reflection after, without labelling capability', have: 'app/src/lib/postmortem.ts', note: 'Why marks were lost, and those units brought forward.' },
