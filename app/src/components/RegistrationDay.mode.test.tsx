@@ -121,6 +121,65 @@ describe('with Registration Day Mode on', () => {
     expect(stored().manual).toBe(true);
   });
 
+  describe('after the student leaves for the official system', () => {
+    const saveAddress = () => {
+      const field = host.querySelector<HTMLInputElement>('input[aria-label="Your school’s registration system address"]')!;
+      type(field, 'https://register.example.edu');
+      act(() => field.form!.requestSubmit());
+    };
+    const status = () => host.querySelector<HTMLSelectElement>('select[aria-label="Where your registration stands"]');
+    const choose = (value: string) =>
+      act(() => {
+        Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value')!.set!.call(status()!, value);
+        status()!.dispatchEvent(new Event('change', { bubbles: true }));
+      });
+
+    it('asks nothing until there is an official system to have left for', () => {
+      mount(true);
+      expect(status()).toBeNull();
+      expect(host.textContent).not.toContain('After you leave');
+      saveAddress();
+      expect(status()).not.toBeNull();
+    });
+
+    it('keeps the student’s own report on the device, and says it is theirs', () => {
+      mount(true);
+      saveAddress();
+      choose('submitted');
+      expect(stored().handoff.status).toBe('submitted');
+      expect(stored().handoff.history.map((e: { status: string }) => e.status)).toEqual(['not_started', 'submitted']);
+      expect(host.textContent).toContain('You marked this “Submitted” today.');
+      expect(host.textContent).toContain('Semester cannot see the official system');
+      expect(host.textContent).not.toMatch(/went through|you are registered/i);
+    });
+
+    it('stores a destination, a status and times, and nothing about the case', () => {
+      mount(true);
+      saveAddress();
+      choose('need_more_information');
+      expect(Object.keys(stored().handoff).sort()).toEqual(['destination', 'history', 'status', 'updatedAt']);
+    });
+
+    it('can be cleared, and then says nothing about how it went', () => {
+      mount(true);
+      saveAddress();
+      choose('scheduled');
+      act(() => button(/^Clear this note$/).click());
+      expect(stored().handoff).toBeNull();
+      expect(host.textContent).toContain('Only you can say how it went');
+    });
+
+    it('is still there when the tab is opened again', () => {
+      mount(true);
+      saveAddress();
+      choose('received');
+      act(() => root.unmount());
+      root = createRoot(host);
+      mount(true);
+      expect(status()!.value).toBe('received');
+    });
+  });
+
   it('every control has an accessible name', () => {
     mount(true);
     for (const el of host.querySelectorAll('input, select, button')) {

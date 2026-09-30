@@ -183,7 +183,7 @@ And the seven things Semester does with it, 6 of them held by a file:
 | Shows source-labelled next actions | [`app/src/lib/source.ts`](../app/src/lib/source.ts) | The labels exist; a help route’s answer is not yet labelled. |
 | Prepares a concise handoff packet | [`app/src/lib/nowrongdoor.ts`](../app/src/lib/nowrongdoor.ts) | summary(): built from the sentence alone, nothing the app added about the student; preview() shows every line before it is sent. |
 | Lets the student choose whether to share | [`app/src/components/GetHelp.tsx`](../app/src/components/GetHelp.tsx) | Nothing leaves until ticked and confirmed. |
-| Tracks only operational referral status | **nothing** | No status after the request leaves; the office’s reply is not read back. |
+| Tracks only operational referral status | **nothing** | Only the registration handoff has one (`app/src/lib/handoff-status.ts`), as the student’s own report on their device. A help request keeps its own statuses; aid and accessibility are directory-only and have none. The office’s reply is not read back. |
 | Provides recovery and escalation | [`docs/CAMPUS-ESCALATION-POLICY.md`](CAMPUS-ESCALATION-POLICY.md) | The escalation policy is written; no screen offers it. |
 
 ### The Launch System (PL-01)

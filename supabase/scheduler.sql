@@ -136,7 +136,7 @@ select cron.schedule(
 select cron.schedule(
   'ai-runtime-metadata',
   '43 4 * * *',
-  $job$select private.sweep_ai_runtime_metadata()$job$
+  $job$select private.run_sweep('ai_runtime_metadata')$job$
 );
 
 -- Durable institutional action and AI-confirmation state has conservative
@@ -159,7 +159,7 @@ select cron.schedule(
 select cron.schedule(
   'community-retention',
   '29 4 * * *',
-  $job$select private.sweep_community_retention()$job$
+  $job$select private.run_sweep('community_retention')$job$
 );
 
 
@@ -421,6 +421,22 @@ select cron.schedule(
   'console-audit-integrity',
   '23 3 * * *',
   $job$select private.console_audit_seal(); select private.console_audit_verify();$job$
+);
+
+-- ── The academic-record and student-account ledger chains ─────────────────
+--
+-- The same two nightly things for the two ledgers that hold the most
+-- (20260930150000_ledger_chain_seals.sql): `private.ledger_chain_nightly()`
+-- seals yesterday's links into an HMAC-signed manifest per ledger and school,
+-- then walks every chain with the link check and the seal check and records
+-- the run in `private.ledger_chain_verification`. Nothing is ever removed, so
+-- `audit-retention` does not name these tables and must not. 03:27 UTC, four
+-- minutes after the console's. **Active**: no secret and no endpoint, and with
+-- no chains it verifies nothing and says so.
+select cron.schedule(
+  'ledger-chain-integrity',
+  '27 3 * * *',
+  $job$select private.ledger_chain_nightly()$job$
 );
 
 -- ── Commercial: the dunning worker ────────────────────────────────────────
