@@ -51,6 +51,7 @@ import { helpSeedWaiting, loadInboxes, newRequestCount, type StaffInbox } from '
 import { ControlPlane } from '../components/institutional/ControlPlane';
 import { TrustDashboard } from '../components/institutional/TrustDashboard';
 import { IntegrationDashboard } from '../components/institutional/IntegrationDashboard';
+import { ModulesPanel } from '../components/institutional/ModulesPanel';
 import { CampaignManager } from '../components/institutional/CampaignManager';
 import { campaignsAllowed } from '../lib/gtm/manager';
 import type { ControlPlaneStatus } from '../lib/control-plane';
@@ -142,6 +143,9 @@ const tabsFor = (verified: readonly string[]) => [
   ...(EXPERIENCE_FLAGS.universityControlPlane !== 'off'
     ? [{ id: 'control' as const, label: 'Control' }, { id: 'trust' as const, label: 'Trust' }]
     : []),
+  // Only for someone the database says may configure this school: the switch
+  // itself is refused to anyone else, and the tab would only be a dead end.
+  ...(verified.includes('tenant:configure') ? [{ id: 'modules' as const, label: 'Modules' }] : []),
   ...(EXPERIENCE_FLAGS.humanHelp !== 'off' ? [{ id: 'help' as const, label: 'Get help' }] : []),
   // Staff only in practice: RLS returns nothing to an account without
   // `integration:view`, and the dashboard says so rather than inventing data.
@@ -164,7 +168,7 @@ const tabsFor = (verified: readonly string[]) => [
     : []),
 ];
 
-type Tab = 'overview' | 'drafts' | 'records' | 'connections' | 'control' | 'trust' | 'help' | 'integrations' | 'operations' | 'demand' | 'campaigns';
+type Tab = 'overview' | 'drafts' | 'records' | 'connections' | 'control' | 'trust' | 'modules' | 'help' | 'integrations' | 'operations' | 'demand' | 'campaigns';
 
 /** What each role is called on screen. */
 const ROLE_LABELS: Record<UniversityRole, string> = {
@@ -801,6 +805,10 @@ function Workspace({ storageKey }: { storageKey: string }) {
       )}
 
       {tab === 'trust' && EXPERIENCE_FLAGS.universityControlPlane !== 'off' && <TrustDashboard />}
+
+      {tab === 'modules' && verified.includes('tenant:configure') && (
+        <ModulesPanel school={school.id} me={account?.id ?? ''} canEdit={verified.includes('tenant:configure')} />
+      )}
 
       {tab === 'integrations' && EXPERIENCE_FLAGS.integrationDashboard !== 'off' && <IntegrationDashboard />}
 

@@ -1215,6 +1215,14 @@ export const OWNED_TABLES: OwnedTable[] = [
  */
 export const KEPT_TABLES: KeptTable[] = [
   {
+    table: 'module_mode_request',
+    why: 'A request to switch one of a school’s modules between Connect and Core is a governance record of the school, kept with its approvals. Deleting your account removes you as the person who asked; the request and what it changed stay.',
+  },
+  {
+    table: 'module_mode_approval',
+    why: 'An approval is the proof that two administrators agreed to a change in what the school’s record is. Deleting your account removes your id from it; the approval stays, so the change can still be explained.',
+  },
+  {
     table: 'commercial_prices',
     why: 'The price list is not a record about you. Anyone can read it, no account writes a row in it, and the Membership panel only reads it to name what Plus costs.',
   },
