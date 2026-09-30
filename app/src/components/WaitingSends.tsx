@@ -113,6 +113,7 @@ function Item({ row, online, onSend, onDrop }: { row: Row; online: boolean; onSe
 export function KeepForLater({ kind, summary, payload }: { kind: Kind; summary: string; payload: unknown }) {
   const o = useOutbox();
   const [kept, setKept] = useState(false);
+  const [refused, setRefused] = useState(false);
   if (!cloudConfigured || !o.ready) return null;
   return (
     <div role="group" aria-label="Keep it to send later" style={{ marginTop: 'var(--sp-4)' }}>
@@ -131,10 +132,20 @@ export function KeepForLater({ kind, summary, payload }: { kind: Kind; summary: 
             type="button"
             className="btn btn-secondary"
             style={{ marginTop: 'var(--sp-3)', minHeight: 44 }}
-            onClick={() => void o.keep(kind, summary, payload).then((e) => setKept(e !== null))}
+            onClick={() =>
+              void o.keep(kind, summary, payload).then((e) => {
+                setKept(e !== null);
+                setRefused(e === null);
+              })
+            }
           >
             Keep it to send later
           </button>
+          {refused ? (
+            <p role="alert" style={{ fontSize: 'var(--type-sm)', margin: 'var(--sp-3) 0 0' }}>
+              This could not be kept: the browser would not save it. Nothing was saved and nothing was sent.
+            </p>
+          ) : null}
         </>
       )}
     </div>

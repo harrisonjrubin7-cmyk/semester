@@ -66,7 +66,13 @@ export function useOutbox(): UseOutbox {
     async (kind: Kind, summary: string, payload: unknown) => {
       if (accountId === null) return null;
       const entry = newEntry({ kind, accountId, summary, payload, now: Date.now() });
-      await (await port()).put(entry);
+      try {
+        await (await port()).put(entry);
+      } catch {
+        // Full, or refused: not kept, and it says so rather than pretending.
+        setSaid('This could not be kept: the browser would not save it. Nothing was saved and nothing was sent.');
+        return null;
+      }
       setSaid(`Kept. ${summary} is waiting for you to send it. It will not go by itself.`);
       changed();
       return entry;
@@ -83,7 +89,14 @@ export function useOutbox(): UseOutbox {
         setSaid(can.why);
         return;
       }
-      const out = await send(await port(), entry, senders);
+      let out: Entry;
+      try {
+        out = await send(await port(), entry, senders);
+      } catch {
+        // The write that comes before the call failed, so no call was made.
+        setSaid('Not sent. This device would not save its place first, so nothing left. Try again, or discard it.');
+        return;
+      }
       setSaid(
         out.state === 'sent'
           ? `Sent. ${out.summary}`

@@ -81,6 +81,7 @@ beforeEach(() => {
 afterEach(async () => {
   await act(async () => root.unmount());
   host.remove();
+  vi.restoreAllMocks(); // the spies on the port and on openPort, or they wrap each other across tests
   vi.unstubAllGlobals();
   vi.useRealTimers();
 });
@@ -218,6 +219,42 @@ describe('where the browser will not keep it', () => {
   it('says nothing of the kind where it can', async () => {
     await keepOne();
     expect(host.textContent).not.toMatch(/lost if you close the app/);
+  });
+});
+
+describe('when the browser will not save', () => {
+  it('says it could not be kept, keeps nothing and sends nothing', async () => {
+    // A store that opens but refuses every write: the "storage full" case.
+    const { openPort } = await import('../lib/sync/outbox');
+    const port = await openPort();
+    vi.spyOn(port, 'put').mockRejectedValue(new Error('QuotaExceededError'));
+    // openPort is called once per tab; hand the failing one to the hook by resetting to it.
+    resetOutbox();
+    vi.spyOn(await import('../lib/sync/outbox'), 'openPort').mockResolvedValue(port);
+    await mount(true);
+    await act(async () => button(/Keep it to send later/)!.click());
+    await flush();
+    expect(host.querySelector('[role="alert"]')!.textContent).toMatch(/could not be kept.*Nothing was saved and nothing was sent/);
+    expect(host.textContent).not.toMatch(/Waiting for you to send/);
+    expect(share).not.toHaveBeenCalled();
+  });
+
+  it('sends nothing if it cannot first write that it is sending', async () => {
+    await keepOne();
+    const { openPort } = await import('../lib/sync/outbox');
+    const port = await openPort();
+    const real = port.put.bind(port);
+    vi.spyOn(port, 'put').mockImplementation(async (e) => {
+      if (e.state === 'sending') throw new Error('QuotaExceededError');
+      return real(e);
+    });
+    resetOutbox();
+    vi.spyOn(await import('../lib/sync/outbox'), 'openPort').mockResolvedValue(port);
+    await mount();
+    await act(async () => button(/^Send: /)!.click());
+    await flush();
+    expect(share).not.toHaveBeenCalled(); // no place saved, no request made
+    expect(host.textContent).toMatch(/Not sent\. This device would not save its place first, so nothing left/);
   });
 });
 
