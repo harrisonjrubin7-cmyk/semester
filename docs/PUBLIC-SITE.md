@@ -108,7 +108,7 @@ printing the baseline's answer rather than prose.
 
 ## The advancement pages
 
-Two pages for alumni relations and fundraising (D-156), printed from
+Two pages for alumni relations and fundraising (D-157), printed from
 `lib/advancement/edition.ts`:
 
 | Route | Says |

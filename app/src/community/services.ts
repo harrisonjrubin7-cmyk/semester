@@ -64,6 +64,14 @@ export interface ServiceListing {
   verifiedOn: string;
   /** Student reports that the link or the listing is wrong. */
   brokenReports: number;
+  /**
+   * Whether it can be used right now, as its owner states it. Absent means the
+   * owner has not said, which is not the same as open: `guarantee` reports it
+   * as unknown rather than promising a service nobody confirmed.
+   */
+  availability?: { status: 'open' | 'closed' | 'waitlist'; note: string; until?: string };
+  /** The listing to offer when this one cannot be used. Owner-chosen, never inferred. */
+  fallbackId?: string;
 }
 
 const ISO = /^\d{4}-\d{2}-\d{2}$/;
@@ -132,4 +140,102 @@ export function nextSteps(category: CategoryId, listings: readonly ServiceListin
 /** What the institution reads: listings past their window or reported broken, by category. Never a student. */
 export function needsAttention(listings: readonly ServiceListing[], today: string): ServiceListing[] {
   return listings.filter((l) => freshness(l, today) === 'stale' || l.brokenReports > 0 || problems(l).length > 0);
+}
+
+/** Whether a listing can be used today, by the owner's own statement. */
+export type Availability = 'open' | 'waitlist' | 'closed' | 'unknown';
+
+export function availabilityOf(l: ServiceListing, today: string): Availability {
+  const a = l.availability;
+  if (!a) return 'unknown';
+  // A closure with an end date that has passed no longer says anything.
+  if (a.status !== 'open' && a.until && ISO.test(a.until) && a.until < today) return 'unknown';
+  return a.status;
+}
+
+export interface Alternative {
+  listing: ServiceListing;
+  /** Why this one is offered: the owner's own fallback, or the next in the category. */
+  why: 'owner-fallback' | 'same-category';
+  sourceLine: string;
+  freshness: Freshness;
+}
+
+export interface Guarantee {
+  listing: ServiceListing;
+  availability: Availability;
+  /** "The Writing Center is currently closed: back Oct 3." Empty when it is open. */
+  headline: string;
+  alternatives: Alternative[];
+  /** True when the student is left with nothing to do. The institution is told; the student is not shown a dead end silently. */
+  deadEnd: boolean;
+  /** Always present: the report control the guarantee promises. */
+  canReport: true;
+}
+
+const usable = (l: ServiceListing, today: string) => problems(l).length === 0 && availabilityOf(l, today) !== 'closed';
+
+/**
+ * The resource guarantee: when a route is unavailable, the next best approved
+ * alternative — the owner's own fallback first, then the rest of the category,
+ * official before partner before peer. Closed listings and incomplete ones are
+ * never offered, and neither is the listing itself. A student is never shown a
+ * dead end without being told there is one; `deadEnd` is the signal the office
+ * that owns the category reads.
+ */
+export function guarantee(l: ServiceListing, all: readonly ServiceListing[], today: string): Guarantee {
+  const availability = availabilityOf(l, today);
+  const open = availability === 'open' || availability === 'unknown';
+  const seen = new Set<string>([l.id]);
+  const out: Alternative[] = [];
+  const add = (x: ServiceListing, why: Alternative['why']) => {
+    if (seen.has(x.id) || !usable(x, today)) return;
+    seen.add(x.id);
+    out.push({ listing: x, why, freshness: freshness(x, today), sourceLine: `${LABELS[x.label]} · ${x.owner} · verified ${x.verifiedOn}` });
+  };
+  const fallback = l.fallbackId ? all.find((x) => x.id === l.fallbackId) : undefined;
+  if (fallback) add(fallback, 'owner-fallback');
+  for (const step of nextSteps(l.category, all, today)) add(step.listing, 'same-category');
+
+  const why =
+    availability === 'closed'
+      ? `${l.name} is currently closed${l.availability?.note ? `: ${l.availability.note}` : ''}.`
+      : availability === 'waitlist'
+        ? `${l.name} has a waitlist${l.availability?.note ? `: ${l.availability.note}` : ''}.`
+        : '';
+  return {
+    listing: l,
+    availability,
+    headline: why,
+    alternatives: out,
+    deadEnd: !open && out.length === 0,
+    canReport: true,
+  };
+}
+
+/**
+ * What the owning office must fix: a fallback that names nothing, names itself,
+ * names an incomplete listing, or loops back through other fallbacks; and a
+ * closed listing with nowhere to send anyone.
+ */
+export function guaranteeProblems(l: ServiceListing, all: readonly ServiceListing[], today: string): string[] {
+  const out: string[] = [];
+  if (l.fallbackId !== undefined) {
+    const byId = new Map(all.map((x) => [x.id, x]));
+    if (l.fallbackId === l.id) out.push('its fallback is itself');
+    else {
+      const target = byId.get(l.fallbackId);
+      if (!target) out.push('its fallback does not exist');
+      else if (problems(target).length > 0) out.push('its fallback is incomplete');
+      else {
+        let cur: ServiceListing | undefined = target;
+        for (let hops = 0; cur && hops <= all.length; hops++) {
+          if (cur.fallbackId === l.id) { out.push('its fallback leads back to it'); break; }
+          cur = cur.fallbackId ? byId.get(cur.fallbackId) : undefined;
+        }
+      }
+    }
+  }
+  if (guarantee(l, all, today).deadEnd) out.push('it is closed and there is nothing to offer instead');
+  return out;
 }

@@ -3452,7 +3452,38 @@ edit silently won. Both were corrected, and nothing was rebuilt.
   this is proved against the store, not the wire. *Naming the other device*: no
   device identity exists, so the screen says "this device" and "the other".
 
-## D-156 · Alumni relations and fundraising are described on the site and built by no one yet
+
+## D-156 · The fifteen cross-platform features are built in slices, each reading what the student already holds, and none acts without their review
+
+**Proposed — needs owner.** The owner supplied a document of fifteen
+cross-platform features (My Commitments, the decision journal, What Changed,
+inbox-zero, templates, the resource guarantee, the workload contract and
+fairness engine, retrospectives, Prepare Me, handoff packs, skills transfer,
+the archive, focus modes, learning continuity) and asked for all of them. This
+records how they are being built, so the owner can correct it.
+
+- **Slices, audited first.** Each slice is checked against `origin/main` and the
+  open pull requests before it starts (CLAUDE.md). Where a module already
+  holds most of a feature, it is extended rather than duplicated:
+  `community/services.ts` for the resource guarantee, `advisor-meeting.ts`'s
+  share-payload pattern for handoff packs.
+- **Nothing is created or sent on the student's behalf.** What Changed only
+  reports and the one write is "Got it"; Prepare Me gathers, and its handoff
+  pack needs a tick per field from a fixed list per destination; suggestions
+  never become deadlines or actions until confirmed.
+- **Derived, not asserted.** Conflicts, free windows and recovery options are
+  arithmetic on stated times; a missing commute is zero; a slot with nothing
+  behind it is reported as missing. No difficulty score.
+- **Aggregates only for institutions.** Anything cohort-level (the fairness
+  engine) is aggregate and suppresses small cells; none reads an individual.
+- **Not built here, on purpose:** Focus Modes, which open PR #725 already
+  covers, and the learning-map overlap with PR #1010 for the workload contract
+  and learning continuity, until those land. Status per feature is in
+  `docs/CROSS-PLATFORM-FEATURES-REGISTER.md`.
+- **Numbering.** Open pull requests may also claim D-156; whoever merges second
+  renumbers.
+
+## D-157 · Alumni relations and fundraising are described on the site and built by no one yet
 
 **Decided 30 Sep 2026.** The site to-do (S7) asks for an advancement module
 and its two pages. Following D-141's pattern for the K–12 edition, this puts
