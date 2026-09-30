@@ -3363,6 +3363,17 @@ already in the tree under the design-debt register and needs no decision.
 - **The design brief's five destinations** (Today, My Path, Search, Plan, Me)
   **conflict with the seven roots on main** and with `DO-NOT-BUILD.md` #1.
   Existing decision holds; not reopened here.
+- **Owner's answer, 30 Sep 2026.** Build the Recovery Center's first phase only,
+  with the proposed answers to its open questions: no per-plan versions, no
+  account cooling-off. The Access Simulator and the five-destination navigation
+  stay parked; the navigation still conflicts with `DO-NOT-BUILD.md` #1.
+- **What R1 built, and a correction.** A list of the drafts a device holds, the
+  restore claim on `Recovery` corrected (it said nothing could be restored while
+  `Export` restores from copies the app takes by itself), and links to that
+  restore and to `Behind`. The first version of `RECOVERY-CENTER.md` said
+  "Restart my week" was absent; it was not (`screens/Behind.tsx`), and the page
+  is corrected. A per-deadline "set aside" needs new persisted state and is left
+  as an open question.
 
 ## D-154 · The load harness covers the open and sync every student makes, and a push that loses an update fails it
 
@@ -3483,7 +3494,33 @@ records how they are being built, so the owner can correct it.
 - **Numbering.** Open pull requests may also claim D-156; whoever merges second
   renumbers.
 
-## D-158 · A school records its graduates, each graduate gives or refuses three consents, and no current student's record reaches fundraising
+## D-157 · Alumni relations and fundraising are described on the site and built by no one yet
+
+**Decided 30 Sep 2026.** The site to-do (S7) asks for an advancement module
+and its two pages. Following D-141's pattern for the K–12 edition, this puts
+what the module would be on the site without offering it.
+
+- **`app/src/lib/advancement/edition.ts`** holds three parts (alumni relations,
+  giving, the advancement office's console), each *planned*, each saying what
+  it would do and what it still needs. Its test holds that no gift, donor,
+  pledge, giving-campaign or advancement table exists, so a row cannot stay
+  "planned" once the money side lands. A record of who graduated and the
+  consents they give is not money, and may land on its own.
+- **Not planned, and said so:** wealth screening and predictive donor
+  scoring. DO-NOT-BUILD rule 3 refuses a ranking nobody can explain, and a
+  donor's capacity to give is inferred about them, not told to the school.
+- **Not decided here, and the pages say so:** how a gift would be paid, and a
+  price. The brief names a payment provider for recurring gifts; D-146 says no
+  money moves through Semester. Those two disagree, and it is the owner's
+  call, so neither page names a provider or a figure.
+- **Waits on counsel** for charitable-solicitation registration, state by
+  state, and for the wording of tax receipts, before the module is offered.
+- **Pages:** `/solutions/advancement/` and `/alumni/`. The site test holds
+  both to "no school uses Semester for alumni relations or fundraising" and
+  "no gift has been taken", and forbids a solicitation on either. The company
+  site (`company-site/index.html`) does not carry them yet.
+
+## D-159 · A school records its graduates, each graduate gives or refuses three consents, and no current student's record reaches fundraising
 
 **Decided by owner 29 Sep 2026.** The owner asked for alumni relations and
 fundraising to be built out. Before a gift, a campaign or a donor portal can

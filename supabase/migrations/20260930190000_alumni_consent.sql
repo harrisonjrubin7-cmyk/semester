@@ -73,9 +73,10 @@ create index if not exists alumni_consents_by_alum on public.alumni_consents (us
 create table if not exists public.alumni_consent_history (
   id          bigint      generated always as identity primary key,
   consent_id  uuid        not null,
-  -- Goes with the alum's account, like the consents it records.
+  -- Goes with the alum's account and with the school, like the consents it
+  -- records (RETENTION.md): neither may leave their history behind.
   user_id     uuid        not null references auth.users on delete cascade,
-  school_id   text        not null,
+  school_id   text        not null references public.schools on delete cascade,
   kind        text        not null,
   action      text        not null check (action in ('given', 'withdrawn')),
   wording_version text    not null,
@@ -83,6 +84,7 @@ create table if not exists public.alumni_consent_history (
 );
 alter table public.alumni_consent_history enable row level security;
 create index if not exists alumni_consent_history_by_user on public.alumni_consent_history (user_id);
+create index if not exists alumni_consent_history_by_school on public.alumni_consent_history (school_id);
 
 -- ── Rules ───────────────────────────────────────────────────────────────────
 
@@ -183,9 +185,11 @@ language plpgsql
 set search_path = ''
 as $$
 begin
-  -- The one removal allowed: the alum's account is being deleted, and the
-  -- cascade is taking their history with it.
-  if tg_op = 'DELETE' and not exists (select 1 from auth.users u where u.id = old.user_id) then
+  -- The removals allowed: the alum's account or the school is being deleted,
+  -- and the cascade is taking their history with it.
+  if tg_op = 'DELETE' and (
+       not exists (select 1 from auth.users u where u.id = old.user_id)
+       or not exists (select 1 from public.schools s where s.id = old.school_id)) then
     return old;
   end if;
   raise exception 'semester: alumni consent history is kept as written' using errcode = 'insufficient_privilege';

@@ -439,6 +439,14 @@ browser; they follow the tenant, and a contract row is kept for the life of
 the school row it belongs to. None of these has a time-based sweep, and each
 is small: one row per request, decision, grant or contract, never per student.
 
+`platform_release_evidence` is the platform's dated proof for restore, legal,
+infrastructure, deployment, TLS and migration gates. It is kept until Semester
+removes it under an approved evidence-retention decision; there is no automatic
+sweep. It contains a named approver and a reference to evidence, never the
+evidence file or a secret, and clearing the recorder on account deletion leaves
+the institutional proof intact. The command center treats an expired row as a
+blocker rather than deleting it, so the history remains reviewable.
+
 **The outbox and its receipts: no sweep yet.** `domain_outbox_events` and
 `domain_event_receipts` (`20260928320000_audit_correlation_and_outbox.sql`)
 are service-role only and, as of that migration, empty: no producer writes to

@@ -269,6 +269,35 @@ begin
     perform pg_temp.counted('a direct update cannot erase the recorder',
       (select count(*) from public.alumni_profiles where user_id = other_alum and recorded_by = staff), 1);
   end;
+
+  -- A school is removed: its profiles, consents and consent history go with
+  -- it (RETENTION.md), and nothing is left for the alum to read.
+  declare
+    gone_alum uuid; gone_staff uuid;
+  begin
+    insert into public.schools (id, name, email_domains) values
+      ('gone-alumni-check', 'Gone Check University', array['gone-check.example']);
+    gone_staff := pg_temp.newuser('advancement@gone-check.example', 'gone-alumni-check');
+    gone_alum  := pg_temp.newuser('grad@gone-home-check.example', null);
+    insert into public.role_grants (subject, role, scope_kind, scope_id, provenance) values
+      (gone_staff, 'university_staff', 'school', 'gone-alumni-check', 'institution');
+    perform pg_temp.become(gone_staff);
+    insert into public.alumni_profiles (user_id, school_id, graduation_term) values (gone_alum, 'gone-alumni-check', '2026-spring');
+    reset role;
+    perform pg_temp.become(gone_alum);
+    insert into public.alumni_consents (user_id, school_id, kind, wording_version) values (gone_alum, 'gone-alumni-check', 'directory_listing', 'v1');
+    reset role;
+    perform pg_temp.counted('a school''s alum has a consent and a history row',
+      (select count(*) from public.alumni_consent_history where school_id = 'gone-alumni-check'), 1);
+    update public.profiles set school_id = null where user_id in (gone_staff);
+    delete from public.schools where id = 'gone-alumni-check';
+    perform pg_temp.counted('deleting the school removes its profiles',
+      (select count(*) from public.alumni_profiles where school_id = 'gone-alumni-check'), 0);
+    perform pg_temp.counted('— its consents',
+      (select count(*) from public.alumni_consents where school_id = 'gone-alumni-check'), 0);
+    perform pg_temp.counted('— and its consent history, which no one is left able to read',
+      (select count(*) from public.alumni_consent_history where school_id = 'gone-alumni-check'), 0);
+  end;
 end $$;
 
 rollback;
