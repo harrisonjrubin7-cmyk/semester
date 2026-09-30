@@ -1,6 +1,6 @@
 # Tenant contract
 
-> Code: `app/src/lib/contract/tenantcontract.ts` · Decision: D-156 · **Pure logic and tests. Not wired to any screen, route or table, and no contract is recorded for any school.**
+> Code: `app/src/lib/contract/tenantcontract.ts` · Decision: D-158 · **Pure logic and tests. Not wired to any screen, route or table, and no contract is recorded for any school.**
 
 A school signs for some modules, some data, a region, a retention window and an
 AI arrangement. Each is a place the running product can drift from the paper.

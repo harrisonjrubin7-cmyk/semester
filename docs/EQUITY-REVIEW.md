@@ -1,6 +1,6 @@
 # Equity review gate
 
-> Code: `app/src/lib/equity/` · Decision: D-156 · Reviewed 2026-09-30 by the author, as the founder acting. **Not an independent review.**
+> Code: `app/src/lib/equity/` · Decision: D-158 · Reviewed 2026-09-30 by the author, as the founder acting. **Not an independent review.**
 
 Semester ranks, recommends, matches and routes: what to do first, which study
 session, which mentor, which report is read next. Each of those is a decision

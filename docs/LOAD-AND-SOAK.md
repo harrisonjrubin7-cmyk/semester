@@ -1,6 +1,6 @@
 # Load and soak
 
-> Code: `supabase/load/`, `app/scripts/soak.test.ts`, `app/src/lib/stability.test.ts` · Decision: D-156
+> Code: `supabase/load/`, `app/scripts/soak.test.ts`, `app/src/lib/stability.test.ts` · Decision: D-158
 
 The database load harness (`supabase/load.sh`, pgbench against the schema
 `check.sh` builds) asks whether the paths a registration week leans on stay inside

@@ -34,7 +34,7 @@ import {
  * module is pure and stores nothing; putting contracts in the database needs an
  * owner decision about who may write them (Semester's commercial owner, with a
  * second person approving, as configuration changes are in the Configuration
- * Studio) and is recorded as open in D-156. Until then a contract is data that
+ * Studio) and is recorded as open in D-158. Until then a contract is data that
  * a person with the signed order form writes into a migration.
  */
 
