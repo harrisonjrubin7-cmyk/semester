@@ -279,6 +279,15 @@ jobs:
           VITE_BASE: /${{ github.event.repository.name }}/
         run: npm run build
 
+      # The performance budgets, against the build just made. The first load,
+      # each screen's cost to open and the largest single file, in gzip bytes,
+      # each held to app/perf-budgets.json (set from a measurement, plus ten
+      # per cent). A deliberate increase raises the number in that file in the
+      # same pull request, where a reviewer sees it.
+      - name: Performance budgets
+        working-directory: app
+        run: npm run budgets
+
       # ── Opening the app's own addresses, cold ────────────────────────────
       #
       # Everything above this line runs in jsdom or in node. Nothing in CI had
