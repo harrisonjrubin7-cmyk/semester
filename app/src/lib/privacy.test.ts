@@ -436,7 +436,7 @@ describe('"delete my account" really means every row', () => {
       'migration_runs',
       // Verified listings (lib/listings.ts, components/ListingDesk.tsx): an
       // office's or employer's publication. publisher_id is `on delete set null`.
-      // A school's Connect/Core switch and who approved it (D-148): governance
+      // A school's Connect/Core switch and who approved it (D-149): governance
       // records of the school, kept with their approvals.
       'module_mode_approval',
       'module_mode_request',

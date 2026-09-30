@@ -47,7 +47,7 @@ Every flag: default **off**, created 2026-09-27, review 2026-12-15, runbook belo
 
 | Key | Type | Owner | High-risk | Scope | Expires | Rollback |
 | --- | --- | --- | --- | --- | --- | --- |
-| `module.core_mode` | module | Platform | **yes** | tenant | — | Engage `kill.core_modules`, or request Connect for the module. Data is frozen, never deleted. See D-147. |
+| `module.core_mode` | module | Platform | **yes** | tenant | — | Engage `kill.core_modules`, or request Connect for the module. Data is frozen, never deleted. See D-148. |
 | `module.integration_dashboard` | module | Integrations | no | tenant, role | — | Set off; read-only screen. |
 | `module.institutional_operations` | module | Institutional research | no | tenant, role | — | Set off; drafts stay on the analyst's device, nothing server-side to undo. Needs `outcomes:read`. |
 | `module.source_freshness_cards` | module | Student experience | no | tenant | — | Set off; the Today section disappears. The Privacy panel is not behind this flag. |

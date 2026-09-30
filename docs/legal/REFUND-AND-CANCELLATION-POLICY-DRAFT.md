@@ -7,9 +7,9 @@
 > ([`app/src/lib/membership.ts`](../../app/src/lib/membership.ts),
 > [`MembershipPanel.tsx`](../../app/src/components/MembershipPanel.tsx)) and
 > D-128 in [`DECISION-LOG.md`](../DECISION-LOG.md). The
-> [Terms of Service draft](TERMS-OF-SERVICE-DRAFT.md) section 8 still says no
-> billing exists and must be updated with it. Every `[DECIDE: …]` is a
-> question only the owner or counsel can answer.
+> [Terms of Service draft](TERMS-OF-SERVICE-DRAFT.md) section 8 says the same
+> things and points here for refunds; change them together. Every
+> `[DECIDE: …]` is a question only the owner or counsel can answer.
 
 **Effective date:** [DECIDE]
 

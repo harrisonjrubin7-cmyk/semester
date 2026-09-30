@@ -94,7 +94,8 @@ No provider may be enabled for production student or customer content until secu
 
 Today the inventory is [the subprocessor register](../SUBPROCESSORS.md) and
 [`VENDOR-RISK-REGISTER.md`](VENDOR-RISK-REGISTER.md): providers and regions, with
-retention and training terms marked “to confirm”. The
+retention and training terms marked “to confirm”, and the published terms
+recorded verbatim in [`PROVIDER-TERMS.md`](PROVIDER-TERMS.md), none signed. The
 [DPA checklist](DPA-CHECKLIST.md) carries the no-training clause unchecked for
 the same reason.
 
@@ -128,7 +129,7 @@ change.
 | --- | --- | --- | --- | --- |
 | TP-01 | Tenant-scoped retrieval indexes | tested | `packages/institution/src/policy.test.ts` — ai.retrieve_source needs enrolment or an authorized share, with a field allowlist<br>`supabase/intelligence-policy.check.sql` — another tenant cannot read or change policy or sources | The gateway repository is tenant-level only (AI-004); the on-device assistant does no retrieval at all. |
 | TP-02 | No cross-tenant vector search | tested | `supabase/intelligence-policy.check.sql` — sources are approved per tenant and course<br>`supabase/governance.check.sql` — tenant isolation walked account by account | There is no vector index yet, so the rule is true by absence rather than by test. |
-| TP-03 | Provider contracts with no-training and no-retention terms where available | building | `app/server/institution/providers/openai.test.ts` — the institutional OpenAI call uses store: false and stateless responses<br>`docs/trust/DPA-CHECKLIST.md` — the no-training clause, unchecked; provider training terms not yet recorded | store: false does not itself establish zero data retention (docs/market-readiness/AI_GOVERNANCE.md); no provider term is on file for Anthropic or OpenAI. |
+| TP-03 | Provider contracts with no-training and no-retention terms where available | building | `app/server/institution/providers/openai.test.ts` — the institutional OpenAI call uses store: false and stateless responses<br>`docs/trust/DPA-CHECKLIST.md` — the no-training clause, unchecked<br>`docs/trust/PROVIDER-TERMS.md` — both providers’ published no-training and retention terms, verbatim | store: false does not itself establish zero data retention (docs/market-readiness/AI_GOVERNANCE.md); the terms are recorded as published, and neither is accepted or signed by Semester. |
 | TP-04 | Prompt and output redaction and data-loss-prevention controls | building | `app/src/lib/toolkit/classification.test.ts` — unclassified material is an education record and stays away from AI; T4–T6 are hard-blocked | A tier lookup keeps classes out; nothing redacts PII or secrets from a prompt that is sent. |
 | TP-05 | Separate environments for production, evaluation and synthetic test data | designed | `STAGING.md` — the staging environment<br>`docs/AI-RECOMMENDATION-EVALUATION-HARNESS.md` — evaluation suites planned against fixtures | No evaluation environment; the one labelled corpus (extractaccuracy.test.ts) is a fixture in the test suite. |
 | TP-06 | Role-bound access to AI logs | tested | `app/server/institution/postgres-journal.test.ts` — the audit is written through a service-only RPC<br>`app/server/institution/journal.ts` — intelligence_audit: tenant, actor, provider, model, tokens, cost and the policy decision | Who may read the audit is not yet a granted capability; only the service role writes it. |
