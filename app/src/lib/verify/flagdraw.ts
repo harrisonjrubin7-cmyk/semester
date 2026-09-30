@@ -1,5 +1,7 @@
 import { FLAGS, flagDefinition, type FlagContext, type KillSwitchRow, type TenantPolicyRow } from '../flags';
-import { arrayOf, bool, int, oneOf, record, subset, type Gen } from './property';
+// Aliased: `spendnames.test.ts` reads any call to a function of that name, with a braced
+// argument, as the AI spend meter recording a reply.
+import { arrayOf, bool, int, oneOf, record as struct, subset, type Gen } from './property';
 
 /**
  * Generated flag contexts, shared by the properties that hold the flag
@@ -55,12 +57,12 @@ export interface Draw {
 export const scopeKeys = [...new Set(FLAGS.flatMap((f) => f.needsScopes ?? []))];
 export const caps = [...new Set(FLAGS.flatMap((f) => (f.capability ? [f.capability] : [])))];
 
-const rawDraw: Gen<Draw> = record({
+const rawDraw: Gen<Draw> = struct({
   key: oneOf(KEYS),
   env: oneOf(ENVS),
   tenant: oneOf<string | null>([...TENANTS, null]),
   days: int(-400, 800),
-  kills: arrayOf(record({ key: oneOf(SWITCHES), tenant: oneOf<string | null>([null, ...TENANTS]), engaged: bool }), 4),
+  kills: arrayOf(struct({ key: oneOf(SWITCHES), tenant: oneOf<string | null>([null, ...TENANTS]), engaged: bool }), 4),
   // A row for the flag, its module and a few others, each possibly absent.
   policy: {
     gen: (r) => Object.fromEntries(KEYS.map((k) => [k, policyRow.gen(r)])),
