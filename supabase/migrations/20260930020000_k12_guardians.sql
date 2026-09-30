@@ -176,7 +176,21 @@ begin
     new.ended_at := null;
     new.ended_reason := null;
   else
-    -- Who, where and when a link was made are facts, not settings.
+    -- Who, where and when a link was made are facts, not settings. The one
+    -- exception is the verifier's own account being deleted: the foreign key
+    -- then sets `verified_by` to null, on live and ended links alike, and that
+    -- is the name going, not the verification being edited. It is allowed only
+    -- when nothing else changes in the same statement.
+    -- `pg_trigger_depth() > 1` is what tells the cascade (the foreign key's own
+    -- trigger is depth 1, this one depth 2) from a person's UPDATE (depth 1).
+    if pg_trigger_depth() > 1 and old.verified_by is not null and new.verified_by is null
+       and new.student_id = old.student_id and new.guardian_id = old.guardian_id
+       and new.school_id = old.school_id and new.created_at = old.created_at
+       and new.verified_at = old.verified_at and new.relationship = old.relationship
+       and new.rights = old.rights and new.ended_at is not distinct from old.ended_at
+       and new.ended_reason is not distinct from old.ended_reason then
+      return new;
+    end if;
     if new.student_id <> old.student_id or new.guardian_id <> old.guardian_id
        or new.school_id <> old.school_id or new.created_at <> old.created_at
        or new.verified_by is distinct from old.verified_by or new.verified_at <> old.verified_at then

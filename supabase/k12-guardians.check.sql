@@ -295,6 +295,67 @@ begin
   select count(*) into n from public.guardian_link_history where student_id = teen;
   perform pg_temp.counted('— and the history of them', n, 0);
 
+  -- A staff member who verified links leaves. Their account's deletion sets
+  -- `verified_by` to null on every link they made, live or ended, and that
+  -- must not be refused as an edit to a verification: the link stays, and only
+  -- the name of who verified it goes.
+  declare
+    verifier uuid;
+    ended_link uuid;
+  begin
+    verifier := pg_temp.newuser('leaving-office@maple-check.example', 'maple-k12-check');
+    insert into public.role_grants (subject, role, scope_kind, scope_id, provenance) values
+      (verifier, 'university_staff', 'school', 'maple-k12-check', 'institution');
+    perform pg_temp.become(verifier);
+    insert into public.guardian_links (school_id, student_id, guardian_id, relationship, rights)
+    values ('maple-k12-check', sibling, parent, 'parent', 'view_only');
+    insert into public.guardian_links (school_id, student_id, guardian_id, relationship, rights)
+    values ('maple-k12-check', sibling, second_parent, 'parent', 'view_only')
+    returning id into ended_link;
+    reset role;
+    update public.guardian_links set ended_at = now(), ended_reason = 'school' where id = ended_link;
+
+    select count(*) into n from public.guardian_links where verified_by = verifier;
+    perform pg_temp.counted('the leaving staff member verified two links, one live and one ended', n, 2);
+
+    delete from auth.users where id = verifier;
+    perform pg_temp.counted('their account is deleted', (select count(*) from auth.users where id = verifier), 0);
+
+    select count(*) into n from public.guardian_links where student_id = sibling and verified_by is null;
+    perform pg_temp.counted('both links are still there, no longer naming who verified them', n, 2);
+    select count(*) into n from public.guardian_links where student_id = sibling and ended_at is null;
+    perform pg_temp.counted('the live one is still live', n, 1);
+    select count(*) into n from public.guardian_links where id = ended_link and ended_at is not null;
+    perform pg_temp.counted('the ended one is still ended', n, 1);
+
+    -- The controls, on a live link that still names its verifier: a person
+    -- cannot null or rewrite a verification by hand, not even the table's
+    -- owner. Only the verifier's account deletion does.
+    declare
+      held uuid;
+    begin
+      perform pg_temp.become(staff);
+      insert into public.guardian_links (school_id, student_id, guardian_id, relationship, rights)
+      values ('maple-k12-check', sibling, stranger, 'other_caregiver', 'view_only')
+      returning id into held;
+      reset role;
+      perform pg_temp.counted('a fresh live link names its verifier', (select count(*) from public.guardian_links where id = held and verified_by = staff), 1);
+      begin
+        update public.guardian_links set verified_by = null where id = held;
+        raise exception 'FAILED: a verification was erased by a direct update';
+      exception when check_violation then
+        raise notice 'ok  a verification cannot be erased by a direct update';
+      end;
+      begin
+        update public.guardian_links set verified_by = other_staff where id = held;
+        raise exception 'FAILED: a verification was rewritten by a direct update';
+      exception when check_violation then
+        raise notice 'ok  nor rewritten to someone else';
+      end;
+      perform pg_temp.counted('the verifier is unchanged', (select count(*) from public.guardian_links where id = held and verified_by = staff), 1);
+    end;
+  end;
+
   -- ── Grade levels ───────────────────────────────────────────────────────
 
   insert into public.role_grants (subject, role, scope_kind, scope_id, provenance) values
