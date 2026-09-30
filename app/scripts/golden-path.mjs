@@ -557,16 +557,28 @@ async function journey(label, viewport) {
       .evaluate((el) => getComputedStyle(el).textDecorationLine);
     expect(struck.includes('line-through'), `the done action is not struck through (text-decoration: ${struck})`);
 
-    // ── 7 · Resume here: a reload, then a second tab ───────────────────────
+    // ── 7 · Resume here: a second tab, then a reload ───────────────────────
+    //
+    // The database writer deliberately coalesces edits for a quarter second.
+    // Reloading in the same browser turn as the click raced that contract: the
+    // new button had painted, but the persistence effect had not necessarily
+    // queued the write yet. That made this check alternate between passing
+    // and losing the action on otherwise identical CI runs.
+    //
+    // A second tab is the acknowledgement rather than an arbitrary sleep. It
+    // can show `done` only after the first tab's write has landed and its
+    // broadcast has made the second tab re-read the database (or after its
+    // first load read that landed row). Reload only after that durable copy is
+    // observed, then prove the original tab reads it back too.
     at(STEPS[10]);
-    await page.reload({ waitUntil: 'domcontentloaded' });
-    expect(await visible(page.locator('h1', { hasText: 'Personal' })), 'a reload did not come back to Personal');
-    expect(await visible(page.getByRole('button', { name: done })), 'after a reload the action is gone or no longer done');
     const tab = await first.context.newPage();
     await tab.goto(`${BASE}#/mine`, { waitUntil: 'domcontentloaded' });
     expect(await visible(tab.locator('h1', { hasText: 'Personal' })), 'a second tab showed the first run again instead of the app');
     expect(await visible(tab.getByRole('button', { name: done })), 'a second tab does not have the action, done');
     await tab.close();
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    expect(await visible(page.locator('h1', { hasText: 'Personal' })), 'a reload did not come back to Personal');
+    expect(await visible(page.getByRole('button', { name: done })), 'after a reload the action is gone or no longer done');
 
     // ── 8 · Take it with you ───────────────────────────────────────────────
     at(STEPS[11]);
