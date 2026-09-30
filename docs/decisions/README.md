@@ -1,6 +1,6 @@
 # Decisions
 
-D-001 to D-156 are sections of [`../DECISION-LOG.md`](../DECISION-LOG.md).
+D-001 to D-157 are sections of [`../DECISION-LOG.md`](../DECISION-LOG.md).
 Every decision after them is a file of its own here, named for the pull
 request that records it: `D-<pull request number>.md`.
 

@@ -4,7 +4,7 @@ import { join } from 'node:path';
 /**
  * Where the programme's decisions are written, and how a new one is numbered.
  *
- * D-001 to D-156 are sections of `docs/DECISION-LOG.md`, numbered in turn.
+ * D-001 to D-157 are sections of `docs/DECISION-LOG.md`, numbered in turn.
  * That scheme collided whenever two pull requests were open at once: both
  * took the next number and both appended to the end of the same file. On 30
  * September one pull request was renumbered nine times, from D-139 to D-154,
@@ -14,8 +14,8 @@ import { join } from 'node:path';
  * So every later decision has a file of its own, `docs/decisions/D-<n>.md`,
  * and `n` is the number of the pull request that records it. A pull request
  * number is unique, is known the moment the pull request is opened, and is
- * already far above 156. Two open pull requests can therefore neither take
- * the same number nor edit the same lines. The log keeps its first 156 and
+ * already far above 157. Two open pull requests can therefore neither take
+ * the same number nor edit the same lines. The log keeps its first 157 and
  * takes no more.
  *
  * Read by the tests that hold a register's `decisions` to something written
@@ -23,7 +23,7 @@ import { join } from 'node:path';
  */
 
 /** The last decision numbered in the log itself. */
-export const LAST_IN_LOG = 156;
+export const LAST_IN_LOG = 157;
 
 export const LOG = 'docs/DECISION-LOG.md';
 export const DIR = 'docs/decisions';
