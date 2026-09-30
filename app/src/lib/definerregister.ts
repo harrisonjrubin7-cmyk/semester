@@ -303,7 +303,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
  * the reading, so the reading's count is the register's rows minus these.
  * Delete an entry when the file is applied, and the next reading's count moves.
  */
-export const NOT_YET_APPLIED: readonly string[] = ['20260930180000_console_command_center.sql'];
+export const NOT_YET_APPLIED: readonly string[] = ['20260930173030_console_command_center.sql'];
 
 /**
  * Callable definer functions added by migrations that were **not** applied to
@@ -315,7 +315,7 @@ export const NOT_YET_APPLIED: readonly string[] = ['20260930180000_console_comma
  */
 export const SINCE_READING: readonly { file: string; functions: readonly string[] }[] = [
   {
-    file: '20260930180000_console_command_center.sql',
+    file: '20260930173030_console_command_center.sql',
     functions: ['console_command_center'],
   },
   {
