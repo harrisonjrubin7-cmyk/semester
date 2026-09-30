@@ -11,6 +11,12 @@ until the owner (Harrison Rubin) reopens it here.
 
 Status values: **Decided** · **Proposed — needs owner** · **Superseded**.
 
+**This log is closed at D-160.** Each later decision is its own file in
+[`decisions/`](decisions/README.md), named for the pull request that records
+it (`D-<pull request number>.md`), so two open pull requests can never take
+the same number or edit the same lines. The numbers here stand, and are cited
+as before.
+
 Owner approvals: D-003, D-005 and D-011 approved 27 Sep 2026 (in the
 session that opened #763). For D-005 the approval covers the recommendation
 as written: definitions and on-device counts now, and each server-collected
@@ -3520,46 +3526,44 @@ what the module would be on the site without offering it.
   "no gift has been taken", and forbids a solicitation on either. The company
   site (`company-site/index.html`) does not carry them yet.
 
-## D-158 · A K–12 school's staff record who a student's guardian is, and the link stops counting on the student's 18th birthday
 
-**Decided by owner 29 Sep 2026.** D-139 set the minimum age at 13 and asked
-for the full K–12 edition behind it. This is the edition's first piece and
-K12-002's missing half: guardian consent had no table, and nothing verified a
-guardian.
+## D-160 · A security gap audit: what was closed, what was laid as a foundation, and what is left to people
 
-- **An edition, not a fork.** `schools.edition` is `higher_ed` (every school
-  today) or `k12`; `grade_levels` holds a K–12 school's codes (K to 12) and
-  labels, written by a tenant administrator.
-- **A guardian link is the school's record, not the student's grant.**
-  `family_grants` stays the consent an adult student gives. A
-  `guardian_links` row is made by school staff with the new
-  `guardians:manage` capability (`university_admin`, `university_staff`),
-  stamped with who verified it, for a student at that school who is a minor
-  today, naming a guardian who has stated they are an adult. Rights are
-  `full`, `view_only` or `none`. A link is ended, never deleted; its people,
-  school and verification cannot be edited, and an ended link cannot reopen.
-- **What a guardian must not read is its own table.**
-  `guardian_link_restrictions` (a court order, a note) is readable by staff
-  only; the guardian and the student read neither.
-- **Rights move to the student with nothing run.**
-  `private.guardian_may_read(student)` is true only for a live, verified link
-  with rights to read, at a K–12 school, while `private.is_minor(student)` is
-  true — which it stops being on the 18th birthday (D-139). The parent portal
-  (K12-003) will read through it; no policy does yet, so no client may call it.
-- **History is kept as written.** `guardian_link_history` records every
-  create, change and end; nobody rewrites it, and the only removal it allows
-  is the student's own account deletion. Retention is in `RETENTION.md`.
-- **Proved.** `supabase/k12-guardians.check.sql` runs 43 checks: a parent or
-  student cannot make a link, another school's staff cannot, a college
-  cannot, an 18-year-old cannot be linked, an adult who never stated an age
-  cannot be a guardian, a minor cannot be one; each person reads only their
-  own links, the restriction is invisible to the guardian, the birthday turns
-  the answer false, history cannot be rewritten or deleted. Opening the
-  guardian read policy to everyone, and dropping `is_minor` from
-  `guardian_may_read`, each turned it red.
-- **The takeover map follows.** The K-12 module in `site/modules.ts` reads
-  *in preparation* on `guardian_links` and `grade_levels` (suite
-  `k12-guardians`), and `modules.test.ts` refuses *planned* for it while
-  `guardian_links` exists.
-- **Not built here:** the parent portal, messaging, report cards, forms and
-  any screen. Counsel has not reviewed the guardian model.
+**Decided 30 Sep 2026.** The FERPA/LTI checklist, the runbook and the
+architecture-hardening briefs were read as evidence, not authority, against
+`main` and the open drafts. The record is
+[SECURITY-GAP-AUDIT-2026-09-30.md](SECURITY-GAP-AUDIT-2026-09-30.md). This is
+not a penetration test and claims nothing about FERPA.
+
+- **Closed, each shown red before or under a mutation:**
+  - LTI envelope: a token header that names a key (`jku`, `x5u`, `x5c`,
+    `jwk`) or an algorithm other than RS256 is refused before a key is fetched;
+    `jwtVerify` is pinned to that algorithm, the registration's issuer and
+    audience, a maximum token age and required claims; `nbf`, token age and a
+    foreign `azp` on a single audience are refused; `sub` and library errors
+    leave the logs; key-set refresh limits are pinned.
+  - Termination: SCIM deprovisioning did not revoke `role_grants`, which is
+    what `has_capability` reads, so a removed staff member kept school-scoped
+    authority. A trigger revokes that person's live school-scope grants for
+    that school; suspension revokes nothing; reactivation does not restore
+    authority; a backfill repairs people already deprovisioned.
+  - Endpoints: every edge function has `verify_jwt = false` by design, so one
+    without its own check would have been open. Each is now listed with the
+    credential it answers to, and its source must carry the evidence.
+- **A foundation for a control that did not exist:** staged roster imports
+  (per-school, server-only, closed row shape, manifest and digest validation,
+  a held-on-large-removal threshold with a second-person approver,
+  idempotent, reconcilable, reversible, refusing deletes under a legal hold).
+  There is **no OneRoster client and no live data path**; EDT-6 stays
+  NOT_STARTED and nothing may say Semester supports OneRoster.
+- **Left, and why:** the legitimate-purpose code list, `legal_basis`, the
+  meaning of a signature and retention of staged roster rows are counsel's; the
+  access-review cadence, staff export policy and JIT elevation are policy; an
+  unbound LTI registration launching with a warning is a recorded product
+  decision, not a bug; a person/alias identity table and a sweep of every RPC
+  for tenant context are larger than an unambiguous fix.
+- **Not applied to production.** The migrations are drafts. Applying
+  `20260930210000` revokes live grants of people already deprovisioned (the
+  backfill), which is the intent and is still a data change; it wants a look at
+  the affected rows first.
+- **Claims.** No claim moves. Not FERPA compliant, not certified, not pilot-ready.

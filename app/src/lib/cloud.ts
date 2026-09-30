@@ -610,6 +610,40 @@ export interface Snapshot {
   seen: Seen;
 }
 
+/**
+ * What each course row held when this device last knew it matched the
+ * database: the stamp, and the data in a canonical form. Keyed `user/id`.
+ *
+ * It is what lets `push` send only the courses that changed. A push used to
+ * rewrite every course, changed or not, and on 30 September that was where
+ * capacity gave first: the load harness's push, the state row and four 42 KB
+ * courses, was the slowest thing a student does (docs/PERFORMANCE-AND-LOW-END-
+ * DEVICE-PLAN.md). A student edits one course at a time.
+ *
+ * Skipping a row is safe only when two things hold, and both are checked: the
+ * stamp this push names for it is the stamp recorded here, so the device has
+ * not taken a newer copy since; and its data is what was recorded, so there
+ * is nothing to send. If another device changed that row meanwhile, not
+ * writing it loses nothing: this push does not touch it, and the state row's
+ * compare-and-swap, which every push makes, is refused because the other
+ * device's push moved that too.
+ *
+ * Memory only. After a reload it is empty until the first pull, and the first
+ * push writes everything, which is what every push did before.
+ */
+const acked = new Map<string, { at: string; data: string }>();
+
+/** JSON with object keys sorted, so jsonb's reordering is not a change. */
+function canon(value: unknown): string {
+  return JSON.stringify(value, (_k, v: unknown) =>
+    v && typeof v === 'object' && !Array.isArray(v)
+      ? Object.fromEntries(Object.entries(v as Record<string, unknown>).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)))
+      : v,
+  );
+}
+
+const ackKey = (userId: string, id: string) => `${userId}/${id}`;
+
 export async function pull(userId: string): Promise<Snapshot> {
   const db = (await cloud());
   const [stateRow, courseRows] = await Promise.all([
@@ -622,6 +656,7 @@ export async function pull(userId: string): Promise<Snapshot> {
 
   const rows = (courseRows.data ?? []) as { id: string; data: unknown; updated_at: string }[];
   const stateAt = stateRow.data?.updated_at as string | undefined;
+  for (const r of rows) acked.set(ackKey(userId, r.id), { at: r.updated_at, data: canon(r.data) });
   const stamps = [stateAt, ...rows.map((r) => r.updated_at)].filter(Boolean) as string[];
 
   return {
@@ -760,7 +795,16 @@ export async function push(
   }
 
   const stamps: Record<string, string> = {};
-  const known = courses.filter((c) => seen?.courses[c.id]);
+  const sent = new Map(courses.map((c) => [c.id, canon(c.data)]));
+  // Known to this device and unchanged since the database last confirmed
+  // them: nothing to send, and the stamp carries forward (see `acked`).
+  const same = courses.filter((c) => {
+    const at = seen?.courses[c.id];
+    const was = at ? acked.get(ackKey(userId, c.id)) : undefined;
+    return !!was && was.at === at && was.data === sent.get(c.id);
+  });
+  for (const c of same) stamps[c.id] = seen!.courses[c.id];
+  const known = courses.filter((c) => seen?.courses[c.id] && !same.includes(c));
   const fresh = courses.filter((c) => !seen?.courses[c.id]);
 
   // New to this device: one insert for all of them. A clash on any means
@@ -810,6 +854,12 @@ export async function push(
       .eq('user_id', userId)
       .in('id', gone);
     if (pruneError) throw new Error(pruneError.message);
+    for (const id of gone) acked.delete(ackKey(userId, id));
+  }
+
+  // What the database now holds, for the next push to compare against.
+  for (const c of [...fresh, ...known]) {
+    if (stamps[c.id]) acked.set(ackKey(userId, c.id), { at: stamps[c.id], data: sent.get(c.id)! });
   }
 
   /*

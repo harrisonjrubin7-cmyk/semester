@@ -44,6 +44,10 @@ afterEach(() => {
   act(() => root.unmount());
   host.remove();
   vi.restoreAllMocks();
+  // The clipboard tests below define their own on navigator. Left behind, it
+  // is read-only in the shared worker, and the next file to assign one
+  // (RegistrationDayCard.test.tsx) throws.
+  delete (navigator as { clipboard?: unknown }).clipboard;
 });
 
 function show() {
