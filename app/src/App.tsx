@@ -1,4 +1,5 @@
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
+import { Analytics } from '@vercel/analytics/react';
 import { useNow, useStore } from './state/store';
 import { useBottomChrome } from './lib/bottomchrome.hook';
 import { currentLook } from './state/shape';
@@ -1327,6 +1328,7 @@ function AppFrame() {
           <InstitutionalPreviewBar />
         </Suspense>
       )}
+      <Analytics />
     </>
   );
 
