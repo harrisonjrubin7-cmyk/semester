@@ -129,6 +129,17 @@ export const EVIDENCE: readonly EvidenceRecord[] = [
     note: 'Repository-only evidence. It does not prove deployment, live tenant isolation, human accessibility, production restore, or a student pilot. Renew on a material M1/M2 change or monthly.',
   },
   {
+    id: 'offboarding-hosted-rehearsal',
+    artifact: 'School offboarding walked end to end on a hosted Supabase preview database with synthetic schools and accounts, inside a rolled-back transaction',
+    path: 'docs/evidence/offboarding/2026-09-30-hosted-preview-rehearsal.md',
+    produced: '2026-09-30',
+    validFor: QUARTERLY,
+    owner: 'engineering',
+    claims: [],
+    rows: ['LEG-004'],
+    note: 'Run by the author on an empty disposable preview, not by a second person and not on production; the compact script omits some of the 98 local checks. The purge is not built and the export file is generated elsewhere.',
+  },
+  {
     id: 'hecvat-draft',
     artifact: 'HECVAT draft response, not sent',
     path: 'docs/market-readiness/HECVAT_DRAFT_RESPONSE.md',

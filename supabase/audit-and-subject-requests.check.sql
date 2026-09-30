@@ -58,6 +58,7 @@ declare
   n bigint;
   made uuid;
   req uuid;
+  req2 uuid;
   hash text;
 begin
   insert into public.schools (id, name, email_domains) values
@@ -157,6 +158,25 @@ begin
   reset role;
   select count(*) into n from public.data_subject_request where id = req and status = 'received' and due_at > now() + interval '29 days';
   perform pg_temp.counted('a person raises a request about themselves, with a thirty-day clock', n, 1);
+
+  -- The product uses one definer entry point so subject and tenant are facts
+  -- from the session, not values a browser has to assert. Two rapid same-kind
+  -- filings return the first request without resetting its clock.
+  perform pg_temp.become(north_student);
+  req2 := public.raise_my_data_subject_request('correction', 'My program is wrong.');
+  made := public.raise_my_data_subject_request('correction', 'A second tap must not replace the first note.');
+  reset role;
+  perform pg_temp.counted('same-kind intake is idempotent', (req2 = made)::int, 1);
+  select count(*) into n from public.data_subject_request
+   where subject = north_student and kind = 'correction' and resolved_at is null
+     and tenant_id = 'north-aud' and detail = 'My program is wrong.';
+  perform pg_temp.counted('intake derives the subject and tenant and preserves the first request', n, 1);
+  set local role anon;
+  if not pg_temp.refused($q$select public.raise_my_data_subject_request('export', '')$q$) then
+    raise exception 'FAILED: an unsigned visitor filed a rights request';
+  end if;
+  reset role;
+  raise notice 'ok  unsigned intake is refused';
 
   -- Raising a request left an audit event, without content.
   select count(*) into n from public.audit_event
