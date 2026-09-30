@@ -6,6 +6,9 @@ import { DOMAINS, REGISTER } from '../masterregister';
 import { SEATS } from '../launchreadiness';
 import { cell, controlLine, renderedFrom, table } from '../ops/render';
 import { PRIMITIVES, PRIMITIVE_IDS } from './constitution';
+import { CLAIMS } from '../ops/claims';
+import { EVIDENCE } from '../ops/evidence';
+import { capabilityReadiness, repositoryProjectionContext } from './projections';
 import {
   ACTIVATION_CLASSES, ACTIVATION_MEANINGS, CAPABILITY_DEFINITIONS, CAPABILITY_POLICIES,
   CAPABILITY_PROFILES, HIGH_RISK_REQUIREMENTS, MATURITY_LEVELS, MATURITY_MEANINGS,
@@ -122,9 +125,13 @@ function render(): string {
     '## Shared primitives', '',
     ...table(['ID', 'Primitive'], PRIMITIVES.map((p) => [p.id, cell(p.name)])), '',
     '## Capabilities', '',
+    'Evidence and claim projections are evaluated as of 2026-09-30 from directly bound evidence records. Missing means no dated record is bound; expiring remains valid until UTC expiry. No general-availability declaration or tenant state is inferred from repository tests. These projections are repository evidence, not live tenant activation proof.', '',
     'Master rows are applicable requirements, not claims that Semester replaces those systems. Current courses, assignments and practice are student tools; official grade writes and system-of-record operations require separate high-risk activation.', '',
-    ...table(['ID', 'Capability', 'Owner', 'Domain', 'Primitives', 'Source state', 'Product maturity', 'Activation class', 'Master rows', 'Fallback', 'Permitted claim'],
-      CAPABILITY_DEFINITIONS.map((c) => [c.id, c.name, c.owner, c.domain, c.primitives.join(', '), c.currentState, c.maturity, c.activationClass, c.masterRows.join(', '), c.fallback, c.requiredClaims].map(cell))), '',
+    ...table(['ID', 'Capability', 'Owner', 'Domain', 'Primitives', 'Source state', 'Product maturity', 'Activation class', 'Master rows', 'Fallback', 'Permitted claim', 'Evidence state', 'Permitted claim statuses'],
+      CAPABILITY_DEFINITIONS.map((c) => {
+        const readiness = capabilityReadiness(c, repositoryProjectionContext(c, EVIDENCE, '2026-09-30', CLAIMS));
+        return [c.id, c.name, c.owner, c.domain, c.primitives.join(', '), c.currentState, c.maturity, c.activationClass, c.masterRows.join(', '), c.fallback, c.requiredClaims, readiness.evidence, readiness.allowed.join(', ')].map(cell);
+      })), '',
     '## High-risk requirement profiles', '',
     'Every entry below is a requirement to satisfy with current tenant evidence, not an assertion that it is satisfied. Support seats identify accountable roles; they do not assert a named or staffed owner.', '',
     ...CAPABILITY_DEFINITIONS.filter((c) => c.activationClass === 'high-risk').flatMap((c) => [
