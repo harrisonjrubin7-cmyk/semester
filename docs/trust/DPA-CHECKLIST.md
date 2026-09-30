@@ -58,7 +58,7 @@ support for each is in the next table.
 | Direct control | Institution directs use and maintenance of records | Institution admins hold capability grants: `supabase/capabilities.check.sql` |
 | Legitimate educational interest | Access limited to the users and data the purpose needs | Capability-scoped access and consented, expiring staff access: `supabase/support-access.check.sql` |
 | No sale or advertising | No sale, behavioral advertising, profiling or commercial exploitation | No advertising code exists; needs the written commitment |
-| No secondary use | No product or external model training on identifiable records without written authorization | Institutional AI calls OpenAI with `store: false` (`app/server/institution/providers/openai.ts`). Provider training terms are not yet recorded ([`docs/SUBPROCESSORS.md`](../SUBPROCESSORS.md)) |
+| No secondary use | No product or external model training on identifiable records without written authorization | Institutional AI calls OpenAI with `store: false` (`app/server/institution/providers/openai.ts`). Both providers' published terms forbid training on API content without opt-in, recorded verbatim in [`PROVIDER-TERMS.md`](PROVIDER-TERMS.md); neither is accepted or signed by Semester |
 | No re-disclosure | Only to approved subprocessors under equivalent terms | Subprocessors are listed in [`docs/SUBPROCESSORS.md`](../SUBPROCESSORS.md); their DPAs are not reviewed |
 | Data minimization | Each integration limited to minimum fields | Integration permission matrix: `docs/INTEGRATION-PERMISSION-MATRIX.md` |
 | Security measures | A security schedule of technical and organizational measures | [`SECURITY-WHITEPAPER.md`](SECURITY-WHITEPAPER.md) is the draft of that schedule |
