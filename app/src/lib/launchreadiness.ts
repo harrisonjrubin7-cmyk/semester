@@ -168,10 +168,11 @@ export const GATES: readonly Gate[] = [
     owner: 'engineering',
     status: 'partial',
     evidence: [
-      { path: '.github/workflows/production-smoke.yml', shows: 'hourly synthetic check of the public app, its assets and PostgREST' },
+      { path: '.github/workflows/production-smoke.yml', shows: 'hourly synthetic check of the public app, its assets and PostgREST, and a job that records each hour’s result for the status page’s 90-day history' },
+      { path: 'app/src/lib/statushistory.test.ts', shows: 'the history’s rules: an unchecked day is never up, uptime is checks passed over checks made, and the pages and feed are held to it' },
       { path: 'docs/market-readiness/INCIDENT_RESPONSE.md', shows: 'the incident process, written and never exercised' },
     ],
-    gap: 'No alert reaches a named person and no support address exists that a university could be given. A public status page is live at /status.html (28 September); it has no subscriber notifications yet.',
+    gap: 'No alert reaches a named person and no support address exists that a university could be given. A public status page is live at /status.html (28 September) with an Atom incident feed and a 90-day history that begins with the first hourly record; it has no subscriber notifications yet, and is not hosted apart from the app it reports on.',
     goLive: [/Error monitoring live and alerting/, /Incident process with named owner/],
   },
   {
