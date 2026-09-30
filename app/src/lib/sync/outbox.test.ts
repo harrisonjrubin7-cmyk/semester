@@ -160,14 +160,15 @@ describe('what survives the app closing', () => {
     expect(await port.all()).toEqual([]);
   });
 
-  it('never shows or keeps another account’s, and nothing when signed out', async () => {
+  it('never shows or keeps another account’s, and shows but does not delete when nobody is resolved yet', async () => {
     const port = memoryPort();
     await port.put(make({ id: 'mine' }));
     await port.put(make({ id: 'theirs', accountId: 'u2' }));
     expect((await load(port, 'u1', NOW)).map((e) => e.id)).toEqual(['mine']);
     expect((await port.all()).map((e) => e.id)).toEqual(['mine']); // theirs was removed, not just hidden
+    // The session is null for a moment at every start; that must not wipe the disk.
     expect(await load(port, null, NOW)).toEqual([]);
-    expect(await port.all()).toEqual([]);
+    expect((await port.all()).map((e) => e.id)).toEqual(['mine']);
   });
 
   it('discarding removes it entirely', async () => {

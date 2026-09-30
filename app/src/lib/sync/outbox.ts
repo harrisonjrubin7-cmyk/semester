@@ -174,14 +174,19 @@ export async function clearOutbox(): Promise<void> {
  * What is on disk, made safe to show: a request found `sending` was cut off
  * (the app closed, or the tab died) and may or may not have gone, so it reads
  * as `unknown`. Sent ones past `SENT_MS` are dropped, and so is anything that
- * belongs to another account.
+ * belongs to another account. With no account resolved yet it shows nothing
+ * and removes nothing.
  */
 export async function load(port: Port, accountId: string | null, now: number): Promise<Entry[]> {
+  // The account is null for a moment at every start, before the session
+  // resolves. That is not signing out: show nothing and delete nothing, or a
+  // request waiting since yesterday is lost to a restart.
+  if (accountId === null) return [];
   const all = await port.all();
   const keep: Entry[] = [];
   for (const e of all) {
-    if (accountId === null || e.accountId !== accountId) {
-      // Somebody else's, or nobody's: not shown, not sent, and not kept.
+    if (e.accountId !== accountId) {
+      // Somebody else's: not shown, not sent, and not kept.
       await port.remove(e.id);
       continue;
     }
