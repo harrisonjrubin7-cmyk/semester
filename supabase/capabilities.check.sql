@@ -289,7 +289,9 @@ begin
   -- 155 before 20260929300000_registration_transaction.sql gave `registrar`
   -- `registration:administer`.
   -- 156 before 20260929330000_dining.sql added dining_staff → dining:operate.
-  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 157);
+  -- 157 before guardians:manage for university_admin and university_staff
+  -- (20260930020000_k12_guardians.sql) added two.
+  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 159);
 
   perform pg_temp.become_anon();
   perform pg_temp.refused('a signed-out visitor cannot read the matrix',
