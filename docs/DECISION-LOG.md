@@ -3702,13 +3702,13 @@ the flag evaluator or the contract; disk, bloat and database memory readings in 
 soak; a browser soak; large-tenant, many-small-tenant, file-processing and AI-cost
 load scenarios.
 
-**Open pull requests this sits beside.** #996 extends the same load harness with the
-open-and-sync scenarios and edits `run.sh`, `ci.yml` and this log, so whichever merges
-second resolves a textual conflict; the resolution is to keep both, with its scenarios
-inside `run_pass`. #1011 (the Configuration Studio) is where contract storage would
-naturally live, and this does not depend on it. #1012 adds a legal hold and #1021 a
-retention page; the history is never held and honours the student's deletion, which is
-item 1 above.
+**Neighbouring work.** #996 merged while this was open: its open-and-sync scenarios
+(D-154) now run inside `run_pass`, so every soak window includes them and its invariants
+are checked after each; its lost-update control runs once, after the last window. It took
+D-154, so this decision is D-156 and the earlier three-guards decision D-155. #1011 (the
+Configuration Studio) is where contract storage would naturally live, and this does not
+depend on it. #1012 adds a legal hold and #1021 a retention page; the history is never
+held and honours the student's deletion, which is item 1 above.
 
 **What would change it:** a retention decision that lengthens the history, an equity
 finding that is fixed or accepted, a contract stored in the database, or a soak run on

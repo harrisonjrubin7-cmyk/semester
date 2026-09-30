@@ -61,8 +61,8 @@ trend and passes.
 - **No browser soak.** Nothing here runs the app for hours.
 - **Not built:** a large-tenant scenario, a many-small-tenants scenario, concurrent
   file-processing and OCR uploads, and AI cost and quota load. The memo asks for each;
-  none exists, and none is claimed. Registration-opening and the open-and-sync every
-  student makes are covered by an open pull request to the same harness.
+  none exists, and none is claimed. The open-and-sync every student makes is covered by
+  D-154, and runs in every soak window.
 - **Two thresholds are judgement.** The ratio of 2 and the 5 ms floor were chosen to
   pass a clean run on a shared runner and fail the planted leak. If CI proves them too
   tight or too loose, they are environment variables, and changing them is a one-line,
