@@ -71,7 +71,8 @@ export function Registration() {
 }
 
 function Desk({ school }: { school: string }) {
-  const [grants, setGrants] = useState<Grant[] | null>(null);
+  const [grants, setGrants] = useState<Grant[] | null | string>(null);
+  const [grantReads, setGrantReads] = useState(0);
   const [terms, setTerms] = useState<TermCalendar[] | null | string>(null);
   const [term, setTerm] = useState('');
   const [view, setView] = useState<View>('mine');
@@ -79,9 +80,11 @@ function Desk({ school }: { school: string }) {
 
   useEffect(() => {
     let live = true;
-    loadMyCapabilities().then((g) => { if (live) setGrants(g); }, () => { if (live) setGrants([]); });
+    // A failed read is not "no capabilities": a registrar whose check failed
+    // is told so and can ask again, rather than silently losing the desk.
+    loadMyCapabilities().then((g) => { if (live) setGrants(g); }, (e: unknown) => { if (live) setGrants(e instanceof Error ? e.message : 'Could not check your staff permissions.'); });
     return () => { live = false; };
-  }, []);
+  }, [grantReads]);
 
   useEffect(() => {
     let live = true;
@@ -108,13 +111,22 @@ function Desk({ school }: { school: string }) {
   }
   if (terms === null || grants === null) return <p role="status">Loading your registration…</p>;
 
-  const registrar = holdsRegistrar(grants, school);
+  const grantsFailed = typeof grants === 'string';
+  const registrar = !grantsFailed && holdsRegistrar(grants, school);
   const calendar = terms.find((t) => t.term === term) ?? null;
   // A registrar with no term yet still needs the desk, to create one.
   const deskTerm = term || termOf(new Date());
 
   return (
     <>
+      {grantsFailed && (
+        <>
+          <Notice alert>{grants} If you work in the registrar’s office, its views stay hidden until this loads.</Notice>
+          <button type="button" className="btn" onClick={() => { setGrants(null); setGrantReads((n) => n + 1); }}>
+            Check again
+          </button>
+        </>
+      )}
       {registrar && (
         <TabList
           label="Enrollment views"

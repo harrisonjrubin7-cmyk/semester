@@ -257,6 +257,33 @@ describe('who may see it', () => {
     expect(text()).toContain('Student account stu-2-ab…');
     expect(buttons().filter((b) => b.classList.contains('btn-primary')).map((b) => b.textContent)).toEqual(['Grant override']);
   });
+
+  it('says so when the permission check fails, keeps the student’s half, and checks again on request', async () => {
+    mock.caps.mockRejectedValueOnce(new Error('Could not reach your school’s account service.'));
+    await render();
+    expect(text()).toContain('Could not reach your school’s account service.');
+    expect(text()).toContain('registrar’s office, its views stay hidden until this loads');
+    expect(host.querySelector('[role="tablist"]')).toBeNull();
+    expect(text()).toContain('ECON 1020');
+    mock.caps.mockResolvedValue([{ capability: 'registration:administer', scopeKind: 'school', scopeId: 'vu' }]);
+    await press('Check again');
+    expect(mock.caps).toHaveBeenCalledTimes(2);
+    expect([...host.querySelectorAll('[role="tab"]')].map((t) => t.textContent)).toContain('Registrar');
+    expect(text()).not.toContain('Could not reach your school’s account service.');
+  });
+
+  it('says the section list did not load rather than showing a term with none, and loads it again', async () => {
+    mock.caps.mockResolvedValue([{ capability: 'registration:administer', scopeKind: 'school', scopeId: 'vu' }]);
+    await render();
+    mock.sections.mockRejectedValueOnce(new Error('Could not load the sections.'));
+    const tab = [...host.querySelectorAll('[role="tab"]')].find((t) => t.textContent === 'Registrar') as HTMLElement;
+    await act(async () => tab.click());
+    await flush();
+    expect(text()).toContain('The section list below is empty because it did not load');
+    await press('Load the sections again');
+    expect(text()).not.toContain('did not load');
+    expect(host.querySelector('select option[value="s-econ"]')).toBeTruthy();
+  });
 });
 
 describe('a student’s term', () => {

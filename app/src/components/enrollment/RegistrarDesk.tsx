@@ -63,7 +63,7 @@ export function RegistrarDesk({ term, calendar, onTermSaved }: { term: string; c
   const { say } = useStore();
   const { attempt } = useAttempts();
   const [pending, setPending] = useState<PendingRequest[] | null | string>(null);
-  const [sections, setSections] = useState<LiveSection[]>([]);
+  const [sections, setSections] = useState<LiveSection[] | string>([]);
   const [reasons, setReasons] = useState<Record<string, string>>({});
   const [said, setSaid] = useState<Said | null>(null);
   const [busy, setBusy] = useState(false);
@@ -77,7 +77,8 @@ export function RegistrarDesk({ term, calendar, onTermSaved }: { term: string; c
   useEffect(() => {
     let live = true;
     loadPending(term).then((v) => { if (live) setPending(v); }, (e: unknown) => { if (live) setPending(e instanceof Error ? e.message : 'Could not load the requests.'); });
-    loadSections(term).then((v) => { if (live) setSections(v); }, () => { if (live) setSections([]); });
+    // A failed read is said, not shown as a term with no sections.
+    loadSections(term).then((v) => { if (live) setSections(v); }, (e: unknown) => { if (live) setSections(e instanceof Error ? e.message : 'Could not load the sections.'); });
     return () => { live = false; };
   }, [term, reads]);
 
@@ -116,7 +117,8 @@ export function RegistrarDesk({ term, calendar, onTermSaved }: { term: string; c
     }
   };
 
-  const chosen = sections.find((s) => s.id === override.section);
+  const sectionList = typeof sections === 'string' ? [] : sections;
+  const chosen = sectionList.find((s) => s.id === override.section);
 
   const submitOverride = async (e?: FormEvent) => {
     e?.preventDefault();
@@ -212,11 +214,19 @@ export function RegistrarDesk({ term, calendar, onTermSaved }: { term: string; c
               <input id={ids.id} aria-describedby={ids.hint} className="input" value={override.student} onChange={(e) => setOverride((o) => ({ ...o, student: e.target.value }))} required />
             )}
           </Field>
+          {typeof sections === 'string' && (
+            <>
+              <Notice alert>{sections} The section list below is empty because it did not load, not because the term has none.</Notice>
+              <button type="button" className="btn" onClick={() => setReads((n) => n + 1)}>
+                Load the sections again
+              </button>
+            </>
+          )}
           <Field label="Section">
             {(ids) => (
               <select id={ids.id} aria-describedby={ids.hint} className="input" value={override.section} onChange={(e) => setOverride((o) => ({ ...o, section: e.target.value }))} required>
                 <option value="">Choose a section</option>
-                {sections.map((s) => (
+                {sectionList.map((s) => (
                   <option key={s.id} value={s.id}>
                     {sectionName(s)} · {s.title}
                   </option>
