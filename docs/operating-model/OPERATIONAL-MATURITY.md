@@ -10,7 +10,7 @@ and each control marked with what the tree holds. A control that claims to
 exist cites a file, and the file exists; an owed control says what would
 close it. Nothing here is a promise of a date.
 
-**43 of 200 controls are in place, 76 are partial and 81 are owed.**
+**43 of 200 controls are in place, 80 are partial and 77 are owed.**
 Nothing at all is in place in 7 areas: Records management and legal holds; E-discovery and export defensibility; Accessibility of generated content; Physical security and device management; Cost governance; Data residency; Disaster scenarios beyond technology.
 Most owed controls wait on something that does not exist yet — a company,
 a second person, billing, an assessment engine, a customer — and the note
@@ -28,7 +28,7 @@ never a person; every seat is vacant.
 
 | Area | In place | Partial | Owed | Exposure | Owner |
 | --- | ---: | ---: | ---: | --- | --- |
-| [Records management and legal holds](#records-management-and-legal-holds) | 0 | 4 | 5 | `internal` | `privacy` |
+| [Records management and legal holds](#records-management-and-legal-holds) | 0 | 8 | 1 | `internal` | `privacy` |
 | [E-discovery and export defensibility](#e-discovery-and-export-defensibility) | 0 | 4 | 7 | `internal` | `privacy` |
 | [Accessibility of generated content](#accessibility-of-generated-content) | 0 | 4 | 4 | `public` | `accessibility` |
 | [Content rights, copyright and licensing](#content-rights-copyright-and-licensing) | 2 | 5 | 4 | `staff` | `data` |
@@ -58,13 +58,13 @@ Exposure `internal` · owner `privacy` · 0 of 9 in place.
 | ID | Control | Status | Evidence | What it shows, or what would close it |
 | --- | --- | --- | --- | --- |
 | RM-01 | Records-retention schedule by data class. | partial | [`RETENTION.md`](../../RETENTION.md) | Retention is stated per table and per device store. It is not organised by data class, and financial, audit and security records are not yet classes of their own. |
-| RM-02 | Legal-hold workflow. | owed | — | No hold object exists in the schema and no screen or runbook places one. Needs a hold table, a placing role and a runbook. |
+| RM-02 | Legal-hold workflow. | partial | [`supabase/legal-holds.check.sql`](../../supabase/legal-holds.check.sql) | A hold table, a placing capability limited to the account’s own school, and a platform hold only an operator places (`20260930100000_legal_holds.sql`); 42 checks. No screen places one and no runbook says when counsel should. |
 | RM-03 | Litigation and investigation preservation workflow. | owed | — | Would follow the hold workflow; nothing preserves a snapshot of an account on request today. |
-| RM-04 | A hold overrides deletion jobs. | owed | — | Deletion (`deleteEverything`, the erase-on-device path) checks nothing before it runs. The override must be in the deletion path, not beside it. |
-| RM-05 | Hold release process. | owed | — | Follows RM-02: who releases, on what authority, and the record of the release. |
+| RM-04 | A hold overrides deletion jobs. | partial | [`supabase/legal-holds.check.sql`](../../supabase/legal-holds.check.sql) | The three retention sweeps skip what a live hold covers, and `erase_account` refuses a held account before it touches a row (20260930040000), and a trigger on `auth.users` is the backstop. A platform-wide hold pauses the AI-runtime and Community sweeps (`private.run_sweep`), and a school or account hold keeps its own rows in them (20260930170000): exercised on AI metadata, restrictions and safety entries, held by a test on the rest. On-device deletion (`deleteEverything`) checks nothing. |
+| RM-05 | Hold release process. | partial | [`supabase/legal-holds.check.sql`](../../supabase/legal-holds.check.sql) | Released by a different person holding `hold:release`, with a reason, once; the row is never deleted or edited, so the placement and release are the record. A school with one administrator cannot release its own hold and must use break-glass. No runbook yet. |
 | RM-06 | Retention owner and review cadence. | partial | [`SEMESTER-OPERATING-SYSTEM.md`](../../SEMESTER-OPERATING-SYSTEM.md) | The operating system names the privacy seat as owner of data inventory and lineage, quarterly. The seat is vacant. |
 | RM-07 | Customer notification where contractually required. | partial | [`docs/operating-model/INCIDENT-COMMUNICATIONS.md`](INCIDENT-COMMUNICATIONS.md) | Notice templates exist for incidents. None exists for a hold, a preservation request or a lawful-access request. |
-| RM-08 | Proof that deletion resumes correctly after a hold is released. | owed | — | A test that places a hold, runs deletion, releases the hold and observes deletion complete. Nothing to test until RM-02 and RM-04 exist. |
+| RM-08 | Proof that deletion resumes correctly after a hold is released. | partial | [`supabase/legal-holds.check.sql`](../../supabase/legal-holds.check.sql) | Proved for the abandoned-sign-up, audit and invite sweeps and for a student’s own erasure through `erase_account`: each stops for a hold and runs again once it is released. Proved for the AI-runtime and Community sweeps under a platform hold only. |
 | RM-09 | Financial, audit and security records kept apart from student-content retention. | partial | [`RETENTION.md`](../../RETENTION.md) | Audit and access logs have their own retention lines. Financial records do not exist yet (no billing), and nothing says they would be a separate class. |
 
 ## E-discovery and export defensibility

@@ -18,7 +18,7 @@ production. Evidence of the before reading:
 "Local" is a throwaway Postgres built from every migration on `main`, read with
 `supabase/advisor-probe.sql`; its before column reproduces production's exactly,
 which is what makes the after column mean something. **Production after: not
-yet observed.** Apply `20260930150000_advisor_reconciliation.sql`, re-run
+yet observed.** Apply `20260930232000_advisor_reconciliation.sql`, re-run
 `advisor-probe.sql` and the advisor, and record it here.
 
 ## Classification

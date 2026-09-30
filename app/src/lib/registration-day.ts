@@ -36,6 +36,7 @@ import { TIME, localTime } from './registration-window';
 export { REGISTRATION_DAY_KEY, localTime, storedWindow, windowReminders, type WindowReminder } from './registration-window';
 import { obj, textValue } from './device-library';
 import { conflicts, type CatalogCourse } from './registration';
+import { readHandoff, type Handoff } from './handoff-status';
 
 
 /** How many backups one section may carry. Five is already a long night. */
@@ -65,6 +66,12 @@ export interface RegistrationDayData {
   remind: boolean;
   /** Show the mode on Today now, whatever the date — for a pilot, a demo, or a student who wants it early. */
   manual: boolean;
+  /**
+   * Where the student says their registration stands in the official system
+   * (`lib/handoff-status.ts`). Their own report, on their device, never sent; null
+   * until they leave for the portal and say anything.
+   */
+  handoff: Handoff | null;
 }
 
 export const EMPTY_REGISTRATION_DAY: RegistrationDayData = {
@@ -76,6 +83,7 @@ export const EMPTY_REGISTRATION_DAY: RegistrationDayData = {
   portalUrl: null,
   remind: true,
   manual: false,
+  handoff: null,
 };
 
 export interface CheckItem {
@@ -145,7 +153,10 @@ export function readRegistrationDay(value: unknown): RegistrationDayData {
   const portalUrl = typeof value.portalUrl === 'string' ? safePortalUrl(value.portalUrl) : null;
   const remind = value.remind !== false;
   const manual = value.manual === true;
-  return { opensAt, source, backups, checks, creditTarget, portalUrl, remind, manual };
+  // Tolerant on purpose: a note the student can re-make is not worth refusing
+  // the whole plan over, so anything that is not a handoff reads as none.
+  const handoff = readHandoff(value.handoff);
+  return { opensAt, source, backups, checks, creditTarget, portalUrl, remind, manual, handoff };
 }
 
 export type Phase = 'unset' | 'later' | 'soon' | 'open';

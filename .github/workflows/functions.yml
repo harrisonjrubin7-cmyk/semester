@@ -97,7 +97,7 @@ jobs:
       github.event.workflow_run.conclusion == 'success'
 
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           # The commit CI passed, not whatever main has drifted to since —
           # which on this repository is a real distance: five merges landed
@@ -177,7 +177,7 @@ jobs:
           fi
           echo "list=$list" >> "$GITHUB_OUTPUT"
 
-      - uses: supabase/setup-cli@v3
+      - uses: supabase/setup-cli@45a513f8c64c0bc8e0e3dfe572b5c95be85f6359 # v3
         if: steps.what.outputs.list != ''
         with:
           version: latest

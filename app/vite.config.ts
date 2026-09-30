@@ -776,6 +776,8 @@ const MOCKS_MODULES = [
   'src/state/syncstates.test.tsx',
   'src/state/returnto.test.tsx',
   'src/state/review.test.tsx',
+  'src/state/deletions.test.tsx',
+  'src/components/WaitingSends.test.tsx',
 ]
 
 export default defineConfig(({ command, mode }) => {

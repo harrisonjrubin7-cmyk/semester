@@ -1,18 +1,15 @@
 /**
- * The faculty side of grading, as rules: a rubric with levels and outcomes, and
- * a grade ledger that remembers every change and why.
+ * A rubric with performance levels and outcomes, scored by level, and a small
+ * grade ledger that overlaps the gradebook of record. Pure functions over rows
+ * the caller passes in: no database, no student, wired to no screen. The
+ * sandbox in `server/institution/sandbox.ts` and the student's own `grades.ts`
+ * are untouched.
  *
- * `docs/LEARNING-ASSESSMENT-GRADEBOOK-REGISTER.md` marks the student side of
- * assessment tested and the faculty side absent, "present only as the labelled
- * sandbox". Its L09 names what a rubric lacks (performance levels, outcome
- * mapping, versions) and its L10 what the gradebook lacks (excused work, an
- * override with a reason, grade history). This file is those, and only those,
- * as pure functions over rows the caller passes in. It reads no database, holds
- * no student, and is wired to no screen: the sandbox in
- * `server/institution/sandbox.ts` and the student's own `grades.ts` are
- * untouched.
+ * ## The rubric half
  *
- * Rules kept on purpose:
+ * `docs/LEARNING-ASSESSMENT-GRADEBOOK-REGISTER.md` (L09) named what a rubric
+ * lacked: performance levels, outcome mapping and versions. Nothing else in the
+ * tree has them (`lib/gradebook/` has no rubric), so this half stands.
  *
  *   - **A mark is a level, not a number.** A rubric is scored by choosing a
  *     level for each criterion, so the points a student receives are the ones
@@ -22,6 +19,52 @@
  *   - **A rubric with an empty box is refused.** Every level needs its
  *     descriptor, the sandbox's own rule, so a student is never scored against
  *     words nobody wrote.
+ *
+ * ## The ledger half overlaps `lib/gradebook/`, and stays until someone decides
+ *
+ * The ledger was written while the register still said no gradebook existed;
+ * the gradebook of record (`lib/gradebook/ledger.ts`, `compute.ts`, with its
+ * tables and row-level security) merged afterwards and is the source of truth.
+ * Nothing imports this ledger, and it was removed once on that ground. It is
+ * back, because "nothing uses it" is not "the gradebook covers it": the two
+ * differ in ways that are choices, and a choice is not this file's to erase.
+ *
+ * Covered, each held by a gradebook test (`gradebook/gradebook.test.ts`):
+ *   - history is never edited or removed ("never edits or removes a version:
+ *     every earlier one is still there, byte for byte");
+ *   - excused work leaves the calculation and missing counts as zero ("leaves
+ *     excused work out, counts missing as zero, and never drops the only item");
+ *   - a change to a released grade needs a reason that is kept ("needs a
+ *     reason, and leaves the released grade in view until the change is
+ *     released");
+ *   - an excused or missing item carries no score, and a score is bounded
+ *     ("refuses a score out of range, a mark that contradicts it, and no score
+ *     without a reason for none");
+ *   - a repeated request is replayed, not written twice ("replays the same key
+ *     and request without writing twice");
+ *   - no number when nothing is released ("has no number when nothing is
+ *     released, and refuses to be handed a draft").
+ *
+ * Not the same (this ledger's rule, then the gradebook's):
+ *   - a reason on every later entry, against a reason only once the grade has
+ *     been released (drafts are working copies);
+ *   - a score no higher than the item's maximum, against up to twice it (extra
+ *     credit);
+ *   - lifting an excusal restores the grade beneath it, against re-entering a
+ *     score as a new version;
+ *   - an entry dated before the one it follows is refused, against no such rule
+ *     in the library (the database stamps `at` with `now()`);
+ *   - an item's maximum cannot change once graded, against no function that
+ *     edits it (the migration has an insert and no update).
+ *
+ * Decision owed, by whoever owns the gradebook: whether it should take any of
+ * the second list (a reason on every edit, a restore on lifting an excusal, an
+ * out-of-order refusal), after which this ledger can go; or whether this ledger
+ * is kept as a specification. Until then it is not a source of truth for
+ * anything.
+ *
+ * Rules this ledger keeps:
+ *
  *   - **The ledger only grows.** An override, an excusal or a lifting of one is
  *     a new entry with a reason and a name; nothing is edited or removed, so the
  *     grade history is the ledger itself.

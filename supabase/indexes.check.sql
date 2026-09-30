@@ -24,7 +24,7 @@
 -- `gateway_intelligence_audit`, `gateway_review`), and this file was green
 -- throughout: the schema it was asked about had none. Deleting a school
 -- scans a child table once per row without one, and `private` is where the
--- gateway and outbox tables live. `20260930150000_advisor_reconciliation.sql`
+-- gateway and outbox tables live. `20260930232000_advisor_reconciliation.sql`
 -- covers the four; the rule now sees both schemas.
 --
 -- ## What an unindexed foreign key costs, and why a test can see it

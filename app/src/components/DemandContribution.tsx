@@ -1,3 +1,5 @@
+import { OfflineRefusal } from '../lib/offline-mode';
+import { KeepForLater } from './WaitingSends';
 import { formatDate } from '../lib/locale';
 import { useEffect, useMemo, useState } from 'react';
 import {
@@ -69,6 +71,8 @@ function Contribution({ userId }: { userId: string | null }) {
   const [confirm, setConfirm] = useState<'send' | 'stop' | null>(null);
   const [said, setSaid] = useState('');
   const [failed, setFailed] = useState('');
+  // Set when the send was refused for want of a connection: the offer to keep it.
+  const [offer, setOffer] = useState<{ summary: string; payload: unknown } | null>(null);
 
   useEffect(() => {
     if (!userId || !term) return;
@@ -115,14 +119,16 @@ function Contribution({ userId }: { userId: string | null }) {
       </section>
     );
   }
-  const run = async (what: () => Promise<unknown>, ok: string) => {
+  const run = async (what: () => Promise<unknown>, ok: string, onOffline?: () => void) => {
     setFailed('');
+    setOffer(null);
     try {
       await what();
       setSaid(ok);
       setRound((r) => r + 1);
     } catch (e) {
       setFailed(e instanceof Error ? e.message : String(e));
+      if (e instanceof OfflineRefusal) onOffline?.();
     }
   };
 
@@ -170,6 +176,7 @@ function Contribution({ userId }: { userId: string | null }) {
       {header}
       {said ? <p role="status" className="balance-said">{said}</p> : null}
       {failed ? <p role="alert">{failed}</p> : null}
+      {offer ? <KeepForLater kind="contribute" summary={offer.summary} payload={offer.payload} /> : null}
       {mine === 'loading' ? <p role="status">Checking whether you contribute for {term}…</p> : null}
       {mine === 'error' ? <p role="alert">Could not check your contribution. Try again later.</p> : null}
 
@@ -222,7 +229,12 @@ function Contribution({ userId }: { userId: string | null }) {
           confirmLabel="Contribute"
           onConfirm={() => {
             setConfirm(null);
-            void run(() => contribute(proposed.term, proposed.courses), `Contributing your ${proposed.term} plan.`);
+            void run(() => contribute(proposed.term, proposed.courses), `Contributing your ${proposed.term} plan.`, () =>
+              setOffer({
+                summary: `Send your ${proposed.term} course plan (${proposed.courses.length} ${proposed.courses.length === 1 ? 'course' : 'courses'}) to your school’s demand count`,
+                payload: { term: proposed.term, courses: proposed.courses },
+              }),
+            );
           }}
           onCancel={() => setConfirm(null)}
         />

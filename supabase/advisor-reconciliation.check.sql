@@ -239,7 +239,7 @@ alter table private.console_audit_verification drop column id;
 alter table private.site_lead_hits drop constraint site_lead_hits_pkey;
 alter table private.site_lead_hits drop column id;
 
-\ir migrations/20260930150000_advisor_reconciliation.sql
+\ir migrations/20260930232000_advisor_reconciliation.sql
 
 do $$
 begin
@@ -256,7 +256,7 @@ begin
 end $$;
 
 -- Twice is the same as once.
-\ir migrations/20260930150000_advisor_reconciliation.sql
+\ir migrations/20260930232000_advisor_reconciliation.sql
 
 select pg_temp.counted('run again, still one key on each',
   (select count(*) from pg_index where indrelid in ('private.console_audit_verification'::regclass, 'private.site_lead_hits'::regclass) and indisprimary), 2);
