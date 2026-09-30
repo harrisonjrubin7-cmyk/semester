@@ -1,9 +1,15 @@
 # University OS architecture
 
-Semester is the student's journey and workflow layer over the systems a university already runs. It is never
-the system of record for any of them.
+Semester is the student's journey and workflow layer over the systems a university already runs. Today it is
+the system of record for none of them.
 
-**Semester does not replace:** the SIS or student record, the ERP (finance, HR), the official degree audit,
+**Destination (D-143).** Connect first, replace by domain, operate as one system. Semester's end state is to
+replace the fragmented stack, becoming the system of record for each domain an institution chooses to migrate.
+A domain moves only when it clears the replaceability bar in
+[`DOMAIN-REPLACEMENT-REGISTER.md`](DOMAIN-REPLACEMENT-REGISTER.md), which computes that none has yet. Health,
+counseling and clinical records, and emergency response stay bounded however far replacement goes.
+
+**Today Semester does not replace:** the SIS or student record, the ERP (finance, HR), the official degree audit,
 official registration, the LMS gradebook, financial-aid determination, payments or the bursar, health,
 counseling, disability or clinical records, conduct, or emergency and safety systems.
 

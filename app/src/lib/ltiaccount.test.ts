@@ -178,6 +178,13 @@ const NOT_CONTENT = new Set([
    * `20260923210000_intelligence_policy.sql` are the tables.
    */
   'canonical_entity_references',
+  /*
+   * The link a registrar made from the school's student record to this
+   * account (D-145, D-146). The school made it, not the person; counting it
+   * would call a linked account that has never been opened "not empty".
+   * `20260929210000_academic_record_ledger.sql` is the table.
+   */
+  'academic_record_subjects',
   'consent_record',
   /*
    * Phase J (`20260928302000_office_action_feed.sql`). Which programs and
