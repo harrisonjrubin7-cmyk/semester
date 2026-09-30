@@ -25,8 +25,7 @@ repeated here from memory.
 | --- | --- | --- |
 | `main` at 3b54e2c, CI job 109913887393 | 11.2 ms | 14.0 ms |
 | `main` at aa05b48, CI job 109893040844 | 10.1 ms | **162.5 ms** |
-| local, Postgres 16, run 1 | 28.5 ms | 37.9 ms |
-| local, Postgres 16, run 2 | 30.3 ms | 41.3 ms |
+| local, Postgres 16, runs 1 to 6 | 28.5, 30.3, 21.1, 11.7, 25.3, 20.7 ms | 37.9, 41.3, 32.2, 20.1, 34.2, 32.7 ms |
 
 (A third main job, 109903095401 at fd056fc, could not be read: its signed log URL was rejected.)
 
@@ -52,7 +51,7 @@ to move p95. That points at the runner or at a Postgres background event (checkp
 SEMESTER_CHECK_PG_ANY=1 LOAD_SECONDS=10 supabase/load.sh   # repeat; read only the scenario lines
 ```
 
-Locally this has not failed (two runs above, more recorded below if they finished). A local pass does not
+Locally this has not failed (six consecutive runs above, all exit 0, spread 11.7 to 30.3 ms). A local pass does not
 clear CI: the failures have only been seen on the shared runner, which is the reason this is filed as
 open and not as fixed.
 
