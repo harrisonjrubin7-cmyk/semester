@@ -12,7 +12,7 @@ with each item pointed at what the repository holds. Every checklist item
 rests on rows of the registers that already exist — the master, HECVAT,
 FERPA/1EdTech and maturity registers, and the twelve launch gates of
 [`docs/LAUNCH-READINESS-COUNCIL.md`](LAUNCH-READINESS-COUNCIL.md) — and its level on the crosswalk’s 0–4 scale is
-computed by the test, capped at 2 while `docs/evidence/` does not exist. The launch
+computed by the test, capped at 4 now that `docs/evidence/` holds the AI drills of 29 September. The launch
 verdict is computed the same way. **Today it is NO-GO**, and the test
 asserts that rather than letting the page decide.
 
@@ -265,7 +265,7 @@ Thirteen areas, each resting on rows and launch gates. **An area’s level is it
 | **Reliability** | SLOs, monitoring, alerting, status communications, dependency health and runbooks are ready. | Yes | SRE-001 (2), SRE-002 (1), SRE-010 (1), gate:operations-live (1) | 1 |
 | **Recovery** | Backup restore, rollback, reconciliation and failure behaviour are tested. | Yes | SRE-005 (1), BCP-1 (0), gate:backup-restore (1), gate:flags-rollback (1) | 0 |
 | **Performance** | Peak-load and capacity evidence meets the defined thresholds. | Yes | SRE-007 (0), SRE-009 (1) | 0 |
-| **AI** | Provider, policy, data use, evaluation, monitoring and disable controls are approved. | If AI is enabled (it is) | AI-1 (2), AI-2 (0), AI-006 (1), AI-012 (2) | 0 |
+| **AI** | Provider, policy, data use, evaluation, monitoring and disable controls are approved. | If AI is enabled (it is) | AI-1 (2), AI-2 (0), AI-006 (1), AI-012 (3) | 0 |
 | **Integration** | Sandbox validation, scopes, reconciliation, failure fallback and a customer owner are approved. | If integrations are enabled (they are) | INT-001 (1), INT-014 (1), INT-1 (1) | 1 |
 | **Support** | Help, escalation, incident communication and the implementation and hypercare plan are ready. | Yes | SUP-001 (2), SUP-1 (1), IMP-001 (1), gate:onboarding-support (1) | 1 |
 | **Commercial** | Entitlement, price, invoicing, contract, support tier and renewal and exit terms are ready. | Yes | COM-001 (1), COM-002 (1), LEG-002 (1), gate:terms-reviewed (1) | 1 |

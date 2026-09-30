@@ -266,8 +266,11 @@ export const EVIDENCE: readonly EvidenceRow[] = [
     id: 'SEC-AI-002', control: 'AI evaluation and misuse testing — an answer that cites nothing and nobody noticed', rubric: 'genai',
     rests: ['AI-2', 'AI-010', 'AI-011'],
     evidence: 'Evaluation plan, red-team report, sign-off, issue tracker.', frequency: 'Per model or change', owner: 'product', visibility: 'summary', status: 'owed',
-    holds: [{ path: 'docs/AI-RECOMMENDATION-EVALUATION-HARNESS.md', shows: 'the harness design; no evaluation set from approved course sources and no recorded run' }],
-    produce: 'Build the evaluation set, run it, record the run with the model version; the proof calendar’s quarterly AI evaluation.',
+    holds: [
+      { path: 'docs/AI-RECOMMENDATION-EVALUATION-HARNESS.md', shows: 'the harness design; no evaluation set from approved course sources and no recorded run' },
+      { path: 'docs/evidence/ai/injection-redteam-2026-09-29T22-58-56-465Z-claude-opus-5.json', shows: 'the misuse half, once: the injection red-team on claude-opus-5, 21 cases, none followed (29 September 2026)' },
+    ],
+    produce: 'Build the evaluation set, run it, record the run with the model version; the proof calendar’s quarterly AI evaluation. The red-team transcript is one run on one model, not the evaluation this row asks for.',
   },
   {
     id: 'ACC-001', control: 'Accessibility release gate — a regression shipped to a screen-reader user', rubric: 'accessibility',

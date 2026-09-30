@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { badge, claimed, inView, lateBy, overdueCount, overdueLine, split, standingOf } from './standing';
 import { decorateItem } from './date';
@@ -213,5 +214,11 @@ describe('which view of a course\'s assignments a deadline is in', () => {
     expect(inView('completed', tonight, { ps1: true })).toBe(true);
     expect(inView('upcoming', tonight, { ps1: true })).toBe(false);
     expect(inView('all', yesterday, {})).toBe(true);
+  });
+
+  it('is what the course page filters by, not the clock against midnight', () => {
+    const page = readFileSync(new URL('../components/CourseHub.tsx', import.meta.url), 'utf8');
+    expect(page).toMatch(/inView\(filter as AssignmentView,i,state\.done\)/);
+    expect(page).not.toMatch(/i\.date\s*(<|>=)\s*now/);
   });
 });
