@@ -96,6 +96,7 @@ import {
   writeReview,
   type Conflict,
 } from '../lib/conflicts';
+import { coursesDeletedHere, settleDeletions } from '../lib/deletions';
 import {
   STORAGE_KEY,
   initialEphemeral,
@@ -943,7 +944,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       }
 
       if (take) {
-        const theirs = {
+        const theirsAll = {
           ...(remote.state as Partial<Persisted>),
           courses: remote.courses.map((c) => c.data as CourseModule),
         };
@@ -955,9 +956,21 @@ export function StoreProvider({ children }: { children: ReactNode }) {
          */
         const here = pickPersisted(latest.current) as unknown as Record<string, unknown>;
         const agreedOn = readBase();
+        /*
+         * What was deleted, on either side, since the two agreed — the one
+         * thing the merge below cannot see, because a union cannot express a
+         * deletion. What this device deleted is taken out of the account's
+         * copy so it cannot come back; what another device deleted and this
+         * one never touched is dropped here; and a deletion against an edit
+         * is offered like two edits are, with the edit in use. See
+         * `lib/deletions.ts`.
+         */
+        const deletions = settleDeletions(here, theirsAll as Record<string, unknown>, agreedOn);
+        const theirs = deletions.remote as typeof theirsAll;
         const found = [
-          ...conflictsIn(here, theirs as Record<string, unknown>, agreedOn),
-          ...tickConflictsIn(here, theirs as Record<string, unknown>, agreedOn),
+          ...conflictsIn(here, theirsAll as Record<string, unknown>, agreedOn),
+          ...tickConflictsIn(here, theirsAll as Record<string, unknown>, agreedOn),
+          ...deletions.conflicts,
         ];
         if (found.length > 0) {
           setReview((was) => {
@@ -988,11 +1001,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
          */
         const gone = removedThere(here, theirs as Record<string, unknown>, agreedOn);
         if (Object.keys(gone).length > 0) dispatch({ type: 'dropTicks', removals: gone });
+        if (Object.keys(deletions.dropHere).length > 0) dispatch({ type: 'dropRecords', removals: deletions.dropHere });
         dispatch({ type: 'hydrate', persisted: taken });
         markSeen(remote.seen);
         // The version both sides now agree on is the account's — including
-        // for the fields held back, whose difference here is still to go up.
-        writeBase(baseOf(theirs as Record<string, unknown>));
+        // for the fields held back, whose difference here is still to go up,
+        // and for what this device deleted, which the account still holds
+        // until the push that follows tells it. The untrimmed copy, so that
+        // deletion is still a deletion if that push has to wait.
+        writeBase(baseOf(theirsAll as Record<string, unknown>));
       }
       setSync({ status: 'synced', at: Date.now(), error: '' });
       return refreshSaid(
@@ -1187,7 +1204,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       inFlight.current = true;
       const sentAt = editNow.current;
       const { courses, ...rest } = pickPersisted(state);
-      const removed = state.removedCourses;
+      // Read from the base as well as from memory, so a course deleted while
+      // offline is still a deletion after the app was closed and opened.
+      const removed = [...new Set([...state.removedCourses, ...coursesDeletedHere(readBase(), courses)])];
       void pushCloud(
         account.id,
         rest as Record<string, unknown>,
@@ -1812,7 +1831,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       if (item && keep !== item.kept) {
         const chosen = keep === 'mine' ? item.mine : item.theirs;
         dispatch(
-          item.field === 'settings'
+          // The side that deleted it: keeping it deleted is deleting it here,
+          // and the push tells the account. Never a null written into a list.
+          chosen === null
+            ? { type: 'dropRecords', removals: { [item.field]: [item.id] } }
+            : item.field === 'settings'
             ? { type: 'restoreSettings', values: chosen as Record<string, unknown> }
             : item.field === 'ticks'
               ? {
