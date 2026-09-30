@@ -128,3 +128,5 @@ Do not launch first with financial aid, disability accommodations, health, immig
 ## What each gate needs from the owner
 
 G1: nothing but time, plus the answerer for rights requests. G3: the offboarding decision above. G5: production access and a second operator. G6: a screen-reader user and time. G7: the shared key working. G9: a named incident owner, a support inbox, counsel on the pilot agreement. G10: counsel on the policy drafts, then the effective dates.
+
+Every question that needs counsel is gathered in [`docs/COUNSEL-BRIEF.md`](COUNSEL-BRIEF.md), with what the code assumes today, so one conversation can close many.
