@@ -1241,6 +1241,93 @@ export function warnFor(g: Ground): string {
 }
 
 /**
+ * The error ink: the rung above `warnFor`, mixed for the ground it is read on.
+ *
+ * Until now `--status-danger` was `--app-warn`, so "possible conflict" and
+ * "this failed" drew in the same colour (DD-006). The order of the rungs was
+ * carried only by the word and the glyph beside it, which is right and stays
+ * right — no state is ever colour-only — but the colour should not undo it.
+ *
+ * Three things separate it from the warning, and each is measured in
+ * `lib/contrast.test.ts` rather than described here:
+ *
+ *   - a hue 24° further into red (350 against 14), and more saturated;
+ *   - a higher bar, 6:1 against every surface the ground has, where the
+ *     warning holds 4.5:1. The rung that says "this did not work" is the one
+ *     that must not be missed in daylight. (7:1, WCAG's AAA, was tried and
+ *     turned every dark ground's error into a pastel pink, which is a softer
+ *     signal, not a stronger one.)
+ *   - it is never the same hex as the warning on any ground.
+ *
+ * Same walk as `warnFor`: darker on a light ground, lighter on a dark one, stop
+ * at the first value that clears the bar.
+ */
+export function errorFor(g: Ground): string {
+  const HUE = 350;
+  const SAT = 0.62;
+  const TARGET = 6.1;
+  const worst = (hex: string) =>
+    g.ramp.reduce((low, surface) => Math.min(low, wcagContrast(hex, surface) ?? 99), 99);
+  const step = g.light ? -0.01 : 0.01;
+  let lum = g.light ? 0.5 : 0.62;
+  for (let i = 0; i < 90; i += 1) {
+    const hex = hueToHex(HUE, lum, SAT);
+    if (worst(hex) >= TARGET) return hex;
+    lum += step;
+    if (lum <= 0.04 || lum >= 0.96) break;
+  }
+  return g.light ? '#000000' : '#ffffff';
+}
+
+/**
+ * The five categorical series a chart may use, and the bar they are held to.
+ *
+ * Hues are fixed and spread (blue, green, amber, violet, and a low-chroma slate), red is
+ * left out on purpose — red is `errorFor`, and a series that reads as an
+ * error is a chart that lies. What is derived per ground is only the
+ * lightness, walked from a different starting point for each series so that
+ * neighbours also differ in luminance, which is what keeps them apart for
+ * someone who cannot tell two hues apart.
+ *
+ * The bar is 3:1 (WCAG 1.4.11, non-text contrast) against *every* surface in
+ * the ground's ramp — the same rule `CLAUDE.md` sets for the faint rung, for
+ * the same reason: a mark that clears the page and fails on a panel is the
+ * one somebody reads. It is 3:1 and not 4.5:1 because a bar or a line is a
+ * graphic, not text; any label set in a series colour is measured as text by
+ * `lib/contrast.test.ts` separately.
+ *
+ * These are for charts that mean something — verified against estimated,
+ * this term against last. `SheetChart` and the grapher keep using the
+ * reader's own hues around their accent (`lib/tint.ts`), which is a different
+ * job: telling five of somebody's own columns apart.
+ */
+export const CHART_HUES = [215, 152, 42, 272, 200] as const;
+/** The fifth is a slate, not a fifth hue: a fifth hue lands between two others. */
+export const CHART_SAT = [0.55, 0.55, 0.55, 0.55, 0.1] as const;
+export const CHART_START = [0.62, 0.5, 0.68, 0.44, 0.74] as const;
+/** The same five on a light ground, where the walk runs darker from here. */
+export const CHART_START_LIGHT = [0.46, 0.27, 0.42, 0.32, 0.4] as const;
+export const CHART_TARGET = 3.2;
+
+export function chartFor(g: Ground): string[] {
+  const worst = (hex: string) =>
+    g.ramp.reduce((low, surface) => Math.min(low, wcagContrast(hex, surface) ?? 99), 99);
+  const step = g.light ? -0.01 : 0.01;
+  return CHART_HUES.map((hue, i) => {
+    // Different starting lightness per series, on either kind of ground, so
+    // neighbours differ in luminance and not only in hue.
+    let lum = g.light ? CHART_START_LIGHT[i] : CHART_START[i];
+    for (let n = 0; n < 96; n += 1) {
+      const hex = hueToHex(hue, lum, CHART_SAT[i]);
+      if (worst(hex) >= CHART_TARGET) return hex;
+      lum += step;
+      if (lum <= 0.04 || lum >= 0.96) break;
+    }
+    return g.light ? '#000000' : '#ffffff';
+  });
+}
+
+/**
  * A whole accent from one hue.
  *
  * All four shades, not just the main one. `shade` in particular is not a
@@ -1481,6 +1568,12 @@ export function tokensFor(look: Look, moreContrast = false): Record<string, stri
     '--app-warn': warnFor(g),
     '--app-warn-line': fade(warnFor(g), 0.45),
     '--app-warn-wash': fade(warnFor(g), 0.09),
+    // One rung above the warning, and a different colour. See `errorFor`.
+    '--app-error': errorFor(g),
+    '--app-error-line': fade(errorFor(g), 0.5),
+    '--app-error-wash': fade(errorFor(g), 0.1),
+    // The categorical series for charts that carry meaning. See `chartFor`.
+    ...Object.fromEntries(chartFor(g).map((hex, i) => [`--chart-${i + 1}`, hex])),
 
     '--app-accent': g.light ? a.shade : a.base,
     '--app-accent-bright': g.light ? a.shade : a.bright,

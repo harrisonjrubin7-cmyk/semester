@@ -3335,3 +3335,32 @@ Connect and Core the two ways a school can run a module. This is the switch.
   restored.
 - **Not done here, on purpose:** MFA on the approving act (Prompt 6 adds
   step-up), a withdraw action for a pending request, and any Core module.
+
+## D-153 · Chart colours, an error colour and motion tokens are tokens; recovery and access review are designed, not built
+
+**Proposed — needs owner** for the two designs. The token work below is
+already in the tree under the design-debt register and needs no decision.
+
+- **Chart colours** (`chartFor`, `--chart-1` … `--chart-5`, four source
+  roles). Derived per ground, held to 3:1 on every surface of all 13 grounds
+  (measured floor 3.20:1), apart from each other, apart in luminance for
+  neighbours, and never red. No existing chart is migrated: `SheetChart` and
+  `Plot` keep the reader's own hues, a different job. Rules:
+  [DATA-VISUALIZATION-SYSTEM.md](DATA-VISUALIZATION-SYSTEM.md).
+- **An error colour** (`errorFor`, `--app-error`, DD-006). `--status-danger`
+  no longer shares the warning ink: hue 350, held to 6:1 where the warning
+  holds 4.5:1. 7:1 was tried and turned every dark ground's error into a pastel.
+- **Motion** (DD-007) and **hex colours** (DD-009) now have ledgers that fail on
+  a new literal and on a stale entry, in the shape of `styles/budget.ts`. Eight
+  durations moved onto tokens; nine stay with reasons. The leave button on a
+  call had white ink on the warning colour (2.14:1 on Industry Dark) and now uses
+  `--app-bg`.
+- **Proposed, not built:** [RECOVERY-CENTER.md](RECOVERY-CENTER.md) extends the
+  existing Recovery screen (three phases, the first needing no schema);
+  [ACCESS-SIMULATOR.md](ACCESS-SIMULATOR.md) is a University tab, read-only,
+  proved against the real policies. Neither adds navigation. Open questions are
+  at the foot of each.
+- **The design brief's five destinations** (Today, My Path, Search, Plan, Me)
+  **conflict with the seven roots on main** and with `DO-NOT-BUILD.md` #1.
+  Existing decision holds; not reopened here.
+
