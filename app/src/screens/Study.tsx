@@ -1,6 +1,10 @@
 import { useCoursePublications } from '../lib/courserules';
 import {StudyJournal} from '../components/StudyJournal';
 import {FeedbackInbox} from '../components/FeedbackInbox';
+import {LearningMap} from '../components/LearningMap';
+import {CourseAgreement} from '../components/CourseAgreement';
+import {LearningPreferences} from '../components/LearningPreferences';
+import {LearningInsights} from '../components/LearningInsights';
 import { StudyStudio } from '../components/StudyStudio';
 import { Toolkit } from '../components/toolkit/Toolkit';
 import { on, TOOLKIT_FLAGS } from '../lib/toolkit/flags';
@@ -359,6 +363,10 @@ export function Study({
       */}
       <StudyJournal/>
       <FeedbackInbox/>
+      <LearningMap/>
+      <CourseAgreement/>
+      <LearningInsights/>
+      <LearningPreferences/>
       {exam && (
         <Blueprint
           style={{
