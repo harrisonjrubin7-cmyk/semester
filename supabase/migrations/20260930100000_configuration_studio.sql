@@ -253,6 +253,12 @@ begin
     new.updated_at := now();
   end if;
 
+  -- Saving a draft is drafting: publishing rights alone do not edit what they are to review.
+  if tg_op = 'UPDATE' and new.state = 'draft'
+     and not private.has_capability('config:manage', 'school', new.tenant_id) then
+    raise exception 'Your account cannot change a draft at this school.' using errcode = '42501';
+  end if;
+
   problems := private.config_problems(new.domain, new.settings);
   if cardinality(problems) > 0 then
     raise exception 'This configuration is not valid: %', array_to_string(problems, ', ') using errcode = '23514';

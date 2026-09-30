@@ -208,6 +208,10 @@ begin
   perform pg_temp.says('an editor cannot publish, drafting or not',
     pg_temp.error_as(editor, $q$update public.school_config_versions set state = 'published' where domain = 'workflows'$q$), 'cannot publish');
 
+  perform pg_temp.says('a publisher without the drafting role cannot rewrite a draft they are to review',
+    pg_temp.error_as(publisher, $q$update public.school_config_versions set settings = '{"approval_sla_days": 60}'::jsonb where domain = 'workflows'$q$),
+    'cannot change a draft');
+
   -- ── publishing ─────────────────────────────────────────────────────────
   perform pg_temp.says('an editor without the capability cannot publish another editor''s draft',
     pg_temp.publish(editor2, 'workflows'), 'cannot publish');
