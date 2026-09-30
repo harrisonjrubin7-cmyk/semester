@@ -6,7 +6,7 @@ import { useNow, useStore } from '../state/store';
 import {useLive} from '../lib/live';
 import {modesFor} from '../lib/modes';
 import {datedItems} from '../lib/select';
-import {inView,split,standingOf} from '../lib/standing';
+import {inView,split,standingOf,type AssignmentView} from '../lib/standing';
 import {nameFor} from '../lib/yours';
 import {DeadlineRow} from './DeadlineRow';
 import {type Course} from '../lib/types';
@@ -26,7 +26,7 @@ export function CourseHub({course,information,readiness=moduleOn(MODULE_FLAGS.st
  const [studio,setStudio]=useState(false);const [tab,setTab]=useState('overview');const [filter,setFilter]=useState('upcoming');const [query,setQuery]=useState('');
  const all=datedItems(catalog,now).filter(i=>i.c===course.id);const groups=split(all,state.done);const next=groups.ahead[0];
  const matches=(text:string)=>text.toLowerCase().includes(query.trim().toLowerCase());
- const assignments=all.filter(i=>matches(`${i.title} ${i.kind} ${i.detail}`)).filter(i=>inView(filter,i,state.done));
+ const assignments=all.filter(i=>matches(`${i.title} ${i.kind} ${i.detail}`)).filter(i=>inView(filter as AssignmentView,i,state.done));
  const readingItems=all.filter(i=>/read/i.test(i.kind));
  const ready=modes.filter(m=>m.ready);
  // Imported is the one test of whose course this is — the same one `ShareCourse` uses. A sample course is not the student's, whatever the rest of the semester is.

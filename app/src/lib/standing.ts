@@ -59,18 +59,21 @@ export function split(items: DatedItem[], done: DoneMap): Split {
   return { ahead, overdue, done: finished };
 }
 
+/** The four views a course's Assignments tab offers. */
+export type AssignmentView = 'upcoming' | 'past' | 'completed' | 'all';
+
 /**
- * Which deadlines a course's Assignments filter shows. Upcoming is the same
- * `ahead` the overview counts, so something due today stays upcoming until
- * its day is over. The filter used to compare the day's midnight with the
- * clock, and a deadline due at 11:59 PM left Upcoming for Past the moment
- * its day began.
+ * Whether a deadline belongs in one of those views, by the same rule as
+ * `standingOf`: today is never past. The tab used to compare the item's day,
+ * which is midnight, with the clock, so something due at 11:59 tonight left
+ * Upcoming and joined Past the moment the day began — while the Overview
+ * beside it, counting with `split`, still called it upcoming.
  */
-export function inView(view: string, item: DatedItem, done: DoneMap): boolean {
-  if (view === 'upcoming') return standingOf(item, done) === 'ahead';
+export function inView(view: AssignmentView, item: DatedItem, done: DoneMap): boolean {
+  if (view === 'all') return true;
+  if (view === 'completed') return Boolean(done[item.id]);
   if (view === 'past') return item.isPast;
-  if (view === 'completed') return !!done[item.id];
-  return true;
+  return !done[item.id] && !item.isPast;
 }
 
 /** How many deadlines have gone by unticked. The number worth a warning. */

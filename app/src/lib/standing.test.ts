@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { badge, claimed, inView, lateBy, overdueCount, overdueLine, split, standingOf } from './standing';
+import { decorateItem } from './date';
+import type { Item } from './types';
 import type { DatedItem } from './types';
 
 function item(id: string, daysAway: number, title = id): DatedItem {
@@ -79,28 +81,6 @@ describe('split', () => {
     const given = [item('b', 4), item('a', 1)];
     split(given, {});
     expect(given.map((i) => i.id)).toEqual(['b', 'a']);
-  });
-});
-
-describe('inView', () => {
-  const items = [item('yesterday', -1), item('today', 0), item('tomorrow', 1), item('handed-in', -2)];
-  const done = { 'handed-in': true };
-  const shown = (view: string) => items.filter((i) => inView(view, i, done)).map((i) => i.id);
-
-  it('keeps something due today in Upcoming, however late in its day it is', () => {
-    // The day's midnight is behind the clock by then; the filter used to read
-    // that as past, and the course's Upcoming list emptied on the due date.
-    expect(shown('upcoming')).toEqual(['today', 'tomorrow']);
-    expect(shown('past')).toEqual(['yesterday', 'handed-in']);
-  });
-
-  it('shows in Upcoming exactly what the overview counts as ahead', () => {
-    expect(shown('upcoming')).toEqual(split(items, done).ahead.map((i) => i.id));
-  });
-
-  it('shows ticked items under Completed, and everything under All', () => {
-    expect(shown('completed')).toEqual(['handed-in']);
-    expect(shown('all')).toEqual(items.map((i) => i.id));
   });
 });
 
@@ -200,5 +180,38 @@ describe('claimed', () => {
     expect(overdueCount(claimed(overdueItems, [], true), done)).toBe(0);
     expect(overdueCount(claimed(overdueItems, ['hist-3010'], true), done)).toBe(1);
     expect(overdueCount(claimed(overdueItems, [], false), done)).toBe(3);
+  });
+});
+
+describe('which view of a course\'s assignments a deadline is in', () => {
+  // Due at 11:59 tonight, read a quarter of an hour after midnight: the case
+  // the golden path met on the last day of September, when its syllabus put
+  // Problem Set 1 on the same day it ran.
+  const now = new Date(2026, 8, 30, 0, 15);
+  const tonight = decorateItem(
+    { id: 'ps1', c: 'gold', kind: 'Problem set', title: 'Problem Set 1', month: 8, day: 30, dueTime: '11:59 PM' } as Item,
+    now,
+  );
+  const yesterday = decorateItem(
+    { id: 'old', c: 'gold', kind: 'Problem set', title: 'Old', month: 8, day: 29, dueTime: '11:59 PM' } as Item,
+    now,
+  );
+
+  it('keeps something due later today in Upcoming, not Past', () => {
+    expect(inView('upcoming', tonight, {})).toBe(true);
+    expect(inView('past', tonight, {})).toBe(false);
+  });
+
+  it('agrees with the Overview, which counts by standing', () => {
+    expect(standingOf(tonight, {})).toBe('ahead');
+    expect(split([tonight], {}).ahead).toHaveLength(1);
+  });
+
+  it('puts yesterday in Past, and anything ticked in Completed and out of Upcoming', () => {
+    expect(inView('past', yesterday, {})).toBe(true);
+    expect(inView('upcoming', yesterday, {})).toBe(false);
+    expect(inView('completed', tonight, { ps1: true })).toBe(true);
+    expect(inView('upcoming', tonight, { ps1: true })).toBe(false);
+    expect(inView('all', yesterday, {})).toBe(true);
   });
 });

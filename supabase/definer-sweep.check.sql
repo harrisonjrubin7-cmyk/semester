@@ -1,7 +1,7 @@
 -- Every definer function a signed-in account can call, called by one that
 -- holds nothing.
 --
--- `docs/DEFINER-RLS-REGISTER.md` holds each of the 151 `security definer`
+-- `docs/DEFINER-RLS-REGISTER.md` holds each of the 153 `security definer`
 -- functions in `grants.check.sql`'s allowlist to the checks its body makes —
 -- `auth.uid()`, a capability helper, an ownership test. That proves the check
 -- is present. It does not prove it works, and its entry DR-02 said so: the
@@ -196,10 +196,12 @@ declare
     'forget_my_help_requests',     jsonb_build_object('answers', '^done$', 'why', 'deletes the caller''s own help requests'),
     'forget_my_support_tickets',   jsonb_build_object('answers', '^done$', 'why', 'deletes the caller''s own tickets'),
     'make_referral_code',          jsonb_build_object('answers', '^"[A-Z0-9]{8}"$', 'why', 'mints the caller''s own code'),
+    'my_age_status',               jsonb_build_object('answers', '^"(adult|unknown|under_minimum)"$', 'why', 'the caller''s own age standing, a fixed word'),
     'my_community_standing',       jsonb_build_object('answers', '^"Your Community account is in good standing\."$', 'why', 'the caller''s own standing'),
     'my_moderation_access',        jsonb_build_object('answers', '^1 rows: \{"can_act": false, "can_read": false\}$', 'why', 'the caller''s own two capabilities, both false'),
     'note_activity',               jsonb_build_object('answers', '^done$', 'why', 'marks the caller''s own day'),
     'referral_standing',           jsonb_build_object('answers', '^1 rows: ', 'why', 'the caller''s own code and counts; the leak check holds it to the caller'),
+    'state_my_age',                jsonb_build_object('answers', '^"(already_stated|under_minimum_age)"$', 'why', 'states the caller''s own age, once; check.sh records the stranger as an adult who already said'),
     'stop_contributing',           jsonb_build_object('answers', '^done$', 'why', 'withdraws the caller''s own course plan')
   );
 begin
@@ -211,8 +213,8 @@ begin
   secrets := array[victim::text, 'victim@sweep.example', code, 'Victim ticket subject', 'Victim ticket body'];
 
   select jsonb_agg(to_jsonb(s)), count(*) into swept, total from pg_temp.sweep(stranger) s;
-  if total < 151 then
-    raise exception 'FAILED: the sweep found % callable definer functions; the register holds 151', total;
+  if total < 153 then
+    raise exception 'FAILED: the sweep found % callable definer functions; the register holds 153', total;
   end if;
   raise notice 'ok  every one of the % callable definer functions was called by a stranger', total;
 

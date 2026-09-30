@@ -2794,7 +2794,55 @@ how: a file CI checks against the build output, set from a measurement.
   table the plan describes and a privacy decision on what it records.
   Register row A18 moves from owed to partial.
 
-## D-139 · The AI providers' published terms are on file, verbatim, and nothing is signed
+## D-139 · Nobody under 13 holds an account, and a minor is kept out of the features where strangers reach them
+
+**Decided 29 Sep 2026, by the owner.** K–12 was the one area the register
+(D-133) could not score: COPPA-1 had no stated minimum age and no posture on
+children, and every social feature was open to any confirmed account. The
+owner set the minimum age at 13, with no one younger, and asked for the full
+K–12 edition behind it. This is its first prerequisite.
+
+- **Stated, once.** Sign-up asks for a date of birth. The app refuses a date
+  under 13 before anything is sent; `20260929150000_minimum_age.sql`'s trigger
+  on `auth.users` refuses it again (`semester: under the minimum age`), records
+  when a minor turns 18 in `private.account_ages`, and strips the birth date
+  from the account's metadata, so the date itself is never kept. An account
+  made before this states its age once on the Account screen
+  (`state_my_age`); a second statement is `already_stated`.
+- **A minor is kept out, by the database.** `private.verified_student()` now
+  also requires `private.age_cleared(auth.uid())` — an age stated, and not
+  under 18 — so every policy that gates on it closes to a minor.
+- **Ask, then gate.** Google, Microsoft, Apple, institution SSO and LTI
+  sign-ups never see the sign-up form's date field, and neither did accounts
+  made before it. Codex's review found those accounts were treated as adults;
+  the owner chose to ask, then gate. An account that has not said its age is
+  kept out of everything a minor is kept out of, and a line under the header
+  on every screen (`AgeBanner`) takes it to Account, where it is asked once.
+  Everything that is the account's own keeps working meanwhile. The check
+  suites' accounts are made with no birth date, so `supabase/check.sh`
+  records them as adults with a fixture trigger that is never a migration;
+  `minimum-age.check.sql` turns it off. Mentor requests and connections (a minor at either
+  end), study matching, opting into the talent profile, and an active peer or
+  alumni mentor offer are refused by a trigger as well, so a policy added
+  later cannot open them by accident, and a request is refused again when it
+  is accepted, so one sent before an age was known cannot become a
+  relationship after. An account made before the age was asked, once it says
+  it is under 18, comes off every roster and out of study matching and
+  employer view, and its unanswered requests are withdrawn; its classmate
+  profile is hidden from others by the read policy, not deleted. Reports and
+  family sharing move to `private.verified_account()`: a minor can still report
+  and share with a parent or guardian.
+- **Proved.** `supabase/minimum-age.check.sql` runs 63 checks; removing the
+  minor test from `verified_student`, putting back "unknown is an adult", the
+  connections trigger, the recipient check, the peer-offer check, the roster
+  clean-up, the check on acceptance or the profile policy's clause each turned
+  it
+  red. COPPA-1 is `TESTING`; MN-01, MN-03 and MN-06 are in place; CTL-006,
+  K12-001 and K12-002 are tested.
+- **Not settled here.** Counsel has not reviewed the terms' minimum age, and a
+  district's own data rules are the next decision's.
+
+## D-140 · The AI providers' published terms are on file, verbatim, and nothing is signed
 
 **Decided 29 Sep 2026.** The DPA checklist, the vendor risk register and the
 AI training policy each said the providers' training and retention terms were
