@@ -9,11 +9,12 @@ import { goCal } from '../lib/opencal';
 import { goMine } from '../lib/openmine';
 import { fromHash } from '../lib/route';
 import { appointmentsOn, tasksOn, upcomingItems } from '../lib/select';
-import { freshnessLine } from '../lib/source';
+import { freshnessLine, SOURCE_TEXT, type SourceLabel } from '../lib/source';
 import { officeActionToAction } from '../lib/office-actions';
 import { useOfficeActions } from '../lib/office-actions.hook';
 import { registrationActions } from '../lib/registration-actions';
 import { useRegistrationPlan } from '../lib/registration-plan';
+import { ownedScope } from '../lib/standing';
 import { todayActions } from '../lib/today-actions';
 import {
   STATUS_SENTENCE,
@@ -49,6 +50,12 @@ const HORIZON_DAYS = 10;
  *
  * With the flag off none of this renders, and Today is the #761 briefing.
  */
+/** The row's source in words, after its meta. A missing source says nothing. */
+function sourceWords(source: SourceLabel | undefined): string {
+  if (!source) return '';
+  return source === 'needs_review' ? ` · ${SOURCE_TEXT[source]} · date not checked` : ` · ${SOURCE_TEXT[source]}`;
+}
+
 export function TodayActionCenter({
   registrationDay = false,
   officeActions = false,
@@ -64,7 +71,12 @@ export function TodayActionCenter({
   const choices = library.value.choices;
 
   const path = useMemo(() => pathSnapshot(state.requirements, state.taken), [state.requirements, state.taken]);
-  const upcoming = useMemo(() => upcomingItems(catalog, now), [catalog, now]);
+  const ownIds = useMemo(() => state.courses.map((c) => c.course.id), [state.courses]);
+  const scope = useMemo(
+    () => ownedScope(upcomingItems(catalog, now), ownIds, state.sample, catalog.empty),
+    [catalog, now, ownIds, state.sample],
+  );
+  const upcoming = scope.items;
   const reviewDue = useMemo(
     () => Object.values(state.reviews).filter((review) => review.due <= now.getTime()).length,
     [state.reviews, now],
@@ -76,12 +88,12 @@ export function TodayActionCenter({
   const officeList = office.state.kind === 'ready' ? office.state.actions : null;
   const actions = useMemo(
     () => [
-      ...todayActions({ path, upcoming, done: state.done, reviewDue, catalogEmpty: catalog.empty }),
+      ...todayActions({ path, upcoming, done: state.done, reviewDue, catalogEmpty: scope.empty }),
       // Registration readiness (Phase C), only while the mode is showing.
       ...(registrationDay ? registrationActions(registration.data, registration.cart, registration.catalog, now) : []),
       ...(officeList ?? []).filter((a) => a.doneAt === null).map((a) => officeActionToAction(a, now.getTime())),
     ],
-    [path, upcoming, state.done, reviewDue, catalog.empty, registrationDay, registration.data, registration.cart, registration.catalog, now, officeList],
+    [path, upcoming, state.done, reviewDue, scope.empty, registrationDay, registration.data, registration.cart, registration.catalog, now, officeList],
   );
   const top = useMemo(() => rank(actions, choices, now.getTime()).mostImportant, [actions, choices, now]);
   const leadingRoute = top ? fromHash(top.action.primary.target) : null;
@@ -133,7 +145,9 @@ export function TodayActionCenter({
       // Classes only for today and tomorrow: a timetable repeated for ten
       // days would push every deadline off the list.
       if (offset > 1) continue;
-      for (const block of blocksFor(catalog, date).filter((b) => !b.optional && !b.canceled)) {
+      // The sample's classes are not the student's classes until they say so.
+      const theirs = (b: { c?: string | null }) => !state.sample || !b.c || ownIds.includes(b.c);
+      for (const block of blocksFor(catalog, date).filter((b) => !b.optional && !b.canceled && theirs(b))) {
         out.push({
           id: `class:${dateToIso(date)}:${block.c}:${block.at}`,
           at: date.getTime() + block.at * 60_000,
@@ -145,7 +159,7 @@ export function TodayActionCenter({
       }
     }
     return out;
-  }, [catalog, now, state.appointments, state.done, state.tasks, upcoming]);
+  }, [catalog, now, ownIds, state.appointments, state.done, state.sample, state.tasks, upcoming]);
 
   const commitments = useMemo(() => planCommitments(rows, now.getTime(), leadingId), [rows, now, leadingId]);
 
@@ -203,7 +217,10 @@ export function TodayActionCenter({
             <button type="button" className="commitment-urgent" onClick={() => openRow(commitments.urgent!)}>
               <span className="commitment-when">{commitments.urgent.when}</span>
               <strong>{commitments.urgent.title}</strong>
-              <span className="commitment-meta">{commitments.urgent.meta}</span>
+              <span className="commitment-meta">
+                {commitments.urgent.meta}
+                {sourceWords(commitments.urgent.source)}
+              </span>
             </button>
           )}
           {commitments.rows.length > 0 ? (
@@ -216,7 +233,7 @@ export function TodayActionCenter({
                       <strong>{row.count > 1 ? (catalog.byId[row.group ?? '']?.code ?? row.title) : row.title}</strong>
                       <span className="commitment-meta">
                         {row.meta}
-                        {row.source === 'needs_review' ? ' · date not checked' : ''}
+                        {sourceWords(row.source)}
                       </span>
                     </span>
                   </button>

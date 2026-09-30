@@ -1,11 +1,11 @@
 // @vitest-environment jsdom
-import { act } from 'react';
+import { act, useEffect } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { loadSeed } from '../data/seed';
 import { STATUS_SENTENCE, UNCALM } from '../lib/today-center';
 import { STORAGE_KEY } from '../state/shape';
-import { StoreProvider } from '../state/store';
+import { StoreProvider, useStore } from '../state/store';
 import { TodayDecisionSurface } from './TodayDecisionSurface';
 
 /**
@@ -59,10 +59,18 @@ afterEach(async () => {
   vi.useRealTimers();
 });
 
-const mount = async (actionCenter: boolean) => {
+/** "These are mine": the student says the shipped semester is theirs. */
+function Adopt() {
+  const { adopt } = useStore();
+  useEffect(() => adopt(), [adopt]);
+  return null;
+}
+
+const mount = async (actionCenter: boolean, adopted = false) => {
   await act(async () => {
     root.render(
       <StoreProvider>
+        {adopted ? <Adopt /> : null}
         <TodayDecisionSurface actionCenter={actionCenter} />
       </StoreProvider>,
     );
@@ -98,7 +106,7 @@ describe('with the flag off', () => {
 
 describe('with the flag on', () => {
   it('puts the Action Center inside Today, with the path in an approved sentence', async () => {
-    await mount(true);
+    await mount(true, true);
     expect(host.querySelector('.today-decision-surface')).toBeNull();
     expect(host.querySelector('.today-action-center .action-center')).not.toBeNull();
     expect(topTitle()).toMatch(/^Prepare /);
@@ -108,7 +116,7 @@ describe('with the flag on', () => {
   });
 
   it('shows at most one urgent commitment and four rows, the time first, never the item it leads with', async () => {
-    await mount(true);
+    await mount(true, true);
     expect(host.querySelectorAll('.commitment-urgent').length).toBeLessThanOrEqual(1);
     const rows = [...host.querySelectorAll('.commitment-row')];
     expect(rows.length).toBeGreaterThan(0);
@@ -122,7 +130,7 @@ describe('with the flag on', () => {
   });
 
   it('says the day is done once the student has closed something and nothing is due today or tomorrow', async () => {
-    await mount(true);
+    await mount(true, true);
     expect(host.querySelector('#action-done-line')).toBeNull();
     await click(button(/^Done$/, host.querySelector('.action-center article')!));
     expect(host.querySelector('#action-done-line')?.textContent).toMatch(/^You are set for today\. Your next deadline is (tomorrow|in \d+ days)\.$/);
@@ -163,3 +171,35 @@ describe('with the flag on', () => {
     expect(text()).not.toMatch(UNCALM);
   });
 });
+
+describe('before the student says the shipped semester is theirs', () => {
+  it('does not lead with a sample assignment or list the sample\'s classes', async () => {
+    await mount(true);
+    expect(topTitle()).toBe('Start your semester');
+    expect(topTitle()).not.toMatch(/^Prepare /);
+    expect(host.querySelectorAll('.commitment-row')).toHaveLength(0);
+    expect(host.querySelector('.commitment-urgent')).toBeNull();
+  });
+
+  it('control: once they adopt it, the same dates lead and the classes are listed', async () => {
+    await mount(true, true);
+    expect(topTitle()).toMatch(/^Prepare /);
+    expect(host.querySelectorAll('.commitment-row, .commitment-urgent').length).toBeGreaterThan(0);
+  });
+
+  it('says where each commitment came from, in words', async () => {
+    await mount(true, true);
+    const meta = [...host.querySelectorAll('.commitment-meta')].map((m) => m.textContent ?? '');
+    expect(meta.some((m) => /Needs review|Imported|Student entered/.test(m))).toBe(true);
+  });
+
+  it('the briefing (flag off) does the same', async () => {
+    await mount(false);
+    expect(text()).not.toContain('Prepare ');
+    await act(async () => root.unmount());
+    root = createRoot(host);
+    await mount(false, true);
+    expect(text()).toContain('Prepare ');
+  });
+});
+

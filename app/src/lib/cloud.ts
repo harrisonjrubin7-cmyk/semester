@@ -1126,6 +1126,11 @@ export const OWNED_TABLES: OwnedTable[] = [
   // it, so the filtered DELETE takes nothing; the cascade from auth.users
   // does, and the school's record stays with the school.
   { table: 'academic_record_subjects', column: 'user_id' },
+  // A request to be recognised as a member of a university (`school_membership_
+  // requests`, G-03). The person reads their own; they have no delete policy —
+  // a decision is a record other people made — so the filtered DELETE takes
+  // nothing and the cascade from auth.users does. It holds no address.
+  { table: 'school_membership_requests', column: 'user_id' },
   // A support grant names this account in either of two columns. The RPC
   // removes both sides, which one filtered DELETE cannot express, while its
   // audit trigger leaves only pseudonyms behind.
