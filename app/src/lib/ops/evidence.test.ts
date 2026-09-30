@@ -158,10 +158,10 @@ describe('the register', () => {
   });
 
   it('takes an available word away from a claim whose record has expired', () => {
-    const stale: EvidenceRecord = { ...evidence('restore-rehearsal'), id: 'stale-drill', claims: ['rls'] };
+    const stale: EvidenceRecord = { ...evidence('restore-rehearsal'), id: 'stale-drill', claims: ['source-labels'] };
     const today = addDays(stale.produced, stale.validFor); // the day it expires
-    expect(problems([claim('rls')], facts(today, [stale]))).toContain('rls is available and rests on stale-drill, which has expired.');
-    expect(problems([claim('rls')], facts(addDays(today, -1), [stale]))).toEqual([]);
+    expect(problems([claim('source-labels')], facts(today, [stale]))).toContain('source-labels is available and rests on stale-drill, which has expired.');
+    expect(problems([claim('source-labels')], facts(addDays(today, -1), [stale]))).toEqual([]);
   });
 
   it('has, today, no expired record under an available claim — or problems() names it', () => {

@@ -80,9 +80,16 @@ function world(over: Partial<DiningState> = {}): DiningState {
 }
 
 function flagCtx(over: Partial<FlagContext> = {}): FlagContext {
+  const now = over.now ?? new Date(NOON_MON);
   return {
-    environment: 'production', tenantId: 'vu', now: new Date(NOON_MON), killSwitches: [],
-    tenantPolicy: { 'module.dining': { state: 'production', permittedRoles: [], permittedCohorts: [] } }, capabilities: [], ...over,
+    environment: 'production', tenantId: 'vu', now, killSwitches: [],
+    tenantPolicy: { 'module.dining': { state: 'production', permittedRoles: [], permittedCohorts: [] } }, capabilities: [],
+    activationReceipt: {
+      decisionKey: 'activation-v1-dining', requestId: 'req-dining', tenantId: 'vu', capabilityId: 'CAP-047', operation: 'module.dining',
+      policyVersion: 'constitution-v1', configurationVersion: 1,
+      issuedAt: new Date(now.getTime() - 60_000).toISOString(), expiresAt: new Date(now.getTime() + 60 * 60_000).toISOString(),
+    },
+    ...over,
   };
 }
 

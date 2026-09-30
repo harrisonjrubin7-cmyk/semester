@@ -3,6 +3,8 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { COUNCIL, SEATS } from '../launchreadiness';
 import { REGISTER } from '../masterregister';
+import { CAPABILITY_DEFINITIONS } from '../governance/capability-governance';
+import { projectClaim, repositoryProjectionContext } from '../governance/projections';
 import { DEFAULT_SITE } from '../../site/config';
 import { ROUTES, renderPage } from '../../site/render';
 import {
@@ -56,6 +58,12 @@ const FACTS: Facts = {
   proofExists: (id) => CALENDAR.some((c) => c.id === id),
   routes: ROUTES.map((r) => r.path),
   page: (route) => pages.get(route),
+  capabilityExists: (capabilityId) => CAPABILITY_DEFINITIONS.some((capability) => capability.id === capabilityId),
+  claimProjection: (claim) => projectClaim(
+    claim,
+    CAPABILITY_DEFINITIONS,
+    Object.fromEntries(CAPABILITY_DEFINITIONS.map((capability) => [capability.id, repositoryProjectionContext(capability)])),
+  ),
 };
 
 const sound: Claim = {
@@ -63,6 +71,7 @@ const sound: Claim = {
   claim: 'A fixture',
   scope: 'For the test',
   status: 'available',
+  capabilityIds: ['CAP-001'],
   owner: 'engineering',
   pages: ['/'],
   audiences: ['students'],
@@ -96,6 +105,14 @@ describe('the checks', () => {
     expect(problems([{ ...sound, evidence: [{ path: 'app/src/nowhere.test.ts', shows: '' }] }], fixtureFacts)).toEqual(['fixture cites app/src/nowhere.test.ts, which does not exist.']);
     expect(problems([{ ...sound, proof: 'nothing' }], fixtureFacts)).toEqual(['fixture names proof nothing, which is not on the calendar.']);
     expect(problems([{ ...sound, pages: ['/nowhere/'] }], fixtureFacts)).toEqual(['fixture names page /nowhere/, which is not a route.']);
+  });
+
+  it('rejects missing and unknown canonical capability bindings', () => {
+    const known = new Set<string>(CAPABILITY_DEFINITIONS.map((capability) => capability.id));
+    expect(problems([{ ...sound, capabilityIds: [] }], fixtureFacts)).toContain('fixture has no canonical capability binding.');
+    expect(problems([{ ...sound, capabilityIds: ['CAP-999'] }], fixtureFacts)).toContain('fixture names unknown capability CAP-999.');
+    expect(sound.capabilityIds.every((capabilityId) => known.has(capabilityId))).toBe(true);
+    expect(known.has('CAP-999')).toBe(false);
   });
 
   it('catch a claim that is not yet available and names nothing that would move it', () => {
@@ -152,10 +169,12 @@ describe('the register', () => {
   });
 
   it('is owned by seats, and speaks to the four audiences', () => {
+    const capabilityIds = new Set<string>(CAPABILITY_DEFINITIONS.map((capability) => capability.id));
     for (const c of CLAIMS) {
       expect(SEATS).toContain(c.owner);
       expect(c.audiences.length, `${c.id} speaks to nobody`).toBeGreaterThan(0);
       for (const a of c.audiences) expect(AUDIENCES.map((x) => x.id)).toContain(a);
+      for (const capabilityId of c.capabilityIds) expect(capabilityIds.has(capabilityId), `${c.id}: ${capabilityId}`).toBe(true);
     }
     for (const a of AUDIENCES) expect(CLAIMS.some((c) => c.audiences.includes(a.id)), `nothing is said to ${a.id}`).toBe(true);
   });
@@ -239,11 +258,12 @@ function render(): string {
     '## The claims',
     '',
     ...table(
-      ['Id', 'Claim', 'Status', 'Owner', 'Rests on', 'Would move it', 'Evidence', 'Pages'],
+      ['Id', 'Claim', 'Status', 'Capabilities', 'Owner', 'Rests on', 'Would move it', 'Evidence', 'Pages'],
       CLAIMS.map((c) => [
         `\`${c.id}\``,
         `**${cell(c.claim)}**<br>${cell(c.scope)}`,
         STATUS_LABEL[c.status],
+        c.capabilityIds.map((id) => `\`${id}\``).join(', '),
         seat(c.owner),
         c.rows.length ? c.rows.map((r) => `\`${r}\``).join(', ') : '—',
         c.proof ? `[\`${c.proof}\`](${link(DOC, 'docs/PROOF-CALENDAR.md')})` : '—',

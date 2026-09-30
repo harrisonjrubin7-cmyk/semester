@@ -2,8 +2,18 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { FLAGS, KILL_SWITCHES, evaluateFlag, type FlagContext } from './flags';
+import { CAPABILITY_DEFINITIONS } from './governance/capability-governance';
+import type { ActivationReceipt } from './governance/activation';
 
 const NOW = new Date('2026-10-01T12:00:00Z');
+
+function receipt(operation: string, capabilityId: string, over: Partial<ActivationReceipt> = {}): ActivationReceipt {
+  return {
+    decisionKey: 'activation-v1-test', requestId: 'req-test', tenantId: 'vu', capabilityId, operation,
+    policyVersion: 'constitution-v1', configurationVersion: 1,
+    issuedAt: '2026-10-01T11:55:00Z', expiresAt: '2026-10-01T12:10:00Z', ...over,
+  };
+}
 
 function ctx(over: Partial<FlagContext> = {}): FlagContext {
   return {
@@ -29,6 +39,7 @@ const LTI_LIVE: Partial<FlagContext> = {
   },
   connection: { publicId: 'conn_0123456789abcdef0123', approved: true, status: 'healthy' },
   scopes: [{ key: 'scope.lms.assignment_dates_read', approved: true }],
+  activationReceipt: receipt('scope.lms.assignment_dates_read', 'CAP-003'),
 };
 
 describe('the registry', () => {
@@ -60,6 +71,14 @@ describe('the registry', () => {
   it('marks every connector, scope, write-back and safety flag high-risk', () => {
     for (const f of FLAGS.filter((x) => ['connector', 'scope', 'writeback', 'safety'].includes(x.type))) {
       expect(f.highRisk, f.key).toBe(true);
+    }
+  });
+
+  it('binds every flag to one or more registered constitution capabilities', () => {
+    const ids = new Set<string>(CAPABILITY_DEFINITIONS.map((capability) => capability.id));
+    for (const flag of FLAGS) {
+      expect(flag.capabilityIds.length, flag.key).toBeGreaterThan(0);
+      for (const capabilityId of flag.capabilityIds) expect(ids.has(capabilityId), `${flag.key}: ${capabilityId}`).toBe(true);
     }
   });
 
@@ -181,13 +200,27 @@ describe('evaluation', () => {
 
   it('refuses by data classification', () => {
     const on = { tenantPolicy: { 'ops.external_ai_generation': { state: 'production' as const, permittedRoles: [], permittedCohorts: [] } } };
-    expect(evaluateFlag('ops.external_ai_generation', ctx({ ...on, classification: 'T3' })).allowed).toBe(true);
+    const activationReceipt = receipt('ops.external_ai_generation', 'CAP-027');
+    expect(evaluateFlag('ops.external_ai_generation', ctx({ ...on, classification: 'T3', activationReceipt })).allowed).toBe(true);
     expect(evaluateFlag('ops.external_ai_generation', ctx({ ...on, classification: 'T4' })).step).toBe('classification');
   });
 
   it('applies a course rule and user eligibility last', () => {
     expect(evaluateFlag('scope.lms.assignment_dates_read', ctx({ ...LTI_LIVE, courseRule: { allowed: false } })).step).toBe('course_rule');
     expect(evaluateFlag('scope.lms.assignment_dates_read', ctx({ ...LTI_LIVE, userEligible: false })).step).toBe('user_eligibility');
+  });
+
+  it('requires a current, operation- and tenant-bound activation receipt for high-risk flags', () => {
+    const base = ctx(LTI_LIVE);
+    expect(evaluateFlag('scope.lms.assignment_dates_read', { ...base, activationReceipt: null }).step).toBe('activation_contract');
+    expect(evaluateFlag('scope.lms.assignment_dates_read', { ...base,
+      activationReceipt: receipt('scope.lms.assignment_dates_read', 'CAP-003', { tenantId: 'other' }) }).step).toBe('activation_contract');
+    expect(evaluateFlag('scope.lms.assignment_dates_read', { ...base,
+      activationReceipt: receipt('another.operation', 'CAP-003') }).step).toBe('activation_contract');
+    expect(evaluateFlag('scope.lms.assignment_dates_read', { ...base,
+      activationReceipt: receipt('scope.lms.assignment_dates_read', 'CAP-060') }).step).toBe('activation_contract');
+    expect(evaluateFlag('scope.lms.assignment_dates_read', { ...base,
+      activationReceipt: receipt('scope.lms.assignment_dates_read', 'CAP-003', { expiresAt: NOW.toISOString() }) }).step).toBe('activation_contract');
   });
 
   it('turns a temporary flag off after it expires (the rollback state)', () => {

@@ -108,6 +108,7 @@ const favouring = (g: Gen<Draw>): Gen<Draw> => ({
 
 export function context(d: Draw): FlagContext {
   const now = new Date(T0 + d.days * DAY);
+  const definition = flagDefinition(d.key)!;
   const tenantPolicy: Record<string, TenantPolicyRow> = {};
   for (const [k, row] of Object.entries(d.policy)) if (row) tenantPolicy[k] = row;
   return {
@@ -126,8 +127,14 @@ export function context(d: Draw): FlagContext {
     cohorts: d.cohort ? ['pilot'] : [],
     courseRule: d.course === null ? null : { allowed: d.course },
     userEligible: d.eligible === null ? undefined : d.eligible,
+    activationReceipt: definition.highRisk && d.tenant ? {
+      decisionKey: 'fixture-receipt', requestId: 'req-property', tenantId: d.tenant,
+      capabilityId: definition.capabilityIds[0]!, operation: d.key,
+      policyVersion: 'constitution-v1', configurationVersion: 1,
+      issuedAt: new Date(now.getTime() - 60_000).toISOString(),
+      expiresAt: new Date(now.getTime() + 60 * 60_000).toISOString(),
+    } : null,
   };
 }
 
 export const draw = favouring(rawDraw);
-

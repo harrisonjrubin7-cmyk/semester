@@ -25,7 +25,7 @@ import {
  * than the tree shows:
  *
  *   - every primitive has a home that exists, and every capability names one
- *     of the twelve and one of P0–P5;
+ *     of the eight and one of P0–P5;
  *   - a `partial` capability cites a file that exists, an `absent` one cites
  *     nothing;
  *   - the counts are stated here, so a change either way is a line in a diff;
@@ -46,9 +46,19 @@ describe('the platform constitution', () => {
     expect(exists('app/src/lib/governance/no-such-thing.ts')).toBe(false);
   });
 
-  it('has twelve primitives, each at home in a file that exists', () => {
+  it('has eight primitives, each at home in a file that exists', () => {
+    expect(PRIMITIVE_IDS).toEqual([
+      'identity-tenancy',
+      'permission-consent-authority',
+      'data-provenance',
+      'policy-rules',
+      'action-workflow',
+      'integration-gateway',
+      'trust-evidence',
+      'experience-accessibility',
+    ]);
     expect(PRIMITIVES.map((p) => p.id)).toEqual([...PRIMITIVE_IDS]);
-    expect(PRIMITIVES).toHaveLength(12);
+    expect(PRIMITIVES).toHaveLength(8);
     for (const p of PRIMITIVES) {
       expect(p.one.length, p.id).toBeGreaterThan(30);
       expect(exists(p.home), `${p.id} lives in ${p.home}, which is missing`).toBe(true);
@@ -56,7 +66,7 @@ describe('the platform constitution', () => {
   });
 
   it('holds the principles to something that exists', () => {
-    expect(PRINCIPLES).toHaveLength(11);
+    expect(PRINCIPLES).toHaveLength(12);
     for (const x of PRINCIPLES) {
       expect(x.principle.length, x.id).toBeGreaterThan(40);
       expect(x.heldBy === DOC || exists(x.heldBy), `${x.id} is held by ${x.heldBy}, which is missing`).toBe(true);
@@ -66,7 +76,7 @@ describe('the platform constitution', () => {
   it('keeps the twelve admission questions and the six priorities', () => {
     expect(ADMISSION).toHaveLength(12);
     expect(ADMISSION.every((q) => q.endsWith('?'))).toBe(true);
-    expect(ADMISSION[1]).toMatch(/twelve primitives/);
+    expect(ADMISSION[1]).toMatch(/eight primitives/);
     expect(PRIORITY_IDS.map((p) => PRIORITIES[p].length > 20)).toEqual([true, true, true, true, true, true]);
   });
 
@@ -93,7 +103,7 @@ describe('the platform constitution', () => {
   it('states the finding: 37 capabilities, none complete, 10 absent', () => {
     expect(CAPABILITIES).toHaveLength(37);
     expect(coverage()).toEqual({ partial: 27, absent: 10 });
-    const one: Capability = { id: 'x', title: 't', source: 'operating', primitive: 'trust', priority: 'P0', status: 'absent', evidence: null, note: 'n' };
+    const one: Capability = { id: 'x', title: 't', source: 'operating', primitive: 'trust-evidence', priority: 'P0', status: 'absent', evidence: null, note: 'n' };
     expect(coverage([one])).toEqual({ partial: 0, absent: 1 });
   });
 
@@ -114,7 +124,7 @@ describe('the platform constitution', () => {
 
   it('says which primitives none of the briefs found a gap under, rather than inventing one', () => {
     const b = byPrimitive();
-    expect(PRIMITIVE_IDS.filter((p) => b[p].length === 0)).toEqual(['identity', 'learning']);
+    expect(PRIMITIVE_IDS.filter((p) => b[p].length === 0)).toEqual(['identity-tenancy']);
   });
 
   it('keeps the thirty-three departments, each with the line it does not cross', () => {
@@ -155,12 +165,12 @@ function render(): string {
     '',
     'Semester has covered the product domains a university runs on. What remains',
     'is not another module; it is keeping the ones there coherent. Every capability',
-    'belongs to one of twelve primitives, and a proposed feature that strengthens',
+    'belongs to one of eight primitives, and a proposed feature that strengthens',
     'none of them is deferred, merged or rejected.',
     '',
     `**${CAPABILITIES.length} capabilities named by the four briefs: none complete, ${c.partial} partial, ${c.absent} absent.** A partial row cites the file that holds part of it; an absent row cites nothing. The test states these counts, so a change either way is a line in a diff.`,
     '',
-    '## The twelve primitives',
+    '## The eight primitives',
     '',
     ...table(
       ['Primitive', 'One shared system', 'Lives in', 'Capabilities'],

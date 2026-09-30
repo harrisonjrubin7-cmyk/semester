@@ -33,6 +33,11 @@ function ctx(over: Partial<FlagContext> = {}): FlagContext {
     connection: { publicId: 'lms-1', approved: true, status: 'healthy' },
     scopes: [{ key: 'scope.lms.score_publish', approved: true }],
     capabilities: [],
+    activationReceipt: {
+      decisionKey: 'activation-v1-passback', requestId: 'req-passback', tenantId: 'gb-u', capabilityId: 'CAP-030', operation: FLAG,
+      policyVersion: 'constitution-v1', configurationVersion: 1,
+      issuedAt: new Date(new Date(AT).getTime() - 60_000).toISOString(), expiresAt: new Date(new Date(AT).getTime() + 60 * 60_000).toISOString(),
+    },
     ...over,
   };
 }

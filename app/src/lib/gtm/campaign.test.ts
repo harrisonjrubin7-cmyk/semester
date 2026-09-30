@@ -12,6 +12,10 @@ const LINK = campaignUrl('https://semester.app/start', {
 const FLAG_ON: FlagContext = {
   environment: 'production', tenantId: 'vu', now: new Date('2026-10-01T12:00:00Z'), killSwitches: [],
   tenantPolicy: { [CAMPAIGN_FLAG]: { state: 'production', permittedRoles: [], permittedCohorts: [] } }, capabilities: ['tenant:configure'],
+  activationReceipt: {
+    decisionKey: 'activation-v1-campaign', requestId: 'req-campaign', tenantId: 'vu', capabilityId: 'CAP-018', operation: CAMPAIGN_FLAG,
+    policyVersion: 'constitution-v1', configurationVersion: 1, issuedAt: '2026-10-01T11:55:00Z', expiresAt: '2026-10-01T12:10:00Z',
+  },
 };
 
 const READY: Campaign = {

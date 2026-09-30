@@ -257,7 +257,6 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['publish_course_guidance', 'admin', ['auth.uid()', 'private.course_publisher']],
   ['publish_course_rules', 'admin', ['auth.uid()', 'private.course_publisher']],
   ['publish_study_pack', 'admin', ['auth.uid()', 'private.course_publisher']],
-  ['raise_my_data_subject_request', 'self-service', ['auth.uid()']],
   ['read_advisor_share', 'sharing', ['auth.uid()']],
   ['read_family_share', 'sharing', ['auth.uid()']],
   ['read_shared_accommodation', 'sharing', ['auth.uid()']],
@@ -328,7 +327,6 @@ export const NOT_YET_APPLIED: readonly string[] = [
   '20260930173030_console_command_center.sql',
   '20260930185000_school_membership_enforcement.sql',
   '20260930200000_school_offboarding.sql',
-  '20260930233000_data_subject_request_intake.sql',
 ];
 
 /**
@@ -340,10 +338,6 @@ export const NOT_YET_APPLIED: readonly string[] = [
  * the files in `NOT_YET_APPLIED`.
  */
 export const SINCE_READING: readonly { file: string; functions: readonly string[] }[] = [
-  {
-    file: '20260930233000_data_subject_request_intake.sql',
-    functions: ['raise_my_data_subject_request'],
-  },
   {
     file: '20260930173030_console_command_center.sql',
     functions: ['console_command_center'],

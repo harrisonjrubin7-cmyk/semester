@@ -18,6 +18,7 @@
  * It never throws and never answers "allowed" for a key it does not know.
  */
 import type { FeatureState } from '../intelligence/contracts';
+import type { ActivationReceipt } from './governance/activation';
 import { routeAllowed, type DataClass, type Destination } from './integration/classification';
 
 export type FlagType =
@@ -61,6 +62,8 @@ export interface FlagDefinition {
   defaultEnabled: false;
   /** High-risk flags are never on by default and need a named approval. */
   highRisk: boolean;
+  /** Constitution capabilities whose current activation may authorize this exposure. */
+  capabilityIds: readonly string[];
   created: string;
   reviewAt: string;
   /** Required for release and experiment flags, which are temporary. */
@@ -87,8 +90,41 @@ const RUNBOOK = 'docs/FEATURE-FLAG-REGISTRY.md#kill-switch-runbook';
 const CREATED = '2026-09-27';
 const REVIEW = '2026-12-15';
 
-function flag(d: Omit<FlagDefinition, 'defaultEnabled' | 'created' | 'runbook'> & { runbook?: string }): FlagDefinition {
-  return { defaultEnabled: false, created: CREATED, runbook: RUNBOOK, ...d };
+const FLAG_CAPABILITY_IDS: Readonly<Record<string, readonly string[]>> = {
+  'module.core_mode': ['CAP-043', 'CAP-044', 'CAP-046', 'CAP-047', 'CAP-048', 'CAP-050'],
+  'module.integration_dashboard': ['CAP-013'],
+  'module.institutional_operations': ['CAP-014', 'CAP-043'],
+  'module.source_freshness_cards': ['CAP-003', 'CAP-014'],
+  'module.campaign_manager': ['CAP-018', 'CAP-059'],
+  'module.sponsorship': ['CAP-051', 'CAP-054'],
+  'module.dining': ['CAP-047'],
+  'release.integration_dashboard_v1': ['CAP-013'],
+  'integration.lms_lti': ['CAP-020', 'CAP-021'],
+  'integration.sis_read': ['CAP-013', 'CAP-045', 'CAP-050'],
+  'integration.degree_audit_read': ['CAP-044'],
+  'integration.advising_crm': ['CAP-043', 'CAP-052'],
+  'integration.career': ['CAP-054', 'CAP-055'],
+  'integration.campus_services': ['CAP-043', 'CAP-051'],
+  'integration.erp_bursar_actions': ['CAP-046'],
+  'scope.sis.enrollment_read': ['CAP-020'],
+  'scope.lms.assignment_dates_read': ['CAP-003', 'CAP-021'],
+  'scope.sis.registration_hold_summary_read': ['CAP-045', 'CAP-050'],
+  'writeback.registration_submit': ['CAP-050'],
+  'writeback.space_booking': ['CAP-043'],
+  'writeback.lms_grade_passback': ['CAP-020', 'CAP-021', 'CAP-030'],
+  'ops.external_ai_generation': ['CAP-027'],
+  'ops.data_upload': ['CAP-028', 'CAP-040'],
+  'ops.code_sandbox_enabled': ['CAP-031', 'CAP-032'],
+  'safety.scoped_pseudonymity': ['CAP-051', 'CAP-060'],
+  'safety.volunteer_moderation': ['CAP-051', 'CAP-060'],
+  'safety.institution_escalation': ['CAP-043', 'CAP-060'],
+  'experiment.today_action_ranking_v2': ['CAP-001'],
+};
+
+function flag(d: Omit<FlagDefinition, 'defaultEnabled' | 'created' | 'runbook' | 'capabilityIds'> & { runbook?: string }): FlagDefinition {
+  const capabilityIds = FLAG_CAPABILITY_IDS[d.key];
+  if (!capabilityIds?.length) throw new Error(`No constitution capability is bound to ${d.key}.`);
+  return { defaultEnabled: false, created: CREATED, runbook: RUNBOOK, capabilityIds, ...d };
 }
 
 export const FLAGS: readonly FlagDefinition[] = [
@@ -390,6 +426,8 @@ export interface FlagContext {
   courseRule?: { allowed: boolean } | null;
   /** Per-user eligibility (consent given, account in good standing). */
   userEligible?: boolean;
+  /** A short-lived, tenant-bound authorization for a high-risk exposure. */
+  activationReceipt?: ActivationReceipt | null;
 }
 
 export type FlagStep =
@@ -405,6 +443,7 @@ export type FlagStep =
   | 'classification'
   | 'course_rule'
   | 'user_eligibility'
+  | 'activation_contract'
   | 'allowed';
 
 export interface FlagDecision {
@@ -501,6 +540,24 @@ export function evaluateFlag(key: string, ctx: FlagContext): FlagDecision {
 
   // 10. User eligibility.
   if (ctx.userEligible === false) return deny('user_eligibility', 'This account is not eligible (consent or standing).');
+
+  // 11. High-risk exposure needs a current receipt from the activation
+  // control plane. This supplements, and never replaces, server authority.
+  if (def.highRisk) {
+    const receipt = ctx.activationReceipt;
+    const issuedAt = receipt ? Date.parse(receipt.issuedAt) : Number.NaN;
+    const expiresAt = receipt ? Date.parse(receipt.expiresAt) : Number.NaN;
+    const now = ctx.now.getTime();
+    const valid = !!receipt &&
+      receipt.tenantId === ctx.tenantId &&
+      def.capabilityIds.includes(receipt.capabilityId) &&
+      receipt.operation === key &&
+      receipt.policyVersion.trim().length > 0 &&
+      Number.isInteger(receipt.configurationVersion) && receipt.configurationVersion > 0 &&
+      Number.isFinite(issuedAt) && Number.isFinite(expiresAt) &&
+      issuedAt <= now && now < expiresAt;
+    if (!valid) return deny('activation_contract', 'A current activation receipt does not authorize this high-risk feature.');
+  }
 
   return { allowed: true, step: 'allowed', reason: 'Every gate passed.' };
 }

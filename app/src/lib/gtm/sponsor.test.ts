@@ -5,6 +5,10 @@ import { SPONSOR_FLAG, placementProblems, sponsorReport, type SponsorPlacement, 
 const ON: FlagContext = {
   environment: 'production', tenantId: 'vu', now: new Date('2026-10-01T12:00:00Z'), killSwitches: [],
   tenantPolicy: { [SPONSOR_FLAG]: { state: 'production', permittedRoles: [], permittedCohorts: [] } }, capabilities: ['tenant:configure'],
+  activationReceipt: {
+    decisionKey: 'activation-v1-sponsor', requestId: 'req-sponsor', tenantId: 'vu', capabilityId: 'CAP-051', operation: SPONSOR_FLAG,
+    policyVersion: 'constitution-v1', configurationVersion: 1, issuedAt: '2026-10-01T11:55:00Z', expiresAt: '2026-10-01T12:10:00Z',
+  },
 };
 const POLICY: TenantSponsorPolicy = { enabled: true, categories: ['education_career'], surfaces: ['career_events'], segments: ['all_students'] };
 const OK: SponsorPlacement = {
