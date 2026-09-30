@@ -5409,7 +5409,21 @@ const exampleRow = (scale = 1) => ({
   const xpOrig=xpRender;xpRender=function(){xpOrig();const r=XP[xpRole],c2=document.getElementById("xp-cta2");if(!c2)return;if(r.cta2){c2.hidden=false;c2.textContent=r.cta2[0];c2.href=r.cta2[1];c2.dataset.topic=r.cta2[2]||""}else c2.hidden=true};
 
   // ---------- after-signup links on every signup / request CTA ----------
-  document.querySelectorAll('a[href$="#/signup"],a[href="#request-invite"]').forEach(a=>{if(a.closest("header,.drawer,footer,.banner,.dd-panel,.plan,.reco,.search-in,[data-page=\"start\"]"))return;const host=a.closest(".ctas")||a.parentElement;if(!host||host.querySelector(".after-signup")||host.nextElementSibling&&host.nextElementSibling.classList&&host.nextElementSibling.classList.contains("after-signup"))return;host.insertAdjacentHTML("afterend",`<p class="fine after-signup" style="margin-top:10px"><a href="#start">What happens after you sign up?</a></p>`)});
+  document.querySelectorAll('a[href$="#/signup"],a[href="#request-invite"]').forEach(a=>{
+    if(a.closest('header,.drawer,footer,.banner,.dd-panel,.plan,.reco,.search-in,[data-page="start"]'))return;
+    const ctas=a.closest(".ctas");
+    const card=a.closest(".aud,.box,article,.card");
+    const host=ctas||card||a.parentElement;
+    if(!host||host.querySelector(".after-signup"))return;
+    const helper=document.createElement("p");
+    helper.className="fine after-signup";
+    helper.style.marginTop="10px";
+    helper.innerHTML='<a href="#start">What happens after you sign up?</a>';
+    // Keep helper copy inside a card when the CTA is a direct card child. Adding
+    // it as a sibling creates an extra grid item and breaks multi-column layouts.
+    if(card&&!ctas)card.appendChild(helper);
+    else host.insertAdjacentElement("afterend",helper);
+  });
 
   // ---------- trust tiles, search ----------
   document.getElementById("trust-grid").insertAdjacentHTML("beforeend",[["Product availability","availability","Who can use what, today"],["Service map","service-map","Who's authoritative for what"],["Product quality","product-quality","Release health, real values only"],["Policies in practice","policies-in-practice","Analytics, rights, records, minors"]].map(x=>`<a class="tile" href="#${x[1]}" style="text-decoration:none"><h3 class="h4">${x[0]}</h3><p>${x[2]}</p></a>`).join(""));
