@@ -9,9 +9,9 @@ The minimum age is 13 (D-139), so K–12 here means only the grades where
 students are 13 and over: in practice high school, early college and career
 and technical education. Nothing here says a district may be served today.
 
-**May a district’s student data be accepted?** No. 5 of 16 baseline items are short of tested.
+**May a district’s student data be accepted?** No. 11 of 16 baseline items are short of tested or still have a gap.
 
-Baseline: 0 not-started, 4 designed, 1 building, 11 tested.
+Baseline: 0 not-started, 4 designed, 2 building, 10 tested.
 
 ## The district baseline
 
@@ -24,7 +24,7 @@ Before any district’s student data is accepted, every item here is tested.
 | KB-03 | A COPPA assessment for users under 13 | tested | `supabase/minimum-age.check.sql` — nobody under 13 may hold an account | Nobody under 13 is served, so there is nothing to assess until a district asks for elementary grades; counsel confirms that reading. | `privacy` (vacant) |
 | KB-04 | A parent or guardian consent approach where required | designed | `docs/SUPPORTER-FAMILY-PRIVACY-MODEL.md` — the limited-grant model a guardian would use | Guardian consent is not built; the model is for adults’ supporters, and nothing verifies a guardian. | `privacy` (vacant) |
 | KB-05 | Age-aware product design | tested | `supabase/minimum-age.check.sql` — a minor is out of discovery, matching, messaging and employer visibility | — | `product` |
-| KB-06 | Strict role, school, class and guardian boundaries | tested | `supabase/rolegrants.check.sql` — roles held per school<br>`supabase/family.check.sql` — a guardian sees only what was granted | No grade or class-section boundary exists; a district tenant is one school. | `security` (vacant) |
+| KB-06 | Strict role, school, class and guardian boundaries | building | `supabase/rolegrants.check.sql` — roles held per school<br>`supabase/family.check.sql` — a guardian sees only what was granted | No grade or class-section boundary exists; a district tenant is one school. | `security` (vacant) |
 | KB-07 | No behavioural advertising | tested | `app/src/lib/gtm/campaign.test.ts` — no targeting on education records | — | `privacy` (vacant) |
 | KB-08 | No sale of student data | tested | `app/src/lib/trust/ai-training-policy.test.ts` — never sold, never used to train | — | `privacy` (vacant) |
 | KB-09 | No public student discovery by default | tested | `supabase/minimum-age.check.sql` — a minor cannot be found, matched or opted into employer view<br>`supabase/expansion.check.sql` — employer visibility is opt-in for everyone | — | `trust` (vacant) |

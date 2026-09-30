@@ -55,14 +55,33 @@ describe('the K–12 requirements', () => {
     for (const c of COUNSEL) for (const m of c.moves) expect(ids.has(m), `${c.question} → ${m}`).toBe(true);
   });
 
-  it('refuse district data while any baseline item is short of tested, and not otherwise', () => {
+  it('refuse district data while any baseline item is short of tested or has a gap, and not otherwise', () => {
     const now = districtReady();
     expect(now.ready).toBe(false);
-    expect(now.short.length).toBe(BASELINE.filter((b) => b.status !== 'tested').length);
-    // The control: a baseline all tested is ready, and one item short is not.
-    const allTested = BASELINE.map((b) => ({ ...b, status: 'tested' as const }));
-    expect(districtReady(allTested)).toEqual({ ready: true, short: [] });
-    expect(districtReady([...allTested.slice(1), { ...allTested[0], status: 'designed' as const }]).ready).toBe(false);
+    expect(now.short.length).toBe(BASELINE.filter((b) => b.status !== 'tested' || b.gap !== '').length);
+    // The control: a baseline all tested with nothing left to do is ready,
+    // and one item short is not.
+    const met = BASELINE.map((b) => ({ ...b, status: 'tested' as const, gap: '' }));
+    expect(districtReady(met)).toEqual({ ready: true, short: [] });
+    expect(districtReady([...met.slice(1), { ...met[0], status: 'designed' as const }]).ready).toBe(false);
+    // Tested, but with its gap still written against it: not met (KB-06 was
+    // marked tested while saying no class boundary exists).
+    expect(districtReady([...met.slice(1), { ...met[0], gap: 'Not done yet.' }]).ready).toBe(false);
+  });
+
+  it('refuse a baseline that leaves any of the sixteen out', () => {
+    const met = BASELINE.map((b) => ({ ...b, status: 'tested' as const, gap: '' }));
+    expect(districtReady([]).ready).toBe(false);
+    expect(districtReady([]).short).toHaveLength(BASELINE.length);
+    const partial = districtReady(met.slice(1));
+    expect(partial.ready).toBe(false);
+    expect(partial.short).toEqual([`${BASELINE[0].id} ${BASELINE[0].item} (not given)`]);
+  });
+
+  it('keep the class boundary short of tested while no class boundary exists', () => {
+    const kb06 = BASELINE.find((b) => b.item.startsWith('Strict role, school, class'))!;
+    expect(kb06.gap).toMatch(/No grade or class-section boundary exists/);
+    expect(kb06.status).not.toBe('tested');
   });
 
   it(`is what ${DOC} says`, () => {
@@ -100,7 +119,7 @@ function render(): string {
     'students are 13 and over: in practice high school, early college and career',
     'and technical education. Nothing here says a district may be served today.',
     '',
-    `**May a district’s student data be accepted?** ${gate.ready ? 'Yes.' : `No. ${gate.short.length} of ${BASELINE.length} baseline items are short of tested.`}`,
+    `**May a district’s student data be accepted?** ${gate.ready ? 'Yes.' : `No. ${gate.short.length} of ${BASELINE.length} baseline items are short of tested or still have a gap.`}`,
     '',
     `Baseline: ${STATUSES.map((s) => `${count(BASELINE, s)} ${s}`).join(', ')}.`,
     '',

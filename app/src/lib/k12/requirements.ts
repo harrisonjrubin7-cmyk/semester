@@ -57,7 +57,7 @@ export const BASELINE: readonly Held[] = rows('KB', [
   ['A COPPA assessment for users under 13', 'tested', [['supabase/minimum-age.check.sql', 'nobody under 13 may hold an account']], 'Nobody under 13 is served, so there is nothing to assess until a district asks for elementary grades; counsel confirms that reading.', 'privacy'],
   ['A parent or guardian consent approach where required', 'designed', [['docs/SUPPORTER-FAMILY-PRIVACY-MODEL.md', 'the limited-grant model a guardian would use']], 'Guardian consent is not built; the model is for adults’ supporters, and nothing verifies a guardian.', 'privacy'],
   ['Age-aware product design', 'tested', [['supabase/minimum-age.check.sql', 'a minor is out of discovery, matching, messaging and employer visibility']], '', 'product'],
-  ['Strict role, school, class and guardian boundaries', 'tested', [['supabase/rolegrants.check.sql', 'roles held per school'], ['supabase/family.check.sql', 'a guardian sees only what was granted']], 'No grade or class-section boundary exists; a district tenant is one school.', 'security'],
+  ['Strict role, school, class and guardian boundaries', 'building', [['supabase/rolegrants.check.sql', 'roles held per school'], ['supabase/family.check.sql', 'a guardian sees only what was granted']], 'No grade or class-section boundary exists; a district tenant is one school.', 'security'],
   ['No behavioural advertising', 'tested', [['app/src/lib/gtm/campaign.test.ts', 'no targeting on education records']], '', 'privacy'],
   ['No sale of student data', 'tested', [['app/src/lib/trust/ai-training-policy.test.ts', 'never sold, never used to train']], '', 'privacy'],
   ['No public student discovery by default', 'tested', [['supabase/minimum-age.check.sql', 'a minor cannot be found, matched or opted into employer view'], ['supabase/expansion.check.sql', 'employer visibility is opt-in for everyone']], '', 'trust'],
@@ -116,6 +116,15 @@ export const COUNSEL: readonly { question: string; moves: readonly string[] }[] 
 
 /** May a district's student data be accepted? Only when every baseline item is tested. */
 export function districtReady(baseline: readonly Held[] = BASELINE): { ready: boolean; short: string[] } {
-  const short = baseline.filter((b) => b.status !== 'tested').map((b) => `${b.id} ${b.item}`);
-  return { ready: short.length === 0, short };
+  // Every one of the sixteen must be here: a filtered or half-loaded list is
+  // not a baseline that has been met.
+  const given = new Set(baseline.map((b) => b.id));
+  const missing = BASELINE.filter((b) => !given.has(b.id)).map((b) => `${b.id} ${b.item} (not given)`);
+  // Tested and with nothing still written against it. A gap is the item
+  // saying what is not done; a status cannot outvote it.
+  const short = baseline
+    .filter((b) => b.status !== 'tested' || b.gap.trim() !== '')
+    .map((b) => `${b.id} ${b.item}`);
+  const all = [...missing, ...short];
+  return { ready: all.length === 0, short: all };
 }

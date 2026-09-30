@@ -2856,13 +2856,15 @@ decision writes that gate down before any of the edition exists.
   district asks.
 - **The baseline is data.** `app/src/lib/k12/requirements.ts` holds the
   sixteen items (KB-01 to KB-16), each with a status the tree can show and
-  its evidence, and renders `docs/k12/K12-REQUIREMENTS.md`. Today 11 are
-  tested, 1 is building (a district-controlled AI policy) and 4 are
-  designed: the district data-privacy agreement, the guardian consent
-  approach, accessibility documentation and the security questionnaire
-  package.
+  its evidence, and renders `docs/k12/K12-REQUIREMENTS.md`. Today 10 are
+  tested, 2 are building (a district-controlled AI policy, and class and
+  grade boundaries, which do not exist yet) and 4 are designed: the district
+  data-privacy agreement, the guardian consent approach, accessibility
+  documentation and the security questionnaire package.
 - **One question, one answer.** `districtReady()` answers "may a district's
-  student data be accepted?" and is false while any item is short of tested.
-  It is false today, and the edition asks it before anything else.
+  student data be accepted?" It is false while any of the sixteen is missing,
+  short of tested, or tested with a gap still written against it — a status
+  cannot outvote the item's own account of what is not done (Codex's review
+  of #998). It is false today, and the edition asks it before anything else.
 - **What only counsel can answer** is listed with the baseline items each
   answer would move, so the review is a list, not a conversation.
