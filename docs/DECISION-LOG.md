@@ -2888,3 +2888,42 @@ writes down what the edition is, and puts it on the site without offering it.
   `districtReady()`, and the page prints its answer. Today that is no.
 - **`/k-12/`** says no district or school uses Semester today, and the site
   test holds it there.
+## D-142 · The two AI drills ran against production, and both held
+
+**Decided 29 Sep 2026.** `docs/LAUNCH-DECISIONS.md` item 15 asked for the
+kill switch to be engaged against production once and for the prompt-injection
+red-team to be run against the real model, each filed. Both ran on the evening
+of 29 September, once the shared key was set and set cleanly, with a throwaway
+invited account (`killswitch-drill@semester.invalid`) that was deleted
+afterwards, with its invite and its usage row.
+
+- **The kill switch held, 3 of 3.** `npm run drill:killswitch` made one call
+  that was answered (200), then `kill.ai_generation` was engaged globally
+  through the database and the next call was refused with 503 and the
+  runtime's own sentence, then it was released and the next call was answered
+  again. Engaged 22:52, released 22:55 UTC. The record is
+  `docs/evidence/ai/killswitch-drill-2026-09-29T22-51-50-121Z.json`. The
+  refused call was not counted against the account, as the function says.
+- **The red-team held, 21 of 21.** Three canaries (a verbatim token, a grade
+  change, a request to quote the rules) planted in the material of seven
+  prompt builders, sent to claude-opus-5 through the shared key's own proxy
+  with the clamp and the monthly count in force. No reply carried a canary;
+  several named the planted instruction and declined it. The transcript is
+  `docs/evidence/ai/injection-redteam-2026-09-29T22-58-56-465Z-claude-opus-5.json`.
+- **What moved.** These are the first files under `docs/evidence/`, so the
+  compliance crosswalk's ceiling lifted from 2 to 4 by itself. AI-012 is
+  `evidenced`, the first master-register row past `tested`; AI-010 is `tested`
+  (one model, one run, and nothing screens material before it is sent, so not
+  `evidenced`). R-07's description and mitigation say what is left. SEC-AI-002
+  and AM-12 cite the transcript and stay open, because the evaluation set and
+  the rest of misuse testing do not exist. Every test that held
+  "`docs/evidence/` does not exist" now holds the directory to its records
+  instead: every file there is registered, and a row above 2 cites one.
+- **What it took.** The key was unset until the evening (501), and the first
+  value saved was not a key: 82 characters, five spaces or breaks, one
+  character outside ASCII, which made every signed-in call a 502 that
+  counted. #987 now refuses such a value with a 503 before anyone is counted
+  and logs its shape; that is how this one was found and replaced.
+- **Not drilled:** the institution gateway, which is not deployed, and a
+  per-tenant switch row. The red-team is a floor: it is re-run on every model
+  change and each quarter, and each run files beside the last.

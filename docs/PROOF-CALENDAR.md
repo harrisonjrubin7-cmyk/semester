@@ -6,8 +6,9 @@
 
 The schedule for producing the evidence needed to sell. The
 [master readiness register](MASTER-LAUNCH-READINESS-REGISTER.md) lets no row
-above `tested` until an artifact exists under `docs/evidence/`, and none
-does. This is the order in which those artifacts get made: three months of
+above `tested` until it cites an artifact under `docs/evidence/`, and one
+does: the AI kill switch, on the drill of 29 September. This is the order in
+which the rest get made: three months of
 them, then a quarterly cycle, so that enterprise readiness is a recurring
 discipline and not a push before each procurement.
 
@@ -19,7 +20,7 @@ with day 1 of the 90-day program; no date is invented here.
 
 ## Where it stands
 
-**0 of 19 artifacts filed.** `docs/evidence/` does not exist yet. The test reads the directory, so this line changes when the first artifact lands.
+**0 of 19 artifacts filed.** `docs/evidence/` holds only the AI drills of 29 September, which this calendar does not schedule. The test reads the directory, so this line changes when the first artifact here lands.
 
 ## Month 1
 
