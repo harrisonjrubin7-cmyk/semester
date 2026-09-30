@@ -46,6 +46,8 @@ export type HighRiskRequirements = Record<(typeof HIGH_RISK_REQUIREMENTS)[number
 
 export interface CapabilityProfile {
   domain: Domain;
+  /** Only standard activation may use this declared personal default without tenant configuration. */
+  safeDefaultEligible: boolean;
   primitives: readonly PrimitiveId[];
   data: readonly DataRule[];
   accessibility: string;
@@ -77,10 +79,10 @@ const accessible = 'Keyboard and screen-reader completion, visible focus, mobile
 const personalLifecycle = 'Preserve student work until explicit deletion; support export and recovery before migration or retirement; follow the retention reference for server records and disclose device-only storage.';
 const institutionLifecycle = 'Keep disabled until the scoped tenant approval and source mapping are current; pause on stale authority or unhealthy integration; revoke access and execute approved export, archive and deletion at offboarding.';
 function personal(domain: Domain, rules: readonly DataRule[], fallback: string, primitives = personalPrimitives, supportOwner: Seat = 'success'): CapabilityProfile {
-  return { domain, primitives, data: rules, accessibility: accessible, fallback, supportOwner, lifecycle: personalLifecycle };
+  return { domain, safeDefaultEligible: true, primitives, data: rules, accessibility: accessible, fallback, supportOwner, lifecycle: personalLifecycle };
 }
 function connected(domain: Domain, rules: readonly DataRule[], fallback: string, supportOwner: Seat = 'data'): CapabilityProfile {
-  return { domain, primitives: connectedPrimitives, data: rules, accessibility: accessible, fallback, supportOwner, lifecycle: institutionLifecycle };
+  return { domain, safeDefaultEligible: false, primitives: connectedPrimitives, data: rules, accessibility: accessible, fallback, supportOwner, lifecycle: institutionLifecycle };
 }
 /** Shared contract mechanics retain a domain-specific authorization and test boundary. */
 function highRisk(subject: string, authorization: string, integration: string, recovery: string, support: string): HighRiskRequirements {
