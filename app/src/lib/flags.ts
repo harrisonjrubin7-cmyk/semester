@@ -13,12 +13,13 @@
  *   kill switch → environment → tenant entitlement → connection approval
  *   → scope approval → capability → role policy → cohort policy
  *   → data classification
- *   → course/assignment rule → user eligibility → allowed
+ *   → course/assignment rule → user eligibility → activation contract → allowed
  *
  * It never throws and never answers "allowed" for a key it does not know.
  */
 import type { FeatureState } from '../intelligence/contracts';
 import { routeAllowed, type DataClass, type Destination } from './integration/classification';
+import type { ActivationReceipt } from './governance/activation';
 
 export type FlagType =
   | 'module'
@@ -61,6 +62,8 @@ export interface FlagDefinition {
   defaultEnabled: false;
   /** High-risk flags are never on by default and need a named approval. */
   highRisk: boolean;
+  /** Canonical product capabilities this flag may expose; no wildcard IDs. */
+  capabilityIds: readonly string[];
   created: string;
   reviewAt: string;
   /** Required for release and experiment flags, which are temporary. */
@@ -101,6 +104,7 @@ export const FLAGS: readonly FlagDefinition[] = [
     successCriteria: 'No module reads Core without an applied, twice-approved request; every change is in the history; going back deletes nothing.',
     rollback: 'Engage kill.core_modules for the school: every module reads Connect at once and any Core data is frozen, read-only, not deleted. Or request Connect for one module.',
     killSwitches: ['kill.core_modules'], capability: 'tenant:configure',
+    capabilityIds: ['CAP-013', 'CAP-020', 'CAP-021', 'CAP-027', 'CAP-043', 'CAP-044', 'CAP-046', 'CAP-047', 'CAP-050', 'CAP-051'],
   }),
   flag({
     key: 'module.integration_dashboard',
@@ -109,7 +113,7 @@ export const FLAGS: readonly FlagDefinition[] = [
     rollout: 'One pilot school in preview, then its production tenant after an accessibility review.',
     successCriteria: 'Integration staff find a failing connection and its cause without a support ticket.',
     rollback: 'Set the tenant policy row to off. The dashboard reads only; nothing to undo.',
-    killSwitches: [], capability: 'integration:view',
+    killSwitches: [], capability: 'integration:view', capabilityIds: ['CAP-013'],
   }),
   flag({
     key: 'module.institutional_operations',
@@ -118,7 +122,7 @@ export const FLAGS: readonly FlagDefinition[] = [
     rollout: 'Preview for one pilot school’s institutional research office, then its production tenant after a governance review.',
     successCriteria: 'An analyst produces a suppressed, lineage-labelled export without a spreadsheet step; no per-student figure is ever rendered.',
     rollback: 'Unset VITE_INSTITUTIONAL_OPERATIONS (or set it to off) and redeploy: the screen reads the build-time flag, not the tenant policy row. The studio stores its drafts on the analyst’s device only; nothing to undo server-side.',
-    killSwitches: [], capability: 'outcomes:read',
+    killSwitches: [], capability: 'outcomes:read', capabilityIds: ['CAP-014', 'CAP-016'],
   }),
   flag({
     key: 'module.source_freshness_cards',
@@ -130,7 +134,7 @@ export const FLAGS: readonly FlagDefinition[] = [
     // No connection gate: a student cannot read connections, so the evaluator
     // would refuse every student. The card shows only rows RLS already lets
     // the student read, and there are none without a live connection.
-    killSwitches: ['kill.integration_sync'],
+    killSwitches: ['kill.integration_sync'], capabilityIds: ['CAP-001', 'CAP-003', 'CAP-011', 'CAP-020', 'CAP-044'],
   }),
   flag({
     key: 'module.campaign_manager',
@@ -140,7 +144,7 @@ export const FLAGS: readonly FlagDefinition[] = [
     successCriteria: 'No message leaves without consent, quiet-hour and cap checks; every link carries the UTM convention; opt-outs apply at once.',
     rollback: 'Set off. Scheduled sends stop at the next decision; nothing already sent is recalled.',
     // Until a dedicated marketing capability exists, only a school's configurers.
-    killSwitches: ['kill.sharing'], capability: 'tenant:configure',
+    killSwitches: ['kill.sharing'], capability: 'tenant:configure', capabilityIds: ['CAP-059', 'CAP-060'],
   }),
   flag({
     key: 'module.sponsorship',
@@ -149,7 +153,7 @@ export const FLAGS: readonly FlagDefinition[] = [
     rollout: 'Not before a school opts in with its own categories and surfaces, and the review workflow and complaint path exist.',
     successCriteria: 'No placement on a protected surface, none unlabelled, no sponsor receives anything but suppressed aggregates.',
     rollback: 'Set off. Every placement disappears on the next render.',
-    killSwitches: ['kill.sharing'], capability: 'tenant:configure',
+    killSwitches: ['kill.sharing'], capability: 'tenant:configure', capabilityIds: ['CAP-043', 'CAP-051'],
   }),
 
   flag({
@@ -163,7 +167,7 @@ export const FLAGS: readonly FlagDefinition[] = [
     // a student cannot. The dining functions check the card-office partner
     // connection themselves (public.dining_partner_connections, which every
     // member of the school may read), and refuse to charge unless it is live.
-    killSwitches: ['kill.writeback', 'kill.integration_sync'],
+    killSwitches: ['kill.writeback', 'kill.integration_sync'], capabilityIds: ['CAP-047'],
   }),
 
   // ── Release (temporary) ─────────────────────────────────────────────────
@@ -175,26 +179,26 @@ export const FLAGS: readonly FlagDefinition[] = [
     rollout: 'Preview environments, then one production tenant.',
     successCriteria: 'Accessibility journey passes; no credential or student record rendered.',
     rollback: 'Set to off; the University screen shows the control plane as it did before.',
-    killSwitches: [], module: 'module.integration_dashboard', capability: 'integration:view',
+    killSwitches: [], module: 'module.integration_dashboard', capability: 'integration:view', capabilityIds: ['CAP-013'],
   }),
 
   // ── Connectors (every one high-risk) ────────────────────────────────────
   ...([
-    ['integration.lms_lti', 'Any LMS through LTI 1.3 / LTI Advantage (Brightspace today): launch context and assignment dates only.'],
-    ['integration.sis_read', 'Student information system, read-only: term, program, section, enrollment, registration window.'],
-    ['integration.degree_audit_read', 'Degree audit, read-only: requirement status with the audit system named as source.'],
-    ['integration.advising_crm', 'Advising CRM: appointment times and referral actions for the student themselves.'],
-    ['integration.career', 'Career platform: jobs, internships and events.'],
-    ['integration.campus_services', 'Library, tutoring, events, organizations, transit and official alerts.'],
-    ['integration.erp_bursar_actions', 'Bursar and aid: a minimal action item and a deep link. No amounts, no decisions, no payments.'],
-  ] as const).map(([key, description]) =>
+    ['integration.lms_lti', 'Any LMS through LTI 1.3 / LTI Advantage (Brightspace today): launch context and assignment dates only.', ['CAP-020', 'CAP-021']],
+    ['integration.sis_read', 'Student information system, read-only: term, program, section, enrollment, registration window.', ['CAP-020', 'CAP-045', 'CAP-050']],
+    ['integration.degree_audit_read', 'Degree audit, read-only: requirement status with the audit system named as source.', ['CAP-044']],
+    ['integration.advising_crm', 'Advising CRM: appointment times and referral actions for the student themselves.', ['CAP-043', 'CAP-052']],
+    ['integration.career', 'Career platform: jobs, internships and events.', ['CAP-051', 'CAP-054', 'CAP-055']],
+    ['integration.campus_services', 'Library, tutoring, events, organizations, transit and official alerts.', ['CAP-043', 'CAP-049', 'CAP-051']],
+    ['integration.erp_bursar_actions', 'Bursar and aid: a minimal action item and a deep link. No amounts, no decisions, no payments.', ['CAP-046']],
+  ] as const).map(([key, description, capabilityIds]) =>
     flag({
       key, description, type: 'connector', owner: 'Integrations', scopes: ['tenant'], highRisk: true,
       reviewAt: REVIEW,
       rollout: 'Sandbox tenant with provider fixtures, then a named pilot with a signed data agreement.',
       successCriteria: 'Contract tests pass against the provider sandbox; freshness meets the target for 14 days.',
       rollback: 'Engage the connection kill switch, set the flag off, then disconnect and revoke.',
-      killSwitches: ['kill.integration_sync'], needsConnection: true, destination: 'semester',
+      killSwitches: ['kill.integration_sync'], needsConnection: true, destination: 'semester', capabilityIds,
     })),
 
   // ── Scopes ──────────────────────────────────────────────────────────────
@@ -206,7 +210,7 @@ export const FLAGS: readonly FlagDefinition[] = [
     successCriteria: 'Course workspaces match the registrar for every pilot student.',
     rollback: 'Set off and withdraw the scope; mapped references stay but stop refreshing.',
     killSwitches: ['kill.integration_sync'], module: 'integration.sis_read', needsConnection: true,
-    needsScopes: ['scope.sis.enrollment_read'], destination: 'semester',
+    needsScopes: ['scope.sis.enrollment_read'], destination: 'semester', capabilityIds: ['CAP-020'],
   }),
   flag({
     key: 'scope.lms.assignment_dates_read',
@@ -216,7 +220,7 @@ export const FLAGS: readonly FlagDefinition[] = [
     successCriteria: 'Due dates match the LMS; stale dates are labelled stale.',
     rollback: 'Set off and withdraw the scope.',
     killSwitches: ['kill.integration_sync'], module: 'integration.lms_lti', needsConnection: true,
-    needsScopes: ['scope.lms.assignment_dates_read'], destination: 'semester',
+    needsScopes: ['scope.lms.assignment_dates_read'], destination: 'semester', capabilityIds: ['CAP-021'],
   }),
   flag({
     key: 'scope.sis.registration_hold_summary_read',
@@ -226,7 +230,7 @@ export const FLAGS: readonly FlagDefinition[] = [
     successCriteria: 'Every shown hold resolves at the official link.',
     rollback: 'Set off and withdraw the scope.',
     killSwitches: ['kill.integration_sync'], module: 'integration.sis_read', needsConnection: true,
-    needsScopes: ['scope.sis.registration_hold_summary_read'], destination: 'semester',
+    needsScopes: ['scope.sis.registration_hold_summary_read'], destination: 'semester', capabilityIds: ['CAP-050'],
   }),
 
   // ── Write-back (every one high-risk) ────────────────────────────────────
@@ -238,7 +242,7 @@ export const FLAGS: readonly FlagDefinition[] = [
     successCriteria: 'n/a until built.',
     rollback: 'Engage kill.writeback.',
     killSwitches: ['kill.writeback', 'kill.integration_sync'], needsConnection: true,
-    needsScopes: ['scope.sis.registration_write'], capability: 'integration:approve',
+    needsScopes: ['scope.sis.registration_write'], capability: 'integration:approve', capabilityIds: ['CAP-050'],
   }),
   flag({
     key: 'writeback.space_booking',
@@ -248,7 +252,7 @@ export const FLAGS: readonly FlagDefinition[] = [
     successCriteria: 'n/a until built.',
     rollback: 'Engage kill.writeback.',
     killSwitches: ['kill.writeback', 'kill.integration_sync'], needsConnection: true,
-    needsScopes: ['scope.library.booking_write'], capability: 'integration:approve',
+    needsScopes: ['scope.library.booking_write'], capability: 'integration:approve', capabilityIds: ['CAP-043'],
   }),
   flag({
     key: 'writeback.lms_grade_passback',
@@ -259,7 +263,7 @@ export const FLAGS: readonly FlagDefinition[] = [
     successCriteria: 'n/a until approved.',
     rollback: 'Engage kill.writeback.',
     killSwitches: ['kill.writeback', 'kill.integration_sync'], module: 'integration.lms_lti',
-    needsConnection: true, needsScopes: ['scope.lms.score_publish'],
+    needsConnection: true, needsScopes: ['scope.lms.score_publish'], capabilityIds: ['CAP-020', 'CAP-021', 'CAP-030'],
   }),
 
   // ── Operations and safety ───────────────────────────────────────────────
@@ -270,7 +274,7 @@ export const FLAGS: readonly FlagDefinition[] = [
     rollout: 'Tenant AI policy and provider agreement first.',
     successCriteria: 'No T3+ datum reaches the provider (classification tests and audit).',
     rollback: 'Engage kill.ai_generation.',
-    killSwitches: ['kill.ai_generation'], destination: 'approved_ai',
+    killSwitches: ['kill.ai_generation'], destination: 'approved_ai', capabilityIds: ['CAP-027'],
   }),
   flag({
     key: 'ops.data_upload',
@@ -279,35 +283,35 @@ export const FLAGS: readonly FlagDefinition[] = [
     rollout: 'After malware scanning and retention are in place.',
     successCriteria: 'Every upload scanned and retained per tenant policy.',
     rollback: 'Engage kill.data_upload.',
-    killSwitches: ['kill.data_upload'],
+    killSwitches: ['kill.data_upload'], capabilityIds: ['CAP-022', 'CAP-028', 'CAP-040'],
   }),
   flag({
     key: 'ops.code_sandbox_enabled',
     description: 'Notebook and code execution.',
     type: 'ops', owner: 'Platform', scopes: ['tenant', 'course'], highRisk: true, reviewAt: REVIEW,
     rollout: 'Isolated sandbox review first.', successCriteria: 'No escape in the sandbox review.',
-    rollback: 'Engage kill.code_execution.', killSwitches: ['kill.code_execution'],
+    rollback: 'Engage kill.code_execution.', killSwitches: ['kill.code_execution'], capabilityIds: ['CAP-025', 'CAP-032'],
   }),
   flag({
     key: 'safety.scoped_pseudonymity',
     description: 'Course-scoped pseudonyms in Community.',
     type: 'safety', owner: 'Trust & Safety', scopes: ['tenant', 'course'], highRisk: true, reviewAt: REVIEW,
     rollout: 'After moderation staffing is confirmed.', successCriteria: 'Report response under 24h.',
-    rollback: 'Set off; pseudonyms fall back to names at next load.', killSwitches: ['kill.sharing'],
+    rollback: 'Set off; pseudonyms fall back to names at next load.', killSwitches: ['kill.sharing'], capabilityIds: ['CAP-058', 'CAP-060'],
   }),
   flag({
     key: 'safety.volunteer_moderation',
     description: 'Student volunteers moderating course communities.',
     type: 'safety', owner: 'Trust & Safety', scopes: ['tenant', 'course'], highRisk: true, reviewAt: REVIEW,
     rollout: 'Training and an escalation path first.', successCriteria: 'Escalations reach staff within policy.',
-    rollback: 'Set off.', killSwitches: ['kill.sharing'],
+    rollback: 'Set off.', killSwitches: ['kill.sharing'], capabilityIds: ['CAP-058', 'CAP-060'],
   }),
   flag({
     key: 'safety.institution_escalation',
     description: 'Escalating a report to the institution.',
     type: 'safety', owner: 'Trust & Safety', scopes: ['tenant'], highRisk: true, reviewAt: REVIEW,
     rollout: 'Named institutional contact and agreement first.', successCriteria: 'Every escalation acknowledged.',
-    rollback: 'Set off.', killSwitches: [],
+    rollback: 'Set off.', killSwitches: [], capabilityIds: ['CAP-058', 'CAP-060'],
   }),
 
   // ── Experiments (temporary) ─────────────────────────────────────────────
@@ -319,7 +323,7 @@ export const FLAGS: readonly FlagDefinition[] = [
     rollout: '10% of pilot students, compared on actions completed before their deadline.',
     successCriteria: 'More actions completed on time, no rise in dismissals.',
     rollback: 'Set off; Today returns to the current ranking.', killSwitches: [],
-    module: 'module.source_freshness_cards',
+    module: 'module.source_freshness_cards', capabilityIds: ['CAP-001'],
   }),
 ];
 
@@ -390,6 +394,8 @@ export interface FlagContext {
   courseRule?: { allowed: boolean } | null;
   /** Per-user eligibility (consent given, account in good standing). */
   userEligible?: boolean;
+  /** Activation correlation for this one flag and capability; never domain authorization. */
+  activationReceipt?: ActivationReceipt | null;
 }
 
 export type FlagStep =
@@ -405,6 +411,7 @@ export type FlagStep =
   | 'classification'
   | 'course_rule'
   | 'user_eligibility'
+  | 'activation_contract'
   | 'allowed';
 
 export interface FlagDecision {
@@ -501,6 +508,24 @@ export function evaluateFlag(key: string, ctx: FlagContext): FlagDecision {
 
   // 10. User eligibility.
   if (ctx.userEligible === false) return deny('user_eligibility', 'This account is not eligible (consent or standing).');
+
+  // 11. Product-exposure/workflow-entry gate only. A receipt is correlation
+  // material, not a bearer credential; domain APIs must still enforce their
+  // own tenant, actor, scope, policy and transaction authorization.
+  if (def.highRisk) {
+    const receipt = ctx.activationReceipt;
+    const now = ctx.now.getTime();
+    const issued = receipt ? Date.parse(receipt.issuedAt) : Number.NaN;
+    const expires = receipt ? Date.parse(receipt.expiresAt) : Number.NaN;
+    if (!receipt || !Number.isFinite(now) || !Number.isFinite(issued) || !Number.isFinite(expires)
+      || issued > now || expires <= now || expires <= issued
+      || receipt.tenantId !== ctx.tenantId || !def.capabilityIds.includes(receipt.capabilityId)
+      || receipt.operation !== key || !receipt.policyVersion?.trim()
+      || typeof receipt.configurationVersion !== 'number'
+      || !Number.isSafeInteger(receipt.configurationVersion) || receipt.configurationVersion <= 0) {
+      return deny('activation_contract', 'No current, scoped activation receipt covers this flag.');
+    }
+  }
 
   return { allowed: true, step: 'allowed', reason: 'Every gate passed.' };
 }
