@@ -107,10 +107,10 @@ export function history(rows: readonly WorkflowVersion[], workflow: WorkflowKey)
     .sort((a, b) => (b.version ?? 0) - (a.version ?? 0));
 }
 
-/** Whether an account holding these verified capabilities should see the Workflows tab at all. */
-export function workflowsAllowed(holds: readonly string[]): boolean {
-  return holds.some((c) => c === 'workflow:manage' || c === 'workflow:publish' || c === 'workflow:view');
-}
+// `workflowsAllowed` lives in its own module so the University screen can ask
+// it without importing this file (and through it the whole spec) into the
+// route's opening cost. Re-exported so this stays the one import.
+export { workflowsAllowed } from './allowed';
 
 /**
  * Whether the signed-in account may publish this draft, and if not, why — the

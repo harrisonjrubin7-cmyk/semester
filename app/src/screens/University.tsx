@@ -54,7 +54,7 @@ import { IntegrationDashboard } from '../components/institutional/IntegrationDas
 import { CampaignManager } from '../components/institutional/CampaignManager';
 import { campaignsAllowed } from '../lib/gtm/manager';
 import { canApprove, canManage, migrationAllowed } from '../lib/migration/api';
-import { workflowsAllowed } from '../lib/workflow/api';
+import { workflowsAllowed } from '../lib/workflow/allowed';
 import { canDecide, canOverride, canPropose, canRead, recordAllowed } from '../lib/record/api';
 import { canApprove as canApproveFinance, canApproveHigh, canClose, canReadAccounts, canRequest, financeAllowed } from '../lib/finance/api';
 import type { ControlPlaneStatus } from '../lib/control-plane';
