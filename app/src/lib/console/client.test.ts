@@ -64,6 +64,7 @@ import {
   loadCustomers,
   loadDuties,
   loadFigures,
+  loadCommandCenter,
   loadPreferences,
   mfaFresh,
   mfaLevel,
@@ -239,6 +240,27 @@ describe('the audit', () => {
 });
 
 describe('figures and customers', () => {
+  it('reads the demo-aware command center and preserves evidence boundaries', async () => {
+    replies.set('rpc:console_command_center', {
+      data: [{
+        id: 'gate:production_restore', severity: 'critical', category: 'release gate',
+        title: 'Production restore evidence', tenant_id: null, tenant_name: null,
+        is_demo: false, owner: 'engineering', due_at: null, status: 'missing',
+        next_step: 'Record a dated production result.', route: 'Recovery runbook',
+        source: 'public.platform_release_evidence', evidence: '',
+        limitation: 'A backup listing is not execution evidence.', observed_at: '2026-09-30T16:00:00Z',
+      }],
+    });
+    const [item] = await loadCommandCenter();
+    expect(item).toMatchObject({
+      id: 'gate:production_restore', severity: 'critical', tenantId: null,
+      status: 'missing', source: 'public.platform_release_evidence',
+    });
+    expect(last()).toMatchObject({ name: 'console_command_center', args: { include_demo: false } });
+    await loadCommandCenter(true);
+    expect(last()).toMatchObject({ args: { include_demo: true } });
+  });
+
   it('leaves demo rows out unless asked', async () => {
     replies.set('rpc:console_figures', { data: [{ figure: 'billing', value: 'not applicable', source: 'docs/DECISION-LOG.md D-009', time_window: 'always', owner_seat: 'founder', refreshed_at: null, evidence: 'D-009', limitation: 'Semester takes no payments' }] });
     const [f] = await loadFigures();

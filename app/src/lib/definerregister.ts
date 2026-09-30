@@ -134,6 +134,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['console_act', 'admin', ['auth.uid()', 'private.has_capability', 'private.assert_fresh_mfa']],
   ['console_audit_read', 'admin', ['auth.uid()', 'private.has_capability']],
   ['console_audit_status', 'admin', ['auth.uid()', 'private.has_capability']],
+  ['console_command_center', 'admin', ['auth.uid()', 'private.has_capability']],
   ['console_figures', 'admin', ['auth.uid()', 'private.has_capability']],
   ['contribute_course_plan', 'self-service', ['auth.uid()', 'private.school_of']],
   ['create_community', 'self-service', ['auth.uid()', 'private.has_capability', 'private.verified_student', 'private.school_of']],
@@ -284,6 +285,10 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
  * a file here that is applied moves its functions into the count.
  */
 export const SINCE_READING: readonly { file: string; functions: readonly string[] }[] = [
+  {
+    file: '20260930180000_console_command_center.sql',
+    functions: ['console_command_center'],
+  },
   {
     file: '20260929150000_minimum_age.sql',
     functions: ['my_age_status', 'state_my_age'],

@@ -33,6 +33,7 @@ const mock = vi.hoisted(() => ({
   audit: vi.fn(),
   auditStatus: vi.fn(),
   figures: vi.fn(),
+  command: vi.fn(),
   customers: vi.fn(),
   prefs: vi.fn(),
   savePref: vi.fn(),
@@ -71,6 +72,7 @@ vi.mock('../lib/console/client', async (orig) => ({
   loadAudit: mock.audit,
   auditStatus: mock.auditStatus,
   loadFigures: mock.figures,
+  loadCommandCenter: mock.command,
   loadCustomers: mock.customers,
   loadPreferences: mock.prefs,
   savePreference: mock.savePref,
@@ -149,6 +151,7 @@ beforeEach(() => {
     { figure: 'billing', value: 'not applicable', source: 'docs/DECISION-LOG.md D-009', timeWindow: 'always', ownerSeat: 'founder', refreshedAt: null, evidence: 'D-009', limitation: 'Semester takes no payments; no payment provider exists to read from' },
     { figure: 'approvals-open', value: '1', source: 'public.approval_request', timeWindow: 'now', ownerSeat: 'security', refreshedAt: '2026-09-28T10:00:00Z', evidence: 'supabase/console-approvals.check.sql', limitation: 'Counts pending requests only' },
   ]);
+  mock.command.mockResolvedValue([]);
   mock.customers.mockResolvedValue([
     {
       id: 'c-1',
@@ -164,7 +167,9 @@ beforeEach(() => {
       contracts: [{ id: 'ct-1', kind: 'pilot-agreement', signedOn: '2026-09-01', startsOn: '2026-09-01', endsOn: '2027-05-31', documentRef: 'VU-PILOT-1' }],
     },
   ]);
-  mock.prefs.mockResolvedValue({});
+  // Existing view tests exercise Approvals first; production defaults to the
+  // Command center when no server-side preference exists.
+  mock.prefs.mockResolvedValue({ 'console.tab': 'approvals' });
   mock.savePref.mockResolvedValue(undefined);
   mock.mfa.mockResolvedValue(FRESH);
   mock.factors.mockResolvedValue([{ id: 'f-1', name: 'Phone' }]);
@@ -238,7 +243,7 @@ function dd(list: Element, field: string): string {
 }
 
 const noReads = () => {
-  for (const fn of [mock.duties, mock.approvals, mock.audit, mock.figures, mock.customers, mock.prefs, mock.breakGlass]) expect(fn).not.toHaveBeenCalled();
+  for (const fn of [mock.duties, mock.approvals, mock.audit, mock.figures, mock.command, mock.customers, mock.prefs, mock.breakGlass]) expect(fn).not.toHaveBeenCalled();
 };
 
 describe('the gate', () => {
@@ -274,6 +279,34 @@ describe('the gate', () => {
     await act(async () => answer(PLATFORM));
     await flush();
     expect(host.querySelector('[aria-label="Context bar"]')).toBeTruthy();
+  });
+});
+
+describe('command center', () => {
+  it('shows live blockers with their evidence boundary and never turns them green', async () => {
+    mock.prefs.mockResolvedValue({ 'console.tab': 'command' });
+    mock.command.mockResolvedValue([{
+      id: 'gate:production_restore', severity: 'critical', category: 'release gate',
+      title: 'Production restore evidence', tenantId: null, tenantName: null,
+      isDemo: false, owner: 'engineering', dueAt: null, status: 'missing',
+      nextStep: 'Record a dated production result.', route: 'Recovery runbook',
+      source: 'public.platform_release_evidence', evidence: '',
+      limitation: 'A backup listing is not execution evidence.', observedAt: '2026-09-30T16:00:00Z',
+    }]);
+    await render();
+    expect(host.textContent).toContain('NOT GO');
+    expect(host.textContent).toContain('Production restore evidence');
+    expect(host.textContent).toContain('No evidence recorded');
+    expect(host.textContent).not.toContain('GREEN —');
+    expect(mock.command).toHaveBeenCalledWith(false);
+  });
+
+  it('says green only when the live exception reader returns no rows', async () => {
+    mock.prefs.mockResolvedValue({ 'console.tab': 'command' });
+    mock.command.mockResolvedValue([]);
+    await render();
+    expect(host.textContent).toContain('GREEN');
+    expect(host.textContent).toContain('no open exception');
   });
 });
 

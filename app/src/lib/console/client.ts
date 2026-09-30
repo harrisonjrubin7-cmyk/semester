@@ -359,6 +359,63 @@ export async function loadFigures(includeDemo = false): Promise<Figure[]> {
   }));
 }
 
+// ── command center ────────────────────────────────────────────────────────
+
+export type CommandSeverity = 'critical' | 'high' | 'medium' | 'info';
+
+export interface CommandItem {
+  id: string;
+  severity: CommandSeverity;
+  category: string;
+  title: string;
+  tenantId: string | null;
+  tenantName: string | null;
+  isDemo: boolean;
+  owner: string;
+  dueAt: string | null;
+  status: string;
+  nextStep: string;
+  route: string;
+  source: string;
+  evidence: string;
+  limitation: string;
+  observedAt: string;
+}
+
+const COMMAND_SEVERITIES: readonly CommandSeverity[] = ['critical', 'high', 'medium', 'info'];
+
+export function readCommandItem(r: Row): CommandItem {
+  const severity = COMMAND_SEVERITIES.includes(r.severity as CommandSeverity)
+    ? (r.severity as CommandSeverity)
+    : 'info';
+  return {
+    id: text(r.id),
+    severity,
+    category: text(r.category),
+    title: text(r.title),
+    tenantId: maybe(r.tenant_id),
+    tenantName: maybe(r.tenant_name),
+    isDemo: r.is_demo === true,
+    owner: text(r.owner),
+    dueAt: maybe(r.due_at),
+    status: text(r.status),
+    nextStep: text(r.next_step),
+    route: text(r.route),
+    source: text(r.source),
+    evidence: text(r.evidence),
+    limitation: text(r.limitation),
+    observedAt: text(r.observed_at),
+  };
+}
+
+/** Live operational exceptions, ordered server-side by urgency. Demo tenants stay out unless explicitly requested. */
+export async function loadCommandCenter(includeDemo = false): Promise<CommandItem[]> {
+  const db = await cloud();
+  const { data, error } = await db.rpc('console_command_center', { include_demo: includeDemo });
+  if (error) throw new Error(message(error, 'Could not read the command center.'));
+  return rows(data).map(readCommandItem);
+}
+
 // ── customers ──────────────────────────────────────────────────────────────
 
 export interface CustomerCommitment {
