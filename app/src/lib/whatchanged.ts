@@ -21,6 +21,27 @@ import type { Item } from './types';
 
 export type ChangeKind = 'added' | 'removed' | 'moved' | 'retimed' | 'reweighted';
 
+/**
+ * What was last acknowledged about one deadline — the fields a change is
+ * reported from and nothing else. An {@link Item} is assignable to it.
+ */
+export interface Seen {
+  id: string;
+  c: string;
+  title: string;
+  month: number;
+  day: number;
+  year?: number;
+  dueTime: string;
+  weight: string;
+  source: string;
+  quote: string;
+  checked?: { confirmed: boolean; page?: number; doc?: string };
+}
+
+/** The last reading acknowledged, per course. A course absent here is one never read. */
+export type SeenMap = Record<string, Seen[]>;
+
 export interface WhatChanged {
   id: string;
   kind: ChangeKind;
@@ -42,10 +63,10 @@ export interface WhatChanged {
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-const at = (i: Pick<Item, 'month' | 'day' | 'year'>, fallbackYear: number): Date =>
+const at = (i: Pick<Seen, 'month' | 'day' | 'year'>, fallbackYear: number): Date =>
   new Date(i.year ?? fallbackYear, i.month, i.day);
 
-const say = (i: Pick<Item, 'month' | 'day'>): string => `${MONTHS[i.month]} ${i.day}`;
+const say = (i: Pick<Seen, 'month' | 'day'>): string => `${MONTHS[i.month]} ${i.day}`;
 
 const daysBetween = (a: Date, b: Date): number => {
   const d0 = Date.UTC(a.getFullYear(), a.getMonth(), a.getDate());
@@ -53,7 +74,7 @@ const daysBetween = (a: Date, b: Date): number => {
   return Math.round((d1 - d0) / 86_400_000);
 };
 
-const sourceOf = (i: Item): string => {
+const sourceOf = (i: Seen): string => {
   const page = i.checked?.confirmed && i.checked.page ? `, p. ${i.checked.page}` : '';
   const from = i.source ? i.source : 'the course';
   return i.quote ? `${from}${page}: "${i.quote}"` : `${from}${page}`;
@@ -75,14 +96,14 @@ const soon = (days: number): string =>
  * change that most needs a reaction is the first thing read; equal dates fall
  * back to title so the order is stable.
  */
-export function whatChanged(before: readonly Item[], after: readonly Item[], now: Date): WhatChanged[] {
+export function whatChanged(before: readonly Seen[], after: readonly Item[], now: Date): WhatChanged[] {
   const y = now.getFullYear();
   const was = new Map(before.map((i) => [i.id, i]));
   const is = new Map(after.map((i) => [i.id, i]));
   const out: WhatChanged[] = [];
 
   const push = (
-    i: Item,
+    i: Seen,
     kind: ChangeKind,
     previous: string | null,
     next: string | null,
@@ -140,4 +161,84 @@ export function whatChanged(before: readonly Item[], after: readonly Item[], now
   }
 
   return out.sort((a, b) => a.effective.getTime() - b.effective.getTime() || a.title.localeCompare(b.title) || a.kind.localeCompare(b.kind));
+}
+
+export const seenOf = (i: Item): Seen => ({
+  id: i.id,
+  c: i.c,
+  title: i.title,
+  month: i.month,
+  day: i.day,
+  ...(i.year === undefined ? {} : { year: i.year }),
+  dueTime: i.dueTime,
+  weight: i.weight,
+  source: i.source,
+  quote: i.quote,
+  ...(i.checked ? { checked: { ...i.checked } } : {}),
+});
+
+const num = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
+const str = (v: unknown): v is string => typeof v === 'string';
+
+/** Read a saved map, dropping anything malformed rather than trusting it. */
+export function readSeen(raw: unknown): SeenMap {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};
+  const out: SeenMap = {};
+  for (const [course, list] of Object.entries(raw as Record<string, unknown>)) {
+    if (!Array.isArray(list)) continue;
+    out[course] = list.flatMap((r): Seen[] => {
+      if (!r || typeof r !== 'object') return [];
+      const o = r as Record<string, unknown>;
+      if (!str(o.id) || !str(o.c) || !str(o.title) || !num(o.month) || !num(o.day)) return [];
+      const ck = o.checked as Record<string, unknown> | undefined;
+      return [
+        {
+          id: o.id,
+          c: o.c,
+          title: o.title,
+          month: o.month,
+          day: o.day,
+          ...(num(o.year) ? { year: o.year } : {}),
+          dueTime: str(o.dueTime) ? o.dueTime : '',
+          weight: str(o.weight) ? o.weight : '',
+          source: str(o.source) ? o.source : '',
+          quote: str(o.quote) ? o.quote : '',
+          ...(ck && typeof ck.confirmed === 'boolean'
+            ? { checked: { confirmed: ck.confirmed, ...(num(ck.page) ? { page: ck.page } : {}), ...(str(ck.doc) ? { doc: ck.doc } : {}) } }
+            : {}),
+        },
+      ];
+    });
+  }
+  return out;
+}
+
+/** Courses holding at least one deadline now and no acknowledged reading yet. */
+export function unseenCourses(seen: SeenMap, items: readonly Item[]): SeenMap {
+  const fresh: SeenMap = {};
+  for (const i of items) if (!seen[i.c]) (fresh[i.c] ??= []).push(seenOf(i));
+  return fresh;
+}
+
+/**
+ * Changes since each course's acknowledged reading.
+ *
+ * A course is compared only if it was acknowledged before *and* holds a
+ * deadline now. Without the second condition a catalogue still loading, or a
+ * course briefly emptied, would report every deadline it ever had as removed.
+ * A course never read has nothing to differ from, so it reports nothing and is
+ * seeded silently by {@link unseenCourses}.
+ */
+export function pendingChanges(seen: SeenMap, items: readonly Item[], now: Date, courseId?: string): WhatChanged[] {
+  const present = new Set(items.map((i) => i.c));
+  return Object.entries(seen)
+    .filter(([c]) => present.has(c) && (courseId === undefined || c === courseId))
+    .flatMap(([c, before]) =>
+      whatChanged(
+        before,
+        items.filter((i) => i.c === c),
+        now,
+      ),
+    )
+    .sort((a, b) => a.effective.getTime() - b.effective.getTime() || a.title.localeCompare(b.title) || a.kind.localeCompare(b.kind));
 }

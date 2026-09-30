@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { whatChanged } from './whatchanged';
+import { pendingChanges, readSeen, seenOf, unseenCourses, whatChanged } from './whatchanged';
 import type { Item } from './types';
 
 const NOW = new Date(2026, 8, 18, 20, 0);
@@ -82,5 +82,37 @@ describe('whatChanged', () => {
     const [c] = whatChanged([], [item({ id: 'j', month: 0, day: 12, year: 2027 })], NOW);
     expect(c.effective).toEqual(new Date(2027, 0, 12));
     expect(c.daysAway).toBe(116);
+  });
+});
+
+describe('the acknowledged reading', () => {
+  const a = item({ id: 'a', c: 'econ' });
+  const b = item({ id: 'b', c: 'hist', title: 'Paper', day: 20 });
+
+  it('seeds only the courses that have no reading yet', () => {
+    expect(Object.keys(unseenCourses({ econ: [seenOf(a)] }, [a, b]))).toEqual(['hist']);
+  });
+
+  it('reports nothing for a course never read, so the first visit is silent', () => {
+    expect(pendingChanges({}, [a, b], NOW)).toEqual([]);
+  });
+
+  it('does not report a course that holds no deadlines now as all removed', () => {
+    expect(pendingChanges({ econ: [seenOf(a)], hist: [seenOf(b)] }, [a], NOW).map((c) => c.courseId)).toEqual([]);
+  });
+
+  it('filters to one course for Course Home', () => {
+    const seen = { econ: [seenOf(a)], hist: [seenOf(b)] };
+    const moved = [{ ...a, day: 9 }, { ...b, day: 21 }];
+    expect(pendingChanges(seen, moved, NOW).map((c) => c.courseId).sort()).toEqual(['econ', 'hist']);
+    expect(pendingChanges(seen, moved, NOW, 'hist').map((c) => c.courseId)).toEqual(['hist']);
+  });
+
+  it('round-trips through readSeen and drops malformed rows', () => {
+    const good = { econ: [seenOf({ ...a, checked: { confirmed: true, page: 2 }, year: 2026 })] };
+    expect(readSeen(JSON.parse(JSON.stringify(good)))).toEqual(good);
+    expect(readSeen({ econ: [{ id: 1 }, null, 'x'], hist: 'no' })).toEqual({ econ: [] });
+    expect(readSeen(null)).toEqual({});
+    expect(readSeen([])).toEqual({});
   });
 });
