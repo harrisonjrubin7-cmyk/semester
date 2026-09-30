@@ -99,3 +99,33 @@ it('says every module is Connect when the setting could not be read', async () =
   expect(host.textContent).toContain('could not be read');
   expect(host.textContent).toContain('Connect, because the setting could not be read');
 });
+
+it('does not say the settings could not be read while they are still being read', async () => {
+  // canEdit so that "Ask for Core" would be on offer if the panel guessed a mode.
+  let release: (v: typeof mock.rows) => void = () => {};
+  const slow = new Promise<typeof mock.rows>((r) => { release = r; });
+  const real = mock.rows;
+  // The loader is stubbed above to resolve at once; hand this render a slow one.
+  const mod = await import('../../lib/modulemode');
+  const spy = vi.spyOn(mod, 'moduleModes').mockReturnValue(slow as never);
+  try {
+    await act(async () => root.render(<ModulesPanel school="s1" me="u1" canEdit />));
+    expect(host.textContent).toContain('Reading the settings');
+    expect(host.textContent).not.toContain('could not be read');
+    // Nor does any module claim a mode, or offer a change, before it is known.
+    expect(host.textContent).not.toContain('because the setting');
+    expect(button(/Ask for Core|Go back to Connect/)).toBeUndefined();
+    await act(async () => { release(real); await slow; });
+    expect(host.textContent).not.toContain('Reading the settings');
+    expect(host.textContent).not.toContain('could not be read');
+  } finally {
+    spy.mockRestore();
+  }
+});
+
+it('says so, after the read, when the settings really could not be read', async () => {
+  mock.rows = null;
+  await render({ canEdit: false });
+  expect(host.textContent).toContain('The settings could not be read, so every module shows as Connect');
+  expect(host.textContent).not.toContain('Reading the settings');
+});

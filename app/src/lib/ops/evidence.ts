@@ -109,6 +109,17 @@ export const EVIDENCE: readonly EvidenceRecord[] = [
     note: 'The go/no-go checklist records the pass date; RESTORE.md and supabase/restore.sh hold the procedure and state no date. Production has never been restored, which is why the claim stays in preparation. Renewed by the quarterly disaster-recovery exercise.',
   },
   {
+    id: 'restore-rehearsal-offboarding',
+    artifact: 'Backup restore rehearsal after the school-offboarding migration: a logical dump restored locally, 308 tables, schema and row counts compared, timed',
+    path: 'docs/evidence/restore/2026-09-30-logical-rehearsal.md',
+    produced: '2026-09-30',
+    validFor: QUARTERLY,
+    owner: 'engineering',
+    claims: [],
+    rows: ['SRE-004', 'SRE-005'],
+    note: 'A rehearsal in a throwaway database with one account, not a restore of the live project. Production has never been restored; release gate G5 stays unmet until it is, on a non-production project, by someone other than the author.',
+  },
+  {
     id: 'hecvat-draft',
     artifact: 'HECVAT draft response, not sent',
     path: 'docs/market-readiness/HECVAT_DRAFT_RESPONSE.md',

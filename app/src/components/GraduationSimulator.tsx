@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { SourceBadge } from './SourceBadge';
 import { ConfirmDialog } from './ConfirmDialog';
 import { CostPlanner } from './CostPlanner';
 import { RecordLabel } from './RecordLabel';
@@ -150,7 +151,7 @@ export function GraduationSimulator({
         <span className="portal-eyebrow">Estimate</span>
         <h3 id="grad-plan">Your current plan</h3>
         <p className="portal-muted">
-          <strong>A planning estimate, not an official degree audit</strong> — confirm with your advisor or the
+          <SourceBadge label="estimated" /> <strong>A planning estimate, not an official degree audit</strong> — confirm with your advisor or the
           registrar. {done} hours finished, counted from your Taken tab. Every figure here is an estimate from numbers
           you enter — it does not know course sequencing, when classes are offered, or your financial aid.
         </p>

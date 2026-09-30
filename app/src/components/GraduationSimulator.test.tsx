@@ -28,6 +28,13 @@ afterEach(() => {
   localStorage.clear();
 });
 
+it('labels the whole projection as an estimate with a source badge, not a degree audit', () => {
+  act(() => root.render(<GraduationSimulator done={60} />));
+  const note = host.querySelector('#grad-plan')!.closest('section')!;
+  expect(note.querySelector('[data-source="estimated"]')).not.toBeNull();
+  expect(note.textContent).toContain('A planning estimate, not an official degree audit');
+});
+
 it('projects a finish from the transcript hours and calls it an estimate', () => {
   act(() => root.render(<GraduationSimulator done={60} />));
   expect(host.textContent).toContain('Fall 2028');

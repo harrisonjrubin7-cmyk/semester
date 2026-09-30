@@ -53,3 +53,16 @@ it('offers a report control only when the screen can take the report', () => {
   act(() => button?.click());
   expect(onReport).toHaveBeenCalledOnce();
 });
+
+it('says the time was not recorded only when asked, never "just now"', () => {
+  const now = Date.UTC(2026, 8, 27, 12);
+  act(() => root.render(<SourceBadge label="needs_review" now={now} />));
+  expect(host.textContent).not.toContain('Update time not recorded');
+  act(() => root.render(<SourceBadge label="needs_review" now={now} unknownAge />));
+  expect(host.textContent).toContain('Update time not recorded');
+  expect(host.textContent).not.toContain('just now');
+  // A known time still wins over the note.
+  act(() => root.render(<SourceBadge label="imported" at={now - 3_600_000} now={now} unknownAge />));
+  expect(host.textContent).toContain('Updated 1 hour ago');
+  expect(host.textContent).not.toContain('Update time not recorded');
+});
