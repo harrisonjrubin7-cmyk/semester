@@ -71,3 +71,33 @@ Each addition extends a layer above; nothing replaces one.
    pattern.
 6. The app stays fully usable signed out (ADR 0001) unless the owner
    reopens that ADR.
+
+## Full-beta target (Milestone 0, 2026-09-30)
+
+Added by the full-beta programme; the plan is in
+[FULL-BETA-REQUIREMENTS.md](FULL-BETA-REQUIREMENTS.md) and per-feature status in
+[FEATURE-TRUTH-TABLE.md](FEATURE-TRUTH-TABLE.md). It changes nothing above.
+
+Target shape: the same three tiers, with server persistence added only where data is shared,
+institutional, billed, consented or file-shaped.
+
+```
+ SPA (device-first, ADR 0001) ── Supabase Auth ── Postgres + RLS (tenant_id, has_capability)
+        │                             │              ├─ audit_event (common envelope)   [M1]
+        │                             │              ├─ record provenance labels        [M2]
+        │                             │              ├─ content / search index          [M3]
+        │                             │              ├─ study materials + AI history    [M4]
+        │                             │              └─ workspace files + share grants  [M5]
+        ├─ edge functions: billing-*, claude, lti, lead-intake, …  (each authenticates itself)
+        └─ institution gateway (Node/Vercel; SCIM, records, actions) — hosting vs ADR 0003 undecided (C-4)
+ Connectors register adapters behind a kill switch; none are registered today (ADAPTERS = []).
+```
+
+New invariants for full-beta work, in addition to those above:
+
+7. A record shown from an external or institutional source carries one of the five source labels
+   (`institution_verified`, `imported`, `student_entered`, `estimated`, `needs_review`), an owner,
+   and a last-review date, or it is not shown as fact.
+8. Stripe state changes only from a signature-verified webhook event; the raw body is stored so
+   the event can be replayed.
+9. Sensitive institutional features default OFF and are enabled per tenant, never by a build flag.
