@@ -54,20 +54,50 @@ function walk(dir: string, out: string[] = []): string[] {
 const strip = (t: string) =>
   t.replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, ' ')).replace(/(^|[^:'"`])\/\/[^\n]*/g, (m, a) => a + ' '.repeat(m.length - a.length));
 
-/** Every transition/animation declaration whose value holds a literal time. */
+/**
+ * Every transition/animation declaration whose value holds a literal time.
+ *
+ * The whole declaration is read, not the line it starts on: a stylesheet writes
+ * `transition:` and puts the value on the next line (`app.css` does), and a
+ * line-by-line read saw an empty value there and let a literal through. CSS
+ * runs to its `;` or `}`. In a `.tsx` style object there is no `;`, so the
+ * value is the rest of its line, and the next line too when it opens empty.
+ */
 export function literals(): { file: string; line: number; value: string }[] {
   const found: { file: string; line: number; value: string }[] = [];
+  const HEAD = /\b(?:transition|animation)(?:-duration|-delay)?\s*:/g;
   for (const path of walk(SRC)) {
     const text = strip(readFileSync(path, 'utf8'));
     const file = path.slice(SRC.length);
-    text.split('\n').forEach((raw, i) => {
-      const m = /\b(?:transition|animation)(?:-duration|-delay)?\s*:\s*(.*)$/.exec(raw);
-      if (!m) return;
-      const value = m[1].replace(/[;,]?\s*$/, '').replace(/^['"`]|['"`]$/g, '').trim();
+    const css = path.endsWith('.css');
+    for (const m of text.matchAll(HEAD)) {
+      const from = m.index! + m[0].length;
+      let end: number;
+      if (css) {
+        const semi = text.indexOf(';', from);
+        const brace = text.indexOf('}', from);
+        end = Math.min(...[semi, brace].filter((i) => i >= 0), text.length);
+      } else {
+        let eol = text.indexOf('\n', from);
+        if (eol < 0) eol = text.length;
+        end = eol;
+        // `transition:` alone on its line: the value is on the next one.
+        if (text.slice(from, eol).trim() === '') {
+          const next = text.indexOf('\n', eol + 1);
+          end = next < 0 ? text.length : next;
+        }
+      }
+      const value = text
+        .slice(from, end)
+        .replace(/\s+/g, ' ')
+        .trim()
+        .replace(/[;,]$/, '')
+        .replace(/^['"`]|['"`]$/g, '')
+        .trim();
       // A literal time: digits then s/ms, not the tail of a var() name.
       const times = [...value.matchAll(/(?<![\w-])(\d*\.?\d+)(ms|s)\b/g)].filter((t) => t[0] !== '0.001ms' && t[0] !== '0ms');
-      if (times.length) found.push({ file, line: i + 1, value });
-    });
+      if (times.length) found.push({ file, line: text.slice(0, m.index!).split('\n').length, value });
+    }
   }
   return found;
 }

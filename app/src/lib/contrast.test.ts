@@ -652,6 +652,27 @@ describe('the error colour, on every ground', () => {
     }
   });
 
+  it('is what the shared status components draw a danger tone with', () => {
+    // A review found `unity.css` grouped `[data-tone='danger']` with attention,
+    // so the token above existed and nothing drew it. Any rule that selects the
+    // danger tone or the error panel must reach for a danger token, never the
+    // attention one.
+    const css = readFileSync(join(__dirname, '../styles/unity.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+    const rules = [...css.matchAll(/([^{}]+)\{([^}]*)\}/g)].map((m) => ({ sel: m[1].trim(), body: m[2] }));
+    const danger = rules.filter((r) => /data-tone='danger'|\.state-error\b|data-state='failed'/.test(r.sel));
+    // Layout-only rules (`.state-error` shares one with its siblings) set no
+    // status colour and are not the point; a rule that does must use danger's.
+    const painting = danger.filter((r) => /--status-/.test(r.body));
+    expect(painting.length, 'the danger rules that set a colour are there to be checked').toBeGreaterThanOrEqual(3);
+    for (const r of painting) {
+      expect(r.body, r.sel).not.toMatch(/--status-attention/);
+      expect(r.body, r.sel).toMatch(/--status-danger/);
+    }
+    // And the pair that stayed attention did not lose it.
+    const offline = rules.find((r) => r.sel === '.state-offline' && /status-attention/.test(r.body));
+    expect(offline, '.state-offline stays on the attention rung').toBeTruthy();
+  });
+
   it('is what the danger status paints with', () => {
     const tokens = readFileSync(join(__dirname, '../styles/tokens.css'), 'utf8');
     expect(tokens).toMatch(/--status-danger:\s*var\(--app-error\)/);
