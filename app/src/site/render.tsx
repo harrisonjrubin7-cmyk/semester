@@ -6,6 +6,7 @@ import { Layout, href } from './Layout';
 import * as B from './benchmark';
 import * as C from './community';
 import * as K from './k12';
+import * as AD from './advancement';
 import * as O from './oneos';
 import * as M from './more';
 import * as P from './pages';
@@ -82,6 +83,8 @@ export const ROUTES: Route[] = [
   { path: '/community/ambassadors/', title: 'Campus ambassadors — Semester', description: 'What an ambassador does, what they get, and the boundaries: never paid per sign-up, and no access to other students’ data.', Page: C.Ambassadors },
   { path: '/community/stories/', title: 'Student stories — Semester', description: 'Real campus journeys in the student’s own words, published only with permission, anonymous, attributed, campus-only or public as they chose.', Page: C.Stories },
   { path: '/k-12/', title: 'Semester for high school', description: 'The K–12 edition, described and not yet offered: no district uses Semester, and nobody under 13 may hold an account.', Page: K.K12 },
+  { path: '/solutions/advancement/', title: 'Alumni relations and fundraising', description: 'Planned, not built: no school uses Semester for alumni relations or fundraising, and no gift has been taken.', Page: AD.Advancement },
+  { path: '/alumni/', title: 'For graduates', description: 'What a graduate can do in Semester today, and what a school’s alumni office might one day add. Nothing here asks for a gift.', Page: AD.Alumni },
   { path: '/community/partners/', title: 'Partner community directory — Semester', description: 'Who can be listed, the four verification labels, and the rules: visibility is never sold and a partner never sees a student’s record.', Page: C.Partners },
   { path: '/community/events/', title: 'Events and sessions — Semester', description: 'Workshops, registration-prep sessions, roundtables and panels, each with registration, calendar save, accessibility information, a replay and a next step.', Page: C.Events },
   ...TOOL_LIST.map(
