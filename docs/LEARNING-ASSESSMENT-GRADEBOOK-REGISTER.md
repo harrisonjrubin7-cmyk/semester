@@ -531,7 +531,7 @@ The tutor has `explain`, `hint`, `practice`, `review`, `draft`. Each mode the do
 
 ## The study and AI learning tools
 
-The second document’s eighteen tools, each with its source and safety control; 13 have something in the tree, and each names the file.
+The second document’s eighteen tools, each with its source and safety control; 14 have something in the tree, and each names the file.
 
 | Tool | What it does | Source and safety control | Have | Note |
 | --- | --- | --- | --- | --- |
@@ -545,7 +545,7 @@ The second document’s eighteen tools, each with its source and safety control;
 | Lecture companion | Syncs slides, notes, transcript, timestamps and study prompts | Requires an authorized recording; respects instructor policy | — | A transcript becomes course material (`lib/transcribe.ts`); nothing syncs slides or timestamps. |
 | Problem-set planner | Breaks a problem set into effort estimates and support checkpoints | No solution delivery when course policy restricts it | `app/src/lib/assignment.ts` | Steps with minutes; the policy cap in `lib/socratic.ts`. |
 | Exam readiness planner | Builds a study schedule from scope, date and availability | Labels estimates; supports accessibility and quiet hours | `app/src/lib/study-readiness.ts` | With the readiness forecast in `lib/learning-loop.ts`. |
-| Office-hours agenda builder | Creates a concise question list from confusion points | The student chooses what to share | — | An agenda builder exists for advisor meetings only; `lib/officehours.ts` is a nudge with no advice. |
+| Office-hours agenda builder | Creates a concise question list from confusion points | The student chooses what to share | `app/src/lib/officeagenda.ts` | A question list from the student’s private questions, filed feedback and review-later concepts, each ticked by the student and none pre-selected; copied or saved as text, never sent. Sources are not attached to it yet, and `lib/officehours.ts` remains a nudge about when to go. |
 | Feedback-to-revision coach | Turns released feedback into a revision checklist | Uses only the student’s released feedback and selected sources | `app/src/lib/feedbackloop.ts` | Works from comments the student files and the category they choose, and turns each into optional next steps they add to their plan by hand; nothing is read from released gradebook feedback, and no action is inferred from the comment text. `critique` in `lib/assignment.ts` compares a draft to the rubric. |
 | Citation coach | Explains attribution and source quality; builds a bibliography draft | The student verifies every citation before use | `app/src/lib/toolkit/research.ts` | verify and audit; Write does not format bibliographies by design. |
 | Accessibility transformation | Read aloud, captions, plain-language restatement, format checks | Identifies transformations; preserves original access | `app/src/components/StudyStudio.tsx` | Read-aloud; captions on the podcasts; no plain-language restatement or format check. |
