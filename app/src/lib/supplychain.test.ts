@@ -122,8 +122,21 @@ describe('the workflows', () => {
     for (const action of Object.keys(ACTIONS)) expect(used.has(action), `${action} is approved and unused`).toBe(true);
   });
 
-  it('pins every Action to a ref', () => {
-    for (const w of workflows()) for (const u of usesIn(w.text)) expect(u, w.file).toMatch(/@\S+$/);
+  it('pins every Action to a full commit SHA, not a tag a publisher can move', () => {
+    for (const w of workflows()) for (const u of usesIn(w.text)) expect(u, w.file).toMatch(/@[0-9a-f]{40}$/);
+  });
+
+  it('says which release each pinned SHA is, so a reviewer can read the pin', () => {
+    for (const w of workflows())
+      for (const line of w.text.split('\n').filter((l) => /^\s*(?:-\s+)?uses:\s*[^\s#]+@[0-9a-f]{40}/.test(l)))
+        expect(line, `${w.file}: ${line.trim()}`).toMatch(/@[0-9a-f]{40}\s+#\s*v\d/);
+  });
+
+  it('reads a pin, a tag and a short SHA apart', () => {
+    const pin = /@[0-9a-f]{40}$/;
+    expect('actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1').toMatch(pin);
+    expect('actions/checkout@v7').not.toMatch(pin);
+    expect('actions/checkout@3d3c42e').not.toMatch(pin);
   });
 
   it('gives every workflow a least-privilege token by default', () => {
@@ -212,10 +225,11 @@ function render(): string {
     '| Every package under an approved or named licence | `app/src/lib/supplychain.test.ts` |',
     '| Every package from `registry.npmjs.org` with a sha512 integrity hash | `app/src/lib/supplychain.test.ts` |',
     '| Only approved third-party Actions run | `app/src/lib/supplychain.test.ts` |',
+    '| Every Action pinned to a full commit SHA, with its release in a comment | `app/src/lib/supplychain.test.ts` |',
     '| An SBOM (CycloneDX) of every deploy, kept 90 days | `pages.yml` → `npm run sbom`; asserted by `supplychain.test.ts` |',
     '',
-    'What is **not** held yet — Actions pinned to commit SHAs, signed build',
-    'provenance, a supplier-compromise playbook — is tracked with the rest of the',
+    'What is **not** held yet — signed build provenance, a',
+    'supplier-compromise playbook — is tracked with the rest of the',
     'strategic expansion in [`STRATEGIC-EXPANSION-REGISTER.md`](STRATEGIC-EXPANSION-REGISTER.md).',
     '',
     '## Licence inventory',
