@@ -88,7 +88,7 @@ PDFs are never cited as evidence.
 | `app/src/lib/help-routes.test.ts` | tutoring, the writing centre and the library as routes, directory-only |
 | `app/src/lib/source-locker.test.ts` | per-material AI use |
 
-*Gap.* No term plan, no outcome map (LMS-015), no course discussions (LMS-007), no submission state because no submission exists outside the sandbox (LMS-004), and no time zone on a due date.
+*Gap.* No term plan, no outcome map (LMS-015), no course discussions (LMS-007), no native submission state (a Canvas-imported label, from `standing` in `lib/canvas.ts`, and released grades on the Gradebook screen exist, but neither sits on the assignment itself) (LMS-004), and no time zone on a due date.
 
 #### L02
 
@@ -141,7 +141,7 @@ PDFs are never cited as evidence.
 | `app/src/lib/toolkit/templates.test.ts` | a stage cannot be marked done without the student’s own note |
 | `app/src/lib/notify.test.ts` | quiet hours and caps |
 
-*Gap.* No submission, so no submission checklist, receipt or proof (LMS-004, LMS-005); no route from the plan to an instructor.
+*Gap.* No native submission, so no receipt or proof of one (LMS-004, LMS-005): the assignment workspace has a submission checklist, and its last line sends the student to submit through the course’s own system. No route from the plan to an instructor.
 
 #### L04
 
@@ -174,7 +174,7 @@ PDFs are never cited as evidence.
 | `app/src/lib/pdf.test.ts` | PDF export |
 | `app/src/lib/socratic.test.ts` | the modes, and the policy cap on the top rung |
 
-*Gap.* No comments on a draft, no accessibility or format check, no submission checklist. Write deliberately does not format bibliographies.
+*Gap.* No comments on a draft, and no accessibility or format check on the document itself; the assignment workspace’s submission checklist is a short list of prompts, some shown only when the assignment has sources or the course needs an AI-use declaration, and none of them a check on the document (“Headings in order, figures described, links named” is a reminder). Write deliberately does not format bibliographies.
 
 #### L05
 
@@ -434,7 +434,7 @@ PDFs are never cited as evidence.
 | `app/src/components/spokenlesson.test.tsx` | a lesson read aloud |
 | `docs/operating-model/AI-GRADING-AND-INTEGRITY.md` | the roles matrix at the lifecycle gates, and the two rules at the code |
 
-*Gap.* Nothing faculty-facing: no feedback draft, evidence spotting or integrity signal for a grader; and no intake refusal names automated grading (AI-006, AI-007).
+*Gap.* Nothing that helps a grader: no feedback draft, evidence spotting or integrity signal; and no intake refusal names automated grading (AI-006, AI-007). The one faculty-side review rule for AI-drafted material is `app/src/lib/itembank.ts` (a reviewer other than the author, an accessibility review, and the model, prompt version and editor named), which has no accuracy or bias review and is wired to no screen.
 
 #### L13
 
@@ -531,7 +531,7 @@ The tutor has `explain`, `hint`, `practice`, `review`, `draft`. Each mode the do
 
 ## The study and AI learning tools
 
-The second document’s eighteen tools, each with its source and safety control; 12 have something in the tree, and each names the file.
+The second document’s eighteen tools, each with its source and safety control; 13 have something in the tree, and each names the file.
 
 | Tool | What it does | Source and safety control | Have | Note |
 | --- | --- | --- | --- | --- |
@@ -546,7 +546,7 @@ The second document’s eighteen tools, each with its source and safety control;
 | Problem-set planner | Breaks a problem set into effort estimates and support checkpoints | No solution delivery when course policy restricts it | `app/src/lib/assignment.ts` | Steps with minutes; the policy cap in `lib/socratic.ts`. |
 | Exam readiness planner | Builds a study schedule from scope, date and availability | Labels estimates; supports accessibility and quiet hours | `app/src/lib/study-readiness.ts` | With the readiness forecast in `lib/learning-loop.ts`. |
 | Office-hours agenda builder | Creates a concise question list from confusion points | The student chooses what to share | — | An agenda builder exists for advisor meetings only; `lib/officehours.ts` is a nudge with no advice. |
-| Feedback-to-revision coach | Turns released feedback into a revision checklist | Uses only the student’s released feedback and selected sources | — | critique compares a draft to the rubric; no instructor feedback is ingested. |
+| Feedback-to-revision coach | Turns released feedback into a revision checklist | Uses only the student’s released feedback and selected sources | `app/src/lib/feedbackloop.ts` | Works from comments the student files and the category they choose, and turns each into optional next steps they add to their plan by hand; nothing is read from released gradebook feedback, and no action is inferred from the comment text. `critique` in `lib/assignment.ts` compares a draft to the rubric. |
 | Citation coach | Explains attribution and source quality; builds a bibliography draft | The student verifies every citation before use | `app/src/lib/toolkit/research.ts` | verify and audit; Write does not format bibliographies by design. |
 | Accessibility transformation | Read aloud, captions, plain-language restatement, format checks | Identifies transformations; preserves original access | `app/src/components/StudyStudio.tsx` | Read-aloud; captions on the podcasts; no plain-language restatement or format check. |
 | Study-group kit | Shared agenda, roles, practice prompts and resources | Consent-based sharing; no grade or analytics exposure | `app/src/lib/groupwork.ts` | A group-project split; community sessions; no kit. |
@@ -554,7 +554,7 @@ The second document’s eighteen tools, each with its source and safety control;
 | Formula and reference builder | Student-authored, instructor-approved study sheets | Course-policy and assessment-permission label | — | None. |
 | Metacognition journal | Records goals, confidence, strategy and reflection | Private by default; no behavioural scoring | `app/src/components/StudyJournal.tsx` | With calibration in `lib/sure.ts` and what-worked in `lib/worked.ts`. |
 
-### Advanced learning features (3 of 8)
+### Advanced learning features (4 of 8)
 
 | Feature | What | Have | Note |
 | --- | --- | --- | --- |
@@ -562,7 +562,7 @@ The second document’s eighteen tools, each with its source and safety control;
 | Misconception library | Faculty-curated common misunderstandings with source-linked corrections | — | Repeated mistakes are tracked per student; no library. |
 | Adaptive practice with transparent rules | The next item chosen by coverage, confidence, prior response and exam scope — not opaque risk prediction | `app/src/lib/interleave.ts` | With `lib/pretest.ts` and recommendLearningActivity in `lib/learning-loop.ts`. |
 | Learning-outcome navigator | Which modules, assignments, practice items and feedback connect to each outcome | — | Student mastery only; no outcome authoring or mapping (LMS-015). |
-| Feedback digest | Released feedback summarized into student-controlled patterns | — | None. |
+| Feedback digest | Released feedback summarized into student-controlled patterns | `app/src/lib/feedbackloop.ts` | Themes across the student’s own filings, spoken only above a floor of three and never ranked (`themes` in `lib/feedbackloop.ts`), kept private on the device; the filings are not read from released gradebook feedback. |
 | Study workload balancer | A realistic plan across courses from deadlines and declared availability, assumptions visible | `app/src/lib/ahead.ts` | Week pressure, pace and work windows. |
 | Academic-integrity rehearsal | Practice citation, paraphrase, collaboration and disclosure decisions without punitive grading | — | None. |
 | Exam wrapper | Strategy before, reflection after, without labelling capability | `app/src/lib/postmortem.ts` | Why marks were lost, and those units brought forward. |
