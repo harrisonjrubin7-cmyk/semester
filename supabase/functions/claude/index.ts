@@ -23,6 +23,11 @@
  *     supabase secrets set ANTHROPIC_API_KEY=sk-ant-…
  *     supabase functions deploy claude
  *
+ * and it still serves nobody until the owner's decisions in
+ * `../_shared/provideractivation.ts` are recorded with evidence and
+ * `SHARED_AI_PROVIDER=on` is set. `docs/trust/SHARED-PROVIDER-ACTIVATION.md`
+ * is the checklist.
+ *
  * A student who would rather use their own key still can: the app prefers a key
  * set on the device, and only falls back to this.
  */
@@ -32,6 +37,7 @@ import { corsHeaders } from '../_shared/cors.ts';
 import { clampRequest } from '../_shared/clamp.ts';
 import { KILLED_MESSAGE, aiGenerationKilled } from '../_shared/killswitch.ts';
 import { KEY_UNUSABLE_MESSAGE, describeThrow, keyShape, sharedKey } from '../_shared/sharedkey.ts';
+import { NOT_ACTIVATED, NOT_ACTIVATED_MESSAGE, SHARED_PROVIDER, SWITCH, activation } from '../_shared/provideractivation.ts';
 
 const ANTHROPIC = 'https://api.anthropic.com/v1/messages';
 
@@ -55,6 +61,19 @@ Deno.serve(async (req) => {
 
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors });
   if (req.method !== 'POST') return json({ error: { message: 'POST only.' } }, 405);
+
+  // ── whether the shared key may serve anybody ────────────────────────────
+  //
+  // First, before the key is read: a secret is a credential, not an
+  // agreement. The owner's five decisions have to be recorded with evidence
+  // and the deployment switch set, and until both are true nobody is served,
+  // however the secret is set. See `../_shared/provideractivation.ts`. The
+  // log names what is owed and nothing else.
+  const gate = activation(SHARED_PROVIDER, Deno.env.get(SWITCH));
+  if (!gate.active) {
+    console.warn('claude: the shared key is not activated', { owed: gate.blockers });
+    return json({ error: { message: NOT_ACTIVATED_MESSAGE, code: NOT_ACTIVATED } }, 501);
+  }
 
   const key = sharedKey(Deno.env.get('ANTHROPIC_API_KEY'));
   if (!key) {
