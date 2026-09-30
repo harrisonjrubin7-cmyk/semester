@@ -6,6 +6,7 @@ import { clearFiles } from './files';
 import { clearVersions } from './docversions';
 import { clearOutbox } from './sync/outbox';
 import { clearShared } from './shared';
+import { clearHistory } from './history/history';
 
 /**
  * Erase from this device.
@@ -67,6 +68,7 @@ export const DATABASES = [
   'semester-drafts',
   // Sends the student kept for later. Their own material, waiting to go.
   'semester-outbox',
+  'semester-history',
 ];
 
 /** What was actually removed, so the screen can say so rather than assume. */
@@ -156,6 +158,7 @@ export async function eraseDevice(): Promise<Erased> {
   await clearSnapshots().catch(() => undefined);
   await clearVersions().catch(() => undefined);
   await clearOutbox().catch(() => undefined);
+  await clearHistory().catch(() => undefined);
 
   // Not a database: the service worker leaves a shared file in a Cache
   // Storage entry, and one that arrived and was never collected is still a

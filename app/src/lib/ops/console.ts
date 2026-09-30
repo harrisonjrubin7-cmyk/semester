@@ -426,7 +426,7 @@ export interface Capability {
 
 const MIGRATION_A = 'supabase/migrations/20260929100000_console_control_plane.sql';
 const MIGRATION_B = 'supabase/migrations/20260929110000_console_approvals_and_break_glass.sql';
-const MIGRATION_C = 'supabase/migrations/20260930180000_console_command_center.sql';
+const MIGRATION_C = 'supabase/migrations/20260930173030_console_command_center.sql';
 const CHECK_A = 'supabase/console-control-plane.check.sql';
 const CHECK_B = 'supabase/console-approvals.check.sql';
 const CHECK_C = 'supabase/console-command-center.check.sql';

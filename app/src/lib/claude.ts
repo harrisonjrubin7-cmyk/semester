@@ -116,6 +116,16 @@ export interface ToolResult {
 type Route = 'proxy' | 'shared' | 'own' | 'openai' | 'none';
 
 /**
+ * The words the `claude` function answers with while the shared key is not
+ * activated, from `supabase/functions/_shared/provideractivation.ts`. Matched
+ * rather than imported, because the app does not import server code;
+ * `lib/trust/provideractivation.test.ts` holds the two in step.
+ */
+export const NOT_ACTIVATED_MARK = "switched off until Semester's agreements";
+/** The error code beside it. */
+export const NOT_ACTIVATED_CODE = 'shared_provider_not_activated';
+
+/**
  * Turn a failed call into a sentence that names the fix.
  *
  * The failure worth spelling out is the shared route against a project where
@@ -139,6 +149,10 @@ export function explainAskError(
   addressUsed = '',
 ): string {
   if (taking === 'shared') {
+    // Deployed, holding a key, and still off: the owner's provider decisions
+    // are not all recorded. The function's own sentence already says what to
+    // do, and "no key" or "not an API" would both be wrong here.
+    if (status === 501 && detail.includes(NOT_ACTIVATED_MARK)) return detail;
     if (status === 404 || /function was not found|not_found/i.test(detail)) {
       return (
         'The shared key is not switched on for this deployment yet — the `claude` ' +
@@ -1390,10 +1404,20 @@ export async function checkShared(): Promise<{ ok: boolean; detail: string }> {
   }
 
   const body = (await res.json().catch(() => ({}))) as {
-    error?: { message?: string };
+    error?: { message?: string; code?: string };
     message?: string;
   };
   const said = body.error?.message ?? '';
+
+  if (body.error?.code === NOT_ACTIVATED_CODE) {
+    return {
+      ok: false,
+      detail:
+        'The function is deployed and switched off on purpose: the shared key serves nobody until ' +
+        "Semester's provider decisions are recorded with evidence and the deployment switch is set " +
+        '(docs/trust/SHARED-PROVIDER-ACTIVATION.md). Your own key below works meanwhile.',
+    };
+  }
 
   if (res.status === 401) {
     /*

@@ -3,7 +3,9 @@ import {
   CORRELATION_ID_PATTERN,
   UNIVERSITY_AREAS,
   isRefusal,
+  groundsFor,
   isUniversityArea,
+  mayStep,
   parseAction,
   validateActionFields,
   type ActionInput,
@@ -568,6 +570,30 @@ export function createGateway(config: Config) {
       const checked = await adapter.review(context, row.input);
       if (JSON.stringify(checked) !== JSON.stringify({ title: row.review.title, details: row.review.details })) {
         fail(409, 'The action details changed. Prepare a new review.', 'review_changed');
+      }
+
+      /*
+       * The ladder, asked at the one place something is written.
+       *
+       * Everything above is what "confirm" and its four grounds are made of:
+       * the explicit `true`, write access to this area, an action the adapter
+       * offered for this record, and the correlation id the journal will hold
+       * the start of the action under. If any is missing the answer is a
+       * refusal that names it, before anything is claimed or sent.
+       */
+      const step = mayStep(
+        { from: 'confirm', to: 'execute' },
+        groundsFor({
+          confirmed: asked.confirmed,
+          institutionId: who.institutionId,
+          area: row.input.area,
+          actionId: row.input.actionId,
+          correlationId,
+        }),
+      );
+      if (!step.ok) {
+        await config.journal.audit(who, row.input.area, 'action.refused', row.review.id, correlationId);
+        fail(403, `This action cannot run yet: ${step.why}`, 'not_ready_to_execute');
       }
 
       if (!(await config.journal.claim(row.review.id, who, Date.now()))) {

@@ -5,6 +5,7 @@ import { dateFormatter } from '../lib/locale';
 import { readDue } from '../lib/duetime';
 import { pathSnapshot, nextTodayDecision, showsTodayDecisionSurface } from '../lib/today-decision';
 import { appointmentsOn, tasksOn, upcomingItems } from '../lib/select';
+import { ownedScope } from '../lib/standing';
 import { useNow, useStore } from '../state/store';
 import { MODULE_FLAGS, moduleOn } from '../lib/experience-flags';
 import { Blueprint } from './Blueprint';
@@ -127,7 +128,12 @@ function DecisionBriefing() {
     () => pathSnapshot(state.requirements, state.taken),
     [state.requirements, state.taken],
   );
-  const upcoming = useMemo(() => upcomingItems(catalog, now), [catalog, now]);
+  const ownIds = useMemo(() => state.courses.map((c) => c.course.id), [state.courses]);
+  const scope = useMemo(
+    () => ownedScope(upcomingItems(catalog, now), ownIds, state.sample, catalog.empty),
+    [catalog, now, ownIds, state.sample],
+  );
+  const upcoming = scope.items;
   const reviewDue = useMemo(
     () => Object.values(state.reviews).filter((review) => review.due <= now.getTime()).length,
     [state.reviews, now],
@@ -138,9 +144,9 @@ function DecisionBriefing() {
       upcoming,
       done: state.done,
       reviewDue,
-      catalogEmpty: catalog.empty,
+      catalogEmpty: scope.empty,
     }),
-    [path, upcoming, state.done, reviewDue, catalog.empty],
+    [path, upcoming, state.done, reviewDue, scope.empty],
   );
   const timeline = useMemo(() => {
     const rows: TimelineRow[] = [];

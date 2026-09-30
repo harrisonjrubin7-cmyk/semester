@@ -259,7 +259,11 @@ begin
   end;
 
   -- ── a school's removal takes its chain with it ─────────────────────────
+  -- The delete guard of 20260930200000 is off for this one proof of the
+  -- cascade, inside a transaction that is rolled back.
+  alter table public.schools disable trigger refuse_school_delete;
   delete from public.schools where id = 'ch-other';
+  alter table public.schools enable trigger refuse_school_delete;
   perform pg_temp.must('removing a school removes its chain, and only its chain',
     not exists (select 1 from private.ledger_chain where tenant_id = 'ch-other')
     and exists (select 1 from private.ledger_chain where tenant_id = 'ch-u'));

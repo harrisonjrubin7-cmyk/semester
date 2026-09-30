@@ -100,7 +100,7 @@ describe('the drafts on this device', () => {
 
   it('copies the whole text, and says so', async () => {
     const write = vi.fn().mockResolvedValue(undefined);
-    Object.defineProperty(navigator, 'clipboard', { value: { writeText: write }, configurable: true });
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText: write }, configurable: true, writable: true });
     keep({ 'essay:out': { text: 'all of it, not a preview', at: Date.now() } });
     show();
     const copy = [...host.querySelectorAll('button')].find((b) => /^Copy this text/.test(b.textContent ?? ''))!;
@@ -112,7 +112,7 @@ describe('the drafts on this device', () => {
   });
 
   it('says when the clipboard refused, rather than claiming it copied', async () => {
-    Object.defineProperty(navigator, 'clipboard', { value: { writeText: vi.fn().mockRejectedValue(new Error('no')) }, configurable: true });
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText: vi.fn().mockRejectedValue(new Error('no')) }, configurable: true, writable: true });
     keep({ 'essay:out': { text: 'x', at: Date.now() } });
     show();
     const copy = [...host.querySelectorAll('button')].find((b) => /^Copy this text/.test(b.textContent ?? ''))!;

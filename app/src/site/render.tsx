@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react';
 import { renderToStaticMarkup, renderToString } from 'react-dom/server';
 import { defaultNext } from '../lib/graduation';
+import { STATUS_LABEL } from '../lib/ops/claims';
+import { MODULES as CORE_MODULES } from './modules';
 import { PROMISE, type SiteConfig } from './config';
 import { Layout, href } from './Layout';
 import * as B from './benchmark';
@@ -108,6 +110,9 @@ export const ROUTES: Route[] = [
  */
 export function toolMarkup(id: ToolId, now = new Date()): { html: string; props: string } {
   const props: ToolProps = { next: defaultNext(now) };
+  if (id === 'stack') {
+    props.statuses = Object.fromEntries(CORE_MODULES.map((m) => [m.id, STATUS_LABEL[m.status]]));
+  }
   return { html: renderToString(<Tool id={id} props={props} />), props: JSON.stringify(props) };
 }
 

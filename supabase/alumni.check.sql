@@ -290,7 +290,12 @@ begin
     perform pg_temp.counted('a school''s alum has a consent and a history row',
       (select count(*) from public.alumni_consent_history where school_id = 'gone-alumni-check'), 1);
     update public.profiles set school_id = null where user_id in (gone_staff);
+    -- A school is never deleted in production (docs/SCHOOL-OFFBOARDING.md); the
+    -- purge that will one day remove one must leave no history behind, so this
+    -- takes the refusal off inside the rolled-back test only.
+    alter table public.schools disable trigger refuse_school_delete;
     delete from public.schools where id = 'gone-alumni-check';
+    alter table public.schools enable trigger refuse_school_delete;
     perform pg_temp.counted('deleting the school removes its profiles',
       (select count(*) from public.alumni_profiles where school_id = 'gone-alumni-check'), 0);
     perform pg_temp.counted('— its consents',

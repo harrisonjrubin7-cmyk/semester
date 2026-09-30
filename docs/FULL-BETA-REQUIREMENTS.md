@@ -206,12 +206,34 @@ gates for this report. Before Milestone 1 I will re-run the gates to refresh the
 | Gap | State | Evidence |
 |---|---|---|
 | G-02 recovery screen, change password/email, sign out other devices | **done** (client) | `components/AccountSecurity.tsx`, 6 tests, guard shown red by disabling the floor. A session *list* is not built: I found no client-side listing call in supabase-js, so it needs a server function. |
-| G-03 tenant scoping | **not changed** — awaiting owner | Verified still true in `tenancy.check.sql`; tightening empties rooms for unclaimed students (D-150 note) |
+| G-03 tenant scoping | **built, off everywhere (D-1021)**: per-school members-only switch, requests, admin approval, leave/remove, readiness count; 32 checks, six guards shown red | `docs/SCHOOL-MEMBERSHIP-ENFORCEMENT.md`; its readiness evidence list is **not yet met** and no school is switched on |
 | G-04 common audit envelope | **schema + 2 producers** | `20260930000000_audit_and_subject_requests.sql`, 22 checks; guards shown red by removing the trigger, the insert clause and the immutability trigger |
 | G-05 data-subject requests | **schema only** | same migration; no screen or answering workflow yet |
-| G-06 plan/cohort flag dimensions, cohorts | **not started** | needs a cohort membership design that does not expose rosters |
-| G-32 sensitive features default OFF test | not started | |
-| Data inventory, role matrix, threat model, retention/export doc | not started | |
+| G-06 plan/cohort flag dimensions, cohorts | **cohort and role limits landed on main** (`20260929340000_feature_cohorts.sql`, another PR); a *plan* dimension was not added — entitlements resolve plans separately | not duplicated here |
+| G-32 sensitive features default OFF test | already held: every flag is defined with `defaultEnabled: false` and `flags.test.ts` covers the registry | no change |
+| Data inventory, role matrix | **done, generated** from a database built by all migrations | `docs/DATA-INVENTORY-AND-LINEAGE.md`, `docs/ROLE-PERMISSION-MATRIX.md`, `supabase/tools/` |
+| Threat model | **done** (a reading, not a penetration test) | `docs/SECURITY-THREAT-MODEL.md` |
+| Retention/export/deletion doc | **done** (synthesis) | `docs/DATA-RETENTION-EXPORT-DELETION.md` |
+| G-05 request screen + answering workflow | **deliberately not built**: nobody is named to answer, so a screen would promise a 30-day reply nobody agreed to keep | owner decision |
+| Truth table guard | **done**: `app/src/lib/truthtable.test.ts` holds status words to the agreed six and every named file to existence (it cannot check that a status is *true*) | mutation shown red |
 
-Migrations have been run only on a disposable local Postgres 17 (`supabase/check.sh`,
-`rehearse.sh`, `restore.sh`); none has been applied to a Supabase project or preview branch.
+The Milestone 1 migration was merged to main in #1000. It was run on a disposable local Postgres 17 and in CI's disposable database. **Whether the schema deploy applied it to the production project has not been confirmed by me.**
+
+## 14. Milestone 2 progress (in flight)
+
+Audits of Today/Action Center and Plan/My Path/sharing were read-only readings of the tree.
+
+| Item | State | Evidence |
+|---|---|---|
+| G-07 sample shown as the student's own | **done for Today's decisions**: the Action Center, the briefing and the commitments list leave out unclaimed sample dates and classes until "These are mine"; with nothing of their own, Today offers "Start your semester" | `lib/standing.ts` `ownedScope`, `TodayActionCenter.test.tsx` (guard shown red by removing the filter). The first-run banner's wording ("The semester this app ships with") is unchanged: its own header records why it avoids "sample" — owner's call |
+| Freshness on items | **honest, not real**: course dates carry no per-item timestamp, so the badge now says "Update time not recorded" instead of nothing | `SourceBadge` `unknownAge`; real freshness needs a stored last-checked time (not built) |
+| Source words on commitments | done | `TodayActionCenter.tsx` |
+| Snooze presets and dismiss reasons | **done** (client, device-only): later today / tomorrow / next week / the day before it is due, never past expiry or after 9 p.m. for "later today"; four fixed dismiss reasons or none, shown in the Hidden list. No storage version bump was needed (the reason rides the existing `note`). Guards shown red by mutation | `lib/actions.ts` `snoozePresets`, `DISMISS_REASONS`; `ActionCenter.test.tsx`; **still device-only, and the Action Center is off by default** |
+| Helpful / not-helpful per item | not started | needs the clarity model, not just a button |
+| Turn the Action Center on for students | **not done — deliberate.** It is off by default (`VITE_TODAY_ACTION_CENTER`); enabling it is a release decision and needs a DECISION-LOG entry | `lib/experience-flags.ts` |
+| Term credit and workload engine | **done** (pure, deterministic, estimates only): credits vs the student's own minimum/maximum/target, and estimated weekly hours (2 h per credit, stated) vs the study hours they say they have; three new optional student-entered numbers in the registration plan. Never says allowed/blocked. Guards shown red | `lib/termload.ts`, `RegistrationDay.tsx` panel (behind Registration Day Mode, off by default) |
+| Sharing and audit lifecycle | **advisor shares audited**: create, read, revoke and delete each write one pseudonymous `audit_event` (no title, address or payload), read by the school's auditor only; a refused attempt writes nothing. Five guards shown red | `20260930190000_advisor_share_audit.sql`, `share-audit.check.sql` (14 checks). **Not built:** a general read-only plan share; sources/assumptions/freshness in the advisor payload; denied attempts are not recorded (a refused call rolls back its own write) |
+| Source, assumptions and freshness on planning surfaces | **advisor share** carries `provenance` (per-part source labels, three standing assumptions, the day prepared; optional on read so older shares open); **graduation simulator** and **study abroad** now carry a badge and "not an official degree audit / credit evaluation" wording. Guards shown red | `lib/advisor-meeting.ts`, `GraduationSimulator.tsx`, `StudyAbroad.tsx`. Registration cart/backups still unlabelled |
+| Fix: `ModulesPanel` said the settings could not be read on first paint | **fixed** as its own commit (bug from #1002, found by the review bot) | `ModulesPanel.tsx`, 2 tests, red without the fix |
+| Study blocks, work/travel constraints in a scheduler, catalog-tied requirements | not started | catalog-tied requirements need external data (G-08) |
+| Release gates from the readiness analysis | **written**: ten gates with evidence and gaps, and the do-not-claim boundaries | `docs/RELEASE-GATES.md`; G3 (school offboarding) is an owner decision |

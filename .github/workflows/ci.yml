@@ -509,9 +509,17 @@ jobs:
       # noisy, so the budgets are set an order of magnitude above a quiet
       # machine's readings: they catch a path that became slow, not a jittery
       # one. A deadlock or a broken invariant fails it at any speed.
+      #
+      # Four windows of six seconds rather than one of ten, so the same run is also
+      # a soak: each scenario is timed in every window, the invariants and the
+      # open connections are checked after each, and `drift.sh` fails a scenario
+      # whose best window at the end is more than twice, and five milliseconds,
+      # slower than its best at the start. A leak passes every window's budget
+      # and fails that (D-1019).
       - name: Load and concurrency scenarios
         env:
-          LOAD_SECONDS: '10'
+          LOAD_SECONDS: '6'
+          LOAD_SOAK_WINDOWS: '4'
         run: supabase/load.sh
 
       # `check.sh` builds from empty; this applies the pending migrations to

@@ -125,6 +125,26 @@ export function claimed<T extends { c: CourseId }>(
   return items.filter((i) => mine.has(i.c));
 }
 
+/**
+ * What Today decides from: the student's own dates, not the sample's.
+ *
+ * While the sample question is open the catalogue holds the sample's courses
+ * as well as the student's, and Today would lead with "Prepare <a sample
+ * assignment>" as if it were theirs. `OverdueBanner` already applied `claimed`
+ * for that reason; the Action Center and the single-decision briefing did not.
+ *
+ * `empty` is also true when the only courses are the sample's, so the first
+ * step offered is "Start your semester" rather than nothing at all.
+ */
+export function ownedScope<T extends { c: CourseId }>(
+  items: T[],
+  own: CourseId[],
+  sample: boolean,
+  catalogEmpty: boolean,
+): { items: T[]; empty: boolean } {
+  return { items: claimed(items, own, sample), empty: catalogEmpty || (sample && own.length === 0) };
+}
+
 /** "2 days late" — said plainly, because softening it helps nobody. */
 export function lateBy(item: DatedItem): string {
   const days = -item.daysAway;
