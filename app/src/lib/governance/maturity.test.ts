@@ -70,7 +70,7 @@ describe('the operational-maturity register', () => {
     const c = coverage();
     expect(c.inPlace + c.partial + c.owed).toBe(CONTROLS.length);
     // Said directly, so a change in either direction has to be explained here.
-    // Legal holds (20260930000000_legal_holds.sql) moved RM-02, RM-04, RM-05 and
+    // Legal holds (20260930100000_legal_holds.sql) moved RM-02, RM-04, RM-05 and
     // RM-08 from owed to partial: 76/81 became 80/77. None is in place, because
     // no screen or runbook places a hold and erase_account's resume is unproved.
     expect(c).toEqual({ inPlace: 43, partial: 80, owed: 77 });

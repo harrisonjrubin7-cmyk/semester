@@ -201,7 +201,7 @@ revoke all on table public.override_patterns from public, anon, authenticated;
 grant select on table public.override_patterns to authenticated;
 
 comment on table public.human_overrides is
-  'Every time a person overrode an automated decision, and why. Append-only. The academic record logs its own by trigger; other domains use override:record until they have a producer. See 20260930020000_human_overrides.sql.';
+  'Every time a person overrode an automated decision, and why. Append-only. The academic record logs its own by trigger; other domains use override:record until they have a producer. See 20260930120000_human_overrides.sql.';
 
 -- ── Rollback ──────────────────────────────────────────────────────────────
 --

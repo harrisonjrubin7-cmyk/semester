@@ -96,11 +96,11 @@ const CALLED_BY: Record<string, { caller: string; file: string }> = {
   // Both run through the legal-hold check, which is what the jobs call.
   'private.sweep_ai_runtime_metadata': {
     caller: 'private.run_sweep',
-    file: '20260930030000_hold_gated_sweeps.sql',
+    file: '20260930130000_hold_gated_sweeps.sql',
   },
   'private.sweep_community_retention': {
     caller: 'private.run_sweep',
-    file: '20260930030000_hold_gated_sweeps.sql',
+    file: '20260930130000_hold_gated_sweeps.sql',
   },
 };
 

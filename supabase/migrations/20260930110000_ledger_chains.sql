@@ -249,7 +249,7 @@ revoke all on function private.verify_ledger_chain(text, text) from anon, authen
 grant execute on function private.verify_ledger_chain(text, text) to service_role;
 
 comment on table private.ledger_chain is
-  'A hash chain over the academic-record and student-account ledgers, per ledger and school. Verified by private.verify_ledger_chain; see 20260930010000_ledger_chains.sql for what it does and does not prove.';
+  'A hash chain over the academic-record and student-account ledgers, per ledger and school. Verified by private.verify_ledger_chain; see 20260930110000_ledger_chains.sql for what it does and does not prove.';
 
 -- ── Rollback ──────────────────────────────────────────────────────────────
 --

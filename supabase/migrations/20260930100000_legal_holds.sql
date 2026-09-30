@@ -325,6 +325,7 @@ declare
   n_role integer := 0;
   n_moderation integer := 0;
   n_provisioning integer := 0;
+  n_audit integer := 0;
 begin
   perform set_config('semester.audit_retention', 'sweep', true);
 
@@ -347,12 +348,23 @@ begin
      and not private.platform_is_held();
   get diagnostics n_provisioning = row_count;
 
+  -- The common audit envelope (20260930000000_audit_and_subject_requests.sql),
+  -- which redefined this function while this migration was open: its purge is
+  -- kept, and it obeys a hold like the others. tenant_id is null for a
+  -- platform-level event, which only a platform hold keeps.
+  delete from public.audit_event e
+   where e.occurred_at < now() - interval '3 years'
+     and not private.tenant_is_held(coalesce(e.tenant_id, ''))
+     and not private.platform_is_held();
+  get diagnostics n_audit = row_count;
+
   perform set_config('semester.audit_retention', '', true);
 
   return jsonb_build_object(
     'role_grant_audit_event', n_role,
     'moderation_audit_event', n_moderation,
-    'provisioning_audit_event', n_provisioning
+    'provisioning_audit_event', n_provisioning,
+    'audit_event', n_audit
   );
 end $$;
 

@@ -254,8 +254,16 @@ begin
   insert into public.moderation_audit_event
     (report_id, from_status, to_status, reporter_sha256, actor_kind, occurred_at) values
     (gen_random_uuid(), 'open', 'closed', h, 'service', now() - interval '3 years 1 day');
+  insert into public.audit_event (tenant_id, action, object_kind, outcome, actor_kind, occurred_at) values
+    ('lh-u',     'share.create', 'plan', 'allowed', 'service', now() - interval '3 years 1 day'),
+    ('lh-other', 'share.create', 'plan', 'allowed', 'service', now() - interval '3 years 1 day'),
+    (null,       'auth.sign_in', 'session', 'allowed', 'service', now() - interval '3 years 1 day');
 
   said := private.sweep_audit_retention();
+  perform pg_temp.must('a school hold keeps that school''s old common audit event, and the other school''s and the platform-level one go',
+    (select count(*) from public.audit_event where tenant_id = 'lh-u' and occurred_at < now() - interval '3 years') = 1
+    and (select count(*) from public.audit_event where tenant_id = 'lh-other' and occurred_at < now() - interval '3 years') = 0
+    and (select count(*) from public.audit_event where tenant_id is null and occurred_at < now() - interval '3 years') = 0);
   perform pg_temp.must('a school hold keeps that school''s old role-grant event and removes the other school''s',
     (select count(*) from public.role_grant_audit_event where tenant_id = 'lh-u' and occurred_at < now() - interval '3 years') = 1
     and (select count(*) from public.role_grant_audit_event where tenant_id = 'lh-other' and occurred_at < now() - interval '3 years') = 0);
@@ -279,9 +287,13 @@ begin
     (report_id, from_status, to_status, reporter_sha256, actor_kind, occurred_at) values
     (gen_random_uuid(), 'open', 'closed', h, 'service', now() - interval '3 years 1 day');
   insert into public.invites (email, invited_at) values ('platform.held@lh-u.example', now() - interval '91 days');
+  insert into public.audit_event (tenant_id, action, object_kind, outcome, actor_kind, occurred_at) values
+    ('lh-other', 'share.create', 'plan', 'allowed', 'service', now() - interval '3 years 2 days');
   said := private.sweep_audit_retention();
+  perform pg_temp.must('and the platform hold keeps a common audit event no school hold covers',
+    exists (select 1 from public.audit_event where tenant_id = 'lh-other' and occurred_at < now() - interval '3 years'));
   perform pg_temp.must('a platform hold pauses the audit sweep entirely',
-    said = jsonb_build_object('role_grant_audit_event', 0, 'moderation_audit_event', 0, 'provisioning_audit_event', 0));
+    said = jsonb_build_object('role_grant_audit_event', 0, 'moderation_audit_event', 0, 'provisioning_audit_event', 0, 'audit_event', 0));
   perform private.sweep_stale_invites();
   perform pg_temp.must('and the invite sweep', exists (select 1 from public.invites where email = 'platform.held@lh-u.example'));
 

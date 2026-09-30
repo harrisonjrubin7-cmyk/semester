@@ -289,9 +289,9 @@ begin
   -- 155 before 20260929300000_registration_transaction.sql gave `registrar`
   -- `registration:administer`.
   -- 156 before 20260929330000_dining.sql added dining_staff → dining:operate.
-  -- 157 before legal holds (20260930000000_legal_holds.sql) added three:
+  -- 157 before legal holds (20260930100000_legal_holds.sql) added three:
   -- hold:read, :place and :release for university_admin.
-  -- 160 before human overrides (20260930020000_human_overrides.sql) added three:
+  -- 160 before human overrides (20260930120000_human_overrides.sql) added three:
   -- override:record and override:review for registrar, override:review for
   -- university_admin.
   perform pg_temp.counted('and the whole matrix, including tenant controls', n, 163);

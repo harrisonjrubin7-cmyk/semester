@@ -1,7 +1,7 @@
 -- Student erasure now reads a legal hold first, and refuses before it touches
 -- anything.
 --
--- 20260930000000_legal_holds.sql put a trigger on `auth.users` and said that is
+-- 20260930100000_legal_holds.sql put a trigger on `auth.users` and said that is
 -- "where student erasure goes". It is not the first place. `public.erase_account`
 -- clears the account's own rows itself, in one transaction, and only afterwards
 -- does the `delete-account` edge function delete the auth user. So for a held
@@ -53,4 +53,4 @@ revoke all on function public.erase_account(uuid) from public, anon, authenticat
 grant execute on function public.erase_account(uuid) to service_role;
 
 comment on function public.erase_account(uuid) is
-  'Erase an account''s own data, unless it is under a legal hold. Service role only. The body is private.erase_account_unheld; see 20260930040000_erase_respects_holds.sql.';
+  'Erase an account''s own data, unless it is under a legal hold. Service role only. The body is private.erase_account_unheld; see 20260930140000_erase_respects_holds.sql.';

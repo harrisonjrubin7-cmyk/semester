@@ -343,8 +343,8 @@ behind and a client that believes it succeeded.
 | `student_account_entries`, `student_account_requests`, `student_account_reconciliations`, `student_account_closes`, `student_account_settings` | **kept until the school is removed** | the school's financial record of its students' accounts (D-146): what was charged, paid, refunded and credited, and the reconciliations and closes it was checked by. The school's financial-records schedule governs it, and none is set yet; the ledger has no purge, and a school must set its schedule before real use. No card data is held. A staff member's account deletion clears them as requester, approver, recorder or closer and leaves the record |
 | `student_payment_plans`, `student_payment_plan_installments` | **kept until the school is removed** | payment plans on student accounts (D-146): what a student asked to spread and over how many payments, whether the school agreed, and the schedule the database wrote. Part of the school's financial record and governed by the same schedule, which no school has set yet. No payment or card data is held. A student's or staff member's account deletion clears them as asker, decider or canceller and leaves the plan with the school |
 | `legal_holds` | **kept until the school is removed; never deleted** | the record that an account, a school or the platform was placed under a legal hold, why, and who placed and released it. A hold is never edited except to record its release, once, so the row is the audit trail. It stops the invite, abandoned-sign-up and audit sweeps for what it covers, and refuses deletion of a held account. See *Legal holds*, below |
-| `human_overrides` | **kept until the school is removed**; the overriding person is cleared, not the override, when their account is deleted | every time a person overrode an automated decision, and why (20260930020000_human_overrides.sql): the rule, what the system had decided, what replaced it, the reason, and — where a student is meant to understand it — a plain-language explanation. Append-only. Only the academic record's registrar overrides are logged today, by trigger; the moderation, credential, notification, permission, integration, migration and AI-output domains have a path and no producer yet. The override-patterns view over it is read by override reviewers only |
-| `ledger_chain` | **kept until the school is removed** | one hash link per entry appended to the academic-record and student-account ledgers, per school (20260930010000_ledger_chains.sql). Append-only; it goes with the school as the ledgers do, and holds no more about a person than the ledger's own row does, which it excludes the person columns of. Entries before the migration are not chained |
+| `human_overrides` | **kept until the school is removed**; the overriding person is cleared, not the override, when their account is deleted | every time a person overrode an automated decision, and why (20260930120000_human_overrides.sql): the rule, what the system had decided, what replaced it, the reason, and — where a student is meant to understand it — a plain-language explanation. Append-only. Only the academic record's registrar overrides are logged today, by trigger; the moderation, credential, notification, permission, integration, migration and AI-output domains have a path and no producer yet. The override-patterns view over it is read by override reviewers only |
+| `ledger_chain` | **kept until the school is removed** | one hash link per entry appended to the academic-record and student-account ledgers, per school (20260930110000_ledger_chains.sql). Append-only; it goes with the school as the ledgers do, and holds no more about a person than the ledger's own row does, which it excludes the person columns of. Entries before the migration are not chained |
 | `ledger_chain_start` | **kept; never removed** | when each ledger's chain began, so the verifier can tell an entry that predates the chain from one appended without being chained. Two rows |
 | `gtm_report_access` | **kept until the school is removed** | who read which campaign's counts, and when. The reader's account deletion clears actor_id |
 | `gtm_sponsor_policy`, `gtm_sponsor_placements` | **kept until the school is removed** | a school's sponsorship choices and each placement's approval record. A removed placement stays as a record, with its status set to removed |
@@ -446,7 +446,7 @@ cannot land without somebody reading this.
 
 ## Legal holds
 
-A hold is the one instruction a clock has to obey. `supabase/migrations/20260930000000_legal_holds.sql`
+A hold is the one instruction a clock has to obey. `supabase/migrations/20260930100000_legal_holds.sql`
 adds `legal_holds`, and `supabase/legal-holds.check.sql` checks each rule below
 on both sides of its line.
 
@@ -462,12 +462,12 @@ on both sides of its line.
   covers (a platform hold pauses them; a school hold keeps that school's
   events); the abandoned-sign-up sweep skips held accounts; the erase-account function
   refuses a held account before it touches a single row, and says why
-  (20260930040000_erase_respects_holds.sql; the student is told it is not a
+  (20260930140000_erase_respects_holds.sql; the student is told it is not a
   fault and given no reason); a `before delete` trigger on `auth.users` is the
   backstop behind it. Erasure runs as normal once the hold is released. A hold on
   a school covers every account in it.
 - **What a platform hold also stops.** The AI-runtime and Community sweeps run
-  through `private.run_sweep` (20260930030000_hold_gated_sweeps.sql), which
+  through `private.run_sweep` (20260930130000_hold_gated_sweeps.sql), which
   skips them while a platform hold is live and says so in its result.
 - **What it does not stop yet.** A school or account hold does not reach those
   two sweeps (their data is not mapped to a hold's subject), there is no

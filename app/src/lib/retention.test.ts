@@ -405,7 +405,7 @@ describe('the clocks that run are still the clocks the document describes', () =
     );
     // The job goes through the hold check, and the hold check runs this sweep:
     // read both, so the scheduler cannot name a sweep the dispatcher does not run.
-    const gate = readFileSync(join(MIGRATIONS, '20260930030000_hold_gated_sweeps.sql'), 'utf8');
+    const gate = readFileSync(join(MIGRATIONS, '20260930130000_hold_gated_sweeps.sql'), 'utf8');
     expect(gate).toMatch(/return private\.sweep_community_retention\(\);/);
     expect(gate).toMatch(/if private\.platform_is_held\(\) then/);
 
@@ -483,5 +483,60 @@ describe('the clocks that run are still the clocks the document describes', () =
     expect(said).toContain('deliberately not on the 3-year clock');
     expect(said).not.toContain('**no answer yet**');
     expect(said).not.toContain('An invitation that is never taken up has no clock yet');
+  });
+});
+
+/**
+ * A `create or replace` of a whole function is a silent overwrite: the last
+ * migration to define `private.sweep_audit_retention` is the one that runs, and
+ * it is defined more than once. Main's common audit envelope added a table to it
+ * while the legal-hold migration was being written, and the legal-hold version,
+ * which sorted later, would have deleted that table's purge without a sound.
+ * So the last definition is read, not the first: it must purge every audit table
+ * the 3-year trigger lets go of, and every purge must obey a hold.
+ */
+describe('the audit sweep is one function defined many times, and the last one runs', () => {
+  const files = readdirSync(MIGRATIONS).filter((f) => f.endsWith('.sql')).sort();
+  const definers = files.filter((f) =>
+    /create or replace function private\.sweep_audit_retention\(\)/.test(readFileSync(join(MIGRATIONS, f), 'utf8')),
+  );
+  const last = readFileSync(join(MIGRATIONS, definers[definers.length - 1]), 'utf8');
+  const body = (last.split('create or replace function private.sweep_audit_retention()')[1] ?? '').split('$$;')[0];
+
+  /** The tables the three-year audit clock lets go of. A fifth one must be added here on purpose. */
+  const purgeable = ['role_grant_audit_event', 'moderation_audit_event', 'provisioning_audit_event', 'audit_event'];
+
+  it('finds the definitions, and the purgeable tables are exactly the ones a trigger lets the sweep delete', () => {
+    expect(definers.length).toBeGreaterThanOrEqual(3);
+    // Each purgeable table has one immutability function that calls audit_purge_allowed;
+    // count the distinct functions, so a fifth table added without updating the list above fails here.
+    const callers = new Set(
+      files.flatMap((f) =>
+        [...readFileSync(join(MIGRATIONS, f), 'utf8').matchAll(
+          /create or replace function private\.(refuse_\w+)\(\)[\s\S]*?(?=create or replace function|\n-- ──|$)/g,
+        )]
+          .filter((m) => m[0].includes('audit_purge_allowed'))
+          .map((m) => m[1]),
+      ),
+    );
+    expect(callers.size).toBe(purgeable.length);
+  });
+
+  it('the last definition purges every one of them', () => {
+    for (const table of purgeable) {
+      expect(body, `${definers[definers.length - 1]} no longer purges ${table}`).toMatch(new RegExp(`delete from public\\.${table}\\b`));
+    }
+  });
+
+  it('and every purge in it asks whether a legal hold applies', () => {
+    const deletes = body.split(/delete from public\./).slice(1);
+    expect(deletes.length).toBe(purgeable.length);
+    for (const d of deletes) expect(d.split(';')[0], d.slice(0, 40)).toMatch(/platform_is_held\(\)/);
+  });
+
+  it('is not fooled: a definition that forgets a table or a hold is caught by the same checks', () => {
+    const forgetful = 'delete from public.role_grant_audit_event e where e.occurred_at < now();';
+    expect(forgetful).not.toMatch(/delete from public\.audit_event\b/);
+    expect(forgetful.split(';')[0]).not.toMatch(/platform_is_held\(\)/);
   });
 });

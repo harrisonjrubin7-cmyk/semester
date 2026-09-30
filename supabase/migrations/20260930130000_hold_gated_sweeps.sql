@@ -2,7 +2,7 @@
 -- way to hear it: the AI runtime metadata sweep and the Community retention
 -- sweep.
 --
--- 20260930000000_legal_holds.sql made the invite, abandoned-sign-up and audit
+-- 20260930100000_legal_holds.sql made the invite, abandoned-sign-up and audit
 -- sweeps skip what a live hold covers, by editing the three functions that
 -- deleted. These two are large functions defined in other migrations, and
 -- copying them into this one would freeze today's body and silently override
