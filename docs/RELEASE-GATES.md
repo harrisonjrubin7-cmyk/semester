@@ -113,6 +113,16 @@ Until evidence exists, Semester **must not say or imply**:
 - that any institution's students are protected by members-only rooms, until a school is switched on and its evidence filed;
 - that a data-subject request will be answered in any time, until someone is named to answer.
 
+Added from the readiness synthesis of 30 Sep 2026 (`docs/PDF-EVIDENCE-GAP-MATRIX.md`; the six PDFs themselves are not in the repository):
+
+- a **purpose-coded FERPA authorization** — a "legitimate educational interest" control that decides by tenant, role, relationship, purpose and data class — because none exists; access is decided by tenant, role and scope only, and no purposes have been defined by counsel;
+- a **canonical person or source-authority model**, or that any system is the authority for a field a school has not agreed;
+- a **versioned policy engine** with explanations and rollback;
+- that **LTI 1.3 or OneRoster** has been certified, or has ever run against a real platform: the launch checks are code and tests only;
+- a **recovery time or recovery point** figure, or that any dependency's failure has been drilled;
+- that a **pilot target has been met**: every number in the pilot log is a target until measured, by method, with a second checker;
+- that Semester is **ready for financial aid, payroll, general-ledger or system-of-record replacement** — including the student-accounts and dining modules already on main, which are built and off until a finance owner and specialist controls exist.
+
 Do not launch first with financial aid, disability accommodations, health, immigration status, billing, housing, conduct, or parent access. Do not allow each campus to ask for a different product.
 
 ## What each gate needs from the owner

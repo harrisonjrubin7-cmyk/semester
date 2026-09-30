@@ -110,6 +110,17 @@ therefore **violated by design in most student modules**; see the gap register i
 | AI evaluation | PARTIAL | `AI-RECOMMENDATION-EVALUATION-HARNESS.md`; live tests write to nonexistent `docs/evidence/ai` | no scored run, no release gate |
 | Pen test, HECVAT, SOC 2 | PLANNED / BLOCKED | plans only | third parties |
 | Legal (terms, privacy, refund, DPA) | PLANNED / BLOCKED | drafts in `docs/legal/` with `[DECIDE]` | **counsel review required**; drafts only |
+| Purpose-coded FERPA authorization (tenant + role + relationship + purpose + data class, permit/deny audited) | PLANNED | `docs/PDF-EVIDENCE-GAP-MATRIX.md` row b | no purpose code exists; **counsel must define the purposes first**; denied attempts are not on the audit record |
+| Canonical person / source-authority model | PLANNED | `docs/PDF-EVIDENCE-GAP-MATRIX.md` row c | needs a real pilot school's identifiers; source labels exist on four tables only |
+| Versioned policy / rules engine with explanation and rollback | PARTIAL | `supabase/migrations/20260928050000_tenant_rollout.sql`, `docs/PDF-EVIDENCE-GAP-MATRIX.md` row f | roll-out and flags are versioned; no single rule object; depends on open PRs #1011 and #1018 |
+| Migration Center (dry run, parallel run, cutover, rollback, archive) | IMPLEMENTED_NOT_RELEASED | `supabase/migrations/20260929200000_migration_center.sql`, `supabase/migration-center.check.sql` | never used on a real migration |
+| LTI 1.3 launch validation (issuer, audience, azp, exp/iat, single-use nonce, deployment) | IMPLEMENTED_NOT_RELEASED | `supabase/functions/_shared/lti.ts`, `supabase/lti.check.sql` | never launched from a real platform; not 1EdTech-certified; inbound-signature review belongs to the security workstream |
+| OneRoster staging and reconciliation | PLANNED | `app/src/lib/interop.ts` | no adapter; security workstream |
+| SPOF and degraded-mode map | PARTIAL | `docs/DEGRADED-MODE-MAP.md` | written from the repository, never drilled; no measured RTO/RPO; one operator |
+| Decision rights / two-person rules | PARTIAL | `docs/DECISION-RIGHTS.md` | describes enforcement; no adopted charter; no rule for policy, security or data exceptions |
+| Pilot evidence log and scorecard | PARTIAL | `docs/pilot/DISCOVERY-EVIDENCE-LOG.md` | blank template; targets are the owner's |
+| Accessible authentication (WCAG 2.2 SC 3.3.8) on sign-in and account forms | PARTIAL | `app/src/components/authaccess.test.ts` | guard on the source only; no human check with a password manager or screen reader |
+| Financial aid, payroll, general ledger, system-of-record replacement | BLOCKED | `docs/PDF-EVIDENCE-GAP-MATRIX.md` row X1 | specialist controls and pre-pilot evidence; the student-accounts and dining modules on main are built and off, not ready |
 
 ## How this table stays true
 

@@ -3597,3 +3597,13 @@ not a penetration test and claims nothing about FERPA.
 - **Placeholders for counsel:** the retention window (90 days, 30 minimum) and what happens to a former school's student work.
 - **Existing tests changed:** `schools.check.sql` and `organizations.check.sql` deleted schools to prove their foreign keys; they now switch the guard off inside their rolled-back transaction for that one proof, and `schools.check.sql` gains the assertion that even an administrator cannot delete one.
 
+## D-158 · The six readiness PDFs are requirements evidence, reconciled in a matrix; only non-duplicate, unambiguous gaps are built
+
+**Decided 30 Sep 2026, by the owner**: treat the extracted PDFs (via the owner's source-grounded synthesis, 14 common P0s and 5 operating artifacts) as sources, not authority; reconcile against `main` and open PRs; build only non-duplicate gaps; keep high-risk replacement and real institutional data blocked; hand LTI / JWT / OneRoster / IAM to the security workstream.
+
+- **Result** (`docs/PDF-EVIDENCE-GAP-MATRIX.md`, rendered from `app/src/lib/ops/pdfgaps.ts`, 20 rows): 4 covered, 6 partial, 4 built here, 3 open-design, 2 for the security workstream, 1 not to build, none blocked. Most of the P0s already existed: the readiness register has the six states, the Migration Center is the migration studio, LTI launch validation is strict and tested, procurement drafts exist.
+- **Built here:** the degraded-mode map, the decision-rights page, the discovery/pilot evidence log, an accessible-authentication guard on the sign-in and account forms, and the matrix with its test.
+- **Not built, and why:** a purpose-coded FERPA decision (counsel defines the purposes first), a canonical identity model (needs a real school's identifiers), a policy engine (waits on #1011 and #1018), LTI/OneRoster (security workstream), and financial aid, payroll, ledger and system-of-record replacement (blocked).
+- **Conflict surfaced, not resolved:** the synthesis says do not build financial-aid, payroll or ledger; main already holds a student-accounts module (D-146) and dining, off behind flags. They stay off and unclaimed. Whether to remove or keep them is the owner's.
+- **Caveat:** the PDFs were never available to this session; every row cites the synthesis, not a page.
+

@@ -27,6 +27,7 @@ gap is visible where the runbook would be.
 | A school’s connector is failing or must stop | [`docs/INTEGRATION-OPERATOR-RUNBOOK.md`](INTEGRATION-OPERATOR-RUNBOOK.md) | Onboarding, health, stopping in an incident, answering a student or a lawyer |
 | Support cannot answer without data access | [`docs/market-readiness/SUPPORT_PLAYBOOK.md`](market-readiness/SUPPORT_PLAYBOOK.md) | Tiers, what a supporter may see, the seven-day access window |
 | Abuse, spam or a flood | [`docs/SUPPORT-RELIABILITY-AND-ABUSE-PREVENTION.md`](SUPPORT-RELIABILITY-AND-ABUSE-PREVENTION.md) | What exists, what is measured, and the rate limits |
+| A dependency is down (what still works) | [`docs/DEGRADED-MODE-MAP.md`](DEGRADED-MODE-MAP.md) | Eleven dependencies, what degrades, critical-period priorities; written from the repository, never drilled |
 | The region is gone | [`docs/market-readiness/DISASTER_RECOVERY.md`](market-readiness/DISASTER_RECOVERY.md) | Status **NOT_STARTED**: the plan for a plan |
 
 ## When switching something on
