@@ -95,7 +95,7 @@ export const FLAGS: readonly FlagDefinition[] = [
   // ── Modules ─────────────────────────────────────────────────────────────
   flag({
     key: 'module.core_mode',
-    description: 'A school running a module in Core: Semester as the record for it, instead of reading the school’s own system (D-150). The per-module setting is `tenant_module_mode`; this flag and its kill switch are the school-wide stop.',
+    description: 'A school running a module in Core: Semester as the record for it, instead of reading the school’s own system (D-151). The per-module setting is `tenant_module_mode`; this flag and its kill switch are the school-wide stop.',
     type: 'module', owner: 'Platform', scopes: ['tenant'], highRisk: true, reviewAt: REVIEW,
     rollout: 'One module at a time, for one pilot school, after DO-NOT-BUILD rule 13 is met for that module and two of the school’s administrators have approved the request.',
     successCriteria: 'No module reads Core without an applied, twice-approved request; every change is in the history; going back deletes nothing.',

@@ -392,7 +392,7 @@ declare
     'integration_set_paused(want_connection text, want_paused boolean, want_reason text)',
     'kill_switch_engaged(want_switch text, want_tenant text)',
 
-    -- The two in 20260930010000_module_mode.sql (D-151). Both are security
+    -- The two in 20260930010000_module_mode.sql (D-152). Both are security
     -- invoker, so a caller reads only their own school's rows: a school they
     -- are not in reads all-Connect. `core_modules()` is the constant list of
     -- fourteen; `effective_module_modes` is what the app asks for a school's

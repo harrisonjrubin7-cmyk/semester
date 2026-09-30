@@ -198,7 +198,7 @@ declare said jsonb;
 begin
   said := private.sweep_audit_retention();
   perform pg_temp.must('the audit sweep removes one row from each of the three tables',
-    said = jsonb_build_object('role_grant_audit_event', 1, 'moderation_audit_event', 1, 'provisioning_audit_event', 1));
+    said = jsonb_build_object('role_grant_audit_event', 1, 'moderation_audit_event', 1, 'provisioning_audit_event', 1, 'audit_event', 0));
   perform pg_temp.must('and keeps the event two years old in each',
     (select count(*) from public.role_grant_audit_event where scope_id = 'sweep-u') = 1
     and (select count(*) from public.moderation_audit_event where occurred_at > now() - interval '3 years') >= 1

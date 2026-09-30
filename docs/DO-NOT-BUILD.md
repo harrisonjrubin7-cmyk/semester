@@ -26,7 +26,7 @@ cannot be relaxed in code without the page changing in the same diff.
 | 10 | **No student data used for advertising or sponsorship targeting.** No ad or tracking SDK is loaded, and sponsorship is a separate opt-in that reads nothing about the student. | `donotbuild.test.ts` (no ad/tracking hosts in the source), review |
 | 11 | **No irreversible action without confirmation, and no removal without undo or a restore path.** (WCAG 2.2 SC 3.3.4, Error Prevention.) Use `TypeToConfirm` for the consequential, `Undone` for the reversible. | Review |
 | 12 | **No "Continue" card for work that is not actually unfinished.** `lib/opened.ts` drops finished deadlines; anything similar must too. | `lib/opened.test.ts` |
-| 13 | **No Core module without row-level security tests, an immutable history and a kill switch.** A module the site calls anything above *planned* has its tables in `supabase/migrations`, a `supabase/<module>.check.sql` suite with positive and negative cases, a history row for every consequential change, and a flag in `lib/flags.ts` (D-150). | `site/modules.test.ts`, review |
+| 13 | **No Core module without row-level security tests, an immutable history and a kill switch.** A module the site calls anything above *planned* has its tables in `supabase/migrations`, a `supabase/<module>.check.sql` suite with positive and negative cases, a history row for every consequential change, and a flag in `lib/flags.ts` (D-151). | `site/modules.test.ts`, review |
 
 ## The top-level navigation
 

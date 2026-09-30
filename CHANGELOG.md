@@ -34,6 +34,16 @@ how many of the things that waits on are still undone.
 
 Nothing to do.
 
+### A reset link now lands on a screen of the app's own
+
+Following a password-reset email opens a "Choose a new password" box in Semester,
+under the same eight-character rule as making an account (before, it sent you to
+a page Supabase draws, which applies its own rule). Account, once you are signed
+in, gains a "Sign-in and security" section: change your password, change your
+email address (it changes when you follow the link sent to the new address, and
+the page says so), and sign out every other device, which asks you to confirm
+first. Nothing to do; nothing is deleted by any of it.
+
 ### Making an account now asks for your date of birth
 
 When you create an account, the form asks for your date of birth. You need to

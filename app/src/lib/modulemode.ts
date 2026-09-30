@@ -1,5 +1,5 @@
 /**
- * Which mode a school runs each module in: Connect or Core (D-150).
+ * Which mode a school runs each module in: Connect or Core (D-151).
  *
  * Connect is Semester reading the school's own system and preparing actions.
  * Core is Semester as the record for that module. The mode is a row per school

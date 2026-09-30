@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { PASSWORD_FLOOR } from '../lib/password';
 import { MINIMUM_AGE, SAID, standing, todayIso } from '../lib/age';
 import { useStore } from '../state/store';
 import { ActionButton } from './ui';
@@ -148,7 +149,7 @@ export function Credentials({
    * floor stays where it belongs — on creating one, where the placeholder does
    * say it — and signing in asks only that there is something to send.
    */
-  const MADE_FLOOR = 8;
+  const MADE_FLOOR = PASSWORD_FLOOR;
   const ready =
     Boolean(email.trim()) &&
     (mode === 'up' ? password.length >= MADE_FLOOR && Boolean(bornOn) : password.length > 0);

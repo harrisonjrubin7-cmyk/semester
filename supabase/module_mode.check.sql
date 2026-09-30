@@ -1,7 +1,7 @@
 -- The per-school, per-module Connect / Core switch (20260930010000).
 -- LOCAL/DISPOSABLE DATABASES ONLY; the transaction is always rolled back.
 --
--- D-150. What this walks: a module with no row reads Connect; Core needs two
+-- D-151. What this walks: a module with no row reads Connect; Core needs two
 -- approvers other than the requester; nobody writes the table directly; the
 -- way back is immediate and freezes rather than deletes; the kill switch
 -- overrides a school's Core; another school's people see and do nothing;

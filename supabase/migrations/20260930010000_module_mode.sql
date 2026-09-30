@@ -3,7 +3,7 @@
 -- Run this once, in the Supabase dashboard: SQL Editor → New query → paste →
 -- Run. It is safe to run again; every statement is guarded.
 --
--- D-150: Semester runs beside a school's systems (CONNECT, today's behaviour
+-- D-151: Semester runs beside a school's systems (CONNECT, today's behaviour
 -- and the default) and takes a module over only when the school switches that
 -- module to CORE. This file is where the switch lives. It builds no module.
 --
