@@ -48,8 +48,8 @@ an artifact under `docs/evidence/`.
 | [PAR](#par) Partners and design partners | 4 | 1 | 0 | 0 | 3 |
 | [NAR](#nar) The category narrative and precise claims | 4 | 0 | 0 | 1 | 3 |
 | [BEN](#ben) The benchmark itself | 5 | 0 | 1 | 2 | 2 |
-| [K12](#k12) K–12, as a configured edition later | 3 | 2 | 1 | 0 | 0 |
-| **total** | **117** | **18** | **21** | **16** | **62** |
+| [K12](#k12) K–12, as a configured edition later | 3 | 1 | 0 | 0 | 2 |
+| **total** | **117** | **17** | **20** | **16** | **64** |
 
 ## Where a brief and the tree disagree
 
@@ -312,8 +312,8 @@ None is open. The four this register found — the Plus price, the pilot length,
 
 | ID | Item | Status | Evidence | Gap | Asked by | Overlaps |
 | --- | --- | --- | --- | --- | --- | --- |
-| K12-001 | A stated minimum age and a posture on children | designed | `docs/FERPA-COPPA-1EDTECH-READINESS.md` — COPPA-1 not started; not directed at children | The terms draft leaves the minimum age for counsel. | F, P | — |
-| K12-002 | Guardian consent, age-aware design and strict guardian boundaries | not-started | — | Nothing in the tree knows a student’s age (Connect register CTL-006). | F, P | `connect:CTL-006` |
+| K12-001 | A stated minimum age and a posture on children | tested | `supabase/minimum-age.check.sql` — under 13 refused at sign-up by the database<br>`docs/legal/TERMS-OF-SERVICE-DRAFT.md` — at least 13 | Set by the owner (D-139); counsel has not reviewed it, and an age is stated, not verified. | F, P | — |
+| K12-002 | Guardian consent, age-aware design and strict guardian boundaries | tested | `supabase/minimum-age.check.sql` — a minor is out of discovery, matching, messaging and employer visibility until 18 | Age-aware design is held; guardian consent is not built, and nothing verifies a guardian. | F, P | `connect:CTL-006` |
 | K12-003 | K–12 positioning, segments, module configuration, pilot and PRD | not-started | — | Absent, neither planned nor refused; the sixteen-item district baseline is the brief’s own gate. | F, P | — |
 
 ## The operating model
@@ -342,7 +342,7 @@ Every row the compliance playbook marks P0 — a blocker before institutional da
 | ID | Control | Owner | Status | Evidence | Next |
 | --- | --- | --- | --- | --- | --- |
 | DP-01 | Public privacy notice | `privacy` (vacant) | designed | `docs/legal/PRIVACY-POLICY-DRAFT.md` | Counsel review, then in force with a version and date. |
-| DP-02 | Terms of Service | `privacy` (vacant) | designed | `docs/legal/TERMS-OF-SERVICE-DRAFT.md` | Decide the minimum age; counsel review. |
+| DP-02 | Terms of Service | `privacy` (vacant) | designed | `docs/legal/TERMS-OF-SERVICE-DRAFT.md` | Counsel review, the minimum age of 13 (D-139) included. |
 | DP-03 | Data inventory | `data` (vacant) | tested | `app/src/lib/retention.test.ts` | A field-level data dictionary beyond the per-table inventory. |
 | DP-04 | Data minimisation | `data` (vacant) | tested | `app/src/lib/governance/module-privacy.test.ts` | A minimum-field review per connector scope. |
 | DP-05 | Student data ownership | `privacy` (vacant) | tested | `app/src/lib/transparency.test.ts` | The promise in force as policy. |

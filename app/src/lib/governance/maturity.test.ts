@@ -70,14 +70,14 @@ describe('the operational-maturity register', () => {
     const c = coverage();
     expect(c.inPlace + c.partial + c.owed).toBe(CONTROLS.length);
     // Said directly, so a change in either direction has to be explained here.
-    expect(c).toEqual({ inPlace: 40, partial: 76, owed: 84 });
+    expect(c).toEqual({ inPlace: 43, partial: 76, owed: 81 });
     expect(CONTROLS).toHaveLength(200);
     const one: Control = { id: 'x', area: 'docs', control: 'a control', status: 'owed', evidence: null, note: 'a note long enough' };
     expect(coverage([one])).toEqual({ inPlace: 0, partial: 0, owed: 1 });
   });
 
   it('names the areas where nothing is in place', () => {
-    expect(bare()).toEqual(['records', 'ediscovery', 'generated', 'minors', 'devices', 'finops', 'residency', 'disaster']);
+    expect(bare()).toEqual(['records', 'ediscovery', 'generated', 'devices', 'finops', 'residency', 'disaster']);
     expect(bare([{ id: 'x', area: 'docs', control: 'a control', status: 'in-place', evidence: 'README.md', note: 'a note long enough' }])).not.toContain('docs');
   });
 

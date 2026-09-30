@@ -88,11 +88,12 @@ describe('the Security Definer and RLS remediation register', () => {
     expect(extra, 'register rows for functions that are not callable definers').toEqual([]);
   });
 
-  it('finds the 151 the advisor listed, so the parser is reading what production runs', () => {
+  it('finds the 151 the advisor listed, plus the two added since, so the parser is reading what production runs', () => {
     // A control on the instrument: a parser that silently lost half the
     // functions would also agree with a register that lost the same half.
-    expect(exposedDefiners().length).toBe(151);
-    expect(FUNCTIONS.length).toBe(151);
+    // 151 on the advisor's reading; state_my_age and my_age_status came after (D-139).
+    expect(exposedDefiners().length).toBe(153);
+    expect(FUNCTIONS.length).toBe(153);
   });
 
   it('holds every row to a gate its winning body actually makes', () => {

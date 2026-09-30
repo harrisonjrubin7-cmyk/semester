@@ -41,7 +41,7 @@ vi.mock('../state/store', () => ({
 
 type Made = { said: string; signedIn: boolean };
 
-const signUp = vi.fn<(email: string, password: string) => Promise<Made>>(async () => ({
+const signUp = vi.fn<(email: string, password: string, bornOn?: string) => Promise<Made>>(async () => ({
   said: 'Account made.',
   signedIn: true,
 }));
@@ -77,7 +77,7 @@ vi.mock('../lib/cloud', () => ({
   providersOn: () => providersOn(),
   institutionSsoConfig: () => institutionSsoConfig(),
   appUrl: () => 'https://semester.example/',
-  signUp: (email: string, password: string) => signUp(email, password),
+  signUp: (email: string, password: string, bornOn?: string) => signUp(email, password, bornOn),
   signIn: (email: string, password: string) => signIn(email, password),
   sendReset: (email: string) => sendReset(email),
   signInWith: (provider: string) => signInWith(provider),
@@ -113,6 +113,7 @@ function type(el: HTMLInputElement, value: string) {
 
 const email = () => host.querySelector('#account-email') as HTMLInputElement;
 const password = () => host.querySelector('#account-password') as HTMLInputElement;
+const born = () => host.querySelector('#account-born') as HTMLInputElement | null;
 const submit = () => host.querySelector('button[type=submit]') as HTMLButtonElement;
 const link = (said: string) =>
   [...host.querySelectorAll('button')].find((b) => (b.textContent ?? '').trim() === said);
@@ -140,10 +141,12 @@ async function send() {
   });
 }
 
-/** Fill both fields and submit, which is the whole of what this form asks. */
-async function enter(address = 'you@vanderbilt.edu', secret = 'a-real-password') {
+/** Fill the fields and submit: a date of birth too, when making an account. */
+async function enter(address = 'you@vanderbilt.edu', secret = 'a-real-password', bornOn = '2000-01-01') {
   type(email(), address);
   type(password(), secret);
+  const b = born();
+  if (b) type(b, bornOn);
   await send();
 }
 
@@ -202,8 +205,36 @@ describe('the first time', () => {
   it('registers what was typed, and does not try to sign in with it', async () => {
     show(<Credentials />);
     await enter();
-    expect(signUp).toHaveBeenCalledWith('you@vanderbilt.edu', 'a-real-password');
+    expect(signUp).toHaveBeenCalledWith('you@vanderbilt.edu', 'a-real-password', '2000-01-01');
     expect(signIn).not.toHaveBeenCalled();
+  });
+
+  it('asks for a date of birth when making an account, and never when signing in', () => {
+    show(<Credentials />);
+    expect(born()).not.toBeNull();
+    expect(host.textContent).toMatch(/at least 13/);
+    act(() => link('I already have one')?.click());
+    expect(born()).toBeNull();
+  });
+
+  it('tells someone under 13 why, and sends nothing', async () => {
+    show(<Credentials />);
+    const twelve = new Date();
+    twelve.setFullYear(twelve.getFullYear() - 12);
+    await enter('young@example.edu', 'a-real-password', twelve.toISOString().slice(0, 10));
+    expect(signUp).not.toHaveBeenCalled();
+    expect(host.textContent).toMatch(/at least 13 to make a Semester account/);
+    expect(host.textContent).toMatch(/Nothing was sent and nothing was created/);
+  });
+
+  it('makes the account for someone 13 to 17, and says what stays off until 18', async () => {
+    show(<Credentials />);
+    const fifteen = new Date();
+    fifteen.setFullYear(fifteen.getFullYear() - 15);
+    const bornOn = fifteen.toISOString().slice(0, 10);
+    await enter('teen@example.edu', 'a-real-password', bornOn);
+    expect(signUp).toHaveBeenCalledWith('teen@example.edu', 'a-real-password', bornOn);
+    expect(host.textContent).toMatch(/stay off until your 18th birthday/);
   });
 
   it('remembers that this device now has an account', async () => {

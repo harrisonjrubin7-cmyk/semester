@@ -195,12 +195,12 @@ export const CONTROLS: readonly Control[] = [
   c('AP-11', 'accommodations', 'No unauthorised staff visibility.', 'in-place', 'supabase/expansion.check.sql', 'Row-level policy: only the named recipient, within the window.'),
 
   // ── Minors, guardians and dual enrollment ──────────────────────────────
-  c('MN-01', 'minors', 'Source for minor age or status.', 'owed', null, 'No date of birth or minor flag is held. The minimum age is a [DECIDE] in the legal drafts.'),
+  c('MN-01', 'minors', 'Source for minor age or status.', 'in-place', 'supabase/minimum-age.check.sql', 'Stated at sign-up or once afterwards, never changed; only the day a minor turns 18 is kept (D-139). Self-reported, so it is a stated age, not a verified one.'),
   c('MN-02', 'minors', 'Guardian consent where required.', 'owed', null, 'No guardian model. The supporter and family privacy model says it needs the minors decision before building.'),
-  c('MN-03', 'minors', 'Age-of-majority transition.', 'owed', null, 'Follows MN-01: what changes on the day, and who is told.'),
+  c('MN-03', 'minors', 'Age-of-majority transition.', 'in-place', 'supabase/minimum-age.check.sql', 'The restriction lifts on the 18th birthday with nothing to run. Nobody is told; the Account screen stops saying it.'),
   c('MN-04', 'minors', 'Dual-enrollment sharing rules.', 'owed', null, 'A high-school student in a university course would be a minor in an institutional tenant; no rule exists.'),
   c('MN-05', 'minors', 'Parent and supporter limited-grant model.', 'partial', 'docs/SUPPORTER-FAMILY-PRIVACY-MODEL.md', 'The model is designed: a student grants a supporter a limited view. Built for adults’ supporters, not for guardians of minors.'),
-  c('MN-06', 'minors', 'Restricted career matching, reviews and messaging for minors.', 'owed', null, 'Nothing restricts these because nothing knows a user is a minor (MN-01).'),
+  c('MN-06', 'minors', 'Restricted career matching, reviews and messaging for minors.', 'in-place', 'supabase/minimum-age.check.sql', 'A minor is not a verified student, so every policy that asks refuses; mentor requests, connections, study matching and employer opt-in refuse by trigger. Reporting and guardian sharing stay open.'),
   c('MN-07', 'minors', 'Consent renewal and expiry.', 'owed', null, 'Follows MN-02: a consent that never expires is not a consent.'),
   c('MN-08', 'minors', 'Safe communications policy.', 'partial', 'docs/COMMUNITY-MEDIA-SAFETY.md', 'Community safety rules exist for all users. Nothing is specific to minors.'),
   c('MN-09', 'minors', 'Identity and guardian verification where necessary.', 'owed', null, 'No verification path for a guardian.'),

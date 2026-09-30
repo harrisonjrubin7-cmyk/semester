@@ -124,7 +124,7 @@ end $$;
 do $$
 declare
   /*
-   * The allowlist. Eighty-seven, and each is a deliberate entry point:
+   * The allowlist. Each is a deliberate entry point, among them:
    *   make_referral_code  — mints this account's own code
    *   claim_referral      — records that this account arrived on somebody's
    *   referral_standing   — two integers and a boolean about the caller
@@ -173,6 +173,10 @@ declare
     'read_support_share(want_share uuid)',
     'note_activity(marks text[])',
     'referral_standing()',
+    -- 20260929150000_minimum_age.sql: an account that never stated an age
+    -- states it once, and reads back only its standing, never a date.
+    'state_my_age(want_birth_date date)',
+    'my_age_status()',
     -- Both are security-invoker reads. Their table RLS remains the boundary:
     -- a caller can resolve only policy rows from their verified school.
     'effective_ai_policy(want_tenant text, want_user uuid)',
