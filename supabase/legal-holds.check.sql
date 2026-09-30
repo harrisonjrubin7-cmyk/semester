@@ -304,6 +304,56 @@ begin
   perform private.sweep_stale_invites();
   perform pg_temp.must('and so does the invite sweep', not exists (select 1 from public.invites where email = 'platform.held@lh-u.example'));
 
+  -- ── student erasure: refused before it touches anything, then resumes ───
+  -- erase_account clears the account's own rows itself and only then does the
+  -- edge function delete the auth user, so a hold has to be read at the top of
+  -- erase_account, not left to the auth.users trigger that fires last.
+  declare
+    erasee uuid := pg_temp.newuser('erasee@lh-u.example', 'lh-u');
+    erase_hold uuid;
+    survived boolean;
+  begin
+    perform set_config('request.jwt.claims', '', true);
+    insert into public.legal_holds (subject_kind, subject_id, tenant_id, reason, matter_ref, placed_by)
+      values ('account', erasee::text, 'lh-u', 'Preserve pending inquiry.', 'MATTER-400', platform) returning id into erase_hold;
+    begin
+      perform public.erase_account(erasee);
+      raise exception 'FAILED: erase_account ran for an account under a legal hold';
+    exception when sqlstate '55006' then
+      raise notice 'ok  erase_account refuses an account under a legal hold';
+    end;
+    select exists (select 1 from public.profiles where user_id = erasee) into survived;
+    perform pg_temp.must('and it refused before touching anything: the account''s profile is still there', survived);
+    update public.legal_holds set released_by = gen_random_uuid(), release_reason = 'Inquiry closed.' where id = erase_hold;
+    -- The account's own hold is released, but the school hold from the sweep
+    -- checks above still covers everyone in that school, so erasure still waits.
+    begin
+      perform public.erase_account(erasee);
+      raise exception 'FAILED: erase_account ran for an account in a school under a legal hold';
+    exception when sqlstate '55006' then
+      raise notice 'ok  a school-wide hold blocks erasure of the accounts in that school too';
+    end;
+    update public.legal_holds set released_by = gen_random_uuid(), release_reason = 'School released.' where id = tenant_hold;
+    perform public.erase_account(erasee);
+    perform pg_temp.must('once released, erase_account runs and the profile is erased',
+      not exists (select 1 from public.profiles where user_id = erasee));
+  end;
+
+  -- The original body is reachable only through the wrapper: not even the
+  -- service role may call it and walk around the hold.
+  begin
+    set local role service_role;
+    perform private.erase_account_unheld(gen_random_uuid());
+    reset role;
+    raise exception 'FAILED: the service role called the unwrapped erase directly';
+  exception when insufficient_privilege then
+    reset role;
+    raise notice 'ok  the unwrapped erase is not callable, even by the service role';
+  end;
+
+  perform pg_temp.says('a signed-in account cannot call erase_account, held or not',
+    pg_temp.error_as(a, format('select public.erase_account(%L)', student)), 'permission denied');
+
   -- ── nobody reaches the helpers from the API ────────────────────────────
   perform pg_temp.says('a signed-in account cannot ask whether an account is held',
     pg_temp.error_as(a, format('select private.account_is_held(%L)', student)), 'permission denied');

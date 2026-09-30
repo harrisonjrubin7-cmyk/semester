@@ -460,9 +460,12 @@ on both sides of its line.
 - **Never deleted, never edited** except to record the release.
 - **What it stops.** The invite sweep and the audit sweep skip what a live hold
   covers (a platform hold pauses them; a school hold keeps that school's
-  events); the abandoned-sign-up sweep skips held accounts; and a `before delete`
-  trigger on `auth.users` refuses to delete a held account, which is the door a
-  student's own erasure goes through. The refusal says why.
+  events); the abandoned-sign-up sweep skips held accounts; the erase-account function
+  refuses a held account before it touches a single row, and says why
+  (20260930040000_erase_respects_holds.sql; the student is told it is not a
+  fault and given no reason); a `before delete` trigger on `auth.users` is the
+  backstop behind it. Erasure runs as normal once the hold is released. A hold on
+  a school covers every account in it.
 - **What a platform hold also stops.** The AI-runtime and Community sweeps run
   through `private.run_sweep` (20260930030000_hold_gated_sweeps.sql), which
   skips them while a platform hold is live and says so in its result.
