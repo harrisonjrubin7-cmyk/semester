@@ -383,7 +383,7 @@ export const PACKET: readonly { item: string; path: string | null }[] = [
   { item: 'Data flow, classification, source owner, retention and integration map', path: 'RETENTION.md' },
   { item: 'Security, privacy, accessibility and AI risk assessments', path: 'docs/operating-model/RISK-GOVERNANCE.md' },
   { item: 'Service tier, SLOs, RTO/RPO, monitoring, alerts and on-call owners', path: 'docs/operating-model/SLOS-AND-ERROR-BUDGETS.md' },
-  { item: 'Performance, capacity and load-test results', path: null },
+  { item: 'Performance, capacity and load-test results', path: 'docs/PERFORMANCE-AND-LOW-END-DEVICE-PLAN.md' },
   { item: 'Backup restore, rollback, reconciliation and failure-test evidence', path: null },
   { item: 'Support, escalation, training, documentation and hypercare plan', path: 'docs/launch/FIRST-DAY-CHECKLISTS.md' },
   { item: 'Known limitations, customer communications and workaround plan', path: 'docs/launch/KNOWN-LIMITATIONS.md' },
