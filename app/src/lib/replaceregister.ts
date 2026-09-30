@@ -174,7 +174,7 @@ export const DOMAINS: readonly Domain[] = [
   domain('registration', 'Registration', 'Plan and official handoff', 'The registration center: waitlist, enrollment, add/drop and approval workflow', {
     status: 'tested',
     evidence: [['app/src/lib/registration-day.test.ts', 'ranked backups and the checklist'], ['app/src/components/RegistrationDay.test.tsx', 'countdown and official handoff']],
-    gap: 'No live seats, and nothing asks what happened after the handoff.',
+    gap: 'No live seats. After the handoff the student can note where it stands (their own report, on their device, `handoff-status.ts`), but nothing reads the official system back.',
   }, {
     status: 'building',
     evidence: [['app/server/institution/registration.ts', 'a waitlist queue and add/drop close'], ['app/server/institution/registration.test.ts', 'the sandbox flows']],
