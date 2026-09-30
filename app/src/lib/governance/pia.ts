@@ -271,6 +271,33 @@ export const ASSESSMENTS: readonly Assessment[] = [
       'Sharing: nothing reaches the payment provider from here; its settlement file is read by hand, so a missed month is not noticed by the system.',
     ],
   },
+  {
+    id: 'assignments-and-submissions',
+    surface: 'Assignments and submissions',
+    what: 'An instructor publishes an assignment for a course and term, a student of that course submits text and keeps a receipt, at a school that has switched the module to Core.',
+    owner: 'privacy',
+    assessed: '2026-10-01',
+    answers: {
+      purpose: { answer: 'To let a school run coursework in Semester: what was asked, when it was due, what a student handed in and when the database took it. Each column answers one of those four things; nothing is derived from the text.', evidence: [{ path: 'supabase/migrations/20260930240000_assignments.sql', shows: 'The seven tables and what each column is for' }] },
+      fields: { answer: 'An assignment’s title, instructions, due and closing times and version cap; per student the text they submitted (up to 50,000 characters, text only), its SHA-256, the times, whether it was late, a receipt code, and any extension with its reason. Submitted coursework is an education record. The list is closed: no file, link, media or group field exists.', evidence: [{ path: 'supabase/migrations/20260930240000_assignments.sql', shows: 'Column checks bound every field; no attachment column exists' }, { path: 'app/src/lib/assignments/assignments.test.ts', shows: 'Every limit in the client is held equal to the migration’s text' }] },
+      default: { answer: 'Private to the student and the course’s staff, enforced by the database: a student reads their own versions, receipts and extensions and the published assignments of courses they are on the roster of, and nothing else; a draft is the instructor’s until published.', evidence: [{ path: 'supabase/assignments.check.sql', shows: 'Reads as seven different people: an enrolled student, a classmate, a student of another course, faculty elsewhere, a TA, a grant on the untermed course and a grant for another term' }] },
+      readers: { answer: 'Accounts holding assignments:author or assignments:review on this course and this term, directly under row-level security; grants are per term, so last year’s section is not readable by this year’s instructor. No one at Semester reads it: there is no service-role reader and no support view. They never receive another course’s rows.', evidence: [{ path: 'supabase/assignments.check.sql', shows: 'An instructor holding only 2027SP reads nothing of 2026FA; faculty at another school reads nothing' }, { path: 'app/src/lib/assignments/client.test.ts', shows: 'A read keeps only rows of this course’s assignments, so one course never shows another’s' }] },
+      identity: { answer: 'Not anonymous: a submission names the student by account id, and an instructor reads it so. The instructor’s table shows an eight-character prefix of the id, not a name, and Semester derives nothing anonymous from it.', evidence: [{ path: 'app/src/screens/assignments.test.tsx', shows: 'A student never sees another student’s submission, even if a read returned one' }] },
+      ai: { answer: 'Nothing. No prompt builder reads these tables and the screen sends nothing to a model. The text a student types is kept on the device until they submit it.', evidence: [{ path: 'app/src/lib/assignments/client.ts', shows: 'The only calls are the five tables and the six functions; none is an AI route' }] },
+      retention: { answer: 'Kept with the school and, for a student’s own rows, until their account is deleted. No clock is set: how long a school keeps coursework is the school’s rule and none has been given. RETENTION.md says so for each table.', evidence: [RETENTION, RETENTION_TEST] },
+      deletion: { answer: 'Deleting a student’s account removes every version, receipt and extension that names them (each column references auth.users with on delete cascade); an instructor deleting theirs clears who wrote the assignment and leaves it. The catalog-driven export and erasure cover the new tables the day they exist. The school’s own system keeps its copy. An account that has submitted is not read as untouched.', evidence: [{ path: 'app/src/lib/privacy.test.ts', shows: 'Every table the client writes is either owned (deleted with the account) or kept with a sentence' }, { path: 'supabase/assignments.check.sql', shows: 'lti_account_untouched reads a submission and an extension as a person’s work, with a control' }] },
+      sharing: { answer: 'None. There is no share, link or export of a submission beyond the student’s own data export and the course’s staff reading it. A receipt is the student’s to show; it proves what Semester took and is not a grade.', evidence: [{ path: 'supabase/assignments.check.sql', shows: 'No table accepts a write from a client, and only the course’s staff and the student read a row' }] },
+      inference: { answer: 'None. Nothing here computes a score, flag or ranking: lateness is a fact about a time, recorded once, and is never aggregated into a per-student number.', evidence: [NEVER_MEASURED] },
+      guard: { answer: '114 checks across two schools walk every refusal, each after the same call works for the right person; five deliberate breaks of the migration and six of the client each turn a test red.', evidence: [{ path: 'supabase/assignments.check.sql', shows: 'Who authors, who submits, who reads, late, extensions, close, Connect, frozen, paused and the untouched-account rule' }, { path: 'app/src/screens/assignments.test.tsx', shows: 'The screen at the mode, the roles, a lost reply and a refusal' }] },
+    },
+    rating: 'medium',
+    open: [
+      'Retention: no clock is set for coursework; how long a school keeps it is the school’s rule and none has been given.',
+      'Readers: a teaching assistant reads every submission in the course because assignments:review has no narrower scope; a course that wants TAs to see only their own section has no way to say so yet.',
+      'Deletion: a student who deletes their account loses the receipt that proves what they submitted; the school’s copy is not Semester’s to keep on their behalf.',
+      'Guard: applied to no production project and run only against a throwaway Postgres; no counsel has read what a receipt can and cannot be said to prove.',
+    ],
+  },
 ];
 
 export interface Owed {
