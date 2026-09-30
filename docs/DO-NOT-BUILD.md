@@ -26,6 +26,7 @@ cannot be relaxed in code without the page changing in the same diff.
 | 10 | **No student data used for advertising or sponsorship targeting.** No ad or tracking SDK is loaded, and sponsorship is a separate opt-in that reads nothing about the student. | `donotbuild.test.ts` (no ad/tracking hosts in the source), review |
 | 11 | **No irreversible action without confirmation, and no removal without undo or a restore path.** (WCAG 2.2 SC 3.3.4, Error Prevention.) Use `TypeToConfirm` for the consequential, `Undone` for the reversible. | Review |
 | 12 | **No "Continue" card for work that is not actually unfinished.** `lib/opened.ts` drops finished deadlines; anything similar must too. | `lib/opened.test.ts` |
+| 13 | **No current student's record reaches alumni relations or fundraising, and nobody is asked about giving without their own consent.** An advancement migration names none of the tables listed below; fundraising contact is a consent the alum gives, withdraws at once, and a minor cannot give (`private.fundraising_reachable`). | `donotbuild.test.ts` (the advancement migrations against the list below), `supabase/alumni.check.sql` |
 
 ## The top-level navigation
 
@@ -55,11 +56,34 @@ public/sw.js
 - `public/sw.js` displays a push that `lib/notify.ts#planAhead` already
   planned, capped and explained on the device.
 
+## What advancement may not read
+
+Rule 13 fails the build when a migration whose name contains `alumni`,
+`advancement`, `fundrais`, `donor` or `gift` names any of these tables — the
+ones that hold a current student's courses, plans, work, study or context:
+
+```student-tables
+enrollments
+courses
+term_plan_courses
+student_context
+state
+notes
+tasks
+study_packs
+weekly_checkins
+graduation_scenarios
+transfer_evaluations
+course_reviews
+seat_watches
+```
+
 ## Why these and not more
 
 The list in the continuity brief this page came from had ten rules; 11 and 12
 were added because the same brief asks for them elsewhere (undo and receipts,
 "Continue" only for real work), and a rule stated in one document and missing
-from this one is a rule that is not held. See
+from this one is a rule that is not held. 13 was added with the alumni
+foundation (D-143), when fundraising first had tables to reach from. See
 [EXPERIENCE-CONTINUITY.md](EXPERIENCE-CONTINUITY.md) for where each of the
 brief's sixteen items stands.

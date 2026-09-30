@@ -268,8 +268,9 @@ begin
   -- (20260929100000_console_control_plane.sql: console:operate for six
   -- operator roles, approval:decide for platform_admin, breakglass:request
   -- for platform_admin and incident_responder).
-  -- 112 before the commercial core migration added six role-capability pairs.
-  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 118);
+  -- 112 before the commercial core migration added six role-capability pairs;
+  -- 118 before alumni:manage for university_admin and university_staff (20260929210000_alumni_consent.sql) added two.
+  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 120);
 
   perform pg_temp.become_anon();
   perform pg_temp.refused('a signed-out visitor cannot read the matrix',
