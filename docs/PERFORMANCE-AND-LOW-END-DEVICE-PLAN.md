@@ -12,8 +12,22 @@ Part 17 of the expansion command. Phase 7. Some of it exists.
 - Debounced saves: `app/src/lib/draft.ts`.
 - Caching: the service worker (`app/public/sw.js`) and `app/src/lib/warm.ts`.
 
+- **Bundle budgets, as a CI gate** (29 September 2026, D-138):
+  `app/perf-budgets.json`, checked by `npm run budgets` after every CI build.
+  The first load, each lazily loaded screen's cost to open and the largest
+  single file, in gzip bytes, each set from a measurement plus ten per cent
+  (and never less than the measurement plus 8 KB); a new screen with no budget
+  of its own may cost 48 KB. The arithmetic is `app/src/lib/perfbudget.ts`;
+  the chunk graph comes from the `bundle-graph` plugin in `vite.config.ts`,
+  written outside `dist/` so no source path is published.
+- **What the first measurement said:** the first load is 395 KB gzip, well
+  above the 150–200 KB common mobile guidance, and the largest file is the
+  diagram layout engine (`elk`, 436 KB gzip), loaded only when a diagram is
+  drawn. The budgets hold the line; bringing the first load down is its own
+  piece of work, measured against them.
+
 Absent: web-vitals (LCP, INP, CLS), list virtualization, search debounce or
-`useDeferredValue`, bundle budgets, `manualChunks`.
+`useDeferredValue`, `manualChunks`.
 
 ## In flight
 
@@ -36,7 +50,8 @@ Absent: web-vitals (LCP, INP, CLS), list virtualization, search debounce or
 ## Order of work
 
 1. Measure first: web-vitals into the aggregate table, and a bundle report in CI.
-   Budgets are set from the measurement, not guessed.
+   Budgets are set from the measurement, not guessed. *The bundle half is done
+   (D-138); web-vitals is not.*
 2. Search debounce with cancellation, and `useDeferredValue` for the result list.
 3. Virtualize the lists measured as largest (calendar agenda, sources, catalog).
 4. Skeletons sized to the final layout (CLS measured before and after).
@@ -58,7 +73,7 @@ Absent: web-vitals (LCP, INP, CLS), list virtualization, search debounce or
 
 ## Tests
 
-- CI fails when a route's JavaScript exceeds its budget.
+- CI fails when a route's JavaScript exceeds its budget. *Done: `npm run budgets`, shown red on a screen given a static import of KaTeX (1 KB to 75.6 KB) and on the entry given the same (395 KB to 470 KB).*
 - The service-worker test fetches the same private URL as two users and gets
   two different answers.
 - A 5,000-item list renders under a DOM node budget.

@@ -29,15 +29,23 @@
  *      on its day, and double-clicking that day adds something to it.
  *   6. **Path.** My Path (`#/degree`): the path details saved, and the Path
  *      Snapshot rewritten to show them — still saying it is not an audit.
- *   7. **Get help.** The Guide (`#/help`): its "When things go wrong" chapter
- *      opens and says what to do when two devices disagree. Then Support
- *      (`#/support`): its first tab carries a working `tel:` crisis line.
- *   8. **Finish it.** The action's tick box, and the row reading back as done
+ *   7. **A deadline's own page.** From the course's Assignments, the first
+ *      deadline's page (`#/item/<id>`): the syllabus sentence it was read
+ *      from, verbatim; Source & details, saying who can see it; and "Work for
+ *      this" to file work against it.
+ *   8. **Get help.** The Guide (`#/help`): its "When things go wrong" chapter
+ *      opens and says what to do when two devices disagree. "Describe the
+ *      problem" names whose question it is. With `VITE_HUMAN_HELP` on, "Ask …"
+ *      opens the request to a person and shows exactly what would be sent,
+ *      carrying the question; signed out, the screen says sending needs sign-in
+ *      and offers nothing that sends — and nothing is pressed that would. CI
+ *      walks it both ways. Then Support (`#/support`): a working `tel:` line.
+ *   9. **Finish it.** The action's tick box, and the row reading back as done
  *      — named "Mark … not done" and struck through.
- *   9. **Resume.** The same browser reloaded, then a second tab of it: the
+ *  10. **Resume.** The same browser reloaded, then a second tab of it: the
  *      action is still there and still done, and the first run is not shown
  *      again.
- *  10. **Take it with you**, then **resume on a second device.** See the next section, which is the part
+ *  11. **Take it with you**, then **resume on a second device.** See the next section, which is the part
  *      of this that is easiest to overclaim.
  *
  * All of it at a phone viewport (390×844) and a desktop one (1280×900), each
@@ -102,6 +110,12 @@ import { join } from 'node:path';
 
 const BASE = (process.env.SMOKE_URL || 'http://localhost:4173/').replace(/\/?$/, '/');
 const CHROME = process.env.SMOKE_CHROME || '/opt/pw-browsers/chromium';
+/**
+ * Set by the CI run against a build with `VITE_HUMAN_HELP` on, so that run
+ * fails if the request to a person never appears — rather than passing by
+ * taking the branch a build without it takes.
+ */
+const EXPECT_HUMAN_HELP = process.env.SMOKE_EXPECT_HUMAN_HELP === '1';
 /** How long a single expectation may take to come true. */
 const WAIT = Number(process.env.SMOKE_WAIT || 15_000);
 
@@ -119,7 +133,8 @@ const STEPS = [
   'see it on Today',
   'plan: the deadline on the calendar, and something added there',
   'path: record the degree',
-  'get help',
+  'open a deadline\'s own page, with where it came from',
+  'get help, and find whose question it is',
   'complete it',
   'resume on this device',
   'take it with you',
@@ -403,6 +418,7 @@ async function journey(label, viewport) {
     await page.getByRole('button', { name: new RegExp(`^Add ${CODE} — ${course.due.length} dates$`) }).click();
     expect(await visible(page.locator('h1', { hasText: CODE })), `saving the course did not open ${CODE}`);
     expect(page.url().includes('#/course/'), `saving the course landed at ${page.url()}, not the course`);
+    const courseAt = new URL(page.url()).hash;
     // The overview shows only what is next; the tab lists every date taken.
     await page.getByRole('tab', { name: 'Assignments', exact: true }).click();
     for (const d of course.due) {
@@ -455,20 +471,82 @@ async function journey(label, viewport) {
     expect(/Economics BA/.test(snapshot) && snapshot.includes(`Spring ${year}`), 'the Path Snapshot does not show the path just saved');
     expect(/not an official degree audit/i.test(snapshot), 'the Path Snapshot no longer says it is not an official audit');
 
-    // ── 5 · Help ───────────────────────────────────────────────────────────
+    // ── 8 · A deadline's own page, and where it came from ──────────────────
+    //
+    // Step 6 of GOLDEN-PATH-TEST-SCRIPT.md is "a source-linked Assignment or
+    // Study workspace". The AI Toolkit's workspace is behind build flags a
+    // production build leaves off, and is not tied to any deadline; the page
+    // every student has is the deadline's own (`ItemDetail`, `#/item/<id>`):
+    // the syllabus's sentence it was read from, its Source & details, and
+    // "Work for this" to file work against it.
     at(STEPS[7]);
+    const firstDue = course.due[0];
+    await page.evaluate((h) => { location.hash = h; }, courseAt);
+    await page.getByRole('tab', { name: 'Assignments', exact: true }).click();
+    await page.getByRole('button', { name: new RegExp(`^(?!Mark ).*${firstDue.title}`) }).first().click();
+    // The header names the kind ("Problem set", `headers.ts`); the title is
+    // the page's own.
+    expect(await visible(page.locator('h1', { hasText: firstDue.kind })), `opening "${firstDue.title}" did not reach a ${firstDue.kind} page`);
+    expect(page.url().includes('#/item/'), `"${firstDue.title}" opened at ${page.url()}, not its own page`);
+    expect(await visible(page.locator('main').getByText(firstDue.title, { exact: true })), `the page opened is not "${firstDue.title}"'s`);
+    expect(await visible(page.getByText('Straight from the syllabus')), 'the deadline page does not say where it came from');
+    expect(await visible(page.locator('main').getByText(firstDue.quote, { exact: true })), 'the deadline page does not quote the syllabus sentence it was read from');
+    await page.getByRole('button', { name: /^source & details$/i }).first().click();
+    const details = page.getByRole('dialog', { name: 'Source & details' });
+    expect(await visible(details), 'Source & details did not open');
+    expect(/only you/i.test(await details.innerText()), 'Source & details does not say who can see this');
+    await page.keyboard.press('Escape');
+    await details.waitFor({ state: 'hidden', timeout: WAIT });
+    expect(await visible(page.getByText('Work for this')), 'the deadline page has no place to file work against it');
+
+    // ── 9 · Help ───────────────────────────────────────────────────────────
+    at(STEPS[8]);
     await go(page, '#/help', 'Guide');
     const wrong = page.getByRole('button', { name: /^when things go wrong/i });
     expect(await visible(wrong), 'the Guide has no "When things go wrong" chapter');
     await wrong.click();
     expect((await wrong.getAttribute('aria-expanded')) === 'true', 'the "When things go wrong" chapter did not open');
     expect(await visible(page.getByText('Two devices disagree')), 'the troubleshooting chapter opened with nothing in it');
+
+    // Whose question it is. Every build has this: the problem in the
+    // student's words, and the office that owns it (`NoWrongDoor.tsx`).
+    const problem = page.getByRole('region', { name: 'Describe the problem' });
+    await problem.getByLabel('What is going on').fill(`I do not understand how ${firstDue.title} in ${CODE} will be graded.`);
+    await problem.getByRole('button', { name: /^find the right door$/i }).click();
+    const door = problem.getByRole('status');
+    expect(await visible(door), '"Find the right door" gave no answer');
+    const answer = await door.first().innerText();
+    expect(/ owns this\.|every door, so none is wrong/i.test(answer), `"Find the right door" named no owner: ${answer.slice(0, 120)}`);
+
+    // And, in a build with human help on (`VITE_HUMAN_HELP`), the request to
+    // that person: what would be sent, shown before anything is. Signed out,
+    // there is nothing to press that sends — the script checks exactly that
+    // and never looks for a send button to press.
+    const ask = problem.getByRole('button', { name: /^ask /i });
+    if (await ask.count()) {
+      await ask.first().click();
+      const question = page.getByLabel('Your question');
+      expect(await visible(question), '"Ask" did not open the request to a person');
+      // A live region headed "Exactly what will be sent" (`GetHelp.tsx`).
+      const sent = page.locator('[aria-live="polite"]', { has: page.getByText('Exactly what will be sent', { exact: true }) });
+      expect(await visible(sent), 'the request to a person does not show what will be sent');
+      expect((await sent.innerText()).includes(firstDue.title), 'what will be sent does not carry the question the student wrote');
+      expect(await visible(page.getByText(/sign in with your university account to send this/i)), 'a signed-out request did not say it needs sign-in to send');
+      expect(
+        (await page.getByRole('button', { name: /^(review and send|yes, send to )/i }).count()) === 0,
+        'a signed-out student was offered a way to send',
+      );
+      notes.push(`${label}: human help is on in this build; the request preview was checked, nothing sent`);
+    } else {
+      expect(!EXPECT_HUMAN_HELP, 'this build was meant to have human help on, and "Find the right door" offered no way to ask a person');
+      notes.push(`${label}: human help is off in this build (VITE_HUMAN_HELP); the right door was found, no request to preview`);
+    }
     await go(page, '#/support', 'Support');
     const crisis = page.locator('main a[href^="tel:"]');
     expect(await visible(crisis), 'Support drew no telephone line to call');
 
     // ── 6 · Complete it ────────────────────────────────────────────────────
-    at(STEPS[8]);
+    at(STEPS[9]);
     await go(page, '#/mine', 'Personal');
     await page.getByRole('button', { name: open }).click();
     expect(await visible(page.getByRole('button', { name: done })), 'ticking the action did not mark it done');
@@ -480,7 +558,7 @@ async function journey(label, viewport) {
     expect(struck.includes('line-through'), `the done action is not struck through (text-decoration: ${struck})`);
 
     // ── 7 · Resume here: a reload, then a second tab ───────────────────────
-    at(STEPS[9]);
+    at(STEPS[10]);
     await page.reload({ waitUntil: 'domcontentloaded' });
     expect(await visible(page.locator('h1', { hasText: 'Personal' })), 'a reload did not come back to Personal');
     expect(await visible(page.getByRole('button', { name: done })), 'after a reload the action is gone or no longer done');
@@ -491,7 +569,7 @@ async function journey(label, viewport) {
     await tab.close();
 
     // ── 8 · Take it with you ───────────────────────────────────────────────
-    at(STEPS[10]);
+    at(STEPS[11]);
     await go(page, '#/export', 'Take it with you');
     for (const part of ['Courses', 'Deadlines', 'Calendar', 'Notes', 'Your own actions']) {
       await page.getByRole('button', { name: `Leave out ${part}`, exact: true }).click();
@@ -510,7 +588,7 @@ async function journey(label, viewport) {
     expect(carried?.done === true, 'the backup file does not carry the action as done');
 
     // ── 9 · A second device: fresh context, restore through the picker ─────
-    at(STEPS[11]);
+    at(STEPS[12]);
     second = await device(viewport, errors);
     const other = second.page;
     await other.goto(BASE, { waitUntil: 'domcontentloaded' });
@@ -565,7 +643,8 @@ if (walked !== VIEWPORTS.length) {
 }
 console.log(
   `golden path ok — ${STEPS.length} steps at ${VIEWPORTS.map(([l]) => l).join(' and ')}: ` +
-    'first run, a course added from its syllabus, Today, an action made, Plan, Path, help, completion, ' +
+    'first run, a course added from its syllabus, Today, an action made, Plan, Path, a deadline\'s own page, ' +
+    'help and the right door, completion, ' +
     'resume after reload and in a second tab, and restored from its backup file into a fresh context. ' +
     'Account-synced resume is account-sync.mjs.',
 );

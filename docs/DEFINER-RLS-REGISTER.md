@@ -326,7 +326,7 @@ Since the reading, 38 more, from migrations not applied to production, each with
 
 ## Both briefs, item by item
 
-Read against main on 2026-09-29. `held` cites a test or check that guards it; `partial` cites what exists and names what does not; `owed` cites only prose. A01–A20 are the architecture brief's twenty priorities; B01–B15 are the audit's named artifacts and remediation items. held 7, partial 26, owed 2.
+Read against main on 2026-09-29. `held` cites a test or check that guards it; `partial` cites what exists and names what does not; `owed` cites only prose. A01–A20 are the architecture brief's twenty priorities; B01–B15 are the audit's named artifacts and remediation items. held 7, partial 27, owed 1.
 
 | ID | Item | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- |
@@ -347,7 +347,7 @@ Read against main on 2026-09-29. `held` cites a test or check that guards it; `p
 | A15 | A platform event bus with a standard envelope | partial | `packages/institution/src/events.ts`<br>`packages/institution/src/events.test.ts`<br>`supabase/outbox.check.sql`<br>`docs/architecture/0008-event-envelope-and-outbox.md` | The envelope and outbox are tested; no producer writes to the outbox and no publisher runs. |
 | A16 | First-class feature flags | partial | `app/src/lib/flags.ts`<br>`app/src/lib/flags.test.ts`<br>`docs/FEATURE-FLAG-REGISTRY.md` | Owner, review date, expiry, kill switch, tenant and role scope exist; no cohort scope, and evaluation is client-side. |
 | A17 | Tests by risk: tenant isolation, contracts, critical journeys, accessibility, visual, load | partial | `supabase/integration-rls-matrix.check.sql`<br>`supabase/tenancy.check.sql`<br>`app/scripts/golden-path.mjs`<br>`app/src/a11y/axe.test.tsx` | No visual regression or load tests. |
-| A18 | Performance budgets | owed | `docs/PERFORMANCE-AND-LOW-END-DEVICE-PLAN.md` | No bundle budget, no web-vitals measurement, no CI gate; the plan says so itself. |
+| A18 | Performance budgets | partial | `app/src/lib/perfbudget.ts`<br>`app/src/lib/perfbudget.test.ts`<br>`app/perf-budgets.json`<br>`docs/PERFORMANCE-AND-LOW-END-DEVICE-PLAN.md` | Bundle budgets are a CI gate: first load, each of 90 screens and the largest file, in gzip bytes, set from a measurement. The first load they were set from is 395 KB, well above common mobile guidance, and nothing measures Core Web Vitals in the field yet. |
 | A19 | The console as an operations command centre | partial | `app/src/screens/Console.tsx`<br>`app/src/screens/console.test.tsx`<br>`app/src/lib/ops/console.ts` | Approvals, break-glass, audit and figures exist; no integration-health, flag-status, permission-simulator or data-request tabs. |
 | A20 | A safe sandbox tenant | partial | `app/server/institution/sandbox.ts`<br>`app/server/institution/sandbox.test.ts`<br>`docs/SYNC-SIMULATION-SANDBOX.md` | A fictional-institution sandbox exists; no sandbox tenant with role switching and no promotion path. |
 | B01 | THREAT-MODEL | partial | `docs/INTEGRATION-THREAT-MODEL.md`<br>`docs/ai-toolkit/AI-TOOLKIT-THREAT-MODEL.md` | Integration and AI-toolkit threat models only; no platform-wide one. |

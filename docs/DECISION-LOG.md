@@ -2635,3 +2635,161 @@ four to be scored, and for the evaluation set model quality needs.
 - **Not changed:** the weights, the floors, the thresholds, the subprocessor
   register. The pass-rate bands and the critical cap are the owner's to
   change; the set has not been run, because this session had no key.
+
+## D-136 · Plus is offered once on Today, the same way to everyone, below the day's own next step
+
+**Decided by owner 29 Sep 2026.** Plus could be bought since D-128, but only
+from Account → Membership, and nothing pointed there: by 21:26 UTC no
+checkout had been opened. The owner asked for an upgrade prompt in the app.
+
+- **Where:** the foot of Today's briefing (`components/PlusPrompt.tsx`, lazy
+  in `TodayDecisionSurface`), under the Action Center or the briefing, so it
+  never sits above the one next step Today exists for.
+- **Who:** a signed-in student on Free, while the catalog has a Plus price,
+  once they have a semester: not on the first-run screen Today shows before a
+  student has added anything, so nobody is sold to during setup.
+  Never someone with a live subscription, never signed out. It is shown the
+  same way to everyone: nothing about what, when or how well a student studies
+  decides whether they see it (D-133's line against using study activity to
+  label or target anyone).
+- **What:** the catalog's price, read through the helper the Membership panel
+  charges from (`fetchPlusPrices`, so the two cannot drift, the fault D-134
+  found between the pricing page and the catalog), what Plus includes from
+  `plans.ts`, and that Free stays free with export and deletion on every plan.
+  "See Plus" opens Account with the upgrade already open
+  (`askToOpenUpgrade` / `takeOpenUpgrade`, one session key, used once);
+  nothing is bought on Today. "Not now" hides it on that device for thirty
+  days.
+- **Fails closed.** If the subscription read fails, the card stays away
+  (`fetchOwnSubscriptions` throws on a PostgREST error rather than returning
+  no rows, which would read as "not a subscriber"). Arriving from "See Plus",
+  Account scrolls to the open upgrade and focuses it (Codex's review of #985).
+- **Not changed:** checkout, consent, cancellation, prices.
+
+
+## D-137 · Three launch-readiness briefs are held to the tree, and Semester has one Definition of Done
+
+**Decided 29 Sep 2026.** Three documents arrived: the *University Launch
+Readiness, HECVAT, Data Migration, and Pilot Contract Playbook*, its one-page
+summary, and the answer to "anything else missing for the company, site,
+application, market, launch and contracts". They are kept under
+`docs/expansion/` as supplied and held to the tree the way D-108 and D-111
+hold every brief: `docs/LAUNCH-COMPLETENESS.md`, rendered from
+`app/src/lib/launchcompleteness.ts`, cites a file for every row, and every
+standing is held to the kind of file it cites.
+
+- **Most of it exists as parts.** 210 items: 118 held by a test, 40 building,
+  41 designed, 10 not started, 1 held by a decision already on main.
+- **The HECVAT tracker the briefs ask for first** is the 81 rows of their
+  seven domains, each with a council seat as owner and the
+  `HECVAT_READINESS.md` control it moves; 40 rows have none, which is what the
+  brief adds to the thirty. **Due dates are the seats' to set**, not typed
+  here on their behalf; the test holds any that is set to an ISO date after
+  the reading.
+- **The pilot term conflict is settled.** The brief's Registration and Path
+  pilot runs 12–26 weeks; when it arrived `gtm/pilot.ts` refused anything
+  outside 60–120 days. The owner has since chosen exactly 26 weeks (D-134),
+  the top of the brief's range, so the row is tested, not held.
+- **Four claim words may not be said**: "Replaces", "Improves student
+  success", "Trusted by" and "Compliant" rest on no row of the claims
+  register. The five that can be said name the rows they rest on.
+- **The Semester Definition of Done** is `docs/DEFINITION-OF-DONE.md`, from
+  the same module: the brief's nine questions, the launch acceptance rule and
+  twelve journeys, each beside where the tree asks it. The engineering
+  checklist in `QUALITY-MANAGEMENT.md` stays where it is.
+- **Eleven public policies drafted for counsel** under `docs/legal/`: the
+  acceptable use policy, community guidelines, copyright and takedown, AI use,
+  cookie and storage notice, accessibility statement, retention and deletion,
+  support, incident response summary, advertising and sponsorship, and refund
+  and cancellation (owed before a live key since D-128). Each is written from
+  the code, carries the *Not in force* banner, and says where the company site
+  promises more; `legal-drafts.test.ts` now holds every file in the folder to
+  the banner and the contact, and `/legal/` lists each as a draft. None may be
+  published until counsel reviews it.
+- **The company site's takedown row said "Available now"** with a Legal owner
+  and a five-day target; no process, agent or owner exists. It now says the
+  policy is drafted and not in force, and names the email address a person
+  reads meanwhile.
+- **The company site's other overclaims are corrected to the code.** Its
+  cookie copy and preference toggles described sign-in and marketing cookies
+  nothing sets; it now says no cookie is set and describes the campaign tags
+  a form carries. The accessibility center's one-day target and "staffed"
+  form, and the support page's business-day support, customer-success
+  manager and critical-period cover, now say one person reads everything and
+  no time is promised. The policy-versions table lists the drafts.
+- **No reply time is promised anywhere on the company site.** The reporting
+  center gave eight report types an owner seat nobody else holds and a one-
+  to three-day target; every form printed a reply target from a table of
+  hours, the contact directory listed one per topic, the security form
+  promised acknowledgement within 24 hours and the privacy form within 72,
+  and the disclosure page within two business days. `SECURITY.md` already
+  refuses an acknowledgement number while one person reads the mailbox; the
+  site now says the same everywhere, keeps the same-day action on a critical
+  security issue, and says no independent advisor is appointed.
+- **The refund terms are undecided, and the site says so.** The membership
+  page stated "Full refund if you cancel within 14 days" and promised final
+  terms "before checkout goes live" — checkout is live with test keys
+  (D-128). Both refund lines now say the policy is drafted for counsel and
+  not in force, name the 14 days as one option it weighs, and promise the
+  final terms before any real charge.
+- **The rest of the membership page says what billing does after D-132.**
+  Cancelling reaches Stripe and is not charged again; a failed payment is
+  Stripe's email and retries with Plus working through a 14-day grace, then
+  paused, with the data untouched — Semester's own reminders are recorded,
+  not sent, and the page no longer says "email and in-app message". The
+  renewal reminder, the 30-day price-change notice and "we stop charging you"
+  when a school sponsors are not built and now say so; the preview stops
+  asking why you are leaving, which the app does not ask, and stops
+  promising a confirmation email. The refund and retention drafts take D-132's
+  cancellation and seven-year record period.
+- **Service commitments and institution exit say what exists.** The
+  service-commitments page listed first-response times from 30 minutes (a
+  24/7 tier) to two business days, hourly updates, extended and critical-
+  period tiers, and credits against a monthly uptime nobody measures; the
+  incident section promised acknowledgement in 30 minutes. They now say one
+  person answers with no time promised, nobody is on call, and the status
+  page keeps no history. The portability page and the trust FAQ promised
+  institutions an export "within 10 business days" and a written deletion
+  certificate; neither a tenant-wide export nor a certificate exists
+  (`docs/trust/DPA-CHECKLIST.md`), and the page now says students can leave
+  with their device copy today and an institution's exit is still being
+  built.
+- **Codex's review of this change found two more, both right.** The site's
+  cookie copy said form attribution stayed in the browser; the form sends it
+  and it is kept with the message. And the procurement questionnaire still
+  answered "blocking issues acknowledged within 1 business day". Both are
+  corrected, and so is a third found while checking: every form footer said a
+  message is kept "up to 24 months", but `site_leads` has no purge
+  (`RETENTION.md`); it now says no deletion period is set.
+- **Not written here, because the repository cannot write them:** the MSA,
+  counsel's review of every policy, a VPAT, customer data migration, and
+  anything with an institution's name on it. Each is a row that says so.
+- **Not changed:** every other register, every status, the go/no-go verdict.
+
+## D-138 · Performance budgets are a CI gate, set from the first measurement
+
+**Decided 29 Sep 2026.** The architecture brief's priority 18 and the audit's
+performance dimension (2/5) both asked for measurable limits before pages
+become heavy; `docs/PERFORMANCE-AND-LOW-END-DEVICE-PLAN.md` had already said
+how: a file CI checks against the build output, set from a measurement.
+
+- **What is held**, in gzip bytes: the first load (the entry and everything
+  it imports statically), each of the 90 lazily loaded screens' cost to open
+  (its chunk and the static imports the first load did not bring), and the
+  largest single file. Each budget is the measurement plus ten per cent, and
+  never less than the measurement plus 8 KB; a new screen with no budget of
+  its own may cost 48 KB. `app/perf-budgets.json` records the measurement
+  beside the budgets, and a test holds each budget to it.
+- **How:** a `bundle-graph` plugin records which source module each chunk
+  came from, written under `node_modules/.cache/` rather than `dist/`,
+  because Vite's own manifest would publish every source path on the live
+  site. `npm run budgets` gzips `dist/` itself and runs after the CI build.
+- **Shown red on real builds:** Search given a static import of KaTeX went
+  from 1 KB to 75.6 KB against a 10 KB budget; the entry given the same went
+  from 395 KB to 470 KB against 435 KB. Both named the budget they broke.
+- **What the measurement says, not changed here:** the first load is 395 KB
+  gzip, roughly twice common mobile guidance. The budget holds that line; it
+  does not bless it. Bringing it down is its own work, measured against this.
+- **Not done:** Core Web Vitals from real devices, which needs the aggregate
+  table the plan describes and a privacy decision on what it records.
+  Register row A18 moves from owed to partial.
