@@ -75,6 +75,27 @@ create policy "tenant administrators write grade levels" on public.grade_levels
   using (private.has_capability('tenant:configure', 'school', school_id))
   with check (private.has_capability('tenant:configure', 'school', school_id));
 
+-- Grade levels are configuration of a K–12 school, like the links; an ordinary
+-- higher-ed school cannot keep them.
+create or replace function private.grade_level_rules()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if not exists (select 1 from public.schools s where s.id = new.school_id and s.edition = 'k12') then
+    raise exception 'semester: grade levels are for K–12 schools' using errcode = 'check_violation';
+  end if;
+  return new;
+end $$;
+revoke all on function private.grade_level_rules() from public;
+
+drop trigger if exists grade_level_rules on public.grade_levels;
+create trigger grade_level_rules
+  before insert or update on public.grade_levels
+  for each row execute function private.grade_level_rules();
+
 -- ── Guardian links ──────────────────────────────────────────────────────────
 
 create table if not exists public.guardian_links (
@@ -123,10 +144,14 @@ create index if not exists guardian_link_restrictions_by_writer on public.guardi
 create table if not exists public.guardian_link_history (
   id          bigint      generated always as identity primary key,
   link_id     uuid        not null,
-  school_id   text        not null,
-  -- Goes with the student's account, like the link it records.
+  -- Goes with the school and with the student's account, like the link it
+  -- records (RETENTION.md): neither may leave their history behind.
+  school_id   text        not null references public.schools on delete cascade,
   student_id  uuid        not null references auth.users on delete cascade,
-  changed_by  uuid,
+  -- The staff account that made the change. A foreign key, so that erasing
+  -- that account finds and clears it (`private.account_data_map()` reads the
+  -- foreign keys), and so the name is not left in the history for good.
+  changed_by  uuid        references auth.users on delete set null,
   changed_at  timestamptz not null default now(),
   action      text        not null check (action in ('created', 'changed', 'ended')),
   rights      text        not null,
@@ -135,6 +160,8 @@ create table if not exists public.guardian_link_history (
 alter table public.guardian_link_history enable row level security;
 create index if not exists guardian_link_history_by_link on public.guardian_link_history (link_id);
 create index if not exists guardian_link_history_by_student on public.guardian_link_history (student_id);
+create index if not exists guardian_link_history_by_school on public.guardian_link_history (school_id);
+create index if not exists guardian_link_history_by_actor on public.guardian_link_history (changed_by);
 
 -- ── The rules a link must meet ──────────────────────────────────────────────
 --
@@ -152,6 +179,24 @@ declare
   edition text;
   student_school text;
 begin
+  -- The verifier's own account being deleted: the foreign key sets
+  -- `verified_by` to null, on live and ended links alike, and that is the name
+  -- going, not the verification being edited. It is allowed only when nothing
+  -- else changes in the same statement, and before the edition check: a school
+  -- moved back to `higher_ed` keeps its links, and must not make their
+  -- verifier's account impossible to erase.
+  -- `pg_trigger_depth() > 1` is what tells the cascade (the foreign key's own
+  -- trigger is depth 1, this one depth 2) from a person's UPDATE (depth 1).
+  if tg_op = 'UPDATE' and pg_trigger_depth() > 1
+     and old.verified_by is not null and new.verified_by is null
+     and new.student_id = old.student_id and new.guardian_id = old.guardian_id
+     and new.school_id = old.school_id and new.created_at = old.created_at
+     and new.verified_at = old.verified_at and new.relationship = old.relationship
+     and new.rights = old.rights and new.ended_at is not distinct from old.ended_at
+     and new.ended_reason is not distinct from old.ended_reason then
+    return new;
+  end if;
+
   select s.edition into edition from public.schools s where s.id = new.school_id;
   if edition is distinct from 'k12' then
     raise exception 'semester: guardian links are for K–12 schools' using errcode = 'check_violation';
@@ -176,21 +221,7 @@ begin
     new.ended_at := null;
     new.ended_reason := null;
   else
-    -- Who, where and when a link was made are facts, not settings. The one
-    -- exception is the verifier's own account being deleted: the foreign key
-    -- then sets `verified_by` to null, on live and ended links alike, and that
-    -- is the name going, not the verification being edited. It is allowed only
-    -- when nothing else changes in the same statement.
-    -- `pg_trigger_depth() > 1` is what tells the cascade (the foreign key's own
-    -- trigger is depth 1, this one depth 2) from a person's UPDATE (depth 1).
-    if pg_trigger_depth() > 1 and old.verified_by is not null and new.verified_by is null
-       and new.student_id = old.student_id and new.guardian_id = old.guardian_id
-       and new.school_id = old.school_id and new.created_at = old.created_at
-       and new.verified_at = old.verified_at and new.relationship = old.relationship
-       and new.rights = old.rights and new.ended_at is not distinct from old.ended_at
-       and new.ended_reason is not distinct from old.ended_reason then
-      return new;
-    end if;
+    -- Who, where and when a link was made are facts, not settings.
     if new.student_id <> old.student_id or new.guardian_id <> old.guardian_id
        or new.school_id <> old.school_id or new.created_at <> old.created_at
        or new.verified_by is distinct from old.verified_by or new.verified_at <> old.verified_at then
@@ -220,7 +251,10 @@ begin
   insert into public.guardian_link_history
     (link_id, school_id, student_id, changed_by, action, rights, relationship)
   values
-    (new.id, new.school_id, new.student_id, (select auth.uid()),
+    (new.id, new.school_id, new.student_id,
+     -- Null when the acting account is the one being deleted (the foreign key
+     -- would refuse a name that is going).
+     (select u.id from auth.users u where u.id = (select auth.uid())),
      case when tg_op = 'INSERT' then 'created'
           when new.ended_at is not null then 'ended'
           else 'changed' end,
@@ -240,10 +274,22 @@ language plpgsql
 set search_path = ''
 as $$
 begin
-  -- The one removal allowed: the student's account is being deleted, and the
-  -- cascade is taking their history with it.
-  if tg_op = 'DELETE' and not exists (select 1 from auth.users u where u.id = old.student_id) then
+  -- The removals allowed: the student's account or the school is being
+  -- deleted, and the cascade is taking their history with it.
+  if tg_op = 'DELETE' and (
+       not exists (select 1 from auth.users u where u.id = old.student_id)
+       or not exists (select 1 from public.schools s where s.id = old.school_id)) then
     return old;
+  end if;
+  -- The one edit allowed: the staff account that made the change is being
+  -- deleted, and the foreign key is clearing its name. Nothing else changes.
+  if tg_op = 'UPDATE' and pg_trigger_depth() > 1
+     and old.changed_by is not null and new.changed_by is null
+     and new.id = old.id and new.link_id = old.link_id and new.school_id = old.school_id
+     and new.student_id = old.student_id and new.changed_at = old.changed_at
+     and new.action = old.action and new.rights = old.rights
+     and new.relationship = old.relationship then
+    return new;
   end if;
   raise exception 'semester: guardian link history is kept as written' using errcode = 'insufficient_privilege';
 end $$;
@@ -262,6 +308,15 @@ security definer
 set search_path = ''
 as $$
 begin
+  -- The writer's own account being deleted: the foreign key clears the name
+  -- and nothing else changes, so the audit time stays what it was.
+  if tg_op = 'UPDATE' and pg_trigger_depth() > 1
+     and old.written_by is not null and new.written_by is null
+     and new.link_id = old.link_id and new.school_id = old.school_id
+     and new.court_order = old.court_order and new.note = old.note
+     and new.written_at = old.written_at then
+    return new;
+  end if;
   select l.school_id into new.school_id from public.guardian_links l where l.id = new.link_id;
   new.written_by := (select auth.uid());
   new.written_at := now();

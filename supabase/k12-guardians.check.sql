@@ -318,9 +318,21 @@ begin
     select count(*) into n from public.guardian_links where verified_by = verifier;
     perform pg_temp.counted('the leaving staff member verified two links, one live and one ended', n, 2);
 
+    select count(*) into n from public.guardian_link_history where changed_by = verifier;
+    perform pg_temp.counted('the history names them as the one who made its changes', n, 3);
     delete from auth.users where id = verifier;
     perform pg_temp.counted('their account is deleted', (select count(*) from auth.users where id = verifier), 0);
 
+    select count(*) into n from public.guardian_link_history where changed_by = verifier;
+    perform pg_temp.counted('the history no longer names them', n, 0);
+    select count(*) into n from public.guardian_link_history where link_id = ended_link;
+    perform pg_temp.counted('— and the history itself is kept', n, 3);
+    begin
+      update public.guardian_link_history set changed_by = staff where link_id = ended_link;
+      raise exception 'FAILED: a history actor was rewritten by a direct update';
+    exception when insufficient_privilege then
+      raise notice 'ok  history cannot be rewritten by a direct update';
+    end;
     select count(*) into n from public.guardian_links where student_id = sibling and verified_by is null;
     perform pg_temp.counted('both links are still there, no longer naming who verified them', n, 2);
     select count(*) into n from public.guardian_links where student_id = sibling and ended_at is null;
@@ -379,6 +391,104 @@ begin
     pg_temp.refused(staff, format(
       'insert into public.grade_levels (school_id, code, label, sort_order) values (%L, %L, %L, %L)',
       'maple-k12-check', '13', 'Grade 13', 12)), true);
+
+  -- ── Findings from review ────────────────────────────────────────────────
+
+  -- A school moved back to higher_ed keeps its links, and their verifier's
+  -- account must still be erasable.
+  declare
+    flip_staff uuid; flip_student uuid; flip_link uuid;
+  begin
+    insert into public.schools (id, name, email_domains, edition)
+    values ('flip-k12-check', 'Flip Check High School', array['flip-check.example'], 'k12');
+    flip_staff   := pg_temp.newuser('office@flip-check.example', 'flip-k12-check');
+    flip_student := pg_temp.newuser('teen@flip-check.example', 'flip-k12-check');
+    update private.account_ages set minor_until = current_date + 400 where user_id = flip_student;
+    insert into public.role_grants (subject, role, scope_kind, scope_id, provenance) values
+      (flip_staff, 'university_staff', 'school', 'flip-k12-check', 'institution');
+    perform pg_temp.become(flip_staff);
+    insert into public.guardian_links (school_id, student_id, guardian_id, relationship, rights)
+    values ('flip-k12-check', flip_student, parent, 'parent', 'view_only') returning id into flip_link;
+    reset role;
+    update public.schools set edition = 'higher_ed' where id = 'flip-k12-check';
+    delete from auth.users where id = flip_staff;
+    perform pg_temp.counted('a verifier at a school moved to higher_ed can be erased, the link stays',
+      (select count(*) from public.guardian_links where id = flip_link and verified_by is null), 1);
+    perform pg_temp.answered('— but the moved school cannot gain a new link',
+      pg_temp.refused(staff, format(
+        'insert into public.guardian_links (school_id, student_id, guardian_id, relationship) values (%L, %L, %L, %L)',
+        'flip-k12-check', flip_student, second_parent, 'parent')), true);
+    perform pg_temp.answered('— nor a grade level',
+      pg_temp.refused(staff, format(
+        'insert into public.grade_levels (school_id, code, label, sort_order) values (%L, %L, %L, %L)',
+        'flip-k12-check', '9', 'Grade 9', 9)), true);
+  end;
+
+  -- A higher-ed school cannot keep K–12 grade levels, at insert or by moving.
+  -- As the table's owner, so the policy is not what refuses it: the rule holds
+  -- for every writer, like the link rules.
+  reset role;
+  begin
+    insert into public.grade_levels (school_id, code, label, sort_order) values ('oak-college-check', '9', 'Grade 9', 9);
+    raise exception 'FAILED: a higher-ed school was given a grade level';
+  exception when check_violation then
+    raise notice 'ok  a higher-ed school cannot have grade levels, whoever writes';
+  end;
+  begin
+    update public.grade_levels set school_id = 'oak-college-check' where school_id = 'maple-k12-check';
+    raise exception 'FAILED: a grade level was moved to a higher-ed school';
+  exception when check_violation then
+    raise notice 'ok  a grade level cannot be moved to a higher-ed school';
+  end;
+
+  -- The writer of a restriction leaves: the name goes, the audit time stays.
+  declare
+    writer uuid; held uuid; stamped timestamptz;
+  begin
+    writer := pg_temp.newuser('writer@maple-check.example', 'maple-k12-check');
+    insert into public.role_grants (subject, role, scope_kind, scope_id, provenance) values
+      (writer, 'university_staff', 'school', 'maple-k12-check', 'institution');
+    perform pg_temp.become(staff);
+    reset role;
+    insert into public.guardian_links (school_id, student_id, guardian_id, relationship, rights)
+    values ('maple-k12-check', sibling, adult_student, 'other_caregiver', 'none') returning id into held;
+    perform pg_temp.become(writer);
+    insert into public.guardian_link_restrictions (link_id, court_order, note) values (held, true, 'order on file');
+    reset role;
+    update public.guardian_link_restrictions set written_at = now() - interval '3 days' where link_id = held;
+    select written_at into stamped from public.guardian_link_restrictions where link_id = held;
+    delete from auth.users where id = writer;
+    perform pg_temp.counted('a restriction writer can be erased; the name goes, the restriction stays',
+      (select count(*) from public.guardian_link_restrictions where link_id = held and written_by is null and court_order), 1);
+    perform pg_temp.counted('— and its audit time is not restamped',
+      (select count(*) from public.guardian_link_restrictions where link_id = held and written_at = stamped), 1);
+  end;
+
+  -- A school is removed: its guardian history goes with it (RETENTION.md).
+  declare
+    gone_student uuid;
+  begin
+    insert into public.schools (id, name, email_domains, edition)
+    values ('gone-k12-check', 'Gone Check High School', array['gone-check.example'], 'k12');
+    gone_student := pg_temp.newuser('teen@gone-check.example', 'gone-k12-check');
+    update private.account_ages set minor_until = current_date + 400 where user_id = gone_student;
+    perform pg_temp.become(staff);
+    reset role;
+    insert into public.guardian_links (school_id, student_id, guardian_id, relationship)
+    values ('gone-k12-check', gone_student, parent, 'parent');
+    perform pg_temp.counted('a school''s links leave history rows',
+      (select count(*) from public.guardian_link_history where school_id = 'gone-k12-check'), 1);
+    begin
+      delete from public.guardian_link_history where school_id = 'gone-k12-check';
+      raise exception 'FAILED: history was deleted directly';
+    exception when insufficient_privilege then
+      raise notice 'ok  history cannot be deleted directly';
+    end;
+    update public.profiles set school_id = null where user_id = gone_student;
+    delete from public.schools where id = 'gone-k12-check';
+    perform pg_temp.counted('deleting the school removes its history too',
+      (select count(*) from public.guardian_link_history where school_id = 'gone-k12-check'), 0);
+  end;
 end $$;
 
 rollback;
