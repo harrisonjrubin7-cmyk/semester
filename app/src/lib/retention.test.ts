@@ -217,13 +217,22 @@ describe('the provider’s backups have a lifecycle here, held to the HECVAT ans
     expect(flat()).toMatch(new RegExp(`outlives its deletion by at most the backup retention — ${days} days — and then by nothing, with one exception`));
   });
 
-  it('says the number is the tier’s documentation and not a dashboard reading, and that the test cannot verify the provider', () => {
+  it('says where the number comes from — the tier’s documentation and a dated dashboard reading — and that the test cannot verify the provider', () => {
     // Codex on #940: holding two documents to one number proves consistency,
     // not the provider's configuration. The section must say which it is.
-    expect(flat()).toMatch(/not yet read off the dashboard on any date/);
+    // The owner read the Backups page on 30 September 2026, so both documents
+    // now carry that date and the filed reading, and neither may claim more:
+    // a reading is not a restore.
+    const reading = 'docs/evidence/backups/backups-dashboard-reading-2026-09-30.md';
+    expect(existsSync(join(ROOT, reading))).toBe(true);
+    expect(flat()).toMatch(/read off the dashboard on 30 September 2026/);
+    expect(flat()).toContain(reading);
+    expect(flat()).toMatch(/no backup from it has been restored/);
     expect(flat()).toMatch(/it cannot verify the provider/);
     const hecvatRow = hecvat().split('\n').find((l) => l.startsWith('| BCDR-01 '))!;
-    expect(hecvatRow).toMatch(/not yet read from the project dashboard/);
+    expect(hecvatRow).toMatch(/read from the project dashboard on 30 September 2026/);
+    expect(hecvatRow).toMatch(/No backup has been restored/);
+    expect(hecvatRow).toMatch(/\| Partial \|/);
   });
 
   it('carries the restore exception into RESTORE.md and the privacy-policy draft', () => {
@@ -252,7 +261,7 @@ describe('the provider’s backups have a lifecycle here, held to the HECVAT ans
   it('says what a deletion means for the copy in a backup, and that a restore owes the deletions again', () => {
     expect(flat()).toMatch(/No process reads it in that window, and nothing restores it on its own/);
     expect(flat()).toMatch(/have to be run again/);
-    expect(flat()).toMatch(/is not confirmed to be on/);
+    expect(flat()).toMatch(/Point-in-time recovery, which would keep a continuous log for 7, 14 or 28 days, is off/);
   });
 
   it('and the probe would catch a different number', () => {

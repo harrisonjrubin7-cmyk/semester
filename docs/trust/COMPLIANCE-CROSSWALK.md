@@ -31,7 +31,7 @@ cited as evidence of anything.
 | 4 | Independently tested, automated where appropriate, continuously improved and transparently reported |
 
 A 3 needs an artifact somebody produced by operating the control. The master
-register keeps those under `docs/evidence/`, which holds the AI drills of 29 September,
+register keeps those under `docs/evidence/`, which holds the AI drills of 29 September and the backups reading of 30 September,
 so **the ceiling today is 4** for every domain, held by the test to the
 directory rather than to this sentence. A domain's score is the lower median of
 its rows' levels: the level the middle row reaches, so one tested row cannot

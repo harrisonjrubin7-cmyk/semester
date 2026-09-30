@@ -160,9 +160,10 @@ export const GATES: readonly Gate[] = [
     status: 'partial',
     evidence: [
       { path: 'supabase/restore.sh', shows: 'a logical-dump restore rehearsal, run on 2026-09-21 and passing' },
-      { path: 'RESTORE.md', shows: 'the production procedure, with every measurement still blank' },
+      { path: 'RESTORE.md', shows: 'the production procedure; how far back and the recovery point read off the dashboard on 2026-09-30, the restore itself not run' },
+      { path: 'docs/evidence/backups/backups-dashboard-reading-2026-09-30.md', shows: 'the owner’s reading of Database → Backups on 2026-09-30: nine physical daily backups from 23 Sep 12:06:40 UTC to 30 Sep 12:08:31 UTC, point-in-time recovery off' },
     ],
-    gap: 'The production project has never been restored: recovery point, recovery time and post-restore policy checks are all unmeasured. The rehearsal runs in CI on every change, against a disposable database.',
+    gap: 'The production project has never been restored. The backups exist (nine daily, seven days back, read 2026-09-30), and with point-in-time recovery off a restore could lose up to a day. Recovery time and post-restore policy checks are unmeasured, and engineering access to production, which the drill needs, is not granted. The rehearsal runs in CI on every change, against a disposable database.',
     goLive: [/Restore tested from backup/, /Gateway journal backed up/],
   },
   {

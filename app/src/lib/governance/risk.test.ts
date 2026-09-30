@@ -211,7 +211,8 @@ describe('game days', () => {
       expect(g.held, `${g.id} claims a run; file it under docs/evidence/ and change this test`).toBeNull();
       if (g.runbook) expect(exists(g.runbook), `${g.id} → ${g.runbook}`).toBe(true);
     }
-    // docs/evidence/ holds the AI drills of 29 September; none is a game day.
+    // docs/evidence/ holds the AI drills of 29 September and the backups reading
+    // of 30 September; none is a game day.
     const filedHere = (dir: string): string[] =>
       readdirSync(join(root, dir), { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? filedHere(`${dir}/${e.name}`) : [e.name]));
     expect(filedHere('docs/evidence').filter((f) => /game-?day|GD-\d/i.test(f))).toEqual([]);

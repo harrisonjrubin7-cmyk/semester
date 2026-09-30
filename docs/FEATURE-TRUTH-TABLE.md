@@ -103,7 +103,7 @@ therefore **violated by design in most student modules**; see the gap register i
 | CI gates (tsc, lint, tests, shuffle, budgets, axe smoke, golden path, RLS suites, gitleaks, audit) | LIVE | `.github/workflows/ci.yml` | no SAST/CodeQL; no coverage tool |
 | Staging with isolated demo tenants | PLANNED | `STAGING.md`: parity steps 2–4 never run | M9 |
 | Monitoring / alerting | PARTIAL | `MONITORING.md`, `public/status.html` | **no alert reaches anyone**; no client error capture |
-| Restore / DR | PARTIAL | CI logical-dump rehearsal | **production never restored**; `docs/evidence/` absent; gateway journal has no backup |
+| Restore / DR | PARTIAL | CI logical-dump rehearsal; production Backups page read by the owner on 2026-09-30 (`docs/evidence/backups/backups-dashboard-reading-2026-09-30.md`): nine physical daily backups, 23–30 Sep, PITR off | **production never restored**; PITR off, so the recovery point is up to a day; engineering access to production not granted; gateway journal has no backup |
 | Incident response | PARTIAL | runbooks exist | all owners "Unassigned" |
 | Accessibility | PARTIAL | axe tests, focus/modal/motion tests | no human AT pass, no ACR/VPAT |
 | AI evaluation | PARTIAL | `AI-RECOMMENDATION-EVALUATION-HARNESS.md`; live tests write to nonexistent `docs/evidence/ai` | no scored run, no release gate |

@@ -166,7 +166,7 @@ function render(): string {
     '',
     '## Where it stands',
     '',
-    `**${done} of ${CALENDAR.length} artifacts filed.**${done === 0 ? ' `docs/evidence/` holds only the AI drills of 29 September, which this calendar does not schedule. The test reads the directory, so this line changes when the first artifact here lands.' : ''}`,
+    `**${done} of ${CALENDAR.length} artifacts filed.**${done === 0 ? ' `docs/evidence/` holds only the AI drills of 29 September and the backups reading of 30 September, which this calendar does not schedule. The test reads the directory, so this line changes when the first artifact here lands.' : ''}`,
     '',
   ];
   for (const w of WINDOWS) {

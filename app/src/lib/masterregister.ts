@@ -1426,8 +1426,11 @@ export const REGISTER: readonly Requirement[] = [
     validation: 'Backup evidence',
     severity: 'P0',
     status: 'designed',
-    evidence: [{ path: 'RESTORE.md', shows: 'production backup questions (tier, retention, PITR) left to confirm; PITR enable-and-restore-to-timestamp procedure written, results table blank and marked not verified' }],
-    gap: 'Backup tier/retention/PITR not confirmed for production and no PITR restore performed; no backup monitoring or retained evidence of successful backups.',
+    evidence: [
+      { path: 'RESTORE.md', shows: 'the tier, retention and PITR answered from the dashboard on 2026-09-30; the PITR procedure written, its results row marked not verified' },
+      { path: 'docs/evidence/backups/backups-dashboard-reading-2026-09-30.md', shows: 'nine physical daily backups listed, 23 to 30 September 2026, and PITR off, read off the dashboard by the owner' },
+    ],
+    gap: 'Daily backups are confirmed (seven days, read 2026-09-30), but point-in-time recovery is off, so the recovery point is up to a day. No backup has been restored, and nothing monitors that backups succeed: the list was read once, by hand.',
   },
   {
     id: 'SRE-005',

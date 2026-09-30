@@ -213,7 +213,7 @@ function render(all: Map<string, Level>): string {
     'rests on rows of the registers that already exist — the master, HECVAT,',
     'FERPA/1EdTech and maturity registers, and the twelve launch gates of',
     `${ref('docs/LAUNCH-READINESS-COUNCIL.md')} — and its level on the crosswalk’s 0–4 scale is`,
-    `computed by the test, capped at ${cap}${cap === 4 ? ` now that \`${EVIDENCE_DIR}/\` holds the AI drills of 29 September` : ` while \`${EVIDENCE_DIR}/\` does not exist`}. The launch`,
+    `computed by the test, capped at ${cap}${cap === 4 ? ` now that \`${EVIDENCE_DIR}/\` holds the AI drills of 29 September and the backups reading of 30 September` : ` while \`${EVIDENCE_DIR}/\` does not exist`}. The launch`,
     `verdict is computed the same way. **Today it is ${VERDICT_TITLE[decision]}**, and the test`,
     'asserts that rather than letting the page decide.',
     '',
