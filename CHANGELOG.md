@@ -24,6 +24,20 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### For school staff: a Configuration tab on University (off for now)
+
+Staff with configuration rights at a school get a **Configuration** tab in
+eleven domains — academic structure, workflows, roles, branding, content, AI,
+notifications, data, features, accessibility and reporting. A change is a
+draft; a colleague who holds the publish role publishes it as a numbered
+version, and you cannot publish your own. Old versions stay, and you can start
+a new draft from any of them.
+
+It is switched off, and nothing in the app reads these settings yet: the tab
+says so. Students see no difference.
+
+Nothing to do.
+
 ### On the public site: a page for the K–12 edition
 
 A new page, `/k-12/`, describes Semester for high school: who it would start

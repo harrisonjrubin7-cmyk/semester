@@ -40,6 +40,11 @@ export interface ExperienceFlags {
    */
   migrationCenter: FeatureState;
   /**
+   * The staff Configuration Studio (lib/config, school_config_versions, D-149).
+   * RLS and the second-person publish rule decide what each account may do.
+   */
+  configurationStudio: FeatureState;
+  /**
    * The staff academic-record ledger (lib/record, academic_record_* tables,
    * D-145). RLS and the approval trigger decide what each account may do.
    */
@@ -75,6 +80,7 @@ export function experienceFlags(env: PreviewEnv): ExperienceFlags {
     supportTickets: featureState(env, 'VITE_SUPPORT_TICKETS', false),
     campaignManager: featureState(env, 'VITE_CAMPAIGN_MANAGER', preview),
     migrationCenter: featureState(env, 'VITE_MIGRATION_CENTER', preview),
+    configurationStudio: featureState(env, 'VITE_CONFIGURATION_STUDIO', preview),
     recordLedger: featureState(env, 'VITE_RECORD_LEDGER', preview),
     studentAccounts: featureState(env, 'VITE_STUDENT_ACCOUNTS', preview),
   };

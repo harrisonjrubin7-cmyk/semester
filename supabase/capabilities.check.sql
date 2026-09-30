@@ -289,7 +289,12 @@ begin
   -- 155 before 20260929300000_registration_transaction.sql gave `registrar`
   -- `registration:administer`.
   -- 156 before 20260929330000_dining.sql added dining_staff → dining:operate.
-  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 157);
+  -- 157 before the Configuration Studio (20260930100000_configuration_studio.sql)
+  -- added ten: config:manage and :view for implementation_manager and
+  -- integration_admin, config:manage, :publish and :view for university_admin,
+  -- config:publish and :view for registrar, and config:view for
+  -- institutional_researcher.
+  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 167);
 
   perform pg_temp.become_anon();
   perform pg_temp.refused('a signed-out visitor cannot read the matrix',
