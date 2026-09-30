@@ -649,6 +649,11 @@ details.svc summary .sum-l{min-width:0}
   .canvas{grid-template-columns:1fr 1fr!important}
 }
 
+.wrap.grid-2.one{grid-template-columns:minmax(0,1fr)}.wrap.grid-2.one form.f{grid-template-columns:minmax(0,1fr)}.wrap.grid-2.one .tbl-wrap{min-width:0;max-width:100%}
+.sc-table{min-width:980px}.sc-table th[scope=row]{min-width:230px}.sc-table .nm{display:block;font-weight:600}.sc-table .dt{display:block;font-size:12px;color:var(--ink-faint)}
+.sc-in{width:112px;padding:6px 8px}.sc-num{text-align:right;font-variant-numeric:tabular-nums}
+@media print{body.print-stack [data-page="business-case"]{display:block!important}body.print-stack #bc-form,body.print-stack #bc-pick,body.print-stack .sc-noprint{display:none!important}body.print-stack #bc-grid{display:block!important}body.print-stack .box,body.print-stack .warn{background:#fff!important;color:#000!important;border-color:#000!important}body.print-stack .muted,body.print-stack .fine,body.print-stack .dt,body.print-stack .bignum{color:#000!important}}
+
 /* v7 · YouTube + community */
 .yt-chan{display:flex;gap:18px;align-items:center;flex-wrap:wrap;border:1px solid transparent;background:linear-gradient(180deg,#141518,#0c0c0e) padding-box,var(--chrome) border-box;padding:22px}
 .yt-av{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 35% 30%,#2a2c31,#121316);border:1px solid var(--brass);flex:none}
@@ -1875,9 +1880,10 @@ SPAN 1102 Spanish II, MW, 14:30-15:45, 3</textarea></label>
     <p class="eyebrow brass">Business-case center</p>
     <h1>Build the case with numbers you can defend.</h1>
     <p class="lede">Every calculator shows its assumptions, method and limits. Results are planning estimates, never guarantees.</p>
+    <p class="lede" style="margin-top:10px">Start with stack consolidation: what your school pays today for the systems Semester Core is planned to take over, and what would change if, and only when, Semester’s replacement is available and your contract has ended.</p>
     <div class="persona" role="group" aria-label="Choose a calculator" id="bc-pick"></div>
   </div></section>
-  <section class="blk rule" style="padding-top:40px"><div class="wrap grid-2" style="align-items:start">
+  <section class="blk rule" style="padding-top:40px"><div class="wrap grid-2" id="bc-grid" style="align-items:start">
     <form class="f box" id="bc-form"></form>
     <div id="bc-out" aria-live="polite"></div>
   </div></section>
@@ -4228,6 +4234,107 @@ SPAN 1102 Spanish II, MW, 14:30-15:45, 3</textarea></label>
   bgp.addEventListener("click",e=>{const b=e.target.closest("button");if(b){bgK=b.dataset.k;bgr()}});bgr();
   document.getElementById("bg-copy").addEventListener("click",()=>{const d=BG[bgK];copyTxt(`Semester options: ${d[0]}\n${d[1].map(p=>`- ${p[0]} (${p[1]}): ${p[2]}`).join("\n")}\nWho's involved: ${d[2]}\nPath: ${d[3]}\nData: ${d[4]}\nSupport: ${d[5]}\nContract: ${d[6]}\nPricing: ${d[7]}`,document.getElementById("bg-copied"))});
 
+  /*stack-calc:start*/
+const HORIZON = 5;
+const num = (v) => {
+  const n = typeof v === 'number' ? v : parseFloat(String(v ?? '').replace(/[$,\s]/g, ''));
+  return Number.isFinite(n) && n > 0 ? n : 0;
+};
+const yearOrNull = (v) => {
+  if (v === '' || v === null || v === undefined) return null;
+  const n = Math.round(Number(v));
+  return Number.isFinite(n) && n >= 0 ? n : null;
+};
+function stackCalc(input) {
+  const esc = Math.min(num(input.escalation), 25) / 100;
+  const rows = input.rows.map((r) => {
+    const annual = num(r.annualCost);
+    const price = num(r.semesterAnnual);
+    const contractEnds = yearOrNull(r.contractEnds) ?? 0;
+    const ready = yearOrNull(r.readyYear);
+    let switchYear = null;
+    let why = '';
+    if (annual === 0) why = 'no current cost entered';
+    else if (ready === null) why = 'no year entered for when the replacement is available';
+    else if (price === 0) why = 'no Semester price entered';
+    else {
+      const y = Math.max(contractEnds + 1, ready, 1);
+      if (y > HORIZON) why = 'the switch-off would fall in year ' + y + ', after the ' + HORIZON + ' years shown';
+      else switchYear = y;
+    }
+    return { id: r.id, name: r.name, annual, price, migration: num(r.migrationOnce), hours: num(r.adminHours), contractEnds, ready, switchYear, why };
+  });
+  const years = [];
+  let cumulative = 0;
+  let hoursTotal = 0;
+  let paybackMonth = null;
+  const firstSwitch = rows.reduce((m, r) => (r.switchYear !== null && r.switchYear < m ? r.switchYear : m), HORIZON + 1);
+  for (let y = 1; y <= HORIZON; y++) {
+    const grow = Math.pow(1 + esc, y - 1);
+    let current = 0;
+    let remaining = 0;
+    let semester = 0;
+    let migration = 0;
+    let hours = 0;
+    for (const r of rows) {
+      const base = r.annual * grow;
+      current += base;
+      if (r.switchYear !== null && y >= r.switchYear) {
+        semester += r.price;
+        if (y === r.switchYear) migration += r.migration;
+        hours += r.hours;
+      } else remaining += base;
+    }
+    const withSemester = remaining + semester + migration;
+    const saving = current - withSemester;
+    const before = cumulative;
+    cumulative += saving;
+    hoursTotal += hours;
+    if (paybackMonth === null && y >= firstSwitch && cumulative >= 0 && saving > 0) {
+      paybackMonth = before >= 0 ? (y - 1) * 12 + 1 : (y - 1) * 12 + Math.ceil((12 * -before) / saving);
+    }
+    years.push({ year: y, current, remaining, semester, migration, withSemester, saving, cumulative, hours });
+  }
+  const totalCurrent = years.reduce((a, y) => a + y.current, 0);
+  const totalWith = years.reduce((a, y) => a + y.withSemester, 0);
+  return { years, rows, totalCurrent, totalWith, totalSaving: totalCurrent - totalWith, hoursTotal, paybackMonth, switched: rows.filter((r) => r.switchYear !== null).length };
+}
+const csvCell = (s) => {
+  const t = String(s);
+  return /[",\n]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t;
+};
+function stackCsv(input, result, statuses) {
+  const line = (cells) => cells.map(csvCell).join(',');
+  const out = [
+    line(['Semester stack comparison: a planning estimate from the inputs below, not a quote or a guarantee']),
+    line(['Every input is the school’s own. Semester has no published institutional price.']),
+    line(['Annual price increase on current systems (%)', input.escalation || 0]),
+    '',
+    line(['System', 'Register says', 'Current cost / yr', 'Contract ends (end of year)', 'Replacement available from (year)', 'Semester price / yr', 'One-time migration', 'Admin hours / yr freed', 'Switched off in year', 'Why not']),
+  ];
+  result.rows.forEach((r) => out.push(line([r.name, (statuses && statuses[r.id]) || '', r.annual, r.contractEnds, r.ready === null ? '' : r.ready, r.price, r.migration, r.hours, r.switchYear === null ? 'not within ' + HORIZON + ' years' : r.switchYear, r.why])));
+  out.push('', line(['Year', 'Current systems', 'Systems still running', 'Semester', 'Migration', 'With Semester', 'Saving', 'Cumulative saving', 'Admin hours freed']));
+  result.years.forEach((y) => out.push(line([y.year, Math.round(y.current), Math.round(y.remaining), Math.round(y.semester), Math.round(y.migration), Math.round(y.withSemester), Math.round(y.saving), Math.round(y.cumulative), Math.round(y.hours)])));
+  out.push('', line(['Five-year total: current', Math.round(result.totalCurrent), 'with Semester', Math.round(result.totalWith), 'saving', Math.round(result.totalSaving)]));
+  out.push(line(['Payback month', result.paybackMonth === null ? 'not within ' + HORIZON + ' years' : result.paybackMonth]));
+  return out.join('\n') + '\n';
+}
+const INSTITUTION_TYPES = [
+  { id: 'community', name: 'Community college', scale: 0.5 },
+  { id: 'public4', name: '4-year public', scale: 1 },
+  { id: 'private4', name: '4-year private', scale: 0.8 },
+  { id: 'k12', name: 'K-12 district', scale: 0.6 },
+];
+const exampleRow = (scale = 1) => ({
+  annualCost: Math.round(100000 * scale),
+  contractEnds: 2,
+  readyYear: 3,
+  semesterAnnual: Math.round(60000 * scale),
+  migrationOnce: Math.round(30000 * scale),
+  adminHours: 200,
+});
+/*stack-calc:end*/
+  /*stack-modules:start*/const STACK_MODULES=[{"id":"course-content","name":"Course content and delivery","replaces":"Canvas, Blackboard Learn, Brightspace, Moodle","status":"Planned"},{"id":"assignments","name":"Assignments and submissions","replaces":"Canvas assignments, Blackboard assignments, Brightspace assignments, Moodle assignments","status":"Planned"},{"id":"gradebook","name":"Gradebook and grading","replaces":"Canvas gradebook, Blackboard grade center, Brightspace grades, Moodle gradebook","status":"Planned"},{"id":"assessments","name":"Tests, question banks and attendance","replaces":"Canvas quizzes, Blackboard tests, Brightspace quizzes, Moodle quizzes","status":"Planned"},{"id":"registration","name":"Registration and enrolment","replaces":"Ellucian Banner, Ellucian Colleague, PeopleSoft Campus Solutions, Workday Student","status":"Planned"},{"id":"degree-audit","name":"Degree audit","replaces":"Ellucian Degree Works, uAchieve","status":"Planned"},{"id":"records","name":"Academic records and transcripts","replaces":"Ellucian Banner records, Parchment, National Student Clearinghouse transcript ordering","status":"Planned"},{"id":"admissions","name":"Admissions","replaces":"Slate, Ellucian CRM Recruit, Common App processing","status":"Planned"},{"id":"student-accounts","name":"Student accounts (tuition and fees)","replaces":"Ellucian Banner Student Accounts, Nelnet, TouchNet","status":"Planned"},{"id":"financial-aid","name":"Financial-aid records","replaces":"Ellucian Financial Aid, PowerFAIDS","status":"Planned"},{"id":"scheduling","name":"Timetabling and room booking","replaces":"Ad Astra, EMS, 25Live","status":"Planned"},{"id":"events","name":"Events and campus engagement","replaces":"Anthology Engage, CampusGroups, Presence","status":"Planned"},{"id":"k12","name":"K-12 records and parent portal","replaces":"PowerSchool, Infinite Campus, Skyward","status":"Planned"},{"id":"advancement","name":"Alumni relations and fundraising","replaces":"Blackbaud Raiser’s Edge, Ellucian Advance, Salesforce Nonprofit Cloud","status":"Planned"}];/*stack-modules:end*/
   // ---------- business case ----------
   const BC={
    adv:{n:"Advising workflow",f:[["bc-stu","Students in scope","number",2000],["bc-adv","Advisors","number",8],["bc-appt","Appointments per student per term","number",1.5],["bc-rec","Minutes spent reconstructing context per appointment","number",12],["bc-share","Share of students who arrive prepared with Semester (%)","number",40],["bc-cut","Share of reconstruction time a prepared agenda removes (%)","number",50]],
@@ -4239,10 +4346,54 @@ SPAN 1102 Spanish II, MW, 14:30-15:45, 3</textarea></label>
    ai:{n:"AI governance readiness",f:[["bc-q1","Do you have an institution-wide AI policy?","select",["Yes","Draft","No"]],["bc-q2","Can faculty set course-level AI rules?","select",["Yes","Informally","No"]],["bc-q3","Do students' AI tools cite approved sources?","select",["Yes","Some","No"]],["bc-q4","Is there a process to switch off an AI feature fast?","select",["Yes","Unclear","No"]]],
      calc:g=>{const map={Yes:2,Draft:1,Informally:1,Some:1,Unclear:1,No:0};const ids=["bc-q1","bc-q2","bc-q3","bc-q4"];const sc=ids.reduce((a,i)=>a+map[v(i)],0);const lvl=sc>=7?"Established":sc>=4?"Developing":"Early";return{big:`${sc} of 8`,lbl:`readiness · ${lvl}`,rows:ids.filter(i=>map[v(i)]<2).map(i=>[document.querySelector(`label[for=${i}]`).firstChild.textContent.trim(),"Gap to address"]),
        method:"Four governance practices scored 0–2 each.",lim:"A self-assessment for planning conversations. It isn't an audit.",pkg:"AI governance workshop, then Course Studio",people:["Provost's office","Faculty senate","Academic integrity","IT/security"],metrics:["Courses with a published AI policy","Share of AI answers with citations","Time to disable a feature"]}}}};
-  const bcp=document.getElementById("bc-pick");let bcK="adv";pills(bcp,Object.entries(BC).map(([k,v])=>[k,v.n]),bcK);
-  function bcForm(){setP(bcp,bcK);document.getElementById("bc-form").innerHTML=`<p class="eyebrow">${BC[bcK].n} · your inputs</p>`+BC[bcK].f.map(([id,l,t,d])=>t==="select"?`<label for="${id}">${l}<select id="${id}">${d.map(o=>`<option>${o}</option>`).join("")}</select></label>`:`<label for="${id}">${l}<input id="${id}" type="number" min="0" step="any" value="${d}"></label>`).join("")+`<p class="src demo" style="justify-self:start">Example values pre-filled</p>`;bcCalc()}
+  const SC_COLS=[["annualCost","Current cost per year ($)"],["contractEnds","Contract ends after year"],["readyYear","Replacement available from year"],["semesterAnnual","Semester price per year ($, your quote)"],["migrationOnce","One-time migration ($)"],["adminHours","Admin hours freed per year"]];
+  const scId=(m,k)=>"sc-"+m+"-"+k;
+  let scType="public4",scIllus=false,scFilling=false,scSum="",scCsv="";
+  const scStatuses=()=>Object.fromEntries(STACK_MODULES.map(m=>[m.id,m.status]));
+  function scInput(){const g=id=>{const e=document.getElementById(id);return e?e.value:""};return{escalation:g("sc-esc"),rows:STACK_MODULES.map(m=>Object.assign({id:m.id,name:m.name},...SC_COLS.map(([k])=>({[k]:g(scId(m.id,k))}))))}}
+  function scForm(){const f=document.getElementById("bc-form");
+    f.innerHTML=`<p class="eyebrow">Stack consolidation · your inputs</p>
+    <p class="muted" style="font-size:14px">One row per system Semester Core is planned to take over. Enter what you pay today, when each contract ends, and the year you would assume Semester’s replacement is available. A system counts as switched off only when both are true, and only if you enter a Semester price from a quote: Semester has no published institutional price.</p>
+    <div class="fr"><label for="sc-type">Institution type (sets only the illustrative example)<select id="sc-type">${INSTITUTION_TYPES.map(t=>`<option value="${t.id}"${t.id===scType?" selected":""}>${esc(t.name)}</option>`).join("")}</select></label><label for="sc-esc">Yearly price increase on current systems (%)<input id="sc-esc" type="number" min="0" max="25" step="any" value="0"></label></div>
+    <div class="ctas" style="margin-top:4px"><button class="btn btn-ghost btn-sm" type="button" id="sc-example">Fill with illustrative numbers</button><button class="btn btn-ghost btn-sm" type="button" id="sc-clear">Clear all</button></div>
+    <div class="tbl-wrap" style="margin-top:12px"><table class="sc-table"><caption>Systems, and what each costs and when it could change</caption><thead><tr><th scope="col">System</th><th scope="col">Semester register</th>${SC_COLS.map(c=>`<th scope="col">${esc(c[1])}</th>`).join("")}</tr></thead><tbody>${STACK_MODULES.map(m=>`<tr><th scope="row"><span class="nm">${esc(m.name)}</span><span class="dt">${esc(m.replaces)}</span></th><td>${esc(m.status)}</td>${SC_COLS.map(([k,l])=>`<td><input class="sc-in" id="${scId(m.id,k)}" type="number" min="0" step="any" inputmode="decimal" aria-label="${esc(m.name+": "+l)}"></td>`).join("")}</tr>`).join("")}</tbody></table></div>
+    <p class="src demo" style="justify-self:start">Nothing here is saved or sent, except by “Email me this”.</p>`;
+    document.getElementById("sc-type").addEventListener("change",e=>{scType=e.target.value});
+    document.getElementById("sc-example").addEventListener("click",()=>{const t=INSTITUTION_TYPES.find(x=>x.id===scType)||INSTITUTION_TYPES[1],ex=exampleRow(t.scale);scFilling=true;STACK_MODULES.forEach(m=>SC_COLS.forEach(([k])=>{document.getElementById(scId(m.id,k)).value=ex[k]}));scFilling=false;scIllus=true;scCalc()});
+    document.getElementById("sc-clear").addEventListener("click",()=>{STACK_MODULES.forEach(m=>SC_COLS.forEach(([k])=>{document.getElementById(scId(m.id,k)).value=""}));document.getElementById("sc-esc").value="0";scIllus=false;scCalc()});
+    scCalc()}
+  function scCalc(){const inp=scInput(),r=stackCalc(inp),st=scStatuses();
+    const $=n=>"$"+Math.round(Math.abs(n)).toLocaleString("en-US");
+    const entered=r.rows.filter(x=>x.annual>0),blocked=entered.filter(x=>x.switchYear===null);
+    const notAvail=STACK_MODULES.filter(m=>m.status!=="Available now").length;
+    const wk=`<div class="warn" style="margin-bottom:14px"><b>Where Semester’s replacement stands.</b> The register calls ${notAvail} of ${STACK_MODULES.length} modules in this table below “Available now”; Semester Core is planned and has set no date. The year you enter for each is your assumption, not a Semester commitment.</div>`;
+    const il=scIllus?`<div class="warn" style="margin-bottom:14px"><b>Illustrative numbers.</b> These are placeholders, not Semester’s prices or any school’s costs.</div>`:"";
+    let head;
+    if(!entered.length)head=`<p class="eyebrow">Planning estimate · five years</p><p class="muted">Enter what you pay today for at least one system, or use the illustrative numbers, to see a comparison.</p>`;
+    else if(!r.switched)head=`<p class="eyebrow">Planning estimate · five years</p><div class="bignum">$0</div><p class="muted">saved: no system is switched off on these inputs</p><ul class="check" style="margin-top:12px">${blocked.map(x=>`<li>${esc(x.name)}: ${esc(x.why)}</li>`).join("")}</ul>`;
+    else head=`<p class="eyebrow">Planning estimate · five years</p><div class="bignum">${$(r.totalSaving)}</div><p class="muted">${r.totalSaving>=0?"saved over five years on these inputs":"more than today over five years on these inputs"}</p>
+      <div class="legend" style="margin-top:16px"><div><b>Current stack</b><p>${$(r.totalCurrent)}</p></div><div><b>With Semester</b><p>${$(r.totalWith)}</p></div><div><b>Payback</b><p>${r.paybackMonth===null?"Not within "+HORIZON+" years":"Month "+r.paybackMonth+" (year "+Math.ceil(r.paybackMonth/12)+")"}</p></div><div><b>Systems switched off</b><p>${r.switched} of ${entered.length} with a cost entered</p></div><div><b>Admin hours freed</b><p>${Math.round(r.hoursTotal).toLocaleString("en-US")} over five years (your figure)</p></div></div>`;
+    const yr=entered.length?`<div class="tbl-wrap" style="margin-top:18px"><table><caption>Year by year</caption><thead><tr><th scope="col">Year</th><th scope="col">Current systems</th><th scope="col">With Semester</th><th scope="col">Saving</th><th scope="col">Cumulative</th></tr></thead><tbody>${r.years.map(y=>`<tr><th scope="row">${y.year}</th><td class="sc-num">${$(y.current)}</td><td class="sc-num">${$(y.withSemester)}</td><td class="sc-num">${y.saving<0?"−":""}${$(y.saving)}</td><td class="sc-num">${y.cumulative<0?"−":""}${$(y.cumulative)}</td></tr>`).join("")}</tbody></table></div>`:"";
+    const tl=entered.length?`<div class="tbl-wrap" style="margin-top:18px"><table><caption>Consolidation timeline: when each system is switched off</caption><thead><tr><th scope="col">System</th><th scope="col">Contract ends after</th><th scope="col">Replacement from</th><th scope="col">Switched off</th></tr></thead><tbody>${entered.map(x=>`<tr><th scope="row">${esc(x.name)}<br><span class="dt" style="display:block">Register: ${esc(st[x.id]||"")}</span></th><td>${x.contractEnds?"year "+x.contractEnds:"no contract"}</td><td>${x.ready===null?"not entered":"year "+x.ready}</td><td>${x.switchYear===null?"Not within "+HORIZON+" years: "+esc(x.why):"Year "+x.switchYear}</td></tr>`).join("")}</tbody></table></div>`:"";
+    const method=`<p class="eyebrow" style="margin-top:20px">Method</p><p class="muted" style="font-size:14px;margin-top:6px">Each year, current systems cost what you pay today, raised by the yearly increase you enter. With Semester, a system still running costs the same; a system already switched off costs Semester’s price for it, plus its one-time migration in the year it is switched. A system is switched off in the later of the year after its contract ends and the year its replacement is available. A switch-off after year ${HORIZON}, or with no Semester price entered, is not counted. Saving is current minus with Semester. Payback is the first month the cumulative saving reaches zero, interpolated within the year.</p>
+      <p class="eyebrow" style="margin-top:16px">Assumptions</p><ul class="check" style="margin-top:8px"><li>Semester’s price is yours, from a quote. Semester has no published institutional price.</li><li>The year each replacement is available is yours. The register’s word for every module is shown beside it.</li><li>Costs are in today’s dollars apart from the increase you enter; nothing is discounted.</li><li>No cost of running both systems at once is included unless you put it in the one-time migration.</li><li>Admin hours freed are your figure, not a Semester benchmark.</li></ul>
+      <p class="eyebrow" style="margin-top:16px">Limits</p><p class="muted" style="font-size:14px;margin-top:6px">A planning estimate from your inputs, not a quote, a forecast or a guarantee. It ignores contract penalties, taxes, staff turnover and anything you do not enter. Semester Core is planned; none of these modules is built.</p>`;
+    scSum=`Semester stack comparison (planning estimate, five years)\n`+(r.switched?`${r.totalSaving>=0?"Saved":"Extra cost"}: ${$(r.totalSaving)}; current stack ${$(r.totalCurrent)}, with Semester ${$(r.totalWith)}; payback ${r.paybackMonth===null?"not within "+HORIZON+" years":"month "+r.paybackMonth}; ${r.switched} of ${entered.length} systems switched off; ${Math.round(r.hoursTotal)} admin hours freed (user figure).\n`:"No system is switched off on these inputs, so nothing is saved.\n")+entered.map(x=>`- ${x.name}: ${x.switchYear===null?"not within "+HORIZON+" years ("+x.why+")":"switched off in year "+x.switchYear} (register: ${st[x.id]||""})`).join("\n")+`\nSemester’s price and the availability year are the user’s own assumptions. Semester Core is planned. Not a quote or a guarantee.`+(scIllus?"\nIllustrative numbers, not Semester prices or any school's costs.":"");
+    scCsv=stackCsv(inp,r,st);
+    document.getElementById("bc-out").innerHTML=`<div class="box">${il}${wk}${head}${yr}${tl}${method}
+      <div class="ctas sc-noprint" style="margin-top:18px"><button class="btn btn-ghost btn-sm" type="button" id="sc-copy">Copy executive summary</button><button class="btn btn-ghost btn-sm" type="button" id="sc-csv">Download CSV</button><button class="btn btn-ghost btn-sm" type="button" id="sc-print">Print or save as PDF</button></div>
+      <form class="f sc-noprint" id="sc-mail" novalidate style="margin-top:14px"><p class="eyebrow">Email me this</p><p class="fine">Sends the summary above to Semester with your name and email, so a person can reply. The inputs stay in this page.</p><div class="fr"><label for="sc-name">Name<input id="sc-name" autocomplete="name"></label><label for="sc-mailaddr">Email<input id="sc-mailaddr" type="email" autocomplete="email"></label></div><p class="err" id="sc-err" hidden></p><button class="btn btn-primary btn-sm" type="submit" style="justify-self:start">Send it to me</button><div class="ok" id="sc-ok" hidden></div></form>
+      <p class="fine" id="sc-copied" style="margin-top:8px"></p></div>`;
+    document.getElementById("sc-copy").onclick=()=>copyTxt(scSum,document.getElementById("sc-copied"));
+    document.getElementById("sc-csv").onclick=()=>{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([scCsv],{type:"text/csv"}));a.download="semester-stack-comparison.csv";document.body.appendChild(a);a.click();a.remove()};
+    document.getElementById("sc-print").onclick=()=>{document.body.classList.add("print-stack");window.addEventListener("afterprint",()=>document.body.classList.remove("print-stack"),{once:true});window.print()};
+    const mf=document.getElementById("sc-mail");addHP(mf);
+    mf.addEventListener("submit",e=>{e.preventDefault();const err=document.getElementById("sc-err"),ok=document.getElementById("sc-ok");sendLead({route:"general_contact",name:val("sc-name"),email:val("sc-mailaddr"),message:"Please reply to this stack comparison.\n\n"+scSum,fields:{kind:"stack-consolidation",illustrative:scIllus?"yes":"no"},form:mf,ok,err})})}
+  document.getElementById("bc-form").addEventListener("input",()=>{if(bcK==="stack"&&!scFilling)scIllus=false});
+  const bcp=document.getElementById("bc-pick");let bcK="stack";pills(bcp,[["stack","Stack consolidation"],...Object.entries(BC).map(([k,v])=>[k,v.n])],bcK);
+  function bcForm(){setP(bcp,bcK);document.getElementById("bc-grid").classList.toggle("one",bcK==="stack");if(bcK==="stack"){scForm();return}document.getElementById("bc-form").innerHTML=`<p class="eyebrow">${BC[bcK].n} · your inputs</p>`+BC[bcK].f.map(([id,l,t,d])=>t==="select"?`<label for="${id}">${l}<select id="${id}">${d.map(o=>`<option>${o}</option>`).join("")}</select></label>`:`<label for="${id}">${l}<input id="${id}" type="number" min="0" step="any" value="${d}"></label>`).join("")+`<p class="src demo" style="justify-self:start">Example values pre-filled</p>`;bcCalc()}
   let bcSum="";
-  function bcCalc(){const g=id=>Math.max(0,parseFloat(v(id))||0);const r=BC[bcK].calc(g);
+  function bcCalc(){if(bcK==="stack"){scCalc();return}const g=id=>Math.max(0,parseFloat(v(id))||0);const r=BC[bcK].calc(g);
     document.getElementById("bc-out").innerHTML=`<div class="box"><p class="eyebrow">Planning estimate</p><div class="bignum">${r.big}</div><p class="muted">${r.lbl}</p>
     ${r.rows.length?`<div class="legend" style="margin-top:16px">${r.rows.map(x=>`<div><b>${esc(x[0])}</b><p>${esc(x[1])}</p></div>`).join("")}</div>`:""}
     <p class="eyebrow" style="margin-top:20px">Method</p><p class="muted" style="font-size:14px;margin-top:6px">${r.method}</p>
@@ -4324,7 +4475,7 @@ SPAN 1102 Spanish II, MW, 14:30-15:45, 3</textarea></label>
   // ---------- site search ----------
   const IDX=[["Home","Semester overview, student action platform","home","Product"],["Product overview","Modules, boundaries, what Semester does not do","product","Product"],["Interactive demo","Role-based walkthrough student advisor faculty registrar admin IT","experience","Product"],["How Semester is built","Architecture tenants permissions sources AI","how-built","Product"],["Integrations directory","Canvas Brightspace Blackboard Moodle Google Microsoft SSO SCIM Banner Workday OneRoster QTI","integrations","Product"],["Developer portal","API OAuth webhooks LTI sandbox SDK rate limits","developers","Product"],["Compare approaches","Semester vs portals, AI chat, manual planning, advising tools, LMS","compare","Product"],["Roadmap & changelog","Available now, in development, exploring","roadmap","Product"],["Principles","What Semester believes manifesto","principles","Company"],
    ["Students","Free planning for students","students","Solutions"],["Departments","Department launch cohort packages","departments","Solutions"],["Advising","Advising and student success","advising","Solutions"],["Registrars","Registration readiness","registrars","Solutions"],["Faculty","Course Studio AI policy","faculty","Solutions"],["IT & security","Governance tenant isolation SSO","it","Solutions"],["Institutions","Governed student action layer","institutions","Solutions"],["Enterprise","Multi-campus native LMS","enterprise","Solutions"],
-   ["Pricing","Free Plus Pro Access department institution enterprise price","pricing","Buying"],["Buying guide","Which package fits","buying-guide","Buying"],["Business-case calculator","ROI advising registration AI governance","business-case","Buying"],["Services","Service catalog implementation methodology migration training","services","Buying"],["Launch estimator","Institution implementation path","launch-estimator","Buying"],["Membership & cancellation","Cancel refund renewal billing receipts","membership","Buying"],["Customer portal","Contract support tickets adoption documents renewal QBR","customer-portal","Buying"],
+   ["Pricing","Free Plus Pro Access department institution enterprise price","pricing","Buying"],["Buying guide","Which package fits","buying-guide","Buying"],["Business-case calculator","ROI stack consolidation software costs replace systems advising registration AI governance","business-case","Buying"],["Services","Service catalog implementation methodology migration training","services","Buying"],["Launch estimator","Institution implementation path","launch-estimator","Buying"],["Membership & cancellation","Cancel refund renewal billing receipts","membership","Buying"],["Customer portal","Contract support tickets adoption documents renewal QBR","customer-portal","Buying"],
    ["Trust Center","Security privacy student data AI reliability subprocessors","trust","Trust"],["Data-use map","What Semester stores who can see it","data-use","Trust"],["HECVAT readiness simulator","Security review planning procurement","hecvat","Trust"],["Procurement accelerator","HECVAT VPAT DPA SLA insurance documents","procurement","Trust"],["Evidence library","Evidence for every claim audit","evidence","Trust"],["Accessibility center","Report a barrier WCAG VPAT known issues language","accessibility","Trust"],["System status","Uptime incidents maintenance","status","Trust"],["Privacy choices","Email notifications cookies preferences quiet hours","preferences","Trust"],["Policies","Terms privacy DPA cookies acceptable use versions","legal","Trust"],["Leadership & governance","Founder owners accountability responsibility","leadership","Company"],
    ["Build my semester","Schedule builder conflicts workload","build-my-semester","Resources"],["Registration checklist","Readiness checklist","checklist","Resources"],["Advisor agenda builder","Agenda for advising","agenda","Resources"],["Semester Academy","Courses for students faculty advisors IT","academy","Resources"],["Events & office hours","Workshops clinics briefings webinars","events","Resources"],["Help center","Getting started account billing data FAQ support","help","Resources"],
    ["About","Company mission","company","Company"],["Careers","Jobs ambassadors advisors","careers","Company"],["Design partners","Design partner program","design-partners","Company"],["Refer a friend","Referral invite ambassador disclosure","refer","Company"],["Contact","Talk to sales support press","contact","Company"]];

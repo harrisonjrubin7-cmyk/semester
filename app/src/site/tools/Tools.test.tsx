@@ -110,3 +110,71 @@ it('writes an agenda with gaps marked rather than hidden', () => {
   expect(text).toContain('not an official record');
   expect(agendaText({ when: ' Tue 2pm ', where: 'x', questions: ['a'], decisions: 'y' })).toContain('When: Tue 2pm');
 });
+
+const aria = (name: string) => host.querySelector(`input[aria-label="${name}"]`) as HTMLInputElement;
+
+it('works the stack comparison out from what is typed, and counts nothing until every part is entered', () => {
+  hydrate('stack');
+  expect(host.textContent).toContain('Enter what you pay today for at least one system');
+  const A = 'Course content and delivery';
+  const B = 'Assignments and submissions';
+  type(aria(`${A}: Current cost per year ($)`), '100000');
+  type(aria(`${A}: Contract ends after year`), '2');
+  type(aria(`${A}: Replacement available from year`), '1');
+  // No Semester price yet: the calculator does not supply one, so nothing is saved.
+  expect(host.textContent).toContain('$0 saved: no system is switched off on these inputs.');
+  expect(host.textContent).toContain('no Semester price entered');
+  type(aria(`${A}: Semester price per year ($, your quote)`), '60000');
+  type(aria(`${A}: One-time migration ($)`), '30000');
+  type(aria(`${A}: Admin hours freed per year`), '200');
+  type(aria(`${B}: Current cost per year ($)`), '50000');
+  type(aria(`${B}: Replacement available from year`), '2');
+  type(aria(`${B}: Semester price per year ($, your quote)`), '20000');
+  type(aria(`${B}: Admin hours freed per year`), '100');
+  // Worked by hand in stackcost.test.ts: 750,000 today, 540,000 with Semester, payback in month 13.
+  expect(host.textContent).toContain('$210,000 saved over five years on these inputs.');
+  expect(host.textContent).toContain('Current stack: $750,000. With Semester: $540,000.');
+  expect(host.textContent).toContain('month 13 (year 2)');
+  expect(host.textContent).toContain('Admin hours freed: 1,000 over five years (your figure).');
+});
+
+it('says what the register says about every module, and that the year is the school’s assumption', () => {
+  hydrate('stack');
+  expect(host.textContent).toContain('the register calls 14 of 14 modules here below “Available now”');
+  expect(host.textContent).toContain('Semester Core is planned and has set no date');
+  const registerCells = [...host.querySelectorAll('tbody tr')].map((tr) => tr.children[1]?.textContent);
+  expect(registerCells).toHaveLength(14);
+  expect(registerCells.every((c) => c === 'Planned')).toBe(true);
+  expect(host.textContent).toContain('Semester has no published institutional price');
+});
+
+it('labels the illustrative numbers as placeholders, and drops the label when the visitor types', () => {
+  hydrate('stack');
+  act(() => button(/Fill with illustrative numbers/).click());
+  expect(host.textContent).toContain('Illustrative numbers: placeholders, not Semester’s prices or any school’s costs.');
+  expect(host.textContent).toContain('Systems switched off: 14 of 14');
+  type(aria('Degree audit: Current cost per year ($)'), '1');
+  expect(host.textContent).not.toContain('Illustrative numbers: placeholders');
+  act(() => button(/Clear all/).click());
+  expect(host.textContent).toContain('Enter what you pay today for at least one system');
+});
+
+it('downloads the comparison as a CSV without sending it anywhere', async () => {
+  hydrate('stack');
+  act(() => button(/Fill with illustrative numbers/).click());
+  const made: Blob[] = [];
+  Object.defineProperty(URL, 'createObjectURL', { value: (b: Blob) => (made.push(b), 'blob:x'), configurable: true, writable: true });
+  Object.defineProperty(URL, 'revokeObjectURL', { value: () => {}, configurable: true, writable: true });
+  const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+  act(() => button(/Download CSV/).click());
+  click.mockRestore();
+  expect(made).toHaveLength(1);
+  const text = await new Promise<string>((done) => {
+    const reader = new FileReader();
+    reader.onload = () => done(String(reader.result));
+    reader.readAsText(made[0]);
+  });
+  expect(text).toContain('planning estimate');
+  expect(text).toContain('Payback month,25');
+  expect(text).toContain('Planned');
+});
